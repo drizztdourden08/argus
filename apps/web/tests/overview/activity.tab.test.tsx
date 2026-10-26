@@ -21,9 +21,11 @@ const open = async (activity: Record<string, object> = ACTIVITY) => {
 const rowsOf = (): HTMLElement[] => within(screen.getByRole('list', { name: 'Activity' })).getAllByRole('listitem');
 
 describe('the Activity tab', () => {
-  it('says there is nothing to report when the feed is empty', async () => {
+  it('says there is nothing to report when the feed is empty, with the filters still in place', async () => {
     await open({});
     expect(await screen.findByText('Nothing to report yet.')).toBeTruthy();
+    expect(screen.getByText('All levels 0')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'All kinds 0' })).toBeTruthy();
   });
 
   it('shows the newest entry first', async () => {
@@ -47,6 +49,9 @@ describe('the Activity tab', () => {
     expect(first.querySelector('time')).not.toBeNull();
   });
 
+});
+
+describe('the filters of the Activity tab', () => {
   it('filters by level with the counts on the buttons, and the all button clears it', async () => {
     await open();
     await screen.findByText('R-3 play failed (exit 1)');
@@ -75,6 +80,35 @@ describe('the Activity tab', () => {
     expect(screen.queryByRole('button', { name: 'Show more' })).toBeNull();
   });
 
+  it('filters by kind with a chip per kind and its count, the pressed chip again clears it', async () => {
+    await open();
+    await screen.findByText('R-3 play failed (exit 1)');
+    expect(screen.getByRole('radio', { name: 'All kinds 3' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('radio', { name: 'kill 0' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
+    await waitFor(() => expect(rowsOf()).toHaveLength(1));
+    expect(rowsOf()[0]?.textContent).toContain('its wake listener is not running');
+    expect(screen.getByRole('radio', { name: 'fault 1' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
+    await waitFor(() => expect(rowsOf()).toHaveLength(3));
+    expect(screen.getByRole('radio', { name: 'All kinds 3' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('combines the level and the kind filters', async () => {
+    await open();
+    await screen.findByText('R-3 play failed (exit 1)');
+    fireEvent.click(screen.getByText('error 1'));
+    fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
+    expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();
+  });
+
+  it('puts a header row of column labels over the feed', async () => {
+    await open();
+    await screen.findByText('R-3 play failed (exit 1)');
+    const list = screen.getByRole('list', { name: 'Activity' });
+    expect(list.textContent).toContain('Level');
+    expect(list.textContent).toContain('When');
+  });
 });
 
 describe('the Activity tab as it changes', () => {

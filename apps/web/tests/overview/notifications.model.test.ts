@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NoteItem } from '../../src/screens/overview/notifications/model';
 import {
-  apiSentence, countLevels, filterNotes, noteLevel, noteProject, projectCounts, sortNotes, testSentence, toastNote,
+  apiSentence, countLevels, filterNotes, noteLevel, noteProject, projectCounts, settingTip, sortNotes, testSentence, toastNote,
 } from '../../src/screens/overview/notifications/model';
 import { ApiError } from '../../src/data/api';
 
@@ -77,5 +77,18 @@ describe('the sentences of the test button and the settings', () => {
     expect(apiSentence(new ApiError(403, { code: 'forbidden', message: 'no' }), otherwise)).toBe('Only this page may change the settings.');
     expect(apiSentence(new ApiError(500, { code: 'config_not_saved', message: 'disk full' }), otherwise)).toBe('Not saved: disk full.');
     expect(apiSentence('odd', otherwise)).toBe('Not saved: unknown.');
+  });
+});
+
+describe('the tip of a setting', () => {
+  it('says what a toast switch does in each state, and that info is recorded only by default', () => {
+    expect(settingTip('toast', 'urgent', true)).toBe('A toast is shown for urgent');
+    expect(settingTip('toast', 'ping', false)).toBe('No toast for ping');
+    expect(settingTip('toast', 'info', false)).toBe('No toast for info (info is recorded only by default)');
+  });
+
+  it('says whether the toast of a level plays the system sound', () => {
+    expect(settingTip('sound', 'urgent', true)).toBe('The urgent toast plays the system notification sound');
+    expect(settingTip('sound', 'ping', false)).toBe('The ping toast is silent');
   });
 });

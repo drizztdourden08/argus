@@ -8,6 +8,11 @@ import { SampleNotices } from './SampleNotices';
 const sumMemory = (procs: ProcessSummaryProps['procs']): number =>
   procs.reduce((sum, proc) => sum + (asNumber(proc.memMB) ?? 0), 0);
 
+const sampleTook = (meta: ProcessSummaryProps['meta']): string | undefined => {
+  const took = asNumber(meta?.sampleMs);
+  return took === null ? undefined : `took ${Math.round(took)} ms`;
+};
+
 const ProcessSummary = (props: ProcessSummaryProps) => {
   const { procs, meta } = props;
   const look = procs.filter(needsLook).length;
@@ -19,7 +24,7 @@ const ProcessSummary = (props: ProcessSummaryProps) => {
         <StatTile size="sm" label={count === 1 ? 'Process' : 'Processes'} value={count} />
         <StatTile size="sm" label="Memory" value={formatMemory(total)} />
         <StatTile size="sm" label="Need a look" value={look} tone={look > 0 ? 'warning' : undefined} />
-        <StatTile size="sm" label="Sampled" value={meta?.sampledAt ? <DateText value={meta.sampledAt} format="relative" /> : 'not sampled yet'} />
+        <StatTile size="sm" label="Sampled" value={meta?.sampledAt ? <DateText value={meta.sampledAt} format="relative" tooltip /> : 'not sampled yet'} unit={sampleTook(meta)} />
       </Grid>
       <SampleNotices meta={meta} />
     </>
