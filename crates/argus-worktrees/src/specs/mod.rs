@@ -10,3 +10,4 @@ mod rules;
 mod safety;
 mod scan;
 mod service;
+mod wire;

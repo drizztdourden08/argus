@@ -91,6 +91,21 @@ fn the_names_of_a_map_are_checked_sorted_and_the_public_copy_has_no_env() {
 }
 
 #[test]
+fn the_label_the_board_keeps_is_not_part_of_the_public_definition() {
+    let raw = json!({"cmd": "x", "label": "Play alpha"});
+    let def = coerce_def("launcher-alpha", &raw).unwrap();
+    assert_eq!(
+        def.label.as_deref(),
+        Some("Play alpha"),
+        "the board keeps it"
+    );
+    let public = serde_json::to_value(public_def(&def)).unwrap();
+    assert!(public.get("label").is_none(), "{public}");
+    let bare = serde_json::to_value(RunDef::default()).unwrap();
+    assert!(bare.get("label").is_none(), "{bare}");
+}
+
+#[test]
 fn the_board_file_is_read_on_every_call_and_a_missing_file_falls_back() {
     let dir = tempfile::TempDir::new().unwrap();
     let fallback = Arc::new(MemoryDefs::new());

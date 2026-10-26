@@ -147,12 +147,11 @@ impl Fs for RealFs {
         let mut out = Vec::new();
         for entry in fs::read_dir(path)? {
             let entry = entry?;
-            let full = entry.path();
-            let stat = stat_of(&fs::symlink_metadata(&full)?);
+            let kind = entry.file_type()?;
             out.push(Entry {
                 name: entry.file_name().to_string_lossy().into_owned(),
-                is_dir: stat.is_dir,
-                is_link: stat.is_link,
+                is_dir: kind.is_dir(),
+                is_link: kind.is_symlink(),
             });
         }
         Ok(out)

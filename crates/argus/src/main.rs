@@ -105,6 +105,7 @@ async fn run_serve(port: u16, data_dir: Option<PathBuf>, shadow: bool) -> Result
     let mut opts = ServeOptions::new(paths_of(data_dir));
     opts.port = Some(port);
     opts.shadow = shadow;
+    opts.shadow_seed = shadow.then(|| Paths::from_env().home);
     opts.notify.system = true;
     let server = serve(opts).await.map_err(|e| e.to_string())?;
     println!(
