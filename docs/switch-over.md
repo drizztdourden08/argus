@@ -34,7 +34,7 @@ $cfg    = 'X:\ai-config'                          # the config repo
 These are gaps between this plan and the code at commit `c45f9da`. Items 1 to 3 must be closed
 before the cut. Items 1 and 3 are fixed.
 
-1. The port. Fixed in SHA. `argus serve`, `argus start`, the tray and the MCP bridge now use the
+1. The port. Fixed in 813fab3. `argus serve`, `argus start`, the tray and the MCP bridge now use the
    `port` of the home's `config.json` (47615 by default), with `--port` and `DASHBOARD_PORT`
    overriding as in Node. The `NODE_PORT` special case is gone. Safety before the cut stays with
    the node guard: `serve` refuses a home a live Node server uses, and every client verb
@@ -44,7 +44,7 @@ before the cut. Items 1 and 3 are fixed.
 2. The shim. Neither side has one. `X:\ai-config\dashboard\bin\dashboard.mjs` has no forward
    block and no engine key, and Argus has nothing to write. Step 4 needs the Overlord to land one
    (the design is in step 4, on the model of `shared/tools/coord/forward.mjs`).
-3. The backup. Fixed in SHA. The first `argus serve` of a home with no `argus.marker` file (and
+3. The backup. Fixed in 813fab3. The first `argus serve` of a home with no `argus.marker` file (and
    not a shadow) takes `dashboard.db.node-<UTC stamp>` with `VACUUM INTO` before anything
    writes, then writes the marker. Step 4 still copies by hand, which does no harm.
 4. The `exe` key. Argus writes `exe` into the config it loads, but `forward.mjs` reads
