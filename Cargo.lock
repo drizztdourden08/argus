@@ -72,8 +72,10 @@ name = "argus"
 version = "0.1.0"
 dependencies = [
  "argus-core",
+ "argus-native",
  "argus-server",
  "clap",
+ "serde_json",
  "tokio",
 ]
 

@@ -11,9 +11,11 @@ repository.workspace = true
 
 [dependencies]
 argus-core = { path = "../argus-core" }
+argus-native = { path = "../argus-native" }
 argus-server = { path = "../argus-server" }
 clap = { version = "4", features = ["derive"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
 
 [lints]
 workspace = true
