@@ -30,7 +30,7 @@ pub struct Options {
     pub tolerance_ms: i64,
     /// How long the doc streams are read; 0 skips them.
     pub stream_secs: u64,
-    /// Routes whose label contains one of these words are not compared.
+    /// Routes and stream snapshot frames whose label contains one of these words are not compared.
     pub skip: Vec<String>,
 }
 
@@ -134,6 +134,12 @@ async fn streams(opts: &Options, sides: (&Side, &Side), scope: &str) -> Vec<Rout
     merge_stream(opts, scope, &l, &r)
 }
 
+/// Splits the routes into the compared ones and the labels of those left out by `--skip`.
+fn drop_skipped(opts: &Options, routes: Vec<RouteResult>) -> (Vec<RouteResult>, Vec<String>) {
+    let (out, kept): (Vec<_>, Vec<_>) = routes.into_iter().partition(|r| skipped(opts, &r.label));
+    (kept, out.into_iter().map(|r| r.label).collect())
+}
+
 /// Compares the two servers.
 ///
 /// # Errors
@@ -164,9 +170,9 @@ pub async fn compare(opts: &Options) -> Result<Report, String> {
     }
     let first = scopes.first().map_or(PORTFOLIO, String::as_str);
     if opts.stream_secs > 0 && !skipped(opts, "STREAM") {
-        report
-            .routes
-            .extend(streams(opts, (&left, &right), first).await);
+        let (kept, left_out) = drop_skipped(opts, streams(opts, (&left, &right), first).await);
+        report.routes.extend(kept);
+        report.skipped.extend(left_out);
     }
     Ok(report)
 }
@@ -175,8 +181,10 @@ pub async fn compare(opts: &Options) -> Result<Report, String> {
 mod tests {
     use serde_json::json;
 
-    use super::{Options, scopes, skipped};
+    use super::{Options, drop_skipped, scopes, skipped};
     use crate::got::Got;
+    use crate::report::RouteResult;
+    use crate::verdict::Verdict;
 
     #[test]
     fn the_scopes_are_the_union_of_both_lists_and_the_portfolio() {
@@ -200,5 +208,26 @@ mod tests {
         o.skip.push("listeners".into());
         assert!(skipped(&o, "GET /api/p/x/wakes/listeners"));
         assert!(!skipped(&o, "GET /api/health"));
+    }
+
+    #[test]
+    fn skip_words_drop_the_matching_stream_snapshot_frames() {
+        let row = |frame: &str| RouteResult {
+            label: format!("STREAM /api/p/x/stream snapshot {frame}"),
+            verdict: Verdict::Equal,
+        };
+        let mut o = Options::new("a", "b");
+        o.skip = vec!["wakes".into(), "snapshot registry".into()];
+        let routes = ["wakes", "registry", "agents", "meta"].map(row).to_vec();
+        let (kept, out) = drop_skipped(&o, routes);
+        let kept: Vec<&str> = kept.iter().map(|r| r.label.as_str()).collect();
+        assert_eq!(
+            kept,
+            [
+                "STREAM /api/p/x/stream snapshot agents",
+                "STREAM /api/p/x/stream snapshot meta"
+            ]
+        );
+        assert_eq!(out.len(), 2);
     }
 }

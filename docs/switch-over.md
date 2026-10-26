@@ -130,7 +130,16 @@ The gate:
   `notifications` doc, `/api/activity` and the `activity` doc, `/api/procs` and the `procs`
   doc, `/api/agents/reconcile`, and the `agents` and `meta` docs where the parity rules do not
   already ignore the field. The parity rules already set aside seq numbers, timestamps within
-  2 s, the `live` numbers of agents and the lifecycle lines of the activity feed.
+  2 s, the whole `live` object of agents, the listener-derived fields of the `registry` doc
+  (`listening`, `listenerLabel`, `state`, `fault`, `since`, `deaf`, `boardOpen`, `boardSince`,
+  `boardRequired`) and the lifecycle lines of the activity feed.
+- The second shadow run found three more sources of noise. The `registry` doc and its stream
+  snapshot follow who listens to each server, which the rules above now set aside. The wakes
+  list differs when one side has pruned past its 50-row cap and the other has not, so the oldest
+  rows are absent on one side. The worktree scan can differ by timing when a scan lands between
+  the two reads. `--skip <word>` leaves out the matching routes and also the matching stream
+  snapshot frames (`--skip wakes` drops `snapshot wakes`), so a known noise source is dropped
+  from both parts of the report.
 - A difference on a noise route counts only when it is a row or field that exists on both sides
   and disagrees, and only when the row is older than the shadow's start. A row that is newer
   than the start, or absent on one side because of the seed, is noise. The lead writes the
@@ -439,6 +448,9 @@ Checks, in this order. Stop at the first failure and roll back if it is not a on
 
 One day later, `dashboard status` shows the same pid unless the owner stopped it, the log has
 no repeated warnings, and the notification record is filling.
+
+Finished agents lose their live counters at the cut, as at any Node restart: a fresh server only
+tracks agents that ended within `recentMs`. That is expected, not a regression.
 
 Rollback to Node. The database stays readable by Node because Argus adds no migration and the
 board files are never rewritten by Argus on its own. The order matters: the engine flips back

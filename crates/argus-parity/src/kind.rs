@@ -6,6 +6,12 @@
 //! own), integer versus float spelling of a number, and timestamps within the tolerance
 //! (`--tolerance-ms`, 2 s by default): two strings that both parse as a date and time, or two
 //! epoch numbers under a timestamp key (see `diff`).
+//!
+//! Set aside by kind, because they depend on who is asked and when: the `live` sub-object of an
+//! agent (a fresh server only tracks agents that ended within `recentMs`, so a finished agent
+//! loses it at any restart), and the listener-derived fields of a registry doc (`listening`,
+//! `listenerLabel`, `state`, `fault`, `since`, `deaf`, `boardOpen`, `boardSince`,
+//! `boardRequired`), which follow who listens to each server.
 
 use crate::rules::{RowDrop, Rules, Spec};
 
@@ -95,19 +101,30 @@ static DOC_META: Spec = Spec {
 };
 
 /// The watcher's `live` state of an agent counts what each server has read of the transcript so
-/// far, so two servers sampling at different moments cannot agree on it.
+/// far, and a fresh server only tracks agents that ended within `recentMs`, so an agent that has
+/// finished loses its `live` at any restart, Node included. The whole sub-object is set aside, so
+/// a `live` that exists on one side only is equal.
 static DOC_AGENTS: Spec = Spec {
+    ignore: &["seq", "docs.*.data.live"],
+    unordered: &[("docs", "id")],
+    drop_rows: &[],
+};
+
+/// The thread registry. The fields that say who listens to a server (the listener, its label, the
+/// state and fault derived from it, the board-open flags) belong to the process that is asked, so
+/// two servers with different listeners cannot agree on them.
+static DOC_REGISTRY: Spec = Spec {
     ignore: &[
         "seq",
-        "docs.*.data.live.turns",
-        "docs.*.data.live.toolCalls",
-        "docs.*.data.live.tokens",
-        "docs.*.data.live.activity",
-        "docs.*.data.live.activitySince",
-        "docs.*.data.live.lastActivityAt",
-        "docs.*.data.live.lastMessage",
-        "docs.*.data.live.lastTool",
-        "docs.*.data.live.stalled",
+        "docs.*.data.listening",
+        "docs.*.data.listenerLabel",
+        "docs.*.data.state",
+        "docs.*.data.fault",
+        "docs.*.data.since",
+        "docs.*.data.deaf",
+        "docs.*.data.boardOpen",
+        "docs.*.data.boardSince",
+        "docs.*.data.boardRequired",
     ],
     unordered: &[("docs", "id")],
     drop_rows: &[],
@@ -256,6 +273,7 @@ fn doc_spec(coll: &str) -> &'static Spec {
         "procs" => &DOC_PROCS,
         "meta" => &DOC_META,
         "agents" => &DOC_AGENTS,
+        "registry" => &DOC_REGISTRY,
         "activity" => &DOC_ACTIVITY,
         "notifications" => &DOC_NOTIFY,
         _ => &DOC,
@@ -320,17 +338,51 @@ mod tests {
     }
 
     #[test]
-    fn the_live_agent_numbers_are_never_compared_but_the_model_is() {
-        let before = json!({ "turns": 3, "toolCalls": 9, "tokens": { "input": 1 }, "activitySince": "2026-01-01T00:00:00Z", "lastMessage": "a", "modelUsed": "opus" });
-        let later = json!({ "turns": 5, "toolCalls": 12, "tokens": { "input": 4 }, "activitySince": "2026-01-01T00:09:00Z", "lastMessage": "b", "modelUsed": "opus" });
+    fn the_live_state_of_an_agent_is_never_compared_but_the_rest_is() {
+        let before = json!({ "turns": 3, "tokens": { "input": 1 }, "modelUsed": "opus" });
+        let later = json!({ "turns": 5, "tokens": { "input": 4 }, "modelUsed": "haiku" });
         let rules = Kind::Doc("agents").rules(0);
-        let same = judge(rules, &agents(&before), &agents(&later));
-        assert_eq!(same, Verdict::Equal);
-        let other = json!({ "turns": 3, "modelUsed": "haiku" });
-        let Verdict::Differs(c) = judge(rules, &agents(&before), &agents(&other)) else {
-            panic!("the model differs");
+        assert_eq!(
+            judge(rules, &agents(&before), &agents(&later)),
+            Verdict::Equal
+        );
+        let named =
+            |name: &str| Got::Doc(json!({ "docs": [{ "id": "A-1", "data": { "name": name } }] }));
+        let Verdict::Differs(c) = judge(rules, &named("x"), &named("y")) else {
+            panic!("the name differs");
         };
-        assert_eq!(c[0].path, "docs[A-1].data.live.modelUsed");
+        assert_eq!(c[0].path, "docs[A-1].data.name");
+    }
+
+    #[test]
+    fn a_live_that_exists_on_one_side_only_is_equal() {
+        let rules = Kind::Doc("agents").rules(0);
+        let gone = Got::Doc(json!({ "docs": [{ "id": "A-1", "data": { "name": "x" } }] }));
+        let live = json!({ "turns": 3, "modelUsed": "opus" });
+        assert_eq!(judge(rules, &agents(&live), &gone), Verdict::Equal);
+        assert_eq!(judge(rules, &gone, &agents(&live)), Verdict::Equal);
+    }
+
+    fn registry(listening: bool, state: &str, role: &str) -> Got {
+        Got::Doc(json!({ "docs": [{ "id": "web", "data": {
+            "role": role, "listening": listening, "listenerLabel": state, "state": state,
+            "fault": state, "since": state, "deaf": listening, "boardOpen": listening,
+            "boardSince": state, "boardRequired": listening,
+        } }] }))
+    }
+
+    #[test]
+    fn the_listener_fields_of_the_registry_are_never_compared_but_the_rest_is() {
+        let rules = Kind::Doc("registry").rules(0);
+        let (a, b) = (
+            registry(true, "live", "lead"),
+            registry(false, "gone", "lead"),
+        );
+        assert_eq!(judge(rules, &a, &b), Verdict::Equal);
+        let Verdict::Differs(c) = judge(rules, &a, &registry(true, "live", "ui")) else {
+            panic!("the role differs");
+        };
+        assert_eq!(c[0].path, "docs[web].data.role");
     }
 
     #[test]
