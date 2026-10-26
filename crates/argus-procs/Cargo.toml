@@ -1,6 +1,6 @@
 [package]
 name = "argus-procs"
-description = "Argus procs crate."
+description = "Argus process monitor: sampling, rules, status, alerts and kills."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,3 +11,14 @@ repository.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+fancy-regex = "0.20"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"
