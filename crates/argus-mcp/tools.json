@@ -1,0 +1,846 @@
+[
+  {
+    "name": "health",
+    "title": "Dashboard health",
+    "description": "Is the dashboard up: version, projects, watcher state, runs running and queued.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "portfolio_overview",
+    "title": "Argus overview",
+    "description": "One card per project: threads, open questions, tests, runs. Start here to learn the project keys.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "board_summary",
+    "title": "Board summary",
+    "description": "A project board in one call: threads with notes, items with AC progress, open questions, pending decisions, tests, locks, runs running and queued, the handed build.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_threads",
+    "title": "List threads",
+    "description": "The threads of a project board (hidden ones, archived or paused, only with includeHidden).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "includeHidden": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_items",
+    "title": "List items",
+    "description": "Work items of a project, in short form (id, status, thread, subject, title, AC done/total). Use get_item for one in full.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "todo",
+            "doing",
+            "review",
+            "done",
+            "dropped"
+          ]
+        },
+        "thread": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "includeArchived": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Most rows to return (default 50, max 500)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "get_item",
+    "title": "Get an item",
+    "description": "One item in full with its tests, entries (questions, decisions) and manual actions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^I-\\d+$",
+          "description": "Item id, e.g. I-12."
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_tests",
+    "title": "List tests",
+    "description": "Tests of a project in short form. status is pending (not run), pass, fail, partial, blocked or moved.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "item": {
+          "type": "string",
+          "pattern": "^I-\\d+$",
+          "description": "Item id, e.g. I-12."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "pass",
+            "fail",
+            "partial",
+            "blocked",
+            "moved"
+          ]
+        },
+        "build": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Most rows to return (default 50, max 500)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "get_test",
+    "title": "Get a test",
+    "description": "One test in full: steps, what proves pass and fail, results, and proof images as absolute urls.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^T-\\d+$",
+          "description": "Test id, e.g. T-4."
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_agents",
+    "title": "List agents",
+    "description": "Sub-agents registered on the board, each with the dashboard runs it started.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "thread": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_entries",
+    "title": "List entries",
+    "description": "Questions, decisions, notices and messages on the board (the owner page edits are left out). Each carries its context (what it is about, why it needs the owner) and, for a decision, its options with the recommended one first. open=true keeps those waiting for an answer.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "kind": {
+          "type": "string"
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Most rows to return (default 50, max 500)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "search",
+    "title": "Search the boards",
+    "description": "Text search over items, tests, entries, threads, actions, agents and log lines. Omit project to search every project.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "project": {
+          "type": "string",
+          "description": "A project key, or \"all\". Defaults to the default project, else every project."
+        },
+        "collections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "items",
+              "tests",
+              "entries",
+              "threads",
+              "actions",
+              "agents",
+              "log"
+            ]
+          },
+          "maxItems": 7
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Most rows to return (default 50, max 500)."
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "run_status",
+    "title": "Run status",
+    "description": "The launches a lead defined and the runs started from them. With run: that one run. Otherwise the defs plus recent runs (filter by name or status).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "run": {
+          "type": "string",
+          "pattern": "^R-\\d+$",
+          "description": "Run id, e.g. R-3."
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "running",
+            "exited",
+            "failed",
+            "stopped"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Most rows to return (default 50, max 500)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_launchers",
+    "title": "List launchers",
+    "description": "What the owner can start from the Builds tab (coord launcher set): each launcher, master first, then the current ones, with its command, folder, kind, branch, commit and note, its Play run name (start it with run_start) and the bundles that link it. Retired ones only with includeRetired.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "includeRetired": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "run_logs",
+    "title": "Run logs",
+    "description": "Output of a run. Without after, the last tail lines (default 200). Pass after=<next> from the previous call to follow it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "run": {
+          "type": "string",
+          "pattern": "^R-\\d+$",
+          "description": "Run id, e.g. R-3."
+        },
+        "after": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tail": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        },
+        "stream": {
+          "type": "string",
+          "enum": [
+            "out",
+            "err",
+            "all"
+          ]
+        }
+      },
+      "required": [
+        "run"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "post_entry",
+    "title": "Post an entry as the owner",
+    "description": "Post to a board as the owner: a follow-up, a decision, an acknowledgement, a done tick for a manual action, or pause/resume of a thread (replyTo = the thread). Applied at once; the result says applied, conflict or refused.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "followup",
+            "decision",
+            "ack",
+            "done",
+            "pause",
+            "resume"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "replyTo": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "item": {
+          "type": "string",
+          "pattern": "^I-\\d+$",
+          "description": "Item id, e.g. I-12."
+        },
+        "thread": {
+          "type": "string",
+          "maxLength": 60
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "answer",
+    "title": "Answer an entry as the owner",
+    "description": "Answer a question or message on the board. decision=true makes the answer a decision the thread must pick up.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{1,3}-[A-Za-z0-9-]{1,40}$",
+          "description": "Entry id, e.g. Q-7 or D-2."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "decision": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "entry",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "decision",
+    "title": "Record a decision as the owner",
+    "description": "Post a standalone owner decision to the lead of the project, optionally tied to an item or thread.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "item": {
+          "type": "string",
+          "pattern": "^I-\\d+$",
+          "description": "Item id, e.g. I-12."
+        },
+        "thread": {
+          "type": "string",
+          "maxLength": 60
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "record_test_result",
+    "title": "Record a test result as the owner",
+    "description": "Record the owner's result on a test: pass, fail, partial or blocked. A note (text) is required for fail, partial and blocked: say what you saw.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "test": {
+          "type": "string",
+          "pattern": "^T-\\d+$",
+          "description": "Test id, e.g. T-4."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "partial",
+            "blocked"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 300
+        }
+      },
+      "required": [
+        "test",
+        "outcome"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "run_start",
+    "title": "Start a defined run",
+    "description": "Start a launch a lead defined with `coord run define` (by name only; always hidden). If the definition is already at its parallel limit the live run comes back with already=true.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "agent": {
+          "type": "string",
+          "pattern": "^A-\\d+$"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "run_stop",
+    "title": "Stop a run",
+    "description": "Stop a queued or running run (its whole process tree).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "run": {
+          "type": "string",
+          "pattern": "^R-\\d+$",
+          "description": "Run id, e.g. R-3."
+        }
+      },
+      "required": [
+        "run"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "attach_proof",
+    "title": "Attach a picture",
+    "description": "Attach an image (png, jpeg, gif, webp) to a test as proof, or to a run. Give exactly one of path (inside a project root, the coord home or the temp folder) or base64, and exactly one of test or run.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        },
+        "test": {
+          "type": "string",
+          "pattern": "^T-\\d+$",
+          "description": "Test id, e.g. T-4."
+        },
+        "run": {
+          "type": "string",
+          "pattern": "^R-\\d+$",
+          "description": "Run id, e.g. R-3."
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "base64": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/gif",
+            "image/webp"
+          ]
+        }
+      },
+      "required": [
+        "caption"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "send_to_lead",
+    "title": "Send a note to a project lead",
+    "description": "From the Overlord level: send a note (or a decision) down to the lead of one project, or \"all\". Delivered at once, or when the project gets a board.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "A project key, or \"all\"."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "decision": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "notify_owner",
+    "title": "Ping the owner",
+    "description": "Send the owner a notification: an OS toast on his screen and a line in Argus > Notifications (the last 50). Ping only when he is needed: a build ready to test, a decision only he can make, something broken that only he can fix; never for progress or a done with nothing to look at. level ping (default) shows a toast, info only records it, urgent stays on screen until dismissed (only when he must act now). More than 3 toasts a minute from one caller are recorded without a toast. Unlike the tools above it does not act as the owner: it speaks to him.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "info",
+            "ping",
+            "urgent"
+          ]
+        },
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  }
+]

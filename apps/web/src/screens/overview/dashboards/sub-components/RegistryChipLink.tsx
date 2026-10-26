@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Link, Status, Tooltip } from '@drizztdourden08/tessera';
+import { DateText, Link, Status, Tooltip } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { useNow } from '../../clock';
 import { useProjectName } from '../../projects';
@@ -12,11 +12,15 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
   const nameOf = useProjectName();
   const now = useNow();
   const chip = registryChip(row, nameOf, now);
-  const words = [chip.name, chip.label, chip.extra].filter(Boolean).join(', ');
   return (
     <Tooltip content={chip.tip}>
       <Link href={`/p/${encodeURIComponent(row.project)}/#agents`} navigate={navigate} aria-label={chip.tip}>
-        <Status tone={chip.tone} pulse={chip.pulse} dot>{words}</Status>
+        <Status tone={chip.tone} pulse={chip.pulse} dot>
+          {chip.name}
+          {chip.label ? `, ${chip.label}` : ''}
+          {chip.since ? <> <DateText value={chip.since} format="relative" /></> : null}
+          {chip.extra ? `, ${chip.extra}` : ''}
+        </Status>
       </Link>
     </Tooltip>
   );

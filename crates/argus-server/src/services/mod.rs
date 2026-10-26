@@ -13,8 +13,8 @@ use std::time::Duration;
 use argus_agents::{AgentReaper, AgentReconciler, AgentWatcher};
 use argus_core::log::Logger;
 use argus_core::{Bus, Config, Paths, Subscription};
+use argus_launchers::RunService;
 use argus_launchers::launcher::LauncherStale;
-use argus_launchers::{RunService, SystemHost};
 use argus_native::{Notifier, TrayFiles};
 use argus_notify::Notify;
 use argus_procs::ProcsService;
@@ -24,10 +24,12 @@ use argus_wake::service::WakeService;
 use argus_worktrees::Service as WorktreeService;
 use tokio_util::sync::CancellationToken;
 
+use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
 use crate::security::LoginCodes;
-use crate::sse::Fanout;
+use crate::sse::{Fanout, RunLogs};
 use crate::web::WebAssets;
+use tasks::Tasks;
 
 pub(crate) mod activity;
 pub(crate) mod agents;
@@ -37,10 +39,18 @@ pub(crate) mod procs;
 pub(crate) mod runs;
 pub(crate) mod stale;
 pub(crate) mod sync;
+pub(crate) mod tasks;
 pub(crate) mod wake;
+pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
+pub use agents::AgentsOptions;
+pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
+pub use runs::RunsOptions;
+pub use wake::WakeOptions;
+pub use wake_hook::{WakeHook, WakeRequest};
+pub use worktrees::WorktreesOptions;
 
 /// The composed services.
 pub struct Services {
@@ -65,7 +75,7 @@ pub struct Services {
     /// The per-scope mutation queues.
     pub queue: ScopeQueue,
     /// The run service, when on.
-    pub runs: Option<Arc<RunService<SystemHost>>>,
+    pub runs: Option<Arc<RunService<RunHost>>>,
     /// The launcher wakes (no master launcher, a launcher unused past its window), when on.
     pub launcher_stale: Option<Arc<LauncherStale>>,
     /// The wake engine and its registry, when on. Its calls take `&mut self`, so it lives in a
@@ -97,12 +107,15 @@ pub struct Services {
     pub web: WebAssets,
     /// The doc stream hub.
     pub fanout: Arc<Fanout>,
+    /// The live tail of run logs.
+    pub run_logs: Arc<RunLogs>,
     /// Open SSE streams.
     pub streams: Arc<AtomicUsize>,
     /// One-time login codes.
     pub codes: LoginCodes,
     /// Rings when the server should stop.
     pub stop: CancellationToken,
+    pub(crate) tasks: Tasks,
     pub(crate) port: AtomicU16,
     pub(crate) links: Mutex<Vec<Subscription>>,
 }

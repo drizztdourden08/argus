@@ -49,6 +49,18 @@ describe('the Notifications tab record', () => {
     expect(await screen.findByText('FYI')).toBeTruthy();
   });
 
+  it('filters by project with a chip per project and its count, and the all chip clears it', async () => {
+    stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
+    await open();
+    await screen.findByText('RotP: build ready');
+    expect(screen.getByRole('radio', { name: 'All projects 2' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('radio', { name: 'RotP 1' }));
+    await waitFor(() => expect(screen.queryByText('FYI')).toBeNull());
+    expect(screen.getByText('RotP: build ready')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'RotP 1' }));
+    expect(await screen.findByText('FYI')).toBeTruthy();
+  });
+
   it('says nothing matches when a level has no entries', async () => {
     stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
     await open();

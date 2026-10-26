@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { DateText, ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
-import { orText } from '../../format';
+import { orText } from '../../../../format';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
 import { LEVEL_LOOK, noteLevel, noteProject, toastNote } from '../model';

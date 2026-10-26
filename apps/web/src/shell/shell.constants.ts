@@ -4,4 +4,7 @@ const NOTICES = {
   unauthorized: { tone: 'danger', text: 'The dashboard asks you to sign in again.' },
 } as const;
 
-export { NOTICES };
+const WAKING_LOOK = { variant: 'urgency', color: 'info' } as const;
+const FAULT_LOOK = { variant: 'urgency', color: 'danger' } as const;
+
+export { FAULT_LOOK, NOTICES, WAKING_LOOK };

@@ -43,12 +43,15 @@ interface RegistryChip {
   pulse: boolean;
   tip: string;
   extra: string;
+  since: string | null;
 }
 
-type ChipLook = Pick<RegistryChip, 'label' | 'tone' | 'pulse' | 'tip'>;
+type ChipLook = Pick<RegistryChip, 'label' | 'tone' | 'pulse' | 'tip'> & { since?: string | null };
 
 interface MasterLine {
-  text: string;
+  head: string;
+  at: string | null;
+  tail: string;
   tone: 'muted' | 'danger' | 'success';
   running: boolean;
 }

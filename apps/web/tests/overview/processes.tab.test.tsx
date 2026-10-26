@@ -152,3 +152,29 @@ describe('killing a protected process and the stale ones of a rule', () => {
     expect(screen.getAllByRole('button', { name: /Kill stale/ })).toHaveLength(1);
   });
 });
+
+describe('the cells of the process table', () => {
+  const sample = (status: string) => ({ ...PROCS['4812-1'], status, flags: [] });
+
+  it('writes memory as Node does (1.9 GB), CPU with its unit, the age and idle time in hours and minutes, and the pid beside the name', async () => {
+    stubApi();
+    await open();
+    const grid = await screen.findByRole('grid');
+    expect(within(grid).getAllByText('1.9 GB').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('12 %').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('3h 10m').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('4812').length).toBeGreaterThan(0);
+  });
+
+  it('tones each status like the Node page: warning for hog, stale and old, danger for orphan and hung, calm for an unknown one', async () => {
+    stubApi();
+    await open({ cards: CARDS, procs: { a: sample('hog'), b: { ...sample('old'), pid: 2 }, c: { ...sample('orphan'), pid: 3 }, d: { ...sample('hung'), pid: 4 }, e: { ...sample('exotic'), pid: 5 } }, meta: PROCS_META });
+    const grid = await screen.findByRole('grid');
+    const tag = (title: string): string => within(grid).getByTitle(title).className;
+    expect(tag('Uses more memory than its rule allows.')).toContain('tag--warning');
+    expect(tag('Running for longer than its rule allows.')).toContain('tag--warning');
+    expect(tag('Its parent process is gone.')).toContain('tag--danger');
+    expect(tag('Not responding.')).toContain('tag--danger');
+    expect(tag('exotic')).toContain('tag--neutral');
+  });
+});

@@ -1,7 +1,7 @@
 //! In-memory and temp-folder stand-ins for the ports, for the tests of this crate and of the
 //! server that wires it. None of them touches anything outside the folder it is given.
 
-use crate::board::Board;
+use crate::board::{Board, put_back, records};
 use crate::error::AgentsError;
 use crate::iso::format_iso;
 use crate::ports::{ActivityLine, ActivitySink, BoardStore, LiveDocs, WakeEvent, WakeSink};
@@ -103,28 +103,6 @@ pub struct JsonBoards {
     mirrors: Mutex<HashMap<String, Board>>,
 }
 
-fn collection(root: &Value, name: &str) -> Vec<Record> {
-    let docs = root.get(name).and_then(Value::as_object);
-    docs.map(|m| m.values().filter_map(|v| v.as_object().cloned()).collect())
-        .unwrap_or_default()
-}
-
-fn put_back(root: &mut Value, name: &str, docs: &[Record]) {
-    let Some(map) = root.as_object_mut() else {
-        return;
-    };
-    let entry = map
-        .entry(name.to_owned())
-        .or_insert_with(|| Value::Object(Map::new()));
-    let Some(target) = entry.as_object_mut() else {
-        return;
-    };
-    for doc in docs {
-        let id = doc.get("id").and_then(Value::as_str).unwrap_or("");
-        target.insert(id.to_owned(), Value::Object(doc.clone()));
-    }
-}
-
 impl JsonBoards {
     /// Boards under `home` for these project keys.
     #[must_use]
@@ -172,8 +150,8 @@ impl JsonBoards {
         let text = fs::read_to_string(self.path(project)).ok()?;
         let root: Value = serde_json::from_str(&text).ok()?;
         let board = Board {
-            agents: collection(&root, "agents"),
-            threads: collection(&root, "threads"),
+            agents: records(&root, "agents"),
+            threads: records(&root, "threads"),
         };
         Some((root, board))
     }

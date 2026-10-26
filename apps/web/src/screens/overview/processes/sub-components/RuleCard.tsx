@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, Inline, Tag } from '@drizztdourden08/tessera';
-import { asNumber, formatMemory } from '../../format';
+import { asNumber, formatMemory } from '../../../../format';
 import { groupCap, isOverCap, ruleTip } from '../model';
 import { CALM_LOOK, OVER_LOOK } from '../processes.constants';
 import type { RuleCardProps } from '../processes.type';

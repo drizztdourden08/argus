@@ -15,6 +15,7 @@ use argus_store::Db;
 use serde::Serialize;
 use serde_json::{Value, json};
 
+use crate::hooks::Hooks;
 use crate::posts::{PostResult, Source};
 use crate::proofs::{Proof, ProofSource};
 use crate::state::State;
@@ -118,6 +119,17 @@ impl SyncService {
             Some(watcher::start(&self.state));
     }
 
+    /// Calls `listener` with the key each time the board of a project was exported, whether or
+    /// not its docs changed. The listener runs on the exporting thread, so it returns quickly
+    /// and hands slow work to another thread.
+    pub fn on_board(&self, listener: impl Fn(&str) + Send + Sync + 'static) {
+        self.state
+            .listeners
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(Arc::new(listener));
+    }
+
     /// Stops the watcher and every pending export.
     pub fn stop(&self) {
         self.state.stopped.store(true, Ordering::SeqCst);
@@ -170,6 +182,12 @@ impl SyncService {
                 }
             })
             .collect()
+    }
+
+    /// The hooks other services hang on this one.
+    #[must_use]
+    pub fn hooks(&self) -> &Hooks {
+        &self.state.hooks
     }
 
     /// The last good board of a key.

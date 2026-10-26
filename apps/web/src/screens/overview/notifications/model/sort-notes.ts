@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { asNumber, toMillis } from '../../format';
+import { asNumber, toMillis } from '../../../../format';
 import type { NoteItem } from './model.type';
 
 const newestFirst = (a: NoteItem, b: NoteItem): number =>

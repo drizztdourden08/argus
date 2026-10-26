@@ -47,6 +47,7 @@ impl Inner {
             if self.chunks.len() < at + 4 + size {
                 return;
             }
+            self.ended |= size == 0;
             let text =
                 String::from_utf8_lossy(&dechunk(&self.chunks[..at + 4 + size])).into_owned();
             self.chunks.drain(..at + 4 + size);

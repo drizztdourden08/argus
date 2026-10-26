@@ -24,6 +24,7 @@ use axum::response::Response;
 use serde::Serialize;
 use serde_json::{Value, json, to_value};
 
+use super::blocking::blocking;
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::{AuthKind, Ctx, RouteOpts, Router};
@@ -51,14 +52,6 @@ fn refusal(e: &ProcsError) -> ApiError {
         ProcsCode::Internal => ErrorCode::Internal,
     };
     ApiError::new(code, e.message())
-}
-
-async fn blocking<T: Send + 'static>(
-    f: impl FnOnce() -> T + Send + 'static,
-) -> Result<T, ApiError> {
-    tokio::task::spawn_blocking(f)
-        .await
-        .map_err(|_| ApiError::internal())
 }
 
 fn answer(body: &impl Serialize) -> Response {

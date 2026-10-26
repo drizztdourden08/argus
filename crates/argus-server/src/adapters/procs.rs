@@ -13,6 +13,7 @@ use serde_json::{Value, to_value};
 
 use super::activity::ActivityAdapter;
 use crate::boards::BoardReader;
+use crate::services::{WakeHook, WakeRequest as Wake};
 
 const KIND: &str = "procs";
 
@@ -55,12 +56,12 @@ impl ProcsStore for ProcsDocs {
 }
 
 #[cfg(windows)]
-fn alive(pid: u32) -> bool {
+pub(crate) fn alive(pid: u32) -> bool {
     argus_native::process_alive(pid)
 }
 
 #[cfg(not(windows))]
-fn alive(pid: u32) -> bool {
+pub(crate) fn alive(pid: u32) -> bool {
     std::path::Path::new(&format!("/proc/{pid}")).exists()
 }
 
@@ -70,22 +71,26 @@ pub struct ProcsHostAdapter {
     config: Arc<RwLock<Config>>,
     tray: TrayFiles,
     activity: ActivityAdapter,
+    wake: WakeHook,
 }
 
 impl ProcsHostAdapter {
-    /// A host over the boards, the config, the tray's files and the activity log.
+    /// A host over the boards, the config, the tray's files, the activity log and the wake
+    /// service.
     #[must_use]
     pub fn new(
         boards: BoardReader,
         config: Arc<RwLock<Config>>,
         tray: TrayFiles,
         activity: ActivityAdapter,
+        wake: WakeHook,
     ) -> Self {
         ProcsHostAdapter {
             boards,
             config,
             tray,
             activity,
+            wake,
         }
     }
 }
@@ -113,8 +118,15 @@ impl ProcsHost for ProcsHostAdapter {
         self.boards.coordinator(MAIN_KEY)
     }
 
-    fn submit_wake(&self, _wake: &WakeRequest) -> Result<(), String> {
-        Ok(())
+    fn submit_wake(&self, wake: &WakeRequest) -> Result<(), String> {
+        let request = Wake::about(
+            &wake.scope,
+            &wake.thread,
+            &wake.reason,
+            &wake.subject,
+            &wake.text,
+        );
+        self.wake.submit(&[request])
     }
 
     fn activity(&self, entry: &Activity) {

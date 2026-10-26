@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { ProcsMeta, RuleGroup } from '../../../../data/types';
-import { asNumber } from '../../format';
+import { asNumber } from '../../../../format';
 import type { ProcItem } from './model.type';
 
 const groupsFromRows = (procs: readonly ProcItem[]): RuleGroup[] => {

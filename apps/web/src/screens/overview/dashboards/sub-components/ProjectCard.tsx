@@ -25,7 +25,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <CardHeadline card={card} now={now} />
         {started ? <CardCounters card={card} /> : null}
         {started ? <CardFlags card={card} /> : null}
-        {started ? <MasterRow card={card} now={now} /> : null}
+        {started ? <MasterRow card={card} /> : null}
         <Inline gap="sm" align="center">
           {started ? <Link href={card.url} navigate={navigate}>Open board</Link> : null}
           {started ? <Button size="xs" onClick={() => onSend(card.key)} title={`Send a decision or a note to ${card.name}`}>Send down</Button> : null}

@@ -18,6 +18,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 use crate::failure::board_error;
+use crate::hooks::AppliedPost;
 use crate::state::{State, clear_marks};
 use crate::validate::{RESULT_NOTE_REQUIRED, result_note_missing, validate_entry};
 
@@ -202,6 +203,7 @@ impl State {
     ) -> Result<PostResult, ApiError> {
         let id = entry["id"].as_str().unwrap_or_default().to_owned();
         let home = self.coord_home().to_path_buf();
+        let before = self.board(scope);
         let known = |other: &str| other != id && self.get_post(other).is_some();
         let saved = with_board_async(self.coord_home(), scope, LockWait::default(), |board| {
             import_entries_at(&home, board, vec![entry], &known);
@@ -214,9 +216,16 @@ impl State {
             Err(e) => return Err(self.post_failed(&id, e)),
         };
         let stored = saved["entries"].get(&id).cloned();
-        let out = self.export_board(scope, saved)?;
+        let out = self.export_board(scope, saved.clone())?;
         let result = result_of(&id, stored.as_ref(), out.seq);
         self.finish_post(&id, &result.status, result.outcome.as_deref());
+        self.hooks.applied(&AppliedPost {
+            scope: scope.to_owned(),
+            entry: stored,
+            status: result.status.clone(),
+            board: Some(saved),
+            before,
+        });
         Ok(result)
     }
 
@@ -239,6 +248,13 @@ impl State {
             }
         };
         self.finish_post(&id, &status, None);
+        self.hooks.applied(&AppliedPost {
+            scope: PORTFOLIO.to_owned(),
+            entry: stored.clone(),
+            status: status.clone(),
+            board: None,
+            before: None,
+        });
         Ok(PostResult {
             id,
             status,

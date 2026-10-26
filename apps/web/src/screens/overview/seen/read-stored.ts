@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../format';
+import { toMillis } from '../../../format';
 
 const readStored = (key: string): number => {
   try {

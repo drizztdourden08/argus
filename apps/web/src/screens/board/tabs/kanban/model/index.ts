@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind barrel */
-export { ago } from './ago';
 export { buildView } from './build-view';
 export { bulkMoves } from './bulk-moves';
 export { bulkSofts } from './bulk-softs';

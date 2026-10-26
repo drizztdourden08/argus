@@ -11,6 +11,7 @@ pub mod adapters;
 pub mod boards;
 mod body;
 mod ctx;
+pub mod endpoint;
 mod gate;
 pub mod instance;
 mod pathing;
@@ -27,5 +28,8 @@ pub use ctx::{AuthKind, Ctx};
 pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
-pub use services::{ProcsOptions, Services};
+pub use services::{
+    AgentsOptions, NotifyOptions, ProcsOptions, RunsOptions, Services, WakeHook, WakeOptions,
+    WakeRequest, WorktreesOptions,
+};
 pub use web::{PageVars, WebAssets, render_page};

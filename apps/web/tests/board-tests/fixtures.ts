@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind test */
+import { exitedRun, launchDef } from '../helpers/launch-docs';
 const NOW = '2026-10-26T10:00:00.000Z';
 const EARLIER = '2026-10-26T09:00:00.000Z';
 
@@ -60,27 +61,9 @@ const launcherDoc = (name: string, extra: object = {}) => ({
   ...extra,
 });
 
-const defDoc = (launcher: string, extra: object = {}) => ({
-  name: `launcher-${launcher}`,
-  launcher,
-  cmd: `rotp launch ${launcher}`,
-  hand: true,
-  window: false,
-  ...extra,
-});
+const defDoc = (launcher: string, extra: object = {}) => launchDef(launcher, `rotp launch ${launcher}`, extra);
 
-const runDoc = (id: string, name: string, extra: object = {}) => ({
-  id,
-  name,
-  status: 'exited',
-  exitCode: 0,
-  queuedAt: EARLIER,
-  startedAt: EARLIER,
-  endedAt: NOW,
-  error: null,
-  lastLine: null,
-  ...extra,
-});
+const runDoc = (id: string, name: string, extra: object = {}) => exitedRun(id, name, { queuedAt: EARLIER, startedAt: EARLIER, endedAt: NOW }, extra);
 
 const itemDoc = (id: string, extra: object = {}) => ({
   id,

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { formatAgo } from '../../format';
+import { formatAgo } from '../../../../format';
 import type { RegistryFault } from '../../../../data/types';
 
 const registryTip = (fault: RegistryFault, main: boolean, now: number): string => {
