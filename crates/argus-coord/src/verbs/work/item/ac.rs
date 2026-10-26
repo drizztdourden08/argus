@@ -4,12 +4,11 @@
 
 use argus_board::json::doc;
 use argus_board::limits::require_text;
-use argus_board::ops::{Check, authorize};
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
 use crate::cli::Outcome;
-use crate::verbs::work::crud::{apply, assert_live, find_doc, op, who_of};
+use crate::verbs::work::crud::{apply, checked, op};
 use crate::verbs::work::run::{Res, Run, bad};
 
 /// What one `ac` verb asks for, its numbers checked.
@@ -55,7 +54,7 @@ fn ac_range(spec: Option<&str>) -> Res<(f64, f64)> {
 }
 
 fn line(spec: Option<&String>) -> Res<String> {
-    Ok(require_text("ac", &spec.map_or(Value::Null, |s| json!(s)))?)
+    require_text("ac", &spec.map_or(Value::Null, |s| json!(s)))
 }
 
 impl Edit {
@@ -94,7 +93,7 @@ impl Edit {
             Edit::Done(n, true) => format!("{id} AC{n}: reopened"),
             Edit::Done(n, false) => format!("{id} AC{n}: done"),
             Edit::Rm(n, m) => {
-                let span = if n == m {
+                let span = if (n - m).abs() < f64::EPSILON {
                     format!("AC{n}")
                 } else {
                     format!("AC{n}-{m}")
@@ -123,9 +122,7 @@ fn run(r: &mut Run<'_>, id: Option<String>, sub: &str, args: &[String]) -> Outco
     let edit = Edit::parse(sub, args, r.options.flag("undo"))?;
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let item = find_doc(board, "items", id.as_deref())?;
-        assert_live(&item, "items")?;
-        authorize(&who_of(&who), &Check::new("ac", "items", Some(&item)))?;
+        checked(board, &who, ("items", "ac"), id.as_deref())?;
         let key = id.unwrap_or_default();
         let len = count(board, &key);
         if let Edit::Rm(n, m) = edit {
@@ -136,7 +133,11 @@ fn run(r: &mut Run<'_>, id: Option<String>, sub: &str, args: &[String]) -> Outco
                 )));
             }
         }
-        apply(board, &who, &op(("ac", "items", &key), edit.fields(), r.options)?)?;
+        apply(
+            board,
+            &who,
+            &op(("ac", "items", &key), edit.fields(), r.options)?,
+        )?;
         r.say(&[&edit.said(&key, count(board, &key))]);
         Ok(())
     })
@@ -152,18 +153,28 @@ pub(super) fn ac(r: &mut Run<'_>) -> Outcome {
     let known = word(1).filter(|s| ["add", "set", "done", "rm", "move"].contains(&s.as_str()));
     match known {
         Some(sub) => run(r, word(0), &sub, words.get(2..).unwrap_or_default()),
-        None => run(r, word(0), "add", &words.get(1..2).unwrap_or_default().to_vec()),
+        None => run(r, word(0), "add", words.get(1..2).unwrap_or_default()),
     }
 }
 
 /// `coord item ac-done <I> <n>`.
 pub(super) fn ac_done(r: &mut Run<'_>) -> Outcome {
     let words = r.args.clone();
-    run(r, words.first().cloned(), "done", words.get(1..2).unwrap_or_default())
+    run(
+        r,
+        words.first().cloned(),
+        "done",
+        words.get(1..2).unwrap_or_default(),
+    )
 }
 
 /// `coord item ac-rm <I> <n>`.
 pub(super) fn ac_rm(r: &mut Run<'_>) -> Outcome {
     let words = r.args.clone();
-    run(r, words.first().cloned(), "rm", words.get(1..2).unwrap_or_default())
+    run(
+        r,
+        words.first().cloned(),
+        "rm",
+        words.get(1..2).unwrap_or_default(),
+    )
 }

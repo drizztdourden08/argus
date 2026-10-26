@@ -2,12 +2,11 @@
 //! stamp.
 
 use argus_board::json::{display, doc, map_mut};
-use argus_board::ops::{Check, authorize};
 use argus_board::store::stamp;
 use serde_json::Value;
 
 use crate::cli::Outcome;
-use crate::verbs::work::crud::{assert_live, find_doc, who_of};
+use crate::verbs::work::crud::checked;
 use crate::verbs::work::run::{Res, Run};
 
 /// Runs `mutate` on the test named by the first word and its item, when the caller may change
@@ -18,9 +17,7 @@ pub(super) fn edit(
 ) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let mut test = find_doc(board, "tests", r.arg(0))?;
-        assert_live(&test, "tests")?;
-        authorize(&who_of(&who), &Check::new("set", "tests", Some(&test)))?;
+        let mut test = checked(board, &who, ("tests", "set"), r.arg(0))?;
         let id = display(&test["id"]);
         let item = doc(board, "items", &display(&test["item"]))
             .cloned()

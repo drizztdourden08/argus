@@ -10,9 +10,9 @@ use serde_json::{Map, Value, json};
 
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{
-    apply, assert_live, find_doc, move_op, op, rev_of, thread_arg, who_of,
+    apply, assert_live, checked, find_doc, find_live, move_doc, move_target, op, rev_of, who_of,
 };
-use crate::verbs::work::place::{has_placement, rank_to};
+use crate::verbs::work::place::has_placement;
 use crate::verbs::work::run::{Run, bad};
 
 /// `coord action set`.
@@ -29,17 +29,24 @@ pub(super) fn set(r: &mut Run<'_>) -> Outcome {
     }
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let action = find_doc(board, "actions", r.arg(0))?;
-        assert_live(&action, "actions")?;
+        let action = find_live(board, "actions", r.arg(0))?;
         let id = display(&action["id"]);
-        if let Some(item) = fields.get("item").and_then(Value::as_str).filter(|i| !i.is_empty()) {
+        if let Some(item) = fields
+            .get("item")
+            .and_then(Value::as_str)
+            .filter(|i| !i.is_empty())
+        {
             assert_live(&find_doc(board, "items", Some(item))?, "items")?;
         }
         authorize(&who_of(&who), &Check::new("set", "actions", Some(&action)))?;
         let names: Vec<&str> = fields.keys().map(String::as_str).collect();
         let rest = Map::from_iter([("set".to_owned(), Value::Object(fields.clone()))]);
         apply(board, &who, &op(("edit", "actions", &id), rest, r.options)?)?;
-        let line = format!("{id}: {} updated (rev {}).", names.join(", "), rev_of(board, "actions", &id));
+        let line = format!(
+            "{id}: {} updated (rev {}).",
+            names.join(", "),
+            rev_of(board, "actions", &id)
+        );
         r.say(&[&line]);
         Ok(())
     })
@@ -50,15 +57,21 @@ pub(super) fn done(r: &mut Run<'_>) -> Outcome {
     let undo = r.options.flag("undo");
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let action = find_doc(board, "actions", r.arg(0))?;
-        assert_live(&action, "actions")?;
-        authorize(&who_of(&who), &Check::new("done", "actions", Some(&action)))?;
+        let action = checked(board, &who, ("actions", "done"), r.arg(0))?;
         let id = display(&action["id"]);
         if let Some(found) = doc_mut(board, "actions", &id) {
-            let done_at = if undo || !found["doneAt"].is_null() { found["doneAt"].clone() } else { json!(now_iso()) };
+            let done_at = if undo || !found["doneAt"].is_null() {
+                found["doneAt"].clone()
+            } else {
+                json!(now_iso())
+            };
             put(found, "status", if undo { "pending" } else { "done" });
             put(found, "doneAt", if undo { Value::Null } else { done_at });
-            put(found, "ackedAt", if undo { Value::Null } else { json!(now_iso()) });
+            put(
+                found,
+                "ackedAt",
+                if undo { Value::Null } else { json!(now_iso()) },
+            );
         }
         stamp(board, "actions", &id, &who.actor)?;
         refresh_needs_human(board, action["thread"].as_str().unwrap_or_default());
@@ -70,32 +83,23 @@ pub(super) fn done(r: &mut Run<'_>) -> Outcome {
 
 /// `coord action move`.
 pub(super) fn move_to(r: &mut Run<'_>) -> Outcome {
-    let mut to = Map::new();
-    if let Some(thread) = r.text_opt("to") {
-        to.insert("thread".into(), json!(thread));
-    }
+    let to = move_target(r.options);
     if to.is_empty() && !has_placement(r.options) {
-        return Err(bad("say where: --to <thread>, --before|--after <action>, --top or --bottom.").into());
+        return Err(
+            bad("say where: --to <thread>, --before|--after <action>, --top or --bottom.").into(),
+        );
     }
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let action = find_doc(board, "actions", r.arg(0))?;
-        assert_live(&action, "actions")?;
-        let id = display(&action["id"]);
-        let thread = to.get("thread").and_then(Value::as_str).map(str::to_owned);
-        if let Some(name) = &thread {
-            thread_arg(board, name)?;
-        }
-        let check = Check::new("move", "actions", Some(&action)).to(thread.as_deref());
-        authorize(&who_of(&who), &check)?;
-        if let Some(place) = rank_to(board, ("actions", &id), r.options)? {
-            to.extend(place);
-        }
-        apply(board, &who, &move_op("actions", &id, to.clone(), r.options)?)?;
+        let (before, id) = move_doc(board, &who, ("actions", r.arg(0)), (to, r.options))?;
         let now = find_doc(board, "actions", Some(&id))?;
-        refresh_needs_human(board, action["thread"].as_str().unwrap_or_default());
+        refresh_needs_human(board, before["thread"].as_str().unwrap_or_default());
         refresh_needs_human(board, now["thread"].as_str().unwrap_or_default());
-        r.say(&[&format!("{id}: {} (rev {}).", display(&now["thread"]), display(&now["rev"]))]);
+        r.say(&[&format!(
+            "{id}: {} (rev {}).",
+            display(&now["thread"]),
+            display(&now["rev"])
+        )]);
         Ok(())
     })
 }

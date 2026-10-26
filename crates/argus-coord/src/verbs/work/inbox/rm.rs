@@ -21,7 +21,11 @@ pub(super) fn rm(r: &mut Run<'_>) -> Outcome {
         let kept: Vec<Value> = if all {
             Vec::new()
         } else {
-            before.iter().filter(|m| m["id"].as_str() != id.as_deref()).cloned().collect()
+            before
+                .iter()
+                .filter(|m| m["id"].as_str() != id.as_deref())
+                .cloned()
+                .collect()
         };
         let removed = before.len() - kept.len();
         map_mut(board, "inbox").insert(thread.clone(), Value::Array(kept));

@@ -52,7 +52,9 @@ pub fn run(r: &mut Run<'_>, kind: &Soft, verb: &str) -> Outcome {
             let operation = op((op_kind, kind.coll, &id), rest, r.options)?;
             apply(board, &who, &operation)?;
             (kind.after)(board, &found);
-            let because = reason.as_ref().map_or_else(String::new, |w| format!(" ({w})"));
+            let because = reason
+                .as_ref()
+                .map_or_else(String::new, |w| format!(" ({w})"));
             r.say(&[&format!("{id}: {past}{because}")]);
         }
         Ok(())

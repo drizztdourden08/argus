@@ -28,7 +28,11 @@ pub(super) fn write(r: &mut Run<'_>) -> Outcome {
             .or(from_thread)
             .unwrap_or_else(|| "general".to_owned());
         let subject = slug(&subject);
-        let line = LogLine { thread: &me, item: item.as_deref(), text: &text };
+        let line = LogLine {
+            thread: &me,
+            item: item.as_deref(),
+            text: &text,
+        };
         append_log(board, &subject, &line);
         js_order(map_mut(board, "log"));
         r.say(&[&format!("[{subject}] {me}: {text}")]);

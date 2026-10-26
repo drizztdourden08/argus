@@ -1,7 +1,7 @@
 //! `coord item add "<title>" [--desc] [--ac]... [--subject] [--status s] [--for T]
 //! [--before|--after <I>|--top|--bottom]`.
 
-use argus_board::json::{nullish, doc};
+use argus_board::json::{doc, nullish};
 use argus_board::limits::{optional_text, require_text};
 use argus_board::ops::{Check, authorize};
 use argus_board::store::create_doc;
@@ -9,8 +9,8 @@ use argus_board::text::slug;
 use serde_json::{Map, Value, json};
 
 use super::STATUSES;
-use crate::cli::Outcome;
-use crate::verbs::work::crud::{apply, move_op, owner_arg, who_of};
+use crate::cli::{Options, Outcome};
+use crate::verbs::work::crud::{apply, is_coordinator, move_op, owner_arg, who_of};
 use crate::verbs::work::place::rank_to;
 use crate::verbs::work::run::{Res, Run, bad};
 
@@ -18,7 +18,10 @@ use crate::verbs::work::run::{Res, Run, bad};
 pub(super) fn check_status(value: &Value) -> Res<String> {
     match value.as_str().filter(|s| STATUSES.contains(s)) {
         Some(status) => Ok(status.to_owned()),
-        None => Err(bad(format!("status must be one of {}.", STATUSES.join(", ")))),
+        None => Err(bad(format!(
+            "status must be one of {}.",
+            STATUSES.join(", ")
+        ))),
     }
 }
 
@@ -56,7 +59,7 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         let subject = optional_text("subject", &r.opt("subject"))?
             .or(thread_subject)
             .unwrap_or_else(|| "general".to_owned());
-        let from_other_lead = super::super::crud::is_coordinator(&who) && owner != who.thread;
+        let from_other_lead = is_coordinator(&who) && owner != who.thread;
         let fields = json!({
             "title": title, "description": description, "subject": slug(&subject),
             "thread": owner, "status": status,
@@ -66,7 +69,11 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         let fields = fields.as_object().cloned().unwrap_or_else(Map::new);
         let id = create_doc(board, "items", "I", fields, &who.actor)?;
         if let Some(to) = rank_to(board, ("items", &id), r.options)? {
-            apply(board, &who, &move_op("items", &id, to, &Default::default())?)?;
+            apply(
+                board,
+                &who,
+                &move_op("items", &id, to, &Options::default())?,
+            )?;
         }
         r.say(&[&format!("{id}: {title} ({owner}, {} AC)", ac.len())]);
         Ok(())

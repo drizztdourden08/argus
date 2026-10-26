@@ -13,11 +13,18 @@ const HEAD: [&str; 5] = ["resource", "holder", "since", "queue", "about"];
 
 fn row(lock: &Value, now: i64) -> Vec<String> {
     let holder = holder_of(lock);
-    let queue: Vec<String> = super::queue_of(lock).iter().map(argus_board::json::display).collect();
+    let queue: Vec<String> = super::queue_of(lock)
+        .iter()
+        .map(argus_board::json::display)
+        .collect();
     vec![
         argus_board::json::display(&lock["resource"]),
         holder.clone().unwrap_or_else(|| "free".to_owned()),
-        if holder.is_some() { ago(lock["since"].as_str(), now) } else { String::new() },
+        if holder.is_some() {
+            ago(lock["since"].as_str(), now)
+        } else {
+            String::new()
+        },
         queue.join(" > "),
         nullish(lock, "description").unwrap_or_default(),
     ]

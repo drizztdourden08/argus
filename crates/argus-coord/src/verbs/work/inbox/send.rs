@@ -32,7 +32,9 @@ fn wake(r: &Run<'_>, thread: &str, from: &str, text: &str) {
     };
     let line = format!("{from}: {}", js::slice(&one_line(text), WAKE_CLIP));
     let body = json!({"thread": thread, "reason": "thread-message", "text": line});
-    client.post(&format!("/api/p/{}/wakes", r.project), &body).ok();
+    client
+        .post(&format!("/api/p/{}/wakes", r.project), &body)
+        .ok();
 }
 
 /// `coord inbox send`.

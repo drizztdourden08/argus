@@ -20,12 +20,23 @@ fn tail_from(len: usize, n: f64) -> usize {
         return 0;
     }
     let steps = start.abs().min(1e15) as usize;
-    if start < 0.0 { len.saturating_sub(steps) } else { steps.min(len) }
+    if start < 0.0 {
+        len.saturating_sub(steps)
+    } else {
+        steps.min(len)
+    }
 }
 
 fn line(entry: &Value, now: i64) -> String {
-    let seq = if entry["seq"].is_null() { "-".to_owned() } else { display(&entry["seq"]) };
-    let item = entry["item"].as_str().filter(|i| !i.is_empty()).map_or_else(String::new, |i| format!("{i} "));
+    let seq = if entry["seq"].is_null() {
+        "-".to_owned()
+    } else {
+        display(&entry["seq"])
+    };
+    let item = entry["item"]
+        .as_str()
+        .filter(|i| !i.is_empty())
+        .map_or_else(String::new, |i| format!("{i} "));
     format!(
         "  {} {} {} {item}{}",
         pad_end(&format!("#{seq}"), 6),
@@ -51,7 +62,11 @@ pub(super) fn list(r: &mut Run<'_>) -> Outcome {
             };
             lines.push(format!("## {subject}"));
             let entries = found["entries"].as_array().map_or(&[][..], Vec::as_slice);
-            lines.extend(entries[tail_from(entries.len(), n)..].iter().map(|e| line(e, now)));
+            lines.extend(
+                entries[tail_from(entries.len(), n)..]
+                    .iter()
+                    .map(|e| line(e, now)),
+            );
         }
         if lines.is_empty() {
             r.say(&["log is empty."]);

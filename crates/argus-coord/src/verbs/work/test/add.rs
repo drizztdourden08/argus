@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use super::edit::edit;
 use super::spec::{apply_spec, spec_from_options};
 use crate::cli::Outcome;
-use crate::verbs::work::crud::{assert_live, find_doc, who_of};
+use crate::verbs::work::crud::{find_live, who_of};
 use crate::verbs::work::run::{Run, bad};
 
 fn blank_test(item: &Value) -> serde_json::Map<String, Value> {
@@ -25,14 +25,20 @@ fn blank_test(item: &Value) -> serde_json::Map<String, Value> {
 
 fn summary(test: &Value, item_id: &str) -> String {
     let build = test["build"].as_str().filter(|b| !b.is_empty());
-    let acs: Vec<String> = test["ac"].as_array().map_or_else(Vec::new, |a| a.iter().map(display).collect());
+    let acs: Vec<String> = test["ac"]
+        .as_array()
+        .map_or_else(Vec::new, |a| a.iter().map(display).collect());
     format!(
         "{}: {} ({}, on {item_id}{}{})",
         display(&test["id"]),
         display(&test["title"]),
         display(&test["mode"]),
         build.map_or_else(String::new, |b| format!(", build {b}")),
-        if acs.is_empty() { String::new() } else { format!(", proves AC {}", acs.join(",")) },
+        if acs.is_empty() {
+            String::new()
+        } else {
+            format!(", proves AC {}", acs.join(","))
+        },
     )
 }
 
@@ -40,8 +46,7 @@ fn summary(test: &Value, item_id: &str) -> String {
 pub(super) fn add(r: &mut Run<'_>) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let item = find_doc(board, "items", r.arg(0))?;
-        assert_live(&item, "items")?;
+        let item = find_live(board, "items", r.arg(0))?;
         let check = Check::new("add", "tests", None).to(item["thread"].as_str());
         authorize(&who_of(&who), &check)?;
         let id = create_doc(board, "tests", "T", blank_test(&item), &who.actor)?;
@@ -66,7 +71,9 @@ pub(super) fn set_fields(r: &mut Run<'_>) -> Outcome {
     edit(r, |r, test, item| {
         let spec = spec_from_options(r)?;
         if spec.is_empty() {
-            return Err(bad("nothing to change: pass --file or flags such as --title --covers --run --context --mode --changed --note --ac --build."));
+            return Err(bad(
+                "nothing to change: pass --file or flags such as --title --covers --run --context --mode --changed --note --ac --build.",
+            ));
         }
         apply_spec(test, item, &spec)?;
         r.say(&[&format!("{}: updated.", display(&test["id"]))]);

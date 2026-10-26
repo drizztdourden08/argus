@@ -5,8 +5,8 @@ use serde_json::Value;
 
 use crate::cli::Outcome;
 use crate::cli::out::{ago, clip};
-use crate::verbs::work::crud::{docs_of, find_doc};
-use crate::verbs::work::listing::{Table, cell, emit, scoped, visible};
+use crate::verbs::work::crud::find_doc;
+use crate::verbs::work::listing::{Table, cell, list_docs, print_json, scoped};
 use crate::verbs::work::run::Run;
 
 const ACTIONS: Table = Table {
@@ -17,8 +17,7 @@ const ACTIONS: Table = Table {
 /// `coord action show`.
 pub(super) fn show(r: &mut Run<'_>) -> Outcome {
     r.read(|board, r| {
-        let action = find_doc(board, "actions", r.arg(0))?;
-        r.say(&[&serde_json::to_string_pretty(&action).unwrap_or_default()]);
+        print_json(r, &find_doc(board, "actions", r.arg(0))?);
         Ok(())
     })
 }
@@ -37,13 +36,5 @@ fn row(action: &Value, now: i64) -> Vec<String> {
 
 /// `coord action list`.
 pub(super) fn list(r: &mut Run<'_>) -> Outcome {
-    r.read(|board, r| {
-        let actions: Vec<Value> = docs_of(board, "actions")
-            .into_iter()
-            .filter(|a| visible(a, r.options))
-            .collect();
-        let actions = scoped(board, r, actions)?;
-        emit(r, actions, &ACTIONS, row);
-        Ok(())
-    })
+    list_docs(r, "actions", &ACTIONS, scoped, row)
 }

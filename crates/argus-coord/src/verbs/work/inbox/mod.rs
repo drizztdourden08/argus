@@ -56,5 +56,8 @@ fn target(board: &Board, who: &Caller, r: &Run<'_>, verb: &str) -> Res<String> {
 
 /// The messages waiting for a thread.
 fn waiting(board: &Board, thread: &str) -> Vec<Value> {
-    board["inbox"][thread].as_array().cloned().unwrap_or_default()
+    board["inbox"][thread]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
 }

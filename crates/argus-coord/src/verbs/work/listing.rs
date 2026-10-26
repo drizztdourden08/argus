@@ -5,10 +5,12 @@ use argus_board::Board;
 use argus_board::json::{display, truthy};
 use serde_json::Value;
 
+use super::crud::docs_of;
 use super::place::by_rank;
 use super::run::{Res, Run};
-use crate::cli::out::{as_json, table};
 use crate::cli::Options;
+use crate::cli::Outcome;
+use crate::cli::out::{as_json, table};
 
 /// The columns and the empty message of a list.
 pub struct Table {
@@ -35,6 +37,39 @@ pub fn visible(found: &Value, options: &Options) -> bool {
     }
 }
 
+/// The docs of a collection a list shows (see [`visible`]).
+#[must_use]
+pub fn visible_docs(board: &Board, coll: &str, options: &Options) -> Vec<Value> {
+    docs_of(board, coll)
+        .into_iter()
+        .filter(|d| visible(d, options))
+        .collect()
+}
+
+/// Lists a collection: the visible docs, narrowed by the verb, then printed.
+///
+/// # Errors
+/// Refused as the narrowing refuses, or when the board is missing.
+pub fn list_docs(
+    r: &mut Run<'_>,
+    coll: &str,
+    layout: &Table,
+    narrow: impl FnOnce(&Board, &Run<'_>, Vec<Value>) -> Res<Vec<Value>>,
+    row: impl Fn(&Value, i64) -> Vec<String>,
+) -> Outcome {
+    r.read(|board, r| {
+        let docs = narrow(board, r, visible_docs(board, coll, r.options))?;
+        emit(r, docs, layout, row);
+        Ok(())
+    })
+}
+
+/// Prints a doc as two-space JSON.
+pub fn print_json(r: &mut Run<'_>, value: &Value) {
+    let text = serde_json::to_string_pretty(value).unwrap_or_default();
+    r.say(&[&text]);
+}
+
 /// Narrows docs to the caller's own with `--mine`, or to a thread with `--for <T>`.
 ///
 /// # Errors
@@ -56,7 +91,11 @@ pub fn scoped(board: &Board, r: &Run<'_>, docs: Vec<Value>) -> Res<Vec<Value>> {
 /// A cell: nothing for `null`, else the value as a template literal prints it.
 #[must_use]
 pub fn cell(v: &Value) -> String {
-    if v.is_null() { String::new() } else { display(v) }
+    if v.is_null() {
+        String::new()
+    } else {
+        display(v)
+    }
 }
 
 /// Prints docs in rank order, as JSON with `--json`, else as a table of `row` lines.

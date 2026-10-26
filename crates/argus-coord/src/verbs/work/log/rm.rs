@@ -47,11 +47,29 @@ pub(super) fn rm(r: &mut Run<'_>) -> Outcome {
         touch(board, "log", &subject);
         let author = display(&line["thread"]);
         if author != who.actor {
-            let note = format!("{} removed {subject} #{seq} ({author}): {}", who.actor, display(&line["text"]));
+            let note = format!(
+                "{} removed {subject} #{seq} ({author}): {}",
+                who.actor,
+                display(&line["text"])
+            );
             let audit = clip(&note, AUDIT);
-            append_log(board, "audit", &LogLine { thread: &who.actor, item: None, text: &audit });
+            append_log(
+                board,
+                "audit",
+                &LogLine {
+                    thread: &who.actor,
+                    item: None,
+                    text: &audit,
+                },
+            );
             if doc(board, "threads", &author).is_some_and(|t| !t.is_null()) {
-                post(board, &author, &who.actor, ("note", &clip(&note, NOTE)), None);
+                post(
+                    board,
+                    &author,
+                    &who.actor,
+                    ("note", &clip(&note, NOTE)),
+                    None,
+                );
             }
         }
         r.say(&[&format!("{subject} #{seq}: removed.")]);

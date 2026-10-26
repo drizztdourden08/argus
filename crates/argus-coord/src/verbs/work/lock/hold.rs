@@ -3,14 +3,12 @@
 use argus_board::Board;
 use argus_board::json::{array_mut, doc, doc_mut, map_mut, nullish, set};
 use argus_board::limits::optional_text;
-use argus_board::ops::{Check, authorize};
 use argus_core::clock::now_iso;
 use serde_json::{Value, json};
 
-use super::{find_lock, hand_on, holder_of, resource_arg, touched};
+use super::{find_lock, hand_on, holder_of, may, resource_arg, touched};
 use crate::cli::Outcome;
 use crate::cli::out::ago;
-use crate::verbs::work::crud::who_of;
 use crate::verbs::work::keys::js_order;
 use crate::verbs::work::run::{Run, bad};
 
@@ -49,7 +47,10 @@ fn enqueue(board: &mut Board, resource: &str, me: &str) -> usize {
     if !queue.iter().any(|id| id.as_str() == Some(me)) {
         queue.push(json!(me));
     }
-    queue.iter().position(|id| id.as_str() == Some(me)).map_or(0, |i| i + 1)
+    queue
+        .iter()
+        .position(|id| id.as_str() == Some(me))
+        .map_or(0, |i| i + 1)
 }
 
 /// `coord lock claim`: held at once when free, else queued.
@@ -92,7 +93,7 @@ pub(super) fn release(r: &mut Run<'_>) -> Outcome {
         if holder_of(&lock).is_none() {
             return Err(bad(format!("{resource}: nobody holds it.")));
         }
-        authorize(&who_of(&who), &Check::new("release", "locks", Some(&lock)))?;
+        may(&who, "release", &lock)?;
         hand_on(board, &resource, None, &who.actor);
         let Some(next) = holder_of(&find_lock(board, &resource)?) else {
             r.say(&[&format!("{resource}: released, nobody waiting.")]);

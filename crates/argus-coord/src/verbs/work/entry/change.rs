@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use super::item_arg;
 use crate::cli::Outcome;
-use crate::verbs::work::crud::{assert_live, find_doc, who_of};
+use crate::verbs::work::crud::{checked, find_live, who_of};
 use crate::verbs::work::run::{Run, bad};
 
 fn set_status(board: &mut argus_board::Board, id: &str, status: &str) {
@@ -22,13 +22,17 @@ fn set_status(board: &mut argus_board::Board, id: &str, status: &str) {
 pub(super) fn pick(r: &mut Run<'_>) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let e = find_doc(board, "entries", r.arg(0))?;
-        assert_live(&e, "entries")?;
-        authorize(&who_of(&who), &Check::new("pick", "entries", Some(&e)))?;
+        let e = checked(board, &who, ("entries", "pick"), r.arg(0))?;
         let id = display(&e["id"]);
         if e["kind"] != "decision" || e["status"] != "pending" {
-            let was = if e["kind"] == "decision" { display(&e["status"]) } else { format!("a {}", display(&e["kind"])) };
-            return Err(bad(format!("{id} is {was}, only a pending decision can be picked.")));
+            let was = if e["kind"] == "decision" {
+                display(&e["status"])
+            } else {
+                format!("a {}", display(&e["kind"]))
+            };
+            return Err(bad(format!(
+                "{id} is {was}, only a pending decision can be picked."
+            )));
         }
         set_status(board, &id, "doing");
         stamp(board, "entries", &id, &who.actor)?;
@@ -41,9 +45,7 @@ pub(super) fn pick(r: &mut Run<'_>) -> Outcome {
 pub(super) fn done(r: &mut Run<'_>) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let e = find_doc(board, "entries", r.arg(0))?;
-        assert_live(&e, "entries")?;
-        authorize(&who_of(&who), &Check::new("done", "entries", Some(&e)))?;
+        let e = checked(board, &who, ("entries", "done"), r.arg(0))?;
         let id = display(&e["id"]);
         let status = match e["kind"].as_str() {
             Some("question") => "closed",
@@ -64,8 +66,7 @@ pub(super) fn move_to(r: &mut Run<'_>) -> Outcome {
     };
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let e = find_doc(board, "entries", r.arg(0))?;
-        assert_live(&e, "entries")?;
+        let e = find_live(board, "entries", r.arg(0))?;
         let item = item_arg(board, Some(&target))?;
         let check = Check::new("move", "entries", Some(&e)).to(item["thread"].as_str());
         authorize(&who_of(&who), &check)?;

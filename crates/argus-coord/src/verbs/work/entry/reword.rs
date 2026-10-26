@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use super::{DECISION_OPTIONS, prefix_of};
 use crate::cli::{Outcome, Val};
-use crate::verbs::work::crud::{assert_live, find_doc, is_coordinator, who_of};
+use crate::verbs::work::crud::{find_live, is_coordinator, who_of};
 use crate::verbs::work::run::{Res, Run, bad};
 
 /// The new context: a question or decision keeps the minimum, information is clipped.
@@ -29,8 +29,7 @@ fn new_context(r: &Run<'_>, kind: &str) -> Res<Option<Value>> {
 pub(super) fn set_text(r: &mut Run<'_>) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let e = find_doc(board, "entries", r.arg(0))?;
-        assert_live(&e, "entries")?;
+        let e = find_live(board, "entries", r.arg(0))?;
         let (id, kind) = (display(&e["id"]), display(&e["kind"]));
         if prefix_of(&kind).is_none() {
             return Err(bad(format!("{id} is not a text entry.")));
@@ -60,7 +59,11 @@ pub(super) fn set_text(r: &mut Run<'_>) -> Outcome {
             return Err(bad(format!("{DECISION_OPTIONS} Got {}.", choices.len())));
         }
         let given = Value::Array(choices.iter().map(Val::to_json).collect());
-        let options = if choices.is_empty() { None } else { Some(text_list("option", &given, 5)?) };
+        let options = if choices.is_empty() {
+            None
+        } else {
+            Some(text_list("option", &given, 5)?)
+        };
         let context = new_context(r, &kind)?;
         if let Some(found) = doc_mut(board, "entries", &id) {
             set(found, "text", text);

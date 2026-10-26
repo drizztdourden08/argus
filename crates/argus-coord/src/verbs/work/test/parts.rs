@@ -42,10 +42,10 @@ fn remove_step(test: &mut Value, spec: &Value) -> Res<String> {
     ))
 }
 
-fn reword_step(test: &mut Value, spec: &Value, text: &Value) -> Res<()> {
+fn reword_step(test: &mut Value, spec: &Value, line: &Value) -> Res<()> {
     let steps = listed(test, "steps");
     let at = at(steps.len(), spec, "step")?;
-    steps[at] = json!(require_text("step", text)?);
+    steps[at] = json!(require_text("step", line)?);
     Ok(())
 }
 
@@ -58,7 +58,11 @@ pub(super) fn step(r: &mut Run<'_>) -> Outcome {
             remove_step(test, &r.arg_json(2))?
         } else if second == Some("set") && count == 4 {
             reword_step(test, &r.arg_json(2), &r.arg_json(3))?;
-            format!("{id} step {}: {}", r.arg(2).unwrap_or_default(), r.arg(3).unwrap_or_default())
+            format!(
+                "{id} step {}: {}",
+                r.arg(2).unwrap_or_default(),
+                r.arg(3).unwrap_or_default()
+            )
         } else {
             if listed(test, "steps").len() >= MAX_STEPS {
                 return Err(bad(format!("{id} already has {MAX_STEPS} steps.")));
@@ -66,7 +70,11 @@ pub(super) fn step(r: &mut Run<'_>) -> Outcome {
             let text = require_text("step", &r.arg_json(1))?;
             let steps = listed(test, "steps");
             steps.push(json!(text));
-            format!("{id} step {}: {}", steps.len(), r.arg(1).unwrap_or_default())
+            format!(
+                "{id} step {}: {}",
+                steps.len(),
+                r.arg(1).unwrap_or_default()
+            )
         };
         r.say(&[&line]);
         Ok(())
@@ -99,7 +107,10 @@ fn remove_criteria(r: &Run<'_>, test: &mut Value) -> Res<()> {
             "say which to remove: coord test expect <T> rm --pass <n> | --fail <n>.",
         ));
     }
-    for (key, given, what) in [("pass", pass, "pass criterion"), ("fail", fail, "fail criterion")] {
+    for (key, given, what) in [
+        ("pass", pass, "pass criterion"),
+        ("fail", fail, "fail criterion"),
+    ] {
         if let Some(given) = given {
             let list = listed(test, key);
             list.remove(at(list.len(), &given, what)?);
@@ -110,7 +121,13 @@ fn remove_criteria(r: &Run<'_>, test: &mut Value) -> Res<()> {
 
 fn add_criteria(r: &Run<'_>, test: &mut Value) -> Res<()> {
     for key in ["pass", "fail"] {
-        let given = Value::Array(r.options.many(key).iter().map(crate::cli::Val::to_json).collect());
+        let given = Value::Array(
+            r.options
+                .many(key)
+                .iter()
+                .map(crate::cli::Val::to_json)
+                .collect(),
+        );
         let texts = text_list("expect", &given, MAX_EXPECT)?;
         listed(test, key).extend(texts.into_iter().map(Value::from));
     }
@@ -126,7 +143,10 @@ pub(super) fn expect(r: &mut Run<'_>) -> Outcome {
             add_criteria(r, test)?;
         }
         let (pass, fail) = (listed(test, "pass").len(), listed(test, "fail").len());
-        r.say(&[&format!("{}: {pass} pass / {fail} fail criteria", display(&test["id"]))]);
+        r.say(&[&format!(
+            "{}: {pass} pass / {fail} fail criteria",
+            display(&test["id"])
+        )]);
         Ok(())
     })
 }

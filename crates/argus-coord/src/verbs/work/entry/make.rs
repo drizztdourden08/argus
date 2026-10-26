@@ -3,12 +3,10 @@
 //! [--context "<c>"]` and `coord message "<t>" [--item I] [--context "<c>"]`.
 
 use argus_board::limits::{require_context, require_text, soft_context, text_list};
-use argus_board::ops::{Check, authorize};
 use serde_json::{Value, json};
 
-use super::{DECISION_OPTIONS, create_entry, item_arg};
+use super::{DECISION_OPTIONS, create_entry, item_arg, on_item};
 use crate::cli::{Outcome, Val};
-use crate::verbs::work::crud::who_of;
 use crate::verbs::work::run::{Run, bad};
 
 const LEVELS: [&str; 3] = ["info", "warn", "bad"];
@@ -29,16 +27,17 @@ pub(super) fn ask(r: &mut Run<'_>) -> Outcome {
     let choices = text_list("option", &choices_of(&given), 5)?;
     let needs = if decision { "decision" } else { "answer" };
     r.write(|board, r| {
-        let who = r.begin(board)?;
-        let item = item_arg(board, r.arg(0))?;
-        let check = Check::new("add", "entries", None).to(item["thread"].as_str());
-        authorize(&who_of(&who), &check)?;
+        let (who, item) = on_item(board, r)?;
         let fields = json!({
             "kind": "question", "item": item["id"], "thread": who.thread, "author": who.thread,
             "text": text, "context": context, "needs": needs, "options": choices, "status": "open",
         });
-        let id = create_entry(board, fields, &who.actor)?;
-        let kind = if decision { " (decision request, shown in the feed)" } else { "" };
+        let id = create_entry(board, &fields, &who.actor)?;
+        let kind = if decision {
+            " (decision request, shown in the feed)"
+        } else {
+            ""
+        };
         let item_id = argus_board::json::display(&item["id"]);
         r.say(&[
             &format!("{id} asked on {item_id}{kind}: {text}"),
@@ -53,15 +52,12 @@ pub(super) fn decide(r: &mut Run<'_>) -> Outcome {
     let text = require_text("decision", &r.arg_json(1))?;
     let context = require_context(&r.opt("context"))?;
     r.write(|board, r| {
-        let who = r.begin(board)?;
-        let item = item_arg(board, r.arg(0))?;
-        let check = Check::new("add", "entries", None).to(item["thread"].as_str());
-        authorize(&who_of(&who), &check)?;
+        let (who, item) = on_item(board, r)?;
         let fields = json!({
             "kind": "decision", "item": item["id"], "thread": who.thread, "author": who.thread,
             "text": text, "context": context, "status": "done",
         });
-        let id = create_entry(board, fields, &who.actor)?;
+        let id = create_entry(board, &fields, &who.actor)?;
         let item_id = argus_board::json::display(&item["id"]);
         r.say(&[&format!("{id} recorded on {item_id}: {text}")]);
         Ok(())
@@ -102,7 +98,7 @@ pub(super) fn notify(r: &mut Run<'_>) -> Outcome {
             "author": who.thread, "text": text, "context": soft_context(&r.opt("context")),
             "level": level, "status": "open",
         });
-        let id = create_entry(board, fields, &who.actor)?;
+        let id = create_entry(board, &fields, &who.actor)?;
         r.say(&[&format!("{id} posted to the feed: {text}")]);
         Ok(())
     })
@@ -118,7 +114,7 @@ pub(super) fn message(r: &mut Run<'_>) -> Outcome {
             "author": who.thread, "text": text, "context": soft_context(&r.opt("context")),
             "status": "open",
         });
-        let id = create_entry(board, fields, &who.actor)?;
+        let id = create_entry(board, &fields, &who.actor)?;
         r.say(&[&format!("{id} sent to the owner: {text}")]);
         Ok(())
     })

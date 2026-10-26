@@ -5,7 +5,7 @@ use argus_board::ops::{Check, authorize, refresh_needs_human};
 use argus_board::store::create_doc;
 use serde_json::json;
 
-use crate::cli::Outcome;
+use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{apply, assert_live, find_doc, move_op, owner_arg, who_of};
 use crate::verbs::work::place::rank_to;
 use crate::verbs::work::run::Run;
@@ -29,7 +29,11 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         let fields = fields.as_object().cloned().unwrap_or_default();
         let id = create_doc(board, "actions", "H", fields, &who.actor)?;
         if let Some(to) = rank_to(board, ("actions", &id), r.options)? {
-            apply(board, &who, &move_op("actions", &id, to, &Default::default())?)?;
+            apply(
+                board,
+                &who,
+                &move_op("actions", &id, to, &Options::default())?,
+            )?;
         }
         refresh_needs_human(board, &owner);
         r.say(&[&format!("{id} needs the human: {text}")]);

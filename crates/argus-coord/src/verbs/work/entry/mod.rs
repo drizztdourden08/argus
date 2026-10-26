@@ -21,13 +21,15 @@ mod reword;
 
 use argus_board::Board;
 use argus_board::json::doc;
+use argus_board::ops::{Check, authorize};
 use argus_board::store::create_doc;
 use serde_json::{Map, Value};
 
-use super::crud::assert_live;
-use super::group::{Group, nothing, serve, Soft};
-use super::run::{Res, bad};
+use super::crud::{assert_live, who_of};
+use super::group::{Group, Soft, nothing, serve};
+use super::run::{Res, Run, bad};
 use crate::cli::{Call, Outcome};
+use crate::who::Caller;
 
 const KINDS: [(&str, &str); 5] = [
     ("question", "Q"),
@@ -90,8 +92,18 @@ fn item_arg(board: &Board, reference: Option<&str>) -> Res<Value> {
     Ok(item.clone())
 }
 
+/// The caller and the live item a question or decision attaches to. Only the thread that owns
+/// the item asks inside it (the coordinator can for anyone).
+fn on_item(board: &mut Board, r: &Run<'_>) -> Res<(Caller, Value)> {
+    let who = r.begin(board)?;
+    let item = item_arg(board, r.arg(0))?;
+    let check = Check::new("add", "entries", None).to(item["thread"].as_str());
+    authorize(&who_of(&who), &check)?;
+    Ok((who, item))
+}
+
 /// A new entry of a kind, with the defaults every entry carries.
-fn create_entry(board: &mut Board, fields: Value, actor: &str) -> Res<String> {
+fn create_entry(board: &mut Board, fields: &Value, actor: &str) -> Res<String> {
     let mut entry = Map::from_iter([
         ("replyTo".to_owned(), Value::Null),
         ("item".to_owned(), Value::Null),
@@ -99,7 +111,10 @@ fn create_entry(board: &mut Board, fields: Value, actor: &str) -> Res<String> {
         ("context".to_owned(), Value::Null),
     ]);
     let given = fields.as_object().cloned().unwrap_or_default();
-    let prefix = given.get("kind").and_then(Value::as_str).and_then(prefix_of);
+    let prefix = given
+        .get("kind")
+        .and_then(Value::as_str)
+        .and_then(prefix_of);
     entry.extend(given);
-    Ok(create_doc(board, "entries", prefix.unwrap_or("E"), entry, actor)?)
+    create_doc(board, "entries", prefix.unwrap_or("E"), entry, actor)
 }

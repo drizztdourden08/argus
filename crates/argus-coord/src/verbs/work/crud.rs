@@ -3,11 +3,12 @@
 //! never comes from a flag: every change goes through `authorize` and `apply_op`, so a thread
 //! changes only what it owns and the coordinator changes anything.
 
-use argus_board::json::{as_integer, display, doc, nullish, section, shown, to_number, truthy};
-use argus_board::ops::{Role, Status, Who, apply_op};
 use argus_board::Board;
+use argus_board::json::{as_integer, display, doc, nullish, section, shown, truthy};
+use argus_board::ops::{Check, Role, Status, Who, apply_op, authorize};
 use serde_json::{Map, Value, json};
 
+use super::place::rank_to;
 use super::run::{Res, bad};
 use crate::cli::Options;
 use crate::who::Caller;
@@ -52,13 +53,40 @@ pub fn assert_live(found: &Value, coll: &str) -> Res<()> {
     Ok(())
 }
 
+/// The doc of a collection by id, refused when it does not exist or is in the trash.
+///
+/// # Errors
+/// As [`find_doc`] and [`assert_live`].
+pub fn find_live(board: &Board, coll: &str, id: Option<&str>) -> Res<Value> {
+    let found = find_doc(board, coll, id)?;
+    assert_live(&found, coll)?;
+    Ok(found)
+}
+
+/// A live doc the caller may do `verb` to.
+///
+/// # Errors
+/// As [`find_live`], or as `authorize` refuses.
+pub fn checked(
+    board: &Board,
+    who: &Caller,
+    (coll, verb): (&str, &str),
+    id: Option<&str>,
+) -> Res<Value> {
+    let found = find_live(board, coll, id)?;
+    authorize(&who_of(who), &Check::new(verb, coll, Some(&found)))?;
+    Ok(found)
+}
+
 /// The id of a thread an argument names, refused when it is not on the board.
 ///
 /// # Errors
 /// Refused with `no thread "<name>".`
 pub fn thread_arg(board: &Board, name: &str) -> Res<String> {
     match doc(board, "threads", name) {
-        Some(thread) if !thread.is_null() => Ok(nullish(thread, "id").unwrap_or_else(|| "undefined".to_owned())),
+        Some(thread) if !thread.is_null() => {
+            Ok(nullish(thread, "id").unwrap_or_else(|| "undefined".to_owned()))
+        }
         _ => Err(bad(format!("no thread \"{name}\"."))),
     }
 }
@@ -160,8 +188,39 @@ pub fn docs_of(board: &Board, coll: &str) -> Vec<Value> {
     section(board, coll).values().cloned().collect()
 }
 
-/// `Number(v)` as a whole number, when it is one.
+/// The `to` of a move that names a thread: `--to <T>`.
 #[must_use]
-pub fn whole(v: &Value) -> Option<i64> {
-    as_integer(Some(v)).filter(|_| !to_number(Some(v)).is_nan())
+pub fn move_target(options: &Options) -> Map<String, Value> {
+    let mut to = Map::new();
+    if let Some(thread) = options.text("to") {
+        to.insert("thread".into(), json!(thread));
+    }
+    to
+}
+
+/// Moves an item or action: the doc must be live, a named thread must exist, the caller must be
+/// allowed, the placement flags join `to`, and the shared op applies it. Returns the doc as it
+/// was before and its id.
+///
+/// # Errors
+/// As the checks and the op refuse.
+pub fn move_doc(
+    board: &mut Board,
+    who: &Caller,
+    (coll, id): (&str, Option<&str>),
+    (mut to, options): (Map<String, Value>, &Options),
+) -> Res<(Value, String)> {
+    let before = find_live(board, coll, id)?;
+    let key = display(&before["id"]);
+    let thread = to.get("thread").and_then(Value::as_str).map(str::to_owned);
+    if let Some(name) = &thread {
+        thread_arg(board, name)?;
+    }
+    let check = Check::new("move", coll, Some(&before)).to(thread.as_deref());
+    authorize(&who_of(who), &check)?;
+    if let Some(place) = rank_to(board, (coll, &key), options)? {
+        to.extend(place);
+    }
+    apply(board, who, &move_op(coll, &key, to, options)?)?;
+    Ok((before, key))
 }

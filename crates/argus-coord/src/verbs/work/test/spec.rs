@@ -83,7 +83,11 @@ pub(super) fn ac_numbers(item: &Value, v: &Value) -> Res<Vec<i64>> {
             let n = as_integer(Some(given));
             match n.filter(|n| usize::try_from(*n).is_ok_and(|n| (1..=count).contains(&n))) {
                 Some(n) => Ok(n),
-                None => Err(bad(format!("{} has no AC{}.", display(&item["id"]), display(given)))),
+                None => Err(bad(format!(
+                    "{} has no AC{}.",
+                    display(&item["id"]),
+                    display(given)
+                ))),
             }
         })
         .collect()
@@ -139,7 +143,9 @@ pub(super) fn spec_from_options(r: &Run<'_>) -> Res<Map<String, Value>> {
         }
     }
     if r.options.json("build") == Some(json!(true)) {
-        return Err(bad("--build needs a tag (--build \"\" or --clear-build removes it)."));
+        return Err(bad(
+            "--build needs a tag (--build \"\" or --clear-build removes it).",
+        ));
     }
     if let Some(tag) = r.text_opt("build") {
         spec.insert("build".into(), json!(tag));

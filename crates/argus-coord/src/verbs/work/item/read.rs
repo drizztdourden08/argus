@@ -1,15 +1,18 @@
 //! `coord item show <I>` and `coord item list [--mine|--for T] [--status s] [--subject s]
 //! [--archived] [--deleted] [--json]`.
 
-use argus_board::json::{display, truthy};
+use argus_board::json::display;
+use argus_board::json::truthy;
 use argus_board::text::slug;
 use serde_json::{Value, json};
 
 use crate::cli::Outcome;
 use crate::cli::out::clip;
-use crate::verbs::work::crud::{docs_of, find_doc};
-use crate::verbs::work::listing::{Table, cell, emit, scoped, visible};
-use crate::verbs::work::run::Run;
+use crate::verbs::work::{
+    crud::{docs_of, find_doc},
+    listing::{Table, cell, list_docs, print_json, scoped},
+    run::{Res, Run},
+};
 
 const ITEMS: Table = Table {
     head: &["item", "status", "thread", "subject", "ac", "title"],
@@ -28,8 +31,7 @@ pub(super) fn show(r: &mut Run<'_>) -> Outcome {
         if let Some(fields) = item.as_object_mut() {
             fields.insert("entries".into(), json!(related));
         }
-        let text = serde_json::to_string_pretty(&item).unwrap_or_default();
-        r.say(&[&text]);
+        print_json(r, &item);
         Ok(())
     })
 }
@@ -47,22 +49,19 @@ fn row(item: &Value, _now: i64) -> Vec<String> {
     ]
 }
 
+fn narrow(board: &argus_board::Board, r: &Run<'_>, items: Vec<Value>) -> Res<Vec<Value>> {
+    let mut items = scoped(board, r, items)?;
+    if let Some(status) = r.text_opt("status") {
+        items.retain(|i| i["status"].as_str() == Some(status));
+    }
+    if let Some(subject) = r.text_opt("subject") {
+        let wanted = slug(subject);
+        items.retain(|i| i["subject"].as_str() == Some(wanted.as_str()));
+    }
+    Ok(items)
+}
+
 /// `coord item list`.
 pub(super) fn list(r: &mut Run<'_>) -> Outcome {
-    r.read(|board, r| {
-        let mut items: Vec<Value> = docs_of(board, "items")
-            .into_iter()
-            .filter(|i| visible(i, r.options))
-            .collect();
-        items = scoped(board, r, items)?;
-        if let Some(status) = r.text_opt("status") {
-            items.retain(|i| i["status"].as_str() == Some(status));
-        }
-        if let Some(subject) = r.text_opt("subject") {
-            let wanted = slug(subject);
-            items.retain(|i| i["subject"].as_str() == Some(wanted.as_str()));
-        }
-        emit(r, items, &ITEMS, row);
-        Ok(())
-    })
+    list_docs(r, "items", &ITEMS, narrow, row)
 }

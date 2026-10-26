@@ -10,15 +10,18 @@ mod read;
 use argus_board::Board;
 use argus_board::inbox::post;
 use argus_board::json::{display, doc, doc_mut, set};
+use argus_board::ops::{Check, authorize};
 use argus_board::store::touch;
 use argus_board::text::slug;
 use argus_core::clock::now_iso;
 use argus_core::js;
 use serde_json::{Value, json};
 
+use super::crud::who_of;
 use super::group::{Group, serve};
-use super::run::{Res, bad};
+use super::run::{Res, Run, bad};
 use crate::cli::{Call, Outcome};
+use crate::who::Caller;
 
 const GROUP: Group = Group {
     name: "lock",
@@ -62,6 +65,26 @@ fn find_lock(board: &Board, resource: &str) -> Res<Value> {
     }
 }
 
+/// A change to a lock that exists, which the caller may do `verb` to.
+fn on_lock(
+    r: &mut Run<'_>,
+    verb: &str,
+    change: impl FnOnce(&mut Board, &mut Run<'_>, (&Caller, &str, &Value)) -> Res<()>,
+) -> Outcome {
+    let resource = resource_arg(r.arg(0))?;
+    r.write(|board, r| {
+        let who = r.begin(board)?;
+        let lock = find_lock(board, &resource)?;
+        may(&who, verb, &lock)?;
+        change(board, r, (&who, &resource, &lock))
+    })
+}
+
+/// Refuses unless the caller may do `verb` to the lock.
+fn may(who: &Caller, verb: &str, lock: &Value) -> Res<()> {
+    authorize(&who_of(who), &Check::new(verb, "locks", Some(lock)))
+}
+
 /// Stamps a lock as changed now.
 fn touched(board: &mut Board, resource: &str) {
     if let Some(lock) = doc_mut(board, "locks", resource) {
@@ -97,7 +120,15 @@ fn hand_on(board: &mut Board, resource: &str, next: Option<&str>, from: &str) {
     };
     set(lock, "queue", Value::Array(queue));
     set(lock, "holder", holder.clone());
-    set(lock, "since", if holder.is_null() { Value::Null } else { json!(now_iso()) });
+    set(
+        lock,
+        "since",
+        if holder.is_null() {
+            Value::Null
+        } else {
+            json!(now_iso())
+        },
+    );
     touched(board, resource);
     if let Some(holder) = holder.as_str() {
         let text = format!("{resource} is yours now (released by {from}).");
