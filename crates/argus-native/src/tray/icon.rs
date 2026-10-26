@@ -7,7 +7,8 @@ use ico::IconDir;
 
 use super::error::TrayError;
 
-const ARGUS_ICO: &[u8] = include_bytes!("../../assets/argus.ico");
+/// The icon file of Argus, for the identity Windows shows on a toast.
+pub const ARGUS_ICO: &[u8] = include_bytes!("../../assets/argus.ico");
 const SIZE: u32 = 32;
 const SAMPLES: i64 = 4;
 const RED: [u8; 3] = [220, 38, 38];

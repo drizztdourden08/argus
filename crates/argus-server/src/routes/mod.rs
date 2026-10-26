@@ -6,6 +6,7 @@ use crate::Router;
 pub mod actions;
 pub mod activity;
 pub mod admin;
+mod blocking;
 pub mod db;
 pub mod files;
 pub mod notify;

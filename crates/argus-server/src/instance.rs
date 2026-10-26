@@ -46,29 +46,47 @@ pub fn write_pid_file(
     std::fs::write(file, rec.to_string())
 }
 
-async fn probe(port: u16, token: Option<&str>) -> Option<Value> {
+/// One request to a server on this machine: the status and the body. A write carries an empty
+/// JSON object. `None` when nothing answers.
+pub async fn call(
+    port: u16,
+    method: &str,
+    path: &str,
+    token: Option<&str>,
+) -> Option<(u16, String)> {
     let mut s = TcpStream::connect(("127.0.0.1", port)).await.ok()?;
     let auth = token
         .map(|t| format!("Authorization: Bearer {t}\r\n"))
         .unwrap_or_default();
+    let (kind, body) = if method == "GET" {
+        ("", "")
+    } else {
+        ("Content-Type: application/json\r\n", "{}")
+    };
+    let len = body.len();
     let req = format!(
-        "GET /api/health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{auth}Connection: close\r\n\r\n"
+        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n{auth}{kind}Content-Length: {len}\r\nConnection: close\r\n\r\n{body}"
     );
     s.write_all(req.as_bytes()).await.ok()?;
     let mut buf = Vec::new();
     s.read_to_end(&mut buf).await.ok()?;
     let text = String::from_utf8_lossy(&buf);
     let (head, body) = text.split_once("\r\n\r\n")?;
-    head.starts_with("HTTP/1.1 200")
-        .then(|| serde_json::from_str(body).ok())
-        .flatten()
+    let status = head.split(' ').nth(1)?.parse().ok()?;
+    Some((status, body.to_owned()))
+}
+
+/// The health answer of the server on `port`, when it says 200.
+pub async fn probe(port: u16, token: Option<&str>) -> Option<Value> {
+    let (status, body) = tokio::time::timeout(PROBE, call(port, "GET", "/api/health", token))
+        .await
+        .ok()??;
+    (status == 200).then(|| serde_json::from_str(&body).ok())?
 }
 
 /// The live server of this home, if any.
 pub async fn running_instance(pid_file: &Path, token: Option<&str>) -> Option<PidRecord> {
     let rec = read_pid_file(pid_file)?;
-    let health = tokio::time::timeout(PROBE, probe(rec.port, token))
-        .await
-        .ok()??;
+    let health = probe(rec.port, token).await?;
     (health["instance"].as_str() == Some(rec.instance.as_str())).then_some(rec)
 }

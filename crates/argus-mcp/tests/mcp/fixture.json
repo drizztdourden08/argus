@@ -1,0 +1,427 @@
+{
+  "alpha": {
+    "meta": {
+      "board": {
+        "project": "alpha",
+        "name": "Alpha",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "counters": {},
+        "handedBuild": "b1",
+        "handedAt": "2026-10-22T10:00:00.000Z"
+      }
+    },
+    "threads": {
+      "coordinator": {
+        "id": "coordinator",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "active",
+        "role": "coordinator",
+        "subject": "lead",
+        "note": "steering",
+        "flags": {},
+        "lastSeen": "2026-10-22T10:00:00.000Z"
+      },
+      "story": {
+        "id": "story",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "active",
+        "subject": "Story",
+        "note": "writing events",
+        "flags": {},
+        "lastSeen": "2026-10-22T10:00:00.000Z"
+      },
+      "old": {
+        "id": "old",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "archived",
+        "archivedAt": "2026-10-22T10:00:00.000Z",
+        "subject": "Old"
+      },
+      "napping": {
+        "id": "napping",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "paused",
+        "subject": "Nap"
+      }
+    },
+    "items": {
+      "I-1": {
+        "id": "I-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "doing",
+        "thread": "coordinator",
+        "subject": "lead",
+        "title": "Ship the pedestal fix",
+        "description": "sword pedestal",
+        "ac": [
+          {
+            "n": 1,
+            "text": "sage speaks",
+            "done": true
+          },
+          {
+            "n": 2,
+            "text": "zelda present",
+            "done": false
+          }
+        ]
+      },
+      "I-2": {
+        "id": "I-2",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "todo",
+        "thread": "story",
+        "subject": "Story",
+        "title": "Write the harbor scene",
+        "ac": []
+      },
+      "I-3": {
+        "id": "I-3",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "done",
+        "thread": "story",
+        "subject": "Story",
+        "title": "Archived scene",
+        "archivedAt": "2026-10-22T10:00:00.000Z",
+        "ac": []
+      },
+      "I-4": {
+        "id": "I-4",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "dropped",
+        "thread": "story",
+        "title": "Deleted scene",
+        "deletedAt": "2026-10-22T10:00:00.000Z",
+        "ac": []
+      }
+    },
+    "tests": {
+      "T-1": {
+        "id": "T-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "item": "I-1",
+        "thread": "coordinator",
+        "title": "A sword nobody pulled changes nothing",
+        "covers": "gate PedestalScenes",
+        "mode": "manual",
+        "status": "pending",
+        "build": "b1",
+        "steps": [
+          "Walk in."
+        ],
+        "proofs": [
+          {
+            "n": 1,
+            "caption": "altar",
+            "at": "2026-10-22T10:00:00.000Z",
+            "url": "/files/alpha/proofs/T-1-1.png"
+          }
+        ],
+        "result": null
+      },
+      "T-2": {
+        "id": "T-2",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "item": "I-1",
+        "thread": "coordinator",
+        "title": "Unit suite",
+        "covers": "core",
+        "mode": "auto",
+        "status": "pass",
+        "build": null,
+        "proofs": [],
+        "result": {
+          "status": "pass",
+          "text": "green",
+          "by": "coordinator",
+          "at": "2026-10-22T10:00:00.000Z"
+        }
+      },
+      "T-3": {
+        "id": "T-3",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "item": "I-2",
+        "thread": "story",
+        "title": "Harbor loads",
+        "covers": "harbor",
+        "mode": "manual",
+        "status": "pending",
+        "build": "b2",
+        "proofs": []
+      }
+    },
+    "entries": {
+      "Q-1": {
+        "id": "Q-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "kind": "question",
+        "author": "coordinator",
+        "thread": "coordinator",
+        "item": "I-1",
+        "text": "Should the pedestal glow after the sword is pulled?",
+        "context": "A visual polish choice on the story scene. It only changes the look of the sword moment. If unanswered the scene stays plain.",
+        "needs": "decision",
+        "options": [
+          "Add the glow",
+          "Keep it plain"
+        ],
+        "status": "open"
+      },
+      "D-1": {
+        "id": "D-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "kind": "decision",
+        "author": "human",
+        "thread": "coordinator",
+        "item": "I-1",
+        "text": "Go with the glow",
+        "status": "pending"
+      },
+      "O-m1x2-ab12": {
+        "id": "O-m1x2-ab12",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "kind": "edit",
+        "author": "human",
+        "status": "applied",
+        "text": ""
+      }
+    },
+    "locks": {
+      "rom": {
+        "resource": "rom",
+        "holder": "story",
+        "queue": [
+          "coordinator"
+        ]
+      }
+    },
+    "actions": {
+      "H-1": {
+        "id": "H-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "thread": "coordinator",
+        "item": "I-1",
+        "text": "Plug in the controller",
+        "status": "pending"
+      }
+    },
+    "agents": {
+      "A-1": {
+        "id": "A-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "name": "builder",
+        "thread": "coordinator",
+        "task": "build the pedestal fix",
+        "status": "working",
+        "kind": "build"
+      },
+      "A-2": {
+        "id": "A-2",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "name": "tester",
+        "thread": "story",
+        "task": "run the suite",
+        "status": "done",
+        "kind": "test"
+      }
+    },
+    "log": {
+      "lead": {
+        "id": "lead",
+        "subject": "lead",
+        "entries": [
+          {
+            "seq": 1,
+            "ts": "2026-10-22T10:00:00.000Z",
+            "text": "landed the glow shader"
+          }
+        ]
+      }
+    },
+    "runs": {
+      "R-1": {
+        "id": "R-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "name": "hello",
+        "kind": "task",
+        "status": "exited",
+        "exitCode": 0,
+        "agent": "A-1",
+        "origin": "cli",
+        "by": "coordinator"
+      }
+    },
+    "launches": {
+      "hello": {
+        "name": "hello",
+        "cmd": "node -e \"1\"",
+        "env": {},
+        "hand": false
+      },
+      "launcher-master": {
+        "name": "launcher-master",
+        "launcher": "master",
+        "cmd": "game run",
+        "env": {},
+        "hand": true,
+        "kind": "launch"
+      },
+      "launcher-build-1": {
+        "name": "launcher-build-1",
+        "launcher": "build-1",
+        "cmd": "game run --wt build-1",
+        "env": {},
+        "hand": true,
+        "kind": "launch"
+      }
+    },
+    "builds": {
+      "b1": {
+        "tag": "b1",
+        "title": "First",
+        "launcher": "build-1",
+        "thread": "coordinator"
+      },
+      "b2": {
+        "tag": "b2",
+        "title": "Second",
+        "launcher": null,
+        "cmd": "old way",
+        "thread": "story"
+      }
+    },
+    "launchers": {
+      "build-1": {
+        "name": "build-1",
+        "title": "Pedestal build",
+        "cmd": "game run --wt build-1",
+        "kind": "app",
+        "branch": "fix/pedestal",
+        "current": true,
+        "retiredAt": null,
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "by": "coordinator"
+      },
+      "master": {
+        "name": "master",
+        "title": "Main checkout",
+        "cmd": "game run",
+        "kind": "app",
+        "branch": "main",
+        "current": false,
+        "retiredAt": null,
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "by": "coordinator"
+      },
+      "old-1": {
+        "name": "old-1",
+        "title": "Old",
+        "cmd": "game run --wt old-1",
+        "kind": "dev",
+        "current": false,
+        "retiredAt": "2026-10-22T10:00:00.000Z",
+        "retiredBy": "coordinator",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "by": "coordinator"
+      }
+    }
+  },
+  "beta": {
+    "meta": {
+      "board": {
+        "project": "beta",
+        "name": "Beta",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "counters": {},
+        "handedBuild": null
+      }
+    },
+    "threads": {
+      "coordinator": {
+        "id": "coordinator",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "active",
+        "subject": "lead",
+        "flags": {}
+      }
+    },
+    "items": {
+      "I-1": {
+        "id": "I-1",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "todo",
+        "thread": "coordinator",
+        "title": "Pedestal in the beta game",
+        "ac": []
+      }
+    },
+    "tests": {},
+    "entries": {},
+    "locks": {},
+    "actions": {},
+    "agents": {},
+    "log": {},
+    "runs": {},
+    "launches": {}
+  },
+  "_portfolio": {
+    "cards": {
+      "alpha": {
+        "id": "alpha",
+        "name": "Alpha",
+        "threads": 2,
+        "runs": {
+          "running": 0
+        }
+      },
+      "beta": {
+        "id": "beta",
+        "name": "Beta",
+        "threads": 1,
+        "runs": {
+          "running": 0
+        }
+      }
+    }
+  }
+}

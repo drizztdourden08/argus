@@ -694,7 +694,7 @@ only.
 | `argus resync [--project k] [--hard]`, `token --rotate` | same verbs |
 | `argus wake-stream --project k [--thread id] [--id label]` | same verb, same stdout lines and exit codes |
 | `argus mcp [--project k]` | same verb |
-| `argus tray [start or stop or status]` | same verb |
+| `argus tray [run or start or stop or status]` | same verb; `run` is the tray process, `start` launches it detached |
 | `argus autostart install or remove or status`, `install-mcp ...` | same verbs |
 | `argus parity --left url --right url` | new: the shadow comparison below |
 | `argus coord ...` | slice 8: the coord CLI |

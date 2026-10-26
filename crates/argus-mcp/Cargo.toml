@@ -1,6 +1,6 @@
 [package]
 name = "argus-mcp"
-description = "Argus mcp crate."
+description = "Argus MCP: the tool host, the resources, the JSON-RPC handler and the stdio bridge."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,20 @@ license.workspace = true
 publish.workspace = true
 authors.workspace = true
 repository.workspace = true
+
+[dependencies]
+argus-core = { path = "../argus-core" }
+async-trait = "0.1"
+base64 = "0.22"
+getrandom = "0.3"
+regex = "1"
+reqwest = { version = "0.12", default-features = false }
+serde_json = { version = "1", features = ["preserve_order"] }
+tokio = { version = "1", features = ["io-util", "macros", "rt", "sync", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "sync", "time"] }
 
 [lints]
 workspace = true

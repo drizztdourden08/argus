@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, PoisonError, RwLock};
 
@@ -21,6 +22,9 @@ pub(crate) fn clear_marks(b: &mut Board) {
     }
 }
 
+/// What listens for a project board that was exported again; it is given the key.
+pub(crate) type BoardListener = Arc<dyn Fn(&str) + Send + Sync>;
+
 /// The shared state.
 pub(crate) struct State {
     pub opts: SyncOptions,
@@ -30,6 +34,7 @@ pub(crate) struct State {
     pub last_event_at: Mutex<Option<String>>,
     pub stopped: AtomicBool,
     pub portfolio_pending: AtomicBool,
+    pub listeners: Mutex<Vec<BoardListener>>,
 }
 
 impl State {
@@ -42,6 +47,7 @@ impl State {
             last_event_at: Mutex::new(None),
             stopped: AtomicBool::new(true),
             portfolio_pending: AtomicBool::new(false),
+            listeners: Mutex::new(Vec::new()),
         }
     }
 
@@ -74,6 +80,18 @@ impl State {
             .write()
             .unwrap_or_else(PoisonError::into_inner)
             .insert(key.to_owned(), board);
+    }
+
+    /// Tells every listener that the board of a project was exported.
+    pub fn announce(&self, key: &str) {
+        let now: Vec<BoardListener> = self
+            .listeners
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone();
+        for listener in now {
+            listener(key);
+        }
     }
 
     pub fn set_cards(&self, cards: Vec<Value>) {

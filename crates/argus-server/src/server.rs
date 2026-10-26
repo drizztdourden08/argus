@@ -28,7 +28,7 @@ use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
-use crate::{ProcsOptions, Router, RunsOptions, Services, WorktreesOptions, routes};
+use crate::{NotifyOptions, ProcsOptions, Router, RunsOptions, Services, WorktreesOptions, routes};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -58,6 +58,8 @@ pub struct ServeOptions {
     pub run_service: RunsOptions,
     /// The worktree scanner.
     pub worktrees: WorktreesOptions,
+    /// The notifications to the owner.
+    pub notify: NotifyOptions,
 }
 
 impl ServeOptions {
@@ -76,6 +78,7 @@ impl ServeOptions {
             procs: ProcsOptions::default(),
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
+            notify: NotifyOptions::default(),
         }
     }
 }

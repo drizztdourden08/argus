@@ -92,13 +92,12 @@ async fn blocking<T: Send + 'static>(
     work: impl FnOnce(&WorktreeService) -> Result<T, WtError> + Send + 'static,
 ) -> Result<Result<T, WtError>, ApiError> {
     let (svc, key) = (Arc::clone(&ctx.svc), key.to_owned());
-    tokio::task::spawn_blocking(move || {
+    crate::routes::blocking::blocking(move || {
         let out = work(&service);
         crate::services::worktrees::publish(&svc, &service, &key);
         out
     })
     .await
-    .map_err(|_| ApiError::internal())
 }
 
 fn answer<T>(out: Result<T, WtError>, body: impl FnOnce(T) -> Value) -> Reply {
