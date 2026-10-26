@@ -3,7 +3,8 @@
 use argus_core::js;
 
 /// `clipText`: the text cut to `max` UTF-16 units with an ellipsis when it was longer.
-pub(crate) fn clip_text(text: &str, max: usize) -> String {
+#[must_use]
+pub fn clip_text(text: &str, max: usize) -> String {
     if js::len(text) > max {
         format!("{}…", js::slice(text, max.saturating_sub(1)))
     } else {
@@ -12,7 +13,8 @@ pub(crate) fn clip_text(text: &str, max: usize) -> String {
 }
 
 /// `slug`: lower case, runs of other characters become one dash, cut to 60.
-pub(crate) fn slug(text: &str) -> String {
+#[must_use]
+pub fn slug(text: &str) -> String {
     let mut out = String::new();
     let mut dash = false;
     for c in js::trim(text).to_lowercase().chars() {

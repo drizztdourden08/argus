@@ -13,7 +13,7 @@ use crate::json::{array_mut, slot};
 static SALT: AtomicU64 = AtomicU64::new(0);
 
 /// One message for an inbox.
-pub(crate) struct Message<'a> {
+pub struct Message<'a> {
     pub id: String,
     pub from: &'a str,
     pub kind: &'a str,
@@ -22,12 +22,13 @@ pub(crate) struct Message<'a> {
 }
 
 /// `m-<epoch ms>-<suffix>`: the id form of inbox messages.
-pub(crate) fn message_id(suffix: &str) -> String {
+#[must_use]
+pub fn message_id(suffix: &str) -> String {
     format!("m-{}-{suffix}", now_ms())
 }
 
 /// Append a message to a thread's inbox (created when missing).
-pub(crate) fn push(board: &mut Board, to: &str, m: &Message) {
+pub fn push(board: &mut Board, to: &str, m: &Message) {
     array_mut(slot(board, "inbox"), to).push(json!({
         "id": m.id, "ts": now_iso(), "from": m.from, "kind": m.kind, "text": m.text,
         "ref": m.reference, "deliveredAt": null,
@@ -52,7 +53,7 @@ fn random_suffix() -> String {
 }
 
 /// `queue`: one line into a thread's inbox. False for a thread that is gone.
-pub(crate) fn queue(
+pub fn queue(
     board: &mut Board,
     to: &str,
     from: &str,

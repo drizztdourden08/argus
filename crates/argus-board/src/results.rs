@@ -10,7 +10,7 @@ use crate::store::{LogLine, append_log, stamp};
 use crate::text::clip_text;
 
 /// What a result says: the status the test gets, the note and who recorded it.
-pub(crate) struct Outcome<'a> {
+pub struct Outcome<'a> {
     pub status: &'a Value,
     pub text: &'a str,
     pub by: &'a str,
@@ -43,7 +43,10 @@ fn tick_covered(board: &mut Board, test: &Value, by: &str) -> Result<(), BoardEr
 
 /// Record a result on a test: the status, the result and a run in its history. A pass ticks the
 /// item's covered acceptance criteria. One line goes to the work log.
-pub(crate) fn record_result(
+///
+/// # Errors
+/// The status of the test or an item cannot be stamped.
+pub fn record_result(
     board: &mut Board,
     test_id: &str,
     outcome: &Outcome,
