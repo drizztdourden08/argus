@@ -12,7 +12,11 @@ use tempfile::TempDir;
 
 use crate::{Reply, Request, SseReader, make_home, request};
 
-/// How to start a test server.
+/// Changes the serve options of a test server after the testkit set them.
+pub type Tweak = Arc<dyn Fn(&mut ServeOptions) + Send + Sync>;
+
+/// How to start a test server. Services that sample or act on the machine are off unless a
+/// tweak turns them on.
 pub struct TestOptions {
     /// Write the fixture boards first.
     pub seed: bool,
@@ -28,6 +32,8 @@ pub struct TestOptions {
     pub coord_home: Option<PathBuf>,
     /// Reuse a dashboard home (a restart).
     pub dashboard_home: Option<PathBuf>,
+    /// Last say on the serve options (a service's seams).
+    pub tweak: Option<Tweak>,
 }
 
 impl Default for TestOptions {
@@ -40,6 +46,7 @@ impl Default for TestOptions {
             heartbeat: Duration::from_secs(15),
             coord_home: None,
             dashboard_home: None,
+            tweak: None,
         }
     }
 }
@@ -107,6 +114,10 @@ impl TestServer {
         opts.shadow = o.shadow;
         opts.heartbeat = o.heartbeat;
         opts.web_root = Some(dashboard_home.join("no-web-build"));
+        opts.procs.enabled = false;
+        if let Some(tweak) = &o.tweak {
+            tweak(&mut opts);
+        }
         let handle = tokio::time::timeout(Duration::from_secs(30), serve(opts))
             .await
             .expect("the test server starts within 30 s")

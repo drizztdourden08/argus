@@ -10,10 +10,17 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+argus-agents = { path = "../argus-agents" }
 argus-board = { path = "../argus-board" }
 argus-core = { path = "../argus-core" }
+argus-launchers = { path = "../argus-launchers" }
+argus-native = { path = "../argus-native" }
+argus-notify = { path = "../argus-notify" }
+argus-procs = { path = "../argus-procs" }
 argus-store = { path = "../argus-store" }
 argus-sync = { path = "../argus-sync" }
+argus-wake = { path = "../argus-wake" }
+argus-worktrees = { path = "../argus-worktrees" }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 bytes = "1"
 form_urlencoded = "1"

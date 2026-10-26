@@ -165,12 +165,21 @@ impl DocStore<'_> {
     pub fn seq(&self) -> i64;
 }
 pub struct ActivityLog { .. }
+impl ActivityLog {
+    pub fn new(db: Arc<Db>, clock: Arc<dyn Clock>, log: Arc<Logger>) -> ActivityLog;
+    pub fn add(&self, new: NewActivity) -> Option<ActivityEntry>;
+    pub fn list(&self, filter: &ActivityFilter) -> Result<Vec<ActivityEntry>, StoreError>;
+    pub fn mirror(&self);
+    pub fn note(&self, note: &LogNote<'_>);
+}
 ```
 
 One writer connection lives on a dedicated thread behind a channel; readers use a small pool of
 read-only connections (WAL lets them read while the writer works). `apply` and `replace` emit
 one bus event per non-empty result. `ActivityLog` is DESIGN 13.11: `add` never fails its caller,
-`list` filters, the last 1000 rows stay, the newest 300 are `activity` docs of `_portfolio`.
+`list` filters, the last 1000 rows stay, the newest 300 are `activity` docs of `_portfolio`
+(`mirror` writes them again after a hard resync), `note` is the Node `wrapLog`: a service's warn
+or error line, one per message within a minute.
 
 ### argus-board
 
@@ -230,17 +239,44 @@ impl SyncService {
 streams, page serving, `/files`, and the composition root:
 
 ```rust
-pub struct Services { pub config: Arc<Config>, pub db: Db, pub bus: Bus, pub sync: Arc<SyncService>,
-    pub runs: Option<Arc<RunService>>, pub wake: Option<Arc<WakeService>>, pub procs: Option<Arc<ProcMonitor>>,
-    pub worktrees: Option<Arc<WorktreeService>>, pub agents: Option<Arc<AgentServices>>,
-    pub notify: Option<Arc<Notifier>>, pub activity: Option<ActivityLog> }
+pub struct Services { pub config, pub paths, pub db: Arc<Db>, pub bus: Bus, pub log: Arc<Logger>,
+    pub activity: Arc<ActivityLog>, pub tray: TrayFiles, pub sync: Option<Arc<SyncService>>,
+    pub runs: Option<Arc<RunService<SystemHost>>>, pub launcher_stale: Option<Arc<LauncherStale>>,
+    pub wake: Option<Arc<Mutex<WakeService>>>, pub agent_watcher: Option<Arc<AgentWatcher>>,
+    pub agent_reaper: Option<Arc<AgentReaper>>, pub agent_reconciler: Option<Arc<AgentReconciler>>,
+    pub procs: Option<Arc<ProcsService>>, pub worktrees: Option<Arc<WorktreeService>>,
+    pub notify: Option<Arc<Notify>>, pub notifier: Option<Arc<dyn Notifier>>, .. }
 pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError>;
 ```
 
-Boot order follows the Node `services.mjs`: open the database, activity, sync, runs recovery,
-sync start (posts recovery and a full export), wake, agents, worktrees, notify, procs last, then
-the routes and the listener. Shutdown runs it backwards. A service turned off (the Node
-`opts.disable`) is `None` and its routes answer 503 `unavailable`.
+A service that is off (an option, a failed build) is `None` and its routes answer 503
+`unavailable`. `activity` is never `None`: every service writes to it.
+
+#### Service layout
+
+One convention for every service, so a service is wired by touching only its own files:
+
+| File | Holds |
+|---|---|
+| `services/<svc>.rs` | `build(&Services, &ServeOptions) -> Option<Arc<T>>`, `start(&Arc<Services>)`, `stop(&Services)`, and the service's test seams as a `<Svc>Options` struct on `ServeOptions` |
+| `adapters/<svc>.rs` | the crate's store, host and sink traits implemented over `DocStore`, the tables, `BoardReader`, the wake engine and `ActivityAdapter` |
+| `adapters/activity/<crate>.rs` | the crate's activity port over `ActivityLog` (already written for every crate) |
+| `routes/<svc>.rs` | `register(&mut Router)`, called by one line of `routes::register_all` |
+| `tests/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
+
+`services/compose.rs` holds the three orders and already calls every service: `build_all`
+(runs, watcher, sync, reaper, reconciler, wake, stale, procs, worktrees, notify), `start_all` (the
+Node boot order: wake before sync, whose boot recovery may wake threads) and `stop_all` (the
+reverse). A service not wired yet has a stub of those functions answering `None` or doing nothing;
+wiring it replaces the bodies, never `compose.rs`. Rules of an adapter: a trait method that fails
+returns the crate's error as text, nothing blocks the runtime (a blocking service call from a route
+goes through `spawn_blocking`), a host method for a service that is `None` is a no-op.
+
+The activity log is the one service built before `Services` exists. `services/procs.rs` with
+`adapters/procs.rs` and `routes/procs.rs` is the worked example.
+
+Test servers keep the services that sample or act on the machine off. `TestOptions::tweak` changes
+the `ServeOptions` last: the process monitor test turns `procs` on with a fake sampler and killer.
 
 ### argus-wake, argus-procs, argus-worktrees, argus-launchers, argus-agents
 
@@ -583,9 +619,16 @@ at temp folders.
 
 ### Activity log
 
-`ActivityLog` in `argus-store`, DESIGN 13.11. Every service writes its one-liners through it; a
-`wrap_log` helper turns a service's warn and error log lines into activity rows at most once a
-minute per message.
+`ActivityLog` in `argus-store`, DESIGN 13.11. Every service writes its one-liners through it, as
+`NewActivity` (kind, level, text, project, thread). `ActivityLog::note` turns a service's warn and
+error log lines into rows at most once a minute per message. `GET /api/activity[?limit&kind&level]`
+answers `{activity}` newest first. The server writes `dashboard started` and `dashboard stopped`,
+and writes the docs again when a reset of `_portfolio` reaches the bus.
+
+Each service crate defines its own activity trait, and `ActivityAdapter` (`adapters/activity/`)
+implements it: `argus-wake`, `argus-notify` (kind `note`) and `argus-agents` as sinks; the process
+monitor, the worktree service and the launcher wakes as methods (`procs_line`, `worktree_line`,
+`stale_note`) their own adapters call. The run service's warnings go to the server log only.
 
 ### Notifications (argus-notify)
 

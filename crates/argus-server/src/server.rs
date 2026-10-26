@@ -5,7 +5,7 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU16, AtomicUsize};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 
 use argus_core::clock::now_iso;
@@ -13,8 +13,9 @@ use argus_core::config::{ConfigError, HOST, load_config};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
 use argus_core::{Bus, Config, Paths};
+use argus_native::TrayFiles;
 use argus_store::{Db, PruneOptions, StoreError};
-use argus_sync::{RunsView, ScopeQueue, SyncOptions, SyncService};
+use argus_sync::{RunsView, ScopeQueue};
 use serde_json::json;
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
@@ -23,9 +24,10 @@ use tokio_util::sync::CancellationToken;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::security::LoginCodes;
+use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
-use crate::{Router, Services, routes};
+use crate::{ProcsOptions, Router, Services, routes};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -49,6 +51,8 @@ pub struct ServeOptions {
     pub echo_log: bool,
     /// Run counts for the cards.
     pub runs: Option<Arc<dyn RunsView>>,
+    /// The process monitor.
+    pub procs: ProcsOptions,
 }
 
 impl ServeOptions {
@@ -64,6 +68,7 @@ impl ServeOptions {
             shadow: false,
             echo_log: false,
             runs: None,
+            procs: ProcsOptions::default(),
         }
     }
 }
@@ -123,15 +128,6 @@ fn random_hex(n: usize) -> String {
     argus_core::config::hex(&b)
 }
 
-async fn start_sync(opts: &ServeOptions, base: SyncOptions) -> Option<Arc<SyncService>> {
-    if !opts.sync {
-        return None;
-    }
-    let sync = Arc::new(SyncService::new(base));
-    sync.start().await;
-    Some(sync)
-}
-
 async fn checked_config(paths: &Paths, port: Option<u16>) -> Result<Config, ServeError> {
     std::fs::create_dir_all(&paths.home)?;
     let config = load_config(paths, port)?;
@@ -145,7 +141,15 @@ async fn checked_config(paths: &Paths, port: Option<u16>) -> Result<Config, Serv
     }
 }
 
-async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
+struct Core {
+    paths: Paths,
+    config: Arc<RwLock<Config>>,
+    log: Arc<Logger>,
+    bus: Bus,
+    db: Arc<Db>,
+}
+
+async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
     let config = checked_config(&paths, opts.port).await?;
     let log = Arc::new(
@@ -158,6 +162,23 @@ async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
     );
     let bus = Bus::new();
     let db = Arc::new(Db::open(&paths.db, bus.clone())?);
+    Ok(Core {
+        paths,
+        config: Arc::new(RwLock::new(config)),
+        log,
+        bus,
+        db,
+    })
+}
+
+fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
+    let Core {
+        paths,
+        config,
+        log,
+        bus,
+        db,
+    } = core;
     let instance = random_hex(8);
     db.kv_set("instance", &instance)?;
     let fanout = Arc::new(Fanout::default());
@@ -166,26 +187,27 @@ async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
         bus.on_docs(move |e| f1.on_docs(e)),
         bus.on_reset(move |e| f2.on_reset(e)),
     ];
-    let config = Arc::new(RwLock::new(config));
-    let queue = ScopeQueue::new();
-    let base = SyncOptions {
-        paths: paths.clone(),
-        db: Arc::clone(&db),
-        config: Arc::clone(&config),
-        log: Arc::clone(&log),
-        runs: opts.runs.clone(),
-        queue: queue.clone(),
-    };
-    let sync = start_sync(opts, base).await;
     Ok(Services {
         config,
         env_port: opts.port,
+        tray: TrayFiles::new(&paths.home),
         paths,
+        activity: activity::build(&db, &log),
         db,
         bus,
         log,
-        sync,
-        queue,
+        sync: None,
+        queue: ScopeQueue::new(),
+        runs: None,
+        launcher_stale: None,
+        wake: None,
+        agent_watcher: None,
+        agent_reaper: None,
+        agent_reconciler: None,
+        procs: None,
+        worktrees: None,
+        notify: None,
+        notifier: None,
         instance,
         started_at: now_iso(),
         shadow: opts.shadow,
@@ -196,8 +218,14 @@ async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
         codes: LoginCodes::default(),
         stop: CancellationToken::new(),
         port: AtomicU16::new(0),
-        _bus_links: links,
+        links: Mutex::new(links),
     })
+}
+
+async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
+    let mut svc = assemble(open_core(opts).await?, opts)?;
+    compose::build_all(&mut svc, opts);
+    Ok(svc)
 }
 
 async fn bind(port: u16) -> Result<TcpListener, ServeError> {
@@ -231,9 +259,7 @@ fn spawn_prune(svc: &Arc<Services>) {
 
 fn close(svc: &Services) {
     svc.log.info("stopping", json!({}));
-    if let Some(s) = &svc.sync {
-        s.stop();
-    }
+    compose::stop_all(svc);
     svc.db.checkpoint();
     if read_pid_file(&svc.paths.pid_file).is_some_and(|r| r.instance == svc.instance) {
         let _ = std::fs::remove_file(&svc.paths.pid_file);
@@ -278,7 +304,7 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     let listener = match bind(svc.config().port).await {
         Ok(l) => l,
         Err(e) => {
-            close(&svc);
+            svc.db.checkpoint();
             return Err(e);
         }
     };
@@ -286,6 +312,7 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     svc.port.store(port, std::sync::atomic::Ordering::SeqCst);
     write_pid_file(&svc.paths.pid_file, port, &svc.started_at, &svc.instance)?;
     let svc = Arc::new(svc);
+    compose::start_all(&svc).await;
     prune(&svc);
     spawn_prune(&svc);
     svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": svc.shadow }));
