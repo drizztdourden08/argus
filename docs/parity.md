@@ -104,8 +104,8 @@ their status is `n/a`.
 | `pages.worktrees.test.mjs` | Worktrees tab | 5 | `apps/web/src/pages/board/worktrees/WorktreesTab.test.tsx` | todo |
 | `portfolio.longsend.test.mjs` | Portfolio send down | 5 | `crates/argus-server/tests/portfolio_send.rs` | todo |
 | `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/procs_http.rs` | todo |
-| `procs.monitor.test.mjs` | Process rules and sampling; Process alerts and kills | 4 | `crates/argus-procs/tests/monitor.rs` | todo |
-| `procs.sampler.test.mjs` | Process rules and sampling; Native process sampling | 4, 6 | `crates/argus-procs/tests/sampler.rs`, `crates/argus-native/tests/sample.rs` | todo |
+| `procs.monitor.test.mjs` | Process rules and sampling; Process alerts and kills | 4 | `crates/argus-procs/tests/monitor.rs` | done |
+| `procs.sampler.test.mjs` | Process rules and sampling; Native process sampling | 4, 6 | `crates/argus-procs/tests/sampler.rs`, `crates/argus-native/tests/sample.rs` | done |
 | `render.mcp.test.mjs` | MCP install and render | 7 | stays in `ai-config`, run there at switch-over | todo |
 | `render.publish.test.mjs` | none: tests the render in `ai-config` | none | stays in `ai-config` | n/a |
 | `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/runs_cli.rs` | todo |
