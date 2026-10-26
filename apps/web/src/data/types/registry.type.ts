@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind types */
+type RegistryState = 'fault' | 'waking' | 'busy' | 'listening' | 'idle';
+
 interface RegistryFault {
   since: string;
   reason: string;
@@ -13,14 +15,15 @@ interface RegistryPending {
 }
 
 interface RegistryRow {
+  id: string;
   project: string;
-  thread?: string;
+  thread: string;
   session?: string | null;
   role?: string;
   listening?: boolean;
   listenerLabel?: string | null;
-  since?: string;
-  state: string;
+  since?: string | null;
+  state: RegistryState;
   pendingWake?: RegistryPending | null;
   fault?: RegistryFault | null;
   lastSeen?: string | null;
@@ -39,4 +42,4 @@ interface SentEntry {
   status?: string;
 }
 
-export type { RegistryFault, RegistryRow, SentEntry };
+export type { RegistryFault, RegistryRow, RegistryState, SentEntry };

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { postEntry } from '../posts';
 import { BULK_CHUNK } from './agents.constants';
-import { ownerEntry } from './owner-entry';
+import { ownerEntry } from '../posts';
 import type { BulkKind, BulkSent } from './agents.type';
 
 const chunksOf = (ids: readonly string[]): string[][] =>

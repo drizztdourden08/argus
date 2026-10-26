@@ -1,19 +1,15 @@
 /* @layer renderer-app @kind logic */
 import type { DocData } from '../api';
+import { newEntryId } from './new-entry-id';
 
-const entryId = (): string => {
-  const tail = Math.random().toString(36).slice(2, 6).padEnd(4, '0');
-  return `O-${Date.now().toString(36)}-${tail}`;
-};
-
-const ownerEntry = (fields: DocData): DocData => ({
-  id: entryId(),
+const ownerEntry = (fields: DocData, now: Date = new Date()): DocData => ({
+  id: newEntryId(now.getTime()),
   author: 'human',
   replyTo: null,
   item: null,
   thread: null,
   status: 'new',
-  createdAt: new Date().toISOString(),
+  createdAt: now.toISOString(),
   ...fields,
 });
 
