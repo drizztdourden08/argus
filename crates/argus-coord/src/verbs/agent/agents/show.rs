@@ -28,7 +28,8 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         if agent["source"].is_null() {
             argus_board::json::set(&mut agent, "source", "manual");
         }
-        let text = serde_json::to_string_pretty(&agent).map_err(|e| CoordError::refuse(e.to_string()))?;
+        let text =
+            serde_json::to_string_pretty(&agent).map_err(|e| CoordError::refuse(e.to_string()))?;
         run.say(&text);
         Ok(())
     })

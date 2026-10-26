@@ -18,7 +18,9 @@ use crate::verbs::agent::rules::{refused, typed_board};
 /// No tag, a closed or draft bundle, no master launcher, a thread that is not the coordinator.
 pub fn hand(call: &mut Call<'_>) -> Outcome {
     let Some(tag) = call.positional.first().filter(|t| !t.is_empty()).cloned() else {
-        return Err(CoordError::refuse("name the build: coord build hand <tag>."));
+        return Err(CoordError::refuse(
+            "name the build: coord build hand <tag>.",
+        ));
     };
     write(call, |board, who, run| {
         check_hand(&typed_board(board)?, &tag).map_err(refused)?;

@@ -12,8 +12,8 @@ use serde_json::Value;
 
 use super::parts::Parts;
 use super::support::bundle_mut;
-use crate::verbs::agent::base::links::linked;
 use crate::cli::exit::CoordError;
+use crate::verbs::agent::base::links::linked;
 use crate::verbs::agent::rules;
 use crate::who::Caller;
 
@@ -181,7 +181,17 @@ impl Step<'_> {
         }
         let (tag, cwd) = (self.tag, self.cwd);
         let written = rules::run(self.board, self.who, |b, w, at| {
-            write_launcher(b, w, own, &patch, &WriteContext { cwd, bundle: Some(tag), at })
+            write_launcher(
+                b,
+                w,
+                own,
+                &patch,
+                &WriteContext {
+                    cwd,
+                    bundle: Some(tag),
+                    at,
+                },
+            )
         })?;
         let marked: Vec<String> = if written.created {
             parts.launch.keys().into_iter().map(str::to_owned).collect()
@@ -200,7 +210,13 @@ impl Step<'_> {
             self.done.notes.push(format!("launcher {own} {how}"));
         }
         if !written.play.is_empty() {
-            self.done.notes.push(written.play.strip_suffix('.').unwrap_or(&written.play).to_owned());
+            self.done.notes.push(
+                written
+                    .play
+                    .strip_suffix('.')
+                    .unwrap_or(&written.play)
+                    .to_owned(),
+            );
         }
         self.relink(Some(own))?;
         self.forget();

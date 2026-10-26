@@ -140,10 +140,9 @@ pub fn find(
         .collect();
     found.sort_by(|a, b| newest(a, b));
     let running = if want == Want::Live { "running " } else { "" };
-    found
-        .first()
-        .map(|a| display(&a["id"]))
-        .ok_or_else(|| CoordError::refuse(format!("no {running}agent named \"{name}\" on {owner}.")))
+    found.first().map(|a| display(&a["id"])).ok_or_else(|| {
+        CoordError::refuse(format!("no {running}agent named \"{name}\" on {owner}."))
+    })
 }
 
 /// What an agent that ended leaves behind goes when it runs again: no end time, no result and
@@ -168,12 +167,7 @@ pub fn agent_mut<'a>(board: &'a mut Board, id: &str) -> Result<&'a mut Value, Co
 ///
 /// # Errors
 /// As [`find`].
-pub fn named(
-    board: &Board,
-    who: &Caller,
-    run: &Run<'_>,
-    want: Want,
-) -> Result<String, CoordError> {
+pub fn named(board: &Board, who: &Caller, run: &Run<'_>, want: Want) -> Result<String, CoordError> {
     let reference = run.positional.first().map(String::as_str);
     find(board, Some(who), reference, run.options, want)
 }

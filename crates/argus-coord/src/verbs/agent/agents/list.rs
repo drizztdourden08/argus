@@ -2,8 +2,8 @@
 //! running agents of every thread by default; `--all` adds the finished ones, `--status s` picks
 //! one status, `--archived` and `--deleted` look at the hidden ones.
 
-use argus_board::json::{display, section, strict_eq, truthy};
 use argus_board::Board;
+use argus_board::json::{display, section, strict_eq, truthy};
 use serde_json::Value;
 
 use crate::cli::Call;
@@ -64,7 +64,9 @@ fn filters(run: &Run<'_>) -> Result<(Option<String>, Option<String>, bool), Coor
             STATUSES.join(", ")
         )));
     }
-    let widened = ["all", "archived", "deleted"].iter().any(|f| run.options.flag(f));
+    let widened = ["all", "archived", "deleted"]
+        .iter()
+        .any(|f| run.options.flag(f));
     Ok((thread, status, widened))
 }
 
@@ -86,7 +88,11 @@ fn model_cell(a: &Value) -> String {
 }
 
 fn row(a: &Value, now_ms: i64) -> Vec<String> {
-    let source = if a["source"].is_null() { "manual".to_owned() } else { display(&a["source"]) };
+    let source = if a["source"].is_null() {
+        "manual".to_owned()
+    } else {
+        display(&a["source"])
+    };
     vec![
         cell(&a["id"]),
         cell(&a["thread"]),
@@ -103,7 +109,13 @@ fn row(a: &Value, now_ms: i64) -> Vec<String> {
     ]
 }
 
-fn chosen<'a>(board: &'a Board, run: &Run<'_>, status: Option<&str>, widened: bool, thread: Option<&str>) -> Vec<&'a Value> {
+fn chosen<'a>(
+    board: &'a Board,
+    run: &Run<'_>,
+    status: Option<&str>,
+    widened: bool,
+    thread: Option<&str>,
+) -> Vec<&'a Value> {
     let wanted = |a: &Value| match status {
         Some(s) => a["status"].as_str() == Some(s),
         None => widened || a["status"].as_str().is_some_and(|s| LIVE.contains(&s)),

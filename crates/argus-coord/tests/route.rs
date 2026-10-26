@@ -115,7 +115,7 @@ fn an_unported_verb_exits_120_before_reading_stdin_or_touching_anything() {
             "",
         );
         inv.stdin = Box::new(Watched(Arc::clone(&reads)));
-        let code = run(&mut inv);
+        let code = dispatch(&mut inv, &[]);
         assert_eq!(code, NOT_PORTED, "{verb}");
         assert_eq!(code, 120);
         assert_eq!(out.text(), "", "{verb} wrote on stdout");
@@ -148,10 +148,10 @@ fn the_exit_120_does_not_depend_on_the_project() {
     let home = Home::new();
     let bare = home.folder("bare");
     // no .ai-config.json above: a ported verb would refuse, an unported one never looks
-    let ran = coord(&["item", "list"], home.env(), &bare);
+    let (mut inv, out, err) = Invocation::captured(&["item", "list"], home.env(), bare, "");
     assert_eq!(
-        (ran.code, ran.out.as_str(), ran.err.as_str()),
-        (120, "", "")
+        (dispatch(&mut inv, &[]), out.text(), err.text()),
+        (120, String::new(), String::new())
     );
 }
 

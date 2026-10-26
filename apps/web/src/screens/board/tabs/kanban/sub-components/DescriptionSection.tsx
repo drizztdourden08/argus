@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, Markdown, Text } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import type { DescriptionSectionProps } from '../kanban-props.type';
+import type { DescriptionSectionProps } from '../drawer-props.type';
 import { DescriptionEditor } from './DescriptionEditor';
 import { DrawerSection } from './DrawerSection';
 

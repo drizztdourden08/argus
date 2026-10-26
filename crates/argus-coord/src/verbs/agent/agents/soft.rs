@@ -81,8 +81,14 @@ pub fn run(call: &mut Call<'_>, soft: Soft) -> Outcome {
             }
             let operation = op(soft.kind(), "agents", &id, rest, run.options)?;
             apply(board, who, &operation)?;
-            let because = reason.as_ref().map_or_else(String::new, |r| format!(" ({r})"));
-            run.say(&format!("{}: {}{because}", display(&Value::from(id)), soft.past()));
+            let because = reason
+                .as_ref()
+                .map_or_else(String::new, |r| format!(" ({r})"));
+            run.say(&format!(
+                "{}: {}{because}",
+                display(&Value::from(id)),
+                soft.past()
+            ));
         }
         Ok(())
     })

@@ -38,6 +38,8 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "hand" => hand::hand(call),
         "unhand" => hand::unhand(call),
         "list" => list::run(call),
-        _ => Err(CoordError::refuse(format!("build verb must be one of {VERBS}."))),
+        _ => Err(CoordError::refuse(format!(
+            "build verb must be one of {VERBS}."
+        ))),
     }
 }

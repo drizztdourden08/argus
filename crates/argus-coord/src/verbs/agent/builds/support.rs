@@ -88,12 +88,14 @@ pub fn carrying<'a>(board: &'a Board, tag: &str) -> Vec<&'a Value> {
 /// `ensureBuild`: the record of a tag, made as a draft when missing.
 pub fn ensure_build(board: &mut Board, tag: &str, actor: &str) {
     let at = now_iso();
-    map_mut(board, "builds").entry(tag.to_owned()).or_insert_with(|| {
-        json!({
-            "tag": tag, "status": "draft", "title": null, "note": null, "launcher": null,
-            "thread": null, "createdAt": at, "updatedAt": at, "createdBy": actor,
-        })
-    });
+    map_mut(board, "builds")
+        .entry(tag.to_owned())
+        .or_insert_with(|| {
+            json!({
+                "tag": tag, "status": "draft", "title": null, "note": null, "launcher": null,
+                "thread": null, "createdAt": at, "updatedAt": at, "createdBy": actor,
+            })
+        });
 }
 
 /// The thread of a bundle record, when it has one.

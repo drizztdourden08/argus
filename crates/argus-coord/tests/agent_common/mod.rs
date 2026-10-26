@@ -53,7 +53,11 @@ impl Rig {
         let home = Home::new();
         let root = home.path().to_string_lossy().into_owned();
         let mut board = empty_board("alpha");
-        let threads = [("coordinator", "coordinator"), ("worker", "thread"), ("other", "thread")];
+        let threads = [
+            ("coordinator", "coordinator"),
+            ("worker", "thread"),
+            ("other", "thread"),
+        ];
         for (rank, (id, role)) in (1_u32..).zip(threads) {
             board["threads"][id] = thread(id, role, &root, 1024 * rank);
         }
@@ -105,7 +109,11 @@ impl Rig {
     pub fn refused(&self, args: &[&str], who: As, needle: &str) -> Ran {
         let ran = self.call(args, who);
         assert_ne!(ran.code, 0, "{args:?} should be refused\n{}", ran.out);
-        assert!(ran.err.contains(needle), "{args:?}: {:?} lacks {needle:?}", ran.err);
+        assert!(
+            ran.err.contains(needle),
+            "{args:?}: {:?} lacks {needle:?}",
+            ran.err
+        );
         ran
     }
 
@@ -118,7 +126,10 @@ impl Rig {
 
     /// The master launcher every project must have, made as the coordinator.
     pub fn with_master(&self) {
-        self.ok(&["launcher", "set", "master", "--cmd", "game run"], As::Lead);
+        self.ok(
+            &["launcher", "set", "master", "--cmd", "game run"],
+            As::Lead,
+        );
     }
 
     /// An item `I-1` and a manual test `T-1` of it carrying the build tag `bundle-4`.

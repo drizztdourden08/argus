@@ -17,7 +17,14 @@ use crate::verbs::agent::base::show::{cell, clip};
 use crate::verbs::agent::rules::typed_board;
 
 const HEAD: [&str; 8] = [
-    "name", "kind", "current", "branch", "set", "used every", "command line", "",
+    "name",
+    "kind",
+    "current",
+    "branch",
+    "set",
+    "used every",
+    "command line",
+    "",
 ];
 
 /// Master first, then the current ones, then the rest by name.
@@ -36,9 +43,16 @@ fn usage_cell(row: &Row, now_ms: i64) -> String {
     }
     match (&row.usage, &row.joined) {
         (Some(u), _) if row.standalone => {
-            let every = if u.legacy { format!("{} (default)", u.use_every) } else { u.use_every.clone() };
+            let every = if u.legacy {
+                format!("{} (default)", u.use_every)
+            } else {
+                u.use_every.clone()
+            };
             let stale = if u.stale { " STALE" } else { "" };
-            format!("{every}, unused {}{stale}", duration_text(now_ms - u.last_used_ms))
+            format!(
+                "{every}, unused {}{stale}",
+                duration_text(now_ms - u.last_used_ms)
+            )
         }
         (_, Some(bundle)) => format!("for bundle {bundle}"),
         _ => String::new(),
@@ -81,9 +95,18 @@ fn line(row: &Row, now_ms: i64) -> Vec<String> {
     vec![
         cell(&rec["name"]),
         cell(&rec["kind"]),
-        if truthy(rec, "current") { "current" } else { "" }.to_owned(),
+        if truthy(rec, "current") {
+            "current"
+        } else {
+            ""
+        }
+        .to_owned(),
         cell(&rec["branch"]),
-        format!("{} {}", shown(rec.get("by")), ago(rec["updatedAt"].as_str(), now_ms)),
+        format!(
+            "{} {}",
+            shown(rec.get("by")),
+            ago(rec["updatedAt"].as_str(), now_ms)
+        ),
         usage_cell(row, now_ms),
         clip(&cmd, 60),
         flag.to_owned(),
@@ -103,10 +126,16 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             .filter(|l| all || !truthy(l, "retiredAt"))
             .collect();
         recs.sort_by(|a, b| by_pin(a, b));
-        let rows: Vec<Row> = recs.into_iter().map(|l| row_of(board, &typed, l, run.now_ms)).collect();
+        let rows: Vec<Row> = recs
+            .into_iter()
+            .map(|l| row_of(board, &typed, l, run.now_ms))
+            .collect();
         if run.options.flag("json") {
             let launchers: Vec<Value> = rows.iter().map(Row::to_json).collect();
-            as_json(run.out, &json!({ "launchers": launchers, "master": has_master(&typed) }));
+            as_json(
+                run.out,
+                &json!({ "launchers": launchers, "master": has_master(&typed) }),
+            );
             return Ok(());
         }
         if rows.is_empty() {

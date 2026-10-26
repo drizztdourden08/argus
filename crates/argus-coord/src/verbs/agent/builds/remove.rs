@@ -36,12 +36,24 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             retire_made_for(b, w, &tag, (&why, false), at)
         })?;
         notes.extend(gone.iter().map(|n| format!("launcher {n} retired")));
-        notes.push(if legacy { drop_legacy(board, &tag) } else { String::new() });
+        notes.push(if legacy {
+            drop_legacy(board, &tag)
+        } else {
+            String::new()
+        });
         notes.retain(|n| !n.is_empty());
         map_mut(board, "builds").shift_remove(&tag);
         audit(board, who, &format!("removed bundle {tag}"));
-        let named = if notes.is_empty() { String::new() } else { format!(" ({})", notes.join(", ")) };
-        let kept = if carried > 0 { format!(" ({carried} test(s) keep the tag)") } else { String::new() };
+        let named = if notes.is_empty() {
+            String::new()
+        } else {
+            format!(" ({})", notes.join(", "))
+        };
+        let kept = if carried > 0 {
+            format!(" ({carried} test(s) keep the tag)")
+        } else {
+            String::new()
+        };
         let handed = if board["handedBuild"].as_str() == Some(tag.as_str()) {
             "; it is still the handed build (coord build unhand)"
         } else {

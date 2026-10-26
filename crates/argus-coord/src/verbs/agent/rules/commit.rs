@@ -24,7 +24,13 @@ fn diff(rec: &mut Value, before: &Map<String, Value>, after: &Map<String, Value>
 }
 
 /// Puts one record of a collection: a changed one by its keys, a new one whole.
-fn put(board: &mut Board, coll: &str, key: &str, after: Map<String, Value>, before: Option<Map<String, Value>>) {
+fn put(
+    board: &mut Board,
+    coll: &str,
+    key: &str,
+    after: Map<String, Value>,
+    before: Option<Map<String, Value>>,
+) {
     let records = map_mut(board, coll);
     match (records.get_mut(key), before) {
         (Some(rec), Some(before)) => diff(rec, &before, &after),
@@ -38,7 +44,13 @@ fn launchers(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard) {
     for (name, rec) in &after.launchers {
         let was = before.launchers.get(name);
         if was != Some(rec) {
-            put(board, "launchers", name, launcher_map(rec), was.map(launcher_map));
+            put(
+                board,
+                "launchers",
+                name,
+                launcher_map(rec),
+                was.map(launcher_map),
+            );
         }
     }
 }
@@ -67,7 +79,11 @@ fn definitions(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard)
             map_mut(board, "runDefs").insert(name.clone(), Value::Object(def_map(def)));
         }
     }
-    for name in before.run_defs.keys().filter(|n| !after.run_defs.contains_key(*n)) {
+    for name in before
+        .run_defs
+        .keys()
+        .filter(|n| !after.run_defs.contains_key(*n))
+    {
         map_mut(board, "runDefs").shift_remove(name);
     }
 }

@@ -23,7 +23,9 @@ fn changed_fields(rec: &Value, parts: &Parts) -> Vec<String> {
         .patch
         .entries()
         .into_iter()
-        .filter(|(key, value)| json_of(value.as_ref()) != rec.get(*key).cloned().unwrap_or(Value::Null))
+        .filter(|(key, value)| {
+            json_of(value.as_ref()) != rec.get(*key).cloned().unwrap_or(Value::Null)
+        })
         .map(|(key, _)| key.to_owned())
         .collect()
 }
@@ -92,7 +94,12 @@ fn updated(tag: &str, changed: &[String]) -> String {
     }
 }
 
-fn stamp_and_audit(board: &mut Board, who: &Caller, tag: &str, what: &str) -> Result<(), CoordError> {
+fn stamp_and_audit(
+    board: &mut Board,
+    who: &Caller,
+    tag: &str,
+    what: &str,
+) -> Result<(), CoordError> {
     set(bundle_mut(board, tag)?, "updatedAt", now_iso());
     audit(board, who, what);
     Ok(())
@@ -125,7 +132,11 @@ pub fn add(call: &mut Call<'_>) -> Outcome {
             updated(&tag, &applied.changed)
         } else {
             let what = describe(board, &tag)?;
-            let shown = if what.is_empty() { String::new() } else { format!(" ({what})") };
+            let shown = if what.is_empty() {
+                String::new()
+            } else {
+                format!(" ({what})")
+            };
             format!("{tag}: bundle added{shown}.")
         };
         let draft = if have {

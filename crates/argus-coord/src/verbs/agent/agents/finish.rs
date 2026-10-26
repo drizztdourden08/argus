@@ -70,7 +70,9 @@ pub fn run(call: &mut Call<'_>, ending: Ending) -> Outcome {
         let (name, thread) = (display(&agent["name"]), display(&agent["thread"]));
         stamp(board, "agents", &id, &who.actor)?;
         let running = live_agent_ids(board, Some(&thread)).len();
-        let shown = result.as_ref().map_or_else(String::new, |r| format!(" ({r})"));
+        let shown = result
+            .as_ref()
+            .map_or_else(String::new, |r| format!(" ({r})"));
         run.say(&format!(
             "{id}: {name} {}{shown}; {running} running on {thread}",
             ending.status()

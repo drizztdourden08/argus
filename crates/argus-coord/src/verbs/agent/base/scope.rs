@@ -12,6 +12,7 @@ use argus_board::store::{read_board, with_board};
 use crate::cli::exit::CoordError;
 use crate::cli::out::say;
 use crate::cli::{Call, Env, Invocation, Options};
+use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me};
 
 /// What a verb works with besides the board.
@@ -88,7 +89,7 @@ pub fn write<T>(
         let who = begin(board, &run).map_err(|e| board_error(&e))?;
         verb(board, &who, &mut run).map_err(|e| board_error(&e))
     })
-    .map_err(CoordError::from)
+    .map_err(|e| board_refusal(e, &home, key))
 }
 
 /// Runs a verb that only reads the board (`requireBoard`): no lock, nothing saved.

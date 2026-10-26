@@ -113,7 +113,11 @@ fn records(board: &Board, rows: &mut Vec<Row>, handed: Option<&str>) -> Result<(
             .get(tag)
             .map(|b| listed_status(&typed, tag, b).as_str().to_owned());
         rows[at] = Row {
-            status: if truthy(rec, "closedAt") { Some("closed".to_owned()) } else { status },
+            status: if truthy(rec, "closedAt") {
+                Some("closed".to_owned())
+            } else {
+                status
+            },
             title: text(&rec["title"]),
             note: text(&rec["note"]),
             launcher: starts.launcher,

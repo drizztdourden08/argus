@@ -4,7 +4,9 @@ import { ackOp, resendOp } from '../../../../../data/kanban';
 import type { Entry, ItemRef } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import { opNotices } from '../model';
+import { purgeNotices } from '../trash';
 import type { OpNotice } from '../model';
+import type { PurgeNotice } from '../trash';
 import type { NoticeOps } from '../kanban.type';
 import { useWriter } from './useWriter';
 
@@ -12,6 +14,8 @@ const useNoticeOps = (boardKey: string, entries: readonly WithId<Entry>[], items
   const write = useWriter();
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
   const notices = useMemo(() => opNotices(entries, dismissed), [entries, dismissed]);
+  const purges = useMemo(() => purgeNotices(entries), [entries]);
+  const dismissPurge = useCallback((notice: PurgeNotice) => void write(() => ackOp(boardKey, notice.id), 'Dismissed.'), [boardKey, write]);
 
   const dismiss = useCallback((notice: OpNotice) => {
     if (!notice.bulk) {
@@ -29,7 +33,7 @@ const useNoticeOps = (boardKey: string, entries: readonly WithId<Entry>[], items
     dismiss(notice);
   }, [boardKey, items, write, dismiss]);
 
-  return { notices, dismiss, resend };
+  return { notices, purges, dismiss, dismissPurge, resend };
 };
 
 export { useNoticeOps };

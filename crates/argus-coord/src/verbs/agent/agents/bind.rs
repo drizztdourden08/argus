@@ -63,15 +63,16 @@ pub fn launch_for(board: &Board, owner: &str, text: &str, now_ms: i64) -> Option
     let launches = board["agentLaunches"].as_array()?;
     let taken = |id: &str| {
         section(board, "agents").values().any(|a| {
-            claude_id(a).as_deref() == Some(id)
-                && (truthy(a, "leadBound") || a["source"] != "hook")
+            claude_id(a).as_deref() == Some(id) && (truthy(a, "leadBound") || a["source"] != "hook")
         })
     };
     let mine: Vec<&Value> = launches
         .iter()
         .filter(|l| {
             l["thread"].as_str() == Some(owner)
-                && l["claudeId"].as_str().is_some_and(|id| !id.is_empty() && !taken(id))
+                && l["claudeId"]
+                    .as_str()
+                    .is_some_and(|id| !id.is_empty() && !taken(id))
                 && within(&l["at"], now_ms, LAUNCH_MS)
         })
         .collect();

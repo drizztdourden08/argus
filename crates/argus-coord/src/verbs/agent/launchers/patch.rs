@@ -18,12 +18,16 @@ fn on_off(options: &Options, on: &str, off: &str) -> Result<Option<bool>, CoordE
         return Ok(None);
     }
     if yes && no {
-        return Err(CoordError::refuse(format!("pass --{on} or --{off}, not both.")));
+        return Err(CoordError::refuse(format!(
+            "pass --{on} or --{off}, not both."
+        )));
     }
     if is_list(options, on) || is_list(options, off) {
         return Err(CoordError::refuse(format!("--{on} takes no value.")));
     }
-    Ok(Some(!no && !OFF.contains(&js_string(options, on).to_lowercase().as_str())))
+    Ok(Some(
+        !no && !OFF.contains(&js_string(options, on).to_lowercase().as_str()),
+    ))
 }
 
 fn kind_flag(options: &Options) -> Result<Option<String>, CoordError> {

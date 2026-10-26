@@ -53,6 +53,9 @@ pub async fn stop(paths: &Paths) -> Result<u8, String> {
         println!("dashboard is not running");
         return Ok(0);
     };
+    if let Some(code) = running.refuse_node("stop") {
+        return Ok(code);
+    }
     let pid = running.at.record.as_ref().map(|r| r.pid);
     if let Err(why) = api(&running.at, "POST", "/api/admin/shutdown", &json!({})).await {
         eprintln!("dashboard: shutdown request failed ({why}); stopping the process");

@@ -43,7 +43,9 @@ pub fn run(call: &mut Call<'_>, ready: bool) -> Outcome {
             let play = if starts.cmd.is_some_and(|c| !c.is_empty()) {
                 " Play is shown.".to_owned()
             } else {
-                format!(" No launcher yet, so no Play: coord build set {tag} --launcher <name> (or --cmd \"...\").")
+                format!(
+                    " No launcher yet, so no Play: coord build set {tag} --launcher <name> (or --cmd \"...\")."
+                )
             };
             format!("{tag}: ready. coord build hand {tag} is allowed.{play}")
         };

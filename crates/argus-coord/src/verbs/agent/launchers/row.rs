@@ -33,15 +33,24 @@ impl Row {
     #[must_use]
     pub fn to_json(&self) -> Value {
         let mut map: Map<String, Value> = self.rec.as_object().cloned().unwrap_or_default();
-        map.insert("runsWith".to_owned(), Value::from(shell_of(Platform::current())));
+        map.insert(
+            "runsWith".to_owned(),
+            Value::from(shell_of(Platform::current())),
+        );
         map.insert("play".to_owned(), Value::from(self.play.clone()));
         map.insert("bundles".to_owned(), Value::from(self.bundles.clone()));
         map.insert("joined".to_owned(), Value::from(self.joined.clone()));
         map.insert("standalone".to_owned(), Value::from(self.standalone));
         if let Some(u) = &self.usage {
-            map.insert("useEveryEffective".to_owned(), Value::from(u.use_every.as_str()));
+            map.insert(
+                "useEveryEffective".to_owned(),
+                Value::from(u.use_every.as_str()),
+            );
             map.insert("useEveryLegacy".to_owned(), Value::from(u.legacy));
-            map.insert("lastUsedAt".to_owned(), Value::from(u.last_used_at.as_str()));
+            map.insert(
+                "lastUsedAt".to_owned(),
+                Value::from(u.last_used_at.as_str()),
+            );
             map.insert("stale".to_owned(), Value::from(u.stale));
         }
         Value::Object(map)
@@ -53,7 +62,8 @@ impl Row {
 pub fn row_of(board: &Board, typed: &LauncherBoard, rec: &Value, now_ms: i64) -> Row {
     let name = display(&rec["name"]);
     let def = launcher_def_name(&name);
-    let own = doc(board, "runDefs", &def).is_some_and(|d| d["launcher"].as_str() == Some(name.as_str()));
+    let own =
+        doc(board, "runDefs", &def).is_some_and(|d| d["launcher"].as_str() == Some(name.as_str()));
     let known = typed.launchers.get(&name);
     Row {
         rec: rec.clone(),

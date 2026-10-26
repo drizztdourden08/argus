@@ -5,8 +5,8 @@ use argus_board::json::{as_integer, doc};
 use argus_launchers::launcher::{EVERY_LEGACY, keep_launcher, usage_of};
 
 use super::name::name_arg;
-use crate::cli::Options;
 use crate::cli::Call;
+use crate::cli::Options;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::opt::{json_or_null, not_one_text, one_text};
 use crate::verbs::agent::base::write;
@@ -51,7 +51,9 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             Some(d) => format!(" for {d} day{}", if d == 1 { "" } else { "s" }),
             None => format!(": it counts as used now, so the next {every} are quiet"),
         };
-        let why = note.as_ref().map_or_else(String::new, |n| format!(" ({n})"));
+        let why = note
+            .as_ref()
+            .map_or_else(String::new, |n| format!(" ({n})"));
         run.say(&format!(
             "{name}: kept{span}{why}. coord launcher set {name} --use-every <window> changes how often it is expected to be used; coord launcher retire {name} drops it."
         ));

@@ -25,10 +25,23 @@ const openTerminal = (): void => {
   fireEvent.click(summaryOf());
 };
 
+const sendLine = (input: HTMLElement, text: string): void => {
+  fireEvent.change(input, { target: { value: text } });
+  fireEvent.keyDown(input, { key: 'Enter' });
+};
+
+const typeIntoTerminal = async (text: string): Promise<HTMLInputElement> => {
+  await waitForSummary();
+  openTerminal();
+  const input = await screen.findByLabelText<HTMLInputElement>('Send a line to the process');
+  sendLine(input, text);
+  return input;
+};
+
 const isOpen = (): boolean => (summaryOf().closest('details') as HTMLDetailsElement).open;
 
 const logCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.includes('/logs'));
 
 const stdinCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWith('/stdin'));
 
-export { board, isOpen, line, logCalls, openTerminal, stdinCalls, summaryOf, tailOf, waitForSummary };
+export { board, isOpen, sendLine, typeIntoTerminal, line, logCalls, openTerminal, stdinCalls, summaryOf, tailOf, waitForSummary };

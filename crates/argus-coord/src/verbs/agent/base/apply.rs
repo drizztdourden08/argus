@@ -4,22 +4,13 @@
 
 use argus_board::Board;
 use argus_board::json::as_integer;
-use argus_board::ops::{Status, Who, apply_op};
+use argus_board::ops::{Status, apply_op};
 use serde_json::{Map, Value, json};
 
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
+use crate::verbs::shared::caller::who_of;
 use crate::who::Caller;
-
-/// The caller as the ops know it.
-#[must_use]
-pub fn ops_who(who: &Caller) -> Who {
-    Who {
-        thread: Some(who.thread.clone()),
-        role: who.role,
-        actor: Some(who.actor.clone()),
-    }
-}
 
 /// An op on one record: `{ kind, target, ...rest }` with `force`, or `baseRev` for `--if-rev`.
 ///
@@ -53,7 +44,7 @@ pub fn op(
 /// # Errors
 /// The op was refused, or the record changed since the revision the caller read.
 pub fn apply(board: &mut Board, who: &Caller, operation: &Value) -> Result<String, CoordError> {
-    let result = apply_op(board, operation, &ops_who(who), None);
+    let result = apply_op(board, operation, &who_of(who), None);
     match result.status {
         Status::Applied => Ok(result.outcome),
         Status::Refused => Err(CoordError::refuse(result.outcome)),

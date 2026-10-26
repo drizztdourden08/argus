@@ -16,8 +16,8 @@ use serde_json::{Map, Value};
 use super::bind::{claude_id, hook_record, launch_for};
 use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{agent_mut, clear_ending, owner_of};
-use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::Call;
+use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::authority::create_agent;
 use crate::verbs::agent::base::opt::{value, word};
 use crate::verbs::agent::base::{Run, write};
@@ -191,8 +191,15 @@ fn entry_of<'a>(
     let owner = owner_of(board, Some(who), run.options)?;
     create_agent(who, &owner)?;
     let fields = fields_of(board, run.options, &["kind", "item", "branch", "worktree"])?;
-    let kind = fields.get("kind").and_then(Value::as_str).unwrap_or("build");
-    let model = model_why(value(run.options, "model")?, value(run.options, "why")?, kind)?;
+    let kind = fields
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or("build");
+    let model = model_why(
+        value(run.options, "model")?,
+        value(run.options, "why")?,
+        kind,
+    )?;
     let checkin = checkin(Some(&model.model), value(run.options, "checkin")?)?;
     let text = format!(
         "{name} {task} {} {}",

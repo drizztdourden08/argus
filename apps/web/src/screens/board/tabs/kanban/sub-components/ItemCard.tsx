@@ -6,12 +6,14 @@ import { CardMenu } from './CardMenu';
 import { CardTags } from './CardTags';
 
 const ItemCard = (props: ItemCardProps) => {
-  const { card, group, threads, now, selected, ops, onToggle, onOpen } = props;
+  const { card, group, threads, now, selected, ops, onToggle, onMark, onOpen } = props;
   const { item } = card;
   return (
     <Flex direction="column" gap="xs" data-item={item.id}>
       <Flex gap="xs" align="center" wrap>
-        <Checkbox checked={selected} onChange={() => onToggle(item.id)} ariaLabel={`Select ${item.id}`} size="sm" />
+        <Flex onClickCapture={(event) => onMark(event.shiftKey)}>
+          <Checkbox checked={selected} onChange={() => onToggle(item.id)} ariaLabel={`Select ${item.id}`} size="sm" />
+        </Flex>
         <Text variant="caption" tone="muted" mono>{item.id}</Text>
         <CardTags card={card} group={group} now={now} />
         <CardMenu item={item} threads={threads} ops={ops} onOpen={onOpen} />

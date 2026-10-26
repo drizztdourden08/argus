@@ -156,6 +156,8 @@ crates/argus-coord/
   src/who/                   WP1: project lookup, caller, me, session scan
   src/client/                WP1: dashboard client, health, autostart, SSE reader
   src/shortcut.rs            WP1: alias urls, launch.json read and merge, needs_shortcut
+  src/verbs/shared/          shared by every group: caller (who_of, is_coordinator), lock
+                             (board_refusal, lock_sentence)
   src/verbs/hook/            WP2
   src/verbs/thread/          WP3: thread, dispatch, board, purge, check, tick, sync
   src/verbs/work/            WP4: item, test, entry, action, lock, log, inbox
@@ -166,6 +168,12 @@ crates/argus/src/main.rs     WP1: the coord fast path
 crates/argus/tests/coord_*   WP7: end-to-end and differential runs of the binary
 crates/argus-testkit/fixtures/coord/   WP7: corpus and twin-home seeds
 ```
+
+WP2, WP5 and WP6 must not rebuild the lock refusal or the caller helpers. A verb that locks the
+board maps its `BoardError` through `verbs::shared::lock::board_refusal(e, home, project)`, which
+says the exact Node sentence `board is locked by another coord call (<path>); retry.` with the path
+as Node's `join(COORD_HOME, project, 'board.lock')` gives it (unresolved, platform separators).
+`who_of` and `is_coordinator` live in `verbs::shared::caller`.
 
 Each group's `mod.rs` starts as a stub answering exit 120, "not ported" (section 4), so the router
 compiles from day one, the same way `services/compose.rs` works in the server.

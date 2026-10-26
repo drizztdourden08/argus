@@ -166,6 +166,13 @@ describe('the cells of the process table', () => {
     expect(within(grid).getAllByText('4812').length).toBeGreaterThan(0);
   });
 
+  it('marks the rows that need a look with the warning bar and leaves the others plain', async () => {
+    stubApi();
+    await open({ cards: CARDS, procs: { a: sample('hog'), b: { ...sample('ok'), pid: 2 } }, meta: PROCS_META });
+    const grid = await screen.findByRole('grid');
+    await waitFor(() => expect(grid.querySelectorAll('[data-state="warning"]').length).toBe(1));
+  });
+
   it('tones each status like the Node page: warning for hog, stale and old, danger for orphan and hung, calm for an unknown one', async () => {
     stubApi();
     await open({ cards: CARDS, procs: { a: sample('hog'), b: { ...sample('old'), pid: 2 }, c: { ...sample('orphan'), pid: 3 }, d: { ...sample('hung'), pid: 4 }, e: { ...sample('exotic'), pid: 5 } }, meta: PROCS_META });

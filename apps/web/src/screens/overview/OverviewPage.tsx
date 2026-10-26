@@ -11,7 +11,7 @@ const OverviewPage = () => {
   const { tab, select } = useHashTab(OVERVIEW_TAB_IDS, 'dashboards');
   const { cards, status } = usePortfolio();
   const badges = useTabBadges(tab);
-  const tabs = OVERVIEW_TABS.map((item) => ({ ...item, badge: badges.counts[item.id], badgeTone: badges.tones[item.id] }));
+  const tabs = OVERVIEW_TABS.map((item) => ({ ...item, badgeTitle: item.badgeTitle, badge: badges.counts[item.id], badgeTone: badges.tones[item.id] }));
   return (
     <PageFrame>
       <ContentHeader title="Argus" actions={<ProjectSwitcher cards={cards} />} />

@@ -19,10 +19,22 @@ fn line(key: &str, value: &str) -> Option<String> {
 }
 
 fn header(name: &str, rec: &Value, now_ms: i64) -> String {
-    let title = if truthy(rec, "title") { format!(": {}", cell(&rec["title"])) } else { String::new() };
-    let current = if truthy(rec, "current") { " (current)" } else { "" };
+    let title = if truthy(rec, "title") {
+        format!(": {}", cell(&rec["title"]))
+    } else {
+        String::new()
+    };
+    let current = if truthy(rec, "current") {
+        " (current)"
+    } else {
+        ""
+    };
     let retired = if truthy(rec, "retiredAt") {
-        let note = if truthy(rec, "retireNote") { format!(": {}", cell(&rec["retireNote"])) } else { String::new() };
+        let note = if truthy(rec, "retireNote") {
+            format!(": {}", cell(&rec["retireNote"]))
+        } else {
+            String::new()
+        };
         format!(
             " (retired {} by {}{note})",
             ago(rec["retiredAt"].as_str(), now_ms),
@@ -37,12 +49,27 @@ fn header(name: &str, rec: &Value, now_ms: i64) -> String {
 /// The `window` line of a standalone launcher: how often it is used, when it was last, who kept it.
 fn window(row: &Row, now_ms: i64) -> Option<String> {
     let rec = &row.rec;
-    let usage = row.usage.as_ref().filter(|_| row.standalone && !truthy(rec, "retiredAt"))?;
-    let default = if usage.legacy { " (default: set --use-every)" } else { "" };
+    let usage = row
+        .usage
+        .as_ref()
+        .filter(|_| row.standalone && !truthy(rec, "retiredAt"))?;
+    let default = if usage.legacy {
+        " (default: set --use-every)"
+    } else {
+        ""
+    };
     let stale = if usage.stale { " -- STALE" } else { "" };
     let kept = if truthy(rec, "keptAt") {
-        let until = if truthy(rec, "keptUntil") { format!(" until {}", cell(&rec["keptUntil"])) } else { String::new() };
-        let note = if truthy(rec, "keptNote") { format!(" ({})", cell(&rec["keptNote"])) } else { String::new() };
+        let until = if truthy(rec, "keptUntil") {
+            format!(" until {}", cell(&rec["keptUntil"]))
+        } else {
+            String::new()
+        };
+        let note = if truthy(rec, "keptNote") {
+            format!(" ({})", cell(&rec["keptNote"]))
+        } else {
+            String::new()
+        };
         format!(
             "; kept by {} {}{until}{note}",
             shown(rec.get("keptBy")),
@@ -75,11 +102,13 @@ fn lines(name: &str, row: &Row, now_ms: i64) -> Vec<String> {
         shown(rec.get("createdBy")),
         ago(rec["createdAt"].as_str(), now_ms)
     );
-    let joined = row
-        .joined
-        .as_ref()
-        .map_or_else(String::new, |b| format!("for bundle {b}: it goes with the bundle, no usage window"));
-    let runs = format!("{}, from the folder above, hidden, stdin a pipe", shell_of(Platform::current()));
+    let joined = row.joined.as_ref().map_or_else(String::new, |b| {
+        format!("for bundle {b}: it goes with the bundle, no usage window")
+    });
+    let runs = format!(
+        "{}, from the folder above, hidden, stdin a pipe",
+        shell_of(Platform::current())
+    );
     [
         Some(header(name, rec, now_ms)),
         line("command", &cell(&rec["cmd"])),

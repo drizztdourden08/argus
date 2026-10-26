@@ -10,9 +10,7 @@ use argus_board::store::stamp;
 use serde_json::Value;
 
 use super::bind::claude_id;
-use super::fields::{
-    Fields, add_model, checkin, claude_id_option, fields_of, model_why,
-};
+use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{Want, agent_mut, clear_ending, named};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
@@ -51,11 +49,13 @@ fn add_justification(
     if model.is_none() && why.is_none() {
         return Ok(());
     }
-    let named = model_of(model, agent).filter(|m| !m.is_empty()).ok_or_else(|| {
-        CoordError::refuse(
-            "--why goes with --model: this agent has no model recorded, so pass both.",
-        )
-    })?;
+    let named = model_of(model, agent)
+        .filter(|m| !m.is_empty())
+        .ok_or_else(|| {
+            CoordError::refuse(
+                "--why goes with --model: this agent has no model recorded, so pass both.",
+            )
+        })?;
     let kind = fields
         .get("kind")
         .map_or_else(|| display(&agent["kind"]), display);
@@ -63,12 +63,19 @@ fn add_justification(
     Ok(())
 }
 
-fn add_claude_id(board: &Board, fields: &mut Fields, id: &str, run: &Run<'_>) -> Result<(), CoordError> {
+fn add_claude_id(
+    board: &Board,
+    fields: &mut Fields,
+    id: &str,
+    run: &Run<'_>,
+) -> Result<(), CoordError> {
     let Some(given) = claude_id_option(run.options)? else {
         return Ok(());
     };
     let other = section(board, "agents").values().find(|x| {
-        display(&x["id"]) != id && !truthy(x, "deletedAt") && claude_id(x).as_deref() == Some(&given)
+        display(&x["id"]) != id
+            && !truthy(x, "deletedAt")
+            && claude_id(x).as_deref() == Some(&given)
     });
     if let Some(other) = other {
         return Err(CoordError::refuse(format!(
@@ -98,7 +105,12 @@ fn add_checkin(
     Ok(())
 }
 
-fn add_status(fields: &mut Fields, agent: &Value, id: &str, status: Option<&str>) -> Result<(), CoordError> {
+fn add_status(
+    fields: &mut Fields,
+    agent: &Value,
+    id: &str,
+    status: Option<&str>,
+) -> Result<(), CoordError> {
     let Some(status) = status else {
         return Ok(());
     };
@@ -145,7 +157,11 @@ fn change(
     let hidden = truthy(agent, "archivedAt") || truthy(agent, "deletedAt");
     let reopening = status.is_some() && !is_live(agent) && !hidden;
     if status.is_some() && !is_live(agent) && !reopening {
-        let why = if truthy(agent, "deletedAt") { "in the trash" } else { "archived" };
+        let why = if truthy(agent, "deletedAt") {
+            "in the trash"
+        } else {
+            "archived"
+        };
         return Err(CoordError::refuse(format!("{id} is {why}, not running.")));
     }
     if reopening {
@@ -187,5 +203,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             "--status must be waiting or working (done, fail and stop have their own verbs).",
         ));
     }
-    write(call, |board, who, run| change(board, who, run, status.as_deref()))
+    write(call, |board, who, run| {
+        change(board, who, run, status.as_deref())
+    })
 }

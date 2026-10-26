@@ -4,16 +4,14 @@
 
 use argus_board::Board;
 use argus_board::json::doc;
-use argus_launchers::launcher::{LauncherPatch, require_launcher_name};
 use argus_core::js;
+use argus_launchers::launcher::{LauncherPatch, require_launcher_name};
 use serde_json::Value;
 
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::opt::{Text, is_list, js_string, not_one_text, one_text};
 use crate::verbs::agent::rules::refused;
-
-
 
 /// The bundle's own fields.
 #[derive(Default)]
@@ -130,7 +128,8 @@ fn window_flag(options: &Options) -> Result<Option<bool>, CoordError> {
         ));
     }
     let word = js_string(options, "window").to_lowercase();
-    let off = options.get("no-window").is_some() || ["false", "0", "no", "off"].contains(&word.as_str());
+    let off =
+        options.get("no-window").is_some() || ["false", "0", "no", "off"].contains(&word.as_str());
     Ok(Some(!off))
 }
 
@@ -174,7 +173,11 @@ pub fn parts_from(board: &Board, options: &Options) -> Result<Parts, CoordError>
         window: window_flag(options)?,
     };
     let link = link_flag(options, &launch)?;
-    Ok(Parts { patch, launch, link })
+    Ok(Parts {
+        patch,
+        launch,
+        link,
+    })
 }
 
 /// A bundle field as the JSON it is stored as.

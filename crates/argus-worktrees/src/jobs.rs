@@ -56,6 +56,7 @@ pub struct JobDoc {
     pub state: JobState,
     pub removed: u64,
     pub total: Option<u64>,
+    #[serde(rename = "sizeMB")]
     pub size_mb: Option<f64>,
     pub files: Option<u64>,
     pub queued_at: String,

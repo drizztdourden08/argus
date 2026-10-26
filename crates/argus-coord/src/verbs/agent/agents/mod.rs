@@ -4,8 +4,8 @@
 
 mod bind;
 mod fields;
-mod finish;
 mod find;
+mod finish;
 mod list;
 mod note;
 mod reconcile;
@@ -19,7 +19,8 @@ use crate::cli::exit::{CoordError, Outcome};
 use finish::Ending;
 use soft::Soft;
 
-const VERBS: &str = "start, note, set, done, fail, stop, archive, unarchive, rm, restore, list, show, reconcile";
+const VERBS: &str =
+    "start, note, set, done, fail, stop, archive, unarchive, rm, restore, list, show, reconcile";
 
 /// Runs the sub-verb the first word names; the other words stay for it.
 ///
@@ -45,6 +46,8 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "list" => list::run(call),
         "show" => show::run(call),
         "reconcile" => reconcile::run(call),
-        _ => Err(CoordError::refuse(format!("agent verb must be one of {VERBS}."))),
+        _ => Err(CoordError::refuse(format!(
+            "agent verb must be one of {VERBS}."
+        ))),
     }
 }

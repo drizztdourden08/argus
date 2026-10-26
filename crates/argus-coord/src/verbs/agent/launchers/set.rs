@@ -35,7 +35,10 @@ fn describe(rec: &Launcher) -> String {
     if let Some(every) = rec.use_every.as_deref().filter(|e| !e.is_empty()) {
         parts.push(format!("used every {every}"));
     }
-    parts.push(format!("command line: {}", rec.cmd.as_deref().unwrap_or_default()));
+    parts.push(format!(
+        "command line: {}",
+        rec.cmd.as_deref().unwrap_or_default()
+    ));
     parts.join(", ")
 }
 
@@ -56,7 +59,13 @@ fn what_happened(name: &str, written: &WriteResult, rec: &Launcher) -> String {
 
 /// The notes after the first line: an ignored `--use-every`, the command line and what runs it,
 /// the warnings, and the missing master.
-fn notes(run: &mut Run<'_>, board: &Board, name: &str, written: &WriteResult, rec: &Launcher) -> Result<(), CoordError> {
+fn notes(
+    run: &mut Run<'_>,
+    board: &Board,
+    name: &str,
+    written: &WriteResult,
+    rec: &Launcher,
+) -> Result<(), CoordError> {
     if written.ignored.contains(&"useEvery") {
         run.say(&if name == MASTER {
             "--use-every ignored: master has no usage window (it is never stale).".to_owned()
@@ -101,14 +110,35 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         }
         let cwd = run.cwd.to_string_lossy().into_owned();
         let written = rules::run(board, who, |b, w, at| {
-            write_launcher(b, w, &name, &patch, &WriteContext { cwd: &cwd, bundle: None, at })
+            write_launcher(
+                b,
+                w,
+                &name,
+                &patch,
+                &WriteContext {
+                    cwd: &cwd,
+                    bundle: None,
+                    at,
+                },
+            )
         })?;
         let typed = typed_board(board)?;
         let rec = typed.launchers.get(&name).cloned().unwrap_or_default();
         let links = linked(board, &name, None);
-        let play = if written.play.is_empty() { String::new() } else { format!(" {}", written.play) };
-        let by = if links.is_empty() { String::new() } else { format!(" Linked by bundle {}.", links.join(", ")) };
-        run.say(&format!("{}{play}{by}", what_happened(&name, &written, &rec)));
+        let play = if written.play.is_empty() {
+            String::new()
+        } else {
+            format!(" {}", written.play)
+        };
+        let by = if links.is_empty() {
+            String::new()
+        } else {
+            format!(" Linked by bundle {}.", links.join(", "))
+        };
+        run.say(&format!(
+            "{}{play}{by}",
+            what_happened(&name, &written, &rec)
+        ));
         notes(run, board, &name, &written, &rec)
     })
 }

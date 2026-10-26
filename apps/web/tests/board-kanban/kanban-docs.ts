@@ -60,6 +60,9 @@ interface Setup {
   needs?: ReadonlyMap<string, Needs>;
   notices?: OpNotice[];
   threads?: WithId<ThreadChoice>[];
+  paused?: string[];
+  focus?: string;
+  showPaused?: boolean;
 }
 
 const viewOf = (items: ItemRef[], setup: Setup = {}) =>
@@ -70,6 +73,9 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
     notices: setup.notices ?? [],
     filters: filters(setup.filters),
     prefs: prefs(setup.prefs),
+    paused: new Set(setup.paused ?? []),
+    focus: setup.focus ?? '',
+    showPaused: setup.showPaused ?? false,
     now: NOW,
   });
 

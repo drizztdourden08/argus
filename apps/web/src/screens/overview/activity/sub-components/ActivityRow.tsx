@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
-import { DateText, Inline, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
+import { Inline, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
+import { ShortAge } from '../../sub-components/ShortAge';
 import type { ActivityRowProps } from '../activity.type';
 import { kindLook, LEVEL_LOOK, levelOf } from '../model';
 import { kindOf } from '../model/kind-of';
@@ -24,7 +25,7 @@ const ActivityRow = (props: ActivityRowProps) => {
       )}
       columns={[
         { primary: <Tag {...LEVEL_LOOK[level]}>{level}</Tag> },
-        { primary: item.at ? <DateText value={item.at} format="relative" tooltip /> : '', align: 'end' },
+        { primary: item.at ? <ShortAge value={item.at} ago /> : '', align: 'end' },
       ]}
     />
   );

@@ -46,7 +46,11 @@ fn report(out: &mut dyn std::io::Write, run: &Value, now_ms: i64) {
         say(out, &["the reconciler has not run yet."]);
         return;
     }
-    let skipped = if truthy(run, "skipped") { ", skipped: the machine had slept" } else { "" };
+    let skipped = if truthy(run, "skipped") {
+        ", skipped: the machine had slept"
+    } else {
+        ""
+    };
     let head = format!(
         "last run {} ago ({} ms){skipped}",
         ago(run["at"].as_str(), now_ms),
@@ -62,9 +66,11 @@ fn report(out: &mut dyn std::io::Write, run: &Value, now_ms: i64) {
     }
     let findings = run["findings"].as_array().filter(|f| !f.is_empty());
     if let Some(findings) = findings {
-        let mut rows = vec![["project", "agent", "name", "thread", "class", "detail"]
-            .map(str::to_owned)
-            .to_vec()];
+        let mut rows = vec![
+            ["project", "agent", "name", "thread", "class", "detail"]
+                .map(str::to_owned)
+                .to_vec(),
+        ];
         rows.extend(findings.iter().map(finding));
         say(out, &[&table(&rows)]);
     }
@@ -82,7 +88,10 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
     let path = if all {
         "/api/agents/reconcile".to_owned()
     } else {
-        format!("/api/agents/reconcile?project={}", js::encode_uri_component(&project))
+        format!(
+            "/api/agents/reconcile?project={}",
+            js::encode_uri_component(&project)
+        )
     };
     let found = client.get(&path)?;
     let now_ms = call.inv.clock.now_ms();

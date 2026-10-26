@@ -9,30 +9,33 @@ cleanKanban();
 describe('the edits of the owner in the drawer: title and subject', () => {
   it('edits the title with an edit op that carries the old title', async () => {
     const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit title' }));
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'title' }), { target: { value: 'Sign in' } });
-    fireEvent.keyDown(within(dialog).getByRole('textbox', { name: 'title' }), { key: 'Enter' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit title: Login' }));
+    const box = within(dialog).getByRole('textbox', { name: 'Edit title' });
+    fireEvent.change(box, { target: { value: 'Sign in' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
     await postedEdit(posted, { title: 'Sign in' }, { title: 'Login' });
     expect(await screen.findByText('Saved I-1.')).toBeTruthy();
   });
 
   it('does not take an empty title or one over 80 characters', async () => {
     const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit title' }));
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'title' }), { target: { value: '   ' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save title' }));
-    expect(within(dialog).getByRole('alert').textContent).toBe('That cannot be empty.');
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'title' }), { target: { value: 'x'.repeat(81) } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save title' }));
-    expect(within(dialog).getByRole('alert').textContent).toBe('At most 80 characters.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit title: Login' }));
+    const box = within(dialog).getByRole('textbox', { name: 'Edit title' });
+    fireEvent.change(box, { target: { value: '   ' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(within(dialog).getByText('That cannot be empty.')).toBeTruthy();
+    fireEvent.change(box, { target: { value: 'x'.repeat(81) } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(within(dialog).getByText('At most 80 characters.')).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
 
   it('edits the subject, and may empty it', async () => {
     const { posted, dialog } = await opened({ subject: 'ui' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit subject' }));
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'subject' }), { target: { value: '' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save subject' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit subject: ui' }));
+    const box = within(dialog).getByRole('textbox', { name: 'Edit subject' });
+    fireEvent.change(box, { target: { value: '' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
     await postedEdit(posted, { subject: '' }, { subject: 'ui' });
   });
 });

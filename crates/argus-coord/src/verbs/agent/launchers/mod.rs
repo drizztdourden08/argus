@@ -32,6 +32,8 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "retire" => retire::run(call),
         "list" => list::run(call),
         "show" => show::run(call),
-        _ => Err(CoordError::refuse(format!("launcher verb must be one of {VERBS}."))),
+        _ => Err(CoordError::refuse(format!(
+            "launcher verb must be one of {VERBS}."
+        ))),
     }
 }

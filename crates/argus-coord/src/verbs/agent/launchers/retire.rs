@@ -36,7 +36,11 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             retire_launcher(b, w, &name, why.as_deref(), at)
         })?;
         let links = linked(board, &name, None);
-        let play = if play.is_empty() { String::new() } else { format!(" {play}") };
+        let play = if play.is_empty() {
+            String::new()
+        } else {
+            format!(" {play}")
+        };
         let still = if links.is_empty() {
             String::new()
         } else {
@@ -46,7 +50,9 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
                 if links.len() > 1 { "" } else { "s" }
             )
         };
-        run.say(&format!("{name}: retired.{play}{still} coord launcher set {name} brings it back."));
+        run.say(&format!(
+            "{name}: retired.{play}{still} coord launcher set {name} brings it back."
+        ));
         Ok(())
     })
 }

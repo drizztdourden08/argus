@@ -51,12 +51,17 @@ pub fn close(call: &mut Call<'_>) -> Outcome {
             force: run.options.flag("force"),
             pending_tests: &pending,
         };
-        let done = rules::run(board, who, |b, w, at| close_bundle(b, w, &tag, &request, at))?;
+        let done = rules::run(board, who, |b, w, at| {
+            close_bundle(b, w, &tag, &request, at)
+        })?;
         let unhanded = if done.unhanded { " and unhanded" } else { "" };
         let gone = if done.retired.is_empty() {
             String::new()
         } else {
-            format!("; launcher {} made for it retired with it", done.retired.join(", "))
+            format!(
+                "; launcher {} made for it retired with it",
+                done.retired.join(", ")
+            )
         };
         run.say(&format!(
             "{tag}: closed{unhanded}{gone}. Its tests leave the owner's Tests tab until Show closed; coord build reopen {tag} undoes it."
