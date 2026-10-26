@@ -3,8 +3,8 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { buildDoc, doneDoc, itemDoc, testDoc } from './fixtures';
+import { entries, firstResult, openFrom } from './menu-dom';
 import { mountTab } from './mount-tab';
-import type { Call } from './mount-tab';
 import { resultCalls } from './outcome-dom';
 
 cleanAfterEach();
@@ -14,14 +14,6 @@ const board = () => ({
   items: [itemDoc('I-1'), itemDoc('I-2')],
   tests: [testDoc('T-1', { rev: 4, covers: 'AC1' }), doneDoc('T-2', 'fail', 'broken')],
 });
-
-const entries = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWith('/entries'));
-
-const openFrom = async (id: string, item: string): Promise<HTMLElement> => {
-  fireEvent.click(await screen.findByRole('button', { name: `More actions for ${id}` }));
-  fireEvent.click(await screen.findByRole('menuitem', { name: item }));
-  return screen.findByRole('dialog');
-};
 
 describe('the note dialog of the row menu', () => {
   it('takes any outcome, but a fail without text is not sent', async () => {
@@ -33,8 +25,7 @@ describe('the note dialog of the row menu', () => {
     expect(await dialog.findByText('Say what you saw: three characters at least.')).toBeTruthy();
     expect(resultCalls(calls)).toHaveLength(0);
     fireEvent.click(dialog.getByRole('button', { name: 'Post T-1 as pass' }));
-    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
-    expect(resultCalls(calls)[0]?.body).toEqual({ outcome: 'pass', text: '' });
+    expect(await firstResult(calls)).toEqual({ outcome: 'pass', text: '' });
   });
 
   it('posts a note with the outcome picked and closes', async () => {

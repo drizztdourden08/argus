@@ -6,8 +6,9 @@ import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
-import { createFakeSources, FakeSource } from '../helpers/fake-source';
+import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
+import { stubEventSource } from '../helpers/stub-event-source';
 import { byId } from './fixtures';
 
 type Doc = Record<string, unknown>;
@@ -61,17 +62,6 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
     return Promise.resolve(new Response(JSON.stringify(reply.body), { status: reply.status, headers: { 'Content-Type': 'application/json' } }));
   });
   return calls;
-};
-
-const stubEventSource = (): FakeSource[] => {
-  const streams: FakeSource[] = [];
-  vi.stubGlobal('EventSource', class extends FakeSource {
-    constructor(url: string) {
-      super(url);
-      streams.push(this);
-    }
-  });
-  return streams;
 };
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {

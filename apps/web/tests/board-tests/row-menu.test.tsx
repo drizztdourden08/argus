@@ -3,8 +3,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { buildDoc, doneDoc, itemDoc, testDoc } from './fixtures';
+import { choose, entries, openMenu } from './menu-dom';
 import { mountTab } from './mount-tab';
-import type { Call } from './mount-tab';
 
 cleanAfterEach();
 
@@ -13,16 +13,6 @@ const owner = () => ({
   items: [itemDoc('I-1'), itemDoc('I-2')],
   tests: [testDoc('T-1', { rev: 4 }), doneDoc('T-2', 'fail', 'broken', { rev: 3 })],
 });
-
-const entries = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWith('/entries'));
-
-const openMenu = async (id: string): Promise<void> => {
-  fireEvent.click(await screen.findByRole('button', { name: `More actions for ${id}` }));
-};
-
-const choose = async (name: string): Promise<void> => {
-  fireEvent.click(await screen.findByRole('menuitem', { name }));
-};
 
 describe('the row menu', () => {
   it('lists the actions of a test to run, without Run again', async () => {

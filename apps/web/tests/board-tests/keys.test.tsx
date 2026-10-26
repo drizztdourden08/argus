@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { doneDoc } from './fixtures';
+import { firstResult } from './menu-dom';
 import { mountTab } from './mount-tab';
 import { board, noteBox, resultCalls } from './outcome-dom';
 
@@ -19,8 +20,7 @@ describe('the keys 1 to 4 on a test to run', () => {
   it('1 posts pass at once with no note', async () => {
     const { calls } = await mountTab(board());
     fireEvent.keyDown(await rowButton(), { key: '1' });
-    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
-    expect(resultCalls(calls)[0]?.body).toEqual({ outcome: 'pass', text: '' });
+    expect(await firstResult(calls)).toEqual({ outcome: 'pass', text: '' });
   });
 
   it('2, 3 and 4 open the note box for fail, partial and blocked and post nothing', async () => {
