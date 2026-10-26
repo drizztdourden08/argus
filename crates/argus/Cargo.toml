@@ -14,6 +14,7 @@ argus-coord = { path = "../argus-coord" }
 argus-core = { path = "../argus-core" }
 argus-mcp = { path = "../argus-mcp" }
 argus-native = { path = "../argus-native" }
+argus-parity = { path = "../argus-parity" }
 argus-server = { path = "../argus-server" }
 argus-wake = { path = "../argus-wake" }
 clap = { version = "4", features = ["derive"] }

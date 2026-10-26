@@ -30,7 +30,7 @@ pub fn bytes_reply(code: u16, body: impl Into<Body>, headers: &[(HeaderName, &st
 }
 
 fn json_bytes(body: &Value) -> Vec<u8> {
-    serde_json::to_vec(body).unwrap_or_default()
+    argus_core::json_text::to_vec(body).unwrap_or_default()
 }
 
 /// A route's JSON answer: `no-store` and `nosniff`.

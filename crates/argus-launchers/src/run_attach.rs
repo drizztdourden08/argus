@@ -49,7 +49,7 @@ impl<H: ProcessHost> RunService<H> {
         let n =
             u64::try_from(self.inner.deps.store.attachments_of(key, rid).len()).unwrap_or(0) + 1;
         let at = self.now_iso();
-        let config = &self.inner.deps.config;
+        let config = self.config();
         let row = save_attachment(&SaveRequest {
             dir: &config.attachments_dir,
             scope: key,

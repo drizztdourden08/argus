@@ -4,12 +4,14 @@
 #![deny(clippy::cognitive_complexity)]
 
 mod client;
+mod coord_cli;
 mod fixture;
 mod png;
 mod server;
 mod stream;
 
 pub use client::{Reply, Request, request};
+pub use coord_cli::{CliOut, CoordCli};
 pub use fixture::{ago, alpha_board, beta_board, make_home, portfolio_board, write_board};
 pub use png::png;
 pub use server::{TestOptions, TestServer, Tweak};

@@ -30,7 +30,7 @@ describe('closed bundles', () => {
   it('have no toggle when no bundle is closed', async () => {
     await mountTab({ builds: [buildDoc('open-1')], tests: [testDoc('T-1', { build: 'open-1' })] });
     expect(await screen.findByText('Test T-1')).toBeTruthy();
-    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.queryByRole('switch', { name: /Show closed/ })).toBeNull();
   });
 
   it('show as a muted card with Show closed, still not counted', async () => {

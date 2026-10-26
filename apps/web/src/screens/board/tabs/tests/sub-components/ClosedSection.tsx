@@ -1,16 +1,16 @@
 /* @layer renderer-app @kind component */
 import { Flex, Toggle } from '@drizztdourden08/tessera';
-import { useState } from 'react';
+import { useTestsShared } from '../behavior/useTestsShared';
 import type { ClosedSectionProps } from '../tests-props.type';
 import { ClosedBundleCard } from './ClosedBundleCard';
 
 const ClosedSection = (props: ClosedSectionProps) => {
-  const { groups, folds } = props;
-  const [shown, setShown] = useState(false);
-  if (groups.length === 0) return null;
+  const { groups, count, shown, onShownChange } = props;
+  const { folds } = useTestsShared();
+  if (count === 0) return null;
   return (
     <Flex direction="column" gap="md">
-      <Toggle label={`Show closed (${groups.length})`} checked={shown} onChange={setShown} />
+      <Toggle label={`Show closed (${count})`} checked={shown} onChange={onShownChange} />
       {shown && groups.map((group) => (
         <ClosedBundleCard
           key={group.tag}

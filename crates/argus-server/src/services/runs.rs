@@ -3,10 +3,13 @@
 //! each board file. Shadow mode starts nothing: the service reads, and every write answers
 //! `read_only`.
 
-use std::sync::Arc;
+use std::path::Path;
+use std::sync::{Arc, PoisonError};
 
+use argus_core::Config;
 use argus_launchers::{
-    BoardFileDefs, FakeHost, RunConfig, RunDeps, RunLimits, RunService, SystemClock, SystemHost,
+    BoardFileDefs, ConfigSource, FakeHost, RunConfig, RunDeps, RunLimits, RunService, SystemClock,
+    SystemHost,
 };
 use argus_wake::service::driver::lock;
 use tokio::runtime::{Handle, RuntimeFlavor};
@@ -35,8 +38,8 @@ impl Default for RunsOptions {
     }
 }
 
-fn config_of(svc: &Services) -> RunConfig {
-    let config = svc.config();
+/// The run settings of the config as it is now.
+fn run_config(config: &Config, attachments_dir: &Path) -> RunConfig {
     let runs = &config.runs;
     RunConfig {
         limits: RunLimits {
@@ -48,9 +51,20 @@ fn config_of(svc: &Services) -> RunConfig {
             stop_grace_ms: runs.stop_grace_ms,
         },
         token: Some(config.token.clone()),
-        attachments_dir: svc.paths.attachments.clone(),
+        attachments_dir: attachments_dir.to_path_buf(),
         attach_max_bytes: usize::try_from(config.attach.max_bytes).unwrap_or(10 << 20),
     }
+}
+
+/// Reads the live config on every call: `config.runs` and `config.attach` apply to the next
+/// run and the next attachment, and a rotated token is scrubbed from the next log.
+fn config_source(svc: &Services) -> ConfigSource {
+    let live = Arc::clone(&svc.config);
+    let attachments = svc.paths.attachments.clone();
+    Arc::new(move || {
+        let config = live.read().unwrap_or_else(PoisonError::into_inner);
+        run_config(&config, &attachments)
+    })
 }
 
 fn deps_of(svc: &Services, opts: &RunsOptions) -> RunDeps<RunHost> {
@@ -66,7 +80,7 @@ fn deps_of(svc: &Services, opts: &RunsOptions) -> RunDeps<RunHost> {
             Arc::clone(&svc.log),
         )),
         defs: Arc::new(BoardFileDefs::new(svc.paths.coord_home.clone(), None)),
-        config: config_of(svc),
+        config: config_source(svc),
         clock: Arc::new(SystemClock),
     }
 }

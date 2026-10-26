@@ -69,6 +69,9 @@ interface RunDoc {
 
 interface TestItem {
   title: string;
+  thread?: string | null;
+  subject?: string | null;
+  deletedAt?: string | null;
   ac?: { text: string; done: boolean }[];
 }
 
