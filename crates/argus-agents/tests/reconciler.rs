@@ -82,7 +82,15 @@ fn world() -> World {
     let home = tempfile::tempdir().unwrap();
     let claude = tempfile::tempdir().unwrap();
     for sid in [SID, SID_UI] {
-        fs::create_dir_all(claude.path().join("home/projects").join(PROJ).join(sid)).unwrap();
+        fs::create_dir_all(
+            claude
+                .path()
+                .join("home")
+                .join("projects")
+                .join(PROJ)
+                .join(sid),
+        )
+        .unwrap();
     }
     let now = SystemClock.now_ms();
     let boards = Arc::new(JsonBoards::new(home.path(), &["alpha"]));
@@ -111,7 +119,8 @@ impl World {
     fn sub_dir(&self, sid: &str) -> PathBuf {
         self.claude
             .path()
-            .join("home/projects")
+            .join("home")
+            .join("projects")
             .join(PROJ)
             .join(sid)
             .join("subagents")
