@@ -1,6 +1,5 @@
 //! The process host of the run service: the machine's, or in tests the fake one.
 
-use std::future::Future;
 use std::io;
 use std::time::Duration;
 
@@ -23,12 +22,10 @@ impl ProcessHost for RunHost {
         }
     }
 
-    fn kill_tree(&self, pid: u32, grace: Duration) -> impl Future<Output = ()> + Send {
-        async move {
-            match self {
-                RunHost::System(host) => host.kill_tree(pid, grace).await,
-                RunHost::Fake(host) => host.kill_tree(pid, grace).await,
-            }
+    async fn kill_tree(&self, pid: u32, grace: Duration) {
+        match self {
+            RunHost::System(host) => host.kill_tree(pid, grace).await,
+            RunHost::Fake(host) => host.kill_tree(pid, grace).await,
         }
     }
 
@@ -39,12 +36,10 @@ impl ProcessHost for RunHost {
         }
     }
 
-    fn looks_like_ours(&self, pid: u32) -> impl Future<Output = bool> + Send {
-        async move {
-            match self {
-                RunHost::System(host) => host.looks_like_ours(pid).await,
-                RunHost::Fake(host) => host.looks_like_ours(pid).await,
-            }
+    async fn looks_like_ours(&self, pid: u32) -> bool {
+        match self {
+            RunHost::System(host) => host.looks_like_ours(pid).await,
+            RunHost::Fake(host) => host.looks_like_ours(pid).await,
         }
     }
 }

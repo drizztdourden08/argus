@@ -9,11 +9,11 @@ use crate::Services;
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Timing {
     /// The first scan after the start.
-    pub start_delay_ms: u64,
+    pub start_delay: u64,
     /// A scan after a change of rules waits for this long, so several changes make one.
-    pub debounce_ms: u64,
+    pub debounce: u64,
     /// Leftovers a scan had no time to measure are scanned again after this long.
-    pub more_ms: u64,
+    pub more: u64,
 }
 
 fn setting(svc: &Services) -> Value {
@@ -33,15 +33,21 @@ fn number(setting: &Value, name: &str, default: u64, min: u64) -> u64 {
 }
 
 fn int(setting: &Value, name: &str, default: i64, min: u64) -> i64 {
-    i64::try_from(number(setting, name, u64::try_from(default).unwrap_or(0), min)).unwrap_or(default)
+    i64::try_from(number(
+        setting,
+        name,
+        u64::try_from(default).unwrap_or(0),
+        min,
+    ))
+    .unwrap_or(default)
 }
 
 pub(super) fn timing_of(svc: &Services) -> Timing {
     let s = setting(svc);
     Timing {
-        start_delay_ms: number(&s, "startDelayMs", 5000, 0),
-        debounce_ms: number(&s, "debounceMs", 800, 0),
-        more_ms: number(&s, "leftoverMoreMs", 20_000, 0),
+        start_delay: number(&s, "startDelayMs", 5000, 0),
+        debounce: number(&s, "debounceMs", 800, 0),
+        more: number(&s, "leftoverMoreMs", 20_000, 0),
     }
 }
 
@@ -69,7 +75,12 @@ pub(super) fn options_of(svc: &Services) -> Options {
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {
         options.leftover_age_days = days;
     }
-    options.measure_bounds.max_entries = number(&s, "leftoverMaxEntries", options.measure_bounds.max_entries, 1);
+    options.measure_bounds.max_entries = number(
+        &s,
+        "leftoverMaxEntries",
+        options.measure_bounds.max_entries,
+        1,
+    );
     options.measure_bounds.max_ms = int(&s, "leftoverMaxMs", options.measure_bounds.max_ms, 1);
     options
 }

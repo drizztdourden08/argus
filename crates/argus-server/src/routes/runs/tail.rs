@@ -40,7 +40,8 @@ impl Tail {
             return;
         }
         *cursor = event.seq;
-        let data = json!({ "seq": event.seq, "stream": event.stream, "at": event.at, "text": event.text });
+        let data =
+            json!({ "seq": event.seq, "stream": event.stream, "at": event.at, "text": event.text });
         let _ = self
             .sender
             .event("log", &data, i64::try_from(event.seq).ok());
@@ -121,7 +122,8 @@ fn watch(ctx: &Ctx, tail: &Arc<Tail>) -> Vec<Box<dyn Any + Send>> {
 async fn stream(ctx: Ctx) -> Reply {
     let runs = service(&ctx)?;
     let (key, rid) = ids(&ctx)?;
-    runs.get(&key, &rid).ok_or_else(|| unknown_run(&key, &rid))?;
+    runs.get(&key, &rid)
+        .ok_or_else(|| unknown_run(&key, &rid))?;
     let watching: Arc<Watching> = Arc::default();
     let held = Arc::clone(&watching);
     let on_drop = Box::new(move || locked(&held).clear());

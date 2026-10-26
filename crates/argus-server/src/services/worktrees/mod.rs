@@ -7,8 +7,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use argus_worktrees::{
-    Deps, Fs, GhRunner, Git, ProcessLister, RealFs, Service as WorktreeService, SystemClock,
-    SystemExec, SystemGh,
+    Deps, Fs, GhRunner, Git, GitExec, ProcessLister, RealFs, Service as WorktreeService,
+    SystemClock, SystemExec, SystemGh,
 };
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -31,6 +31,8 @@ pub struct WorktreesOptions {
     /// Scan on timers: the first scan after `startDelayMs`, then every `scanMs`, the live check
     /// every `liveMs`, and the rescans a removal or a change of rules asks for.
     pub timers: bool,
+    /// Another way to run `git` than the command.
+    pub git: Option<Arc<dyn GitExec>>,
     /// Another way to ask GitHub whether a pull request merged than the `gh` command.
     pub gh: Option<Arc<dyn GhRunner>>,
     /// Another list of the machine's processes than the process monitor's.
@@ -42,16 +44,21 @@ impl Default for WorktreesOptions {
         WorktreesOptions {
             enabled: true,
             timers: true,
+            git: None,
             gh: None,
             procs: None,
         }
     }
 }
 
-fn git_of(svc: &Services) -> Git {
+fn git_of(svc: &Services, opts: &WorktreesOptions) -> Git {
     let (max_procs, read_ms) = config::git_limits(svc);
+    let exec: Arc<dyn GitExec> = opts
+        .git
+        .clone()
+        .unwrap_or_else(|| Arc::new(SystemExec::default()));
     Git::with_limits(
-        Arc::new(SystemExec::default()),
+        exec,
         max_procs,
         Duration::from_millis(read_ms),
         Duration::from_secs(120),
@@ -78,7 +85,7 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
             Arc::clone(&svc.wake_link),
         )),
         fs,
-        git: git_of(svc),
+        git: git_of(svc, opts),
         gh,
         procs,
         clock: Arc::new(SystemClock),

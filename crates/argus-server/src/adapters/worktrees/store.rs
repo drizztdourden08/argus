@@ -76,7 +76,9 @@ impl WorktreeStore for BoardWorktrees {
                 board["worktreeKeeps"].as_object_mut().map(|m| m.remove(id));
             }
             for id in answer_ids {
-                board["worktreeAnswers"].as_object_mut().map(|m| m.remove(id));
+                board["worktreeAnswers"]
+                    .as_object_mut()
+                    .map(|m| m.remove(id));
             }
             board["dirty"] = json!({});
             board["versions"] = json!({});

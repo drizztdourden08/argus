@@ -81,7 +81,8 @@ async fn stdin(ctx: Ctx) -> Reply {
     let (key, rid) = ids(&ctx)?;
     let body = object(&ctx).await?;
     let Some(text) = body["text"].as_str() else {
-        runs.get(&key, &rid).ok_or_else(|| unknown_run(&key, &rid))?;
+        runs.get(&key, &rid)
+            .ok_or_else(|| unknown_run(&key, &rid))?;
         return Err(ApiError::bad_request("text must be a string"));
     };
     let bytes = runs
@@ -92,9 +93,14 @@ async fn stdin(ctx: Ctx) -> Reply {
 }
 
 fn filter_of(ctx: &Ctx) -> ListFilter {
-    let limit = ctx.query("limit").and_then(|n| n.trim().parse::<i64>().ok());
+    let limit = ctx
+        .query("limit")
+        .and_then(|n| n.trim().parse::<i64>().ok());
     ListFilter {
-        name: ctx.query("name").filter(|n| !n.is_empty()).map(str::to_owned),
+        name: ctx
+            .query("name")
+            .filter(|n| !n.is_empty())
+            .map(str::to_owned),
         limit,
         ..ListFilter::default()
     }
@@ -115,7 +121,9 @@ async fn list_all(ctx: Ctx) -> Reply {
 async fn one(ctx: Ctx) -> Reply {
     let runs = service(&ctx)?;
     let (key, rid) = ids(&ctx)?;
-    let run = runs.get(&key, &rid).ok_or_else(|| unknown_run(&key, &rid))?;
+    let run = runs
+        .get(&key, &rid)
+        .ok_or_else(|| unknown_run(&key, &rid))?;
     Ok(answer(&json!({ "run": run })))
 }
 

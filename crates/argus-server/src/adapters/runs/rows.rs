@@ -33,7 +33,9 @@ pub(super) fn run_of(row: &Row<'_>) -> Result<RunRow> {
         status: word(row.get(4)?).unwrap_or(RunStatus::Failed),
         exit_code: row.get(5)?,
         signal: row.get(6)?,
-        pid: row.get::<_, Option<i64>>(7)?.and_then(|p| u32::try_from(p).ok()),
+        pid: row
+            .get::<_, Option<i64>>(7)?
+            .and_then(|p| u32::try_from(p).ok()),
         cmd: row.get(8)?,
         cwd: row.get(9)?,
         visible: row.get(10)?,

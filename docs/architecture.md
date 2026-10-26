@@ -272,6 +272,11 @@ wiring it replaces the bodies, never `compose.rs`. Rules of an adapter: a trait 
 returns the crate's error as text, nothing blocks the runtime (a blocking service call from a route
 goes through `spawn_blocking`), a host method for a service that is `None` is a no-op.
 
+The run service, the launcher wakes and the worktree scanner reach the wake engine through
+`Services::wake_link`, a `WakeBridge` whose calls do nothing until the wake wiring plugs the
+engine in with `set`. A service's timers are kept in `Services::tasks`, by service name, and
+ended at stop.
+
 The activity log is the one service built before `Services` exists. `services/procs.rs` with
 `adapters/procs.rs` and `routes/procs.rs` is the worked example.
 

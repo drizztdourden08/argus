@@ -28,8 +28,10 @@ pub(crate) fn publish_derived(svc: &Services, key: &str, derived: &Derived) {
         Ok(())
     });
     if let Err(e) = written {
-        svc.log
-            .warn("worktree docs not written", json!({ "key": key, "err": e.to_string() }));
+        svc.log.warn(
+            "worktree docs not written",
+            json!({ "key": key, "err": e.to_string() }),
+        );
     }
 }
 

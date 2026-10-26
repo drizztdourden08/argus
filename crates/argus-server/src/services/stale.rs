@@ -15,10 +15,7 @@ use crate::{ServeOptions, Services};
 const TASK: &str = "launcher-stale";
 
 fn number(setting: &Value, name: &str, default: i64) -> i64 {
-    setting[name]
-        .as_i64()
-        .filter(|n| *n > 0)
-        .unwrap_or(default)
+    setting[name].as_i64().filter(|n| *n > 0).unwrap_or(default)
 }
 
 /// `config.launchers`: `tickMs`, `masterWaitMs`, `masterRepeatMs`, `staleRepeatMs`.
@@ -56,7 +53,11 @@ pub(crate) fn build(svc: &Services, _opts: &ServeOptions) -> Option<Arc<Launcher
 }
 
 pub(crate) fn start(svc: &Arc<Services>) {
-    if let Some(stale) = svc.launcher_stale.as_ref().filter(|_| svc.tasks.stale_timer) {
+    if let Some(stale) = svc
+        .launcher_stale
+        .as_ref()
+        .filter(|_| svc.tasks.stale_timer)
+    {
         svc.tasks.keep(TASK, stale.start());
     }
 }

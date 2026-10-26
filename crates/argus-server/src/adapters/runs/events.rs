@@ -34,7 +34,10 @@ impl DocRunEvents {
 
 impl RunEvents for DocRunEvents {
     fn project(&self, row: &RunRow) {
-        self.apply(&row.scope, DocChange::set(Coll::Runs, row.id.clone(), row.to_doc()));
+        self.apply(
+            &row.scope,
+            DocChange::set(Coll::Runs, row.id.clone(), row.to_doc()),
+        );
     }
 
     fn unproject(&self, scope: &str, rid: &str) {

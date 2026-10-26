@@ -13,6 +13,7 @@
 //! Refusals carry the crate's codes: 403 `forbidden`, 404 `not_found`, 409 `conflict`, 423
 //! `in_use`, 500 `backup_failed` and `git_failed`. Shadow mode answers `read_only`.
 
+use std::future::Future;
 use std::sync::Arc;
 
 use argus_core::{ApiError, ErrorCode};
@@ -22,7 +23,10 @@ use serde_json::{Value, json};
 
 use crate::reply::json_reply;
 use crate::router::Reply;
-use crate::{AuthKind, Ctx, Router};
+use crate::routes::blocking::blocking;
+use crate::routes::params;
+use crate::services::worktrees::publish;
+use crate::{AuthKind, Ctx, RouteOpts, Router};
 
 mod leftovers;
 mod remove;
@@ -57,10 +61,19 @@ fn caller(ctx: &Ctx, body: &Value) -> Caller {
     Caller::Thread(by.chars().take(BY_MAX).collect())
 }
 
+/// The reason, its white space folded and cut short.
 fn reason(body: &Value) -> Option<String> {
-    let text = body["reason"].as_str()?;
-    let folded = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    let cut: String = folded.chars().take(REASON_MAX).collect();
+    let mut out = String::new();
+    for word in body["reason"].as_str()?.split_whitespace() {
+        if !out.is_empty() {
+            out.push(' ');
+        }
+        out.push_str(word);
+        if out.chars().count() >= REASON_MAX {
+            break;
+        }
+    }
+    let cut: String = out.chars().take(REASON_MAX).collect();
     (!cut.is_empty()).then_some(cut)
 }
 
@@ -84,27 +97,42 @@ fn refusal(e: &WtError) -> Response {
     json_reply(e.code.status(), &json!({ "error": error }))
 }
 
-/// Runs a removal on a thread that may block, then writes the rows again.
-async fn blocking<T: Send + 'static>(
-    ctx: &Ctx,
-    key: &str,
-    service: Arc<WorktreeService>,
-    work: impl FnOnce(&WorktreeService) -> Result<T, WtError> + Send + 'static,
-) -> Result<Result<T, WtError>, ApiError> {
-    let (svc, key) = (Arc::clone(&ctx.svc), key.to_owned());
-    crate::routes::blocking::blocking(move || {
-        let out = work(&service);
-        crate::services::worktrees::publish(&svc, &service, &key);
+/// What the three routes share: the checks, the body, the call on a thread that may block, the
+/// rows written again, and the answer.
+async fn serve<I: Send + 'static, T: Send + 'static>(
+    ctx: Ctx,
+    input: fn(&Ctx, &str, &Value) -> I,
+    call: fn(&WorktreeService, &I) -> Result<T, WtError>,
+    render: fn(T) -> Value,
+) -> Reply {
+    let service = service(&ctx)?;
+    writable(&ctx)?;
+    let key = params::key(&ctx)?;
+    let body = ctx.json().await?;
+    let input = input(&ctx, &key, &body);
+    let svc = Arc::clone(&ctx.svc);
+    let out = blocking(move || {
+        let out = call(&service, &input);
+        publish(&svc, &service, &key);
         out
     })
-    .await
-}
-
-fn answer<T>(out: Result<T, WtError>, body: impl FnOnce(T) -> Value) -> Reply {
+    .await?;
     Ok(match out {
-        Ok(done) => json_reply(200, &body(done)),
+        Ok(done) => json_reply(200, &render(done)),
         Err(e) => refusal(&e),
     })
+}
+
+fn post<F, Fut>(r: &mut Router, path: &str, max_bytes: usize, f: F)
+where
+    F: Fn(Ctx) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Reply> + Send + 'static,
+{
+    let opts = RouteOpts {
+        max_bytes,
+        ..RouteOpts::default()
+    };
+    r.add("POST", path, opts, f);
 }
 
 /// Registers the worktree routes.

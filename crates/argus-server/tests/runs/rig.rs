@@ -1,13 +1,18 @@
 //! A test server whose run service starts pipes the test drives by hand, and the calls the run
 //! tests make over and over.
 
-use std::future::Future;
+#![allow(dead_code)]
+
 use std::sync::Arc;
-use std::time::Duration;
 
 use argus_launchers::FakeHost;
 use argus_testkit::{Reply, Request, SseReader, TestOptions, TestServer, write_board};
 use serde_json::{Value, json};
+
+#[path = "../support/wait.rs"]
+mod wait;
+
+pub use wait::until;
 
 /// A definition the way `coord run define` writes it; `cwd` is a folder that exists.
 pub fn def(name: &str, cwd: &str, extra: &Value) -> Value {
@@ -25,17 +30,6 @@ pub fn def(name: &str, cwd: &str, extra: &Value) -> Value {
 pub struct Rig {
     pub t: TestServer,
     pub host: FakeHost,
-}
-
-/// Polls until `f` answers something (up to ten seconds).
-pub async fn until<T, Fut: Future<Output = Option<T>>>(what: &str, mut f: impl FnMut() -> Fut) -> T {
-    for _ in 0..200 {
-        if let Some(found) = f().await {
-            return found;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
-    panic!("timed out waiting for {what}");
 }
 
 impl Rig {
@@ -88,7 +82,9 @@ impl Rig {
 
     /// Starts a launch as the CLI; the run it answers.
     pub async fn begin(&self, name: &str) -> Value {
-        let out = self.cli("POST", "/api/p/alpha/runs", &json!({ "name": name })).await;
+        let out = self
+            .cli("POST", "/api/p/alpha/runs", &json!({ "name": name }))
+            .await;
         assert_eq!(out.status, 200, "{}", out.text());
         out.json()["run"].clone()
     }
@@ -108,20 +104,33 @@ impl Rig {
 
     /// The text of the lines of a run, in order.
     pub async fn texts(&self, rid: &str) -> Vec<String> {
-        let page = self.t.get(&format!("/api/p/alpha/runs/{rid}/logs?limit=5000")).await.json();
+        let page = self
+            .t
+            .get(&format!("/api/p/alpha/runs/{rid}/logs?limit=5000"))
+            .await
+            .json();
         let lines = page["lines"].as_array().cloned().unwrap_or_default();
-        lines.iter().filter_map(|l| l["text"].as_str().map(str::to_owned)).collect()
+        lines
+            .iter()
+            .filter_map(|l| l["text"].as_str().map(str::to_owned))
+            .collect()
     }
 
     pub async fn until_line(&self, rid: &str, text: &str) {
         until(&format!("the line {text}"), || async {
-            self.texts(rid).await.iter().any(|t| t == text).then_some(())
+            self.texts(rid)
+                .await
+                .iter()
+                .any(|t| t == text)
+                .then_some(())
         })
         .await;
     }
 
     /// Opens the log stream of a run.
     pub async fn tail(&self, rid: &str, query: &str) -> SseReader {
-        self.t.sse(&format!("/api/p/alpha/runs/{rid}/logs/stream{query}")).await
+        self.t
+            .sse(&format!("/api/p/alpha/runs/{rid}/logs/stream{query}"))
+            .await
     }
 }

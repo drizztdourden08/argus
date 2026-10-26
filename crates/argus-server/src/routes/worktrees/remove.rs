@@ -1,13 +1,12 @@
 //! Removing one worktree, and pruning the gone ones.
 
 use argus_core::clock::parse_ms;
-use argus_worktrees::RemoveInput;
+use argus_worktrees::{RemoveInput, RemoveOutcome, Service};
 use serde_json::{Value, to_value};
 
-use super::{answer, blocking, caller, id_of, reason, service, writable};
-use crate::routes::params;
+use super::{caller, id_of, post, reason, serve};
 use crate::router::Reply;
-use crate::{Ctx, RouteOpts, Router};
+use crate::{Ctx, Router};
 
 const REMOVE_BYTES: usize = 8 * 1024;
 const PRUNE_BYTES: usize = 4 * 1024;
@@ -30,35 +29,19 @@ fn input_of(ctx: &Ctx, key: &str, body: &Value) -> RemoveInput {
     input
 }
 
+fn render(done: RemoveOutcome) -> Value {
+    to_value(done).unwrap_or(Value::Null)
+}
+
 async fn remove(ctx: Ctx) -> Reply {
-    let service = service(&ctx)?;
-    writable(&ctx)?;
-    let key = params::key(&ctx)?;
-    let body = ctx.json().await?;
-    let input = input_of(&ctx, &key, &body);
-    let out = blocking(&ctx, &key, service, move |s| s.remove(&input)).await?;
-    answer(out, |done| to_value(done).unwrap_or(Value::Null))
+    serve(ctx, input_of, Service::remove, render).await
 }
 
 async fn prune(ctx: Ctx) -> Reply {
-    let service = service(&ctx)?;
-    writable(&ctx)?;
-    let key = params::key(&ctx)?;
-    let body = ctx.json().await?;
-    let input = input_of(&ctx, &key, &body);
-    let out = blocking(&ctx, &key, service, move |s| s.prune(&input)).await?;
-    answer(out, |done| to_value(done).unwrap_or(Value::Null))
+    serve(ctx, input_of, Service::prune, render).await
 }
 
 pub(super) fn register(r: &mut Router) {
-    let remove_opts = RouteOpts {
-        max_bytes: REMOVE_BYTES,
-        ..RouteOpts::default()
-    };
-    let prune_opts = RouteOpts {
-        max_bytes: PRUNE_BYTES,
-        ..RouteOpts::default()
-    };
-    r.add("POST", "/api/p/:key/worktrees/remove", remove_opts, remove);
-    r.add("POST", "/api/p/:key/worktrees/prune", prune_opts, prune);
+    post(r, "/api/p/:key/worktrees/remove", REMOVE_BYTES, remove);
+    post(r, "/api/p/:key/worktrees/prune", PRUNE_BYTES, prune);
 }

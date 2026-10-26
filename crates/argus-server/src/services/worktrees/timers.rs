@@ -90,7 +90,7 @@ struct Pump {
 impl Pump {
     fn due(&mut self, service: &WorktreeService) -> Vec<String> {
         let now = Instant::now();
-        let wait = Duration::from_millis(self.timing.debounce_ms);
+        let wait = Duration::from_millis(self.timing.debounce);
         while let Ok(key) = self.asked.try_recv() {
             self.debounce.entry(key).or_insert(now + wait);
         }
@@ -112,7 +112,7 @@ impl Pump {
 
     /// Projects with leftovers the last scan had no time to measure, once `more_ms` has passed.
     fn unmeasured(&self, service: &WorktreeService, now: Instant) -> Vec<String> {
-        let more = Duration::from_millis(self.timing.more_ms);
+        let more = Duration::from_millis(self.timing.more);
         projects(service)
             .into_iter()
             .filter(|key| service.pending_count(key) > 0)
@@ -152,11 +152,7 @@ impl Pump {
     }
 }
 
-async fn pump_loop(
-    svc: Arc<Services>,
-    service: Arc<WorktreeService>,
-    mut pump: Pump,
-) {
+async fn pump_loop(svc: Arc<Services>, service: Arc<WorktreeService>, mut pump: Pump) {
     let mut ticker = tokio::time::interval(PUMP_EVERY);
     loop {
         ticker.tick().await;
@@ -171,7 +167,7 @@ pub(super) fn start(
     timing: Timing,
     asked: UnboundedReceiver<String>,
 ) {
-    let delay = Duration::from_millis(timing.start_delay_ms);
+    let delay = Duration::from_millis(timing.start_delay);
     let pump = Pump {
         timing,
         asked,
@@ -179,9 +175,18 @@ pub(super) fn start(
         scanned: HashMap::new(),
         jobs: HashMap::new(),
     };
-    svc.tasks.keep(TASK, tokio::spawn(scan_loop(Arc::clone(svc), Arc::clone(service), delay)));
-    svc.tasks.keep(TASK, tokio::spawn(live_loop(Arc::clone(svc), Arc::clone(service))));
-    svc.tasks.keep(TASK, tokio::spawn(pump_loop(Arc::clone(svc), Arc::clone(service), pump)));
+    svc.tasks.keep(
+        TASK,
+        tokio::spawn(scan_loop(Arc::clone(svc), Arc::clone(service), delay)),
+    );
+    svc.tasks.keep(
+        TASK,
+        tokio::spawn(live_loop(Arc::clone(svc), Arc::clone(service))),
+    );
+    svc.tasks.keep(
+        TASK,
+        tokio::spawn(pump_loop(Arc::clone(svc), Arc::clone(service), pump)),
+    );
 }
 
 /// Ends the timers.

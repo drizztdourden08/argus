@@ -1,12 +1,11 @@
 //! Deleting the old leftover folders of a project in the background.
 
-use argus_worktrees::{BatchInput, BatchOutcome};
+use argus_worktrees::{BatchInput, BatchOutcome, Service};
 use serde_json::{Value, json, to_value};
 
-use super::{answer, blocking, caller, id_of, reason, service, writable};
-use crate::routes::params;
+use super::{caller, id_of, post, reason, serve};
 use crate::router::Reply;
-use crate::{Ctx, RouteOpts, Router};
+use crate::{Ctx, Router};
 
 const LEFTOVER_BYTES: usize = 64 * 1024;
 const IDS_MAX: usize = 500;
@@ -58,19 +57,13 @@ fn outcome_json(outcome: &BatchOutcome) -> Value {
 }
 
 async fn remove(ctx: Ctx) -> Reply {
-    let service = service(&ctx)?;
-    writable(&ctx)?;
-    let key = params::key(&ctx)?;
-    let body = ctx.json().await?;
-    let input = input_of(&ctx, &key, &body);
-    let out = blocking(&ctx, &key, service, move |s| s.remove_leftovers(&input)).await?;
-    answer(out, |done| outcome_json(&done))
+    serve(ctx, input_of, Service::remove_leftovers, |done| {
+        outcome_json(&done)
+    })
+    .await
 }
 
 pub(super) fn register(r: &mut Router) {
-    let opts = RouteOpts {
-        max_bytes: LEFTOVER_BYTES,
-        ..RouteOpts::default()
-    };
-    r.add("POST", "/api/p/:key/worktrees/leftovers/remove", opts, remove);
+    let path = "/api/p/:key/worktrees/leftovers/remove";
+    post(r, path, LEFTOVER_BYTES, remove);
 }

@@ -34,8 +34,7 @@ impl SqliteRuns {
     }
 
     pub(super) fn failed(&self, what: &str, err: &dyn std::fmt::Display) {
-        self.log
-            .warn(what, json!({ "err": err.to_string() }));
+        self.log.warn(what, json!({ "err": err.to_string() }));
     }
 
     fn query(&self, clause: &str, args: impl Params) -> Vec<RunRow> {
@@ -168,7 +167,8 @@ impl RunStore for SqliteRuns {
     }
 
     fn live_by_name(&self, scope: &str, name: &str) -> Vec<RunRow> {
-        let clause = format!("WHERE scope = ? AND name = ? AND status IN {LIVE} ORDER BY rowid DESC");
+        let clause =
+            format!("WHERE scope = ? AND name = ? AND status IN {LIVE} ORDER BY rowid DESC");
         self.query(&clause, params![scope, name])
     }
 
@@ -177,10 +177,7 @@ impl RunStore for SqliteRuns {
     }
 
     fn queued_rows(&self) -> Vec<RunRow> {
-        self.query(
-            "WHERE status = 'queued' ORDER BY queued_at, rowid",
-            [],
-        )
+        self.query("WHERE status = 'queued' ORDER BY queued_at, rowid", [])
     }
 
     fn groups(&self) -> Vec<(String, String)> {
@@ -221,7 +218,10 @@ impl RunStore for SqliteRuns {
                 "DELETE FROM attachments WHERE scope = ? AND owner_kind = 'run' AND owner_id = ?",
                 params![scope, rid],
             )?;
-            c.execute("DELETE FROM runs WHERE id = ?", params![format!("{scope}:{rid}")])?;
+            c.execute(
+                "DELETE FROM runs WHERE id = ?",
+                params![format!("{scope}:{rid}")],
+            )?;
             Ok(())
         });
         if let Err(e) = done {

@@ -69,7 +69,10 @@ impl LogStore for SqliteRuns {
                 return Vec::new();
             };
             statement
-                .query_map(params![format!("{scope}:{rid}"), int(after), stream], line_of)
+                .query_map(
+                    params![format!("{scope}:{rid}"), int(after), stream],
+                    line_of,
+                )
                 .map(|rows| rows.flatten().collect())
                 .unwrap_or_default()
         });

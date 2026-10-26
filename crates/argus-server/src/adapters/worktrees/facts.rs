@@ -115,7 +115,8 @@ fn entries_of(raw: &Value) -> HashMap<String, OwnerEntry> {
     let Some(all) = raw.as_object() else {
         return HashMap::new();
     };
-    let ours = |e: &Value| e["worktree"].is_object() || (e["author"] == "human" && e["via"] == "page");
+    let ours =
+        |e: &Value| e["worktree"].is_object() || (e["author"] == "human" && e["via"] == "page");
     let asked: HashSet<&str> = all
         .values()
         .filter(|e| ours(e))
