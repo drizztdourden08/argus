@@ -131,14 +131,14 @@ their status is `n/a`.
 | `wake.registry.test.mjs` | Wake registry and faults | 3 | `crates/argus-wake/tests/registry.rs` | done |
 | `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` | todo |
 | `worktrees.fallback.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_fallback_http.rs` | todo |
-| `worktrees.fallback.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/fallback.rs` | todo |
+| `worktrees.fallback.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/fallback.rs` | done |
 | `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_http.rs` | todo |
-| `worktrees.leftover.test.mjs` | Leftover folders | 5 | `crates/argus-worktrees/tests/leftover.rs` | todo |
-| `worktrees.remove.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/remove.rs` | todo |
-| `worktrees.rules.test.mjs` | Worktree scanner; Leftover folders | 5 | `crates/argus-worktrees/tests/rules.rs` | todo |
-| `worktrees.safety.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/safety.rs` | todo |
-| `worktrees.scan.test.mjs` | Worktree scanner | 5 | `crates/argus-worktrees/tests/scan.rs` | todo |
-| `worktrees.service.test.mjs` | Worktree scanner | 5 | `crates/argus-worktrees/tests/service.rs` | todo |
+| `worktrees.leftover.test.mjs` | Leftover folders | 5 | `crates/argus-worktrees/tests/leftover.rs` | done |
+| `worktrees.remove.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/remove.rs` | done |
+| `worktrees.rules.test.mjs` | Worktree scanner; Leftover folders | 5 | `crates/argus-worktrees/tests/rules.rs` | done |
+| `worktrees.safety.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/safety.rs` | done |
+| `worktrees.scan.test.mjs` | Worktree scanner | 5 | `crates/argus-worktrees/tests/scan.rs` | done |
+| `worktrees.service.test.mjs` | Worktree scanner | 5 | `crates/argus-worktrees/tests/service.rs` | done |
 
 A row with two slices is ported in two steps: the cases that need the later slice (owner posts in
 `wake.http`, the native sender in `notify`, the native sampler in `procs.sampler`, the Rust client
