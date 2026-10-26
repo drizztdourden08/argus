@@ -127,6 +127,11 @@ fn the_check_in_period_is_the_leads_choice_clamped_to_15_to_30_minutes_default_2
     assert_eq!(every(json!({"checkinMin": 5})), 15 * MIN);
     assert_eq!(every(json!({"checkinMin": 25})), 25 * MIN);
     assert_eq!(every(json!({"checkinMin": 90})), 30 * MIN);
+    assert_eq!(
+        every(json!({"checkinMin": null})),
+        15 * MIN,
+        "Number(null) is 0 in Node, clamped to 15"
+    );
 }
 
 #[test]

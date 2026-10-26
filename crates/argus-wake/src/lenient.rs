@@ -90,7 +90,10 @@ impl<'de> Deserialize<'de> for Num {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Ok(Self(match Value::deserialize(d)? {
             Value::Number(n) => n.as_f64(),
+            Value::String(s) if s.trim().is_empty() => Some(0.0),
             Value::String(s) => s.trim().parse().ok(),
+            Value::Null | Value::Bool(false) => Some(0.0),
+            Value::Bool(true) => Some(1.0),
             _ => None,
         }))
     }
