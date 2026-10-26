@@ -24,8 +24,9 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
   const columns: KanbanColumn<CardData>[] = view.columns.map((column) => ({
     ...column,
     badge: quietIn(column.cards) > 0 ? <QuietBadge count={quietIn(column.cards)} /> : undefined,
-    action: (
-      <ColumnAdd title={column.title} open={add.column === column.id} onToggle={() => add.toggle(column.id)} onClose={add.close}>
+    action: <ColumnAdd title={column.title} open={add.column === column.id} onToggle={() => add.toggle(column.id)} />,
+    top:
+      add.column === column.id ? (
         <ColumnAddForm
           preset={addPreset(group, column.id, focus)}
           group={group}
@@ -33,8 +34,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
           onCreate={(item) => void ops.create(item)}
           onClose={add.close}
         />
-      </ColumnAdd>
-    ),
+      ) : undefined,
   }));
   return (
     <KanbanBoard

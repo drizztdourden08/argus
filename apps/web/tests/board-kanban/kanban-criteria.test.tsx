@@ -92,3 +92,20 @@ describe('the criteria of an item: editing, removing and moving', () => {
     expect(await within(dialog).findByText('Criterion 1 moved to 2 of 2')).toBeTruthy();
   });
 });
+
+describe('the criteria of an item: inline Markdown', () => {
+  it('shows a criterion as inline Markdown with a link, and edits the raw text', async () => {
+    const { posted, dialog } = await opened({ ac: [{ n: 1, text: 'Reads **bold** and [the rules](https://example.com/rules)', done: false }] });
+    expect(within(dialog).getByText('bold').tagName).toBe('STRONG');
+    const link = within(dialog).getByText('the rules');
+    fireEvent.click(link);
+    expect(within(dialog).queryByRole('textbox', { name: 'Edit criterion 1' })).toBeNull();
+    fireEvent.click(within(dialog).getByText('bold'));
+    const box = within(dialog).getByRole<HTMLTextAreaElement | HTMLInputElement>('textbox', { name: 'Edit criterion 1' });
+    expect(box.value).toBe('Reads **bold** and [the rules](https://example.com/rules)');
+    fireEvent.change(box, { target: { value: 'Reads _it_' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]?.body).toMatchObject({ kind: 'ac', do: 'set', n: 1, text: 'Reads _it_' });
+  });
+});
