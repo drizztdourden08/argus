@@ -58,9 +58,9 @@ their status is `n/a`.
 | `activity.test.mjs` | Activity log | 4 | `crates/argus-store/tests/activity.rs` | done |
 | `agent.model.test.mjs` | coord agent verbs | 8 | `crates/argus-coord/tests/agent_model.rs` | done |
 | `agents.export.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/export.rs` | done |
-| `agents.reaper.test.mjs` | Agent reaper | 5 | `crates/argus-agents/tests/reaper.rs` | doing (9 of 10; sync case with server) |
+| `agents.reaper.test.mjs` | Agent reaper | 5 | `crates/argus-agents/tests/reaper.rs`, `crates/argus-server/tests/agents.rs` (through the sync service) | done (10 of 10 at `4dbe260`; the 5 worktree-aware cases of `62e66c7` are in the fixes table) |
 | `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/agents_reconcile_http.rs` | done |
-| `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs` | doing (32 of 34; wake cases with argus-wake) |
+| `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs`, `crates/argus-wake/tests/agents.rs` (the wake reasons and the flagged record) | done (34 of 34 at `4dbe260`; the 3 reopen cases of `62e66c7` are in the fixes table) |
 | `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
 | `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | n/a (Tessera LogPanel renders ANSI) |
 | `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | done |
@@ -92,12 +92,12 @@ their status is `n/a`.
 | `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | done |
 | `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | done |
 | `mcp.tools.test.mjs` | MCP tool host | 7 | `crates/argus-mcp/tests/tools.rs` | done |
-| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/src/features/markdown/markdown.test.tsx` | doing (strip cases ported; render by Tessera Markdown) |
+| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/tests/markdown/*.test.tsx`, `apps/web/tests/board/plain-text.test.ts` | doing (all applicable cases ported; 8 `gap:` cases wait for Tessera, see Markdown gaps) |
 | `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/notify.rs` | done |
-| `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify.rs` | doing (pure cases done; HTTP cases with the server) |
+| `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify/`, `crates/argus-native/tests/toast_payload.rs`, `crates/argus-native/tests/toast_winrt.rs` | done (the `toastScript` and fake PowerShell cases do not apply: the notifier is native) |
 | `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
 | `pages.agents.test.mjs` | Agents tab | 5 | `apps/web/src/pages/board/agents/AgentsTab.test.tsx` | done |
-| `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/src/pages/board/*/*.test.tsx` | doing (all tabs built; gaps I-21, I-23) |
+| `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/tests/board*/` | doing (110 cases matched by title; 3 added; the rest wait on features, see Board page gaps) |
 | `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | done |
 | `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | done |
 | `pages.shim.test.mjs` | Web shell and data layer | 1 | `apps/web/src/data/*.test.ts` | done |
@@ -110,16 +110,16 @@ their status is `n/a`.
 | `render.publish.test.mjs` | none: tests the render in `ai-config` | none | stays in `ai-config` | n/a |
 | `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/runs_cli.rs` | done |
 | `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_http.rs` | done |
-| `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/kill.rs` | doing (one case each waits for the server) |
+| `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/it/runs_kill.rs`, `crates/argus-launchers/tests/it/system_host.rs` (the stubborn process) | done |
 | `runs.lifecycle.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/lifecycle.rs` | done |
 | `runs.logs.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/logs.rs` | done |
 | `runs.recover.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/recover.rs` | done |
 | `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_server.rs` | done |
-| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/terminal.rs` | doing (one case each waits for the server) |
+| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/it/runs_terminal.rs`, `crates/argus-server/tests/runs_stdin.rs` (the stdin route) | done |
 | `sync.export.test.mjs` | Board ingestion and export; Portfolio cards | 1 | `crates/argus-sync/tests/export.rs` | done |
 | `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/posts.rs` | done |
-| `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs` | doing (CLI cases with slice 8) |
-| `tray.test.mjs` | Tray icon and menu | 6 | `crates/argus-native/tests/tray.rs` | doing (state, quit.flag, stop ported; CLI cases with slice 8) |
+| `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs`, `crates/argus-sync/tests/watch_cli.rs` (Node CLI and `argus coord`) | done |
+| `tray.test.mjs` | Tray icon and menu | 6 | unit tests in `crates/argus-native/src/tray/`, `crates/argus/tests/tray_cli.rs` | done (no case starts the tray: it would put an icon on the owner desktop; the PowerShell script cases do not apply) |
 | `wake.agents.test.mjs` | Agent wakes | 3 | `crates/argus-wake/tests/agent_wakes.rs` | done |
 | `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/wake_stream.rs` | done |
 | `wake.engine.test.mjs` | Wake engine and listeners | 3 | `crates/argus-wake/tests/engine.rs` | done |
@@ -146,6 +146,39 @@ in `runs.cli`) wait for it. `pages.portfolio` covers the Dashboards tab in slice
 Processes, Activity and Notifications tabs in slice 4; `pages.board` covers the page shell and
 the Activity feed in slice 2 and the other tabs in slice 5.
 
+## Open gaps by test file
+
+### Markdown gaps (md.test.mjs, for the Tessera lead)
+
+The cases are in `apps/web/tests/markdown/` as `it.fails` cases named `gap: ...`: they pass while
+Tessera lacks the feature and fail the day it ships it, and then become plain `it` cases.
+
+- Links to `/files/...` proof addresses: Tessera Markdown links only http, https and mailto.
+- Inline images: every image shows its alt text (the Node page showed `/files`, https and data images).
+- `linkIds`: `T-5`, `I-3`, `A-2` and `H-1` stay text (the Node page linked them to page anchors).
+- Control and private-use characters pass through (Node removed them; NUL becomes U+FFFD).
+- The editor lacks list continuation on Enter, Tab and Shift+Tab indent, Backspace on an empty
+  marker and the checkbox autoformat of a dash and empty brackets.
+- Different on purpose and asserted as Tessera does it: raw html is dropped (Node showed it as
+  text), entities are decoded to text, headings start one level lower, a soft break stays a
+  newline, a table cell carries its alignment as a class, a bold with no selection inserts the
+  two marks and no placeholder word, and a text is never cut at a size cap.
+
+### Board page gaps (pages.board.test.mjs, for the web lead)
+
+All 110 Node cases were matched by title to the 627 web cases; three were added
+(`note-limits.test.tsx`). These wait on a feature the web app does not have yet:
+
+- The Tests tab note box and the note dialog are a plain Textarea; the Node box was the Markdown
+  editor with a toolbar and list keys (4 cases: toolbar, every box the same editor, toolbar
+  formatting, keys in the note box). Its over-limit sentence is also worded differently.
+- The drawer: the criterion as inline markdown, the Expand focus toggle (Tessera Drawer wide) and
+  the thread drawer with its note and brief (3 cases).
+- The terminal's Copy all, Jump to bottom and 300 line window belong to Tessera LogPanel and need
+  layout that jsdom lacks.
+- Not applicable to React: the persistent body mounted into a slot, the redraw-free patch of a
+  run line, and the page without `md.js`.
+
 ## Node fixes after the matrix commit
 
 Node is frozen except fixes, and every fix reaches Argus. Each line names the `ai-config` commit and
@@ -165,7 +198,7 @@ where it landed.
 | `62e66c7` | The reconciler reopens a record the reaper closed when its task output or worktree shows work after the close, and says why | `crates/argus-agents/src/reconciler/resume.rs`, cases in `tests/reconciler.rs` | ported |
 | `62e66c7` | A hook event binds only by exact agent id (start reopens, stop notes an unknown id, the tool result never rewrites another agent's record) | `crates/argus-coord/src/verbs/hook/` (already exact in WP2), cases in `tests/hook_agents*.rs` | ported |
 | `62e66c7` | `coord agent start` with a session id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
-| `62e66c7` | Dev servers may use 3 GB before they are flagged (the Node repo keeps 1500 in `DEFAULT_RULES`; the owner's live rules file has 3000) | `crates/argus-procs/src/defaults.rs` (`node-dev-server`) | ported |
+| `62e66c7` | Dev servers may use 3 GB: only in the owner's live `process-rules.json`, which Argus reads; the built-in default stays Node's 1500 MB | `crates/argus-procs/src/defaults.rs` | ported |
 | `62e66c7` | The `coord` forward shim to `argus coord` is off by default | the config repo only: `forward.mjs` | n/a |
 
 Where Argus differs from Node on purpose in the `62e66c7` port:
@@ -175,7 +208,7 @@ Where Argus differs from Node on purpose in the `62e66c7` port:
 - A pruned record's folder is read from its `gitdir` file as in Node, and a record Argus cannot name stops the prune.
 - The backup of a nested repository is copied into `<base>.nested` (the folder itself, not under its relative path) only up to
   2000 files and 50 MB, else it is named in `<base>.nested.txt`. Node copies it whole, `node_modules` left out.
-- The nested look stops after 3000 folders (Node has no budget). Less strict on a huge tree; the removal still needs a clean status.
+- The nested look stops after 3000 folders (Node has no budget) and then fails closed: the folder counts as unsafe (I-26). Stricter.
 
 ## Feature areas
 

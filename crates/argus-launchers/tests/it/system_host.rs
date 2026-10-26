@@ -1,11 +1,13 @@
 //! The real process host on Windows: `cmd.exe /d /s /c`, hidden, with the tree kill scoped
-//! to the spawned pid. Only harmless commands run (echo, ping) and every test kills what it
-//! spawned, by pid, in a guard that also runs when an assertion fails.
+//! to the spawned pid. Only harmless commands run (echo, ping, a node script that ignores the
+//! polite signal) and every test kills what it spawned, by pid, in a guard that also runs when an
+//! assertion fails. The stubborn-process case ports `runs.kill.test.mjs`.
 #![cfg(windows)]
 
 use std::os::windows::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use argus_launchers::{
     MemoryDefs, MemoryStore, ProcessHost, RecordingEvents, RunConfig, RunDef, RunDeps, RunService,
@@ -49,6 +51,10 @@ struct Real {
 }
 
 fn real(defs: Vec<RunDef>) -> Real {
+    real_with(defs, RunConfig::default())
+}
+
+fn real_with(defs: Vec<RunDef>, config: RunConfig) -> Real {
     let dir = TempDir::new().unwrap();
     let store = Arc::new(MemoryStore::new());
     let memory = Arc::new(MemoryDefs::new());
@@ -67,7 +73,7 @@ fn real(defs: Vec<RunDef>) -> Real {
         store: Arc::clone(&store) as _,
         events: Arc::new(RecordingEvents::new()),
         defs: memory,
-        config: RunConfig::default().fixed(),
+        config: config.fixed(),
         clock: Arc::new(SystemClock),
     });
     svc.recover();
@@ -235,4 +241,28 @@ async fn a_recycled_pid_that_is_not_a_cmd_shell_is_never_killed() {
     let row = real.svc.stop("alpha", "R-1", "tester").await.unwrap();
     assert!(row.orphan, "left alone");
     assert!(SystemHost.is_alive(plain), "the unrelated process survives");
+}
+
+#[tokio::test]
+async fn a_process_that_ignores_the_polite_signal_is_ended_by_the_forced_kill() {
+    let scripts = TempDir::new().unwrap();
+    let script = scripts.path().join("stubborn.cjs");
+    let body = "process.on('SIGTERM', () => console.log('ignoring')); console.log('ready'); setInterval(() => {}, 1000);";
+    std::fs::write(&script, body).unwrap();
+    let command = format!("node \"{}\"", script.display());
+    let mut config = RunConfig::default();
+    config.limits.stop_grace_ms = 600;
+    let real = real_with(vec![def("stubborn", &command)], config);
+    let run = start(&real, "stubborn");
+    let shell = run.pid.unwrap();
+    let _reaper = Reaper(vec![shell]);
+    until("the process to be ready", || {
+        texts(&real, &run.id, "out").contains("ready").then_some(())
+    })
+    .await;
+    let began = Instant::now();
+    let stopped = real.svc.stop("alpha", &run.id, "tester").await.unwrap();
+    assert_eq!(stopped.status, RunStatus::Stopped);
+    assert!(began.elapsed() < Duration::from_secs(5));
+    assert!(!SystemHost.is_alive(shell));
 }
