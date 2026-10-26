@@ -58,7 +58,7 @@ fn an_unported_verb_exits_120_with_no_output_and_no_file_written() {
     for args in [
         &["hook", "tool"][..],
         &["wake-fault", "list"][..],
-        &["item", "add", "A title", "--project", "alpha"][..],
+        &["proc", "list"][..],
         &["ping", "hello"][..],
     ] {
         let out = argus(args, home.path(), json);
