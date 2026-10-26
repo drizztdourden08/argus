@@ -7,6 +7,7 @@ import { PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { BOARD_TAB_IDS, BOARD_TABS } from './board.constants';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
+import { KanbanTab } from './tabs/kanban';
 import { TestsTab } from './tabs/tests';
 import { ThreadList } from './sub-components/ThreadList';
 
@@ -23,8 +24,9 @@ const BoardPage = (props: BoardPageProps) => {
       <ThreadList threads={board.threads} />
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
+      {tab === 'kanban' && <KanbanTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
-      {tab !== 'agents' && tab !== 'tests' && <EmptyState message="This tab is not built yet." />}
+      {tab !== 'agents' && tab !== 'kanban' && tab !== 'tests' && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };
