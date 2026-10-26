@@ -89,27 +89,11 @@ impl WakeStore for SqlWakeStore {
         self.db
             .tx(|tx| {
                 let n = tx.next_counter(COUNTER)?;
-                let id = format!("W-{n}");
                 tx.conn().execute(
                     "INSERT INTO wakes(id, n, scope, thread, reason, subject, text, at, status, listeners, count) VALUES(?, ?, ?, ?, ?, ?, ?, ?, 'queued', 0, 1)",
-                    params![id, n, wake.scope, wake.thread, wake.reason, wake.subject, wake.text, at],
+                    params![format!("W-{n}"), n, wake.scope, wake.thread, wake.reason, wake.subject, wake.text, at],
                 )?;
-                Ok(WakeRow {
-                    id,
-                    n: u64::try_from(n).unwrap_or(0),
-                    scope: wake.scope.clone(),
-                    thread: wake.thread.clone(),
-                    reason: wake.reason.clone(),
-                    subject: wake.subject.clone(),
-                    text: wake.text.clone(),
-                    at: at.to_owned(),
-                    status: WakeStatus::Queued,
-                    listeners: 0,
-                    delivered_at: None,
-                    lines: None,
-                    count: 1,
-                    merged_into: None,
-                })
+                Ok(WakeRow::queued(u64::try_from(n).unwrap_or(0), wake, at))
             })
             .map_err(|e| failed("insert", &e))
     }

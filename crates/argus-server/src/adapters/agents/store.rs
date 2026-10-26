@@ -3,11 +3,12 @@
 
 use std::path::PathBuf;
 
-use argus_agents::record::{Record, id_of};
+use argus_agents::board::{put_back, records};
+use argus_agents::record::Record;
 use argus_agents::{AgentsError, Board, BoardStore};
 use argus_board::store::{LockWait, with_board_async};
 use argus_sync::ScopeQueue;
-use serde_json::{Map, Value};
+use serde_json::Value;
 use tokio::runtime::Handle;
 
 use crate::boards::BoardReader;
@@ -35,13 +36,6 @@ impl AgentBoards {
     }
 }
 
-fn records(root: &Value, name: &str) -> Vec<Record> {
-    root.get(name)
-        .and_then(Value::as_object)
-        .map(|m| m.values().filter_map(|v| v.as_object().cloned()).collect())
-        .unwrap_or_default()
-}
-
 fn board_of(root: &Value) -> Board {
     Board {
         agents: records(root, "agents"),
@@ -49,23 +43,10 @@ fn board_of(root: &Value) -> Board {
     }
 }
 
-/// Puts the records that changed back into their collection, by id.
-fn put_back(root: &mut Value, name: &str, before: &[Record], after: &[Record]) {
-    let Some(map) = root.as_object_mut() else {
-        return;
-    };
-    let entry = map
-        .entry(name.to_owned())
-        .or_insert_with(|| Value::Object(Map::new()));
-    let Some(target) = entry.as_object_mut() else {
-        return;
-    };
-    for doc in after {
-        let unchanged = before.iter().any(|b| b == doc);
-        if !unchanged {
-            target.insert(id_of(doc).to_owned(), Value::Object(doc.clone()));
-        }
-    }
+/// The documents of `after` that are not as they were in `before`.
+fn changed(before: &[Record], after: &[Record]) -> Vec<Record> {
+    let differs = |doc: &&Record| !before.iter().any(|b| b == *doc);
+    after.iter().filter(differs).cloned().collect()
 }
 
 impl BoardStore for AgentBoards {
@@ -82,8 +63,8 @@ impl BoardStore for AgentBoards {
             let before = board_of(root);
             let mut board = before.clone();
             change(&mut board);
-            put_back(root, "agents", &before.agents, &board.agents);
-            put_back(root, "threads", &before.threads, &board.threads);
+            put_back(root, "agents", &changed(&before.agents, &board.agents));
+            put_back(root, "threads", &changed(&before.threads, &board.threads));
             Ok(())
         });
         self.runtime
