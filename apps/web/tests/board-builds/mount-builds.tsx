@@ -1,14 +1,15 @@
 /* @layer renderer-app @kind test */
 import { act, render, waitFor } from '@testing-library/react';
-import { expect, vi } from 'vitest';
+import { expect } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BuildsTab } from '../../src/screens/board/tabs/builds';
 import { byId } from '../board-tests/fixtures';
 import { stubFetch } from '../board-tests/mount-tab';
 import type { Responder } from '../board-tests/mount-tab';
-import { createFakeSources, FakeSource } from '../helpers/fake-source';
+import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
+import { stubEventSource } from '../helpers/stub-event-source';
 
 type Doc = Record<string, unknown>;
 
@@ -20,17 +21,6 @@ interface Board {
 }
 
 const SCOPE = 'rotp';
-
-const stubEventSource = (): FakeSource[] => {
-  const streams: FakeSource[] = [];
-  vi.stubGlobal('EventSource', class extends FakeSource {
-    constructor(url: string) {
-      super(url);
-      streams.push(this);
-    }
-  });
-  return streams;
-};
 
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);

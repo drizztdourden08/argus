@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { List, ListItem, Markdown } from '@drizztdourden08/tessera';
-import type { TextListProps } from '../tests-props.type';
+import type { TextListProps } from '../tests-drawer-props.type';
 
 const TextList = (props: TextListProps) => {
   const { lines, ordered, label } = props;

@@ -1,23 +1,93 @@
 /* @layer renderer-app @kind types */
 import type { PostResult } from '../../../../data/api';
+import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
-import type { TestItem } from '../../../../data/types';
-import type { BundleGroup, ClosedGroup, LaunchInfo, TestDoc } from './model';
-
-interface BundleView {
-  group: BundleGroup;
-  launch: LaunchInfo;
-}
+import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../data/types';
+import type { EditChange, ItemDoc, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, WakeDoc } from './model';
 
 interface TestsData {
   ready: boolean;
-  tests: TestDoc[];
-  bundles: BundleView[];
-  closed: ClosedGroup[];
+  tests: WithId<Test>[];
+  builds: WithId<Build>[];
+  launchers: WithId<Launcher>[];
+  defs: WithId<LaunchDef>[];
   runs: RunEntry[];
   items: WithId<TestItem>[];
+  threads: WithId<ThreadChoice>[];
+  entries: WithId<Entry>[];
+  wakes: WithId<Wake>[];
+  handed: string | null;
+}
+
+interface TestsState {
+  filters: TestFilters;
+  prefs: TestPrefs;
+  patchFilters: (patch: Partial<TestFilters>) => void;
+  clearFilters: () => void;
+  setGroup: (group: TestGroup) => void;
+  setOrder: (order: TestOrder) => void;
+  setShowPassed: (show: boolean) => void;
+  setShowClosed: (show: boolean) => void;
+}
+
+interface TestOps {
+  edit: (test: TestDoc, set: Partial<EditChange>) => Promise<boolean>;
+  move: (test: TestDoc, item: string) => Promise<boolean>;
+  soft: (kind: SoftKind, test: TestDoc) => Promise<boolean>;
+}
+
+interface NoticeOps {
+  notices: TestNotice[];
+  dismiss: (notice: TestNotice) => void;
+  resend: (notice: TestNotice) => void;
+}
+
+interface WakeLookup {
+  all: WakeDoc[];
+  latest: ReadonlyMap<string, WakeDoc>;
+  now: number;
+}
+
+interface TestsShared {
+  boardKey: string;
+  ops: TestOps;
+  items: ItemDoc[];
+  threads: WithId<ThreadChoice>[];
+  wakes: WakeLookup;
+  group: TestGroup;
+  order: TestOrder;
+  showPassed: boolean;
+  conflicted: ReadonlySet<string>;
+  folds: Folds;
+  onOpen: (testId: string) => void;
+  onNote: (testId: string) => void;
+  onEdit: (testId: string) => void;
+  onLog: (runId: string) => void;
+}
+
+interface TestMenuInput {
+  test: TestDoc;
+  shared: TestsShared;
+  rerun: () => void;
+}
+
+interface TestsScreen {
+  state: TestsState;
+  view: TestsView;
+  shared: TestsShared;
+  notices: NoticeOps;
+  visible: TestDoc[];
+  anchor: TestAnchor;
+  nav: DrawerNav;
+  wide: DrawerWide;
+  noteId: string | null;
+  editId: string | null;
+  logId: string | null;
+  closeNote: () => void;
+  closeEdit: () => void;
+  closeLog: () => void;
 }
 
 interface OwnerPost {
@@ -49,6 +119,26 @@ interface Outcome {
   send: () => void;
 }
 
+interface NoteDraft {
+  text: string;
+  shot: File | null;
+  error: string | null;
+  busy: boolean;
+  setText: (text: string) => void;
+  setShot: (file: File) => void;
+  removeShot: () => void;
+  post: (outcome: TestOutcome) => void;
+}
+
+interface EditDraft {
+  value: EditChange;
+  item: string;
+  problem: string | null;
+  set: (field: keyof EditChange, value: string) => void;
+  setItem: (item: string) => void;
+  save: () => void;
+}
+
 interface TestActions {
   busy: boolean;
   rerun: (testId: string) => Promise<void>;
@@ -60,6 +150,23 @@ interface Folds {
   set: (key: string, open: boolean) => void;
 }
 
+interface TestAnchor {
+  selected: string | null;
+  open: (testId: string) => void;
+  close: () => void;
+}
+
+interface DrawerNav {
+  previous: string | null;
+  next: string | null;
+  step: (direction: -1 | 1) => void;
+}
+
+interface DrawerWide {
+  wide: boolean;
+  toggle: () => void;
+}
+
 export type {
-  BundleView, Folds, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestsData,
+  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsScreen, TestsShared, TestsState,
 };
