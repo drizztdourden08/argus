@@ -39,6 +39,16 @@ fn path(agents: &Value, key: &str) -> Option<PathBuf> {
 }
 
 impl AgentsConfig {
+    /// Overwrite the Claude home and temp folders with the ones the config sets.
+    pub(crate) fn place_claude_dirs(&self, home: &mut PathBuf, temp: &mut PathBuf) {
+        if let Some(set) = &self.claude_home {
+            home.clone_from(set);
+        }
+        if let Some(set) = &self.claude_temp {
+            temp.clone_from(set);
+        }
+    }
+
     /// Reads the `agents` object of the config.
     #[must_use]
     pub fn from_json(agents: &Value) -> Self {
@@ -142,12 +152,7 @@ impl ReaperOptions {
         self.reap_ms = config.reap_ms.unwrap_or(self.reap_ms);
         self.reap_opus_ms = config.reap_opus_ms.unwrap_or(self.reap_opus_ms);
         self.stall_ms = config.stall_ms.unwrap_or(self.stall_ms);
-        if let Some(home) = &config.claude_home {
-            self.claude_home.clone_from(home);
-        }
-        if let Some(temp) = &config.claude_temp {
-            self.claude_temp.clone_from(temp);
-        }
+        config.place_claude_dirs(&mut self.claude_home, &mut self.claude_temp);
         self
     }
 }
@@ -220,12 +225,7 @@ impl ReconcilerOptions {
         self.orphan_clear_ms = config.orphan_clear_ms.unwrap_or(self.orphan_clear_ms);
         self.idle_wake_ms = config.idle_wake_ms.unwrap_or(self.idle_wake_ms);
         self.stall_ms = config.stall_ms.unwrap_or(self.stall_ms);
-        if let Some(home) = &config.claude_home {
-            self.claude_home.clone_from(home);
-        }
-        if let Some(temp) = &config.claude_temp {
-            self.claude_temp.clone_from(temp);
-        }
+        config.place_claude_dirs(&mut self.claude_home, &mut self.claude_temp);
         self
     }
 }

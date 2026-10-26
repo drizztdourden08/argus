@@ -39,6 +39,8 @@ pub struct Fact {
     pub leftover: Option<Leftover>,
     /// A `.git` (a nested repository) found inside the worktree by the look right before a removal.
     pub nested_git: Option<String>,
+    /// The walk for a nested `.git` hit its cap: unknown, so the folder counts as unsafe like a nested repository.
+    pub nested_too_big: bool,
     pub error: Option<String>,
 }
 
@@ -74,6 +76,7 @@ pub fn blank_fact(path: &str, rule: &Rule, case_insensitive: bool) -> Fact {
         registered: false,
         leftover: None,
         nested_git: None,
+        nested_too_big: false,
         error: None,
     }
 }

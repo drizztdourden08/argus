@@ -19,29 +19,52 @@ use crate::service::{Service, age_ms};
 /// A thread may go below the server's age limit down to this (6 hours), and only with a reason.
 pub const THREAD_MIN_AGE_DAYS: f64 = 0.25;
 
-fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Option<String> {
-    if level > 3 || *budget <= 0 {
-        return None;
+/// How many folders the walk for a nested `.git` visits before it gives up.
+const WALK_CAP: i32 = 3000;
+
+/// What the walk for a nested `.git` found. A walk that hit its cap is `TooBig`: unknown, never "nothing found".
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Within {
+    Nothing,
+    Git(String),
+    TooBig,
+}
+
+fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within {
+    if level > 3 {
+        return Within::Nothing;
+    }
+    if *budget <= 0 {
+        return Within::TooBig;
     }
     *budget -= 1;
-    let entries = fs.read_dir(dir).ok()?;
+    let Ok(entries) = fs.read_dir(dir) else {
+        return Within::Nothing;
+    };
     if level > 0 && entries.iter().any(|e| e.name == ".git") {
-        return Some(join_path(dir, ".git"));
+        return Within::Git(join_path(dir, ".git"));
     }
     for entry in entries
         .iter()
         .filter(|e| e.is_dir && !e.is_link && e.name != "node_modules" && e.name != ".git")
     {
-        if let Some(hit) = walk_for_git(fs, &join_path(dir, &entry.name), level + 1, budget) {
-            return Some(hit);
+        match walk_for_git(fs, &join_path(dir, &entry.name), level + 1, budget) {
+            Within::Nothing => {}
+            found => return found,
         }
     }
-    None
+    Within::Nothing
 }
 
-/// A `.git` (file or folder) within three levels below the folder, links and `node_modules` not entered.
-pub fn git_within(fs: &dyn Fs, path: &str) -> Option<String> {
-    walk_for_git(fs, path, 0, &mut 3000)
+/// A `.git` (file or folder) within three levels below the folder, links and `node_modules` not entered. A folder with
+/// more than the cap of subfolders is `TooBig`, and counts as unsafe like a nested repository.
+pub fn git_within(fs: &dyn Fs, path: &str) -> Within {
+    git_within_capped(fs, path, WALK_CAP)
+}
+
+pub(crate) fn git_within_capped(fs: &dyn Fs, path: &str, cap: i32) -> Within {
+    let mut budget = cap;
+    walk_for_git(fs, path, 0, &mut budget)
 }
 
 fn conflict(message: String) -> WtError {
@@ -199,12 +222,15 @@ impl Service {
                 m.nested_git.as_deref().unwrap_or(".git")
             )));
         }
-        if let Some(deep) = git_within(self.deps.fs.as_ref(), path) {
-            return Err(conflict(format!(
+        match git_within(self.deps.fs.as_ref(), path) {
+            Within::Nothing => Ok(m),
+            Within::Git(deep) => Err(conflict(format!(
                 "{path} contains a .git ({deep}) within three levels: it holds a repository or worktree, not a leftover; nothing was deleted"
-            )));
+            ))),
+            Within::TooBig => Err(conflict(format!(
+                "{path} is too big to check for a nested git repository: Argus cannot tell whether it holds one, so nothing was deleted"
+            ))),
         }
-        Ok(m)
     }
 
     /// A thread is refused a folder it may not judge or one that is too young; the page needs `confirm_young` for one.

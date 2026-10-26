@@ -161,12 +161,12 @@ where it landed.
 | `62e66c7` | The look-again fallback of a removal prunes only vetted records and says `Argus did not prune git's records: ...` | `crates/argus-worktrees/src/finish.rs` (`LetGo`), `remove.rs` | ported |
 | `62e66c7` | A merged pull request without a `headRefOid` (or with one that is no commit id) is no proof of a merge | `crates/argus-worktrees/src/branch.rs` | ported |
 | `62e66c7` | A nested git repository (3 levels down) is unsafe, needs discard and the owner, and is copied into the backup; a failed `git status` refuses the removal with `git_failed` | `crates/argus-worktrees/src/remove.rs`, `backup.rs`, cases in `src/specs/round2.rs` | ported |
-| `62e66c7` | The reaper judges by Claude task data (transcript turn, task output) and worktree activity, opus-level agents wait 60 min (`agents.reapOpusMs`), `closedBy: reaper` | `crates/argus-agents/src/evidence/` (shared with the reconciler), `reaper.rs`, `config.rs`, cases in `tests/reaper.rs` | ported |
+| `62e66c7` | The reaper judges by the session task data (transcript turn, task output) and worktree activity, opus-level agents wait 60 min (`agents.reapOpusMs`), `closedBy: reaper` | `crates/argus-agents/src/evidence/` (shared with the reconciler), `reaper.rs`, `config.rs`, cases in `tests/reaper.rs` | ported |
 | `62e66c7` | The reconciler reopens a record the reaper closed when its task output or worktree shows work after the close, and says why | `crates/argus-agents/src/reconciler/resume.rs`, cases in `tests/reconciler.rs` | ported |
 | `62e66c7` | A hook event binds only by exact agent id (start reopens, stop notes an unknown id, the tool result never rewrites another agent's record) | `crates/argus-coord/src/verbs/hook/` (already exact in WP2), cases in `tests/hook_agents*.rs` | ported |
-| `62e66c7` | `coord agent start` with a Claude id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
+| `62e66c7` | `coord agent start` with a session id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
 | `62e66c7` | Dev servers may use 3 GB before they are flagged (the Node repo keeps 1500 in `DEFAULT_RULES`; the owner's live rules file has 3000) | `crates/argus-procs/src/defaults.rs` (`node-dev-server`) | ported |
-| `62e66c7` | The `coord` forward shim to `argus coord` is off by default | ai-config only: `forward.mjs` | n/a |
+| `62e66c7` | The `coord` forward shim to `argus coord` is off by default | the config repo only: `forward.mjs` | n/a |
 
 Where Argus differs from Node on purpose in the `62e66c7` port:
 
