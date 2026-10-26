@@ -6,6 +6,7 @@ import { resolvePalette, useDocumentPalette } from '../../palette';
 import { PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { BOARD_TAB_IDS, BOARD_TABS } from './board.constants';
 import type { BoardPageProps } from './board.type';
+import { AgentsTab } from './tabs/agents';
 import { TestsTab } from './tabs/tests';
 import { ThreadList } from './sub-components/ThreadList';
 
@@ -21,7 +22,9 @@ const BoardPage = (props: BoardPageProps) => {
       <StatusNotice status={board.status} />
       <ThreadList threads={board.threads} />
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
-      {tab === 'tests' ? <TestsTab boardKey={boardKey} /> : <EmptyState message="This tab is not built yet." />}
+      {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
+      {tab === 'tests' && <TestsTab boardKey={boardKey} />}
+      {tab !== 'agents' && tab !== 'tests' && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };
