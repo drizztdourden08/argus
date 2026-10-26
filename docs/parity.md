@@ -119,7 +119,7 @@ their status is `n/a`.
 | `sync.export.test.mjs` | Board ingestion and export; Portfolio cards | 1 | `crates/argus-sync/tests/export.rs` | todo |
 | `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/posts.rs` | todo |
 | `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs` | todo |
-| `tray.test.mjs` | Tray icon and menu | 6 | `crates/argus-native/tests/tray.rs` | todo |
+| `tray.test.mjs` | Tray icon and menu | 6 | `crates/argus-native/tests/tray.rs` | doing (state, quit.flag, stop ported; CLI cases with slice 8) |
 | `wake.agents.test.mjs` | Agent wakes | 3 | `crates/argus-wake/tests/agent_wakes.rs` | todo |
 | `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/wake_stream.rs` | todo |
 | `wake.engine.test.mjs` | Wake engine and listeners | 3 | `crates/argus-wake/tests/engine.rs` | todo |
