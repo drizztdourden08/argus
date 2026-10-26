@@ -74,9 +74,13 @@ dependencies = [
  "argus-core",
  "argus-native",
  "argus-server",
+ "argus-testkit",
+ "argus-wake",
  "clap",
  "serde_json",
+ "tempfile",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

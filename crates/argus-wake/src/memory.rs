@@ -72,22 +72,7 @@ impl WakeStore for MemoryStore {
         let mut inner = locked(&self.inner);
         inner.counter += 1;
         let n = inner.counter;
-        let row = WakeRow {
-            id: format!("W-{n}"),
-            n,
-            scope: wake.scope.clone(),
-            thread: wake.thread.clone(),
-            reason: wake.reason.clone(),
-            subject: wake.subject.clone(),
-            text: wake.text.clone(),
-            at: at.to_owned(),
-            status: WakeStatus::Queued,
-            listeners: 0,
-            delivered_at: None,
-            lines: None,
-            count: 1,
-            merged_into: None,
-        };
+        let row = WakeRow::queued(n, wake, at);
         inner.rows.push(row.clone());
         Ok(row)
     }

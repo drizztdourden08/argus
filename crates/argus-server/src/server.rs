@@ -28,7 +28,10 @@ use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
-use crate::{NotifyOptions, ProcsOptions, Router, RunsOptions, Services, WorktreesOptions, routes};
+use crate::{
+    AgentsOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services, WakeOptions,
+    WorktreesOptions, routes,
+};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -58,6 +61,10 @@ pub struct ServeOptions {
     pub run_service: RunsOptions,
     /// The worktree scanner.
     pub worktrees: WorktreesOptions,
+    /// The wake service (it needs the sync service).
+    pub wake: WakeOptions,
+    /// Which sub-agent services run.
+    pub agents: AgentsOptions,
     /// The notifications to the owner.
     pub notify: NotifyOptions,
 }
@@ -78,6 +85,8 @@ impl ServeOptions {
             procs: ProcsOptions::default(),
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
+            wake: WakeOptions::default(),
+            agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
         }
     }
@@ -225,7 +234,6 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
         run_logs: Arc::default(),
-        wake_link: Arc::default(),
         streams: Arc::new(AtomicUsize::new(0)),
         codes: LoginCodes::default(),
         stop: CancellationToken::new(),

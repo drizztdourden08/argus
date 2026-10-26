@@ -1,7 +1,7 @@
 //! A test server whose run service starts pipes the test drives by hand, and the calls the run
 //! tests make over and over.
 
-#![allow(dead_code)]
+#![allow(dead_code, unused_imports)]
 
 use std::sync::Arc;
 
@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 #[path = "../support/wait.rs"]
 mod wait;
 
-pub use wait::until;
+pub use wait::{until, wakes_of};
 
 /// A definition the way `coord run define` writes it; `cwd` is a folder that exists.
 pub fn def(name: &str, cwd: &str, extra: &Value) -> Value {
@@ -34,11 +34,19 @@ pub struct Rig {
 
 impl Rig {
     pub async fn with(options: TestOptions) -> Rig {
+        Rig::served(TestOptions {
+            sync: false,
+            ..options
+        })
+        .await
+    }
+
+    /// As given, with the sync service and the wake service the options ask for.
+    pub async fn served(options: TestOptions) -> Rig {
         let host = FakeHost::new();
         let wired = host.clone();
         let tweak = options.tweak.clone();
         let t = TestServer::start(TestOptions {
-            sync: false,
             tweak: Some(Arc::new(move |opts| {
                 opts.run_service.host = Some(wired.clone());
                 if let Some(more) = &tweak {

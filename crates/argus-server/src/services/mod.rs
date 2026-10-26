@@ -24,7 +24,6 @@ use argus_wake::service::WakeService;
 use argus_worktrees::Service as WorktreeService;
 use tokio_util::sync::CancellationToken;
 
-use crate::adapters::link::WakeBridge;
 use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
 use crate::security::LoginCodes;
@@ -42,11 +41,15 @@ pub(crate) mod stale;
 pub(crate) mod sync;
 pub(crate) mod tasks;
 pub(crate) mod wake;
+pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
+pub use agents::AgentsOptions;
 pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
 pub use runs::RunsOptions;
+pub use wake::WakeOptions;
+pub use wake_hook::{WakeHook, WakeRequest};
 pub use worktrees::WorktreesOptions;
 
 /// The composed services.
@@ -106,8 +109,6 @@ pub struct Services {
     pub fanout: Arc<Fanout>,
     /// The live tail of run logs.
     pub run_logs: Arc<RunLogs>,
-    /// The wake engine as the launcher, run and worktree services reach it.
-    pub wake_link: Arc<WakeBridge>,
     /// Open SSE streams.
     pub streams: Arc<AtomicUsize>,
     /// One-time login codes.

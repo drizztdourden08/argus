@@ -9,11 +9,11 @@ use crate::{ServeOptions, Services};
 
 pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {
     svc.runs = runs::build(svc, opts);
-    svc.agent_watcher = agents::build_watcher(svc, opts);
     svc.sync = sync::build(svc, opts);
+    svc.agent_watcher = agents::build_watcher(svc, opts);
+    svc.wake = wake::build(svc, opts);
     svc.agent_reaper = agents::build_reaper(svc, opts);
     svc.agent_reconciler = agents::build_reconciler(svc, opts);
-    svc.wake = wake::build(svc, opts);
     svc.launcher_stale = stale::build(svc, opts);
     svc.procs = procs::build(svc, opts);
     svc.worktrees = worktrees::build(svc, opts);

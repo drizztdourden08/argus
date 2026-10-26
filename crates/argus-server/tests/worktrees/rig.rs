@@ -4,13 +4,12 @@
 #![allow(dead_code)]
 
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use argus_core::clock::iso_from_ms;
 use argus_core::clock::now_ms;
-use argus_server::adapters::link::WakeLink;
 use argus_testkit::{Reply, Request, TestOptions, TestServer, alpha_board, make_home, write_board};
-use argus_worktrees::{GitExec, ProcInfo, ProcessLister, WakeEvent, clean_path, worktree_id};
+use argus_worktrees::{GitExec, ProcInfo, ProcessLister, clean_path, worktree_id};
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
@@ -19,7 +18,7 @@ use super::fixture::Fixture;
 #[path = "../support/wait.rs"]
 mod wait;
 
-pub use wait::until;
+pub use wait::{until, wakes_of};
 
 /// A machine with no process on it: a removal never finds its folder in use.
 pub struct NoProcs;
@@ -27,19 +26,6 @@ pub struct NoProcs;
 impl ProcessLister for NoProcs {
     fn list(&self) -> Result<Vec<ProcInfo>, String> {
         Ok(Vec::new())
-    }
-}
-
-/// The wakes the scanner asked for.
-#[derive(Default)]
-pub struct Wakes {
-    pub events: Mutex<Vec<WakeEvent>>,
-}
-
-impl WakeLink for Wakes {
-    fn worktree_wakes(&self, events: &[WakeEvent]) -> Result<(), String> {
-        self.events.lock().unwrap().extend_from_slice(events);
-        Ok(())
     }
 }
 
@@ -53,7 +39,6 @@ pub struct Setup {
 pub struct Rig {
     pub t: TestServer,
     pub fx: Fixture,
-    pub wakes: Arc<Wakes>,
     _home: TempDir,
 }
 
@@ -97,14 +82,7 @@ impl Rig {
             ..TestOptions::default()
         })
         .await;
-        let wakes = Arc::new(Wakes::default());
-        t.svc.wake_link.set(wakes.clone());
-        Rig {
-            t,
-            fx,
-            wakes,
-            _home: home,
-        }
+        Rig { t, fx, _home: home }
     }
 
     /// The docs of the Worktrees tab by folder name.

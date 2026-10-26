@@ -1,6 +1,6 @@
 //! The launcher wakes (no master launcher, a launcher unused past its window), ticked every
 //! ten minutes. They read the boards, so they need the sync service; their wakes go to the wake
-//! engine through the [`WakeBridge`](crate::adapters::link::WakeBridge).
+//! service through the [`WakeHook`](crate::WakeHook).
 
 use std::sync::Arc;
 
@@ -41,7 +41,8 @@ pub(crate) fn build(svc: &Services, _opts: &ServeOptions) -> Option<Arc<Launcher
         svc.boards(),
         svc.runs.clone(),
         Arc::clone(&svc.db),
-        Arc::clone(&svc.wake_link),
+        svc.wake_hook(),
+        svc.wake.clone(),
         ActivityAdapter::of(svc),
         svc.shadow,
     );

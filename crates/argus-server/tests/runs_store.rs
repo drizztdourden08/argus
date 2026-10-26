@@ -4,15 +4,10 @@
 #[path = "runs/rig.rs"]
 mod rig;
 
-use std::sync::{Arc, Mutex};
-
 use argus_core::Paths;
-use argus_launchers::RunRow;
-use argus_launchers::launcher::WakeEvent;
-use argus_server::adapters::link::WakeLink;
 use argus_store::rusqlite::{Connection, params};
 use argus_testkit::{TestOptions, TestServer, alpha_board, write_board};
-use rig::{Rig, until};
+use rig::{Rig, until, wakes_of};
 use serde_json::{Value, json};
 
 /// A row an earlier server left, with the status it died in.
@@ -147,42 +142,39 @@ async fn the_log_cap_drops_the_middle_keeps_the_head_and_counts_what_it_dropped(
     r.t.stop(false).await;
 }
 
-#[derive(Default)]
-struct Recorder {
-    ended: Mutex<Vec<(String, String)>>,
-    launcher: Mutex<Vec<WakeEvent>>,
-}
-
-impl WakeLink for Recorder {
-    fn run_ended(&self, run: &RunRow) {
-        let status = run.status.as_str().to_owned();
-        self.ended.lock().unwrap().push((run.id.clone(), status));
-    }
-
-    fn launcher_wakes(&self, events: Vec<WakeEvent>) -> Result<(), String> {
-        self.launcher.lock().unwrap().extend(events);
-        Ok(())
-    }
-}
-
 #[tokio::test(flavor = "multi_thread")]
-async fn a_run_that_ends_is_told_to_the_wake_link_with_its_final_status() {
-    let r = Rig::start().await;
-    let link = Arc::new(Recorder::default());
-    r.t.svc.wake_link.set(link.clone());
-    r.define(&[("job", json!({}))]);
-    let pid = u32::try_from(r.begin("job").await["pid"].as_u64().unwrap()).unwrap();
-    r.host.exit(pid, Some(3)).await;
-    r.until_status("R-1", "failed").await;
-    until("the end to be told", || async {
-        (!link.ended.lock().unwrap().is_empty()).then_some(())
+async fn a_run_that_fails_wakes_the_lead_of_its_project() {
+    let r = Rig::served(TestOptions {
+        seed: true,
+        ..TestOptions::default()
     })
     .await;
+    let pid = u32::try_from(r.begin("fail").await["pid"].as_u64().unwrap()).unwrap();
+    r.host.say(pid, "it broke\n").await;
+    r.host.exit(pid, Some(3)).await;
+    r.until_status("R-1", "failed").await;
+    let wake = until("the wake", || async {
+        wakes_of(&r.t, "alpha", "run-failed").await.pop()
+    })
+    .await;
+    assert_eq!(wake["thread"], "coordinator");
+    let text = wake["text"].as_str().unwrap();
+    assert!(text.starts_with("R-1 fail failed (exit 3)"), "{text}");
+    let stopped = r.begin("slow").await;
+    r.cli("POST", "/api/p/alpha/runs/R-2/stop", &json!({}))
+        .await;
+    assert_eq!(stopped["id"], "R-2");
+    quiet_for_a_moment().await;
     assert_eq!(
-        *link.ended.lock().unwrap(),
-        [("R-1".to_owned(), "failed".to_owned())]
+        wakes_of(&r.t, "alpha", "run-failed").await.len(),
+        1,
+        "a stop is not a failure to act on"
     );
     r.t.stop(false).await;
+}
+
+async fn quiet_for_a_moment() {
+    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -197,22 +189,16 @@ async fn the_launcher_wakes_tell_the_lead_of_a_project_with_no_master_launcher()
     write_board(&t.coord_home, "alpha", &board);
     t.write("POST", "/api/admin/resync", &json!({ "project": "alpha" }))
         .await;
-    let link = Arc::new(Recorder::default());
-    t.svc.wake_link.set(link.clone());
     let stale = t
         .svc
         .launcher_stale
         .clone()
         .expect("the launcher wakes are on");
     assert!(stale.tick() >= 1);
-    let events = link.launcher.lock().unwrap().clone();
-    let mine = events
-        .iter()
-        .find(|e| e.scope == "alpha")
-        .expect("alpha is told");
+    let wakes = wakes_of(&t, "alpha", "launcher-master-missing").await;
     assert_eq!(
-        (mine.reason, mine.thread.as_str(), mine.subject.as_str()),
-        ("launcher-master-missing", "coordinator", "alpha")
+        (wakes[0]["thread"].clone(), wakes[0]["subject"].clone()),
+        (json!("coordinator"), json!("alpha"))
     );
     let activity = t.get("/api/activity?kind=launcher-stale").await.json();
     assert!(

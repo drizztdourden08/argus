@@ -1,24 +1,22 @@
 //! Where the worktree service says what it did (the activity log) and whom it wants to wake
 //! (the wake engine, through the bridge).
 
-use std::sync::Arc;
-
 use argus_worktrees::{ActivityLine, Notifier, WakeEvent};
 
 use crate::adapters::activity::ActivityAdapter;
-use crate::adapters::link::{WakeBridge, WakeLink};
+use crate::{WakeHook, WakeRequest};
 
 /// The worktree service's notifier.
 pub struct TreeNotifier {
     activity: ActivityAdapter,
-    link: Arc<WakeBridge>,
+    hook: WakeHook,
 }
 
 impl TreeNotifier {
-    /// A notifier writing to the activity log and waking through `link`.
+    /// A notifier writing to the activity log and waking through `hook`.
     #[must_use]
-    pub fn new(activity: ActivityAdapter, link: Arc<WakeBridge>) -> Self {
-        TreeNotifier { activity, link }
+    pub fn new(activity: ActivityAdapter, hook: WakeHook) -> Self {
+        TreeNotifier { activity, hook }
     }
 }
 
@@ -28,6 +26,10 @@ impl Notifier for TreeNotifier {
     }
 
     fn wake(&self, events: &[WakeEvent]) -> Result<(), String> {
-        self.link.worktree_wakes(events)
+        let wakes: Vec<WakeRequest> = events
+            .iter()
+            .map(|e| WakeRequest::about(&e.scope, &e.thread, e.reason, &e.subject, e.text.clone()))
+            .collect();
+        self.hook.submit(&wakes)
     }
 }

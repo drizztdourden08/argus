@@ -5,6 +5,7 @@
 
 mod exporter;
 mod failure;
+mod hooks;
 mod portfolio;
 mod posts;
 mod proofs;
@@ -17,6 +18,7 @@ mod validate;
 mod watcher;
 
 pub use failure::board_error;
+pub use hooks::{AppliedPost, Hooks};
 pub use posts::{PostResult, Source, new_post_id};
 pub use proofs::{Proof, ProofSource, sniff_image};
 pub use queue::ScopeQueue;

@@ -8,10 +8,10 @@ use std::sync::Arc;
 use argus_launchers::{
     BoardFileDefs, FakeHost, RunConfig, RunDeps, RunLimits, RunService, SystemClock, SystemHost,
 };
+use argus_wake::service::driver::lock;
 use tokio::runtime::{Handle, RuntimeFlavor};
 
-use crate::adapters::link::WakeLink;
-use crate::adapters::runs::{DocRunEvents, RunHost, SqliteRuns};
+use crate::adapters::runs::{DocRunEvents, RunHost, SqliteRuns, view_of};
 use crate::{ServeOptions, Services};
 
 /// How the run service starts; the fields after `enabled` are seams for tests.
@@ -73,16 +73,24 @@ fn deps_of(svc: &Services, opts: &RunsOptions) -> RunDeps<RunHost> {
 
 pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<RunService<RunHost>>> {
     let options = &opts.run_service;
-    options.enabled.then(|| {
-        let service = RunService::new(deps_of(svc, options));
-        let link = Arc::clone(&svc.wake_link);
-        service.on_end(move |run| link.run_ended(run));
-        Arc::new(service)
-    })
+    options
+        .enabled
+        .then(|| Arc::new(RunService::new(deps_of(svc, options))))
+}
+
+/// A run that ended is told to the wake service, which wakes the lead of a failed one. The wake
+/// service is built after the runs, so the listener is added here.
+fn tell_wake_of_ends(svc: &Services, runs: &RunService<RunHost>) {
+    if let Some(wake) = svc.wake.clone() {
+        runs.on_end(move |run| lock(&wake).on_run_end(&view_of(run)));
+    }
 }
 
 /// Before serving: nothing survives a restart as running or queued.
 pub(crate) fn start(svc: &Arc<Services>) {
+    if let Some(runs) = &svc.runs {
+        tell_wake_of_ends(svc, runs);
+    }
     if let Some(runs) = svc.runs.as_ref().filter(|_| !svc.shadow) {
         runs.recover();
     }

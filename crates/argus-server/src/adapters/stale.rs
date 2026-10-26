@@ -1,16 +1,18 @@
 //! The environment of the launcher wakes: the boards, the Play runs, the wake engine and the
 //! activity log.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use argus_launchers::launcher::{LauncherBoard, StaleEnv, StaleNote, WakeEvent};
 use argus_launchers::{ListFilter, RunService, parse_iso};
 use argus_store::Db;
+use argus_wake::service::WakeService;
+use argus_wake::service::driver::lock;
 
 use super::activity::ActivityAdapter;
-use super::link::{WakeBridge, WakeLink};
 use super::runs::RunHost;
 use crate::boards::BoardReader;
+use crate::{WakeHook, WakeRequest};
 
 /// What the launcher wakes read, and the one thing they do.
 pub struct StaleHost {
@@ -18,7 +20,8 @@ pub struct StaleHost {
     runs: Option<Arc<RunService<RunHost>>>,
     db: Arc<Db>,
     activity: ActivityAdapter,
-    link: Arc<WakeBridge>,
+    hook: WakeHook,
+    wake: Option<Arc<Mutex<WakeService>>>,
     shadow: bool,
 }
 
@@ -30,7 +33,8 @@ impl StaleHost {
         boards: BoardReader,
         runs: Option<Arc<RunService<RunHost>>>,
         db: Arc<Db>,
-        link: Arc<WakeBridge>,
+        hook: WakeHook,
+        wake: Option<Arc<Mutex<WakeService>>>,
         activity: ActivityAdapter,
         shadow: bool,
     ) -> Self {
@@ -39,7 +43,8 @@ impl StaleHost {
             runs,
             db,
             activity,
-            link,
+            hook,
+            wake,
             shadow,
         }
     }
@@ -97,12 +102,30 @@ impl StaleEnv for StaleHost {
     }
 
     fn last_sent_ms(&self, scope: &str, thread: &str, reason: &str, subject: &str) -> i64 {
-        self.link
-            .launcher_last_sent_ms(scope, thread, reason, subject)
+        let Some(wake) = &self.wake else {
+            return 0;
+        };
+        let service = lock(wake);
+        service
+            .engine()
+            .store()
+            .last_at(scope, thread, reason, Some(subject))
+            .unwrap_or(0)
     }
 
     fn submit(&self, events: Vec<WakeEvent>) -> Result<(), String> {
-        self.link.launcher_wakes(events)
+        let mut wakes = Vec::with_capacity(events.len());
+        for event in events {
+            let WakeEvent {
+                scope,
+                thread,
+                reason,
+                subject,
+                text,
+            } = event;
+            wakes.push(WakeRequest::about(&scope, &thread, reason, &subject, text));
+        }
+        self.hook.submit(&wakes)
     }
 
     fn note(&self, note: StaleNote) {

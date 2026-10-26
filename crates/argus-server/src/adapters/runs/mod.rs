@@ -10,8 +10,10 @@ mod patch;
 mod rows;
 mod store;
 mod view;
+mod wake;
 
 pub use events::DocRunEvents;
 pub use host::RunHost;
 pub use store::SqliteRuns;
 pub use view::RunsCards;
+pub use wake::view_of;

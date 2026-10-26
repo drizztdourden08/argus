@@ -32,6 +32,12 @@ pub const SSE_BUFFER_LIMIT: usize = 1024 * 1024;
 /// One frame: `id: <id>\nevent: <name>\ndata: <json>\n\n`.
 #[must_use]
 pub fn frame(name: &str, data: &Value, id: Option<i64>) -> String {
+    frame_with(name, data, id.map(|id| id.to_string()).as_deref())
+}
+
+/// A frame whose id is text, such as the wake ids `W-12`.
+#[must_use]
+pub fn frame_with(name: &str, data: &Value, id: Option<&str>) -> String {
     let head = id.map(|id| format!("id: {id}\n")).unwrap_or_default();
     format!("{head}event: {name}\ndata: {data}\n\n")
 }
@@ -62,6 +68,13 @@ impl SseSender {
     #[must_use]
     pub fn event(&self, name: &str, data: &Value, id: Option<i64>) -> bool {
         self.push(frame(name, data, id))
+    }
+
+    /// Writes an event with a text id; `false` once the stream is closed or the client fell
+    /// behind.
+    #[must_use]
+    pub fn event_with(&self, name: &str, data: &Value, id: &str) -> bool {
+        self.push(frame_with(name, data, Some(id)))
     }
 
     /// Ends the stream after what is queued.

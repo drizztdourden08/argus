@@ -5,12 +5,15 @@
 
 mod tray;
 
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use argus::wake_stream::{self, Io};
 use argus_core::Paths;
 use argus_server::{ServeOptions, serve};
 use clap::{Parser, Subcommand};
+use tokio_util::sync::CancellationToken;
 use tray::TrayAction;
 
 /// The port of `argus serve` while the Node server keeps 47615.
@@ -40,6 +43,13 @@ enum Command {
         /// Shadow mode: read the boards, never write them.
         #[arg(long)]
         shadow: bool,
+    },
+    /// Prints one line per wake of a project's wake stream (for a Monitor); see
+    /// `--project <key> [--thread <id|*>] [--id <label>]`.
+    WakeStream {
+        /// The flags, read by the wake-stream command itself.
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
     },
     /// The tray icon (Windows): run, start, stop or status; start is the default.
     Tray {
@@ -80,6 +90,33 @@ async fn run_serve(port: u16, data_dir: Option<PathBuf>, shadow: bool) -> Result
     Ok(0)
 }
 
+/// Ends the command on Ctrl-C.
+fn stop_on_interrupt() -> CancellationToken {
+    let stop = CancellationToken::new();
+    let ring = stop.clone();
+    tokio::spawn(async move {
+        if tokio::signal::ctrl_c().await.is_ok() {
+            ring.cancel();
+        }
+    });
+    stop
+}
+
+/// Writes one wake line to stdout, flushed, and reports a closed reader instead of panicking.
+fn print_line(line: &str) -> io::Result<()> {
+    let mut out = io::stdout().lock();
+    writeln!(out, "{line}")?;
+    out.flush()
+}
+
+async fn run_wake_stream(args: Vec<String>) -> Result<u8, String> {
+    let io = Io {
+        out: Box::new(print_line),
+        err: Box::new(|line| eprintln!("{line}")),
+    };
+    Ok(wake_stream::run(&args, &paths_of(None), io, stop_on_interrupt()).await)
+}
+
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
@@ -89,6 +126,7 @@ async fn main() -> ExitCode {
             data_dir,
             shadow,
         } => run_serve(port, data_dir, shadow).await,
+        Command::WakeStream { args } => run_wake_stream(args).await,
         Command::Tray { action, data_dir } => {
             let action = action.unwrap_or(TrayAction::Start);
             tray::command(action, paths_of(data_dir)).await

@@ -51,6 +51,7 @@ fn ports(svc: &Services, opts: &ProcsOptions) -> Ports {
         Arc::clone(&svc.config),
         TrayFiles::new(&svc.paths.home),
         ActivityAdapter::of(svc),
+        svc.wake_hook(),
     );
     Ports {
         sampler: opts

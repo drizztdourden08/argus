@@ -16,7 +16,7 @@ use std::time::Duration;
 use argus_testkit::{Request, write_board};
 use argus_worktrees::{GitExec, GitOutput, SystemExec};
 use fixture::git;
-use rig::{Rig, Setup, id_of, rule, until};
+use rig::{Rig, Setup, id_of, rule, until, wakes_of};
 use serde_json::{Value, json};
 
 fn status_counts(meta: &Value) -> Value {
@@ -55,20 +55,17 @@ async fn the_first_scan_makes_a_doc_per_worktree_a_summary_and_one_wake_to_the_r
     assert_eq!(docs["fresh"]["id"], json!(id_of(&r.path("fresh"))));
     assert_eq!(docs["old-merged"]["status"], "merged");
     let wake = until("the stale wake", || async {
-        let events = r.wakes.events.lock().unwrap().clone();
-        events.first().cloned()
+        wakes_of(&r.t, "alpha", "worktree-stale").await.pop()
     })
     .await;
+    assert_eq!(wake["thread"], "ui");
+    let text = wake["text"].as_str().unwrap();
+    assert!(text.starts_with("3 worktrees need a decision: "), "{text}");
     assert_eq!(
-        (wake.reason, wake.thread.as_str(), wake.scope.as_str()),
-        ("worktree-stale", "ui", "alpha")
+        wakes_of(&r.t, "alpha", "worktree-stale").await.len(),
+        1,
+        "one wake"
     );
-    assert!(
-        wake.text.starts_with("3 worktrees need a decision: "),
-        "{}",
-        wake.text
-    );
-    assert_eq!(r.wakes.events.lock().unwrap().len(), 1, "one wake");
     until("the activity line", || async {
         r.activity("worktree-stale")
             .await
@@ -619,7 +616,7 @@ async fn shadow_mode_scans_and_shows_and_removes_nothing() {
         );
     }
     assert!(r.path("old-merged").exists());
-    assert!(r.wakes.events.lock().unwrap().len() <= 1);
+    assert!(wakes_of(&r.t, "alpha", "worktree-stale").await.len() <= 1);
     r.t.stop(false).await;
 }
 
