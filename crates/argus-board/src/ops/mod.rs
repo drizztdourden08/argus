@@ -15,6 +15,7 @@ mod fields;
 mod move_;
 mod plan;
 mod purge;
+mod restore;
 mod result;
 mod soft;
 mod target;
@@ -30,6 +31,7 @@ use crate::json::shown;
 
 pub use backup::{PurgeDone, apply_purge, count_line};
 pub use plan::{PurgePlan, Selection, purge_plan};
+pub use restore::restore_from;
 pub use result::{Notice, OpResult, Status};
 pub use who::{Role, Who};
 
@@ -66,4 +68,18 @@ pub fn apply_op(board: &mut Board, op: &Value, who: &Who, home: Option<&Path>) -
         Some(Err(e)) => OpResult::refused(e.to_string()),
         None => OpResult::refused(format!("unknown op \"{}\"", shown(op.get("kind")))),
     }
+}
+
+/// `authorize` of `ops.mjs`: refuses with the reason when `who` may not do `verb` on `doc`, a
+/// record of `coll` (`None` for a create or a collection-wide verb).
+///
+/// # Errors
+/// Refused with the sentence the rules give.
+pub fn check_authority(
+    who: &Who,
+    verb: &str,
+    coll: &str,
+    doc: Option<&Value>,
+) -> Result<(), BoardError> {
+    authorize::authorize(who, &authorize::Check::new(verb, coll, doc))
 }
