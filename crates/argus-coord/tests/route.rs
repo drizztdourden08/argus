@@ -13,9 +13,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use argus_coord::NOT_PORTED;
 use argus_coord::cli::route::{Entry, dispatch, module_of};
 use argus_coord::cli::{Call, CoordError, Invocation, Outcome, USAGE};
-use argus_coord::{NOT_PORTED, run};
 use common::{Home, board_with, coord};
 
 /// Every verb and alias of `coord.mjs`, with `hook`, `dashboard` and `portfolio`.
@@ -115,7 +115,7 @@ fn an_unported_verb_exits_120_before_reading_stdin_or_touching_anything() {
             "",
         );
         inv.stdin = Box::new(Watched(Arc::clone(&reads)));
-        let code = run(&mut inv);
+        let code = dispatch(&mut inv, &[]);
         assert_eq!(code, NOT_PORTED, "{verb}");
         assert_eq!(code, 120);
         assert_eq!(out.text(), "", "{verb} wrote on stdout");
@@ -137,7 +137,7 @@ fn an_unported_hook_with_json_on_stdin_leaves_it_for_node() {
     let reads = Arc::new(AtomicUsize::new(0));
     let (mut inv, out, err) = Invocation::captured(&["hook", "tool"], home.env(), cwd, "");
     inv.stdin = Box::new(Watched(Arc::clone(&reads)));
-    assert_eq!(run(&mut inv), 120);
+    assert_eq!(dispatch(&mut inv, &[]), 120);
     assert_eq!((out.text(), err.text()), (String::new(), String::new()));
     assert_eq!(reads.load(Ordering::SeqCst), 0);
     assert_eq!(tree_hash(home.path()), before);
