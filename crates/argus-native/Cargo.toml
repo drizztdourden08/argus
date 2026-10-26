@@ -13,5 +13,23 @@ repository.workspace = true
 workspace = true
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62.2", features = ["Data_Xml_Dom", "UI_Notifications"] }
+tray-icon = "0.24.2"
+windows = { version = "0.62.2", features = [
+    "Data_Xml_Dom",
+    "UI_Notifications",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_LibraryLoader",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
 windows-registry = "0.100.0"
+
+[dependencies]
+ico = "0.6.0"
+serde_json = "1.0.154"
+
+[dev-dependencies]
+tempfile = "3.27.0"
