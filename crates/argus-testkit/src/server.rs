@@ -115,6 +115,8 @@ impl TestServer {
         opts.heartbeat = o.heartbeat;
         opts.web_root = Some(dashboard_home.join("no-web-build"));
         opts.procs.enabled = false;
+        opts.worktrees.timers = false;
+        opts.run_service.stale_timer = false;
         if let Some(tweak) = &o.tweak {
             tweak(&mut opts);
         }

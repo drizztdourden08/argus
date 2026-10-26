@@ -21,8 +21,10 @@ use tokio::time::{Instant, Interval, interval_at};
 use crate::reply::bytes_reply;
 
 mod fanout;
+mod run_logs;
 
 pub use fanout::{Fanout, MAX_CLIENTS_PER_SCOPE, StreamRequest};
+pub use run_logs::{LogListening, RunLogs};
 
 /// A client this far behind is dropped.
 pub const SSE_BUFFER_LIMIT: usize = 1024 * 1024;

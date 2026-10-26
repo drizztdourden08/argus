@@ -5,6 +5,7 @@
 
 pub mod activity;
 pub mod agents;
+pub mod link;
 pub mod notify;
 pub mod procs;
 pub mod runs;
