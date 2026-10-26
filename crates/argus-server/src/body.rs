@@ -1,5 +1,6 @@
-//! Request bodies up to a limit: a declared length over it is refused before reading, a body
-//! that grows past it is refused as it arrives.
+//! Request bodies up to a limit: a declared length over it is refused before keeping anything,
+//! a body that grows past it is refused as it arrives. The rest of a refused body is drained (as
+//! Node does), so the client reads the 413 instead of a reset connection.
 
 use argus_core::{ApiError, ErrorCode};
 use axum::body::Body;
@@ -12,6 +13,10 @@ fn too_large(message: String) -> ApiError {
     ApiError::new(ErrorCode::TooLarge, message)
 }
 
+async fn drain(mut body: Body) {
+    while let Some(Ok(_)) = body.frame().await {}
+}
+
 /// Reads at most `max` bytes.
 ///
 /// # Errors
@@ -22,6 +27,7 @@ pub async fn read_limited(headers: &HeaderMap, body: Body, max: usize) -> Result
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.parse::<u64>().ok());
     if let Some(n) = declared.filter(|n| *n > max as u64) {
+        drain(body).await;
         return Err(too_large(format!("body is {n} bytes, the limit is {max}")));
     }
     let mut body = body;
@@ -30,6 +36,7 @@ pub async fn read_limited(headers: &HeaderMap, body: Body, max: usize) -> Result
         let frame = frame.map_err(|_| ApiError::bad_request("request aborted"))?;
         if let Ok(data) = frame.into_data() {
             if out.len() + data.len() > max {
+                drain(body).await;
                 return Err(too_large(format!("body is over the limit of {max} bytes")));
             }
             out.extend_from_slice(&data);
