@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind test */
+import { ToastStack } from '@drizztdourden08/tessera';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { AppRoutes } from '../../src/routing/AppRoutes';
@@ -13,6 +14,7 @@ const renderAt = (location: string) => {
       <MemoryRouter initialEntries={[location]}>
         <AppRoutes />
       </MemoryRouter>
+      <ToastStack />
     </DataProvider>,
   );
   return { ...view, sources: fake.sources };
