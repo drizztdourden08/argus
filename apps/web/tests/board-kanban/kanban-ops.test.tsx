@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MIN, ago, cleanKanban, item, mountKanban, openItem, thread } from './kanban-harness';
+import { MIN, ago, cleanKanban, columnOf, item, mountKanban, openItem, thread } from './kanban-harness';
 
 cleanKanban();
 
@@ -67,6 +67,19 @@ describe('adding an item', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('At most 80 characters.')).toBeTruthy();
     expect(posted).toHaveLength(0);
+  });
+});
+
+describe('the add form in its column', () => {
+  it('opens the form inside its column above the cards, and only in that column', async () => {
+    await mountKanban({ items: [item('I-1')] });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
+    const column = within(columnOf('To do, 1 card'));
+    const box = column.getByRole('textbox', { name: 'Title' });
+    const card = column.getByText('Item I-1');
+    expect(box.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByRole('textbox', { name: 'Title' })).toHaveLength(1);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
 

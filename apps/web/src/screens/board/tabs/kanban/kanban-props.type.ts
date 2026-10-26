@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
@@ -91,8 +90,6 @@ interface ColumnAddProps {
   title: string;
   open: boolean;
   onToggle: () => void;
-  onClose: () => void;
-  children: ReactNode;
 }
 
 interface ItemCardProps {
