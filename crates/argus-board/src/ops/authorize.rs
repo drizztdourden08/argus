@@ -23,7 +23,7 @@ const COORDINATOR_ONLY: [&str; 6] = [
 const EDITABLE_ENTRY: [&str; 2] = ["open", "pending"];
 
 /// What is being checked: the verb on a record of a collection.
-pub(crate) struct Check<'a> {
+pub struct Check<'a> {
     verb: &'a str,
     coll: &'a str,
     doc: Option<&'a Value>,
@@ -33,7 +33,8 @@ pub(crate) struct Check<'a> {
 
 impl<'a> Check<'a> {
     /// `verb` on `doc` (a record of `coll`, `None` for a create or a collection-wide verb).
-    pub(crate) fn new(verb: &'a str, coll: &'a str, doc: Option<&'a Value>) -> Self {
+    #[must_use]
+    pub fn new(verb: &'a str, coll: &'a str, doc: Option<&'a Value>) -> Self {
         Check {
             verb,
             coll,
@@ -44,13 +45,15 @@ impl<'a> Check<'a> {
     }
 
     /// The thread that will own the new record (create) or end up with the moved one (move).
-    pub(crate) fn to(mut self, to: Option<&'a str>) -> Self {
+    #[must_use]
+    pub fn to(mut self, to: Option<&'a str>) -> Self {
         self.to = to;
         self
     }
 
     /// What a set changes.
-    pub(crate) fn fields(mut self, fields: &'a [String]) -> Self {
+    #[must_use]
+    pub fn fields(mut self, fields: &'a [String]) -> Self {
         self.fields = fields;
         self
     }
@@ -115,7 +118,10 @@ fn verb_word(verb: &str) -> &str {
 }
 
 /// Refuses with the reason when `who` may not do what `check` describes.
-pub(crate) fn authorize(who: &Who, c: &Check) -> Verdict {
+///
+/// # Errors
+/// Refused with the ownership rule that applies.
+pub fn authorize(who: &Who, c: &Check) -> Verdict {
     if READ_VERBS.contains(&c.verb) && c.coll != "inbox" {
         return Ok(());
     }

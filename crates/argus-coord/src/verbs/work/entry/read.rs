@@ -1,0 +1,65 @@
+//! `coord entry show <E>` and `coord entry list [--open] [--kind k] [--mine|--for T] [--archived]
+//! [--deleted] [--json]`.
+
+use argus_board::json::{display, truthy};
+use serde_json::{Value, json};
+
+use super::prefix_of;
+use crate::cli::Outcome;
+use crate::cli::out::{ago, clip};
+use crate::verbs::work::crud::{docs_of, find_doc};
+use crate::verbs::work::listing::{Table, cell, emit, scoped, visible};
+use crate::verbs::work::run::Run;
+
+const ENTRIES: Table = Table {
+    head: &["entry", "kind", "status", "thread", "item", "age", "text"],
+    empty: "no entries.",
+};
+
+/// `coord entry show`: the entry and its replies.
+pub(super) fn show(r: &mut Run<'_>) -> Outcome {
+    r.read(|board, r| {
+        let mut e = find_doc(board, "entries", r.arg(0))?;
+        let id = display(&e["id"]);
+        let replies: Vec<Value> = docs_of(board, "entries")
+            .into_iter()
+            .filter(|x| display(&x["replyTo"]) == id && !truthy(x, "deletedAt"))
+            .collect();
+        if let Some(fields) = e.as_object_mut() {
+            fields.insert("replies".into(), json!(replies));
+        }
+        r.say(&[&serde_json::to_string_pretty(&e).unwrap_or_default()]);
+        Ok(())
+    })
+}
+
+fn row(e: &Value, now: i64) -> Vec<String> {
+    vec![
+        cell(&e["id"]),
+        cell(&e["kind"]),
+        cell(&e["status"]),
+        cell(&e["thread"]),
+        cell(&e["item"]),
+        ago(e["createdAt"].as_str().filter(|s| !s.is_empty()), now),
+        clip(&cell(&e["text"]), 60),
+    ]
+}
+
+/// `coord entry list`.
+pub(super) fn list(r: &mut Run<'_>) -> Outcome {
+    r.read(|board, r| {
+        let mut entries: Vec<Value> = docs_of(board, "entries")
+            .into_iter()
+            .filter(|e| e["kind"].as_str().is_some_and(|k| prefix_of(k).is_some()) && visible(e, r.options))
+            .collect();
+        if r.options.flag("open") {
+            entries.retain(|e| matches!(e["status"].as_str(), Some("open" | "pending" | "doing")));
+        }
+        if let Some(kind) = r.text_opt("kind") {
+            entries.retain(|e| e["kind"].as_str() == Some(kind));
+        }
+        let entries = scoped(board, r, entries)?;
+        emit(r, entries, &ENTRIES, row);
+        Ok(())
+    })
+}

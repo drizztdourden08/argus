@@ -28,6 +28,8 @@ use crate::Board;
 use crate::error::BoardError;
 use crate::json::shown;
 
+pub use announce::refresh_needs_human;
+pub use authorize::{Check, authorize};
 pub use backup::{PurgeDone, apply_purge, count_line};
 pub use plan::{PurgePlan, Selection, purge_plan};
 pub use result::{Notice, OpResult, Status};
