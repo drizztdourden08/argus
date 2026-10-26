@@ -82,9 +82,9 @@ fn node_rules() -> Vec<Value> {
                 "cmd": r"(?<![.])\b(vite|electron-vite|storylite|pnpm|tsx|webpack|nodemon)\b|next\s+dev|astro\s+dev"
             },
             "ignore": dashboard_ignore(),
-            "maxMemMB": 1500, "maxGroupMemMB": 4000, "maxAgeMin": 720, "idleMin": 180,
+            "maxMemMB": 3000, "maxGroupMemMB": 4000, "maxAgeMin": 720, "idleMin": 180,
             "orphan": true, "killable": true,
-            "note": "Dev servers and watchers (vite, storylite, pnpm, tsx): idle 3 h, older than 12 h or orphaned means nobody uses it."
+            "note": "Dev servers and watchers (vite, storylite, pnpm, tsx): over 3 GB (an electron-vite dev build normally takes 2 to 2.5 GB), idle 3 h, older than 12 h or orphaned."
         }),
         json!({
             "name": "build-helpers",
@@ -168,5 +168,12 @@ mod tests {
         let names: std::collections::HashSet<_> = rules.iter().map(|r| r.name.as_str()).collect();
         assert_eq!(names.len(), rules.len());
         assert!(rules.last().unwrap().matcher.is_empty());
+    }
+
+    #[test]
+    fn a_dev_server_may_use_3_gb_before_it_is_flagged() {
+        let rules = default_rules();
+        let dev = rules.iter().find(|r| r.name == "node-dev-server").unwrap();
+        assert_eq!(dev.max_mem_mb, Some(3000.0));
     }
 }

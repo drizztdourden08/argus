@@ -3,7 +3,7 @@
 //! one of them has a transcript. A record with an id and no transcript path gets the path.
 
 use super::pass::Pass;
-use super::session::{Session, agent_id_of_path};
+use crate::evidence::session::{Session, agent_id_of_path};
 use crate::record::{Patch, Record, claude_id_of, filled, is_set, text};
 
 fn distinct_ids(agent: &Record) -> Vec<String> {

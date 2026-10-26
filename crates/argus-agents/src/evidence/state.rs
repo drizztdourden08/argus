@@ -11,7 +11,7 @@ const TASK_TAIL_BYTES: u64 = 512;
 
 /// What a transcript or a task output shows at one moment.
 #[derive(Debug)]
-pub(super) struct Observed {
+pub(crate) struct Observed {
     pub file: PathBuf,
     pub mtime_ms: i64,
     /// Size of the transcript; 0 for a task output, whose last turn is never read.
@@ -36,7 +36,7 @@ fn turn_ended(env: &Env, file: &Path, size: u64) -> bool {
 }
 
 /// The state of a sub-agent transcript that exists, else `None`.
-pub(super) fn transcript_state(env: &Env, file: &Path, at: i64) -> Option<Observed> {
+pub(crate) fn transcript_state(env: &Env, file: &Path, at: i64) -> Option<Observed> {
     let stat = env.fs.stat(file)?;
     let meta_file = meta_path(file);
     let meta_stat = env.fs.stat(&meta_file);
@@ -87,7 +87,7 @@ fn exit_marker(tail: &str) -> bool {
 }
 
 /// The state of a background task output: alive while it grows, a shell's exit marker ends it.
-pub(super) fn task_state(env: &Env, file: &Path, at: i64) -> Option<Observed> {
+pub(crate) fn task_state(env: &Env, file: &Path, at: i64) -> Option<Observed> {
     let stat = env.fs.stat(file)?;
     let n = stat.size.min(TASK_TAIL_BYTES);
     let tail = env

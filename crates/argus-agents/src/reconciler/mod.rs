@@ -27,44 +27,6 @@ mod pass;
 mod report;
 mod resume;
 mod service;
-mod session;
-mod state;
 
 pub use report::{Class, Counts, Finding, RunReport};
 pub use service::AgentReconciler;
-
-use crate::config::ReconcilerOptions;
-use crate::fs::FileSystem;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::{Mutex, PoisonError};
-
-/// The inputs of an evaluation that do not change while it runs.
-struct Env<'a> {
-    opts: &'a ReconcilerOptions,
-    fs: &'a dyn FileSystem,
-    project_dirs: &'a Mutex<HashMap<String, PathBuf>>,
-    boot_at: i64,
-}
-
-impl Env<'_> {
-    fn projects_dir(&self) -> PathBuf {
-        self.opts.claude_home.join("projects")
-    }
-
-    fn cached_dir(&self, sid: &str) -> Option<PathBuf> {
-        let dirs = self
-            .project_dirs
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
-        dirs.get(sid).cloned()
-    }
-
-    fn remember_dir(&self, sid: &str, dir: PathBuf) {
-        let mut dirs = self
-            .project_dirs
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
-        dirs.insert(sid.to_owned(), dir);
-    }
-}

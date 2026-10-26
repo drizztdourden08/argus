@@ -13,6 +13,8 @@ pub struct AgentsConfig {
     pub stall_ms: Option<i64>,
     /// `agents.reapMs`: quiet time before the reaper closes a record.
     pub reap_ms: Option<i64>,
+    /// `agents.reapOpusMs`: quiet time before the reaper closes an opus-level record.
+    pub reap_opus_ms: Option<i64>,
     /// `agents.reconcileMs`: time between reconciler polls.
     pub reconcile_ms: Option<i64>,
     /// `agents.orphanWakeMs`: age of a record Claude has nothing for before the thread is told.
@@ -43,6 +45,7 @@ impl AgentsConfig {
         Self {
             stall_ms: positive(agents, "stallMs"),
             reap_ms: positive(agents, "reapMs"),
+            reap_opus_ms: positive(agents, "reapOpusMs"),
             reconcile_ms: positive(agents, "reconcileMs"),
             orphan_wake_ms: positive(agents, "orphanWakeMs"),
             orphan_clear_ms: positive(agents, "orphanClearMs"),
@@ -108,22 +111,43 @@ pub struct ReaperOptions {
     pub poll_ms: i64,
     /// Quiet time before a record is closed.
     pub reap_ms: i64,
+    /// Quiet time before an opus-level record (anything but haiku and sonnet) is closed; at least `reap_ms`.
+    pub reap_opus_ms: i64,
+    /// A transcript or task that grew within this time is alive.
+    pub stall_ms: i64,
+    /// Where Claude keeps its projects.
+    pub claude_home: PathBuf,
+    /// Where Claude keeps its task outputs.
+    pub claude_temp: PathBuf,
 }
 
 impl Default for ReaperOptions {
     fn default() -> Self {
+        let evidence = ReconcilerOptions::default();
         Self {
             poll_ms: MINUTE_MS,
             reap_ms: 20 * MINUTE_MS,
+            reap_opus_ms: 60 * MINUTE_MS,
+            stall_ms: evidence.stall_ms,
+            claude_home: evidence.claude_home,
+            claude_temp: evidence.claude_temp,
         }
     }
 }
 
 impl ReaperOptions {
-    /// The options with the config's quiet time.
+    /// The options with what the config sets.
     #[must_use]
     pub fn configured(mut self, config: &AgentsConfig) -> Self {
         self.reap_ms = config.reap_ms.unwrap_or(self.reap_ms);
+        self.reap_opus_ms = config.reap_opus_ms.unwrap_or(self.reap_opus_ms);
+        self.stall_ms = config.stall_ms.unwrap_or(self.stall_ms);
+        if let Some(home) = &config.claude_home {
+            self.claude_home.clone_from(home);
+        }
+        if let Some(temp) = &config.claude_temp {
+            self.claude_temp.clone_from(temp);
+        }
         self
     }
 }

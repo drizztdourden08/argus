@@ -46,6 +46,14 @@ pub(crate) struct Finish<'a> {
     pub plan: &'a BranchPlan,
 }
 
+/// Has git let go of the worktree after its removal failed on the folder?
+pub(crate) enum LetGo {
+    Yes,
+    No,
+    /// git let go, but pruning its records would also forget some Argus did not vet: the sentence says which.
+    Unvetted(String),
+}
+
 /// What git says about one worktree now.
 enum Listing {
     /// git could not answer.
@@ -77,28 +85,26 @@ impl Service {
     /// After `git worktree remove` failed on the folder: has git already let go of the worktree (it no longer lists it,
     /// or lists it only because its `.git` file is gone, which `git worktree prune` clears)? False when the error was
     /// not a folder-deletion one, git cannot say, the worktree is still listed with its `.git` or is locked.
-    pub(crate) fn git_let_go(&self, project: &str, now: &Fact, run: &GitOutput) -> bool {
+    pub(crate) fn git_let_go(&self, project: &str, now: &Fact, run: &GitOutput) -> LetGo {
         let said = format!(
-            "{}\n{}",
+            "{}
+{}",
             run.stderr,
             run.error.as_deref().unwrap_or_default()
         );
         if !is_folder_error(&said) || self.deps.fs.is_dir(&format!("{}/.git", now.path)) {
-            return false;
+            return LetGo::No;
         }
         let entry = match self.look_listed(now) {
-            Listing::Unknown => return false,
-            Listing::Absent => return true,
+            Listing::Unknown => return LetGo::No,
+            Listing::Absent => return LetGo::Yes,
             Listing::Present(entry) => entry,
         };
         if entry.locked.is_some() || self.deps.fs.exists(&format!("{}/.git", now.path)) {
-            return false;
+            return LetGo::No;
         }
-        let Some(repo) = now.repo.as_deref() else {
-            return false;
-        };
-        let Ok(board) = self.board(project) else {
-            return false;
+        let (Some(repo), Ok(board)) = (now.repo.as_deref(), self.board(project)) else {
+            return LetGo::No;
         };
         let mut vetted: Vec<String> = self
             .vetted_gone(project, &board)
@@ -107,7 +113,14 @@ impl Service {
             .collect();
         vetted.push(now.path.clone());
         let allowed: Vec<&str> = vetted.iter().map(String::as_str).collect();
-        self.prune_repo(repo, &allowed).is_ok() && matches!(self.look_listed(now), Listing::Absent)
+        if let Err(err) = self.vet_prune(repo, &allowed) {
+            return LetGo::Unvetted(err.message);
+        }
+        if self.run_prune(repo).is_ok() && matches!(self.look_listed(now), Listing::Absent) {
+            LetGo::Yes
+        } else {
+            LetGo::No
+        }
     }
 
     /// The name a folder is renamed to before it is deleted (free in its parent).

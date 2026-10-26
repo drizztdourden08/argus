@@ -11,7 +11,7 @@ use crate::error::ErrorCode;
 use crate::jobs::JobState;
 use crate::testkit::{
     Fixture, Harness, RemoveMode, backdate, board_with, branches, exists_itself, listed, make_link,
-    put, root_of, rule_for,
+    put, records, root_of, rule_for, unplugged,
 };
 use std::fs;
 use std::sync::Arc;
@@ -328,6 +328,28 @@ fn git_still_listing_the_worktree_with_its_git_keeps_the_refusal_nothing_is_rena
         "error"
     );
     assert_eq!(s.made(), "{}", "nothing was left by a removal");
+}
+
+#[test]
+fn another_prunable_record_no_rule_vetted_an_unplugged_drive_stops_the_prune_that_finishes_the_folder()
+ {
+    let s = shape(RemoveMode::Stuck, unplugged(false));
+    let err = s.h.refused(&s.id("old-merged"), |_| {});
+    assert_eq!(err.code, ErrorCode::GitFailed);
+    assert!(
+        err.message.contains("Argus did not prune git's records: ")
+            && err
+                .message
+                .contains("would also forget 1 other worktree record")
+            && err.message.contains("drive-x"),
+        "{}",
+        err.message
+    );
+    assert!(
+        records(&s.fx).contains(&"drive-x".to_string()),
+        "the unvetted record is still there"
+    );
+    assert_eq!(s.h.svc.jobs("alpha").len(), 0);
 }
 
 #[test]

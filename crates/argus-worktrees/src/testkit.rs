@@ -592,6 +592,8 @@ pub struct ScriptedExec {
     pub calls: Mutex<Vec<Vec<String>>>,
     pub on_remove: Mutex<Option<RemoveHook>>,
     pub after_failure: Mutex<Option<FailureHook>>,
+    /// Every `git status` fails like a damaged index does.
+    pub fail_status: Mutex<bool>,
 }
 
 impl ScriptedExec {
@@ -602,6 +604,7 @@ impl ScriptedExec {
             calls: Mutex::new(Vec::new()),
             on_remove: Mutex::new(None),
             after_failure: Mutex::new(None),
+            fail_status: Mutex::new(false),
         }
     }
 
@@ -646,6 +649,13 @@ impl ScriptedExec {
 impl GitExec for ScriptedExec {
     fn exec(&self, cwd: &str, args: &[String], timeout: Duration) -> GitOutput {
         locked(&self.calls).push(args.to_vec());
+        if *locked(&self.fail_status) && args.iter().any(|a| a == "status") {
+            return GitOutput::failure(
+                128,
+                "fatal: unable to read the index
+",
+            );
+        }
         let mode = *locked(&self.mode);
         let is_remove = args.first().map(String::as_str) == Some("worktree")
             && args.get(1).map(String::as_str) == Some("remove");
@@ -884,6 +894,34 @@ pub fn started(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.scan();
     (fx, h)
+}
+
+/// A record git lists for a worktree OUTSIDE every rule (an unplugged drive): its folder is gone, so a prune would forget it.
+pub fn unplugged(commits: bool) -> impl FnOnce(&Fixture) {
+    move |fx| {
+        let path = format!("{}/unplugged/drive-x", fx.root);
+        fx.git(&["worktree", "add", "-q", "--detach", &path, "main"]);
+        if commits {
+            commit(
+                &path,
+                "u.txt",
+                "work on a detached HEAD
+",
+                3.0,
+            );
+        }
+        fs::remove_dir_all(&path).unwrap();
+    }
+}
+
+/// The names git keeps worktree records under, sorted.
+pub fn records(fx: &Fixture) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(format!("{}/.git/worktrees", fx.repo))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
+    names
 }
 
 /// The id of a worktree folder of the fixture.

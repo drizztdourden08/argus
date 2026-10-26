@@ -1045,3 +1045,140 @@ fn a_record_closed_a_moment_ago_whose_transcript_did_not_grow_stays_closed() {
     w.reconciler(true).tick();
     assert_eq!(w.a("A-1")["status"], json!("done"));
 }
+
+// The idle reaper closed it from a quiet transcript while the agent was in a long tool call (a big write, a build).
+fn reaped(w: &World, id: &str, file: &str, extra: &Value) -> Value {
+    let mut fields = json!({
+        "source": "hook", "hookId": id, "claudeId": id, "transcriptFile": file, "model": "opus",
+        "status": "done", "finishedAt": w.at(-10 * MIN), "reaped": true, "closedBy": "reaper",
+        "note": "no activity for 25 min, closed automatically"
+    });
+    for (key, value) in extra.as_object().unwrap() {
+        fields[key] = value.clone();
+    }
+    w.agent("A-1", &fields)
+}
+
+fn worktree_with(w: &World, name: &str, age_min: i64) -> String {
+    let dir = w.claude.path().join(name);
+    fs::create_dir_all(dir.join("src")).unwrap();
+    let file = dir.join("src").join("big.rs");
+    fs::write(
+        &file,
+        "fn main() {}
+",
+    )
+    .unwrap();
+    w.touch(&file, age_min);
+    dir.to_string_lossy().into_owned()
+}
+
+#[test]
+fn a_record_the_reaper_closed_while_the_agent_was_still_writing_files_in_its_worktree_is_reopened_and_the_note_says_why()
+ {
+    let w = world();
+    let file = w.subagent(
+        "a0000000000000161",
+        Sub {
+            quiet: 30,
+            ..Sub::default()
+        },
+    );
+    let tree = worktree_with(&w, "wt-live", 1);
+    w.put(&[reaped(
+        &w,
+        "a0000000000000161",
+        &file,
+        &json!({ "worktree": tree }),
+    )]);
+    let run = w.reconciler(true).tick();
+    let a = w.a("A-1");
+    assert_eq!(a["status"], json!("working"));
+    assert_eq!(a["finishedAt"], json!(null));
+    assert_eq!(
+        a["note"],
+        json!(
+            "reopened automatically: its Claude task is still running (worktree active 60s ago) although the record was closed as idle"
+        )
+    );
+    assert_eq!(a["reaped"], json!(null));
+    assert_eq!(a["closedBy"], json!(null));
+    assert_eq!(counts(&run).reopened, 1);
+    assert_eq!(
+        found(&run, "A-1").unwrap().detail,
+        "worktree active 60s ago, after the record was closed by the reaper"
+    );
+}
+
+#[test]
+fn the_output_file_of_a_running_background_task_of_the_agent_brings_the_closed_record_back_too() {
+    let w = world();
+    let file = w.subagent(
+        "a0000000000000162",
+        Sub {
+            quiet: 30,
+            ..Sub::default()
+        },
+    );
+    fs::create_dir_all(w.task_dir()).unwrap();
+    let out = w.task_dir().join("a0000000000000162.output");
+    fs::write(
+        &out,
+        "compiling...
+",
+    )
+    .unwrap();
+    touch(&out, w.clock.now_ms() - 30_000);
+    w.put(&[reaped(&w, "a0000000000000162", &file, &json!({}))]);
+    w.reconciler(true).tick();
+    assert_eq!(w.a("A-1")["status"], json!("working"));
+    assert_eq!(
+        w.a("A-1")["note"],
+        json!(
+            "reopened automatically: its Claude task is still running (task active 30s ago) although the record was closed as idle"
+        )
+    );
+}
+
+#[test]
+fn a_record_the_reaper_closed_whose_worktree_is_quiet_too_or_whose_turn_really_ended_stays_closed()
+{
+    let w = world();
+    let quiet = w.subagent(
+        "a0000000000000163",
+        Sub {
+            quiet: 30,
+            ..Sub::default()
+        },
+    );
+    let ended = w.subagent(
+        "a0000000000000164",
+        Sub {
+            quiet: 30,
+            ended: true,
+            end_turn: true,
+            ..Sub::default()
+        },
+    );
+    let old_tree = worktree_with(&w, "wt-old", 30);
+    let fresh_tree = worktree_with(&w, "wt-fresh", 1);
+    let mut second = reaped(
+        &w,
+        "a0000000000000164",
+        &ended,
+        &json!({ "worktree": fresh_tree }),
+    );
+    second["id"] = json!("A-2");
+    w.put(&[
+        reaped(
+            &w,
+            "a0000000000000163",
+            &quiet,
+            &json!({ "worktree": old_tree }),
+        ),
+        second,
+    ]);
+    w.reconciler(true).tick();
+    assert_eq!(w.a("A-1")["status"], json!("done"));
+    assert_eq!(w.a("A-2")["status"], json!("done"));
+}

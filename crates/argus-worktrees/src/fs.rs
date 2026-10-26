@@ -36,6 +36,10 @@ pub trait Fs: Send + Sync {
     fn mtime_ms(&self, path: &str) -> Option<i64>;
     fn lstat(&self, path: &str) -> io::Result<Stat>;
     fn read_dir(&self, path: &str) -> io::Result<Vec<Entry>>;
+    /// The text of a small file (a git bookkeeping file).
+    fn read_text(&self, path: &str) -> io::Result<String> {
+        fs::read_to_string(path)
+    }
     fn rename(&self, from: &str, to: &str) -> io::Result<()>;
     /// Remove a file, or a link as a link.
     fn remove_file(&self, path: &str) -> io::Result<()>;

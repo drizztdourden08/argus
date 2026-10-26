@@ -15,6 +15,7 @@
 pub mod board;
 pub mod config;
 pub mod error;
+mod evidence;
 pub mod fakes;
 pub mod fs;
 pub mod hook_logic;

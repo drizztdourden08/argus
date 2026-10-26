@@ -14,6 +14,8 @@ pub struct FileStat {
     pub mtime_ms: i64,
     /// Creation, epoch milliseconds; the last write when the system keeps no creation time.
     pub birth_ms: i64,
+    /// Whether it is a folder.
+    pub is_dir: bool,
 }
 
 /// One entry of a folder.
@@ -60,6 +62,7 @@ impl FileSystem for StdFs {
             size: meta.len(),
             mtime_ms,
             birth_ms: millis(meta.created()).unwrap_or(mtime_ms),
+            is_dir: meta.is_dir(),
         })
     }
 

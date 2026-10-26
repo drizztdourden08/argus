@@ -5,8 +5,8 @@
 
 use super::pass::Pass;
 use super::report::Class;
-use super::session::{Candidate, agent_id_of_path};
 use crate::config::MINUTE_MS;
+use crate::evidence::session::{Candidate, agent_id_of_path};
 use crate::iso::format_iso;
 use crate::record::{Patch, Record, claude_id_of, filled, is_set, ms_of, text};
 use crate::text::{clip, overlap, same_model};

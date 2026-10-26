@@ -5,9 +5,9 @@
 
 use super::pass::{IDLE_KEYS, ORPHAN_KEYS, Pass};
 use super::report::Class;
-use super::session::Session;
-use super::state::{Observed, task_state, transcript_state};
 use crate::config::MINUTE_MS;
+use crate::evidence::session::Session;
+use crate::evidence::state::{Observed, task_state, transcript_state};
 use crate::iso::format_iso;
 use crate::record::{Patch, Record, claude_id_of, filled, is_set, ms_of, text};
 use crate::transcript::last_turn;
