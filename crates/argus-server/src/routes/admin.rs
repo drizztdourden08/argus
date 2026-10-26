@@ -71,7 +71,7 @@ async fn health(ctx: Ctx) -> Reply {
             "watcher": watcher,
             "runs": { "running": counts.running, "queued": counts.queued },
             "sse": { "clients": svc.streams.load(std::sync::atomic::Ordering::SeqCst) },
-            "modules": { "sync": svc.sync.is_some(), "runs": false, "problems": {} },
+            "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
             "impl": "argus",
             "shadow": svc.shadow,
         }),

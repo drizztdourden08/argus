@@ -24,10 +24,14 @@ use tokio_util::sync::CancellationToken;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::security::LoginCodes;
+use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
-use crate::{AgentsOptions, NotifyOptions, ProcsOptions, Router, Services, WakeOptions, routes};
+use crate::{
+    AgentsOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services, WakeOptions,
+    WorktreesOptions, routes,
+};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -53,6 +57,10 @@ pub struct ServeOptions {
     pub runs: Option<Arc<dyn RunsView>>,
     /// The process monitor.
     pub procs: ProcsOptions,
+    /// The run service and the launcher wakes.
+    pub run_service: RunsOptions,
+    /// The worktree scanner.
+    pub worktrees: WorktreesOptions,
     /// The wake service (it needs the sync service).
     pub wake: WakeOptions,
     /// Which sub-agent services run.
@@ -75,6 +83,8 @@ impl ServeOptions {
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
+            run_service: RunsOptions::default(),
+            worktrees: WorktreesOptions::default(),
             wake: WakeOptions::default(),
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
@@ -223,9 +233,11 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         heartbeat: opts.heartbeat,
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
+        run_logs: Arc::default(),
         streams: Arc::new(AtomicUsize::new(0)),
         codes: LoginCodes::default(),
         stop: CancellationToken::new(),
+        tasks: Tasks::new(opts),
         port: AtomicU16::new(0),
         links: Mutex::new(links),
     })

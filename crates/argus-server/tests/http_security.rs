@@ -1302,7 +1302,7 @@ async fn resync_is_delegated_to_the_sync_service() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn routes_of_a_later_slice_answer_503_unavailable() {
+async fn mcp_answers_503_unavailable_until_its_slice_is_wired() {
     let t = plain().await;
     let r = t
         .write(
@@ -1312,16 +1312,6 @@ async fn routes_of_a_later_slice_answer_503_unavailable() {
         )
         .await;
     assert_refused(&r, 503, "unavailable", "/mcp");
-    let routes = [
-        ("GET", "/api/p/alpha/launches"),
-        ("POST", "/api/p/alpha/runs"),
-        ("GET", "/api/runs?status=running"),
-        ("GET", "/api/p/alpha/runs/R-1/logs"),
-    ];
-    for (method, path) in routes {
-        let r = send(&t, method, path, &[JSON]).await;
-        assert_refused(&r, 503, "unavailable", path);
-    }
     t.stop(false).await;
 }
 
