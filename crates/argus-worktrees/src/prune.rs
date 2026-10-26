@@ -4,8 +4,6 @@
 //! those records is a gone worktree of this project that passes its rule and loses no commit (or whose loss the owner
 //! approved).
 
-use crate::board::{BoardFacts, Caller};
-use crate::branch::BranchOutcome;
 use crate::error::{ErrorCode, Result, WtError};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
@@ -15,6 +13,10 @@ use crate::paths::{base_name, clean_path, join_path, same_path};
 use crate::remove::{apply_branch, forbidden, plural, short7};
 use crate::request::{RemoveInput, RemoveOutcome};
 use crate::service::Service;
+use crate::{
+    board::{BoardFacts, Caller},
+    branch::BranchOutcome,
+};
 
 /// A record `git worktree prune` would forget: its name under `.git/worktrees` and the folder it stood for, when known.
 struct Record {

@@ -3,11 +3,10 @@
 
 use crate::board::Caller;
 use crate::error::{ErrorCode, WtError};
-use crate::exec::GitOutput;
-use crate::request::RemoveInput;
+use crate::request::{RemoveInput, RemoveOutcome};
 use crate::testkit::{
-    Fixture, Harness, branches, commit, exists_itself, git_in, id, listed, owner_now, records,
-    rule_for, started, unplugged, write,
+    Fixture, Harness, commit, exists_itself, id, listed, owner_now,
+    pull_request_answer_keeps_branch, records, refused_for_nested, started, unplugged, write,
 };
 use std::fs;
 
@@ -113,32 +112,51 @@ fn nested_at(rel: &'static str) -> impl FnOnce(&Fixture) {
     }
 }
 
+/// The page removes `old-merged` with discard; the folder was still there before.
+fn discard_as_page(h: &Harness, fx: &Fixture, target: &str) -> RemoveOutcome {
+    assert!(exists_itself(&fx.path("old-merged")), "nothing was removed");
+    let out = h
+        .rm_with(target, |i| (i.discard, i.caller) = (true, Caller::Page))
+        .unwrap();
+    assert!(out.removed);
+    out
+}
+
 #[test]
 fn an_ignored_nested_repository_is_refused_without_discard_then_removed_with_the_pages_say_and_copied()
  {
-    let (fx, h) = started(nested_at("vendor/lib"));
-    assert_eq!(
-        h.docs()["old-merged"].dirty,
-        0,
-        "git calls it clean: it is ignored"
+    let (fx, h, target, err) = refused_for_nested(nested_at("vendor/lib"), "vendor/lib");
+    assert!(
+        err.message.contains("removing it discards them"),
+        "{}",
+        err.message
     );
+    let out = discard_as_page(&h, &fx, &target);
+    let copy = out.backup.unwrap().nested_copy.unwrap();
+    assert!(exists_itself(&format!("{copy}/precious.txt")));
+    assert!(!exists_itself(&fx.path("old-merged")));
+}
+
+#[test]
+fn a_folder_too_big_to_check_for_nested_repositories_is_unsafe_like_one_and_the_backup_lists_it() {
+    let (fx, h) = started(|fx| {
+        for n in 0..=3000 {
+            fs::create_dir_all(format!("{}/many/d{n}", fx.path("old-merged"))).unwrap();
+        }
+        fs::write(format!("{}/.git/info/exclude", fx.repo), "many/\n").unwrap();
+    });
     let target = id(&h, &fx, "old-merged");
     let err = h.refused(&target, |_| {});
     assert_eq!(err.code, ErrorCode::Forbidden);
     assert!(
-        err.message.contains("a nested git repository (vendor/lib)")
+        err.message
+            .contains("a folder too big to check for nested git repositories")
             && err.message.contains("removing it discards them"),
         "{}",
         err.message
     );
-    assert!(exists_itself(&fx.path("old-merged")), "nothing was removed");
-    let out = h
-        .rm_with(&target, |i| (i.discard, i.caller) = (true, Caller::Page))
-        .unwrap();
-    assert!(out.removed);
-    let copy = out.backup.unwrap().nested_copy.unwrap();
-    assert!(exists_itself(&format!("{copy}/precious.txt")));
-    assert!(!exists_itself(&fx.path("old-merged")));
+    let out = discard_as_page(&h, &fx, &target);
+    assert!(out.backup.is_some(), "the backup lists it");
 }
 
 #[test]
@@ -179,24 +197,5 @@ fn a_failed_git_status_is_unknown_never_clean_the_removal_is_refused_and_the_fol
 
 #[test]
 fn a_merged_pull_request_whose_head_is_not_a_commit_id_proves_nothing() {
-    let fx = Fixture::new();
-    let remote = [
-        "remote",
-        "add",
-        "origin",
-        "https://github.com/acme/proj.git",
-    ];
-    git_in(&fx.repo, &remote, &[]);
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-    h.scan();
-    *h.gh.answer.lock().unwrap() = GitOutput {
-        code: Some(0),
-        stdout: "[{\"number\":7,\"headRefOid\":\"--oops\"}]".into(),
-        ..GitOutput::default()
-    };
-    let out = h
-        .rm_with(&id(&h, &fx, "old-unmerged"), |i| i.branch = true)
-        .unwrap();
-    assert!(!out.deleted_branch, "{}", out.text);
-    assert!(branches(&fx.repo).contains(&"old-unmerged".to_string()));
+    pull_request_answer_keeps_branch("[{\"number\":7,\"headRefOid\":\"--oops\"}]");
 }

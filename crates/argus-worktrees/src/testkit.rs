@@ -929,6 +929,53 @@ pub fn id(h: &Harness, fx: &Fixture, name: &str) -> String {
     h.id_of(&fx.path(name))
 }
 
+/// A fixture prepared by `prep` whose merged worktree `old-merged` holds a nested repository at `nested`, started, and the
+/// refusal of removing it: forbidden, naming the nested repository. Returns the fixture, harness, the folder's id and the
+/// refusal.
+pub fn refused_for_nested(
+    prep: impl FnOnce(&Fixture),
+    nested: &str,
+) -> (Fixture, Harness, String, WtError) {
+    let (fx, h) = started(prep);
+    assert_eq!(
+        h.docs()["old-merged"].dirty,
+        0,
+        "git sees nothing to commit"
+    );
+    let target = id(&h, &fx, "old-merged");
+    let err = h.refused(&target, |_| {});
+    assert_eq!(err.code, crate::error::ErrorCode::Forbidden);
+    let named = format!("a nested git repository ({nested})");
+    assert!(err.message.contains(&named), "{}", err.message);
+    (fx, h, target, err)
+}
+
+/// A project with a GitHub remote whose pull request lookup answers `answer`, and the removal of the unmerged worktree
+/// with its branch. The branch must survive: the answer proves no merge. Returns the fixture.
+pub fn pull_request_answer_keeps_branch(answer: &str) -> Fixture {
+    let fx = Fixture::new();
+    let remote = [
+        "remote",
+        "add",
+        "origin",
+        "https://github.com/acme/proj.git",
+    ];
+    git_in(&fx.repo, &remote, &[]);
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
+    *h.gh.answer.lock().unwrap() = GitOutput {
+        code: Some(0),
+        stdout: answer.into(),
+        ..GitOutput::default()
+    };
+    let out = h
+        .rm_with(&id(&h, &fx, "old-unmerged"), |i| i.branch = true)
+        .unwrap();
+    assert!(!out.deleted_branch, "{}", out.text);
+    assert!(branches(&fx.repo).contains(&"old-unmerged".to_string()));
+    fx
+}
+
 /// The rule of the fixture's folder, for the rule's thread `worker`.
 pub fn rule_for(fx: &Fixture) -> Rule {
     Rule::folder("W-1", &fx.wts, "worker")

@@ -5,13 +5,13 @@
 use crate::batch::BatchInput;
 use crate::board::Caller;
 use crate::error::ErrorCode;
-use crate::exec::GitOutput;
 use crate::inspect::{ScanCtx, inspect_dir};
 use crate::jobs::JobState;
 use crate::rule::Rule;
 use crate::testkit::{
-    Fixture, Harness, RemoveMode, board_with, branches, commit, exists_itself, git_in, id, listed,
-    make_link, owner_now, rule_for, started, write,
+    Fixture, Harness, RemoveMode, board_with, branches, commit, exists_itself, id, listed,
+    make_link, owner_now, pull_request_answer_keeps_branch, refused_for_nested, rule_for, started,
+    write,
 };
 use std::fs;
 
@@ -173,20 +173,7 @@ fn nested_repo_in_an_ignored_folder(fx: &Fixture) {
 
 #[test]
 fn a_nested_repository_is_not_safe_it_needs_discard_and_is_copied_into_the_backup() {
-    let (fx, h) = started(nested_repo_in_an_ignored_folder);
-    assert_eq!(
-        h.docs()["old-merged"].dirty,
-        0,
-        "ignored: git sees nothing to commit"
-    );
-    let target = id(&h, &fx, "old-merged");
-    let err = h.refused(&target, |_| {});
-    assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(
-        err.message.contains("a nested git repository (vendor/lib)"),
-        "{}",
-        err.message
-    );
+    let (fx, h, target, _) = refused_for_nested(nested_repo_in_an_ignored_folder, "vendor/lib");
     assert!(exists_itself(&fx.path("old-merged")));
     let out = h
         .rm_with(&target, |i| (i.discard, i.caller) = (true, Caller::Page))
@@ -247,28 +234,6 @@ fn a_branch_whose_tip_moved_after_the_decision_is_not_deleted() {
 
 #[test]
 fn a_merged_pull_request_that_names_no_head_is_not_proof_of_a_merge() {
-    let fx = Fixture::new();
-    git_in(
-        &fx.repo,
-        &[
-            "remote",
-            "add",
-            "origin",
-            "https://github.com/acme/proj.git",
-        ],
-        &[],
-    );
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-    h.scan();
-    *h.gh.answer.lock().unwrap() = GitOutput {
-        code: Some(0),
-        stdout: "[{\"number\":7}]".into(),
-        ..GitOutput::default()
-    };
-    let out = h
-        .rm_with(&id(&h, &fx, "old-unmerged"), |i| i.branch = true)
-        .unwrap();
-    assert!(!out.deleted_branch, "{}", out.text);
-    assert!(branches(&fx.repo).contains(&"old-unmerged".to_string()));
+    let fx = pull_request_answer_keeps_branch("[{\"number\":7}]");
     assert!(!exists_itself(&fx.path("old-unmerged")));
 }

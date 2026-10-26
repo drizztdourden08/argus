@@ -286,7 +286,7 @@ session host as exit 101.
 
 Node commit `db17ac5` raised the hook timeout of the three `hook listen` entries in
 `shared/hooks.json` (PostToolUse, SessionStart, Stop) from 21600 s (6 h) to 259200 s (3 days). That
-is the Claude hook timeout of the rendered config, not the listener's own deadline: the Rust
+is the hook timeout of the rendered config, not the listener's own deadline: the Rust
 listener keeps Node's default of 6 h (`COORD_LISTEN_MS` overrides it) until Node changes it, and
 the rendered config of Argus carries the same 259200. The same commit added the `master`
 launcher of the Overlord project, which is project config and needs no port. The wake side of that

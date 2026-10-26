@@ -10,7 +10,7 @@ use crate::doc::Status;
 use crate::error::ErrorCode;
 use crate::fs::RealFs;
 use crate::jobs::JobState;
-use crate::leftover_remove::git_within;
+use crate::leftover_remove::{Within, git_within, git_within_capped};
 use crate::rule::Rule;
 use crate::testkit::{Fixture, Harness, commit, exists_itself, git_in, put, rule_for, write};
 use std::fs;
@@ -328,15 +328,33 @@ fn a_git_within_three_levels_is_found_one_deeper_than_three_is_not_asked_for() {
     let dir = tempfile::tempdir().unwrap();
     let root = crate::testkit::root_of(&dir);
     fs::create_dir_all(format!("{root}/junk/a/b/c/.git")).unwrap();
-    let found = git_within(&RealFs, &format!("{root}/junk")).unwrap();
+    let Within::Git(found) = git_within(&RealFs, &format!("{root}/junk")) else {
+        panic!("the .git three levels down is found");
+    };
     assert!(found.ends_with("junk/a/b/c/.git"), "{found}");
     fs::create_dir_all(format!("{root}/deep/a/b/c/d/.git")).unwrap();
-    assert!(git_within(&RealFs, &format!("{root}/deep")).is_none());
+    assert_eq!(
+        git_within(&RealFs, &format!("{root}/deep")),
+        Within::Nothing
+    );
     put(&root, "node/node_modules/x/.git/HEAD", "x");
-    assert!(
-        git_within(&RealFs, &format!("{root}/node")).is_none(),
+    assert_eq!(
+        git_within(&RealFs, &format!("{root}/node")),
+        Within::Nothing,
         "node_modules is not entered"
     );
+}
+
+#[test]
+fn a_walk_that_hits_its_cap_is_too_big_never_nothing_found() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::testkit::root_of(&dir);
+    for n in 0..5 {
+        fs::create_dir_all(format!("{root}/big/d{n}")).unwrap();
+    }
+    let big = format!("{root}/big");
+    assert_eq!(git_within_capped(&RealFs, &big, 6), Within::Nothing);
+    assert_eq!(git_within_capped(&RealFs, &big, 5), Within::TooBig);
 }
 
 #[test]

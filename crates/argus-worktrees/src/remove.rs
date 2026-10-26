@@ -14,8 +14,8 @@ use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
 use crate::inspect::{ScanCtx, inspect_dir};
-use crate::leftover_remove::git_within;
-use crate::paths::{clean_path, is_worktree_id, parent_of, worktree_id};
+use crate::leftover_remove::{Within, git_within};
+use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::Service;
@@ -89,10 +89,14 @@ impl Safety {
         });
         let dirty = (now.dirty > 0).then(|| plural(now.dirty, "uncommitted change"));
         let nested = now.nested_git.as_ref().map(|n| {
-            format!(
-                "a nested git repository ({})",
-                relative_folder(&now.path, n)
-            )
+            if now.nested_too_big {
+                "a folder too big to check for nested git repositories".to_string()
+            } else {
+                format!(
+                    "a nested git repository ({})",
+                    relative_folder(&now.path, n)
+                )
+            }
         });
         [dirty, nested, lost_commits, branch]
             .into_iter()
@@ -325,7 +329,14 @@ impl Service {
                 ),
             ));
         }
-        now.nested_git = git_within(self.deps.fs.as_ref(), &fact.path);
+        match git_within(self.deps.fs.as_ref(), &fact.path) {
+            Within::Nothing => {}
+            Within::Git(git) => now.nested_git = Some(git),
+            Within::TooBig => {
+                now.nested_git = Some(join_path(&fact.path, ".git"));
+                now.nested_too_big = true;
+            }
+        }
         if !now.is_git || !self.deps.fs.exists(&fact.path) {
             self.request_rescan(&input.project);
             return Err(WtError::new(
