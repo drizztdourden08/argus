@@ -9,7 +9,7 @@ use crate::record::NewNotification;
 /// One `note` line for a recorded notification; none for `info`.
 #[must_use]
 pub fn activity_line(record: &NewNotification) -> Option<ActivityLine> {
-    if record.level == Level::Info {
+    if record.message.level == Level::Info {
         return None;
     }
     let level = if record.toast == ToastState::Failed {
@@ -22,26 +22,29 @@ pub fn activity_line(record: &NewNotification) -> Option<ActivityLine> {
         text: format!(
             "{}: {}: {} ({})",
             who(record),
-            record.title,
-            record.text,
+            record.message.title,
+            record.message.text,
             outcome(record)
         ),
-        project: record.project.clone(),
-        thread: record.thread.clone(),
+        project: record.message.project.clone(),
+        thread: record.message.thread.clone(),
     })
 }
 
 fn who(record: &NewNotification) -> String {
-    match record.by {
+    match record.message.by {
         By::Auto => "automatic ping".to_owned(),
         By::Page => "ping from the page".to_owned(),
         By::Thread | By::Overlord => {
-            let urgent = if record.level == Level::Urgent {
+            let urgent = if record.message.level == Level::Urgent {
                 "urgent "
             } else {
                 ""
             };
-            let label = label_of(record.project.as_deref(), record.thread.as_deref());
+            let label = label_of(
+                record.message.project.as_deref(),
+                record.message.thread.as_deref(),
+            );
             format!("{urgent}ping from {label}")
         }
     }

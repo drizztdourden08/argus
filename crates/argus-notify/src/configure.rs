@@ -73,22 +73,14 @@ pub fn describe(settings: Settings) -> String {
 mod tests {
     use super::{SettingsPatch, apply, describe};
     use crate::config::NotifyConfig;
-    use crate::level::PerLevel;
+    use crate::level::{Level, PerLevel};
     use crate::settings::settings_of;
 
     #[test]
     fn a_quiet_ping_and_a_loud_info_are_written_to_the_config() {
         let patch = SettingsPatch {
-            toast: PerLevel {
-                info: Some(true),
-                ping: Some(false),
-                urgent: None,
-            },
-            sound: PerLevel {
-                info: Some(true),
-                ping: Some(true),
-                urgent: None,
-            },
+            toast: PerLevel::from_fn(|level| Some(level != Level::Ping)),
+            sound: PerLevel::from_fn(|_| Some(true)),
         };
         let next = apply(&NotifyConfig::default(), patch);
         assert_eq!(next.quiet_levels, ["ping"]);

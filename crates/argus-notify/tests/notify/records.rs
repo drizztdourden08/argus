@@ -1,7 +1,7 @@
 //! Records, docs, the click address, the cap of 50 and the list.
 
 use argus_native::{TEXT_MAX, TITLE_MAX};
-use argus_notify::{By, Filter, KEEP_ROWS, Level, Notification, PingRequest, ToastState};
+use argus_notify::{By, Filter, KEEP_ROWS, Level, PingRequest, ToastState};
 
 use crate::harness::{Harness, ROTP, TAB, from_lead};
 
@@ -17,22 +17,14 @@ fn a_ping_is_recorded_with_its_doc_the_project_link_and_the_toast_that_was_asked
     assert!(out.is_recorded());
     assert_eq!(out.toast, ToastState::Shown);
     assert_eq!(out.id(), Some("n-1"));
-    let expected = Notification {
-        id: "n-1".into(),
-        n: 1,
-        at: "2026-10-26T12:00:00.000Z".into(),
-        level: Level::Ping,
-        title: "Rotp: lead".into(),
-        text: "B1 is ready to test".into(),
-        project: Some("rotp".into()),
-        thread: Some("lead".into()),
-        by: By::Thread,
-        toast: ToastState::Shown,
-        url: Some(ROTP.into()),
-        why: None,
-    };
-    assert_eq!(out.notification.as_ref(), Some(&expected));
-    assert_eq!(h.events.pushed(), [expected]);
+    let note = out.notification.expect("recorded");
+    let doc = serde_json::json!({
+        "id": "n-1", "n": 1, "at": "2026-10-26T12:00:00.000Z", "level": "ping",
+        "title": "Rotp: lead", "text": "B1 is ready to test", "project": "rotp",
+        "thread": "lead", "by": "thread", "toast": "shown", "url": ROTP, "why": null,
+    });
+    assert_eq!(serde_json::to_value(&note).expect("serializes"), doc);
+    assert_eq!(h.events.pushed(), [note]);
     let shown = h.shown();
     assert_eq!(shown.len(), 1);
     assert_eq!(shown[0].texts, ["Rotp: lead", "B1 is ready to test"]);
@@ -86,7 +78,12 @@ fn the_click_address_is_only_ever_an_http_address_on_this_machine() {
     ask("c", None, Some("file:///c:/windows/system32/calc.exe"));
     ask("d", None, Some("http://evil.example.com/"));
     ask("e", Some("Not A Key"), None);
-    let urls: Vec<_> = h.store.rows().into_iter().map(|note| note.url).collect();
+    let urls: Vec<_> = h
+        .store
+        .rows()
+        .into_iter()
+        .map(|note| note.url.clone())
+        .collect();
     let tab = Some(TAB.to_owned());
     assert_eq!(
         urls,
@@ -143,7 +140,7 @@ fn list_is_newest_first_filtered_by_level_and_project_and_at_most_50() {
             .list(&filter)
             .expect("listed")
             .into_iter()
-            .map(|note| note.text)
+            .map(|note| note.text.clone())
             .collect()
     };
     assert_eq!(texts(Filter::default()), ["c", "b", "a"]);

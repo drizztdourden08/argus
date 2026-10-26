@@ -39,7 +39,11 @@ fn asking(entries: Vec<EntryFact>) -> BoardFacts {
 }
 
 fn texts(h: &Harness) -> Vec<String> {
-    h.store.rows().into_iter().map(|note| note.text).collect()
+    h.store
+        .rows()
+        .into_iter()
+        .map(|note| note.text.clone())
+        .collect()
 }
 
 fn started() -> Harness {
