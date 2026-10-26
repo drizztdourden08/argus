@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { TesseraProvider } from '@drizztdourden08/tessera';
+import { TesseraProvider, ToastStack } from '@drizztdourden08/tessera';
 import { BrowserRouter } from 'react-router';
 import { DataProvider } from '../data/react';
 import { AppRoutes } from './AppRoutes';
@@ -11,6 +11,7 @@ const App = () => (
         <AppRoutes />
       </BrowserRouter>
     </DataProvider>
+    <ToastStack />
   </TesseraProvider>
 );
 

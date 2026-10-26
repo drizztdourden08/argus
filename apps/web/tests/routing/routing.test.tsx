@@ -25,7 +25,8 @@ describe('routing', () => {
   it('shows the board page at /p/:key/ with the thread list', async () => {
     const { sources } = renderAt('/p/rotp/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    expect(sources[0]?.url).toBe('/api/p/rotp/stream?c=meta,threads');
+    expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
+    expect(sources[0]?.url.split('c=')[1]?.split(',').sort()).toEqual(['agents', 'meta', 'threads']);
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
       sources[0]?.emit('snapshot', snapshot('rotp', 'threads', { lead: { id: 'lead', name: 'lead', role: 'coordinator', status: 'active' } }));
