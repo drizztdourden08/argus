@@ -1,6 +1,8 @@
 //! A small HTTP/1.1 client: one request per connection, any header (`Host` included), the whole
 //! answer read back. Enough to drive the server the way the Node tests do with `node:http`.
 
+use std::time::Duration;
+
 use serde_json::Value;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -16,6 +18,8 @@ pub struct Request {
     pub headers: Vec<(String, String)>,
     /// The body.
     pub body: Vec<u8>,
+    /// A pause between the head and the body, as a slow writer makes.
+    pub gap: Duration,
 }
 
 impl Request {
@@ -40,6 +44,13 @@ impl Request {
     #[must_use]
     pub fn body(mut self, body: impl Into<Vec<u8>>) -> Self {
         self.body = body.into();
+        self
+    }
+
+    /// The same request, its body sent `gap` after its head.
+    #[must_use]
+    pub fn paced(mut self, gap: Duration) -> Self {
+        self.gap = gap;
         self
     }
 
@@ -153,7 +164,7 @@ pub(crate) fn dechunk(raw: &[u8]) -> Vec<u8> {
     out
 }
 
-/// Sends a request to `127.0.0.1:<port>` and reads the whole answer.
+/// Sends a request to `127.0.0.1:<port>` and reads the whole answer (status 0 when none came).
 ///
 /// # Panics
 /// When the server cannot be reached (a test failure).
@@ -170,6 +181,9 @@ async fn exchange(port: u16, req: &Request) -> Reply {
     s.write_all(req.head(port, true).as_bytes())
         .await
         .expect("send head");
+    if !req.body.is_empty() {
+        tokio::time::sleep(req.gap).await;
+    }
     let _ = s.write_all(&req.body).await;
     let mut buf = Vec::new();
     let _ = s.read_to_end(&mut buf).await;

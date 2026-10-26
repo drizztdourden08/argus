@@ -10,7 +10,7 @@ use axum::http::{HeaderMap, Method};
 use bytes::Bytes;
 use serde_json::{Value, json};
 
-use crate::body::read_limited;
+use crate::body::{discard, read_limited};
 use crate::{RouteOpts, Services};
 
 /// Who sent a request: a browser page, or the CLI (a bearer or a caller without fetch metadata).
@@ -50,6 +50,17 @@ fn is_json_type(t: &str) -> bool {
         .unwrap_or(rest.len());
     let sub = &rest[..sub_end];
     sub == "json" || sub.ends_with("+json")
+}
+
+/// A handler that answered without reading the body leaves it here: it is discarded while the
+/// answer goes out.
+impl Drop for Ctx {
+    fn drop(&mut self) {
+        let slot = self.body.get_mut().unwrap_or_else(PoisonError::into_inner);
+        if let Some(body) = slot.take() {
+            discard(body);
+        }
+    }
 }
 
 /// The parts of a request a [`Ctx`] is built from.
