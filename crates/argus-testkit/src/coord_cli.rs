@@ -1,6 +1,8 @@
-//! The Node coord CLI as a client of a test server: `node <ARGUS_COORD_CLI> <args>` with the
-//! temp homes of the server, so the server is proven against the real client it must serve at
-//! the switch-over. Without `ARGUS_COORD_CLI` the cases that need it say why and return.
+//! The coord CLI as a client of a test server: the Node CLI as `node <ARGUS_COORD_CLI> <args>` and
+//! the Rust port as `argus coord <args>`, both with the temp homes of the server, so the server is
+//! proven against the real clients it must serve at and after the switch-over. Without the Node
+//! script (`ARGUS_COORD_CLI`) or the binary (`ARGUS_EXE`, else the `argus` next to the test
+//! executables) the cases that need it say why and return.
 
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -24,10 +26,19 @@ pub struct CliOut {
     pub stderr: String,
 }
 
+/// Which implementation of the CLI a client runs.
+#[derive(Debug, Clone)]
+enum Engine {
+    /// `node <script>`.
+    Node(PathBuf),
+    /// `<exe> coord`.
+    Argus(PathBuf),
+}
+
 /// The located CLI.
 #[derive(Debug, Clone)]
 pub struct CoordCli {
-    script: PathBuf,
+    engine: Engine,
 }
 
 impl CoordCli {
@@ -39,7 +50,55 @@ impl CoordCli {
         if found.is_none() {
             eprintln!("skipped: ARGUS_COORD_CLI does not name the Node coord CLI (coord.mjs)");
         }
-        found.map(|script| CoordCli { script })
+        found.map(|script| CoordCli {
+            engine: Engine::Node(script),
+        })
+    }
+
+    /// `argus coord`, from `ARGUS_EXE` or the `argus` built next to the test executables, or
+    /// `None` after saying the case is skipped.
+    #[must_use]
+    pub fn locate_argus() -> Option<CoordCli> {
+        let found = argus_exe();
+        if found.is_none() {
+            eprintln!("skipped: no argus binary (set ARGUS_EXE or run `cargo build -p argus`)");
+        }
+        found.map(|exe| CoordCli {
+            engine: Engine::Argus(exe),
+        })
+    }
+
+    /// Every CLI that can run here, the Node one first. Empty after saying why when none can.
+    #[must_use]
+    pub fn locate_each() -> Vec<CoordCli> {
+        [CoordCli::locate(), CoordCli::locate_argus()]
+            .into_iter()
+            .flatten()
+            .collect()
+    }
+
+    /// Which client this is, for a failure message.
+    #[must_use]
+    pub fn name(&self) -> &'static str {
+        match self.engine {
+            Engine::Node(_) => "node coord",
+            Engine::Argus(_) => "argus coord",
+        }
+    }
+
+    fn command(&self) -> Command {
+        match &self.engine {
+            Engine::Node(script) => {
+                let mut command = Command::new("node");
+                command.arg("--no-warnings").arg(script);
+                command
+            }
+            Engine::Argus(exe) => {
+                let mut command = Command::new(exe);
+                command.arg("coord");
+                command
+            }
+        }
     }
 
     /// Runs `coord <args>` against the homes of `server`, from `cwd`, with `extra` environment
@@ -63,10 +122,8 @@ impl CoordCli {
         extra: &[(&str, &str)],
         input: &str,
     ) -> CliOut {
-        let mut command = Command::new("node");
+        let mut command = self.command();
         command
-            .arg("--no-warnings")
-            .arg(&self.script)
             .args(args)
             .current_dir(cwd)
             .env("COORD_HOME", &server.coord_home)
@@ -81,6 +138,18 @@ impl CoordCli {
         hide_window(&mut command);
         collect(command, input).await
     }
+}
+
+fn argus_exe() -> Option<PathBuf> {
+    let named = std::env::var_os("ARGUS_EXE").map(PathBuf::from);
+    let beside = std::env::current_exe().ok().and_then(|exe| {
+        Some(
+            exe.parent()?
+                .parent()?
+                .join(format!("argus{}", std::env::consts::EXE_SUFFIX)),
+        )
+    });
+    named.or(beside).filter(|exe| exe.is_file())
 }
 
 #[cfg(windows)]
