@@ -5,7 +5,7 @@ import { DataProvider } from '../data/react';
 import { AppRoutes } from './AppRoutes';
 
 const App = () => (
-  <TesseraProvider overrides={{}}>
+  <TesseraProvider>
     <DataProvider>
       <BrowserRouter>
         <AppRoutes />
