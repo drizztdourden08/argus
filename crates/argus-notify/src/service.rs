@@ -1,0 +1,115 @@
+//! The notification service: its parts, its start and stop, and the owner's settings.
+
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Mutex, MutexGuard, PoisonError};
+
+use crate::configure::{SettingsPatch, apply, describe};
+use crate::limits::Limiter;
+use crate::links::Links;
+use crate::ports::{ActivityLevel, ActivityLine, Ports, StoreError};
+use crate::record::{Filter, KEEP_ROWS, Notification};
+use crate::seen::SeenMap;
+use crate::settings::{Settings, settings_of};
+
+pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// Notifications to the owner: records them, shows their toasts and pings by itself when a board
+/// says the owner is needed. It never fails its callers.
+pub struct Notify {
+    pub(crate) ports: Ports,
+    pub(crate) links: Links,
+    pub(crate) limiter: Mutex<Limiter>,
+    pub(crate) seen: Mutex<Option<SeenMap>>,
+    running: AtomicBool,
+}
+
+impl Notify {
+    /// A stopped service; `port` is the dashboard's, for the addresses a toast opens.
+    #[must_use]
+    pub fn new(ports: Ports, port: u16) -> Self {
+        Self {
+            ports,
+            links: Links::new(port),
+            limiter: Mutex::new(Limiter::default()),
+            seen: Mutex::new(None),
+            running: AtomicBool::new(false),
+        }
+    }
+
+    /// Starts the service and writes the docs of the stored notifications again.
+    pub fn start(&self) {
+        if !self.running.swap(true, Ordering::SeqCst) {
+            self.mirror();
+        }
+    }
+
+    /// Stops the automatic pings; `send` keeps working.
+    pub fn stop(&self) {
+        self.running.store(false, Ordering::SeqCst);
+    }
+
+    /// True between `start` and `stop`.
+    #[must_use]
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::SeqCst)
+    }
+
+    /// Writes the docs again, as after a hard resync of the portfolio scope.
+    pub fn mirror(&self) {
+        if self.ports.store.mirror().is_err() {
+            self.warn("notification mirror failed");
+        }
+    }
+
+    /// The stored notifications that match, newest first, at most `KEEP_ROWS`.
+    ///
+    /// # Errors
+    ///
+    /// When the database cannot be read.
+    pub fn list(&self, filter: &Filter) -> Result<Vec<Notification>, StoreError> {
+        let clamped = Filter {
+            limit: filter.limit.clamp(1, KEEP_ROWS),
+            ..filter.clone()
+        };
+        self.ports.store.list(&clamped)
+    }
+
+    /// The settings in effect.
+    #[must_use]
+    pub fn settings(&self) -> Settings {
+        settings_of(&self.ports.config.load())
+    }
+
+    /// Changes the toast and the sound of some levels, writes the config and answers the settings
+    /// now in effect.
+    ///
+    /// # Errors
+    ///
+    /// When `config.json` cannot be written; nothing changed then.
+    pub fn configure(&self, patch: SettingsPatch) -> Result<Settings, StoreError> {
+        let next = apply(&self.ports.config.load(), patch);
+        self.ports.config.save(&next)?;
+        let settings = settings_of(&next);
+        self.activity(ActivityLevel::Info, describe(settings));
+        Ok(settings)
+    }
+
+    pub(crate) fn warn(&self, text: &str) {
+        self.activity(ActivityLevel::Warn, text.to_owned());
+    }
+
+    fn activity(&self, level: ActivityLevel, text: String) {
+        self.ports.activity.note(ActivityLine {
+            level,
+            text,
+            project: None,
+            thread: None,
+        });
+    }
+
+    pub(crate) fn name_of(&self, key: &str) -> String {
+        self.ports.names.name(key).unwrap_or_else(|| key.to_owned())
+    }
+}
