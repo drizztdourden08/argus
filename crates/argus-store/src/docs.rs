@@ -195,7 +195,7 @@ impl Tx<'_> {
                 c.coll, c.id
             )));
         };
-        let text = serde_json::to_string(data)?;
+        let text = argus_core::json_text::to_string(data)?;
         let hash = sha1_hex(&text);
         if self.stored_hash(scope, c.coll, &c.id)?.as_deref() == Some(hash.as_str()) {
             return Ok(None);

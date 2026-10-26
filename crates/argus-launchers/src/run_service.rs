@@ -45,13 +45,25 @@ impl Default for RunConfig {
     }
 }
 
+impl RunConfig {
+    /// A source that always answers this config.
+    #[must_use]
+    pub fn fixed(self) -> ConfigSource {
+        Arc::new(move || self.clone())
+    }
+}
+
+/// Where the service reads its settings: asked on every call, so a change to the dashboard
+/// config applies to the next run and the next attachment without a restart.
+pub type ConfigSource = Arc<dyn Fn() -> RunConfig + Send + Sync>;
+
 /// What a run service is built from.
 pub struct RunDeps<H> {
     pub host: H,
     pub store: Arc<dyn Storage>,
     pub events: Arc<dyn RunEvents>,
     pub defs: Arc<dyn DefsSource>,
-    pub config: RunConfig,
+    pub config: ConfigSource,
     pub clock: Arc<dyn Clock>,
 }
 
@@ -110,12 +122,17 @@ impl<H: ProcessHost> RunService<H> {
         format_iso(self.inner.deps.clock.now_ms())
     }
 
-    pub(crate) fn limits(&self) -> &RunLimits {
-        &self.inner.deps.config.limits
+    /// The settings as they are right now.
+    pub(crate) fn config(&self) -> RunConfig {
+        (self.inner.deps.config)()
+    }
+
+    pub(crate) fn limits(&self) -> RunLimits {
+        self.config().limits
     }
 
     pub(crate) fn redactor_for(&self, def: Option<&RunDef>) -> Redactor {
-        let mut secrets: Vec<String> = self.inner.deps.config.token.iter().cloned().collect();
+        let mut secrets: Vec<String> = self.config().token.into_iter().collect();
         if let Some(def) = def {
             secrets.extend(secret_env_values(&def.env));
         }
@@ -130,7 +147,7 @@ impl<H: ProcessHost> RunService<H> {
                 clock: Arc::clone(&self.inner.deps.clock),
                 scope: row.scope.clone(),
                 rid: row.id.clone(),
-                limits: self.limits().clone(),
+                limits: self.limits(),
                 redact,
             },
             row,

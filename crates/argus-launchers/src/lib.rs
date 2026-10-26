@@ -76,7 +76,7 @@ pub use redact::{Redactor, secret_env_values};
 pub use run_attach::AttachmentInfo;
 pub use run_input::STDIN_MAX;
 pub use run_query::{LogOptions, LogPage};
-pub use run_service::{RunConfig, RunDeps, RunService};
+pub use run_service::{ConfigSource, RunConfig, RunDeps, RunService};
 pub use run_start::{StartOptions, StartOutcome};
 pub use run_verdict::{EndInput, Verdict, verdict};
 pub use store::{AttachmentStore, LogStore, RunStore, Storage};

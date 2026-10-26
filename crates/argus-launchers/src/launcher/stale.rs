@@ -342,23 +342,27 @@ impl LauncherStale {
     /// from the board file): the newest Play run of the launcher is a use too. Changes the
     /// docs in place.
     pub fn overlay(&self, scope: &str, docs: &mut [Value]) {
-        let now = self.clock.now_ms();
         for doc in docs.iter_mut().filter(|d| d["coll"] == "launchers") {
-            let launcher = &mut doc["data"];
-            if launcher["standalone"] != true || !launcher["retiredAt"].is_null() {
-                continue;
-            }
-            let played = launcher["name"]
-                .as_str()
-                .map_or(0, |name| self.env.played_ms(scope, name));
-            if played <= time_of(launcher["lastUsedAt"].as_str()) {
-                continue;
-            }
-            let kept = time_of(launcher["keptUntil"].as_str()) > now;
-            let window = launcher["useEveryMs"].as_i64().unwrap_or(0);
-            launcher["lastUsedAt"] = Value::String(format_iso(played));
-            launcher["stale"] = Value::Bool(!kept && now - played > window);
+            self.overlay_launcher(scope, &mut doc["data"]);
         }
+    }
+
+    /// [`Self::overlay`] for the data of one launchers doc.
+    pub fn overlay_launcher(&self, scope: &str, launcher: &mut Value) {
+        if launcher["standalone"] != true || !launcher["retiredAt"].is_null() {
+            return;
+        }
+        let played = launcher["name"]
+            .as_str()
+            .map_or(0, |name| self.env.played_ms(scope, name));
+        if played <= time_of(launcher["lastUsedAt"].as_str()) {
+            return;
+        }
+        let now = self.clock.now_ms();
+        let kept = time_of(launcher["keptUntil"].as_str()) > now;
+        let window = launcher["useEveryMs"].as_i64().unwrap_or(0);
+        launcher["lastUsedAt"] = Value::String(format_iso(played));
+        launcher["stale"] = Value::Bool(!kept && now - played > window);
     }
 
     /// Ticks every `tick_ms` until the task is aborted.

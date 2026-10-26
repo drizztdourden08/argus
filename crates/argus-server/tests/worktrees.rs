@@ -276,6 +276,11 @@ async fn sees_leftover(r: &Rig) {
         (&meta["git"], meta["leftoverOld"]["days"].as_f64()),
         (&json!(4), Some(1.0))
     );
+    let raw = r.t.get("/api/p/alpha/db/meta/worktrees").await.text();
+    assert!(
+        raw.contains(r#""days":1,"#),
+        "a whole number has no fraction: {raw}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

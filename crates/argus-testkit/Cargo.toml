@@ -14,7 +14,7 @@ argus-core = { path = "../argus-core", features = ["testkit"] }
 argus-server = { path = "../argus-server" }
 serde_json = { version = "1", features = ["preserve_order"] }
 tempfile = "3"
-tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1", features = ["io-util", "macros", "net", "process", "rt-multi-thread", "sync", "time"] }
 
 [lints]
 workspace = true

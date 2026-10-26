@@ -116,7 +116,8 @@ impl Env {
                 token: options.token,
                 attachments_dir: dir.path().join("attachments"),
                 attach_max_bytes: options.attach_max_bytes,
-            },
+            }
+            .fixed(),
             clock: Arc::new(TokioClock::new()),
         });
         if options.boot {
