@@ -45,4 +45,9 @@ interface RunGroups {
   finished: RunEntry[];
 }
 
-export type { BuildDoc, LaunchDefDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, RunGroups, ViewInput };
+interface TerminalInput {
+  enabled: boolean;
+  placeholder: string;
+}
+
+export type { BuildDoc, LaunchDefDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, RunGroups, TerminalInput, ViewInput };

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
 import { ago, MIN, runDoc, runningDoc } from './fixtures';
 import { mountBuilds } from './mount-builds';
-import { board, line, openTerminal, stdinCalls, tailOf, waitForSummary } from './terminal-dom';
+import { board, line, openTerminal, stdinCalls, typeIntoTerminal, tailOf, waitForSummary } from './terminal-dom';
 
 cleanAfterEach();
 
@@ -75,33 +75,40 @@ describe('the input row of a terminal', () => {
 
   it('sends a line to the process on Enter and clears the box', async () => {
     const { calls } = await mountBuilds(board(), tailOf([]));
-    await waitForSummary();
-    openTerminal();
-    const input = await screen.findByLabelText<HTMLInputElement>(inputLabel);
-    fireEvent.change(input, { target: { value: 'help me' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    const input = await typeIntoTerminal('help me');
     await waitFor(() => expect(stdinCalls(calls)).toHaveLength(1));
     expect(stdinCalls(calls)[0]).toMatchObject({ url: '/api/p/rotp/runs/R-4/stdin', method: 'POST', body: { text: 'help me' } });
     expect(input.value).toBe('');
   });
 
   it.each([
-    ['has no stdin', runningDoc('R-4', 'launcher-master', { stdin: false })],
-    ['is over', runDoc('R-4', 'launcher-master')],
-  ])('is not there when the run %s', async (_name, run) => {
+    ['has no stdin', runningDoc('R-4', 'launcher-master', { stdin: false }), 'This run has no input'],
+    ['is over', runDoc('R-4', 'launcher-master'), 'The run is over'],
+  ])('is off, with its reason, when the run %s', async (_name, run, reason) => {
     await mountBuilds(board(run), tailOf([line(1, 'one')]));
     await waitForSummary();
     openTerminal();
     await screen.findByText('one');
-    expect(screen.queryByLabelText(inputLabel)).toBeNull();
+    const input = screen.getByLabelText<HTMLInputElement>(inputLabel);
+    expect(input.disabled).toBe(true);
+    expect(input.placeholder).toBe(reason);
   });
 
-  it('follows the run: gone when it ends', async () => {
+  it('keeps the typed text when the process refuses the line, and says why', async () => {
+    const tail = tailOf([]);
+    const { calls } = await mountBuilds(board(), (call) => (call.url.endsWith('/stdin') ? { status: 409, body: { error: 'run has no stdin' } } : tail(call)));
+    const input = await typeIntoTerminal('help me');
+    await waitFor(() => expect(stdinCalls(calls)).toHaveLength(1));
+    expect(await screen.findByText(/Could not send to R-4/)).toBeTruthy();
+    expect(input.value).toBe('help me');
+  });
+
+  it('follows the run: off when it ends', async () => {
     const { change } = await mountBuilds(board(), tailOf([line(1, 'one')]));
     await waitForSummary();
     openTerminal();
     expect(await screen.findByLabelText(inputLabel)).toBeTruthy();
     change('runs', 'R-4', runDoc('R-4', 'launcher-master', { queuedAt: ago(5 * MIN) }));
-    await waitFor(() => expect(screen.queryByLabelText(inputLabel)).toBeNull());
+    await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>(inputLabel).disabled).toBe(true));
   });
 });

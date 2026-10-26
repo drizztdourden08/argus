@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { ContentHeader, EmptyState, Tabs } from '@drizztdourden08/tessera';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useBoard } from '../../data/react';
 import { resolvePalette, useDocumentPalette } from '../../palette';
 import { PageFrame, StatusNotice, useHashTab } from '../../shell';
@@ -9,7 +9,7 @@ import { BoardBody } from './BoardBody';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { BuildsTab } from './tabs/builds';
-import { KanbanTab } from './tabs/kanban';
+import { KanbanTab, itemHash } from './tabs/kanban';
 import { TestsTab } from './tabs/tests';
 import { WorktreesTab } from './tabs/worktrees';
 
@@ -17,7 +17,9 @@ const BoardPage = (props: BoardPageProps) => {
   const { boardKey } = props;
   const board = useBoard(boardKey);
   const navigate = useNavigate();
-  const { tab, select } = useHashTab(BOARD_TAB_IDS, 'agents');
+  const { hash } = useLocation();
+  const { tab: hashed, select } = useHashTab(BOARD_TAB_IDS, 'agents');
+  const tab = itemHash(hash) ? 'kanban' : hashed;
   useDocumentPalette(resolvePalette(boardKey, board.meta?.palette));
   return (
     <PageFrame>

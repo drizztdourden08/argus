@@ -1,14 +1,18 @@
 /* @layer renderer-app @kind component */
-import { Flex, Select, Text } from '@drizztdourden08/tessera';
-import type { DrawerFactsProps } from '../kanban-props.type';
-import { STATUS_OPTIONS, ago, threadChoices } from '../model';
-import { InlineEdit } from './InlineEdit';
+import { Flex, InlineEdit, Select, Tag, Text } from '@drizztdourden08/tessera';
+import type { DrawerFactsProps } from '../drawer-props.type';
+import { STATUS_OPTIONS, ago, threadChoices, validateField } from '../model';
+
+const validateSubject = validateField('subject');
 
 const DrawerFacts = (props: DrawerFactsProps) => {
   const { item, threads, now, ops } = props;
-  const subject = item.subject ?? '';
   return (
     <Flex direction="column" gap="sm">
+      <Flex gap="xs" align="center" wrap>
+        <Tag>{item.status}</Tag>
+        {item.archivedAt && <Tag>archived</Tag>}
+      </Flex>
       <Flex gap="md" align="center" wrap>
         <Select
           aria-label="Status"
@@ -28,10 +32,10 @@ const DrawerFacts = (props: DrawerFactsProps) => {
           <Text variant="caption" tone="muted">Subject</Text>
           <InlineEdit
             label="subject"
-            field="subject"
-            value={subject}
-            display={<Text>{subject || 'none'}</Text>}
-            onSave={(value) => void ops.setField(item, 'subject', value)}
+            placeholder="subject"
+            value={item.subject ?? ''}
+            validate={validateSubject}
+            onCommit={(value) => void ops.setField(item, 'subject', value.trim())}
           />
         </Flex>
       </Flex>

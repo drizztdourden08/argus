@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind test */
+import { ToastStack } from '@drizztdourden08/tessera';
 import { act, render, waitFor } from '@testing-library/react';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
@@ -39,6 +40,7 @@ const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const view = render(
     <DataProvider streams={createScopeStreams(fake.open)}>
       <BuildsTab boardKey={SCOPE} />
+      <ToastStack />
     </DataProvider>,
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));

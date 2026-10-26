@@ -39,11 +39,15 @@ const ORDER_OPTIONS: { value: ItemOrder; label: string }[] = [
   { value: 'updated', label: 'Updated' },
 ];
 
-const LIMITS = { title: 80, subject: 40, description: 400, criterion: 120 };
+const LIMITS = { title: 80, subject: 40, description: 400, criterion: 120, todo: 200 };
 
 const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
 
 const HUMAN = 'human';
+
+const ITEM_HASH = /^[IH]-\d+$/;
+
+const PAUSE_KINDS = ['pause', 'resume'];
 
 const ANSWER_KINDS = ['followup', 'decision'];
 
@@ -57,7 +61,15 @@ const DEFAULT_FILTERS: KanbanFilters = { query: '', threads: [], status: '', sub
 
 const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', showDone: false };
 
-const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.items', order: 'coord.sort', showDone: 'coord.done2' };
+const STORE_KEYS = {
+  filters: 'coord.f',
+  group: 'coord.g.items',
+  order: 'coord.sort',
+  showDone: 'coord.done2',
+  focus: 'coord.focus',
+  showPaused: 'coord.paused',
+  wide: 'coord.drawer.wide',
+};
 
 export {
   ANSWER_KINDS,
@@ -77,6 +89,8 @@ export {
   STARTING_STATUS,
   OP_KINDS,
   ORDER_OPTIONS,
+  ITEM_HASH,
+  PAUSE_KINDS,
   PLACE_FIELDS,
   QUIET_HOURS,
   SECONDS_PER_MINUTE,

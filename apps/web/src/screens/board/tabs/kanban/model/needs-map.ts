@@ -1,13 +1,12 @@
 /* @layer renderer-app @kind logic */
 import type { Entry } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import { isUnapplied } from './is-unapplied';
 import { ANSWER_KINDS, HUMAN } from './model.constants';
 import type { EntryDocs, Needs, NeedsInput } from './model.type';
 
 const repliedTo = (entries: EntryDocs, kinds: readonly string[]): Set<string> =>
   new Set(entries.filter((entry) => entry.author === HUMAN && kinds.includes(entry.kind) && entry.replyTo).map((entry) => String(entry.replyTo)));
-
-const isUnapplied = (entry: Entry): boolean => !entry.appliedAt && (!entry.status || entry.status === 'new');
 
 const pendingDone = (entries: EntryDocs): Set<string> =>
   new Set(entries.filter((entry) => entry.author === HUMAN && entry.kind === 'done' && entry.replyTo && isUnapplied(entry)).map((entry) => String(entry.replyTo)));

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, SectionHeader } from '@drizztdourden08/tessera';
-import type { DrawerSectionProps } from '../kanban-props.type';
+import type { DrawerSectionProps } from '../drawer-props.type';
 
 const DrawerSection = (props: DrawerSectionProps) => {
   const { title, count, children } = props;

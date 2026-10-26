@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, ToastStack, toast } from '@drizztdourden08/tessera';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -17,6 +18,8 @@ interface Board {
   actions?: Doc[];
   tests?: Doc[];
   builds?: Doc[];
+  log?: Doc[];
+  agents?: Doc[];
 }
 
 interface Posted {
@@ -27,6 +30,12 @@ interface Posted {
 type Reply = (body: Doc) => Doc | undefined;
 
 const SCOPE = 'alpha';
+const where = { hash: '' };
+
+const Probe = () => {
+  where.hash = useLocation().hash;
+  return null;
+};
 const MIN = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -64,17 +73,20 @@ const stubPosts = (reply?: Reply): Posted[] => {
   return posted;
 };
 
-const mountKanban = async (board: Board = {}, reply?: Reply) => {
+const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
   vi.stubGlobal('CSS', { supports: () => false });
   const posted = stubPosts(reply);
   const fake = createFakeSources();
   const view = render(
-    <TesseraProvider overrides={{}}>
-      <DataProvider streams={createScopeStreams(fake.open)}>
-        <KanbanTab boardKey={SCOPE} />
-        <ToastStack />
-      </DataProvider>
-    </TesseraProvider>,
+    <MemoryRouter initialEntries={[`/p/${SCOPE}/${hash}`]}>
+      <TesseraProvider overrides={{}}>
+        <DataProvider streams={createScopeStreams(fake.open)}>
+          <KanbanTab boardKey={SCOPE} />
+          <Probe />
+          <ToastStack />
+        </DataProvider>
+      </TesseraProvider>
+    </MemoryRouter>,
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   const feed = (coll: string, docs: Doc[]) => fake.sources.forEach((source) => source.emit('snapshot', snapshot(SCOPE, coll, byId(docs))));
@@ -85,6 +97,8 @@ const mountKanban = async (board: Board = {}, reply?: Reply) => {
     feed('actions', board.actions ?? []);
     feed('tests', board.tests ?? []);
     feed('builds', (board.builds ?? []).map((build) => ({ ...build, id: build.tag })));
+    feed('log', board.log ?? []);
+    feed('agents', board.agents ?? []);
   });
   let seq = 98;
   const change = (coll: string, id: string, data: Doc) => {
@@ -114,5 +128,5 @@ const openItem = async (id: string): Promise<HTMLElement> => {
 
 const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: `Move ${id} ${title}` });
 
-export { DAY, HOUR, MIN, ago, boardOf, cleanKanban, columnOf, gripOf, item, mountKanban, openItem, thread };
+export { DAY, HOUR, MIN, ago, boardOf, cleanKanban, columnOf, gripOf, item, mountKanban, openItem, thread, where };
 export type { Board, Doc, Posted };
