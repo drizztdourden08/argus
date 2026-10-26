@@ -2,6 +2,7 @@
 //! in the crate documentation) and one row to [`PORTED`]; a group with no row answers exit 120.
 
 pub mod agent;
+mod hook;
 pub mod shared;
 pub mod thread;
 pub mod work;
@@ -14,6 +15,7 @@ pub const PORTED: &[Entry] = &[
     ("agent", agent::agent),
     ("build", agent::build),
     ("launcher", agent::launcher),
+    ("hook", hook::run),
     ("thread", thread::run_thread),
     ("dispatch", thread::run_dispatch),
     ("board", thread::run_board),

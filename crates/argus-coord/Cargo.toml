@@ -14,6 +14,7 @@ argus-agents = { path = "../argus-agents" }
 argus-board = { path = "../argus-board" }
 argus-core = { path = "../argus-core" }
 argus-launchers = { path = "../argus-launchers" }
+argus-native = { path = "../argus-native" }
 argus-notify = { path = "../argus-notify" }
 argus-worktrees = { path = "../argus-worktrees" }
 memchr = "2"
