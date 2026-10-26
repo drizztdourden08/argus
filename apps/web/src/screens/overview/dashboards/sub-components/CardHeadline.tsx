@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DateText, Inline, Tag, Text } from '@drizztdourden08/tessera';
+import { Inline, Tag, Text } from '@drizztdourden08/tessera';
 import { formatAgo, orText } from '../../../../format';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { STATE_LOOK, WARN_LOOK } from '../dashboards.constants';
 import type { CardHeadlineProps } from '../dashboards.type';
 import { attentionOf, leadState } from '../model';
@@ -22,7 +23,7 @@ const CardHeadline = (props: CardHeadlineProps) => {
     <Inline gap="sm" align="center" wrap>
       <Tag {...STATE_LOOK[state]}>{state}</Tag>
       {state !== 'not started' && (
-        <Text variant="caption" tone="muted" title={seenTip(card, now)}>{seen ? <DateText value={seen} format="relative" /> : 'never'}</Text>
+        <Text variant="caption" tone="muted" title={seenTip(card, now)}>{seen ? <ShortAge value={seen} /> : 'never'}</Text>
       )}
       {needs > 0 && <Tag {...WARN_LOOK} title={needsTip}>{`${needs} need you`}</Tag>}
     </Inline>

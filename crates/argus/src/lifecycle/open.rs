@@ -37,7 +37,11 @@ pub async fn open(paths: &Paths, key: Option<&str>, print: bool) -> Result<u8, S
         return Ok(2);
     }
     let _cleared = clear_quit_flag(&TrayFiles::new(&paths.home));
-    if up(paths).await.is_none() {
+    let found = up(paths).await;
+    if let Some(code) = found.as_ref().and_then(|u| u.refuse_node("open")) {
+        return Ok(code);
+    }
+    if found.is_none() {
         let options = Options {
             port: None,
             wait: START_WAIT,

@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind constants */
 const OVERVIEW_TABS = [
   { id: 'dashboards', label: 'Dashboards' },
-  { id: 'processes', label: 'Processes' },
-  { id: 'activity', label: 'Activity' },
-  { id: 'notifications', label: 'Notifications' },
+  { id: 'processes', label: 'Processes', badgeTitle: 'Processes that need a look' },
+  { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
+  { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
 ];
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);

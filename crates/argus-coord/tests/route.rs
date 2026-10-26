@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use argus_coord::cli::route::{Entry, dispatch, module_of};
 use argus_coord::cli::{Call, CoordError, Invocation, Outcome, USAGE};
+use argus_coord::verbs::PORTED;
 use argus_coord::{NOT_PORTED, run};
 use common::{Home, board_with, coord};
 
@@ -106,7 +107,11 @@ fn an_unported_verb_exits_120_before_reading_stdin_or_touching_anything() {
     let home = seeded_home();
     let cwd = home.folder("checkout");
     let before = tree_hash(home.path());
-    for verb in VERBS {
+    let ported = |verb: &str| {
+        let module = module_of(verb);
+        PORTED.iter().any(|(m, _)| Some(*m) == module)
+    };
+    for verb in VERBS.into_iter().filter(|v| !ported(v)) {
         let reads = Arc::new(AtomicUsize::new(0));
         let (mut inv, out, err) = Invocation::captured(
             &[verb, "x", "--project", "alpha"],

@@ -30,6 +30,28 @@ pub struct Up {
     pub health: Value,
 }
 
+impl Up {
+    /// Whether this is an argus server. The Node dashboard's health has no `impl` field.
+    #[must_use]
+    pub fn is_argus(&self) -> bool {
+        self.health["impl"] == "argus"
+    }
+
+    /// When this is the Node dashboard: says so on stderr and answers the exit code 1. The verbs
+    /// that change a server never act on it, whatever home it was found through.
+    #[must_use]
+    pub fn refuse_node(&self, verb: &str) -> Option<u8> {
+        if self.is_argus() {
+            return None;
+        }
+        eprintln!(
+            "dashboard: the server at {} is the Node dashboard, not argus; `argus {verb}` does not touch it",
+            self.at.base()
+        );
+        Some(1)
+    }
+}
+
 impl Live {
     /// `http://127.0.0.1:<port>`.
     #[must_use]

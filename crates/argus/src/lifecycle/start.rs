@@ -41,7 +41,7 @@ async fn wait_for(paths: &Paths, child: &mut Child, limit: Duration) -> Outcome 
     while waited < limit {
         sleep(STEP).await;
         waited += STEP;
-        if let Some(up) = up(paths).await {
+        if let Some(up) = up(paths).await.filter(Up::is_argus) {
             return Outcome::Up(up);
         }
         if child.try_wait().ok().flatten().is_some() {
@@ -82,6 +82,9 @@ pub async fn start(paths: &Paths, options: &Options) -> Result<u8, String> {
     let env = env_port().map_err(|e| e.to_string())?;
     load_config(paths, env).map_err(|e| e.to_string())?;
     if let Some(live) = up(paths).await {
+        if let Some(code) = live.refuse_node("start") {
+            return Ok(code);
+        }
         if !options.quiet {
             let line = format!(
                 "dashboard already running at {}/ (pid {})",
