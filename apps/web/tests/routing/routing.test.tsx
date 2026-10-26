@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
@@ -32,7 +32,7 @@ describe('routing', () => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'threads', { lead: { id: 'lead', name: 'lead', role: 'coordinator', status: 'active' } }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    expect(screen.getByText('lead')).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees']) {
       expect(screen.getByRole('tab', { name: label })).toBeTruthy();
     }

@@ -83,7 +83,7 @@ describe('Agents tab: the lead and the chats', () => {
     mockApi();
     await renderAgents({ agents: { 'A-1': agent() }, threads });
     expect(screen.getByText('dispatching')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open the lead chat' }).getAttribute('href')).toBe('chat://x/lead');
+    expect(screen.getByRole('link', { name: /Open the lead chat/ }).getAttribute('href')).toBe('chat://x/lead');
   });
 
   it('lists the owner chats in a compact section, blocked first, and hides finished ones', async () => {
