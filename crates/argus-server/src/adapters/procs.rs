@@ -55,12 +55,12 @@ impl ProcsStore for ProcsDocs {
 }
 
 #[cfg(windows)]
-fn alive(pid: u32) -> bool {
+pub(crate) fn alive(pid: u32) -> bool {
     argus_native::process_alive(pid)
 }
 
 #[cfg(not(windows))]
-fn alive(pid: u32) -> bool {
+pub(crate) fn alive(pid: u32) -> bool {
     std::path::Path::new(&format!("/proc/{pid}")).exists()
 }
 

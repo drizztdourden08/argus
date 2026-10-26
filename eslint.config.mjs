@@ -1,4 +1,4 @@
 /* @layer root-config @kind config */
 import { brockEslint } from '@drizztdourden08/brock-lint-config';
 
-export default brockEslint({ ignores: ['**/target/**'], allow: ['claudeId'] });
+export default brockEslint({ ignores: ['**/target/**'], prose: { allow: ['claudeId'] } });

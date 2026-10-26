@@ -27,7 +27,7 @@ use crate::security::LoginCodes;
 use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
-use crate::{ProcsOptions, Router, Services, routes};
+use crate::{NotifyOptions, ProcsOptions, Router, Services, routes};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -53,6 +53,8 @@ pub struct ServeOptions {
     pub runs: Option<Arc<dyn RunsView>>,
     /// The process monitor.
     pub procs: ProcsOptions,
+    /// The notifications to the owner.
+    pub notify: NotifyOptions,
 }
 
 impl ServeOptions {
@@ -69,6 +71,7 @@ impl ServeOptions {
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
+            notify: NotifyOptions::default(),
         }
     }
 }

@@ -40,6 +40,7 @@ pub(crate) mod sync;
 pub(crate) mod wake;
 pub(crate) mod worktrees;
 
+pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
 
 /// The composed services.

@@ -54,7 +54,7 @@ impl Notify {
         };
         let toasts = request.level != Level::Info || settings.toast.info;
         let url = toasts.then(|| {
-            self.links
+            self.links()
                 .url_for(project.as_deref(), request.url.as_deref())
         });
         Message {
@@ -129,7 +129,7 @@ impl Notify {
             title: "Argus".to_owned(),
             text: format!("{count} more notification{plural} from {label}: see Argus"),
             level: Level::Ping,
-            url: Some(self.links.url_for(None, None)),
+            url: Some(self.links().url_for(None, None)),
             tag: tag_of(project, thread),
             sound: settings.sound.ping,
         };

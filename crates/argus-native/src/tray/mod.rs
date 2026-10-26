@@ -20,10 +20,10 @@ mod stopping;
 mod timestamp;
 mod watch;
 
-pub use balloon::Balloon;
+pub use balloon::{Balloon, write as write_balloon};
 pub use error::TrayError;
 pub use fallback::{Delivery, FallbackNotifier};
-pub use icon::{IconKind, Rgba, render as render_icon};
+pub use icon::{ARGUS_ICO, IconKind, Rgba, render as render_icon};
 pub use launch::{Launch, prepare as prepare_launch, wait_for_tray};
 pub use menu::{Command, Entry, entries as menu_entries};
 #[cfg(windows)]
