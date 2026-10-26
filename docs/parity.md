@@ -62,7 +62,7 @@ their status is `n/a`.
 | `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/agents_reconcile_http.rs` | todo |
 | `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs` | doing (32 of 34; wake cases with argus-wake) |
 | `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
-| `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | todo |
+| `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | n/a (Tessera LogPanel renders ANSI) |
 | `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | todo |
 | `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/build_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
 | `coord.store.test.mjs` | Board file locking | 5 | `crates/argus-board/tests/lock.rs` | done |
