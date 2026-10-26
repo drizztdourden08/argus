@@ -86,22 +86,22 @@ their status is `n/a`.
 | `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
 | `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
 | `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/lead_verbs.rs` | todo |
-| `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | todo |
+| `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | n/a (Tessera MediaViewer) |
 | `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/mcp_http.rs` | todo |
 | `mcp.install.test.mjs` | MCP install and render | 7 | `crates/argus/tests/install.rs` | todo |
 | `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | todo |
 | `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | todo |
 | `mcp.tools.test.mjs` | MCP tool host | 7 | `crates/argus-mcp/tests/tools.rs` | todo |
-| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/src/features/markdown/markdown.test.tsx` | todo |
+| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/src/features/markdown/markdown.test.tsx` | doing (strip cases ported; render by Tessera Markdown) |
 | `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/notify_http.rs` | todo |
 | `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify.rs` | doing (pure cases done; HTTP cases with the server) |
 | `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
 | `pages.agents.test.mjs` | Agents tab | 5 | `apps/web/src/pages/board/agents/AgentsTab.test.tsx` | done |
 | `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/src/pages/board/*/*.test.tsx` | doing (body, agents, tests tabs ported) |
 | `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | doing (tabs ported; gaps in I-22) |
-| `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | todo |
+| `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | done |
 | `pages.shim.test.mjs` | Web shell and data layer | 1 | `apps/web/src/data/*.test.ts` | todo |
-| `pages.worktrees.test.mjs` | Worktrees tab | 5 | `apps/web/src/pages/board/worktrees/WorktreesTab.test.tsx` | todo |
+| `pages.worktrees.test.mjs` | Worktrees tab | 5 | `apps/web/src/pages/board/worktrees/WorktreesTab.test.tsx` | done |
 | `portfolio.longsend.test.mjs` | Portfolio send down | 5 | `crates/argus-server/tests/portfolio_send.rs` | todo |
 | `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/procs_http.rs` | todo |
 | `procs.monitor.test.mjs` | Process rules and sampling; Process alerts and kills | 4 | `crates/argus-procs/tests/monitor.rs` | done |
