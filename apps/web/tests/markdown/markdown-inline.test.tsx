@@ -122,14 +122,30 @@ describe('markdown images and ids', () => {
     expect(root.textContent).toBe('x');
   });
 
-  it.fails('gap: a data image is drawn (Tessera draws only http, https and app paths)', () => {
-    expect(renderMarkdown('![x](data:image/png;base64,AAAA)').querySelector('img')).not.toBeNull();
+  it('a base64 png, jpeg, gif or webp image is drawn', () => {
+    const sources = ['data:image/png;base64,iVBORw0KGgo=', 'data:image/jpeg;base64,/9j/4AAQ', 'data:image/gif;base64,R0lGOD==', 'data:image/webp;base64,UklGRg=='];
+    const root = renderMarkdown(sources.map((source) => `![d](${source})`).join(' '));
+    expect([...root.querySelectorAll('img')].map((image) => image.getAttribute('src'))).toEqual(sources);
   });
 
-  it.fails('gap: a drawn image opens in the lightbox (Tessera Markdown images are not clickable)', () => {
+  it('a data image that is svg, text, not base64 or has a bad body drops to its alt text', () => {
+    for (const bad of ['data:image/svg+xml;base64,PHN2Zz4=', 'data:text/html;base64,AAAA', 'data:image/png,notbase64', 'data:image/png;base64,AA"onerror=x']) {
+      expect(renderMarkdown(`![x](${bad})`).querySelector('img'), bad).toBeNull();
+      cleanup();
+    }
+  });
+
+  it('a drawn image opens in the lightbox, reached by keyboard, and Escape closes it', () => {
     const root = renderMarkdown('![shot](/files/p/proofs/p-1.png)');
-    fireEvent.click(root.querySelector('img') as Element);
-    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+    const button = root.querySelector('button') as HTMLElement;
+    expect(button.getAttribute('aria-label')).toBe('shot');
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    fireEvent.click(button);
+    const dialog = document.body.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.querySelector('img')?.getAttribute('src')).toBe('/files/p/proofs/p-1.png');
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('an image from any other address drops to its alt text', () => {

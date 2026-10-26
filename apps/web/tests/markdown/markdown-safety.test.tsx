@@ -125,7 +125,7 @@ describe('markdown against hostile input', () => {
     expect(root.querySelector('script')).toBeNull();
   });
 
-  it.fails('gap: control characters and the private-use area never reach the text', () => {
+  it('control characters and the private-use area never reach the text', () => {
     expect(hiddenCharacters(renderMarkdown('a\u0000b\u0001c\ue000d').textContent)).toEqual([]);
   });
 });

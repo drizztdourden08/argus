@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Markdown } from '@drizztdourden08/tessera';
 import { useRoutedOptions } from '../behavior/useRoutedOptions';
 import type { BoardMarkdownProps } from '../markdown.type';
+import { LightboxMarkdown } from './LightboxMarkdown';
 
-const RoutedMarkdown = (props: BoardMarkdownProps) => <Markdown {...props} {...useRoutedOptions()} />;
+const RoutedMarkdown = (props: BoardMarkdownProps) => <LightboxMarkdown {...props} options={useRoutedOptions()} />;
 
 export { RoutedMarkdown };
