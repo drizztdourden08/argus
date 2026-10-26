@@ -8,6 +8,7 @@ import { BOARD_TAB_IDS, BOARD_TABS } from './board.constants';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { TestsTab } from './tabs/tests';
+import { WorktreesTab } from './tabs/worktrees';
 import { ThreadList } from './sub-components/ThreadList';
 
 const BoardPage = (props: BoardPageProps) => {
@@ -24,7 +25,8 @@ const BoardPage = (props: BoardPageProps) => {
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
-      {tab !== 'agents' && tab !== 'tests' && <EmptyState message="This tab is not built yet." />}
+      {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
+      {tab !== 'agents' && tab !== 'tests' && tab !== 'worktrees' && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };
