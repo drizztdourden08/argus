@@ -23,9 +23,9 @@ const declaredTags = (builds: readonly BuildDoc[], handed: string | null): strin
 };
 
 const groupBundles = (input: GroupInput): BundleGroup[] => {
-  const { tests, builds, handed } = input;
+  const { tests, builds, handed, narrowed = false } = input;
   const closed = new Set(builds.filter((build) => build.closedAt).map((build) => build.id));
-  const slots = new Map<string, TestDoc[]>(declaredTags(builds, handed).map((tag) => [tag, []]));
+  const slots = new Map<string, TestDoc[]>((narrowed ? [] : declaredTags(builds, handed)).map((tag) => [tag, []]));
   for (const test of openTests(tests, closed)) {
     const tag = bundleTag(test);
     slots.set(tag, [...(slots.get(tag) ?? []), test]);

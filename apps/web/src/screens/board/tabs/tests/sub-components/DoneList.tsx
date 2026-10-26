@@ -6,9 +6,9 @@ import type { DoneListProps } from '../tests-props.type';
 import { TestRow } from './TestRow';
 
 const DoneList = (props: DoneListProps) => {
-  const { tests, boardKey, onOpenTest } = props;
+  const { tests } = props;
   const folded = tests.length > DONE_FOLD_AFTER;
-  const rows = (list: TestDoc[]) => list.map((test) => <TestRow key={test.id} test={test} boardKey={boardKey} onOpenTest={onOpenTest} />);
+  const rows = (list: TestDoc[]) => list.map((test) => <TestRow key={test.id} test={test} />);
   return (
     <Flex direction="column" gap="xs" role="group" aria-label="Done">
       <SectionHeader title="Done" count={tests.length} level={4} />

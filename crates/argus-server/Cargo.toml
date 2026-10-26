@@ -14,6 +14,7 @@ argus-agents = { path = "../argus-agents" }
 argus-board = { path = "../argus-board" }
 argus-core = { path = "../argus-core" }
 argus-launchers = { path = "../argus-launchers" }
+argus-mcp = { path = "../argus-mcp" }
 argus-native = { path = "../argus-native" }
 argus-notify = { path = "../argus-notify" }
 argus-procs = { path = "../argus-procs" }
@@ -21,6 +22,7 @@ argus-store = { path = "../argus-store" }
 argus-sync = { path = "../argus-sync" }
 argus-wake = { path = "../argus-wake" }
 argus-worktrees = { path = "../argus-worktrees" }
+async-trait = "0.1"
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 bytes = "1"
 form_urlencoded = "1"
@@ -39,6 +41,8 @@ tokio-util = "0.7"
 
 [dev-dependencies]
 argus-testkit = { path = "../argus-testkit" }
+base64 = "0.22"
+filetime = "0.2"
 tempfile = "3"
 
 

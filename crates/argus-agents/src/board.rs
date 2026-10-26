@@ -1,6 +1,7 @@
 //! The part of a project board these services look at: its agents and its threads.
 
 use crate::record::{Record, id_of, is_set, text};
+use serde_json::{Map, Value};
 
 /// A board as the services see it, both collections in file order.
 #[derive(Debug, Clone, Default)]
@@ -46,5 +47,29 @@ impl Board {
             Some(t) if !thread_ended(t) && !is_set(t, "placeholder") => Some(id_of(t).to_owned()),
             _ => self.coordinator(),
         }
+    }
+}
+
+/// The documents of the collection `name` of a board file, in file order.
+#[must_use]
+pub fn records(root: &Value, name: &str) -> Vec<Record> {
+    let docs = root.get(name).and_then(Value::as_object);
+    docs.map(|m| m.values().filter_map(|v| v.as_object().cloned()).collect())
+        .unwrap_or_default()
+}
+
+/// Sets these documents, by their id, in the collection `name` of a board file.
+pub fn put_back(root: &mut Value, name: &str, docs: &[Record]) {
+    let Some(map) = root.as_object_mut() else {
+        return;
+    };
+    let entry = map
+        .entry(name.to_owned())
+        .or_insert_with(|| Value::Object(Map::new()));
+    let Some(target) = entry.as_object_mut() else {
+        return;
+    };
+    for doc in docs {
+        target.insert(id_of(doc).to_owned(), Value::Object(doc.clone()));
     }
 }

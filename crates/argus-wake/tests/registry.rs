@@ -1,7 +1,8 @@
 //! The registry on in-memory storage with a manual clock and fake boards: the row states (listening,
 //! waking, idle, fault), a reaction seen through `lastSeen` or an acked inbox, the three ways a wake fails
 //! (queued with nobody listening, delivered with no reaction, a write that throws), one fault per thread,
-//! the single wake of the Overlord, a fault that is never cleared by itself, and the page mirror.
+//! the single wake of the Overlord, a fault that clears itself only when the thread listens again, the re-alert for a deaf thread, and the
+//! page mirror.
 
 use argus_wake::board::InboxMessage;
 use argus_wake::config::WakeConfig;
@@ -360,22 +361,64 @@ fn a_second_failure_of_a_thread_with_an_open_fault_is_not_recorded_and_not_sent_
 }
 
 #[test]
-fn a_fault_is_never_cleared_by_the_registry_not_even_when_the_thread_reacts_later_or_starts_listening()
- {
+fn a_no_listener_fault_clears_itself_once_the_thread_listens_again() {
     let mut rig = rig();
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
     assert_eq!(rig.state("alpha", "ui"), Some(RowState::Fault));
     let _ui = rig.listen("alpha", "ui", AttachOptions::default());
     rig.seen("alpha", "ui");
-    rig.pass(10 * MIN, STEP);
-    assert_eq!(rig.state("alpha", "ui"), Some(RowState::Fault));
-    assert_eq!(open_for(&rig, "alpha", "ui"), 1);
+    rig.pass(10 * SEC, STEP);
     assert_eq!(
-        rig.doc("alpha", "ui").expect("doc")["listening"],
-        true,
-        "the row still says it listens, next to the fault"
+        open_for(&rig, "alpha", "ui"),
+        0,
+        "a wake can reach it now: nothing stays open"
     );
+    assert_ne!(rig.state("alpha", "ui"), Some(RowState::Fault));
+    let cleared = rig.faults.list(true).expect("faults");
+    let cleared = cleared.iter().find(|f| f.project == "alpha").expect("row");
+    assert_eq!(cleared.cleared_by.as_deref(), Some("registry"));
+    assert_eq!(cleared.note.as_deref(), Some("it listens again"));
+}
+
+#[test]
+fn a_deaf_thread_with_an_open_fault_that_is_sent_another_wake_tells_the_overlord_again_at_most_every_10_minutes()
+ {
+    let mut rig = rig();
+    let mut main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    send(&mut rig, "ui", "first");
+    rig.pass(70 * SEC, STEP);
+    assert_eq!(rig.fault_wakes().len(), 1);
+    send(&mut rig, "ui", "second");
+    rig.pass(2 * MIN, STEP);
+    assert_eq!(
+        rig.fault_wakes().len(),
+        1,
+        "inside 10 minutes of the fault: no second alert"
+    );
+    rig.pass(10 * MIN, STEP);
+    send(&mut rig, "ui", "third: the owner is waiting");
+    rig.pass(5 * SEC, STEP);
+    assert_eq!(
+        rig.fault_wakes().len(),
+        2,
+        "a new wake after 10 minutes tells the Overlord again"
+    );
+    let last = main.events().last().expect("event").clone();
+    assert!(
+        last.lines
+            .last()
+            .expect("line")
+            .contains("alpha/ui: a new wake is waiting and nobody listens")
+    );
+    send(&mut rig, "ui", "fourth");
+    rig.pass(5 * SEC, STEP);
+    assert_eq!(
+        rig.fault_wakes().len(),
+        2,
+        "and then not again within the next 10 minutes"
+    );
+    assert_eq!(open_for(&rig, "alpha", "ui"), 1, "still one fault, not two");
 }
 
 #[test]

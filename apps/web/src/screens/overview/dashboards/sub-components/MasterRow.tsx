@@ -1,16 +1,17 @@
 /* @layer renderer-app @kind component */
 import { Button, Inline, Text, Tooltip } from '@drizztdourden08/tessera';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { useMasterRun } from '../behavior/useMasterRun';
 import { NO_PLAY } from '../dashboards.constants';
 import type { MasterRowProps } from '../dashboards.type';
 import { masterLine } from '../model';
 
 const MasterRow = (props: MasterRowProps) => {
-  const { card, now } = props;
+  const { card } = props;
   const run = useMasterRun(card);
-  const line = masterLine(card, now);
+  const line = masterLine(card);
   const master = card.master;
-  if (!master) return <Text variant="caption" tone={line.tone}>{line.text}</Text>;
+  if (!master) return <Text variant="caption" tone={line.tone}>{line.head}</Text>;
   return (
     <Inline gap="sm" align="center" wrap>
       <Tooltip content={[master.title, master.cmd].filter(Boolean).join('\n') || 'master'}>
@@ -23,7 +24,13 @@ const MasterRow = (props: MasterRowProps) => {
             Play
           </Button>
         )}
-      {line.text && <Text variant="caption" tone={line.tone}>{line.text}</Text>}
+      {line.head && (
+        <Text variant="caption" tone={line.tone}>
+          {line.head}
+          {line.at ? <> <ShortAge value={line.at} ago={!line.running} /></> : null}
+          {line.tail}
+        </Text>
+      )}
     </Inline>
   );
 };

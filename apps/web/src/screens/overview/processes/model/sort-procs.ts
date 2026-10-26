@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { asNumber } from '../../format';
+import { asNumber } from '../../../../format';
 import { needsLook } from './needs-look';
 import type { ProcItem } from './model.type';
 

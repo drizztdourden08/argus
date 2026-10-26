@@ -13,6 +13,7 @@ pub mod error;
 pub mod fixture;
 pub mod ids;
 pub mod js;
+pub mod json_text;
 pub mod log;
 pub mod paths;
 pub mod redact;

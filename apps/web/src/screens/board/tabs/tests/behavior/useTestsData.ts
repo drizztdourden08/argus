@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind logic */
-import { useMemo } from 'react';
+import type { Entry, ThreadChoice } from '../../../../../data/kanban';
 import { useCollection, useDoc } from '../../../../../data/react';
-import type { Build, BoardMeta, LaunchDef, Launcher, RunDoc, Test, TestItem } from '../../../../../data/types';
-import { closedBundles, groupBundles, resolveLaunch, visibleTests } from '../model';
+import type { BoardMeta, Build, LaunchDef, Launcher, RunDoc, Test, TestItem, Wake } from '../../../../../data/types';
 import type { TestsData } from '../tests.type';
 
 const useTestsData = (boardKey: string): TestsData => {
@@ -12,16 +11,23 @@ const useTestsData = (boardKey: string): TestsData => {
   const defs = useCollection<LaunchDef>(boardKey, 'launches');
   const runs = useCollection<RunDoc>(boardKey, 'runs');
   const items = useCollection<TestItem>(boardKey, 'items');
+  const threads = useCollection<ThreadChoice>(boardKey, 'threads');
+  const entries = useCollection<Entry>(boardKey, 'entries');
+  const wakes = useCollection<Wake>(boardKey, 'wakes');
   const meta = useDoc<BoardMeta>(boardKey, 'meta', 'board');
-  const ready = tests.ready && builds.ready;
-  const handed = meta.doc?.handedBuild ?? null;
-  const visible = useMemo(() => visibleTests(tests.docs), [tests.docs]);
-  const bundles = useMemo(
-    () => groupBundles({ tests: visible, builds: builds.docs, handed }).map((group) => ({ group, launch: resolveLaunch(group.build, launchers.docs, defs.docs) })),
-    [visible, builds.docs, handed, launchers.docs, defs.docs],
-  );
-  const closed = useMemo(() => closedBundles(visible, builds.docs), [visible, builds.docs]);
-  return { ready, tests: visible, bundles, closed, runs: runs.docs, items: items.docs };
+  return {
+    ready: tests.ready && builds.ready,
+    tests: tests.docs,
+    builds: builds.docs,
+    launchers: launchers.docs,
+    defs: defs.docs,
+    runs: runs.docs,
+    items: items.docs,
+    threads: threads.docs,
+    entries: entries.docs,
+    wakes: wakes.docs,
+    handed: meta.doc?.handedBuild ?? null,
+  };
 };
 
 export { useTestsData };

@@ -67,7 +67,7 @@ fn real(defs: Vec<RunDef>) -> Real {
         store: Arc::clone(&store) as _,
         events: Arc::new(RecordingEvents::new()),
         defs: memory,
-        config: RunConfig::default(),
+        config: RunConfig::default().fixed(),
         clock: Arc::new(SystemClock),
     });
     svc.recover();

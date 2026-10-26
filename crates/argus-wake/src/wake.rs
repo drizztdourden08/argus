@@ -114,6 +114,29 @@ pub struct WakeEvent {
     pub count: u32,
 }
 
+impl WakeRow {
+    /// The row of a wake just recorded: queued, `n`th of all, waiting for its window.
+    #[must_use]
+    pub fn queued(n: u64, wake: &WakeInput, at: &str) -> Self {
+        Self {
+            id: format!("W-{n}"),
+            n,
+            scope: wake.scope.clone(),
+            thread: wake.thread.clone(),
+            reason: wake.reason.clone(),
+            subject: wake.subject.clone(),
+            text: wake.text.clone(),
+            at: at.to_owned(),
+            status: WakeStatus::Queued,
+            listeners: 0,
+            delivered_at: None,
+            lines: None,
+            count: 1,
+            merged_into: None,
+        }
+    }
+}
+
 impl WakeEvent {
     /// The event a closed row stands for.
     #[must_use]

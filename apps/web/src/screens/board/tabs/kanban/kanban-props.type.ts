@@ -45,7 +45,7 @@ interface OpNoticesProps {
 
 interface OpNoticeProps {
   notice: OpNotice;
-  ops: NoticeOps;
+  ops: Pick<NoticeOps, 'dismiss' | 'resend'>;
 }
 
 interface NoticeDiffProps {

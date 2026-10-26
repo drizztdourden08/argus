@@ -68,7 +68,7 @@ fn replace_launch_defs(tx: &Tx, scope: &str, defs: Option<&Value>) -> Result<(),
         if let Some(o) = full.as_object_mut() {
             o.insert("name".into(), json!(name));
         }
-        let text = serde_json::to_string(&full)?;
+        let text = argus_core::json_text::to_string(&full)?;
         let hash = sha1_hex(&text);
         if have.remove(name).as_deref() != Some(hash.as_str()) {
             tx.conn().execute(
@@ -112,6 +112,9 @@ impl State {
         let mut docs = export_docs(&board, &|p| {
             proof_url(key, p["file"].as_str().unwrap_or_default())
         });
+        if project {
+            self.hooks.overlaid(key, &mut docs);
+        }
         let count = docs.len();
         let applied = self.opts.db.tx(|tx| {
             keep_foreign(tx, key, project, &mut docs)?;

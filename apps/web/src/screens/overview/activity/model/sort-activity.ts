@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../../format';
+import { toMillis } from '../../../../format';
 import type { ActivityItem } from './model.type';
 
 const newestFirst = (a: ActivityItem, b: ActivityItem): number =>

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { asNumber } from '../../format';
+import { asNumber } from '../../../../format';
 import type { ProcItem, ProcRow } from './model.type';
 
 const toProcRow = (proc: ProcItem, nameOf: (key: string) => string): ProcRow => ({

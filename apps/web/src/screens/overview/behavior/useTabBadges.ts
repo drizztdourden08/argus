@@ -2,7 +2,8 @@
 import { useMemo } from 'react';
 import { PORTFOLIO_SCOPE, useCollection } from '../../../data/react';
 import type { ActivityDoc, NotificationDoc, ProcDoc } from '../../../data/types';
-import { needsAttention } from '../activity/model';
+import { levelOf, needsAttention } from '../activity/model';
+import { noteLevel } from '../notifications/model';
 import { needsLook } from '../processes/model';
 import { useUnread } from '../seen';
 import { ACTIVITY_SEEN_KEY, NOTIFICATIONS_SEEN_KEY } from '../overview.constants';
@@ -21,6 +22,11 @@ const useTabBadges = (tab: string): TabBadges => {
       processes: procs.docs.filter(needsLook).length,
       activity: unreadActivity.unread.length,
       notifications: unreadNotes.unread.length,
+    },
+    tones: {
+      processes: 'warn',
+      activity: unreadActivity.unread.some((item) => levelOf(item) === 'error') ? 'danger' : 'warn',
+      notifications: unreadNotes.unread.some((note) => noteLevel(note) === 'urgent') ? 'danger' : 'warn',
     },
     freshActivity: unreadActivity.freshSince,
     freshNotifications: unreadNotes.freshSince,

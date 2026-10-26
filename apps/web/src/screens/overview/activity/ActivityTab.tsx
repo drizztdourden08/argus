@@ -17,7 +17,6 @@ const ActivityTab = (props: ActivityTabProps) => {
   const matching = useMemo(() => filterActivity(items, filters), [items, filters]);
   const levels = useMemo(() => countLevels(items), [items]);
   const kinds = useMemo(() => kindCounts(items), [items]);
-  if (items.length === 0) return <EmptyState message={NOTHING_YET} />;
   const change = (next: ActivityFilters) => {
     setFilters(next);
     setShown(PAGE);
@@ -25,7 +24,9 @@ const ActivityTab = (props: ActivityTabProps) => {
   return (
     <Stack gap="md">
       <ActivityFilterBar filters={filters} levels={levels} kinds={kinds} total={items.length} onChange={change} />
-      <ActivityFeed items={matching} shown={shown} freshSince={freshSince} onMore={() => setShown(shown + PAGE)} />
+      {items.length === 0
+        ? <EmptyState message={NOTHING_YET} />
+        : <ActivityFeed items={matching} shown={shown} freshSince={freshSince} onMore={() => setShown(shown + PAGE)} />}
     </Stack>
   );
 };

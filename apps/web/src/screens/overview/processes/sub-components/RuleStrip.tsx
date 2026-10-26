@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, StackedBar, Stack } from '@drizztdourden08/tessera';
-import { asNumber, formatMemory } from '../../format';
+import { asNumber, formatMemory } from '../../../../format';
 import { staleOf } from '../model';
 import type { RuleStripProps } from '../processes.type';
 import { KillConfirm } from './KillConfirm';

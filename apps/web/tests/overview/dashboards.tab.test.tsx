@@ -8,6 +8,8 @@ import { installHarness } from './helpers/harness';
 import { stubApi } from './helpers/stub-api';
 import type { ApiCall } from './helpers/stub-api';
 
+const lineLike = (pattern: RegExp) => (_: string, element: Element | null): boolean => element?.children.length === 1 && pattern.test(element.textContent);
+
 const COUNTS = { threads: 2, working: 1, blocked: 1, needsYou: 2, itemsOpen: 5, tests: 10, testsPass: 7, testsFailing: 1, agents: 2 };
 
 const MASTER = { name: 'master', title: 'Main checkout', cmd: 'game run', current: true, window: false, play: 'launcher-master', updatedAt: null, by: null, lastRun: null };
@@ -79,10 +81,10 @@ describe('the totals and the cards', () => {
   });
 
   it('offers Stop while the master run lives, and stops it in its scope', async () => {
-    const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1), lastLine: 'window open' };
+    const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1.5), lastLine: 'window open' };
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { run: { id: 'R-9', status: 'stopped' } } } : undefined));
     await open({ cards: { ...cards, rotp: { ...cards.rotp, master: { ...MASTER, lastRun: live } } } });
-    expect(await screen.findByText('running 1m: window open')).toBeTruthy();
+    expect(await screen.findByText(lineLike(/^running 1m: window open$/))).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(await screen.findByText('Stopped RotP master (R-9).')).toBeTruthy();
     expect(posts(calls)).toEqual([{ path: '/api/p/rotp/runs/R-9/stop', method: 'POST', body: {} }]);
@@ -116,6 +118,15 @@ describe('the registered strip', () => {
     expect(within(strip).getByText('Registered 2')).toBeTruthy();
     expect(within(strip).getByText('1 fault')).toBeTruthy();
     expect(within(strip).getByText('Beta, wake failed')).toBeTruthy();
+  });
+
+  it('writes how long a wake has been on its way as a live time', async () => {
+    stubApi();
+    const waking = { rotp: { project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'waking', since: minutesAgo(3), pendingWake: { since: minutesAgo(1.5) } } };
+    await open({ registry: waking });
+    const strip = await screen.findByRole('status', { name: 'Registered leads' });
+    expect(within(strip).getByText('1 waking')).toBeTruthy();
+    expect((await within(strip).findAllByText(lineLike(/^RotP, waking 1m$/))).length).toBeGreaterThan(0);
   });
 
   it('links a chip to the agents of its board and says in the tip what failed', async () => {
@@ -182,6 +193,23 @@ describe('running now and sent down', () => {
     await open();
     expect(await screen.findByText('hello R-5')).toBeTruthy();
     expect(screen.getByText('compiling')).toBeTruthy();
+  });
+
+  it('counts a queued run from the moment it was queued and heads the list with its column labels', async () => {
+    stubApi((call) => (call.path.startsWith('/api/runs')
+      ? { body: { runs: [{ id: 'R-6', scope: 'rotp', name: 'hello', status: 'queued', queuedAt: minutesAgo(5.5), startedAt: null, lastLine: null }] } }
+      : undefined));
+    await open();
+    const list = await screen.findByRole('list', { name: 'Running now' });
+    expect(await within(list).findByText('5m')).toBeTruthy();
+    expect(list.textContent).toContain('Elapsed');
+    expect(list.textContent).toContain('Project');
+  });
+
+  it('offers a switcher that lists every project', async () => {
+    stubApi();
+    await open();
+    expect(await screen.findByRole('combobox', { name: 'Switch project' })).toBeTruthy();
   });
 
   it('counts what was sent down', async () => {

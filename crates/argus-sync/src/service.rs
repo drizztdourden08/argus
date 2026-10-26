@@ -15,6 +15,7 @@ use argus_store::Db;
 use serde::Serialize;
 use serde_json::{Value, json};
 
+use crate::hooks::Hooks;
 use crate::posts::{PostResult, Source};
 use crate::proofs::{Proof, ProofSource};
 use crate::state::State;
@@ -181,6 +182,12 @@ impl SyncService {
                 }
             })
             .collect()
+    }
+
+    /// The hooks other services hang on this one.
+    #[must_use]
+    pub fn hooks(&self) -> &Hooks {
+        &self.state.hooks
     }
 
     /// The last good board of a key.

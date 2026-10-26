@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind test */
+import { exitedRun, launchDef } from '../helpers/launch-docs';
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * MIN;
 
@@ -28,28 +29,10 @@ const launcherDoc = (name: string, extra: object = {}) => ({
 const standaloneDoc = (name: string, extra: object = {}) =>
   launcherDoc(name, { standalone: true, joined: null, useEvery: '7d', useEveryMs: 7 * DAY, lastUsedAt: ago(DAY), keptUntil: null, ...extra });
 
-const defDoc = (launcher: string, extra: object = {}) => ({
-  name: `launcher-${launcher}`,
-  launcher,
-  cmd: `game run --${launcher}`,
-  hand: true,
-  window: false,
-  ...extra,
-});
+const defDoc = (launcher: string, extra: object = {}) => launchDef(launcher, `game run --${launcher}`, extra);
 
-const runDoc = (id: string, name: string, extra: object = {}) => ({
-  id,
-  name,
-  status: 'exited',
-  exitCode: 0,
-  queuedAt: ago(5 * MIN),
-  startedAt: ago(5 * MIN),
-  endedAt: ago(4 * MIN),
-  error: null,
-  lastLine: null,
-  stdin: true,
-  ...extra,
-});
+const runDoc = (id: string, name: string, extra: object = {}) =>
+  exitedRun(id, name, { queuedAt: ago(5 * MIN), startedAt: ago(5 * MIN), endedAt: ago(4 * MIN) }, { stdin: true, ...extra });
 
 const runningDoc = (id: string, name: string, extra: object = {}) => runDoc(id, name, { status: 'running', endedAt: null, exitCode: null, ...extra });
 

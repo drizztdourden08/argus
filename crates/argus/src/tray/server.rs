@@ -10,7 +10,7 @@ use argus_server::instance::{PidRecord, call, probe, read_pid_file};
 use serde_json::Value;
 use tokio::time::sleep;
 
-use super::detach;
+use argus::detach;
 
 const START_WAIT: Duration = Duration::from_secs(15);
 const STOP_WAIT: Duration = Duration::from_secs(10);

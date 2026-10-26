@@ -85,23 +85,31 @@ describe('the master launcher line of a card', () => {
   });
 
   it('says no master set, and says so in red when the thread must set one', () => {
-    expect(masterLine(card('a', { master: null }), NOW)).toEqual({ text: 'no master set', tone: 'muted', running: false });
-    expect(masterLine(card('a', { master: null, masterMissing: true }), NOW)).toEqual({ text: 'no master launcher: the thread must set one', tone: 'danger', running: false });
+    expect(masterLine(card('a', { master: null }))).toEqual({ head: 'no master set', at: null, tail: '', tone: 'muted', running: false });
+    expect(masterLine(card('a', { master: null, masterMissing: true }))).toEqual({
+      head: 'no master launcher: the thread must set one', at: null, tail: '', tone: 'danger', running: false,
+    });
   });
 
   it('says nothing for a master that never ran', () => {
-    expect(masterLine(card('a', { master }), NOW)).toEqual({ text: '', tone: 'muted', running: false });
+    expect(masterLine(card('a', { master }))).toEqual({ head: '', at: null, tail: '', tone: 'muted', running: false });
   });
 
-  it('shows a live run with its age and last line, and offers Stop', () => {
-    expect(masterLine(card('a', { master: { ...master, lastRun: runRow({}) } }), NOW)).toEqual({ text: 'running 1m: window open', tone: 'success', running: true });
+  it('shows a live run with its start and last line, and offers Stop', () => {
+    const run = runRow({});
+    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toEqual({ head: 'running', at: run.startedAt, tail: ': window open', tone: 'success', running: true });
+  });
+
+  it('counts a queued run from the moment it was queued', () => {
+    const run = runRow({ status: 'queued', startedAt: null, lastLine: null });
+    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toMatchObject({ head: 'queued', at: run.queuedAt, tail: '', running: true });
   });
 
   it('shows how a finished run ended: failed with its exit code in red, other ends quiet', () => {
     const failed = runRow({ status: 'failed', exitCode: 2, endedAt: minutesAgo(4) });
-    expect(masterLine(card('a', { master: { ...master, lastRun: failed } }), NOW)).toEqual({ text: 'failed (exit 2) 4m ago', tone: 'danger', running: false });
+    expect(masterLine(card('a', { master: { ...master, lastRun: failed } }))).toEqual({ head: 'failed (exit 2)', at: failed.endedAt, tail: '', tone: 'danger', running: false });
     const exited = runRow({ status: 'exited', exitCode: 0, endedAt: minutesAgo(3) });
-    expect(masterLine(card('a', { master: { ...master, lastRun: exited } }), NOW).text).toBe('exited 3m ago');
+    expect(masterLine(card('a', { master: { ...master, lastRun: exited } }))).toMatchObject({ head: 'exited', at: exited.endedAt, tone: 'muted' });
   });
 });
 
@@ -121,8 +129,10 @@ describe('the registered strip', () => {
   });
 
   it('shows a wake on its way with the age and a pulse', () => {
-    const chip = registryChip(row('a', { state: 'waking', pendingWake: { since: minutesAgo(1) } }), nameOf, NOW);
-    expect(chip).toMatchObject({ label: 'waking 1m', tone: 'info', pulse: true });
+    const since = minutesAgo(1);
+    const chip = registryChip(row('a', { state: 'waking', pendingWake: { since } }), nameOf, NOW);
+    expect(chip).toMatchObject({ label: 'waking', since, tone: 'info', pulse: true });
+    expect(chip.tip).toContain('a wake was sent 1m ago');
   });
 
   it('shows a lead in a turn as working', () => {

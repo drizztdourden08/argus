@@ -27,6 +27,14 @@ interface NotifySettingsProps {
   state: SettingsState;
 }
 
+interface SettingToggleProps {
+  part: SettingPart;
+  level: NotifyLevel;
+  on: boolean;
+  busy: boolean;
+  onToggle: () => void;
+}
+
 interface NoteFiltersProps {
   filters: NoteFilters;
   counts: Record<LevelPick, number>;
@@ -44,4 +52,4 @@ interface NoteRowProps {
   freshSince: number;
 }
 
-export type { NoteFeedProps, NoteFiltersProps, NoteRowProps, NotificationsTabProps, NotifySettingsProps, SettingsState, TestPing, TestPingProps };
+export type { NoteFeedProps, NoteFiltersProps, NoteRowProps, NotificationsTabProps, NotifySettingsProps, SettingsState, SettingToggleProps, TestPing, TestPingProps };

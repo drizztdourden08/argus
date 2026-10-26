@@ -1,12 +1,12 @@
 /* @layer renderer-app @kind component */
 import { Button, Checkbox, Flex, TableCell, TableRow } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../../../format';
 import type { TrashLineProps } from '../trash-props.type';
-import { ago } from '../model';
 import { TRASH_KINDS } from '../trash';
 
 const TrashLine = (props: TrashLineProps) => {
   const { row, now, selected, selection, order, bulk } = props;
-  const when = `${row.archived ? 'archived ' : ''}${ago(row.at, now)} ago`;
+  const when = `${row.archived ? 'archived ' : ''}${formatAgo(row.at, now)} ago`;
   return (
     <TableRow>
       <TableCell>

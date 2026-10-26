@@ -10,9 +10,15 @@ interface StatusNoticeProps {
   status: StreamStatus;
 }
 
+interface RegisteredFrameProps {
+  label: string;
+  rows: readonly { state: string }[];
+  children: ReactNode;
+}
+
 interface HashTab {
   tab: string;
   select: (tab: string) => void;
 }
 
-export type { HashTab, PageFrameProps, StatusNoticeProps };
+export type { HashTab, PageFrameProps, RegisteredFrameProps, StatusNoticeProps };

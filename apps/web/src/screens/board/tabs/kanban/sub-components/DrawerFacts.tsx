@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Flex, InlineEdit, Select, Tag, Text } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../drawer-props.type';
-import { STATUS_OPTIONS, ago, threadChoices, validateField } from '../model';
+import { STATUS_OPTIONS, threadChoices, validateField } from '../model';
 
 const validateSubject = validateField('subject');
 
@@ -39,7 +40,7 @@ const DrawerFacts = (props: DrawerFactsProps) => {
           />
         </Flex>
       </Flex>
-      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${ago(item.updatedAt, now)} ago`}</Text>
+      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
     </Flex>
   );
 };

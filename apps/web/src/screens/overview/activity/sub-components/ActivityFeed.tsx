@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, EmptyState, Inline, ListItemList, Stack, Text } from '@drizztdourden08/tessera';
-import { NOTHING_MATCHES } from '../activity.constants';
+import { ACTIVITY_HEADER, ACTIVITY_SHAPE, NOTHING_MATCHES } from '../activity.constants';
 import type { ActivityFeedProps } from '../activity.type';
 import { ActivityRow } from './ActivityRow';
 
@@ -10,7 +10,7 @@ const ActivityFeed = (props: ActivityFeedProps) => {
   const part = items.slice(0, shown);
   return (
     <Stack gap="sm">
-      <ListItemList label="Activity" count={items.length}>
+      <ListItemList label="Activity" header={ACTIVITY_HEADER} shape={ACTIVITY_SHAPE} count={items.length}>
         {part.map((item) => <ActivityRow key={item.id} item={item} freshSince={freshSince} />)}
       </ListItemList>
       {items.length > part.length && (

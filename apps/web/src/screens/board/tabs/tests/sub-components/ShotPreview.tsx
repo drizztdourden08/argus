@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, Image, Text } from '@drizztdourden08/tessera';
 import { useObjectUrl } from '../behavior/useObjectUrl';
-import type { ShotPreviewProps } from '../tests-props.type';
+import type { ShotPreviewProps } from '../tests-drawer-props.type';
 
 const ShotPreview = (props: ShotPreviewProps) => {
   const { file, testId, onRemove } = props;

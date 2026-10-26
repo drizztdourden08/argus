@@ -4,22 +4,21 @@
 //! portfolio cards.
 #![deny(clippy::cognitive_complexity)]
 
-mod agents;
-mod inbox;
-mod json;
-mod launchers;
-mod pause;
-mod results;
-mod text;
-
+pub mod agents;
 pub mod error;
+pub mod inbox;
+pub mod json;
+pub mod launchers;
 pub mod limits;
 pub mod names;
 pub mod ops;
+pub mod pause;
 pub mod portfolio;
 pub mod proofs;
+pub mod results;
 pub mod store;
 pub mod sync;
+pub mod text;
 
 pub use error::BoardError;
 

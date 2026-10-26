@@ -10,6 +10,7 @@ export { opVerdict } from './op-verdict';
 export { purgeOp } from './purge-op';
 export { resendOp } from './resend-op';
 export { SOFT_INVERSE } from './kanban.constants';
+export { sendOp } from './send-op';
 export { softOp } from './soft-op';
 export { writeFailure } from './write-failure';
 export type * from './kanban.type';

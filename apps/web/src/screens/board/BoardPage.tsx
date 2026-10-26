@@ -10,7 +10,7 @@ import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { BuildsTab } from './tabs/builds';
 import { KanbanTab, itemHash } from './tabs/kanban';
-import { TestsTab } from './tabs/tests';
+import { ANCHOR_PATTERN, TestsTab, useTestsBadge } from './tabs/tests';
 import { WorktreesTab } from './tabs/worktrees';
 
 const BoardPage = (props: BoardPageProps) => {
@@ -18,15 +18,18 @@ const BoardPage = (props: BoardPageProps) => {
   const board = useBoard(boardKey);
   const navigate = useNavigate();
   const { hash } = useLocation();
-  const { tab: hashed, select } = useHashTab(BOARD_TAB_IDS, 'agents');
-  const tab = itemHash(hash) ? 'kanban' : hashed;
+  const picked = useHashTab(BOARD_TAB_IDS, 'agents');
+  const anchored = ANCHOR_PATTERN.test(hash.slice(1)) ? 'tests' : picked.tab;
+  const tab = itemHash(hash) ? 'kanban' : anchored;
+  const toRun = useTestsBadge(boardKey);
+  const tabs = BOARD_TABS.map((entry) => (entry.id === 'tests' ? { ...entry, badge: toRun } : entry));
   useDocumentPalette(resolvePalette(boardKey, board.meta?.palette));
   return (
     <PageFrame>
       <ContentHeader title={board.name} back={{ label: 'Argus', onSelect: () => void navigate('/') }} />
       <StatusNotice status={board.status} />
       <BoardBody boardKey={boardKey} />
-      <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
+      <Tabs tabs={tabs} activeTab={tab} hideZero onTabChange={picked.select} />
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
       {tab === 'kanban' && <KanbanTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}

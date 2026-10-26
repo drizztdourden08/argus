@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Disclosure, Stack, Table, TableCell, TableRow, TableSection, Text } from '@drizztdourden08/tessera';
-import { formatMemory, formatMinutes } from '../../format';
+import { Code, Disclosure, Stack, Table, TableCell, TableRow, TableSection, Text } from '@drizztdourden08/tessera';
+import { formatMemory, formatMinutes } from '../../../../format';
 import { matchText } from '../model';
 import { RULE_HEADINGS } from '../processes.constants';
 import type { RulesTableProps } from '../processes.type';
@@ -23,7 +23,7 @@ const RulesTable = (props: RulesTableProps) => {
                 {rules.map((rule) => (
                   <TableRow key={rule.name}>
                     <TableCell>{rule.name}</TableCell>
-                    <TableCell>{matchText(rule.match)}</TableCell>
+                    <TableCell><Code>{matchText(rule.match)}</Code></TableCell>
                     <TableCell align="right">{formatMemory(rule.maxMemMB)}</TableCell>
                     <TableCell align="right">{formatMemory(rule.maxGroupMemMB)}</TableCell>
                     <TableCell align="right">{formatMinutes(rule.maxAgeMin)}</TableCell>
@@ -38,7 +38,7 @@ const RulesTable = (props: RulesTableProps) => {
             </Table>
           )}
         <Text variant="caption" tone="muted">
-          The rules are read-only here. The Overlord changes them with coord proc rule set (coord skill, processes.md); the next sample applies the change.
+          The rules are read-only here. The Overlord changes them with <Code>coord proc rule set</Code> (coord skill, processes.md); the next sample applies the change.
         </Text>
       </Stack>
     </Disclosure>

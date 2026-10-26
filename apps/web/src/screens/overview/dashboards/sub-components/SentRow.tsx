@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DateText, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
+import { ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
 import { useProjectName } from '../../projects';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { GOOD_LOOK, INFO_LOOK, KIND_WORD, WARN_LOOK } from '../dashboards.constants';
 import type { SentRowProps } from '../dashboards.type';
 import { sentTarget } from '../model';
@@ -18,7 +19,7 @@ const SentRow = (props: SentRowProps) => {
       meta={`${entry.id} to ${target}`}
       columns={[
         { primary: <Tag {...(entry.status === 'delivered' ? GOOD_LOOK : WARN_LOOK)}>{entry.status ?? 'sent'}</Tag> },
-        { primary: <Text>{from}</Text>, secondary: entry.createdAt ? <DateText value={entry.createdAt} format="relative" /> : '', align: 'end' },
+        { primary: <Text>{from}</Text>, secondary: entry.createdAt ? <ShortAge value={entry.createdAt} /> : '', align: 'end' },
       ]}
     />
   );

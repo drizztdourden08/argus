@@ -49,4 +49,42 @@ const COMPOSE_HINTS: Record<string, string> = {
 
 const RESULT_PLACEHOLDER = 'recorded on the board';
 
-export { BUNDLE_STATUSES, BUNDLE_TIPS, COMPOSE_HINTS, OUTCOMES, PROGRESS_SEGMENTS, RESULT_PLACEHOLDER, TEST_STATUSES };
+const ANCHOR_PATTERN = /^T-\d+$/;
+
+const TAB_HASH = 'tests';
+
+const TYPING_SELECTOR = 'input, textarea, select, [contenteditable]';
+
+const WAKE_TICK_MS = 5000;
+
+const KEY_HINT = 'keys 1 pass, 2 fail, 3 partial, 4 blocked (2 to 4 ask what you saw first)';
+
+const NOTE_FOLD_CHARS = 160;
+
+const NO_BUILD_VALUE = '(no build)';
+
+const FIND_TEXT = 'Search id or title';
+
+const ANY_CHOICE = 'any';
+
+const FILTER_SWITCHES: ['needs' | 'conflict' | 'archived', string][] = [
+  ['needs', 'needs you'],
+  ['conflict', 'conflict'],
+  ['archived', 'archived'],
+];
+
+const NO_TESTS_TEXT = 'No test yet. Threads document every test here with coord test.';
+
+const NO_MATCH_TEXT = 'No test matches the filters.';
+
+const NOTE_DIALOG_TEXT = 'The note is posted with the outcome you pick. Fail, partial and blocked need one; pass does not.';
+
+const MODE_OPTIONS = [
+  { value: 'auto', label: 'auto' },
+  { value: 'manual', label: 'manual' },
+];
+
+export {
+  ANCHOR_PATTERN, ANY_CHOICE, BUNDLE_STATUSES, BUNDLE_TIPS, COMPOSE_HINTS, FILTER_SWITCHES, FIND_TEXT, KEY_HINT, NO_BUILD_VALUE, MODE_OPTIONS, NO_MATCH_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOMES, PROGRESS_SEGMENTS,
+  RESULT_PLACEHOLDER, TAB_HASH, TEST_STATUSES, TYPING_SELECTOR, WAKE_TICK_MS,
+};

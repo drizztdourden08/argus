@@ -43,6 +43,10 @@ interface Test {
   runs: TestResult[];
   proofs: TestProof[];
   rank?: number;
+  rev?: number;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  subject?: string | null;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string | null;

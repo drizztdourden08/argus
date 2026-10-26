@@ -6,7 +6,7 @@ use std::time::Duration;
 use argus_core::Paths;
 use argus_native::{Launch, TrayFiles, prepare_launch, process_alive, wait_for_tray};
 
-use super::detach;
+use argus::detach;
 
 const WAIT: Duration = Duration::from_secs(10);
 const STEP: Duration = Duration::from_millis(150);

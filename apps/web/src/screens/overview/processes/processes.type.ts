@@ -79,6 +79,15 @@ interface ProcessCellProps {
   kill: KillFlow;
 }
 
+interface NameCellProps {
+  name: string;
+  pid: number | null;
+}
+
+interface StatusCellProps {
+  proc: ProcItem;
+}
+
 interface KillRowConfirmProps {
   row: ProcRow;
   kill: KillFlow;
@@ -97,6 +106,6 @@ interface RulesTableProps {
 }
 
 export type {
-  KillCellProps, KillConfirmProps, KillFlow, KillRowConfirmProps, ProcessCellProps, ProcessFeed, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
-  RuleStripProps, RulesTableProps, SampleNoticesProps,
+  KillCellProps, KillConfirmProps, KillFlow, KillRowConfirmProps, NameCellProps, ProcessCellProps, ProcessFeed, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
+  RuleStripProps, RulesTableProps, SampleNoticesProps, StatusCellProps,
 };

@@ -1,17 +1,87 @@
-//! The launcher wakes (no master launcher, a launcher unused past its window). Not wired yet:
-//! `build` answers `None`. It needs the wake engine, so the wiring comes with or after the
-//! wake wiring.
+//! The launcher wakes (no master launcher, a launcher unused past its window), ticked every
+//! ten minutes. They read the boards, so they need the sync service; their wakes go to the wake
+//! service through the [`WakeHook`](crate::WakeHook).
 
 use std::sync::Arc;
 
-use argus_launchers::launcher::LauncherStale;
+use argus_core::Coll;
+use argus_launchers::SystemClock;
+use argus_launchers::launcher::{LauncherStale, StaleConfig};
+use serde_json::Value;
 
+use crate::adapters::activity::ActivityAdapter;
+use crate::adapters::stale::StaleHost;
 use crate::{ServeOptions, Services};
 
-pub(crate) fn build(_svc: &Services, _opts: &ServeOptions) -> Option<Arc<LauncherStale>> {
-    None
+const TASK: &str = "launcher-stale";
+
+fn number(setting: &Value, name: &str, default: i64) -> i64 {
+    setting[name].as_i64().filter(|n| *n > 0).unwrap_or(default)
 }
 
-pub(crate) fn start(_svc: &Arc<Services>) {}
+/// `config.launchers`: `tickMs`, `masterWaitMs`, `masterRepeatMs`, `staleRepeatMs`.
+fn config_of(svc: &Services) -> StaleConfig {
+    let setting = svc
+        .config()
+        .extra
+        .get("launchers")
+        .cloned()
+        .unwrap_or(Value::Null);
+    let base = StaleConfig::default();
+    StaleConfig {
+        tick_ms: number(&setting, "tickMs", base.tick_ms),
+        master_wait_ms: number(&setting, "masterWaitMs", base.master_wait_ms),
+        master_repeat_ms: number(&setting, "masterRepeatMs", base.master_repeat_ms),
+        stale_repeat_ms: number(&setting, "staleRepeatMs", base.stale_repeat_ms),
+    }
+}
 
-pub(crate) fn stop(_svc: &Services) {}
+pub(crate) fn build(svc: &Services, _opts: &ServeOptions) -> Option<Arc<LauncherStale>> {
+    svc.sync.as_ref()?;
+    let env = StaleHost::new(
+        svc.boards(),
+        svc.runs.clone(),
+        Arc::clone(&svc.db),
+        svc.wake_hook(),
+        svc.wake.clone(),
+        ActivityAdapter::of(svc),
+        svc.shadow,
+    );
+    let stale = Arc::new(LauncherStale::new(
+        Arc::new(env),
+        Arc::new(SystemClock),
+        config_of(svc),
+    ));
+    overlay(svc, &stale);
+    Some(stale)
+}
+
+/// The newest Play run of a standalone launcher is a use: the launchers docs of every project
+/// export carry `lastUsedAt` and `stale` as the Node dashboard shows them.
+fn overlay(svc: &Services, stale: &Arc<LauncherStale>) {
+    let Some(sync) = &svc.sync else {
+        return;
+    };
+    let stale = Arc::clone(stale);
+    sync.hooks().on_overlay(move |key, docs| {
+        for doc in docs.iter_mut().filter(|d| d.coll == Coll::Launchers) {
+            if let Some(data) = doc.data.as_mut() {
+                stale.overlay_launcher(key, data);
+            }
+        }
+    });
+}
+
+pub(crate) fn start(svc: &Arc<Services>) {
+    if let Some(stale) = svc
+        .launcher_stale
+        .as_ref()
+        .filter(|_| svc.tasks.stale_timer)
+    {
+        svc.tasks.keep(TASK, stale.start());
+    }
+}
+
+pub(crate) fn stop(svc: &Services) {
+    svc.tasks.abort(TASK);
+}
