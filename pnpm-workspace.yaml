@@ -1,0 +1,21 @@
+packages:
+  - apps/*
+
+catalog:
+  '@types/node': ^24.19.0
+  '@types/react': ^19.2.15
+  '@types/react-dom': ^19.2.3
+  '@vitejs/plugin-react': ^5.2.0
+  eslint: ^10.4.0
+  jscpd: ^4.0.5
+  knip: ^5.65.0
+  markdownlint-cli2: ^0.22.1
+  react: ^19.2.6
+  react-dom: ^19.2.6
+  stylelint: ^17.13.0
+  typescript: ^6.0.3
+  vite: ^7.3.3
+  vitest: ^4.1.11
+
+onlyBuiltDependencies:
+  - esbuild

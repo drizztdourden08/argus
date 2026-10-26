@@ -8,3 +8,10 @@ AGENTS.md
 .codex/config.toml
 .github/copilot-instructions.md
 .mcp.json
+
+node_modules/
+dist/
+target/
+coverage/
+*.log
+*.tsbuildinfo
