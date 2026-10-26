@@ -2,34 +2,10 @@
 //! page (a `PUT` of the entries collection) and the CLI (`POST /api/p/:key/entries`) make.
 #![allow(dead_code)]
 
-use std::sync::atomic::{AtomicU64, Ordering};
-
-use argus_core::clock::{now_iso, now_ms};
+use argus_core::clock::now_iso;
+pub use argus_sync::new_post_id as id;
 use argus_testkit::{Reply, Request, TestOptions, TestServer};
 use serde_json::{Value, json};
-
-static COUNTER: AtomicU64 = AtomicU64::new(0);
-
-fn base36(mut n: u64) -> String {
-    const DIGITS: &[u8; 36] = b"0123456789abcdefghijklmnopqrstuvwxyz";
-    let mut out = Vec::new();
-    loop {
-        out.push(DIGITS[usize::try_from(n % 36).unwrap_or(0)]);
-        n /= 36;
-        if n == 0 {
-            break;
-        }
-    }
-    out.reverse();
-    String::from_utf8(out).unwrap_or_default()
-}
-
-/// A fresh post id, `O-<base36 ms>-<4 chars>`, unique in this process.
-pub fn id() -> String {
-    let n = COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-    let time = base36(u64::try_from(now_ms()).unwrap_or(0));
-    format!("O-{time}-{:0>4}", base36(n))
-}
 
 /// The current time as an ISO string.
 pub fn iso() -> String {

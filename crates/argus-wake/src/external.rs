@@ -1,6 +1,7 @@
 //! The checks of the wake routes that need no HTTP: who may post a wake from outside the policy, and who
 //! may clear a fault. The server slice maps a [`RequestError`] to its status code.
 
+use argus_core::ids::is_key;
 use serde_json::Value;
 
 use crate::board::BoardView;
@@ -51,16 +52,6 @@ fn bad(message: &str) -> RequestError {
     RequestError::BadRequest(message.to_owned())
 }
 
-/// A project key: `^[a-z0-9][a-z0-9-]*$`.
-#[must_use]
-pub fn valid_key(key: &str) -> bool {
-    let mut chars = key.chars();
-    chars
-        .next()
-        .is_some_and(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
-        && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
-}
-
 /// A thread id: 1 to 60 of `A-Za-z0-9._~:@+-`.
 #[must_use]
 pub fn valid_thread_id(thread: &str) -> bool {
@@ -107,7 +98,7 @@ pub fn presence_thread(raw: Option<&str>) -> Result<String, RequestError> {
 /// # Errors
 /// When the key is not a project key.
 pub fn scope_of(key: &str) -> Result<&str, RequestError> {
-    if valid_key(key) {
+    if is_key(key) {
         Ok(key)
     } else {
         Err(bad(&format!("invalid project key \"{key}\"")))
@@ -217,7 +208,7 @@ pub fn clear_request(
     portfolio: Option<&BoardView>,
 ) -> Result<ClearRequest, RequestError> {
     let project = text_field(body, "project")
-        .filter(|p| valid_key(p))
+        .filter(|p| is_key(p))
         .ok_or_else(|| bad("project must be a project key"))?;
     let thread = text_field(body, "thread")
         .filter(|t| valid_thread_id(t))

@@ -81,6 +81,7 @@ dependencies = [
 name = "argus-agents"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "serde",
  "serde_json",
  "tempfile",
@@ -118,6 +119,7 @@ dependencies = [
 name = "argus-launchers"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "getrandom 0.3.4",
  "regex",
  "serde",
@@ -148,6 +150,7 @@ dependencies = [
 name = "argus-notify"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "argus-native",
  "serde",
  "serde_json",
@@ -159,6 +162,7 @@ dependencies = [
 name = "argus-procs"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "chrono",
  "fancy-regex",
  "serde",
@@ -239,6 +243,7 @@ dependencies = [
 name = "argus-wake"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "indexmap",
  "serde",
  "serde_json",
@@ -251,6 +256,7 @@ dependencies = [
 name = "argus-worktrees"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "filetime",
  "serde",
  "serde_json",

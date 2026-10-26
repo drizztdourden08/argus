@@ -57,6 +57,7 @@ mod specs;
 mod testkit;
 
 pub use approval::{approval_of, mentions, names_folder};
+pub use argus_core::StorageError;
 pub use backup::Backup;
 pub use batch::{BatchInput, BatchOutcome, Skipped};
 pub use board::{Answer, BoardFacts, Caller, EntryWorktree, Keep, OwnerEntry, ThreadInfo};
@@ -72,9 +73,7 @@ pub use git::{Git, GitExec, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
-pub use ports::{
-    ActivityLine, Notifier, ProcInfo, ProcessLister, StoreError, WakeEvent, WorktreeStore,
-};
+pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;

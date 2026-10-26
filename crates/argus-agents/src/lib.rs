@@ -13,7 +13,6 @@
 //! [`ports`], so the server wires the real board, wake engine and doc store, and tests use fakes.
 
 pub mod board;
-pub mod clock;
 pub mod config;
 pub mod error;
 pub mod fakes;
@@ -31,8 +30,8 @@ pub mod tool_summary;
 pub mod transcript;
 pub mod watcher;
 
+pub use argus_core::clock::{Clock, ManualClock, SystemClock};
 pub use board::Board;
-pub use clock::{Clock, SystemClock};
 pub use config::{AgentsConfig, ReaperOptions, ReconcilerOptions, WatcherOptions};
 pub use error::AgentsError;
 pub use fs::{FileSystem, StdFs};

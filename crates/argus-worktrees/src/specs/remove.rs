@@ -822,22 +822,12 @@ fn over_many_at_live_folders_the_summary_says_so_and_one_sentence_goes_first_in_
         (meta.count, meta.many_at, meta.too_many, meta.name.as_str()),
         (5, 2, true, "Alpha")
     );
-    let wakes = h.notes.wakes.lock().unwrap().clone();
-    let lead = wakes.iter().find(|w| w.thread == "lead").unwrap();
-    assert_eq!(lead.reason, "worktree-stale");
     assert_eq!(
-        lead.text,
+        h.lead_stale_text(),
         "Alpha has 5 folders: 4 git worktrees and 1 leftover: `coord worktree remove --all-leftovers` clears the old ones.",
         "git worktrees and leftovers are counted apart"
     );
-    assert!(
-        !wakes
-            .iter()
-            .find(|w| w.thread == "worker")
-            .unwrap()
-            .text
-            .contains("that is a lot")
-    );
+    assert!(!h.wake_text("worker").contains("that is a lot"));
     h.notes.wakes.lock().unwrap().clear();
     h.scan();
     assert_eq!(h.notes.wake_count(), 0, "not again before repeat_ms");

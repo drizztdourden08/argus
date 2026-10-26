@@ -148,6 +148,18 @@ fn headers(pairs: &[(&str, &str)]) -> HeaderMap {
         .collect()
 }
 
+fn assert_home(reply: &Reply, next: &str) {
+    assert_eq!(reply.header("location"), Some("/"), "next {next:?}");
+}
+
+const FOREIGN_NEXT: [&str; 5] = [
+    "//evil.test/x",
+    "/\\evil.test",
+    "http://evil.test",
+    "evil",
+    "",
+];
+
 #[tokio::test(flavor = "multi_thread")]
 async fn loopback_gets_need_no_credential_a_wrong_bearer_is_401() {
     let t = plain().await;
@@ -454,15 +466,9 @@ async fn auth_in_the_default_mode_redirects_to_next_with_no_cookie() {
     assert_eq!((r.status, r.header("location")), (302, Some("/p/alpha/")));
     assert_eq!(r.header("set-cookie"), None);
     assert_eq!(t.get("/auth").await.header("location"), Some("/"));
-    for next in [
-        "//evil.test/x",
-        "/\\evil.test",
-        "http://evil.test",
-        "evil",
-        "",
-    ] {
+    for next in FOREIGN_NEXT {
         let r = t.get(&format!("/auth?next={}", enc(next))).await;
-        assert_eq!(r.header("location"), Some("/"), "next {next:?}");
+        assert_home(&r, next);
     }
     t.stop(false).await;
 }
@@ -602,13 +608,7 @@ async fn token_mode_login_code_is_single_use_and_sets_the_cookie() {
 #[tokio::test(flavor = "multi_thread")]
 async fn token_mode_login_next_is_always_a_local_path() {
     let t = token_server().await;
-    for next in [
-        "//evil.test/x",
-        "/\\evil.test",
-        "http://evil.test",
-        "evil",
-        "",
-    ] {
+    for next in FOREIGN_NEXT {
         let code = issue_code(&t).await["code"]
             .as_str()
             .expect("code")
@@ -616,7 +616,7 @@ async fn token_mode_login_next_is_always_a_local_path() {
         let r = t
             .get(&format!("/auth?code={code}&next={}", enc(next)))
             .await;
-        assert_eq!(r.header("location"), Some("/"), "next {next:?}");
+        assert_home(&r, next);
     }
     t.stop(false).await;
 }

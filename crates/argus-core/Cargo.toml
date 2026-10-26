@@ -9,6 +9,9 @@ publish.workspace = true
 authors.workspace = true
 repository.workspace = true
 
+[features]
+testkit = []
+
 [dependencies]
 getrandom = "0.3"
 regex = "1"

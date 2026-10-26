@@ -30,8 +30,10 @@ mod service;
 mod settings;
 mod watch;
 
+pub use argus_core::StorageError;
+pub use argus_core::clock::{Clock, ManualClock, SystemClock};
 pub use board::{BoardFacts, Bundle, EntryFact, TestFact};
-pub use clock::{Clock, SystemClock, iso, parse_ms};
+pub use clock::{iso, parse_ms};
 pub use config::{AutoConfig, NotifyConfig};
 pub use configure::SettingsPatch;
 pub use deliver::{Delivered, Delivery, ToastRequest, TrayFallback};
@@ -40,7 +42,7 @@ pub use level::{Level, PerLevel};
 pub use limits::{GLOBAL_PER_MINUTE, SUMMARY_EVERY_MS, THREAD_PER_HOUR, THREAD_PER_MINUTE};
 pub use ports::{
     ActivityLevel, ActivityLine, ActivitySink, ConfigStore, NotifyStore, PageEvents, Ports,
-    ProjectNames, StoreError,
+    ProjectNames,
 };
 pub use record::{Filter, KEEP_ROWS, Message, NewNotification, Notification};
 pub use request::{Outcome, PingRequest};

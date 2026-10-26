@@ -1,26 +1,13 @@
 //! The words of the Kanban reminders.
 
+use argus_core::clock::age_text;
+
 use super::stale::Stale;
 
 const MAX_TEXT: usize = 300;
 const MAX_LISTED: usize = 5;
 const DAY_MS: i64 = 86_400_000;
 const TAIL: &str = " Per item: start it (coord item set <I-n> --status doing, then dispatch), update it (a note or a status) or drop or close it (coord item status <I-n> dropped|done). Keep the board true.";
-
-/// `40m` under an hour, `5h` under two days, else `2d`.
-#[must_use]
-pub fn age_text(ms: i64) -> String {
-    let minutes = ((ms + 30_000) / 60_000).max(1);
-    if minutes < 60 {
-        return format!("{minutes}m");
-    }
-    let hours = (minutes + 30) / 60;
-    if hours < 48 {
-        format!("{hours}h")
-    } else {
-        format!("{}d", (hours + 12) / 24)
-    }
-}
 
 fn plural(n: usize) -> &'static str {
     if n == 1 { "" } else { "s" }

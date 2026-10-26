@@ -1,7 +1,7 @@
 //! Kill guards and kill-rule, over a fake killer that records the pids it was asked to end.
 
 use super::harness::{Harness, MIN, Setup, Spec, T0, proc};
-use argus_procs::{ErrorCode, KillRequest, KillRuleRequest, Level, Source};
+use argus_procs::{ErrorCode, KillRequest, KillRuleOutcome, KillRuleRequest, Level, Source};
 use chrono::{DateTime, SecondsFormat};
 use serde_json::{Value, json};
 
@@ -17,6 +17,17 @@ fn harness(rules: Value) -> Harness {
         self_pid: Some(1),
         ..Setup::default()
     })
+}
+
+fn assert_rule_outcome(out: &KillRuleOutcome, killed: &[u32], skipped: &[(u32, &str)]) {
+    assert_eq!(out.killed.iter().map(|k| k.pid).collect::<Vec<_>>(), killed);
+    assert_eq!(
+        out.skipped
+            .iter()
+            .map(|k| (k.pid, k.why.as_str()))
+            .collect::<Vec<_>>(),
+        skipped
+    );
 }
 
 fn request(pid: u32, started_at: Option<String>) -> KillRequest {
@@ -200,14 +211,7 @@ fn kill_rule_ends_the_old_enough_and_skips_the_rest() {
         ..KillRuleRequest::default()
     };
     let out = h.service.kill_rule(&ask).unwrap();
-    assert_eq!(out.killed.iter().map(|k| k.pid).collect::<Vec<_>>(), [6001]);
-    assert_eq!(
-        out.skipped
-            .iter()
-            .map(|k| (k.pid, k.why.as_str()))
-            .collect::<Vec<_>>(),
-        [(6002, "younger than 60 min")]
-    );
+    assert_rule_outcome(&out, &[6001], &[(6002, "younger than 60 min")]);
     let acts = h.fake.acts();
     assert!(acts.iter().any(|a| a.kind == "process-kill"
         && a.text.starts_with("killed node ")
@@ -235,13 +239,6 @@ fn kill_rule_idle_only_ends_the_quiet_one_and_keeps_the_busy_one() {
         ..KillRuleRequest::default()
     };
     let out = h.service.kill_rule(&ask).unwrap();
-    assert_eq!(out.killed.iter().map(|k| k.pid).collect::<Vec<_>>(), [6003]);
-    assert_eq!(
-        out.skipped
-            .iter()
-            .map(|k| (k.pid, k.why.as_str()))
-            .collect::<Vec<_>>(),
-        [(6002, "not idle for 1 min")]
-    );
+    assert_rule_outcome(&out, &[6003], &[(6002, "not idle for 1 min")]);
     assert_eq!(h.fake.killed(), [6003]);
 }

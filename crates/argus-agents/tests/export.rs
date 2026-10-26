@@ -3,12 +3,13 @@
 //! played by `overlay_doc` over a record read from the board. Ported from `agents.export.test.mjs`.
 
 use argus_agents::fakes::{
-    JsonBoards, ManualClock, MemoryDocs, agent_record, assistant_line, board_json, text_block,
-    thread_record, tool_result, tool_use, user_line,
+    JsonBoards, MemoryDocs, agent_record, assistant_line, board_json, text_block, thread_record,
+    tool_result, tool_use, user_line,
 };
 use argus_agents::record::Record;
 use argus_agents::{
-    AgentWatcher, BoardStore, Clock, FileSystem, LiveDocs, Ports, StdFs, WatcherOptions,
+    AgentWatcher, BoardStore, Clock, FileSystem, LiveDocs, ManualClock, Ports, StdFs,
+    WatcherOptions,
 };
 use serde_json::{Value, json};
 use std::fs;
@@ -56,7 +57,7 @@ fn world() -> World {
             board["agents"][id].as_object().cloned().unwrap(),
         );
     }
-    let clock = Arc::new(ManualClock::new(T0 + 1000));
+    let clock = Arc::new(ManualClock::at(T0 + 1000));
     let (dyn_clock, dyn_docs): (Arc<dyn Clock>, Arc<dyn LiveDocs>) = (clock.clone(), docs.clone());
     let dyn_fs: Arc<dyn FileSystem> = Arc::new(StdFs);
     let ports = Ports::new(boards.clone(), dyn_fs, dyn_clock);

@@ -1,6 +1,6 @@
 //! What the wake engine reads and writes: the wakes table, behind a trait the server plugs SQLite into.
 
-use std::fmt;
+use argus_core::StorageError;
 
 use crate::time::iso;
 use crate::wake::{FinishedEvent, WakeInput, WakeRow};
@@ -11,20 +11,8 @@ pub const KEEP_DAYS: i64 = 7;
 /// How many rows of a project the page mirror shows.
 pub const MIRROR_KEEP: usize = 50;
 
-/// A failure of the storage behind the engine.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StoreError(pub String);
-
-impl fmt::Display for StoreError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl std::error::Error for StoreError {}
-
 /// The result of a storage call.
-pub type StoreResult<T> = Result<T, StoreError>;
+pub type StoreResult<T> = Result<T, StorageError>;
 
 /// Which rows of a project to list, newest first.
 #[derive(Debug, Clone, PartialEq, Eq)]

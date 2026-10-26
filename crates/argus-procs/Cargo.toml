@@ -13,6 +13,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+argus-core = { path = "../argus-core" }
 chrono = { version = "0.4", default-features = false, features = ["std"] }
 fancy-regex = "0.20"
 serde = { version = "1", features = ["derive"] }

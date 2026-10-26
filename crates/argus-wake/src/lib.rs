@@ -7,7 +7,6 @@
 pub mod activity;
 pub mod agent_wakes;
 pub mod board;
-pub mod clock;
 pub mod config;
 pub mod docs;
 pub mod engine;
@@ -31,7 +30,7 @@ pub mod time;
 pub mod wake;
 pub mod wake_stream;
 
-pub use clock::{Clock, ManualClock, SystemClock};
+pub use argus_core::clock::{Clock, ManualClock, SystemClock};
 pub use docs::{Doc, DocSink};
 pub use engine::{EngineConfig, WakeEngine};
 pub use faults::FaultStore;

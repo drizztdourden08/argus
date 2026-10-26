@@ -13,7 +13,6 @@ use tracing::warn;
 use crate::activity::{ActivityFaults, ActivityLine, ActivitySink, Level};
 use crate::agent_wakes::AgentWakes;
 use crate::board::{BoardView, EntryView};
-use crate::clock::Clock;
 use crate::config::WakeConfig;
 use crate::docs::DocSink;
 use crate::engine::{
@@ -29,6 +28,7 @@ use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
 use crate::source::{AgentLive, BoardSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore};
 use crate::wake::WakeInput;
+use argus_core::clock::Clock;
 use periodic::Schedule;
 
 const DEFAULT_LIST_LIMIT: usize = 50;

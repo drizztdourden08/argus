@@ -120,6 +120,19 @@ fn decoded(raw: Vec<(String, String)>) -> Option<HashMap<String, String>> {
         .collect()
 }
 
+macro_rules! verb_route {
+    ($name:ident, $method:literal, $doc:literal) => {
+        #[doc = $doc]
+        pub fn $name<F, Fut>(&mut self, pattern: &str, f: F)
+        where
+            F: Fn(Ctx) -> Fut + Send + Sync + 'static,
+            Fut: Future<Output = Reply> + Send + 'static,
+        {
+            self.add($method, pattern, RouteOpts::default(), f);
+        }
+    };
+}
+
 impl Router {
     /// An empty router.
     #[must_use]
@@ -142,23 +155,8 @@ impl Router {
         });
     }
 
-    /// Adds a GET route with the default options.
-    pub fn get<F, Fut>(&mut self, pattern: &str, f: F)
-    where
-        F: Fn(Ctx) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Reply> + Send + 'static,
-    {
-        self.add("GET", pattern, RouteOpts::default(), f);
-    }
-
-    /// Adds a POST route with the default options.
-    pub fn post<F, Fut>(&mut self, pattern: &str, f: F)
-    where
-        F: Fn(Ctx) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Reply> + Send + 'static,
-    {
-        self.add("POST", pattern, RouteOpts::default(), f);
-    }
+    verb_route!(get, "GET", "Adds a GET route with the default options.");
+    verb_route!(post, "POST", "Adds a POST route with the default options.");
 
     /// Matches a method and a normalized path.
     #[must_use]

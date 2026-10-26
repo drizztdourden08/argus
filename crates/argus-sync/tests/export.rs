@@ -14,19 +14,11 @@ use argus_core::{
 };
 use argus_store::Db;
 use argus_sync::{Proof, ProofSource, RunsView, ScopeQueue, SyncOptions, SyncService};
-use argus_testkit::{alpha_board, make_home, write_board};
+use argus_testkit::{alpha_board, make_home, png, write_board};
 use serde_json::{Map, Value, json};
 use tempfile::TempDir;
 
-const PNG_HEX: &str = "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082";
 const AT: &str = "2026-10-20T10:00:00.000Z";
-
-fn png() -> Vec<u8> {
-    (0..PNG_HEX.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&PNG_HEX[i..i + 2], 16).expect("hex"))
-        .collect()
-}
 
 fn last_run() -> Value {
     json!({ "id": "R-7", "name": "launcher-master", "status": "exited", "exitCode": 0, "signal": null, "error": null, "stdin": false, "queuedAt": "q", "startedAt": "s", "endedAt": "e", "lastLine": "bye" })
