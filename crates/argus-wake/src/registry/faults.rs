@@ -71,16 +71,7 @@ impl Registry {
                 };
                 format!("{scope}/{thread}: {}{detail}", failure.reason)
             });
-            let wake = WakeInput::about(
-                MAIN_SCOPE,
-                &self.main_thread(),
-                "wake-fault",
-                &format!("{scope}/{thread}"),
-                text,
-            );
-            if let Err(err) = env.engine.submit(&[wake]) {
-                warn!(scope, thread, %err, "wake fault not sent to the Overlord");
-            }
+            self.tell_main(env, scope, thread, text);
         }
         Some(fault)
     }
@@ -99,6 +90,11 @@ impl Registry {
             "{scope}/{thread}: a new wake is waiting and nobody listens (fault open since {}, {}). Reach it now with its session (the owner is waiting), then coord wake-fault clear.",
             open.since, open.reason
         );
+        self.tell_main(env, scope, thread, text);
+    }
+
+    /// Sends one `wake-fault` wake about `scope/thread` to the Overlord.
+    fn tell_main(&self, env: &mut Env<'_>, scope: &str, thread: &str, text: String) {
         let wake = WakeInput::about(
             MAIN_SCOPE,
             &self.main_thread(),
@@ -107,7 +103,7 @@ impl Registry {
             text,
         );
         if let Err(err) = env.engine.submit(&[wake]) {
-            warn!(%scope, %thread, %err, "wake fault re-alert not sent to the Overlord");
+            warn!(scope, thread, %err, "wake fault not sent to the Overlord");
         }
     }
 
