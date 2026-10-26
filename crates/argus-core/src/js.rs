@@ -33,6 +33,20 @@ pub fn slice(s: &str, n: usize) -> &str {
     s
 }
 
+/// `encodeURIComponent`: every byte but letters, digits and `-_.!~*'()` as `%XX`.
+#[must_use]
+pub fn encode_uri_component(text: &str) -> String {
+    text.bytes()
+        .map(|b| {
+            if b.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&b) {
+                char::from(b).to_string()
+            } else {
+                format!("%{b:02X}")
+            }
+        })
+        .collect()
+}
+
 /// A number as `JSON.stringify` prints it: integral values without a fraction.
 #[must_use]
 pub fn number(n: f64) -> Value {

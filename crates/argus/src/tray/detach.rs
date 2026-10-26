@@ -27,6 +27,7 @@ fn quiet(program: impl AsRef<OsStr>, args: &[&OsStr], flags: u32) -> io::Result<
 ///
 /// The program could not be started.
 pub fn argus(args: &[&OsStr]) -> io::Result<()> {
+    argus_native::keep_stdio_private();
     let exe = std::env::current_exe()?;
     let flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
     quiet(&exe, args, flags | CREATE_BREAKAWAY_FROM_JOB).or_else(|_| quiet(&exe, args, flags))

@@ -26,7 +26,9 @@ pub fn paths_of(data_dir: Option<PathBuf>) -> Paths {
 pub fn port_of(flag: Option<u16>) -> Result<u16, String> {
     match flag {
         Some(port) => Ok(port),
-        None => Ok(env_port().map_err(|e| e.to_string())?.unwrap_or(DEFAULT_PORT)),
+        None => Ok(env_port()
+            .map_err(|e| e.to_string())?
+            .unwrap_or(DEFAULT_PORT)),
     }
 }
 
@@ -35,11 +37,7 @@ pub fn port_of(flag: Option<u16>) -> Result<u16, String> {
 /// # Errors
 ///
 /// The port is refused or the server does not start.
-pub async fn run(
-    port: Option<u16>,
-    data_dir: Option<PathBuf>,
-    shadow: bool,
-) -> Result<u8, String> {
+pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> Result<u8, String> {
     let mut opts = ServeOptions::new(paths_of(data_dir));
     opts.port = Some(port_of(port)?);
     opts.shadow = shadow;

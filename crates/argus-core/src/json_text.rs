@@ -1,4 +1,4 @@
-//! JSON text as `JSON.stringify` prints it. serde_json writes the float `1.0` as `1.0`; Node
+//! JSON text as `JSON.stringify` prints it. `serde_json` writes the float `1.0` as `1.0`; Node
 //! writes `1`. Every JSON text a client or a stored doc sees goes through [`to_string`] or
 //! [`to_vec`], so one rule covers every doc and route: a number with no fraction has none.
 
@@ -7,7 +7,7 @@ use std::io::{self, Write};
 use serde::Serialize;
 use serde_json::ser::{CompactFormatter, Formatter, Serializer};
 
-/// Past this a JavaScript number prints with an exponent, as serde_json does.
+/// Past this a JavaScript number prints with an exponent, as `serde_json` does.
 const WHOLE_LIMIT: f64 = 1e21;
 
 /// The compact format with whole floats written as integers.

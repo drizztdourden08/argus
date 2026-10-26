@@ -105,11 +105,8 @@ fn cwd_of(dir: &Path) -> String {
     dir.display().to_string()
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_the_launch() {
-    let Some(env) = Env::start().await else {
-        return;
-    };
+/// The first `run define`: the board file holds the launch and the server lists it without env.
+async fn first_define(env: &Env) {
     let build = [
         "define",
         "build",
@@ -157,6 +154,14 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
         served.contains("npm run build") && !served.contains("s3cret"),
         "the launch is listed without its env: {served}"
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_the_launch() {
+    let Some(env) = Env::start().await else {
+        return;
+    };
+    first_define(&env).await;
     let again = env
         .run(
             &[
@@ -204,6 +209,10 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
         !listed.stdout.contains("s3cret"),
         "defs never prints env values"
     );
+    undefine_build(&env).await;
+}
+
+async fn undefine_build(env: &Env) {
     let gone = env
         .run(&["undefine", "build"], &["--as", "coordinator"])
         .await;
@@ -217,17 +226,8 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
     assert_eq!(keys, ["app"]);
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
-    let Some(env) = Env::start().await else {
-        return;
-    };
-    env.define("hello", r#"console.log("hi"); console.error("careful")"#)
-        .await;
-    env.define("fail", r#"console.log("before"); process.exit(3)"#)
-        .await;
-    env.define("slow", "setInterval(() => {}, 1000)").await;
-
+/// `start --wait` streams the output and exits with the run's exit code.
+async fn waited_runs(env: &Env) {
     let hello = env
         .run(&["start", "hello", "--wait", "--reason", "smoke"], &[])
         .await;
@@ -254,7 +254,10 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
         "{}",
         fail.stderr
     );
+}
 
+/// A run left running: a second start is already, status and list read it.
+async fn live_run(env: &Env) {
     let first = env.run(&["start", "slow", "--agent", "A-7"], &[]).await;
     assert_eq!(first.status, 0, "{}", first.stderr);
     assert!(first.stdout.contains("R-3 slow"), "{}", first.stdout);
@@ -295,7 +298,10 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
         .filter_map(|r| r["id"].as_str())
         .collect();
     assert_eq!(ids, ["R-1"]);
+}
 
+/// Stop, the refusals of the verbs and the logs of finished runs.
+async fn stops_refusals_and_logs(env: &Env) {
     let stopped = env.run(&["stop", "R-3"], &[]).await;
     assert!(
         stopped.stdout.contains("R-3 slow stopped"),
@@ -343,6 +349,21 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
         tail.stderr
     );
     assert!(!tail.stdout.contains("before"), "{}", tail.stdout);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
+    let Some(env) = Env::start().await else {
+        return;
+    };
+    env.define("hello", r#"console.log("hi"); console.error("careful")"#)
+        .await;
+    env.define("fail", r#"console.log("before"); process.exit(3)"#)
+        .await;
+    env.define("slow", "setInterval(() => {}, 1000)").await;
+    waited_runs(&env).await;
+    live_run(&env).await;
+    stops_refusals_and_logs(&env).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]

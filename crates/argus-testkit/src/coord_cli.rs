@@ -35,13 +35,11 @@ impl CoordCli {
     #[must_use]
     pub fn locate() -> Option<CoordCli> {
         let script = std::env::var_os("ARGUS_COORD_CLI").map(PathBuf::from);
-        match script.filter(|s| s.is_file()) {
-            Some(script) => Some(CoordCli { script }),
-            None => {
-                eprintln!("skipped: ARGUS_COORD_CLI does not name the Node coord CLI (coord.mjs)");
-                None
-            }
+        let found = script.filter(|s| s.is_file());
+        if found.is_none() {
+            eprintln!("skipped: ARGUS_COORD_CLI does not name the Node coord CLI (coord.mjs)");
         }
+        found.map(|script| CoordCli { script })
     }
 
     /// Runs `coord <args>` against the homes of `server`, from `cwd`, with `extra` environment
