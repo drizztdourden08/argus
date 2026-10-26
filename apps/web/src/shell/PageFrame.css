@@ -1,0 +1,5 @@
+/* @layer renderer-app @kind style */
+.page-frame {
+  height: 100%;
+  padding: var(--space-xl);
+}

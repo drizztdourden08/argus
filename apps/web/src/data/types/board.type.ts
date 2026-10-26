@@ -1,0 +1,29 @@
+/* @layer renderer-app @kind types */
+interface BoardMeta {
+  project: string;
+  name: string;
+  updatedAt: string;
+  palette?: string;
+  handedBuild: string | null;
+  handedAt: string | null;
+}
+
+interface ThreadFlags {
+  needsHuman: boolean;
+  blocked: boolean;
+}
+
+interface Thread {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+  activity?: string;
+  note?: string | null;
+  flags?: ThreadFlags;
+  rank?: number;
+  mergedInto?: string;
+  deletedAt?: string;
+}
+
+export type { BoardMeta, Thread };
