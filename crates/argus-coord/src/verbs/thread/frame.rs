@@ -6,7 +6,6 @@ use std::path::{Path, PathBuf};
 
 use argus_board::Board;
 use argus_board::error::BoardError;
-use argus_board::ops::{Role, Who};
 use argus_board::store::{board_path, read_board, with_board};
 use argus_core::Paths;
 use serde_json::Value;
@@ -14,7 +13,10 @@ use serde_json::Value;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::{Call, Env, Options, out};
 use crate::client::board_port;
+use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me};
+
+pub use crate::verbs::shared::caller::{is_coordinator, who_of};
 
 /// One call of a verb of this group.
 pub struct Frame<'a> {
@@ -79,29 +81,7 @@ pub fn locked<T>(
     with_board(home, project, create, |board| {
         f(board).map_err(|e| BoardError::Refused(e.to_string()))
     })
-    .map_err(|e| match e {
-        BoardError::Locked(_) => CoordError::refuse(format!(
-            "board is locked by another coord call ({}); retry.",
-            home.join(project).join("board.lock").display()
-        )),
-        other => other.into(),
-    })
-}
-
-/// The authority of a caller as the ops take it.
-#[must_use]
-pub fn who_of(c: &Caller) -> Who {
-    Who {
-        thread: Some(c.thread.clone()),
-        role: c.role,
-        actor: Some(c.actor.clone()),
-    }
-}
-
-/// Whether the caller leads the project.
-#[must_use]
-pub fn is_coordinator(c: &Caller) -> bool {
-    c.role == Role::Coordinator
+    .map_err(|e| board_refusal(e, home, project))
 }
 
 impl<'a> Frame<'a> {

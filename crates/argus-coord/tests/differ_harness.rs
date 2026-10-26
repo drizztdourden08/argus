@@ -43,6 +43,46 @@ fn times_stamps_ids_and_relative_times_are_normalised() {
 }
 
 #[test]
+fn a_relative_time_absorbs_the_padding_of_its_column() {
+    let n = norm(&[]);
+    let pad_end = n.text(
+        "a   9s ago   x
+b  10s ago  x
+",
+    );
+    assert_eq!(
+        pad_end,
+        "a <AGO> x
+b <AGO> x
+"
+    );
+    let pad_start = n.text(
+        "   9s ago
+  10s ago
+ 9s ago",
+    );
+    assert_eq!(
+        pad_start,
+        "<AGO>
+<AGO>
+<AGO>"
+    );
+    assert_eq!(
+        n.text(
+            "id  9s ago  
+id 10s ago 
+"
+        ),
+        n.text(
+            "id 10s ago
+id  9s ago
+"
+        )
+    );
+    assert_eq!(n.text("a9s ago"), "a9s ago");
+}
+
+#[test]
 fn a_fixed_session_id_stays_visible_and_a_generated_one_is_replaced() {
     let fixed = "11111111-1111-4111-8111-111111111111";
     let other = "9f1c2d3e-4a5b-4c6d-8e7f-0123456789ab";

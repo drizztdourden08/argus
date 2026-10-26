@@ -5,13 +5,15 @@
 
 use argus_board::Board;
 use argus_board::json::{as_integer, display, doc, nullish, section, shown, truthy};
-use argus_board::ops::{Check, Role, Status, Who, apply_op, authorize};
+use argus_board::ops::{Check, Status, apply_op, authorize};
 use serde_json::{Map, Value, json};
 
 use super::place::rank_to;
 use super::run::{Res, bad};
 use crate::cli::Options;
 use crate::who::Caller;
+
+pub use crate::verbs::shared::caller::{is_coordinator, who_of};
 
 /// The word a collection goes by in the messages.
 #[must_use]
@@ -101,22 +103,6 @@ pub fn owner_arg(board: &Board, who: &Caller, options: &Options) -> Res<String> 
         Some(name) => thread_arg(board, name),
         None => Ok(who.thread.clone()),
     }
-}
-
-/// The caller as the `who` of `apply_op` and `authorize`.
-#[must_use]
-pub fn who_of(c: &Caller) -> Who {
-    Who {
-        thread: Some(c.thread.clone()),
-        role: c.role,
-        actor: Some(c.actor.clone()),
-    }
-}
-
-/// Whether the caller leads the project.
-#[must_use]
-pub fn is_coordinator(c: &Caller) -> bool {
-    c.role == Role::Coordinator
 }
 
 /// An op for `apply_op`. The CLI is last-writer unless `--if-rev <n>` asks for the check.
