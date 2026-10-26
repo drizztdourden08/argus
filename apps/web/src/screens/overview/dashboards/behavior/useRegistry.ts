@@ -10,7 +10,7 @@ const useRegistry = (): RegistryItem[] => {
   const { docs } = useCollection<RegistryRow>(PORTFOLIO_SCOPE, 'registry');
   const nameOf = useProjectName();
   return useMemo(
-    () => sortRegistry(docs, (row) => `${nameOf(row.project)} ${row.session ?? row.thread ?? row.id}`),
+    () => sortRegistry(docs, (row) => `${nameOf(row.project)} ${row.session ?? row.thread}`),
     [docs, nameOf],
   );
 };
