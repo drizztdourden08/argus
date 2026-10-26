@@ -10,7 +10,7 @@ use axum::http::{HeaderMap, Method};
 use bytes::Bytes;
 use serde_json::{Value, json};
 
-use crate::body::{discard, read_limited};
+use crate::body::{discard, read_limited, skip};
 use crate::{RouteOpts, Services};
 
 /// Who sent a request: a browser page, or the CLI (a bearer or a caller without fetch metadata).
@@ -120,6 +120,13 @@ impl Ctx {
             .unwrap_or_else(PoisonError::into_inner)
             .take()
             .unwrap_or_else(Body::empty)
+    }
+
+    /// Reads the body to its end and drops it. A route that ignores its body and then closes
+    /// the connection (the shutdown) calls it first: a close with the body unread resets the
+    /// answer under the client.
+    pub async fn skip_body(&self) {
+        skip(self.take_body()).await;
     }
 
     /// The raw body, at most `max` bytes (the route's limit when smaller).

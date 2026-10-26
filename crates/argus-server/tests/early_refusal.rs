@@ -75,3 +75,20 @@ async fn every_early_refusal_reaches_the_client() {
         t.stop(false).await;
     }
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_shutdown_answers_a_client_whose_body_comes_late() {
+    for _ in 0..5 {
+        let t = TestServer::start(TestOptions {
+            sync: false,
+            ..TestOptions::default()
+        })
+        .await;
+        let req = t
+            .bearer(Request::new("POST", "/api/admin/shutdown"))
+            .json(&json!({}))
+            .paced(Duration::from_millis(20));
+        assert_eq!(t.send(req).await.status, 202);
+        t.stop(false).await;
+    }
+}

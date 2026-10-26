@@ -45,11 +45,13 @@ pub(crate) fn discard(body: Body) {
         return;
     }
     if let Ok(rt) = tokio::runtime::Handle::try_current() {
-        rt.spawn(tokio::time::timeout(
-            DISCARD_TIME,
-            drain_up_to(body, DISCARD_MAX),
-        ));
+        rt.spawn(skip(body));
     }
+}
+
+/// Reads and drops a body now, within the same bounds as [`discard`].
+pub(crate) async fn skip(body: Body) {
+    let _ = tokio::time::timeout(DISCARD_TIME, drain_up_to(body, DISCARD_MAX)).await;
 }
 
 /// Reads at most `max` bytes.

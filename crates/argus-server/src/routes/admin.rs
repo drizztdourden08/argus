@@ -140,6 +140,7 @@ async fn resync(ctx: Ctx) -> Reply {
 }
 
 async fn shutdown(ctx: Ctx) -> Reply {
+    ctx.skip_body().await;
     ctx.svc.stop.cancel();
     Ok(json_reply(202, &json!({ "ok": true })))
 }
