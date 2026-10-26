@@ -83,6 +83,7 @@ pub struct RemoveOutcome {
     pub backup: Option<Backup>,
     pub discarded: Option<Discarded>,
     pub git_error: Option<String>,
+    #[serde(rename = "sizeMB")]
     pub size_mb: Option<f64>,
     pub files: Option<u64>,
     pub newest_at: Option<String>,

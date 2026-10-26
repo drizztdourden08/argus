@@ -11,6 +11,7 @@ mod docs;
 mod error;
 mod migrations;
 mod query;
+mod snapshot;
 mod tx;
 
 pub use activity::{ActivityLog, KEEP_ROWS, LogNote, MIRROR_ROWS, SCOPE as ACTIVITY_SCOPE};
@@ -23,4 +24,5 @@ pub use error::StoreError;
 pub use migrations::MIGRATIONS;
 pub use query::{Query, QueryOp};
 pub use rusqlite;
+pub use snapshot::snapshot;
 pub use tx::Tx;

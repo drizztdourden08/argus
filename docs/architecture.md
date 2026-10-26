@@ -693,7 +693,7 @@ only.
 
 | Subcommand | Node equivalent |
 |---|---|
-| `argus serve [--port n] [--home dir] [--shadow]` | `dashboard serve` |
+| `argus serve [--port n] [--data-dir dir] [--shadow]` | `dashboard serve` |
 | `argus start [--foreground]`, `stop`, `status [--json]` | same verbs |
 | `argus open [<key>] [--print]` | same verb |
 | `argus logs [--lines n] [--follow] [--run R-n --project k]` | same verb |
@@ -708,7 +708,7 @@ only.
 `--shadow` starts Argus with every outward effect off: no board writes (posts answer
 `read_only`), no wakes delivered, no process kills, no worktree removal, no toasts (pings are
 recorded `skipped`). It is how
-Argus runs beside the Node server on real data.
+Argus runs beside the Node server on real data. `--home` is an alias of `--data-dir`.
 
 ## Web app
 
@@ -809,9 +809,12 @@ feature `dev-origin`, which release builds never enable.
 
 ## Switch-over
 
-1. Shadow. From slice 1 on, Argus runs as `argus serve --shadow --port 47616 --home
-   <COORD_HOME>/argus-shadow`, reading the real `~/.coord` boards. Its database starts as a copy
-   of the Node one (`VACUUM INTO`), so runs, wakes, faults and activity history are there too.
+1. Shadow. From slice 1 on, Argus runs as `argus serve --shadow --port 47616 --data-dir
+   <COORD_HOME>/argus-shadow` (`--home` is an alias), reading the real `~/.coord` boards. When
+   the shadow home has no database it starts as a copy of the Node one (`VACUUM INTO`, opened
+   read-only), so runs, wakes, faults and activity history are there too. `config.json` and
+   `process-rules.json` are copied from the Node home the same way, each only when absent. The
+   Node home (`DASHBOARD_HOME`, default `<COORD_HOME>/dashboard`) is only read, never written.
    The owner opens `http://127.0.0.1:47616/` beside the Node page when a slice lands.
 2. Compare. `argus parity --left http://127.0.0.1:47615 --right http://127.0.0.1:47616` reads
    every scope's collections, `/api/projects`, `/api/procs`, `/api/activity`, `/api/runs` and the
