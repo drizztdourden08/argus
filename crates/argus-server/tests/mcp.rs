@@ -115,11 +115,13 @@ async fn a_bad_host_is_421_a_foreign_origin_403_and_get_and_delete_are_405() {
     let host = Request::new("POST", "/mcp")
         .header("Host", "evil.test")
         .json(&ping());
-    assert_eq!(t.send(host).await.status, 421);
+    let refused = t.send(host).await;
+    assert_eq!(refused.status, 421, "{}", refused.text());
     let origin = Request::new("POST", "/mcp")
         .header("Origin", "http://evil.test")
         .json(&ping());
-    assert_eq!(t.send(origin).await.status, 403);
+    let refused = t.send(origin).await;
+    assert_eq!(refused.status, 403, "{}", refused.text());
     for method in ["GET", "DELETE"] {
         let req = Request::new(method, "/mcp").header("Content-Type", "application/json");
         let r = t.send(t.bearer(req)).await;
