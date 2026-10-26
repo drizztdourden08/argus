@@ -4,7 +4,7 @@
 //! project) and waits. The first wake prints its line on stderr and exits 2, and Claude Code
 //! wakes the model with that text. A newer listener for the thread replaces this one (exit 0,
 //! silent); a dashboard that is down is started and waited out; the wait ends silently after
-//! `COORD_LISTEN_MS` (default three days, the timeout of the hook), or as soon as the process
+//! `COORD_LISTEN_MS` (default six hours, as Node), or as soon as the process
 //! named by `ARGUS_COORD_PARENT` (the shim) is gone.
 //!
 //! A `PostToolUse` listener is skipped while a listener of the thread started in the last two
@@ -29,8 +29,9 @@ use super::wake_line::{is_lead, label_of};
 use crate::cli::CoordError;
 use crate::who::is_ended;
 
-/// The longest wait: three days, the timeout of the `hook listen` entries.
-const LISTEN_DEFAULT_MS: i64 = 3 * 24 * 3600 * 1000;
+/// The longest wait when `COORD_LISTEN_MS` does not say: six hours, as Node. The 259200 s
+/// (three days) of the rendered hook config is the hook timeout, not this deadline.
+const LISTEN_DEFAULT_MS: i64 = 6 * 3600 * 1000;
 
 /// What a listener listens to: the project, the thread (`*` for a lead) and its label.
 pub struct Target {

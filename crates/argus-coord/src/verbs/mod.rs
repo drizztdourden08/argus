@@ -1,6 +1,7 @@
 //! The verb groups served in Rust. A work package adds its folder under `verbs/` (see the layout
 //! in the crate documentation) and one row to [`PORTED`]; a group with no row answers exit 120.
 
+pub mod agent;
 mod hook;
 pub mod shared;
 pub mod thread;
@@ -12,6 +13,9 @@ use crate::cli::route::Entry;
 /// group, so two packages never edit the same row.
 pub const PORTED: &[Entry] = &[
     ("hook", hook::run),
+    ("agent", agent::agent),
+    ("build", agent::build),
+    ("launcher", agent::launcher),
     ("thread", thread::run_thread),
     ("dispatch", thread::run_dispatch),
     ("board", thread::run_board),

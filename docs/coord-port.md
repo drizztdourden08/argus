@@ -8,7 +8,9 @@ with no change to the hook config. The hooks keep calling
 `docs/parity.md`: the coord suites pass against `argus coord`, and the `coord` shim calls it.
 
 The specification is the Node CLI at `ai-config` commit `4dbe260` (the coord folder last changed
-in `ff939e2`). It is owned by the Overlord: every change on the `ai-config` side named here is a
+in `ff939e2`), except the sub-agent hooks: their exact-id binding (a hook event touches only the
+record of its own agent id; a known id reopens a record closed for silence; an Agent result never
+rewrites another agent's record) follows `ai-config` commit `62e66c7`. It is owned by the Overlord: every change on the `ai-config` side named here is a
 request through `coord lead portfolio`, never a local patch.
 
 ## Ground rules
@@ -283,9 +285,10 @@ session host as exit 101.
 - A refused or broken stream runs the autostart and retries 5 s later, until the deadline.
 
 Node commit `db17ac5` raised the hook timeout of the three `hook listen` entries in
-`shared/hooks.json` (PostToolUse, SessionStart, Stop) from 21600 s (6 h) to 259200 s (3 days). WP2
-reads `COORD_LISTEN_MS` against that budget: the listener must keep running as long as the hook
-may, and the rendered config of Argus carries the same 259200. The same commit added the `master`
+`shared/hooks.json` (PostToolUse, SessionStart, Stop) from 21600 s (6 h) to 259200 s (3 days). That
+is the Claude hook timeout of the rendered config, not the listener's own deadline: the Rust
+listener keeps Node's default of 6 h (`COORD_LISTEN_MS` overrides it) until Node changes it, and
+the rendered config of Argus carries the same 259200. The same commit added the `master`
 launcher of the Overlord project, which is project config and needs no port. The wake side of that
 commit (the re-alert for a deaf thread, the self-clearing `no-listener` fault) is already in
 `argus-wake`.
