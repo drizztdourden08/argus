@@ -227,11 +227,10 @@ fn register(
     words: (&str, &str),
 ) -> Result<(), CoordError> {
     let entry = entry_of(board, run, words, who)?;
-    let hooked = entry
-        .claude_id
-        .as_deref()
-        .and_then(|id| by_claude_id(board, id))
-        .or_else(|| hook_record(board, &entry.owner, &entry.text, run.now_ms));
+    let hooked = match entry.claude_id.as_deref() {
+        Some(id) => by_claude_id(board, id),
+        None => hook_record(board, &entry.owner, &entry.text, run.now_ms),
+    };
     let swapped = replace_running(board, who, &entry, hooked.as_deref())?;
     let line = match &hooked {
         Some(id) => bind(board, who, &entry, id)?,

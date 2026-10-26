@@ -6,7 +6,7 @@
 //! | Service | Role |
 //! |---|---|
 //! | [`AgentWatcher`] | Tails transcripts, keeps live fields on the `agents` docs, never writes the board |
-//! | [`AgentReaper`] | Closes a hook record whose transcript stayed quiet for `agents.reapMs` |
+//! | [`AgentReaper`] | Closes a hook record whose transcript, task output and worktree stayed quiet for `agents.reapMs` |
 //! | [`AgentReconciler`] | Compares the board with what Claude has: ids, links, duplicates, orphans |
 //!
 //! Everything the services read or write besides files goes through the small traits in
@@ -15,6 +15,7 @@
 pub mod board;
 pub mod config;
 pub mod error;
+mod evidence;
 pub mod fakes;
 pub mod fs;
 pub mod hook_logic;

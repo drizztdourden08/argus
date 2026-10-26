@@ -1,8 +1,7 @@
-//! The `argus coord` fast path of the real binary: help, an unknown verb, and exit 120 for a
-//! verb that is not ported (no output, nothing written, hook JSON on stdin left alone). The
+//! The `argus coord` fast path of the real binary: help and an unknown verb. Every verb is
+//! ported, so the exit 120 rule is covered in-process by `argus-coord`'s `route` tests. The
 //! homes are temp folders; the real `~/.coord` is never named.
 
-use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Output, Stdio};
@@ -26,10 +25,6 @@ fn argus(args: &[&str], home: &Path, stdin: &str) -> Output {
     child.wait_with_output().unwrap()
 }
 
-fn entries(dir: &Path) -> usize {
-    fs::read_dir(dir).map_or(0, Iterator::count)
-}
-
 #[test]
 fn help_prints_the_usage_and_exits_0() {
     let home = tempfile::tempdir().unwrap();
@@ -49,28 +44,4 @@ fn an_unknown_verb_exits_1_with_the_usage_on_stderr() {
     assert_eq!(out.stdout, Vec::<u8>::new());
     let text = String::from_utf8(out.stderr).unwrap();
     assert!(text.starts_with("Unknown verb \"frobnicate\".\n\nUsage: coord"));
-}
-
-#[test]
-fn an_unported_verb_exits_120_with_no_output_and_no_file_written() {
-    let home = tempfile::tempdir().unwrap();
-    let json = r#"{"session_id":"s-1","cwd":"."}"#;
-    for args in [
-        &["hook", "tool"][..],
-        &["wake-fault", "list"][..],
-        &["proc", "list"][..],
-        &["ping", "hello"][..],
-    ] {
-        let out = argus(args, home.path(), json);
-        assert_eq!(out.status.code(), Some(120), "{args:?}");
-        assert!(out.stdout.is_empty(), "{args:?} printed on stdout");
-        assert!(out.stderr.is_empty(), "{args:?} printed on stderr");
-    }
-    assert_eq!(entries(&home.path().join("coord")), 0);
-    assert_eq!(entries(&home.path().join("dash")), 0);
-    assert_eq!(
-        entries(home.path()),
-        0,
-        "nothing is created in the working directory"
-    );
 }

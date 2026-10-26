@@ -15,6 +15,11 @@ use crate::service::{GhCached, Service};
 
 const GH_CACHE_MS: i64 = 2 * 60_000;
 
+/// A commit id as GitHub names it: 7 to 64 hex digits. Anything else is no proof of a merge.
+fn is_object_id(text: &str) -> bool {
+    (7..=64).contains(&text.len()) && text.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
 /// What is true of a branch.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BranchState {
@@ -109,7 +114,10 @@ impl Service {
         else {
             return false;
         };
-        let oid = pr.get("headRefOid").and_then(serde_json::Value::as_str);
+        let oid = pr
+            .get("headRefOid")
+            .and_then(serde_json::Value::as_str)
+            .filter(|oid| is_object_id(oid));
         oid.is_some_and(|oid| {
             oid == tip
                 || self
@@ -304,6 +312,21 @@ impl Service {
             deleted: true,
             note: None,
             why: plan.why.clone(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_object_id;
+
+    #[test]
+    fn a_commit_id_is_seven_to_sixty_four_hex_digits_and_nothing_else() {
+        for ok in ["abcdef1", "ABCDEF1234", &"a".repeat(64)] {
+            assert!(is_object_id(ok), "{ok}");
+        }
+        for bad in ["", "abcde", "--oops", "abcdefg", &"a".repeat(65)] {
+            assert!(!is_object_id(bad), "{bad}");
         }
     }
 }

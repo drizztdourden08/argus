@@ -94,7 +94,7 @@ fn a_gone_worktree_on_a_detached_head_no_ref_keeps_needs_discard_and_the_owners_
     assert_eq!(plain.code, ErrorCode::Forbidden);
     assert!(
         plain.message.contains(
-            "is kept by no branch, tag or remote: pruning forgets the only record of those commits"
+            "is on a detached HEAD that no branch keeps: pruning forgets it and the commit becomes unreachable. Nothing was pruned"
         ),
         "{}",
         plain.message
@@ -130,7 +130,9 @@ fn a_prune_refuses_when_git_would_also_forget_a_record_argus_did_not_vet() {
     assert_eq!(err.code, ErrorCode::Forbidden);
     assert!(
         err.message
-            .contains("would also forget 1 other worktree record that Argus has not vetted"),
+            .contains("would also forget 1 other worktree record of")
+            && err.message.contains("that no rule of this project vetted")
+            && err.message.contains("nothing was pruned"),
         "{}",
         err.message
     );
@@ -181,7 +183,7 @@ fn a_nested_repository_is_not_safe_it_needs_discard_and_is_copied_into_the_backu
     let err = h.refused(&target, |_| {});
     assert_eq!(err.code, ErrorCode::Forbidden);
     assert!(
-        err.message.contains("a nested git repository inside it ("),
+        err.message.contains("a nested git repository (vendor/lib)"),
         "{}",
         err.message
     );

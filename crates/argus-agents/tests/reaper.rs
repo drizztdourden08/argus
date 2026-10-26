@@ -51,7 +51,11 @@ impl World {
     }
 
     fn put(&self, agents: &[Value]) {
-        let lead = thread_record("coordinator", "coordinator", &json!({}));
+        self.put_lead(&json!({}), agents);
+    }
+
+    fn put_lead(&self, lead_fields: &Value, agents: &[Value]) {
+        let lead = thread_record("coordinator", "coordinator", lead_fields);
         self.boards.save("alpha", &board_json(&[lead], agents));
     }
 
@@ -264,5 +268,201 @@ fn a_poll_long_after_the_previous_one_the_machine_slept_closes_nothing() {
         reaper.tick(),
         vec!["alpha/A-81".to_owned()],
         "the next regular poll closes it"
+    );
+}
+
+const SID: &str = "sess-0000-aaaa";
+
+/// Claude's own data for the agent: its transcript in the thread session's folder, a task output, and a worktree.
+struct Claude {
+    home: std::path::PathBuf,
+    temp: std::path::PathBuf,
+}
+
+impl Claude {
+    fn new(w: &World) -> Self {
+        let root = w.dir.path().join("claude");
+        let claude = Self {
+            home: root.join("home"),
+            temp: root.join("tmp"),
+        };
+        fs::create_dir_all(claude.subagents()).unwrap();
+        fs::create_dir_all(claude.tasks()).unwrap();
+        claude
+    }
+
+    fn subagents(&self) -> std::path::PathBuf {
+        self.home
+            .join("projects")
+            .join("X--proj")
+            .join(SID)
+            .join("subagents")
+    }
+
+    fn tasks(&self) -> std::path::PathBuf {
+        self.temp.join("X--proj").join(SID).join("tasks")
+    }
+
+    fn config(&self, more: &Value) -> Value {
+        let mut agents = json!({ "claudeHome": self.home, "claudeTemp": self.temp });
+        for (key, value) in more.as_object().unwrap() {
+            agents[key] = value.clone();
+        }
+        agents
+    }
+
+    /// A reaper that reads this Claude data (`more` are further `agents` keys).
+    fn reaper(&self, w: &World, more: &Value) -> AgentReaper {
+        w.reaper(&self.config(more), ReaperOptions::default())
+    }
+
+    /// A hook agent whose transcript sits in the session folder and is `quiet_min` quiet.
+    fn agent(&self, id: &str, quiet_min: i64, at: i64, fields: &Value) -> Value {
+        let file = self.subagents().join(format!("agent-{id}.jsonl"));
+        fs::write(&file, user_line(at, &json!("go"))).unwrap();
+        touch(&file, at - quiet_min * MIN);
+        let mut record = json!({
+            "source": "hook", "hookId": id, "claudeId": id,
+            "transcriptFile": file.to_string_lossy()
+        });
+        for (key, value) in fields.as_object().unwrap() {
+            record[key] = value.clone();
+        }
+        agent(&format!("A-{}", &id[id.len() - 2..]), &record)
+    }
+
+    /// A worktree folder with one file written `age_min` ago.
+    fn worktree(w: &World, name: &str, age_min: i64) -> String {
+        let dir = w.dir.path().join(name);
+        fs::create_dir_all(dir.join("src")).unwrap();
+        let file = dir.join("src").join("big.rs");
+        fs::write(&file, "fn main() {}").unwrap();
+        touch(&file, NOW - age_min * MIN);
+        dir.to_string_lossy().into_owned()
+    }
+}
+
+fn with_session(w: &World, agents: &[Value]) {
+    w.put_lead(&json!({ "sessionId": SID }), agents);
+}
+
+fn none() -> Vec<String> {
+    Vec::new()
+}
+
+#[test]
+fn an_opus_agent_writing_files_in_its_worktree_is_not_closed_although_its_transcript_is_30_minutes_quiet()
+ {
+    let w = world();
+    let c = Claude::new(&w);
+    let tree = Claude::worktree(&w, "wt1", 2);
+    let a = c.agent(
+        "a0000000000000011",
+        30,
+        NOW,
+        &json!({ "model": "opus", "worktree": tree }),
+    );
+    with_session(&w, &[a]);
+    assert_eq!(c.reaper(&w, &json!({ "reapMs": 20 * MIN })).tick(), none());
+    assert_eq!(w.agent_on_board("A-11")["status"], json!("working"));
+}
+
+#[test]
+fn a_sonnet_agent_whose_worktree_shows_work_minutes_ago_is_kept_once_it_is_quiet_too_it_is_closed_with_the_newest_sign()
+ {
+    let w = world();
+    let c = Claude::new(&w);
+    let tree = Claude::worktree(&w, "wt2", 3);
+    with_session(
+        &w,
+        &[c.agent("a0000000000000012", 30, NOW, &json!({ "worktree": tree }))],
+    );
+    assert_eq!(c.reaper(&w, &json!({})).tick(), none());
+    touch(
+        &w.dir.path().join("wt2").join("src").join("big.rs"),
+        NOW - 26 * MIN,
+    );
+    assert_eq!(
+        c.reaper(&w, &json!({})).tick(),
+        vec!["alpha/A-12".to_owned()]
+    );
+    let closed = w.agent_on_board("A-12");
+    let note = closed["note"].as_str().unwrap();
+    assert!(
+        note == "no activity for 26 min, closed automatically"
+            || note == "no activity for 27 min, closed automatically",
+        "{note}"
+    );
+    assert_eq!(closed["closedBy"], json!("reaper"));
+}
+
+#[test]
+fn the_output_file_of_a_background_task_of_the_agent_counts_as_a_sign_of_life() {
+    let w = world();
+    let c = Claude::new(&w);
+    with_session(&w, &[c.agent("a0000000000000013", 40, NOW, &json!({}))]);
+    let out = c.tasks().join("a0000000000000013.output");
+    fs::write(&out, "building...").unwrap();
+    touch(&out, NOW - MIN);
+    assert_eq!(c.reaper(&w, &json!({})).tick(), none());
+    touch(&out, NOW - 41 * MIN);
+    assert_eq!(
+        c.reaper(&w, &json!({})).tick(),
+        vec!["alpha/A-13".to_owned()],
+        "a truly quiet one is still closed"
+    );
+}
+
+#[test]
+fn an_opus_level_agent_gets_at_least_60_minutes_haiku_and_sonnet_keep_the_20_minute_limit() {
+    let w = world();
+    let c = Claude::new(&w);
+    let opus_45 = json!({ "model": "claude-opus-4-5", "modelUsed": "claude-opus-4-5" });
+    with_session(
+        &w,
+        &[
+            c.agent("a0000000000000014", 40, NOW, &json!({ "model": "opus" })),
+            c.agent("a0000000000000015", 40, NOW, &json!({ "model": "sonnet" })),
+            c.agent("a0000000000000016", 40, NOW, &opus_45),
+        ],
+    );
+    assert_eq!(
+        c.reaper(&w, &json!({})).tick(),
+        vec!["alpha/A-15".to_owned()]
+    );
+    w.clock.advance(MIN);
+    let later = NOW + MIN;
+    touch(
+        &c.subagents().join("agent-a0000000000000014.jsonl"),
+        later - 62 * MIN,
+    );
+    assert_eq!(
+        c.reaper(&w, &json!({})).tick(),
+        vec!["alpha/A-14".to_owned()]
+    );
+    let note = w.agent_on_board("A-14")["note"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert!(note.starts_with("no activity for 62 min"), "{note}");
+    assert_eq!(w.agent_on_board("A-16")["status"], json!("working"));
+    let short_opus = c.reaper(&w, &json!({ "reapOpusMs": 30 * MIN }));
+    assert_eq!(
+        short_opus.tick(),
+        vec!["alpha/A-16".to_owned()],
+        "the opus limit is configurable"
+    );
+}
+
+#[test]
+fn a_record_without_a_worktree_name_or_with_one_that_is_not_a_folder_is_judged_by_the_transcript_and_the_task_alone()
+ {
+    let w = world();
+    let c = Claude::new(&w);
+    let fields = json!({ "worktree": "no-such-worktree" });
+    with_session(&w, &[c.agent("a0000000000000017", 30, NOW, &fields)]);
+    assert_eq!(
+        c.reaper(&w, &json!({})).tick(),
+        vec!["alpha/A-17".to_owned()]
     );
 }

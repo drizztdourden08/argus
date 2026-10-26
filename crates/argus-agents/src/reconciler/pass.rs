@@ -1,9 +1,9 @@
 //! One evaluation of one board at one moment: the shared state of the five steps.
 
-use super::Env;
 use super::report::{Class, Counts, Finding};
-use super::session::Session;
 use crate::board::Board;
+use crate::evidence::Env;
+use crate::evidence::session::Session;
 use crate::ports::WakeEvent;
 use crate::record::{
     LIVE_STATUSES, Patch, Patches, Record, claude_id_of, id_of, is_set, ms_of, text,

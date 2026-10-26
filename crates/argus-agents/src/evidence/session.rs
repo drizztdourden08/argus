@@ -16,7 +16,7 @@ const EARLIER_SESSIONS: usize = 4;
 
 /// A sub-agent transcript found on disk, with its meta.
 #[derive(Debug)]
-pub(super) struct Candidate {
+pub(crate) struct Candidate {
     pub id: String,
     pub file: PathBuf,
     pub birth_ms: i64,
@@ -31,7 +31,7 @@ struct Layout {
 }
 
 /// What is known about the session of a thread.
-pub(super) struct Session<'a> {
+pub(crate) struct Session<'a> {
     fs: &'a dyn FileSystem,
     sid: Option<String>,
     layout: Option<Layout>,
@@ -58,25 +58,25 @@ fn agent_stem(name: &str) -> Option<&str> {
 }
 
 /// The agent id in a transcript file name, `agent-<id>.jsonl`.
-pub(super) fn agent_id_in(name: &str) -> Option<String> {
+pub(crate) fn agent_id_in(name: &str) -> Option<String> {
     let id = agent_stem(name)?;
     valid_agent_id(id).then(|| id.to_owned())
 }
 
 /// The agent id in the last part of a path.
-pub(super) fn agent_id_of_path(path: &str) -> Option<String> {
+pub(crate) fn agent_id_of_path(path: &str) -> Option<String> {
     agent_id_in(path.rsplit(['\\', '/']).next()?)
 }
 
 /// The meta file beside a transcript.
-pub(super) fn meta_path(file: &Path) -> PathBuf {
+pub(crate) fn meta_path(file: &Path) -> PathBuf {
     let name = file.to_string_lossy();
     let stem = name.strip_suffix(".jsonl").unwrap_or(&name);
     PathBuf::from(format!("{stem}.meta.json"))
 }
 
 /// A JSON object read from a file, `None` when it is missing, broken or not an object.
-pub(super) fn read_object(fs: &dyn FileSystem, file: &Path) -> Option<Record> {
+pub(crate) fn read_object(fs: &dyn FileSystem, file: &Path) -> Option<Record> {
     match serde_json::from_str::<Value>(&fs.read_text(file)?).ok()? {
         Value::Object(map) => Some(map),
         _ => None,
@@ -152,7 +152,7 @@ fn scan_projects(env: &Env, sid: &str) -> Option<PathBuf> {
 
 impl<'a> Session<'a> {
     /// The session of a thread of the board.
-    pub(super) fn open(env: &Env<'a>, board: &Board, thread_id: Option<&str>) -> Self {
+    pub(crate) fn open(env: &Env<'a>, board: &Board, thread_id: Option<&str>) -> Self {
         let thread = thread_id.and_then(|id| board.thread(id));
         let sid = thread
             .and_then(|t| text(t, "sessionId"))
@@ -180,7 +180,7 @@ impl<'a> Session<'a> {
     }
 
     /// Whether the thread has a session id at all.
-    pub(super) fn has_session_id(&self) -> bool {
+    pub(crate) fn has_session_id(&self) -> bool {
         self.sid.is_some()
     }
 
@@ -213,7 +213,7 @@ impl<'a> Session<'a> {
     }
 
     /// The transcript of a sub-agent in this session or its earlier ones.
-    pub(super) fn find_file(&self, id: &str) -> Option<PathBuf> {
+    pub(crate) fn find_file(&self, id: &str) -> Option<PathBuf> {
         if !valid_agent_id(id) {
             return None;
         }
@@ -224,7 +224,7 @@ impl<'a> Session<'a> {
     }
 
     /// The output file of a background task of this session.
-    pub(super) fn task_file(&self, id: &str) -> Option<PathBuf> {
+    pub(crate) fn task_file(&self, id: &str) -> Option<PathBuf> {
         let layout = self.layout.as_ref()?;
         if !valid_agent_id(id) {
             return None;
@@ -234,7 +234,7 @@ impl<'a> Session<'a> {
     }
 
     /// Every transcript of the session's folders, with its meta, to match a record that has no id.
-    pub(super) fn candidates(&self) -> Vec<Candidate> {
+    pub(crate) fn candidates(&self) -> Vec<Candidate> {
         let mut out = Vec::new();
         for dir in self.dirs() {
             let Ok(names) = self.fs.list(&dir) else {

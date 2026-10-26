@@ -169,4 +169,11 @@ mod tests {
         assert_eq!(names.len(), rules.len());
         assert!(rules.last().unwrap().matcher.is_empty());
     }
+
+    #[test]
+    fn a_dev_server_may_use_3_gb_before_it_is_flagged() {
+        let rules = default_rules();
+        let dev = rules.iter().find(|r| r.name == "node-dev-server").unwrap();
+        assert_eq!(dev.max_mem_mb, Some(1500.0));
+    }
 }

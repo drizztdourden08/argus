@@ -5,7 +5,7 @@
 
 use super::pass::{IDLE_KEYS, ORPHAN_KEYS, Pass};
 use super::report::Class;
-use super::session::Session;
+use crate::evidence::session::Session;
 use crate::iso::format_iso;
 use crate::record::{Patch, Record, id_of, is_set, ms_of, text};
 
