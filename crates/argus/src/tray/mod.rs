@@ -7,8 +7,6 @@ use argus_core::Paths;
 use clap::Subcommand;
 
 #[cfg(windows)]
-mod detach;
-#[cfg(windows)]
 mod log;
 #[cfg(windows)]
 mod open;

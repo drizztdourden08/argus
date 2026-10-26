@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 use std::io;
 use std::path::Path;
 
-use super::detach;
+use argus::detach;
 
 /// Opens an address in the default browser, with no window of its own.
 ///
