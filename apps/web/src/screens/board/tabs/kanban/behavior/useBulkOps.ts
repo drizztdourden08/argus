@@ -4,6 +4,7 @@ import type { DocData } from '../../../../../data/api';
 import { bulkOp, opVerdict } from '../../../../../data/kanban';
 import type { OpVerdict } from '../../../../../data/kanban';
 import { bulkMoves, bulkSofts } from '../model';
+import { bulkRestores } from '../trash';
 import type { BulkOps } from '../kanban.type';
 import { announce } from './announce';
 import { announceFailure } from './announce-failure';
@@ -23,6 +24,10 @@ const useBulkOps = (boardKey: string): BulkOps =>
       move: (items, to) => send(bulkMoves(items, to), null),
       soft: (kind, items) => {
         const { ops, inverse } = bulkSofts(kind, items);
+        send(ops, inverse);
+      },
+      restore: (rows) => {
+        const { ops, inverse } = bulkRestores(rows);
         send(ops, inverse);
       },
     };

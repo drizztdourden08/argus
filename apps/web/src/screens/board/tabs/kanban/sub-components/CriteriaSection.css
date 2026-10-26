@@ -1,0 +1,13 @@
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.criteria-list > [data-drop='before'] {
+  box-shadow: 0 calc(-1 * var(--space-2xs)) 0 0 var(--c-primary-bright);
+}
+
+.criteria-list > [data-drop='after'] {
+  box-shadow: 0 var(--space-2xs) 0 0 var(--c-primary-bright);
+}

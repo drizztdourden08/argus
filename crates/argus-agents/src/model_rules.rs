@@ -3,6 +3,11 @@
 //!
 //! The standard is short: haiku for chores and tests, sonnet for most coding, opus only for design,
 //! architecture, unknown-cause, risky-review, plan or an owner request.
+//!
+//! Lengths and trimming are JavaScript's (UTF-16 units, `String.prototype.trim`), as the CLI
+//! counts them.
+
+use argus_core::js;
 
 /// The standard, as the refusals quote it.
 pub const MODEL_STANDARD: &str = "haiku for chores and tests, sonnet for most coding including upgrades and lint/type fixes, opus only for design, architecture, unknown-cause, risky-review, plan or an owner request";
@@ -44,11 +49,11 @@ fn refuse<T>(message: String) -> Result<T, RuleError> {
 }
 
 fn require_text(kind: &str, value: &str, max: usize) -> Result<String, RuleError> {
-    let text = value.trim();
+    let text = js::trim(value);
     if text.is_empty() {
         return refuse(format!("{kind} text is required."));
     }
-    let len = text.chars().count();
+    let len = js::len(text);
     if len > max {
         return refuse(format!(
             "{kind} is {len} chars, the limit is {max}. Shorten it."
@@ -57,9 +62,14 @@ fn require_text(kind: &str, value: &str, max: usize) -> Result<String, RuleError
     Ok(text.to_owned())
 }
 
+/// `\s` of a JavaScript regular expression.
+fn is_js_space(c: char) -> bool {
+    (c.is_whitespace() && c != '\u{85}') || c == '\u{feff}'
+}
+
 fn one_word(model: &str) -> Result<String, RuleError> {
     let name = require_text("model", model, MODEL_MAX)?;
-    if name.contains(char::is_whitespace) {
+    if name.chars().any(is_js_space) {
         return refuse(format!("model must be one word, got \"{name}\"."));
     }
     Ok(name)
@@ -119,7 +129,7 @@ pub fn check_model_why(
     };
     let text = require_text("modelwhy", why, WHY_MAX)?;
     let owner = text.to_ascii_lowercase().starts_with("owner");
-    let len = text.chars().count();
+    let len = js::len(&text);
     if !owner && len < WHY_MIN {
         return refuse(format!(
             "--why is {len} chars, the minimum is {WHY_MIN}: say what about the task needs {name}."
@@ -135,7 +145,7 @@ pub fn check_model_why(
 }
 
 fn parse_checkin(raw: &str) -> Result<u32, RuleError> {
-    let text = raw.trim();
+    let text = js::trim(raw);
     let whole = !text.is_empty() && text.chars().all(|c| c.is_ascii_digit());
     match text.parse::<u32>() {
         Ok(n) if whole && (CHECKIN_MIN..=CHECKIN_MAX).contains(&n) => Ok(n),

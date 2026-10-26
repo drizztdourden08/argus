@@ -31,9 +31,15 @@ const TERMINAL_KINDS: readonly LogKindDef[] = [
   { id: 'sys', label: 'System', tone: 'muted', toneMessage: 'dim' },
 ];
 
+const INPUT_OPEN = 'Type a line for the program and press Enter';
+
+const INPUT_NONE = 'This run has no input';
+
+const INPUT_OVER = 'The run is over';
+
 const RUN_ROW_SHAPE: ListItemShape = { icon: false, columns: 2, action: true };
 
 export {
-  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, FINISHED_SHOWN, FULL_LOG_HEIGHT, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
+  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, FINISHED_SHOWN, FULL_LOG_HEIGHT, INPUT_NONE, INPUT_OPEN, INPUT_OVER, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
   RETIRED_KEY, RUN_ROW_SHAPE, TERMINAL_HEIGHT, TERMINAL_KINDS,
 };

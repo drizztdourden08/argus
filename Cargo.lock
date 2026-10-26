@@ -119,6 +119,7 @@ dependencies = [
  "argus-board",
  "argus-core",
  "argus-launchers",
+ "argus-native",
  "argus-notify",
  "argus-worktrees",
  "memchr",

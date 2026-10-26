@@ -5,8 +5,8 @@ import type { AddItemDialogProps } from '../kanban-props.type';
 import { LIMITS, STATUS_OPTIONS, threadChoices } from '../model';
 
 const AddItemDialog = (props: AddItemDialogProps) => {
-  const { open, threads, onCreate, onClose } = props;
-  const draft = useAddItemDraft(threads, (item) => {
+  const { preset, threads, onCreate, onClose } = props;
+  const draft = useAddItemDraft(threads, preset, (item) => {
     onCreate(item);
     onClose();
   });
@@ -16,7 +16,7 @@ const AddItemDialog = (props: AddItemDialogProps) => {
   };
   return (
     <Dialog
-      open={open}
+      open
       title="New work item"
       message="Add an item to the board. The thread it names takes it from there."
       confirmLabel="Add"

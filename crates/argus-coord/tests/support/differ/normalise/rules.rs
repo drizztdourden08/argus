@@ -101,17 +101,49 @@ fn message_id(at: &At<'_>) -> Option<Hit> {
     Some(hit(head, "m-<MS>-"))
 }
 
-/// A relative time from `ago()`: `12s ago`, `5m ago`, `3h ago`, `2d ago`.
+/// The number of leading bytes of `rest` that are spaces.
+fn spaces(rest: &[u8]) -> usize {
+    rest.iter().take_while(|b| **b == b' ').count()
+}
+
+/// The length of `12s ago` at the start of `rest`, or none.
+fn ago_len(rest: &[u8]) -> Option<usize> {
+    let n = digits(rest);
+    let unit = rest.get(n)?;
+    let ok = n > 0 && b"smhd".contains(unit) && rest[n + 1..].starts_with(b" ago");
+    ok.then_some(n + 5)
+}
+
+/// A relative time from `ago()`: `12s ago`, `5m ago`, `3h ago`, `2d ago`, with the padding of its
+/// table column (`padStart` spaces before, `padEnd` spaces after). The cell widens and narrows
+/// with the digits (`9s ago ` against `10s ago`) and the two engines run a moment apart, so the
+/// padding is part of the volatile value. Padding with text on its side becomes one space (a lost
+/// column separator still differs); at the start or the end of a line it is dropped, since it may
+/// be empty on one side.
 fn relative_time(at: &At<'_>) -> Option<Hit> {
-    if word_before(at.prev) {
+    let lead = spaces(at.rest);
+    if lead > 0 && at.prev == Some(b' ') {
         return None;
     }
-    let n = digits(at.rest);
-    let unit = at.rest.get(n)?;
-    let ok = n > 0 && b"smhd".contains(unit) && at.rest[n + 1..].starts_with(b" ago");
-    ok.then_some(Hit {
-        len: n + 5,
-        text: "<AGO>",
+    if lead == 0 && word_before(at.prev) {
+        return None;
+    }
+    let end = lead + ago_len(&at.rest[lead..])?;
+    let trail = spaces(&at.rest[end..]);
+    let line_start = at.prev.is_none_or(|b| b == b'\n');
+    let line_end = at
+        .rest
+        .get(end + trail)
+        .is_none_or(|b| *b == b'\n' || *b == b'\r');
+    let text = match (lead > 0 && !line_start, trail > 0 && !line_end) {
+        (true, true) => " <AGO> ",
+        (true, false) => " <AGO>",
+        (false, true) => "<AGO> ",
+        (false, false) => "<AGO>",
+    };
+    Some(Hit {
+        len: end + trail,
+        text,
     })
 }
 
