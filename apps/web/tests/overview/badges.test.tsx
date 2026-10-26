@@ -20,6 +20,16 @@ const open = async (location = '/') => {
   return view;
 };
 
+describe('the description of the badges', () => {
+  it('says what each badge counts, as the Node page does', async () => {
+    await open();
+    await waitFor(() => expect(tab('Processes').textContent).toContain('2'));
+    expect(tab('Processes').getAttribute('aria-description')).toBe('Processes that need a look');
+    expect(tab('Activity').getAttribute('aria-description')).toBe('Warnings and errors since this tab was last open');
+    expect(tab('Notifications').getAttribute('aria-description')).toBe('Notifications since this tab was last open');
+  });
+});
+
 describe('the tabs and their badges', () => {
   it('has the four tabs, Dashboards first, and no badge on a tab with nothing to count', async () => {
     await open();

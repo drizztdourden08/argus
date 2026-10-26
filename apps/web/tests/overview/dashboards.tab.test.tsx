@@ -81,10 +81,10 @@ describe('the totals and the cards', () => {
   });
 
   it('offers Stop while the master run lives, and stops it in its scope', async () => {
-    const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1), lastLine: 'window open' };
+    const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1.5), lastLine: 'window open' };
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { run: { id: 'R-9', status: 'stopped' } } } : undefined));
     await open({ cards: { ...cards, rotp: { ...cards.rotp, master: { ...MASTER, lastRun: live } } } });
-    expect(await screen.findByText(lineLike(/^running 1m \d\ds: window open$/))).toBeTruthy();
+    expect(await screen.findByText(lineLike(/^running 1m: window open$/))).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(await screen.findByText('Stopped RotP master (R-9).')).toBeTruthy();
     expect(posts(calls)).toEqual([{ path: '/api/p/rotp/runs/R-9/stop', method: 'POST', body: {} }]);
@@ -122,11 +122,11 @@ describe('the registered strip', () => {
 
   it('writes how long a wake has been on its way as a live time', async () => {
     stubApi();
-    const waking = { rotp: { project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'waking', since: minutesAgo(3), pendingWake: { since: minutesAgo(1) } } };
+    const waking = { rotp: { project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'waking', since: minutesAgo(3), pendingWake: { since: minutesAgo(1.5) } } };
     await open({ registry: waking });
     const strip = await screen.findByRole('status', { name: 'Registered leads' });
     expect(within(strip).getByText('1 waking')).toBeTruthy();
-    expect((await within(strip).findAllByText(lineLike(/^RotP, waking 1 minute ago$/))).length).toBeGreaterThan(0);
+    expect((await within(strip).findAllByText(lineLike(/^RotP, waking 1m$/))).length).toBeGreaterThan(0);
   });
 
   it('links a chip to the agents of its board and says in the tip what failed', async () => {
@@ -197,11 +197,11 @@ describe('running now and sent down', () => {
 
   it('counts a queued run from the moment it was queued and heads the list with its column labels', async () => {
     stubApi((call) => (call.path.startsWith('/api/runs')
-      ? { body: { runs: [{ id: 'R-6', scope: 'rotp', name: 'hello', status: 'queued', queuedAt: minutesAgo(5), startedAt: null, lastLine: null }] } }
+      ? { body: { runs: [{ id: 'R-6', scope: 'rotp', name: 'hello', status: 'queued', queuedAt: minutesAgo(5.5), startedAt: null, lastLine: null }] } }
       : undefined));
     await open();
     const list = await screen.findByRole('list', { name: 'Running now' });
-    expect(await within(list).findByText(/^5m 0d?s?/)).toBeTruthy();
+    expect(await within(list).findByText('5m')).toBeTruthy();
     expect(list.textContent).toContain('Elapsed');
     expect(list.textContent).toContain('Project');
   });

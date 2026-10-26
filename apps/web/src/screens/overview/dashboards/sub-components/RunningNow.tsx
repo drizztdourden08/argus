@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DateText, ListItemList, ListItemRow, Tag } from '@drizztdourden08/tessera';
+import { ListItemList, ListItemRow, Tag } from '@drizztdourden08/tessera';
 import { ProjectLink } from '../../projects';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { GOOD_LOOK, RUNNING_HEADER } from '../dashboards.constants';
 import type { RunningNowProps } from '../dashboards.type';
 
@@ -17,7 +18,7 @@ const RunningNow = (props: RunningNowProps) => {
           meta={run.lastLine ?? ''}
           columns={[
             { primary: <ProjectLink project={run.scope} hash="#agents" /> },
-            { primary: <DateText value={run.startedAt ?? run.queuedAt} format="elapsed" />, align: 'end' },
+            { primary: <ShortAge value={run.startedAt ?? run.queuedAt} />, align: 'end' },
           ]}
         />
       ))}
