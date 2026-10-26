@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "argus-core",
  "argus-native",
+ "argus-parity",
  "argus-server",
  "argus-testkit",
  "argus-wake",
@@ -173,6 +174,19 @@ dependencies = [
  "serde_json",
  "sha1",
  "time",
+]
+
+[[package]]
+name = "argus-parity"
+version = "0.1.0"
+dependencies = [
+ "argus-core",
+ "argus-testkit",
+ "clap",
+ "reqwest",
+ "serde_json",
+ "tempfile",
+ "tokio",
 ]
 
 [[package]]

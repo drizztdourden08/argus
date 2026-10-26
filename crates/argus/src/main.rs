@@ -51,6 +51,8 @@ enum Command {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Compares two dashboard servers by value, read-only: the shadow check of the switch-over.
+    Parity(argus_parity::Args),
     /// The tray icon (Windows): run, start, stop or status; start is the default.
     Tray {
         #[command(subcommand)]
@@ -127,6 +129,7 @@ async fn main() -> ExitCode {
             shadow,
         } => run_serve(port, data_dir, shadow).await,
         Command::WakeStream { args } => run_wake_stream(args).await,
+        Command::Parity(args) => argus_parity::run(args).await,
         Command::Tray { action, data_dir } => {
             let action = action.unwrap_or(TrayAction::Start);
             tray::command(action, paths_of(data_dir)).await
@@ -151,6 +154,13 @@ mod tests {
     #[test]
     fn the_command_line_is_well_formed() {
         Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn the_parity_flags_parse() {
+        let line = "argus parity --left http://a --right http://b --project x --project y --json";
+        assert!(Cli::try_parse_from(line.split(' ')).is_ok());
+        assert!(Cli::try_parse_from(["argus", "parity", "--left", "http://a"]).is_err());
     }
 
     #[test]
