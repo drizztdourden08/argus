@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { StatusTone } from '@drizztdourden08/tessera';
-import { ACTIVITY_TONES } from './model.constants';
+import { ACTIVITY_TONES } from '../shared.constants';
 
 const activityTone = (activity: string | null | undefined): StatusTone => ACTIVITY_TONES[activity ?? ''] ?? 'neutral';
 

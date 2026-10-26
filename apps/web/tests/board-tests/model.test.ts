@@ -142,6 +142,6 @@ describe('the done order and the note rule', () => {
     expect(noteProblem('pass', '')).toBeNull();
     expect(noteProblem('fail', '  a b ')).toMatch(/three characters/);
     expect(noteProblem('blocked', 'abc')).toBeNull();
-    expect(noteProblem('partial', 'x'.repeat(50001))).toMatch(/over 50000/);
+    expect(noteProblem('partial', 'x'.repeat(50001))).toBe('This text is 50001 characters and one post takes 50000 at most: shorten it or post it in two parts.');
   });
 });

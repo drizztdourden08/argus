@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 import { STORE_KEYS, neighbour } from '../model';
 import type { KanbanFilters, KanbanView } from '../model';
 import type { DrawerState, KanbanData } from '../kanban.type';
+import { useStoredFlag } from '../../../shared';
 import { useOpenItem } from './useOpenItem';
 import { usePagerKeys } from './usePagerKeys';
-import { useStoredFlag } from './useStoredFlag';
 
 const useDrawer = (data: KanbanData, view: KanbanView, filters: KanbanFilters): DrawerState => {
   const target = useOpenItem(data.actions);

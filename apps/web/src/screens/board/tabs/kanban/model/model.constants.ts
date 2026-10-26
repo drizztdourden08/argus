@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind constants */
+import { FOCUS_KEY, WIDE_KEY } from '../../../shared';
 import type { Option } from '../../../shared';
 import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
 
@@ -30,7 +31,7 @@ const ORDER_OPTIONS: { value: ItemOrder; label: string }[] = [
   { value: 'updated', label: 'Updated' },
 ];
 
-const LIMITS = { title: 80, subject: 40, description: 400, criterion: 120, todo: 200 };
+const LIMITS = { title: 80, subject: 40, description: 400, brief: 1200, criterion: 120, todo: 200 };
 
 const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
 
@@ -55,9 +56,9 @@ const STORE_KEYS = {
   group: 'coord.g.items',
   order: 'coord.sort',
   showDone: 'coord.done2',
-  focus: 'coord.focus',
+  focus: FOCUS_KEY,
   showPaused: 'coord.paused',
-  wide: 'coord.drawer.wide',
+  wide: WIDE_KEY,
 };
 
 export {

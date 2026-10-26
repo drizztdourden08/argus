@@ -42,4 +42,22 @@ interface StoredFilters {
   conflict: boolean;
 }
 
-export type { NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
+interface MarkdownFieldEditorProps {
+  noun: string;
+  value: string;
+  limit: number;
+  problem: (text: string) => string | null;
+  onSave: (value: string) => void;
+  onCancel: () => void;
+}
+
+interface EditableMarkdownProps {
+  noun: string;
+  value: string;
+  empty: string;
+  limit: number;
+  problem: (text: string) => string | null;
+  onSave: (value: string) => void;
+}
+
+export type { EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };

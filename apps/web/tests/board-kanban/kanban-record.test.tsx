@@ -122,6 +122,13 @@ describe('the activity of an item', () => {
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
   });
 
+  it('has the composer box as the markdown editor with its toolbar', async () => {
+    const { dialog } = await mountOpen();
+    const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'The decision for worker' });
+    expect(box.maxLength).toBe(50000);
+    expect(within(dialog).getAllByRole('toolbar', { name: 'Formatting' }).length).toBeGreaterThan(0);
+  });
+
   it('posts a decision for the thread from the composer, and a note when Note is picked', async () => {
     const { posted, dialog } = await mountOpen();
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'The decision for worker' }), { target: { value: 'Use the new form' } });

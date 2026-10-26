@@ -60,12 +60,6 @@ interface DescriptionSectionProps {
   ops: ItemOps;
 }
 
-interface DescriptionEditorProps {
-  value: string;
-  onSave: (value: string) => void;
-  onCancel: () => void;
-}
-
 interface CriteriaSectionProps {
   item: ItemRef;
   tests: readonly WithId<Test>[];
@@ -158,7 +152,7 @@ interface DrawerSectionProps {
 }
 
 export type {
-  ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionEditorProps, DescriptionSectionProps, DrawerFactsProps,
+  ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
   DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemTestsProps, ItemTitleProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,
 };

@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind constants */
-import type { StatusTone } from '@drizztdourden08/tessera';
 import type { ModelColor, ModelFamily, StatusLook } from './model.type';
 
 const ACTIVE_STATUSES: readonly string[] = ['working', 'waiting', 'stop-requested'];
@@ -26,8 +25,6 @@ const STATUS_LOOKS: Readonly<Record<string, StatusLook>> = {
   stopped: { label: 'stopped', tone: 'neutral' },
   failed: { label: 'failed', tone: 'danger' },
 };
-
-const ACTIVITY_TONES: Readonly<Record<string, StatusTone>> = { working: 'success', waiting: 'warning', blocked: 'danger' };
 
 const MODEL_FAMILIES: readonly ModelFamily[] = ['haiku', 'sonnet', 'opus'];
 
@@ -58,7 +55,6 @@ const MESSAGE_CLIP = 200;
 
 export {
   ACTIVE_STATUSES,
-  ACTIVITY_TONES,
   BUSY_ACTIVITIES,
   CHAT_ORDER,
   CONFLICT_TEXT,
