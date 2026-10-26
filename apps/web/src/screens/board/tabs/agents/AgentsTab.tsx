@@ -3,6 +3,7 @@ import { Flex } from '@drizztdourden08/tessera';
 import { useMemo, useState } from 'react';
 import type { AgentsTabProps } from './AgentsTab.type';
 import { useAgentActions } from './behavior/useAgentActions';
+import { useAgentAnchor } from './behavior/useAgentAnchor';
 import { useAgentsView } from './behavior/useAgentsView';
 import { useNow } from './behavior/useNow';
 import { useReconcile } from './behavior/useReconcile';
@@ -23,9 +24,9 @@ const AgentsTab = (props: AgentsTabProps) => {
   const now = useNow(view.active.length > 0);
   const [filter, setFilter] = useState<AgentFilter>('running');
   const [query, setQuery] = useState('');
-  const [openId, setOpenId] = useState<string | null>(null);
   const rows = useMemo(() => filterAgents(view.active, view.done, filter, query), [view.active, view.done, filter, query]);
-  const opened = [...view.active, ...view.done].find((agent) => agent.id === openId) ?? null;
+  const anchor = useAgentAnchor();
+  const opened = [...view.active, ...view.done].find((agent) => agent.id === anchor.selected) ?? null;
   const canArchive = filter !== 'running' && view.done.length > 0;
   const empty = emptyMessage(view.active.length + view.done.length, filter);
   return (
@@ -41,9 +42,9 @@ const AgentsTab = (props: AgentsTabProps) => {
         doneCount={view.done.length}
         onArchive={canArchive ? () => actions.archiveFinished(view.done.map((agent) => agent.id)) : null}
       />
-      <AgentList rows={rows} empty={empty} now={now} actions={actions} onOpen={setOpenId} />
+      <AgentList rows={rows} empty={empty} now={now} actions={actions} onOpen={anchor.open} />
       <ChatsList chats={view.chats} onPurge={onPurge} />
-      <AgentDrawer id={opened?.id ?? null} agent={opened} now={now} actions={actions} onClose={() => setOpenId(null)} />
+      <AgentDrawer id={opened?.id ?? null} agent={opened} now={now} actions={actions} onClose={anchor.close} />
     </Flex>
   );
 };

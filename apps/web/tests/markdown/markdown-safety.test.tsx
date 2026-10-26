@@ -7,9 +7,9 @@ afterEach(cleanup);
 
 const TAGS = new Set([
   'div', 'span', 'p', 'br', 'strong', 'em', 's', 'code', 'pre', 'a', 'ul', 'ol', 'li', 'blockquote', 'hr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'table', 'thead', 'tbody', 'tr', 'th', 'td', 'button', 'input', 'label', 'svg', 'g', 'rect', 'path',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td', 'button', 'input', 'label', 'svg', 'g', 'rect', 'path', 'img', 'circle',
 ]);
-const LINK_OK = /^(?:https?:\/\/|mailto:)/i;
+const LINK_OK = /^(?:https?:\/\/|mailto:|\/files\/|\/p\/)/i;
 
 const auditElement = (element: Element): void => {
   expect(TAGS.has(element.tagName.toLowerCase()), `tag not allowed: ${element.tagName}`).toBe(true);
@@ -66,7 +66,7 @@ describe('markdown link allow-list', () => {
   it('a link to http, https or mailto stays a link and the others lose it', () => {
     const allowed = renderMarkdown('[a](https://a.test) [b](http://a.test/x?y#z) [c](HTTPS://A.TEST) [d](mailto:a@b.co)');
     expect(allowed.querySelectorAll('a')).toHaveLength(4);
-    for (const href of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'vbscript:x', 'data:text/html,<script>', 'file:///etc/passwd', '//evil.test/x', '/x', '#x', 'ftp://x.test']) {
+    for (const href of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'vbscript:x', 'data:text/html,<script>', 'file:///etc/passwd', '//evil.test/x', '#x', 'ftp://x.test']) {
       const root = renderMarkdown(`[x](${href})`);
       expect(root.querySelector('a'), href).toBeNull();
       expect(root.textContent, href).toBe('x');

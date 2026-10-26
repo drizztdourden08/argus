@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Markdown, Tag, Text } from '@drizztdourden08/tessera';
+import { DateText, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import type { CellProps } from '../worktrees.type';
 
 const RequestCell = (props: CellProps) => {
@@ -17,8 +18,8 @@ const RequestCell = (props: CellProps) => {
           {answer ? `${answer.by ?? 'the thread'} ` : 'asked '}<DateText value={answer ? answer.at : request.at} format="elapsed" />
         </Text>
       </Flex>
-      {request.text && <Markdown size="sm">{request.text}</Markdown>}
-      {answer && <Markdown size="sm">{answer.note}</Markdown>}
+      {request.text && <BoardMarkdown size="sm">{request.text}</BoardMarkdown>}
+      {answer && <BoardMarkdown size="sm">{answer.note}</BoardMarkdown>}
     </Flex>
   );
 };

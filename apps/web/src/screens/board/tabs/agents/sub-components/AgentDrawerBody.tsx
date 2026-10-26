@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { CopyButton, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { CopyButton, Flex, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import type { AgentDrawerBodyProps } from '../AgentsTab.type';
 import { agentMessage, isActive, orText } from '../model';
 import { AgentFacts } from './AgentFacts';
@@ -21,11 +22,11 @@ const AgentDrawerBody = (props: AgentDrawerBodyProps) => {
       <DrawerSection title="Task"><Text>{orText(agent.task, 'No task recorded.')}</Text></DrawerSection>
       <DrawerSection title="Note"><Text>{orText(agent.note, 'No note.')}</Text></DrawerSection>
       <DrawerSection title="Result">
-        {agent.result ? <Markdown>{agent.result}</Markdown> : <Text tone="muted">{noResult}</Text>}
+        {agent.result ? <BoardMarkdown>{agent.result}</BoardMarkdown> : <Text tone="muted">{noResult}</Text>}
       </DrawerSection>
       {message && (
         <DrawerSection title="Last message">
-          <Markdown>{message}</Markdown>
+          <BoardMarkdown>{message}</BoardMarkdown>
           <CopyButton text={message} label="Copy the message" showLabel size="sm" />
         </DrawerSection>
       )}

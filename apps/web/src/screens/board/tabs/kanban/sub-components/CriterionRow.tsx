@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Checkbox, Flex, Icon, IconButton, InlineEdit, Markdown, Text } from '@drizztdourden08/tessera';
+import { Button, Checkbox, Flex, Icon, IconButton, InlineEdit, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import type { CriterionRowProps } from '../drawer-props.type';
 import { validateField } from '../model';
 
@@ -32,7 +33,7 @@ const CriterionRow = (props: CriterionRowProps) => {
         label={`criterion ${n}`}
         value={criterion.text}
         validate={validateCriterion}
-        renderValue={(text) => <Markdown size="inline" source={text} />}
+        renderValue={(text) => <BoardMarkdown size="inline" source={text} />}
         onCommit={(text) => void ops.criterion(item, { do: 'set', n, text: text.trim(), prev: criterion.text }, `Saved ${item.id} criterion ${n}.`)}
       />
       {proving.length > 0 && <Text variant="caption" tone="muted">{`proved by ${proving.join(' ')}`}</Text>}

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Flex, Markdown, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import { formatAgo } from '../../../../../format';
 import type { EntryReplyProps } from '../drawer-props.type';
 import { KIND_LABEL } from '../record';
@@ -14,7 +15,7 @@ const EntryReply = (props: EntryReplyProps) => {
         <Text variant="caption" tone="muted">{`${reply.author === 'human' ? 'you' : reply.author}, ${formatAgo(reply.createdAt, now)} ago`}</Text>
         {reply.status && <Tag>{reply.status}</Tag>}
       </Flex>
-      <Markdown size="sm" source={reply.text} />
+      <BoardMarkdown size="sm" source={reply.text} />
     </Flex>
   );
 };

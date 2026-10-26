@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Flex, InlineEdit, Markdown } from '@drizztdourden08/tessera';
+import { Flex, InlineEdit } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import { askMode, hasContext } from '../../../feed-model';
 import { AskForm, ContextBlock } from '../../../OwnerFeed';
 import type { EntryBlockProps } from '../drawer-props.type';
@@ -26,7 +27,7 @@ const EntryBlock = (props: EntryBlockProps) => {
           onCommit={(value) => void ops.editRecord({ c: 'entries', id: entry.id }, { field: 'text', prev: entry.text, value: value.trim() }, `Saved ${entry.id}.`)}
         />
       ) : (
-        <Markdown size="sm" source={entry.text} />
+        <BoardMarkdown size="sm" source={entry.text} />
       )}
       {row.replies.map((reply) => (
         <EntryReply key={reply.id} reply={reply} now={now} />

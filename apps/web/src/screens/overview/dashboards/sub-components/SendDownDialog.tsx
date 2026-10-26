@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Box, Dialog, MarkdownEditor, SegmentedControl, Stack } from '@drizztdourden08/tessera';
+import { Box, Dialog, SegmentedControl, Stack } from '@drizztdourden08/tessera';
+import { BoardMarkdownEditor } from '../../../../shell';
 import type { KeyboardEvent } from 'react';
 import { SEND_KINDS, SEND_MESSAGE } from '../dashboards.constants';
 import type { SendDownDialogProps } from '../dashboards.type';
@@ -30,7 +31,7 @@ const SendDownDialog = (props: SendDownDialogProps) => {
       <Box onKeyDown={submit}>
         <Stack gap="sm">
           <SegmentedControl<SendKind> aria-label="Kind of post" value={send.kind} options={SEND_KINDS} onChange={send.setKind} />
-          <MarkdownEditor aria-label="Text to send down" value={send.text} onChange={send.setText} error={over} hint="Ctrl+Enter sends" />
+          <BoardMarkdownEditor aria-label="Text to send down" value={send.text} onChange={send.setText} error={over} hint="Ctrl+Enter sends" />
         </Stack>
       </Box>
     </Dialog>

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Callout, Disclosure, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { Button, Callout, Disclosure, Flex, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../shell';
 import { contextParts, hasContext } from '../../feed-model';
 import type { EntryBodyProps } from '../OwnerFeed.type';
 
@@ -25,10 +26,10 @@ const ContextBlock = (props: EntryBodyProps) => {
   return (
     <Flex direction="column" gap="xs">
       <Text variant="overline" tone="muted">Context</Text>
-      <Markdown size="sm" source={parts.shown} />
+      <BoardMarkdown size="sm" source={parts.shown} />
       {parts.rest ? (
         <Disclosure summary="Show the rest" size="sm">
-          <Markdown size="sm" source={parts.rest} />
+          <BoardMarkdown size="sm" source={parts.rest} />
         </Disclosure>
       ) : null}
     </Flex>

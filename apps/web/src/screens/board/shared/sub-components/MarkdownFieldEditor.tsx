@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex, MarkdownEditor } from '@drizztdourden08/tessera';
+import { Button, Flex } from '@drizztdourden08/tessera';
+import { BoardMarkdownEditor } from '../../../../shell';
 import { useState } from 'react';
 import type { MarkdownFieldEditorProps } from '../shared.type';
 
@@ -16,7 +17,7 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
   };
   return (
     <Flex direction="column" gap="sm">
-      <MarkdownEditor
+      <BoardMarkdownEditor
         aria-label={label(noun)}
         value={draft}
         onChange={(next) => {

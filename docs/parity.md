@@ -92,7 +92,7 @@ their status is `n/a`.
 | `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | done |
 | `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | done |
 | `mcp.tools.test.mjs` | MCP tool host | 7 | `crates/argus-mcp/tests/tools.rs` | done |
-| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/tests/markdown/*.test.tsx`, `apps/web/tests/board/plain-text.test.ts` | doing (all applicable cases ported; 8 `gap:` cases wait for Tessera, see Markdown gaps) |
+| `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/tests/markdown/*.test.tsx`, `apps/web/tests/board/plain-text.test.ts` | doing (all applicable cases ported on Tessera 0.76; 3 `gap:` cases wait for Tessera, see Markdown gaps) |
 | `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/notify.rs` | done |
 | `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify/`, `crates/argus-native/tests/toast_payload.rs`, `crates/argus-native/tests/toast_winrt.rs` | done (the `toastScript` and fake PowerShell cases do not apply: the notifier is native) |
 | `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
@@ -150,19 +150,22 @@ the Activity feed in slice 2 and the other tabs in slice 5.
 
 ### Markdown gaps (md.test.mjs, for the Tessera lead)
 
-The cases are in `apps/web/tests/markdown/` as `it.fails` cases named `gap: ...`: they pass while
-Tessera lacks the feature and fail the day it ships it, and then become plain `it` cases.
+Every board and overview Markdown goes through `BoardMarkdown` and `BoardMarkdownEditor` in
+`apps/web/src/shell/markdown/`: proof images under `/files/` and https (no `..` segments), `T-5`,
+`I-3`, `H-1` and `A-2` as links to `/p/<board>#<id>`, app paths through the router, and every other
+link opened in a new tab. The cases are in `apps/web/tests/markdown/`; the ones below are
+`it.fails` cases named `gap: ...`: they pass while Tessera lacks the feature and fail the day it
+ships it, and then become plain `it` cases.
 
-- Links to `/files/...` proof addresses: Tessera Markdown links only http, https and mailto.
-- Inline images: every image shows its alt text (the Node page showed `/files`, https and data images).
-- `linkIds`: `T-5`, `I-3`, `A-2` and `H-1` stay text (the Node page linked them to page anchors).
+- Data images (`data:image/png;base64,...`): Tessera draws only http, https and app path images.
+- A drawn image is not clickable (the Node page opened it in the lightbox).
 - Control and private-use characters pass through (Node removed them; NUL becomes U+FFFD).
-- The editor lacks list continuation on Enter, Tab and Shift+Tab indent, Backspace on an empty
-  marker and the checkbox autoformat of a dash and empty brackets.
 - Different on purpose and asserted as Tessera does it: raw html is dropped (Node showed it as
   text), entities are decoded to text, headings start one level lower, a soft break stays a
   newline, a table cell carries its alignment as a class, a bold with no selection inserts the
-  two marks and no placeholder word, and a text is never cut at a size cap.
+  two marks and no placeholder word, a text is never cut at a size cap, a link that is not a
+  board path opens through `window.open`, and a space after `- []` makes the checkbox (Node did it on
+  the input event).
 
 ### Board page gaps (pages.board.test.mjs, for the web lead)
 

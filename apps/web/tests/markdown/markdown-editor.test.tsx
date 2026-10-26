@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
-import { MarkdownEditor } from '@drizztdourden08/tessera';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { BoardMarkdownEditor } from '../../src/shell';
+import { inBoard } from './render-markdown';
 
 afterEach(cleanup);
 
@@ -13,12 +14,12 @@ interface Boxed {
 
 const Harness = ({ start, onSubmit }: { start: string; onSubmit: (value: string) => void }) => {
   const [value, setValue] = useState(start);
-  return <MarkdownEditor value={value} onChange={setValue} onSubmit={onSubmit} aria-label="Text" layout="tabs" />;
+  return <BoardMarkdownEditor value={value} onChange={setValue} onSubmit={onSubmit} aria-label="Text" layout="tabs" />;
 };
 
 const mount = (start: string, from = 0, to = from): Boxed => {
   const submitted: string[] = [];
-  render(<Harness start={start} onSubmit={(value) => submitted.push(value)} />);
+  render(inBoard(<Harness start={start} onSubmit={(value) => submitted.push(value)} />));
   const area = screen.getByLabelText<HTMLTextAreaElement>('Text');
   area.setSelectionRange(from, to);
   return { area, submitted };
@@ -116,13 +117,13 @@ describe('markdown editor keys', () => {
 });
 
 describe('markdown editor list keys', () => {
-  it.fails('gap: Enter continues a list and ends it on an empty item', () => {
+  it('Enter continues a list and ends it on an empty item', () => {
     const { area } = mount('- a', 3);
     fireEvent.keyDown(area, { key: 'Enter' });
     expect(area.value).toBe('- a\n- ');
   });
 
-  it.fails('gap: indent and outdent move list lines by two spaces', () => {
+  it('indent and outdent move list lines by two spaces', () => {
     const { area } = mount('- a', 3);
     fireEvent.keyDown(area, { key: 'Tab' });
     expect(area.value).toBe('  - a');
@@ -130,15 +131,15 @@ describe('markdown editor list keys', () => {
     expect(area.value).toBe('- a');
   });
 
-  it.fails('gap: Backspace after the marker of an empty item takes the marker away', () => {
+  it('Backspace after the marker of an empty item takes the marker away', () => {
     const { area } = mount('- ', 2);
     fireEvent.keyDown(area, { key: 'Backspace' });
     expect(area.value).toBe('');
   });
 
-  it.fails('gap: typing "- [] " becomes a checkbox item', () => {
+  it('a space after "- []" becomes a checkbox item', () => {
     const { area } = mount('- []', 4);
-    fireEvent.change(area, { target: { value: '- [] ' } });
+    fireEvent.keyDown(area, { key: ' ' });
     expect(area.value).toBe('- [ ] ');
   });
 });

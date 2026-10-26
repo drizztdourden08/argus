@@ -9,4 +9,8 @@ const NOW_TICK_MS = 15_000;
 
 const FILTER_LABEL = 'Show agents';
 
-export { CHAT_SHAPE, FILTER_LABEL, NOW_TICK_MS, ROW_SHAPE };
+const AGENT_ANCHOR = /^A-\d+$/;
+
+const AGENTS_HASH = 'agents';
+
+export { AGENT_ANCHOR, AGENTS_HASH, CHAT_SHAPE, FILTER_LABEL, NOW_TICK_MS, ROW_SHAPE };

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, ToastStack } from '@drizztdourden08/tessera';
 import { act, render, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -80,12 +81,14 @@ interface Board {
   threads?: Record<string, object>;
 }
 
-const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined) => {
+const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined, at = '/p/alpha#agents') => {
   const fake = createFakeSources();
   const view = render(
     <TesseraProvider overrides={{}}>
       <DataProvider streams={createScopeStreams(fake.open)}>
-        <AgentsTab boardKey="alpha" onPurge={onPurge} />
+        <MemoryRouter initialEntries={[at]}>
+          <AgentsTab boardKey="alpha" onPurge={onPurge} />
+        </MemoryRouter>
         <ToastStack />
       </DataProvider>
     </TesseraProvider>,

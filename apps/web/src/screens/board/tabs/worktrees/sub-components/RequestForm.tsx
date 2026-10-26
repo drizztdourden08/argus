@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Callout, Flex, MarkdownEditor, Text } from '@drizztdourden08/tessera';
+import { Button, Callout, Flex, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdownEditor } from '../../../../../shell';
 import type { KeyboardEvent } from 'react';
 import { nameOf, threadOf } from '../model';
 import { ASK_HINTS } from '../worktrees.constants';
@@ -17,7 +18,7 @@ const RequestForm = (props: RequestFormProps) => {
   return (
     <Flex direction="column" gap="sm" role="group" aria-label={`Ask ${thread} to ${verb} ${nameOf(row)}`} onKeyDown={onKeyDown}>
       <Text>Ask <Text.B>{thread}</Text.B> to {verb} <Text.Code>{row.path}</Text.Code>. The thread decides and answers here.</Text>
-      <MarkdownEditor
+      <BoardMarkdownEditor
         aria-label="Message for the thread"
         value={panel.text}
         placeholder={panel.kind === 'delete' ? ASK_HINTS.delete : ASK_HINTS.check}

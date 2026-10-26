@@ -4,6 +4,12 @@ import type { Agent, ProjectThread, ReconcileFinding } from '../../../../data/ag
 import type { WithId } from '../../../../data/react';
 import type { AgentFilter } from './model';
 
+interface AgentAnchor {
+  selected: string | null;
+  open: (id: string) => void;
+  close: () => void;
+}
+
 interface AgentsTabProps {
   boardKey: string;
   onPurge: (thread: string) => void;
@@ -126,6 +132,7 @@ interface ChatMenuProps {
 }
 
 export type {
+  AgentAnchor,
   AgentActions,
   AgentActionsProps,
   AgentDetailLineProps,

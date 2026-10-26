@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex, Markdown, Tag, Text } from '@drizztdourden08/tessera';
+import { Button, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../../shell';
 import { formatAgo } from '../../../../../format';
 import type { TimelineLineProps } from '../drawer-props.type';
 import { KIND_LABEL } from '../record';
@@ -14,7 +15,7 @@ const TimelineLine = (props: TimelineLineProps) => {
       {row.who !== thread && <Text variant="caption" tone="muted">{row.who}</Text>}
       {row.id && <Text variant="caption" tone="muted" mono>{row.id}</Text>}
       {row.on && <Text variant="caption" tone="muted">{`on ${row.on}`}</Text>}
-      <Markdown size="sm" source={row.text} />
+      <BoardMarkdown size="sm" source={row.text} />
       {row.status && <Tag>{row.status}</Tag>}
       {row.doneable && (
         <Button size="xs" variant="primary" aria-label={`Mark ${row.id} done`} disabled={acts.isBusy(`post:done:${row.id}`)} onClick={() => void acts.done(todo)}>

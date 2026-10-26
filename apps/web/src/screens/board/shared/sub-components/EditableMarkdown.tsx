@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { Button, Flex, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdown } from '../../../../shell';
 import { useState } from 'react';
 import type { EditableMarkdownProps } from '../shared.type';
 import { MarkdownFieldEditor } from './MarkdownFieldEditor';
@@ -24,7 +25,7 @@ const EditableMarkdown = (props: EditableMarkdownProps) => {
   }
   return (
     <Flex direction="column" gap="xs" align="start">
-      {value ? <Markdown>{value}</Markdown> : <Text tone="muted">{empty}</Text>}
+      {value ? <BoardMarkdown>{value}</BoardMarkdown> : <Text tone="muted">{empty}</Text>}
       <Button size="xs" variant="ghost" onClick={() => setEditing(true)}>{`Edit ${noun}`}</Button>
     </Flex>
   );
