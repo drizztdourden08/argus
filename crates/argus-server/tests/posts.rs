@@ -6,19 +6,11 @@ mod posting;
 use std::time::{Duration, Instant};
 
 use argus_store::rusqlite::params;
-use argus_testkit::{Request, TestOptions, TestServer};
+use argus_testkit::{Request, TestOptions, TestServer, png};
 use posting::{cli, cli_to, doc, entry, entry_count, id, inbox, iso, page_put, post, seeded, with};
 use serde_json::{Value, json};
 
 const NOTE: &str = "a note is required for fail, partial and blocked: say what you saw";
-const PNG_HEX: &str = "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082";
-
-fn png() -> Vec<u8> {
-    (0..PNG_HEX.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&PNG_HEX[i..i + 2], 16).expect("hex"))
-        .collect()
-}
 
 fn text_of(v: &Value, field: &str) -> String {
     v[field].as_str().unwrap_or_default().to_owned()

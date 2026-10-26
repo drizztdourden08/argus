@@ -1,10 +1,57 @@
-//! Time in the forms the Node server writes: epoch milliseconds and `Date.toISOString`.
+//! Time in the forms the Node server writes (epoch milliseconds and `Date.toISOString`) and the
+//! injected clock every service reads.
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
 use time::{Date, OffsetDateTime, PrimitiveDateTime};
+
+/// A source of epoch milliseconds, injected so tests can drive time.
+pub trait Clock: Send + Sync {
+    /// The current time in epoch milliseconds.
+    fn now_ms(&self) -> i64;
+}
+
+/// The wall clock.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SystemClock;
+
+impl Clock for SystemClock {
+    fn now_ms(&self) -> i64 {
+        now_ms()
+    }
+}
+
+/// A clock that only moves when told to; clones share one time.
+#[derive(Debug, Clone, Default)]
+pub struct ManualClock(Arc<AtomicI64>);
+
+impl ManualClock {
+    /// A manual clock showing `ms`.
+    #[must_use]
+    pub fn at(ms: i64) -> Self {
+        Self(Arc::new(AtomicI64::new(ms)))
+    }
+
+    /// Jump to `ms`.
+    pub fn set(&self, ms: i64) {
+        self.0.store(ms, Ordering::SeqCst);
+    }
+
+    /// Move forward by `ms`.
+    pub fn advance(&self, ms: i64) {
+        self.0.fetch_add(ms, Ordering::SeqCst);
+    }
+}
+
+impl Clock for ManualClock {
+    fn now_ms(&self) -> i64 {
+        self.0.load(Ordering::SeqCst)
+    }
+}
 
 /// Milliseconds since the epoch, now.
 #[must_use]
@@ -28,6 +75,21 @@ pub fn iso_from_ms(ms: i64) -> String {
     let fmt =
         format_description!("[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond digits:3]Z");
     t.format(&fmt).unwrap_or_default()
+}
+
+/// An age as `40m` under an hour, `5h` under two days, else `2d`.
+#[must_use]
+pub fn age_text(ms: i64) -> String {
+    let minutes = ((ms + 30_000).div_euclid(60_000)).max(1);
+    if minutes < 60 {
+        return format!("{minutes}m");
+    }
+    let hours = (minutes + 30).div_euclid(60);
+    if hours < 48 {
+        format!("{hours}h")
+    } else {
+        format!("{}d", (hours + 12).div_euclid(24))
+    }
 }
 
 /// A file-name-safe stamp: `20261017T193800Z`.

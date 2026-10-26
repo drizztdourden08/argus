@@ -37,6 +37,7 @@ mod types;
 
 pub use alert_text::{ALERT_TAIL, alert_text};
 pub use alerts::{AlertBook, Due, Pace};
+pub use argus_core::clock::age_text;
 pub use config::ProcsConfig;
 pub use defaults::{PROTECTED_CMD, PROTECTED_NAMES, default_rules};
 pub use error::{ErrorCode, ProcsError};
@@ -57,7 +58,7 @@ pub use rules_file::{RULES_FILE, parse_rules_file, rules_file_text};
 pub use service::{Options, Ports, ProcsService, RulesView};
 pub use system_killer::SystemKiller;
 pub use system_sampler::{SystemSampler, platform_name};
-pub use text::{age_text, base_name, mem_text, slashed};
+pub use text::{base_name, mem_text, slashed};
 pub use tracker::{IDLE_CPU_PCT, Tracked, Tracker};
 pub use tree::{chain_of, descendants_of};
 pub use types::{Flag, Guard, Meta, ProcDoc, ProcRow, RuleSummary, Sample, Status};

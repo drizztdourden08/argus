@@ -12,13 +12,12 @@ use crate::gh::GhRunner;
 use crate::git::{Git, GitExec, SystemExec};
 use crate::measure::{Bounds, Leftover, measure_folder};
 use crate::paths::{clean_path, join_path};
-use crate::ports::{
-    ActivityLine, Notifier, ProcInfo, ProcessLister, StoreError, WakeEvent, WorktreeStore,
-};
+use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
 use crate::request::{RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::{Deps, Options, Service};
 use crate::sync::locked;
+use argus_core::StorageError;
 use std::collections::HashMap;
 use std::fs;
 use std::io;
@@ -381,7 +380,7 @@ impl WorktreeStore for MemStore {
         locked(&self.kv).get(key).cloned()
     }
 
-    fn kv_set(&self, key: &str, value: &str) -> Result<(), StoreError> {
+    fn kv_set(&self, key: &str, value: &str) -> Result<(), StorageError> {
         locked(&self.kv).insert(key.to_string(), value.to_string());
         Ok(())
     }
@@ -391,7 +390,7 @@ impl WorktreeStore for MemStore {
         _project: &str,
         keep_ids: &[String],
         answer_ids: &[String],
-    ) -> Result<(), StoreError> {
+    ) -> Result<(), StorageError> {
         let mut board = locked(&self.board);
         for id in keep_ids {
             board.keeps.remove(id);
@@ -726,7 +725,7 @@ impl Harness {
             error: Some("ENOENT".to_string()),
             ..GitOutput::default()
         }));
-        let clock = Arc::new(ManualClock::new(SystemClock.now_ms()));
+        let clock = Arc::new(ManualClock::at(SystemClock.now_ms()));
         let exec = Arc::new(ScriptedExec::new(mode));
         let hook_fs = Arc::new(HookFs::default());
         let backups = join_path(root, "worktree-backups");
@@ -849,6 +848,25 @@ impl Harness {
 
     pub fn clock_now(&self) -> i64 {
         self.clock.now_ms()
+    }
+
+    /// The text of the wake sent to `thread`.
+    pub fn wake_text(&self, thread: &str) -> String {
+        let wakes = locked(&self.notes.wakes);
+        wakes
+            .iter()
+            .find(|w| w.thread == thread)
+            .unwrap()
+            .text
+            .clone()
+    }
+
+    /// The text of the lead's `worktree-stale` wake.
+    pub fn lead_stale_text(&self) -> String {
+        let wakes = locked(&self.notes.wakes);
+        let lead = wakes.iter().find(|w| w.thread == "lead").unwrap();
+        assert_eq!(lead.reason, "worktree-stale");
+        lead.text.clone()
     }
 
     pub fn wake_texts(&self) -> Vec<String> {

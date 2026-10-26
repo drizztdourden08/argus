@@ -2,19 +2,7 @@
 //! queue, the machine's processes.
 
 use crate::board::BoardFacts;
-use std::fmt;
-
-/// A storage failure, as a sentence.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct StoreError(pub String);
-
-impl fmt::Display for StoreError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl std::error::Error for StoreError {}
+use argus_core::StorageError;
 
 /// The storage the crate needs. Rules, keeps and answers live on the project's board; the "already told" and "made by a
 /// removal" memories are small texts in a key-value table (`worktrees:sent:<project>`, `worktrees:made:<project>`).
@@ -24,14 +12,14 @@ pub trait WorktreeStore: Send + Sync {
     /// The projects that have a board.
     fn projects(&self) -> Vec<String>;
     fn kv_get(&self, key: &str) -> Option<String>;
-    fn kv_set(&self, key: &str, value: &str) -> Result<(), StoreError>;
+    fn kv_set(&self, key: &str, value: &str) -> Result<(), StorageError>;
     /// Drop the keeps and the answers of worktrees that no longer exist (a locked board write on the store's side).
     fn drop_kept(
         &self,
         project: &str,
         keep_ids: &[String],
         answer_ids: &[String],
-    ) -> Result<(), StoreError>;
+    ) -> Result<(), StorageError>;
 }
 
 /// One line of the activity log.

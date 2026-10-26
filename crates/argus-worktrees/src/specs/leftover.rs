@@ -1004,16 +1004,12 @@ fn the_leads_wake_counts_folders_once_and_not_again_before_repeat_ms() {
         },
         |o| o.many_at = 2,
     );
-    let wakes = h.notes.wakes.lock().unwrap().clone();
-    let lead = wakes.iter().find(|w| w.thread == "lead").unwrap();
-    assert_eq!(lead.reason, "worktree-stale");
     assert_eq!(
-        lead.text,
+        h.lead_stale_text(),
         "Alpha has 7 folders: 4 git worktrees and 3 leftovers (about 6 MB): `coord worktree remove --all-leftovers` clears the old ones."
     );
+    assert!(!h.wake_text("worker").contains("folders:"));
     h.notes.wakes.lock().unwrap().clear();
     h.scan();
     assert_eq!(h.notes.wake_count(), 0, "once per repeat_ms (24 h)");
-    let worker = wakes.iter().find(|w| w.thread == "worker").unwrap();
-    assert!(!worker.text.contains("folders:"));
 }

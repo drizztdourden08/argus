@@ -4,7 +4,6 @@
 
 use std::sync::Arc;
 
-use crate::clock::Clock;
 use crate::events::RunEvents;
 use crate::log_splitter::LineSplitter;
 use crate::log_window::{LogWindow, PendingLine, size_of};
@@ -12,6 +11,7 @@ use crate::record::{LogEvent, RunLimits, RunRow, Stream};
 use crate::redact::Redactor;
 use crate::store::Storage;
 use crate::time::format_iso;
+use argus_core::clock::Clock;
 
 /// Bytes of pending lines that make a flush due at once.
 pub const FLUSH_BYTES: u64 = 64 * 1024;

@@ -10,7 +10,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-argus-core = { path = "../argus-core" }
+argus-core = { path = "../argus-core", features = ["testkit"] }
 argus-server = { path = "../argus-server" }
 serde_json = { version = "1", features = ["preserve_order"] }
 tempfile = "3"

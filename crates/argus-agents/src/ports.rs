@@ -2,10 +2,10 @@
 //! activity log and the live agents docs. The server implements them; tests use fakes.
 
 use crate::board::Board;
-use crate::clock::Clock;
 use crate::error::AgentsError;
 use crate::fs::FileSystem;
 use crate::record::Record;
+use argus_core::clock::Clock;
 use std::sync::Arc;
 
 /// The project boards.
