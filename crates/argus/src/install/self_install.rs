@@ -86,13 +86,7 @@ fn same_bytes(first: &Path, second: &Path) -> bool {
 
 /// Copies `source` over `target` atomically, or leaves `target` untouched and says why.
 fn replace(source: &Path, target: &Path) -> Result<(), String> {
-    let name = target
-        .file_name()
-        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
-    let temp = target.with_file_name(format!("{name}.tmp"));
-    fs::copy(source, &temp).map_err(|e| format!("the copy to {} failed: {e}", temp.display()))?;
-    fs::rename(&temp, target).map_err(|e| {
-        let _removed = fs::remove_file(&temp);
+    argus_core::fs::copy_atomic(source, target).map_err(|e| {
         format!(
             "{} cannot be replaced ({e}). It is most likely in use by a running argus: run `argus stop`, then `argus self-install` again. The installed copy was left as it was.",
             target.display()
