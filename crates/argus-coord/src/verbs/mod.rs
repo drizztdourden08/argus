@@ -1,6 +1,7 @@
 //! The verb groups served in Rust. A work package adds its folder under `verbs/` (see the layout
 //! in the crate documentation) and one row to [`PORTED`]; a group with no row answers exit 120.
 
+pub mod shared;
 pub mod thread;
 pub mod work;
 

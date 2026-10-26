@@ -2,13 +2,14 @@
 //! sub-verb, the board folder, and the two ways to reach the board (a locked write, a plain
 //! read). A verb prints inside its write, before the save, as the Node verbs do.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use argus_board::store::{board_dir, read_board, with_board};
+use argus_board::store::{read_board, with_board};
 use argus_board::{Board, BoardError};
 use serde_json::Value;
 
 use crate::cli::{Call, CoordError, Invocation, Options, Outcome};
+use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me};
 
 /// A board step that can refuse.
@@ -130,7 +131,7 @@ impl<'a> Run<'a> {
     ) -> Result<T, CoordError> {
         let (home, key) = (self.home.clone(), self.project.clone());
         with_board(&home, &key, false, |board| change(board, self))
-            .map_err(|e| refusal(e, &home, &key))
+            .map_err(|e| board_refusal(e, &home, &key))
     }
 
     /// Reads the board without the lock.
@@ -145,15 +146,5 @@ impl<'a> Run<'a> {
             return Err(BoardError::Missing(self.project.clone()).into());
         };
         Ok(show(&board, self)?)
-    }
-}
-
-fn refusal(e: BoardError, home: &Path, key: &str) -> CoordError {
-    match e {
-        BoardError::Locked(_) => CoordError::refuse(format!(
-            "board is locked by another coord call ({}); retry.",
-            board_dir(home, key).join("board.lock").display()
-        )),
-        other => other.into(),
     }
 }
