@@ -50,8 +50,11 @@ fn detach(command: &mut Command) {
 #[cfg(not(windows))]
 fn detach(_command: &mut Command) {}
 
-/// `node <bin> start`, hidden and detached so it outlives this call.
+/// `node <bin> start`, hidden and detached so it outlives this call. The standard handles of
+/// this process stay out of it: on Windows a child inherits every inheritable handle, and the
+/// server would hold the pipe the caller reads this call's output from and keep it open.
 fn start_server(env: &Env, bin: &Path) {
+    argus_native::keep_stdio_private();
     let mut command = Command::new("node");
     command
         .arg(bin)

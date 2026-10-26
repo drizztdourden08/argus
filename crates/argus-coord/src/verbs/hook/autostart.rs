@@ -64,6 +64,7 @@ fn dashboard_bin(env: &Env, paths: &Paths) -> Option<PathBuf> {
 
 /// `node <bin> tray start` (`start` off Windows), with no window and not tied to this process.
 fn start(env: &Env, bin: &Path) {
+    argus_native::keep_stdio_private();
     let verbs: &[&str] = if cfg!(windows) {
         &["tray", "start"]
     } else {

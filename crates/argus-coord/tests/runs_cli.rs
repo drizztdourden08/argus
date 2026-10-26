@@ -511,12 +511,9 @@ fn kill(pid: &str) {
     command.args(args).output().ok();
 }
 
-#[test]
-fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it() {
-    if Command::new("node").arg("--version").output().is_err() {
-        eprintln!("skipped: node is not installed");
-        return;
-    }
+/// A temp home with the board `alpha`, a fake install whose `dashboard.mjs` starts a fake
+/// server, and a `config.json` naming that install. Returns the home and the install folder.
+fn home_with_fake_install() -> (Home, std::path::PathBuf) {
     let home = Home::new();
     seed(&home.coord_home(), home.path());
     let install = home.path().join("fake-install");
@@ -528,6 +525,28 @@ fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it()
         config.to_string(),
     )
     .expect("config");
+    (home, install)
+}
+
+fn node_missing() -> bool {
+    let missing = Command::new("node").arg("--version").output().is_err();
+    if missing {
+        eprintln!("skipped: node is not installed");
+    }
+    missing
+}
+
+fn fake_pid(home: &Home) -> String {
+    let pid = fs::read_to_string(home.dashboard_home().join("fake.pid")).unwrap_or_default();
+    pid.trim().to_owned()
+}
+
+#[test]
+fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it() {
+    if node_missing() {
+        return;
+    }
+    let (home, install) = home_with_fake_install();
     let wait = [
         ("COORD_DASHBOARD_WAIT_MS", "10000"),
         ("COORD_DASHBOARD_INSTALL", &install.to_string_lossy()),
@@ -537,8 +556,8 @@ fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it()
         env_plus(&home.env(), &wait),
         home.path(),
     );
-    let pid = fs::read_to_string(home.dashboard_home().join("fake.pid")).unwrap_or_default();
-    kill(pid.trim());
+    let pid = fake_pid(&home);
+    kill(&pid);
     assert!(
         ok(&ran).contains("no runs match"),
         "{} {}",
@@ -546,7 +565,49 @@ fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it()
         ran.err
     );
     assert!(
-        pid.trim().parse::<u32>().is_ok_and(|p| p > 0),
+        pid.parse::<u32>().is_ok_and(|p| p > 0),
         "the fake dashboard started: {pid:?}"
+    );
+}
+
+/// The autostart as a real child with piped output, as the Node suite and the hooks run it: the
+/// server it starts must not hold those pipes, or the caller waits for it to exit.
+#[test]
+fn the_server_the_client_starts_does_not_hold_the_pipes_of_its_caller() {
+    if node_missing() {
+        return;
+    }
+    let Some(exe) = argus_testkit::argus_exe() else {
+        eprintln!("skipped: no argus binary (set ARGUS_EXE or run `cargo build -p argus`)");
+        return;
+    };
+    let (home, install) = home_with_fake_install();
+    let mut command = Command::new(exe);
+    command
+        .args(["coord", "run", "list", "--project", "alpha"])
+        .current_dir(home.path())
+        .env("COORD_HOME", home.coord_home())
+        .env("DASHBOARD_HOME", home.dashboard_home())
+        .env("COORD_DASHBOARD_WAIT_MS", "10000")
+        .env("COORD_DASHBOARD_INSTALL", &install)
+        .env_remove("CLAUDE_CODE_SESSION_ID")
+        .env_remove("COORD_PROJECT")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    #[cfg(windows)]
+    std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
+    let child = command.spawn().expect("argus coord");
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || tx.send(child.wait_with_output()).ok());
+    let finished = rx.recv_timeout(std::time::Duration::from_secs(25));
+    let pid = fake_pid(&home);
+    kill(&pid);
+    let out = finished
+        .expect("the call returned while the server it started was still running")
+        .expect("output");
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("no runs match"),
+        "{out:?}"
     );
 }
