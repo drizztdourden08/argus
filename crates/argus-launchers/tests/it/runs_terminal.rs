@@ -112,9 +112,9 @@ async fn stdin_a_line_goes_to_the_process_and_is_noted_in_the_log() {
         "second\n",
         "a trailing newline is not doubled"
     );
+    env.svc.stop("alpha", &run.id, "human").await.unwrap();
     let sys = env.text("alpha", &run.id, Some("sys"));
     assert!(sys.contains("> hello world") && sys.contains("> second"));
-    env.svc.stop("alpha", &run.id, "human").await.unwrap();
     assert_eq!(env.events.doc("alpha", &run.id).unwrap()["stdin"], false);
     let late = env
         .svc
