@@ -13,6 +13,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+argus-core = { path = "../argus-core" }
 getrandom = "0.3"
 regex = "1"
 serde = { version = "1", features = ["derive"] }

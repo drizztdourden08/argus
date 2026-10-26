@@ -4,11 +4,11 @@
 //! `agents.reaper.test.mjs`.
 
 use argus_agents::fakes::{
-    JsonBoards, ManualClock, RecordingActivity, agent_record, board_json, thread_record, touch,
-    user_line,
+    JsonBoards, RecordingActivity, agent_record, board_json, thread_record, touch, user_line,
 };
 use argus_agents::{
-    ActivitySink, AgentReaper, AgentsConfig, Board, Clock, FileSystem, Ports, ReaperOptions, StdFs,
+    ActivitySink, AgentReaper, AgentsConfig, Board, Clock, FileSystem, ManualClock, Ports,
+    ReaperOptions, StdFs,
 };
 use serde_json::{Value, json};
 use std::fs;
@@ -28,7 +28,7 @@ struct World {
 fn world() -> World {
     let dir = tempfile::tempdir().unwrap();
     let boards = Arc::new(JsonBoards::new(dir.path(), &["alpha"]));
-    let clock = Arc::new(ManualClock::new(NOW));
+    let clock = Arc::new(ManualClock::at(NOW));
     let activity = Arc::new(RecordingActivity::default());
     World {
         dir,

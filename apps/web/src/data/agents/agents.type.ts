@@ -45,7 +45,7 @@ interface Agent {
   updatedAt?: string | null;
   finishedAt?: string | null;
   rev?: number;
-  'claudeId'?: string | null;
+  claudeId?: string | null;
   live?: AgentLive | null;
   idleSince?: string | null;
   orphanSince?: string | null;

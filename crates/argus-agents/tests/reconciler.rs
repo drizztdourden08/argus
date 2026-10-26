@@ -6,13 +6,13 @@
 //! turn ended, `<sessionId>/tasks/<id>.output`. Ported from `agents.reconciler.test.mjs`.
 
 use argus_agents::fakes::{
-    JsonBoards, ManualClock, RecordingWakes, agent_record, board_json, thread_record, touch,
+    JsonBoards, RecordingWakes, agent_record, board_json, thread_record, touch,
 };
 use argus_agents::iso::format_iso;
 use argus_agents::reconciler::{Class, Counts, Finding};
 use argus_agents::{
-    AgentReconciler, AgentsConfig, Board, Clock, FileSystem, Ports, ReconcilerOptions, RunReport,
-    StdFs, SystemClock, WakeEvent, WakeSink,
+    AgentReconciler, AgentsConfig, Board, Clock, FileSystem, ManualClock, Ports, ReconcilerOptions,
+    RunReport, StdFs, SystemClock, WakeEvent, WakeSink,
 };
 use serde_json::{Value, json};
 use std::fs::{self, OpenOptions};
@@ -109,7 +109,7 @@ fn world() -> World {
         _home: home,
         claude,
         boards,
-        clock: Arc::new(ManualClock::new(now)),
+        clock: Arc::new(ManualClock::at(now)),
         wakes: Arc::new(RecordingWakes::default()),
         now,
     }

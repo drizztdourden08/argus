@@ -12,9 +12,11 @@ use crate::board::BoardView;
 use crate::docs::{Doc, DocSink};
 use crate::faults::{ClearFault, Fault, FaultStore, NewFault};
 use crate::source::BoardSource;
-use crate::store::{RowsQuery, StoreError, StoreResult, WakeStore, prune_cutoff};
+use crate::store::{RowsQuery, StoreResult, WakeStore, prune_cutoff};
 use crate::time::ms_or_zero;
 use crate::wake::{FinishedEvent, WakeInput, WakeRow, WakeStatus};
+use argus_core::StorageError;
+use argus_core::unique::unique;
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -50,12 +52,22 @@ impl MemoryStore {
     pub fn all(&self) -> Vec<WakeRow> {
         locked(&self.inner).rows.clone()
     }
+
+    fn queued_where(&self, keep: impl Fn(&WakeRow) -> bool) -> Vec<WakeRow> {
+        let inner = locked(&self.inner);
+        inner
+            .rows
+            .iter()
+            .filter(|r| r.status == WakeStatus::Queued && keep(r))
+            .cloned()
+            .collect()
+    }
 }
 
 impl WakeStore for MemoryStore {
     fn insert(&self, wake: &WakeInput, at: &str) -> StoreResult<WakeRow> {
         if self.failing.load(Ordering::SeqCst) {
-            return Err(StoreError("insert refused".to_owned()));
+            return Err(StorageError("insert refused".to_owned()));
         }
         let mut inner = locked(&self.inner);
         inner.counter += 1;
@@ -113,24 +125,16 @@ impl WakeStore for MemoryStore {
         thread: &str,
         since_iso: &str,
     ) -> StoreResult<Vec<WakeRow>> {
-        let inner = locked(&self.inner);
-        Ok(inner
-            .rows
-            .iter()
-            .filter(|r| r.status == WakeStatus::Queued && r.lines.is_some() && r.scope == scope)
-            .filter(|r| (thread == "*" || r.thread == thread) && r.at.as_str() >= since_iso)
-            .cloned()
-            .collect())
+        Ok(self.queued_where(|r| {
+            r.lines.is_some()
+                && r.scope == scope
+                && (thread == "*" || r.thread == thread)
+                && r.at.as_str() >= since_iso
+        }))
     }
 
     fn unflushed(&self) -> StoreResult<Vec<WakeRow>> {
-        let inner = locked(&self.inner);
-        Ok(inner
-            .rows
-            .iter()
-            .filter(|r| r.status == WakeStatus::Queued && r.lines.is_none())
-            .cloned()
-            .collect())
+        Ok(self.queued_where(|r| r.lines.is_none()))
     }
 
     fn get(&self, id: &str) -> StoreResult<Option<WakeRow>> {
@@ -174,13 +178,7 @@ impl WakeStore for MemoryStore {
 
     fn scopes(&self) -> StoreResult<Vec<String>> {
         let inner = locked(&self.inner);
-        let mut scopes: Vec<String> = Vec::new();
-        for row in &inner.rows {
-            if !scopes.contains(&row.scope) {
-                scopes.push(row.scope.clone());
-            }
-        }
-        Ok(scopes)
+        Ok(unique(inner.rows.iter().map(|row| row.scope.clone())))
     }
 
     fn prune(&self, now_ms: i64) -> StoreResult<Vec<String>> {

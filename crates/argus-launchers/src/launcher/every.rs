@@ -6,6 +6,8 @@ use std::sync::LazyLock;
 use regex::Regex;
 
 use super::record::RuleError;
+pub use argus_core::clock::age_text as duration_text;
+
 use crate::time::DAY_MS;
 
 pub const EVERY_LEGACY: &str = "7d";
@@ -49,18 +51,4 @@ pub fn parse_every(value: &str) -> Result<Every, RuleError> {
         )));
     }
     Ok(Every { text, ms })
-}
-
-/// `40m` under an hour, `9h` under two days, else `9d`.
-pub fn duration_text(ms: i64) -> String {
-    let minutes = ((ms + 30_000) / 60_000).max(1);
-    if minutes < 60 {
-        return format!("{minutes}m");
-    }
-    let hours = (minutes + 30) / 60;
-    if hours < 48 {
-        format!("{hours}h")
-    } else {
-        format!("{}d", (hours + 12) / 24)
-    }
 }

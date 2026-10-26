@@ -8,7 +8,6 @@ use serde_json::Value;
 use super::fixtures::{MIN, START, registry_boards};
 use super::listen::Tap;
 use crate::board::BoardView;
-use crate::clock::{Clock, ManualClock};
 use crate::config::WakeConfig;
 use crate::engine::{AttachOptions, EngineConfig, WakeEngine, channel};
 use crate::memory::{MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore};
@@ -16,6 +15,7 @@ use crate::registry::RowState;
 use crate::service::{WakeDeps, WakeService};
 use crate::source::NoLive;
 use crate::wake::WakeInput;
+use argus_core::clock::{Clock, ManualClock};
 
 /// A bare engine: windows, listeners, replay and the mirror.
 pub struct EngineRig {

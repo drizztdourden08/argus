@@ -35,7 +35,6 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use tracing::warn;
 
-use crate::clock::Clock;
 use crate::docs::DocSink;
 use crate::engine::{EngineNote, WakeEngine};
 use crate::faults::{ClearFault, Fault, FaultStore};
@@ -43,6 +42,7 @@ use crate::presence::Presence;
 use crate::reasons::{MAIN_SCOPE, PORTFOLIO};
 use crate::source::BoardSource;
 use crate::time::iso;
+use argus_core::clock::Clock;
 
 /// How long a wake may stay unreacted after it was delivered.
 pub const DEFAULT_REACTION_MS: i64 = 600_000;

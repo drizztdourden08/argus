@@ -23,8 +23,8 @@ use super::join::has_master;
 use super::record::{Launcher, LauncherBoard};
 use super::stale_text::{StaleItem, master_text, stale_text};
 use super::usage::{Usage, usage_of};
-use crate::clock::Clock;
 use crate::time::{format_iso, parse_iso};
+use argus_core::clock::Clock;
 
 pub const REASON_STALE: &str = "launcher-stale";
 pub const REASON_MASTER: &str = "launcher-master-missing";

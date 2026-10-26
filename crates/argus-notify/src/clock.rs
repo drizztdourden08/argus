@@ -1,31 +1,10 @@
-//! The injected clock and the time formats of the records.
-
-use std::time::{SystemTime, UNIX_EPOCH};
+//! The time formats of the records.
 
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
 
 const NANOS_PER_MS: i128 = 1_000_000;
-
-/// The time the service reads, in milliseconds since the Unix epoch.
-pub trait Clock: Send + Sync {
-    /// Now, in milliseconds.
-    fn now_ms(&self) -> i64;
-}
-
-/// The real clock.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SystemClock;
-
-impl Clock for SystemClock {
-    fn now_ms(&self) -> i64 {
-        let since_epoch = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default();
-        i64::try_from(since_epoch.as_millis()).unwrap_or(i64::MAX)
-    }
-}
 
 /// `2026-10-26T12:00:00.000Z`, the form the records carry (the Node `toISOString`).
 #[must_use]

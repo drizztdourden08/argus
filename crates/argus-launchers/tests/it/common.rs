@@ -24,7 +24,7 @@ pub struct TokioClock {
 impl TokioClock {
     pub fn new() -> Self {
         Self {
-            base_ms: argus_launchers::system_now_ms(),
+            base_ms: argus_core::clock::now_ms(),
             start: Instant::now(),
         }
     }

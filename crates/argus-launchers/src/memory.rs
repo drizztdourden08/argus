@@ -4,6 +4,8 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
+use argus_core::unique::unique;
+
 use crate::attach::AttachmentRow;
 use crate::record::{
     ListFilter, LogCommit, LogLine, LogRead, NewRun, ReadMode, RunPatch, RunRow, RunStatus,
@@ -172,25 +174,17 @@ impl RunStore for MemoryStore {
 
     fn groups(&self) -> Vec<(String, String)> {
         let inner = self.lock();
-        let mut groups: Vec<(String, String)> = Vec::new();
-        for row in &inner.rows {
-            let group = (row.scope.clone(), row.name.clone());
-            if !groups.contains(&group) {
-                groups.push(group);
-            }
-        }
-        groups
+        unique(
+            inner
+                .rows
+                .iter()
+                .map(|row| (row.scope.clone(), row.name.clone())),
+        )
     }
 
     fn scopes(&self) -> Vec<String> {
         let inner = self.lock();
-        let mut scopes: Vec<String> = Vec::new();
-        for row in &inner.rows {
-            if !scopes.contains(&row.scope) {
-                scopes.push(row.scope.clone());
-            }
-        }
-        scopes
+        unique(inner.rows.iter().map(|row| row.scope.clone()))
     }
 
     fn finished(&self, scope: &str, name: &str) -> Vec<RunRow> {

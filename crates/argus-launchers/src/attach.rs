@@ -99,7 +99,7 @@ fn check_claim(claimed: &str, found: &str) -> Result<(), RunError> {
 fn new_id() -> String {
     let mut random = [0_u8; 8];
     if getrandom::fill(&mut random).is_err() {
-        random = crate::time::system_now_ms().to_le_bytes();
+        random = argus_core::clock::now_ms().to_le_bytes();
     }
     format!("ra-{}", hex(&random))
 }

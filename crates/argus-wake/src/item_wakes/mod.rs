@@ -16,8 +16,8 @@
 mod stale;
 mod text;
 
+pub use argus_core::clock::age_text;
 pub use stale::Stale;
-pub use text::age_text;
 
 use std::collections::HashMap;
 
