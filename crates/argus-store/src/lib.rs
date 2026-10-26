@@ -3,6 +3,9 @@
 //! transactions; doc events reach the bus only after the outermost commit.
 #![deny(clippy::cognitive_complexity)]
 
+mod activity;
+mod activity_entry;
+mod activity_notes;
 mod db;
 mod docs;
 mod error;
@@ -10,6 +13,10 @@ mod migrations;
 mod query;
 mod tx;
 
+pub use activity::{ActivityLog, KEEP_ROWS, LogNote, MIRROR_ROWS, SCOPE as ACTIVITY_SCOPE};
+pub use activity_entry::{
+    ActivityEntry, ActivityFilter, ActivityLevel, NewActivity, TEXT_MAX, one_line,
+};
 pub use db::{Db, DocStore};
 pub use docs::{Applied, DocRow, PruneOptions};
 pub use error::StoreError;

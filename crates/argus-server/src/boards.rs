@@ -1,0 +1,58 @@
+//! Reading boards for the services: the sync service's last good copy, else the file on disk.
+
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use argus_board::Board;
+use argus_board::store::read_board;
+use argus_sync::{ProjectRow, SyncService};
+
+const ENDED: [&str; 2] = ["done", "archived"];
+
+/// What the services read of the boards.
+#[derive(Clone)]
+pub struct BoardReader {
+    sync: Option<Arc<SyncService>>,
+    coord_home: PathBuf,
+}
+
+impl BoardReader {
+    /// A reader over the sync service, falling back to the boards under `coord_home`.
+    #[must_use]
+    pub fn new(sync: Option<Arc<SyncService>>, coord_home: PathBuf) -> Self {
+        BoardReader { sync, coord_home }
+    }
+
+    /// The board of a key, when there is one that reads.
+    #[must_use]
+    pub fn board(&self, key: &str) -> Option<Board> {
+        let kept = self.sync.as_ref().and_then(|s| s.board(key));
+        kept.or_else(|| read_board(&self.coord_home, key).ok().flatten())
+    }
+
+    /// The projects the sync service knows; none without it.
+    #[must_use]
+    pub fn projects(&self) -> Vec<ProjectRow> {
+        self.sync.as_ref().map(|s| s.projects()).unwrap_or_default()
+    }
+
+    /// The thread of a board that coordinates it, unless it is done or archived.
+    #[must_use]
+    pub fn coordinator(&self, key: &str) -> Option<String> {
+        let board = self.board(key)?;
+        coordinator_in(&board)
+    }
+}
+
+/// The id of the first thread of a board whose role is `coordinator` and whose status is not
+/// `done` or `archived`.
+#[must_use]
+pub fn coordinator_in(board: &Board) -> Option<String> {
+    let threads = board["threads"].as_object()?;
+    threads
+        .values()
+        .find(|t| {
+            t["role"] == "coordinator" && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
+        })
+        .and_then(|t| t["id"].as_str().map(str::to_owned))
+}

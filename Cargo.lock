@@ -176,11 +176,18 @@ dependencies = [
 name = "argus-server"
 version = "0.1.0"
 dependencies = [
+ "argus-agents",
  "argus-board",
  "argus-core",
+ "argus-launchers",
+ "argus-native",
+ "argus-notify",
+ "argus-procs",
  "argus-store",
  "argus-sync",
  "argus-testkit",
+ "argus-wake",
+ "argus-worktrees",
  "axum",
  "bytes",
  "form_urlencoded",
