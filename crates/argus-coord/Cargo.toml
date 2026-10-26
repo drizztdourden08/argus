@@ -1,0 +1,28 @@
+[package]
+name = "argus-coord"
+description = "Argus coord: the coord CLI (verbs and hooks) in Rust, behind the `coord` shim."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+argus-agents = { path = "../argus-agents" }
+argus-board = { path = "../argus-board" }
+argus-core = { path = "../argus-core" }
+argus-launchers = { path = "../argus-launchers" }
+argus-notify = { path = "../argus-notify" }
+argus-worktrees = { path = "../argus-worktrees" }
+memchr = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+ureq = { version = "3", default-features = false }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

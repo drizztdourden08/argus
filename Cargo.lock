@@ -71,8 +71,11 @@ dependencies = [
 name = "argus"
 version = "0.1.0"
 dependencies = [
+ "argus-coord",
  "argus-core",
+ "argus-mcp",
  "argus-native",
+ "argus-parity",
  "argus-server",
  "argus-testkit",
  "argus-wake",
@@ -106,6 +109,23 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+]
+
+[[package]]
+name = "argus-coord"
+version = "0.1.0"
+dependencies = [
+ "argus-agents",
+ "argus-board",
+ "argus-core",
+ "argus-launchers",
+ "argus-notify",
+ "argus-worktrees",
+ "memchr",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "ureq",
 ]
 
 [[package]]
@@ -176,6 +196,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "argus-parity"
+version = "0.1.0"
+dependencies = [
+ "argus-core",
+ "argus-testkit",
+ "clap",
+ "reqwest",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "argus-procs"
 version = "0.1.0"
 dependencies = [
@@ -197,6 +230,7 @@ dependencies = [
  "argus-board",
  "argus-core",
  "argus-launchers",
+ "argus-mcp",
  "argus-native",
  "argus-notify",
  "argus-procs",
@@ -205,7 +239,9 @@ dependencies = [
  "argus-testkit",
  "argus-wake",
  "argus-worktrees",
+ "async-trait",
  "axum",
+ "base64 0.22.1",
  "bytes",
  "filetime",
  "form_urlencoded",
@@ -2666,6 +2702,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
 
 [[package]]
+name = "ureq"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cde93ff05758a36a851a398a772b0b79a82fbe3c186a46f2696baaeaf84c966b"
+dependencies = [
+ "base64 0.23.1",
+ "log",
+ "percent-encoding",
+ "ureq-proto",
+ "utf8-zero",
+]
+
+[[package]]
+name = "ureq-proto"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "841583fc36089d7d59419568ae157f43a5a03a2e5a81ba87c77d1596ef46e922"
+dependencies = [
+ "base64 0.23.1",
+ "http",
+ "httparse",
+ "log",
+]
+
+[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2676,6 +2737,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "utf8-zero"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e"
 
 [[package]]
 name = "utf8_iter"

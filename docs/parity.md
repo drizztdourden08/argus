@@ -63,7 +63,7 @@ their status is `n/a`.
 | `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs` | doing (32 of 34; wake cases with argus-wake) |
 | `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
 | `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | n/a (Tessera LogPanel renders ANSI) |
-| `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | todo |
+| `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | doing (helper cases; the verb cases with the board group) |
 | `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/build_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
 | `coord.store.test.mjs` | Board file locking | 5 | `crates/argus-board/tests/lock.rs` | done |
 | `core.cli.test.mjs` | Server CLI and lifecycle | 1 | `crates/argus/tests/cli.rs` | done (start, stop, status, open, logs, resync, token; autostart with slice 7) |
@@ -87,10 +87,10 @@ their status is `n/a`.
 | `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
 | `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/lead_verbs.rs` | todo |
 | `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | n/a (Tessera MediaViewer) |
-| `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/mcp_http.rs` | doing (15 of 16; auth case with server mount) |
-| `mcp.install.test.mjs` | MCP install and render | 7 | `crates/argus/tests/install.rs` | todo |
-| `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | doing (protocol done; live cases with server mount) |
-| `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | doing (8 of 10; quit.flag and config read in bin) |
+| `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/mcp_http.rs` | done |
+| `mcp.install.test.mjs` | MCP install and render | 7 | `crates/argus/tests/install.rs` | done |
+| `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | done |
+| `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | done |
 | `mcp.tools.test.mjs` | MCP tool host | 7 | `crates/argus-mcp/tests/tools.rs` | done |
 | `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/src/features/markdown/markdown.test.tsx` | doing (strip cases ported; render by Tessera Markdown) |
 | `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/notify.rs` | doing (HTTP cases done; the `coord ping`, `coord build hand` and `coord ask` child process cases with slice 8, the MCP `notify_owner` case with slice 7) |
@@ -145,6 +145,17 @@ A row with two slices is ported in two steps: the cases that need the later slic
 in `runs.cli`) wait for it. `pages.portfolio` covers the Dashboards tab in slice 1 and the
 Processes, Activity and Notifications tabs in slice 4; `pages.board` covers the page shell and
 the Activity feed in slice 2 and the other tabs in slice 5.
+
+## Node fixes after the matrix commit
+
+Node is frozen except fixes, and every fix reaches Argus. Each line names the `ai-config` commit and
+where it landed.
+
+| Node commit | Fix | Argus | Status |
+|---|---|---|---|
+| `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/registry.rs` | ported |
+| `db17ac5` | A worktree discard note counts only with a delete word, no negation and the worktree named | `crates/argus-worktrees/src/approval.rs` (word lists as in Node `remove.mjs`) | ported |
+| `db17ac5` | Listener hook timeout 3 days; master launcher for the Overlord project | `docs/coord-port.md` section 3, for WP2 | noted for WP2 |
 
 ## Feature areas
 

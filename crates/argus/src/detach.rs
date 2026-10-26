@@ -1,4 +1,4 @@
-//! Processes the tray starts: hidden, without a console, not waited for.
+//! Processes the tray and the MCP bridge start: hidden, without a console, not waited for.
 
 use std::ffi::OsStr;
 use std::io;

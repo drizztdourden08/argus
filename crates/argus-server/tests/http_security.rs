@@ -1301,20 +1301,6 @@ async fn resync_is_delegated_to_the_sync_service() {
     t.stop(false).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn mcp_answers_503_unavailable_until_its_slice_is_wired() {
-    let t = plain().await;
-    let r = t
-        .write(
-            "POST",
-            "/mcp",
-            &json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" }),
-        )
-        .await;
-    assert_refused(&r, 503, "unavailable", "/mcp");
-    t.stop(false).await;
-}
-
 async fn health_with(t: &TestServer, name: &str, value: &str) -> u16 {
     get_status(t, "/api/health", &[(name, value)]).await
 }

@@ -11,6 +11,9 @@ use crate::time::{iso, parse_ms};
 
 /// A turn this recent counts as running.
 const BUSY_MS: i64 = 3 * 60 * 1000;
+/// The faults that end by themselves once the thread listens again. A `no-reaction` fault does not:
+/// its wake was delivered to a listener and the thread stayed silent.
+const LISTEN_CLEARS: [&str; 2] = ["not-listening", "no-listener"];
 
 type Open = HashMap<Key, Fault>;
 
@@ -107,7 +110,9 @@ impl Registry {
         let key: Key = (w.scope.to_owned(), w.id.to_owned());
         if w.listener.is_some() {
             self.deaf.remove(&key);
-            let listening_again = open.get(&key).is_some_and(|f| f.reason == "not-listening");
+            let listening_again = open
+                .get(&key)
+                .is_some_and(|f| LISTEN_CLEARS.contains(&f.reason.as_str()));
             if listening_again {
                 self.clear_by_registry(w, "it listens again");
                 open.remove(&key);

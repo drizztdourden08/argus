@@ -1,5 +1,5 @@
 //! The routes, one module per area. A service not wired yet has a module with an empty
-//! `register`; `/mcp` still answers 503 from `unavailable` until the MCP layer is wired.
+//! `register`.
 
 use crate::Router;
 
@@ -10,12 +10,12 @@ pub mod agents;
 mod blocking;
 pub mod db;
 pub mod files;
+pub mod mcp;
 pub mod notify;
 pub mod pages;
 mod params;
 pub mod procs;
 pub mod runs;
-pub mod unavailable;
 pub mod wake;
 pub mod worktrees;
 
@@ -35,5 +35,5 @@ pub fn register_all(router: &mut Router) {
     worktrees::register(router);
     pages::register(router);
     files::register(router);
-    unavailable::register(router);
+    mcp::register(router);
 }
