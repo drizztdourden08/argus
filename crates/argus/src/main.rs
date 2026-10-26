@@ -2,12 +2,15 @@
 //! Node `dashboard` bin arrive in later slices.
 #![deny(clippy::cognitive_complexity)]
 
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use argus::wake_stream::{self, Io};
 use argus_core::Paths;
 use argus_server::{ServeOptions, serve};
 use clap::{Parser, Subcommand};
+use tokio_util::sync::CancellationToken;
 
 /// The port of `argus serve` while the Node server keeps 47615.
 const DEFAULT_PORT: u16 = 47616;
@@ -37,6 +40,13 @@ enum Command {
         #[arg(long)]
         shadow: bool,
     },
+    /// Prints one line per wake of a project's wake stream (for a Monitor); see
+    /// `--project <key> [--thread <id|*>] [--id <label>]`.
+    WakeStream {
+        /// The flags, read by the wake-stream command itself.
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }
 
 async fn run_serve(port: u16, data_dir: Option<PathBuf>, shadow: bool) -> Result<(), String> {
@@ -62,6 +72,34 @@ async fn run_serve(port: u16, data_dir: Option<PathBuf>, shadow: bool) -> Result
     Ok(())
 }
 
+/// Ends the command on Ctrl-C.
+fn stop_on_interrupt() -> CancellationToken {
+    let stop = CancellationToken::new();
+    let ring = stop.clone();
+    tokio::spawn(async move {
+        if tokio::signal::ctrl_c().await.is_ok() {
+            ring.cancel();
+        }
+    });
+    stop
+}
+
+/// Writes one wake line to stdout, flushed, and reports a closed reader instead of panicking.
+fn print_line(line: &str) -> io::Result<()> {
+    let mut out = io::stdout().lock();
+    writeln!(out, "{line}")?;
+    out.flush()
+}
+
+async fn run_wake_stream(args: Vec<String>) -> ExitCode {
+    let io = Io {
+        out: Box::new(print_line),
+        err: Box::new(|line| eprintln!("{line}")),
+    };
+    let code = wake_stream::run(&args, &Paths::from_env(), io, stop_on_interrupt()).await;
+    ExitCode::from(code)
+}
+
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
@@ -71,6 +109,7 @@ async fn main() -> ExitCode {
             data_dir,
             shadow,
         } => run_serve(port, data_dir, shadow).await,
+        Command::WakeStream { args } => return run_wake_stream(args).await,
     };
     match done {
         Ok(()) => ExitCode::SUCCESS,

@@ -10,7 +10,7 @@ use argus_board::Board;
 use argus_core::Config;
 use serde_json::{Value, json};
 
-use crate::SyncOptions;
+use crate::{Hooks, SyncOptions};
 
 /// Empties `dirty` and `versions`: nothing reads them any more, so every save by the server
 /// clears what the CLI keeps adding.
@@ -24,6 +24,7 @@ pub(crate) fn clear_marks(b: &mut Board) {
 /// The shared state.
 pub(crate) struct State {
     pub opts: SyncOptions,
+    pub hooks: Hooks,
     pub boards: RwLock<HashMap<String, Board>>,
     pub cards: RwLock<Vec<Value>>,
     pub errors: AtomicU64,
@@ -36,6 +37,7 @@ impl State {
     pub fn new(opts: SyncOptions) -> Self {
         State {
             opts,
+            hooks: Hooks::default(),
             boards: RwLock::new(HashMap::new()),
             cards: RwLock::new(Vec::new()),
             errors: AtomicU64::new(0),

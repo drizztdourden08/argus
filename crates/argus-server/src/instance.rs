@@ -46,6 +46,20 @@ pub fn write_pid_file(
     std::fs::write(file, rec.to_string())
 }
 
+/// Whether a process with this id is running.
+#[cfg(windows)]
+#[must_use]
+pub fn pid_alive(pid: u32) -> bool {
+    argus_native::process_alive(pid)
+}
+
+/// Whether a process with this id is running.
+#[cfg(not(windows))]
+#[must_use]
+pub fn pid_alive(pid: u32) -> bool {
+    Path::new(&format!("/proc/{pid}")).exists()
+}
+
 async fn probe(port: u16, token: Option<&str>) -> Option<Value> {
     let mut s = TcpStream::connect(("127.0.0.1", port)).await.ok()?;
     let auth = token

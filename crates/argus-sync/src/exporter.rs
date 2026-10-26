@@ -112,6 +112,9 @@ impl State {
         let mut docs = export_docs(&board, &|p| {
             proof_url(key, p["file"].as_str().unwrap_or_default())
         });
+        if project {
+            self.hooks.overlaid(key, &mut docs);
+        }
         let count = docs.len();
         let applied = self.opts.db.tx(|tx| {
             keep_foreign(tx, key, project, &mut docs)?;
@@ -121,6 +124,9 @@ impl State {
             }
             Ok(out)
         })?;
+        if project {
+            self.hooks.exported(key, &board);
+        }
         self.keep_board(key, board);
         if project && !applied.changes.is_empty() {
             self.schedule_portfolio();

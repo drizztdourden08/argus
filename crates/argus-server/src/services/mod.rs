@@ -38,9 +38,12 @@ pub(crate) mod runs;
 pub(crate) mod stale;
 pub(crate) mod sync;
 pub(crate) mod wake;
+pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
+pub use agents::AgentsOptions;
 pub use procs::ProcsOptions;
+pub use wake_hook::{WakeHook, WakeRequest};
 
 /// The composed services.
 pub struct Services {

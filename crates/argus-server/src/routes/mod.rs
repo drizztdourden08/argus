@@ -6,6 +6,8 @@ use crate::Router;
 pub mod actions;
 pub mod activity;
 pub mod admin;
+pub mod agents;
+mod blocking;
 pub mod db;
 pub mod files;
 pub mod notify;
@@ -24,6 +26,7 @@ pub fn register_all(router: &mut Router) {
     db::register(router);
     actions::register(router);
     activity::register(router);
+    agents::register(router);
     procs::register(router);
     wake::register(router);
     notify::register(router);

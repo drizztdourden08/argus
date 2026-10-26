@@ -12,8 +12,15 @@ repository.workspace = true
 [dependencies]
 argus-core = { path = "../argus-core" }
 argus-server = { path = "../argus-server" }
+argus-wake = { path = "../argus-wake" }
 clap = { version = "4", features = ["derive"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-util = "0.7"
+
+[dev-dependencies]
+argus-testkit = { path = "../argus-testkit" }
+serde_json = { version = "1", features = ["preserve_order"] }
+tempfile = "3"
 
 [lints]
 workspace = true

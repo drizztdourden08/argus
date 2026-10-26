@@ -73,8 +73,13 @@ version = "0.1.0"
 dependencies = [
  "argus-core",
  "argus-server",
+ "argus-testkit",
+ "argus-wake",
  "clap",
+ "serde_json",
+ "tempfile",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]
