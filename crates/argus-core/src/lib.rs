@@ -7,6 +7,7 @@ pub mod bus;
 pub mod change;
 pub mod clock;
 pub mod coll;
+pub mod collate;
 pub mod config;
 pub mod error;
 #[cfg(feature = "testkit")]

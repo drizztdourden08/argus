@@ -19,7 +19,6 @@ mod args;
 mod backend;
 mod bridge;
 mod call;
-mod collate;
 mod context;
 mod defs;
 mod error;

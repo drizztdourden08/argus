@@ -14,7 +14,7 @@ use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, mod
 use super::find::{Want, agent_mut, clear_ending, named};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
-use crate::verbs::agent::base::authority::change_agent;
+use crate::verbs::agent::base::apply::allow;
 use crate::verbs::agent::base::opt::{given, value};
 use crate::verbs::agent::base::{Run, write};
 use crate::who::Caller;
@@ -167,7 +167,7 @@ fn change(
     if reopening {
         check_resume(agent, &id, run)?;
     }
-    change_agent(who, agent)?;
+    allow(who, "set", "agents", Some(agent))?;
     let fields = plan(board, &id, run, status)?;
     let agent = agent_mut(board, &id)?;
     if reopening {

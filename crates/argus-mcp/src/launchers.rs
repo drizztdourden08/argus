@@ -7,8 +7,8 @@ use serde_json::{Value, json};
 
 use crate::args::flag;
 use crate::backend::McpBackend;
-use crate::collate;
 use crate::json::{display, nn, text, truthy};
+use argus_core::collate;
 
 fn is_master(l: &Value) -> bool {
     text(l, "name") == Some("master")

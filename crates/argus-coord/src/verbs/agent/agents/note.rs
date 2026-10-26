@@ -16,7 +16,7 @@ use crate::verbs::agent::base::{opt::word, write};
 pub fn run(call: &mut Call<'_>) -> Outcome {
     let line = require_str("agentnote", word(&call.positional, 1))?;
     write(call, |board, who, run| {
-        let (id, agent) = own(board, who, run, Want::Live)?;
+        let (id, agent) = own(board, who, run, ("set", Want::Live))?;
         set(agent, "note", line.as_str());
         stamp(board, "agents", &id, &who.actor)?;
         run.say(&format!("{id}: {line}"));

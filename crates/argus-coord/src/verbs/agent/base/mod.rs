@@ -2,8 +2,6 @@
 //! ownership rules and the sort order of ids.
 
 pub mod apply;
-pub mod authority;
-pub mod collate;
 pub mod links;
 pub mod opt;
 pub mod scope;

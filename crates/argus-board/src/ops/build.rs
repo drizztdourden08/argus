@@ -15,7 +15,7 @@ use crate::launchers::bundle_status;
 use crate::limits::require_text;
 
 /// The bundle record of a build tag, made when a tag is handed without one.
-fn ensure_build(board: &mut Board, tag: &str, actor: &str, status: &str) {
+pub fn ensure_build(board: &mut Board, tag: &str, actor: &str, status: &str) {
     let at = now_iso();
     let rec = map_mut(board, "builds")
         .entry(tag.to_owned())

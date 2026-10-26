@@ -25,6 +25,15 @@ pub enum Ending {
 }
 
 impl Ending {
+    /// The verb that asks for it.
+    fn verb(self) -> &'static str {
+        match self {
+            Ending::Done => "done",
+            Ending::Failed => "fail",
+            Ending::Stopped => "stop",
+        }
+    }
+
     fn status(self) -> &'static str {
         match self {
             Ending::Done => "done",
@@ -57,7 +66,7 @@ fn result_of(call: &Call<'_>, ending: Ending) -> Result<Option<String>, CoordErr
 pub fn run(call: &mut Call<'_>, ending: Ending) -> Outcome {
     let result = result_of(call, ending)?;
     write(call, |board, who, run| {
-        let (id, agent) = own(board, who, run, Want::Live)?;
+        let (id, agent) = own(board, who, run, (ending.verb(), Want::Live))?;
         set(agent, "status", ending.status());
         set(agent, "finishedAt", now_iso());
         if let Some(text) = &result {

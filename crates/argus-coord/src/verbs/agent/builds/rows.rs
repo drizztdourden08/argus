@@ -10,8 +10,8 @@ use serde_json::{Value, json};
 
 use super::support::live;
 use crate::cli::exit::CoordError;
-use crate::verbs::agent::base::collate::compare;
 use crate::verbs::agent::rules::typed_board;
+use argus_core::collate::compare;
 
 const FAILING: [&str; 3] = ["fail", "partial", "blocked"];
 
@@ -162,7 +162,7 @@ pub fn build_rows(board: &Board) -> Result<Vec<Row>, CoordError> {
     rows.sort_by(|a, b| {
         b.handed
             .cmp(&a.handed)
-            .then_with(|| compare(&b.build, &a.build))
+            .then_with(|| compare(&b.build, &a.build, true))
     });
     Ok(rows)
 }

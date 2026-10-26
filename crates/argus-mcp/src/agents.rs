@@ -4,8 +4,8 @@ use serde_json::{Value, json};
 
 use crate::args::{arg_str, flag};
 use crate::backend::McpBackend;
-use crate::collate;
 use crate::json::{display, text, truthy};
+use argus_core::collate;
 
 const LIVE: [&str; 3] = ["working", "waiting", "stop-requested"];
 

@@ -7,11 +7,11 @@ use serde_json::{Map, Value, json};
 
 use crate::args::{arg_str, arg_u64};
 use crate::backend::McpBackend;
-use crate::collate;
 use crate::context::CallContext;
 use crate::error::ToolError;
 use crate::json::{display, nn, truthy};
 use crate::project::{clip, require_project};
+use argus_core::collate;
 
 const COLLS: [&str; 7] = [
     "items", "tests", "entries", "threads", "actions", "agents", "log",
