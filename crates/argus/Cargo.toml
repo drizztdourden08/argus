@@ -10,6 +10,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+argus-coord = { path = "../argus-coord" }
 argus-core = { path = "../argus-core" }
 argus-native = { path = "../argus-native" }
 argus-server = { path = "../argus-server" }

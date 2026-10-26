@@ -64,7 +64,7 @@ fn release_lock(lock: &mut Value, thread: &str) -> Option<String> {
 
 /// Free every lock the thread holds or waits for; the next in each queue gets it and a line in
 /// its inbox. Returns the `(resource, new holder)` pairs.
-pub(crate) fn release_all(board: &mut Board, thread: &str) -> Vec<(String, String)> {
+pub fn release_all(board: &mut Board, thread: &str) -> Vec<(String, String)> {
     let mut freed = Vec::new();
     for key in ids(board, "locks") {
         let Some(lock) = doc_mut(board, "locks", &key) else {
@@ -113,7 +113,10 @@ fn keep_previous_status(t: &mut Value) {
 
 /// Pause a thread. Returns false when it is already paused. The caller records who did it
 /// (`stamp`); `by` is the wording the thread is told: "the owner".
-pub(crate) fn pause_thread(board: &mut Board, id: &str, by: &str) -> Result<bool, BoardError> {
+///
+/// # Errors
+/// A thread, an agent or a lock doc cannot be stamped.
+pub fn pause_thread(board: &mut Board, id: &str, by: &str) -> Result<bool, BoardError> {
     let Some(t) = doc_mut(board, "threads", id) else {
         return Ok(false);
     };
@@ -144,7 +147,7 @@ pub(crate) fn pause_thread(board: &mut Board, id: &str, by: &str) -> Result<bool
 }
 
 /// Resume a paused thread. Returns false when it is not paused.
-pub(crate) fn resume_thread(board: &mut Board, id: &str, by: &str) -> bool {
+pub fn resume_thread(board: &mut Board, id: &str, by: &str) -> bool {
     let Some(t) = doc_mut(board, "threads", id) else {
         return false;
     };
@@ -171,7 +174,10 @@ pub(crate) fn resume_thread(board: &mut Board, id: &str, by: &str) -> bool {
 }
 
 /// Archive a thread, recording `actor`. Returns false when it is already archived.
-pub(crate) fn archive_thread(board: &mut Board, id: &str, actor: &str) -> Result<bool, BoardError> {
+///
+/// # Errors
+/// A thread, an agent or a lock doc cannot be stamped.
+pub fn archive_thread(board: &mut Board, id: &str, actor: &str) -> Result<bool, BoardError> {
     let Some(t) = doc_mut(board, "threads", id) else {
         return Ok(false);
     };
@@ -189,7 +195,7 @@ pub(crate) fn archive_thread(board: &mut Board, id: &str, actor: &str) -> Result
 }
 
 /// Bring an archived thread back to the status it had. Returns false when it is not archived.
-pub(crate) fn unarchive_thread(board: &mut Board, id: &str) -> bool {
+pub fn unarchive_thread(board: &mut Board, id: &str) -> bool {
     let Some(t) = doc_mut(board, "threads", id) else {
         return false;
     };

@@ -9,14 +9,15 @@ use crate::Board;
 use crate::json::{section, text, truthy};
 
 /// The launcher every project is expected to have.
-pub(crate) const MASTER: &str = "master";
+pub const MASTER: &str = "master";
 const DEF_PREFIX: &str = "launcher-";
 const EVERY_LEGACY: &str = "7d";
 const EVERY_MIN_MS: i64 = 3_600_000;
 const EVERY_MAX_MS: i64 = 365 * 86_400_000;
 
 /// The name of the run definition behind a launcher's Play button.
-pub(crate) fn launcher_def_name(name: &str) -> String {
+#[must_use]
+pub fn launcher_def_name(name: &str) -> String {
     format!("{DEF_PREFIX}{name}")
 }
 
@@ -25,7 +26,8 @@ fn is_live(rec: &Value) -> bool {
 }
 
 /// Whether the board has a live master launcher.
-pub(crate) fn has_master(board: &Board) -> bool {
+#[must_use]
+pub fn has_master(board: &Board) -> bool {
     is_live(&board["launchers"][MASTER])
 }
 
@@ -38,7 +40,8 @@ fn linked_bundles(board: &Board, name: &str) -> Vec<String> {
 }
 
 /// The bundle a launcher is joined to: the one it was made for, else an open bundle that links it.
-pub(crate) fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
+#[must_use]
+pub fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
     let name = text(rec, "name")?;
     if name == MASTER {
         return None;
@@ -52,13 +55,15 @@ pub(crate) fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
 }
 
 /// Not master and not joined to a bundle: it has a usage window.
-pub(crate) fn is_standalone(board: &Board, rec: &Value) -> bool {
+#[must_use]
+pub fn is_standalone(board: &Board, rec: &Value) -> bool {
     rec.is_object() && text(rec, "name") != Some(MASTER) && joined_bundle(board, rec).is_none()
 }
 
 /// A bundle's status besides closed: `draft` or `ready`. A record without a status reads ready
 /// when it was ever handed or starts something, else draft.
-pub(crate) fn bundle_status(board: &Board, tag: &str, rec: &Value) -> &'static str {
+#[must_use]
+pub fn bundle_status(board: &Board, tag: &str, rec: &Value) -> &'static str {
     match rec["status"].as_str() {
         Some("draft") => return "draft",
         Some("ready") => return "ready",
@@ -76,7 +81,7 @@ pub(crate) fn bundle_status(board: &Board, tag: &str, rec: &Value) -> &'static s
 }
 
 /// The usage of a live standalone launcher.
-pub(crate) struct Usage {
+pub struct Usage {
     /// The window in milliseconds.
     pub every_ms: i64,
     /// When it was last used, as an ISO time.
@@ -115,7 +120,8 @@ fn ms_of(rec: &Value, key: &str) -> i64 {
 }
 
 /// The usage window of a launcher, or `None` for master, a joined one or a retired one.
-pub(crate) fn usage_of(board: &Board, rec: &Value, now_ms: i64) -> Option<Usage> {
+#[must_use]
+pub fn usage_of(board: &Board, rec: &Value, now_ms: i64) -> Option<Usage> {
     if !is_live(rec) || !is_standalone(board, rec) {
         return None;
     }

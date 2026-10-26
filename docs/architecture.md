@@ -95,7 +95,7 @@ in its row.
 | `argus-native` | Windows APIs only: tray, toasts, process sampling, single-instance mutex | core |
 | `argus-mcp` | MCP tools and resources, JSON-RPC handling, the stdio bridge | core, store, board, sync, launchers, wake |
 | `argus-testkit` (added) | One harness for every integration test, a dev-dependency only | server, store, core |
-| `argus-coord` (added, slice 8) | The coord CLI port behind the `coord` shim | core, board |
+| `argus-coord` (added, slice 8) | The coord CLI port behind the `coord` shim | core, board, agents, launchers, worktrees, notify (their pure modules); no service crate depends on it |
 
 The dependency graph has no cycle. Service crates talk to each other through the bus in
 `argus-core` (events) and through traits that `argus-board` and `argus-wake` define (calls).
@@ -320,7 +320,8 @@ a locator for the Node coord CLI (`ARGUS_COORD_CLI`).
 | `tracing`, `tracing-subscriber` | core | Structured JSON-lines server log |
 | `rust-embed` | server | Web build embedded in release, read from disk in debug |
 | `mime_guess` | server | Content types for static and file routes |
-| `reqwest` (rustls, no default features) | argus, mcp, coord | Stdio bridge forwarding, wake-stream client, CLI calls |
+| `reqwest` (rustls, no default features) | argus, mcp | Stdio bridge forwarding, wake-stream client |
+| `ureq` (no TLS, no default features) | coord | Blocking CLI calls to the loopback server, no runtime to start on the hook path |
 | `getrandom`, `subtle` | core, server | The config token and its constant-time compare |
 | `base64` | mcp | `attach_proof` payloads |
 | `thiserror` | libraries | One error enum per crate; `anyhow` only in the binary |

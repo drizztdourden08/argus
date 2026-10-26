@@ -1,4 +1,5 @@
-//! The `argus` binary. `argus serve` runs the server in the foreground and headless; `argus tray`
+//! The `argus` binary. `argus coord <verb>` is the coord CLI and is dispatched before anything
+//! else starts; `argus serve` runs the server in the foreground and headless; `argus tray`
 //! runs the tray icon that starts and quits it; the other verbs of the Node `dashboard` bin
 //! arrive in later slices.
 #![deny(clippy::cognitive_complexity)]
@@ -117,8 +118,8 @@ async fn run_wake_stream(args: Vec<String>) -> Result<u8, String> {
     Ok(wake_stream::run(&args, &paths_of(None), io, stop_on_interrupt()).await)
 }
 
-#[tokio::main]
-async fn main() -> ExitCode {
+/// The commands that need the async runtime: serve, wake-stream and the tray.
+async fn run_cli() -> ExitCode {
     let cli = Cli::parse();
     let done = match cli.command {
         Command::Serve {
@@ -135,6 +136,33 @@ async fn main() -> ExitCode {
     match done {
         Ok(0) => ExitCode::SUCCESS,
         Ok(code) => ExitCode::from(code),
+        Err(e) => {
+            eprintln!("argus: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// `argus coord ...`: the arguments after `coord`, when that is what was typed.
+fn coord_args() -> Option<Vec<String>> {
+    let mut args = std::env::args_os().skip(1);
+    if args.next()? != "coord" {
+        return None;
+    }
+    Some(args.map(|a| a.to_string_lossy().into_owned()).collect())
+}
+
+fn main() -> ExitCode {
+    // The coord fast path runs before clap and before any runtime starts: a hook is called on
+    // every tool call of every session, so nothing is set up that the verb does not need.
+    if let Some(argv) = coord_args() {
+        std::process::exit(argus_coord::run_process(argv));
+    }
+    match tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(runtime) => runtime.block_on(run_cli()),
         Err(e) => {
             eprintln!("argus: {e}");
             ExitCode::FAILURE
