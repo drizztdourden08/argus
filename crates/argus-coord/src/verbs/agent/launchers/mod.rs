@@ -11,8 +11,9 @@ mod row;
 mod set;
 mod show;
 
+use super::base::opt::{take_sub, unknown_sub};
 use crate::cli::Call;
-use crate::cli::exit::{CoordError, Outcome};
+use crate::cli::exit::Outcome;
 
 const VERBS: &str = "set, keep, retire, list, show";
 
@@ -21,19 +22,12 @@ const VERBS: &str = "set, keep, retire, list, show";
 /// # Errors
 /// A sub-verb that does not exist, or the refusal of the sub-verb.
 pub fn run(call: &mut Call<'_>) -> Outcome {
-    let sub = if call.positional.is_empty() {
-        String::new()
-    } else {
-        call.positional.remove(0)
-    };
-    match sub.as_str() {
+    match take_sub(&mut call.positional).as_str() {
         "set" => set::run(call),
         "keep" => keep::run(call),
         "retire" => retire::run(call),
         "list" => list::run(call),
         "show" => show::run(call),
-        _ => Err(CoordError::refuse(format!(
-            "launcher verb must be one of {VERBS}."
-        ))),
+        _ => Err(unknown_sub("launcher", VERBS)),
     }
 }

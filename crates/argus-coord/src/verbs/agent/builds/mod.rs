@@ -13,7 +13,8 @@ mod status;
 mod support;
 
 use crate::cli::Call;
-use crate::cli::exit::{CoordError, Outcome};
+use crate::cli::exit::Outcome;
+use crate::verbs::agent::base::opt::{take_sub, unknown_sub};
 
 const VERBS: &str = "add, set, rm, close, reopen, ready, draft, hand, unhand, list";
 
@@ -22,12 +23,7 @@ const VERBS: &str = "add, set, rm, close, reopen, ready, draft, hand, unhand, li
 /// # Errors
 /// A sub-verb that does not exist, or the refusal of the sub-verb.
 pub fn run(call: &mut Call<'_>) -> Outcome {
-    let sub = if call.positional.is_empty() {
-        String::new()
-    } else {
-        call.positional.remove(0)
-    };
-    match sub.as_str() {
+    match take_sub(&mut call.positional).as_str() {
         "add" => edit::add(call),
         "set" => edit::set_fields(call),
         "rm" => remove::run(call),
@@ -38,8 +34,6 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "hand" => hand::hand(call),
         "unhand" => hand::unhand(call),
         "list" => list::run(call),
-        _ => Err(CoordError::refuse(format!(
-            "build verb must be one of {VERBS}."
-        ))),
+        _ => Err(unknown_sub("build", VERBS)),
     }
 }

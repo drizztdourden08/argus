@@ -65,6 +65,21 @@ pub fn word(words: &[String], at: usize) -> &str {
     words.get(at).map_or("", String::as_str)
 }
 
+/// The sub-verb: the first word, taken off the words that stay for it (empty when there is none).
+pub fn take_sub(positional: &mut Vec<String>) -> String {
+    if positional.is_empty() {
+        String::new()
+    } else {
+        positional.remove(0)
+    }
+}
+
+/// The refusal of a sub-verb that does not exist.
+#[must_use]
+pub fn unknown_sub(group: &str, verbs: &str) -> CoordError {
+    CoordError::refuse(format!("{group} verb must be one of {verbs}."))
+}
+
 /// A text flag that clears with an empty value: `None` when not given, a refusal for a bare flag
 /// or a repeated one, else the checked text (`None` inside for a blank one). `clears` says
 /// whether the refusal names the `""` that clears it.

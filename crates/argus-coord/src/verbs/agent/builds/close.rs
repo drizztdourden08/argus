@@ -6,7 +6,7 @@ use argus_board::json::{doc, shown, truthy};
 use argus_board::limits::optional_text;
 use argus_launchers::launcher::{CloseRequest, close_bundle, reopen_bundle};
 
-use super::support::{authorize_manage, carrying, tag_arg, thread_of};
+use super::support::{authorize_manage, carrying, existing, tag_arg, thread_of};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::out::ago;
@@ -77,9 +77,7 @@ pub fn close(call: &mut Call<'_>) -> Outcome {
 pub fn reopen(call: &mut Call<'_>) -> Outcome {
     let tag = tag_arg(&call.positional, "reopen")?;
     write(call, |board, who, run| {
-        let Some(rec) = doc(board, "builds", &tag) else {
-            return Err(CoordError::refuse(format!("no bundle \"{tag}\".")));
-        };
+        let rec = existing(board, &tag)?;
         let closed = truthy(rec, "closedAt");
         authorize_manage(board, who, &[thread_of(board, &tag)])?;
         if !closed {

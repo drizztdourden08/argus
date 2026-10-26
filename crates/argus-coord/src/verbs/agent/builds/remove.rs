@@ -1,11 +1,11 @@
 //! `coord build rm <tag> [--force]`: delete the record. Refused while live tests carry the tag
 //! (`--force` drops the record only). The launchers made for the bundle are retired with it.
 
-use argus_board::json::{doc, map_mut, nullish, truthy};
+use argus_board::json::{map_mut, nullish, truthy};
 use argus_launchers::launcher::retire_made_for;
 
 use super::launch::{drop_legacy, retire_orphan};
-use super::support::{audit, authorize_manage, carrying, tag_arg, thread_of};
+use super::support::{audit, authorize_manage, carrying, existing, tag_arg, thread_of};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::write;
@@ -18,9 +18,7 @@ use crate::verbs::agent::rules;
 pub fn run(call: &mut Call<'_>) -> Outcome {
     let tag = tag_arg(&call.positional, "rm")?;
     write(call, |board, who, run| {
-        let Some(rec) = doc(board, "builds", &tag) else {
-            return Err(CoordError::refuse(format!("no bundle \"{tag}\".")));
-        };
+        let rec = existing(board, &tag)?;
         let launcher = nullish(rec, "launcher");
         let legacy = truthy(rec, "cmd");
         authorize_manage(board, who, &[thread_of(board, &tag)])?;

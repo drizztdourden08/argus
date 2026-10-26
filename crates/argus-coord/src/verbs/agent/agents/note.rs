@@ -4,12 +4,10 @@ use argus_board::json::set;
 use argus_board::limits::require_str;
 use argus_board::store::stamp;
 
-use super::find::{Want, agent_mut, named};
+use super::find::{Want, own};
 use crate::cli::Call;
 use crate::cli::exit::Outcome;
-use crate::verbs::agent::base::authority::change_agent;
-use crate::verbs::agent::base::opt::word;
-use crate::verbs::agent::base::write;
+use crate::verbs::agent::base::{opt::word, write};
 
 /// `coord agent note`.
 ///
@@ -18,9 +16,7 @@ use crate::verbs::agent::base::write;
 pub fn run(call: &mut Call<'_>) -> Outcome {
     let line = require_str("agentnote", word(&call.positional, 1))?;
     write(call, |board, who, run| {
-        let id = named(board, who, run, Want::Live)?;
-        let agent = agent_mut(board, &id)?;
-        change_agent(who, agent)?;
+        let (id, agent) = own(board, who, run, Want::Live)?;
         set(agent, "note", line.as_str());
         stamp(board, "agents", &id, &who.actor)?;
         run.say(&format!("{id}: {line}"));

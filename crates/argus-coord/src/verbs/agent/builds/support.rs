@@ -104,6 +104,14 @@ pub fn thread_of(board: &Board, tag: &str) -> Option<String> {
     doc(board, "builds", tag).and_then(|b| nullish(b, "thread"))
 }
 
+/// A bundle's record.
+///
+/// # Errors
+/// The bundle is not on the board.
+pub fn existing<'a>(board: &'a Board, tag: &str) -> Result<&'a Value, CoordError> {
+    doc(board, "builds", tag).ok_or_else(|| CoordError::refuse(format!("no bundle \"{tag}\".")))
+}
+
 /// A bundle's record, to change.
 ///
 /// # Errors

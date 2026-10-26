@@ -8,12 +8,10 @@ use argus_board::store::stamp;
 use argus_core::clock::now_iso;
 use serde_json::Value;
 
-use super::find::{Want, agent_mut, named};
+use super::find::{Want, own};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
-use crate::verbs::agent::base::authority::change_agent;
-use crate::verbs::agent::base::opt::word;
-use crate::verbs::agent::base::write;
+use crate::verbs::agent::base::{opt::word, write};
 
 /// How an agent ends.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -59,9 +57,7 @@ fn result_of(call: &Call<'_>, ending: Ending) -> Result<Option<String>, CoordErr
 pub fn run(call: &mut Call<'_>, ending: Ending) -> Outcome {
     let result = result_of(call, ending)?;
     write(call, |board, who, run| {
-        let id = named(board, who, run, Want::Live)?;
-        let agent = agent_mut(board, &id)?;
-        change_agent(who, agent)?;
+        let (id, agent) = own(board, who, run, Want::Live)?;
         set(agent, "status", ending.status());
         set(agent, "finishedAt", now_iso());
         if let Some(text) = &result {

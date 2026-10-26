@@ -15,7 +15,8 @@ mod soft;
 mod start;
 
 use crate::cli::Call;
-use crate::cli::exit::{CoordError, Outcome};
+use crate::cli::exit::Outcome;
+use crate::verbs::agent::base::opt::{take_sub, unknown_sub};
 use finish::Ending;
 use soft::Soft;
 
@@ -27,12 +28,7 @@ const VERBS: &str =
 /// # Errors
 /// A sub-verb that does not exist, or the refusal of the sub-verb.
 pub fn run(call: &mut Call<'_>) -> Outcome {
-    let sub = if call.positional.is_empty() {
-        String::new()
-    } else {
-        call.positional.remove(0)
-    };
-    match sub.as_str() {
+    match take_sub(&mut call.positional).as_str() {
         "start" => start::run(call),
         "note" => note::run(call),
         "set" => set::run(call),
@@ -46,8 +42,6 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "list" => list::run(call),
         "show" => show::run(call),
         "reconcile" => reconcile::run(call),
-        _ => Err(CoordError::refuse(format!(
-            "agent verb must be one of {VERBS}."
-        ))),
+        _ => Err(unknown_sub("agent", VERBS)),
     }
 }
