@@ -55,11 +55,11 @@ their status is `n/a`.
 
 | Node test file | Feature area | Slice | Rust or web location | Status |
 |---|---|---|---|---|
-| `activity.test.mjs` | Activity log | 4 | `crates/argus-store/tests/activity.rs` | todo |
+| `activity.test.mjs` | Activity log | 4 | `crates/argus-store/tests/activity.rs` | done |
 | `agent.model.test.mjs` | coord agent verbs | 8 | `crates/argus-coord/tests/agent_model.rs` | doing (pure rules in argus-agents; CLI cases with slice 8) |
 | `agents.export.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/export.rs` | done |
 | `agents.reaper.test.mjs` | Agent reaper | 5 | `crates/argus-agents/tests/reaper.rs` | doing (9 of 10; sync case with server) |
-| `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/agents_reconcile_http.rs` | todo |
+| `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/agents_reconcile_http.rs` | done |
 | `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs` | doing (32 of 34; wake cases with argus-wake) |
 | `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
 | `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | n/a (Tessera LogPanel renders ANSI) |
@@ -82,7 +82,7 @@ their status is `n/a`.
 | `hook.listen.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_listen.rs` | todo |
 | `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_transcript.rs` | todo |
 | `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/alias.rs` | done |
-| `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/inbox_wake.rs` | doing (pure cases in argus-wake; wire cases later) |
+| `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/inbox_wake.rs` | doing (HTTP done; coord inbox send with slice 8) |
 | `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
 | `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
 | `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/lead_verbs.rs` | todo |
@@ -98,12 +98,12 @@ their status is `n/a`.
 | `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
 | `pages.agents.test.mjs` | Agents tab | 5 | `apps/web/src/pages/board/agents/AgentsTab.test.tsx` | done |
 | `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/src/pages/board/*/*.test.tsx` | doing (all tabs built; gaps I-21, I-23) |
-| `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | doing (tabs ported; gaps in I-22) |
+| `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | done |
 | `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | done |
 | `pages.shim.test.mjs` | Web shell and data layer | 1 | `apps/web/src/data/*.test.ts` | todo |
 | `pages.worktrees.test.mjs` | Worktrees tab | 5 | `apps/web/src/pages/board/worktrees/WorktreesTab.test.tsx` | done |
 | `portfolio.longsend.test.mjs` | Portfolio send down | 5 | `crates/argus-server/tests/portfolio_send.rs` | todo |
-| `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/procs_http.rs` | todo |
+| `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/procs_http.rs` | done |
 | `procs.monitor.test.mjs` | Process rules and sampling; Process alerts and kills | 4 | `crates/argus-procs/tests/monitor.rs` | done |
 | `procs.sampler.test.mjs` | Process rules and sampling; Native process sampling | 4, 6 | `crates/argus-procs/tests/sampler.rs`, `crates/argus-native/tests/sample.rs` | done |
 | `render.mcp.test.mjs` | MCP install and render | 7 | stays in `ai-config`, run there at switch-over | todo |
@@ -121,10 +121,10 @@ their status is `n/a`.
 | `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs` | doing (CLI cases with slice 8) |
 | `tray.test.mjs` | Tray icon and menu | 6 | `crates/argus-native/tests/tray.rs` | doing (state, quit.flag, stop ported; CLI cases with slice 8) |
 | `wake.agents.test.mjs` | Agent wakes | 3 | `crates/argus-wake/tests/agent_wakes.rs` | done |
-| `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/wake_stream.rs` | doing (pure cases in argus-wake; wire cases later) |
+| `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/wake_stream.rs` | done |
 | `wake.engine.test.mjs` | Wake engine and listeners | 3 | `crates/argus-wake/tests/engine.rs` | done |
-| `wake.faults.test.mjs` | Wake registry and faults | 3 | `crates/argus-server/tests/wake_faults.rs` | doing (pure cases in argus-wake; wire cases later) |
-| `wake.http.test.mjs` | Wake engine and listeners | 3, 5 | `crates/argus-server/tests/wake_http.rs` | doing (pure cases in argus-wake; wire cases later) |
+| `wake.faults.test.mjs` | Wake registry and faults | 3 | `crates/argus-server/tests/wake_faults.rs` | doing (HTTP done; coord wake-fault verbs with slice 8) |
+| `wake.http.test.mjs` | Wake engine and listeners | 3, 5 | `crates/argus-server/tests/wake_http.rs` | done |
 | `wake.items.test.mjs` | Kanban stale reminders | 3 | `crates/argus-wake/tests/item_wakes.rs` | done |
 | `wake.policy.test.mjs` | Wake policy | 3 | `crates/argus-wake/tests/policy.rs` | done |
 | `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/presence.rs` | done |
