@@ -181,7 +181,7 @@ async fn exchange(port: u16, req: &Request) -> Reply {
     s.write_all(req.head(port, true).as_bytes())
         .await
         .expect("send head");
-    if !req.body.is_empty() {
+    if !req.body.is_empty() && !req.gap.is_zero() {
         tokio::time::sleep(req.gap).await;
     }
     let _ = s.write_all(&req.body).await;

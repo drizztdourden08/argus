@@ -49,6 +49,7 @@ pub(crate) struct Watcher {
     tasks: Vec<JoinHandle<()>>,
     fs: Arc<Mutex<Option<RecommendedWatcher>>>,
     ok: Arc<AtomicBool>,
+    root: PathBuf,
 }
 
 impl Watcher {
@@ -56,14 +57,23 @@ impl Watcher {
         self.ok.load(Ordering::SeqCst)
     }
 
+    /// Ends the tasks and the file watcher, and returns only once the file watcher has let go
+    /// of the folder. On Windows notify stops in its own thread after the drop; a folder removed
+    /// while that stop is under way can deadlock the process. The unwatch is queued, and the
+    /// configure round trip after it answers only once the unwatch is done.
     pub fn stop(self) {
         for t in &self.tasks {
             t.abort();
         }
-        self.fs
+        let fs = self
+            .fs
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .take();
+        if let Some(mut w) = fs {
+            let _ = w.unwatch(&self.root);
+            let _ = w.configure(notify::Config::default());
+        }
     }
 }
 
@@ -200,5 +210,10 @@ pub(crate) fn start(state: &Arc<State>) -> Watcher {
         tokio::spawn(debounce_loop(Arc::clone(state), rx)),
         tokio::spawn(poll_loop(shared)),
     ];
-    Watcher { tasks, fs, ok }
+    Watcher {
+        tasks,
+        fs,
+        ok,
+        root: state.coord_home().to_path_buf(),
+    }
 }
