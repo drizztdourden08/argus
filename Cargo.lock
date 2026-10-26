@@ -121,11 +121,16 @@ dependencies = [
  "argus-launchers",
  "argus-native",
  "argus-notify",
+ "argus-procs",
+ "argus-server",
+ "argus-testkit",
  "argus-worktrees",
  "memchr",
  "serde",
  "serde_json",
+ "sha1",
  "tempfile",
+ "tokio",
  "ureq",
 ]
 

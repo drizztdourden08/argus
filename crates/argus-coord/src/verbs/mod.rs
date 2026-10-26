@@ -3,6 +3,7 @@
 
 pub mod agent;
 mod hook;
+pub mod remote;
 pub mod shared;
 pub mod thread;
 pub mod work;
@@ -30,4 +31,13 @@ pub const PORTED: &[Entry] = &[
     ("lock", work::lock),
     ("log", work::log),
     ("inbox", work::inbox),
+    ("run", remote::run::handle),
+    ("ping", remote::ping::handle),
+    ("activity", remote::activity::handle),
+    ("proc", remote::proc::handle),
+    ("wakefault", remote::wakefault::handle),
+    ("worktree", remote::worktree::handle),
+    ("lead", remote::lead::handle),
+    ("portfolio", remote::portfolio::handle),
+    ("dashboard", remote::dashboard::handle),
 ];
