@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
@@ -27,13 +27,14 @@ describe('routing', () => {
   it('shows the board page at /p/:key/ with the thread list', async () => {
     const { sources } = renderAt('/p/rotp/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    expect(sources[0]?.url).toBe('/api/p/rotp/stream?c=meta,threads');
+    expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
+    expect(sources[0]?.url.split('c=')[1]?.split(',').sort()).toEqual(['agents', 'meta', 'threads']);
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
       sources[0]?.emit('snapshot', snapshot('rotp', 'threads', { lead: { id: 'lead', name: 'lead', role: 'coordinator', status: 'active' } }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    expect(screen.getByText('lead')).toBeTruthy();
+    expect(within(screen.getByRole('list', { name: 'Threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees']) {
       expect(screen.getByRole('tab', { name: label })).toBeTruthy();
     }
