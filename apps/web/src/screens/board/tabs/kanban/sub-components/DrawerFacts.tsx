@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Flex, Select, Text } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../kanban-props.type';
-import { STATUS_OPTIONS, ago, threadChoices } from '../model';
+import { STATUS_OPTIONS, threadChoices } from '../model';
 import { InlineEdit } from './InlineEdit';
 
 const DrawerFacts = (props: DrawerFactsProps) => {
@@ -35,7 +36,7 @@ const DrawerFacts = (props: DrawerFactsProps) => {
           />
         </Flex>
       </Flex>
-      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${ago(item.updatedAt, now)} ago`}</Text>
+      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
     </Flex>
   );
 };

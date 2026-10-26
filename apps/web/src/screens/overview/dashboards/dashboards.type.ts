@@ -56,7 +56,6 @@ interface MasterRun {
 
 interface MasterRowProps {
   card: Card;
-  now: number;
 }
 
 interface RunningNowProps {

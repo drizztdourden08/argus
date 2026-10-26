@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Callout, Text } from '@drizztdourden08/tessera';
-import { clipText } from '../../format';
+import { clipText } from '../../../../format';
 import { ERROR_CLIP } from '../processes.constants';
 import type { SampleNoticesProps } from '../processes.type';
 

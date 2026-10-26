@@ -12,6 +12,7 @@ const registryChip = (row: RegistryItem, nameOf: (key: string) => string, now: n
     ...look,
     tip: closed ? `${look.tip}. Its board tab is not open: the Overlord is told when this lasts.` : look.tip,
     extra: closed ? 'board closed' : '',
+    since: look.since ?? null,
   };
 };
 

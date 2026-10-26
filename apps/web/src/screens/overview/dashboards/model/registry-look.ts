@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { formatAgo } from '../../format';
+import { formatAgo } from '../../../../format';
 import { isMainRow } from './is-main-row';
 import { registryTip } from './registry-tip';
 import type { ChipLook, RegistryItem } from './model.type';
@@ -12,8 +12,9 @@ const faultLook = (row: RegistryItem, now: number): ChipLook => ({
 });
 
 const wakingLook = (row: RegistryItem, name: string, now: number): ChipLook => {
-  const since = formatAgo(row.pendingWake?.since ?? row.since, now);
-  return { label: `waking ${since}`, tone: 'info', pulse: true, tip: `${name}: waking up, a wake was sent ${since} ago and has not been answered yet` };
+  const since = row.pendingWake?.since ?? row.since ?? null;
+  const ago = formatAgo(since, now);
+  return { label: 'waking', since, tone: 'info', pulse: true, tip: `${name}: waking up, a wake was sent ${ago} ago and has not been answered yet` };
 };
 
 const busyLook = (name: string): ChipLook => ({

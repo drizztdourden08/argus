@@ -42,4 +42,4 @@ interface SentEntry {
   status?: string;
 }
 
-export type { RegistryFault, RegistryRow, RegistryState, SentEntry };
+export type { RegistryFault, RegistryRow, SentEntry };

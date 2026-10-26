@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { asNumber } from '../../format';
+import { asNumber } from '../../../../format';
 
 const killedCount = (result: { killed?: unknown } | null | undefined, fallback: number): number => {
   const killed = result?.killed;

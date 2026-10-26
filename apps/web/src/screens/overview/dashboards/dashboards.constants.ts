@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { SegmentOption } from '@drizztdourden08/tessera';
+import type { ListItemHeader, ListItemShape, SegmentOption } from '@drizztdourden08/tessera';
 import type { SendKind } from './model';
 
 const SENT_LIMIT = 40;
@@ -30,8 +30,22 @@ const SEND_KINDS: SegmentOption<SendKind>[] = [
 
 const NO_PLAY = 'master has no Play: its command spans several lines, or its run name is taken (coord launcher show master)';
 
+const RUNNING_HEADER: ListItemHeader = {
+  icon: 'Status',
+  main: 'Run',
+  columns: [{ label: 'Project' }, { label: 'Elapsed', align: 'end' }],
+};
+
+const SENT_HEADER: ListItemHeader = {
+  icon: 'Kind',
+  main: 'Text',
+  columns: [{ label: 'Status' }, { label: 'From', align: 'end' }],
+};
+
+const SENT_SHAPE: ListItemShape = { icon: true, columns: 2, action: false };
+
 const KIND_WORD: Readonly<Record<string, string>> = { decision: 'decision', followup: 'note' };
 
 export {
-  BAD_LOOK, CALM_LOOK, GOOD_LOOK, INFO_LOOK, KIND_WORD, NO_PLAY, NO_PROJECT, NOTHING_SENT, SEND_KINDS, SEND_MESSAGE, SENT_LIMIT, STATE_LOOK, WARN_LOOK,
+  BAD_LOOK, CALM_LOOK, GOOD_LOOK, INFO_LOOK, KIND_WORD, NO_PLAY, NO_PROJECT, NOTHING_SENT, RUNNING_HEADER, SEND_KINDS, SEND_MESSAGE, SENT_HEADER, SENT_LIMIT, SENT_SHAPE, STATE_LOOK, WARN_LOOK,
 };

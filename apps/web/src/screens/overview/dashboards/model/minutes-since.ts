@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../../format';
+import { toMillis } from '../../../../format';
 import { MS_PER_MINUTE } from './model.constants';
 
 const minutesSince = (iso: string | null | undefined, now: number): number => {
