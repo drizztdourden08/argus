@@ -233,10 +233,7 @@ fn the_bulk_path_applies_the_same_guards_per_folder_the_plain_leftover_beside_it
     h.scan();
     let out = page_batch(&h);
     h.idle();
-    assert_eq!(
-        out.started, 2,
-        "only the two plain leftovers (the fixture's `plain` and `plain-junk`)"
-    );
+    assert_eq!(out.started, 2, "{:?}", out.skipped);
     assert!(
         !h.svc
             .jobs("alpha")

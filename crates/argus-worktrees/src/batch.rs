@@ -119,7 +119,7 @@ impl Service {
         #[allow(clippy::cast_precision_loss)]
         let age = leftover
             .newest_ms
-            .map(|n| (self.now() - n) as f64 / DAY_MS as f64);
+            .map(|n| (self.now() - n).max(0) as f64 / DAY_MS as f64);
         if self.active_job_for(&input.project, &fact.id).is_some() {
             Some("already being deleted".to_string())
         } else if leftover.pending {

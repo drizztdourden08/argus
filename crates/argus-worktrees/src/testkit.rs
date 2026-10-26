@@ -120,6 +120,8 @@ fn walk_times(dir: &Path, when: SystemTime) {
     for entry in fs::read_dir(dir).unwrap().flatten() {
         let kind = entry.file_type().unwrap();
         if kind.is_symlink() || crate::fs::meta_is_link(&entry.metadata().unwrap()) {
+            let time = filetime::FileTime::from_system_time(when);
+            filetime::set_symlink_file_times(entry.path(), time, time).unwrap();
             continue;
         }
         if kind.is_dir() {
