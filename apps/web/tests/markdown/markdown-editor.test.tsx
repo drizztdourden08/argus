@@ -79,6 +79,29 @@ describe('markdown editor toolbar', () => {
   });
 });
 
+describe('markdown editor quote and focus', () => {
+  it('Quote puts a prefix before every selected line, and a second press removes it', () => {
+    const { area } = mount('a\nb', 0, 3);
+    press('Quote');
+    expect(area.value).toBe('> a\n> b');
+    area.setSelectionRange(0, area.value.length);
+    press('Quote');
+    expect(area.value).toBe('a\nb');
+  });
+
+  it('autoFocus puts the caret at the end of the text', () => {
+    render(inBoard(<BoardMarkdownEditor value="hello" onChange={() => undefined} aria-label="Text" autoFocus />));
+    const area = screen.getByLabelText<HTMLTextAreaElement>('Text');
+    expect(document.activeElement).toBe(area);
+    expect([area.selectionStart, area.selectionEnd]).toEqual([5, 5]);
+  });
+
+  it('stays unfocused without autoFocus', () => {
+    const { area } = mount('hello');
+    expect(document.activeElement).not.toBe(area);
+  });
+});
+
 describe('markdown editor panes', () => {
   it('Preview renders the draft with the markdown renderer and Write brings the text back', () => {
     const { area } = mount('**bold** text');

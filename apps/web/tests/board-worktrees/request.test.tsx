@@ -24,6 +24,7 @@ describe('opening the form', () => {
     const group = askGroup('delete', 'a');
     expect(text(group)).toContain('Ask lead to delete X:/proj/trees/a. The thread decides and answers here.');
     expect(messageBox().placeholder).toBe('A short message for the thread (optional): why it can go');
+    expect(document.activeElement).toBe(messageBox());
     expect(text(group)).toContain('Ctrl+Enter sends. Enter adds a line.');
     expect(sendButton(group)).toBeTruthy();
     expect(within(group).getByRole('button', { name: 'Cancel' })).toBeTruthy();

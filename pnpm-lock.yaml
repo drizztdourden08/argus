@@ -87,8 +87,8 @@ importers:
   apps/web:
     dependencies:
       '@drizztdourden08/tessera':
-        specifier: ^0.76.0
-        version: 0.76.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
+        specifier: ^0.77.0
+        version: 0.77.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -404,8 +404,8 @@ packages:
       typescript:
         optional: true
 
-  '@drizztdourden08/tessera@0.76.0':
-    resolution: {integrity: sha512-B/NUKvL0ITPx/ruN6aune46XQqR4yCFLB6iIdMq81dxxrSevDeyhroMA22HginsM/QYc5zO1fSuef5InE/gn4A==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/tessera/0.76.0/94a83c860126e1f607d00c58486733055984165a}
+  '@drizztdourden08/tessera@0.77.0':
+    resolution: {integrity: sha512-tUvuHxNdbmb6oQvfcaoxN9LzfQAQTM2kE5iG937C7WhRcpDH4y65ngaQrToy/sZAOKcJS85fIAAr0mw84VelmA==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/tessera/0.77.0/3ae023d294146a36df91ee5f5fbaa078a9be250d}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -4340,7 +4340,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@drizztdourden08/tessera@0.76.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
+  '@drizztdourden08/tessera@0.77.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)':
     dependencies:
       '@iconify-icons/lucide': 1.2.136
       '@iconify-icons/ph': 2.0.0

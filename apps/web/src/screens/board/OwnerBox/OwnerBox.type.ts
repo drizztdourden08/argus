@@ -9,6 +9,7 @@ interface OwnerBoxProps {
   problem?: string | null;
   rows?: number;
   disabled?: boolean;
+  autoFocus?: boolean;
   onEscape?: () => void;
 }
 

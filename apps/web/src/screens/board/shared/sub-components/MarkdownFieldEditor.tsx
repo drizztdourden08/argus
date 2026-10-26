@@ -25,6 +25,7 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
           setDraft(next);
         }}
         rows={6}
+        autoFocus
         maxLength={limit}
         hint={`Ctrl+Enter saves, Esc cancels, ${limit} characters at most`}
         error={found}

@@ -23,6 +23,7 @@ const RequestForm = (props: RequestFormProps) => {
         value={panel.text}
         placeholder={panel.kind === 'delete' ? ASK_HINTS.delete : ASK_HINTS.check}
         rows={3}
+        autoFocus
         layout="tabs"
         onChange={(text) => controls.patch({ text, error: null })}
       />

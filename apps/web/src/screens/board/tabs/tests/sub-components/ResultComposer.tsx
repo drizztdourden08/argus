@@ -30,6 +30,7 @@ const ResultComposer = (props: ResultComposerProps) => {
           onEscape={controls.cancel}
           problem={controls.text.length > 0 ? problem : null}
           rows={3}
+          autoFocus
         />
       </Box>
       {controls.shot && <ShotPreview file={controls.shot} testId={testId} onRemove={controls.removeShot} />}

@@ -52,6 +52,7 @@ const NoteDialog = (props: NoteDialogProps) => {
             onChange={draft.setText}
             onSubmit={submit}
             rows={3}
+            autoFocus
           />
         </Box>
         {test.proofs.length > 0 && <ScreenshotGallery shots={test.proofs} />}

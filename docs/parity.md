@@ -97,7 +97,7 @@ their status is `n/a`.
 | `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify/`, `crates/argus-native/tests/toast_payload.rs`, `crates/argus-native/tests/toast_winrt.rs` | done (the `toastScript` and fake PowerShell cases do not apply: the notifier is native) |
 | `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
 | `pages.agents.test.mjs` | Agents tab | 5 | `apps/web/src/pages/board/agents/AgentsTab.test.tsx` | done |
-| `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/tests/board*/` | doing (110 cases matched by title; the note box, Expand and thread drawer cases closed; the rest in Board page gaps) |
+| `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/tests/board*/` | doing (110 cases matched by title; the note box, Expand, thread drawer, Quote button and focus on open cases closed; the rest in Board page gaps) |
 | `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | done |
 | `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | done |
 | `pages.shim.test.mjs` | Web shell and data layer | 1 | `apps/web/src/data/*.test.ts` | done |
@@ -172,7 +172,7 @@ ships it, and then become plain `it` cases.
 All 110 Node cases were matched by title to the web cases; three were added
 (`note-limits.test.tsx`). Closed since: the Tests tab note box and the note dialog are the Tessera
 MarkdownEditor with its toolbar, as every other owner box (`tests/board-tests/note-editor.test.tsx`), Node's
-over-limit sentence is word for word, the drawer Expand toggle widens the xl Tessera Drawer
+over-limit sentence is word for word, the Quote button and focus on open come with Tessera 0.77 (`autoFocus` on the result note box, the note dialog, the worktree request box and the inline field editor, as Node focused them; asserted in `note-editor.test.tsx`, `request.test.tsx` and `markdown-editor.test.tsx`), the drawer Expand toggle widens the xl Tessera Drawer
 (`.drawer--xl`, asserted in `kanban-chrome.test.tsx` and `drawer-nav.test.tsx`), and the thread drawer
 opens from its chip, the Chats list and the lead line (`tests/board-thread/`). What remains:
 
@@ -182,8 +182,7 @@ opens from its chip, the Chats list and the lead line (`tests/board-thread/`). W
 - Not applicable to React: the persistent body mounted into a slot, the redraw-free patch of a
   run line, and the page without `md.js`.
 - Waiting on the Tessera lead (MarkdownEditor): Enter continues a list, an empty item ends it, Tab and
-  Shift+Tab indent an item, Backspace takes the marker, a dash with empty brackets becomes a checkbox, a Quote button, and
-  focus on open for the note dialog. The Ctrl+B, Ctrl+I, Ctrl+Enter and toolbar cases are ported.
+  Shift+Tab indent an item, Backspace takes the marker, and a dash with empty brackets becomes a checkbox. The Ctrl+B, Ctrl+I, Ctrl+Enter and toolbar cases are ported.
 - Not ported from the Node thread drawer: the previous and next pager and the copy link of the
   drawer (a thread has no address in the web app).
 

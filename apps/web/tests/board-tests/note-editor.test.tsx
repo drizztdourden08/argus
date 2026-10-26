@@ -8,13 +8,13 @@ import { board, noteBox, openBox, resultCalls, send, sendButton, type } from './
 
 cleanAfterEach();
 
-const TOOLS = ['Bold', 'Italic', 'Bulleted list', 'Numbered list', 'Link', 'Inline code', 'Code block'];
+const TOOLS = ['Bold', 'Italic', 'Bulleted list', 'Numbered list', 'Quote', 'Link', 'Inline code', 'Code block'];
 
 const toolbarOf = (scope: HTMLElement): string[] =>
   within(within(scope).getByRole('toolbar', { name: 'Formatting' })).getAllByRole('button').map((button) => button.getAttribute('aria-label') ?? '');
 
 describe('the note box of a result', () => {
-  it('is a small markdown editor: a toolbar of seven named buttons, three lines, a hint, one limit', async () => {
+  it('is a small markdown editor: a toolbar of eight named buttons, three lines, a hint, one limit', async () => {
     await mountTab(board());
     const box = await openBox('Fail');
     const group = screen.getByRole('group', { name: 'fail note for T-1' });
@@ -23,6 +23,12 @@ describe('the note box of a result', () => {
     expect(box.maxLength).toBe(50000);
     expect(within(group).getByText('Ctrl+Enter sends')).toBeTruthy();
     expect(box.placeholder).toBe('What failed? The thread reads this.');
+  });
+
+  it('takes the focus when it opens, with the caret at the end', async () => {
+    await mountTab(board());
+    const box = await openBox('Fail');
+    expect(document.activeElement).toBe(box);
   });
 
   it('asks a different question for partial and blocked in the same box', async () => {
@@ -38,6 +44,7 @@ describe('the note box of a result', () => {
     expect(toolbarOf(dialog)).toEqual(TOOLS);
     const area = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'Result note for T-1' });
     expect([area.rows, area.maxLength]).toEqual([3, 50000]);
+    expect(document.activeElement).toBe(area);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /Add a note/ })).toBeNull());
     fireEvent.click(await screen.findByRole('button', { name: 'Test T-1' }));
