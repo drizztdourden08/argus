@@ -2,6 +2,7 @@
 //! 400, 405), a wrong bearer, then the token mode's credential and Origin rules or the default
 //! mode's write rules, and finally the handler, whose error becomes the one error shape.
 
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -15,7 +16,7 @@ use serde_json::json;
 use crate::ctx::Parts;
 use crate::pathing::{normalize, query_pairs};
 use crate::reply::{error_reply, html_page, info_page, plain_error};
-use crate::router::{AuthMode, RouteMatch, Router};
+use crate::router::{AuthMode, Handler, RouteMatch, Router};
 use crate::security::{
     Bearer, Credential, bearer_state, credential, host_ok, looks_like_page, origin_ok, peer_ok,
     write_refusal,
@@ -140,6 +141,27 @@ fn authorize(
     }
 }
 
+type Found = (Handler, RouteOpts, HashMap<String, String>);
+
+fn route(router: &Router, method: &Method, path: &str) -> Result<Found, Box<Response>> {
+    let refusal = match router.find(method.as_str(), path) {
+        RouteMatch::Found(h, o, p) => return Ok((h, o, p)),
+        RouteMatch::NotFound => fail(
+            ErrorCode::NotFound,
+            &format!("no route for {method} {path}"),
+        ),
+        RouteMatch::BadPath => fail(ErrorCode::BadRequest, "malformed path"),
+        RouteMatch::NotAllowed(allow) => {
+            let e = ApiError::new(
+                ErrorCode::MethodNotAllowed,
+                format!("{method} is not allowed here"),
+            );
+            plain_error(&e, Some(&allow.join(", ")))
+        }
+    };
+    Err(Box::new(refusal))
+}
+
 /// The listener's one handler.
 pub async fn dispatch(
     State(app): State<Arc<App>>,
@@ -162,41 +184,23 @@ pub async fn dispatch(
             "only this computer may use the dashboard",
         );
     }
-    let (handler, opts, params) = match app.router.find(parts.method.as_str(), &path) {
-        RouteMatch::Found(h, o, p) => (h, o, p),
-        RouteMatch::NotFound => {
-            return fail(
-                ErrorCode::NotFound,
-                &format!("no route for {} {path}", parts.method),
-            );
-        }
-        RouteMatch::BadPath => return fail(ErrorCode::BadRequest, "malformed path"),
-        RouteMatch::NotAllowed(allow) => {
-            let e = ApiError::new(
-                ErrorCode::MethodNotAllowed,
-                format!("{} is not allowed here", parts.method),
-            );
-            return plain_error(&e, Some(&allow.join(", ")));
-        }
-    };
-    let auth = match authorize(svc, &parts.headers, (&parts.method, &path), opts) {
-        Ok(a) => a,
+    let found = route(&app.router, &parts.method, &path).and_then(|(h, opts, params)| {
+        authorize(svc, &parts.headers, (&parts.method, &path), opts)
+            .map(|auth| (h, opts, params, auth))
+    });
+    let (handler, opts, params, auth) = match found {
+        Ok(v) => v,
         Err(res) => return *res,
     };
     let query = query_pairs(parts.uri.query());
-    let ctx = Ctx::new(
-        Arc::clone(svc),
-        Parts {
-            method: parts.method,
-            path,
-            headers: parts.headers,
-            query,
-            body,
-        },
-        params,
-        opts,
-        auth,
-    );
+    let req = Parts {
+        method: parts.method,
+        path,
+        headers: parts.headers,
+        query,
+        body,
+    };
+    let ctx = Ctx::new(Arc::clone(svc), req, params, opts, auth);
     match handler(ctx).await {
         Ok(res) => res,
         Err(e) => {

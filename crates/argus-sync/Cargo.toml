@@ -21,6 +21,7 @@ sha1 = "0.10"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 
 [dev-dependencies]
+argus-testkit = { path = "../argus-testkit" }
 tempfile = "3"
 
 [lints]

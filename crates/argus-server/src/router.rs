@@ -106,7 +106,7 @@ fn capture(parts: &[Part], path: &str) -> Option<Vec<(String, String)>> {
             }
             Part::Lit(l) if segs.get(i) == Some(&l.as_str()) => {}
             Part::Param(name) if segs.get(i).is_some_and(|s| !s.is_empty()) => {
-                out.push((name.clone(), segs[i].to_owned()))
+                out.push((name.clone(), segs[i].to_owned()));
             }
             _ => return None,
         }

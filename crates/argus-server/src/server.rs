@@ -12,7 +12,7 @@ use argus_core::clock::now_iso;
 use argus_core::config::{ConfigError, HOST, load_config};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
-use argus_core::{Bus, Paths};
+use argus_core::{Bus, Config, Paths};
 use argus_store::{Db, PruneOptions, StoreError};
 use argus_sync::{RunsView, ScopeQueue, SyncOptions, SyncService};
 use serde_json::json;
@@ -132,21 +132,22 @@ async fn start_sync(opts: &ServeOptions, base: SyncOptions) -> Option<Arc<SyncSe
     Some(sync)
 }
 
-async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
-    let paths = opts.paths.clone();
+async fn checked_config(paths: &Paths, port: Option<u16>) -> Result<Config, ServeError> {
     std::fs::create_dir_all(&paths.home)?;
-    let config = load_config(&paths, opts.port)?;
-    if let Some(live) = running_instance(
-        &paths.pid_file,
-        config.require_token.then_some(config.token.as_str()),
-    )
-    .await
-    {
-        return Err(ServeError::AlreadyRunning {
+    let config = load_config(paths, port)?;
+    let token = config.require_token.then_some(config.token.as_str());
+    match running_instance(&paths.pid_file, token).await {
+        Some(live) => Err(ServeError::AlreadyRunning {
             pid: live.pid,
             port: live.port,
-        });
+        }),
+        None => Ok(config),
     }
+}
+
+async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
+    let paths = opts.paths.clone();
+    let config = checked_config(&paths, opts.port).await?;
     let log = Arc::new(
         Logger::new(
             paths.logs.join("server.log"),
