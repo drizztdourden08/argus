@@ -74,13 +74,13 @@ their status is `n/a`.
 | `core.sse.test.mjs` | Doc stream SSE | 1 | `crates/argus-server/tests/doc_stream.rs` | done |
 | `entry.context.test.mjs` | coord entry context rules | 8 | `crates/argus-coord/tests/entry_context.rs` | done |
 | `guard.gate.test.mjs` | none: tests the guard in `ai-config` | none | stays in `ai-config` | n/a |
-| `hook.agents.binding.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_binding.rs` | todo |
-| `hook.agents.claudeid.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_id.rs` | todo |
-| `hook.agents.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents.rs` | todo |
-| `hook.autostart.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_autostart.rs` | todo |
-| `hook.guard.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_guard.rs` | todo |
-| `hook.listen.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_listen.rs` | todo |
-| `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_transcript.rs` | todo |
+| `hook.agents.binding.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_binding.rs` | done |
+| `hook.agents.claudeid.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_id.rs` | done |
+| `hook.agents.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents.rs` | done |
+| `hook.autostart.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_autostart.rs` | done |
+| `hook.guard.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_guard.rs` | done |
+| `hook.listen.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_listen.rs` | done |
+| `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_transcript.rs` | done |
 | `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/alias.rs` | done |
 | `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/inbox_wake.rs` | done |
 | `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | done |
@@ -155,7 +155,8 @@ where it landed.
 |---|---|---|---|
 | `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/registry.rs` | ported |
 | `db17ac5` | A worktree discard note counts only with a delete word, no negation and the worktree named | `crates/argus-worktrees/src/approval.rs` (word lists as in Node `remove.mjs`) | ported |
-| `db17ac5` | Listener hook timeout 3 days; master launcher for the Overlord project | `docs/coord-port.md` section 3, for WP2 | noted for WP2 |
+| `db17ac5` | Listener hook timeout 3 days (the rendered hook timeout; the listener keeps its 6 h default); master launcher for the Overlord project | `docs/coord-port.md` section 3; `crates/argus-coord/src/verbs/hook/listen` | ported |
+| `62e66c7` | Sub-agent hooks bind by exact agent id: no word matching, a known id reopens a record closed for silence, an Agent result never rewrites another agent's record | `crates/argus-coord/src/verbs/hook` (`binding.rs`, `subagent_start.rs`, `subagent_stop.rs`, `agent_result.rs`), cases in `hook_agents*.rs` | ported |
 
 ## Feature areas
 
