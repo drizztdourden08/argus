@@ -35,6 +35,8 @@ pub struct Env {
     pub platform: Platform,
     /// `APPDATA`.
     pub appdata: Option<PathBuf>,
+    /// `LOCALAPPDATA`.
+    pub local_appdata: Option<PathBuf>,
     /// `XDG_CONFIG_HOME`.
     pub xdg_config_home: Option<PathBuf>,
     /// The user's home folder.
@@ -58,6 +60,7 @@ impl Env {
         Env {
             platform: Platform::current(),
             appdata: var("APPDATA"),
+            local_appdata: var("LOCALAPPDATA"),
             xdg_config_home: var("XDG_CONFIG_HOME"),
             home: var("USERPROFILE")
                 .or_else(|| var("HOME"))
