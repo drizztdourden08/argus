@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { agoText, clipText, formatAgo, formatCpu, formatMemory, formatMinutes, orText } from '../../src/screens/overview/format';
+import { agoText, clipText, formatAgo, formatCpu, formatMemory, formatMinutes, orText } from '../../src/format';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
 const before = (ms: number): string => new Date(NOW - ms).toISOString();

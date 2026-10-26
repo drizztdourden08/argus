@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../format';
+import { toMillis } from '../../../format';
 import type { Timed } from './seen.type';
 
 const newestAt = (items: readonly Timed[]): number =>

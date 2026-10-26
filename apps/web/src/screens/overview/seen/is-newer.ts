@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../format';
+import { toMillis } from '../../../format';
 
 const isNewer = (at: unknown, since: number): boolean => {
   const millis = toMillis(at);

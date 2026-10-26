@@ -156,11 +156,11 @@ describe('killing a protected process and the stale ones of a rule', () => {
 describe('the cells of the process table', () => {
   const sample = (status: string) => ({ ...PROCS['4812-1'], status, flags: [] });
 
-  it('writes memory and CPU with their unit, the age and idle time in hours and minutes, and the pid beside the name', async () => {
+  it('writes memory as Node does (1.9 GB), CPU with its unit, the age and idle time in hours and minutes, and the pid beside the name', async () => {
     stubApi();
     await open();
     const grid = await screen.findByRole('grid');
-    expect(within(grid).getAllByText('1900 MB').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('1.9 GB').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('12 %').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('3h 10m').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('4812').length).toBeGreaterThan(0);

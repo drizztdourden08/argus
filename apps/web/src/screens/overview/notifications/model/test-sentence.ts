@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { TestPingResult } from '../../../../data/types';
-import { orText } from '../../format';
+import { orText } from '../../../../format';
 
 const testSentence = (result: TestPingResult | null): string => {
   if (result?.toast === 'shown') return 'Sent: the toast should be on your screen now.';

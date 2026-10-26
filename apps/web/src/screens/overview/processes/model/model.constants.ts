@@ -31,7 +31,7 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'name', label: 'Process', kind: 'string', optional: false },
   { path: 'pid', label: 'PID', kind: 'number', optional: true },
   { path: 'project', label: 'Project', kind: 'string', optional: true },
-  { path: 'memMB', label: 'Memory', kind: 'number', optional: true, unit: 'MB' },
+  { path: 'memMB', label: 'Memory', kind: 'number', optional: true },
   { path: 'cpuPct', label: 'CPU', kind: 'number', optional: true, unit: '%' },
   { path: 'ageMin', label: 'Age', kind: 'number', optional: true },
   { path: 'idleMin', label: 'Idle', kind: 'number', optional: true },
@@ -40,7 +40,7 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'kill', label: 'Kill', kind: 'string', optional: true },
 ];
 
-const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
+const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'memMB', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
 
 const PROC_COLUMNS: readonly TableColumn[] = PROC_SCHEMA.filter((field) => field.path !== 'pid').map((field) => ({ path: field.path }));
 

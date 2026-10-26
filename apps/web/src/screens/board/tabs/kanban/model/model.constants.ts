@@ -1,17 +1,7 @@
 /* @layer renderer-app @kind constants */
 import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, Option } from './model.type';
 
-const MS_PER_SECOND = 1000;
-
-const SECONDS_PER_MINUTE = 60;
-
-const MINUTES_PER_HOUR = 60;
-
 const MS_PER_HOUR = 3_600_000;
-
-const HOURS_AS_DAYS_FROM = 48;
-
-const HOURS_PER_DAY = 24;
 
 const QUIET_HOURS: Record<string, number> = { doing: 4, review: 6, todo: 24 };
 
@@ -67,19 +57,14 @@ export {
   DEFAULT_PREFS,
   GENERAL,
   GROUP_OPTIONS,
-  HOURS_AS_DAYS_FROM,
-  HOURS_PER_DAY,
   HUMAN,
   LIMITS,
-  MINUTES_PER_HOUR,
   MS_PER_HOUR,
-  MS_PER_SECOND,
   STARTING_STATUS,
   OP_KINDS,
   ORDER_OPTIONS,
   PLACE_FIELDS,
   QUIET_HOURS,
-  SECONDS_PER_MINUTE,
   STATUS_COLUMNS,
   STATUS_OPTIONS,
   STORE_KEYS,

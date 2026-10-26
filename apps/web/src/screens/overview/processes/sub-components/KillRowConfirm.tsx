@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { formatMemory } from '../../format';
+import { formatMemory } from '../../../../format';
 import { procLabel } from '../model';
 import type { KillRowConfirmProps } from '../processes.type';
 import { KillConfirm } from './KillConfirm';

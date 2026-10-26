@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { DateText, Grid, StatTile } from '@drizztdourden08/tessera';
-import { asNumber, formatMemory } from '../../format';
+import { asNumber, formatMemory } from '../../../../format';
 import { needsLook } from '../model';
 import type { ProcessSummaryProps } from '../processes.type';
 import { SampleNotices } from './SampleNotices';

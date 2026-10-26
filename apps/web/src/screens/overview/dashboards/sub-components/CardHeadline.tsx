@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { DateText, Inline, Tag, Text } from '@drizztdourden08/tessera';
-import { formatAgo, orText } from '../../format';
+import { formatAgo, orText } from '../../../../format';
 import { STATE_LOOK, WARN_LOOK } from '../dashboards.constants';
 import type { CardHeadlineProps } from '../dashboards.type';
 import { attentionOf, leadState } from '../model';

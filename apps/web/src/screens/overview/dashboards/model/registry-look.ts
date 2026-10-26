@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { formatAgo } from '../../format';
+import { formatAgo } from '../../../../format';
 import { isMainRow } from './is-main-row';
 import { registryTip } from './registry-tip';
 import type { ChipLook, RegistryItem } from './model.type';

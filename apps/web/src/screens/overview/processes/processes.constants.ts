@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { ProcFilters } from './model';
+import { formatMemory, formatMinutes } from '../../../format';
+import type { ProcFilters, ProcRow } from './model';
 
 const ERROR_CLIP = 120;
 const COMMAND_CLIP = 200;
@@ -16,8 +17,14 @@ const NO_FILTERS: ProcFilters = { status: 'all', rule: '' };
 const OVER_LOOK = { variant: 'urgency', color: 'warning' } as const;
 const CALM_LOOK = { variant: 'normal', color: 'neutral' } as const;
 
+const MEASURE_CELL: Readonly<Record<string, (row: ProcRow) => string>> = {
+  memMB: (row) => formatMemory(row.memMB),
+  ageMin: (row) => formatMinutes(row.ageMin),
+  idleMin: (row) => formatMinutes(row.idleMin),
+};
+
 const RULE_HEADINGS = ['Rule', 'Match', 'Max memory', 'Group cap', 'Max age', 'Idle', 'Orphan', 'Hung', 'Kill', 'Note'] as const;
 
 export {
-  ALL_RULES, CALM_LOOK, COMMAND_CLIP, ERROR_CLIP, GONE, NO_FILTERS, NONE_LISTED, NONE_SHOWN, NOT_SAMPLED, OVER_LOOK, RULE_HEADINGS,
+  ALL_RULES, CALM_LOOK, COMMAND_CLIP, ERROR_CLIP, GONE, NO_FILTERS, NONE_LISTED, NONE_SHOWN, MEASURE_CELL, NOT_SAMPLED, OVER_LOOK, RULE_HEADINGS,
 };

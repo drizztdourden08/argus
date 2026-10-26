@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { PostResult } from '../../../../data/api';
-import { orText } from '../../format';
+import { orText } from '../../../../format';
 import type { SendOutcome } from './model.type';
 
 const sendOutcome = (result: PostResult, name: string): SendOutcome => {
