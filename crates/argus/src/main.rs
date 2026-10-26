@@ -68,6 +68,14 @@ enum Command {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Copies this binary to a stable folder (default `%LOCALAPPDATA%Programsrgus`) and prints
+    /// the `"exe"` config line: `[--dir <folder>] [--print]`. Edits no config.
+    #[command(disable_help_flag = true)]
+    SelfInstall {
+        /// The flags, read by the self-install command itself.
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
     /// Compares two dashboard servers by value, read-only: the shadow check of the switch-over.
     Parity(argus_parity::Args),
     /// The tray icon (Windows): run, start, stop or status; start is the default.
@@ -133,6 +141,7 @@ async fn run_cli() -> ExitCode {
         }
         Command::InstallMcp { args } => Ok(run_install(install::mcp_config::run, &args)),
         Command::Autostart { args } => Ok(run_install(install::autostart::run, &args)),
+        Command::SelfInstall { args } => Ok(run_install(install::self_install::run, &args)),
         Command::Parity(args) => argus_parity::run(args).await,
         Command::Tray { action, data_dir } => {
             let action = action.unwrap_or(TrayAction::Start);
@@ -215,6 +224,7 @@ mod tests {
             "argus install-mcp --desktop --write --config f.json",
             "argus install-mcp --code --dir d --project k",
             "argus install-mcp --help",
+            "argus self-install --dir d --print",
             "argus autostart status",
             "argus autostart bogus",
         ] {

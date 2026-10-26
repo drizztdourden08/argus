@@ -23,7 +23,7 @@ are fine. Every stop below goes through a stop verb that works from a pid file.
 ## Names used below
 
 ```powershell
-$argus  = 'C:\Users\drizz\.argus\bin\argus.exe'   # the installed copy, see "Install the binary"
+$argus  = "$env:LOCALAPPDATA\Programs\argus\argus.exe"   # the installed copy, see "Install the binary"
 $node   = "$HOME\.coord\dashboard"                # the live Node home, the future Argus home
 $shadow = "$HOME\.coord\argus-shadow"             # the shadow home
 $cfg    = 'X:\ai-config'                          # the config repo
@@ -67,18 +67,30 @@ and `argus help` is the clap help text.
 Do this once before step 1, and again at the cut with the cut build.
 
 A running `argus.exe` cannot be overwritten on Windows, and the config key `exe` should name a
-path that never changes. So the live copy is not `target\release`. Build, then copy.
+path that never changes. So the live copy is not `target\release`, which every build overwrites.
+Build, then run `self-install` from the fresh build.
 
 ```powershell
 pnpm build
 cargo build --release
-New-Item -ItemType Directory -Force (Split-Path $argus) | Out-Null
-Copy-Item X:\argus\target\release\argus.exe $argus -Force
+X:\argus\target\release\argus.exe self-install
 & $argus --version
 ```
 
-To update later: `dashboard stop` (or `argus stop`), copy, start. The web build is embedded at
-build time, so `pnpm build` always comes first.
+`argus self-install [--dir <folder>] [--print]` copies the running binary to
+`%LOCALAPPDATA%\Programs\argus\argus.exe` (or the `--dir` folder). The web build is inside the
+binary, so that one file is the whole install. `--print` shows the path and copies nothing.
+The verb prints the path and the exact config line to add, `"exe": "<path>"`, and edits no
+config itself.
+
+The in-use rule: the copy goes to `argus.exe.tmp` beside the target and is renamed over it. A
+running `argus.exe` cannot be replaced on Windows, so then the rename fails, the temp file is
+removed, the installed copy is left as it was, and the verb exits 1 with a sentence that says to
+run `argus stop` and try again. It never stops anything itself. A target that already holds the
+same bytes is left alone ("already up to date"), and so is a run from the installed copy.
+
+To update later: `argus stop` (or `dashboard stop`), `self-install` from the new build, start.
+The web build is embedded at build time, so `pnpm build` always comes first.
 
 ## 1. Clean shadow comparison
 
@@ -155,34 +167,90 @@ The sandbox, which covers what the shadow cannot. The shadow refuses writes, so 
 and the Node-reads-Argus-database rollback are tried on a throwaway copy of the data on port
 47617. It is isolated: its own `COORD_HOME`, a copy of the boards, a copy of the database, OS
 toasts off, no session listening on it. Its run defs and worktree rows still point at real
-folders, so nothing in it presses Play on a real launcher or removes a real worktree.
+folders, so nothing in it presses Play on a real launcher or removes a real worktree. The whole
+sequence below has been rehearsed end to end: Argus not in shadow mode on 47617 with writes,
+Node on 47618 reading the database Argus wrote, then the shim path.
+
+Build the sandbox. The sandbox runs a COPY of the binary, never `target\release` while a
+rebuild may follow, and never the installed copy. `argus self-install --dir <sandbox>` makes
+that copy. The boards are copied with bash `cp -r`, leaving out `dashboard`, every
+`argus-shadow*` folder and any folder whose `board.json` is damaged. The database is a
+read-only `VACUUM INTO` of the Node database, so the Node home is only read.
+
+```bash
+sb="$TEMP/argus-rehearsal"; mkdir -p "$sb/dashboard" "$sb/bin"
+cd "$HOME/.coord"
+for d in */; do d=${d%/}
+  case "$d" in dashboard|argus-shadow*) continue;; esac
+  # skip a folder whose board.json is damaged (does not parse as JSON)
+  [ -f "$d/board.json" ] && ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$d/board.json" 2>/dev/null && continue
+  cp -r "$d" "$sb/"
+done
+sqlite3 -readonly "$HOME/.coord/dashboard/dashboard.db" "VACUUM INTO '$sb/dashboard/dashboard.db'"
+cp "$HOME/.coord/dashboard/process-rules.json" "$sb/dashboard/"
+```
 
 ```powershell
-& $argus stop                                   # with DASHBOARD_HOME set to $shadow, as above
 $sb = "$env:TEMP\argus-rehearsal"
-robocopy "$HOME\.coord" $sb /E /XD dashboard argus-shadow /NFL /NDL /NJH /NJS
-New-Item -ItemType Directory -Force "$sb\dashboard" | Out-Null
-Copy-Item "$shadow\dashboard.db","$shadow\config.json","$shadow\process-rules.json" "$sb\dashboard"
-$c = Get-Content "$sb\dashboard\config.json" -Raw | ConvertFrom-Json
-$c.notify.os = $false
+$c = Get-Content "$node\config.json" -Raw | ConvertFrom-Json
+$c.port = 47617; $c.notify.os = $false
+$c.PSObject.Properties.Remove('dashboardEngine')      # no engine key: the sandbox is Argus only
 $c | ConvertTo-Json -Depth 10 | Set-Content "$sb\dashboard\config.json"
+& $argus self-install --dir "$sb\bin"                 # the copy the sandbox runs
+$sbx = "$sb\bin\argus.exe"
 $env:COORD_HOME = $sb; $env:DASHBOARD_HOME = "$sb\dashboard"; $env:DASHBOARD_PORT = '47617'
-Start-Process $argus -WindowStyle Hidden -ArgumentList 'serve','--port','47617'
+Start-Process $sbx -WindowStyle Hidden -ArgumentList 'serve','--port','47617' `
+  -RedirectStandardOutput "$sb\serve.out" -RedirectStandardError "$sb\serve.err"
 ```
 
-Then drive it: `coord item add --project argus --title rehearsal` and an owner post through
-`POST /api/p/argus/...` as the web test does, a `coord ping`, a `coord run start` of a harmless
-defined run, an MCP `board_summary`. Stop it with `& $argus stop`. Rollback rehearsal: start the
-Node server on the database Argus just wrote.
+Then drive it, with the three env variables still set. Each line has an expected result:
 
 ```powershell
-node "$cfg\dashboard\bin\dashboard.mjs" start
-node "$cfg\dashboard\bin\dashboard.mjs" status       # same item visible, no schema error
-node "$cfg\dashboard\bin\dashboard.mjs" stop
+coord thread register sandbox-cut --subject rehearsal --project argus
+coord item add "rehearsal item" --project argus --as sandbox-cut
+coord run define rehearse-echo --cmd "cmd /c echo hi" --cwd $sb --kind task
+coord run start rehearse-echo --wait                  # R-1, exit 0
+coord ping "x" --level ping                           # "recorded, no toast"
 ```
 
-Delete `$sb` and clear the three env variables afterwards. Rollback of this step: stop the shadow
-(`$env:DASHBOARD_HOME = $shadow; & $argus stop`). Nothing outside `$shadow` and `$sb` was written.
+- An owner post: `POST /api/p/argus/entries` with a kind `edit` body: `id`, `createdAt`,
+  `target` (`{c: "items", id}`), `set` (`{title}`), `baseRev` and `prev`, as the web test builds
+  it. The item shows the new title.
+- MCP: `tools/list` through `POST /mcp` with `Accept: application/json` lists 23 tools.
+
+Stop it with `& $sbx stop`. Rollback rehearsal: start the Node server on the database Argus just
+wrote, on port 47618 and with the engine forced to Node. Node `start` and `stop` never touch
+the tray.
+
+```powershell
+$env:DASHBOARD_PORT = '47618'; $env:DASHBOARD_ENGINE = 'node'
+$d = "node $cfg\dashboard\bin\dashboard.mjs"
+Invoke-Expression "$d start"
+Invoke-Expression "$d status"                         # running on 47618
+Invoke-RestMethod http://127.0.0.1:47618/api/health   # schema 6
+# the item: /api/p/argus/db/items/<id>, and R-1 listed in /api/p/argus/runs
+Invoke-Expression "$d stop"
+```
+
+Sandbox cut, the shim path in small. Node's `dashboard.mjs` starts the Argus binary when the
+engine says so. Here `ARGUS_EXE` names the sandbox copy:
+
+```powershell
+$env:DASHBOARD_PORT = '47617'; $env:DASHBOARD_ENGINE = 'argus'; $env:ARGUS_EXE = $sbx
+Invoke-Expression "$d start"
+Invoke-Expression "$d status"                         # impl argus
+Invoke-Expression "$d resync --hard"
+foreach ($h in 'argus','argus-app','overlord','rotp') {
+  curl.exe -s -o NUL -w "$h %{http_code} %{redirect_url}`n" `
+    --resolve "$h.localhost:47617:127.0.0.1" "http://$h.localhost:47617/"
+}
+Invoke-Expression "$d stop"
+```
+
+Delete `$sb` and clear `COORD_HOME`, `DASHBOARD_HOME`, `DASHBOARD_PORT`, `DASHBOARD_ENGINE` and
+`ARGUS_EXE` afterwards. Rollback of this step: stop the sandbox servers (`$sbx stop`,
+`$d stop`, each with the env above) and stop the shadow (`$env:DASHBOARD_HOME = $shadow; & $argus
+stop`). Nothing outside `$shadow` and `$sb` was written.
 
 ## 2. Owner trial of the shadow build
 
@@ -191,7 +259,7 @@ Who: the owner. The lead hands over the command and ends its turn. It never open
 The owner runs this in his own terminal. It stays in the foreground, and Ctrl+C ends it:
 
 ```powershell
-& 'C:\Users\drizz\.argus\bin\argus.exe' serve --shadow --port 47616 --data-dir "$HOME\.coord\argus-shadow"
+& "$env:LOCALAPPDATA\Programs\argus\argus.exe" serve --shadow --port 47616 --data-dir "$HOME\.coord\argus-shadow"
 ```
 
 Then he opens `http://127.0.0.1:47616/` beside the Node page on 47615. What to look at:
@@ -218,9 +286,10 @@ landed and rendered `forward.mjs` in every project first (phase A). Check one ch
 project for `.claude\tools\coord\forward.mjs` and a `forward(import.meta.filename)` line in
 `coord.mjs`. A project not rendered yet runs Node whatever the config says.
 
-Preparation. Add the `exe` key by hand, so the forward block finds the binary before Argus has
-ever run in the Node home. Edit `$node\config.json` and add `"exe": "C:\\Users\\drizz\\.argus\\bin\\argus.exe"`,
-and put `coordEngine` in the same edit once a step is ready. The server need not stop. Write the
+Preparation. Install the stable copy (`argus self-install` from the build, see "Install the
+binary"), which prints the line to add. Add the `exe` key by hand, so the forward block finds the
+binary before Argus has ever run in the Node home. Edit `$node\config.json` and add the printed
+line, `"exe": "C:\\Users\\drizz\\AppData\\Local\\Programs\\argus\\argus.exe"`, and put `coordEngine` in the same edit once a step is ready. The server need not stop. Write the
 file in one save. Node re-reads it per call and keeps the keys it does not know.
 
 The gate of each step is the same:
@@ -344,7 +413,10 @@ $d = "node $cfg\dashboard\bin\dashboard.mjs"
    ```
 
    If `stop` reports "the server did not stop", stop here and look. Do not stop it by name.
-4. Take the backup. A clean Node stop leaves no WAL. Check, then copy:
+4. Take the backup. After a clean Node stop the WAL is 0 bytes and `dashboard.db-shm` remains.
+   Check, then copy. This is a second copy: the first start of a new home also takes
+   `dashboard.db.node-<UTC stamp>` itself (blocker 3, fixed), so the manual copy is a belt and
+   braces step:
 
    ```powershell
    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -387,12 +459,25 @@ $d = "node $cfg\dashboard\bin\dashboard.mjs"
    argus."`
 
 MCP configuration. Rendered projects already call `dashboard mcp`, so they follow the shim with
-no change. For the desktop app entry, `argus install-mcp --desktop` prints the entry for
-`argus.exe mcp`, and `--write` merges it into the app config. For a folder the config repo does
-not render, `argus install-mcp --code --dir <folder> --project <key>` prints the `.mcp.json`
-entry. Sessions that are already open hold a stdio bridge of the Node build, which keeps working
-because it talks HTTP to the same port. New sessions get the Argus one. **Go (owner):** before
-`--write` on the desktop app config, because it changes a tool setting outside the repo.
+no change. For a folder the config repo does not render,
+`argus install-mcp --code --dir <folder> --project <key>` prints the `.mcp.json` entry. Sessions
+that are already open hold a stdio bridge of the Node build, which keeps working because it
+talks HTTP to the same port. New sessions get the Argus one.
+
+The desktop app entry is prepared for the owner and is NOT run. Run it from the installed copy,
+because the entry names the binary that runs the command:
+
+```powershell
+& $argus install-mcp --desktop            # prints the entry, writes nothing
+& $argus install-mcp --desktop --write    # the write
+```
+
+`--write` merges only the `coord-dashboard` key into
+`%APPDATA%\Claude\claude_desktop_config.json` and keeps every other key. Before it writes, it
+copies the file as it is to `claude_desktop_config.json.bak.<UTC stamp>` beside it (a missing
+file is created with no backup), and it prints the backup path and asks for a restart of the
+desktop app. To go back, copy the backup over the file. **Go (owner):** before `--write`, because it
+changes a tool setting outside the repo.
 
 Autostart. Argus-side autostart is the tray, started by the MCP bridge and the hooks. A login
 launcher exists only if someone installed it. It is not installed on this machine today (the

@@ -10,6 +10,7 @@ use argus::install::autostart::{self, VBS_NAME, startup_dir};
 use argus::install::code::code_entry;
 use argus::install::desktop::{desktop_config_path, desktop_entry};
 use argus::install::mcp_config;
+use argus::install::self_install::{self, config_line};
 use argus::install::vbs::{content, decode, encode};
 use argus::install::{Env, Io, Platform};
 use serde_json::{Value, json};
@@ -21,6 +22,7 @@ fn env_in(tmp: &Path, platform: Platform) -> Env {
     Env {
         platform,
         appdata: Some(tmp.join("appdata")),
+        local_appdata: Some(tmp.join("local")),
         xdg_config_home: None,
         home: tmp.join("home"),
         cwd: tmp.to_path_buf(),
@@ -334,4 +336,116 @@ fn autostart_usage_and_the_platform_guard() {
     let r = autostart_run(&["install"], env_in(dir.path(), Platform::Other));
     assert_eq!(r.code, 1);
     assert!(!dir.path().join("appdata").exists());
+}
+
+fn self_install(args: &[&str], env: Env) -> Run {
+    run(self_install::run, args, env)
+}
+
+/// An env whose running binary is a small file in the temp folder.
+fn env_with_exe(tmp: &Path, bytes: &[u8]) -> Env {
+    let mut env = env_in(tmp, Platform::Windows);
+    env.exe = tmp.join("build").join("argus.exe");
+    fs::create_dir_all(env.exe.parent().expect("parent")).expect("build dir");
+    fs::write(&env.exe, bytes).expect("exe");
+    env
+}
+
+fn stable_dir(tmp: &Path) -> PathBuf {
+    let dir = tmp.join("stable");
+    fs::create_dir_all(&dir).expect("stable dir");
+    dir
+}
+
+#[test]
+fn copies_to_the_dir_prints_the_config_line_and_edits_nothing() {
+    let dir = tmp();
+    let r = self_install(&["--dir", "stable"], env_with_exe(dir.path(), b"v1"));
+    assert_eq!(r.code, 0, "{:?}", r.err);
+    let target = dir.path().join("stable").join("argus.exe");
+    assert_eq!(fs::read(&target).expect("copy"), b"v1");
+    assert_eq!(names(&dir.path().join("stable")), ["argus.exe"]);
+    assert!(r.out[0].starts_with("installed "), "{:?}", r.out);
+    let line = config_line(&target);
+    assert!(r.out[1].ends_with(&line), "{:?}", r.out);
+    assert!(line.starts_with("\"exe\": \""));
+    assert!(!dir.path().join("appdata").exists());
+    assert!(!dir.path().join("local").exists());
+}
+
+#[test]
+fn the_default_folder_is_programs_argus_under_local_appdata_and_print_copies_nothing() {
+    let dir = tmp();
+    let r = self_install(&["--print"], env_with_exe(dir.path(), b"v1"));
+    assert_eq!(r.code, 0);
+    let want = dir.path().join("local").join("Programs").join("argus");
+    assert!(r.out[0].contains(&want.join("argus.exe").display().to_string()));
+    assert!(!dir.path().join("local").exists(), "--print writes nothing");
+}
+
+#[test]
+fn a_stale_copy_is_updated_an_equal_one_is_skipped_and_no_temp_file_stays() {
+    let dir = tmp();
+    let stable = stable_dir(dir.path());
+    fs::write(stable.join("argus.exe"), b"old").expect("old");
+    let env = env_with_exe(dir.path(), b"new build");
+    assert_eq!(self_install(&["--dir", "stable"], env.clone()).code, 0);
+    assert_eq!(
+        fs::read(stable.join("argus.exe")).expect("file"),
+        b"new build"
+    );
+    let again = self_install(&["--dir", "stable"], env);
+    assert_eq!(again.code, 0);
+    assert!(
+        again.out[0].starts_with("already up to date"),
+        "{:?}",
+        again.out
+    );
+    assert_eq!(names(&stable), ["argus.exe"]);
+}
+
+#[test]
+fn running_from_the_installed_copy_says_so() {
+    let dir = tmp();
+    let mut env = env_with_exe(dir.path(), b"v1");
+    let installed = stable_dir(dir.path()).join("argus.exe");
+    fs::copy(&env.exe, &installed).expect("copy");
+    env.exe = installed;
+    let r = self_install(&["--dir", "stable"], env);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.out[0].starts_with("this is the installed copy"),
+        "{:?}",
+        r.out
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn a_target_in_use_is_refused_and_left_with_its_folder_as_it_was() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let dir = tmp();
+    let stable = stable_dir(dir.path());
+    let target = stable.join("argus.exe");
+    fs::write(&target, b"running").expect("running");
+    // Share mode 1 shares reads only: no rename or delete, as for a running executable.
+    let _held = fs::OpenOptions::new()
+        .read(true)
+        .share_mode(1)
+        .open(&target)
+        .expect("held");
+    let r = self_install(&["--dir", "stable"], env_with_exe(dir.path(), b"new build"));
+    assert_eq!(r.code, 1);
+    assert!(r.err[0].contains("argus stop"), "{:?}", r.err);
+    assert_eq!(fs::read(&target).expect("kept"), b"running");
+    assert_eq!(names(&stable), ["argus.exe"]);
+}
+
+#[test]
+fn self_install_usage_errors_exit_2_and_help_exits_0() {
+    let dir = tmp();
+    let env = env_with_exe(dir.path(), b"v1");
+    assert_eq!(self_install(&["--bogus"], env.clone()).code, 2);
+    assert_eq!(self_install(&["--dir"], env.clone()).code, 2);
+    assert_eq!(self_install(&["--help"], env).code, 0);
 }
