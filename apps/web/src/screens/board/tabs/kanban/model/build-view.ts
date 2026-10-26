@@ -19,10 +19,16 @@ const cardOf = (item: ItemRef, needs: Needs | undefined, conflicted: boolean, no
 const conflictedIds = (input: ViewInput): Set<string> =>
   new Set(input.notices.filter((notice) => notice.kind === 'conflict').map((notice) => String(notice.op.target?.id)));
 
+const threadKeeper = (input: ViewInput): ((thread: string) => boolean) => {
+  const focus = input.threads.some((thread) => thread.id === input.focus) ? input.focus : '';
+  return (thread) => (input.showPaused || !input.paused.has(thread)) && (!focus || thread === focus);
+};
+
 const buildView = (input: ViewInput): KanbanView => {
   const { items, threads, needs, filters, prefs, now } = input;
   const conflicted = conflictedIds(input);
-  const live = items.filter((item) => !item.deletedAt && (filters.archived || !item.archivedAt));
+  const keeps = threadKeeper(input);
+  const live = items.filter((item) => !item.deletedAt && (filters.archived || !item.archivedAt) && keeps(item.thread));
   const cards = live.map((item) => cardOf(item, needs.get(item.id), conflicted.has(item.id), now));
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
   const shown = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));

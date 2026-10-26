@@ -7,5 +7,6 @@ export { runDuration } from './run-duration';
 export { runGroups } from './run-groups';
 export { runNote } from './run-note';
 export { terminalLast } from './terminal-last';
+export { terminalInput } from './terminal-input';
 export { terminalMeta } from './terminal-meta';
 export type * from './model.type';

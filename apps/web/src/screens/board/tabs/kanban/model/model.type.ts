@@ -8,7 +8,7 @@ type ItemGroup = 'status' | 'subject' | 'thread';
 
 type ItemOrder = 'rank' | 'updated';
 
-type EditableField = 'title' | 'subject' | 'description' | 'criterion';
+type EditableField = 'title' | 'subject' | 'description' | 'criterion' | 'todo';
 
 interface KanbanFilters {
   query: string;
@@ -85,7 +85,21 @@ interface ViewInput {
   notices: readonly OpNotice[];
   filters: KanbanFilters;
   prefs: KanbanPrefs;
+  paused: ReadonlySet<string>;
+  focus: string;
+  showPaused: boolean;
   now: number;
+}
+
+interface AddPreset {
+  status?: string;
+  thread?: string;
+  subject?: string;
+}
+
+interface FocusChoices {
+  options: Option[];
+  pausedCount: number;
 }
 
 interface ColumnsInput {
@@ -127,4 +141,6 @@ type DropPlan =
   | { kind: 'reorder'; place: PlaceAmong }
   | { kind: 'status' | 'thread' | 'subject'; to: string; place: PlaceAmong };
 
-export type { BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, NoticeRow, OpNotice, Option, RawStored, StoredView, ViewInput };
+export type {
+  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, NoticeRow, OpNotice, Option, RawStored, StoredView, ViewInput,
+};
