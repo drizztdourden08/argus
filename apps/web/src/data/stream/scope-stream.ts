@@ -83,7 +83,7 @@ class ScopeStream {
     const source = this.openSource(streamUrl(this.scope, wanted, caughtUp ? this.seq : null));
     this.source = source;
     this.attach(source);
-    if (this.status !== 'live') this.setStatus('connecting');
+    if (this.status === 'idle') this.setStatus('connecting');
   }
 
   private attach(source: SourceLike): void {
