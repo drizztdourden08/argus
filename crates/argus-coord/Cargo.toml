@@ -19,10 +19,16 @@ argus-worktrees = { path = "../argus-worktrees" }
 memchr = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
 ureq = { version = "3", default-features = false }
 
 [dev-dependencies]
+argus-native = { path = "../argus-native" }
+argus-procs = { path = "../argus-procs" }
+argus-server = { path = "../argus-server" }
+argus-testkit = { path = "../argus-testkit" }
 tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [lints]
 workspace = true
