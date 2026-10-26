@@ -10,6 +10,7 @@
 
 mod cli;
 mod diff;
+mod findings;
 mod got;
 mod kind;
 mod normalize;

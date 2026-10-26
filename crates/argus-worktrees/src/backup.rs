@@ -9,6 +9,7 @@ use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::paths::{base_name, clean_path, join_path, parent_of};
 use crate::service::Service;
+use argus_core::fs::{copy_atomic, write_atomic};
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
@@ -223,7 +224,10 @@ impl Service {
         };
         let list = join_path(&out.dir, &format!("{base}.untracked.txt"));
         let write = || -> std::io::Result<()> {
-            fs::write(&list, format!("{}\n{note}", untracked.names.join("\n")))?;
+            write_atomic(
+                Path::new(&list),
+                format!("{}\n{note}", untracked.names.join("\n")),
+            )?;
             if copy {
                 copy_files(
                     &fact.path,
@@ -290,7 +294,7 @@ impl Service {
             "not copied: over the copy limits"
         };
         let write = || -> std::io::Result<()> {
-            fs::write(&list, format!("{folder}\n# {note}\n"))?;
+            write_atomic(Path::new(&list), format!("{folder}\n# {note}\n"))?;
             if copy {
                 copy_path(&folder, &target)
             } else {
@@ -413,7 +417,7 @@ fn copy_path(source: &str, target: &str) -> std::io::Result<()> {
     if let Some(parent) = Path::new(target).parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::copy(source, target).map(|_| ())
+    copy_atomic(Path::new(source), Path::new(target))
 }
 
 #[cfg(test)]

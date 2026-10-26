@@ -12,6 +12,7 @@ pub mod config;
 pub mod error;
 #[cfg(feature = "testkit")]
 pub mod fixture;
+pub mod fs;
 pub mod ids;
 pub mod js;
 pub mod json_text;

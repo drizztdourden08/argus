@@ -188,3 +188,24 @@ async fn skipped_routes_are_listed_and_not_compared() {
     assert!(report.skipped.iter().any(|s| s.contains("/wakes")));
     assert!(report.routes.iter().all(|r| !r.label.contains("wakes")));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_board_file_of_nul_bytes_is_its_own_finding_and_fails_the_run() {
+    let p = pair().await;
+    let coord = tempfile::tempdir().expect("coord home");
+    std::fs::create_dir_all(coord.path().join("tessera")).expect("folder");
+    std::fs::write(coord.path().join("tessera").join("board.json"), [0u8; 128]).expect("board");
+    let mut o = options(&p);
+    o.coord_homes = vec![coord.path().to_path_buf()];
+    let report = compare(&o).await.expect("a report");
+    assert_eq!(report.findings.len(), 1, "{}", report.text(8));
+    assert!(report.findings[0].contains("board \"tessera\" is damaged"));
+    assert!(report.findings[0].contains("128 NUL bytes"));
+    assert_eq!(
+        differing(&report),
+        Vec::<&str>::new(),
+        "the routes are equal"
+    );
+    assert_eq!(report.exit_code(), 1);
+    assert!(report.text(8).contains("FINDING  board \"tessera\""));
+}

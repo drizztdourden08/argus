@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use argus_core::Bus;
-use argus_server::shadow::seed;
+use argus_server::shadow::{board_findings, seed};
 use argus_store::Db;
 use argus_testkit::{TestOptions, TestServer, Tweak};
 use tempfile::TempDir;
@@ -56,6 +56,22 @@ fn what_the_shadow_home_already_has_is_kept() {
         shadow.join("process-rules.json").is_file(),
         "the missing one is copied"
     );
+}
+
+#[test]
+fn a_board_of_nul_bytes_is_a_finding_of_its_own_and_a_good_board_is_not() {
+    let coord = TempDir::new().unwrap();
+    for (key, bytes) in [("tessera", vec![0u8; 64]), ("argus", b"{}".to_vec())] {
+        fs::create_dir_all(coord.path().join(key)).unwrap();
+        fs::write(coord.path().join(key).join("board.json"), bytes).unwrap();
+    }
+    let found = board_findings(coord.path());
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(
+        found[0].contains("board \"tessera\" is damaged"),
+        "{found:?}"
+    );
+    assert!(found[0].contains("64 NUL bytes"), "{found:?}");
 }
 
 #[test]

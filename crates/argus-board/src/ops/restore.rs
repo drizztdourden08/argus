@@ -7,6 +7,7 @@ use std::fs;
 use std::path::Path;
 
 use argus_core::clock::now_iso;
+use argus_core::fs::copy_atomic;
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
@@ -199,10 +200,7 @@ fn restore_proofs(rec: &Value, restored: &HashSet<String>) -> Result<usize, Boar
         if !wanted || !Path::new(kept).exists() || Path::new(file).exists() {
             continue;
         }
-        if let Some(dir) = Path::new(file).parent() {
-            fs::create_dir_all(dir)?;
-        }
-        fs::copy(kept, file)?;
+        copy_atomic(Path::new(kept), Path::new(file))?;
         fs::remove_file(kept)?;
         back += 1;
     }

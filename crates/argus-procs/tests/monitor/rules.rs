@@ -147,6 +147,20 @@ fn the_dashboard_is_ignored_by_every_node_rule_and_the_other_default_rules_take_
 }
 
 #[test]
+fn the_rules_file_is_written_through_the_atomic_writer_and_leaves_no_temp_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut book = argus_procs::RuleBook::new(dir.path().join("nested").join("process-rules.json"));
+    assert!(book.load().is_none());
+    book.set_rule(&json!({"name": "mine", "match": {"name": "^mine$"}}))
+        .unwrap();
+    let names: Vec<_> = std::fs::read_dir(dir.path().join("nested"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(names, ["process-rules.json"]);
+}
+
+#[test]
 fn the_rules_file_is_seeded_changed_and_reloaded_and_a_bad_file_keeps_the_rules() {
     let h = Harness::new(Setup::default());
     h.at(T0, vec![]);

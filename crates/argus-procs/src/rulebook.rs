@@ -137,14 +137,7 @@ impl RuleBook {
     }
 
     fn write(&mut self, list: Vec<Rule>) -> io::Result<()> {
-        if let Some(dir) = self.file.parent() {
-            fs::create_dir_all(dir)?;
-        }
-        let mut tmp = self.file.clone().into_os_string();
-        tmp.push(format!(".{}.tmp", std::process::id()));
-        let tmp = PathBuf::from(tmp);
-        fs::write(&tmp, rules_file_text(&list))?;
-        fs::rename(&tmp, &self.file)?;
+        argus_core::fs::write_atomic(&self.file, rules_file_text(&list))?;
         self.stamp = stamp_of(&self.file);
         self.error = None;
         self.adopt(list);

@@ -5,6 +5,8 @@ use std::fs;
 use std::io;
 use std::time::{Duration, Instant};
 
+use argus_core::fs::write_atomic;
+
 use super::paths::TrayFiles;
 use super::record::read_live;
 use super::timestamp::iso_utc;
@@ -33,7 +35,7 @@ pub enum Stopped {
 /// The file cannot be written.
 pub fn request(files: &TrayFiles) -> io::Result<()> {
     let at = iso_utc(std::time::SystemTime::now());
-    fs::write(files.stop_file(), format!("{at}\n"))
+    write_atomic(&files.stop_file(), format!("{at}\n"))
 }
 
 /// Closes the tray: asks through `tray.stop`, calls `pause` while the tray is alive and within

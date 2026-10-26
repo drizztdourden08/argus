@@ -11,6 +11,8 @@ pub fn board_error(e: BoardError) -> ApiError {
         BoardError::Locked(_) => ApiError::new(ErrorCode::BoardLocked, e.to_string()),
         BoardError::Missing(_) => ApiError::not_found(e.to_string()),
         BoardError::Refused(m) => ApiError::bad_request(m),
-        BoardError::Io(_) | BoardError::Json(_) => ApiError::internal(),
+        BoardError::Io(_) | BoardError::Json(_) | BoardError::Damaged { .. } => {
+            ApiError::internal()
+        }
     }
 }

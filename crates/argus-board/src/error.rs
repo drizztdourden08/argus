@@ -1,5 +1,7 @@
 //! The ways a board call fails.
 
+use crate::store::BoardDamage;
+
 /// A board call failed.
 #[derive(Debug, thiserror::Error)]
 pub enum BoardError {
@@ -15,6 +17,14 @@ pub enum BoardError {
     /// A file could not be read or written.
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    /// A board file is empty, all NUL bytes or not valid JSON: its own finding, not a read error.
+    #[error("the board file {file} is damaged: {damage}")]
+    Damaged {
+        /// The file.
+        file: String,
+        /// What is wrong with it.
+        damage: BoardDamage,
+    },
     /// A board file is not valid JSON.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

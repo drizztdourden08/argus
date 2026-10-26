@@ -5,6 +5,8 @@ use std::fs;
 use std::io;
 use std::time::SystemTime;
 
+use argus_core::fs::write_atomic;
+
 use super::paths::TrayFiles;
 use super::timestamp::{epoch_ms, iso_utc};
 
@@ -41,11 +43,10 @@ pub fn is_active(files: &TrayFiles, boot: Boot) -> bool {
 ///
 /// The home cannot be created or the file cannot be written.
 pub fn write(files: &TrayFiles) -> io::Result<()> {
-    fs::create_dir_all(files.home())?;
     let at = iso_utc(SystemTime::now());
     let pid = std::process::id();
-    fs::write(
-        files.quit_flag(),
+    write_atomic(
+        &files.quit_flag(),
         format!("{{\"at\":\"{at}\",\"pid\":{pid}}}\n"),
     )
 }

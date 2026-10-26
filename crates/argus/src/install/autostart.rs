@@ -6,7 +6,7 @@
 
 use std::fs;
 use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::env::{Env, Io, Platform};
 use super::vbs::{content, decode, encode};
@@ -53,11 +53,8 @@ fn remove(file: &PathBuf, io: &mut Io<'_>) -> u8 {
     0
 }
 
-fn install(file: &PathBuf, wanted: &str, io: &mut Io<'_>) -> u8 {
-    let written = file
-        .parent()
-        .map_or(Ok(()), fs::create_dir_all)
-        .and_then(|()| fs::write(file, encode(wanted)));
+fn install(file: &Path, wanted: &str, io: &mut Io<'_>) -> u8 {
+    let written = argus_core::fs::write_atomic(file, encode(wanted));
     if let Err(e) = written {
         (io.err)(&format!("argus: {} cannot be written: {e}", file.display()));
         return 1;

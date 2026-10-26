@@ -124,7 +124,7 @@ pub fn save_attachment(req: &SaveRequest<'_>) -> Result<AttachmentRow, RunError>
     let folder = req.dir.join(req.scope);
     let path = folder.join(format!("{id}{ext}"));
     std::fs::create_dir_all(&folder)
-        .and_then(|()| std::fs::write(&path, req.bytes))
+        .and_then(|()| argus_core::fs::write_atomic(&path, req.bytes))
         .map_err(|e| {
             RunError::new(
                 500,

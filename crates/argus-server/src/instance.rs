@@ -53,7 +53,7 @@ pub fn write_pid_file(
     instance: &str,
 ) -> std::io::Result<()> {
     let rec = json!({ "pid": std::process::id(), "port": port, "startedAt": started_at, "instance": instance });
-    std::fs::write(file, rec.to_string())
+    argus_core::fs::write_atomic(file, rec.to_string())
 }
 
 /// One request to a server on this machine: the status and the body. A write carries an empty

@@ -190,6 +190,11 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
         )
         .echo(opts.echo_log),
     );
+    if opts.shadow {
+        for finding in shadow::board_findings(&paths.coord_home) {
+            log.error("board file damaged", json!({ "finding": finding }));
+        }
+    }
     let bus = Bus::new();
     let db = Arc::new(Db::open(&paths.db, bus.clone())?);
     Ok(Core {

@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use argus_core::Paths;
 use clap::Args as ClapArgs;
 
 use crate::run::{Options, compare};
@@ -39,6 +40,10 @@ pub struct Args {
     /// Leave out the routes whose name contains this word (repeat for more).
     #[arg(long = "skip")]
     skip: Vec<String>,
+    /// A coord home whose board files are checked for damage, such as all NUL bytes after a crash
+    /// (repeat for more; default `COORD_HOME`, else `~/.coord`).
+    #[arg(long = "coord-home")]
+    coord_homes: Vec<PathBuf>,
     /// How many differing paths a route shows.
     #[arg(long, default_value_t = 8)]
     max_diffs: usize,
@@ -53,6 +58,11 @@ impl Args {
         o.tolerance_ms = self.tolerance_ms;
         o.stream_secs = self.stream_secs;
         o.skip.clone_from(&self.skip);
+        o.coord_homes = if self.coord_homes.is_empty() {
+            vec![Paths::from_env().coord_home]
+        } else {
+            self.coord_homes.clone()
+        };
         o
     }
 }

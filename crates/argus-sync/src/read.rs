@@ -5,22 +5,19 @@ use std::io::ErrorKind;
 use std::path::Path;
 use std::time::Duration;
 
-use argus_board::store::{board_path, normalize};
+use argus_board::store::{BoardDamage, board_path, normalize, read_board_text};
 use argus_board::{Board, BoardError};
 
 const ATTEMPTS: u32 = 4;
 const PAUSE: Duration = Duration::from_millis(40);
 
 fn read_once(home: &Path, key: &str) -> Result<Option<Board>, BoardError> {
-    match std::fs::read_to_string(board_path(home, key)) {
-        Ok(text) => {
-            let mut board: Board = serde_json::from_str(&text)?;
-            normalize(&mut board);
-            Ok(Some(board))
-        }
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e.into()),
-    }
+    let Some(text) = read_board_text(&board_path(home, key))? else {
+        return Ok(None);
+    };
+    let mut board: Board = serde_json::from_str(&text)?;
+    normalize(&mut board);
+    Ok(Some(board))
 }
 
 fn retryable(e: &BoardError) -> bool {
@@ -32,6 +29,7 @@ fn retryable(e: &BoardError) -> bool {
             ) || io.raw_os_error() == Some(32)
         }
         BoardError::Json(_) => true,
+        BoardError::Damaged { damage, .. } => matches!(damage, BoardDamage::NotJson(_)),
         _ => false,
     }
 }

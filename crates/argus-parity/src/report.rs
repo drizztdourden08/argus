@@ -29,6 +29,9 @@ pub struct Report {
     pub routes: Vec<RouteResult>,
     /// The routes left out by `--skip`.
     pub skipped: Vec<String>,
+    /// Findings that are not a route difference: a board file that is all NUL bytes, empty or
+    /// not JSON. Any finding fails the run.
+    pub findings: Vec<String>,
 }
 
 /// The numbers of the summary.
@@ -110,7 +113,7 @@ impl Report {
     #[must_use]
     pub fn is_equal(&self) -> bool {
         let c = self.counts();
-        c.differs == 0 && c.missing == 0 && c.equal > 0
+        c.differs == 0 && c.missing == 0 && c.equal > 0 && self.findings.is_empty()
     }
 
     /// 0 when every route is equal, 1 otherwise.
@@ -122,11 +125,12 @@ impl Report {
     fn summary(&self) -> String {
         let c = self.counts();
         format!(
-            "summary: {} equal, {} differ, {} missing, {} skipped; exit {}",
+            "summary: {} equal, {} differ, {} missing, {} skipped, {} findings; exit {}",
             c.equal,
             c.differs,
             c.missing,
             self.skipped.len(),
+            self.findings.len(),
             self.exit_code()
         )
     }
@@ -135,6 +139,7 @@ impl Report {
     #[must_use]
     pub fn text(&self, max_diffs: usize) -> String {
         let mut lines = vec![format!("parity: left {} | right {}", self.left, self.right)];
+        lines.extend(self.findings.iter().map(|f| format!("  FINDING  {f}")));
         for route in &self.routes {
             match &route.verdict {
                 Verdict::Equal => lines.push(format!("  equal    {}", route.label)),
@@ -165,8 +170,9 @@ impl Report {
         json!({
             "left": self.left,
             "right": self.right,
-            "summary": { "equal": c.equal, "differs": c.differs, "missing": c.missing, "skipped": self.skipped.len() },
+            "summary": { "equal": c.equal, "differs": c.differs, "missing": c.missing, "skipped": self.skipped.len(), "findings": self.findings.len() },
             "skipped": self.skipped,
+            "findings": self.findings,
             "exit": self.exit_code(),
             "routes": routes,
         })
@@ -203,6 +209,7 @@ mod tests {
             right: "http://r".into(),
             routes,
             skipped: Vec::new(),
+            findings: Vec::new(),
         }
     }
 
@@ -227,8 +234,23 @@ mod tests {
         assert_eq!(r.exit_code(), 0);
         assert!(
             r.text(5)
-                .contains("summary: 1 equal, 0 differ, 0 missing, 0 skipped; exit 0")
+                .contains("summary: 1 equal, 0 differ, 0 missing, 0 skipped, 0 findings; exit 0")
         );
+    }
+
+    #[test]
+    fn a_finding_fails_an_otherwise_equal_run_and_is_told_on_its_own_line() {
+        let mut r = report(vec![route("GET /a", Verdict::Equal)]);
+        r.findings
+            .push("board \"tessera\" is damaged: all NUL".into());
+        assert_eq!(r.exit_code(), 1);
+        assert!(
+            r.text(5)
+                .contains("  FINDING  board \"tessera\" is damaged: all NUL")
+        );
+        let j = r.json(5);
+        assert_eq!(j["summary"]["findings"], 1);
+        assert_eq!(j["findings"][0], "board \"tessera\" is damaged: all NUL");
     }
 
     #[test]

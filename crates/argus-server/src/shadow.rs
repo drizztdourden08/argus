@@ -4,6 +4,7 @@
 use std::fs;
 use std::path::Path;
 
+use argus_board::store::damaged_boards;
 use argus_core::config::pretty;
 use argus_procs::RULES_FILE;
 use argus_store::snapshot;
@@ -20,7 +21,7 @@ fn copy_if_absent(node_home: &Path, shadow_home: &Path, name: &str) -> Result<()
     let (from, to) = (node_home.join(name), shadow_home.join(name));
     if from.is_file() && !to.exists() {
         fs::create_dir_all(shadow_home)?;
-        fs::copy(from, to)?;
+        argus_core::fs::copy_atomic(&from, &to)?;
     }
     Ok(())
 }
@@ -37,10 +38,10 @@ fn seed_config(node_home: &Path, shadow_home: &Path) -> Result<(), ServeError> {
     match serde_json::from_str::<Value>(&text) {
         Ok(Value::Object(mut config)) => {
             config.insert("port".to_owned(), json!(SHADOW_PORT));
-            fs::write(to, pretty(&Value::Object(config)))?;
+            argus_core::fs::write_atomic(&to, pretty(&Value::Object(config)))?;
         }
         _ => {
-            fs::write(to, text)?;
+            argus_core::fs::write_atomic(&to, text)?;
         }
     }
     Ok(())
@@ -51,6 +52,17 @@ fn same_folder(a: &Path, b: &Path) -> bool {
         (Ok(a), Ok(b)) => a == b,
         _ => a == b,
     }
+}
+
+/// The boards of `coord_home` that cannot be read at all (all NUL bytes after a crash, empty, or
+/// not JSON), one line each with the cause. A shadow serves what it can and says this at start,
+/// so a project that is missing from it is not taken for a parity gap.
+#[must_use]
+pub fn board_findings(coord_home: &Path) -> Vec<String> {
+    damaged_boards(coord_home)
+        .iter()
+        .map(ToString::to_string)
+        .collect()
 }
 
 /// Gives a shadow home a copy of the Node database (`VACUUM INTO`, read-only on the Node side),
