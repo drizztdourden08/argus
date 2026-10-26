@@ -4,6 +4,7 @@
     ".": {
       "entry": [
         ".markdownlint-cli2.mjs",
+        "brock.workspace.mjs",
         "eslint.config.mjs",
         "stylelint.config.mjs"
       ],
