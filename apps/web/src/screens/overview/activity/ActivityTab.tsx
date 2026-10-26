@@ -1,37 +1,32 @@
 /* @layer renderer-app @kind component */
-import { EmptyState, LogPanel } from '@drizztdourden08/tessera';
+import { EmptyState, Stack } from '@drizztdourden08/tessera';
 import { useMemo, useState } from 'react';
-import { useNow } from '../clock';
-import { useProjectName } from '../projects';
+import { NO_FILTERS, NOTHING_YET, PAGE } from './activity.constants';
 import type { ActivityTabProps } from './activity.type';
-import { NOTHING_MATCHES, NOTHING_YET, PANEL_HEIGHT } from './activity.constants';
 import { useActivityFeed } from './behavior/useActivityFeed';
-import { countLevels, kindDefs, levelOf, toLogRow } from './model';
-import type { LevelFilter as Level } from './model';
-import { LevelFilter } from './sub-components/LevelFilter';
+import { countLevels, filterActivity, kindCounts } from './model';
+import type { ActivityFilters } from './model';
+import { ActivityFeed } from './sub-components/ActivityFeed';
+import { ActivityFilterBar } from './sub-components/ActivityFilterBar';
 
 const ActivityTab = (props: ActivityTabProps) => {
   const { freshSince } = props;
   const items = useActivityFeed();
-  const nameOf = useProjectName();
-  const now = useNow();
-  const [level, setLevel] = useState<Level>('all');
-  const kinds = useMemo(() => kindDefs(items), [items]);
-  const counts = useMemo(() => countLevels(items), [items]);
-  const rows = useMemo(
-    () => items.filter((item) => level === 'all' || levelOf(item) === level).map((item) => toLogRow(item, { now, freshSince, nameOf })),
-    [items, level, now, freshSince, nameOf],
-  );
+  const [filters, setFilters] = useState<ActivityFilters>(NO_FILTERS);
+  const [shown, setShown] = useState(PAGE);
+  const matching = useMemo(() => filterActivity(items, filters), [items, filters]);
+  const levels = useMemo(() => countLevels(items), [items]);
+  const kinds = useMemo(() => kindCounts(items), [items]);
   if (items.length === 0) return <EmptyState message={NOTHING_YET} />;
+  const change = (next: ActivityFilters) => {
+    setFilters(next);
+    setShown(PAGE);
+  };
   return (
-    <LogPanel
-      rows={rows}
-      kinds={kinds}
-      toolbarExtra={<LevelFilter value={level} counts={counts} onChange={setLevel} />}
-      countLabel="entries"
-      emptyLabel={NOTHING_MATCHES}
-      height={PANEL_HEIGHT}
-    />
+    <Stack gap="md">
+      <ActivityFilterBar filters={filters} levels={levels} kinds={kinds} total={items.length} onChange={change} />
+      <ActivityFeed items={matching} shown={shown} freshSince={freshSince} onMore={() => setShown(shown + PAGE)} />
+    </Stack>
   );
 };
 

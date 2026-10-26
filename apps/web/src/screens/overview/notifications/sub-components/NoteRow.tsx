@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind component */
-import { ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
-import { agoText, orText } from '../../format';
+import { DateText, ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
+import { orText } from '../../format';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
 import { LEVEL_LOOK, noteLevel, noteProject, toastNote } from '../model';
 import type { NoteRowProps } from '../notifications.type';
 
 const NoteRow = (props: NoteRowProps) => {
-  const { note, now, freshSince } = props;
+  const { note, freshSince } = props;
   const level = noteLevel(note);
   const project = noteProject(note);
   const toastText = toastNote(note);
@@ -23,7 +23,7 @@ const NoteRow = (props: NoteRowProps) => {
         </Stack>
       )}
       columns={[
-        { primary: <Text title={note.at ?? ''}>{agoText(note.at, now)}</Text>, align: 'end' },
+        { primary: note.at ? <DateText value={note.at} format="relative" tooltip /> : '', align: 'end' },
         { primary: project ? <ProjectLink project={project} /> : '', secondary: note.thread ?? '' },
       ]}
     />

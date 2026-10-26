@@ -61,8 +61,8 @@ describe('the summary, the rule strip and the rules', () => {
     stubApi();
     await open();
     const grid = await screen.findByRole('grid');
-    expect(within(grid).getByText('vite')).toBeTruthy();
-    expect(within(grid).getByText('electron')).toBeTruthy();
+    expect(within(grid).getAllByText('vite').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('electron').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('explorer').length).toBeGreaterThan(0);
   });
 
@@ -73,17 +73,17 @@ describe('the summary, the rule strip and the rules', () => {
     expect(within(grid).getAllByText('explorer').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByText('Needs a look 2'));
     await waitFor(() => expect(within(screen.getByRole('grid')).queryByText('explorer')).toBeNull());
-    expect(within(screen.getByRole('grid')).getByText('vite')).toBeTruthy();
+    expect(within(screen.getByRole('grid')).getAllByText('vite').length).toBeGreaterThan(0);
   });
 });
 
+const ask = async (label = 'Kill vite 4812') => fireEvent.click(await screen.findByRole('button', { name: label }));
+
 describe('killing', () => {
-  it('asks first, naming the process and its memory, then posts the pid, the startedAt as sampled and tree false', async () => {
+  it('asks under the row first, naming the process and its memory, then posts the pid, the startedAt as sampled and tree false', async () => {
     const calls = stubApi(() => ({ body: { killed: true } }));
     await open();
-    fireEvent.click(within(await screen.findByRole('grid')).getByText('vite'));
-    expect(await screen.findByText('vite 4812')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Kill' }));
+    await ask();
     expect(await screen.findByText('Kill vite 4812 (1.9 GB)?')).toBeTruthy();
     expect(kills(calls)).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'Kill' }));
@@ -94,8 +94,7 @@ describe('killing', () => {
   it('posts tree true for Kill with children and reports the count the server gives back', async () => {
     const calls = stubApi(() => ({ body: { killed: [4812, 4813, 4814] } }));
     await open();
-    fireEvent.click(within(await screen.findByRole('grid')).getByText('vite'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
+    await ask();
     fireEvent.click(await screen.findByRole('button', { name: 'Kill with children' }));
     expect(await screen.findByText('Killed vite 4812 and its children (3 processes).')).toBeTruthy();
     expect(kills(calls)[0]?.body).toMatchObject({ tree: true });
@@ -104,36 +103,35 @@ describe('killing', () => {
   it('cancels the question without posting anything', async () => {
     const calls = stubApi();
     await open();
-    fireEvent.click(within(await screen.findByRole('grid')).getByText('vite'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
+    await ask();
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
-    expect(await screen.findByRole('button', { name: 'Kill' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Kill vite 4812' })).toBeTruthy();
+    expect(screen.queryByText('Kill vite 4812 (1.9 GB)?')).toBeNull();
     expect(kills(calls)).toEqual([]);
   });
 
-  it('says what a 403, a 404 and a 409 mean in a toast', async () => {
+  it('says what a 403 and a 404 mean in a toast', async () => {
     let status = 403;
     stubApi(() => ({ status, body: { error: { code: 'x', message: 'no' } } }));
     await open();
-    fireEvent.click(within(await screen.findByRole('grid')).getByText('vite'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
+    await ask();
     fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
     expect(await screen.findByText('Argus will not kill vite 4812: it is protected, or its rule does not allow kills.')).toBeTruthy();
     status = 404;
-    fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
+    await ask();
     fireEvent.click(await screen.findByRole('button', { name: 'Kill' }));
     expect(await screen.findByText('vite 4812 is already gone, nothing was killed.')).toBeTruthy();
   });
-
 });
 
 describe('killing a protected process and the stale ones of a rule', () => {
-  it('shows no Kill for a protected process, and says why', async () => {
+  it('shows protected and no Kill for a protected process, and a Kill for the others', async () => {
     stubApi();
     await open();
-    fireEvent.click(within(await screen.findByRole('grid')).getAllByText('explorer')[0] as HTMLElement);
-    expect(await screen.findByText('Protected (system): Argus never kills this process.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Kill' })).toBeNull();
+    const grid = await screen.findByRole('grid');
+    expect(within(grid).getAllByText('protected')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Kill explorer 100' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Kill electron 4900' })).toBeTruthy();
   });
 
   it('offers Kill stale for a rule with stale killable processes, asks with their count and memory, then posts the rule with idleOnly', async () => {

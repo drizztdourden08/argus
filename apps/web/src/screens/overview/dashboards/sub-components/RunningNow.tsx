@@ -1,14 +1,11 @@
 /* @layer renderer-app @kind component */
-import { ListItemList, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
-import { SECOND_MS, useNow } from '../../clock';
-import { formatElapsed } from '../../format';
+import { DateText, ListItemList, ListItemRow, Tag } from '@drizztdourden08/tessera';
 import { ProjectLink } from '../../projects';
 import { GOOD_LOOK } from '../dashboards.constants';
 import type { RunningNowProps } from '../dashboards.type';
 
 const RunningNow = (props: RunningNowProps) => {
   const { runs } = props;
-  const now = useNow(SECOND_MS);
   if (runs.length === 0) return null;
   return (
     <ListItemList label="Running now" heading="Running now" count={runs.length}>
@@ -20,7 +17,7 @@ const RunningNow = (props: RunningNowProps) => {
           meta={run.lastLine ?? ''}
           columns={[
             { primary: <ProjectLink project={run.scope} hash="#agents" /> },
-            { primary: <Text numeric>{formatElapsed(now - Date.parse(run.startedAt ?? run.queuedAt))}</Text>, align: 'end' },
+            { primary: <DateText value={run.startedAt ?? run.queuedAt} format="elapsed" />, align: 'end' },
           ]}
         />
       ))}

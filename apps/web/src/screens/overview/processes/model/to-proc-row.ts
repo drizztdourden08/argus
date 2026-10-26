@@ -13,6 +13,9 @@ const toProcRow = (proc: ProcItem, nameOf: (key: string) => string): ProcRow => 
   ageMin: asNumber(proc.ageMin),
   idleMin: asNumber(proc.idleMin),
   status: proc.status ?? '',
+  cmd: proc.cmd ?? '',
+  kill: '',
+  item: proc,
 });
 
 export { toProcRow };

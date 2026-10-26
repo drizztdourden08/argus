@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { agoText, clipText, formatAgo, formatCpu, formatElapsed, formatMemory, formatMinutes, orText } from '../../src/screens/overview/format';
+import { agoText, clipText, formatAgo, formatCpu, formatMemory, formatMinutes, orText } from '../../src/screens/overview/format';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
 const before = (ms: number): string => new Date(NOW - ms).toISOString();
@@ -66,15 +66,6 @@ describe('formatCpu', () => {
     expect(formatCpu(3.14)).toBe('3.1%');
     expect(formatCpu(42.6)).toBe('43%');
     expect(formatCpu(null)).toBe('-');
-  });
-});
-
-describe('formatElapsed', () => {
-  it('counts seconds, minutes with seconds, and hours with minutes', () => {
-    expect(formatElapsed(45 * SECOND)).toBe('45s');
-    expect(formatElapsed(125 * SECOND)).toBe('2m 05s');
-    expect(formatElapsed(65 * MINUTE)).toBe('1h 05m');
-    expect(formatElapsed(-5)).toBe('0s');
   });
 });
 

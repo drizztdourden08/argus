@@ -6,10 +6,9 @@ type ActivityItem = WithId<ActivityDoc>;
 
 type LevelFilter = 'all' | ActivityLevel;
 
-interface RowContext {
-  now: number;
-  freshSince: number;
-  nameOf: (key: string) => string;
+interface ActivityFilters {
+  level: LevelFilter;
+  kind: string;
 }
 
-export type { ActivityItem, LevelFilter, RowContext };
+export type { ActivityFilters, ActivityItem, LevelFilter };

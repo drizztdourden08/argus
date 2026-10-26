@@ -16,10 +16,8 @@ const NO_FILTERS: ProcFilters = { status: 'all', rule: '' };
 const OVER_LOOK = { variant: 'urgency', color: 'warning' } as const;
 const CALM_LOOK = { variant: 'normal', color: 'neutral' } as const;
 
-const SAMPLE_TICK_MS = 5000;
-
 const RULE_HEADINGS = ['Rule', 'Match', 'Max memory', 'Group cap', 'Max age', 'Idle', 'Orphan', 'Hung', 'Kill', 'Note'] as const;
 
 export {
-  ALL_RULES, CALM_LOOK, COMMAND_CLIP, ERROR_CLIP, GONE, NO_FILTERS, NONE_LISTED, NONE_SHOWN, NOT_SAMPLED, OVER_LOOK, RULE_HEADINGS, SAMPLE_TICK_MS,
+  ALL_RULES, CALM_LOOK, COMMAND_CLIP, ERROR_CLIP, GONE, NO_FILTERS, NONE_LISTED, NONE_SHOWN, NOT_SAMPLED, OVER_LOOK, RULE_HEADINGS,
 };

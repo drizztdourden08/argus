@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { ContentHeader, Tabs, ToastStack } from '@drizztdourden08/tessera';
+import { ContentHeader, Tabs } from '@drizztdourden08/tessera';
 import { usePortfolio } from '../../data/react';
 import { PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { useTabBadges } from './behavior/useTabBadges';
@@ -17,7 +17,6 @@ const OverviewPage = () => {
       <StatusNotice status={status} />
       <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero />
       <TabBody tab={tab} cards={cards} status={status} badges={badges} />
-      <ToastStack />
     </PageFrame>
   );
 };

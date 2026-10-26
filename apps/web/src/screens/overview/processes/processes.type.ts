@@ -12,8 +12,6 @@ interface ProcessView {
   filters: ProcFilters;
   setFilters: (next: ProcFilters) => void;
   rows: ProcRow[];
-  selected: ProcItem | null;
-  select: (id: string) => void;
   look: number;
   groups: RuleGroup[];
   rules: ProcRule[];
@@ -33,7 +31,6 @@ interface KillFlow {
 interface ProcessSummaryProps {
   procs: readonly ProcItem[];
   meta: ProcsMeta | null;
-  now: number;
 }
 
 interface SampleNoticesProps {
@@ -68,12 +65,22 @@ interface ProcessFiltersProps {
 
 interface ProcessTableProps {
   rows: readonly ProcRow[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  kill: KillFlow;
 }
 
-interface ProcessDetailProps {
+interface KillCellProps {
   proc: ProcItem;
+  kill: KillFlow;
+}
+
+interface ProcessCellProps {
+  row: ProcRow;
+  path: string;
+  kill: KillFlow;
+}
+
+interface KillRowConfirmProps {
+  row: ProcRow;
   kill: KillFlow;
 }
 
@@ -90,6 +97,6 @@ interface RulesTableProps {
 }
 
 export type {
-  KillConfirmProps, KillFlow, ProcessDetailProps, ProcessFeed, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
+  KillCellProps, KillConfirmProps, KillFlow, KillRowConfirmProps, ProcessCellProps, ProcessFeed, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
   RuleStripProps, RulesTableProps, SampleNoticesProps,
 };

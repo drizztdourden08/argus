@@ -4,7 +4,6 @@ export { asNumber } from './as-number';
 export { clipText } from './clip-text';
 export { formatAgo } from './format-ago';
 export { formatCpu } from './format-cpu';
-export { formatElapsed } from './format-elapsed';
 export { formatMemory } from './format-memory';
 export { formatMinutes } from './format-minutes';
 export { orText } from './or-text';

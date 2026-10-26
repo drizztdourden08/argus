@@ -1,15 +1,15 @@
 /* @layer renderer-app @kind component */
-import { ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
-import { formatAgo } from '../../format';
+import { DateText, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
 import { useProjectName } from '../../projects';
 import { GOOD_LOOK, INFO_LOOK, KIND_WORD, WARN_LOOK } from '../dashboards.constants';
 import type { SentRowProps } from '../dashboards.type';
+import { sentTarget } from '../model';
 
 const SentRow = (props: SentRowProps) => {
-  const { entry, now } = props;
+  const { entry } = props;
   const nameOf = useProjectName();
   const kind = entry.kind ?? '';
-  const target = entry.project === 'all' ? 'all projects' : nameOf(entry.project ?? '');
+  const target = sentTarget(entry.project, nameOf);
   const from = entry.author === 'human' ? 'you' : 'Overlord';
   return (
     <ListItemRow
@@ -18,7 +18,7 @@ const SentRow = (props: SentRowProps) => {
       meta={`${entry.id} to ${target}`}
       columns={[
         { primary: <Tag {...(entry.status === 'delivered' ? GOOD_LOOK : WARN_LOOK)}>{entry.status ?? 'sent'}</Tag> },
-        { primary: <Text>{from}</Text>, secondary: `${formatAgo(entry.createdAt, now)} ago`, align: 'end' },
+        { primary: <Text>{from}</Text>, secondary: entry.createdAt ? <DateText value={entry.createdAt} format="relative" /> : '', align: 'end' },
       ]}
     />
   );

@@ -18,6 +18,13 @@ interface CardCountsView {
   failing: number;
 }
 
+interface SendOutcome {
+  ok: boolean;
+  message: string;
+}
+
+type SendKind = 'decision' | 'followup';
+
 interface Totals {
   running: number;
   needs: number;
@@ -46,4 +53,4 @@ interface MasterLine {
   running: boolean;
 }
 
-export type { Attention, CardCountsView, ChipLook, LeadState, MasterLine, RegistryChip, RegistryItem, SentItem, Totals };
+export type { Attention, CardCountsView, ChipLook, LeadState, MasterLine, RegistryChip, RegistryItem, SendKind, SendOutcome, SentItem, Totals };

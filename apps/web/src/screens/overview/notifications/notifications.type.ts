@@ -41,7 +41,6 @@ interface NoteFeedProps {
 
 interface NoteRowProps {
   note: NoteItem;
-  now: number;
   freshSince: number;
 }
 

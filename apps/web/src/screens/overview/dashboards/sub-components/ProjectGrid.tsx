@@ -8,13 +8,13 @@ import { sortCards } from '../model';
 import { ProjectCard } from './ProjectCard';
 
 const ProjectGrid = (props: ProjectGridProps) => {
-  const { cards } = props;
+  const { cards, onSend } = props;
   const now = useNow();
   const sorted = useMemo(() => sortCards(cards), [cards]);
   if (cards.length === 0) return <EmptyState message={NO_PROJECT} />;
   return (
     <Grid minColWidth={260} gap="md">
-      {sorted.map((card) => <ProjectCard key={card.key} card={card} now={now} />)}
+      {sorted.map((card) => <ProjectCard key={card.key} card={card} now={now} onSend={onSend} />)}
     </Grid>
   );
 };

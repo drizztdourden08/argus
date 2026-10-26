@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind constants */
-const SECOND_MS = 1000;
-const TICK_MS = 30 * SECOND_MS;
+const TICK_MS = 30000;
 
-export { SECOND_MS, TICK_MS };
+export { TICK_MS };

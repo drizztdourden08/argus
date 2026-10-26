@@ -129,7 +129,7 @@ describe('the filters and the stale ones', () => {
 describe('the table rows and the status tip', () => {
   it('keeps a row with only an id: dashes and nulls, no crash', () => {
     expect(toProcRow({ id: 'x' }, (key) => key)).toEqual({
-      id: 'x', rule: '-', name: '?', pid: null, project: '', memMB: null, cpuPct: null, ageMin: null, idleMin: null, status: '',
+      id: 'x', rule: '-', name: '?', pid: null, project: '', memMB: null, cpuPct: null, ageMin: null, idleMin: null, status: '', cmd: '', kill: '', item: { id: 'x' },
     });
   });
 

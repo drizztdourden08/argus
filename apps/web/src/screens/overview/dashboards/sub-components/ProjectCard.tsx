@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, CopyButton, Inline, Link, Stack } from '@drizztdourden08/tessera';
+import { Button, Card, CopyButton, Inline, Link, Stack } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { resolvePalette } from '../../../../palette';
 import type { ProjectCardProps } from '../dashboards.type';
@@ -10,7 +10,7 @@ import { CardHeadline } from './CardHeadline';
 import { MasterRow } from './MasterRow';
 
 const ProjectCard = (props: ProjectCardProps) => {
-  const { card, now } = props;
+  const { card, now, onSend } = props;
   const navigate = useNavigate();
   const started = leadState(card, now) !== 'not started';
   return (
@@ -28,6 +28,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         {started ? <MasterRow card={card} now={now} /> : null}
         <Inline gap="sm" align="center">
           {started ? <Link href={card.url} navigate={navigate}>Open board</Link> : null}
+          {started ? <Button size="xs" onClick={() => onSend(card.key)} title={`Send a decision or a note to ${card.name}`}>Send down</Button> : null}
           <CopyButton text={card.key} label="Copy the project key" size="xs" />
         </Inline>
       </Stack>

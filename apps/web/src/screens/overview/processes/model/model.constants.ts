@@ -31,8 +31,12 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'ageMin', label: 'Age (min)', kind: 'number', optional: true },
   { path: 'idleMin', label: 'Idle (min)', kind: 'number', optional: true },
   { path: 'status', label: 'Status', kind: 'enum', optional: false, closed: true, options: STATUS_OPTIONS },
+  { path: 'cmd', label: 'Command', kind: 'string', optional: true },
+  { path: 'kill', label: 'Kill', kind: 'string', optional: true },
 ];
+
+const CUSTOM_PATHS: readonly string[] = ['project', 'status', 'cmd', 'kill'];
 
 const PROC_COLUMNS: readonly TableColumn[] = PROC_SCHEMA.map((field) => ({ path: field.path }));
 
-export { PROC_COLUMNS, PROC_SCHEMA, STATUS_COLOR, STATUS_TIP };
+export { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, STATUS_COLOR, STATUS_TIP };

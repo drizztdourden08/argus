@@ -15,6 +15,9 @@ interface ProcRow {
   ageMin: number | null;
   idleMin: number | null;
   status: string;
+  cmd: string;
+  kill: string;
+  item: ProcItem;
 }
 
 type ProcStatusFilter = 'all' | 'look';

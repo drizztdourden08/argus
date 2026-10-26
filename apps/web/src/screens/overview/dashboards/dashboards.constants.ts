@@ -1,4 +1,7 @@
 /* @layer renderer-app @kind constants */
+import type { SegmentOption } from '@drizztdourden08/tessera';
+import type { SendKind } from './model';
+
 const SENT_LIMIT = 40;
 
 const WARN_LOOK = { variant: 'urgency', color: 'warning' } as const;
@@ -18,10 +21,17 @@ const STATE_LOOK = {
 const NO_PROJECT = 'No project has a board yet.';
 const NOTHING_SENT = 'Nothing sent down yet.';
 
+const SEND_MESSAGE = 'It reaches the lead at once; a lead that is asleep reads it when it wakes.';
+
+const SEND_KINDS: SegmentOption<SendKind>[] = [
+  { value: 'decision', label: 'Decision' },
+  { value: 'followup', label: 'Note' },
+];
+
 const NO_PLAY = 'master has no Play: its command spans several lines, or its run name is taken (coord launcher show master)';
 
 const KIND_WORD: Readonly<Record<string, string>> = { decision: 'decision', followup: 'note' };
 
 export {
-  BAD_LOOK, CALM_LOOK, GOOD_LOOK, INFO_LOOK, KIND_WORD, NO_PLAY, NO_PROJECT, NOTHING_SENT, SENT_LIMIT, STATE_LOOK, WARN_LOOK,
+  BAD_LOOK, CALM_LOOK, GOOD_LOOK, INFO_LOOK, KIND_WORD, NO_PLAY, NO_PROJECT, NOTHING_SENT, SEND_KINDS, SEND_MESSAGE, SENT_LIMIT, STATE_LOOK, WARN_LOOK,
 };

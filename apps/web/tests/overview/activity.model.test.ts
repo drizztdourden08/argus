@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ActivityItem } from '../../src/screens/overview/activity/model';
-import { countLevels, kindDefs, levelOf, needsAttention, sortActivity, toLogRow } from '../../src/screens/overview/activity/model';
+import { countLevels, filterActivity, kindCounts, kindLook, levelOf, needsAttention, sortActivity } from '../../src/screens/overview/activity/model';
 import { kindOf } from '../../src/screens/overview/activity/model/kind-of';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
@@ -9,12 +9,10 @@ const minutesAgo = (minutes: number): string => new Date(NOW - minutes * 60000).
 
 const entry = (id: string, extra: Partial<ActivityItem> = {}): ActivityItem => ({ id, at: minutesAgo(1), kind: 'note', level: 'info', text: 'text', ...extra });
 
-const context = { now: NOW, freshSince: Number.NaN, nameOf: (key: string) => (key === 'rotp' ? 'Relic of the Past' : key) };
-
 describe('the feed order and the level and kind of an entry', () => {
-  it('runs oldest first so the newest sits at the bottom of the log, ties by the number in the id', () => {
+  it('runs newest first, ties by the number in the id, newest number first', () => {
     const rows = [entry('a-10', { at: minutesAgo(1) }), entry('a-2', { at: minutesAgo(5) }), entry('a-9', { at: minutesAgo(1) })];
-    expect(sortActivity(rows).map((row) => row.id)).toEqual(['a-2', 'a-9', 'a-10']);
+    expect(sortActivity(rows).map((row) => row.id)).toEqual(['a-10', 'a-9', 'a-2']);
   });
 
   it('reads a level it does not know, or none, as info, and a missing kind as note', () => {
@@ -37,39 +35,30 @@ describe('the feed order and the level and kind of an entry', () => {
   });
 });
 
-describe('the kinds of the log panel', () => {
-  it('lists the known kinds, then the kinds the feed carries that are new', () => {
-    const ids = kindDefs([entry('1', { kind: 'mystery' }), entry('2', { kind: 'fault' })]).map((kind) => kind.id);
-    expect(ids).toEqual(['fault', 'process', 'kill', 'close', 'run', 'wake', 'error', 'note', 'mystery']);
+describe('the filters', () => {
+  const rows = [
+    entry('1', { kind: 'run', level: 'error' }),
+    entry('2', { kind: 'note', level: 'info' }),
+    entry('3', { kind: 'run', level: 'warn' }),
+  ];
+
+  it('narrows by level and by kind, and both combine; all and an empty kind clear', () => {
+    expect(filterActivity(rows, { level: 'all', kind: '' })).toHaveLength(3);
+    expect(filterActivity(rows, { level: 'error', kind: '' }).map((row) => row.id)).toEqual(['1']);
+    expect(filterActivity(rows, { level: 'all', kind: 'run' }).map((row) => row.id)).toEqual(['1', '3']);
+    expect(filterActivity(rows, { level: 'warn', kind: 'run' }).map((row) => row.id)).toEqual(['3']);
+    expect(filterActivity(rows, { level: 'warn', kind: 'note' })).toEqual([]);
   });
 
-  it('gives each kind a tone, and a quiet one to a kind it does not know', () => {
-    const defs = kindDefs([entry('1', { kind: 'mystery' })]);
-    expect(defs.find((kind) => kind.id === 'fault')?.tone).toBe('danger');
-    expect(defs.find((kind) => kind.id === 'mystery')?.tone).toBe('muted');
-  });
-});
-
-describe('a row of the log', () => {
-  it('shows the time ago, the kind, the text, and the project and thread in the tag', () => {
-    const row = toLogRow(entry('a-1', { at: minutesAgo(5), kind: 'run', text: 'R-3 play failed', project: 'rotp', thread: 'lead' }), context);
-    expect(row).toEqual({ id: 'a-1', gutter: '5m ago', tag: 'Relic of the Past / lead', kind: 'run', message: 'R-3 play failed' });
+  it('lists the known kinds with their counts, then the kinds the feed carries that are new', () => {
+    const counts = kindCounts([entry('1', { kind: 'mystery' }), entry('2', { kind: 'fault' }), entry('3', { kind: 'fault' })]);
+    expect(counts.map(([kind]) => kind)).toEqual(['fault', 'process', 'kill', 'close', 'run', 'wake', 'error', 'note', 'mystery']);
+    expect(counts[0]).toEqual(['fault', 2]);
+    expect(counts[8]).toEqual(['mystery', 1]);
   });
 
-  it('puts the level in the tag for a warning or an error, and nothing for info', () => {
-    expect(toLogRow(entry('a', { level: 'error', project: 'rotp' }), context).tag).toBe('error Relic of the Past');
-    expect(toLogRow(entry('a', { level: 'warn' }), context).tag).toBe('warn');
-    expect(toLogRow(entry('a', { level: 'info' }), context).tag).toBe('');
-  });
-
-  it('marks the entries newer than the last visit as new', () => {
-    const row = toLogRow(entry('a', { at: minutesAgo(1) }), { ...context, freshSince: NOW - 5 * 60000 });
-    expect(row.tag).toBe('new');
-    const old = toLogRow(entry('a', { at: minutesAgo(10) }), { ...context, freshSince: NOW - 5 * 60000 });
-    expect(old.tag).toBe('');
-  });
-
-  it('is still a row when the doc has no time, no kind, no level and no text', () => {
-    expect(toLogRow({ id: 'a-7' }, context)).toEqual({ id: 'a-7', gutter: '', tag: '', kind: 'note', message: '' });
+  it('gives each kind a look, and a quiet one to a kind it does not know', () => {
+    expect(kindLook('fault')).toEqual({ variant: 'urgency', color: 'danger' });
+    expect(kindLook('mystery')).toEqual({ variant: 'normal', color: 'neutral' });
   });
 });
