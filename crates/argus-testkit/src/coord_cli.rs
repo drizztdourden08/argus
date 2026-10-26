@@ -140,7 +140,9 @@ impl CoordCli {
     }
 }
 
-fn argus_exe() -> Option<PathBuf> {
+/// The `argus` binary: `ARGUS_EXE`, else the one next to the test executables.
+#[must_use]
+pub fn argus_exe() -> Option<PathBuf> {
     let named = std::env::var_os("ARGUS_EXE").map(PathBuf::from);
     let beside = std::env::current_exe().ok().and_then(|exe| {
         Some(

@@ -11,7 +11,7 @@ mod server;
 mod stream;
 
 pub use client::{Reply, Request, request};
-pub use coord_cli::{CliOut, CoordCli};
+pub use coord_cli::{CliOut, CoordCli, argus_exe};
 pub use fixture::{ago, alpha_board, beta_board, make_home, portfolio_board, write_board};
 pub use png::png;
 pub use server::{TestOptions, TestServer, Tweak};
