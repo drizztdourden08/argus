@@ -18,7 +18,7 @@ use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, mod
 use super::find::{agent_mut, clear_ending, owner_of};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
-use crate::verbs::agent::base::authority::create_agent;
+use crate::verbs::agent::base::apply::allow_create;
 use crate::verbs::agent::base::opt::{value, word};
 use crate::verbs::agent::base::{Run, write};
 use crate::who::Caller;
@@ -189,7 +189,7 @@ fn entry_of<'a>(
     who: &Caller,
 ) -> Result<Entry<'a>, CoordError> {
     let owner = owner_of(board, Some(who), run.options)?;
-    create_agent(who, &owner)?;
+    allow_create(who, "agents", &owner)?;
     let fields = fields_of(board, run.options, &["kind", "item", "branch", "worktree"])?;
     let kind = fields
         .get("kind")

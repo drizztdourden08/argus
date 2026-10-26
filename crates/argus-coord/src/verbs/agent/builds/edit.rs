@@ -4,13 +4,14 @@
 
 use argus_board::Board;
 use argus_board::json::{doc, nullish, set};
+use argus_board::ops::ensure_build;
 use argus_core::clock::now_iso;
 use argus_launchers::launcher::resolve_bundle;
 use serde_json::Value;
 
 use super::launch::{Applied, apply_launch};
 use super::parts::{Parts, json_of, parts_from};
-use super::support::{audit, authorize_manage, bundle_mut, ensure_build, tag_arg, thread_of};
+use super::support::{audit, authorize_manage, bundle_mut, tag_arg, thread_of};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::write;
@@ -116,7 +117,9 @@ pub fn add(call: &mut Call<'_>) -> Outcome {
         let have = doc(board, "builds", &tag).is_some();
         let own = thread_of(board, &tag);
         authorize_manage(board, who, &[own, parts.patch.thread.clone().flatten()])?;
-        ensure_build(board, &tag, &who.actor);
+        if !have {
+            ensure_build(board, &tag, &who.actor, "draft");
+        }
         let cwd = run.cwd.to_string_lossy().into_owned();
         let applied = apply_parts(board, who, (&tag, &cwd), &parts)?;
         if !have || !applied.changed.is_empty() {

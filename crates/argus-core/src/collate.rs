@@ -1,6 +1,7 @@
-//! `a.localeCompare(b, undefined, { numeric: true })` for the ids, tags and names of a board:
-//! white space and punctuation sort before digits and digits before letters, letters compare
-//! without case first, a run of digits compares by value, and lower case wins a tie.
+//! `a.localeCompare(b)` and `a.localeCompare(b, undefined, { numeric: true })` for the ids, tags
+//! and names of a board: white space and punctuation sort before digits and digits before
+//! letters, letters compare without case first, with `numeric` a run of digits compares by value,
+//! and lower case wins a tie.
 
 use std::cmp::Ordering;
 
@@ -34,10 +35,10 @@ fn runs(a: &[char], b: &[char]) -> Ordering {
     x.len().cmp(&y.len()).then_with(|| x.cmp(&y))
 }
 
-fn first_pass(mut a: &[char], mut b: &[char]) -> Ordering {
+fn first_pass(mut a: &[char], mut b: &[char], numeric: bool) -> Ordering {
     while !a.is_empty() && !b.is_empty() {
         let (la, lb) = (digits(a), digits(b));
-        let (order, step_a, step_b) = if la > 0 && lb > 0 {
+        let (order, step_a, step_b) = if numeric && la > 0 && lb > 0 {
             (runs(&a[..la], &b[..lb]), la, lb)
         } else {
             (weight(a[0]).cmp(&weight(b[0])), 1, 1)
@@ -59,9 +60,9 @@ fn case_pass(a: &[char], b: &[char]) -> Ordering {
     }
 }
 
-/// The order `a.localeCompare(b, undefined, { numeric: true })` gives.
+/// The order `a.localeCompare(b)` gives; `numeric` stands for `{ numeric: true }`.
 #[must_use]
-pub fn compare(a: &str, b: &str) -> Ordering {
+pub fn compare(a: &str, b: &str, numeric: bool) -> Ordering {
     let (x, y): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
-    first_pass(&x, &y).then_with(|| case_pass(&x, &y))
+    first_pass(&x, &y, numeric).then_with(|| case_pass(&x, &y))
 }

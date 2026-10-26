@@ -6,9 +6,9 @@ use argus_core::ids::is_key;
 use serde_json::{Value, json};
 
 use crate::backend::McpBackend;
-use crate::collate;
 use crate::error::ToolError;
 use crate::json::{display, truthy};
+use argus_core::collate;
 
 /// The project key a call names, checked against the boards that exist.
 pub fn require_project(backend: &dyn McpBackend, key: Option<&str>) -> Result<String, ToolError> {

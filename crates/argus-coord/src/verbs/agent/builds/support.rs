@@ -2,16 +2,15 @@
 //! small readings of the board (live tests of a tag, the bundles that link a launcher).
 
 use argus_board::Board;
-use argus_board::json::{doc, map_mut, nullish, section, truthy};
+use argus_board::json::{doc, nullish, section, truthy};
 use argus_board::limits::require_str;
 use argus_board::ops::Role;
 use argus_board::store::{LogLine, append_log};
 use argus_board::text::clip_text;
-use argus_core::clock::now_iso;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use crate::cli::exit::CoordError;
-use crate::verbs::agent::base::authority::manage_thread;
+use crate::verbs::agent::base::apply::allow;
 use crate::verbs::agent::base::opt::word;
 use crate::who::Caller;
 
@@ -56,7 +55,7 @@ pub fn authorize_manage(
         return Ok(());
     }
     ids.into_iter()
-        .try_for_each(|id| manage_thread(who, doc(board, "threads", id)))
+        .try_for_each(|id| allow(who, "set", "threads", doc(board, "threads", id)))
 }
 
 /// One audit line of the board, as the actor.
@@ -83,19 +82,6 @@ pub fn carrying<'a>(board: &'a Board, tag: &str) -> Vec<&'a Value> {
         .values()
         .filter(|t| t["build"].as_str() == Some(tag) && live(t))
         .collect()
-}
-
-/// `ensureBuild`: the record of a tag, made as a draft when missing.
-pub fn ensure_build(board: &mut Board, tag: &str, actor: &str) {
-    let at = now_iso();
-    map_mut(board, "builds")
-        .entry(tag.to_owned())
-        .or_insert_with(|| {
-            json!({
-                "tag": tag, "status": "draft", "title": null, "note": null, "launcher": null,
-                "thread": null, "createdAt": at, "updatedAt": at, "createdBy": actor,
-            })
-        });
 }
 
 /// The thread of a bundle record, when it has one.

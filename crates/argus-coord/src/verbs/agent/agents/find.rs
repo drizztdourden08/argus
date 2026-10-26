@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::Run;
-use crate::verbs::agent::base::authority::change_agent;
+use crate::verbs::agent::base::apply::allow;
 use crate::who::Caller;
 
 /// The marks the reaper and the reconciler leave on a record they closed.
@@ -181,10 +181,10 @@ pub fn own<'a>(
     board: &'a mut Board,
     who: &Caller,
     run: &Run<'_>,
-    want: Want,
+    (verb, want): (&str, Want),
 ) -> Result<(String, &'a mut Value), CoordError> {
     let id = named(board, who, run, want)?;
     let agent = agent_mut(board, &id)?;
-    change_agent(who, agent)?;
+    allow(who, verb, "agents", Some(agent))?;
     Ok((id, agent))
 }

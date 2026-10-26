@@ -4,13 +4,32 @@
 
 use argus_board::Board;
 use argus_board::json::as_integer;
-use argus_board::ops::{Status, apply_op};
+use argus_board::ops::{Check, Status, apply_op, authorize, check_authority};
 use serde_json::{Map, Value, json};
 
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
 use crate::verbs::shared::caller::who_of;
 use crate::who::Caller;
+
+/// `authorize` of `ops.mjs` for the caller: `verb` on `doc`, a record of `coll`.
+///
+/// # Errors
+/// The ownership rule that applies.
+pub fn allow(who: &Caller, verb: &str, coll: &str, doc: Option<&Value>) -> Result<(), CoordError> {
+    Ok(check_authority(&who_of(who), verb, coll, doc)?)
+}
+
+/// `authorize(..., 'add', coll, null, { to })`: a new record for the thread `to`.
+///
+/// # Errors
+/// A thread creating a record for another thread.
+pub fn allow_create(who: &Caller, coll: &str, to: &str) -> Result<(), CoordError> {
+    Ok(authorize(
+        &who_of(who),
+        &Check::new("add", coll, None).to(Some(to)),
+    )?)
+}
 
 /// An op on one record: `{ kind, target, ...rest }` with `force`, or `baseRev` for `--if-rev`.
 ///

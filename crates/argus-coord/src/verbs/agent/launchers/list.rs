@@ -11,10 +11,10 @@ use super::row::{Row, row_of};
 use crate::cli::Call;
 use crate::cli::exit::Outcome;
 use crate::cli::out::{ago, as_json, table};
-use crate::verbs::agent::base::collate::compare;
 use crate::verbs::agent::base::read;
 use crate::verbs::agent::base::show::{cell, clip};
 use crate::verbs::agent::rules::typed_board;
+use argus_core::collate::compare;
 
 const HEAD: [&str; 8] = [
     "name",
@@ -33,7 +33,7 @@ fn by_pin(a: &Value, b: &Value) -> Ordering {
     let (pa, pb) = (pin(a), pin(b));
     pb.0.cmp(&pa.0)
         .then_with(|| pb.1.cmp(&pa.1))
-        .then_with(|| compare(&display(&a["name"]), &display(&b["name"])))
+        .then_with(|| compare(&display(&a["name"]), &display(&b["name"]), true))
 }
 
 /// The usage column: `every 7d, unused 2d STALE`, `for bundle b4`, or nothing for master.

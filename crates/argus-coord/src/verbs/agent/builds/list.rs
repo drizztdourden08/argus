@@ -7,8 +7,7 @@ use super::rows::{Row, build_rows};
 use crate::cli::Call;
 use crate::cli::exit::Outcome;
 use crate::cli::out::{ago, as_json, table};
-use crate::verbs::agent::base::read;
-use crate::verbs::agent::base::show::clip;
+use crate::verbs::agent::base::{read, show::clip};
 
 const HEAD: [&str; 12] = [
     "build", "status", "title", "thread", "tests", "pass", "fail", "to run", "closed", "launcher",
