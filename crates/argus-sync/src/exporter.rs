@@ -124,12 +124,12 @@ impl State {
             }
             Ok(out)
         })?;
-        if project {
-            self.hooks.exported(key, &board);
-        }
         self.keep_board(key, board);
-        if project && !applied.changes.is_empty() {
-            self.schedule_portfolio();
+        if project {
+            self.announce(key);
+            if !applied.changes.is_empty() {
+                self.schedule_portfolio();
+            }
         }
         Ok(Exported {
             seq: applied.seq,

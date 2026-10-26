@@ -29,12 +29,18 @@ use tokio_util::sync::CancellationToken;
 use connection::{Connection, Request};
 use session::{Ended, Flow, pump};
 
+/// Writes one wake line to stdout; fails when nobody reads it any more.
+pub type Print = Box<dyn FnMut(&str) -> io::Result<()> + Send>;
+
+/// Writes one status line to stderr.
+pub type Say = Box<dyn FnMut(&str) + Send>;
+
 /// Where the command writes: stdout lines (which may fail) and status lines.
 pub struct Io {
-    /// Writes one wake line to stdout.
-    pub out: Box<dyn FnMut(&str) -> io::Result<()> + Send>,
-    /// Writes one status line to stderr.
-    pub err: Box<dyn FnMut(&str) + Send>,
+    /// Wake lines.
+    pub out: Print,
+    /// Status lines.
+    pub err: Say,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -47,7 +53,7 @@ enum State {
 /// The state of the command, so a long outage prints one line and not one per retry.
 struct Status {
     state: State,
-    err: Box<dyn FnMut(&str) + Send>,
+    err: Say,
 }
 
 impl Status {
@@ -60,9 +66,9 @@ impl Status {
 }
 
 /// Where the lines go, and why the command ended when it did.
-struct Sink<'a> {
-    out: &'a mut (dyn FnMut(&str) -> io::Result<()> + Send),
-    stop: &'a CancellationToken,
+struct Sink {
+    out: Print,
+    stop: CancellationToken,
     reason: Option<String>,
 }
 
@@ -75,7 +81,7 @@ fn cause(e: &io::Error) -> String {
     }
 }
 
-impl Sink<'_> {
+impl Sink {
     fn end(&mut self, reason: String) -> Flow {
         self.reason = Some(reason);
         self.stop.cancel();
@@ -107,102 +113,125 @@ fn encode(text: &str) -> String {
         .collect()
 }
 
-fn target(args: &WakeArgs) -> String {
-    let label = args
+fn target(wanted: &WakeArgs) -> String {
+    let label = wanted
         .id
         .as_deref()
         .map(|id| format!("&id={}", encode(id)))
         .unwrap_or_default();
     format!(
         "/api/p/{}/wakes/stream?thread={}&v=2{label}",
-        args.project,
-        encode(&args.thread)
+        wanted.project,
+        encode(&wanted.thread)
     )
 }
 
-/// One connection, from the connect to the end of the stream. Returns whether it connected.
-async fn attempt(
-    args: &WakeArgs,
-    at: &Endpoint,
-    status: &mut Status,
-    sink: &mut Sink<'_>,
-) -> bool {
-    let target = target(args);
-    let request = Request {
-        port: at.port,
-        target: &target,
-        token: at.token.as_deref(),
-    };
-    let stop = sink.stop.clone();
-    let opened = tokio::select! {
-        o = Connection::open(&request) => o,
-        () = stop.cancelled() => return false,
-    };
-    let mut conn = match opened {
-        Ok(conn) => conn,
-        Err(e) => {
-            let what = if status.state == State::Up {
-                "connection lost"
-            } else {
-                "dashboard not reachable"
-            };
-            status.note(State::Down, &format!("{what} ({}); retrying", cause(&e)));
-            return false;
-        }
-    };
-    status.note(State::Up, "connected");
-    let ended = tokio::select! {
-        r = pump(&mut conn, |action| sink.on(action)) => Some(r),
-        () = stop.cancelled() => None,
-    };
-    match ended {
-        Some(Ok(Ended::ByServer)) => status.note(State::Down, "the stream ended; reconnecting"),
-        Some(Err(e)) => status.note(
-            State::Down,
-            &format!("connection lost ({}); retrying", cause(&e)),
-        ),
-        Some(Ok(Ended::ByCaller)) | None => {}
-    }
-    true
+/// The command: what it listens to, what it says, where its lines go.
+struct Command {
+    wanted: WakeArgs,
+    status: Status,
+    sink: Sink,
 }
 
-/// Runs the command until `stop` rings or the stream is replaced. `argv` is the command line
+impl Command {
+    /// Connects to the server; `None` when it cannot, or the command was stopped meanwhile.
+    async fn open(&mut self, at: &Endpoint) -> Option<Connection> {
+        let target = target(&self.wanted);
+        let request = Request {
+            port: at.port,
+            target: &target,
+            token: at.token.as_deref(),
+        };
+        let stop = self.sink.stop.clone();
+        let opened = tokio::select! {
+            o = Connection::open(&request) => o,
+            () = stop.cancelled() => return None,
+        };
+        let lost = if self.status.state == State::Up {
+            "connection lost"
+        } else {
+            "dashboard not reachable"
+        };
+        match opened {
+            Ok(conn) => Some(conn),
+            Err(e) => {
+                let message = format!("{lost} ({}); retrying", cause(&e));
+                self.status.note(State::Down, &message);
+                None
+            }
+        }
+    }
+
+    /// Reads the stream to its end and says how it ended.
+    async fn read(&mut self, mut conn: Connection) {
+        self.status.note(State::Up, "connected");
+        let stop = self.sink.stop.clone();
+        let sink = &mut self.sink;
+        let ended = tokio::select! {
+            r = pump(&mut conn, |action| sink.on(action)) => Some(r),
+            () = stop.cancelled() => None,
+        };
+        match ended {
+            Some(Ok(Ended::ByServer)) => {
+                self.status
+                    .note(State::Down, "the stream ended; reconnecting");
+            }
+            Some(Err(e)) => {
+                let message = format!("connection lost ({}); retrying", cause(&e));
+                self.status.note(State::Down, &message);
+            }
+            Some(Ok(Ended::ByCaller)) | None => {}
+        }
+    }
+
+    /// One try: find the server, connect, read. Returns whether it connected.
+    async fn attempt(&mut self, paths: &Paths) -> bool {
+        let Some(at) = endpoint(paths) else {
+            let message = "no dashboard address known (is it installed?); retrying";
+            self.status.note(State::Down, message);
+            return false;
+        };
+        let Some(conn) = self.open(&at).await else {
+            return false;
+        };
+        self.read(conn).await;
+        true
+    }
+}
+
+/// Runs the command until `stop` rings or the stream is replaced. `words` is the command line
 /// after `argus` (it may start with `wake-stream`). Returns the exit code.
-pub async fn run(argv: &[String], paths: &Paths, io: Io, stop: CancellationToken) -> u8 {
-    let Io { mut out, err } = io;
-    let args = match parse_wake_args(argv) {
-        Ok(args) => args,
+pub async fn run(words: &[String], paths: &Paths, io: Io, stop: CancellationToken) -> u8 {
+    let Io { out, mut err } = io;
+    let wanted = match parse_wake_args(words) {
+        Ok(wanted) => wanted,
         Err(message) => {
-            let mut err = err;
             err(&format!("argus wake-stream: {message}"));
             return 2;
         }
     };
-    let mut status = Status {
+    err(&format!(
+        "wake-stream: project {}, thread {}",
+        wanted.project, wanted.thread
+    ));
+    let sink = Sink {
+        out,
+        stop: stop.clone(),
+        reason: None,
+    };
+    let status = Status {
         state: State::Init,
         err,
     };
-    (status.err)(&format!(
-        "wake-stream: project {}, thread {}",
-        args.project, args.thread
-    ));
-    let mut sink = Sink {
-        out: &mut *out,
-        stop: &stop,
-        reason: None,
+    let mut command = Command {
+        wanted,
+        status,
+        sink,
     };
     let mut backoff = BACKOFF_START_MS;
     while !stop.is_cancelled() {
-        match endpoint(paths) {
-            None => status.note(
-                State::Down,
-                "no dashboard address known (is it installed?); retrying",
-            ),
-            Some(at) => {
-                if attempt(&args, &at, &mut status, &mut sink).await {
-                    backoff = BACKOFF_START_MS;
-                }
-            }
+        if command.attempt(paths).await {
+            backoff = BACKOFF_START_MS;
         }
         tokio::select! {
             () = tokio::time::sleep(Duration::from_millis(backoff)) => {}
@@ -210,8 +239,8 @@ pub async fn run(argv: &[String], paths: &Paths, io: Io, stop: CancellationToken
         }
         backoff = next_backoff(backoff);
     }
-    if let Some(reason) = sink.reason {
-        (status.err)(&format!("wake-stream: ending, {reason}"));
+    if let Some(reason) = command.sink.reason.take() {
+        (command.status.err)(&format!("wake-stream: ending, {reason}"));
     }
     0
 }

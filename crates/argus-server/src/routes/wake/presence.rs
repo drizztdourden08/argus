@@ -20,7 +20,7 @@ use crate::sse::{SseSender, open_stream};
 #[derive(Default)]
 struct Hold {
     token: Option<PresenceToken>,
-    _sender: Option<SseSender>,
+    sender: Option<SseSender>,
 }
 
 pub(super) async fn presence(ctx: Ctx) -> Reply {
@@ -28,8 +28,8 @@ pub(super) async fn presence(ctx: Ctx) -> Reply {
     let scope = key(&ctx)?;
     let thread = presence_thread(ctx.query("thread")).map_err(|e| refusal(&e))?;
     let tab = clean_tab(ctx.query("tab").unwrap_or(""));
-    let hold: Arc<Mutex<Hold>> = Arc::default();
-    let (service, kept) = (Arc::clone(&wake), Arc::clone(&hold));
+    let slot: Arc<Mutex<Hold>> = Arc::default();
+    let (service, kept) = (Arc::clone(&wake), Arc::clone(&slot));
     let leave = Box::new(move || {
         let held = std::mem::take(&mut *kept.lock().unwrap_or_else(PoisonError::into_inner));
         if let Some(token) = held.token {
@@ -43,10 +43,18 @@ pub(super) async fn presence(ctx: Ctx) -> Reply {
         None,
     );
     let token = lock(&wake).presence_attach(&scope, &thread, &tab);
-    *hold.lock().unwrap_or_else(PoisonError::into_inner) = Hold {
+    *slot.lock().unwrap_or_else(PoisonError::into_inner) = Hold {
         token: Some(token),
-        _sender: Some(sender),
+        sender: Some(sender),
     };
+    let stop = ctx.svc.stop.clone();
+    tokio::spawn(async move {
+        stop.cancelled().await;
+        slot.lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .sender
+            .take();
+    });
     Ok(response)
 }
 

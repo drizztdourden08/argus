@@ -1,8 +1,8 @@
-//! Work that blocks (a lock, the database, a board file) runs off the runtime's workers.
+//! Calls into a service that blocks (a database, the platform) run off the async workers.
 
 use argus_core::ApiError;
 
-/// Runs `f` on a blocking thread and answers what it returns.
+/// Runs `f` on a blocking thread and answers what it returned.
 ///
 /// # Errors
 /// 500 when the thread panicked.

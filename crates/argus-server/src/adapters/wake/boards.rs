@@ -35,12 +35,15 @@ impl WakeBoards {
         }
     }
 
-    /// Keeps the board of a key as just exported.
-    pub fn keep(&self, key: &str, board: &Board) {
+    /// Reads the board of a key again, as just exported.
+    pub fn refresh(&self, key: &str) {
+        let Some(board) = self.reader.board(key) else {
+            return;
+        };
         self.kept
             .write()
             .unwrap_or_else(PoisonError::into_inner)
-            .insert(key.to_owned(), view_of(board));
+            .insert(key.to_owned(), view_of(&board));
     }
 }
 

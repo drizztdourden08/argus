@@ -8,6 +8,7 @@ use argus_wake::external::{clean_label, listener_cap_message};
 use argus_wake::service::driver::{SharedWake, lock};
 use serde_json::{Value, json, to_value};
 use tokio::sync::mpsc::UnboundedReceiver;
+use tokio_util::sync::CancellationToken;
 
 use super::{service, thread};
 use crate::Ctx;
@@ -17,10 +18,21 @@ use crate::sse::{SseSender, open_stream};
 
 type Slot = Arc<Mutex<Option<ListenerId>>>;
 
-/// Writes what the engine sends until the stream is closed. When it returns, the sender drops
-/// and the stream ends after what is queued.
-async fn forward(mut messages: UnboundedReceiver<ListenerMessage>, sender: SseSender) {
-    while let Some(message) = messages.recv().await {
+/// Writes what the engine sends until the stream is closed or the server stops. When it
+/// returns, the sender drops and the stream ends after what is queued.
+async fn forward(
+    mut messages: UnboundedReceiver<ListenerMessage>,
+    sender: SseSender,
+    stop: CancellationToken,
+) {
+    loop {
+        let message = tokio::select! {
+            m = messages.recv() => m,
+            () = stop.cancelled() => None,
+        };
+        let Some(message) = message else {
+            return;
+        };
         match message {
             ListenerMessage::Wake(event) => {
                 let data = to_value(&event).unwrap_or(Value::Null);
@@ -70,6 +82,6 @@ pub(super) async fn stream(ctx: Ctx) -> Reply {
     let attached = service.attach(&scope, &thread, Box::new(sink), AttachOptions { v, label });
     *slot.lock().unwrap_or_else(PoisonError::into_inner) = Some(attached.id);
     drop(service);
-    tokio::spawn(forward(messages, sender));
+    tokio::spawn(forward(messages, sender, ctx.svc.stop.clone()));
     Ok(response)
 }

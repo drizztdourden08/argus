@@ -13,7 +13,6 @@ use serde_json::{Value, to_value};
 
 use super::activity::ActivityAdapter;
 use crate::boards::BoardReader;
-use crate::instance::pid_alive;
 use crate::services::{WakeHook, WakeRequest as Wake};
 
 const KIND: &str = "procs";
@@ -54,6 +53,16 @@ impl ProcsStore for ProcsDocs {
             })
             .map_err(|e| e.to_string())
     }
+}
+
+#[cfg(windows)]
+pub(crate) fn alive(pid: u32) -> bool {
+    argus_native::process_alive(pid)
+}
+
+#[cfg(not(windows))]
+pub(crate) fn alive(pid: u32) -> bool {
+    std::path::Path::new(&format!("/proc/{pid}")).exists()
 }
 
 /// The dashboard around the monitor.
@@ -102,7 +111,7 @@ impl ProcsHost for ProcsHostAdapter {
     }
 
     fn tray_pid(&self) -> Option<u32> {
-        read_live_tray(&self.tray, pid_alive).map(|r| r.pid)
+        read_live_tray(&self.tray, alive).map(|r| r.pid)
     }
 
     fn coordinator(&self) -> Option<String> {

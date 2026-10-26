@@ -47,6 +47,11 @@ async fn wakes_inside_the_window_arrive_as_one_event_and_the_other_threads_hear_
     assert_eq!(api.queued(), 0, "another thread hears nothing");
 }
 
+/// The page doc of a wake row.
+async fn wake_doc(t: &TestServer, row: &Value) -> Value {
+    doc(t, "alpha", "wakes", row["id"].as_str().unwrap_or_default()).await
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bundle_wakes_once() {
     let r = rig().await;
@@ -71,29 +76,14 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
     assert_eq!(queued["listeners"], 0);
     assert_eq!(queued["thread"], "ui");
     assert_eq!(queued["reason"], "test-blocked");
-    assert_eq!(
-        doc(
-            t,
-            "alpha",
-            "wakes",
-            queued["id"].as_str().unwrap_or_default()
-        )
-        .await["listeners"],
-        0
-    );
+    assert_eq!(wake_doc(t, &queued).await["listeners"], 0);
 
     let late = wake_stream(t, "ui", "alpha").await;
     let replay = late.next(Some("wake"), 5000).await.expect("the replay");
     assert_eq!(lines(&replay.data), ["T-4 blocked: device missing"]);
     assert_eq!(replay.data["id"], queued["id"]);
     pause(100).await;
-    let delivered = doc(
-        t,
-        "alpha",
-        "wakes",
-        queued["id"].as_str().unwrap_or_default(),
-    )
-    .await;
+    let delivered = wake_doc(t, &queued).await;
     assert_eq!(delivered["status"], "delivered");
     assert_eq!(delivered["listeners"], 1);
 
@@ -460,7 +450,7 @@ async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
 async fn the_listeners_route_lists_open_streams_and_validates_the_project_key() {
     let r = rig().await;
     let t = &r.t;
-    assert!(listeners(t, "alpha").await.is_empty());
+    assert_eq!(listeners(t, "alpha").await.len(), 0);
     let s = t
         .sse("/api/p/alpha/wakes/stream?thread=ui&v=2&id=%20%20ui%0Asession%20")
         .await;
@@ -517,7 +507,7 @@ async fn a_board_page_holds_presence_open_per_thread_and_closing_drops_it() {
 async fn with_the_wake_service_off_its_routes_answer_503() {
     let t = TestServer::start(argus_testkit::TestOptions {
         seed: true,
-        tweak: Some(std::sync::Arc::new(|o| o.wake = false)),
+        tweak: Some(std::sync::Arc::new(|o| o.wake.enabled = false)),
         ..argus_testkit::TestOptions::default()
     })
     .await;

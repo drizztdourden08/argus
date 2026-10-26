@@ -261,17 +261,19 @@ async fn the_clear_route_refuses_a_browser_request_with_or_without_the_bearer() 
     assert_eq!(state_of(t, "alpha", "ui").as_deref(), Some("fault"));
 }
 
+/// A clear request for alpha/ui as the main coordinator, with `extra` laid over it.
+fn with(extra: &Value) -> Value {
+    let mut body = json!({ "project": "alpha", "thread": "ui", "by": "coordinator" });
+    body.as_object_mut()
+        .expect("object")
+        .extend(extra.as_object().cloned().unwrap_or_default());
+    body
+}
+
 #[tokio::test(flavor = "multi_thread")]
-async fn the_clear_route_needs_a_note_and_the_main_coordinator_and_then_clears() {
+async fn the_clear_route_needs_a_note_and_the_main_coordinator() {
     let f = faulted().await;
     let t = &f.t;
-    let with = |extra: Value| {
-        let mut body = json!({ "project": "alpha", "thread": "ui", "by": "coordinator" });
-        body.as_object_mut()
-            .expect("object")
-            .extend(extra.as_object().cloned().unwrap_or_default());
-        body
-    };
     assert_eq!(
         clear(
             t,
@@ -281,13 +283,13 @@ async fn the_clear_route_needs_a_note_and_the_main_coordinator_and_then_clears()
         400,
         "no note"
     );
-    assert_eq!(clear(t, &with(json!({ "note": "too short" }))).await, 400);
+    assert_eq!(clear(t, &with(&json!({ "note": "too short" }))).await, 400);
     assert_eq!(
-        clear(t, &with(json!({ "note": "x".repeat(301) }))).await,
+        clear(t, &with(&json!({ "note": "x".repeat(301) }))).await,
         400
     );
     assert_eq!(
-        clear(t, &with(json!({ "thread": "*", "note": NOTE }))).await,
+        clear(t, &with(&json!({ "thread": "*", "note": NOTE }))).await,
         400
     );
     for by in ["api", "ui", "nobody", ""] {
@@ -295,22 +297,28 @@ async fn the_clear_route_needs_a_note_and_the_main_coordinator_and_then_clears()
             .write(
                 "POST",
                 "/api/wake-faults/clear",
-                &with(json!({ "by": by, "note": NOTE })),
+                &with(&json!({ "by": by, "note": NOTE })),
             )
             .await;
         assert_eq!(r.status, 403, "by \"{by}\"");
         assert_eq!(r.code(), "forbidden");
     }
     assert_eq!(
-        clear(t, &with(json!({ "thread": "nothing", "note": NOTE }))).await,
+        clear(t, &with(&json!({ "thread": "nothing", "note": NOTE }))).await,
         404
     );
     assert_eq!(state_of(t, "alpha", "ui").as_deref(), Some("fault"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_main_coordinator_clears_a_fault_with_a_note() {
+    let f = faulted().await;
+    let t = &f.t;
     let done = t
         .write(
             "POST",
             "/api/wake-faults/clear",
-            &with(json!({ "note": NOTE })),
+            &with(&json!({ "note": NOTE })),
         )
         .await;
     assert_eq!(done.status, 200);
@@ -324,7 +332,7 @@ async fn the_clear_route_needs_a_note_and_the_main_coordinator_and_then_clears()
         "a cleared non-lead row leaves the portfolio strip"
     );
     assert_eq!(
-        clear(t, &with(json!({ "note": NOTE }))).await,
+        clear(t, &with(&json!({ "note": NOTE }))).await,
         404,
         "already cleared"
     );

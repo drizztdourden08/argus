@@ -88,9 +88,9 @@ pub async fn post_wake(t: &TestServer, key: &str, body: &Value) -> Reply {
 }
 
 /// A one-click result of the owner.
-pub async fn result(t: &TestServer, test: &str, outcome: &str, text: &str) -> Value {
-    let body = json!({ "outcome": outcome, "text": text });
-    let path = format!("/api/p/alpha/tests/{test}/result");
+pub async fn result(t: &TestServer, test_id: &str, outcome: &str, note: &str) -> Value {
+    let body = json!({ "outcome": outcome, "text": note });
+    let path = format!("/api/p/alpha/tests/{test_id}/result");
     t.write("POST", &path, &body).await.json()
 }
 

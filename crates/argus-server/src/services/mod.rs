@@ -42,7 +42,9 @@ pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
 pub use agents::AgentsOptions;
+pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
+pub use wake::WakeOptions;
 pub use wake_hook::{WakeHook, WakeRequest};
 
 /// The composed services.

@@ -28,5 +28,7 @@ pub use ctx::{AuthKind, Ctx};
 pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
-pub use services::{AgentsOptions, ProcsOptions, Services, WakeHook, WakeRequest};
+pub use services::{
+    AgentsOptions, NotifyOptions, ProcsOptions, Services, WakeHook, WakeOptions, WakeRequest,
+};
 pub use web::{PageVars, WebAssets, render_page};

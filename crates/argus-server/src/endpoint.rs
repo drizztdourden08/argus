@@ -4,7 +4,8 @@
 use argus_core::Paths;
 use argus_core::config::{env_port, peek_config};
 
-use crate::instance::{pid_alive, read_pid_file};
+use crate::adapters::procs::alive;
+use crate::instance::read_pid_file;
 
 /// A server to talk to.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,7 +25,7 @@ pub fn endpoint(paths: &Paths) -> Option<Endpoint> {
         .as_ref()
         .and_then(|c| c["port"].as_u64())
         .and_then(|p| u16::try_from(p).ok());
-    let live = read_pid_file(&paths.pid_file).filter(|r| r.port > 0 && pid_alive(r.pid));
+    let live = read_pid_file(&paths.pid_file).filter(|r| r.port > 0 && alive(r.pid));
     let port = live.map(|r| r.port).or(configured).filter(|p| *p > 0)?;
     let token = config
         .filter(|c| c["requireToken"] == true)

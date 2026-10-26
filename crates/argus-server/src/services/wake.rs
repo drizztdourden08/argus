@@ -41,14 +41,27 @@ fn link(sync: &SyncService, wake: &SharedWake, boards: &Arc<WakeBoards>, stop: &
         }
     });
     let (service, boards) = (Arc::clone(wake), Arc::clone(boards));
-    sync.hooks().on_board(move |key, board| {
-        boards.keep(key, board);
+    sync.on_board(move |key| {
+        boards.refresh(key);
         lock(&service).on_board(key);
     });
 }
 
+/// Whether the wake service runs.
+#[derive(Clone, Copy)]
+pub struct WakeOptions {
+    /// Run it; it needs the sync service.
+    pub enabled: bool,
+}
+
+impl Default for WakeOptions {
+    fn default() -> Self {
+        WakeOptions { enabled: true }
+    }
+}
+
 pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<Mutex<WakeService>>> {
-    let sync = svc.sync.as_ref().filter(|_| opts.wake)?;
+    let sync = svc.sync.as_ref().filter(|_| opts.wake.enabled)?;
     let boards = Arc::new(WakeBoards::new(svc.boards()));
     let settings = Value::Object(svc.config().extra);
     let config = WakeConfig::from_json(&settings);

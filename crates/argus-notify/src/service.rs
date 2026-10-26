@@ -1,6 +1,6 @@
 //! The notification service: its parts, its start and stop, and the owner's settings.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU16, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::configure::{SettingsPatch, apply, describe};
@@ -20,7 +20,7 @@ pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
 /// says the owner is needed. It never fails its callers.
 pub struct Notify {
     pub(crate) ports: Ports,
-    pub(crate) links: Links,
+    port: AtomicU16,
     pub(crate) limiter: Mutex<Limiter>,
     pub(crate) seen: Mutex<Option<SeenMap>>,
     running: AtomicBool,
@@ -32,11 +32,21 @@ impl Notify {
     pub fn new(ports: Ports, port: u16) -> Self {
         Self {
             ports,
-            links: Links::new(port),
+            port: AtomicU16::new(port),
             limiter: Mutex::new(Limiter::default()),
             seen: Mutex::new(None),
             running: AtomicBool::new(false),
         }
+    }
+
+    /// Tells the service the port the dashboard really listens on, for the addresses a toast
+    /// opens; the server knows it only once the listener is bound.
+    pub fn set_port(&self, port: u16) {
+        self.port.store(port, Ordering::SeqCst);
+    }
+
+    pub(crate) fn links(&self) -> Links {
+        Links::new(self.port.load(Ordering::SeqCst))
     }
 
     /// Starts the service and writes the docs of the stored notifications again.
