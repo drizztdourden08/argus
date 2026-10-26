@@ -1,11 +1,12 @@
 /* @layer renderer-app @kind test */
+import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
 import { act, render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
-import { createFakeSources } from '../helpers/fake-source';
+import { createFakeSources, FakeSource } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
 import { byId } from './fixtures';
 
@@ -37,6 +38,8 @@ const FEEDS: [Feed, string][] = [
 ];
 const POSTED = { id: 'O-1', status: 'applied', outcome: null, entry: null, seq: 1 };
 
+const HashProbe = () => <Text data-testid="hash">{useLocation().hash}</Text>;
+
 const defaultReply = (call: Call): Reply => {
   if (call.url.endsWith('/proofs') || call.url.includes('/proofs?')) return { status: 200, body: { test: 'T-1', proof: { n: 1, url: '/files/rotp/proofs/T-1-1.png', caption: 'c' } } };
   if (call.url.endsWith('/stop')) return { status: 200, body: { run: { id: 'R-1' } } };
@@ -60,16 +63,32 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
   return calls;
 };
 
+const stubEventSource = (): FakeSource[] => {
+  const streams: FakeSource[] = [];
+  vi.stubGlobal('EventSource', class extends FakeSource {
+    constructor(url: string) {
+      super(url);
+      streams.push(this);
+    }
+  });
+  return streams;
+};
+
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   vi.stubGlobal('CSS', { supports: () => false });
+  const streams = stubEventSource();
   const calls = stubFetch(respond);
   const fake = createFakeSources();
   const view = render(
-    <MemoryRouter initialEntries={[board.at ?? '/']}>
-      <DataProvider streams={createScopeStreams(fake.open)}>
-        <TestsTab boardKey={SCOPE} />
-      </DataProvider>
-    </MemoryRouter>,
+    <TesseraProvider overrides={{}}>
+      <MemoryRouter initialEntries={[board.at ?? '/']}>
+        <DataProvider streams={createScopeStreams(fake.open)}>
+          <TestsTab boardKey={SCOPE} />
+        </DataProvider>
+        <HashProbe />
+      </MemoryRouter>
+      <ToastStack />
+    </TesseraProvider>,
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   const source = fake.sources[fake.sources.length - 1];
@@ -80,7 +99,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   });
   const change = (coll: string, id: string, data: object) =>
     act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
-  return { ...view, calls, change };
+  return { ...view, calls, change, streams };
 };
 
 export { mountTab, stubFetch };

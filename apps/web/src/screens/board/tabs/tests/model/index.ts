@@ -28,6 +28,7 @@ export { sortToRun } from './sort-to-run';
 export { subjectsOf } from './subjects-of';
 export { testNotices } from './test-notices';
 export { threadName } from './thread-name';
+export { toRunCount } from './to-run-count';
 export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
