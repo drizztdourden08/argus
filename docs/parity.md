@@ -64,7 +64,7 @@ their status is `n/a`.
 | `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
 | `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | todo |
 | `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | todo |
-| `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/build_verbs.rs` | todo |
+| `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/build_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
 | `coord.store.test.mjs` | Board file locking | 5 | `crates/argus-board/tests/lock.rs` | todo |
 | `core.cli.test.mjs` | Server CLI and lifecycle | 1 | `crates/argus/tests/cli.rs` | todo |
 | `core.config.test.mjs` | Config and data folders | 1 | `crates/argus-core/tests/config.rs` | todo |
@@ -83,8 +83,8 @@ their status is `n/a`.
 | `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_transcript.rs` | todo |
 | `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/alias.rs` | todo |
 | `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/inbox_wake.rs` | doing (pure cases in argus-wake; wire cases later) |
-| `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | todo |
-| `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | todo |
+| `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | doing (rules ported; CLI parsing with slice 8) |
+| `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
 | `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/lead_verbs.rs` | todo |
 | `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | todo |
 | `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/mcp_http.rs` | todo |
@@ -110,12 +110,12 @@ their status is `n/a`.
 | `render.publish.test.mjs` | none: tests the render in `ai-config` | none | stays in `ai-config` | n/a |
 | `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/runs_cli.rs` | todo |
 | `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_http.rs` | todo |
-| `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/kill.rs` | todo |
-| `runs.lifecycle.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/lifecycle.rs` | todo |
-| `runs.logs.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/logs.rs` | todo |
-| `runs.recover.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/recover.rs` | todo |
+| `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/kill.rs` | doing (one case each waits for the server) |
+| `runs.lifecycle.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/lifecycle.rs` | done |
+| `runs.logs.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/logs.rs` | done |
+| `runs.recover.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/recover.rs` | done |
 | `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_server.rs` | todo |
-| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/terminal.rs` | todo |
+| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/terminal.rs` | doing (one case each waits for the server) |
 | `sync.export.test.mjs` | Board ingestion and export; Portfolio cards | 1 | `crates/argus-sync/tests/export.rs` | todo |
 | `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/posts.rs` | todo |
 | `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs` | todo |
