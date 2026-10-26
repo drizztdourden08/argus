@@ -1,11 +1,10 @@
 //! Who may change the process rules, kill a process or clear a wake fault: the Overlord, the
 //! coordinator thread of project `portfolio`. The dashboard checks it again.
 
-use argus_board::ops::Role;
-
 use super::scope::require_board;
 use crate::cli::exit::CoordError;
 use crate::cli::route::Call;
+use crate::verbs::shared::caller::is_coordinator;
 use crate::who::{caller, find_project};
 
 const MAIN: &str = "portfolio";
@@ -37,7 +36,7 @@ pub fn actor(call: &Call<'_>, what: &str, advice: &str) -> Result<String, CoordE
     }
     let board = require_board(call, MAIN)?;
     let who = caller(&board, &call.inv.cwd, env, &call.options)?;
-    if who.role != Role::Coordinator {
+    if !is_coordinator(&who) {
         let text = format!("thread {} is not the coordinator", who.thread);
         return Err(refusal(what, &text, advice));
     }

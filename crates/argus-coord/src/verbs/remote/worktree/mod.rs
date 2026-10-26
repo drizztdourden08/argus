@@ -16,12 +16,13 @@ mod text;
 
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
+use crate::verbs::remote::support::link::take_sub;
 
 const VERBS: &str =
     "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune.";
 
 fn rule(call: &mut Call<'_>) -> Outcome {
-    let action = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let action = take_sub(call);
     match action.as_deref() {
         Some("add") => rules::rule_add(call),
         Some("rm" | "remove") => rules::rule_rm(call),
@@ -37,7 +38,7 @@ fn rule(call: &mut Call<'_>) -> Outcome {
 /// # Errors
 /// A refusal, or the dashboard's own.
 pub fn handle(call: &mut Call<'_>) -> Outcome {
-    let sub = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let sub = take_sub(call);
     match sub.as_deref() {
         Some("rule") => rule(call),
         Some("rules") => rules::rules(call),

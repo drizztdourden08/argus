@@ -166,21 +166,10 @@ pub fn read_board_at(coord_home: &Path, key: &str) -> Value {
 
 /// An environment with more variables than `env` holds.
 pub fn env_plus(env: &Env, extra: &[(&str, &str)]) -> Env {
-    let mut pairs: Vec<(String, String)> = env
-        .iter()
-        .map(|(k, v)| (k.to_owned(), v.to_owned()))
-        .collect();
-    pairs.retain(|(k, _)| !extra.iter().any(|(name, _)| name == k));
-    pairs.extend(
-        extra
-            .iter()
-            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned())),
-    );
-    let refs: Vec<(&str, &str)> = pairs
-        .iter()
-        .map(|(k, v)| (k.as_str(), v.as_str()))
-        .collect();
-    Env::of(&refs)
+    let mut merged: std::collections::BTreeMap<&str, &str> = env.iter().collect();
+    merged.extend(extra.iter().copied());
+    let pairs: Vec<(&str, &str)> = merged.into_iter().collect();
+    Env::of(&pairs)
 }
 
 /// A board of `alpha` with a coordinator that has no folder and a worker working in `root`.

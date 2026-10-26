@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { sendOp } from './send-op';
-import type { SentOp, SoftKind } from './kanban.type';
+import type { SentOp, SoftRequest } from './kanban.type';
 
-const softOp = (key: string, kind: SoftKind, id: string, undoes?: string): Promise<SentOp> =>
-  sendOp(key, { kind, target: { c: 'items', id }, undoes });
+const softOp = (key: string, request: SoftRequest): Promise<SentOp> =>
+  sendOp(key, { kind: request.kind, target: { c: request.c ?? 'items', id: request.id }, undoes: request.undoes });
 
 export { softOp };

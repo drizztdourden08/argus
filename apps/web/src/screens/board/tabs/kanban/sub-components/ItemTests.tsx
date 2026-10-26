@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
-import type { ItemTestsProps } from '../kanban-props.type';
+import type { ItemTestsProps } from '../drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 
 const ItemTests = (props: ItemTestsProps) => {

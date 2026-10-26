@@ -56,6 +56,7 @@ pub struct KeptDoc {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LeftoverDoc {
+    #[serde(rename = "sizeMB")]
     pub size_mb: Option<f64>,
     pub files: Option<u64>,
     pub newest_at: Option<String>,
@@ -105,6 +106,7 @@ pub struct WorktreeDoc {
     pub kept: Option<KeptDoc>,
     pub request: Option<RequestDoc>,
     pub leftover: Option<LeftoverDoc>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub job: Option<JobDoc>,
     pub error: Option<String>,
 }
@@ -136,6 +138,7 @@ pub struct RuleSummary {
 pub struct LeftoverOld {
     pub days: f64,
     pub count: usize,
+    #[serde(rename = "sizeMB")]
     pub size_mb: f64,
 }
 
@@ -153,6 +156,7 @@ pub struct Meta {
     pub count: usize,
     pub git: usize,
     pub leftovers: usize,
+    #[serde(rename = "leftoverMB")]
     pub leftover_mb: f64,
     pub leftover_pending: usize,
     pub leftover_old: LeftoverOld,

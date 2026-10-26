@@ -2,7 +2,10 @@
 //! verbs and every refusal with the dashboard down, then the verbs that read the dashboard with
 //! both engines pointed at one Argus test server, so the answers compare. They skip with a
 //! reason when node, `ai-config` or the `argus` binary is absent (set `ARGUS_EXE`, or build
-//! `-p argus`). A dashboard is never started: every step carries a missing install folder.
+//! `-p argus`). A dashboard is never started: every step carries a missing install folder. The
+//! tests are tables of steps, one per verb and refusal, so they are longer than a function should be.
+
+#![allow(clippy::too_many_lines)]
 
 mod support;
 

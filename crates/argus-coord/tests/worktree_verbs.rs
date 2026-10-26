@@ -39,9 +39,9 @@ impl World {
     }
 
     /// `coord worktree <args> --project alpha --as <who>`.
-    fn run(&self, args: &[&str], who: &str) -> Ran {
+    fn run(&self, words: &[&str], who: &str) -> Ran {
         let mut argv = vec!["worktree"];
-        argv.extend(args);
+        argv.extend(words);
         argv.extend(["--project", "alpha", "--as", who]);
         coord(&argv, self.home.env(), self.home.path())
     }
@@ -288,6 +288,13 @@ fn include_and_exclude_share_a_parent_folder_between_rules_and_a_stored_wildcard
         "9",
     ]));
     assert!(again.contains("W-1: rule updated (staleDays)"), "{again}");
+}
+
+#[test]
+fn a_stored_wildcard_rule_shows_as_invalid_in_the_table_and_in_json() {
+    let w = World::new();
+    let dir = "X:/relic-of-the-past/.claude/worktrees";
+    ok(&w.worker(&["rule", "add", dir]));
     let mut board = w.board();
     board["worktreeRules"].as_array_mut().expect("rules").push(json!({ "id": "W-99", "path": format!("{dir}/web-*"), "kind": "folder", "thread": "worker", "note": null, "staleDays": null }));
     w.home.write_board("alpha", &board);

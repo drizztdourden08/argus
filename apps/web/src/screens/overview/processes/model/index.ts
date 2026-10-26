@@ -8,6 +8,7 @@ export { killStale } from './kill-stale';
 export { matchText } from './match-text';
 export { needsLook } from './needs-look';
 export { procLabel } from './proc-label';
+export { rowState } from './row-state';
 export { ruleGroups } from './rule-groups';
 export { ruleNames } from './rule-names';
 export { ruleTip } from './rule-tip';

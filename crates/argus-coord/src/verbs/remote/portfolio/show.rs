@@ -1,13 +1,15 @@
 //! `coord portfolio show` and the retired verbs `page`, `url` and `pushed`.
 
-use argus_board::portfolio::{project_keys, summarize};
 use argus_board::store::read_board;
 use argus_core::ids::PORTFOLIO;
 use serde_json::{Value, json};
 
-use crate::cli::exit::{CoordError, Outcome};
-use crate::cli::out;
-use crate::cli::route::Call;
+use super::cards_of;
+use crate::cli::{
+    exit::{CoordError, Outcome},
+    out,
+    route::Call,
+};
 use crate::verbs::remote::support::scope::coord_home;
 use crate::verbs::remote::support::text::cell;
 use crate::verbs::remote::support::url::dashboard_url;
@@ -39,11 +41,7 @@ pub(super) fn show(call: &mut Call<'_>) -> Outcome {
             "no portfolio yet: coord portfolio init.",
         ));
     };
-    let registry = json!({ "projects": board["projects"] });
-    let cards: Vec<Value> = project_keys(&home, &registry)
-        .iter()
-        .map(|key| summarize(&home, key, &registry, None))
-        .collect();
+    let cards = cards_of(&home, &board);
     if call.options.flag("json") {
         out::as_json(&mut call.inv.stdout, &json!(cards));
         return Ok(());

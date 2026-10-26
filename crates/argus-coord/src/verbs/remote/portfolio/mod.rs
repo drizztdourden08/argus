@@ -8,12 +8,16 @@ mod show;
 mod tick;
 
 use argus_board::Board;
-use argus_board::portfolio::shape;
+use std::path::Path;
+
+use argus_board::portfolio::{project_keys, shape, summarize};
 use argus_core::ids::PORTFOLIO;
+use serde_json::{Value, json};
 
 use super::support::scope::{Scope, locked};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
+use crate::verbs::remote::support::link::take_sub;
 
 const SUBS: &str = "init, add, remove, send, tick, show, page, url, pushed";
 
@@ -29,12 +33,21 @@ fn with_portfolio<T>(
     })
 }
 
+/// The cards of every project the registry of `p` and the boards on disk know.
+fn cards_of(home: &Path, p: &Board) -> Vec<Value> {
+    let registry = json!({ "projects": p["projects"] });
+    project_keys(home, &registry)
+        .iter()
+        .map(|key| summarize(home, key, &registry, None))
+        .collect()
+}
+
 /// `coord portfolio <init|add|remove|send|tick|show>`.
 ///
 /// # Errors
 /// A refusal.
 pub fn handle(call: &mut Call<'_>) -> Outcome {
-    let sub = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let sub = take_sub(call);
     match sub.as_deref() {
         Some("init") => registry::init(call),
         Some("add") => registry::add(call),

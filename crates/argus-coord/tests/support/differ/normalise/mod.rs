@@ -7,7 +7,7 @@
 //! | iso time | `2026-10-26T15:49:13.648Z` (any fraction, or none) | `<TS>` |
 //! | file stamp | `20261017T193800Z` (backup and stamp file names) | `<STAMP>` |
 //! | message id | `m-<12+ digits>-` and, when the tail is 4 characters, the tail | `m-<MS>-`, `m-<MS>-<RND>` |
-//! | relative time | `12s ago`, `5m ago`, `3h ago`, `2d ago` | `<AGO>` |
+//! | relative time | `12s ago`, `5m ago`, `3h ago`, `2d ago`, with the spaces that pad its column | `<AGO>` |
 //! | epoch ms | a 13 digit number from 2017 to 2033 on its own | `<EPOCH_MS>` |
 //! | pid | `"pid": 4242` | `"pid": <PID>` |
 //! | generated session id | a UUID that is not one a step fixed with `Step::session` | `<UUID>` |

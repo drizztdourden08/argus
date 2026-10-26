@@ -42,9 +42,10 @@ describe('the criteria of an item: ticking and adding', () => {
 describe('the criteria of an item: editing, removing and moving', () => {
   it('edits a criterion with the text it had as prev', async () => {
     const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1' }));
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'criterion 1' }), { target: { value: 'Shows a clear error' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save criterion 1' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
+    const box = within(dialog).getByRole('textbox', { name: 'Edit criterion 1' });
+    fireEvent.change(box, { target: { value: 'Shows a clear error' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'ac', target: { c: 'items', id: 'I-1' }, do: 'set', n: 1, text: 'Shows a clear error', prev: { text: 'Shows an error' }, baseRev: 3 });
     expect(await screen.findByText('Saved I-1 criterion 1.')).toBeTruthy();
@@ -52,19 +53,19 @@ describe('the criteria of an item: editing, removing and moving', () => {
 
   it('keeps the old text for an edit that changes nothing, and does not post', async () => {
     const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save criterion 1' }));
-    expect(within(dialog).queryByRole('textbox', { name: 'criterion 1' })).toBeNull();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
+    fireEvent.keyDown(within(dialog).getByRole('textbox', { name: 'Edit criterion 1' }), { key: 'Enter' });
+    expect(within(dialog).queryByRole('textbox', { name: 'Edit criterion 1' })).toBeNull();
     expect(posted).toHaveLength(0);
   });
 
   it('cancels an edit with Escape', async () => {
     const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1' }));
-    const box = within(dialog).getByRole('textbox', { name: 'criterion 1' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
+    const box = within(dialog).getByRole('textbox', { name: 'Edit criterion 1' });
     fireEvent.change(box, { target: { value: 'changed' } });
     fireEvent.keyDown(box, { key: 'Escape' });
-    expect(within(dialog).queryByRole('textbox', { name: 'criterion 1' })).toBeNull();
+    expect(within(dialog).queryByRole('textbox', { name: 'Edit criterion 1' })).toBeNull();
     expect(within(dialog).getByText('Shows an error')).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
@@ -77,15 +78,17 @@ describe('the criteria of an item: editing, removing and moving', () => {
     expect(await screen.findByText('Criterion 2 of I-1 removed.')).toBeTruthy();
   });
 
-  it('moves a criterion up or down by its numbers, with the first up and the last down off', async () => {
+  it('moves a criterion with the arrow keys on its grip, and not past either end', async () => {
     const { posted, dialog } = await opened();
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Move criterion 1 up' }).disabled).toBe(true);
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Move criterion 2 down' }).disabled).toBe(true);
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Move criterion 2 up' }));
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Move criterion 1' }), { key: 'ArrowUp' });
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Move criterion 2' }), { key: 'ArrowDown' });
+    expect(posted).toHaveLength(0);
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Move criterion 2' }), { key: 'ArrowUp' });
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'ac', do: 'move', n: 2, to: 1, baseRev: 3 });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Move criterion 1 down' }));
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Move criterion 1' }), { key: 'ArrowDown' });
     await waitFor(() => expect(posted).toHaveLength(2));
     expect(posted[1]?.body).toMatchObject({ do: 'move', n: 1, to: 2 });
+    expect(await within(dialog).findByText('Criterion 1 moved to 2 of 2')).toBeTruthy();
   });
 });

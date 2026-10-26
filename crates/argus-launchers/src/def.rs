@@ -70,6 +70,7 @@ pub struct RunDef {
     pub defined_by: String,
     pub defined_at: String,
     pub rev: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
@@ -205,10 +206,11 @@ pub fn defs_from_map(map: &Map<String, Value>) -> Vec<RunDef> {
     defs
 }
 
-/// What a page or the API may see of a definition: the env values stay on the board.
+/// What a page or the API may see of a definition: the env values and the board's label stay on the board.
 pub fn public_def(def: &RunDef) -> RunDef {
     RunDef {
         env: BTreeMap::new(),
+        label: None,
         ..def.clone()
     }
 }

@@ -208,7 +208,7 @@ async fn with_the_dashboard_running_the_target_lead_is_woken_with_the_sender_and
     ] {
         ok(&rig.run(argv));
     }
-    let mut star = rig.t.sse("/api/p/brock/wakes/stream?thread=*").await;
+    let star = rig.t.sse("/api/p/brock/wakes/stream?thread=*").await;
     star.next(Some("ready"), 5000).await.expect("ready");
     let long = "z".repeat(120);
     let cwd = rig.dir.path().join("checkout-pixelarttool");

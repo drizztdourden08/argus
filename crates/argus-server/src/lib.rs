@@ -21,6 +21,7 @@ pub mod routes;
 pub mod security;
 mod server;
 mod services;
+pub mod shadow;
 pub mod sse;
 mod web;
 

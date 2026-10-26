@@ -17,6 +17,7 @@ use super::support::link::connect;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::client::{Client, ClientError};
+use crate::verbs::remote::support::link::take_sub;
 
 /// Why a server verb of `run` ended: a refusal of its own, or the server's answer.
 pub(super) enum Fail {
@@ -69,7 +70,7 @@ fn online(call: &mut Call<'_>, verb: ServerVerb) -> Outcome {
 /// # Errors
 /// A refusal, the dashboard not running (exit 3) or the run's own exit code.
 pub fn handle(call: &mut Call<'_>) -> Outcome {
-    let sub = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let sub = take_sub(call);
     match sub.as_deref() {
         Some("define") => define::define(call),
         Some("undefine") => define::undefine(call),

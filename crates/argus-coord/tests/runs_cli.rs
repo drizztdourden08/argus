@@ -22,12 +22,19 @@ fn seed(coord_home: &Path, folder: &Path) {
     argus_testkit::write_board(coord_home, "alpha", &alpha_with_worker(folder));
 }
 
+/// `coord run <words> --project alpha <extra>`.
+fn run_argv<'a>(words: &[&'a str], extra: &[&'a str]) -> Vec<&'a str> {
+    ["run"]
+        .iter()
+        .chain(words)
+        .chain(&P)
+        .chain(extra)
+        .copied()
+        .collect()
+}
+
 fn run(rig: &Rig, words: &[&str], extra: &[&str]) -> Ran {
-    let mut argv = vec!["run"];
-    argv.extend(words);
-    argv.extend(P);
-    argv.extend(extra);
-    rig.run(&argv)
+    rig.run(&run_argv(words, extra))
 }
 
 /// A launch whose command is a Node script written to the rig folder.
@@ -48,17 +55,30 @@ fn same_folder(a: &Value, b: &Path) -> bool {
         .is_some_and(|a| flat(a) == flat(&b.to_string_lossy()))
 }
 
+/// A home with the board `alpha`, and `coord run <words> --project alpha <extra>` in it.
+struct Local {
+    home: Home,
+}
+
+impl Local {
+    fn new() -> Local {
+        let home = Home::new();
+        seed(&home.coord_home(), home.path());
+        Local { home }
+    }
+
+    fn go(&self, words: &[&str], extra: &[&str]) -> Ran {
+        coord(&run_argv(words, extra), self.home.env(), self.home.path())
+    }
+
+    fn defs(&self) -> Value {
+        read_board_at(&self.home.coord_home(), "alpha")["runDefs"].clone()
+    }
+}
+
 #[test]
-fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_only() {
-    let home = Home::new();
-    seed(&home.coord_home(), home.path());
-    let go = |words: &[&str], extra: &[&str]| -> Ran {
-        let mut argv = vec!["run"];
-        argv.extend(words);
-        argv.extend(P);
-        argv.extend(extra);
-        coord(&argv, home.env(), home.path())
-    };
+fn define_records_the_launch_and_a_second_define_updates_it() {
+    let local = Local::new();
     let build = [
         "define",
         "build",
@@ -67,7 +87,7 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
         "--kind",
         "build",
     ];
-    let first = go(
+    let first = local.go(
         &build,
         &[
             "--env",
@@ -83,8 +103,7 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
         out.contains("defined build: build") && out.contains("timeout 1800s"),
         "{out}"
     );
-    let board = read_board_at(&home.coord_home(), "alpha");
-    let def = &board["runDefs"]["build"];
+    let def = local.defs()["build"].clone();
     let seen = json!([
         def["cmd"],
         def["kind"],
@@ -110,12 +129,27 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
     );
     assert_eq!(def["env"], json!({ "API_TOKEN": "s3cret", "MODE": "prod" }));
     assert!(
-        same_folder(&def["cwd"], home.path()),
+        same_folder(&def["cwd"], local.home.path()),
         "cwd defaults to the caller cwd: {}",
         def["cwd"]
     );
+}
 
-    let again = go(
+#[test]
+fn a_second_define_updates_the_launch_and_a_hand_launch_may_be_visible() {
+    let local = Local::new();
+    local.go(
+        &[
+            "define",
+            "build",
+            "--cmd",
+            "npm run build",
+            "--kind",
+            "build",
+        ],
+        &AS,
+    );
+    let again = local.go(
         &[
             "define",
             "build",
@@ -129,11 +163,8 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
         &AS,
     );
     assert!(ok(&again).contains("updated build"));
-    assert_eq!(
-        read_board_at(&home.coord_home(), "alpha")["runDefs"]["build"]["rev"],
-        2
-    );
-    let hand = go(
+    assert_eq!(local.defs()["build"]["rev"], 2);
+    let hand = local.go(
         &[
             "define",
             "app",
@@ -147,8 +178,35 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
         &AS,
     );
     assert!(ok(&hand).contains("hand (visible)"));
+}
 
-    let parsed: Value = serde_json::from_str(ok(&go(&["defs", "--json"], &[]))).expect("json");
+#[test]
+fn defs_lists_the_launches_without_their_env_values_and_undefine_removes_one() {
+    let local = Local::new();
+    local.go(
+        &[
+            "define",
+            "build",
+            "--cmd",
+            "npm run build",
+            "--env",
+            "API_TOKEN=s3cret",
+        ],
+        &AS,
+    );
+    local.go(
+        &[
+            "define",
+            "app",
+            "--cmd",
+            "start /wait app.exe",
+            "--hand",
+            "--visible",
+        ],
+        &AS,
+    );
+    let parsed: Value =
+        serde_json::from_str(ok(&local.go(&["defs", "--json"], &[]))).expect("json");
     let names: Vec<&Value> = parsed["defs"]
         .as_array()
         .expect("defs")
@@ -160,14 +218,31 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
         !parsed.to_string().contains("s3cret"),
         "defs never prints env values"
     );
-    let text = ok(&go(&["defs"], &[]))
+    let text = ok(&local.go(&["defs"], &[]))
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ");
     assert!(text.contains("app task hand,visible"), "{text}");
+    ok(&local.go(&["undefine", "build"], &AS));
+    refused(
+        &local.go(&["undefine", "build"], &AS),
+        1,
+        "no launch \"build\"",
+    );
+    assert_eq!(
+        local
+            .defs()
+            .as_object()
+            .map(|m| m.keys().cloned().collect::<Vec<_>>()),
+        Some(vec!["app".to_owned()])
+    );
+}
 
+#[test]
+fn define_and_undefine_refuse_what_is_not_the_coordinators_or_not_valid() {
+    let local = Local::new();
     let worker = ["--as", "worker"];
-    let refusals: [(&[&str], &[&str], &str); 10] = [
+    let refusals: [(&[&str], &[&str], &str); 9] = [
         (
             &["define", "evil", "--cmd", "calc"],
             &worker,
@@ -201,23 +276,15 @@ fn define_defs_redefine_and_undefine_work_on_the_board_file_for_the_coordinator_
             "--timeout",
         ),
         (&["undefine", "build"], &worker, "only the coordinator"),
-        (&["nonsense"], &[], "run verb must be one of"),
     ];
     for (words, extra, text) in refusals {
-        refused(&go(words, extra), 1, text);
+        refused(&local.go(words, extra), 1, text);
     }
-    ok(&go(&["undefine", "build"], &AS));
-    refused(&go(&["undefine", "build"], &AS), 1, "no launch \"build\"");
-    let left = read_board_at(&home.coord_home(), "alpha")["runDefs"].clone();
-    assert_eq!(
-        left.as_object()
-            .map(|m| m.keys().cloned().collect::<Vec<_>>()),
-        Some(vec!["app".to_owned()])
-    );
+    refused(&local.go(&["nonsense"], &[]), 1, "run verb must be one of");
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
+/// A rig with three launches: `hello`, `fail` and a `slow` one that never ends by itself.
+async fn launches() -> Rig {
     let rig = Rig::start(json!({}), seed).await;
     define(
         &rig,
@@ -226,7 +293,12 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
     );
     define(&rig, "fail", "console.log(\"before\"); process.exit(3)");
     define(&rig, "slow", "setInterval(() => {}, 1000)");
+    rig
+}
 
+#[tokio::test(flavor = "multi_thread")]
+async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
+    let rig = launches().await;
     let hello = run(
         &rig,
         &["start", "hello", "--wait", "--reason", "smoke"],
@@ -242,7 +314,6 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
         hello.err
     );
     assert_eq!(run_doc(&rig, "R-1").await["reason"], "smoke");
-
     let fail = run(&rig, &["start", "fail", "--wait"], &[]);
     assert_eq!(fail.code, 3, "the exit code is the run exit code");
     assert!(fail.out.lines().any(|l| l == "before"), "{}", fail.out);
@@ -251,36 +322,51 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
         "{}",
         fail.err
     );
+    let logs = run(&rig, &["logs", "R-1"], &[]);
+    assert!(ok(&logs).lines().any(|l| l == "hi"), "{}", logs.out);
+    assert!(logs.err.contains("# started by worker"), "{}", logs.err);
+    let tail = run(&rig, &["logs", "R-2", "--tail", "1"], &[]);
+    assert!(
+        tail.err.contains("exited with code 3") && !tail.out.contains("before"),
+        "{} {}",
+        tail.out,
+        tail.err
+    );
+    rig.stop().await;
+}
 
+#[tokio::test(flavor = "multi_thread")]
+async fn a_live_run_is_started_once_listed_shown_and_stopped() {
+    let rig = launches().await;
+    ok(&run(&rig, &["start", "hello", "--wait"], &[]));
     let first = run(&rig, &["start", "slow", "--agent", "A-7"], &[]);
-    assert!(ok(&first).starts_with("R-3 slow "), "{}", first.out);
+    assert!(ok(&first).starts_with("R-2 slow "), "{}", first.out);
     let second = run(&rig, &["start", "slow"], &[]);
     assert!(
-        ok(&second).contains("R-3 slow running (already live, nothing new started)"),
+        ok(&second).contains("R-2 slow running (already live, nothing new started)"),
         "{}",
         second.out
     );
-    let slow = run_doc(&rig, "R-3").await;
+    let slow = run_doc(&rig, "R-2").await;
     assert_eq!(
         (slow["agent"].clone(), slow["by"].clone()),
         (json!("A-7"), json!("worker")),
         "the cwd is the worker's checkout"
     );
-
-    let status = ok(&run(&rig, &["status", "R-3"], &[]))
+    let status = ok(&run(&rig, &["status", "R-2"], &[]))
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ");
     assert!(
-        status.contains("R-3 slow running") && status.contains("agent: A-7"),
+        status.contains("R-2 slow running") && status.contains("agent: A-7"),
         "{status}"
     );
     let json: Value =
-        serde_json::from_str(ok(&run(&rig, &["status", "R-3", "--json"], &[]))).expect("json");
+        serde_json::from_str(ok(&run(&rig, &["status", "R-2", "--json"], &[]))).expect("json");
     assert_eq!(json["run"]["status"], "running");
     let list = run(&rig, &["list", "--status", "running"], &[]);
     assert!(
-        ok(&list).contains("R-3") && !list.out.contains("R-1"),
+        ok(&list).contains("R-2") && !list.out.contains("R-1"),
         "{}",
         list.out
     );
@@ -293,9 +379,14 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
             .map(|r| r.iter().map(|x| x["id"].clone()).collect::<Vec<_>>()),
         Some(vec![json!("R-1")])
     );
+    let stopped = run(&rig, &["stop", "R-2"], &[]);
+    assert!(ok(&stopped).contains("R-2 slow stopped"), "{}", stopped.out);
+    rig.stop().await;
+}
 
-    let stopped = run(&rig, &["stop", "R-3"], &[]);
-    assert!(ok(&stopped).contains("R-3 slow stopped"), "{}", stopped.out);
+#[tokio::test(flavor = "multi_thread")]
+async fn start_stop_and_status_refuse_a_bad_name_id_or_agent() {
+    let rig = launches().await;
     let cases: [(&[&str], &str); 5] = [
         (&["stop", "R-99"], "no run R-99"),
         (&["stop", "nope"], "run id"),
@@ -306,16 +397,6 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
     for (words, text) in cases {
         refused(&run(&rig, words, &[]), 1, text);
     }
-    let logs = run(&rig, &["logs", "R-1"], &[]);
-    assert!(ok(&logs).lines().any(|l| l == "hi"), "{}", logs.out);
-    assert!(logs.err.contains("# started by worker"), "{}", logs.err);
-    let tail = run(&rig, &["logs", "R-2", "--tail", "1"], &[]);
-    assert!(
-        tail.err.contains("exited with code 3") && !tail.out.contains("before"),
-        "{} {}",
-        tail.out,
-        tail.err
-    );
     rig.stop().await;
 }
 
@@ -372,12 +453,7 @@ fn with_the_server_down_and_no_way_to_start_it_the_plain_message_and_exit_3() {
             ("COORD_DASHBOARD_INSTALL", &missing),
         ],
     );
-    let call = |words: &[&str]| -> Ran {
-        let mut argv = vec!["run"];
-        argv.extend(words);
-        argv.extend(P);
-        coord(&argv, env.clone(), home.path())
-    };
+    let call = |words: &[&str]| -> Ran { coord(&run_argv(words, &[]), env.clone(), home.path()) };
     ok(&call(&[
         "define",
         "quick",
@@ -454,10 +530,7 @@ fn the_client_starts_a_stopped_dashboard_hidden_and_detached_and_then_calls_it()
     .expect("config");
     let wait = [
         ("COORD_DASHBOARD_WAIT_MS", "10000"),
-        (
-            "COORD_DASHBOARD_INSTALL",
-            &install.to_string_lossy().into_owned(),
-        ),
+        ("COORD_DASHBOARD_INSTALL", &install.to_string_lossy()),
     ];
     let ran = coord(
         &["run", "list", "--project", "alpha"],

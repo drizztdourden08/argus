@@ -11,6 +11,7 @@ use super::support::link::connect;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::client::Client;
+use crate::verbs::remote::support::link::take_sub;
 
 const USAGE: &str = "coord proc list [--rule r] [--json] | rules [--json]
 coord proc rule set <name> [--name-match re] [--cmd-match re] [--path-match re] [--ignore re]... [--min-mem MB] [--max-mem MB] [--max-group-mem MB] [--max-age 6h] [--idle 30m] [--orphan|--no-orphan] [--hung|--no-hung] [--killable|--not-killable] [--only-flagged|--all-listed] [--note \"...\"]   (none removes a field)
@@ -27,7 +28,7 @@ fn dashboard(call: &Call<'_>) -> Result<Client, CoordError> {
 /// # Errors
 /// A refusal, or the dashboard's own.
 pub fn handle(call: &mut Call<'_>) -> Outcome {
-    let sub = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let sub = take_sub(call);
     match sub.as_deref() {
         None | Some("list") => list::list(call),
         Some("rules") => rules::rules(call),

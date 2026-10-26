@@ -7,7 +7,7 @@ use serde_json::{Map, Value, json};
 use super::live::up;
 use super::tray_line;
 
-/// The JSON of a running server: the health answer with the pid and the address in front.
+/// The JSON of a running server (`impl` is `node` for the Node dashboard): the health answer with the pid and the address in front.
 fn running_json(base: &str, pid: Option<u32>, health: &Value, tray: &Value) -> String {
     let mut out = Map::new();
     out.insert("running".into(), json!(true));
@@ -16,6 +16,7 @@ fn running_json(base: &str, pid: Option<u32>, health: &Value, tray: &Value) -> S
     if let Some(fields) = health.as_object() {
         out.extend(fields.clone());
     }
+    out.entry("impl").or_insert_with(|| json!("node"));
     if !tray.is_null() {
         out.insert("tray".into(), tray.clone());
     }
@@ -30,10 +31,10 @@ fn uptime_seconds(started_at: &Value) -> i64 {
     ((now_ms() - started).max(0) + 500) / 1000
 }
 
-fn print_running(base: &str, pid: &str, health: &Value, tray: &Value) {
+fn print_running(label: &str, base: &str, pid: &str, health: &Value, tray: &Value) {
     let up = uptime_seconds(&health["startedAt"]);
     let version = health["version"].as_str().unwrap_or_default();
-    println!("dashboard running at {base}/ (pid {pid}, up {up} s, version {version})");
+    println!("{label} running at {base}/ (pid {pid}, up {up} s, version {version})");
     let runs = &health["runs"];
     println!(
         "  runs: {} running, {} queued; streams: {}; scopes: {}",
@@ -79,7 +80,12 @@ pub async fn status(paths: &Paths, json: bool) -> Result<u8, String> {
         let pid = running.at.record.as_ref().map(|r| r.pid);
         println!("{}", running_json(&base, pid, &running.health, &tray));
     } else {
-        print_running(&base, &running.at.pid_text(), &running.health, &tray);
+        let label = if running.is_argus() {
+            "dashboard"
+        } else {
+            "the Node dashboard"
+        };
+        print_running(label, &base, &running.at.pid_text(), &running.health, &tray);
     }
     Ok(0)
 }

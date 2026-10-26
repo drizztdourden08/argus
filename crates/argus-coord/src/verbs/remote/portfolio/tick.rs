@@ -5,13 +5,13 @@
 use std::collections::BTreeSet;
 
 use argus_board::json::{display, map_mut, obj};
-use argus_board::portfolio::{dispatch_entry, project_keys, summarize};
+use argus_board::portfolio::dispatch_entry;
 use argus_board::store::touch;
 use argus_core::config::hex;
 use serde_json::{Map, Value, json};
 use sha1::{Digest, Sha1};
 
-use super::with_portfolio;
+use super::{cards_of, with_portfolio};
 use crate::cli::exit::Outcome;
 use crate::cli::out;
 use crate::cli::route::Call;
@@ -70,11 +70,7 @@ pub(super) fn tick(call: &mut Call<'_>) -> Outcome {
         for id in waiting {
             dispatch_entry(&home, p, &id)?;
         }
-        let registry = json!({ "projects": p["projects"] });
-        let cards: Vec<Value> = project_keys(&home, &registry)
-            .iter()
-            .map(|key| summarize(&home, key, &registry, None))
-            .collect();
+        let cards = cards_of(&home, p);
         refresh(p, &cards);
         let current = attention_of(&cards);
         let seen: BTreeSet<String> = p["lastAttention"]

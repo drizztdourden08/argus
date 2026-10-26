@@ -4,8 +4,8 @@
 
 use std::path::Path;
 
+use argus_board::Board;
 use argus_board::json::{map_mut, truthy};
-use argus_board::ops::Role;
 use argus_core::clock::now_iso;
 use argus_core::js;
 use serde_json::{Map, Value, json};
@@ -17,8 +17,10 @@ use crate::cli::route::Call;
 use crate::cli::{Val, out};
 use crate::verbs::remote::support::collate;
 use crate::verbs::remote::support::link::project_of;
-use crate::verbs::remote::support::scope::{locked, require_board};
+use crate::verbs::remote::support::scope::{Scope, locked, require_board};
 use crate::verbs::remote::support::text::{cell, say_all};
+use crate::verbs::shared::caller::is_coordinator;
+use crate::who::Caller;
 
 const KINDS: [&str; 4] = ["build", "test", "launch", "task"];
 
@@ -167,17 +169,26 @@ fn record(def: &Def, actor: &str, rev: i64) -> Value {
     })
 }
 
+/// The caller of a change that is the coordinator's alone.
+fn coordinator(board: &mut Board, scope: &Scope<'_>, refusal: &str) -> Result<Caller, CoordError> {
+    let who = scope.begin(board)?;
+    if is_coordinator(&who) {
+        Ok(who)
+    } else {
+        Err(CoordError::refuse(refusal))
+    }
+}
+
 /// `coord run define <name> --cmd "<command line>" ...`.
 pub(super) fn define(call: &mut Call<'_>) -> Outcome {
     let def = read_def(call)?;
     let project = project_of(call).to_owned();
     locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
-        if who.role != Role::Coordinator {
-            return Err(CoordError::refuse(
-                "only the coordinator can define what may be launched. Ask with coord inbox send coordinator \"...\" or coord message.",
-            ));
-        }
+        let who = coordinator(
+            board,
+            scope,
+            "only the coordinator can define what may be launched. Ask with coord inbox send coordinator \"...\" or coord message.",
+        )?;
         let defs = map_mut(board, "runDefs");
         let before = defs.get(&def.name).cloned();
         let rev = before.as_ref().and_then(|b| b["rev"].as_i64()).unwrap_or(0) + 1;
@@ -192,12 +203,11 @@ pub(super) fn undefine(call: &mut Call<'_>) -> Outcome {
     let name = need_name(call.positional.first(), "name")?;
     let project = project_of(call).to_owned();
     locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
-        if who.role != Role::Coordinator {
-            return Err(CoordError::refuse(
-                "only the coordinator can remove a launch definition.",
-            ));
-        }
+        coordinator(
+            board,
+            scope,
+            "only the coordinator can remove a launch definition.",
+        )?;
         if map_mut(board, "runDefs").shift_remove(&name).is_none() {
             return Err(CoordError::refuse(format!(
                 "no launch \"{name}\" is defined."

@@ -13,6 +13,7 @@ use std::sync::Arc;
 
 use argus_core::clock::now_ms;
 use argus_server::ServeOptions;
+use common::Ran;
 use machine::{Machine, row};
 use remote::{ALPHA_LEAD, HELPER, MAIN, Rig, ok, refused, seed_standard};
 use serde_json::{Value, json};
@@ -42,7 +43,7 @@ fn flat(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-fn proc(rig: &Rig, words: &[&str], session: Option<&str>, folder: &str) -> common::Ran {
+fn proc(rig: &Rig, words: &[&str], session: Option<&str>, folder: &str) -> Ran {
     let mut argv = vec!["proc"];
     argv.extend(words);
     rig.run_in(&argv, session, &rig.dir.path().join(folder))
@@ -81,46 +82,44 @@ async fn list_and_rules_work_for_anyone() {
     rig.stop().await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn rule_set_rm_and_kill_are_for_the_overlord_only() {
+/// A rig with a listed process of 70 MB, sampled.
+async fn with_child(pid: u32) -> (Rig, Arc<Machine>, u32) {
     let (rig, fake) = rig().await;
-    let pid = fake.add(row(41_006, "e", 70, now_ms() - 60_000));
+    let pid = fake.add(row(pid, "e", 70, now_ms() - 60_000));
     rig.t.write("POST", "/api/procs/sample", &json!({})).await;
+    (rig, fake, pid)
+}
+
+/// `coord proc <words>` as the Overlord.
+fn overlord(rig: &Rig, words: &[&str]) -> Ran {
+    proc(rig, words, Some(MAIN), "checkout-portfolio")
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn rule_set_rm_and_kill_are_refused_for_everyone_but_the_overlord() {
+    let (rig, _fake, pid) = with_child(41_006).await;
     let pid_text = pid.to_string();
+    let set = [
+        "rule",
+        "set",
+        "py",
+        "--name-match",
+        "^python",
+        "--max-mem",
+        "800",
+    ];
+    let kill = ["kill", pid_text.as_str(), "--reason", "testing it"];
     let refusals = [
         (
-            proc(
-                &rig,
-                &[
-                    "rule",
-                    "set",
-                    "py",
-                    "--name-match",
-                    "^python",
-                    "--max-mem",
-                    "800",
-                ],
-                Some(ALPHA_LEAD),
-                "checkout-alpha",
-            ),
+            proc(&rig, &set, Some(ALPHA_LEAD), "checkout-alpha"),
             "change the process rules; this session belongs to project alpha",
         ),
         (
-            proc(
-                &rig,
-                &["rule", "set", "py", "--name-match", "^python"],
-                Some(HELPER),
-                "checkout-portfolio",
-            ),
+            proc(&rig, &set[..5], Some(HELPER), "checkout-portfolio"),
             "change the process rules; thread helper is not the coordinator",
         ),
         (
-            proc(
-                &rig,
-                &["kill", &pid_text, "--reason", "testing it"],
-                Some(ALPHA_LEAD),
-                "checkout-alpha",
-            ),
+            proc(&rig, &kill, Some(ALPHA_LEAD), "checkout-alpha"),
             "kill a process; this session belongs to project alpha",
         ),
         (
@@ -135,13 +134,13 @@ async fn rule_set_rm_and_kill_are_for_the_overlord_only() {
             &format!("{OVERLORD}{text}. Ask it with coord lead portfolio"),
         );
     }
-    let main = |words: &[&str]| proc(&rig, words, Some(MAIN), "checkout-portfolio");
-    let set = main(&[
-        "rule",
-        "set",
-        "py",
-        "--name-match",
-        "^python",
+    rig.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_overlord_sets_changes_and_removes_a_rule() {
+    let (rig, _fake, _pid) = with_child(41_007).await;
+    let flags = [
         "--max-mem",
         "800",
         "--idle",
@@ -150,48 +149,65 @@ async fn rule_set_rm_and_kill_are_for_the_overlord_only() {
         "--killable",
         "--note",
         "python servers",
-    ]);
+    ];
+    let mut words = vec!["rule", "set", "py", "--name-match", "^python"];
+    words.extend(flags);
+    let set = overlord(&rig, &words);
     let want = r#"added rule py: {"name":"py","match":{"name":"^python"},"maxMemMB":800,"idleMin":120,"orphan":true,"killable":true,"note":"python servers"}"#;
     assert!(ok(&set).starts_with(want), "{}", set.out);
-    let changed = main(&["rule", "set", "py", "--max-mem", "none", "--no-orphan"]);
+    let changed = overlord(
+        &rig,
+        &["rule", "set", "py", "--max-mem", "none", "--no-orphan"],
+    );
     assert!(
         ok(&changed).starts_with("changed rule py: ") && changed.out.contains("\"orphan\":false"),
         "{}",
         changed.out
     );
     refused(
-        &main(&["rule", "set", "py", "--idle", "soon"]),
+        &overlord(&rig, &["rule", "set", "py", "--idle", "soon"]),
         1,
         "--idle takes a duration",
     );
     refused(
-        &main(&["rule", "set", "py", "--cmd-match", "("]),
+        &overlord(&rig, &["rule", "set", "py", "--cmd-match", "("]),
         1,
         "not a valid regex",
     );
-    assert!(ok(&main(&["rule", "rm", "py"])).starts_with("removed rule py."));
-    refused(&main(&["rule", "rm", "py"]), 1, "no rule \"py\"");
-    refused(&main(&["kill", &pid_text]), 1, "--reason is required");
+    assert!(ok(&overlord(&rig, &["rule", "rm", "py"])).starts_with("removed rule py."));
+    refused(&overlord(&rig, &["rule", "rm", "py"]), 1, "no rule \"py\"");
+    rig.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_overlord_kills_a_listed_process_and_the_activity_log_says_so() {
+    let (rig, fake, pid) = with_child(41_008).await;
+    let pid_text = pid.to_string();
     refused(
-        &main(&["kill", "999999", "--reason", "not there"]),
+        &overlord(&rig, &["kill", &pid_text]),
+        1,
+        "--reason is required",
+    );
+    refused(
+        &overlord(&rig, &["kill", "999999", "--reason", "not there"]),
         1,
         "not in the listing",
     );
     let own = std::process::id().to_string();
     refused(
-        &main(&["kill", &own, "--reason", "the server"]),
+        &overlord(&rig, &["kill", &own, "--reason", "the server"]),
         1,
         "protected (dashboard)",
     );
     assert!(fake.alive(pid));
-    let killed = main(&["kill", &pid_text, "--reason", "a test child"]);
+    let killed = overlord(&rig, &["kill", &pid_text, "--reason", "a test child"]);
     assert!(
         ok(&killed).starts_with(&format!("killed node.exe {pid} (70 MB).")),
         "{}",
         killed.out
     );
     assert!(!fake.alive(pid));
-    let rule = main(&["kill-rule", "test-kids", "--older-than", "6h"]);
+    let rule = overlord(&rig, &["kill-rule", "test-kids", "--older-than", "6h"]);
     assert!(
         ok(&rule).starts_with("test-kids: killed 0, skipped "),
         "{}",

@@ -11,6 +11,7 @@ use argus_board::store::{read_board, with_board};
 use crate::cli::exit::CoordError;
 use crate::cli::route::Call;
 use crate::cli::{Env, Options, out};
+use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me};
 
 use super::link::paths_of;
@@ -72,10 +73,10 @@ pub fn locked<T>(
         options: &call.options,
         out: &mut inv.stdout,
     };
-    let done = with_board(&home, key, create, |board| {
+    with_board(&home, key, create, |board| {
         f(board, &mut scope).map_err(|e| to_board(&e))
-    })?;
-    Ok(done)
+    })
+    .map_err(|e| board_refusal(e, &home, key))
 }
 
 /// The board of a project, read.

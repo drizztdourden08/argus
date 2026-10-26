@@ -2,14 +2,10 @@
 
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
-use crate::verbs::remote::support::text::{int_within, number_of};
+use crate::verbs::remote::support::text::{int_within, is_key, number_of};
 
 fn is_name(text: &str) -> bool {
-    let plain = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit();
-    let mut chars = text.chars();
-    chars.next().is_some_and(plain)
-        && chars.all(|c| plain(c) || c == '-')
-        && text.chars().count() <= 40
+    is_key(text) && text.chars().count() <= 40
 }
 
 fn is_id(prefix: &str, text: &str) -> bool {

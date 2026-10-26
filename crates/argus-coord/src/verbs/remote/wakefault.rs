@@ -10,6 +10,7 @@ use super::support::text::{cell, collapse, is_key, truthy};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::out;
 use crate::cli::route::Call;
+use crate::verbs::remote::support::link::take_sub;
 
 const NOTE_MIN: usize = 10;
 const NOTE_MAX: usize = 300;
@@ -118,7 +119,7 @@ fn clear(call: &mut Call<'_>) -> Outcome {
 /// # Errors
 /// A refusal, or the dashboard's own.
 pub fn handle(call: &mut Call<'_>) -> Outcome {
-    let sub = (!call.positional.is_empty()).then(|| call.positional.remove(0));
+    let sub = take_sub(call);
     match sub.as_deref() {
         None | Some("list") => list(call),
         Some("clear") => clear(call),

@@ -93,32 +93,35 @@ async fn list_works_for_any_session_and_the_cleared_one_is_not_listed() {
     rig.stop().await;
 }
 
+/// `coord wake-fault clear alpha/api <extra>` as a session, from a folder of the rig.
+fn clear(rig: &Rig, extra: &[&str], session: Option<&str>, folder: &str) -> Ran {
+    let mut argv = vec!["wake-fault", "clear", "alpha/api"];
+    argv.extend(extra);
+    as_session(rig, &argv, session, folder)
+}
+
 #[tokio::test(flavor = "multi_thread")]
-async fn clear_works_only_for_the_coordinator_of_project_portfolio_and_needs_a_note() {
+async fn clear_is_refused_for_everyone_but_the_overlord() {
     let rig = faulted().await;
-    let target = "alpha/api";
-    let clear = |extra: &[&str], session: Option<&str>, folder: &str| {
-        let mut argv = vec!["wake-fault", "clear", target];
-        argv.extend(extra);
-        as_session(&rig, &argv, session, folder)
-    };
+    let with_note = ["--note", NOTE];
     let overlord =
         "only the Overlord (the coordinator thread of project portfolio) can clear a wake fault; ";
     let refusals = [
         (
-            clear(&["--note", NOTE], Some(UI), "checkout-alpha"),
+            clear(&rig, &with_note, Some(UI), "checkout-alpha"),
             "this session belongs to project alpha",
         ),
         (
-            clear(&["--note", NOTE], Some(HELPER), "checkout-portfolio"),
+            clear(&rig, &with_note, Some(HELPER), "checkout-portfolio"),
             "thread helper is not the coordinator",
         ),
         (
-            clear(&["--note", NOTE], Some(ALPHA_LEAD), "checkout-alpha"),
+            clear(&rig, &with_note, Some(ALPHA_LEAD), "checkout-alpha"),
             "this session belongs to project alpha",
         ),
         (
             clear(
+                &rig,
                 &["--note", NOTE, "--as", "coordinator"],
                 Some(ALPHA_LEAD),
                 "checkout-alpha",
@@ -126,24 +129,28 @@ async fn clear_works_only_for_the_coordinator_of_project_portfolio_and_needs_a_n
             "this session belongs to project alpha",
         ),
         (
-            clear(&["--note", NOTE], None, "."),
+            clear(&rig, &with_note, None, "."),
             "this session belongs to no project",
         ),
     ];
     for (ran, who) in &refusals {
-        refused(
-            ran,
-            1,
-            &format!(
-                "{overlord}{who}. A fault is cleared after the Overlord found out what is going on."
-            ),
+        let said = format!(
+            "{overlord}{who}. A fault is cleared after the Overlord found out what is going on."
         );
+        refused(ran, 1, &said);
     }
     assert_eq!(faults(&rig, false).await.len(), 2, "still open");
-    let main = |extra: &[&str]| clear(extra, Some(MAIN), "checkout-portfolio");
+    rig.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn clear_needs_a_note_a_target_and_an_open_fault() {
+    let rig = faulted().await;
+    let main = |extra: &[&str]| clear(&rig, extra, Some(MAIN), "checkout-portfolio");
     refused(&main(&[]), 1, "--note is required, 10 to 300 characters");
+    let short = main(&["--note", "short"]);
     refused(
-        &main(&["--note", "short"]),
+        &short,
         1,
         "--note is required, 10 to 300 characters: say what was wrong and what you did (it is 5).",
     );

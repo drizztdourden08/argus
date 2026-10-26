@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Button, DateText, Inline, Tag, Text } from '@drizztdourden08/tessera';
+import { Button, Inline, Tag, Text } from '@drizztdourden08/tessera';
 import { PORTFOLIO_SCOPE, useDoc } from '../../../../data/react';
 import type { BoardMeta } from '../../../../data/types';
 import { useNow } from '../../clock';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { CALM_LOOK, GOOD_LOOK, WARN_LOOK } from '../dashboards.constants';
 import type { DashboardTotalsProps } from '../dashboards.type';
 import { totalsOf } from '../model';
@@ -12,7 +13,7 @@ const DashboardTotals = (props: DashboardTotalsProps) => {
   const now = useNow();
   const meta = useDoc<BoardMeta>(PORTFOLIO_SCOPE, 'meta', 'board');
   const totals = totalsOf(cards, now);
-  const updated = meta.doc ? <>updated <DateText value={meta.doc.updatedAt} format="relative" /></> : 'waiting for the cards';
+  const updated = meta.doc ? <>updated <ShortAge value={meta.doc.updatedAt} ago /></> : 'waiting for the cards';
   return (
     <Inline gap="sm" align="center" wrap>
       <Tag {...GOOD_LOOK} title="Leads running now">{`${totals.running} running`}</Tag>

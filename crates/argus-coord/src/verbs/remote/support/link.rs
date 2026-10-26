@@ -31,3 +31,8 @@ pub fn project_of<'a>(call: &'a Call<'_>) -> &'a str {
 pub fn list_of<'a>(answer: &'a Value, field: &str) -> &'a [Value] {
     answer[field].as_array().map_or(&[], Vec::as_slice)
 }
+
+/// The first word after the verb as the sub-verb, taken off the arguments.
+pub fn take_sub(call: &mut Call<'_>) -> Option<String> {
+    (!call.positional.is_empty()).then(|| call.positional.remove(0))
+}

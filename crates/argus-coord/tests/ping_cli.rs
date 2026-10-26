@@ -71,6 +71,29 @@ async fn newest(rig: &Rig) -> Value {
     rig.t.get("/api/notify?limit=1").await.json()["notifications"][0].clone()
 }
 
+/// The first ping of the lead, as the dashboard recorded it.
+fn assert_recorded(n: &Value) {
+    let seen = json!([
+        n["by"],
+        n["project"],
+        n["thread"],
+        n["title"],
+        n["text"],
+        n["level"],
+        n["toast"]
+    ]);
+    let want = json!([
+        "thread",
+        "alpha",
+        "lead",
+        "Alpha: lead",
+        "The save-slot build is ready",
+        "ping",
+        "shown"
+    ]);
+    assert_eq!(seen, want);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_ping_names_the_thread_the_default_title_and_the_sentence_and_is_limited_after_three_a_minute()
  {
@@ -86,28 +109,7 @@ async fn a_ping_names_the_thread_the_default_title_and_the_sentence_and_is_limit
         "{}",
         first.out
     );
-    let n = newest(&rig).await;
-    let seen = json!([
-        n["by"],
-        n["project"],
-        n["thread"],
-        n["title"],
-        n["text"],
-        n["level"],
-        n["toast"]
-    ]);
-    assert_eq!(
-        seen,
-        json!([
-            "thread",
-            "alpha",
-            "lead",
-            "Alpha: lead",
-            "The save-slot build is ready",
-            "ping",
-            "shown"
-        ])
-    );
+    assert_recorded(&newest(&rig).await);
     let titled = ping(
         &rig,
         &["second", "--title", "Custom title"],

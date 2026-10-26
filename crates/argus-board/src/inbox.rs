@@ -52,6 +52,24 @@ fn random_suffix() -> String {
     digits.chars().take(4).collect()
 }
 
+/// `post` of the CLI: one line into a thread's inbox, whether or not the thread is on the board.
+pub fn post(
+    board: &mut Board,
+    to: &str,
+    from: &str,
+    (kind, text): (&str, &str),
+    reference: Option<&str>,
+) {
+    let message = Message {
+        id: message_id(&random_suffix()),
+        from,
+        kind,
+        text,
+        reference,
+    };
+    push(board, to, &message);
+}
+
 /// `queue`: one line into a thread's inbox. False for a thread that is gone.
 pub fn queue(
     board: &mut Board,
@@ -64,13 +82,6 @@ pub fn queue(
     if to.is_empty() || board["threads"][to].is_null() {
         return false;
     }
-    let message = Message {
-        id: message_id(&random_suffix()),
-        from,
-        kind,
-        text,
-        reference,
-    };
-    push(board, to, &message);
+    post(board, to, from, (kind, text), reference);
     true
 }
