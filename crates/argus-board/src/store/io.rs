@@ -3,23 +3,21 @@
 //! converting.
 
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
-use std::io::{self, Write};
+use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex, PoisonError};
-use std::time::Duration;
 
 use argus_core::clock::file_stamp;
+use argus_core::fs::{write_atomic_with, write_new};
 use serde_json::Value;
 
+use super::damage::read_board_text;
 use super::normalize::{normalize, stale_schema};
 use super::{board_dir, board_path};
 use crate::Board;
 use crate::error::{BoardError, refuse};
 use crate::json::{display, section, truthy};
-
-const RENAME_ATTEMPTS: u32 = 8;
-const RENAME_PAUSE: Duration = Duration::from_millis(25);
 
 type Unmigrated = HashMap<PathBuf, (String, &'static str)>;
 
@@ -54,10 +52,8 @@ fn note_unmigrated(file: &Path, raw: String, board: &Board) {
 /// The file cannot be read or is not a JSON object.
 pub fn read_board(home: &Path, key: &str) -> Result<Option<Board>, BoardError> {
     let file = board_path(home, key);
-    let raw = match fs::read_to_string(&file) {
-        Ok(raw) => raw,
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
-        Err(e) => return Err(e.into()),
+    let Some(raw) = read_board_text(&file)? else {
+        return Ok(None);
     };
     let mut board: Value = serde_json::from_str(&raw)?;
     if !board.is_object() {
@@ -75,42 +71,14 @@ fn write_backup(dir: &Path, file: &Path) -> Result<(), BoardError> {
         return Ok(());
     };
     let backup = dir.join(format!("{name}.{}.json", file_stamp()));
-    let mut out = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(backup)?;
-    out.write_all(raw.as_bytes())?;
+    write_new(&backup, raw)?;
     unmigrated().remove(file);
     Ok(())
 }
 
-fn retriable(e: &io::Error) -> bool {
-    e.kind() == io::ErrorKind::PermissionDenied
-        || (cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 33)))
-}
-
-/// On Windows a reader holding the board open makes the rename fail for a moment: retry, and
-/// never leave the temp file behind.
-fn rename_with_retry(
-    tmp: &Path,
-    file: &Path,
-    rename: &dyn Fn(&Path, &Path) -> io::Result<()>,
-) -> Result<(), BoardError> {
-    for attempt in 1..=RENAME_ATTEMPTS {
-        match rename(tmp, file) {
-            Ok(()) => return Ok(()),
-            Err(e) if !retriable(&e) || attempt >= RENAME_ATTEMPTS => {
-                fs::remove_file(tmp).ok();
-                return Err(e.into());
-            }
-            Err(_) => std::thread::sleep(RENAME_PAUSE),
-        }
-    }
-    Ok(())
-}
-
 /// Save a board with an injectable rename (tests): the unmigrated backup first, then two-space
-/// JSON and a newline into `board.json.<pid>.tmp`, then the rename, retried on a sharing error.
+/// JSON and a newline through `argus_core::fs::write_atomic_with` (temp file, flush to the disk,
+/// rename retried on a sharing error).
 ///
 /// # Errors
 /// A file cannot be written or the rename keeps failing.
@@ -124,9 +92,9 @@ pub fn save_board_with(
     fs::create_dir_all(&dir)?;
     let file = board_path(home, &project);
     write_backup(&dir, &file)?;
-    let tmp = dir.join(format!("board.json.{}.tmp", std::process::id()));
-    fs::write(&tmp, format!("{}\n", serde_json::to_string_pretty(board)?))?;
-    rename_with_retry(&tmp, &file, rename)
+    let text = format!("{}\n", serde_json::to_string_pretty(board)?);
+    write_atomic_with(&file, text.as_bytes(), rename)?;
+    Ok(())
 }
 
 /// Save a board atomically.

@@ -90,10 +90,7 @@ pub fn write_shortcuts(root: &Path, entries: &[Value]) -> Result<Written, CoordE
         });
     }
     json["configurations"] = Value::Array(list);
-    if let Some(dir) = file.parent() {
-        fs::create_dir_all(dir)?;
-    }
-    fs::write(
+    argus_core::fs::write_atomic(
         &file,
         format!(
             "{}\n",

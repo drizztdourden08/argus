@@ -5,6 +5,7 @@ use std::fmt::Write;
 use std::fs;
 use std::io;
 
+use argus_core::fs::write_atomic;
 use serde_json::Value;
 
 use super::paths::TrayFiles;
@@ -71,8 +72,7 @@ fn ascii_string(value: &str) -> String {
 ///
 /// The home cannot be created or the file cannot be written.
 pub fn write(files: &TrayFiles, balloon: &Balloon) -> io::Result<()> {
-    fs::create_dir_all(files.home())?;
-    fs::write(files.balloon_file(), balloon.to_json())
+    write_atomic(&files.balloon_file(), balloon.to_json())
 }
 
 /// Takes the pending request: reads it and deletes the file, whether or not it parsed.

@@ -11,8 +11,8 @@ use std::time::{Duration, Instant, SystemTime};
 
 use argus_board::BoardError;
 use argus_board::store::{
-    LockWait, board_dir, empty_board, normalize, read_board, save_board_with, try_lock, with_board,
-    with_board_async,
+    BoardDamage, LockWait, board_dir, empty_board, normalize, read_board, save_board_with,
+    try_lock, with_board, with_board_async,
 };
 use serde_json::json;
 use tempfile::TempDir;
@@ -158,6 +158,64 @@ fn save_board_retries_a_rename_that_windows_refuses_then_succeeds() {
     .expect("saved");
     assert_eq!(calls.load(Ordering::SeqCst), 3);
     assert_eq!(name_of(home.path(), "lockme"), "Retried");
+}
+
+#[test]
+fn save_board_goes_through_the_atomic_writer_whole_file_in_a_temp_beside_the_board() {
+    let home = home_with_board();
+    let mut board = read_board(home.path(), "lockme")
+        .expect("read")
+        .expect("a board");
+    board["name"] = json!("Through the helper");
+    let seen = std::sync::Mutex::new(None);
+    save_board_with(home.path(), &board, &|from, to| {
+        *seen.lock().unwrap() = Some((from.to_path_buf(), fs::read_to_string(from)?));
+        fs::rename(from, to)
+    })
+    .expect("saved");
+    let (tmp, text) = seen.into_inner().unwrap().expect("renamed once");
+    assert_eq!(
+        tmp.parent(),
+        Some(board_dir(home.path(), "lockme").as_path())
+    );
+    assert_eq!(
+        tmp.file_name().unwrap().to_string_lossy(),
+        format!("board.json.{}.tmp", std::process::id())
+    );
+    assert_eq!(
+        text,
+        format!("{}\n", serde_json::to_string_pretty(&board).unwrap()),
+        "the temp file holds the whole board when the rename runs"
+    );
+    assert!(!tmp.exists());
+}
+
+#[test]
+fn a_board_of_nul_bytes_is_a_damaged_board_not_a_parse_error() {
+    let home = home_with_board();
+    fs::write(
+        argus_board::store::board_path(home.path(), "lockme"),
+        [0u8; 2048],
+    )
+    .unwrap();
+    let err = read_board(home.path(), "lockme").expect_err("refused");
+    assert!(
+        matches!(
+            &err,
+            BoardError::Damaged {
+                damage: BoardDamage::AllNul { bytes: 2048 },
+                ..
+            }
+        ),
+        "{err}"
+    );
+    let text = err.to_string();
+    assert!(
+        text.contains("2048 NUL bytes") && text.contains("board.json"),
+        "{text}"
+    );
+    let locked = with_board(home.path(), "lockme", false, |_| Ok(()));
+    assert!(matches!(locked, Err(BoardError::Damaged { .. })));
 }
 
 #[test]

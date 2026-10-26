@@ -81,6 +81,15 @@ fn load_config_creates_config_json_with_defaults_and_a_64_hex_token() {
     assert_eq!(attach, json!({ "maxBytes": 10_485_760, "extraRoots": [] }));
     assert!(paths.config.exists());
     assert_eq!(load_config(&paths, None).unwrap().token, c.token);
+    let left: Vec<_> = fs::read_dir(&paths.home)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(
+        left,
+        ["config.json"],
+        "written through the atomic writer, no temp file"
+    );
 }
 
 #[test]

@@ -81,7 +81,8 @@ fn merged(current: Map<String, Value>, entry: &Value) -> Value {
 fn backup_of(file: &Path) -> Result<PathBuf, String> {
     let name = file.file_name().map(|n| n.to_string_lossy().into_owned());
     let copy = file.with_file_name(format!("{}.bak.{}", name.unwrap_or_default(), stamp()));
-    fs::copy(file, &copy).map_err(|e| format!("the backup could not be written: {e}"))?;
+    argus_core::fs::copy_atomic(file, &copy)
+        .map_err(|e| format!("the backup could not be written: {e}"))?;
     Ok(copy)
 }
 
@@ -102,11 +103,8 @@ pub fn write_desktop_config(file: &Path, entry: &Value) -> Result<Written, Strin
     } else {
         None
     };
-    if let Some(dir) = file.parent() {
-        fs::create_dir_all(dir).map_err(|e| format!("{} cannot be created: {e}", dir.display()))?;
-    }
     let text = serde_json::to_string_pretty(&merged(current, entry)).map_err(|e| e.to_string())?;
-    fs::write(file, format!("{text}\n"))
+    argus_core::fs::write_atomic(file, format!("{text}\n"))
         .map_err(|e| format!("{} cannot be written: {e}", file.display()))?;
     Ok(Written {
         file: file.to_path_buf(),

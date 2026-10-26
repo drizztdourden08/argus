@@ -181,6 +181,7 @@ dependencies = [
 name = "argus-native"
 version = "0.1.0"
 dependencies = [
+ "argus-core",
  "ico",
  "serde_json",
  "tempfile",
@@ -205,6 +206,7 @@ dependencies = [
 name = "argus-parity"
 version = "0.1.0"
 dependencies = [
+ "argus-board",
  "argus-core",
  "argus-testkit",
  "clap",

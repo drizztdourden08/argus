@@ -3,7 +3,6 @@
 //! beside it, then a marker file records that Argus has been there. The marker is what tells a
 //! home last opened by Node from one Argus already owns.
 
-use std::fs;
 use std::path::PathBuf;
 
 use argus_core::Paths;
@@ -34,7 +33,6 @@ pub fn back_up_node_database(paths: &Paths) -> Result<Option<PathBuf>, ServeErro
     if let Some(to) = &backup {
         snapshot(&paths.db, to)?;
     }
-    fs::create_dir_all(&paths.home)?;
-    fs::write(&marker, "argus has opened this home\n")?;
+    argus_core::fs::write_atomic(&marker, "argus has opened this home\n")?;
     Ok(backup)
 }

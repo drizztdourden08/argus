@@ -4,6 +4,7 @@ use std::fs;
 use std::io;
 use std::time::SystemTime;
 
+use argus_core::fs::write_atomic;
 use serde_json::Value;
 
 use super::paths::TrayFiles;
@@ -24,10 +25,9 @@ pub struct TrayRecord {
 ///
 /// The home cannot be created or the file cannot be written.
 pub fn write(files: &TrayFiles, pid: u32) -> io::Result<()> {
-    fs::create_dir_all(files.home())?;
     let started = iso_utc(SystemTime::now());
-    fs::write(
-        files.tray_json(),
+    write_atomic(
+        &files.tray_json(),
         format!("{{\"pid\":{pid},\"startedAt\":\"{started}\"}}\n"),
     )
 }
@@ -90,6 +90,19 @@ mod tests {
         assert!(read_live(&files, |_| true).is_none());
         std::fs::write(files.tray_json(), "not json").unwrap();
         assert!(read_live(&files, |_| true).is_none());
+    }
+
+    #[test]
+    fn the_record_is_written_through_the_atomic_writer_into_a_missing_home() {
+        let dir = tempfile::tempdir().unwrap();
+        let files = TrayFiles::new(dir.path().join("not").join("yet"));
+        write(&files, 5).unwrap();
+        let names: Vec<_> = std::fs::read_dir(files.home())
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(names, ["tray.json"], "no temp file is left");
+        assert_eq!(read_live(&files, |_| true).unwrap().pid, 5);
     }
 
     #[test]

@@ -1,9 +1,9 @@
 //! Proof images of tests: kept next to the board so they outlive the worktree they came from.
 
-use std::fs;
 use std::path::Path;
 
 use argus_core::clock::now_iso;
+use argus_core::fs::write_atomic;
 use serde_json::{Value, json};
 
 use crate::error::{BoardError, refuse};
@@ -43,9 +43,8 @@ pub fn keep_proof_bytes(
         .fold(0, i64::max);
     let n = latest + 1;
     let dir = board_dir(home, key).join("proofs");
-    fs::create_dir_all(&dir)?;
     let dest = dir.join(format!("{}-{n}{suffix}", display(&test["id"])));
-    fs::write(&dest, bytes)?;
+    write_atomic(&dest, bytes)?;
     array_mut(test, "proofs").push(json!({
         "n": n, "file": dest.to_string_lossy(), "caption": note, "url": null, "at": now_iso(),
     }));

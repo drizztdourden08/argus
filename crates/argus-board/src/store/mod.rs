@@ -1,8 +1,9 @@
 //! The per-project board file, `<home>/<project>/board.json`: one JSON document holding every
 //! collection the dashboard shows. Every mutation goes through [`with_board`] (blocking, for the
 //! CLI) or [`with_board_async`] (polling, for the server): take the lock file, load, mutate,
-//! write atomically (temp file and rename) and release.
+//! write atomically (temp file, flush to the disk, rename; see `argus_core::fs`) and release.
 
+mod damage;
 mod docs;
 mod io;
 mod lock;
@@ -15,6 +16,7 @@ use std::path::{Path, PathBuf};
 use argus_core::clock::now_iso;
 use serde_json::json;
 
+pub use damage::{BoardDamage, DamagedBoard, check_board_bytes, damaged_boards, read_board_text};
 pub use docs::{LogLine, append_log, create_doc, next_id, remove_doc, stamp, touch};
 pub use io::{read_board, save_board, save_board_with};
 pub use lock::{BoardLock, LockWait, try_lock, with_board, with_board_async};

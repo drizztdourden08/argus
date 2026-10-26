@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use argus_core::fs::flush_file;
 use rusqlite::{Connection, OpenFlags};
 
 use crate::StoreError;
@@ -31,7 +32,9 @@ pub fn snapshot(from: &Path, to: &Path) -> Result<(), StoreError> {
     }
     let partial = partial_of(to);
     let _ = fs::remove_file(&partial);
-    let made = vacuum_into(from, &partial).and_then(|()| Ok(fs::rename(&partial, to)?));
+    let made = vacuum_into(from, &partial)
+        .and_then(|()| Ok(flush_file(&partial)?))
+        .and_then(|()| Ok(fs::rename(&partial, to)?));
     if made.is_err() {
         let _ = fs::remove_file(&partial);
     }

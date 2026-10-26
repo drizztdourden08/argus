@@ -224,21 +224,6 @@ fn read_file(file: &Path) -> Result<Option<Value>, ConfigError> {
     }
 }
 
-/// Writes through a temp file so a crash never leaves half a file.
-///
-/// # Errors
-/// When the folder or the file cannot be written.
-pub fn write_atomic(file: &Path, text: &str) -> std::io::Result<()> {
-    if let Some(dir) = file.parent() {
-        fs::create_dir_all(dir)?;
-    }
-    let tmp = file.with_extension(format!("json.{}.tmp", std::process::id()));
-    fs::write(&tmp, text)?;
-    fs::rename(&tmp, file).inspect_err(|_| {
-        let _ = fs::remove_file(&tmp);
-    })
-}
-
 /// `DASHBOARD_PORT` as Node reads it: absent or empty is no override.
 ///
 /// # Errors
@@ -311,7 +296,7 @@ pub fn load_config(paths: &Paths, env_port: Option<u16>) -> Result<Config, Confi
         c.insert("exe".into(), json!(exe.display().to_string()));
     }
     if Value::Object(c.clone()) != Value::Object(file) {
-        write_atomic(&paths.config, &pretty(&Value::Object(c.clone())))?;
+        crate::fs::write_atomic(&paths.config, pretty(&Value::Object(c.clone())))?;
     }
     let mut config = typed(&paths.config, c)?;
     if let Some(p) = env_port {
@@ -341,7 +326,7 @@ pub fn save_config(
         }
     }
     let value = serde_json::to_value(&out).map_err(|e| ConfigError::Refused(e.to_string()))?;
-    write_atomic(&paths.config, &pretty(&value))?;
+    crate::fs::write_atomic(&paths.config, pretty(&value))?;
     Ok(())
 }
 

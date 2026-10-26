@@ -1,9 +1,12 @@
 //! The comparison itself: find the scopes both servers know, put every probe to both, judge
 //! each pair, then read one doc stream from both and judge its snapshot frames.
 
+use std::path::PathBuf;
+
 use argus_core::ids::PORTFOLIO;
 use serde_json::Value;
 
+use crate::findings::board_findings;
 use crate::got::Got;
 use crate::kind::Kind;
 use crate::probe::Probe;
@@ -32,6 +35,8 @@ pub struct Options {
     pub stream_secs: u64,
     /// Routes and stream snapshot frames whose label contains one of these words are not compared.
     pub skip: Vec<String>,
+    /// The coord homes whose board files are checked for damage (none checks nothing).
+    pub coord_homes: Vec<PathBuf>,
 }
 
 impl Options {
@@ -47,6 +52,7 @@ impl Options {
             tolerance_ms: 2000,
             stream_secs: 5,
             skip: Vec::new(),
+            coord_homes: Vec::new(),
         }
     }
 }
@@ -158,6 +164,7 @@ pub async fn compare(opts: &Options) -> Result<Report, String> {
         right: right.url().to_owned(),
         routes: Vec::new(),
         skipped: Vec::new(),
+        findings: board_findings(&opts.coord_homes),
     };
     for probe in probes {
         if skipped(opts, &probe.label()) {

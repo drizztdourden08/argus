@@ -1,11 +1,11 @@
 //! The only hard delete: write a restorable backup under `<project>/purged/`, then remove what a
 //! plan names.
 
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use argus_core::clock::{file_stamp, now_iso};
+use argus_core::fs::{copy_atomic, write_new};
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
@@ -125,8 +125,10 @@ fn write_backup(
         "schema": SCHEMA, "project": board["project"], "purgedAt": now_iso(), "by": by,
         "criteria": plan.criteria, "counts": plan.counts, "records": records,
     });
-    let mut out = OpenOptions::new().write(true).create_new(true).open(file)?;
-    out.write_all(format!("{}\n", serde_json::to_string_pretty(&backup)?).as_bytes())?;
+    write_new(
+        file,
+        format!("{}\n", serde_json::to_string_pretty(&backup)?),
+    )?;
     Ok(())
 }
 
@@ -223,7 +225,10 @@ pub fn apply_purge(
         fs::create_dir_all(&proof_dir)?;
     }
     for p in &proofs {
-        fs::copy(display(&p["file"]), display(&p["kept"]))?;
+        copy_atomic(
+            Path::new(&display(&p["file"])),
+            Path::new(&display(&p["kept"])),
+        )?;
     }
     let owners = action_owners(&records);
     write_backup(&file, board, plan, &by, &records)?;

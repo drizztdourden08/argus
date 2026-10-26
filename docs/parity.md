@@ -208,6 +208,16 @@ where it landed.
 | `62e66c7` | `coord agent start` with a session id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
 | `62e66c7` | Dev servers may use 3 GB: only in the owner's live `process-rules.json`, which Argus reads; the built-in default stays Node's 1500 MB | `crates/argus-procs/src/defaults.rs` | ported |
 | `62e66c7` | The `coord` forward shim to `argus coord` is off by default | the config repo only: `forward.mjs` | n/a |
+| `e9fc73f` | A board write flushes the temp file to the disk before the rename (a power cut left a board of NUL bytes). Every state file takes the same path | `crates/argus-core/src/fs.rs` (`write_atomic`, `write_new`, `copy_atomic`, `flush_file`); callers: board and its backups, purge backup and restore, proofs, config, process rules, shortcut `launch.json`, tray record and flags, pid file, first-start marker, autostart, Desktop config, attachments, worktree backups, shadow seed, database snapshot. Cases in `fs.rs`, `argus-board/tests/lock.rs`, `argus-core/tests/one_writer.rs` | ported |
+| `e9fc73f` | (Argus only) A board file that is all NUL bytes, empty or not JSON is its own finding: `BoardError::Damaged` names the file and the cause, the shadow start logs it, `argus parity` lists it as `FINDING` and fails the run | `crates/argus-board/src/store/damage.rs`, `argus-server/src/shadow.rs`, `argus-parity/src/findings.rs`, cases in `argus-server/tests/shadow.rs` and `argus-parity/tests/two_servers.rs` | ported |
+
+Where Argus differs from Node in the `e9fc73f` port:
+
+- The helper creates the folder, retries a busy rename for every file (Node only for the board), and removes its temp file when
+  the write, the flush or the rename fails (Node leaves it when the write itself fails).
+- Like Node it flushes the file, not the folder entry. The temp file name is `<file>.<pid>.tmp` as in Node.
+- Not routed on purpose: the listener stamp and `start.lock` (rewritten every few seconds, existence only), logs, the parity
+  report and the tray log (appended, not replaced).
 
 Where Argus differs from Node on purpose in the `62e66c7` port:
 
