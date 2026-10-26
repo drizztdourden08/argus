@@ -20,23 +20,14 @@ pub struct FixtureBoard {
 }
 
 impl FixtureBoard {
-    /// An empty board for `project`, in the key order of `emptyBoard` in `store.mjs`.
+    /// An empty board for `project`: `argus_board::store::empty_board` with the seed time.
     #[must_use]
     pub fn new(project: &str) -> Self {
-        let board = json!({
-            "schema": 2,
-            "project": project,
-            "artifact": { "url": null, "publishedAt": null },
-            "createdAt": SEED_TIME,
-            "updatedAt": SEED_TIME,
-            "counters": {},
-            "threads": {}, "items": {}, "tests": {}, "entries": {}, "locks": {},
-            "actions": {}, "agents": {}, "log": {}, "inbox": {}, "runDefs": {},
-            "builds": {}, "launchers": {}, "dirty": {}, "versions": {},
-        });
-        let Value::Object(board) = board else {
+        let Value::Object(mut board) = argus_board::store::empty_board(project) else {
             unreachable!("a json object")
         };
+        board.insert("createdAt".to_owned(), json!(SEED_TIME));
+        board.insert("updatedAt".to_owned(), json!(SEED_TIME));
         FixtureBoard {
             project: project.to_owned(),
             board,
