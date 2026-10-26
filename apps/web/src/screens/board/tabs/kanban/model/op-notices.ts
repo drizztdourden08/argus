@@ -4,7 +4,7 @@ import type { WithId } from '../../../../../data/react';
 import { byCreated } from './by-created';
 import { isUnapplied } from './is-unapplied';
 import { BAD_STATUSES, HUMAN, OP_KINDS } from './model.constants';
-import type { OpNotice } from './model.type';
+import type { OpNotice } from '../../../shared';
 
 const ackedIds = (entries: readonly WithId<Entry>[]): Set<string> =>
   new Set(entries.filter((entry) => entry.author === HUMAN && entry.kind === 'ack' && entry.replyTo).map((entry) => String(entry.replyTo)));

@@ -13,16 +13,15 @@ import { useNow } from './behavior/useNow';
 import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
-import { subjectsOf } from './model';
+import { needsYou, subjectsOf } from './model';
 import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
-import { KanbanDialogs } from './sub-components/KanbanDialogs';
 import { KanbanToolbar } from './sub-components/KanbanToolbar';
 import { OpNotices } from './sub-components/OpNotices';
 import { SelectionBar } from './sub-components/SelectionBar';
 
 const KanbanTab = (props: KanbanTabProps) => {
-  const { boardKey } = props;
+  const { boardKey, trash, onTrashBack, onPurge } = props;
   const data = useKanbanData(boardKey);
   const state = useKanbanState();
   const focus = useFocusState();
@@ -33,22 +32,14 @@ const KanbanTab = (props: KanbanTabProps) => {
   const { view, choices } = useKanbanView({ data, state, focus, notices, now });
   const drawer = useDrawer(data, view, state.filters);
   const selection = useSelection();
-  const panels = usePanels(data, state, focus, bulk);
+  const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
   const subjects = useMemo(() => subjectsOf(data.items), [data.items]);
   if (!data.ready) return <Text tone="muted">Loading the work items.</Text>;
   return (
     <Flex direction="column" gap="md">
-      <KanbanToolbar
-        state={state}
-        view={view}
-        threads={data.threads}
-        subjects={subjects}
-        focus={focus}
-        choices={choices}
-        trash={panels.trash}
-        onNew={() => panels.adding(null)}
-        onPurge={() => panels.purging('thread')}
-      />
+      {!panels.trash.open && (
+        <KanbanToolbar state={state} view={view} threads={data.threads} subjects={subjects} focus={focus} choices={choices} />
+      )}
       <OpNotices ops={notices} />
       {!panels.trash.open && <SelectionBar items={view.cards.map((card) => card.item)} threads={data.threads} selection={selection} ops={bulk} />}
       <KanbanBody
@@ -59,9 +50,10 @@ const KanbanTab = (props: KanbanTabProps) => {
         selection={selection}
         ops={ops}
         trash={panels.trash}
+        add={panels.add}
+        focus={focus.focus}
         onOpen={drawer.open}
-        onAdd={panels.adding}
-        onPurge={() => panels.purging('trash')}
+        onPurge={() => onPurge('trash')}
       />
       <ItemDrawer
         boardKey={boardKey}
@@ -69,6 +61,7 @@ const KanbanTab = (props: KanbanTabProps) => {
         tests={data.tests}
         threads={data.threads}
         actions={data.actions}
+        waiting={needsYou(drawer.opened ? data.needs.get(drawer.opened.id) : undefined)}
         now={now}
         ops={ops}
         nav={drawer.nav}
@@ -76,7 +69,6 @@ const KanbanTab = (props: KanbanTabProps) => {
         onWide={drawer.onWide}
         onClose={drawer.close}
       />
-      <KanbanDialogs boardKey={boardKey} data={data} focus={focus.focus} ops={ops} dialog={panels.dialog} onClose={panels.close} />
     </Flex>
   );
 };

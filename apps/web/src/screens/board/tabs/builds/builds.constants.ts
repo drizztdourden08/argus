@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { ListItemShape, LogKindDef } from '@drizztdourden08/tessera';
+import type { ListItemShape } from '@drizztdourden08/tessera';
 
 const MASTER = 'master';
 
@@ -11,10 +11,6 @@ const CLOCK_TICK_MS = 60 * 1000;
 
 const RETIRED_KEY = 'coord.lcretired';
 
-const TERMINAL_HEIGHT = 288;
-
-const FULL_LOG_HEIGHT = 520;
-
 const FINISHED_SHOWN = 20;
 
 const LEAD_TEXT = 'What you can start. The registered agent keeps this list true.';
@@ -25,21 +21,9 @@ const EMPTY_HINT = 'The registered agent fills this list: coord launcher set mas
 
 const NO_MASTER_TEXT = 'No master launcher: the thread must set one. Every project has a master (the main checkout\'s app): coord launcher set master --cmd "...". Until then no build can be handed to you, and the lead has been told.';
 
-const TERMINAL_KINDS: readonly LogKindDef[] = [
-  { id: 'out', label: 'Output' },
-  { id: 'err', label: 'Errors', tone: 'danger', toneMessage: true },
-  { id: 'sys', label: 'System', tone: 'muted', toneMessage: 'dim' },
-];
-
-const INPUT_OPEN = 'Type a line for the program and press Enter';
-
-const INPUT_NONE = 'This run has no input';
-
-const INPUT_OVER = 'The run is over';
-
 const RUN_ROW_SHAPE: ListItemShape = { icon: false, columns: 2, action: true };
 
 export {
-  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, FINISHED_SHOWN, FULL_LOG_HEIGHT, INPUT_NONE, INPUT_OPEN, INPUT_OVER, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
-  RETIRED_KEY, RUN_ROW_SHAPE, TERMINAL_HEIGHT, TERMINAL_KINDS,
+  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, FINISHED_SHOWN, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
+  RETIRED_KEY, RUN_ROW_SHAPE,
 };

@@ -80,10 +80,11 @@ describe('the focus mode', () => {
   it('widens the drawer to the whole width and remembers it', async () => {
     await mountTab(board('/#T-1'));
     const toggle = await screen.findByRole('button', { name: 'Expand' });
-    expect(document.querySelector('.drawer--top')).toBeNull();
+    expect(document.querySelector('.drawer--xl')).toBeNull();
     fireEvent.click(toggle);
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
-    expect(document.querySelector('.drawer--top')).not.toBeNull();
+    expect(document.querySelector('.drawer--xl')).not.toBeNull();
+    expect(document.querySelector('.drawer--top')).toBeNull();
     expect(screen.getByRole('button', { name: 'Collapse' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('0');

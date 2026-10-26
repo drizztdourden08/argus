@@ -37,6 +37,11 @@ interface TrashRow {
 
 type PurgeScope = 'thread' | 'keep' | 'status' | 'idle' | 'trash';
 
+interface PurgeRequest {
+  scope: PurgeScope;
+  thread?: string;
+}
+
 interface PurgeDraft {
   scope: PurgeScope;
   thread: string;
@@ -90,5 +95,5 @@ interface PurgeNotice {
 }
 
 export type {
-  PurgeCounts, PurgeCriteria, PurgeData, PurgeDoc, PurgeDraft, PurgeNotice, PurgeScope, PurgeThread, TrashInput, TrashKind, TrashRow, TrashSource,
+  PurgeCounts, PurgeCriteria, PurgeData, PurgeDoc, PurgeDraft, PurgeNotice, PurgeRequest, PurgeScope, PurgeThread, TrashInput, TrashKind, TrashRow, TrashSource,
 };

@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind types */
 import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
-import type { Entry, ItemRef, OpOutcome, OwnerOp, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
+import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import type { OpNotice, Option } from '../../../shared';
 
 type ItemGroup = 'status' | 'subject' | 'thread';
 
@@ -49,21 +50,6 @@ interface Needs {
   tests: number;
 }
 
-interface OpNotice {
-  id: string;
-  entryId: string;
-  bulk: boolean;
-  kind: 'conflict' | 'refused';
-  op: OwnerOp;
-  result: OpOutcome;
-}
-
-interface NoticeRow {
-  field: string;
-  mine: string;
-  theirs: string;
-}
-
 interface CardData {
   id: string;
   item: ItemRef;
@@ -71,11 +57,6 @@ interface CardData {
   decisions: number;
   quietMs: number | null;
   conflicted: boolean;
-}
-
-interface Option {
-  value: string;
-  label: string;
 }
 
 interface ViewInput {
@@ -142,5 +123,5 @@ type DropPlan =
   | { kind: 'status' | 'thread' | 'subject'; to: string; place: PlaceAmong };
 
 export type {
-  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, NoticeRow, OpNotice, Option, RawStored, StoredView, ViewInput,
+  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, ViewInput,
 };

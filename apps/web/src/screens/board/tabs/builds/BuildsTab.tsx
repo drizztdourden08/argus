@@ -5,10 +5,10 @@ import { useBuildsData } from './behavior/useBuildsData';
 import { useRetiredShown } from './behavior/useRetiredShown';
 import { EMPTY_HINT, EMPTY_TEXT, NO_MASTER_TEXT } from './builds.constants';
 import type { BuildsTabProps } from './builds-props.type';
+import { RunLogDrawer } from '../../run-terminal';
 import { BuildsHeader } from './sub-components/BuildsHeader';
 import { LauncherList } from './sub-components/LauncherList';
 import { RetiredSection } from './sub-components/RetiredSection';
-import { RunLogDrawer } from './sub-components/RunLogDrawer';
 import { RunsSection } from './sub-components/RunsSection';
 
 const BuildsTab = (props: BuildsTabProps) => {

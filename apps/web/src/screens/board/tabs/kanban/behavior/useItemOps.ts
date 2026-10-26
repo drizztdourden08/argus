@@ -2,9 +2,8 @@
 import { useMemo } from 'react';
 import { SOFT_INVERSE, createAction, createItem, criterionOp, editDoc, moveItem, softOp } from '../../../../../data/kanban';
 import type { ItemRef, SoftKind } from '../../../../../data/kanban';
-import { SOFT_LABEL } from '../kanban.constants';
+import { SOFT_LABEL, useWriter } from '../../../shared';
 import type { ItemOps } from '../kanban.type';
-import { useWriter } from './useWriter';
 
 const useItemOps = (boardKey: string): ItemOps => {
   const write = useWriter();

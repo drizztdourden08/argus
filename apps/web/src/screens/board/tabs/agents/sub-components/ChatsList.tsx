@@ -1,11 +1,12 @@
 /* @layer renderer-app @kind component */
-import { DateText, Link, ListItemList, ListItemRow, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { DateText, Flex, Link, ListItemList, ListItemRow, Status, Tag, Text } from '@drizztdourden08/tessera';
 import { CHAT_SHAPE } from '../AgentsTab.constants';
 import type { ChatsListProps } from '../AgentsTab.type';
 import { activityTone, orText } from '../model';
+import { ChatMenu } from './ChatMenu';
 
 const ChatsList = (props: ChatsListProps) => {
-  const { chats } = props;
+  const { chats, onPurge } = props;
   if (chats.length === 0) return null;
   return (
     <ListItemList label="Chats" heading="Chats" count={chats.length} shape={CHAT_SHAPE}>
@@ -21,7 +22,12 @@ const ChatsList = (props: ChatsListProps) => {
             },
             { primary: <Tag variant="normal" color="neutral">{chat.status}</Tag> },
           ]}
-          action={chat.link ? <Link href={chat.link} variant="subtle" external>Open chat</Link> : <Text tone="muted">-</Text>}
+          action={
+            <Flex gap="xs" align="center">
+              {chat.link ? <Link href={chat.link} variant="subtle" external>Open chat</Link> : <Text tone="muted">-</Text>}
+              <ChatMenu id={chat.id} onPurge={onPurge} />
+            </Flex>
+          }
           data={{ 'data-chat-id': chat.id }}
         />
       ))}

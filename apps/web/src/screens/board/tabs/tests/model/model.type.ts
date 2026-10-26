@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { OpNotice } from '../../kanban/model';
+import type { OpNotice } from '../../../shared';
 import type { WithId } from '../../../../../data/react';
 import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../../data/types';
 

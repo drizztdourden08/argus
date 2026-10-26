@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { RunLogDrawer } from '../../builds/sub-components/RunLogDrawer';
+import { RunLogDrawer } from '../../../run-terminal';
 import type { TestLayersProps } from '../tests-drawer-props.type';
 import { EditDialog } from './EditDialog';
 import { NoteDialog } from './NoteDialog';

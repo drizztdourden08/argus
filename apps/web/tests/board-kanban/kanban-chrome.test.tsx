@@ -15,8 +15,11 @@ describe('the focus mode of the drawer', () => {
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
     expect(screen.getByRole('button', { name: 'Collapse' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('heading', { name: /Login/ })).toBeTruthy();
+    expect(document.querySelector('.drawer--xl')).not.toBeNull();
+    expect(document.querySelector('.drawer--top')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('0');
+    expect(document.querySelector('.drawer--xl')).toBeNull();
     expect(screen.getByRole('button', { name: 'Expand' })).toBeTruthy();
   });
 

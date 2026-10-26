@@ -3,7 +3,7 @@ import { Flex } from '@drizztdourden08/tessera';
 import { useItemRecord } from '../behavior/useItemRecord';
 import { useRecordActions } from '../behavior/useRecordActions';
 import type { ItemBodyProps } from '../drawer-props.type';
-import { useFeedActions } from '../../../OwnerFeed/behavior/useFeedActions';
+import { useFeedActions } from '../../../OwnerFeed';
 import { ActivitySection } from './ActivitySection';
 import { CriteriaSection } from './CriteriaSection';
 import { DescriptionSection } from './DescriptionSection';
@@ -13,7 +13,7 @@ import { ItemTests } from './ItemTests';
 import { TodosSection } from './TodosSection';
 
 const ItemBody = (props: ItemBodyProps) => {
-  const { boardKey, item, tests, threads, actions, now, ops, tools } = props;
+  const { boardKey, item, tests, threads, actions, waiting, now, ops, tools } = props;
   const record = useItemRecord(boardKey, item.id, actions);
   const acts = useRecordActions(boardKey);
   const feed = useFeedActions(boardKey);
@@ -22,7 +22,7 @@ const ItemBody = (props: ItemBodyProps) => {
   return (
     <Flex direction="column" gap="lg">
       {tools}
-      <DrawerFacts item={item} threads={threads} now={now} ops={ops} />
+      <DrawerFacts item={item} waiting={waiting} threads={threads} now={now} ops={ops} />
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={own} ops={ops} />
       <TodosSection item={item} todos={record.todos} ops={ops} acts={acts} />

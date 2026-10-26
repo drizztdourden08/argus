@@ -2,9 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { mergeRunLines } from '../../src/data/runs/merge-run-lines';
 import type { RunEntry, RunLogLine } from '../../src/data/runs';
-import {
-  countsText, launcherViews, logRows, noPlayHint, runDuration, runNote, terminalLast, terminalMeta,
-} from '../../src/screens/board/tabs/builds/model';
+import { countsText, launcherViews, noPlayHint, runDuration, runNote } from '../../src/screens/board/tabs/builds/model';
+import { logRows, terminalLast, terminalMeta } from '../../src/screens/board/run-terminal';
 import { formatDuration } from '../../src/screens/board/tabs/builds/model/format-duration';
 import { DAY, launcherDoc, runDoc, runningDoc, standaloneDoc } from './fixtures';
 import { at, input, launchers } from './model-docs';

@@ -13,10 +13,10 @@ import { PurgeCountsView } from './PurgeCountsView';
 import { PurgeScopeFields } from './PurgeScopeFields';
 
 const PurgeDialog = (props: PurgeDialogProps) => {
-  const { boardKey, data, focus, scope, onClose } = props;
+  const { boardKey, data, thread, scope, onClose } = props;
   const log = useCollection<LogDoc>(boardKey, 'log');
   const send = usePurge(boardKey);
-  const [draft, patch] = usePurgeDraft(data.threads.some((thread) => thread.id === focus && thread.role !== 'coordinator') ? focus : '', scope);
+  const [draft, patch] = usePurgeDraft(thread, scope);
   const counts = useMemo(
     () => purgeCounts(
       purgeCriteria(draft),

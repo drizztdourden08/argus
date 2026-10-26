@@ -2,16 +2,19 @@
 import { Flex, InlineEdit, Select, Tag, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../drawer-props.type';
-import { STATUS_OPTIONS, threadChoices, validateField } from '../model';
+import { threadChoices } from '../../../shared';
+import { NEEDS_YOU_TIP } from '../kanban.constants';
+import { STATUS_OPTIONS, validateField } from '../model';
 
 const validateSubject = validateField('subject');
 
 const DrawerFacts = (props: DrawerFactsProps) => {
-  const { item, threads, now, ops } = props;
+  const { item, waiting, threads, now, ops } = props;
   return (
     <Flex direction="column" gap="sm">
       <Flex gap="xs" align="center" wrap>
         <Tag>{item.status}</Tag>
+        {waiting && <Tag variant="urgency" color="warning" title={NEEDS_YOU_TIP}>needs you</Tag>}
         {item.archivedAt && <Tag>archived</Tag>}
       </Flex>
       <Flex gap="md" align="center" wrap>

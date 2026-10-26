@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import {
-  bulkMoves, bulkSofts, formatFilters, noticeRows, opNotices, parseStored, planDrop, textProblem,
-} from '../../src/screens/board/tabs/kanban/model';
+import { formatFilters } from '../../src/screens/board/shared';
+import { noticeRows } from '../../src/screens/board/shared/model';
+import { bulkMoves, bulkSofts, opNotices, parseStored, planDrop, textProblem } from '../../src/screens/board/tabs/kanban/model';
 import type { DropInput, ItemGroup, ItemOrder } from '../../src/screens/board/tabs/kanban/model';
 import { entryRef, filters, itemRef, prefs, threadRef, viewOf } from './kanban-docs';
 

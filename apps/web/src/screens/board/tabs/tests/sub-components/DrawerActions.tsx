@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button } from '@drizztdourden08/tessera';
-import { copyText } from '../../kanban/behavior/copy-text';
+import { copyText } from '../../../shared';
 import { useTestsShared } from '../behavior/useTestsShared';
 import type { DrawerActionsProps } from '../tests-drawer-props.type';
 

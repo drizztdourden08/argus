@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
-import type { FeedActions } from '../../OwnerFeed/OwnerFeed.type';
+import type { FeedActions } from '../../OwnerFeed';
 import type { CriteriaReorder, DrawerNav, ItemOps, KanbanData, RecordActions, Threads } from './kanban.type';
 import type { EntryRow, TimelineRow, TodoRow as TodoEntry } from './record';
 
@@ -13,6 +13,7 @@ interface ItemDrawerProps {
   tests: readonly WithId<Test>[];
   threads: Threads;
   actions: KanbanData['actions'];
+  waiting: boolean;
   now: number;
   ops: ItemOps;
   nav: DrawerNav;
@@ -27,6 +28,7 @@ interface ItemBodyProps {
   tests: readonly WithId<Test>[];
   threads: Threads;
   actions: KanbanData['actions'];
+  waiting: boolean;
   now: number;
   ops: ItemOps;
   tools: ReactNode;
@@ -47,6 +49,7 @@ interface ItemTitleProps {
 
 interface DrawerFactsProps {
   item: ItemRef;
+  waiting: boolean;
   threads: Threads;
   now: number;
   ops: ItemOps;

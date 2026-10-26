@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { DropZoneStatus } from '@drizztdourden08/tessera';
-import type { RunAttachment, RunEntry } from '../../../../data/runs';
+import type { RunEntry } from '../../../../data/runs';
 import type { LauncherViews, RunGroups } from './model';
 
 interface BuildsData {
@@ -15,11 +14,4 @@ interface RetiredFlag {
   set: (open: boolean) => void;
 }
 
-interface RunAttachments {
-  items: RunAttachment[];
-  uploading: boolean;
-  status: DropZoneStatus | undefined;
-  attach: (file: File, caption: string) => Promise<boolean>;
-}
-
-export type { BuildsData, RetiredFlag, RunAttachments };
+export type { BuildsData, RetiredFlag };

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Checkbox, Flex, NumberInput, Select } from '@drizztdourden08/tessera';
 import type { PurgeScopeFieldsProps } from '../trash-props.type';
-import { threadChoices } from '../model';
+import { threadChoices } from '../../../shared';
 import { PURGE_STATUSES } from '../trash';
 
 const toggled = (list: readonly string[], value: string, on: boolean): string[] => (on ? [...list, value] : list.filter((entry) => entry !== value));

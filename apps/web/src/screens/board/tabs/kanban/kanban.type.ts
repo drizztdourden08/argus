@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind types */
 import type { ReorderDrag } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, RefObject } from 'react';
-import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, ItemInput, ItemRef, MoveTarget, SentOp, SoftKind, ThreadChoice } from '../../../../data/kanban';
+import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, ItemInput, ItemRef, MoveTarget, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
-import type { TrashControl, TrashPanel } from './trash-props.type';
-import type { AddPreset, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, OpNotice } from './model';
-import type { PurgeNotice, PurgeScope, TrashRow, TrashSource } from './trash';
+import type { OpNotice } from '../../shared';
+import type { TrashPanel } from './trash-props.type';
+import type { FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
+import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
 interface KanbanData {
   ready: boolean;
@@ -45,20 +46,26 @@ interface CriteriaReorder {
   step: (event: KeyboardEvent<HTMLElement>, index: number) => void;
 }
 
-type KanbanDialog = { kind: 'add'; preset: AddPreset } | { kind: 'purge'; scope: PurgeScope } | null;
-
 interface OpenItem {
   id: string | null;
   open: (id: string) => void;
   close: () => void;
 }
 
-interface Panels {
-  dialog: KanbanDialog;
+interface Adding {
+  column: string;
+  group: ItemGroup;
+}
+
+interface AddPanel {
+  column: string | null;
+  toggle: (column: string) => void;
   close: () => void;
-  adding: (column: string | null) => void;
-  purging: (scope: PurgeScope) => void;
-  trash: TrashPanel & TrashControl;
+}
+
+interface Panels {
+  add: AddPanel;
+  trash: TrashPanel;
 }
 
 interface KanbanViewInput {
@@ -136,17 +143,9 @@ interface SoftDoc {
 type Threads = readonly WithId<ThreadChoice>[];
 
 interface AddItemDraft {
-  title: string;
   thread: string;
-  status: string;
-  setTitle: (title: string) => void;
   setThread: (thread: string) => void;
-  setStatus: (status: string) => void;
-  ready: boolean;
-  reset: () => void;
-  submit: () => void;
+  itemOf: (title: string) => ItemInput;
 }
 
-type Writer = (send: () => Promise<SentOp>, done: string, undo?: (sentId: string) => void) => Promise<boolean>;
-
-export type { AddItemDraft, BulkOps, BulkTarget, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanDialog, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads, Writer };
+export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };

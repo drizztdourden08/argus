@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { KanbanColumn } from '@drizztdourden08/tessera';
 import { CLOSED_STATUSES, GENERAL, STATUS_COLUMNS } from './model.constants';
-import { nonEmpty } from './non-empty';
+import { nonEmpty } from '../../../shared';
 import { sortCards } from './sort-cards';
 import type { CardData, ColumnsInput, ItemGroup } from './model.type';
 

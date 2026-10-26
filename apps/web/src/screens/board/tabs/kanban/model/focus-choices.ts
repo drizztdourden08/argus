@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
-import { nonEmpty } from './non-empty';
+import { nonEmpty } from '../../../shared';
 import type { FocusChoices } from './model.type';
 
 const isFocusable = (thread: ThreadChoice): boolean =>

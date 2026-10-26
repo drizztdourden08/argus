@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useState } from 'react';
-import { readStored } from '../../kanban/behavior/read-stored';
-import { writeStored } from '../../kanban/behavior/write-stored';
+import { readStored, writeStored } from '../../../shared';
 import { STORE_KEYS } from '../model';
 import type { DrawerWide } from '../tests.type';
 

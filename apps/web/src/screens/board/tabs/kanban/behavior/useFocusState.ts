@@ -2,9 +2,8 @@
 import { useCallback, useState } from 'react';
 import { STORE_KEYS } from '../model';
 import type { FocusState } from '../kanban.type';
-import { readStored } from './read-stored';
+import { readStored, writeStored } from '../../../shared';
 import { useStoredFlag } from './useStoredFlag';
-import { writeStored } from './write-stored';
 
 const useFocusState = (): FocusState => {
   const [focus, setFocusValue] = useState(() => readStored(STORE_KEYS.focus) ?? '');

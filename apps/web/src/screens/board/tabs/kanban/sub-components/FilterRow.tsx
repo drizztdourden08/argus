@@ -2,7 +2,8 @@
 import { Button, FilterBar, Flex, Select, Toggle } from '@drizztdourden08/tessera';
 import { ANY_STATUS, ANY_SUBJECT } from '../kanban.constants';
 import type { FilterRowProps } from '../kanban-props.type';
-import { STATUS_OPTIONS, filtersActive, threadChoices } from '../model';
+import { threadChoices } from '../../../shared';
+import { STATUS_OPTIONS, filtersActive } from '../model';
 
 const FilterRow = (props: FilterRowProps) => {
   const { state, threads, subjects } = props;

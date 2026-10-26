@@ -6,12 +6,12 @@ import { FocusRow } from './FocusRow';
 import { ViewRow } from './ViewRow';
 
 const KanbanToolbar = (props: KanbanToolbarProps) => {
-  const { state, view, threads, subjects, focus, choices, trash, onNew, onPurge } = props;
+  const { state, view, threads, subjects, focus, choices } = props;
   return (
     <Flex direction="column" gap="sm" role="search" aria-label="Filters">
       <FilterRow state={state} threads={threads} subjects={subjects} />
       <FocusRow focus={focus} choices={choices} />
-      <ViewRow state={state} view={view} trash={trash} onNew={onNew} onPurge={onPurge} />
+      <ViewRow state={state} view={view} />
     </Flex>
   );
 };

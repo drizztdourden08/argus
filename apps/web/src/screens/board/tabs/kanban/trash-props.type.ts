@@ -1,15 +1,10 @@
 /* @layer renderer-app @kind types */
 import type { BulkOps, KanbanData, NoticeOps, Selection, Threads } from './kanban.type';
-import type { PurgeCounts, PurgeDraft, PurgeNotice, PurgeScope, TrashRow } from './trash';
-
-interface TrashControl {
-  open: boolean;
-  count: number;
-  onToggle: () => void;
-}
+import type { PurgeCounts, PurgeDraft, PurgeNotice, PurgeRequest, PurgeScope, TrashRow } from './trash';
 
 interface TrashPanel {
   open: boolean;
+  onBack: () => void;
   rows: readonly TrashRow[];
   selection: Selection;
   bulk: BulkOps;
@@ -23,8 +18,14 @@ interface PurgeNoticeViewProps {
 interface PurgeDialogProps {
   boardKey: string;
   data: KanbanData;
-  focus: string;
+  thread: string;
   scope: PurgeScope;
+  onClose: () => void;
+}
+
+interface KanbanPurgeProps {
+  boardKey: string;
+  request: PurgeRequest | null;
   onClose: () => void;
 }
 
@@ -43,6 +44,7 @@ interface TrashViewProps {
   now: number;
   selection: Selection;
   bulk: BulkOps;
+  onBack: () => void;
   onPurge: () => void;
 }
 
@@ -56,5 +58,5 @@ interface TrashLineProps {
 }
 
 export type {
-  PurgeCountsViewProps, PurgeDialogProps, PurgeNoticeViewProps, PurgeScopeFieldsProps, TrashControl, TrashLineProps, TrashPanel, TrashViewProps,
+  KanbanPurgeProps, PurgeCountsViewProps, PurgeDialogProps, PurgeNoticeViewProps, PurgeScopeFieldsProps, TrashLineProps, TrashPanel, TrashViewProps,
 };

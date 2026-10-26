@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, Option } from './model.type';
+import type { Option } from '../../../shared';
+import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
 
 const MS_PER_HOUR = 3_600_000;
 
@@ -41,8 +42,6 @@ const PAUSE_KINDS = ['pause', 'resume'];
 
 const ANSWER_KINDS = ['followup', 'decision'];
 
-const PLACE_FIELDS = ['before', 'after'];
-
 const BAD_STATUSES = ['conflict', 'refused'];
 
 const STARTING_STATUS = 'todo';
@@ -77,7 +76,6 @@ export {
   ORDER_OPTIONS,
   ITEM_HASH,
   PAUSE_KINDS,
-  PLACE_FIELDS,
   QUIET_HOURS,
   STATUS_COLUMNS,
   STATUS_OPTIONS,

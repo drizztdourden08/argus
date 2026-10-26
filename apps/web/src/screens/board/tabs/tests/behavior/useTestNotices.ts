@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ackOp, resendOp } from '../../../../../data/kanban';
 import type { Entry } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
-import { useWriter } from '../../kanban/behavior/useWriter';
+import { useWriter } from '../../../shared';
 import { testNotices } from '../model';
 import type { TestDoc, TestNotice } from '../model';
 import type { NoticeOps } from '../tests.type';

@@ -3,9 +3,9 @@ import { Button, DateText, Flex, ListItemRow, Status, Tag, Text } from '@drizztd
 import type { ListItemColumn } from '@drizztdourden08/tessera';
 import { isLiveRun, runLine } from '../../../../../data/runs';
 import type { RunEntry } from '../../../../../data/runs';
+import { RunStopButton } from '../../../run-terminal';
 import type { RunRowProps } from '../builds-props.type';
 import { runDuration, runNote } from '../model';
-import { RunStopButton } from './RunStopButton';
 
 const columnsOf = (run: RunEntry): ListItemColumn[] => {
   const line = runLine(run);

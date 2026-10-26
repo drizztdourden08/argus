@@ -2,8 +2,7 @@
 import { Callout, CopyValue, Flex, Link, Text } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { RunPlay } from '../../../run-play';
-import { LogButton } from '../../builds/sub-components/LogButton';
-import { RunTerminal } from '../../builds/sub-components/RunTerminal';
+import { LogButton, RunTerminal } from '../../../run-terminal';
 import { playHint, shownRun } from '../model';
 import type { LaunchCommandProps } from '../tests-props.type';
 
