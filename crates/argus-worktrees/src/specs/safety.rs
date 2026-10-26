@@ -10,19 +10,15 @@ use crate::exec::GitOutput;
 use crate::request::Discarded;
 use crate::testkit::{
     Fixture, Harness, backdate_index, branches, commit, exists_itself, git_in, listed, owner_now,
-    write,
+    started, write,
 };
 
 fn setup(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    let fx = Fixture::new();
-    prep(&fx);
-    let h = Harness::new(&fx.root, vec![crate::testkit::rule_for(&fx)], |_| {});
-    h.scan();
-    (fx, h)
+    started(prep)
 }
 
 fn id(h: &Harness, fx: &Fixture, name: &str) -> String {
-    h.id_of(&fx.path(name))
+    crate::testkit::id(h, fx, name)
 }
 
 fn tip_of(fx: &Fixture, branch: &str) -> String {

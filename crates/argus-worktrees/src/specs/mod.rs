@@ -5,6 +5,7 @@
 mod fallback;
 mod leftover;
 mod remove;
+mod review;
 mod rules;
 mod safety;
 mod scan;

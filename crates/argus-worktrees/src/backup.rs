@@ -7,7 +7,7 @@ use crate::clock::{DAY_MS, stamp_from_ms};
 use crate::error::{ErrorCode, Result, WtError};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
-use crate::paths::{base_name, clean_path, join_path};
+use crate::paths::{base_name, clean_path, join_path, parent_of};
 use crate::service::Service;
 use serde::Serialize;
 use std::fs;
@@ -30,6 +30,7 @@ pub struct Backup {
     pub untracked: Option<String>,
     pub untracked_copy: Option<String>,
     pub untracked_count: usize,
+    pub nested_copy: Option<String>,
     pub restore: Vec<String>,
 }
 
@@ -164,7 +165,8 @@ impl Service {
         Ok(())
     }
 
-    fn write_untracked(&self, fact: &Fact, base: &str, out: &mut Backup) -> Result<()> {
+    /// The untracked files (not the ignored ones) of a worktree, and whether the backup can copy them.
+    fn untracked_of(&self, fact: &Fact) -> Result<Untracked> {
         let listing = self.deps.git.write(
             &fact.path,
             &["ls-files", "--others", "--exclude-standard", "-z"],
@@ -172,37 +174,62 @@ impl Service {
         if !listing.ok() {
             return Err(refuse("git ls-files", Some(&listing)));
         }
-        let names: Vec<&str> = listing
+        let names: Vec<String> = listing
             .stdout
             .split('\0')
             .filter(|n| !n.is_empty())
+            .map(String::from)
             .collect();
-        out.untracked_count = names.len();
-        if names.is_empty() {
+        let (files, bytes) = names.iter().fold((0, 0), |(f, b), n| {
+            if f > COPY_MAX_FILES || b > COPY_MAX_BYTES {
+                return (f, b);
+            }
+            let (more_files, more_bytes) = tree_size(&join_path(&fact.path, n));
+            (f + more_files, b + more_bytes)
+        });
+        Ok(Untracked {
+            names,
+            files,
+            bytes,
+        })
+    }
+
+    /// When the untracked files are too many or too big to copy, the sentence that says they are only listed.
+    pub(crate) fn untracked_warning(&self, fact: &Fact) -> Option<String> {
+        let untracked = self.untracked_of(fact).ok()?;
+        (!untracked.copy()).then(|| {
+            format!(
+                "its untracked files ({}) are only listed in the backup, not copied",
+                untracked.size_text()
+            )
+        })
+    }
+
+    fn write_untracked(&self, fact: &Fact, base: &str, out: &mut Backup) -> Result<()> {
+        let untracked = self.untracked_of(fact)?;
+        out.untracked_count = untracked.names.len();
+        if untracked.names.is_empty() {
             return Ok(());
         }
-        let bytes: u64 = names
-            .iter()
-            .filter_map(|n| fs::metadata(join_path(&fact.path, n)).ok())
-            .map(|m| m.len())
-            .sum();
-        let copy = names.len() <= COPY_MAX_FILES && bytes <= COPY_MAX_BYTES;
+        let copy = untracked.copy();
         let note = if copy {
             String::new()
         } else {
             format!(
-                "# not copied: {} files, {} MB (over {COPY_MAX_FILES} files or {} MB)\n",
-                names.len(),
-                bytes / 1_048_576,
+                "# not copied: {} (over {COPY_MAX_FILES} files or {} MB)\n",
+                untracked.size_text(),
                 COPY_MAX_BYTES / 1_048_576
             )
         };
         let list = join_path(&out.dir, &format!("{base}.untracked.txt"));
         let write = || -> std::io::Result<()> {
-            fs::write(&list, format!("{}\n{note}", names.join("\n")))?;
+            fs::write(&list, format!("{}\n{note}", untracked.names.join("\n")))?;
             if copy {
-                let dir = join_path(&out.dir, &format!("{base}.untracked"));
-                copy_files(&fact.path, &dir, &names)?;
+                copy_files(
+                    &fact.path,
+                    &join_path(&out.dir, &format!("{base}.untracked")),
+                    &untracked.names,
+                )?;
             }
             Ok(())
         };
@@ -242,6 +269,44 @@ impl Service {
             .unwrap_or_default();
         out.restore.push(format!(
             "git -C <a checkout of {head}> apply \"{file}\"{back}"
+        ));
+        Self::write_nested(fact, base, out)
+    }
+
+    /// A nested repository inside the worktree (it may hold real work, and a patch cannot): its folder is copied when it
+    /// fits the copy limits, and named in the backup either way.
+    fn write_nested(fact: &Fact, base: &str, out: &mut Backup) -> Result<()> {
+        let Some(git_dir) = fact.nested_git.as_deref() else {
+            return Ok(());
+        };
+        let folder = parent_of(git_dir);
+        let (files, bytes) = tree_size(&folder);
+        let list = join_path(&out.dir, &format!("{base}.nested.txt"));
+        let copy = files <= COPY_MAX_FILES && bytes <= COPY_MAX_BYTES;
+        let target = join_path(&out.dir, &format!("{base}.nested"));
+        let note = if copy {
+            "copied"
+        } else {
+            "not copied: over the copy limits"
+        };
+        let write = || -> std::io::Result<()> {
+            fs::write(&list, format!("{folder}\n# {note}\n"))?;
+            if copy {
+                copy_path(&folder, &target)
+            } else {
+                Ok(())
+            }
+        };
+        write().map_err(|err| {
+            refuse(
+                &format!("the nested repository: {}", crate::error::io_code(&err)),
+                None,
+            )
+        })?;
+        out.nested_copy = copy.then(|| target.clone());
+        out.restore.push(format!(
+            "the nested repository {folder} is in {}",
+            if copy { target } else { list }
         ));
         Ok(())
     }
@@ -285,19 +350,70 @@ impl Service {
     }
 }
 
-fn copy_files(from: &str, to: &str, names: &[&str]) -> std::io::Result<()> {
+/// The untracked files of a worktree: their names and how much there is.
+struct Untracked {
+    names: Vec<String>,
+    files: usize,
+    bytes: u64,
+}
+
+impl Untracked {
+    fn copy(&self) -> bool {
+        self.files <= COPY_MAX_FILES && self.bytes <= COPY_MAX_BYTES
+    }
+
+    fn size_text(&self) -> String {
+        format!("{} files, {} MB", self.files, self.bytes / 1_048_576)
+    }
+}
+
+/// Files and bytes under a path, a link counted as nothing and never entered; stops counting once past the copy limits.
+fn tree_size(path: &str) -> (usize, u64) {
+    let Ok(meta) = fs::symlink_metadata(path) else {
+        return (0, 0);
+    };
+    if crate::fs::meta_is_link(&meta) {
+        return (0, 0);
+    }
+    if !meta.is_dir() {
+        return (1, meta.len());
+    }
+    let (mut files, mut bytes) = (0, 0);
+    for entry in fs::read_dir(path).into_iter().flatten().flatten() {
+        let (f, b) = tree_size(&join_path(path, &entry.file_name().to_string_lossy()));
+        (files, bytes) = (files + f, bytes + b);
+        if files > COPY_MAX_FILES || bytes > COPY_MAX_BYTES {
+            break;
+        }
+    }
+    (files, bytes)
+}
+
+fn copy_files(from: &str, to: &str, names: &[String]) -> std::io::Result<()> {
     for name in names {
-        let source = join_path(from, name);
-        if fs::symlink_metadata(&source).is_ok_and(|m| crate::fs::meta_is_link(&m)) {
-            continue;
-        }
-        let target = join_path(to, name);
-        if let Some(parent) = Path::new(&target).parent() {
-            fs::create_dir_all(parent)?;
-        }
-        fs::copy(&source, &target)?;
+        copy_path(&join_path(from, name), &join_path(to, name))?;
     }
     Ok(())
+}
+
+/// Copy a file, or a folder with what is in it. A link is skipped, never followed.
+fn copy_path(source: &str, target: &str) -> std::io::Result<()> {
+    let meta = fs::symlink_metadata(source)?;
+    if crate::fs::meta_is_link(&meta) {
+        return Ok(());
+    }
+    if meta.is_dir() {
+        fs::create_dir_all(target)?;
+        for entry in fs::read_dir(source)?.flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            copy_path(&join_path(source, &name), &join_path(target, &name))?;
+        }
+        return Ok(());
+    }
+    if let Some(parent) = Path::new(target).parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::copy(source, target).map(|_| ())
 }
 
 #[cfg(test)]

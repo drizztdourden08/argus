@@ -310,10 +310,15 @@ fn defaults_of(dir: &str, list: usize, ctx: &mut ScanCtx<'_>) -> Defaults {
 
 /// Is HEAD kept by a branch, a remote branch or a tag? (A stash does not count.) None when git could not say.
 pub fn head_kept(git: &Git, dir: &str) -> Option<bool> {
+    rev_kept(git, dir, "HEAD")
+}
+
+/// Is this commit kept by a branch, a remote branch or a tag? None when git could not say.
+pub fn rev_kept(git: &Git, dir: &str, rev: &str) -> Option<bool> {
     let args = [
         "for-each-ref",
         "--contains",
-        "HEAD",
+        rev,
         "--count=1",
         "--format=%(refname)",
         "refs/heads",

@@ -13,8 +13,10 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::finish::Finish;
-use crate::inspect::{ScanCtx, inspect_dir};
-use crate::paths::{base_name, clean_path, is_worktree_id, worktree_id};
+use crate::inspect::{ScanCtx, inspect_dir, rev_kept};
+use crate::leftover_remove::git_within;
+use crate::parse::parse_worktree_list;
+use crate::paths::{base_name, clean_path, is_worktree_id, same_path, worktree_id};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::Service;
@@ -56,7 +58,7 @@ impl Safety {
         Self {
             unmerged,
             kept,
-            safe: now.dirty == 0 && kept,
+            safe: now.dirty == 0 && kept && now.nested_git.is_none(),
         }
     }
 
@@ -79,7 +81,11 @@ impl Safety {
             )
         });
         let dirty = (now.dirty > 0).then(|| plural(now.dirty, "uncommitted change"));
-        [dirty, lost_commits, branch]
+        let nested = now
+            .nested_git
+            .as_ref()
+            .map(|n| format!("a nested git repository inside it ({n})"));
+        [dirty, nested, lost_commits, branch]
             .into_iter()
             .flatten()
             .collect::<Vec<_>>()
@@ -206,6 +212,15 @@ impl Service {
         let rule = self.rule_of(&board, &fact)?;
         self.assert_not_main(&fact)?;
         Self::assert_not_locked(&fact)?;
+        if input.job.is_some() && fact.leftover.is_none() {
+            return Err(WtError::new(
+                ErrorCode::Conflict,
+                format!(
+                    "{} is not a leftover folder any more (a scan took it for a worktree): nothing was deleted",
+                    fact.path
+                ),
+            ));
+        }
         if fact.leftover.is_some() && !input.prune {
             return self.start_leftover(input, &fact, &rule, &board);
         }
@@ -241,8 +256,42 @@ impl Service {
         )
     }
 
-    /// `git worktree prune` in a repository: git's record of the worktrees whose folders are gone.
-    fn prune_repo(&self, repo: &str) -> Result<()> {
+    /// `git worktree prune` in a repository, but only when every record it would forget is one of `allowed`: git prunes
+    /// every record whose folder is gone, and Argus never forgets one it did not vet.
+    pub(crate) fn prune_repo(&self, repo: &str, allowed: &[&str]) -> Result<()> {
+        let ci = self.ci();
+        let listing = self
+            .deps
+            .git
+            .read(repo, &["worktree", "list", "--porcelain"]);
+        if !listing.ok() {
+            return Err(WtError::new(
+                ErrorCode::GitFailed,
+                format!(
+                    "git could not list the worktrees of {repo}: {}",
+                    listing.failure_text()
+                ),
+            ));
+        }
+        let others: Vec<String> = parse_worktree_list(&listing.stdout)
+            .into_iter()
+            .filter(|i| {
+                i.prunable.is_some()
+                    && i.locked.is_none()
+                    && !allowed.iter().any(|a| same_path(a, &i.path, ci))
+            })
+            .map(|i| i.path)
+            .collect();
+        if !others.is_empty() {
+            return Err(forbidden(format!(
+                "git worktree prune would also forget {} that Argus has not vetted ({}): nothing was pruned",
+                plural(
+                    u32::try_from(others.len()).unwrap_or(u32::MAX),
+                    "other worktree record"
+                ),
+                others.join(", ")
+            )));
+        }
         let run = self.deps.git.write(repo, &["worktree", "prune"]);
         if run.ok() {
             return Ok(());
@@ -254,6 +303,26 @@ impl Service {
                 run.failure_text()
             ),
         ))
+    }
+
+    /// The gone worktrees of the project that a prune may forget: under a valid rule, not locked, folder still gone, and
+    /// no commit lost.
+    pub(crate) fn vetted_gone(&self, project: &str, board: &BoardFacts) -> Vec<Fact> {
+        let vetted = |f: &Fact| {
+            f.locked.is_none()
+                && !self.deps.fs.exists(&f.path)
+                && self.rule_of(board, f).is_ok()
+                && !self.loses_commits(f)
+        };
+        self.gone_of(project).into_iter().filter(vetted).collect()
+    }
+
+    /// A gone worktree on a detached HEAD that no branch, tag or remote keeps: pruning forgets the only record of it.
+    fn loses_commits(&self, fact: &Fact) -> bool {
+        let (Some(repo), Some(head)) = (fact.repo.as_deref(), fact.head.as_deref()) else {
+            return fact.detached;
+        };
+        fact.detached && rev_kept(&self.deps.git, repo, head) != Some(true)
     }
 
     fn git_repo(fact: &Fact) -> Result<&str> {
@@ -286,14 +355,16 @@ impl Service {
                 ),
             ));
         }
-        if input.discard {
-            return Err(forbidden(format!(
-                "{} is gone; its branch is only deleted when it is merged, never discarded from here",
-                fact.path
-            )));
-        }
+        self.authorize_prune(input, fact)?;
         let repo = Self::git_repo(fact)?;
-        self.prune_repo(repo)?;
+        let board = self.board(&input.project)?;
+        let mut vetted: Vec<String> = self
+            .vetted_gone(&input.project, &board)
+            .into_iter()
+            .map(|f| f.path)
+            .collect();
+        vetted.push(fact.path.clone());
+        self.prune_repo(repo, &vetted.iter().map(String::as_str).collect::<Vec<_>>())?;
         let plan = self.plan_branch(input.branch, input.discard, fact);
         let branch = if input.branch {
             self.delete_branch(fact, &plan)
@@ -314,25 +385,51 @@ impl Service {
         Ok(out)
     }
 
+    /// Pruning needs no say, except for a detached HEAD no ref keeps: that needs `discard` and the owner's say. `discard`
+    /// means nothing else here: a branch of a gone worktree is only deleted when it is merged.
+    fn authorize_prune(&self, input: &RemoveInput, fact: &Fact) -> Result<()> {
+        if !self.loses_commits(fact) {
+            if input.discard {
+                return Err(forbidden(format!(
+                    "{} is gone; its branch is only deleted when it is merged, never discarded from here",
+                    fact.path
+                )));
+            }
+            return Ok(());
+        }
+        let sha = short7(fact.head.as_deref());
+        let say = "The owner can do it from the page (Delete now), or send discard with the owner's entry that asks for it (--discard --owner-entry <id>)";
+        if !input.discard {
+            return Err(forbidden(format!(
+                "{} is gone and its HEAD {sha} is kept by no branch, tag or remote: pruning forgets the only record of those commits. {say}",
+                fact.path
+            )));
+        }
+        if input.caller != Caller::Page {
+            let board = self.board(&input.project)?;
+            let entry = input.owner_entry.as_deref().unwrap_or_default();
+            if let Some(why) = crate::approval::approval_of(&board, entry, fact, self.now()) {
+                return Err(forbidden(format!(
+                    "discarding the commits of the gone worktree {} (HEAD {sha}) needs the owner: {why}",
+                    fact.path
+                )));
+            }
+        }
+        Ok(())
+    }
+
     /// Every gone worktree of the project: one `git worktree prune` per repository.
     fn prune_all(&self, input: &RemoveInput) -> Result<RemoveOutcome> {
         let board = self.board(&input.project)?;
         let rules = board.valid_rules();
         crate::guards::check_caller(&board, &input.caller, &rules)?;
-        let gone: Vec<Fact> = self
-            .gone_of(&input.project)
-            .into_iter()
-            .filter(|f| {
-                f.locked.is_none()
-                    && !self.deps.fs.exists(&f.path)
-                    && self.rule_of(&board, f).is_ok()
-            })
-            .collect();
+        let gone = self.vetted_gone(&input.project, &board);
         let mut repos: Vec<&str> = gone.iter().filter_map(|f| f.repo.as_deref()).collect();
         repos.sort_unstable();
         repos.dedup();
+        let vetted: Vec<&str> = gone.iter().map(|f| f.path.as_str()).collect();
         for repo in repos {
-            self.prune_repo(repo)?;
+            self.prune_repo(repo, &vetted)?;
         }
         for fact in &gone {
             self.forget(&input.project, &fact.id);
@@ -392,15 +489,31 @@ impl Service {
         Ok(())
     }
 
-    /// The folder as it is now (read-only git), against the row.
-    fn look_again(&self, input: &RemoveInput, fact: &Fact, rule: &Rule) -> Result<Fact> {
+    /// The folder as it is now (read-only git): not a link, readable by git, a nested repository named.
+    fn inspect_now(&self, input: &RemoveInput, fact: &Fact, rule: &Rule) -> Result<Fact> {
         let mut ctx = ScanCtx {
             git: &self.deps.git,
             fs: self.deps.fs.as_ref(),
             lists: Vec::new(),
             case_insensitive: self.ci(),
         };
+        if self.deps.fs.lstat(&fact.path).is_ok_and(|s| s.is_link) {
+            return Err(forbidden(format!(
+                "{} is a link or junction, not a worktree folder: Argus never removes one",
+                fact.path
+            )));
+        }
         let mut now = inspect_dir(&fact.path, rule, &mut ctx);
+        if let Some(why) = &now.error {
+            return Err(WtError::new(
+                ErrorCode::Conflict,
+                format!(
+                    "git could not read {} ({why}): nothing was removed",
+                    fact.path
+                ),
+            ));
+        }
+        now.nested_git = git_within(self.deps.fs.as_ref(), &fact.path);
         if !now.is_git || !self.deps.fs.exists(&fact.path) {
             self.request_rescan(&input.project);
             return Err(WtError::new(
@@ -411,6 +524,12 @@ impl Service {
                 ),
             ));
         }
+        Ok(now)
+    }
+
+    /// The folder as it is now, against the row.
+    fn look_again(&self, input: &RemoveInput, fact: &Fact, rule: &Rule) -> Result<Fact> {
+        let mut now = self.inspect_now(input, fact, rule)?;
         if now.repo.is_none() {
             now.repo.clone_from(&fact.repo);
         }
@@ -456,7 +575,17 @@ impl Service {
         if safety.safe && !force_branch {
             return Ok(None);
         }
-        let loss = safety.loss(now, force_branch);
+        let warning = if now.dirty > 0 || now.nested_git.is_some() {
+            self.untracked_warning(now)
+        } else {
+            None
+        };
+        let loss = [Some(safety.loss(now, force_branch)), warning]
+            .into_iter()
+            .flatten()
+            .filter(|l| !l.is_empty())
+            .collect::<Vec<_>>()
+            .join(" and ");
         if !input.discard {
             return Err(forbidden(format!(
                 "{} has {loss}: removing it discards them. The owner can do it from the page (Delete now), or send discard with the owner's entry that asks for it (--discard --owner-entry <id>)",
@@ -474,7 +603,7 @@ impl Service {
         }
         let need = Need {
             bundle: !safety.kept || force_branch,
-            patch: now.dirty > 0,
+            patch: now.dirty > 0 || now.nested_git.is_some(),
         };
         self.write_backup(&input.project, now, need).map(Some)
     }
@@ -531,7 +660,7 @@ impl Service {
         backup: Option<Backup>,
         discarded: Option<Discarded>,
     ) -> Result<RemoveOutcome> {
-        if self.git_let_go(step.now, step.run) {
+        if self.git_let_go(&step.input.project, step.now, step.run) {
             return self.finish_by_argus(step, backup, discarded);
         }
         let here = backup

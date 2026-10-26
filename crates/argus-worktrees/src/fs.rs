@@ -41,6 +41,10 @@ pub trait Fs: Send + Sync {
     fn remove_file(&self, path: &str) -> io::Result<()>;
     /// Remove an empty folder, or a junction as a link.
     fn remove_dir(&self, path: &str) -> io::Result<()>;
+    /// Delete a folder and everything in it. A link inside is removed as a link, never followed.
+    fn remove_tree(&self, path: &str) -> io::Result<()> {
+        crate::tree::walk_remove(self, path)
+    }
 }
 
 #[cfg(windows)]
@@ -144,10 +148,7 @@ impl Fs for RealFs {
         for entry in fs::read_dir(path)? {
             let entry = entry?;
             let full = entry.path();
-            let stat = match fs::symlink_metadata(&full) {
-                Ok(meta) => stat_of(&meta),
-                Err(_) => continue,
-            };
+            let stat = stat_of(&fs::symlink_metadata(&full)?);
             out.push(Entry {
                 name: entry.file_name().to_string_lossy().into_owned(),
                 is_dir: stat.is_dir,
@@ -167,6 +168,10 @@ impl Fs for RealFs {
 
     fn remove_dir(&self, path: &str) -> io::Result<()> {
         retried(path, || fs::remove_dir(path))
+    }
+
+    fn remove_tree(&self, path: &str) -> io::Result<()> {
+        retried(path, || fs::remove_dir_all(path))
     }
 }
 

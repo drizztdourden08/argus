@@ -1,6 +1,6 @@
 //! Worktree rules: where a project's worktrees live.
 
-use crate::paths::{has_wildcard, name_allowed};
+use crate::paths::{clean_path, has_wildcard, name_allowed};
 use serde::{Deserialize, Serialize};
 
 /// The default number of days without a touch before a worktree is stale.
@@ -72,8 +72,26 @@ impl Rule {
     }
 
     /// Why a stored rule cannot be used, or none. The scan and every delete guard ignore a rule that has one.
+    /// A path must be literal (no wildcard), absolute, with no `.` or `..` segment and no device prefix.
     pub fn problem(&self) -> Option<&'static str> {
-        has_wildcard(&self.path).then_some("wildcard path")
+        if has_wildcard(&self.path) {
+            return Some("wildcard path");
+        }
+        let clean = clean_path(&self.path);
+        if clean.starts_with("//./") || clean.starts_with("//?/") {
+            return Some("device path");
+        }
+        let drive = clean
+            .as_bytes()
+            .get(..3)
+            .is_some_and(|b| b[0].is_ascii_alphabetic() && b[1] == b':' && b[2] == b'/');
+        if !(drive || clean.starts_with('/')) {
+            return Some("path is not absolute");
+        }
+        clean
+            .split('/')
+            .any(|s| s == "." || s == "..")
+            .then_some("path has . or .. segments")
     }
 
     /// Does the rule let this direct-child folder name through?
@@ -97,6 +115,19 @@ mod tests {
             Some("wildcard path")
         );
         assert_eq!(Rule::folder("W-1", "X:/a/b", "t").problem(), None);
+    }
+
+    #[test]
+    fn a_path_that_is_not_absolute_or_has_dot_segments_or_is_a_device_path_is_invalid() {
+        let problem = |path: &str| Rule::folder("W-1", path, "t").problem();
+        assert_eq!(problem("relative/worktrees"), Some("path is not absolute"));
+        assert_eq!(problem("X:/a/../b"), Some("path has . or .. segments"));
+        assert_eq!(problem("X:\\a\\.\\b"), Some("path has . or .. segments"));
+        assert_eq!(problem("//./C:/a"), Some("device path"));
+        assert_eq!(problem("\\\\?\\C:\\a"), Some("wildcard path"));
+        assert_eq!(problem("/home/a/worktrees"), None);
+        assert_eq!(problem("X:/a/b"), None);
+        assert_eq!(problem("//server/share/x"), None);
     }
 
     #[test]

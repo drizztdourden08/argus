@@ -37,6 +37,8 @@ pub struct Fact {
     pub repo: Option<String>,
     pub registered: bool,
     pub leftover: Option<Leftover>,
+    /// A `.git` (a nested repository) found inside the worktree by the look right before a removal.
+    pub nested_git: Option<String>,
     pub error: Option<String>,
 }
 
@@ -71,6 +73,7 @@ pub fn blank_fact(path: &str, rule: &Rule, case_insensitive: bool) -> Fact {
         repo: None,
         registered: false,
         leftover: None,
+        nested_git: None,
         error: None,
     }
 }

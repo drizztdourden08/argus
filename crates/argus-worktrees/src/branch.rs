@@ -24,8 +24,10 @@ pub enum BranchState {
     Default(String),
     /// Checked out in another worktree: kept.
     Elsewhere(String),
-    Merged(String),
-    Unmerged,
+    /// Merged, and why; the tip the decision was made for.
+    Merged(String, String),
+    /// Not merged; the tip the decision was made for.
+    Unmerged(String),
 }
 
 /// What a removal does about the branch.
@@ -35,6 +37,8 @@ pub struct BranchPlan {
     pub force: bool,
     pub why: Option<String>,
     pub note: Option<String>,
+    /// The tip the plan was made for: the branch is deleted only while it is still this commit.
+    pub tip: Option<String>,
 }
 
 /// What happened to the branch.
@@ -106,7 +110,7 @@ impl Service {
             return false;
         };
         let oid = pr.get("headRefOid").and_then(serde_json::Value::as_str);
-        oid.is_none_or(|oid| {
+        oid.is_some_and(|oid| {
             oid == tip
                 || self
                     .deps
@@ -196,10 +200,8 @@ impl Service {
             git.read(repo, &["merge-base", "--is-ancestor", tip, b])
                 .ok()
         }) {
-            return BranchState::Merged(format!(
-                "merged into {}",
-                Self::where_text(defaults, base)
-            ));
+            let why = format!("merged into {}", Self::where_text(defaults, base));
+            return BranchState::Merged(why, tip.to_string());
         }
         let reference = format!("refs/heads/{name}");
         let cherried = bases.iter().find(|b| {
@@ -207,15 +209,16 @@ impl Service {
             run.ok() && !run.stdout.lines().any(|l| l.starts_with('+'))
         });
         if let Some(base) = cherried {
-            return BranchState::Merged(format!(
+            let why = format!(
                 "its changes are already in {}",
                 Self::where_text(defaults, base)
-            ));
+            );
+            return BranchState::Merged(why, tip.to_string());
         }
         if self.pr_merged(repo, name, tip) {
-            return BranchState::Merged("its pull request is merged".to_string());
+            return BranchState::Merged("its pull request is merged".to_string(), tip.to_string());
         }
-        BranchState::Unmerged
+        BranchState::Unmerged(tip.to_string())
     }
 
     /// The branch part of a removal. A merged branch goes; an unmerged one only with `discard` (the caller then needs
@@ -226,18 +229,20 @@ impl Service {
         }
         let repo = fact.repo.as_deref().unwrap_or(&fact.path);
         match self.branch_state(repo, &fact.path, fact.branch.as_deref(), fact.detached) {
-            BranchState::Merged(why) => BranchPlan {
+            BranchState::Merged(why, tip) => BranchPlan {
                 delete: true,
                 why: Some(why),
+                tip: Some(tip),
                 ..BranchPlan::default()
             },
-            BranchState::Unmerged if discard => BranchPlan {
+            BranchState::Unmerged(tip) if discard => BranchPlan {
                 delete: true,
                 force: true,
                 why: Some("discarded with the owner's say (it was not merged)".to_string()),
+                tip: Some(tip),
                 note: None,
             },
-            BranchState::Unmerged => BranchPlan {
+            BranchState::Unmerged(_) => BranchPlan {
                 note: Some("not merged".to_string()),
                 ..BranchPlan::default()
             },
@@ -250,30 +255,50 @@ impl Service {
         }
     }
 
-    /// Delete the branch when the plan says so. `-D`, because the merge was proven here (`-d` judges against the main
-    /// checkout's HEAD, not the default branch).
+    /// The worktree that has the branch checked out now, if any.
+    fn checked_out_at(&self, repo: &str, branch: &str) -> Option<String> {
+        let listing = self
+            .deps
+            .git
+            .read(repo, &["worktree", "list", "--porcelain"]);
+        parse_worktree_list(&listing.stdout)
+            .into_iter()
+            .find(|i| i.branch.as_deref() == Some(branch))
+            .map(|i| i.path)
+    }
+
+    /// Delete the branch when the plan says so, and only while it still is the commit the plan was made for
+    /// (`git update-ref -d` checks the old value): work added after the decision is never lost.
     pub(crate) fn delete_branch(&self, fact: &Fact, plan: &BranchPlan) -> BranchOutcome {
-        let (true, Some(branch), Some(repo)) =
-            (plan.delete, fact.branch.as_deref(), fact.repo.as_deref())
-        else {
-            return BranchOutcome {
-                deleted: false,
-                note: plan.note.clone(),
-                why: None,
-            };
+        let kept = |note: Option<String>| BranchOutcome {
+            deleted: false,
+            note,
+            why: None,
         };
-        let run = self.deps.git.write(repo, &["branch", "-D", branch]);
+        let (true, Some(branch), Some(repo), Some(tip)) = (
+            plan.delete,
+            fact.branch.as_deref(),
+            fact.repo.as_deref(),
+            plan.tip.as_deref(),
+        ) else {
+            return kept(plan.note.clone());
+        };
+        if let Some(path) = self.checked_out_at(repo, branch) {
+            return kept(Some(format!("{branch} is checked out in {path}: kept")));
+        }
+        let run = self.deps.git.write(
+            repo,
+            &["update-ref", "-d", &format!("refs/heads/{branch}"), tip],
+        );
         if !run.ok() {
             let said = if run.stderr.trim().is_empty() {
                 run.error.clone().unwrap_or_else(|| "refused".to_string())
             } else {
                 first_line(&run.stderr)
             };
-            return BranchOutcome {
-                deleted: false,
-                note: Some(format!("git kept {branch}: {said}")),
-                why: None,
-            };
+            return kept(Some(format!(
+                "git kept {branch}: {said} (it is no longer the commit that was judged)"
+            )));
         }
         BranchOutcome {
             deleted: true,

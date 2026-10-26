@@ -258,12 +258,7 @@ fn a_worktree_that_appears_inside_a_queued_leftover_before_its_turn_makes_that_j
     add_inner_worktree(&fx);
     drop(hold);
     h.idle();
-    let job = h
-        .svc
-        .jobs("alpha")
-        .into_iter()
-        .find(|j| j.path.ends_with("/junk"))
-        .unwrap();
+    let job = h.job_ending("junk");
     assert_eq!(job.state, JobState::Refused);
     assert!(job.error.unwrap().contains("holds the working tree "));
     assert!(

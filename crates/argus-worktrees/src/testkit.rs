@@ -837,6 +837,16 @@ impl Harness {
             .unwrap_or_else(|| panic!("no fact for {name}"))
     }
 
+    /// The deletion job whose folder ends with this name.
+    pub fn job_ending(&self, name: &str) -> crate::jobs::JobDoc {
+        let suffix = format!("/{name}");
+        self.svc
+            .jobs("alpha")
+            .into_iter()
+            .find(|j| j.path.ends_with(&suffix))
+            .unwrap_or_else(|| panic!("no job for {name}"))
+    }
+
     pub fn clock_now(&self) -> i64 {
         self.clock.now_ms()
     }
@@ -847,6 +857,20 @@ impl Harness {
             .map(|w| w.text.clone())
             .collect()
     }
+}
+
+/// A fixture prepared by `prep`, a service over it with the fixture's rule, and one scan.
+pub fn started(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
+    let fx = Fixture::new();
+    prep(&fx);
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
+    (fx, h)
+}
+
+/// The id of a worktree folder of the fixture.
+pub fn id(h: &Harness, fx: &Fixture, name: &str) -> String {
+    h.id_of(&fx.path(name))
 }
 
 /// The rule of the fixture's folder, for the rule's thread `worker`.

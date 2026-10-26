@@ -56,6 +56,15 @@ fn says_delete(text: &str) -> bool {
     ["delete", "remove"].iter().any(|w| word_alone(text, w))
 }
 
+/// Does the text say no, keep, stop or never? Such a note is not the owner's go to delete.
+fn negated(text: &str) -> bool {
+    [
+        "not", "don't", "dont", "never", "keep", "cancel", "stop", "no",
+    ]
+    .iter()
+    .any(|w| word_alone(text, w))
+}
+
 pub(crate) fn word_alone(text: &str, word: &str) -> bool {
     let lower = text.to_lowercase();
     find_all(&lower, word).any(|at| {
@@ -145,12 +154,11 @@ pub fn approval_of(board: &BoardFacts, entry_id: &str, fact: &Fact, now_ms: i64)
         .as_ref()
         .is_some_and(|w| w.id == fact.id && w.kind == "delete");
     let names = |text: &str| {
-        requested
-            || names_folder(text, &fact.path, true)
+        names_folder(text, &fact.path, true)
             || mentions(text, &name)
             || fact.branch.as_deref().is_some_and(|b| mentions(text, b))
     };
-    if names(&own) || (says_delete(&own) && names(&format!("{own} {asked}"))) {
+    if requested || (says_delete(&own) && !negated(&own) && names(&format!("{own} {asked}"))) {
         return None;
     }
     let branch = fact.branch.as_deref().unwrap_or("(detached)");
@@ -217,7 +225,7 @@ mod tests {
         );
         assert_eq!(
             approval_of(
-                &board_of(vec![owner("O-3", "claude/feat-login can go")]),
+                &board_of(vec![owner("O-3", "delete claude/feat-login")]),
                 "O-3",
                 &fact,
                 NOW
@@ -235,6 +243,27 @@ mod tests {
             longer.contains("does not name"),
             "a longer name is another folder"
         );
+    }
+
+    #[test]
+    fn a_note_that_only_names_the_worktree_or_says_keep_or_not_is_not_the_owners_go() {
+        let fact = fact();
+        for text in [
+            "claude/feat-login can go",
+            "keep claude/feat-login, still working",
+            "do not delete feat-login",
+            "don't remove claude/feat-login",
+            "delete the fresh one",
+        ] {
+            let board = board_of(vec![owner("O-1", text)]);
+            let why = approval_of(&board, "O-1", &fact, NOW);
+            assert!(
+                why.is_some_and(|w| w.contains("does not name this worktree")),
+                "{text}"
+            );
+        }
+        let go = board_of(vec![owner("O-2", "please delete claude/feat-login")]);
+        assert_eq!(approval_of(&go, "O-2", &fact, NOW), None);
     }
 
     #[test]

@@ -3,7 +3,7 @@
 
 use crate::board::{BoardFacts, Caller};
 use crate::clock::DAY_MS;
-use crate::error::Result;
+use crate::error::{ErrorCode, Result, WtError};
 use crate::fact::Fact;
 use crate::guards::check_caller;
 use crate::jobs::{JobDoc, JobKind, JobState, trim_jobs};
@@ -304,7 +304,19 @@ impl Service {
     fn run_batch_job(&self, one: &RemoveInput, tally: &Arc<Mutex<Tally>>) {
         let id = one.job.clone().unwrap_or_default();
         self.update_job(&id, |j| j.state = JobState::Checking);
-        if let Err(err) = self.guarded(one, false, |trace| self.run(one, trace)) {
+        let started = self
+            .guarded(one, false, |trace| self.run(one, trace))
+            .and_then(|out| {
+                if out.leftover && out.started && out.folder.is_some() {
+                    Ok(out)
+                } else {
+                    Err(WtError::new(
+                        ErrorCode::Conflict,
+                        "the request did not start a leftover deletion: nothing was deleted",
+                    ))
+                }
+            });
+        if let Err(err) = started {
             let finished = crate::clock::iso_from_ms(self.now());
             self.update_job(&id, |j| {
                 (j.state, j.error, j.finished_at) = (

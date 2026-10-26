@@ -2,6 +2,7 @@
 
 use crate::sync::{locked, waited};
 use std::collections::VecDeque;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 
@@ -32,7 +33,9 @@ impl Shared {
                 next
             };
             match next {
-                Some(task) => task(),
+                Some(task) => {
+                    let _ = catch_unwind(AssertUnwindSafe(task));
+                }
                 None => return,
             }
         }
@@ -70,6 +73,25 @@ impl Queue {
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn a_task_that_panics_does_not_stop_the_ones_after_it() {
+        let queue = Queue::default();
+        let ran = Arc::new(AtomicUsize::new(0));
+        queue.push(Box::new(|| panic!("a job went wrong")));
+        let after = ran.clone();
+        queue.push(Box::new(move || {
+            after.fetch_add(1, Ordering::SeqCst);
+        }));
+        queue.wait_idle();
+        assert_eq!(ran.load(Ordering::SeqCst), 1);
+        let again = ran.clone();
+        queue.push(Box::new(move || {
+            again.fetch_add(1, Ordering::SeqCst);
+        }));
+        queue.wait_idle();
+        assert_eq!(ran.load(Ordering::SeqCst), 2);
+    }
 
     #[test]
     fn tasks_run_in_order_and_wait_idle_sees_them_all() {

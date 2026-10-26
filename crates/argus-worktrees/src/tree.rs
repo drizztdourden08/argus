@@ -8,7 +8,7 @@ use crate::paths::join_path;
 use std::io;
 
 /// Remove a link as a link: unlink it, else remove it as a folder junction.
-pub fn unlink_link(fs: &dyn Fs, path: &str) -> io::Result<()> {
+pub fn unlink_link<F: Fs + ?Sized>(fs: &F, path: &str) -> io::Result<()> {
     match fs.remove_file(path) {
         Ok(()) => Ok(()),
         Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
@@ -17,10 +17,21 @@ pub fn unlink_link(fs: &dyn Fs, path: &str) -> io::Result<()> {
 }
 
 /// Every link below `dir` (pnpm's `node_modules` is full of junctions) is removed as a link, walking real folders only.
-/// `.git` is skipped.
+/// Only the worktree's own top-level `.git` (a file or a folder, not a link) is left alone; a link anywhere else, a
+/// `.git` named link included, goes as a link.
 pub fn drop_links(fs: &dyn Fs, dir: &str) -> io::Result<()> {
-    for entry in fs.read_dir(dir)? {
-        if entry.name == ".git" || !(entry.is_dir || entry.is_link) {
+    drop_links_in(fs, dir, true)
+}
+
+fn drop_links_in(fs: &dyn Fs, dir: &str, top: bool) -> io::Result<()> {
+    let entries = fs.read_dir(dir)?;
+    if fs.lstat(dir)?.is_link {
+        return Err(io::Error::other(format!(
+            "{dir} became a link while it was being read"
+        )));
+    }
+    for entry in entries {
+        if (top && entry.name == ".git" && !entry.is_link) || !(entry.is_dir || entry.is_link) {
             continue;
         }
         let path = join_path(dir, &entry.name);
@@ -30,14 +41,20 @@ pub fn drop_links(fs: &dyn Fs, dir: &str) -> io::Result<()> {
         if stat.is_link {
             unlink_link(fs, &path)?;
         } else if stat.is_dir {
-            drop_links(fs, &path)?;
+            drop_links_in(fs, &path, false)?;
         }
     }
     Ok(())
 }
 
-/// Delete a folder and everything in it. A link inside is unlinked, never entered.
+/// Delete a folder and everything in it. A link inside is unlinked, never entered. The file system does the walk
+/// (`RealFs` uses the standard library's handle-based delete, which never follows a link).
 pub fn remove_tree(fs: &dyn Fs, path: &str) -> io::Result<()> {
+    fs.remove_tree(path)
+}
+
+/// The walk behind [`Fs::remove_tree`] for a file system with no native delete: `lstat` before every descent.
+pub fn walk_remove<F: Fs + ?Sized>(fs: &F, path: &str) -> io::Result<()> {
     for entry in fs.read_dir(path)? {
         let child = join_path(path, &entry.name);
         let stat = match fs.lstat(&child) {
@@ -48,7 +65,7 @@ pub fn remove_tree(fs: &dyn Fs, path: &str) -> io::Result<()> {
         if stat.is_link {
             unlink_link(fs, &child)?;
         } else if stat.is_dir {
-            remove_tree(fs, &child)?;
+            walk_remove(fs, &child)?;
         } else {
             fs.remove_file(&child)?;
         }
@@ -122,6 +139,32 @@ mod tests {
             std::fs::read_to_string(join_path(&target, "keep.txt")).unwrap(),
             "precious"
         );
+    }
+
+    #[test]
+    fn only_the_worktrees_own_top_level_git_is_left_a_git_named_link_deeper_or_at_the_top_goes() {
+        let (dir, outside) = (tempdir().unwrap(), tempdir().unwrap());
+        let (root, target) = (root_of(&dir), root_of(&outside));
+        put(&target, "keep.txt", "precious");
+        put(&root, "wt/.git", "gitdir: x");
+        make_link(&join_path(&root, "wt/sub/.git"), &target);
+        drop_links(&RealFs, &join_path(&root, "wt")).unwrap();
+        assert!(
+            exists_itself(&join_path(&root, "wt/.git")),
+            "the worktree's own .git stays"
+        );
+        assert!(
+            !exists_itself(&join_path(&root, "wt/sub/.git")),
+            "a .git link deeper goes as a link"
+        );
+        put(&root, "linked/a.txt", "a");
+        make_link(&join_path(&root, "linked/.git"), &target);
+        drop_links(&RealFs, &join_path(&root, "linked")).unwrap();
+        assert!(
+            !exists_itself(&join_path(&root, "linked/.git")),
+            "a top-level .git that is a link goes as a link"
+        );
+        assert!(exists_itself(&join_path(&target, "keep.txt")));
     }
 
     #[test]

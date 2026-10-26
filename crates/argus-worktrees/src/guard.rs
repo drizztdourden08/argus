@@ -54,8 +54,12 @@ fn worktree_write_ok(rest: &[&str]) -> bool {
 fn write_command_ok(command: &str, rest: &[&str]) -> bool {
     match command {
         "worktree" => worktree_write_ok(rest),
-        "branch" => {
-            rest.len() == 2 && (rest[0] == "-d" || rest[0] == "-D") && !rest[1].starts_with('-')
+        "update-ref" => {
+            rest.len() == 3
+                && rest[0] == "-d"
+                && rest[1].starts_with("refs/heads/")
+                && rest[2].len() >= 40
+                && rest[2].bytes().all(|b| b.is_ascii_hexdigit())
         }
         "bundle" => {
             (rest.first() == Some(&"create") && rest.len() >= 3)
@@ -159,12 +163,12 @@ mod tests {
 
     #[test]
     fn the_write_door_allows_only_the_removals_own_commands() {
-        let ok: [&[&str]; 9] = [
+        let sha = "0123456789abcdef0123456789abcdef01234567";
+        let ok: [&[&str]; 8] = [
             &["worktree", "remove", "X:/w"],
             &["worktree", "remove", "--force", "X:/w"],
             &["worktree", "prune"],
-            &["branch", "-d", "b"],
-            &["branch", "-D", "b"],
+            &["update-ref", "-d", "refs/heads/b", sha],
             &["bundle", "create", "f", "b", "--not", "--remotes"],
             &["bundle", "verify", "f"],
             &["diff", "HEAD", "--binary", "--output=f"],
@@ -173,10 +177,15 @@ mod tests {
         for args in ok {
             assert!(assert_write_ok(args).is_ok(), "{args:?}");
         }
-        let bad: [&[&str]; 9] = [
+        let bad: [&[&str]; 14] = [
             &["worktree", "remove", "--force", "--force", "X:/w"],
             &["worktree", "add", "x"],
+            &["branch", "-D", "b"],
             &["branch", "-D", "--all"],
+            &["update-ref", "-d", "refs/heads/b"],
+            &["update-ref", "-d", "refs/heads/b", "abc"],
+            &["update-ref", "-d", "refs/tags/t", sha],
+            &["update-ref", "refs/heads/b", sha],
             &["reset", "--hard"],
             &["clean", "-fdx"],
             &["push"],

@@ -77,7 +77,7 @@ impl Service {
     /// After `git worktree remove` failed on the folder: has git already let go of the worktree (it no longer lists it,
     /// or lists it only because its `.git` file is gone, which `git worktree prune` clears)? False when the error was
     /// not a folder-deletion one, git cannot say, the worktree is still listed with its `.git` or is locked.
-    pub(crate) fn git_let_go(&self, now: &Fact, run: &GitOutput) -> bool {
+    pub(crate) fn git_let_go(&self, project: &str, now: &Fact, run: &GitOutput) -> bool {
         let said = format!(
             "{}\n{}",
             run.stderr,
@@ -97,8 +97,17 @@ impl Service {
         let Some(repo) = now.repo.as_deref() else {
             return false;
         };
-        self.deps.git.write(repo, &["worktree", "prune"]).ok()
-            && matches!(self.look_listed(now), Listing::Absent)
+        let Ok(board) = self.board(project) else {
+            return false;
+        };
+        let mut vetted: Vec<String> = self
+            .vetted_gone(project, &board)
+            .into_iter()
+            .map(|f| f.path)
+            .collect();
+        vetted.push(now.path.clone());
+        let allowed: Vec<&str> = vetted.iter().map(String::as_str).collect();
+        self.prune_repo(repo, &allowed).is_ok() && matches!(self.look_listed(now), Listing::Absent)
     }
 
     /// The name a folder is renamed to before it is deleted (free in its parent).

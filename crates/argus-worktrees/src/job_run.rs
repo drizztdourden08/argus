@@ -248,6 +248,11 @@ impl Service {
             return None;
         }
         let original = join_path(&parent_of(&path), &original_name(&name));
+        let board = self.deps.store.board(project)?;
+        if crate::guards::leftover_path_problem(&board.valid_rules(), rule, &original, ci).is_some()
+        {
+            return None;
+        }
         if !rule.allows(&base_name(&original), ci)
             || self.st().jobs.iter().any(|j| {
                 j.project == project && j.state.active() && same_path(&j.folder, &path, ci)
