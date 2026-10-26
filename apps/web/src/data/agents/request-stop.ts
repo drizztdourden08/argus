@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { postEntry } from '../posts';
-import { ownerEntry } from './owner-entry';
+import { ownerEntry } from '../posts';
 import type { Agent, StopSent } from './agents.type';
 
 const requestStop = async (key: string, id: string, agent: Agent): Promise<StopSent> => {

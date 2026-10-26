@@ -8,4 +8,9 @@ const OVERVIEW_TABS = [
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);
 
-export { OVERVIEW_TAB_IDS, OVERVIEW_TABS };
+const DOWN_SENTENCE = 'Dashboard unreachable, retrying.';
+
+const ACTIVITY_SEEN_KEY = 'argus.activity.seen';
+const NOTIFICATIONS_SEEN_KEY = 'argus.notifications.seen';
+
+export { ACTIVITY_SEEN_KEY, DOWN_SENTENCE, NOTIFICATIONS_SEEN_KEY, OVERVIEW_TAB_IDS, OVERVIEW_TABS };

@@ -1,0 +1,69 @@
+//! What may change on the board, by whom, and how a change is made. One op is the same shape the
+//! page posts as an entry: `create`, `edit`, `move`, `ac`, `archive`, `unarchive`, `delete`,
+//! `restore`, `bulk`, `purge` and `build`. [`apply_op`] checks the caller, validates, checks the
+//! revision the writer saw, applies, stamps, and tells the owning threads.
+
+mod ac;
+mod announce;
+mod authorize;
+mod backup;
+mod build;
+mod bulk;
+mod create;
+mod edit;
+mod fields;
+mod move_;
+mod plan;
+mod purge;
+mod result;
+mod soft;
+mod target;
+mod who;
+
+use std::path::Path;
+
+use serde_json::Value;
+
+use crate::Board;
+use crate::error::BoardError;
+use crate::json::shown;
+
+pub use backup::{PurgeDone, apply_purge, count_line};
+pub use plan::{PurgePlan, Selection, purge_plan};
+pub use result::{Notice, OpResult, Status};
+pub use who::{Role, Who};
+
+fn dispatch(
+    board: &mut Board,
+    op: &Value,
+    who: &Who,
+    home: Option<&Path>,
+) -> Option<Result<OpResult, BoardError>> {
+    Some(match op["kind"].as_str()? {
+        "create" => create::handle(board, op, who),
+        "edit" => edit::handle(board, op, who),
+        "move" => move_::handle(board, op, who),
+        "ac" => ac::handle(board, op, who),
+        "archive" | "unarchive" | "delete" | "restore" => soft::handle(board, op, who),
+        "bulk" => bulk::handle(board, op, who, home),
+        "purge" => purge::handle(board, op, who, home),
+        "build" => build::handle(board, op, who),
+        _ => return None,
+    })
+}
+
+/// Apply one op to the board as `who`. `home` is the coord home, needed only by `purge` (its
+/// backup goes under it); without it a purge is refused.
+///
+/// Returns how it went: `applied` (with the inbox lines already queued for the owning threads, a
+/// bulk's `results`, a create's `created`, a purge's `file` and `counts`), `conflict` (nothing
+/// applied: the record changed since `baseRev`; `current` holds the fields that differ) or
+/// `refused` (nothing applied; `outcome` says why: `gone`, `in trash`, a refusal from the ownership
+/// rules, or a bad field or value).
+pub fn apply_op(board: &mut Board, op: &Value, who: &Who, home: Option<&Path>) -> OpResult {
+    match dispatch(board, op, who, home) {
+        Some(Ok(result)) => result,
+        Some(Err(e)) => OpResult::refused(e.to_string()),
+        None => OpResult::refused(format!("unknown op \"{}\"", shown(op.get("kind")))),
+    }
+}

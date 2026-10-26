@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { PostResult } from '../api';
 import { postEntry } from '../posts';
-import { ownerEntry } from './owner-entry';
+import { ownerEntry } from '../posts';
 import type { Agent } from './agents.type';
 
 const cancelStop = (key: string, id: string, agent: Agent, undoes?: string): Promise<PostResult> =>

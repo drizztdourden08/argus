@@ -25,12 +25,12 @@ use std::sync::Arc;
 
 use tracing::warn;
 
-use crate::clock::Clock;
 use crate::docs::DocSink;
 use crate::mirror::mirror_wakes;
 use crate::store::{StoreResult, WakeStore};
 use crate::time::iso;
 use crate::wake::{FinishedEvent, WakeEvent, WakeInput, WakeRow, WakeStatus};
+use argus_core::clock::Clock;
 use listeners::ListenerSet;
 
 const MAX_LINES: usize = 8;

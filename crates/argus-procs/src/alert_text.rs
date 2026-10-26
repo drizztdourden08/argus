@@ -1,7 +1,9 @@
 //! The words of an alert wake: `3 processes need a look: node 4812 (vite) 1.9 GB stale 3h, ...`.
 
+use argus_core::clock::age_text;
+
 use crate::alerts::Due;
-use crate::text::{age_text, base_name, mem_text};
+use crate::text::{base_name, mem_text};
 use crate::types::{Flag, ProcDoc};
 
 /// The tail every alert wake carries; the activity line leaves it off.

@@ -4,7 +4,7 @@
 //! the end of tailing. Ported from `agents.watcher.test.mjs`.
 
 use argus_agents::fakes::{
-    JsonBoards, ManualClock, MemoryDocs, agent_record, assistant_line, text_block as text,
+    JsonBoards, MemoryDocs, agent_record, assistant_line, text_block as text,
     tool_result as result, tool_use as tool, user_line,
 };
 use argus_agents::iso::format_iso;
@@ -12,7 +12,8 @@ use argus_agents::record::Record;
 use argus_agents::tool_summary::tool_summary;
 use argus_agents::watcher::{LastTool, Live, Tokens};
 use argus_agents::{
-    AgentWatcher, AgentsConfig, Board, Clock, FileSystem, LiveDocs, Ports, StdFs, WatcherOptions,
+    AgentWatcher, AgentsConfig, Board, Clock, FileSystem, LiveDocs, ManualClock, Ports, StdFs,
+    WatcherOptions,
 };
 use serde_json::{Value, json};
 use std::fs::{self, OpenOptions};
@@ -72,7 +73,7 @@ impl<'a> Setup<'a> {
     }
 
     fn build(self) -> Harness {
-        let clock = Arc::new(ManualClock::new(T0 + 1000));
+        let clock = Arc::new(ManualClock::at(T0 + 1000));
         let boards = Arc::new(JsonBoards::new(self.dir, &["alpha"]));
         let docs = Arc::new(MemoryDocs::default());
         let file = self
@@ -133,6 +134,12 @@ impl Harness {
         self.watcher.live("alpha", "A-1")
     }
 
+    fn assert_live(&self, turns: u64, last_message: &str) {
+        let live = self.live().unwrap();
+        assert_eq!(live.turns, turns);
+        assert_eq!(live.last_message.as_deref(), Some(last_message));
+    }
+
     fn applied(&self) -> Vec<Record> {
         self.docs.applied()
     }
@@ -158,18 +165,10 @@ fn reads_only_the_new_bytes_and_waits_for_the_rest_of_a_partial_last_line() {
     );
     let m = make(&dir, &f);
     m.tick();
-    assert_eq!(m.live().unwrap().turns, 1);
-    assert_eq!(
-        m.live().unwrap().last_message.as_deref(),
-        Some("first message")
-    );
+    m.assert_live(1, "first message");
     append(&f, &whole[40..]);
     m.tick();
-    assert_eq!(m.live().unwrap().turns, 2);
-    assert_eq!(
-        m.live().unwrap().last_message.as_deref(),
-        Some("second message")
-    );
+    m.assert_live(2, "second message");
     m.tick();
     assert_eq!(
         m.live().unwrap().turns,
@@ -192,8 +191,7 @@ fn a_garbage_line_and_a_line_without_a_role_are_skipped() {
     write(&f, &lines);
     let m = make(&dir, &f);
     m.tick();
-    assert_eq!(m.live().unwrap().turns, 1);
-    assert_eq!(m.live().unwrap().last_message.as_deref(), Some("real"));
+    m.assert_live(1, "real");
 }
 
 #[test]

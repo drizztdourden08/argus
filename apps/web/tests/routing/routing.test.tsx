@@ -15,24 +15,30 @@ describe('routing', () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
     const { sources } = renderAt('/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    expect(sources[0]?.url).toBe('/api/p/_portfolio/stream?c=cards');
+    const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
+    expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
+    expect(wanted).toContain('cards');
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards)));
     expect(await screen.findByText('RotP')).toBeTruthy();
     const links = screen.getAllByRole('link', { name: 'Open board' });
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/p/argus/', '/p/rotp/']);
   });
 
-  it('shows the board page at /p/:key/ with the thread list', async () => {
+  it('shows the board page at /p/:key/ with the registered strip', async () => {
     const { sources } = renderAt('/p/rotp/');
     await waitFor(() => expect(sources).toHaveLength(1));
     expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
-    expect(sources[0]?.url.split('c=')[1]?.split(',').sort()).toEqual(['agents', 'meta', 'threads']);
+    expect(sources[0]?.url.split('c=')[1]?.split(',')).toEqual(
+      expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads']),
+    );
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
-      sources[0]?.emit('snapshot', snapshot('rotp', 'threads', { lead: { id: 'lead', name: 'lead', role: 'coordinator', status: 'active' } }));
+      sources[0]?.emit('snapshot', snapshot('rotp', 'registry', {
+        lead: { id: 'lead', project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'listening' },
+      }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    expect(within(screen.getByRole('list', { name: 'Threads' })).getByText('lead')).toBeTruthy();
+    expect(within(screen.getByRole('status', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees']) {
       expect(screen.getByRole('tab', { name: label })).toBeTruthy();
     }

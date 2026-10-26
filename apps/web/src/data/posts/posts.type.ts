@@ -12,4 +12,12 @@ interface SendDownInput {
   decision?: boolean;
 }
 
-export type { ProofResult, SendDownInput, TestOutcome };
+type OwnerFields = {
+  kind: string;
+  text?: string;
+  replyTo?: string | null;
+  item?: string | null;
+  thread?: string | null;
+};
+
+export type { OwnerFields, ProofResult, SendDownInput, TestOutcome };

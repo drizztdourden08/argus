@@ -2,8 +2,9 @@
 import type { PostResult } from '../../../../data/api';
 import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
+import type { RunEntry } from '../../../../data/runs';
 import type { TestItem } from '../../../../data/types';
-import type { BundleGroup, ClosedGroup, LaunchDefDoc, LaunchInfo, RunEntry, TestDoc } from './model';
+import type { BundleGroup, ClosedGroup, LaunchInfo, TestDoc } from './model';
 
 interface BundleView {
   group: BundleGroup;
@@ -48,17 +49,6 @@ interface Outcome {
   send: () => void;
 }
 
-interface RunAction {
-  busy: boolean;
-  act: (action: () => Promise<string>) => Promise<void>;
-}
-
-interface Play {
-  busy: boolean;
-  start: (def: LaunchDefDoc, tag: string) => Promise<void>;
-  stop: (run: RunEntry) => Promise<void>;
-}
-
 interface TestActions {
   busy: boolean;
   rerun: (testId: string) => Promise<void>;
@@ -71,5 +61,5 @@ interface Folds {
 }
 
 export type {
-  BundleView, Folds, Outcome, OwnerPost, Play, ProofUpload, RecordResult, RunAction, TestActions, TestsData,
+  BundleView, Folds, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestsData,
 };

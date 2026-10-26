@@ -5,9 +5,11 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use argus_native::{Notifier, NotifyError, Payload, RecordingNotifier, Toast};
 use argus_notify::fakes::{
-    ManualClock, MemoryConfig, MemoryStore, RecordingActivity, RecordingEvents, StaticNames,
+    MemoryConfig, MemoryStore, RecordingActivity, RecordingEvents, StaticNames,
 };
-use argus_notify::{Delivery, Notify, NotifyConfig, Outcome, PingRequest, Ports, TrayFallback};
+use argus_notify::{
+    Delivery, ManualClock, Notify, NotifyConfig, Outcome, PingRequest, Ports, TrayFallback,
+};
 
 pub const T0: i64 = 1_793_016_000_000;
 pub const PORT: u16 = 47615;

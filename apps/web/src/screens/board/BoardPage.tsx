@@ -5,11 +5,13 @@ import { useBoard } from '../../data/react';
 import { resolvePalette, useDocumentPalette } from '../../palette';
 import { PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { BOARD_TAB_IDS, BOARD_TABS } from './board.constants';
+import { BoardBody } from './BoardBody';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
+import { BuildsTab } from './tabs/builds';
 import { KanbanTab } from './tabs/kanban';
 import { TestsTab } from './tabs/tests';
-import { ThreadList } from './sub-components/ThreadList';
+import { WorktreesTab } from './tabs/worktrees';
 
 const BoardPage = (props: BoardPageProps) => {
   const { boardKey } = props;
@@ -21,12 +23,14 @@ const BoardPage = (props: BoardPageProps) => {
     <PageFrame>
       <ContentHeader title={board.name} back={{ label: 'Argus', onSelect: () => void navigate('/') }} />
       <StatusNotice status={board.status} />
-      <ThreadList threads={board.threads} />
+      <BoardBody boardKey={boardKey} />
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
       {tab === 'kanban' && <KanbanTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
-      {tab !== 'agents' && tab !== 'kanban' && tab !== 'tests' && <EmptyState message="This tab is not built yet." />}
+      {tab === 'builds' && <BuildsTab boardKey={boardKey} />}
+      {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
+      {!['agents', 'kanban', 'tests', 'builds', 'worktrees'].includes(tab) && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };

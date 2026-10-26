@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind logic */
 import { toast } from '@drizztdourden08/tessera';
 import { useCallback, useRef, useState } from 'react';
+import { writeErrorText } from '../../../../../data/api';
 import type { PostResult } from '../../../../../data/api';
-import { postVerdict, writeErrorText } from '../model';
+import { postVerdict } from '../model';
 import type { OwnerPost } from '../tests.type';
 
 const useOwnerPost = (): OwnerPost => {

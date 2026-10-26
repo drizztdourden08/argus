@@ -1,10 +1,12 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
+import { runLine } from '../../src/data/runs';
+import type { RunEntry } from '../../src/data/runs';
 import {
-  bundleState, closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, runLine, sortDone, visibleTests,
+  bundleState, closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, sortDone, visibleTests,
 } from '../../src/screens/board/tabs/tests/model';
 import { tally } from '../../src/screens/board/tabs/tests/model/tally';
-import type { BuildDoc, LaunchDefDoc, LauncherDoc, RunEntry, TestDoc } from '../../src/screens/board/tabs/tests/model';
+import type { BuildDoc, LaunchDefDoc, LauncherDoc, TestDoc } from '../../src/screens/board/tabs/tests/model';
 import { buildDoc, defDoc, doneDoc, launcherDoc, runDoc, testDoc } from './fixtures';
 
 const tests = (...docs: object[]) => docs as TestDoc[];

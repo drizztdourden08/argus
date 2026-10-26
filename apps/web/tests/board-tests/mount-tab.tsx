@@ -84,5 +84,5 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   return { ...view, calls, change };
 };
 
-export { mountTab };
+export { mountTab, stubFetch };
 export type { Call, Responder };

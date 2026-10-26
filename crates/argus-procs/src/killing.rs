@@ -1,10 +1,12 @@
 //! Kills: only a listed, unprotected process of a killable rule, checked against a fresh sample.
 
+use argus_core::clock::age_text;
+
 use crate::clock::{iso, parse_iso};
 use crate::error::ProcsError;
 use crate::ports::{Activity, Level};
 use crate::service::{Engine, Inner, locked};
-use crate::text::{age_text, base_name, mem_text};
+use crate::text::{base_name, mem_text};
 use crate::tree::descendants_of;
 use crate::types::{ProcDoc, Sample};
 use serde::Serialize;

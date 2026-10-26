@@ -10,7 +10,6 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use tokio::task::JoinHandle;
 
-use crate::clock::Clock;
 use crate::def::RunDef;
 use crate::defs_source::DefsSource;
 use crate::events::RunEvents;
@@ -21,6 +20,7 @@ use crate::record::{RunLimits, RunPatch, RunRow};
 use crate::redact::{Redactor, secret_env_values};
 use crate::store::Storage;
 use crate::time::format_iso;
+use argus_core::clock::Clock;
 
 /// A listener of a run's end; it only watches.
 pub(crate) type EndListener = Box<dyn Fn(&RunRow) + Send + Sync>;

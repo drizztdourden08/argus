@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { toast } from '@drizztdourden08/tessera';
 import { useState } from 'react';
+import { imageProblem } from '../../../../../data/api';
 import type { TestOutcome } from '../../../../../data/posts';
-import { imageProblem } from '../model';
 import type { Outcome } from '../tests.type';
 import { useRecordResult } from './useRecordResult';
 

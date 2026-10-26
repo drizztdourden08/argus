@@ -2,12 +2,12 @@
 //! through the engine like any other, only the Overlord clears a fault, and the stream and presence
 //! parameters are cleaned.
 
+use argus_core::ids::is_key;
 use argus_wake::board::BoardView;
 use argus_wake::engine::AttachOptions;
 use argus_wake::external::{
     ClearRequest, RequestError, clean_label, clean_tab, clear_request, external_wake,
-    listener_cap_message, no_open_fault, presence_thread, scope_of, stream_thread, valid_key,
-    valid_thread_id,
+    listener_cap_message, no_open_fault, presence_thread, scope_of, stream_thread, valid_thread_id,
 };
 use argus_wake::testkit::{Rig, Tap, board, thread};
 use argus_wake::wake::WakeStatus;
@@ -279,11 +279,11 @@ fn only_a_live_coordinator_of_the_portfolio_board_may_clear_a_fault() {
 #[test]
 fn keys_threads_labels_and_tabs_are_cleaned() {
     assert!(
-        valid_key("pixelarttool")
-            && valid_key("a1-b")
-            && !valid_key("Bad_Key")
-            && !valid_key("-a")
-            && !valid_key("")
+        is_key("pixelarttool")
+            && is_key("a1-b")
+            && !is_key("Bad_Key")
+            && !is_key("-a")
+            && !is_key("")
     );
     assert!(
         valid_thread_id("ui")

@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, DropZone, Flex, Text, Textarea } from '@drizztdourden08/tessera';
 import type { ClipboardEvent, KeyboardEvent } from 'react';
-import { IMAGE_TYPES, noteProblem } from '../model';
+import { IMAGE_TYPES } from '../../../../../data/api';
+import { noteProblem } from '../model';
 import { COMPOSE_HINTS } from '../tests.constants';
 import type { ResultComposerProps } from '../tests-props.type';
 import { ShotPreview } from './ShotPreview';

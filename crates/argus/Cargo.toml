@@ -9,5 +9,11 @@ publish.workspace = true
 authors.workspace = true
 repository.workspace = true
 
+[dependencies]
+argus-core = { path = "../argus-core" }
+argus-server = { path = "../argus-server" }
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+
 [lints]
 workspace = true

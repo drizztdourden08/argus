@@ -2,7 +2,6 @@
 //! server that wires it. None of them touches anything outside the folder it is given.
 
 use crate::board::Board;
-use crate::clock::Clock;
 use crate::error::AgentsError;
 use crate::iso::format_iso;
 use crate::ports::{ActivityLine, ActivitySink, BoardStore, LiveDocs, WakeEvent, WakeSink};
@@ -11,40 +10,11 @@ use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, UNIX_EPOCH};
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
-}
-
-/// A clock moved by hand.
-#[derive(Debug)]
-pub struct ManualClock(AtomicI64);
-
-impl ManualClock {
-    /// A clock at `ms`.
-    #[must_use]
-    pub fn new(ms: i64) -> Self {
-        Self(AtomicI64::new(ms))
-    }
-
-    /// Moves the clock to `ms`.
-    pub fn set(&self, ms: i64) {
-        self.0.store(ms, Ordering::SeqCst);
-    }
-
-    /// Moves the clock on by `ms`.
-    pub fn advance(&self, ms: i64) {
-        self.0.fetch_add(ms, Ordering::SeqCst);
-    }
-}
-
-impl Clock for ManualClock {
-    fn now_ms(&self) -> i64 {
-        self.0.load(Ordering::SeqCst)
-    }
 }
 
 /// A wake engine that keeps what it is given.
