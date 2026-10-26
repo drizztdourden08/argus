@@ -23,6 +23,23 @@ interface Launcher {
   retiredAt: string | null;
   retiredBy: string | null;
   retireNote: string | null;
+  title?: string | null;
+  kind?: string | null;
+  branch?: string | null;
+  commit?: string | null;
+  note?: string | null;
+  current?: boolean;
+  window?: boolean;
+  bundle?: string | null;
+  by?: string | null;
+  createdBy?: string | null;
+  updatedAt?: string | null;
+  joined?: string | null;
+  standalone?: boolean;
+  useEvery?: string | null;
+  useEveryMs?: number | null;
+  lastUsedAt?: string | null;
+  keptUntil?: string | null;
 }
 
 interface LaunchDef {
@@ -45,6 +62,9 @@ interface RunDoc {
   endedAt: string | null;
   error: string | null;
   lastLine: string | null;
+  stdin?: boolean;
+  orphan?: boolean;
+  signal?: string | null;
 }
 
 interface TestItem {

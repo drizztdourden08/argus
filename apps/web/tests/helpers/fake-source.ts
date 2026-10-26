@@ -41,5 +41,4 @@ const createFakeSources = (): FakeSources => {
   return { open, sources };
 };
 
-export { createFakeSources };
-export type { FakeSource };
+export { createFakeSources, FakeSource };

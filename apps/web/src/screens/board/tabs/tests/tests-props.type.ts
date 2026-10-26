@@ -2,8 +2,9 @@
 import type { ReactNode } from 'react';
 import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
+import type { RunEntry } from '../../../../data/runs';
 import type { BundleState, TestItem } from '../../../../data/types';
-import type { BundleGroup, ClosedGroup, Counts, LaunchInfo, RunEntry, TestDoc } from './model';
+import type { BundleGroup, ClosedGroup, Counts, TestDoc } from './model';
 import type { BundleView, Folds, Outcome } from './tests.type';
 
 interface TestsTabProps {
@@ -42,17 +43,6 @@ interface HandButtonProps {
   boardKey: string;
   tag: string;
   handed: boolean;
-}
-
-interface PlayControlProps {
-  tag: string;
-  launch: LaunchInfo;
-  boardKey: string;
-  runs: RunEntry[];
-}
-
-interface RunStatusProps {
-  run: RunEntry;
 }
 
 interface TestSectionsProps extends OpenTest {
@@ -141,10 +131,6 @@ interface EvidenceProps {
   boardKey: string;
 }
 
-interface ProofGalleryProps {
-  proofs: TestDoc['proofs'];
-}
-
 interface ProofUploadFormProps {
   testId: string;
   boardKey: string;
@@ -152,11 +138,6 @@ interface ProofUploadFormProps {
 
 interface ResultHistoryProps {
   runs: TestDoc['runs'];
-}
-
-interface PlayDisabledProps {
-  tag: string;
-  hint: string;
 }
 
 interface LaunchCommandProps {
@@ -202,5 +183,5 @@ interface TextListProps {
 }
 
 export type {
-  TestsTabProps, AcListProps, BundleCardProps, BundleHeadProps, BundleListProps, BundleProgressProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, DrawerSectionProps, EvidenceProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, OutcomeButtonsProps, OutcomeControlsProps, PlayControlProps, PlayDisabledProps, ProofGalleryProps, ProofUploadFormProps, RerunButtonProps, ResultBlockProps, ResultComposerProps, ResultHistoryProps, RunStatusProps, ShotPreviewProps, TestBodyProps, TestChipsProps, TestDrawerProps, TestFactsProps, TestPartProps, TestRowProps, TestSectionsProps, TextListProps,
+  TestsTabProps, AcListProps, BundleCardProps, BundleHeadProps, BundleListProps, BundleProgressProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, DrawerSectionProps, EvidenceProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, OutcomeButtonsProps, OutcomeControlsProps, ProofUploadFormProps, RerunButtonProps, ResultBlockProps, ResultComposerProps, ResultHistoryProps, ShotPreviewProps, TestBodyProps, TestChipsProps, TestDrawerProps, TestFactsProps, TestPartProps, TestRowProps, TestSectionsProps, TextListProps,
 };

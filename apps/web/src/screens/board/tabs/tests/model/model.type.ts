@@ -1,16 +1,13 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../../../data/react';
-import type { Build, LaunchDef, Launcher, RunDoc, Test } from '../../../../../data/types';
+import type { Build, LaunchDef, Launcher, Test } from '../../../../../data/types';
 
 type TestDoc = WithId<Test>;
 type BuildDoc = WithId<Build>;
 type LauncherDoc = WithId<Launcher>;
 type LaunchDefDoc = WithId<LaunchDef>;
-type RunEntry = WithId<RunDoc>;
 
 type LaunchState = 'linked' | 'retired' | 'missing' | 'legacy' | 'none';
-
-type RunTone = 'warning' | 'success' | 'info' | 'neutral' | 'danger';
 
 interface Counts {
   run: number;
@@ -51,11 +48,4 @@ interface GroupInput {
   handed: string | null;
 }
 
-interface RunLine {
-  tone: RunTone;
-  label: string;
-  since: string | null;
-  last: string;
-}
-
-export type { BuildDoc, BundleGroup, ClosedGroup, Counts, GroupInput, LaunchDefDoc, LauncherDoc, LaunchInfo, RunEntry, RunLine, RunTone, TestDoc };
+export type { BuildDoc, BundleGroup, ClosedGroup, Counts, GroupInput, LaunchDefDoc, LauncherDoc, LaunchInfo, TestDoc };

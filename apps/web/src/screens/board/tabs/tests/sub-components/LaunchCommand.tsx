@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Callout, CopyValue, Flex, Link, Text } from '@drizztdourden08/tessera';
+import { RunPlay } from '../../../run-play';
+import { playHint } from '../model';
 import type { LaunchCommandProps } from '../tests-props.type';
-import { PlayControl } from './PlayControl';
-import { PlayDisabled } from './PlayDisabled';
 
 const LaunchCommand = (props: LaunchCommandProps) => {
   const { view, boardKey, runs, draft } = props;
@@ -12,7 +12,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
     return (
       <Flex gap="sm" align="center" wrap>
         <Callout tone="warning">{launch.gone}. The thread links another with coord build set {tag} --launcher NAME.</Callout>
-        <PlayDisabled tag={tag} hint={launch.gone} />
+        <RunPlay label={tag} def={null} hint={launch.gone} boardKey={boardKey} runs={runs} />
       </Flex>
     );
   }
@@ -23,7 +23,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
     <Flex direction="column" gap="2xs">
       <Flex gap="sm" align="center" wrap>
         <CopyValue value={launch.cmd} label="Launch command" mono />
-        {!draft && <PlayControl tag={tag} launch={launch} boardKey={boardKey} runs={runs} />}
+        {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
       </Flex>
       {launch.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{launch.cwd}</Text.Code></Text>}
       {launch.name && <Text variant="caption" tone="muted">from <Link href="#builds">launcher {launch.name}</Link></Text>}
