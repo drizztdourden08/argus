@@ -7,11 +7,6 @@ use argus_core::Paths;
 use argus_core::config::env_port;
 use argus_server::{ServeOptions, serve};
 
-/// The port of `argus serve` while the Node server keeps 47615.
-const DEFAULT_PORT: u16 = 47616;
-/// The port the Node server keeps until the switch-over.
-const NODE_PORT: u16 = 47615;
-
 /// The folders of the dashboard: `COORD_HOME` from the environment, and the given home or the
 /// default one.
 pub fn paths_of(data_dir: Option<PathBuf>) -> Paths {
@@ -20,21 +15,19 @@ pub fn paths_of(data_dir: Option<PathBuf>) -> Paths {
     Paths::new(env.coord_home, home.or(Some(env.home)))
 }
 
-/// The port to listen on: the flag, else `DASHBOARD_PORT`, else the default. While the Node
-/// server keeps 47615, a `DASHBOARD_PORT` of 47615 is ignored for the default; only an explicit
-/// `--port 47615` binds it.
+/// The port override of the server: the flag, else `DASHBOARD_PORT`, else none, which leaves the
+/// port to the `port` of the home's `config.json` (47615 by default), as Node does.
 ///
 /// # Errors
 ///
 /// `DASHBOARD_PORT` is set to something that is not a port.
-pub fn port_of(flag: Option<u16>) -> Result<u16, String> {
+pub fn port_of(flag: Option<u16>) -> Result<Option<u16>, String> {
     let env = env_port().map_err(|e| e.to_string())?;
     Ok(pick_port(flag, env))
 }
 
-fn pick_port(flag: Option<u16>, env: Option<u16>) -> u16 {
-    flag.or(env.filter(|p| *p != NODE_PORT))
-        .unwrap_or(DEFAULT_PORT)
+fn pick_port(flag: Option<u16>, env: Option<u16>) -> Option<u16> {
+    flag.or(env)
 }
 
 /// Runs the server until it is told to stop.
@@ -48,7 +41,7 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
         return Err(why);
     }
     let mut opts = ServeOptions::new(paths);
-    opts.port = Some(port_of(port)?);
+    opts.port = port_of(port)?;
     opts.shadow = shadow;
     opts.shadow_seed = shadow.then(|| Paths::from_env().home);
     opts.notify.system = true;
@@ -74,11 +67,11 @@ mod tests {
     use super::pick_port;
 
     #[test]
-    fn the_node_port_is_only_bound_when_asked_for_by_flag() {
-        assert_eq!(pick_port(None, None), 47616);
-        assert_eq!(pick_port(None, Some(47615)), 47616);
-        assert_eq!(pick_port(Some(47615), Some(47615)), 47615);
-        assert_eq!(pick_port(None, Some(0)), 0);
-        assert_eq!(pick_port(Some(9), Some(47615)), 9);
+    fn the_flag_beats_the_environment_and_neither_leaves_the_port_to_the_config() {
+        assert_eq!(pick_port(None, None), None);
+        assert_eq!(pick_port(None, Some(47615)), Some(47615));
+        assert_eq!(pick_port(Some(47615), Some(9)), Some(47615));
+        assert_eq!(pick_port(None, Some(0)), Some(0));
+        assert_eq!(pick_port(Some(9), Some(47615)), Some(9));
     }
 }

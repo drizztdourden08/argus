@@ -12,6 +12,7 @@ pub mod boards;
 mod body;
 mod ctx;
 pub mod endpoint;
+pub mod first_start;
 mod gate;
 pub mod instance;
 mod pathing;

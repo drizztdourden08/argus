@@ -813,8 +813,9 @@ feature `dev-origin`, which release builds never enable.
 1. Shadow. From slice 1 on, Argus runs as `argus serve --shadow --port 47616 --data-dir
    <COORD_HOME>/argus-shadow` (`--home` is an alias), reading the real `~/.coord` boards. When
    the shadow home has no database it starts as a copy of the Node one (`VACUUM INTO`, opened
-   read-only), so runs, wakes, faults and activity history are there too. `config.json` and
-   `process-rules.json` are copied from the Node home the same way, each only when absent. The
+   read-only), so runs, wakes, faults and activity history are there too. `config.json` (its port
+   changed to 47616, nothing else) and `process-rules.json` are copied from the Node home the
+   same way, each only when absent. The
    Node home (`DASHBOARD_HOME`, default `<COORD_HOME>/dashboard`) is only read, never written.
    The owner opens `http://127.0.0.1:47616/` beside the Node page when a slice lands.
 2. Compare. `argus parity --left http://127.0.0.1:47615 --right http://127.0.0.1:47616` reads
@@ -826,8 +827,9 @@ feature `dev-origin`, which release builds never enable.
 4. Cut. `dashboard stop` and `dashboard tray stop` end the Node server and its tray by their pid
    files (never by process name). The `dashboard` shim on PATH and `<installDir>/bin/dashboard.mjs`
    now start `argus.exe` with the same arguments. Argus starts with the Node data home, takes a
-   backup copy of `dashboard.db` named `dashboard.db.node-<stamp>`, runs one hard resync, and
-   takes port 47615. `argus tray start` brings the icon back.
+   backup copy of `dashboard.db` named `dashboard.db.node-<stamp>` (the first start of a home
+   without the `argus.marker` file, before anything writes), runs one hard resync, and takes
+   port 47615 from the `port` of the home's `config.json`. `argus tray start` brings the icon back.
 5. Rollback. Stop Argus, point the shim back at the Node bin, start Node. The schema is the same,
    so Node opens the database Argus used; the backup copy is there if it does not. Board files are
    the source of truth and Argus never rewrites them on its own, so nothing on the boards is lost.

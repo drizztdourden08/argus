@@ -21,6 +21,7 @@ use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+use crate::first_start;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::security::LoginCodes;
@@ -178,6 +179,9 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
         shadow::seed(node_home, &paths.home)?;
     }
     let config = checked_config(&paths, opts.port).await?;
+    if !opts.shadow {
+        first_start::back_up_node_database(&paths)?;
+    }
     let log = Arc::new(
         Logger::new(
             paths.logs.join("server.log"),

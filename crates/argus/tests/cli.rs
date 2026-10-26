@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use argus_server::instance::call;
+use argus_server::instance::{PROBE_ENV, call};
 use serde_json::Value;
 use tempfile::TempDir;
 
@@ -39,6 +39,7 @@ impl Home {
             .env("COORD_HOME", self.dir.path())
             .env("DASHBOARD_HOME", self.dashboard())
             .env("DASHBOARD_PORT", "0")
+            .env(PROBE_ENV, "60000")
             .output()
             .expect("argus runs");
         Out {
@@ -202,6 +203,8 @@ struct FakeNode {
 }
 
 impl FakeNode {
+    /// Listening, and proven to answer, before the first call of a test: the listener is bound
+    /// here, and one probe of its own goes through before this returns.
     fn start() -> FakeNode {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a port");
         let port = listener.local_addr().expect("an address").port();
@@ -209,25 +212,54 @@ impl FakeNode {
         let log = std::sync::Arc::clone(&seen);
         std::thread::spawn(move || {
             for stream in listener.incoming().flatten() {
-                Self::answer(stream, &log);
+                let log = std::sync::Arc::clone(&log);
+                std::thread::spawn(move || Self::answer(stream, &log));
             }
         });
-        FakeNode { port, seen }
+        let node = FakeNode { port, seen };
+        node.ready();
+        node
     }
 
+    /// One health call of the test itself, then its line is forgotten.
+    fn ready(&self) {
+        use std::io::{Read, Write};
+
+        let mut probe = std::net::TcpStream::connect(("127.0.0.1", self.port)).expect("connects");
+        let ask = "GET /api/health HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n";
+        probe.write_all(ask.as_bytes()).expect("asks");
+        let mut reply = String::new();
+        probe.read_to_string(&mut reply).expect("answers");
+        assert!(reply.starts_with("HTTP/1.1 200"), "{reply}");
+        self.seen.lock().expect("the log").clear();
+    }
+
+    /// Reads the whole request, so the close never resets the client's read, keeps its request
+    /// line and answers the Node health.
     fn answer(mut stream: std::net::TcpStream, log: &std::sync::Mutex<Vec<String>>) {
-        use std::io::{BufRead, BufReader, Write};
+        use std::io::{BufRead, BufReader, Read, Write};
 
         let mut reader = BufReader::new(stream.try_clone().expect("a clone"));
+        let mut first = String::new();
+        let _read = reader.read_line(&mut first);
+        let mut length = 0usize;
         let mut line = String::new();
-        let _read = reader.read_line(&mut line);
-        log.lock().expect("the log").push(line.trim().to_owned());
+        while reader.read_line(&mut line).is_ok_and(|n| n > 2) {
+            if let Some(v) = line.to_ascii_lowercase().strip_prefix("content-length:") {
+                length = v.trim().parse().unwrap_or(0);
+            }
+            line.clear();
+        }
+        let mut body = vec![0u8; length];
+        let _read = reader.read_exact(&mut body);
+        log.lock().expect("the log").push(first.trim().to_owned());
         let body = r#"{"ok":true,"version":"0.0.0","instance":"node-1","startedAt":"2026-01-01T00:00:00.000Z","runs":{"running":0,"queued":0}}"#;
         let reply = format!(
             "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
             body.len()
         );
         let _written = stream.write_all(reply.as_bytes());
+        let _closed = stream.shutdown(std::net::Shutdown::Write);
     }
 
     fn requests(&self) -> Vec<String> {
@@ -316,4 +348,36 @@ fn serve_does_not_open_a_home_the_node_dashboard_uses() {
     assert_eq!(refused.code, 1, "{}", refused.stdout);
     assert!(refused.stderr.contains("--data-dir"), "{}", refused.stderr);
     assert!(node.only_health_calls());
+}
+
+/// A port nobody holds right now.
+fn free_port() -> u16 {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a port");
+    listener.local_addr().expect("an address").port()
+}
+
+#[test]
+fn without_a_flag_or_the_environment_the_server_takes_the_port_of_the_config() {
+    let home = Home::new();
+    std::fs::create_dir_all(home.dashboard()).expect("the home");
+    let port = free_port();
+    let config = serde_json::json!({ "host": "127.0.0.1", "port": port });
+    std::fs::write(home.dashboard().join("config.json"), config.to_string()).expect("a config");
+    let run = |args: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_argus"))
+            .args(args)
+            .env("COORD_HOME", home.dir.path())
+            .env("DASHBOARD_HOME", home.dashboard())
+            .env_remove("DASHBOARD_PORT")
+            .env(PROBE_ENV, "60000")
+            .output()
+            .expect("argus runs")
+    };
+    let start = run(&["start"]);
+    assert_eq!(start.status.code(), Some(0), "{start:?}");
+    assert_eq!(
+        home.json("server.pid")["port"].as_u64(),
+        Some(u64::from(port))
+    );
+    assert!(run(&["status"]).status.success());
 }

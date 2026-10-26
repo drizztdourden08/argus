@@ -28,9 +28,12 @@ fn a_shadow_home_with_nothing_gets_the_database_the_config_and_the_rules() {
     seed(&node, &shadow).unwrap();
     let copy = Db::open(&shadow.join("dashboard.db"), Bus::new()).unwrap();
     assert_eq!(copy.kv_get("seen").unwrap().as_deref(), Some("yes"));
+    let config: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(shadow.join("config.json")).unwrap()).unwrap();
     assert_eq!(
-        fs::read_to_string(shadow.join("config.json")).unwrap(),
-        "{\"from\":\"node\"}"
+        config,
+        serde_json::json!({ "from": "node", "port": 47616 }),
+        "the Node config, and the port of the shadow as its one change"
     );
     assert!(shadow.join("process-rules.json").is_file());
 }

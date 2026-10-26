@@ -9,6 +9,16 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
 const PROBE: Duration = Duration::from_secs(2);
+/// Milliseconds that replace the 2 s health probe limit when set; a test on a loaded machine
+/// raises it so a slow answer is not taken for a missing server.
+pub const PROBE_ENV: &str = "ARGUS_PROBE_TIMEOUT_MS";
+
+fn probe_limit() -> Duration {
+    std::env::var(PROBE_ENV)
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .map_or(PROBE, Duration::from_millis)
+}
 
 /// What `server.pid` records.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -95,9 +105,10 @@ pub fn pid_alive(pid: u32) -> bool {
 
 /// The health answer of the server on `port`, when it says 200.
 pub async fn probe(port: u16, token: Option<&str>) -> Option<Value> {
-    let (status, body) = tokio::time::timeout(PROBE, call(port, "GET", "/api/health", token))
-        .await
-        .ok()??;
+    let (status, body) =
+        tokio::time::timeout(probe_limit(), call(port, "GET", "/api/health", token))
+            .await
+            .ok()??;
     (status == 200).then(|| serde_json::from_str(&body).ok())?
 }
 

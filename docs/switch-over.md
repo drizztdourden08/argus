@@ -32,20 +32,21 @@ $cfg    = 'X:\ai-config'                          # the config repo
 ## Blockers found in the code
 
 These are gaps between this plan and the code at commit `c45f9da`. Items 1 to 3 must be closed
-before the cut. Item 1 must be closed before step 3.
+before the cut. Items 1 and 3 are fixed.
 
-1. The port. `crates/argus/src/lifecycle/serve.rs` fixes the default port at 47616 and ignores
-   `DASHBOARD_PORT=47615` and the `port` of `config.json`. The tray (`tray/server.rs`), the MCP
-   bridge (`mcp/launch.rs`) and `argus start` all start the server as `serve --data-dir <home>`
-   with no port. After the cut they would all start Argus on 47616. The fix: the default port
-   is the `port` of the config (47615), `NODE_PORT` and its special case leave `pick_port`, and
-   its test changes. The shadow then always passes `--port 47616` (its copied config says 47615).
+1. The port. Fixed in SHA. `argus serve`, `argus start`, the tray and the MCP bridge now use the
+   `port` of the home's `config.json` (47615 by default), with `--port` and `DASHBOARD_PORT`
+   overriding as in Node. The `NODE_PORT` special case is gone. Safety before the cut stays with
+   the node guard: `serve` refuses a home a live Node server uses, and every client verb
+   refuses a Node server. A new shadow gets a copied config whose port is 47616 (its one
+   change), so `serve --shadow` needs no `--port`; the commands below still pass it, which is
+   harmless.
 2. The shim. Neither side has one. `X:\ai-config\dashboard\bin\dashboard.mjs` has no forward
    block and no engine key, and Argus has nothing to write. Step 4 needs the Overlord to land one
    (the design is in step 4, on the model of `shared/tools/coord/forward.mjs`).
-3. The backup. The architecture says Argus takes `dashboard.db.node-<stamp>` on its first start.
-   The code does not. Step 4 makes the copy by hand, which is enough. An `argus` verb for it is
-   optional.
+3. The backup. Fixed in SHA. The first `argus serve` of a home with no `argus.marker` file (and
+   not a shadow) takes `dashboard.db.node-<UTC stamp>` with `VACUUM INTO` before anything
+   writes, then writes the marker. Step 4 still copies by hand, which does no harm.
 4. The `exe` key. Argus writes `exe` into the config it loads, but `forward.mjs` reads
    `exe` from the Node home before Argus has ever run there. Step 3 adds it by hand. Node keeps
    unknown keys, so it survives Node's own rewrites.
@@ -220,8 +221,8 @@ The gate of each step is the same:
 - `crates/argus/tests/coord_diff.rs` and its corpus lines show no difference for the verbs.
 - One day of the real-usage replay on fresh copies (layer 4 of `docs/coord-port.md`), kept
   outside the repo.
-- Before the first step, the port fix of blocker 1 is landed and installed. Otherwise a hook
-  could start Argus on 47616 against the live home if Node is ever down.
+- Before the first step, the port fix of blocker 1 is landed and installed. It is what makes
+  every launcher start Argus on the port of the config.
 
 The order and the lists. Each step replaces the value of `coordVerbs` in `$node\config.json`
 and keeps `"coordEngine": "argus"`.

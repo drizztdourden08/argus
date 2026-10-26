@@ -30,7 +30,7 @@ pub use serve::paths_of;
 pub enum Verb {
     /// Runs the server in the foreground.
     Serve {
-        /// The port (0 picks a free one); default `DASHBOARD_PORT`, else 47616.
+        /// The port (0 picks a free one); default `DASHBOARD_PORT`, else the config's (47615).
         #[arg(long)]
         port: Option<u16>,
         /// The dashboard home (config, database, logs); default `<COORD_HOME>/dashboard`.
