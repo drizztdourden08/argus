@@ -6,6 +6,7 @@
 mod admin;
 mod live;
 mod logs;
+mod node_guard;
 mod open;
 mod serve;
 mod spawn;
