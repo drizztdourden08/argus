@@ -65,6 +65,7 @@ const stubPosts = (reply?: Reply): Posted[] => {
 };
 
 const mountKanban = async (board: Board = {}, reply?: Reply) => {
+  vi.stubGlobal('CSS', { supports: () => false });
   const posted = stubPosts(reply);
   const fake = createFakeSources();
   const view = render(
