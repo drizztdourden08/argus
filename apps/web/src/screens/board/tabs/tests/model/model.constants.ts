@@ -5,8 +5,6 @@ const NO_BUNDLE = '(no build)';
 
 const NOTE_MIN_CHARS = 3;
 
-const NOTE_MAX_CHARS = 50000;
-
 const DONE_FOLD_AFTER = 5;
 
 const NOTE_OUTCOMES = ['fail', 'partial', 'blocked'];
@@ -51,6 +49,6 @@ const BAD_STATUSES =['conflict', 'refused'];
 const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
 
 export {
-  BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_BUNDLE, NO_KEY, NOTE_MAX_CHARS, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS,
+  BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_BUNDLE, NO_KEY, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS,
   PASSED_STATUSES, ORDER_OPTIONS, STATUS_FILTERS, STORE_KEYS, WAKE_WAIT_MS,
 };

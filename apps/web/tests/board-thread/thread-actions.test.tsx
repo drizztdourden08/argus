@@ -1,0 +1,144 @@
+/* @layer renderer-app @kind test */
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { chip, cleanThreads, docs, item, mountBoard, openChip, posted, thread, tool } from './thread-harness';
+
+cleanThreads();
+
+const worker = (over: Record<string, unknown> = {}) => thread('worker', { brief: 'Read the plan first.', ...over });
+
+const open = async (threadOver: Record<string, unknown> = {}, extra: Parameters<typeof mountBoard>[0] = {}) => {
+  const mounted = await mountBoard({ threads: docs(worker(threadOver)), registry: docs(chip('worker')), ...extra });
+  return { ...mounted, dialog: await openChip('worker') };
+};
+
+describe('the owner actions of the thread drawer', () => {
+  it('Pause posts a pause for the thread, and a paused thread offers Resume', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(tool(dialog, 'Pause'));
+    await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
+    expect(posted(fetchMock)[0]).toMatchObject({ kind: 'pause', replyTo: 'worker', thread: 'worker', author: 'human', text: '' });
+    expect(await screen.findByText('worker paused.')).toBeTruthy();
+  });
+
+  it('shows Resume for a paused thread, and a pause the owner posted that the board has not applied yet', async () => {
+    const { fetchMock, dialog } = await open({ status: 'paused' });
+    fireEvent.click(tool(dialog, 'Resume'));
+    await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
+    expect(posted(fetchMock)[0]).toMatchObject({ kind: 'resume', replyTo: 'worker', thread: 'worker' });
+  });
+
+  it('counts a pause that is still waiting to be applied', async () => {
+    const waiting = { id: 'O-5', kind: 'pause', author: 'human', replyTo: 'worker', status: 'new', createdAt: new Date().toISOString() };
+    const { dialog } = await open({}, { entries: docs(['O-5', waiting]) });
+    expect(within(dialog).getByRole('button', { name: 'Resume' })).toBeTruthy();
+  });
+
+  it('Focus keeps the thread in the focus of the board and a second press lets it go', async () => {
+    const { dialog } = await open();
+    fireEvent.click(tool(dialog, 'Focus'));
+    expect(localStorage.getItem('coord.focus')).toBe('worker');
+    expect(tool(dialog, 'Focus').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(tool(dialog, 'Focus'));
+    expect(localStorage.getItem('coord.focus')).toBe('');
+  });
+
+});
+
+describe('the end of a thread in the thread drawer', () => {
+  it('Archive sends an archive of the thread, and an archived thread offers Unarchive', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(tool(dialog, 'Archive'));
+    await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
+    expect(posted(fetchMock)[0]).toMatchObject({ kind: 'archive', target: { c: 'threads', id: 'worker' } });
+  });
+
+  it('offers Unarchive for an archived thread and no Pause or Focus', async () => {
+    const { dialog } = await open({ status: 'archived', archivedAt: new Date().toISOString() });
+    expect(within(dialog).getByRole('button', { name: 'Unarchive' })).toBeTruthy();
+    expect(within(dialog).queryByRole('button', { name: 'Pause' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: 'Focus' })).toBeNull();
+  });
+
+  it('Purge opens the purge dialog for this thread', async () => {
+    const { dialog } = await open();
+    fireEvent.click(tool(dialog, 'Purge...'));
+    expect(await screen.findByRole('dialog', { name: /Purge/ })).toBeTruthy();
+  });
+
+  it('the lead has no Pause, Focus, Archive or Purge', async () => {
+    await mountBoard({ threads: docs(thread('lead', { role: 'coordinator' })), registry: docs(chip('lead', { role: 'coordinator' })) });
+    const dialog = within(await openChip('lead'));
+    for (const name of ['Pause', 'Focus', 'Archive', 'Purge...']) expect(dialog.queryByRole('button', { name })).toBeNull();
+    expect(dialog.getByRole('button', { name: 'Copy id lead' })).toBeTruthy();
+  });
+
+  it('opens the chat and copies its link when the thread has one', async () => {
+    const { dialog } = await open({ link: 'https://example.com/session/abc' });
+    expect(within(dialog).getByRole('link', { name: /Open the chat/ }).getAttribute('href')).toBe('https://example.com/session/abc');
+    expect(within(dialog).getByRole('button', { name: 'Copy the session link' })).toBeTruthy();
+  });
+
+  it('Expand widens the drawer and remembers it', async () => {
+    const { dialog } = await open();
+    expect(document.querySelector('.drawer--xl')).toBeNull();
+    fireEvent.click(tool(dialog, 'Expand'));
+    expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
+    expect(document.querySelector('.drawer--xl')).not.toBeNull();
+    expect(tool(dialog, 'Collapse').getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+describe('editing in the thread drawer', () => {
+  it('a new subject is sent as an edit of the thread with what it was and its revision', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit subject: the work' }));
+    const field = within(dialog).getByRole('textbox', { name: 'Edit subject' });
+    fireEvent.change(field, { target: { value: 'the new work' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
+    expect(posted(fetchMock)[0]).toMatchObject({ kind: 'edit', target: { c: 'threads', id: 'worker' }, set: { subject: 'the new work' }, prev: { subject: 'the work' }, baseRev: 3 });
+  });
+
+  it('refuses a subject over 40 characters without a post', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit subject: the work' }));
+    const field = within(dialog).getByRole('textbox', { name: 'Edit subject' });
+    fireEvent.change(field, { target: { value: 'x'.repeat(41) } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(await within(dialog).findByText('At most 40 characters.')).toBeTruthy();
+    expect(posted(fetchMock)).toHaveLength(0);
+  });
+
+  it('the brief is edited as markdown with its limit and sent as an edit', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit brief' }));
+    const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'Brief' });
+    expect(box.maxLength).toBe(1200);
+    expect(within(dialog).getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
+    fireEvent.change(box, { target: { value: 'Read the new plan first.' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save brief' }));
+    await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
+    expect(posted(fetchMock)[0]).toMatchObject({ kind: 'edit', target: { c: 'threads', id: 'worker' }, set: { brief: 'Read the new plan first.' }, prev: { brief: 'Read the plan first.' } });
+  });
+
+  it('refuses a brief over 1200 characters and keeps the editor open', async () => {
+    const { fetchMock, dialog } = await open();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit brief' }));
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Brief' }), { target: { value: 'x'.repeat(1201) } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save brief' }));
+    expect(await within(dialog).findByText('At most 1200 characters.')).toBeTruthy();
+    expect(posted(fetchMock)).toHaveLength(0);
+  });
+});
+
+describe('the focus kept by the drawer', () => {
+  it('reaches the Kanban tab, which narrows the board to the thread', async () => {
+    const { dialog } = await open({}, { items: docs(item('I-1'), item('I-2', { thread: 'other' })) });
+    fireEvent.click(tool(dialog, 'Focus'));
+    fireEvent.click(within(dialog).getAllByRole('button', { name: /Close/ })[0] as HTMLElement);
+    fireEvent.click(await screen.findByRole('tab', { name: /^Kanban/ }));
+    expect(await screen.findByRole('button', { name: /^Open I-1:/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Open I-2:/ })).toBeNull();
+  });
+});

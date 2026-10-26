@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind barrel */
-export { activityTone } from './activity-tone';
 export { agentElapsed } from './agent-elapsed';
 export { agentMarks } from './agent-marks';
 export { agentMessage } from './agent-message';

@@ -9,7 +9,7 @@ type ItemGroup = 'status' | 'subject' | 'thread';
 
 type ItemOrder = 'rank' | 'updated';
 
-type EditableField = 'title' | 'subject' | 'description' | 'criterion' | 'todo';
+type EditableField = 'title' | 'subject' | 'description' | 'brief' | 'criterion' | 'todo';
 
 interface KanbanFilters {
   query: string;
