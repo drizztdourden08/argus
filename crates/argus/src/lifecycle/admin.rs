@@ -19,6 +19,9 @@ pub async fn resync(paths: &Paths, project: Option<&str>, hard: bool) -> Result<
         eprintln!("dashboard is not running");
         return Ok(1);
     };
+    if let Some(code) = running.refuse_node("resync") {
+        return Ok(code);
+    }
     if let Some(bad) = project.filter(|p| !is_scope(p)) {
         eprintln!("dashboard: \"{bad}\" is not a project key");
         return Ok(2);
@@ -43,7 +46,11 @@ pub async fn token(paths: &Paths, rotate: bool) -> Result<u8, String> {
         eprintln!("Usage: argus token --rotate");
         return Ok(2);
     }
-    if let Some(running) = up(paths).await {
+    let found = up(paths).await;
+    if let Some(code) = found.as_ref().and_then(|u| u.refuse_node("token")) {
+        return Ok(code);
+    }
+    if let Some(running) = found {
         api(&running.at, "POST", "/api/admin/token/rotate", &json!({})).await?;
     } else {
         let env = env_port().map_err(|e| e.to_string())?;

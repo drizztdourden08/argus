@@ -191,3 +191,129 @@ async fn start_status_open_resync_token_second_start_stop() {
     assert_eq!(home.run(&["status"]).code, 1);
     assert!(call(port16, "GET", "/api/health", None).await.is_none());
 }
+
+const NODE_TOKEN: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+/// A stand-in for the Node dashboard on an ephemeral port: its health body has no `impl` field.
+/// Every request line it gets is kept.
+struct FakeNode {
+    port: u16,
+    seen: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+}
+
+impl FakeNode {
+    fn start() -> FakeNode {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a port");
+        let port = listener.local_addr().expect("an address").port();
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let log = std::sync::Arc::clone(&seen);
+        std::thread::spawn(move || {
+            for stream in listener.incoming().flatten() {
+                Self::answer(stream, &log);
+            }
+        });
+        FakeNode { port, seen }
+    }
+
+    fn answer(mut stream: std::net::TcpStream, log: &std::sync::Mutex<Vec<String>>) {
+        use std::io::{BufRead, BufReader, Write};
+
+        let mut reader = BufReader::new(stream.try_clone().expect("a clone"));
+        let mut line = String::new();
+        let _read = reader.read_line(&mut line);
+        log.lock().expect("the log").push(line.trim().to_owned());
+        let body = r#"{"ok":true,"version":"0.0.0","instance":"node-1","startedAt":"2026-01-01T00:00:00.000Z","runs":{"running":0,"queued":0}}"#;
+        let reply = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            body.len()
+        );
+        let _written = stream.write_all(reply.as_bytes());
+    }
+
+    fn requests(&self) -> Vec<String> {
+        self.seen.lock().expect("the log").clone()
+    }
+
+    fn only_health_calls(&self) -> bool {
+        let seen = self.requests();
+        !seen.is_empty() && seen.iter().all(|l| l.starts_with("GET /api/health "))
+    }
+}
+
+impl Home {
+    /// A home that the fake Node server holds: its config, and a pid file naming `pid`.
+    fn held_by(node: &FakeNode, pid: u32) -> Home {
+        let home = Home::new();
+        std::fs::create_dir_all(home.dashboard()).expect("the home");
+        let config = serde_json::json!({
+            "host": "127.0.0.1", "port": node.port, "token": NODE_TOKEN, "requireToken": false
+        });
+        std::fs::write(home.dashboard().join("config.json"), config.to_string()).expect("a config");
+        let record = serde_json::json!({
+            "pid": pid, "port": node.port, "startedAt": "2026-01-01T00:00:00.000Z", "instance": "node-1"
+        });
+        std::fs::write(home.pid_file(), record.to_string()).expect("a pid file");
+        home
+    }
+}
+
+#[test]
+fn the_verbs_that_change_a_server_refuse_the_node_dashboard() {
+    let node = FakeNode::start();
+    let home = Home::held_by(&node, std::process::id());
+    for args in [
+        &["stop"][..],
+        &["start"],
+        &["open", "--print"],
+        &["resync"],
+        &["token", "--rotate"],
+    ] {
+        let out = home.run(args);
+        assert_eq!(out.code, 1, "{args:?}: {}", out.stdout);
+        assert!(
+            out.stderr.contains("Node dashboard"),
+            "{args:?}: {}",
+            out.stderr
+        );
+    }
+    assert_eq!(
+        home.json("config.json")["token"],
+        NODE_TOKEN,
+        "the token is untouched"
+    );
+    let status = home.run(&["status"]);
+    assert_eq!(status.code, 0);
+    assert!(
+        status.stdout.contains("the Node dashboard running at"),
+        "{}",
+        status.stdout
+    );
+    let json: Value = serde_json::from_str(&home.run(&["status", "--json"]).stdout).expect("JSON");
+    assert_eq!(json["running"], true);
+    assert_eq!(json["impl"], "node");
+    assert!(
+        node.only_health_calls(),
+        "the Node server only saw health calls: {:?}",
+        node.requests()
+    );
+}
+
+#[test]
+fn serve_does_not_open_a_home_the_node_dashboard_uses() {
+    let node = FakeNode::start();
+    let live = Home::held_by(&node, std::process::id());
+    let refused = live.run(&["serve"]);
+    assert_eq!(refused.code, 1, "{}", refused.stdout);
+    assert!(refused.stderr.contains("--data-dir"), "{}", refused.stderr);
+    assert!(
+        refused.stderr.contains("Node dashboard"),
+        "{}",
+        refused.stderr
+    );
+    // The pid is gone but the port still answers with the Node health: still refused.
+    let gone = Home::held_by(&node, 2_000_000_000);
+    let refused = gone.run(&["serve"]);
+    assert_eq!(refused.code, 1, "{}", refused.stdout);
+    assert!(refused.stderr.contains("--data-dir"), "{}", refused.stderr);
+    assert!(node.only_health_calls());
+}
