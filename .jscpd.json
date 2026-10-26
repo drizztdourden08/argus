@@ -2,7 +2,7 @@
   "threshold": 0,
   "minTokens": 50,
   "minLines": 5,
-  "format": ["typescript", "tsx", "javascript", "css"],
+  "format": ["typescript", "tsx", "javascript", "css", "rust"],
   "ignore": ["**/node_modules/**", "**/dist/**", "**/target/**"],
   "gitignore": true,
   "reporters": ["console"],
