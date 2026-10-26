@@ -33,7 +33,7 @@ describe('the run lists', () => {
       runDoc('R-2', 'launcher-master', { queuedAt: ago(20 * MIN), status: 'failed', exitCode: 3 }),
       runDoc('R-3', 'launcher-master', { queuedAt: ago(10 * MIN), status: 'stopped', exitCode: null }),
       runDoc('R-4', 'launcher-master', { queuedAt: ago(15 * MIN), status: 'failed', exitCode: null, error: 'failed to start: spawn ENOENT' }),
-      runningDoc('R-5', 'launcher-master', { queuedAt: ago(MIN) }),
+      runningDoc('R-5', 'launcher-master', { queuedAt: ago(MIN), lastLine: 'serving' }),
     ]));
     expect(await screen.findByText('Running now')).toBeTruthy();
     expect(screen.getByText('Finished runs')).toBeTruthy();
@@ -42,6 +42,7 @@ describe('the run lists', () => {
     expect(within(rowOf(container, 'R-3')).getByText('stopped')).toBeTruthy();
     expect(within(rowOf(container, 'R-4')).getByText('failed (failed to start: spawn ENOENT)')).toBeTruthy();
     expect(within(rowOf(container, 'R-5')).getByText('running')).toBeTruthy();
+    expect(within(rowOf(container, 'R-5')).getByText('serving')).toBeTruthy();
   });
 
   it('show the newest finished first, and keep only the last 20', async () => {

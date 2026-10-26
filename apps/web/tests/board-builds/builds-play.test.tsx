@@ -104,7 +104,7 @@ describe('Stop and the status line', () => {
       runDoc('R-3', 'launcher-master', { queuedAt: ago(MIN), lastLine: 'newest' }),
     ];
     await mountBuilds(board(finished));
-    const statuses = await screen.findAllByRole('status');
+    const statuses = await screen.findAllByRole('status', { name: /^Run R-/ });
     expect(statuses.map((status) => status.getAttribute('aria-label'))).toEqual(['Run R-3']);
     expect(statuses[0]?.textContent).toContain('newest');
   });

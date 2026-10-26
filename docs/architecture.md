@@ -738,7 +738,7 @@ render and the page follows at once.
 |---|---|---|
 | Kanban | requested, in progress | Columns, drag between and within columns, keyboard move, counts per column |
 | Markdown editor | requested, in progress | Textarea with live preview and a small toolbar; Ctrl+Enter sends, Enter never sends; list continuation |
-| Terminal view | to request | ANSI colours, stderr tint, dim system lines, stick to bottom with Jump to bottom, Clear view, Copy all, a one-line input row; `LogPanel` has no ANSI and no input |
+| Terminal view | done | It is `LogPanel` in Tessera 0.70: `ansi` for colours, `follow` with Jump to bottom, `onInput` for the input row with history, Copy all in the toolbar. Stderr and system lines are kinds with a tone; Clear view is a button in `toolbarExtra` |
 | DataTable row detail | to request | A panel under one row for inline confirms and forms (Worktrees, Processes) |
 | Live relative time | to check | "running 12s", "4m ago" ticking without a redraw of the table; `DateText` has no relative preset that ticks |
 
