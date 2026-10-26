@@ -58,6 +58,12 @@ interface Agent {
   deletedAt?: string | null;
 }
 
+interface ThreadAgent {
+  name?: string | null;
+  task?: string | null;
+  startedAt?: string | null;
+}
+
 interface ProjectThread {
   name: string;
   role: string;
@@ -66,6 +72,10 @@ interface ProjectThread {
   note?: string | null;
   session?: string | null;
   subject?: string | null;
+  brief?: string | null;
+  root?: string | null;
+  rev?: number;
+  agents?: ThreadAgent[];
   lastSeen?: string | null;
   link?: string | null;
   placeholder?: boolean;

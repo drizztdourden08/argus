@@ -44,9 +44,9 @@ describe('a long note', () => {
     expect((resultCalls(calls)[0]?.body as { text: string }).text).toBe(long);
   });
 
-  it('over 50000 characters is said in a sentence, Send is off and nothing is posted', async () => {
+  it('over 50000 characters is said in a sentence under the box and in a toast, Send is off and nothing is posted', async () => {
     const { calls } = await failWith(undefined, 'x'.repeat(50001));
-    expect(screen.getByText(/over 50000 characters/)).toBeTruthy();
+    expect(await screen.findAllByText(/50001 characters and one post takes 50000 at most/)).toHaveLength(2);
     expect(sendButton('fail').disabled).toBe(true);
     expect(calls).toHaveLength(0);
   });

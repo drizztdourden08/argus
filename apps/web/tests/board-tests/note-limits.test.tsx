@@ -10,6 +10,7 @@ import { noteBox, openBox, resultCalls, send, sendButton, type } from './outcome
 cleanAfterEach();
 
 const LIMIT = 50000;
+const SENTENCE = `This text is ${LIMIT + 1} characters and one post takes ${LIMIT} at most: shorten it or post it in two parts.`;
 const PROOFS = [
   { n: 1, caption: 'the first view', url: '/files/rotp/proofs/T-1-1.png', at: '2026-10-26T09:00:00.000Z' },
   { n: 2, caption: 'the second view', url: '/files/rotp/proofs/T-1-2.png', at: '2026-10-26T09:00:00.000Z' },
@@ -33,13 +34,14 @@ describe('the length of a note', () => {
     const { calls } = await mountTab(withProofs());
     const box = await openBox('Fail');
     type(box, 'x'.repeat(LIMIT + 1));
-    expect(await screen.findByText(`The note is over ${LIMIT} characters. Shorten it.`)).toBeTruthy();
+    expect(await screen.findByText(SENTENCE)).toBeTruthy();
     expect(sendButton('fail').disabled).toBe(true);
     send(box);
+    await waitFor(() => expect(screen.getAllByText(SENTENCE)).toHaveLength(2));
     expect(resultCalls(calls)).toHaveLength(0);
     expect(noteBox().value).toHaveLength(LIMIT + 1);
     type(box, 'x'.repeat(LIMIT));
-    expect(screen.queryByText(`The note is over ${LIMIT} characters. Shorten it.`)).toBeNull();
+    expect(screen.getAllByText(SENTENCE)).toHaveLength(1);
     expect(sendButton('fail').disabled).toBe(false);
   });
 });

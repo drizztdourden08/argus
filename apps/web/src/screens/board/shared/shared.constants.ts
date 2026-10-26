@@ -1,7 +1,14 @@
 /* @layer renderer-app @kind constants */
+import type { StatusTone } from '@drizztdourden08/tessera';
 import type { SoftKind } from '../../../data/kanban';
 
 const UNDO_TOAST_MS = 8000;
+
+const ACTIVITY_TONES: Readonly<Record<string, StatusTone>> = { working: 'success', waiting: 'warning', blocked: 'danger' };
+
+const FOCUS_KEY = 'coord.focus';
+
+const WIDE_KEY = 'coord.drawer.wide';
 
 const PLACE_FIELDS = ['before', 'after'];
 
@@ -12,4 +19,4 @@ const SOFT_LABEL: Record<SoftKind, string> = {
   restore: 'Restored',
 };
 
-export { PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS };
+export { ACTIVITY_TONES, FOCUS_KEY, PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS, WIDE_KEY };

@@ -1,12 +1,14 @@
 /* @layer renderer-app @kind component */
 import { DateText, Flex, Link, ListItemList, ListItemRow, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { activityTone, useOpenThread } from '../../../shared';
 import { CHAT_SHAPE } from '../AgentsTab.constants';
 import type { ChatsListProps } from '../AgentsTab.type';
-import { activityTone, orText } from '../model';
+import { orText } from '../model';
 import { ChatMenu } from './ChatMenu';
 
 const ChatsList = (props: ChatsListProps) => {
   const { chats, onPurge } = props;
+  const open = useOpenThread();
   if (chats.length === 0) return null;
   return (
     <ListItemList label="Chats" heading="Chats" count={chats.length} shape={CHAT_SHAPE}>
@@ -28,6 +30,7 @@ const ChatsList = (props: ChatsListProps) => {
               <ChatMenu id={chat.id} onPurge={onPurge} />
             </Flex>
           }
+          onClick={() => open(chat.id)}
           data={{ 'data-chat-id': chat.id }}
         />
       ))}

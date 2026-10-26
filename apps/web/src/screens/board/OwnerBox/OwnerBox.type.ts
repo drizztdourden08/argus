@@ -1,11 +1,15 @@
 /* @layer renderer-app @kind types */
 interface OwnerBoxProps {
-  label: string;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  label?: string;
+  ariaLabel?: string;
+  placeholder?: string;
+  problem?: string | null;
   rows?: number;
   disabled?: boolean;
+  onEscape?: () => void;
 }
 
 export type { OwnerBoxProps };

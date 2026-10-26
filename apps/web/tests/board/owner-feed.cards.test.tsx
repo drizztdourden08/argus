@@ -58,6 +58,16 @@ describe('a decision card', () => {
 });
 
 describe('deciding', () => {
+  it('the own answer field is the markdown editor with its toolbar and the sentence for a text over the limit', async () => {
+    mockPosts();
+    await openBoard({ entries: byId(decision) });
+    expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
+    const field = textbox('Or write your own answer');
+    expect(field.maxLength).toBe(50000);
+    fireEvent.change(field, { target: { value: 'x'.repeat(50001) } });
+    expect(screen.getByText('This text is 50001 characters and one post takes 50000 at most: shorten it or post it in two parts.')).toBeTruthy();
+  });
+
   it('a written own answer is sent as a decision, trimmed, and the box empties', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(decision) });
