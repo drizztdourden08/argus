@@ -109,12 +109,12 @@ their status is `n/a`.
 | `render.mcp.test.mjs` | MCP install and render | 7 | stays in `ai-config`, run there at switch-over | todo |
 | `render.publish.test.mjs` | none: tests the render in `ai-config` | none | stays in `ai-config` | n/a |
 | `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/runs_cli.rs` | todo |
-| `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_http.rs` | todo |
+| `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_http.rs` | done |
 | `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/kill.rs` | doing (one case each waits for the server) |
 | `runs.lifecycle.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/lifecycle.rs` | done |
 | `runs.logs.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/logs.rs` | done |
 | `runs.recover.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/recover.rs` | done |
-| `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_server.rs` | todo |
+| `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_server.rs` | done |
 | `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/terminal.rs` | doing (one case each waits for the server) |
 | `sync.export.test.mjs` | Board ingestion and export; Portfolio cards | 1 | `crates/argus-sync/tests/export.rs` | done |
 | `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/posts.rs` | done |
@@ -132,7 +132,7 @@ their status is `n/a`.
 | `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` | todo |
 | `worktrees.fallback.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_fallback_http.rs` | todo |
 | `worktrees.fallback.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/fallback.rs` | done |
-| `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_http.rs` | todo |
+| `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_http.rs` | done |
 | `worktrees.leftover.test.mjs` | Leftover folders | 5 | `crates/argus-worktrees/tests/leftover.rs` | done |
 | `worktrees.remove.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/remove.rs` | done |
 | `worktrees.rules.test.mjs` | Worktree scanner; Leftover folders | 5 | `crates/argus-worktrees/tests/rules.rs` | done |
