@@ -1,12 +1,18 @@
 /* @layer renderer-app @kind types */
+import type { StreamStatus } from '../../data/stream';
 import type { Card } from '../../data/types';
 
-interface ProjectCardProps {
-  card: Card;
+interface TabBadges {
+  counts: Record<string, number>;
+  freshActivity: number;
+  freshNotifications: number;
 }
 
-interface ProjectGridProps {
+interface TabBodyProps {
+  tab: string;
   cards: Card[];
+  status: StreamStatus;
+  badges: TabBadges;
 }
 
-export type { ProjectCardProps, ProjectGridProps };
+export type { TabBadges, TabBodyProps };

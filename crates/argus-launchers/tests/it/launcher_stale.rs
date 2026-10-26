@@ -130,7 +130,7 @@ fn world() -> World {
         .unwrap()
         .insert("alpha".to_owned(), board());
     *fixture.lead.lock().unwrap() = Some("lead".to_owned());
-    let clock = Arc::new(ManualClock::new(START));
+    let clock = Arc::new(ManualClock::at(START));
     let stale = make(&fixture, &clock);
     World {
         fixture,
@@ -538,7 +538,7 @@ fn the_defaults_a_tick_every_10_minutes_a_master_wait_of_10_minutes_a_day_betwee
         ),
         (600_000, 600_000, 86_400_000, 86_400_000)
     );
-    assert_eq!(ManualClock::new(5).now_ms(), 5);
+    assert_eq!(ManualClock::at(5).now_ms(), 5);
 }
 
 #[test]

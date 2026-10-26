@@ -1,0 +1,20 @@
+//! Project keys and scopes.
+
+/// The portfolio scope (the Argus overview), also its folder under `COORD_HOME`.
+pub const PORTFOLIO: &str = "_portfolio";
+
+/// `^[a-z0-9][a-z0-9-]*$`: a project key.
+#[must_use]
+pub fn is_key(s: &str) -> bool {
+    let mut chars = s.chars();
+    chars
+        .next()
+        .is_some_and(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// A project key or `_portfolio`.
+#[must_use]
+pub fn is_scope(s: &str) -> bool {
+    s == PORTFOLIO || is_key(s)
+}

@@ -3,9 +3,10 @@
 //!
 //! The line is `WAKE <thread>: <line1>; <line2> ... Run: coord inbox`. Nothing else goes to stdout.
 
+use argus_core::ids::is_key;
 use serde_json::Value;
 
-use crate::external::{clean_label, valid_key, valid_thread_key};
+use crate::external::{clean_label, valid_thread_key};
 use crate::text::one_line;
 
 /// The first pause before a reconnect.
@@ -74,7 +75,7 @@ pub fn parse_wake_args(argv: &[String]) -> Result<WakeArgs, String> {
 }
 
 fn finish(parsed: Parsed) -> Result<WakeArgs, String> {
-    let project = parsed.project.filter(|p| valid_key(p));
+    let project = parsed.project.filter(|p| is_key(p));
     let Some(project) = project else {
         return Err("--project <key> is required (the project key, e.g. rotp)".to_owned());
     };

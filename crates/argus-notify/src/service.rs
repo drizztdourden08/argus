@@ -6,10 +6,11 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use crate::configure::{SettingsPatch, apply, describe};
 use crate::limits::Limiter;
 use crate::links::Links;
-use crate::ports::{ActivityLevel, ActivityLine, Ports, StoreError};
+use crate::ports::{ActivityLevel, ActivityLine, Ports};
 use crate::record::{Filter, KEEP_ROWS, Notification};
 use crate::seen::SeenMap;
 use crate::settings::{Settings, settings_of};
+use argus_core::StorageError;
 
 pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -68,7 +69,7 @@ impl Notify {
     /// # Errors
     ///
     /// When the database cannot be read.
-    pub fn list(&self, filter: &Filter) -> Result<Vec<Notification>, StoreError> {
+    pub fn list(&self, filter: &Filter) -> Result<Vec<Notification>, StorageError> {
         let clamped = Filter {
             limit: filter.limit.clamp(1, KEEP_ROWS),
             ..filter.clone()
@@ -88,7 +89,7 @@ impl Notify {
     /// # Errors
     ///
     /// When `config.json` cannot be written; nothing changed then.
-    pub fn configure(&self, patch: SettingsPatch) -> Result<Settings, StoreError> {
+    pub fn configure(&self, patch: SettingsPatch) -> Result<Settings, StorageError> {
         let next = apply(&self.ports.config.load(), patch);
         self.ports.config.save(&next)?;
         let settings = settings_of(&next);

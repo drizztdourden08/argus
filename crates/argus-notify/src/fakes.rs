@@ -1,13 +1,14 @@
 //! In-memory stand-ins for the ports, for the tests of this crate and of the server.
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-use crate::clock::Clock;
+use argus_core::StorageError;
+
 use crate::config::NotifyConfig;
 use crate::ports::{
-    ActivityLine, ActivitySink, ConfigStore, NotifyStore, PageEvents, ProjectNames, StoreError,
+    ActivityLine, ActivitySink, ConfigStore, NotifyStore, PageEvents, ProjectNames,
 };
 use crate::record::{Filter, KEEP_ROWS, NewNotification, Notification};
 
@@ -54,16 +55,16 @@ impl MemoryStore {
         self.mirrors.load(Ordering::SeqCst)
     }
 
-    fn check(&self) -> Result<(), StoreError> {
+    fn check(&self) -> Result<(), StorageError> {
         if self.broken.load(Ordering::SeqCst) {
-            return Err(StoreError("the database is closed".to_owned()));
+            return Err(StorageError("the database is closed".to_owned()));
         }
         Ok(())
     }
 }
 
 impl NotifyStore for MemoryStore {
-    fn insert(&self, new: NewNotification) -> Result<Notification, StoreError> {
+    fn insert(&self, new: NewNotification) -> Result<Notification, StorageError> {
         self.check()?;
         let mut rows = locked(&self.rows);
         rows.last_n += 1;
@@ -74,7 +75,7 @@ impl NotifyStore for MemoryStore {
         Ok(note)
     }
 
-    fn list(&self, filter: &Filter) -> Result<Vec<Notification>, StoreError> {
+    fn list(&self, filter: &Filter) -> Result<Vec<Notification>, StorageError> {
         self.check()?;
         let rows = locked(&self.rows);
         Ok(rows
@@ -93,7 +94,7 @@ impl NotifyStore for MemoryStore {
             .collect())
     }
 
-    fn mirror(&self) -> Result<(), StoreError> {
+    fn mirror(&self) -> Result<(), StorageError> {
         self.check()?;
         self.mirrors.fetch_add(1, Ordering::SeqCst);
         Ok(())
@@ -103,7 +104,7 @@ impl NotifyStore for MemoryStore {
         locked(&self.rows).seen.clone()
     }
 
-    fn seen_save(&self, json: &str) -> Result<(), StoreError> {
+    fn seen_save(&self, json: &str) -> Result<(), StorageError> {
         self.check()?;
         locked(&self.rows).seen = Some(json.to_owned());
         Ok(())
@@ -156,36 +157,13 @@ impl ConfigStore for MemoryConfig {
         self.get()
     }
 
-    fn save(&self, config: &NotifyConfig) -> Result<(), StoreError> {
+    fn save(&self, config: &NotifyConfig) -> Result<(), StorageError> {
         if self.refuse.load(Ordering::SeqCst) {
-            return Err(StoreError("disk full".to_owned()));
+            return Err(StorageError("disk full".to_owned()));
         }
         self.set(config.clone());
         self.saves.fetch_add(1, Ordering::SeqCst);
         Ok(())
-    }
-}
-
-/// A clock that only moves when told to.
-#[derive(Debug)]
-pub struct ManualClock(AtomicI64);
-
-impl ManualClock {
-    /// A clock at `ms`.
-    #[must_use]
-    pub fn at(ms: i64) -> Self {
-        Self(AtomicI64::new(ms))
-    }
-
-    /// Moves the clock forward.
-    pub fn advance(&self, ms: i64) {
-        self.0.fetch_add(ms, Ordering::SeqCst);
-    }
-}
-
-impl Clock for ManualClock {
-    fn now_ms(&self) -> i64 {
-        self.0.load(Ordering::SeqCst)
     }
 }
 

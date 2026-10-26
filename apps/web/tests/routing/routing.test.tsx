@@ -15,7 +15,9 @@ describe('routing', () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
     const { sources } = renderAt('/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    expect(sources[0]?.url).toBe('/api/p/_portfolio/stream?c=cards');
+    const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
+    expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
+    expect(wanted).toContain('cards');
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards)));
     expect(await screen.findByText('RotP')).toBeTruthy();
     const links = screen.getAllByRole('link', { name: 'Open board' });

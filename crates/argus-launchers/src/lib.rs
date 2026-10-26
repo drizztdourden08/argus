@@ -16,7 +16,6 @@
 mod agents;
 mod ansi;
 mod attach;
-mod clock;
 mod def;
 mod defs_source;
 mod error;
@@ -53,8 +52,8 @@ mod utf8;
 
 pub use agents::{AgentFilter, agents_with_runs};
 pub use ansi::plain_text;
+pub use argus_core::clock::{Clock, ManualClock, SystemClock};
 pub use attach::{AttachmentRow, SaveRequest, save_attachment, sniff_image};
-pub use clock::{Clock, ManualClock, SystemClock};
 pub use def::{RunDef, RunKind, coerce_def, defs_from_map, public_def};
 pub use defs_source::{BoardFileDefs, DefsSource, MemoryDefs};
 pub use error::RunError;
@@ -82,4 +81,4 @@ pub use run_start::{StartOptions, StartOutcome};
 pub use run_verdict::{EndInput, Verdict, verdict};
 pub use store::{AttachmentStore, LogStore, RunStore, Storage};
 pub use system_host::SystemHost;
-pub use time::{DAY_MS, format_iso, parse_iso, system_now_ms};
+pub use time::{DAY_MS, format_iso, parse_iso};
