@@ -16,7 +16,7 @@ import { ChatsList } from './sub-components/ChatsList';
 import { ReconcilePanel } from './sub-components/ReconcilePanel';
 
 const AgentsTab = (props: AgentsTabProps) => {
-  const { boardKey } = props;
+  const { boardKey, onPurge } = props;
   const view = useAgentsView(boardKey);
   const actions = useAgentActions(boardKey, view);
   const findings = useReconcile(boardKey, view.flagSignature);
@@ -42,7 +42,7 @@ const AgentsTab = (props: AgentsTabProps) => {
         onArchive={canArchive ? () => actions.archiveFinished(view.done.map((agent) => agent.id)) : null}
       />
       <AgentList rows={rows} empty={empty} now={now} actions={actions} onOpen={setOpenId} />
-      <ChatsList chats={view.chats} />
+      <ChatsList chats={view.chats} onPurge={onPurge} />
       <AgentDrawer id={opened?.id ?? null} agent={opened} now={now} actions={actions} onClose={() => setOpenId(null)} />
     </Flex>
   );

@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind component */
 import { CopyValue, Flex, Text } from '@drizztdourden08/tessera';
 import { RunPlay } from '../../../run-play';
+import { LogButton } from '../../../run-terminal';
 import type { LauncherCardProps } from '../builds-props.type';
 import { noPlayHint } from '../model';
-import { LogButton } from './LogButton';
 
 const LauncherCommand = (props: LauncherCardProps) => {
   const { view, boardKey, runs, onLog } = props;

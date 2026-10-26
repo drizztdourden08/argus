@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind component */
 import { Card, Flex } from '@drizztdourden08/tessera';
+import { RunTerminal } from '../../../run-terminal';
 import type { LauncherCardProps } from '../builds-props.type';
 import { LauncherCommand } from './LauncherCommand';
 import { LauncherHead } from './LauncherHead';
 import { LauncherMeta } from './LauncherMeta';
 import { LauncherNote } from './LauncherNote';
-import { RunTerminal } from './RunTerminal';
 
 const LauncherCard = (props: LauncherCardProps) => {
   const { view, boardKey, runs, onLog } = props;

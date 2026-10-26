@@ -1,0 +1,33 @@
+/* @layer renderer-app @kind component */
+import { Button, LogPanel } from '@drizztdourden08/tessera';
+import { useMemo } from 'react';
+import { isLiveRun, useRunLog } from '../../../../data/runs';
+import { useStdin } from '../behavior/useStdin';
+import { TERMINAL_KINDS } from '../run-terminal.constants';
+import type { TerminalBodyProps } from '../run-terminal.type';
+import { logRows, terminalInput } from '../model';
+
+const TerminalBody = (props: TerminalBodyProps) => {
+  const { run, boardKey, limit, height } = props;
+  const log = useRunLog(boardKey, run.id, { limit, live: isLiveRun(run), enabled: true });
+  const rows = useMemo(() => logRows(log.lines), [log.lines]);
+  const send = useStdin(boardKey, run.id);
+  const input = terminalInput(run);
+  return (
+    <LogPanel
+      rows={rows}
+      kinds={TERMINAL_KINDS}
+      ansi
+      follow
+      height={height}
+      prompt=">"
+      emptyLabel={isLiveRun(run) ? 'Waiting for the first output line.' : 'No output.'}
+      onInput={input.enabled ? send : undefined}
+      inputDisabled={!input.enabled}
+      inputPlaceholder={input.placeholder}
+      toolbarExtra={<Button size="sm" variant="ghost" title="Clear what is drawn here (the log keeps everything)" onClick={log.clear}>Clear view</Button>}
+    />
+  );
+};
+
+export { TerminalBody };

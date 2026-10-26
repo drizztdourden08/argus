@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { formatFilters } from '../../src/screens/board/tabs/kanban/model';
+import { formatFilters } from '../../src/screens/board/shared';
 import {
   changedFields, conflictedTests, DEFAULT_FILTERS, editProblem, filtersActive, knownBuilds, latestWakes, parseStored, sortToRun, subjectsOf, testNotices, toRunCount, wakeChip,
 } from '../../src/screens/board/tabs/tests/model';

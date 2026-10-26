@@ -3,12 +3,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { ackOp, resendOp } from '../../../../../data/kanban';
 import type { Entry, ItemRef } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import { useWriter } from '../../../shared';
+import type { OpNotice } from '../../../shared';
 import { opNotices } from '../model';
 import { purgeNotices } from '../trash';
-import type { OpNotice } from '../model';
 import type { PurgeNotice } from '../trash';
 import type { NoticeOps } from '../kanban.type';
-import { useWriter } from './useWriter';
 
 const useNoticeOps = (boardKey: string, entries: readonly WithId<Entry>[], items: readonly ItemRef[]): NoticeOps => {
   const write = useWriter();

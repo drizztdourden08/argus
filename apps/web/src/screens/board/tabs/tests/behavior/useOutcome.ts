@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { imageProblem } from '../../../../../data/api';
 import type { TestOutcome } from '../../../../../data/posts';
 import type { Outcome } from '../tests.type';
+import { advanceTo, nextRunAfter } from './advance-run';
 import { useRecordResult } from './useRecordResult';
 
 const useOutcome = (boardKey: string, testId: string): Outcome => {
@@ -20,8 +21,9 @@ const useOutcome = (boardKey: string, testId: string): Outcome => {
     setError(null);
   };
   const postPass = () => {
+    const next = nextRunAfter(testId);
     reset();
-    void record(testId, 'pass', '', null).then((failure) => failure && toast({ variant: 'danger', message: failure }));
+    void record(testId, 'pass', '', null).then((failure) => (failure ? toast({ variant: 'danger', message: failure }) : advanceTo(next)));
   };
   const choose = (outcome: TestOutcome) => {
     if (outcome === 'pass') postPass();
@@ -30,7 +32,14 @@ const useOutcome = (boardKey: string, testId: string): Outcome => {
   const send = () => {
     if (!open) return;
     setError(null);
-    void record(testId, open, text, shot).then((failure) => (failure ? setError(failure) : reset()));
+    const next = nextRunAfter(testId);
+    void record(testId, open, text, shot).then((failure) => {
+      if (failure) setError(failure);
+      else {
+        reset();
+        advanceTo(next);
+      }
+    });
   };
   const setShot = (file: File) => {
     const problem = imageProblem(file);

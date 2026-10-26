@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { doneDoc } from './fixtures';
+import { buildDoc, doneDoc, testDoc } from './fixtures';
 import { firstResult } from './menu-dom';
 import { mountTab } from './mount-tab';
-import { board, noteBox, resultCalls } from './outcome-dom';
+import { board, noteBox, openBox, refuseResults, resultCalls, send, type } from './outcome-dom';
 
 cleanAfterEach();
 
@@ -47,5 +47,73 @@ describe('the keys 1 to 4 on a test to run', () => {
     fireEvent.keyDown(await rowButton('T-2'), { key: '1', ctrlKey: true });
     fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
     expect(resultCalls(calls)).toHaveLength(0);
+  });
+});
+
+describe('the key m on a test row', () => {
+  const mixed = () => ({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'ok')] });
+
+  it('opens the row menu of a test to run and of a done test', async () => {
+    await mountTab(mixed());
+    fireEvent.keyDown(await rowButton('T-1'), { key: 'm' });
+    expect(await screen.findByRole('menuitem', { name: 'Open details' })).toBeTruthy();
+    expect(screen.queryByRole('menuitem', { name: 'Run again' })).toBeNull();
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Open details' }), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Open details' })).toBeNull());
+    fireEvent.keyDown(await rowButton('T-2'), { key: 'M' });
+    expect(await screen.findByRole('menuitem', { name: 'Run again' })).toBeTruthy();
+  });
+
+  it('is typing inside the note box, and does nothing with a modifier held', async () => {
+    await mountTab(board());
+    const box = await openBox('Fail');
+    fireEvent.keyDown(box, { key: 'm' });
+    fireEvent.keyDown(await rowButton('T-2'), { key: 'm', ctrlKey: true });
+    expect(screen.queryByRole('menuitem')).toBeNull();
+  });
+
+  it('runs the menu item chosen with the keyboard', async () => {
+    await mountTab(mixed());
+    fireEvent.keyDown(await rowButton('T-1'), { key: 'm' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Open details' }));
+    expect(await screen.findByRole('dialog', { name: 'Test details' })).toBeTruthy();
+  });
+});
+
+describe('after a result on a row', () => {
+  const focusedName = (): string => document.activeElement?.getAttribute('aria-label') ?? '';
+
+  it('moves the focus to the first button of the next test to run', async () => {
+    const { calls } = await mountTab(board());
+    fireEvent.click(await screen.findByRole('button', { name: 'Pass T-1' }));
+    await firstResult(calls);
+    await waitFor(() => expect(focusedName()).toBe('Pass T-2'));
+  });
+
+  it('moves on after the keys too, and after a fail sent with its note', async () => {
+    const { calls } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), testDoc('T-2'), testDoc('T-3')] });
+    fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
+    await firstResult(calls);
+    await waitFor(() => expect(focusedName()).toBe('Pass T-2'));
+    const box = await openBox('Fail', 'T-2');
+    type(box, 'broken');
+    send(box);
+    await waitFor(() => expect(focusedName()).toBe('Pass T-3'));
+  });
+
+  it('keeps the focus where it is on the last test to run', async () => {
+    const { calls } = await mountTab(board());
+    const last = await screen.findByRole('button', { name: 'Pass T-2' });
+    last.focus();
+    fireEvent.click(last);
+    await firstResult(calls);
+    expect(focusedName()).toBe('Pass T-2');
+  });
+
+  it('does not move on when the board refuses the result', async () => {
+    const { calls } = await mountTab(board(), refuseResults);
+    fireEvent.click(await screen.findByRole('button', { name: 'Pass T-1' }));
+    await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
+    expect(focusedName()).not.toBe('Pass T-2');
   });
 });

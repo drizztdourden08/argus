@@ -6,6 +6,7 @@ import type { AgentFilter } from './model';
 
 interface AgentsTabProps {
   boardKey: string;
+  onPurge: (thread: string) => void;
 }
 
 interface AgentsView {
@@ -116,6 +117,12 @@ interface DrawerSectionProps {
 
 interface ChatsListProps {
   chats: readonly WithId<ProjectThread>[];
+  onPurge: (thread: string) => void;
+}
+
+interface ChatMenuProps {
+  id: string;
+  onPurge: (thread: string) => void;
 }
 
 export type {
@@ -135,6 +142,7 @@ export type {
   AgentsToolbarProps,
   AgentsView,
   AgentTimeProps,
+  ChatMenuProps,
   ChatsListProps,
   DrawerSectionProps,
   LeadLineProps,

@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind types */
+import type { ContextMenuPoint } from '@drizztdourden08/tessera';
+import type { KeyboardEvent } from 'react';
 import type { PostResult } from '../../../../data/api';
 import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
@@ -65,6 +67,12 @@ interface TestsShared {
   onNote: (testId: string) => void;
   onEdit: (testId: string) => void;
   onLog: (runId: string) => void;
+}
+
+interface RowMenu {
+  at: ContextMenuPoint | null;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  close: () => void;
 }
 
 interface TestMenuInput {
@@ -168,5 +176,5 @@ interface DrawerWide {
 }
 
 export type {
-  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsScreen, TestsShared, TestsState,
+  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, RowMenu, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsScreen, TestsShared, TestsState,
 };

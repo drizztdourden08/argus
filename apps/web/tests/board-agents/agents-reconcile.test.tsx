@@ -92,4 +92,15 @@ describe('Agents tab: the lead and the chats', () => {
     const ids = [...container.querySelectorAll('[data-chat-id]')].map((row) => row.getAttribute('data-chat-id'));
     expect(ids).toEqual(['waiting', 'chatty']);
   });
+
+  it('puts Purge in the menu of a chat, which asks to purge that thread', async () => {
+    mockApi();
+    vi.stubGlobal('CSS', { supports: () => false });
+    const onPurge = vi.fn();
+    await renderAgents({ agents: {}, threads }, onPurge);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions for chatty' }));
+    expect(await screen.findByRole('menuitem', { name: 'Copy id' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Purge...' }));
+    expect(onPurge).toHaveBeenCalledWith('chatty');
+  });
 });

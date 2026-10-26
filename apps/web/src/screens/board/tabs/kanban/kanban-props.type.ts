@@ -1,11 +1,16 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
-import type { TrashControl, TrashPanel } from './trash-props.type';
-import type { BulkOps, FocusState, ItemOps, KanbanData, KanbanDialog, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, CardData, FocusChoices, ItemGroup, KanbanView, OpNotice } from './model';
+import type { PurgeScope } from './trash';
+import type { TrashPanel } from './trash-props.type';
+import type { AddPanel, BulkOps, FocusState, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
+import type { AddPreset, CardData, FocusChoices, ItemGroup, KanbanView } from './model';
 
 interface KanbanTabProps {
   boardKey: string;
+  trash: boolean;
+  onTrashBack: () => void;
+  onPurge: (scope: PurgeScope) => void;
 }
 
 interface KanbanToolbarProps {
@@ -15,9 +20,6 @@ interface KanbanToolbarProps {
   subjects: readonly string[];
   focus: FocusState;
   choices: FocusChoices;
-  trash: TrashControl;
-  onNew: () => void;
-  onPurge: () => void;
 }
 
 interface FilterRowProps {
@@ -34,22 +36,10 @@ interface FocusRowProps {
 interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
-  trash: TrashControl;
-  onNew: () => void;
-  onPurge: () => void;
 }
 
 interface OpNoticesProps {
   ops: NoticeOps;
-}
-
-interface OpNoticeProps {
-  notice: OpNotice;
-  ops: Pick<NoticeOps, 'dismiss' | 'resend'>;
-}
-
-interface NoticeDiffProps {
-  notice: OpNotice;
 }
 
 interface SelectionBarProps {
@@ -59,19 +49,11 @@ interface SelectionBarProps {
   ops: BulkOps;
 }
 
-interface AddItemDialogProps {
+interface ColumnAddFormProps {
   preset: AddPreset;
+  group: ItemGroup;
   threads: Threads;
   onCreate: (item: ItemInput) => void;
-  onClose: () => void;
-}
-
-interface KanbanDialogsProps {
-  boardKey: string;
-  data: KanbanData;
-  focus: string;
-  ops: ItemOps;
-  dialog: KanbanDialog;
   onClose: () => void;
 }
 
@@ -83,8 +65,9 @@ interface KanbanBodyProps {
   selection: Selection;
   ops: ItemOps;
   trash: TrashPanel;
+  add: AddPanel;
+  focus: string;
   onOpen: (id: string) => void;
-  onAdd: (column: string) => void;
   onPurge: () => void;
 }
 
@@ -95,8 +78,9 @@ interface KanbanColumnsProps {
   now: number;
   selection: Selection;
   ops: ItemOps;
+  add: AddPanel;
+  focus: string;
   onOpen: (id: string) => void;
-  onAdd: (column: string) => void;
 }
 
 interface QuietBadgeProps {
@@ -105,7 +89,10 @@ interface QuietBadgeProps {
 
 interface ColumnAddProps {
   title: string;
-  onAdd: () => void;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  children: ReactNode;
 }
 
 interface ItemCardProps {
@@ -144,5 +131,5 @@ interface CriteriaBarProps {
 }
 
 export type {
-  AddItemDialogProps, CardFootProps, CardMenuProps, CardTagsProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, FocusRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanDialogsProps, KanbanTabProps, KanbanToolbarProps, NoticeDiffProps, OpNoticeProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, FocusRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

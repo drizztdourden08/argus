@@ -1,22 +1,21 @@
 /* @layer renderer-app @kind logic */
 import { useMemo, useState } from 'react';
-import type { KanbanDialog, KanbanData, KanbanState, FocusState, BulkOps, Panels } from '../kanban.type';
-import { addPreset } from '../model';
+import type { AddPanel, Adding, BulkOps, KanbanData, KanbanState, Panels } from '../kanban.type';
 import { trashRows } from '../trash';
 import { useSelection } from './useSelection';
 
-const usePanels = (data: KanbanData, state: KanbanState, focus: FocusState, bulk: BulkOps): Panels => {
-  const [dialog, setDialog] = useState<KanbanDialog>(null);
-  const [trashOpen, setTrashOpen] = useState(false);
+const usePanels = (data: KanbanData, state: KanbanState, bulk: BulkOps, trash: { open: boolean; onBack: () => void }): Panels => {
+  const [adding, setAdding] = useState<Adding | null>(null);
   const selection = useSelection();
   const rows = useMemo(() => trashRows(data), [data]);
-  return {
-    dialog,
-    close: () => setDialog(null),
-    adding: (column) => setDialog({ kind: 'add', preset: addPreset(state.prefs.group, column, focus.focus) }),
-    purging: (scope) => setDialog({ kind: 'purge', scope }),
-    trash: { open: trashOpen, count: rows.length, rows, selection, bulk, onToggle: () => setTrashOpen(!trashOpen) },
+  const { group } = state.prefs;
+  const column = adding?.group === group ? adding.column : null;
+  const add: AddPanel = {
+    column,
+    toggle: (target) => setAdding(column === target ? null : { column: target, group }),
+    close: () => setAdding(null),
   };
+  return { add, trash: { ...trash, rows, selection, bulk } };
 };
 
 export { usePanels };

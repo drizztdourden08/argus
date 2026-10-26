@@ -4,7 +4,7 @@ import { purgeOp } from '../../../../../data/kanban';
 import { PURGE_SENT } from '../kanban.constants';
 import { purgeCriteria } from '../trash';
 import type { PurgeCounts, PurgeDraft } from '../trash';
-import { useWriter } from './useWriter';
+import { useWriter } from '../../../shared';
 
 const usePurge = (boardKey: string): ((draft: PurgeDraft, counts: PurgeCounts) => Promise<boolean>) => {
   const write = useWriter();

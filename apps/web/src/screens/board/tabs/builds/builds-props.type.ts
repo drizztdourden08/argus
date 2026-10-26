@@ -1,14 +1,11 @@
 /* @layer renderer-app @kind types */
 import type { RunEntry } from '../../../../data/runs';
+import type { OpenLog } from '../../run-terminal';
 import type { RetiredFlag } from './builds.type';
 import type { LauncherView, LauncherViews, RunGroups } from './model';
 
 interface BuildsTabProps {
   boardKey: string;
-}
-
-interface OpenLog {
-  onLog: (runId: string) => void;
 }
 
 interface RunScope {
@@ -33,22 +30,6 @@ interface LauncherPartProps {
   view: LauncherView;
 }
 
-interface LogButtonProps extends OpenLog {
-  run: RunEntry | null;
-}
-
-interface RunTerminalProps extends OpenLog {
-  run: RunEntry;
-  boardKey: string;
-}
-
-interface TerminalBodyProps {
-  run: RunEntry;
-  boardKey: string;
-  limit: number;
-  height: number;
-}
-
 interface RetiredSectionProps extends OpenLog, RunScope {
   views: LauncherView[];
   flag: RetiredFlag;
@@ -70,23 +51,6 @@ interface RunRowProps extends OpenLog {
   boardKey: string;
 }
 
-interface RunStopButtonProps {
-  run: RunEntry;
-  boardKey: string;
-}
-
-interface RunLogDrawerProps {
-  run: RunEntry | null;
-  boardKey: string;
-  onClose: () => void;
-}
-
-interface RunAttachmentsProps {
-  boardKey: string;
-  runId: string;
-}
-
 export type {
-  BuildsHeaderProps, BuildsTabProps, LauncherCardProps, LauncherListProps, LauncherPartProps, LogButtonProps, RetiredSectionProps,
-  RunAttachmentsProps, RunListProps, RunLogDrawerProps, RunRowProps, RunsSectionProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps,
+  BuildsHeaderProps, BuildsTabProps, LauncherCardProps, LauncherListProps, LauncherPartProps, RetiredSectionProps, RunListProps, RunRowProps, RunsSectionProps,
 };

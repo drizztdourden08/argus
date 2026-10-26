@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { opened, rich } from './kanban-drawer-dom';
-import { cleanKanban } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban, openItem } from './kanban-harness';
 
 cleanKanban();
 
@@ -34,6 +34,20 @@ describe('the detail drawer', () => {
     expect(within(dialog).getByText('Tests, 1/2 passing')).toBeTruthy();
     expect(within(dialog).getByText('Wrong password')).toBeTruthy();
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
+  });
+
+  it('says needs you in the drawer while a question waits on the owner, and stops once it is answered', async () => {
+    const question = { id: 'Q-1', kind: 'question', item: 'I-1', author: 'worker', status: 'open', createdAt: ago(10 * MIN) };
+    const { change } = await mountKanban({ items: [item('I-1')], entries: [question] });
+    const dialog = await openItem('I-1');
+    expect(within(dialog).getByText('needs you')).toBeTruthy();
+    change('entries', 'H-1', { id: 'H-1', kind: 'followup', author: 'human', replyTo: 'Q-1', status: 'new', createdAt: ago(MIN) });
+    await waitFor(() => expect(within(dialog).queryByText('needs you')).toBeNull());
+  });
+
+  it('shows no needs you chip for an item that waits on nobody', async () => {
+    const { dialog } = await opened();
+    expect(within(dialog).queryByText('needs you')).toBeNull();
   });
 
   it('shows the revision line', async () => {

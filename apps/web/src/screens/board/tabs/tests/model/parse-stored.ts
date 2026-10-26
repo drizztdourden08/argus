@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { jsonRecord } from '../../kanban/model/json-record';
+import { jsonRecord } from '../../../shared';
 import { DEFAULT_FILTERS, DEFAULT_PREFS, GROUP_OPTIONS } from './model.constants';
 import type { RawStored, StoredView, TestFilters, TestGroup, TestOrder } from './model.type';
 

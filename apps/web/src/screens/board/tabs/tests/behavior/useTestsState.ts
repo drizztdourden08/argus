@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useEffect, useState } from 'react';
-import { readStored } from '../../kanban/behavior/read-stored';
-import { writeStored } from '../../kanban/behavior/write-stored';
-import { formatFilters } from '../../kanban/model';
+import { formatFilters, readStored, writeStored } from '../../../shared';
 import { DEFAULT_FILTERS, parseStored, STORE_KEYS } from '../model';
 import type { StoredView, TestFilters, TestPrefs } from '../model';
 import type { TestsState } from '../tests.type';

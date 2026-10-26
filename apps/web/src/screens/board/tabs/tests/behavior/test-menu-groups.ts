@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
-import { copyText } from '../../kanban/behavior/copy-text';
+import { copyText } from '../../../shared';
 import type { ItemDoc } from '../model';
 import type { TestMenuInput } from '../tests.type';
 

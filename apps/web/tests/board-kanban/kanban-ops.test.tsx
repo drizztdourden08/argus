@@ -1,41 +1,71 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MIN, ago, cleanKanban, item, mountKanban, openItem } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban, openItem, thread } from './kanban-harness';
 
 cleanKanban();
 
 describe('adding an item', () => {
-  it('opens a dialog, keeps Add off until there is a title, and posts a create op for the first listed thread', async () => {
+  it('opens the inline form of a column, keeps Add off until there is a title, and posts a create op for the first listed thread', async () => {
     const { posted } = await mountKanban({ items: [] });
+    expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
     expect(screen.queryByRole('dialog', { name: 'New work item' })).toBeNull();
-    fireEvent.click(await screen.findByRole('button', { name: 'New item' }));
-    const dialog = screen.getByRole('dialog', { name: 'New work item' });
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: '  Brand new  ' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }));
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Brand new  ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'create', author: 'human', target: { c: 'items' }, set: { title: 'Brand new', thread: 'worker', status: 'todo' } });
     expect(await screen.findByText('Adding "Brand new".')).toBeTruthy();
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New work item' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull());
   });
 
   it('adds with Enter in the title field', async () => {
     const { posted } = await mountKanban({ items: [item('I-1')] });
-    fireEvent.click(await screen.findByRole('button', { name: 'New item' }));
-    const box = within(screen.getByRole('dialog', { name: 'New work item' })).getByRole('textbox', { name: 'Title' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
+    const box = screen.getByRole('textbox', { name: 'Title' });
     fireEvent.change(box, { target: { value: 'By keyboard' } });
     fireEvent.keyDown(box, { key: 'Enter' });
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ set: { title: 'By keyboard' } });
   });
 
+  it('lets the thread be picked, and hides the thread choice in a thread column', async () => {
+    const { posted, unmount } = await mountKanban({ items: [item('I-1')], threads: [thread('worker'), thread('idle')] });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
+    expect(screen.getByRole('combobox', { name: 'Thread' })).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'For idle' } });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Thread' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'idle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]?.body).toMatchObject({ set: { title: 'For idle', thread: 'idle' } });
+    unmount();
+    localStorage.setItem('coord.g.items', 'thread');
+    await mountKanban({ items: [item('I-1')], threads: [thread('worker'), thread('idle')] });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to idle' }));
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeTruthy();
+    expect(screen.queryByRole('combobox', { name: 'Thread' })).toBeNull();
+  });
+
+  it('closes the form with Cancel and with a second click on + Add', async () => {
+    await mountKanban({ items: [item('I-1')] });
+    const open = await screen.findByRole('button', { name: 'Add a work item to To do' });
+    fireEvent.click(open);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
+    fireEvent.click(open);
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeTruthy();
+    fireEvent.click(open);
+    expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
+  });
+
   it('does not add a title over 80 characters', async () => {
     const { posted } = await mountKanban({ items: [] });
-    fireEvent.click(await screen.findByRole('button', { name: 'New item' }));
-    const dialog = screen.getByRole('dialog', { name: 'New work item' });
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Title' }), { target: { value: 'x'.repeat(81) } });
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'x'.repeat(81) } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(await screen.findByText('At most 80 characters.')).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
 });

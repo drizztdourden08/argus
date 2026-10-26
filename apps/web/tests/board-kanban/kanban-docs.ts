@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind test */
 import type { Entry, ItemRef, ThreadChoice } from '../../src/data/kanban';
 import type { WithId } from '../../src/data/react';
-import type { CardData, KanbanFilters, KanbanPrefs, Needs, OpNotice } from '../../src/screens/board/tabs/kanban/model';
+import type { OpNotice } from '../../src/screens/board/shared';
+import type { CardData, KanbanFilters, KanbanPrefs, Needs } from '../../src/screens/board/tabs/kanban/model';
 import { DEFAULT_FILTERS, buildView } from '../../src/screens/board/tabs/kanban/model';
 
 const MIN = 60_000;

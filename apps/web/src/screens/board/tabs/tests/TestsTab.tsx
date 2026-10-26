@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
-import { threadChoices } from '../kanban/model';
+import { threadChoices } from '../../shared';
 import { TestsContext } from './behavior/tests-context';
 import { knownBuilds, subjectsOf } from './model';
 import { useTestsData } from './behavior/useTestsData';

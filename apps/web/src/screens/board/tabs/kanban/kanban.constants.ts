@@ -1,11 +1,8 @@
 /* @layer renderer-app @kind constants */
-import type { SoftKind } from '../../../../data/kanban';
 import type { NoteKind } from '../../owner-posts';
 import type { PurgeDraft, PurgeScope } from './trash';
 
 const NOW_TICK_MS = 60_000;
-
-const UNDO_TOAST_MS = 8000;
 
 const ANY_STATUS = 'any';
 
@@ -13,14 +10,9 @@ const ANY_SUBJECT = 'any';
 
 const ALL_THREADS = 'all';
 
-const SOFT_LABEL: Record<SoftKind, string> = {
-  archive: 'Archived',
-  unarchive: 'Unarchived',
-  delete: 'Deleted',
-  restore: 'Restored',
-};
-
 const BOARD_LABEL = 'Work items';
+
+const NEEDS_YOU_TIP = 'A question, a to-do or a test waits on you.';
 
 const NO_ITEMS_TEXT = 'No work item yet. Threads enter their own as they take work on.';
 
@@ -49,4 +41,4 @@ const NOTE_WORD: Record<NoteKind, string> = { decision: 'decision', followup: 'n
 
 const ORDER_HINT = 'Switch the order to Manual to reorder.';
 
-export { ALL_THREADS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NO_ITEMS_TEXT, NOW_TICK_MS, SOFT_LABEL, TYPING_SELECTOR, UNDO_TOAST_MS };
+export { ALL_THREADS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };

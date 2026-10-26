@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { HOUR, MIN, ago, cleanKanban, item, mountKanban, thread } from './kanban-harness';
+import { HOUR, MIN, ago, cleanKanban, item, moreItem, mountKanban, thread } from './kanban-harness';
 import type { Board } from './kanban-harness';
 
 cleanKanban();
@@ -17,7 +17,7 @@ const board: Board = {
 const openTrash = async (extra: Board = {}, count = 4) => {
   const mounted = await mountKanban({ ...board, ...extra });
   await screen.findByText('Item I-1');
-  fireEvent.click(screen.getByRole('button', { name: `Trash (${count})` }));
+  await moreItem(`Trash (${count})`);
   return mounted;
 };
 
@@ -33,12 +33,25 @@ describe('the Trash view', () => {
     expect(screen.queryByText('Item I-1')).toBeNull();
   });
 
-  it('says the trash is empty, and goes back to the board with the same button', async () => {
+  it('says the trash is empty, and goes back to the board with Back to the board', async () => {
     await mountKanban({ items: [item('I-1')] });
     await screen.findByText('Item I-1');
-    fireEvent.click(screen.getByRole('button', { name: 'Trash (0)' }));
+    await moreItem('Trash (0)');
     expect(screen.getByText('Trash is empty.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Trash (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to the board' }));
+    expect(screen.getByText('Item I-1')).toBeTruthy();
+  });
+
+  it('opens from the More menu, which counts the trash, and Back to the board closes it', async () => {
+    await mountKanban(board);
+    await screen.findByText('Item I-1');
+    expect(screen.queryByRole('button', { name: /^Trash \(/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    expect(await screen.findByRole('menuitem', { name: 'Trash (4)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Trash (4)' }));
+    expect(screen.getByRole('table', { name: 'Trash' })).toBeTruthy();
+    expect(screen.queryByRole('search', { name: 'Filters' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to the board' }));
     expect(screen.getByText('Item I-1')).toBeTruthy();
   });
 
@@ -96,7 +109,7 @@ describe('the Purge dialog', () => {
   it('purges a thread chosen in the dialog, with the counts of its items', async () => {
     const { posted } = await mountKanban(sleepy);
     await screen.findByText('Item I-1');
-    fireEvent.click(screen.getByRole('button', { name: 'Purge...' }));
+    await moreItem('Purge threads and records...');
     const dialog = within(await screen.findByRole('dialog', { name: 'Purge' }));
     expect(dialog.getByText('Nothing matches. Nothing to purge.')).toBeTruthy();
     fireEvent.click(dialog.getByRole('combobox', { name: 'Thread to purge' }));
@@ -110,7 +123,7 @@ describe('the Purge dialog', () => {
   it('never counts the coordinator thread', async () => {
     await mountKanban({ items: [item('I-1')], threads: [thread('lead', { role: 'coordinator' })] });
     await screen.findByText('Item I-1');
-    fireEvent.click(screen.getByRole('button', { name: 'Purge...' }));
+    await moreItem('Purge threads and records...');
     const dialog = within(await screen.findByRole('dialog', { name: 'Purge' }));
     fireEvent.click(dialog.getByRole('radio', { name: 'Every thread except the checked ones' }));
     expect(dialog.getByText('Nothing matches. Nothing to purge.')).toBeTruthy();

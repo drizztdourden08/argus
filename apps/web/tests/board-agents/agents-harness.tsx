@@ -80,12 +80,12 @@ interface Board {
   threads?: Record<string, object>;
 }
 
-const renderAgents = async (board: Board) => {
+const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined) => {
   const fake = createFakeSources();
   const view = render(
     <TesseraProvider overrides={{}}>
       <DataProvider streams={createScopeStreams(fake.open)}>
-        <AgentsTab boardKey="alpha" />
+        <AgentsTab boardKey="alpha" onPurge={onPurge} />
         <ToastStack />
       </DataProvider>
     </TesseraProvider>,

@@ -4,12 +4,24 @@ import type { TrashViewProps } from '../trash-props.type';
 import { TrashLine } from './TrashLine';
 
 const TrashView = (props: TrashViewProps) => {
-  const { rows, now, selection, bulk, onPurge } = props;
+  const { rows, now, selection, bulk, onBack, onPurge } = props;
   const order = rows.map((row) => row.key);
   const picked = rows.filter((row) => selection.has(row.key));
-  if (rows.length === 0) return <Text tone="muted">Trash is empty.</Text>;
+  const back = <Button size="sm" variant="secondary" onClick={onBack}>Back to the board</Button>;
+  if (rows.length === 0) {
+    return (
+      <Flex direction="column" gap="md" align="start">
+        {back}
+        <Text tone="muted">Trash is empty.</Text>
+      </Flex>
+    );
+  }
   return (
     <Flex direction="column" gap="md">
+      <Flex gap="sm" align="center">
+        {back}
+        <Text variant="caption" tone="muted">{`${rows.length} in trash`}</Text>
+      </Flex>
       {picked.length > 0 && (
         <Flex gap="sm" align="center" wrap role="toolbar" aria-label="Selected trash">
           <Text>{`${picked.length} selected`}</Text>

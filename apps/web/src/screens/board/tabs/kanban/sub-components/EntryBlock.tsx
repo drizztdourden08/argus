@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, InlineEdit, Markdown } from '@drizztdourden08/tessera';
 import { askMode, hasContext } from '../../../feed-model';
-import { AskForm } from '../../../OwnerFeed/sub-components/AskForm';
-import { ContextBlock } from '../../../OwnerFeed/sub-components/ContextBlock';
+import { AskForm, ContextBlock } from '../../../OwnerFeed';
 import type { EntryBlockProps } from '../drawer-props.type';
 import { validateDecision } from '../model';
 import { EntryHead } from './EntryHead';

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useState } from 'react';
-import { readStored } from './read-stored';
-import { writeStored } from './write-stored';
+import { readStored, writeStored } from '../../../shared';
 
 const useStoredFlag = (key: string): [boolean, (next: boolean) => void] => {
   const [flag, setFlag] = useState(() => readStored(key) === '1');

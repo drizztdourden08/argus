@@ -5,7 +5,8 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
-import { KanbanTab } from '../../src/screens/board/tabs/kanban';
+import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
+import { KanbanPurge, KanbanTab, useTrashCount } from '../../src/screens/board/tabs/kanban';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
 
@@ -36,6 +37,23 @@ const Probe = () => {
   where.hash = useLocation().hash;
   return null;
 };
+const Stage = () => {
+  const more = useBoardMore();
+  const count = useTrashCount(SCOPE);
+  return (
+    <>
+      <BoardMore trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
+      <KanbanTab boardKey={SCOPE} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />
+      <KanbanPurge boardKey={SCOPE} request={more.purge} onClose={more.closePurge} />
+    </>
+  );
+};
+
+const moreItem = async (name: string | RegExp) => {
+  fireEvent.click(screen.getByRole('button', { name: 'More' }));
+  fireEvent.click(await screen.findByRole('menuitem', { name }));
+};
+
 const MIN = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -81,7 +99,7 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
     <MemoryRouter initialEntries={[`/p/${SCOPE}/${hash}`]}>
       <TesseraProvider overrides={{}}>
         <DataProvider streams={createScopeStreams(fake.open)}>
-          <KanbanTab boardKey={SCOPE} />
+          <Stage />
           <Probe />
           <ToastStack />
         </DataProvider>
@@ -128,5 +146,5 @@ const openItem = async (id: string): Promise<HTMLElement> => {
 
 const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: `Move ${id} ${title}` });
 
-export { DAY, HOUR, MIN, ago, boardOf, cleanKanban, columnOf, gripOf, item, mountKanban, openItem, thread, where };
+export { DAY, HOUR, MIN, ago, boardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, thread, where };
 export type { Board, Doc, Posted };

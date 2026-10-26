@@ -2,7 +2,8 @@
 import { Button, Flex, Select, Text } from '@drizztdourden08/tessera';
 import type { SelectionBarProps } from '../kanban-props.type';
 import type { BulkTarget } from '../kanban.type';
-import { STATUS_OPTIONS, threadChoices } from '../model';
+import { threadChoices } from '../../../shared';
+import { STATUS_OPTIONS } from '../model';
 
 const SelectionBar = (props: SelectionBarProps) => {
   const { items, threads, selection, ops } = props;

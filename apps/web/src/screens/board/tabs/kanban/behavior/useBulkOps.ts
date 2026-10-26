@@ -6,8 +6,7 @@ import type { OpVerdict } from '../../../../../data/kanban';
 import { bulkMoves, bulkSofts } from '../model';
 import { bulkRestores } from '../trash';
 import type { BulkOps } from '../kanban.type';
-import { announce } from './announce';
-import { announceFailure } from './announce-failure';
+import { announce, announceFailure } from '../../../shared';
 
 const changesText = (count: number): string => `${count} change${count === 1 ? '' : 's'} sent.`;
 

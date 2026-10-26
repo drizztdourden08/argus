@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_FILTERS, STORE_KEYS, formatFilters, parseStored } from '../model';
+import { formatFilters, readStored, writeStored } from '../../../shared';
+import { DEFAULT_FILTERS, STORE_KEYS, parseStored } from '../model';
 import type { ItemGroup, ItemOrder, KanbanFilters, StoredView } from '../model';
 import type { KanbanState } from '../kanban.type';
-import { readStored } from './read-stored';
-import { writeStored } from './write-stored';
 
 const loadView = (): StoredView =>
   parseStored({ filters: readStored(STORE_KEYS.filters), group: readStored(STORE_KEYS.group), showDone: readStored(STORE_KEYS.showDone) });

@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
 import { countsText, filtersActive, needsMap } from '../../src/screens/board/tabs/kanban/model';
-import type { Needs, OpNotice } from '../../src/screens/board/tabs/kanban/model';
+import type { OpNotice } from '../../src/screens/board/shared';
+import type { Needs } from '../../src/screens/board/tabs/kanban/model';
 import { DAY, HOUR, before, entryRef, filters, idsIn, itemRef, noNeeds, threadRef, viewOf } from './kanban-docs';
 
 const quietOf = (item: ItemRef, needs: ReadonlyMap<string, Needs> = noNeeds): number | null =>

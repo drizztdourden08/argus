@@ -2,6 +2,7 @@
 import { Flex, Tag } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { CardTagsProps } from '../kanban-props.type';
+import { NEEDS_YOU_TIP } from '../kanban.constants';
 import { quietTip } from '../model';
 
 const CardTags = (props: CardTagsProps) => {
@@ -9,7 +10,7 @@ const CardTags = (props: CardTagsProps) => {
   const { item } = card;
   return (
     <Flex gap="xs" align="center" wrap>
-      {card.needsYou && <Tag variant="urgency" color="warning" title="A question, a to-do or a test waits on you.">needs you</Tag>}
+      {card.needsYou && <Tag variant="urgency" color="warning" title={NEEDS_YOU_TIP}>needs you</Tag>}
       {card.decisions > 0 && <Tag variant="urgency" color="info" title="Decisions to pick up">{`${card.decisions} to decide`}</Tag>}
       {card.quietMs !== null && <Tag variant="urgency" color="warning" title={quietTip(item, now)}>{`quiet ${formatAgo(item.updatedAt, now)}`}</Tag>}
       {group !== 'status' && <Tag>{item.status}</Tag>}

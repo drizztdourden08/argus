@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
 import type { CardMenuProps } from '../kanban-props.type';
-import { STATUS_OPTIONS, threadChoices } from '../model';
-import { copyText } from './copy-text';
+import { copyText, threadChoices } from '../../../shared';
+import { STATUS_OPTIONS } from '../model';
 
 const choice = (id: string, label: string, checked: boolean, pick: () => void): MenuItem => ({
   id,
