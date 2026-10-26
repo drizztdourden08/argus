@@ -176,13 +176,12 @@ over-limit sentence is word for word, the Quote button and focus on open come wi
 (`.drawer--xl`, asserted in `kanban-chrome.test.tsx` and `drawer-nav.test.tsx`), and the thread drawer
 opens from its chip, the Chats list and the lead line (`tests/board-thread/`). What remains:
 
-- The drawer shows the criterion as plain text where Node showed inline markdown.
 - The terminal's Copy all, Jump to bottom and 300 line window belong to Tessera LogPanel and need
   layout that jsdom lacks.
 - Not applicable to React: the persistent body mounted into a slot, the redraw-free patch of a
   run line, and the page without `md.js`.
-- Waiting on the Tessera lead (MarkdownEditor): Enter continues a list, an empty item ends it, Tab and
-  Shift+Tab indent an item, Backspace takes the marker, and a dash with empty brackets becomes a checkbox. The Ctrl+B, Ctrl+I, Ctrl+Enter and toolbar cases are ported.
+- Closed with Tessera 0.75 and 0.76: the criterion as inline markdown (`InlineEdit` with `renderValue`),
+  and the editor list keys (Enter, Tab, Backspace, the checkbox), on by default in every owner box.
 - Not ported from the Node thread drawer: the previous and next pager and the copy link of the
   drawer (a thread has no address in the web app).
 
