@@ -146,6 +146,17 @@ in `runs.cli`) wait for it. `pages.portfolio` covers the Dashboards tab in slice
 Processes, Activity and Notifications tabs in slice 4; `pages.board` covers the page shell and
 the Activity feed in slice 2 and the other tabs in slice 5.
 
+## Node fixes after the matrix commit
+
+Node is frozen except fixes, and every fix reaches Argus. Each line names the `ai-config` commit and
+where it landed.
+
+| Node commit | Fix | Argus | Status |
+|---|---|---|---|
+| `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/registry.rs` | ported |
+| `db17ac5` | A worktree discard note counts only with a delete word, no negation and the worktree named | `crates/argus-worktrees/src/approval.rs` (word lists as in Node `remove.mjs`) | ported |
+| `db17ac5` | Listener hook timeout 3 days; master launcher for the Overlord project | `docs/coord-port.md` section 3, for WP2 | noted for WP2 |
+
 ## Feature areas
 
 One row per area, from `DESIGN.md`, `README.md`, `pages/`, `src/` and `static/`. Names are at most

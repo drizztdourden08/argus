@@ -274,6 +274,14 @@ session host as exit 101.
   stderr (or `WAKE <thread>: see coord inbox` for bad data) and exits 2.
 - A refused or broken stream runs the autostart and retries 5 s later, until the deadline.
 
+Node commit `db17ac5` raised the hook timeout of the three `hook listen` entries in
+`shared/hooks.json` (PostToolUse, SessionStart, Stop) from 21600 s (6 h) to 259200 s (3 days). WP2
+reads `COORD_LISTEN_MS` against that budget: the listener must keep running as long as the hook
+may, and the rendered config of Argus carries the same 259200. The same commit added the `master`
+launcher of the Overlord project, which is project config and needs no port. The wake side of that
+commit (the re-alert for a deaf thread, the self-clearing `no-listener` fault) is already in
+`argus-wake`.
+
 Under the shim, a Node parent waits on the Rust child for those 6 h. The shim passes its pid in
 `ARGUS_COORD_PARENT`, and the Rust listener checks it every 5 s and exits 0 when the parent is
 gone, so a killed hook leaves no orphan holding a wake stream. The server keeps one listener per

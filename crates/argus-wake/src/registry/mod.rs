@@ -16,8 +16,9 @@
 //! delivered and the thread shows no sign of life for more than `reaction_ms`, or when writing it to a
 //! listener threw. A failure opens a fault (one open per project and thread), mirrors it to the row, and
 //! wakes the Overlord with reason `wake-fault`. The fault of the Overlord itself shows on the page only.
-//! The registry never clears a fault, except the two that clear themselves: `not-listening` and
-//! `board-closed`.
+//! A fault ends by itself only when the thread listens again (`not-listening`, `no-listener`) or its
+//! board opens again (`board-closed`). A thread that is sent more wakes while its fault is open tells
+//! the Overlord again, at most every 10 minutes, so a deaf thread is never silently ignored.
 
 mod evaluate;
 mod faults;
@@ -115,6 +116,7 @@ pub struct Registry {
     last_mirror: HashMap<String, String>,
     missing: HashMap<Key, i64>,
     deaf: HashMap<Key, i64>,
+    alerted: HashMap<Key, i64>,
     started_at: i64,
 }
 
@@ -145,6 +147,7 @@ impl Registry {
             last_mirror: HashMap::new(),
             missing: HashMap::new(),
             deaf: HashMap::new(),
+            alerted: HashMap::new(),
             started_at,
         }
     }
@@ -237,7 +240,7 @@ impl Registry {
                     reason: Some(reason),
                     text: Some(text),
                 };
-                self.track(&scope, &thread, event, sent > 0);
+                self.track(env, &scope, &thread, event, sent > 0);
                 self.refresh(env, Some(&scope));
             }
             EngineNote::Replayed { scope, events } => {
@@ -248,7 +251,7 @@ impl Registry {
                         reason: Some(ev.reason),
                         text: Some(ev.text),
                     };
-                    self.track(&scope, &ev.thread, event, true);
+                    self.track(env, &scope, &ev.thread, event, true);
                 }
                 self.refresh(env, Some(&scope));
             }

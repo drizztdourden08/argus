@@ -52,17 +52,29 @@ pub fn names_folder(text: &str, path: &str, case_insensitive: bool) -> bool {
     })
 }
 
+/// What a written note must say to count as the owner's go: a delete word.
+const DELETE_WORDS: [&str; 7] = [
+    "delete",
+    "remove",
+    "discard",
+    "get rid of",
+    "clean up",
+    "drop",
+    "can go",
+];
+
+/// Words that turn a delete request around: such a note is not the owner's go.
+const NEGATION_WORDS: [&str; 10] = [
+    "don't", "dont", "do not", "never", "not", "keep", "leave", "stop", "wait", "no",
+];
+
 fn says_delete(text: &str) -> bool {
-    ["delete", "remove"].iter().any(|w| word_alone(text, w))
+    DELETE_WORDS.iter().any(|w| word_alone(text, w))
 }
 
-/// Does the text say no, keep, stop or never? Such a note is not the owner's go to delete.
+/// Does the text say no, keep, leave, stop, wait or never?
 fn negated(text: &str) -> bool {
-    [
-        "not", "don't", "dont", "never", "keep", "cancel", "stop", "no",
-    ]
-    .iter()
-    .any(|w| word_alone(text, w))
+    NEGATION_WORDS.iter().any(|w| word_alone(text, w))
 }
 
 pub(crate) fn word_alone(text: &str, word: &str) -> bool {
@@ -232,6 +244,15 @@ mod tests {
             ),
             None
         );
+        assert_eq!(
+            approval_of(
+                &board_of(vec![owner("O-3b", "claude/feat-login can go")]),
+                "O-3b",
+                &fact,
+                NOW
+            ),
+            None
+        );
         let longer = approval_of(
             &board_of(vec![owner("O-4", "feat-login-2 can go")]),
             "O-4",
@@ -249,10 +270,11 @@ mod tests {
     fn a_note_that_only_names_the_worktree_or_says_keep_or_not_is_not_the_owners_go() {
         let fact = fact();
         for text in [
-            "claude/feat-login can go",
+            "claude/feat-login looks fine to me",
             "keep claude/feat-login, still working",
-            "do not delete feat-login",
+            "do not delete claude/feat-login yet",
             "don't remove claude/feat-login",
+            "keep feat-login, remove the others",
             "delete the fresh one",
         ] {
             let board = board_of(vec![owner("O-1", text)]);

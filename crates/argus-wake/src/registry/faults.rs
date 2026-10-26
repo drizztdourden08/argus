@@ -11,6 +11,8 @@ use crate::time::iso;
 use crate::wake::WakeInput;
 
 const ERROR_CLIP: usize = 200;
+/// A thread with a fault open that is sent another wake tells the Overlord again, at most this often.
+const REALERT_MS: i64 = 10 * 60 * 1000;
 
 /// Why a wake failed.
 pub(super) struct Failure<'a> {
@@ -58,6 +60,8 @@ impl Registry {
                 return None;
             }
         };
+        self.alerted
+            .insert((scope.to_owned(), thread.to_owned()), self.now());
         if !self.is_main(scope, thread) {
             let text = failure.text.clone().unwrap_or_else(|| {
                 let detail = if failure.detail.is_empty() {
@@ -79,6 +83,32 @@ impl Registry {
             }
         }
         Some(fault)
+    }
+
+    /// A new wake came for a thread whose fault is open: tell the Overlord again, at most once per
+    /// ten minutes per thread. The Overlord's own fault wakes nobody.
+    pub(super) fn realert(&mut self, env: &mut Env<'_>, key: &Key, open: &Fault) {
+        let now = self.now();
+        let last = self.alerted.get(key).copied().unwrap_or(0);
+        if self.is_main(&key.0, &key.1) || now - last <= REALERT_MS {
+            return;
+        }
+        self.alerted.insert(key.clone(), now);
+        let (scope, thread) = key;
+        let text = format!(
+            "{scope}/{thread}: a new wake is waiting and nobody listens (fault open since {}, {}). Reach it now with its session (the owner is waiting), then coord wake-fault clear.",
+            open.since, open.reason
+        );
+        let wake = WakeInput::about(
+            MAIN_SCOPE,
+            &self.main_thread(),
+            "wake-fault",
+            &format!("{scope}/{thread}"),
+            text,
+        );
+        if let Err(err) = env.engine.submit(&[wake]) {
+            warn!(%scope, %thread, %err, "wake fault re-alert not sent to the Overlord");
+        }
     }
 
     pub(super) fn raise_delivery_error(

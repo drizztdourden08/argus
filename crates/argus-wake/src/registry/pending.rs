@@ -1,6 +1,6 @@
 //! The wakes that wait for a reaction, and how a reaction is seen.
 
-use super::{Key, Registry};
+use super::{Env, Key, Registry};
 use crate::board::ThreadView;
 use crate::time::{iso, parse_ms};
 use crate::wake::WakeRow;
@@ -60,13 +60,17 @@ impl Registry {
 
     pub(super) fn track(
         &mut self,
+        env: &mut Env<'_>,
         scope: &str,
         thread: &str,
         event: TrackedEvent,
         delivered: bool,
     ) {
         let key: Key = (scope.to_owned(), thread.to_owned());
-        if self.open_faults().contains_key(&key) {
+        if let Some(open) = self.open_faults().remove(&key) {
+            if !delivered {
+                self.realert(env, &key, &open);
+            }
             return;
         }
         let now = self.now();
