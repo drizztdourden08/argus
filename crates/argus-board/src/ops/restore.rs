@@ -15,8 +15,7 @@ use super::backup::count_line;
 use crate::Board;
 use crate::error::{BoardError, refuse};
 use crate::json::{
-    array_mut, display, doc, map_mut, nullish, obj, section, set, shown, slot, strict_eq,
-    to_number,
+    array_mut, display, doc, map_mut, nullish, obj, section, set, shown, slot, strict_eq, to_number,
 };
 use crate::store::touch;
 
@@ -125,7 +124,10 @@ fn merge_log(board: &mut Board, subject: &str, mine: &[&Value]) -> usize {
         .collect();
     let back: Vec<Value> = mine
         .iter()
-        .filter(|l| l.get("seq").is_none_or(|s| s.as_f64().is_none_or(|n| !have.contains(&n))))
+        .filter(|l| {
+            l.get("seq")
+                .is_none_or(|s| s.as_f64().is_none_or(|n| !have.contains(&n)))
+        })
         .map(|l| (*l).clone())
         .collect();
     if back.is_empty() {
@@ -139,7 +141,10 @@ fn merge_log(board: &mut Board, subject: &str, mine: &[&Value]) -> usize {
             .total_cmp(&seq_or_zero(b))
             .then_with(|| shown(a.get("ts")).cmp(&shown(b.get("ts"))))
     });
-    let top = list.iter().map(seq_or_zero).fold(f64::NEG_INFINITY, f64::max);
+    let top = list
+        .iter()
+        .map(seq_or_zero)
+        .fold(f64::NEG_INFINITY, f64::max);
     set(entry, "updatedAt", now_iso());
     touch(board, "log", subject);
     let key = format!("log:{subject}");
@@ -220,9 +225,7 @@ fn refresh_owners(board: &mut Board, rec: &Value) {
 }
 
 fn audit_restore(board: &mut Board, counts: &Map<String, Value>, file: &Path) {
-    let changed = counts
-        .iter()
-        .any(|(k, n)| k != "skipped" && js::truthy(n));
+    let changed = counts.iter().any(|(k, n)| k != "skipped" && js::truthy(n));
     if !changed {
         return;
     }
@@ -269,7 +272,10 @@ pub fn restore_from(
         )));
     }
     let scope = Scope::new(rec, threads)?;
-    let mut counts: Map<String, Value> = COUNTED.iter().map(|k| ((*k).to_owned(), json!(0))).collect();
+    let mut counts: Map<String, Value> = COUNTED
+        .iter()
+        .map(|k| ((*k).to_owned(), json!(0)))
+        .collect();
     let restored = restore_docs(board, &scope, &mut counts);
     restore_log(board, &scope, &mut counts);
     restore_inbox(board, &scope, &mut counts);

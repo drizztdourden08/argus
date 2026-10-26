@@ -60,11 +60,7 @@ const VERBS: [(&str, Verb); 14] = [
 ];
 
 /// The thread a verb works on: the one named, else the caller.
-pub(super) fn target(
-    board: &Board,
-    frame: &Frame<'_>,
-    who: &Caller,
-) -> Result<String, CoordError> {
+pub(super) fn target(board: &Board, frame: &Frame<'_>, who: &Caller) -> Result<String, CoordError> {
     match frame.arg(0).filter(|name| !name.is_empty()) {
         Some(name) => Ok(id_of(named_thread(board, name)?)),
         None => Ok(who.thread.clone()),

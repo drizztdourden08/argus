@@ -1,23 +1,17 @@
 //! The `--confirm <project key>` of a purge and a restore: true with a matching key, false
 //! without one, and a wrong key stops the call.
 
+use super::text_of;
 use crate::cli::exit::CoordError;
 use crate::cli::{Opt, Val};
 use crate::verbs::thread::frame::Frame;
-
-fn shown(val: &Val) -> String {
-    match val {
-        Val::Flag => "true".to_owned(),
-        Val::Text(text) => text.clone(),
-    }
-}
 
 /// What a wrong `--confirm` is named as: a bare flag is empty, a list is joined by commas.
 fn given(opt: &Opt) -> String {
     match opt {
         Opt::One(Val::Flag) => String::new(),
-        Opt::One(val) => shown(val),
-        Opt::Many(list) => list.iter().map(shown).collect::<Vec<_>>().join(","),
+        Opt::One(val) => text_of(val),
+        Opt::Many(list) => list.iter().map(text_of).collect::<Vec<_>>().join(","),
     }
 }
 

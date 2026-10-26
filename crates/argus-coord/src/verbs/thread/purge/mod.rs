@@ -15,9 +15,18 @@ use argus_board::ops::Role;
 use serde_json::Value;
 
 use super::frame::{Frame, with_frame};
+use crate::cli::Val;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::who::Caller;
+
+/// An option value as text: a bare flag is `true`.
+fn text_of(val: &Val) -> String {
+    match val {
+        Val::Flag => "true".to_owned(),
+        Val::Text(text) => text.clone(),
+    }
+}
 
 /// Only the coordinator purges, restores and reads the trash.
 fn need_coordinator(who: &Caller, what: &str) -> Result<(), CoordError> {

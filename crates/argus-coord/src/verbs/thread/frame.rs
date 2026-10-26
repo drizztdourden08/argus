@@ -192,6 +192,9 @@ impl<'a> Frame<'a> {
     /// Where the dashboard serves a page.
     #[must_use]
     pub fn dashboard_url(&self, path: &str) -> String {
-        format!("http://127.0.0.1:{}{path}", board_port(self.env, self.paths))
+        format!(
+            "http://127.0.0.1:{}{path}",
+            board_port(self.env, self.paths)
+        )
     }
 }

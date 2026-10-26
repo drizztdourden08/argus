@@ -16,7 +16,13 @@ use crate::cli::resolve::resolve;
 use crate::verbs::thread::frame::Frame;
 
 fn read_backup(file: &Path) -> Result<Value, CoordError> {
-    let text = fs::read_to_string(file)?;
+    let text = fs::read_to_string(file).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => CoordError::refuse(format!(
+            "ENOENT: no such file or directory, open '{}'",
+            file.display()
+        )),
+        _ => CoordError::from(e),
+    })?;
     serde_json::from_str(&text).map_err(|e| CoordError::refuse(e.to_string()))
 }
 

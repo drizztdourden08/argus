@@ -29,7 +29,7 @@ pub fn note(frame: &mut Frame<'_>) -> Outcome {
     let text = require_text("note", &json!(frame.arg(0)))?;
     frame.mutate(false, |board, fr| {
         let who = fr.identify(board)?;
-        set(thread_mut(board, &who.thread)?, "note", &text);
+        set(thread_mut(board, &who.thread)?, "note", text.as_str());
         stamp(board, "threads", &who.thread, &who.actor)?;
         fr.say(&[&format!("{}: {text}", who.thread)]);
         Ok(())

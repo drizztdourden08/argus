@@ -34,68 +34,78 @@ fn class_of(c: char) -> Class {
 }
 
 fn digits(text: &str) -> (&str, &str) {
-    let end = text.find(|c: char| !c.is_ascii_digit()).unwrap_or(text.len());
+    let end = text
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(text.len());
     text.split_at(end)
 }
 
-fn compare_numbers(a: &str, b: &str) -> Ordering {
-    let (a, b) = (a.trim_start_matches('0'), b.trim_start_matches('0'));
-    a.len().cmp(&b.len()).then_with(|| a.cmp(b))
+fn compare_numbers(one: &str, other: &str) -> Ordering {
+    let (one, other) = (one.trim_start_matches('0'), other.trim_start_matches('0'));
+    one.len().cmp(&other.len()).then_with(|| one.cmp(other))
 }
 
-fn compare_chars(a: char, b: char) -> Ordering {
-    class_of(a)
-        .cmp(&class_of(b))
-        .then_with(|| a.to_lowercase().cmp(b.to_lowercase()))
+fn compare_chars(first: char, second: char) -> Ordering {
+    class_of(first)
+        .cmp(&class_of(second))
+        .then_with(|| first.to_lowercase().cmp(second.to_lowercase()))
+}
+
+/// Compares the heads of two texts: two digit runs as numbers, else one character each. Equal
+/// heads leave the rest of both texts to compare.
+fn step<'t>(left: &'t str, right: &'t str) -> Result<(&'t str, &'t str), Ordering> {
+    let (first, second) = (left.chars().next(), right.chars().next());
+    let (Some(first), Some(second)) = (first, second) else {
+        return Err(first.is_some().cmp(&second.is_some()));
+    };
+    if first.is_ascii_digit() && second.is_ascii_digit() {
+        let ((one, rest_one), (other, rest_other)) = (digits(left), digits(right));
+        return match compare_numbers(one, other) {
+            Ordering::Equal => Ok((rest_one, rest_other)),
+            order => Err(order),
+        };
+    }
+    match compare_chars(first, second) {
+        Ordering::Equal => Ok((&left[first.len_utf8()..], &right[second.len_utf8()..])),
+        order => Err(order),
+    }
+}
+
+fn case_tie(left: &str, right: &str) -> Ordering {
+    for (ours, theirs) in left.chars().zip(right.chars()) {
+        if ours != theirs {
+            return if ours.is_lowercase() {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            };
+        }
+    }
+    Ordering::Equal
 }
 
 /// `a.localeCompare(b, undefined, { numeric: true })` for the tags builds carry: digit runs
 /// compare as numbers, letters ignore case first (lower case before upper case on a tie), and
 /// punctuation sorts before digits, digits before letters.
 #[must_use]
-pub fn natural_cmp(a: &str, b: &str) -> Ordering {
-    let (mut left, mut right) = (a, b);
+pub fn natural_cmp(left: &str, right: &str) -> Ordering {
+    let (mut rest_left, mut rest_right) = (left, right);
     loop {
-        match (left.chars().next(), right.chars().next()) {
-            (None, None) => break,
-            (None, Some(_)) => return Ordering::Less,
-            (Some(_), None) => return Ordering::Greater,
-            (Some(x), Some(y)) if x.is_ascii_digit() && y.is_ascii_digit() => {
-                let ((n, rest_left), (m, rest_right)) = (digits(left), digits(right));
-                let order = compare_numbers(n, m);
-                if order != Ordering::Equal {
-                    return order;
-                }
-                (left, right) = (rest_left, rest_right);
-            }
-            (Some(x), Some(y)) => {
-                let order = compare_chars(x, y);
-                if order != Ordering::Equal {
-                    return order;
-                }
-                (left, right) = (&left[x.len_utf8()..], &right[y.len_utf8()..]);
-            }
+        if rest_left.is_empty() && rest_right.is_empty() {
+            return case_tie(left, right);
+        }
+        match step(rest_left, rest_right) {
+            Ok(rest) => (rest_left, rest_right) = rest,
+            Err(order) => return order,
         }
     }
-    case_tie(a, b)
-}
-
-fn case_tie(a: &str, b: &str) -> Ordering {
-    for (x, y) in a.chars().zip(b.chars()) {
-        if x != y {
-            return if x.is_lowercase() { Ordering::Less } else { Ordering::Greater };
-        }
-    }
-    Ordering::Equal
 }
 
 fn rank(build: &Value, handed: &Value) -> u8 {
     if build.is_null() {
         2
-    } else if build == handed {
-        0
     } else {
-        1
+        u8::from(build != handed)
     }
 }
 
@@ -111,10 +121,10 @@ pub fn by_build(tests: &[&Value], handed: &Value) -> Vec<Value> {
             None => groups.push((build, vec![id])),
         }
     }
-    groups.sort_by(|(a, _), (b, _)| {
-        rank(a, handed)
-            .cmp(&rank(b, handed))
-            .then_with(|| natural_cmp(&display(b), &display(a)))
+    groups.sort_by(|(first, _), (second, _)| {
+        rank(first, handed)
+            .cmp(&rank(second, handed))
+            .then_with(|| natural_cmp(&display(second), &display(first)))
     });
     groups
         .into_iter()

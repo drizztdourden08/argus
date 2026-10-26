@@ -26,8 +26,9 @@ fn word_char(c: char) -> bool {
 }
 
 fn is_link(link: &str) -> bool {
-    link.strip_prefix(LINK_PREFIX)
-        .is_some_and(|rest| !rest.is_empty() && rest.chars().all(|c| word_char(c) || "./-".contains(c)))
+    link.strip_prefix(LINK_PREFIX).is_some_and(|rest| {
+        !rest.is_empty() && rest.chars().all(|c| word_char(c) || "./-".contains(c))
+    })
 }
 
 fn is_host_id(host: &str) -> bool {
@@ -96,25 +97,20 @@ fn record_texts(board: &mut Board, frame: &Frame<'_>, name: &str) -> Result<(), 
 fn tips(frame: &mut Frame<'_>, board: &Board, name: &str) {
     let thread = &board["threads"][name];
     if !truthy(thread, "session") {
-        frame.say(&["tip: pass --session \"<your session title>\" so the coordinator can wake you."]);
+        frame.say(&[
+            "tip: pass --session \"<your session title>\" so the coordinator can wake you.",
+        ]);
     }
     if !truthy(thread, "link") {
         frame.say(&["tip: no session link found; pass --link \"<link from get_session self>\" so the owner can open you from the board."]);
     }
     let waiting = list(&board["inbox"][name]).len();
     if waiting > 0 {
-        frame.say(&[&format!(
-            "{waiting} message(s) waiting: run `coord inbox`."
-        )]);
+        frame.say(&[&format!("{waiting} message(s) waiting: run `coord inbox`.")]);
     }
 }
 
-fn apply(
-    board: &mut Board,
-    frame: &mut Frame<'_>,
-    name: &str,
-    sid: Option<&str>,
-) -> Outcome {
+fn apply(board: &mut Board, frame: &mut Frame<'_>, name: &str, sid: Option<&str>) -> Outcome {
     if let Some(sid) = sid {
         fold::placeholders(board, name, sid)?;
     }

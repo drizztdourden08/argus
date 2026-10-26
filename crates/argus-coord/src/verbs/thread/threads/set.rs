@@ -54,9 +54,9 @@ fn revision_of(frame: &Frame<'_>) -> Result<Option<i64>, CoordError> {
     let Some(value) = frame.options.json("if-rev") else {
         return Ok(None);
     };
-    as_integer(Some(&value)).map(Some).ok_or_else(|| {
-        CoordError::refuse("--if-rev takes the revision number you last saw.")
-    })
+    as_integer(Some(&value))
+        .map(Some)
+        .ok_or_else(|| CoordError::refuse("--if-rev takes the revision number you last saw."))
 }
 
 fn read(frame: &Frame<'_>) -> Result<Input, CoordError> {
@@ -164,7 +164,12 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, input: &Input) -> Outcome {
             changed.push(key);
         }
     }
-    run_ops(board, &acting, &ops_of(&id, input, &edit), (&id, input.if_rev))?;
+    run_ops(
+        board,
+        &acting,
+        &ops_of(&id, input, &edit),
+        (&id, input.if_rev),
+    )?;
     if input.anchor.is_some() {
         changed.push("order");
     }

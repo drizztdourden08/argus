@@ -72,7 +72,8 @@ pub fn show(frame: &mut Frame<'_>) -> Outcome {
         Some(name) => named_thread(&board, name)?.clone(),
         None => board["threads"][frame.caller(&board)?.thread.as_str()].clone(),
     };
-    let text = serde_json::to_string_pretty(&thread).map_err(|e| CoordError::refuse(e.to_string()))?;
+    let text =
+        serde_json::to_string_pretty(&thread).map_err(|e| CoordError::refuse(e.to_string()))?;
     frame.say(&[&text]);
     Ok(())
 }

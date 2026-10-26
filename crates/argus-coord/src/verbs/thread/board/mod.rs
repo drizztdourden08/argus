@@ -13,6 +13,7 @@ use crate::cli::route::Call;
 
 type Verb = fn(&mut Frame<'_>) -> Outcome;
 
+#[allow(clippy::unnecessary_wraps)]
 fn page(frame: &mut Frame<'_>) -> Outcome {
     let url = frame.dashboard_url(&format!("/p/{}/", frame.project));
     frame.say(&[&format!("retired: the dashboard serves this page at {url}")]);
@@ -26,6 +27,7 @@ fn open(_frame: &mut Frame<'_>) -> Outcome {
     Err(CoordError::Exit(NOT_PORTED))
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn path(frame: &mut Frame<'_>) -> Outcome {
     let file = frame.board_file().to_string_lossy().into_owned();
     frame.say(&[&file]);

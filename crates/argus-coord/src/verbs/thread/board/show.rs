@@ -13,7 +13,11 @@ const HEADER: [&str; 6] = ["thread", "status", "agents", "subject", "seen", "not
 
 fn joined(ids: &Value) -> String {
     let text = list(ids).iter().map(display).collect::<Vec<_>>().join(" ");
-    if text.is_empty() { "-".to_owned() } else { text }
+    if text.is_empty() {
+        "-".to_owned()
+    } else {
+        text
+    }
 }
 
 fn lock_text(lock: &Value) -> String {
@@ -84,7 +88,11 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
     }
     let inbox: Vec<String> = s["inbox"]
         .as_object()
-        .map(|m| m.iter().map(|(k, n)| format!("{k}({})", display(n))).collect())
+        .map(|m| {
+            m.iter()
+                .map(|(k, n)| format!("{k}({})", display(n)))
+                .collect()
+        })
         .unwrap_or_default();
     if !inbox.is_empty() {
         frame.say(&[&format!("inbox: {}", inbox.join(" "))]);

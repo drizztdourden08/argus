@@ -89,7 +89,11 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
     for entry in &written.wrote {
         lines.push(format!("  {entry}"));
     }
-    let play = if written.wrote.len() > 1 { "them" } else { "the board" };
+    let play = if written.wrote.len() > 1 {
+        "them"
+    } else {
+        "the board"
+    };
     lines.push(format!(
         "In the Browser pane, a new tab now lists {}: Play opens {play} without starting anything.",
         names_of(&written.wrote)

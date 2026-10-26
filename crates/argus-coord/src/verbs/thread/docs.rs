@@ -3,6 +3,7 @@
 
 use argus_board::Board;
 use argus_board::json::{display, doc_mut, section, truthy};
+use argus_core::clock::parse_ms;
 use serde_json::{Map, Value};
 
 use crate::cli::exit::CoordError;
@@ -76,8 +77,7 @@ pub fn named_thread<'a>(board: &'a Board, name: &str) -> Result<&'a Value, Coord
 /// # Errors
 /// Refused as `no thread "<id>".` when the board has no such thread.
 pub fn thread_mut<'a>(board: &'a mut Board, id: &str) -> Result<&'a mut Value, CoordError> {
-    doc_mut(board, "threads", id)
-        .ok_or_else(|| CoordError::refuse(format!("no thread \"{id}\".")))
+    doc_mut(board, "threads", id).ok_or_else(|| CoordError::refuse(format!("no thread \"{id}\".")))
 }
 
 /// Whether a character is white space to JavaScript (`\s`, `trim`).
@@ -89,6 +89,30 @@ pub fn is_space(c: char) -> bool {
 /// The words of a text, split on runs of white space as `split(/\s+/).filter(Boolean)` does.
 pub fn words(text: &str) -> impl Iterator<Item = &str> {
     text.split(is_space).filter(|w| !w.is_empty())
+}
+
+/// `iso ? Date.now() - Date.parse(iso) : Infinity`, in milliseconds. A time that does not parse
+/// is `NaN`, which no comparison is true for.
+#[must_use]
+#[allow(clippy::cast_precision_loss)]
+pub fn age_ms(iso: &Value, now_ms: i64) -> f64 {
+    match iso.as_str().filter(|s| !s.is_empty()) {
+        None if !argus_core::js::truthy(iso) => f64::INFINITY,
+        None => f64::NAN,
+        Some(text) => parse_ms(text).map_or(f64::NAN, |t| (now_ms - t) as f64),
+    }
+}
+
+/// A JavaScript number as a template literal prints it.
+#[must_use]
+pub fn js_number(n: f64) -> String {
+    if n.is_nan() {
+        "NaN".to_owned()
+    } else if n.is_infinite() {
+        if n > 0.0 { "Infinity" } else { "-Infinity" }.to_owned()
+    } else {
+        display(&argus_core::js::number(n))
+    }
 }
 
 /// The items of a JSON array.

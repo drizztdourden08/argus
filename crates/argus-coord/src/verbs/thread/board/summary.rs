@@ -81,15 +81,35 @@ pub fn summary(board: &Board) -> Value {
         ("updatedAt", field(board, "updatedAt")),
         (
             "threads",
-            rows(visible(board, "threads").into_iter().map(|t| thread_row(board, t)).collect()),
+            rows(
+                visible(board, "threads")
+                    .into_iter()
+                    .map(|t| thread_row(board, t))
+                    .collect(),
+            ),
         ),
-        ("items", rows(visible(board, "items").into_iter().map(item_row).collect())),
-        ("openQuestions", rows(ids_where(&entries, Some("question"), "open"))),
-        ("pendingDecisions", rows(ids_where(&entries, Some("decision"), "pending"))),
+        (
+            "items",
+            rows(visible(board, "items").into_iter().map(item_row).collect()),
+        ),
+        (
+            "openQuestions",
+            rows(ids_where(&entries, Some("question"), "open")),
+        ),
+        (
+            "pendingDecisions",
+            rows(ids_where(&entries, Some("decision"), "pending")),
+        ),
         ("handedBuild", Some(or_null(field(board, "handedBuild")))),
-        ("tests", rows(visible(board, "tests").into_iter().map(test_row).collect())),
+        (
+            "tests",
+            rows(visible(board, "tests").into_iter().map(test_row).collect()),
+        ),
         ("pendingActions", rows(ids_where(&actions, None, "pending"))),
-        ("locks", rows(section(board, "locks").values().map(lock_row).collect())),
+        (
+            "locks",
+            rows(section(board, "locks").values().map(lock_row).collect()),
+        ),
         ("inbox", Some(Value::Object(waiting(board)))),
         ("dirty", Some(json!(section(board, "dirty").len()))),
     ])

@@ -94,7 +94,11 @@ fn chip_title(display: &str, typed: Option<&str>, subject: &str) -> String {
 }
 
 /// Adds the thread to the board as `dispatched`, for the coordinator only.
-fn add(frame: &mut Frame<'_>, (name, subject, brief): (&str, &str, &str), worktree: Option<&str>) -> Outcome {
+fn add(
+    frame: &mut Frame<'_>,
+    (name, subject, brief): (&str, &str, &str),
+    worktree: Option<&str>,
+) -> Outcome {
     frame.mutate(false, |board, fr| {
         let who = fr.caller(board)?;
         if !is_coordinator(&who) {
@@ -116,7 +120,10 @@ fn add(frame: &mut Frame<'_>, (name, subject, brief): (&str, &str, &str), worktr
             ("worktree", json!(worktree)),
             ("root", Value::Null),
             ("session", Value::Null),
-            ("note", json!("dispatched, waiting for the session to register")),
+            (
+                "note",
+                json!("dispatched, waiting for the session to register"),
+            ),
             ("flags", json!({"needsHuman": false, "blocked": false})),
             ("lastSeen", Value::Null),
         ];

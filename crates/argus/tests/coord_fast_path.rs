@@ -57,7 +57,7 @@ fn an_unported_verb_exits_120_with_no_output_and_no_file_written() {
     let json = r#"{"session_id":"s-1","cwd":"."}"#;
     for args in [
         &["hook", "tool"][..],
-        &["thread", "register", "ui"][..],
+        &["wake-fault", "list"][..],
         &["item", "add", "A title", "--project", "alpha"][..],
         &["ping", "hello"][..],
     ] {

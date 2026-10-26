@@ -23,7 +23,11 @@ struct Trashed<'a> {
 
 impl Trashed<'_> {
     fn owner(&self) -> Option<&Value> {
-        let key = if self.collection == "threads" { "id" } else { "thread" };
+        let key = if self.collection == "threads" {
+            "id"
+        } else {
+            "thread"
+        };
         self.doc.get(key)
     }
 }
@@ -39,9 +43,7 @@ fn found<'a>(board: &'a Board, owner: Option<&str>) -> Vec<Trashed<'a>> {
             }
         }
     }
-    found.sort_by(|a, b| {
-        cell(b.doc.get("deletedAt")).cmp(&cell(a.doc.get("deletedAt")))
-    });
+    found.sort_by_key(|t| std::cmp::Reverse(cell(t.doc.get("deletedAt"))));
     found
 }
 
@@ -75,7 +77,7 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let board = frame.read_board()?;
     let who = frame.caller(&board)?;
     need_coordinator(&who, "read the trash")?;
-    let entries = found(&board, frame.options.text("for"));
+    let entries = found(&board, frame.options.text("for").filter(|o| !o.is_empty()));
     if matches!(frame.options.get("json"), Some(Opt::One(Val::Flag))) {
         frame.json(&as_json(&entries));
         return Ok(());

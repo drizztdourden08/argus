@@ -1,7 +1,7 @@
 //! A purge without `--confirm`: what it would remove, the backup it would write, and the exact
 //! command that does it. Nothing is written.
 
-use argus_board::json::{display, to_number};
+use argus_board::json::display;
 use argus_board::ops::purge_plan;
 use argus_core::js;
 
@@ -28,7 +28,7 @@ pub fn run(frame: &mut Frame<'_>, words: &[String]) -> Outcome {
     let rows: Vec<Vec<String>> = plan
         .counts
         .iter()
-        .filter(|(_, n)| js::truthy(n) && to_number(Some(n)) != 0.0)
+        .filter(|(_, n)| js::truthy(n))
         .map(|(key, n)| vec![key.clone(), display(n)])
         .collect();
     let shown: Vec<String> = table(&rows)

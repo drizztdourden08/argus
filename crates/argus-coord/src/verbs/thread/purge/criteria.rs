@@ -7,8 +7,8 @@ use argus_board::limits::optional_text;
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
+use super::text_of;
 use crate::cli::exit::CoordError;
-use crate::cli::Val;
 use crate::verbs::thread::frame::Frame;
 use crate::who::Caller;
 
@@ -21,13 +21,6 @@ pub struct Criteria {
     pub criteria: Value,
     /// The purge in the words the owner typed.
     pub args: String,
-}
-
-fn text_of(val: &Val) -> String {
-    match val {
-        Val::Flag => "true".to_owned(),
-        Val::Text(text) => text.clone(),
-    }
 }
 
 /// The threads a purge never takes: every coordinator and the thread making the call.
@@ -65,8 +58,8 @@ fn known_threads(board: &Board, names: &[String]) -> Result<Vec<String>, CoordEr
     Ok(names.to_vec())
 }
 
-fn days(value: Option<Value>, name: &str) -> Result<Value, CoordError> {
-    let n = to_number(value.as_ref());
+fn days(value: Option<&Value>, name: &str) -> Result<Value, CoordError> {
+    let n = to_number(value);
     if !n.is_finite() || n <= 0.0 {
         return Err(CoordError::refuse(format!(
             "{name} takes a number of days, e.g. {name} 30."
@@ -107,11 +100,17 @@ fn by_keep(
     let names = known_threads(board, &typed)?;
     let args: Vec<String> = names.iter().map(|n| format!("--keep {n}")).collect();
     let all = unique(names.into_iter().chain(keep.iter().cloned()).collect());
-    Ok((Map::from_iter([("keep".into(), json!(all))]), args.join(" ")))
+    Ok((
+        Map::from_iter([("keep".into(), json!(all))]),
+        args.join(" "),
+    ))
 }
 
 fn by_status(frame: &Frame<'_>) -> Result<(Map<String, Value>, String), CoordError> {
-    let typed = frame.options.json("status").map_or_else(String::new, |v| js::string(&v));
+    let typed = frame
+        .options
+        .json("status")
+        .map_or_else(String::new, |v| js::string(&v));
     let list: Vec<String> = typed
         .split(',')
         .map(|s| js::trim(s).to_owned())
@@ -128,7 +127,7 @@ fn by_status(frame: &Frame<'_>) -> Result<(Map<String, Value>, String), CoordErr
 }
 
 fn by_idle(frame: &Frame<'_>) -> Result<(Map<String, Value>, String), CoordError> {
-    let n = days(frame.options.json("idle"), "--idle")?;
+    let n = days(frame.options.json("idle").as_ref(), "--idle")?;
     let args = format!("--idle {}", display(&n));
     Ok((Map::from_iter([("idleDays".into(), n)]), args))
 }
@@ -137,7 +136,7 @@ fn by_trash(frame: &Frame<'_>) -> Result<(Map<String, Value>, String), CoordErro
     let mut criteria = Map::from_iter([("trash".to_owned(), json!(true))]);
     let mut args = "--trash".to_owned();
     if let Some(older) = frame.options.json("older") {
-        let n = days(Some(older), "--older")?;
+        let n = days(Some(&older), "--older")?;
         args = format!("{args} --older {}", display(&n));
         criteria.insert("olderDays".into(), n);
     }
@@ -147,7 +146,10 @@ fn by_trash(frame: &Frame<'_>) -> Result<(Map<String, Value>, String), CoordErro
 fn modes(frame: &Frame<'_>, words: &[String]) -> Vec<&'static str> {
     let on = |name: &str| frame.options.get(name).is_some();
     [
-        (words.first().map(String::as_str) == Some("thread"), "thread"),
+        (
+            words.first().map(String::as_str) == Some("thread"),
+            "thread",
+        ),
         (on("keep"), "keep"),
         (on("status"), "status"),
         (on("idle"), "idle"),

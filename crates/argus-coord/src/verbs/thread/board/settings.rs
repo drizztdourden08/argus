@@ -38,7 +38,12 @@ pub fn name(frame: &mut Frame<'_>) -> Outcome {
 /// Refused for a prefix over 30 characters, and no board.
 pub fn prefixes(frame: &mut Frame<'_>) -> Outcome {
     let mut values: Vec<String> = Vec::new();
-    for word in frame.args.iter().map(|v| js::trim(v)).filter(|v| !v.is_empty()) {
+    for word in frame
+        .args
+        .iter()
+        .map(|v| js::trim(v))
+        .filter(|v| !v.is_empty())
+    {
         if js::len(word) > NAME_MAX {
             return Err(CoordError::refuse(
                 "each thread-title prefix is 30 characters at most.",
@@ -62,7 +67,10 @@ pub fn prefixes(frame: &mut Frame<'_>) -> Outcome {
         } else {
             listed
         };
-        let titles: Vec<String> = shown.iter().map(|p| format!("\"{p} - <Subject>\"")).collect();
+        let titles: Vec<String> = shown
+            .iter()
+            .map(|p| format!("\"{p} - <Subject>\""))
+            .collect();
         fr.say(&[&format!(
             "thread titles on {project} start with: {}.",
             titles.join(", ")
