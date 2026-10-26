@@ -9,6 +9,7 @@ import { BoardBody } from './BoardBody';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { BuildsTab } from './tabs/builds';
+import { KanbanTab } from './tabs/kanban';
 import { TestsTab } from './tabs/tests';
 import { WorktreesTab } from './tabs/worktrees';
 
@@ -25,10 +26,11 @@ const BoardPage = (props: BoardPageProps) => {
       <BoardBody boardKey={boardKey} />
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
+      {tab === 'kanban' && <KanbanTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
       {tab === 'builds' && <BuildsTab boardKey={boardKey} />}
       {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
-      {!['agents', 'tests', 'builds', 'worktrees'].includes(tab) && <EmptyState message="This tab is not built yet." />}
+      {!['agents', 'kanban', 'tests', 'builds', 'worktrees'].includes(tab) && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };
