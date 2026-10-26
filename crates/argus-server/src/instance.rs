@@ -54,6 +54,17 @@ pub async fn call(
     path: &str,
     token: Option<&str>,
 ) -> Option<(u16, String)> {
+    call_with(port, method, path, token, "{}").await
+}
+
+/// [`call`] with the JSON text a write carries. A `GET` carries none.
+pub async fn call_with(
+    port: u16,
+    method: &str,
+    path: &str,
+    token: Option<&str>,
+    body: &str,
+) -> Option<(u16, String)> {
     let mut s = TcpStream::connect(("127.0.0.1", port)).await.ok()?;
     let auth = token
         .map(|t| format!("Authorization: Bearer {t}\r\n"))
@@ -61,7 +72,7 @@ pub async fn call(
     let (kind, body) = if method == "GET" {
         ("", "")
     } else {
-        ("Content-Type: application/json\r\n", "{}")
+        ("Content-Type: application/json\r\n", body)
     };
     let len = body.len();
     let req = format!(
@@ -74,6 +85,12 @@ pub async fn call(
     let (head, body) = text.split_once("\r\n\r\n")?;
     let status = head.split(' ').nth(1)?.parse().ok()?;
     Some((status, body.to_owned()))
+}
+
+/// Whether a process with this id runs (one that denies the query counts as running).
+#[must_use]
+pub fn pid_alive(pid: u32) -> bool {
+    crate::adapters::procs::alive(pid)
 }
 
 /// The health answer of the server on `port`, when it says 200.

@@ -1,0 +1,113 @@
+/* @layer renderer-app @kind test */
+import { describe, expect, it } from 'vitest';
+import { formatFilters } from '../../src/screens/board/tabs/kanban/model';
+import {
+  changedFields, conflictedTests, DEFAULT_FILTERS, editProblem, filtersActive, knownBuilds, latestWakes, parseStored, sortToRun, subjectsOf, testNotices, toRunCount, wakeChip,
+} from '../../src/screens/board/tabs/tests/model';
+import type { BuildDoc, TestDoc, TestFilters, WakeDoc } from '../../src/screens/board/tabs/tests/model';
+import { buildDoc, conflictEntry, doneDoc, itemDoc, testDoc, wakeDoc } from './fixtures';
+
+const tests = (...docs: object[]): TestDoc[] => docs as TestDoc[];
+const builds = (...docs: object[]): BuildDoc[] => docs.map((doc) => ({ ...doc, id: (doc as { tag: string }).tag })) as BuildDoc[];
+const wakes = (...docs: object[]): WakeDoc[] => docs as WakeDoc[];
+
+describe('the saved view', () => {
+  it('reads the Node keys: q, threads, builds, nobuild, status, subject, needs, conf, archived and sort', () => {
+    const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', needs: true, conf: true, archived: true, sort: 'updated' });
+    const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
+    expect(view.filters).toEqual({ query: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', needs: true, conflict: true, archived: true });
+    expect(view.prefs).toEqual({ group: 'item', order: 'updated', showPassed: false, showClosed: true });
+  });
+
+  it('falls back to the defaults for nothing, damage or an unknown group', () => {
+    expect(parseStored({ filters: '{oops', group: 'zzz', passed: null, closed: null })).toEqual({
+      filters: DEFAULT_FILTERS,
+      prefs: { group: 'build', order: 'rank', showPassed: true, showClosed: false },
+    });
+  });
+
+  it('writes the filters back without dropping the keys it does not own', () => {
+    const next: TestFilters = { ...DEFAULT_FILTERS, query: 'q', conflict: true, builds: ['b1'] };
+    expect(JSON.parse(formatFilters('{"trash":true}', next, 'updated'))).toMatchObject({ trash: true, q: 'q', conf: true, builds: ['b1'], sort: 'updated' });
+  });
+
+  it('counts a filter as on for everything but the archived switch', () => {
+    expect(filtersActive(DEFAULT_FILTERS)).toBe(false);
+    expect(filtersActive({ ...DEFAULT_FILTERS, archived: true })).toBe(false);
+    expect(filtersActive({ ...DEFAULT_FILTERS, nobuild: true })).toBe(true);
+  });
+});
+
+describe('the order of the tests to run', () => {
+  const docs = tests(testDoc('T-2', { rank: 1, createdAt: 'b', updatedAt: '2' }), testDoc('T-1', { rank: 1, createdAt: 'a', updatedAt: '1' }), testDoc('T-3', { rank: 0, updatedAt: '3' }));
+
+  it('is the rank, then the creation time, then the id; or the newest update first', () => {
+    expect(sortToRun(docs).map((test) => test.id)).toEqual(['T-3', 'T-1', 'T-2']);
+    expect(sortToRun(docs, 'updated').map((test) => test.id)).toEqual(['T-3', 'T-2', 'T-1']);
+  });
+});
+
+describe('the known builds and the subjects', () => {
+  it('lists the declared and used tags, the handed one first, closed ones only on request', () => {
+    const closed = builds(buildDoc('b1'), buildDoc('b2', { closedAt: '2026-10-01T00:00:00.000Z' }), buildDoc('b10'));
+    const used = tests(testDoc('T-1', { build: 'b3' }), testDoc('T-2', { build: null }));
+    expect(knownBuilds(used, closed, 'b1', false)).toEqual(['b1', 'b10', 'b3']);
+    expect(knownBuilds(used, closed, null, true)).toEqual(['b10', 'b3', 'b2', 'b1']);
+  });
+
+  it('collects the subjects of the items and the tests, sorted and without blanks', () => {
+    const items = [itemDoc('I-1', { subject: 'work' }), itemDoc('I-2', { subject: null })] as never[];
+    expect(subjectsOf(items, tests(testDoc('T-1', { subject: 'play' }), testDoc('T-2', { subject: 'work' })))).toEqual(['play', 'work']);
+  });
+
+  it('counts the tests to run of the open bundles only', () => {
+    const all = tests(testDoc('T-1'), testDoc('T-2', { build: 'old' }), doneDoc('T-3', 'pass', 'ok'), testDoc('T-4', { archivedAt: 'then' }));
+    expect(toRunCount(all, builds(buildDoc('bundle-1'), buildDoc('old', { closedAt: 'then' })))).toBe(1);
+  });
+});
+
+describe('the edit of a test', () => {
+  const test = testDoc('T-1', { covers: null, build: 'bundle-1' }) as TestDoc;
+
+  it('sends only what changed, trimmed', () => {
+    expect(changedFields(test, { title: ' New ', covers: '', build: 'bundle-1', mode: 'manual' })).toEqual({ title: 'New' });
+  });
+
+  it('refuses an empty title and a text over its limit', () => {
+    expect(editProblem({ title: ' ', covers: '', build: '', mode: 'auto' })).toBe('The title cannot be empty.');
+    expect(editProblem({ title: 'ok', covers: '', build: 'x'.repeat(41), mode: 'auto' })).toBe('The build is at most 40 characters.');
+    expect(editProblem({ title: 'ok', covers: '', build: '', mode: 'auto' })).toBeNull();
+  });
+});
+
+describe('the changes the board did not take', () => {
+  const entries = (...docs: object[]) => docs as never[];
+
+  it('keeps the conflicts and refusals of tests, one per sub-op of a bulk, and marks the conflicted tests', () => {
+    const bulk = { id: 'O-5', kind: 'bulk', author: 'human', createdAt: 'a', ops: [{ kind: 'move', target: { c: 'tests', id: 'T-7' } }, { kind: 'move', target: { c: 'tests', id: 'T-8' } }], results: [{ status: 'conflict', by: 'lead' }, { status: 'applied' }] };
+    const notices = testNotices(entries(conflictEntry('O-1', 'T-1'), conflictEntry('O-2', 'T-2', { status: 'refused' }), bulk), new Set(['O-2']));
+    expect(notices.map((notice) => notice.id)).toEqual(['O-1', 'O-5#0']);
+    expect([...conflictedTests(notices)]).toEqual(['T-1', 'T-7']);
+  });
+});
+
+describe('the wake chip', () => {
+  const NOW = Date.parse('2026-10-26T10:00:00.000Z');
+  const done = doneDoc('T-1', 'fail', 'x', { result: { status: 'fail', text: 'x', by: 'human', at: '2026-10-26T09:59:50.000Z' } }) as TestDoc;
+  const chip = (list: WakeDoc[], at = NOW) => wakeChip({ test: done, wakes: list, latest: latestWakes(list), now: at });
+
+  it('goes from waking to not listening once the coalescing window has passed', () => {
+    const queued = wakes(wakeDoc('W-1', 'T-1', { status: 'queued', listeners: 0, at: '2026-10-26T09:59:55.000Z' }));
+    expect(chip(queued)?.label).toBe('lead waking...');
+    expect(chip(queued, NOW + 30000)?.label).toBe('lead not listening');
+  });
+
+  it('keeps the newest wake of a test', () => {
+    const list = wakes(wakeDoc('W-1', 'T-1', { listeners: 0, at: '2026-10-26T09:59:51.000Z' }), wakeDoc('W-2', 'T-1', { at: '2026-10-26T09:59:58.000Z' }));
+    expect(chip(list)?.label).toBe('lead notified');
+  });
+
+  it('has nothing for a coalesced wake whose target is gone', () => {
+    expect(chip(wakes(wakeDoc('W-1', 'T-1', { status: 'coalesced', into: 'W-0', at: '2026-10-26T09:59:55.000Z' })))).toBeNull();
+  });
+});

@@ -1,0 +1,25 @@
+[package]
+name = "argus-parity"
+description = "Argus parity: a read-only, by-value comparison of two dashboard servers (the shadow check of the switch-over)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+argus-core = { path = "../argus-core" }
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false }
+serde_json = { version = "1", features = ["preserve_order"] }
+tokio = { version = "1", features = ["macros", "rt", "time"] }
+
+[dev-dependencies]
+argus-testkit = { path = "../argus-testkit" }
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+
+[lints]
+workspace = true

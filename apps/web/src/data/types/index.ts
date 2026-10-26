@@ -11,3 +11,4 @@ export type * from './portfolio.type';
 export type * from './procs.type';
 export type * from './registry.type';
 export type * from './test.type';
+export type * from './wake.type';

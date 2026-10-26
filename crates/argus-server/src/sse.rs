@@ -39,6 +39,7 @@ pub fn frame(name: &str, data: &Value, id: Option<i64>) -> String {
 #[must_use]
 pub fn frame_with(name: &str, data: &Value, id: Option<&str>) -> String {
     let head = id.map(|id| format!("id: {id}\n")).unwrap_or_default();
+    let data = argus_core::json_text::to_string(data).unwrap_or_default();
     format!("{head}event: {name}\ndata: {data}\n\n")
 }
 

@@ -23,7 +23,7 @@ describe('the launch box of a linked launcher', () => {
     expect(screen.getByText('C:\\work\\rotp')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'launcher l1' }).getAttribute('href')).toBe('#builds');
     expect(screen.getByText('First bundle')).toBeTruthy();
-    expect(screen.getByText('Note')).toBeTruthy();
+    expect(screen.getByText('Read me first.')).toBeTruthy();
   });
 
   it('follows the launcher live: a new command is the one shown', async () => {

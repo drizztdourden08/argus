@@ -20,6 +20,7 @@ use std::io;
 use std::time::Duration;
 
 use argus_core::Paths;
+use argus_core::js::encode_uri_component;
 use argus_server::endpoint::{Endpoint, endpoint};
 use argus_wake::wake_stream::{
     BACKOFF_START_MS, StreamAction, WakeArgs, next_backoff, parse_wake_args,
@@ -101,28 +102,16 @@ impl Sink {
     }
 }
 
-fn encode(text: &str) -> String {
-    text.bytes()
-        .map(|b| {
-            if b.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&b) {
-                char::from(b).to_string()
-            } else {
-                format!("%{b:02X}")
-            }
-        })
-        .collect()
-}
-
 fn target(wanted: &WakeArgs) -> String {
     let label = wanted
         .id
         .as_deref()
-        .map(|id| format!("&id={}", encode(id)))
+        .map(|id| format!("&id={}", encode_uri_component(id)))
         .unwrap_or_default();
     format!(
         "/api/p/{}/wakes/stream?thread={}&v=2{label}",
         wanted.project,
-        encode(&wanted.thread)
+        encode_uri_component(&wanted.thread)
     )
 }
 

@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use argus_core::Coll;
 use argus_launchers::SystemClock;
 use argus_launchers::launcher::{LauncherStale, StaleConfig};
 use serde_json::Value;
@@ -46,11 +47,29 @@ pub(crate) fn build(svc: &Services, _opts: &ServeOptions) -> Option<Arc<Launcher
         ActivityAdapter::of(svc),
         svc.shadow,
     );
-    Some(Arc::new(LauncherStale::new(
+    let stale = Arc::new(LauncherStale::new(
         Arc::new(env),
         Arc::new(SystemClock),
         config_of(svc),
-    )))
+    ));
+    overlay(svc, &stale);
+    Some(stale)
+}
+
+/// The newest Play run of a standalone launcher is a use: the launchers docs of every project
+/// export carry `lastUsedAt` and `stale` as the Node dashboard shows them.
+fn overlay(svc: &Services, stale: &Arc<LauncherStale>) {
+    let Some(sync) = &svc.sync else {
+        return;
+    };
+    let stale = Arc::clone(stale);
+    sync.hooks().on_overlay(move |key, docs| {
+        for doc in docs.iter_mut().filter(|d| d.coll == Coll::Launchers) {
+            if let Some(data) = doc.data.as_mut() {
+                stale.overlay_launcher(key, data);
+            }
+        }
+    });
 }
 
 pub(crate) fn start(svc: &Arc<Services>) {

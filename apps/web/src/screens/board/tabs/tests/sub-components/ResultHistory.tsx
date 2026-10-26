@@ -2,7 +2,7 @@
 import { DateText, Flex, List, ListItem, Markdown, Status, Text } from '@drizztdourden08/tessera';
 import { byLabel } from '../model';
 import { TEST_STATUSES } from '../tests.constants';
-import type { ResultHistoryProps } from '../tests-props.type';
+import type { ResultHistoryProps } from '../tests-drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 
 const ResultHistory = (props: ResultHistoryProps) => {

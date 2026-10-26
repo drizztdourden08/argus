@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Callout, Flex, Markdown, Text } from '@drizztdourden08/tessera';
-import type { TestBodyProps } from '../tests-props.type';
+import { useOutcome } from '../behavior/useOutcome';
+import { useTestsShared } from '../behavior/useTestsShared';
+import type { TestBodyProps } from '../tests-drawer-props.type';
 import { AcList } from './AcList';
 import { DrawerSection } from './DrawerSection';
 import { Evidence } from './Evidence';
@@ -11,16 +13,20 @@ import { ResultBlock } from './ResultBlock';
 import { ResultHistory } from './ResultHistory';
 import { SetupList } from './SetupList';
 import { TestFacts } from './TestFacts';
+import { TestNotices } from './TestNotices';
 import { TextList } from './TextList';
 
 const TestBody = (props: TestBodyProps) => {
-  const { test, item, boardKey, handed } = props;
+  const { test, item, handed, notices } = props;
+  const { boardKey } = useTestsShared();
+  const controls = useOutcome(boardKey, test.id);
   return (
     <Flex direction="column" gap="lg">
+      <TestNotices label={`Conflicts on ${test.id}`} notices={notices.notices.filter((notice) => notice.kind === 'conflict' && notice.op.target?.id === test.id)} ops={notices} />
       <TestFacts test={test} handed={handed} />
       <Flex gap="sm" align="start" wrap>
         <Text variant="label">Run</Text>
-        <OutcomeControls test={test} boardKey={boardKey} />
+        <OutcomeControls test={test} controls={controls} />
         <RerunButton test={test} boardKey={boardKey} />
       </Flex>
       <ResultBlock test={test} />

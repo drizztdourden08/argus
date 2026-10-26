@@ -5,6 +5,7 @@
 //! (`TrayState`, `menu_entries`) and a set of protocol files (`TrayFiles`) that build everywhere.
 
 mod error;
+mod handles;
 mod identity;
 mod notifier;
 mod payload;
@@ -16,6 +17,7 @@ mod tray;
 mod windows_notifier;
 
 pub use error::NotifyError;
+pub use handles::keep_stdio_private;
 pub use identity::{ARGUS_AUMID, ARGUS_NAME, Identity};
 pub use notifier::Notifier;
 pub use payload::{GROUP, Payload};
