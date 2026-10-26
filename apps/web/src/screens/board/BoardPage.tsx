@@ -5,8 +5,8 @@ import { useBoard } from '../../data/react';
 import { resolvePalette, useDocumentPalette } from '../../palette';
 import { PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { BOARD_TAB_IDS, BOARD_TABS } from './board.constants';
+import { BoardBody } from './BoardBody';
 import type { BoardPageProps } from './board.type';
-import { ThreadList } from './sub-components/ThreadList';
 
 const BoardPage = (props: BoardPageProps) => {
   const { boardKey } = props;
@@ -18,7 +18,7 @@ const BoardPage = (props: BoardPageProps) => {
     <PageFrame>
       <ContentHeader title={board.name} back={{ label: 'Argus', onSelect: () => void navigate('/') }} />
       <StatusNotice status={board.status} />
-      <ThreadList threads={board.threads} />
+      <BoardBody boardKey={boardKey} />
       <Tabs tabs={BOARD_TABS} activeTab={tab} onTabChange={select} />
       <EmptyState message="This tab is not built yet." />
     </PageFrame>

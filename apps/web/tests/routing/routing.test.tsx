@@ -22,13 +22,19 @@ describe('routing', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/p/argus/', '/p/rotp/']);
   });
 
-  it('shows the board page at /p/:key/ with the thread list', async () => {
+  it('shows the board page at /p/:key/ with the registered strip', async () => {
     const { sources } = renderAt('/p/rotp/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    expect(sources[0]?.url).toBe('/api/p/rotp/stream?c=meta,threads');
+    const url = new URL(sources[0]?.url ?? '', 'http://localhost');
+    expect(url.pathname).toBe('/api/p/rotp/stream');
+    expect(url.searchParams.get('c')?.split(',').sort()).toEqual([
+      'actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads',
+    ]);
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
-      sources[0]?.emit('snapshot', snapshot('rotp', 'threads', { lead: { id: 'lead', name: 'lead', role: 'coordinator', status: 'active' } }));
+      sources[0]?.emit('snapshot', snapshot('rotp', 'registry', {
+        lead: { id: 'lead', project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'listening' },
+      }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
     expect(screen.getByText('lead')).toBeTruthy();
