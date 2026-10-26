@@ -6,6 +6,7 @@ const cleanAfterEach = (): void => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    localStorage.clear();
   });
 };
 

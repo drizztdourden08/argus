@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind test */
 import { act, render, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -10,15 +11,12 @@ import { byId } from './fixtures';
 
 type Doc = Record<string, unknown>;
 
-interface Board {
-  tests?: Doc[];
-  builds?: Doc[];
-  launchers?: Doc[];
-  launches?: Doc[];
-  runs?: Doc[];
-  items?: Doc[];
+type Feed = 'tests' | 'builds' | 'launchers' | 'launches' | 'runs' | 'items' | 'threads' | 'entries' | 'wakes';
+
+type Board = Partial<Record<Feed, Doc[]>> & {
   handed?: string | null;
-}
+  at?: string;
+};
 
 interface Call {
   url: string;
@@ -34,6 +32,9 @@ interface Reply {
 type Responder = (call: Call) => Reply | undefined;
 
 const SCOPE = 'rotp';
+const FEEDS: [Feed, string][] = [
+  ['tests', 'id'], ['builds', 'tag'], ['launchers', 'name'], ['launches', 'name'], ['runs', 'id'], ['items', 'id'], ['threads', 'id'], ['entries', 'id'], ['wakes', 'id'],
+];
 const POSTED = { id: 'O-1', status: 'applied', outcome: null, entry: null, seq: 1 };
 
 const defaultReply = (call: Call): Reply => {
@@ -60,23 +61,21 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
 };
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
+  vi.stubGlobal('CSS', { supports: () => false });
   const calls = stubFetch(respond);
   const fake = createFakeSources();
   const view = render(
-    <DataProvider streams={createScopeStreams(fake.open)}>
-      <TestsTab boardKey={SCOPE} />
-    </DataProvider>,
+    <MemoryRouter initialEntries={[board.at ?? '/']}>
+      <DataProvider streams={createScopeStreams(fake.open)}>
+        <TestsTab boardKey={SCOPE} />
+      </DataProvider>
+    </MemoryRouter>,
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   const source = fake.sources[fake.sources.length - 1];
   const feed = (coll: string, docs: Doc[], key = 'id') => source?.emit('snapshot', snapshot(SCOPE, coll, byId(docs, key)));
   act(() => {
-    feed('tests', board.tests ?? []);
-    feed('builds', board.builds ?? [], 'tag');
-    feed('launchers', board.launchers ?? [], 'name');
-    feed('launches', board.launches ?? [], 'name');
-    feed('runs', board.runs ?? []);
-    feed('items', board.items ?? []);
+    for (const [coll, key] of FEEDS) feed(coll, board[coll] ?? [], key);
     source?.emit('snapshot', snapshot(SCOPE, 'meta', { board: { name: 'RotP', handedBuild: board.handed ?? null } }));
   });
   const change = (coll: string, id: string, data: object) =>

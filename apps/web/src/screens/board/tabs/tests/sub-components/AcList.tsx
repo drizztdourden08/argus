@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, List, ListItem, Status, Text } from '@drizztdourden08/tessera';
-import type { AcListProps } from '../tests-props.type';
+import type { AcListProps } from '../tests-drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 
 const AcList = (props: AcListProps) => {

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Text } from '@drizztdourden08/tessera';
 import { ScreenshotGallery } from '../../../screenshots';
-import type { EvidenceProps } from '../tests-props.type';
+import type { EvidenceProps } from '../tests-drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 import { ProofUploadForm } from './ProofUploadForm';
 

@@ -3,7 +3,7 @@ import type { DropZoneStatus } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { ScreenshotAttach } from '../../../screenshots';
 import { useProofUpload } from '../behavior/useProofUpload';
-import type { ProofUploadFormProps } from '../tests-props.type';
+import type { ProofUploadFormProps } from '../tests-drawer-props.type';
 
 const ProofUploadForm = (props: ProofUploadFormProps) => {
   const { testId, boardKey } = props;
