@@ -5,7 +5,7 @@ use std::time::Duration;
 use argus_core::Paths;
 use argus_native::{STOP_GRACE, Stopped, TrayFiles, process_alive, stop_tray};
 
-use super::detach;
+use argus::detach;
 
 const STEP: Duration = Duration::from_millis(100);
 

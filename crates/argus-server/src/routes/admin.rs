@@ -40,7 +40,7 @@ fn run_counts(svc: &Services) -> RunCounts {
     })
 }
 
-fn scopes(svc: &Services) -> Vec<String> {
+pub(crate) fn scopes(svc: &Services) -> Vec<String> {
     svc.db.with_conn(|c| {
         let Ok(mut st) = c.prepare("SELECT DISTINCT scope FROM docs ORDER BY scope") else {
             return Vec::new();
@@ -51,31 +51,35 @@ fn scopes(svc: &Services) -> Vec<String> {
     })
 }
 
-async fn health(ctx: Ctx) -> Reply {
-    let svc = &ctx.svc;
+/// The body of `GET /api/health`, which the MCP `health` tool answers too.
+///
+/// # Errors
+/// When the schema version cannot be read.
+pub(crate) fn health_body(svc: &Services) -> Result<Value, ApiError> {
     let counts = run_counts(svc);
     let watcher = svc.sync.as_ref().map_or_else(
         || json!({ "ok": false, "lastEventAt": null, "errors": 0 }),
         |s| json!(s.health()),
     );
-    Ok(json_reply(
-        200,
-        &json!({
-            "ok": true,
-            "version": Services::version(),
-            "instance": svc.instance,
-            "startedAt": svc.started_at,
-            "port": svc.port(),
-            "schema": svc.db.user_version()?,
-            "scopes": scopes(svc),
-            "watcher": watcher,
-            "runs": { "running": counts.running, "queued": counts.queued },
-            "sse": { "clients": svc.streams.load(std::sync::atomic::Ordering::SeqCst) },
-            "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
-            "impl": "argus",
-            "shadow": svc.shadow,
-        }),
-    ))
+    Ok(json!({
+        "ok": true,
+        "version": Services::version(),
+        "instance": svc.instance,
+        "startedAt": svc.started_at,
+        "port": svc.port(),
+        "schema": svc.db.user_version()?,
+        "scopes": scopes(svc),
+        "watcher": watcher,
+        "runs": { "running": counts.running, "queued": counts.queued },
+        "sse": { "clients": svc.streams.load(std::sync::atomic::Ordering::SeqCst) },
+        "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
+        "impl": "argus",
+        "shadow": svc.shadow,
+    }))
+}
+
+async fn health(ctx: Ctx) -> Reply {
+    Ok(json_reply(200, &health_body(&ctx.svc)?))
 }
 
 async fn version(ctx: Ctx) -> Reply {
