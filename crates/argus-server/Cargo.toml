@@ -1,6 +1,6 @@
 [package]
 name = "argus-server"
-description = "Argus server crate."
+description = "Argus server: the HTTP API, the security checks, the doc stream and the web assets."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,6 +8,28 @@ license.workspace = true
 publish.workspace = true
 authors.workspace = true
 repository.workspace = true
+
+[dependencies]
+argus-board = { path = "../argus-board" }
+argus-core = { path = "../argus-core" }
+argus-store = { path = "../argus-store" }
+argus-sync = { path = "../argus-sync" }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+bytes = "1"
+form_urlencoded = "1"
+futures-core = "0.3"
+getrandom = "0.3"
+http-body-util = "0.1"
+rust-embed = "8"
+serde = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+sha2 = "0.10"
+subtle = "2"
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio-util = "0.7"
+
 
 [lints]
 workspace = true

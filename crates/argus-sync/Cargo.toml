@@ -1,0 +1,27 @@
+[package]
+name = "argus-sync"
+description = "Argus sync: boards mirrored into the doc store, owner posts, proofs and portfolio cards."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+argus-board = { path = "../argus-board" }
+argus-core = { path = "../argus-core" }
+argus-store = { path = "../argus-store" }
+getrandom = "0.3"
+notify = "8"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
