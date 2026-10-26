@@ -156,6 +156,25 @@ where it landed.
 | `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/registry.rs` | ported |
 | `db17ac5` | A worktree discard note counts only with a delete word, no negation and the worktree named | `crates/argus-worktrees/src/approval.rs` (word lists as in Node `remove.mjs`) | ported |
 | `db17ac5` | Listener hook timeout 3 days; master launcher for the Overlord project | `docs/coord-port.md` section 3, for WP2 | noted for WP2 |
+| `62e66c7` | A prune forgets only vetted records: `git worktree prune --dry-run --verbose` names them first, every repository is vetted before any prune runs, and an unvetted record (an unplugged drive) or a detached HEAD no ref keeps stops it | `crates/argus-worktrees/src/prune.rs`, write door in `guard.rs`, cases in `src/specs/round2.rs` and `src/specs/fallback.rs` | ported |
+| `62e66c7` | The look-again fallback of a removal prunes only vetted records and says `Argus did not prune git's records: ...` | `crates/argus-worktrees/src/finish.rs` (`LetGo`), `remove.rs` | ported |
+| `62e66c7` | A merged pull request without a `headRefOid` (or with one that is no commit id) is no proof of a merge | `crates/argus-worktrees/src/branch.rs` | ported |
+| `62e66c7` | A nested git repository (3 levels down) is unsafe, needs discard and the owner, and is copied into the backup; a failed `git status` refuses the removal with `git_failed` | `crates/argus-worktrees/src/remove.rs`, `backup.rs`, cases in `src/specs/round2.rs` | ported |
+| `62e66c7` | The reaper judges by Claude task data (transcript turn, task output) and worktree activity, opus-level agents wait 60 min (`agents.reapOpusMs`), `closedBy: reaper` | `crates/argus-agents/src/evidence/` (shared with the reconciler), `reaper.rs`, `config.rs`, cases in `tests/reaper.rs` | ported |
+| `62e66c7` | The reconciler reopens a record the reaper closed when its task output or worktree shows work after the close, and says why | `crates/argus-agents/src/reconciler/resume.rs`, cases in `tests/reconciler.rs` | ported |
+| `62e66c7` | A hook event binds only by exact agent id (start reopens, stop notes an unknown id, the tool result never rewrites another agent's record) | `crates/argus-coord/src/verbs/hook/` (already exact in WP2), cases in `tests/hook_agents*.rs` | ported |
+| `62e66c7` | `coord agent start` with a Claude id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
+| `62e66c7` | Dev servers may use 3 GB before they are flagged (the Node repo keeps 1500 in `DEFAULT_RULES`; the owner's live rules file has 3000) | `crates/argus-procs/src/defaults.rs` (`node-dev-server`) | ported |
+| `62e66c7` | The `coord` forward shim to `argus coord` is off by default | ai-config only: `forward.mjs` | n/a |
+
+Where Argus differs from Node on purpose in the `62e66c7` port:
+
+- `prune` for all with a gone detached worktree no ref keeps is refused as an unvetted record even with discard and the owner's
+  entry (Node lets discard through); the by-id prune takes discard as Node does. Stricter.
+- A pruned record's folder is read from its `gitdir` file as in Node, and a record Argus cannot name stops the prune.
+- The backup of a nested repository is copied into `<base>.nested` (the folder itself, not under its relative path) only up to
+  2000 files and 50 MB, else it is named in `<base>.nested.txt`. Node copies it whole, `node_modules` left out.
+- The nested look stops after 3000 folders (Node has no budget). Less strict on a huge tree; the removal still needs a clean status.
 
 ## Feature areas
 

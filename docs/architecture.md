@@ -611,14 +611,15 @@ keeps the last Play time per launcher in kv (`launcher-played:<scope>:<name>`).
 
 ### Agents (argus-agents)
 
-Three services over one data source (the sub-agent transcripts the session host keeps under
+Three services and one shared reader over one data source (the sub-agent transcripts the session host keeps under
 `~/.claude/projects/<slug>/<sessionId>/subagents/`, and the task outputs under the temp folder):
 
 | Service | Node source | Role |
 |---|---|---|
 | `watcher` | `src/agents/watcher.mjs` | Tails transcripts once a second, live fields on the `agents` docs, never written to the board |
-| `reaper` | `src/agents/reaper.mjs` | Closes a hook record whose transcript stayed quiet for `agents.reapMs` |
-| `reconciler` | `src/agents/reconciler.mjs` | Verify ids, link, duplicates, classify, resume; the report route |
+| `reaper` | `src/agents/reaper.mjs` | Closes a hook record whose transcript, task output and worktree stayed quiet for `agents.reapMs` (`agents.reapOpusMs` for opus-level agents) |
+| `reconciler` | `src/agents/reconciler.mjs` | Verify ids, link, duplicates, classify, resume (also a record the reaper closed while the agent still worked); the report route |
+| `evidence` | `src/agents/evidence.mjs` | What Claude keeps for a session (transcript, meta, task output) and the newest sign of life of a record; shared by the reaper and the reconciler |
 
 The folders come from `agents.claudeHome` and `agents.claudeTemp` in config, so tests point them
 at temp folders.

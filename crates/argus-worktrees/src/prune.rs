@@ -360,11 +360,16 @@ mod tests {
     fn the_names_of_a_dry_run_are_read_once_each() {
         let text = "Removing worktrees/a: gitdir file points to non-existent location\nRemoving worktrees/b: invalid gitdir file\nRemoving worktrees/a: again\nnoise\n";
         assert_eq!(dry_run_names("/r", &dry(text)).unwrap(), ["a", "b"]);
-        assert!(dry_run_names("/r", &dry("")).unwrap().is_empty());
-        assert!(
-            dry_run_names("/r", &dry("Removed nothing\n"))
-                .unwrap()
-                .is_empty()
+        let none = Vec::<String>::new();
+        assert_eq!(dry_run_names("/r", &dry("")).unwrap(), none);
+        assert_eq!(
+            dry_run_names(
+                "/r",
+                &dry("Removed nothing
+")
+            )
+            .unwrap(),
+            none
         );
     }
 

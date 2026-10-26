@@ -565,6 +565,49 @@ fn registering_a_hook_recorded_agent_with_checkin_the_manual_value_wins() {
     assert_eq!(board["agents"]["A-90"]["name"], "pad-overlay");
 }
 
+#[test]
+fn registering_with_a_claude_id_that_has_no_record_never_takes_another_agents_hook_record() {
+    let rig = Rig::new();
+    rig.edit(|b| {
+        let at = now_iso();
+        b["agents"]["A-91"] = json!({
+            "id": "A-91", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
+            "updatedBy": "coordinator", "rank": 91000, "name": "rebuild-the-pad-overlay",
+            "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": "sonnet",
+            "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
+            "status": "working", "note": null, "result": null, "startedAt": at,
+            "finishedAt": null, "hookId": "hk-91", "claudeId": "hk-91", "source": "hook",
+            "agentType": "general-purpose", "modelUsed": null, "transcriptFile": null, "rev": 1,
+        });
+    });
+    rig.ok(
+        &[
+            "agent",
+            "start",
+            "pad-overlay",
+            "Rebuild the pad overlay screen with the new layout",
+            "--model",
+            "sonnet",
+            "--why",
+            "known cause, one module",
+            "--claude-id",
+            "other-id-0001",
+        ],
+        As::Lead,
+    );
+    let board = rig.board();
+    let agents = board["agents"].as_object().unwrap();
+    assert_eq!(agents.len(), 2, "its own record");
+    assert_eq!(agents["A-91"]["name"], "rebuild-the-pad-overlay");
+    assert_eq!(agents["A-91"]["claudeId"], "hk-91");
+    assert_eq!(agents["A-91"]["leadBound"], Value::Null);
+    let made = agents
+        .values()
+        .find(|a| a["name"] == "pad-overlay")
+        .unwrap();
+    assert_eq!(made["claudeId"], "other-id-0001");
+}
+
 /// The time now, as the board writes it.
 fn now_iso() -> String {
     argus_core::clock::now_iso()

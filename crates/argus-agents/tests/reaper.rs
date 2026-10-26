@@ -332,7 +332,7 @@ impl Claude {
     }
 
     /// A worktree folder with one file written `age_min` ago.
-    fn worktree(&self, w: &World, name: &str, age_min: i64) -> String {
+    fn worktree(w: &World, name: &str, age_min: i64) -> String {
         let dir = w.dir.path().join(name);
         fs::create_dir_all(dir.join("src")).unwrap();
         let file = dir.join("src").join("big.rs");
@@ -355,7 +355,7 @@ fn an_opus_agent_writing_files_in_its_worktree_is_not_closed_although_its_transc
  {
     let w = world();
     let c = Claude::new(&w);
-    let tree = c.worktree(&w, "wt1", 2);
+    let tree = Claude::worktree(&w, "wt1", 2);
     let a = c.agent(
         "a0000000000000011",
         30,
@@ -372,7 +372,7 @@ fn a_sonnet_agent_whose_worktree_shows_work_minutes_ago_is_kept_once_it_is_quiet
  {
     let w = world();
     let c = Claude::new(&w);
-    let tree = c.worktree(&w, "wt2", 3);
+    let tree = Claude::worktree(&w, "wt2", 3);
     with_session(
         &w,
         &[c.agent("a0000000000000012", 30, NOW, &json!({ "worktree": tree }))],
