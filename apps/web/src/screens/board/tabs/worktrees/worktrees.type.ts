@@ -1,0 +1,76 @@
+/* @layer renderer-app @kind types */
+import type { WorktreesMeta } from '../../../../data/worktrees';
+import type { Notice, Panel, PanelKind, WorktreeFilter, WorktreeRow } from './model';
+
+type Attempt<T> = { ok: true; value: T } | { ok: false; error: unknown };
+
+interface Guard {
+  busy: boolean;
+  attempt: <T>(task: () => Promise<T>) => Promise<Attempt<T> | null>;
+}
+
+interface WorktreesData {
+  ready: boolean;
+  meta: WorktreesMeta | null;
+  rows: WorktreeRow[];
+}
+
+interface TabPrefs {
+  filter: WorktreeFilter;
+  setFilter: (filter: WorktreeFilter) => void;
+  rulesOpen: boolean;
+  setRulesOpen: (open: boolean) => void;
+}
+
+interface Notices {
+  notice: Notice | null;
+  dismissed: ReadonlySet<string>;
+  show: (notice: Notice) => void;
+  clear: () => void;
+  dismissJobs: (ids: readonly string[]) => void;
+}
+
+interface PanelControls {
+  panel: Panel | null;
+  toggle: (row: WorktreeRow, kind: PanelKind) => void;
+  close: () => void;
+  patch: (change: Partial<Panel>) => void;
+}
+
+interface AskThread {
+  busy: boolean;
+  send: (row: WorktreeRow) => Promise<void>;
+}
+
+interface Removal {
+  busy: boolean;
+  confirm: (row: WorktreeRow) => Promise<void>;
+}
+
+interface BatchState {
+  error: string | null;
+}
+
+interface BatchControls {
+  state: BatchState | null;
+  busy: boolean;
+  toggle: () => void;
+  cancel: () => void;
+  confirm: () => Promise<void>;
+}
+
+interface RowContext {
+  panel: Panel | null;
+  busy: boolean;
+  meta: WorktreesMeta | null;
+  onAsk: (row: WorktreeRow, kind: PanelKind) => void;
+}
+
+interface CellProps {
+  row: WorktreeRow;
+  context: RowContext;
+}
+
+export type {
+  Attempt, AskThread, BatchControls, BatchState, CellProps, Guard, Notices, PanelControls, Removal, RowContext, TabPrefs, WorktreesData,
+};

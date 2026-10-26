@@ -10,6 +10,7 @@ import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { BuildsTab } from './tabs/builds';
 import { TestsTab } from './tabs/tests';
+import { WorktreesTab } from './tabs/worktrees';
 
 const BoardPage = (props: BoardPageProps) => {
   const { boardKey } = props;
@@ -26,7 +27,8 @@ const BoardPage = (props: BoardPageProps) => {
       {tab === 'agents' && <AgentsTab boardKey={boardKey} />}
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
       {tab === 'builds' && <BuildsTab boardKey={boardKey} />}
-      {tab !== 'agents' && tab !== 'tests' && tab !== 'builds' && <EmptyState message="This tab is not built yet." />}
+      {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
+      {!['agents', 'tests', 'builds', 'worktrees'].includes(tab) && <EmptyState message="This tab is not built yet." />}
     </PageFrame>
   );
 };
