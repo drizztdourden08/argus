@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { DateText, ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
+import { ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
 import { orText } from '../../../../format';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { LEVEL_LOOK, noteLevel, noteProject, toastNote } from '../model';
 import type { NoteRowProps } from '../notifications.type';
 
@@ -23,7 +24,7 @@ const NoteRow = (props: NoteRowProps) => {
         </Stack>
       )}
       columns={[
-        { primary: note.at ? <DateText value={note.at} format="relative" tooltip /> : '', align: 'end' },
+        { primary: note.at ? <ShortAge value={note.at} ago /> : '', align: 'end' },
         { primary: project ? <ProjectLink project={project} /> : '', secondary: note.thread ?? '' },
       ]}
     />

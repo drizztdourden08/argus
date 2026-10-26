@@ -9,7 +9,7 @@ import { BoardBody } from './BoardBody';
 import type { BoardPageProps } from './board.type';
 import { AgentsTab } from './tabs/agents';
 import { BuildsTab } from './tabs/builds';
-import { KanbanTab } from './tabs/kanban';
+import { KanbanTab, itemHash } from './tabs/kanban';
 import { ANCHOR_PATTERN, TestsTab, useTestsBadge } from './tabs/tests';
 import { WorktreesTab } from './tabs/worktrees';
 
@@ -19,7 +19,8 @@ const BoardPage = (props: BoardPageProps) => {
   const navigate = useNavigate();
   const { hash } = useLocation();
   const picked = useHashTab(BOARD_TAB_IDS, 'agents');
-  const tab = ANCHOR_PATTERN.test(hash.slice(1)) ? 'tests' : picked.tab;
+  const anchored = ANCHOR_PATTERN.test(hash.slice(1)) ? 'tests' : picked.tab;
+  const tab = itemHash(hash) ? 'kanban' : anchored;
   const toRun = useTestsBadge(boardKey);
   const tabs = BOARD_TABS.map((entry) => (entry.id === 'tests' ? { ...entry, badge: toRun } : entry));
   useDocumentPalette(resolvePalette(boardKey, board.meta?.palette));

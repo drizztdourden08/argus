@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DateText, Grid, StatTile } from '@drizztdourden08/tessera';
+import { Grid, StatTile } from '@drizztdourden08/tessera';
 import { asNumber, formatMemory } from '../../../../format';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { needsLook } from '../model';
 import type { ProcessSummaryProps } from '../processes.type';
 import { SampleNotices } from './SampleNotices';
@@ -24,7 +25,7 @@ const ProcessSummary = (props: ProcessSummaryProps) => {
         <StatTile size="sm" label={count === 1 ? 'Process' : 'Processes'} value={count} />
         <StatTile size="sm" label="Memory" value={formatMemory(total)} />
         <StatTile size="sm" label="Need a look" value={look} tone={look > 0 ? 'warning' : undefined} />
-        <StatTile size="sm" label="Sampled" value={meta?.sampledAt ? <DateText value={meta.sampledAt} format="relative" tooltip /> : 'not sampled yet'} unit={sampleTook(meta)} />
+        <StatTile size="sm" label="Sampled" value={meta?.sampledAt ? <ShortAge value={meta.sampledAt} ago /> : 'not sampled yet'} unit={sampleTook(meta)} />
       </Grid>
       <SampleNotices meta={meta} />
     </>

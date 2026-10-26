@@ -43,9 +43,14 @@ fn pick_port(flag: Option<u16>, env: Option<u16>) -> u16 {
 ///
 /// The port is refused or the server does not start.
 pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> Result<u8, String> {
-    let mut opts = ServeOptions::new(paths_of(data_dir));
+    let paths = paths_of(data_dir);
+    if let Some(why) = super::node_guard::refusal(&paths).await {
+        return Err(why);
+    }
+    let mut opts = ServeOptions::new(paths);
     opts.port = Some(port_of(port)?);
     opts.shadow = shadow;
+    opts.shadow_seed = shadow.then(|| Paths::from_env().home);
     opts.notify.system = true;
     let server = serve(opts).await.map_err(|e| e.to_string())?;
     println!(

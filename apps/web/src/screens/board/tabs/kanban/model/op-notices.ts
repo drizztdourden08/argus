@@ -1,20 +1,17 @@
 /* @layer renderer-app @kind logic */
 import type { Entry, OpOutcome, OwnerOp } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import { byCreated } from './by-created';
+import { isUnapplied } from './is-unapplied';
 import { BAD_STATUSES, HUMAN, OP_KINDS } from './model.constants';
 import type { OpNotice } from './model.type';
-
-const isPending = (entry: Entry): boolean => !entry.appliedAt && (!entry.status || entry.status === 'new');
-
-const byTime = (a: WithId<Entry>, b: WithId<Entry>): number =>
-  String(a.createdAt).localeCompare(String(b.createdAt)) || a.id.localeCompare(b.id);
 
 const ackedIds = (entries: readonly WithId<Entry>[]): Set<string> =>
   new Set(entries.filter((entry) => entry.author === HUMAN && entry.kind === 'ack' && entry.replyTo).map((entry) => String(entry.replyTo)));
 
 const statusOf = (entry: Entry, result: OpOutcome | undefined): string | undefined => {
   if (result?.status) return result.status;
-  return isPending(entry) ? 'new' : entry.status;
+  return isUnapplied(entry) ? 'new' : entry.status;
 };
 
 const outcomeOf = (entry: Entry, result: OpOutcome | undefined): OpOutcome => ({
@@ -47,7 +44,7 @@ const opNotices = (entries: readonly WithId<Entry>[], dismissed: ReadonlySet<str
   const acked = ackedIds(entries);
   return entries
     .filter((entry) => entry.author === HUMAN && OP_KINDS.includes(entry.kind) && entry.kind !== 'purge' && !acked.has(entry.id))
-    .sort(byTime)
+    .sort(byCreated)
     .flatMap(opsOf)
     .filter((notice) => !dismissed.has(notice.id));
 };

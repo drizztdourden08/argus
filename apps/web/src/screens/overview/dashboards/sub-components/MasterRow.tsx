@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, DateText, Inline, Text, Tooltip } from '@drizztdourden08/tessera';
+import { Button, Inline, Text, Tooltip } from '@drizztdourden08/tessera';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { useMasterRun } from '../behavior/useMasterRun';
 import { NO_PLAY } from '../dashboards.constants';
 import type { MasterRowProps } from '../dashboards.type';
@@ -26,7 +27,7 @@ const MasterRow = (props: MasterRowProps) => {
       {line.head && (
         <Text variant="caption" tone={line.tone}>
           {line.head}
-          {line.at ? <> <DateText value={line.at} format={line.running ? 'elapsed' : 'relative'} /></> : null}
+          {line.at ? <> <ShortAge value={line.at} ago={!line.running} /></> : null}
           {line.tail}
         </Text>
       )}

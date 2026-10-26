@@ -148,10 +148,10 @@ fn the_exit_120_does_not_depend_on_the_project() {
     let home = Home::new();
     let bare = home.folder("bare");
     // no .ai-config.json above: a ported verb would refuse, an unported one never looks
-    let ran = coord(&["item", "list"], home.env(), &bare);
+    let (mut inv, out, err) = Invocation::captured(&["item", "list"], home.env(), bare, "");
     assert_eq!(
-        (ran.code, ran.out.as_str(), ran.err.as_str()),
-        (120, "", "")
+        (dispatch(&mut inv, &[]), out.text(), err.text()),
+        (120, String::new(), String::new())
     );
 }
 

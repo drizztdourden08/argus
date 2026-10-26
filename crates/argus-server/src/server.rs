@@ -26,6 +26,7 @@ use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::security::LoginCodes;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
+use crate::shadow;
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
@@ -51,6 +52,8 @@ pub struct ServeOptions {
     pub sync: bool,
     /// Shadow mode: no board writes.
     pub shadow: bool,
+    /// The Node dashboard home a shadow copies its database, config and process rules from.
+    pub shadow_seed: Option<PathBuf>,
     /// Also print the log to stderr.
     pub echo_log: bool,
     /// Run counts for the cards.
@@ -80,6 +83,7 @@ impl ServeOptions {
             web_root: None,
             sync: true,
             shadow: false,
+            shadow_seed: None,
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
@@ -170,6 +174,9 @@ struct Core {
 
 async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
+    if let Some(node_home) = opts.shadow_seed.as_ref().filter(|_| opts.shadow) {
+        shadow::seed(node_home, &paths.home)?;
+    }
     let config = checked_config(&paths, opts.port).await?;
     let log = Arc::new(
         Logger::new(

@@ -48,6 +48,24 @@ mod tests {
     }
 
     #[test]
+    fn memory_text_matches_the_node_formatter_at_its_edges() {
+        let cases = [
+            (0, "0 MB"),
+            (1023, "1023 MB"),
+            (1024, "1 GB"),
+            (1996, "1.9 GB"),
+            (1997, "2 GB"),
+            (2047, "2 GB"),
+            (4096, "4 GB"),
+            (5000, "4.9 GB"),
+            (12288, "12 GB"),
+        ];
+        for (mb, text) in cases {
+            assert_eq!(mem_text(mb), text, "{mb} MB");
+        }
+    }
+
+    #[test]
     fn names_and_paths_normalise() {
         assert_eq!(base_name("Node.EXE"), "node");
         assert_eq!(slashed("C:\\a\\b"), "C:/a/b");

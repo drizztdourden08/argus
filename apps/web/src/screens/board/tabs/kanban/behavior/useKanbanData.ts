@@ -4,6 +4,7 @@ import type { ActionDoc, Entry, Item, ThreadChoice } from '../../../../../data/k
 import { useCollection } from '../../../../../data/react';
 import type { Build, Test } from '../../../../../data/types';
 import { OP_KINDS, needsMap } from '../model';
+import type { TrashSource } from '../trash';
 import type { KanbanData, SoftDoc } from '../kanban.type';
 
 const isLive = (doc: SoftDoc): boolean => !doc.deletedAt && !doc.archivedAt;
@@ -15,6 +16,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
   const actions = useCollection<ActionDoc>(boardKey, 'actions');
   const tests = useCollection<Test>(boardKey, 'tests');
   const builds = useCollection<Build>(boardKey, 'builds');
+  const agents = useCollection<TrashSource>(boardKey, 'agents');
   const needs = useMemo(() => {
     const closed = new Set(builds.docs.filter((build) => build.closedAt).map((build) => build.id));
     return needsMap({
@@ -23,7 +25,16 @@ const useKanbanData = (boardKey: string): KanbanData => {
       tests: tests.docs.filter((test) => isLive(test) && !(test.build && closed.has(test.build))),
     });
   }, [entries.docs, actions.docs, tests.docs, builds.docs]);
-  return { ready: items.ready && threads.ready, items: items.docs, threads: threads.docs, entries: entries.docs, tests: tests.docs, needs };
+  return {
+    ready: items.ready && threads.ready,
+    items: items.docs,
+    threads: threads.docs,
+    entries: entries.docs,
+    actions: actions.docs,
+    agents: agents.docs,
+    tests: tests.docs,
+    needs,
+  };
 };
 
 export { useKanbanData };

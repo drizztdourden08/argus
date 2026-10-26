@@ -59,7 +59,7 @@ pub(crate) fn announce(
 
 /// A thread needs the human exactly while it has a pending action that is neither archived nor
 /// in the trash.
-pub(crate) fn refresh_needs_human(board: &mut Board, thread: &str) {
+pub fn refresh_needs_human(board: &mut Board, thread: &str) {
     if doc(board, "threads", thread).is_none() {
         return;
     }

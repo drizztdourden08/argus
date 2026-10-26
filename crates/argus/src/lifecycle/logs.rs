@@ -72,6 +72,9 @@ async fn run_log(paths: &Paths, n: usize, request: &Request<'_>) -> Result<u8, S
         eprintln!("dashboard is not running");
         return Ok(1);
     };
+    if let Some(code) = running.refuse_node("logs") {
+        return Ok(code);
+    }
     let base = format!("/api/p/{project}/runs/{run}");
     let page = api(
         &running.at,
