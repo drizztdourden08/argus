@@ -77,6 +77,12 @@ impl TrayHandle {
         self.handlers.set_command(Box::new(handler));
     }
 
+    /// True while the tray thread runs; false once it ended, for whatever reason.
+    #[must_use]
+    pub fn is_running(&self) -> bool {
+        self.thread.as_ref().is_some_and(|t| !t.is_finished())
+    }
+
     /// Removes the icon and ends the thread.
     #[must_use]
     pub fn shutdown(self) -> ExitReason {
