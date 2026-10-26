@@ -9,10 +9,12 @@ use std::sync::Arc;
 use argus_core::{ApiError, ErrorCode};
 use axum::body::Body;
 use axum::extract::{ConnectInfo, Request, State};
+use axum::http::request::Parts as RequestParts;
 use axum::http::{HeaderMap, Method};
 use axum::response::Response;
 use serde_json::json;
 
+use crate::body::discard;
 use crate::ctx::Parts;
 use crate::pathing::{normalize, query_pairs};
 use crate::reply::{error_reply, html_page, info_page, plain_error};
@@ -162,7 +164,41 @@ fn route(router: &Router, method: &Method, path: &str) -> Result<Found, Box<Resp
     Err(Box::new(refusal))
 }
 
-/// The listener's one handler.
+type Admitted = (
+    Handler,
+    RouteOpts,
+    HashMap<String, String>,
+    Option<AuthKind>,
+);
+
+/// The checks before the handler: Host, peer, route, credentials.
+fn admit(
+    app: &App,
+    peer: SocketAddr,
+    parts: &RequestParts,
+    path: &str,
+) -> Result<Admitted, Box<Response>> {
+    let svc = &app.svc;
+    if !host_ok(&parts.headers, svc.port()) {
+        svc.log.warn(
+            "bad host refused",
+            json!({ "req": format!("{} {path}", parts.method) }),
+        );
+        return Err(Box::new(fail(ErrorCode::BadHost, "unexpected Host header")));
+    }
+    if !peer_ok(peer.ip()) {
+        return Err(Box::new(fail(
+            ErrorCode::Forbidden,
+            "only this computer may use the dashboard",
+        )));
+    }
+    let (handler, opts, params) = route(&app.router, &parts.method, path)?;
+    let auth = authorize(svc, &parts.headers, (&parts.method, path), opts)?;
+    Ok((handler, opts, params, auth))
+}
+
+/// The listener's one handler. A refused request's body, like any body its handler left unread,
+/// is discarded while the answer goes out.
 pub async fn dispatch(
     State(app): State<Arc<App>>,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
@@ -171,26 +207,12 @@ pub async fn dispatch(
     let (parts, body) = req.into_parts();
     let path = normalize(parts.uri.path());
     let svc = &app.svc;
-    if !host_ok(&parts.headers, svc.port()) {
-        svc.log.warn(
-            "bad host refused",
-            json!({ "req": format!("{} {path}", parts.method) }),
-        );
-        return fail(ErrorCode::BadHost, "unexpected Host header");
-    }
-    if !peer_ok(peer.ip()) {
-        return fail(
-            ErrorCode::Forbidden,
-            "only this computer may use the dashboard",
-        );
-    }
-    let found = route(&app.router, &parts.method, &path).and_then(|(h, opts, params)| {
-        authorize(svc, &parts.headers, (&parts.method, &path), opts)
-            .map(|auth| (h, opts, params, auth))
-    });
-    let (handler, opts, params, auth) = match found {
+    let (handler, opts, params, auth) = match admit(&app, peer, &parts, &path) {
         Ok(v) => v,
-        Err(res) => return *res,
+        Err(res) => {
+            discard(body);
+            return *res;
+        }
     };
     let query = query_pairs(parts.uri.query());
     let req = Parts {
