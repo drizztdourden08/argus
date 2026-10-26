@@ -11,3 +11,16 @@ repository.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+getrandom = "0.3"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+tokio = { version = "1", features = ["io-util", "macros", "process", "rt", "sync", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["io-util", "macros", "process", "rt-multi-thread", "sync", "test-util", "time"] }

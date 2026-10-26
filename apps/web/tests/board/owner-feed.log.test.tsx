@@ -99,7 +99,7 @@ describe('the tests waiting on you', () => {
     await openBoard({ tests: byId(...tests) });
     expect(screen.getAllByText('bundle to test')).toHaveLength(1);
     expect(screen.getByText('3 tests to run · T-1 title ...')).toBeTruthy();
-    expect(screen.getByText('bundle-4')).toBeTruthy();
+    expect(screen.getAllByText('bundle-4')).toHaveLength(2);
   });
 
   it('a test with no bundle is its own card with a link to the Tests tab', async () => {

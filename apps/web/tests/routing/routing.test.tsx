@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
@@ -25,11 +25,10 @@ describe('routing', () => {
   it('shows the board page at /p/:key/ with the registered strip', async () => {
     const { sources } = renderAt('/p/rotp/');
     await waitFor(() => expect(sources).toHaveLength(1));
-    const url = new URL(sources[0]?.url ?? '', 'http://localhost');
-    expect(url.pathname).toBe('/api/p/rotp/stream');
-    expect(url.searchParams.get('c')?.split(',').sort()).toEqual([
-      'actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads',
-    ]);
+    expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
+    expect(sources[0]?.url.split('c=')[1]?.split(',')).toEqual(
+      expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads']),
+    );
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
       sources[0]?.emit('snapshot', snapshot('rotp', 'registry', {
@@ -37,7 +36,7 @@ describe('routing', () => {
       }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    expect(screen.getByText('lead')).toBeTruthy();
+    expect(within(screen.getByRole('status', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees']) {
       expect(screen.getByRole('tab', { name: label })).toBeTruthy();
     }

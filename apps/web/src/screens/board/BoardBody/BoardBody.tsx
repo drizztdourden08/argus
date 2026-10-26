@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, ToastStack } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
 import { useBoardWork } from '../feed-model';
 import { OwnerFeed } from '../OwnerFeed';
 import { RegisteredStrip } from '../RegisteredStrip';
@@ -14,7 +14,6 @@ const BoardBody = (props: BoardBodyProps) => {
       <RegisteredStrip boardKey={boardKey} />
       {work.ready ? <OwnerFeed boardKey={boardKey} work={work} /> : null}
       {work.ready ? <WorkItems boardKey={boardKey} items={work.items} needs={work.needs} /> : null}
-      <ToastStack />
     </Flex>
   );
 };
