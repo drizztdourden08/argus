@@ -10,6 +10,11 @@ interface TabBadges {
   freshNotifications: number;
 }
 
+interface ShortAgeProps {
+  value: string | number;
+  ago?: boolean;
+}
+
 interface ChipFilterProps {
   label: string;
   value: string;
@@ -29,4 +34,4 @@ interface TabBodyProps {
   badges: TabBadges;
 }
 
-export type { ChipFilterProps, ProjectSwitcherProps, TabBadges, TabBodyProps };
+export type { ChipFilterProps, ProjectSwitcherProps, ShortAgeProps, TabBadges, TabBodyProps };

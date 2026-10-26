@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { DateText, Link, Status, Tooltip } from '@drizztdourden08/tessera';
+import { Link, Status, Tooltip } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { useNow } from '../../clock';
 import { useProjectName } from '../../projects';
+import { ShortAge } from '../../sub-components/ShortAge';
 import { registryChip } from '../model';
 import type { RegistryChipLinkProps } from '../dashboards.type';
 
@@ -18,7 +19,7 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
         <Status tone={chip.tone} pulse={chip.pulse} dot>
           {chip.name}
           {chip.label ? `, ${chip.label}` : ''}
-          {chip.since ? <> <DateText value={chip.since} format="relative" /></> : null}
+          {chip.since ? <> <ShortAge value={chip.since} /></> : null}
           {chip.extra ? `, ${chip.extra}` : ''}
         </Status>
       </Link>
