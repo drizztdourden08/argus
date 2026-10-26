@@ -22,7 +22,7 @@ describe('starting and stopping the Play of a bundle', () => {
     await mountTab(playable());
     const play = await screen.findByRole<HTMLButtonElement>('button', { name: 'Play b1' });
     expect(play.disabled).toBe(false);
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status', { name: /^Run R-/ })).toBeNull();
   });
 
   it('clicking Play starts the definition by name, hidden unless the definition says window', async () => {
@@ -85,7 +85,7 @@ describe('the status line next to Play', () => {
   it('a run of another definition does not show on this card', async () => {
     await mountTab(playable([runDoc('R-1', 'launcher-other', { status: 'running', endedAt: null })]));
     expect(await screen.findByRole('button', { name: 'Play b1' })).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('status', { name: /^Run R-/ })).toBeNull();
   });
 
   it('finished: how it ended and the last line, with Play again', async () => {
@@ -101,6 +101,7 @@ describe('the status line next to Play', () => {
       runDoc('R-1', 'launcher-l1', { queuedAt: '2026-10-25T00:00:00.000Z', lastLine: 'older' }),
       runDoc('R-2', 'launcher-l1', { queuedAt: '2026-10-26T00:00:00.000Z', lastLine: 'newer' }),
     ]));
-    expect((await screen.findByRole('status')).textContent).toContain('newer');
+    expect((await screen.findByRole('status', { name: 'Run R-2' })).textContent).toContain('newer');
+    expect(screen.queryByRole('status', { name: 'Run R-1' })).toBeNull();
   });
 });
