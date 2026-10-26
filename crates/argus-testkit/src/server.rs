@@ -107,7 +107,10 @@ impl TestServer {
         opts.shadow = o.shadow;
         opts.heartbeat = o.heartbeat;
         opts.web_root = Some(dashboard_home.join("no-web-build"));
-        let handle = serve(opts).await.expect("the test server starts");
+        let handle = tokio::time::timeout(Duration::from_secs(30), serve(opts))
+            .await
+            .expect("the test server starts within 30 s")
+            .expect("the test server starts");
         let svc = Arc::clone(&handle.svc);
         TestServer {
             url: handle.url.clone(),
@@ -169,9 +172,14 @@ impl TestServer {
     }
 
     /// Stops the server; the homes are removed unless `keep`.
+    ///
+    /// # Panics
+    /// When the server does not stop within 10 s.
     pub async fn stop(mut self, keep: bool) -> (PathBuf, PathBuf) {
         if let Some(h) = self.handle.take() {
-            h.stop().await;
+            tokio::time::timeout(Duration::from_secs(10), h.stop())
+                .await
+                .expect("the server stops within 10 s");
         }
         if keep {
             for d in self.dirs.drain(..) {

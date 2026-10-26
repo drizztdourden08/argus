@@ -74,7 +74,8 @@ fn the_export_has_every_page_collection_the_meta_and_the_cards() {
     assert!(has(Coll::Log, "ui") && has(Coll::Cards, "beta") && has(Coll::Meta, "board"));
     let launch = exported(&b, Coll::Launches, "hello");
     assert_eq!(launch["env"], json!({"SECRET": ""}));
-    let proof = &exported(&b, Coll::Tests, "T-1")["proofs"][0];
+    let test = docs.iter().find(|d| d.coll == Coll::Tests && d.id == "T-1");
+    let proof = &test.and_then(|d| d.data.clone()).unwrap_or_default()["proofs"][0];
     assert_eq!(proof["url"], "/files/1");
     let meta = exported(&b, Coll::Meta, "board");
     assert_eq!(meta["name"], "Alpha");
@@ -187,7 +188,10 @@ fn the_owner_edits_his_own_decision_past_200_characters_but_never_a_threads_ques
         &mut b,
         json!({"kind": "decision", "text": "short", "item": "I-1"}),
     );
-    let longer = "Steps: open the page.\n- first **bold** item\n".repeat(70);
+    let longer = "Steps: open the page.\n- first **bold** item\n"
+        .repeat(70)
+        .trim()
+        .to_owned();
     let rev = b["entries"][id.as_str()]["rev"].clone();
     let (_, edited) = post(
         &mut b,

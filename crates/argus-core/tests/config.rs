@@ -84,7 +84,7 @@ fn load_config_creates_config_json_with_defaults_and_a_64_hex_token() {
 }
 
 #[test]
-fn unknown_keys_are_kept_partial_sub_objects_get_defaults_and_install_dir_is_rewritten() {
+fn unknown_keys_are_kept_partial_sub_objects_get_defaults_and_a_given_install_dir_is_kept() {
     let (_dir, paths) = fresh();
     let c = load_config(&paths, None).unwrap();
     edit_file(&paths, |doc| {
@@ -97,9 +97,20 @@ fn unknown_keys_are_kept_partial_sub_objects_get_defaults_and_install_dir_is_rew
     assert_eq!(again.runs.max_concurrent, 9);
     assert_eq!(again.runs.log_cap_bytes, 2_097_152);
     assert_eq!(again.token, c.token);
-    assert_eq!(again.install_dir, c.install_dir);
-    assert_eq!(again.install_dir, install_dir());
-    assert_eq!(read_json(&paths)["installDir"], json!(c.install_dir));
+    assert_eq!(
+        c.install_dir,
+        install_dir(),
+        "a new file names the binary's folder"
+    );
+    assert_eq!(
+        again.install_dir, "Z:\\somewhere\\else",
+        "a given installDir is kept"
+    );
+    assert_eq!(
+        read_json(&paths)["installDir"],
+        json!("Z:\\somewhere\\else")
+    );
+    assert!(again.exe.is_some(), "exe names the running binary");
 }
 
 #[test]

@@ -1,6 +1,8 @@
 //! `config.json` of the dashboard home: every Node key with its default, unknown keys kept.
-//! A missing file is created with a fresh token; `installDir` and `exe` are rewritten on every
-//! load; `DASHBOARD_PORT` overrides the port of the loaded config without being saved.
+//! A missing file is created with a fresh token; `installDir` is kept when the file has one (the
+//! Node bin folder the coord CLI starts) and set to the binary's folder otherwise; `exe` is
+//! rewritten on every load; `DASHBOARD_PORT` overrides the port of the loaded config without
+//! being saved.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -290,8 +292,8 @@ fn typed(file: &Path, c: Map<String, Value>) -> Result<Config, ConfigError> {
     })
 }
 
-/// Loads the config, creating it (and the token) when missing and rewriting `installDir` and
-/// `exe`. `env_port` (from `DASHBOARD_PORT`) overrides the returned port only.
+/// Loads the config, creating it (and the token) when missing, keeping a given `installDir`
+/// and rewriting `exe`. `env_port` (from `DASHBOARD_PORT`) overrides the returned port only.
 ///
 /// # Errors
 /// A file that is not JSON, a refused host or port, or a file that cannot be written.
@@ -305,7 +307,6 @@ pub fn load_config(paths: &Paths, env_port: Option<u16>) -> Result<Config, Confi
     if !valid_token(c.get("token")) {
         c.insert("token".into(), json!(new_token()));
     }
-    c.insert("installDir".into(), json!(install_dir()));
     if let Ok(exe) = std::env::current_exe() {
         c.insert("exe".into(), json!(exe.display().to_string()));
     }

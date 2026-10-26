@@ -158,6 +158,12 @@ pub(crate) fn dechunk(raw: &[u8]) -> Vec<u8> {
 /// # Panics
 /// When the server cannot be reached (a test failure).
 pub async fn request(port: u16, req: &Request) -> Reply {
+    tokio::time::timeout(std::time::Duration::from_secs(30), exchange(port, req))
+        .await
+        .expect("the server answers within 30 s")
+}
+
+async fn exchange(port: u16, req: &Request) -> Reply {
     let mut s = TcpStream::connect(("127.0.0.1", port))
         .await
         .expect("connect to the test server");

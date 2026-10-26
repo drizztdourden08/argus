@@ -136,12 +136,37 @@ async fn read_head(s: &mut TcpStream) -> (String, Vec<u8>) {
     }
 }
 
+const OPEN_LIMIT: Duration = Duration::from_secs(10);
+
+/// The body of a plain answer on a kept-alive connection: `Content-Length` bytes.
+async fn read_body(s: &mut TcpStream, mut body: Vec<u8>, headers: &[(String, String)]) -> Vec<u8> {
+    let want = headers
+        .iter()
+        .find(|(k, _)| k == "content-length")
+        .and_then(|(_, v)| v.parse::<usize>().ok())
+        .unwrap_or(0);
+    let mut chunk = [0u8; 4096];
+    while body.len() < want {
+        match s.read(&mut chunk).await {
+            Ok(n) if n > 0 => body.extend_from_slice(&chunk[..n]),
+            _ => break,
+        }
+    }
+    body
+}
+
 impl SseReader {
     /// Opens a stream.
     ///
     /// # Panics
-    /// When the server cannot be reached.
+    /// When the server cannot be reached or does not answer within 10 s.
     pub async fn open(port: u16, req: &Request) -> SseReader {
+        tokio::time::timeout(OPEN_LIMIT, Self::connect(port, req))
+            .await
+            .expect("the stream answers within 10 s")
+    }
+
+    async fn connect(port: u16, req: &Request) -> SseReader {
         let mut s = TcpStream::connect(("127.0.0.1", port))
             .await
             .expect("connect to the test server");
@@ -153,8 +178,7 @@ impl SseReader {
         let inner = Arc::new(Mutex::new(Inner::default()));
         let wake = Arc::new(Notify::new());
         if status != 200 {
-            let mut body = rest;
-            let _ = s.read_to_end(&mut body).await;
+            let body = read_body(&mut s, rest, &headers).await;
             let body = serde_json::from_slice(&body).unwrap_or(Value::Null);
             inner.lock().unwrap_or_else(PoisonError::into_inner).ended = true;
             return SseReader {
