@@ -14,7 +14,9 @@ export { activityTone, bundleState, formatFilters, jsonRecord, neighbours, nonEm
 export { FOCUS_KEY, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { ChatButton } from './sub-components/ChatButton';
 export { DrawerToolbar } from './sub-components/DrawerToolbar';
+export { FactSelect } from './sub-components/FactSelect';
 export { EditableMarkdown } from './sub-components/EditableMarkdown';
 export { OpNoticeCallout } from './sub-components/OpNoticeCallout';
 export { RecordDrawer } from './sub-components/RecordDrawer';
+export { SoftTools } from './sub-components/SoftTools';
 export type * from './shared.type';

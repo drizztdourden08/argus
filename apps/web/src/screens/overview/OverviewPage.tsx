@@ -14,7 +14,7 @@ const OverviewPage = () => {
   const tabs = OVERVIEW_TABS.map((item) => ({ ...item, badge: badges.counts[item.id], badgeTone: badges.tones[item.id] }));
   return (
     <PageFrame>
-      <ContentHeader compact title="Argus" actions={<ProjectSwitcher cards={cards} />} />
+      <ContentHeader variant="plain" title="Argus" actions={<ProjectSwitcher cards={cards} />} />
       <StatusNotice status={status} />
       <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero={false} />
       <TabBody tab={tab} cards={cards} status={status} badges={badges} />

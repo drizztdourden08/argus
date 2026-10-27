@@ -45,7 +45,7 @@ describe('the detail drawer', () => {
       builds: [{ tag: 'old-1', closedAt: ago(MIN) }],
     });
     const dialog = await openItem('I-86');
-    expect(within(dialog).getByText('Tests, 0/0 passing')).toBeTruthy();
+    expect(within(dialog).getByText('Tests · 0/0 passing')).toBeTruthy();
     expect(within(dialog).queryByText('Moved away')).toBeNull();
   });
 

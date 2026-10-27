@@ -52,7 +52,7 @@ describe('the sections of the test drawer', () => {
   it('opens from the row title with the id, the covers and the facts', async () => {
     const { drawer } = await openRich();
     expect(within(drawer).getByText('Rich test')).toBeTruthy();
-    expect(within(drawer).getByText('T-1 / gate PedestalScenes')).toBeTruthy();
+    expect(within(drawer).getByText('T-1 · gate PedestalScenes')).toBeTruthy();
     expect(within(drawer).getByText('manual: needs you')).toBeTruthy();
     expect(within(drawer).getByText('handed to you')).toBeTruthy();
   });

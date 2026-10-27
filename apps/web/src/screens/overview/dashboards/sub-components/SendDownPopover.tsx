@@ -13,7 +13,7 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
   const empty = send.text.trim().length === 0;
   const over = send.text.length > OWNER_MAX ? sendProblem(send.text) : null;
   return (
-    <Anchored anchorRef={anchorRef} placement="bottom-start" onDismiss={send.close} className="send-down" role="dialog" aria-label="Send down">
+    <Anchored anchorRef={anchorRef} placement="bottom-start" onDismiss={send.close} className="send-down" role="dialog" aria-label={`Send down to ${send.name}`}>
       <Card>
         <Flex direction="column" gap="sm">
           <Flex gap="sm" align="center">

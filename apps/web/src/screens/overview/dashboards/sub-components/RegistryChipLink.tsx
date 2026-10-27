@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Badge, Icon, Inline, Link, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
+import { Badge, Inline, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { useNow } from '../../clock';
 import { useProjectName } from '../../projects';
@@ -17,19 +17,24 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
   const icon = REGISTRY_ICON[chip.tone];
   return (
     <Tooltip content={chip.tip}>
-      <Link href={`/p/${encodeURIComponent(row.project)}/#agents`} navigate={navigate} aria-label={chip.tip} tone="neutral" variant="subtle">
-        <Tag {...REGISTRY_LOOK[chip.tone]}>
-          <Inline gap="xs" align="center">
-            {icon ? <Icon name={icon} size={12} /> : <Badge variant="dot" color={REGISTRY_DOT[chip.tone]} />}
-            {chip.name}
-            <Text variant="caption" tone="muted">
-              {chip.label}
-              {chip.since ? <> <ShortAge value={chip.since} /></> : null}
-              {chip.extra ? ` ${chip.extra}` : ''}
-            </Text>
-          </Inline>
-        </Tag>
-      </Link>
+      <Tag
+        {...REGISTRY_LOOK[chip.tone]}
+        pill
+        icon={icon}
+        href={`/p/${encodeURIComponent(row.project)}/#agents`}
+        navigate={navigate}
+        aria-label={chip.tip}
+      >
+        <Inline gap="xs" align="center">
+          {icon ? null : <Badge variant="dot" color={REGISTRY_DOT[chip.tone]} />}
+          {chip.name}
+          <Text variant="caption" tone="muted">
+            {chip.label}
+            {chip.since ? <> <ShortAge value={chip.since} /></> : null}
+            {chip.extra ? ` ${chip.extra}` : ''}
+          </Text>
+        </Inline>
+      </Tag>
     </Tooltip>
   );
 };

@@ -1,10 +1,11 @@
 /* @layer renderer-app @kind component */
 import './BundleCard.css';
-import { Box, Card } from '@drizztdourden08/tessera';
+import { Card, Disclosure } from '@drizztdourden08/tessera';
 import { bundleState } from '../../../shared';
 import { NO_BUNDLE } from '../model';
 import type { BundleCardProps } from '../tests-props.type';
 import { BundleHead } from './BundleHead';
+import { BundleName } from './BundleName';
 import { LaunchBox } from './LaunchBox';
 import { TestSections } from './TestSections';
 
@@ -14,12 +15,16 @@ const BundleCard = (props: BundleCardProps) => {
   const state = bundleState(group.build);
   const emptyText = group.tag === NO_BUNDLE ? 'No test without a bundle.' : 'No test in this bundle yet.';
   return (
-    <Card className="bundle" edgeTone={group.handed ? 'primary' : undefined} data-bundle={group.tag}>
-      <BundleHead group={group} state={state} open={open} onToggle={onToggle} />
-      <Box className="bundle__body" hidden={!open}>
+    <Card flush className="bundle" edgeTone={group.handed ? 'neutral' : undefined} data-bundle={group.tag}>
+      <Disclosure
+        open={open}
+        onOpenChange={onToggle}
+        summary={<BundleName tag={group.tag} title={group.build?.title} />}
+        end={<BundleHead group={group} state={state} />}
+      >
         <LaunchBox view={view} runs={runs} state={state} />
         <TestSections tests={group.tests} emptyText={emptyText} />
-      </Box>
+      </Disclosure>
     </Card>
   );
 };

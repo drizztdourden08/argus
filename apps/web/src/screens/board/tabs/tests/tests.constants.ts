@@ -6,7 +6,7 @@ import type { BundleState } from '../../../../data/types';
 import type { Counts, WakeChip } from './model';
 
 const TEST_STATUSES = defineStatuses({
-  pending: { label: 'To run', tone: 'primary' },
+  pending: { label: 'To run', tone: 'warning' },
   pass: { label: 'Pass', tone: 'success' },
   fail: { label: 'Fail', tone: 'danger' },
   partial: { label: 'Partial', tone: 'warning' },
@@ -15,7 +15,7 @@ const TEST_STATUSES = defineStatuses({
 });
 
 const TEST_TAGS: Record<string, TagLook> = {
-  pending: { variant: 'normal', color: 'primary' },
+  pending: { variant: 'urgency', color: 'warning' },
   pass: { variant: 'urgency', color: 'success' },
   fail: { variant: 'urgency', color: 'danger' },
   partial: { variant: 'urgency', color: 'warning' },

@@ -22,6 +22,7 @@ const WorktreeTable = (props: WorktreeTableProps) => {
       fallbackColumns={FALLBACK_COLUMNS}
       rowHeight="size-56"
       footer={false}
+      headerCase="upper"
       getRowId={(item) => item.id}
       rowState={(item) => (item.source.status === 'deleting' ? 'pending' : undefined)}
       renderCell={(item, path) => {

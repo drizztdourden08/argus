@@ -14,9 +14,9 @@ const cleanAfterEach = (): void => {
 
 const cardOf = (container: HTMLElement, tag: string): HTMLElement => container.querySelector<HTMLElement>(`[data-bundle="${tag}"]`) as HTMLElement;
 
-const toggleOf = (card: HTMLElement): HTMLElement => card.querySelector<HTMLElement>('button[aria-expanded]') as HTMLElement;
+const toggleOf = (card: HTMLElement): HTMLElement => card.querySelector<HTMLElement>('summary') as HTMLElement;
 
-const isOpen = (card: HTMLElement): boolean => toggleOf(card).getAttribute('aria-expanded') === 'true';
+const isOpen = (card: HTMLElement): boolean => (card.querySelector('details') as HTMLDetailsElement).open;
 
 const tagsOf = (container: HTMLElement): (string | null)[] => [...container.querySelectorAll('[data-bundle]')].map((card) => card.getAttribute('data-bundle'));
 

@@ -2,6 +2,8 @@
 import { useMemo } from 'react';
 import type { Agent, ProjectThread } from '../../../../../data/agents';
 import { useCollection } from '../../../../../data/react';
+import { HIDDEN_KEY } from '../../../BoardMore';
+import { useStoredFlag } from '../../../shared';
 import type { RunDoc } from '../../../../../data/types';
 import type { AgentsView } from '../AgentsTab.type';
 import { chatThreads, findLead, finishedCount, isActive, sortActive, sortDone } from '../model';
@@ -14,6 +16,7 @@ const useAgentsView = (boardKey: string): AgentsView => {
   const agents = useCollection<Agent>(boardKey, 'agents');
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
   const runs = useCollection<RunDoc>(boardKey, 'runs');
+  const [showHidden] = useStoredFlag(HIDDEN_KEY);
   return useMemo(() => {
     const shown = agents.docs.filter(isShown);
     const active = sortActive(shown.filter(isActive));
@@ -24,10 +27,10 @@ const useAgentsView = (boardKey: string): AgentsView => {
       done,
       finishedCount: finishedCount(done, runs.docs),
       lead: findLead(threads.docs),
-      chats: chatThreads(threads.docs),
+      chats: chatThreads(threads.docs, showHidden),
       flagSignature: active.map((agent) => `${agent.id}:${flagsOf(agent)}`).join(','),
     };
-  }, [agents, threads, runs]);
+  }, [agents, threads, runs, showHidden]);
 };
 
 export { useAgentsView };

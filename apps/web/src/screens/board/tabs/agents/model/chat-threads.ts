@@ -8,9 +8,9 @@ const isHidden = (thread: ProjectThread): boolean =>
 
 const rankOf = (thread: ProjectThread): number => CHAT_ORDER[thread.status] ?? Object.keys(CHAT_ORDER).length;
 
-const chatThreads = (threads: readonly WithId<ProjectThread>[]): WithId<ProjectThread>[] =>
+const chatThreads = (threads: readonly WithId<ProjectThread>[], showHidden: boolean): WithId<ProjectThread>[] =>
   threads
-    .filter((thread) => thread.role !== 'coordinator' && !thread.mergedInto && !thread.deletedAt && !isHidden(thread))
+    .filter((thread) => thread.role !== 'coordinator' && !thread.mergedInto && !thread.deletedAt && (showHidden || !isHidden(thread)))
     .sort((a, b) => rankOf(a) - rankOf(b) || a.id.localeCompare(b.id));
 
 export { chatThreads };

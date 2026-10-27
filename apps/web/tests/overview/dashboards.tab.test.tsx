@@ -137,7 +137,7 @@ describe('the registered strip', () => {
   });
 });
 
-describe('the send down dialog', () => {
+describe('the send down popover', () => {
   it('sends to every lead: the button opens the dialog, the text enables Send down, the post goes to the portfolio route', async () => {
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { id: 'O-1', status: 'delivered', outcome: null } } : undefined));
     await open();
@@ -162,7 +162,7 @@ describe('the send down dialog', () => {
     expect(posts(calls)[0]?.body).toEqual({ project: 'rotp', text: 'fyi', decision: false });
   });
 
-  it('keeps the dialog and says so when the post is refused', async () => {
+  it('keeps the popover and says so when the post is refused', async () => {
     stubApi((call) => (call.method === 'POST' ? { body: { id: 'O-3', status: 'refused', outcome: 'too long' } } : undefined));
     await open();
     fireEvent.click(await screen.findByRole('button', { name: 'Send to all' }));

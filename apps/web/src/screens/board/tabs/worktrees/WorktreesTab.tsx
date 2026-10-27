@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Text } from '@drizztdourden08/tessera';
+import { Card, Flex, SectionHeader, Text } from '@drizztdourden08/tessera';
 import { useAskThread } from './behavior/useAskThread';
 import { useAttempt } from './behavior/useAttempt';
 import { useLeftoverBatch } from './behavior/useLeftoverBatch';
@@ -32,13 +32,16 @@ const WorktreesTab = (props: WorktreesTabProps) => {
   const counts = countRows(rows);
   const rules = meta?.rules ?? [];
   return (
-    <Card
-      title="Worktrees"
-      level={2}
-      subtitle={<WorktreeSummary counts={counts} meta={meta} />}
-      actions={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
-    >
+    <Card>
       <Flex direction="column" gap="sm">
+        <SectionHeader
+          size="lg"
+          wrap
+          level={2}
+          title="Worktrees"
+          subtitle={<WorktreeSummary counts={counts} meta={meta} />}
+          action={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
+        />
         <LeftoverBatchConfirm meta={meta} batch={batch} />
         {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
         <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />

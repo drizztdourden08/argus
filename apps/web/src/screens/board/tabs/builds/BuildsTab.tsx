@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Callout, Card, EmptyState, Flex, Text } from '@drizztdourden08/tessera';
+import { Callout, Card, EmptyState, Flex, SectionHeader, Text } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useBuildsData } from './behavior/useBuildsData';
 import { useRetiredShown } from './behavior/useRetiredShown';
@@ -21,8 +21,9 @@ const BuildsTab = (props: BuildsTabProps) => {
   const counts = countsText(views);
   return (
     <>
-      <Card title="Builds" subtitle={<BuildsLead counts={counts} />} level={2}>
+      <Card>
         <Flex direction="column" gap="sm">
+          <SectionHeader size="lg" wrap level={2} title="Builds" subtitle={<BuildsLead counts={counts} />} />
           {!views.hasMaster && <Callout tone="danger">{NO_MASTER_TEXT}</Callout>}
           {views.live.length > 0
             ? <LauncherList views={views.live} label="Launchers" boardKey={boardKey} runs={runs} onLog={setLogId} />

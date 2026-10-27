@@ -9,9 +9,9 @@ const CardFlags = (props: CardCountersProps) => {
   const attention = attentionOf(card);
   return (
     <Inline gap="xs" align="center" wrap>
-      {attention.decisions > 0 && <Tag {...WARN_LOOK} title="open decisions waiting for you">{`${attention.decisions} decision${attention.decisions > 1 ? 's' : ''}`}</Tag>}
-      {attention.failing > 0 && <Tag {...BAD_LOOK} title="tests failing">{`${attention.failing} failing`}</Tag>}
-      {attention.blocked > 0 && <Tag {...BAD_LOOK} title="blocked threads">{`${attention.blocked} blocked`}</Tag>}
+      {attention.decisions > 0 && <Tag pill {...WARN_LOOK} title="open decisions waiting for you">{`${attention.decisions} decision${attention.decisions > 1 ? 's' : ''}`}</Tag>}
+      {attention.failing > 0 && <Tag pill {...BAD_LOOK} title="tests failing">{`${attention.failing} failing`}</Tag>}
+      {attention.blocked > 0 && <Tag pill {...BAD_LOOK} title="blocked threads">{`${attention.blocked} blocked`}</Tag>}
     </Inline>
   );
 };

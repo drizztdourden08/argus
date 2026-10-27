@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind component */
 import { Flex, InlineEdit, Tag, Text } from '@drizztdourden08/tessera';
+import { FactSelect } from '../../../shared';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { fieldValidator, itemChoices } from '../model';
 import { MODE_OPTIONS } from '../tests.constants';
 import type { TestFactsProps } from '../tests-drawer-props.type';
-import { FactSelect } from './FactSelect';
 import { FactTags } from './FactTags';
 
 const validateCovers = fieldValidator('covers');
@@ -28,7 +28,7 @@ const TestFacts = (props: TestFactsProps) => {
         <Flex gap="xs" align="center">
           <Text variant="caption" tone="muted">Build</Text>
           <InlineEdit label="build" placeholder="add" value={test.build ?? ''} validate={validateBuild} onCommit={(build) => void ops.edit(test, { build: build.trim() })} />
-          {handed && <Tag color="primary">handed to you</Tag>}
+          {handed && <Tag color="neutral">handed to you</Tag>}
         </Flex>
       </Flex>
     </Flex>

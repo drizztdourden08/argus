@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Select, Text } from '@drizztdourden08/tessera';
-import type { FactSelectProps } from '../drawer-props.type';
+import type { FactSelectProps } from '../shared.type';
 
 const FactSelect = (props: FactSelectProps) => {
   const { label, options, value, onPick } = props;

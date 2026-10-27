@@ -72,6 +72,19 @@ interface RecordDrawerProps {
   children?: ReactNode;
 }
 
+interface FactSelectProps {
+  label: string;
+  options: readonly Option[];
+  value: string;
+  onPick: (value: string) => void;
+}
+
+interface SoftToolsProps {
+  archived: boolean;
+  onArchive: () => void;
+  onDelete: () => void;
+}
+
 interface ChatButtonProps {
   link: string;
   label: string;
@@ -89,4 +102,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, StoredFilters, Writer };
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };

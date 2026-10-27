@@ -17,7 +17,7 @@ const CardState = (props: CardStateProps) => {
   const seen = card.coordinator?.lastSeen ?? card.updatedAt;
   return (
     <Inline gap="sm" align="center">
-      <Status variant="pill" tone={STATE_TONE[state]}>{state}</Status>
+      <Status variant="pill" size="sm" tone={STATE_TONE[state]}>{state}</Status>
       <Spacer />
       {state !== 'not started' && (
         <Inline gap="2xs" align="center" title={seenTip(card, now)}>

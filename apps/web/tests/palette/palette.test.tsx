@@ -49,13 +49,13 @@ describe('palette attribute', () => {
     await waitFor(() => expect(document.documentElement.dataset.palette).toBeUndefined());
   });
 
-  it('carries the board palette on the overview card, never on the overview itself', async () => {
+  it('keeps the overview and its project cards on the basic palette, as the Node page does', async () => {
     const { sources } = renderAt('/');
     await waitFor(() => expect(sources).toHaveLength(1));
     const rotp = { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/' };
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp })));
-    const link = await screen.findByRole('link', { name: 'Open board' });
-    expect(link.closest('[data-palette]')?.getAttribute('data-palette')).toBe('rotp');
+    const open = await screen.findByRole('button', { name: 'Open the RotP board' });
+    expect(open.closest('[data-palette]')).toBeNull();
     expect(document.documentElement.dataset.palette).toBeUndefined();
   });
 });

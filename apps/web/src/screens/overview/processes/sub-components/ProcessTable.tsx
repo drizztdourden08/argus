@@ -18,6 +18,7 @@ const ProcessTable = (props: ProcessTableProps) => {
       getRowId={rowId}
       rowHeight="size-28"
       footer={false}
+      headerCase="upper"
       rowState={rowState}
       fallbackColumns={PROC_COLUMNS}
       renderCell={(row, path) => (CUSTOM_PATHS.includes(path) ? <ProcessCell row={row} path={path} kill={kill} /> : undefined)}

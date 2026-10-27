@@ -14,7 +14,7 @@ const CardHeadline = (props: CardHeadlineProps) => {
       <Badge variant="dot" color={DOT_COLOR[state]} />
       <Text variant="title" title={card.name}>{card.name}</Text>
       <Spacer />
-      {needs > 0 && <Badge variant="number" color="warning" value={needs} label={needsTip} />}
+      {needs > 0 && <Badge variant="number" color="warning" icon="triangle-alert" value={needs} label={needsTip} />}
     </Inline>
   );
 };

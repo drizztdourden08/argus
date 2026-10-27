@@ -73,8 +73,12 @@ interface BundleCardProps {
 interface BundleHeadProps {
   group: BundleGroup;
   state: BundleState;
-  open: boolean;
-  onToggle: (open: boolean) => void;
+}
+
+interface BundleNameProps {
+  tag: string;
+  title?: string | null;
+  muted?: boolean;
 }
 
 interface BundleTagsProps {
@@ -189,5 +193,5 @@ interface TestCardProps {
 }
 
 export type {
-  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestChipsProps, TestMenuProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestChipsProps, TestMenuProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };

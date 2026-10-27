@@ -19,6 +19,7 @@ const ColumnAddForm = (props: ColumnAddFormProps) => {
   };
   return (
     <InlineCreateForm
+      dashed
       label="Title"
       placeholder="New work item title"
       submitLabel="Add"

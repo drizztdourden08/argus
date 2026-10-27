@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Icon, Link, Tag } from '@drizztdourden08/tessera';
+import { Tag } from '@drizztdourden08/tessera';
 import { bundleState } from '../../../shared';
 import { MASTER } from '../builds.constants';
 import type { LauncherPartProps } from '../builds-props.type';
@@ -10,11 +10,13 @@ const BundleLink = (props: LauncherPartProps) => {
   const status = bundleState(joined);
   return (
     <>
-      <Tag title={`This launcher goes with bundle ${launcher.joined}: closed or removed, it is retired with it. Open the bundle on the Tests tab`}>
-        <Link href="#tests" variant="subtle" tone="neutral">
-          <Icon name="link" size={12} aria-hidden />
-          {` for bundle ${launcher.joined}`}
-        </Link>
+      <Tag
+        pill
+        icon="link"
+        href="#tests"
+        title={`This launcher goes with bundle ${launcher.joined}: closed or removed, it is retired with it. Open the bundle on the Tests tab`}
+      >
+        {`for bundle ${launcher.joined}`}
       </Tag>
       {joined && (status === 'ready'
         ? <Tag variant="urgency" color="success" title="Built and ready to start">{status}</Tag>

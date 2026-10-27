@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../data/kanban';
-import type { Option } from '../../shared';
 import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
 import type { FeedActions } from '../../OwnerFeed';
@@ -62,13 +61,6 @@ interface DrawerFactsProps {
   threads: Threads;
   now: number;
   ops: ItemOps;
-}
-
-interface FactSelectProps {
-  label: string;
-  options: readonly Option[];
-  value: string;
-  onPick: (value: string) => void;
 }
 
 interface DescriptionSectionProps {
@@ -172,7 +164,7 @@ interface EmptyLineProps {
 
 export type {
   ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
-  DrawerNavProps, DrawerSectionProps, EntryBlockProps, FactSelectProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
+  DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
   ItemTitleProps, StatusTagProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,
 };

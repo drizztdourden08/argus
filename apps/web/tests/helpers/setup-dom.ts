@@ -16,3 +16,5 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 Element.prototype.scrollIntoView = noop;
+
+Object.defineProperty(window, 'CSS', { writable: true, value: { supports: () => false } });

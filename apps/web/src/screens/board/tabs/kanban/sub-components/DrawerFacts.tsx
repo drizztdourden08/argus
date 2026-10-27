@@ -2,9 +2,8 @@
 import { Flex, InlineEdit, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../drawer-props.type';
-import { threadChoices } from '../../../shared';
+import { FactSelect, threadChoices } from '../../../shared';
 import { STATUS_OPTIONS, validateField } from '../model';
-import { FactSelect } from './FactSelect';
 
 const validateSubject = validateField('subject');
 
