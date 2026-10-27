@@ -16,9 +16,9 @@ const BundleLink = (props: LauncherPartProps) => {
           {` for bundle ${launcher.joined}`}
         </Link>
       </Tag>
-      {status === 'ready'
+      {joined && (status === 'ready'
         ? <Tag variant="urgency" color="success" title="Built and ready to start">{status}</Tag>
-        : <Tag title={status === 'closed' ? 'Closed with coord build close' : 'Not built yet'}>{status}</Tag>}
+        : <Tag title={status === 'closed' ? 'Closed with coord build close' : 'Not built yet'}>{status}</Tag>)}
     </>
   );
 };
