@@ -8,9 +8,12 @@ use argus_core::Paths;
 use argus_core::config::{env_port, peek_config};
 use argus_server::instance::{PidRecord, call_with, pid_alive, probe, read_pid_file};
 use serde_json::Value;
-use tokio::time::timeout;
+use tokio::time::{sleep, timeout};
 
 const CALL_LIMIT: Duration = Duration::from_secs(20);
+/// How often, and how many times, a server that answers is waited for to show its pid file.
+const RECORD_STEP: Duration = Duration::from_millis(50);
+const RECORD_TRIES: u32 = 40;
 
 /// The address of a server and what to send it.
 pub struct Live {
@@ -90,11 +93,29 @@ pub fn locate(paths: &Paths) -> Option<Live> {
     })
 }
 
+/// The pid file of a server that answers: read again for a moment while it cannot be read, since
+/// the lines print the pid and a file that is being replaced is briefly unreadable on Windows.
+async fn settled_record(file: &std::path::Path, tries: u32, step: Duration) -> Option<PidRecord> {
+    for _ in 0..tries {
+        if let Some(record) = read_pid_file(file) {
+            return Some(record);
+        }
+        sleep(step).await;
+    }
+    read_pid_file(file)
+}
+
 /// The server when it answers its health call.
 pub async fn up(paths: &Paths) -> Option<Up> {
-    let at = locate(paths)?;
+    let mut at = locate(paths)?;
     let health = probe(at.port, at.token.as_deref()).await?;
-    (health["ok"] == true).then_some(Up { at, health })
+    if health["ok"] != true {
+        return None;
+    }
+    if at.record.is_none() {
+        at.record = settled_record(&paths.pid_file, RECORD_TRIES, RECORD_STEP).await;
+    }
+    Some(Up { at, health })
 }
 
 /// One call to a running server: the answer's JSON, or the server's own sentence for a refusal.
@@ -117,4 +138,33 @@ pub async fn api(at: &Live, method: &str, path: &str, body: &Value) -> Result<Va
     Err(data["error"]["message"]
         .as_str()
         .map_or_else(|| format!("HTTP {status} from {path}"), str::to_owned))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::settled_record;
+
+    #[tokio::test]
+    async fn a_pid_file_that_shows_up_late_is_still_read() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let file = dir.path().join("server.pid");
+        let writer = file.clone();
+        let late = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(120)).await;
+            std::fs::write(&writer, r#"{"pid":4242,"port":1,"instance":"i"}"#).expect("pid file");
+        });
+        let record = settled_record(&file, 40, Duration::from_millis(20)).await;
+        late.await.expect("the writer ends");
+        assert_eq!(record.map(|r| r.pid), Some(4242));
+    }
+
+    #[tokio::test]
+    async fn no_pid_file_gives_up_after_the_tries() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let file = dir.path().join("server.pid");
+        let none = settled_record(&file, 3, Duration::from_millis(5)).await;
+        assert!(none.is_none());
+    }
 }

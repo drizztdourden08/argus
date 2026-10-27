@@ -14,6 +14,8 @@ pub enum Phase {
         /// How many launches are running.
         runs: u32,
     },
+    /// The server is being started and has not answered yet.
+    Starting,
     /// The health check fails.
     Stopped,
     /// The owner chose Quit and the server is being stopped.
@@ -37,6 +39,16 @@ impl TrayState {
     pub const fn running(runs: u32) -> Self {
         Self {
             phase: Phase::Running { runs },
+            attention: 0,
+            shadow: false,
+        }
+    }
+
+    /// A server that is being started and has not answered yet.
+    #[must_use]
+    pub const fn starting() -> Self {
+        Self {
+            phase: Phase::Starting,
             attention: 0,
             shadow: false,
         }
@@ -88,6 +100,7 @@ impl TrayState {
                 let noun = if runs == 1 { "run" } else { "runs" };
                 format!("running ({runs} {noun})")
             }
+            Phase::Starting => "starting".to_owned(),
             Phase::Stopped => "stopped".to_owned(),
             Phase::Closing => "closing".to_owned(),
         };
@@ -140,6 +153,7 @@ mod tests {
     #[test]
     fn every_phase_has_its_words() {
         assert_eq!(TrayState::default().tooltip(), "Argus: checking");
+        assert_eq!(TrayState::starting().tooltip(), "Argus: starting");
         assert_eq!(TrayState::stopped().tooltip(), "Argus: stopped");
         assert_eq!(TrayState::running(2).closing().tooltip(), "Argus: closing");
     }
@@ -171,6 +185,7 @@ mod tests {
         assert_eq!(TrayState::running(0).icon(), IconKind::Running);
         for state in [
             TrayState::default(),
+            TrayState::starting(),
             TrayState::stopped(),
             TrayState::stopped().closing(),
         ] {
