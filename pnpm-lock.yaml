@@ -66,11 +66,11 @@ importers:
   .:
     devDependencies:
       '@drizztdourden08/brock-build':
-        specifier: ^0.109.1
-        version: 0.109.1(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: ^0.110.0
+        version: 0.110.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@drizztdourden08/brock-lint-config':
-        specifier: ^0.109.1
-        version: 0.109.1(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: ^0.110.0
+        version: 0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       jscpd:
         specifier: 'catalog:'
         version: 4.3.0
@@ -100,11 +100,11 @@ importers:
         version: 7.18.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@drizztdourden08/brock-build':
-        specifier: ^0.104.0
-        version: 0.104.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: ^0.110.0
+        version: 0.110.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@drizztdourden08/brock-lint-config':
-        specifier: ^0.104.0
-        version: 0.104.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: ^0.110.0
+        version: 0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -314,24 +314,8 @@ packages:
     peerDependencies:
       postcss-selector-parser: ^7.1.1
 
-  '@drizztdourden08/brock-build@0.104.0':
-    resolution: {integrity: sha512-nZke1mjZH7y4ptRdBNrsDCpqOY9Q79Lp/86Jtl448AUH/w4U/QCt0PMNtA6XJWk481fsIKaRcWPce7K47+L5Kg==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-build/0.104.0/12a36bfe0fda37c5f81f0360c9f60ad063a250fd}
-    engines: {node: '>=24'}
-    hasBin: true
-    peerDependencies:
-      '@vitejs/plugin-react': '>=5'
-      electron: '>=38'
-      electron-builder: '>=26'
-      electron-vite: '>=5'
-      playwright-core: '>=1.40'
-    peerDependenciesMeta:
-      electron-builder:
-        optional: true
-      playwright-core:
-        optional: true
-
-  '@drizztdourden08/brock-build@0.109.1':
-    resolution: {integrity: sha512-0Qpni8MK4O3p9/cGVddBa9g5PqnxWr4jNwNZb6rgbefkV1rUZJYGuB4mXqXd2IpVhPw5ga5zEkFzXyhgOK2EMA==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-build/0.109.1/01e186bce9133a3691e8fb5188ebe7d5216d659e}
+  '@drizztdourden08/brock-build@0.110.0':
+    resolution: {integrity: sha512-NO+ghHrO8hy8sMOloszIBVSECZ2M0Fy/QyenErNJVAj0yiQqR86a0hPuRto1vZ20ECpIrXJNcHZcNhY8s4FmUQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-build/0.110.0/00d6a859ca9b0a240a6d70d53e7dce2aea084194}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
@@ -341,42 +325,20 @@ packages:
       electron-vite: '>=5'
       playwright-core: '>=1.40'
 
-  '@drizztdourden08/brock-core@0.104.0':
-    resolution: {integrity: sha512-LoXUjg75QYsJuaaSBXAJnfmygOrJ+ttlH8bOH4CtgCKEJy/A5JDPIM4OiWkoYAMV0vWlyTWncmPyiXuc/vORTQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-core/0.104.0/74bd52fba8b26eb80cff4f11f91811cf93f495d6}
+  '@drizztdourden08/brock-core@0.110.0':
+    resolution: {integrity: sha512-JWRk9KoZRnIBQtzyZdnaTkNb8ccKyN+fzOPnqjDXBf3UrMfuw0h0bR8+vUbS51WGZ4IHQz7TvPewh0XD61Qf0A==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-core/0.110.0/59a3de7251286663114a17f5b47772401660f368}
     engines: {node: '>=24'}
 
-  '@drizztdourden08/brock-core@0.109.1':
-    resolution: {integrity: sha512-YMTaolFAkEpSv4oGkUjFTB23r+w8C+v/FQE30cmL1menhSFWId8KDwh0l+DV4HVKND5v3qagA7BZrND9Qdc8cQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-core/0.109.1/79d3a6969d6ff61a1ba4200fafaf43a58a8c1eae}
-    engines: {node: '>=24'}
-
-  '@drizztdourden08/brock-lint-config@0.104.0':
-    resolution: {integrity: sha512-Dv/RPgR+QZG1yHlKZj1HH+ukYf1oeGnzrkBak5feIvcELFBOETcrstaZ5xEX+4q+QAOtomtdbzWWbkAk3k0D+g==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-lint-config/0.104.0/3bed20dd0fad1531e870308435b4365973f08577}
-    engines: {node: '>=24'}
-    peerDependencies:
-      eslint: ^10.0.0
-      markdownlint-cli2: ^0.22.0
-      stylelint: ^17.0.0
-    peerDependenciesMeta:
-      markdownlint-cli2:
-        optional: true
-      stylelint:
-        optional: true
-
-  '@drizztdourden08/brock-lint-config@0.109.1':
-    resolution: {integrity: sha512-rFIQoa7K0utfQDaQ+PpMuxBw011GiqZsMqgx2iXIME/3poe51uwpB2bWp242L/zfBr2dizpHVp/j98bihEn3OQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-lint-config/0.109.1/d879e4621d8bed3f0c5d2b86996ce707ee14b6bd}
+  '@drizztdourden08/brock-lint-config@0.110.0':
+    resolution: {integrity: sha512-crfhsiomWaeZIgu+YlDmm9ovQw6aXwOnnHFURpg2VoyPgV20Sy1D2jrek16Tp+x5Lr560mhM8pLy0XwiIt/p+Q==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-lint-config/0.110.0/83abc2d593e6558ff55593f83d80afff68183e24}
     engines: {node: '>=24'}
     peerDependencies:
       eslint: ^10.0.0
       markdownlint-cli2: ^0.22.0
       stylelint: ^17.0.0
 
-  '@drizztdourden08/brock-thread@0.104.0':
-    resolution: {integrity: sha512-dYXIjxKZ1DcCiqkrjbAErsTb2BLQq664r0oUf4996YjHVlQmHXBEmjX5ixgG+PEpSy3xykG0qEuOJzVNT+rXNQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-thread/0.104.0/5f460e10c219c6afbde8a7254f69a2aeffcae731}
-    engines: {node: '>=24'}
-    hasBin: true
-
-  '@drizztdourden08/brock-thread@0.109.1':
-    resolution: {integrity: sha512-GRnnubw2uqk1h+T/xvFCZPGArJMMIUU7JqWmk2Y+LVUg3knsCxOCYNwq2SyndRuMsKR+lGX0+R/KtDoRPlRw0A==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-thread/0.109.1/11af653da5a77411a6305d65d7d528c1823c36c1}
+  '@drizztdourden08/brock-thread@0.110.0':
+    resolution: {integrity: sha512-UgMw0sAWiTBNZV0uZMlNVs8Q4sv7mj1dmec1a0AH574wnWIucsp75MpuvXpybQHfdwcl0VaXumrTfOttSyA0ZQ==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/brock-thread/0.110.0/624ae4c5bc6d68ef804173af5b87160fe1096d77}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -388,11 +350,6 @@ packages:
       eslint: ^10.0.0
       stylelint: ^17.0.0
       typescript: ^6.0.0
-    peerDependenciesMeta:
-      stylelint:
-        optional: true
-      typescript:
-        optional: true
 
   '@drizztdourden08/tessera@0.84.0':
     resolution: {integrity: sha512-SMOgk2tVTKgIiPLgMjTXx36slRxJ/To1xOx2bM3tiq2piaBtKoT8LCA+Nx0SjLG8e1AmV545v9/gfV5naen2XA==, tarball: https://npm.pkg.github.com/download/@drizztdourden08/tessera/0.84.0/f5632a97cdaa4fe7cc8924505d08841b92566dd9}
@@ -4229,21 +4186,20 @@ snapshots:
     dependencies:
       postcss-selector-parser: 7.1.7
 
-  '@drizztdourden08/brock-build@0.104.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
+  '@drizztdourden08/brock-build@0.110.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
-      '@drizztdourden08/brock-core': 0.104.0
-      '@drizztdourden08/brock-lint-config': 0.104.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
-      '@drizztdourden08/brock-thread': 0.104.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+      '@drizztdourden08/brock-core': 0.110.0
+      '@drizztdourden08/brock-lint-config': 0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+      '@drizztdourden08/brock-thread': 0.110.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@resvg/resvg-js': 2.6.2
       '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
       electron: 45.0.0
+      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
       electron-vite: 6.0.0(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
+      playwright-core: 1.64.1
       pngjs: 7.0.0
       rcedit: 5.0.2
-    optionalDependencies:
-      electron-builder: 26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0))
-      playwright-core: 1.64.1
     transitivePeerDependencies:
       - eslint
       - markdownlint-cli2
@@ -4251,11 +4207,11 @@ snapshots:
       - supports-color
       - typescript
 
-  '@drizztdourden08/brock-build@0.109.1(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
+  '@drizztdourden08/brock-build@0.110.0(@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron-builder@26.18.0(electron-builder-squirrel-windows@26.18.0(dmg-builder@26.18.0)))(electron-vite@6.0.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)))(electron@45.0.0)(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(playwright-core@1.64.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
-      '@drizztdourden08/brock-core': 0.109.1
-      '@drizztdourden08/brock-lint-config': 0.109.1(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
-      '@drizztdourden08/brock-thread': 0.109.1(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+      '@drizztdourden08/brock-core': 0.110.0
+      '@drizztdourden08/brock-lint-config': 0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+      '@drizztdourden08/brock-thread': 0.110.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       '@resvg/resvg-js': 2.6.2
       '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1))
@@ -4272,22 +4228,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@drizztdourden08/brock-core@0.104.0': {}
+  '@drizztdourden08/brock-core@0.110.0': {}
 
-  '@drizztdourden08/brock-core@0.109.1': {}
-
-  '@drizztdourden08/brock-lint-config@0.104.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
-    dependencies:
-      '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
-      eslint: 10.13.0(jiti@2.7.0)
-    optionalDependencies:
-      markdownlint-cli2: 0.22.1
-      stylelint: 17.16.0(typescript@6.0.3)
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
-  '@drizztdourden08/brock-lint-config@0.109.1(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
+  '@drizztdourden08/brock-lint-config@0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
       '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
       eslint: 10.13.0(jiti@2.7.0)
@@ -4297,16 +4240,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@drizztdourden08/brock-thread@0.104.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
-    dependencies:
-      '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
-    transitivePeerDependencies:
-      - eslint
-      - stylelint
-      - supports-color
-      - typescript
-
-  '@drizztdourden08/brock-thread@0.109.1(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
+  '@drizztdourden08/brock-thread@0.110.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
       '@drizztdourden08/standards': 0.12.0(eslint@10.13.0(jiti@2.7.0))(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
     transitivePeerDependencies:
@@ -4323,11 +4257,10 @@ snapshots:
       jscpd: 5.4.2
       knip: 6.43.0
       markdownlint-cli2: 0.22.1
-      stylelint-config-standard: 40.0.0(stylelint@17.16.0(typescript@6.0.3))
-      typescript-eslint: 8.72.0(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3)
-    optionalDependencies:
       stylelint: 17.16.0(typescript@6.0.3)
+      stylelint-config-standard: 40.0.0(stylelint@17.16.0(typescript@6.0.3))
       typescript: 6.0.3
+      typescript-eslint: 8.72.0(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3)
     transitivePeerDependencies:
       - supports-color
 
