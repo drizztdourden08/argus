@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import './BundleCard.css';
-import { Card, DateText, Disclosure, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Card, Disclosure, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { countsText } from '../model';
 import { BUNDLE_TAGS } from '../tests.constants';
 import type { ClosedBundleCardProps } from '../tests-props.type';
@@ -19,7 +20,7 @@ const ClosedBundleCard = (props: ClosedBundleCardProps) => {
         end={(
           <Flex gap="sm" align="center" className="bundle__end">
             <Tag {...BUNDLE_TAGS.closed} title={build.closeNote ?? 'This bundle was closed: finished and landed.'}>
-              {build.closedAt ? <>closed <DateText value={build.closedAt} format="elapsed" length="short" /> ago{build.closedBy ? ` by ${build.closedBy}` : ''}</> : 'closed'}
+              {build.closedAt ? <>closed <Age value={build.closedAt} /> ago{build.closedBy ? ` by ${build.closedBy}` : ''}</> : 'closed'}
             </Tag>
             <Text variant="caption" tone="muted">{countsText(group.counts)}</Text>
           </Flex>

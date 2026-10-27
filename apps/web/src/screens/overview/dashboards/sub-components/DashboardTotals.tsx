@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { PORTFOLIO_SCOPE, useDoc } from '../../../../data/react';
 import type { BoardMeta } from '../../../../data/types';
 import { useNow } from '../../clock';
-import { ShortAge } from '../../sub-components/ShortAge';
+import { Age } from '../../../../shell';
 import { CALM_LOOK, GOOD_LOOK, WARN_LOOK } from '../dashboards.constants';
 import type { DashboardTotalsProps } from '../dashboards.type';
 import { totalsOf } from '../model';
@@ -16,7 +16,7 @@ const DashboardTotals = (props: DashboardTotalsProps) => {
   const now = useNow();
   const meta = useDoc<BoardMeta>(PORTFOLIO_SCOPE, 'meta', 'board');
   const totals = totalsOf(cards, now);
-  const updated = meta.doc ? <>updated <ShortAge value={meta.doc.updatedAt} ago /></> : 'waiting for the cards';
+  const updated = meta.doc ? <>updated <Age value={meta.doc.updatedAt} ago /></> : 'waiting for the cards';
   return (
     <Inline gap="md" align="center" justify="between" wrap>
       <Inline gap="sm" align="center" wrap>

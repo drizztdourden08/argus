@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Icon, TableCell, TableRow, Text } from '@drizztdourden08/tessera';
 import type { FeedRowProps } from '../overview.type';
-import { ShortAge } from './ShortAge';
+import { Age } from '../../../shell';
 
 const FeedRow = (props: FeedRowProps) => {
   const { icon, tone, title, at, children } = props;
@@ -11,7 +11,7 @@ const FeedRow = (props: FeedRowProps) => {
         <Text tone={tone} title={title}><Icon name={icon} size={14} /></Text>
       </TableCell>
       <TableCell>
-        <Text variant="caption" numeric title={at ?? ''}>{at ? <><ShortAge value={at} />{' ago'}</> : ''}</Text>
+        <Text variant="caption" numeric title={at ?? ''}>{at ? <Age value={at} ago /> : ''}</Text>
       </TableCell>
       <TableCell>{children}</TableCell>
     </TableRow>

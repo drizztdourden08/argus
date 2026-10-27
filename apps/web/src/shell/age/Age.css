@@ -1,0 +1,5 @@
+.age {
+  display: inline;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

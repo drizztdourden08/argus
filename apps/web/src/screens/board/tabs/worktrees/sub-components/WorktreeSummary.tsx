@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { DateText } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { summaryParts } from '../model';
 import type { WorktreeSummaryProps } from '../worktrees-props.type';
 
@@ -11,7 +11,7 @@ const WorktreeSummary = (props: WorktreeSummaryProps) => {
   return (
     <>
       {`${parts.counts} · ${parts.need} · `}
-      {meta.scannedAt ? <>scanned <DateText value={meta.scannedAt} format="elapsed" length="short" /> ago</> : 'not scanned yet'}
+      {meta.scannedAt ? <>scanned <Age value={meta.scannedAt} /> ago</> : 'not scanned yet'}
       {tail.map((part) => ` · ${part}`)}
     </>
   );

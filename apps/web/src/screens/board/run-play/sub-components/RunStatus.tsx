@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Status, Text } from '@drizztdourden08/tessera';
+import { Status, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { runLine } from '../../../../data/runs';
 import type { RunStatusProps } from '../run-play.type';
 
@@ -11,7 +12,7 @@ const RunStatus = (props: RunStatusProps) => {
     <Status tone={line.tone} dot pulse={running} role="status" aria-label={`Run ${run.id}`} title={`${line.last} (${run.id})`}>
       <Text variant="caption" tone="dim">
         {line.label}
-        {line.since && <>{running ? ' ' : ' · '}<DateText value={line.since} format="elapsed" length="short" />{running ? '' : ' ago'}</>}
+        {line.since && <>{running ? ' ' : ' · '}<Age value={line.since} />{running ? '' : ' ago'}</>}
         {line.last && ` · ${line.last}`}
       </Text>
     </Status>

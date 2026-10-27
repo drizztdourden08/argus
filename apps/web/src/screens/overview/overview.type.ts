@@ -11,11 +11,6 @@ interface TabBadges {
   freshNotifications: number;
 }
 
-interface ShortAgeProps {
-  value: string | number;
-  ago?: boolean;
-}
-
 interface ChipFilterProps {
   label: string;
   value: string;
@@ -37,6 +32,10 @@ interface FeedTableProps {
   children: ReactNode;
 }
 
+interface OverviewHeaderProps {
+  cards: Card[];
+}
+
 interface ProjectSwitcherProps {
   cards: Card[];
 }
@@ -48,4 +47,4 @@ interface TabBodyProps {
   badges: TabBadges;
 }
 
-export type { ChipFilterProps, FeedRowProps, FeedTableProps, ProjectSwitcherProps, ShortAgeProps, TabBadges, TabBodyProps };
+export type { ChipFilterProps, FeedRowProps, FeedTableProps, OverviewHeaderProps, ProjectSwitcherProps, TabBadges, TabBodyProps };

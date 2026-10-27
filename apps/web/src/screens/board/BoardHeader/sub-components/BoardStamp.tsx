@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Text } from '@drizztdourden08/tessera';
+import { Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import type { BoardStampProps } from '../BoardHeader.type';
 
 const BoardStamp = (props: BoardStampProps) => {
@@ -7,7 +8,7 @@ const BoardStamp = (props: BoardStampProps) => {
   if (status === 'unavailable') return <Text variant="caption" tone="muted">dashboard unreachable</Text>;
   if (!updatedAt && (status === 'connecting' || status === 'idle')) return <Text variant="caption" tone="muted">connecting</Text>;
   if (!updatedAt) return <Text variant="caption" tone="muted">waiting for the board</Text>;
-  return <Text variant="caption" tone="muted">board updated <DateText value={updatedAt} format="elapsed" length="short" /> ago</Text>;
+  return <Text variant="caption" tone="muted">board updated <Age value={updatedAt} /> ago</Text>;
 };
 
 export { BoardStamp };

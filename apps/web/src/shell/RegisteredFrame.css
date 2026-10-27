@@ -1,0 +1,3 @@
+.registered-frame {
+  min-block-size: calc(var(--size-24) + var(--space-md));
+}

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { byLabel } from '../model';
 import { TEST_TAGS } from '../tests.constants';
 import type { ResultBlockProps } from '../tests-drawer-props.type';
@@ -14,7 +15,7 @@ const ResultMeta = (props: ResultBlockProps) => {
       <Tag {...(TEST_TAGS[status] ?? TEST_TAGS.pending)}>{pending ? 'to run' : status}</Tag>
       {result && (
         <Text variant="caption" tone="muted">
-          {pending ? 'last result ' : ''}<DateText value={result.at} format="elapsed" length="short" /> ago by {byLabel(result.by)}
+          {pending ? 'last result ' : ''}<Age value={result.at} /> ago by {byLabel(result.by)}
         </Text>
       )}
     </Flex>

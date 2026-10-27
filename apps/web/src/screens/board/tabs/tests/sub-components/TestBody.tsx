@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Callout, DateText, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { Callout, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { useOutcome } from '../behavior/useOutcome';
 import { useTestsShared } from '../behavior/useTestsShared';
 import type { TestBodyProps } from '../tests-drawer-props.type';
@@ -31,7 +32,7 @@ const TestBody = (props: TestBodyProps) => {
         <RerunButton test={test} boardKey={boardKey} />
       </Flex>
       <Text variant="caption" tone="muted">
-        {`rev ${test.rev ?? 1}, updated by ${test.updatedBy ?? test.createdBy ?? 'unknown'} `}<DateText value={test.updatedAt} format="elapsed" length="short" /> ago
+        {`rev ${test.rev ?? 1}, updated by ${test.updatedBy ?? test.createdBy ?? 'unknown'} `}<Age value={test.updatedAt} /> ago
       </Text>
       <ResultBlock test={test} />
       {test.steps.length > 0 && <DrawerSection title="Steps" count={test.steps.length}><StepList lines={test.steps} /></DrawerSection>}

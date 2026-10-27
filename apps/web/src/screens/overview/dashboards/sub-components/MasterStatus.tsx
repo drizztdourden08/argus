@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Badge, Button, Inline, Text } from '@drizztdourden08/tessera';
-import { ShortAge } from '../../sub-components/ShortAge';
+import { Age } from '../../../../shell';
 import { RUN_DOT } from '../dashboards.constants';
 import type { MasterStatusProps } from '../dashboards.type';
 import './MasterStatus.css';
@@ -13,7 +13,7 @@ const MasterStatus = (props: MasterStatusProps) => {
         <Badge variant="dot" color={RUN_DOT[line.tone]} />
         <Text variant="caption" tone={line.tone === 'neutral' ? 'muted' : 'dim'} className="master-status__text">
           {line.head}
-          {line.at ? <>{line.running ? ' ' : ' · '}<ShortAge value={line.at} ago={!line.running} /></> : null}
+          {line.at ? <>{line.running ? ' ' : ' · '}<Age value={line.at} ago={!line.running} /></> : null}
           {line.tail}
         </Text>
       </Inline>

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Box, Callout, DateText, Text } from '@drizztdourden08/tessera';
+import { Box, Callout, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { NO_BUNDLE } from '../model';
 import type { LaunchBoxProps } from '../tests-props.type';
 import { LaunchCommand } from './LaunchCommand';
@@ -20,7 +21,7 @@ const LaunchBox = (props: LaunchBoxProps) => {
       )}
       <LaunchCommand view={view} runs={runs} draft={draft} />
       {build?.note && <LaunchNote tag={group.tag} note={build.note} />}
-      {build?.updatedAt && <Text variant="caption" tone="muted">updated <DateText value={build.updatedAt} format="elapsed" length="short" /> ago</Text>}
+      {build?.updatedAt && <Text variant="caption" tone="muted">updated <Age value={build.updatedAt} /> ago</Text>}
     </Box>
   );
 };

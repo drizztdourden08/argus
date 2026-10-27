@@ -19,7 +19,7 @@ const ActivityRow = (props: ActivityRowProps) => {
         {` ${item.text ?? ''} `}
         {project ? <ProjectLink project={project} chip /> : null}
         {item.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${item.thread}`}</Text> : null}
-        {isFresh(item.at, freshSince) ? <> <Tag variant="urgency" color="info">new</Tag></> : null}
+        {isFresh(item.at, freshSince) ? <> <Tag variant="urgency" color="info" pill>new</Tag></> : null}
       </Text>
     </FeedRow>
   );

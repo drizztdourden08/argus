@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import type { LauncherPartProps } from '../builds-props.type';
 import { LauncherChips } from './LauncherChips';
 
@@ -16,7 +17,7 @@ const LauncherHead = (props: LauncherPartProps) => {
       {launcher.updatedAt && (
         <Text variant="caption" tone="muted">
           {`set by ${launcher.by ?? launcher.createdBy ?? 'a thread'} · `}
-          <DateText value={launcher.updatedAt} format="elapsed" length="short" />
+          <Age value={launcher.updatedAt} />
           {' ago'}
         </Text>
       )}

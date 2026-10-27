@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Icon, Inline, Spacer, Status, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../format';
-import { ShortAge } from '../../sub-components/ShortAge';
+import { Age } from '../../../../shell';
 import { STATE_TONE } from '../dashboards.constants';
 import type { CardStateProps } from '../dashboards.type';
 
@@ -22,7 +22,7 @@ const CardState = (props: CardStateProps) => {
       {state !== 'not started' && (
         <Inline gap="2xs" align="center" title={seenTip(card, now)}>
           <Icon name="clock" size={12} />
-          <Text variant="caption">{seen ? <ShortAge value={seen} /> : 'never'}</Text>
+          <Text variant="caption">{seen ? <Age value={seen} /> : 'never'}</Text>
         </Inline>
       )}
     </Inline>

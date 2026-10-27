@@ -29,7 +29,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
         <Box surface="sunken" className="bundle__command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'}>
           <Text mono>{launch.cmd}</Text>
         </Box>
-        <CopyButton text={launch.cmd} label="Copy" showLabel size="sm" variant="secondary" />
+        <CopyButton text={launch.cmd} label="Copy" showLabel size="sm" variant="tertiary" />
         {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
       </Flex>
@@ -37,7 +37,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
       {launch.name && (
         <Flex gap="xs" align="center">
           <Text variant="caption" tone="muted">from</Text>
-          <Tag><Link href="#builds"><Icon name="link" size={12} /> launcher {launch.name}</Link></Tag>
+          <Tag><Link href="#builds" tone="neutral" variant="subtle"><Icon name="link" size={12} /> launcher {launch.name}</Link></Tag>
         </Flex>
       )}
       {shown && <RunTerminal key={shown.id} run={shown} boardKey={boardKey} onLog={onLog} />}

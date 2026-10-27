@@ -3,7 +3,7 @@ import { Badge, Inline, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { useNow } from '../../clock';
 import { useProjectName } from '../../projects';
-import { ShortAge } from '../../sub-components/ShortAge';
+import { Age } from '../../../../shell';
 import { REGISTRY_DOT, REGISTRY_ICON, REGISTRY_LOOK } from '../dashboards.constants';
 import { registryChip } from '../model';
 import type { RegistryChipLinkProps } from '../dashboards.type';
@@ -30,7 +30,7 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
           {chip.name}
           <Text variant="caption" tone="muted">
             {chip.label}
-            {chip.since ? <> <ShortAge value={chip.since} /></> : null}
+            {chip.since ? <> <Age value={chip.since} /></> : null}
             {chip.extra ? ` ${chip.extra}` : ''}
           </Text>
         </Inline>
