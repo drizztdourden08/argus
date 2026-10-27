@@ -3,13 +3,15 @@ import { DateText, Flex, Tag, Text } from '@drizztdourden08/tessera';
 import type { CardMetaProps } from '../OwnerFeed.type';
 
 const CardMeta = (props: CardMetaProps) => {
-  const { id, at, thread, item } = props;
+  const { label, id, at, thread, item, menu } = props;
   return (
-    <Flex gap="xs" align="center" wrap>
+    <Flex gap="sm" align="center" wrap>
+      <Text variant="overline" tone="dim">{label}</Text>
       <Text variant="caption" tone="muted" mono>{id}</Text>
       {thread ? <Text variant="caption" tone="muted">{thread}</Text> : null}
       {item ? <Tag>{item}</Tag> : null}
-      <Text variant="caption" tone="muted"><DateText value={at} format="relative" /></Text>
+      <Text variant="caption" tone="muted"><DateText value={at} format="elapsed" length="short" /></Text>
+      {menu ? <Flex className="feed-card__menu">{menu}</Flex> : null}
     </Flex>
   );
 };

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { DateText, Pressable, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
+import { DateText, Flex, Pressable, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
 import { useOpenThread } from '../../shared';
 import { chipLook } from '../behavior/chip-look';
 import { FAULT_LOOK, PLAIN_LOOK } from '../RegisteredStrip.constants';
@@ -17,10 +17,12 @@ const RegisteredChip = (props: RegisteredChipProps) => {
     <Tooltip content={<ChipTip row={row} />}>
       <Pressable aria-label={`Open the thread ${row.thread}`} onClick={() => open(row.thread)}>
         <Tag {...(look.faulted ? FAULT_LOOK : PLAIN_LOOK)} data-state={row.state}>
-          <ChipMark look={look} name={row.session ?? row.thread} />
-          {look.word ? <Text variant="caption" tone="muted">{look.word}</Text> : null}
-          {row.state === 'waking' && since ? <DateText value={since} format="relative" /> : null}
-          <AgentText load={load} />
+          <Flex inline gap="xs" align="center">
+            <ChipMark look={look} name={row.session ?? row.thread} />
+            {look.word ? <Text variant="caption" tone={look.faulted ? 'danger' : 'muted'}>{look.word}</Text> : null}
+            {row.state === 'waking' && since ? <DateText value={since} format="elapsed" length="short" /> : null}
+            <AgentText load={load} />
+          </Flex>
         </Tag>
       </Pressable>
     </Tooltip>

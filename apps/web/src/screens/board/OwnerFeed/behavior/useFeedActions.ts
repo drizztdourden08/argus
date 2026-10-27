@@ -1,14 +1,24 @@
 /* @layer renderer-app @kind logic */
 import { toast } from '@drizztdourden08/tessera';
 import { useMemo } from 'react';
+import { softOp, SOFT_INVERSE } from '../../../../data/kanban';
 import { contextRequestFields, replyFields, replyProblem, useOwnerPost } from '../../owner-posts';
+import { SOFT_LABEL, useWriter } from '../../shared';
 import type { FeedActions } from '../OwnerFeed.type';
 
-const useFeedActions = (boardKey: string): FeedActions => {
+const useFeedActions = (boardKey: string, handed: string | null = null): FeedActions => {
   const { isBusy, submit } = useOwnerPost(boardKey);
+  const write = useWriter();
   return useMemo(
     () => ({
       isBusy,
+      handed,
+      soft: (kind, c, id) =>
+        write(
+          () => softOp(boardKey, { kind, c, id }),
+          `${SOFT_LABEL[kind]} ${id}.`,
+          (undoes) => void write(() => softOp(boardKey, { kind: SOFT_INVERSE[kind], c, id, undoes }), `Undone: ${id}.`),
+        ),
       choose: (entry, option) =>
         submit({ key: `answer:${entry.id}`, fields: replyFields(entry, 'decision', option), said: `Decided: ${option}` }),
       reply: (entry, kind, text) => {
@@ -28,7 +38,7 @@ const useFeedActions = (boardKey: string): FeedActions => {
       askContext: (entry) =>
         submit({ key: `askctx:${entry.id}`, fields: contextRequestFields(entry), said: `Asked ${entry.thread} for context.` }),
     }),
-    [isBusy, submit],
+    [boardKey, handed, isBusy, submit, write],
   );
 };
 

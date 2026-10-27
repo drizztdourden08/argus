@@ -1,0 +1,18 @@
+.test-line__main {
+  flex: 1 1 var(--size-256);
+  min-width: 0;
+}
+
+.test-line__text {
+  flex: 1 1 var(--size-192);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (width <= 720px) {
+  .test-line__text {
+    white-space: normal;
+  }
+}

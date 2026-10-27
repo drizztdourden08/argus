@@ -6,6 +6,7 @@ import { afterEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
+import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { KanbanPurge, KanbanTab, useTrashCount } from '../../src/screens/board/tabs/kanban';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
@@ -42,7 +43,8 @@ const Stage = () => {
   const count = useTrashCount(SCOPE);
   return (
     <>
-      <BoardMore trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
+      <BoardMore boardKey={SCOPE} trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
+      <BoardFocus boardKey={SCOPE} />
       <KanbanTab boardKey={SCOPE} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />
       <KanbanPurge boardKey={SCOPE} request={more.purge} onClose={more.closePurge} />
     </>

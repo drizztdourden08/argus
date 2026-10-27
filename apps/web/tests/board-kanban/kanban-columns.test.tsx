@@ -84,7 +84,7 @@ describe('paused threads and the focus', () => {
     await mountKanban(board);
     expect(await screen.findByText('Item I-1')).toBeTruthy();
     expect(screen.queryByText('Item I-2')).toBeNull();
-    fireEvent.click(screen.getByRole('switch', { name: 'Show paused (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show paused (1)' }));
     expect(screen.getByText('Item I-2')).toBeTruthy();
     expect(localStorage.getItem('coord.paused')).toBe('1');
   });

@@ -1,0 +1,29 @@
+/* @layer renderer-app @kind component */
+import { DateText, Flex, Icon, Link, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { activityTone } from '../../shared';
+import { LEAD_STATUS_TONES, NO_LEAD } from '../BoardHeader.constants';
+import type { LeadStatusProps } from '../BoardHeader.type';
+
+const LeadStatus = (props: LeadStatusProps) => {
+  const { lead } = props;
+  if (!lead) return <Text variant="caption" tone="muted">{NO_LEAD}</Text>;
+  const tone = LEAD_STATUS_TONES[lead.status];
+  return (
+    <Flex gap="sm" align="center">
+      <Status tone={activityTone(lead.activity)} pulse={lead.activity === 'working'} dot title={lead.activity ?? 'unknown'}>
+        <Text weight={600} title={lead.session ?? lead.id}>{lead.session ?? lead.id}</Text>
+      </Status>
+      {tone ? <Tag variant="urgency" color={tone}>{lead.status}</Tag> : <Tag>{lead.status}</Tag>}
+      <Text variant="caption" tone="muted" title={lead.lastSeen ?? 'never seen'}>
+        {lead.lastSeen ? <>seen <DateText value={lead.lastSeen} format="elapsed" length="short" /> ago</> : 'seen never'}
+      </Text>
+      {lead.link ? (
+        <Link href={lead.link} variant="subtle" aria-label="Open the chat of the lead" title="Open the lead chat">
+          <Icon name="message-square" size={14} />
+        </Link>
+      ) : null}
+    </Flex>
+  );
+};
+
+export { LeadStatus };

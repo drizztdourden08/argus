@@ -4,7 +4,6 @@ const NOTICES = {
   unauthorized: { tone: 'danger', text: 'The dashboard asks you to sign in again.' },
 } as const;
 
-const WAKING_LOOK = { variant: 'urgency', color: 'info' } as const;
-const FAULT_LOOK = { variant: 'urgency', color: 'danger' } as const;
+const OVERVIEW_OPTION = { value: '', label: 'Argus overview' } as const;
 
-export { FAULT_LOOK, NOTICES, WAKING_LOOK };
+export { NOTICES, OVERVIEW_OPTION };

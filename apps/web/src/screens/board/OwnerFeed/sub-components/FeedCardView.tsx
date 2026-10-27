@@ -1,18 +1,32 @@
 /* @layer renderer-app @kind component */
 import { Card, Flex } from '@drizztdourden08/tessera';
 import { FEED_META } from '../../feed-model';
-import { CARD_TONES } from '../OwnerFeed.constants';
 import type { FeedCardViewProps } from '../OwnerFeed.type';
 import { CardBody } from './CardBody';
+import { CardMenu } from './CardMenu';
 import { CardMeta } from './CardMeta';
+import { TestLine } from './TestLine';
 
 const FeedCardView = (props: FeedCardViewProps) => {
   const { card, actions } = props;
-  const item = card.type === 'bundle' ? null : card.data.item;
+  if (card.type === 'test' || card.type === 'bundle') {
+    return (
+      <Card data-feed-type={card.type}>
+        <TestLine card={card} handed={actions.handed} />
+      </Card>
+    );
+  }
   return (
-    <Card title={FEED_META[card.type].label} tone={CARD_TONES[card.type]} level={3} data-feed-type={card.type}>
-      <Flex direction="column" gap="sm">
-        <CardMeta id={card.data.id} at={card.at} thread={card.data.thread} item={item} />
+    <Card data-feed-type={card.type}>
+      <Flex direction="column" gap="xs">
+        <CardMeta
+          label={FEED_META[card.type].label}
+          id={card.data.id}
+          at={card.at}
+          thread={card.data.thread}
+          item={card.data.item}
+          menu={<CardMenu card={card} actions={actions} />}
+        />
         <CardBody card={card} actions={actions} />
       </Flex>
     </Card>

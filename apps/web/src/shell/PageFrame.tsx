@@ -1,13 +1,16 @@
 /* @layer renderer-app @kind component */
-import { Flex, PageFrame as FramePrimitive } from '@drizztdourden08/tessera';
+import { DensityScope, Flex, ScrollArea } from '@drizztdourden08/tessera';
 import type { PageFrameProps } from './shell.type';
+import './PageFrame.css';
 
 const PageFrame = (props: PageFrameProps) => {
   const { children } = props;
   return (
-    <FramePrimitive>
-      <Flex direction="column" gap="lg">{children}</Flex>
-    </FramePrimitive>
+    <DensityScope density="compact">
+      <ScrollArea className="argus-page" gutter="stable">
+        <Flex direction="column" gap="md">{children}</Flex>
+      </ScrollArea>
+    </DensityScope>
   );
 };
 

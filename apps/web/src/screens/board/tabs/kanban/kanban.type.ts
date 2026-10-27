@@ -7,7 +7,7 @@ import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
 import type { OpNotice } from '../../shared';
 import type { TrashPanel } from './trash-props.type';
-import type { FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
+import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
 import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
 interface KanbanData {
@@ -78,7 +78,6 @@ interface KanbanViewInput {
 
 interface KanbanViewResult {
   view: KanbanView;
-  choices: FocusChoices;
 }
 
 interface DrawerNav {

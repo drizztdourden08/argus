@@ -2,8 +2,8 @@
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
-import type { AddPanel, BulkOps, FocusState, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, CardData, FocusChoices, ItemGroup, KanbanView } from './model';
+import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
+import type { AddPreset, CardData, ItemGroup, KanbanView } from './model';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -17,19 +17,12 @@ interface KanbanToolbarProps {
   view: KanbanView;
   threads: Threads;
   subjects: readonly string[];
-  focus: FocusState;
-  choices: FocusChoices;
 }
 
 interface FilterRowProps {
   state: KanbanState;
   threads: Threads;
   subjects: readonly string[];
-}
-
-interface FocusRowProps {
-  focus: FocusState;
-  choices: FocusChoices;
 }
 
 interface ViewRowProps {
@@ -128,5 +121,5 @@ interface CriteriaBarProps {
 }
 
 export type {
-  CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, FocusRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

@@ -35,6 +35,12 @@ pair with the same numbered list under it.
 Screenshots: `visual-audit/w1440-light-overview-dashboards.png`,
 `visual-audit/w1440-light-rotp-kanban.png`, `visual-audit/w1440-dark-overview-notifications.png`.
 
+Status (fix-board-shell): 1 is dropped, dark only by owner rule (Tessera lead confirmed). 2 done for
+boards: `shell/PageFrame` is a Tessera ScrollArea with a 16px gutter (12px under 720px) and no top
+padding, and the board header is its own compact row (`BoardHeader`). The overview header is the
+overview thread's. 3 done: `PageFrame` wraps every page in `DensityScope compact`. 4, 5 and 6 are
+per tab and belong to the tab threads. The shell has no workaround left: no Tessera class is touched.
+
 ## Overview header and tab bar
 
 1. Switcher. Node shows a compact select at the top right whose value reads "Argus overview" and
@@ -199,6 +205,17 @@ Screenshots: `visual-audit/w1440-dark-overview-notifications.png`.
 Screenshots: `visual-audit/w1440-dark-rotp-agents.png`, `visual-audit/w1440-dark-brock-agents.png`,
 `visual-audit/w420-dark-brock-kanban.png`.
 
+Status (fix-board-shell): 1 to 5 done. The tab bar sits right under the registered strip (at 146px,
+Node 147px). `BoardPage` holds `BoardHeader`, `RegisteredStrip`, `Tabs`, `BoardFocus` and
+`BoardTabBody`; `BoardBody` and `WorkItems` are gone. The header is a plain Flex row (eyebrow, title,
+lead status, board updated, `shell/ProjectSwitcher`, More), because Tessera `ContentHeader` has no
+way to put an eyebrow over the title or to drop its panel padding and gradient. The registered chip
+keeps Node's own fault look (red outline, red word) with a gap between mark, word and agent text.
+`FocusRow` left the Kanban toolbar. Remaining gaps: the Tessera `Tabs` tab is 36px high against 40px
+in Node, and the Select has no auto width (the Focus select sits in an inline Flex to shrink).
+`ProjectSwitcher` also lists "Argus overview" first and ends with "(N running)" like Node; the
+overview thread can reuse it.
+
 ## Board: Activity tab
 
 1. Not built. The Argus Activity tab body says "This tab is not built yet." while the feed it should
@@ -230,6 +247,14 @@ Screenshots: `visual-audit/w1440-dark-rotp-agents.png`, `visual-audit/w1440-dark
 
 Screenshots: `visual-audit/tab-rotp-activity.png`, `visual-audit/w1440-dark-rotp-activity.png`,
 `visual-audit/x-activity-needs.png`, `visual-audit/x-activity-log.png`.
+
+Status (fix-board-shell): 1, 3, 4, 5 and 6 done: `tabs/activity/ActivityTab` holds `OwnerFeed` in a
+`shell/Panel` (title, count, view control on one row); the bundle and test cards are one line
+(`TestLine`) with Open; the work log is a grid with short ages and a link coloured source; every
+decision, question, manual step and notice card has a kebab (Archive, Delete, Copy id). 2 is half
+done: the question is bold, the options are neutral buttons with a RECOMMENDED word and the card
+head is one line; the amber left edge (Card edge tone) and the one line editor (compact
+MarkdownEditor) wait for the next Tessera release.
 
 ## Board: Agents tab
 
@@ -503,6 +528,12 @@ Screenshots: `visual-audit/w1440-dark-brock-drawer-thread.png`,
 Screenshots: `visual-audit/x-board-more.png`, `visual-audit/x-board-trash.png`,
 `visual-audit/x-ov-send-down.png`, `visual-audit/x-ov-switcher.png`.
 
+Status (fix-board-shell): 1 done: the More menu lists Trash, Resources and locks (N held, a dialog
+with the lock table), Legend (a dialog), Show hidden (N, stored as `coord.hidden`) and Purge. The
+Agents tab thread must read `coord.hidden` (`HIDDEN_KEY` in `BoardMore.constants.ts`) to show the
+hidden threads. 2 and 5 done. 3 belongs to the overview and kanban threads (needs the compact
+editor). 4 is the tab threads'.
+
 ## Narrow window (420px)
 
 1. First screen. On every board Node shows header, tabs, Focus and the first cards of the tab; Argus
@@ -519,6 +550,10 @@ Screenshots: `visual-audit/w420-dark-overview-dashboards.png`,
 `visual-audit/w420-dark-rotp-agents.png`, `visual-audit/w420-dark-brock-kanban.png`,
 `visual-audit/w420-dark-overview-processes.png`.
 
+Status (fix-board-shell): 1 and 3 done on boards (header, tabs, Focus and the first rows fit the
+first screen at 420px; the header folds like Node: title, switcher and kebab on one row, lead line
+under it). 2 belongs to the overview thread. 4 kept.
+
 ## Empty, busy and not found states
 
 1. Empty tests (Argus board): same sentence on both. Argus wraps it in the broken toolbar; Node in
@@ -533,6 +568,11 @@ Screenshots: `visual-audit/w420-dark-overview-dashboards.png`,
 
 Screenshots: `visual-audit/tab-argus-tests.png`, `visual-audit/tab-rotp-agents.png`,
 `visual-audit/x-unknown-board.png`, `visual-audit/x-loading-overview.png`.
+
+Status (fix-board-shell): 5 done: the board header says "connecting" until the stream has the
+board, then "board updated Xs ago", and "dashboard unreachable" when it is down. 1 to 3 follow the
+tab threads. 4: the Vite dev server shows an empty board for an unknown key; the Rust server
+returns the Not found page, which is the real behaviour.
 
 ## Palette check
 
@@ -551,6 +591,14 @@ Screenshots: `visual-audit/tab-argus-tests.png`, `visual-audit/tab-rotp-agents.p
    neutral marks in Node. The palette should drive the accent only (active tab, links, primary
    buttons).
 10. Node has one palette for every board, so this is an intended difference, not a parity gap.
+
+Status (fix-board-shell): the shell, the header, the strip, the focus bar, the Activity tab and the
+More menu use no palette colour except the active tab and focus ring. The leaks in item 9 sit in
+other folders: `tabs/agents/model/model.constants.ts` (sonnet is `primary`),
+`tabs/builds/sub-components/LauncherChips.tsx` (master), `tabs/tests/sub-components/BundleHead.tsx`
+and `FactTags.tsx` (handed to you), `tabs/tests/tests.constants.ts` and
+`tabs/worktrees/model/model.constants.ts` (`primary` tones). The tab threads move them to neutral
+or status tones.
 
 ## Data differences seen on screen
 
@@ -575,7 +623,7 @@ These are not layout, but the owner sees them side by side. Each needs a check o
 ## New Tessera pieces
 
 1. A light theme for the basic palette and each project palette, switched by `prefers-color-scheme`
-   (Tessera ships dark only).
+   (Tessera ships dark only). Dark only by owner rule: not a target.
 2. A Drawer record header: an eyebrow slot, a title that wraps, and a header actions slot for icon
    tools; plus a 760px size and full width under 480px.
 3. A Card edge tone: a coloured border or left edge in a status tone that leaves the header neutral

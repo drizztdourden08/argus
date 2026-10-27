@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex } from '@drizztdourden08/tessera';
+import { Button, Flex, Text } from '@drizztdourden08/tessera';
 import type { EntryBodyProps } from '../OwnerFeed.type';
 
 const OptionButtons = (props: EntryBodyProps) => {
@@ -11,12 +11,13 @@ const OptionButtons = (props: EntryBodyProps) => {
         <Button
           key={option}
           size="sm"
-          variant={index === 0 ? 'primary' : 'secondary'}
+          variant="tertiary"
           disabled={busy}
           title={index === 0 ? 'Recommended' : undefined}
           onClick={() => void actions.choose(entry, option)}
         >
-          {index === 0 ? `${option} (recommended)` : option}
+          {option}
+          {index === 0 ? <> <Text variant="overline" weight={400}>recommended</Text></> : null}
         </Button>
       ))}
     </Flex>

@@ -1,21 +1,22 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, List, ListItem, Tag, Text } from '@drizztdourden08/tessera';
+import { DateText, List, ListItem, Small, Text } from '@drizztdourden08/tessera';
 import { plainText } from '../../plain-text';
 import type { LogListProps } from '../OwnerFeed.type';
+import './LogList.css';
 
 const LogList = (props: LogListProps) => {
   const { lines } = props;
   return (
-    <List aria-label="Work log">
+    <List aria-label="Work log" className="log-list">
       {lines.map((line) => (
-        <ListItem key={`${line.subject}:${line.seq}:${line.ts}`} bare>
-          <Flex gap="sm" align="baseline" wrap>
-            <Text variant="caption" tone="muted"><DateText value={line.ts} format="relative" /></Text>
-            <Text variant="caption" tone="muted" title={line.thread}>{line.thread}</Text>
-            {line.item ? <Tag>{line.item}</Tag> : null}
-            <Text title={line.text}>{plainText(line.text)}</Text>
-            {line.subject && line.subject !== line.thread ? <Text variant="caption" tone="dim">{line.subject}</Text> : null}
-          </Flex>
+        <ListItem key={`${line.subject}:${line.seq}:${line.ts}`} bare className="log-list__row">
+          <Small tone="muted" className="log-list__age"><DateText value={line.ts} format="elapsed" length="short" /></Small>
+          <Small tone="info" className="log-list__source" title={line.thread}>{line.thread}</Small>
+          <Small className="log-list__text" title={line.text}>
+            {line.item ? <><Text variant="caption" tone="dim" mono>{line.item}</Text>{' '}</> : null}
+            {plainText(line.text)}
+            {line.subject && line.subject !== line.thread ? <> <Small tone="muted">{line.subject}</Small></> : null}
+          </Small>
         </ListItem>
       ))}
     </List>

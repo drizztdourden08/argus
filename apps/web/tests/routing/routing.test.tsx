@@ -40,13 +40,13 @@ describe('routing', () => {
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
     expect(within(screen.getByRole('status', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees']) {
-      expect(screen.getByRole('tab', { name: label })).toBeTruthy();
+      expect(screen.getByRole('tab', { name: new RegExp(`^${label}`) })).toBeTruthy();
     }
   });
 
   it('opens the tab named by the hash', async () => {
     renderAt('/p/rotp/#tests');
-    const tab = await screen.findByRole('tab', { name: 'Tests' });
+    const tab = await screen.findByRole('tab', { name: /^Tests/ });
     expect(tab.getAttribute('aria-selected')).toBe('true');
   });
 

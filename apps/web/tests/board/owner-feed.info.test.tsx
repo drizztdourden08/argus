@@ -73,7 +73,7 @@ describe('the verdict of the board', () => {
   it('a refusal is shown with its reason and the card stays', async () => {
     mockPosts('refused', 'not allowed');
     await openBoard({ entries: byId(decision) });
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, private (recommended)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, private recommended' }));
     expect(await screen.findByText('Refused: not allowed.')).toBeTruthy();
     expect(screen.getByText('Create the private repo?')).toBeTruthy();
   });
@@ -81,14 +81,14 @@ describe('the verdict of the board', () => {
   it('a conflict says nothing of yours was applied', async () => {
     mockPosts('conflict');
     await openBoard({ entries: byId(decision) });
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, private (recommended)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, private recommended' }));
     expect(await screen.findByText('Conflict: a thread changed it after you looked. Nothing of yours was applied.')).toBeTruthy();
   });
 
   it('an unreachable dashboard is told in one sentence', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('offline'))));
     await openBoard({ entries: byId(decision) });
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, private (recommended)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, private recommended' }));
     expect(await screen.findByText('Dashboard unreachable, retrying.')).toBeTruthy();
   });
 });

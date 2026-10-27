@@ -19,4 +19,4 @@ interface WorkItem {
   deletedAt?: string;
 }
 
-export type { Criterion, WorkItem };
+export type { WorkItem };
