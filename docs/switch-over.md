@@ -62,6 +62,21 @@ tray, mcp, wake-stream, install-mcp and autostart all exist. Two small output di
 worth a look in step 5. `argus --version` is the clap line, where Node prints the bare version,
 and `argus help` is the clap help text.
 
+## The shadow marker
+
+A shadow home is marked: its `config.json` carries `"shadow": true`. The marker is written by the
+shadow seed, by `serve --shadow` and by `tray start --shadow` (the default home under `COORD_HOME`,
+the live one, is never marked). `serve` reads the marker and runs in shadow mode whatever flags it
+got, and no flag turns it off, so every way the dashboard can start on that home is shadow:
+`argus serve`, `argus start`, the tray (and its Start and Restart items), the stdio MCP bridge and
+the hook and coord-client autostart. Without the marker a start that forgot `--shadow` would write
+the real boards in `COORD_HOME`. To end a shadow, delete its folder.
+
+Every Argus start goes through the tray on Windows, as in Node: the bridge runs `argus tray start`,
+the hooks and the coord client run the install's `dashboard tray start` (which forwards to Argus
+after the cut) or, for a shadow home, `argus tray start --shadow` of the binary its config names.
+`argus start` alone is the plain server, as `dashboard start` is in Node.
+
 ## Install the binary
 
 Do this once before step 1, and again at the cut with the cut build.
@@ -256,11 +271,19 @@ stop`). Nothing outside `$shadow` and `$sb` was written.
 
 Who: the owner. The lead hands over the command and ends its turn. It never opens a window.
 
-The owner runs this in his own terminal. It stays in the foreground, and Ctrl+C ends it:
+The owner runs this in his own terminal. It starts the tray icon in the notification area and the
+shadow server behind it, then returns:
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\argus\argus.exe" serve --shadow --port 47616 --data-dir "$HOME\.coord\argus-shadow"
+& "$env:LOCALAPPDATA\Programsrgusrgus.exe" tray start --shadow --data-dir "$HOME\.coordrgus-shadow"
 ```
+
+The icon is the Argus eye (grey with a red badge while the server is stopped). Its tooltip reads
+`Argus (shadow): running (0 runs)`, so a shadow can never be mistaken for the live dashboard. To
+check without looking: `... tray status --data-dir "$HOME\.coordrgus-shadow"` prints `tray
+running (pid ...)` and `icon registered: "<tooltip>"`. To close it: `... tray stop` (the icon) and
+`... stop` (the server), each with the same `--data-dir`. Without an icon, in the foreground
+(Ctrl+C ends it): `... serve --shadow --data-dir "$HOME\.coordrgus-shadow"`.
 
 Then he opens `http://127.0.0.1:47616/` beside the Node page on 47615. What to look at:
 
@@ -277,7 +300,7 @@ Then he opens `http://127.0.0.1:47616/` beside the Node page on 47615. What to l
 He answers with one verdict. A defect goes to the board as an item and the lead fixes it, then
 repeats step 1. **Go:** the owner's "looks right" is the go to start step 3.
 
-Rollback: Ctrl+C. Node was never touched.
+Rollback: `tray stop` and `stop` with the same `--data-dir` (or Ctrl+C for the foreground form). Node was never touched.
 
 ## 3. The coord engine rollout
 

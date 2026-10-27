@@ -27,6 +27,8 @@ pub struct TrayState {
     pub phase: Phase,
     /// How many things wait for the owner (questions, tests, decisions).
     pub attention: u32,
+    /// True when the home is a shadow: the tooltip and the status line say so.
+    pub shadow: bool,
 }
 
 impl TrayState {
@@ -36,6 +38,7 @@ impl TrayState {
         Self {
             phase: Phase::Running { runs },
             attention: 0,
+            shadow: false,
         }
     }
 
@@ -45,6 +48,7 @@ impl TrayState {
         Self {
             phase: Phase::Stopped,
             attention: 0,
+            shadow: false,
         }
     }
 
@@ -52,6 +56,13 @@ impl TrayState {
     #[must_use]
     pub const fn with_attention(mut self, attention: u32) -> Self {
         self.attention = attention;
+        self
+    }
+
+    /// The state of a shadow home when `shadow` is true: the tooltip says so.
+    #[must_use]
+    pub const fn shadowed(mut self, shadow: bool) -> Self {
+        self.shadow = shadow;
         self
     }
 
@@ -80,9 +91,14 @@ impl TrayState {
             Phase::Stopped => "stopped".to_owned(),
             Phase::Closing => "closing".to_owned(),
         };
+        let name = if self.shadow {
+            "Argus (shadow)"
+        } else {
+            "Argus"
+        };
         match self.attention {
-            0 => format!("Argus: {server}"),
-            n => format!("Argus: {server}, {n} need you"),
+            0 => format!("{name}: {server}"),
+            n => format!("{name}: {server}, {n} need you"),
         }
     }
 
@@ -129,6 +145,17 @@ mod tests {
     }
 
     #[test]
+    fn a_shadow_home_says_shadow_in_the_tooltip_and_the_status_line() {
+        let state = TrayState::running(1).shadowed(true);
+        assert_eq!(state.tooltip(), "Argus (shadow): running (1 run)");
+        assert_eq!(state.status_label(), state.tooltip());
+        assert_eq!(
+            TrayState::stopped().shadowed(true).tooltip(),
+            "Argus (shadow): stopped"
+        );
+    }
+
+    #[test]
     fn what_waits_for_the_owner_is_added_only_when_there_is_something() {
         let state = TrayState::running(2).with_attention(3);
         assert_eq!(state.tooltip(), "Argus: running (2 runs), 3 need you");
@@ -152,6 +179,7 @@ mod tests {
         let worst = TrayState {
             phase: Phase::Running { runs: u32::MAX },
             attention: u32::MAX,
+            shadow: true,
         };
         assert!(worst.tooltip().chars().count() <= 127);
     }

@@ -85,6 +85,7 @@ impl Session {
             .map_err(|e| TrayError::Platform(e.to_string()))?;
         watch::clear_requests(&files);
         record::write(&files, process::id())?;
+        record::set_tooltip(&files, process::id(), &state.tooltip())?;
         Ok(Self {
             tray,
             icons,
@@ -182,6 +183,7 @@ impl Session {
         self.tray
             .set_tooltip(Some(self.state.tooltip()))
             .map_err(platform)?;
+        let _noted = record::set_tooltip(&self.files, process::id(), &self.state.tooltip());
         if icon_changed {
             let icon = self.icons.of(self.state.icon());
             self.tray.set_icon(Some(icon)).map_err(platform)?;

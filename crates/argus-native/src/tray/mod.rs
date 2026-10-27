@@ -34,5 +34,5 @@ pub use quit_flag::{
 };
 pub use record::{TrayRecord, read_live as read_live_tray};
 pub use state::{Phase, TrayState};
-pub use status::{TrayStatus, status as tray_status, status_text};
+pub use status::{TrayStatus, icon_line, status as tray_status, status_text};
 pub use stopping::{GRACE as STOP_GRACE, Stopped, request as request_stop, stop_tray};

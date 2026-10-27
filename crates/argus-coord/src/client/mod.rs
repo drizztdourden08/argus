@@ -5,6 +5,7 @@ pub mod autostart;
 pub mod config;
 pub mod health;
 pub mod http;
+pub mod launch;
 pub mod sse;
 
 pub use autostart::dashboard_client;

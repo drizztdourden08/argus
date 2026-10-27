@@ -6,7 +6,7 @@ use argus_mcp::{BridgeEnv, Endpoint};
 use argus_native::{Boot, TrayFiles, quit_flag_active};
 
 use super::endpoint;
-use super::launch::{boot_now, serve_hidden};
+use super::launch::{boot_now, start_hidden};
 
 /// Starts the server: the real start, or a test's.
 pub type Launch = Box<dyn Fn() -> Result<(), String> + Send + Sync>;
@@ -28,7 +28,7 @@ impl DashboardEnv {
         let home = paths.home.clone();
         Self::with(
             paths,
-            Box::new(move || serve_hidden(&home)),
+            Box::new(move || start_hidden(&home)),
             Box::new(boot_now),
         )
     }

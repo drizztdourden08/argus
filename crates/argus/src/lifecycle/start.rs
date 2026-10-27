@@ -2,7 +2,6 @@
 //! A server that answers already is left alone. The server's standard error goes to
 //! `logs/start.err` until it is up, so a start that fails says why.
 
-use std::ffi::OsString;
 use std::fs::{self, File};
 use std::process::Child;
 use std::time::Duration;
@@ -11,6 +10,8 @@ use argus_core::Paths;
 use argus_core::config::{env_port, load_config};
 use argus_native::{TrayFiles, clear_quit_flag};
 use tokio::time::sleep;
+
+use argus_core::launch;
 
 use super::live::{Up, up};
 use super::spawn;
@@ -51,15 +52,6 @@ async fn wait_for(paths: &Paths, child: &mut Child, limit: Duration) -> Outcome 
     Outcome::TimedOut
 }
 
-fn serve_args(port: Option<u16>) -> Vec<OsString> {
-    let mut args = vec![OsString::from("serve")];
-    if let Some(port) = port {
-        args.push("--port".into());
-        args.push(port.to_string().into());
-    }
-    args
-}
-
 fn failure(err_file: &std::path::Path, limit: Duration) -> String {
     let why = fs::read_to_string(err_file).unwrap_or_default();
     let why = why.trim();
@@ -98,7 +90,7 @@ pub async fn start(paths: &Paths, options: &Options) -> Result<u8, String> {
     fs::create_dir_all(&paths.logs).map_err(|e| e.to_string())?;
     let err_file = paths.logs.join("start.err");
     let sink = File::create(&err_file).map_err(|e| e.to_string())?;
-    let mut child = spawn::detached(&serve_args(options.port), &sink)
+    let mut child = spawn::detached(&launch::serve(&paths.home, options.port), &sink)
         .map_err(|e| format!("the server could not be started: {e}"))?;
     drop(sink);
     match wait_for(paths, &mut child, options.wait).await {

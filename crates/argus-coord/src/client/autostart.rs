@@ -1,71 +1,24 @@
 //! The client of a dashboard that may be down: it answers at once when the server is healthy,
-//! else it starts the server (hidden, detached) and waits up to 8 seconds
+//! else it starts the dashboard (hidden, detached) and waits up to 8 seconds
 //! (`COORD_DASHBOARD_WAIT_MS`) for it. A server that will not come up is
 //! [`ClientError::Down`], the error the `run` verbs turn into exit 3.
 //!
-//! The server is started as the Node CLI does while the Node dashboard serves: `node
-//! <installDir>/bin/dashboard.mjs start`. After the switch-over only this module changes.
+//! The dashboard is started through the tray on Windows, as the hooks do, so the icon is there
+//! whenever the server runs; what exactly is run is decided in [`super::launch`].
 
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
 use argus_core::Paths;
-use serde_json::Value;
 
 use super::config::dashboard_config;
 use super::health::healthy;
 use super::http::{Client, ClientError};
+use super::launch::{plan, spawn};
 use crate::cli::env::Env;
 
 const WAIT_DEFAULT_MS: u64 = 8000;
 const POLL: Duration = Duration::from_millis(200);
-
-fn bin_of(install_dir: &Path) -> PathBuf {
-    install_dir.join("bin").join("dashboard.mjs")
-}
-
-/// Where `bin/dashboard.mjs` lives when `config.json` does not say yet (the first ever start):
-/// `COORD_DASHBOARD_INSTALL`, else the install the CLI config names (`aiConfigDir/dashboard`).
-fn install_dir_guess(env: &Env) -> Option<PathBuf> {
-    if let Some(dir) = env.get("COORD_DASHBOARD_INSTALL") {
-        return Some(PathBuf::from(dir));
-    }
-    let file = env.home_dir().join(".rotp-cli").join("config.json");
-    let cli: Value = serde_json::from_str(&fs::read_to_string(file).ok()?).ok()?;
-    let dir = Path::new(cli["aiConfigDir"].as_str()?).join("dashboard");
-    bin_of(&dir).exists().then_some(dir)
-}
-
-#[cfg(windows)]
-fn detach(command: &mut Command) {
-    use std::os::windows::process::CommandExt;
-    const DETACHED_PROCESS: u32 = 0x0000_0008;
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    command.creation_flags(DETACHED_PROCESS | CREATE_NO_WINDOW);
-}
-
-#[cfg(not(windows))]
-fn detach(_command: &mut Command) {}
-
-/// `node <bin> start`, hidden and detached so it outlives this call. The standard handles of
-/// this process stay out of it: on Windows a child inherits every inheritable handle, and the
-/// server would hold the pipe the caller reads this call's output from and keep it open.
-fn start_server(env: &Env, bin: &Path) {
-    argus_native::keep_stdio_private();
-    let mut command = Command::new("node");
-    command
-        .arg(bin)
-        .arg("start")
-        .envs(env.iter())
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    detach(&mut command);
-    command.spawn().ok();
-}
 
 fn ready(paths: &Paths) -> Option<Client> {
     let client = Client::new(&dashboard_config(paths)?);
@@ -92,19 +45,10 @@ pub fn dashboard_client(env: &Env, paths: &Paths, autostart: bool) -> Result<Cli
     if !autostart {
         return Err(ClientError::down(None));
     }
-    let install = env
-        .get("COORD_DASHBOARD_INSTALL")
-        .map(PathBuf::from)
-        .or_else(|| {
-            dashboard_config(paths)
-                .and_then(|c| c.install_dir)
-                .map(PathBuf::from)
-        })
-        .or_else(|| install_dir_guess(env));
-    let Some(bin) = install.map(|d| bin_of(&d)).filter(|b| b.exists()) else {
+    let Some(plan) = plan(env, paths) else {
         return Err(ClientError::down(Some("no dashboard install found")));
     };
-    start_server(env, &bin);
+    spawn(env, &plan);
     let deadline = Instant::now() + Duration::from_millis(wait_ms(env));
     while Instant::now() < deadline {
         sleep(POLL);

@@ -4,13 +4,13 @@
 //! server is down. Output lines and exit codes are the Node ones.
 
 mod admin;
-mod live;
+pub(crate) mod live;
 mod logs;
 mod node_guard;
 mod open;
 mod serve;
 mod spawn;
-mod start;
+pub(crate) mod start;
 mod status;
 mod stop;
 mod tray_line;

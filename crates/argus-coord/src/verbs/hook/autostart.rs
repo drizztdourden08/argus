@@ -6,12 +6,11 @@
 //! (`COORD_HOME` or `DASHBOARD_HOME`) never starts the owner's server unless
 //! `COORD_DASHBOARD_AUTOSTART=1`.
 //!
-//! While the Node dashboard serves, the start is the Node one: `node
-//! <installDir>/bin/dashboard.mjs tray start` on Windows, `... start` elsewhere.
+//! What is started, and how (the tray on Windows, the Node bin or the Argus binary of a shadow
+//! home), is decided by [`crate::client::launch`].
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::path::Path;
 use std::time::{Duration, SystemTime};
 
 use argus_core::Paths;
@@ -20,13 +19,9 @@ use serde_json::Value;
 
 use super::alive::{pid_alive, quit_this_boot};
 use crate::cli::Env;
-use crate::client::dashboard_config;
+use crate::client::launch::{plan, spawn};
 
 const LOCK_FRESH: Duration = Duration::from_secs(60);
-
-/// `DETACHED_PROCESS | CREATE_NO_WINDOW`: no console, and not tied to this process.
-#[cfg(windows)]
-const HIDDEN: u32 = 0x0800_0008;
 
 fn read_json(file: &Path) -> Option<Value> {
     serde_json::from_str(&fs::read_to_string(file).ok()?).ok()
@@ -45,42 +40,6 @@ fn lock_fresh(lock: &Path) -> bool {
         .is_ok_and(|at| SystemTime::now().duration_since(at).unwrap_or_default() < LOCK_FRESH)
 }
 
-/// The install the CLI config of this machine names (`aiConfigDir/dashboard`).
-fn installed(env: &Env) -> Option<PathBuf> {
-    let cli = read_json(&env.home_dir().join(".rotp-cli").join("config.json"))?;
-    Some(Path::new(cli["aiConfigDir"].as_str()?).join("dashboard"))
-}
-
-/// `bin/dashboard.mjs` of the install: `COORD_DASHBOARD_INSTALL`, else `config.json`'s
-/// `installDir`, else the install of the CLI config; `None` when it is not there.
-fn dashboard_bin(env: &Env, paths: &Paths) -> Option<PathBuf> {
-    let install = env
-        .get("COORD_DASHBOARD_INSTALL")
-        .map(PathBuf::from)
-        .or_else(|| dashboard_config(paths)?.install_dir.map(PathBuf::from))
-        .or_else(|| installed(env))?;
-    Some(install.join("bin").join("dashboard.mjs")).filter(|bin| bin.exists())
-}
-
-/// `node <bin> tray start` (`start` off Windows), with no window and not tied to this process.
-fn start(env: &Env, bin: &Path) {
-    argus_native::keep_stdio_private();
-    let verbs: &[&str] = if cfg!(windows) {
-        &["tray", "start"]
-    } else {
-        &["start"]
-    };
-    let mut command = Command::new("node");
-    command.arg(bin).args(verbs).envs(env.iter());
-    command
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    #[cfg(windows)]
-    std::os::windows::process::CommandExt::creation_flags(&mut command, HIDDEN);
-    command.spawn().ok();
-}
-
 fn held_back(env: &Env, home: &Path) -> bool {
     let other_home = env.get("COORD_HOME").is_some() || env.get("DASHBOARD_HOME").is_some();
     env.get("COORD_DASHBOARD_NO_AUTOSTART").is_some()
@@ -95,10 +54,10 @@ pub fn ensure_dashboard(env: &Env, paths: &Paths) {
     if held_back(env, &paths.home) {
         return;
     }
-    let Some(bin) = dashboard_bin(env, paths) else {
+    let Some(plan) = plan(env, paths) else {
         return;
     };
     if fs::write(paths.home.join("start.lock"), format!("{}\n", now_iso())).is_ok() {
-        start(env, &bin);
+        spawn(env, &plan);
     }
 }

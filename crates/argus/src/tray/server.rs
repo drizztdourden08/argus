@@ -1,6 +1,5 @@
 //! The server as the tray sees it: is it up, how busy, start it, stop it, where its page is.
 
-use std::ffi::OsStr;
 use std::time::Duration;
 
 use argus_core::config::load_config;
@@ -11,6 +10,7 @@ use serde_json::Value;
 use tokio::time::sleep;
 
 use argus::detach;
+use argus_core::launch;
 
 const START_WAIT: Duration = Duration::from_secs(15);
 const STOP_WAIT: Duration = Duration::from_secs(10);
@@ -43,6 +43,11 @@ impl Server {
 
     /// What the icon shows: the server down, or up with its runs.
     pub async fn state(&self) -> TrayState {
+        let shadow = launch::is_shadow(&self.paths.home);
+        self.state_of_server().await.shadowed(shadow)
+    }
+
+    async fn state_of_server(&self) -> TrayState {
         match self.live().await {
             Some((_, health)) => {
                 let runs = health["runs"]["running"].as_u64().unwrap_or(0);
@@ -62,8 +67,7 @@ impl Server {
         if self.live().await.is_some() {
             return Ok(());
         }
-        let home = self.paths.home.as_os_str();
-        detach::argus(&[OsStr::new("serve"), OsStr::new("--data-dir"), home])
+        detach::argus(&launch::serve(&self.paths.home, None))
             .map_err(|e| format!("the server could not be started: {e}"))?;
         self.wait(true, START_WAIT)
             .await

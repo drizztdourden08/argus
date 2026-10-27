@@ -32,8 +32,8 @@ fn a_shadow_home_with_nothing_gets_the_database_the_config_and_the_rules() {
         serde_json::from_str(&fs::read_to_string(shadow.join("config.json")).unwrap()).unwrap();
     assert_eq!(
         config,
-        serde_json::json!({ "from": "node", "port": 47616 }),
-        "the Node config, and the port of the shadow as its one change"
+        serde_json::json!({ "from": "node", "port": 47616, "shadow": true }),
+        "the Node config, the port of the shadow and the shadow marker as its changes"
     );
     assert!(shadow.join("process-rules.json").is_file());
 }
@@ -113,4 +113,60 @@ async fn serve_in_shadow_mode_starts_from_the_node_database() {
     })
     .await;
     assert_eq!(t.svc.db.kv_get("seen").unwrap().as_deref(), Some("yes"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_marked_home_serves_in_shadow_mode_whatever_the_start_asked() {
+    let t = TestServer::start(TestOptions {
+        shadow: false,
+        seed: true,
+        config: serde_json::json!({ "shadow": true }),
+        ..TestOptions::default()
+    })
+    .await;
+    assert!(
+        t.svc.shadow,
+        "the marker in config.json turns shadow mode on"
+    );
+    let health = t.get("/api/health").await.json();
+    assert_eq!(health["shadow"], true);
+    let note = serde_json::json!({ "project": "beta", "text": "Shadow" });
+    let sent = t.write("POST", "/api/portfolio/send", &note).await;
+    assert_eq!((sent.status, sent.code().as_str()), (403, "read_only"));
+}
+
+#[test]
+fn preparing_a_shadow_seeds_and_marks_it_and_never_marks_the_node_home() {
+    let dir = TempDir::new().unwrap();
+    let (node, _live) = node_home(dir.path());
+    let coord = dir.path().join("coord");
+    let shadow = argus_core::Paths::new(&coord, Some(dir.path().join("shadow")));
+    argus_server::shadow::prepare(&shadow, Some(&node)).unwrap();
+    assert!(argus_server::shadow::marked(&shadow.config));
+    assert!(shadow.db.is_file());
+    assert!(!argus_server::shadow::marked(&node.join("config.json")));
+    let live = argus_core::Paths::new(&coord, None);
+    argus_server::shadow::prepare(&live, None).unwrap();
+    assert!(
+        !live.config.exists(),
+        "the live default home is never marked"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_home_without_the_marker_stays_a_normal_server() {
+    let t = TestServer::start(TestOptions::default()).await;
+    assert!(!t.svc.shadow);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_shadow_flag_writes_the_marker_so_the_next_start_needs_no_flag() {
+    let t = TestServer::start(TestOptions {
+        shadow: true,
+        ..TestOptions::default()
+    })
+    .await;
+    assert!(argus_server::shadow::marked(
+        &t.dashboard_home.join("config.json")
+    ));
 }

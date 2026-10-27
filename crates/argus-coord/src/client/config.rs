@@ -24,7 +24,7 @@ pub struct DashboardConfig {
     pub install_dir: Option<String>,
 }
 
-fn read_json(file: &Path) -> Option<Value> {
+pub(crate) fn read_json(file: &Path) -> Option<Value> {
     serde_json::from_str(
         fs::read_to_string(file)
             .ok()?

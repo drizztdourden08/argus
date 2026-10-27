@@ -15,6 +15,8 @@ pub struct TrayStatus {
     pub started_at: Option<String>,
     /// True when `quit.flag` says the owner quit from the tray during this boot.
     pub quit: bool,
+    /// The tooltip the live icon shows, when the tray wrote it.
+    pub tooltip: Option<String>,
 }
 
 /// Reads the state of the tray.
@@ -24,7 +26,8 @@ pub fn status(files: &TrayFiles, alive: impl Fn(u32) -> bool, boot: Boot) -> Tra
     TrayStatus {
         running: live.is_some(),
         pid: live.as_ref().map(|record| record.pid),
-        started_at: live.and_then(|record| record.started_at),
+        started_at: live.as_ref().and_then(|record| record.started_at.clone()),
+        tooltip: live.and_then(|record| record.tooltip),
         quit: quit_flag::is_active(files, boot),
     }
 }
@@ -45,9 +48,17 @@ pub fn status_text(status: &TrayStatus) -> String {
     }
 }
 
+/// The second line of `argus tray status`: the icon is registered and what its tooltip says.
+/// None when no live tray wrote a tooltip.
+#[must_use]
+pub fn icon_line(status: &TrayStatus) -> Option<String> {
+    let tooltip = status.tooltip.as_deref().filter(|_| status.running)?;
+    Some(format!("icon registered: \"{tooltip}\""))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{status, status_text};
+    use super::{icon_line, status, status_text};
     use crate::tray::paths::TrayFiles;
     use crate::tray::quit_flag::{self, Boot};
     use crate::tray::record;
@@ -85,5 +96,12 @@ mod tests {
         assert!(state.running);
         assert_eq!(state.pid, Some(12));
         assert!(status_text(&state).starts_with("tray running (pid 12, since 20"));
+        assert_eq!(icon_line(&state), None, "no tooltip written yet");
+        record::set_tooltip(&files, 12, "Argus (shadow): stopped").unwrap();
+        let state = status(&files, |pid| pid == 12, BOOT);
+        assert_eq!(
+            icon_line(&state).as_deref(),
+            Some("icon registered: \"Argus (shadow): stopped\"")
+        );
     }
 }
