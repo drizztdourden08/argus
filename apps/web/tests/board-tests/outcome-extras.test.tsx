@@ -6,7 +6,7 @@ import { buildDoc, doneDoc, testDoc } from './fixtures';
 import type { Responder } from './mount-tab';
 import { choose, openMenu } from './menu-dom';
 import { mountTab } from './mount-tab';
-import { attach, board, openBox, png, refuseResults, send, type } from './outcome-dom';
+import { attach, board, openBox, outcomeButton, png, refuseResults, send, type } from './outcome-dom';
 
 cleanAfterEach();
 
@@ -15,7 +15,7 @@ const proofCalls = (calls: { url: string }[]) => calls.filter((call) => call.url
 describe('a screenshot with the note', () => {
   it('is chosen, shown with a remove button, and uploaded after the result posts with the note as caption', async () => {
     const { calls } = await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'the  sage is\ngone');
     attach(png('altar.png'));
     expect(screen.getByText('altar.png')).toBeTruthy();
@@ -31,7 +31,7 @@ describe('a screenshot with the note', () => {
 
   it('is taken away by the remove button', async () => {
     await mountTab(board());
-    await openBox('Fail');
+    await openBox('fail');
     attach(png('altar.png'));
     fireEvent.click(screen.getByRole('button', { name: 'Remove the screenshot' }));
     expect(screen.queryByText('altar.png')).toBeNull();
@@ -39,7 +39,7 @@ describe('a screenshot with the note', () => {
 
   it('stays in the box and uploads nothing when the send is refused', async () => {
     const { calls } = await mountTab(board(), refuseResults);
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'it broke');
     attach(png('altar.png'));
     send(box);
@@ -50,14 +50,14 @@ describe('a screenshot with the note', () => {
 
   it('is never taken when the file is not a picture', async () => {
     await mountTab(board());
-    await openBox('Fail');
+    await openBox('fail');
     attach(new File(['x'], 'notes.txt', { type: 'text/plain' }));
     expect(screen.queryByText('notes.txt')).toBeNull();
   });
 
   it('is refused in a sentence when it is over 10 MB', async () => {
     await mountTab(board());
-    await openBox('Fail');
+    await openBox('fail');
     const big = png('big.png');
     Object.defineProperty(big, 'size', { value: 11 * 1024 * 1024 });
     attach(big);
@@ -69,7 +69,7 @@ describe('a screenshot with the note', () => {
 describe('run again and the done row', () => {
   it('puts a done test back in To run with a rerun entry; a test still to run has no such button', async () => {
     const { calls } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), doneDoc('T-2', 'fail', 'no luck')] });
-    expect(await screen.findByRole('button', { name: 'Pass T-1' })).toBeTruthy();
+    expect(await waitFor(() => outcomeButton('pass', 'T-1'))).toBeTruthy();
     await openMenu('T-1');
     expect(screen.queryByRole('menuitem', { name: 'Run again' })).toBeNull();
     fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
@@ -99,6 +99,6 @@ describe('run again and the done row', () => {
     expect(await screen.findByText('the sage is gone')).toBeTruthy();
     expect(screen.queryByText('recorded on the board')).toBeNull();
     expect(screen.getAllByText(/you ·/)).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: 'Pass T-1' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Run T-1' })).toBeNull();
   });
 });

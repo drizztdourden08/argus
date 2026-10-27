@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { NOW, byId, freeText, notice } from '../helpers/board-docs';
 import { openBoard, resetBoard } from '../helpers/open-board';
@@ -117,26 +117,13 @@ describe('the tests waiting on you', () => {
 });
 
 describe('the proof images of a test', () => {
-  const proofs = [
-    { n: 1, url: '/files/rotp/proofs/T-9-1.png', caption: 'first shot' },
-    { n: 2, url: '/files/rotp/proofs/T-9-2.png', caption: 'second shot' },
-  ];
+  const proofs = [{ n: 1, url: '/files/rotp/proofs/T-9-1.png', caption: 'first shot' }];
   const shotTest = { id: 'T-9', title: 'Shot test', thread: 'coordinator', mode: 'manual', status: 'pending', updatedAt: NOW, proofs };
 
-  it('are thumbnails that open large in a dialog, go through the set and close', async () => {
+  it('are not in the waiting row, which shows the title only as Node does; the test drawer holds them', async () => {
     await openBoard({ tests: byId(shotTest) });
-    expect(screen.getByRole('group', { name: 'Proofs of Shot test' })).toBeTruthy();
-    expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Open first shot' }));
-    expect(screen.getByRole('dialog', { name: 'first shot' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByRole('dialog', { name: 'second shot' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-  });
-
-  it('a proof with no caption is named by its number', async () => {
-    await openBoard({ tests: byId({ ...shotTest, proofs: [{ n: 3, url: '/files/rotp/proofs/T-9-3.png' }] }) });
-    expect(screen.getByRole('button', { name: 'Open Proof 3' })).toBeTruthy();
+    expect(screen.getByText('Shot test')).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Proofs of Shot test' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Open first shot' })).toBeNull();
   });
 });

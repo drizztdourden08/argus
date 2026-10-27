@@ -19,6 +19,7 @@ export { itemChoices } from './item-choices';
 export { knownBuilds } from './known-builds';
 export { latestWakes } from './latest-wakes';
 export { noteOutcome } from './note-outcome';
+export { outcomeTitle } from './outcome-title';
 export { noteProblem } from './note-problem';
 export { parseStored } from './parse-stored';
 export { playHint } from './play-hint';

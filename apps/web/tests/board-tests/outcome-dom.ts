@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { buildDoc, testDoc } from './fixtures';
 import type { Call, Responder } from './mount-tab';
 
@@ -9,8 +9,17 @@ const resultCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.e
 
 const noteBox = (id = 'T-1'): HTMLTextAreaElement => screen.getByRole<HTMLTextAreaElement>('textbox', { name: `Note for ${id}` });
 
+const outcomeButton = (outcome: string, id = 'T-1', scope: Pick<typeof screen, 'getByRole'> = screen): HTMLElement =>
+  within(scope.getByRole('group', { name: `Run ${id}` })).getByRole('button', { name: outcome });
+
+const focusedOutcome = (): string => {
+  const group = document.activeElement?.closest('[role="group"]')?.getAttribute('aria-label') ?? '';
+  return `${document.activeElement?.textContent ?? ''} ${group.replace(/^Run /, '')}`;
+};
+
 const openBox = async (outcome: string, id = 'T-1'): Promise<HTMLTextAreaElement> => {
-  fireEvent.click(await screen.findByRole('button', { name: `${outcome} ${id}` }));
+  await screen.findByRole('group', { name: `Run ${id}` });
+  fireEvent.click(outcomeButton(outcome, id));
   return noteBox(id);
 };
 
@@ -34,4 +43,4 @@ const attach = (file: File): void => {
   fireEvent.change(input, { target: { files: [file] } });
 };
 
-export { attach, board, noteBox, openBox, png, refuseResults, resultCalls, send, sendButton, type };
+export { attach, board, focusedOutcome, noteBox, openBox, outcomeButton, png, refuseResults, resultCalls, send, sendButton, type };

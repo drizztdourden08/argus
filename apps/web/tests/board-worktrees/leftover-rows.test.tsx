@@ -48,7 +48,7 @@ describe('a leftover row', () => {
     expect(within(rowOf('nested')).getByTitle(/inner\/\.git/).textContent).toBe('nested git');
     expect(hasRowButton('nested', 'Delete leftover')).toBe(false);
     expect(text(rowOf('nm'))).toContain('node_modules');
-    expect(text(cellOf('nm', 'branch'))).toContain('at least 1.5 GB');
+    expect(text(cellOf('nm', 'branch'))).toContain('≥ 1.5 GB');
     expect(text(rowOf('big'))).toContain('partial');
     expect(text(rowOf('lnk'))).toContain('link');
     expect(hasRowButton('lnk', 'Delete leftover')).toBe(false);

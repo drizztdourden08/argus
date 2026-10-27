@@ -22,7 +22,7 @@ describe('the length of a note', () => {
   it('a long note is posted whole: 20000 characters, no counter, no refusal', async () => {
     const { calls } = await mountTab(withProofs());
     const long = 'line of feedback with **markdown** and a list\n- item\n'.repeat(400).slice(0, 20000);
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, long);
     expect(screen.queryByText(/characters/)).toBeNull();
     send(box);
@@ -32,7 +32,7 @@ describe('the length of a note', () => {
 
   it('over 50000 characters the box says so, Send is off, nothing is posted or cut, and under the cap it goes', async () => {
     const { calls } = await mountTab(withProofs());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'x'.repeat(LIMIT + 1));
     expect(await screen.findByText(SENTENCE)).toBeTruthy();
     expect(sendButton('fail').disabled).toBe(true);

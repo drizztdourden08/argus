@@ -2,7 +2,7 @@
 import { Button, Checkbox, Flex, SearchInput, Select } from '@drizztdourden08/tessera';
 import { ANY_STATUS, ANY_SUBJECT } from '../kanban.constants';
 import type { FilterRowProps } from '../kanban-props.type';
-import { FIT_FIELD, FIT_SEARCH, threadChoices } from '../../../shared';
+import { FieldFit, threadChoices } from '../../../shared';
 import { STATUS_OPTIONS, filtersActive } from '../model';
 
 const FilterRow = (props: FilterRowProps) => {
@@ -11,42 +11,46 @@ const FilterRow = (props: FilterRowProps) => {
   const owners = threadChoices(threads);
   return (
     <Flex gap="sm" align="center" wrap>
-      <SearchInput
-        size="sm"
-        className={FIT_SEARCH}
-        aria-label="Search id or title"
-        placeholder="Search id or title"
-        value={filters.query}
-        onChange={(query) => patchFilters({ query })}
-      />
-      <Select
-        aria-label="Threads"
-        placeholder="Threads"
-        size="sm"
-        className={FIT_FIELD}
-        multiDisplay="count"
-        min={0}
-        max={Math.max(owners.length, 2)}
-        options={owners}
-        values={filters.threads}
-        onValuesChange={(values) => patchFilters({ threads: values })}
-      />
-      <Select
-        aria-label="Status"
-        size="sm"
-        className={FIT_FIELD}
-        options={[{ value: ANY_STATUS, label: 'Any status' }, ...STATUS_OPTIONS]}
-        value={filters.status || ANY_STATUS}
-        onChange={(value) => patchFilters({ status: value === ANY_STATUS ? '' : value })}
-      />
-      <Select
-        aria-label="Subject"
-        size="sm"
-        className={FIT_FIELD}
-        options={[{ value: ANY_SUBJECT, label: 'Any subject' }, ...subjects.map((subject) => ({ value: subject, label: subject }))]}
-        value={filters.subject || ANY_SUBJECT}
-        onChange={(value) => patchFilters({ subject: value === ANY_SUBJECT ? '' : value })}
-      />
+      <FieldFit search>
+        <SearchInput
+          size="sm"
+          aria-label="Search id or title"
+          placeholder="Search id or title"
+          value={filters.query}
+          onChange={(query) => patchFilters({ query })}
+        />
+      </FieldFit>
+      <FieldFit>
+        <Select
+          aria-label="Threads"
+          placeholder="Threads"
+          size="sm"
+          multiDisplay="count"
+          min={0}
+          max={Math.max(owners.length, 2)}
+          options={owners}
+          values={filters.threads}
+          onValuesChange={(values) => patchFilters({ threads: values })}
+        />
+      </FieldFit>
+      <FieldFit>
+        <Select
+          aria-label="Status"
+          size="sm"
+          options={[{ value: ANY_STATUS, label: 'Any status' }, ...STATUS_OPTIONS]}
+          value={filters.status || ANY_STATUS}
+          onChange={(value) => patchFilters({ status: value === ANY_STATUS ? '' : value })}
+        />
+      </FieldFit>
+      <FieldFit>
+        <Select
+          aria-label="Subject"
+          size="sm"
+          options={[{ value: ANY_SUBJECT, label: 'Any subject' }, ...subjects.map((subject) => ({ value: subject, label: subject }))]}
+          value={filters.subject || ANY_SUBJECT}
+          onChange={(value) => patchFilters({ subject: value === ANY_SUBJECT ? '' : value })}
+        />
+      </FieldFit>
       <Checkbox size="sm" label="needs you" checked={filters.needs} onChange={(needs) => patchFilters({ needs })} />
       <Checkbox size="sm" label="conflict" checked={filters.conflict} onChange={(conflict) => patchFilters({ conflict })} />
       <Checkbox size="sm" label="archived" checked={filters.archived} onChange={(archived) => patchFilters({ archived })} />

@@ -5,7 +5,7 @@ import { cleanAfterEach } from './board-dom';
 import { buildDoc, doneDoc, testDoc } from './fixtures';
 import { firstResult } from './menu-dom';
 import { mountTab } from './mount-tab';
-import { board, noteBox, openBox, refuseResults, resultCalls, send, type } from './outcome-dom';
+import { board, focusedOutcome, noteBox, openBox, outcomeButton, refuseResults, resultCalls, send, type } from './outcome-dom';
 
 cleanAfterEach();
 
@@ -66,7 +66,7 @@ describe('the key m on a test row', () => {
 
   it('is typing inside the note box, and does nothing with a modifier held', async () => {
     await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     fireEvent.keyDown(box, { key: 'm' });
     fireEvent.keyDown(await rowButton('T-2'), { key: 'm', ctrlKey: true });
     expect(screen.queryByRole('menuitem')).toBeNull();
@@ -81,39 +81,38 @@ describe('the key m on a test row', () => {
 });
 
 describe('after a result on a row', () => {
-  const focusedName = (): string => document.activeElement?.getAttribute('aria-label') ?? '';
 
   it('moves the focus to the first button of the next test to run', async () => {
     const { calls } = await mountTab(board());
-    fireEvent.click(await screen.findByRole('button', { name: 'Pass T-1' }));
+    fireEvent.click(await waitFor(() => outcomeButton('pass', 'T-1')));
     await firstResult(calls);
-    await waitFor(() => expect(focusedName()).toBe('Pass T-2'));
+    await waitFor(() => expect(focusedOutcome()).toBe('pass T-2'));
   });
 
   it('moves on after the keys too, and after a fail sent with its note', async () => {
     const { calls } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), testDoc('T-2'), testDoc('T-3')] });
     fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
     await firstResult(calls);
-    await waitFor(() => expect(focusedName()).toBe('Pass T-2'));
-    const box = await openBox('Fail', 'T-2');
+    await waitFor(() => expect(focusedOutcome()).toBe('pass T-2'));
+    const box = await openBox('fail', 'T-2');
     type(box, 'broken');
     send(box);
-    await waitFor(() => expect(focusedName()).toBe('Pass T-3'));
+    await waitFor(() => expect(focusedOutcome()).toBe('pass T-3'));
   });
 
   it('keeps the focus where it is on the last test to run', async () => {
     const { calls } = await mountTab(board());
-    const last = await screen.findByRole('button', { name: 'Pass T-2' });
+    const last = await waitFor(() => outcomeButton('pass', 'T-2'));
     last.focus();
     fireEvent.click(last);
     await firstResult(calls);
-    expect(focusedName()).toBe('Pass T-2');
+    expect(focusedOutcome()).toBe('pass T-2');
   });
 
   it('does not move on when the board refuses the result', async () => {
     const { calls } = await mountTab(board(), refuseResults);
-    fireEvent.click(await screen.findByRole('button', { name: 'Pass T-1' }));
+    fireEvent.click(await waitFor(() => outcomeButton('pass', 'T-1')));
     await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
-    expect(focusedName()).not.toBe('Pass T-2');
+    expect(focusedOutcome()).not.toBe('pass T-2');
   });
 });

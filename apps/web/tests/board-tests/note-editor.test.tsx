@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { openFrom } from './menu-dom';
 import { mountTab } from './mount-tab';
-import { board, noteBox, openBox, resultCalls, send, sendButton, type } from './outcome-dom';
+import { board, noteBox, openBox, outcomeButton, resultCalls, send, sendButton, type } from './outcome-dom';
 
 cleanAfterEach();
 
@@ -16,7 +16,7 @@ const toolbarOf = (scope: HTMLElement): string[] =>
 describe('the note box of a result', () => {
   it('is a small markdown editor: a toolbar of eight named buttons, three lines, a hint, one limit', async () => {
     await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     const group = screen.getByRole('group', { name: 'fail note for T-1' });
     expect(toolbarOf(group)).toEqual(TOOLS);
     expect(box.rows).toBe(3);
@@ -27,14 +27,14 @@ describe('the note box of a result', () => {
 
   it('takes the focus when it opens, with the caret at the end', async () => {
     await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     expect(document.activeElement).toBe(box);
   });
 
   it('asks a different question for partial and blocked in the same box', async () => {
     await mountTab(board());
-    expect((await openBox('Partial')).placeholder).toBe('What works and what does not?');
-    expect((await openBox('Blocked')).placeholder).toBe('What blocks you?');
+    expect((await openBox('partial')).placeholder).toBe('What works and what does not?');
+    expect((await openBox('blocked')).placeholder).toBe('What blocks you?');
     expect(screen.getAllByRole('textbox', { name: 'Note for T-1' })).toHaveLength(1);
   });
 
@@ -49,7 +49,7 @@ describe('the note box of a result', () => {
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /Add a note/ })).toBeNull());
     fireEvent.click(await screen.findByRole('button', { name: 'Test T-1' }));
     const drawer = await screen.findByRole('dialog');
-    fireEvent.click(within(drawer).getByRole('button', { name: 'Fail T-1' }));
+    fireEvent.click(outcomeButton('fail', 'T-1', within(drawer)));
     expect(toolbarOf(within(drawer).getByRole('group', { name: 'fail note for T-1' }))).toEqual(TOOLS);
   });
 
@@ -58,7 +58,7 @@ describe('the note box of a result', () => {
 describe('the keys and buttons of the note box', () => {
   it('a toolbar button formats the selection, and the draft survives with Send following the text', async () => {
     await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'say hi now');
     box.setSelectionRange(4, 6);
     fireEvent.click(screen.getByRole('button', { name: 'Bold' }));
@@ -72,7 +72,7 @@ describe('the keys and buttons of the note box', () => {
 
   it('Ctrl+B and Ctrl+I wrap the selection, and Cmd+Enter sends the trimmed text', async () => {
     const { calls } = await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'one two');
     box.setSelectionRange(0, 3);
     fireEvent.keyDown(box, { key: 'b', ctrlKey: true });
@@ -88,7 +88,7 @@ describe('the keys and buttons of the note box', () => {
 
   it('Enter alone sends nothing, Ctrl+Enter does', async () => {
     const { calls } = await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'The button does nothing');
     fireEvent.keyDown(box, { key: 'Enter' });
     expect(resultCalls(calls)).toHaveLength(0);
@@ -98,7 +98,7 @@ describe('the keys and buttons of the note box', () => {
 
   it('Escape leaves the box without a post', async () => {
     const { calls } = await mountTab(board());
-    const box = await openBox('Fail');
+    const box = await openBox('fail');
     type(box, 'keep this out');
     fireEvent.keyDown(box, { key: 'Escape' });
     expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull();
