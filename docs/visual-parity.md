@@ -7,6 +7,307 @@ section lists the differences, the most visible first, with the fix in Argus ter
 a piece Tessera does not have yet says so. The gallery `docs/visual-audit/index.html` shows every
 pair with the same numbered list under it.
 
+## Re-audit 2026-10-27 (after the fix wave on main)
+
+Argus main (Vite dev server, read only proxy to the Node dashboard) shot again against Node at
+1440x900 and 420x900, dark only, on RotP, Argus and Brock, with every tab, drawer, menu and the
+narrow views. Of the 118 numbered differences below: 91 fixed, 26 open, 1 dropped (dark only). 23
+new differences are numbered 119 to 141. Item numbers read section.item (the section title, then the
+number in its list). The gallery `docs/visual-audit/index.html` shows the new pairs with this status
+list.
+
+### Page shell, theme and density (every screen)
+
+1. dropped (dark only): light theme, dark only by owner rule.
+2. open: board fixed (16px gutter, plain header, tab bar at 130px against 128px). Overview not:
+   title top 30px against 16px, tab bar at 92px against 66px, so the overview starts 14px to 26px
+   lower.
+3. fixed: activity rows 33px to 34px, notifications 51px to 52px, same as Node. Processes rows are
+   the exception, see new item 119.
+4. fixed: uppercase letter-spaced column and section headers with the middle dot, as Node.
+5. open: Node counts hours up to 47h ("45h ago", "25h ago"); Argus switches to days at 24h ("1d
+   ago") and rounds days down (builds "set by coordinator" reads 2d where Node says 3d).
+6. open: Argus activity event text is brighter than Node (primary white against soft grey);
+   notification titles are bold in both.
+
+### Overview header and tab bar
+
+1. fixed: switcher reads "Argus overview" and lists the overview first, then the 8 boards.
+2. fixed: every tab keeps its badge, grey zero after opening, amber and red tones as Node. The badge
+   shape differs, see new item 121.
+3. open: tab bar sits 26px lower than Node (92px against 66px) and each tab is 36px high against
+   40px (new item 122).
+
+### Overview: Dashboards tab
+
+1. fixed: card built as Node (dot, name, warning pill, uppercase status with clock, three stat
+   tiles, chips, master row, footer icons and key). The tile icons differ, see new item 120.
+2. fixed: card border carries the attention tone, header stays neutral.
+3. fixed: 6 cards per row at 1440, 2 at 420, equal heights, footer pinned.
+4. fixed: summary row with icons, Send to all at the far right.
+5. fixed: registered strip: one chip per project with a dot, faults as chips with a warning icon
+   (shape differs, see new item 133).
+6. fixed: Open board link is an icon button, no palette colour on the overview.
+7. fixed: same order as Node (Archipelia, Brock, Bxel, RotP, Tessera, Argus, Overlord, RotP Web).
+8. fixed: last run line shows exited 0, age, message and a Log link.
+9. fixed: Send to all opens an anchored popover with Decision and Note, compact editor and
+   Ctrl+Enter hint. Layout details differ, see new item 140.
+10. fixed: uppercase status tag with the age and clock at the right.
+11. fixed: Sent down is a full width bordered disclosure bar.
+
+### Overview: Processes tab
+
+1. fixed: all ten columns fit in 1440px, Kill and lock visible.
+2. fixed: one inline summary line with bold numbers.
+3. fixed: rule chips with bold name and muted figures, Kill stale chip, no stacked bar.
+4. fixed: pill toggles All and Needs a look, Rule select on the same row.
+5. open: Argus project cell is a neutral link without underline (Node blue underlined); rows are
+   31px against 41px; a needs-a-look row is tinted across the whole row where Node draws only a left
+   bar. See new item 119.
+6. fixed: at 420 the table keeps its columns and scrolls sideways, as Node.
+
+### Overview: Activity tab
+
+1. fixed: one dense line per event: icon, short age, uppercase mono kind toned by level, text,
+   project chip, muted thread.
+2. fixed: no level column, no level tag.
+3. open: Node chips are full pills with a filled grey selected state; Argus chips are squarer and
+   the selected one is a white outline. See new item 123.
+
+### Overview: Notifications tab
+
+1. fixed: one row per notification: bell, age, ping tag, bold title, text, project chip, "toast
+   shown" under it.
+2. open: settings line is inline as Node, but a switched-on option is a white outline in Argus and a
+   filled grey pill in Node (new item 123).
+3. fixed: small Send a test notification button.
+
+### Board: header, registered strip and tab bar (all boards)
+
+1. fixed: tab bar directly under the registered strip (130px against 128px), first rows on the first
+   screen at 1440 and 420.
+2. fixed: eyebrow, name, lead status with active tag, seen, chat icon, board updated, board select
+   and kebab. The title row starts 16px lower (new item 131) but the tab bar lands at the same
+   height.
+3. fixed: a badge on every tab with Node tones and counts (shape differs, see new item 121).
+4. open: Node draws the fault as a rounded outlined pill with an icon; Argus draws a squarer dark
+   red filled chip. See new item 133.
+5. fixed: page level Focus select under the tab bar on every tab.
+6. fixed: palette kept: active tab underline follows the board palette (intended).
+
+### Board: Activity tab
+
+1. fixed: Activity tab holds the feed in a panel, view control in the panel header.
+2. open: decision card keeps the Node eyebrow, kebab, bold question and RECOMMENDED options, but has
+   no amber left edge (new item 127), and the editor is taller with Decide under it where Node puts
+   Decide at the right of a 3 line box.
+3. fixed: one header row with the All, Needs you and Log control (selected tone differs, see new
+   item 124).
+4. fixed: bundle to test is one line with tag, title, coordinator, age and Open. The amber left edge
+   is missing, see new item 127.
+5. fixed: work log with short ages and link coloured source.
+6. fixed: kebab on every decision card.
+
+### Board: Agents tab
+
+1. fixed: ten column table with headers, 45px rows.
+2. fixed: pencil, stop and kebab (Open and edit, Edit note, Archive, Delete, Copy id). Menu text is
+   smaller, see new item 141.
+3. fixed: panel header with lead line, seen age and chat icon.
+4. fixed: status dot and tag in the first column.
+5. fixed: sonnet green, haiku blue, opus grey.
+6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
+7. fixed: search field removed.
+8. fixed: time cell "37m" over "49 · 54".
+9. fixed: headers kept and the empty sentence centred.
+
+### Board: Kanban tab
+
+1. open: one bordered panel with the Node rows, but the Threads, status and subject selects stretch
+   to fill the row (about 170px each) where Node keeps them content wide, the search is wide instead
+   of 220px, and the selected Group by and Order segments are a gold or orange outline instead of a
+   grey fill (new item 124).
+2. fixed: three columns share the full width (they are panels as tall as the tallest, new item 130).
+3. open: Argus shows the drag handle on every card and a horizontal "..." kebab where Node has no
+   handle and a vertical dots kebab. Spacer, criteria bar and age are right.
+4. open: the needs you card (I-88, I-72, I-74) has no red left edge.
+5. fixed: inline add form with title, thread select set to the column thread, Add and Cancel.
+6. open: card menu has Edit, header and the Node order, but Move to status and Reassign to thread
+   are submenus, not inline selects.
+7. open: Argus keeps a collapse chevron "<" next to the plus on every column header.
+8. fixed: "none" in an empty column and "6 open / 41" counter.
+9. fixed: Threads filter opens a checklist (a little wider than Node).
+
+### Board: Tests tab
+
+1. fixed: same toolbar panel as Kanban and Hide passed as a link.
+2. fixed: one line test rows with tone outcome buttons (labels capitalised, see new item 135).
+3. fixed: bundle head on one row with tags, progress bar and Unhand.
+4. fixed: full width launch field with Copy and Play, run line, "run in" and "from launcher" chip.
+   The Copy button is green outlined and the launcher chip accent coloured, see new item 125.
+5. fixed: Terminal box with Full log.
+6. fixed: done rows with outcome tag, "you · age", coordinator notified tag, amber left bar.
+7. fixed: chips show the thread id.
+8. fixed: Show closed (13) as a link.
+
+### Board: Builds tab
+
+1. fixed: command row with Copy, Play, run status and Log.
+2. fixed: bundle chip with link icon and status tag.
+3. fixed: set by coordinator right aligned (age rounding differs, see Page shell item 5).
+4. fixed: current launcher has the green edge.
+5. open: the panel header is two lines in Argus (the word Builds above, the counts and hint under
+   it); Node puts "Builds 9 to start · 1 retired What you can start..." on one line.
+6. fixed: Terminal box with Full log.
+7. fixed: master tag neutral.
+
+### Board: Worktrees tab
+
+1. fixed: the table fits its box, Request and Actions visible (Node still clips them).
+2. open: Argus stacks the title, the summary line and the explainer in three rows with the segmented
+   control floating at the right; Node has the title and summary on one row and the explainer at the
+   right.
+3. fixed: lowercase status tags with Node tones.
+4. fixed: branch as plain mono text.
+5. open: Node "25h ago", Argus "1d ago" (the age rounding of Page shell item 5).
+6. fixed: no table footer.
+7. fixed: Copy label after the path. Argus middle-truncates the path, see new item 134.
+
+### Drawers: what every drawer shares
+
+1. fixed: 768px at 1440 (Node 760px), full width at 420.
+2. open: eyebrow, wrapping title and header tools are there, but the title is accent coloured (gold
+   on RotP, orange on Brock) and uppercase for tests, agents and threads where Node is white
+   regular; the close X sits in its own column and narrows the title (at 420 the title wraps in half
+   the width).
+3. fixed: archive and trash are icon buttons in the header.
+
+### Drawer: work item
+
+1. open: Status and Thread selects are about 190px wide each and the Subject drops to its own line;
+   Node has one compact row "Status [Doing] Thread [RotP] Subject coordination".
+2. fixed: uppercase titles with the middle dot, empty lines centred.
+3. fixed: Add buttons say Add.
+4. fixed: question card with tags, kebab, context and an indented reply.
+
+### Drawer: test
+
+1. fixed: Mode, Item, Covers and Build controls.
+2. fixed: two Expected cards, PROVES IT WORKS and PROVES IT IS BROKEN.
+3. open: steps are plain small numbers, Node draws a 24px numbered circle and a rule under each
+   step.
+4. fixed: Result card with "Not run yet." centred.
+5. fixed: run buttons toned.
+6. fixed: tools are in the header like every drawer.
+
+### Drawer: agent
+
+1. fixed: WHERE section with Model, Kind, Branch and Worktree.
+2. fixed: Item select and Thread.
+3. fixed: Task, Note, Result, Where, Timeline with seconds and age.
+4. open: title "REVIEW-SERVER-PACKAGING" is uppercase and accent coloured, Node is white regular.
+
+### Drawer: thread
+
+1. fixed: open work rows are one line, nowrap id.
+2. open: title "BROCK" is uppercase accent; tools are all there (copy, previous, next, Expand, chat,
+   copy, kebab).
+3. open: Node: "Subject: add subject" as an italic dashed link; Argus: plain text. The T-6 and T-7
+   links are accent coloured in Argus, neutral underlined in Node (new item 126).
+
+### Menus, popovers and editors that only open
+
+1. fixed: More menu lists Trash, Resources and locks, Legend, Show hidden, Purge (counts in
+   parentheses, Node right aligns them).
+2. open: Trash view: Node swaps the tab body for a "Trash 0 in trash [Back to the board]" panel;
+   Argus shows a green outlined "Back to the board" button and plain text, with the Kanban tab still
+   selected.
+3. fixed: Send down on a card opens the same anchored popover as Send to all.
+4. fixed: see the Agents and Kanban sections.
+5. fixed: project switcher on every board.
+
+### Narrow window (420px)
+
+1. fixed: header, tabs, Focus and first rows on the first screen. Kanban and Tests bodies differ at
+   420, see new items 136 and 137.
+2. fixed: 2 cards per row.
+3. fixed: header folds like Node.
+4. fixed: kept as is (scroll chevron on the tab bar is better).
+
+### Empty, busy and not found states
+
+1. fixed: empty tests: same sentence in a compact panel.
+2. fixed: empty agents keeps the table frame and headers.
+3. fixed: "none" in empty columns.
+4. open: unknown board: the SPA under the Vite dev server draws an empty "nosuchboard" board where
+   Node shows Not found; the Rust server serves Not found, so this is dev only, but the SPA could
+   show it too.
+5. open: not verified: both pages load in under 150ms here, the "connecting" state could not be
+   captured.
+
+### New differences
+
+119. open: Processes table density. Argus rows are 31px, Node 41px; Argus tints a whole needs-a-look
+    row, Node draws a left bar only; the project link is neutral and not underlined, Node blue
+    underlined. (Overview, Processes)
+120. open: Project card stat tiles use other icons: Node robot, book and flask or person; Argus
+    gear, columns and checklist. (Overview, Dashboards)
+121. open: Tab badge shape. Node draws a solid filled circle with dark text (amber, red, grey);
+    Argus draws a faint tinted rounded rectangle on the overview and tinted text on boards. (All tab
+    bars)
+122. open: Tab height is 36px in Argus and 40px in Node on the overview and on boards, the known
+    Tessera Tabs gap. (All tab bars)
+123. open: Overview chip filters and notification toggles: Node full pills with a filled grey
+    selected state; Argus squarer chips with a white outline when selected. (Overview Activity and
+    Notifications)
+124. open: Selected state of segmented controls on boards (Group by, Order, All | Needs you | Log,
+    All (22) on Worktrees) is a gold or orange outline from the palette primary; Node uses a grey
+    fill. The palette should drive the accent only. (Kanban, Tests, Activity, Worktrees)
+125. open: Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
+    "from launcher" chip is accent coloured (Node neutral). (Tests)
+126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
+    links. (Thread drawer)
+127. open: The waiting-on-you rows and decision cards have no amber left edge; Node draws it on the
+    bundle row and the decision card. (Board Activity)
+128. open: Board Activity shows the markdown image thumbnails of a waiting item inside its row
+    (Tessera, "Brock and Tessera marks cleaned"); Node shows the title only. (Board Activity)
+129. open: Work item description editor: Argus opens a split editor with a live preview and "Save
+    description" and "Cancel" text buttons; Node opens one pane with Write and Preview tabs and a
+    check and cross icon pair. (Item drawer)
+130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
+    to its cards. (Kanban)
+131. open: Board header: the title row starts 16px lower (52px against 36px) though the tab bar
+    lands in the right place. (Board header)
+132. open: Argus scrolls an inner area (ScrollArea), not the document: full page screenshots clip at
+    the window height and the scrollbar sits inside the frame; Node scrolls the page. (Every screen)
+133. open: Fault chip shape: Node a rounded outlined pill with a warning icon, Argus a squarer dark
+    red filled chip, on the overview strip and the board strip. (Registered strip)
+134. open: Worktrees path is middle truncated ("X:/relic-of-the-past/.../bundle-10") where Node
+    shows the full path; the size reads "at least 37 MB" where Node reads "≥ 37 MB". (Worktrees)
+135. open: Outcome buttons read "Pass, Fail, Partial, Blocked" (capitalised) in Argus and "pass,
+    fail, partial, blocked" in Node. (Tests, test drawer)
+136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
+    one under the other. (Kanban narrow)
+137. open: At 420 the Tests bundle head wraps badly in Argus (name cut to "Controll...", tags on
+    three lines, Unhand on its own row); Node keeps a tidy two line head. (Tests narrow)
+138. open: Markdown typography: Node shows "1280×720" (a multiplication sign), Argus "1280x720" in
+    test titles and steps. (Tests, drawers)
+139. open: Argus adds "Edit task", "Edit note" and "Edit description" text links under agent and
+    item fields; Node edits in place. The agent drawer says "Agent id" where Node says "Claude id".
+    (Drawers)
+140. open: The Send down popover differs in detail: the label is "to Bxel" muted where Node says
+    "for Bxel" with the name bold, Argus adds a preview eye icon and puts a dim Send down button
+    under the hint, Node puts the filled Send down button at the left under the box. (Send down)
+141. open: Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
+    15px rows. (Menus)
+
+### Data differences, re-checked
+
+Finished counts now equal (RotP 93, Brock 233). I-86 shows "Tests 0/0 passing" as Node. Bundle chips
+read "closed" and "ready" as Node. Notification ages match. Processes totals match (Argus lists the
+same process rows from the Node API through the proxy). The registered strips show the same wake
+faults as Node. Bxel palette primary is now #e0245e (owner approved palette v3), not a parity gap.
+
 ## Page shell, theme and density (every screen)
 
 1. Light theme. Node follows the system: with a light system theme every Node page is light (white
@@ -637,11 +938,11 @@ These are not layout, but the owner sees them side by side. Each needs a check o
 
 ## Screenshots
 
-The 134 side by side images are in `X:/argus/docs/visual-audit/` (Node on the left or on top, Argus
-on the right or below; a magenta bar separates them). The raw screenshots, the text of each page and
-the capture scripts are in the session scratchpad folder `visual`. Name pattern:
-`<viewport>-<theme>-<screen>.png` for whole pages, `tab-<board>-<tab>.png` for a tab from the tab
-bar down, `x-<what>.png` for menus, popovers and states.
+The 102 side by side images of the re-audit are in `X:/argus/docs/visual-audit/` (Node on the left
+or on top, Argus on the right or below; a magenta bar separates them). Name pattern:
+`<viewport>-dark-<screen>.png` for whole pages (Argus clips at the window height, see new item 132),
+`tab-<board>-<tab>.png` for a tab from the tab bar down at 1440, `x-<what>.png` for menus, popovers
+and states.
 
 - `X:/argus/docs/visual-audit/tab-argus-activity.png`
 - `X:/argus/docs/visual-audit/tab-argus-agents.png`
@@ -694,39 +995,6 @@ bar down, `x-<what>.png` for menus, popovers and states.
 - `X:/argus/docs/visual-audit/w1440-dark-rotp-kanban.png`
 - `X:/argus/docs/visual-audit/w1440-dark-rotp-tests.png`
 - `X:/argus/docs/visual-audit/w1440-dark-rotp-worktrees.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-activity.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-agents.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-builds.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-drawer-agent.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-drawer-item.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-drawer-thread.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-kanban.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-tests.png`
-- `X:/argus/docs/visual-audit/w1440-light-argus-worktrees.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-activity.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-agents.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-builds.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-drawer-agent.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-drawer-item.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-drawer-test.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-drawer-thread.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-kanban.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-tests.png`
-- `X:/argus/docs/visual-audit/w1440-light-brock-worktrees.png`
-- `X:/argus/docs/visual-audit/w1440-light-overview-activity.png`
-- `X:/argus/docs/visual-audit/w1440-light-overview-dashboards.png`
-- `X:/argus/docs/visual-audit/w1440-light-overview-notifications.png`
-- `X:/argus/docs/visual-audit/w1440-light-overview-processes.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-activity.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-agents.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-builds.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-drawer-agent.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-drawer-item.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-drawer-test.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-drawer-thread.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-kanban.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-tests.png`
-- `X:/argus/docs/visual-audit/w1440-light-rotp-worktrees.png`
 - `X:/argus/docs/visual-audit/w420-dark-argus-activity.png`
 - `X:/argus/docs/visual-audit/w420-dark-argus-agents.png`
 - `X:/argus/docs/visual-audit/w420-dark-argus-builds.png`
@@ -768,6 +1036,7 @@ bar down, `x-<what>.png` for menus, popovers and states.
 - `X:/argus/docs/visual-audit/x-board-more.png`
 - `X:/argus/docs/visual-audit/x-board-trash.png`
 - `X:/argus/docs/visual-audit/x-card-kebab.png`
+- `X:/argus/docs/visual-audit/x-decision.png`
 - `X:/argus/docs/visual-audit/x-item-edit.png`
 - `X:/argus/docs/visual-audit/x-loading-board.png`
 - `X:/argus/docs/visual-audit/x-loading-overview.png`
