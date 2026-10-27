@@ -19,6 +19,7 @@ interface AgentsView {
   ready: boolean;
   active: WithId<Agent>[];
   done: WithId<Agent>[];
+  finishedCount: number;
   lead: WithId<ProjectThread> | null;
   chats: WithId<ProjectThread>[];
   flagSignature: string;

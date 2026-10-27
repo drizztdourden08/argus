@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Card, Disclosure, Flex } from '@drizztdourden08/tessera';
-import { bundleState, NO_BUNDLE } from '../model';
+import { bundleState } from '../../../shared';
+import { NO_BUNDLE } from '../model';
 import type { BundleCardProps } from '../tests-props.type';
 import { BundleHead } from './BundleHead';
 import { LaunchBox } from './LaunchBox';

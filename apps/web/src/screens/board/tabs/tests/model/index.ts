@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { buildView } from './build-view';
 export { bundleOwner } from './bundle-owner';
-export { bundleState } from './bundle-state';
 export { byLabel } from './by-label';
 export { changedFields } from './changed-fields';
 export { closedBundles } from './closed-bundles';

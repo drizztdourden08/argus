@@ -9,6 +9,7 @@ export { clipText } from './clip-text';
 export { emptyMessage } from './empty-message';
 export { failureMessage } from './failure-message';
 export { filterAgents } from './filter-agents';
+export { finishedCount } from './finished-count';
 export { findLead } from './find-lead';
 export { formatDuration } from './format-duration';
 export { isActive } from './is-active';
