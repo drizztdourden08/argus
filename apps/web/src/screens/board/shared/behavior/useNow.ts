@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useState } from 'react';
-import { NOW_TICK_MS } from '../AgentsTab.constants';
+import { NOW_TICK_MS } from '../shared.constants';
 
 const useNow = (running: boolean): number => {
   const [now, setNow] = useState(() => Date.now());

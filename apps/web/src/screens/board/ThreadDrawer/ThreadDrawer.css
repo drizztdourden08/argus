@@ -1,0 +1,54 @@
+/* @layer renderer-app @kind style */
+.thread-work {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.thread-work > .thread-work__item {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width-thin) solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: start;
+}
+
+.thread-work > .thread-work__item:hover {
+  border-color: var(--c-primary);
+}
+
+.thread-work__id {
+  white-space: nowrap;
+}
+
+.thread-work__title {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.thread-agents {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content;
+  gap: var(--space-xs) var(--space-md);
+  align-items: baseline;
+  font-size: var(--text-sm);
+}
+
+.thread-agents__row {
+  display: contents;
+}
+
+.thread-agents .text {
+  font-size: inherit;
+}
+
+.thread-agents .thread-agents__name {
+  color: var(--c-primary-bright);
+}

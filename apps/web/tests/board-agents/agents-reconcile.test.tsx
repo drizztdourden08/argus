@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { agent, ago, DAY, MIN, mockApi, mockFetch, renderAgents, rowOf } from './agents-harness';
 
 afterEach(() => {
+  localStorage.clear();
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -19,35 +20,32 @@ const finding = (extra: Record<string, unknown> = {}) => ({
 });
 
 describe('Agents tab: reconciler marks and findings', () => {
-  it('marks an idle record, an orphan record and a stale one on their rows', async () => {
+  it('marks a stale record on its row and the idle and orphan ones in their drawers', async () => {
     mockApi();
-    const { container } = await renderAgents({
-      agents: {
-        'A-1': agent({ name: 'idler', idleSince: ago(6 * MIN) }),
-        'A-2': agent({ name: 'ghost', orphanSince: ago(20 * MIN) }),
-        'A-3': agent({ name: 'old', updatedAt: ago(50 * MIN) }),
-      },
-    });
-    expect(within(rowOf(container, 'A-1')).getByText('idle')).toBeTruthy();
-    expect(within(rowOf(container, 'A-2')).getByText('orphan')).toBeTruthy();
+    const { container, unmount } = await renderAgents({ agents: { 'A-3': agent({ name: 'old', updatedAt: ago(50 * MIN) }) } });
     expect(within(rowOf(container, 'A-3')).getByText('stale')).toBeTruthy();
+    unmount();
+    for (const [id, extra, mark] of [['A-1', { idleSince: ago(6 * MIN) }, 'idle'], ['A-2', { orphanSince: ago(20 * MIN) }, 'orphan']] as const) {
+      mockApi();
+      const mounted = await renderAgents({ agents: { [id]: agent({ name: 'marked', ...extra }) } }, () => undefined, `/p/alpha#${id}`);
+      expect(within(await screen.findByRole('dialog', { name: 'Agent detail' })).getByText(mark)).toBeTruthy();
+      mounted.unmount();
+    }
   });
 
-  it('marks a duplicate, a lost record and the mismatches on a finished record', async () => {
-    mockApi();
-    const { container } = await renderAgents({
-      agents: {
-        'A-1': agent({ status: 'stopped', duplicateOf: 'A-9' }),
-        'A-2': agent({ status: 'stopped', lost: true }),
-        'A-3': agent({ status: 'done', idMismatch: true, modelMismatch: true, modelUsed: 'opus-5-5' }),
-      },
-    });
-    fireEvent.click(screen.getByRole('radio', { name: 'All' }));
-    await waitFor(() => expect(container.querySelectorAll('[data-agent-id]')).toHaveLength(3));
-    expect(within(rowOf(container, 'A-1')).getByText('duplicate of A-9')).toBeTruthy();
-    expect(within(rowOf(container, 'A-2')).getByText('lost')).toBeTruthy();
-    expect(within(rowOf(container, 'A-3')).getByText('id mismatch')).toBeTruthy();
-    expect(within(rowOf(container, 'A-3')).getByText('model mismatch')).toBeTruthy();
+  it('marks a duplicate, a lost record and the mismatches in the drawer of a finished record', async () => {
+    const cases = [
+      ['A-1', { status: 'stopped', duplicateOf: 'A-9' }, ['duplicate of A-9']],
+      ['A-2', { status: 'stopped', lost: true }, ['lost']],
+      ['A-3', { status: 'done', idMismatch: true, modelMismatch: true, modelUsed: 'opus-5-5' }, ['id mismatch', 'model mismatch']],
+    ] as const;
+    for (const [id, extra, marks] of cases) {
+      mockApi();
+      const mounted = await renderAgents({ agents: { [id]: agent(extra) } }, () => undefined, `/p/alpha#${id}`);
+      const dialog = within(await screen.findByRole('dialog', { name: 'Agent detail' }));
+      for (const mark of marks) expect(dialog.getByText(mark)).toBeTruthy();
+      mounted.unmount();
+    }
   });
 
   it('asks the board for the reconciler report of this project and lists the findings', async () => {
@@ -83,7 +81,7 @@ describe('Agents tab: the lead and the chats', () => {
     mockApi();
     await renderAgents({ agents: { 'A-1': agent() }, threads });
     expect(screen.getByText('dispatching')).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Open the lead chat/ }).getAttribute('href')).toBe('chat://x/lead');
+    expect(screen.getByRole('button', { name: 'Open the chat of the lead' })).toBeTruthy();
   });
 
   it('lists the owner chats in a compact section, blocked first, and hides finished ones', async () => {

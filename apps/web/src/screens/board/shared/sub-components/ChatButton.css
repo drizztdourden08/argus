@@ -1,0 +1,4 @@
+/* @layer renderer-app @kind style */
+.icon-btn.chat-button {
+  color: var(--c-info-bright);
+}

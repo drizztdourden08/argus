@@ -2,6 +2,7 @@
 export { activityTone } from './activity-tone';
 export { formatFilters } from './format-filters';
 export { jsonRecord } from './json-record';
+export { neighbours } from './neighbours';
 export { nonEmpty } from './non-empty';
 export { noticeRows } from './notice-rows';
 export { threadChoices } from './threads';

@@ -60,4 +60,10 @@ interface EditableMarkdownProps {
   onSave: (value: string) => void;
 }
 
-export type { EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
+interface ChatButtonProps {
+  link: string;
+  label: string;
+  size?: 'xs' | 'sm';
+}
+
+export type { ChatButtonProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
