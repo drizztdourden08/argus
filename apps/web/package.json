@@ -15,7 +15,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@drizztdourden08/tessera": "^0.83.0",
+    "@drizztdourden08/tessera": "^0.84.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:"
