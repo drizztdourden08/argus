@@ -10,8 +10,8 @@ const AgentFullMessage = (props: AgentFullMessageProps) => {
   const message = agentMessage(agent);
   const at = agent.live?.lastActivityAt;
   return (
-    <Box role="row" className="agents-expand" data-agent-message={id}>
-      <Box role="cell">
+    <Box className="agents-expand" data-agent-message={id}>
+      <Box>
         <Text as="p" variant="caption">{`Last message of ${agentName(agent, id)}${at ? ` · ${formatAgo(at, now)} ago` : ''}`}</Text>
         <BoardMarkdown>{message}</BoardMarkdown>
       </Box>
