@@ -1,23 +1,58 @@
 /* @layer renderer-app @kind types */
+import type { IconName } from '@drizztdourden08/tessera';
 import type { RunRow } from '../../../data/runs';
 import type { StreamStatus } from '../../../data/stream';
 import type { Card } from '../../../data/types';
-import type { RegistryItem, SendKind, SentItem } from './model';
+import type { LeadState, MasterLine, RegistryItem, SendKind, SentItem } from './model';
+
+type LogOpener = (key: string, run: RunRow) => void;
+
+interface LogTarget {
+  key: string;
+  run: RunRow;
+}
 
 interface ProjectCardProps {
   card: Card;
   now: number;
   onSend: (key: string) => void;
+  onLog: LogOpener;
 }
 
 interface CardHeadlineProps {
   card: Card;
+  state: LeadState;
+}
+
+interface CardStateProps {
+  card: Card;
+  state: LeadState;
   now: number;
+}
+
+interface CardFooterProps {
+  card: Card;
+  started: boolean;
+  onSend: (key: string) => void;
+}
+
+interface CounterTileProps {
+  icon: IconName;
+  value: number;
+  label: string;
+  bad?: boolean;
+}
+
+interface MasterStatusProps {
+  line: MasterLine;
+  run: RunRow;
+  onLog: (run: RunRow) => void;
 }
 
 interface ProjectGridProps {
   cards: Card[];
   onSend: (key: string) => void;
+  onLog: LogOpener;
 }
 
 interface DashboardTotalsProps {
@@ -56,6 +91,7 @@ interface MasterRun {
 
 interface MasterRowProps {
   card: Card;
+  onLog: LogOpener;
 }
 
 interface RunningNowProps {
@@ -75,6 +111,6 @@ interface SentRowProps {
 }
 
 export type {
-  CardCountersProps, CardHeadlineProps, DashboardsTabProps, DashboardTotalsProps, MasterRowProps, MasterRun, ProjectCardProps, ProjectGridProps, RegistryChipLinkProps,
-  RunningNowProps, SendDown, SendDownDialogProps, SentRowProps,
+  CardCountersProps, CardFooterProps, CardHeadlineProps, CardStateProps, CounterTileProps, DashboardsTabProps, DashboardTotalsProps, LogTarget, MasterRowProps, MasterRun, MasterStatusProps,
+  ProjectCardProps, ProjectGridProps, RegistryChipLinkProps, RunningNowProps, SendDown, SendDownDialogProps, SentRowProps,
 };

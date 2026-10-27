@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../../data/react';
+import type { RunTone } from '../../../../data/runs';
 import type { RegistryRow, SentEntry } from '../../../../data/types';
 
 type LeadState = 'not started' | 'paused' | 'idle' | 'stale' | 'running';
@@ -52,8 +53,8 @@ interface MasterLine {
   head: string;
   at: string | null;
   tail: string;
-  tone: 'muted' | 'danger' | 'success';
+  tone: RunTone;
   running: boolean;
 }
 
-export type { Attention, CardCountsView, ChipLook, LeadState, MasterLine, RegistryChip, RegistryItem, SendKind, SendOutcome, SentItem, Totals };
+export type { Attention, CardCountsView, ChipLook, ChipTone, LeadState, MasterLine, RegistryChip, RegistryItem, SendKind, SendOutcome, SentItem, Totals };

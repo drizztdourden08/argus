@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { ProcRule, ProcsMeta, RuleGroup } from '../../../data/types';
 import type { KillAsk, ProcFilters, ProcItem, ProcRow } from './model';
 
@@ -31,6 +32,13 @@ interface KillFlow {
 interface ProcessSummaryProps {
   procs: readonly ProcItem[];
   meta: ProcsMeta | null;
+}
+
+interface ProcessFigureProps {
+  before?: string;
+  value: ReactNode;
+  after?: string;
+  title?: string;
 }
 
 interface SampleNoticesProps {
@@ -106,6 +114,6 @@ interface RulesTableProps {
 }
 
 export type {
-  KillCellProps, KillConfirmProps, KillFlow, KillRowConfirmProps, NameCellProps, ProcessCellProps, ProcessFeed, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
+  KillCellProps, KillConfirmProps, KillFlow, KillRowConfirmProps, NameCellProps, ProcessCellProps, ProcessFeed, ProcessFigureProps, ProcessFiltersProps, ProcessSummaryProps, ProcessTableProps, ProcessView, RuleCardProps,
   RuleStripProps, RulesTableProps, SampleNoticesProps, StatusCellProps,
 };

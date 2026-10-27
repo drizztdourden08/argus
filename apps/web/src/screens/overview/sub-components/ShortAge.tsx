@@ -1,12 +1,14 @@
 /* @layer renderer-app @kind component */
-import { DateText } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../format';
+import { useNow } from '../clock';
 import type { ShortAgeProps } from '../overview.type';
 
 const ShortAge = (props: ShortAgeProps) => {
   const { value, ago = false } = props;
+  const now = useNow();
   return (
     <>
-      <DateText value={value} format="elapsed" length="short" />
+      {formatAgo(value, now)}
       {ago ? ' ago' : null}
     </>
   );

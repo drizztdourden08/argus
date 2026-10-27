@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { FieldDescriptor, TableColumn, TagLook } from '@drizztdourden08/tessera';
+import type { FieldDescriptor, StatusTone, TableColumn } from '@drizztdourden08/tessera';
 
 const STATUS_TIP: Readonly<Record<string, string>> = {
   ok: 'Within its rule.',
@@ -10,19 +10,14 @@ const STATUS_TIP: Readonly<Record<string, string>> = {
   old: 'Running for longer than its rule allows.',
 };
 
-const WARNING_LOOK: TagLook = { variant: 'urgency', color: 'warning' };
-const DANGER_LOOK: TagLook = { variant: 'urgency', color: 'danger' };
-
-const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
-  ok: { variant: 'urgency', color: 'success' },
-  hog: WARNING_LOOK,
-  stale: WARNING_LOOK,
-  old: WARNING_LOOK,
-  orphan: DANGER_LOOK,
-  hung: DANGER_LOOK,
+const STATUS_TONE: Readonly<Record<string, StatusTone>> = {
+  ok: 'success',
+  hog: 'warning',
+  stale: 'warning',
+  old: 'warning',
+  orphan: 'danger',
+  hung: 'danger',
 };
-
-const UNKNOWN_STATUS_LOOK: TagLook = { variant: 'normal', color: 'neutral' };
 
 const STATUS_OPTIONS = ['ok', 'hog', 'stale', 'orphan', 'hung', 'old'] as const;
 
@@ -40,8 +35,21 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'kill', label: 'Kill', kind: 'string', optional: true },
 ];
 
-const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'memMB', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
+const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'memMB', 'cpuPct', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
 
-const PROC_COLUMNS: readonly TableColumn[] = PROC_SCHEMA.filter((field) => field.path !== 'pid').map((field) => ({ path: field.path }));
+const COLUMN_SIZE: Readonly<Record<string, Omit<TableColumn, 'path'>>> = {
+  rule: { width: 140 },
+  name: { width: 190 },
+  project: { width: 100 },
+  memMB: { width: 84 },
+  cpuPct: { width: 64 },
+  ageMin: { width: 72 },
+  idleMin: { width: 72 },
+  status: { width: 104 },
+  cmd: { grow: true },
+  kill: { width: 72 },
+};
 
-export { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, STATUS_LOOK, STATUS_TIP, UNKNOWN_STATUS_LOOK };
+const PROC_COLUMNS: readonly TableColumn[] = PROC_SCHEMA.filter((field) => field.path !== 'pid').map((field) => ({ path: field.path, ...COLUMN_SIZE[field.path] }));
+
+export { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, STATUS_TIP, STATUS_TONE };

@@ -58,7 +58,7 @@ describe('the tabs and their badges', () => {
     await waitFor(() => expect(tab('Activity').textContent).toContain('2'));
     fireEvent.click(tab('Activity'));
     await waitFor(() => expect(tab('Activity').getAttribute('aria-selected')).toBe('true'));
-    expect(tab('Activity').textContent).toBe('Activity');
+    expect(tab('Activity').textContent).toBe('Activity0');
     expect(localStorage.getItem('argus.activity.seen')).not.toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe('the tabs and their badges', () => {
     await waitFor(() => expect(localStorage.getItem('argus.activity.seen')).not.toBeNull());
     fireEvent.click(tab('Dashboards'));
     await waitFor(() => expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true'));
-    expect(tab('Activity').textContent).toBe('Activity');
+    expect(tab('Activity').textContent).toBe('Activity0');
     await feed(view.sources, {
       activity: { ...ACTIVITY, 'a-9': { n: 9, at: new Date(Date.now() + 60000).toISOString(), kind: 'fault', level: 'warn', text: 'later' } },
     });
@@ -77,13 +77,13 @@ describe('the tabs and their badges', () => {
   it('starts with no unread on Activity when the page opens on that tab', async () => {
     await open('/#activity');
     expect(tab('Activity').getAttribute('aria-selected')).toBe('true');
-    expect(tab('Activity').textContent).toBe('Activity');
+    expect(tab('Activity').textContent).toBe('Activity0');
   });
 
   it('keeps an older entry read after a reload', async () => {
     localStorage.setItem('argus.activity.seen', minutesAgo(0));
     await open();
-    expect(tab('Activity').textContent).toBe('Activity');
+    expect(tab('Activity').textContent).toBe('Activity0');
   });
 
   it('opens the tab named by the hash, and falls back on Dashboards for a hash it does not know', async () => {

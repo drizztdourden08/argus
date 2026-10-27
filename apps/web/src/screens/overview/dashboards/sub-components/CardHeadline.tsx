@@ -1,31 +1,20 @@
 /* @layer renderer-app @kind component */
-import { Inline, Tag, Text } from '@drizztdourden08/tessera';
-import { formatAgo, orText } from '../../../../format';
-import { ShortAge } from '../../sub-components/ShortAge';
-import { STATE_LOOK, WARN_LOOK } from '../dashboards.constants';
+import { Badge, Inline, Spacer, Text } from '@drizztdourden08/tessera';
+import { orText } from '../../../../format';
+import { DOT_COLOR } from '../dashboards.constants';
 import type { CardHeadlineProps } from '../dashboards.type';
-import { attentionOf, leadState } from '../model';
-
-const seenTip = (card: CardHeadlineProps['card'], now: number): string => {
-  const coordinator = card.coordinator;
-  if (!coordinator) return `No live lead session; board updated ${formatAgo(card.updatedAt, now)} ago`;
-  const activity = coordinator.activity ? ` (${coordinator.activity})` : '';
-  return `Lead ${coordinator.session ?? ''} last seen ${formatAgo(coordinator.lastSeen, now)} ago${activity}`;
-};
+import { attentionOf } from '../model';
 
 const CardHeadline = (props: CardHeadlineProps) => {
-  const { card, now } = props;
-  const state = leadState(card, now);
+  const { card, state } = props;
   const needs = attentionOf(card).needs;
-  const seen = card.coordinator?.lastSeen ?? card.updatedAt;
   const needsTip = orText(card.attention?.slice(0, 4).join('\n'), `${needs} item(s) waiting for you`);
   return (
-    <Inline gap="sm" align="center" wrap>
-      <Tag {...STATE_LOOK[state]}>{state}</Tag>
-      {state !== 'not started' && (
-        <Text variant="caption" tone="muted" title={seenTip(card, now)}>{seen ? <ShortAge value={seen} /> : 'never'}</Text>
-      )}
-      {needs > 0 && <Tag {...WARN_LOOK} title={needsTip}>{`${needs} need you`}</Tag>}
+    <Inline gap="sm" align="center">
+      <Badge variant="dot" color={DOT_COLOR[state]} />
+      <Text variant="title" title={card.name}>{card.name}</Text>
+      <Spacer />
+      {needs > 0 && <Badge variant="number" color="warning" value={needs} label={needsTip} />}
     </Inline>
   );
 };

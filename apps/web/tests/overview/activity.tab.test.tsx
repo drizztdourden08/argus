@@ -18,7 +18,7 @@ const open = async (activity: Record<string, object> = ACTIVITY) => {
   return view;
 };
 
-const rowsOf = (): HTMLElement[] => within(screen.getByRole('list', { name: 'Activity' })).getAllByRole('listitem');
+const rowsOf = (): HTMLElement[] => within(screen.getByRole('table', { name: 'Activity' })).getAllByRole('row');
 
 describe('the Activity tab', () => {
   it('says there is nothing to report when the feed is empty, with the filters still in place', async () => {
@@ -43,10 +43,9 @@ describe('the Activity tab', () => {
     await screen.findByText('R-3 play failed (exit 1)');
     const first = rowsOf()[2] as HTMLElement;
     expect(within(first).getByText('run')).toBeTruthy();
-    expect(within(first).getByText('error')).toBeTruthy();
     expect(within(first).getByText('/ lead')).toBeTruthy();
     expect(within(first).getByRole('link', { name: 'RotP' }).getAttribute('href')).toBe('/p/rotp/');
-    expect(first.querySelector('time')).not.toBeNull();
+    expect(first.textContent).toMatch(/\d+[smhd]\sago/);
   });
 
 });
@@ -102,12 +101,12 @@ describe('the filters of the Activity tab', () => {
     expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();
   });
 
-  it('puts a header row of column labels over the feed', async () => {
+  it('draws the feed as one dense line per entry, with no header row and no level column', async () => {
     await open();
     await screen.findByText('R-3 play failed (exit 1)');
-    const list = screen.getByRole('list', { name: 'Activity' });
-    expect(list.textContent).toContain('Level');
-    expect(list.textContent).toContain('When');
+    const table = screen.getByRole('table', { name: 'Activity' });
+    expect(table.textContent).not.toContain('Level');
+    expect(table.querySelector('thead')).toBeNull();
   });
 });
 

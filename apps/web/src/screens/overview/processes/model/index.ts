@@ -17,5 +17,5 @@ export { sortProcs } from './sort-procs';
 export { staleOf } from './stale-of';
 export { statusTip } from './status-tip';
 export { toProcRow } from './to-proc-row';
-export { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, STATUS_LOOK, UNKNOWN_STATUS_LOOK } from './model.constants';
+export { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, STATUS_TONE } from './model.constants';
 export type * from './model.type';

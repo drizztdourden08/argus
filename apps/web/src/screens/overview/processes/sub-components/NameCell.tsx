@@ -6,8 +6,8 @@ const NameCell = (props: NameCellProps) => {
   const { name, pid } = props;
   return (
     <Inline gap="xs" align="baseline">
-      <Text variant="label">{name}</Text>
-      {pid === null ? null : <Text variant="caption" tone="muted" numeric>{pid}</Text>}
+      <Text weight={600}>{name}</Text>
+      {pid === null ? null : <Text variant="caption" numeric>{pid}</Text>}
     </Inline>
   );
 };

@@ -85,31 +85,31 @@ describe('the master launcher line of a card', () => {
   });
 
   it('says no master set, and says so in red when the thread must set one', () => {
-    expect(masterLine(card('a', { master: null }))).toEqual({ head: 'no master set', at: null, tail: '', tone: 'muted', running: false });
+    expect(masterLine(card('a', { master: null }))).toEqual({ head: 'no master set', at: null, tail: '', tone: 'neutral', running: false });
     expect(masterLine(card('a', { master: null, masterMissing: true }))).toEqual({
       head: 'no master launcher: the thread must set one', at: null, tail: '', tone: 'danger', running: false,
     });
   });
 
   it('says nothing for a master that never ran', () => {
-    expect(masterLine(card('a', { master }))).toEqual({ head: '', at: null, tail: '', tone: 'muted', running: false });
+    expect(masterLine(card('a', { master }))).toEqual({ head: '', at: null, tail: '', tone: 'neutral', running: false });
   });
 
   it('shows a live run with its start and last line, and offers Stop', () => {
     const run = runRow({});
-    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toEqual({ head: 'running', at: run.startedAt, tail: ': window open', tone: 'success', running: true });
+    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toEqual({ head: 'running', at: run.startedAt, tail: ' · window open', tone: 'success', running: true });
   });
 
   it('counts a queued run from the moment it was queued', () => {
     const run = runRow({ status: 'queued', startedAt: null, lastLine: null });
-    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toMatchObject({ head: 'queued', at: run.queuedAt, tail: '', running: true });
+    expect(masterLine(card('a', { master: { ...master, lastRun: run } }))).toMatchObject({ head: 'Queued, waiting for a free slot', at: null, tail: '', running: true });
   });
 
   it('shows how a finished run ended: failed with its exit code in red, other ends quiet', () => {
     const failed = runRow({ status: 'failed', exitCode: 2, endedAt: minutesAgo(4) });
-    expect(masterLine(card('a', { master: { ...master, lastRun: failed } }))).toEqual({ head: 'failed (exit 2)', at: failed.endedAt, tail: '', tone: 'danger', running: false });
+    expect(masterLine(card('a', { master: { ...master, lastRun: failed } }))).toEqual({ head: 'failed (exit 2)', at: failed.endedAt, tail: ' · window open', tone: 'danger', running: false });
     const exited = runRow({ status: 'exited', exitCode: 0, endedAt: minutesAgo(3) });
-    expect(masterLine(card('a', { master: { ...master, lastRun: exited } }))).toMatchObject({ head: 'exited', at: exited.endedAt, tone: 'muted' });
+    expect(masterLine(card('a', { master: { ...master, lastRun: exited } }))).toMatchObject({ head: 'exited 0', at: exited.endedAt, tone: 'info' });
   });
 });
 
