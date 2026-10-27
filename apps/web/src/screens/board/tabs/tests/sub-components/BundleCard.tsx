@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Card, Disclosure, Flex } from '@drizztdourden08/tessera';
+import './BundleCard.css';
+import { Box } from '@drizztdourden08/tessera';
 import { bundleState } from '../../../shared';
 import { NO_BUNDLE } from '../model';
 import type { BundleCardProps } from '../tests-props.type';
@@ -13,14 +14,13 @@ const BundleCard = (props: BundleCardProps) => {
   const state = bundleState(group.build);
   const emptyText = group.tag === NO_BUNDLE ? 'No test without a bundle.' : 'No test in this bundle yet.';
   return (
-    <Card data-bundle={group.tag}>
-      <Disclosure open={open} onOpenChange={onToggle} summary={<BundleHead group={group} state={state} />}>
-        <Flex direction="column" gap="md">
-          <LaunchBox view={view} runs={runs} state={state} />
-          <TestSections tests={group.tests} emptyText={emptyText} />
-        </Flex>
-      </Disclosure>
-    </Card>
+    <Box className={group.handed ? 'bundle bundle--handed' : 'bundle'} data-bundle={group.tag}>
+      <BundleHead group={group} state={state} open={open} onToggle={onToggle} />
+      <Box className="bundle__body" hidden={!open}>
+        <LaunchBox view={view} runs={runs} state={state} />
+        <TestSections tests={group.tests} emptyText={emptyText} />
+      </Box>
+    </Box>
   );
 };
 

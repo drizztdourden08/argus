@@ -8,6 +8,7 @@ const ChoiceFilter = (props: ChoiceFilterProps) => {
   return (
     <Select
       size="sm"
+      className="tests-fit"
       aria-label={label}
       options={[{ value: ANY_CHOICE, label: any }, ...options]}
       value={value || ANY_CHOICE}

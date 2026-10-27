@@ -32,7 +32,7 @@ describe('counts', () => {
       doneDoc('T-6', 'blocked', 'stuck'),
     );
     expect(tally(rows)).toEqual({ run: 1, pass: 2, fail: 1, partial: 0, blocked: 1 });
-    expect(countsText(tally(rows))).toBe('1 to run / 2 pass / 1 fail / 1 blocked');
+    expect(countsText(tally(rows))).toBe('1 to run · 2 pass · 1 fail · 1 blocked');
     expect(countsText(tally([]))).toBe('no tests yet');
   });
 

@@ -11,7 +11,7 @@ const PARTS: [keyof Counts, string][] = [
 
 const countsText = (counts: Counts): string => {
   const parts = PARTS.filter(([key]) => counts[key] > 0).map(([key, word]) => `${counts[key]} ${word}`);
-  return parts.length > 0 ? parts.join(' / ') : 'no tests yet';
+  return parts.length > 0 ? parts.join(' · ') : 'no tests yet';
 };
 
 export { countsText };

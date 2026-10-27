@@ -8,10 +8,14 @@ export { conflictedTests } from './conflicted-tests';
 export { countsText } from './counts-text';
 export { doneTests } from './done-tests';
 export { editProblem } from './edit-problem';
+export { fieldValidator } from './field-validator';
 export { filtersActive } from './filters-active';
+export { focusOptions } from './focus-options';
 export { followItemThread } from './follow-item-thread';
 export { groupBundles } from './group-bundles';
+export { inFocus } from './in-focus';
 export { isToRun } from './is-to-run';
+export { itemChoices } from './item-choices';
 export { knownBuilds } from './known-builds';
 export { latestWakes } from './latest-wakes';
 export { noteOutcome } from './note-outcome';
@@ -21,17 +25,18 @@ export { playHint } from './play-hint';
 export { postVerdict } from './post-verdict';
 export { previousValues } from './previous-values';
 export { resolveLaunch } from './resolve-launch';
+export { resultNote } from './result-note';
 export { shownRun } from './shown-run';
 export { sortDone } from './sort-done';
 export { sortToRun } from './sort-to-run';
 export { subjectsOf } from './subjects-of';
+export { testChips } from './test-chips';
 export { testNotices } from './test-notices';
-export { threadName } from './thread-name';
 export { toRunCount } from './to-run-count';
 export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
 export {
-  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, NO_BUNDLE, NO_KEY, ORDER_OPTIONS, STATUS_FILTERS, STORE_KEYS,
+  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, NO_BUNDLE, ORDER_OPTIONS, STATUS_FILTERS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';

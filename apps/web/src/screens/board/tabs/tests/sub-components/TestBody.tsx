@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Callout, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { Callout, DateText, Flex, Markdown, Text } from '@drizztdourden08/tessera';
 import { useOutcome } from '../behavior/useOutcome';
 import { useTestsShared } from '../behavior/useTestsShared';
 import type { TestBodyProps } from '../tests-drawer-props.type';
@@ -12,6 +12,7 @@ import { RerunButton } from './RerunButton';
 import { ResultBlock } from './ResultBlock';
 import { ResultHistory } from './ResultHistory';
 import { SetupList } from './SetupList';
+import { StepList } from './StepList';
 import { TestFacts } from './TestFacts';
 import { TestNotices } from './TestNotices';
 import { TextList } from './TextList';
@@ -24,13 +25,16 @@ const TestBody = (props: TestBodyProps) => {
     <Flex direction="column" gap="lg">
       <TestNotices label={`Conflicts on ${test.id}`} notices={notices.notices.filter((notice) => notice.kind === 'conflict' && notice.op.target?.id === test.id)} ops={notices} />
       <TestFacts test={test} handed={handed} />
-      <Flex gap="sm" align="start" wrap>
-        <Text variant="label">Run</Text>
+      <Flex gap="sm" align="center" wrap>
+        <Text variant="caption" tone="muted">Run</Text>
         <OutcomeControls test={test} controls={controls} />
         <RerunButton test={test} boardKey={boardKey} />
       </Flex>
+      <Text variant="caption" tone="muted">
+        {`rev ${test.rev ?? 1}, updated by ${test.updatedBy ?? test.createdBy ?? 'unknown'} `}<DateText value={test.updatedAt} format="elapsed" length="short" /> ago
+      </Text>
       <ResultBlock test={test} />
-      {test.steps.length > 0 && <DrawerSection title="Steps" count={test.steps.length}><TextList ordered lines={test.steps} label="Steps" /></DrawerSection>}
+      {test.steps.length > 0 && <DrawerSection title="Steps" count={test.steps.length}><StepList lines={test.steps} /></DrawerSection>}
       <ExpectedLists test={test} />
       {test.context && <DrawerSection title="Context"><Markdown size="sm">{test.context}</Markdown></DrawerSection>}
       {test.changed.length > 0 && <DrawerSection title="What changed"><TextList lines={test.changed} label="What changed" /></DrawerSection>}

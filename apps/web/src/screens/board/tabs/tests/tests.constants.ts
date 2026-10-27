@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
-import type { ButtonVariant, StackedBarColor } from '@drizztdourden08/tessera';
+import type { ButtonVariant, CardTone, StackedBarColor, TagLook } from '@drizztdourden08/tessera';
 import type { TestOutcome } from '../../../../data/posts';
 import type { BundleState } from '../../../../data/types';
-import type { Counts } from './model';
+import type { Counts, WakeChip } from './model';
 
 const TEST_STATUSES = defineStatuses({
   pending: { label: 'To run', tone: 'primary' },
@@ -14,11 +14,33 @@ const TEST_STATUSES = defineStatuses({
   moved: { label: 'Moved', tone: 'neutral' },
 });
 
-const BUNDLE_STATUSES = defineStatuses({
-  draft: { label: 'Draft', tone: 'warning' },
-  ready: { label: 'Ready', tone: 'success' },
-  closed: { label: 'Closed', tone: 'neutral' },
-});
+const TEST_TAGS: Record<string, TagLook> = {
+  pending: { variant: 'normal', color: 'primary' },
+  pass: { variant: 'urgency', color: 'success' },
+  fail: { variant: 'urgency', color: 'danger' },
+  partial: { variant: 'urgency', color: 'warning' },
+  blocked: { variant: 'urgency', color: 'info' },
+  moved: { variant: 'normal', color: 'neutral' },
+};
+
+const RESULT_TONES: Record<string, CardTone> = {
+  pass: 'success',
+  fail: 'danger',
+  partial: 'warning',
+  blocked: 'info',
+};
+
+const WAKE_TAGS: Record<WakeChip['tone'], TagLook> = {
+  success: { variant: 'urgency', color: 'info' },
+  warning: { variant: 'urgency', color: 'warning' },
+  neutral: { variant: 'normal', color: 'neutral' },
+};
+
+const BUNDLE_TAGS: Record<BundleState, TagLook> = {
+  draft: { variant: 'urgency', color: 'warning' },
+  ready: { variant: 'urgency', color: 'success' },
+  closed: { variant: 'normal', color: 'neutral' },
+};
 
 const BUNDLE_TIPS: Record<BundleState, string> = {
   draft: 'Draft: not built yet. Its tests can be written, but there is no Play and it cannot be handed to you.',
@@ -73,11 +95,15 @@ const FIND_TEXT = 'Search id or title';
 
 const ANY_CHOICE = 'any';
 
+const ALL_THREADS = 'all';
+
 const FILTER_SWITCHES: ['needs' | 'conflict' | 'archived', string][] = [
   ['needs', 'needs you'],
   ['conflict', 'conflict'],
   ['archived', 'archived'],
 ];
+
+const PASSED_TIP = 'The passed tests of open bundles.';
 
 const NO_TESTS_TEXT = 'No test yet. Threads document every test here with coord test.';
 
@@ -91,6 +117,6 @@ const MODE_OPTIONS = [
 ];
 
 export {
-  ANCHOR_PATTERN, ANY_CHOICE, BUNDLE_STATUSES, BUNDLE_TIPS, COMPOSE_HINTS, FILTER_SWITCHES, FIND_TEXT, KEY_HINT, MENU_KEY, NO_BUILD_VALUE, MODE_OPTIONS, NO_MATCH_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PROGRESS_SEGMENTS,
-  RESULT_PLACEHOLDER, RUN_ROW_SELECTOR, TAB_HASH, TEST_STATUSES, TYPING_SELECTOR, WAKE_TICK_MS,
+  ALL_THREADS, ANCHOR_PATTERN, ANY_CHOICE, BUNDLE_TAGS, BUNDLE_TIPS, COMPOSE_HINTS, FILTER_SWITCHES, FIND_TEXT, KEY_HINT, MENU_KEY, NO_BUILD_VALUE, MODE_OPTIONS, NO_MATCH_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PASSED_TIP, PROGRESS_SEGMENTS,
+  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, TAB_HASH, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
 };

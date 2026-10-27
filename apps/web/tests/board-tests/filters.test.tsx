@@ -52,7 +52,7 @@ describe('the other filters', () => {
     await pick('Subject', 'play');
     shown('T-2');
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.click(screen.getByRole('switch', { name: 'needs you' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'needs you' }));
     shown('T-1');
   });
 
@@ -78,7 +78,7 @@ describe('the saved filters', () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
     typeSearch('works');
-    fireEvent.click(screen.getByRole('switch', { name: 'archived' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'archived' }));
     expect(stored('coord.f')).toMatchObject({ q: 'works', archived: true, sort: 'rank', builds: [], nobuild: false });
   });
 

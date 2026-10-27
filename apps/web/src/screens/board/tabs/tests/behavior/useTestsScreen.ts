@@ -1,10 +1,11 @@
 /* @layer renderer-app @kind logic */
 import { useMemo, useState } from 'react';
-import { buildView, conflictedTests, followItemThread, latestWakes, visibleTests, wakePending } from '../model';
+import { buildView, conflictedTests, followItemThread, inFocus, latestWakes, visibleTests, wakePending } from '../model';
 import type { TestsData, TestsScreen, TestsShared } from '../tests.type';
 import { useDrawerNav } from './useDrawerNav';
 import { useDrawerWide } from './useDrawerWide';
 import { useFolds } from './useFolds';
+import { useTestsFocus } from './useTestsFocus';
 import { useTestAnchor } from './useTestAnchor';
 import { useTestNotices } from './useTestNotices';
 import { useTestOps } from './useTestOps';
@@ -13,6 +14,7 @@ import { useWakeClock } from './useWakeClock';
 
 const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
   const state = useTestsState();
+  const focus = useTestsFocus(data);
   const notices = useTestNotices(boardKey, data.entries, data.tests);
   const ops = useTestOps(boardKey);
   const folds = useFolds();
@@ -26,7 +28,10 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
   const { filters, prefs } = state;
   const { items, builds, launchers, defs, handed } = data;
   const conflicted = useMemo(() => conflictedTests(notices.notices), [notices.notices]);
-  const visible = useMemo(() => visibleTests(followItemThread(data.tests, items), filters.archived), [data.tests, items, filters.archived]);
+  const visible = useMemo(
+    () => inFocus(visibleTests(followItemThread(data.tests, items), filters.archived), focus.scope),
+    [data.tests, items, filters.archived, focus.scope],
+  );
   const view = useMemo(
     () => buildView({ tests: visible, builds, items, launchers, defs, handed, filters, prefs, conflicted }),
     [visible, builds, items, launchers, defs, handed, filters, prefs, conflicted],
@@ -54,6 +59,7 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     shared,
     notices,
     visible,
+    focus,
     anchor,
     nav,
     wide,
