@@ -84,7 +84,7 @@ describe('the totals and the cards', () => {
     const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1.5), lastLine: 'window open' };
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { run: { id: 'R-9', status: 'stopped' } } } : undefined));
     await open({ cards: { ...cards, rotp: { ...cards.rotp, master: { ...MASTER, lastRun: live } } } });
-    expect(await screen.findByText(wholeText(/^running 2m · window open$/))).toBeTruthy();
+    expect(await screen.findByText(wholeText(/^\s*running 2m · window open$/))).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(await screen.findByText('Stopped RotP master (R-9).')).toBeTruthy();
     expect(posts(calls)).toEqual([{ path: '/api/p/rotp/runs/R-9/stop', method: 'POST', body: {} }]);

@@ -15,7 +15,7 @@ const Composer = (props: ComposerProps) => {
   return (
     <Flex direction="column" gap="xs">
       <Flex gap="sm" align="center" wrap>
-        <SegmentedControl<NoteKind> label="Post as" size="sm" value={kind} options={COMPOSE_KINDS} onChange={setKind} />
+        <SegmentedControl<NoteKind> selectedTone="neutral" label="Post as" size="sm" value={kind} options={COMPOSE_KINDS} onChange={setKind} />
         <Text variant="caption" tone="muted">
           {kind === 'decision' ? `queued for ${item.thread} to act on` : `more context for ${item.thread}`}
         </Text>

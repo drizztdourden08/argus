@@ -17,7 +17,7 @@ const RegisteredChip = (props: RegisteredChipProps) => {
   return (
     <Tooltip content={<ChipTip row={row} />}>
       <Pressable aria-label={`Open the thread ${row.thread}`} onClick={() => open(row.thread)}>
-        <Tag {...(look.faulted ? FAULT_LOOK : PLAIN_LOOK)} pill data-state={row.state}>
+        <Tag {...(look.faulted ? FAULT_LOOK : PLAIN_LOOK)} pill size="lg" outlined={look.faulted} data-state={row.state}>
           <Flex inline gap="xs" align="center">
             <ChipMark look={look} name={row.session ?? row.thread} />
             {look.word ? <Text variant="caption" tone={look.faulted ? 'danger' : 'muted'}>{look.word}</Text> : null}

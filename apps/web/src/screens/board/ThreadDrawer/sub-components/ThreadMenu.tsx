@@ -51,6 +51,7 @@ const ThreadMenu = (props: ThreadMenuProps) => {
       variant="ghost"
       size="sm"
       align="end"
+      itemSize="roomy"
     />
   );
 };

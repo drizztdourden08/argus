@@ -9,7 +9,7 @@ const SettingToggle = (props: SettingToggleProps) => {
   const { part, level, on, busy, onToggle } = props;
   return (
     <Tooltip content={settingTip(part, level, on)}>
-      <Tag {...CHIP_LOOK} pill selected={on} disabled={busy} onSelect={onToggle}>{PART_LABEL[part]}</Tag>
+      <Tag {...CHIP_LOOK} pill size="lg" selectedTone="neutral" selected={on} disabled={busy} onSelect={onToggle}>{PART_LABEL[part]}</Tag>
     </Tooltip>
   );
 };

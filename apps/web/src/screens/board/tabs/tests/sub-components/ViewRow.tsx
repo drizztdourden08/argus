@@ -12,11 +12,11 @@ const ViewRow = (props: ViewRowProps) => {
     <Flex gap="md" align="center" wrap>
       <Flex gap="sm" align="center">
         <Text variant="caption" tone="muted" aria-hidden="true">Group by</Text>
-        <SegmentedControl<TestGroup> aria-label="Group by" size="sm" value={prefs.group} options={GROUP_OPTIONS} onChange={setGroup} />
+        <SegmentedControl<TestGroup> selectedTone="neutral" aria-label="Group by" size="sm" value={prefs.group} options={GROUP_OPTIONS} onChange={setGroup} />
       </Flex>
       <Flex gap="sm" align="center">
         <Text variant="caption" tone="muted" aria-hidden="true">Order</Text>
-        <SegmentedControl<TestOrder> aria-label="Order" size="sm" value={prefs.order} options={ORDER_OPTIONS} onChange={setOrder} />
+        <SegmentedControl<TestOrder> selectedTone="neutral" aria-label="Order" size="sm" value={prefs.order} options={ORDER_OPTIONS} onChange={setOrder} />
       </Flex>
       <Button size="sm" variant="ghost" title={PASSED_TIP} aria-pressed={prefs.showPassed} onClick={() => setShowPassed(!prefs.showPassed)}>
         {prefs.showPassed ? 'Hide passed' : 'Show passed'}

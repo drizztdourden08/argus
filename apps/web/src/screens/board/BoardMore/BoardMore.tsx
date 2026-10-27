@@ -32,6 +32,7 @@ const BoardMore = (props: BoardMoreProps) => {
         variant="ghost"
         size="sm"
         align="end"
+        itemSize="roomy"
       />
       <MoreDialogs dialog={dialog} locks={counts.locks} held={counts.held} onClose={() => setDialog(null)} />
     </>

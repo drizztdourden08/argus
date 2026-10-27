@@ -24,6 +24,7 @@ const CardMenu = (props: CardMenuProps) => {
       variant="ghost"
       size="xs"
       align="end"
+      itemSize="roomy"
     />
   );
 };
