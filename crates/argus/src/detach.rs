@@ -1,6 +1,6 @@
 //! Processes the tray and the MCP bridge start: hidden, without a console, not waited for.
 
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::io;
 use std::os::windows::process::CommandExt;
 use std::process::{Command, Stdio};
@@ -26,11 +26,12 @@ fn quiet(program: impl AsRef<OsStr>, args: &[&OsStr], flags: u32) -> io::Result<
 /// # Errors
 ///
 /// The program could not be started.
-pub fn argus(args: &[&OsStr]) -> io::Result<()> {
+pub fn argus(args: &[OsString]) -> io::Result<()> {
     argus_native::keep_stdio_private();
     let exe = std::env::current_exe()?;
+    let args: Vec<&OsStr> = args.iter().map(OsString::as_os_str).collect();
     let flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    quiet(&exe, args, flags | CREATE_BREAKAWAY_FROM_JOB).or_else(|_| quiet(&exe, args, flags))
+    quiet(&exe, &args, flags | CREATE_BREAKAWAY_FROM_JOB).or_else(|_| quiet(&exe, &args, flags))
 }
 
 /// Starts a program with no window and does not wait for it.

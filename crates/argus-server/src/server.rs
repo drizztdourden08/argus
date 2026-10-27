@@ -175,8 +175,8 @@ struct Core {
 
 async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
-    if let Some(node_home) = opts.shadow_seed.as_ref().filter(|_| opts.shadow) {
-        shadow::seed(node_home, &paths.home)?;
+    if opts.shadow {
+        shadow::prepare(&paths, opts.shadow_seed.as_deref())?;
     }
     let config = checked_config(&paths, opts.port).await?;
     if !opts.shadow {
@@ -259,7 +259,16 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     })
 }
 
+/// The options with the shadow marker of the home applied: a home marked `"shadow": true` in its
+/// `config.json` always runs in shadow mode, whatever way the server was started.
+fn marked_by_home(opts: &ServeOptions) -> ServeOptions {
+    let mut opts = opts.clone();
+    opts.shadow = opts.shadow || shadow::marked(&opts.paths.config);
+    opts
+}
+
 async fn build(opts: &ServeOptions) -> Result<Services, ServeError> {
+    let opts = &marked_by_home(opts);
     let mut svc = assemble(open_core(opts).await?, opts)?;
     compose::build_all(&mut svc, opts);
     Ok(svc)

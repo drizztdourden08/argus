@@ -22,6 +22,8 @@ fn argus(home: &Path, args: &[&str]) -> Out {
         .args(args)
         .arg("--data-dir")
         .arg(home)
+        .env("COORD_HOME", home.join("coord"))
+        .env("DASHBOARD_PORT", "0")
         .output()
         .expect("argus runs");
     Out {
@@ -106,15 +108,38 @@ mod windows {
     }
 
     #[test]
-    fn start_with_a_tray_already_running_spawns_nothing() {
+    fn start_with_a_tray_already_running_spawns_no_tray_but_still_brings_the_server_up() {
         let home = home();
         write_tray(home.path(), std::process::id());
         let before = std::fs::read_to_string(home.path().join("tray.json")).unwrap();
         let out = argus(home.path(), &["start"]);
-        let line = format!("tray already running (pid {})", std::process::id());
-        assert_eq!((out.code, out.stdout.as_str()), (0, line.as_str()));
+        let first = format!("tray already running (pid {})", std::process::id());
+        let mut lines = out.stdout.lines();
+        assert_eq!(
+            (out.code, lines.next()),
+            (0, Some(first.as_str())),
+            "{}",
+            out.stderr
+        );
+        let second = lines.next().unwrap_or_default();
+        assert!(
+            second.starts_with("dashboard running at http://127.0.0.1:"),
+            "{second}"
+        );
         let after = std::fs::read_to_string(home.path().join("tray.json")).unwrap();
         assert_eq!(before, after, "no second tray replaced the record");
+        assert!(
+            home.path().join("server.pid").exists(),
+            "the server was started"
+        );
+        let stopped = Command::new(env!("CARGO_BIN_EXE_argus"))
+            .arg("stop")
+            .env("COORD_HOME", home.path().join("coord"))
+            .env("DASHBOARD_HOME", home.path())
+            .env("DASHBOARD_PORT", "0")
+            .output()
+            .expect("argus stops");
+        assert!(stopped.status.success());
     }
 
     #[test]

@@ -85,6 +85,10 @@ enum Command {
         /// The dashboard home (config, database, logs); default `<COORD_HOME>/dashboard`.
         #[arg(long, alias = "home", global = true)]
         data_dir: Option<PathBuf>,
+        /// Makes the home a shadow home for good (the `"shadow": true` marker in its
+        /// config.json): the server behind the tray never writes the boards.
+        #[arg(long, global = true)]
+        shadow: bool,
     },
 }
 
@@ -143,9 +147,13 @@ async fn run_cli() -> ExitCode {
         Command::Autostart { args } => Ok(run_install(install::autostart::run, &args)),
         Command::SelfInstall { args } => Ok(run_install(install::self_install::run, &args)),
         Command::Parity(args) => argus_parity::run(args).await,
-        Command::Tray { action, data_dir } => {
+        Command::Tray {
+            action,
+            data_dir,
+            shadow,
+        } => {
             let action = action.unwrap_or(TrayAction::Start);
-            tray::command(action, lifecycle::paths_of(data_dir)).await
+            tray::command(action, lifecycle::paths_of(data_dir), shadow).await
         }
     };
     match done {
@@ -209,6 +217,8 @@ mod tests {
             "argus tray --data-dir x stop",
             "argus tray status",
             "argus tray start",
+            "argus tray start --shadow --data-dir x",
+            "argus tray --shadow",
         ] {
             assert!(Cli::try_parse_from(line.split(' ')).is_ok(), "{line}");
         }

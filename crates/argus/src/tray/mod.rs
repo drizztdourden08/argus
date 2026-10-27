@@ -34,16 +34,27 @@ pub enum TrayAction {
     Status,
 }
 
+/// `--shadow`: the home becomes a shadow for good (seeded from the Node home when it has no
+/// database yet, and marked in its `config.json`), before the tray or the server comes up.
+#[cfg(windows)]
+fn make_shadow(paths: &Paths) -> Result<(), String> {
+    let node_home = Paths::from_env().home;
+    argus_server::shadow::prepare(paths, Some(&node_home)).map_err(|e| e.to_string())
+}
+
 /// Does what `argus tray` was asked and answers the exit code.
 ///
 /// # Errors
 ///
 /// The tray could not start or stop, or this is not Windows.
 #[cfg(windows)]
-pub async fn command(action: TrayAction, paths: Paths) -> Result<u8, String> {
+pub async fn command(action: TrayAction, paths: Paths, shadow: bool) -> Result<u8, String> {
+    if shadow && matches!(action, TrayAction::Run | TrayAction::Start) {
+        make_shadow(&paths)?;
+    }
     match action {
         TrayAction::Run => run::run(paths).await,
-        TrayAction::Start => start::start(&paths),
+        TrayAction::Start => start::start(&paths).await,
         TrayAction::Stop => stop::stop(&paths),
         TrayAction::Status => Ok(status::status(&paths)),
     }
@@ -55,7 +66,11 @@ pub async fn command(action: TrayAction, paths: Paths) -> Result<u8, String> {
 ///
 /// This is not Windows.
 #[cfg(not(windows))]
-pub fn command(_action: TrayAction, _paths: Paths) -> std::future::Ready<Result<u8, String>> {
+pub fn command(
+    _action: TrayAction,
+    _paths: Paths,
+    _shadow: bool,
+) -> std::future::Ready<Result<u8, String>> {
     let why = "the tray icon is Windows only; use `argus serve` for the server";
     std::future::ready(Err(why.to_owned()))
 }

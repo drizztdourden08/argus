@@ -381,3 +381,19 @@ fn without_a_flag_or_the_environment_the_server_takes_the_port_of_the_config() {
     );
     assert!(run(&["status"]).status.success());
 }
+
+#[tokio::test]
+async fn a_start_on_a_home_marked_shadow_runs_in_shadow_mode_without_a_flag() {
+    let home = Home::new();
+    std::fs::create_dir_all(home.dashboard()).expect("the home");
+    std::fs::write(home.dashboard().join("config.json"), r#"{"shadow":true}"#).expect("a config");
+    let start = home.run(&["start"]);
+    assert_eq!(start.code, 0, "{}", start.stderr);
+    let port = home.json("server.pid")["port"].as_u64().expect("a port");
+    let port = u16::try_from(port).expect("a port");
+    let health = call(port, "GET", "/api/health", None)
+        .await
+        .expect("health");
+    let body: Value = serde_json::from_str(&health.1).expect("JSON");
+    assert_eq!(body["shadow"], true, "{body}");
+}
