@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind constants */
+import { FOCUS_KEY } from '../../../shared';
 import type { TestFilters, TestGroup, TestOrder, TestPrefs } from './model.type';
 
 const NO_BUNDLE = '(no build)';
@@ -21,7 +22,7 @@ const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], builds: [], nobui
 
 const DEFAULT_PREFS: TestPrefs = { group: 'build', order: 'rank', showPassed: true, showClosed: false };
 
-const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests3', passed: 'coord.passed', closed: 'coord.closed', wide: 'coord.drawer.wide' };
+const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests3', passed: 'coord.passed', closed: 'coord.closed', wide: 'coord.drawer.wide', focus: FOCUS_KEY, paused: 'coord.paused' };
 
 const GROUP_OPTIONS: { value: TestGroup; label: string }[] = [
   { value: 'build', label: 'Bundle' },

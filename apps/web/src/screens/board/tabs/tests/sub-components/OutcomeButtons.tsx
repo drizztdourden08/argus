@@ -6,14 +6,14 @@ import type { OutcomeButtonsProps } from '../tests-props.type';
 const OutcomeButtons = (props: OutcomeButtonsProps) => {
   const { testId, active, busy, onChoose } = props;
   return (
-    <Flex gap="xs" wrap role="group" aria-label={`Run ${testId}`}>
+    <Flex gap="xs" role="group" className="test-row__buttons" aria-label={`Run ${testId}`}>
       {OUTCOMES.map((outcome) => {
         const pressed = outcome.id !== 'pass' && active === outcome.id;
         return (
           <Button
             key={outcome.id}
             size="sm"
-            variant={pressed || outcome.id === 'pass' ? outcome.variant : 'secondary'}
+            variant={outcome.variant}
             active={pressed}
             disabled={busy}
             aria-label={`${outcome.label} ${testId}`}

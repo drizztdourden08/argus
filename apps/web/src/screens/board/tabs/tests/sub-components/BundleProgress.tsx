@@ -11,7 +11,7 @@ const BundleProgress = (props: BundleProgressProps) => {
     .filter((segment) => counts[segment.id] > 0)
     .map((segment) => ({ id: segment.id, label: segment.label, value: counts[segment.id], color: segment.color }));
   if (segments.length === 0) return null;
-  return <StackedBar segments={segments} size="sm" legend={false} label={countsText(counts)} />;
+  return <StackedBar className="bundle__bar" segments={segments} size="sm" legend={false} label={countsText(counts)} />;
 };
 
 export { BundleProgress };

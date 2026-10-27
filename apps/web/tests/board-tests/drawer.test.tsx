@@ -1,7 +1,9 @@
 /* @layer renderer-app @kind test */
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { pick } from './filter-dom';
 import { buildDoc, doneDoc, testDoc } from './fixtures';
+import { entries } from './menu-dom';
 import { mountTab } from './mount-tab';
 
 afterEach(() => {
@@ -174,5 +176,20 @@ describe('recording from the drawer', () => {
     fireEvent.change(input, { target: { files: [new File(['x'], 'altar view.png', { type: 'image/png' })] } });
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(new URL(calls[0]?.url ?? '', 'http://dashboard').searchParams.get('caption')).toBe('altar view');
+  });
+});
+
+describe('the controls of the test drawer', () => {
+  it('changes the mode with the Mode select and the item with the Item select', async () => {
+    const { calls } = await openRich({ item: 'I-1' });
+    await pick('Mode', 'auto');
+    await waitFor(() => expect(entries(calls)).toHaveLength(1));
+    expect(entries(calls)[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'tests', id: 'T-1' }, set: { mode: 'auto' } });
+  });
+
+  it('shows the covers and the build as inline fields', async () => {
+    const { drawer } = await openRich();
+    expect(within(drawer).getByRole('button', { name: /covers/ })).toBeTruthy();
+    expect(within(drawer).getByRole('button', { name: /build/ })).toBeTruthy();
   });
 });

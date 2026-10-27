@@ -1,0 +1,9 @@
+.tests-fit.tests-fit {
+  flex: none;
+  inline-size: auto;
+  min-inline-size: 0;
+}
+
+.tests-fit.tests-fit--search {
+  inline-size: var(--size-224);
+}

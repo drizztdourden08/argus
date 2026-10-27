@@ -10,6 +10,7 @@ cleanAfterEach();
 const fresh = () => new Date(Date.now() - 2000).toISOString();
 
 const withWake = (wakes: object[], result: object = {}) => ({
+  handed: 'bundle-1',
   builds: [buildDoc('bundle-1')],
   tests: [doneDoc('T-1', 'fail', 'broken', { result: { status: 'fail', text: 'broken', by: 'human', at: fresh(), ...result } })],
   wakes: wakes as Record<string, unknown>[],

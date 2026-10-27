@@ -1,0 +1,112 @@
+.test-row {
+  display: grid;
+  grid-template-columns: calc(var(--size-64) + var(--space-xs)) minmax(0, 1fr) auto auto;
+  grid-template-areas: 'id body result menu';
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  min-block-size: var(--size-48);
+  padding: var(--space-xs) var(--space-md);
+  border-block-start: var(--border-width-thin) solid var(--c-border);
+}
+
+.test-row:hover {
+  background: var(--c-hover);
+}
+
+.test-row--partial {
+  box-shadow: inset var(--size-3) 0 0 var(--c-warning);
+}
+
+.test-row--fail {
+  box-shadow: inset var(--size-3) 0 0 var(--c-danger);
+}
+
+.test-row--blocked {
+  box-shadow: inset var(--size-3) 0 0 var(--c-info);
+}
+
+.test-row--conflict {
+  box-shadow: inset var(--size-3) 0 0 var(--c-danger);
+}
+
+.test-row--done .test-row__id,
+.test-row--done .test-row__title {
+  opacity: 0.72;
+}
+
+.test-row--composing {
+  grid-template-areas:
+    'id body result menu'
+    'composer composer composer composer';
+}
+
+.test-row__id {
+  grid-area: id;
+}
+
+.test-row__body {
+  display: grid;
+  grid-area: body;
+  gap: var(--space-2xs);
+  min-inline-size: 0;
+}
+
+.test-row__title {
+  justify-self: start;
+  max-inline-size: 100%;
+  text-align: start;
+  line-height: var(--leading-tight);
+}
+
+.test-row__note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-row__result {
+  grid-area: result;
+  justify-self: end;
+}
+
+.test-row__menu {
+  grid-area: menu;
+}
+
+.test-row__composer {
+  grid-area: composer;
+  min-inline-size: 0;
+}
+
+@media (width <= 720px) {
+  .test-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'id menu'
+      'body body'
+      'result result';
+    padding-block: var(--space-sm);
+  }
+
+  .test-row--composing {
+    grid-template-areas:
+      'id menu'
+      'body body'
+      'result result'
+      'composer composer';
+  }
+
+  .test-row__result {
+    justify-self: stretch;
+  }
+
+  .test-row__result > * {
+    justify-content: flex-start;
+  }
+
+  .test-row__result > .test-row__buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    inline-size: 100%;
+  }
+}

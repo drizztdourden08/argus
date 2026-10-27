@@ -29,6 +29,7 @@ const TestsTab = (props: TestsTabProps) => {
           subjects={subjectsOf(data.items, data.tests)}
           builds={knownBuilds(data.tests, data.builds, data.handed, state.prefs.showClosed)}
           handed={data.handed}
+          focus={screen.focus}
         />
         <TestNotices label="Changes the board did not take" notices={notices.notices} ops={notices} />
         {state.prefs.group === 'build'

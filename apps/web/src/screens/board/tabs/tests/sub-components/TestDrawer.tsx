@@ -11,7 +11,7 @@ const TestDrawer = (props: TestDrawerProps) => {
     <Drawer
       open={test !== null}
       onClose={onClose}
-      size={wide.wide ? 'xl' : 'md'}
+      size={wide.wide ? 'xl' : 'lg'}
       title={test?.title}
       subtitle={subtitle}
       label="Test details"

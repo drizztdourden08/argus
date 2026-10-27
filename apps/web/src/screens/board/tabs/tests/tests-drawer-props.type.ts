@@ -74,6 +74,17 @@ interface TextListProps {
   label: string;
 }
 
+interface FactSelectProps {
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onPick: (value: string) => void;
+}
+
+interface StepListProps {
+  lines: string[];
+}
+
 interface NoteDialogProps {
   test: TestDoc;
   onClose: () => void;
@@ -91,5 +102,5 @@ interface TestLayersProps {
 }
 
 export type {
-  AcListProps, DrawerActionsProps, DrawerSectionProps, EditDialogProps, EvidenceProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, TestBodyProps, TestDrawerProps, TestFactsProps, TestLayersProps, TextListProps,
+  AcListProps, DrawerActionsProps, DrawerSectionProps, EditDialogProps, EvidenceProps, FactSelectProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestBodyProps, TestDrawerProps, TestFactsProps, TestLayersProps, TextListProps,
 };

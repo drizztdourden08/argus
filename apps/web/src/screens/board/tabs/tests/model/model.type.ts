@@ -137,6 +137,26 @@ interface WakeInput {
   now: number;
 }
 
+interface TestChipSet {
+  item: string;
+  thread: string;
+  auto: boolean;
+  conflict: boolean;
+  archived: boolean;
+}
+
+interface FocusScope {
+  focus: string;
+  paused: ReadonlySet<string>;
+  showPaused: boolean;
+}
+
+interface FocusOption {
+  value: string;
+  label: string;
+  paused: boolean;
+}
+
 interface EditChange {
   title: string;
   covers: string;
@@ -145,6 +165,6 @@ interface EditChange {
 }
 
 export type {
-  BuildDoc, BundleGroup, BundleView, ClosedGroup, Counts, EditChange, GroupCard, GroupInput, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, RawStored, StoredView,
-  TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, ViewInput, WakeChip, WakeDoc, WakeInput,
+  BuildDoc, BundleGroup, BundleView, ClosedGroup, Counts, EditChange, FocusOption, FocusScope, GroupCard, GroupInput, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, RawStored, StoredView,
+  TestChipSet, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, ViewInput, WakeChip, WakeDoc, WakeInput,
 };

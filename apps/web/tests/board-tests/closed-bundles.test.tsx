@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { cardOf, cleanAfterEach, detailsOf } from './board-dom';
+import { cardOf, cleanAfterEach, isOpen, toggleOf } from './board-dom';
 import { buildDoc, doneDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
@@ -30,36 +30,35 @@ describe('closed bundles', () => {
   it('have no toggle when no bundle is closed', async () => {
     await mountTab({ builds: [buildDoc('open-1')], tests: [testDoc('T-1', { build: 'open-1' })] });
     expect(await screen.findByText('Test T-1')).toBeTruthy();
-    expect(screen.queryByRole('switch', { name: /Show closed/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Show closed/ })).toBeNull();
   });
 
   it('show as a muted card with Show closed, still not counted', async () => {
     const { container } = await mountTab(closedBoard());
-    fireEvent.click(await screen.findByRole('switch', { name: 'Show closed (1)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     const card = cardOf(container, 'old-1');
-    expect(within(card).getByText('Closed')).toBeTruthy();
+    expect(card.textContent).toContain('closed');
     expect(card.textContent).toContain('by lead');
-    expect(card.textContent).toContain('2 to run / 1 fail');
+    expect(card.textContent).toContain('2 to run · 1 fail');
     expect(screen.getByText('1 to run / 2')).toBeTruthy();
   });
 
   it('unfold to read-only rows: no outcome buttons, no Play, no Hand', async () => {
     const { container } = await mountTab(closedBoard());
-    fireEvent.click(await screen.findByRole('switch', { name: 'Show closed (1)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     const card = cardOf(container, 'old-1');
-    expect(detailsOf(card).open).toBe(false);
-    fireEvent.click(card.querySelector('summary') as Element);
-    expect(detailsOf(card).open).toBe(true);
+    expect(isOpen(card)).toBe(false);
+    fireEvent.click(toggleOf(card));
+    expect(isOpen(card)).toBe(true);
     expect(within(card).getByText('Test T-3')).toBeTruthy();
     expect(within(card).queryByRole('button', { name: /Pass|Fail|Partial|Blocked|Play|Hand|again/ })).toBeNull();
   });
 
   it('hide again when the toggle is turned off', async () => {
     await mountTab(closedBoard());
-    const toggle = await screen.findByRole('switch', { name: 'Show closed (1)' });
-    fireEvent.click(toggle);
+    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     expect(screen.getByText('old-1')).toBeTruthy();
-    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
     expect(screen.queryByText('old-1')).toBeNull();
   });
 });

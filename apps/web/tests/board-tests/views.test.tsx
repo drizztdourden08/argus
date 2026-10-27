@@ -23,13 +23,13 @@ describe('grouping', () => {
     expect(localStorage.getItem('coord.g.tests3')).toBe('item');
   });
 
-  it('by thread follows the item and names the thread by its session', async () => {
+  it('by thread follows the item and names the thread by its id', async () => {
     const board = { ...filterBoard(), threads: [threadDoc('lead', { session: 'Overlord' }), threadDoc('coder')] };
     const { container } = await mountTab(board);
     await screen.findByText('Login works');
     fireEvent.click(screen.getByRole('radio', { name: 'Thread' }));
     expect(titlesIn(groupOf(container, 'coder'))).toEqual(['T-2']);
-    expect(within(groupOf(container, 'lead')).getByText('Overlord')).toBeTruthy();
+    expect(within(groupOf(container, 'lead')).getAllByText('lead').length).toBeGreaterThan(0);
   });
 
   it('returns to the bundles and reads the saved choice on load', async () => {
@@ -74,7 +74,7 @@ describe('show passed', () => {
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
     await mountTab(withPassed());
     await screen.findByText('Test T-2');
-    fireEvent.click(screen.getByRole('switch', { name: 'Show passed' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide passed' }));
     expect(screen.queryByText('Test T-2')).toBeNull();
     expect(screen.getByText('Test T-3')).toBeTruthy();
     expect(localStorage.getItem('coord.passed')).toBe('0');
@@ -112,9 +112,9 @@ describe('closed bundles and the search', () => {
 
   it('remember the Show closed choice under the key of the Node page', async () => {
     await mountTab(closed());
-    fireEvent.click(await screen.findByRole('switch', { name: 'Show closed (1)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     expect(localStorage.getItem('coord.closed')).toBe('1');
-    fireEvent.click(screen.getByRole('switch', { name: 'Show closed (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
     expect(localStorage.getItem('coord.closed')).toBe('0');
   });
 });

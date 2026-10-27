@@ -1,27 +1,27 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Text } from '@drizztdourden08/tessera';
+import { Box, Flex, Spacer, Text } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
-import { countsText, NO_KEY, threadName } from '../model';
+import { countsText } from '../model';
 import type { TestCardProps } from '../tests-props.type';
 import { BundleProgress } from './BundleProgress';
 import { TestSections } from './TestSections';
 
 const TestCard = (props: TestCardProps) => {
   const { card } = props;
-  const { group, threads } = useTestsShared();
-  const label = group === 'thread' && card.key !== NO_KEY ? threadName(threads, card.key) : card.key;
+  const { group } = useTestsShared();
   return (
-    <Card data-group={card.key}>
-      <Flex direction="column" gap="md">
-        <Flex gap="sm" align="center" wrap>
-          <Text mono weight={600}>{label}</Text>
-          {card.item?.title && <Text>{card.item.title}</Text>}
-          <Text variant="caption" tone="muted">{countsText(card.counts)}</Text>
-          <BundleProgress counts={card.counts} />
-        </Flex>
-        <TestSections tests={card.tests} emptyText="none" />
+    <Box className="bundle" data-group={card.key}>
+      <Flex gap="sm" align="center" wrap className="bundle__head">
+        <Text mono weight={600}>{card.key}</Text>
+        {group === 'item' && card.item?.title && <Text tone="dim">{card.item.title}</Text>}
+        <Spacer />
+        <Text variant="caption" tone="dim">{countsText(card.counts)}</Text>
+        <BundleProgress counts={card.counts} />
       </Flex>
-    </Card>
+      <Box className="bundle__body">
+        <TestSections tests={card.tests} emptyText="none" />
+      </Box>
+    </Box>
   );
 };
 
