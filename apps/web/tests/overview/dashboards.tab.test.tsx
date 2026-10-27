@@ -114,7 +114,7 @@ describe('the registered strip', () => {
     stubApi();
     await open({ registry });
     const strip = await screen.findByRole('status', { name: 'Registered leads' });
-    expect(within(strip).getByText('Registered 2')).toBeTruthy();
+    expect(within(strip).getByText(/^Registered 2/)).toBeTruthy();
     expect(within(strip).getByText('1 fault')).toBeTruthy();
     expect(within(strip).getByText('Beta')).toBeTruthy();
     expect(within(strip).getByText('wake failed')).toBeTruthy();

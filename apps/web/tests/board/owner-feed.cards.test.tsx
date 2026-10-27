@@ -14,7 +14,7 @@ describe('a decision card', () => {
     expect(screen.getByText('decision needed')).toBeTruthy();
     expect(screen.getByText('Context')).toBeTruthy();
     expect(screen.getByText('Create the private repo?')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Yes, private (recommended)' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Yes, private recommended' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Not yet, stay local' })).toBeTruthy();
     expect(textbox('Or write your own answer')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Decide' })).toBeTruthy();
@@ -24,13 +24,13 @@ describe('a decision card', () => {
   it('only the first option is tagged recommended', async () => {
     mockPosts();
     await openBoard({ entries: byId(decision) });
-    expect(screen.queryByRole('button', { name: 'Not yet, stay local (recommended)' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Not yet, stay local recommended' })).toBeNull();
   });
 
   it('clicking an option decides it and says so', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(decision) });
-    fireEvent.click(screen.getByRole('button', { name: 'Yes, private (recommended)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, private recommended' }));
     const post = await onlyPost(fetchMock);
     expect(post?.body).toMatchObject({
       kind: 'decision',
@@ -82,7 +82,7 @@ describe('deciding', () => {
   it('a second click while the post is on its way posts once', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(decision) });
-    const option = screen.getByRole('button', { name: 'Yes, private (recommended)' });
+    const option = screen.getByRole('button', { name: 'Yes, private recommended' });
     fireEvent.click(option);
     fireEvent.click(option);
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));

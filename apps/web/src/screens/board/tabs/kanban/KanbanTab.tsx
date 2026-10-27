@@ -29,7 +29,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   const ops = useItemOps(boardKey);
   const bulk = useBulkOps(boardKey);
   const notices = useNoticeOps(boardKey, data.entries, data.items);
-  const { view, choices } = useKanbanView({ data, state, focus, notices, now });
+  const { view } = useKanbanView({ data, state, focus, notices, now });
   const drawer = useDrawer(data, view, state.filters);
   const selection = useSelection();
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
@@ -39,7 +39,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   return (
     <Flex direction="column" gap="md">
       {!panels.trash.open && (
-        <KanbanToolbar state={state} view={view} threads={data.threads} subjects={subjects} focus={focus} choices={choices} />
+        <KanbanToolbar state={state} view={view} threads={data.threads} subjects={subjects} />
       )}
       <OpNotices ops={notices} />
       {!panels.trash.open && <SelectionBar items={view.cards.map((card) => card.item)} threads={data.threads} selection={selection} ops={bulk} />}

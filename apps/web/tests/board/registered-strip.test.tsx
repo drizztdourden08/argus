@@ -68,7 +68,7 @@ describe('the Registered strip', () => {
         row({ thread: 'delta', state: 'idle' }),
       ),
     });
-    expect(screen.getByText('Registered 4')).toBeTruthy();
+    expect(screen.getByText(/^Registered 4/)).toBeTruthy();
     expect(screen.getByText('1 waking')).toBeTruthy();
     expect(screen.getByText('1 fault')).toBeTruthy();
     const names = screen.getAllByText(/^(lead|beta|gamma|delta)$/).map((node) => node.textContent);

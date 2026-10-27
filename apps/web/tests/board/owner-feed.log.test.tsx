@@ -97,22 +97,22 @@ describe('the tests waiting on you', () => {
   it('the tests of one bundle are ONE card with a count', async () => {
     const tests = ['T-1', 'T-2', 'T-3'].map((id, index) => manual(id, { build: 'bundle-4', rank: index + 1 }));
     await openBoard({ tests: byId(...tests) });
-    expect(screen.getAllByText('bundle to test')).toHaveLength(1);
-    expect(screen.getByText('3 tests to run · T-1 title ...')).toBeTruthy();
-    expect(screen.getAllByText('bundle-4')).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Open' })).toHaveLength(1);
+    expect(screen.getByText('3 tests to run')).toBeTruthy();
+    expect(screen.getByText(/T-1 title \.\.\./)).toBeTruthy();
+    expect(screen.getAllByText('bundle-4')).toHaveLength(1);
   });
 
-  it('a test with no bundle is its own card with a link to the Tests tab', async () => {
+  it('a test with no bundle is its own line with an Open button for the test', async () => {
     await openBoard({ tests: byId(manual('T-7')) });
-    expect(screen.getByText('test to run')).toBeTruthy();
     expect(screen.getByText('T-7 title')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Open in Tests' }).getAttribute('href')).toBe('#tests');
+    expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
   });
 
   it('a closed bundle leaves the feed', async () => {
     await openBoard({ tests: byId(manual('T-1', { build: 'old' })), builds: { old: { id: 'old', closedAt: NOW } } });
-    expect(screen.queryByText('test to run')).toBeNull();
-    expect(screen.queryByText('bundle to test')).toBeNull();
+    expect(screen.queryByText('T-1 title')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Open' })).toBeNull();
   });
 });
 

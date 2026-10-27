@@ -16,9 +16,20 @@ interface RegisteredFrameProps {
   children: ReactNode;
 }
 
+interface PanelProps {
+  title: ReactNode;
+  note?: ReactNode;
+  tools?: ReactNode;
+  children: ReactNode;
+}
+
+interface ProjectSwitcherProps {
+  current?: string | null;
+}
+
 interface HashTab {
   tab: string;
   select: (tab: string) => void;
 }
 
-export type { HashTab, PageFrameProps, RegisteredFrameProps, StatusNoticeProps };
+export type { HashTab, PageFrameProps, PanelProps, ProjectSwitcherProps, RegisteredFrameProps, StatusNoticeProps };

@@ -11,7 +11,7 @@ const AskBody = (props: EntryBodyProps) => {
   return (
     <Flex direction="column" gap="sm">
       <ContextBlock entry={entry} actions={actions} />
-      <Text variant={entry.kind === 'question' ? 'subtitle' : 'body'} title={entry.text}>{plainText(entry.text)}</Text>
+      <Text weight={600} title={entry.text}>{plainText(entry.text)}</Text>
       <AskForm entry={entry} mode={askMode(entry)} actions={actions} />
     </Flex>
   );

@@ -4,7 +4,7 @@ import type { TestOutcome } from '../../../../data/posts';
 import type { RunEntry } from '../../../../data/runs';
 import type { BundleState } from '../../../../data/types';
 import type { BundleGroup, BundleView, ClosedGroup, Counts, GroupCard, TestDoc, TestNotice, TestsView } from './model';
-import type { NoticeOps, Outcome, RowMenu, TestsFocus, TestsState } from './tests.type';
+import type { NoticeOps, Outcome, RowMenu, TestsState } from './tests.type';
 
 interface TestsTabProps {
   boardKey: string;
@@ -34,12 +34,8 @@ interface ClearFiltersProps {
   state: TestsState;
 }
 
-interface FocusRowProps {
-  focus: TestsFocus;
-}
 
 interface TestsToolbarProps {
-  focus: TestsFocus;
   state: TestsState;
   view: TestsView;
   threads: Option[];
@@ -193,5 +189,5 @@ interface TestCardProps {
 }
 
 export type {
-  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, FocusRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestChipsProps, TestMenuProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestChipsProps, TestMenuProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };

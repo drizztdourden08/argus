@@ -1,0 +1,33 @@
+/* @layer renderer-app @kind component */
+import { Button, DateText, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { useNavigate } from 'react-router';
+import { ProofGallery } from '../../ProofGallery';
+import { testLine } from '../behavior/test-line';
+import type { TestLineProps } from '../OwnerFeed.type';
+import './TestLine.css';
+
+const TestLine = (props: TestLineProps) => {
+  const { card, handed } = props;
+  const navigate = useNavigate();
+  const line = testLine(card);
+  return (
+    <Flex direction="column" gap="xs">
+      <Flex align="center" gap="sm" wrap>
+        <Flex className="test-line__main" align="center" gap="sm" wrap>
+          {line.build ? <Tag>{line.build === handed ? `${line.build} · handed to you` : line.build}</Tag> : null}
+          <Text className="test-line__text" title={line.hover}>
+            {line.count ? <Text weight={600}>{line.count}</Text> : null}
+            {line.count ? ' · ' : null}
+            {line.title}
+          </Text>
+        </Flex>
+        <Text variant="caption" tone="muted">{line.thread}</Text>
+        <Text variant="caption" tone="muted"><DateText value={card.at} format="elapsed" length="short" /></Text>
+        <Button size="sm" variant="tertiary" onClick={() => void navigate({ hash: line.open })}>Open</Button>
+      </Flex>
+      {card.type === 'test' ? <ProofGallery proofs={card.data.proofs ?? []} label={`Proofs of ${card.data.title}`} /> : null}
+    </Flex>
+  );
+};
+
+export { TestLine };

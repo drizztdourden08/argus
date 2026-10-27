@@ -1,12 +1,15 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { BoardAction, Entry, LogLine } from '../../../data/types';
-import type { AskMode, BoardWork, FeedCard, Proof } from '../feed-model';
+import type { AskMode, BoardWork, FeedCard } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
 
 type FeedFilter = 'all' | 'you' | 'log';
 
 interface FeedActions {
   isBusy: (key: string) => boolean;
+  handed: string | null;
+  soft: (kind: 'archive' | 'delete', c: 'entries' | 'actions', id: string) => Promise<boolean>;
   choose: (entry: Entry, option: string) => Promise<boolean>;
   reply: (entry: Entry, kind: NoteKind, text: string) => Promise<boolean>;
   dismiss: (entry: Entry) => Promise<boolean>;
@@ -24,6 +27,7 @@ interface LogWindow {
 interface OwnerFeedProps {
   boardKey: string;
   work: BoardWork;
+  handed: string | null;
 }
 
 interface FeedGroupProps {
@@ -38,10 +42,31 @@ interface FeedCardViewProps {
 }
 
 interface CardMetaProps {
+  label: string;
   id: string;
   at: string;
   thread?: string | null;
   item?: string | null;
+  menu?: ReactNode;
+}
+
+interface CardMenuProps {
+  card: FeedCard;
+  actions: FeedActions;
+}
+
+interface TestLineProps {
+  card: FeedCard & { type: 'test' | 'bundle' };
+  handed: string | null;
+}
+
+interface TestLineView {
+  build?: string | null;
+  count: string;
+  title: string;
+  hover: string;
+  thread: string;
+  open: string;
 }
 
 interface EntryBodyProps {
@@ -64,12 +89,6 @@ interface ActionBodyProps {
   actions: FeedActions;
 }
 
-interface TestBodyProps {
-  summary: string;
-  title: string;
-  build?: string | null;
-  proofs?: Proof[];
-}
 
 interface LogListProps {
   lines: LogLine[];
@@ -96,6 +115,7 @@ export type {
   ActionBodyProps,
   AskCopy,
   AskFormProps,
+  CardMenuProps,
   CardMetaProps,
   CardSectionsProps,
   EntryBodyProps,
@@ -108,5 +128,6 @@ export type {
   LogSectionProps,
   LogWindow,
   OwnerFeedProps,
-  TestBodyProps,
+  TestLineProps,
+  TestLineView,
 };
