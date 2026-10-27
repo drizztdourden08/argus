@@ -1,23 +1,20 @@
 /* @layer renderer-app @kind logic */
-import type { Card } from '../../../../data/types';
+import { isLiveRun, runLine } from '../../../../data/runs';
 import type { RunRow } from '../../../../data/runs';
-import { LIVE_RUN_STATUSES } from './model.constants';
+import type { Card } from '../../../../data/types';
 import type { MasterLine } from './model.type';
 
-const runLine = (run: RunRow): MasterLine => {
-  if (LIVE_RUN_STATUSES.includes(run.status)) {
-    return { head: run.status, at: run.startedAt ?? run.queuedAt, tail: run.lastLine ? `: ${run.lastLine}` : '', tone: 'success', running: true };
-  }
-  const exit = run.status === 'failed' ? ` (exit ${run.exitCode ?? '?'})` : '';
-  return { head: `${run.status}${exit}`, at: run.endedAt, tail: '', tone: run.status === 'failed' ? 'danger' : 'muted', running: false };
+const lineOf = (run: RunRow): MasterLine => {
+  const line = runLine(run);
+  return { head: line.label, at: line.since, tail: line.last ? ` · ${line.last}` : '', tone: line.tone, running: isLiveRun(run) };
 };
 
 const plain = (head: string, tone: MasterLine['tone']): MasterLine => ({ head, at: null, tail: '', tone, running: false });
 
 const masterLine = (card: Card): MasterLine => {
   const master = card.master;
-  if (!master) return card.masterMissing ? plain('no master launcher: the thread must set one', 'danger') : plain('no master set', 'muted');
-  return master.lastRun ? runLine(master.lastRun) : plain('', 'muted');
+  if (!master) return card.masterMissing ? plain('no master launcher: the thread must set one', 'danger') : plain('no master set', 'neutral');
+  return master.lastRun ? lineOf(master.lastRun) : plain('', 'neutral');
 };
 
 export { masterLine };

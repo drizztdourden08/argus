@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind component */
-import { ListItemRow, Stack, Tag, Text } from '@drizztdourden08/tessera';
-import { orText } from '../../../../format';
+import { Stack, Tag, Text } from '@drizztdourden08/tessera';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
-import { ShortAge } from '../../sub-components/ShortAge';
-import { LEVEL_LOOK, noteLevel, noteProject, toastNote } from '../model';
+import { FeedRow } from '../../sub-components/FeedRow';
+import { LEVEL_LOOK, NOTE_ICON, NOTE_TONE, noteLevel, noteProject, toastNote } from '../model';
 import type { NoteRowProps } from '../notifications.type';
 
 const NoteRow = (props: NoteRowProps) => {
@@ -13,21 +12,19 @@ const NoteRow = (props: NoteRowProps) => {
   const project = noteProject(note);
   const toastText = toastNote(note);
   return (
-    <ListItemRow
-      icon={<Tag {...LEVEL_LOOK[level]}>{level}</Tag>}
-      name={orText(note.title, note.text ?? '')}
-      nameAction={isFresh(note.at, freshSince) ? <Tag variant="urgency" color="info">new</Tag> : undefined}
-      meta={(
-        <Stack gap="2xs">
-          {note.title ? <Text>{note.text ?? ''}</Text> : null}
-          <Text variant="caption" tone={toastText.bad ? 'danger' : 'muted'} title={note.why ?? ''}>{toastText.text}</Text>
-        </Stack>
-      )}
-      columns={[
-        { primary: note.at ? <ShortAge value={note.at} ago /> : '', align: 'end' },
-        { primary: project ? <ProjectLink project={project} /> : '', secondary: note.thread ?? '' },
-      ]}
-    />
+    <FeedRow icon={NOTE_ICON[level]} tone={NOTE_TONE[level]} title={level} at={note.at}>
+      <Stack gap="2xs">
+        <Text>
+          <Tag {...LEVEL_LOOK[level]}>{level}</Tag>
+          {note.title ? <Text weight={600}>{` ${note.title}`}</Text> : null}
+          <Text tone="dim">{` ${note.text ?? ''} `}</Text>
+          {project ? <ProjectLink project={project} chip /> : null}
+          {note.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${note.thread}`}</Text> : null}
+          {isFresh(note.at, freshSince) ? <> <Tag variant="urgency" color="info">new</Tag></> : null}
+        </Text>
+        <Text variant="caption" tone={toastText.bad ? 'danger' : 'muted'} title={note.why ?? ''}>{toastText.text}</Text>
+      </Stack>
+    </FeedRow>
   );
 };
 

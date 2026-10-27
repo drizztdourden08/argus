@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ActivityItem } from '../../src/screens/overview/activity/model';
-import { countLevels, filterActivity, kindCounts, kindLook, levelOf, needsAttention, sortActivity } from '../../src/screens/overview/activity/model';
+import { countLevels, filterActivity, kindCounts, kindIcon, levelOf, needsAttention, sortActivity } from '../../src/screens/overview/activity/model';
 import { kindOf } from '../../src/screens/overview/activity/model/kind-of';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
@@ -57,8 +57,8 @@ describe('the filters', () => {
     expect(counts[8]).toEqual(['mystery', 1]);
   });
 
-  it('gives each kind a look, and a quiet one to a kind it does not know', () => {
-    expect(kindLook('fault')).toEqual({ variant: 'urgency', color: 'danger' });
-    expect(kindLook('mystery')).toEqual({ variant: 'normal', color: 'neutral' });
+  it('gives each kind an icon, and the note icon to a kind it does not know', () => {
+    expect(kindIcon('fault')).toBe('triangle-alert');
+    expect(kindIcon('mystery')).toBe('file-text');
   });
 });

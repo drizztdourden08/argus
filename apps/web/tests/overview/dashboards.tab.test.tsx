@@ -8,8 +8,6 @@ import { installHarness } from './helpers/harness';
 import { stubApi } from './helpers/stub-api';
 import type { ApiCall } from './helpers/stub-api';
 
-const lineLike = (pattern: RegExp) => (_: string, element: Element | null): boolean => element?.children.length === 1 && pattern.test(element.textContent);
-
 const COUNTS = { threads: 2, working: 1, blocked: 1, needsYou: 2, itemsOpen: 5, tests: 10, testsPass: 7, testsFailing: 1, agents: 2 };
 
 const MASTER = { name: 'master', title: 'Main checkout', cmd: 'game run', current: true, window: false, play: 'launcher-master', updatedAt: null, by: null, lastRun: null };
@@ -49,9 +47,9 @@ describe('the totals and the cards', () => {
   it('shows the state, the counters and the flags of a card', async () => {
     stubApi();
     await open();
-    expect(await screen.findByText('agents 2')).toBeTruthy();
-    expect(screen.getByText('items 5')).toBeTruthy();
-    expect(screen.getByText('tests 3')).toBeTruthy();
+    expect(await screen.findByTitle('2 agents working')).toBeTruthy();
+    expect(screen.getByTitle('5 Kanban items outstanding')).toBeTruthy();
+    expect(screen.getByTitle('3 tests not passing')).toBeTruthy();
     expect(screen.getByText('1 decision')).toBeTruthy();
     expect(screen.getByText('1 failing')).toBeTruthy();
     expect(screen.getByText('1 blocked')).toBeTruthy();
@@ -61,8 +59,9 @@ describe('the totals and the cards', () => {
   it('puts the hot card first and gives a link to a board only to a card that has one', async () => {
     stubApi();
     await open();
-    const links = await screen.findAllByRole('link', { name: 'Open board' });
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/p/rotp/', '/p/beta/']);
+    const buttons = await screen.findAllByRole('button', { name: /^Open the .+ board$/ });
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(['Open the RotP board', 'Open the Beta board', 'Open the Delta board']);
+    expect(buttons.map((button) => (button as HTMLButtonElement).disabled)).toEqual([false, false, true]);
     expect(screen.getByText('not started')).toBeTruthy();
   });
 
@@ -84,7 +83,7 @@ describe('the totals and the cards', () => {
     const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1.5), lastLine: 'window open' };
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { run: { id: 'R-9', status: 'stopped' } } } : undefined));
     await open({ cards: { ...cards, rotp: { ...cards.rotp, master: { ...MASTER, lastRun: live } } } });
-    expect(await screen.findByText(lineLike(/^running 1m: window open$/))).toBeTruthy();
+    expect(await screen.findByText(/^running 2m · window open$/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(await screen.findByText('Stopped RotP master (R-9).')).toBeTruthy();
     expect(posts(calls)).toEqual([{ path: '/api/p/rotp/runs/R-9/stop', method: 'POST', body: {} }]);
@@ -117,7 +116,8 @@ describe('the registered strip', () => {
     const strip = await screen.findByRole('status', { name: 'Registered leads' });
     expect(within(strip).getByText('Registered 2')).toBeTruthy();
     expect(within(strip).getByText('1 fault')).toBeTruthy();
-    expect(within(strip).getByText('Beta, wake failed')).toBeTruthy();
+    expect(within(strip).getByText('Beta')).toBeTruthy();
+    expect(within(strip).getByText('wake failed')).toBeTruthy();
   });
 
   it('writes how long a wake has been on its way as a live time', async () => {
@@ -126,7 +126,7 @@ describe('the registered strip', () => {
     await open({ registry: waking });
     const strip = await screen.findByRole('status', { name: 'Registered leads' });
     expect(within(strip).getByText('1 waking')).toBeTruthy();
-    expect((await within(strip).findAllByText(lineLike(/^RotP, waking 1m$/))).length).toBeGreaterThan(0);
+    expect((await within(strip).findAllByText(/^waking 2m$/)).length).toBeGreaterThan(0);
   });
 
   it('links a chip to the agents of its board and says in the tip what failed', async () => {
@@ -201,7 +201,7 @@ describe('running now and sent down', () => {
       : undefined));
     await open();
     const list = await screen.findByRole('list', { name: 'Running now' });
-    expect(await within(list).findByText('5m')).toBeTruthy();
+    expect(await within(list).findByText('6m')).toBeTruthy();
     expect(list.textContent).toContain('Elapsed');
     expect(list.textContent).toContain('Project');
   });

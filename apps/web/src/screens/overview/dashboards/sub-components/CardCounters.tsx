@@ -1,17 +1,17 @@
 /* @layer renderer-app @kind component */
-import { Inline, Tag } from '@drizztdourden08/tessera';
-import { BAD_LOOK, CALM_LOOK } from '../dashboards.constants';
+import { Grid } from '@drizztdourden08/tessera';
 import type { CardCountersProps } from '../dashboards.type';
 import { cardCounts } from '../model';
+import { CounterTile } from './CounterTile';
 
 const CardCounters = (props: CardCountersProps) => {
   const { agents, items, notPassing, failing } = cardCounts(props.card);
   return (
-    <Inline gap="xs" align="center" wrap>
-      <Tag {...CALM_LOOK} title="agents working">{`agents ${agents}`}</Tag>
-      <Tag {...CALM_LOOK} title="Kanban items outstanding">{`items ${items}`}</Tag>
-      <Tag {...(failing > 0 ? BAD_LOOK : CALM_LOOK)} title="tests not passing">{`tests ${notPassing}`}</Tag>
-    </Inline>
+    <Grid columns={3} gap="xs">
+      <CounterTile icon="cpu" value={agents} label="agents working" />
+      <CounterTile icon="columns-3" value={items} label="Kanban items outstanding" />
+      <CounterTile icon="list-checks" value={notPassing} label="tests not passing" bad={failing > 0} />
+    </Grid>
   );
 };
 

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind constants */
-import type { ListItemHeader, ListItemShape, SegmentOption } from '@drizztdourden08/tessera';
-import type { SendKind } from './model';
+import type { BadgeColor, IconName, ListItemHeader, ListItemShape, SegmentOption, StatusTone, TagLook } from '@drizztdourden08/tessera';
+import type { RunTone } from '../../../data/runs';
+import type { ChipTone, LeadState, SendKind } from './model';
 
 const SENT_LIMIT = 40;
 
@@ -10,13 +11,51 @@ const GOOD_LOOK = { variant: 'urgency', color: 'success' } as const;
 const BAD_LOOK = { variant: 'urgency', color: 'danger' } as const;
 const INFO_LOOK = { variant: 'urgency', color: 'info' } as const;
 
-const STATE_LOOK = {
-  running: GOOD_LOOK,
-  idle: CALM_LOOK,
-  paused: INFO_LOOK,
-  stale: WARN_LOOK,
-  'not started': CALM_LOOK,
-} as const;
+const STATE_TONE: Readonly<Record<LeadState, StatusTone>> = {
+  running: 'success',
+  idle: 'info',
+  paused: 'warning',
+  stale: 'warning',
+  'not started': 'neutral',
+};
+
+const DOT_COLOR: Readonly<Record<LeadState, BadgeColor>> = {
+  running: 'success',
+  idle: 'info',
+  paused: 'warning',
+  stale: 'warning',
+  'not started': 'tame',
+};
+
+const RUN_DOT: Readonly<Record<RunTone, BadgeColor>> = {
+  success: 'success',
+  info: 'info',
+  warning: 'warning',
+  danger: 'danger',
+  neutral: 'tame',
+};
+
+const REGISTRY_LOOK: Readonly<Record<ChipTone, TagLook>> = {
+  success: CALM_LOOK,
+  neutral: CALM_LOOK,
+  warning: WARN_LOOK,
+  info: WARN_LOOK,
+  danger: BAD_LOOK,
+};
+
+const REGISTRY_DOT: Readonly<Record<ChipTone, BadgeColor>> = {
+  success: 'success',
+  neutral: 'tame',
+  warning: 'warning',
+  info: 'warning',
+  danger: 'danger',
+};
+
+const REGISTRY_ICON: Readonly<Partial<Record<ChipTone, IconName>>> = { danger: 'triangle-alert', info: 'loader-circle' };
+
+const CARD_COLUMN_MIN = 192;
+const NARROW_COLUMNS = 2;
+const NARROW_QUERY = '(max-width: 479px)';
 
 const NO_PROJECT = 'No project has a board yet.';
 const NOTHING_SENT = 'Nothing sent down yet.';
@@ -47,5 +86,6 @@ const SENT_SHAPE: ListItemShape = { icon: true, columns: 2, action: false };
 const KIND_WORD: Readonly<Record<string, string>> = { decision: 'decision', followup: 'note' };
 
 export {
-  BAD_LOOK, CALM_LOOK, GOOD_LOOK, INFO_LOOK, KIND_WORD, NO_PLAY, NO_PROJECT, NOTHING_SENT, RUNNING_HEADER, SEND_KINDS, SEND_MESSAGE, SENT_HEADER, SENT_LIMIT, SENT_SHAPE, STATE_LOOK, WARN_LOOK,
+  BAD_LOOK, CALM_LOOK, CARD_COLUMN_MIN, REGISTRY_DOT, REGISTRY_ICON, REGISTRY_LOOK, DOT_COLOR, GOOD_LOOK, INFO_LOOK, KIND_WORD, NARROW_COLUMNS, NARROW_QUERY, NO_PLAY, NO_PROJECT, NOTHING_SENT, RUN_DOT, RUNNING_HEADER, SEND_KINDS,
+  SEND_MESSAGE, SENT_HEADER, SENT_LIMIT, SENT_SHAPE, STATE_TONE, WARN_LOOK,
 };
