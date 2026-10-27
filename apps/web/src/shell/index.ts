@@ -7,3 +7,4 @@ export { ProjectSwitcher } from './ProjectSwitcher';
 export { RegisteredFrame } from './RegisteredFrame';
 export { StatusNotice } from './StatusNotice';
 export type { HashTab } from './shell.type';
+export { Age } from './age';

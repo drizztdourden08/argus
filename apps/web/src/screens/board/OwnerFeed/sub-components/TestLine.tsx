@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, DateText, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Button, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { useNavigate } from 'react-router';
 import { ProofGallery } from '../../ProofGallery';
 import { testLine } from '../behavior/test-line';
@@ -22,7 +23,7 @@ const TestLine = (props: TestLineProps) => {
           </Text>
         </Flex>
         <Text variant="caption" tone="muted">{line.thread}</Text>
-        <Text variant="caption" tone="muted"><DateText value={card.at} format="elapsed" length="short" /></Text>
+        <Text variant="caption" tone="muted"><Age value={card.at} /></Text>
         <Button size="sm" variant="tertiary" onClick={() => void navigate({ hash: line.open })}>Open</Button>
       </Flex>
       {card.type === 'test' ? <ProofGallery proofs={card.data.proofs ?? []} label={`Proofs of ${card.data.title}`} /> : null}

@@ -15,12 +15,12 @@ const NoteRow = (props: NoteRowProps) => {
     <FeedRow icon={NOTE_ICON[level]} tone={NOTE_TONE[level]} title={level} at={note.at}>
       <Stack gap="2xs">
         <Text>
-          <Tag {...LEVEL_LOOK[level]}>{level}</Tag>
+          <Tag {...LEVEL_LOOK[level]} pill>{level}</Tag>
           {note.title ? <Text weight={600}>{` ${note.title}`}</Text> : null}
           <Text tone="dim">{` ${note.text ?? ''} `}</Text>
           {project ? <ProjectLink project={project} chip /> : null}
           {note.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${note.thread}`}</Text> : null}
-          {isFresh(note.at, freshSince) ? <> <Tag variant="urgency" color="info">new</Tag></> : null}
+          {isFresh(note.at, freshSince) ? <> <Tag variant="urgency" color="info" pill>new</Tag></> : null}
         </Text>
         <Text variant="caption" tone={toastText.bad ? 'danger' : 'muted'} title={note.why ?? ''}>{toastText.text}</Text>
       </Stack>

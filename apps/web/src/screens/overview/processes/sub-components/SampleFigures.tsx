@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Text } from '@drizztdourden08/tessera';
 import { asNumber } from '../../../../format';
-import { ShortAge } from '../../sub-components/ShortAge';
+import { Age } from '../../../../shell';
 import type { SampleNoticesProps } from '../processes.type';
 import { ProcessFigure } from './ProcessFigure';
 
@@ -15,7 +15,7 @@ const SampleFigures = (props: SampleNoticesProps) => {
   return (
     <>
       {meta?.sampledAt
-        ? <ProcessFigure before="sampled" value={<ShortAge value={meta.sampledAt} />} after="ago" title={sampleTitle(meta)} />
+        ? <ProcessFigure before="sampled" value={<Age value={meta.sampledAt} />} after="ago" title={sampleTitle(meta)} />
         : <Text variant="subtitle">not sampled yet</Text>}
       {meta?.platform ? <Text variant="subtitle">{meta.platform}</Text> : null}
     </>

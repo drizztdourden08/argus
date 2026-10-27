@@ -1,0 +1,14 @@
+.overview-header {
+  padding-block-end: var(--space-xs);
+}
+
+.overview-header .overview-header__title {
+  font-family: var(--font-title);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semi);
+  line-height: 1.4;
+}
+
+.overview-header .overview-header__tools {
+  margin-inline-start: auto;
+}

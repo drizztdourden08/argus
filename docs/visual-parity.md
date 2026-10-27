@@ -19,24 +19,24 @@ list.
 ### Page shell, theme and density (every screen)
 
 1. dropped (dark only): light theme, dark only by owner rule.
-2. open: board fixed (16px gutter, plain header, tab bar at 130px against 128px). Overview not:
-   title top 30px against 16px, tab bar at 92px against 66px, so the overview starts 14px to 26px
-   lower.
+2. fixed: board and overview titles start at 16px, the overview tab bar sits at 66px and the board tab
+   bar at 128px, as Node (own plain headers, no ContentHeader).
 3. fixed: activity rows 33px to 34px, notifications 51px to 52px, same as Node. Processes rows are
    the exception, see new item 119.
 4. fixed: uppercase letter-spaced column and section headers with the middle dot, as Node.
-5. open: Node counts hours up to 47h ("45h ago", "25h ago"); Argus switches to days at 24h ("1d
+5. fixed: one Age component with the exact Node rule (seconds, minutes, hours up to 47h, then days,
+   all rounded) replaces the Tessera elapsed text in every board and overview age. Node counts hours up to 47h ("45h ago", "25h ago"); Argus switches to days at 24h ("1d
    ago") and rounds days down (builds "set by coordinator" reads 2d where Node says 3d).
-6. open: Argus activity event text is brighter than Node (primary white against soft grey);
-   notification titles are bold in both.
+6. open, needs Tessera: the event text colour is already the same (#f0f0f2); Argus draws it 14px where
+   Node draws 13px and Tessera has no 13px text step. Notification titles are bold in both.
 
 ### Overview header and tab bar
 
 1. fixed: switcher reads "Argus overview" and lists the overview first, then the 8 boards.
 2. fixed: every tab keeps its badge, grey zero after opening, amber and red tones as Node. The badge
    shape differs, see new item 121.
-3. open: tab bar sits 26px lower than Node (92px against 66px) and each tab is 36px high against
-   40px (new item 122).
+3. fixed: the tab bar sits at 66px as Node. Each tab is still 36px high against 40px (needs Tessera,
+   new item 122).
 
 ### Overview: Dashboards tab
 
@@ -219,7 +219,7 @@ list.
 
 1. fixed: More menu lists Trash, Resources and locks, Legend, Show hidden, Purge (counts in
    parentheses, Node right aligns them).
-2. open: Trash view: Node swaps the tab body for a "Trash 0 in trash [Back to the board]" panel;
+2. fixed: Trash view is a Trash panel with the count and the Back button, no tab selected. Node swaps the tab body for a "Trash 0 in trash [Back to the board]" panel;
    Argus shows a green outlined "Back to the board" button and plain text, with the Kanban tab still
    selected.
 3. fixed: Send down on a card opens the same anchored popover as Send to all.
@@ -250,22 +250,22 @@ list.
 119. open: Processes table density. Argus rows are 31px, Node 41px; Argus tints a whole needs-a-look
     row, Node draws a left bar only; the project link is neutral and not underlined, Node blue
     underlined. (Overview, Processes)
-120. open: Project card stat tiles use other icons: Node robot, book and flask or person; Argus
+120. fixed: robot and flask icons on the agents and tests tiles (the items tile keeps columns, as Node). Project card stat tiles use other icons: Node robot, book and flask or person; Argus
     gear, columns and checklist. (Overview, Dashboards)
-121. open: Tab badge shape. Node draws a solid filled circle with dark text (amber, red, grey);
+121. open, needs Tessera: Tabs has no solid badge (a badgeSolid prop) and only draws the tinted inline badge. Tab badge shape. Node draws a solid filled circle with dark text (amber, red, grey);
     Argus draws a faint tinted rounded rectangle on the overview and tinted text on boards. (All tab
     bars)
-122. open: Tab height is 36px in Argus and 40px in Node on the overview and on boards, the known
+122. open, needs Tessera: a Tabs size prop or min-height of 40px (and an active label in the text colour, not the palette primary). Tab height is 36px in Argus and 40px in Node on the overview and on boards, the known
     Tessera Tabs gap. (All tab bars)
-123. open: Overview chip filters and notification toggles: Node full pills with a filled grey
+123. open, needs Tessera: TagPicker has no pill prop and Tag has no filled grey selected state; the setting toggles, level and project chips are pills now, the filter chips are not. Overview chip filters and notification toggles: Node full pills with a filled grey
     selected state; Argus squarer chips with a white outline when selected. (Overview Activity and
     Notifications)
-124. open: Selected state of segmented controls on boards (Group by, Order, All | Needs you | Log,
+124. open, needs Tessera: SegmentedControl and ToggleGroup selected state is fixed to the palette primary; a neutral grey fill option is needed. Selected state of segmented controls on boards (Group by, Order, All | Needs you | Log,
     All (22) on Worktrees) is a gold or orange outline from the palette primary; Node uses a grey
     fill. The palette should drive the accent only. (Kanban, Tests, Activity, Worktrees)
-125. open: Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
+125. fixed: Copy is a tertiary (grey) button and the launcher chip link is neutral. Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
-126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
+126. open, needs Tessera: the links are drawn by Tessera Markdown (Link tone primary); Markdown needs a link tone prop. Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
     links. (Thread drawer)
 127. open: The waiting-on-you rows and decision cards have no amber left edge; Node draws it on the
     bundle row and the decision card. (Board Activity)
@@ -276,11 +276,11 @@ list.
     check and cross icon pair. (Item drawer)
 130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
     to its cards. (Kanban)
-131. open: Board header: the title row starts 16px lower (52px against 36px) though the tab bar
+131. fixed: Board header: the title row starts 16px lower (52px against 36px) though the tab bar
     lands in the right place. (Board header)
-132. open: Argus scrolls an inner area (ScrollArea), not the document: full page screenshots clip at
+132. fixed: the page uses Tessera PageRoot, so the document scrolls (the stable scrollbar gutter of Tessera still keeps 6px free on the right). Argus scrolled an inner area (ScrollArea), not the document: full page screenshots clip at
     the window height and the scrollbar sits inside the frame; Node scrolls the page. (Every screen)
-133. open: Fault chip shape: Node a rounded outlined pill with a warning icon, Argus a squarer dark
+133. open, needs Tessera: the board chip is a pill now like the overview one; Tag has no outlined danger variant and no 24px size. Fault chip shape: Node a rounded outlined pill with a warning icon, Argus a squarer dark
     red filled chip, on the overview strip and the board strip. (Registered strip)
 134. open: Worktrees path is middle truncated ("X:/relic-of-the-past/.../bundle-10") where Node
     shows the full path; the size reads "at least 37 MB" where Node reads "≥ 37 MB". (Worktrees)
@@ -298,7 +298,7 @@ list.
 140. open: The Send down popover differs in detail: the label is "to Bxel" muted where Node says
     "for Bxel" with the name bold, Argus adds a preview eye icon and puts a dim Send down button
     under the hint, Node puts the filled Send down button at the left under the box. (Send down)
-141. open: Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
+141. open, needs Tessera: DropdownMenu has no item size prop. Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
     15px rows. (Menus)
 
 ### Data differences, re-checked

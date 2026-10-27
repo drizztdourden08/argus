@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, DialogShell, Button, Flex, Table, TableCell, TableRow, TableSection, Tag, Text } from '@drizztdourden08/tessera';
+import { DialogShell, Button, Flex, Table, TableCell, TableRow, TableSection, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { RESOURCES_NOTE } from '../BoardMore.constants';
 import type { MoreDialogsProps } from '../BoardMore.type';
 
@@ -29,7 +30,7 @@ const ResourcesDialog = (props: Pick<MoreDialogsProps, 'locks' | 'held' | 'onClo
               <TableRow key={lock.id}>
                 <TableCell><Text mono>{lock.resource ?? lock.id}</Text></TableCell>
                 <TableCell>{lock.holder ?? <Tag>free</Tag>}</TableCell>
-                <TableCell>{lock.holder && lock.since ? <DateText value={lock.since} format="elapsed" length="short" /> : null}</TableCell>
+                <TableCell>{lock.holder && lock.since ? <Age value={lock.since} /> : null}</TableCell>
                 <TableCell>{(lock.queue ?? []).join(' › ')}</TableCell>
                 <TableCell>{lock.description ?? ''}</TableCell>
               </TableRow>

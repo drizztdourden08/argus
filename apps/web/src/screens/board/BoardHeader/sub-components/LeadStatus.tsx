@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Icon, Link, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, Icon, Link, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { activityTone } from '../../shared';
 import { LEAD_STATUS_TONES, NO_LEAD } from '../BoardHeader.constants';
 import type { LeadStatusProps } from '../BoardHeader.type';
@@ -15,7 +16,7 @@ const LeadStatus = (props: LeadStatusProps) => {
       </Status>
       {tone ? <Tag variant="urgency" color={tone}>{lead.status}</Tag> : <Tag>{lead.status}</Tag>}
       <Text variant="caption" tone="muted" title={lead.lastSeen ?? 'never seen'}>
-        {lead.lastSeen ? <>seen <DateText value={lead.lastSeen} format="elapsed" length="short" /> ago</> : 'seen never'}
+        {lead.lastSeen ? <>seen <Age value={lead.lastSeen} /> ago</> : 'seen never'}
       </Text>
       {lead.link ? (
         <Link href={lead.link} variant="subtle" aria-label="Open the chat of the lead" title="Open the lead chat">

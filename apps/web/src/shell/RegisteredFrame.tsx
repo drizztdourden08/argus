@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Inline, Text } from '@drizztdourden08/tessera';
 import type { RegisteredFrameProps } from './shell.type';
+import './RegisteredFrame.css';
 
 const RegisteredFrame = (props: RegisteredFrameProps) => {
   const { label, rows, children } = props;
@@ -8,7 +9,7 @@ const RegisteredFrame = (props: RegisteredFrameProps) => {
   const waking = rows.filter((row) => row.state === 'waking').length;
   const faults = rows.filter((row) => row.state === 'fault').length;
   return (
-    <Inline gap="sm" align="center" wrap role="status" aria-label={label}>
+    <Inline className="registered-frame" gap="sm" align="center" wrap role="status" aria-label={label}>
       <Text variant="caption" tone="dim" weight={600} title="The threads hooked on this dashboard">
         {`Registered ${rows.length}`}
         {waking > 0 && <> · <Text variant="caption" tone="warning" weight={600}>{`${waking} waking`}</Text></>}

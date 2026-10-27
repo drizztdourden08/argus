@@ -1,6 +1,6 @@
 .board-header {
   gap: var(--space-sm) var(--space-xl);
-  padding-block: var(--space-lg) var(--space-xs);
+  padding-block: 0 var(--space-xs);
 }
 
 .board-header .board-header__title {
