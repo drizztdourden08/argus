@@ -23,8 +23,8 @@
     "duplicates": "jscpd ."
   },
   "devDependencies": {
-    "@drizztdourden08/brock-build": "^0.106.0",
-    "@drizztdourden08/brock-lint-config": "^0.106.0",
+    "@drizztdourden08/brock-build": "^0.109.1",
+    "@drizztdourden08/brock-lint-config": "^0.109.1",
     "jscpd": "catalog:",
     "knip": "catalog:",
     "markdownlint-cli2": "catalog:",
