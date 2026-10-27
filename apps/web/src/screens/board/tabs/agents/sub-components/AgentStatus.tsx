@@ -19,7 +19,7 @@ const AgentStatus = (props: AgentStatusProps) => {
   const busy = isActive(agent) && !isQuiet(agent) && agent.status === 'working';
   return (
     <AgentCell name="status" title={statusTip(props)}>
-      <Status tone={isStalled(agent) ? 'warning' : look.tone} pulse={busy} dot aria-hidden>{null}</Status>
+      <Status tone={isStalled(agent) ? 'warning' : look.tone} pulse={busy} dot dotSize="lg" halo aria-hidden>{null}</Status>
       <AgentStatusTag agent={agent} />
     </AgentCell>
   );

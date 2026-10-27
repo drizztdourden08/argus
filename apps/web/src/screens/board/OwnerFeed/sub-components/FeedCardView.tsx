@@ -17,7 +17,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
     );
   }
   return (
-    <Card data-feed-type={card.type}>
+    <Card data-feed-type={card.type} edge="left" edgeTone={FEED_META[card.type].you ? 'warning' : undefined}>
       <Flex direction="column" gap="xs">
         <CardMeta
           label={FEED_META[card.type].label}

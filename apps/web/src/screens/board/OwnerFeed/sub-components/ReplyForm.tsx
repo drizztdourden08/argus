@@ -16,7 +16,7 @@ const ReplyForm = (props: AskFormProps) => {
   return (
     <Flex direction="column" gap="xs">
       {mode === 'decide' ? <OptionButtons entry={entry} actions={actions} /> : null}
-      <OwnerBox compact label={copy.label} value={text} onChange={setText} rows={2} onSubmit={send} disabled={busy} />
+      <OwnerBox compact ariaLabel={copy.label} placeholder={copy.label} value={text} onChange={setText} rows={3} onSubmit={send} disabled={busy} />
       <Flex gap="xs">
         <Button size="sm" variant={mode === 'answer' ? 'primary' : 'tertiary'} disabled={busy} onClick={send}>{copy.verb}</Button>
         {entry.kind === 'message' ? <DismissButton entry={entry} actions={actions} /> : null}

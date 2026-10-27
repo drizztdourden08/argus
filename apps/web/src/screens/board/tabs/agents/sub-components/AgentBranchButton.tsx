@@ -7,8 +7,8 @@ const AgentBranchButton = (props: AgentBranchButtonProps) => {
   const { branch } = props;
   if (!branch) return null;
   return (
-    <IconButton label={`Copy the branch: ${branch}`} variant="ghost" size="sm" className="agents-actions__extra" onClick={() => copyText(branch)}>
-      <Icon name="git-fork" className="agents-icon--info" />
+    <IconButton label={`Copy the branch: ${branch}`} variant="ghost" tone="info" size="sm" className="agents-actions__extra" onClick={() => copyText(branch)}>
+      <Icon name="git-fork" />
     </IconButton>
   );
 };
