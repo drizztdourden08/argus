@@ -7,6 +7,7 @@
 #![deny(clippy::cognitive_complexity)]
 
 mod lifecycle;
+mod node_form;
 mod tray;
 
 use std::io::{self, Write};
@@ -175,9 +176,27 @@ fn coord_args() -> Option<Vec<String>> {
     Some(args.map(|a| a.to_string_lossy().into_owned()).collect())
 }
 
+/// The Node `dashboard` output for a call the shim forwarded, when the command only prints.
+fn shim_answer() -> Option<ExitCode> {
+    if !node_form::forwarded() {
+        return None;
+    }
+    let args: Vec<String> = std::env::args_os()
+        .skip(1)
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
+    let done = node_form::answer(&args, env!("CARGO_PKG_VERSION"))?;
+    print!("{}", done.stdout);
+    eprint!("{}", done.stderr);
+    Some(ExitCode::from(done.code))
+}
+
 fn main() -> ExitCode {
     if let Some(argv) = coord_args() {
         std::process::exit(argus_coord::run_process(argv));
+    }
+    if let Some(done) = shim_answer() {
+        return done;
     }
     match tokio::runtime::Builder::new_multi_thread()
         .enable_all()

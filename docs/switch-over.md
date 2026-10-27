@@ -58,9 +58,11 @@ before the cut. Items 1 and 3 are fixed.
    covers them on a copy of the data before the cut.
 
 No `dashboard` verb is missing in `argus`: serve, start, stop, status, open, logs, resync, token,
-tray, mcp, wake-stream, install-mcp and autostart all exist. Two small output differences are
-worth a look in step 5. `argus --version` is the clap line, where Node prints the bare version,
-and `argus help` is the clap help text.
+tray, mcp, wake-stream, install-mcp and autostart all exist. The top-level output matches Node
+byte for byte when the call comes through the shim (it sets `ARGUS_FORWARDED_FROM`): the bare
+version for `--version` and `-v`, the Node usage text (no argument: stdout, exit 2; `--help`, `-h`,
+`help`: exit 0) and `dashboard: unknown command` on stderr with exit 2. A direct `argus` call keeps
+the clap output, so the Node form applies only to the marked call and nothing else changes.
 
 ## The shadow marker
 
