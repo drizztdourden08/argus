@@ -39,8 +39,8 @@ before the cut. Items 1 and 3 are fixed.
    overriding as in Node. The `NODE_PORT` special case is gone. Safety before the cut stays with
    the node guard: `serve` refuses a home a live Node server uses, and every client verb
    refuses a Node server. A new shadow gets a copied config whose port is 47616 (its one
-   change), so `serve --shadow` needs no `--port`; the commands below still pass it, which is
-   harmless.
+   change), whatever `--port` the shadow was started with. The config always says 47616, so pass
+   `--port` every time and do not read the port from the shadow config.
 2. The shim. Neither side has one. `X:\ai-config\dashboard\bin\dashboard.mjs` has no forward
    block and no engine key, and Argus has nothing to write. Step 4 needs the Overlord to land one
    (the design is in step 4, on the model of `shared/tools/coord/forward.mjs`).
@@ -116,14 +116,31 @@ Who: the Argus lead's agents. A haiku agent runs the commands and reports the di
 Start a fresh shadow. The shadow home is Argus's own folder, so it may be deleted and re-seeded.
 The Node home is only read. Never delete or edit it here.
 
+Do not start with a bare `argus stop` under `DASHBOARD_HOME=$shadow`. A stale shadow home can hold
+a dead `server.pid` and a config that is not the shadow's (for example port 47615), and then the
+line addresses 47615, the live Node port. Check the folder first, and decide from its own pid.
+
 ```powershell
-$env:DASHBOARD_HOME = $shadow
-& $argus stop                       # prints "dashboard is not running" when none runs
-Remove-Item -Recurse -Force $shadow -ErrorAction SilentlyContinue
+if (Test-Path $shadow) {
+  $pidFile = "$shadow\server.pid"
+  $alive = (Test-Path $pidFile) -and (Get-Process -Id ([int](Get-Content $pidFile -Raw).Trim()) `
+    -ErrorAction SilentlyContinue)
+  if (Test-Path "$shadow\config.json") { Get-Content "$shadow\config.json" }   # read the port
+  if ($alive) { & $argus stop --data-dir $shadow }       # only when its own pid is alive
+  Remove-Item -Recurse -Force $shadow                    # a dead pid goes straight here
+}
 Start-Process $argus -WindowStyle Hidden -ArgumentList 'serve','--shadow','--port','47616',
   '--data-dir',$shadow
-Remove-Item Env:DASHBOARD_HOME
 ```
+
+The config is printed before anything is stopped or removed, so the port it names is on record.
+Do not set `DASHBOARD_HOME` for this step. `--data-dir` is the only address the stop line needs.
+
+The seeded shadow config always says port 47616, even when the shadow was started with another
+`--port`. The config does not follow the flag. The owner's trial shadow (step 2) uses 47616, so a
+comparison shadow started while the trial runs must use another port (47619) and always pass
+`--port` (and `--data-dir` with its own folder). Compare against that port, not the one in the
+config.
 
 The first start copies the Node database (`VACUUM INTO`), `config.json` and `process-rules.json`
 into the shadow home. It reads the real boards in `~/.coord` and writes none of them.
@@ -175,6 +192,13 @@ The gate:
   verdict on the board item, with the report path.
 - The comparison is run twice: right after a fresh seed, and again after a full working day with
   the shadow left running (the checklist asks for a day). The second run is the real gate.
+- The first parity run right after a fresh seed shows a large worktree difference until the first
+  worktree scan finishes, which takes 3 to 4 minutes. Wait for it before the comparison that
+  counts.
+- The parity tool checks only the archipelia stream frames. It does not check the stream `wakes`
+  frame of the other boards. Check that frame by hand for each other board (read the first
+  frames of `/api/p/<key>/stream` on both sides and compare the `wakes` frame), or extend the tool
+  later.
 
 Run the Rust and web suites through the haiku agent as the checklist says (`cargo fmt --check`,
 `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` with
@@ -220,7 +244,11 @@ Start-Process $sbx -WindowStyle Hidden -ArgumentList 'serve','--port','47617' `
   -RedirectStandardOutput "$sb\serve.out" -RedirectStandardError "$sb\serve.err"
 ```
 
-Then drive it, with the three env variables still set. Each line has an expected result:
+Then drive it, with the three env variables still set. The `coord` commands do not work from the
+sandbox folder: they fail with "coord: not inside a wired checkout". Run them from a wired
+checkout (for example `X:\argus`) with `COORD_HOME`, `DASHBOARD_HOME` and `DASHBOARD_PORT` set to
+the sandbox values. Check those three before every coord write, because a write with one of them
+missing lands on the real boards. Each line has an expected result:
 
 ```powershell
 coord thread register sandbox-cut --subject rehearsal --project argus
@@ -232,7 +260,15 @@ coord ping "x" --level ping                           # "recorded, no toast"
 
 - An owner post: `POST /api/p/argus/entries` with a kind `edit` body: `id`, `createdAt`,
   `target` (`{c: "items", id}`), `set` (`{title}`), `baseRev` and `prev`, as the web test builds
-  it. The item shows the new title.
+  it. The item shows the new title. The `id` must be `O-<base36 time>-<4 chars>` in lower case
+  (the rule is `^O-[a-z0-9]+-[a-z0-9]{4}$`). A made-up id returns 400. This builds a valid one:
+
+  ```powershell
+  $a = '0123456789abcdefghijklmnopqrstuvwxyz'; $n = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); $t = ''
+  while ($n -gt 0) { $t = "$($a[[int]($n % 36)])$t"; $n = [long][math]::Floor($n / 36) }
+  $id = "O-$t-" + (-join (1..4 | ForEach-Object { $a[(Get-Random -Maximum 36)] }))
+  ```
+
 - MCP: `tools/list` through `POST /mcp` with `Accept: application/json` lists 23 tools.
 
 Stop it with `& $sbx stop`. Rollback rehearsal: start the Node server on the database Argus just
@@ -266,8 +302,8 @@ Invoke-Expression "$d stop"
 
 Delete `$sb` and clear `COORD_HOME`, `DASHBOARD_HOME`, `DASHBOARD_PORT`, `DASHBOARD_ENGINE` and
 `ARGUS_EXE` afterwards. Rollback of this step: stop the sandbox servers (`$sbx stop`,
-`$d stop`, each with the env above) and stop the shadow (`$env:DASHBOARD_HOME = $shadow; & $argus
-stop`). Nothing outside `$shadow` and `$sb` was written.
+`$d stop`, each with the env above) and stop the shadow (`& $argus stop --data-dir $shadow`, only
+when the pid in `$shadow\server.pid` is alive, as in the start of this step). Nothing outside `$shadow` and `$sb` was written.
 
 ## 2. Owner trial of the shadow build
 
