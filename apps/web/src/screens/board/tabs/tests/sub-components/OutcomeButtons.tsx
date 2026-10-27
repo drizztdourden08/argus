@@ -20,7 +20,7 @@ const OutcomeButtons = (props: OutcomeButtonsProps) => {
             aria-pressed={outcome.id === 'pass' ? undefined : pressed}
             onClick={() => onChoose(outcome.id)}
           >
-            {outcome.label}
+            {outcome.label.toLowerCase()}
           </Button>
         );
       })}

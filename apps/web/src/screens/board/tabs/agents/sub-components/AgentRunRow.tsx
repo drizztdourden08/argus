@@ -32,8 +32,8 @@ const AgentRunRow = (props: AgentRunRowProps) => {
       <Text as="span" tone="muted" className="agents-run__detail" title={detailOf(props)}>{detailOf(props)}</Text>
       <Flex gap="2xs" align="center" justify="end">
         {live && (
-          <IconButton label={`Stop run ${run.id}`} variant="ghost" size="sm" disabled={play.busy} onClick={() => void play.stop(run)}>
-            <Icon name="square" className="agents-icon--danger" />
+          <IconButton label={`Stop run ${run.id}`} variant="ghost" tone="danger" size="sm" disabled={play.busy} onClick={() => void play.stop(run)}>
+            <Icon name="square" />
           </IconButton>
         )}
         <Button size="sm" variant="ghost" aria-label={`Log of ${run.id}`} onClick={() => onLog(run.id)}>Log</Button>

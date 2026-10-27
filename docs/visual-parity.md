@@ -98,9 +98,10 @@ list.
 ### Board: Activity tab
 
 1. fixed: Activity tab holds the feed in a panel, view control in the panel header.
-2. open: decision card keeps the Node eyebrow, kebab, bold question and RECOMMENDED options, but has
-   no amber left edge (new item 127), and the editor is taller with Decide under it where Node puts
-   Decide at the right of a 3 line box.
+2. open: decision card has the Node eyebrow (item as plain mono text, kebab at the right), bold
+   question, RECOMMENDED options, the amber left edge (item 127, fixed for ask cards), a 3 row box
+   with the prompt as placeholder. Left: Decide sits under the box where Node puts it at the right
+   of the toolbar (needs Tessera: a MarkdownEditor toolbar end slot).
 3. fixed: one header row with the All, Needs you and Log control (selected tone differs, see new
    item 124).
 4. fixed: bundle to test is one line with tag, title, coordinator, age and Open. The amber left edge
@@ -114,7 +115,11 @@ list.
 2. fixed: pencil, stop and kebab (Open and edit, Edit note, Archive, Delete, Copy id). Menu text is
    smaller, see new item 141.
 3. fixed: panel header with lead line, seen age and chat icon.
-4. fixed: status dot and tag in the first column.
+4. fixed: status dot (dotSize lg with halo) and tag in the first column; model tag dot through
+   Tag dot; stop, branch and undo icons use IconButton tone danger, info and accent; item ref is
+   neutral as Node. Left: the ten column grid is still the app's own CSS, not TrackTable (needs
+   Tessera: TrackTable row click, a row detail slot for the full message and note editor, and a
+   row tone for stale and stalled).
 5. fixed: sonnet green, haiku blue, opus grey.
 6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
 7. fixed: search field removed.
@@ -177,10 +182,10 @@ list.
 ### Drawers: what every drawer shares
 
 1. fixed: 768px at 1440 (Node 760px), full width at 420.
-2. open: eyebrow, wrapping title and header tools are there, but the title is accent coloured (gold
-   on RotP, orange on Brock) and uppercase for tests, agents and threads where Node is white
-   regular; the close X sits in its own column and narrows the title (at 420 the title wraps in half
-   the width).
+2. open: title is now white sentence case (RecordDrawer uses Drawer look record). Left: the close X
+   sits in its own column and narrows the title, at 420 the title wraps in half the width where
+   Node moves the X into the tools row under the eyebrow (needs Tessera: a narrow header layout
+   for WindowHeader).
 3. fixed: archive and trash are icon buttons in the header.
 
 ### Drawer: work item
@@ -195,7 +200,8 @@ list.
 1. fixed: Mode, Item, Covers and Build controls.
 2. fixed: two Expected cards, PROVES IT WORKS and PROVES IT IS BROKEN.
 3. open: steps are plain small numbers, Node draws a 24px numbered circle and a rule under each
-   step.
+   step. Needs Tessera: a numbered step row with a 24px ring circle (Stepper takes string labels
+   and draws connectors, Badge inline is 16px and filled).
 4. fixed: Result card with "Not run yet." centred.
 5. fixed: run buttons toned.
 6. fixed: tools are in the header like every drawer.
@@ -205,15 +211,17 @@ list.
 1. fixed: WHERE section with Model, Kind, Branch and Worktree.
 2. fixed: Item select and Thread.
 3. fixed: Task, Note, Result, Where, Timeline with seconds and age.
-4. open: title "REVIEW-SERVER-PACKAGING" is uppercase and accent coloured, Node is white regular.
+4. fixed: title is white regular (RecordDrawer look record); the id line says "Claude id" as Node.
 
 ### Drawer: thread
 
 1. fixed: open work rows are one line, nowrap id.
-2. open: title "BROCK" is uppercase accent; tools are all there (copy, previous, next, Expand, chat,
+2. fixed: title is white regular; tools are all there (copy, previous, next, Expand, chat,
    copy, kebab).
 3. open: Node: "Subject: add subject" as an italic dashed link; Argus: plain text. The T-6 and T-7
-   links are accent coloured in Argus, neutral underlined in Node (new item 126).
+   links are accent coloured in Argus, neutral underlined in Node (new item 126). Needs Tessera:
+   an InlineEdit link look (dashed underline, italic placeholder) and a Markdown `linkTone` for
+   id links.
 
 ### Menus, popovers and editors that only open
 
@@ -266,9 +274,10 @@ list.
 125. open: Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
 126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
-    links. (Thread drawer)
-127. open: The waiting-on-you rows and decision cards have no amber left edge; Node draws it on the
-    bundle row and the decision card. (Board Activity)
+    links. Needs Tessera: Markdown `linkTone="neutral"` (Link has the tone, MarkdownLink does not
+    pass one). (Thread drawer)
+127. open: decision cards fixed (Card edge left in the warning tone on every needs-you ask card).
+    The bundle row still has no edge, owned by the Tests and Activity row work. (Board Activity)
 128. open: Board Activity shows the markdown image thumbnails of a waiting item inside its row
     (Tessera, "Brock and Tessera marks cleaned"); Node shows the title only. (Board Activity)
 129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
@@ -284,8 +293,8 @@ list.
     red filled chip, on the overview strip and the board strip. (Registered strip)
 134. open: Worktrees path is middle truncated ("X:/relic-of-the-past/.../bundle-10") where Node
     shows the full path; the size reads "at least 37 MB" where Node reads "≥ 37 MB". (Worktrees)
-135. open: Outcome buttons read "Pass, Fail, Partial, Blocked" (capitalised) in Argus and "pass,
-    fail, partial, blocked" in Node. (Tests, test drawer)
+135. fixed: outcome buttons read pass, fail, partial, blocked (the accessible names keep the
+    capital, "Pass T-1"). (Tests, test drawer)
 136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
     one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
 137. open: At 420 the Tests bundle head wraps badly in Argus (name cut to "Controll...", tags on

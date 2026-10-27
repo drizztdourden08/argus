@@ -11,8 +11,8 @@ const AgentDrawerTools = (props: AgentDrawerToolsProps) => {
       <IconButton label={archived ? 'Unarchive this agent' : 'Archive this agent'} size="xs" variant="ghost" onClick={() => actions.soft(archived ? 'unarchive' : 'archive', id)}>
         <Icon name="archive" />
       </IconButton>
-      <IconButton label="Delete this agent" size="xs" variant="ghost" onClick={() => actions.soft('delete', id)}>
-        <Icon name="trash-2" className="agents-icon--danger" />
+      <IconButton label="Delete this agent" size="xs" variant="ghost" tone="danger" onClick={() => actions.soft('delete', id)}>
+        <Icon name="trash-2" />
       </IconButton>
     </DrawerToolbar>
   );
