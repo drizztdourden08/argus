@@ -116,8 +116,8 @@ list.
 4. fixed: status dot (dotSize lg with halo) and tag in the first column; model tag dot through
    Tag dot; stop, branch and undo icons use IconButton tone danger, info and accent; item ref is
    neutral as Node. The table is now Tessera TrackTable: onRowClick opens the drawer, rowDetail
-   draws the full message and the note editor, rowTone gives stale a muted row and stalled a
-   warning row (Node only draws a stale chip and a warning dot, it never tints the row). Still
+   draws the full message and the note editor, and no row is tinted (Node only draws a stale
+   chip and a warning dot). Still
    open, needs Tessera: a fixed width per TrackColumn (rem or px). Columns share the width by
    fraction, tuned to Node at 1440, but at 420 the status column is about 65px wide for a dot
    where Node uses 22px, and a column drops at 768, 640 and 480 px of table width, not at the
