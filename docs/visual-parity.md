@@ -298,9 +298,9 @@ list.
 137. open, needs Tessera: Disclosure `end` slot that drops to its own row under the summary at
     narrow widths. At 420 the Tests bundle head wraps badly in Argus (tags on three lines, Unhand on
     its own row); Node keeps a tidy head. (Tests narrow)
-138. open, needs Tessera: Node shows "1280×720" because its Inter applies the contextual alternate
-    for a digit, x, digit; the Inter subset Tessera ships for the Latin range loses it (the glyph
-    widths differ, measured). The bundled font needs the calt feature kept. (Tests, drawers)
+138. open: Node shows "1280×720" because its md.js turns digit x digit into a times sign; the
+    font is not the cause. Needs Tessera: Markdown smartTimes (Tessera PR 240, next release).
+    (Tests, drawers)
 139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
     links are gone. The agent drawer says "Claude id". (Drawers)
 140. open: the Send down popover label now reads "for Bxel" with the name bold, and the Send down
