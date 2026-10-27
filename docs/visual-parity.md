@@ -128,19 +128,19 @@ list.
 
 ### Board: Kanban tab
 
-1. fixed: the Threads, status and subject selects are content wide and the search is 224px (Node
-   220px). The selected Group by and Order segments are still the palette outline (new item 124).
+1. fixed: the Threads, status and subject selects are content wide (Select `width="fit"`) and the
+   search is 220px (SearchInput `width="narrow"`); FieldFit and TestsFit are gone. At 420 Node
+   stretches the search to the full row, Argus keeps 220px (needs Tessera: a narrow width that
+   fills the row on a narrow screen). The selected Group by and Order segments are still the palette outline (new item 124).
 2. fixed: three columns share the full width (they are panels as tall as the tallest, new item 130).
-3. open: vertical dots kebab is fixed. Argus still shows the drag handle on every card where Node has
-   none; the KanbanBoard draws the grip itself (needs Tessera: a prop to hide the grip).
+3. fixed: vertical dots kebab, and no drag handle on the cards (KanbanBoard `grip={false}`).
 4. fixed: the needs you card has the red left edge (KanbanBoard cardEdgeTone).
 5. fixed: inline add form with title, thread select set to the column thread, Add and Cancel.
-6. open: card menu has Edit, header and the Node order, but Move to status and Reassign to thread
-   are submenus, not inline selects. ControlMenu cannot hold action items and has no way to close
-   after one (needs Tessera: a DropdownMenu item with an inline select, or action rows in ControlMenu
-   that close it).
-7. open: Argus keeps a collapse chevron "<" next to the plus on every column header (needs Tessera:
-   a way to turn the column fold off).
+6. fixed: card menu has the header, Edit, inline Move to status and Reassign to thread selects
+   (DropdownMenu item `kind="select"`), then Archive, Delete and Copy id; the actions close the
+   menu, a select pick keeps it open (the card moves and the menu goes with it). The row text size is
+   item 141, the label sits above the select in Node and beside the select in Tessera.
+7. fixed: no collapse chevron on the column headers (KanbanBoard `foldable={false}`).
 8. fixed: "none" in an empty column and "6 open / 41" counter.
 9. fixed: Threads filter opens a checklist (a little wider than Node).
 
@@ -279,9 +279,7 @@ list.
     gone). (Board Activity)
 129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
     cross icon pair. (Item drawer)
-130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
-    to its cards. KanbanBoard stretches its columns (needs Tessera: a column height option, fit).
-    (Kanban)
+130. fixed: each Kanban column is as tall as its cards (KanbanBoard `columnHeight="fit"`). (Kanban)
 131. fixed: Board header: the title row starts 16px lower (52px against 36px) though the tab bar
     lands in the right place. (Board header)
 132. fixed: the page uses Tessera PageRoot, so the document scrolls (the stable scrollbar gutter of Tessera still keeps 6px free on the right). Argus scrolled an inner area (ScrollArea), not the document: full page screenshots clip at
@@ -293,8 +291,7 @@ list.
 135. fixed: outcome buttons read pass, fail, partial, blocked (the shared outcome list, so the test
     drawer and the note dialog follow; the accessible names keep the capital, "Pass T-1"). (Tests,
     test drawer)
-136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
-    one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
+136. fixed: at 420 the Kanban columns stack one under the other (KanbanBoard `stack`). (Kanban narrow)
 137. open, needs Tessera: Disclosure `end` slot that drops to its own row under the summary at
     narrow widths. At 420 the Tests bundle head wraps badly in Argus (tags on three lines, Unhand on
     its own row); Node keeps a tidy head. (Tests narrow)

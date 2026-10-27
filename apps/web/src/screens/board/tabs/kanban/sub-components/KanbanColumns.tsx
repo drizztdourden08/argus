@@ -41,6 +41,10 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
     <KanbanBoard
       label={BOARD_LABEL}
       columnWidth="fill"
+      columnHeight="fit"
+      grip={false}
+      foldable={false}
+      stack
       columns={columns}
       cardLabel={(card) => `${card.id} ${card.item.title}`}
       cardEdgeTone={(card) => (card.needsYou ? 'danger' : undefined)}

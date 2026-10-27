@@ -12,10 +12,6 @@ const FOCUS_KEY = 'coord.focus';
 
 const WIDE_KEY = 'coord.drawer.wide';
 
-const FIT_FIELD = 'field-fit';
-
-const FIT_SEARCH = 'field-fit field-fit--search';
-
 const PLACE_FIELDS =['before', 'after'];
 
 const SOFT_LABEL: Record<SoftKind, string> = {
@@ -25,4 +21,4 @@ const SOFT_LABEL: Record<SoftKind, string> = {
   restore: 'Restored',
 };
 
-export { ACTIVITY_TONES, FIT_FIELD, FIT_SEARCH, FOCUS_KEY, NOW_TICK_MS, PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS, WIDE_KEY };
+export { ACTIVITY_TONES, FOCUS_KEY, NOW_TICK_MS, PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS, WIDE_KEY };

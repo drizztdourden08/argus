@@ -7,7 +7,7 @@ const MultiFilter = (props: MultiFilterProps) => {
   return (
     <Select
       size="sm"
-      className="tests-fit"
+      width="fit"
       aria-label={label}
       placeholder={label}
       multiDisplay="count"
