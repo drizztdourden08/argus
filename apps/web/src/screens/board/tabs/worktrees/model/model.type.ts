@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { StatusKey } from '@drizztdourden08/tessera';
 import type { WithId } from '../../../../../data/react';
 import type { Worktree } from '../../../../../data/worktrees';
-import type { WORKTREE_STATUSES } from './model.constants';
 
 type WorktreeRow = WithId<Worktree>;
 
@@ -53,8 +51,6 @@ interface LeftoverFlag {
   tip: string;
 }
 
-type KnownStatus = StatusKey<typeof WORKTREE_STATUSES>;
-
 interface RemoveLook {
   label: string;
   danger: boolean;
@@ -76,5 +72,5 @@ interface TableRow {
 }
 
 export type {
-  Counts, KnownStatus, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, Seen, SummaryParts, TableRow, WorktreeFilter, WorktreeRow,
+  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, Seen, SummaryParts, TableRow, WorktreeFilter, WorktreeRow,
 };

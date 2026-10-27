@@ -11,7 +11,7 @@ const RemoveButton = (props: RemoveButtonProps) => {
   return (
     <Button
       size="xs"
-      variant={look.danger ? 'danger' : 'secondary'}
+      variant={look.danger ? 'danger' : 'tertiary'}
       title={look.tip}
       aria-expanded={panel?.id === row.id && panel.kind === 'remove'}
       disabled={busy && panel?.id === row.id}

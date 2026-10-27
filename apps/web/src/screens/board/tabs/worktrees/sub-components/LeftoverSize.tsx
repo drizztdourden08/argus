@@ -7,7 +7,7 @@ const LeftoverSize = (props: CellProps) => {
   const { row } = props;
   const files = filesText(row);
   const tops = (row.leftover?.topEntries ?? []).join(', ');
-  const size = <Text>{cellSize(row)}</Text>;
+  const size = <Text variant="subtitle">{cellSize(row)}</Text>;
   return (
     <Flex direction="column" gap="2xs">
       {tops ? <Tooltip content={tops}>{size}</Tooltip> : size}

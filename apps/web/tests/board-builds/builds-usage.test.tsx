@@ -23,9 +23,10 @@ describe('a launcher made for a bundle', () => {
       [launcherDoc('master'), launcherDoc('open-1', { bundle: 'open-1', joined: 'open-1' }), launcherDoc('shared-1', { joined: 'open-1' })],
       { builds: [buildDoc('open-1', { launcher: 'open-1' })] },
     ));
-    const links = await screen.findAllByRole('link', { name: 'for bundle open-1 (ready)' });
+    const links = await screen.findAllByRole('link', { name: 'for bundle open-1' });
     expect(links).toHaveLength(2);
     expect(links[0]?.getAttribute('href')).toBe('#tests');
+    expect(screen.getAllByText('ready')).toHaveLength(2);
     expect(container.textContent).not.toContain('expected every');
     expect(screen.queryByText('stale')).toBeNull();
   });

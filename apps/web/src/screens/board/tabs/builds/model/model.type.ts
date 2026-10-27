@@ -7,6 +7,8 @@ type LauncherDoc = WithId<Launcher>;
 type BuildDoc = WithId<Build>;
 type LaunchDefDoc = WithId<LaunchDef>;
 
+type BundleStatus = 'closed' | 'draft' | 'ready';
+
 interface LauncherUsage {
   every: string;
   legacy: boolean;
@@ -40,9 +42,4 @@ interface LauncherViews {
   hasMaster: boolean;
 }
 
-interface RunGroups {
-  live: RunEntry[];
-  finished: RunEntry[];
-}
-
-export type { BuildDoc, LaunchDefDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, RunGroups, ViewInput };
+export type { BuildDoc, BundleStatus, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };

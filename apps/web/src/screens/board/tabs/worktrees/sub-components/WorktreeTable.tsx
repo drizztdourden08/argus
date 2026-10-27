@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { tableRow } from '../model';
 import type { TableRow } from '../model';
 import { CELLS } from '../cells.constants';
-import { COUNT_LABEL, SCHEMA } from '../worktrees.constants';
+import { COUNT_LABEL, FALLBACK_COLUMNS, SCHEMA } from '../worktrees.constants';
 import type { RowContext } from '../worktrees.type';
 import type { WorktreeTableProps } from '../worktrees-props.type';
 import { WorktreeDetail } from './WorktreeDetail';
@@ -19,6 +19,8 @@ const WorktreeTable = (props: WorktreeTableProps) => {
     <DataTable<TableRow>
       rows={items}
       schema={SCHEMA}
+      fallbackColumns={FALLBACK_COLUMNS}
+      rowHeight="size-56"
       getRowId={(item) => item.id}
       countLabel={COUNT_LABEL}
       rowState={(item) => (item.source.status === 'deleting' ? 'pending' : undefined)}

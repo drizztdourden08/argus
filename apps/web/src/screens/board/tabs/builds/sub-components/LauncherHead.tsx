@@ -7,14 +7,17 @@ const LauncherHead = (props: LauncherPartProps) => {
   const { view } = props;
   const { launcher } = view;
   return (
-    <Flex gap="sm" align="center" wrap>
-      <Text mono weight={600}>{launcher.name}</Text>
-      {launcher.title && <Text>{launcher.title}</Text>}
-      <LauncherChips view={view} />
+    <Flex gap="sm" align="center" justify="between" wrap>
+      <Flex gap="sm" align="center" wrap>
+        <Text mono weight={600}>{launcher.name}</Text>
+        {launcher.title && <Text tone="dim">{launcher.title}</Text>}
+        <LauncherChips view={view} />
+      </Flex>
       {launcher.updatedAt && (
         <Text variant="caption" tone="muted">
           {`set by ${launcher.by ?? launcher.createdBy ?? 'a thread'} · `}
-          <DateText value={launcher.updatedAt} format="relative" />
+          <DateText value={launcher.updatedAt} format="elapsed" length="short" />
+          {' ago'}
         </Text>
       )}
     </Flex>

@@ -14,15 +14,17 @@ const board = (run: object = runningDoc('R-4', 'launcher-master', { lastLine: 'c
   runs: [run as Record<string, unknown>],
 });
 
-const summaryOf = (): HTMLElement => screen.getByText('Terminal').closest('summary') as HTMLElement;
+const toggleOf = (): HTMLElement => screen.getByRole('button', { name: 'Terminal' });
+
+const summaryOf = (): HTMLElement => toggleOf().parentElement as HTMLElement;
 
 const waitForSummary = async (): Promise<HTMLElement> => {
-  await screen.findByText('Terminal');
+  await screen.findByRole('button', { name: 'Terminal' });
   return summaryOf();
 };
 
 const openTerminal = (): void => {
-  fireEvent.click(summaryOf());
+  fireEvent.click(toggleOf());
 };
 
 const sendLine = (input: HTMLElement, text: string): void => {
@@ -38,7 +40,7 @@ const typeIntoTerminal = async (text: string): Promise<HTMLInputElement> => {
   return input;
 };
 
-const isOpen = (): boolean => (summaryOf().closest('details') as HTMLDetailsElement).open;
+const isOpen = (): boolean => toggleOf().getAttribute('aria-expanded') === 'true';
 
 const logCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.includes('/logs'));
 

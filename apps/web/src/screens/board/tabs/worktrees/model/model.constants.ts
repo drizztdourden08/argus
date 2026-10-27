@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import { defineStatuses } from '@drizztdourden08/tessera';
+import type { TagLook } from '@drizztdourden08/tessera';
 
 const NEED_STATUSES: readonly string[] = ['stale', 'merged', 'dirty-stale'];
 
@@ -32,18 +32,31 @@ const STATUS_TIP: Readonly<Record<string, string>> = {
   kept: 'The thread kept it (coord worktree keep): no stale signal until the date.',
 };
 
-const WORKTREE_STATUSES = defineStatuses({
-  active: { label: 'active', tone: 'success' },
-  stale: { label: 'stale', tone: 'warning' },
-  merged: { label: 'merged, can go', tone: 'primary' },
-  'dirty-stale': { label: 'dirty, stale', tone: 'danger' },
-  missing: { label: 'missing', tone: 'warning' },
-  'not-git': { label: 'not git', tone: 'neutral' },
-  leftover: { label: 'leftover', tone: 'neutral' },
-  deleting: { label: 'deleting', tone: 'info', pulse: true },
-  error: { label: 'error', tone: 'danger' },
-  kept: { label: 'kept', tone: 'info' },
-});
+const SUCCESS_LOOK: TagLook = { variant: 'urgency', color: 'success' };
+
+const WARNING_LOOK: TagLook = { variant: 'urgency', color: 'warning' };
+
+const DANGER_LOOK: TagLook = { variant: 'urgency', color: 'danger' };
+
+const INFO_LOOK: TagLook = { variant: 'urgency', color: 'info' };
+
+const UNKNOWN_STATUS_LOOK: TagLook = { variant: 'normal', color: 'neutral' };
+
+const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
+  active: SUCCESS_LOOK,
+  stale: WARNING_LOOK,
+  merged: INFO_LOOK,
+  'dirty-stale': DANGER_LOOK,
+  missing: DANGER_LOOK,
+  error: DANGER_LOOK,
+  deleting: WARNING_LOOK,
+};
+
+const STATUS_LABEL: Readonly<Record<string, string>> = {
+  'dirty-stale': 'dirty, stale',
+  'not-git': 'not git',
+  merged: 'merged, can go',
+};
 
 const REMOVE_LOOKS = {
   leftover: { label: 'Delete leftover', danger: true, tip: 'Delete this leftover folder now, from here. No backup is possible: git does not know it.' },
@@ -55,5 +68,5 @@ const NOT_REMOVABLE: readonly string[] = ['not-git', 'error', 'leftover', 'delet
 
 export {
   DEFAULT_LIMIT_DAYS, GB_STEP, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, STATUS_TIP, SUBJECTS_SHOWN,
-  UNKNOWN_SIZE, UNREACHABLE, WORKTREE_STATUSES,
+  STATUS_LABEL, STATUS_LOOK, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE, WARNING_LOOK,
 };
