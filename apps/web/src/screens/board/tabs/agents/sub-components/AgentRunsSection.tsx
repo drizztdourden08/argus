@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Text } from '@drizztdourden08/tessera';
-import type { AgentRunsProps } from '../AgentsTab.type';
+import type { AgentRunsProps } from '../row-props.type';
 import { AgentRunRow } from './AgentRunRow';
 
 const AgentRunsSection = (props: AgentRunsProps) => {

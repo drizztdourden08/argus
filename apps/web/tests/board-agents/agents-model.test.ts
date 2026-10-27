@@ -130,7 +130,7 @@ describe('lists', () => {
   it('lists every live item with a short title, the current one even when gone, and none first', () => {
     const items = [{ id: 'I-1', title: 'a'.repeat(60), status: 'todo', thread: 't' }, { id: 'I-2', title: 'gone', status: 'todo', thread: 't', deletedAt: 'x' }];
     const options = itemOptions(items, 'I-7');
-    expect(options.map((option) => option.value)).toEqual(['', 'I-1', 'I-7']);
+    expect(options.map((option) => option.value)).toEqual(['none', 'I-1', 'I-7']);
     expect(options[1]?.label).toBe(`I-1 ${'a'.repeat(40)}`);
   });
 

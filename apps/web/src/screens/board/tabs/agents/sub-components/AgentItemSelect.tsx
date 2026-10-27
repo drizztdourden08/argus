@@ -3,8 +3,8 @@ import { Flex, Select, Text } from '@drizztdourden08/tessera';
 import { useMemo } from 'react';
 import type { Item } from '../../../../../data/kanban';
 import { useCollection } from '../../../../../data/react';
-import type { AgentItemSelectProps } from '../AgentsTab.type';
-import { itemOptions } from '../model';
+import type { AgentItemSelectProps } from '../drawer-props.type';
+import { itemOptions, NO_ITEM } from '../model';
 
 const AgentItemSelect = (props: AgentItemSelectProps) => {
   const { boardKey, id, agent, actions } = props;
@@ -17,8 +17,8 @@ const AgentItemSelect = (props: AgentItemSelectProps) => {
         aria-label="Item"
         size="sm"
         options={options}
-        value={agent.item ?? ''}
-        onChange={(item) => item !== (agent.item ?? '') && actions.setItem(id, item === '' ? null : item)}
+        value={agent.item ?? NO_ITEM}
+        onChange={(item) => item !== (agent.item ?? NO_ITEM) && actions.setItem(id, item === NO_ITEM ? null : item)}
       />
     </Flex>
   );

@@ -139,7 +139,7 @@ describe('Agents tab: the finished agents and archive', () => {
 });
 
 describe('Agents tab: the row actions', () => {
-  const menuOf = async (container: HTMLElement) => {
+  const menuOf = (container: HTMLElement) => {
     vi.stubGlobal('CSS', { supports: () => false });
     fireEvent.click(within(rowOf(container, 'A-1')).getByRole('button', { name: 'More actions for A-1' }));
   };
@@ -158,7 +158,7 @@ describe('Agents tab: the row actions', () => {
   it('puts Open and edit, Edit note, Ask to stop, Archive, Delete and Copy id in the kebab', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent() } });
-    await menuOf(container);
+    menuOf(container);
     for (const name of ['Open and edit', 'Edit note', 'Ask to stop', 'Archive', 'Delete', 'Copy id']) {
       expect(await screen.findByRole('menuitem', { name })).toBeTruthy();
     }
@@ -167,7 +167,7 @@ describe('Agents tab: the row actions', () => {
   it('archives and deletes from the kebab with an undoable entry', async () => {
     const posted = mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent() } });
-    await menuOf(container);
+    menuOf(container);
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'archive', target: { c: 'agents', id: 'A-1' } });

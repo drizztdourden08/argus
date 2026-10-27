@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Flex, Icon, Tag, Text } from '@drizztdourden08/tessera';
+import { Box, Flex, Icon, Tag } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
-import type { AgentNowProps } from '../AgentsTab.type';
+import type { AgentNowProps } from '../row-props.type';
 import { agentNow, isStalled } from '../model';
 
 const quietSince = (props: AgentNowProps): string => {
@@ -13,7 +13,7 @@ const AgentNow = (props: AgentNowProps) => {
   const { agent, now } = props;
   const doing = agentNow(agent);
   const stalled = isStalled(agent);
-  if (!doing && !stalled) return <Text as="span" tone="muted">-</Text>;
+  if (!doing && !stalled) return <Box as="span" className="agents-na">-</Box>;
   const age = formatAgo(quietSince(props), now);
   return (
     <>

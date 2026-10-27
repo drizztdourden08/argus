@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Pressable, Text } from '@drizztdourden08/tessera';
-import type { AgentMessageProps } from '../AgentsTab.type';
+import { Box, Pressable } from '@drizztdourden08/tessera';
+import type { AgentMessageProps } from '../row-props.type';
 import { agentMessage, plainText } from '../model';
 import { AgentCell } from './AgentCell';
 
@@ -21,7 +21,7 @@ const AgentMessage = (props: AgentMessageProps) => {
         >
           {plainText(message)}
         </Pressable>
-      ) : <Text as="span" tone="dim">-</Text>}
+      ) : <Box as="span" className="agents-na">-</Box>}
     </AgentCell>
   );
 };

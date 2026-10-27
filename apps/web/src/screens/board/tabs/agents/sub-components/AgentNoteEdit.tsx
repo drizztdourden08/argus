@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Box, Text, TextInput } from '@drizztdourden08/tessera';
 import { useRef, useState } from 'react';
-import type { AgentNoteEditProps } from '../AgentsTab.type';
+import type { AgentNoteEditProps } from '../row-props.type';
 import { AGENT_LIMITS, agentName, agentProblem } from '../model';
 
 const AgentNoteEdit = (props: AgentNoteEditProps) => {

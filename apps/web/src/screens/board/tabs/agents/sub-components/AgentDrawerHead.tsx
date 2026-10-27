@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
-import type { AgentDrawerHeadProps } from '../AgentsTab.type';
+import type { AgentDrawerHeadProps } from '../drawer-props.type';
 import { agentMarks } from '../model';
 import { AgentItemSelect } from './AgentItemSelect';
 import { AgentModelTag } from './AgentModelTag';
@@ -35,7 +35,7 @@ const AgentDrawerHead = (props: AgentDrawerHeadProps) => {
       </Flex>
       <Text variant="caption">
         {revLine(props)}
-        {agent.claudeId && ` · Claude id ${agent.claudeId}`}
+        {agent.claudeId && ` · Agent id ${agent.claudeId}`}
       </Text>
     </Flex>
   );

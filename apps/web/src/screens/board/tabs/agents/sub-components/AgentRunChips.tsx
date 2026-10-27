@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Pressable, Tag } from '@drizztdourden08/tessera';
 import { runLine } from '../../../../../data/runs';
-import type { AgentRunChipsProps } from '../AgentsTab.type';
+import type { AgentRunChipsProps } from '../row-props.type';
 import { tagLook } from '../model';
 
 const AgentRunChips = (props: AgentRunChipsProps) => {

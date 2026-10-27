@@ -2,7 +2,7 @@
 import { Box, Button, CopyButton, Flex, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import { BoardMarkdown } from '../../../../../shell';
-import type { AgentFullMessageProps } from '../AgentsTab.type';
+import type { AgentFullMessageProps } from '../row-props.type';
 import { agentMessage, agentName } from '../model';
 
 const AgentFullMessage = (props: AgentFullMessageProps) => {

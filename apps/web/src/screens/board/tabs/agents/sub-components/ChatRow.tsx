@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Box, Pressable, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { Box, Pressable, Status, Tag } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import { ThreadMenu, useThreadOps, useThreadView } from '../../../ThreadDrawer';
 import { ChatButton, activityTone, useOpenThread } from '../../../shared';
@@ -22,7 +22,7 @@ const ChatRow = (props: ChatRowProps) => {
       </Box>
       <Tag variant="normal" color="neutral">{chat.status}</Tag>
       <Pressable className="agents-chat__note" title={orText(chat.note, 'no note')} onClick={() => open(chat.id)}>
-        <Text as="span" tone="dim">{chat.note || '-'}</Text>
+        {orText(chat.note, '-')}
       </Pressable>
       {chat.link && <ChatButton link={chat.link} label={`Open the chat of ${chat.id}`} />}
       <ThreadMenu thread={chat} paused={view.paused} ops={ops} onPurge={onPurge} onEditSubject={() => open(chat.id)} />

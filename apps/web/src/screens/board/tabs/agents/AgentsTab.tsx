@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex } from '@drizztdourden08/tessera';
+import { Box, Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { RunLogDrawer } from '../../run-terminal';
 import { useNow, useStoredFlag } from '../../shared';
@@ -37,7 +37,7 @@ const AgentsTab = (props: AgentsTabProps) => {
   return (
     <Flex direction="column" gap="md">
       <ReconcilePanel findings={findings} />
-      <Card className="agents-panel">
+      <Box as="section" aria-label="Agents" className="agents-panel">
         <AgentsHeader active={view.active} lead={view.lead} now={now} />
         <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={now} onLog={setLogId} />
         <AgentsBody
@@ -62,7 +62,7 @@ const AgentsTab = (props: AgentsTabProps) => {
         )}
         {showFinished && <AgentRunsSection title="Finished runs" runs={runs.finished} boardKey={boardKey} now={now} onLog={setLogId} />}
         <ChatsList boardKey={boardKey} chats={view.chats} now={now} onPurge={onPurge} />
-      </Card>
+      </Box>
       <AgentDrawer boardKey={boardKey} id={opened?.id ?? null} agent={opened} order={order} now={now} actions={actions} onOpen={anchor.open} onClose={anchor.close} />
       <RunLogDrawer run={runs.all.find((run) => run.id === logId) ?? null} boardKey={boardKey} onClose={() => setLogId(null)} />
     </Flex>

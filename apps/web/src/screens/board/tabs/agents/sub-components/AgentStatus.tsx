@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Status } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
-import type { AgentStatusProps } from '../AgentsTab.type';
+import type { AgentStatusProps } from '../row-props.type';
 import { agentNow, isActive, isQuiet, isStalled, statusLook } from '../model';
 import { AgentCell } from './AgentCell';
 import { AgentStatusTag } from './AgentStatusTag';

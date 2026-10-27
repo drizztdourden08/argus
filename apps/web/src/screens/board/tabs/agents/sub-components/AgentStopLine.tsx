@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, Text } from '@drizztdourden08/tessera';
-import type { AgentFieldProps } from '../AgentsTab.type';
+import type { AgentFieldProps } from '../drawer-props.type';
 
 const AgentStopLine = (props: AgentFieldProps) => {
   const { id, agent, actions } = props;

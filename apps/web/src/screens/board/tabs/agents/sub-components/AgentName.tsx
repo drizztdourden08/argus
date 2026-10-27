@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Flex, Pressable, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
-import type { AgentNameProps } from '../AgentsTab.type';
+import { Box, Flex, Pressable, Tag, Tooltip } from '@drizztdourden08/tessera';
+import type { AgentNameProps } from '../row-props.type';
 import { agentMarks, agentMessage, agentName, isActive, plainText } from '../model';
 import { AgentCell } from './AgentCell';
 import { AgentNow } from './AgentNow';
@@ -31,8 +31,8 @@ const AgentName = (props: AgentNameProps) => {
           </Tooltip>
         ))}
       </Flex>
-      {isActive(agent) && agent.live && <Text as="span" className="agents-name__now"><AgentNow agent={agent} now={now} /></Text>}
-      {message && <Text as="span" className="agents-name__message">{message}</Text>}
+      {isActive(agent) && agent.live && <Box as="span" className="agents-name__now"><AgentNow agent={agent} now={now} /></Box>}
+      {message && <Box as="span" className="agents-name__message">{message}</Box>}
     </AgentCell>
   );
 };

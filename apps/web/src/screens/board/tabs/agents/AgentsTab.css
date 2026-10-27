@@ -1,18 +1,14 @@
 /* @layer renderer-app @kind style */
-.card.agents-panel {
+.agents-panel {
   --agents-rem: var(--size-16);
+
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 0;
+  background: var(--c-surface);
+  border: var(--border-width-thin) solid var(--c-border);
+  border-radius: var(--radius-lg);
   container: agents-panel / inline-size;
-}
-
-.agents-table {
-  --agents-cols:
-    calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 9.5) calc(var(--agents-rem) * 4.4) calc(var(--agents-rem) * 4)
-    calc(var(--agents-rem) * 3.6) calc(var(--agents-rem) * 7) calc(var(--agents-rem) * 4.2) calc(var(--agents-rem) * 10)
-    minmax(calc(var(--agents-rem) * 9), 2fr) minmax(calc(var(--agents-rem) * 4), 1fr) calc(var(--agents-rem) * 8);
 }
 
 .agents-head {
@@ -53,7 +49,10 @@
 
 .agents-row {
   display: grid;
-  grid-template-columns: var(--agents-cols);
+  grid-template-columns:
+    calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 9.5) calc(var(--agents-rem) * 4.4) calc(var(--agents-rem) * 4)
+    calc(var(--agents-rem) * 3.6) calc(var(--agents-rem) * 7) calc(var(--agents-rem) * 4.2) calc(var(--agents-rem) * 10)
+    minmax(calc(var(--agents-rem) * 9), 2fr) minmax(calc(var(--agents-rem) * 4), 1fr) calc(var(--agents-rem) * 8);
   column-gap: var(--space-sm);
   align-items: center;
   min-height: var(--size-40);
@@ -84,10 +83,6 @@
 
 .agents-row:not(.agents-row--head):hover {
   background: var(--c-hover);
-}
-
-.agents-cell .text {
-  font-size: inherit;
 }
 
 .agents-cell--status {
@@ -135,35 +130,31 @@
   margin-inline-start: auto;
 }
 
-.icon-btn.agents-icon--danger {
+.agents-icon--danger {
   color: var(--c-danger);
 }
 
-.icon-btn.agents-icon--danger:hover:not(:disabled) {
-  background: var(--c-danger-soft);
-  color: var(--c-danger-bright);
-}
-
-.icon-btn.agents-icon--info {
+.agents-icon--info {
   color: var(--c-info-bright);
 }
 
-.icon-btn.agents-icon--accent {
+.agents-icon--accent {
   color: var(--c-primary-bright);
 }
 
-.agents-row--fin .agents-cell--status,
-.agents-row--fin .agents-cell--agent,
-.agents-row--fin .agents-cell--model,
-.agents-row--fin .agents-cell--kind,
-.agents-row--fin .agents-cell--time {
-  opacity: var(--opacity-muted);
+.agents-na {
+  color: var(--c-text-muted);
 }
 
-.agents-cell--status .status__dot {
-  width: var(--size-8);
-  height: var(--size-8);
-  box-shadow: 0 0 0 var(--size-3) color-mix(in srgb, var(--status-ink) 25%, transparent);
+.agents-cell--kind,
+.agents-cell--branch,
+.agents-cell--time {
+  color: var(--c-text-dim);
+}
+
+.agents-cell--time > :nth-child(2) {
+  color: var(--c-text-muted);
+  font-size: var(--text-xs);
 }
 
 .agents-name {
@@ -359,6 +350,7 @@
 
 .agents-chat > .agents-chat__note {
   flex: 1 1 0;
+  color: var(--c-text-dim);
   min-width: 0;
   overflow: hidden;
   text-align: start;
@@ -388,24 +380,21 @@
   margin: 0;
 }
 
-.agents-kv .text,
-.agents-timeline .text {
-  font-size: inherit;
-}
-
-.agents-kv dt.text,
-.agents-timeline dt.text {
+.agents-kv__label {
+  color: var(--c-text-muted);
   font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  line-height: 1.7;
+  text-transform: uppercase;
 }
 
-.agents-kv dt {
-  font-weight: var(--weight-normal);
-  line-height: 1.7;
+.agents-timeline__label {
+  color: var(--c-text-muted);
 }
 
 @container agents-panel (max-width: 79.99rem) {
-  .agents-table {
-    --agents-cols:
+  .agents-row {
+    grid-template-columns:
       calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 9.5) calc(var(--agents-rem) * 4.4) calc(var(--agents-rem) * 4)
       calc(var(--agents-rem) * 3.6) calc(var(--agents-rem) * 4.2) calc(var(--agents-rem) * 10)
       minmax(calc(var(--agents-rem) * 9), 2fr) minmax(calc(var(--agents-rem) * 4), 1fr) calc(var(--agents-rem) * 8);
@@ -417,8 +406,8 @@
 }
 
 @container agents-panel (max-width: 69.99rem) {
-  .agents-table {
-    --agents-cols:
+  .agents-row {
+    grid-template-columns:
       calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 11) calc(var(--agents-rem) * 4.4) calc(var(--agents-rem) * 3.6)
       calc(var(--agents-rem) * 4.2) minmax(calc(var(--agents-rem) * 9), 2fr) minmax(calc(var(--agents-rem) * 4), 1fr)
       calc(var(--agents-rem) * 8);
@@ -435,8 +424,8 @@
 }
 
 @container agents-panel (max-width: 55.99rem) {
-  .agents-table {
-    --agents-cols:
+  .agents-row {
+    grid-template-columns:
       calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 10) calc(var(--agents-rem) * 4.4) calc(var(--agents-rem) * 4.2)
       minmax(calc(var(--agents-rem) * 8), 2fr) minmax(calc(var(--agents-rem) * 3), 1fr) calc(var(--agents-rem) * 8);
   }
@@ -447,8 +436,8 @@
 }
 
 @container agents-panel (max-width: 47.99rem) {
-  .agents-table {
-    --agents-cols:
+  .agents-row {
+    grid-template-columns:
       calc(var(--agents-rem) * 6.8) calc(var(--agents-rem) * 10) calc(var(--agents-rem) * 4.2)
       minmax(calc(var(--agents-rem) * 7), 2fr) minmax(calc(var(--agents-rem) * 3), 1fr) calc(var(--agents-rem) * 8);
   }
@@ -469,8 +458,8 @@
     order: 3;
   }
 
-  .agents-table {
-    --agents-cols: calc(var(--agents-rem) * 1.4) minmax(calc(var(--agents-rem) * 6), 44%) minmax(0, 1fr) auto;
+  .agents-row {
+    grid-template-columns: calc(var(--agents-rem) * 1.4) minmax(calc(var(--agents-rem) * 6), 4fr) 5fr max-content;
   }
 
   .agents-cell--time,
@@ -480,7 +469,7 @@
   .agents-cell--branch,
   .agents-cell--now,
   .agents-cell--message,
-  .agents-cell--status .tag,
+  .agents-status-tag,
   .agents-actions__extra {
     display: none;
   }

@@ -11,8 +11,8 @@ const ThreadAgents = (props: ThreadAgentsProps) => {
       <Box className="thread-agents">
         {agents.map((agent, index) => (
           <Box key={`${agent.name ?? 'agent'}-${index}`} className="thread-agents__row">
-            <Text as="b" weight={600} className="thread-agents__name">{agent.name ?? 'agent'}</Text>
-            <Text as="span">{agent.task ?? ''}</Text>
+            <Box as="b" className="thread-agents__name">{agent.name ?? 'agent'}</Box>
+            <Box as="span">{agent.task ?? ''}</Box>
             <Text as="span" variant="caption">{agent.startedAt ? `${formatAgo(agent.startedAt, now)} ago` : ''}</Text>
           </Box>
         ))}

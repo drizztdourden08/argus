@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { CopyButton, Flex, InlineEdit } from '@drizztdourden08/tessera';
-import type { AgentWhereFieldProps } from '../AgentsTab.type';
+import type { AgentWhereFieldProps } from '../drawer-props.type';
 import { agentProblem } from '../model';
 
 const AgentWhereField = (props: AgentWhereFieldProps) => {

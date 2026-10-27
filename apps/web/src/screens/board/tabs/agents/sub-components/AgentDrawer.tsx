@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Drawer } from '@drizztdourden08/tessera';
 import { WIDE_KEY, useStoredFlag } from '../../../shared';
-import type { AgentDrawerProps } from '../AgentsTab.type';
+import type { AgentDrawerProps } from '../drawer-props.type';
 import { agentName } from '../model';
 import { AgentDrawerBody } from './AgentDrawerBody';
 

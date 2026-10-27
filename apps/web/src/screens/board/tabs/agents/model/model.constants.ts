@@ -51,11 +51,11 @@ const UNREACHABLE_TEXT = 'Dashboard unreachable, retrying.';
 
 const NO_WHY = 'no justification recorded';
 
-const MESSAGE_CLIP = 200;
-
 const RUN_CHIPS_SHOWN = 4;
 
 const ITEM_LABEL_CHARS = 40;
+
+const NO_ITEM = 'none';
 
 const SECONDS_PER_MINUTE = 60;
 
@@ -73,7 +73,7 @@ export {
   HOURS_AS_DAYS_FROM,
   HOURS_PER_DAY,
   ITEM_LABEL_CHARS,
-  MESSAGE_CLIP,
+  NO_ITEM,
   MINUTES_PER_HOUR,
   MODEL_LOOKS,
   MODEL_FAMILIES,

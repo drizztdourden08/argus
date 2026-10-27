@@ -45,10 +45,7 @@
   display: contents;
 }
 
-.thread-agents .text {
-  font-size: inherit;
-}
-
-.thread-agents .thread-agents__name {
+.thread-agents__name {
   color: var(--c-primary-bright);
+  font-weight: var(--weight-semi);
 }

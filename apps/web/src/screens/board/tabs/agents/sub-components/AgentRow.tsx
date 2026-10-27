@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import type { AgentRowProps } from '../AgentsTab.type';
+import type { AgentRowProps } from '../row-props.type';
 import { agentMessage } from '../model';
 import { AgentFullMessage } from './AgentFullMessage';
 import { AgentNoteEdit } from './AgentNoteEdit';

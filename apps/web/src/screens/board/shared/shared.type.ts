@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { OpOutcome, OwnerOp, SentOp } from '../../../data/kanban';
 
 type Writer = (send: () => Promise<SentOp>, done: string, undo?: (sentId: string) => void) => Promise<boolean>;
@@ -66,4 +67,14 @@ interface ChatButtonProps {
   size?: 'xs' | 'sm';
 }
 
-export type { ChatButtonProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
+interface DrawerToolbarProps {
+  id: string;
+  order: readonly string[];
+  label: string;
+  wide: boolean;
+  onWide: () => void;
+  onOpen: (id: string) => void;
+  children?: ReactNode;
+}
+
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };

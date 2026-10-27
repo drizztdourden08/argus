@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import type { AgentModelProps } from '../AgentsTab.type';
+import type { AgentModelProps } from '../row-props.type';
 import { AgentCell } from './AgentCell';
 import { AgentModelTag } from './AgentModelTag';
 

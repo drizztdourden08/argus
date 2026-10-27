@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
-import type { AgentNoteProps } from '../AgentsTab.type';
-import { agentNote, isActive } from '../model';
+import { Box } from '@drizztdourden08/tessera';
+import type { AgentNoteProps } from '../row-props.type';
+import { agentNote, isActive, orText } from '../model';
 import { AgentCell } from './AgentCell';
 
 const noteTip = (props: AgentNoteProps): string => {
@@ -15,7 +15,7 @@ const AgentNote = (props: AgentNoteProps) => {
   const note = agentNote(props.agent);
   return (
     <AgentCell name="note" title={noteTip(props)}>
-      <Text as="span" tone={note ? undefined : 'muted'}>{note || '-'}</Text>
+      <Box as="span" className={note ? undefined : 'agents-na'}>{orText(note, '-')}</Box>
     </AgentCell>
   );
 };

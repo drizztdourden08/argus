@@ -2,7 +2,7 @@
 import { DropdownMenu } from '@drizztdourden08/tessera';
 import type { MenuItem } from '@drizztdourden08/tessera';
 import { copyText } from '../../../shared';
-import type { AgentMenuProps } from '../AgentsTab.type';
+import type { AgentMenuProps } from '../row-props.type';
 
 const stopItems = (props: AgentMenuProps): MenuItem[] => {
   const { id, agent, actions } = props;

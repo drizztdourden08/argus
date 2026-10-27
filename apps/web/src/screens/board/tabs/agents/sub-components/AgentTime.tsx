@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
-import type { AgentTimeProps } from '../AgentsTab.type';
+import { Box, Text } from '@drizztdourden08/tessera';
+import type { AgentTimeProps } from '../row-props.type';
 import { agentElapsed, tokenLines } from '../model';
 import { AgentCell } from './AgentCell';
 
@@ -17,7 +17,7 @@ const AgentTime = (props: AgentTimeProps) => {
   const { agent, now } = props;
   return (
     <AgentCell name="time" title={timeTip(props)}>
-      <Text as="span" tone="dim">{agentElapsed(agent, now)}</Text>
+      <Box as="span">{agentElapsed(agent, now)}</Box>
       {agent.live && <Text as="span" variant="caption">{`${countOf(agent.live.turns)} · ${countOf(agent.live.toolCalls)}`}</Text>}
     </AgentCell>
   );

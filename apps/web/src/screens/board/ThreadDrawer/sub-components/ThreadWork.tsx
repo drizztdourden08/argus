@@ -15,7 +15,7 @@ const ThreadWork = (props: ThreadWorkProps) => {
           <Pressable key={item.id} className="thread-work__item" aria-label={`Open ${item.id}`} onClick={() => onOpen(item.id)}>
             <Text as="span" variant="caption" mono weight={600} className="thread-work__id">{item.id}</Text>
             <Tag>{item.status}</Tag>
-            <Text as="span" className="thread-work__title">{item.title}</Text>
+            <Box as="span" className="thread-work__title">{item.title}</Box>
           </Pressable>
         ))}
       </Box>

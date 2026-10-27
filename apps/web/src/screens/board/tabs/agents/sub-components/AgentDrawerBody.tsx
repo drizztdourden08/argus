@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { BoardMarkdown } from '../../../../../shell';
-import type { AgentDrawerBodyProps } from '../AgentsTab.type';
+import type { AgentDrawerBodyProps } from '../drawer-props.type';
 import { isActive } from '../model';
 import { AgentDrawerHead } from './AgentDrawerHead';
 import { AgentDrawerTools } from './AgentDrawerTools';

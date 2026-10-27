@@ -6,8 +6,8 @@ import './ChatButton.css';
 const ChatButton = (props: ChatButtonProps) => {
   const { link, label, size = 'sm' } = props;
   return (
-    <IconButton label={label} variant="ghost" size={size} className="chat-button" onClick={() => window.location.assign(link)}>
-      <Icon name="message-square" />
+    <IconButton label={label} variant="ghost" size={size} onClick={() => window.location.assign(link)}>
+      <Icon name="message-square" className="chat-button__icon" />
     </IconButton>
   );
 };

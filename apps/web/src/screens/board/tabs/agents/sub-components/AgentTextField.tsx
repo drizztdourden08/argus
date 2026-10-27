@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { EditableMarkdown } from '../../../shared';
-import type { AgentTextFieldProps } from '../AgentsTab.type';
+import type { AgentTextFieldProps } from '../drawer-props.type';
 import { AGENT_LIMITS, agentProblem } from '../model';
 
 const AgentTextField = (props: AgentTextFieldProps) => {

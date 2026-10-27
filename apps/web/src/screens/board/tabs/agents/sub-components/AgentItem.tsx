@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Pressable, Text } from '@drizztdourden08/tessera';
+import { Box, Pressable } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
-import type { AgentItemProps } from '../AgentsTab.type';
+import type { AgentItemProps } from '../row-props.type';
 import { AgentCell } from './AgentCell';
 
 const AgentItem = (props: AgentItemProps) => {
@@ -17,7 +17,7 @@ const AgentItem = (props: AgentItemProps) => {
         >
           {item}
         </Pressable>
-      ) : <Text tone="dim">-</Text>}
+      ) : <Box as="span" className="agents-na">-</Box>}
     </AgentCell>
   );
 };

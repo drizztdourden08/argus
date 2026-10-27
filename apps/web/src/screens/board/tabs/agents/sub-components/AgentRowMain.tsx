@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Box, Text } from '@drizztdourden08/tessera';
-import type { AgentRowProps } from '../AgentsTab.type';
-import { agentNow, isActive, isStale, isStalled, shortBranch } from '../model';
+import { Box } from '@drizztdourden08/tessera';
+import type { AgentRowProps } from '../row-props.type';
+import { agentNow, isActive, isStale, isStalled, orText, shortBranch } from '../model';
 import { AgentActionButtons } from './AgentActionButtons';
 import { AgentCell } from './AgentCell';
 import { AgentItem } from './AgentItem';
@@ -32,12 +32,12 @@ const AgentRowMain = (props: AgentRowProps) => {
       <AgentStatus agent={agent} now={now} />
       <AgentName id={id} agent={agent} now={now} runs={runs} onOpen={onOpen} onLog={onLog} />
       <AgentModel agent={agent} />
-      <AgentCell name="kind"><Text as="span" tone="dim">{agent.kind || '-'}</Text></AgentCell>
+      <AgentCell name="kind">{orText(agent.kind, '-')}</AgentCell>
       <AgentItem item={agent.item} />
-      <AgentCell name="branch" title={branchTip(props)}><Text as="span" tone="dim">{agent.branch ? shortBranch(agent.branch) : '-'}</Text></AgentCell>
+      <AgentCell name="branch" title={branchTip(props)}>{agent.branch ? shortBranch(agent.branch) : '-'}</AgentCell>
       <AgentTime agent={agent} now={now} />
       <AgentCell name="now" title={doing?.text ?? agent.live?.liveNote ?? ''}>
-        {isActive(agent) && agent.live ? <AgentNow agent={agent} now={now} /> : <Text as="span" tone="muted">-</Text>}
+        {isActive(agent) && agent.live ? <AgentNow agent={agent} now={now} /> : <Box as="span" className="agents-na">-</Box>}
       </AgentCell>
       <AgentMessage id={id} agent={agent} open={state.openMessages.has(id)} onToggle={state.toggleMessage} />
       <AgentNote agent={agent} />
