@@ -61,9 +61,9 @@ list.
 2. fixed: one inline summary line with bold numbers.
 3. fixed: rule chips with bold name and muted figures, Kill stale chip, no stacked bar.
 4. fixed: pill toggles All and Needs a look, Rule select on the same row.
-5. open: Argus project cell is a neutral link without underline (Node blue underlined); rows are
-   31px against 41px; a needs-a-look row is tinted across the whole row where Node draws only a left
-   bar. See new item 119.
+5. open: rows are 40px as Node now (fixed). Still open, needs Tessera: the project link (Node blue
+   underlined, Tessera Link has no blue tone) and the needs-a-look row (Tessera warning row state
+   tints the whole row, Node draws only a left bar). See new item 119.
 6. fixed: at 420 the table keeps its columns and scrolls sideways, as Node.
 
 ### Overview: Activity tab
@@ -162,22 +162,20 @@ list.
 2. fixed: bundle chip with link icon and status tag.
 3. fixed: set by coordinator right aligned (age rounding differs, see Page shell item 5).
 4. fixed: current launcher has the green edge.
-5. open: the panel header is two lines in Argus (the word Builds above, the counts and hint under
-   it); Node puts "Builds 9 to start · 1 retired What you can start..." on one line.
+5. fixed: the panel header is one line, "Builds 9 to start · 1 retired What you can start...", with
+   the divider under it (the shell Panel).
 6. fixed: Terminal box with Full log.
 7. fixed: master tag neutral.
 
 ### Board: Worktrees tab
 
 1. fixed: the table fits its box, Request and Actions visible (Node still clips them).
-2. open: Argus stacks the title, the summary line and the explainer in three rows with the segmented
-   control floating at the right; Node has the title and summary on one row and the explainer at the
-   right.
+2. fixed: title and summary on one row, the explainer and the segmented control at the right.
 3. fixed: lowercase status tags with Node tones.
 4. fixed: branch as plain mono text.
 5. open: Node "25h ago", Argus "1d ago" (the age rounding of Page shell item 5).
 6. fixed: no table footer.
-7. fixed: Copy label after the path. Argus middle-truncates the path, see new item 134.
+7. fixed: Copy label after the path. The path column is wide enough for the full path, see new item 134.
 
 ### Drawers: what every drawer shares
 
@@ -247,17 +245,16 @@ list.
 1. fixed: empty tests: same sentence in a compact panel.
 2. fixed: empty agents keeps the table frame and headers.
 3. fixed: "none" in empty columns.
-4. open: unknown board: the SPA under the Vite dev server draws an empty "nosuchboard" board where
-   Node shows Not found; the Rust server serves Not found, so this is dev only, but the SPA could
-   show it too.
+4. fixed: unknown board: the SPA shows Not found ("There is no board for ...") once the portfolio
+   has loaded and the key is not in it.
 5. open: not verified: both pages load in under 150ms here, the "connecting" state could not be
    captured.
 
 ### New differences
 
-119. open: Processes table density. Argus rows are 31px, Node 41px; Argus tints a whole needs-a-look
-    row, Node draws a left bar only; the project link is neutral and not underlined, Node blue
-    underlined. (Overview, Processes)
+119. open: Processes table density. Rows are 40px as Node (fixed). Needs Tessera: a needs-a-look row
+    state with the left bar only (the warning state tints the row), and a blue underlined link tone
+    for the project cell. (Overview, Processes)
 120. open: Project card stat tiles use other icons: Node robot, book and flask or person; Argus
     gear, columns and checklist. (Overview, Dashboards)
 121. open: Tab badge shape. Node draws a solid filled circle with dark text (amber, red, grey);
@@ -274,6 +271,7 @@ list.
 125. open: Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
 126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
+<<<<<<< HEAD
     links. Needs Tessera: Markdown `linkTone="neutral"` (Link has the tone, MarkdownLink does not
     pass one). (Thread drawer)
 127. open: decision cards fixed (Card edge left in the warning tone on every needs-you ask card).
@@ -282,6 +280,16 @@ list.
     (Tessera, "Brock and Tessera marks cleaned"); Node shows the title only. (Board Activity)
 129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
     cross icon pair. (Item drawer)
+=======
+    links. (Thread drawer)
+127. open: the waiting-on-you bundle and test rows have the amber left edge (fixed, Card edge tone).
+    The decision card still has none (not part of this pass). (Board Activity)
+128. fixed: the waiting row shows the title only, no image thumbnails (the unused ProofGallery is
+    gone). (Board Activity)
+129. open: Work item description editor: Argus opens a split editor with a live preview and "Save
+    description" and "Cancel" text buttons; Node opens one pane with Write and Preview tabs and a
+    check and cross icon pair. (Item drawer)
+>>>>>>> worktree-agent-ad1922d5e737d0fae
 130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
     to its cards. KanbanBoard stretches its columns (needs Tessera: a column height option, fit).
     (Kanban)
@@ -291,6 +299,7 @@ list.
     the window height and the scrollbar sits inside the frame; Node scrolls the page. (Every screen)
 133. open: Fault chip shape: Node a rounded outlined pill with a warning icon, Argus a squarer dark
     red filled chip, on the overview strip and the board strip. (Registered strip)
+<<<<<<< HEAD
 134. open: Worktrees path is middle truncated ("X:/relic-of-the-past/.../bundle-10") where Node
     shows the full path; the size reads "at least 37 MB" where Node reads "≥ 37 MB". (Worktrees)
 135. fixed: outcome buttons read pass, fail, partial, blocked (the accessible names keep the
@@ -306,6 +315,26 @@ list.
 140. open: The Send down popover differs in detail: the label is "to Bxel" muted where Node says
     "for Bxel" with the name bold, Argus adds a preview eye icon and puts a dim Send down button
     under the hint, Node puts the filled Send down button at the left under the box. (Send down)
+=======
+134. fixed: the path column fits the full path (a longer path still truncates in the middle) and the
+    size reads "≥ 37 MB". (Worktrees)
+135. fixed: outcome buttons read "pass, fail, partial, blocked" (the shared outcome list, so the test
+    drawer and the note dialog follow). (Tests, test drawer)
+136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
+    one under the other. (Kanban narrow)
+137. open, needs Tessera: Disclosure `end` slot that drops to its own row under the summary at
+    narrow widths. At 420 the Tests bundle head wraps badly in Argus (tags on three lines, Unhand on
+    its own row); Node keeps a tidy head. (Tests narrow)
+138. open, needs Tessera: Node shows "1280×720" because its Inter applies the contextual alternate
+    for a digit, x, digit; the Inter subset Tessera ships for the Latin range loses it (the glyph
+    widths differ, measured). The bundled font needs the calt feature kept. (Tests, drawers)
+139. open: Argus adds "Edit task", "Edit note" and "Edit description" text links under agent and
+    item fields; Node edits in place. The agent drawer says "Agent id" where Node says "Claude id".
+    (Drawers)
+140. open: the Send down popover label now reads "for Bxel" with the name bold, and the Send down
+    button sits at the left under the box with "Ctrl+Enter sends" beside it (fixed). Needs Tessera: a
+    MarkdownEditor option to hide the preview eye icon in its toolbar. (Send down)
+>>>>>>> worktree-agent-ad1922d5e737d0fae
 141. open: Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
     15px rows. (Menus)
 

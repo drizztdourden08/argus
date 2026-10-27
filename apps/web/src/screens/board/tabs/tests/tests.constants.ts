@@ -49,10 +49,10 @@ const BUNDLE_TIPS: Record<BundleState, string> = {
 };
 
 const OUTCOMES: { id: TestOutcome; label: string; variant: ButtonVariant }[] = [
-  { id: 'pass', label: 'Pass', variant: 'success' },
-  { id: 'fail', label: 'Fail', variant: 'danger' },
-  { id: 'partial', label: 'Partial', variant: 'warning' },
-  { id: 'blocked', label: 'Blocked', variant: 'info' },
+  { id: 'pass', label: 'pass', variant: 'success' },
+  { id: 'fail', label: 'fail', variant: 'danger' },
+  { id: 'partial', label: 'partial', variant: 'warning' },
+  { id: 'blocked', label: 'blocked', variant: 'info' },
 ];
 
 const PROGRESS_SEGMENTS: { id: keyof Counts; label: string; color: StackedBarColor }[] = [

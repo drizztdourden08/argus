@@ -11,7 +11,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
   const { card, actions } = props;
   if (card.type === 'test' || card.type === 'bundle') {
     return (
-      <Card data-feed-type={card.type}>
+      <Card edgeTone="warning" data-feed-type={card.type}>
         <TestLine card={card} handed={actions.handed} />
       </Card>
     );

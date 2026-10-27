@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, SectionHeader, Text } from '@drizztdourden08/tessera';
+import { Text } from '@drizztdourden08/tessera';
+import { Panel } from '../../../../shell';
 import { useAskThread } from './behavior/useAskThread';
 import { useAttempt } from './behavior/useAttempt';
 import { useLeftoverBatch } from './behavior/useLeftoverBatch';
@@ -32,33 +33,27 @@ const WorktreesTab = (props: WorktreesTabProps) => {
   const counts = countRows(rows);
   const rules = meta?.rules ?? [];
   return (
-    <Card>
-      <Flex direction="column" gap="sm">
-        <SectionHeader
-          size="lg"
-          wrap
-          level={2}
-          title="Worktrees"
-          subtitle={<WorktreeSummary counts={counts} meta={meta} />}
-          action={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
-        />
-        <LeftoverBatchConfirm meta={meta} batch={batch} />
-        {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
-        <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
-        <WorktreeBody
-          rows={filterRows(rows, prefs.filter)}
-          total={counts.all}
-          filter={prefs.filter}
-          hasRules={rules.length > 0}
-          meta={meta}
-          controls={controls}
-          ask={ask}
-          removal={removal}
-          onShowAll={() => prefs.setFilter('all')}
-        />
-        <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
-      </Flex>
-    </Card>
+    <Panel
+      title="Worktrees"
+      note={rules.length > 0 ? <WorktreeSummary counts={counts} meta={meta} /> : undefined}
+      tools={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
+    >
+      <LeftoverBatchConfirm meta={meta} batch={batch} />
+      {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
+      <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
+      <WorktreeBody
+        rows={filterRows(rows, prefs.filter)}
+        total={counts.all}
+        filter={prefs.filter}
+        hasRules={rules.length > 0}
+        meta={meta}
+        controls={controls}
+        ask={ask}
+        removal={removal}
+        onShowAll={() => prefs.setFilter('all')}
+      />
+      <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
+    </Panel>
   );
 };
 
