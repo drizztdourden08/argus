@@ -123,18 +123,19 @@ list.
 
 ### Board: Kanban tab
 
-1. open: one bordered panel with the Node rows, but the Threads, status and subject selects stretch
-   to fill the row (about 170px each) where Node keeps them content wide, the search is wide instead
-   of 220px, and the selected Group by and Order segments are a gold or orange outline instead of a
-   grey fill (new item 124).
+1. fixed: the Threads, status and subject selects are content wide and the search is 224px (Node
+   220px). The selected Group by and Order segments are still the palette outline (new item 124).
 2. fixed: three columns share the full width (they are panels as tall as the tallest, new item 130).
-3. open: Argus shows the drag handle on every card and a horizontal "..." kebab where Node has no
-   handle and a vertical dots kebab. Spacer, criteria bar and age are right.
-4. open: the needs you card (I-88, I-72, I-74) has no red left edge.
+3. open: vertical dots kebab is fixed. Argus still shows the drag handle on every card where Node has
+   none; the KanbanBoard draws the grip itself (needs Tessera: a prop to hide the grip).
+4. fixed: the needs you card has the red left edge (KanbanBoard cardEdgeTone).
 5. fixed: inline add form with title, thread select set to the column thread, Add and Cancel.
 6. open: card menu has Edit, header and the Node order, but Move to status and Reassign to thread
-   are submenus, not inline selects.
-7. open: Argus keeps a collapse chevron "<" next to the plus on every column header.
+   are submenus, not inline selects. ControlMenu cannot hold action items and has no way to close
+   after one (needs Tessera: a DropdownMenu item with an inline select, or action rows in ControlMenu
+   that close it).
+7. open: Argus keeps a collapse chevron "<" next to the plus on every column header (needs Tessera:
+   a way to turn the column fold off).
 8. fixed: "none" in an empty column and "6 open / 41" counter.
 9. fixed: Threads filter opens a checklist (a little wider than Node).
 
@@ -184,8 +185,7 @@ list.
 
 ### Drawer: work item
 
-1. open: Status and Thread selects are about 190px wide each and the Subject drops to its own line;
-   Node has one compact row "Status [Doing] Thread [RotP] Subject coordination".
+1. fixed: Status and Thread selects are content wide and the Subject sits on the same row.
 2. fixed: uppercase titles with the middle dot, empty lines centred.
 3. fixed: Add buttons say Add.
 4. fixed: question card with tags, kebab, context and an indented reply.
@@ -271,11 +271,11 @@ list.
     bundle row and the decision card. (Board Activity)
 128. open: Board Activity shows the markdown image thumbnails of a waiting item inside its row
     (Tessera, "Brock and Tessera marks cleaned"); Node shows the title only. (Board Activity)
-129. open: Work item description editor: Argus opens a split editor with a live preview and "Save
-    description" and "Cancel" text buttons; Node opens one pane with Write and Preview tabs and a
-    check and cross icon pair. (Item drawer)
+129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
+    cross icon pair. (Item drawer)
 130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
-    to its cards. (Kanban)
+    to its cards. KanbanBoard stretches its columns (needs Tessera: a column height option, fit).
+    (Kanban)
 131. open: Board header: the title row starts 16px lower (52px against 36px) though the tab bar
     lands in the right place. (Board header)
 132. open: Argus scrolls an inner area (ScrollArea), not the document: full page screenshots clip at
@@ -287,14 +287,13 @@ list.
 135. open: Outcome buttons read "Pass, Fail, Partial, Blocked" (capitalised) in Argus and "pass,
     fail, partial, blocked" in Node. (Tests, test drawer)
 136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
-    one under the other. (Kanban narrow)
+    one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
 137. open: At 420 the Tests bundle head wraps badly in Argus (name cut to "Controll...", tags on
     three lines, Unhand on its own row); Node keeps a tidy two line head. (Tests narrow)
 138. open: Markdown typography: Node shows "1280×720" (a multiplication sign), Argus "1280x720" in
     test titles and steps. (Tests, drawers)
-139. open: Argus adds "Edit task", "Edit note" and "Edit description" text links under agent and
-    item fields; Node edits in place. The agent drawer says "Agent id" where Node says "Claude id".
-    (Drawers)
+139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
+    links are gone. The agent drawer says "Claude id". (Drawers)
 140. open: The Send down popover differs in detail: the label is "to Bxel" muted where Node says
     "for Bxel" with the name bold, Argus adds a preview eye icon and puts a dim Send down button
     under the hint, Node puts the filled Send down button at the left under the box. (Send down)

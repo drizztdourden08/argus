@@ -1,9 +1,12 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex, Text } from '@drizztdourden08/tessera';
+import { Pressable, Text } from '@drizztdourden08/tessera';
 import { BoardMarkdown } from '../../../../shell';
 import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import type { EditableMarkdownProps } from '../shared.type';
 import { MarkdownFieldEditor } from './MarkdownFieldEditor';
+
+const onText = (event: MouseEvent<HTMLElement>): boolean => !(event.target as HTMLElement).closest('a');
 
 const EditableMarkdown = (props: EditableMarkdownProps) => {
   const { noun, value, empty, limit, problem, onSave } = props;
@@ -24,10 +27,9 @@ const EditableMarkdown = (props: EditableMarkdownProps) => {
     );
   }
   return (
-    <Flex direction="column" gap="xs" align="start">
+    <Pressable aria-label={`Edit ${noun}`} title={`Click to edit the ${noun}`} onClick={(event) => onText(event) && setEditing(true)}>
       {value ? <BoardMarkdown>{value}</BoardMarkdown> : <Text tone="muted" italic>{empty}</Text>}
-      <Button size="xs" variant="ghost" onClick={() => setEditing(true)}>{`Edit ${noun}`}</Button>
-    </Flex>
+    </Pressable>
   );
 };
 

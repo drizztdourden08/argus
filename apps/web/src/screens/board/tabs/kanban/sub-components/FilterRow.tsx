@@ -2,7 +2,7 @@
 import { Button, Checkbox, Flex, SearchInput, Select } from '@drizztdourden08/tessera';
 import { ANY_STATUS, ANY_SUBJECT } from '../kanban.constants';
 import type { FilterRowProps } from '../kanban-props.type';
-import { threadChoices } from '../../../shared';
+import { FIT_FIELD, FIT_SEARCH, threadChoices } from '../../../shared';
 import { STATUS_OPTIONS, filtersActive } from '../model';
 
 const FilterRow = (props: FilterRowProps) => {
@@ -13,7 +13,7 @@ const FilterRow = (props: FilterRowProps) => {
     <Flex gap="sm" align="center" wrap>
       <SearchInput
         size="sm"
-        grow={false}
+        className={FIT_SEARCH}
         aria-label="Search id or title"
         placeholder="Search id or title"
         value={filters.query}
@@ -23,7 +23,7 @@ const FilterRow = (props: FilterRowProps) => {
         aria-label="Threads"
         placeholder="Threads"
         size="sm"
-        grow={false}
+        className={FIT_FIELD}
         multiDisplay="count"
         min={0}
         max={Math.max(owners.length, 2)}
@@ -34,7 +34,7 @@ const FilterRow = (props: FilterRowProps) => {
       <Select
         aria-label="Status"
         size="sm"
-        grow={false}
+        className={FIT_FIELD}
         options={[{ value: ANY_STATUS, label: 'Any status' }, ...STATUS_OPTIONS]}
         value={filters.status || ANY_STATUS}
         onChange={(value) => patchFilters({ status: value === ANY_STATUS ? '' : value })}
@@ -42,7 +42,7 @@ const FilterRow = (props: FilterRowProps) => {
       <Select
         aria-label="Subject"
         size="sm"
-        grow={false}
+        className={FIT_FIELD}
         options={[{ value: ANY_SUBJECT, label: 'Any subject' }, ...subjects.map((subject) => ({ value: subject, label: subject }))]}
         value={filters.subject || ANY_SUBJECT}
         onChange={(value) => patchFilters({ subject: value === ANY_SUBJECT ? '' : value })}

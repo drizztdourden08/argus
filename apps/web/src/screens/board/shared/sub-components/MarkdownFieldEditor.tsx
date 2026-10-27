@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex } from '@drizztdourden08/tessera';
+import { Flex, Icon, IconButton } from '@drizztdourden08/tessera';
 import { BoardMarkdownEditor } from '../../../../shell';
 import { useState } from 'react';
 import type { MarkdownFieldEditorProps } from '../shared.type';
@@ -16,7 +16,7 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
     if (!next) onSave(text.trim());
   };
   return (
-    <Flex direction="column" gap="sm">
+    <Flex direction="column" gap="xs">
       <BoardMarkdownEditor
         aria-label={label(noun)}
         value={draft}
@@ -24,17 +24,17 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
           setFound(null);
           setDraft(next);
         }}
-        rows={6}
+        layout="tabs"
+        rows={4}
         autoFocus
         maxLength={limit}
-        hint={`Ctrl+Enter saves, Esc cancels, ${limit} characters at most`}
         error={found}
         onSubmit={save}
         onEscape={onCancel}
       />
-      <Flex gap="xs">
-        <Button size="sm" variant="primary" onClick={() => save(draft)}>{`Save ${noun}`}</Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
+      <Flex gap="xs" justify="end">
+        <IconButton label={`Save ${noun}`} size="sm" variant="secondary" onClick={() => save(draft)}><Icon name="check" /></IconButton>
+        <IconButton label="Cancel" size="sm" variant="ghost" onClick={onCancel}><Icon name="x" /></IconButton>
       </Flex>
     </Flex>
   );

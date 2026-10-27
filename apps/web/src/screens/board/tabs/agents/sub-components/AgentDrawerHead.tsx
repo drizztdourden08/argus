@@ -22,7 +22,7 @@ const AgentDrawerHead = (props: AgentDrawerHeadProps) => {
       </Flex>
       <Text variant="caption">
         {revLine(props)}
-        {agent.claudeId && ` · Agent id ${agent.claudeId}`}
+        {agent.claudeId && ` · Claude id ${agent.claudeId}`}
       </Text>
     </Flex>
   );
