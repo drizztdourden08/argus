@@ -34,13 +34,14 @@ interface ThreadDrawerProps {
 
 interface ThreadBodyProps {
   view: ThreadView & { thread: ThreadDoc };
-  order: readonly string[];
   now: number;
   ops: ThreadOps;
-  wide: boolean;
-  onWide: () => void;
-  onPurge: (thread: string) => void;
   onOpenItem: (id: string) => void;
+}
+
+interface ThreadEyebrowProps {
+  thread: ThreadDoc;
+  counts: ThreadCounts;
 }
 
 interface ThreadToolsProps {
@@ -75,7 +76,6 @@ interface ThreadMenuProps {
 
 interface ThreadFactsProps {
   thread: ThreadDoc;
-  counts: ThreadCounts;
   now: number;
   ops: ThreadOps;
 }
@@ -102,6 +102,6 @@ interface ThreadSectionProps {
 }
 
 export type {
-  ThreadAgentsProps, ThreadBodyProps, ThreadBriefProps, ThreadCounts, ThreadDoc, ThreadDrawerProps, ThreadMenuProps, ThreadFactsProps, ThreadLiveToolsProps, ThreadOps,
+  ThreadAgentsProps, ThreadBodyProps, ThreadBriefProps, ThreadCounts, ThreadDoc, ThreadDrawerProps, ThreadEyebrowProps, ThreadMenuProps, ThreadFactsProps, ThreadLiveToolsProps, ThreadOps,
   ThreadSectionProps, ThreadState, ThreadToolsProps, ThreadView, ThreadWorkProps,
 };

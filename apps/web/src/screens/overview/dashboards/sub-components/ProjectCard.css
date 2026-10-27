@@ -1,3 +1,4 @@
+/* @layer renderer-app @kind style */
 .project-card {
   min-width: 0;
 }
@@ -5,12 +6,4 @@
 .project-card[data-state='not started'] {
   border-style: dashed;
   background: transparent;
-}
-
-.project-card[data-edge='warning'] {
-  border-color: color-mix(in srgb, var(--c-warning) 60%, var(--c-border));
-}
-
-.project-card[data-edge='danger'] {
-  border-color: color-mix(in srgb, var(--c-danger) 65%, var(--c-border));
 }

@@ -43,7 +43,7 @@ const useDrawerNav = (selected: string | null, open: (testId: string) => void): 
     return () => document.removeEventListener('keydown', onKey);
   }, [selected, step]);
 
-  return { previous, next, step };
+  return { previous, next, open };
 };
 
 export { useDrawerNav };

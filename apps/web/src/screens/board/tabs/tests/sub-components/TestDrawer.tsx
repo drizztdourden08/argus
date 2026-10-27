@@ -1,24 +1,23 @@
 /* @layer renderer-app @kind component */
-import { Drawer } from '@drizztdourden08/tessera';
+import { RecordDrawer } from '../../../shared';
 import type { TestDrawerProps } from '../tests-drawer-props.type';
-import { DrawerActions } from './DrawerActions';
 import { TestBody } from './TestBody';
+import { TestTools } from './TestTools';
 
 const TestDrawer = (props: TestDrawerProps) => {
   const { test, item, handed, nav, wide, notices, onClose } = props;
-  const subtitle = test ? [test.id, test.covers].filter(Boolean).join(' / ') : undefined;
   return (
-    <Drawer
+    <RecordDrawer
       open={test !== null}
-      onClose={onClose}
-      size={wide.wide ? 'xl' : 'lg'}
-      title={test?.title}
-      subtitle={subtitle}
       label="Test details"
-      actions={test ? <DrawerActions test={test} nav={nav} wide={wide} /> : undefined}
+      wide={wide.wide}
+      eyebrow={test && [test.id, test.covers].filter(Boolean).join(' · ')}
+      title={test?.title}
+      tools={test && <TestTools test={test} nav={nav} wide={wide} />}
+      onClose={onClose}
     >
       {test && <TestBody test={test} item={item} handed={handed} notices={notices} />}
-    </Drawer>
+    </RecordDrawer>
   );
 };
 

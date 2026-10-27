@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import './BundleCard.css';
-import { Box, Button, DateText, Flex, Icon, Spacer, Tag, Text } from '@drizztdourden08/tessera';
+import { Box, Button, Card, DateText, Flex, Icon, Spacer, Tag, Text } from '@drizztdourden08/tessera';
 import { countsText } from '../model';
 import { BUNDLE_TAGS } from '../tests.constants';
 import type { ClosedBundleCardProps } from '../tests-props.type';
@@ -10,7 +10,7 @@ const ClosedBundleCard = (props: ClosedBundleCardProps) => {
   const { group, open, onToggle } = props;
   const { build } = group;
   return (
-    <Box className="bundle bundle--closed" data-bundle={group.tag}>
+    <Card className="bundle bundle--closed" data-bundle={group.tag}>
       <Flex gap="sm" align="center" wrap className="bundle__head">
         <Button
           size="sm"
@@ -35,7 +35,7 @@ const ClosedBundleCard = (props: ClosedBundleCardProps) => {
           ? group.tests.map((test) => <ClosedTestRow key={test.id} test={test} />)
           : <Text tone="muted" className="test-section__empty">No test in this bundle.</Text>}
       </Box>
-    </Box>
+    </Card>
   );
 };
 

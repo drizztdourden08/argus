@@ -1,0 +1,12 @@
+/* @layer renderer-app @kind style */
+.send-down {
+  inline-size: min(var(--size-336), calc(100vw - var(--space-xl)));
+}
+
+.send-down .send-down__to {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -10,7 +10,6 @@ export { filtersActive } from './filters-active';
 export { focusChoices } from './focus-choices';
 export { itemHash } from './item-hash';
 export { itemTests } from './item-tests';
-export { linkOf } from './link-of';
 export { listedThreads } from './listed-threads';
 export { neighbour } from './neighbour';
 export { needsMap } from './needs-map';

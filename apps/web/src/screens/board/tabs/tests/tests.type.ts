@@ -176,7 +176,7 @@ interface TestAnchor {
 interface DrawerNav {
   previous: string | null;
   next: string | null;
-  step: (direction: -1 | 1) => void;
+  open: (testId: string) => void;
 }
 
 interface DrawerWide {

@@ -18,12 +18,14 @@ interface AgentDrawerBodyProps {
   boardKey: string;
   id: string;
   agent: Agent;
-  order: readonly string[];
   now: number;
   actions: AgentActions;
-  wide: boolean;
-  onWide: () => void;
-  onOpen: (id: string) => void;
+}
+
+interface AgentEyebrowProps {
+  id: string;
+  agent: Agent;
+  now: number;
 }
 
 interface AgentDrawerHeadProps {
@@ -80,6 +82,7 @@ export type {
   AgentDrawerHeadProps,
   AgentDrawerProps,
   AgentDrawerToolsProps,
+  AgentEyebrowProps,
   AgentFieldProps,
   AgentItemSelectProps,
   AgentTextFieldProps,

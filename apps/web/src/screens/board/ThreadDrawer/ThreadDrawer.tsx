@@ -1,12 +1,13 @@
 /* @layer renderer-app @kind component */
-import { Drawer } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
-import { WIDE_KEY, nonEmpty, useNow, useStoredFlag } from '../shared';
+import { RecordDrawer, WIDE_KEY, nonEmpty, useNow, useStoredFlag } from '../shared';
 import { useThreadOps } from './behavior/useThreadOps';
 import { useThreadOrder } from './behavior/useThreadOrder';
 import { useThreadView } from './behavior/useThreadView';
 import type { ThreadDrawerProps } from './ThreadDrawer.type';
 import { ThreadBody } from './sub-components/ThreadBody';
+import { ThreadEyebrow } from './sub-components/ThreadEyebrow';
+import { ThreadTools } from './sub-components/ThreadTools';
 import './ThreadDrawer.css';
 
 const ThreadDrawer = (props: ThreadDrawerProps) => {
@@ -23,16 +24,17 @@ const ThreadDrawer = (props: ThreadDrawerProps) => {
     void navigate({ hash: itemId }, { replace: true });
   };
   return (
-    <Drawer
+    <RecordDrawer
       open={thread !== null}
-      onClose={onClose}
-      size={wide ? 'xl' : 'md'}
       label="Thread detail"
+      wide={wide}
+      eyebrow={thread && <ThreadEyebrow thread={thread} counts={view.counts} />}
       title={thread ? nonEmpty(thread.session, thread.id) : ''}
-      subtitle={id ?? undefined}
+      tools={thread && <ThreadTools thread={thread} paused={view.paused} order={order} ops={ops} wide={wide} onWide={() => setWide(!wide)} onPurge={onPurge} />}
+      onClose={onClose}
     >
-      {thread && <ThreadBody view={{ ...view, thread }} order={order} now={now} ops={ops} wide={wide} onWide={() => setWide(!wide)} onPurge={onPurge} onOpenItem={openItem} />}
-    </Drawer>
+      {thread && <ThreadBody view={{ ...view, thread }} now={now} ops={ops} onOpenItem={openItem} />}
+    </RecordDrawer>
   );
 };
 

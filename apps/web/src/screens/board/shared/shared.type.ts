@@ -61,17 +61,14 @@ interface EditableMarkdownProps {
   onSave: (value: string) => void;
 }
 
-interface RecordHeaderProps {
+interface RecordDrawerProps {
+  open: boolean;
+  label: string;
+  wide: boolean;
   eyebrow: ReactNode;
   title: ReactNode;
   tools?: ReactNode;
   onClose: () => void;
-}
-
-interface RecordDrawerProps extends RecordHeaderProps {
-  open: boolean;
-  label: string;
-  wide: boolean;
   children?: ReactNode;
 }
 
@@ -83,12 +80,13 @@ interface ChatButtonProps {
 
 interface DrawerToolbarProps {
   id: string;
-  order: readonly string[];
+  previous: string | null;
+  next: string | null;
   label: string;
   wide: boolean;
   onWide: () => void;
-  onOpen: (id: string) => void;
+  onStep: (id: string) => void;
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, RecordHeaderProps, StoredFilters, Writer };
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, StoredFilters, Writer };

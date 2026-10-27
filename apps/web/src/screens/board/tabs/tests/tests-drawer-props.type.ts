@@ -15,7 +15,7 @@ interface TestDrawerProps {
   onClose: () => void;
 }
 
-interface DrawerActionsProps {
+interface TestToolsProps {
   test: TestDoc;
   nav: DrawerNav;
   wide: DrawerWide;
@@ -102,5 +102,5 @@ interface TestLayersProps {
 }
 
 export type {
-  AcListProps, DrawerActionsProps, DrawerSectionProps, EditDialogProps, EvidenceProps, FactSelectProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestBodyProps, TestDrawerProps, TestFactsProps, TestLayersProps, TextListProps,
+  AcListProps, DrawerSectionProps, EditDialogProps, EvidenceProps, FactSelectProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestBodyProps, TestDrawerProps, TestFactsProps, TestLayersProps, TestToolsProps, TextListProps,
 };

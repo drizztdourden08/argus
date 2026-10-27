@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { IconName } from '@drizztdourden08/tessera';
+import type { RefObject } from 'react';
 import type { RunRow } from '../../../data/runs';
 import type { StreamStatus } from '../../../data/stream';
 import type { Card } from '../../../data/types';
@@ -15,7 +16,7 @@ interface LogTarget {
 interface ProjectCardProps {
   card: Card;
   now: number;
-  onSend: (key: string) => void;
+  send: SendDown;
   onLog: LogOpener;
 }
 
@@ -33,7 +34,7 @@ interface CardStateProps {
 interface CardFooterProps {
   card: Card;
   started: boolean;
-  onSend: (key: string) => void;
+  send: SendDown;
 }
 
 interface CounterTileProps {
@@ -51,14 +52,14 @@ interface MasterStatusProps {
 
 interface ProjectGridProps {
   cards: Card[];
-  onSend: (key: string) => void;
+  send: SendDown;
   onLog: LogOpener;
 }
 
 interface DashboardTotalsProps {
   cards: Card[];
   status: StreamStatus;
-  onSend: (key: string) => void;
+  send: SendDown;
 }
 
 interface DashboardsTabProps {
@@ -79,8 +80,10 @@ interface SendDown {
   send: () => void;
 }
 
-interface SendDownDialogProps {
+interface SendDownPopoverProps {
   send: SendDown;
+  owner: string;
+  anchorRef: RefObject<HTMLElement | null>;
 }
 
 interface MasterRun {
@@ -112,5 +115,5 @@ interface SentRowProps {
 
 export type {
   CardCountersProps, CardFooterProps, CardHeadlineProps, CardStateProps, CounterTileProps, DashboardsTabProps, DashboardTotalsProps, LogTarget, MasterRowProps, MasterRun, MasterStatusProps,
-  ProjectCardProps, ProjectGridProps, RegistryChipLinkProps, RunningNowProps, SendDown, SendDownDialogProps, SentRowProps,
+  ProjectCardProps, ProjectGridProps, RegistryChipLinkProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps,
 };

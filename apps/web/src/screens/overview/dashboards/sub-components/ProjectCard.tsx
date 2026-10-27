@@ -11,11 +11,11 @@ import { MasterRow } from './MasterRow';
 import './ProjectCard.css';
 
 const ProjectCard = (props: ProjectCardProps) => {
-  const { card, now, onSend, onLog } = props;
+  const { card, now, send, onLog } = props;
   const state = leadState(card, now);
   const started = state !== 'not started';
   return (
-    <Card fill className="project-card" data-state={state} data-edge={started ? cardTone(attentionOf(card)) : undefined}>
+    <Card fill className="project-card" edge="border" edgeTone={started ? cardTone(attentionOf(card)) : undefined} data-state={state}>
       <Flex direction="column" gap="sm">
         <CardHeadline card={card} state={state} />
         <CardState card={card} state={state} now={now} />
@@ -23,7 +23,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         {started && <CardFlags card={card} />}
         {started && <MasterRow card={card} onLog={onLog} />}
         <Spacer />
-        <CardFooter card={card} started={started} onSend={onSend} />
+        <CardFooter card={card} started={started} send={send} />
       </Flex>
     </Card>
   );

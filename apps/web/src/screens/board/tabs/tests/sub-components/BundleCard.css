@@ -2,15 +2,8 @@
   display: flex;
   flex-direction: column;
   min-inline-size: 0;
+  padding: 0;
   overflow: hidden;
-  background: var(--c-surface);
-  border: var(--border-width-thin) solid var(--c-border);
-  border-radius: var(--radius-lg);
-}
-
-.bundle--handed {
-  border-color: var(--c-primary);
-  box-shadow: inset var(--size-3) 0 0 var(--c-primary);
 }
 
 .bundle--closed {

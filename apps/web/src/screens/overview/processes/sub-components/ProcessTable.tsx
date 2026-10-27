@@ -17,13 +17,13 @@ const ProcessTable = (props: ProcessTableProps) => {
       schema={PROC_SCHEMA}
       getRowId={rowId}
       rowHeight="size-28"
+      footer={false}
       rowState={rowState}
       fallbackColumns={PROC_COLUMNS}
       renderCell={(row, path) => (CUSTOM_PATHS.includes(path) ? <ProcessCell row={row} path={path} kill={kill} /> : undefined)}
       detailRowId={kill.ask?.kind === 'proc' ? kill.ask.id : null}
       renderDetail={(row) => <KillRowConfirm row={row} kill={kill} />}
       onDetailClose={kill.cancel}
-      countLabel={['process', 'processes']}
       emptyMessage={NONE_SHOWN}
     />
   );

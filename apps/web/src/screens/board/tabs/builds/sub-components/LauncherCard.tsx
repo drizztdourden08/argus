@@ -12,7 +12,7 @@ const LauncherCard = (props: LauncherCardProps) => {
   const { launcher } = view;
   const label = `Launcher ${launcher.name}${launcher.title ? `: ${launcher.title}` : ''}`;
   return (
-    <Card data-launcher={launcher.name} role="group" aria-label={label}>
+    <Card data-launcher={launcher.name} role="group" aria-label={label} edge="border" edgeTone={launcher.current ? 'success' : undefined}>
       <Flex direction="column" gap="sm">
         <LauncherHead view={view} />
         <LauncherMeta view={view} />

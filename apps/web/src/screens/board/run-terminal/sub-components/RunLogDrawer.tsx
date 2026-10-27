@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Drawer, Flex } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
 import { isLiveRun, runLine, RUN_LOG_FULL } from '../../../../data/runs';
+import { RecordDrawer } from '../../shared';
 import { FULL_LOG_HEIGHT } from '../run-terminal.constants';
 import type { RunLogDrawerProps } from '../run-terminal.type';
 import { RunAttachments } from './RunAttachments';
@@ -10,13 +11,14 @@ import { TerminalBody } from './TerminalBody';
 const RunLogDrawer = (props: RunLogDrawerProps) => {
   const { run, boardKey, onClose } = props;
   return (
-    <Drawer
+    <RecordDrawer
       open={run !== null}
-      onClose={onClose}
       label="Run log"
+      wide={false}
+      eyebrow={run && runLine(run).label}
       title={run ? `${run.name} ${run.id}` : ''}
-      subtitle={run ? runLine(run).label : undefined}
-      actions={run && isLiveRun(run) ? <RunStopButton run={run} boardKey={boardKey} /> : undefined}
+      tools={run && isLiveRun(run) ? <RunStopButton run={run} boardKey={boardKey} /> : undefined}
+      onClose={onClose}
     >
       {run && (
         <Flex direction="column" gap="md">
@@ -24,7 +26,7 @@ const RunLogDrawer = (props: RunLogDrawerProps) => {
           <RunAttachments key={`attach-${run.id}`} boardKey={boardKey} runId={run.id} />
         </Flex>
       )}
-    </Drawer>
+    </RecordDrawer>
   );
 };
 

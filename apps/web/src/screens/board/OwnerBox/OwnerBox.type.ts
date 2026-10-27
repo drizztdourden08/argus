@@ -10,6 +10,7 @@ interface OwnerBoxProps {
   rows?: number;
   disabled?: boolean;
   autoFocus?: boolean;
+  compact?: boolean;
   onEscape?: () => void;
 }
 

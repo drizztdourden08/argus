@@ -40,7 +40,6 @@ const NO_RULES_HINT = 'The registered thread adds the places once: coord worktre
 
 const FILTER_LABEL = 'Show';
 
-const COUNT_LABEL: readonly [string, string] = ['row', 'rows'];
 
 const STALE_TEXT = 'This changed since you opened this confirm. Close it and open it again to read what is at stake now.';
 
@@ -54,4 +53,4 @@ const ASK_HINTS = {
   check: 'A short message for the thread (optional): what to check',
 } as const;
 
-export { ASK_BUTTONS, ASK_HINTS, COUNT_LABEL, EXPLAINER_TEXT, FALLBACK_COLUMNS, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, RULES_KEY, RULES_STATES, SCHEMA, STALE_TEXT };
+export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, FALLBACK_COLUMNS, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, RULES_KEY, RULES_STATES, SCHEMA, STALE_TEXT };

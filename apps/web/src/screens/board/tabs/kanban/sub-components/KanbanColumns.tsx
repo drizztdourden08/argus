@@ -40,6 +40,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
     <TesseraProvider overrides={EMPTY_COLUMN_STRINGS}>
     <KanbanBoard
       label={BOARD_LABEL}
+      columnWidth="fill"
       columns={columns}
       cardLabel={(card) => `${card.id} ${card.item.title}`}
       onMove={onMove}

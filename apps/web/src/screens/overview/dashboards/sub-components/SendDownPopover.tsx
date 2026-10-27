@@ -1,0 +1,44 @@
+/* @layer renderer-app @kind component */
+import { Anchored, Button, Card, Flex, Icon, IconButton, SegmentedControl, Text } from '@drizztdourden08/tessera';
+import { BoardMarkdownEditor } from '../../../../shell';
+import { SEND_KINDS, SEND_MESSAGE } from '../dashboards.constants';
+import type { SendDownPopoverProps } from '../dashboards.type';
+import { OWNER_MAX, sendProblem } from '../model';
+import type { SendKind } from '../model';
+import './SendDownPopover.css';
+
+const SendDownPopover = (props: SendDownPopoverProps) => {
+  const { send, owner, anchorRef } = props;
+  if (send.target !== owner) return null;
+  const empty = send.text.trim().length === 0;
+  const over = send.text.length > OWNER_MAX ? sendProblem(send.text) : null;
+  return (
+    <Anchored anchorRef={anchorRef} placement="bottom-start" onDismiss={send.close} className="send-down" role="dialog" aria-label="Send down">
+      <Card>
+        <Flex direction="column" gap="sm">
+          <Flex gap="sm" align="center">
+            <SegmentedControl<SendKind> aria-label="Kind of post" value={send.kind} options={SEND_KINDS} onChange={send.setKind} />
+            <Text variant="caption" tone="muted" className="send-down__to">{`to ${send.name}`}</Text>
+            <IconButton label="Close" size="xs" variant="ghost" onClick={send.close}><Icon name="x" /></IconButton>
+          </Flex>
+          <BoardMarkdownEditor
+            aria-label="Text to send down"
+            compact
+            autoFocus
+            placeholder={SEND_MESSAGE}
+            value={send.text}
+            onChange={send.setText}
+            onSubmit={send.send}
+            error={over}
+            hint="Ctrl+Enter sends"
+          />
+          <Flex>
+            <Button size="sm" variant="primary" disabled={send.busy || empty || over !== null} title="Send down (Ctrl+Enter)" onClick={send.send}>Send down</Button>
+          </Flex>
+        </Flex>
+      </Card>
+    </Anchored>
+  );
+};
+
+export { SendDownPopover };
