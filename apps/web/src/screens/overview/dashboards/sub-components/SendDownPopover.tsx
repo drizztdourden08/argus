@@ -24,6 +24,7 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
           <BoardMarkdownEditor
             aria-label="Text to send down"
             compact
+            preview={false}
             autoFocus
             placeholder={SEND_MESSAGE}
             value={send.text}

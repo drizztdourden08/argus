@@ -4,20 +4,18 @@ import type { Agent } from '../../../../data/agents';
 import type { RunEntry } from '../../../../data/runs';
 import type { AgentActions, RowState } from './AgentsTab.type';
 
-interface AgentRowProps {
+interface AgentDetailProps {
   id: string;
   agent: Agent;
   now: number;
   actions: AgentActions;
   state: RowState;
-  runs: readonly RunEntry[];
-  onOpen: (id: string) => void;
-  onLog: (id: string) => void;
 }
 
 interface AgentCellProps {
   name: string;
   title?: string;
+  agentId?: string;
   children?: ReactNode;
 }
 
@@ -87,6 +85,7 @@ interface AgentNoteEditProps {
 }
 
 interface AgentStatusProps {
+  id: string;
   agent: Agent;
   now: number;
 }
@@ -142,7 +141,7 @@ export type {
   AgentNoteEditProps,
   AgentNoteProps,
   AgentNowProps,
-  AgentRowProps,
+  AgentDetailProps,
   AgentRunChipsProps,
   AgentRunRowProps,
   AgentRunsProps,

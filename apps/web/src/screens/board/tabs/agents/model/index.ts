@@ -1,5 +1,8 @@
 /* @layer renderer-app @kind barrel */
 export { agentElapsed } from './agent-elapsed';
+export { agentTone } from './agent-tone';
+export { hasDetail } from './has-detail';
+export { hasMessage } from './has-message';
 export { agentMarks } from './agent-marks';
 export { agentMessage } from './agent-message';
 export { agentName } from './agent-name';

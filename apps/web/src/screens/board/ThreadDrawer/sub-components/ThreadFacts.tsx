@@ -15,6 +15,7 @@ const ThreadFacts = (props: ThreadFactsProps) => {
           <Text as="span" variant="caption">Subject:</Text>
           <InlineEdit
             label="subject"
+            look="link"
             placeholder="add subject"
             value={thread.subject ?? ''}
             validate={validateSubject}

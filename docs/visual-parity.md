@@ -11,8 +11,8 @@ pair with the same numbered list under it.
 
 Argus main (Vite dev server, read only proxy to the Node dashboard) shot again against Node at
 1440x900 and 420x900, dark only, on RotP, Argus and Brock, with every tab, drawer, menu and the
-narrow views. Of the 118 numbered differences below: 91 fixed, 26 open, 1 dropped (dark only). 23
-new differences are numbered 119 to 141. Item numbers read section.item (the section title, then the
+narrow views. Of the 120 numbered differences below: 100 fixed, 19 open, 1 dropped (dark only). 25
+new differences are numbered 119 to 143. Item numbers read section.item (the section title, then the
 number in its list). The gallery `docs/visual-audit/index.html` shows the new pairs with this status
 list.
 
@@ -61,9 +61,8 @@ list.
 2. fixed: one inline summary line with bold numbers.
 3. fixed: rule chips with bold name and muted figures, Kill stale chip, no stacked bar.
 4. fixed: pill toggles All and Needs a look, Rule select on the same row.
-5. open: rows are 40px as Node now (fixed). Still open, needs Tessera: the project link (Node blue
-   underlined, Tessera Link has no blue tone) and the needs-a-look row (Tessera warning row state
-   tints the whole row, Node draws only a left bar). See new item 119.
+5. fixed: rows are 40px as Node, the project link is Link tone link (lavender, underlined) and the
+   needs-a-look row draws only the left bar (DataTable rowState edge). See new item 119.
 6. fixed: at 420 the table keeps its columns and scrolls sideways, as Node.
 
 ### Overview: Activity tab
@@ -98,10 +97,11 @@ list.
 ### Board: Activity tab
 
 1. fixed: Activity tab holds the feed in a panel, view control in the panel header.
-2. open: decision card has the Node eyebrow (item as plain mono text, kebab at the right), bold
+2. fixed: decision card has the Node eyebrow (item as plain mono text, kebab at the right), bold
    question, RECOMMENDED options, the amber left edge (item 127, fixed for ask cards), a 3 row box
-   with the prompt as placeholder. Left: Decide sits under the box where Node puts it at the right
-   of the toolbar (needs Tessera: a MarkdownEditor toolbar end slot).
+   with the prompt as placeholder. Decide (and Answer) now sit at the right of the editor toolbar
+   (MarkdownEditor toolbarEnd); Dismiss stays under the box. Covered by tests, not seen on screen
+   because no board had a pending decision when the round was shot.
 3. fixed: one header row with the All, Needs you and Log control (selected tone differs, see new
    item 124).
 4. fixed: bundle to test is one line with tag, title, coordinator, age and Open. The amber left edge
@@ -117,9 +117,13 @@ list.
 3. fixed: panel header with lead line, seen age and chat icon.
 4. fixed: status dot (dotSize lg with halo) and tag in the first column; model tag dot through
    Tag dot; stop, branch and undo icons use IconButton tone danger, info and accent; item ref is
-   neutral as Node. Left: the ten column grid is still the app's own CSS, not TrackTable (needs
-   Tessera: TrackTable row click, a row detail slot for the full message and note editor, and a
-   row tone for stale and stalled).
+   neutral as Node. The table is now Tessera TrackTable: onRowClick opens the drawer, rowDetail
+   draws the full message and the note editor, rowTone gives stale a muted row and stalled a
+   warning row (Node only draws a stale chip and a warning dot, it never tints the row). Still
+   open, needs Tessera: a fixed width per TrackColumn (rem or px). Columns share the width by
+   fraction, tuned to Node at 1440, but at 420 the status column is about 65px wide for a dot
+   where Node uses 22px, and a column drops at 768, 640 and 480 px of table width, not at the
+   Node steps.
 5. fixed: sonnet green, haiku blue, opus grey.
 6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
 7. fixed: search field removed.
@@ -182,8 +186,9 @@ list.
 1. fixed: 768px at 1440 (Node 760px), full width at 420.
 2. open: title is now white sentence case (RecordDrawer uses Drawer look record). Left: the close X
    sits in its own column and narrows the title, at 420 the title wraps in half the width where
-   Node moves the X into the tools row under the eyebrow (needs Tessera: a narrow header layout
-   for WindowHeader).
+   Node moves the X into the tools row under the eyebrow. WindowHeader now has stackNarrow, but
+   Drawer does not pass it on (needs Tessera: a stackNarrow prop on Drawer, or an exported drawer
+   shell, so RecordDrawer can use it).
 3. fixed: archive and trash are icon buttons in the header.
 
 ### Drawer: work item
@@ -197,9 +202,9 @@ list.
 
 1. fixed: Mode, Item, Covers and Build controls.
 2. fixed: two Expected cards, PROVES IT WORKS and PROVES IT IS BROKEN.
-3. open: steps are plain small numbers, Node draws a 24px numbered circle and a rule under each
-   step. Needs Tessera: a numbered step row with a 24px ring circle (Stepper takes string labels
-   and draws connectors, Badge inline is 16px and filled).
+3. fixed: steps are a Stepper (vertical, size sm, ring dots). The labels are plain text, so
+   inline marks in a step show without their formatting; Node draws a rule between steps where
+   Stepper draws a connector and spaces the steps wider.
 4. fixed: Result card with "Not run yet." centred.
 5. fixed: run buttons toned.
 6. fixed: tools are in the header like every drawer.
@@ -216,10 +221,8 @@ list.
 1. fixed: open work rows are one line, nowrap id.
 2. fixed: title is white regular; tools are all there (copy, previous, next, Expand, chat,
    copy, kebab).
-3. open: Node: "Subject: add subject" as an italic dashed link; Argus: plain text. The T-6 and T-7
-   links are accent coloured in Argus, neutral underlined in Node (new item 126). Needs Tessera:
-   an InlineEdit link look (dashed underline, italic placeholder) and a Markdown `linkTone` for
-   id links.
+3. fixed: the subject is an InlineEdit with look link, and the T-6 and T-7 links are neutral
+   underlined (new item 126).
 
 ### Menus, popovers and editors that only open
 
@@ -252,9 +255,8 @@ list.
 
 ### New differences
 
-119. open: Processes table density. Rows are 40px as Node (fixed). Needs Tessera: a needs-a-look row
-    state with the left bar only (the warning state tints the row), and a blue underlined link tone
-    for the project cell. (Overview, Processes)
+119. fixed: Processes rows are 40px, the needs-a-look row draws the left bar only (rowState edge)
+    and the project cell is Link tone link. (Overview, Processes)
 120. fixed: robot and flask icons on the agents and tests tiles (the items tile keeps columns, as Node). Project card stat tiles use other icons: Node robot, book and flask or person; Argus
     gear, columns and checklist. (Overview, Dashboards)
 121. open, needs Tessera: Tabs has no solid badge (a badgeSolid prop) and only draws the tinted inline badge. Tab badge shape. Node draws a solid filled circle with dark text (amber, red, grey);
@@ -270,9 +272,9 @@ list.
     fill. The palette should drive the accent only. (Kanban, Tests, Activity, Worktrees)
 125. fixed: Copy is a tertiary (grey) button and the launcher chip link is neutral. Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
-126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
-    links. Needs Tessera: Markdown `linkTone="neutral"` (Link has the tone, MarkdownLink does not
-    pass one). (Thread drawer)
+126. fixed: BoardMarkdown passes linkTone neutral, so T-n and I-n links are neutral underlined. The
+    tone is one for every link of a text, so a plain web link is neutral too where Node draws it
+    blue (needs Tessera: a separate tone for id links). (Thread drawer)
 127. fixed: decision cards and the waiting-on-you bundle and test rows have the amber left edge
     (Card edge in the warning tone). (Board Activity)
 128. fixed: the waiting row shows the title only, no image thumbnails (the unused ProofGallery is
@@ -295,19 +297,25 @@ list.
     test drawer)
 136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
     one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
-137. open, needs Tessera: Disclosure `end` slot that drops to its own row under the summary at
-    narrow widths. At 420 the Tests bundle head wraps badly in Argus (tags on three lines, Unhand on
-    its own row); Node keeps a tidy head. (Tests narrow)
-138. open: Node shows "1280×720" because its md.js turns digit x digit into a times sign; the
-    font is not the cause. Needs Tessera: Markdown smartTimes (Tessera PR 240, next release).
-    (Tests, drawers)
+137. fixed: the bundle Disclosure takes wrapEnd, so at 420 the tags, counts, bar and Unhand drop
+    under the bundle name. (Tests narrow)
+138. fixed: BoardMarkdown sets smartTimes, so "1280x720" in a drawer text draws a times sign. Node's
+    md.js has no such step (its text still says x); the sign Node shows comes from its Inter font.
+    The Test drawer steps are drawn by Stepper from plain text and do not use it. (Tests, drawers)
 139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
     links are gone. The agent drawer says "Claude id". (Drawers)
-140. open: the Send down popover label now reads "for Bxel" with the name bold, and the Send down
-    button sits at the left under the box with "Ctrl+Enter sends" beside it (fixed). Needs Tessera: a
-    MarkdownEditor option to hide the preview eye icon in its toolbar. (Send down)
+140. fixed: the Send down popover label reads "for Bxel" with the name bold, the Send down button
+    sits at the left under the box with "Ctrl+Enter sends" beside it, and the editor has
+    preview={false}, so no eye icon. (Send down)
 141. open, needs Tessera: DropdownMenu has no item size prop. Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
     15px rows. (Menus)
+
+142. open, needs Tessera: FoldText takes the width of its text (no inline-size containment) and has
+    no middle truncation. The Worktrees cells (CellText: subject, branch, path with the tail kept)
+    stay as they are, since a FoldText subject pushed the table wider than its box. (Worktrees)
+143. open, needs Tessera: a read only code field that grows beside buttons (sunken, mono, wraps).
+    The Builds command box (LauncherCommand.css) and the Tests launch command stay, since FoldText
+    only clamps text and draws no field or flex growth. (Builds, Tests)
 
 ### Data differences, re-checked
 

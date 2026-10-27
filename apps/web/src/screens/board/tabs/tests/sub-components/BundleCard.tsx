@@ -21,6 +21,7 @@ const BundleCard = (props: BundleCardProps) => {
         onOpenChange={onToggle}
         summary={<BundleName tag={group.tag} title={group.build?.title} />}
         end={<BundleHead group={group} state={state} />}
+        wrapEnd
       >
         <LaunchBox view={view} runs={runs} state={state} />
         <TestSections tests={group.tests} emptyText={emptyText} />

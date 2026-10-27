@@ -16,8 +16,8 @@ const AgentNoteEdit = (props: AgentNoteEditProps) => {
     onDone();
   };
   return (
-    <Box role="row" className="agents-edit">
-      <Box role="cell">
+    <Box className="agents-edit">
+      <Box>
         <Text as="p" variant="caption">{`Note for ${agentName(agent, id)}`}</Text>
         <TextInput
           aria-label="Note"

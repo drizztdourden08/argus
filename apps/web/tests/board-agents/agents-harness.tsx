@@ -104,7 +104,7 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
 };
 
 const rowOf = (container: HTMLElement, id: string): HTMLElement => {
-  const row = container.querySelector<HTMLElement>(`[data-agent-id="${id}"]`);
+  const row = container.querySelector<HTMLElement>(`[data-agent-id="${id}"]`)?.closest<HTMLElement>('[role="row"]');
   if (!row) throw new Error(`no row for ${id}`);
   return row;
 };
