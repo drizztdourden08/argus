@@ -2,6 +2,7 @@
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { AgentDrawerHeadProps } from '../drawer-props.type';
+import { CHAT_ID_LABEL } from './AgentDrawerHead.constants';
 import { AgentItemSelect } from './AgentItemSelect';
 import { AgentStopLine } from './AgentStopLine';
 
@@ -22,7 +23,7 @@ const AgentDrawerHead = (props: AgentDrawerHeadProps) => {
       </Flex>
       <Text variant="caption">
         {revLine(props)}
-        {agent.claudeId && ` · Claude id ${agent.claudeId}`}
+        {agent.claudeId && `${CHAT_ID_LABEL}${agent.claudeId}`}
       </Text>
     </Flex>
   );

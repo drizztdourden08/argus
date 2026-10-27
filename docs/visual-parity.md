@@ -209,7 +209,7 @@ list.
 1. fixed: WHERE section with Model, Kind, Branch and Worktree.
 2. fixed: Item select and Thread.
 3. fixed: Task, Note, Result, Where, Timeline with seconds and age.
-4. fixed: title is white regular (RecordDrawer look record); the id line says "Claude id" as Node.
+4. fixed: title is white regular (RecordDrawer look record); the id line carries the agent id label as Node.
 
 ### Drawer: thread
 
@@ -246,7 +246,7 @@ list.
 2. fixed: empty agents keeps the table frame and headers.
 3. fixed: "none" in empty columns.
 4. fixed: unknown board: the SPA shows Not found ("There is no board for ...") once the portfolio
-   has loaded and the key is not in it.
+   has loaded and that name is not in it.
 5. open: not verified: both pages load in under 150ms here, the "connecting" state could not be
    captured.
 

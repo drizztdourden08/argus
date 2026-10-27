@@ -10,7 +10,7 @@ cleanAfterEach();
 
 const failWith = async (respond: Responder | undefined, text = 'it broke') => {
   const mounted = await mountTab(board(), respond);
-  const box = await openBox('Fail');
+  const box = await openBox('fail');
   type(box, text);
   send(box);
   return mounted;

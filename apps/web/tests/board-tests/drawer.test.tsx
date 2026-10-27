@@ -5,6 +5,7 @@ import { pick } from './filter-dom';
 import { buildDoc, doneDoc, testDoc } from './fixtures';
 import { entries } from './menu-dom';
 import { mountTab } from './mount-tab';
+import { outcomeButton } from './outcome-dom';
 
 afterEach(() => {
   cleanup();
@@ -102,6 +103,17 @@ describe('the evidence, the history and the stream in the test drawer', () => {
     expect(within(evidence).getByRole('button', { name: 'Open the sage at the altar' })).toBeTruthy();
   });
 
+  it('opens a thumbnail large in a dialog, goes through the set and closes', async () => {
+    const { drawer } = await openRich();
+    expect(screen.queryByRole('dialog', { name: 'the sage at the altar' })).toBeNull();
+    fireEvent.click(within(section(drawer, 'Evidence')).getByRole('button', { name: 'Open the sage at the altar' }));
+    expect(screen.getByRole('dialog', { name: 'the sage at the altar' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('dialog', { name: 'the empty altar' })).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'the empty altar' })).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'the empty altar' })).toBeNull());
+  });
+
   it('shows the results history newest first when there is more than one result', async () => {
     const { drawer } = await openRich();
     const rows = within(section(drawer, 'Results history')).getAllByRole('listitem');
@@ -152,7 +164,7 @@ describe('recording from the drawer', () => {
     await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-3', { title: 'Plain test' })] });
     fireEvent.click(await screen.findByRole('button', { name: 'Plain test' }));
     const drawer = await screen.findByRole('dialog', { name: 'Test details' });
-    fireEvent.click(within(drawer).getByRole('button', { name: 'Fail T-3' }));
+    fireEvent.click(outcomeButton('fail', 'T-3', within(drawer)));
     expect(within(drawer).getByRole('textbox', { name: 'Note for T-3' })).toBeTruthy();
     expect(within(drawer).getByRole('button', { name: 'Send fail' })).toBeTruthy();
   });

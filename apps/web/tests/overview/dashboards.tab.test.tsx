@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
+import { wholeText } from '../helpers/whole-text';
 import { feed } from './helpers/feed';
 import { minutesAgo } from './helpers/fixtures';
 import { installHarness } from './helpers/harness';
@@ -83,7 +84,7 @@ describe('the totals and the cards', () => {
     const live = { id: 'R-9', scope: 'rotp', name: 'launcher-master', status: 'running', queuedAt: minutesAgo(2), startedAt: minutesAgo(1.5), lastLine: 'window open' };
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { run: { id: 'R-9', status: 'stopped' } } } : undefined));
     await open({ cards: { ...cards, rotp: { ...cards.rotp, master: { ...MASTER, lastRun: live } } } });
-    expect(await screen.findByText(/^running 2m · window open$/)).toBeTruthy();
+    expect(await screen.findByText(wholeText(/^running 2m · window open$/))).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     expect(await screen.findByText('Stopped RotP master (R-9).')).toBeTruthy();
     expect(posts(calls)).toEqual([{ path: '/api/p/rotp/runs/R-9/stop', method: 'POST', body: {} }]);
@@ -126,7 +127,7 @@ describe('the registered strip', () => {
     await open({ registry: waking });
     const strip = await screen.findByRole('status', { name: 'Registered leads' });
     expect(within(strip).getByText('1 waking')).toBeTruthy();
-    expect((await within(strip).findAllByText(/^waking 2m$/)).length).toBeGreaterThan(0);
+    expect((await within(strip).findAllByText(wholeText(/^waking 2m$/))).length).toBeGreaterThan(0);
   });
 
   it('links a chip to the agents of its board and says in the tip what failed', async () => {

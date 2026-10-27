@@ -106,6 +106,5 @@ export type {
   ManualTest,
   NeedCount,
   OwnerMarks,
-  Proof,
   WorkSources,
 };

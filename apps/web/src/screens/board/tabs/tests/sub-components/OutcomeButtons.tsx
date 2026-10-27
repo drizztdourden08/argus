@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex } from '@drizztdourden08/tessera';
 import { OUTCOMES } from '../tests.constants';
+import { outcomeTitle } from '../model';
 import type { OutcomeButtonsProps } from '../tests-props.type';
 
 const OutcomeButtons = (props: OutcomeButtonsProps) => {
@@ -16,11 +17,11 @@ const OutcomeButtons = (props: OutcomeButtonsProps) => {
             variant={outcome.variant}
             active={pressed}
             disabled={busy}
-            aria-label={`${outcome.label} ${testId}`}
+            title={outcomeTitle(outcome.id, testId)}
             aria-pressed={outcome.id === 'pass' ? undefined : pressed}
             onClick={() => onChoose(outcome.id)}
           >
-            {outcome.label.toLowerCase()}
+            {outcome.label}
           </Button>
         );
       })}
