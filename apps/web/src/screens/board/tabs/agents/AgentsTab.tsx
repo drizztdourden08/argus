@@ -39,7 +39,7 @@ const AgentsTab = (props: AgentsTabProps) => {
         filter={filter}
         onFilter={setFilter}
         runningCount={view.active.length}
-        doneCount={view.done.length}
+        doneCount={view.finishedCount}
         onArchive={canArchive ? () => actions.archiveFinished(view.done.map((agent) => agent.id)) : null}
       />
       <AgentList rows={rows} empty={empty} now={now} actions={actions} onOpen={anchor.open} />

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
-import { countsText, filtersActive, needsMap } from '../../src/screens/board/tabs/kanban/model';
+import { countsText, filtersActive, itemTests, needsMap } from '../../src/screens/board/tabs/kanban/model';
 import type { OpNotice } from '../../src/screens/board/shared';
 import type { Needs } from '../../src/screens/board/tabs/kanban/model';
 import { DAY, HOUR, before, entryRef, filters, idsIn, itemRef, noNeeds, threadRef, viewOf } from './kanban-docs';
@@ -172,5 +172,24 @@ describe('the other groupings', () => {
     const view = viewOf([itemRef('I-1', { subject: 'ui' }), itemRef('I-2', { subject: '' }), itemRef('I-3', { subject: null })], { prefs: { group: 'subject' } });
     expect(view.columns.map((column) => column.id)).toEqual(['general', 'ui']);
     expect(idsIn(view, 'general')).toEqual(['I-2', 'I-3']);
+  });
+});
+
+describe('the tests a drawer counts', () => {
+  const docs = [
+    { id: 'T-1' },
+    { id: 'T-2', archivedAt: '2026-10-25T21:37:00.080Z' },
+    { id: 'T-3', deletedAt: '2026-10-25T21:37:00.080Z' },
+    { id: 'T-4', build: 'old-1' },
+    { id: 'T-5', build: 'open-2' },
+  ];
+  const closed = new Set(['old-1']);
+
+  it('leaves out deleted and archived tests and those of a closed bundle', () => {
+    expect(itemTests(docs, closed, false).map((test) => test.id)).toEqual(['T-1', 'T-5']);
+  });
+
+  it('keeps the archived ones while the archived filter is on, never the deleted or the closed', () => {
+    expect(itemTests(docs, closed, true).map((test) => test.id)).toEqual(['T-1', 'T-2', 'T-5']);
   });
 });

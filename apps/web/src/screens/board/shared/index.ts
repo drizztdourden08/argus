@@ -9,7 +9,7 @@ export { useStored } from './behavior/useStored';
 export { useStoredFlag } from './behavior/useStoredFlag';
 export { useWriter } from './behavior/useWriter';
 export { writeStored } from './behavior/write-stored';
-export { activityTone, formatFilters, jsonRecord, nonEmpty, threadChoices } from './model';
+export { activityTone, bundleState, formatFilters, jsonRecord, nonEmpty, threadChoices } from './model';
 export { FOCUS_KEY, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { EditableMarkdown } from './sub-components/EditableMarkdown';
 export { OpNoticeCallout } from './sub-components/OpNoticeCallout';

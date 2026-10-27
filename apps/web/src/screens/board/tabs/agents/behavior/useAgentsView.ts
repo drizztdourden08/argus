@@ -2,8 +2,9 @@
 import { useMemo } from 'react';
 import type { Agent, ProjectThread } from '../../../../../data/agents';
 import { useCollection } from '../../../../../data/react';
+import type { RunDoc } from '../../../../../data/types';
 import type { AgentsView } from '../AgentsTab.type';
-import { chatThreads, findLead, isActive, sortActive, sortDone } from '../model';
+import { chatThreads, findLead, finishedCount, isActive, sortActive, sortDone } from '../model';
 
 const isShown = (agent: Agent): boolean => !agent.deletedAt && !agent.archivedAt;
 
@@ -12,18 +13,21 @@ const flagsOf = (agent: Agent): string => `${agent.idleSince ?? ''}|${agent.orph
 const useAgentsView = (boardKey: string): AgentsView => {
   const agents = useCollection<Agent>(boardKey, 'agents');
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
+  const runs = useCollection<RunDoc>(boardKey, 'runs');
   return useMemo(() => {
     const shown = agents.docs.filter(isShown);
     const active = sortActive(shown.filter(isActive));
+    const done = sortDone(shown.filter((agent) => !isActive(agent)));
     return {
       ready: agents.ready && threads.ready,
       active,
-      done: sortDone(shown.filter((agent) => !isActive(agent))),
+      done,
+      finishedCount: finishedCount(done, runs.docs),
       lead: findLead(threads.docs),
       chats: chatThreads(threads.docs),
       flagSignature: active.map((agent) => `${agent.id}:${flagsOf(agent)}`).join(','),
     };
-  }, [agents, threads]);
+  }, [agents, threads, runs]);
 };
 
 export { useAgentsView };

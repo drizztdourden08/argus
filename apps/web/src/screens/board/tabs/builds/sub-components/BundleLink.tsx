@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind component */
 import { Icon, Link, Tag } from '@drizztdourden08/tessera';
+import { bundleState } from '../../../shared';
 import { MASTER } from '../builds.constants';
 import type { LauncherPartProps } from '../builds-props.type';
-import { bundleStatus } from '../model';
 
 const BundleLink = (props: LauncherPartProps) => {
   const { launcher, joined } = props.view;
   if (!launcher.joined || launcher.name === MASTER) return null;
-  const status = bundleStatus(joined);
+  const status = bundleState(joined);
   return (
     <>
       <Tag title={`This launcher goes with bundle ${launcher.joined}: closed or removed, it is retired with it. Open the bundle on the Tests tab`}>

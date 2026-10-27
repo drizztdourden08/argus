@@ -30,6 +30,15 @@ describe('a launcher made for a bundle', () => {
     expect(container.textContent).not.toContain('expected every');
     expect(screen.queryByText('stale')).toBeNull();
   });
+
+  it('says closed for a bundle closed with coord build close, and nothing when the bundle is gone', async () => {
+    await mountBuilds(withDefs(
+      [launcherDoc('master'), launcherDoc('done-1', { bundle: 'done-1', joined: 'done-1' }), launcherDoc('lost-2', { bundle: 'lost-2', joined: 'lost-2' })],
+      { builds: [buildDoc('done-1', { launcher: 'done-1', closedAt: ago(DAY) })] },
+    ));
+    expect(await screen.findByRole('link', { name: 'for bundle done-1 (closed)' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'for bundle lost-2' })).toBeTruthy();
+  });
 });
 
 describe('the usage window of a standalone launcher', () => {

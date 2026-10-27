@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { bundleStatus, launcherViews } from '../../src/screens/board/tabs/builds/model';
+import { launcherViews } from '../../src/screens/board/tabs/builds/model';
 import type { LauncherDoc } from '../../src/screens/board/tabs/builds/model';
 import { launcherUsage } from '../../src/screens/board/tabs/builds/model/launcher-usage';
 import { buildDoc, DAY, defDoc, launcherDoc, runDoc, runningDoc, standaloneDoc } from './fixtures';
@@ -102,14 +102,5 @@ describe('launcherUsage', () => {
   it('assumes 7 days and says so when the thread set no useEvery', () => {
     expect(usage(standaloneDoc('x', { useEvery: null, useEveryMs: null, lastUsedAt: at(8 * DAY) }))).toMatchObject({ every: '7d', legacy: true, stale: true });
     expect(usage(standaloneDoc('x', { useEvery: '2w', useEveryMs: 14 * DAY }))).toMatchObject({ every: '2w', legacy: false });
-  });
-});
-
-describe('bundleStatus', () => {
-  it('reads closed first, then draft, else ready, and ready for a bundle that is not there', () => {
-    expect(bundleStatus(builds(buildDoc('a', { closedAt: at(DAY) }))[0] ?? null)).toBe('closed');
-    expect(bundleStatus(builds(buildDoc('b', { status: 'draft' }))[0] ?? null)).toBe('draft');
-    expect(bundleStatus(builds(buildDoc('c', { status: 'ready' }))[0] ?? null)).toBe('ready');
-    expect(bundleStatus(null)).toBe('ready');
   });
 });

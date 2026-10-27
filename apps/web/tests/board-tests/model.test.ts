@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { runLine } from '../../src/data/runs';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  bundleState, closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, sortDone, visibleTests,
+  closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, sortDone, visibleTests,
 } from '../../src/screens/board/tabs/tests/model';
+import { bundleState } from '../../src/screens/board/shared';
 import { tally } from '../../src/screens/board/tabs/tests/model/tally';
 import type { BuildDoc, LaunchDefDoc, LauncherDoc, TestDoc } from '../../src/screens/board/tabs/tests/model';
 import { buildDoc, defDoc, doneDoc, launcherDoc, runDoc, testDoc } from './fixtures';
