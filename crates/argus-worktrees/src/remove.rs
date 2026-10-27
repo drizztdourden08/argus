@@ -14,7 +14,7 @@ use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
 use crate::inspect::{ScanCtx, inspect_dir};
-use crate::leftover_remove::{Within, git_within};
+use crate::leftover_remove::{Within, git_within, unreadable_refusal};
 use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
@@ -335,6 +335,12 @@ impl Service {
             Within::TooBig => {
                 now.nested_git = Some(join_path(&fact.path, ".git"));
                 now.nested_too_big = true;
+            }
+            Within::Unreadable(why) => {
+                return Err(WtError::new(
+                    ErrorCode::Conflict,
+                    unreadable_refusal(&fact.path, &why, "removed"),
+                ));
             }
         }
         if !now.is_git || !self.deps.fs.exists(&fact.path) {

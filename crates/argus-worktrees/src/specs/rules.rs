@@ -12,7 +12,9 @@ use crate::fs::RealFs;
 use crate::jobs::JobState;
 use crate::leftover_remove::{Within, git_within, git_within_capped};
 use crate::rule::Rule;
-use crate::testkit::{Fixture, Harness, commit, exists_itself, git_in, put, rule_for, write};
+use crate::testkit::{
+    Fixture, Harness, HookFs, commit, exists_itself, git_in, put, rule_for, write,
+};
 use std::fs;
 
 fn live_web_1(fx: &Fixture) {
@@ -355,6 +357,60 @@ fn a_walk_that_hits_its_cap_is_too_big_never_nothing_found() {
     let big = format!("{root}/big");
     assert_eq!(git_within_capped(&RealFs, &big, 6), Within::Nothing);
     assert_eq!(git_within_capped(&RealFs, &big, 5), Within::TooBig);
+}
+
+#[test]
+fn a_folder_the_walk_cannot_read_is_unreadable_never_nothing_found() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::testkit::root_of(&dir);
+    fs::create_dir_all(format!("{root}/junk/a/locked")).unwrap();
+    let hook = HookFs::default();
+    assert_eq!(git_within(&hook, &format!("{root}/junk")), Within::Nothing);
+    *hook.unreadable_containing.lock().unwrap() = Some("/a/locked".to_string());
+    let Within::Unreadable(why) = git_within(&hook, &format!("{root}/junk")) else {
+        panic!("the folder that cannot be read stops the walk");
+    };
+    assert!(why.ends_with("junk/a/locked: EPERM"), "{why}");
+}
+
+#[test]
+fn a_leftover_with_a_folder_the_walk_cannot_read_is_refused_and_stays() {
+    let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
+    let target = h.id_of(&format!("{}/junk", fx.wts));
+    *h.fs.unreadable_containing.lock().unwrap() = Some("/junk/sub".to_string());
+    let err = page_remove(&h, &target);
+    assert_eq!(err.code, ErrorCode::Conflict);
+    assert!(
+        err.message.contains("has a folder that could not be read")
+            && err.message.contains("junk/sub: EPERM")
+            && err.message.contains("nothing was deleted"),
+        "{}",
+        err.message
+    );
+    assert!(exists_itself(&format!("{}/junk/sub/a.txt", fx.wts)));
+}
+
+#[test]
+fn a_leftover_too_big_to_check_for_nested_repositories_is_refused_and_stays() {
+    let (fx, h) = junk_setup(
+        |fx| vec![rule_for(fx)],
+        |fx| {
+            for n in 0..=3000 {
+                fs::create_dir_all(format!("{}/junk/many/d{n}", fx.wts)).unwrap();
+            }
+        },
+    );
+    let target = h.id_of(&format!("{}/junk", fx.wts));
+    let err = page_remove(&h, &target);
+    assert_eq!(err.code, ErrorCode::Conflict);
+    assert!(
+        err.message
+            .contains("is too big to check for a nested git repository")
+            && err.message.contains("nothing was deleted"),
+        "{}",
+        err.message
+    );
+    assert!(exists_itself(&format!("{}/junk/many/d0", fx.wts)));
 }
 
 #[test]

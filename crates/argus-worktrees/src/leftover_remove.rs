@@ -22,12 +22,21 @@ pub const THREAD_MIN_AGE_DAYS: f64 = 0.25;
 /// How many folders the walk for a nested `.git` visits before it gives up.
 const WALK_CAP: i32 = 3000;
 
-/// What the walk for a nested `.git` found. A walk that hit its cap is `TooBig`: unknown, never "nothing found".
+/// What the walk for a nested `.git` found. A walk that hit its cap is `TooBig`, and a folder it could not read is
+/// `Unreadable` (the folder and the reason): both unknown, never "nothing found".
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Within {
     Nothing,
     Git(String),
     TooBig,
+    Unreadable(String),
+}
+
+/// The refusal sentence for a walk that could not read a folder. `undone` says what did not happen ("deleted").
+pub(crate) fn unreadable_refusal(path: &str, unreadable: &str, undone: &str) -> String {
+    format!(
+        "{path} has a folder that could not be read ({unreadable}), so Argus cannot tell whether it holds a nested git repository: nothing was {undone}"
+    )
 }
 
 fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within {
@@ -38,8 +47,10 @@ fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within 
         return Within::TooBig;
     }
     *budget -= 1;
-    let Ok(entries) = fs.read_dir(dir) else {
-        return Within::Nothing;
+    let entries = match fs.read_dir(dir) {
+        Ok(entries) => entries,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Within::Nothing,
+        Err(err) => return Within::Unreadable(format!("{dir}: {}", io_code(&err))),
     };
     if level > 0 && entries.iter().any(|e| e.name == ".git") {
         return Within::Git(join_path(dir, ".git"));
@@ -57,7 +68,8 @@ fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within 
 }
 
 /// A `.git` (file or folder) within three levels below the folder, links and `node_modules` not entered. A folder with
-/// more than the cap of subfolders is `TooBig`, and counts as unsafe like a nested repository.
+/// more than the cap of subfolders is `TooBig`, and one that cannot be read is `Unreadable`; both count as unsafe like a
+/// nested repository. A folder that vanished during the walk holds nothing.
 pub fn git_within(fs: &dyn Fs, path: &str) -> Within {
     git_within_capped(fs, path, WALK_CAP)
 }
@@ -230,6 +242,7 @@ impl Service {
             Within::TooBig => Err(conflict(format!(
                 "{path} is too big to check for a nested git repository: Argus cannot tell whether it holds one, so nothing was deleted"
             ))),
+            Within::Unreadable(why) => Err(conflict(unreadable_refusal(path, &why, "deleted"))),
         }
     }
 

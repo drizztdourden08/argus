@@ -160,6 +160,25 @@ fn a_folder_too_big_to_check_for_nested_repositories_is_unsafe_like_one_and_the_
 }
 
 #[test]
+fn a_folder_the_walk_cannot_read_refuses_the_removal_even_with_discard() {
+    let (fx, h) = started(nested_at("vendor/lib"));
+    let target = id(&h, &fx, "old-merged");
+    *h.fs.unreadable_containing.lock().unwrap() = Some("/old-merged/vendor".to_string());
+    let err = h.refused(&target, |i| {
+        (i.discard, i.caller) = (true, Caller::Page);
+    });
+    assert_eq!(err.code, ErrorCode::Conflict);
+    assert!(
+        err.message.contains("has a folder that could not be read")
+            && err.message.contains("old-merged/vendor: EPERM")
+            && err.message.contains("nothing was removed"),
+        "{}",
+        err.message
+    );
+    assert!(exists_itself(&fx.path("old-merged")));
+}
+
+#[test]
 fn three_levels_down_still_counts_and_a_thread_needs_the_owners_entry() {
     let (fx, h) = started(nested_at("deep/a/b"));
     let err = h.refused(&id(&h, &fx, "old-merged"), |i| i.discard = true);

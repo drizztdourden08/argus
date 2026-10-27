@@ -499,6 +499,8 @@ pub struct HookFs {
     pub rename_error: Mutex<Option<io::ErrorKind>>,
     pub fail_remove_containing: Mutex<Option<String>>,
     pub fail_unlink: Mutex<Option<io::ErrorKind>>,
+    /// Listing a folder whose path contains this text fails like a folder without the right to read it.
+    pub unreadable_containing: Mutex<Option<String>>,
     pub gate: Mutex<Option<Arc<Gate>>>,
 }
 
@@ -539,6 +541,10 @@ impl Fs for HookFs {
     }
 
     fn read_dir(&self, path: &str) -> io::Result<Vec<Entry>> {
+        let needle = locked(&self.unreadable_containing).clone();
+        if needle.is_some_and(|n| path.contains(&n)) {
+            return Err(io::Error::from(io::ErrorKind::PermissionDenied));
+        }
         RealFs.read_dir(path)
     }
 
