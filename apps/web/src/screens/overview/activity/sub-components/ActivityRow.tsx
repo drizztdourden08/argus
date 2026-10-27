@@ -14,7 +14,7 @@ const ActivityRow = (props: ActivityRowProps) => {
   const project = item.project ?? '';
   return (
     <FeedRow icon={kindIcon(kind)} tone={LEVEL_TONE[level]} title={`${kind} · ${level}`} at={item.at}>
-      <Text>
+      <Text size="md">
         <Text variant="overline" tone={LEVEL_TONE[level]}>{kind}</Text>
         {` ${item.text ?? ''} `}
         {project ? <ProjectLink project={project} chip /> : null}

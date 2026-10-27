@@ -20,6 +20,8 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
       <Tag
         {...REGISTRY_LOOK[chip.tone]}
         pill
+        size="lg"
+        outlined={chip.tone === 'danger'}
         icon={icon}
         href={`/p/${encodeURIComponent(row.project)}/#agents`}
         navigate={navigate}

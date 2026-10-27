@@ -16,7 +16,7 @@ const OverviewPage = () => {
     <PageFrame>
       <OverviewHeader cards={cards} />
       <StatusNotice status={status} />
-      <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero={false} />
+      <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero={false} size="lg" selectedTone="neutral" />
       <TabBody tab={tab} cards={cards} status={status} badges={badges} />
     </PageFrame>
   );

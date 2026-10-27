@@ -11,11 +11,11 @@ const ViewRow = (props: ViewRowProps) => {
     <Flex gap="md" align="center" wrap>
       <Flex gap="sm" align="center">
         <Text variant="caption" tone="muted">Group by</Text>
-        <SegmentedControl<ItemGroup> aria-label="Group by" size="sm" value={prefs.group} options={GROUP_OPTIONS} onChange={setGroup} />
+        <SegmentedControl<ItemGroup> selectedTone="neutral" aria-label="Group by" size="sm" value={prefs.group} options={GROUP_OPTIONS} onChange={setGroup} />
       </Flex>
       <Flex gap="sm" align="center">
         <Text variant="caption" tone="muted">Order</Text>
-        <SegmentedControl<ItemOrder> aria-label="Order" size="sm" value={prefs.order} options={ORDER_OPTIONS} onChange={setOrder} />
+        <SegmentedControl<ItemOrder> selectedTone="neutral" aria-label="Order" size="sm" value={prefs.order} options={ORDER_OPTIONS} onChange={setOrder} />
       </Flex>
       <Checkbox size="sm" label={`Show done (${view.closed})`} checked={prefs.showDone} onChange={setShowDone} />
       <Spacer />

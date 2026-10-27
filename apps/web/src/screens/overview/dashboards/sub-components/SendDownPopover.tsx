@@ -17,7 +17,7 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
       <Card>
         <Flex direction="column" gap="sm">
           <Flex gap="sm" align="center">
-            <SegmentedControl<SendKind> aria-label="Kind of post" value={send.kind} options={SEND_KINDS} onChange={send.setKind} />
+            <SegmentedControl<SendKind> selectedTone="neutral" aria-label="Kind of post" value={send.kind} options={SEND_KINDS} onChange={send.setKind} />
             <Text variant="caption" tone="muted" className="send-down__to">for <Text as="span" variant="caption" weight={600}>{send.name}</Text></Text>
             <IconButton label="Close" size="xs" variant="ghost" onClick={send.close}><Icon name="x" /></IconButton>
           </Flex>

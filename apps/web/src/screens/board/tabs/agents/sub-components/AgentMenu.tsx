@@ -47,6 +47,7 @@ const AgentMenu = (props: AgentMenuProps) => {
       variant="ghost"
       size="sm"
       align="end"
+      itemSize="roomy"
     />
   );
 };

@@ -19,7 +19,7 @@ const WorktreeToolbar = (props: WorktreeToolbarProps) => {
   return (
     <Flex gap="md" align="center" wrap>
       {about}
-      <SegmentedControl<WorktreeFilter> aria-label={FILTER_LABEL} size="sm" value={filter} onChange={onFilter} options={options} />
+      <SegmentedControl<WorktreeFilter> selectedTone="neutral" aria-label={FILTER_LABEL} size="sm" value={filter} onChange={onFilter} options={options} />
       {old && old.count > 0 && (
         <Button size="sm" variant="danger" aria-expanded={batch.state !== null} disabled={batch.busy} onClick={batch.toggle}>
           {`Delete all leftovers older than ${daysText(old.days)} (${old.count}, ${aboutSize(old.sizeMB)})`}
