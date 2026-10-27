@@ -1,11 +1,10 @@
 /* @layer renderer-app @kind types */
 import type { RunEntry } from '../../../../data/runs';
-import type { LauncherViews, RunGroups } from './model';
+import type { LauncherViews } from './model';
 
 interface BuildsData {
   ready: boolean;
   views: LauncherViews;
-  groups: RunGroups;
   runs: RunEntry[];
 }
 

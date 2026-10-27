@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind constants */
-import { formatMemory, formatMinutes } from '../../../format';
+import { formatCpu, formatMemory, formatMinutes } from '../../../format';
 import type { ProcFilters, ProcRow } from './model';
 
 const ERROR_CLIP = 120;
-const COMMAND_CLIP = 200;
+const COMMAND_CLIP = 52;
 
 const NOT_SAMPLED = 'Argus has not sampled the processes yet.';
 const NONE_LISTED = 'No process matches a rule right now.';
@@ -19,6 +19,7 @@ const CALM_LOOK = { variant: 'normal', color: 'neutral' } as const;
 
 const MEASURE_CELL: Readonly<Record<string, (row: ProcRow) => string>> = {
   memMB: (row) => formatMemory(row.memMB),
+  cpuPct: (row) => formatCpu(row.cpuPct),
   ageMin: (row) => formatMinutes(row.ageMin),
   idleMin: (row) => formatMinutes(row.idleMin),
 };

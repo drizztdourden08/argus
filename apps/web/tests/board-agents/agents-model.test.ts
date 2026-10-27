@@ -1,8 +1,11 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
+import type { Agent } from '../../src/data/agents';
+import type { WithId } from '../../src/data/react';
+import type { RunEntry } from '../../src/data/runs';
 import {
-  agentElapsed, agentMessage, agentNow, clipText, filterAgents, findLead, formatDuration, isQuiet, isStale, modelFamily, modelTip,
-  plainText, shortBranch, sortActive, sortDone, statusLook, tokenLines,
+  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, finishedCount, formatDuration, isQuiet, isStale, itemOptions, MODEL_LOOKS, modelFamily, modelTip,
+  plainText, runSpan, shortBranch, sortActive, sortDone, statusLook, tagLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
 const NOW = Date.parse('2026-10-26T12:00:00Z');
@@ -103,7 +106,7 @@ describe('model and status', () => {
   });
 
   it('calls the stop request stopping and keeps an unknown status as it is', () => {
-    expect(statusLook('stop-requested').label).toBe('stopping');
+    expect(statusLook('stop-requested')).toEqual({ label: 'stopping', tone: 'warning' });
     expect(statusLook('failed').tone).toBe('danger');
     expect(statusLook('odd')).toEqual({ label: 'odd', tone: 'neutral' });
   });
@@ -117,14 +120,33 @@ describe('lists', () => {
     expect(sortDone([doc('A-1', { finishedAt: at(9 * MIN) }), doc('A-2', { finishedAt: at(MIN) })]).map((a) => a.id)).toEqual(['A-2', 'A-1']);
   });
 
-  it('filters by view and by search over id, name, task, item and note', () => {
-    const active = [doc('A-1', { name: 'alpha' }), doc('A-2', { name: 'beta', task: 'Port the reaper', item: 'I-9' })];
-    const done = [doc('A-3', { status: 'done', note: 'merged' })];
-    expect(filterAgents(active, done, 'running', '').map((a) => a.id)).toEqual(['A-1', 'A-2']);
-    expect(filterAgents(active, done, 'done', '').map((a) => a.id)).toEqual(['A-3']);
-    expect(filterAgents(active, done, 'all', 'REAPER').map((a) => a.id)).toEqual(['A-2']);
-    expect(filterAgents(active, done, 'all', 'i-9').map((a) => a.id)).toEqual(['A-2']);
-    expect(filterAgents(active, done, 'all', 'merged').map((a) => a.id)).toEqual(['A-3']);
+  it('checks an agent field against its limit, and a task against empty', () => {
+    expect(agentProblem('task', '  ')).toBe('A task cannot be empty.');
+    expect(agentProblem('note', '')).toBeNull();
+    expect(agentProblem('note', 'x'.repeat(101))).toBe('At most 100 characters.');
+    expect(agentProblem('branch', 'x'.repeat(80))).toBeNull();
+  });
+
+  it('lists every live item with a short title, the current one even when gone, and none first', () => {
+    const items = [{ id: 'I-1', title: 'a'.repeat(60), status: 'todo', thread: 't' }, { id: 'I-2', title: 'gone', status: 'todo', thread: 't', deletedAt: 'x' }];
+    const options = itemOptions(items, 'I-7');
+    expect(options.map((option) => option.value)).toEqual(['none', 'I-1', 'I-7']);
+    expect(options[1]?.label).toBe(`I-1 ${'a'.repeat(40)}`);
+  });
+
+  it('tones a model by family: sonnet green, haiku blue, opus and others neutral', () => {
+    expect(MODEL_LOOKS.sonnet.tone).toBe('success');
+    expect(MODEL_LOOKS.haiku.tone).toBe('info');
+    expect(MODEL_LOOKS.opus).toEqual({ tone: 'neutral', dot: true });
+    expect(tagLook('warning')).toEqual({ variant: 'urgency', color: 'warning' });
+    expect(tagLook('neutral')).toEqual({ variant: 'normal', color: 'neutral' });
+  });
+
+  it('writes a run span as 1m 05s and 2h 03m', () => {
+    const run = (start: string, end: string) => ({ id: 'R-1', name: 'x', status: 'exited', queuedAt: start, startedAt: start, endedAt: end, exitCode: 0, error: null, lastLine: null }) as const;
+    expect(runSpan(run('2026-01-01T00:00:00Z', '2026-01-01T00:01:05Z'))).toBe('1m 05s');
+    expect(runSpan(run('2026-01-01T00:00:00Z', '2026-01-01T02:03:00Z'))).toBe('2h 03m');
+    expect(runSpan(run('2026-01-01T00:00:00Z', '2026-01-01T00:00:09Z'))).toBe('9s');
   });
 
   it('takes the live coordinator as the lead and ignores merged and deleted ones', () => {
@@ -132,5 +154,17 @@ describe('lists', () => {
     expect(findLead([thread('old', { status: 'done' }), thread('now')])?.id).toBe('now');
     expect(findLead([thread('old', { status: 'done' })])?.id).toBe('old');
     expect(findLead([thread('gone', { deletedAt: 'x' }), thread('merged', { mergedInto: 'y' })])).toBeNull();
+  });
+});
+
+describe('finishedCount', () => {
+  const agent = (id: string): WithId<Agent> => ({ id, status: 'done' });
+  const run = (id: string, status: string): RunEntry => ({ id, status, queuedAt: at(MIN) }) as RunEntry;
+
+  it('adds the finished runs to the finished agents, as the Node Show finished button does', () => {
+    const agents = [agent('A-1'), agent('A-2')];
+    const runs = [run('R-1', 'exited'), run('R-2', 'failed'), run('R-3', 'running')];
+    expect(finishedCount(agents, runs)).toBe(4);
+    expect(finishedCount(agents, [])).toBe(2);
   });
 });

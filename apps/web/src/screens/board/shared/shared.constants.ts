@@ -6,6 +6,8 @@ const UNDO_TOAST_MS = 8000;
 
 const ACTIVITY_TONES: Readonly<Record<string, StatusTone>> = { working: 'success', waiting: 'warning', blocked: 'danger' };
 
+const NOW_TICK_MS = 15_000;
+
 const FOCUS_KEY = 'coord.focus';
 
 const WIDE_KEY = 'coord.drawer.wide';
@@ -19,4 +21,4 @@ const SOFT_LABEL: Record<SoftKind, string> = {
   restore: 'Restored',
 };
 
-export { ACTIVITY_TONES, FOCUS_KEY, PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS, WIDE_KEY };
+export { ACTIVITY_TONES, FOCUS_KEY, NOW_TICK_MS, PLACE_FIELDS, SOFT_LABEL, UNDO_TOAST_MS, WIDE_KEY };

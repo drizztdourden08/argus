@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
 import type { Agent, ProjectThread, ReconcileFinding } from '../../../../data/agents';
 import type { WithId } from '../../../../data/react';
-import type { AgentFilter } from './model';
+import type { SoftKind } from '../../../../data/kanban';
+import type { RunEntry } from '../../../../data/runs';
+import type { AgentField } from './model';
 
 interface AgentAnchor {
   selected: string | null;
@@ -19,139 +20,102 @@ interface AgentsView {
   ready: boolean;
   active: WithId<Agent>[];
   done: WithId<Agent>[];
+  finishedCount: number;
   lead: WithId<ProjectThread> | null;
   chats: WithId<ProjectThread>[];
   flagSignature: string;
 }
 
-interface AgentActions {
+interface AgentEdits {
+  setField: (id: string, field: AgentField, value: string) => void;
+  setItem: (id: string, item: string | null) => void;
+  soft: (kind: SoftKind, id: string) => void;
+}
+
+interface AgentActions extends AgentEdits {
   stop: (id: string) => void;
   cancelStop: (id: string) => void;
   archiveFinished: (ids: readonly string[]) => void;
 }
 
+interface RowState {
+  openMessages: ReadonlySet<string>;
+  editing: string | null;
+  toggleMessage: (id: string) => void;
+  startEdit: (id: string) => void;
+  stopEdit: () => void;
+}
+
+interface AgentRuns {
+  all: RunEntry[];
+  live: RunEntry[];
+  finished: RunEntry[];
+  byAgent: ReadonlyMap<string, RunEntry[]>;
+}
+
 interface AgentsHeaderProps {
   active: readonly WithId<Agent>[];
   lead: WithId<ProjectThread> | null;
+  now: number;
 }
 
 interface LeadLineProps {
   lead: WithId<ProjectThread>;
+  now: number;
 }
 
-interface AgentsToolbarProps {
-  query: string;
-  onQuery: (query: string) => void;
-  filter: AgentFilter;
-  onFilter: (filter: AgentFilter) => void;
-  runningCount: number;
-  doneCount: number;
-  onArchive: (() => void) | null;
+interface AgentsBodyProps {
+  active: readonly WithId<Agent>[];
+  done: readonly WithId<Agent>[];
+  showFinished: boolean;
+  now: number;
+  actions: AgentActions;
+  state: RowState;
+  runs: AgentRuns;
+  onOpen: (id: string) => void;
+  onLog: (id: string) => void;
+}
+
+interface AgentsFootProps {
+  count: number;
+  showFinished: boolean;
+  canArchive: boolean;
+  onToggle: () => void;
+  onArchive: () => void;
 }
 
 interface ReconcilePanelProps {
   findings: readonly ReconcileFinding[];
 }
 
-interface AgentRowProps {
-  id: string;
-  agent: Agent;
-  now: number;
-  actions: AgentActions;
-  onOpen: (id: string) => void;
-}
-
-interface AgentListProps {
-  rows: readonly WithId<Agent>[];
-  empty: string;
-  now: number;
-  actions: AgentActions;
-  onOpen: (id: string) => void;
-}
-
-interface AgentActionsProps {
-  id: string;
-  agent: Agent;
-  actions: AgentActions;
-}
-
-interface AgentNameProps {
-  id: string;
-  agent: Agent;
-  now: number;
-}
-
-interface AgentDetailLineProps {
-  agent: Agent;
-}
-
-interface AgentStatusProps {
-  agent: Agent;
-}
-
-interface AgentModelProps {
-  agent: Agent;
-}
-
-interface AgentTimeProps {
-  agent: Agent;
-  now: number;
-}
-
-interface AgentDrawerProps {
-  id: string | null;
-  agent: Agent | null;
-  now: number;
-  actions: AgentActions;
-  onClose: () => void;
-}
-
-interface AgentDrawerBodyProps {
-  agent: Agent;
-  now: number;
-}
-
-interface AgentFactsProps {
-  agent: Agent;
-  now: number;
-}
-
-interface DrawerSectionProps {
-  title: string;
-  children: ReactNode;
-}
-
 interface ChatsListProps {
+  boardKey: string;
   chats: readonly WithId<ProjectThread>[];
+  now: number;
   onPurge: (thread: string) => void;
 }
 
-interface ChatMenuProps {
-  id: string;
+interface ChatRowProps {
+  boardKey: string;
+  chat: WithId<ProjectThread>;
+  now: number;
   onPurge: (thread: string) => void;
 }
+
 
 export type {
   AgentAnchor,
   AgentActions,
-  AgentActionsProps,
-  AgentDetailLineProps,
-  AgentDrawerBodyProps,
-  AgentDrawerProps,
-  AgentFactsProps,
-  AgentListProps,
-  AgentModelProps,
-  AgentNameProps,
-  AgentRowProps,
-  AgentStatusProps,
+  AgentEdits,
+  AgentRuns,
+  ChatRowProps,
+  AgentsBodyProps,
+  AgentsFootProps,
   AgentsHeaderProps,
   AgentsTabProps,
-  AgentsToolbarProps,
   AgentsView,
-  AgentTimeProps,
-  ChatMenuProps,
   ChatsListProps,
-  DrawerSectionProps,
   LeadLineProps,
   ReconcilePanelProps,
+  RowState,
 };

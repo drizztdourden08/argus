@@ -1,37 +1,30 @@
 /* @layer renderer-app @kind component */
-import { Button, Card, CopyButton, Inline, Link, Stack } from '@drizztdourden08/tessera';
-import { useNavigate } from 'react-router';
-import { resolvePalette } from '../../../../palette';
-import type { ProjectCardProps } from '../dashboards.type';
+import { Card, Flex, Spacer } from '@drizztdourden08/tessera';
 import { attentionOf, cardTone, leadState } from '../model';
+import type { ProjectCardProps } from '../dashboards.type';
 import { CardCounters } from './CardCounters';
 import { CardFlags } from './CardFlags';
+import { CardFooter } from './CardFooter';
 import { CardHeadline } from './CardHeadline';
+import { CardState } from './CardState';
 import { MasterRow } from './MasterRow';
+import './ProjectCard.css';
 
 const ProjectCard = (props: ProjectCardProps) => {
-  const { card, now, onSend } = props;
-  const navigate = useNavigate();
-  const started = leadState(card, now) !== 'not started';
+  const { card, now, onSend, onLog } = props;
+  const state = leadState(card, now);
+  const started = state !== 'not started';
   return (
-    <Card
-      variant="interactive"
-      title={card.name}
-      subtitle={card.key}
-      tone={started ? cardTone(attentionOf(card)) : undefined}
-      data-palette={resolvePalette(card.key, card.palette)}
-    >
-      <Stack gap="sm">
-        <CardHeadline card={card} now={now} />
-        {started ? <CardCounters card={card} /> : null}
-        {started ? <CardFlags card={card} /> : null}
-        {started ? <MasterRow card={card} /> : null}
-        <Inline gap="sm" align="center">
-          {started ? <Link href={card.url} navigate={navigate}>Open board</Link> : null}
-          {started ? <Button size="xs" onClick={() => onSend(card.key)} title={`Send a decision or a note to ${card.name}`}>Send down</Button> : null}
-          <CopyButton text={card.key} label="Copy the project key" size="xs" />
-        </Inline>
-      </Stack>
+    <Card fill className="project-card" data-state={state} data-edge={started ? cardTone(attentionOf(card)) : undefined}>
+      <Flex direction="column" gap="sm">
+        <CardHeadline card={card} state={state} />
+        <CardState card={card} state={state} now={now} />
+        {started && <CardCounters card={card} />}
+        {started && <CardFlags card={card} />}
+        {started && <MasterRow card={card} onLog={onLog} />}
+        <Spacer />
+        <CardFooter card={card} started={started} onSend={onSend} />
+      </Flex>
     </Card>
   );
 };

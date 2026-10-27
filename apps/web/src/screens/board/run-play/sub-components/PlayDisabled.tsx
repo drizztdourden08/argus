@@ -6,7 +6,7 @@ const PlayDisabled = (props: PlayDisabledProps) => {
   const { label, hint } = props;
   return (
     <Tooltip content={hint} focusable>
-      <Button size="sm" variant="primary" disabled aria-label={`Play ${label}`} title={hint}>Play</Button>
+      <Button size="sm" disabled aria-label={`Play ${label}`} title={hint}>Play</Button>
     </Tooltip>
   );
 };

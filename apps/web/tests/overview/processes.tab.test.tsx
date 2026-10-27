@@ -39,7 +39,7 @@ describe('the summary, the rule strip and the rules', () => {
   it('shows the count, the memory, how many need a look and the platform', async () => {
     stubApi();
     await open();
-    expect(await screen.findByText('Need a look')).toBeTruthy();
+    expect(await screen.findByText('need a look')).toBeTruthy();
     expect(screen.getAllByText('4.2 GB').length).toBeGreaterThan(0);
     expect(screen.getByText('win32')).toBeTruthy();
   });
@@ -47,8 +47,8 @@ describe('the summary, the rule strip and the rules', () => {
   it('shows each rule with its count and memory, and says over the cap when the group is past it', async () => {
     stubApi();
     await open();
-    expect(await screen.findByText('node-dev-server 1, 1.9 GB of cap 1.5 GB')).toBeTruthy();
-    expect(screen.getByText('electron-dev 1, 1.6 GB')).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /node-dev-server\s*1\s*1\.9 GB \/ cap 1\.5 GB/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /electron-dev\s*1\s*1\.6 GB/ })).toBeTruthy();
   });
 
   it('lists the rules read-only in a section that carries their number', async () => {
@@ -71,7 +71,7 @@ describe('the summary, the rule strip and the rules', () => {
     await open();
     const grid = await screen.findByRole('grid');
     expect(within(grid).getAllByText('explorer').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByText('Needs a look 2'));
+    fireEvent.click(screen.getByRole('radio', { name: /Needs a look\s*2/ }));
     await waitFor(() => expect(within(screen.getByRole('grid')).queryByText('explorer')).toBeNull());
     expect(within(screen.getByRole('grid')).getAllByText('vite').length).toBeGreaterThan(0);
   });
@@ -129,7 +129,7 @@ describe('killing a protected process and the stale ones of a rule', () => {
     stubApi();
     await open();
     const grid = await screen.findByRole('grid');
-    expect(within(grid).getAllByText('protected')).toHaveLength(1);
+    expect(within(grid).getAllByLabelText('Protected')).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Kill explorer 100' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Kill electron 4900' })).toBeTruthy();
   });
@@ -147,7 +147,7 @@ describe('killing a protected process and the stale ones of a rule', () => {
   it('offers no Kill stale for a rule with nothing stale', async () => {
     stubApi();
     await open();
-    await screen.findByText('electron-dev 1, 1.6 GB');
+    await screen.findByRole('button', { name: /electron-dev\s*1\s*1\.6 GB/ });
     expect(screen.queryByRole('button', { name: 'Kill stale (0)' })).toBeNull();
     expect(screen.getAllByRole('button', { name: /Kill stale/ })).toHaveLength(1);
   });
@@ -161,7 +161,7 @@ describe('the cells of the process table', () => {
     await open();
     const grid = await screen.findByRole('grid');
     expect(within(grid).getAllByText('1.9 GB').length).toBeGreaterThan(0);
-    expect(within(grid).getAllByText('12 %').length).toBeGreaterThan(0);
+    expect(within(grid).getAllByText('12%').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('3h 10m').length).toBeGreaterThan(0);
     expect(within(grid).getAllByText('4812').length).toBeGreaterThan(0);
   });
@@ -178,10 +178,10 @@ describe('the cells of the process table', () => {
     await open({ cards: CARDS, procs: { a: sample('hog'), b: { ...sample('old'), pid: 2 }, c: { ...sample('orphan'), pid: 3 }, d: { ...sample('hung'), pid: 4 }, e: { ...sample('exotic'), pid: 5 } }, meta: PROCS_META });
     const grid = await screen.findByRole('grid');
     const tag = (title: string): string => within(grid).getByTitle(title).className;
-    expect(tag('Uses more memory than its rule allows.')).toContain('tag--warning');
-    expect(tag('Running for longer than its rule allows.')).toContain('tag--warning');
-    expect(tag('Its parent process is gone.')).toContain('tag--danger');
-    expect(tag('Not responding.')).toContain('tag--danger');
-    expect(tag('exotic')).toContain('tag--neutral');
+    expect(tag('Uses more memory than its rule allows.')).toContain('status--warning');
+    expect(tag('Running for longer than its rule allows.')).toContain('status--warning');
+    expect(tag('Its parent process is gone.')).toContain('status--danger');
+    expect(tag('Not responding.')).toContain('status--danger');
+    expect(tag('exotic')).toContain('status--neutral');
   });
 });

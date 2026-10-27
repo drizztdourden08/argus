@@ -3,6 +3,8 @@ import type { RunStatus, RunTone } from './runs.type';
 
 const LIVE_RUN_STATES: readonly RunStatus[] = ['queued', 'running'];
 
+const FINISHED_RUNS_SHOWN = 20;
+
 const QUEUED_LABEL = 'Queued, waiting for a free slot';
 
 const LAUNCHING_LABEL = 'Launching...';
@@ -21,4 +23,4 @@ const RUN_LOG_FULL = 4000;
 
 const RUN_LOG_FLUSH_MS = 40;
 
-export { ANSI_PATTERN, END_TONES, LAUNCHING_LABEL, LINE_MAX_CHARS, LIVE_RUN_STATES, QUEUED_LABEL, RUN_LOG_FLUSH_MS, RUN_LOG_FULL, RUN_LOG_TAIL, RUNNING_LABEL };
+export { ANSI_PATTERN, END_TONES, FINISHED_RUNS_SHOWN, LAUNCHING_LABEL, LINE_MAX_CHARS, LIVE_RUN_STATES, QUEUED_LABEL, RUN_LOG_FLUSH_MS, RUN_LOG_FULL, RUN_LOG_TAIL, RUNNING_LABEL };

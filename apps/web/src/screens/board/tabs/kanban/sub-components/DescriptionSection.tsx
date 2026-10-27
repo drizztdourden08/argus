@@ -14,7 +14,7 @@ const DescriptionSection = (props: DescriptionSectionProps) => {
       <EditableMarkdown
         noun="description"
         value={description}
-        empty="No description yet."
+        empty="add a description"
         limit={LIMITS.description}
         problem={descriptionProblem}
         onSave={(value) => void ops.setField(item, 'description', value)}

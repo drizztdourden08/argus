@@ -7,7 +7,7 @@ const onScreenIds = (): string[] => {
   const ids: string[] = [];
   for (const row of document.querySelectorAll<HTMLElement>('[data-open-test]')) {
     const id = row.dataset.openTest;
-    if (id && !ids.includes(id) && !row.closest('details:not([open])')) ids.push(id);
+    if (id && !ids.includes(id) && !row.closest('[hidden]')) ids.push(id);
   }
   return ids;
 };

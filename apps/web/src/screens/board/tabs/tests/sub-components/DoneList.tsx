@@ -1,24 +1,34 @@
 /* @layer renderer-app @kind component */
-import { Disclosure, Flex, List, SectionHeader } from '@drizztdourden08/tessera';
+import { Box, Button, Icon, SectionHeader } from '@drizztdourden08/tessera';
+import { useState } from 'react';
 import { DONE_FOLD_AFTER } from '../model';
-import type { TestDoc } from '../model';
 import type { DoneListProps } from '../tests-props.type';
+import { SectionBand } from './SectionBand';
 import { TestRow } from './TestRow';
 
 const DoneList = (props: DoneListProps) => {
   const { tests } = props;
+  const [all, setAll] = useState(false);
   const folded = tests.length > DONE_FOLD_AFTER;
-  const rows = (list: TestDoc[]) => list.map((test) => <TestRow key={test.id} test={test} />);
+  const shown = folded && !all ? tests.slice(0, 1) : tests;
   return (
-    <Flex direction="column" gap="xs" role="group" aria-label="Done">
-      <SectionHeader title="Done" count={tests.length} level={4} />
-      <List>{rows(folded ? tests.slice(0, 1) : tests)}</List>
-      {folded && (
-        <Disclosure size="sm" summary={`Show all ${tests.length} done`}>
-          <List>{rows(tests.slice(1))}</List>
-        </Disclosure>
-      )}
-    </Flex>
+    <Box role="group" aria-label="Done">
+      <SectionBand>
+        {folded ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={<Icon name={all ? 'chevron-down' : 'chevron-right'} />}
+            aria-expanded={all}
+            title={all ? 'Show only the newest' : `Show all ${tests.length}`}
+            onClick={() => setAll(!all)}
+          >
+            {`${tests.length} done`}
+          </Button>
+        ) : <SectionHeader title="Done" count={tests.length} level={4} />}
+      </SectionBand>
+      {shown.map((test) => <TestRow key={test.id} test={test} />)}
+    </Box>
   );
 };
 

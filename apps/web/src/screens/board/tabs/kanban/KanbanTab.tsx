@@ -13,7 +13,7 @@ import { useNow } from './behavior/useNow';
 import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
-import { needsYou, subjectsOf } from './model';
+import { itemTests, needsYou, subjectsOf } from './model';
 import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
 import { KanbanToolbar } from './sub-components/KanbanToolbar';
@@ -34,6 +34,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   const selection = useSelection();
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
   const subjects = useMemo(() => subjectsOf(data.items), [data.items]);
+  const drawerTests = useMemo(() => itemTests(data.tests, data.closedBuilds, state.filters.archived), [data.tests, data.closedBuilds, state.filters.archived]);
   if (!data.ready) return <Text tone="muted">Loading the work items.</Text>;
   return (
     <Flex direction="column" gap="md">
@@ -58,7 +59,7 @@ const KanbanTab = (props: KanbanTabProps) => {
       <ItemDrawer
         boardKey={boardKey}
         item={drawer.opened}
-        tests={data.tests}
+        tests={drawerTests}
         threads={data.threads}
         actions={data.actions}
         waiting={needsYou(drawer.opened ? data.needs.get(drawer.opened.id) : undefined)}

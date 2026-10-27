@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
-import { KanbanBoard } from '@drizztdourden08/tessera';
+import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
 import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import { applyDrop } from '../behavior/apply-drop';
-import { BOARD_LABEL } from '../kanban.constants';
+import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { addPreset, planDrop } from '../model';
 import type { CardData } from '../model';
@@ -37,6 +37,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       ) : undefined,
   }));
   return (
+    <TesseraProvider overrides={EMPTY_COLUMN_STRINGS}>
     <KanbanBoard
       label={BOARD_LABEL}
       columns={columns}
@@ -56,6 +57,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
         />
       )}
     />
+    </TesseraProvider>
   );
 };
 

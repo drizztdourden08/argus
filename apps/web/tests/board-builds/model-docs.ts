@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import type { RunEntry } from '../../src/data/runs';
-import type { BuildDoc, LaunchDefDoc, LauncherDoc, launcherViews } from '../../src/screens/board/tabs/builds/model';
+import type { BuildDoc, LauncherDoc, launcherViews, ViewInput } from '../../src/screens/board/tabs/builds/model';
 import { defDoc, launcherDoc } from './fixtures';
 
 const NOW = Date.parse('2026-10-26T10:00:00.000Z');
@@ -11,7 +11,7 @@ const withId = (key: string) => (doc: object) => ({ ...doc, id: String((doc as R
 
 const launchers = (...docs: object[]) => docs.map(withId('name')) as LauncherDoc[];
 
-const defs = (...docs: object[]) => docs.map(withId('name')) as LaunchDefDoc[];
+const defs = (...docs: object[]) => docs.map(withId('name')) as ViewInput['defs'][number][];
 
 const builds = (...docs: object[]) => docs.map(withId('tag')) as BuildDoc[];
 

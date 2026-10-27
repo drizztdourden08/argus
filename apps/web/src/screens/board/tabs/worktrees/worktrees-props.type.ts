@@ -1,7 +1,13 @@
 /* @layer renderer-app @kind types */
+import type { TextProps } from '@drizztdourden08/tessera';
 import type { BatchJob, WorktreeRule, WorktreesMeta } from '../../../../data/worktrees';
 import type { Counts, Notice, Panel, WorktreeFilter, WorktreeRow } from './model';
 import type { AskThread, BatchControls, PanelControls, Removal, RowContext } from './worktrees.type';
+
+interface CellTextProps extends TextProps {
+  fill?: boolean;
+  tail?: number;
+}
 
 interface WorktreesTabProps {
   boardKey: string;
@@ -109,7 +115,7 @@ interface RuleLineProps {
 }
 
 export type {
-  BatchConfirmProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
+  BatchConfirmProps, CellTextProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
   RefusedJobsProps, RemoveButtonProps, RemoveConfirmProps, RequestFormProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
   WorktreeSummaryProps, WorktreeTableProps, WorktreeToolbarProps, WorktreesTabProps,
 };

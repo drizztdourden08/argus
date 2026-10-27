@@ -2,10 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { mergeRunLines } from '../../src/data/runs/merge-run-lines';
 import type { RunEntry, RunLogLine } from '../../src/data/runs';
-import { countsText, launcherViews, noPlayHint, runDuration, runNote } from '../../src/screens/board/tabs/builds/model';
+import { countsText, launcherViews, noPlayHint } from '../../src/screens/board/tabs/builds/model';
 import { logRows, terminalLast, terminalMeta } from '../../src/screens/board/run-terminal';
-import { formatDuration } from '../../src/screens/board/tabs/builds/model/format-duration';
-import { DAY, launcherDoc, runDoc, runningDoc, standaloneDoc } from './fixtures';
+import { DAY, launcherDoc, runningDoc, standaloneDoc } from './fixtures';
 import { at, input, launchers } from './model-docs';
 
 describe('texts of a launcher and a run', () => {
@@ -33,23 +32,6 @@ describe('texts of a launcher and a run', () => {
     const failed = { ...live, status: 'failed', exitCode: 3, lastLine: null } as RunEntry;
     expect(terminalMeta(failed)).toBe('R-4 · failed (exit 3)');
     expect(terminalLast(failed)).toBe('');
-  });
-
-  it('notes a run by its last line, else its error', () => {
-    const run = runDoc('R-1', 'launcher-master', { status: 'failed', exitCode: null, error: 'timeout', lastLine: null }) as RunEntry;
-    expect(runNote(run)).toBe('timeout');
-    expect(runNote({ ...run, lastLine: 'boom' })).toBe('boom');
-    expect(runNote({ ...run, error: null })).toBe('');
-  });
-
-  it('formats a duration the way a build is read', () => {
-    expect([0, 59_000, 65_000, 3_599_000, 3_900_000].map(formatDuration)).toEqual(['0s', '59s', '1m 05s', '59m 59s', '1h 05m']);
-  });
-
-  it('measures a finished run from its start, and nothing for a live one', () => {
-    const done = runDoc('R-1', 'x', { startedAt: at(125_000), endedAt: at(0) }) as RunEntry;
-    expect(runDuration(done)).toBe('2m 05s');
-    expect(runDuration(runningDoc('R-2', 'x') as RunEntry)).toBe('');
   });
 });
 

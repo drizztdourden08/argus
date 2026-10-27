@@ -82,7 +82,7 @@ describe('the conflicted tests in the list and the drawer', () => {
   it('narrows the list to the conflicted tests with the conflict switch', async () => {
     await mountTab(board([conflictEntry('O-1', 'T-1')]));
     await screen.findByText('Test T-2');
-    fireEvent.click(screen.getByRole('switch', { name: 'conflict' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'conflict' }));
     expect(screen.queryByText('Test T-2')).toBeNull();
     expect(screen.getByText('Test T-1')).toBeTruthy();
   });

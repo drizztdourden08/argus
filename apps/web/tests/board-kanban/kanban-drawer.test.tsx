@@ -22,18 +22,31 @@ describe('the detail drawer', () => {
 
   it('says there is no description yet', async () => {
     const { dialog } = await opened({ description: '' });
-    expect(within(dialog).getByText('No description yet.')).toBeTruthy();
+    expect(within(dialog).getByText('add a description')).toBeTruthy();
   });
 
   it('lists the criteria met, and the tests of this item only', async () => {
     const { dialog } = await opened();
-    expect(within(dialog).getByText('Acceptance criteria, 1/2 met')).toBeTruthy();
+    expect(within(dialog).getByText('Acceptance criteria · 1/2')).toBeTruthy();
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 1 met' }).checked).toBe(false);
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 2 met' }).checked).toBe(true);
     expect(within(dialog).getByText('proved by T-1')).toBeTruthy();
-    expect(within(dialog).getByText('Tests, 1/2 passing')).toBeTruthy();
+    expect(within(dialog).getByText('Tests · 1/2 passing')).toBeTruthy();
     expect(within(dialog).getByText('Wrong password')).toBeTruthy();
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
+  });
+
+  it('counts no archived test and no test of a closed bundle, as the Node page does', async () => {
+    const moved = { id: 'T-5', item: 'I-1', title: 'Moved away', mode: 'manual', status: 'moved', ac: [], archivedAt: ago(MIN) };
+    const closed = { id: 'T-6', item: 'I-1', title: 'In a closed bundle', mode: 'manual', status: 'pass', ac: [], build: 'old-1' };
+    await mountKanban({
+      items: [item('I-86')],
+      tests: [{ ...moved, item: 'I-86' }, { ...closed, item: 'I-86' }],
+      builds: [{ tag: 'old-1', closedAt: ago(MIN) }],
+    });
+    const dialog = await openItem('I-86');
+    expect(within(dialog).getByText('Tests, 0/0 passing')).toBeTruthy();
+    expect(within(dialog).queryByText('Moved away')).toBeNull();
   });
 
   it('says needs you in the drawer while a question waits on the owner, and stops once it is answered', async () => {

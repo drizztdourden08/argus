@@ -116,25 +116,25 @@ describe('the settings row', () => {
     stubApi(() => ({ body: SETTINGS }));
     await open();
     const ping = await screen.findByRole('group', { name: 'ping' });
-    expect(within(ping).getByLabelText('Toast')).toBeTruthy();
-    expect(within(ping).getByLabelText('Sound')).toBeTruthy();
+    expect(within(ping).getByRole('button', { name: 'Toast' })).toBeTruthy();
+    expect(within(ping).getByRole('button', { name: 'Sound' })).toBeTruthy();
   });
 
   it('saves a toggle at once with just that switch and shows the answer', async () => {
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { ...SETTINGS, toast: { ...SETTINGS.toast, ping: false } } } : { body: SETTINGS }));
     await open();
     const ping = await screen.findByRole('group', { name: 'ping' });
-    fireEvent.click(within(ping).getByLabelText('Toast'));
+    fireEvent.click(within(ping).getByRole('button', { name: 'Toast' }));
     await waitFor(() => expect(posts(calls, '/api/notify/settings')).toHaveLength(1));
     expect(posts(calls, '/api/notify/settings')[0]?.body).toEqual({ toast: { ping: false } });
-    await waitFor(() => expect(within(ping).getByLabelText<HTMLInputElement>('Toast').checked).toBe(false));
+    await waitFor(() => expect(within(ping).getByRole('button', { name: 'Toast' }).getAttribute('aria-pressed')).toBe('false'));
   });
 
   it('says only the page may change the settings when the save is refused', async () => {
     stubApi((call) => (call.method === 'POST' ? { status: 403, body: { error: { code: 'forbidden', message: 'no' } } } : { body: SETTINGS }));
     await open();
     const ping = await screen.findByRole('group', { name: 'ping' });
-    fireEvent.click(within(ping).getByLabelText('Sound'));
+    fireEvent.click(within(ping).getByRole('button', { name: 'Sound' }));
     expect(await screen.findByText('Only this page may change the settings.')).toBeTruthy();
   });
 

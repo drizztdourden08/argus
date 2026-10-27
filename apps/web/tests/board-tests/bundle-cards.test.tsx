@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { cardOf, cleanAfterEach, detailsOf, tagsOf } from './board-dom';
+import { cardOf, cleanAfterEach, isOpen, tagsOf, toggleOf } from './board-dom';
 import { buildDoc, doneDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
@@ -17,7 +17,7 @@ describe('the order and the folds of bundle cards', () => {
     await screen.findByText('Test T-1');
     expect(tagsOf(container)).toEqual(['b2', 'b1']);
     expect(within(cardOf(container, 'b2')).getByText('handed to you')).toBeTruthy();
-    expect(detailsOf(cardOf(container, 'b2')).open).toBe(true);
+    expect(isOpen(cardOf(container, 'b2'))).toBe(true);
   });
 
   it('open for tests to run and fold when finished, and a click on the header overrides that', async () => {
@@ -26,11 +26,11 @@ describe('the order and the folds of bundle cards', () => {
       tests: [testDoc('T-1', { build: 'todo' }), doneDoc('T-2', 'pass', 'ok', { build: 'finished' })],
     });
     await screen.findByText('Test T-1');
-    expect(detailsOf(cardOf(container, 'todo')).open).toBe(true);
+    expect(isOpen(cardOf(container, 'todo'))).toBe(true);
     const finished = cardOf(container, 'finished');
-    expect(detailsOf(finished).open).toBe(false);
-    fireEvent.click(finished.querySelector('summary') as Element);
-    expect(detailsOf(finished).open).toBe(true);
+    expect(isOpen(finished)).toBe(false);
+    fireEvent.click(toggleOf(finished));
+    expect(isOpen(finished)).toBe(true);
   });
 
   it('show a declared bundle with no test yet, and the tests without a bundle last', async () => {
@@ -49,16 +49,16 @@ describe('the order and the folds of bundle cards', () => {
       tests: [testDoc('T-1', { build: 'd1' }), testDoc('T-2', { build: 'r1' })],
     });
     await screen.findByText('Test T-1');
-    const draft = cardOf(container, 'd1').querySelector('[data-status="draft"]');
-    expect(draft?.textContent).toBe('Draft');
+    const draft = cardOf(container, 'd1').querySelector('[data-bstatus="draft"]');
+    expect(draft?.textContent).toBe('draft');
     expect(draft?.getAttribute('title')).toMatch(/not built yet/);
-    expect(cardOf(container, 'r1').querySelector('[data-status="ready"]')?.textContent).toBe('Ready');
+    expect(cardOf(container, 'r1').querySelector('[data-bstatus="ready"]')?.textContent).toBe('ready');
   });
 });
 
 describe('the sections of a bundle card', () => {
   it('take a test in live: a change moves it from To run to Done', async () => {
-    const { change } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1')] });
+    const { change } = await mountTab({ handed: 'bundle-1', builds: [buildDoc('bundle-1')], tests: [testDoc('T-1')] });
     const toRun = await screen.findByRole('group', { name: 'To run' });
     expect(within(toRun).getByText('Test T-1')).toBeTruthy();
     change('tests', 'T-1', doneDoc('T-1', 'pass', 'ok'));
@@ -71,18 +71,17 @@ describe('the sections of a bundle card', () => {
     const rows = Array.from({ length: 6 }, (_, index) => doneDoc(`T-${index + 1}`, 'pass', 'ok', {
       result: { status: 'pass', text: 'ok', by: 'human', at: `2026-10-26T0${index}:00:00.000Z` },
     }));
-    await mountTab({ builds: [buildDoc('bundle-1')], tests: rows });
+    await mountTab({ handed: 'bundle-1', builds: [buildDoc('bundle-1')], tests: rows });
     const done = await screen.findByRole('group', { name: 'Done' });
-    expect(within(done).getByText('Show all 6 done')).toBeTruthy();
-    const outside = done.querySelector('ul') as HTMLElement;
-    expect([...outside.querySelectorAll('[data-test]')].map((row) => row.getAttribute('data-test'))).toEqual(['T-6']);
+    expect(within(done).getByRole('button', { name: /6 done/ })).toBeTruthy();
+    expect([...done.querySelectorAll('[data-test]')].map((row) => row.getAttribute('data-test'))).toEqual(['T-6']);
   });
 
   it('list five done tests with no toggle', async () => {
     const rows = Array.from({ length: 5 }, (_, index) => doneDoc(`T-${index + 1}`, 'pass', 'ok'));
-    await mountTab({ builds: [buildDoc('bundle-1')], tests: rows });
+    await mountTab({ handed: 'bundle-1', builds: [buildDoc('bundle-1')], tests: rows });
     const done = await screen.findByRole('group', { name: 'Done' });
-    expect(within(done).queryByText(/Show all/)).toBeNull();
+    expect(within(done).queryByRole('button', { name: /done/ })).toBeNull();
     expect(done.querySelectorAll('[data-test]')).toHaveLength(5);
   });
 

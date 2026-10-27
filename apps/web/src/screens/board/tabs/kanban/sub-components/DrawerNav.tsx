@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind component */
-import { Button, CopyButton, Flex, Icon, IconButton } from '@drizztdourden08/tessera';
+import { Button, CopyButton, Icon, IconButton } from '@drizztdourden08/tessera';
 import type { DrawerNavProps } from '../drawer-props.type';
 import { linkOf } from '../model';
 
 const DrawerNav = (props: DrawerNavProps) => {
   const { item, ops, nav, wide, onWide } = props;
   const { previous, next, onStep } = nav;
+  const archived = Boolean(item.archivedAt);
   return (
-    <Flex gap="xs" align="center" wrap role="toolbar" aria-label="Item tools">
+    <>
       <CopyButton text={() => linkOf(item.id)} label={`Copy a link to ${item.id}`} variant="ghost" size="xs" />
       <IconButton label="Previous in the list ([)" size="xs" variant="ghost" disabled={previous === null} onClick={() => previous && onStep(previous)}>
         <Icon name="chevron-left" />
@@ -18,11 +19,18 @@ const DrawerNav = (props: DrawerNavProps) => {
       <Button size="xs" variant="ghost" aria-pressed={wide} title="Focus mode: the drawer takes the whole width" onClick={onWide}>
         {wide ? 'Collapse' : 'Expand'}
       </Button>
-      <Button size="xs" variant="secondary" onClick={() => void ops.soft(item.archivedAt ? 'unarchive' : 'archive', item)}>
-        {item.archivedAt ? 'Unarchive' : 'Archive'}
-      </Button>
-      <Button size="xs" variant="danger" onClick={() => void ops.soft('delete', item)}>Delete</Button>
-    </Flex>
+      <IconButton
+        label={archived ? 'Unarchive' : 'Archive'}
+        size="xs"
+        variant="ghost"
+        onClick={() => void ops.soft(archived ? 'unarchive' : 'archive', item)}
+      >
+        <Icon name={archived ? 'rotate-ccw' : 'archive'} />
+      </IconButton>
+      <IconButton label="Delete" title="Delete (Undo stays a few seconds)" size="xs" variant="ghost" tone="danger" onClick={() => void ops.soft('delete', item)}>
+        <Icon name="trash-2" />
+      </IconButton>
+    </>
   );
 };
 

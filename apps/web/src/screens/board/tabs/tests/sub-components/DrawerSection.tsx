@@ -6,7 +6,7 @@ const DrawerSection = (props: DrawerSectionProps) => {
   const { title, count, children } = props;
   return (
     <Flex direction="column" gap="xs" role="group" aria-label={title}>
-      <SectionHeader title={title} count={count} level={4} />
+      <SectionHeader title={count === undefined ? title : `${title} · ${count}`} level={4} />
       {children}
     </Flex>
   );

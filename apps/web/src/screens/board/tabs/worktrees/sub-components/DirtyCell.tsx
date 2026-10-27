@@ -4,7 +4,7 @@ import type { CellProps } from '../worktrees.type';
 
 const DirtyCell = (props: CellProps) => {
   const { row } = props;
-  return row.dirty ? <Text numeric>{row.dirty}</Text> : null;
+  return row.dirty ? <Text variant="caption" tone="dim" mono numeric>{row.dirty}</Text> : null;
 };
 
 export { DirtyCell };

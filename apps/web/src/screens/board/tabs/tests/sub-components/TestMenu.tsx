@@ -13,7 +13,7 @@ const TestMenu = (props: TestMenuProps) => {
   const groups = testMenuGroups({ test, shared, rerun: () => void actions.rerun(test.id) });
   return (
     <>
-      <DropdownMenu label={label} trigger={{ label, icon: 'ellipsis', iconOnly: true }} groups={groups} variant="ghost" size="xs" align="end" />
+      <DropdownMenu label={label} trigger={{ label, icon: 'ellipsis-vertical', iconOnly: true }} groups={groups} variant="ghost" size="xs" align="end" />
       <ContextMenu open={menu.at !== null} point={menu.at ?? undefined} label={label} groups={groups} variant="ghost" onClose={menu.close} />
     </>
   );

@@ -17,14 +17,15 @@ const useKanbanData = (boardKey: string): KanbanData => {
   const tests = useCollection<Test>(boardKey, 'tests');
   const builds = useCollection<Build>(boardKey, 'builds');
   const agents = useCollection<TrashSource>(boardKey, 'agents');
-  const needs = useMemo(() => {
-    const closed = new Set(builds.docs.filter((build) => build.closedAt).map((build) => build.id));
-    return needsMap({
+  const closedBuilds = useMemo(() => new Set(builds.docs.filter((build) => build.closedAt).map((build) => build.id)), [builds.docs]);
+  const needs = useMemo(
+    () => needsMap({
       entries: entries.docs.filter((entry) => !OP_KINDS.includes(entry.kind) && isLive(entry)),
       actions: actions.docs.filter(isLive),
-      tests: tests.docs.filter((test) => isLive(test) && !(test.build && closed.has(test.build))),
-    });
-  }, [entries.docs, actions.docs, tests.docs, builds.docs]);
+      tests: tests.docs.filter((test) => isLive(test) && !(test.build && closedBuilds.has(test.build))),
+    }),
+    [entries.docs, actions.docs, tests.docs, closedBuilds],
+  );
   return {
     ready: items.ready && threads.ready,
     items: items.docs,
@@ -33,6 +34,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     actions: actions.docs,
     agents: agents.docs,
     tests: tests.docs,
+    closedBuilds,
     needs,
   };
 };

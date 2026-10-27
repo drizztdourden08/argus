@@ -7,7 +7,7 @@ import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
 import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../data/types';
-import type { EditChange, ItemDoc, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, WakeDoc } from './model';
+import type { EditChange, FocusOption, FocusScope, ItemDoc, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, WakeDoc } from './model';
 
 interface TestsData {
   ready: boolean;
@@ -32,6 +32,14 @@ interface TestsState {
   setOrder: (order: TestOrder) => void;
   setShowPassed: (show: boolean) => void;
   setShowClosed: (show: boolean) => void;
+}
+
+interface TestsFocus {
+  scope: FocusScope;
+  options: FocusOption[];
+  pausedCount: number;
+  setFocus: (focus: string) => void;
+  setShowPaused: (show: boolean) => void;
 }
 
 interface TestOps {
@@ -87,6 +95,7 @@ interface TestsScreen {
   shared: TestsShared;
   notices: NoticeOps;
   visible: TestDoc[];
+  focus: TestsFocus;
   anchor: TestAnchor;
   nav: DrawerNav;
   wide: DrawerWide;
@@ -176,5 +185,5 @@ interface DrawerWide {
 }
 
 export type {
-  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, RowMenu, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsScreen, TestsShared, TestsState,
+  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, RowMenu, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsFocus, TestsScreen, TestsShared, TestsState,
 };

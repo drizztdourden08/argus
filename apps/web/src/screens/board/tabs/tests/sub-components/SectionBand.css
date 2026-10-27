@@ -1,0 +1,27 @@
+.test-section__band {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--size-32);
+  padding: var(--space-2xs) var(--space-md);
+  background: var(--c-inset);
+  border-block-start: var(--border-width-thin) solid var(--c-border);
+}
+
+.test-section__band > * {
+  flex: 1;
+}
+
+.test-section__empty {
+  padding: var(--space-md);
+  border-block-start: var(--border-width-thin) solid var(--c-border);
+}
+
+@media (width <= 720px) {
+  .test-section__band {
+    padding-inline: var(--space-sm);
+  }
+
+  .test-section__hint {
+    display: none;
+  }
+}

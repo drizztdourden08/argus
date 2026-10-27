@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind constants */
+import type { TagUrgencyColor, TesseraOverrides } from '@drizztdourden08/tessera';
 import type { NoteKind } from '../../owner-posts';
 import type { PurgeDraft, PurgeScope } from './trash';
 
@@ -10,6 +11,20 @@ const ANY_SUBJECT = 'any';
 
 
 const BOARD_LABEL = 'Work items';
+
+const EMPTY_COLUMN_STRINGS: TesseraOverrides = { strings: { kanbanBoard: { empty: 'none' } } };
+
+const STATUS_TONES: Record<string, TagUrgencyColor> = {
+  todo: 'info',
+  doing: 'success',
+  review: 'warning',
+  pending: 'warning',
+  manual: 'warning',
+  partial: 'warning',
+  pass: 'success',
+  fail: 'danger',
+  blocked: 'danger',
+};
 
 const NEEDS_YOU_TIP = 'A question, a to-do or a test waits on you.';
 
@@ -40,4 +55,4 @@ const NOTE_WORD: Record<NoteKind, string> = { decision: 'decision', followup: 'n
 
 const ORDER_HINT = 'Switch the order to Manual to reorder.';
 
-export { KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
+export { EMPTY_COLUMN_STRINGS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };

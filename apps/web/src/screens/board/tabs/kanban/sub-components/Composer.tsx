@@ -20,7 +20,7 @@ const Composer = (props: ComposerProps) => {
           {kind === 'decision' ? `queued for ${item.thread} to act on` : `more context for ${item.thread}`}
         </Text>
       </Flex>
-      <OwnerBox label={`The ${word} for ${item.thread}`} value={text} onChange={setText} onSubmit={send} disabled={acts.isBusy(`compose:${item.id}`)} />
+      <OwnerBox label={`The ${word} for ${item.thread}`} value={text} onChange={setText} rows={2} onSubmit={send} disabled={acts.isBusy(`compose:${item.id}`)} />
       <Flex>
         <Button size="sm" variant="primary" disabled={acts.isBusy(`compose:${item.id}`)} onClick={send}>{`Post ${word}`}</Button>
       </Flex>

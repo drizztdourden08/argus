@@ -42,14 +42,14 @@ describe('the Kanban columns', () => {
     expect(screen.queryByRole('group', { name: /^Done,/ })).toBeNull();
     expect(screen.queryByText('Item I-8')).toBeNull();
     expect(screen.getByText(/^1 open \/ 3/)).toBeTruthy();
-    const toggle = screen.getByRole('switch', { name: 'Show done (2)' });
-    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    const toggle = screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' });
+    expect(toggle.checked).toBe(false);
     fireEvent.click(toggle);
     expect(within(columnOf('Done, 2 cards')).getByText('Item I-8')).toBeTruthy();
     expect(within(columnOf('Done, 2 cards')).getByText('Item I-9')).toBeTruthy();
-    expect(screen.getByRole('switch', { name: 'Show done (2)' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' }).checked).toBe(true);
     expect(localStorage.getItem('coord.done2')).toBe('1');
-    fireEvent.click(screen.getByRole('switch', { name: 'Show done (2)' }));
+    fireEvent.click(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' }));
     expect(screen.queryByText('Item I-8')).toBeNull();
     expect(localStorage.getItem('coord.done2')).toBe('0');
   });
@@ -84,7 +84,7 @@ describe('the quiet mark', () => {
     expect(screen.getByTitle(/^No change for 5h \(a doing item is reminded after 4 h\)\. Its thread must start it/)).toBeTruthy();
     expect(screen.getByText('quiet 2d')).toBeTruthy();
     expect(within(columnOf('Doing, 2 cards')).getAllByText(/^quiet /)).toHaveLength(1);
-    expect(screen.getByText(/^3 open \/ 3 · 2 quiet$/)).toBeTruthy();
+    expect(screen.getByText(/^3 open \/ 3$/)).toBeTruthy();
   });
 
   it('does not mark an item that waits on the owner', async () => {
@@ -155,7 +155,7 @@ describe('the toolbar', () => {
   it('remembers the filters in the shape of the Node page, with the order inside them', async () => {
     await mountKanban({ items: [item('I-1')] });
     fireEvent.change(await screen.findByLabelText('Search id or title'), { target: { value: 'abc' } });
-    fireEvent.click(screen.getByRole('switch', { name: 'needs you' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'needs you' }));
     expect(JSON.parse(localStorage.getItem('coord.f') ?? '{}')).toMatchObject({ q: 'abc', needs: true, sort: 'rank' });
   });
 
@@ -163,7 +163,7 @@ describe('the toolbar', () => {
     await mountKanban({ items: [item('I-1'), item('I-2', { archivedAt: ago(HOUR) })] });
     await screen.findByText('Item I-1');
     expect(screen.queryByText('Item I-2')).toBeNull();
-    fireEvent.click(screen.getByRole('switch', { name: 'archived' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'archived' }));
     expect(screen.getByText('Item I-2')).toBeTruthy();
     expect(within(await boardOf()).getByText('archived')).toBeTruthy();
   });

@@ -20,8 +20,8 @@ describe('routing', () => {
     expect(wanted).toContain('cards');
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards)));
     expect(await screen.findByText('RotP')).toBeTruthy();
-    const links = screen.getAllByRole('link', { name: 'Open board' });
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/p/argus/', '/p/rotp/']);
+    const buttons = screen.getAllByRole('button', { name: /^Open the .+ board$/ });
+    expect(buttons).toHaveLength(2);
   });
 
   it('shows the board page at /p/:key/ with the registered strip', async () => {

@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { runLine } from '../../src/data/runs';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  bundleState, closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, sortDone, visibleTests,
+  closedBundles, countsText, groupBundles, noteProblem, resolveLaunch, sortDone, visibleTests,
 } from '../../src/screens/board/tabs/tests/model';
+import { bundleState } from '../../src/screens/board/shared';
 import { tally } from '../../src/screens/board/tabs/tests/model/tally';
 import type { BuildDoc, LaunchDefDoc, LauncherDoc, TestDoc } from '../../src/screens/board/tabs/tests/model';
 import { buildDoc, defDoc, doneDoc, launcherDoc, runDoc, testDoc } from './fixtures';
@@ -31,7 +32,7 @@ describe('counts', () => {
       doneDoc('T-6', 'blocked', 'stuck'),
     );
     expect(tally(rows)).toEqual({ run: 1, pass: 2, fail: 1, partial: 0, blocked: 1 });
-    expect(countsText(tally(rows))).toBe('1 to run / 2 pass / 1 fail / 1 blocked');
+    expect(countsText(tally(rows))).toBe('1 to run · 2 pass · 1 fail · 1 blocked');
     expect(countsText(tally([]))).toBe('no tests yet');
   });
 

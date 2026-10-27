@@ -1,0 +1,25 @@
+.cell-text {
+  display: block;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-text--fill {
+  contain: inline-size;
+}
+
+.cell-text--middle {
+  display: flex;
+}
+
+.cell-text__head {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-text__tail {
+  flex: none;
+}

@@ -22,13 +22,16 @@ interface AgentMark {
 
 type ModelFamily = 'haiku' | 'sonnet' | 'opus' | 'other';
 
-type ModelColor = 'neutral' | 'primary' | 'secondary' | 'tertiary';
+interface ModelLook {
+  tone: 'success' | 'info' | 'neutral';
+  dot: boolean;
+}
 
-type AgentFilter = 'running' | 'done' | 'all';
+type AgentField = 'task' | 'note' | 'branch' | 'worktree';
 
 interface Verdict {
   ok: boolean;
   message: string;
 }
 
-export type { AgentFilter, AgentMark, ModelColor, ModelFamily, NowLine, StatusLook, Verdict };
+export type { AgentField, AgentMark, ModelFamily, ModelLook, NowLine, StatusLook, Verdict };

@@ -47,7 +47,7 @@ describe('the launcher list', () => {
     const { container } = await mountBuilds(withDefs([launcherDoc('master'), launcherDoc('wt-1', { cwd: 'C:\\work\\wt-1' })]));
     await screen.findByText('2 to start');
     expect(within(cardOf(container, 'wt-1')).getAllByText('C:\\work\\wt-1')).toHaveLength(2);
-    expect(within(cardOf(container, 'master')).getByText(/run from the checkout/)).toBeTruthy();
+    expect(within(cardOf(container, 'master')).getByText(/run by .+ from the checkout/)).toBeTruthy();
   });
 
   it('draws the text of a launcher as text, never as markup', async () => {

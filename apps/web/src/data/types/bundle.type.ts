@@ -65,6 +65,8 @@ interface RunDoc {
   stdin?: boolean;
   orphan?: boolean;
   signal?: string | null;
+  agent?: string | null;
+  origin?: string;
 }
 
 interface TestItem {

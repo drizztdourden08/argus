@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Callout, CopyValue, Flex, Link, Text } from '@drizztdourden08/tessera';
+import { Box, Callout, CopyButton, Flex, Icon, Link, Tag, Text } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { RunPlay } from '../../../run-play';
 import { LogButton, RunTerminal } from '../../../run-terminal';
@@ -24,14 +24,22 @@ const LaunchCommand = (props: LaunchCommandProps) => {
   }
   const shown = draft ? null : shownRun(launch, runs);
   return (
-    <Flex direction="column" gap="2xs">
+    <Flex direction="column" gap="xs">
       <Flex gap="sm" align="center" wrap>
-        <CopyValue value={launch.cmd} label="Launch command" mono />
+        <Box surface="sunken" className="bundle__command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'}>
+          <Text mono>{launch.cmd}</Text>
+        </Box>
+        <CopyButton text={launch.cmd} label="Copy" showLabel size="sm" variant="secondary" />
         {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
       </Flex>
       {launch.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{launch.cwd}</Text.Code></Text>}
-      {launch.name && <Text variant="caption" tone="muted">from <Link href="#builds">launcher {launch.name}</Link></Text>}
+      {launch.name && (
+        <Flex gap="xs" align="center">
+          <Text variant="caption" tone="muted">from</Text>
+          <Tag><Link href="#builds"><Icon name="link" size={12} /> launcher {launch.name}</Link></Tag>
+        </Flex>
+      )}
       {shown && <RunTerminal key={shown.id} run={shown} boardKey={boardKey} onLog={onLog} />}
     </Flex>
   );

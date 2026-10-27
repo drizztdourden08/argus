@@ -1,14 +1,15 @@
 /* @layer renderer-app @kind component */
-import { Box, SectionHeader } from '@drizztdourden08/tessera';
+import { Divider, Flex, SectionHeader } from '@drizztdourden08/tessera';
 import type { DrawerSectionProps } from '../drawer-props.type';
 
 const DrawerSection = (props: DrawerSectionProps) => {
-  const { title, count, children } = props;
+  const { title, children } = props;
   return (
-    <Box as="section" aria-label={title}>
-      <SectionHeader title={title} count={count} hideZero={false} level={4} />
+    <Flex as="section" direction="column" gap="sm" aria-label={title}>
+      <Divider />
+      <SectionHeader title={title} level={4} />
       {children}
-    </Box>
+    </Flex>
   );
 };
 

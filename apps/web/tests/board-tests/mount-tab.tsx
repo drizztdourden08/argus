@@ -5,6 +5,7 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
+import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
@@ -73,6 +74,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[board.at ?? '/']}>
         <DataProvider streams={createScopeStreams(fake.open)}>
+          <BoardFocus boardKey={SCOPE} />
           <TestsTab boardKey={SCOPE} />
         </DataProvider>
         <HashProbe />

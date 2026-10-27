@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, InlineEdit, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, InlineEdit, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../../format';
 import { activityTone, nonEmpty } from '../../shared';
 import { validateField } from '../../tabs/kanban';
 import { COORDINATOR_ROLE } from '../ThreadDrawer.constants';
@@ -8,7 +9,7 @@ import type { ThreadFactsProps } from '../ThreadDrawer.type';
 const validateSubject = validateField('subject');
 
 const ThreadFacts = (props: ThreadFactsProps) => {
-  const { thread, counts, ops } = props;
+  const { thread, counts, now, ops } = props;
   return (
     <Flex direction="column" gap="xs">
       <Flex gap="xs" align="center" wrap>
@@ -21,7 +22,7 @@ const ThreadFacts = (props: ThreadFactsProps) => {
       </Flex>
       <Flex gap="md" align="center" wrap>
         <Flex gap="xs" align="center">
-          <Text variant="caption" tone="muted">Subject</Text>
+          <Text as="span" variant="caption">Subject:</Text>
           <InlineEdit
             label="subject"
             placeholder="add subject"
@@ -30,9 +31,7 @@ const ThreadFacts = (props: ThreadFactsProps) => {
             onCommit={(value) => ops.setField(thread, 'subject', value.trim())}
           />
         </Flex>
-        <Text variant="caption" tone="muted">
-          seen {thread.lastSeen ? <DateText value={thread.lastSeen} format="relative" /> : 'never'}
-        </Text>
+        <Text as="span" variant="caption">{`seen ${formatAgo(thread.lastSeen, now)} ago`}</Text>
       </Flex>
       {thread.root && <Text variant="caption" tone="muted" mono>{thread.root}</Text>}
     </Flex>
