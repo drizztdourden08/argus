@@ -13,4 +13,5 @@ export { activityTone, formatFilters, jsonRecord, nonEmpty, threadChoices } from
 export { FOCUS_KEY, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { EditableMarkdown } from './sub-components/EditableMarkdown';
 export { OpNoticeCallout } from './sub-components/OpNoticeCallout';
+export { RecordDrawer } from './sub-components/RecordDrawer';
 export type * from './shared.type';

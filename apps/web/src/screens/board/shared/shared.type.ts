@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { OpOutcome, OwnerOp, SentOp } from '../../../data/kanban';
 
 type Writer = (send: () => Promise<SentOp>, done: string, undo?: (sentId: string) => void) => Promise<boolean>;
@@ -60,4 +61,18 @@ interface EditableMarkdownProps {
   onSave: (value: string) => void;
 }
 
-export type { EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
+interface RecordHeaderProps {
+  eyebrow: ReactNode;
+  title: ReactNode;
+  tools?: ReactNode;
+  onClose: () => void;
+}
+
+interface RecordDrawerProps extends RecordHeaderProps {
+  open: boolean;
+  label: string;
+  wide: boolean;
+  children?: ReactNode;
+}
+
+export type { EditableMarkdownProps, RecordDrawerProps, RecordHeaderProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };

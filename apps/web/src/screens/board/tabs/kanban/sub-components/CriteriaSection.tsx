@@ -6,6 +6,7 @@ import { LIMITS, textProblem } from '../model';
 import { AddLine } from './AddLine';
 import { CriterionRow } from './CriterionRow';
 import { DrawerSection } from './DrawerSection';
+import { EmptyLine } from './EmptyLine';
 import './CriteriaSection.css';
 
 const CriteriaSection = (props: CriteriaSectionProps) => {
@@ -15,8 +16,8 @@ const CriteriaSection = (props: CriteriaSectionProps) => {
   const met = criteria.filter((criterion) => criterion.done).length;
   const provedBy = (n: number): string[] => tests.filter((test) => test.ac.includes(n)).map((test) => test.id);
   return (
-    <DrawerSection title={`Acceptance criteria, ${met}/${criteria.length} met`}>
-      {criteria.length === 0 && <Text tone="muted">None entered.</Text>}
+    <DrawerSection title={`Acceptance criteria · ${met}/${criteria.length}`}>
+      {criteria.length === 0 && <EmptyLine>None entered.</EmptyLine>}
       <Box ref={reorder.listRef} className="criteria-list" role="group" aria-label="Acceptance criteria">
         {criteria.map((criterion, index) => (
           <CriterionRow

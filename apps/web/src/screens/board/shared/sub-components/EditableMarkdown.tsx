@@ -25,7 +25,7 @@ const EditableMarkdown = (props: EditableMarkdownProps) => {
   }
   return (
     <Flex direction="column" gap="xs" align="start">
-      {value ? <BoardMarkdown>{value}</BoardMarkdown> : <Text tone="muted">{empty}</Text>}
+      {value ? <BoardMarkdown>{value}</BoardMarkdown> : <Text tone="muted" italic>{empty}</Text>}
       <Button size="xs" variant="ghost" onClick={() => setEditing(true)}>{`Edit ${noun}`}</Button>
     </Flex>
   );

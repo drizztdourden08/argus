@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Checkbox, Flex, Pressable, Text } from '@drizztdourden08/tessera';
+import { Checkbox, Flex, Pressable, Spacer, Text } from '@drizztdourden08/tessera';
 import type { ItemCardProps } from '../kanban-props.type';
 import { CardFoot } from './CardFoot';
 import { CardMenu } from './CardMenu';
@@ -16,6 +16,7 @@ const ItemCard = (props: ItemCardProps) => {
         </Flex>
         <Text variant="caption" tone="muted" mono>{item.id}</Text>
         <CardTags card={card} group={group} now={now} />
+        <Spacer />
         <CardMenu item={item} threads={threads} ops={ops} onOpen={onOpen} />
       </Flex>
       <Pressable onClick={() => onOpen(item.id)} aria-label={`Open ${item.id}: ${item.title}`} title={item.title}>

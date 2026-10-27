@@ -25,9 +25,12 @@ const cardMenuGroups = (props: CardMenuProps): MenuGroup[] => {
   const owners = threadChoices(threads, item.thread).map((option) =>
     choice(`thread-${option.value}`, option.label, option.value === item.thread, () => void ops.move(item, { thread: option.value }, `Moved ${id}.`)));
   return [
-    { id: 'open', items: [{ id: 'open', label: 'Open details', onSelect: () => onOpen(id) }, { id: 'copy', label: 'Copy id', onSelect: () => copyText(id) }] },
+    { id: 'edit', label: id, items: [{ id: 'edit', label: 'Edit', onSelect: () => onOpen(id) }] },
     { id: 'move', items: [{ id: 'status', label: 'Move to status', children: statuses }, { id: 'thread', label: 'Reassign to thread', children: owners }] },
-    { id: 'soft', items: [archive, { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void ops.soft('delete', item) }] },
+    {
+      id: 'soft',
+      items: [archive, { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void ops.soft('delete', item) }, { id: 'copy', label: 'Copy id', onSelect: () => copyText(id) }],
+    },
   ];
 };
 

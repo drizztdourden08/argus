@@ -19,6 +19,7 @@ const AddLine = (props: AddLineProps) => {
     <Flex direction="column" gap="xs">
       <Flex gap="xs" align="center">
         <TextInput
+          size="sm"
           aria-label={label}
           placeholder={label}
           maxLength={limit}
@@ -29,7 +30,7 @@ const AddLine = (props: AddLineProps) => {
           }}
           onEnter={add}
         />
-        <Button size="sm" onClick={add}>{buttonLabel}</Button>
+        <Button size="sm" aria-label={buttonLabel} onClick={add}>Add</Button>
       </Flex>
       {problem && <Text variant="caption" tone="danger" role="alert">{problem}</Text>}
     </Flex>

@@ -22,16 +22,16 @@ describe('the detail drawer', () => {
 
   it('says there is no description yet', async () => {
     const { dialog } = await opened({ description: '' });
-    expect(within(dialog).getByText('No description yet.')).toBeTruthy();
+    expect(within(dialog).getByText('add a description')).toBeTruthy();
   });
 
   it('lists the criteria met, and the tests of this item only', async () => {
     const { dialog } = await opened();
-    expect(within(dialog).getByText('Acceptance criteria, 1/2 met')).toBeTruthy();
+    expect(within(dialog).getByText('Acceptance criteria · 1/2')).toBeTruthy();
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 1 met' }).checked).toBe(false);
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 2 met' }).checked).toBe(true);
     expect(within(dialog).getByText('proved by T-1')).toBeTruthy();
-    expect(within(dialog).getByText('Tests, 1/2 passing')).toBeTruthy();
+    expect(within(dialog).getByText('Tests · 1/2 passing')).toBeTruthy();
     expect(within(dialog).getByText('Wrong password')).toBeTruthy();
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
   });

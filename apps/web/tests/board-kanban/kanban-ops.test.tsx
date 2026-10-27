@@ -142,10 +142,10 @@ describe('the menu of a card', () => {
     fireEvent.click(await screen.findByRole('button', { name: `More actions for ${id}` }));
   };
 
-  it('opens the drawer from Open details', async () => {
+  it('opens the drawer from Edit', async () => {
     await mountKanban({ items: [item('I-1')] });
     await openMenu('I-1');
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Open details' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
     expect(await screen.findByRole('dialog', { name: 'Work item' })).toBeTruthy();
   });
 

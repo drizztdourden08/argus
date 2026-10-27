@@ -41,7 +41,7 @@ describe('the quiet limits', () => {
       itemRef('I-3', { status: 'doing', updatedAt: before(HOUR) }),
     ]);
     expect(view.quiet).toBe(2);
-    expect(countsText(view)).toBe('3 open / 3 · 2 quiet');
+    expect(countsText(view)).toBe('3 open / 3');
   });
 });
 
