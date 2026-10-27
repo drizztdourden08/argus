@@ -23,7 +23,7 @@ const SCHEMA: readonly FieldDescriptor[] = [
 ];
 
 const FALLBACK_COLUMNS: readonly TableColumn[] = [
-  { path: 'path', width: 310 },
+  { path: 'path', width: 410 },
   { path: 'status', width: 110 },
   { path: 'branch', width: 160 },
   { path: 'touched', width: 80 },

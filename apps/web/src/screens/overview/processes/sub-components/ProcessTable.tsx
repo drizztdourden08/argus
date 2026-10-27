@@ -16,7 +16,7 @@ const ProcessTable = (props: ProcessTableProps) => {
       rows={rows}
       schema={PROC_SCHEMA}
       getRowId={rowId}
-      rowHeight="size-28"
+      rowHeight="size-40"
       footer={false}
       headerCase="upper"
       rowState={rowState}

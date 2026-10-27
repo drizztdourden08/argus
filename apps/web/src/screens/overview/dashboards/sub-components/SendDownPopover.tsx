@@ -18,7 +18,7 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
         <Flex direction="column" gap="sm">
           <Flex gap="sm" align="center">
             <SegmentedControl<SendKind> aria-label="Kind of post" value={send.kind} options={SEND_KINDS} onChange={send.setKind} />
-            <Text variant="caption" tone="muted" className="send-down__to">{`to ${send.name}`}</Text>
+            <Text variant="caption" tone="muted" className="send-down__to">for <Text as="span" variant="caption" weight={600}>{send.name}</Text></Text>
             <IconButton label="Close" size="xs" variant="ghost" onClick={send.close}><Icon name="x" /></IconButton>
           </Flex>
           <BoardMarkdownEditor
@@ -30,10 +30,10 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
             onChange={send.setText}
             onSubmit={send.send}
             error={over}
-            hint="Ctrl+Enter sends"
           />
-          <Flex>
+          <Flex gap="sm" align="center">
             <Button size="sm" variant="primary" disabled={send.busy || empty || over !== null} title="Send down (Ctrl+Enter)" onClick={send.send}>Send down</Button>
+            <Text variant="caption" tone="muted">Ctrl+Enter sends</Text>
           </Flex>
         </Flex>
       </Card>

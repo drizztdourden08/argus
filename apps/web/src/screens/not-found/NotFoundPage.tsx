@@ -2,12 +2,14 @@
 import { EmptyState, Link } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
 import { PageFrame } from '../../shell';
+import type { NotFoundPageProps } from './NotFoundPage.type';
 
-const NotFoundPage = () => {
+const NotFoundPage = (props: NotFoundPageProps) => {
+  const { message = 'There is no such page.' } = props;
   const navigate = useNavigate();
   return (
     <PageFrame>
-      <EmptyState title="Not found" message="There is no such page." action={<Link href="/" navigate={navigate}>Back to Argus</Link>} />
+      <EmptyState title="Not found" message={message} action={<Link href="/" navigate={navigate}>Back to Argus</Link>} />
     </PageFrame>
   );
 };
