@@ -8,7 +8,7 @@ const CardMenu = (props: CardMenuProps) => {
   return (
     <DropdownMenu
       label={label}
-      trigger={{ label, icon: 'ellipsis', iconOnly: true }}
+      trigger={{ label, icon: 'ellipsis-vertical', iconOnly: true }}
       groups={cardMenuGroups(props)}
       variant="ghost"
       size="xs"

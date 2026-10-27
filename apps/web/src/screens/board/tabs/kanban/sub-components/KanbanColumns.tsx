@@ -43,6 +43,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       columnWidth="fill"
       columns={columns}
       cardLabel={(card) => `${card.id} ${card.item.title}`}
+      cardEdgeTone={(card) => (card.needsYou ? 'danger' : undefined)}
       onMove={onMove}
       renderCard={(card) => (
         <ItemCard

@@ -11,7 +11,7 @@ export { useStoredFlag } from './behavior/useStoredFlag';
 export { useWriter } from './behavior/useWriter';
 export { writeStored } from './behavior/write-stored';
 export { activityTone, bundleState, formatFilters, jsonRecord, neighbours, nonEmpty, threadChoices } from './model';
-export { FOCUS_KEY, SOFT_LABEL, WIDE_KEY } from './shared.constants';
+export { FIT_FIELD, FIT_SEARCH, FOCUS_KEY, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { ChatButton } from './sub-components/ChatButton';
 export { DrawerToolbar } from './sub-components/DrawerToolbar';
 export { FactSelect } from './sub-components/FactSelect';
