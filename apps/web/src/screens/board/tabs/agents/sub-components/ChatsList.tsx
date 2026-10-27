@@ -1,40 +1,16 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Link, ListItemList, ListItemRow, Status, Tag, Text } from '@drizztdourden08/tessera';
-import { activityTone, useOpenThread } from '../../../shared';
-import { CHAT_SHAPE } from '../AgentsTab.constants';
+import { Box, Text } from '@drizztdourden08/tessera';
 import type { ChatsListProps } from '../AgentsTab.type';
-import { orText } from '../model';
-import { ChatMenu } from './ChatMenu';
+import { ChatRow } from './ChatRow';
 
 const ChatsList = (props: ChatsListProps) => {
-  const { chats, onPurge } = props;
-  const open = useOpenThread();
+  const { boardKey, chats, now, onPurge } = props;
   if (chats.length === 0) return null;
   return (
-    <ListItemList label="Chats" heading="Chats" count={chats.length} shape={CHAT_SHAPE}>
-      {chats.map((chat) => (
-        <ListItemRow
-          key={chat.id}
-          name={chat.id}
-          meta={orText(chat.note, 'no note')}
-          columns={[
-            {
-              primary: <Status tone={activityTone(chat.activity)} dot>{orText(chat.activity, 'unknown')}</Status>,
-              secondary: chat.lastSeen ? <DateText value={chat.lastSeen} format="relative" /> : undefined,
-            },
-            { primary: <Tag variant="normal" color="neutral">{chat.status}</Tag> },
-          ]}
-          action={
-            <Flex gap="xs" align="center">
-              {chat.link ? <Link href={chat.link} variant="subtle" external>Open chat</Link> : <Text tone="muted">-</Text>}
-              <ChatMenu id={chat.id} onPurge={onPurge} />
-            </Flex>
-          }
-          onClick={() => open(chat.id)}
-          data={{ 'data-chat-id': chat.id }}
-        />
-      ))}
-    </ListItemList>
+    <Box as="section" aria-label="Chats" className="agents-chats">
+      <Text as="h3" variant="overline" className="agents-chats__title">{`Chats · ${chats.length}`}</Text>
+      {chats.map((chat) => <ChatRow key={chat.id} boardKey={boardKey} chat={chat} now={now} onPurge={onPurge} />)}
+    </Box>
   );
 };
 

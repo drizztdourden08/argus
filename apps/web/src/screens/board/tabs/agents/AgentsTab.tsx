@@ -1,20 +1,24 @@
 /* @layer renderer-app @kind component */
-import { Flex } from '@drizztdourden08/tessera';
-import { useMemo, useState } from 'react';
+import { Box, Flex } from '@drizztdourden08/tessera';
+import { useState } from 'react';
+import { RunLogDrawer } from '../../run-terminal';
+import { useNow, useStoredFlag } from '../../shared';
+import { FINISHED_KEY } from './AgentsTab.constants';
 import type { AgentsTabProps } from './AgentsTab.type';
 import { useAgentActions } from './behavior/useAgentActions';
 import { useAgentAnchor } from './behavior/useAgentAnchor';
+import { useAgentRuns } from './behavior/useAgentRuns';
 import { useAgentsView } from './behavior/useAgentsView';
-import { useNow } from './behavior/useNow';
 import { useReconcile } from './behavior/useReconcile';
-import { emptyMessage, filterAgents } from './model';
-import type { AgentFilter } from './model';
+import { useRowState } from './behavior/useRowState';
 import { AgentDrawer } from './sub-components/AgentDrawer';
-import { AgentList } from './sub-components/AgentList';
+import { AgentRunsSection } from './sub-components/AgentRunsSection';
+import { AgentsBody } from './sub-components/AgentsBody';
+import { AgentsFoot } from './sub-components/AgentsFoot';
 import { AgentsHeader } from './sub-components/AgentsHeader';
-import { AgentsToolbar } from './sub-components/AgentsToolbar';
 import { ChatsList } from './sub-components/ChatsList';
 import { ReconcilePanel } from './sub-components/ReconcilePanel';
+import './AgentsTab.css';
 
 const AgentsTab = (props: AgentsTabProps) => {
   const { boardKey, onPurge } = props;
@@ -22,29 +26,45 @@ const AgentsTab = (props: AgentsTabProps) => {
   const actions = useAgentActions(boardKey, view);
   const findings = useReconcile(boardKey, view.flagSignature);
   const now = useNow(view.active.length > 0);
-  const [filter, setFilter] = useState<AgentFilter>('running');
-  const [query, setQuery] = useState('');
-  const rows = useMemo(() => filterAgents(view.active, view.done, filter, query), [view.active, view.done, filter, query]);
+  const runs = useAgentRuns(boardKey);
+  const state = useRowState();
   const anchor = useAgentAnchor();
+  const [showFinished, setShowFinished] = useStoredFlag(FINISHED_KEY);
+  const [logId, setLogId] = useState<string | null>(null);
   const opened = [...view.active, ...view.done].find((agent) => agent.id === anchor.selected) ?? null;
-  const canArchive = filter !== 'running' && view.done.length > 0;
-  const empty = emptyMessage(view.active.length + view.done.length, filter);
+  const count = view.finishedCount;
+  const order = [...view.active, ...(showFinished ? view.done : [])].map((agent) => agent.id);
   return (
     <Flex direction="column" gap="md">
-      <AgentsHeader active={view.active} lead={view.lead} />
       <ReconcilePanel findings={findings} />
-      <AgentsToolbar
-        query={query}
-        onQuery={setQuery}
-        filter={filter}
-        onFilter={setFilter}
-        runningCount={view.active.length}
-        doneCount={view.finishedCount}
-        onArchive={canArchive ? () => actions.archiveFinished(view.done.map((agent) => agent.id)) : null}
-      />
-      <AgentList rows={rows} empty={empty} now={now} actions={actions} onOpen={anchor.open} />
-      <ChatsList chats={view.chats} onPurge={onPurge} />
-      <AgentDrawer id={opened?.id ?? null} agent={opened} now={now} actions={actions} onClose={anchor.close} />
+      <Box as="section" aria-label="Agents" className="agents-panel">
+        <AgentsHeader active={view.active} lead={view.lead} now={now} />
+        <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={now} onLog={setLogId} />
+        <AgentsBody
+          active={view.active}
+          done={view.done}
+          showFinished={showFinished}
+          now={now}
+          actions={actions}
+          state={state}
+          runs={runs}
+          onOpen={anchor.open}
+          onLog={setLogId}
+        />
+        {count > 0 && (
+          <AgentsFoot
+            count={count}
+            showFinished={showFinished}
+            canArchive={view.done.length > 0}
+            onToggle={() => setShowFinished(!showFinished)}
+            onArchive={() => actions.archiveFinished(view.done.map((agent) => agent.id))}
+          />
+        )}
+        {showFinished && <AgentRunsSection title="Finished runs" runs={runs.finished} boardKey={boardKey} now={now} onLog={setLogId} />}
+        <ChatsList boardKey={boardKey} chats={view.chats} now={now} onPurge={onPurge} />
+      </Box>
+      <AgentDrawer boardKey={boardKey} id={opened?.id ?? null} agent={opened} order={order} now={now} actions={actions} onOpen={anchor.open} onClose={anchor.close} />
+      <RunLogDrawer run={runs.all.find((run) => run.id === logId) ?? null} boardKey={boardKey} onClose={() => setLogId(null)} />
     </Flex>
   );
 };

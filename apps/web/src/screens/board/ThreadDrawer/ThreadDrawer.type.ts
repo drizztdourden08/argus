@@ -34,6 +34,8 @@ interface ThreadDrawerProps {
 
 interface ThreadBodyProps {
   view: ThreadView & { thread: ThreadDoc };
+  order: readonly string[];
+  now: number;
   ops: ThreadOps;
   wide: boolean;
   onWide: () => void;
@@ -44,6 +46,7 @@ interface ThreadBodyProps {
 interface ThreadToolsProps {
   thread: ThreadDoc;
   paused: boolean;
+  order: readonly string[];
   ops: ThreadOps;
   wide: boolean;
   onWide: () => void;
@@ -62,25 +65,24 @@ interface ThreadLiveToolsProps {
   ops: ThreadOps;
 }
 
-interface ThreadChatToolsProps {
+interface ThreadMenuProps {
   thread: ThreadDoc;
-}
-
-interface ThreadEndToolsProps {
-  thread: ThreadDoc;
-  state: ThreadState;
+  paused: boolean;
   ops: ThreadOps;
   onPurge: (thread: string) => void;
+  onEditSubject?: () => void;
 }
 
 interface ThreadFactsProps {
   thread: ThreadDoc;
   counts: ThreadCounts;
+  now: number;
   ops: ThreadOps;
 }
 
 interface ThreadAgentsProps {
   agents: NonNullable<ProjectThread['agents']>;
+  now: number;
 }
 
 interface ThreadWorkProps {
@@ -100,6 +102,6 @@ interface ThreadSectionProps {
 }
 
 export type {
-  ThreadAgentsProps, ThreadBodyProps, ThreadBriefProps, ThreadChatToolsProps, ThreadCounts, ThreadDoc, ThreadDrawerProps, ThreadEndToolsProps, ThreadFactsProps, ThreadLiveToolsProps, ThreadOps,
+  ThreadAgentsProps, ThreadBodyProps, ThreadBriefProps, ThreadCounts, ThreadDoc, ThreadDrawerProps, ThreadMenuProps, ThreadFactsProps, ThreadLiveToolsProps, ThreadOps,
   ThreadSectionProps, ThreadState, ThreadToolsProps, ThreadView, ThreadWorkProps,
 };

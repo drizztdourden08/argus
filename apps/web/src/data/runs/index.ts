@@ -13,3 +13,4 @@ export { startRun } from './start-run';
 export { stopRun } from './stop-run';
 export { RUN_LOG_FULL, RUN_LOG_TAIL } from './runs.constants';
 export type * from './runs.type';
+export { newestFirst } from './newest-first';

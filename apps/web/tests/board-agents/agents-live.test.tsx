@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { agent, ago, live, MIN, mockApi, renderAgents, rowOf } from './agents-harness';
 
 afterEach(() => {
+  localStorage.clear();
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -35,11 +36,13 @@ describe('Agents tab: the live view', () => {
     const row = rowOf(container, 'A-1');
     expect(row.textContent).toContain('Fixed the form and ran the tests. 12 passed 0 failed');
     expect(row.textContent).not.toMatch(/\*\*|`/);
-    fireEvent.click(within(row).getAllByRole('button')[0] as HTMLElement);
-    const drawer = await screen.findByRole('dialog', { name: 'Agent detail' });
-    expect(drawer.querySelector('strong')?.textContent).toBe('form');
-    expect(within(drawer).getByText('12 passed')).toBeTruthy();
-    expect(within(drawer).getByRole('button', { name: 'Copy the message' })).toBeTruthy();
+    fireEvent.click(within(row).getByTitle('Read the whole message'));
+    const whole = container.querySelector<HTMLElement>('[data-agent-message="A-1"]');
+    expect(whole?.querySelector('strong')?.textContent).toBe('form');
+    expect(within(whole as HTMLElement).getByText('12 passed')).toBeTruthy();
+    expect(within(whole as HTMLElement).getByRole('button', { name: 'Copy the message' })).toBeTruthy();
+    fireEvent.click(within(whole as HTMLElement).getByRole('button', { name: 'Close' }));
+    expect(container.querySelector('[data-agent-message]')).toBeNull();
   });
 
   it('draws a message with markup as text', async () => {
@@ -54,9 +57,9 @@ describe('Agents tab: the live view', () => {
       'A-2': agent({ name: 'busy', live: live({ activity: 'tool', activitySince: ago(2000), lastTool: { name: 'Read', summary: 'a.txt' } }) }),
       'A-3': agent({ name: 'plain' }),
     });
-    expect(within(rowOf(container, 'A-1')).getByText('stalled')).toBeTruthy();
-    expect(within(rowOf(container, 'A-2')).queryByText('stalled')).toBeNull();
-    expect(within(rowOf(container, 'A-3')).queryByText('stalled')).toBeNull();
+    expect(within(rowOf(container, 'A-1')).getAllByText(/^stalled 4m$/).length).toBeGreaterThan(0);
+    expect(within(rowOf(container, 'A-2')).queryByText(/^stalled/)).toBeNull();
+    expect(within(rowOf(container, 'A-3')).queryByText(/^stalled/)).toBeNull();
   });
 
 });
@@ -68,7 +71,7 @@ describe('Agents tab: the columns', () => {
     });
     const text = rowOf(container, 'A-1').textContent;
     expect(text).toContain('10m');
-    expect(text).toContain('7 turns, 12 tools');
+    expect(text).toContain('7 \u00b7 12');
   });
 
   it('shows the model family and keeps the dash for an agent without a model', async () => {
@@ -90,7 +93,7 @@ describe('Agents tab: the columns', () => {
         'A-2': agent({ name: 'done-two', status: 'done', finishedAt: ago(2 * MIN), result: 'recorded result' }),
       },
     });
-    fireEvent.click(screen.getByRole('radio', { name: /Done/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Show finished/ }));
     expect(rowOf(container, 'A-1').textContent).toContain('All green, 41 tests.');
     expect(rowOf(container, 'A-1').textContent).not.toContain('stalled');
     expect(rowOf(container, 'A-2').textContent).toContain('recorded result');

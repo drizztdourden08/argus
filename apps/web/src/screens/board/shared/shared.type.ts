@@ -75,4 +75,20 @@ interface RecordDrawerProps extends RecordHeaderProps {
   children?: ReactNode;
 }
 
-export type { EditableMarkdownProps, RecordDrawerProps, RecordHeaderProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, StoredFilters, Writer };
+interface ChatButtonProps {
+  link: string;
+  label: string;
+  size?: 'xs' | 'sm';
+}
+
+interface DrawerToolbarProps {
+  id: string;
+  order: readonly string[];
+  label: string;
+  wide: boolean;
+  onWide: () => void;
+  onOpen: (id: string) => void;
+  children?: ReactNode;
+}
+
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, RecordHeaderProps, StoredFilters, Writer };

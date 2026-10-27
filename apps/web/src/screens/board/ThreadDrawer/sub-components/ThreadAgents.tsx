@@ -1,21 +1,22 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Text } from '@drizztdourden08/tessera';
+import { Box, Text } from '@drizztdourden08/tessera';
+import { formatAgo } from '../../../../format';
 import type { ThreadAgentsProps } from '../ThreadDrawer.type';
 import { ThreadSection } from './ThreadSection';
 
 const ThreadAgents = (props: ThreadAgentsProps) => {
-  const { agents } = props;
+  const { agents, now } = props;
   return (
     <ThreadSection title="Agents" count={agents.length}>
-      <Flex direction="column" gap="xs">
+      <Box className="thread-agents">
         {agents.map((agent, index) => (
-          <Flex key={`${agent.name ?? 'agent'}-${index}`} gap="sm" align="baseline" wrap>
-            <Text variant="label">{agent.name ?? 'agent'}</Text>
-            <Text>{agent.task ?? ''}</Text>
-            {agent.startedAt ? <DateText value={agent.startedAt} format="relative" /> : null}
-          </Flex>
+          <Box key={`${agent.name ?? 'agent'}-${index}`} className="thread-agents__row">
+            <Box as="b" className="thread-agents__name">{agent.name ?? 'agent'}</Box>
+            <Box as="span">{agent.task ?? ''}</Box>
+            <Text as="span" variant="caption">{agent.startedAt ? `${formatAgo(agent.startedAt, now)} ago` : ''}</Text>
+          </Box>
         ))}
-      </Flex>
+      </Box>
     </ThreadSection>
   );
 };

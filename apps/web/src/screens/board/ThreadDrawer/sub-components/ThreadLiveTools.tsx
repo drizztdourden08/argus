@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Button } from '@drizztdourden08/tessera';
+import { Button, Icon, IconButton } from '@drizztdourden08/tessera';
 import { FOCUS_KEY, useStored } from '../../shared';
 import type { ThreadLiveToolsProps } from '../ThreadDrawer.type';
 
@@ -18,9 +18,15 @@ const ThreadLiveTools = (props: ThreadLiveToolsProps) => {
       >
         Focus
       </Button>
-      <Button size="xs" variant="secondary" disabled={ops.isBusy(`post:${paused ? 'resume' : 'pause'}:${thread.id}`)} onClick={() => ops.setPaused(thread, !paused)}>
-        {paused ? 'Resume' : 'Pause'}
-      </Button>
+      <IconButton
+        label={paused ? 'Resume this thread' : 'Pause this thread'}
+        size="xs"
+        variant="ghost"
+        disabled={ops.isBusy(`post:${paused ? 'resume' : 'pause'}:${thread.id}`)}
+        onClick={() => ops.setPaused(thread, !paused)}
+      >
+        <Icon name={paused ? 'play' : 'pause'} />
+      </IconButton>
     </>
   );
 };
