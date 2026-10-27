@@ -1,37 +1,21 @@
 /* @layer renderer-app @kind component */
-import { Flex, InlineEdit, Select, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, InlineEdit, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../drawer-props.type';
 import { threadChoices } from '../../../shared';
-import { NEEDS_YOU_TIP } from '../kanban.constants';
 import { STATUS_OPTIONS, validateField } from '../model';
+import { FactSelect } from './FactSelect';
 
 const validateSubject = validateField('subject');
 
 const DrawerFacts = (props: DrawerFactsProps) => {
-  const { item, waiting, threads, now, ops } = props;
+  const { item, threads, now, ops } = props;
+  const moved = `Moved ${item.id}.`;
   return (
     <Flex direction="column" gap="sm">
-      <Flex gap="xs" align="center" wrap>
-        <Tag>{item.status}</Tag>
-        {waiting && <Tag variant="urgency" color="warning" title={NEEDS_YOU_TIP}>needs you</Tag>}
-        {item.archivedAt && <Tag>archived</Tag>}
-      </Flex>
       <Flex gap="md" align="center" wrap>
-        <Select
-          aria-label="Status"
-          size="sm"
-          options={STATUS_OPTIONS}
-          value={item.status}
-          onChange={(status) => status !== item.status && void ops.move(item, { status }, `Moved ${item.id}.`)}
-        />
-        <Select
-          aria-label="Thread"
-          size="sm"
-          options={threadChoices(threads, item.thread)}
-          value={item.thread}
-          onChange={(thread) => thread !== item.thread && void ops.move(item, { thread }, `Moved ${item.id}.`)}
-        />
+        <FactSelect label="Status" options={STATUS_OPTIONS} value={item.status} onPick={(status) => void ops.move(item, { status }, moved)} />
+        <FactSelect label="Thread" options={threadChoices(threads, item.thread)} value={item.thread} onPick={(thread) => void ops.move(item, { thread }, moved)} />
         <Flex gap="xs" align="center">
           <Text variant="caption" tone="muted">Subject</Text>
           <InlineEdit

@@ -93,7 +93,7 @@ describe('a change the board did not take: bulk, filter and what is skipped', ()
   it('shows only the cards with a conflict for the conflict filter', async () => {
     await mountKanban({ items: [item('I-1', { status: 'review', rev: 5 }), item('I-2')], entries: [conflicted] });
     await screen.findByText('Item I-2');
-    fireEvent.click(screen.getByRole('switch', { name: 'conflict' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'conflict' }));
     expect(screen.queryByText('Item I-2')).toBeNull();
     expect(screen.getByText('Item I-1')).toBeTruthy();
   });

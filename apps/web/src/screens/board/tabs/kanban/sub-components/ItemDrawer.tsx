@@ -1,30 +1,25 @@
 /* @layer renderer-app @kind component */
-import { Drawer } from '@drizztdourden08/tessera';
 import type { ItemDrawerProps } from '../drawer-props.type';
+import { RecordDrawer } from '../../../shared';
 import { DrawerNav } from './DrawerNav';
 import { ItemBody } from './ItemBody';
+import { ItemEyebrow } from './ItemEyebrow';
 import { ItemTitle } from './ItemTitle';
 
 const ItemDrawer = (props: ItemDrawerProps) => {
   const { boardKey, item, tests, threads, actions, waiting, now, ops, nav, wide, onWide, onClose } = props;
-  const title = item && <ItemTitle item={item} ops={ops} />;
-  const body = item && (
-    <ItemBody
-      boardKey={boardKey}
-      item={item}
-      tests={tests}
-      threads={threads}
-      actions={actions}
-      waiting={waiting}
-      now={now}
-      ops={ops}
-      tools={<DrawerNav item={item} ops={ops} nav={nav} wide={wide} onWide={onWide} />}
-    />
-  );
   return (
-    <Drawer open={item !== null} onClose={onClose} size={wide ? 'xl' : 'md'} label="Work item" title={title ?? undefined} subtitle={item?.id}>
-      {body}
-    </Drawer>
+    <RecordDrawer
+      open={item !== null}
+      label="Work item"
+      wide={wide}
+      eyebrow={item && <ItemEyebrow item={item} waiting={waiting} />}
+      title={item && <ItemTitle item={item} ops={ops} />}
+      tools={item && <DrawerNav item={item} ops={ops} nav={nav} wide={wide} onWide={onWide} />}
+      onClose={onClose}
+    >
+      {item && <ItemBody boardKey={boardKey} item={item} tests={tests} threads={threads} actions={actions} waiting={waiting} now={now} ops={ops} />}
+    </RecordDrawer>
   );
 };
 

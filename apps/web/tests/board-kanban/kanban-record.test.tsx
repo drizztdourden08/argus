@@ -29,7 +29,7 @@ const mountOpen = async (board: Board = {}) => {
 describe('the to-dos of an item', () => {
   it('lists them with the open count, and adds one for the thread of the item', async () => {
     const { posted, dialog } = await mountOpen({ actions: [todo] });
-    expect(within(dialog).getByText('To-dos, 1 open')).toBeTruthy();
+    expect(within(dialog).getByText('To-dos · 1 open')).toBeTruthy();
     expect(within(dialog).getByRole('button', { name: 'Edit to-do H-1: Run it by hand' })).toBeTruthy();
     fireEvent.change(within(dialog).getByRole('textbox', { name: '+ To-do for worker' }), { target: { value: 'Write it down' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add to-do' }));
@@ -40,7 +40,7 @@ describe('the to-dos of an item', () => {
 
   it('marks one done with a done entry, and reopens a done one with an edit', async () => {
     const { posted, dialog } = await mountOpen({ actions: [todo, { ...todo, id: 'H-2', text: 'Already', status: 'done' }] });
-    fireEvent.click(within(within(dialog).getByRole('region', { name: 'To-dos, 1 open' })).getByRole('button', { name: 'Mark H-1 done' }));
+    fireEvent.click(within(within(dialog).getByRole('region', { name: 'To-dos · 1 open' })).getByRole('button', { name: 'Mark H-1 done' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'done', replyTo: 'H-1', item: 'I-1', thread: 'worker' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Reopen H-2' }));
@@ -70,7 +70,7 @@ describe('the to-dos of an item', () => {
 describe('the questions and decisions of an item', () => {
   it('shows an open question with its context, and answers it with a followup', async () => {
     const { posted, dialog } = await mountOpen({ entries: [question] });
-    const section = within(within(dialog).getByRole('region', { name: 'Questions, 1 open' }));
+    const section = within(within(dialog).getByRole('region', { name: 'Questions · 1 open' }));
     expect(section.getByText('npm test').tagName).toBe('CODE');
     expect(section.getByText('The suite is slow.')).toBeTruthy();
     expect(section.getByText('Show the rest')).toBeTruthy();
@@ -83,7 +83,7 @@ describe('the questions and decisions of an item', () => {
   it('shows the owner reply under a question that is answered, with no form', async () => {
     const reply = { id: 'O-1', kind: 'followup', item: 'I-1', thread: 'worker', author: 'human', status: 'new', replyTo: 'Q-1', text: 'Yes', createdAt: ago(MIN) };
     const { dialog } = await mountOpen({ entries: [question, reply] });
-    expect(within(dialog).getByText('Questions, 0 open')).toBeTruthy();
+    expect(within(dialog).getByText('Questions · 0 open')).toBeTruthy();
     expect(within(dialog).getByRole('group', { name: 'Reply O-1' })).toBeTruthy();
     expect(within(dialog).queryByRole('textbox', { name: 'Answer worker.' })).toBeNull();
   });
@@ -112,7 +112,7 @@ describe('the activity of an item', () => {
 
   it('merges the entries, the to-dos and the log lines of this item, newest first', async () => {
     const { dialog } = await mountOpen({ entries: [question], actions: [todo], log });
-    expect(within(dialog).getByText('Activity, 3')).toBeTruthy();
+    expect(within(dialog).getByText('Activity · 3')).toBeTruthy();
     const rows = within(within(dialog).getByRole('list', { name: 'Activity' })).getAllByRole('listitem');
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringContaining('Started the form'),

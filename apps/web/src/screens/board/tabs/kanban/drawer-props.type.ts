@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../data/kanban';
+import type { Option } from '../../shared';
 import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
 import type { FeedActions } from '../../OwnerFeed';
@@ -31,7 +32,15 @@ interface ItemBodyProps {
   waiting: boolean;
   now: number;
   ops: ItemOps;
-  tools: ReactNode;
+}
+
+interface ItemEyebrowProps {
+  item: ItemRef;
+  waiting: boolean;
+}
+
+interface StatusTagProps {
+  status: string;
 }
 
 interface DrawerNavProps {
@@ -53,6 +62,13 @@ interface DrawerFactsProps {
   threads: Threads;
   now: number;
   ops: ItemOps;
+}
+
+interface FactSelectProps {
+  label: string;
+  options: readonly Option[];
+  value: string;
+  onPick: (value: string) => void;
 }
 
 interface DescriptionSectionProps {
@@ -147,12 +163,16 @@ interface ComposerProps {
 
 interface DrawerSectionProps {
   title: string;
-  count?: number;
+  children: ReactNode;
+}
+
+interface EmptyLineProps {
   children: ReactNode;
 }
 
 export type {
   ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
-  DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemTestsProps, ItemTitleProps,
+  DrawerNavProps, DrawerSectionProps, EntryBlockProps, FactSelectProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
+  ItemTitleProps, StatusTagProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,
 };
