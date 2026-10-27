@@ -51,7 +51,7 @@ describe('the note of a bundle', () => {
 describe('the terminal under Play', () => {
   it('is folded by default, even while running: the run and the newest output, nothing loaded', async () => {
     const { calls } = await mountTab(launched([running()]), tail);
-    const summary = within((await screen.findByText('Terminal')).closest('summary') as HTMLElement);
+    const summary = within((await screen.findByRole('button', { name: 'Terminal' })).parentElement as HTMLElement);
     expect(summary.getByText('R-4 · running · input on')).toBeTruthy();
     expect(summary.getByText('compiling main.ts')).toBeTruthy();
     expect(calls.filter((call) => call.url.includes('/logs'))).toHaveLength(0);
@@ -59,7 +59,7 @@ describe('the terminal under Play', () => {
 
   it('loads the newest lines when the owner opens it', async () => {
     const { calls } = await mountTab(launched([running()]), tail);
-    fireEvent.click((await screen.findByText('Terminal')).closest('summary') as HTMLElement);
+    fireEvent.click(await screen.findByRole('button', { name: 'Terminal' }));
     expect(await screen.findByText('first line')).toBeTruthy();
     expect(calls.map((call) => call.url)).toContain('/api/p/rotp/runs/R-4/logs?tail=300');
   });

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, Text } from '@drizztdourden08/tessera';
+import { Card, Flex, Text } from '@drizztdourden08/tessera';
 import { useAskThread } from './behavior/useAskThread';
 import { useAttempt } from './behavior/useAttempt';
 import { useLeftoverBatch } from './behavior/useLeftoverBatch';
@@ -32,25 +32,30 @@ const WorktreesTab = (props: WorktreesTabProps) => {
   const counts = countRows(rows);
   const rules = meta?.rules ?? [];
   return (
-    <Flex direction="column" gap="md">
-      <WorktreeSummary counts={counts} meta={meta} />
-      <WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />
-      <LeftoverBatchConfirm meta={meta} batch={batch} />
-      {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
-      <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
-      <WorktreeBody
-        rows={filterRows(rows, prefs.filter)}
-        total={counts.all}
-        filter={prefs.filter}
-        hasRules={rules.length > 0}
-        meta={meta}
-        controls={controls}
-        ask={ask}
-        removal={removal}
-        onShowAll={() => prefs.setFilter('all')}
-      />
-      <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
-    </Flex>
+    <Card
+      title="Worktrees"
+      level={2}
+      subtitle={<WorktreeSummary counts={counts} meta={meta} />}
+      actions={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
+    >
+      <Flex direction="column" gap="sm">
+        <LeftoverBatchConfirm meta={meta} batch={batch} />
+        {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
+        <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
+        <WorktreeBody
+          rows={filterRows(rows, prefs.filter)}
+          total={counts.all}
+          filter={prefs.filter}
+          hasRules={rules.length > 0}
+          meta={meta}
+          controls={controls}
+          ask={ask}
+          removal={removal}
+          onShowAll={() => prefs.setFilter('all')}
+        />
+        <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
+      </Flex>
+    </Card>
   );
 };
 

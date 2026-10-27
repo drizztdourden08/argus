@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { launcherViews, runGroups } from '../../src/screens/board/tabs/builds/model';
+import { launcherViews } from '../../src/screens/board/tabs/builds/model';
 import type { LauncherDoc } from '../../src/screens/board/tabs/builds/model';
 import { launcherUsage } from '../../src/screens/board/tabs/builds/model/launcher-usage';
 import { buildDoc, DAY, defDoc, launcherDoc, runDoc, runningDoc, standaloneDoc } from './fixtures';
@@ -102,35 +102,5 @@ describe('launcherUsage', () => {
   it('assumes 7 days and says so when the thread set no useEvery', () => {
     expect(usage(standaloneDoc('x', { useEvery: null, useEveryMs: null, lastUsedAt: at(8 * DAY) }))).toMatchObject({ every: '7d', legacy: true, stale: true });
     expect(usage(standaloneDoc('x', { useEvery: '2w', useEveryMs: 14 * DAY }))).toMatchObject({ every: '2w', legacy: false });
-  });
-});
-
-describe('runGroups', () => {
-  const group = (list: object[], defList: object[] = [defDoc('master')]) => runGroups(runs(...list), defs(...defList));
-
-  it('splits live from finished, newest first, ties by run number', () => {
-    const groups = group([
-      runDoc('R-9', 'launcher-master', { queuedAt: at(DAY) }),
-      runDoc('R-10', 'launcher-master', { queuedAt: at(DAY) }),
-      runningDoc('R-3', 'launcher-master', { queuedAt: at(2 * DAY) }),
-      runDoc('R-1', 'launcher-master', { queuedAt: at(3 * DAY) }),
-    ]);
-    expect(groups.live.map((run) => run.id)).toEqual(['R-3']);
-    expect(groups.finished.map((run) => run.id)).toEqual(['R-10', 'R-9', 'R-1']);
-  });
-
-  it('keeps runs of launcher and bundle definitions and of launcher-/bundle- names, nothing else', () => {
-    const groups = group(
-      [runDoc('R-1', 'launcher-gone'), runDoc('R-2', 'bundle-b1'), runDoc('R-3', 'npm-test'), runDoc('R-4', 'custom-play')],
-      [defDoc('master'), { name: 'custom-play', launcher: 'custom', cmd: 'x', hand: true }, { name: 'npm-test', cmd: 'npm test', hand: false }],
-    );
-    expect(groups.finished.map((run) => run.id).sort()).toEqual(['R-1', 'R-2', 'R-4']);
-  });
-
-  it('keeps the last 20 finished runs', () => {
-    const many = Array.from({ length: 30 }, (_, index) => runDoc(`R-${index + 1}`, 'launcher-master', { queuedAt: at((40 - index) * 1000) }));
-    const groups = group(many);
-    expect(groups.finished).toHaveLength(20);
-    expect(groups.finished[0]?.id).toBe('R-30');
   });
 });

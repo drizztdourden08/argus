@@ -10,7 +10,7 @@ const LauncherChips = (props: LauncherPartProps) => {
   const { launcher } = view;
   return (
     <Flex gap="xs" align="center" wrap>
-      {launcher.name === MASTER && <Tag color="primary" title="The main checkout: every project has one">master</Tag>}
+      {launcher.name === MASTER && <Tag title="The main checkout: every project has one">master</Tag>}
       <Tag title={`Kind: ${launcher.kind ?? 'app'}`}>{launcher.kind ?? 'app'}</Tag>
       {launcher.current && <Tag variant="urgency" color="success" title="The valid one to start now">current</Tag>}
       <BundleLink view={view} />

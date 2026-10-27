@@ -30,10 +30,10 @@ describe('the table', () => {
     await mountTab({ docs: rows, meta: metaDoc() });
     const row = await findRow('stale-1');
     expect(text(cellOf('stale-1', 'path'))).toContain('X:/proj/trees/stale-1');
-    expect(text(cellOf('stale-1', 'path'))).toContain('rule W-1, tells lead');
+    expect(text(cellOf('stale-1', 'path'))).toContain('rule W-1 · tells lead');
     expect(within(row).getByTitle(STALE_TIP).textContent).toContain('stale');
     expect(text(cellOf('stale-1', 'branch'))).toContain('abc1234');
-    expect(text(cellOf('stale-1', 'ahead'))).toBe('2 ahead, 1 behind');
+    expect(text(cellOf('stale-1', 'ahead'))).toBe('↑2 ↓1');
     expect(text(cellOf('stale-1', 'subject'))).toContain('work on stale-1');
     const touched = cellOf('stale-1', 'touched').querySelector('time');
     expect(touched?.getAttribute('datetime')).toBe(rows[1]?.lastTouchedAt);

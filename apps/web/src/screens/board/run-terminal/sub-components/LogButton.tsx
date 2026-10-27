@@ -5,7 +5,7 @@ import type { LogButtonProps } from '../run-terminal.type';
 const LogButton = (props: LogButtonProps) => {
   const { run, onLog } = props;
   if (!run) return null;
-  return <Button size="sm" variant="secondary" aria-label={`Log of ${run.id}`} onClick={() => onLog(run.id)}>Log</Button>;
+  return <Button size="sm" variant="ghost" title={`Open the log of ${run.id}`} aria-label={`Log of ${run.id}`} onClick={() => onLog(run.id)}>Log</Button>;
 };
 
 export { LogButton };

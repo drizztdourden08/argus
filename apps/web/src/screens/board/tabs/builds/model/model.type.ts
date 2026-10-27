@@ -40,9 +40,4 @@ interface LauncherViews {
   hasMaster: boolean;
 }
 
-interface RunGroups {
-  live: RunEntry[];
-  finished: RunEntry[];
-}
-
-export type { BuildDoc, LaunchDefDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, RunGroups, ViewInput };
+export type { BuildDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };

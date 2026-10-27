@@ -23,9 +23,10 @@ describe('a launcher made for a bundle', () => {
       [launcherDoc('master'), launcherDoc('open-1', { bundle: 'open-1', joined: 'open-1' }), launcherDoc('shared-1', { joined: 'open-1' })],
       { builds: [buildDoc('open-1', { launcher: 'open-1' })] },
     ));
-    const links = await screen.findAllByRole('link', { name: 'for bundle open-1 (ready)' });
+    const links = await screen.findAllByRole('link', { name: 'for bundle open-1' });
     expect(links).toHaveLength(2);
     expect(links[0]?.getAttribute('href')).toBe('#tests');
+    expect(screen.getAllByText('ready')).toHaveLength(2);
     expect(container.textContent).not.toContain('expected every');
     expect(screen.queryByText('stale')).toBeNull();
   });
@@ -35,8 +36,10 @@ describe('a launcher made for a bundle', () => {
       [launcherDoc('master'), launcherDoc('done-1', { bundle: 'done-1', joined: 'done-1' }), launcherDoc('lost-2', { bundle: 'lost-2', joined: 'lost-2' })],
       { builds: [buildDoc('done-1', { launcher: 'done-1', closedAt: ago(DAY) })] },
     ));
-    expect(await screen.findByRole('link', { name: 'for bundle done-1 (closed)' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'for bundle done-1' })).toBeTruthy();
+    expect(screen.getAllByText('closed')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'for bundle lost-2' })).toBeTruthy();
+    expect(screen.queryByText('ready')).toBeNull();
   });
 });
 

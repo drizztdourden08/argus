@@ -1,22 +1,20 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Status, Text } from '@drizztdourden08/tessera';
+import { DateText, Status, Text } from '@drizztdourden08/tessera';
 import { runLine } from '../../../../data/runs';
 import type { RunStatusProps } from '../run-play.type';
 
 const RunStatus = (props: RunStatusProps) => {
   const { run } = props;
   const line = runLine(run);
+  const running = run.status === 'running';
   return (
-    <Flex gap="xs" align="center" wrap role="status" aria-label={`Run ${run.id}`}>
-      <Status tone={line.tone} dot pulse={run.status === 'running'}>{line.label}</Status>
-      {line.since && (
-        <Text variant="caption" tone="muted">
-          {run.status === 'running' ? 'since ' : ''}
-          <DateText value={line.since} format="relative" />
-        </Text>
-      )}
-      {line.last && <Text variant="caption" tone="dim" mono>{line.last}</Text>}
-    </Flex>
+    <Status tone={line.tone} dot pulse={running} role="status" aria-label={`Run ${run.id}`} title={`${line.last} (${run.id})`}>
+      <Text variant="caption" tone="dim">
+        {line.label}
+        {line.since && <>{running ? ' ' : ' · '}<DateText value={line.since} format="elapsed" length="short" />{running ? '' : ' ago'}</>}
+        {line.last && ` · ${line.last}`}
+      </Text>
+    </Status>
   );
 };
 

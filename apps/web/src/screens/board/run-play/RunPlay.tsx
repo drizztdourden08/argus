@@ -18,7 +18,7 @@ const RunPlay = (props: RunPlayProps) => {
       {live ? (
         <Button size="sm" variant="danger" disabled={play.busy} aria-label={`Stop ${live.id}`} onClick={() => void play.stop(live)}>Stop</Button>
       ) : (
-        <Button size="sm" variant="primary" disabled={play.busy} aria-label={`Play ${label}`} onClick={() => void play.start(def, label)}>Play</Button>
+        <Button size="sm" disabled={play.busy} aria-label={`Play ${label}`} onClick={() => void play.start(def, label)}>Play</Button>
       )}
       {shown && <RunStatus run={shown} />}
     </Flex>

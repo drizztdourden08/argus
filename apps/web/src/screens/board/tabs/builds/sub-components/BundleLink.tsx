@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Link } from '@drizztdourden08/tessera';
+import { Icon, Link, Tag } from '@drizztdourden08/tessera';
 import { bundleState } from '../../../shared';
 import { MASTER } from '../builds.constants';
 import type { LauncherPartProps } from '../builds-props.type';
@@ -7,11 +7,19 @@ import type { LauncherPartProps } from '../builds-props.type';
 const BundleLink = (props: LauncherPartProps) => {
   const { launcher, joined } = props.view;
   if (!launcher.joined || launcher.name === MASTER) return null;
-  const state = joined ? ` (${bundleState(joined)})` : '';
+  const status = bundleState(joined);
   return (
-    <Link href="#tests" variant="subtle" title={`This launcher goes with bundle ${launcher.joined}: closed or removed, it is retired with it. Open the bundle on the Tests tab`}>
-      {`for bundle ${launcher.joined}${state}`}
-    </Link>
+    <>
+      <Tag title={`This launcher goes with bundle ${launcher.joined}: closed or removed, it is retired with it. Open the bundle on the Tests tab`}>
+        <Link href="#tests" variant="subtle" tone="neutral">
+          <Icon name="link" size={12} aria-hidden />
+          {` for bundle ${launcher.joined}`}
+        </Link>
+      </Tag>
+      {joined && (status === 'ready'
+        ? <Tag variant="urgency" color="success" title="Built and ready to start">{status}</Tag>
+        : <Tag title={status === 'closed' ? 'Closed with coord build close' : 'Not built yet'}>{status}</Tag>)}
+    </>
   );
 };
 

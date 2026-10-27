@@ -18,7 +18,6 @@ const ActionsCell = (props: CellProps) => {
         <Button
           key={ask.kind}
           size="xs"
-          variant="secondary"
           title={ask.tip(thread)}
           aria-expanded={expanded(ask.kind)}
           disabled={busy && panel?.id === row.id}
