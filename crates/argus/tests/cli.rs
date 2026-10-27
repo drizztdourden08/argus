@@ -34,10 +34,15 @@ impl Home {
     }
 
     fn run(&self, args: &[&str]) -> Out {
+        self.run_with_env_home(&self.dashboard(), args)
+    }
+
+    /// A run whose `DASHBOARD_HOME` is `env_home`, to prove that `--data-dir` beats it.
+    fn run_with_env_home(&self, env_home: &Path, args: &[&str]) -> Out {
         let out = Command::new(env!("CARGO_BIN_EXE_argus"))
             .args(args)
             .env("COORD_HOME", self.dir.path())
-            .env("DASHBOARD_HOME", self.dashboard())
+            .env("DASHBOARD_HOME", env_home)
             .env("DASHBOARD_PORT", "0")
             .env(PROBE_ENV, "60000")
             .output()
@@ -396,4 +401,79 @@ async fn a_start_on_a_home_marked_shadow_runs_in_shadow_mode_without_a_flag() {
         .expect("health");
     let body: Value = serde_json::from_str(&health.1).expect("JSON");
     assert_eq!(body["shadow"], true, "{body}");
+}
+
+/// Runs a verb in a home that is only addressed by `--data-dir` (or `--home`): the environment
+/// points at an empty decoy folder.
+fn by_flag(home: &Home, decoy: &Path, flag: &str, verb: &[&str]) -> Out {
+    let folder = home.dashboard();
+    let folder = folder.to_str().expect("a path");
+    let mut args = verb.to_vec();
+    args.extend([flag, folder]);
+    home.run_with_env_home(decoy, &args)
+}
+
+#[test]
+fn every_verb_takes_the_data_dir_flag_and_its_home_alias() {
+    let home = Home::new();
+    let decoy = tempfile::tempdir().expect("a decoy home");
+    let at = |flag: &str, verb: &[&str]| by_flag(&home, decoy.path(), flag, verb);
+
+    let start = at("--data-dir", &["start"]);
+    assert_eq!(start.code, 0, "{}", start.stderr);
+    assert!(running_line(start.stdout.trim()), "{}", start.stdout);
+    let pid = home.json("server.pid")["pid"].as_u64().expect("a pid");
+    assert!(
+        start.stdout.contains(&format!("(pid {pid})")),
+        "{}",
+        start.stdout
+    );
+
+    let status = at("--home", &["status"]);
+    assert_eq!(status.code, 0, "{}", status.stderr);
+    assert!(
+        status.stdout.contains(&format!("(pid {pid},")),
+        "{}",
+        status.stdout
+    );
+    let json: Value =
+        serde_json::from_str(&at("--data-dir", &["status", "--json"]).stdout).expect("JSON");
+    assert_eq!(json["pid"].as_u64(), Some(pid));
+    assert_eq!(at("--data-dir", &["start"]).code, 0);
+    assert_eq!(at("--home", &["open", "alpha", "--print"]).code, 0);
+    assert_eq!(at("--data-dir", &["resync"]).code, 0);
+    assert_eq!(at("--home", &["token", "--rotate"]).code, 0);
+    assert_eq!(at("--data-dir", &["logs", "--lines", "3"]).code, 0);
+    assert_eq!(
+        home.run_with_env_home(decoy.path(), &["status"]).code,
+        1,
+        "without the flag the decoy home is not running"
+    );
+
+    let stop = at("--data-dir", &["stop"]);
+    assert_eq!(stop.code, 0, "{}", stop.stderr);
+    assert!(stop.stdout.contains("dashboard stopped"), "{}", stop.stdout);
+    assert_eq!(at("--home", &["status"]).code, 1);
+}
+
+#[test]
+fn the_node_guard_holds_for_a_home_addressed_by_the_flag() {
+    let node = FakeNode::start();
+    let home = Home::held_by(&node, std::process::id());
+    let decoy = tempfile::tempdir().expect("a decoy home");
+    for verb in [
+        &["stop"][..],
+        &["start"],
+        &["resync"],
+        &["token", "--rotate"],
+    ] {
+        let out = by_flag(&home, decoy.path(), "--data-dir", verb);
+        assert_eq!(out.code, 1, "{verb:?}: {}", out.stdout);
+        assert!(
+            out.stderr.contains("Node dashboard"),
+            "{verb:?}: {}",
+            out.stderr
+        );
+    }
+    assert!(node.only_health_calls(), "{:?}", node.requests());
 }

@@ -21,9 +21,19 @@ use std::time::Duration;
 
 use argus_core::Paths;
 use clap::error::{ContextKind, ContextValue, ErrorKind};
-use clap::{Command, CommandFactory, Subcommand};
+use clap::{Args, Command, CommandFactory, Subcommand};
 
 pub use serve::paths_of;
+
+/// The dashboard home flag every lifecycle verb takes; without it the home is `DASHBOARD_HOME`,
+/// else `<COORD_HOME>/dashboard`.
+#[derive(Args, Clone)]
+pub struct Home {
+    /// The dashboard home (config, database, logs); default `DASHBOARD_HOME`, else
+    /// `<COORD_HOME>/dashboard`.
+    #[arg(long, alias = "home")]
+    data_dir: Option<PathBuf>,
+}
 
 /// The verbs.
 #[derive(Subcommand)]
@@ -51,14 +61,21 @@ pub enum Verb {
         /// Seconds to wait for the server to answer (default 8).
         #[arg(long, value_name = "SECONDS")]
         wait: Option<u64>,
+        #[command(flatten)]
+        home: Home,
     },
     /// Stops the server.
-    Stop,
+    Stop {
+        #[command(flatten)]
+        home: Home,
+    },
     /// Health, pid, port and runs; exit 1 when the server is down.
     Status {
         /// Prints JSON.
         #[arg(long)]
         json: bool,
+        #[command(flatten)]
+        home: Home,
     },
     /// Opens Argus (the overview) or a board in the browser.
     Open {
@@ -67,6 +84,8 @@ pub enum Verb {
         /// Only prints the address.
         #[arg(long)]
         print: bool,
+        #[command(flatten)]
+        home: Home,
     },
     /// The server log; with `--run R-n --project <key>` a run's log.
     Logs {
@@ -82,6 +101,8 @@ pub enum Verb {
         /// The project of the run.
         #[arg(long)]
         project: Option<String>,
+        #[command(flatten)]
+        home: Home,
     },
     /// Asks the server to read its boards again.
     Resync {
@@ -91,12 +112,16 @@ pub enum Verb {
         /// Rebuilds the docs from the boards.
         #[arg(long)]
         hard: bool,
+        #[command(flatten)]
+        home: Home,
     },
     /// A new token (it only matters with `requireToken` in config.json).
     Token {
         /// Rotates it.
         #[arg(long)]
         rotate: bool,
+        #[command(flatten)]
+        home: Home,
     },
 }
 
@@ -105,7 +130,7 @@ async fn start_verb(
     (foreground, port, wait): (bool, Option<u16>, Option<u64>),
 ) -> Result<u8, String> {
     if foreground {
-        return serve::run(port, None, false).await;
+        return serve::run(port, Some(paths.home.clone()), false).await;
     }
     let options = start::Options {
         port,
@@ -115,13 +140,25 @@ async fn start_verb(
     start::start(paths, &options).await
 }
 
+async fn logs_verb(
+    paths: &Paths,
+    (lines, follow, run, project): (Option<String>, bool, Option<String>, Option<String>),
+) -> Result<u8, String> {
+    let request = logs::Request {
+        lines: lines.as_deref(),
+        follow,
+        run: run.as_deref(),
+        project: project.as_deref(),
+    };
+    logs::logs(paths, &request).await
+}
+
 /// Does what the verb asks and answers the exit code.
 ///
 /// # Errors
 ///
 /// The verb failed in a way it did not print itself.
 pub async fn run(verb: Verb) -> Result<u8, String> {
-    let paths = paths_of(None);
     match verb {
         Verb::Serve {
             port,
@@ -132,26 +169,26 @@ pub async fn run(verb: Verb) -> Result<u8, String> {
             foreground,
             port,
             wait,
-        } => start_verb(&paths, (foreground, port, wait)).await,
-        Verb::Stop => stop::stop(&paths).await,
-        Verb::Status { json } => status::status(&paths, json).await,
-        Verb::Open { key, print } => open::open(&paths, key.as_deref(), print).await,
+            home,
+        } => start_verb(&paths_of(home.data_dir), (foreground, port, wait)).await,
+        Verb::Stop { home } => stop::stop(&paths_of(home.data_dir)).await,
+        Verb::Status { json, home } => status::status(&paths_of(home.data_dir), json).await,
+        Verb::Open { key, print, home } => {
+            open::open(&paths_of(home.data_dir), key.as_deref(), print).await
+        }
         Verb::Logs {
             lines,
             follow,
             run,
             project,
-        } => {
-            let request = logs::Request {
-                lines: lines.as_deref(),
-                follow,
-                run: run.as_deref(),
-                project: project.as_deref(),
-            };
-            logs::logs(&paths, &request).await
-        }
-        Verb::Resync { project, hard } => admin::resync(&paths, project.as_deref(), hard).await,
-        Verb::Token { rotate } => admin::token(&paths, rotate).await,
+            home,
+        } => logs_verb(&paths_of(home.data_dir), (lines, follow, run, project)).await,
+        Verb::Resync {
+            project,
+            hard,
+            home,
+        } => admin::resync(&paths_of(home.data_dir), project.as_deref(), hard).await,
+        Verb::Token { rotate, home } => admin::token(&paths_of(home.data_dir), rotate).await,
     }
 }
 

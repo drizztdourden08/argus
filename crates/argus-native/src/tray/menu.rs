@@ -131,6 +131,37 @@ mod tests {
         );
     }
 
+    /// The Node tray (`tray.ps1`): Open dashboard, the status line, a separator, Open log folder,
+    /// Restart server, Start server (only while stopped), a separator, Quit dashboard. Argus
+    /// differs in two ways on purpose: the app name in the labels, and one more item,
+    /// Notifications, after the first separator.
+    #[test]
+    fn the_menu_is_the_node_menu_with_the_argus_name_and_the_notifications_item() {
+        let node = |state: &TrayState| -> Vec<String> {
+            let mut menu = labels(state);
+            menu.retain(|label| label != "Notifications");
+            menu.iter()
+                .map(|label| label.replace("Open Argus", "Open dashboard"))
+                .map(|label| label.replace("Quit Argus", "Quit dashboard"))
+                .collect()
+        };
+        assert_eq!(
+            node(&TrayState::stopped()),
+            [
+                "Open dashboard",
+                "Argus: stopped",
+                "-",
+                "Open log folder",
+                "Restart server",
+                "Start server",
+                "-",
+                "Quit dashboard"
+            ]
+        );
+        assert!(!node(&TrayState::running(1)).contains(&"Start server".to_owned()));
+        assert_eq!(labels(&TrayState::stopped())[3], "Notifications");
+    }
+
     #[test]
     fn a_stopped_server_offers_start_between_restart_and_quit() {
         let labels = labels(&TrayState::stopped());

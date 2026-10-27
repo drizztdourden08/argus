@@ -13,12 +13,15 @@ use argus_native::{
     request_stop,
 };
 use tokio::runtime::Handle;
-use tokio::time::interval;
+use tokio::time::{Instant, interval, sleep_until};
 
 use super::server::Server;
 use super::{log, open};
 
 const POLL: Duration = Duration::from_secs(5);
+/// How often the server is probed while it is still starting, so the icon turns to running as
+/// soon as it answers.
+const POLL_STARTING: Duration = Duration::from_millis(500);
 const LOOK: Duration = Duration::from_millis(250);
 
 /// What the menu items work with.
@@ -103,12 +106,18 @@ fn wire(tray: &TrayHandle, menu: &Arc<Menu>) {
     });
 }
 
+/// Probes the server at once, then every few seconds (faster while it starts), until the icon is
+/// closed.
 async fn watch(tray: &TrayHandle, menu: &Menu) {
-    let mut poll = interval(POLL);
     let mut look = interval(LOOK);
+    let mut due = Instant::now();
     loop {
         tokio::select! {
-            _ = poll.tick() => tray.set_state(menu.server.state().await),
+            () = sleep_until(due) => {
+                tray.set_state(menu.server.state().await);
+                let wait = if menu.server.is_starting() { POLL_STARTING } else { POLL };
+                due = Instant::now() + wait;
+            }
             _ = look.tick() => {
                 if !tray.is_running() {
                     return;
@@ -140,6 +149,7 @@ pub async fn run(paths: Paths) -> Result<u8, String> {
     });
     wire(&tray, &menu);
     if !quit_flag_active(&menu.files, Boot::current()) {
+        menu.server.expect_start();
         let booting = Arc::clone(&menu);
         drop(menu.runtime.spawn(async move { booting.start().await }));
     }

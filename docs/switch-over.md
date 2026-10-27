@@ -278,8 +278,9 @@ shadow server behind it, then returns:
 & "$env:LOCALAPPDATA\Programsrgusrgus.exe" tray start --shadow --data-dir "$HOME\.coordrgus-shadow"
 ```
 
-The icon is the Argus eye (grey with a red badge while the server is stopped). Its tooltip reads
-`Argus (shadow): running (0 runs)`, so a shadow can never be mistaken for the live dashboard. To
+The icon is the Argus eye (grey with a red badge while the server is starting or stopped). Its
+tooltip reads `Argus (shadow): running (0 runs)`, so a shadow can never be mistaken for the live
+dashboard. To
 check without looking: `... tray status --data-dir "$HOME\.coordrgus-shadow"` prints `tray
 running (pid ...)` and `icon registered: "<tooltip>"`. To close it: `... tray stop` (the icon) and
 `... stop` (the server), each with the same `--data-dir`. Without an icon, in the foreground
@@ -301,6 +302,50 @@ He answers with one verdict. A defect goes to the board as an item and the lead 
 repeats step 1. **Go:** the owner's "looks right" is the go to start step 3.
 
 Rollback: `tray stop` and `stop` with the same `--data-dir` (or Ctrl+C for the foreground form). Node was never touched.
+
+### Tray proof
+
+What proves the tray matches Node, without putting an icon on any desktop. Each line names the
+test that holds it.
+
+- **The icon.** The running icon is the Argus eye at 32 pixels
+  (`the_running_icon_is_the_eye_at_32_pixels`). The stopped icon is grey and faded with a red
+  badge at the bottom right
+  (`the_stopped_icon_is_grey_and_faded_with_a_red_badge_at_the_bottom_right`), with a smooth
+  badge edge. Both are in `argus-native` `tray/icon.rs`. Only a running server shows
+  the colour icon; checking, starting, stopped and closing show the grey one
+  (`the_icon_follows_the_server_and_a_tooltip_always_fits_windows`).
+- **The tooltip while the server comes up.** The tray probes the server the moment the icon is
+  created and again every half second while a start is in flight, then every five seconds. It
+  reads `Argus (shadow): starting` until the first probe answers and never `stopped` while the
+  server answers (`tray/server.rs`: `a_server_that_is_down_reads_stopped_until_a_start_is_expected`
+  and `a_server_that_answers_reads_running_at_once_and_ends_the_starting`).
+- **The menu.** The entries and their order are Node's `tray.ps1`: Open (also the left
+  click), the disabled status line, a separator, Open log folder, Restart server, Start server
+  (only while the server is down), a separator, Quit. Two differences are on purpose: the labels
+  say Argus where Node says dashboard (`Open Argus`, `Quit Argus`, `Argus: running (n runs)`), and
+  Argus has one more item, Notifications, after the first separator, which opens `#notifications`.
+  `the_menu_is_the_node_menu_with_the_argus_name_and_the_notifications_item` pins it, and
+  `quitting_greys_out_restart_start_and_quit` the Quit state.
+- **The toast click.** The toast XML is Node's `toastXml`: `launch="<url>"` with
+  `activationType="protocol"`, the same Open and Dismiss buttons on an urgent toast
+  (`argus-native/tests/toast_payload.rs`). The target is Node's `urlFor`: the project's board on
+  its alias host (`http://rotp.localhost:<port>/`), else
+  `http://argus.localhost:<port>/#notifications` for no project, `portfolio`, `argus` and
+  `overlord`; only an http address on this machine is
+  accepted (`argus-notify` `links.rs`, and
+  `a_click_on_the_toast_opens_the_board_or_the_notifications_tab_by_protocol_activation`).
+- **Status lines that show the icon registered.** `argus tray status --data-dir <home>` prints
+  `tray running (pid N, ...)` and a second line
+  `icon registered: "Argus (shadow): running (0 runs)"`, read from the tooltip the live tray wrote
+  to `tray.json`. Right after `tray start` the second
+  line may read `starting` for a moment; it never reads `stopped` while the server answers
+  (`argus-native` `tray/status.rs`, `tray/record.rs`).
+- **The verbs.** `start`, `stop`, `status`, `open`, `logs`, `resync` and `token` take
+  `--data-dir <folder>` (alias `--home`) like `serve`, so a shadow home is addressed without
+  `DASHBOARD_HOME`. The Node guard still refuses `stop`, `start`, `resync` and `token` on a Node
+  server (`tests/cli.rs`: `every_verb_takes_the_data_dir_flag_and_its_home_alias` and
+  `the_node_guard_holds_for_a_home_addressed_by_the_flag`).
 
 ## 3. The coord engine rollout
 

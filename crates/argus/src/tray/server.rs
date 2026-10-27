@@ -1,5 +1,6 @@
 //! The server as the tray sees it: is it up, how busy, start it, stop it, where its page is.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use argus_core::config::load_config;
@@ -19,12 +20,24 @@ const STEP: Duration = Duration::from_millis(250);
 /// The server of one dashboard home.
 pub struct Server {
     paths: Paths,
+    /// True from the moment a start is expected until it has ended, so the icon says "starting"
+    /// and never "stopped" while the server is on its way up.
+    starting: AtomicBool,
 }
 
 impl Server {
     /// The server that keeps its files in `paths`.
     pub fn new(paths: Paths) -> Self {
-        Server { paths }
+        Server {
+            paths,
+            starting: AtomicBool::new(false),
+        }
+    }
+
+    /// Notes that a start is about to run, before the task that does it has been scheduled, so
+    /// the first probe of the icon already says "starting".
+    pub fn expect_start(&self) {
+        self.starting.store(true, Ordering::SeqCst);
     }
 
     fn config(&self) -> Option<Config> {
@@ -41,7 +54,7 @@ impl Server {
         (health["instance"] == record.instance.as_str()).then_some((record, health))
     }
 
-    /// What the icon shows: the server down, or up with its runs.
+    /// What the icon shows: the server up with its runs, on its way up, or down.
     pub async fn state(&self) -> TrayState {
         let shadow = launch::is_shadow(&self.paths.home);
         self.state_of_server().await.shadowed(shadow)
@@ -53,8 +66,14 @@ impl Server {
                 let runs = health["runs"]["running"].as_u64().unwrap_or(0);
                 TrayState::running(u32::try_from(runs).unwrap_or(u32::MAX))
             }
+            None if self.starting.load(Ordering::SeqCst) => TrayState::starting(),
             None => TrayState::stopped(),
         }
+    }
+
+    /// Whether the server is on its way up and has not answered yet.
+    pub fn is_starting(&self) -> bool {
+        self.starting.load(Ordering::SeqCst)
     }
 
     /// Starts `argus serve` apart from the tray, unless a server answers already, and waits for
@@ -64,6 +83,13 @@ impl Server {
     ///
     /// The server could not be started or did not answer in time.
     pub async fn start(&self) -> Result<(), String> {
+        self.expect_start();
+        let done = self.start_now().await;
+        self.starting.store(false, Ordering::SeqCst);
+        done
+    }
+
+    async fn start_now(&self) -> Result<(), String> {
         if self.live().await.is_some() {
             return Ok(());
         }
@@ -117,5 +143,44 @@ impl Server {
             .to_owned();
         let next = next.replace('#', "%23");
         Some(format!("{base}/auth?code={code}&next={next}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use argus_core::Paths;
+    use argus_native::TrayState;
+    use argus_testkit::{TestOptions, TestServer};
+
+    use super::Server;
+
+    fn idle_server() -> (tempfile::TempDir, Server) {
+        let dir = tempfile::tempdir().expect("a temp home");
+        let paths = Paths::new(dir.path().join("coord"), Some(dir.path().join("dashboard")));
+        (dir, Server::new(paths))
+    }
+
+    #[tokio::test]
+    async fn a_server_that_is_down_reads_stopped_until_a_start_is_expected() {
+        let (_dir, server) = idle_server();
+        assert_eq!(server.state().await, TrayState::stopped());
+        server.expect_start();
+        assert!(server.is_starting());
+        assert_eq!(server.state().await, TrayState::starting());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_server_that_answers_reads_running_at_once_and_ends_the_starting() {
+        let test = TestServer::start(TestOptions::default()).await;
+        let paths = Paths::new(&test.coord_home, Some(test.dashboard_home.clone()));
+        let server = Server::new(paths);
+        server.expect_start();
+        assert_eq!(server.state().await, TrayState::running(0));
+        server
+            .start()
+            .await
+            .expect("a running server needs no start");
+        assert!(!server.is_starting());
+        test.stop(false).await;
     }
 }

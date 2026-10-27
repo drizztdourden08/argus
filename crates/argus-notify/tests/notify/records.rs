@@ -34,6 +34,21 @@ fn a_ping_is_recorded_with_its_doc_the_project_link_and_the_toast_that_was_asked
     assert!(tag.len() == 12 && tag.chars().all(|c| c.is_ascii_hexdigit()));
 }
 
+/// The click target as Node's `toastXml` writes it: the page address in the `launch` attribute,
+/// opened by protocol activation, on the project's alias host or else the Notifications tab.
+#[test]
+fn a_click_on_the_toast_opens_the_board_or_the_notifications_tab_by_protocol_activation() {
+    let h = Harness::new();
+    h.notify.send(from_lead("B1 is ready to test"));
+    h.notify.send(PingRequest::new("no project here"));
+    let xml: Vec<String> = h.notifier.shown().into_iter().map(|p| p.xml).collect();
+    assert_eq!(xml.len(), 2);
+    let board = format!("<toast launch=\"{ROTP}\" activationType=\"protocol\">");
+    let tab = format!("<toast launch=\"{TAB}\" activationType=\"protocol\">");
+    assert!(xml[0].starts_with(&board), "{}", xml[0]);
+    assert!(xml[1].starts_with(&tab), "{}", xml[1]);
+}
+
 #[test]
 fn defaults_and_cleaning_title_from_the_sender_plain_text_title_60_and_text_240() {
     let h = Harness::new();
