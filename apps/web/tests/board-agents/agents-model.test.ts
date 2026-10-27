@@ -1,7 +1,10 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
+import type { Agent } from '../../src/data/agents';
+import type { WithId } from '../../src/data/react';
+import type { RunEntry } from '../../src/data/runs';
 import {
-  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, formatDuration, isQuiet, isStale, itemOptions, MODEL_LOOKS, modelFamily, modelTip,
+  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, finishedCount, formatDuration, isQuiet, isStale, itemOptions, MODEL_LOOKS, modelFamily, modelTip,
   plainText, runSpan, shortBranch, sortActive, sortDone, statusLook, tagLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
@@ -151,5 +154,17 @@ describe('lists', () => {
     expect(findLead([thread('old', { status: 'done' }), thread('now')])?.id).toBe('now');
     expect(findLead([thread('old', { status: 'done' })])?.id).toBe('old');
     expect(findLead([thread('gone', { deletedAt: 'x' }), thread('merged', { mergedInto: 'y' })])).toBeNull();
+  });
+});
+
+describe('finishedCount', () => {
+  const agent = (id: string): WithId<Agent> => ({ id, status: 'done' });
+  const run = (id: string, status: string): RunEntry => ({ id, status, queuedAt: at(MIN) }) as RunEntry;
+
+  it('adds the finished runs to the finished agents, as the Node Show finished button does', () => {
+    const agents = [agent('A-1'), agent('A-2')];
+    const runs = [run('R-1', 'exited'), run('R-2', 'failed'), run('R-3', 'running')];
+    expect(finishedCount(agents, runs)).toBe(4);
+    expect(finishedCount(agents, [])).toBe(2);
   });
 });

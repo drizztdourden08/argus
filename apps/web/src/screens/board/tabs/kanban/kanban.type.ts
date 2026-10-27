@@ -18,6 +18,7 @@ interface KanbanData {
   actions: WithId<ActionDoc>[];
   agents: WithId<TrashSource>[];
   tests: WithId<Test>[];
+  closedBuilds: ReadonlySet<string>;
   needs: ReadonlyMap<string, Needs>;
 }
 

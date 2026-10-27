@@ -11,8 +11,6 @@ const CLOCK_TICK_MS = 60 * 1000;
 
 const RETIRED_KEY = 'coord.lcretired';
 
-const FINISHED_SHOWN = 20;
-
 const LEAD_TEXT = 'What you can start. The registered agent keeps this list true.';
 
 const EMPTY_TEXT = 'Nothing to start yet.';
@@ -24,6 +22,6 @@ const NO_MASTER_TEXT = 'No master launcher: the thread must set one. Every proje
 const RUN_ROW_SHAPE: ListItemShape = { icon: false, columns: 2, action: true };
 
 export {
-  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, FINISHED_SHOWN, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
+  CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, LEAD_TEXT, MASTER, NO_MASTER_TEXT,
   RETIRED_KEY, RUN_ROW_SHAPE,
 };

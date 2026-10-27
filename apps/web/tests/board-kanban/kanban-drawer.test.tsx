@@ -36,6 +36,19 @@ describe('the detail drawer', () => {
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
   });
 
+  it('counts no archived test and no test of a closed bundle, as the Node page does', async () => {
+    const moved = { id: 'T-5', item: 'I-1', title: 'Moved away', mode: 'manual', status: 'moved', ac: [], archivedAt: ago(MIN) };
+    const closed = { id: 'T-6', item: 'I-1', title: 'In a closed bundle', mode: 'manual', status: 'pass', ac: [], build: 'old-1' };
+    await mountKanban({
+      items: [item('I-86')],
+      tests: [{ ...moved, item: 'I-86' }, { ...closed, item: 'I-86' }],
+      builds: [{ tag: 'old-1', closedAt: ago(MIN) }],
+    });
+    const dialog = await openItem('I-86');
+    expect(within(dialog).getByText('Tests, 0/0 passing')).toBeTruthy();
+    expect(within(dialog).queryByText('Moved away')).toBeNull();
+  });
+
   it('says needs you in the drawer while a question waits on the owner, and stops once it is answered', async () => {
     const question = { id: 'Q-1', kind: 'question', item: 'I-1', author: 'worker', status: 'open', createdAt: ago(10 * MIN) };
     const { change } = await mountKanban({ items: [item('I-1')], entries: [question] });

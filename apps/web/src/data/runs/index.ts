@@ -1,7 +1,9 @@
 /* @layer renderer-app @kind barrel */
 export { useRunLog } from './behavior/useRunLog';
 export { attachToRun } from './attach-to-run';
+export { finishedRuns } from './finished-runs';
 export { isLiveRun } from './is-live-run';
+export { newestFirst } from './newest-first';
 export { listRunAttachments } from './list-run-attachments';
 export { listRuns } from './list-runs';
 export { playsInWindow } from './plays-in-window';

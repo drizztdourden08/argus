@@ -17,7 +17,7 @@ const ItemBody = (props: ItemBodyProps) => {
   const record = useItemRecord(boardKey, item.id, actions);
   const acts = useRecordActions(boardKey);
   const feed = useFeedActions(boardKey);
-  const own = tests.filter((test) => test.item === item.id && !test.deletedAt);
+  const own = tests.filter((test) => test.item === item.id);
   const openQuestions = record.questions.filter((row) => row.open).length;
   return (
     <Flex direction="column" gap="lg">

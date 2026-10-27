@@ -122,6 +122,12 @@ type DropPlan =
   | { kind: 'reorder'; place: PlaceAmong }
   | { kind: 'status' | 'thread' | 'subject'; to: string; place: PlaceAmong };
 
+interface TestScope {
+  archivedAt?: string | null;
+  deletedAt?: string | null;
+  build?: string | null;
+}
+
 export type {
-  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, ViewInput,
+  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
 };

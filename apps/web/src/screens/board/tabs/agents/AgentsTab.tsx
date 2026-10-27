@@ -32,7 +32,7 @@ const AgentsTab = (props: AgentsTabProps) => {
   const [showFinished, setShowFinished] = useStoredFlag(FINISHED_KEY);
   const [logId, setLogId] = useState<string | null>(null);
   const opened = [...view.active, ...view.done].find((agent) => agent.id === anchor.selected) ?? null;
-  const count = view.done.length + runs.finished.length;
+  const count = view.finishedCount;
   const order = [...view.active, ...(showFinished ? view.done : [])].map((agent) => agent.id);
   return (
     <Flex direction="column" gap="md">
