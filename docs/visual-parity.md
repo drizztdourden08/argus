@@ -271,25 +271,14 @@ list.
 125. open: Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
 126. open: Thread drawer links to T-6 and T-7 take the accent colour; Node draws neutral underlined
-<<<<<<< HEAD
     links. Needs Tessera: Markdown `linkTone="neutral"` (Link has the tone, MarkdownLink does not
     pass one). (Thread drawer)
-127. open: decision cards fixed (Card edge left in the warning tone on every needs-you ask card).
-    The bundle row still has no edge, owned by the Tests and Activity row work. (Board Activity)
-128. open: Board Activity shows the markdown image thumbnails of a waiting item inside its row
-    (Tessera, "Brock and Tessera marks cleaned"); Node shows the title only. (Board Activity)
-129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
-    cross icon pair. (Item drawer)
-=======
-    links. (Thread drawer)
-127. open: the waiting-on-you bundle and test rows have the amber left edge (fixed, Card edge tone).
-    The decision card still has none (not part of this pass). (Board Activity)
+127. fixed: decision cards and the waiting-on-you bundle and test rows have the amber left edge
+    (Card edge in the warning tone). (Board Activity)
 128. fixed: the waiting row shows the title only, no image thumbnails (the unused ProofGallery is
     gone). (Board Activity)
-129. open: Work item description editor: Argus opens a split editor with a live preview and "Save
-    description" and "Cancel" text buttons; Node opens one pane with Write and Preview tabs and a
-    check and cross icon pair. (Item drawer)
->>>>>>> worktree-agent-ad1922d5e737d0fae
+129. fixed: Work item description editor opens one pane with Write and Preview tabs and a check and
+    cross icon pair. (Item drawer)
 130. open: Kanban columns are panels as tall as the tallest column in Argus; Node sizes each column
     to its cards. KanbanBoard stretches its columns (needs Tessera: a column height option, fit).
     (Kanban)
@@ -299,42 +288,24 @@ list.
     the window height and the scrollbar sits inside the frame; Node scrolls the page. (Every screen)
 133. open: Fault chip shape: Node a rounded outlined pill with a warning icon, Argus a squarer dark
     red filled chip, on the overview strip and the board strip. (Registered strip)
-<<<<<<< HEAD
-134. open: Worktrees path is middle truncated ("X:/relic-of-the-past/.../bundle-10") where Node
-    shows the full path; the size reads "at least 37 MB" where Node reads "≥ 37 MB". (Worktrees)
-135. fixed: outcome buttons read pass, fail, partial, blocked (the accessible names keep the
-    capital, "Pass T-1"). (Tests, test drawer)
-136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
-    one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
-137. open: At 420 the Tests bundle head wraps badly in Argus (name cut to "Controll...", tags on
-    three lines, Unhand on its own row); Node keeps a tidy two line head. (Tests narrow)
-138. open: Markdown typography: Node shows "1280×720" (a multiplication sign), Argus "1280x720" in
-    test titles and steps. (Tests, drawers)
-139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
-    links are gone. The agent drawer says "Claude id". (Drawers)
-140. open: The Send down popover differs in detail: the label is "to Bxel" muted where Node says
-    "for Bxel" with the name bold, Argus adds a preview eye icon and puts a dim Send down button
-    under the hint, Node puts the filled Send down button at the left under the box. (Send down)
-=======
 134. fixed: the path column fits the full path (a longer path still truncates in the middle) and the
     size reads "≥ 37 MB". (Worktrees)
-135. fixed: outcome buttons read "pass, fail, partial, blocked" (the shared outcome list, so the test
-    drawer and the note dialog follow). (Tests, test drawer)
+135. fixed: outcome buttons read pass, fail, partial, blocked (the shared outcome list, so the test
+    drawer and the note dialog follow; the accessible names keep the capital, "Pass T-1"). (Tests,
+    test drawer)
 136. open: At 420 the Kanban columns stay side by side in a sideways scroll; Node stacks the columns
-    one under the other. (Kanban narrow)
+    one under the other (needs Tessera: KanbanBoard stacking on a narrow board). (Kanban narrow)
 137. open, needs Tessera: Disclosure `end` slot that drops to its own row under the summary at
     narrow widths. At 420 the Tests bundle head wraps badly in Argus (tags on three lines, Unhand on
     its own row); Node keeps a tidy head. (Tests narrow)
 138. open, needs Tessera: Node shows "1280×720" because its Inter applies the contextual alternate
     for a digit, x, digit; the Inter subset Tessera ships for the Latin range loses it (the glyph
     widths differ, measured). The bundled font needs the calt feature kept. (Tests, drawers)
-139. open: Argus adds "Edit task", "Edit note" and "Edit description" text links under agent and
-    item fields; Node edits in place. The agent drawer says "Agent id" where Node says "Claude id".
-    (Drawers)
+139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
+    links are gone. The agent drawer says "Claude id". (Drawers)
 140. open: the Send down popover label now reads "for Bxel" with the name bold, and the Send down
     button sits at the left under the box with "Ctrl+Enter sends" beside it (fixed). Needs Tessera: a
     MarkdownEditor option to hide the preview eye icon in its toolbar. (Send down)
->>>>>>> worktree-agent-ad1922d5e737d0fae
 141. open: Menu text is about 12px with tight rows in Argus (card, agent and More menus); Node uses
     15px rows. (Menus)
 
