@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { smartTimes } from '../../../../format';
 import { Age } from '../../../../shell';
 import { useNavigate } from 'react-router';
 import { testLine } from '../behavior/test-line';
@@ -17,7 +18,7 @@ const TestLine = (props: TestLineProps) => {
         <Text className="test-line__text" title={line.hover}>
           {line.count ? <Text weight={600}>{line.count}</Text> : null}
           {line.count ? ' · ' : null}
-          {line.title}
+          {smartTimes(line.title)}
         </Text>
       </Flex>
       <Text variant="caption" tone="muted">{line.thread}</Text>

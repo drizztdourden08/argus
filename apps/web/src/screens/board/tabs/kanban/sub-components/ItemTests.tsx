@@ -1,13 +1,17 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Pressable, Text } from '@drizztdourden08/tessera';
+import { Card, Flex, Pressable, Tag, Text } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
+import { smartTimes } from '../../../../../format';
+import { useDoc } from '../../../../../data/react';
+import type { BoardMeta } from '../../../../../data/types';
 import type { ItemTestsProps } from '../drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 import { EmptyLine } from './EmptyLine';
 import { StatusTag } from './StatusTag';
 
 const ItemTests = (props: ItemTestsProps) => {
-  const { tests } = props;
+  const { boardKey, tests } = props;
+  const handed = useDoc<BoardMeta>(boardKey, 'meta', 'board').doc?.handedBuild ?? null;
   const navigate = useNavigate();
   const passing = tests.filter((test) => test.status === 'pass').length;
   return (
@@ -22,8 +26,9 @@ const ItemTests = (props: ItemTestsProps) => {
                   <Text variant="caption" weight={600} mono>{test.id}</Text>
                   <StatusTag status={test.status} />
                   <StatusTag status={test.mode} />
+                  {test.build ? <Tag color="neutral" title={test.build === handed ? `Build ${test.build} is the one handed to you` : `Build ${test.build}`}>{test.build === handed ? `${test.build} · handed to you` : test.build}</Tag> : null}
                 </Flex>
-                <Text>{test.title}</Text>
+                <Text>{smartTimes(test.title)}</Text>
               </Flex>
             </Pressable>
           </Card>

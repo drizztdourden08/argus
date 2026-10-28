@@ -27,7 +27,7 @@ const DashboardTotals = (props: DashboardTotalsProps) => {
             {`${totals.needs} need you`}
           </Inline>
         </Tag>
-        <Inline gap="2xs" align="center" title="When the cards last changed">
+        <Inline gap="xs" align="center" title="When the cards last changed">
           <Icon name="clock" size={13} />
           <Text variant="caption">{status === 'unavailable' ? 'dashboard unreachable' : updated}</Text>
         </Inline>

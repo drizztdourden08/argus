@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Pressable, Tag, Text } from '@drizztdourden08/tessera';
+import { smartTimes } from '../../../../format';
 import { WORK_LIMIT } from '../ThreadDrawer.constants';
 import type { ThreadWorkProps } from '../ThreadDrawer.type';
 import { ThreadSection } from './ThreadSection';
@@ -15,7 +16,7 @@ const ThreadWork = (props: ThreadWorkProps) => {
           <Pressable key={item.id} className="thread-work__item" aria-label={`Open ${item.id}`} onClick={() => onOpen(item.id)}>
             <Text as="span" variant="caption" mono weight={600} className="thread-work__id">{item.id}</Text>
             <Tag>{item.status}</Tag>
-            <Box as="span" className="thread-work__title">{item.title}</Box>
+            <Box as="span" className="thread-work__title">{smartTimes(item.title)}</Box>
           </Pressable>
         ))}
       </Box>

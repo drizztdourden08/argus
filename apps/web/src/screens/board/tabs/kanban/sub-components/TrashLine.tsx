@@ -1,12 +1,14 @@
 /* @layer renderer-app @kind component */
-import { Button, Checkbox, Flex, TableCell, TableRow } from '@drizztdourden08/tessera';
+import { Button, Checkbox, Flex, TableCell, TableRow, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { TrashLineProps } from '../trash-props.type';
 import { TRASH_KINDS } from '../trash';
 
 const TrashLine = (props: TrashLineProps) => {
   const { row, now, selected, selection, order, bulk } = props;
-  const when = `${row.archived ? 'archived ' : ''}${formatAgo(row.at, now)} ago`;
+  const how = row.archived ? 'archived ' : '';
+  const shown = `${how}${formatAgo(row.at, now)} · ${row.by}`;
+  const when = `${how}${formatAgo(row.at, now)} ago by ${row.by}${row.reason ? `: ${row.reason}` : ''}`;
   return (
     <TableRow>
       <TableCell>
@@ -18,7 +20,7 @@ const TrashLine = (props: TrashLineProps) => {
       <TableCell>{TRASH_KINDS[row.c]}</TableCell>
       <TableCell>{row.text}</TableCell>
       <TableCell>{row.thread}</TableCell>
-      <TableCell>{`${when} by ${row.by}${row.reason ? `: ${row.reason}` : ''}`}</TableCell>
+      <TableCell><Text as="span" title={when}>{shown}</Text></TableCell>
       <TableCell>
         <Button size="xs" variant="ghost" aria-label={`Restore ${row.id}`} onClick={() => bulk.restore([row])}>Restore</Button>
       </TableCell>

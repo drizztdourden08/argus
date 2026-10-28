@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { DateText } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { whoOf } from '../behavior/who-of';
 import { BUSY_TIP, DEAF_NOTE } from '../RegisteredStrip.constants';
 import type { ChipTipProps } from '../RegisteredStrip.type';
@@ -10,7 +10,7 @@ const StateTip = (props: ChipTipProps) => {
   if (row.state === 'waking') {
     return (
       <>
-        {who}: waking up, a wake was sent <DateText value={row.pendingWake?.since ?? row.since ?? ''} format="relative" /> and has not
+        {who}: waking up, a wake was sent <Age value={row.pendingWake?.since ?? row.since ?? ''} ago /> and has not
         been answered yet
       </>
     );

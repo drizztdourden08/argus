@@ -105,6 +105,7 @@ interface TodoRowProps {
 }
 
 interface ItemTestsProps {
+  boardKey: string;
   tests: readonly WithId<Test>[];
 }
 
@@ -126,6 +127,7 @@ interface EntryBlockProps {
 
 interface EntryHeadProps {
   entry: BoardEntry;
+  feed: FeedActions;
   now: number;
 }
 

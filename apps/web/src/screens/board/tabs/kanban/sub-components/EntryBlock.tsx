@@ -16,7 +16,7 @@ const EntryBlock = (props: EntryBlockProps) => {
   return (
     <Card>
       <Flex direction="column" gap="xs">
-        <EntryHead entry={entry} now={now} />
+        <EntryHead entry={entry} feed={feed} now={now} />
         {showContext && <ContextBlock entry={entry} actions={feed} />}
         {editable ? (
           <InlineEdit
@@ -28,7 +28,7 @@ const EntryBlock = (props: EntryBlockProps) => {
             onCommit={(value) => void ops.editRecord({ c: 'entries', id: entry.id }, { field: 'text', prev: entry.text, value: value.trim() }, `Saved ${entry.id}.`)}
           />
         ) : (
-          <BoardMarkdown size="sm" source={entry.text} />
+          <BoardMarkdown source={entry.text} />
         )}
         {row.replies.map((reply) => (
           <Flex key={reply.id} gap="sm">

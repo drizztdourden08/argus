@@ -15,7 +15,7 @@ const ProcessCell = (props: ProcessCellProps) => {
   if (path === 'name') return <NameCell name={row.name} pid={row.pid} />;
   if (path === 'project') return proc.project ? <ProjectLink project={proc.project} tone="link" /> : absent;
   const measure = MEASURE_CELL[path];
-  if (measure) return measure(row);
+  if (measure) return <Text size="md" tone="dim" numeric>{measure(row)}</Text>;
   if (path === 'status') return proc.status ? <StatusCell proc={proc} /> : absent;
   if (path === 'cmd') return proc.cmd ? <CopyValue value={clipText(proc.cmd, COMMAND_CLIP)} text={proc.cmd} mono size="sm" label="Command line" /> : absent;
   return <KillCell proc={proc} kill={kill} />;

@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Box, Callout, CopyButton, Flex, Icon, Link, Tag, Text } from '@drizztdourden08/tessera';
+import { Box, Button, Callout, Flex, Icon, Link, Tag, Text } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { RunPlay } from '../../../run-play';
 import { LogButton, RunTerminal } from '../../../run-terminal';
+import { copyText } from '../../../shared';
 import { playHint, shownRun } from '../model';
 import type { LaunchCommandProps } from '../tests-props.type';
 
@@ -29,7 +30,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
         <Box surface="sunken" className="bundle__command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'}>
           <Text mono>{launch.cmd}</Text>
         </Box>
-        <CopyButton text={launch.cmd} label="Copy" showLabel size="sm" variant="tertiary" />
+        <Button size="sm" variant="tertiary" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
         {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
       </Flex>

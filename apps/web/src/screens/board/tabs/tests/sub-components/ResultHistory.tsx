@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, List, ListItem, Markdown, Status, Text } from '@drizztdourden08/tessera';
+import { Flex, List, ListItem, Markdown, Status, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { byLabel } from '../model';
 import { TEST_STATUSES } from '../tests.constants';
 import type { ResultHistoryProps } from '../tests-drawer-props.type';
@@ -15,7 +16,7 @@ const ResultHistory = (props: ResultHistoryProps) => {
           <ListItem key={`${run.at}-${run.status}`}>
             <Flex gap="sm" align="baseline" wrap>
               <Status map={TEST_STATUSES} value={run.status as keyof typeof TEST_STATUSES} fallback="moved" dot />
-              <Text variant="caption" tone="muted"><DateText value={run.at} format="relative" /> by {byLabel(run.by)}</Text>
+              <Text variant="caption" tone="muted"><Age value={run.at} ago /> · {byLabel(run.by)}</Text>
               <Markdown size="sm">{run.text}</Markdown>
             </Flex>
           </ListItem>

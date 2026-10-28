@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Flex, Spacer, Text } from '@drizztdourden08/tessera';
+import { smartTimes } from '../../../../../format';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { countsText } from '../model';
 import type { TestCardProps } from '../tests-props.type';
@@ -13,7 +14,7 @@ const TestCard = (props: TestCardProps) => {
     <Box className="bundle" data-group={card.key}>
       <Flex gap="sm" align="center" wrap className="bundle__head">
         <Text mono weight={600}>{card.key}</Text>
-        {group === 'item' && card.item?.title && <Text tone="dim">{card.item.title}</Text>}
+        {group === 'item' && card.item?.title && <Text tone="dim">{smartTimes(card.item.title)}</Text>}
         <Spacer />
         <Text variant="caption" tone="dim">{countsText(card.counts)}</Text>
         <BundleProgress counts={card.counts} />

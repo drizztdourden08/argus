@@ -10,7 +10,7 @@ const TimelineLine = (props: TimelineLineProps) => {
   const todo = { id: row.id, item: null, thread };
   return (
     <Flex gap="sm" align="center" wrap role="listitem">
-      <Text variant="caption" tone="muted">{`${formatAgo(row.at, now)} ago`}</Text>
+      <Text variant="caption" tone="muted">{formatAgo(row.at, now)}</Text>
       <Tag>{KIND_LABEL[row.kind] ?? row.kind}</Tag>
       {row.who !== thread && <Text variant="caption" tone="muted">{row.who}</Text>}
       {row.id && <Text variant="caption" tone="muted" mono>{row.id}</Text>}

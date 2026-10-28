@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Checkbox, Flex, SegmentedControl, Spacer, Text } from '@drizztdourden08/tessera';
+import { Button, Flex, SegmentedControl, Spacer, Text } from '@drizztdourden08/tessera';
+import { DONE_TIP } from '../kanban.constants';
 import type { ViewRowProps } from '../kanban-props.type';
 import { GROUP_OPTIONS, ORDER_OPTIONS, countsText } from '../model';
 import type { ItemGroup, ItemOrder } from '../model';
@@ -17,7 +18,9 @@ const ViewRow = (props: ViewRowProps) => {
         <Text variant="caption" tone="muted">Order</Text>
         <SegmentedControl<ItemOrder> selectedTone="neutral" aria-label="Order" size="sm" value={prefs.order} options={ORDER_OPTIONS} onChange={setOrder} />
       </Flex>
-      <Checkbox size="sm" label={`Show done (${view.closed})`} checked={prefs.showDone} onChange={setShowDone} />
+      <Button size="sm" variant="ghost" title={DONE_TIP} aria-pressed={prefs.showDone} onClick={() => setShowDone(!prefs.showDone)}>
+        {`${prefs.showDone ? 'Hide' : 'Show'} done (${view.closed})`}
+      </Button>
       <Spacer />
       <Text variant="caption" tone="muted" aria-live="polite">{countsText(view)}</Text>
     </Flex>

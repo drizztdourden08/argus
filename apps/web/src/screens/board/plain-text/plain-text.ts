@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind logic */
+import { smartTimes } from '../../../format';
 import {
   BLOCK_MARKS,
   FENCE_PATTERN,
@@ -40,7 +41,7 @@ const step = (walk: PlainWalk, raw: string): PlainWalk => {
 const plainText = (source: unknown): string => {
   const text = (source === null || source === undefined ? '' : String(source)).slice(0, MAX_CHARS);
   const walked = text.replace(/\r\n?/g, '\n').split('\n').reduce(step, { lines: [], fence: null });
-  return walked.lines.join(' ').replace(/\s+/g, ' ').trim();
+  return smartTimes(walked.lines.join(' ').replace(/\s+/g, ' ').trim());
 };
 
 export { plainText };

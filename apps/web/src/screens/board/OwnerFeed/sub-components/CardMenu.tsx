@@ -4,9 +4,7 @@ import { copyText } from '../../shared';
 import type { CardMenuProps } from '../OwnerFeed.type';
 
 const CardMenu = (props: CardMenuProps) => {
-  const { card, actions } = props;
-  const c = card.type === 'action' ? 'actions' : 'entries';
-  const id = card.data.id;
+  const { collection, id, actions } = props;
   return (
     <DropdownMenu
       label={`More actions for ${id}`}
@@ -15,8 +13,8 @@ const CardMenu = (props: CardMenuProps) => {
         {
           id: 'record',
           items: [
-            { id: 'archive', label: 'Archive', onSelect: () => void actions.soft('archive', c, id) },
-            { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void actions.soft('delete', c, id) },
+            { id: 'archive', label: 'Archive', onSelect: () => void actions.soft('archive', collection, id) },
+            { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void actions.soft('delete', collection, id) },
             { id: 'copy', label: 'Copy id', onSelect: () => copyText(id) },
           ],
         },

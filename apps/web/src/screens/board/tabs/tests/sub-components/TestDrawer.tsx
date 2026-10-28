@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind component */
+import { smartTimes } from '../../../../../format';
 import { RecordDrawer } from '../../../shared';
 import type { TestDrawerProps } from '../tests-drawer-props.type';
 import { TestBody } from './TestBody';
@@ -12,7 +13,7 @@ const TestDrawer = (props: TestDrawerProps) => {
       label="Test details"
       wide={wide.wide}
       eyebrow={test && [test.id, test.covers].filter(Boolean).join(' · ')}
-      title={test?.title}
+      title={test ? smartTimes(test.title) : undefined}
       tools={test && <TestTools test={test} nav={nav} wide={wide} />}
       onClose={onClose}
     >

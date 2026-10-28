@@ -11,10 +11,16 @@ pair with the same numbered list under it.
 
 Argus main (Vite dev server, read only proxy to the Node dashboard) shot again against Node at
 1440x900 and 420x900, dark only, on RotP, Argus and Brock, with every tab, drawer, menu and the
-narrow views. Of the 120 numbered differences below: 100 fixed, 19 open, 1 dropped (dark only). 25
-new differences are numbered 119 to 143. Item numbers read section.item (the section title, then the
-number in its list). The gallery `docs/visual-audit/index.html` shows the new pairs with this status
-list.
+narrow views. Item numbers read section.item (the section title, then the number in its list); the
+numbered differences 119 and up are global. The gallery `docs/visual-audit/index.html` shows the pairs
+of the first round with this status list.
+
+Close-out pass (same day, Tessera 0.84): every "open" entry was checked against Node again, a fresh
+side by side sweep of every overview tab, every board tab, the main drawers and the menus at 1440 and
+420 added items 144 to 160, and the ones that need no new Tessera piece are fixed. What is still open
+is in the closing list "Still open after the close-out" at the end of the new differences. The old
+audit sections further down are the first round, kept for the screenshots; where they disagree with
+this section, this section is true.
 
 ### Page shell, theme and density (every screen)
 
@@ -24,9 +30,10 @@ list.
 3. fixed: activity rows 33px to 34px, notifications 51px to 52px, same as Node. Processes rows are
    the exception, see new item 119.
 4. fixed: uppercase letter-spaced column and section headers with the middle dot, as Node.
-5. fixed: one Age component with the exact Node rule (seconds, minutes, hours up to 47h, then days,
-   all rounded) replaces the Tessera elapsed text in every board and overview age. Node counts hours up to 47h ("45h ago", "25h ago"); Argus switches to days at 24h ("1d
-   ago") and rounds days down (builds "set by coordinator" reads 2d where Node says 3d).
+5. fixed: one age rule (seconds, minutes, hours up to 47h, then days, all rounded, `formatAgo`, shown
+   by the Age component) in every board and overview age. The last places that still used the Tessera
+   relative text ("1 day ago") were the registered strip tooltips, the retired chip, the leftover
+   delete text, the worktree request cell and the results history: they use Age now (item 146).
 6. fixed: the activity event text is Text size="md" (the 13px step in Tessera 0.84), the same colour (#f0f0f2) as Node. Notification titles are bold in both.
 
 ### Overview header and tab bar
@@ -68,15 +75,15 @@ list.
 1. fixed: one dense line per event: icon, short age, uppercase mono kind toned by level, text,
    project chip, muted thread.
 2. fixed: no level column, no level tag.
-3. open: Node chips are full pills with a filled grey selected state; Argus chips are squarer and
-   the selected one is a white outline. See new item 123.
+3. fixed: chips are full pills with the filled grey selected state, as Node (item 123), checked again
+   in the close-out: levels, kinds and projects all fill grey when selected.
 
 ### Overview: Notifications tab
 
 1. fixed: one row per notification: bell, age, ping tag, bold title, text, project chip, "toast
    shown" under it.
-2. open: settings line is inline as Node, but a switched-on option is a white outline in Argus and a
-   filled grey pill in Node (new item 123).
+2. fixed: settings line is inline as Node and a switched-on option is a filled grey pill (item 123),
+   checked again in the close-out.
 3. fixed: small Send a test notification button.
 
 ### Board: header, registered strip and tab bar (all boards)
@@ -87,8 +94,8 @@ list.
    and kebab. The title row starts 16px lower (new item 131) but the tab bar lands at the same
    height.
 3. fixed: a badge on every tab with Node tones and counts (shape differs, see new item 121).
-4. open: Node draws the fault as a rounded outlined pill with an icon; Argus draws a squarer dark
-   red filled chip. See new item 133.
+4. fixed: the fault is a rounded outlined pill with an icon, the name in the text colour and bold, the
+   reason in red (items 133 and 154). The faulted project name used to be red as a whole.
 5. fixed: page level Focus select under the tab bar on every tab.
 6. fixed: palette kept: active tab underline follows the board palette (intended).
 
@@ -141,7 +148,8 @@ list.
 6. fixed: card menu has the header, Edit, inline Move to status and Reassign to thread selects
    (DropdownMenu item `kind="select"`), then Archive, Delete and Copy id; the actions close the
    menu, a select pick keeps it open (the card moves and the menu goes with it). The row text size is
-   item 141, the label sits above the select in Node and beside the select in Tessera.
+   item 141. Checked again in the close-out with a headless shot: the label sits above its select in the
+   Argus menu, as in Node (`docs/visual-audit/x-card-kebab.png` shows the Node menu).
 7. fixed: no collapse chevron on the column headers (KanbanBoard `foldable={false}`).
 8. fixed: "none" in an empty column and "6 open / 41" counter.
 9. fixed: Threads filter opens a checklist (a little wider than Node).
@@ -175,14 +183,15 @@ list.
 2. fixed: title and summary on one row, the explainer and the segmented control at the right.
 3. fixed: lowercase status tags with Node tones.
 4. fixed: branch as plain mono text.
-5. open: Node "25h ago", Argus "1d ago" (the age rounding of Page shell item 5).
+5. fixed: the Touched column uses the shared age ("25h ago"); the leftover rows read "last changed 22h
+   ago" on one line, as Node (item 152). No place on the Worktrees tab uses another age text now.
 6. fixed: no table footer.
 7. fixed: Copy label after the path. The path column is wide enough for the full path, see new item 134.
 
 ### Drawers: what every drawer shares
 
 1. fixed: 768px at 1440 (Node 760px), full width at 420.
-2. open: title is now white sentence case (RecordDrawer uses Drawer look record). Left: the close X
+2. open, needs Tessera: title is white sentence case (RecordDrawer uses Drawer look record). Left: the close X
    sits in its own column and narrows the title, at 420 the title wraps in half the width where
    Node moves the X into the tools row under the eyebrow. WindowHeader now has stackNarrow, but
    Drawer does not pass it on (needs Tessera: a stackNarrow prop on Drawer, or an exported drawer
@@ -248,8 +257,13 @@ list.
 3. fixed: "none" in empty columns.
 4. fixed: unknown board: the SPA shows Not found ("There is no board for ...") once the portfolio
    has loaded and that name is not in it.
-5. open: not verified: both pages load in under 150ms here, the "connecting" state could not be
-   captured.
+5. fixed: Node's source settles it. `setStatus('Connecting to the dashboard...')` runs, then the very
+   next line awaits `claude.use('db')`, which resolves at once in `claude-shim.js`, and `setStatus('')`
+   clears it before the browser paints; the stream state is never shown while it opens. Nothing is on
+   screen except the board header, which says "waiting for the board" until the board document
+   arrives. Argus said "connecting" there; it says "waiting for the board" now. The notice for a
+   stream that fails is Node's "Dashboard unreachable, retrying." in the danger tone
+   (item 144).
 
 ### New differences
 
@@ -286,10 +300,22 @@ list.
 136. fixed: at 420 the Kanban columns stack one under the other (KanbanBoard `stack`). (Kanban narrow)
 137. fixed: the bundle Disclosure takes wrapEnd, so at 420 the tags, counts, bar and Unhand drop
     under the bundle name. (Tests narrow)
-138. open: BoardMarkdown sets smartTimes, so "1280x720" in a drawer text draws a times sign. The
-    source of Node's sign is disputed: the Node source has no times step and Tessera says Inter
-    has no such rule. The Test drawer steps come from Stepper plain text and still show x.
-    (Tests, drawers)
+138. fixed, source found: the sign in Node is not in the data and not in the Node code. The board JSON
+    from the Node API holds the ASCII letter x (checked on the stream of every board: no U+00D7 anywhere,
+    for example "Pad callouts sit well at 1280x720"), `md.js` and `board.html` have no times step, and
+    no CSS sets font-feature-settings or font-variant (only tabular-nums on number cells). The sign is
+    a glyph substitution of the font: Node loads Inter from Google Fonts (`opsz` axis, 14 to 32), whose
+    `calt` feature turns an x between two digits into the multiplication sign, in every Inter text
+    on the page (cards, titles, tags, steps), not only in markdown. Measured headless: on the Node page
+    "1280x720" is 75.23px wide, the same as "1280\u00d7720", and 73.38px with `calt` off. Tessera ships
+    its own Inter file (InterVariable) whose `calt` has the arrows but not this rule: on the Argus page
+    "1280x720" is 73.38px with `calt` on or off. So Argus draws the sign itself in text it owns:
+    `smartTimes` in `format/` (same rule as Tessera Markdown `smartTimes`: between digits, never in a
+    hex value such as 0x1F) is applied to the plain text of cards and rows (`plainText`, so the test
+    drawer steps, agent lines, notes), the item, test and thread titles, the item drawer test cards
+    and the feed test line; markdown keeps `smartTimes` of Tessera. Text Argus passes to a Tessera
+    component without a hook (a tag label, a table cell, a title attribute) still shows the letter x,
+    see item 160 (needs Tessera). (Tests, drawers)
 139. fixed: the text of an item, agent or thread field opens its editor on click; the "Edit"
     links are gone. The agent drawer says "Claude id". (Drawers)
 140. fixed: the Send down popover label reads "for Bxel" with the name bold, the Send down button
@@ -302,7 +328,80 @@ list.
     stay as they are, since a FoldText subject pushed the table wider than its box. (Worktrees)
 143. open, needs Tessera: a read only code field that grows beside buttons (sunken, mono, wraps).
     The Builds command box (LauncherCommand.css) and the Tests launch command stay, since FoldText
-    only clamps text and draws no field or flex growth. (Builds, Tests)
+    only clamps text and draws no field or flex growth. The command text is 14px in Argus and 12px in
+    Node. (Builds, Tests)
+
+144. fixed: the notice for a lost stream reads "Dashboard unreachable, retrying." in the danger tone,
+    as Node (`.notice.bad`); it said "The dashboard is unreachable. Retrying." in the warning tone.
+    The sign-in sentence is Node's: `The dashboard asks you to sign in again: run "dashboard open".`
+    (Every screen)
+145. fixed: the board header says "waiting for the board" until the board document arrives, as Node
+    (it said "connecting"; see Empty states item 5). (Board header)
+146. fixed: the registered chip tooltips ("Board closed since 5m:", "a wake was sent 5m ago and has
+    not been answered yet"), the retired chip ("retired 3d ago by ..."), the leftover delete text, the
+    worktree request cell ("asked to delete · waiting" and "5m ago", answered "lead 5m ago") and the
+    results history ("2h ago · you") use the shared Age instead of the Tessera relative text.
+    (Tooltips, Builds, Worktrees, Tests drawer)
+147. fixed: "Show done (35)" is a toggle button that reads "Hide done (35)" when on, with Node's tooltip,
+    as the Tests tab "Show passed"; it was a checkbox with a fixed label. (Kanban)
+148. fixed: Processes: the "All" and "Needs a look" pills and the rule chips take size lg and the grey
+    selected fill (the pills had the white outline); the number cells are 13px dim, the name and pid
+    13px, as Node (they were 12px bright and 14px). (Overview Processes)
+149. fixed: item drawer question and decision cards: the head reads "Q-29 question · needs a decision
+    · coordinator · 24h answered" and a reply "you · 23h", as Node (it read "coordinator, 24h ago");
+    the card has the kebab (Archive, Delete, Copy id); the question and reply text is 14px and the
+    context text dim (it was 12px bright). The Activity list in the drawer shows the short age "22h"
+    without "ago", and the Trash cell reads "3m · coordinator" with the long text as the tooltip.
+    (Item drawer, Trash)
+150. fixed: the tests of an item show the build chip, "bundle-15 · handed to you" when it is the handed
+    build; the fill of that chip differs, see item 157. (Item drawer)
+151. fixed: the item drawer eyebrow has a gap between the id and the tags (they touched). (Item drawer)
+152. fixed: Worktrees Touched and leftover cells read on one line ("last changed 22h ago"); the request
+    chip reads "asked to check · waiting" with the age after it and no "asked" word. (Worktrees)
+153. fixed: the Copy button of the launch command (Tests) has no icon and is the same Button as the
+    Builds one; "Unhand" is the neutral outline, not the palette green. (Tests, Builds)
+154. fixed: the registered chips (board and overview) draw the project name bold in the text colour with
+    a green or amber dot, the faulted one with a red icon and the reason in red. The name took the
+    status colour before. (Registered strip)
+155. fixed: the clock icon in the overview summary has the Node gap before "updated 11m ago".
+    (Overview Dashboards)
+
+### Still open after the close-out
+
+Needs Tessera:
+
+- 121 solid tab badge, 142 FoldText middle truncation and inline width, 143 read only code field that
+  grows beside buttons, Agents 4 a fixed width per TrackColumn, Kanban 1 a narrow width that fills the
+  row at 420, Drawers 2 a stackNarrow on Drawer, 126 a separate tone for id links.
+- 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
+  body size (14px, 600). Text variant title is the large step (about 17px) and no prop sets the family
+  at the body size, so Argus keeps mono 14px.
+- 157: a quiet grey button (grey text, subtle border, a lifted fill: Node Copy and Unhand) does not
+  exist (tertiary is a white outline, secondary the palette green), a solid neutral Tag (Node "handed to
+  you" is a filled light grey chip, Argus an outlined dark one), and outlined tinted status chips (Node
+  "ready", "active" and the kept dashed chip draw a coloured border with the tint; Status pill has
+  no border).
+- 158: a boxed Checkbox (Node draws "needs you", "conflict" and "archived" as small bordered
+  boxes with the checkbox inside) and a SegmentedControl size between sm and md (Node segments are 13px
+  and 28px, Argus sm is 12px and 22px with almost no padding, Group by and Order).
+- 159: DataTable draws vertical rules between header cells and a "KILL" header on the Processes table,
+  Node has neither; the Processes needs-a-look edge is grey on the basic palette, Node draws it amber
+  (rowState edge has no tone).
+- 160: the sign of item 138 in text that goes through a Tessera prop (tags, table cells, InlineEdit
+  displays other than the item title): a `smartTimes` on Text and Tag, or an Inter build whose `calt`
+  has the rule.
+
+Other (decision for the lead):
+
+- The Agents tab shows a "The reconciler flagged N records" callout (`ReconcilePanel`) that the Node
+  page does not have. Node never renders the reconciler report in the board page (`/api/agents/reconcile`
+  is read by the CLI only). It is the one Argus-only block left on a board; it is kept, since removing
+  a built feature is not a parity call to make alone.
+- Small size gaps: process rule chips and the Processes rule column are 14px, Node 13px; the overview
+  project card name is 16px, Node 15px; the master label on the card is not bold mono. Row heights on
+  Activity (30px for a one line event, Node 34px) differ by 4px.
+- The live run elapsed text of an Agents run row uses the Tessera elapsed text, Node counts "1m 05s"
+  every second; no live run was on screen in the sweep to compare.
 
 ### Data differences, re-checked
 

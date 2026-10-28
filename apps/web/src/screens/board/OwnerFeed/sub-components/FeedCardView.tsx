@@ -25,7 +25,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
           at={card.at}
           thread={card.data.thread}
           item={card.data.item}
-          menu={<CardMenu card={card} actions={actions} />}
+          menu={<CardMenu collection={card.type === 'action' ? 'actions' : 'entries'} id={card.data.id} actions={actions} />}
         />
         <CardBody card={card} actions={actions} />
       </Flex>

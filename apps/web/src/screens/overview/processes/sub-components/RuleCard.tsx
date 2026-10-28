@@ -19,6 +19,7 @@ const RuleCard = (props: RuleCardProps) => {
         {...(over ? OVER_LOOK : CALM_LOOK)}
         title={tip}
         selected={selected}
+        selectedTone="neutral"
         onSelect={() => onPick(group.rule)}
       >
         <Inline gap="sm" align="baseline">
