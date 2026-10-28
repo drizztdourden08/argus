@@ -348,13 +348,13 @@
   color: var(--c-text-muted);
 }
 
-@container agents-panel (max-width: 47.99rem) {
+@container agents-panel (max-width: 69.99rem) {
   .agents-name__now {
     display: block;
   }
 }
 
-@container agents-panel (max-width: 29.99rem) {
+@container agents-panel (max-width: 39.99rem) {
   .agents-head__count {
     flex: 1 1 calc(var(--agents-rem) * 7);
     min-width: 0;

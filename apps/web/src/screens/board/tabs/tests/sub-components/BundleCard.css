@@ -21,13 +21,6 @@
   background: var(--c-inset);
 }
 
-.bundle__command {
-  flex: 1 1 var(--size-256);
-  min-inline-size: 0;
-  padding: var(--space-xs) var(--space-sm);
-  overflow-wrap: anywhere;
-}
-
 .bundle__bar {
   flex: 0 1 var(--size-128);
   min-inline-size: var(--size-64);

@@ -9,7 +9,7 @@ const LightboxMarkdown = ({ options, ...props }: LightboxMarkdownProps) => {
   const [image, setImage] = useState<MarkdownImageTarget | null>(null);
   return (
     <>
-      <Markdown smartTimes linkTone="neutral" {...props} {...options} onImage={setImage} />
+      <Markdown smartTimes linkTone="info" idLinkTone="neutral" {...props} {...options} onImage={setImage} />
       <ImageLightbox image={image} onClose={() => setImage(null)} />
     </>
   );

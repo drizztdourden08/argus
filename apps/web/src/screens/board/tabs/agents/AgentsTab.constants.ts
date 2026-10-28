@@ -10,6 +10,4 @@ const FINISHED_HINT = 'Finished agents and runs stay as history; archived agents
 
 const NO_NOTE_LINE = 'no note';
 
-
-
 export { AGENT_ANCHOR, AGENTS_HASH, FINISHED_HINT, FINISHED_KEY, NO_NOTE_LINE };

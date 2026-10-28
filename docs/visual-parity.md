@@ -124,11 +124,15 @@ this section, this section is true.
    Tag dot; stop, branch and undo icons use IconButton tone danger, info and accent; item ref is
    neutral as Node. The table is now Tessera TrackTable: onRowClick opens the drawer, rowDetail
    draws the full message and the note editor, and no row is tinted (Node only draws a stale
-   chip and a warning dot). Still
-   open, needs Tessera: a fixed width per TrackColumn (rem or px). Columns share the width by
-   fraction, tuned to Node at 1440, but at 420 the status column is about 65px wide for a dot
-   where Node uses 22px, and a column drops at 768, 640 and 480 px of table width, not at the
-   Node steps.
+   chip and a warning dot). Columns take the Node widths through the TrackColumn `width` of
+   Tessera 0.85 (status 6.8rem, agent 9.5rem, model 4.4rem, kind 4rem, item 3.6rem, branch 7rem,
+   time 4.2rem, now 10rem, actions 8rem; the message and note keep fr 2 and 1), measured equal to
+   Node at 1440, 1300, 1200, 1000, 800 and 700. The status column is a dot of 22px at 420 and below
+   40rem, as Node. TrackTable drops only at 48, 40 and 30rem, so the Node steps at 80, 70 and 56rem
+   (branch, then kind and now, then item) are drawn with a width that falls to zero below the step
+   (a CSS clamp on the table container width); the model column drops at 48rem and the rest at
+   40rem, as Node. The drop steps themselves stay Tessera's (needs Tessera if a dashboard wants
+   others), and a hidden column leaves its gap, a few pixels more than Node.
 5. fixed: sonnet green, haiku blue, opus grey.
 6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
 7. fixed: search field removed.
@@ -191,11 +195,10 @@ this section, this section is true.
 ### Drawers: what every drawer shares
 
 1. fixed: 768px at 1440 (Node 760px), full width at 420.
-2. open, needs Tessera: title is white sentence case (RecordDrawer uses Drawer look record). Left: the close X
-   sits in its own column and narrows the title, at 420 the title wraps in half the width where
-   Node moves the X into the tools row under the eyebrow. WindowHeader now has stackNarrow, but
-   Drawer does not pass it on (needs Tessera: a stackNarrow prop on Drawer, or an exported drawer
-   shell, so RecordDrawer can use it).
+2. fixed: title is white sentence case (RecordDrawer uses Drawer look record) and RecordDrawer passes
+   Drawer `stackNarrow` (Tessera 0.85): at 420 the title takes the full width and the close X sits in
+   the tools row, as Node. Left: Node puts the tools in the row of the id and the status tag, Argus
+   draws them in their own row under the title.
 3. fixed: archive and trash are icon buttons in the header.
 
 ### Drawer: work item
@@ -277,9 +280,9 @@ this section, this section is true.
 124. fixed: every SegmentedControl in Argus takes `selectedTone="neutral"` (grey fill, no palette outline): Kanban Group by, Order and Post as, Tests Group by and Order, Activity view, Worktrees filter and the Send down kind. ToggleGroup has no `selectedTone` in 0.84, but Argus uses no ToggleGroup. (Kanban, Tests, Activity, Worktrees, Send down)
 125. fixed: Copy is a tertiary (grey) button and the launcher chip link is neutral. Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
     "from launcher" chip is accent coloured (Node neutral). (Tests)
-126. fixed: BoardMarkdown passes linkTone neutral, so T-n and I-n links are neutral underlined. The
-    tone is one for every link of a text, so a plain web link is neutral too where Node draws it
-    blue (needs Tessera: a separate tone for id links). (Thread drawer)
+126. fixed: BoardMarkdown passes linkTone neutral, so T-n and I-n links are neutral underlined, and
+    since Tessera 0.85 the web links take `linkTone="info"` (blue, as Node) apart from the ids
+    (`idLinkTone="neutral"`). (Thread drawer)
 127. fixed: decision cards and the waiting-on-you bundle and test rows have the amber left edge
     (Card edge in the warning tone). (Board Activity)
 128. fixed: the waiting row shows the title only, no image thumbnails (the unused ProofGallery is
@@ -323,13 +326,16 @@ this section, this section is true.
     preview={false}, so no eye icon. (Send down)
 141. fixed: the card, agent, thread, test and More menus take `itemSize="roomy"`. (Menus)
 
-142. open, needs Tessera: FoldText takes the width of its text (no inline-size containment) and has
-    no middle truncation. The Worktrees cells (CellText: subject, branch, path with the tail kept)
-    stay as they are, since a FoldText subject pushed the table wider than its box. (Worktrees)
-143. open, needs Tessera: a read only code field that grows beside buttons (sunken, mono, wraps).
-    The Builds command box (LauncherCommand.css) and the Tests launch command stay, since FoldText
-    only clamps text and draws no field or flex growth. The command text is 14px in Argus and 12px in
-    Node. (Builds, Tests)
+142. fixed: the Worktrees subject, branch and path cells are Tessera FoldText (`fill` since 0.85, so a
+    long text no longer widens the table), the path with `truncate="middle"`, and the one-off CellText
+    and its CSS are gone. Left, needs Tessera: the middle truncation fills the whole cell, so the Copy
+    button sits at the right end of the path column where Node draws it right after the text, and the
+    cut is by characters (the end of the file name is not always kept). (Worktrees)
+143. fixed: the Builds command line and the Tests launch command are a Tessera TextInput `readOnly`
+    `mono` in a ButtonRow `lead` beside Copy, Play and Log (0.85). The field is 12px mono, 28px high
+    and 1249px wide at 1440 against Node 12px, 28px and 1250px; LauncherCommand.css and the Tests
+    command CSS are deleted. A command longer than the field scrolls inside it, where Node wraps.
+    (Builds, Tests)
 
 144. fixed: the notice for a lost stream reads "Dashboard unreachable, retrying." in the danger tone,
     as Node (`.notice.bad`); it said "The dashboard is unreachable. Retrying." in the warning tone.
@@ -370,9 +376,9 @@ this section, this section is true.
 
 Needs Tessera:
 
-- 121 solid tab badge, 142 FoldText middle truncation and inline width, 143 read only code field that
-  grows beside buttons, Agents 4 a fixed width per TrackColumn, Kanban 1 a narrow width that fills the
-  row at 420, Drawers 2 a stackNarrow on Drawer, 126 a separate tone for id links.
+- 121 solid tab badge (Tabs `badgeFill="solid"` exists since 0.85, outside this pass), 142 a
+  FoldText middle truncation that shrinks to its text, Kanban 1 a narrow width that fills the row at
+  420.
 - 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
   body size (14px, 600). Text variant title is the large step (about 17px) and no prop sets the family
   at the body size, so Argus keeps mono 14px.
@@ -389,7 +395,8 @@ Needs Tessera:
   (rowState edge has no tone).
 - 160: the sign of item 138 in text that goes through a Tessera prop (tags, table cells, InlineEdit
   displays other than the item title): a `smartTimes` on Text and Tag, or an Inter build whose `calt`
-  has the rule.
+  has the rule. Checked against 0.85 and 0.86: `smartTimes` exists only on Markdown (0.84), no
+  Text, Tag, FoldText or TextInput option came with them, so it stays open.
 
 Other (decision for the lead):
 
