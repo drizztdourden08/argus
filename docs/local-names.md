@@ -61,7 +61,7 @@ they are off, or a socket could not be bound, everything stays as it is today. A
 Set `"enabled": false` (or remove the key), restart Argus, and remove the rule with
 `argus dns remove --print`, run as administrator.
 
-## Notes
+## Health answer, Host check and tests
 
 - The health answer carries a `localNames` object (address, suffix, door port, DNS socket) only
   while the names are up. `argus dns status` and `argus open` read it.

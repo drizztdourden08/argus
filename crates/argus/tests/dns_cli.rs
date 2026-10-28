@@ -2,34 +2,27 @@
 //! status test asks an in-process server whose responder and door sit on port 0, never 53 or 80,
 //! and the owner's 47615 is never touched.
 
+mod common;
+
 use std::path::Path;
 use std::process::Command;
 
 use argus_testkit::{TestOptions, TestServer};
+use common::Out;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
 const ADDRESS: &str = "127.65.82.73";
 
-struct Out {
-    code: i32,
-    stdout: String,
-    stderr: String,
-}
-
 fn argus(coord_home: &Path, home: &Path, args: &[&str]) -> Out {
-    let out = Command::new(env!("CARGO_BIN_EXE_argus"))
+    Command::new(env!("CARGO_BIN_EXE_argus"))
         .args(args)
         .env("COORD_HOME", coord_home)
         .env("DASHBOARD_HOME", home)
         .env_remove("DASHBOARD_PORT")
         .output()
-        .expect("argus runs");
-    Out {
-        code: out.status.code().unwrap_or(-1),
-        stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
-        stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
-    }
+        .expect("argus runs")
+        .into()
 }
 
 fn home_with(config: &Value) -> TempDir {
