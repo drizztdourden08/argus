@@ -477,3 +477,47 @@ fn the_node_guard_holds_for_a_home_addressed_by_the_flag() {
     }
     assert!(node.only_health_calls(), "{:?}", node.requests());
 }
+
+/// Opens a board stream and reads its first bytes, so the server holds an open stream.
+fn open_stream(port: u16) -> std::net::TcpStream {
+    use std::io::{Read, Write};
+    let mut stream = std::net::TcpStream::connect(("127.0.0.1", port)).expect("a connection");
+    let ask = format!("GET /api/p/alpha/stream HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n\r\n");
+    stream.write_all(ask.as_bytes()).expect("the request");
+    let mut head = [0u8; 64];
+    let read = stream.read(&mut head).expect("the answer");
+    assert!(
+        head[..read].starts_with(b"HTTP/1.1 200"),
+        "{:?}",
+        &head[..read]
+    );
+    stream
+}
+
+#[test]
+fn a_stop_with_an_open_stream_returns_at_once_and_the_process_ends() {
+    let home = Home::new();
+    let start = home.run(&["start"]);
+    assert_eq!(start.code, 0, "{}", start.stderr);
+    let record = home.json("server.pid");
+    let pid = u32::try_from(record["pid"].as_u64().expect("a pid")).expect("a pid");
+    let port = u16::try_from(record["port"].as_u64().expect("a port")).expect("a port");
+    let _held = open_stream(port);
+    let begun = std::time::Instant::now();
+    let stop = home.run(&["stop"]);
+    assert_eq!(
+        (stop.code, stop.stdout.trim()),
+        (0, "dashboard stopped"),
+        "{}",
+        stop.stderr
+    );
+    assert!(
+        begun.elapsed() < std::time::Duration::from_secs(5),
+        "{:?}",
+        begun.elapsed()
+    );
+    assert!(
+        !argus_server::instance::pid_alive(pid),
+        "the server process ended"
+    );
+}

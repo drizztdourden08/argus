@@ -13,6 +13,7 @@ mod tray;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time::Duration;
 
 use argus::install::{self, Env};
 use argus::wake_stream::{self, Io};
@@ -92,6 +93,9 @@ enum Command {
         shadow: bool,
     },
 }
+
+/// How long the exit waits for blocking work that is still running.
+const EXIT_GRACE: Duration = Duration::from_millis(500);
 
 /// Ends the command on Ctrl-C.
 fn stop_on_interrupt() -> CancellationToken {
@@ -198,11 +202,23 @@ fn main() -> ExitCode {
     if let Some(done) = shim_answer() {
         return done;
     }
+    on_runtime(run_cli())
+}
+
+/// Runs `work` on a fresh runtime and leaves without waiting long for the blocking work still
+/// running: a worktree scan that measures the disk can take minutes, and a dropped runtime waits
+/// for it, so a stopped server's process lingered. Node leaves the process 50 ms after its stop
+/// in the same way.
+fn on_runtime(work: impl Future<Output = ExitCode>) -> ExitCode {
     match tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
     {
-        Ok(runtime) => runtime.block_on(run_cli()),
+        Ok(runtime) => {
+            let code = runtime.block_on(work);
+            runtime.shutdown_timeout(EXIT_GRACE);
+            code
+        }
         Err(e) => {
             eprintln!("argus: {e}");
             ExitCode::FAILURE
@@ -212,9 +228,27 @@ fn main() -> ExitCode {
 
 #[cfg(test)]
 mod tests {
+    use std::process::ExitCode;
+    use std::time::{Duration, Instant};
+
     use clap::{CommandFactory, Parser};
 
-    use super::Cli;
+    use super::{Cli, on_runtime};
+
+    #[test]
+    fn the_exit_does_not_wait_for_blocking_work() {
+        let begun = Instant::now();
+        let code = on_runtime(async {
+            let _left = tokio::task::spawn_blocking(|| std::thread::sleep(Duration::from_secs(30)));
+            ExitCode::SUCCESS
+        });
+        assert_eq!(code, ExitCode::SUCCESS);
+        assert!(
+            begun.elapsed() < Duration::from_secs(5),
+            "{:?}",
+            begun.elapsed()
+        );
+    }
 
     #[test]
     fn the_command_line_is_well_formed() {
