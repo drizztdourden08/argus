@@ -411,6 +411,36 @@ async fn a_client_that_falls_a_megabyte_behind_is_dropped() {
     assert_eq!(open.load(Ordering::SeqCst), 0, "the stream is forgotten");
 }
 
+/// A snapshot doc carries its fields twice (spread and under `data`), so a pad counts double.
+fn padded(coll: Coll, id: &str, bytes: usize) -> DocChange {
+    DocChange::set(coll, id, json!({ "id": id, "pad": "x".repeat(bytes / 2) }))
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_snapshot_frame_that_crosses_the_limit_is_still_sent() {
+    let t = server().await;
+    let items = padded(Coll::Items, "I-big", SSE_BUFFER_LIMIT - 20_000);
+    let wake = padded(Coll::Wakes, "W-1", 40_000);
+    apply(&t, "big", &[items, wake]);
+    let s = t.sse("/api/p/big/stream?c=items,wakes").await;
+    let items = s.next(Some("snapshot"), WAIT).await;
+    assert_eq!(
+        items.expect("the items snapshot arrives").data["coll"],
+        "items"
+    );
+    let wakes = s.next(Some("snapshot"), WAIT).await;
+    let wakes = wakes.expect("the wakes snapshot arrives, as on the Node server");
+    assert_eq!(wakes.data["coll"], "wakes");
+    assert_eq!(wakes.data["docs"][0]["id"], "W-1");
+    for _ in 0..40 {
+        if s.ended() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    }
+    assert!(s.ended(), "the client past the limit is then dropped");
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn stopping_the_server_ends_open_streams() {
     let t = server().await;

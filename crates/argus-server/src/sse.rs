@@ -1,6 +1,7 @@
 //! Server-sent events written by hand, so the bytes match the Node server: `id`, `event`, `data`
 //! lines, a blank line after each frame, the data as one JSON line, and a `: ping` comment on the
-//! heartbeat. A client more than a megabyte behind is dropped; it reconnects and resumes.
+//! heartbeat. A client more than a megabyte behind is dropped after the frame that took it past
+//! the limit; it reconnects and resumes.
 
 use std::convert::Infallible;
 use std::pin::Pin;
@@ -51,14 +52,15 @@ pub struct SseSender {
 }
 
 impl SseSender {
+    /// Queues the frame first, then drops the client when the backlog is past the limit, as the
+    /// Node server does: the frame that crosses the limit still goes out.
     fn push(&self, text: String) -> bool {
         if self.closed.load(Ordering::SeqCst) {
             return false;
         }
         let len = text.len();
-        if self.queued.fetch_add(len, Ordering::SeqCst) + len > SSE_BUFFER_LIMIT
-            || self.tx.send(Bytes::from(text)).is_err()
-        {
+        let queued = self.queued.fetch_add(len, Ordering::SeqCst) + len;
+        if self.tx.send(Bytes::from(text)).is_err() || queued > SSE_BUFFER_LIMIT {
             self.close();
             return false;
         }
