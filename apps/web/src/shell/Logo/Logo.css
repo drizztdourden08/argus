@@ -1,0 +1,24 @@
+.argus-logo {
+  --argus-logo-height: var(--size-16);
+
+  width: auto;
+  height: var(--argus-logo-height);
+  flex: none;
+  aspect-ratio: 1120 / 684;
+}
+
+.argus-logo.argus-logo--sm {
+  --argus-logo-height: var(--size-12);
+}
+
+.argus-logo.argus-logo--lg {
+  --argus-logo-height: var(--size-24);
+}
+
+.argus-logo.argus-logo--text {
+  color: var(--c-text);
+}
+
+.argus-logo.argus-logo--primary {
+  color: var(--c-primary);
+}
