@@ -17,7 +17,7 @@ use crate::verbs::remote::support::text::{amount_and_unit, cell, say_all, truthy
 use crate::who::caller;
 
 /// The id the dashboard knows a worktree by.
-fn id_arg(value: Option<&String>, usage: &str) -> Result<String, CoordError> {
+pub(super) fn id_arg(value: Option<&String>, usage: &str) -> Result<String, CoordError> {
     match value.filter(|v| !v.is_empty()) {
         Some(typed) => Ok(target_of(typed)?.0),
         None => Err(CoordError::refuse(usage)),
@@ -27,7 +27,7 @@ fn id_arg(value: Option<&String>, usage: &str) -> Result<String, CoordError> {
 const AGE_USAGE: &str = "--older-than takes an age such as 3d, 12h, 1w or a number of days.";
 
 /// `3d`, `12h`, `1w` or a bare number of days, in days.
-fn age_arg(text: Option<&str>) -> Result<f64, CoordError> {
+pub(super) fn age_arg(text: Option<&str>) -> Result<f64, CoordError> {
     let (n, unit) =
         amount_and_unit(text.unwrap_or_default()).ok_or_else(|| CoordError::refuse(AGE_USAGE))?;
     let days = match unit.as_str() {
@@ -45,12 +45,12 @@ fn age_arg(text: Option<&str>) -> Result<f64, CoordError> {
 }
 
 /// The thread that asks: the caller of the verb on this project's board.
-fn asker(call: &Call<'_>) -> Result<String, CoordError> {
+pub(super) fn asker(call: &Call<'_>) -> Result<String, CoordError> {
     let board = require_board(call, project_of(call))?;
     Ok(caller(&board, &call.inv.cwd, &call.inv.env, &call.options)?.thread)
 }
 
-fn reason_of(call: &Call<'_>) -> Result<Value, CoordError> {
+pub(super) fn reason_of(call: &Call<'_>) -> Result<Value, CoordError> {
     Ok(text_opt(&call.options, "reason")?.map_or(Value::Null, |r| json!(r)))
 }
 

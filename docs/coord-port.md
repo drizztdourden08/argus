@@ -138,7 +138,7 @@ Each row names the Node module, so the full set of strings is one file away. The
 | `activity` | `--limit`, `--kind`, `--level`, `--json` | none | `no activity.` or lines | `GET /api/activity` | 6 |
 | `proc` | list, rules, rule set, rule rm, kill, kill-rule, help | reason | tables, kill summaries | procs API | 6 |
 | `wake-fault` | list, clear | note | `cleared the wake fault of ...`; Overlord only | wake-faults API, portfolio board | 6 |
-| `worktree` | rule add, rule rm, rules, list, leftovers, keep, done, remove, prune | note, reason | tables, server texts | board (rules, keeps, answers), worktrees API | 6 |
+| `worktree` | rule add, rule rm, rules, list, leftovers, keep, done, remove, prune, request (`--finished [--idle D]`, `--all-leftovers`), requests | note, reason | tables, server texts | board (rules, keeps, answers), worktrees API | 6 |
 | `lead` | `<key> "<text>"`, `--kind note or decision` | lead | `queued for <key> lead: <text>` | target board, `_portfolio`, wakes API | 6 |
 | `portfolio` | init, add, remove, send, tick, show; retired page, url, pushed | name, kind texts | cards table, `retired: ...` | `_portfolio`, every board on send | 6 |
 | `dashboard` | every dashboard verb | none | passthrough | runs the dashboard bin | 6 |

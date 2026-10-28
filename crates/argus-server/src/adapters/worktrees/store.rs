@@ -5,6 +5,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use argus_board::inbox::queue;
 use argus_board::store::with_board;
 use argus_core::StorageError;
 use argus_store::Db;
@@ -83,6 +84,16 @@ impl WorktreeStore for BoardWorktrees {
             board["dirty"] = json!({});
             board["versions"] = json!({});
             Ok(())
+        })
+        .map_err(|e| StorageError(e.to_string()))
+    }
+
+    fn post_inbox(&self, project: &str, thread: &str, text: &str) -> Result<bool, StorageError> {
+        if self.shadow {
+            return Ok(false);
+        }
+        with_board(&self.coord_home, project, false, |board| {
+            Ok(queue(board, thread, "Argus", "note", text, None))
         })
         .map_err(|e| StorageError(e.to_string()))
     }

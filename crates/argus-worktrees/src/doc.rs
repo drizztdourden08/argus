@@ -2,6 +2,7 @@
 
 use crate::board::RequestDoc;
 use crate::jobs::JobDoc;
+use crate::requests::Brief;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -162,6 +163,8 @@ pub struct Meta {
     pub leftover_old: LeftoverOld,
     pub deleting: usize,
     pub jobs: Vec<JobDoc>,
+    /// What threads asked Argus to remove, newest first (the Worktrees tab lists them read-only).
+    pub requests: Vec<Brief>,
     pub gone: usize,
     pub many_at: usize,
     pub too_many: bool,

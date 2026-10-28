@@ -120,11 +120,11 @@ impl Pump {
             .collect()
     }
 
-    /// The projects whose deletion jobs changed since the last tick.
+    /// The projects whose deletion jobs or removal requests changed since the last tick.
     fn moved(&mut self, service: &WorktreeService) -> Vec<String> {
         let mut moved = Vec::new();
         for key in projects(service) {
-            let now = json!(service.jobs(&key)).to_string();
+            let now = json!([service.jobs(&key), service.requests_recent(&key, 20)]).to_string();
             if self.jobs.get(&key).is_none_or(|before| *before != now) {
                 self.jobs.insert(key.clone(), now);
                 moved.push(key);

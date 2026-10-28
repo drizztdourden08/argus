@@ -103,6 +103,21 @@ interface BatchJob {
   finishedAt?: string | null;
 }
 
+interface WorktreeRequest {
+  id: string;
+  by: string;
+  at?: string | null;
+  mode: string;
+  status: string;
+  branch?: boolean;
+  total: number;
+  removed: number;
+  refused: number;
+  skipped?: number;
+  note?: string | null;
+  sentences?: string[];
+}
+
 interface WorktreesMeta {
   name?: string | null;
   scannedAt?: string | null;
@@ -112,6 +127,7 @@ interface WorktreesMeta {
   rules?: WorktreeRule[];
   leftoverOld?: LeftoverOld | null;
   jobs?: BatchJob[];
+  requests?: WorktreeRequest[];
 }
 
 interface WorktreeAskInput {
@@ -165,6 +181,6 @@ interface BatchResult {
 }
 
 export type {
-  BackupInfo, BatchJob, BatchResult, LeftoverInput, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeJob, WorktreeRule,
-  WorktreesMeta,
+  BackupInfo, BatchJob, BatchResult, LeftoverInput, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeJob, WorktreeRequest,
+  WorktreeRule, WorktreesMeta,
 };

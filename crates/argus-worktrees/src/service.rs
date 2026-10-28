@@ -15,6 +15,7 @@ use crate::jobs::{Job, JobDoc};
 use crate::measure::{Bounds, Leftover};
 use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WorktreeStore};
 use crate::queue::Queue;
+use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -41,6 +42,8 @@ pub struct Options {
     pub backup_dir: String,
     pub keep_backups: usize,
     pub keep_backup_days: i64,
+    /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
+    pub run_requests: bool,
 }
 
 impl Default for Options {
@@ -61,6 +64,7 @@ impl Default for Options {
             backup_dir: "worktree-backups".to_string(),
             keep_backups: 30,
             keep_backup_days: 30,
+            run_requests: true,
         }
     }
 }
@@ -120,6 +124,7 @@ pub struct Inner {
     pub state: Mutex<State>,
     pub exclusive: Mutex<()>,
     pub queue: Queue,
+    pub requests: Requests,
 }
 
 /// The service. Cheap to clone: every clone is the same service.
@@ -146,6 +151,7 @@ impl Service {
             state: Mutex::new(state),
             exclusive: Mutex::new(()),
             queue: Queue::default(),
+            requests: Requests::default(),
         }))
     }
 
@@ -210,11 +216,13 @@ impl Service {
     /// Stop: no scan runs, no rescan is asked for. The board listener and the timers are the server's to stop.
     pub fn stop(&self) {
         self.st().stopped = true;
+        self.stop_requests();
     }
 
     /// Start again after a stop.
     pub fn start(&self) {
         self.st().stopped = false;
+        self.start_requests();
     }
 
     pub(crate) fn stopped(&self) -> bool {

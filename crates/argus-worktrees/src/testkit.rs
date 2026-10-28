@@ -355,6 +355,8 @@ pub struct MemStore {
     pub board: Mutex<BoardFacts>,
     pub kv: Mutex<HashMap<String, String>>,
     pub dropped: Mutex<Vec<(Vec<String>, Vec<String>)>>,
+    /// The notes posted to inboxes: thread and text.
+    pub inbox: Mutex<Vec<(String, String)>>,
 }
 
 impl MemStore {
@@ -363,6 +365,7 @@ impl MemStore {
             board: Mutex::new(board),
             kv: Mutex::new(HashMap::new()),
             dropped: Mutex::new(Vec::new()),
+            inbox: Mutex::new(Vec::new()),
         }
     }
 }
@@ -400,6 +403,14 @@ impl WorktreeStore for MemStore {
         }
         locked(&self.dropped).push((keep_ids.to_vec(), answer_ids.to_vec()));
         Ok(())
+    }
+
+    fn post_inbox(&self, _project: &str, thread: &str, text: &str) -> Result<bool, StorageError> {
+        let known = locked(&self.board).threads.contains_key(thread);
+        if known {
+            locked(&self.inbox).push((thread.to_string(), text.to_string()));
+        }
+        Ok(known)
     }
 }
 

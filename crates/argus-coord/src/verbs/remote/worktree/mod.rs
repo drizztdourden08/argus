@@ -1,15 +1,18 @@
 //! `coord worktree`: tell Argus where the project's worktrees live (`verbs/worktree.mjs`). The
 //! dashboard looks at those places with read-only git, lists them on the board's Worktrees tab,
 //! and wakes the registered thread when one is stale. A removal is done by the dashboard behind
-//! its guards. Any registered thread may read and write the rules; `remove` and `prune` are the
-//! project lead's or the rule thread's.
+//! its guards. Any registered thread may read and write the rules; `remove`, `prune` and `request`
+//! are the project lead's or the rule thread's.
 
+mod idle;
 mod keep;
 mod leftovers;
 mod list;
 mod opts;
 mod path;
 mod remove;
+mod request;
+mod requests;
 mod rule_add;
 mod rules;
 mod text;
@@ -18,8 +21,7 @@ use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::verbs::remote::support::link::take_sub;
 
-const VERBS: &str =
-    "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune.";
+const VERBS: &str = "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune, request, requests.";
 
 fn rule(call: &mut Call<'_>) -> Outcome {
     let action = take_sub(call);
@@ -33,7 +35,7 @@ fn rule(call: &mut Call<'_>) -> Outcome {
     }
 }
 
-/// `coord worktree <rule|rules|list|leftovers|keep|done|remove|prune>`.
+/// `coord worktree <rule|rules|list|leftovers|keep|done|remove|prune|request|requests>`.
 ///
 /// # Errors
 /// A refusal, or the dashboard's own.
@@ -48,6 +50,8 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
         Some("done") => keep::done(call),
         Some("remove") => remove::remove(call),
         Some("prune") => remove::prune(call),
+        Some("request") => request::request(call),
+        Some("requests") => requests::requests(call),
         _ => Err(CoordError::refuse(VERBS)),
     }
 }

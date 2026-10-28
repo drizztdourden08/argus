@@ -499,3 +499,102 @@ fn leftovers_and_all_leftovers_check_their_arguments_before_the_dashboard_is_ask
     refused(&w.run(&all, "ghost"), 1, "no thread named \"ghost\"");
     refused(&w.worker(&["leftovers"]), 1, "the dashboard is not running");
 }
+
+#[test]
+fn request_and_requests_check_their_arguments_before_the_dashboard_is_asked() {
+    let w = World::new();
+    let all = "--all-leftovers";
+    w.refuse_all(&[
+        (
+            &["request"],
+            "ask for one thing: coord worktree request <id|path>...",
+        ),
+        (&["request", "--finished", FOO], "ask for one thing"),
+        (&["request", all, FOO], "ask for one thing"),
+        (
+            &["request", "--finished", "--discard"],
+            "never discard work",
+        ),
+        (
+            &["request", all, "--owner-entry", "O-1"],
+            "goes with --discard",
+        ),
+        (
+            &["request", FOO, "--owner-entry", "O-1"],
+            "goes with --discard",
+        ),
+        (
+            &["request", all, "--branch"],
+            "leftover folders have no branch: --branch does not apply to --all-leftovers.",
+        ),
+        (
+            &["request", FOO, "--older-than", "3d"],
+            "--older-than goes with --all-leftovers.",
+        ),
+        (
+            &["request", all, "--older-than", "soon"],
+            "--older-than takes an age such as 3d, 12h, 1w or a number of days",
+        ),
+        (
+            &["request", all, "--older-than", "5h"],
+            "--older-than goes down to 6h at the least",
+        ),
+        (&["request", "X:/Proj/*"], "name one worktree"),
+        (
+            &["request", FOO, "--owner-entry"],
+            "--owner-entry takes one value.",
+        ),
+    ]);
+    // A switch takes no value: the path after it is a worktree again, so it reaches the dashboard.
+    for args in [
+        vec!["request", "--branch", FOO],
+        vec!["request", FOO, "--discard", "--owner-entry", "O-1"],
+        vec!["request", all, "--older-than", "6h"],
+        vec!["request", "--finished", "--branch"],
+        vec!["requests"],
+        vec!["requests", "--json"],
+    ] {
+        refused(&w.worker(&args), 1, "the dashboard is not running");
+    }
+    w.refuse_all(&[
+        (
+            &["request", FOO, "--idle", "6h"],
+            "--idle goes with --finished",
+        ),
+        (
+            &["request", all, "--idle", "6h"],
+            "--idle goes with --finished",
+        ),
+        (
+            &["request", "--finished", "--idle", "30m"],
+            "--idle goes from 1h to 30d",
+        ),
+        (
+            &["request", "--finished", "--idle", "31d"],
+            "--idle goes from 1h to 30d",
+        ),
+        (
+            &["request", "--finished", "--idle", "6h", "--discard"],
+            "never discard work",
+        ),
+        (
+            &["request", "--finished", "--idle", FOO],
+            "ask for one thing",
+        ),
+    ]);
+    for idle in [
+        &["--idle", "6h"][..],
+        &["--idle", "2d"],
+        &["--idle", "90m"],
+        &["--idle"],
+    ] {
+        let mut argv = vec!["request", "--finished"];
+        argv.extend(idle);
+        refused(&w.worker(&argv), 1, "the dashboard is not running");
+    }
+    refused(
+        &w.run(&["request", FOO], "ghost"),
+        1,
+        "no thread named \"ghost\"",
+    );
+}

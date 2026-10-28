@@ -32,6 +32,18 @@ const STATUS_TIP: Readonly<Record<string, string>> = {
   kept: 'The thread kept it (coord worktree keep): no stale signal until the date.',
 };
 
+const REQUESTS_SHOWN = 8;
+
+const REQUEST_WAITING: readonly string[] = ['queued', 'running'];
+
+const REQUEST_TIP: Readonly<Record<string, string>> = {
+  queued: 'Waiting for Argus',
+  running: 'Argus is removing them',
+  done: 'Every target was handled',
+  partial: 'Some were refused by the guards',
+  refused: 'The guards refused every target',
+};
+
 const SUCCESS_LOOK: TagLook = { variant: 'urgency', color: 'success' };
 
 const WARNING_LOOK: TagLook = { variant: 'urgency', color: 'warning' };
@@ -41,6 +53,11 @@ const DANGER_LOOK: TagLook = { variant: 'urgency', color: 'danger' };
 const INFO_LOOK: TagLook = { variant: 'urgency', color: 'info' };
 
 const UNKNOWN_STATUS_LOOK: TagLook = { variant: 'normal', color: 'neutral' };
+
+const REQUEST_LOOK: Readonly<Record<string, TagLook>> = {
+  partial: DANGER_LOOK,
+  refused: DANGER_LOOK,
+};
 
 const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
   active: SUCCESS_LOOK,
@@ -67,6 +84,6 @@ const REMOVE_LOOKS = {
 const NOT_REMOVABLE: readonly string[] = ['not-git', 'error', 'leftover', 'deleting'];
 
 export {
-  DEFAULT_LIMIT_DAYS, GB_STEP, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, STATUS_TIP, SUBJECTS_SHOWN,
+  DEFAULT_LIMIT_DAYS, GB_STEP, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, REQUEST_LOOK, REQUEST_TIP, REQUEST_WAITING, REQUESTS_SHOWN, STATUS_TIP, SUBJECTS_SHOWN,
   STATUS_LABEL, STATUS_LOOK, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE, WARNING_LOOK,
 };

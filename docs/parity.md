@@ -129,7 +129,9 @@ their status is `n/a`.
 | `wake.policy.test.mjs` | Wake policy | 3 | `crates/argus-wake/tests/policy.rs` | done |
 | `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/presence.rs` | done |
 | `wake.registry.test.mjs` | Wake registry and faults | 3 | `crates/argus-wake/tests/registry.rs` | done |
-| `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` | done |
+| `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` (the `request`, `requests` and `--idle` argument cases included) | done |
+| `worktrees.requests.http.test.mjs` | Worktree removal requests | 5 | `crates/argus-server/tests/worktree_requests.rs` (HTTP cases, and the `coord` cases through `CoordCli::locate_each`: the Node CLI and `argus coord`) | done |
+| `worktrees.requests.test.mjs` | Worktree removal requests | 5 | `crates/argus-worktrees/src/specs/requests.rs` (the 10 cases of `c81fa17` less the beta-project assertion, which is in the HTTP file, one case for a request made before the start, and the 3 `--idle` cases of `2820b32`), `crates/argus-worktrees/src/requests/` unit cases | done |
 | `worktrees.fallback.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_fallback_http.rs` | done |
 | `worktrees.fallback.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/fallback.rs` | done |
 | `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_http.rs` | done |
@@ -203,8 +205,18 @@ where it landed.
 | `62e66c7` | `coord agent start` with a session id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
 | `62e66c7` | Dev servers may use 3 GB: only in the owner's live `process-rules.json`, which Argus reads; the built-in default stays Node's 1500 MB | `crates/argus-procs/src/defaults.rs` | ported |
 | `62e66c7` | The `coord` forward shim to `argus coord` is off by default | the config repo only: `forward.mjs` | n/a |
+| `c81fa17` | Worktree removal requests: `POST` and `GET /api/p/:key/worktrees/requests`, the one worker that removes target by target through the same `remove` (same caller, same guards), kv `worktrees:requests:<key>` (last 100), one inbox note from Argus and a `thread-message` wake per finished request, activity kind `worktree-request`, a restart resumes queued and running requests, `meta/worktrees.requests` (the 20 newest, brief form), `coord worktree request` and `requests` | `crates/argus-worktrees/src/requests/` (`create`, `resolve`, `run`, `deliver`, `worker`, `store`, `record`, `text`), `WorktreeStore::post_inbox` (`crates/argus-server/src/adapters/worktrees/store.rs`), `crates/argus-server/src/routes/worktrees/requests.rs`, `crates/argus-coord/src/verbs/remote/worktree/request.rs` and `requests.rs`, usage line in `cli/usage.rs`; cases in `src/specs/requests.rs` and `tests/worktree_requests.rs` | ported |
+| `c81fa17` | The Worktrees tab lists the requests read-only (status chip, who asked, what, counts, the first refusal sentences; the newest 8) | `apps/web/src/screens/board/tabs/worktrees/sub-components/RequestsSection.tsx` and `RequestLine.tsx`, model `request-what.ts` and `request-outcome.ts`; cases in `apps/web/tests/board-worktrees/requests-list.test.tsx`. Built from Tessera `Flex`, `Tag` and `Text` only; nothing is missing | ported |
+| `c81fa17` | A folder that cannot be read fails closed in the nested-repository walks and the leftover measuring | already ported in `e490b2c` (I-26) | ported |
+| `2820b32` | `coord worktree request --finished --idle [D]` also takes clean, merged worktrees with nothing ahead whose newest change is older than D (1h to 30d, 6h by default); `idleMinutes` on the request, the activity line, the queued text and the empty-answer note | `requests/create.rs` (`check_idle`), `requests/resolve.rs` (`is_idle`), `requests/text.rs` (`idle_text`), `idle.rs` of the coord verbs; cases in `src/specs/requests.rs` and `worktree_verbs.rs` | ported |
 | `e9fc73f` | A board write flushes the temp file to the disk before the rename (a power cut left a board of NUL bytes). Every state file takes the same path | `crates/argus-core/src/fs.rs` (`write_atomic`, `write_new`, `copy_atomic`, `flush_file`); callers: board and its backups, purge backup and restore, proofs, config, process rules, shortcut `launch.json`, tray record and flags, pid file, first-start marker, autostart, Desktop config, attachments, worktree backups, shadow seed, database snapshot. Cases in `fs.rs`, `argus-board/tests/lock.rs`, `argus-core/tests/one_writer.rs` | ported |
 | `e9fc73f` | (Argus only) A board file that is all NUL bytes, empty or not JSON is its own finding: `BoardError::Damaged` names the file and the cause, the shadow start logs it, `argus parity` lists it as `FINDING` and fails the run | `crates/argus-board/src/store/damage.rs`, `argus-server/src/shadow.rs`, `argus-parity/src/findings.rs`, cases in `argus-server/tests/shadow.rs` and `argus-parity/tests/two_servers.rs` | ported |
+
+Where Argus differs from Node in the `c81fa17` port:
+
+- In shadow mode the request worker does not start (`run_requests` is off): a shadow server never resumes a queued request, so it removes nothing.
+- The request store keeps its records in the same kv key and the same JSON fields as Node, so a Node database resumes at the switch-over; a whole number is written as `3.0` in the kv text and read back the same, and the routes write it as `3`.
+- The `coord worktree request` text and the `requests` table are word for word Node's; the case of a thread of another project is proven over HTTP, not in the crate (the crate sees one project).
 
 Where Argus differs from Node in the `e9fc73f` port:
 
