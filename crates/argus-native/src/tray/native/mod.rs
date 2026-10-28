@@ -4,6 +4,7 @@ mod event_loop;
 mod handle;
 mod handlers;
 mod session;
+mod taskbar;
 mod view;
 mod win32;
 
