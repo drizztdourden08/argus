@@ -71,7 +71,7 @@ pub use exec::GitOutput;
 pub use fact::Fact;
 pub use fs::{Fs, RealFs};
 pub use gh::{GhRunner, SystemGh};
-pub use git::{Git, GitExec, SystemExec};
+pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};

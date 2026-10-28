@@ -146,7 +146,7 @@ pub fn run_command(spec: &Spec<'_>) -> GitOutput {
                 let text = format!(
                     "{} timed out after {} s",
                     spec.program,
-                    spec.timeout.as_secs()
+                    (spec.timeout.as_millis() + 500) / 1000
                 );
                 return GitOutput {
                     timed_out: true,
