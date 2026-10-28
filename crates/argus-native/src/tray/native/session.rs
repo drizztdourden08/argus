@@ -10,12 +10,13 @@ use tray_icon::{Icon, MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, 
 
 use super::event_loop::ExitReason;
 use super::handlers::Handlers;
+use super::taskbar;
 use super::view;
 use super::win32::{self, InstanceGuard};
 use crate::tray::balloon::Balloon;
 use crate::tray::error::TrayError;
 use crate::tray::gate::OpenGate;
-use crate::tray::icon::{IconKind, render};
+use crate::tray::icon::{IconKind, Ink, render};
 use crate::tray::log::TrayLog;
 use crate::tray::menu::{Command, entries};
 use crate::tray::paths::TrayFiles;
@@ -27,19 +28,23 @@ use crate::tray::{quit_flag, record};
 /// process, and Windows needs it to address the icon for a balloon tip.
 static NEXT_ICON_ID: AtomicU32 = AtomicU32::new(1);
 
+/// The two icons in the ink of the taskbar they were made for.
 struct Icons {
+    ink: Ink,
     running: Icon,
     stopped: Icon,
 }
 
 impl Icons {
-    fn load() -> Result<Self, TrayError> {
+    fn load(ink: Ink) -> Result<Self, TrayError> {
+        let size = win32::small_icon_px();
         let make = |kind| {
-            let image = render(kind)?;
+            let image = render(kind, ink, size)?;
             Icon::from_rgba(image.pixels, image.width, image.height)
                 .map_err(|e| TrayError::Platform(e.to_string()))
         };
         Ok(Self {
+            ink,
             running: make(IconKind::Running)?,
             stopped: make(IconKind::Stopped)?,
         })
@@ -72,7 +77,7 @@ impl Session {
     pub fn start(files: TrayFiles, handlers: Arc<Handlers>) -> Result<Self, TrayError> {
         win32::allow_dark_menus();
         let instance = InstanceGuard::acquire(&files.instance_name())?;
-        let icons = Icons::load()?;
+        let icons = Icons::load(taskbar::ink())?;
         let state = TrayState::default();
         let menu = view::build(&entries(&state))?;
         let icon_id = NEXT_ICON_ID.fetch_add(1, Ordering::Relaxed);
@@ -118,6 +123,7 @@ impl Session {
     /// Takes what the other processes and the owner asked since the last look. `Some` when the
     /// tray must close.
     pub fn tick(&mut self) -> Option<ExitReason> {
+        self.follow_taskbar();
         for request in watch::poll(&self.files) {
             match request {
                 Request::Stop => return Some(ExitReason::StopRequested),
@@ -139,6 +145,22 @@ impl Session {
             if opens_page(&event) {
                 self.open();
             }
+        }
+    }
+
+    /// Draws the icon again in the other ink when the owner switched the taskbar theme.
+    fn follow_taskbar(&mut self) {
+        let ink = taskbar::ink();
+        if ink == self.icons.ink {
+            return;
+        }
+        match Icons::load(ink) {
+            Ok(icons) => self.icons = icons,
+            Err(error) => return self.log.line(&error.to_string()),
+        }
+        let shown = self.icons.of(self.state.icon());
+        if let Err(error) = self.tray.set_icon(Some(shown)) {
+            self.log.line(&error.to_string());
         }
     }
 

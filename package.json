@@ -20,11 +20,13 @@
     "build": "pnpm --filter ./apps/web build",
     "prose": "brock prose",
     "deadcode": "brock knip",
-    "duplicates": "jscpd ."
+    "duplicates": "jscpd .",
+    "icons": "node tools/icons/render-argus-icons.mjs"
   },
   "devDependencies": {
     "@drizztdourden08/brock-build": "^0.110.0",
     "@drizztdourden08/brock-lint-config": "^0.110.0",
+    "@resvg/resvg-js": "2.6.2",
     "jscpd": "catalog:",
     "knip": "catalog:",
     "markdownlint-cli2": "catalog:",

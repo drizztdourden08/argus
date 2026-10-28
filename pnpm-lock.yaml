@@ -71,6 +71,9 @@ importers:
       '@drizztdourden08/brock-lint-config':
         specifier: ^0.110.0
         version: 0.110.0(eslint@10.13.0(jiti@2.7.0))(markdownlint-cli2@0.22.1)(stylelint@17.16.0(typescript@6.0.3))(typescript@6.0.3)
+      '@resvg/resvg-js':
+        specifier: 2.6.2
+        version: 2.6.2
       jscpd:
         specifier: 'catalog:'
         version: 4.3.0

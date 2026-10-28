@@ -25,8 +25,8 @@ pub use recording::RecordingNotifier;
 pub use text::{TEXT_MAX, TITLE_MAX, plain, xml_escape};
 pub use toast::{Level, Toast};
 pub use tray::{
-    ARGUS_ICO, Balloon, Boot, Command, Delivery, Entry, FallbackNotifier, IconKind, Launch, Phase,
-    Rgba, STOP_GRACE, Stopped, TrayError, TrayFiles, TrayRecord, TrayState, TrayStatus,
+    ARGUS_ICO, Balloon, Boot, Command, Delivery, Entry, FallbackNotifier, IconKind, Ink, Launch,
+    Phase, Rgba, STOP_GRACE, Stopped, TrayError, TrayFiles, TrayRecord, TrayState, TrayStatus,
     clear_quit_flag, icon_line, menu_entries, prepare_launch, quit_flag_active, read_live_tray,
     render_icon, request_stop, status_text, stop_tray, tray_status, wait_for_tray, write_balloon,
     write_quit_flag,
