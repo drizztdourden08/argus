@@ -40,7 +40,7 @@ const BoardPage = (props: BoardPageProps) => {
         />
         <StatusNotice status={board.status} />
         <RegisteredStrip boardKey={boardKey} />
-        <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" onTabChange={(next) => {
+        <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={(next) => {
             more.closeTrash();
             select(next);
           }}
