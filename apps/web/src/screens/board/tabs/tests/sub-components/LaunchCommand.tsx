@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Box, Button, Callout, Flex, Icon, Link, Tag, Text } from '@drizztdourden08/tessera';
+import { Button, ButtonRow, Callout, Flex, Icon, Link, Tag, Text, TextInput } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { RunPlay } from '../../../run-play';
 import { LogButton, RunTerminal } from '../../../run-terminal';
@@ -26,14 +26,14 @@ const LaunchCommand = (props: LaunchCommandProps) => {
   const shown = draft ? null : shownRun(launch, runs);
   return (
     <Flex direction="column" gap="xs">
-      <Flex gap="sm" align="center" wrap>
-        <Box surface="sunken" className="bundle__command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'}>
-          <Text mono>{launch.cmd}</Text>
-        </Box>
+      <ButtonRow
+        align="start"
+        lead={<TextInput readOnly mono grow size="sm" aria-label="Launch command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'} value={launch.cmd} />}
+      >
         <Button size="sm" variant="tertiary" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
         {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
-      </Flex>
+      </ButtonRow>
       {launch.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{launch.cwd}</Text.Code></Text>}
       {launch.name && (
         <Flex gap="xs" align="center">

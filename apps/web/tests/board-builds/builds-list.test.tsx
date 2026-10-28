@@ -39,7 +39,7 @@ describe('the launcher list', () => {
     expect(card.getByText('started by bundle open-1')).toBeTruthy();
     expect(card.getByText(/set by coordinator/)).toBeTruthy();
     expect(card.getByText('Note')).toBeTruthy();
-    expect(card.getByText('game run --build-2')).toBeTruthy();
+    expect(card.getByDisplayValue('game run --build-2')).toBeTruthy();
     expect(within(cardOf(container, 'master')).getAllByText('master')).toHaveLength(2);
   });
 
@@ -53,16 +53,16 @@ describe('the launcher list', () => {
   it('draws the text of a launcher as text, never as markup', async () => {
     const { container } = await mountBuilds(withDefs([launcherDoc('master', { title: '<img src=x onerror=alert(1)>', cmd: 'run "a" <b> & c', branch: '<br>' })]));
     expect(await screen.findByText('<img src=x onerror=alert(1)>')).toBeTruthy();
-    expect(screen.getByText('run "a" <b> & c')).toBeTruthy();
+    expect(screen.getByDisplayValue('run "a" <b> & c')).toBeTruthy();
     expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('b')).toBeNull();
   });
 
   it('follows a launcher live: a new command is the one shown', async () => {
     const { change } = await mountBuilds(withDefs([launcherDoc('master')]));
-    await screen.findByText('game run --master');
+    await screen.findByDisplayValue('game run --master');
     change('launchers', 'master', launcherDoc('master', { cmd: 'game run --master --fresh' }));
-    expect(await screen.findByText('game run --master --fresh')).toBeTruthy();
+    expect(await screen.findByDisplayValue('game run --master --fresh')).toBeTruthy();
   });
 });
 

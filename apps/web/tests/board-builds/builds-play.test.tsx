@@ -125,7 +125,7 @@ describe('where Play is hidden', () => {
       runs: [runDoc('R-1', 'launcher-wt-1')],
       builds: [buildDoc('b1', { launcher: 'wt-1', status: 'draft' })],
     });
-    expect(await screen.findByText('game run --wt-1')).toBeTruthy();
+    expect(await screen.findByDisplayValue('game run --wt-1')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Play wt-1' })).toBeNull();
     expect(screen.queryByRole('status', { name: 'Run R-1' })).toBeNull();
   });

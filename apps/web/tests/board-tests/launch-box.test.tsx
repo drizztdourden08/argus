@@ -19,7 +19,7 @@ const playDisabled = (tag: string): boolean => screen.getByRole<HTMLButtonElemen
 describe('the launch box of a linked launcher', () => {
   it('shows the command of the linked launcher, where it runs and the link to the launcher', async () => {
     await mountTab(launched());
-    expect(await screen.findByText('rotp launch l1')).toBeTruthy();
+    expect(await screen.findByDisplayValue('rotp launch l1')).toBeTruthy();
     expect(screen.getByText('C:\\work\\rotp')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'launcher l1' }).getAttribute('href')).toBe('#builds');
     expect(screen.getByText('First bundle')).toBeTruthy();
@@ -28,14 +28,14 @@ describe('the launch box of a linked launcher', () => {
 
   it('follows the launcher live: a new command is the one shown', async () => {
     const { change } = await mountTab(launched());
-    await screen.findByText('rotp launch l1');
+    await screen.findByDisplayValue('rotp launch l1');
     change('launchers', 'l1', launcherDoc('l1', { cmd: 'rotp launch l1 --fresh' }));
-    expect(await screen.findByText('rotp launch l1 --fresh')).toBeTruthy();
+    expect(await screen.findByDisplayValue('rotp launch l1 --fresh')).toBeTruthy();
   });
 
   it('says a draft is not built: the command shows, there is no Play', async () => {
     await mountTab({ ...launched(), builds: [buildDoc('b1', { launcher: 'l1', status: 'draft' })] });
-    expect(await screen.findByText('rotp launch l1')).toBeTruthy();
+    expect(await screen.findByDisplayValue('rotp launch l1')).toBeTruthy();
     expect(screen.getByText(/Draft: not built yet, so no Play/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Play b1' })).toBeNull();
   });
@@ -71,7 +71,7 @@ describe('the launch box without a usable launcher', () => {
       launches: [{ name: 'bundle-b6', bundle: 'b6', cmd: 'rotp launch b6', hand: true, window: true }],
       tests: [testDoc('T-1', { build: 'b6' })],
     });
-    expect(await screen.findByText('rotp launch b6')).toBeTruthy();
+    expect(await screen.findByDisplayValue('rotp launch b6')).toBeTruthy();
     expect(screen.queryByRole('link', { name: /launcher/ })).toBeNull();
     expect(playDisabled('b6')).toBe(false);
   });
