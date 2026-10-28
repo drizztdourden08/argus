@@ -4,18 +4,15 @@
 //! `resync`, token rotation, a second `start`, `stop`. Whatever a test started is stopped by the
 //! home's drop, through `argus stop`.
 
+mod common;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use argus_server::instance::{PROBE_ENV, call};
+use common::Out;
 use serde_json::Value;
 use tempfile::TempDir;
-
-struct Out {
-    code: i32,
-    stdout: String,
-    stderr: String,
-}
 
 struct Home {
     dir: TempDir,
@@ -39,19 +36,15 @@ impl Home {
 
     /// A run whose `DASHBOARD_HOME` is `env_home`, to prove that `--data-dir` beats it.
     fn run_with_env_home(&self, env_home: &Path, args: &[&str]) -> Out {
-        let out = Command::new(env!("CARGO_BIN_EXE_argus"))
+        Command::new(env!("CARGO_BIN_EXE_argus"))
             .args(args)
             .env("COORD_HOME", self.dir.path())
             .env("DASHBOARD_HOME", env_home)
             .env("DASHBOARD_PORT", "0")
             .env(PROBE_ENV, "60000")
             .output()
-            .expect("argus runs");
-        Out {
-            code: out.status.code().unwrap_or(-1),
-            stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
-            stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
-        }
+            .expect("argus runs")
+            .into()
     }
 
     fn json(&self, file: &str) -> Value {
