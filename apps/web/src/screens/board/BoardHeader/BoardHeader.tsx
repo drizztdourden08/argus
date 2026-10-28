@@ -2,7 +2,7 @@
 import { Flex, Stack, Text } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../data/agents';
 import { useCollection } from '../../../data/react';
-import { ProjectSwitcher } from '../../../shell';
+import { Logo, ProjectSwitcher } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
 import { findLead } from '../tabs/agents';
 import { BoardStamp } from './sub-components/BoardStamp';
@@ -14,10 +14,13 @@ const BoardHeader = (props: BoardHeaderProps) => {
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
   return (
     <Flex as="header" className="board-header" wrap align="center">
-      <Stack className="board-header__id" gap="2xs">
-        <Text variant="overline" aria-hidden="true">Coordination board</Text>
-        <Text as="h1" className="board-header__title">{name}</Text>
-      </Stack>
+      <Flex className="board-header__brand" align="center" gap="sm">
+        <Logo size="lg" label="Argus" />
+        <Stack className="board-header__id" gap="2xs">
+          <Text variant="overline" aria-hidden="true">Coordination board</Text>
+          <Text as="h1" className="board-header__title">{name}</Text>
+        </Stack>
+      </Flex>
       <Flex className="board-header__status" wrap align="center">
         <LeadStatus lead={findLead(threads.docs)} />
         <BoardStamp status={status} updatedAt={updatedAt} />
