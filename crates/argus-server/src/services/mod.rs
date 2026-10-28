@@ -7,7 +7,7 @@
 //! `stop(&Services)` ends them. [`compose`] holds the three orders.
 
 use std::sync::atomic::{AtomicU16, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, PoisonError, RwLock};
+use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use std::time::Duration;
 
 use argus_agents::{AgentReaper, AgentReconciler, AgentWatcher};
@@ -26,6 +26,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
+use crate::local_names::LiveNames;
 use crate::security::LoginCodes;
 use crate::sse::{Fanout, RunLogs};
 use crate::web::WebAssets;
@@ -117,6 +118,7 @@ pub struct Services {
     pub stop: CancellationToken,
     pub(crate) tasks: Tasks,
     pub(crate) port: AtomicU16,
+    pub(crate) names: OnceLock<LiveNames>,
     pub(crate) links: Mutex<Vec<Subscription>>,
 }
 

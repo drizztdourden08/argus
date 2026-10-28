@@ -53,6 +53,7 @@ crates/
   argus/                    the binary: serve, start, stop, status, open, logs, resync, token,
                             wake-stream, mcp, tray, autostart, install-mcp, later coord
   argus-core/               shared types, config, paths, ids, clock, bus, redaction, logging
+  argus-dns/                the tiny DNS responder of the local names, and a client to ask it
   argus-store/              SQLite, migrations, DocStore, kv, activity log
   argus-board/              board.json model: read, normalize, lock, save, ops, projections
   argus-sync/               board watcher, exporter, owner posts, portfolio cards, proofs
@@ -82,6 +83,7 @@ in its row.
 |---|---|---|
 | `argus` | Binary entry, `clap` subcommands, boot and shutdown order | server, mcp, native, core |
 | `argus-core` (added) | Types every crate shares, so no service crate depends on another for a struct | none |
+| `argus-dns` (added) | The responder of the local names (`.argus`): UDP and TCP, one address, no recursion | none |
 | `argus-store` | The one SQLite connection, migrations, docs and changes, kv, activity | core |
 | `argus-board` (added) | Everything about a board file, shared by the server now and the Rust coord later | core |
 | `argus-sync` (added) | Mirrors boards into docs and applies owner posts, the Node `src/sync` | core, store, board |
@@ -704,12 +706,28 @@ only.
 | `argus tray [run or start or stop or status]` | same verb; `run` is the tray process, `start` launches it detached |
 | `argus autostart install or remove or status`, `install-mcp ...` | same verbs |
 | `argus parity --left url --right url` | new: the shadow comparison below |
+| `argus dns status`, `install --print`, `remove --print` | new: the local names, see Local names |
 | `argus coord ...` | slice 8: the coord CLI |
 
 `--shadow` starts Argus with every outward effect off: no board writes (posts answer
 `read_only`), no wakes delivered, no process kills, no worktree removal, no toasts (pings are
 recorded `skipped`). It is how
 Argus runs beside the Node server on real data. `--home` is an alias of `--data-dir`.
+
+## Local names
+
+Off by default; the owner steps are in `docs/local-names.md`. With `localNames.enabled` in
+`config.json`, the server binds two sockets on a loopback address of its own (default
+`127.65.82.71`, never `127.0.0.1`, so ports 53 and 80 on it cannot conflict with other software):
+the `argus-dns` responder on `<address>:53` and a front door on `<address>:80`, which serves the
+same app as the main listener. `<key>.<suffix>` and `<thread>.<key>.<suffix>` are board aliases
+like the `.localhost` ones: `security::host_alias` accepts both, and the Host and Origin checks
+use the door's port (none in the header when it is 80). When port 80 cannot be bound the door
+takes the main port on the same address and the names carry it. `argus-core::names` holds the
+setting (`LocalNames`) and the door (`Door`) that the server, `argus-notify` (toast links) and the
+`argus` binary (`argus open`, `argus dns status`) share. The server reports the live names in the
+`localNames` object of the health answer. Argus never runs the NRPT rule that sends `.<suffix>`
+to the responder: `argus dns install --print` prints it for the owner.
 
 ## Web app
 

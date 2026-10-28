@@ -10,7 +10,7 @@ mod png;
 mod server;
 mod stream;
 
-pub use client::{Reply, Request, request};
+pub use client::{Reply, Request, request, request_at};
 pub use coord_cli::{CliOut, CoordCli, argus_exe};
 pub use fixture::{ago, alpha_board, beta_board, make_home, portfolio_board, write_board};
 pub use png::png;

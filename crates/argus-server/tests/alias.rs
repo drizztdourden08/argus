@@ -237,8 +237,9 @@ async fn writes_on_an_alias_host_accept_only_that_host_as_origin() {
 
 #[test]
 fn an_alias_origin_counts_only_against_its_own_alias_host() {
-    let ok =
-        |host: &str, origin: &str, strict: bool| origin_ok(&pair(host, Some(origin)), 4000, strict);
+    let ok = |host: &str, origin: &str, strict: bool| {
+        origin_ok(&pair(host, Some(origin)), 4000, None, strict)
+    };
     let ui = "ui.alpha.localhost:4000";
     assert!(ok(ui, "http://ui.alpha.localhost:4000", false));
     assert!(ok(ui, "http://ui.alpha.localhost:4000", true));
@@ -250,8 +251,8 @@ fn an_alias_origin_counts_only_against_its_own_alias_host() {
     assert!(!ok(ui, "http://alpha.localhost:4000", false));
     assert!(!ok("evil.test", "http://evil.test", false));
     assert!(ok("127.0.0.1:4000", "http://127.0.0.1:4000", false));
-    assert!(host_ok(&pair("alpha.localhost:4000", None), 4000));
-    assert!(!host_ok(&pair("alpha.localhost:4001", None), 4000));
+    assert!(host_ok(&pair("alpha.localhost:4000", None), 4000, None));
+    assert!(!host_ok(&pair("alpha.localhost:4001", None), 4000, None));
 }
 
 #[test]
@@ -326,14 +327,15 @@ async fn reserved_aliases_follow_the_same_origin_rule_as_every_alias() {
 
 #[test]
 fn reserved_hosts_and_origins_in_the_unit_rules() {
-    assert!(host_ok(&pair("argus.localhost:4000", None), 4000));
-    assert!(!host_ok(&pair("overlord.localhost:4001", None), 4000));
+    assert!(host_ok(&pair("argus.localhost:4000", None), 4000, None));
+    assert!(!host_ok(&pair("overlord.localhost:4001", None), 4000, None));
     assert!(origin_ok(
         &pair(
             "overlord.localhost:4000",
             Some("http://overlord.localhost:4000")
         ),
         4000,
+        None,
         false
     ));
     assert!(!origin_ok(
@@ -342,11 +344,13 @@ fn reserved_hosts_and_origins_in_the_unit_rules() {
             Some("http://argus.localhost:4000")
         ),
         4000,
+        None,
         false
     ));
     assert!(!origin_ok(
         &pair("127.0.0.1:4000", Some("http://argus.localhost:4000")),
         4000,
+        None,
         false
     ));
 }

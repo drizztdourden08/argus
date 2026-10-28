@@ -8,6 +8,7 @@ use std::net::IpAddr;
 use std::sync::{Mutex, PoisonError};
 
 use argus_core::clock::{iso_from_ms, now_ms};
+use argus_core::names::Door;
 use argus_core::{ApiError, ErrorCode};
 use axum::http::HeaderMap;
 use sha2::{Digest, Sha256};
@@ -39,11 +40,8 @@ fn label_ok(s: &str, first_strict: bool) -> bool {
     !s.is_empty() && s.len() <= 63 && s.chars().all(valid) && (!first_strict || !s.starts_with('-'))
 }
 
-/// `<key>.localhost:<port>` or `<thread>.<key>.localhost:<port>`, case-insensitive, our port only.
-#[must_use]
-pub fn parse_alias(host: &str, port: u16) -> Option<Alias> {
-    let lower = host.to_ascii_lowercase();
-    let name = lower.strip_suffix(&format!(".localhost:{port}"))?;
+/// The alias of the labels before the host's suffix: `<key>` or `<thread>.<key>`.
+fn alias_of(name: &str) -> Option<Alias> {
     let labels: Vec<&str> = name.split('.').collect();
     let (thread, key) = match labels.as_slice() {
         [key] => (None, *key),
@@ -60,6 +58,30 @@ pub fn parse_alias(host: &str, port: u16) -> Option<Alias> {
         thread: thread.map(str::to_owned),
         reserved,
     })
+}
+
+/// `<key>.localhost:<port>` or `<thread>.<key>.localhost:<port>`, case-insensitive, our port only.
+#[must_use]
+pub fn parse_alias(host: &str, port: u16) -> Option<Alias> {
+    let lower = host.to_ascii_lowercase();
+    alias_of(lower.strip_suffix(&format!(".localhost:{port}"))?)
+}
+
+/// `<key>.<suffix>` or `<thread>.<key>.<suffix>` under the local names, with the port of the
+/// front door unless it is 80; the bare suffix is the overview, like `argus.<suffix>`.
+#[must_use]
+pub fn parse_door_alias(host: &str, door: &Door) -> Option<Alias> {
+    let lower = host.to_ascii_lowercase();
+    if lower == door.bare() {
+        return alias_of("argus");
+    }
+    alias_of(lower.strip_suffix(&format!(".{}", door.bare()))?)
+}
+
+/// The alias a `Host` names, under `.localhost` or under the local names when they are on.
+#[must_use]
+pub fn host_alias(host: &str, port: u16, door: Option<&Door>) -> Option<Alias> {
+    parse_alias(host, port).or_else(|| door.and_then(|door| parse_door_alias(host, door)))
 }
 
 /// Equal-length digests first, so the time does not depend on the length.
@@ -127,11 +149,12 @@ pub fn bearer_state(h: &HeaderMap, token: &str) -> Bearer {
     if ok { Bearer::Ok } else { Bearer::Bad }
 }
 
-/// The socket peer must be loopback.
+/// The socket peer must be loopback: `127.0.0.1`, or the address of Argus when a connection to
+/// the front door shows that as its source.
 #[must_use]
-pub fn peer_ok(ip: IpAddr) -> bool {
+pub fn peer_ok(ip: IpAddr, door: Option<&Door>) -> bool {
     match ip {
-        IpAddr::V4(v4) => v4.octets() == [127, 0, 0, 1],
+        IpAddr::V4(v4) => v4.octets() == [127, 0, 0, 1] || door.is_some_and(|d| d.address == v4),
         IpAddr::V6(v6) => {
             v6.is_loopback()
                 || v6
@@ -143,11 +166,11 @@ pub fn peer_ok(ip: IpAddr) -> bool {
 
 /// `Host` is `127.0.0.1:<port>`, `localhost:<port>` or a board alias.
 #[must_use]
-pub fn host_ok(h: &HeaderMap, port: u16) -> bool {
+pub fn host_ok(h: &HeaderMap, port: u16, door: Option<&Door>) -> bool {
     let host = header(h, "host").unwrap_or_default().to_ascii_lowercase();
     host == format!("127.0.0.1:{port}")
         || host == format!("localhost:{port}")
-        || parse_alias(&host, port).is_some()
+        || host_alias(&host, port, door).is_some()
 }
 
 fn base_type(h: &HeaderMap) -> String {
@@ -213,12 +236,12 @@ pub fn looks_like_page(h: &HeaderMap) -> bool {
 
 /// Origin and Sec-Fetch-Site, when sent, must be ours; `strict` also requires an Origin.
 #[must_use]
-pub fn origin_ok(h: &HeaderMap, port: u16, strict: bool) -> bool {
+pub fn origin_ok(h: &HeaderMap, port: u16, door: Option<&Door>, strict: bool) -> bool {
     let host = header(h, "host").unwrap_or_default().to_ascii_lowercase();
     let own = |o: &str| {
         o == format!("http://127.0.0.1:{port}")
             || o == format!("http://localhost:{port}")
-            || (parse_alias(&host, port).is_some() && o == format!("http://{host}"))
+            || (host_alias(&host, port, door).is_some() && o == format!("http://{host}"))
     };
     let origin = header(h, "origin").map(str::to_ascii_lowercase);
     if origin.as_deref().is_some_and(|o| !own(o)) {

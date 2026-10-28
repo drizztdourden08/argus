@@ -677,9 +677,9 @@ fn bearer_state_and_peer_check() {
     assert_eq!(state("Token t"), Bearer::Bad);
     let ip = |s: &str| s.parse::<IpAddr>().expect("an ip");
     for local in ["127.0.0.1", "::1", "::ffff:127.0.0.1"] {
-        assert!(peer_ok(ip(local)), "{local}");
+        assert!(peer_ok(ip(local), None), "{local}");
     }
-    assert!(!peer_ok(ip("192.168.1.5")));
+    assert!(!peer_ok(ip("192.168.1.5"), None));
 }
 
 #[test]

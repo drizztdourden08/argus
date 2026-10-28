@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use std::sync::PoisonError;
 
 use super::params::{scan_boards, sync};
+use crate::local_names;
 use crate::reply::{html_page, info_page, json_reply, redirect};
 use crate::router::{AuthMode, Reply};
 use crate::security::{cookie_header, safe_next};
@@ -61,7 +62,7 @@ pub(crate) fn health_body(svc: &Services) -> Result<Value, ApiError> {
         || json!({ "ok": false, "lastEventAt": null, "errors": 0 }),
         |s| json!(s.health()),
     );
-    Ok(json!({
+    let mut body = json!({
         "ok": true,
         "version": Services::version(),
         "instance": svc.instance,
@@ -75,7 +76,11 @@ pub(crate) fn health_body(svc: &Services) -> Result<Value, ApiError> {
         "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
         "impl": "argus",
         "shadow": svc.shadow,
-    }))
+    });
+    if let Some(names) = local_names::health_json(svc) {
+        body["localNames"] = names;
+    }
+    Ok(body)
 }
 
 async fn health(ctx: Ctx) -> Reply {
