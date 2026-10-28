@@ -70,6 +70,7 @@ pub(super) fn options_of(svc: &Services) -> Options {
             .join("worktree-backups")
             .to_string_lossy()
             .into_owned(),
+        run_requests: !svc.shadow,
         ..base
     };
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {

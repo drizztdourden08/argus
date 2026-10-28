@@ -5,6 +5,7 @@
 mod fallback;
 mod leftover;
 mod remove;
+mod requests;
 mod review;
 mod round2;
 mod rules;

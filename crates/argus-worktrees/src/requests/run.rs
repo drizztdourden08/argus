@@ -1,0 +1,187 @@
+//! Doing a request: a fresh scan, the targets, each one through the very same removal, and the end.
+
+use super::SENTENCE_MAX;
+use super::record::{Outcome, RequestRec, RequestStatus, Target};
+use super::text::one_line;
+use crate::board::Caller;
+use crate::clock::iso_from_ms;
+use crate::error::WtError;
+use crate::jobs::JobState;
+use crate::request::{RemoveInput, RemoveOutcome};
+use crate::service::Service;
+
+/// The words of a refusal; a blank one still says something.
+fn sentence_of(err: &WtError) -> String {
+    let text = one_line(&err.message, SENTENCE_MAX);
+    if text.is_empty() {
+        "refused".to_string()
+    } else {
+        text
+    }
+}
+
+fn refusal(target: &Target, err: &WtError) -> Outcome {
+    Outcome {
+        id: target.id.clone(),
+        label: target.label.clone(),
+        ok: false,
+        text: sentence_of(err),
+        code: Some(err.code.as_str().to_string()),
+    }
+}
+
+impl Service {
+    fn removal_of(rec: &RequestRec, target: &Target) -> RemoveInput {
+        let mut input = RemoveInput::new(&rec.key, &target.id, Caller::Thread(rec.by.clone()));
+        input.branch = rec.branch;
+        input.discard = rec.discard;
+        input.owner_entry.clone_from(&rec.owner_entry);
+        input.reason.clone_from(&rec.reason);
+        if rec.mode == super::Mode::Leftovers {
+            input.older_than_days = rec.older_than_days;
+        }
+        input
+    }
+
+    /// A leftover starts a background job: its outcome waits for the job.
+    fn leftover_outcome(&self, rec: &RequestRec, target: &Target, out: &RemoveOutcome) -> Outcome {
+        let path = out.path.as_deref().unwrap_or_default();
+        self.jobs_idle();
+        let job = self
+            .jobs(&rec.key)
+            .into_iter()
+            .find(|j| Some(&j.id) == out.job_id.as_ref());
+        let unfinished = job.filter(|j| j.state != JobState::Done);
+        let (ok, text, code) = match unfinished {
+            Some(job) => {
+                let why = job.error.map(|e| format!(": {e}")).unwrap_or_default();
+                let text = format!(
+                    "deleting {path} did not finish ({}{why})",
+                    job.state.as_str()
+                );
+                (
+                    false,
+                    one_line(&text, SENTENCE_MAX),
+                    Some("job_failed".to_string()),
+                )
+            }
+            None => (
+                true,
+                one_line(&format!("deleted leftover folder {path}"), SENTENCE_MAX),
+                None,
+            ),
+        };
+        Outcome {
+            id: target.id.clone(),
+            label: target.label.clone(),
+            ok,
+            text,
+            code,
+        }
+    }
+
+    /// One target through the very same removal the CLI route calls.
+    fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
+        match self.remove(&Self::removal_of(rec, target)) {
+            Ok(out) if out.leftover && out.job_id.is_some() => {
+                self.leftover_outcome(rec, target, &out)
+            }
+            Ok(out) => {
+                let said = one_line(&out.text, SENTENCE_MAX);
+                Outcome {
+                    id: target.id.clone(),
+                    label: target.label.clone(),
+                    ok: true,
+                    text: if said.is_empty() {
+                        format!("removed {}", target.label)
+                    } else {
+                        said
+                    },
+                    code: None,
+                }
+            }
+            Err(err) => refusal(target, &err),
+        }
+    }
+
+    /// Settle what is to be removed: the named targets, or the ones a listing right now gives.
+    fn settle_targets(
+        &self,
+        project: &str,
+        id: &str,
+        rec: &RequestRec,
+    ) -> Result<RequestRec, WtError> {
+        if rec.resolved {
+            return Ok(rec.clone());
+        }
+        let found = self.resolve_request(rec)?;
+        self.update_request(project, id, |r| {
+            r.targets = found.targets;
+            r.resolved = true;
+            r.skipped = found.skipped;
+            r.note = found.note;
+        });
+        self.save_requests(project);
+        Ok(self.request_of(project, id).unwrap_or_else(|| rec.clone()))
+    }
+
+    /// The targets with no outcome yet, one at a time. False when the worker was stopped on the way.
+    fn run_targets(&self, project: &str, id: &str) -> Result<bool, WtError> {
+        let _ = self.scan_now(project);
+        if self.requests_halted() {
+            return Ok(false);
+        }
+        let Some(first) = self.request_of(project, id) else {
+            return Ok(false);
+        };
+        let rec = self.settle_targets(project, id, &first)?;
+        for target in rec.targets.iter().skip(first.results.len()) {
+            if self.requests_halted() {
+                return Ok(false);
+            }
+            let outcome = self.remove_one(&rec, target);
+            self.update_request(project, id, |r| r.results.push(outcome));
+            self.save_requests(project);
+        }
+        Ok(true)
+    }
+
+    fn finish_request(&self, project: &str, id: &str) {
+        let finished = iso_from_ms(self.now());
+        self.update_request(project, id, |rec| {
+            rec.status = match (rec.removed(), rec.refused()) {
+                (_, 0) => RequestStatus::Done,
+                (0, _) => RequestStatus::Refused,
+                _ => RequestStatus::Partial,
+            };
+            rec.finished_at = Some(finished);
+        });
+        self.save_requests(project);
+    }
+
+    /// Carry out one request, then tell the thread. A stop on the way leaves it running: the next start goes on.
+    pub(super) fn process_request(&self, project: &str, id: &str) {
+        let started = iso_from_ms(self.now());
+        self.update_request(project, id, |rec| {
+            rec.status = RequestStatus::Running;
+            rec.started_at.get_or_insert(started);
+        });
+        self.save_requests(project);
+        match self.run_targets(project, id) {
+            Ok(false) => return,
+            Ok(true) => {}
+            Err(err) => {
+                let failed = Outcome {
+                    id: String::new(),
+                    label: String::new(),
+                    ok: false,
+                    text: format!("the request could not run: {}", sentence_of(&err)),
+                    code: None,
+                };
+                self.update_request(project, id, |rec| rec.results.push(failed));
+            }
+        }
+        self.finish_request(project, id);
+        self.deliver_request(project, id);
+    }
+}

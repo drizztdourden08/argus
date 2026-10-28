@@ -13,6 +13,7 @@ import { countRows, filterRows, refusedJobs } from './model';
 import { LeftoverBatchConfirm } from './sub-components/LeftoverBatchConfirm';
 import { NoticeBanner } from './sub-components/NoticeBanner';
 import { RefusedJobs } from './sub-components/RefusedJobs';
+import { RequestsSection } from './sub-components/RequestsSection';
 import { RulesSection } from './sub-components/RulesSection';
 import { WorktreeBody } from './sub-components/WorktreeBody';
 import { WorktreeSummary } from './sub-components/WorktreeSummary';
@@ -52,6 +53,7 @@ const WorktreesTab = (props: WorktreesTabProps) => {
         removal={removal}
         onShowAll={() => prefs.setFilter('all')}
       />
+      <RequestsSection requests={meta?.requests ?? []} />
       <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
     </Panel>
   );

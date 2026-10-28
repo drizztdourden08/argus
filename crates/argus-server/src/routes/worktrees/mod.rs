@@ -7,6 +7,10 @@
 //!   gone one of the project
 //! - `POST /api/p/:key/worktrees/leftovers/remove {ids?, olderThanDays?, confirmYoung?, reason?,
 //!   by?}` queues every old leftover folder for deletion in the background
+//! - `POST /api/p/:key/worktrees/requests {targets? | finished? | allLeftovers?, branch?, discard?,
+//!   ownerEntry?, reason?, olderThanDays?, idleMinutes? (finished only), by}` only records a request (a thread asks, the
+//!   server's one worker removes through the same guards and tells the thread's inbox):
+//!   `{id, status, text, request}`; `GET` lists them newest first: `{requests}`
 //!
 //! Who: the owner's page (discarding work allowed, with the backup), or a registered thread of
 //! the project named in `by`. The page is told by the authenticated session, never by the body.
@@ -30,6 +34,7 @@ use crate::{AuthKind, Ctx, RouteOpts, Router};
 
 mod leftovers;
 mod remove;
+mod requests;
 
 const REASON_MAX: usize = 200;
 const ID_MAX: usize = 400;
@@ -139,4 +144,5 @@ where
 pub fn register(r: &mut Router) {
     remove::register(r);
     leftovers::register(r);
+    requests::register(r);
 }

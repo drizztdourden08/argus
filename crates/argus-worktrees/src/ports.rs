@@ -20,6 +20,8 @@ pub trait WorktreeStore: Send + Sync {
         keep_ids: &[String],
         answer_ids: &[String],
     ) -> Result<(), StorageError>;
+    /// One note from Argus into a thread's inbox, under the project's board lock. False when the thread is not on the board.
+    fn post_inbox(&self, project: &str, thread: &str, text: &str) -> Result<bool, StorageError>;
 }
 
 /// One line of the activity log.

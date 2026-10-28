@@ -9,6 +9,9 @@ use crate::service::Service;
 use crate::status::{Judging, doc_of};
 use std::collections::BTreeMap;
 
+/// The newest requests a summary carries.
+const REQUESTS_SHOWN: usize = 20;
+
 fn round1(value: f64) -> f64 {
     (value * 10.0).round() / 10.0
 }
@@ -188,6 +191,7 @@ impl Service {
             leftover_old: self.leftover_old(project, docs),
             deleting: counts.by_status.get("deleting").copied().unwrap_or(0),
             jobs: jobs.iter().rev().take(20).rev().map(Job::doc).collect(),
+            requests: self.requests_recent(project, REQUESTS_SHOWN),
             gone,
             many_at: self.opts.many_at,
             too_many: counts.counted > self.opts.many_at,
