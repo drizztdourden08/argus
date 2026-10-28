@@ -12,7 +12,7 @@ const FilterRow = (props: FilterRowProps) => {
   return (
     <Flex gap="sm" align="center" wrap>
       <SearchInput
-        width="narrow"
+        width="narrow-fill"
         size="sm"
         aria-label="Search id or title"
         placeholder="Search id or title"

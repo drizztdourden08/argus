@@ -39,8 +39,7 @@ this section, this section is true.
 ### Overview header and tab bar
 
 1. fixed: switcher reads "Argus overview" and lists the overview first, then the 8 boards.
-2. fixed: every tab keeps its badge, grey zero after opening, amber and red tones as Node. The badge
-   shape differs, see new item 121 (needs Tessera).
+2. fixed: every tab keeps its badge, grey zero after opening, amber and red tones as Node. The badge is solid (item 121).
 3. fixed: the tab bar sits at 66px as Node. Each tab is now 40px high as Node (new item 122).
 
 ### Overview: Dashboards tab
@@ -93,7 +92,7 @@ this section, this section is true.
 2. fixed: eyebrow, name, lead status with active tag, seen, chat icon, board updated, board select
    and kebab. The title row starts 16px lower (new item 131) but the tab bar lands at the same
    height.
-3. fixed: a badge on every tab with Node tones and counts (shape differs, see new item 121).
+3. fixed: a badge on every tab with Node tones and counts (solid badge, item 121).
 4. fixed: the fault is a rounded outlined pill with an icon, the name in the text colour and bold, the
    reason in red (items 133 and 154). The faulted project name used to be red as a whole.
 5. fixed: page level Focus select under the tab bar on every tab.
@@ -271,8 +270,8 @@ this section, this section is true.
     and the project cell is Link tone link. (Overview, Processes)
 120. fixed: robot and flask icons on the agents and tests tiles (the items tile keeps columns, as Node). Project card stat tiles use other icons: Node robot, book and flask or person; Argus
     gear, columns and checklist. (Overview, Dashboards)
-121. open, needs Tessera: Tabs 0.84 still has no solid badge (a `badgeSolid` prop); it only draws the tinted inline badge. Node draws a solid filled circle with dark text (amber, red, grey); Argus draws a faint tinted rounded rectangle on the overview and tinted text on boards. Nothing to adopt in 0.84. (All tab bars)
-122. fixed: both tab bars use Tabs `size="lg"` (40px, measured 40px as Node, the bar sits at 66px on the overview and 128px on boards) and `selectedTone="neutral"` (the active label is the text colour, not the palette primary). The tab row is still 4 to 12px narrower than Node per tab because the badge gap differs (see item 121). (All tab bars)
+121. fixed (Tessera 0.85): both tab bars take `badgeFill="solid"`, the solid badge with dark text in the Node tones. (All tab bars)
+122. fixed: both tab bars use Tabs `size="lg"` (40px, measured 40px as Node, the bar sits at 66px on the overview and 128px on boards) and `selectedTone="neutral"` (the active label is the text colour, not the palette primary). (All tab bars)
 123. fixed: the overview chip filters (levels, kinds, projects) are Tessera Tag radios, pill, `size="lg"` (24px) and `selectedTone="neutral"` (filled grey when selected), in a radiogroup. TagPicker 0.84 takes `pill` but passes neither `selectedTone` nor a Tag size, so ChipFilter composes Tag directly. The notification toggles are pill, `size="lg"`, `selectedTone="neutral"`, filled grey when on. (Overview Activity and Notifications)
 124. fixed: every SegmentedControl in Argus takes `selectedTone="neutral"` (grey fill, no palette outline): Kanban Group by, Order and Post as, Tests Group by and Order, Activity view, Worktrees filter and the Send down kind. ToggleGroup has no `selectedTone` in 0.84, but Argus uses no ToggleGroup. (Kanban, Tests, Activity, Worktrees, Send down)
 125. fixed: Copy is a tertiary (grey) button and the launcher chip link is neutral. Palette leaks on the Tests tab: the Copy button is a green outline (Node grey) and the
@@ -291,7 +290,7 @@ this section, this section is true.
     lands in the right place. (Board header)
 132. fixed: the page uses Tessera PageRoot, so the document scrolls (the stable scrollbar gutter of Tessera still keeps 6px free on the right). Argus scrolled an inner area (ScrollArea), not the document: full page screenshots clip at
     the window height and the scrollbar sits inside the frame; Node scrolls the page. (Every screen)
-133. fixed: the board chip and the overview registry chip are pills with `size="lg"` (24px); a fault chip is also `outlined` and keeps the warning icon. Detail left: Node draws the fault chip name in the text colour and only the reason in red; Argus draws the whole label red (the Status tone). (Registered strip)
+133. fixed: the board chip and the overview registry chip are pills with `size="lg"` (24px); a fault chip is also `outlined` and keeps the warning icon. The fault chip takes the Tag `reason` (Tessera 0.85): the name is in the text colour and only the reason is red, as Node. (Registered strip)
 134. fixed: the path column fits the full path (a longer path still truncates in the middle) and the
     size reads "≥ 37 MB". (Worktrees)
 135. fixed: outcome buttons read pass, fail, partial, blocked (the shared outcome list, so the test
@@ -370,9 +369,9 @@ this section, this section is true.
 
 Needs Tessera:
 
-- 121 solid tab badge, 142 FoldText middle truncation and inline width, 143 read only code field that
-  grows beside buttons, Agents 4 a fixed width per TrackColumn, Kanban 1 a narrow width that fills the
-  row at 420, Drawers 2 a stackNarrow on Drawer, 126 a separate tone for id links.
+- 142 FoldText middle truncation and inline width, 143 read only code field that
+  grows beside buttons, Agents 4 a fixed width per TrackColumn, Kanban 1 a container for the narrow-fill search (the Kanban toolbar has no container ancestor, so at 420 the search stays 220px instead of filling the
+  row; 0.85 narrow-fill needs a container prop on Card or Flex), Drawers 2 a stackNarrow on Drawer, 126 a separate tone for id links, brand mark tone (Tessera argus BrandMark is a fixed grey with no tone or colour prop, so it cannot be white on the dark app; Argus keeps its own Logo and favicon files, black on light chrome and white on dark, which the Tessera icon files, grey #8a8a96, do not match).
 - 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
   body size (14px, 600). Text variant title is the large step (about 17px) and no prop sets the family
   at the body size, so Argus keeps mono 14px.
