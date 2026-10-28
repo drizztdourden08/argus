@@ -116,7 +116,7 @@ describe('the request on a row', () => {
     await mountTab({ docs: [worktree('a', 'stale', { request: asked })], meta: metaDoc() });
     await findRow('a');
     const cell = cellOf('a', 'request');
-    expect(within(cell).getByTitle('Waiting for the thread to answer (coord worktree done)').textContent).toBe('asked to delete, waiting');
+    expect(within(cell).getByTitle('Waiting for the thread to answer (coord worktree done)').textContent).toBe('asked to delete · waiting');
     expect(cell.querySelector('strong')?.textContent).toBe('yesterday');
     expect(cell.querySelector('time')).not.toBeNull();
   });
@@ -125,7 +125,7 @@ describe('the request on a row', () => {
     await mountTab({ docs: [worktree('b', 'merged', { request: answered })], meta: metaDoc() });
     await findRow('b');
     const cell = cellOf('b', 'request');
-    expect(within(cell).getByTitle('Asked to check').textContent).toBe('answered');
+    expect(within(cell).getByTitle(/^Asked to check 5m ago$/).textContent).toBe('answered');
     expect(text(cell)).toContain('lead');
     expect(text(cell)).toContain('still needed?');
     expect(text(cell)).toContain('kept for the login work');

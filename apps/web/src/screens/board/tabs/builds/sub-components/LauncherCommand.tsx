@@ -20,7 +20,7 @@ const LauncherCommand = (props: LauncherCardProps) => {
       </Text>
       <Flex gap="sm" align="center" wrap>
         <Box surface="sunken" className="launcher-command__code" title={launcher.cwd ? `${cmd}\nin ${launcher.cwd}` : cmd}>{cmd}</Box>
-        <Button size="sm" title="Copy the command line" onClick={() => copyText(cmd)}>Copy</Button>
+        <Button size="sm" variant="tertiary" title="Copy the command line" onClick={() => copyText(cmd)}>Copy</Button>
         {view.playable && <RunPlay label={launcher.name} def={view.def} hint={noPlayHint(launcher.name)} boardKey={boardKey} runs={runs} />}
         {view.playable && <LogButton run={view.shown} onLog={onLog} />}
       </Flex>

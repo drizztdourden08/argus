@@ -25,7 +25,7 @@ const ItemBody = (props: ItemBodyProps) => {
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={own} ops={ops} />
       <TodosSection item={item} todos={record.todos} ops={ops} acts={acts} />
-      <ItemTests tests={own} />
+      <ItemTests boardKey={boardKey} tests={own} />
       <EntrySection title={`Questions · ${openQuestions} open`} empty="No question on this item." rows={record.questions} feed={feed} ops={ops} now={now} />
       <EntrySection title="Decisions" empty="No decision recorded yet." rows={record.decisions} feed={feed} ops={ops} now={now} />
       <ActivitySection item={item} rows={record.timeline} acts={acts} now={now} />

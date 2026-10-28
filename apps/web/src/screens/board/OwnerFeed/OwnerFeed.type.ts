@@ -51,7 +51,8 @@ interface CardMetaProps {
 }
 
 interface CardMenuProps {
-  card: FeedCard;
+  collection: 'entries' | 'actions';
+  id: string;
   actions: FeedActions;
 }
 

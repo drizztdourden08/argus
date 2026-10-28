@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Flex, Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import { confirmSize, filesText } from '../model';
 import type { LostTextProps } from '../worktrees-props.type';
 
@@ -8,7 +9,7 @@ const LeftoverText = (props: LostTextProps) => {
   const facts = row.leftover;
   const files = filesText(row) || '? files';
   const nodeModules = facts?.nodeModules ? ' (node_modules is not counted)' : '';
-  const newest = facts?.newestAt ? <DateText value={facts.newestAt} format="relative" /> : 'at an unknown time';
+  const newest = facts?.newestAt ? <Age value={facts.newestAt} ago /> : 'at an unknown time';
   return (
     <Flex direction="column" gap="xs">
       <Text>

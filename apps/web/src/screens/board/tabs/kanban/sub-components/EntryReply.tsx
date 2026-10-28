@@ -12,10 +12,10 @@ const EntryReply = (props: EntryReplyProps) => {
       <Flex gap="xs" align="center" wrap>
         <Text variant="caption" tone="muted" mono>{reply.id}</Text>
         <Tag>{KIND_LABEL[reply.kind] ?? reply.kind}</Tag>
-        <Text variant="caption" tone="muted">{`${reply.author === 'human' ? 'you' : reply.author}, ${formatAgo(reply.createdAt, now)} ago`}</Text>
+        <Text variant="caption" tone="muted">{`${reply.author === 'human' ? 'you' : reply.author} · ${formatAgo(reply.createdAt, now)}`}</Text>
         {reply.status && <Tag>{reply.status}</Tag>}
       </Flex>
-      <BoardMarkdown size="sm" source={reply.text} />
+      <BoardMarkdown source={reply.text} />
     </Flex>
   );
 };

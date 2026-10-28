@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { DateText, Tag } from '@drizztdourden08/tessera';
+import { Tag } from '@drizztdourden08/tessera';
+import { Age } from '../../../../../shell';
 import type { LauncherPartProps } from '../builds-props.type';
 
 const RetiredChip = (props: LauncherPartProps) => {
@@ -7,7 +8,7 @@ const RetiredChip = (props: LauncherPartProps) => {
   if (!launcher.retiredAt) return null;
   return (
     <Tag title={launcher.retireNote ?? 'Retired: merged or replaced'}>
-      retired <DateText value={launcher.retiredAt} format="relative" />{launcher.retiredBy ? ` by ${launcher.retiredBy}` : ''}
+      retired <Age value={launcher.retiredAt} ago />{launcher.retiredBy ? ` by ${launcher.retiredBy}` : ''}
     </Tag>
   );
 };

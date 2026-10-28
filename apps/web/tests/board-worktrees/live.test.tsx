@@ -25,7 +25,7 @@ describe('the tab follows the stream', () => {
     const ask = { id: 'O-1', kind: 'delete' as const, text: 'it can go', at: ago(60_000), by: 'owner', answer: null };
     const { change } = await mountTab({ docs: [worktree('a', 'stale', { request: ask })], meta: metaDoc() });
     await findRow('a');
-    expect(text(cellOf('a', 'request'))).toContain('asked to delete, waiting');
+    expect(text(cellOf('a', 'request'))).toContain('asked to delete · waiting');
     change('worktrees', 'id-a', worktree('a', 'stale', { request: { ...ask, answer: { note: 'kept for the login work', at: ago(1000), by: 'lead' } } }));
     await waitFor(() => expect(text(cellOf('a', 'request'))).toContain('kept for the login work'));
     expect(text(cellOf('a', 'request'))).not.toContain('waiting');

@@ -29,7 +29,7 @@ describe('the Trash view', () => {
     expect(table.getByText('Old test')).toBeTruthy();
     expect(table.getByText('Dead question')).toBeTruthy();
     expect(table.getAllByText('item')).toHaveLength(2);
-    expect(table.getAllByText(/ago by lead$/).length).toBeGreaterThan(0);
+    expect(table.getAllByText(/^\d+[mh] · lead$/).length).toBeGreaterThan(0);
     expect(screen.queryByText('Item I-1')).toBeNull();
   });
 

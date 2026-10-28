@@ -26,7 +26,7 @@ const ContextBlock = (props: EntryBodyProps) => {
   return (
     <Flex direction="column" gap="xs">
       <Text variant="overline" tone="muted">Context</Text>
-      <BoardMarkdown size="sm" source={parts.shown} />
+      <Text as="div" tone="dim"><BoardMarkdown size="sm" source={parts.shown} /></Text>
       {parts.rest ? (
         <Disclosure summary="Show the rest" size="sm">
           <BoardMarkdown size="sm" source={parts.rest} />

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { InlineEdit } from '@drizztdourden08/tessera';
+import { smartTimes } from '../../../../../format';
 import type { ItemTitleProps } from '../drawer-props.type';
 import { validateField } from '../model';
 
@@ -12,6 +13,7 @@ const ItemTitle = (props: ItemTitleProps) => {
       label="title"
       placeholder="title"
       value={item.title}
+      renderValue={smartTimes}
       validate={validateTitle}
       onCommit={(value) => void ops.setField(item, 'title', value.trim())}
     />

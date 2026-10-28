@@ -42,14 +42,14 @@ describe('the Kanban columns', () => {
     expect(screen.queryByRole('group', { name: /^Done,/ })).toBeNull();
     expect(screen.queryByText('Item I-8')).toBeNull();
     expect(screen.getByText(/^1 open \/ 3/)).toBeTruthy();
-    const toggle = screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' });
-    expect(toggle.checked).toBe(false);
+    const toggle = screen.getByRole('button', { name: 'Show done (2)' });
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(toggle);
     expect(within(columnOf('Done, 2 cards')).getByText('Item I-8')).toBeTruthy();
     expect(within(columnOf('Done, 2 cards')).getByText('Item I-9')).toBeTruthy();
-    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' }).checked).toBe(true);
+    expect(screen.getByRole('button', { name: 'Hide done (2)' }).getAttribute('aria-pressed')).toBe('true');
     expect(localStorage.getItem('coord.done2')).toBe('1');
-    fireEvent.click(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Show done (2)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide done (2)' }));
     expect(screen.queryByText('Item I-8')).toBeNull();
     expect(localStorage.getItem('coord.done2')).toBe('0');
   });

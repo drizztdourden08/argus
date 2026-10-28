@@ -7,4 +7,5 @@ export { formatCpu } from './format-cpu';
 export { formatMemory } from './format-memory';
 export { formatMinutes } from './format-minutes';
 export { orText } from './or-text';
+export { smartTimes } from './smart-times';
 export { toMillis } from './to-millis';

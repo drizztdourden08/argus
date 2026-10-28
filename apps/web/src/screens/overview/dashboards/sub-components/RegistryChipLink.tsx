@@ -29,8 +29,8 @@ const RegistryChipLink = (props: RegistryChipLinkProps) => {
       >
         <Inline gap="xs" align="center">
           {icon ? null : <Badge variant="dot" color={REGISTRY_DOT[chip.tone]} />}
-          {chip.name}
-          <Text variant="caption" tone="muted">
+          <Text as="span" weight={600}>{chip.name}</Text>
+          <Text variant="caption" tone={chip.tone === 'danger' ? 'danger' : 'muted'}>
             {chip.label}
             {chip.since ? <> <Age value={chip.since} /></> : null}
             {chip.extra ? ` ${chip.extra}` : ''}

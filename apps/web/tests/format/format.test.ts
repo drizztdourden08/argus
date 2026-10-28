@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { agoText, clipText, formatAgo, formatCpu, formatMemory, formatMinutes, orText } from '../../src/format';
+import { agoText, clipText, formatAgo, formatCpu, formatMemory, formatMinutes, orText, smartTimes } from '../../src/format';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
 const before = (ms: number): string => new Date(NOW - ms).toISOString();
@@ -79,5 +79,16 @@ describe('clipText and orText', () => {
     expect(orText('', 'x')).toBe('x');
     expect(orText(null, 'x')).toBe('x');
     expect(orText('y', 'x')).toBe('y');
+  });
+});
+
+describe('smartTimes', () => {
+  it('draws a times sign for an x between digits, as the Inter build of the Node dashboard does', () => {
+    expect(smartTimes('1280x720 and 24x24')).toBe('1280\u00d7720 and 24\u00d724');
+    expect(smartTimes('a 16x16x16 box')).toBe('a 16\u00d716\u00d716 box');
+  });
+
+  it('leaves words, hex values and a lone x alone', () => {
+    expect(smartTimes('0x1F and max 2 and x10 and 10x')).toBe('0x1F and max 2 and x10 and 10x');
   });
 });
