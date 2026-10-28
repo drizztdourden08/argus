@@ -11,6 +11,7 @@ use crate::record::{Filter, KEEP_ROWS, Notification};
 use crate::seen::SeenMap;
 use crate::settings::{Settings, settings_of};
 use argus_core::StorageError;
+use argus_core::names::Door;
 
 pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -21,6 +22,7 @@ pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
 pub struct Notify {
     pub(crate) ports: Ports,
     port: AtomicU16,
+    door: Mutex<Option<Door>>,
     pub(crate) limiter: Mutex<Limiter>,
     pub(crate) seen: Mutex<Option<SeenMap>>,
     running: AtomicBool,
@@ -33,6 +35,7 @@ impl Notify {
         Self {
             ports,
             port: AtomicU16::new(port),
+            door: Mutex::new(None),
             limiter: Mutex::new(Limiter::default()),
             seen: Mutex::new(None),
             running: AtomicBool::new(false),
@@ -45,8 +48,14 @@ impl Notify {
         self.port.store(port, Ordering::SeqCst);
     }
 
+    /// Tells the service the front door of the local names, once they answer, so the addresses a
+    /// toast opens use them; `None` returns to `.localhost:<port>`.
+    pub fn set_door(&self, door: Option<Door>) {
+        *locked(&self.door) = door;
+    }
+
     pub(crate) fn links(&self) -> Links {
-        Links::new(self.port.load(Ordering::SeqCst))
+        Links::new(self.port.load(Ordering::SeqCst), locked(&self.door).clone())
     }
 
     /// Starts the service and writes the docs of the stored notifications again.

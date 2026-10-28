@@ -81,7 +81,12 @@ fn token_mode(
         .is_some_and(|a| a.contains("event-stream"))
         || path.ends_with("/stream");
     if (write || stream || path.starts_with("/mcp"))
-        && !origin_ok(h, svc.port(), write && cred == Credential::Cookie)
+        && !origin_ok(
+            h,
+            svc.port(),
+            svc.door(),
+            write && cred == Credential::Cookie,
+        )
     {
         return Err(Box::new(fail(
             ErrorCode::Forbidden,
@@ -179,14 +184,14 @@ fn admit(
     path: &str,
 ) -> Result<Admitted, Box<Response>> {
     let svc = &app.svc;
-    if !host_ok(&parts.headers, svc.port()) {
+    if !host_ok(&parts.headers, svc.port(), svc.door()) {
         svc.log.warn(
             "bad host refused",
             json!({ "req": format!("{} {path}", parts.method) }),
         );
         return Err(Box::new(fail(ErrorCode::BadHost, "unexpected Host header")));
     }
-    if !peer_ok(peer.ip()) {
+    if !peer_ok(peer.ip(), svc.door()) {
         return Err(Box::new(fail(
             ErrorCode::Forbidden,
             "only this computer may use the dashboard",

@@ -1,6 +1,7 @@
 //! A small HTTP/1.1 client: one request per connection, any header (`Host` included), the whole
 //! answer read back. Enough to drive the server the way the Node tests do with `node:http`.
 
+use std::net::SocketAddr;
 use std::time::Duration;
 
 use serde_json::Value;
@@ -169,16 +170,25 @@ pub(crate) fn dechunk(raw: &[u8]) -> Vec<u8> {
 /// # Panics
 /// When the server cannot be reached (a test failure).
 pub async fn request(port: u16, req: &Request) -> Reply {
-    tokio::time::timeout(std::time::Duration::from_secs(30), exchange(port, req))
+    request_at(([127, 0, 0, 1], port).into(), req).await
+}
+
+/// Sends a request to any address (the front door of the local names is not on `127.0.0.1`) and
+/// reads the whole answer. Without a `Host` header the request names `127.0.0.1:<port>`.
+///
+/// # Panics
+/// When the server cannot be reached (a test failure).
+pub async fn request_at(addr: SocketAddr, req: &Request) -> Reply {
+    tokio::time::timeout(std::time::Duration::from_secs(30), exchange(addr, req))
         .await
         .expect("the server answers within 30 s")
 }
 
-async fn exchange(port: u16, req: &Request) -> Reply {
-    let mut s = TcpStream::connect(("127.0.0.1", port))
+async fn exchange(addr: SocketAddr, req: &Request) -> Reply {
+    let mut s = TcpStream::connect(addr)
         .await
         .expect("connect to the test server");
-    s.write_all(req.head(port, true).as_bytes())
+    s.write_all(req.head(addr.port(), true).as_bytes())
         .await
         .expect("send head");
     if !req.body.is_empty() && !req.gap.is_zero() {

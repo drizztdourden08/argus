@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "argus-coord",
  "argus-core",
+ "argus-dns",
  "argus-mcp",
  "argus-native",
  "argus-parity",
@@ -145,6 +146,14 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "time",
+]
+
+[[package]]
+name = "argus-dns"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -237,6 +246,7 @@ dependencies = [
  "argus-agents",
  "argus-board",
  "argus-core",
+ "argus-dns",
  "argus-launchers",
  "argus-mcp",
  "argus-native",

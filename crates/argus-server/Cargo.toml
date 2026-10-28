@@ -13,6 +13,7 @@ repository.workspace = true
 argus-agents = { path = "../argus-agents" }
 argus-board = { path = "../argus-board" }
 argus-core = { path = "../argus-core" }
+argus-dns = { path = "../argus-dns" }
 argus-launchers = { path = "../argus-launchers" }
 argus-mcp = { path = "../argus-mcp" }
 argus-native = { path = "../argus-native" }

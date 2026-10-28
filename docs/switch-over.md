@@ -665,6 +665,14 @@ What is removed, in one commit in the config repo, after the tag:
 After that, the `dashboard` PATH shims call `argus.exe` directly, and the forward stub can go
 too, once nothing starts `node ...\bin\dashboard.mjs`.
 
+## Local names (optional)
+
+After the cut, the owner can give Argus a name suffix of its own with real DNS, so boards open
+at `http://rotp.argus/` with no port. It is off by default and changes nothing until turned on.
+The steps (a `localNames` key in `config.json`, a restart, and one administrator PowerShell line
+that `argus dns install --print` prints and the owner runs himself) are in `docs/local-names.md`.
+Rollback is `"enabled": false` plus `argus dns remove --print`.
+
 ## Points that need a go
 
 - Overlord: land the `dashboard` shim and its `dashboardEngine` key in the config repo, engine

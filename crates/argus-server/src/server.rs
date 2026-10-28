@@ -1,11 +1,11 @@
 //! Boot and shutdown: config, log, database, bus links, sync, routes, the listener on
-//! `127.0.0.1`, the pid file and the hourly prune. Shutdown ends the streams, lets requests
+//! `127.0.0.1` (and the front door of the local names, when they are on), the pid file and the hourly prune. Shutdown ends the streams, lets requests
 //! finish for a second, stops sync and removes the pid file.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU16, AtomicUsize};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::Duration;
 
 use argus_core::clock::now_iso;
@@ -24,6 +24,7 @@ use tokio_util::sync::CancellationToken;
 use crate::first_start;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
+use crate::local_names::{self, Front, LocalNamesOptions};
 use crate::security::LoginCodes;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
@@ -71,6 +72,8 @@ pub struct ServeOptions {
     pub agents: AgentsOptions,
     /// The notifications to the owner.
     pub notify: NotifyOptions,
+    /// The ports of the local names, when `localNames` is on in the config.
+    pub local_names: LocalNamesOptions,
 }
 
 impl ServeOptions {
@@ -93,6 +96,7 @@ impl ServeOptions {
             wake: WakeOptions::default(),
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
+            local_names: LocalNamesOptions::default(),
         }
     }
 }
@@ -255,6 +259,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         stop: CancellationToken::new(),
         tasks: Tasks::new(opts),
         port: AtomicU16::new(0),
+        names: OnceLock::new(),
         links: Mutex::new(links),
     })
 }
@@ -312,31 +317,39 @@ fn close(svc: &Services) {
     }
 }
 
-async fn run(listener: TcpListener, svc: Arc<Services>) {
+/// Serves the app on a listener until the server stops.
+async fn serve_app(listener: TcpListener, app: Arc<App>) {
+    let svc = Arc::clone(&app.svc);
+    let make = axum::Router::new()
+        .fallback(dispatch)
+        .with_state(app)
+        .into_make_service_with_connect_info::<SocketAddr>();
+    let signal = async move {
+        svc.stop.cancelled().await;
+        svc.fanout.close_all();
+    };
+    let _ended = axum::serve(listener, make)
+        .with_graceful_shutdown(signal)
+        .into_future()
+        .await;
+}
+
+async fn run(listener: TcpListener, door: Option<TcpListener>, svc: Arc<Services>) {
     let mut router = Router::new();
     routes::register_all(&mut router);
     let app = Arc::new(App {
         router,
         svc: Arc::clone(&svc),
     });
-    let make = axum::Router::new()
-        .fallback(dispatch)
-        .with_state(app)
-        .into_make_service_with_connect_info::<SocketAddr>();
-    let signal = {
-        let svc = Arc::clone(&svc);
-        async move {
-            svc.stop.cancelled().await;
-            svc.fanout.close_all();
-        }
-    };
-    let served = axum::serve(listener, make)
-        .with_graceful_shutdown(signal)
-        .into_future();
+    let at_door = door.map(|door| tokio::spawn(serve_app(door, Arc::clone(&app))));
+    let served = serve_app(listener, app);
     let stop = svc.stop.clone();
     tokio::select! {
-        _ = served => {}
+        () = served => {}
         () = async { stop.cancelled().await; tokio::time::sleep(FORCE_AFTER).await } => {}
+    }
+    if let Some(at_door) = at_door {
+        at_door.abort();
     }
     close(&svc);
 }
@@ -356,13 +369,27 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     };
     let port = listener.local_addr()?.port();
     svc.port.store(port, std::sync::atomic::Ordering::SeqCst);
+    let front = local_names::bind(&svc, &opts.local_names).await;
+    if let Some(front) = &front {
+        let _set = svc.names.set(front.live.clone());
+    }
     write_pid_file(&svc.paths.pid_file, port, &svc.started_at, &svc.instance)?;
     let svc = Arc::new(svc);
     compose::start_all(&svc).await;
     prune(&svc);
     spawn_prune(&svc);
     svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": svc.shadow }));
-    let task = tokio::spawn(run(listener, Arc::clone(&svc)));
+    let door = front.map(
+        |Front {
+             listener,
+             responder,
+             ..
+         }| {
+            local_names::spawn_dns(&svc, responder);
+            listener
+        },
+    );
+    let task = tokio::spawn(run(listener, door, Arc::clone(&svc)));
     Ok(ServerHandle {
         url: format!("http://{HOST}:{port}"),
         port,

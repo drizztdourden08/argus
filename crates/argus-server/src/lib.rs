@@ -15,6 +15,7 @@ pub mod endpoint;
 pub mod first_start;
 mod gate;
 pub mod instance;
+mod local_names;
 mod pathing;
 mod reply;
 mod router;
@@ -27,6 +28,7 @@ pub mod sse;
 mod web;
 
 pub use ctx::{AuthKind, Ctx};
+pub use local_names::{LiveNames, LocalNamesOptions};
 pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};

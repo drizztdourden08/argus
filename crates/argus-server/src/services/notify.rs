@@ -156,6 +156,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
         return;
     };
     notify.set_port(svc.port());
+    notify.set_door(svc.door().cloned());
     notify.start();
     if let (Some(sync), Some(tx)) = (&svc.sync, worker(Arc::clone(notify))) {
         let boards = svc.boards();

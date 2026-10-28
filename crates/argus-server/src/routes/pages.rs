@@ -11,7 +11,7 @@ use axum::response::Response;
 use super::params::known_keys;
 use crate::reply::{bytes_reply, escape, html_page, info_page, redirect};
 use crate::router::Reply;
-use crate::security::parse_alias;
+use crate::security::host_alias;
 use crate::web::{PageVars, content_type, render_page};
 use crate::{Ctx, Router, Services};
 
@@ -28,7 +28,7 @@ fn page(ctx: &Ctx, name: &str, key: &str, base: &str) -> Response {
 async fn home(ctx: Ctx) -> Reply {
     let alias = ctx
         .header("host")
-        .and_then(|h| parse_alias(h, ctx.svc.port()));
+        .and_then(|h| host_alias(h, ctx.svc.port(), ctx.svc.door()));
     match alias {
         Some(a) if a.reserved => {
             if a.key == "overlord" && a.thread.is_none() && known_keys(&ctx).contains(MAIN_KEY) {

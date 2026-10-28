@@ -18,6 +18,7 @@ pub mod js;
 pub mod json_text;
 pub mod launch;
 pub mod log;
+pub mod names;
 pub mod paths;
 pub mod redact;
 pub mod shadow_mark;

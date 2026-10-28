@@ -4,6 +4,7 @@
 //! server is down. Output lines and exit codes are the Node ones.
 
 mod admin;
+mod dns;
 pub(crate) mod live;
 mod logs;
 mod node_guard;
@@ -123,6 +124,12 @@ pub enum Verb {
         #[command(flatten)]
         home: Home,
     },
+    /// The local names (`http://<key>.argus/`): `status`, and `install --print` or `remove --print`
+    /// for the one-time administrator PowerShell. Off until `localNames.enabled` in config.json.
+    Dns {
+        #[command(subcommand)]
+        action: dns::Action,
+    },
 }
 
 async fn start_verb(
@@ -153,6 +160,31 @@ async fn logs_verb(
     logs::logs(paths, &request).await
 }
 
+/// The verbs that read or administer a server that is already there.
+async fn admin_verb(verb: Verb) -> Result<u8, String> {
+    match verb {
+        Verb::Logs {
+            lines,
+            follow,
+            run,
+            project,
+            home,
+        } => logs_verb(&paths_of(home.data_dir), (lines, follow, run, project)).await,
+        Verb::Resync {
+            project,
+            hard,
+            home,
+        } => admin::resync(&paths_of(home.data_dir), project.as_deref(), hard).await,
+        Verb::Token { rotate, home } => admin::token(&paths_of(home.data_dir), rotate).await,
+        Verb::Dns { action } => dns::run(action).await,
+        Verb::Serve { .. }
+        | Verb::Start { .. }
+        | Verb::Stop { .. }
+        | Verb::Status { .. }
+        | Verb::Open { .. } => unreachable!("handled by run"),
+    }
+}
+
 /// Does what the verb asks and answers the exit code.
 ///
 /// # Errors
@@ -176,19 +208,7 @@ pub async fn run(verb: Verb) -> Result<u8, String> {
         Verb::Open { key, print, home } => {
             open::open(&paths_of(home.data_dir), key.as_deref(), print).await
         }
-        Verb::Logs {
-            lines,
-            follow,
-            run,
-            project,
-            home,
-        } => logs_verb(&paths_of(home.data_dir), (lines, follow, run, project)).await,
-        Verb::Resync {
-            project,
-            hard,
-            home,
-        } => admin::resync(&paths_of(home.data_dir), project.as_deref(), hard).await,
-        Verb::Token { rotate, home } => admin::token(&paths_of(home.data_dir), rotate).await,
+        other => admin_verb(other).await,
     }
 }
 
