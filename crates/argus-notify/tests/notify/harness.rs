@@ -13,8 +13,8 @@ use argus_notify::{
 
 pub const T0: i64 = 1_793_016_000_000;
 pub const PORT: u16 = 47615;
-pub const TAB: &str = "http://argus.localhost:47615/#notifications";
-pub const ROTP: &str = "http://rotp.localhost:47615/";
+pub const TAB: &str = "http://127.0.0.1:47615/#notifications";
+pub const ROTP: &str = "http://127.0.0.1:47615/p/rotp/";
 
 pub fn from_lead(text: &str) -> PingRequest {
     PingRequest {

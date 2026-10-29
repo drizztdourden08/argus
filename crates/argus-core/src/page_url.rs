@@ -58,12 +58,19 @@ fn named_origin(label: &str, door: u16) -> String {
 /// `health` says the door is bound.
 #[must_use]
 pub fn page(health: &Value, port: u16, key: Option<&str>) -> Page {
-    match (localhost_door(health), key) {
-        (Some(door), _) => Page {
+    page_at(localhost_door(health), port, key)
+}
+
+/// The same page when the port of the localhost door is already known (`None`: not bound), as the
+/// server knows it or as the pid file records it.
+#[must_use]
+pub fn page_at(door: Option<u16>, port: u16, key: Option<&str>) -> Page {
+    match door {
+        Some(door) => Page {
             origin: named_origin(key.map_or(OVERVIEW_LABEL, board_label), door),
             path: "/".to_owned(),
         },
-        (None, key) => Page {
+        None => Page {
             origin: format!("http://127.0.0.1:{port}"),
             path: key.map_or_else(|| "/".to_owned(), |k| format!("/p/{k}/")),
         },

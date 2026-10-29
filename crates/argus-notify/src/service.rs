@@ -23,6 +23,7 @@ pub struct Notify {
     pub(crate) ports: Ports,
     port: AtomicU16,
     door: Mutex<Option<Door>>,
+    localhost_door: Mutex<Option<u16>>,
     pub(crate) limiter: Mutex<Limiter>,
     pub(crate) seen: Mutex<Option<SeenMap>>,
     running: AtomicBool,
@@ -36,6 +37,7 @@ impl Notify {
             ports,
             port: AtomicU16::new(port),
             door: Mutex::new(None),
+            localhost_door: Mutex::new(None),
             limiter: Mutex::new(Limiter::default()),
             seen: Mutex::new(None),
             running: AtomicBool::new(false),
@@ -49,13 +51,24 @@ impl Notify {
     }
 
     /// Tells the service the front door of the local names, once they answer, so the addresses a
-    /// toast opens use them; `None` returns to `.localhost:<port>`.
+    /// toast opens use them while the localhost door is not bound; `None` returns to the
+    /// loopback port.
     pub fn set_door(&self, door: Option<Door>) {
         *locked(&self.door) = door;
     }
 
+    /// Tells the service the port of the server's localhost door, when it is bound: the addresses
+    /// a toast opens use the `.localhost` names then, whatever the local names say.
+    pub fn set_localhost_door(&self, port: Option<u16>) {
+        *locked(&self.localhost_door) = port;
+    }
+
     pub(crate) fn links(&self) -> Links {
-        Links::new(self.port.load(Ordering::SeqCst), locked(&self.door).clone())
+        Links::new(
+            self.port.load(Ordering::SeqCst),
+            locked(&self.door).clone(),
+            *locked(&self.localhost_door),
+        )
     }
 
     /// Starts the service and writes the docs of the stored notifications again.
