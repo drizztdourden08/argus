@@ -70,9 +70,7 @@ pub(super) fn update(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
 
 fn merged_by(set: &Value, who: &Who) -> Result<String, BoardError> {
     let named = optional_text("mergedBy", &set["mergedBy"])?;
-    Ok(named
-        .map(|n| n.chars().take(BY_MAX).collect())
-        .unwrap_or_else(|| who.actor_of()))
+    Ok(named.map_or_else(|| who.actor_of(), |n| n.chars().take(BY_MAX).collect()))
 }
 
 /// Apply a `pr-merge` op: the merge commit Brock's tooling made, and who merged.
