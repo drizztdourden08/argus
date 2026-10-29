@@ -5,6 +5,7 @@ import { useBoard } from '../../data/react';
 import { resolvePalette, useDocumentPalette } from '../../palette';
 import { PageFrame, StatusNotice } from '../../shell';
 import { useBoardTab } from './behavior/useBoardTab';
+import { usePresence } from './behavior/usePresence';
 import { BOARD_TABS } from './board.constants';
 import { BoardFocus } from './BoardFocus';
 import { BoardHeader } from './BoardHeader';
@@ -28,6 +29,7 @@ const BoardPage = (props: BoardPageProps) => {
   const work = useBoardWork(boardKey);
   const badges = useTabBadges(boardKey, work);
   useDocumentPalette(resolvePalette(boardKey, board.meta?.palette));
+  usePresence(boardKey);
   return (
     <OpenThreadContext.Provider value={setOpenThread}>
       <PageFrame>
