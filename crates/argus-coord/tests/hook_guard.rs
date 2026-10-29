@@ -8,7 +8,10 @@ mod common;
 mod hook_support;
 
 use std::fs;
+use std::io::{Read, Write};
+use std::net::TcpListener;
 use std::path::{Path, PathBuf};
+use std::thread;
 
 use common::Home;
 use hook_support::{Fixture, LEAD, UI, hook_in, wire};
@@ -92,6 +95,54 @@ fn the_port_of_the_running_server_wins_over_the_config() {
     fs::write(pid, r#"{"pid":1,"port":40001}"#).unwrap();
     let ran = f.hook("guard", &input(&f, UI));
     assert!(reason(&ran.out).contains("http://127.0.0.1:40001/p/alpha/?thread=ui"));
+}
+
+/// A server on a free port that answers every request with `health`, for `answers` requests.
+fn health_server(health: &'static str, answers: usize) -> u16 {
+    let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+    let port = listener.local_addr().unwrap().port();
+    thread::spawn(move || {
+        for stream in listener.incoming().take(answers) {
+            let mut stream = stream.unwrap();
+            let mut request = [0_u8; 2048];
+            let _read = stream.read(&mut request);
+            let reply = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{health}",
+                health.len()
+            );
+            let _sent = stream.write_all(reply.as_bytes());
+        }
+    });
+    port
+}
+
+fn guard_reason_with_server(health: &'static str, sid: &str) -> (u16, String) {
+    let f = fixture();
+    let port = health_server(health, 1);
+    let pid = f.home.dashboard_home().join("server.pid");
+    fs::write(pid, format!(r#"{{"pid":1,"port":{port}}}"#)).unwrap();
+    let ran = f.hook("guard", &input(&f, sid));
+    (port, reason(&ran.out))
+}
+
+#[test]
+fn with_the_localhost_door_bound_the_board_url_uses_the_localhost_name() {
+    let (_, text) = guard_reason_with_server(r#"{"ok":true,"localhostDoor":80}"#, UI);
+    assert!(
+        text.contains("(http://alpha.localhost/?thread=ui)"),
+        "{text}"
+    );
+}
+
+#[test]
+fn without_the_localhost_door_the_board_url_stays_on_the_loopback_port() {
+    let health =
+        r#"{"ok":true,"localNames":{"address":"127.65.82.71","suffix":"argus","doorPort":80}}"#;
+    let (port, text) = guard_reason_with_server(health, UI);
+    assert!(
+        text.contains(&format!("(http://127.0.0.1:{port}/p/alpha/?thread=ui)")),
+        "{text}"
+    );
 }
 
 #[test]

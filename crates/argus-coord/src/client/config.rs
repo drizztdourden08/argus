@@ -70,10 +70,15 @@ pub fn dashboard_config(paths: &Paths) -> Option<DashboardConfig> {
 /// default; the files are optional.
 #[must_use]
 pub fn server_port(paths: &Paths) -> u16 {
-    read_json(&paths.pid_file)
-        .and_then(|p| valid_port(&p["port"]))
+    pid_port(paths)
         .or_else(|| read_json(&paths.config).and_then(|c| valid_port(&c["port"])))
         .unwrap_or(DEFAULT_PORT)
+}
+
+/// The port of the running server's `server.pid`, when there is one.
+#[must_use]
+pub fn pid_port(paths: &Paths) -> Option<u16> {
+    read_json(&paths.pid_file).and_then(|p| valid_port(&p["port"]))
 }
 
 /// `Number(v)` for a port that is a number or a numeric text, else `None`.

@@ -4,12 +4,13 @@
 
 use argus_board::json::{shown, truthy};
 use argus_core::js;
+use argus_core::page_url::page;
 use serde_json::Value;
 
 use super::ctx::Hook;
 use super::visit::Hit;
 use super::wake_line::wake_line;
-use crate::client::server_port;
+use crate::client::{running_health, server_port};
 use crate::shortcut::{is_overlord, needs_shortcut};
 use crate::who::git_root;
 
@@ -32,11 +33,15 @@ pub fn render(thread: &Value, messages: &[Value]) -> String {
     lines.join("\n")
 }
 
-/// The board url of a thread: `?thread=` is the presence claim the dashboard reads.
+/// The board url of a thread: `?thread=` is the presence claim the dashboard reads. With the
+/// server's localhost door bound it is `http://<key>.localhost/?thread=<id>` (`argus-app` for the
+/// project `argus`), else `http://127.0.0.1:<port>/p/<key>/?thread=<id>`.
 pub fn board_url(hook: &Hook<'_>, project: &str, thread: &str) -> String {
+    let (port, health) =
+        running_health(&hook.paths).unwrap_or_else(|| (server_port(&hook.paths), Value::Null));
     format!(
-        "http://127.0.0.1:{}/p/{project}/?thread={}",
-        server_port(&hook.paths),
+        "{}?thread={}",
+        page(&health, port, Some(project)).url(),
         js::encode_uri_component(thread)
     )
 }
