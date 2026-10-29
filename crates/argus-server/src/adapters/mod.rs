@@ -5,6 +5,7 @@
 
 pub mod activity;
 pub mod agents;
+pub mod check_links;
 pub mod mcp;
 pub mod notify;
 pub mod procs;

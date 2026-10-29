@@ -27,14 +27,14 @@ mod control;
 mod logs;
 mod tail;
 
-fn service(ctx: &Ctx) -> Result<Arc<RunService<RunHost>>, ApiError> {
+pub(crate) fn service(ctx: &Ctx) -> Result<Arc<RunService<RunHost>>, ApiError> {
     ctx.svc
         .runs
         .clone()
         .ok_or_else(|| ApiError::unavailable("the run service is not running"))
 }
 
-fn refusal(e: &RunError) -> ApiError {
+pub(crate) fn refusal(e: &RunError) -> ApiError {
     let code = match e.status {
         400 => ErrorCode::BadRequest,
         404 => ErrorCode::UnknownRun,
