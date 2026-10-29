@@ -81,6 +81,13 @@ pub fn pid_port(paths: &Paths) -> Option<u16> {
     read_json(&paths.pid_file).and_then(|p| valid_port(&p["port"]))
 }
 
+/// What the running server wrote into `server.pid` (`Null` without one): the page-url rule reads
+/// its `localhostDoor` key, so a hook learns whether the door is up from the file alone.
+#[must_use]
+pub fn pid_record(paths: &Paths) -> Value {
+    read_json(&paths.pid_file).unwrap_or(Value::Null)
+}
+
 /// `Number(v)` for a port that is a number or a numeric text, else `None`.
 fn number_port(v: &Value) -> Option<u16> {
     let n = match v {

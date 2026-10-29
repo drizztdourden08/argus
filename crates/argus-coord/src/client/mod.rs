@@ -9,7 +9,9 @@ pub mod launch;
 pub mod sse;
 
 pub use autostart::dashboard_client;
-pub use config::{DEFAULT_PORT, DashboardConfig, board_port, dashboard_config, server_port};
-pub use health::{healthy, running_health};
+pub use config::{
+    DEFAULT_PORT, DashboardConfig, board_port, dashboard_config, pid_record, server_port,
+};
+pub use health::healthy;
 pub use http::{Client, ClientError, DOWN_MESSAGE};
 pub use sse::{Event, SseReader};
