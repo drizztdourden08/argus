@@ -7,6 +7,7 @@ use argus_board::json::truthy;
 use serde_json::{Value, json};
 
 use super::Said;
+use super::binding::payload_agent_id;
 use super::context::{context, render};
 use super::ctx::Hook;
 use super::visit::{Hit, visit};
@@ -45,11 +46,20 @@ fn stop(hit: &Hit) -> Option<Value> {
         .then(|| json!({ "decision": "block", "reason": render(&hit.thread, &hit.fresh) }))
 }
 
+/// The activity an event marks the thread with: `stop` ends the turn, a sub-agent's tool call
+/// marks nothing (its lead may be idle while it works), every other event is the lead at work.
+fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
+    match event {
+        "stop" => Some("idle"),
+        "tool" if payload_agent_id(hook).is_some() => None,
+        _ => Some("working"),
+    }
+}
+
 /// Runs one of the four session hooks.
 pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
     let project = hook.project()?;
-    let activity = if event == "stop" { "idle" } else { "working" };
-    let Some(hit) = visit(hook, &project, activity, event != "stop")? else {
+    let Some(hit) = visit(hook, &project, activity_of(hook, event), event != "stop")? else {
         return Ok(Said::Nothing);
     };
     let out = match event {

@@ -186,3 +186,18 @@ fn a_session_found_by_its_id_wins_over_the_folder() {
         .unwrap();
     assert!(text.starts_with("You are thread \"coordinator\""), "{text}");
 }
+
+#[test]
+fn a_sub_agents_tool_call_never_puts_an_idle_lead_back_to_work() {
+    let f = Fixture::new();
+    f.hook("prompt", &input(&f, UI));
+    f.hook("stop", &input(&f, UI));
+    let mut sub = input(&f, UI);
+    sub["agent_id"] = json!("a1b2c3d4e5f6a7b8c");
+    f.hook("tool", &sub);
+    assert_eq!(f.board()["threads"]["ui"]["activity"], "idle");
+    f.hook("tool", &input(&f, UI));
+    assert_eq!(f.board()["threads"]["ui"]["activity"], "working");
+    f.hook("tool", &sub);
+    assert_eq!(f.board()["threads"]["ui"]["activity"], "working");
+}

@@ -35,7 +35,7 @@ pub struct Hit {
 pub fn visit(
     hook: &Hook<'_>,
     project: &str,
-    activity: &str,
+    activity: Option<&str>,
     may_adopt: bool,
 ) -> Result<Option<Hit>, CoordError> {
     let Some(sid) = hook.session_id() else {
@@ -56,7 +56,7 @@ fn on_board(
     board: &mut Board,
     hook: &Hook<'_>,
     sid: &str,
-    activity: &str,
+    activity: Option<&str>,
     may_adopt: bool,
 ) -> Result<Option<Hit>, BoardError> {
     if retired(board, sid) {
@@ -64,7 +64,7 @@ fn on_board(
     }
     let (id, adopted) = match find(board, hook) {
         Some(id) => (id, false),
-        None if may_adopt => (adopt(board, hook, sid, activity)?, true),
+        None if may_adopt => (adopt(board, hook, sid, activity.unwrap_or("idle"))?, true),
         None => return Ok(None),
     };
     heartbeat(board, &id, sid, activity);
@@ -87,7 +87,7 @@ fn stale(thread: &Value) -> bool {
     parse_ms(&js::string(seen)).is_some_and(|ms| now_ms() - ms > HEARTBEAT_MS)
 }
 
-fn heartbeat(board: &mut Board, id: &str, sid: &str, activity: &str) {
+fn heartbeat(board: &mut Board, id: &str, sid: &str, activity: Option<&str>) {
     let Some(thread) = board["threads"].get_mut(id) else {
         return;
     };
@@ -95,9 +95,12 @@ fn heartbeat(board: &mut Board, id: &str, sid: &str, activity: &str) {
     if thread["sessionId"].as_str() != Some(sid) {
         thread["sessionId"] = json!(sid);
     }
-    if was_stale || thread["activity"].as_str() != Some(activity) || activity == "idle" {
+    let changed = activity.is_some_and(|a| thread["activity"].as_str() != Some(a) || a == "idle");
+    if was_stale || changed {
         thread["lastSeen"] = json!(now_iso());
-        thread["activity"] = json!(activity);
+        if let Some(activity) = activity {
+            thread["activity"] = json!(activity);
+        }
         touch(board, "threads", id);
     }
 }

@@ -241,6 +241,14 @@ Where Argus differs from Node on purpose in the `62e66c7` port:
   2000 files and 50 MB, else it is named in `<base>.nested.txt`. Node copies it whole, `node_modules` left out.
 - The nested look stops after 3000 folders (Node has no budget) and then fails closed: the folder counts as unsafe (I-26). Stricter.
 
+Where Argus differs from Node on purpose in the session hooks:
+
+- A `tool` hook whose payload names a sub-agent (`agent_id`) refreshes the heartbeat but never changes the
+  thread's activity. Node marks the lead `working` on every tool call, so a lead whose turn ended (Stop wrote
+  `idle`, the Browser pane closed) was put back in a turn by its background sub-agents and drew a `board-closed`
+  fault after the 30 s grace. The wake registry rule is unchanged: a board is required only while the thread is
+  `working` and seen within 3 minutes.
+
 ## Feature areas
 
 One row per area, from `DESIGN.md`, `README.md`, `pages/`, `src/` and `static/`. Names are at most

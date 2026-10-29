@@ -468,3 +468,64 @@ fn a_stale_board_closed_fault_of_an_idle_lead_is_cleared_on_start() {
             .all(|f| f.cleared_by.as_deref() == Some("registry"))
     );
 }
+
+/// The turn ends: the stop hook marks the thread idle and stamps it.
+fn turn_ends(rig: &mut Rig) {
+    let now = iso(rig.clock.now_ms());
+    rig.edit_thread("alpha", "ui", |t| {
+        t.activity = "idle".into();
+        t.last_seen = now.as_str().into();
+    });
+    rig.service.on_board("alpha");
+}
+
+/// A listening thread in a turn with its board open for 20 s: the token of that tab.
+fn turn_with_open_board(rig: &mut Rig) -> argus_wake::presence::PresenceToken {
+    let _ui = listen(rig, "alpha", "ui");
+    working(rig, "alpha", "ui");
+    let token = rig.service.presence_attach("alpha", "ui", "t1");
+    rig.pass(20 * SEC, STEP);
+    token
+}
+
+fn assert_never_faulted(rig: &Rig) {
+    assert_eq!(open(rig).len(), 0);
+    assert_eq!(rig.faults.list(true).expect("faults").len(), 0);
+}
+
+#[test]
+fn a_turn_that_ends_and_then_its_board_closing_never_faults() {
+    let mut rig = rig();
+    let token = turn_with_open_board(&mut rig);
+    turn_ends(&mut rig);
+    assert!(!row(&mut rig, "alpha", "ui").board.board_required);
+    rig.service.presence_detach(&token);
+    rig.pass(180 * SEC, STEP);
+    assert_never_faulted(&rig);
+}
+
+#[test]
+fn a_board_that_closed_less_than_the_grace_before_the_turn_ended_never_faults() {
+    let mut rig = rig();
+    let token = turn_with_open_board(&mut rig);
+    rig.service.presence_detach(&token);
+    rig.pass(25 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0);
+    turn_ends(&mut rig);
+    rig.pass(180 * SEC, STEP);
+    assert_never_faulted(&rig);
+}
+
+#[test]
+fn a_thread_mid_turn_with_its_board_closed_past_the_grace_raises_exactly_one_fault() {
+    let mut rig = rig();
+    let token = turn_with_open_board(&mut rig);
+    rig.service.presence_detach(&token);
+    rig.pass(40 * SEC, STEP);
+    let faults = open(&rig);
+    assert_eq!(
+        reasons(&faults),
+        [("ui".to_owned(), "board-closed".to_owned())]
+    );
+    assert_eq!(rig.faults.list(true).expect("faults").len(), 1);
+}
