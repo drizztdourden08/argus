@@ -84,7 +84,7 @@ fn token_mode(
         && !origin_ok(
             h,
             svc.port(),
-            svc.door(),
+            svc.doors(),
             write && cred == Credential::Cookie,
         )
     {
@@ -184,7 +184,7 @@ fn admit(
     path: &str,
 ) -> Result<Admitted, Box<Response>> {
     let svc = &app.svc;
-    if !host_ok(&parts.headers, svc.port(), svc.door()) {
+    if !host_ok(&parts.headers, svc.port(), svc.doors()) {
         svc.log.warn(
             "bad host refused",
             json!({ "req": format!("{} {path}", parts.method) }),

@@ -8,7 +8,7 @@ use std::net::IpAddr;
 use std::sync::{Mutex, PoisonError};
 
 use argus_core::clock::{iso_from_ms, now_ms};
-use argus_core::names::Door;
+use argus_core::names::{Door, HTTP_PORT};
 use argus_core::{ApiError, ErrorCode};
 use axum::http::HeaderMap;
 use sha2::{Digest, Sha256};
@@ -78,10 +78,39 @@ pub fn parse_door_alias(host: &str, door: &Door) -> Option<Alias> {
     alias_of(lower.strip_suffix(&format!(".{}", door.bare()))?)
 }
 
-/// The alias a `Host` names, under `.localhost` or under the local names when they are on.
+/// `<key>.localhost` or `<thread>.<key>.localhost` at the localhost door: no port when the door
+/// is on port 80, its port otherwise.
 #[must_use]
-pub fn host_alias(host: &str, port: u16, door: Option<&Door>) -> Option<Alias> {
-    parse_alias(host, port).or_else(|| door.and_then(|door| parse_door_alias(host, door)))
+pub fn parse_localhost_door_alias(host: &str, door_port: u16) -> Option<Alias> {
+    let lower = host.to_ascii_lowercase();
+    let bare = if door_port == HTTP_PORT {
+        "localhost".to_owned()
+    } else {
+        format!("localhost:{door_port}")
+    };
+    alias_of(lower.strip_suffix(&format!(".{bare}"))?)
+}
+
+/// The doors beside the main listener that a `Host` may name.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Doors<'a> {
+    /// The front door of the local names, when they are up.
+    pub names: Option<&'a Door>,
+    /// The port of the localhost door, when it is bound.
+    pub localhost: Option<u16>,
+}
+
+/// The alias a `Host` names, under `.localhost` with the main port, at the localhost door, or
+/// under the local names when they are on.
+#[must_use]
+pub fn host_alias(host: &str, port: u16, doors: Doors<'_>) -> Option<Alias> {
+    parse_alias(host, port)
+        .or_else(|| {
+            doors
+                .localhost
+                .and_then(|p| parse_localhost_door_alias(host, p))
+        })
+        .or_else(|| doors.names.and_then(|door| parse_door_alias(host, door)))
 }
 
 /// Equal-length digests first, so the time does not depend on the length.
@@ -166,11 +195,11 @@ pub fn peer_ok(ip: IpAddr, door: Option<&Door>) -> bool {
 
 /// `Host` is `127.0.0.1:<port>`, `localhost:<port>` or a board alias.
 #[must_use]
-pub fn host_ok(h: &HeaderMap, port: u16, door: Option<&Door>) -> bool {
+pub fn host_ok(h: &HeaderMap, port: u16, doors: Doors<'_>) -> bool {
     let host = header(h, "host").unwrap_or_default().to_ascii_lowercase();
     host == format!("127.0.0.1:{port}")
         || host == format!("localhost:{port}")
-        || host_alias(&host, port, door).is_some()
+        || host_alias(&host, port, doors).is_some()
 }
 
 fn base_type(h: &HeaderMap) -> String {
@@ -236,12 +265,12 @@ pub fn looks_like_page(h: &HeaderMap) -> bool {
 
 /// Origin and Sec-Fetch-Site, when sent, must be ours; `strict` also requires an Origin.
 #[must_use]
-pub fn origin_ok(h: &HeaderMap, port: u16, door: Option<&Door>, strict: bool) -> bool {
+pub fn origin_ok(h: &HeaderMap, port: u16, doors: Doors<'_>, strict: bool) -> bool {
     let host = header(h, "host").unwrap_or_default().to_ascii_lowercase();
     let own = |o: &str| {
         o == format!("http://127.0.0.1:{port}")
             || o == format!("http://localhost:{port}")
-            || (host_alias(&host, port, door).is_some() && o == format!("http://{host}"))
+            || (host_alias(&host, port, doors).is_some() && o == format!("http://{host}"))
     };
     let origin = header(h, "origin").map(str::to_ascii_lowercase);
     if origin.as_deref().is_some_and(|o| !own(o)) {

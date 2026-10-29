@@ -16,6 +16,7 @@ pub mod first_start;
 mod gate;
 pub mod instance;
 mod local_names;
+mod localhost_door;
 mod pathing;
 mod reply;
 mod router;

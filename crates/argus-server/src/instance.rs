@@ -42,7 +42,8 @@ pub fn read_pid_file(file: &Path) -> Option<PidRecord> {
     })
 }
 
-/// Writes the pid file.
+/// Writes the pid file. The `localhostDoor` key carries the port of the localhost door and is
+/// left out while that door is not bound: the coord hook reads it without a request.
 ///
 /// # Errors
 /// When it cannot be written.
@@ -51,8 +52,12 @@ pub fn write_pid_file(
     port: u16,
     started_at: &str,
     instance: &str,
+    localhost_door: Option<u16>,
 ) -> std::io::Result<()> {
-    let rec = json!({ "pid": std::process::id(), "port": port, "startedAt": started_at, "instance": instance });
+    let mut rec = json!({ "pid": std::process::id(), "port": port, "startedAt": started_at, "instance": instance });
+    if let Some(door) = localhost_door {
+        rec["localhostDoor"] = json!(door);
+    }
     argus_core::fs::write_atomic(file, rec.to_string())
 }
 

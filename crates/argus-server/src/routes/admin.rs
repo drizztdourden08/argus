@@ -76,6 +76,7 @@ pub(crate) fn health_body(svc: &Services) -> Result<Value, ApiError> {
         "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
         "impl": "argus",
         "shadow": svc.shadow,
+        "localhostDoor": svc.localhost_door(),
     });
     if let Some(names) = local_names::health_json(svc) {
         body["localNames"] = names;

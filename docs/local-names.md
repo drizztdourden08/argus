@@ -1,11 +1,49 @@
 <!-- @layer docs @kind doc -->
 # Local names
 
+Argus answers on port 80 of `127.0.0.1` for `<key>.localhost`, with no port and nothing to
+configure: `http://argus.localhost/` is the overview, `http://rotp.localhost/` the board of
+`rotp` (the lead), `http://argus-app.localhost/` the board of the `argus` project and
+`http://<thread>.<key>.localhost/` a thread. This is the way to open Argus. The older `.argus`
+names below are opt-in and need browser setup.
+
+## The localhost door
+
+- **Why.** Browsers resolve every `*.localhost` name to loopback without DNS, so nothing on the
+  machine has to be set up. Claude's built-in browser pane loads the HTML of `http://<key>.argus/`
+  but blocks its scripts and styles (`net::ERR_BLOCKED_BY_CLIENT`), even when the site is in its
+  allow list, while `<key>.localhost` hosts load fully. Sessions therefore open
+  `http://<key>.localhost/?thread=<id>`. Firefox also skips the Windows DNS rules that `.argus`
+  needs.
+- **What it is.** A second listener on `127.0.0.1:80` that serves the same app and routes by
+  `Host` exactly as the main listener does on `:47615`: `http://<key>.localhost/` redirects to
+  `/p/<key>/?thread=coordinator`, `http://<thread>.<key>.localhost/` to
+  `/p/<key>/?thread=<thread>`, `argus.localhost` is the overview. The Host and Origin checks
+  accept `<x>.localhost` with no port on this door and refuse every other host with 421. The
+  existing `<key>.localhost:47615` hosts keep working.
+- **On by default**, whether or not `localNames` is on. `"localhostDoor": false` in `config.json`
+  turns it off. It needs a restart of Argus to change.
+- **If port 80 cannot be bound** (taken, or owned by `http.sys`), the server logs one line
+  (`localhost door: cannot bind 127.0.0.1:80, it stays off`) and carries on; nothing else changes.
+- **Where it is reported.** `/api/health` has `"localhostDoor": 80` (or `null`), and
+  `argus dns status` prints a `localhost door:` line.
+- **The contract the coord hook reads.** While the door is bound, the JSON of the pid file
+  (`server.pid` in the dashboard home, `~/.coord/dashboard/server.pid`) has `"localhostDoor": 80`
+  beside `pid`, `port`, `startedAt` and `instance`. When the door is not bound the key is left
+  out. The hook reads the file only, with no HTTP request, and builds
+  `http://<key>.localhost/?thread=<id>` from it when the key is there. A stop removes the file.
+- **Tests** never bind port 80: `ServeOptions::localhost_door_port` is `None` by default and
+  tests set it to `Some(0)`. Only `argus serve` sets 80.
+
+## The `.argus` names (opt-in)
+
 Argus can have a name suffix of its own with real DNS: `http://argus.argus/` is the overview and
 `http://rotp.argus/` the board of `rotp`, with no port. It is off until the owner turns it on, and
-nothing about `.localhost:<port>` changes while it is off.
+nothing about `.localhost:<port>` changes while it is off. It needs browser setup: Windows must
+send `.argus` to the responder (Chrome and Edge honour that, Firefox does not use the Windows
+DNS rules), and Claude's built-in browser pane blocks the page assets of these names.
 
-## How it works
+### How it works
 
 - **A loopback address of its own.** The default is `127.65.82.71`. It is inside `127.0.0.0/8`,
   so it is local to this computer, and it is never `127.0.0.1`, so no other program binds it.
@@ -25,7 +63,7 @@ nothing about `.localhost:<port>` changes while it is off.
   That is one NRPT rule, printed by `argus dns install --print`. Argus never runs it and never
   changes a system setting.
 
-## Turn it on
+### Turn it on
 
 1. In `config.json` of the dashboard home add:
 
@@ -56,12 +94,12 @@ When the names are on and the responder is bound, toast links and `argus open` u
 they are off, or a socket could not be bound, everything stays as it is today. A refused
 `localNames` value (a bad address or suffix) is logged and leaves the names off.
 
-## Turn it off
+### Turn it off
 
 Set `"enabled": false` (or remove the key), restart Argus, and remove the rule with
 `argus dns remove --print`, run as administrator.
 
-## Health answer, Host check and tests
+### Health answer, Host check and tests
 
 - The health answer carries a `localNames` object (address, suffix, door port, DNS socket) only
   while the names are up. `argus dns status` and `argus open` read it.

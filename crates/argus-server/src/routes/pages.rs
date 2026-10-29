@@ -28,7 +28,7 @@ fn page(ctx: &Ctx, name: &str, key: &str, base: &str) -> Response {
 async fn home(ctx: Ctx) -> Reply {
     let alias = ctx
         .header("host")
-        .and_then(|h| host_alias(h, ctx.svc.port(), ctx.svc.door()));
+        .and_then(|h| host_alias(h, ctx.svc.port(), ctx.svc.doors()));
     match alias {
         Some(a) if a.reserved => {
             if a.key == "overlord" && a.thread.is_none() && known_keys(&ctx).contains(MAIN_KEY) {

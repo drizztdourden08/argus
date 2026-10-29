@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use argus_core::Paths;
 use argus_core::config::env_port;
+use argus_core::names::HTTP_PORT;
 use argus_server::{ServeOptions, serve};
 
 /// The folders of the dashboard: `COORD_HOME` from the environment, and the given home or the
@@ -45,6 +46,7 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
     opts.shadow = shadow;
     opts.shadow_seed = shadow.then(|| Paths::from_env().home);
     opts.notify.system = true;
+    opts.localhost_door_port = Some(HTTP_PORT);
     let server = serve(opts).await.map_err(|e| e.to_string())?;
     println!(
         "dashboard listening on {}/ (pid {}){}",
