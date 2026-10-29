@@ -120,6 +120,7 @@ mod tests {
     use std::cell::Cell;
 
     use super::*;
+    use crate::fixture::dir_names as names;
 
     #[test]
     fn a_copy_is_whole_and_leaves_no_temp_file() {
@@ -143,15 +144,6 @@ mod tests {
         let err = write_new(&file, "second").unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::AlreadyExists);
         assert_eq!(fs::read_to_string(&file).unwrap(), "first");
-    }
-
-    fn names(dir: &Path) -> Vec<String> {
-        let mut all: Vec<_> = fs::read_dir(dir)
-            .unwrap()
-            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
-            .collect();
-        all.sort();
-        all
     }
 
     #[test]

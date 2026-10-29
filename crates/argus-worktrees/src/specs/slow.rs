@@ -5,21 +5,16 @@
 
 use super::fallback::{Shape, add_side, shape};
 use crate::error::ErrorCode;
-use crate::jobs::JobState;
+use crate::request::RemoveOutcome;
 use crate::testkit::{RemoveMode, exists_itself, git_in, listed, put};
 use std::fs;
 use std::sync::{Arc, Mutex};
 
 const TIMED_OUT: &str = "git timed out after 900 s";
 
-fn removal_after_timeout() -> (Shape, crate::request::RemoveOutcome) {
+fn removal_after_timeout() -> (Shape, RemoveOutcome) {
     let s = shape(RemoveMode::Timeout, |_| {});
-    let out =
-        s.h.rm_with(&s.id("old-merged"), |i| {
-            (i.branch, i.reason) = (true, Some("merged long ago".into()));
-        })
-        .unwrap();
-    (s, out)
+    s.remove_old_merged()
 }
 
 #[test]
@@ -52,13 +47,7 @@ fn git_times_out_after_deleting_the_files_the_same_fallback_as_directory_not_emp
     s.h.idle();
     assert!(!exists_itself(&out.folder.clone().unwrap()));
     s.keeps_survive();
-    let job =
-        s.h.meta()
-            .jobs
-            .into_iter()
-            .find(|j| Some(&j.id) == out.job_id.as_ref())
-            .unwrap();
-    assert_eq!((job.state, job.error), (JobState::Done, None));
+    s.assert_job_done(&out);
     let line = &s.h.notes.removals("deleted worktree folder")[0].text;
     assert!(
         line.contains(&format!(

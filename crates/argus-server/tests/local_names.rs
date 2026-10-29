@@ -9,10 +9,15 @@ use std::time::Duration;
 use argus_core::names::Door;
 use argus_dns::{TYPE_AAAA, ask, resolve};
 use argus_server::LiveNames;
-use argus_server::security::{Alias, Doors, host_alias, parse_door_alias, peer_ok};
+use argus_server::security::{Doors, host_alias, parse_door_alias, peer_ok};
 use argus_testkit::{Reply, Request, TestOptions, TestServer, request_at};
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
+
+#[path = "support/doors.rs"]
+mod doors;
+
+use doors::alias;
 
 const ADDRESS: Ipv4Addr = Ipv4Addr::new(127, 65, 82, 72);
 const WAIT: Duration = Duration::from_secs(5);
@@ -154,16 +159,7 @@ async fn a_write_through_a_name_needs_that_name_as_its_origin() {
     let live = up(&t);
     let host = format!("alpha.argus:{}", live.door.port);
     let addr = SocketAddr::from((live.door.address, live.door.port));
-    let put = |origin: String| {
-        Request::new("PUT", "/api/p/alpha/db/items/I-1")
-            .header("Host", &host)
-            .header("Origin", &origin)
-            .json(&json!({ "data": {} }))
-    };
-    let own = request_at(addr, &put(format!("http://{host}"))).await;
-    assert_eq!((own.status, own.code().as_str()), (403, "read_only"));
-    let cross = request_at(addr, &put("http://evil.test".to_owned())).await;
-    assert_eq!((cross.status, cross.code().as_str()), (403, "forbidden"));
+    doors::assert_write_needs_own_origin(addr, &host).await;
     t.stop(false).await;
 }
 
@@ -204,14 +200,6 @@ fn names_only(door: &Door) -> Doors<'_> {
     Doors {
         names: Some(door),
         ..Doors::default()
-    }
-}
-
-fn alias(key: &str, thread: Option<&str>, reserved: bool) -> Alias {
-    Alias {
-        key: key.to_owned(),
-        thread: thread.map(str::to_owned),
-        reserved,
     }
 }
 

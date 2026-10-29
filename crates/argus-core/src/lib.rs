@@ -10,7 +10,7 @@ pub mod coll;
 pub mod collate;
 pub mod config;
 pub mod error;
-#[cfg(feature = "testkit")]
+#[cfg(any(test, feature = "testkit"))]
 pub mod fixture;
 pub mod fs;
 pub mod ids;

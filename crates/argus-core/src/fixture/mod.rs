@@ -15,6 +15,25 @@ pub fn ago(min: i64) -> String {
     iso_from_ms(now_ms() - min * 60_000)
 }
 
+/// The sorted names of the entries in `dir`, for tests that check what a write left behind.
+///
+/// # Panics
+/// When `dir` cannot be read.
+#[must_use]
+pub fn dir_names(dir: &std::path::Path) -> Vec<String> {
+    let mut all: Vec<String> = std::fs::read_dir(dir)
+        .expect("a readable folder")
+        .map(|e| {
+            e.expect("an entry")
+                .file_name()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+    all.sort();
+    all
+}
+
 /// `base` with the fields of `fields` laid over it.
 #[must_use]
 pub fn merge(mut base: Value, fields: Value) -> Value {
