@@ -4,6 +4,7 @@ const OVERVIEW_TABS = [
   { id: 'processes', label: 'Processes', badgeTitle: 'Processes that need a look' },
   { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
   { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
+  { id: 'cache', label: 'Cache' },
 ];
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);

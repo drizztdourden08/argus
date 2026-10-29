@@ -3,6 +3,7 @@ export { agoText } from './ago-text';
 export { asNumber } from './as-number';
 export { clipText } from './clip-text';
 export { formatAgo } from './format-ago';
+export { formatBytes } from './format-bytes';
 export { formatCpu } from './format-cpu';
 export { formatMemory } from './format-memory';
 export { formatMinutes } from './format-minutes';

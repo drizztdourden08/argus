@@ -33,8 +33,8 @@ use crate::shadow;
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
-    AgentsOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services, WakeOptions,
-    WorktreesOptions, routes,
+    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services,
+    WakeOptions, WorktreesOptions, routes,
 };
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
@@ -67,6 +67,8 @@ pub struct ServeOptions {
     pub run_service: RunsOptions,
     /// The worktree scanner.
     pub worktrees: WorktreesOptions,
+    /// The build cache prune.
+    pub cache: CacheOptions,
     /// The wake service (it needs the sync service).
     pub wake: WakeOptions,
     /// Which sub-agent services run.
@@ -97,6 +99,7 @@ impl ServeOptions {
             procs: ProcsOptions::default(),
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
+            cache: CacheOptions::default(),
             wake: WakeOptions::default(),
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
@@ -250,6 +253,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         agent_reconciler: None,
         procs: None,
         worktrees: None,
+        cache: None,
         notify: None,
         notifier: None,
         instance,

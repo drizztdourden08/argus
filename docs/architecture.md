@@ -61,6 +61,7 @@ crates/
   argus-wake/               wake policy, engine, listeners, registry, faults, presence, timers
   argus-procs/              process rules, status, alerts, kills
   argus-worktrees/          worktree rules, read-only git door, scans, removal, leftovers
+  argus-cache/              Brock's build cache: read it, who uses each entry, prune (docs/build-cache.md)
   argus-launchers/          run defs, runs, spawn, kill, logs, attachments, launchers
   argus-agents/             sub-agent transcript watcher, reaper, reconciler
   argus-notify/             notification model, store, fan-out
@@ -91,6 +92,7 @@ in its row.
 | `argus-wake` | Wakes, listeners, registry, faults, presence, agent and item reminders | core, store, board |
 | `argus-procs` | The process monitor, the Overlord's rules, alerts and kills | core, store, wake, native |
 | `argus-worktrees` | The Worktrees tab backend: scans, statuses, stale wakes, removal | core, store, board, wake, procs |
+| `argus-cache` (added) | The build cache of Brock and Tessera: entries, lockfile users, the prune rule | core, worktrees (its junction-safe file system) |
 | `argus-launchers` | Runs and launchers: defs, lifecycle, spawn, logs, stdin, attachments, launcher wakes | core, store, board, wake |
 | `argus-agents` (added) | Sub-agent liveness, three services with one data source | core, store, board, wake |
 | `argus-notify` | Notifications to the owner: record, limits, automatic pings, toast with tray fallback | core, store, board, native |
@@ -267,7 +269,7 @@ One convention for every service, so a service is wired by touching only its own
 | `tests/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
 
 `services/compose.rs` holds the three orders and already calls every service: `build_all`
-(runs, watcher, sync, reaper, reconciler, wake, stale, procs, worktrees, notify), `start_all` (the
+(runs, watcher, sync, reaper, reconciler, wake, stale, procs, worktrees, cache, notify), `start_all` (the
 Node boot order: wake before sync, whose boot recovery may wake threads) and `stop_all` (the
 reverse). A service not wired yet has a stub of those functions answering `None` or doing nothing;
 wiring it replaces the bodies, never `compose.rs`. Rules of an adapter: a trait method that fails

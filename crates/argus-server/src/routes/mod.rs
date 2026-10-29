@@ -8,6 +8,7 @@ pub mod activity;
 pub mod admin;
 pub mod agents;
 mod blocking;
+pub mod cache;
 pub mod db;
 pub mod files;
 pub mod mcp;
@@ -33,6 +34,7 @@ pub fn register_all(router: &mut Router) {
     wake::register(router);
     notify::register(router);
     worktrees::register(router);
+    cache::register(router);
     pages::register(router);
     files::register(router);
     mcp::register(router);
