@@ -1,4 +1,4 @@
-//! Watching the live threads: an active session nobody can wake, and a live thread with no board open.
+//! Watching the live threads: an active session nobody can wake, and a thread inside a turn with no board open.
 
 use std::collections::HashMap;
 
@@ -50,18 +50,10 @@ impl Registry {
             .is_some_and(|seen| self.now() - seen <= self.config.alive_ms)
     }
 
-    pub(super) fn board_required(
-        &self,
-        env: &Env<'_>,
-        thread: Option<&ThreadView>,
-        listener: Option<&ListenerInfo>,
-    ) -> bool {
-        match thread {
-            Some(t) if env.presence.is_some() && t.is_live() => {
-                listener.is_some() || self.heartbeat(t)
-            }
-            _ => false,
-        }
+    /// A board must be open only while the thread is inside a turn: the Browser pane of a session
+    /// closes by itself between turns, so an idle thread is reached through its listener, not its page.
+    pub(super) fn board_required(&self, env: &Env<'_>, thread: Option<&ThreadView>) -> bool {
+        thread.is_some_and(|t| env.presence.is_some() && t.is_live() && self.in_turn(t))
     }
 
     /// Open the not-listening and board-closed faults and clear them when they are over.
@@ -162,9 +154,13 @@ impl Registry {
             }
             return reopened;
         }
-        if !self.board_required(env, Some(w.thread), w.listener) {
+        if !self.board_required(env, Some(w.thread)) {
             self.missing.remove(&key);
-            return false;
+            let stale = current.is_some_and(|f| f.reason == "board-closed");
+            if stale {
+                self.clear_by_registry(w, "the thread is idle, its board is not required");
+            }
+            return stale;
         }
         let now = self.now();
         let since = *self.missing.entry(key).or_insert(now);

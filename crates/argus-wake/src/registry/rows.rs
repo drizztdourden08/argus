@@ -188,7 +188,7 @@ impl Registry {
                     && thread.is_some_and(|t| self.heartbeat(t)),
             },
             board: BoardFlags {
-                board_required: self.board_required(env, thread, listener),
+                board_required: self.board_required(env, thread),
                 board_open: open.is_some(),
                 board_since: open.map(|o| iso(o.since)),
             },

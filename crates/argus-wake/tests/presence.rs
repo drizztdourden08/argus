@@ -5,10 +5,12 @@
 
 use argus_wake::Clock;
 use argus_wake::engine::AttachOptions;
-use argus_wake::faults::{Fault, FaultStore};
+use argus_wake::faults::{Fault, FaultStore, NewFault};
 use argus_wake::presence::{MAX_TABS_PER_THREAD, Presence};
 use argus_wake::registry::{RegistryRow, RowState};
-use argus_wake::testkit::{HOUR, Rig, SEC, START, Tap, board, merge, presence_config, thread};
+use argus_wake::testkit::{
+    HOUR, Rig, SEC, START, Tap, board, merge, presence_config, registry_boards, thread,
+};
 use argus_wake::time::iso;
 use serde_json::json;
 
@@ -52,6 +54,17 @@ fn keep_alive(rig: &mut Rig, thread: &str) {
     let now = iso(rig.clock.now_ms());
     rig.edit_thread("alpha", thread, |t| t.last_seen = now.as_str().into());
     rig.service.on_board("alpha");
+}
+
+/// A board is required only while the thread is inside a turn (its Browser pane closes by itself
+/// between turns): working, seen just now.
+fn working(rig: &mut Rig, scope: &str, thread: &str) {
+    let now = iso(rig.clock.now_ms());
+    rig.edit_thread(scope, thread, |t| {
+        t.activity = "working".into();
+        t.last_seen = now.as_str().into();
+    });
+    rig.service.on_board(scope);
 }
 
 fn digits_between(text: &str, prefix: &str, suffix: &str) -> bool {
@@ -99,6 +112,7 @@ fn tabs_attach_and_detach_a_reconnecting_tab_replaces_itself_and_the_list_and_th
 fn an_open_board_keeps_a_listening_thread_clean_and_the_row_says_so() {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
     let _token = rig.service.presence_attach("alpha", "ui", "t1");
     rig.pass(120 * SEC, STEP);
     assert_eq!(open(&rig).len(), 0);
@@ -119,6 +133,7 @@ fn a_live_thread_with_a_session_and_no_open_board_waits_the_grace_then_one_fault
  {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
     rig.pass(25 * SEC, STEP);
     assert_eq!(open(&rig).len(), 0, "inside the 30 s grace");
     let waiting = row(&mut rig, "alpha", "ui");
@@ -160,6 +175,7 @@ fn the_fault_clears_itself_by_the_registry_when_the_board_opens_again_and_closin
  {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
     rig.pass(40 * SEC, STEP);
     assert_eq!(open(&rig).len(), 1);
     let token = rig.service.presence_attach("alpha", "ui", "t1");
@@ -180,6 +196,7 @@ fn the_fault_clears_itself_by_the_registry_when_the_board_opens_again_and_closin
 fn a_reload_inside_the_grace_does_not_fault() {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
     let token = rig.service.presence_attach("alpha", "ui", "t1");
     rig.pass(10 * SEC, STEP);
     rig.service.presence_detach(&token);
@@ -205,6 +222,11 @@ fn only_a_thread_whose_session_is_alive_needs_its_board() {
         t.last_seen = a_minute_ago.as_str().into();
     });
     rig.service.on_board("alpha");
+    assert!(
+        !row(&mut rig, "alpha", "ui").board.board_required,
+        "a heartbeat a minute ago is not a turn: the pane closes between turns"
+    );
+    working(&mut rig, "alpha", "ui");
     assert!(row(&mut rig, "alpha", "ui").board.board_required);
     rig.pass(40 * SEC, STEP);
     assert_eq!(open(&rig).len(), 1);
@@ -223,6 +245,8 @@ fn the_lead_is_covered_by_its_star_listener_and_the_overlord_itself_is_shown_on_
     let mut rig = rig();
     let _lead = listen(&mut rig, "alpha", "*");
     let _main = listen(&mut rig, "portfolio", "coordinator");
+    working(&mut rig, "alpha", "lead");
+    working(&mut rig, "portfolio", "coordinator");
     rig.pass(40 * SEC, STEP);
     let mut faults: Vec<String> = open(&rig)
         .iter()
@@ -329,6 +353,7 @@ fn after_a_dashboard_restart_nothing_is_raised_during_the_restart_grace() {
     config.registry.restart_grace_ms = 90 * SEC;
     let mut rig = Rig::registry_seen(&config, true, HOUR);
     let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
     rig.pass(85 * SEC, STEP);
     assert_eq!(open(&rig).len(), 0, "inside the grace");
     rig.pass(15 * SEC, STEP);
@@ -361,5 +386,79 @@ fn a_thread_in_a_turn_with_no_listener_is_busy_not_not_listening() {
         row(&mut rig, "alpha", "ui").state,
         RowState::Idle,
         "a turn that went quiet for minutes is idle again"
+    );
+}
+
+#[test]
+fn an_idle_thread_with_its_board_closed_is_never_required_or_faulted() {
+    let mut rig = rig();
+    let _ui = listen(&mut rig, "alpha", "ui");
+    keep_alive(&mut rig, "ui");
+    rig.pass(120 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0);
+    assert!(!row(&mut rig, "alpha", "ui").board.board_required);
+}
+
+#[test]
+fn a_working_thread_unseen_for_over_three_minutes_is_out_of_its_turn() {
+    let mut rig = rig();
+    let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
+    assert!(row(&mut rig, "alpha", "ui").board.board_required);
+    rig.clock.advance(181 * SEC);
+    rig.service.on_board("alpha");
+    assert!(!row(&mut rig, "alpha", "ui").board.board_required);
+}
+
+#[test]
+fn a_board_closed_fault_clears_by_the_registry_when_the_thread_goes_idle() {
+    let mut rig = rig();
+    let _ui = listen(&mut rig, "alpha", "ui");
+    working(&mut rig, "alpha", "ui");
+    rig.pass(40 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 1);
+    rig.edit_thread("alpha", "ui", |t| t.activity = "idle".into());
+    rig.service.on_board("alpha");
+    assert_eq!(open(&rig).len(), 0);
+    let done = rig.faults.list(true).expect("faults");
+    assert_eq!(done[0].reason, "board-closed");
+    assert_eq!(done[0].cleared_by.as_deref(), Some("registry"));
+    assert_eq!(
+        done[0].note.as_deref(),
+        Some("the thread is idle, its board is not required")
+    );
+    assert!(row(&mut rig, "alpha", "ui").fault.is_none());
+    assert_eq!(rig.fault_wakes().len(), 1, "clearing wakes nobody");
+    working(&mut rig, "alpha", "ui");
+    rig.pass(25 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0, "a new turn starts a fresh grace");
+    rig.pass(10 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 1);
+}
+
+#[test]
+fn a_stale_board_closed_fault_of_an_idle_lead_is_cleared_on_start() {
+    let mut rig = Rig::new(&presence_config(), true);
+    for (scope, board) in registry_boards(HOUR) {
+        rig.boards.set(scope, board);
+    }
+    for thread in ["lead", "ui"] {
+        let stale = NewFault {
+            scope: "alpha".to_owned(),
+            thread: thread.to_owned(),
+            since: iso(START - HOUR),
+            reason: "board-closed".to_owned(),
+            wake_id: None,
+            detail: Some("no open board tab for 40s".to_owned()),
+        };
+        rig.faults.open(&stale).expect("fault");
+    }
+    assert_eq!(open(&rig).len(), 2);
+    rig.service.start();
+    assert_eq!(open(&rig).len(), 0);
+    let done = rig.faults.list(true).expect("faults");
+    assert!(
+        done.iter()
+            .all(|f| f.cleared_by.as_deref() == Some("registry"))
     );
 }
