@@ -1,6 +1,7 @@
 //! What may change on the board, by whom, and how a change is made. One op is the same shape the
 //! page posts as an entry: `create`, `edit`, `move`, `ac`, `archive`, `unarchive`, `delete`,
-//! `restore`, `bulk`, `purge` and `build`. [`apply_op`] checks the caller, validates, checks the
+//! `restore`, `bulk`, `purge`, `build` and the pull request ops of the local remote (`pr-open`,
+//! `pr-update`, `pr-merge`, `pr-close`, `pr-checks`). [`apply_op`] checks the caller, validates, checks the
 //! revision the writer saw, applies, stamps, and tells the owning threads.
 
 mod ac;
@@ -14,6 +15,7 @@ mod edit;
 mod fields;
 mod move_;
 mod plan;
+mod pr;
 mod purge;
 mod restore;
 mod result;
@@ -53,6 +55,7 @@ fn dispatch(
         "bulk" => bulk::handle(board, op, who, home),
         "purge" => purge::handle(board, op, who, home),
         "build" => build::handle(board, op, who),
+        kind if pr::is_pr_kind(kind) => pr::handle(board, op, who),
         _ => return None,
     })
 }
