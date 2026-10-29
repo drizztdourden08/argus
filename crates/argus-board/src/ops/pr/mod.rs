@@ -17,7 +17,8 @@ use crate::Board;
 use crate::error::{BoardError, refuse};
 
 /// Whether an op kind is one of the pull request ops.
-pub(super) fn is_pr_kind(kind: &str) -> bool {
+#[must_use]
+pub fn is_pr_kind(kind: &str) -> bool {
     matches!(
         kind,
         "pr-open" | "pr-update" | "pr-merge" | "pr-close" | "pr-checks"

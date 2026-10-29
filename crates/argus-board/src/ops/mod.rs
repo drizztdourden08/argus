@@ -36,6 +36,7 @@ pub use authorize::{Check, authorize};
 pub use backup::{PurgeDone, apply_purge, count_line};
 pub use build::ensure_build;
 pub use plan::{PurgePlan, Selection, purge_plan};
+pub use pr::is_pr_kind;
 pub use restore::restore_from;
 pub use result::{Notice, OpResult, Status};
 pub use who::{Role, Who};
