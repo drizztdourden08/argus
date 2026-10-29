@@ -259,6 +259,34 @@ async fn a_check_run_starts_on_the_run_engine_and_is_linked_to_its_record() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() {
+    let r = rig(false).await;
+    open_pr(&r.t).await;
+    let update = json!({ "headCommit": "a6c5aba0" });
+    let updated = r.t.write("PATCH", "/api/p/alpha/prs/PR-1", &update).await;
+    assert_eq!(updated.status, 200, "{}", updated.text());
+    let rid = start_check(&r.t, &json!({ "pr": "PR-1", "trigger": "pr" })).await;
+    let record = linked_record(&r.t, "?pr=PR-1", &rid).await;
+    assert_eq!(record["commit"], "a6c5aba0");
+    let argv = std::fs::read_to_string(r.out.path().join("argv.json")).expect("argv");
+    let args = serde_json::from_str::<Value>(&argv).expect("json");
+    assert_eq!(
+        (&args[1], &args[2]),
+        (&json!("--commit"), &json!("a6c5aba0"))
+    );
+    let explicit = json!({ "pr": "PR-1", "commit": SHA });
+    let rid = start_check(&r.t, &explicit).await;
+    let record = linked_record(&r.t, "?pr=PR-1", &rid).await;
+    assert_eq!(record["commit"], SHA, "an explicit commit wins");
+    let unknown =
+        r.t.write("POST", "/api/p/alpha/checks", &json!({ "pr": "PR-9" }))
+            .await;
+    assert_eq!(unknown.status, 404, "{}", unknown.text());
+    assert!(unknown.text().contains("PR-9"), "{}", unknown.text());
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn a_check_run_stops_through_the_run_engine() {
     let r = rig(false).await;
     let rid = start_check(&r.t, &json!({ "trigger": "release" })).await;

@@ -303,6 +303,51 @@ console.log(file);
     fs::write(script, source).expect("fake brock");
 }
 
+fn seed_with_pr(coord_home: &Path, folder: &Path) {
+    let mut board = alpha_with_worker(folder);
+    let pr = json!({ "id": "PR-1", "title": "Add x", "head": "feat/x", "base": "main",
+        "headCommit": "a6c5aba0", "status": "open", "checks": [] });
+    board["prs"] = json!({ "PR-1": pr });
+    argus_testkit::write_board(coord_home, "alpha", &board);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn check_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() {
+    let (tools, root) = (
+        tempfile::tempdir().expect("tools"),
+        tempfile::tempdir().expect("root"),
+    );
+    let script = tools.path().join("fake-brock.cjs");
+    let config = json!({
+        "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
+        "projectRoots": { "alpha": root.path().display().to_string() },
+    });
+    let rig = Rig::start(config, seed_with_pr).await;
+    write_fake_script(&rig.t.coord_home, &script);
+    let ran = rig.run(&["check", "--pr", "PR-1", "--project", "alpha"]);
+    assert_eq!(ok(&ran).trim(), "R-1 C-1 check started");
+    let run = rig.t.get("/api/p/alpha/runs/R-1").await.json()["run"].clone();
+    let command = run["cmd"].as_str().unwrap_or_default();
+    assert!(command.contains("--commit a6c5aba0"), "brock got {command}");
+    let record = rig.t.get("/api/p/alpha/checks?run=R-1").await.json();
+    assert_eq!(record["runs"][0]["commit"], "a6c5aba0");
+    let explicit = [
+        "check",
+        "--pr",
+        "PR-1",
+        "--commit",
+        SHA,
+        "--project",
+        "alpha",
+    ];
+    assert_eq!(ok(&rig.run(&explicit)).trim(), "R-2 C-2 check started");
+    let record = rig.t.get("/api/p/alpha/checks?run=R-2").await.json();
+    assert_eq!(record["runs"][0]["commit"], SHA, "an explicit commit wins");
+    let unknown = rig.run(&["check", "--pr", "PR-9", "--project", "alpha"]);
+    refused(&unknown, 1, "PR-9");
+    rig.stop().await;
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn check_starts_a_run_and_prints_its_run_and_record() {
     let (tools, root) = (

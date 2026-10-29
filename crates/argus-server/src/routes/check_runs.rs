@@ -9,6 +9,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use argus_board::json::doc;
 use argus_core::clock::now_iso;
 use argus_core::remote::ci_root_of;
 use argus_core::{ApiError, ErrorCode};
@@ -66,12 +67,15 @@ fn one_of(body: &Value, name: &str, words: &[&str]) -> Result<Option<String>, Ap
     }
 }
 
+fn commit_text(sha: &str) -> bool {
+    sha.bytes().all(|b| b.is_ascii_hexdigit()) && (7..=40).contains(&sha.len())
+}
+
 fn commit_of(body: &Value) -> Result<Option<String>, ApiError> {
     let Some(sha) = text(body, "commit")? else {
         return Ok(None);
     };
-    let hex = sha.bytes().all(|b| b.is_ascii_hexdigit());
-    if hex && (7..=40).contains(&sha.len()) {
+    if commit_text(sha) {
         Ok(Some(sha.to_ascii_lowercase()))
     } else {
         Err(ApiError::bad_request(
@@ -117,6 +121,24 @@ impl Args {
             job: one_of(body, "job", &JOBS)?,
             trigger: one_of(body, "trigger", &TRIGGERS)?,
         })
+    }
+
+    /// A pull request without a commit is checked at the head commit it records, the one
+    /// `coord pr merge` looks a check run up by. An explicit commit wins; an unknown pull
+    /// request is a 404.
+    fn at_head_of_pr(mut self, ctx: &Ctx, project: &str) -> Result<Args, ApiError> {
+        let (Some(pr), None) = (&self.pr, &self.commit) else {
+            return Ok(self);
+        };
+        let board = ctx.svc.boards().board(project);
+        let held = board.as_ref().and_then(|b| doc(b, "prs", pr));
+        let Some(held) = held else {
+            let sentence = format!("no pull request \"{pr}\" on {project}.");
+            return Err(ApiError::new(ErrorCode::NotFound, sentence));
+        };
+        let recorded = held["headCommit"].as_str().map(str::to_ascii_lowercase);
+        self.commit = recorded.filter(|c| commit_text(c));
+        Ok(self)
     }
 
     /// `<program> ci [check] [--commit c] [--pr p] [--job j] [--trigger t] --project key`.
@@ -352,7 +374,7 @@ async fn start(ctx: Ctx) -> Reply {
     let body = object_body(&ctx).await?;
     let project = key(&ctx)?;
     check_key(&project).map_err(|e| refusal(&e))?;
-    let args = Args::parse(&body)?;
+    let args = Args::parse(&body)?.at_head_of_pr(&ctx, &project)?;
     let cmd = args.command(&program_of(&ctx), &project);
     let cwd = root_of(&ctx, &project)?;
     let dirs = watched(&cwd, project_root(&ctx, &project));
