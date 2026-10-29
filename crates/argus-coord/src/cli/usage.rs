@@ -55,6 +55,8 @@ Coordinator side (the same verbs work on every thread's records; --for <T> creat
   coord build ready <tag> | draft <tag>          (a new bundle is a draft: built and testable = ready, which shows Play and allows hand)
   coord tick                                     coord tick woke <thread>...      (manual check, never scheduled: wake + attention, JSON)
   coord check [--stale <minutes>] [--json]
+  coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release]     (a check run: starts brock ci on the run engine in the project root and prints R-n and C-n; see coord run logs R-n)
+  coord pr open "<title>" --head <branch> [--base main] [--item <I>] [--body "..."] [--commit <sha>]     coord pr list [--status s] [--json] | merge <PR-n> | close <PR-n>     (local pull requests, the records PR-n of the local remote; merge runs brock pr merge --local and records the merge commit it prints)
   coord sync import <dir>                        (replay saved owner entries, offline)
   coord run define <name> --cmd "<command>" [--cwd d] [--kind build|test|launch|task] [--hand] [--visible] [--timeout s] [--parallel n] [--env K=V]...
   coord run undefine <name> | defs [--json]      coord run start <name> [--agent A-n] [--reason "..."] [--wait] [--visible]

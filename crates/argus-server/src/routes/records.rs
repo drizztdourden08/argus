@@ -5,7 +5,7 @@
 //! - `GET /api/releases` is `{projects: [{project, channels}]}` and `GET /api/p/<key>/releases`
 //!   is `{channels}`: versions per channel, newest first, with the files and the version
 //!   `latest.yml` points at
-//! - `GET /api/p/<key>/checks?commit=&pr=` is `{runs}` newest first, with ids `C-n`, and
+//! - `GET /api/p/<key>/checks?commit=&pr=&run=` is `{runs}` newest first, with ids `C-n`, and
 //!   `GET /api/p/<key>/checks/<C-n>/log?step=<i>` is the log text of a step; each run has `run`,
 //!   the `R-n` of the run engine that made it (`POST /api/p/<key>/checks`), or null
 //! - `GET /api/registry` is `{builds, consumers, scopeRedirected, consumersNote}`: the local
@@ -84,13 +84,17 @@ async fn checks(ctx: Ctx) -> Reply {
         ctx.query("commit").map(str::to_owned),
         ctx.query("pr").map(str::to_owned),
     );
-    let links = CheckLinks::new(Arc::clone(&ctx.svc.db));
+    let (links, run) = (
+        CheckLinks::new(Arc::clone(&ctx.svc.db)),
+        ctx.query("run").map(str::to_owned),
+    );
     let rows = blocking(move || {
         let runs = records
             .checks
             .of_project(&key, commit.as_deref(), pr.as_deref());
         runs.iter()
             .map(|r| row_of(r, &links))
+            .filter(|row| run.as_deref().is_none_or(|rid| row["run"] == rid))
             .collect::<Vec<Value>>()
     })
     .await?;
