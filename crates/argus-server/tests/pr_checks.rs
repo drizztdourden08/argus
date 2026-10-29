@@ -268,10 +268,10 @@ async fn a_check_run_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_reco
     let rid = start_check(&r.t, &json!({ "pr": "PR-1", "trigger": "pr" })).await;
     let record = linked_record(&r.t, "?pr=PR-1", &rid).await;
     assert_eq!(record["commit"], "a6c5aba0");
-    let argv = std::fs::read_to_string(r.out.path().join("argv.json")).expect("argv");
-    let args = serde_json::from_str::<Value>(&argv).expect("json");
+    let text = std::fs::read_to_string(r.out.path().join("argv.json")).expect("argv");
+    let words = serde_json::from_str::<Value>(&text).expect("json");
     assert_eq!(
-        (&args[1], &args[2]),
+        (&words[1], &words[2]),
         (&json!("--commit"), &json!("a6c5aba0"))
     );
     let explicit = json!({ "pr": "PR-1", "commit": SHA });
