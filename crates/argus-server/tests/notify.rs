@@ -196,7 +196,7 @@ async fn a_ping_is_recorded_and_toasted_and_the_refusals_are_plain_400s() {
         (&json!(true), &json!("shown"), &json!("ping"), &Value::Null)
     );
     assert_eq!(r.toasts.count(), 1);
-    let url = format!("http://alpha.localhost:{}/", r.t.port);
+    let url = format!("http://127.0.0.1:{}/p/alpha/", r.t.port);
     assert_eq!(r.toasts.last().url.as_deref(), Some(url.as_str()));
     let id = out["id"].as_str().expect("an id");
     let doc = r.t.svc.db.docs().get(PORTFOLIO, Coll::Notifications, id);
@@ -292,7 +292,7 @@ async fn the_overlord_opens_the_notifications_tab() {
             &json!("coordinator")
         )
     );
-    let tab = format!("http://argus.localhost:{}/#notifications", r.t.port);
+    let tab = format!("http://127.0.0.1:{}/#notifications", r.t.port);
     assert_eq!(top["url"], tab);
 }
 

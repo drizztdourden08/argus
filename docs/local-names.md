@@ -89,9 +89,10 @@ DNS rules), and Claude's built-in browser pane blocks the page assets of these n
 5. Open `http://argus.argus/`. Type the first visit with `http://` so the browser does not
    search for the name.
 
-When the names are on and the responder is bound, toast links and `argus open` use
-`http://<key>.<suffix>/` (with the port only when the front door could not take port 80). When
-they are off, or a socket could not be bound, everything stays as it is today. A refused
+Toast links follow the one link rule: `http://<key>.localhost/` while the localhost door is
+bound, which the server knows itself. Only when the door is not bound and the names are on and
+the responder is bound do toast links use `http://<key>.<suffix>/` (with the port only when the
+front door could not take port 80). Otherwise they use `http://127.0.0.1:<port>`. A refused
 `localNames` value (a bad address or suffix) is logged and leaves the names off.
 
 ### Turn it off

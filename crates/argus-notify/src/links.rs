@@ -1,7 +1,10 @@
-//! Where a click on a toast goes: the project's board, else the Notifications tab. With the
-//! local names on, the addresses use them (`http://rotp.argus/`) instead of `.localhost:<port>`.
+//! Where a click on a toast goes: the project's board, else the Notifications tab. The addresses
+//! follow the one link rule of `argus_core::page_url`: the `.localhost` names while the server's
+//! localhost door is bound, else `http://127.0.0.1:<port>`. The local names (`http://rotp.argus/`)
+//! are used only when the owner opted into them and the localhost door is not bound.
 
 use argus_core::names::Door;
+use argus_core::page_url::{OVERVIEW_LABEL, page_at};
 
 const URL_MAX: usize = 300;
 const KEY_MAX: usize = 40;
@@ -13,20 +16,28 @@ const RESERVED: [&str; 3] = ["portfolio", "argus", "overlord"];
 pub struct Links {
     port: u16,
     door: Option<Door>,
+    localhost_door: Option<u16>,
 }
 
 impl Links {
-    /// The addresses of the dashboard listening on `port`, under the names of `door` when the
-    /// local names are on.
+    /// The addresses of the dashboard listening on `port`: under the `.localhost` names when
+    /// `localhost_door` (its port) is bound, else under the names of `door` when the local names
+    /// are on, else on the loopback port.
     #[must_use]
-    pub fn new(port: u16, door: Option<Door>) -> Self {
-        Self { port, door }
+    pub fn new(port: u16, door: Option<Door>, localhost_door: Option<u16>) -> Self {
+        Self {
+            port,
+            door,
+            localhost_door,
+        }
     }
 
-    fn origin(&self, label: &str) -> String {
-        match &self.door {
-            Some(door) => format!("http://{}", door.host(label)),
-            None => format!("http://{label}.localhost:{}", self.port),
+    fn page(&self, key: Option<&str>) -> String {
+        match (&self.door, self.localhost_door) {
+            (Some(door), None) => {
+                format!("http://{}/", door.host(key.unwrap_or(OVERVIEW_LABEL)))
+            }
+            (_, localhost) => page_at(localhost, self.port, key).url(),
         }
     }
 
@@ -40,8 +51,8 @@ impl Links {
             return url.to_owned();
         }
         match project.filter(|key| is_board_key(key)) {
-            Some(key) => format!("{}/", self.origin(key)),
-            None => format!("{}/#notifications", self.origin("argus")),
+            Some(key) => self.page(Some(key)),
+            None => format!("{}#notifications", self.page(None)),
         }
     }
 }
@@ -107,23 +118,24 @@ mod tests {
     const LINKS: Links = Links {
         port: 47615,
         door: None,
+        localhost_door: None,
     };
 
-    fn named(port: u16) -> Links {
+    fn named(port: u16, localhost_door: Option<u16>) -> Links {
         let door = Door {
             address: Ipv4Addr::new(127, 65, 82, 71),
             suffix: "argus".to_owned(),
             port,
         };
-        Links::new(47615, Some(door))
+        Links::new(47615, Some(door), localhost_door)
     }
 
     #[test]
     fn a_project_opens_its_board_and_the_rest_opens_the_tab() {
-        let tab = "http://argus.localhost:47615/#notifications";
+        let tab = "http://127.0.0.1:47615/#notifications";
         assert_eq!(
             LINKS.url_for(Some("rotp"), None),
-            "http://rotp.localhost:47615/"
+            "http://127.0.0.1:47615/p/rotp/"
         );
         for project in [Some("portfolio"), Some("argus"), Some("Not A Key"), None] {
             assert_eq!(LINKS.url_for(project, None), tab);
@@ -131,8 +143,23 @@ mod tests {
     }
 
     #[test]
+    fn with_the_localhost_door_bound_the_links_use_the_localhost_names() {
+        let up = Links::new(47615, None, Some(80));
+        assert_eq!(up.url_for(Some("rotp"), None), "http://rotp.localhost/");
+        assert_eq!(
+            up.url_for(None, None),
+            "http://argus.localhost/#notifications"
+        );
+        let other = Links::new(47615, None, Some(8080));
+        assert_eq!(
+            other.url_for(Some("rotp"), None),
+            "http://rotp.localhost:8080/"
+        );
+    }
+
+    #[test]
     fn a_given_address_must_be_http_on_this_machine() {
-        let tab = "http://argus.localhost:47615/#notifications";
+        let tab = "http://127.0.0.1:47615/#notifications";
         let local = "http://rotp.localhost:47615/#x";
         assert_eq!(LINKS.url_for(None, Some(local)), local);
         assert_eq!(
@@ -153,8 +180,8 @@ mod tests {
     }
 
     #[test]
-    fn the_local_names_replace_the_localhost_addresses() {
-        let at_80 = named(80);
+    fn the_local_names_replace_the_loopback_address_while_the_localhost_door_is_not_bound() {
+        let at_80 = named(80, None);
         assert_eq!(at_80.url_for(Some("rotp"), None), "http://rotp.argus/");
         assert_eq!(
             at_80.url_for(None, None),
@@ -164,7 +191,7 @@ mod tests {
             at_80.url_for(Some("portfolio"), None),
             "http://argus.argus/#notifications"
         );
-        let at_port = named(47615);
+        let at_port = named(47615, None);
         assert_eq!(
             at_port.url_for(Some("rotp"), None),
             "http://rotp.argus:47615/"
@@ -172,16 +199,26 @@ mod tests {
     }
 
     #[test]
+    fn the_localhost_door_wins_over_the_local_names() {
+        let both = named(80, Some(80));
+        assert_eq!(both.url_for(Some("rotp"), None), "http://rotp.localhost/");
+        assert_eq!(
+            both.url_for(None, None),
+            "http://argus.localhost/#notifications"
+        );
+    }
+
+    #[test]
     fn a_given_address_may_use_the_local_names_only_while_they_are_on() {
         let given = "http://ui.rotp.argus/#x";
-        assert_eq!(named(80).url_for(None, Some(given)), given);
+        assert_eq!(named(80, None).url_for(None, Some(given)), given);
         assert_eq!(
-            named(80).url_for(None, Some("http://rotp.argus.evil.com/")),
+            named(80, None).url_for(None, Some("http://rotp.argus.evil.com/")),
             "http://argus.argus/#notifications"
         );
         assert_eq!(
             LINKS.url_for(None, Some(given)),
-            "http://argus.localhost:47615/#notifications"
+            "http://127.0.0.1:47615/#notifications"
         );
     }
 }
