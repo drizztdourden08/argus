@@ -5,6 +5,8 @@ const OVERVIEW_TABS = [
   { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
   { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
   { id: 'cache', label: 'Cache' },
+  { id: 'releases', label: 'Releases' },
+  { id: 'registry', label: 'Registry' },
 ];
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);

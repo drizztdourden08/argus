@@ -65,6 +65,7 @@ interface RequestOptions {
   json?: unknown;
   raw?: Blob;
   rawType?: string;
+  text?: boolean;
 }
 
 export type {

@@ -1,80 +1,161 @@
-//! The remote switch (`docs/local-remote.md`): `<COORD_HOME>/remote.json`, `{ mode, since, by }`.
-//! In `local` mode nothing calls `gh`, the GitHub API or the GitHub registry and nothing is
-//! pushed; `remote` is the owner's go. A missing or unreadable file means `local`.
+//! The local or remote switch: `<COORD_HOME>/remote.json` holds `{ "mode": "local" | "remote" }`.
+//! A missing, unreadable or unknown file means local, so nothing calls GitHub unless the owner
+//! said so. The file is looked at on every call (one stat) and read again only when its time or
+//! size changed.
 
-use std::io;
+use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, PoisonError};
+use std::time::SystemTime;
 
-use serde_json::{Value, json};
+use crate::remote_state::read_state;
 
-use crate::clock::now_iso;
-use crate::fs::write_atomic;
-
-/// Nothing calls GitHub.
-pub const LOCAL: &str = "local";
-/// GitHub is used again.
-pub const REMOTE: &str = "remote";
-
-/// The switch as the file holds it; `since` and `by` are `None` while the file is absent.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Switch {
-    /// `local` or `remote`.
-    pub mode: String,
-    /// When the mode was set (ISO text).
-    pub since: Option<String>,
-    /// Who set it.
-    pub by: Option<String>,
+/// Where work goes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Mode {
+    /// Nothing leaves the machine: no `gh`, no GitHub API, no push.
+    Local,
+    /// The owner gave the go.
+    Remote,
 }
 
-impl Switch {
-    fn default_local() -> Self {
-        Switch {
-            mode: LOCAL.to_owned(),
-            since: None,
-            by: None,
+impl Mode {
+    /// The wire name.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Mode::Local => "local",
+            Mode::Remote => "remote",
         }
     }
 }
 
-/// The file of the switch.
-#[must_use]
-pub fn remote_file(coord_home: &Path) -> PathBuf {
-    coord_home.join("remote.json")
-}
+/// Anything that knows the mode. Services take this, so a test can set it without a file.
+pub trait ModeSource: Send + Sync {
+    /// The mode now.
+    fn mode(&self) -> Mode;
 
-fn text_of(json: &Value, key: &str) -> Option<String> {
-    json.get(key).and_then(Value::as_str).map(str::to_owned)
-}
-
-/// The switch of a coord home: `local` when the file is absent or unreadable.
-#[must_use]
-pub fn read_remote(coord_home: &Path) -> Switch {
-    let parsed = std::fs::read_to_string(remote_file(coord_home))
-        .ok()
-        .and_then(|text| serde_json::from_str::<Value>(&text).ok());
-    let Some(json) = parsed else {
-        return Switch::default_local();
-    };
-    let mode = text_of(&json, "mode").filter(|m| m == LOCAL || m == REMOTE);
-    Switch {
-        mode: mode.unwrap_or_else(|| LOCAL.to_owned()),
-        since: text_of(&json, "since"),
-        by: text_of(&json, "by"),
+    /// Whether the mode is local.
+    fn is_local(&self) -> bool {
+        self.mode() == Mode::Local
     }
 }
 
-/// Sets the mode (a temp file and a rename) and returns what was written.
-///
-/// # Errors
-/// The folder or the file cannot be written.
-pub fn write_remote(coord_home: &Path, mode: &str, by: Option<&str>) -> io::Result<Switch> {
-    let next = Switch {
-        mode: mode.to_owned(),
-        since: Some(now_iso()),
-        by: by.map(str::to_owned),
-    };
-    let body = json!({ "mode": next.mode, "since": next.since, "by": next.by });
-    let text = serde_json::to_string_pretty(&body).map_err(io::Error::other)?;
-    write_atomic(&remote_file(coord_home), format!("{text}\n"))?;
-    Ok(next)
+/// The switch file of a coord home.
+#[must_use]
+pub fn switch_file(coord_home: &Path) -> PathBuf {
+    coord_home.join("remote.json")
+}
+
+/// The integration checkouts of `ciRoots` in `remote.json` (project key, folder), in the order
+/// of the file; empty when the file is absent, torn or has none.
+#[must_use]
+pub fn ci_roots(coord_home: &Path) -> Vec<(String, String)> {
+    let roots = read_state(coord_home).ci_roots;
+    let text =
+        |(key, dir): (&String, &serde_json::Value)| Some((key.clone(), dir.as_str()?.to_owned()));
+    roots.iter().filter_map(text).collect()
+}
+
+/// The integration checkout of one project, when `coord remote ci-root` set one.
+#[must_use]
+pub fn ci_root_of(coord_home: &Path, project: &str) -> Option<String> {
+    ci_roots(coord_home)
+        .into_iter()
+        .find(|(key, _)| key == project)
+        .map(|(_, dir)| dir)
+        .filter(|dir| !dir.is_empty())
+}
+
+fn parse(text: &str) -> Mode {
+    let word = serde_json::from_str::<serde_json::Value>(text)
+        .ok()
+        .and_then(|v| v["mode"].as_str().map(str::to_owned));
+    match word.as_deref() {
+        Some("remote") => Mode::Remote,
+        _ => Mode::Local,
+    }
+}
+
+type Stamp = (Option<SystemTime>, u64);
+
+/// The switch read from its file, cached on the file's time and size.
+pub struct Switch {
+    file: PathBuf,
+    seen: Mutex<Option<(Stamp, Mode)>>,
+}
+
+impl Switch {
+    /// The switch of a coord home.
+    #[must_use]
+    pub fn new(coord_home: &Path) -> Self {
+        Switch {
+            file: switch_file(coord_home),
+            seen: Mutex::new(None),
+        }
+    }
+
+    fn stamp(&self) -> Option<Stamp> {
+        let meta = fs::metadata(&self.file).ok()?;
+        Some((meta.modified().ok(), meta.len()))
+    }
+}
+
+impl ModeSource for Switch {
+    fn mode(&self) -> Mode {
+        let mut seen = self.seen.lock().unwrap_or_else(PoisonError::into_inner);
+        let Some(stamp) = self.stamp() else {
+            *seen = None;
+            return Mode::Local;
+        };
+        if let Some((have, mode)) = *seen {
+            if have == stamp {
+                return mode;
+            }
+        }
+        let mode = fs::read_to_string(&self.file).map_or(Mode::Local, |t| parse(&t));
+        *seen = Some((stamp, mode));
+        mode
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn set(home: &Path, text: &str) {
+        fs::write(switch_file(home), text).expect("write switch");
+    }
+
+    #[test]
+    fn a_missing_file_is_local() {
+        let home = tempfile::tempdir().expect("temp dir");
+        let switch = Switch::new(home.path());
+        assert_eq!(switch.mode(), Mode::Local);
+        assert!(switch.is_local());
+    }
+
+    #[test]
+    fn the_file_says_the_mode_and_a_change_is_seen() {
+        let home = tempfile::tempdir().expect("temp dir");
+        let switch = Switch::new(home.path());
+        set(home.path(), r#"{ "mode": "remote" }"#);
+        assert_eq!(switch.mode(), Mode::Remote);
+        set(home.path(), r#"{ "mode": "local", "note": "x" }"#);
+        assert_eq!(switch.mode(), Mode::Local);
+        set(home.path(), r#"{"mode":"remote"}"#);
+        assert_eq!(switch.mode(), Mode::Remote);
+        fs::remove_file(switch_file(home.path())).expect("remove");
+        assert_eq!(switch.mode(), Mode::Local);
+    }
+
+    #[test]
+    fn a_damaged_or_unknown_file_is_local() {
+        let home = tempfile::tempdir().expect("temp dir");
+        let switch = Switch::new(home.path());
+        for text in ["", "{", r#"{"mode":"cloud"}"#, r#"{"mode":1}"#, "[]"] {
+            set(home.path(), text);
+            assert_eq!(switch.mode(), Mode::Local, "{text}");
+        }
+    }
 }

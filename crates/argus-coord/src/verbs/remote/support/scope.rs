@@ -14,7 +14,7 @@ use crate::cli::{Env, Options, out};
 use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me};
 
-use super::link::paths_of;
+use super::link::{paths_of, project_of};
 
 /// What a change reads of the call while the board is held.
 pub struct Scope<'a> {
@@ -52,6 +52,17 @@ fn to_board(e: &CoordError) -> BoardError {
 #[must_use]
 pub fn coord_home(call: &Call<'_>) -> PathBuf {
     paths_of(call).coord_home
+}
+
+/// Who is asking, for the `by` of a request to the dashboard: the calling thread when there is
+/// one, else `cli`.
+#[must_use]
+pub fn requested_by(call: &Call<'_>) -> String {
+    read_board(&coord_home(call), project_of(call))
+        .ok()
+        .flatten()
+        .and_then(|b| caller(&b, &call.inv.cwd, &call.inv.env, &call.options).ok())
+        .map_or_else(|| "cli".to_owned(), |who| who.actor)
 }
 
 /// Runs `f` on the board of `key` under its lock: the change prints as it goes, the board is

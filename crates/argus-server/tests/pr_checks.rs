@@ -1,0 +1,339 @@
+//! Local pull requests and check runs over HTTP, on temp homes and a fake `brock` (a Node script
+//! named by the `checks.command` setting, never the real Brock): the PR routes, the check run
+//! start on the run engine, the link between `R-n` and `C-n`, Stop, and the check lists of the
+//! pull requests. Never the real `~/.coord`, never port 47615, never a real repository.
+
+#[path = "support/wait.rs"]
+mod wait;
+
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+
+use argus_testkit::{Request, TestOptions, TestServer};
+use serde_json::{Value, json};
+use tempfile::TempDir;
+use wait::until;
+
+const SHA: &str = "0123456789abcdef0123456789abcdef01234567";
+const MERGE: &str = "fedcba9876543210fedcba9876543210fedcba98";
+
+fn script_source(coord_home: &Path, out: &Path) -> String {
+    let coord = json!(coord_home.join("ci").join("alpha").display().to_string());
+    let argv = json!(out.join("argv.json").display().to_string());
+    format!(
+        r#"
+const fs = require("fs"), path = require("path");
+const args = process.argv.slice(2);
+const at = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : "");
+const dir = {coord};
+fs.mkdirSync(dir, {{ recursive: true }});
+const runId = "20261029T000000000Z-" + Date.now().toString(36);
+const file = path.join(dir, runId + ".json");
+const record = {{ kind: "check-run", id: runId, project: "alpha", commit: at("--commit"), pr: at("--pr"),
+  trigger: at("--trigger") || "manual", status: "running", startedAt: new Date().toISOString(), steps: [] }};
+fs.writeFileSync(file + ".tmp", JSON.stringify(record));
+fs.renameSync(file + ".tmp", file);
+fs.writeFileSync({argv}, JSON.stringify(args));
+console.log(file);
+if (at("--trigger") === "release") setInterval(() => {{}}, 1000);
+"#
+    )
+}
+
+struct Rig {
+    t: TestServer,
+    out: TempDir,
+    _root: TempDir,
+}
+
+async fn rig(shadow: bool) -> Rig {
+    let (out, root) = (
+        tempfile::tempdir().expect("out"),
+        tempfile::tempdir().expect("root"),
+    );
+    let coord = tempfile::tempdir().expect("coord").keep();
+    let script = out.path().join("fake-brock.cjs");
+    std::fs::write(&script, script_source(&coord, out.path())).expect("fake brock");
+    let command = format!("node \"{}\"", script.display());
+    let config = json!({
+        "checks": { "command": command },
+        "projectRoots": { "alpha": root.path().display().to_string() },
+    });
+    let t = TestServer::start(TestOptions {
+        config,
+        seed: true,
+        coord_home: Some(coord),
+        shadow,
+        ..TestOptions::default()
+    })
+    .await;
+    Rig {
+        t,
+        out,
+        _root: root,
+    }
+}
+
+fn pr_body() -> Value {
+    json!({ "title": "Add x", "body": "why", "head": "feat/x", "headCommit": SHA, "item": "I-1" })
+}
+
+async fn open_pr(t: &TestServer) -> Value {
+    let got = t.write("POST", "/api/p/alpha/prs", &pr_body()).await;
+    assert_eq!(got.status, 200, "{}", got.text());
+    got.json()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_pr_is_opened_updated_merged_and_closed_through_the_routes() {
+    let r = rig(false).await;
+    let opened = open_pr(&r.t).await;
+    assert_eq!(opened["outcome"], "PR-1 opened");
+    let pr = &opened["pr"];
+    assert_eq!(
+        (pr["id"].as_str(), pr["status"].as_str()),
+        (Some("PR-1"), Some("open"))
+    );
+    assert_eq!(pr["base"], "main");
+    assert_eq!(
+        pr["replay"],
+        json!({ "state": "pending", "at": null, "url": null })
+    );
+    assert_eq!(pr["createdBy"], "cli");
+    assert_eq!(r.t.board("alpha")["prs"]["PR-1"]["item"], "I-1");
+    let fresh = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let update = json!({ "headCommit": fresh, "title": "Add x v2" });
+    let updated = r.t.write("PATCH", "/api/p/alpha/prs/PR-1", &update).await;
+    assert_eq!(updated.status, 200, "{}", updated.text());
+    assert_eq!(updated.json()["pr"]["headCommit"], fresh);
+    let merge = json!({ "action": "merge", "mergeCommit": MERGE, "by": "brock" });
+    let merged = r.t.write("PATCH", "/api/p/alpha/prs/PR-1", &merge).await;
+    assert_eq!(merged.status, 200, "{}", merged.text());
+    let pr = merged.json()["pr"].clone();
+    assert_eq!(
+        (pr["status"].as_str(), pr["mergeCommit"].as_str()),
+        (Some("merged"), Some(MERGE))
+    );
+    assert_eq!(pr["mergedBy"], "brock");
+    let again = r.t.write("PATCH", "/api/p/alpha/prs/PR-1", &merge).await;
+    assert_eq!(
+        again.status, 400,
+        "a merged pull request does not merge again"
+    );
+    let mirrored = r.t.svc.db.docs().list("alpha", argus_core::Coll::Prs);
+    assert_eq!(
+        mirrored.expect("prs docs").len(),
+        1,
+        "the board stream carries it"
+    );
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_pr_can_be_closed_and_the_routes_refuse_what_they_should() {
+    let r = rig(false).await;
+    open_pr(&r.t).await;
+    let closed =
+        r.t.write(
+            "PATCH",
+            "/api/p/alpha/prs/PR-1",
+            &json!({ "action": "close" }),
+        )
+        .await;
+    assert_eq!(closed.json()["pr"]["status"], "closed");
+    let missing =
+        r.t.write(
+            "PATCH",
+            "/api/p/alpha/prs/PR-9",
+            &json!({ "action": "close" }),
+        )
+        .await;
+    assert_eq!(missing.status, 404);
+    let odd =
+        r.t.write(
+            "PATCH",
+            "/api/p/alpha/prs/PR-1",
+            &json!({ "action": "burn" }),
+        )
+        .await;
+    assert_eq!(odd.status, 400);
+    let untitled =
+        r.t.write("POST", "/api/p/alpha/prs", &json!({ "head": "feat/y" }))
+            .await;
+    assert_eq!(untitled.status, 400);
+    let evil = json!({ "title": "t", "head": "a b; rm -rf" });
+    assert_eq!(
+        r.t.write("POST", "/api/p/alpha/prs", &evil).await.status,
+        400
+    );
+    let nowhere = r.t.write("POST", "/api/p/nowhere/prs", &pr_body()).await;
+    assert_eq!(nowhere.status, 404);
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_pr_routes_follow_the_write_rules_of_the_other_routes() {
+    let r = rig(false).await;
+    let page =
+        r.t.page(Request::new("POST", "/api/p/alpha/prs").json(&pr_body()));
+    let got = r.t.send(page).await;
+    assert_eq!(got.status, 200, "{}", got.text());
+    assert_eq!(got.json()["pr"]["createdBy"], "human");
+    let foreign = Request::new("POST", "/api/p/alpha/prs")
+        .header("Origin", "http://evil.test")
+        .header("Sec-Fetch-Site", "cross-site")
+        .json(&pr_body());
+    assert_eq!(r.t.send(foreign).await.status, 403);
+    r.t.stop(false).await;
+    let shadow = rig(true).await;
+    let refused = shadow.t.write("POST", "/api/p/alpha/prs", &pr_body()).await;
+    assert_eq!(
+        (refused.status, refused.code().as_str()),
+        (403, "read_only")
+    );
+    let start = shadow
+        .t
+        .write("POST", "/api/p/alpha/checks", &json!({}))
+        .await;
+    assert_eq!(start.status, 403);
+    shadow.t.stop(false).await;
+}
+
+async fn start_check(t: &TestServer, body: &Value) -> String {
+    let got = t.write("POST", "/api/p/alpha/checks", body).await;
+    assert_eq!(got.status, 200, "{}", got.text());
+    got.json()["run"].as_str().expect("a run id").to_owned()
+}
+
+async fn linked_record(t: &TestServer, query: &str, rid: &str) -> Value {
+    let path = format!("/api/p/alpha/checks{query}");
+    let rid = rid.to_owned();
+    until("the record linked to its run", || async {
+        let runs = t.get(&path).await.json()["runs"].clone();
+        runs.as_array()?
+            .iter()
+            .find(|r| r["run"] == rid.as_str())
+            .cloned()
+    })
+    .await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_starts_on_the_run_engine_and_is_linked_to_its_record() {
+    let r = rig(false).await;
+    open_pr(&r.t).await;
+    let body =
+        json!({ "commit": SHA, "pr": "PR-1", "job": "gate", "trigger": "pr", "check": "check" });
+    let rid = start_check(&r.t, &body).await;
+    assert_eq!(rid, "R-1");
+    let record = linked_record(&r.t, "?pr=PR-1", &rid).await;
+    assert_eq!(record["id"], "C-1");
+    assert_eq!(record["commit"], SHA);
+    let argv = std::fs::read_to_string(r.out.path().join("argv.json")).expect("argv");
+    let want = json!([
+        "ci",
+        "check",
+        "--commit",
+        SHA,
+        "--pr",
+        "PR-1",
+        "--job",
+        "gate",
+        "--trigger",
+        "pr",
+        "--project",
+        "alpha"
+    ]);
+    assert_eq!(serde_json::from_str::<Value>(&argv).expect("json"), want);
+    let run = r.t.get(&format!("/api/p/alpha/runs/{rid}")).await.json()["run"].clone();
+    assert_eq!(
+        (run["name"].as_str(), run["visible"].as_bool()),
+        (Some("check"), Some(false))
+    );
+    let t = &r.t;
+    let lists = until("the check list of the pull request", || async move {
+        let checks = t.board("alpha")["prs"]["PR-1"]["checks"].clone();
+        (checks != json!([])).then_some(checks)
+    })
+    .await;
+    assert_eq!(lists, json!(["C-1"]));
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_stops_through_the_run_engine() {
+    let r = rig(false).await;
+    let rid = start_check(&r.t, &json!({ "trigger": "release" })).await;
+    linked_record(&r.t, "", &rid).await;
+    let stop =
+        r.t.write("POST", &format!("/api/p/alpha/runs/{rid}/stop"), &json!({}))
+            .await;
+    assert_eq!(stop.status, 200, "{}", stop.text());
+    let t = &r.t;
+    let path = format!("/api/p/alpha/runs/{rid}");
+    let run = until("the run to stop", || async {
+        let run = t.get(&path).await.json()["run"].clone();
+        (run["status"] == "stopped").then_some(run)
+    })
+    .await;
+    assert_eq!(run["status"], "stopped");
+    tokio::time::sleep(Duration::from_millis(10)).await;
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_refuses_bad_arguments_and_a_project_without_a_root() {
+    let r = rig(false).await;
+    for body in [
+        json!({ "commit": "zz" }),
+        json!({ "commit": "abc1234; rm" }),
+        json!({ "pr": "3" }),
+        json!({ "job": "all && x" }),
+        json!({ "trigger": "now" }),
+        json!({ "check": "a b" }),
+        json!({ "check": "--x" }),
+        json!({ "commit": 5 }),
+    ] {
+        let got = r.t.write("POST", "/api/p/alpha/checks", &body).await;
+        assert_eq!(got.status, 400, "{body}: {}", got.text());
+    }
+    let no_root = r.t.write("POST", "/api/p/beta/checks", &json!({})).await;
+    assert_eq!(no_root.status, 404, "{}", no_root.text());
+    assert!(no_root.text().contains("root"), "{}", no_root.text());
+    let none: Vec<PathBuf> = std::fs::read_dir(r.out.path())
+        .expect("out")
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.ends_with("argv.json"))
+        .collect();
+    assert!(none.is_empty(), "nothing ran");
+    r.t.stop(false).await;
+}
+
+fn set_ci_root(coord_home: &Path, dir: &Path) {
+    let roots = json!({ "alpha": dir.display().to_string().replace('\\', "/") });
+    let text = json!({ "mode": "local", "ciRoots": roots }).to_string();
+    std::fs::write(coord_home.join("remote.json"), text).expect("remote.json");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_starts_in_the_integration_checkout_when_one_is_set() {
+    let r = rig(false).await;
+    let ci = tempfile::tempdir().expect("ci");
+    set_ci_root(&r.t.coord_home, ci.path());
+    let rid = start_check(&r.t, &json!({ "trigger": "manual" })).await;
+    let run = r.t.get(&format!("/api/p/alpha/runs/{rid}")).await.json()["run"].clone();
+    let flat = |s: &str| s.replace('\\', "/").to_lowercase();
+    let want = flat(&ci.path().display().to_string());
+    assert_eq!(flat(run["cwd"].as_str().expect("cwd")), want);
+    let gone = ci.path().join("gone");
+    set_ci_root(&r.t.coord_home, &gone);
+    let refused = r.t.write("POST", "/api/p/alpha/checks", &json!({})).await;
+    assert_eq!(refused.status, 400, "{}", refused.text());
+    assert!(
+        refused.text().contains("not a folder"),
+        "{}",
+        refused.text()
+    );
+    r.t.stop(false).await;
+}

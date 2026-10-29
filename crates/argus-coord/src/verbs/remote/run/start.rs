@@ -1,7 +1,6 @@
 //! `coord run start | stop`: launch a defined run through the dashboard, and end one.
 
 use argus_board::limits::optional_text;
-use argus_board::store::read_board;
 use serde_json::{Value, json};
 
 use super::follow::{LogRead, exit_code_of, follow_logs, seconds, summary};
@@ -11,22 +10,11 @@ use crate::cli::exit::CoordError;
 use crate::cli::route::Call;
 use crate::client::Client;
 use crate::verbs::remote::support::link::project_of;
-use crate::verbs::remote::support::scope::coord_home;
+use crate::verbs::remote::support::scope::requested_by;
 use crate::verbs::remote::support::text::cell;
-use crate::who::caller;
-
-/// Who is asking, for the run's `by`: the calling thread when there is one.
-fn by_of(call: &Call<'_>) -> String {
-    let board = read_board(&coord_home(call), project_of(call))
-        .ok()
-        .flatten();
-    board
-        .and_then(|b| caller(&b, &call.inv.cwd, &call.inv.env, &call.options).ok())
-        .map_or_else(|| "cli".to_owned(), |who| who.actor)
-}
 
 fn start_body(call: &Call<'_>, name: &str) -> Result<Value, CoordError> {
-    let mut body = json!({ "name": name, "by": by_of(call) });
+    let mut body = json!({ "name": name, "by": requested_by(call) });
     if call.options.get("agent").is_some() {
         match call.options.text("agent").filter(|a| is_agent_id(a)) {
             Some(agent) => body["agent"] = json!(agent),

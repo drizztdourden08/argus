@@ -12,6 +12,7 @@ use argus_core::clock::now_iso;
 use argus_core::config::{ConfigError, HOST, load_config};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
+use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths};
 use argus_native::TrayFiles;
 use argus_store::{Db, PruneOptions, StoreError};
@@ -33,8 +34,8 @@ use crate::shadow;
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
-    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services,
-    WakeOptions, WorktreesOptions, routes,
+    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
+    Services, WakeOptions, WorktreesOptions, routes,
 };
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
@@ -69,6 +70,8 @@ pub struct ServeOptions {
     pub worktrees: WorktreesOptions,
     /// The build cache prune.
     pub cache: CacheOptions,
+    /// The release store, check runs and local package registry.
+    pub records: RecordsOptions,
     /// The wake service (it needs the sync service).
     pub wake: WakeOptions,
     /// Which sub-agent services run.
@@ -100,6 +103,7 @@ impl ServeOptions {
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
             cache: CacheOptions::default(),
+            records: RecordsOptions::default(),
             wake: WakeOptions::default(),
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
@@ -238,6 +242,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         config,
         env_port: opts.port,
         tray: TrayFiles::new(&paths.home),
+        remote: Arc::new(Switch::new(&paths.coord_home)),
         paths,
         activity: activity::build(&db, &log),
         db,
@@ -254,6 +259,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         procs: None,
         worktrees: None,
         cache: None,
+        records: None,
         notify: None,
         notifier: None,
         instance,

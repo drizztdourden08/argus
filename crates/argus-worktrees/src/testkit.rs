@@ -18,6 +18,7 @@ use crate::rule::Rule;
 use crate::service::{Deps, Options, Service};
 use crate::sync::locked;
 use argus_core::StorageError;
+use argus_core::remote::{Mode, ModeSource};
 use std::collections::HashMap;
 use std::fs;
 use std::io;
@@ -494,6 +495,25 @@ impl GhRunner for FakeGh {
     }
 }
 
+/// The switch, as the test says: remote until the test makes it local.
+pub struct FakeMode(AtomicBool);
+
+impl FakeMode {
+    pub fn set_local(&self, local: bool) {
+        self.0.store(local, Ordering::SeqCst);
+    }
+}
+
+impl ModeSource for FakeMode {
+    fn mode(&self) -> Mode {
+        if self.0.load(Ordering::SeqCst) {
+            Mode::Local
+        } else {
+            Mode::Remote
+        }
+    }
+}
+
 /// A door the test keeps shut until it opens it.
 #[derive(Default)]
 pub struct Gate {
@@ -723,6 +743,7 @@ pub struct Harness {
     pub notes: Arc<Recorder>,
     pub procs: Arc<FakeProcs>,
     pub gh: Arc<FakeGh>,
+    pub mode: Arc<FakeMode>,
     pub clock: Arc<ManualClock>,
     pub exec: Arc<ScriptedExec>,
     pub fs: Arc<HookFs>,
@@ -785,6 +806,7 @@ impl Harness {
             error: Some("ENOENT".to_string()),
             ..GitOutput::default()
         }));
+        let remote = Arc::new(FakeMode(AtomicBool::new(false)));
         let clock = Arc::new(ManualClock::at(SystemClock.now_ms()));
         let exec = Arc::new(ScriptedExec::new(mode));
         let hook_fs = Arc::new(HookFs::default());
@@ -802,6 +824,7 @@ impl Harness {
             fs: hook_fs.clone(),
             git: Git::new(exec.clone()),
             gh: gh.clone(),
+            remote: remote.clone(),
             procs: procs.clone(),
             clock: clock.clone(),
         };
@@ -811,6 +834,7 @@ impl Harness {
             notes,
             procs,
             gh,
+            mode: remote,
             clock,
             exec,
             fs: hook_fs,

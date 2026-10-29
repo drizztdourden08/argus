@@ -2,7 +2,9 @@
 import { ActivityTab } from '../tabs/activity';
 import { AgentsTab } from '../tabs/agents';
 import { BuildsTab } from '../tabs/builds';
+import { ChangesTab } from '../tabs/changes';
 import { KanbanTab } from '../tabs/kanban';
+import { ReleasesTab } from '../tabs/releases';
 import { TestsTab } from '../tabs/tests';
 import { WorktreesTab } from '../tabs/worktrees';
 import type { BoardTabBodyProps } from './BoardTabBody.type';
@@ -17,6 +19,8 @@ const BoardTabBody = (props: BoardTabBodyProps) => {
       {tab === 'tests' && <TestsTab boardKey={boardKey} />}
       {tab === 'builds' && <BuildsTab boardKey={boardKey} />}
       {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
+      {tab === 'changes' && <ChangesTab boardKey={boardKey} />}
+      {tab === 'releases' && <ReleasesTab boardKey={boardKey} />}
     </>
   );
 };

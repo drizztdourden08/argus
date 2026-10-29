@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex, PoisonError, RwLock};
 
 use argus_board::Board;
 use argus_board::names::display_name;
+use argus_board::ops::is_pr_kind;
 use argus_board::portfolio::project_keys;
 use argus_board::store::board_path;
 use argus_core::ids::PORTFOLIO;
@@ -18,6 +19,7 @@ use serde_json::{Value, json};
 use crate::hooks::Hooks;
 use crate::posts::{PostResult, Source};
 use crate::proofs::{Proof, ProofSource};
+use crate::prs::PrApplied;
 use crate::state::State;
 use crate::watcher::{self, Watcher, is_board_key};
 use crate::{RunsView, ScopeQueue};
@@ -270,6 +272,19 @@ impl SyncService {
         by: &str,
     ) -> Result<Proof, ApiError> {
         self.state.attach_entry_image(key, target, pic, by).await
+    }
+
+    /// Applies one pull request op (`pr-open`, `pr-update`, `pr-merge`, `pr-close`,
+    /// `pr-checks`) to the `prs` collection as `by`, and exports the board.
+    ///
+    /// # Errors
+    /// 400 for a bad op or one the board refuses, 404 for a project with no board, 503 for a
+    /// board that stays locked.
+    pub async fn apply_pr(&self, key: &str, op: Value, by: &str) -> Result<PrApplied, ApiError> {
+        if !op["kind"].as_str().is_some_and(is_pr_kind) {
+            return Err(ApiError::bad_request("not a pull request op"));
+        }
+        self.state.apply_pr(key, op, by).await
     }
 
     /// Exports again (soft: hash diff; hard: clear, export, reset the streams).

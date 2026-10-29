@@ -2,8 +2,10 @@
 //! bookkeeping, threads and test docs. Compiled only with the `testkit` feature.
 
 mod alpha;
+mod files;
 
 pub use alpha::fill_alpha;
+pub use files::{check_run_record, put_file};
 
 use serde_json::{Map, Value, json};
 

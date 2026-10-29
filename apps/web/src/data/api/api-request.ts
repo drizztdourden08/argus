@@ -11,9 +11,10 @@ const requestInit = (options: RequestOptions): RequestInit => {
   return { method, headers };
 };
 
-const parseBody = async (response: Response): Promise<unknown> => {
+const parseBody = async (response: Response, asText: boolean): Promise<unknown> => {
   const text = await response.text();
   if (!text) return null;
+  if (asText) return text;
   try {
     return JSON.parse(text);
   } catch {
@@ -35,7 +36,7 @@ const apiRequest = async <T>(path: string, options: RequestOptions = {}): Promis
   } catch {
     throw new ApiError(0, UNREACHABLE);
   }
-  const body = await parseBody(response);
+  const body = await parseBody(response, options.text === true);
   if (!response.ok) throw new ApiError(response.status, errorBodyOf(response, body));
   return body as T;
 };
