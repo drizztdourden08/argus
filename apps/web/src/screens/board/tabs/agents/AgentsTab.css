@@ -355,6 +355,10 @@
 }
 
 @container agents-panel (max-width: 39.99rem) {
+  .agents-table {
+    --agents-status-width: var(--size-24);
+  }
+
   .agents-head__count {
     flex: 1 1 calc(var(--agents-rem) * 7);
     min-width: 0;

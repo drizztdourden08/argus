@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Flex, Stack, Text } from '@drizztdourden08/tessera';
+import { BrandMark, Flex, Stack, Text } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../data/agents';
 import { useCollection } from '../../../data/react';
-import { Logo, ProjectSwitcher } from '../../../shell';
+import { ProjectSwitcher } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
 import { findLead } from '../tabs/agents';
 import { BoardStamp } from './sub-components/BoardStamp';
@@ -15,7 +15,7 @@ const BoardHeader = (props: BoardHeaderProps) => {
   return (
     <Flex as="header" className="board-header" wrap align="center">
       <Flex className="board-header__brand" align="center" gap="sm">
-        <Logo size="lg" label="Argus" />
+        <BrandMark app="argus" size="lg" />
         <Stack className="board-header__id" gap="2xs">
           <Text variant="overline" aria-hidden="true">Coordination board</Text>
           <Text as="h1" className="board-header__title">{name}</Text>
