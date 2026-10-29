@@ -120,11 +120,11 @@ fn old_temp_folders_go_and_young_ones_stay() {
     rig.tmp("old-build", 2 * DAY);
     rig.tmp("young-build", DAY / 4);
     let outcome = rig.prune(14).expect("prune");
-    assert_eq!(outcome.tmp_deleted, 1);
+    assert_eq!(outcome.abandoned_deleted, 1);
     assert!(!rig.root_path().join(".tmp/old-build").exists());
     assert!(rig.root_path().join(".tmp/young-build").exists());
     let report = rig.report(14);
-    assert_eq!(report.totals.stale_tmp, 0);
+    assert_eq!(report.totals.abandoned_folders, 0);
 }
 
 #[test]
@@ -138,7 +138,7 @@ fn the_report_counts_what_a_prune_would_delete() {
     assert_eq!((totals.versions, totals.entries), (2, 2));
     assert_eq!((totals.prunable_entries, totals.prunable_bytes), (1, 700));
     assert_eq!((totals.in_use_bytes, totals.unused_bytes), (100, 700));
-    assert_eq!(totals.stale_tmp, 1);
+    assert_eq!(totals.abandoned_folders, 1);
     assert!(rig.exists("package", CORE, "0.100.0", "node-aa"));
 }
 

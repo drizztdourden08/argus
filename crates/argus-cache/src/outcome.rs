@@ -34,7 +34,7 @@ pub struct Outcome {
     pub at: String,
     pub deleted: Vec<Deleted>,
     /// Left-over `.tmp/` folders deleted.
-    pub tmp_deleted: usize,
+    pub abandoned_deleted: usize,
     pub freed_bytes: u64,
     /// Paths outside the cache root that a prune refused to touch.
     pub refused: Vec<String>,
@@ -64,7 +64,7 @@ impl Outcome {
     /// Did it delete, refuse and fail nothing?
     pub fn is_quiet(&self) -> bool {
         self.deleted.is_empty()
-            && self.tmp_deleted == 0
+            && self.abandoned_deleted == 0
             && self.refused.is_empty()
             && self.failed.is_empty()
     }
@@ -73,7 +73,7 @@ impl Outcome {
     pub fn summary(&self) -> String {
         let mut parts = vec![
             counted(self.deleted.len(), "entry", "entries"),
-            counted(self.tmp_deleted, "temp folder", "temp folders"),
+            counted(self.abandoned_deleted, "temp folder", "temp folders"),
             format!("{} freed", size_text(self.freed_bytes)),
         ];
         if !self.refused.is_empty() {

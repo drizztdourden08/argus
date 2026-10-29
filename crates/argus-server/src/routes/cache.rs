@@ -3,7 +3,7 @@
 //! - `GET /api/cache` is `{root, exists, graceDays, rows, totals, problems, lastPrune, shadow}`: one row per cached
 //!   version with every project and worktree that resolves it in its lockfile, the totals, and the last prune of this
 //!   run (`null` before one)
-//! - `POST /api/cache/prune` prunes now and answers what it deleted: `{at, deleted, tmpDeleted, freedBytes, refused,
+//! - `POST /api/cache/prune` prunes now and answers what it deleted: `{at, deleted, abandonedDeleted, freedBytes, refused,
 //!   failed}`. 403 `read_only` in shadow mode, 409 `conflict` while the worktrees were not scanned yet or a lockfile
 //!   could not be read (nothing is deleted then)
 

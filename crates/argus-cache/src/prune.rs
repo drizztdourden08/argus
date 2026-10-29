@@ -57,7 +57,7 @@ pub fn run(fs: &dyn Fs, root: &str, plan: &Plan, now_ms: i64) -> Outcome {
     for tmp in &plan.tmp {
         match delete_tree(fs, root, &tmp.path) {
             Ok(()) => {
-                run.outcome.tmp_deleted += 1;
+                run.outcome.abandoned_deleted += 1;
                 run.outcome.freed_bytes += tmp.size_bytes;
             }
             Err(e) => run.fail(&tmp.path, e),
@@ -107,7 +107,7 @@ mod tests {
         let outcome = run(&RealFs, &root, &plan, 0);
         assert_eq!(outcome.refused.len(), 3, "{outcome:?}");
         assert_eq!(outcome.deleted, Vec::new());
-        assert_eq!((outcome.tmp_deleted, outcome.freed_bytes), (0, 0));
+        assert_eq!((outcome.abandoned_deleted, outcome.freed_bytes), (0, 0));
         assert!(fs::exists(format!("{outside}/files/keep.js")).expect("exists"));
         assert!(outcome.summary().contains("3 refused"));
     }

@@ -40,8 +40,8 @@ pub struct Totals {
     pub unused_bytes: u64,
     pub prunable_entries: usize,
     pub prunable_bytes: u64,
-    pub stale_tmp: usize,
-    pub stale_tmp_bytes: u64,
+    pub abandoned_folders: usize,
+    pub abandoned_bytes: u64,
 }
 
 /// What `GET /api/cache` answers with, apart from the last prune.
@@ -107,8 +107,8 @@ fn totals_of(rows: &[Row], survey: &Survey) -> Totals {
         unused_bytes: used(false),
         prunable_entries: rows.iter().map(|r| r.prunable).sum(),
         prunable_bytes: rows.iter().map(|r| r.prunable_bytes).sum(),
-        stale_tmp: survey.stale_tmp.len(),
-        stale_tmp_bytes: survey.stale_tmp.iter().map(|t| t.size_bytes).sum(),
+        abandoned_folders: survey.stale_tmp.len(),
+        abandoned_bytes: survey.stale_tmp.iter().map(|t| t.size_bytes).sum(),
     }
 }
 
