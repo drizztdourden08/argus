@@ -740,3 +740,22 @@ fn a_stopped_service_scans_nothing() {
     h.svc.start();
     assert!(h.svc.scan_now("alpha").is_some());
 }
+
+#[test]
+fn a_rule_whose_scan_fails_says_so_once_for_the_servers_log() {
+    let fx = Fixture::new();
+    let plain = format!("{}/plain", fx.wts);
+    let h = Harness::new(
+        &fx.root,
+        vec![rule_for(&fx), Rule::folder("W-2", &plain, "worker").repo()],
+        |_| {},
+    );
+    h.scan();
+    h.scan();
+    let problems = h.notes.problems.lock().unwrap().clone();
+    assert_eq!(
+        problems,
+        ["alpha: the worktree scan of rule W-2 failed: not a git repository"],
+        "one line, not one per scan"
+    );
+}

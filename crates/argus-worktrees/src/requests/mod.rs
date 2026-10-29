@@ -10,7 +10,9 @@
 //!   `leftovers` (every leftover folder old enough, each through `remove` on its own)
 //! - caller: checked when the request is made (a stranger project or thread: forbidden; the page may not ask, it removes
 //!   directly) and again by `remove` for every target
-//! - worker: ONE for all projects, one target at a time, oldest request first; each request starts with a fresh scan
+//! - worker: one per project, one target at a time, oldest request first; each request starts with a fresh scan. A
+//!   long request of one project (88 leftovers of 10 minutes each) never holds up the requests of another; the
+//!   removals themselves still run one at a time across every project (`Service::one_at_a_time`, the job queue)
 //! - state: kept in the key-value table after every target (the last 100 per project); a restart makes the queued and
 //!   the running ones queued again and goes on with the targets that have no outcome yet
 //! - outcome: every target ends with a sentence; the request is `done` (nothing refused), `partial`, or `refused`
@@ -27,7 +29,7 @@ mod text;
 mod worker;
 
 use crate::queue::Queue;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 
 pub use create::{Queued, RequestInput};
@@ -54,7 +56,8 @@ pub(crate) struct State {
     pub stores: HashMap<String, store::Store>,
     /// The worker does not run until the service starts (and again after a stop).
     pub halted: bool,
-    pub looping: bool,
+    /// The projects whose worker runs.
+    pub looping: HashSet<String>,
 }
 
 impl Default for State {
@@ -62,14 +65,15 @@ impl Default for State {
         Self {
             stores: HashMap::new(),
             halted: true,
-            looping: false,
+            looping: HashSet::new(),
         }
     }
 }
 
-/// The requests of every project and the one worker that carries them out.
+/// The requests of every project and the worker of each project that carries them out.
 #[derive(Default)]
 pub struct Requests {
     pub(crate) state: Mutex<State>,
-    pub(crate) queue: Queue,
+    /// One worker per project, by project.
+    pub(crate) queues: Mutex<HashMap<String, Queue>>,
 }

@@ -10,7 +10,9 @@ mod fixture;
 #[path = "worktrees/rig.rs"]
 mod rig;
 
+use argus_core::clock::{iso_from_ms, now_ms};
 use argus_testkit::CoordCli;
+use argus_worktrees::requests_key;
 use rig::{Rig, id_of, until, wakes_of};
 use serde_json::{Value, json};
 
@@ -136,6 +138,36 @@ async fn a_request_is_recorded_at_once_the_worker_removes_the_lead_is_told_and_t
     let ids: Vec<&Value> = both.iter().map(|x| &x["id"]).collect();
     assert_eq!(ids, [&json!("R-2"), &json!("R-1")]);
     the_summary_and_the_activity_follow(&r).await;
+    r.t.stop(false).await;
+}
+
+/// A request by path as the server records it, queued and not yet run.
+fn queued_by_path(path: &str) -> String {
+    let target = json!({ "id": path, "label": path });
+    let rec = json!({ "id": "R-1", "key": "alpha", "by": "ui", "at": iso_from_ms(now_ms()), "mode": "targets", "branch": true, "targets": [target], "resolved": true, "status": "queued" });
+    json!({ "seq": 1, "list": [rec] }).to_string()
+}
+
+/// The live bug of 2026-10-29: a request filed before a restart, naming its worktree by path, must
+/// be carried out by the next server, which scans the project on its own first.
+#[tokio::test(flavor = "multi_thread")]
+async fn a_request_by_path_filed_before_a_restart_is_carried_out_by_the_next_server_with_no_scan_before_it()
+ {
+    let r = Rig::start().await;
+    let path = r
+        .path("old-merged")
+        .display()
+        .to_string()
+        .replace('\\', "/");
+    r.t.svc
+        .db
+        .kv_set(&requests_key("alpha"), &queued_by_path(&path))
+        .expect("the request is stored");
+    let r = r.restart().await;
+    let list = until("the request done", || first_is(&r, "done")).await;
+    assert_eq!(list[0]["results"][0]["ok"], true, "{}", list[0]);
+    assert!(!r.path("old-merged").exists(), "the server removed it");
+    r.scanned().await;
     r.t.stop(false).await;
 }
 

@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use argus_core::clock::iso_from_ms;
@@ -29,7 +29,7 @@ impl ProcessLister for NoProcs {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Setup {
     pub shadow: bool,
     pub enabled_off: bool,
@@ -39,7 +39,9 @@ pub struct Setup {
 pub struct Rig {
     pub t: TestServer,
     pub fx: Fixture,
-    _home: TempDir,
+    setup: Setup,
+    home: TempDir,
+    dash: TempDir,
 }
 
 /// The id of a worktree folder.
@@ -51,6 +53,29 @@ pub fn rule(fx: &Fixture) -> Value {
     json!({ "id": "W-1", "path": clean_path(&fx.wts.display().to_string()), "kind": "folder", "include": [], "exclude": [], "thread": "ui", "note": "the ui thread builds here", "staleDays": null, "addedBy": "ui", "addedAt": iso_from_ms(now_ms()) })
 }
 
+/// A server on these homes with the scanner's timers on.
+async fn serve(setup: &Setup, home: &Path, dash: &Path) -> TestServer {
+    let Setup {
+        shadow,
+        enabled_off,
+        git,
+    } = setup.clone();
+    TestServer::start(TestOptions {
+        shadow,
+        coord_home: Some(home.to_path_buf()),
+        dashboard_home: Some(dash.to_path_buf()),
+        config: json!({ "worktrees": { "startDelayMs": 300, "liveMs": 1000 } }),
+        tweak: Some(Arc::new(move |opts| {
+            opts.worktrees.timers = true;
+            opts.worktrees.enabled = !enabled_off;
+            opts.worktrees.procs = Some(Arc::new(NoProcs));
+            opts.worktrees.git.clone_from(&git);
+        })),
+        ..TestOptions::default()
+    })
+    .await
+}
+
 impl Rig {
     pub async fn start() -> Rig {
         Rig::with(Setup::default()).await
@@ -59,30 +84,40 @@ impl Rig {
     pub async fn with(setup: Setup) -> Rig {
         let fx = Fixture::new();
         let home = tempfile::tempdir().expect("a coord home");
+        let dash = tempfile::tempdir().expect("a dashboard home");
         make_home(home.path());
         let mut board = alpha_board(home.path());
         board["worktreeRules"] = json!([rule(&fx)]);
         board["counters"]["worktreeRule"] = json!(1);
         write_board(home.path(), "alpha", &board);
-        let Setup {
-            shadow,
-            enabled_off,
-            git,
-        } = setup;
-        let t = TestServer::start(TestOptions {
-            shadow,
-            coord_home: Some(home.path().to_path_buf()),
-            config: json!({ "worktrees": { "startDelayMs": 300, "liveMs": 1000 } }),
-            tweak: Some(Arc::new(move |opts| {
-                opts.worktrees.timers = true;
-                opts.worktrees.enabled = !enabled_off;
-                opts.worktrees.procs = Some(Arc::new(NoProcs));
-                opts.worktrees.git.clone_from(&git);
-            })),
-            ..TestOptions::default()
-        })
-        .await;
-        Rig { t, fx, _home: home }
+        let t = serve(&setup, home.path(), dash.path()).await;
+        Rig {
+            t,
+            fx,
+            setup,
+            home,
+            dash,
+        }
+    }
+
+    /// The server stopped and started again on the same homes (a restart of the owner's server).
+    pub async fn restart(self) -> Rig {
+        let Rig {
+            t,
+            fx,
+            setup,
+            home,
+            dash,
+        } = self;
+        t.stop(true).await;
+        let t = serve(&setup, home.path(), dash.path()).await;
+        Rig {
+            t,
+            fx,
+            setup,
+            home,
+            dash,
+        }
     }
 
     /// The docs of the Worktrees tab by folder name.
