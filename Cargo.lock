@@ -276,6 +276,7 @@ dependencies = [
  "argus-native",
  "argus-notify",
  "argus-procs",
+ "argus-records",
  "argus-store",
  "argus-sync",
  "argus-testkit",

@@ -117,6 +117,7 @@ impl TestServer {
         opts.procs.enabled = false;
         opts.worktrees.timers = false;
         opts.cache.enabled = false;
+        opts.records.consumers = argus_server::ConsumerSource::Off;
         opts.run_service.stale_timer = false;
         if let Some(tweak) = &o.tweak {
             tweak(&mut opts);

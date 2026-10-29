@@ -8,6 +8,7 @@ pub mod agents;
 pub mod mcp;
 pub mod notify;
 pub mod procs;
+pub mod records;
 pub mod runs;
 pub mod stale;
 pub mod wake;

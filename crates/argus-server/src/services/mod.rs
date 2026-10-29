@@ -39,6 +39,7 @@ pub(crate) mod cache;
 pub(crate) mod compose;
 pub(crate) mod notify;
 pub(crate) mod procs;
+pub(crate) mod records;
 pub(crate) mod runs;
 pub(crate) mod stale;
 pub(crate) mod sync;
@@ -51,6 +52,7 @@ pub use agents::AgentsOptions;
 pub use cache::{CacheOptions, CacheService};
 pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
+pub use records::{ConsumerSource, ConsumerStatus, Consumers, NodeStatus, Records, RecordsOptions};
 pub use runs::RunsOptions;
 pub use wake::WakeOptions;
 pub use wake_hook::{WakeHook, WakeRequest};
@@ -99,6 +101,8 @@ pub struct Services {
     pub worktrees: Option<Arc<WorktreeService>>,
     /// The build cache of Brock and Tessera, when on.
     pub cache: Option<Arc<CacheService>>,
+    /// The release store, the check runs and the local package registry, when on.
+    pub records: Option<Arc<Records>>,
     /// The notifications to the owner, when on.
     pub notify: Option<Arc<Notify>>,
     /// The OS toast, when there is one.
