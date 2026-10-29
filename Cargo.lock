@@ -113,6 +113,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "argus-cache"
+version = "0.1.0"
+dependencies = [
+ "argus-core",
+ "argus-worktrees",
+ "filetime",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "argus-coord"
 version = "0.1.0"
 dependencies = [
