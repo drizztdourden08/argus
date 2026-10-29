@@ -4,16 +4,11 @@
 use std::fs;
 use std::path::Path;
 
+use argus_core::fixture::put_file as put;
 use argus_records::releases::{ReleaseStore, Served};
 use serde_json::{Value, json};
 
 const LATEST: &str = "version: VER\nfiles:\n  - url: App-Setup-VER.exe\n    sha512: abc==\n    size: 5\npath: App-Setup-VER.exe\nsha512: abc==\n";
-
-fn put(root: &Path, rel: &str, body: &str) {
-    let file = root.join(rel);
-    fs::create_dir_all(file.parent().expect("parent")).expect("folders");
-    fs::write(file, body).expect("file");
-}
 
 fn record(version: &str, replay: &str) -> String {
     json!({
@@ -31,7 +26,7 @@ fn release(root: &Path, channel: &str, version: &str, replay: &str, with_yml: bo
     put(
         root,
         &format!("{base}/release.json"),
-        &record(version, replay),
+        record(version, replay),
     );
     put(root, &format!("{base}/notes.md"), "# notes");
     put(root, &format!("{base}/core.tgz"), "tgz");
@@ -40,7 +35,7 @@ fn release(root: &Path, channel: &str, version: &str, replay: &str, with_yml: bo
         put(
             root,
             &format!("{base}/latest.yml"),
-            &LATEST.replace("VER", version),
+            LATEST.replace("VER", version),
         );
     }
 }
@@ -102,7 +97,7 @@ fn a_release_appears_when_its_record_is_written_and_half_written_entries_do_not(
     put(
         &root,
         "brock/latest/1.1.0.tmp/release.json",
-        &record("1.1.0", "pending"),
+        record("1.1.0", "pending"),
     );
     put(&root, "brock/latest/1.2.0/release.json", "{ half");
     s.rescan();
@@ -113,7 +108,7 @@ fn a_release_appears_when_its_record_is_written_and_half_written_entries_do_not(
     put(
         &root,
         "brock/latest/1.2.0/release.json",
-        &record("1.2.0", "pending"),
+        record("1.2.0", "pending"),
     );
     s.rescan();
     assert_eq!(s.releases().len(), 1);

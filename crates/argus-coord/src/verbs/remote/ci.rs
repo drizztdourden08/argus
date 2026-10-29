@@ -8,11 +8,11 @@ use std::time::{Duration, Instant};
 use serde_json::{Value, json};
 
 use super::support::link::{connect, project_of};
+use super::support::scope::requested_by;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::client::{Client, ClientError};
 use crate::verbs::thread::run_check;
-use crate::who::caller;
 
 /// The options that ask for a check run.
 const ASKS: [&str; 4] = ["commit", "pr", "job", "trigger"];
@@ -24,19 +24,9 @@ fn asks_for_a_run(call: &Call<'_>) -> bool {
     !call.positional.is_empty() || ASKS.iter().any(|o| call.options.get(o).is_some())
 }
 
-fn by_of(call: &Call<'_>) -> String {
-    let home = call.inv.env.paths(&call.inv.cwd).coord_home;
-    let board = argus_board::store::read_board(&home, project_of(call))
-        .ok()
-        .flatten();
-    board
-        .and_then(|b| caller(&b, &call.inv.cwd, &call.inv.env, &call.options).ok())
-        .map_or_else(|| "cli".to_owned(), |who| who.actor)
-}
-
 /// The request: the check word and the options typed, each a text.
 fn body_of(call: &Call<'_>) -> Result<Value, CoordError> {
-    let mut body = json!({ "by": by_of(call) });
+    let mut body = json!({ "by": requested_by(call) });
     if let Some(check) = call.positional.first() {
         body["check"] = json!(check);
     }

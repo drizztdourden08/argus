@@ -5,9 +5,10 @@ use argus_launchers::{ListFilter, Origin, StartOptions, check_key};
 use axum::response::Response;
 use serde_json::{Value, json, to_value};
 
-use super::{actor, ids, is_page, object, refusal, service, unknown_run, writable};
+use super::{actor, ids, is_page, refusal, service, unknown_run, writable};
 use crate::reply::json_reply;
 use crate::router::Reply;
+use crate::routes::write::object_body;
 use crate::{Ctx, RouteOpts, Router};
 
 const STDIN_ROUTE_BYTES: usize = 16 * 1024;
@@ -54,7 +55,7 @@ fn start_options(ctx: &Ctx, body: &Value) -> StartOptions {
 async fn start(ctx: Ctx) -> Reply {
     let runs = service(&ctx)?;
     writable(&ctx)?;
-    let body = object(&ctx).await?;
+    let body = object_body(&ctx).await?;
     let name = body["name"].as_str().unwrap_or_default();
     let out = runs
         .start(ctx.param("key"), name, &start_options(&ctx, &body))
@@ -79,7 +80,7 @@ async fn stdin(ctx: Ctx) -> Reply {
     let runs = service(&ctx)?;
     writable(&ctx)?;
     let (key, rid) = ids(&ctx)?;
-    let body = object(&ctx).await?;
+    let body = object_body(&ctx).await?;
     let Some(text) = body["text"].as_str() else {
         runs.get(&key, &rid)
             .ok_or_else(|| unknown_run(&key, &rid))?;

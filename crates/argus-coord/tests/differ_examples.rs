@@ -72,16 +72,12 @@ fn inbox_and_a_hook_with_stdin() {
     report.assert_no_mismatch();
 }
 
-/// The usage lines of verbs Argus serves and Node does not yet (`coord pr`, the check run form of
-/// `coord check`). Remove an entry the day Node prints the same line. See `docs/coord-port.md`.
-const ARGUS_AHEAD_USAGE: [&str; 2] = ["  coord check [<check>]", "  coord pr open"];
-
 #[test]
 fn router_answers_that_exist_on_both_sides_are_compared_for_real() {
     let steps = [
-        Step::new(&["--help"]).argus_ahead(&ARGUS_AHEAD_USAGE),
-        Step::new(&["help"]).argus_ahead(&ARGUS_AHEAD_USAGE),
-        Step::new(&["frobnicate"]).argus_ahead(&ARGUS_AHEAD_USAGE),
+        Step::new(&["--help"]),
+        Step::new(&["help"]),
+        Step::new(&["frobnicate"]),
     ];
     let Some(report) = run("router_answers_compared_for_real", &steps) else {
         return;

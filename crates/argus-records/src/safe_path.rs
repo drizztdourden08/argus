@@ -19,6 +19,18 @@ pub fn is_temp_name(name: &str) -> bool {
         || ext.is_some_and(|e| UNFINISHED.contains(&e.as_str()))
 }
 
+/// The entries of a folder whose type `keep` accepts, as (name, path); an unreadable folder has
+/// none.
+pub fn children(dir: &Path, keep: impl Fn(&std::fs::FileType) -> bool) -> Vec<(String, PathBuf)> {
+    let Ok(read) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    read.filter_map(Result::ok)
+        .filter(|e| e.file_type().is_ok_and(|t| keep(&t)))
+        .filter_map(|e| Some((e.file_name().to_str()?.to_owned(), e.path())))
+        .collect()
+}
+
 /// Whether a path segment is a plain name: no dots-only, separators, drive or stream colons,
 /// control characters, trailing dot or space (Windows reads those as another name), and no
 /// temp name.

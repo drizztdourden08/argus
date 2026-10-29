@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use argus_core::fixture::{check_run_record, put_file as put};
 use argus_server::{ConsumerSource, ConsumerStatus};
 use argus_testkit::{
     Reply, Request, TestOptions, TestServer, alpha_board, make_home, request_at, write_board,
@@ -23,12 +24,6 @@ use wait::until;
 
 const LATEST: &str = "version: VER\nfiles:\n  - url: App-Setup-VER.exe\n    sha512: abc==\n    size: 10\npath: App-Setup-VER.exe\nsha512: abc==\n";
 const EXE: &[u8] = b"0123456789";
-
-fn put(root: &Path, rel: &str, body: impl AsRef<[u8]>) {
-    let file = root.join(rel);
-    fs::create_dir_all(file.parent().expect("parent")).expect("folders");
-    fs::write(file, body).expect("file");
-}
 
 fn release(home: &Path, channel: &str, version: &str, replay: &str) {
     let base = format!("releases/brock/{channel}/{version}");
@@ -56,12 +51,7 @@ fn release(home: &Path, channel: &str, version: &str, replay: &str) {
 }
 
 fn check_run(home: &Path, project: &str, id: &str, started: &str, commit: &str, pr: &str) {
-    let record = json!({
-        "kind": "check-run", "id": "", "project": project, "commit": commit, "pr": pr,
-        "status": "pass", "startedAt": started, "finishedAt": started,
-        "steps": [{ "name": "lint", "command": "pnpm lint", "exitCode": 0, "log": format!("{id}/lint.log") }],
-        "replay": { "state": "pending" },
-    });
+    let record = check_run_record(project, id, started, commit, pr);
     put(home, &format!("ci/{project}/{id}.json"), record.to_string());
     put(home, &format!("ci/{project}/{id}/lint.log"), "lint ok\n");
 }

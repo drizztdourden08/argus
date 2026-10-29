@@ -10,7 +10,7 @@ use argus_core::ids::is_key;
 use serde_json::Value;
 
 use crate::fields::text;
-use crate::safe_path::segment_ok;
+use crate::safe_path::{children, segment_ok};
 use crate::stamp::StampCache;
 
 /// Hands out the number of a run: the same number every time it is asked for the same run, a
@@ -65,13 +65,7 @@ fn run_id_of(path: &Path) -> Option<String> {
 }
 
 fn entries(dir: &Path) -> Vec<(String, PathBuf)> {
-    let Ok(read) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    read.filter_map(Result::ok)
-        .filter(|e| e.file_type().is_ok_and(|t| !t.is_symlink()))
-        .filter_map(|e| Some((e.file_name().to_str()?.to_owned(), e.path())))
-        .collect()
+    children(dir, |t| !t.is_symlink())
 }
 
 impl CheckStore {

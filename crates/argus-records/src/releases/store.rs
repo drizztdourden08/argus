@@ -11,7 +11,7 @@ use serde_json::Value;
 use super::record::{Place, Release, parse};
 use super::semver::compare;
 use crate::Replay;
-use crate::safe_path::segment_ok;
+use crate::safe_path::{children, segment_ok};
 use crate::stamp::StampCache;
 
 const RECORD: &str = "release.json";
@@ -25,14 +25,9 @@ pub struct ReleaseStore {
 
 /// The names of the folders in a folder that can be part of the store.
 fn folders(dir: &Path) -> Vec<(String, PathBuf)> {
-    let Ok(read) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    read.filter_map(Result::ok)
-        .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
-        .filter_map(|e| Some((e.file_name().to_str()?.to_owned(), e.path())))
-        .filter(|(name, _)| segment_ok(name))
-        .collect()
+    let mut found = children(dir, std::fs::FileType::is_dir);
+    found.retain(|(name, _)| segment_ok(name));
+    found
 }
 
 fn read_record(path: &Path) -> Option<Value> {

@@ -6,8 +6,9 @@ use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
+use argus_core::fixture::check_run_record;
 use argus_records::checks::{CheckRun, CheckStore, IdBook, run_json};
-use serde_json::{Value, json};
+use serde_json::Value;
 
 /// A book in memory that outlives the stores, as the database does.
 #[derive(Default)]
@@ -22,12 +23,7 @@ impl IdBook for Book {
 }
 
 fn run(root: &Path, project: &str, id: &str, started: &str, commit: &str, pr: &str) {
-    let record = json!({
-        "kind": "check-run", "id": "", "project": project, "commit": commit, "pr": pr,
-        "status": "pass", "startedAt": started, "finishedAt": started,
-        "steps": [{ "name": "lint", "command": "pnpm lint", "exitCode": 0, "log": format!("{id}/lint.log") }],
-        "replay": { "state": "pending" },
-    });
+    let record = check_run_record(project, id, started, commit, pr);
     let file = root.join(project).join(format!("{id}.json"));
     fs::create_dir_all(root.join(project).join(id)).expect("folders");
     fs::write(root.join(project).join(id).join("lint.log"), "lint ok\n").expect("log");

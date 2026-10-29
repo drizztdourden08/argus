@@ -10,8 +10,10 @@ mod merge;
 mod open;
 mod root;
 
-use crate::cli::exit::{CoordError, Outcome};
-use crate::cli::route::Call;
+use crate::cli::{
+    exit::{CoordError, Outcome},
+    route::Call,
+};
 use crate::verbs::remote::support::link::take_sub;
 
 const SUBS: &str = "open, list, merge, close";

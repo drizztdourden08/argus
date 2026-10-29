@@ -408,18 +408,6 @@ That is 181 cases in the dedicated files plus the CLI cases of the shared ones.
 
 The bench of section 3 runs with layer 3 on every package landing.
 
-### Argus ahead of Node
-
-Argus serves a few verbs Node does not have yet. Their usage lines are the only output the
-differential run may leave out of the Argus side, and only for the router answers (`--help`,
-`help`, an unknown verb), through `Step::argus_ahead` and the explicit `ARGUS_AHEAD_USAGE` list in
-`crates/argus-coord/tests/differ_examples.rs`. Everything else is compared byte for byte.
-
-| Usage line starts with | Verb | Remove the entry when |
-|---|---|---|
-| `  coord check [<check>]` | `coord check` as a check run | Node prints the same line |
-| `  coord pr open` | `coord pr ...` | Node prints the same line |
-
 ### Gates
 
 - A package is done when its Rust ports pass, its Node files pass with `COORD_ENGINE=argus`, and
