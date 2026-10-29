@@ -5,6 +5,7 @@ import { plainText } from '../../plain-text';
 import type { EntryBodyProps } from '../OwnerFeed.type';
 import { AskForm } from './AskForm';
 import { ContextBlock } from './ContextBlock';
+import { EntryImages } from './EntryImages';
 
 const AskBody = (props: EntryBodyProps) => {
   const { entry, actions } = props;
@@ -12,6 +13,7 @@ const AskBody = (props: EntryBodyProps) => {
     <Flex direction="column" gap="sm">
       <ContextBlock entry={entry} actions={actions} />
       <Text weight={600} title={entry.text}>{plainText(entry.text)}</Text>
+      <EntryImages entry={entry} />
       <AskForm entry={entry} mode={askMode(entry)} actions={actions} />
     </Flex>
   );

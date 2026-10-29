@@ -4,4 +4,5 @@ export { OwnerFeed } from './OwnerFeed';
 export { AskForm } from './sub-components/AskForm';
 export { CardMenu } from './sub-components/CardMenu';
 export { ContextBlock } from './sub-components/ContextBlock';
+export { EntryImages } from './sub-components/EntryImages';
 export type { FeedActions } from './OwnerFeed.type';

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
-import type { BoardAction, Entry, LogLine } from '../../../data/types';
+import type { BoardAction, Entry, EntryImage, LogLine } from '../../../data/types';
 import type { AskMode, BoardWork, FeedCard } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
 
@@ -75,6 +75,16 @@ interface EntryBodyProps {
   actions: FeedActions;
 }
 
+interface EntryImagesProps {
+  entry: Entry;
+}
+
+interface ImageGroup {
+  key: string;
+  title: string | null;
+  shots: EntryImage[];
+}
+
 interface AskFormProps extends EntryBodyProps {
   mode: AskMode;
 }
@@ -120,11 +130,13 @@ export type {
   CardMetaProps,
   CardSectionsProps,
   EntryBodyProps,
+  EntryImagesProps,
   FeedActions,
   FeedCardViewProps,
   FeedFilter,
   FeedGroupProps,
   FeedSectionsProps,
+  ImageGroup,
   LogListProps,
   LogSectionProps,
   LogWindow,
