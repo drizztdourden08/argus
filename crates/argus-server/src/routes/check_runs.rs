@@ -254,8 +254,27 @@ fn options_of(ctx: &Ctx, body: &Value, args: &Args) -> StartOptions {
     }
 }
 
+/// Check runs start only when `checks.enabled` is `true` in `config.json`: paused by default
+/// since `brock ci` once removed tracked files of a main checkout.
+fn paused(ctx: &Ctx) -> Result<(), ApiError> {
+    let config = ctx.svc.config();
+    let on = config
+        .extra
+        .get("checks")
+        .and_then(|c| c["enabled"].as_bool());
+    if on == Some(true) {
+        return Ok(());
+    }
+    Err(ApiError::new(
+        ErrorCode::Conflict,
+        "check runs are paused (set checks.enabled to true in config.json once brock ci is safe)"
+            .to_owned(),
+    ))
+}
+
 async fn start(ctx: Ctx) -> Reply {
     writable(&ctx)?;
+    paused(&ctx)?;
     let runs = service(&ctx)?;
     let body = object_body(&ctx).await?;
     let project = key(&ctx)?;

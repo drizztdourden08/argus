@@ -209,7 +209,7 @@ coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [-
 
 - `pr open` applies `pr-open` as the caller. The head commit is `--commit`, else what
   `git rev-parse --verify <head>^{commit}` says in the project root (empty when git cannot say).
-  Output: `PR-3 opened: feat/x into main at 0123456` (` at <7 characters>` only when the commit is
+  Output: `PR-3 opened: feat/x into main at 0123456` (the trailing `at <7 characters>` only when the commit is
   known). Refusals, exit 1 and `coord: <sentence>` on stderr: no title (`give the title: coord pr
   open "<title>" --head <branch>.`), no head (`--head <branch> is required.`), and the sentences of
   the board op (`head and base are the same branch.`, `PR-1 is already open for feat/x into

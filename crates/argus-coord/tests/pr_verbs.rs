@@ -311,7 +311,7 @@ async fn check_starts_a_run_and_prints_its_run_and_record() {
     );
     let script = tools.path().join("fake-brock.cjs");
     let config = json!({
-        "checks": { "command": format!("node \"{}\"", script.display()) },
+        "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
         "projectRoots": { "alpha": root.path().display().to_string() },
     });
     let rig = Rig::start(config, seed).await;

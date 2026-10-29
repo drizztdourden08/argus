@@ -56,7 +56,7 @@ async fn rig(shadow: bool) -> Rig {
     std::fs::write(&script, script_source(&coord, out.path())).expect("fake brock");
     let command = format!("node \"{}\"", script.display());
     let config = json!({
-        "checks": { "command": command },
+        "checks": { "command": command, "enabled": true },
         "projectRoots": { "alpha": root.path().display().to_string() },
     });
     let t = TestServer::start(TestOptions {
