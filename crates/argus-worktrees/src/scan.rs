@@ -10,7 +10,7 @@ use crate::git::Git;
 use crate::inspect::{RepoList, ScanCtx, inspect_dir};
 use crate::measure::Leftover;
 use crate::parse::{ListedWorktree, parse_worktree_list};
-use crate::paths::{base_name, clean_path, join_path, parent_of, path_key, same_path};
+use crate::paths::{base_name, clean_path, join_path, parent_of, path_key, same_path, worktree_id};
 use crate::rule::{Rule, RuleKind};
 use std::collections::HashSet;
 
@@ -200,15 +200,17 @@ impl Scanner<'_, '_> {
         }
     }
 
+    /// A folder an earlier rule already read is skipped before any git runs: it is listed once, for that rule.
     fn inspect_found(&mut self, rule: &Rule, paths: &[String]) {
         for dir in paths.iter().take(MAX_CANDIDATES) {
-            let fact = inspect_dir(dir, rule, &mut self.ctx);
-            if self.seen.insert(fact.id.clone()) {
-                if rule.kind == RuleKind::Folder {
-                    self.folder_facts.push(self.facts.len());
-                }
-                self.facts.push(fact);
+            let id = worktree_id(&clean_path(dir), self.env.case_insensitive);
+            if !self.seen.insert(id) {
+                continue;
             }
+            if rule.kind == RuleKind::Folder {
+                self.folder_facts.push(self.facts.len());
+            }
+            self.facts.push(inspect_dir(dir, rule, &mut self.ctx));
         }
     }
 
