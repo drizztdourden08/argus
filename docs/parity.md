@@ -127,7 +127,7 @@ their status is `n/a`.
 | `wake.http.test.mjs` | Wake engine and listeners | 3, 5 | `crates/argus-server/tests/wake_http.rs` | done |
 | `wake.items.test.mjs` | Kanban stale reminders | 3 | `crates/argus-wake/tests/item_wakes.rs` | done |
 | `wake.policy.test.mjs` | Wake policy | 3 | `crates/argus-wake/tests/policy.rs` | done |
-| `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/presence.rs` | done |
+| `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/presence.rs` (the cc1e7ef cases included: the `working` helper in every board-required case, and a heartbeat a minute ago is not a turn) | done |
 | `wake.registry.test.mjs` | Wake registry and faults | 3 | `crates/argus-wake/tests/registry.rs` | done |
 | `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` (the `request`, `requests` and `--idle` argument cases included) | done |
 | `worktrees.requests.http.test.mjs` | Worktree removal requests | 5 | `crates/argus-server/tests/worktree_requests.rs` (HTTP cases, and the `coord` cases through `CoordCli::locate_each`: the Node CLI and `argus coord`) | done |
@@ -267,7 +267,7 @@ their own Argus tests and by the owner's check.
 | Wake engine and listeners | Windows, coalescing, queued replay, v2 listeners and the wakes mirror match Node. | 3 |
 | Wake stream command | The wake-stream command prints the same lines, reconnects and exits 0 on replaced. | 3 |
 | Wake registry and faults | Registry states, the three failures, one fault per thread and the Overlord-only clear match Node. | 3 |
-| Board presence | Open board tabs are tracked per thread and board-closed faults open and clear as on Node. | 3 |
+| Board presence | Open board tabs are tracked per thread and board-closed faults open and clear as on Node. A board is required only while a thread is inside a turn (working, seen in the last 3 minutes; Node cc1e7ef). A stale board-closed fault of an idle thread is cleared by the registry on start and when the thread goes idle (Argus only; Node leaves it open). | 3 |
 | Agent wakes | The agent-stale and agent-checkin wakes fire on the same clock and records as on Node. | 3 |
 | Kanban stale reminders | Kanban reminders and the Overlord digest fire with the same thresholds, skips and texts. | 3 |
 | Registered strip | Both pages show the Registered strip with the same chips, counts and tooltips as Node. | 3 |

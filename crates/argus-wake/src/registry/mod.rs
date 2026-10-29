@@ -17,7 +17,8 @@
 //! listener threw. A failure opens a fault (one open per project and thread), mirrors it to the row, and
 //! wakes the Overlord with reason `wake-fault`. The fault of the Overlord itself shows on the page only.
 //! A fault ends by itself only when the thread listens again (`not-listening`, `no-listener`) or its
-//! board opens again (`board-closed`). A thread that is sent more wakes while its fault is open tells
+//! board opens again, or the thread goes idle, since a board is required only inside a turn
+//! (`board-closed`). A thread that is sent more wakes while its fault is open tells
 //! the Overlord again, at most every 10 minutes, so a deaf thread is never silently ignored.
 
 mod evaluate;
@@ -186,7 +187,8 @@ impl Registry {
         scope == MAIN_SCOPE && thread == self.main_thread()
     }
 
-    /// Hook into the engine, take up the young events still queued from before a restart, and write the docs.
+    /// Hook into the engine, take up the young events still queued from before a restart, clear the
+    /// board-closed faults the board rule no longer raises, and write the docs.
     pub fn start(&mut self, env: &mut Env<'_>) {
         self.started_at = self.now();
         env.engine.observe(true);
@@ -202,6 +204,7 @@ impl Registry {
                 }
             }
         }
+        self.check_boards(env, None);
         self.refresh(env, None);
     }
 
