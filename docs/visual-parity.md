@@ -127,11 +127,11 @@ this section, this section is true.
    Tessera 0.85 (status 6.8rem, agent 9.5rem, model 4.4rem, kind 4rem, item 3.6rem, branch 7rem,
    time 4.2rem, now 10rem, actions 8rem; the message and note keep fr 2 and 1), measured equal to
    Node at 1440, 1300, 1200, 1000, 800 and 700. The status column is a dot of 22px at 420 and below
-   40rem, as Node. TrackTable drops only at 48, 40 and 30rem, so the Node steps at 80, 70 and 56rem
-   (branch, then kind and now, then item) are drawn with a width that falls to zero below the step
-   (a CSS clamp on the table container width); the model column drops at 48rem and the rest at
-   40rem, as Node. The drop steps themselves stay Tessera's (needs Tessera if a dashboard wants
-   others), and a hidden column leaves its gap, a few pixels more than Node.
+   40rem, as Node. Node drops branch at 80rem, kind and now at 70rem, item at 56rem, model at 48rem and
+   the rest at 40rem. Since Tessera 0.87 the columns take `hideBelow` at Node's steps (branch 80rem,
+   kind and now 70rem, item 56rem, model 48rem, time and last message 40rem) and a hidden column
+   leaves no gap; the width clamp and its two model files are gone. Only the status dot at 420 and
+   below 40rem still comes from one container rule that sets the status width.
 5. fixed: sonnet green, haiku blue, opus grey.
 6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
 7. fixed: search field removed.
@@ -142,8 +142,8 @@ this section, this section is true.
 
 1. fixed: the Threads, status and subject selects are content wide (Select `width="fit"`) and the
    search is 220px (SearchInput `width="narrow"`); FieldFit and TestsFit are gone. At 420 Node
-   stretches the search to the full row, Argus keeps 220px (needs Tessera: a narrow width that
-   fills the row on a narrow screen). The selected Group by and Order segments are still the palette outline (new item 124).
+   stretches the search to the full row; the toolbar Card takes `container` (Tessera 0.87) so the
+   `narrow-fill` search fills the row at 420. The selected Group by and Order segments are still the palette outline (new item 124).
 2. fixed: three columns share the full width (they are panels as tall as the tallest, new item 130).
 3. fixed: vertical dots kebab, and no drag handle on the cards (KanbanBoard `grip={false}`).
 4. fixed: the needs you card has the red left edge (KanbanBoard cardEdgeTone).
@@ -196,8 +196,8 @@ this section, this section is true.
 1. fixed: 768px at 1440 (Node 760px), full width at 420.
 2. fixed: title is white sentence case (RecordDrawer uses Drawer look record) and RecordDrawer passes
    Drawer `stackNarrow` (Tessera 0.85): at 420 the title takes the full width and the close X sits in
-   the tools row, as Node. Left: Node puts the tools in the row of the id and the status tag, Argus
-   draws them in their own row under the title.
+   the tools row, as Node. RecordDrawer passes `headerActionsRow="eyebrow"` (0.87), so the tools sit
+   in the row of the id and the status tag as Node.
 3. fixed: archive and trash are icon buttons in the header.
 
 ### Drawer: work item
@@ -327,9 +327,9 @@ this section, this section is true.
 
 142. fixed: the Worktrees subject, branch and path cells are Tessera FoldText (`fill` since 0.85, so a
     long text no longer widens the table), the path with `truncate="middle"`, and the one-off CellText
-    and its CSS are gone. Left, needs Tessera: the middle truncation fills the whole cell, so the Copy
-    button sits at the right end of the path column where Node draws it right after the text, and the
-    cut is by characters (the end of the file name is not always kept). (Worktrees)
+    and its CSS are gone. The path takes FoldText `hug` (0.87), so the Copy button sits right after the text as
+    Node. Still open: the cut is by characters, so the end of the file name is not always kept.
+    (Worktrees)
 143. fixed: the Builds command line and the Tests launch command are a Tessera TextInput `readOnly`
     `mono` in a ButtonRow `lead` beside Copy, Play and Log (0.85). The field is 12px mono, 28px high
     and 1249px wide at 1440 against Node 12px, 28px and 1250px; LauncherCommand.css and the Tests
@@ -371,14 +371,28 @@ this section, this section is true.
 155. fixed: the clock icon in the overview summary has the Node gap before "updated 11m ago".
     (Overview Dashboards)
 
+161. fixed: the Argus mark is Tessera's `BrandMark app="argus"` in `currentColor` (0.87), white on the
+    dark app through the text colour; Argus's own Logo component and its SVG parser are gone. It
+    sits in the overview header (`md`, before "Argus") and the board header (`lg`). The BrandMark is
+    drawn in a square box, so its steps are a little wider than the old wide Logo (24 and 48px, were 26 and
+    39px). `apps/web/assets/argus-logo.svg` stays for the tray icon script. (Headers)
+162. fixed: the favicon stays `apps/web/public/static/favicon.svg`, which already switches black on
+    light chrome and white on dark with one `prefers-color-scheme` rule. Tessera 0.87 ships no
+    single adaptive favicon file (`brand/argus.svg` is black, `brand/dark-ground/argus.svg` white), so
+    there is nothing to switch to. (Shell)
+163. fixed: the Kanban toolbar Card takes `container`, so the `narrow-fill` search fills the row at
+    420. (Kanban)
+164. fixed: the Agents table uses `hideBelow` at Node's steps; see Agents 4. (Agents)
+165. fixed: the Worktrees path cell hugs its text and every record drawer puts its tools in the id row;
+    see Worktrees 142 and Drawers 2. (Worktrees, Drawers)
+
 ### Still open after the close-out
 
 Needs Tessera:
 
-- FoldText middle truncation that hugs its text (the Copy button right after the path), Kanban 1 a
-  container for the narrow-fill search at 420 (a container prop on Card or Flex), TrackTable
-  configurable column drop steps, Drawer tools in the id and tag row, brand mark tone (the argus
-  BrandMark is fixed grey), and the items 156 to 160 below.
+- The items 156 to 160 below. Tessera 0.87 closed the FoldText hug, the Kanban toolbar container,
+  the TrackTable `hideBelow` steps, the Drawer tools in the id and tag row and the argus mark
+  in `currentColor` (items 161 to 165).
 - 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
   body size (14px, 600). Text variant title is the large step (about 17px) and no prop sets the family
   at the body size, so Argus keeps mono 14px.

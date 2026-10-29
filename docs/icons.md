@@ -1,8 +1,9 @@
 <!-- @layer docs @kind doc -->
 # Native icons
 
-The Argus mark lives in `apps/web/assets/argus-logo.svg`, a single colour drawn with
-`currentColor`. The owner's rule: the mark is white or black depending on where it sits, or the
+The Argus mark shows in the app through Tessera's `BrandMark app="argus"`, drawn in `currentColor`.
+The file `apps/web/assets/argus-logo.svg` is the same mark for the tray icon script, a single colour
+drawn with `currentColor`. The owner's rule: the mark is white or black depending on where it sits, or the
 palette primary when it needs emphasis.
 
 ## Where it shows
