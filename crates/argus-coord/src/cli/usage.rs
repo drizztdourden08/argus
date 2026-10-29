@@ -32,7 +32,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord worktree leftovers [--json] | remove --all-leftovers [--older-than 3d] [--reason "..."]    (folders git no longer lists, only files left: listed with size and age; deleted in the background by Argus when nothing touched them for 3 days; no backup is possible; remove <id|path> works on one, without --branch/--discard)
   coord worktree request <id|path>... | --finished [--idle 6h] | --all-leftovers [--older-than 3d] [--branch] [--reason "..."]  |  requests [--json]    (ASKS Argus to remove, for a session whose own safety check refuses remove: deletes nothing itself; Argus removes behind the same guards, one at a time, and one note comes to your inbox; --finished = merged, or stale and clean; --idle D adds clean worktrees with nothing ahead untouched for D, 1h to 30d, 6h by default)
   coord test result <T> <pass|fail|partial|blocked> "<note>" [--proof <img>]    move <T> --item <I2> | archive|unarchive|rm|restore <T>
-  coord ask <I> "<question>" --context "<c>" [--option "<recommended>" --option "<other>"]... [--decide]    coord decide <I> "<decision>" --context "<c>"   (context and, for a decision, 2 to 5 options are required)  [--image [N=]<png> "<caption>"]... on either: pictures to open and zoom, one quoted caption each after the text, N= ties it to option N from 1
+  coord ask <I> "<question>" --context "<c>" [--option "<recommended>" --option "<other>"]... [--decide] [--image [N=]<file> "<caption>"]...    coord decide <I> "<decision>" --context "<c>" [--image <file> "<caption>"]...   (context and, for a decision, 2 to 5 options are required; --image is png/jpg/jpeg/gif/webp, 1 B to 10 MiB, one caption of 1 to 120 chars per image after the text in flag order, N= ties it to option N on ask only)
   coord notify "<text>" [--item I] [--level info|warn|bad] [--context "<c>"]    coord message "<text for the owner>" [--item I] [--context "<c>"]
   coord entry list [--open] [--kind k] [--mine] [--archived] | show <E> | pick <E> | done <E>
   coord entry set <E> ["<text>"] [--option "..."]... [--context "<c>"] | move <E> --item <I> | archive|unarchive|rm|restore <E>
@@ -61,6 +61,7 @@ Coordinator side (the same verbs work on every thread's records; --for <T> creat
   coord run stop <R-n> | status [<R-n>] [--json] | list [--status s] [--name n] [--limit n] [--json] | logs <R-n> [--follow] [--tail n]
 
 Ping the owner (any registered thread, the Overlord too; an OS notification on his screen and a line in Argus > Notifications):
+  coord remote [status|local|remote]      (the GitHub switch, ~/.coord/remote.json: local = nothing calls gh, the GitHub API or registry and nothing is pushed (the default); remote = the owner's go, set only when he says so)
   coord ping "<text, max 240>" [--title "<t, max 60>"] [--level info|ping|urgent] [--project k]
               (ping only when the owner is needed: a build handed and ready to test, a blocking decision only he can answer, something
               broken that only he can fix; never for progress or a "done" with nothing to look at. info = recorded only; urgent = stays until
