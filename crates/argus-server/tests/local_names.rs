@@ -9,7 +9,7 @@ use std::time::Duration;
 use argus_core::names::Door;
 use argus_dns::{TYPE_AAAA, ask, resolve};
 use argus_server::LiveNames;
-use argus_server::security::{Alias, host_alias, parse_door_alias, peer_ok};
+use argus_server::security::{Alias, Doors, host_alias, parse_door_alias, peer_ok};
 use argus_testkit::{Reply, Request, TestOptions, TestServer, request_at};
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
@@ -200,6 +200,13 @@ fn door(port: u16) -> Door {
     }
 }
 
+fn names_only(door: &Door) -> Doors<'_> {
+    Doors {
+        names: Some(door),
+        ..Doors::default()
+    }
+}
+
 fn alias(key: &str, thread: Option<&str>, reserved: bool) -> Alias {
     Alias {
         key: key.to_owned(),
@@ -249,14 +256,14 @@ fn a_name_under_the_suffix_is_an_alias_with_the_port_of_the_door() {
 fn the_localhost_aliases_still_work_beside_the_names() {
     let at_80 = door(80);
     assert_eq!(
-        host_alias("rotp.localhost:4000", 4000, Some(&at_80)),
+        host_alias("rotp.localhost:4000", 4000, names_only(&at_80)),
         Some(alias("rotp", None, false))
     );
     assert_eq!(
-        host_alias("rotp.argus", 4000, Some(&at_80)),
+        host_alias("rotp.argus", 4000, names_only(&at_80)),
         Some(alias("rotp", None, false))
     );
-    assert_eq!(host_alias("rotp.argus", 4000, None), None);
+    assert_eq!(host_alias("rotp.argus", 4000, Doors::default()), None);
 }
 
 #[test]

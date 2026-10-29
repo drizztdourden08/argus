@@ -119,6 +119,7 @@ pub struct Services {
     pub(crate) tasks: Tasks,
     pub(crate) port: AtomicU16,
     pub(crate) names: OnceLock<LiveNames>,
+    pub(crate) localhost_door: OnceLock<u16>,
     pub(crate) links: Mutex<Vec<Subscription>>,
 }
 

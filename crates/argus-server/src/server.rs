@@ -1,5 +1,5 @@
 //! Boot and shutdown: config, log, database, bus links, sync, routes, the listener on
-//! `127.0.0.1` (and the front door of the local names, when they are on), the pid file and the hourly prune. Shutdown ends the streams, lets requests
+//! `127.0.0.1` (and the localhost door and the front door of the local names, when they are on), the pid file and the hourly prune. Shutdown ends the streams, lets requests
 //! finish for a second, stops sync and removes the pid file.
 
 use std::net::SocketAddr;
@@ -25,6 +25,7 @@ use crate::first_start;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::local_names::{self, Front, LocalNamesOptions};
+use crate::localhost_door;
 use crate::security::LoginCodes;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
@@ -74,6 +75,9 @@ pub struct ServeOptions {
     pub notify: NotifyOptions,
     /// The ports of the local names, when `localNames` is on in the config.
     pub local_names: LocalNamesOptions,
+    /// The port of the localhost door on `127.0.0.1` (0 picks a free one); `None` leaves the
+    /// door off, which is what tests want. The `argus serve` verb sets port 80.
+    pub localhost_door_port: Option<u16>,
 }
 
 impl ServeOptions {
@@ -97,6 +101,7 @@ impl ServeOptions {
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
             local_names: LocalNamesOptions::default(),
+            localhost_door_port: None,
         }
     }
 }
@@ -260,6 +265,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         tasks: Tasks::new(opts),
         port: AtomicU16::new(0),
         names: OnceLock::new(),
+        localhost_door: OnceLock::new(),
         links: Mutex::new(links),
     })
 }
@@ -334,21 +340,24 @@ async fn serve_app(listener: TcpListener, app: Arc<App>) {
         .await;
 }
 
-async fn run(listener: TcpListener, door: Option<TcpListener>, svc: Arc<Services>) {
+async fn run(listener: TcpListener, doors: Vec<TcpListener>, svc: Arc<Services>) {
     let mut router = Router::new();
     routes::register_all(&mut router);
     let app = Arc::new(App {
         router,
         svc: Arc::clone(&svc),
     });
-    let at_door = door.map(|door| tokio::spawn(serve_app(door, Arc::clone(&app))));
+    let at_doors: Vec<_> = doors
+        .into_iter()
+        .map(|door| tokio::spawn(serve_app(door, Arc::clone(&app))))
+        .collect();
     let served = serve_app(listener, app);
     let stop = svc.stop.clone();
     tokio::select! {
         () = served => {}
         () = async { stop.cancelled().await; tokio::time::sleep(FORCE_AFTER).await } => {}
     }
-    if let Some(at_door) = at_door {
+    for at_door in at_doors {
         at_door.abort();
     }
     close(&svc);
@@ -373,13 +382,21 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     if let Some(front) = &front {
         let _set = svc.names.set(front.live.clone());
     }
-    write_pid_file(&svc.paths.pid_file, port, &svc.started_at, &svc.instance)?;
+    let localhost = localhost_door::open(&svc, opts.localhost_door_port).await;
+    let door_port = svc.localhost_door();
+    write_pid_file(
+        &svc.paths.pid_file,
+        port,
+        &svc.started_at,
+        &svc.instance,
+        door_port,
+    )?;
     let svc = Arc::new(svc);
     compose::start_all(&svc).await;
     prune(&svc);
     spawn_prune(&svc);
     svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": svc.shadow }));
-    let door = front.map(
+    let names_door = front.map(
         |Front {
              listener,
              responder,
@@ -389,7 +406,8 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
             listener
         },
     );
-    let task = tokio::spawn(run(listener, door, Arc::clone(&svc)));
+    let doors = names_door.into_iter().chain(localhost).collect();
+    let task = tokio::spawn(run(listener, doors, Arc::clone(&svc)));
     Ok(ServerHandle {
         url: format!("http://{HOST}:{port}"),
         port,
