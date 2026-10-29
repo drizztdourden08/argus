@@ -17,15 +17,21 @@ use std::fs;
 use std::sync::Arc;
 use tempfile::{TempDir, tempdir};
 
-struct Shape {
-    fx: Fixture,
-    h: Harness,
-    outside: String,
-    outside2: String,
+pub(super) struct Shape {
+    pub(super) fx: Fixture,
+    pub(super) h: Harness,
+    pub(super) outside: String,
+    pub(super) outside2: String,
     _dirs: (TempDir, TempDir),
 }
 
 fn ensure_links(old_merged: &str, outside: &str, outside2: &str) {
+    // node_modules is ignored by git, so Argus clears it before it calls git: the package folder is rebuilt here with the links.
+    put(
+        old_merged,
+        "node_modules/.pnpm/pkg@1/node_modules/pkg/index.js",
+        "module.exports = 1",
+    );
     let nm = format!("{old_merged}/node_modules");
     for (target, link) in [
         (
@@ -41,7 +47,7 @@ fn ensure_links(old_merged: &str, outside: &str, outside2: &str) {
     }
 }
 
-fn shape(mode: RemoveMode, prep: impl FnOnce(&Fixture)) -> Shape {
+pub(super) fn shape(mode: RemoveMode, prep: impl FnOnce(&Fixture)) -> Shape {
     let fx = Fixture::new();
     fs::write(
         format!("{}/.git/info/exclude", fx.repo),
@@ -75,16 +81,16 @@ fn shape(mode: RemoveMode, prep: impl FnOnce(&Fixture)) -> Shape {
     }
 }
 
-fn add_side(fx: &Fixture) {
+pub(super) fn add_side(fx: &Fixture) {
     fx.add("side");
 }
 
 impl Shape {
-    fn id(&self, name: &str) -> String {
+    pub(super) fn id(&self, name: &str) -> String {
         self.h.id_of(&self.fx.path(name))
     }
 
-    fn keeps_survive(&self) {
+    pub(super) fn keeps_survive(&self) {
         assert_eq!(
             fs::read_to_string(format!("{}/keep.txt", self.outside)).unwrap(),
             "precious one",
@@ -97,7 +103,7 @@ impl Shape {
         );
     }
 
-    fn made(&self) -> String {
+    pub(super) fn made(&self) -> String {
         self.h
             .store
             .kv

@@ -12,4 +12,5 @@ mod rules;
 mod safety;
 mod scan;
 mod service;
+mod slow;
 mod wire;

@@ -82,9 +82,10 @@ impl Service {
             .map_or(Listing::Absent, Listing::Present)
     }
 
-    /// After `git worktree remove` failed on the folder: has git already let go of the worktree (it no longer lists it,
-    /// or lists it only because its `.git` file is gone, which `git worktree prune` clears)? False when the error was
-    /// not a folder-deletion one, git cannot say, the worktree is still listed with its `.git` or is locked.
+    /// After `git worktree remove` failed on the folder or ran past its timeout and was killed: has git already let go
+    /// of the worktree (it no longer lists it, or lists it only because its `.git` file is gone, which `git worktree
+    /// prune` clears)? False when the error was neither, git cannot say, the worktree is still listed with its `.git`
+    /// or is locked.
     pub(crate) fn git_let_go(&self, project: &str, now: &Fact, run: &GitOutput) -> LetGo {
         let said = format!(
             "{}
@@ -92,7 +93,9 @@ impl Service {
             run.stderr,
             run.error.as_deref().unwrap_or_default()
         );
-        if !is_folder_error(&said) || self.deps.fs.is_dir(&format!("{}/.git", now.path)) {
+        if !(run.was_cut() || is_folder_error(&said))
+            || self.deps.fs.is_dir(&format!("{}/.git", now.path))
+        {
             return LetGo::No;
         }
         let entry = match self.look_listed(now) {

@@ -494,6 +494,11 @@ impl Service {
             LetGo::Unvetted(text) => format!("; Argus did not prune git's records: {text}"),
             LetGo::No => String::new(),
         };
+        let cut = if step.run.was_cut() {
+            "; nothing was deleted by Argus"
+        } else {
+            ""
+        };
         let here = backup
             .as_ref()
             .map(|b| format!("; the backup is in {}", b.dir))
@@ -501,7 +506,7 @@ impl Service {
         Err(WtError::new(
             ErrorCode::GitFailed,
             format!(
-                "git worktree remove failed: {}{why}{here}",
+                "git worktree remove failed: {}{cut}{why}{here}",
                 step.run.failure_text()
             ),
         )
