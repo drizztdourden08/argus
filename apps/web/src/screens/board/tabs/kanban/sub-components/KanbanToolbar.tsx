@@ -7,7 +7,7 @@ import { ViewRow } from './ViewRow';
 const KanbanToolbar = (props: KanbanToolbarProps) => {
   const { state, view, threads, subjects } = props;
   return (
-    <Card role="search" aria-label="Filters">
+    <Card container role="search" aria-label="Filters">
       <Flex direction="column" gap="sm">
         <FilterRow state={state} threads={threads} subjects={subjects} />
         <ViewRow state={state} view={view} />
