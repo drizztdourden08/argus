@@ -17,7 +17,7 @@ pub use export::export_docs;
 pub use import::{ImportResult, OpCounts, import_entries, import_entries_at};
 
 /// The collections the page mirrors from a board.
-pub const PAGE_COLLECTIONS: [Coll; 10] = [
+pub const PAGE_COLLECTIONS: [Coll; 11] = [
     Coll::Threads,
     Coll::Items,
     Coll::Tests,
@@ -28,6 +28,7 @@ pub const PAGE_COLLECTIONS: [Coll; 10] = [
     Coll::Log,
     Coll::Builds,
     Coll::Launchers,
+    Coll::Prs,
 ];
 
 /// What each reply kind of owner entry does to the board.

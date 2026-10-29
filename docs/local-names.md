@@ -21,6 +21,10 @@ names below are opt-in and need browser setup.
   `/p/<key>/?thread=<thread>`, `argus.localhost` is the overview. The Host and Origin checks
   accept `<x>.localhost` with no port on this door and refuse every other host with 421. The
   existing `<key>.localhost:47615` hosts keep working.
+- **The update feed host.** `http://releases.localhost/<project>/<channel>/<path>` is the
+  read-only release store, the same as `/releases/<project>/<channel>/<path>` on the main
+  listener (see `docs/local-remote.md`). A project called `releases` cannot use that host for its
+  board.
 - **On by default**, whether or not `localNames` is on. `"localhostDoor": false` in `config.json`
   turns it off. It needs a restart of Argus to change.
 - **If port 80 cannot be bound** (taken, or owned by `http.sys`), the server logs one line

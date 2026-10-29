@@ -1,8 +1,11 @@
-# Local remote: the Argus side (proposal)
+# Local remote: the Argus side
 
-Status: proposal for the joint plan of the Overlord, the Brock lead and the Argus lead. No code
-yet. Owner order, 2026-10-29: development stays local, GitHub is used only on the owner's go, and
-everything that needs the remote must still work as if it were there.
+The agreed plan of the Overlord, the Brock lead and the Argus lead is
+`X:/ai-config/docs/local-remote.md`; where this file differs, the plan wins. Status: the server
+side is built (the switch, the release store and update feed, the check runs, the registry, the
+`prs` collection; see the API section at the end). The pages are built by the web side. Owner
+order, 2026-10-29: development stays local, GitHub is used only on the owner's go, and everything
+that needs the remote must still work as if it were there.
 
 ## What Argus has today
 
@@ -30,9 +33,11 @@ counts as merged only by ancestry or `git cherry`.
 
 ## Check runs (local CI)
 
-Brock's local CI runner runs the checks (the same commands as CI) and writes one file per run,
-atomically (temp file, then rename): `~/.coord/ci/<project>/<runId>.json`. Argus watches the
-folder, indexes the runs into its database and shows them. No push to Argus is needed.
+Argus starts `brock ci` as a run on its run engine (logs, stop and history are Argus's), in a
+detached worktree at the commit; the step list stays in Brock's standards. Brock's runner writes
+one file per run, atomically (temp file, then rename): `~/.coord/ci/<project>/<runId>.json`. That
+file is the source of truth: Argus watches the folder and indexes it as `C-n`, never a second
+writer.
 
 ```json
 {
@@ -50,7 +55,9 @@ A commit's status is its latest run; a step is green when its `status` is pass.
 
 ## Local pull requests
 
-A board collection `prs` (project scoped, like items), ids `PR-n`:
+A board collection `prs` (project scoped, like items), ids `PR-n`. Argus exports it in the board
+stream like the other collections (`c=prs`) and only reads it. The block that says where a record
+stands on the way to GitHub is `replay` (older writers said `remote`; both are read):
 
 ```json
 {
@@ -68,9 +75,9 @@ the way branch protection does.
 
 ## Releases and the update feed
 
-Brock's release runner writes `~/.coord/releases/<project>/<version>/`: `release.json`,
-`notes.md`, the package tarballs and the app assets under GitHub's asset names, including
-electron-builder's own `latest.yml` (sha512). Written atomically; Argus only reads.
+Brock's release runner writes `~/.coord/releases/<project>/<channel>/<version>/`: `release.json`,
+`notes.md`, the package tarballs and the app assets under GitHub's asset names, and
+electron-builder's own `latest.yml` (sha512), written last. Written atomically; Argus only reads.
 
 ```json
 {
@@ -83,11 +90,13 @@ electron-builder's own `latest.yml` (sha512). Written atomically; Argus only rea
 }
 ```
 
-Feed: Argus serves `http://releases.localhost/<project>/` (and
-`http://127.0.0.1:47615/releases/<project>/`) as the newest non-prerelease version's `latest.yml`
-with each `url` rewritten to `<version>/<file>`, and `/beta/` the same over prereleases. The
-version files are served under `<version>/`, with Range requests for differential downloads. In
-local mode an app is built with electron-builder's `generic` provider pointing at that URL.
+Feed: Argus serves `http://releases.localhost/<project>/<channel>/` (and
+`http://127.0.0.1:47615/releases/<project>/<channel>/`). `<channel>/latest.yml` (and
+`latest-mac.yml`, `latest-linux.yml`) is the newest non-prerelease version's file with each `url:`
+and `path:` rewritten to `<version>/<file>` (a channel of prereleases only falls back to its
+newest); a channel level file on disk is served instead when there is one. The version files are
+served under `<version>/`, with Range requests for differential downloads. In local mode an app is
+built with electron-builder's `generic` provider pointing at that URL.
 
 ## Packages
 
@@ -110,3 +119,71 @@ Order: push branches and `main` (merge commits included), then pull requests (op
 records of what was merged, closed with a link to the merge commit), then packages, then releases
 with their assets. Each record's `replay` block moves to `done` with its URL; a failure stops the
 replay at that record and says why.
+
+## API
+
+All JSON, read only, on the main listener and on every door. The pages and the feed share one
+server, so the feed urls in the answers are paths (`/releases/...`) that work on whatever host the
+page was opened from.
+
+| Route | Answer |
+|---|---|
+| `GET /api/remote` | `{ mode, replay: { prs, releases, packages, checks } }`: the switch and the counts of records whose `replay.state` is `pending`. `prs` counts the `prs` collection of every board, `packages` the builds of the registry index that carry a pending `replay` (0 when the index has none). |
+| `GET /api/releases` | `{ projects: [{ project, channels: [{ channel, latest, versions }] }] }` |
+| `GET /api/p/<key>/releases` | `{ channels: [{ channel, latest, versions }] }` |
+| `GET /api/p/<key>/checks?commit=<sha>&pr=<PR-n>` | `{ runs: [{ id: "C-n", runId, ...the record }] }`, newest first. `commit` matches a prefix of at least 7 characters either way, `pr` the record's `pr`. |
+| `GET /api/p/<key>/checks/<C-n>/log?step=<i>` | the log text of a step (`text/plain`, the last 4 MiB, `X-Log-Truncated: start` when cut) |
+| `GET /api/registry` | `{ builds, consumers, scopeRedirected, consumersNote }` |
+| `GET /releases/<project>/<channel>/<path>` | the update feed (below) |
+
+A version is `{ version, tag, commit, title, publishedAt, notesUrl, assets: [{ name, size, kind,
+url }], packages: [{ name, version, size, url, sha256, sha512 }], replay }`, newest first by semver.
+`latest` is the version `latest.yml` points at (`null` when no version has one). `replay` is
+`{ state, at, url }` or `null` when the record has none. `notesUrl` is `null` when the notes file is
+missing.
+
+A run is the check-run record of Brock with `id` set to `C-n`, `runId` the file name without
+`.json` and `project` the folder. `C-n` is assigned per project in the order the runs were first
+seen and kept in the dashboard database (`kv`: `check-run:<project>:<runId>` and the counter
+`check-seq:<project>`), so a number never moves across a restart. A step log is served only when the
+`log` path of the step is inside `~/.coord/ci` or inside the run's own `logDir`.
+
+`/api/registry`: `builds` are the entries of `<localpkg home>/index.json` as `{ name, version, commit,
+checkout, packedAt, tarball, size, dirty, replay }` (`commit` and `checkout` are `head` and `project`
+in the tool's own index). `consumers` are the checkouts that use them, from `node localpkg.mjs status
+--json`, run with a 5 s limit and kept 30 s: `{ path, since, hook, packages, on: true }`.
+`scopeRedirected` is true when any consumer is on (the GitHub scope points at `127.0.0.1:9`). When
+the tool is missing or too old to know `--json`, `consumers` is `[]` and `consumersNote` says why.
+The `localpkg` home is `LOCALPKG_HOME`, else `~/.coord/localpkg`; `config.json` may set
+`"localpkg": { "script": "...", "node": "..." }`.
+
+### The switch
+
+`~/.coord/remote.json` is read through `argus_core::remote` (`Switch`), one stat per call and read
+again only when its time or size changed. A missing, unreadable or unknown file is `local`. In local
+mode the one `gh pr list` of the worktree branch check (`pr_merged`) is skipped: a branch counts as
+merged only by ancestry or `git cherry`.
+
+### The update feed
+
+- Two forms: `http://127.0.0.1:47615/releases/<project>/<channel>/<path>` and
+  `http://releases.localhost/<project>/<channel>/<path>` on the localhost door (port 80). The Host
+  `releases.localhost` is read as the `/releases` prefix. A project called `releases` cannot use
+  that host for its board.
+- `GET` and `HEAD` only (anything else is a 405). No credential is asked, so an app's updater works
+  with `requireToken` on; the Host and peer checks still apply.
+- Types: `.yml` `text/yaml`, `.exe` `.blockmap` and anything unknown `application/octet-stream`,
+  `.tgz` `.gz` `application/gzip`, `.json`, `.md` and `.txt` as text. Never html or scripts.
+- `Range: bytes=a-b` (also `a-` and `-n`) is a `206` with `Content-Range`; every answer for a file
+  has `Accept-Ranges: bytes` and an `ETag`, and a stale `If-Range` gets the whole file. Several
+  ranges or a header that does not parse get the whole file; a range past the end is a `416`.
+- No directory listing. A path is split into plain names; `..`, `.`, an empty name, a back slash,
+  a drive or stream colon, a trailing dot, a hidden or temp name (a `.tmp` or `.part` ending, `~`)
+  and a link anywhere on the way are a 404, and the real path must stay inside the store.
+- A release without a readable `release.json`, or in a folder with a temp name, is not in the index.
+
+### Folders and watches
+
+`~/.coord/releases` and `~/.coord/ci` are created when missing and watched (120 ms debounce, a
+safety look every 30 s); the stores keep an index and parse a file again only when its time or size
+changed.
