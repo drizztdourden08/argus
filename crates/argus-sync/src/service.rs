@@ -258,6 +258,20 @@ impl SyncService {
             .await
     }
 
+    /// Keeps a picture on a question or a decision entry, tied to a 1-based option or to none.
+    ///
+    /// # Errors
+    /// 400, 403, 404, 413 or 415 as [`Self::attach_proof`] answers.
+    pub async fn attach_entry_image(
+        &self,
+        key: &str,
+        target: (&str, Option<i64>),
+        pic: (ProofSource, &str),
+        by: &str,
+    ) -> Result<Proof, ApiError> {
+        self.state.attach_entry_image(key, target, pic, by).await
+    }
+
     /// Exports again (soft: hash diff; hard: clear, export, reset the streams).
     ///
     /// # Errors

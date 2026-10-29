@@ -451,3 +451,72 @@ The bench of section 3 runs with layer 3 on every package landing.
 | Lead | `argus-coord` depends on the agents, launchers, worktrees and notify crates for their pure rules? | Yes, so each rule exists once |
 | Lead | `ureq` for the CLI client in place of `reqwest`? | Yes: blocking, no runtime start on the hook path |
 | Lead | Skip a hook save that changes nothing? | Not before phase C; it changes when the dashboard sees a board move |
+
+## Images on ask and decide
+
+`coord ask` and `coord decide` carry pictures, the way `coord test result --proof` does. The
+owner sees thumbnails in the question or decision card and in the item drawer, and opens them in
+the lightbox to zoom. The Rust port ships this first. The Overlord copies the contract below into
+the Node CLI (`verbs/entry.mjs`) so both CLIs write the same board.
+
+### CLI
+
+```
+coord ask <I> "<question>" --context "<c>" [--option "<o>"]... --image [N=]<file> "<caption>" [--image ...]
+coord decide <I> "<decision>" --context "<c>" --image <file> "<caption>" [--image ...]
+```
+
+1. `--image` is repeatable. Its value is `<file>`, or `N=<file>` to tie the picture to option N.
+   N counts from 1 in the order of the `--option` flags. A word before `=` that is not all digits
+   is part of the path, so `C:\shot.png` is never cut. The form `--image=2=a.png` parses the same.
+2. The caption is the word after the question. The captions are the positional arguments from
+   index 2 on, one per `--image`, in the same order as the flags. The count must match: an image
+   without a caption, or a caption without an image, is refused with `each image needs a caption`.
+   With no `--image`, extra words are ignored as they are today.
+3. Why this syntax: `parseArgs` already gives a repeated `--image` as a list and leaves the
+   caption as a positional, so no parser changes. The `N=` prefix needs no second flag to pair by
+   index, which `--for 2` after each image would need and which breaks when one is left out.
+4. Checks run before the board is touched, and a refusal writes nothing: the file exists, its
+   extension is `.png`, `.jpg`, `.jpeg`, `.gif` or `.webp`, its size is 1 to 10485760 bytes, the
+   caption is 1 to 120 characters (the `caption` limit), and N is in 1 to the number of options.
+   `decide` has no options, so a `N=` image there is refused. A bare `--image` is refused with
+   `--image needs a file`.
+5. The confirmation line gets the words `with <n> image(s)` before the colon, for example
+   `Q-4 asked on I-1 (decision request, shown in the feed) with 2 image(s): Which look?`.
+
+### Upload
+
+The coord CLI writes straight into the board folder, as `--proof` does; there is no HTTP call.
+Inside the same locked board write that creates the entry (`Q-4`):
+
+1. Copy the file to `<COORD_HOME>/<key>/proofs/<entry id>-<n><ext>` with a temp file and a rename.
+   `n` is the highest `n` in the entry's `images` plus one, starting at 1. The extension is
+   lowercase and keeps the leading dot, and `.jpeg` stays `.jpeg`.
+2. Push the record below onto `entry.images`, creating the list on the first image. An entry
+   without images has no `images` field at all.
+
+The page, the MCP tools and other HTTP clients use the same storage through one route:
+`POST /api/p/<key>/entries/<Q-n|D-n>/images?caption=<text>[&option=<N>]` with the image as the
+body and `Content-Type: image/png|jpeg|gif|webp`. The size cap is `attach.maxBytes` (10 MiB by
+default) and the bytes must match the declared type, as for `POST /api/p/<key>/tests/<T>/proofs`.
+It answers `{ "entry": "Q-4", "image": { "n", "url", "caption", "option" } }`. Only a live
+question or decision takes an image: another kind answers 400, an unknown entry 404, a wrong
+type 415, a body over the cap 413, and `option` outside the entry's options 400.
+
+### Entry fields
+
+```
+entry.images = [{ n, file, caption, option?, url: null, at }]
+```
+
+1. `n` is the image number, only ever growing. `file` is the absolute path under
+   `<COORD_HOME>/<key>/proofs/`. `caption` is the trimmed caption. `at` is the ISO time it was kept.
+   `url` is `null` on the board.
+2. `option` is present only for a picture tied to an option. It is the 1-based number of the
+   option, not its text.
+3. The dashboard export turns each record into `{ n, caption, option?, at, url }` with
+   `url = /files/<key>/proofs/<file name>` and drops `file`, exactly as for a test proof. The
+   same `/files/<key>/proofs/<name>` route serves the bytes.
+4. Nothing else changes: `entry set`, `answer`, `pick` and `done` keep the field untouched, and
+   an entry made before this change reads as before.
+5. A purge does not move entry images into the purge folder yet. Their files stay in `proofs/`.

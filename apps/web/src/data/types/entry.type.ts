@@ -1,4 +1,11 @@
 /* @layer renderer-app @kind types */
+interface EntryImage {
+  n: number;
+  url: string;
+  caption: string;
+  option?: number | null;
+}
+
 interface Entry {
   id: string;
   kind: string;
@@ -10,6 +17,7 @@ interface Entry {
   replyTo?: string | null;
   context?: string;
   options?: string[];
+  images?: EntryImage[];
   needs?: string;
   level?: string;
   createdAt: string;
@@ -18,4 +26,4 @@ interface Entry {
   deletedAt?: string;
 }
 
-export type { Entry };
+export type { Entry, EntryImage };

@@ -15,6 +15,7 @@
 
 mod answer;
 mod change;
+mod images;
 mod make;
 mod read;
 mod reword;

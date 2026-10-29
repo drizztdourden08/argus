@@ -18,7 +18,7 @@ fn nn(doc: &Value, key: &str) -> Value {
 
 fn public_proof(p: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
     let mut out = Map::new();
-    for key in ["n", "caption"] {
+    for key in ["n", "caption", "option"] {
         if let Some(v) = p.get(key) {
             out.insert(key.to_owned(), v.clone());
         }
@@ -42,6 +42,18 @@ fn public_test(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
         .collect();
     let mut out = doc.clone();
     set(&mut out, "proofs", proofs);
+    out
+}
+
+/// An entry as the page sees it: the pictures of a question or decision get their `url`; an
+/// entry without any is passed on as it is.
+fn public_entry(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
+    let Some(images) = doc["images"].as_array() else {
+        return doc.clone();
+    };
+    let shown: Vec<Value> = images.iter().map(|p| public_proof(p, proof_url)).collect();
+    let mut out = doc.clone();
+    set(&mut out, "images", shown);
     out
 }
 
@@ -93,6 +105,7 @@ fn public_doc(
 ) -> Value {
     match coll {
         Coll::Tests => public_test(doc, proof_url),
+        Coll::Entries => public_entry(doc, proof_url),
         Coll::Builds => public_build(doc, id, board),
         Coll::Launchers => public_launcher(doc, id, board),
         _ => doc.clone(),

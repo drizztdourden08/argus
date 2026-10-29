@@ -75,7 +75,9 @@ async fn result(ctx: Ctx) -> Reply {
     ))
 }
 
-async fn proofs(ctx: Ctx) -> Reply {
+/// The body of an image upload as a proof source: the declared type must be an image type and the
+/// body is capped at the attach limit.
+async fn image_body(ctx: &Ctx) -> Result<ProofSource, ApiError> {
     let mime = ctx
         .header("content-type")
         .unwrap_or_default()
@@ -90,15 +92,50 @@ async fn proofs(ctx: Ctx) -> Reply {
             "send the image as image/png, image/jpeg, image/gif or image/webp",
         ));
     }
-    let key = key(&ctx)?;
     let max = usize::try_from(ctx.svc.config().attach.max_bytes).unwrap_or(usize::MAX);
     let bytes = ctx.raw(max).await?;
-    let caption = ctx.query("caption").unwrap_or_default().to_owned();
-    let test = ctx.param("id").to_owned();
-    let src = ProofSource::Bytes {
+    Ok(ProofSource::Bytes {
         bytes: bytes.to_vec(),
         mime: Some(mime),
+    })
+}
+
+/// `?option=N`: the 1-based choice a picture belongs to.
+fn option_param(ctx: &Ctx) -> Result<Option<i64>, ApiError> {
+    ctx.query("option")
+        .filter(|o| !o.is_empty())
+        .map(|o| {
+            o.parse::<i64>()
+                .map_err(|_| ApiError::bad_request("option must be a number"))
+        })
+        .transpose()
+}
+
+async fn entry_images(ctx: Ctx) -> Reply {
+    let src = image_body(&ctx).await?;
+    let key = key(&ctx)?;
+    let caption = ctx.query("caption").unwrap_or_default().to_owned();
+    let entry = ctx.param("id").to_owned();
+    let option = option_param(&ctx)?;
+    let image = writer(&ctx)?
+        .attach_entry_image(&key, (&entry, option), (src, &caption), "human")
+        .await?;
+    let shown = if js::trim(&caption).is_empty() {
+        format!("{entry} image")
+    } else {
+        js::trim(&caption).to_owned()
     };
+    Ok(json_reply(
+        200,
+        &json!({ "entry": entry, "image": { "n": image.n, "url": image.url, "caption": shown, "option": option } }),
+    ))
+}
+
+async fn proofs(ctx: Ctx) -> Reply {
+    let src = image_body(&ctx).await?;
+    let key = key(&ctx)?;
+    let caption = ctx.query("caption").unwrap_or_default().to_owned();
+    let test = ctx.param("id").to_owned();
     let proof = writer(&ctx)?
         .attach_proof(&key, &test, src, &caption, "human")
         .await?;
@@ -155,6 +192,16 @@ pub fn register(r: &mut Router) {
             ..RouteOpts::default()
         },
         proofs,
+    );
+    r.add(
+        "POST",
+        "/api/p/:key/entries/:id/images",
+        RouteOpts {
+            max_bytes: usize::MAX,
+            images: true,
+            ..RouteOpts::default()
+        },
+        entry_images,
     );
     r.post("/api/portfolio/send", send);
 }

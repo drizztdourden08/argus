@@ -2,7 +2,7 @@
 import { Card, Divider, Flex, InlineEdit } from '@drizztdourden08/tessera';
 import { BoardMarkdown } from '../../../../../shell';
 import { askMode, hasContext } from '../../../feed-model';
-import { AskForm, ContextBlock } from '../../../OwnerFeed';
+import { AskForm, ContextBlock, EntryImages } from '../../../OwnerFeed';
 import type { EntryBlockProps } from '../drawer-props.type';
 import { validateDecision } from '../model';
 import { EntryHead } from './EntryHead';
@@ -30,6 +30,7 @@ const EntryBlock = (props: EntryBlockProps) => {
         ) : (
           <BoardMarkdown source={entry.text} />
         )}
+        <EntryImages entry={entry} />
         {row.replies.map((reply) => (
           <Flex key={reply.id} gap="sm">
             <Divider orientation="vertical" />
