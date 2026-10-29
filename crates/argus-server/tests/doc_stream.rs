@@ -432,13 +432,70 @@ async fn the_snapshot_frame_that_crosses_the_limit_is_still_sent() {
     let wakes = wakes.expect("the wakes snapshot arrives, as on the Node server");
     assert_eq!(wakes.data["coll"], "wakes");
     assert_eq!(wakes.data["docs"][0]["id"], "W-1");
-    for _ in 0..40 {
-        if s.ended() {
-            break;
-        }
-        tokio::time::sleep(Duration::from_millis(25)).await;
+    let ready = s.next(Some("ready"), WAIT).await;
+    assert!(
+        ready.is_some(),
+        "the snapshot is never cut short by the limit"
+    );
+    assert!(
+        !s.ended(),
+        "the opening snapshot does not count toward the limit"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_two_megabyte_snapshot_over_several_collections_arrives_whole_with_ready() {
+    let t = server().await;
+    let big = 600_000;
+    let changes: Vec<DocChange> = [Coll::Items, Coll::Agents, Coll::Entries, Coll::Wakes]
+        .into_iter()
+        .map(|c| padded(c, "X-1", big))
+        .collect();
+    apply(&t, "huge", &changes);
+    let s = t
+        .sse("/api/p/huge/stream?c=items,agents,entries,wakes,meta")
+        .await;
+    for coll in ["items", "agents", "entries", "wakes", "meta"] {
+        let e = s.next(Some("snapshot"), WAIT).await;
+        assert_eq!(e.expect("each snapshot arrives").data["coll"], coll);
     }
-    assert!(s.ended(), "the client past the limit is then dropped");
+    assert!(
+        s.next(Some("ready"), WAIT).await.is_some(),
+        "ready follows the snapshot"
+    );
+    assert!(!s.ended(), "the stream stays open");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn opening_frames_do_not_count_but_a_live_backlog_over_a_megabyte_still_drops() {
+    let open = Arc::new(AtomicUsize::new(0));
+    let (sender, res) = open_stream(Duration::from_secs(3600), &open, None);
+    let chunk = json!({ "pad": "x".repeat(64 * 1024) });
+    for _ in 0..32 {
+        assert!(
+            sender.opening_event("snapshot", &chunk, None),
+            "2 MB of opening frames"
+        );
+    }
+    assert!(
+        sender.event("changes", &json!({ "n": 1 }), None),
+        "a live frame after the snapshot"
+    );
+    let mut sent = 0;
+    while sender.event("changes", &chunk, None) {
+        sent += 1;
+        assert!(
+            sent < 32,
+            "the live backlog must hit the limit of {SSE_BUFFER_LIMIT} bytes"
+        );
+    }
+    assert!((10..=16).contains(&sent), "{sent} live chunks fit");
+    let end = tokio::time::timeout(Duration::from_secs(2), res.into_body().collect());
+    let bytes = end.await.expect("the body ends").expect("body").to_bytes();
+    assert!(
+        bytes.len() > 2 * 1024 * 1024,
+        "the opening frames were all sent"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

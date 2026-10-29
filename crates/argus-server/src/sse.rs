@@ -1,7 +1,8 @@
 //! Server-sent events written by hand, so the bytes match the Node server: `id`, `event`, `data`
 //! lines, a blank line after each frame, the data as one JSON line, and a `: ping` comment on the
-//! heartbeat. A client more than a megabyte behind is dropped after the frame that took it past
-//! the limit; it reconnects and resumes.
+//! heartbeat. A client more than a megabyte behind on live frames is dropped after the frame that
+//! took it past the limit; it reconnects and resumes. The opening frames (the snapshot and
+//! `ready`) never count toward the limit, so a board larger than a megabyte can open.
 
 use std::convert::Infallible;
 use std::pin::Pin;
@@ -27,7 +28,7 @@ mod run_logs;
 pub use fanout::{Fanout, MAX_CLIENTS_PER_SCOPE, StreamRequest};
 pub use run_logs::{LogListening, RunLogs};
 
-/// A client this far behind is dropped.
+/// A client this far behind on live frames is dropped.
 pub const SSE_BUFFER_LIMIT: usize = 1024 * 1024;
 
 /// One frame: `id: <id>\nevent: <name>\ndata: <json>\n\n`.
@@ -44,9 +45,12 @@ pub fn frame_with(name: &str, data: &Value, id: Option<&str>) -> String {
     format!("{head}event: {name}\ndata: {data}\n\n")
 }
 
+/// A queued frame, and whether it counts toward the live backlog.
+type Frame = (Bytes, bool);
+
 /// The writing side of one stream.
 pub struct SseSender {
-    tx: UnboundedSender<Bytes>,
+    tx: UnboundedSender<Frame>,
     queued: Arc<AtomicUsize>,
     closed: Arc<AtomicBool>,
 }
@@ -60,7 +64,22 @@ impl SseSender {
         }
         let len = text.len();
         let queued = self.queued.fetch_add(len, Ordering::SeqCst) + len;
-        if self.tx.send(Bytes::from(text)).is_err() || queued > SSE_BUFFER_LIMIT {
+        if self.tx.send((Bytes::from(text), true)).is_err() || queued > SSE_BUFFER_LIMIT {
+            self.close();
+            return false;
+        }
+        true
+    }
+
+    /// Queues an opening frame (the snapshot, `ready`): it is not counted toward the backlog
+    /// limit, which guards live updates only. `false` once the stream is closed.
+    #[must_use]
+    pub fn opening_event(&self, name: &str, data: &Value, id: Option<i64>) -> bool {
+        if self.closed.load(Ordering::SeqCst) {
+            return false;
+        }
+        let text = frame(name, data, id);
+        if self.tx.send((Bytes::from(text), false)).is_err() {
             self.close();
             return false;
         }
@@ -89,7 +108,7 @@ impl SseSender {
 type OnDrop = Box<dyn FnOnce() + Send>;
 
 struct SseBody {
-    rx: UnboundedReceiver<Bytes>,
+    rx: UnboundedReceiver<Frame>,
     queued: Arc<AtomicUsize>,
     closed: Arc<AtomicBool>,
     beat: Interval,
@@ -103,8 +122,10 @@ impl Stream for SseBody {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.get_mut();
         match this.rx.poll_recv(cx) {
-            Poll::Ready(Some(b)) => {
-                this.queued.fetch_sub(b.len(), Ordering::SeqCst);
+            Poll::Ready(Some((b, metered))) => {
+                if metered {
+                    this.queued.fetch_sub(b.len(), Ordering::SeqCst);
+                }
                 return Poll::Ready(Some(Ok(b)));
             }
             Poll::Ready(None) => return Poll::Ready(None),

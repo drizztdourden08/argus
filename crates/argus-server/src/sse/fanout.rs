@@ -182,7 +182,7 @@ impl Fanout {
         };
         let sent = frames
             .iter()
-            .all(|(name, data, fid)| client.sender.event(name, data, *fid));
+            .all(|(name, data, fid)| client.sender.opening_event(name, data, *fid));
         let pending = client.pending.take().unwrap_or_default();
         let live = sent
             && pending
