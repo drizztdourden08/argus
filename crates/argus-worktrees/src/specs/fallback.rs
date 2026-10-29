@@ -250,8 +250,8 @@ fn the_links_inside_the_worktree_are_removed_as_links_before_git_is_called() {
     s.h.rm(&s.id("old-merged")).unwrap();
     assert_eq!(
         *seen.lock().unwrap(),
-        vec![[false, false, false, true]],
-        "links gone, the real package folder still there when git runs"
+        vec![[false, false, false, false]],
+        "links gone (node_modules, ignored by git, cleared by Argus first) when git runs"
     );
     assert!(exists_itself(&format!("{}/keep.txt", s.outside)));
     s.h.idle();

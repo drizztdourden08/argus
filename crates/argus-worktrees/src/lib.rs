@@ -36,6 +36,7 @@ mod jobs;
 mod leftover_remove;
 mod made;
 mod measure;
+mod modules;
 mod parse;
 mod paths;
 mod ports;

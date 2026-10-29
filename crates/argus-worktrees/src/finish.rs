@@ -10,6 +10,7 @@ use crate::error::{ErrorCode, Result, WtError, io_code};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::jobs::JobKind;
+use crate::modules::NodeModules;
 use crate::parse::{ListedWorktree, parse_worktree_list};
 use crate::paths::{clean_path, path_key};
 use crate::remove::apply_branch;
@@ -44,6 +45,7 @@ pub(crate) struct Finish<'a> {
     pub now: &'a Fact,
     pub run: &'a GitOutput,
     pub plan: &'a BranchPlan,
+    pub modules: NodeModules,
 }
 
 /// Has git let go of the worktree after its removal failed on the folder?
@@ -152,6 +154,7 @@ impl Service {
             now,
             run,
             plan,
+            modules,
         } = *step;
         self.remember_made(&input.project, &now.path);
         let branch = if input.branch {
@@ -192,6 +195,7 @@ impl Service {
             backup,
             discarded,
             git_error: Some(git_said),
+            node_modules_cleared: modules.cleared(),
             ..RemoveOutcome::default()
         };
         apply_branch(&mut out, &branch);
