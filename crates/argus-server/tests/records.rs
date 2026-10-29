@@ -211,13 +211,13 @@ async fn the_feed_serves_files_with_types_ranges_and_head() {
     assert_eq!(part.header("content-length"), Some("4"));
     let tail = feed(&r.t, Request::new("GET", exe).header("Range", "bytes=-3")).await;
     assert_eq!((tail.status, tail.body.as_slice()), (206, &EXE[7..]));
-    let past = feed(
+    let beyond = feed(
         &r.t,
         Request::new("GET", exe).header("Range", "bytes=10-20"),
     )
     .await;
     assert_eq!(
-        (past.status, past.header("content-range")),
+        (beyond.status, beyond.header("content-range")),
         (416, Some("bytes */10"))
     );
     let head = feed(&r.t, Request::new("HEAD", exe)).await;
@@ -359,29 +359,29 @@ async fn the_feed_host_serves_the_store_without_the_prefix_and_boards_keep_their
     drop(r.dirs);
 }
 
+fn two_runs(home: &Path) {
+    check_run(
+        home,
+        "brock",
+        "run-b",
+        "2026-10-29T10:05:00Z",
+        "bbbbbbb1234567",
+        "PR-2",
+    );
+    check_run(
+        home,
+        "brock",
+        "run-a",
+        "2026-10-29T10:00:00Z",
+        "aaaaaaa1234567",
+        "PR-1",
+    );
+    put(home, "ci/brock/run-t.json.tmp", "{}");
+}
+
 #[tokio::test(flavor = "multi_thread")]
-async fn check_runs_are_listed_with_numbers_filtered_and_their_step_logs_are_served() {
-    let r = rig(|home| {
-        check_run(
-            home,
-            "brock",
-            "run-b",
-            "2026-10-29T10:05:00Z",
-            "bbbbbbb1234567",
-            "PR-2",
-        );
-        check_run(
-            home,
-            "brock",
-            "run-a",
-            "2026-10-29T10:00:00Z",
-            "aaaaaaa1234567",
-            "PR-1",
-        );
-        put(home, "ci/brock/run-t.json.tmp", "{}");
-        put(home, "secret.log", "no");
-    })
-    .await;
+async fn check_runs_are_listed_with_numbers_and_filtered() {
+    let r = rig(two_runs).await;
     let all = r.t.get("/api/p/brock/checks").await.json();
     let ids: Vec<&str> = all["runs"]
         .as_array()
@@ -400,8 +400,21 @@ async fn check_runs_are_listed_with_numbers_filtered_and_their_step_logs_are_ser
     assert_eq!(by_commit["runs"][0]["id"], "C-1");
     let by_pr = r.t.get("/api/p/brock/checks?pr=PR-2").await.json();
     assert_eq!(by_pr["runs"].as_array().map(Vec::len), Some(1));
+    r.t.stop(false).await;
+    drop(r.dirs);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn step_logs_are_served_and_a_run_is_indexed_when_its_file_appears() {
+    let r = rig(two_runs).await;
     let log = r.t.get("/api/p/brock/checks/C-1/log?step=0").await;
-    assert_eq!((log.status, log.text().as_str()), (200, "lint ok\n"));
+    assert_eq!(
+        (log.status, log.text().as_str()),
+        (
+            200, "lint ok
+"
+        )
+    );
     assert_eq!(
         r.t.get("/api/p/brock/checks/C-1/log?step=3").await.status,
         404
@@ -475,6 +488,17 @@ async fn a_step_log_outside_the_store_is_refused() {
     drop(r.dirs);
 }
 
+fn id_rows(body: &Value) -> Vec<(String, String)> {
+    let text = |x: &Value, key: &str| x[key].as_str().unwrap_or_default().to_owned();
+    let runs = body["runs"].as_array().expect("runs");
+    let mut rows: Vec<(String, String)> = runs
+        .iter()
+        .map(|x| (text(x, "runId"), text(x, "id")))
+        .collect();
+    rows.sort();
+    rows
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn check_numbers_stay_the_same_after_a_restart() {
     let home = tempfile::tempdir().expect("coord home");
@@ -495,28 +519,11 @@ async fn check_numbers_stay_the_same_after_a_restart() {
         "bbbbbbb1",
         "",
     );
-    let ids = |body: &Value| -> Vec<(String, String)> {
-        let mut rows: Vec<(String, String)> = body["runs"]
-            .as_array()
-            .expect("runs")
-            .iter()
-            .map(|x| {
-                (
-                    x["runId"].as_str().unwrap_or_default().to_owned(),
-                    x["id"].as_str().unwrap_or_default().to_owned(),
-                )
-            })
-            .collect();
-        rows.sort();
-        rows
+    let at = |h: &TempDir, d: &TempDir| {
+        start_with(h.path().to_path_buf(), Some(d.path().to_path_buf()), |_| {})
     };
-    let first = start_with(
-        home.path().to_path_buf(),
-        Some(dash.path().to_path_buf()),
-        |_| {},
-    )
-    .await;
-    let before = ids(&first.get("/api/p/brock/checks").await.json());
+    let first = at(&home, &dash).await;
+    let before = id_rows(&first.get("/api/p/brock/checks").await.json());
     assert_eq!(
         before,
         [
@@ -533,13 +540,8 @@ async fn check_numbers_stay_the_same_after_a_restart() {
         "0000000a",
         "",
     );
-    let second = start_with(
-        home.path().to_path_buf(),
-        Some(dash.path().to_path_buf()),
-        |_| {},
-    )
-    .await;
-    let after = ids(&second.get("/api/p/brock/checks").await.json());
+    let second = at(&home, &dash).await;
+    let after = id_rows(&second.get("/api/p/brock/checks").await.json());
     let want = [("run-0", "C-3"), ("run-a", "C-1"), ("run-b", "C-2")];
     assert_eq!(after, want.map(|(a, b)| (a.to_owned(), b.to_owned())));
     second.stop(false).await;

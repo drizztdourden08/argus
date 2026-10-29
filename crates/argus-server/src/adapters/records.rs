@@ -24,13 +24,13 @@ impl IdBook for DbIds {
         let counter = format!("check-seq:{project}");
         let n = self
             .0
-            .tx(|tx| match tx.kv_get(&key)? {
-                Some(kept) => Ok(kept.parse::<i64>().unwrap_or(0)),
-                None => {
-                    let n = tx.next_counter(&counter)?;
-                    tx.kv_set(&key, &n.to_string())?;
-                    Ok(n)
+            .tx(|tx| {
+                if let Some(kept) = tx.kv_get(&key)? {
+                    return Ok(kept.parse::<i64>().unwrap_or(0));
                 }
+                let n = tx.next_counter(&counter)?;
+                tx.kv_set(&key, &n.to_string())?;
+                Ok(n)
             })
             .ok()?;
         u32::try_from(n).ok().filter(|n| *n > 0)
