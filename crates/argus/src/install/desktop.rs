@@ -44,7 +44,7 @@ pub struct Written {
     pub backup: Option<PathBuf>,
 }
 
-fn stamp() -> String {
+pub(super) fn stamp() -> String {
     let iso = now_iso();
     let whole = iso.split('.').next().unwrap_or(&iso);
     whole.chars().filter(|c| *c != '-' && *c != ':').collect()

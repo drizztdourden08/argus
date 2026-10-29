@@ -428,7 +428,7 @@ fn a_target_in_use_is_refused_and_left_with_its_folder_as_it_was() {
     let stable = stable_dir(dir.path());
     let target = stable.join("argus.exe");
     fs::write(&target, b"running").expect("running");
-    // Share mode 1 shares reads only: no rename or delete, as for a running executable.
+    // Share mode 1 shares reads only: no rename or delete, so the set-aside rename fails too.
     let _held = fs::OpenOptions::new()
         .read(true)
         .share_mode(1)
@@ -439,6 +439,46 @@ fn a_target_in_use_is_refused_and_left_with_its_folder_as_it_was() {
     assert!(r.err[0].contains("argus stop"), "{:?}", r.err);
     assert_eq!(fs::read(&target).expect("kept"), b"running");
     assert_eq!(names(&stable), ["argus.exe"]);
+}
+
+#[test]
+fn earlier_set_aside_copies_are_removed_on_the_next_install() {
+    let dir = tmp();
+    let stable = stable_dir(dir.path());
+    for name in [
+        "argus.exe",
+        "argus.exe.old-1",
+        "argus.exe.old-2",
+        "notes.txt",
+    ] {
+        fs::write(stable.join(name), b"old").expect("file");
+    }
+    let r = self_install(&["--dir", "stable"], env_with_exe(dir.path(), b"new build"));
+    assert_eq!(r.code, 0, "{:?}", r.err);
+    assert_eq!(names(&stable), ["argus.exe", "notes.txt"]);
+}
+
+#[cfg(windows)]
+#[test]
+fn a_set_aside_copy_still_in_use_stays_and_the_others_go() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let dir = tmp();
+    let stable = stable_dir(dir.path());
+    for name in ["argus.exe", "argus.exe.old-busy", "argus.exe.old-free"] {
+        fs::write(stable.join(name), b"old").expect("file");
+    }
+    let _held = fs::OpenOptions::new()
+        .read(true)
+        .share_mode(1)
+        .open(stable.join("argus.exe.old-busy"))
+        .expect("held");
+    let r = self_install(&["--dir", "stable"], env_with_exe(dir.path(), b"new build"));
+    assert_eq!(r.code, 0, "{:?}", r.err);
+    assert_eq!(names(&stable), ["argus.exe", "argus.exe.old-busy"]);
+    assert_eq!(
+        fs::read(stable.join("argus.exe")).expect("new"),
+        b"new build"
+    );
 }
 
 #[test]

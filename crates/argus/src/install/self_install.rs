@@ -4,15 +4,23 @@
 //! The verb never edits a config: it prints the path and the `"exe"` line to add.
 //!
 //! The in-use rule: the copy goes to a temp name next to the target and is renamed over it. A
-//! running `argus.exe` cannot be replaced on Windows, so the rename fails, the temp file is
-//! removed, the target is left exactly as it was and the verb refuses with a sentence: stop
-//! the dashboard with `argus stop`, then run it again. It never leaves a half copy and never
-//! stops anything itself. A target that already holds the same bytes is left alone.
+//! running `argus.exe` cannot be replaced on Windows (every open Claude session holds the
+//! installed file through its `argus mcp` bridge), but it can be renamed. So when the replace
+//! fails, the installed copy is renamed aside to `argus.exe.old-<UTC stamp>` and the new copy
+//! takes its place; running processes keep the old image, new starts use the new file. Each run
+//! first deletes the earlier `argus.exe.old-*` copies that are no longer in use. When the rename
+//! aside fails too, or the new copy cannot be put in place, the folder is left as it was and the
+//! verb refuses with a sentence. It never leaves a half copy, never leaves the folder without an
+//! `argus.exe` and never stops anything itself. A target that already holds the same bytes is
+//! left alone. A restart of the server and the tray picks up the new copy; bridges pick it up as
+//! their sessions restart.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::desktop::stamp;
 use super::env::{Env, Io, Platform};
+use super::replace::{Replaced, remove_old_copies, replace};
 
 const USAGE: &str = "Usage: argus self-install [--dir <folder>] [--print]
   --dir <folder>  install into this folder (default: %LOCALAPPDATA%\\Programs\\argus)
@@ -84,14 +92,11 @@ fn same_bytes(first: &Path, second: &Path) -> bool {
     matches!((fs::read(first), fs::read(second)), (Ok(one), Ok(two)) if one == two)
 }
 
-/// Copies `source` over `target` atomically, or leaves `target` untouched and says why.
-fn replace(source: &Path, target: &Path) -> Result<(), String> {
-    argus_core::fs::copy_atomic(source, target).map_err(|e| {
-        format!(
-            "{} cannot be replaced ({e}). It is most likely in use by a running argus: run `argus stop`, then `argus self-install` again. The installed copy was left as it was.",
-            target.display()
-        )
-    })
+fn aside_line(old: &Path) -> String {
+    format!(
+        "The running copy was in use and was set aside as {}; it is removed on a later self-install.",
+        old.display()
+    )
 }
 
 fn report(target: &Path, verb: &str, io: &mut Io<'_>) {
@@ -133,12 +138,16 @@ pub fn run(args: &[String], io: &mut Io<'_>) -> u8 {
         (io.err)(&format!("argus: {} cannot be created: {e}", dir.display()));
         return 1;
     }
+    remove_old_copies(&dir, file_name(&io.env));
     if target.exists() && same_bytes(&source, &target) {
         report(&target, "already up to date:", io);
         return 0;
     }
-    match replace(&source, &target) {
-        Ok(()) => {
+    match replace(&source, &target, &stamp()) {
+        Ok(done) => {
+            if let Replaced::SetAside(old) = done {
+                (io.out)(&aside_line(&old));
+            }
             report(&target, "installed", io);
             0
         }
