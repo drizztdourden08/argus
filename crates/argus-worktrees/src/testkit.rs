@@ -58,31 +58,7 @@ pub fn exists_itself(path: &str) -> bool {
 
 /// A symlink (a junction on Windows) at `link` pointing to `target`.
 pub fn make_link(link: &str, target: &str) {
-    if let Some(parent) = Path::new(link).parent() {
-        fs::create_dir_all(parent).unwrap();
-    }
-    link_to(link, target);
-}
-
-#[cfg(windows)]
-fn link_to(link: &str, target: &str) {
-    let status = Command::new("cmd")
-        .args([
-            "/C",
-            "mklink",
-            "/J",
-            &link.replace('/', "\\"),
-            &target.replace('/', "\\"),
-        ])
-        .stdout(std::process::Stdio::null())
-        .status()
-        .unwrap();
-    assert!(status.success(), "mklink /J {link} {target}");
-}
-
-#[cfg(not(windows))]
-fn link_to(link: &str, target: &str) {
-    std::os::unix::fs::symlink(target, link).unwrap();
+    argus_core::fixture::links::junction(Path::new(link), Path::new(target));
 }
 
 pub fn set_mtime(path: &Path, when: SystemTime) {

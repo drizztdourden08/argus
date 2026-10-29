@@ -3,6 +3,7 @@
 
 mod alpha;
 mod files;
+pub mod links;
 
 pub use alpha::fill_alpha;
 pub use files::{check_run_record, put_file};

@@ -1,4 +1,5 @@
-//! A temporary cache root, temporary project folders and a fixed clock.
+//! A temporary cache root, temporary project folders and a fixed clock. Each test file uses a part of it.
+#![allow(dead_code)]
 
 use argus_cache::{BuildCache, Outcome, Place, PlaceKind, PruneError, Report};
 use argus_core::clock::{iso_from_ms, parse_ms};
@@ -42,6 +43,18 @@ impl Rig {
 
     pub fn root_path(&self) -> PathBuf {
         self.dir.path().join("cache")
+    }
+
+    /// A folder full of files beside the cache root, for the links of the delete safety tests.
+    pub fn sibling(&self) -> PathBuf {
+        let dir = self.dir.path().join("sibling");
+        argus_core::fixture::links::fill_sibling(&dir);
+        dir
+    }
+
+    /// Sets the modification time of a folder to `ago` ms before the rig's now.
+    pub fn age(&self, path: &Path, ago: i64) {
+        touch(path, self.now - ago);
     }
 
     pub fn iso_days_ago(&self, days: i64) -> String {

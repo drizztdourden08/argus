@@ -4,6 +4,7 @@
 
 mod fallback;
 mod leftover;
+mod links;
 mod remove;
 mod requests;
 mod review;
