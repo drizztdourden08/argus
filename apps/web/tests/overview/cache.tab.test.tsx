@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { formatDate } from '@drizztdourden08/tessera';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { CacheReport } from '../../src/data/cache';
 import { renderAt } from '../helpers/render-at';
@@ -60,6 +60,10 @@ const open = async (report: CacheReport = REPORT, prune?: { status?: number; bod
 
 const shown = (text: string | RegExp): number => screen.getAllByText(text).length;
 
+const bodyRows = (): HTMLElement[] => screen.getAllByRole('row').filter((row) => within(row).queryAllByRole('columnheader').length === 0);
+
+const rowsWith = (text: string): number => bodyRows().filter((row) => row.textContent.includes(text)).length;
+
 const reads = (calls: ApiCall[]): number => calls.filter((call) => call.method === 'GET' && call.path === '/api/cache').length;
 
 describe('the Cache tab listing', () => {
@@ -72,8 +76,9 @@ describe('the Cache tab listing', () => {
 
   it('shows a row per version with its kind, size, build count and users', async () => {
     await open();
-    expect(shown('Package')).toBe(2);
-    expect(shown('Electron')).toBe(1);
+    expect(bodyRows()).toHaveLength(3);
+    expect(rowsWith('Package')).toBe(2);
+    expect(rowsWith('Electron')).toBe(1);
     expect(shown('0.115.3')).toBeGreaterThan(0);
     expect(shown('brock, brock / agent-1')).toBeGreaterThan(0);
     expect(shown('4.0 MB')).toBeGreaterThan(0);
