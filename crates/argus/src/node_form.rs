@@ -1,7 +1,8 @@
 //! The top-level answers of the Node `dashboard` bin, for a call the shim forwarded: the bare
 //! version, the usage text, the `dashboard: unknown command` refusal and their exit codes.
 //! The shim marks its call with `ARGUS_FORWARDED_FROM`; a direct `argus` call keeps clap's own
-//! output. Anything this module does not answer goes on to the normal parse.
+//! output. Anything this module does not answer goes on to the normal parse, and so does a verb
+//! only Argus has (`dns`, `self-install`, `parity`): Node is retired, so those must run.
 
 /// The environment variable the Node shim sets on the process it forwards to.
 pub const FORWARD_ENV: &str = "ARGUS_FORWARDED_FROM";
@@ -37,6 +38,10 @@ const VERBS: [&str; 13] = [
     "autostart",
     "install-mcp",
 ];
+
+/// The commands only Argus has. The Node bin never knew them, so a forwarded call goes straight
+/// to the normal parse, `--help` included.
+const ARGUS_ONLY: [&str; 3] = ["dns", "self-install", "parity"];
 
 /// The options that take the next argument as their value (`WITH_VALUE` in the Node bin).
 const WITH_VALUE: [&str; 5] = ["port", "lines", "project", "run", "thread"];
@@ -104,6 +109,9 @@ pub fn answer(args: &[String], version: &str) -> Option<Answer> {
         }
         _ => {}
     }
+    if ARGUS_ONLY.contains(&command.as_str()) {
+        return None;
+    }
     match help_requested(rest) {
         Err(message) => Some(failure(&message, 1)),
         Ok(true) => Some(usage(0)),
@@ -165,7 +173,6 @@ mod tests {
             code: 2,
         };
         assert_eq!(got, want);
-        assert_eq!(code_of("self-install"), Some(2));
     }
 
     #[test]
@@ -178,6 +185,22 @@ mod tests {
         ] {
             assert_eq!(answer(&args(line), "1"), None, "{line}");
         }
+    }
+
+    #[test]
+    fn an_argus_only_verb_goes_on_to_the_normal_parse() {
+        for line in [
+            "dns status",
+            "dns --help",
+            "self-install --print",
+            "parity --help",
+            "install-mcp --code",
+            "autostart status",
+            "tray status",
+        ] {
+            assert_eq!(answer(&args(line), "1"), None, "{line}");
+        }
+        assert_eq!(code_of("dnsx status"), Some(2));
     }
 
     #[test]

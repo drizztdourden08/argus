@@ -52,8 +52,9 @@ describe('markdown cost on hostile input', () => {
     const small = '*a *b '.repeat(500);
     const big = '*a *b '.repeat(2000);
     timed(small);
-    const first = Math.max(timed(small), 1);
-    expect(timed(big)).toBeLessThan(first * 16);
+    const best = (source: string): number => Math.min(timed(source), timed(source), timed(source));
+    const first = Math.max(best(small), 1);
+    expect(best(big)).toBeLessThan(first * 16);
   });
 
   it('the output of the long inputs is still free of scripts and event attributes', () => {
