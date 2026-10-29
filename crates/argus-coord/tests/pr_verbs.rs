@@ -349,6 +349,26 @@ async fn check_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() 
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn check_of_a_run_that_ends_at_once_always_prints_its_record() {
+    let (tools, root) = (
+        tempfile::tempdir().expect("tools"),
+        tempfile::tempdir().expect("root"),
+    );
+    let script = tools.path().join("fake-brock.cjs");
+    let config = json!({
+        "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
+        "projectRoots": { "alpha": root.path().display().to_string() },
+    });
+    let rig = Rig::start(config, seed).await;
+    write_fake_script(&rig.t.coord_home, &script);
+    for n in 1..=20 {
+        let ran = rig.run(&["check", "--commit", SHA, "--project", "alpha"]);
+        assert_eq!(ok(&ran).trim(), format!("R-{n} C-{n} check started"));
+    }
+    rig.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn check_starts_a_run_and_prints_its_run_and_record() {
     let (tools, root) = (
         tempfile::tempdir().expect("tools"),

@@ -67,6 +67,9 @@ impl<H: ProcessHost> RunService<H> {
             ..RunPatch::default()
         };
         self.state().live.remove(&live.id);
+        if let Some(row) = self.get(&live.scope, &live.rid) {
+            self.notify_finishing(&row);
+        }
         let ended = self.set_state(&live.scope, &live.rid, &patch);
         self.prune(&live.scope, &live.name);
         if let Some(row) = &ended {

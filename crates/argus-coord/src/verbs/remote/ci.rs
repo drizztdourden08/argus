@@ -21,9 +21,6 @@ const ASKS: [&str; 4] = ["commit", "pr", "job", "trigger"];
 /// How long the record of a started run is waited for.
 const LINK_WAIT: Duration = Duration::from_secs(30);
 const POLL: Duration = Duration::from_millis(250);
-/// How long the dashboard is given to link the record of a run that has already ended: it links
-/// on its own poll, which a quick run can beat.
-const LINK_GRACE: Duration = Duration::from_secs(2);
 
 fn asks_for_a_run(call: &Call<'_>) -> bool {
     !call.positional.is_empty() || ASKS.iter().any(|o| call.options.get(o).is_some())
@@ -83,21 +80,9 @@ fn ended(client: &Client, project: &str, rid: &str) -> Option<String> {
     (status != "queued" && status != "running").then(|| status.to_owned())
 }
 
-/// The record of a run that has ended, given the grace the dashboard needs to link it.
-fn linked_after_end(client: &Client, project: &str, rid: &str) -> Option<String> {
-    let deadline = Instant::now() + LINK_GRACE;
-    loop {
-        if let Some(id) = record_of(client, project, rid) {
-            return Some(id);
-        }
-        if Instant::now() >= deadline {
-            return None;
-        }
-        std::thread::sleep(POLL);
-    }
-}
-
-/// Waits for the record the run prints first: its `C-n`, or why there is none.
+/// Waits for the record the run prints first: its `C-n`, or why there is none. The dashboard
+/// links the record before it reports a run ended, so the record is read again once the run is
+/// seen ended (it may have been linked between the two reads).
 fn wait_for_record(client: &Client, project: &str, rid: &str) -> Result<String, String> {
     let deadline = Instant::now() + LINK_WAIT;
     loop {
@@ -105,7 +90,7 @@ fn wait_for_record(client: &Client, project: &str, rid: &str) -> Result<String, 
             return Ok(id);
         }
         if let Some(status) = ended(client, project, rid) {
-            return linked_after_end(client, project, rid).ok_or(format!("the run {status}"));
+            return record_of(client, project, rid).ok_or(format!("the run {status}"));
         }
         if Instant::now() >= deadline {
             return Err("none yet".to_owned());

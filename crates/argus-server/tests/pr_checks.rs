@@ -258,6 +258,31 @@ async fn a_check_run_starts_on_the_run_engine_and_is_linked_to_its_record() {
     r.t.stop(false).await;
 }
 
+/// The status of a run once it is no longer queued or running.
+async fn ended_status(t: &TestServer, rid: &str) -> String {
+    let path = format!("/api/p/alpha/runs/{rid}");
+    until("the run to end", || async {
+        let status = t.get(&path).await.json()["run"]["status"].clone();
+        let word = status.as_str()?;
+        (word != "queued" && word != "running").then(|| word.to_owned())
+    })
+    .await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_quick_check_run_is_linked_to_its_record_before_it_is_reported_ended() {
+    let r = rig(false).await;
+    for n in 1..=20 {
+        let rid = start_check(&r.t, &json!({ "trigger": "manual" })).await;
+        assert_eq!(rid, format!("R-{n}"));
+        assert_eq!(ended_status(&r.t, &rid).await, "exited");
+        let got = r.t.get(&format!("/api/p/alpha/checks?run={rid}")).await;
+        let record = got.json()["runs"][0]["id"].clone();
+        assert_eq!(record, format!("C-{n}"), "run {rid} ended without its link");
+    }
+    r.t.stop(false).await;
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_check_run_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() {
     let r = rig(false).await;

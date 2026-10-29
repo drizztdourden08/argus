@@ -25,6 +25,10 @@ use argus_core::clock::Clock;
 /// A listener of a run's end; it only watches.
 pub(crate) type EndListener = Box<dyn Fn(&RunRow) + Send + Sync>;
 
+/// A listener of a run whose output is complete but whose end is not yet reported. It gets the
+/// service, so it can read the log.
+pub(crate) type FinishListener<H> = Box<dyn Fn(&RunService<H>, &RunRow) + Send + Sync>;
+
 #[derive(Clone, Debug)]
 pub struct RunConfig {
     pub limits: RunLimits,
@@ -75,10 +79,11 @@ pub(crate) struct State {
     pub sweeper: Option<JoinHandle<()>>,
 }
 
-pub(crate) struct Inner<H> {
+pub(crate) struct Inner<H: ProcessHost> {
     pub deps: RunDeps<H>,
     pub state: Mutex<State>,
     pub listeners: Mutex<Vec<(u64, EndListener)>>,
+    pub finish_listeners: Mutex<Vec<FinishListener<H>>>,
     pub next_listener: AtomicU64,
 }
 
@@ -106,6 +111,7 @@ impl<H: ProcessHost> RunService<H> {
                 deps,
                 state: Mutex::new(State::default()),
                 listeners: Mutex::new(Vec::new()),
+                finish_listeners: Mutex::new(Vec::new()),
                 next_listener: AtomicU64::new(1),
             }),
         }
@@ -188,13 +194,38 @@ impl<H: ProcessHost> RunService<H> {
             .lock()
             .unwrap_or_else(PoisonError::into_inner);
         for (_, listener) in listeners.iter() {
-            let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| listener(row)));
-            if outcome.is_err() {
-                self.inner
-                    .deps
-                    .events
-                    .warn("run end listener failed", &run_key(&row.scope, &row.id));
-            }
+            self.guarded("run end listener failed", row, || listener(row));
+        }
+    }
+
+    /// Listeners of a run whose output is complete and whose end is not yet reported: the run
+    /// is still live in its record and its log is whole, so a listener sees every line before
+    /// anyone is told the run ended. They only watch, and are never removed.
+    pub fn on_finish(&self, listener: impl Fn(&Self, &RunRow) + Send + Sync + 'static) {
+        self.inner
+            .finish_listeners
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(Box::new(listener));
+    }
+
+    pub(crate) fn notify_finishing(&self, row: &RunRow) {
+        let listeners = self
+            .inner
+            .finish_listeners
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        for listener in listeners.iter() {
+            self.guarded("run finish listener failed", row, || listener(self, row));
+        }
+    }
+
+    /// Runs a listener; one that panics is warned about and ignored.
+    fn guarded(&self, warning: &str, row: &RunRow, call: impl FnOnce()) {
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(call));
+        if outcome.is_err() {
+            let key = run_key(&row.scope, &row.id);
+            self.inner.deps.events.warn(warning, &key);
         }
     }
 

@@ -11,9 +11,11 @@ use std::time::Duration;
 
 use argus_board::json::doc;
 use argus_core::clock::now_iso;
+use argus_core::log::Logger;
 use argus_core::remote::ci_root_of;
 use argus_core::{ApiError, ErrorCode};
 use argus_launchers::{LogOptions, Origin, RunDef, RunKind, RunService, StartOptions, check_key};
+use argus_store::Db;
 use argus_worktrees::path_key;
 use serde_json::{Value, json};
 
@@ -237,15 +239,34 @@ fn live(runs: &RunService<RunHost>, project: &str, rid: &str) -> bool {
 }
 
 /// Keeps the pair a first line makes, when the line names a record of the project.
-fn keep_pair(svc: &Services, (project, rid): (&str, &str), line: &str) {
+fn keep_pair(db: &Arc<Db>, log: &Logger, (project, rid): (&str, &str), line: &str) {
     let Some(run_id) = run_id_of(project, line) else {
         return;
     };
-    let links = CheckLinks::new(Arc::clone(&svc.db));
+    let links = CheckLinks::new(Arc::clone(db));
     if !links.link(project, &run_id, rid) {
         let detail = json!({ "run": rid, "record": run_id });
-        svc.log.warn("check run not linked to its record", detail);
+        log.warn("check run not linked to its record", detail);
     }
+}
+
+/// The last link pass of every check run, made by the run engine once the log of the run is
+/// whole and before the run is reported ended: the record is linked and the check index reads
+/// the record, however fast the run ended, so whoever sees the run ended finds its `C-n`.
+pub(crate) fn link_on_finish(svc: &Services, runs: &RunService<RunHost>) {
+    let (db, log) = (Arc::clone(&svc.db), Arc::clone(&svc.log));
+    let checks = svc.records.as_ref().map(|r| Arc::clone(&r.checks));
+    runs.on_finish(move |runs, row| {
+        if row.name != NAME {
+            return;
+        }
+        if let Some(line) = first_line(runs, &row.scope, &row.id) {
+            keep_pair(&db, &log, (&row.scope, &row.id), &line);
+        }
+        if let Some(checks) = &checks {
+            checks.rescan();
+        }
+    });
 }
 
 /// The folders the guard watches: the one the run works in, and the project root when that
@@ -311,8 +332,9 @@ async fn follow(
     let _ = tokio::task::spawn_blocking(verdict).await;
 }
 
-/// Waits for the first line of the run, which names Brock's record, and keeps the pair. Ends with
-/// the run, with the first line, or with the server.
+/// Links the record as soon as the first line is there, so a running check shows its `C-n`
+/// early (`link_on_finish` makes sure of it at the end). Ends with the run, with the first line,
+/// or with the server.
 async fn link_when_printed(
     svc: Arc<Services>,
     runs: Arc<RunService<RunHost>>,
@@ -321,7 +343,7 @@ async fn link_when_printed(
 ) {
     loop {
         if let Some(line) = first_line(&runs, &project, &rid) {
-            keep_pair(&svc, (&project, &rid), &line);
+            keep_pair(&svc.db, &svc.log, (&project, &rid), &line);
             return;
         }
         if !live(&runs, &project, &rid) {

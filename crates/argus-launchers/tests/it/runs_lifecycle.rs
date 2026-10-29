@@ -271,3 +271,33 @@ async fn end_listeners_hear_failed_and_exited_runs_and_a_panic_stops_nobody() {
     );
     assert_eq!(env.events.warnings().len(), 2, "each panic is reported");
 }
+
+#[tokio::test(start_paused = true)]
+async fn finish_listeners_see_the_whole_log_of_a_run_that_is_not_yet_reported_ended() {
+    let env = Env::new();
+    env.define("alpha", vec![env.def("quick", "quick")]);
+    env.svc.on_finish(|_, _| panic!("a broken listener"));
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let sink = Arc::clone(&seen);
+    env.svc.on_finish(move |svc, row| {
+        let options = argus_launchers::LogOptions::default();
+        let page = svc.logs(&row.scope, &row.id, &options).unwrap();
+        let out: Vec<String> = page.lines.iter().map(|l| l.text.clone()).collect();
+        let live = svc.get(&row.scope, &row.id).unwrap().status.is_live();
+        sink.lock().unwrap().push((out, live));
+    });
+    env.start("alpha", "quick");
+    let pid = env.pid(0);
+    env.host.say(pid, "first\nlast\n").await;
+    env.host.exit(pid, Some(0)).await;
+    env.finished("alpha", "R-1").await;
+    let seen = seen.lock().unwrap().clone();
+    assert_eq!(seen.len(), 1);
+    let (lines, live) = &seen[0];
+    assert!(
+        lines.iter().any(|l| l == "last"),
+        "the log is whole: {lines:?}"
+    );
+    assert!(live, "the run is not reported ended yet");
+    assert_eq!(env.events.warnings().len(), 1, "the panic is reported");
+}
