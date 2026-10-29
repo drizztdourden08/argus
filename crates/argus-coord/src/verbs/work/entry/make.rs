@@ -5,7 +5,7 @@
 use argus_board::limits::{require_context, require_text, soft_context, text_list};
 use serde_json::{Value, json};
 
-use super::{DECISION_OPTIONS, create_entry, item_arg, on_item};
+use super::{DECISION_OPTIONS, create_entry, images, item_arg, on_item};
 use crate::cli::{Outcome, Val};
 use crate::verbs::work::run::{Run, bad};
 
@@ -26,6 +26,7 @@ pub(super) fn ask(r: &mut Run<'_>) -> Outcome {
     }
     let choices = text_list("option", &choices_of(&given), 5)?;
     let needs = if decision { "decision" } else { "answer" };
+    let pics = images::picked(r, choices.len())?;
     r.write(|board, r| {
         let (who, item) = on_item(board, r)?;
         let fields = json!({
@@ -33,14 +34,16 @@ pub(super) fn ask(r: &mut Run<'_>) -> Outcome {
             "text": text, "context": context, "needs": needs, "options": choices, "status": "open",
         });
         let id = create_entry(board, &fields, &who.actor)?;
+        images::keep_all(board, r, &id, &pics)?;
         let kind = if decision {
             " (decision request, shown in the feed)"
         } else {
             ""
         };
         let item_id = argus_board::json::display(&item["id"]);
+        let pictured = images::said(&pics);
         r.say(&[
-            &format!("{id} asked on {item_id}{kind}: {text}"),
+            &format!("{id} asked on {item_id}{kind}{pictured}: {text}"),
             "The answer reaches your inbox; hooks hand it to you on your next turn.",
         ]);
         Ok(())
@@ -51,6 +54,7 @@ pub(super) fn ask(r: &mut Run<'_>) -> Outcome {
 pub(super) fn decide(r: &mut Run<'_>) -> Outcome {
     let text = require_text("decision", &r.arg_json(1))?;
     let context = require_context(&r.opt("context"))?;
+    let pics = images::picked(r, 0)?;
     r.write(|board, r| {
         let (who, item) = on_item(board, r)?;
         let fields = json!({
@@ -58,8 +62,10 @@ pub(super) fn decide(r: &mut Run<'_>) -> Outcome {
             "text": text, "context": context, "status": "done",
         });
         let id = create_entry(board, &fields, &who.actor)?;
+        images::keep_all(board, r, &id, &pics)?;
         let item_id = argus_board::json::display(&item["id"]);
-        r.say(&[&format!("{id} recorded on {item_id}: {text}")]);
+        let pictured = images::said(&pics);
+        r.say(&[&format!("{id} recorded on {item_id}{pictured}: {text}")]);
         Ok(())
     })
 }

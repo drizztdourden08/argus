@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use argus_board::limits::limit;
-use argus_board::proofs::keep_proof_bytes;
+use argus_board::proofs::{Image, keep_entry_image, keep_proof_bytes};
 use argus_board::store::{LockWait, board_path, stamp, with_board_async};
 use argus_board::{Board, BoardError};
 use argus_core::ids::{PORTFOLIO, is_key};
@@ -64,10 +64,10 @@ fn canonical(p: &Path) -> Option<PathBuf> {
     std::fs::canonicalize(p).ok()
 }
 
-fn check_caption(test_id: &str, caption: &str) -> Result<String, ApiError> {
+fn check_caption(target: &Target, caption: &str) -> Result<String, ApiError> {
     let trimmed = js::trim(caption);
     let text = if trimmed.is_empty() {
-        format!("{test_id} proof")
+        format!("{} {}", target.id(), target.noun())
     } else {
         trimmed.to_owned()
     };
@@ -160,22 +160,49 @@ impl State {
         caption: &str,
         by: &str,
     ) -> Result<Proof, ApiError> {
+        if !numbered(test_id, &["T"]) {
+            return Err(ApiError::bad_request(format!(
+                "invalid test id \"{test_id}\""
+            )));
+        }
+        self.attach(key, Target::Test(test_id), (src, caption), by)
+            .await
+    }
+
+    /// Keeps a picture on a question or a decision entry. `option` is the 1-based choice it
+    /// belongs to, `None` for the entry as a whole.
+    pub async fn attach_entry_image(
+        self: &Arc<Self>,
+        key: &str,
+        target: (&str, Option<i64>),
+        (src, caption): (ProofSource, &str),
+        by: &str,
+    ) -> Result<Proof, ApiError> {
+        let (entry_id, option) = target;
+        if !numbered(entry_id, &["Q", "D"]) {
+            return Err(ApiError::bad_request(format!(
+                "invalid entry id \"{entry_id}\""
+            )));
+        }
+        let target = Target::Entry(entry_id, option);
+        self.attach(key, target, (src, caption), by).await
+    }
+
+    async fn attach(
+        self: &Arc<Self>,
+        key: &str,
+        target: Target<'_>,
+        (src, caption): (ProofSource, &str),
+        by: &str,
+    ) -> Result<Proof, ApiError> {
         if !is_key(key) {
             return Err(ApiError::bad_request(format!(
                 "invalid project key \"{key}\""
             )));
         }
-        let numbered = test_id
-            .strip_prefix("T-")
-            .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()));
-        if !numbered {
-            return Err(ApiError::bad_request(format!(
-                "invalid test id \"{test_id}\""
-            )));
-        }
         let (bytes, mime) = self.read_source(src)?;
         let ext = check_bytes(&bytes, mime.as_deref(), self.config().attach.max_bytes)?;
-        let text = check_caption(test_id, caption)?;
+        let text = check_caption(&target, caption)?;
         if !board_path(self.coord_home(), key).exists() {
             return Err(ApiError::not_found(format!(
                 "no board for project \"{key}\""
@@ -184,7 +211,7 @@ impl State {
         let me = Arc::clone(self);
         let job = Keep {
             key,
-            test_id,
+            target,
             bytes: &bytes,
             ext,
             caption: &text,
@@ -204,10 +231,12 @@ impl State {
             })
             .await
             .map_err(|e| match e {
-                BoardError::Refused(m) if m.starts_with("no test") => ApiError::not_found(m),
+                BoardError::Refused(m) if m.starts_with("no test") || m.starts_with("no entry") => {
+                    ApiError::not_found(m)
+                }
                 other => board_error(other),
             })?;
-        let file = saved["tests"][job.test_id]["proofs"]
+        let file = saved[job.target.coll()][job.target.id()][job.target.field()]
             .as_array()
             .and_then(|ps| ps.iter().find(|p| p["n"] == json!(n)))
             .and_then(|p| p["file"].as_str())
@@ -221,9 +250,53 @@ impl State {
     }
 }
 
+fn numbered(id: &str, prefixes: &[&str]) -> bool {
+    id.split_once('-').is_some_and(|(prefix, n)| {
+        prefixes.contains(&prefix) && !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit())
+    })
+}
+
+/// What a picture is kept on.
+#[derive(Clone, Copy)]
+enum Target<'a> {
+    /// A test, as a proof.
+    Test(&'a str),
+    /// A question or decision entry, tied to a 1-based option or to none.
+    Entry(&'a str, Option<i64>),
+}
+
+impl Target<'_> {
+    fn id(&self) -> &str {
+        match self {
+            Target::Test(id) | Target::Entry(id, _) => id,
+        }
+    }
+
+    fn noun(&self) -> &'static str {
+        match self {
+            Target::Test(_) => "proof",
+            Target::Entry(..) => "image",
+        }
+    }
+
+    fn coll(&self) -> &'static str {
+        match self {
+            Target::Test(_) => "tests",
+            Target::Entry(..) => "entries",
+        }
+    }
+
+    fn field(&self) -> &'static str {
+        match self {
+            Target::Test(_) => "proofs",
+            Target::Entry(..) => "images",
+        }
+    }
+}
+
 struct Keep<'a> {
     key: &'a str,
-    test_id: &'a str,
+    target: Target<'a>,
     bytes: &'a [u8],
     ext: &'a str,
     caption: &'a str,
@@ -231,19 +304,42 @@ struct Keep<'a> {
 }
 
 fn keep_on(home: &Path, board: &mut Board, job: &Keep) -> Result<(Board, i64), BoardError> {
-    let missing = || BoardError::Refused(format!("no test {} on {}", job.test_id, job.key));
-    let test = board
-        .get_mut("tests")
-        .and_then(|t| t.get_mut(job.test_id))
+    let id = job.target.id();
+    let what = if matches!(job.target, Target::Test(_)) {
+        "test"
+    } else {
+        "entry"
+    };
+    let missing = || BoardError::Refused(format!("no {what} {id} on {}", job.key));
+    let doc = board
+        .get_mut(job.target.coll())
+        .and_then(|t| t.get_mut(id))
         .ok_or_else(missing)?;
-    if js::truthy(&test["deletedAt"]) {
+    if js::truthy(&doc["deletedAt"]) {
         return Err(missing());
     }
-    let n = keep_proof_bytes(home, job.key, test, job.bytes, job.ext, job.caption)?;
+    if matches!(job.target, Target::Entry(..))
+        && !matches!(doc["kind"].as_str(), Some("question" | "decision"))
+    {
+        return Err(BoardError::Refused(format!(
+            "{id} is not a question or a decision: only those carry images."
+        )));
+    }
+    let image = Image {
+        bytes: job.bytes,
+        ext: job.ext,
+        caption: job.caption,
+    };
+    let n = match job.target {
+        Target::Test(_) => {
+            keep_proof_bytes(home, job.key, doc, image.bytes, image.ext, image.caption)
+        }
+        Target::Entry(_, option) => keep_entry_image(home, job.key, doc, (image, option)),
+    }?;
     stamp(
         board,
-        "tests",
-        job.test_id,
+        job.target.coll(),
+        id,
         if job.by.is_empty() { "human" } else { job.by },
     )?;
     clear_marks(board);

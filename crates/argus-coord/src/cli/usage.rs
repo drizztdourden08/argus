@@ -33,6 +33,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord worktree request <id|path>... | --finished [--idle 6h] | --all-leftovers [--older-than 3d] [--branch] [--reason "..."]  |  requests [--json]    (ASKS Argus to remove, for a session whose own safety check refuses remove: deletes nothing itself; Argus removes behind the same guards, one at a time, and one note comes to your inbox; --finished = merged, or stale and clean; --idle D adds clean worktrees with nothing ahead untouched for D, 1h to 30d, 6h by default)
   coord test result <T> <pass|fail|partial|blocked> "<note>" [--proof <img>]    move <T> --item <I2> | archive|unarchive|rm|restore <T>
   coord ask <I> "<question>" --context "<c>" [--option "<recommended>" --option "<other>"]... [--decide]    coord decide <I> "<decision>" --context "<c>"   (context and, for a decision, 2 to 5 options are required)
+  coord ask | decide ... [--image [N=]<png> "<caption>"]...    (pictures the owner opens and zooms in the card; one quoted caption per --image after the text, N= ties it to option N counted from 1)
   coord notify "<text>" [--item I] [--level info|warn|bad] [--context "<c>"]    coord message "<text for the owner>" [--item I] [--context "<c>"]
   coord entry list [--open] [--kind k] [--mine] [--archived] | show <E> | pick <E> | done <E>
   coord entry set <E> ["<text>"] [--option "..."]... [--context "<c>"] | move <E> --item <I> | archive|unarchive|rm|restore <E>

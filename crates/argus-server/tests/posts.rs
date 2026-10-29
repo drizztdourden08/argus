@@ -293,6 +293,49 @@ async fn a_proof_upload_is_kept_and_served() {
     assert_eq!(img.body, png());
 }
 
+fn image_upload(path: &str) -> Request {
+    Request::new("POST", path)
+        .header("Content-Type", "image/png")
+        .body(png())
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_question_image_is_kept_served_and_shown_on_the_entry() {
+    let t = seeded().await;
+    let r = t
+        .send(image_upload("/api/p/alpha/entries/Q-1/images?caption=look"))
+        .await
+        .json();
+    let image = json!({ "n": 1, "url": "/files/alpha/proofs/Q-1-1.png", "caption": "look", "option": null });
+    assert_eq!(r, json!({ "entry": "Q-1", "image": image }));
+    let stored = doc(&t, "alpha", "entries", "Q-1").await;
+    assert_eq!(stored["images"][0]["url"], "/files/alpha/proofs/Q-1-1.png");
+    assert_eq!(stored["images"][0]["caption"], "look");
+    let img = t.get("/files/alpha/proofs/Q-1-1.png").await;
+    assert_eq!((img.status, img.body), (200, png()));
+    let untouched = doc(&t, "alpha", "entries", "N-1").await;
+    assert!(untouched.get("images").is_none());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn an_entry_image_is_refused_for_a_bad_type_a_missing_option_or_a_notice() {
+    let t = seeded().await;
+    let text = Request::new("POST", "/api/p/alpha/entries/Q-1/images")
+        .header("Content-Type", "text/plain")
+        .body("hello");
+    assert_eq!(t.send(text).await.status, 415);
+    let tied = image_upload("/api/p/alpha/entries/Q-1/images?caption=x&option=1");
+    assert_eq!(t.send(tied).await.status, 400);
+    let word = image_upload("/api/p/alpha/entries/Q-1/images?option=two");
+    assert_eq!(t.send(word).await.status, 400);
+    let notice = image_upload("/api/p/alpha/entries/N-1/images?caption=x");
+    assert_eq!(t.send(notice).await.status, 400);
+    let missing = image_upload("/api/p/alpha/entries/Q-99/images?caption=x");
+    assert_eq!(t.send(missing).await.status, 404);
+    let bad_id = image_upload("/api/p/alpha/entries/X-1/images?caption=x");
+    assert_eq!(t.send(bad_id).await.status, 400);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_proof_that_is_not_an_image_type_is_refused() {
     let t = seeded().await;
