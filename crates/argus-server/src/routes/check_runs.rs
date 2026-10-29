@@ -2,7 +2,9 @@
 //! job?, trigger?}` runs `brock ci` in the root of the project on the run engine (hidden, logs
 //! kept, Stop and history are the run engine's) and answers `{run: "R-n"}`. When the run prints
 //! its first line, the path of Brock's record, the pair is kept and `GET /api/p/:key/checks`
-//! shows `run` on that record.
+//! shows `run` on that record. The guard (`check_guard`) reads the tracked changes of the folders
+//! the run can touch before it starts and after it ends; a run that changed tracked files is
+//! failed, on its run record and its `C-n` entry, with one warn line in the server log.
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,8 +13,11 @@ use argus_core::clock::now_iso;
 use argus_core::remote::ci_root_of;
 use argus_core::{ApiError, ErrorCode};
 use argus_launchers::{LogOptions, Origin, RunDef, RunKind, RunService, StartOptions, check_key};
+use argus_worktrees::path_key;
 use serde_json::{Value, json};
 
+use super::blocking::blocking;
+use super::check_guard::Before;
 use super::params::key;
 use super::runs::{refusal, service};
 use super::write::{actor, object_body, writable};
@@ -138,12 +143,17 @@ impl Args {
     }
 }
 
-/// The folder `brock ci` runs in: the integration checkout of `coord remote ci-root` when one
-/// is set, else the root of the project from the boards and the config.
-fn root_of(ctx: &Ctx, project: &str) -> Result<String, ApiError> {
+/// The root of the project from the boards and the config.
+fn project_root(ctx: &Ctx, project: &str) -> Option<String> {
     let known = ctx.svc.boards().projects();
+    known.into_iter().find(|p| p.key == project)?.root
+}
+
+/// The folder `brock ci` runs in: the integration checkout of `coord remote ci-root` when one
+/// is set, else the root of the project.
+fn root_of(ctx: &Ctx, project: &str) -> Result<String, ApiError> {
     let root = ci_root_of(&ctx.svc.paths.coord_home, project)
-        .or_else(|| known.into_iter().find(|p| p.key == project)?.root)
+        .or_else(|| project_root(ctx, project))
         .ok_or_else(|| {
             ApiError::new(
                 ErrorCode::NotFound,
@@ -216,6 +226,69 @@ fn keep_pair(svc: &Services, (project, rid): (&str, &str), line: &str) {
     }
 }
 
+/// The folders the guard watches: the one the run works in, and the project root when that
+/// differs.
+fn watched(cwd: &str, root: Option<String>) -> Vec<String> {
+    let same = |r: &String| path_key(r, cfg!(windows)) == path_key(cwd, cfg!(windows));
+    let mut dirs = vec![cwd.to_owned()];
+    dirs.extend(root.filter(|r| !same(r)));
+    dirs
+}
+
+/// Fails a run that changed tracked files: its run record, its `C-n` entry when its first line
+/// named one, and one warn line. Blocking: git runs.
+fn judge(
+    svc: &Services,
+    runs: &RunService<RunHost>,
+    (project, rid): (&str, &str),
+    before: &Before,
+) {
+    let Some(note) = before.verdict() else {
+        return;
+    };
+    let failed = runs.fail_ended(project, rid, &note).is_some();
+    let record = first_line(runs, project, rid).and_then(|line| run_id_of(project, &line));
+    let links = CheckLinks::new(Arc::clone(&svc.db));
+    let flagged = record
+        .as_deref()
+        .is_some_and(|id| links.flag(project, id, &note));
+    let detail = json!({ "project": project, "run": rid, "record": record, "note": note,
+        "runFailed": failed, "recordFailed": flagged });
+    svc.log.warn("check run changed tracked files", detail);
+}
+
+/// Waits for the run to end. False when the server stops first.
+async fn ended(svc: &Services, runs: &RunService<RunHost>, project: &str, rid: &str) -> bool {
+    while live(runs, project, rid) {
+        tokio::select! {
+            () = tokio::time::sleep(POLL) => {}
+            () = svc.stop.cancelled() => return false,
+        }
+    }
+    true
+}
+
+/// Follows a check run: links its record when it prints it, then judges it when it ends.
+async fn follow(
+    svc: Arc<Services>,
+    runs: Arc<RunService<RunHost>>,
+    (project, rid): (String, String),
+    before: Before,
+) {
+    link_when_printed(
+        Arc::clone(&svc),
+        Arc::clone(&runs),
+        project.clone(),
+        rid.clone(),
+    )
+    .await;
+    if !ended(&svc, &runs, &project, &rid).await {
+        return;
+    }
+    let verdict = move || judge(&svc, &runs, (&project, &rid), &before);
+    let _ = tokio::task::spawn_blocking(verdict).await;
+}
+
 /// Waits for the first line of the run, which names Brock's record, and keeps the pair. Ends with
 /// the run, with the first line, or with the server.
 async fn link_when_printed(
@@ -281,12 +354,15 @@ async fn start(ctx: Ctx) -> Reply {
     check_key(&project).map_err(|e| refusal(&e))?;
     let args = Args::parse(&body)?;
     let cmd = args.command(&program_of(&ctx), &project);
-    let def = definition(cmd, root_of(&ctx, &project)?);
+    let cwd = root_of(&ctx, &project)?;
+    let dirs = watched(&cwd, project_root(&ctx, &project));
+    let before = blocking(move || Before::take(dirs)).await?;
+    let def = definition(cmd, cwd);
     let started = runs
         .start_def(&project, &def, &options_of(&ctx, &body, &args))
         .map_err(|e| refusal(&e))?;
     let rid = started.run.id;
-    let tracker = link_when_printed(Arc::clone(&ctx.svc), runs, project, rid.clone());
+    let tracker = follow(Arc::clone(&ctx.svc), runs, (project, rid.clone()), before);
     tokio::spawn(tracker);
     Ok(json_reply(200, &json!({ "run": rid })))
 }

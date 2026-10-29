@@ -8,7 +8,8 @@
 //!   `latest.yml` points at
 //! - `GET /api/p/<key>/checks?commit=&pr=&run=` is `{runs}` newest first, with ids `C-n`, and
 //!   `GET /api/p/<key>/checks/<C-n>/log?step=<i>` is the log text of a step; each run has `run`,
-//!   the `R-n` of the run engine that made it (`POST /api/p/<key>/checks`), or null
+//!   the `R-n` of the run engine that made it (`POST /api/p/<key>/checks`), or null; a run that
+//!   changed tracked files is `failed` with `guardNote`
 //! - `GET /api/registry` is `{builds, consumers, scopeRedirected, consumersNote}`: the local
 //!   package builds and the checkouts that use them
 
@@ -77,10 +78,15 @@ async fn project_releases(ctx: Ctx) -> Reply {
     Ok(json_reply(200, &json!({ "channels": channels })))
 }
 
-/// A run as the API shows it, with `run`: the `R-n` of the run engine that made it, or null.
+/// A run as the API shows it, with `run`: the `R-n` of the run engine that made it, or null. A
+/// run the guard failed (it changed tracked files) is `failed` with the note in `guardNote`.
 fn row_of(run: &CheckRun, links: &CheckLinks) -> Value {
     let mut row = run_json(run);
     row["run"] = json!(links.run_of(&run.project, &run.run_id));
+    if let Some(note) = links.flag_of(&run.project, &run.run_id) {
+        row["status"] = json!("failed");
+        row["guardNote"] = json!(note);
+    }
     row
 }
 

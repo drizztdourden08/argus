@@ -69,6 +69,31 @@ async fn a_non_zero_exit_is_failed_and_keeps_the_code() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn an_ended_run_can_be_failed_after_the_fact_and_a_live_one_cannot() {
+    let env = Env::new();
+    env.define("alpha", vec![env.def("hello", "echo hi")]);
+    env.start("alpha", "hello");
+    let pid = env.pid(0);
+    assert_eq!(
+        env.svc.fail_ended("alpha", "R-1", "harm"),
+        None,
+        "still live"
+    );
+    env.host.exit(pid, Some(0)).await;
+    env.finished("alpha", "R-1").await;
+    let failed = env.svc.fail_ended("alpha", "R-1", "harm").unwrap();
+    assert_eq!(
+        (failed.status, failed.error.as_deref(), failed.exit_code),
+        (RunStatus::Failed, Some("harm"), Some(0))
+    );
+    assert_eq!(
+        env.svc.get("alpha", "R-1").unwrap().status,
+        RunStatus::Failed
+    );
+    assert_eq!(env.svc.fail_ended("alpha", "R-9", "harm"), None, "unknown");
+}
+
+#[tokio::test(start_paused = true)]
 async fn a_refused_spawn_fails_the_run_at_once_with_the_reason() {
     let env = Env::new();
     env.define("alpha", vec![env.def("app", "anything")]);

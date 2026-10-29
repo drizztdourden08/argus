@@ -9,6 +9,7 @@ pub mod admin;
 pub mod agents;
 mod blocking;
 pub mod cache;
+mod check_guard;
 pub mod check_runs;
 pub mod db;
 pub mod feed;

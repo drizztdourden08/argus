@@ -128,6 +128,18 @@ impl<H: ProcessHost> RunService<H> {
         ended
     }
 
+    /// An ended run the dashboard found harmful after the fact (a check run that changed tracked
+    /// files): failed, with `error` as its reason. `None` for an unknown or a still live run.
+    pub fn fail_ended(&self, key: &str, rid: &str, error: &str) -> Option<RunRow> {
+        let row = self.get(key, rid).filter(|r| !r.status.is_live())?;
+        let patch = RunPatch {
+            status: Some(RunStatus::Failed),
+            error: Some(Some(error.to_owned())),
+            ..RunPatch::default()
+        };
+        self.set_state(&row.scope, &row.id, &patch)
+    }
+
     /// A slot freed: the oldest queued run (any scope) takes it.
     pub(crate) fn drain(&self) {
         while let Some(outcome) = self.start_next_queued() {

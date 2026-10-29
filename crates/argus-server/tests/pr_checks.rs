@@ -1,7 +1,8 @@
 //! Local pull requests and check runs over HTTP, on temp homes and a fake `brock` (a Node script
 //! named by the `checks.command` setting, never the real Brock): the PR routes, the check run
-//! start on the run engine, the link between `R-n` and `C-n`, Stop, and the check lists of the
-//! pull requests. Never the real `~/.coord`, never port 47615, never a real repository.
+//! start on the run engine, the link between `R-n` and `C-n`, Stop, the guard that fails a run
+//! that changed tracked files, and the check lists of the pull requests. Never the real
+//! `~/.coord`, never port 47615, never a real repository (only a temp one the test makes).
 
 #[path = "support/wait.rs"]
 mod wait;
@@ -36,6 +37,7 @@ fs.renameSync(file + ".tmp", file);
 fs.writeFileSync({argv}, JSON.stringify(args));
 console.log(file);
 if (at("--trigger") === "release") setInterval(() => {{}}, 1000);
+if (at("--trigger") === "push") fs.rmSync("tracked.txt");
 "#
     )
 }
@@ -43,7 +45,7 @@ if (at("--trigger") === "release") setInterval(() => {{}}, 1000);
 struct Rig {
     t: TestServer,
     out: TempDir,
-    _root: TempDir,
+    root: TempDir,
 }
 
 async fn rig(shadow: bool) -> Rig {
@@ -67,11 +69,7 @@ async fn rig(shadow: bool) -> Rig {
         ..TestOptions::default()
     })
     .await;
-    Rig {
-        t,
-        out,
-        _root: root,
-    }
+    Rig { t, out, root }
 }
 
 fn pr_body() -> Value {
@@ -335,5 +333,88 @@ async fn a_check_run_starts_in_the_integration_checkout_when_one_is_set() {
         "{}",
         refused.text()
     );
+    r.t.stop(false).await;
+}
+
+fn git(dir: &Path, args: &[&str]) {
+    let status = std::process::Command::new("git")
+        .args([
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "commit.gpgsign=false",
+        ])
+        .args(args)
+        .current_dir(dir)
+        .stdout(std::process::Stdio::null())
+        .status()
+        .expect("git runs");
+    assert!(status.success(), "git {args:?}");
+}
+
+/// The project root as a temp repository with one tracked file the fake Brock deletes.
+fn tracked_repo(dir: &Path) {
+    std::fs::write(dir.join("tracked.txt"), "keep me\n").expect("file");
+    git(dir, &["init", "-q", "-b", "main"]);
+    git(dir, &["add", "tracked.txt"]);
+    git(dir, &["commit", "-q", "-m", "one"]);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_that_deletes_a_tracked_file_is_failed_with_a_note_and_a_warn_line() {
+    let r = rig(false).await;
+    tracked_repo(r.root.path());
+    let rid = start_check(&r.t, &json!({ "trigger": "push" })).await;
+    let t = &r.t;
+    let path = format!("/api/p/alpha/runs/{rid}");
+    let run = until("the guard to fail the run", || async {
+        let run = t.get(&path).await.json()["run"].clone();
+        let noted = run["error"]
+            .as_str()
+            .is_some_and(|e| e.contains("tracked.txt"));
+        noted.then_some(run)
+    })
+    .await;
+    assert_eq!(run["status"], "failed");
+    let note = run["error"].as_str().expect("a note").to_owned();
+    assert!(
+        note.starts_with("brock ci changed tracked files in "),
+        "{note}"
+    );
+    let record = linked_record(&r.t, "", &rid).await;
+    assert_eq!(record["id"], "C-1");
+    assert_eq!(record["status"], "failed");
+    assert_eq!(record["guardNote"], note.as_str());
+    let log = std::fs::read_to_string(r.t.svc.log.file()).expect("server log");
+    let warned: Vec<&str> = log
+        .lines()
+        .filter(|l| l.contains("check run changed tracked files"))
+        .collect();
+    assert_eq!(warned.len(), 1, "{log}");
+    assert!(warned[0].contains("\"warn\""), "{}", warned[0]);
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_check_run_that_leaves_the_tracked_files_alone_stays_as_brock_wrote_it() {
+    let r = rig(false).await;
+    tracked_repo(r.root.path());
+    let rid = start_check(&r.t, &json!({ "trigger": "manual" })).await;
+    let t = &r.t;
+    let path = format!("/api/p/alpha/runs/{rid}");
+    let run = until("the run to end", || async {
+        let run = t.get(&path).await.json()["run"].clone();
+        (run["status"] != "running" && run["status"] != "queued").then_some(run)
+    })
+    .await;
+    assert_eq!(
+        (run["status"].as_str(), run["error"].as_str()),
+        (Some("exited"), None)
+    );
+    let record = linked_record(&r.t, "", &rid).await;
+    assert_eq!(record["status"], "running", "as the fake Brock wrote it");
+    assert!(record.get("guardNote").is_none());
     r.t.stop(false).await;
 }
