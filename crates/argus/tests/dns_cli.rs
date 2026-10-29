@@ -124,6 +124,7 @@ async fn status_asks_the_real_responder_of_a_running_server() {
         tweak: Some(std::sync::Arc::new(|o| {
             o.local_names.dns_port = 0;
             o.local_names.door_port = 0;
+            o.localhost_door_port = Some(0);
         })),
         ..TestOptions::default()
     };
@@ -143,6 +144,12 @@ async fn status_asks_the_real_responder_of_a_running_server() {
         status
             .stdout
             .contains(&format!("front door: port {}", live.door.port))
+    );
+    let door = t.svc.localhost_door().expect("the localhost door is bound");
+    assert!(
+        status
+            .stdout
+            .contains(&format!("localhost door: port {door}"))
     );
     t.stop(false).await;
 }
