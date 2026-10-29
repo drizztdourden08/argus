@@ -6,15 +6,13 @@ use std::fs;
 use std::path::Path;
 
 use argus_board::json::{array_mut, display, to_number};
-use argus_board::proofs::keep_proof_bytes;
+use argus_board::proofs::{IMAGE, keep_proof_bytes};
 use serde_json::{Value, json};
 
 use super::edit::edit;
 use crate::cli::Outcome;
 use crate::cli::resolve::resolve;
 use crate::verbs::work::run::{Res, Run, bad};
-
-const IMAGE: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
 
 fn extension(src: &Path) -> String {
     src.extension().map_or_else(String::new, |e| {

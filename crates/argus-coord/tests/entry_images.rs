@@ -22,14 +22,14 @@ fn picture(work: &Work, name: &str) -> String {
 
 fn run(work: &Work, words: &[&str]) -> String {
     let ran = work.worker(words);
-    assert_eq!(ran.code, 0, "{words:?}\n{}\n{}", ran.out, ran.err);
+    assert!(ran.code == 0, "{words:?} failed: {} {}", ran.out, ran.err);
     ran.out
 }
 
 fn refused(work: &Work, words: &[&str], needle: &str) {
     let ran = work.worker(words);
-    assert_eq!(ran.code, 1, "{words:?}\n{}\n{}", ran.out, ran.err);
-    assert!(ran.err.contains(needle), "{needle:?} not in {:?}", ran.err);
+    let said = ran.code == 1 && ran.err.contains(needle);
+    assert!(said, "{words:?} wanted {needle:?}: {} {}", ran.out, ran.err);
 }
 
 fn entries(work: &Work) -> serde_json::Map<String, Value> {

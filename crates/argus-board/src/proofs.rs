@@ -12,7 +12,8 @@ use crate::json::{array_mut, display};
 use crate::limits::require_str;
 use crate::store::board_dir;
 
-const IMAGE: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+/// The extensions a kept image may have, dot included.
+pub const IMAGE: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
 
 /// One image to keep: its bytes, its extension (dot included) and its caption.
 #[derive(Debug, Clone, Copy)]

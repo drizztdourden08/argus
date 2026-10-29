@@ -9,13 +9,12 @@ use std::path::Path;
 
 use argus_board::Board;
 use argus_board::json::doc_mut;
-use argus_board::proofs::{Image, keep_entry_image};
+use argus_board::proofs::{IMAGE, Image, keep_entry_image};
 
 use crate::cli::Val;
 use crate::cli::resolve::resolve;
 use crate::verbs::work::run::{Res, Run, bad};
 
-const IMAGE: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
 const MAX_BYTES: u64 = 10_485_760;
 const SYNTAX: &str = "--image [N=]<file> \"<caption>\"";
 
