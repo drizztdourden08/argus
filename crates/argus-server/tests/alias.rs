@@ -151,6 +151,68 @@ async fn the_root_of_an_alias_host_redirects_to_that_board_with_a_thread_claim()
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_thread_given_in_the_address_wins_over_the_label_and_the_default() {
+    let t = alias_server().await;
+    let port = t.port;
+    let cases = [
+        (
+            format!("alpha.localhost:{port}"),
+            "/?thread=ui",
+            "/p/alpha/?thread=ui",
+        ),
+        (
+            format!("alpha.localhost:{port}"),
+            "/?thread=RotP%20lead",
+            "/p/alpha/?thread=RotP%20lead",
+        ),
+        (
+            format!("ui.alpha.localhost:{port}"),
+            "/?thread=web",
+            "/p/alpha/?thread=web",
+        ),
+        (
+            format!("alpha.localhost:{port}"),
+            "/?thread=",
+            "/p/alpha/?thread=coordinator",
+        ),
+    ];
+    for (host, path, target) in cases {
+        let r = get(&t, path, &host).await;
+        assert_eq!(
+            (r.status, location(&r)),
+            (302, Some(target)),
+            "{host}{path}"
+        );
+    }
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_board_opened_on_its_alias_host_holds_its_presence() {
+    let options = TestOptions {
+        seed: true,
+        ..TestOptions::default()
+    };
+    let t = TestServer::start(options).await;
+    let host = format!("alpha.localhost:{}", t.port);
+    let path = "/api/p/alpha/presence?thread=ui&tab=t1";
+    let s = t
+        .sse_with(Request::new("GET", path).header("Host", &host))
+        .await;
+    assert_eq!(s.status, 200);
+    s.next(Some("ready"), 5000).await.expect("ready");
+    let open = t.get("/api/presence").await.json();
+    let rows = open["open"].as_array().cloned().unwrap_or_default();
+    assert!(
+        rows.iter()
+            .any(|r| r["project"] == "alpha" && r["thread"] == "ui"),
+        "{open}"
+    );
+    s.close();
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn the_redirect_target_and_the_api_are_served_on_the_alias_host() {
     let t = alias_server().await;
     let port = t.port;

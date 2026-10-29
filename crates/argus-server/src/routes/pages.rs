@@ -36,8 +36,13 @@ async fn home(ctx: Ctx) -> Reply {
             }
         }
         Some(a) if known_keys(&ctx).contains(&a.key) => {
-            let thread = a.thread.as_deref().unwrap_or("coordinator");
-            return Ok(redirect(&format!("/p/{}/?thread={thread}", a.key), &[]));
+            let thread = ctx
+                .query("thread")
+                .filter(|t| !t.is_empty())
+                .or(a.thread.as_deref())
+                .unwrap_or("coordinator");
+            let target = format!("/p/{}/?thread={}", a.key, encode(thread));
+            return Ok(redirect(&target, &[]));
         }
         _ => {}
     }
