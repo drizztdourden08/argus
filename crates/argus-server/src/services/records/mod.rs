@@ -16,6 +16,7 @@ use crate::adapters::records::DbIds;
 use crate::{ServeOptions, Services};
 
 mod consumers;
+mod pr_checks;
 
 pub use consumers::{ConsumerStatus, Consumers, NodeStatus};
 
@@ -141,18 +142,29 @@ pub(crate) async fn start(svc: &Arc<Services>) {
                 move || store.rescan()
             }),
         ),
-        FolderWatch::start(
-            checks.root(),
-            Arc::new({
-                let store = Arc::clone(&checks);
-                move || store.rescan()
-            }),
-        ),
+        FolderWatch::start(checks.root(), Arc::new(on_checks_changed(svc, &checks))),
     ];
     *records
         .watches
         .lock()
         .unwrap_or_else(PoisonError::into_inner) = watches;
+    tokio::spawn(pr_checks::fill(Arc::clone(svc)));
+}
+
+/// What the watch of the check folder does: reads it again, then brings the check lists of the
+/// pull requests in line. It holds the services weakly, so the watch never keeps them alive.
+fn on_checks_changed(
+    svc: &Arc<Services>,
+    checks: &Arc<CheckStore>,
+) -> impl Fn() + Send + Sync + 'static {
+    let (store, weak) = (Arc::clone(checks), Arc::downgrade(svc));
+    let runtime = tokio::runtime::Handle::current();
+    move || {
+        store.rescan();
+        if let Some(svc) = weak.upgrade() {
+            runtime.spawn(pr_checks::fill(svc));
+        }
+    }
 }
 
 pub(crate) fn stop(svc: &Services) {

@@ -56,22 +56,36 @@ A commit's status is its latest run; a step is green when its `status` is pass.
 ## Local pull requests
 
 A board collection `prs` (project scoped, like items), ids `PR-n`. Argus exports it in the board
-stream like the other collections (`c=prs`) and only reads it. The block that says where a record
-stands on the way to GitHub is `replay` (older writers said `remote`; both are read):
+stream like the other collections (`c=prs`); the pages only read it. The block that says where a
+record stands on the way to GitHub is `replay` (older writers said `remote`; both are read):
 
 ```json
 {
   "id": "PR-3", "title": "", "body": "", "head": "feat/x", "base": "main",
   "headCommit": "<sha>", "status": "open | merged | closed", "item": "I-12",
+  "checks": ["C-4", "C-5"],
   "createdBy": "coordinator", "createdAt": "",
   "mergedAt": null, "mergeCommit": null, "mergedBy": null,
   "replay": { "state": "pending | done | failed", "at": null, "url": null }
 }
 ```
 
-`coord pr open|merge|close|list` write it. A merge is a local git merge into `base` done by the
-tooling (Brock's), then the record. Merge refuses while the latest check run of `headCommit` has a required step not passing,
-the way branch protection does.
+`coord pr open|merge|close|list` write it (the section "coord pr and coord check" below), and so
+do the PR routes of the API. A merge is a local git merge into `base` done by the tooling
+(Brock's), then the record. Merge refuses while the latest check run of `headCommit` has a
+required step not passing, the way branch protection does; that check is Brock's, in
+`brock pr merge --local`.
+
+`checks` lists the `C-n` of the check runs whose `pr` is this record, oldest first. Argus keeps it:
+after every scan of the check run folder it brings the list of each pull request that has runs in
+line with the index (a merged or closed pull request keeps getting late runs). `closedAt` is set
+when a pull request is closed without a merge.
+
+The board ops behind it (`argus-board`, `apply_op`): `pr-open {set: {title, body?, head, base?,
+headCommit?, item?}}`, `pr-update {target, set: {headCommit?, title?, body?}}`, `pr-merge {target,
+set: {mergeCommit, mergedBy?}}`, `pr-close {target}` and `pr-checks {target, set: {checks}}`. Only
+an open pull request is updated, merged or closed. A second open pull request for the same head and
+base is refused. Each change but `pr-checks` leaves one audit line in the work log.
 
 ## Releases and the update feed
 
@@ -122,19 +136,24 @@ replay at that record and says why.
 
 ## API
 
-All JSON, read only, on the main listener and on every door. The pages and the feed share one
-server, so the feed urls in the answers are paths (`/releases/...`) that work on whatever host the
-page was opened from.
+All JSON, on the main listener and on every door. The pages and the feed share one server, so the
+feed urls in the answers are paths (`/releases/...`) that work on whatever host the page was opened
+from. Everything is read only except the two write routes at the end of the table, which take the
+same credential and Origin rules as the other writes (a page with its Origin, the CLI with the
+bearer when the token is required) and answer `read_only` in shadow mode.
 
 | Route | Answer |
 |---|---|
 | `GET /api/remote` | `{ mode, replay: { prs, releases, packages, checks } }`: the switch and the counts of records whose `replay.state` is `pending`. `prs` counts the `prs` collection of every board, `packages` the builds of the registry index that carry a pending `replay` (0 when the index has none). |
 | `GET /api/releases` | `{ projects: [{ project, channels: [{ channel, latest, versions }] }] }` |
 | `GET /api/p/<key>/releases` | `{ channels: [{ channel, latest, versions }] }` |
-| `GET /api/p/<key>/checks?commit=<sha>&pr=<PR-n>` | `{ runs: [{ id: "C-n", runId, ...the record }] }`, newest first. `commit` matches a prefix of at least 7 characters either way, `pr` the record's `pr`. |
+| `GET /api/p/<key>/checks?commit=<sha>&pr=<PR-n>&run=<R-n>` | `{ runs: [{ id: "C-n", runId, run, ...the record }] }`, newest first. `commit` matches a prefix of at least 7 characters either way, `pr` the record's `pr`, `run` the run of the run engine that made the record. `run` in each row is that `R-n`, or `null` for a record Argus did not start. |
 | `GET /api/p/<key>/checks/<C-n>/log?step=<i>` | the log text of a step (`text/plain`, the last 4 MiB, `X-Log-Truncated: start` when cut) |
 | `GET /api/registry` | `{ builds, consumers, scopeRedirected, consumersNote }` |
 | `GET /releases/<project>/<channel>/<path>` | the update feed (below) |
+| `POST /api/p/<key>/prs` | opens a local pull request. Body `{ title, body?, head, base?, headCommit?, item?, by? }`; `base` is `main` by default. Answers `{ pr, outcome, seq }`, `pr` being the record. 400 with the board's sentence for a bad field, a head equal to the base, an unknown item or a second open pull request for the same head and base; 404 for a project with no board. |
+| `PATCH /api/p/<key>/prs/<PR-n>` | changes an open pull request. Body `{ action?, ... }`: `update` (the default) takes `headCommit`, `title`, `body`; `merge` takes `mergeCommit` (7 to 40 hex characters, required) and `mergedBy?`, and sets status `merged` and `mergedAt`; `close` sets status `closed`. `by?` names who acted (the page is always `human`; the default is `cli`). Answers as the POST; 404 for an unknown pull request, 400 for one that is not open. |
+| `POST /api/p/<key>/checks` | starts a check run. Body `{ commit?, pr?, check?, job?, trigger? }` (below). Answers `{ run: "R-n" }`. |
 
 A version is `{ version, tag, commit, title, publishedAt, notesUrl, assets: [{ name, size, kind,
 url }], packages: [{ name, version, size, url, sha256, sha512 }], replay }`, newest first by semver.
@@ -147,6 +166,78 @@ A run is the check-run record of Brock with `id` set to `C-n`, `runId` the file 
 seen and kept in the dashboard database (`kv`: `check-run:<project>:<runId>` and the counter
 `check-seq:<project>`), so a number never moves across a restart. A step log is served only when the
 `log` path of the step is inside `~/.coord/ci` or inside the run's own `logDir`.
+
+### Starting a check run
+
+`POST /api/p/<key>/checks` runs `brock ci` as a run on the run engine of Argus: hidden (never a
+window), in the root of the project (the root of `projectRoots` in `config.json`, else the one the
+portfolio lists; 404 when none is known, 400 when it is not a folder), the logs kept like any run
+(30 per definition, 14 days), Stop and the history are the run engine's (`POST
+/api/p/<key>/runs/<R-n>/stop`, `GET /api/p/<key>/runs/<R-n>`). The run definition is made for the
+request and is named `check`; it is not on the board. Up to 8 check runs of a project are live at
+once (Brock queues them per repository); the time limit is 2 hours.
+
+The command line is `brock ci [<check>] [--commit <sha>] [--pr <PR-n>] [--job <job>] [--trigger
+<trigger>] --project <key>`. Every part is optional but the project and is checked to plain words
+before it reaches the shell: `check` letters, digits, `-` and `_` (40 at most, no leading `-`),
+`commit` 7 to 40 hex characters, `pr` like `PR-3`, `job` one of `gate`, `upgrade`, `all`,
+`trigger` one of `push`, `pr`, `manual`, `release`. Anything else is a 400. `by?` names who asked
+(the run's `by`; the page is `human`).
+
+The program is `brock`; the `command` of the `checks` setting of `config.json` replaces it (typed
+as in a shell, for a Brock that is not on the PATH, and for tests: a fake script).
+
+The first line the run prints is the path of Brock's record (`~/.coord/ci/<project>/<runId>.json`).
+When Argus reads it, it keeps the pair in the dashboard database (`check-link:<project>:<runId>`
+holds `R-n`), so the checks answer shows `run` on that record, `?run=R-n` finds it, and the pair
+survives a restart. A run that ends before it printed anything has no record and no link.
+
+### coord pr and coord check
+
+The exact command line, for the live Node `coord` to mirror. `coord pr` works on the board file
+alone (it needs no running dashboard); `coord check` with a check run needs the dashboard (it is
+started when it is down, and exit 3 says it would not come up, as for `coord run`). Every line
+below is the whole of the output.
+
+```text
+coord pr open "<title>" --head <branch> [--base main] [--item <I-n>] [--body "<text>"] [--commit <sha>]
+coord pr list [--status open|merged|closed] [--json]
+coord pr merge <PR-n>
+coord pr close <PR-n>
+coord check [<check>] [--commit <sha>] [--pr <PR-n>] [--job gate|upgrade|all] [--trigger push|pr|manual|release]
+```
+
+- `pr open` applies `pr-open` as the caller. The head commit is `--commit`, else what
+  `git rev-parse --verify <head>^{commit}` says in the project root (empty when git cannot say).
+  Output: `PR-3 opened: feat/x into main at 0123456` (` at <7 characters>` only when the commit is
+  known). Refusals, exit 1 and `coord: <sentence>` on stderr: no title (`give the title: coord pr
+  open "<title>" --head <branch>.`), no head (`--head <branch> is required.`), and the sentences of
+  the board op (`head and base are the same branch.`, `PR-1 is already open for feat/x into
+  main.`, `no item "I-9".`).
+- `pr list` prints an aligned table `pr  status  branch  commit  checks  title`, one row per pull
+  request, oldest first (`feat/x -> main`, the commit as 7 characters, the checks as `C-4 C-5`), or
+  `no pull requests.`. `--json` prints an array of `{ id, title, body, head, base, headCommit,
+  status, item, checks, mergeCommit, mergedAt, mergedBy, createdAt, closedAt, replay }`. This
+  is what Brock's `brock pr merge --local` reads.
+- `pr merge` refuses a pull request that is not open (`PR-3 is merged; only an open pull request
+  merges.`) or unknown (`no pull request "PR-3".`). It runs `brock pr merge --local PR-3` in the
+  project root (`--root <dir>`, else `projectRoots` of `config.json`, else the root the portfolio
+  lists, else the git root of the folder it runs in), with the environment of the call. On exit 0
+  the last line Brock printed must be the merge commit (7 to 40 hex characters): it is recorded
+  (`pr-merge`, `mergedBy` the caller) and the output is `PR-3 merged into main at fedcba9`. On any
+  other exit the pull request stays open and the exit is 1 with Brock's own words (stderr, else
+  stdout) as `coord: <reason>`. A Brock that exits 0 without a commit is `brock merged but did not
+  print a merge commit (it printed "<line>").`. On Windows Brock is started through `cmd /d /c`.
+- `pr close` applies `pr-close`: `PR-3 closed`.
+- `check` with a word or any of `--commit`, `--pr`, `--job`, `--trigger` posts to `POST
+  /api/p/<project>/checks` with `by` the caller, then waits up to 30 seconds for the record and
+  prints `R-5 C-9 check started`, or `R-5 check started (no record: <why>; coord run logs R-5
+  shows the output)`. `coord check` with none of them is the board checker it always was
+  (`coord check [--stale <minutes>] [--json]`).
+
+`coord check` and `coord pr` appear in the usage text (two lines after `coord check [--stale]`).
+
+### The registry
 
 `/api/registry`: `builds` are the entries of `<localpkg home>/index.json` as `{ name, version, commit,
 checkout, packedAt, tarball, size, dirty, replay }` (`commit` and `checkout` are `head` and `project`

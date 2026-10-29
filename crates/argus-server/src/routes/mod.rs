@@ -9,6 +9,7 @@ pub mod admin;
 pub mod agents;
 mod blocking;
 pub mod cache;
+pub mod check_runs;
 pub mod db;
 pub mod feed;
 pub mod files;
@@ -17,10 +18,12 @@ pub mod notify;
 pub mod pages;
 mod params;
 pub mod procs;
+pub mod prs;
 pub mod records;
 pub mod runs;
 pub mod wake;
 pub mod worktrees;
+mod write;
 
 pub use params::scan_boards;
 
@@ -38,6 +41,8 @@ pub fn register_all(router: &mut Router) {
     worktrees::register(router);
     cache::register(router);
     records::register(router);
+    prs::register(router);
+    check_runs::register(router);
     feed::register(router);
     pages::register(router);
     files::register(router);
