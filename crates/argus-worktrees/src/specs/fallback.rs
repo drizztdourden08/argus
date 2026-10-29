@@ -9,6 +9,7 @@ use crate::clock::DAY_MS;
 use crate::doc::Status;
 use crate::error::ErrorCode;
 use crate::jobs::JobState;
+use crate::request::RemoveOutcome;
 use crate::testkit::{
     Fixture, Harness, RemoveMode, backdate, board_with, branches, exists_itself, listed, make_link,
     put, records, root_of, rule_for, unplugged,
@@ -103,6 +104,29 @@ impl Shape {
         );
     }
 
+    /// Removes `old-merged` with its branch and a reason: the removal every spec here starts from.
+    pub(super) fn remove_old_merged(self) -> (Shape, RemoveOutcome) {
+        let out = self
+            .h
+            .rm_with(&self.id("old-merged"), |i| {
+                (i.branch, i.reason) = (true, Some("merged long ago".into()));
+            })
+            .unwrap();
+        (self, out)
+    }
+
+    /// The background job of the removal finished clean.
+    pub(super) fn assert_job_done(&self, out: &RemoveOutcome) {
+        let job = self
+            .h
+            .meta()
+            .jobs
+            .into_iter()
+            .find(|j| Some(&j.id) == out.job_id.as_ref())
+            .unwrap();
+        assert_eq!((job.state, job.error), (JobState::Done, None));
+    }
+
     pub(super) fn made(&self) -> String {
         self.h
             .store
@@ -115,15 +139,10 @@ impl Shape {
     }
 }
 
-fn stuck_removal() -> (Shape, crate::request::RemoveOutcome) {
+fn stuck_removal() -> (Shape, RemoveOutcome) {
     let s = shape(RemoveMode::Stuck, |_| {});
     assert_eq!(s.h.docs()["old-merged"].status, Status::Merged);
-    let out =
-        s.h.rm_with(&s.id("old-merged"), |i| {
-            (i.branch, i.reason) = (true, Some("merged long ago".into()));
-        })
-        .unwrap();
-    (s, out)
+    s.remove_old_merged()
 }
 
 #[test]
@@ -182,18 +201,12 @@ fn the_job_deletes_the_folder_and_every_junction_target_survives() {
     let (s, out) = stuck_removal();
     s.h.idle();
     assert!(
-        !exists_itself(&out.folder.unwrap()),
+        !exists_itself(&out.folder.clone().unwrap()),
         "the renamed folder is gone"
     );
     s.keeps_survive();
     assert!(!s.h.docs().contains_key("old-merged"), "the row left");
-    let job =
-        s.h.meta()
-            .jobs
-            .into_iter()
-            .find(|j| Some(&j.id) == out.job_id.as_ref())
-            .unwrap();
-    assert_eq!((job.state, job.error), (JobState::Done, None));
+    s.assert_job_done(&out);
 }
 
 #[test]

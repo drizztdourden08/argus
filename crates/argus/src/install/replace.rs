@@ -95,17 +95,9 @@ pub(super) fn remove_old_copies(dir: &Path, file_name: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use argus_core::fixture::dir_names as names;
 
     const STAMP: &str = "20261028T101500Z";
-
-    fn names(dir: &Path) -> Vec<String> {
-        let mut all: Vec<String> = fs::read_dir(dir)
-            .unwrap()
-            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
-            .collect();
-        all.sort();
-        all
-    }
 
     fn denied() -> io::Error {
         io::Error::from(io::ErrorKind::PermissionDenied)

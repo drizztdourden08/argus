@@ -5,11 +5,16 @@
 use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 
-use argus_server::security::{Alias, Doors, host_alias, host_ok, origin_ok};
+use argus_server::security::{Doors, host_alias, host_ok, origin_ok};
 use argus_testkit::{Reply, Request, TestOptions, TestServer, request_at};
 use axum::http::{HeaderMap, HeaderValue};
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
+
+#[path = "support/doors.rs"]
+mod doors;
+
+use doors::alias;
 
 async fn server(config: Value, door: Option<u16>) -> TestServer {
     let options = TestOptions {
@@ -79,16 +84,7 @@ async fn a_write_through_the_door_needs_that_host_as_its_origin() {
     let t = server(json!({}), Some(0)).await;
     let host = format!("alpha.localhost:{}", door_port(&t));
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, door_port(&t)));
-    let put = |origin: String| {
-        Request::new("PUT", "/api/p/alpha/db/items/I-1")
-            .header("Host", &host)
-            .header("Origin", &origin)
-            .json(&json!({ "data": {} }))
-    };
-    let own = request_at(addr, &put(format!("http://{host}"))).await;
-    assert_eq!((own.status, own.code().as_str()), (403, "read_only"));
-    let cross = request_at(addr, &put("http://evil.test".to_owned())).await;
-    assert_eq!((cross.status, cross.code().as_str()), (403, "forbidden"));
+    doors::assert_write_needs_own_origin(addr, &host).await;
     t.stop(false).await;
 }
 
@@ -143,14 +139,6 @@ fn headers(host: &str, origin: Option<&str>) -> HeaderMap {
         h.insert("origin", HeaderValue::from_str(origin).expect("an origin"));
     }
     h
-}
-
-fn alias(key: &str, thread: Option<&str>, reserved: bool) -> Alias {
-    Alias {
-        key: key.to_owned(),
-        thread: thread.map(str::to_owned),
-        reserved,
-    }
 }
 
 #[test]

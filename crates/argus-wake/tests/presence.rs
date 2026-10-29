@@ -56,6 +56,22 @@ fn keep_alive(rig: &mut Rig, thread: &str) {
     rig.service.on_board("alpha");
 }
 
+/// A listening, working thread whose board stayed closed past the grace: one fault is open.
+fn closed_board_fault(rig: &mut Rig) -> Tap {
+    let tap = listen(rig, "alpha", "ui");
+    working(rig, "alpha", "ui");
+    rig.pass(40 * SEC, STEP);
+    assert_eq!(open(rig).len(), 1);
+    tap
+}
+
+/// Two quiet minutes on: no fault is open and the board is not required.
+fn assert_unrequired_after_two_quiet_minutes(rig: &mut Rig) {
+    rig.pass(120 * SEC, STEP);
+    assert_eq!(open(rig).len(), 0);
+    assert!(!row(rig, "alpha", "ui").board.board_required);
+}
+
 /// A board is required only while the thread is inside a turn (its Browser pane closes by itself
 /// between turns): working, seen just now.
 fn working(rig: &mut Rig, scope: &str, thread: &str) {
@@ -174,10 +190,7 @@ fn a_live_thread_with_a_session_and_no_open_board_waits_the_grace_then_one_fault
 fn the_fault_clears_itself_by_the_registry_when_the_board_opens_again_and_closing_it_starts_a_new_grace()
  {
     let mut rig = rig();
-    let _ui = listen(&mut rig, "alpha", "ui");
-    working(&mut rig, "alpha", "ui");
-    rig.pass(40 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 1);
+    let _ui = closed_board_fault(&mut rig);
     let token = rig.service.presence_attach("alpha", "ui", "t1");
     assert_eq!(open(&rig).len(), 0);
     let done = rig.faults.list(true).expect("faults");
@@ -272,9 +285,7 @@ fn the_lead_is_covered_by_its_star_listener_and_the_overlord_itself_is_shown_on_
 fn without_a_presence_tracker_nothing_is_required_or_faulted() {
     let mut rig = Rig::registry_seen(&presence_config(), false, HOUR);
     let _ui = listen(&mut rig, "alpha", "ui");
-    rig.pass(120 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 0);
-    assert!(!row(&mut rig, "alpha", "ui").board.board_required);
+    assert_unrequired_after_two_quiet_minutes(&mut rig);
 }
 
 #[test]
@@ -394,9 +405,7 @@ fn an_idle_thread_with_its_board_closed_is_never_required_or_faulted() {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
     keep_alive(&mut rig, "ui");
-    rig.pass(120 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 0);
-    assert!(!row(&mut rig, "alpha", "ui").board.board_required);
+    assert_unrequired_after_two_quiet_minutes(&mut rig);
 }
 
 #[test]
@@ -413,10 +422,7 @@ fn a_working_thread_unseen_for_over_three_minutes_is_out_of_its_turn() {
 #[test]
 fn a_board_closed_fault_clears_by_the_registry_when_the_thread_goes_idle() {
     let mut rig = rig();
-    let _ui = listen(&mut rig, "alpha", "ui");
-    working(&mut rig, "alpha", "ui");
-    rig.pass(40 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 1);
+    let _ui = closed_board_fault(&mut rig);
     rig.edit_thread("alpha", "ui", |t| t.activity = "idle".into());
     rig.service.on_board("alpha");
     assert_eq!(open(&rig).len(), 0);

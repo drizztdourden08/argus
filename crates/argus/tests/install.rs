@@ -13,6 +13,7 @@ use argus::install::mcp_config;
 use argus::install::self_install::{self, config_line};
 use argus::install::vbs::{content, decode, encode};
 use argus::install::{Env, Io, Platform};
+use argus_core::fixture::dir_names as names;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
@@ -64,15 +65,6 @@ fn tmp() -> TempDir {
 
 fn json_of(path: &Path) -> Value {
     serde_json::from_str(&fs::read_to_string(path).expect("file")).expect("json")
-}
-
-fn names(dir: &Path) -> Vec<String> {
-    let mut all: Vec<String> = fs::read_dir(dir)
-        .expect("dir")
-        .map(|e| e.expect("entry").file_name().to_string_lossy().into_owned())
-        .collect();
-    all.sort();
-    all
 }
 
 #[test]
