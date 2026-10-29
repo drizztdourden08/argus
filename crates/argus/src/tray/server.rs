@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use argus_core::config::load_config;
+use argus_core::page_url::page;
 use argus_core::{Config, Paths};
 use argus_native::TrayState;
 use argus_server::instance::{PidRecord, call, probe, read_pid_file};
@@ -128,22 +129,38 @@ impl Server {
         }
     }
 
-    /// The address of a page of the running server. With the token hardening on, it carries a
-    /// one-time code that signs the page in.
-    pub async fn page(&self, next: &str) -> Option<String> {
-        let (record, _) = self.live().await?;
-        let base = format!("http://127.0.0.1:{}", record.port);
-        let config = self.config()?;
+    /// The address of a page of the running server: under the localhost names when the server
+    /// says its localhost door is bound (`http://argus.localhost/`), else on `127.0.0.1`. With
+    /// the token hardening on, it carries a one-time code that signs the page in.
+    ///
+    /// # Errors
+    ///
+    /// Why there is no address: the server does not answer, the config cannot be read, or the
+    /// sign-in code was refused.
+    pub async fn page(&self, next: &str) -> Result<String, String> {
+        let (record, health) = self
+            .live()
+            .await
+            .ok_or("the server did not answer its health check")?;
+        let base = page(&health, record.port, None).origin;
+        let config = load_config(&self.paths, None).map_err(|e| format!("config.json: {e}"))?;
         if !config.require_token {
-            return Some(format!("{base}{next}"));
+            return Ok(format!("{base}{next}"));
         }
-        let reply = call(record.port, "POST", "/api/auth/code", Some(&config.token)).await?;
-        let code = serde_json::from_str::<Value>(&reply.1).ok()?["code"]
-            .as_str()?
-            .to_owned();
+        let code = sign_in_code(record.port, &config.token).await?;
         let next = next.replace('#', "%23");
-        Some(format!("{base}/auth?code={code}&next={next}"))
+        Ok(format!("{base}/auth?code={code}&next={next}"))
     }
+}
+
+async fn sign_in_code(port: u16, token: &str) -> Result<String, String> {
+    let (status, body) = call(port, "POST", "/api/auth/code", Some(token))
+        .await
+        .ok_or("the sign-in code call got no answer")?;
+    serde_json::from_str::<Value>(&body)
+        .ok()
+        .and_then(|reply| reply["code"].as_str().map(str::to_owned))
+        .ok_or_else(|| format!("the sign-in code call answered {status} without a code"))
 }
 
 #[cfg(test)]

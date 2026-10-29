@@ -8,15 +8,12 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use argus_core::Paths;
-use argus_native::{
-    Boot, Command, TrayError, TrayFiles, TrayHandle, clear_quit_flag, quit_flag_active,
-    request_stop,
-};
+use argus_native::{Boot, TrayError, TrayFiles, TrayHandle, open_url, quit_flag_active};
 use tokio::runtime::Handle;
 use tokio::time::{Instant, interval, sleep_until};
 
+use super::menu::Menu;
 use super::server::Server;
-use super::{log, open};
 
 const POLL: Duration = Duration::from_secs(5);
 /// How often the server is probed while it is still starting, so the icon turns to running as
@@ -24,85 +21,16 @@ const POLL: Duration = Duration::from_secs(5);
 const POLL_STARTING: Duration = Duration::from_millis(500);
 const LOOK: Duration = Duration::from_millis(250);
 
-/// What the menu items work with.
-struct Menu {
-    server: Server,
-    files: TrayFiles,
-    runtime: Handle,
-}
-
-impl Menu {
-    fn note(&self, text: &str) {
-        log::line(&self.files, text);
-    }
-
-    fn report(&self, what: &str, done: Result<(), String>) {
-        if let Err(why) = done {
-            self.note(&format!("{what}: {why}"));
-        }
-    }
-
-    async fn start(&self) {
-        self.report("start", self.server.start().await);
-    }
-
-    /// Opens a page of the dashboard. Opening it is how the owner reopens a closed dashboard,
-    /// so `quit.flag` goes and a stopped server starts.
-    async fn show(&self, next: &str) {
-        let _cleared = clear_quit_flag(&self.files);
-        self.start().await;
-        let Some(address) = self.server.page(next).await else {
-            return self.note("open: the server did not answer");
-        };
-        self.report("open", open::url(&address).map_err(|e| e.to_string()));
-    }
-
-    async fn restart(&self) {
-        self.server.stop().await;
-        let _cleared = clear_quit_flag(&self.files);
-        self.start().await;
-    }
-
-    async fn quit(&self) {
-        self.server.stop().await;
-        self.report(
-            "close",
-            request_stop(&self.files).map_err(|e| e.to_string()),
-        );
-    }
-
-    async fn run(&self, command: Command) {
-        match command {
-            Command::Open => self.show("/").await,
-            Command::OpenNotifications => self.show("/#notifications").await,
-            Command::OpenLogs => {
-                let done = open::folder(&self.files.log_dir()).map_err(|e| e.to_string());
-                self.report("open logs", done);
-            }
-            Command::Restart => self.restart().await,
-            Command::Start => {
-                let _cleared = clear_quit_flag(&self.files);
-                self.start().await;
-            }
-            Command::Quit => self.quit().await,
-        }
-    }
-}
-
 fn wire(tray: &TrayHandle, menu: &Arc<Menu>) {
     let quitting = Arc::clone(menu);
     tray.on_quit(move || {
         let menu = Arc::clone(&quitting);
-        drop(quitting.runtime.spawn(async move { menu.quit().await }));
+        drop(quitting.spawn("close", async move { menu.quit().await }));
     });
     let clicked = Arc::clone(menu);
     tray.on_command(move |command| {
         let menu = Arc::clone(&clicked);
-        drop(
-            clicked
-                .runtime
-                .spawn(async move { menu.run(command).await }),
-        );
+        drop(clicked.spawn(command.id(), async move { menu.run(command).await }));
     });
 }
 
@@ -146,12 +74,13 @@ pub async fn run(paths: Paths) -> Result<u8, String> {
         server: Server::new(paths),
         files,
         runtime: Handle::current(),
+        opener: Box::new(open_url),
     });
     wire(&tray, &menu);
     if !quit_flag_active(&menu.files, Boot::current()) {
         menu.server.expect_start();
         let booting = Arc::clone(&menu);
-        drop(menu.runtime.spawn(async move { booting.start().await }));
+        drop(menu.spawn("start", async move { booting.start().await }));
     }
     watch(&tray, &menu).await;
     let _reason = tray.wait();

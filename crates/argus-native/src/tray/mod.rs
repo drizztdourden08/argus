@@ -27,7 +27,7 @@ pub use icon::{ARGUS_ICO, IconKind, Ink, Rgba, render as render_icon};
 pub use launch::{Launch, prepare as prepare_launch, wait_for_tray};
 pub use menu::{Command, Entry, entries as menu_entries};
 #[cfg(windows)]
-pub use native::{ExitReason, TrayHandle, process_alive};
+pub use native::{ExitReason, TrayHandle, open_url, process_alive};
 pub use paths::TrayFiles;
 pub use quit_flag::{
     Boot, clear as clear_quit_flag, is_active as quit_flag_active, write as write_quit_flag,

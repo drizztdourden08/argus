@@ -34,15 +34,6 @@ pub fn argus(args: &[OsString]) -> io::Result<()> {
     quiet(&exe, &args, flags | CREATE_BREAKAWAY_FROM_JOB).or_else(|_| quiet(&exe, &args, flags))
 }
 
-/// Starts a program with no window and does not wait for it.
-///
-/// # Errors
-///
-/// The program could not be started.
-pub fn hidden(program: &str, args: &[&OsStr]) -> io::Result<()> {
-    quiet(program, args, CREATE_NO_WINDOW)
-}
-
 /// Starts a program that shows its own window (the folder of the logs) and does not wait.
 ///
 /// # Errors

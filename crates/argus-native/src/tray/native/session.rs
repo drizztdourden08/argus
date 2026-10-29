@@ -10,6 +10,7 @@ use tray_icon::{Icon, MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, 
 
 use super::event_loop::ExitReason;
 use super::handlers::Handlers;
+use super::opener;
 use super::taskbar;
 use super::view;
 use super::win32::{self, InstanceGuard};
@@ -24,9 +25,12 @@ use crate::tray::state::TrayState;
 use crate::tray::watch::{self, Request};
 use crate::tray::{quit_flag, record};
 
-/// The id the icon library gives the next icon: it counts from 1, one per icon built in this
-/// process, and Windows needs it to address the icon for a balloon tip.
+/// The next value of the icon library's counter, which Windows needs to address the icon for a
+/// balloon tip. The counter starts at 1 and every icon takes two values: the builder takes one
+/// for the public id, then the icon takes the next as the id Windows knows it by.
 static NEXT_ICON_ID: AtomicU32 = AtomicU32::new(1);
+/// How many values of the counter one icon takes.
+const IDS_PER_ICON: u32 = 2;
 
 /// The two icons in the ink of the taskbar they were made for.
 struct Icons {
@@ -80,7 +84,7 @@ impl Session {
         let icons = Icons::load(taskbar::ink())?;
         let state = TrayState::default();
         let menu = view::build(&entries(&state))?;
-        let icon_id = NEXT_ICON_ID.fetch_add(1, Ordering::Relaxed);
+        let icon_id = NEXT_ICON_ID.fetch_add(IDS_PER_ICON, Ordering::Relaxed) + 1;
         let tray = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_icon(icons.of(state.icon()))
@@ -168,14 +172,37 @@ impl Session {
         match command {
             Command::Quit => self.quit(),
             Command::Open => self.open(),
+            Command::OpenNotifications => self.show_page(command),
             Command::Restart | Command::Start if self.quitting => {}
-            other => self.handlers.fire_command(other),
+            other => self.fire(other),
         }
     }
 
     fn open(&mut self) {
         if self.gate.allow(Instant::now()) {
-            self.handlers.fire_command(Command::Open);
+            self.show_page(Command::Open);
+        } else {
+            self.log
+                .line("open: ignored, the page was asked for less than 2 s ago");
+        }
+    }
+
+    /// Hands the foreground right of this click on, while the tray still holds it, then asks
+    /// for the page.
+    fn show_page(&self, command: Command) {
+        if let Err(why) = opener::pass_foreground() {
+            self.log.line(&format!(
+                "{}: the browser may open behind: {why}",
+                command.id()
+            ));
+        }
+        self.fire(command);
+    }
+
+    fn fire(&self, command: Command) {
+        if !self.handlers.fire_command(command) {
+            self.log
+                .line(&format!("{}: nothing handles the menu yet", command.id()));
         }
     }
 

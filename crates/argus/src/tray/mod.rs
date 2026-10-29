@@ -9,6 +9,8 @@ use clap::Subcommand;
 #[cfg(windows)]
 mod log;
 #[cfg(windows)]
+mod menu;
+#[cfg(windows)]
 mod open;
 #[cfg(windows)]
 mod run;

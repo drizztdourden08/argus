@@ -3,6 +3,7 @@
 mod event_loop;
 mod handle;
 mod handlers;
+mod opener;
 mod session;
 mod taskbar;
 mod view;
@@ -10,6 +11,7 @@ mod win32;
 
 pub use event_loop::ExitReason;
 pub use handle::TrayHandle;
+pub use opener::open_url;
 pub use win32::process_alive;
 
 use super::quit_flag::Boot;

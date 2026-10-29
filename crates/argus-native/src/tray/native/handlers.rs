@@ -33,10 +33,10 @@ impl Handlers {
         }
     }
 
-    pub fn fire_command(&self, command: Command) {
-        if let Some(handler) = locked(&self.command).as_ref() {
-            handler(command);
-        }
+    /// Runs the command handler; false when none is registered.
+    pub fn fire_command(&self, command: Command) -> bool {
+        let slot = locked(&self.command);
+        slot.as_ref().inspect(|handler| handler(command)).is_some()
     }
 }
 
@@ -52,7 +52,7 @@ mod tests {
     fn handlers_fire_once_registered_and_the_last_registration_wins() {
         let handlers = Handlers::default();
         handlers.fire_quit();
-        handlers.fire_command(Command::Open);
+        assert!(!handlers.fire_command(Command::Open));
         let quits = Arc::new(AtomicU32::new(0));
         let seen = Arc::clone(&quits);
         handlers.set_quit(Box::new(move || {
@@ -64,8 +64,8 @@ mod tests {
             seen.fetch_add(u32::from(c == Command::Open), Ordering::SeqCst);
         }));
         handlers.fire_quit();
-        handlers.fire_command(Command::Open);
-        handlers.fire_command(Command::Restart);
+        assert!(handlers.fire_command(Command::Open));
+        assert!(handlers.fire_command(Command::Restart));
         assert_eq!(quits.load(Ordering::SeqCst), 1);
         assert_eq!(opened.load(Ordering::SeqCst), 1);
     }

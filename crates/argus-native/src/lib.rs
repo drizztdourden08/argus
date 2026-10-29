@@ -32,6 +32,6 @@ pub use tray::{
     write_quit_flag,
 };
 #[cfg(windows)]
-pub use tray::{ExitReason, TrayHandle, process_alive};
+pub use tray::{ExitReason, TrayHandle, open_url, process_alive};
 #[cfg(windows)]
 pub use windows_notifier::WindowsNotifier;
