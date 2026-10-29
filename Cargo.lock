@@ -258,6 +258,7 @@ version = "0.1.0"
 dependencies = [
  "argus-agents",
  "argus-board",
+ "argus-cache",
  "argus-core",
  "argus-dns",
  "argus-launchers",

@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use argus_core::clock::iso_from_ms;
 use argus_core::clock::now_ms;
+use argus_server::CacheOptions;
 use argus_testkit::{Reply, Request, TestOptions, TestServer, alpha_board, make_home, write_board};
 use argus_worktrees::{GitExec, ProcInfo, ProcessLister, clean_path, worktree_id};
 use serde_json::{Value, json};
@@ -18,6 +19,7 @@ use super::fixture::Fixture;
 #[path = "../support/wait.rs"]
 mod wait;
 
+#[allow(unused_imports)]
 pub use wait::{until, wakes_of};
 
 /// A machine with no process on it: a removal never finds its folder in use.
@@ -34,6 +36,8 @@ pub struct Setup {
     pub shadow: bool,
     pub enabled_off: bool,
     pub git: Option<Arc<dyn GitExec>>,
+    /// A build cache folder to serve, with the prune timer off.
+    pub cache_root: Option<PathBuf>,
 }
 
 pub struct Rig {
@@ -68,6 +72,7 @@ impl Rig {
             shadow,
             enabled_off,
             git,
+            cache_root,
         } = setup;
         let t = TestServer::start(TestOptions {
             shadow,
@@ -78,6 +83,11 @@ impl Rig {
                 opts.worktrees.enabled = !enabled_off;
                 opts.worktrees.procs = Some(Arc::new(NoProcs));
                 opts.worktrees.git.clone_from(&git);
+                opts.cache = CacheOptions {
+                    enabled: cache_root.is_some(),
+                    timers: false,
+                    root: cache_root.clone(),
+                };
             })),
             ..TestOptions::default()
         })

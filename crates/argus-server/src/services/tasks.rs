@@ -8,10 +8,11 @@ use tokio::task::JoinHandle;
 
 use crate::ServeOptions;
 
-/// Whether the timers of the launcher wakes and the worktree scanner run, and their tasks.
+/// Whether the timers of the launcher wakes, the worktree scanner and the build cache prune run, and their tasks.
 pub(crate) struct Tasks {
     pub stale_timer: bool,
     pub worktree_timers: bool,
+    pub cache_timer: bool,
     handles: Mutex<HashMap<&'static str, Vec<JoinHandle<()>>>>,
 }
 
@@ -20,6 +21,7 @@ impl Tasks {
         Tasks {
             stale_timer: opts.run_service.stale_timer,
             worktree_timers: opts.worktrees.timers,
+            cache_timer: opts.cache.timers,
             handles: Mutex::default(),
         }
     }

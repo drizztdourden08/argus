@@ -34,6 +34,7 @@ use tasks::Tasks;
 
 pub(crate) mod activity;
 pub(crate) mod agents;
+pub(crate) mod cache;
 pub(crate) mod compose;
 pub(crate) mod notify;
 pub(crate) mod procs;
@@ -46,6 +47,7 @@ pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
 pub use agents::AgentsOptions;
+pub use cache::{CacheOptions, CacheService};
 pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
 pub use runs::RunsOptions;
@@ -92,6 +94,8 @@ pub struct Services {
     pub procs: Option<Arc<ProcsService>>,
     /// The worktree scanner, when on.
     pub worktrees: Option<Arc<WorktreeService>>,
+    /// The build cache of Brock and Tessera, when on.
+    pub cache: Option<Arc<CacheService>>,
     /// The notifications to the owner, when on.
     pub notify: Option<Arc<Notify>>,
     /// The OS toast, when there is one.

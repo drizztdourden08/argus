@@ -1338,6 +1338,7 @@ fn serve_options(t: &TestServer) -> ServeOptions {
     let paths = Paths::new(&t.coord_home, Some(t.dashboard_home.clone()));
     let mut options = ServeOptions::new(paths);
     options.port = Some(0);
+    options.cache.enabled = false;
     options
 }
 

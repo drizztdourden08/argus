@@ -163,6 +163,11 @@ impl Service {
         changed
     }
 
+    /// Has the project been scanned since the service started? Before that its worktrees are not known.
+    pub fn scanned(&self, project: &str) -> bool {
+        self.st().scans.contains_key(project)
+    }
+
     /// How many leftovers the last scan had no time to measure: the server scans again soon to measure the next ones.
     pub fn pending_count(&self, project: &str) -> usize {
         self.st().scans.get(project).map_or(0, |s| {

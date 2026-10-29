@@ -42,9 +42,18 @@ pub struct Outcome {
     pub failed: Vec<String>,
 }
 
-fn megabytes(bytes: u64) -> String {
-    let tenths = bytes.saturating_mul(10) / (1024 * 1024);
-    format!("{}.{} MB", tenths / 10, tenths % 10)
+const KB: u64 = 1024;
+
+/// `300 B`, `1.5 KB`, `12.4 MB`, `2.0 GB`.
+fn size_text(bytes: u64) -> String {
+    let units = [("GB", KB * KB * KB), ("MB", KB * KB), ("KB", KB)];
+    for (unit, size) in units {
+        if bytes >= size {
+            let tenths = bytes.saturating_mul(10) / size;
+            return format!("{}.{} {unit}", tenths / 10, tenths % 10);
+        }
+    }
+    format!("{bytes} B")
 }
 
 fn counted(count: usize, one: &str, many: &str) -> String {
@@ -65,7 +74,7 @@ impl Outcome {
         let mut parts = vec![
             counted(self.deleted.len(), "entry", "entries"),
             counted(self.tmp_deleted, "temp folder", "temp folders"),
-            format!("{} freed", megabytes(self.freed_bytes)),
+            format!("{} freed", size_text(self.freed_bytes)),
         ];
         if !self.refused.is_empty() {
             parts.push(format!("{} refused", self.refused.len()));

@@ -56,7 +56,7 @@ fn an_unused_entry_past_the_grace_period_goes_whole_with_its_empty_folders() {
     assert!(!rig.name_folder("package", CORE).exists());
     assert!(rig.root_path().join("package").exists());
     assert!(outcome.summary().contains("2 entries"));
-    assert!(outcome.summary().contains("temp folders"));
+    assert!(outcome.summary().contains("1000 B freed"));
 }
 
 #[test]
