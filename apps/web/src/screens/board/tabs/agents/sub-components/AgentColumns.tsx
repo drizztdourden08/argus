@@ -30,7 +30,7 @@ const nowCell = (agent: Agent, now: number) => {
 const agentColumns = (props: AgentsBodyProps): TrackColumn<WithId<Agent>>[] => {
   const { now, actions, state, runs, onOpen, onLog } = props;
   return [
-    { id: 'status', label: 'Status', width: 'var(--agents-status-width)', cell: (row) => <AgentStatus id={row.id} agent={row} now={now} /> },
+    { id: 'status', label: 'Status', width: 'var(--agents-status-width, 6.8rem)', cell: (row) => <AgentStatus id={row.id} agent={row} now={now} /> },
     { id: 'agent', label: 'Agent', width: '9.5rem', cell: (row) => <AgentName id={row.id} agent={row} now={now} runs={runs.byAgent.get(row.id) ?? []} onOpen={onOpen} onLog={onLog} /> },
     { id: 'model', label: 'Model', width: '4.4rem', hideBelow: 768, cell: (row) => <AgentModel agent={row} /> },
     { id: 'kind', label: 'Kind', width: '4rem', hideBelow: 1120, cell: (row) => <AgentCell name="kind">{orText(row.kind, '-')}</AgentCell> },

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind style */
 .agents-panel {
   --agents-rem: var(--size-16);
-  --agents-status-width: calc(var(--agents-rem) * 6.8);
 
   display: flex;
   flex-direction: column;
@@ -357,7 +356,7 @@
 
 @container agents-panel (max-width: 39.99rem) {
   .agents-table {
-    --agents-status-width: calc(var(--agents-rem) * 1.4);
+    --agents-status-width: var(--size-24);
   }
 
   .agents-head__count {

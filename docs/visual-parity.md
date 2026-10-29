@@ -130,7 +130,7 @@ this section, this section is true.
    40rem, as Node. Node drops branch at 80rem, kind and now at 70rem, item at 56rem, model at 48rem and
    the rest at 40rem. Since Tessera 0.87 the columns take `hideBelow` at Node's steps (branch 80rem,
    kind and now 70rem, item 56rem, model 48rem, time and last message 40rem) and a hidden column
-   leaves no gap; the width clamp and its two model files are gone. Only the status dot at 420 and
+   leaves no gap; the width clamp and its two model files are gone. Only the status dot at 420 (24px, was 22px) and
    below 40rem still comes from one container rule that sets the status width.
 5. fixed: sonnet green, haiku blue, opus grey.
 6. fixed: Show finished disclosure with the hint; counts now equal (Brock 233, RotP 93).
