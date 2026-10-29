@@ -172,6 +172,21 @@ fn apply_log(fact: &mut Fact, out: &GitOutput) {
     fact.subject = (!subject.is_empty()).then_some(subject);
 }
 
+const STATUS: &[&str] = &["status", "--porcelain=v1", "-b"];
+const LAST_COMMIT: &[&str] = &["log", "-1", "--format=%H%x1f%ct%x1f%s"];
+
+/// Two independent reads of one folder at once, so a scan uses both git slots as the Node scanner did.
+fn read_both(git: &Git, dir: &str, first: &[&str], second: &[&str]) -> (GitOutput, GitOutput) {
+    std::thread::scope(|scope| {
+        let other = scope.spawn(|| git.read(dir, second));
+        let one = git.read(dir, first);
+        let two = other
+            .join()
+            .unwrap_or_else(|_| GitOutput::refused("git read panicked"));
+        (one, two)
+    })
+}
+
 fn index_mtime(fs: &dyn Fs, dir: &str, git_dir: &str) -> Option<i64> {
     if git_dir.is_empty() {
         return None;
@@ -201,16 +216,12 @@ pub fn inspect_dir(dir: &str, rule: &Rule, ctx: &mut ScanCtx<'_>) -> Fact {
         fact.detached = name == "HEAD";
         fact.branch = (!fact.detached).then_some(name);
     }
-    apply_status(
-        &mut fact,
-        &ctx.git.read(dir, &["status", "--porcelain=v1", "-b"]),
-    );
-    if !probe.unborn {
-        apply_log(
-            &mut fact,
-            &ctx.git
-                .read(dir, &["log", "-1", "--format=%H%x1f%ct%x1f%s"]),
-        );
+    if probe.unborn {
+        apply_status(&mut fact, &ctx.git.read(dir, STATUS));
+    } else {
+        let (status, log) = read_both(ctx.git, dir, STATUS, LAST_COMMIT);
+        apply_status(&mut fact, &status);
+        apply_log(&mut fact, &log);
     }
     let git_dir = probe
         .lines
@@ -370,8 +381,12 @@ fn mark_merged(dir: &str, list: usize, fact: &mut Fact, ctx: &mut ScanCtx<'_>) {
 
 fn mark_unmerged(dir: &str, base: &str, fact: &mut Fact, ctx: &ScanCtx<'_>) {
     let range = format!("{base}..HEAD");
-    let count = ctx.git.read(dir, &["rev-list", "--count", &range]);
-    let subjects = ctx.git.read(dir, &["log", "-3", "--format=%s", &range]);
+    let (count, subjects) = read_both(
+        ctx.git,
+        dir,
+        &["rev-list", "--count", &range],
+        &["log", "-3", "--format=%s", &range],
+    );
     let digits = count.stdout.trim();
     if count.ok() && !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) {
         fact.unmerged = digits.parse().ok();
