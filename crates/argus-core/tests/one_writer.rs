@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 /// Source files that rename for another reason: the board save hands `fs::rename` to the helper,
 /// the log rotation, the database copy (flushed by
 /// `flush_file` first) and the worktree folder moves.
-const RENAMES_ALLOWED: [&str; 7] = [
+const RENAMES_ALLOWED: [&str; 8] = [
+    "argus/src/install/replace.rs",
     "argus-board/src/store/io.rs",
     "argus-worktrees/src/leftover_remove.rs",
     "argus-core/src/fs.rs",

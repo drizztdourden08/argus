@@ -83,9 +83,9 @@ after the cut) or, for a shadow home, `argus tray start --shadow` of the binary 
 
 Do this once before step 1, and again at the cut with the cut build.
 
-A running `argus.exe` cannot be overwritten on Windows, and the config key `exe` should name a
-path that never changes. So the live copy is not `target\release`, which every build overwrites.
-Build, then run `self-install` from the fresh build.
+The config key `exe` should name a path that never changes. So the live copy is not
+`target\release`, which every build overwrites. Build, then run `self-install` from the fresh
+build.
 
 ```powershell
 pnpm build
@@ -100,14 +100,22 @@ binary, so that one file is the whole install. `--print` shows the path and copi
 The verb prints the path and the exact config line to add, `"exe": "<path>"`, and edits no
 config itself.
 
-The in-use rule: the copy goes to `argus.exe.tmp` beside the target and is renamed over it. A
-running `argus.exe` cannot be replaced on Windows, so then the rename fails, the temp file is
-removed, the installed copy is left as it was, and the verb exits 1 with a sentence that says to
-run `argus stop` and try again. It never stops anything itself. A target that already holds the
-same bytes is left alone ("already up to date"), and so is a run from the installed copy.
+The in-use rule: self-install works while sessions hold the binary. Every open Claude session
+keeps an `argus mcp` bridge running from the installed file, and a running `argus.exe` cannot be
+overwritten or deleted on Windows, but it can be renamed. So the copy goes to a temp name beside
+the target and is renamed over it, and when that fails because the target is in use, the current
+target is renamed aside to `argus.exe.old-<UTC stamp>` and the new copy takes its place. The verb
+prints one line that the old copy was set aside. Each self-install first deletes the earlier
+`argus.exe.old-*` files, and leaves the ones still in use for the next time. If the rename aside
+fails too, the installed copy is left as it was and the verb exits 1 with a sentence that says to
+run `argus stop` and try again; if the new copy cannot be put in place after the rename aside,
+the old one is renamed back, so the folder always holds an `argus.exe`. It never stops anything
+itself. A target that already holds the same bytes is left alone ("already up to date"), and so
+is a run from the installed copy.
 
-To update later: `argus stop` (or `dashboard stop`), `self-install` from the new build, start.
-The web build is embedded at build time, so `pnpm build` always comes first.
+To update later: `self-install` from the new build. Running processes keep the old image. A
+restart of the server and the tray picks up the new copy; the bridges pick it up as their
+sessions restart. The web build is embedded at build time, so `pnpm build` always comes first.
 
 ## 1. Clean shadow comparison
 

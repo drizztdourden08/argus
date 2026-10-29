@@ -8,6 +8,7 @@ pub mod code;
 pub mod desktop;
 mod env;
 pub mod mcp_config;
+mod replace;
 pub mod self_install;
 pub mod vbs;
 
