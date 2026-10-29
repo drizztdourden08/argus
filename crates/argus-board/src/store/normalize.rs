@@ -7,7 +7,7 @@ use super::migrate::{convert_agents, migrate_to_2};
 use crate::Board;
 use crate::json::{set, slot, unset};
 
-const COLLECTIONS: [&str; 17] = [
+const COLLECTIONS: [&str; 18] = [
     "counters",
     "threads",
     "items",
@@ -21,6 +21,7 @@ const COLLECTIONS: [&str; 17] = [
     "runDefs",
     "builds",
     "launchers",
+    "prs",
     "worktreeKeeps",
     "worktreeAnswers",
     "dirty",

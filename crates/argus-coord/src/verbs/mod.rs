@@ -32,6 +32,7 @@ pub const PORTED: &[Entry] = &[
     ("log", work::log),
     ("inbox", work::inbox),
     ("run", remote::run::handle),
+    ("remote", remote::mode::handle),
     ("ping", remote::ping::handle),
     ("activity", remote::activity::handle),
     ("proc", remote::proc::handle),

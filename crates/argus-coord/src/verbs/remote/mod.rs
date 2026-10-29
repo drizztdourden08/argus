@@ -5,6 +5,7 @@
 pub mod activity;
 pub mod dashboard;
 pub mod lead;
+pub mod mode;
 pub mod ping;
 pub mod portfolio;
 pub mod proc;

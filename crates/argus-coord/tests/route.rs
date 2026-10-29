@@ -19,7 +19,7 @@ use argus_coord::cli::{Call, CoordError, Invocation, Outcome, USAGE};
 use common::{Home, board_with, coord};
 
 /// Every verb and alias of `coord.mjs`, with `hook`, `dashboard` and `portfolio`.
-const VERBS: [&str; 35] = [
+const VERBS: [&str; 37] = [
     "hook",
     "dashboard",
     "thread",
@@ -55,6 +55,8 @@ const VERBS: [&str; 35] = [
     "activity",
     "run",
     "worktree",
+    "remote",
+    "pr",
 ];
 
 /// Counts the reads made of it, and holds JSON the verb must never see.
