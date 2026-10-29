@@ -10,12 +10,14 @@ use serde_json::{Value, json};
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
 const MERGE: &str = "fedcba9876543210fedcba9876543210fedcba98";
 
-fn run(board: &mut Board, op: Value) -> (Status, String) {
+fn run(board: &mut Board, op: impl Into<Value>) -> (Status, String) {
+    let op: Value = op.into();
     let res = apply_op(board, &op, &Who::human(), None);
     (res.status, res.outcome)
 }
 
-fn open_op(extra: Value) -> Value {
+fn open_op(extra: impl Into<Value>) -> Value {
+    let extra: Value = extra.into();
     let mut set = json!({"title": "Add x", "body": "why", "head": "feat/x", "base": "main", "headCommit": HEAD});
     for (k, v) in extra.as_object().cloned().unwrap_or_default() {
         set[k.as_str()] = v;
@@ -23,7 +25,8 @@ fn open_op(extra: Value) -> Value {
     json!({"kind": "pr-open", "set": set})
 }
 
-fn target(kind: &str, set: Value) -> Value {
+fn target(kind: &str, set: impl Into<Value>) -> Value {
+    let set: Value = set.into();
     json!({"kind": kind, "target": {"c": "prs", "id": "PR-1"}, "set": set})
 }
 
@@ -88,7 +91,7 @@ fn open_defaults_the_base_and_refuses_bad_fields() {
         let (status, why) = run(&mut b, op);
         assert_eq!(status, Status::Refused, "{why}");
     }
-    assert_eq!(b["prs"].as_object().map(|m| m.len()), Some(1));
+    assert_eq!(b["prs"].as_object().map(serde_json::Map::len), Some(1));
 }
 
 #[test]
