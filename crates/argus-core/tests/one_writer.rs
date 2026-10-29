@@ -9,8 +9,9 @@ use std::path::{Path, PathBuf};
 /// Source files that rename for another reason: the board save hands `fs::rename` to the helper,
 /// the log rotation, the database copy (flushed by
 /// `flush_file` first) and the worktree folder moves.
-const RENAMES_ALLOWED: [&str; 8] = [
+const RENAMES_ALLOWED: [&str; 9] = [
     "argus/src/install/replace.rs",
+    "argus-cache/src/remove.rs",
     "argus-board/src/store/io.rs",
     "argus-worktrees/src/leftover_remove.rs",
     "argus-core/src/fs.rs",
@@ -58,11 +59,21 @@ fn workspace_sources() -> Vec<(String, String)> {
         .collect()
 }
 
+/// Files that name a `.tmp` folder fixed by an outside contract (the Brock build cache layout), not a temp file of
+/// their own.
+const TMP_BY_CONTRACT: [&str; 5] = [
+    "argus-core/src/fs.rs",
+    "argus-cache/src/outcome.rs",
+    "argus-cache/src/prune.rs",
+    "argus-cache/src/remove.rs",
+    "argus-cache/src/tmp.rs",
+];
+
 #[test]
 fn no_crate_names_its_own_temp_file() {
     let mut own: Vec<String> = workspace_sources()
         .into_iter()
-        .filter(|(rel, text)| rel != "argus-core/src/fs.rs" && text.contains(".tmp"))
+        .filter(|(rel, text)| !TMP_BY_CONTRACT.contains(&rel.as_str()) && text.contains(".tmp"))
         .map(|(rel, _)| rel)
         .collect();
     own.sort();
