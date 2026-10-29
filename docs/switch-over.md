@@ -61,8 +61,10 @@ No `dashboard` verb is missing in `argus`: serve, start, stop, status, open, log
 tray, mcp, wake-stream, install-mcp and autostart all exist. The top-level output matches Node
 byte for byte when the call comes through the shim (it sets `ARGUS_FORWARDED_FROM`): the bare
 version for `--version` and `-v`, the Node usage text (no argument: stdout, exit 2; `--help`, `-h`,
-`help`: exit 0) and `dashboard: unknown command` on stderr with exit 2. A direct `argus` call keeps
-the clap output, so the Node form applies only to the marked call and nothing else changes.
+`help`: exit 0) and `dashboard: unknown command` on stderr with exit 2. The verbs only Argus has (`dns`,
+`self-install`, `parity`) are not answered in the Node form: a forwarded call goes on to clap and
+runs, since Node is retired. A direct `argus` call keeps the clap output, so the Node form applies
+only to the marked call and nothing else changes.
 
 ## The shadow marker
 
@@ -193,8 +195,8 @@ The gate:
 - The comparison is run twice: right after a fresh seed, and again after a full working day with
   the shadow left running (the checklist asks for a day). The second run is the real gate.
 - The first parity run right after a fresh seed shows a large worktree difference until the first
-  worktree scan finishes, which takes 3 to 4 minutes. Wait for it before the comparison that
-  counts.
+  worktree scan finishes, which takes up to about 20 minutes on this machine (wait until every
+  board has `scannedAt`). Wait for it before the comparison that counts.
 - The parity tool checks only the archipelia stream frames. It does not check the stream `wakes`
   frame of the other boards. Check that frame by hand for each other board (read the first
   frames of `/api/p/<key>/stream` on both sides and compare the `wakes` frame), or extend the tool
@@ -534,7 +536,9 @@ $d = "node $cfg\dashboard\bin\dashboard.mjs"
    If `dashboard.db-wal` still has bytes, copy it too as `dashboard.db.node-$stamp-wal` and
    tell the lead before going on.
 5. Switch the engine, in one save of `$node\config.json`. The server is stopped, so nothing
-   rewrites the file. Add `"dashboardEngine": "argus"`. Keep `exe`. Keep `installDir`
+   rewrites the file. Add `"dashboardEngine": "argus"`. Add the `exe` line printed by
+   `self-install`, in the same save (the Node config had no `exe` key before the coord rollout, so
+   without it the shim falls back to Node). Keep `installDir`
    (`X:\ai-config\dashboard`): Argus keeps a given value and the coord client still needs
    `bin\dashboard.mjs` there. Leave `port` at 47615.
 6. Start Argus through the shim, which exercises it. The database is opened as it is
