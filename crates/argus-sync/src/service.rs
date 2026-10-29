@@ -5,8 +5,8 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, PoisonError, RwLock};
 
 use argus_board::Board;
-use argus_board::ops::is_pr_kind;
 use argus_board::names::display_name;
+use argus_board::ops::is_pr_kind;
 use argus_board::portfolio::project_keys;
 use argus_board::store::board_path;
 use argus_core::ids::PORTFOLIO;
@@ -18,8 +18,8 @@ use serde_json::{Value, json};
 
 use crate::hooks::Hooks;
 use crate::posts::{PostResult, Source};
-use crate::prs::PrApplied;
 use crate::proofs::{Proof, ProofSource};
+use crate::prs::PrApplied;
 use crate::state::State;
 use crate::watcher::{self, Watcher, is_board_key};
 use crate::{RunsView, ScopeQueue};

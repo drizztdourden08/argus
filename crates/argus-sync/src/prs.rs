@@ -71,7 +71,10 @@ impl State {
         let key_owned = key.to_owned();
         self.opts
             .queue
-            .run(key, async move { me.apply_pr_now(&key_owned, &op, &who).await })
+            .run(
+                key,
+                async move { me.apply_pr_now(&key_owned, &op, &who).await },
+            )
             .await
     }
 
