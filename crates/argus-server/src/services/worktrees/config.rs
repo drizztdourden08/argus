@@ -1,6 +1,6 @@
 //! `config.worktrees` as the service's options and the server's own timings.
 
-use argus_worktrees::Options;
+use argus_worktrees::{Options, REMOVE_TIMEOUT};
 use serde_json::Value;
 
 use crate::Services;
@@ -86,11 +86,13 @@ pub(super) fn options_of(svc: &Services) -> Options {
     options
 }
 
-/// How many git processes at once, and how long a read may take.
-pub(super) fn git_limits(svc: &Services) -> (usize, u64) {
+/// How many git processes at once, how long a read may take, and how long `git worktree remove` may take.
+pub(super) fn git_limits(svc: &Services) -> (usize, u64, u64) {
     let s = setting(svc);
+    let remove_ms = u64::try_from(REMOVE_TIMEOUT.as_millis()).unwrap_or(900_000);
     (
         usize::try_from(number(&s, "maxProcs", 2, 1)).unwrap_or(2),
         number(&s, "gitTimeoutMs", 10_000, 100),
+        number(&s, "removeTimeoutMs", remove_ms, 1000),
     )
 }

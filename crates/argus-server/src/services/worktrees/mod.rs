@@ -52,7 +52,7 @@ impl Default for WorktreesOptions {
 }
 
 fn git_of(svc: &Services, opts: &WorktreesOptions) -> Git {
-    let (max_procs, read_ms) = config::git_limits(svc);
+    let (max_procs, read_ms, remove_ms) = config::git_limits(svc);
     let exec: Arc<dyn GitExec> = opts
         .git
         .clone()
@@ -63,6 +63,7 @@ fn git_of(svc: &Services, opts: &WorktreesOptions) -> Git {
         Duration::from_millis(read_ms),
         Duration::from_secs(120),
     )
+    .with_remove_timeout(Duration::from_millis(remove_ms))
 }
 
 fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {

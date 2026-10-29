@@ -83,6 +83,9 @@ pub struct RemoveOutcome {
     pub backup: Option<Backup>,
     pub discarded: Option<Discarded>,
     pub git_error: Option<String>,
+    /// An ignored, untracked `node_modules` was deleted by Argus before git ran. Absent from the JSON when false.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub node_modules_cleared: bool,
     #[serde(rename = "sizeMB")]
     pub size_mb: Option<f64>,
     pub files: Option<u64>,
@@ -128,6 +131,9 @@ impl RemoveOutcome {
                 files.join(" and "),
                 backup.restore.join("; ")
             ));
+        }
+        if self.node_modules_cleared {
+            parts.push("node_modules cleared by Argus first".to_string());
         }
         parts.join(", ")
     }

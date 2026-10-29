@@ -46,6 +46,24 @@ impl GitOutput {
         self.code == Some(0)
     }
 
+    /// Did the run end because it was cut: it ran past its limit, or something killed it?
+    pub fn was_cut(&self) -> bool {
+        if self.timed_out {
+            return true;
+        }
+        let said = self.error.as_deref().unwrap_or_default().to_lowercase();
+        let word = |w: &str| {
+            said.split(|c: char| !(c.is_alphanumeric() || c == '_'))
+                .any(|t| t == w)
+        };
+        said.contains("timed out")
+            || said.contains("sigterm")
+            || said.contains("sigkill")
+            || said.contains("aborterror")
+            || word("killed")
+            || word("aborted")
+    }
+
     /// The first non-blank line of stderr, cut to 200 characters.
     pub fn first_line(&self) -> String {
         first_line(&self.stderr)
@@ -146,7 +164,7 @@ pub fn run_command(spec: &Spec<'_>) -> GitOutput {
                 let text = format!(
                     "{} timed out after {} s",
                     spec.program,
-                    spec.timeout.as_secs()
+                    (spec.timeout.as_millis() + 500) / 1000
                 );
                 return GitOutput {
                     timed_out: true,
@@ -201,6 +219,23 @@ mod tests {
         });
         assert_eq!(out.code, None);
         assert!(out.error.is_some());
+    }
+
+    #[test]
+    fn a_run_that_timed_out_or_was_killed_was_cut() {
+        assert!(GitOutput::refused("git timed out after 900 s").was_cut());
+        assert!(GitOutput::refused("spawn git ENOENT SIGTERM").was_cut());
+        assert!(GitOutput::refused("the process was killed").was_cut());
+        assert!(
+            GitOutput {
+                timed_out: true,
+                ..GitOutput::default()
+            }
+            .was_cut()
+        );
+        assert!(!GitOutput::refused("spawn git ENOENT").was_cut());
+        assert!(!GitOutput::failure(128, "fatal: timed out").was_cut());
+        assert!(!GitOutput::refused("skilled worker").was_cut());
     }
 
     #[test]

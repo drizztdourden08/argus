@@ -70,7 +70,12 @@ fn write_command_ok(command: &str, rest: &[&str]) -> bool {
                 && rest.contains(&"--binary")
                 && rest.iter().any(|a| a.starts_with("--output="))
         }
-        "ls-files" => rest.contains(&"--others") && rest.contains(&"--exclude-standard"),
+        // The two questions asked before Argus clears an ignored `node_modules`.
+        "check-ignore" => rest == ["-q", "node_modules"],
+        "ls-files" => {
+            (rest.contains(&"--others") && rest.contains(&"--exclude-standard"))
+                || rest == ["--cached", "-z", "--", "node_modules"]
+        }
         "rev-list" => true,
         _ => false,
     }
@@ -164,7 +169,7 @@ mod tests {
     #[test]
     fn the_write_door_allows_only_the_removals_own_commands() {
         let sha = "0123456789abcdef0123456789abcdef01234567";
-        let ok: [&[&str]; 9] = [
+        let ok: [&[&str]; 11] = [
             &["worktree", "remove", "X:/w"],
             &["worktree", "remove", "--force", "X:/w"],
             &["worktree", "prune"],
@@ -173,12 +178,14 @@ mod tests {
             &["bundle", "create", "f", "b", "--not", "--remotes"],
             &["bundle", "verify", "f"],
             &["diff", "HEAD", "--binary", "--output=f"],
+            &["check-ignore", "-q", "node_modules"],
+            &["ls-files", "--cached", "-z", "--", "node_modules"],
             &["ls-files", "--others", "--exclude-standard", "-z"],
         ];
         for args in ok {
             assert!(assert_write_ok(args).is_ok(), "{args:?}");
         }
-        let bad: [&[&str]; 16] = [
+        let bad: [&[&str]; 20] = [
             &["worktree", "remove", "--force", "--force", "X:/w"],
             &["worktree", "add", "x"],
             &["branch", "-D", "b"],
@@ -194,6 +201,10 @@ mod tests {
             &["worktree", "prune", "--expire", "now"],
             &["worktree", "prune", "--dry-run"],
             &["worktree", "prune", "--verbose", "--dry-run"],
+            &["check-ignore", "-q", "src"],
+            &["check-ignore", "node_modules"],
+            &["ls-files", "--cached", "-z", "--", "src"],
+            &["ls-files", "--cached"],
             &[],
         ];
         for args in bad {

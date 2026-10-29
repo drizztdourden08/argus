@@ -15,6 +15,7 @@ use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
 use crate::inspect::{ScanCtx, inspect_dir};
 use crate::leftover_remove::{Within, git_within, unreadable_refusal};
+use crate::modules::NodeModules;
 use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
@@ -452,7 +453,8 @@ impl Service {
         let safety = Safety::of(&now);
         let plan = self.plan_branch(input.branch, input.discard, &now);
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
-        self.drop_links_before_git(&now, backup.as_ref())?;
+        let modules = self.clear_ignored_node_modules(&now);
+        self.drop_links_before_git(&now, backup.as_ref(), modules)?;
         let run = self.git_remove(&now)?;
         let discarded = (!safety.safe || plan.force).then_some(Discarded {
             dirty: now.dirty,
@@ -464,6 +466,7 @@ impl Service {
             now: &now,
             run: &run,
             plan: &plan,
+            modules,
         };
         if !run.ok() {
             return self.git_could_not(&finish, backup, discarded);
@@ -494,6 +497,7 @@ impl Service {
             LetGo::Unvetted(text) => format!("; Argus did not prune git's records: {text}"),
             LetGo::No => String::new(),
         };
+        let cut = cut_text(step.run, step.modules);
         let here = backup
             .as_ref()
             .map(|b| format!("; the backup is in {}", b.dir))
@@ -501,7 +505,7 @@ impl Service {
         Err(WtError::new(
             ErrorCode::GitFailed,
             format!(
-                "git worktree remove failed: {}{why}{here}",
+                "git worktree remove failed: {}{cut}{why}{here}",
                 step.run.failure_text()
             ),
         )
@@ -520,6 +524,7 @@ impl Service {
             fact,
             now,
             plan,
+            modules,
             ..
         } = *step;
         let left = self.deps.fs.exists(&now.path);
@@ -539,6 +544,7 @@ impl Service {
             backup,
             discarded,
             folder_left: left,
+            node_modules_cleared: modules.cleared(),
             ..RemoveOutcome::default()
         };
         apply_branch(&mut out, &branch);
@@ -549,14 +555,38 @@ impl Service {
     /// Windows: git for Windows follows a junction when it deletes a folder, and deletes what the junction points to.
     /// So every link in the worktree is removed AS a link first; the removal is authorized by now. A link that cannot be
     /// removed stops the removal: git must not meet it.
-    fn drop_links_before_git(&self, now: &Fact, backup: Option<&Backup>) -> Result<()> {
+    fn drop_links_before_git(
+        &self,
+        now: &Fact,
+        backup: Option<&Backup>,
+        modules: NodeModules,
+    ) -> Result<()> {
         if !self.opts.drop_links_first {
             return Ok(());
         }
         drop_links(self.deps.fs.as_ref(), &now.path).map_err(|err| {
+            let began = if modules.begun() {
+                " (except the ignored node_modules Argus began to clear first)"
+            } else {
+                ""
+            };
             let here = backup.map(|b| format!("; the backup is in {}", b.dir)).unwrap_or_default();
-            WtError::new(ErrorCode::GitFailed, format!("could not remove the junctions or symlinks inside {} first ({}): git for Windows would follow them and delete what they point to, so nothing was removed{here}", now.path, crate::error::io_code(&err))).with_backup(backup.cloned())
+            WtError::new(ErrorCode::GitFailed, format!("could not remove the junctions or symlinks inside {} first ({}): git for Windows would follow them and delete what they point to, so nothing was removed{began}{here}", now.path, crate::error::io_code(&err))).with_backup(backup.cloned())
         })
+    }
+}
+
+/// What a refusal adds when git was cut: what Argus itself deleted before git ran.
+fn cut_text(run: &GitOutput, modules: NodeModules) -> String {
+    if !run.was_cut() {
+        return String::new();
+    }
+    match modules {
+        NodeModules::Untouched => "; nothing was deleted by Argus".to_string(),
+        NodeModules::Cleared => "; Argus deleted nothing but the ignored node_modules".to_string(),
+        NodeModules::Partial => {
+            "; Argus deleted nothing but part of the ignored node_modules".to_string()
+        }
     }
 }
 

@@ -593,6 +593,10 @@ pub enum RemoveMode {
     Stuck,
     /// git failed at once and changed nothing.
     Untouched,
+    /// Like `Stuck`, but the answer is the door's timeout (the process was killed after deleting the files).
+    Timeout,
+    /// The timeout with nothing changed: the worktree is still registered with its `.git`.
+    TimeoutUntouched,
     /// The files and `.git` went but the error is not a folder-deletion one.
     Other,
     /// git succeeded but the folder is still there with a file in it.
@@ -611,6 +615,15 @@ pub struct ScriptedExec {
     pub after_failure: Mutex<Option<FailureHook>>,
     /// Every `git status` fails like a damaged index does.
     pub fail_status: Mutex<bool>,
+}
+
+/// The door's own answer to a process that ran past the removal timeout and was killed.
+fn timed_out() -> GitOutput {
+    GitOutput {
+        timed_out: true,
+        error: Some("git timed out after 900 s".to_string()),
+        ..GitOutput::default()
+    }
 }
 
 impl ScriptedExec {
@@ -641,6 +654,7 @@ impl ScriptedExec {
                 128,
                 &format!("error: failed to delete '{path}': Permission denied\n"),
             ),
+            RemoveMode::TimeoutUntouched => timed_out(),
             RemoveMode::Leaves => {
                 let out = self.real.exec(cwd, args, timeout);
                 put(&path, "left-behind.txt", "git could not delete me\n");
@@ -651,6 +665,9 @@ impl ScriptedExec {
                 let _ = fs::remove_file(join_path(&path, ".git"));
                 if let Some(hook) = locked(&self.after_failure).as_ref() {
                     hook();
+                }
+                if mode == RemoveMode::Timeout {
+                    return timed_out();
                 }
                 let said = if mode == RemoveMode::Other {
                     "fatal: something else went wrong\n".to_string()
