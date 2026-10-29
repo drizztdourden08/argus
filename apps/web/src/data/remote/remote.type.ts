@@ -126,6 +126,6 @@ interface RemoteRead<T> {
 }
 
 export type {
-  CheckQuery, CheckRun, CheckRunner, CheckStatus, CheckStep, ProjectReleases, RegistryBuild, RegistryConsumer, RegistryReport, ReleaseAsset, ReleaseChannel,
-  ReleasePackage, ReleaseVersion, RemoteInfo, RemoteMode, RemoteRead, Replay, ReplayCounts, ReplayState,
+  CheckQuery, CheckRun, CheckStatus, CheckStep, ProjectReleases, RegistryBuild, RegistryConsumer, RegistryReport, ReleaseChannel,
+  ReleaseVersion, RemoteInfo, RemoteRead, Replay, ReplayCounts, ReplayState,
 };

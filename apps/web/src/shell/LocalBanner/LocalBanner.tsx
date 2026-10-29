@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Text } from '@drizztdourden08/tessera';
 import { readRemote, REMOTE_POLL_MS, useRemoteRead } from '../../data/remote';
-import { bannerText } from './banner-text';
+import { bannerText } from './behavior/banner-text';
 
 const LocalBanner = () => {
   const { data } = useRemoteRead(readRemote, REMOTE_POLL_MS);

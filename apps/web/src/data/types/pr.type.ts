@@ -19,4 +19,4 @@ interface PullRequest {
   replay?: Replay | null;
 }
 
-export type { PullRequest, PullRequestStatus };
+export type { PullRequest };

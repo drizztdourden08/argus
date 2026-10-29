@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
-import type { RemoteInfo } from '../../data/remote';
-import { BANNER_NONE, BANNER_PARTS } from './LocalBanner.constants';
+import type { RemoteInfo } from '../../../data/remote';
+import { BANNER_NONE, BANNER_PARTS } from '../LocalBanner.constants';
 
 const bannerText = (info: RemoteInfo): string | null => {
   if (info.mode !== 'local') return null;
