@@ -3,10 +3,12 @@
 //! with its handler, and one row of [`PORTED`](crate::verbs::PORTED).
 
 pub mod activity;
+pub mod ci;
 pub mod dashboard;
 pub mod lead;
 pub mod ping;
 pub mod portfolio;
+pub mod pr;
 pub mod proc;
 pub mod run;
 mod support;

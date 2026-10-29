@@ -8,6 +8,7 @@ export type * from './item.type';
 export type * from './log.type';
 export type * from './notify.type';
 export type * from './portfolio.type';
+export type * from './pr.type';
 export type * from './procs.type';
 export type * from './registry.type';
 export type * from './test.type';

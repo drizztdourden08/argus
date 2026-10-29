@@ -6,6 +6,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use argus_core::remote::ModeSource;
 use argus_worktrees::{
     Deps, Fs, GhRunner, Git, GitExec, ProcessLister, RealFs, Service as WorktreeService,
     SystemClock, SystemExec, SystemGh,
@@ -79,6 +80,7 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
         .unwrap_or_else(|| Arc::new(MachineProcs::new(svc.procs.clone())));
     let gh: Arc<dyn GhRunner> = opts.gh.clone().unwrap_or_else(|| Arc::new(SystemGh));
     let fs: Arc<dyn Fs> = Arc::new(RealFs);
+    let remote: Arc<dyn ModeSource> = svc.remote.clone();
     Deps {
         store: Arc::new(store),
         notifier: Arc::new(TreeNotifier::new(
@@ -89,6 +91,7 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
         fs,
         git: git_of(svc, opts),
         gh,
+        remote,
         procs,
         clock: Arc::new(SystemClock),
     }

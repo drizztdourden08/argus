@@ -34,7 +34,7 @@ describe('the board header', () => {
   it('puts the tab bar right under the registered strip, with a count on every tab', async () => {
     await open();
     const tabs = await screen.findAllByRole('tab');
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['Agents0', 'Activity0', 'Kanban0', 'Tests0', 'Builds0', 'Worktrees0']);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Agents0', 'Activity0', 'Kanban0', 'Tests0', 'Builds0', 'Worktrees0', 'Changes0', 'Releases0']);
     expect(screen.queryByText('Work items')).toBeNull();
   });
 

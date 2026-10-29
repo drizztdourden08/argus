@@ -75,9 +75,7 @@ impl<H: ProcessHost> RunService<H> {
     ) -> Result<StartOutcome, RunError> {
         check_key(key)?;
         check_name(name)?;
-        if self.state().closing {
-            return Err(RunError::unavailable("the dashboard is shutting down"));
-        }
+        self.ensure_open()?;
         let def = self
             .inner
             .deps.defs
@@ -89,11 +87,26 @@ impl<H: ProcessHost> RunService<H> {
                     "no launch \"{name}\" is defined in {key} (a lead defines it with coord run define)"
                 ))
             })?;
+        self.start_def(key, &def, options)
+    }
+
+    /// Starts a run of a definition the caller made: the server builds it for one request (a
+    /// check run) instead of a lead keeping it on the board. Every rule of [`Self::start`]
+    /// applies: the visible rule, the parallel limit and the queue.
+    pub fn start_def(
+        &self,
+        key: &str,
+        def: &RunDef,
+        options: &StartOptions,
+    ) -> Result<StartOutcome, RunError> {
+        check_key(key)?;
+        check_name(&def.name)?;
+        self.ensure_open()?;
         if let Some(agent) = &options.agent {
             check_agent(agent)?;
         }
-        let visible = visible_for(&def, options.origin, options.visible)?;
-        let admitted = self.admit(key, &def, options, visible);
+        let visible = visible_for(def, options.origin, options.visible)?;
+        let admitted = self.admit(key, def, options, visible);
         if let Some(message) = admitted.failure {
             self.fail_now(&admitted.outcome.run, &message, RunStatus::Failed, None);
             let run = self
@@ -108,6 +121,13 @@ impl<H: ProcessHost> RunService<H> {
             });
         }
         Ok(admitted.outcome)
+    }
+
+    fn ensure_open(&self) -> Result<(), RunError> {
+        if self.state().closing {
+            return Err(RunError::unavailable("the dashboard is shutting down"));
+        }
+        Ok(())
     }
 
     /// Everything from the parallel check to the insert happens under the state lock, so

@@ -397,6 +397,30 @@ fn gh_is_asked_once_per_branch_and_tip_and_the_answer_is_cached() {
 }
 
 #[test]
+fn in_local_mode_gh_is_never_asked_and_a_merged_pull_request_does_not_count() {
+    let (fx, h) = setup(github_sq2);
+    h.mode.set_local(true);
+    gh_says(&h, 0, &merged_pr(&tip_of(&fx, "sq2")));
+    let kept = h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
+    assert_eq!((kept.removed, kept.deleted_branch), (true, false));
+    assert_eq!(kept.branch_note.as_deref(), Some("not merged"));
+    assert!(h.gh.calls.lock().unwrap().is_empty(), "local: no gh call");
+}
+
+#[test]
+fn back_in_remote_mode_gh_is_asked_again_and_its_merged_answer_counts() {
+    let (fx, h) = setup(github_sq2);
+    h.mode.set_local(true);
+    let mut seq = 0;
+    gh_says(&h, 0, &merged_pr(&tip_of(&fx, "sq2")));
+    h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
+    assert!(h.gh.calls.lock().unwrap().is_empty());
+    h.mode.set_local(false);
+    assert!(try_again(&h, &fx, &mut seq, false).deleted_branch);
+    assert_eq!(h.gh.calls.lock().unwrap().len(), 1);
+}
+
+#[test]
 fn a_new_tip_that_gh_says_was_merged_deletes_the_branch_with_the_reason() {
     let (fx, h) = setup(|fx| {
         squashed("sq2", 2)(fx);

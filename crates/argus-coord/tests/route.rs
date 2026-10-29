@@ -19,7 +19,7 @@ use argus_coord::cli::{Call, CoordError, Invocation, Outcome, USAGE};
 use common::{Home, board_with, coord};
 
 /// Every verb and alias of `coord.mjs`, with `hook`, `dashboard` and `portfolio`.
-const VERBS: [&str; 35] = [
+const VERBS: [&str; 36] = [
     "hook",
     "dashboard",
     "thread",
@@ -55,6 +55,7 @@ const VERBS: [&str; 35] = [
     "activity",
     "run",
     "worktree",
+    "pr",
 ];
 
 /// Counts the reads made of it, and holds JSON the verb must never see.
@@ -166,7 +167,7 @@ fn help_with_no_verb_or_the_word_help_prints_the_usage_and_exits_0() {
     }
     assert!(USAGE.starts_with("Usage: coord <verb> ... [--project <key>] [--as <thread>]\n"));
     assert!(USAGE.ends_with("coord hook session-start|prompt|tool|guard|stop"));
-    assert_eq!(USAGE.lines().count(), 91);
+    assert_eq!(USAGE.lines().count(), 93);
 }
 
 #[test]

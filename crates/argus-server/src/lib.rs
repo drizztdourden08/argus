@@ -34,7 +34,8 @@ pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
 pub use services::{
-    AgentsOptions, CacheOptions, CacheService, NotifyOptions, ProcsOptions, RunsOptions, Services,
+    AgentsOptions, CacheOptions, CacheService, ConsumerSource, ConsumerStatus, Consumers,
+    NodeStatus, NotifyOptions, ProcsOptions, Records, RecordsOptions, RunsOptions, Services,
     WakeHook, WakeOptions, WakeRequest, WorktreesOptions,
 };
 pub use web::{PageVars, WebAssets, render_page};

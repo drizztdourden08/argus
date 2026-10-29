@@ -48,6 +48,17 @@ pub fn coll(name: &str) -> Result<Coll, ApiError> {
         .map_err(|_| ApiError::bad_request(format!("unknown collection \"{name}\"")))
 }
 
+/// The records service (releases, check runs, registry).
+///
+/// # Errors
+/// 503 when it is off.
+pub fn records(ctx: &Ctx) -> Result<Arc<crate::Records>, ApiError> {
+    ctx.svc
+        .records
+        .clone()
+        .ok_or_else(|| ApiError::unavailable("the records service is not running"))
+}
+
 /// The sync service.
 ///
 /// # Errors

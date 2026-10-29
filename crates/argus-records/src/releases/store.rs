@@ -1,0 +1,108 @@
+//! The release store: `<root>/<project>/<channel>/<version>/release.json` with its files
+//! beside it. The index is rebuilt by [`ReleaseStore::rescan`]; an entry without a readable
+//! `release.json`, or under a temp name, is not in it (it is half written).
+
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, PoisonError, RwLock};
+
+use argus_core::ids::is_key;
+use serde_json::Value;
+
+use super::record::{Place, Release, parse};
+use super::semver::compare;
+use crate::Replay;
+use crate::safe_path::segment_ok;
+use crate::stamp::StampCache;
+
+const RECORD: &str = "release.json";
+
+/// The releases on disk, indexed.
+pub struct ReleaseStore {
+    root: PathBuf,
+    index: RwLock<Arc<Vec<Release>>>,
+    cache: Mutex<StampCache<Value>>,
+}
+
+/// The names of the folders in a folder that can be part of the store.
+fn folders(dir: &Path) -> Vec<(String, PathBuf)> {
+    let Ok(read) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    read.filter_map(Result::ok)
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+        .filter_map(|e| Some((e.file_name().to_str()?.to_owned(), e.path())))
+        .filter(|(name, _)| segment_ok(name))
+        .collect()
+}
+
+fn read_record(path: &Path) -> Option<Value> {
+    serde_json::from_slice(&std::fs::read(path).ok()?).ok()
+}
+
+impl ReleaseStore {
+    /// A store over a folder; call [`Self::rescan`] to fill the index.
+    #[must_use]
+    pub fn new(root: &Path) -> Self {
+        ReleaseStore {
+            root: root.to_path_buf(),
+            index: RwLock::default(),
+            cache: Mutex::default(),
+        }
+    }
+
+    /// The folder of the store.
+    #[must_use]
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    /// The index now: by project, then channel, newest version first.
+    #[must_use]
+    pub fn releases(&self) -> Arc<Vec<Release>> {
+        Arc::clone(&self.index.read().unwrap_or_else(PoisonError::into_inner))
+    }
+
+    /// Reads the store again and replaces the index.
+    pub fn rescan(&self) {
+        let mut cache = self.cache.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut found = Vec::new();
+        for (project, dir) in folders(&self.root).into_iter().filter(|(p, _)| is_key(p)) {
+            for (channel, dir) in folders(&dir) {
+                for (version, dir) in folders(&dir) {
+                    let place = Place {
+                        project: &project,
+                        channel: &channel,
+                        version: &version,
+                        dir: dir.clone(),
+                    };
+                    let record = cache.get(&dir.join(RECORD), read_record);
+                    found.extend(record.and_then(|r| parse(place, &r)));
+                }
+            }
+        }
+        cache.sweep();
+        found.sort_by(|a, b| {
+            (&a.project, &a.channel)
+                .cmp(&(&b.project, &b.channel))
+                .then_with(|| compare(&b.version, &a.version))
+        });
+        *self.index.write().unwrap_or_else(PoisonError::into_inner) = Arc::new(found);
+    }
+
+    /// The releases of one channel, newest first.
+    #[must_use]
+    pub fn channel(&self, project: &str, channel: &str) -> Vec<Release> {
+        self.releases()
+            .iter()
+            .filter(|r| r.project == project && r.channel == channel)
+            .cloned()
+            .collect()
+    }
+
+    /// How many releases wait for the go.
+    #[must_use]
+    pub fn pending(&self) -> usize {
+        let pending = |r: &&Release| r.replay.as_ref().is_some_and(Replay::is_pending);
+        self.releases().iter().filter(pending).count()
+    }
+}

@@ -96,9 +96,22 @@ impl Differ {
             run_step(&self.engines, Which::Node, &self.twin.rust, port, step)?;
         }
         let node_seen = seen(&node, &self.twin.node, norm)?;
-        let rust_seen = seen(&rust, &self.twin.rust, norm)?;
+        let mut rust_seen = seen(&rust, &self.twin.rust, norm)?;
+        rust_seen.stdout = without_ahead(&rust_seen.stdout, &step.argus_ahead);
+        rust_seen.stderr = without_ahead(&rust_seen.stderr, &step.argus_ahead);
         Ok(judge(&node_seen, &rust_seen))
     }
+}
+
+/// `text` without the lines that start with one of `starts` (Argus verbs Node does not have yet).
+fn without_ahead(text: &str, starts: &[String]) -> String {
+    if starts.is_empty() {
+        return text.to_owned();
+    }
+    text.split_inclusive('
+')
+        .filter(|line| !starts.iter().any(|s| line.starts_with(s.as_str())))
+        .collect()
 }
 
 fn seen(observed: &Observed, home: &super::homes::Home, norm: &Normaliser) -> io::Result<Seen> {

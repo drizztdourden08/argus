@@ -102,7 +102,7 @@ binary, so that one file is the whole install. `--print` shows the path and copi
 The verb prints the path and the exact config line to add, `"exe": "<path>"`, and edits no
 config itself.
 
-The in-use rule: self-install works while sessions hold the binary. Every open Claude session
+The in-use rule: self-install works while sessions hold the binary. Every open agent session
 keeps an `argus mcp` bridge running from the installed file, and a running `argus.exe` cannot be
 overwritten or deleted on Windows, but it can be renamed. So the copy goes to a temp name beside
 the target and is renamed over it, and when that fails because the target is in use, the current

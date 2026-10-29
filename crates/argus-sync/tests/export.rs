@@ -291,6 +291,24 @@ async fn start_mirrors_every_board_and_the_portfolio_cards() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn local_pull_requests_of_a_board_are_mirrored_as_prs_and_leave_with_the_board() {
+    let h = Harness::start().await;
+    assert!(h.docs("alpha", Coll::Prs).is_empty(), "a board without prs");
+    let mut board = h.read("alpha");
+    board["prs"] = json!({ "PR-1": { "id": "PR-1", "head": "feat/x", "base": "main", "status": "open", "replay": { "state": "pending" } } });
+    h.write("alpha", &board);
+    h.resync("alpha").await;
+    let prs = h.docs("alpha", Coll::Prs);
+    assert_eq!(h.keys("alpha", Coll::Prs), ["PR-1"]);
+    assert_eq!(prs["PR-1"]["head"], "feat/x");
+    assert_eq!(prs["PR-1"]["replay"]["state"], "pending");
+    board["prs"] = json!({});
+    h.write("alpha", &board);
+    h.resync("alpha").await;
+    assert!(h.docs("alpha", Coll::Prs).is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn a_soft_resync_of_an_unchanged_board_writes_and_emits_nothing() {
     let h = Harness::start().await;
     let (events, seq) = (h.event_count(), h.seq());

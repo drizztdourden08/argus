@@ -14,6 +14,9 @@ pub struct Step {
     pub env: Vec<(String, String)>,
     /// A folder under the work folder to run in; the work folder itself when `None`.
     pub cwd: Option<String>,
+    /// Output lines (by their start) that only the Argus side prints, because Argus is ahead of
+    /// Node; they are left out of the Argus output before it is compared. See `docs/coord-port.md`.
+    pub argus_ahead: Vec<String>,
 }
 
 impl Step {
@@ -51,6 +54,13 @@ impl Step {
     #[must_use]
     pub fn cwd(mut self, folder: &str) -> Step {
         self.cwd = Some(folder.to_owned());
+        self
+    }
+
+    /// The same step, comparing without the Argus lines that start with one of `starts`.
+    #[must_use]
+    pub fn argus_ahead(mut self, starts: &[&str]) -> Step {
+        self.argus_ahead = starts.iter().map(|s| (*s).to_owned()).collect();
         self
     }
 
