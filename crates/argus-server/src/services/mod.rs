@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use argus_agents::{AgentReaper, AgentReconciler, AgentWatcher};
 use argus_core::log::Logger;
+use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths, Subscription};
 use argus_launchers::RunService;
 use argus_launchers::launcher::LauncherStale;
@@ -63,6 +64,8 @@ pub struct Services {
     pub env_port: Option<u16>,
     /// The data folders.
     pub paths: Paths,
+    /// The local or remote switch (`<COORD_HOME>/remote.json`).
+    pub remote: Arc<Switch>,
     /// The database.
     pub db: Arc<Db>,
     /// The event bus.

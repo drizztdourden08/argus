@@ -12,6 +12,7 @@ use argus_core::clock::now_iso;
 use argus_core::config::{ConfigError, HOST, load_config};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
+use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths};
 use argus_native::TrayFiles;
 use argus_store::{Db, PruneOptions, StoreError};
@@ -238,6 +239,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         config,
         env_port: opts.port,
         tray: TrayFiles::new(&paths.home),
+        remote: Arc::new(Switch::new(&paths.coord_home)),
         paths,
         activity: activity::build(&db, &log),
         db,

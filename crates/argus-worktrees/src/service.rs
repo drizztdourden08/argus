@@ -18,6 +18,7 @@ use crate::queue::Queue;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
+use argus_core::remote::ModeSource;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -76,6 +77,8 @@ pub struct Deps {
     pub fs: Arc<dyn Fs>,
     pub git: Git,
     pub gh: Arc<dyn GhRunner>,
+    /// The local or remote switch: in local mode `gh` is never asked.
+    pub remote: Arc<dyn ModeSource>,
     pub procs: Arc<dyn ProcessLister>,
     pub clock: Arc<dyn Clock>,
 }
