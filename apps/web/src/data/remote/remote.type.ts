@@ -18,7 +18,7 @@ interface ReplayCounts {
 
 interface RemoteInfo {
   mode: RemoteMode;
-  replay: ReplayCounts;
+  replay: Partial<ReplayCounts>;
 }
 
 interface ReleaseAsset {

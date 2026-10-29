@@ -1,11 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { ReplayState } from '../../data/remote';
-
-interface ReplayLook {
-  label: string;
-  title: string;
-  color: 'success' | 'warning' | 'danger';
-}
+import type { ReplayLook } from './ReplayTag.constants.type';
 
 const REPLAY_LOOK: Readonly<Record<ReplayState, ReplayLook>> = {
   pending: { label: 'waits for the go', title: 'Not on GitHub yet: the replay runs on the owner\'s go', color: 'warning' },

@@ -6,7 +6,7 @@ import type { ReplayTagProps } from './ReplayTag.type';
 const ReplayTag = (props: ReplayTagProps) => {
   const { replay } = props;
   if (!replay) return null;
-  const look = REPLAY_LOOK[replay.state] ?? REPLAY_LOOK.pending;
+  const look = REPLAY_LOOK[replay.state];
   const title = replay.at ? `${look.title} (${replay.at})` : look.title;
   if (replay.state === 'done' && replay.url) {
     return <Tag variant="urgency" color={look.color} title={title} href={replay.url} target="_blank" rel="noreferrer">{look.label}</Tag>;
