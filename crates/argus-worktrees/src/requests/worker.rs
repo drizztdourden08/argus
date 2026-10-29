@@ -1,6 +1,7 @@
-//! The one worker: oldest request first, one at a time, resumed after a restart.
+//! The workers: one per project, oldest request first, one at a time, resumed after a restart.
 
 use super::record::RequestStatus;
+use crate::queue::Queue;
 use crate::service::Service;
 use crate::sync::locked;
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -10,71 +11,63 @@ impl Service {
         locked(&self.requests.state).halted
     }
 
-    /// The projects that may hold requests: the ones with a board, and the ones already loaded.
-    fn request_projects(&self) -> Vec<String> {
-        let mut projects = self.deps.store.projects();
-        let loaded: Vec<String> = locked(&self.requests.state)
-            .stores
-            .keys()
-            .cloned()
-            .collect();
-        for project in loaded {
-            if !projects.contains(&project) {
-                projects.push(project);
-            }
-        }
-        projects
+    /// The worker of a project, made on first use.
+    fn worker_of(&self, project: &str) -> Queue {
+        locked(&self.requests.queues)
+            .entry(project.to_string())
+            .or_default()
+            .clone()
     }
 
-    /// The oldest request still to run or running: its project and id.
-    fn next_request(&self) -> Option<(String, String)> {
-        let mut best: Option<(String, String, String)> = None;
-        for project in self.request_projects() {
-            let waiting = self.with_requests(&project, |store| {
-                store
-                    .list
-                    .iter()
-                    .filter(|r| r.status.active())
-                    .map(|r| (r.at.clone(), r.id.clone()))
-                    .collect::<Vec<_>>()
-            });
-            for (at, id) in waiting {
-                if best.as_ref().is_none_or(|(b, _, _)| at < *b) {
-                    best = Some((at, project.clone(), id));
-                }
-            }
-        }
-        best.map(|(_, project, id)| (project, id))
+    /// Every worker made so far.
+    pub(crate) fn workers(&self) -> Vec<Queue> {
+        locked(&self.requests.queues).values().cloned().collect()
     }
 
-    fn drain_requests(&self) {
+    /// The project's oldest request still to run or running.
+    fn next_request(&self, project: &str) -> Option<String> {
+        self.with_requests(project, |store| {
+            store
+                .list
+                .iter()
+                .filter(|r| r.status.active())
+                .min_by(|a, b| a.at.cmp(&b.at))
+                .map(|r| r.id.clone())
+        })
+    }
+
+    fn drain_requests(&self, project: &str) {
         let ran = catch_unwind(AssertUnwindSafe(|| {
             while !self.requests_halted() {
-                let Some((project, id)) = self.next_request() else {
+                let Some(id) = self.next_request(project) else {
                     return;
                 };
-                self.process_request(&project, &id);
+                self.process_request(project, &id);
             }
         }));
-        locked(&self.requests.state).looping = false;
-        if ran.is_ok() && !self.requests_halted() && self.next_request().is_some() {
-            self.kick_requests();
+        locked(&self.requests.state).looping.remove(project);
+        if ran.is_err() {
+            self.deps.notifier.problem(&format!(
+                "{project}: the worktree request worker stopped on a panic; it starts again on the next request"
+            ));
+            return;
+        }
+        if !self.requests_halted() && self.next_request(project).is_some() {
+            self.kick_requests(project);
         }
     }
 
-    /// Start the worker unless it runs, or the service is stopped.
-    pub(crate) fn kick_requests(&self) {
+    /// Start the project's worker unless it runs, or the service is stopped.
+    pub(crate) fn kick_requests(&self, project: &str) {
         {
             let mut state = locked(&self.requests.state);
-            if state.halted || state.looping {
+            if state.halted || !state.looping.insert(project.to_string()) {
                 return;
             }
-            state.looping = true;
         }
-        let service = self.clone();
-        self.requests
-            .queue
-            .push(Box::new(move || service.drain_requests()));
+        let (service, key) = (self.clone(), project.to_string());
+        self.worker_of(project)
+            .push(Box::new(move || service.drain_requests(&key)));
     }
 
     /// A restart: what was queued or running is queued again; the finished ones that were never told are told.
@@ -86,33 +79,37 @@ impl Service {
             }
             state.halted = false;
         }
-        let mut any = false;
-        let mut untold: Vec<(String, String)> = Vec::new();
         for project in self.deps.store.projects() {
-            self.with_requests(&project, |store| {
-                for rec in &mut store.list {
-                    if rec.status == RequestStatus::Running {
-                        rec.status = RequestStatus::Queued;
-                    }
-                    if rec.status.active() {
-                        any = true;
-                    } else if !rec.notified && rec.finished_at.is_some() {
-                        untold.push((project.clone(), rec.id.clone()));
-                    }
-                }
-            });
+            self.resume_requests(&project);
         }
+    }
+
+    /// One project's part of a restart.
+    fn resume_requests(&self, project: &str) {
+        let mut any = false;
+        let mut untold: Vec<String> = Vec::new();
+        self.with_requests(project, |store| {
+            for rec in &mut store.list {
+                if rec.status == RequestStatus::Running {
+                    rec.status = RequestStatus::Queued;
+                }
+                if rec.status.active() {
+                    any = true;
+                } else if !rec.notified && rec.finished_at.is_some() {
+                    untold.push(rec.id.clone());
+                }
+            }
+        });
         if !self.opts.run_requests {
             return;
         }
         if any {
-            self.kick_requests();
+            self.kick_requests(project);
         }
-        for (project, id) in untold {
-            let service = self.clone();
-            self.requests
-                .queue
-                .push(Box::new(move || service.deliver_request(&project, &id)));
+        for id in untold {
+            let (service, key) = (self.clone(), project.to_string());
+            self.worker_of(project)
+                .push(Box::new(move || service.deliver_request(&key, &id)));
         }
     }
 

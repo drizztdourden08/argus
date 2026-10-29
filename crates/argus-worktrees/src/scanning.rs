@@ -7,7 +7,9 @@ use crate::inspect::{ScanCtx, inspect_dir};
 use crate::measure::{Leftover, measure_folder};
 use crate::paths::path_key;
 use crate::rule::{Rule, RuleKind};
-use crate::scan::{DeletingFolder, ScanEnv, folder_candidates, mark_leftover, scan_rules};
+use crate::scan::{
+    DeletingFolder, RuleInfo, ScanEnv, folder_candidates, mark_leftover, scan_rules,
+};
 use crate::service::{Measured, ScanState, Service};
 use std::collections::HashSet;
 use std::time::Instant;
@@ -113,6 +115,7 @@ impl Service {
             }
         };
         let clean = scan.error.is_none();
+        self.log_scan_failures(project, &scan.rules);
         self.st().scans.insert(project.to_string(), scan);
         if self.stopped() {
             return None;
@@ -123,6 +126,30 @@ impl Service {
             self.prune_made(project);
         }
         self.derive(project)
+    }
+
+    /// One log line for each rule whose scan failed, when it did not fail the same way at the last scan.
+    fn log_scan_failures(&self, project: &str, rules: &[RuleInfo]) {
+        let before: Vec<RuleInfo> = self
+            .st()
+            .scans
+            .get(project)
+            .map(|s| s.rules.clone())
+            .unwrap_or_default();
+        for rule in rules {
+            let Some(error) = &rule.error else {
+                continue;
+            };
+            let same = before
+                .iter()
+                .any(|b| b.id == rule.id && b.error.as_ref() == Some(error));
+            if !same {
+                self.deps.notifier.problem(&format!(
+                    "{project}: the worktree scan of rule {} failed: {error}",
+                    rule.id
+                ));
+            }
+        }
     }
 
     /// Scan every project, one after another.

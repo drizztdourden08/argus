@@ -171,11 +171,15 @@ impl Service {
             Ok(false) => return,
             Ok(true) => {}
             Err(err) => {
+                let text = format!("the request could not run: {}", sentence_of(&err));
+                self.deps
+                    .notifier
+                    .problem(&format!("{project}: worktree request {id}: {text}"));
                 let failed = Outcome {
                     id: String::new(),
                     label: String::new(),
                     ok: false,
-                    text: format!("the request could not run: {}", sentence_of(&err)),
+                    text,
                     code: None,
                 };
                 self.update_request(project, id, |rec| rec.results.push(failed));

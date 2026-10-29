@@ -88,13 +88,18 @@ impl Service {
         Store::parse(&text)
     }
 
-    /// Cut the list and write it down. A failed write is not fatal: the next save writes again.
+    /// Cut the list and write it down. A failed write is not fatal (the next save writes again), only logged.
     pub(crate) fn save_requests(&self, project: &str) {
-        self.with_requests(project, |store| {
+        let written = self.with_requests(project, |store| {
             store.cut();
             let text = serde_json::to_string(store).unwrap_or_default();
-            let _ = self.deps.store.kv_set(&requests_key(project), &text);
+            self.deps.store.kv_set(&requests_key(project), &text)
         });
+        if let Err(err) = written {
+            self.deps.notifier.problem(&format!(
+                "{project}: the worktree requests were not saved: {err}"
+            ));
+        }
     }
 
     /// Change one request, found by id.
@@ -131,9 +136,17 @@ impl Service {
         })
     }
 
-    /// Block until the worker has run what was queued, and told what it finished.
+    /// Block until every worker has run what was queued, and told what it finished.
     pub fn requests_idle(&self) {
-        self.requests.queue.wait_idle();
+        loop {
+            let workers = self.workers();
+            for worker in &workers {
+                worker.wait_idle();
+            }
+            if self.workers().len() == workers.len() {
+                return;
+            }
+        }
     }
 }
 

@@ -243,7 +243,7 @@ impl Service {
             request: rec.brief(),
         };
         if self.opts.run_requests {
-            self.kick_requests();
+            self.kick_requests(&input.project);
         }
         Ok(answer)
     }

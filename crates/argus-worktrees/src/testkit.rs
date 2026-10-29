@@ -350,9 +350,10 @@ impl Fixture {
     }
 }
 
-/// What a store keeps for the tests: one project, `alpha`.
+/// What a store keeps for the tests: one project, `alpha`, unless a test adds more that share its board.
 pub struct MemStore {
     pub board: Mutex<BoardFacts>,
+    pub projects: Mutex<Vec<String>>,
     pub kv: Mutex<HashMap<String, String>>,
     pub dropped: Mutex<Vec<(Vec<String>, Vec<String>)>>,
     /// The notes posted to inboxes: thread and text.
@@ -363,6 +364,7 @@ impl MemStore {
     pub fn new(board: BoardFacts) -> Self {
         Self {
             board: Mutex::new(board),
+            projects: Mutex::new(vec!["alpha".to_string()]),
             kv: Mutex::new(HashMap::new()),
             dropped: Mutex::new(Vec::new()),
             inbox: Mutex::new(Vec::new()),
@@ -372,11 +374,14 @@ impl MemStore {
 
 impl WorktreeStore for MemStore {
     fn board(&self, project: &str) -> Option<BoardFacts> {
-        (project == "alpha").then(|| locked(&self.board).clone())
+        locked(&self.projects)
+            .iter()
+            .any(|p| p == project)
+            .then(|| locked(&self.board).clone())
     }
 
     fn projects(&self) -> Vec<String> {
-        vec!["alpha".to_string()]
+        locked(&self.projects).clone()
     }
 
     fn kv_get(&self, key: &str) -> Option<String> {
@@ -420,6 +425,8 @@ pub struct Recorder {
     pub lines: Mutex<Vec<ActivityLine>>,
     pub wakes: Mutex<Vec<WakeEvent>>,
     pub refuse_wakes: AtomicBool,
+    /// The failures said for the server's log.
+    pub problems: Mutex<Vec<String>>,
 }
 
 impl Notifier for Recorder {
@@ -433,6 +440,10 @@ impl Notifier for Recorder {
         }
         locked(&self.wakes).extend(events.iter().cloned());
         Ok(())
+    }
+
+    fn problem(&self, text: &str) {
+        locked(&self.problems).push(text.to_string());
     }
 }
 
@@ -513,6 +524,8 @@ pub struct HookFs {
     /// Listing a folder whose path contains this text fails like a folder without the right to read it.
     pub unreadable_containing: Mutex<Option<String>>,
     pub gate: Mutex<Option<Arc<Gate>>>,
+    /// The gate holds only the paths that contain this text (every path when unset).
+    pub gate_on: Mutex<Option<String>>,
 }
 
 impl HookFs {
@@ -522,8 +535,11 @@ impl HookFs {
             .then(|| io::Error::from(io::ErrorKind::ResourceBusy))
     }
 
-    fn wait_at_gate(&self) {
-        let gate = locked(&self.gate).clone();
+    fn wait_at_gate(&self, path: &str) {
+        let held = locked(&self.gate_on)
+            .as_ref()
+            .is_none_or(|needle| path.contains(needle));
+        let gate = locked(&self.gate).clone().filter(|_| held);
         if let Some(gate) = gate {
             gate.wait();
         }
@@ -567,7 +583,7 @@ impl Fs for HookFs {
     }
 
     fn remove_file(&self, path: &str) -> io::Result<()> {
-        self.wait_at_gate();
+        self.wait_at_gate(path);
         if let Some(kind) = *locked(&self.fail_unlink) {
             return Err(io::Error::from(kind));
         }

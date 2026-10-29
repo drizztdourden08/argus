@@ -31,11 +31,16 @@ fn scan(svc: &Services, service: &WorktreeService, key: &str) {
     }
 }
 
-/// Runs `work` on a thread that may block. A panic in a scan is the scanner's: the next tick
-/// looks again.
+/// Runs `work` on a thread that may block. A panic in a scan is the scanner's: one log line, and
+/// the next tick looks again.
 async fn blocking(svc: &Arc<Services>, work: impl FnOnce(&Services) + Send + 'static) {
-    let svc = Arc::clone(svc);
-    let _ = tokio::task::spawn_blocking(move || work(&svc)).await;
+    let held = Arc::clone(svc);
+    if let Err(err) = tokio::task::spawn_blocking(move || work(&held)).await {
+        svc.log.error(
+            "worktree scan failed",
+            json!({ "err": format!("the scanner stopped on a panic: {err}") }),
+        );
+    }
 }
 
 async fn scan_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {

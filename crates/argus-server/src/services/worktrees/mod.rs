@@ -81,7 +81,11 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
     let fs: Arc<dyn Fs> = Arc::new(RealFs);
     Deps {
         store: Arc::new(store),
-        notifier: Arc::new(TreeNotifier::new(ActivityAdapter::of(svc), svc.wake_hook())),
+        notifier: Arc::new(TreeNotifier::new(
+            ActivityAdapter::of(svc),
+            svc.wake_hook(),
+            Arc::clone(&svc.log),
+        )),
         fs,
         git: git_of(svc, opts),
         gh,

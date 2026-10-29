@@ -49,6 +49,8 @@ pub trait Notifier: Send + Sync {
     fn activity(&self, line: ActivityLine);
     /// Queue wakes. An error means the queue refused them: they are not remembered as told.
     fn wake(&self, events: &[WakeEvent]) -> Result<(), String>;
+    /// A failure of the scanner or of a request worker, for the server's log.
+    fn problem(&self, text: &str);
 }
 
 /// A running process, as far as a removal cares.

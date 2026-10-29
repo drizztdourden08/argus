@@ -9,6 +9,7 @@ use crate::board::{Caller, OwnerEntry};
 use crate::clock::Clock;
 use crate::clock::SystemClock;
 use crate::error::ErrorCode;
+use crate::jobs::JobState;
 use crate::paths::worktree_id;
 use crate::request::RemoveInput;
 use crate::requests::{
@@ -16,10 +17,12 @@ use crate::requests::{
 };
 use crate::sync::locked;
 use crate::testkit::{
-    Fixture, Harness, RemoveMode, backdate, backdate_index, branches, commit, exists_itself,
+    Fixture, Gate, Harness, RemoveMode, backdate, backdate_index, branches, commit, exists_itself,
     git_in, owner_now, put, started,
 };
 use serde_json::{Value, json};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 fn lead() -> Caller {
     Caller::Thread("lead".into())
@@ -829,4 +832,56 @@ fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_ch
         1,
         "refused asks store nothing"
     );
+}
+
+/// Waits up to a minute for `done`.
+fn within_a_minute(what: &str, done: impl Fn() -> bool) {
+    let deadline = Instant::now() + Duration::from_secs(60);
+    while !done() {
+        assert!(Instant::now() < deadline, "{what}");
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+/// The live bug of 2026-10-29: Brock's 88 leftovers (10 minutes each) held Tessera's request for hours. Each project has
+/// its own worker now: while alpha's deletion is held, beta's request by path (beta was never scanned) is done.
+#[test]
+fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another() {
+    let (fx, h) = world();
+    let slow = leftover_of(&fx, "left-slow", 3.0);
+    h.scan();
+    let gate = Arc::new(Gate::default());
+    *locked(&h.fs.gate) = Some(gate.clone());
+    *locked(&h.fs.gate_on) = Some("left-slow".to_string());
+    let held = ask_lead(&h, &[&slow]);
+    within_a_minute("alpha's deletion is running", || {
+        h.svc
+            .jobs("alpha")
+            .iter()
+            .any(|j| j.state == JobState::Running)
+    });
+    locked(&h.store.projects).push("beta".to_string());
+    let mut input = RequestInput::new("beta", lead());
+    input.targets = vec![fx.path("old-merged")];
+    h.svc.request(&input).unwrap();
+    within_a_minute("beta's request is done while alpha's waits", || {
+        h.svc
+            .request_list("beta")
+            .first()
+            .is_some_and(|r| r.status == RequestStatus::Done)
+    });
+    assert!(!exists_itself(&fx.path("old-merged")));
+    assert_eq!(
+        h.svc.request_list("alpha")[0].status,
+        RequestStatus::Running
+    );
+    gate.open();
+    let alpha = only(&h).remove(0);
+    assert_eq!(
+        (alpha.id, alpha.status),
+        (held.id, RequestStatus::Done),
+        "{:?}",
+        alpha.results
+    );
+    assert!(locked(&h.notes.problems).is_empty());
 }
