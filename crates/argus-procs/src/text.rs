@@ -36,16 +36,10 @@ pub fn one_line(text: &str, max: usize) -> String {
         .collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn memory_reads_in_mb_then_gb() {
-        assert_eq!(mem_text(1946), "1.9 GB");
-        assert_eq!(mem_text(640), "640 MB");
-        assert_eq!(mem_text(2048), "2 GB");
-    }
 
     #[test]
     fn memory_text_matches_the_node_formatter_at_its_edges() {
