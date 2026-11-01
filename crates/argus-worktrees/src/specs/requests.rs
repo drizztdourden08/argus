@@ -6,7 +6,7 @@
 //! the page is refused, a restart goes on with what was queued), then the happy paths (named targets with a branch,
 //! `finished`, all leftovers) with the inbox note, the wake, the activity line and the summary of the project.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::board::{Caller, OwnerEntry};
 use crate::clock::{Clock, SystemClock};
@@ -93,7 +93,6 @@ fn activity(h: &Harness, kind: &str) -> Vec<(String, String)> {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn uncommitted_work_and_unmerged_detached_commits_are_refused_with_the_removals_own_sentence_and_the_lead_is_told()
  {
     let (fx, h) = world();
@@ -145,7 +144,6 @@ fn uncommitted_work_and_unmerged_detached_commits_are_refused_with_the_removals_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn discard_needs_the_owners_page_entry_exactly_as_remove_does_and_with_it_the_work_is_backed_up_and_removed()
  {
     let (fx, h) = world();
@@ -207,7 +205,6 @@ fn discard_needs_the_owners_page_entry_exactly_as_remove_does_and_with_it_the_wo
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_young_leftover_keeps_the_age_limit_through_a_request_all_leftovers_skips_young_ones_and_says_so_and_6_hours_needs_a_reason()
  {
     let (fx, h) = world();
@@ -268,7 +265,6 @@ fn leftover_of(fx: &Fixture, name: &str, days: f64) -> String {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_stranger_a_thread_that_is_not_the_lead_or_the_rules_an_ended_thread_and_the_page_are_refused_and_nothing_is_stored()
  {
     let (fx, h) = world();
@@ -320,7 +316,6 @@ fn refused_shape(h: &Harness, change: &dyn Fn(&mut RequestInput), said: &str) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_shape_of_a_request_is_checked_at_once_one_kind_of_ask_no_discard_for_finished_older_than_only_with_all_leftovers()
  {
     let (_fx, h) = world();
@@ -424,7 +419,6 @@ fn restart_of(h: &Harness, fx: &Fixture) -> Harness {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_restart_resumes_a_queued_request_and_a_running_one_from_the_target_it_had_not_finished_and_tells_a_finished_one_never_told()
  {
     let (fx, h) = started(|fx| {
@@ -489,7 +483,6 @@ fn a_restart_resumes_a_queued_request_and_a_running_one_from_the_target_it_had_n
 }
 
 #[test]
-#[ignore = "e2e"]
 fn one_request_at_a_time_oldest_first_and_the_list_keeps_the_last_100() {
     let (fx, h) = world();
     let first = ask_lead(&h, &[&id(&h, &fx, "old-merged")]);
@@ -574,7 +567,6 @@ fn assert_told(h: &Harness) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn named_worktrees_with_branch_a_merged_clean_one_goes_with_its_branch_and_the_note_the_wake_the_activity_line_and_the_summary_follow()
  {
     let (fx, h) = world();
@@ -614,7 +606,6 @@ fn named_worktrees_with_branch_a_merged_clean_one_goes_with_its_branch_and_the_n
 }
 
 #[test]
-#[ignore = "e2e"]
 fn finished_merged_and_stale_clean_worktrees_go_the_guards_still_refuse_the_unsafe_one_active_and_dirty_ones_are_not_even_tried()
  {
     let (fx, h) = world();
@@ -656,7 +647,6 @@ fn finished_merged_and_stale_clean_worktrees_go_the_guards_still_refuse_the_unsa
 }
 
 #[test]
-#[ignore = "e2e"]
 fn finished_with_nothing_finished_says_so() {
     let (fx, h) = started(|fx| {
         detached(fx);
@@ -684,7 +674,6 @@ fn finished_with_nothing_finished_says_so() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_request_made_before_the_service_starts_waits_for_the_start() {
     let (_fx, h) = started(|_| {});
     let queued = ask_lead(&h, &["ffffffffff"]);
@@ -733,7 +722,6 @@ fn ask_idle(h: &Harness, minutes: f64) -> Queued {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn finished_idle_also_takes_a_clean_worktree_with_nothing_ahead_older_than_d_and_never_a_younger_dirty_or_unmerged_one()
  {
     let (fx, h) = started(idle_prep);
@@ -772,7 +760,6 @@ fn finished_idle_also_takes_a_clean_worktree_with_nothing_ahead_older_than_d_and
 }
 
 #[test]
-#[ignore = "e2e"]
 fn finished_idle_the_age_is_the_cut_90_minutes_takes_the_2_day_one_6_hours_leaves_the_one_touched_now()
  {
     let (fx, h) = started(idle_prep);
@@ -810,7 +797,6 @@ fn finished_idle_the_age_is_the_cut_90_minutes_takes_the_2_day_one_6_hours_leave
 }
 
 #[test]
-#[ignore = "e2e"]
 fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_checked_at_once() {
     let (fx, h) = started(idle_prep);
     h.svc.start();
@@ -853,7 +839,6 @@ fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_ch
 /// The live bug of 2026-10-29: Brock's 88 leftovers (10 minutes each) held Tessera's request for hours. Each project has
 /// its own worker now: while alpha's deletion is held, beta's request by path (beta was never scanned) is done.
 #[test]
-#[ignore = "e2e"]
 fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another() {
     let (fx, h) = world();
     let slow = leftover_of(&fx, "left-slow", 3.0);

@@ -2,7 +2,7 @@
 //! Leftover folders: finding them in a scan, every guard of their deletion, the rename-then-delete job, the batch, the
 //! folders a crash left half deleted.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -11,7 +11,6 @@ use crate::doc::{Status, WorktreeDoc};
 use crate::error::ErrorCode;
 use crate::fact::Fact;
 use crate::fs::RealFs;
-use crate::git::Git;
 use crate::jobs::JobState;
 use crate::paths::{base_name, path_key};
 use crate::ports::ProcInfo;
@@ -34,9 +33,8 @@ fn facts_by_name(facts: &[Fact]) -> HashMap<String, &Fact> {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list_is_a_leftover() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let orphan = fx.path("orphan");
     git_in(
         &fx.repo,
@@ -45,7 +43,7 @@ fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list
     );
     fs::remove_file(format!("{orphan}/.git")).unwrap();
     let ci = cfg!(windows);
-    let git = Git::system();
+    let git = fx.door();
     let env = ScanEnv {
         git: &git,
         fs: &RealFs,
@@ -69,7 +67,7 @@ fn lo_with(
     extra: impl FnOnce(&Fixture),
     options: impl FnOnce(&mut Options),
 ) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     for (name, _) in spec {
         put(&fx.wts, &format!("{name}/a.txt"), "hello\n");
     }
@@ -113,7 +111,6 @@ fn rows_setup() -> (Harness, TempDir) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_leftover_row_carries_size_files_age_top_entries_and_flags() {
     let (h, _outside) = rows_setup();
     let d = h.docs();
@@ -137,7 +134,6 @@ fn a_leftover_row_carries_size_files_age_top_entries_and_flags() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_summary_counts_git_worktrees_and_leftovers_apart() {
     let (h, _outside) = rows_setup();
     let d = h.docs();
@@ -172,7 +168,6 @@ fn the_summary_counts_git_worktrees_and_leftovers_apart() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn another_thread_and_an_ended_one_are_refused_the_lead_and_the_rules_thread_may() {
     let (fx, h) = lo(&["junk-old"], |_| {});
     let target = id(&h, &fx, "junk-old");
@@ -208,7 +203,6 @@ fn another_thread_and_an_ended_one_are_refused_the_lead_and_the_rules_thread_may
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_leftover_has_no_branch_and_no_discard_a_400_with_the_reason_and_no_backup_is_promised() {
     let (fx, h) = lo(&["junk-flags"], |_| {});
     let target = id(&h, &fx, "junk-flags");
@@ -224,7 +218,6 @@ fn a_leftover_has_no_branch_and_no_discard_a_400_with_the_reason_and_no_backup_i
 }
 
 #[test]
-#[ignore = "e2e"]
 fn outside_the_rules_the_rule_folder_changed_or_a_rule_whose_folder_it_is() {
     let (fx, h) = lo(&["junk-x"], |_| {});
     let target = id(&h, &fx, "junk-x");
@@ -249,7 +242,6 @@ fn outside_the_rules_the_rule_folder_changed_or_a_rule_whose_folder_it_is() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_git_of_its_own_now_or_git_listing_it_again_is_a_409_and_nothing_is_deleted() {
     let (fx, h) = lo(&["junk-gitnow"], |fx| {
         fs::create_dir_all(fx.path("junk-listed")).unwrap();
@@ -283,7 +275,6 @@ fn a_git_of_its_own_now_or_git_listing_it_again_is_a_409_and_nothing_is_deleted(
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_nested_repository_is_refused_with_its_name_for_a_thread_and_the_page_and_a_link_too() {
     let outside = tempdir().unwrap();
     let (fx, h) = lo(&["junk-nested"], |fx| {
@@ -326,7 +317,6 @@ fn node_on(path: &str, pid: u32) -> ProcInfo {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_live_process_in_the_folder_is_a_423_the_requester_is_not_a_user_then_the_deletion_starts() {
     let (fx, h) = lo(&["junk-proc"], |_| {});
     let (path, target) = (fx.path("junk-proc"), id(&h, &fx, "junk-proc"));
@@ -354,7 +344,6 @@ fn a_live_process_in_the_folder_is_a_423_the_requester_is_not_a_user_then_the_de
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_young_folder_a_thread_is_refused_the_page_is_refused_until_it_confirms_then_it_starts() {
     let (fx, h) = lo_with(&[("junk-young", 0.0)], |_| {}, |_| {});
     let target = id(&h, &fx, "junk-young");
@@ -383,7 +372,6 @@ fn a_young_folder_a_thread_is_refused_the_page_is_refused_until_it_confirms_then
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_token_a_wrong_newest_change_is_a_409_and_a_file_written_since_the_listing_is_a_409_even_for_the_page()
  {
     let (fx, h) = lo(&["junk-token"], |_| {});
@@ -417,7 +405,6 @@ fn the_token_a_wrong_newest_change_is_a_409_and_a_file_written_since_the_listing
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_rename_is_refused_a_423_nothing_deleted_no_job_and_the_row_stays() {
     let (fx, h) = lo(&["junk-lock"], |_| {});
     *h.fs.rename_error.lock().unwrap() = Some(std::io::ErrorKind::ResourceBusy);
@@ -469,7 +456,6 @@ fn start_gated(g: &Gated) -> crate::request::RemoveOutcome {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_job_answers_at_once_with_the_renamed_folder_and_what_it_will_delete() {
     let g = gated_job();
     let out = start_gated(&g);
@@ -493,7 +479,6 @@ fn the_job_answers_at_once_with_the_renamed_folder_and_what_it_will_delete() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_row_shows_the_deletion_while_the_job_runs_and_the_name_is_free_at_once() {
     let g = gated_job();
     let out = start_gated(&g);
@@ -518,7 +503,6 @@ fn the_row_shows_the_deletion_while_the_job_runs_and_the_name_is_free_at_once() 
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_second_request_for_a_folder_being_deleted_is_refused() {
     let g = gated_job();
     let target = id(&g.h, &g.fx, "junk-inner-link");
@@ -535,7 +519,6 @@ fn a_second_request_for_a_folder_being_deleted_is_refused() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_junction_inside_is_never_followed_and_the_row_the_folder_and_the_lines_end_well() {
     let g = gated_job();
     g.gate.open();
@@ -580,7 +563,6 @@ fn a_junction_inside_is_never_followed_and_the_row_the_folder_and_the_lines_end_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_failed_entry_fails_the_job_the_renamed_folder_stays_and_an_error_line_says_why() {
     let (fx, h) = lo(&["junk-fail"], |fx| {
         put(&fx.wts, "junk-fail/build/out.bin", "x");
@@ -618,7 +600,6 @@ fn a_failed_entry_fails_the_job_the_renamed_folder_stays_and_an_error_line_says_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_id_that_is_not_in_the_last_scan_is_a_404() {
     let (_fx, h) = lo(&["junk-x"], |_| {});
     assert_eq!(h.refused("ffffffffff", |_| {}).code, ErrorCode::NotFound);
@@ -683,7 +664,6 @@ fn cleanup_batch(h: &Harness) -> crate::batch::BatchOutcome {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_thread_that_is_neither_lead_nor_rule_thread_is_refused_as_a_whole() {
     let (_fx, h) = batch_setup();
     let bad = batch(&h, Caller::Thread("other".into()), |_| {}).unwrap_err();
@@ -691,7 +671,6 @@ fn a_thread_that_is_neither_lead_nor_rule_thread_is_refused_as_a_whole() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_rules_thread_queues_the_old_ones_and_is_told_what_was_skipped_and_why() {
     let (_fx, h) = batch_setup();
     let out = cleanup_batch(&h);
@@ -724,7 +703,6 @@ fn the_rules_thread_queues_the_old_ones_and_is_told_what_was_skipped_and_why() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_old_ones_are_gone_after_the_batch_the_others_stay_and_the_lines_say_so() {
     let (fx, h) = batch_setup();
     cleanup_batch(&h);
@@ -746,7 +724,6 @@ fn page_batch(h: &Harness, change: impl FnOnce(&mut BatchInput)) -> crate::batch
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_page_may_go_younger_but_a_young_folder_is_refused_at_its_turn_without_the_confirm() {
     let (fx, h) = batch_setup();
     cleanup_batch(&h);
@@ -782,7 +759,6 @@ fn the_page_may_go_younger_but_a_young_folder_is_refused_at_its_turn_without_the
 }
 
 #[test]
-#[ignore = "e2e"]
 fn ids_pick_folders_the_confirm_lets_a_young_one_go_and_a_nested_repository_never_goes() {
     let (fx, h) = batch_setup();
     let ids = vec![
@@ -812,7 +788,6 @@ fn ids_pick_folders_the_confirm_lets_a_young_one_go_and_a_nested_repository_neve
 }
 
 #[test]
-#[ignore = "e2e"]
 fn nothing_to_delete_says_so_in_the_activity_log() {
     let (_fx, h) = batch_setup();
     page_batch(&h, |i| {
@@ -839,7 +814,6 @@ fn sibling_names(wts: &str) -> Vec<String> {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_folder_a_crash_left_half_deleted_is_finished_at_the_next_start_once_other_names_and_places_are_left()
  {
     let (fx, h) = lo_with(
@@ -896,7 +870,6 @@ fn a_folder_a_crash_left_half_deleted_is_finished_at_the_next_start_once_other_n
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_scan_with_no_time_left_to_measure_shows_the_leftovers_as_pending_and_a_batch_skips_them() {
     let (_fx, h) = lo_with(&[("old", 9.0)], |_| {}, |o| o.budget_ms = 0);
     let row = &h.docs()["old"];
@@ -917,7 +890,6 @@ fn a_scan_with_no_time_left_to_measure_shows_the_leftovers_as_pending_and_a_batc
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_leads_wake_counts_folders_once_and_not_again_before_repeat_ms() {
     let (_fx, h) = lo_with(
         &[],

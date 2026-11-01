@@ -2,8 +2,9 @@
 //! `worktrees.service`, `worktrees.leftover`, `worktrees.remove`, `worktrees.rules`, `worktrees.safety`,
 //! `worktrees.fallback`). They run on temporary folders and repositories the tests create.
 //!
-//! Every file carries one `test-tag` line. The `critical` and `standard` files run on temporary folders and in-memory
-//! facts. The `e2e` files run the real git through the service harness and are ignored by a plain `cargo test`.
+//! Every file carries one `test-tag` line. The `critical` and `standard` files run on temporary folders, in-memory facts
+//! and the fake git (`crate::fakegit`, through `testkit::Fixture::fake`). The `e2e` files run the real git through the
+//! service harness and are ignored by a plain `cargo test`.
 
 mod exec_real;
 mod fallback;
@@ -14,6 +15,7 @@ mod links;
 mod links_fs;
 mod probe;
 mod remove;
+mod remove_real;
 mod request_kit;
 mod requests;
 mod review;

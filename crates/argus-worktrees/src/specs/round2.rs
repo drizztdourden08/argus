@@ -2,7 +2,7 @@
 //! Worktree safety round 2 (Node 62e66c7): a prune forgets only vetted records, a merged pull request needs its head, a
 //! nested repository is unsafe and copied into the backup, and a git status that failed is unknown, never clean.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::board::Caller;
 use crate::error::{ErrorCode, WtError};
@@ -22,7 +22,6 @@ fn prune_all_refused(h: &Harness) -> WtError {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_prunable_record_no_rule_vetted_stops_the_prune_by_id_and_for_all_nothing_pruned() {
     let (fx, h) = started(unplugged(true));
     let before = records(&fx);
@@ -48,7 +47,6 @@ fn a_prunable_record_no_rule_vetted_stops_the_prune_by_id_and_for_all_nothing_pr
 }
 
 #[test]
-#[ignore = "e2e"]
 fn with_only_vetted_records_the_prune_still_works() {
     let (fx, h) = started(|_| {});
     let out = h.svc.prune(&prune_request()).unwrap();
@@ -64,7 +62,6 @@ fn gone_loose(fx: &Fixture) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_gone_worktree_on_a_detached_head_no_ref_keeps_needs_discard_and_the_owners_say_by_id_and_for_all()
  {
     let (fx, h) = started(gone_loose);
@@ -129,7 +126,6 @@ fn discard_as_page(h: &Harness, fx: &Fixture, target: &str) -> RemoveOutcome {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_ignored_nested_repository_is_refused_without_discard_then_removed_with_the_pages_say_and_copied()
  {
     let (fx, h, target, err) = refused_for_nested(nested_at("vendor/lib"), "vendor/lib");
@@ -145,7 +141,6 @@ fn an_ignored_nested_repository_is_refused_without_discard_then_removed_with_the
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_folder_too_big_to_check_for_nested_repositories_is_unsafe_like_one_and_the_backup_lists_it() {
     let (fx, h) = started(|fx| {
         for n in 0..=3000 {
@@ -168,7 +163,6 @@ fn a_folder_too_big_to_check_for_nested_repositories_is_unsafe_like_one_and_the_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_folder_the_walk_cannot_read_refuses_the_removal_even_with_discard() {
     let (fx, h) = started(nested_at("vendor/lib"));
     let target = id(&h, &fx, "old-merged");
@@ -188,7 +182,6 @@ fn a_folder_the_walk_cannot_read_refuses_the_removal_even_with_discard() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn three_levels_down_still_counts_and_a_thread_needs_the_owners_entry() {
     let (fx, h) = started(nested_at("deep/a/b"));
     let err = h.refused(&id(&h, &fx, "old-merged"), |i| i.discard = true);
@@ -201,7 +194,6 @@ fn three_levels_down_still_counts_and_a_thread_needs_the_owners_entry() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn without_any_nested_repository_a_clean_merged_worktree_goes_with_no_backup() {
     let (fx, h) = started(|_| {});
     let out = h.rm(&id(&h, &fx, "old-merged")).unwrap();
@@ -209,7 +201,6 @@ fn without_any_nested_repository_a_clean_merged_worktree_goes_with_no_backup() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_failed_git_status_is_unknown_never_clean_the_removal_is_refused_and_the_folder_stays() {
     let (fx, h) = started(|_| {});
     *h.exec.fail_status.lock().unwrap() = true;
@@ -227,7 +218,6 @@ fn a_failed_git_status_is_unknown_never_clean_the_removal_is_refused_and_the_fol
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_merged_pull_request_whose_head_is_not_a_commit_id_proves_nothing() {
     pull_request_answer_keeps_branch("[{\"number\":7,\"headRefOid\":\"--oops\"}]");
 }

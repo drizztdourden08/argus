@@ -9,13 +9,13 @@ number: only the KEEP and WIPE rules decided. The verdict tables, per file, are 
 
 | | Rust before | Rust after | web before | web after |
 |---|---|---|---|---|
-| cases | 2128 | 1995 | 1036 | 759 |
-| tagged critical | 0 | 1172 | 0 | 281 |
-| tagged standard | 0 | 446 | 0 | 478 |
-| tagged e2e | 0 | 377 | 0 | 0 |
+| cases | 2128 | 2000 | 1036 | 759 |
+| tagged critical | 0 | 1173 | 0 | 281 |
+| tagged standard | 0 | 620 | 0 | 478 |
+| tagged e2e | 0 | 207 | 0 | 0 |
 | untagged | 2128 | 0 | 1036 | 0 |
 
-`node scripts/rust-tests.mjs --check-tags` finds 338 Rust files with tests and none without exactly one tag.
+`node scripts/rust-tests.mjs --check-tags` finds 339 Rust files with tests and none without exactly one tag.
 
 ## Parts
 
@@ -23,7 +23,7 @@ number: only the KEEP and WIPE rules decided. The verdict tables, per file, are 
 |---|---|---|---|---|
 | rust-coord | argus-coord, argus-board, argus-core | 537 | 499 | [rust-coord.md](test-cleanup/rust-coord.md) |
 | rust-server | argus-server, argus, argus-mcp | 504 | 460 | [rust-server.md](test-cleanup/rust-server.md) |
-| rust-worktrees-wake | argus-worktrees, argus-wake | 478 | 463 | [rust-worktrees-wake.md](test-cleanup/rust-worktrees-wake.md) |
+| rust-worktrees-wake | argus-worktrees, argus-wake | 478 | 468 | [rust-worktrees-wake.md](test-cleanup/rust-worktrees-wake.md) |
 | rust-other | the other 11 crates | 609 | 573 | [rust-other.md](test-cleanup/rust-other.md) |
 | web | apps/web | 1036 | 759 | [web.md](test-cleanup/web.md) |
 
@@ -43,5 +43,7 @@ Each item below is on the Argus board, on hold until the Overlord's signal.
 
 - I-54: the wake-fault clear refusal (K4) cases of argus-coord were deleted for W7 (they polled the real wake
   tick for 10 s). They come back once the test kit can tick the wake engine by hand.
-- I-53: 213 argus-worktrees cases, the removal and refusal ones among them (K3, K4), are e2e because the
-  fixture uses real git. A git fake would let them run as standard.
+- I-53 (done in part): a fake git (`crates/argus-worktrees/src/fakegit`) now answers the git commands of the
+  worktrees specs, so 170 of the 213 argus-worktrees cases, the removal, refusal, hygiene and request ones (K3,
+  K4) among them, run as standard. 43 stay e2e on the real git, with the reason per file in
+  [rust-worktrees-wake.md](test-cleanup/rust-worktrees-wake.md).
