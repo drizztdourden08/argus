@@ -18,6 +18,7 @@ use crate::queue::Queue;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
+use crate::turns::{Turn, Turns};
 use argus_core::remote::ModeSource;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
@@ -53,6 +54,9 @@ pub struct Options {
     pub release_grace_ms: i64,
     /// A newly released worktree is told once nothing new was released for this long, so a burst makes one wake.
     pub release_debounce_ms: i64,
+    /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
+    /// than the longest git removal, 15 minutes, and a scan before it).
+    pub target_limit_ms: i64,
 }
 
 impl Default for Options {
@@ -77,6 +81,7 @@ impl Default for Options {
             release: true,
             release_grace_ms: 3_600_000,
             release_debounce_ms: 30_000,
+            target_limit_ms: 30 * 60_000,
         }
     }
 }
@@ -129,6 +134,8 @@ pub struct State {
     pub gh_cache: HashMap<String, GhCached>,
     pub proc_cache: Option<(i64, Vec<ProcInfo>)>,
     pub rescans: BTreeSet<String>,
+    /// What each running removal does now, by worktree id.
+    pub steps: HashMap<String, crate::progress::Step>,
     pub stopped: bool,
 }
 
@@ -136,7 +143,7 @@ pub struct Inner {
     pub deps: Deps,
     pub opts: Options,
     pub state: Mutex<State>,
-    pub exclusive: Mutex<()>,
+    pub exclusive: Turns,
     pub queue: Queue,
     pub requests: Requests,
     pub(crate) hygiene: crate::hygiene::Memories,
@@ -164,7 +171,7 @@ impl Service {
             deps,
             opts,
             state: Mutex::new(state),
-            exclusive: Mutex::new(()),
+            exclusive: Turns::default(),
             queue: Queue::default(),
             requests: Requests::default(),
             hygiene: crate::hygiene::Memories::default(),
@@ -175,9 +182,9 @@ impl Service {
         locked(&self.state)
     }
 
-    /// Scans and removals run one at a time: hold this while doing either.
-    pub(crate) fn one_at_a_time(&self) -> MutexGuard<'_, ()> {
-        locked(&self.exclusive)
+    /// Scans and removals run one at a time, first come first served: hold this while doing either.
+    pub(crate) fn one_at_a_time(&self) -> Turn<'_> {
+        self.exclusive.take()
     }
 
     pub(crate) fn now(&self) -> i64 {

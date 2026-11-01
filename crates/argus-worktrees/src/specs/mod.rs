@@ -3,6 +3,7 @@
 //! `worktrees.fallback`). They run on temporary folders and repositories the tests create.
 
 mod fallback;
+mod holders;
 mod hygiene;
 mod leftover;
 mod links;
@@ -15,4 +16,5 @@ mod safety;
 mod scan;
 mod service;
 mod slow;
+mod stuck;
 mod wire;

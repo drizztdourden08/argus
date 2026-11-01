@@ -12,7 +12,9 @@ use crate::gh::GhRunner;
 use crate::git::{Git, GitExec, SystemExec};
 use crate::measure::{Bounds, Leftover, measure_folder};
 use crate::paths::{clean_path, join_path};
-use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
+use crate::ports::{
+    ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
+};
 use crate::request::{RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::{Deps, Options, Service};
@@ -446,13 +448,17 @@ impl Recorder {
     }
 }
 
-/// The processes of the machine, as the test says.
+/// The processes of the machine and Argus's live runs, as the test says.
 #[derive(Default)]
-pub struct FakeProcs(pub Mutex<Vec<ProcInfo>>);
+pub struct FakeProcs(pub Mutex<Vec<ProcInfo>>, pub Mutex<Vec<LiveRun>>);
 
 impl ProcessLister for FakeProcs {
     fn list(&self) -> Result<Vec<ProcInfo>, String> {
         Ok(locked(&self.0).clone())
+    }
+
+    fn runs(&self) -> Vec<LiveRun> {
+        locked(&self.1).clone()
     }
 }
 

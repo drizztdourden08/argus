@@ -375,14 +375,7 @@ impl Service {
     ) -> Result<RemoveOutcome> {
         let target = self.deleting_name(&fact.path);
         if let Err(err) = self.deps.fs.rename(&fact.path, &target) {
-            return Err(WtError::new(
-                ErrorCode::InUse,
-                format!(
-                    "{} could not be renamed for deletion ({}): something has it open or locked. Close it and try again; nothing was deleted",
-                    fact.path,
-                    io_code(&err)
-                ),
-            ));
+            return Err(self.rename_refusal(&fact.path, &err));
         }
         let by = input.caller.by_text();
         let job_id = input

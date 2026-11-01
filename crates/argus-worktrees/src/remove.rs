@@ -135,11 +135,14 @@ impl Service {
         rescan: bool,
         what: impl FnOnce(&mut Trace) -> Result<RemoveOutcome>,
     ) -> Result<RemoveOutcome> {
+        self.step(&input.id, "waiting for its turn (a scan or another removal runs)");
         let _one = self.one_at_a_time();
+        self.step(&input.id, "checking");
         let (who, why) = Self::who_and_why(input);
         let mut trace = Trace::default();
         let thread = input.caller.thread();
         let result = what(&mut trace);
+        self.step_end(&input.id);
         match &result {
             Ok(out) => self.note(
                 &input.project,
@@ -173,7 +176,9 @@ impl Service {
                 );
             }
         }
-        if rescan {
+        // A folder in use changed nothing: no rescan, which in a big project holds up the next removal for a whole scan.
+        let in_use = matches!(&result, Err(err) if err.code == ErrorCode::InUse);
+        if rescan && !in_use {
             self.request_rescan(&input.project);
         }
         result
@@ -465,9 +470,12 @@ impl Service {
         let safety = Safety::of(&now);
         let plan = self.plan_branch(input.branch, input.discard, &now);
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
+        self.step(&fact.id, "node_modules clear");
         let modules = self.clear_ignored_node_modules(&now);
+        self.step(&fact.id, "links");
         self.drop_links_before_git(&now, backup.as_ref(), modules)?;
         self.lift_brock_lock(&now, backup.as_ref())?;
+        self.step(&fact.id, "git worktree remove");
         let run = self.git_remove(&now)?;
         let discarded = (!safety.safe || plan.force).then_some(Discarded {
             dirty: now.dirty,

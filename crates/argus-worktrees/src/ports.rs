@@ -66,7 +66,22 @@ pub struct ProcInfo {
     pub cwd: Option<String>,
 }
 
+/// One of Argus's own live runs. A dev server or a watcher holds the folders below its working directory open, and
+/// Windows says nothing about the process of a folder held that way.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct LiveRun {
+    pub id: String,
+    pub project: String,
+    pub cmd: String,
+    pub cwd: String,
+}
+
 /// The machine's processes now.
 pub trait ProcessLister: Send + Sync {
     fn list(&self) -> Result<Vec<ProcInfo>, String>;
+
+    /// Argus's own runs that are live now; none where the process list knows no runs.
+    fn runs(&self) -> Vec<LiveRun> {
+        Vec::new()
+    }
 }

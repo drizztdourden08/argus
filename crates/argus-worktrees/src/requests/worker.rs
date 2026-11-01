@@ -93,6 +93,7 @@ impl Service {
                 if rec.status == RequestStatus::Running {
                     rec.status = RequestStatus::Queued;
                 }
+                rec.current = None;
                 if rec.status.active() {
                     any = true;
                 } else if !rec.notified && rec.finished_at.is_some() {

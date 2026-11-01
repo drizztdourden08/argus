@@ -30,6 +30,7 @@ mod gh;
 mod git;
 mod guard;
 mod guards;
+mod holders;
 mod hygiene;
 mod inspect;
 mod job_run;
@@ -41,6 +42,7 @@ mod modules;
 mod parse;
 mod paths;
 mod ports;
+mod progress;
 mod prune;
 mod queue;
 mod remove;
@@ -53,6 +55,7 @@ mod service;
 mod status;
 mod sync;
 mod tree;
+mod turns;
 mod waking;
 
 #[cfg(test)]
@@ -83,12 +86,15 @@ pub use hygiene::{
 };
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
-pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
+pub use progress::Step as RemovalStep;
+pub use ports::{
+    ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
+};
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use requests::{
-    Brief, Mode as RequestMode, Outcome as RequestOutcome, Queued, RequestInput, RequestRec,
-    RequestStatus, Requests, SkippedSummary, Target as RequestTarget, queued_text, requests_key,
-    summary_text, what_text,
+    Brief, Current as RequestCurrent, Mode as RequestMode, Outcome as RequestOutcome, Queued,
+    RequestInput, RequestRec, RequestStatus, Requests, SkippedSummary, Target as RequestTarget,
+    queued_text, requests_key, summary_text, what_text,
 };
 pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;

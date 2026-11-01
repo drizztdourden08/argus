@@ -1,7 +1,8 @@
 //! Running a program with a time limit: the one place a process is spawned.
 
 use std::io::Read;
-use std::process::{Command, Stdio};
+use std::process::{Child, Command, Stdio};
+use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -104,14 +105,33 @@ pub struct Spec<'a> {
     pub timeout: Duration,
 }
 
-fn reader<R: Read + Send + 'static>(source: Option<R>) -> thread::JoinHandle<String> {
+/// How long the output may still come after the program ended: a child it left behind may hold the pipe open forever.
+const DRAIN_GRACE: Duration = Duration::from_secs(2);
+
+/// Read a pipe on its own thread, chunk by chunk, so what came before a deadline is never lost.
+fn reader<R: Read + Send + 'static>(source: Option<R>) -> Receiver<Vec<u8>> {
+    let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
-        let mut bytes = Vec::new();
-        if let Some(mut source) = source {
-            let _ = source.read_to_end(&mut bytes);
+        let Some(mut source) = source else {
+            return;
+        };
+        let mut chunk = [0u8; 8192];
+        while let Ok(n) = source.read(&mut chunk) {
+            if n == 0 || tx.send(chunk[..n].to_vec()).is_err() {
+                return;
+            }
         }
-        String::from_utf8_lossy(&bytes).into_owned()
-    })
+    });
+    rx
+}
+
+/// What a pipe said until it closed, or until the deadline.
+fn drained(pipe: &Receiver<Vec<u8>>, until: Instant) -> String {
+    let mut bytes = Vec::new();
+    while let Ok(chunk) = pipe.recv_timeout(until.saturating_duration_since(Instant::now())) {
+        bytes.extend(chunk);
+    }
+    String::from_utf8_lossy(&bytes).into_owned()
 }
 
 #[cfg(windows)]
@@ -123,7 +143,43 @@ fn hide_window(command: &mut Command) {
 #[cfg(not(windows))]
 fn hide_window(_command: &mut Command) {}
 
-/// Run a program, wait at most `timeout`, kill it after that.
+/// Windows: the `git.exe` of `Git\cmd` is a launcher that starts the real git, so killing the launcher alone leaves the
+/// real git running (and holding the worktree's files). The whole tree goes, by process id, while the launcher still
+/// links it.
+#[cfg(windows)]
+fn kill_tree(child: &Child) {
+    let mut command = Command::new("taskkill");
+    command
+        .args(["/PID", &child.id().to_string(), "/T", "/F"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    hide_window(&mut command);
+    let _ = command.status();
+}
+
+#[cfg(not(windows))]
+fn kill_tree(_child: &Child) {}
+
+/// The program ran past its time: it goes, with what it started.
+fn cut(spec: &Spec<'_>, child: &mut Child) -> GitOutput {
+    kill_tree(child);
+    let _ = child.kill();
+    let _ = child.wait();
+    let text = format!(
+        "{} timed out after {} s",
+        spec.program,
+        (spec.timeout.as_millis() + 500) / 1000
+    );
+    GitOutput {
+        timed_out: true,
+        error: Some(text),
+        ..GitOutput::default()
+    }
+}
+
+/// Run a program, wait at most `timeout`, kill it (and what it started) after that. Once it ended, its output is read
+/// for a short grace at most: a child it left behind holding the pipe never holds up the answer.
 pub fn run_command(spec: &Spec<'_>) -> GitOutput {
     let mut command = Command::new(spec.program);
     command
@@ -146,32 +202,16 @@ pub fn run_command(spec: &Spec<'_>) -> GitOutput {
     loop {
         match child.try_wait() {
             Ok(Some(status)) => {
-                let (stdout, stderr) = (
-                    out.join().unwrap_or_default(),
-                    err.join().unwrap_or_default(),
-                );
+                let until = Instant::now() + DRAIN_GRACE;
                 return GitOutput {
                     code: status.code(),
-                    stdout,
-                    stderr,
+                    stdout: drained(&out, until),
+                    stderr: drained(&err, until),
                     timed_out: false,
                     error: None,
                 };
             }
-            Ok(None) if Instant::now() >= deadline => {
-                let _ = child.kill();
-                let _ = child.wait();
-                let text = format!(
-                    "{} timed out after {} s",
-                    spec.program,
-                    (spec.timeout.as_millis() + 500) / 1000
-                );
-                return GitOutput {
-                    timed_out: true,
-                    error: Some(text),
-                    ..GitOutput::default()
-                };
-            }
+            Ok(None) if Instant::now() >= deadline => return cut(spec, &mut child),
             Ok(None) => thread::sleep(Duration::from_millis(5)),
             Err(e) => return GitOutput::refused(&e.to_string()),
         }
@@ -206,6 +246,39 @@ mod tests {
         assert!(out.timed_out);
         assert!(out.error.unwrap().contains("timed out"));
         assert!(started.elapsed() < Duration::from_secs(5));
+    }
+
+    /// A program that ends at once and leaves a child behind that keeps its output pipe open for 8 seconds.
+    #[cfg(windows)]
+    fn leaves_a_child() -> (&'static str, Vec<String>) {
+        let args = ["/d", "/c", "echo said& start /b ping -n 8 127.0.0.1"];
+        ("cmd", args.map(String::from).to_vec())
+    }
+
+    #[cfg(not(windows))]
+    fn leaves_a_child() -> (&'static str, Vec<String>) {
+        let args = ["-c", "echo said; sleep 8 &"];
+        ("sh", args.map(String::from).to_vec())
+    }
+
+    #[test]
+    fn a_child_left_behind_holding_the_pipe_does_not_hold_up_the_answer() {
+        let (program, args) = leaves_a_child();
+        let started = Instant::now();
+        let out = run_command(&Spec {
+            program,
+            args: &args,
+            cwd: ".",
+            env: &[],
+            timeout: Duration::from_secs(30),
+        });
+        assert_eq!(out.code, Some(0), "{out:?}");
+        assert!(out.stdout.contains("said"), "{out:?}");
+        assert!(
+            started.elapsed() < Duration::from_secs(6),
+            "answered after {:?}",
+            started.elapsed()
+        );
     }
 
     #[test]

@@ -78,7 +78,7 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
     let procs: Arc<dyn ProcessLister> = opts
         .procs
         .clone()
-        .unwrap_or_else(|| Arc::new(MachineProcs::new(svc.procs.clone())));
+        .unwrap_or_else(|| Arc::new(MachineProcs::new(svc.procs.clone(), svc.runs.clone())));
     let gh: Arc<dyn GhRunner> = opts.gh.clone().unwrap_or_else(|| Arc::new(SystemGh));
     let fs: Arc<dyn Fs> = Arc::new(RealFs);
     let remote: Arc<dyn ModeSource> = svc.remote.clone();
