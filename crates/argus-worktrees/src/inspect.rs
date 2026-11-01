@@ -238,6 +238,21 @@ pub fn inspect_dir(dir: &str, rule: &Rule, ctx: &mut ScanCtx<'_>) -> Fact {
     fact
 }
 
+/// A fact read before whose fingerprint did not change: no probe, no status, no log, no merge check. Only what the
+/// repository's listing says is read again (registered, main, locked, prunable): one `git worktree list` for each
+/// repository, shared by the folders in it.
+pub fn reuse_dir(kept: &Fact, dir: &str, rule: &Rule, ctx: &mut ScanCtx<'_>) -> Fact {
+    let mut fact = kept.clone();
+    fact.rule.clone_from(&rule.id);
+    fact.thread.clone_from(&rule.thread);
+    (fact.main, fact.registered, fact.repo) = (false, false, None);
+    (fact.prunable, fact.locked) = (None, None);
+    if let Some(hit) = list_for(dir, &fact.path, ctx) {
+        apply_entry(&mut fact, &hit, ctx);
+    }
+    fact
+}
+
 fn apply_entry(fact: &mut Fact, hit: &Hit, ctx: &ScanCtx<'_>) {
     let list = &ctx.lists[hit.list];
     let item = &list.items[hit.index];

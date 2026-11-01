@@ -72,6 +72,32 @@ the `worktree-stale` wake when they grow stale.
 - What the removal itself refused is not released again while the worktree stays as it was (same
   HEAD, same dirty count), so a refusal never loops.
 
+## How the scan is triggered
+
+A scan runs git in every worktree, which costs with dozens of them, so the scan is event driven.
+
+- **The look.** Every live tick (`liveMs`, 20 seconds) Argus reads file times and sizes, with no
+  git process and without the turn that scans and removals take. A worktree's fingerprint is: the
+  folder is there, its `.git`, its own `HEAD` and `index` (for a linked worktree the files under
+  `<main>/.git/worktrees/<name>`, found through its `.git` file), the loose ref of its branch, the
+  loose ref of the branch the main checkout has, and `packed-refs`. The shape of the rules is
+  also looked at: the candidate folders of a folder rule, and the registration folder
+  (`.git/worktrees`) of a repo rule, so a folder or a worktree that comes or goes shows.
+- **The scan that follows.** It runs only when the look saw a change. It reads with git only the
+  worktrees whose fingerprint changed (or are new); every other worktree keeps the facts of the
+  last scan, except the registration facts (main, locked, prunable), which come from one
+  `git worktree list` for each repository.
+- **The safety scan.** An edited tracked file, a fetch or a push changes none of those files, so
+  every `scanMs` (30 minutes by default, `SAFETY_SCAN_MS`) one scan reads everything with git
+  again. The dirty count of a row can be that old; nothing is ever removed on it (below).
+- **A forced scan** reads everything and trusts no fingerprint: the first scan after the start, a
+  changed rule (after the debounce), the rescan after a removal, a prune or an agent that ended,
+  the unmeasured leftovers, and the request worker before it starts a request.
+- **No removal on a cached state.** The hygiene only flags and tells. The removal it hands to the
+  request worker begins with a forced scan, then the look again (`still_released`, `blocked_why`
+  with fresh process data), then `Service::remove`, which reads the folder with git once more
+  right before it deletes (HEAD and dirty count must still match the row).
+
 ## The counter
 
 The board header and each overview card show `worktrees N / running agents M`. N is the listed
@@ -87,8 +113,9 @@ The numbers are in the worktrees meta of the project (`listed`, `runningAgents`,
 - `coord worktree keep <id|path> --note "why" [--days n]` keeps it (7 days by default).
 - `coord worktree keep <id|path> --clear` ends the keep.
 - `coord worktree release <id|path> [--reason "..."]` says the thread no longer needs it. After a
-  fresh scan Argus checks that nothing holds it and that removing it is safe (not the keep) and
-  answers at once with a removal request of the thread (`R-n`); the project's request worker
+  fresh look at that one worktree (git runs in it on the spot, with no scan of the project, so
+  it never waits for a running removal) Argus checks that nothing holds it and that removing it is
+  safe (not the keep) and answers at once with a removal request of the thread (`R-n`); the project's request worker
   looks again, removes it through the same removal (the branch too when merged) and the result
   comes to the thread's inbox. Anything that is not safe is refused with the reason. Route: `POST /api/p/:key/worktrees/release {id, reason?, by}`.
 
@@ -101,6 +128,7 @@ In `config.json`, under `worktrees`:
 | `release` | `true` | `false` turns the hygiene off. Shadow mode always has it off. |
 | `releaseGraceMs` | `3600000` | How long a released worktree stays after its thread was told. |
 | `releaseDebounceMs` | `30000` | How long nothing new must be released before the thread is told. |
+| `scanMs` | `1800000` | The safety scan: how often every worktree is read with git whatever the look says. |
 
 ## The state kept
 

@@ -1,7 +1,8 @@
-//! When the scanner looks: once after the start and every `scanMs`, a no-git live check and a
-//! worktree hygiene step every `liveMs`, and a pump that scans what asked for it (changed rules
-//! after a debounce, a removal's rescan, leftovers a scan had no time to measure) and republishes
-//! the rows while a deletion job moves.
+//! When the scanner looks: one full scan after the start; then, every `liveMs`, a no-git live check,
+//! the cheap file-time look at every worktree (a scan reads with git only what changed, and everything
+//! once every `scanMs`, 30 minutes by default) and a worktree hygiene step; and a pump that scans what
+//! asked for it (changed rules after a debounce, a removal's rescan, leftovers a scan had no time to
+//! measure) and republishes the rows while a deletion job moves. A scan the pump runs is always full.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -58,8 +59,9 @@ async fn live_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {
     blocking(svc, move |svc| {
         for key in projects(&service) {
             let found = service.live_step(&key);
+            let scanned = service.scan_if_changed(&key).is_some();
             let hygiene = service.hygiene_step(&key);
-            if found.dropped > 0 || !found.added.is_empty() || hygiene.changed {
+            if scanned || found.dropped > 0 || !found.added.is_empty() || hygiene.changed {
                 publish(svc, &service, &key);
             }
         }
@@ -67,13 +69,10 @@ async fn live_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {
     .await;
 }
 
-async fn scan_loop(svc: Arc<Services>, service: Arc<WorktreeService>, start_delay: Duration) {
+/// The first scan reads everything. Later scans follow the live tick's look at the disk.
+async fn first_scan(svc: Arc<Services>, service: Arc<WorktreeService>, start_delay: Duration) {
     tokio::time::sleep(start_delay).await;
-    let every = Duration::from_millis(u64::try_from(service.opts.scan_ms).unwrap_or(600_000));
-    loop {
-        scan_all(&svc, &service).await;
-        tokio::time::sleep(every).await;
-    }
+    scan_all(&svc, &service).await;
 }
 
 async fn live_loop(svc: Arc<Services>, service: Arc<WorktreeService>) {
@@ -183,7 +182,7 @@ pub(super) fn start(
     };
     svc.tasks.keep(
         TASK,
-        tokio::spawn(scan_loop(Arc::clone(svc), Arc::clone(service), delay)),
+        tokio::spawn(first_scan(Arc::clone(svc), Arc::clone(service), delay)),
     );
     svc.tasks.keep(
         TASK,

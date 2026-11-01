@@ -96,7 +96,7 @@ pub(super) fn rule_add(call: &mut Call<'_>) -> Outcome {
         };
         scope.say(&[&line]);
         if added.created {
-            scope.say(&["Argus scans it within a minute (then every 10 minutes); coord worktree list shows what it found, and you get a worktree-stale notice when one needs a decision."]);
+            scope.say(&["Argus scans it within a minute (then whenever a worktree changes, and every 30 minutes in any case); coord worktree list shows what it found, and you get a worktree-stale notice when one needs a decision."]);
         }
         let path = cell(added.rule.get("path"));
         if !has_wildcard(&path) && !std::path::Path::new(&path).exists() {
