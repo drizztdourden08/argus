@@ -13,4 +13,5 @@ mod safety;
 mod scan;
 mod service;
 mod slow;
+mod stuck;
 mod wire;

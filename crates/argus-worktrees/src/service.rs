@@ -18,6 +18,7 @@ use crate::queue::Queue;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
+use crate::turns::{Turn, Turns};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -44,6 +45,9 @@ pub struct Options {
     pub keep_backup_days: i64,
     /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
     pub run_requests: bool,
+    /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
+    /// than the longest git removal, 15 minutes, and a scan before it).
+    pub target_limit_ms: i64,
 }
 
 impl Default for Options {
@@ -65,6 +69,7 @@ impl Default for Options {
             keep_backups: 30,
             keep_backup_days: 30,
             run_requests: true,
+            target_limit_ms: 30 * 60_000,
         }
     }
 }
@@ -122,7 +127,7 @@ pub struct Inner {
     pub deps: Deps,
     pub opts: Options,
     pub state: Mutex<State>,
-    pub exclusive: Mutex<()>,
+    pub exclusive: Turns,
     pub queue: Queue,
     pub requests: Requests,
 }
@@ -149,7 +154,7 @@ impl Service {
             deps,
             opts,
             state: Mutex::new(state),
-            exclusive: Mutex::new(()),
+            exclusive: Turns::default(),
             queue: Queue::default(),
             requests: Requests::default(),
         }))
@@ -159,9 +164,9 @@ impl Service {
         locked(&self.state)
     }
 
-    /// Scans and removals run one at a time: hold this while doing either.
-    pub(crate) fn one_at_a_time(&self) -> MutexGuard<'_, ()> {
-        locked(&self.exclusive)
+    /// Scans and removals run one at a time, first come first served: hold this while doing either.
+    pub(crate) fn one_at_a_time(&self) -> Turn<'_> {
+        self.exclusive.take()
     }
 
     pub(crate) fn now(&self) -> i64 {

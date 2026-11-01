@@ -52,6 +52,7 @@ mod service;
 mod status;
 mod sync;
 mod tree;
+mod turns;
 mod waking;
 
 #[cfg(test)]
@@ -79,9 +80,9 @@ pub use paths::{clean_path, path_key, worktree_id};
 pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use requests::{
-    Brief, Mode as RequestMode, Outcome as RequestOutcome, Queued, RequestInput, RequestRec,
-    RequestStatus, Requests, SkippedSummary, Target as RequestTarget, queued_text, requests_key,
-    summary_text, what_text,
+    Brief, Current as RequestCurrent, Mode as RequestMode, Outcome as RequestOutcome, Queued,
+    RequestInput, RequestRec, RequestStatus, Requests, SkippedSummary, Target as RequestTarget,
+    queued_text, requests_key, summary_text, what_text,
 };
 pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;

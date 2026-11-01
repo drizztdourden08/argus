@@ -120,7 +120,13 @@ impl Service {
 
     /// The project's requests, newest first.
     pub fn request_list(&self, project: &str) -> Vec<RequestRec> {
-        self.with_requests(project, |store| store.list.iter().rev().cloned().collect())
+        let now = self.now();
+        let mut list: Vec<RequestRec> =
+            self.with_requests(project, |store| store.list.iter().rev().cloned().collect());
+        for current in list.iter_mut().filter_map(|r| r.current.as_mut()) {
+            current.for_s = (now - current.since_ms).max(0) / 1000;
+        }
+        list
     }
 
     /// The newest `n` requests in their brief form, newest first: what the page's summary carries.

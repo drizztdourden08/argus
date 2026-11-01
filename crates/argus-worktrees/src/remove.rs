@@ -172,7 +172,9 @@ impl Service {
                 );
             }
         }
-        if rescan {
+        // A folder in use changed nothing: no rescan, which in a big project holds up the next removal for a whole scan.
+        let in_use = matches!(&result, Err(err) if err.code == ErrorCode::InUse);
+        if rescan && !in_use {
             self.request_rescan(&input.project);
         }
         result

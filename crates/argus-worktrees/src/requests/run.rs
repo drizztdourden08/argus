@@ -81,7 +81,7 @@ impl Service {
     }
 
     /// One target through the very same removal the CLI route calls.
-    fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
+    pub(super) fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
         match self.remove(&Self::removal_of(rec, target)) {
             Ok(out) if out.leftover && out.job_id.is_some() => {
                 self.leftover_outcome(rec, target, &out)
@@ -139,7 +139,7 @@ impl Service {
             if self.requests_halted() {
                 return Ok(false);
             }
-            let outcome = self.remove_one(&rec, target);
+            let outcome = self.remove_watched(project, &rec, target);
             self.update_request(project, id, |r| r.results.push(outcome));
             self.save_requests(project);
         }

@@ -15,6 +15,8 @@
 //!   removals themselves still run one at a time across every project (`Service::one_at_a_time`, the job queue)
 //! - state: kept in the key-value table after every target (the last 100 per project); a restart makes the queued and
 //!   the running ones queued again and goes on with the targets that have no outcome yet
+//! - limit: a target that does not come back within `target_limit_ms` (30 minutes) fails with a sentence and the
+//!   request goes on; while one runs, the record's `current` names it with the seconds it has been on it
 //! - outcome: every target ends with a sentence; the request is `done` (nothing refused), `partial`, or `refused`
 //! - follow-up: when a request finishes, ONE short note goes to the inbox of the requesting thread (from Argus) with a
 //!   `thread-message` wake, and an activity line `worktree-request`
@@ -26,6 +28,7 @@ mod resolve;
 mod run;
 mod store;
 mod text;
+mod watch;
 mod worker;
 
 use crate::queue::Queue;
@@ -33,7 +36,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 
 pub use create::{Queued, RequestInput};
-pub use record::{Brief, Mode, Outcome, RequestRec, RequestStatus, SkippedSummary, Target};
+pub use record::{
+    Brief, Current, Mode, Outcome, RequestRec, RequestStatus, SkippedSummary, Target,
+};
 pub use store::requests_key;
 pub use text::{queued_text, summary_text, what_text};
 

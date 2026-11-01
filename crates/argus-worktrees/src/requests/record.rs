@@ -69,6 +69,17 @@ pub struct Outcome {
     pub code: Option<String>,
 }
 
+/// The target a running request is on, since when, and for how long (seconds, as of the listing).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Current {
+    pub id: String,
+    pub label: String,
+    pub since: String,
+    pub since_ms: i64,
+    pub for_s: i64,
+}
+
 /// The targets a `finished` or `leftovers` request left alone, and why.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SkippedSummary {
@@ -102,6 +113,8 @@ pub struct RequestRec {
     pub started_at: Option<String>,
     pub finished_at: Option<String>,
     pub notified: bool,
+    /// While running: the target it is on.
+    pub current: Option<Current>,
 }
 
 impl RequestRec {
