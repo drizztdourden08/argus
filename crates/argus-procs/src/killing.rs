@@ -170,7 +170,8 @@ impl Inner {
             .and_then(|raw| self.tree_refusal(doc, &raw))
     }
 
-    fn wait_gone(&self, pid: u32) -> bool {
+    /// Waits a moment for a killed process to go; whether it went.
+    pub(crate) fn wait_gone(&self, pid: u32) -> bool {
         let end = Instant::now() + WAIT_GONE;
         while self.ports.killer.is_alive(pid) && Instant::now() < end {
             thread::sleep(POLL);

@@ -10,6 +10,13 @@ pub struct ProjectRoot {
     pub root: String,
 }
 
+/// A project key and every folder that is its own: the root, the worktrees, the ci root.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProjectFolders {
+    pub key: String,
+    pub folders: Vec<String>,
+}
+
 /// Roots as lower case forward-slash paths, the longest first.
 #[must_use]
 pub fn normalize_roots(roots: &[ProjectRoot]) -> Vec<(String, String)> {
@@ -70,6 +77,7 @@ mod tests {
             start_ms: 0,
             cpu_ms: 0,
             responding: None,
+            cwd: None,
         }
     }
 

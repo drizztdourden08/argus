@@ -40,6 +40,10 @@ pub const PROTECTED_CMD: [&str; 6] = [
     r"(?i)@anthropic-ai/claude",
 ];
 
+/// The Rust dashboard by command line: `argus serve`, `argus tray` and the `argus mcp` bridges,
+/// wherever the binary lives (an installed copy or a worktree's `target`).
+pub const ARGUS_CMD: &str = r#"(?i)(?:^|[\s/"'])argus(?:[.]exe)?["']?\s+(?:serve|tray|mcp)\b"#;
+
 fn dashboard_ignore() -> Value {
     json!([
         "dashboard[.]mjs",

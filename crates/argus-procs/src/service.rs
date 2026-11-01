@@ -7,8 +7,10 @@ use crate::error::ProcsError;
 use crate::killing::{KillOutcome, KillRequest, KillRuleOutcome, KillRuleRequest};
 use crate::matcher::CompiledRule;
 use crate::ports::{Killer, ProcsHost, ProcsStore, Responder, Sampler};
+use crate::reaper::ReaperState;
 use crate::rule::Rule;
 use crate::rulebook::{RuleBook, RuleChange};
+use crate::self_kill::{SelfKillOutcome, SelfKillRequest};
 use crate::timer::Timer;
 use crate::tracker::Tracker;
 use crate::types::{Meta, ProcDoc, Sample};
@@ -61,6 +63,7 @@ pub(crate) struct RulesSnapshot {
 pub(crate) struct Engine {
     pub tracker: Tracker,
     pub alerts: AlertBook,
+    pub reaper: ReaperState,
     pub last_error: Option<String>,
 }
 
@@ -232,6 +235,15 @@ impl ProcsService {
     /// `not_found` for an unknown rule.
     pub fn kill_rule(&self, request: &KillRuleRequest) -> Result<KillRuleOutcome, ProcsError> {
         self.inner.kill_rule(request)
+    }
+
+    /// A thread ends its own process (and with `tree` its tree): only one inside the thread's
+    /// own project folders, never a Claude session, the dashboard or a system process.
+    ///
+    /// # Errors
+    /// `bad_request`, `not_found` or `forbidden`, each with the reason in a plain sentence.
+    pub fn self_kill(&self, request: &SelfKillRequest) -> Result<SelfKillOutcome, ProcsError> {
+        self.inner.self_kill(request)
     }
 
     /// Milliseconds between samples.

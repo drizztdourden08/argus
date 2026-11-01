@@ -22,6 +22,7 @@ fn row(name: &str, cmd: &str, path: Option<&str>) -> ProcRow {
         start_ms: 0,
         cpu_ms: 0,
         responding: None,
+        cwd: None,
     }
 }
 

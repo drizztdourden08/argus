@@ -130,6 +130,7 @@ impl Inner {
             repeat_ms: i64::try_from(self.options.config.repeat_ms).unwrap_or(i64::MAX),
         };
         let due = engine.alerts.due(&ev, &rules.rules, pace);
+        self.reap(&mut engine.reaper, &sample, &guard);
         {
             let mut view = locked(&self.view);
             view.listing = ev.docs;

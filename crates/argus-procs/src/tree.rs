@@ -67,6 +67,7 @@ mod tests {
             start_ms,
             cpu_ms: 0,
             responding: None,
+            cwd: None,
         }
     }
 

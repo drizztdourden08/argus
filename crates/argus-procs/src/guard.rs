@@ -1,6 +1,6 @@
 //! The protection no rule can lift: why a process may never be killed from here.
 
-use crate::defaults::{PROTECTED_CMD, PROTECTED_NAMES};
+use crate::defaults::{ARGUS_CMD, PROTECTED_CMD, PROTECTED_NAMES};
 use crate::text::{base_name, slashed};
 use crate::tree::chain_of;
 use crate::types::{Guard, ProcRow};
@@ -14,6 +14,8 @@ static PROTECTED_COMMANDS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
         .filter_map(|src| Regex::new(src).ok())
         .collect()
 });
+
+static ARGUS_COMMAND: LazyLock<Option<Regex>> = LazyLock::new(|| Regex::new(ARGUS_CMD).ok());
 
 /// What the guard needs to know of a sample: the dashboard's own chain of processes, the tray and the Windows folder.
 #[derive(Debug, Clone, Default)]
@@ -55,6 +57,12 @@ impl GuardCtx {
 
     fn by_command(cmd: &str) -> Option<Guard> {
         let line = slashed(cmd);
+        let argus = ARGUS_COMMAND
+            .as_ref()
+            .is_some_and(|re| re.is_match(&line).unwrap_or(false));
+        if argus {
+            return Some(Guard::Dashboard);
+        }
         let hit = PROTECTED_COMMANDS
             .iter()
             .any(|re| re.is_match(&line).unwrap_or(false));
