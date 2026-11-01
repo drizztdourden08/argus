@@ -580,7 +580,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
 | `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
-| `lead-info` | passive | a lead's note: information, no action |
+| `lead-info` | passive | a lead's note, for information only |
 | `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
 | `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
 | `kanban-stale` | passive | item staleness |
