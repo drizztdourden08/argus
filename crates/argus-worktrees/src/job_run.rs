@@ -215,7 +215,11 @@ impl Service {
         };
         let failures = self.delete_folder(id, &job.folder);
         let error = failures.text().map(|text| {
-            match failures.held.then(|| self.holders_of(&job.folder)).flatten() {
+            match failures
+                .held
+                .then(|| self.holders_of(&job.folder))
+                .flatten()
+            {
                 Some(who) => format!("{text}; held by {who}: stop it and ask again"),
                 None => text,
             }

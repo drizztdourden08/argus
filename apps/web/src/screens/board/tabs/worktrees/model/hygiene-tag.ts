@@ -1,14 +1,8 @@
 /* @layer renderer-app @kind logic */
-import type { TagLook } from '@drizztdourden08/tessera';
 import type { WorktreeHygiene } from '../../../../../data/worktrees';
 import { plainText } from '../../../plain-text';
+import type { HygieneTag } from './hygiene-tag.type';
 import { HYGIENE_LOOK, UNKNOWN_STATUS_LOOK } from './model.constants';
-
-interface HygieneTag {
-  text: string;
-  tip: string;
-  look: TagLook;
-}
 
 const clockText = (iso: string): string => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -32,4 +26,3 @@ const hygieneTag = (hygiene: WorktreeHygiene): HygieneTag => {
 };
 
 export { hygieneTag };
-export type { HygieneTag };

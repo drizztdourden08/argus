@@ -24,10 +24,7 @@ pub struct MachineProcs {
 impl MachineProcs {
     /// The processes, read from `monitor` when it has a fresh sample; the live runs from `runs`.
     #[must_use]
-    pub fn new(
-        monitor: Option<Arc<ProcsService>>,
-        runs: Option<Arc<RunService<RunHost>>>,
-    ) -> Self {
+    pub fn new(monitor: Option<Arc<ProcsService>>, runs: Option<Arc<RunService<RunHost>>>) -> Self {
         MachineProcs { monitor, runs }
     }
 

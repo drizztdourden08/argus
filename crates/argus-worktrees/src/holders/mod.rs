@@ -168,10 +168,7 @@ mod tests {
         assert_eq!(listed_text(&names(1)).unwrap(), "h1");
         assert_eq!(listed_text(&names(2)).unwrap(), "h1 and h2");
         assert_eq!(listed_text(&names(3)).unwrap(), "h1, h2 and h3");
-        assert_eq!(
-            listed_text(&names(6)).unwrap(),
-            "h1, h2, h3, h4 and 2 more"
-        );
+        assert_eq!(listed_text(&names(6)).unwrap(), "h1, h2, h3, h4 and 2 more");
     }
 
     #[test]

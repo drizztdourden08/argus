@@ -54,10 +54,7 @@ impl Service {
         done: &str,
     ) -> Outcome {
         self.jobs_idle();
-        let job = self
-            .jobs(&rec.key)
-            .into_iter()
-            .find(|j| j.id == job_id);
+        let job = self.jobs(&rec.key).into_iter().find(|j| j.id == job_id);
         let unfinished = job.filter(|j| j.state != JobState::Done);
         let (ok, text, code) = match unfinished {
             Some(job) => {

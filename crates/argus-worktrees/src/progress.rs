@@ -1,7 +1,7 @@
 //! What a removal is doing right now, by worktree id: the step, the entries done so far, since when. A request that
 //! waits on a removal shows it (`current.step`), so a long one is never a silent `running`.
 //!
-//! Steps: waiting for its turn (a scan or another removal runs), checking, node_modules clear (entries removed so
+//! Steps: waiting for its turn (a scan or another removal runs), checking, `node_modules` clear (entries removed so
 //! far), links, git worktree remove, folder delete (a deletion job: entries removed of the total).
 
 use crate::clock::iso_from_ms;

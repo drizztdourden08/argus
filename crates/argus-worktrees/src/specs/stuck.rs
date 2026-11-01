@@ -48,7 +48,9 @@ fn a_git_that_hangs_past_its_timeout_fails_the_target_and_the_request_goes_on() 
     let step = current.step.expect("the record named the removal's step");
     assert_eq!(step.name, "git worktree remove");
     assert!(
-        r.results[0].text.contains("(it was at: git worktree remove, for "),
+        r.results[0]
+            .text
+            .contains("(it was at: git worktree remove, for "),
         "{}",
         r.results[0].text
     );

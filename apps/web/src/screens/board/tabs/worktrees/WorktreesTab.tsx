@@ -9,7 +9,7 @@ import { usePanel } from './behavior/usePanel';
 import { useRemoval } from './behavior/useRemoval';
 import { useTabPrefs } from './behavior/useTabPrefs';
 import { useWorktreesData } from './behavior/useWorktreesData';
-import { countRows, filterRows, refusedJobs } from './model';
+import { countRows, filterRows, refusedJobs, removedOf, requestsOf } from './model';
 import { LeftoverBatchConfirm } from './sub-components/LeftoverBatchConfirm';
 import { NoticeBanner } from './sub-components/NoticeBanner';
 import { RefusedJobs } from './sub-components/RefusedJobs';
@@ -54,8 +54,8 @@ const WorktreesTab = (props: WorktreesTabProps) => {
         removal={removal}
         onShowAll={() => prefs.setFilter('all')}
       />
-      <RequestsSection requests={meta?.requests ?? []} />
-      <RemovedSection removed={meta?.hygiene?.removed ?? []} />
+      <RequestsSection requests={requestsOf(meta)} />
+      <RemovedSection removed={removedOf(meta)} />
       <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
     </Panel>
   );

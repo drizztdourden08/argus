@@ -72,8 +72,9 @@ fn a_file_held_open_without_share_delete_names_this_process() {
     drop(file);
     assert_eq!(err.code, ErrorCode::InUse);
     assert!(
-        err.message
-            .contains(&format!("is held by pid {me} the-test.exe: stop it and ask again")),
+        err.message.contains(&format!(
+            "is held by pid {me} the-test.exe: stop it and ask again"
+        )),
         "{}",
         err.message
     );

@@ -23,6 +23,8 @@ const cellOf = (name: string, path: string): HTMLElement => {
 
 const text = (element: HTMLElement): string => element.textContent;
 
+const titleOf = (element: HTMLElement): string | null => element.closest('[title]')?.getAttribute('title') ?? null;
+
 const findRow = async (name: string): Promise<HTMLElement> => {
   await waitFor(() => expect(document.body.querySelector(`[data-marquee-key="id-${name}"]`)).not.toBeNull());
   return rowOf(name);
@@ -39,4 +41,4 @@ const confirmGroup = (label: string): HTMLElement => screen.getByRole('group', {
 const postedBodies = (calls: { url: string; body: unknown }[], suffix: string): unknown[] =>
   calls.filter((call) => call.url.endsWith(suffix)).map((call) => call.body);
 
-export { cellOf, confirmGroup, findRow, hasRowButton, messageBox, postedBodies, rowButton, rowNames, rowOf, text, typeMessage };
+export { cellOf, confirmGroup, findRow, hasRowButton, messageBox, postedBodies, rowButton, rowNames, rowOf, text, titleOf, typeMessage };

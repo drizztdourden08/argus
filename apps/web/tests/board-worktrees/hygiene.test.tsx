@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { HOUR, MIN, ago, metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
-import { findRow, text } from './wt-dom';
+import { findRow, text, titleOf } from './wt-dom';
 
 cleanAfterEach();
 
@@ -23,12 +23,12 @@ describe('the worktree hygiene on the Worktrees tab', () => {
     await mountTab({ docs: docs(), meta: metaDoc() });
     const a = await findRow('a');
     const released = within(a).getByText(/^released, goes /);
-    expect(released.getAttribute('title')).toContain('Its agent A-3 ended and nothing uses it: Argus removes it at ');
-    expect(released.getAttribute('title')).toContain('unless lead keeps it (coord worktree keep) or releases it now (coord worktree release).');
+    expect(titleOf(released)).toContain('Its agent A-3 ended and nothing uses it: Argus removes it at ');
+    expect(titleOf(released)).toContain('unless lead keeps it (coord worktree keep) or releases it now (coord worktree release).');
     const review = within(await findRow('b')).getByText('in review');
-    expect(review.getAttribute('title')).toBe('Its agent A-4 ended, but Argus does not remove it by itself: it has 1 uncommitted change.');
+    expect(titleOf(review)).toBe('Its agent A-4 ended, but Argus does not remove it by itself: it has 1 uncommitted change.');
     const kept = within(await findRow('c')).getByText('kept');
-    expect(kept.getAttribute('title')).toBe('Its agent A-5 ended; the thread keeps it: still testing.');
+    expect(titleOf(kept)).toBe('Its agent A-5 ended; the thread keeps it: still testing.');
     const d = await findRow('d');
     expect(within(d).queryByText(/released|in review/)).toBeNull();
   });
@@ -40,7 +40,7 @@ describe('the worktree hygiene on the Worktrees tab', () => {
     const body = text(group);
     expect(body).toContain('Removed by the worktree hygiene: the worktrees of ended sub-agents, newest first.');
     expect(body).toMatch(/removedX:\/proj\/trees\/elead · .* ago/);
-    expect(within(group).getByText('removed').getAttribute('title')).toBe('removed worktree X:/proj/trees/e, branch e deleted');
+    expect(titleOf(within(group).getByText('removed'))).toBe('removed worktree X:/proj/trees/e, branch e deleted');
     expect(within(group).queryAllByRole('button')).toHaveLength(0);
   });
 });

@@ -32,6 +32,8 @@ export { removalNotice } from './removal-notice';
 export { removeLook } from './remove-look';
 export { requestOutcome } from './request-outcome';
 export { requestWhat } from './request-what';
+export { removedOf } from './removed-of';
+export { requestsOf } from './requests-of';
 export { ruleDetails } from './rule-details';
 export { sizeText } from './size-text';
 export { statusTip } from './status-tip';

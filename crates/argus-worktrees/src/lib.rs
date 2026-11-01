@@ -86,10 +86,10 @@ pub use hygiene::{
 };
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
-pub use progress::Step as RemovalStep;
 pub use ports::{
     ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
 };
+pub use progress::Step as RemovalStep;
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use requests::{
     Brief, Current as RequestCurrent, Mode as RequestMode, Outcome as RequestOutcome, Queued,

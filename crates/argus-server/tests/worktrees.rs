@@ -634,7 +634,9 @@ async fn a_threads_release_removes_a_safe_worktree_at_once_and_refuses_one_with_
     assert!(r.path("dirty-old").exists());
     let removed = until("the removal in the summary", || async {
         let meta = r.meta().await;
-        meta["hygiene"]["removed"][0]["path"].as_str().map(str::to_owned)
+        meta["hygiene"]["removed"][0]["path"]
+            .as_str()
+            .map(str::to_owned)
     })
     .await;
     assert!(removed.ends_with("/old-merged"), "{removed}");

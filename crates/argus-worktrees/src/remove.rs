@@ -135,7 +135,10 @@ impl Service {
         rescan: bool,
         what: impl FnOnce(&mut Trace) -> Result<RemoveOutcome>,
     ) -> Result<RemoveOutcome> {
-        self.step(&input.id, "waiting for its turn (a scan or another removal runs)");
+        self.step(
+            &input.id,
+            "waiting for its turn (a scan or another removal runs)",
+        );
         let _one = self.one_at_a_time();
         self.step(&input.id, "checking");
         let (who, why) = Self::who_and_why(input);
