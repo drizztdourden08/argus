@@ -201,20 +201,25 @@ pub(super) fn remove(call: &mut Call<'_>) -> Outcome {
     Ok(())
 }
 
+/// Posts `{ id, reason, by }` to `/worktrees/<action>` and says the one line Argus answers with.
+fn file_request(call: &mut Call<'_>, id: Value, action: &str, what: &str, check: &str) -> Outcome {
+    let by = asker(call)?;
+    let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
+    let project = project_of(call).to_owned();
+    let out = connect(call, false)?
+        .post(&format!("/api/p/{project}/worktrees/{action}"), &body)
+        .map_err(|e| slow(e, what, check))?;
+    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
+    Ok(())
+}
+
 /// `coord worktree prune [<id|path>]`.
 pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
     let id = match call.positional.first().filter(|v| !v.is_empty()) {
         Some(typed) => json!(target_of(typed)?.0),
         None => Value::Null,
     };
-    let by = asker(call)?;
-    let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
-    let project = project_of(call).to_owned();
-    let out = connect(call, false)?
-        .post(&format!("/api/p/{project}/worktrees/prune"), &body)
-        .map_err(|e| slow(e, "the prune", "coord worktree list"))?;
-    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
-    Ok(())
+    file_request(call, id, "prune", "the prune", "coord worktree list")
 }
 
 /// `coord worktree release <id|path> [--reason "..."]`: the thread no longer needs it. Argus
@@ -226,14 +231,13 @@ pub(super) fn release(call: &mut Call<'_>) -> Outcome {
         call.positional.first(),
         "name the worktree: coord worktree release <id|path> [--reason \"...\"].",
     )?;
-    let by = asker(call)?;
-    let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
-    let project = project_of(call).to_owned();
-    let out = connect(call, false)?
-        .post(&format!("/api/p/{project}/worktrees/release"), &body)
-        .map_err(|e| slow(e, "the removal", "coord worktree requests"))?;
-    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
-    Ok(())
+    file_request(
+        call,
+        json!(id),
+        "release",
+        "the removal",
+        "coord worktree requests",
+    )
 }
 
 #[cfg(test)]

@@ -12,9 +12,8 @@ use argus_core::remote_state::{
     LOCAL, REMOTE, State, read_state, record_sync, set_ci_root, write_mode,
 };
 
-use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::resolve::resolve;
-use crate::cli::route::Call;
+use crate::cli::{Call, CoordError, Outcome};
 use crate::verbs::remote::support::text::is_key;
 use crate::who::find_project;
 

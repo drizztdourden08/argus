@@ -6,36 +6,13 @@
 mod common;
 mod hook_support;
 
-use std::fs;
-use std::io::{BufRead, BufReader, Write};
-use std::net::{TcpListener, TcpStream};
-use std::sync::{Arc, Mutex};
-use std::thread;
+use std::io::Write;
+use std::net::TcpStream;
 
-use hook_support::{Fixture, LEAD, UI, ago};
+use hook_support::{Fixture, LEAD, StandIn, UI, ago, fixture};
 use serde_json::{Value, json};
 
 const LINE: &str = "Board notices since your last turn: 3 (kanban-stale 2, worktree-review 1). Newest: \"I-4 sits in doing for 3 days\". Not wakes: the board header lists them.";
-
-struct Server {
-    port: u16,
-    paths: Arc<Mutex<Vec<String>>>,
-}
-
-fn request_path(stream: &TcpStream) -> String {
-    let mut reader = BufReader::new(stream);
-    let mut first = String::new();
-    reader.read_line(&mut first).ok();
-    let mut line = String::new();
-    while reader.read_line(&mut line).is_ok_and(|n| n > 2) {
-        line.clear();
-    }
-    first
-        .split_whitespace()
-        .nth(1)
-        .unwrap_or_default()
-        .to_owned()
-}
 
 fn reply(mut stream: TcpStream, body: &str) {
     let head = format!(
@@ -47,45 +24,25 @@ fn reply(mut stream: TcpStream, body: &str) {
     stream.flush().ok();
 }
 
-impl Server {
-    /// Answers the health check, and the notices route with `digest`.
-    fn start(digest: Value) -> Server {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = listener.local_addr().unwrap().port();
-        let paths = Arc::new(Mutex::new(Vec::new()));
-        let seen = Arc::clone(&paths);
-        let body = digest.to_string();
-        thread::spawn(move || {
-            for stream in listener.incoming().flatten() {
-                let path = request_path(&stream);
-                let answer = if path.starts_with("/api/health") {
-                    r#"{"ok":true}"#.to_owned()
-                } else {
-                    body.clone()
-                };
-                seen.lock().unwrap().push(path);
-                reply(stream, &answer);
-            }
-        });
-        Server { port, paths }
-    }
-
-    fn notice_paths(&self) -> Vec<String> {
-        self.paths
-            .lock()
-            .unwrap()
-            .iter()
-            .filter(|p| p.contains("/wakes/notices"))
-            .cloned()
-            .collect()
-    }
+/// Answers the health check, and the notices route with `digest`.
+fn serve(digest: Value) -> StandIn {
+    let body = digest.to_string();
+    StandIn::start(move |_, stream, path| {
+        let answer = if path.starts_with("/api/health") {
+            r#"{"ok":true}"#
+        } else {
+            body.as_str()
+        };
+        reply(stream, answer);
+    })
 }
 
-fn fixture(server: &Server) -> Fixture {
-    let f = Fixture::new();
-    let config = f.home.dashboard_home().join("config.json");
-    fs::write(config, format!(r#"{{"port":{}}}"#, server.port)).unwrap();
-    f
+fn notice_paths(server: &StandIn) -> Vec<String> {
+    server
+        .paths()
+        .into_iter()
+        .filter(|p| p.contains("/wakes/notices"))
+        .collect()
 }
 
 fn input(f: &Fixture, sid: &str) -> Value {
@@ -104,7 +61,7 @@ fn seen_at(f: &Fixture, id: &str, at: &str) {
 
 #[test]
 fn a_prompt_prints_the_digest_of_the_notices_since_the_thread_last_turn() {
-    let server = Server::start(digest(Some(LINE)));
+    let server = serve(digest(Some(LINE)));
     let f = fixture(&server);
     let last_turn = ago(30);
     seen_at(&f, "ui", &last_turn);
@@ -112,7 +69,7 @@ fn a_prompt_prints_the_digest_of_the_notices_since_the_thread_last_turn() {
     assert_eq!((ran.code, ran.out.as_str()), (0, LINE));
     let since = last_turn.replace(':', "%3A");
     assert_eq!(
-        server.notice_paths(),
+        notice_paths(&server),
         [format!(
             "/api/p/alpha/wakes/notices?thread=ui&since={since}"
         )]
@@ -121,11 +78,11 @@ fn a_prompt_prints_the_digest_of_the_notices_since_the_thread_last_turn() {
 
 #[test]
 fn a_lead_asks_for_the_notices_of_every_thread() {
-    let server = Server::start(digest(Some(LINE)));
+    let server = serve(digest(Some(LINE)));
     let f = fixture(&server);
     let ran = f.hook("prompt", &input(&f, LEAD));
     assert_eq!(ran.out, LINE);
-    let asked = server.notice_paths();
+    let asked = notice_paths(&server);
     assert_eq!(asked.len(), 1);
     assert!(
         asked[0].starts_with("/api/p/alpha/wakes/notices?thread=*&since="),
@@ -136,7 +93,7 @@ fn a_lead_asks_for_the_notices_of_every_thread() {
 
 #[test]
 fn no_notice_and_no_message_say_nothing() {
-    let server = Server::start(digest(None));
+    let server = serve(digest(None));
     let f = fixture(&server);
     let ran = f.hook("prompt", &input(&f, UI));
     assert_eq!((ran.code, ran.out.as_str()), (0, ""));
@@ -151,7 +108,7 @@ fn a_dashboard_that_is_down_adds_nothing() {
 
 #[test]
 fn new_messages_and_the_digest_come_in_one_text_the_digest_last() {
-    let server = Server::start(digest(Some(LINE)));
+    let server = serve(digest(Some(LINE)));
     let f = fixture(&server);
     let mut board = f.board();
     let message = json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": "Start with the parser.", "ref": null, "deliveredAt": null });

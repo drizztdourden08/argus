@@ -11,6 +11,10 @@ use serde_json::{Value, json};
 use crate::common::{Home, Ran};
 use argus_coord::Invocation;
 
+mod stand_in;
+
+pub use stand_in::{StandIn, fixture};
+
 /// The session ids of the fixture.
 pub const LEAD: &str = "sid-lead-0001";
 pub const UI: &str = "sid-ui-0002";

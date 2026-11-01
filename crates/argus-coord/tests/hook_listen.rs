@@ -11,41 +11,21 @@ mod hook_support;
 
 use std::env;
 use std::fs;
-use std::io::{BufRead, BufReader, Write};
-use std::net::{TcpListener, TcpStream};
+use std::io::Write;
+use std::net::TcpStream;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use argus_coord::Env;
-use hook_support::{Fixture, LEAD, UI, hook_with};
+use hook_support::{Fixture, LEAD, StandIn, UI, fixture, hook_with};
 use serde_json::{Value, json};
 
 /// What the stand-in answers on a stream: the events to send, then it holds the stream open
 /// (`None`: hold it open, silent; an empty text: end the stream at once).
 type Answer = Arc<dyn Fn(usize) -> Option<String> + Send + Sync>;
-
-struct Server {
-    port: u16,
-    paths: Arc<Mutex<Vec<String>>>,
-}
-
-fn request_path(stream: &TcpStream) -> String {
-    let mut reader = BufReader::new(stream);
-    let mut first = String::new();
-    reader.read_line(&mut first).ok();
-    let mut line = String::new();
-    while reader.read_line(&mut line).is_ok_and(|n| n > 2) {
-        line.clear();
-    }
-    first
-        .split_whitespace()
-        .nth(1)
-        .unwrap_or_default()
-        .to_owned()
-}
 
 fn answer(mut stream: TcpStream, events: Option<String>) {
     let head = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n";
@@ -61,25 +41,11 @@ fn answer(mut stream: TcpStream, events: Option<String>) {
     thread::sleep(Duration::from_secs(20));
 }
 
-impl Server {
-    fn start(answer_with: Answer) -> Server {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let port = listener.local_addr().unwrap().port();
-        let paths = Arc::new(Mutex::new(Vec::new()));
-        let seen = Arc::clone(&paths);
-        thread::spawn(move || {
-            for (n, stream) in listener.incoming().flatten().enumerate() {
-                seen.lock().unwrap().push(request_path(&stream));
-                let events = answer_with(n);
-                thread::spawn(move || answer(stream, events));
-            }
-        });
-        Server { port, paths }
-    }
-
-    fn paths(&self) -> Vec<String> {
-        self.paths.lock().unwrap().clone()
-    }
+fn serve(answer_with: Answer) -> StandIn {
+    StandIn::start(move |n, stream, _| {
+        let events = answer_with(n);
+        thread::spawn(move || answer(stream, events));
+    })
 }
 
 fn wake(data: &Value) -> String {
@@ -88,13 +54,6 @@ fn wake(data: &Value) -> String {
 
 fn always(events: Option<String>) -> Answer {
     Arc::new(move |_| events.clone())
-}
-
-fn fixture(server: &Server) -> Fixture {
-    let f = Fixture::new();
-    let config = f.home.dashboard_home().join("config.json");
-    fs::write(config, format!(r#"{{"port":{}}}"#, server.port)).unwrap();
-    f
 }
 
 fn env_of(f: &Fixture, extra: &[(&str, &str)]) -> Env {
@@ -116,7 +75,7 @@ fn listen(f: &Fixture, sid: &str, event: &str, extra: &[(&str, &str)]) -> common
 
 #[test]
 fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() {
-    let server = Server::start(always(Some(wake(
+    let server = serve(always(Some(wake(
         &json!({ "thread": "ui", "lines": ["lead: look at the build"], "count": 1 }),
     ))));
     let f = fixture(&server);
@@ -136,13 +95,13 @@ fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() 
 #[test]
 fn several_wakes_are_counted_and_unreadable_data_still_wakes() {
     let data = json!({ "thread": "ui", "lines": ["a", "b"], "count": 3 });
-    let server = Server::start(always(Some(wake(&data))));
+    let server = serve(always(Some(wake(&data))));
     let f = fixture(&server);
     assert_eq!(
         listen(&f, UI, "Stop", &[]).err,
         "WAKE ui: a; b (3 wakes). Run: coord inbox\n"
     );
-    let bad = Server::start(always(Some("event: wake\ndata: not json\n\n".to_owned())));
+    let bad = serve(always(Some("event: wake\ndata: not json\n\n".to_owned())));
     let f = fixture(&bad);
     let ran = listen(&f, UI, "Stop", &[]);
     assert_eq!(
@@ -153,7 +112,7 @@ fn several_wakes_are_counted_and_unreadable_data_still_wakes() {
 
 #[test]
 fn a_newer_listener_replaces_this_one_which_ends_silently_with_exit_0() {
-    let server = Server::start(always(Some("event: replaced\ndata: {}\n\n".to_owned())));
+    let server = serve(always(Some("event: replaced\ndata: {}\n\n".to_owned())));
     let f = fixture(&server);
     let ran = listen(&f, UI, "Stop", &[]);
     assert_eq!((ran.code, ran.out.as_str(), ran.err.as_str()), (0, "", ""));
@@ -161,7 +120,7 @@ fn a_newer_listener_replaces_this_one_which_ends_silently_with_exit_0() {
 
 #[test]
 fn a_lead_listens_for_every_thread_of_its_project() {
-    let server = Server::start(always(Some(wake(
+    let server = serve(always(Some(wake(
         &json!({ "thread": "ui", "lines": ["ui needs something"] }),
     ))));
     let f = fixture(&server);
@@ -176,7 +135,7 @@ fn a_lead_listens_for_every_thread_of_its_project() {
 
 #[test]
 fn an_unregistered_session_and_a_wait_that_ran_out_exit_0_with_nothing_to_say() {
-    let server = Server::start(always(None));
+    let server = serve(always(None));
     let f = fixture(&server);
     let stranger = listen(&f, "sid-stranger", "Stop", &[]);
     assert_eq!((stranger.code, stranger.err.as_str()), (0, ""));
@@ -200,7 +159,7 @@ fn a_stream_that_ended_is_joined_again_and_the_wake_still_arrives() {
             wake(&json!({ "thread": "ui", "lines": ["second try"] }))
         })
     });
-    let server = Server::start(answer_with);
+    let server = serve(answer_with);
     let f = fixture(&server);
     let ran = listen(&f, UI, "Stop", &[("COORD_LISTEN_MS", "20000")]);
     assert_eq!(ran.code, 2);
@@ -232,7 +191,7 @@ fn other_process() -> Child {
 
 #[test]
 fn a_tool_use_listener_skips_while_a_fresh_one_lives_and_a_stop_always_takes_over() {
-    let server = Server::start(always(Some(wake(
+    let server = serve(always(Some(wake(
         &json!({ "thread": "ui", "lines": ["go"] }),
     ))));
     let f = fixture(&server);
@@ -272,7 +231,7 @@ fn write_stamp(f: &Fixture, pid: u32, at: i64, started: i64) {
 
 #[test]
 fn the_tool_hook_keeps_a_live_old_listener_fresh_so_the_listener_after_it_has_nothing_to_do() {
-    let server = Server::start(always(None));
+    let server = serve(always(None));
     let f = fixture(&server);
     let mut other = other_process();
     let now = argus_core::clock::now_ms();
@@ -293,7 +252,7 @@ fn the_tool_hook_keeps_a_live_old_listener_fresh_so_the_listener_after_it_has_no
 
 #[test]
 fn the_tool_hook_leaves_a_dead_a_spent_or_a_sub_agents_listener_stamp_as_it_is() {
-    let server = Server::start(always(None));
+    let server = serve(always(None));
     let f = fixture(&server);
     let tool = json!({ "session_id": UI, "cwd": f.cwd_text() });
     let now = argus_core::clock::now_ms();
@@ -319,7 +278,7 @@ fn the_tool_hook_leaves_a_dead_a_spent_or_a_sub_agents_listener_stamp_as_it_is()
 
 #[test]
 fn session_start_says_wakes_are_automatic_only_where_the_settings_carry_the_listen_hook() {
-    let server = Server::start(always(None));
+    let server = serve(always(None));
     let f = fixture(&server);
     let start = || {
         let ran = f.hook(
@@ -366,7 +325,7 @@ fn a_listener_ends_silently_when_its_parent_is_gone() {
         eprintln!("skipped: no argus binary (cargo build -p argus)");
         return;
     };
-    let server = Server::start(always(None));
+    let server = serve(always(None));
     let f = fixture(&server);
     let mut parent = other_process();
     let parent_pid = parent.id().to_string();
