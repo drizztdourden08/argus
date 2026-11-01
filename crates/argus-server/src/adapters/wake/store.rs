@@ -29,10 +29,13 @@ fn failed(what: &str, err: &StoreError) -> StorageError {
     StorageError(format!("wakes: {what}: {err}"))
 }
 
-fn status_of(word: &str) -> WakeStatus {
-    match word {
-        "delivered" => WakeStatus::Delivered,
-        "coalesced" => WakeStatus::Coalesced,
+/// The status of a row. A passive notice is stored as `coalesced` with no event to fold into,
+/// so the table keeps the three words the Node schema allows and Node still opens it.
+fn status_of(word: &str, merged_into: Option<&str>) -> WakeStatus {
+    match (word, merged_into) {
+        ("delivered", _) => WakeStatus::Delivered,
+        ("coalesced", None) => WakeStatus::Passive,
+        ("coalesced", Some(_)) => WakeStatus::Coalesced,
         _ => WakeStatus::Queued,
     }
 }
@@ -41,12 +44,14 @@ fn status_word(status: WakeStatus) -> &'static str {
     match status {
         WakeStatus::Queued => "queued",
         WakeStatus::Delivered => "delivered",
-        WakeStatus::Coalesced => "coalesced",
+        WakeStatus::Coalesced | WakeStatus::Passive => "coalesced",
     }
 }
 
 fn row_of(r: &Row<'_>) -> argus_store::rusqlite::Result<WakeRow> {
     let lines: Option<String> = r.get(11)?;
+    let merged_into: Option<String> = r.get(13)?;
+    let status = status_of(&r.get::<_, String>(8)?, merged_into.as_deref());
     Ok(WakeRow {
         id: r.get(0)?,
         n: u64::try_from(r.get::<_, i64>(1)?).unwrap_or(0),
@@ -56,12 +61,12 @@ fn row_of(r: &Row<'_>) -> argus_store::rusqlite::Result<WakeRow> {
         subject: r.get(5)?,
         text: r.get(6)?,
         at: r.get(7)?,
-        status: status_of(&r.get::<_, String>(8)?),
+        status,
         listeners: u32::try_from(r.get::<_, i64>(9)?).unwrap_or(0),
         delivered_at: r.get(10)?,
         lines: lines.and_then(|text| serde_json::from_str(&text).ok()),
         count: u32::try_from(r.get::<_, i64>(12)?).unwrap_or(1),
-        merged_into: r.get(13)?,
+        merged_into,
     })
 }
 

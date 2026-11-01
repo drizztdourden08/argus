@@ -6,6 +6,8 @@
 //!   row is the event, the others fold into it, and every matching listener is sent the event.
 //! * With no listener the event stays queued and is replayed once to the first matching v2 listener that
 //!   connects within the replay period (24 hours).
+//! * The wake policy applies here, for every producer: a passive reason is recorded as a notice and never
+//!   reaches a listener, and a thread woken inside the debounce has its next wakes held in one digest.
 //!
 //! The engine is pure logic over a [`WakeStore`], a [`DocSink`] and a [`Clock`]. Nothing here sleeps:
 //! the owner calls `tick` when `next_deadline` has passed.
@@ -13,6 +15,7 @@
 mod attach;
 mod listeners;
 mod notes;
+mod policy;
 
 pub use attach::{Attached, MAX_LISTENERS_PER_SCOPE};
 pub use listeners::{
@@ -21,6 +24,7 @@ pub use listeners::{
 };
 pub use notes::{EngineNote, ReplayedEvent};
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use tracing::warn;
@@ -30,8 +34,10 @@ use crate::mirror::mirror_wakes;
 use crate::store::{StoreResult, WakeStore};
 use crate::time::iso;
 use crate::wake::{FinishedEvent, WakeEvent, WakeInput, WakeRow, WakeStatus};
+use crate::wake_policy::{WakePolicy, is_passive};
 use argus_core::clock::Clock;
 use listeners::ListenerSet;
+use policy::Placed;
 
 const MAX_LINES: usize = 8;
 const MAX_TEXT: usize = 300;
@@ -45,6 +51,8 @@ pub struct EngineConfig {
     pub replay_ms: i64,
     /// Reasons that close the window at once.
     pub immediate: Vec<String>,
+    /// How often one thread may be woken; off here, `wakePolicy` of `config.json` in the service.
+    pub policy: WakePolicy,
 }
 
 impl Default for EngineConfig {
@@ -53,6 +61,7 @@ impl Default for EngineConfig {
             window_ms: 15_000,
             replay_ms: 24 * 3_600_000,
             immediate: Vec::new(),
+            policy: WakePolicy::off(),
         }
     }
 }
@@ -63,6 +72,8 @@ struct Group {
     key: Key,
     rows: Vec<WakeRow>,
     deadline: Option<i64>,
+    /// Held by the debounce: the window is a digest, not the short coalescing one.
+    held: bool,
 }
 
 /// The wake engine.
@@ -72,6 +83,8 @@ pub struct WakeEngine {
     clock: Arc<dyn Clock>,
     config: EngineConfig,
     groups: Vec<Group>,
+    /// When each thread was last woken, for the debounce.
+    woken: HashMap<Key, i64>,
     listeners: ListenerSet,
     observed: bool,
     notes: Vec<EngineNote>,
@@ -125,6 +138,7 @@ impl WakeEngine {
             clock,
             config,
             groups: Vec::new(),
+            woken: HashMap::new(),
             listeners: ListenerSet::default(),
             observed: false,
             notes: Vec::new(),
@@ -173,22 +187,8 @@ impl WakeEngine {
         self.store.as_ref()
     }
 
-    fn push_row(&mut self, key: &Key, row: WakeRow) -> bool {
-        if let Some(group) = self.groups.iter_mut().find(|g| g.key == *key) {
-            group.rows.push(row);
-            return false;
-        }
-        let deadline =
-            (self.config.window_ms > 0).then(|| self.clock.now_ms() + self.config.window_ms);
-        self.groups.push(Group {
-            key: key.clone(),
-            rows: vec![row],
-            deadline,
-        });
-        true
-    }
-
     /// Record wakes and open or join their windows; returns how many projects were touched.
+    /// A passive reason is recorded as a notice only (see [`crate::wake_policy`]).
     ///
     /// # Errors
     /// When a wake cannot be written to the store.
@@ -208,23 +208,36 @@ impl WakeEngine {
                 },
                 &at,
             )?;
+            push_unique(&mut touched, wake.scope.clone());
+            if is_passive(&wake.reason) {
+                self.shelve(&row);
+                continue;
+            }
             let key = (wake.scope.clone(), wake.thread.clone());
-            if self.push_row(&key, row) {
+            let immediate = self.config.immediate.contains(&wake.reason);
+            let placed = self.place(&key, row, immediate);
+            if matches!(placed, Placed::Opened) {
                 fresh.push(key.clone());
             }
-            push_unique(&mut touched, wake.scope.clone());
-            if self.config.immediate.contains(&wake.reason) {
+            let close_now = match placed {
+                Placed::Opened | Placed::Joined => immediate,
+                Placed::Held { due } => due,
+            };
+            if close_now {
                 push_unique(&mut urgent, key);
             }
         }
         for scope in &touched {
             self.mirror(scope);
         }
-        let closing = if self.config.window_ms <= 0 {
+        let mut closing = if self.config.window_ms <= 0 {
             fresh
         } else {
-            urgent
+            Vec::new()
         };
+        for key in urgent {
+            push_unique(&mut closing, key);
+        }
         for (scope, thread) in &closing {
             self.flush(scope, thread);
         }
@@ -268,6 +281,7 @@ impl WakeEngine {
         if let Err(err) = self.store.finish(lead, others, &done) {
             warn!(scope, thread, %err, "wake event not recorded");
         }
+        self.mark_woken(scope, thread);
         self.mirror(scope);
         self.note(EngineNote::Flushed {
             scope: scope.to_owned(),
@@ -341,6 +355,10 @@ impl WakeEngine {
             if self.groups.iter().any(|g| g.key == key) {
                 continue;
             }
+            if is_passive(&row.reason) {
+                self.shelve(&row);
+                continue;
+            }
             match by_key.iter_mut().find(|(k, _)| *k == key) {
                 Some((_, rows)) => rows.push(row),
                 None => by_key.push((key, vec![row])),
@@ -364,12 +382,16 @@ impl WakeEngine {
         Ok(())
     }
 
-    /// Events nobody received since `since_iso` (for the registry after a restart).
+    /// Events nobody received since `since_iso` (for the registry after a restart); a passive one
+    /// queued before the wake policy is not one.
     #[must_use]
     pub fn queued_since(&self, scope: &str, since_iso: &str) -> Vec<WakeRow> {
-        self.store
+        let mut rows = self
+            .store
             .queued_events(scope, "*", since_iso)
-            .unwrap_or_default()
+            .unwrap_or_default();
+        rows.retain(|r| !is_passive(&r.reason));
+        rows
     }
 
     /// Every project that has wake rows.

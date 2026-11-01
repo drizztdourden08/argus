@@ -7,6 +7,7 @@ use super::listeners::{AttachOptions, Delivery, ListenerId, ListenerSink, NewLis
 use super::notes::{EngineNote, ReplayedEvent};
 use crate::time::iso;
 use crate::wake::WakeEvent;
+use crate::wake_policy::is_passive;
 
 /// The most listeners one project accepts.
 pub const MAX_LISTENERS_PER_SCOPE: usize = 64;
@@ -94,7 +95,7 @@ impl WakeEngine {
             }
         };
         let mut replayed = Vec::new();
-        for row in rows {
+        for row in rows.into_iter().filter(|r| !is_passive(&r.reason)) {
             match sink.deliver(&WakeEvent::of_row(&row)) {
                 Delivery::Sent => {}
                 Delivery::Gone => break,

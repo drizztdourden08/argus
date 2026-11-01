@@ -1,4 +1,5 @@
 //! Every reason a wake row can carry, and which of them close the coalescing window at once.
+//! Which of them wake a thread at all is the table of [`crate::wake_policy`].
 
 /// The scope of the portfolio page.
 pub const PORTFOLIO: &str = "_portfolio";
@@ -7,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 27] = [
+pub const WAKE_REASONS: [&str; 28] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -20,6 +21,7 @@ pub const WAKE_REASONS: [&str; 27] = [
     "portfolio-decision",
     "portfolio-note",
     "lead-message",
+    "lead-info",
     "thread-message",
     "wake-fault",
     "agent-stale",
@@ -51,7 +53,8 @@ pub const IMMEDIATE_REASONS: [&str; 9] = [
 ];
 
 /// The reasons the wakes route accepts from outside the policy.
-pub const EXTERNAL_REASONS: [&str; 3] = ["lead-message", "thread-message", "wake-fault"];
+pub const EXTERNAL_REASONS: [&str; 4] =
+    ["lead-message", "lead-info", "thread-message", "wake-fault"];
 
 /// Does this reason close the window at once?
 #[must_use]
