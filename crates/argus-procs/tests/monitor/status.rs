@@ -1,4 +1,5 @@
-//! Status, protection and docs from fake samples.
+//! K1: Status, protection and docs from fake samples.
+// test-tag: critical
 
 use super::harness::{Harness, MIN, Setup, Spec, T0, proc};
 use argus_procs::{Flag, Guard, ProcRow, RuleSummary, Status};

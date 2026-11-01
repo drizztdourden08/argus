@@ -1,4 +1,5 @@
-//! The store is written only when a reader would see a change, and at a slow heartbeat.
+//! K1: The store is written only when a reader would see a change, and at a slow heartbeat.
+// test-tag: critical
 
 use super::harness::{Harness, Setup, Spec, T0, proc};
 use argus_procs::{HEARTBEAT_MS, ProcRow};

@@ -176,6 +176,7 @@ pub fn normalize_rule(input: &Value) -> Checked<Rule> {
     })
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

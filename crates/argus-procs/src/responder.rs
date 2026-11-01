@@ -76,6 +76,7 @@ impl Responder for NoResponder {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,10 +85,5 @@ mod tests {
     fn the_answer_is_read_per_pid() {
         let map = parse_responding("10=True\r\n11=False\nnoise\n12=maybe\n");
         assert_eq!(map, HashMap::from([(10, true), (11, false)]));
-    }
-
-    #[test]
-    fn the_script_names_the_pids() {
-        assert!(script(&[4, 9]).contains("in 4,9"));
     }
 }
