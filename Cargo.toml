@@ -16,3 +16,10 @@ unsafe_code = "deny"
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
+
+# Line tables are enough for a backtrace; full debug info filled the target folder with pdb files.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.test]
+debug = 0
