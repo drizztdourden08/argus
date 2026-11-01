@@ -145,15 +145,7 @@ impl Service {
 
     /// Block until every worker has run what was queued, and told what it finished.
     pub fn requests_idle(&self) {
-        loop {
-            let workers = self.workers();
-            for worker in &workers {
-                worker.wait_idle();
-            }
-            if self.workers().len() == workers.len() {
-                return;
-            }
-        }
+        self.requests.queues.wait_all_idle();
     }
 }
 

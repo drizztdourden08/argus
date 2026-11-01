@@ -18,6 +18,7 @@ use crate::inspect::{ScanCtx, inspect_dir};
 use crate::leftover_remove::{Within, git_within, unreadable_refusal};
 use crate::modules::NodeModules;
 use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
+use crate::progress::{WAITING, target_key};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::Service;
@@ -135,13 +136,17 @@ impl Service {
         rescan: bool,
         what: impl FnOnce(&mut Trace) -> Result<RemoveOutcome>,
     ) -> Result<RemoveOutcome> {
-        self.step(
-            &input.id,
-            "waiting for its turn (a scan or another removal runs)",
-        );
-        let _one = self.one_at_a_time();
-        self.step(&input.id, "checking");
+        self.step(&input.id, WAITING);
         let (who, why) = Self::who_and_why(input);
+        let key = target_key(&input.id, self.ci());
+        let named = if input.id.trim().is_empty() {
+            "every gone worktree"
+        } else {
+            input.id.trim()
+        };
+        let holder = format!("the removal of {named} {who}");
+        let _one = self.one_at_a_time(&input.project, &holder, Some(&key));
+        self.step(&input.id, "checking");
         let mut trace = Trace::default();
         let thread = input.caller.thread();
         let result = what(&mut trace);

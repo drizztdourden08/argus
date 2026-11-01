@@ -102,10 +102,13 @@ impl Service {
             .cloned()
     }
 
-    /// Run a job after the ones queued before it.
+    /// Run a job after the ones of its project queued before it.
     pub(crate) fn enqueue_delete(&self, id: &str) {
+        let project = self.job(id).map(|j| j.project).unwrap_or_default();
         let (service, id) = (self.clone(), id.to_string());
-        self.queue.push(Box::new(move || service.run_delete(&id)));
+        self.queue
+            .of(&project)
+            .push(Box::new(move || service.run_delete(&id)));
     }
 
     fn delete_folder(&self, id: &str, folder: &str) -> Failures {

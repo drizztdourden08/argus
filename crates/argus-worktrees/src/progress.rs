@@ -3,12 +3,22 @@
 //!
 //! Steps: waiting for its turn (a scan or another removal runs), checking, `node_modules` clear (entries removed so
 //! far), links, git worktree remove, folder delete (a deletion job: entries removed of the total).
+//!
+//! A wait for the turn past `NAME_HOLDER_AFTER_MS` names the holder instead: what took the project's turn, since
+//! when, and the step that holder is on.
 
 use crate::clock::iso_from_ms;
 use crate::jobs::JobState;
 use crate::paths::{clean_path, is_worktree_id, worktree_id};
 use crate::service::Service;
+use crate::turns::Holder;
 use serde::{Deserialize, Serialize};
+
+/// The step of a removal that waits for the project's turn.
+pub(crate) const WAITING: &str = "waiting for its turn (a scan or another removal runs)";
+
+/// A wait for the turn this long names the holder.
+const NAME_HOLDER_AFTER_MS: i64 = 30_000;
 
 /// One step of a removal.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -68,7 +78,37 @@ impl Service {
             .job_step(project, &key)
             .or_else(|| self.st().steps.get(&key).cloned())?;
         step.for_s = (now - step.since_ms).max(0) / 1000;
+        if step.name == WAITING
+            && now - step.since_ms >= NAME_HOLDER_AFTER_MS
+            && let Some(holder) = self.exclusive.holder(project)
+        {
+            step.name = self.holder_text(&holder, now);
+        }
         Some(step)
+    }
+
+    /// The step of a long wait, as in this example:
+    /// `waiting for its turn: the removal of 1a2b3c4d5e for lead has held it since <iso> (248 s), at links`.
+    fn holder_text(&self, holder: &Holder, now: i64) -> String {
+        let at = holder
+            .key
+            .as_ref()
+            .and_then(|key| self.st().steps.get(key).cloned())
+            .filter(|s| s.name != WAITING)
+            .map(|s| {
+                let done = s
+                    .done
+                    .map(|n| format!(", {n} entries removed"))
+                    .unwrap_or_default();
+                format!(", at {}{done}", s.name)
+            })
+            .unwrap_or_default();
+        format!(
+            "waiting for its turn: {} has held it since {} ({} s){at}",
+            holder.what,
+            iso_from_ms(holder.since_ms),
+            (now - holder.since_ms).max(0) / 1000
+        )
     }
 
     /// A deletion job of the folder (a leftover's, or a parked folder a restart took up): its count of the total. The

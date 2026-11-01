@@ -77,7 +77,10 @@ the `worktree-stale` wake when they grow stale.
 A scan runs git in every worktree, which costs with dozens of them, so the scan is event driven.
 
 - **The look.** Every live tick (`liveMs`, 20 seconds) Argus reads file times and sizes, with no
-  git process and without the turn that scans and removals take. A worktree's fingerprint is: the
+  git process and without the turn that scans and removals take. Each project has its own turn
+  and its own deletion worker, so a long removal in one project never holds up another, and a
+  removal that waits for its turn more than 30 seconds names in its step who holds it and since
+  when. A worktree's fingerprint is: the
   folder is there, its `.git`, its own `HEAD` and `index` (for a linked worktree the files under
   `<main>/.git/worktrees/<name>`, found through its `.git` file), the loose ref of its branch, the
   loose ref of the branch the main checkout has, and `packed-refs`. The shape of the rules is

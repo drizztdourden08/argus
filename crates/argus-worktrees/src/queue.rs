@@ -1,9 +1,9 @@
-//! One background worker that runs deletion jobs one at a time.
+//! One background worker that runs tasks one at a time, and one such worker per project.
 
 use crate::sync::{locked, waited};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex, mpsc};
 use std::thread;
 
 type Task = Box<dyn FnOnce() + Send + 'static>;
@@ -65,6 +65,48 @@ impl Queue {
         let mut lane = locked(&self.0.lane);
         while lane.running || !lane.pending.is_empty() {
             lane = waited(&self.0.idle, lane);
+        }
+    }
+
+    /// Block until every task queued before this call has run. The ones queued after it are not waited for, so a
+    /// queue that others keep feeding never holds the caller forever.
+    pub fn wait_queued(&self) {
+        let (ran, done) = mpsc::channel();
+        self.push(Box::new(move || {
+            let _ = ran.send(());
+        }));
+        let _ = done.recv();
+    }
+}
+
+/// One queue per project, made on first use: the tasks of a project never wait for another project's.
+#[derive(Default)]
+pub struct Queues(Mutex<HashMap<String, Queue>>);
+
+impl Queues {
+    /// The project's queue.
+    pub fn of(&self, project: &str) -> Queue {
+        locked(&self.0)
+            .entry(project.to_string())
+            .or_default()
+            .clone()
+    }
+
+    /// Every queue made so far.
+    pub fn all(&self) -> Vec<Queue> {
+        locked(&self.0).values().cloned().collect()
+    }
+
+    /// Block until every queue has run what it was given, the queues made meanwhile included.
+    pub fn wait_all_idle(&self) {
+        loop {
+            let queues = self.all();
+            for queue in &queues {
+                queue.wait_idle();
+            }
+            if self.all().len() == queues.len() {
+                return;
+            }
         }
     }
 }
