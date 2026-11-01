@@ -1,4 +1,6 @@
 //! `attach_proof`: base64 and path sources, the magic bytes, the allowed folders and the cap.
+//! K4, K2: attach_proof sources, magic bytes, allowed folders and the size cap.
+// test-tag: critical
 
 use std::fs;
 use std::path::{Path, PathBuf};

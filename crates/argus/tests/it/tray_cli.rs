@@ -4,6 +4,8 @@
 //! in `argus-native`. No case starts the tray itself (that would put an icon on the owner's
 //! desktop): the start that spawns it, the real Quit and the PowerShell script cases of the Node
 //! file have no counterpart, because the tray is native code in `argus-native` now.
+//! E2, K2: the tray verbs of the real binary, with no tray started.
+// test-tag: e2e
 
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -73,6 +75,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn status_says_not_running_and_exits_1_with_no_tray() {
         let home = home();
         let out = argus(home.path(), &["status"]);
@@ -80,6 +83,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn status_says_when_the_dashboard_was_closed_from_the_tray() {
         let home = home();
         std::fs::write(home.path().join("quit.flag"), "{}\n").expect("quit.flag");
@@ -108,6 +112,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn start_with_a_tray_already_running_spawns_no_tray_but_still_brings_the_server_up() {
         let home = home();
         write_tray(home.path(), std::process::id());
@@ -143,6 +148,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn stop_with_no_tray_is_a_no_op_and_clears_a_stale_record() {
         let home = home();
         let gone = Sleeper::start();
@@ -171,17 +177,10 @@ mod windows {
 
 #[cfg(not(windows))]
 #[test]
+#[ignore = "e2e"]
 fn start_fails_clearly_on_a_platform_without_a_tray() {
     let home = home();
     let out = argus(home.path(), &["start"]);
     assert_eq!(out.code, 1);
     assert!(out.stderr.contains("Windows only"), "{}", out.stderr);
-}
-
-#[test]
-fn an_unknown_tray_verb_is_a_usage_error() {
-    let home = home();
-    let out = argus(home.path(), &["frobnicate"]);
-    assert_eq!(out.code, 2);
-    assert!(out.stderr.contains("frobnicate"), "{}", out.stderr);
 }

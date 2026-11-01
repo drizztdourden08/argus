@@ -1,4 +1,6 @@
 //! The resources: listing, templates and reads.
+//! K2: the resource list and reads.
+// test-tag: critical
 
 use argus_mcp::RpcHost;
 use serde_json::{Value, json};

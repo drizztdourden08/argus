@@ -1,4 +1,6 @@
 //! The permission model of `config.mcp`: deny wins, allow narrows, readOnly refuses writes.
+//! K4: deny, allow and readOnly decide which tools run.
+// test-tag: critical
 
 use argus_core::config::McpConfig;
 use argus_mcp::tool_defs;

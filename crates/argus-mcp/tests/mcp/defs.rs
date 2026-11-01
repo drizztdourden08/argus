@@ -1,4 +1,6 @@
 //! The tool definitions.
+//! K2: the tool definitions are the contract of the MCP layer.
+// test-tag: critical
 
 use std::collections::HashSet;
 

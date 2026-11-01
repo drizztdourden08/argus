@@ -1,6 +1,8 @@
 //! The `argus coord` fast path of the real binary: help and an unknown verb. Every verb is
 //! ported, so the exit 120 rule is covered in-process by `argus-coord`'s `route` tests. The
 //! homes are temp folders; the real `~/.coord` is never named.
+//! E2, K2: help and an unknown verb of the real binary.
+// test-tag: e2e
 
 use std::io::Write;
 use std::path::Path;
@@ -26,6 +28,7 @@ fn argus(args: &[&str], home: &Path, stdin: &str) -> Output {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn help_prints_the_usage_and_exits_0() {
     let home = tempfile::tempdir().unwrap();
     let out = argus(&["--help"], home.path(), "");
@@ -37,6 +40,7 @@ fn help_prints_the_usage_and_exits_0() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn an_unknown_verb_exits_1_with_the_usage_on_stderr() {
     let home = tempfile::tempdir().unwrap();
     let out = argus(&["frobnicate"], home.path(), "");

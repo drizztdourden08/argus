@@ -163,8 +163,10 @@ async fn sign_in_code(port: u16, token: &str) -> Result<String, String> {
         .ok_or_else(|| format!("the sign-in code call answered {status} without a code"))
 }
 
+// test-tag: standard
 #[cfg(test)]
 mod tests {
+    //! S2: the tray reads the server state from a home and an in-process server.
     use argus_core::Paths;
     use argus_native::TrayState;
     use argus_testkit::{TestOptions, TestServer};

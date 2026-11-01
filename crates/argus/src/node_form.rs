@@ -129,8 +129,10 @@ pub fn forwarded() -> bool {
     std::env::var_os(FORWARD_ENV).is_some_and(|value| !value.is_empty())
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1, K2: the Node command line, answered the way the Node parser answers it.
     use super::{Answer, USAGE, answer};
 
     fn args(line: &str) -> Vec<String> {

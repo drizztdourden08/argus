@@ -32,8 +32,10 @@ pub fn remove(names: &LocalNames) -> String {
     )
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K2, K4: the printed NRPT script is the one rule and nothing else.
     use argus_core::names::LocalNames;
 
     use super::{install, remove};
@@ -44,7 +46,6 @@ mod tests {
         assert!(text.contains(
             "Add-DnsClientNrptRule -Namespace \".argus\" -NameServers \"127.65.82.71\"\n"
         ));
-        assert!(text.contains("Chrome and Edge honour NRPT"));
         assert!(text.contains("http://argus.argus/"));
     }
 

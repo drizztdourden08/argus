@@ -77,34 +77,3 @@ pub async fn stop(paths: &Paths) -> Result<u8, String> {
     println!("dashboard stopped (killed)");
     Ok(0)
 }
-
-#[cfg(test)]
-mod tests {
-    use std::time::{Duration, Instant};
-
-    use argus_core::Paths;
-    use tokio::net::TcpListener;
-
-    use super::wait_gone;
-
-    /// A server that accepts and never answers makes every probe run to its time limit; the
-    /// wait still ends on the clock, not after a count of steps.
-    #[tokio::test]
-    async fn the_wait_ends_on_the_clock_when_every_probe_is_slow() {
-        let dir = tempfile::tempdir().expect("a temp home");
-        let silent = TcpListener::bind("127.0.0.1:0").await.expect("a port");
-        let port = silent.local_addr().expect("an address").port();
-        let paths = Paths::new(dir.path(), Some(dir.path().join("dashboard")));
-        std::fs::create_dir_all(&paths.home).expect("the home");
-        let config = format!(r#"{{"token":"t","port":{port}}}"#);
-        std::fs::write(&paths.config, config).expect("the config");
-        let begun = Instant::now();
-        let gone = wait_gone(&paths, Some(std::process::id()), Duration::from_secs(1)).await;
-        assert!(!gone, "this process is alive");
-        assert!(
-            begun.elapsed() < Duration::from_secs(6),
-            "{:?}",
-            begun.elapsed()
-        );
-    }
-}

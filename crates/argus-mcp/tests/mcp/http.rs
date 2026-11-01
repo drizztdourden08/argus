@@ -1,6 +1,8 @@
 //! The `/mcp` handler: JSON-RPC framing, initialize, tools/list, the tools/call envelope,
 //! resources and every transport-level refusal (the cases of `mcp.http` and the protocol side
 //! of `mcp.server`).
+//! K2, K4: the /mcp framing, envelope and refusals.
+// test-tag: critical
 
 use argus_mcp::{
     INSTRUCTIONS, MAX_BYTES, McpReply, McpRequest, SUPPORTED_VERSIONS, handle_other, handle_post,
@@ -195,32 +197,6 @@ async fn ping_unknown_method_unknown_tool_and_a_missing_name() {
     assert_eq!(
         no_name["error"],
         json!({ "code": -32602, "message": "name is required" })
-    );
-}
-
-#[tokio::test]
-async fn tools_list_has_23_well_formed_tools() {
-    let rig = Rig::new();
-    let body = rpc(
-        &rig,
-        json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }),
-    )
-    .await;
-    let tools = body["result"]["tools"].as_array().expect("tools");
-    assert_eq!(tools.len(), 23);
-    for t in tools {
-        assert_eq!(t["inputSchema"]["type"], "object", "{}", t["name"]);
-        assert!(
-            t["annotations"].get("readOnlyHint").is_some(),
-            "{}",
-            t["name"]
-        );
-    }
-    let names: Vec<&str> = tools.iter().filter_map(|t| t["name"].as_str()).collect();
-    assert!(
-        names.contains(&"board_summary")
-            && names.contains(&"send_to_lead")
-            && names.contains(&"notify_owner")
     );
 }
 

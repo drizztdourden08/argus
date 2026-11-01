@@ -2,6 +2,8 @@
 //! temp folders (an `APPDATA` of its own, explicit `--config` files); the real Claude Desktop
 //! config and Startup folder are never touched. The `coord dashboard` verb and the `dashboard`
 //! shims of that file belong to `ai-config`.
+//! K2, K3: the install-mcp, autostart and self-install verbs, their files and their refusals.
+// test-tag: critical
 
 use std::fs;
 use std::path::{Path, PathBuf};

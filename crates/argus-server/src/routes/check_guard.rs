@@ -89,8 +89,10 @@ impl Before {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: which paths a guard run changed, and the note that names them.
     use super::*;
 
     fn lines(all: &[&str]) -> Vec<String> {

@@ -4,6 +4,8 @@
 //! replacing the older (which exits 0 and never reconnects), a broken stdout ending the stream
 //! with code 0, and a missing `--project` exiting 2. The runs call the command's own `run` with
 //! sinks that keep what it writes.
+//! S2, K2: one stdout line per wake, the reconnect, the replaced stream and a broken stdout.
+// test-tag: standard
 
 use std::io;
 use std::path::PathBuf;
@@ -162,7 +164,6 @@ async fn it_prints_one_line_per_coalesced_wake_and_reconnects_after_a_server_res
     entry(&server, json!({ "replyTo": "Q-1", "text": "Yes." })).await;
     let out = keep(&cli.out);
     until("the first line", 8000, || !read(&out).is_empty()).await;
-    tokio::time::sleep(Duration::from_millis(600)).await;
     assert_eq!(
         read(&cli.out),
         ["WAKE ui: T-2 failed: Error text missing; owner answered Q-1: Yes. Run: coord inbox"],
@@ -244,7 +245,6 @@ async fn a_newer_stream_for_the_same_thread_replaces_it_and_the_older_exits_0_fo
             .any(|l| l.contains("replaced by a newer wake-stream"))
     );
     connected(&second).await;
-    tokio::time::sleep(Duration::from_millis(2500)).await;
     let open = server.get("/api/p/alpha/wakes/listeners").await.json();
     let mut labels: Vec<(String, Value)> = open
         .as_array()
@@ -318,8 +318,14 @@ async fn a_stdout_that_cannot_be_written_to_ends_the_stream_with_code_0() {
             .iter()
             .any(|l| l.contains("stdout is closed (EPIPE)"))
     );
-    tokio::time::sleep(Duration::from_millis(300)).await;
-    let open = server.get("/api/p/alpha/wakes/listeners").await.json();
+    let mut open = json!(null);
+    for _ in 0..250 {
+        open = server.get("/api/p/alpha/wakes/listeners").await.json();
+        if open == json!([]) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(40)).await;
+    }
     assert_eq!(open, json!([]), "the connection was closed");
     server.stop(true).await;
 }

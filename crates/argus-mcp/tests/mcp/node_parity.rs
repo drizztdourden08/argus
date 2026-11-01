@@ -1,6 +1,8 @@
 //! The tool list and the `initialize` text compared with the Node server itself. The test
 //! runs only where the Node dashboard is on disk (`ARGUS_NODE_DASHBOARD`, default
 //! `X:/ai-config/dashboard`) and `node` is on the path.
+//! E3: the tool list and initialize text against the Node server.
+// test-tag: e2e
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -33,6 +35,7 @@ fn node_answer() -> Option<Value> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_tool_list_and_the_initialize_text_are_the_node_ones() {
     let Some(node) = node_answer() else {
         return;
@@ -81,6 +84,7 @@ fn names_where(keep: impl Fn(&Value) -> bool) -> Vec<String> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_permission_rules_allow_the_reads_and_the_ping_and_ask_for_the_writes() {
     let Some(perms) = permissions() else {
         return;

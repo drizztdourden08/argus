@@ -1,6 +1,8 @@
 //! The result text of the tools and resources compared with the Node tool host over the same
 //! fixture, byte for byte. Runs only where the Node dashboard is on disk
 //! (`ARGUS_NODE_DASHBOARD`, default `X:/ai-config/dashboard`) and `node` is on the path.
+//! E3: result texts against the Node tool host.
+// test-tag: e2e
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -234,6 +236,7 @@ fn node_output(calls: &[(&str, Value, Option<&str>)]) -> Option<Vec<String>> {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn every_result_text_is_the_node_one() {
     let plan = calls();
     let Some(node) = node_output(&plan) else {

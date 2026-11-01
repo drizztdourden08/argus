@@ -1,4 +1,6 @@
 //! Every read tool against the fixture boards: shapes, filters, sorting and the argument rules.
+//! K2: the shape of every read tool.
+// test-tag: critical
 
 use argus_mcp::{MemoryBackend, RpcHost};
 use serde_json::{Value, json};

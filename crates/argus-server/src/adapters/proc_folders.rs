@@ -115,8 +115,10 @@ impl FolderReader {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: the porcelain list and the rule paths parse to their folders.
     use super::*;
     use serde_json::json;
 

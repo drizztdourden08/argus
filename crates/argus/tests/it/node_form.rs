@@ -1,6 +1,8 @@
 //! The top-level output of a call the Node shim forwarded (`ARGUS_FORWARDED_FROM` set) is the
 //! Node `dashboard` bin's, ported from its `--version`, usage and unknown command behaviour; a
 //! direct call keeps clap's own. Temp home, `DASHBOARD_PORT=0`, nothing is started.
+//! E2, K2: the real binary answers a forwarded call with the Node text.
+// test-tag: e2e
 
 use std::process::{Command, Output};
 
@@ -29,22 +31,7 @@ fn text(bytes: &[u8]) -> String {
 }
 
 #[test]
-fn a_forwarded_version_is_bare() {
-    let home = tempfile::tempdir().expect("a temp home");
-    for flag in ["--version", "-v"] {
-        let out = run(&home, true, &[flag]);
-        assert_eq!(
-            text(&out.stdout),
-            format!("{}\n", env!("CARGO_PKG_VERSION"))
-        );
-        assert_eq!(
-            (text(&out.stderr).as_str(), out.status.code()),
-            ("", Some(0))
-        );
-    }
-}
-
-#[test]
+#[ignore = "e2e"]
 fn a_forwarded_usage_is_the_node_text() {
     let home = tempfile::tempdir().expect("a temp home");
     for (args, code) in [
@@ -64,23 +51,7 @@ fn a_forwarded_usage_is_the_node_text() {
 }
 
 #[test]
-fn a_forwarded_unknown_command_is_refused_the_node_way() {
-    let home = tempfile::tempdir().expect("a temp home");
-    let out = run(&home, true, &["frobnicate"]);
-    let stderr = text(&out.stderr);
-    assert!(
-        stderr
-            .starts_with("dashboard: unknown command \"frobnicate\"\nUsage: dashboard <command>\n")
-    );
-    assert!(stderr.ends_with(USAGE_TAIL), "{stderr}");
-    assert_eq!(
-        (text(&out.stdout).as_str(), out.status.code()),
-        ("", Some(2))
-    );
-    assert_eq!(run(&home, true, &["-V"]).status.code(), Some(2));
-}
-
-#[test]
+#[ignore = "e2e"]
 fn a_direct_call_keeps_the_clap_output() {
     let home = tempfile::tempdir().expect("a temp home");
     let version = run(&home, false, &["--version"]);

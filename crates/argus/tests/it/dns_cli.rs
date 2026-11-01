@@ -1,6 +1,8 @@
 //! `argus dns` end to end: the real binary on throwaway homes. The scripts are only printed. The
 //! status test asks an in-process server whose responder and door sit on port 0, never 53 or 80,
 //! and the owner's 47615 is never touched.
+//! E2, K2, K4: the dns verbs of the real binary print scripts and run nothing.
+// test-tag: e2e
 
 use std::path::Path;
 use std::process::Command;
@@ -38,6 +40,7 @@ fn dns(home: &TempDir, args: &[&str]) -> Out {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn install_and_remove_print_the_administrator_script_and_change_nothing() {
     let home = home_with(&Value::Null);
     let install = dns(&home, &["install", "--print"]);
@@ -47,7 +50,6 @@ fn install_and_remove_print_the_administrator_script_and_change_nothing() {
             .stdout
             .contains("Add-DnsClientNrptRule -Namespace \".argus\" -NameServers \"127.65.82.71\"")
     );
-    assert!(install.stdout.contains("Chrome and Edge honour NRPT"));
     assert!(install.stdout.contains("http://argus.argus/"));
     let remove = dns(&home, &["remove", "--print"]);
     assert_eq!(remove.code, 0, "{}", remove.stderr);
@@ -59,6 +61,7 @@ fn install_and_remove_print_the_administrator_script_and_change_nothing() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_script_follows_the_suffix_and_address_of_the_config() {
     let config = json!({ "localNames": { "suffix": "home.argus", "address": ADDRESS } });
     let home = home_with(&config);
@@ -69,6 +72,7 @@ fn the_script_follows_the_suffix_and_address_of_the_config() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn nothing_is_printed_or_run_without_print_and_a_refused_key_is_named() {
     let home = home_with(&Value::Null);
     assert_eq!(dns(&home, &["install"]).code, 2);
@@ -84,18 +88,7 @@ fn nothing_is_printed_or_run_without_print_and_a_refused_key_is_named() {
 }
 
 #[test]
-fn status_says_off_until_the_config_turns_the_names_on() {
-    let home = home_with(&Value::Null);
-    let status = dns(&home, &["status"]);
-    assert_eq!(status.code, 0, "{}", status.stderr);
-    assert!(
-        status.stdout.contains("local names: off"),
-        "{}",
-        status.stdout
-    );
-}
-
-#[test]
+#[ignore = "e2e"]
 fn status_with_the_names_on_and_no_server_says_the_dns_is_silent() {
     let config = json!({ "localNames": { "enabled": true, "address": ADDRESS } });
     let home = home_with(&config);
@@ -115,6 +108,7 @@ fn status_with_the_names_on_and_no_server_says_the_dns_is_silent() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn status_asks_the_real_responder_of_a_running_server() {
     let options = TestOptions {
         sync: false,

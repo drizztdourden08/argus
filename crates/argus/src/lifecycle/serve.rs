@@ -64,8 +64,10 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
     Ok(0)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: the order of the port flag, the environment and the config.
     use super::pick_port;
 
     #[test]

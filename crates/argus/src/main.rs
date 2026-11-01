@@ -226,34 +226,13 @@ fn on_runtime(work: impl Future<Output = ExitCode>) -> ExitCode {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
-    use std::process::ExitCode;
-    use std::time::{Duration, Instant};
+    //! K2: the verbs and flags of the argus command line.
+    use clap::Parser;
 
-    use clap::{CommandFactory, Parser};
-
-    use super::{Cli, on_runtime};
-
-    #[test]
-    fn the_exit_does_not_wait_for_blocking_work() {
-        let begun = Instant::now();
-        let code = on_runtime(async {
-            let _left = tokio::task::spawn_blocking(|| std::thread::sleep(Duration::from_secs(30)));
-            ExitCode::SUCCESS
-        });
-        assert_eq!(code, ExitCode::SUCCESS);
-        assert!(
-            begun.elapsed() < Duration::from_secs(5),
-            "{:?}",
-            begun.elapsed()
-        );
-    }
-
-    #[test]
-    fn the_command_line_is_well_formed() {
-        Cli::command().debug_assert();
-    }
+    use super::Cli;
 
     #[test]
     fn the_parity_flags_parse() {

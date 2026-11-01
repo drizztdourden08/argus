@@ -108,8 +108,10 @@ impl Menu {
     }
 }
 
+// test-tag: standard
 #[cfg(test)]
 mod tests {
+    //! S2: the tray menu commands against an in-process server.
     use std::fs;
     use std::sync::{Arc, Mutex, PoisonError};
 
