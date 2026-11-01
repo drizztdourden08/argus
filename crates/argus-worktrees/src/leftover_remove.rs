@@ -327,7 +327,8 @@ impl Service {
         rule: &Rule,
         board: &BoardFacts,
     ) -> Result<RemoveOutcome> {
-        if input.branch || input.discard {
+        let branch_asked = input.branch && !input.empty_goes;
+        if branch_asked || input.discard {
             return Err(WtError::new(
                 ErrorCode::BadRequest,
                 format!(
