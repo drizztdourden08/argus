@@ -24,7 +24,7 @@ pub struct WakeDoc {
     pub text: String,
     /// When it was made (ISO).
     pub at: String,
-    /// Queued, delivered or coalesced.
+    /// Queued, delivered, coalesced or passive (a notice, never sent to a listener).
     pub status: WakeStatus,
     /// How many listeners took the event (a coalesced row shows its event's).
     pub listeners: u32,

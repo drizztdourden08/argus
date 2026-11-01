@@ -16,6 +16,7 @@ pub mod item_wakes;
 pub mod lenient;
 pub mod memory;
 pub mod mirror;
+pub mod notices;
 pub mod policy;
 pub mod presence;
 pub mod reasons;
@@ -29,6 +30,7 @@ pub mod testkit;
 pub mod text;
 pub mod time;
 pub mod wake;
+pub mod wake_policy;
 pub mod wake_stream;
 
 pub use argus_core::clock::{Clock, ManualClock, SystemClock};

@@ -462,6 +462,7 @@ the log. JSON field names and value types are copied from the Node answers; key 
 | GET | `/api/p/:key/wakes/stream` | wake stream (SSE) |
 | GET, POST | `/api/p/:key/wakes` | wakes |
 | GET | `/api/p/:key/wakes/listeners` | wakes |
+| GET | `/api/p/:key/wakes/notices` | wakes (the passive notices digest of the prompt hook) |
 | GET | `/api/p/:key/presence` | presence stream (SSE) |
 | GET | `/api/presence` | presence |
 | GET | `/api/wake-faults` | wake faults |
@@ -557,9 +558,41 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `agent_wakes` | `agent-stale` and `agent-checkin` |
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
 | `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
+| `wake_policy` | The one table reason to wake or passive, `class_of`, the `wakePolicy` debounce and digest settings |
+| `notices` | The digest of the passive notices since a thread's last turn, and its one line |
 
 It listens to `Applied` events from the bus and offers `submit(Wake)` to other crates (procs,
 worktrees, agents). It never decides from page data: it reads boards through the `Boards` trait.
+
+#### The wake table
+
+A thread stays idle until Argus signals a reason on the board (docs/wake-policy.md). The engine
+applies this table in `submit`, the one place every wake is queued, so every producer obeys it. A
+passive row is recorded (status `passive`), mirrored and counted in the board header, and printed
+in the next prompt hook's digest line; it never reaches a listener and is never replayed.
+
+| Reason | Class | Why |
+|---|---|---|
+| `owner-answer`, `owner-note`, `owner-decision`, `item-assigned`, `resume` | wake | the owner posted for this thread |
+| `portfolio-decision`, `portfolio-note` | wake | the Overlord or the owner sent it down |
+| `lead-message` | wake | a lead's decision: it asks for action |
+| `thread-message` | wake | a message to this thread (also a worktree request it filed, done or refused) |
+| `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
+| `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
+| `process-reaped` | wake | the reaper stopped its own hung run |
+| `lead-info` | passive | a lead's note: information, no action |
+| `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
+| `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
+| `kanban-stale` | passive | item staleness |
+| `process-alert` | passive | hogs and orphans the process monitor saw |
+| `worktree-stale`, `worktree-review` | passive | worktree hygiene |
+| `launcher-stale`, `launcher-master-missing` | passive | launcher hygiene |
+| `remote-sync-due` | passive | the daily remote sync reminder |
+
+A reason the table does not list wakes. On top of the table, `wakePolicy.debounceMs` (5 min)
+lets a thread be woken at most once per window; a wake inside it joins one digest sent
+`wakePolicy.digestMs` (20 min) after the last wake, and an owner reason goes at the end of the
+window instead.
 
 ### Process monitor (argus-procs)
 

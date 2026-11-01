@@ -6,6 +6,7 @@ import { useRemoteSyncs } from '../../../data/remote';
 import { ProjectSwitcher, SyncStamp } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
 import { findLead } from '../tabs/agents';
+import { BoardNotices } from './sub-components/BoardNotices';
 import { BoardStamp } from './sub-components/BoardStamp';
 import { BoardWorktrees } from './sub-components/BoardWorktrees';
 import { LeadStatus } from './sub-components/LeadStatus';
@@ -28,6 +29,7 @@ const BoardHeader = (props: BoardHeaderProps) => {
         <LeadStatus lead={findLead(threads.docs)} />
         <BoardStamp status={status} updatedAt={updatedAt} />
         <BoardWorktrees boardKey={boardKey} />
+        <BoardNotices boardKey={boardKey} />
         {syncs ? <SyncStamp sync={syncs[boardKey] ?? null} /> : null}
       </Flex>
       <Flex className="board-header__tools" gap="xs" align="center">

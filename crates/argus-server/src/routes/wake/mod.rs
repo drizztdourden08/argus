@@ -9,8 +9,12 @@
 //!   counted and given no replay.
 //! - `GET /api/p/:key/wakes/listeners` lists the open streams `[{thread, since, label, v}]`
 //! - `GET /api/p/:key/wakes?thread=<id|*>&limit=<n>` is `{wakes}`, the rows the page mirrors
+//! - `GET /api/p/:key/wakes/notices?thread=<id|*>&since=<iso>` is `{count, kinds, newest, line}`,
+//!   the passive notices the wake policy kept off the listener (at most a day back); the prompt
+//!   hook prints `line`
 //! - `POST /api/p/:key/wakes {thread, reason, text}` wakes from outside the policy
-//!   (`lead-message`, `thread-message`, `wake-fault`); the thread must exist on the board
+//!   (`lead-message`, `lead-info`, `thread-message`, `wake-fault`); the thread must exist on the
+//!   board, and a passive reason is recorded as a notice only
 //! - `GET /api/p/:key/presence?thread=<id>&tab=<id>` is held open by a board page opened with
 //!   `?thread=`; `GET /api/presence` is `{open}`, the threads with an open board
 //! - `GET /api/wake-faults[?all=1]` is `{faults}`
@@ -67,6 +71,7 @@ pub fn register(r: &mut Router) {
     r.get("/api/p/:key/presence", presence::presence);
     r.get("/api/presence", presence::open);
     r.get("/api/p/:key/wakes/listeners", listing::listeners);
+    r.get("/api/p/:key/wakes/notices", listing::notices);
     r.get("/api/wake-faults", faults::list);
     r.add("POST", "/api/wake-faults/clear", clear, faults::clear);
     r.get("/api/p/:key/wakes", listing::wakes);

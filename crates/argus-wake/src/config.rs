@@ -11,6 +11,7 @@ use crate::registry::{
     DEFAULT_TICK_MS, RegistryConfig,
 };
 use crate::sync_wakes::SyncWakeConfig;
+use crate::wake_policy::WakePolicy;
 
 /// The coalescing window when config.json does not say.
 pub const DEFAULT_WINDOW_MS: i64 = 2000;
@@ -70,6 +71,8 @@ pub struct WakeConfig {
     pub items: ItemWakeConfig,
     /// The remote sync wake (`remoteSync.*`).
     pub syncs: SyncWakeConfig,
+    /// How often one thread may be woken (`wakePolicy.*`).
+    pub policy: WakePolicy,
 }
 
 impl Default for WakeConfig {
@@ -99,6 +102,7 @@ impl WakeConfig {
             agents: AgentWakeConfig::from_json(config.get("agents").unwrap_or(&Value::Null)),
             items: ItemWakeConfig::from_json(config.get("items").unwrap_or(&Value::Null)),
             syncs: SyncWakeConfig::from_json(config.get("remoteSync").unwrap_or(&Value::Null)),
+            policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
         }
     }
 }

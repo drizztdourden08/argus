@@ -212,7 +212,7 @@ async fn with_the_dashboard_running_the_target_lead_is_woken_with_the_sender_and
     star.next(Some("ready"), 5000).await.expect("ready");
     let long = "z".repeat(120);
     let cwd = rig.dir.path().join("checkout-pixelarttool");
-    let ran = rig.run_in(&["lead", "brock", &long], None, &cwd);
+    let ran = rig.run_in(&["lead", "brock", &long, "--kind", "decision"], None, &cwd);
     assert_eq!(ok(&ran), format!("queued for brock lead: {long}\n"));
     let heard = star
         .next(Some("wake"), 5000)
@@ -231,6 +231,17 @@ async fn with_the_dashboard_running_the_target_lead_is_woken_with_the_sender_and
         .filter(|w| w["reason"] == "lead-message")
         .collect();
     assert_eq!(woke.len(), 1);
+    let note = rig.run_in(&["lead", "brock", "fyi: released 1.2"], None, &cwd);
+    assert_eq!(ok(&note), "queued for brock lead: fyi: released 1.2\n");
+    let rows = rig.t.get("/api/p/brock/wakes").await.json();
+    let info: Vec<&Value> = rows["wakes"]
+        .as_array()
+        .expect("wakes")
+        .iter()
+        .filter(|w| w["reason"] == "lead-info")
+        .collect();
+    assert_eq!(info.len(), 1, "a note is information only");
+    assert_eq!(info[0]["status"], "passive", "kept off the listener");
     star.close();
     rig.stop().await;
 }

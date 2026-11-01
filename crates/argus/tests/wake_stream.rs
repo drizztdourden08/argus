@@ -50,7 +50,7 @@ impl Homes {
         TestServer::start(TestOptions {
             coord_home: Some(self.coord_path()),
             dashboard_home: Some(self.dash.path().to_path_buf()),
-            config: json!({ "port": closed, "wake": { "windowMs": window_ms } }),
+            config: json!({ "port": closed, "wake": { "windowMs": window_ms }, "wakePolicy": { "debounceMs": 0 } }),
             ..TestOptions::default()
         })
         .await

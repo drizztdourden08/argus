@@ -21,6 +21,7 @@ use crate::engine::{
 use crate::faults::{Fault, FaultStore};
 use crate::item_wakes::ItemWakes;
 use crate::mirror::{WakeDoc, docs_of};
+use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE};
@@ -98,6 +99,7 @@ impl WakeService {
             window_ms: config.window_ms,
             replay_ms: EngineConfig::default().replay_ms,
             immediate: IMMEDIATE_REASONS.iter().map(|r| (*r).to_owned()).collect(),
+            policy: config.policy,
         };
         let engine = WakeEngine::new(
             deps.store,
@@ -326,6 +328,20 @@ impl WakeService {
         };
         let rows = self.engine.store().rows(scope, &query)?;
         docs_of(self.engine.store(), &rows)
+    }
+
+    /// The passive notices of a thread (`*`: every thread) made after `since_ms`, read from the
+    /// newest rows of the project: what the prompt hook's digest line says.
+    ///
+    /// # Errors
+    /// When the rows cannot be read.
+    pub fn notices(&self, scope: &str, thread: &str, since_ms: i64) -> StoreResult<NoticeDigest> {
+        let query = RowsQuery {
+            limit: MAX_LIST_LIMIT,
+            thread: Some(thread.to_owned()),
+        };
+        let rows = self.engine.store().rows(scope, &query)?;
+        Ok(digest(&rows, since_ms))
     }
 
     /// The open streams of a project.

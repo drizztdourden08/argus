@@ -17,6 +17,7 @@ fn rig() -> Rig {
     let rig = Rig::new(
         &argus_wake::config::WakeConfig {
             window_ms: 150,
+            policy: argus_wake::wake_policy::WakePolicy::off(),
             ..Default::default()
         },
         false,
@@ -135,7 +136,7 @@ fn only_the_outside_reasons_an_existing_thread_and_a_text_are_accepted_and_nothi
         (
             json!({"thread": "coordinator", "reason": "test-fail", "text": "x"}),
             400,
-            "reason must be one of lead-message, thread-message, wake-fault",
+            "reason must be one of lead-message, lead-info, thread-message, wake-fault",
         ),
         (
             json!({"thread": "coordinator", "text": "x"}),

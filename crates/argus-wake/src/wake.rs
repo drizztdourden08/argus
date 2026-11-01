@@ -47,6 +47,8 @@ pub enum WakeStatus {
     Delivered,
     /// Folded into the event of its window.
     Coalesced,
+    /// A notice the wake policy keeps off the listener: shown on the board, never delivered.
+    Passive,
 }
 
 /// One row of the wakes table.

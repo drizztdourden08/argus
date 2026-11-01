@@ -45,9 +45,9 @@ pub async fn rig_with(config: Value) -> Rig {
     Rig { t, _home: home }
 }
 
-/// A server with a short coalescing window.
+/// A server with a short coalescing window and no debounce (the wake policy tests turn it on).
 pub async fn rig() -> Rig {
-    rig_with(json!({ "wake": { "windowMs": WINDOW_MS } })).await
+    rig_with(json!({ "wake": { "windowMs": WINDOW_MS }, "wakePolicy": { "debounceMs": 0 } })).await
 }
 
 pub async fn pause(ms: u64) {

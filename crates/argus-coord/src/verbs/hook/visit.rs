@@ -28,6 +28,9 @@ pub struct Hit {
     pub adopted: bool,
     /// What the session titles of this project start with.
     pub name: String,
+    /// The thread's `lastSeen` before this visit: the end of its last turn, which the prompt
+    /// hook's notice digest counts from.
+    pub seen_before: Option<String>,
 }
 
 /// What a visit may do beyond the heartbeat.
@@ -74,6 +77,7 @@ fn on_board(
         ),
         None => return Ok(None),
     };
+    let seen_before = doc(board, &id)["lastSeen"].as_str().map(str::to_owned);
     heartbeat(board, &id, sid, mode.activity);
     let fresh = if mode.deliver {
         deliver(board, &id)
@@ -86,6 +90,7 @@ fn on_board(
         fresh,
         adopted,
         name,
+        seen_before,
     }))
 }
 

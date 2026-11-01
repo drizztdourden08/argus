@@ -27,7 +27,7 @@ async fn faults(rig: &Rig, all: bool) -> Vec<Value> {
 
 /// A server where two wakes for threads nobody listens for have become faults.
 async fn faulted() -> Rig {
-    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 } });
+    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } });
     let rig = Rig::start(config, seed_standard).await;
     for thread in ["ui", "api"] {
         let body = json!({ "thread": thread, "reason": "thread-message", "text": format!("lead: look at {thread}") });
