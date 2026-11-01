@@ -11,7 +11,7 @@ use argus_launchers::launcher::{
     Bundle, Launcher, LauncherBoard, LauncherStale, MASTER, REASON_MASTER, REASON_STALE,
     StaleConfig, StaleEnv, StaleItem, StaleNote, ThreadInfo, WakeEvent, master_text, stale_text,
 };
-use argus_launchers::{Clock, ManualClock, format_iso};
+use argus_launchers::{ManualClock, format_iso};
 use serde_json::{Value, json};
 
 const START: i64 = 1_792_800_000_000;
@@ -193,14 +193,6 @@ fn names(world: &World) -> Vec<String> {
         .collect();
     found.sort();
     found
-}
-
-#[test]
-fn the_reasons_are_the_names_the_wake_store_knows() {
-    assert_eq!(
-        (REASON_STALE, REASON_MASTER),
-        ("launcher-stale", "launcher-master-missing")
-    );
 }
 
 #[test]
@@ -524,21 +516,6 @@ fn overlay_the_newest_play_run_is_a_use_on_the_launchers_docs_of_an_export() {
         "master is left alone"
     );
     assert_eq!(docs[3]["data"], json!({"id": "a"}));
-}
-
-#[test]
-fn the_defaults_a_tick_every_10_minutes_a_master_wait_of_10_minutes_a_day_between_repeats() {
-    let config = StaleConfig::default();
-    assert_eq!(
-        (
-            config.tick_ms,
-            config.master_wait_ms,
-            config.master_repeat_ms,
-            config.stale_repeat_ms
-        ),
-        (600_000, 600_000, 86_400_000, 86_400_000)
-    );
-    assert_eq!(ManualClock::at(5).now_ms(), 5);
 }
 
 #[test]

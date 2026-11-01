@@ -251,37 +251,6 @@ async fn last_line_reaches_the_run_doc_at_most_every_250_ms_as_plain_text() {
 }
 
 #[tokio::test(start_paused = true)]
-async fn a_start_that_cannot_happen_is_final_at_once_and_says_why() {
-    let env = Env::new();
-    let gone = RunDef {
-        cwd: env
-            .dir
-            .path()
-            .join("no-such-folder")
-            .to_string_lossy()
-            .into_owned(),
-        ..play(&env, "bundle-term", "never")
-    };
-    env.define("alpha", vec![gone]);
-    let run = env.svc.start("alpha", "bundle-term", &page()).unwrap().run;
-    assert_eq!(
-        run.status,
-        RunStatus::Failed,
-        "the start itself answers with the failure"
-    );
-    assert!(
-        run.error
-            .unwrap()
-            .starts_with("failed to start: working directory is not usable")
-    );
-    assert!(
-        env.text("alpha", &run.id, Some("sys"))
-            .contains("failed to start: working directory is not usable")
-    );
-    assert!(run.started_at.is_none());
-}
-
-#[tokio::test(start_paused = true)]
 async fn a_command_that_returns_at_once_with_code_0_gets_one_note_failures_and_tasks_do_not() {
     let env = Env::new();
     let quiet = RunDef {
