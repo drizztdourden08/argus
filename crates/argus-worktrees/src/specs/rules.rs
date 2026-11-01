@@ -254,7 +254,7 @@ fn the_bulk_path_applies_the_same_guards_per_folder_the_plain_leftover_beside_it
 fn a_worktree_that_appears_inside_a_queued_leftover_before_its_turn_makes_that_job_refused_and_nothing_is_deleted()
  {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
-    let hold = h.svc.one_at_a_time();
+    let hold = h.svc.one_at_a_time("alpha", "a test", None);
     let input = page_input();
     h.svc.remove_leftovers(&input).unwrap();
     add_inner_worktree(&fx);

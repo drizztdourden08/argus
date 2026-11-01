@@ -661,7 +661,7 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
 fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
     let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
     let id = h.id_of(&fx.path("agent-a1"));
-    let turn = h.svc.one_at_a_time();
+    let turn = h.svc.one_at_a_time("alpha", "a test", None);
     let svc = h.svc.clone();
     let (sender, receiver) = std::sync::mpsc::channel();
     std::thread::spawn(move || {

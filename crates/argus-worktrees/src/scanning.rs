@@ -89,7 +89,7 @@ impl Service {
 
     /// A scan that keeps the facts of a worktree whose fingerprint did not change (`keep`), or reads all with git.
     pub(crate) fn scan_with(&self, project: &str, keep: bool) -> Option<Derived> {
-        let _one = self.one_at_a_time();
+        let _one = self.one_at_a_time(project, "a scan of the project", None);
         if self.stopped() {
             return None;
         }
@@ -308,7 +308,7 @@ impl Service {
     }
 
     fn read_added(&self, project: &str, added: &[(String, Rule)]) {
-        let _one = self.one_at_a_time();
+        let _one = self.one_at_a_time(project, "a look at new folders", None);
         let listed = match self.st().scans.get(project) {
             Some(scan) => scan.listed.clone(),
             None => return,

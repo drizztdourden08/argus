@@ -1,7 +1,8 @@
 //! The worktrees service: its settings, its inputs and the state it keeps between calls.
 //!
 //! Scanning never changes a worktree. A removal goes only through the guards in `remove`, `leftover_remove` and
-//! `batch`. Scans and removals run one at a time; deletion jobs run one at a time on a background worker.
+//! `batch`. Scans and removals of a project run one at a time; deletion jobs of a project run one at a time on a
+//! background worker. Another project never waits for them.
 
 use crate::board::BoardFacts;
 use crate::clock::Clock;
@@ -15,11 +16,11 @@ use crate::jobs::{Job, JobDoc};
 use crate::measure::{Bounds, Leftover};
 use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WorktreeStore};
 use crate::probe::{Fingerprint, SAFETY_SCAN_MS};
-use crate::queue::Queue;
+use crate::queue::Queues;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
-use crate::turns::{Turn, Turns};
+use crate::turns::{Asker, Turn, Turns};
 use argus_core::remote::ModeSource;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
@@ -155,7 +156,8 @@ pub struct Inner {
     pub opts: Options,
     pub state: Mutex<State>,
     pub exclusive: Turns,
-    pub queue: Queue,
+    /// The deletion jobs, one worker per project.
+    pub queue: Queues,
     pub requests: Requests,
     pub(crate) hygiene: crate::hygiene::Memories,
 }
@@ -183,7 +185,7 @@ impl Service {
             opts,
             state: Mutex::new(state),
             exclusive: Turns::default(),
-            queue: Queue::default(),
+            queue: Queues::default(),
             requests: Requests::default(),
             hygiene: crate::hygiene::Memories::default(),
         }))
@@ -193,9 +195,11 @@ impl Service {
         locked(&self.state)
     }
 
-    /// Scans and removals run one at a time, first come first served: hold this while doing either.
-    pub(crate) fn one_at_a_time(&self) -> Turn<'_> {
-        self.exclusive.take()
+    /// Scans and removals of a project run one at a time, first come first served: hold this while doing either.
+    /// `what` names the holder to the ones that wait; `key` is the worktree a removal is on.
+    pub(crate) fn one_at_a_time(&self, project: &str, what: &str, key: Option<&str>) -> Turn {
+        self.exclusive
+            .take(project, &Asker { what, key }, &|| self.now())
     }
 
     pub(crate) fn now(&self) -> i64 {
@@ -337,9 +341,15 @@ impl Service {
             .collect()
     }
 
-    /// Block until every deletion job has run.
+    /// Block until every deletion job of every project has run.
     pub fn jobs_idle(&self) {
-        self.queue.wait_idle();
+        self.queue.wait_all_idle();
+    }
+
+    /// Block until the project's deletion jobs queued so far have run: never for another project's, never for the
+    /// ones queued after.
+    pub(crate) fn jobs_queued_ran(&self, project: &str) {
+        self.queue.of(project).wait_queued();
     }
 }
 

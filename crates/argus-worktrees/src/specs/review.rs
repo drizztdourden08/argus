@@ -34,7 +34,7 @@ fn become_worktree(h: &Harness, fx: &Fixture, name: &str) {
 fn a_batch_job_whose_row_a_scan_turned_into_a_git_worktree_is_refused_and_nothing_is_deleted() {
     let (fx, h) = started(|fx| fs::create_dir_all(fx.path("junk")).unwrap());
     assert_eq!(h.docs()["junk"].status, crate::doc::Status::Leftover);
-    let hold = h.svc.one_at_a_time();
+    let hold = h.svc.one_at_a_time("alpha", "a test", None);
     let input = BatchInput {
         older_than_days: Some(0.0),
         confirm_young: true,

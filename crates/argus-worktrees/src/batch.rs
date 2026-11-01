@@ -296,6 +296,7 @@ impl Service {
                 },
             );
             self.queue
+                .of(&input.project)
                 .push(Box::new(move || service.run_batch_job(&one, &tally)));
         }
         docs

@@ -11,8 +11,9 @@
 //! - caller: checked when the request is made (a stranger project or thread: forbidden; the page may not ask, it removes
 //!   directly) and again by `remove` for every target
 //! - worker: one per project, one target at a time, oldest request first; each request starts with a fresh scan. A
-//!   long request of one project (88 leftovers of 10 minutes each) never holds up the requests of another; the
-//!   removals themselves still run one at a time across every project (`Service::one_at_a_time`, the job queue)
+//!   long request of one project (88 leftovers of 10 minutes each) never holds up the requests of another. The
+//!   removals, the scans and the deletion jobs run one at a time within a project (`Service::one_at_a_time`, the
+//!   project's job queue), never across projects; a target that waits for its turn past a while names the holder
 //! - state: kept in the key-value table after every target (the last 100 per project); a restart makes the queued and
 //!   the running ones queued again and goes on with the targets that have no outcome yet
 //! - limit: a target that does not come back within `target_limit_ms` (30 minutes) fails with a sentence and the
@@ -31,7 +32,7 @@ mod text;
 mod watch;
 mod worker;
 
-use crate::queue::Queue;
+use crate::queue::Queues;
 use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 
@@ -80,5 +81,5 @@ impl Default for State {
 pub struct Requests {
     pub(crate) state: Mutex<State>,
     /// One worker per project, by project.
-    pub(crate) queues: Mutex<HashMap<String, Queue>>,
+    pub(crate) queues: Queues,
 }

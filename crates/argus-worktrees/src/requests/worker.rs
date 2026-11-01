@@ -13,15 +13,7 @@ impl Service {
 
     /// The worker of a project, made on first use.
     fn worker_of(&self, project: &str) -> Queue {
-        locked(&self.requests.queues)
-            .entry(project.to_string())
-            .or_default()
-            .clone()
-    }
-
-    /// Every worker made so far.
-    pub(crate) fn workers(&self) -> Vec<Queue> {
-        locked(&self.requests.queues).values().cloned().collect()
+        self.requests.queues.of(project)
     }
 
     /// The project's oldest request still to run or running.
