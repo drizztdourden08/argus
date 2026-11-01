@@ -23,6 +23,7 @@ pub fn row(pid: u32, tag: &str, mem: u64, start: i64) -> ProcRow {
         start_ms: start,
         cpu_ms: 0,
         responding: None,
+        cwd: None,
     }
 }
 

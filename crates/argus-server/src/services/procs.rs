@@ -11,6 +11,7 @@ use argus_procs::{
 use serde_json::Value;
 
 use crate::adapters::activity::ActivityAdapter;
+use crate::adapters::proc_folders::FolderReader;
 use crate::adapters::procs::{ProcsDocs, ProcsHostAdapter};
 use crate::{ServeOptions, Services};
 
@@ -52,6 +53,11 @@ fn ports(svc: &Services, opts: &ProcsOptions) -> Ports {
         TrayFiles::new(&svc.paths.home),
         ActivityAdapter::of(svc),
         svc.wake_hook(),
+        FolderReader::new(
+            svc.boards(),
+            Arc::clone(&svc.db),
+            svc.paths.coord_home.clone(),
+        ),
     );
     Ports {
         sampler: opts
@@ -79,8 +85,10 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<ProcsServ
         .get("procs")
         .cloned()
         .unwrap_or(Value::Null);
+    let mut config = ProcsConfig::from_json(&setting);
+    config.reaper.shadow |= svc.shadow;
     let options = Options {
-        config: ProcsConfig::from_json(&setting),
+        config,
         rules_file: svc.paths.home.join(RULES_FILE),
         own_pid: std::process::id(),
         system_root: system_root(),

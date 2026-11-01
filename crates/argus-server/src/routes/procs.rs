@@ -7,9 +7,14 @@
 //! - `POST /api/procs/rules/remove {name, by?}` is `{removed: true, name}`, 404 for no such rule
 //! - `POST /api/procs/kill {pid, startedAt, tree?, reason?, by?}` ends one listed process
 //! - `POST /api/procs/kill-rule {rule, olderThanMin?, idleOnly?, reason?, by?}` ends a rule's
+//! - `POST /api/p/:key/procs/:pid/kill {by, tree?, reason?}` is a thread's kill of its own
+//!   process ([`own`])
 //!
 //! Who may change rules or kill: the owner's page, or the Overlord (the coordinator thread of
-//! the portfolio board) named in `by` from the CLI. Anyone may read.
+//! the portfolio board) named in `by` from the CLI. Anyone may read. A thread may kill only its
+//! own project's processes, through the route of its project.
+
+mod own;
 
 use std::sync::Arc;
 
@@ -252,4 +257,5 @@ pub fn register(r: &mut Router) {
     r.add("POST", "/api/procs/rules/remove", small, remove_rule);
     r.add("POST", "/api/procs/kill", small, kill);
     r.add("POST", "/api/procs/kill-rule", small, kill_rule);
+    own::register(r, small);
 }

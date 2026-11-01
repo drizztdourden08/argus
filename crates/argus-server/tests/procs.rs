@@ -328,3 +328,68 @@ async fn without_the_monitor_its_routes_answer_503() {
     }
     assert_eq!(post(&t, "/api/procs/sample", &json!({})).await.status, 503);
 }
+
+/// A rig whose project `beta` has its root at `/work/beta`, and the beta board.
+async fn own_rig() -> Rig {
+    let machine = Arc::new(Machine::with_self());
+    let wired = Arc::clone(&machine);
+    let home = tempfile::tempdir().expect("dashboard home");
+    let t = TestServer::start(TestOptions {
+        sync: false,
+        config: json!({ "projectRoots": { "beta": "/work/beta" } }),
+        dashboard_home: Some(home.path().to_path_buf()),
+        tweak: Some(Arc::new(move |opts| machine::install(&wired, opts))),
+        ..TestOptions::default()
+    })
+    .await;
+    write_board(&t.coord_home, "beta", &beta_board());
+    Rig {
+        t,
+        machine,
+        _home: home,
+    }
+}
+
+fn message(reply: &Reply) -> String {
+    reply.json()["error"]["message"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_thread_kills_its_own_process_through_its_project_route_and_nothing_else() {
+    let r = own_rig().await;
+    let t = &r.t;
+    let start = now_ms() - MIN;
+    let mine = r.machine.add(row(42_001, "/work/beta/run.js", 40, start));
+    let other = r.machine.add(row(42_002, "/work/gamma/run.js", 40, start));
+    let by = json!({ "by": "api", "reason": "its run hung" });
+    let path = |pid: u32| format!("/api/p/beta/procs/{pid}/kill");
+    let ghost = post(t, &path(mine), &json!({ "by": "ghost" })).await;
+    assert_eq!(ghost.status, 403);
+    assert!(message(&ghost).starts_with("only a live thread of project beta"));
+    let outside = post(t, &path(other), &by).await;
+    assert_eq!(outside.status, 403);
+    let said = message(&outside);
+    assert!(
+        said.contains("is not inside a folder of project beta"),
+        "{said}"
+    );
+    let server = post(t, &path(std::process::id()), &by).await;
+    assert_eq!(server.status, 403);
+    assert!(message(&server).contains("is a process of the dashboard itself"));
+    assert_eq!(post(t, "/api/p/beta/procs/abc/kill", &by).await.status, 400);
+    let done = post(t, &path(mine), &by).await;
+    assert_eq!(done.status, 200, "{}", done.json());
+    assert_eq!(done.json()["killed"], json!(true));
+    assert!(!r.machine.alive(mine) && r.machine.alive(other));
+    let texts = activity_texts(t, "proc-kill").await;
+    let killed =
+        format!("thread api of beta killed C:\\nvm4w\\nodejs\\node.exe {mine}: its run hung");
+    assert!(texts.contains(&killed), "{texts:?}");
+    let refused = texts
+        .iter()
+        .any(|x| x.starts_with("refused a process kill for project beta from ghost"));
+    assert!(refused, "{texts:?}");
+}
