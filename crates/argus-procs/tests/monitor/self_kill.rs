@@ -1,5 +1,6 @@
-//! A thread's kill of its own process, over a fake process list and a fake killer: what it
+//! K4: A thread's kill of its own process, over a fake process list and a fake killer: what it
 //! ends, each refusal, and the activity line of each.
+// test-tag: critical
 
 use super::harness::{Harness, MIN, Setup, Spec, T0, proc};
 use argus_procs::{ErrorCode, Level, ProcRow, SelfKillRequest};

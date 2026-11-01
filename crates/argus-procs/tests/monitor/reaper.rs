@@ -1,6 +1,7 @@
-//! The reaper over a fake machine: the sample's time is the clock and the rows carry the CPU
+//! K4: The reaper over a fake machine: the sample's time is the clock and the rows carry the CPU
 //! times. Orphaned and long searches, idle and capped test or build runs, what it never takes,
 //! shadow mode, the activity lines and the debounced wake.
+// test-tag: critical
 
 use super::harness::{Harness, MIN, Setup, Spec, T0, proc};
 use argus_procs::{Level, ProcRow, WakeRequest};
