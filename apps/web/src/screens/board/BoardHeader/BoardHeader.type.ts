@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { ProjectThread } from '../../../data/agents';
 import type { WithId } from '../../../data/react';
 import type { StreamStatus } from '../../../data/stream';
+import type { Wake } from '../../../data/types';
 
 interface BoardHeaderProps {
   boardKey: string;
@@ -25,4 +26,20 @@ interface BoardWorktreesProps {
   boardKey: string;
 }
 
-export type { BoardHeaderProps, BoardStampProps, BoardWorktreesProps, LeadStatusProps };
+interface BoardNoticesProps {
+  boardKey: string;
+}
+
+interface NoticeListProps {
+  notices: readonly WithId<Wake>[];
+}
+
+interface NoticesView {
+  notices: WithId<Wake>[];
+  anchor: RefObject<HTMLButtonElement | null>;
+  open: boolean;
+  toggle: () => void;
+  close: () => void;
+}
+
+export type { BoardHeaderProps, BoardNoticesProps, BoardStampProps, BoardWorktreesProps, LeadStatusProps, NoticeListProps, NoticesView };
