@@ -102,7 +102,7 @@ pub fn digest_line(count: u32, kinds: &[KindCount], newest: &[Notice]) -> Option
 pub fn digest(rows: &[WakeRow], since_ms: i64) -> NoticeDigest {
     let passive: Vec<&WakeRow> = rows
         .iter()
-        .filter(|r| r.status == WakeStatus::Passive && ms_or_zero(Some(&r.at)) > since_ms)
+        .filter(|r| r.status == WakeStatus::Passive && ms_or_zero(Some(r.at.as_str())) > since_ms)
         .collect();
     let count = u32::try_from(passive.len()).unwrap_or(u32::MAX);
     let kinds = kinds_of(&passive);
