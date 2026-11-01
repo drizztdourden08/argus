@@ -1,5 +1,8 @@
+//! KEEP: K1.
 //! Wakes about sub-agents: a quiet agent wakes the thread that owns it, and an agent on a model of opus
 //! level or above wakes it for a check-in every 15 to 30 minutes (the lead's choice, default 20).
+
+// test-tag: critical
 
 use std::collections::HashMap;
 

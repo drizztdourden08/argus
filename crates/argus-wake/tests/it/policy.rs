@@ -1,4 +1,7 @@
+//! KEEP: K1.
 //! `wakes_for`: one test per row of the policy (what wakes whom, and what must not).
+
+// test-tag: critical
 
 use argus_wake::board::{BoardView, EntryView};
 use argus_wake::policy::{ApplyCtx, RunView, failed_run_line, wake_for_run, wakes_for};

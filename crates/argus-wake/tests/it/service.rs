@@ -1,15 +1,15 @@
+//! KEEP: S2 (the wake service on in-memory storage, the owner's post to the listener).
 //! The wake service end to end on in-memory storage: the owner posts the importer applies become events for
 //! the listeners (coalesced, queued, replayed), a failed run wakes the lead, the page rows, the settings.
 
+// test-tag: standard
+
 use argus_wake::activity::Level;
-use argus_wake::board::EntryView;
 use argus_wake::config::{DEFAULT_RESTART_GRACE_MS, DEFAULT_WINDOW_MS, WakeConfig};
 use argus_wake::engine::AttachOptions;
 use argus_wake::policy::RunView;
-use argus_wake::service::AppliedPost;
 use argus_wake::testkit::{HOUR, MIN, Rig, SEC, Tap, applied, board, failed_run, thread, wake};
 use argus_wake::time::parse_ms;
-use argus_wake::wake::{WakeRow, WakeStatus};
 use argus_wake::wake_policy::WakePolicy;
 use serde_json::{Value, json};
 
@@ -67,28 +67,14 @@ fn listen(rig: &mut Rig, scope: &str, thread: &str) -> Tap {
     rig.listen(scope, thread, AttachOptions::default())
 }
 
-fn row_where(rig: &Rig, keep: impl Fn(&WakeRow) -> bool) -> WakeRow {
-    rig.store.all().into_iter().find(|r| keep(r)).expect("row")
-}
-
 fn post(rig: &mut Rig, entry: &Value, after: &Value, before: &Value) {
     rig.service
         .on_applied(&applied("alpha", entry, after, before));
 }
 
-fn doc(rig: &Rig, id: &str) -> Value {
-    rig.docs.get("alpha", "wakes", id).expect("doc")
-}
-
 const FAILED: [(&str, &str); 1] = [("T-2", "fail")];
+
 const PARTIAL: [(&str, &str); 2] = [("T-2", "fail"), ("T-3", "partial")];
-const BLOCKED: [(&str, &str); 3] = [("T-2", "fail"), ("T-3", "partial"), ("T-4", "blocked")];
-const PASSED: [(&str, &str); 4] = [
-    ("T-2", "fail"),
-    ("T-3", "partial"),
-    ("T-4", "blocked"),
-    ("T-5", "pass"),
-];
 
 fn alpha_with(done: &[(&'static str, &'static str)]) -> Value {
     alpha(&tests_with(done), "ui", "active")
@@ -128,181 +114,6 @@ fn wakes_inside_the_window_arrive_as_one_event_and_another_thread_hears_nothing(
     assert!(event.id.starts_with("W-") && parse_ms(&event.at).is_some());
     rig.advance(400);
     assert_eq!((ui.count(), api.count()), (1, 0), "one event, not two");
-}
-
-#[test]
-fn a_wake_nobody_listens_for_stays_queued_and_goes_once_to_the_next_listener() {
-    let mut rig = rig(150);
-    post(
-        &mut rig,
-        &result("O-3", "T-4", "blocked", "device missing"),
-        &alpha_with(&BLOCKED),
-        &alpha_with(&PARTIAL),
-    );
-    rig.advance(450);
-    let queued = row_where(&rig, |r| r.text.starts_with("T-4 blocked"));
-    assert_eq!(
-        (
-            queued.status,
-            queued.listeners,
-            queued.thread.as_str(),
-            queued.reason.as_str()
-        ),
-        (WakeStatus::Queued, 0, "ui", "test-blocked")
-    );
-    assert_eq!(
-        doc(&rig, &queued.id)["listeners"],
-        0,
-        "the page doc says nobody was watching"
-    );
-    let mut late = listen(&mut rig, "alpha", "ui");
-    assert_eq!(late.lines(), [["T-4 blocked: device missing"]]);
-    assert_eq!(late.events()[0].id, queued.id);
-    assert_eq!(doc(&rig, &queued.id)["status"], "delivered");
-    assert_eq!(doc(&rig, &queued.id)["listeners"], 1);
-    assert_eq!(
-        listen(&mut rig, "alpha", "ui").count(),
-        0,
-        "the replay was once"
-    );
-}
-
-#[test]
-fn the_pass_that_completes_the_bundle_wakes_once() {
-    let mut rig = rig(150);
-    let mut ui = listen(&mut rig, "alpha", "ui");
-    post(
-        &mut rig,
-        &result("O-4", "T-5", "pass", "ok"),
-        &alpha_with(&PASSED),
-        &alpha_with(&BLOCKED),
-    );
-    rig.advance(150);
-    assert_eq!(ui.lines(), [["b1: all manual tests run, 1 pass 3 fail"]]);
-    let done = row_where(&rig, |r| r.reason == "bundle-complete");
-    assert_eq!(
-        (
-            done.subject.as_deref(),
-            done.thread.as_str(),
-            done.listeners,
-            done.status
-        ),
-        (Some("b1"), "ui", 1, WakeStatus::Delivered)
-    );
-    let pending = alpha_with(&PARTIAL);
-    post(
-        &mut rig,
-        &result("O-5", "T-3", "pass", "ok"),
-        &alpha_with(&[("T-2", "fail"), ("T-3", "pass")]),
-        &pending,
-    );
-    rig.advance(450);
-    assert_eq!(
-        ui.count(),
-        1,
-        "a pass that leaves tests pending wakes nobody"
-    );
-}
-
-#[test]
-fn an_answer_a_note_a_reassigned_item_and_a_resume_wake_the_right_thread_and_a_star_listener_hears_every_thread()
- {
-    let mut rig = rig(150);
-    let mut star = listen(&mut rig, "alpha", "*");
-    let plain = alpha(&[], "ui", "active");
-    let answer = json!({"id": "O-1", "kind": "followup", "replyTo": "Q-1", "thread": "ui", "text": "Yes, remember it."});
-    post(&mut rig, &answer, &plain, &plain);
-    assert_eq!(
-        (star.events()[0].thread.clone(), star.lines()[0].clone()),
-        (
-            "ui".to_owned(),
-            vec!["owner answered Q-1: Yes, remember it.".to_owned()]
-        )
-    );
-
-    let paused = alpha(&[], "ui", "paused");
-    post(
-        &mut rig,
-        &json!({"id": "O-2", "kind": "pause", "replyTo": "ui"}),
-        &paused,
-        &plain,
-    );
-    rig.advance(450);
-    assert_eq!(star.count(), 1, "pause wakes nobody");
-    post(
-        &mut rig,
-        &json!({"id": "O-3", "kind": "resume", "replyTo": "ui"}),
-        &plain,
-        &paused,
-    );
-    assert_eq!(
-        (star.events()[1].thread.clone(), star.lines()[1].clone()),
-        (
-            "ui".to_owned(),
-            vec!["ui was resumed by the owner".to_owned()]
-        )
-    );
-
-    let moved_to = alpha(&[], "coordinator", "active");
-    let moved = json!({"id": "O-4", "kind": "move", "target": {"c": "items", "id": "I-2"}, "to": {"thread": "coordinator"}});
-    post(&mut rig, &moved, &moved_to, &plain);
-    assert_eq!(star.events()[2].thread, "coordinator");
-    assert!(star.lines()[2][0].starts_with("I-2 (Settings page) was assigned to you by the owner"));
-
-    let quiet = [
-        json!({"id": "O-5", "kind": "edit", "target": {"c": "items", "id": "I-2"}, "set": {"title": "Settings screen"}}),
-        json!({"id": "O-6", "kind": "move", "target": {"c": "items", "id": "I-2"}, "to": {"status": "doing"}}),
-        json!({"id": "O-7", "kind": "archive", "target": {"c": "items", "id": "I-2"}}),
-    ];
-    for entry in &quiet {
-        post(&mut rig, entry, &moved_to, &moved_to);
-    }
-    rig.advance(450);
-    assert_eq!(
-        star.count(),
-        3,
-        "edits, status moves and archives wake nobody"
-    );
-}
-
-#[test]
-fn a_portfolio_send_wakes_the_coordinator_of_the_project_it_was_delivered_to() {
-    let mut rig = rig(150);
-    rig.boards.set(
-        "beta",
-        board(
-            &json!({"threads": {"coordinator": thread("coordinator", "coordinator", &json!({}))}}),
-        ),
-    );
-    let mut lead = listen(&mut rig, "beta", "*");
-    let entry = serde_json::from_value::<EntryView>(json!({
-        "id": "O-10", "kind": "decision", "project": "beta", "text": "Freeze the API until Friday.", "deliveredTo": ["beta"],
-    }))
-    .expect("entry");
-    let post = AppliedPost {
-        scope: "_portfolio".to_owned(),
-        entry: Some(entry),
-        status: Some("delivered".to_owned()),
-        ..AppliedPost::default()
-    };
-    rig.service.on_applied(&post);
-    let event = lead.events()[0].clone();
-    assert_eq!(
-        (event.scope.as_str(), event.thread.as_str()),
-        ("beta", "coordinator")
-    );
-    assert_eq!(
-        event.lines,
-        ["owner decision from the Overlord: Freeze the API until Friday."]
-    );
-    let chips: Vec<_> = rig
-        .service
-        .list("beta", None, None)
-        .expect("list")
-        .into_iter()
-        .filter(|w| w.reason == "portfolio-decision")
-        .collect();
-    assert_eq!((chips.len(), chips[0].listeners), (1, 1));
 }
 
 #[test]

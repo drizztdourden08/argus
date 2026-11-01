@@ -1,8 +1,11 @@
+//! KEEP: K1.
 //! The registry on in-memory storage with a manual clock and fake boards: the row states (listening,
 //! waking, idle, fault), a reaction seen through `lastSeen` or an acked inbox, the three ways a wake fails
 //! (queued with nobody listening, delivered with no reaction, a write that throws), one fault per thread,
 //! the single notice for the Overlord (a passive `wake-fault`, never a wake), a fault that clears itself only
 //! when the thread listens again, the re-alert for a deaf thread, and the page mirror.
+
+// test-tag: critical
 
 use argus_wake::board::InboxMessage;
 use argus_wake::config::WakeConfig;

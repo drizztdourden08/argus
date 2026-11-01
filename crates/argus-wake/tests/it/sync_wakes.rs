@@ -1,6 +1,9 @@
+//! KEEP: K1.
 //! The remote sync wake: a project whose lead went 24 hours without `coord remote synced` wakes
 //! that lead once, then again every 24 hours while the sync is still due; a new record ends it.
 //! A manual clock drives every tick.
+
+// test-tag: critical
 
 use argus_wake::activity::{ActivityLine, Level};
 use argus_wake::config::WakeConfig;

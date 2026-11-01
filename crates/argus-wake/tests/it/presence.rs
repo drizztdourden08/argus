@@ -1,7 +1,10 @@
+//! KEEP: K1.
 //! Board presence: a thread's board tab (a page opened with `?thread=<id>`) is tracked, and the registry
 //! opens a `board-closed` fault, waking the Overlord at once, when a live thread whose session is alive has
 //! no open board for longer than the grace. The fault clears itself when the board opens again. Also the
 //! not-listening fault for an active session with no wake-stream.
+
+// test-tag: critical
 
 use argus_wake::Clock;
 use argus_wake::engine::AttachOptions;

@@ -1,5 +1,8 @@
+//! KEEP: K2.
 //! The pure parts of `dashboard wake-stream`: the arguments, the ONE line printed per wake (hooks and Claude
 //! sessions parse it, so it must match byte for byte), reading the server-sent events and the reconnect pauses.
+
+// test-tag: critical
 
 use argus_wake::sse::SseParser;
 use argus_wake::wake_stream::{

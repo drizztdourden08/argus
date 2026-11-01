@@ -1,4 +1,7 @@
+//! KEEP: K2.
 //! A fault store that writes one activity line for every fault that opens or clears.
+
+// test-tag: critical
 
 use std::sync::Arc;
 
