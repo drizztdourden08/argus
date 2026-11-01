@@ -392,7 +392,7 @@ test that holds it.
 - **The verbs.** `start`, `stop`, `status`, `open`, `logs`, `resync` and `token` take
   `--data-dir <folder>` (alias `--home`) like `serve`, so a shadow home is addressed without
   `DASHBOARD_HOME`. The Node guard still refuses `stop`, `start`, `resync` and `token` on a Node
-  server (`tests/cli.rs`: `every_verb_takes_the_data_dir_flag_and_its_home_alias` and
+  server (`tests/it/cli.rs`: `every_verb_takes_the_data_dir_flag_and_its_home_alias` and
   `the_node_guard_holds_for_a_home_addressed_by_the_flag`).
 
 ## 3. The coord engine rollout
@@ -412,7 +412,7 @@ The gate of each step is the same:
 
 - The Rust ports for those verbs pass, and the Node suites for them pass with
   `COORD_ENGINE=argus ARGUS_EXE=$argus node --test <file>` from `$cfg\dashboard`.
-- `crates/argus/tests/coord_diff.rs` and its corpus lines show no difference for the verbs.
+- `crates/argus/tests/it/coord_diff.rs` and its corpus lines show no difference for the verbs.
 - One day of the real-usage replay on fresh copies (layer 4 of `docs/coord-port.md`), kept
   outside the repo.
 - Before the first step, the port fix of blocker 1 is landed and installed. It is what makes

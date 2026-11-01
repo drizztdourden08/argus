@@ -4,7 +4,7 @@
 //! option, six options), the accepted shapes, the context stored on the entry, clipped on
 //! information, edited with `entry set --context`. The case "the context reaches the page docs,
 //! and survives importing the owner answer" is the export and import of `argus-board`, ported in
-//! `crates/argus-board/tests/export_import.rs`.
+//! `crates/argus-board/tests/it/export_import.rs`.
 
 use crate::work_board::Work;
 use serde_json::json;

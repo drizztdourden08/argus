@@ -44,6 +44,11 @@ The Rust lane runs beside the TypeScript gates and Brock enforces both.
 The Brock cargo lane runs when a root `Cargo.toml` exists. A rule that blocks a sound design goes
 to the Brock lead with `coord lead brock "..."`.
 
+Integration tests are one binary per crate: every file is a module of
+`crates/<crate>/tests/it/main.rs`, so a crate links its tests once. Run one file with
+`cargo test -p <crate> --test it <module>::`. A test that must run in its own process stays a
+top-level file in `tests/` (`argus-coord`: `latency_bench`, the ignored bench).
+
 ## Workspace layout
 
 ```text
@@ -266,7 +271,7 @@ One convention for every service, so a service is wired by touching only its own
 | `adapters/<svc>.rs` | the crate's store, host and sink traits implemented over `DocStore`, the tables, `BoardReader`, the wake engine and `ActivityAdapter` |
 | `adapters/activity/<crate>.rs` | the crate's activity port over `ActivityLog` (already written for every crate) |
 | `routes/<svc>.rs` | `register(&mut Router)`, called by one line of `routes::register_all` |
-| `tests/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
+| `tests/it/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
 
 `services/compose.rs` holds the three orders and already calls every service: `build_all`
 (runs, watcher, sync, reaper, reconciler, wake, stale, procs, worktrees, cache, notify), `start_all` (the

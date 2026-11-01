@@ -78,10 +78,10 @@ Two kinds, one line each:
 
 ## Tests
 
-- `crates/argus-wake/tests/sync_wakes.rs`: never synced, 19 h, 20 h, 24 h once, 48 h again, an
+- `crates/argus-wake/tests/it/sync_wakes.rs`: never synced, 19 h, 20 h, 24 h once, 48 h again, an
   archived lead skipped, a new record clears it, the restart rule, the activity lines, the config
   and the service tick, all on a manual clock.
-- `crates/argus-coord/tests/remote_switch.rs`: the verb, the status lines and the file.
+- `crates/argus-coord/tests/it/remote_switch.rs`: the verb, the status lines and the file.
 - `crates/argus-core/src/remote.rs`: the records read back.
-- `crates/argus-server/tests/records.rs`: `syncs` in `GET /api/remote`.
+- `crates/argus-server/tests/it/records.rs`: `syncs` in `GET /api/remote`.
 - `apps/web/tests/remote/sync-stamp.test.tsx`: the tones, the board header and the cards.

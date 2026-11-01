@@ -88,7 +88,7 @@ uses it (folded when long), the count of users, the size and the last use. An un
   projects with small lockfiles: in use, unused inside the grace period, unused past it, old and
   young `.tmp/` folders, an unreadable lockfile. The unit tests cover the lockfile formats and a
   path outside the root being refused.
-- `crates/argus-server/tests/cache.rs` covers the routes, the activity line, the grace period of
+- `crates/argus-server/tests/it/cache.rs` covers the routes, the activity line, the grace period of
   the config, shadow mode, the wait for the worktree scan and a worktree lockfile.
 - `apps/web/tests/overview/cache.tab.test.tsx` covers the tab.
 - No test touches the real `%USERPROFILE%\.brock`: the test server turns the cache service off

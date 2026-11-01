@@ -390,7 +390,7 @@ That is 181 cases in the dedicated files plus the CLI cases of the shared ones.
    exists, `COORD_ENGINE=argus ARGUS_EXE=<target>/argus.exe node --test` on the slice 8 files runs
    the real Node specification against `argus coord`, unchanged. A file passes on both engines
    before its row turns `done`.
-3. The differential harness (`crates/argus/tests/coord_diff.rs`, skipped with a reason when
+3. The differential harness (`crates/argus/tests/it/coord_diff.rs`, skipped with a reason when
    `ARGUS_COORD_CLI` is unset). Two twin homes are seeded from
    `crates/argus-testkit/fixtures/coord/` (the `alpha`, `beta` and `_portfolio` boards plus a
    hook scenario board). A corpus file holds one command per line, with directives for the

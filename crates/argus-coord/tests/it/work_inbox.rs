@@ -4,7 +4,7 @@
 //! yourself or to a thread that does not exist wakes nobody) and of `owner.text.test.mjs` (`coord
 //! inbox` prints the whole text of an owner post, and `inbox send` keeps its cap of 240). The
 //! wake stream itself (listeners, replay) is the server's, ported in
-//! `crates/argus-server/tests/wake_http.rs`.
+//! `crates/argus-server/tests/it/wake_http.rs`.
 
 use std::fs;
 use std::io::{Read, Write};

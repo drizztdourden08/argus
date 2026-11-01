@@ -103,5 +103,5 @@ A server in shadow mode is always in reaper shadow mode.
 
 `crates/argus-procs/tests/monitor/scope.rs`, `self_kill.rs` and `reaper.rs` run the monitor over a
 fake process list, a fake killer and the sample's own time as the clock.
-`crates/argus-server/tests/procs.rs` covers the route, and `crates/argus-coord/tests/procs_cli.rs`
+`crates/argus-server/tests/it/procs.rs` covers the route, and `crates/argus-coord/tests/it/procs_cli.rs`
 the verb.
