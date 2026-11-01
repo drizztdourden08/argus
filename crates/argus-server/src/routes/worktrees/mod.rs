@@ -5,6 +5,9 @@
 //!   leftover folder: `{removed, path, branch, deletedBranch, ..., text}`
 //! - `POST /api/p/:key/worktrees/prune {id?, reason?, by?}` prunes one gone worktree, or every
 //!   gone one of the project
+//! - `POST /api/p/:key/worktrees/release {id, reason?, by}` a thread's release: after a fresh
+//!   scan, nothing may use it and nothing may be lost, then it is removed at once through the same
+//!   removal (the branch too when merged); `docs/worktree-hygiene.md`
 //! - `POST /api/p/:key/worktrees/leftovers/remove {ids?, olderThanDays?, confirmYoung?, reason?,
 //!   by?}` queues every old leftover folder for deletion in the background
 //! - `POST /api/p/:key/worktrees/requests {targets? | finished? | allLeftovers?, branch?, discard?,

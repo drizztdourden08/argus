@@ -1,4 +1,4 @@
-//! Removing one worktree, and pruning the gone ones.
+//! Removing one worktree, pruning the gone ones, and a thread's release of one it no longer needs.
 
 use argus_core::clock::parse_ms;
 use argus_worktrees::{RemoveInput, RemoveOutcome, Service};
@@ -37,6 +37,10 @@ async fn remove(ctx: Ctx) -> Reply {
     serve(ctx, input_of, Service::remove, render).await
 }
 
+async fn release(ctx: Ctx) -> Reply {
+    serve(ctx, input_of, Service::release, render).await
+}
+
 async fn prune(ctx: Ctx) -> Reply {
     serve(ctx, input_of, Service::prune, render).await
 }
@@ -44,4 +48,5 @@ async fn prune(ctx: Ctx) -> Reply {
 pub(super) fn register(r: &mut Router) {
     post(r, "/api/p/:key/worktrees/remove", REMOVE_BYTES, remove);
     post(r, "/api/p/:key/worktrees/prune", PRUNE_BYTES, prune);
+    post(r, "/api/p/:key/worktrees/release", PRUNE_BYTES, release);
 }
