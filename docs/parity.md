@@ -306,6 +306,7 @@ their own Argus tests and by the owner's check.
 | Worktree removal | Every removal guard, backup, branch decision and folder fallback answers as Node. | 5 |
 | Leftover folders | Leftovers are measured, listed and deleted behind the same guards and jobs as Node. | 5 |
 | Worktrees tab | The Worktrees tab shows rows, confirms, requests, leftovers and jobs as the Node page. | 5 |
+| Worktree hygiene (Argus only) | A finished agent's safe, unlinked worktree is told, then removed after the grace; docs/worktree-hygiene.md. | 5 |
 | Agents live view | Transcript tailing fills the live agent fields on the docs and never in board.json. | 5 |
 | Agent reaper | Quiet hook records close after the reap delay with the same note and activity line. | 5 |
 | Agent reconciler | Linking, duplicates, idle and orphan classes, reopen and the report route match Node. | 5 |
