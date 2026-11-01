@@ -1,4 +1,6 @@
 //! Sound and toast per level, `toastInfo`, and changing the settings from the page.
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_notify::{
     Level, NotifyConfig, PerLevel, PingRequest, Settings, SettingsPatch, ToastState, settings_of,

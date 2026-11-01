@@ -1,4 +1,5 @@
 //! The `notify` key of `config.json`, read on every send.
+// test-tag: critical
 
 use serde::{Deserialize, Serialize};
 

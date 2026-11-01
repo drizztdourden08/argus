@@ -1,4 +1,5 @@
 //! What `coord ping` says to the thread that pinged, in one sentence.
+// test-tag: critical
 
 use crate::kinds::ToastState;
 use crate::level::Level;
