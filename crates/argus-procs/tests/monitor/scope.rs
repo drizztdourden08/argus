@@ -17,8 +17,8 @@ fn scope() -> Scope {
 
 fn at(cwd: Option<&'static str>, cmd: &'static str) -> ProcRow {
     proc(Spec {
-        cwd,
         cmd,
+        cwd,
         ..Spec::new(500)
     })
 }

@@ -24,9 +24,9 @@ fn harness(reaper: Value, self_pid: u32) -> Harness {
 }
 
 /// A search: `ppid` 4242 is a dead parent, 100 the live explorer.
-fn search(pid: u32, ppid: u32, start: i64, cwd: &'static str) -> ProcRow {
+fn search(pid: u32, parent: u32, start: i64, cwd: &'static str) -> ProcRow {
     proc(Spec {
-        ppid,
+        ppid: parent,
         name: "find.exe",
         cmd: "find . -name tessera",
         path: FIND,
@@ -36,9 +36,9 @@ fn search(pid: u32, ppid: u32, start: i64, cwd: &'static str) -> ProcRow {
     })
 }
 
-fn run(pid: u32, ppid: u32, (cmd, start, cpu): (&'static str, i64, i64)) -> ProcRow {
+fn run(pid: u32, parent: u32, (cmd, start, cpu): (&'static str, i64, i64)) -> ProcRow {
     proc(Spec {
-        ppid,
+        ppid: parent,
         cmd,
         start,
         cpu,
@@ -47,9 +47,9 @@ fn run(pid: u32, ppid: u32, (cmd, start, cpu): (&'static str, i64, i64)) -> Proc
     })
 }
 
-fn cargo(pid: u32, ppid: u32, cmd: &'static str) -> ProcRow {
+fn cargo(pid: u32, parent: u32, cmd: &'static str) -> ProcRow {
     proc(Spec {
-        ppid,
+        ppid: parent,
         name: "cargo.exe",
         cmd,
         path: CARGO,
@@ -140,7 +140,7 @@ fn a_run_whose_tree_gains_no_cpu_time_for_five_minutes_is_reaped_whole() {
     let h = harness(json!({}), 1);
     h.at(T0, vitest_tree(1000));
     h.at(T0 + 3 * MIN, vitest_tree(1500));
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
     h.at(T0 + 6 * MIN, vitest_tree(1500));
     assert_eq!(h.fake.trees(), [(7101, true, vec![7102, 7103])]);
     let (level, line) = &reap_lines(&h)[0];
@@ -159,7 +159,7 @@ fn a_busy_run_is_reaped_only_past_the_cap() {
     let busy = |cpu| vec![run(7111, 100, (VITEST, T0 - 29 * MIN, cpu))];
     h.at(T0, busy(0));
     h.at(T0 + MIN, busy(30_000));
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
     h.at(T0 + 2 * MIN, busy(60_000));
     assert_eq!(h.fake.killed(), [7111]);
     let (_, line) = &reap_lines(&h)[0];
@@ -256,7 +256,7 @@ fn a_tree_of_the_dashboard_or_holding_its_process_or_another_projects_is_never_r
             beta_child,
         ],
     );
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
     assert!(reap_lines(&h).is_empty() && wakes(&h).is_empty());
 }
 
@@ -300,7 +300,7 @@ fn a_failed_reap_writes_one_error_line_and_wakes_nobody() {
             .starts_with(&format!("could not reap {FIND} 7001: "))
     );
     assert!(lines[0].1.ends_with("(project alpha): access is denied"));
-    assert!(wakes(&h).is_empty());
+    assert_eq!(wakes(&h), Vec::<WakeRequest>::new());
 }
 
 #[test]

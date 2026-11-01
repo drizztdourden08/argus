@@ -21,9 +21,9 @@ fn harness(self_pid: u32, tray: Option<u32>) -> Harness {
     h
 }
 
-fn mine(pid: u32, ppid: u32, cwd: &'static str) -> ProcRow {
+fn mine(pid: u32, parent: u32, cwd: &'static str) -> ProcRow {
     proc(Spec {
-        ppid,
+        ppid: parent,
         cmd: MINE,
         cwd: Some(cwd),
         start: T0 - 5 * MIN,
@@ -119,7 +119,7 @@ fn a_tree_that_holds_another_projects_process_is_refused_whole() {
         text,
         "the tree of node 5001 holds node 5002, which belongs to project beta, not alpha: only that project's threads may kill it"
     );
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
     assert!(h.service.self_kill(&ask(5001, false)).unwrap().killed);
 }
 
@@ -147,79 +147,77 @@ fn named(pid: u32, name: &'static str, cmd: &'static str, path: &'static str) ->
     })
 }
 
-#[test]
-fn every_protected_or_foreign_process_is_refused_with_its_reason() {
-    let h = harness(77, Some(78));
+fn protected_rows() -> Vec<ProcRow> {
     let blank = ProcRow {
         cmd: String::new(),
         path: None,
         cwd: None,
         ..named(5009, "x.exe", "", "")
     };
-    h.at(
-        T0,
-        vec![
-            named(
-                5001,
-                "claude.exe",
-                "claude --resume",
-                "C:\\claude\\claude.exe",
-            ),
-            named(
-                5002,
-                "node.exe",
-                "node C:/npm/@anthropic-ai/claude-code/cli.js",
-                "C:\\nvm4w\\nodejs\\node.exe",
-            ),
-            named(
-                77,
-                "argus.exe",
-                "X:\\argus\\argus.exe serve",
-                "X:\\argus\\argus.exe",
-            ),
-            named(
-                78,
-                "argus.exe",
-                "X:\\argus\\argus.exe tray",
-                "X:\\argus\\argus.exe",
-            ),
-            named(
-                5003,
-                "argus.exe",
-                "C:\\argus\\argus.exe mcp alpha",
-                "C:\\argus\\argus.exe",
-            ),
-            named(
-                5004,
-                "svchost.exe",
-                "svchost -k netsvcs",
-                "C:\\Windows\\System32\\svchost.exe",
-            ),
-            named(
-                5005,
-                "explorer.exe",
-                "explorer",
-                "C:\\Windows\\explorer.exe",
-            ),
-            named(
-                5006,
-                "conhost.exe",
-                "conhost 0x4",
-                "C:\\Windows\\System32\\conhost.exe",
-            ),
-            mine(5007, 100, "X:\\beta\\app"),
-            proc(Spec {
-                cmd: "node c:/tools/run.js",
-                cwd: Some("C:\\Users\\me"),
-                ..Spec::new(5008)
-            }),
-            blank,
-        ],
-    );
+    vec![
+        named(
+            5001,
+            "claude.exe",
+            "claude --resume",
+            "C:\\claude\\claude.exe",
+        ),
+        named(
+            5002,
+            "node.exe",
+            "node C:/npm/@anthropic-ai/claude-code/cli.js",
+            "C:\\nvm4w\\nodejs\\node.exe",
+        ),
+        named(
+            77,
+            "argus.exe",
+            "X:\\argus\\argus.exe serve",
+            "X:\\argus\\argus.exe",
+        ),
+        named(
+            78,
+            "argus.exe",
+            "X:\\argus\\argus.exe tray",
+            "X:\\argus\\argus.exe",
+        ),
+        named(
+            5003,
+            "argus.exe",
+            "C:\\argus\\argus.exe mcp alpha",
+            "C:\\argus\\argus.exe",
+        ),
+        named(
+            5004,
+            "svchost.exe",
+            "svchost -k netsvcs",
+            "C:\\Windows\\System32\\svchost.exe",
+        ),
+        named(
+            5005,
+            "explorer.exe",
+            "explorer",
+            "C:\\Windows\\explorer.exe",
+        ),
+        named(
+            5006,
+            "conhost.exe",
+            "conhost 0x4",
+            "C:\\Windows\\System32\\conhost.exe",
+        ),
+        mine(5007, 100, "X:\\beta\\app"),
+        proc(Spec {
+            cmd: "node c:/tools/run.js",
+            cwd: Some("C:\\Users\\me"),
+            ..Spec::new(5008)
+        }),
+        blank,
+    ]
+}
+
+fn protected_cases() -> Vec<(u32, String)> {
     let claude = "is a Claude session process: it is never killed from here";
     let dashboard = "is a process of the dashboard itself (argus serve, the tray or an MCP bridge): it is never killed from here";
     let system = "is a system process: it is never killed from here";
-    let cases = [
+    vec![
         (5001, format!("claude 5001 {claude}")),
         (5002, format!("node 5002 {claude}")),
         (77, format!("argus 77 {dashboard}")),
@@ -243,14 +241,21 @@ fn every_protected_or_foreign_process_is_refused_with_its_reason() {
             "x 5009 has details that cannot be read (no folder, executable or command line): it is never killed from here"
                 .to_string(),
         ),
-    ];
+    ]
+}
+
+#[test]
+fn every_protected_or_foreign_process_is_refused_with_its_reason() {
+    let h = harness(77, Some(78));
+    h.at(T0, protected_rows());
+    let cases = protected_cases();
     for (pid, text) in &cases {
         assert_eq!(
             refused(&h, &ask(*pid, false)),
             (ErrorCode::Forbidden, text.clone())
         );
     }
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
     let lines = kill_lines(&h);
     assert_eq!(lines.len(), cases.len());
     assert!(lines.iter().all(|(level, _)| *level == Level::Warn));
@@ -275,7 +280,7 @@ fn a_pid_that_is_not_running_or_zero_is_refused() {
         )
     );
     assert_eq!(refused(&h, &ask(0, false)).0, ErrorCode::BadRequest);
-    assert!(h.fake.killed().is_empty());
+    assert_eq!(h.fake.killed(), Vec::<u32>::new());
 }
 
 #[test]
