@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { IconName } from '@drizztdourden08/tessera';
 import type { RefObject } from 'react';
+import type { SyncMap } from '../../../data/remote';
 import type { RunRow } from '../../../data/runs';
 import type { StreamStatus } from '../../../data/stream';
 import type { Card } from '../../../data/types';
@@ -18,6 +19,7 @@ interface ProjectCardProps {
   now: number;
   send: SendDown;
   onLog: LogOpener;
+  syncs: SyncMap | null;
 }
 
 interface CardHeadlineProps {

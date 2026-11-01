@@ -144,7 +144,7 @@ bearer when the token is required) and answer `read_only` in shadow mode.
 
 | Route | Answer |
 |---|---|
-| `GET /api/remote` | `{ mode, replay: { prs, releases, packages, checks } }`: the switch and the counts of records whose `replay.state` is `pending`. `prs` counts the `prs` collection of every board, `packages` the builds of the registry index that carry a pending `replay` (0 when the index has none). |
+| `GET /api/remote` | `{ mode, replay: { prs, releases, packages, checks }, ciRoots, syncs }`: the switch, the last full remote sync of each project (`syncs`, project key to `{ at, by, note }`, see `docs/remote-sync.md`) and the counts of records whose `replay.state` is `pending`. `prs` counts the `prs` collection of every board, `packages` the builds of the registry index that carry a pending `replay` (0 when the index has none). |
 | `GET /api/releases` | `{ projects: [{ project, channels: [{ channel, latest, versions }] }] }` |
 | `GET /api/p/<key>/releases` | `{ channels: [{ channel, latest, versions }] }` |
 | `GET /api/p/<key>/checks?commit=<sha>&pr=<PR-n>&run=<R-n>` | `{ runs: [{ id: "C-n", runId, run, ...the record }] }`, newest first. `commit` matches a prefix of at least 7 characters either way, `pr` the record's `pr`, `run` the run of the run engine that made the record. `run` in each row is that `R-n`, or `null` for a record Argus did not start. |
@@ -253,7 +253,9 @@ The `localpkg` home is `LOCALPKG_HOME`, else `~/.coord/localpkg`; `config.json` 
 `~/.coord/remote.json` is read through `argus_core::remote` (`Switch`), one stat per call and read
 again only when its time or size changed. A missing, unreadable or unknown file is `local`. In local
 mode the one `gh pr list` of the worktree branch check (`pr_merged`) is skipped: a branch counts as
-merged only by ancestry or `git cherry`.
+merged only by ancestry or `git cherry`. The same file also keeps `ciRoots` and the daily remote sync
+record of each lead (`syncs`, written by `coord remote synced`, shown on the boards and the cards, and
+watched by a wake after 24 hours without one): see `docs/remote-sync.md`.
 
 ### The update feed
 

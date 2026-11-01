@@ -1,6 +1,9 @@
 //! Where the wake logic reads the project boards from.
 
+use std::path::PathBuf;
 use std::sync::Arc;
+
+use argus_core::remote::SyncRecord;
 
 use crate::board::BoardView;
 
@@ -26,5 +29,41 @@ pub struct NoLive;
 impl AgentLive for NoLive {
     fn last_activity_at(&self, _scope: &str, _agent: &str) -> Option<String> {
         None
+    }
+}
+
+/// The last full remote sync of every project (`coord remote synced`).
+pub trait SyncSource: Send + Sync {
+    /// The records, a project at most once.
+    fn syncs(&self) -> Vec<(String, SyncRecord)>;
+}
+
+/// A [`SyncSource`] that knows nothing.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct NoSyncs;
+
+impl SyncSource for NoSyncs {
+    fn syncs(&self) -> Vec<(String, SyncRecord)> {
+        Vec::new()
+    }
+}
+
+/// The syncs of the `remote.json` of a coord home, read at every call.
+#[derive(Debug, Clone)]
+pub struct FileSyncs {
+    coord_home: PathBuf,
+}
+
+impl FileSyncs {
+    /// The syncs of a coord home.
+    #[must_use]
+    pub fn new(coord_home: PathBuf) -> Self {
+        FileSyncs { coord_home }
+    }
+}
+
+impl SyncSource for FileSyncs {
+    fn syncs(&self) -> Vec<(String, SyncRecord)> {
+        argus_core::remote::syncs(&self.coord_home)
     }
 }

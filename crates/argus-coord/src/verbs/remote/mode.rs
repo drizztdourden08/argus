@@ -1,17 +1,23 @@
-//! `coord remote [status|local|remote]` and `coord remote ci-root <project> <dir> | --clear`:
-//! the GitHub switch of `<COORD_HOME>/remote.json` and the integration checkout of a project.
-//! `local` freezes every call to GitHub, `remote` is the owner's go; only the owner sets it.
+//! `coord remote [status|local|remote]`, `coord remote ci-root <project> <dir> | --clear` and
+//! `coord remote synced [--note "<what went out>"]`: the GitHub switch of
+//! `<COORD_HOME>/remote.json`, the integration checkout of a project and the lead's daily full
+//! remote sync. `local` freezes every call to GitHub, `remote` is the owner's go; only the owner
+//! sets it. `synced` records `syncs.<project>`: Argus shows it on the board and wakes the lead
+//! when a day passes without one.
 
 use std::path::{Path, PathBuf};
 
 use argus_core::remote::switch_file;
-use argus_core::remote_state::{LOCAL, REMOTE, State, read_state, set_ci_root, write_mode};
+use argus_core::remote_state::{
+    LOCAL, REMOTE, State, read_state, record_sync, set_ci_root, write_mode,
+};
 
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::resolve::resolve;
 use crate::cli::route::Call;
+use crate::who::find_project;
 
-const USAGE: &str = "usage: coord remote [status|local|remote|ci-root <project> <dir>].";
+const USAGE: &str = "usage: coord remote [status|local|remote|synced|ci-root <project> <dir>].";
 const CI_ROOT_USAGE: &str = "usage: coord remote ci-root <project> <dir> | --clear.";
 
 fn describe(state: &State) -> String {
@@ -74,9 +80,51 @@ fn set(call: &mut Call<'_>, mode: &str) -> Outcome {
     Ok(())
 }
 
+/// The last full remote sync of each project, one line each.
+fn sync_list(state: &State) -> String {
+    if state.syncs.is_empty() {
+        return "no remote sync recorded yet.".to_owned();
+    }
+    let rows = state.syncs.iter().fold(String::new(), |all, (key, sync)| {
+        let at = sync.get("at").map_or_else(|| "undefined".to_owned(), js_text);
+        let note = sync
+            .get("note")
+            .and_then(serde_json::Value::as_str)
+            .filter(|n| !n.is_empty())
+            .map_or_else(String::new, |n| format!(" ({n})"));
+        format!("{all}\n  {key}: {at}{note}")
+    });
+    format!("last remote sync per lead:{rows}")
+}
+
 fn status(call: &mut Call<'_>) {
-    let text = describe(&read_state(&home_of(call)));
+    let state = read_state(&home_of(call));
+    let text = format!("{}\n{}", describe(&state), sync_list(&state));
     call.inv.say(&[&text]);
+}
+
+/// `coord remote synced [--note "<what went out>"]`: the lead's daily full remote sync is done
+/// (push, pull requests, packages, releases, deploys).
+fn synced(call: &mut Call<'_>) -> Outcome {
+    let env = &call.inv.env;
+    let project = find_project(env, &call.inv.cwd, &call.options, env.session_id())?;
+    let by = call
+        .options
+        .text("as")
+        .filter(|a| !a.is_empty())
+        .unwrap_or(&project);
+    let note = call.options.text("note").unwrap_or_default();
+    let home = home_of(call);
+    let record = record_sync(&home, &project, Some(by), note).map_err(|e| failed(&e))?;
+    let at = record["at"].as_str().unwrap_or_default();
+    let tail = if note.is_empty() {
+        String::new()
+    } else {
+        format!(": {}", record["note"].as_str().unwrap_or_default())
+    };
+    let line = format!("remote sync of {project} recorded at {at}{tail}. Due again in 24 h.");
+    call.inv.say(&[&line]);
+    Ok(())
 }
 
 /// A project key as the boards name them.
@@ -126,7 +174,7 @@ fn ci_root(call: &mut Call<'_>) -> Outcome {
     Ok(())
 }
 
-/// `coord remote [status|local|remote|ci-root <project> <dir> | --clear]`.
+/// `coord remote [status|local|remote|synced|ci-root <project> <dir> | --clear]`.
 ///
 /// # Errors
 /// A refusal for an unknown word or a bad root, or a write that fails.
@@ -138,6 +186,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
             Ok(())
         }
         Some("ci-root") => ci_root(call),
+        Some("synced") => synced(call),
         Some(LOCAL) => set(call, LOCAL),
         Some(REMOTE) => set(call, REMOTE),
         Some(_) => Err(CoordError::refuse(USAGE)),

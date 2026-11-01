@@ -1,6 +1,7 @@
 //! The content of `<COORD_HOME>/remote.json` as `coord remote` reads and writes it:
-//! `{ mode, since, by, ciRoots }`. `ciRoots` maps a project key to its integration checkout and
-//! stays across switches of the mode. A missing or unreadable file means `local` with no roots.
+//! `{ mode, since, by, ciRoots, syncs }`. `ciRoots` maps a project key to its integration checkout
+//! and `syncs` to the last full remote sync of a project (`{ at, by, note }`); both stay across
+//! switches of the mode. A missing or unreadable file means `local` with no roots and no syncs.
 
 use std::io;
 use std::path::Path;
@@ -27,6 +28,8 @@ pub struct State {
     pub by: Option<String>,
     /// Project key to integration checkout, in the order of the file.
     pub ci_roots: Map<String, Value>,
+    /// Project key to the last full remote sync `{ at, by, note }`, in the order of the file.
+    pub syncs: Map<String, Value>,
 }
 
 impl State {
@@ -36,6 +39,7 @@ impl State {
             since: None,
             by: None,
             ci_roots: Map::new(),
+            syncs: Map::new(),
         }
     }
 
@@ -44,8 +48,18 @@ impl State {
         if !self.ci_roots.is_empty() {
             body["ciRoots"] = Value::Object(self.ci_roots.clone());
         }
+        if !self.syncs.is_empty() {
+            body["syncs"] = Value::Object(self.syncs.clone());
+        }
         body
     }
+}
+
+fn object_of(json: &Value, key: &str) -> Map<String, Value> {
+    json.get(key)
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default()
 }
 
 fn text_of(json: &Value, key: &str) -> Option<String> {
@@ -66,11 +80,8 @@ pub fn read_state(coord_home: &Path) -> State {
         mode: mode.unwrap_or_else(|| LOCAL.to_owned()),
         since: text_of(&json, "since"),
         by: text_of(&json, "by"),
-        ci_roots: json
-            .get("ciRoots")
-            .and_then(Value::as_object)
-            .cloned()
-            .unwrap_or_default(),
+        ci_roots: object_of(&json, "ciRoots"),
+        syncs: object_of(&json, "syncs"),
     }
 }
 
@@ -85,11 +96,13 @@ fn save(coord_home: &Path, state: &State) -> io::Result<()> {
 /// # Errors
 /// The folder or the file cannot be written.
 pub fn write_mode(coord_home: &Path, mode: &str, by: Option<&str>) -> io::Result<State> {
+    let kept = read_state(coord_home);
     let next = State {
         mode: mode.to_owned(),
         since: Some(now_iso()),
         by: by.map(str::to_owned),
-        ci_roots: read_state(coord_home).ci_roots,
+        ci_roots: kept.ci_roots,
+        syncs: kept.syncs,
     };
     save(coord_home, &next)?;
     Ok(next)
@@ -112,4 +125,27 @@ pub fn set_ci_root(coord_home: &Path, project: &str, dir: Option<&str>) -> io::R
     }
     save(coord_home, &next)?;
     Ok(next)
+}
+
+/// The longest note a sync record keeps.
+const NOTE_MAX: usize = 400;
+
+/// Records the last full remote sync of a project (the mode stays): `{ at, by, note }` with the
+/// note cut to 400 characters. Returns the record.
+///
+/// # Errors
+/// The folder or the file cannot be written.
+pub fn record_sync(
+    coord_home: &Path,
+    project: &str,
+    by: Option<&str>,
+    note: &str,
+) -> io::Result<Value> {
+    let mut next = read_state(coord_home);
+    next.since.get_or_insert_with(now_iso);
+    let note: String = note.chars().take(NOTE_MAX).collect();
+    let record = json!({ "at": now_iso(), "by": by, "note": note });
+    next.syncs.insert(project.to_owned(), record.clone());
+    save(coord_home, &next)?;
+    Ok(record)
 }

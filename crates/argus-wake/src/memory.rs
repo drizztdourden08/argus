@@ -11,11 +11,12 @@ use crate::activity::{ActivityLine, ActivitySink};
 use crate::board::BoardView;
 use crate::docs::{Doc, DocSink};
 use crate::faults::{ClearFault, Fault, FaultStore, NewFault};
-use crate::source::BoardSource;
+use crate::source::{BoardSource, SyncSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore, prune_cutoff};
 use crate::time::ms_or_zero;
 use crate::wake::{FinishedEvent, WakeInput, WakeRow, WakeStatus};
 use argus_core::StorageError;
+use argus_core::remote::SyncRecord;
 use argus_core::unique::unique;
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -352,5 +353,37 @@ impl BoardSource for MemoryBoards {
 
     fn board(&self, scope: &str) -> Option<Arc<BoardView>> {
         locked(&self.inner).get(scope).cloned()
+    }
+}
+
+/// The remote syncs in memory. Clones share their data.
+#[derive(Clone, Default)]
+pub struct MemorySyncs {
+    inner: Arc<Mutex<Vec<(String, SyncRecord)>>>,
+}
+
+impl MemorySyncs {
+    /// No syncs.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Record a sync of a project at an ISO time, replacing the one it had.
+    pub fn set(&self, project: &str, at: &str, by: &str, note: &str) {
+        let record = SyncRecord {
+            at: at.to_owned(),
+            by: Some(by.to_owned()),
+            note: note.to_owned(),
+        };
+        let mut all = locked(&self.inner);
+        all.retain(|(key, _)| key != project);
+        all.push((project.to_owned(), record));
+    }
+}
+
+impl SyncSource for MemorySyncs {
+    fn syncs(&self) -> Vec<(String, SyncRecord)> {
+        locked(&self.inner).clone()
     }
 }

@@ -67,6 +67,62 @@ pub fn ci_root_of(coord_home: &Path, project: &str) -> Option<String> {
         .filter(|dir| !dir.is_empty())
 }
 
+/// The last full remote sync of a project, as `coord remote synced` recorded it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SyncRecord {
+    /// When it was recorded (ISO text).
+    pub at: String,
+    /// Who recorded it.
+    pub by: Option<String>,
+    /// What went out; empty when the thread gave no note.
+    pub note: String,
+}
+
+impl SyncRecord {
+    /// The record of one `syncs` entry; `None` when it has no text `at`.
+    #[must_use]
+    pub fn from_json(value: &serde_json::Value) -> Option<Self> {
+        let text = |key: &str| value.get(key).and_then(serde_json::Value::as_str);
+        Some(SyncRecord {
+            at: text("at")?.to_owned(),
+            by: text("by").map(str::to_owned),
+            note: text("note").unwrap_or_default().to_owned(),
+        })
+    }
+
+    /// When it was recorded, in epoch milliseconds; `None` when `at` is not a date.
+    #[must_use]
+    pub fn at_ms(&self) -> Option<i64> {
+        crate::clock::parse_ms(&self.at)
+    }
+
+    /// The wire form: `{ at, by, note }`.
+    #[must_use]
+    pub fn to_json(&self) -> serde_json::Value {
+        serde_json::json!({ "at": self.at, "by": self.by, "note": self.note })
+    }
+}
+
+/// The last full remote sync of every project in `remote.json` (`syncs`), in the order of the
+/// file; empty when the file is absent, torn or has none.
+#[must_use]
+pub fn syncs(coord_home: &Path) -> Vec<(String, SyncRecord)> {
+    let syncs = read_state(coord_home).syncs;
+    let record = |(key, value): (&String, &serde_json::Value)| {
+        Some((key.clone(), SyncRecord::from_json(value)?))
+    };
+    syncs.iter().filter_map(record).collect()
+}
+
+/// The last full remote sync of one project.
+#[must_use]
+pub fn last_sync(coord_home: &Path, project: &str) -> Option<SyncRecord> {
+    syncs(coord_home)
+        .into_iter()
+        .find(|(key, _)| key == project)
+        .map(|(_, record)| record)
+}
+
 fn parse(text: &str) -> Mode {
     let word = serde_json::from_str::<serde_json::Value>(text)
         .ok()
@@ -157,5 +213,26 @@ mod tests {
             set(home.path(), text);
             assert_eq!(switch.mode(), Mode::Local, "{text}");
         }
+    }
+
+    #[test]
+    fn the_syncs_read_back_and_an_entry_without_a_time_is_left_out() {
+        let home = tempfile::tempdir().expect("temp dir");
+        assert!(syncs(home.path()).is_empty());
+        set(
+            home.path(),
+            r#"{"mode":"local","syncs":{"alpha":{"at":"2026-11-01T10:00:00.000Z","by":"alpha","note":"pushed 2 PRs"},"beta":{"note":"no time"},"gamma":{"at":"2026-11-01T11:00:00.000Z"}}}"#,
+        );
+        let all = syncs(home.path());
+        assert_eq!(
+            all.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(),
+            ["alpha", "gamma"]
+        );
+        let alpha = last_sync(home.path(), "alpha").expect("alpha");
+        assert_eq!(alpha.by.as_deref(), Some("alpha"));
+        assert_eq!(alpha.note, "pushed 2 PRs");
+        assert_eq!(alpha.at_ms(), Some(1_793_527_200_000));
+        assert_eq!(last_sync(home.path(), "gamma").expect("gamma").by, None);
+        assert_eq!(last_sync(home.path(), "beta"), None);
     }
 }

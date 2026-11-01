@@ -56,6 +56,8 @@ pub struct ThreadView {
     pub session: Text,
     /// The last sign of life (ISO).
     pub last_seen: Text,
+    /// When the thread registered on the board (ISO).
+    pub registered_at: Text,
     /// `working` or `idle`.
     pub activity: Text,
 }

@@ -1,8 +1,9 @@
 //! What the local remote shows the pages (docs/local-remote.md, the API section):
 //!
-//! - `GET /api/remote` is `{mode, replay: {prs, releases, packages, checks}, ciRoots}`: the switch,
-//!   the counts of records that wait for the owner's go (`replay.state` is `pending`) and the
-//!   integration checkouts of `coord remote ci-root` (project key to folder)
+//! - `GET /api/remote` is `{mode, replay: {prs, releases, packages, checks}, ciRoots, syncs}`: the
+//!   switch, the counts of records that wait for the owner's go (`replay.state` is `pending`), the
+//!   integration checkouts of `coord remote ci-root` (project key to folder) and the last full
+//!   remote sync of each project (`coord remote synced`; project key to `{at, by, note}`)
 //! - `GET /api/releases` is `{projects: [{project, channels}]}` and `GET /api/p/<key>/releases`
 //!   is `{channels}`: versions per channel, newest first, with the files and the version
 //!   `latest.yml` points at
@@ -16,7 +17,7 @@
 use std::sync::Arc;
 
 use argus_core::ApiError;
-use argus_core::remote::{ModeSource, ci_roots};
+use argus_core::remote::{ModeSource, ci_roots, syncs};
 use argus_records::checks::{CheckRun, run_json};
 use argus_records::replay_of;
 use axum::http::header;
@@ -62,7 +63,11 @@ async fn remote(ctx: Ctx) -> Reply {
         .into_iter()
         .map(|(key, dir)| (key, json!(dir)))
         .collect();
-    let body = json!({ "mode": mode, "replay": counts, "ciRoots": roots });
+    let last: Map<String, Value> = syncs(&ctx.svc.paths.coord_home)
+        .into_iter()
+        .map(|(key, record)| (key, record.to_json()))
+        .collect();
+    let body = json!({ "mode": mode, "replay": counts, "ciRoots": roots, "syncs": last });
     Ok(json_reply(200, &body))
 }
 

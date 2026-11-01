@@ -145,6 +145,18 @@ async fn the_switch_and_the_replay_counts_are_reported() {
     );
     let roots = r.t.get("/api/remote").await.json()["ciRoots"].clone();
     assert_eq!(roots, json!({ "brock": "X:/brock", "argus": "X:/argus" }));
+    assert_eq!(body["syncs"], json!({}), "no record yet");
+    put(
+        r.home(),
+        "remote.json",
+        r#"{ "mode": "local", "syncs": { "alpha": { "at": "2026-11-01T10:00:00.000Z", "by": "alpha", "note": "pushed 2 PRs" }, "beta": { "note": "no time" } } }"#,
+    );
+    let synced = r.t.get("/api/remote").await.json()["syncs"].clone();
+    assert_eq!(
+        synced,
+        json!({ "alpha": { "at": "2026-11-01T10:00:00.000Z", "by": "alpha", "note": "pushed 2 PRs" } }),
+        "an entry without a time is left out"
+    );
     put(r.home(), "remote.json", "{ torn");
     assert_eq!(r.t.get("/api/remote").await.json()["mode"], "local");
     let mirrored = r.t.svc.db.docs().list("alpha", argus_core::Coll::Prs);
