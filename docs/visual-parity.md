@@ -390,7 +390,11 @@ this section, this section is true.
 
 Needs Tessera:
 
-- The items 156 to 160 below. Tessera 0.87 closed the FoldText hug, the Kanban toolbar container,
+- The items 156 to 160 below, re-checked against Tessera 0.93 and 0.94 (spec now ^0.94.0): neither
+  release covers any of them. 0.93 is ScrollArea `thumb`, SplitButton `panel`, Tree `trail` and
+  `onDragOut`, a Toolbar number fit and a hit-area fix for xs buttons and selectable Tags; 0.94 is
+  DataTable `rowRef`, marquee fixes and icon renames. No Argus code needed a change for them.
+  Tessera 0.87 closed the FoldText hug, the Kanban toolbar container,
   the TrackTable `hideBelow` steps, the Drawer tools in the id and tag row and the argus mark
   in `currentColor` (items 161 to 165).
 - 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
