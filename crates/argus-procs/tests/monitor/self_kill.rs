@@ -267,7 +267,8 @@ fn every_protected_or_foreign_process_is_refused_with_its_reason() {
     assert_eq!(
         lines[0].1,
         format!(
-            "refused thread alpha-lead of alpha the kill of 5001: claude 5001 {claude} (reason given: its run hung)"
+            "refused thread alpha-lead of alpha the kill of 5001: {} (reason given: its run hung)",
+            cases[0].1
         )
     );
 }
