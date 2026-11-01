@@ -1,4 +1,4 @@
 /* @layer root-config @kind config */
-import { defineConfig } from 'vitest/config';
+import { defineStandardsVitest } from '@drizztdourden08/standards/vitest';
 
-export default defineConfig({ test: { projects: ['apps/web'] } });
+export default defineStandardsVitest({ test: { projects: ['apps/web'] } });
