@@ -11,7 +11,7 @@ const StatusCell = (props: CellProps) => {
     <Flex direction="column" gap="2xs">
       <Flex gap="xs" align="center" wrap>
         {statusShown(row) && <Tag {...(STATUS_LOOK[row.status] ?? UNKNOWN_STATUS_LOOK)} title={statusTip(row)}>{STATUS_LABEL[row.status] ?? row.status}</Tag>}
-        <RowFlagTags row={row} />
+        <RowFlagTags {...props} />
         {hygiene && <Tag {...hygiene.look} title={hygiene.tip}>{hygiene.text}</Tag>}
         {leftoverFlags(row).map((flag) => <Tag key={flag.text} {...WARNING_LOOK} title={flag.tip}>{flag.text}</Tag>)}
       </Flex>

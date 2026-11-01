@@ -130,6 +130,6 @@ mod tests {
         let rules =
             json!([{ "path": "X:/argus/.claude/worktrees" }, { "path": "  " }, { "id": "r" }]);
         assert_eq!(paths_in(&rules), ["X:/argus/.claude/worktrees"]);
-        assert!(paths_in(&Value::Null).is_empty());
+        assert_eq!(paths_in(&Value::Null), Vec::<String>::new());
     }
 }
