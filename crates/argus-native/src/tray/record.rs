@@ -1,4 +1,5 @@
 //! `tray.json`: the pid and start time of the process that holds the icon.
+// test-tag: critical
 
 use std::fs;
 use std::io;

@@ -1,5 +1,6 @@
 //! The two callbacks the owner of the tray registers. They run on the tray thread, so they
 //! return quickly and hand slow work to another thread.
+// test-tag: critical
 
 use std::sync::{Mutex, MutexGuard, PoisonError};
 

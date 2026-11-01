@@ -1,5 +1,6 @@
 //! The balloon fallback of the notifications: when a toast fails and a tray holds the icon, the
 //! tray shows the notification as a balloon tip instead.
+// test-tag: critical
 
 use super::balloon::{self, Balloon};
 use super::paths::TrayFiles;
