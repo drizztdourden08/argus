@@ -31,6 +31,14 @@ fn statuses_since(h: &Harness, since: usize) -> usize {
         .count()
 }
 
+/// A changed disk is seen, and the scan after it reads exactly one worktree with git.
+fn reads_one_changed(h: &Harness, said: &str) {
+    assert!(h.svc.changed("alpha"));
+    let before = git_calls(h);
+    assert!(h.svc.scan_if_changed("alpha").is_some());
+    assert_eq!(statuses_since(h, before), 1, "{said}");
+}
+
 #[test]
 #[ignore = "e2e"]
 fn an_unchanged_disk_means_no_scan_and_no_git_process() {
@@ -47,10 +55,7 @@ fn a_new_index_time_scans_that_worktree_only_and_the_others_keep_their_facts() {
     let (fx, h) = scanned();
     let rows = h.docs().len();
     set_mtime(Path::new(&index_of(&fx.path("fresh"))), days_ago(0.5));
-    assert!(h.svc.changed("alpha"));
-    let before = git_calls(&h);
-    assert!(h.svc.scan_if_changed("alpha").is_some());
-    assert_eq!(statuses_since(&h, before), 1, "only the changed worktree");
+    reads_one_changed(&h, "only the changed worktree");
     assert_eq!(h.docs().len(), rows, "the others keep their rows");
     assert!(
         !h.svc.changed("alpha"),
@@ -64,10 +69,7 @@ fn a_new_head_time_scans_that_worktree() {
     let (fx, h) = scanned();
     let index = index_of(&fx.path("old-merged"));
     set_mtime(&Path::new(&index).with_file_name("HEAD"), days_ago(1.0));
-    assert!(h.svc.changed("alpha"));
-    let before = git_calls(&h);
-    assert!(h.svc.scan_if_changed("alpha").is_some());
-    assert_eq!(statuses_since(&h, before), 1);
+    reads_one_changed(&h, "the one that changed");
 }
 
 #[test]
@@ -75,10 +77,7 @@ fn a_new_head_time_scans_that_worktree() {
 fn a_worktree_that_comes_is_read_and_the_others_are_not() {
     let (fx, h) = scanned();
     fx.add("brand-new");
-    assert!(h.svc.changed("alpha"));
-    let before = git_calls(&h);
-    assert!(h.svc.scan_if_changed("alpha").is_some());
-    assert_eq!(statuses_since(&h, before), 1);
+    reads_one_changed(&h, "the one that changed");
     assert_eq!(h.fact("brand-new").branch.as_deref(), Some("brand-new"));
 }
 

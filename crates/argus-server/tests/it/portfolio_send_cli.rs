@@ -3,40 +3,10 @@
 //! once.
 // test-tag: e2e
 
-use std::sync::atomic::{AtomicU32, Ordering};
-
+use crate::page_send::{brief, from_page};
 use crate::wake_rig::rig;
-use argus_testkit::{CoordCli, Request, TestServer};
-use serde_json::{Value, json};
-
-static COUNTER: AtomicU32 = AtomicU32::new(0);
-
-fn post_id() -> String {
-    let n = COUNTER.fetch_add(1, Ordering::SeqCst) + 1;
-    format!("O-{}-{n:04}", argus_core::clock::now_ms())
-}
-
-/// A long text with lines, a list and markdown, the way the owner writes a brief.
-fn brief(len: usize) -> String {
-    let unit = "Plan:\n- first **bold** step\n- second step\n1. numbered\n";
-    unit.repeat(len.div_ceil(50))[..len].trim().to_owned()
-}
-
-/// A send the way the page makes it: a write of the `_portfolio` entries collection.
-async fn from_page(t: &TestServer, extra: Value) -> Value {
-    let mut data = json!({ "author": "human", "createdAt": argus_core::clock::now_iso() });
-    data.as_object_mut()
-        .expect("an object")
-        .extend(extra.as_object().expect("an object").clone());
-    let request = Request::new(
-        "PUT",
-        &format!("/api/p/_portfolio/db/entries/{}", post_id()),
-    )
-    .json(&json!({ "data": data }));
-    let reply = t.send(t.page(request)).await;
-    assert_eq!(reply.status, 200, "{}", reply.text());
-    reply.json()
-}
+use argus_testkit::CoordCli;
+use serde_json::json;
 
 #[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]

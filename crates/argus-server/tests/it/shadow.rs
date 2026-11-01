@@ -4,21 +4,13 @@
 // test-tag: critical
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use crate::node_home::node_home;
 use argus_core::Bus;
 use argus_server::shadow::{board_findings, seed};
 use argus_store::Db;
 use tempfile::TempDir;
-
-fn node_home(dir: &Path) -> (PathBuf, Db) {
-    let home = dir.join("node");
-    let db = Db::open(&home.join("dashboard.db"), Bus::new()).unwrap();
-    db.kv_set("seen", "yes").unwrap();
-    fs::write(home.join("config.json"), "{\"from\":\"node\"}").unwrap();
-    fs::write(home.join("process-rules.json"), "{\"rules\":[]}").unwrap();
-    (home, db)
-}
 
 #[test]
 fn a_shadow_home_with_nothing_gets_the_database_the_config_and_the_rules() {

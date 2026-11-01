@@ -6,18 +6,11 @@
 
 // test-tag: e2e
 
-use crate::board::Caller;
 use crate::progress::WAITING;
-use crate::requests::{RequestInput, RequestStatus};
+use crate::specs::request_kit::{beta_request_done, until};
 use crate::sync::locked;
 use crate::testkit::{Gate, Harness, backdate, exists_itself, put, started};
 use std::sync::Arc;
-
-fn until(done: impl Fn() -> bool) {
-    while !done() {
-        std::thread::yield_now();
-    }
-}
 
 #[test]
 #[ignore = "e2e"]
@@ -35,16 +28,7 @@ fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects
     let turn = h
         .svc
         .one_at_a_time("alpha", "the removal of a big worktree for lead", None);
-    locked(&h.store.projects).push("beta".to_string());
-    let mut input = RequestInput::new("beta", Caller::Thread("lead".into()));
-    input.targets = vec![fx.path("left-beta")];
-    h.svc.request(&input).unwrap();
-    until(|| {
-        h.svc
-            .request_list("beta")
-            .first()
-            .is_some_and(|r| r.status == RequestStatus::Done)
-    });
+    beta_request_done(&h, fx.path("left-beta"));
     let beta = h.svc.request_list("beta").remove(0);
     assert!(
         beta.results[0].text.starts_with("deleted leftover folder "),

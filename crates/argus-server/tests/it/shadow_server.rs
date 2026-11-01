@@ -2,23 +2,11 @@
 //! shadow mode whatever the start asked, and the shadow flag writes the marker.
 // test-tag: standard
 
-use std::fs;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use argus_core::Bus;
-use argus_store::Db;
+use crate::node_home::node_home;
 use argus_testkit::{TestOptions, TestServer, Tweak};
 use tempfile::TempDir;
-
-fn node_home(dir: &Path) -> (PathBuf, Db) {
-    let home = dir.join("node");
-    let db = Db::open(&home.join("dashboard.db"), Bus::new()).unwrap();
-    db.kv_set("seen", "yes").unwrap();
-    fs::write(home.join("config.json"), "{\"from\":\"node\"}").unwrap();
-    fs::write(home.join("process-rules.json"), "{\"rules\":[]}").unwrap();
-    (home, db)
-}
 
 #[tokio::test]
 async fn serve_in_shadow_mode_starts_from_the_node_database() {

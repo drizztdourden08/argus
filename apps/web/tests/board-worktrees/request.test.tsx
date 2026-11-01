@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { findRow, messageBox, rowButton, text, typeMessage } from './wt-dom';
 import { metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
 import type { Responder } from './mount-tab';
-import { findRow, messageBox, rowButton, text, typeMessage } from './wt-dom';
 
 cleanAfterEach();
 

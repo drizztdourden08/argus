@@ -1,8 +1,14 @@
+#[path = "support/cache_rows.rs"]
+mod cache_rows;
 #[path = "support/doors.rs"]
 mod doors;
 #[path = "worktrees/fixture.rs"]
 mod fixture;
 mod machine;
+#[path = "support/node_home.rs"]
+mod node_home;
+#[path = "support/page_send.rs"]
+mod page_send;
 mod posting;
 mod pr_rig;
 #[path = "runs/rig.rs"]

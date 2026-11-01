@@ -17,6 +17,7 @@ use crate::request::RemoveInput;
 use crate::requests::{
     KEPT, Mode, Queued, RequestInput, RequestRec, RequestStatus, requests_key, summary_text,
 };
+use crate::specs::request_kit::{beta_request_done, until};
 use crate::sync::locked;
 use crate::testkit::{
     Fixture, Gate, Harness, RemoveMode, backdate, backdate_index, branches, commit, exists_itself,
@@ -849,13 +850,6 @@ fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_ch
     );
 }
 
-/// Yields until `done`: another thread sets the state, so no clock is read and nothing sleeps.
-fn until(done: impl Fn() -> bool) {
-    while !done() {
-        std::thread::yield_now();
-    }
-}
-
 /// The live bug of 2026-10-29: Brock's 88 leftovers (10 minutes each) held Tessera's request for hours. Each project has
 /// its own worker now: while alpha's deletion is held, beta's request by path (beta was never scanned) is done.
 #[test]
@@ -874,16 +868,7 @@ fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another()
             .iter()
             .any(|j| j.state == JobState::Running)
     });
-    locked(&h.store.projects).push("beta".to_string());
-    let mut input = RequestInput::new("beta", lead());
-    input.targets = vec![fx.path("old-merged")];
-    h.svc.request(&input).unwrap();
-    until(|| {
-        h.svc
-            .request_list("beta")
-            .first()
-            .is_some_and(|r| r.status == RequestStatus::Done)
-    });
+    beta_request_done(&h, fx.path("old-merged"));
     assert!(!exists_itself(&fx.path("old-merged")));
     assert_eq!(
         h.svc.request_list("alpha")[0].status,

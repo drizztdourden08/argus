@@ -1,4 +1,5 @@
 <!-- @layer docs @kind doc -->
+
 # Test clean-up: web (apps/web)
 
 Verdicts against the shared test standard (`X:/ai-config/docs/test-standard.md`). A case is one `it` or `test` call site. Nothing was run in this pass (no tests, lint or typecheck); the checker runs them.
@@ -31,6 +32,7 @@ The vitest native tag on the `describe`, one tag per test, the KEEP rule at the 
 - Fixtures that build timestamps relative to `Date.now()` (agents, builds, thread, remote helpers) were left: no kept assertion depends on a minute value. Tests that read the clock for an assertion were frozen with `vi.useFakeTimers({ toFake: ['Date'] })` or deleted, as each part says under W7.
 
 ## board-tests
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | board-page.test.tsx | keep | S1 | standard | 2 | 2 |
@@ -61,25 +63,32 @@ The vitest native tag on the `describe`, one tag per test, the KEEP rule at the 
 Total: 187 before, 156 after.
 
 ### Deleted helpers
+
 none. Helper files inside the folder (board-dom.ts, filter-dom.ts, menu-dom.ts, outcome-dom.ts, fixtures.ts, mount-tab.tsx) are all still imported. One dead export removed: `searchBox` from filter-dom.ts (only used inside the file). Inside test files: `TOOLS`, `toolbarOf`, `PROOFS` and `withProofs` removed; the `text` parameter of `failWith` removed.
 
 ### Possibly unused shared helpers
+
 none. (board-dom.ts, fixtures.ts and mount-tab.tsx are imported by apps/web/tests/board-builds and apps/web/tests/remote, so their exports stay. Nothing under apps/web/tests/helpers became unused from this folder: the fakes, snapshot, render-at and launch-docs are still used.)
 
 ### Deleted tests that looked critical
+
 none. model.test.ts and model-view.test.ts lost no case. Cases deleted as covered by a pure test: play.test.tsx "running with nothing said yet reads Launching..." and "queued says it waits for a slot" (runLine in model.test.ts); wake-chip.test.tsx "says waking while a queued wake waits" (wakeChip in model-view.test.ts).
 
 ### W7
+
 - wake-chip.test.tsx (converted): `fresh()` and the "earlier result" case read `Date.now()`. Now `vi.useFakeTimers({ toFake: ['Date'] })` and `vi.setSystemTime(NOW)` in `beforeEach`, `vi.useRealTimers()` in `afterEach`, and both timestamps derive from a fixed `NOW`. Only Date is faked, so `findBy*` and `waitFor` keep working. The component reads `Date.now()` in useWakeClock and useTestsScreen, so the fixed system time drives it.
 - No other sleeps, setTimeout or real clocks were found in the folder.
 
 ### Unsure
+
 - wake-chip.test.tsx: relies on `toFake: ['Date']` leaving setInterval real (useWakeClock ticks with setInterval and re-reads the fixed Date, so the chip stays stable). Not run, as ordered.
 - drawer-nav.test.tsx "widens the drawer": kept with localStorage and aria-pressed assertions only, after removing the `.drawer--xl` and `.drawer--top` class checks.
 - Judgement calls kept as S1 although near W3: board-page "counts the tests to run in its badge", conflicts "shows the field by field table in the drawer", closed-bundles "hide again when the toggle is turned off", launch-box retired, missing, none and legacy states (distinct launcher rules, not one state in variants).
 - Mounted rules that are K3 or K4 by nature (note length, refusals, file type and size) are titled S3 because they are mounted and tagged standard.
 - Nothing was compiled or run. The unused-import scan was done with a script over the folder.
+
 ## board-kanban
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | kanban-board.test.tsx | trim | S1 (done toggle, stream, group radio, needs you, search, clear filters), K2 (filters stored for the Node page) | standard | 16 | 7 |
@@ -98,14 +107,17 @@ none. model.test.ts and model-view.test.ts lost no case. Cases deleted as covere
 | kanban-trash.test.tsx | trim | K3 (trash list, restore, agent unarchive, purge answer), K4 (purge confirm by project key) | standard | 10 | 6 |
 
 ### Deleted helpers
+
 - kanban-docs.ts: `cardOf` and its `CardData` import (no test used it); `MIN` is no longer exported (still used inside the file).
 - kanban-moves.test.tsx: local `pressed` helper and the `Doc`, `Posted` type imports (only the deleted tests used them).
 - kanban-trash.test.tsx: local `sleepy` board and the `thread` import.
 
 ### Possibly unused shared helpers
+
 none (nothing under apps/web/tests/helpers was touched; fake-source and snapshot are still imported by kanban-harness.tsx)
 
 ### Deleted tests that looked critical
+
 - kanban-columns.test.tsx: "counts the quiet items of a column in a chip" - quiet limit rule is the K1 model test (quiet limits), the chip is markup.
 - kanban-columns.test.tsx: "adds an item to a thread column ... and to a subject column" - the preset rule is the K1 addPreset test, the post wiring is the status-column test.
 - kanban-columns.test.tsx: "counts a pause the owner posted that the board has not applied yet" - K1 pausedThreads test covers it.
@@ -124,15 +136,19 @@ none (nothing under apps/web/tests/helpers was touched; fake-source and snapshot
 - kanban-record.test.tsx: "refuses a to-do over 200 characters" - K1 textProblem-style rule, W4 of the other refusals.
 
 ### W7
+
 - Real clock: the harness `ago` helper read `Date.now()`. Converted: `ago` now counts from a fixed `CLOCK` (2026-10-26T12:00:00Z) and `cleanKanban` calls `vi.setSystemTime(CLOCK)` in `beforeEach` (Date only, real timers stay so `waitFor` and `findBy*` keep working) and `vi.useRealTimers()` in `afterEach`. No test was deleted for W7.
 - No test sleeps or uses setTimeout. `waitFor`/`findBy*` on outcomes stay.
 
 ### Unsure
+
 - `vi.setSystemTime` without `vi.useFakeTimers` mocks only `Date`; I could not run it. If Tessera toast code or a data layer timer relies on real `Date.now()` advancing, a test may need the clock moved on. Easy rollback: remove the `beforeEach` and the `useRealTimers` line from `cleanKanban` and restore `ago` to `Date.now()`.
 - kanban-drawer.test.tsx keeps "counts no archived test ..." as K5 because it names I-86; I added "on I-86" to its title. If I-86 was not a real bug, it still stands as S2 against the K1 itemTests tests, so it could go.
 - kanban-chrome.test.tsx "copies the page address" asserts only `clipboard.writeText` (W6 shaped), kept because the copied link is the outcome.
 - The describe prefix "K2/K3/K4" on mounted files carries the `standard` tag as the brief says.
+
 ## board-agents, board-builds, board-thread
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | apps/web/tests/board-agents/agents-actions.test.tsx | trim | S1, K3 (stop request, archive, note edit with Undo), S3 (conflict) | standard | 14 | 10 |
@@ -154,6 +170,7 @@ none (nothing under apps/web/tests/helpers was touched; fake-source and snapshot
 Totals: 157 cases before, 102 after.
 
 ### Deleted helpers
+
 - `cardOf` in `apps/web/tests/board-builds/list-dom.ts` (no test uses it any more; `withDefs` stays).
 - `waitForCard` (local to builds-usage.test.tsx).
 - `export type { Posted }` in `apps/web/tests/board-agents/agents-harness.tsx` (the type is only used inside the file).
@@ -161,9 +178,11 @@ Totals: 157 cases before, 102 after.
 - No helper file was deleted: every helper file in the three folders is still imported.
 
 ### Possibly unused shared helpers
+
 none (nothing under apps/web/tests/helpers or board-tests was left unreferenced by my edits; those files were not touched).
 
 ### Deleted tests that looked critical
+
 - agents-model.test.ts: "tones a model by family: sonnet green, haiku blue, opus and others neutral" - W5, tests the MODEL_LOOKS constant and a trivial tagLook mapping.
 - builds-texts.test.ts: "says why Play is missing" - W10, asserts one prose string (the same hint is still asserted in builds-play "with no run definition Play is disabled").
 - builds-terminal.test.tsx: "draws colour codes as colours, stderr tinted and system lines dim" - W3, asserts CSS class names.
@@ -176,16 +195,20 @@ none (nothing under apps/web/tests/helpers or board-tests was left unreferenced 
 - thread-actions.test.tsx: "offers Unarchive for an archived thread and no Pause or Focus" - W4, a state variant of the archive/pause tests.
 
 ### W7
+
 - No test was converted or deleted for W7 alone. Fixtures (`ago` in agents-harness and builds fixtures, `new Date()` in thread-harness) build timestamps relative to the real clock and the assertions only use coarse spans (10m, 4m), so the kept tests do not depend on timing luck. I left them as they are.
 - Deleted for the W7-like race: agents-reconcile "shows no panel when the report is empty or the route is missing" (see above).
 - Deleted for real clock in the test body: builds-usage "a keep holds a launcher fresh until it ends" (used `Date.now()` inside the test; the rule is K1 tested with a fixed NOW in builds-model).
 
 ### Unsure
+
 - Nothing was run, so imports were checked by reading only. Imports removed because no kept test uses them: `waitFor`, `rowOf`, `mockFetch` from agents-reconcile; `screen` from agents-live; `within`, `ago`, `MIN` from builds-play; `runningDoc` from builds-runs and builds-terminal-live; `runDoc`, `waitFor` from builds-terminal; `within`, `buildDoc`, `cardOf` from builds-list; `within`, `buildDoc`, `cardOf` from builds-usage; `MODEL_LOOKS`, `tagLook` from agents-model; `noPlayHint` from builds-texts.
 - Kept as S1 although they lean on text or state: agents-actions "counts the working, waiting and stopping agents in the header" (a computation shown), agents-live "marks a stalled working agent and leaves a busy one alone", agents-reconcile "marks a duplicate, a lost record and the mismatches in the drawer" (one test, three marks), thread-drawer "counts only the open questions and the pending decisions". If the lead wants a stricter line, these four are the first to go.
 - builds-play "asks for a console window only when the definition has window" is the boundary of the hidden/visible start rule and sits beside the default test; it could be read as W4.
 - Describe `K4 where Play is hidden` in builds-play.test.tsx carries the standard tag (it mounts a tree) while the K4 prefix names the rule.
+
 ## Worktrees, board, data and format (apps/web/tests/board-worktrees, board, data, format)
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | board-worktrees/hygiene.test.tsx | trim | S1 | standard | 4 | 1 |
@@ -216,12 +239,15 @@ none (nothing under apps/web/tests/helpers or board-tests was left unreferenced 
 Totals: 210 cases before, 130 after. Files deleted: none (every file keeps at least one case).
 
 ### Deleted helpers
+
 none. Tidied inside apps/web/tests/board-worktrees: `postedBodies` removed from wt-dom.ts (no user left), the `SCOPE` value and the `Call` type are no longer exported from mount-tab.tsx, the `REMOVE` constant and the `removed` and `request` leftovers that only deleted cases used are gone. Unused imports were removed from every trimmed file.
 
 ### Possibly unused shared helpers
+
 none. The shared helpers (board-docs.ts, open-board.tsx, post-mock.ts, seed-board.ts, render-at.tsx, etc.) are still imported by kept cases. Possibly unused exports of `apps/web/tests/helpers/board-docs.ts` after this pass: `oldDecision` (its only user here, owner-feed.info, was deleted; other folders may still use it, grep before touching), `NOW` (no longer imported by owner-feed.log; other folders may).
 
 ### Deleted tests that looked critical
+
 - board-worktrees/model.test.ts: "labels: Remove, Delete now, Delete leftover" - W9, the labels are reached by the Remove and Delete now clicks in remove.test.tsx and rows.test.tsx.
 - board-worktrees/model.test.ts: "names the states: in use, released, review and kept" - W5, a text mapping of a getter, the hygiene component test shows the same labels.
 - board-worktrees/remove.test.tsx: "a new HEAD blocks Confirm too, and reopening the confirm reads the new state" and "a row that can no longer be removed blocks Confirm" - W4, the same stale-confirm rule as the kept dirty case, and confirmStale is covered as K1 in model.test.ts.
@@ -241,17 +267,21 @@ none. The shared helpers (board-docs.ts, open-board.tsx, post-mock.ts, seed-boar
 - data/hooks.test.tsx: "useStreamStatus reports the connection" - W5, a status getter of the stream (the stream state is covered where the stream is tested).
 
 ### W7
+
 - board-worktrees (all ten files): converted. `cleanAfterEach()` in mount-tab.tsx now freezes only `Date` (`vi.useFakeTimers({ toFake: ['Date'] })` plus `vi.setSystemTime`) to a constant in a `beforeEach`, and restores real timers in the `afterEach`. `fixtures.ts` builds every timestamp (`ago`) from the same constant `NOW` instead of `Date.now()`. `hygiene.test.tsx` builds `goesAt` from `NOW`, `leftover-rows.test.tsx` and `requests-list.test.tsx` use `ago()` instead of `new Date()` and `Date.now()`. `model.test.ts` passes `NOW` to `refusedJobs`. Timers (setTimeout, setInterval) are not faked, so `waitFor` and `findBy*` still work.
 - board/plain-text.test.ts "stays quick on a hostile input": converted. The `Date.now()` stopwatch and the 3000 ms assertion are gone; the case now just runs the hostile input and asserts a non-empty result, the critical tag timeout (5 s) is the bound.
 - board/presence.test.tsx "opens nothing without a thread in the URL": deleted (see above).
 - Left as is: `Date.now()` / `new Date()` used only to build timestamps relative to now, with no wait, race or timer: board/board-notices.test.tsx (`NOW`, `at()`), board/board-shell.test.tsx (`NOW`), board/registered-strip.test.tsx (`minutesAgo`). The `waitFor` and `findBy*` calls everywhere wait on a rendered outcome.
 
 ### Unsure
+
 - Nothing was run. The fake `Date` in the board-worktrees `beforeEach` is the riskiest edit: if a component there reads time through something other than `Date` (it should not), or `waitFor` misbehaves with a frozen `Date`, drop the `beforeEach` in `cleanAfterEach` and keep the fixed `NOW` (the relative strings would then drift by the real run time, as before).
 - plain-text.test.ts hostile case: the asserted output is only "not empty"; if the checker finds it too weak (W8), delete it, the ReDoS guard then rests on the other cases.
 - board/registered-strip.test.tsx holds one file with both tags (standard describes and one critical describe for the pure chipLook); the chipLook "maps every state to a tone, a mark and a word" case is a mapping table that the checker may judge W5/W3.
 - board-worktrees/hygiene.test.tsx keeps the `f` (main) row in `docs()` that no assertion reads any more; harmless, not removed to keep the fixture shape.
+
 ## apps/web/tests/overview
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | activity.model.test.ts | keep | K1 | critical | 7 | 7 |
@@ -272,12 +302,15 @@ none. The shared helpers (board-docs.ts, open-board.tsx, post-mock.ts, seed-boar
 Total: 163 before, 119 after.
 
 ### Deleted helpers
+
 none
 
 ### Possibly unused shared helpers
+
 none (apps/web/tests/helpers/whole-text.ts is no longer imported from overview, but apps/web/tests/remote/sync-stamp.test.tsx still uses it)
 
 ### Deleted tests that looked critical
+
 - processes.model.test.ts: "shows the project by its name" (toProcRow) - W5, a plain field mapping the table-row test already reaches
 - processes.model.test.ts: killOne "posts the pid, the startedAt exactly as sampled and tree false" - W6/W4, only asserts the mock call; the Processes tab kill test posts and checks the same body through the UI
 - processes.model.test.ts: killOne "posts tree true for Kill with children" - W6/W4, same, covered by the tab test "posts tree true"
@@ -291,6 +324,7 @@ none (apps/web/tests/helpers/whole-text.ts is no longer imported from overview, 
 - cache.tab.test.tsx: "shows the totals, the folder and the grace period" - W3/W9, text of numbers formatBytes already covers in cache.model.test.ts
 
 ### W7
+
 - seen.test.tsx: converted. The file now fakes only Date (`vi.useFakeTimers({ toFake: ['Date'] })` plus `vi.setSystemTime`) and the time helper is fixed to a constant NOW; the `> Date.now() - 5000` assertion is now an exact `toBe(new Date(NOW).toISOString())`.
 - badges.test.tsx: converted. The "later" entry uses a fixed far-future timestamp instead of `Date.now() + 60000`.
 - activity.tab.test.tsx: converted. The stream entry uses the `minutesAgo(0)` fixture instead of `new Date()` in the test.
@@ -300,11 +334,14 @@ none (apps/web/tests/helpers/whole-text.ts is no longer imported from overview, 
 - deleted for W7: dashboards.send.test.tsx "counts a queued run from the moment it was queued ..." (`6m` from a 5.5 minute real-clock offset, plus column labels, W3); dashboards.tab.test.tsx "writes how long a wake has been on its way as a live time".
 
 ### Unsure
+
 - Relative times in the shared fixtures (helpers/fixtures.ts `minutesAgo` uses the real clock) are still used by kept tests, but no kept assertion depends on a minute value except the activity row regex `\d+[smhd] ago`, which holds for any clock.
 - cache.tab.test.tsx "shows a row per version ..." and activity.tab / notifications.tab "shows the kind/title ... project link" are close to W3 (data rendered after mount); kept because they assert the project link and per-row data from the report that no other test reaches.
 - seen.test.tsx is tagged standard (renderHook plus jsdom localStorage), not critical.
 - Nothing was run, so the edits are not compile-checked; imports were adjusted by hand (removed `cleanup`, `waitFor`, `within`, `wholeText` where no kept test uses them).
+
 ## markdown, remote, palette, routing, stream, api
+
 | file | verdict | rule | tag | cases before | cases after |
 |---|---|---|---|---|---|
 | markdown/markdown-blocks.test.tsx | trim | S1 | standard | 17 | 17 |
@@ -326,12 +363,15 @@ none (apps/web/tests/helpers/whole-text.ts is no longer imported from overview, 
 Totals: 150 cases before, 129 after (markdown 64 to 60, remote 57 to 41, palette 5 to 4, routing 6, stream 10, api 8).
 
 ### Deleted helpers
+
 none
 
 ### Possibly unused shared helpers
+
 none found (the shared helpers I use are all still imported: board-tests/board-dom, helpers/render-at, helpers/fake-source, helpers/snapshot, helpers/seed-board, helpers/whole-text, overview/helpers/*).
 
 ### Deleted tests that looked critical
+
 - markdown/markdown-cost.test.tsx: "stays fast: <name>" (24 cases, one it.each) - asserted a real-clock time under 5 s (W7); replaced by one it.each that renders each hostile input and asserts no script or event attribute (K4), the test timeout bounds the cost.
 - markdown/markdown-cost.test.tsx: "time grows with the size, not with its square" - real clock ratio, flaky by nature (W7).
 - markdown/markdown-cost.test.tsx: "the output of the long inputs is still free of scripts and event attributes" - now covered by the converted it.each over the full inputs (W4).
@@ -340,12 +380,14 @@ none found (the shared helpers I use are all still imported: board-tests/board-d
 - remote/banner.test.tsx: "asks again every 60 seconds" - only asserted that setInterval was called with 60000 (W6, W7).
 
 ### W7
+
 - Deleted: markdown/markdown-cost.test.tsx real-clock timing tests (performance.now): the 24 "stays fast" cases and the growth ratio test. The hostile-input cost is now bounded by the standard test timeout, with the K4 output check kept.
 - Deleted: remote/banner.test.tsx "asks again every 60 seconds" (spied window.setInterval).
 - Converted: remote/sync-stamp.test.tsx now fakes only Date (vi.useFakeTimers with toFake: ['Date'] and vi.setSystemTime(NOW)) so the sync ages are fixed instead of derived from the real clock; waitFor and findBy keep their real timers. hoursAgo, the board header updatedAt and the overview cards seen stamp use NOW.
 - Not converted, left as is: remote/helpers/fixtures.ts `ago` uses Date.now() to build relative timestamps for changes, registry and releases tests ("5m ago", "3m"). The values are minutes apart, so they hold unless a test takes about a minute; it is a shared helper in my folder and the fix is a one-line fake Date in each file if wanted.
 
 ### Unsure
+
 - K4 describes (markdown-safety, markdown-cost, the changes title escaping test) carry the tag standard because they mount a tree, as the brief says; K4 is a critical rule in the standard table, so a lint that ties K-rules to the critical tag would flag them.
 - api/api.test.ts: each case asserts the request path, method and body sent to fetch plus the parsed result. Kept as K2 (the wire contract with the Rust server). If the lead reads it as W6, the whole file goes.
 - stream/scope-stream.test.ts: Connection and State are tagged critical (in-memory fake source, no timers); Recovery uses fake timers and a stubbed fetch, tagged standard (S3).

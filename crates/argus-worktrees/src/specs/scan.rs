@@ -4,48 +4,15 @@
 
 // test-tag: critical
 
-use crate::fact::Fact;
-use crate::fs::RealFs;
 use crate::git::Git;
 use crate::paths::base_name;
 use crate::rule::Rule;
-use crate::scan::{ScanEnv, scan_rules};
+use crate::scan::scan_rules;
+use crate::specs::scan_kit::{by_name, env, rule_lines};
 use crate::testkit::{NotRepo, no_measure, put, root_of};
-use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
 use tempfile::tempdir;
-
-fn by_name(facts: &[Fact]) -> HashMap<String, &Fact> {
-    facts.iter().map(|f| (base_name(&f.path), f)).collect()
-}
-
-fn env<'a>(
-    git: &'a Git,
-    ci: bool,
-    measure: &'a dyn Fn(&str) -> crate::measure::Leftover,
-) -> ScanEnv<'a> {
-    ScanEnv {
-        git,
-        fs: &RealFs,
-        case_insensitive: ci,
-        measure,
-    }
-}
-
-fn rule_lines(rules: &[crate::scan::RuleInfo]) -> Vec<String> {
-    let line = |r: &crate::scan::RuleInfo| {
-        format!(
-            "{} {} {} {} {:?}",
-            r.id,
-            r.exists,
-            r.matched,
-            r.candidates,
-            r.error.as_deref()
-        )
-    };
-    rules.iter().map(line).collect()
-}
 
 fn tree(root: &str, dirs: &[&str]) {
     for d in dirs {

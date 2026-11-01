@@ -4,54 +4,21 @@
 // test-tag: e2e
 
 use crate::clock::{Clock, DAY_MS, SystemClock};
-use crate::fact::Fact;
-use crate::fs::RealFs;
 use crate::git::{GIT_PREFIX, Git};
 use crate::guard::assert_read_only;
 use crate::paths::{base_name, path_key, worktree_id};
 use crate::rule::Rule;
-use crate::scan::{ScanEnv, scan_rules};
+use crate::scan::scan_rules;
+use crate::specs::scan_kit::{by_name, env, rule_lines};
 use crate::status::{Judging, classify};
 use crate::testkit::{Fixture, Recording, real_measure, snapshot};
-use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-
-fn by_name(facts: &[Fact]) -> HashMap<String, &Fact> {
-    facts.iter().map(|f| (base_name(&f.path), f)).collect()
-}
 
 fn names(list: &[String]) -> Vec<String> {
     let mut out: Vec<String> = list.iter().map(|p| base_name(p)).collect();
     out.sort();
     out
-}
-
-fn env<'a>(
-    git: &'a Git,
-    ci: bool,
-    measure: &'a dyn Fn(&str) -> crate::measure::Leftover,
-) -> ScanEnv<'a> {
-    ScanEnv {
-        git,
-        fs: &RealFs,
-        case_insensitive: ci,
-        measure,
-    }
-}
-
-fn rule_lines(rules: &[crate::scan::RuleInfo]) -> Vec<String> {
-    let line = |r: &crate::scan::RuleInfo| {
-        format!(
-            "{} {} {} {} {:?}",
-            r.id,
-            r.exists,
-            r.matched,
-            r.candidates,
-            r.error.as_deref()
-        )
-    };
-    rules.iter().map(line).collect()
 }
 
 fn near(value: Option<i64>, expected: i64) -> bool {
