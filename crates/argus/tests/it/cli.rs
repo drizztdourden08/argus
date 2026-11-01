@@ -4,13 +4,11 @@
 //! `resync`, token rotation, a second `start`, `stop`. Whatever a test started is stopped by the
 //! home's drop, through `argus stop`.
 
-mod common;
-
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::common::Out;
 use argus_server::instance::{PROBE_ENV, call};
-use common::Out;
 use serde_json::Value;
 use tempfile::TempDir;
 

@@ -2,13 +2,11 @@
 //! status test asks an in-process server whose responder and door sit on port 0, never 53 or 80,
 //! and the owner's 47615 is never touched.
 
-mod common;
-
 use std::path::Path;
 use std::process::Command;
 
+use crate::common::Out;
 use argus_testkit::{TestOptions, TestServer};
-use common::Out;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
