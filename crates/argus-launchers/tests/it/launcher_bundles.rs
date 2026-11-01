@@ -1,6 +1,9 @@
 //! Bundles and their launchers (build.verbs, the pure parts): close and reopen retire and
 //! restore the launchers made for a bundle, the status of a bundle, and the rules for
 //! handing a build to the owner.
+//!
+//! Keep rule: K1, K4.
+// test-tag: critical
 
 use argus_launchers::launcher::{
     Bundle, BundleStatus, CloseRequest, LauncherBoard, LauncherPatch, WriteContext, check_hand,

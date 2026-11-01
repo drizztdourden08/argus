@@ -2,6 +2,9 @@
 //! hidden runs, and a shell that exited while a grandchild still holds the pipes does not
 //! keep the run "running" (runs.kill, on the fake host; the real tree kill is in
 //! `system_host`).
+//!
+//! Keep rule: S2, S3.
+// test-tag: standard
 
 use argus_launchers::{ProcessHost, RunStatus};
 

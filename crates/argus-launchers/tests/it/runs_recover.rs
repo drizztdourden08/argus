@@ -1,6 +1,9 @@
 //! Restart safety: at boot nothing stays "running" or "queued". Rows are written the way a
 //! crashed server would have left them; "pid still alive" and Stop-kills-the-orphan go
 //! through the fake host (runs.recover; the real processes are in `system_host`).
+//!
+//! Keep rule: K3, S2.
+// test-tag: standard
 
 use std::collections::BTreeMap;
 use std::sync::Arc;

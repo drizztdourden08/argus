@@ -3,6 +3,9 @@
 //! past its window wakes the thread that made it, one wake a day that lists them; a launcher
 //! without the field counts as 7d and is asked for it. A manual clock drives every tick and
 //! the wake store's last wake stands in for the persisted state.
+//!
+//! Keep rule: K1, K2.
+// test-tag: critical
 
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};

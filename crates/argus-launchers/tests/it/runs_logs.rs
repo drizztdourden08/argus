@@ -1,5 +1,8 @@
 //! Logs: lines and partial lines, carriage returns, long lines, the head and tail cap,
 //! cursors, redaction and the live tail (runs.logs).
+//!
+//! Keep rule: S2, K4.
+// test-tag: standard
 
 use std::time::Duration;
 
