@@ -2,6 +2,7 @@
 //! notifier over the activity log and the wake bridge, and the machine's processes.
 
 mod facts;
+mod links;
 mod machine;
 mod notifier;
 mod store;

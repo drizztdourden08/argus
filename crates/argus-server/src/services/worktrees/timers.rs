@@ -1,7 +1,7 @@
-//! When the scanner looks: once after the start and every `scanMs`, a no-git live check every
-//! `liveMs`, and a pump that scans what asked for it (changed rules after a debounce, a
-//! removal's rescan, leftovers a scan had no time to measure) and republishes the rows while a
-//! deletion job moves.
+//! When the scanner looks: once after the start and every `scanMs`, a no-git live check and a
+//! worktree hygiene step every `liveMs`, and a pump that scans what asked for it (changed rules
+//! after a debounce, a removal's rescan, leftovers a scan had no time to measure) and republishes
+//! the rows while a deletion job moves.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -58,7 +58,8 @@ async fn live_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {
     blocking(svc, move |svc| {
         for key in projects(&service) {
             let found = service.live_step(&key);
-            if found.dropped > 0 || !found.added.is_empty() {
+            let hygiene = service.hygiene_step(&key);
+            if found.dropped > 0 || !found.added.is_empty() || hygiene.changed {
                 publish(svc, &service, &key);
             }
         }

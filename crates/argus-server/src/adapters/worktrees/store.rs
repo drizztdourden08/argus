@@ -8,12 +8,17 @@ use std::sync::Arc;
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
 use argus_core::StorageError;
+use argus_launchers::{ListFilter, RunRow, RunService};
 use argus_store::Db;
-use argus_worktrees::{BoardFacts, WorktreeStore};
+use argus_worktrees::{BoardFacts, Link, WorktreeStore};
 use serde_json::json;
 
 use super::facts::facts_of;
+use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
+
+/// The runs queued or running, at most this many.
+const RUNS_SEEN: i64 = 500;
 
 /// The boards and the key-value table as the worktree service sees them.
 pub struct BoardWorktrees {
@@ -21,6 +26,7 @@ pub struct BoardWorktrees {
     db: Arc<Db>,
     coord_home: PathBuf,
     shadow: bool,
+    runs: Option<Arc<RunService<RunHost>>>,
 }
 
 impl BoardWorktrees {
@@ -32,7 +38,23 @@ impl BoardWorktrees {
             db,
             coord_home,
             shadow,
+            runs: None,
         }
+    }
+
+    /// The same storage, with the run engine the hygiene asks which runs work in a worktree.
+    #[must_use]
+    pub fn with_runs(mut self, runs: Option<Arc<RunService<RunHost>>>) -> Self {
+        self.runs = runs;
+        self
+    }
+}
+
+fn run_link(run: RunRow) -> Link {
+    Link {
+        what: format!("run {} ({})", run.id, run.name),
+        path: Some(run.cwd),
+        ..Link::default()
     }
 }
 
@@ -96,5 +118,17 @@ impl WorktreeStore for BoardWorktrees {
             Ok(queue(board, thread, "Argus", "note", text, None))
         })
         .map_err(|e| StorageError(e.to_string()))
+    }
+
+    fn live_runs(&self) -> Result<Vec<Link>, String> {
+        let Some(runs) = &self.runs else {
+            return Ok(Vec::new());
+        };
+        let filter = ListFilter {
+            limit: Some(RUNS_SEEN),
+            ..ListFilter::default()
+        }
+        .with_statuses("running, queued");
+        Ok(runs.list_all(&filter).into_iter().map(run_link).collect())
     }
 }

@@ -8,6 +8,8 @@ use argus_core::clock::parse_ms;
 use argus_worktrees::{Answer, BoardFacts, EntryWorktree, Keep, OwnerEntry, Rule, ThreadInfo};
 use serde_json::Value;
 
+use super::links::{agents_of, links_of};
+
 const ENDED: [&str; 2] = ["done", "archived"];
 
 fn text(value: &Value) -> Option<String> {
@@ -137,5 +139,7 @@ pub(super) fn facts_of(board: &Board) -> BoardFacts {
         answers: answers_of(&board["worktreeAnswers"]),
         threads: threads_of(&board["threads"]),
         entries: entries_of(&board["entries"]),
+        agents: agents_of(board),
+        links: links_of(board),
     }
 }
