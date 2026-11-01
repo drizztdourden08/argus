@@ -63,6 +63,40 @@ fn only_what_is_in_the_live_listing_an_unknown_id_or_path_is_404_and_the_refusal
 }
 
 #[test]
+fn a_project_with_no_rule_lists_nothing_and_the_404_says_to_add_one_a_path_is_never_taken_as_it_is()
+{
+    let fx = Fixture::new();
+    let h = Harness::new(&fx.root, Vec::new(), |_| {});
+    h.scan();
+    assert!(h.docs().is_empty());
+    let err = h.refused(&fx.path("old-merged"), |i| {
+        i.caller = Caller::Thread("lead".into());
+    });
+    assert_eq!(err.code, ErrorCode::NotFound);
+    assert!(
+        err.message.contains("alpha has no valid worktree rule"),
+        "{}",
+        err.message
+    );
+    assert!(err.message.contains("coord worktree rule add"));
+    assert!(listed(&fx.repo).contains(&"old-merged".to_string()));
+}
+
+#[test]
+fn a_repo_rule_lists_the_worktrees_wherever_they_are_and_a_path_names_one() {
+    let fx = Fixture::new();
+    let h = Harness::new(
+        &fx.root,
+        vec![Rule::folder("R-1", &fx.repo, "worker").repo()],
+        |_| {},
+    );
+    h.scan();
+    let out = h.rm(&fx.path("old-merged")).unwrap();
+    assert!(out.removed, "{}", out.text);
+    assert!(!listed(&fx.repo).contains(&"old-merged".to_string()));
+}
+
+#[test]
 fn a_rule_that_no_longer_covers_the_folder_is_a_403_never_an_arbitrary_path() {
     let (fx, h) = std_setup();
     h.board().rules[0].path = format!("{}/elsewhere", fx.root);
