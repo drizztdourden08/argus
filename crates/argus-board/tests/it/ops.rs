@@ -1,5 +1,8 @@
 //! The owner's ops on a board: pause and resume, move, acceptance criteria, create, bulk, the
 //! soft ops, the handed build and purge with its backup.
+//! K1, K3, K4: the owner ops and the confirmed purge.
+
+// test-tag: critical
 
 use crate::common::{alpha, post};
 use argus_board::ops::purge_plan;

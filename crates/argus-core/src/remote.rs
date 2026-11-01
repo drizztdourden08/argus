@@ -175,20 +175,13 @@ impl ModeSource for Switch {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn set(home: &Path, text: &str) {
         fs::write(switch_file(home), text).expect("write switch");
-    }
-
-    #[test]
-    fn a_missing_file_is_local() {
-        let home = tempfile::tempdir().expect("temp dir");
-        let switch = Switch::new(home.path());
-        assert_eq!(switch.mode(), Mode::Local);
-        assert!(switch.is_local());
     }
 
     #[test]

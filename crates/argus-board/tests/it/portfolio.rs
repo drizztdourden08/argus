@@ -1,5 +1,8 @@
 //! The portfolio: the owner's posts handed down to the project boards, the project list, the
 //! cards, and the proof images of a test.
+//! K1, K2, K3: the hand-down, the project list, the cards and the proofs.
+
+// test-tag: critical
 
 use crate::common::alpha;
 use argus_board::BoardError;

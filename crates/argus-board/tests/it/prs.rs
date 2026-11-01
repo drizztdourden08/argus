@@ -1,4 +1,7 @@
 //! The pull request ops of the local remote: open, update, merge, close and the check list.
+//! K1, K4: the pull request ops.
+
+// test-tag: critical
 
 use crate::common::alpha;
 use argus_board::Board;
