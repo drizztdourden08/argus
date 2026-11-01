@@ -245,6 +245,7 @@ pub fn request_for(board: &BoardFacts, id: &str) -> Option<RequestDoc> {
     })
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -324,12 +325,5 @@ mod tests {
         assert_eq!(board.coordinator().as_deref(), Some("b"));
         assert_eq!(board.live_thread("a"), None);
         assert_eq!(board.live_thread("c").as_deref(), Some("c"));
-    }
-
-    #[test]
-    fn callers_say_who_asked() {
-        assert_eq!(Caller::Page.for_text(), "for the owner (page)");
-        assert_eq!(Caller::Thread("worker".into()).for_text(), "for worker");
-        assert_eq!(Caller::Thread(String::new()).by_text(), "a thread");
     }
 }

@@ -346,6 +346,7 @@ fn pruned_outcome(gone: &[Fact]) -> RemoveOutcome {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

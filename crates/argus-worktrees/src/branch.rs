@@ -321,6 +321,7 @@ impl Service {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::is_object_id;

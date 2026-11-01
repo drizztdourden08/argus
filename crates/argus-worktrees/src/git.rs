@@ -187,9 +187,11 @@ impl Git {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Barrier;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::thread;
 
@@ -315,16 +317,18 @@ mod tests {
         );
     }
 
+    /// Every run waits for a second one to be running with it, so two at once is proven and a third would show.
     struct Slow {
         running: AtomicUsize,
         peak: AtomicUsize,
+        pair: Barrier,
     }
 
     impl GitExec for Slow {
         fn exec(&self, _cwd: &str, _args: &[String], _timeout: Duration) -> GitOutput {
             let now = self.running.fetch_add(1, Ordering::SeqCst) + 1;
             self.peak.fetch_max(now, Ordering::SeqCst);
-            thread::sleep(Duration::from_millis(15));
+            self.pair.wait();
             self.running.fetch_sub(1, Ordering::SeqCst);
             GitOutput::success("ok")
         }
@@ -335,6 +339,7 @@ mod tests {
         let exec = Arc::new(Slow {
             running: AtomicUsize::new(0),
             peak: AtomicUsize::new(0),
+            pair: Barrier::new(2),
         });
         let git = Arc::new(Git::new(exec.clone()));
         let workers: Vec<_> = (0..12)

@@ -117,6 +117,7 @@ pub fn parse_status(text: &str) -> StatusInfo {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
