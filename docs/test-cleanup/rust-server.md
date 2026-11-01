@@ -6,11 +6,11 @@ Baseline `3a35cac`. Rules from `X:/ai-config/docs/test-standard.md`. Tags follow
 
 | Crate | Files before | Cases before | Files after | Cases after | critical (files/cases) | standard (files/cases) | e2e (files/cases) | untagged (files/cases) |
 |---|---|---|---|---|---|---|---|---|
-| argus-server | 35 | 325 | 45 | 298 | 9/33 | 24/206 | 6/17 | 6/42 |
+| argus-server | 35 | 325 | 45 | 297 | 11/35 | 26/226 | 8/36 | 0/0 |
 | argus | 19 | 99 | 19 | 84 | 9/45 | 3/10 | 7/29 | 0/0 |
 | argus-mcp | 11 | 80 | 12 | 79 | 9/69 | 1/7 | 2/3 | 0/0 |
 
-Untagged in argus-server: `wake.rs`, `wake_faults.rs`, `worktrees.rs`, `worktree_requests.rs` and the inline tests of `adapters/worktrees/links.rs` and `routes/worktrees/requests.rs`. A separate agent (R3, worktrees and wake) was running on them, so this part did not edit them, to avoid a merge clash. The wake and worktrees rig helpers (`wake_rig`, `worktrees/fixture.rs`, `worktrees/rig.rs`) keep their `#![allow(dead_code)]` for the same reason.
+Every file that holds a test carries one tag; `scripts/rust-tests/check-tags.mjs` finds no problem.
 
 ## Verdicts
 
@@ -19,9 +19,9 @@ Untagged in argus-server: `wake.rs`, `wake_faults.rs`, `worktrees.rs`, `worktree
 | File | Cases | Verdict | Rule | Tag |
 |---|---|---|---|---|
 | argus-server/src/adapters/proc_folders.rs | 1 | KEEP | K1: the porcelain list and the rule paths parse to their folders. | critical |
-| argus-server/src/adapters/worktrees/links.rs | 1 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
+| argus-server/src/adapters/worktrees/links.rs | 1 | KEEP | K1: which open things and agents link to a worktree. | critical |
 | argus-server/src/routes/check_guard.rs | 2 | KEEP | K1: which paths a guard run changed, and the note that names them. | critical |
-| argus-server/src/routes/worktrees/requests.rs | 1 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
+| argus-server/src/routes/worktrees/requests.rs | 1 | KEEP | K1: the targets and the owner entry of a removal request. | critical |
 | argus-server/tests/it/activity.rs | 6 | KEEP | K2, K3: the activity route shape, the portfolio docs and the sink adapters. | standard |
 | argus-server/tests/it/agents.rs | 6 | KEEP | K2, S2: the reconcile report and the reaper through the sync service. | standard |
 | argus-server/tests/it/alias.rs | 8 | KEEP | K2, K4: the redirect and overview answers and the host and origin refusals; the pure parse rules are in `alias | standard |
@@ -59,10 +59,10 @@ Untagged in argus-server: `wake.rs`, `wake_faults.rs`, `worktrees.rs`, `worktree
 | argus-server/tests/it/shadow.rs | 6 | KEEP | K3, K1: seeding a shadow home from the Node home in temp folders: nothing the shadow has is overwritten and th | critical |
 | argus-server/tests/it/shadow_server.rs | 3 | KEEP | K3, K4: a server in shadow mode: it starts from the Node database, a marked home serves in | standard |
 | argus-server/tests/it/sse_buffer.rs | 2 | KEEP | K1, S3: the buffer limit of one page stream client, with no server: a client a megabyte behind | critical |
-| argus-server/tests/it/wake.rs | 15 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
-| argus-server/tests/it/wake_faults.rs | 6 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
-| argus-server/tests/it/worktree_requests.rs | 4 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
-| argus-server/tests/it/worktrees.rs | 15 | NOT TOUCHED (R3 agent owns worktrees and wake) |  | NONE |
+| argus-server/tests/it/wake.rs | 14 | KEEP | S2, K2: the wake stream, the wake docs and the listeners against an in-process server. | standard |
+| argus-server/tests/it/wake_faults.rs | 6 | KEEP | S2, K2, K4: the fault life cycle and the clear route refusals against an in-process server. | standard |
+| argus-server/tests/it/worktree_requests.rs | 4 | KEEP | E2, K2, K4: removal requests through the whole server, with the real git and the coord CLI. | e2e |
+| argus-server/tests/it/worktrees.rs | 15 | KEEP | E2, K4: the worktree scanner and removal routes inside the server, on a throwaway repository with the real git | e2e |
 
 ### argus
 
@@ -105,7 +105,7 @@ Untagged in argus-server: `wake.rs`, `wake_faults.rs`, `worktrees.rs`, `worktree
 | argus-mcp/tests/mcp/resources.rs | 5 | KEEP | K2: the resource list and reads. | critical |
 | argus-mcp/tests/mcp/write_tools.rs | 6 | KEEP | K2, K4: the tools that act as the owner and their refusals. | critical |
 
-## Deleted cases (41 names) and why
+## Deleted cases (42 names) and why
 
 Reasons are one line each. Where a case looked like K1 to K4 it says so ("K4 by look"). None was a K5 regression.
 
@@ -119,6 +119,7 @@ Reasons are one line each. Where a case looked like K1 to K4 it says so ("K4 by 
 | alias.rs reserved_hosts_and_origins_in_the_unit_rules | W4 | Overlapped the kept parse and origin rule cases. |
 | alias.rs the_redirect_target_and_the_api_are_served_on_the_alias_host | W4 | The alias host served pages already, covered by the kept redirect test. |
 | alias.rs overlord_alias_edge_cases_and_the_board_page_name | W4 | Edge states of the same alias routing, one behavior in different states. |
+| wake.rs a_thread_message_goes_through_the_engine_like_a_lead_message | W4 | Same engine path as the lead message case (window, replay, page doc), only another reason word. |
 | doc_stream.rs a_two_megabyte_snapshot_over_several_collections_arrives_whole_with_ready | W7 | A size and time bound stream read; the buffer rule is kept deterministic in `sse_buffer.rs`. |
 | early_refusal.rs the_shutdown_answers_a_client_whose_body_comes_late | W7 | Repeated five times and ordering dependent (a late body); the kept test of the file covers the refusal. |
 | http_security.rs pages_files_streams_and_static_files_are_open_too | W4 | Open GET routes in the default mode; one state of the matrix the kept tests already walk. |
@@ -170,6 +171,8 @@ Reasons are one line each. Where a case looked like K1 to K4 it says so ("K4 by 
 Made deterministic by waiting for an outcome (`crate::wait::until`, which polls an outcome for up to 20 s) or by removing the sleep:
 
 - argus-server notify.rs: absence by sleep became a FIFO ordering sentinel (a later wake proves the earlier ones were processed).
+- argus-server wake.rs: `quiet()` and `pause()` sleeps and the 400 and 600 ms absence timeouts went. Each "nothing arrives" check became an ordering check (the next wake that does arrive carries only the expected line) or an outcome wait on the wake row; `wake_where` now waits through `until`.
+- argus-server wake_faults.rs and agents.rs: the hand-rolled sleep loops use `until`.
 - argus-server runs_server.rs, runs_store.rs, records.rs, procs.rs, mcp.rs: fixed loops and sleeps replaced by `until`; two elapsed bounds removed from runs_server.rs.
 - argus wake_stream.rs: the 600 ms and 2500 ms sleeps went; the 300 ms one became a bounded poll for the empty listener list.
 - argus mcp_stdio.rs and argus-mcp bridge*.rs: the 300 ms and 600 ms start waits of the bridge became 5 ms.
@@ -179,7 +182,7 @@ Deleted instead of converted: the W7 rows above (doc_stream, early_refusal, post
 
 ## Helpers and structure
 
-- Dead helpers: `#![allow(dead_code)]` removed from `posting/mod.rs`, `support/wait.rs`, `runs/rig.rs` (also `unused_imports`) and from `mod toasts` in `main.rs`. The wake and worktrees rigs keep theirs (R3).
+- Dead helpers: `#![allow(dead_code)]` removed from `posting/mod.rs`, `support/wait.rs`, `runs/rig.rs` (also `unused_imports`) and from `mod toasts` in `main.rs`. `wake_rig/mod.rs`, `worktrees/fixture.rs` and `worktrees/rig.rs` lost theirs too (`pause` and `quiet` deleted from the wake rig).
 - `machine/mod.rs` and `toasts/mod.rs` are unchanged (argus-coord includes both by `#[path]`).
-- Split by tag: alias, local_names, localhost_door, http (rules files, critical); cache_worktree, portfolio_send_cli, pr_checks_runs, records_node (e2e); shadow_server, sse_buffer; mcp_stdio_process (e2e); install/replace/link_tests (e2e); argus-mcp bridge_stub (standard).
+- worktrees.rs and worktree_requests.rs use the real git, so they are e2e with `#[ignore]`; wake.rs and wake_faults.rs are standard. Split by tag: alias, local_names, localhost_door, http (rules files, critical); cache_worktree, portfolio_send_cli, pr_checks_runs, records_node (e2e); shadow_server, sse_buffer; mcp_stdio_process (e2e); install/replace/link_tests (e2e); argus-mcp bridge_stub (standard).
 - Nothing was compiled or run, so imports and visibility of the split files are untested.

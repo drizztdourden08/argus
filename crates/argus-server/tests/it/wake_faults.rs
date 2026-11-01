@@ -2,10 +2,11 @@
 //! listens for becomes a fault, mirrored to the `registry` docs and told once to the main
 //! coordinator as a passive notice (the wake policy never wakes it for a fault); the clear route refuses a browser and anyone but the Overlord. The `coord
 //! wake-fault` verbs stay in the Node `coord` tests until the `coord` port of slice 8.
+//! S2, K2, K4: the fault life cycle and the clear route refusals against an in-process server.
+// test-tag: standard
 
-use std::time::{Duration, Instant};
-
-use crate::wake_rig::{pause, post_wake, wake_stream, wakes};
+use crate::wait;
+use crate::wake_rig::{post_wake, wake_stream, wakes};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
@@ -63,12 +64,8 @@ fn state_of(t: &TestServer, scope: &str, id: &str) -> Option<String> {
 }
 
 /// Waits until `check` is true.
-async fn until(what: &str, ms: u64, check: impl Fn() -> bool) {
-    let end = Instant::now() + Duration::from_millis(ms);
-    while !check() {
-        assert!(Instant::now() < end, "timed out waiting for {what}");
-        pause(40).await;
-    }
+async fn until(what: &str, check: impl Fn() -> bool) {
+    wait::until(what, || async { check().then_some(()) }).await;
 }
 
 /// Two wakes for threads nobody listens for, and the main coordinator listening.
@@ -89,7 +86,7 @@ async fn faulted() -> Faulted {
         let body = json!({ "thread": thread, "reason": "thread-message", "text": format!("lead: look at {thread}") });
         assert_eq!(post_wake(&t, "alpha", &body).await.json()["queued"], true);
     }
-    until("both faults", 8000, || {
+    until("both faults", || {
         state_of(&t, "alpha", "ui").as_deref() == Some("fault")
             && state_of(&t, "alpha", "api").as_deref() == Some("fault")
     })
@@ -184,7 +181,7 @@ async fn a_listening_thread_is_waking_until_its_next_sign_of_life_then_listening
     let path = "/api/p/alpha/wakes/stream?thread=web&v=2&id=web%20session";
     let s = t.sse(path).await;
     s.next(Some("ready"), 5000).await.expect("ready");
-    until("listening", 8000, || {
+    until("listening", || {
         state_of(t, "alpha", "web").as_deref() == Some("listening")
     })
     .await;
@@ -195,7 +192,7 @@ async fn a_listening_thread_is_waking_until_its_next_sign_of_life_then_listening
     let body = json!({ "thread": "web", "reason": "thread-message", "text": "lead: look at web" });
     post_wake(t, "alpha", &body).await;
     assert!(s.next(Some("wake"), 5000).await.is_some(), "delivered");
-    until("waking", 8000, || {
+    until("waking", || {
         state_of(t, "alpha", "web").as_deref() == Some("waking")
     })
     .await;
@@ -207,7 +204,7 @@ async fn a_listening_thread_is_waking_until_its_next_sign_of_life_then_listening
     let mut board = t.board("alpha");
     board["threads"]["web"]["lastSeen"] = json!(argus_core::clock::iso_from_ms(now_ms() + 5000));
     write_board(&t.coord_home, "alpha", &board);
-    until("listening again", 10000, || {
+    until("listening again", || {
         state_of(t, "alpha", "web").as_deref() == Some("listening")
     })
     .await;
@@ -216,7 +213,7 @@ async fn a_listening_thread_is_waking_until_its_next_sign_of_life_then_listening
         Value::Null
     );
     s.close();
-    until("idle", 8000, || {
+    until("idle", || {
         state_of(t, "alpha", "web").as_deref() == Some("idle")
     })
     .await;
@@ -333,7 +330,7 @@ async fn the_main_coordinator_clears_a_fault_with_a_note() {
         .await;
     assert_eq!(done.status, 200);
     assert_eq!(done.json()["fault"]["clearedBy"], "coordinator");
-    until("the row to go idle", 8000, || {
+    until("the row to go idle", || {
         state_of(t, "alpha", "ui").as_deref() == Some("idle")
     })
     .await;

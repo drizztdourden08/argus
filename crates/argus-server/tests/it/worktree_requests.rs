@@ -4,6 +4,8 @@
 //! result comes to the lead's inbox, `coord worktree requests` lists the sentences, and the
 //! summary the page reads carries the brief form. A stranger, a thread of another project and the
 //! page are refused. The CLI cases need `ARGUS_COORD_CLI` (Node) or the `argus` binary.
+//! E2, K2, K4: removal requests through the whole server, with the real git and the coord CLI.
+// test-tag: e2e
 
 use crate::worktrees_rig::{Rig, id_of, until, wakes_of};
 use argus_core::clock::{iso_from_ms, now_ms};
@@ -32,6 +34,7 @@ fn inbox_note(r: &Rig, text: &str) -> Option<Value> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_stranger_a_thread_of_another_project_and_the_page_cannot_ask_nothing_is_stored_and_a_bad_shape_is_400()
  {
     let r = Rig::start().await;
@@ -84,6 +87,7 @@ async fn the_summary_and_the_activity_follow(r: &Rig) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_request_is_recorded_at_once_the_worker_removes_the_lead_is_told_and_the_summary_the_page_reads_has_the_brief()
  {
     let r = Rig::start().await;
@@ -146,6 +150,7 @@ fn queued_by_path(path: &str) -> String {
 /// The live bug of 2026-10-29: a request filed before a restart, naming its worktree by path, must
 /// be carried out by the next server, which scans the project on its own first.
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_request_by_path_filed_before_a_restart_is_carried_out_by_the_next_server_with_no_scan_before_it()
  {
     let r = Rig::start().await;
@@ -266,6 +271,7 @@ async fn lists_the_sentences(a: &Asker<'_>) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn coord_worktree_request_records_and_returns_and_coord_worktree_requests_lists_the_sentences()
  {
     for cli in CoordCli::locate_each() {

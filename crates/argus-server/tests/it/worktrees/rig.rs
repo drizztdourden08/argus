@@ -1,8 +1,6 @@
 //! A server whose worktree scanner looks at a throwaway repository, with timers on and no real
 //! process list, and the calls the worktree tests make over and over.
 
-#![allow(dead_code)]
-
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -16,7 +14,6 @@ use tempfile::TempDir;
 
 use crate::fixture::Fixture;
 
-#[allow(unused_imports)]
 pub use crate::wait::{until, wakes_of};
 
 /// A machine with no process on it: a removal never finds its folder in use.

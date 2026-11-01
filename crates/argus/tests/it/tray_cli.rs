@@ -97,6 +97,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn status_exits_0_for_a_running_tray_and_ignores_a_dead_one() {
         let home = home();
         write_tray(home.path(), std::process::id());
@@ -161,6 +162,7 @@ mod windows {
     }
 
     #[test]
+    #[ignore = "e2e"]
     fn a_tray_that_ignores_the_request_is_killed_and_the_request_file_is_removed() {
         let home = home();
         let stubborn = Sleeper::start();

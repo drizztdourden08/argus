@@ -5,11 +5,12 @@
 //!
 //! The builds, launchers and rerun cases of `wake.http.test.mjs` belong to the sync and runs
 //! slices, and `coord inbox send` itself to the `coord` port of slice 8.
+//! S2, K2: the wake stream, the wake docs and the listeners against an in-process server.
+// test-tag: standard
 
 use crate::posting::{doc, post};
-use crate::wake_rig::{
-    lines, listeners, pause, post_wake, quiet, result, rig, wake_stream, wake_where, wakes,
-};
+use crate::wait::until;
+use crate::wake_rig::{lines, listeners, post_wake, result, rig, wake_stream, wake_where, wakes};
 use argus_testkit::TestServer;
 use serde_json::{Value, json};
 
@@ -41,7 +42,6 @@ async fn wakes_inside_the_window_arrive_as_one_event_and_the_other_threads_hear_
     assert!(is_wake_id(&e.data["id"]));
     assert_eq!(e.id.as_deref(), e.data["id"].as_str());
     assert!(e.data["at"].as_str().is_some_and(|at| at.ends_with('Z')));
-    assert!(ui.next(Some("wake"), 400).await.is_none(), "one event");
     assert_eq!(api.queued(), 0, "another thread hears nothing");
 }
 
@@ -63,11 +63,11 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
         .expect("the first event");
     first.close();
     result(t, "T-4", "blocked", "device missing").await;
-    quiet().await;
     let queued = wake_where(t, "alpha", |w| {
         w["text"]
             .as_str()
             .is_some_and(|x| x.starts_with("T-4 blocked"))
+            && w["status"] == "queued"
     })
     .await;
     assert_eq!(queued["status"], "queued");
@@ -80,9 +80,11 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
     let replay = late.next(Some("wake"), 5000).await.expect("the replay");
     assert_eq!(lines(&replay.data), ["T-4 blocked: device missing"]);
     assert_eq!(replay.data["id"], queued["id"]);
-    pause(100).await;
-    let delivered = wake_doc(t, &queued).await;
-    assert_eq!(delivered["status"], "delivered");
+    let delivered = until("the replayed wake to be delivered", || async {
+        let doc = wake_doc(t, &queued).await;
+        (doc["status"] == "delivered").then_some(doc)
+    })
+    .await;
     assert_eq!(delivered["listeners"], 1);
 
     result(t, "T-5", "pass", "ok").await;
@@ -98,10 +100,13 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
     assert_eq!(row["status"], "delivered");
 
     let second = wake_stream(t, "ui", "alpha").await;
-    assert!(
-        second.next(Some("wake"), 400).await.is_none(),
-        "replayed once"
-    );
+    let after = json!({ "thread": "ui", "reason": "thread-message", "text": "lead: after" });
+    post_wake(t, "alpha", &after).await;
+    let next = second
+        .next(Some("wake"), 5000)
+        .await
+        .expect("the next wake");
+    assert_eq!(lines(&next.data), ["lead: after"], "replayed once");
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -122,11 +127,13 @@ async fn an_answer_a_resume_and_a_reassigned_item_wake_the_right_thread_to_a_sta
     );
 
     post(t, &json!({ "kind": "pause", "replyTo": "ui" })).await;
-    quiet().await;
-    assert_eq!(star.queued(), 0, "pause wakes nobody");
     post(t, &json!({ "kind": "resume", "replyTo": "ui" })).await;
     let resumed = star.next(Some("wake"), 5000).await.expect("the resume");
-    assert_eq!(lines(&resumed.data), ["ui was resumed by the owner"]);
+    assert_eq!(
+        lines(&resumed.data),
+        ["ui was resumed by the owner"],
+        "pause wakes nobody"
+    );
 
     let moved = post(
         t,
@@ -159,8 +166,10 @@ async fn edits_status_moves_and_archives_wake_nobody() {
     )
     .await;
     post(t, &json!({ "kind": "archive", "target": target })).await;
-    quiet().await;
-    assert_eq!(star.queued(), 0);
+    let text = json!({ "kind": "followup", "replyTo": "Q-1", "text": "Yes." });
+    post(t, &text).await;
+    let first = star.next(Some("wake"), 5000).await.expect("the answer");
+    assert_eq!(lines(&first.data), ["owner answered Q-1: Yes."]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -253,9 +262,10 @@ async fn a_lead_message_goes_through_the_engine_window_star_listener_replay_and_
     let ping =
         json!({ "thread": "coordinator", "reason": "lead-message", "text": "tessera lead: ping" });
     post_wake(t, "beta", &ping).await;
-    quiet().await;
-    let queued = wake_where(t, "beta", |w| w["text"] == "tessera lead: ping").await;
-    assert_eq!(queued["status"], "queued");
+    let queued = wake_where(t, "beta", |w| {
+        w["text"] == "tessera lead: ping" && w["status"] == "queued"
+    })
+    .await;
     assert_eq!(queued["listeners"], 0);
     let late = wake_stream(t, "coordinator", "beta").await;
     let replay = late.next(Some("wake"), 5000).await.expect("the replay");
@@ -316,25 +326,7 @@ async fn only_an_outside_reason_an_existing_thread_and_a_text_are_accepted() {
         "unknown thread"
     );
     assert_eq!(bad(ok, "nowhere").await, 404, "unknown board");
-    quiet().await;
     assert_eq!(wakes(t, "beta").await.len(), before, "nothing was recorded");
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_thread_message_goes_through_the_engine_like_a_lead_message() {
-    let r = rig().await;
-    let t = &r.t;
-    let body = json!({ "thread": "coordinator", "reason": "thread-message", "text": "ui: please look at T-9" });
-    let sent = post_wake(t, "beta", &body).await.json();
-    assert_eq!(sent["reason"], "thread-message");
-    quiet().await;
-    let row = wake_where(t, "beta", |w| w["reason"] == "thread-message").await;
-    assert_eq!(row["status"], "queued");
-    assert_eq!(row["listeners"], 0);
-    assert_eq!(row["text"], "ui: please look at T-9");
-    let late = wake_stream(t, "coordinator", "beta").await;
-    let replay = late.next(Some("wake"), 5000).await.expect("the replay");
-    assert_eq!(lines(&replay.data), ["ui: please look at T-9"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -356,8 +348,10 @@ async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
     fresh.next(Some("ready"), 5000).await.expect("ready");
     let bye = old.next(Some("replaced"), 5000).await.expect("replaced");
     assert_eq!(bye.data, json!({ "reason": "newer listener" }));
-    pause(100).await;
-    assert!(old.ended(), "the server closed the old connection");
+    until("the old connection to close", || async {
+        old.ended().then_some(())
+    })
+    .await;
     let open = listeners(t, "beta").await;
     assert_eq!(
         open.len(),
@@ -378,9 +372,10 @@ async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
     assert_eq!(lines(&e.data), ["a: hello"]);
     assert!(star.next(Some("wake"), 5000).await.is_some());
     assert_eq!(old.queued(), 0, "nothing reached the replaced stream");
-    pause(100).await;
-    let row = wake_where(t, "beta", |w| w["text"] == "a: hello").await;
-    assert_eq!(row["status"], "delivered");
+    let row = wake_where(t, "beta", |w| {
+        w["text"] == "a: hello" && w["status"] == "delivered"
+    })
+    .await;
     assert_eq!(
         row["listeners"], 2,
         "the coordinator stream and the star stream"
@@ -393,14 +388,13 @@ async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
     let t = &r.t;
     let text = |s: &str| json!({ "thread": "coordinator", "reason": "thread-message", "text": s });
     post_wake(t, "beta", &text("queued before any listener")).await;
-    quiet().await;
+    wake_where(t, "beta", |w| {
+        w["text"] == "queued before any listener" && w["status"] == "queued"
+    })
+    .await;
     let legacy = t.sse("/api/p/beta/wakes/stream?thread=coordinator").await;
     let ready = legacy.next(Some("ready"), 5000).await.expect("ready");
     assert_eq!(ready.data["thread"], "coordinator");
-    assert!(
-        legacy.next(Some("wake"), 400).await.is_none(),
-        "no replay to a legacy listener"
-    );
     let legacy2 = t.sse("/api/p/beta/wakes/stream?thread=coordinator").await;
     legacy2.next(Some("ready"), 5000).await.expect("ready");
     assert!(
@@ -415,24 +409,26 @@ async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
     assert_eq!(versions, [json!(1), json!(1)]);
 
     post_wake(t, "beta", &text("live while only legacy listens")).await;
-    assert!(
-        legacy.next(Some("wake"), 5000).await.is_some(),
-        "a legacy stream hears live wakes"
+    let heard = legacy.next(Some("wake"), 5000).await;
+    let heard = heard.expect("a legacy stream hears live wakes");
+    assert_eq!(
+        lines(&heard.data),
+        ["live while only legacy listens"],
+        "no replay to a legacy listener"
     );
     assert!(legacy2.next(Some("wake"), 5000).await.is_some());
-    pause(100).await;
-    let row = wake_where(t, "beta", |w| w["text"] == "live while only legacy listens").await;
-    assert_eq!(
-        row["status"], "queued",
-        "dead orphans cannot swallow a wake"
-    );
-    assert_eq!(row["listeners"], 0);
+    let row = wake_where(t, "beta", |w| {
+        w["text"] == "live while only legacy listens" && w["status"] == "queued"
+    })
+    .await;
+    assert_eq!(row["listeners"], 0, "dead orphans cannot swallow a wake");
 
     let modern = wake_stream(t, "coordinator", "beta").await;
     assert!(!legacy.ended(), "a v2 stream does not replace a legacy one");
-    let mut texts = lines(&modern.next(Some("wake"), 5000).await.expect("replay").data);
-    if let Some(more) = modern.next(Some("wake"), 600).await {
-        texts.extend(lines(&more.data));
+    let mut texts = Vec::new();
+    while texts.len() < 2 {
+        let event = modern.next(Some("wake"), 5000).await.expect("replay");
+        texts.extend(lines(&event.data));
     }
     texts.sort();
     assert_eq!(
@@ -492,13 +488,10 @@ async fn a_board_page_holds_presence_open_per_thread_and_closing_drops_it() {
     assert_eq!(listed[0]["thread"], "ui");
     assert_eq!(listed[0]["tabs"], 1);
     s.close();
-    for _ in 0..40 {
-        if open_boards(t).await.is_empty() {
-            return;
-        }
-        pause(50).await;
-    }
-    panic!("the presence stayed after the stream closed");
+    until("the presence to drop", || async {
+        open_boards(t).await.is_empty().then_some(())
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -1,10 +1,9 @@
 //! What the wake tests share: a server on the fixture boards with short windows, the streams a
 //! thread listens on, and the rows the page mirrors.
-#![allow(dead_code)]
 
 use std::path::Path;
-use std::time::Duration;
 
+use crate::wait::until;
 use argus_testkit::{Reply, SseReader, TestOptions, TestServer, make_home, write_board};
 use serde_json::{Value, json};
 use tempfile::TempDir;
@@ -50,15 +49,6 @@ pub async fn rig() -> Rig {
     rig_with(json!({ "wake": { "windowMs": WINDOW_MS }, "wakePolicy": { "debounceMs": 0 } })).await
 }
 
-pub async fn pause(ms: u64) {
-    tokio::time::sleep(Duration::from_millis(ms)).await;
-}
-
-/// Waits for the windows to close.
-pub async fn quiet() {
-    pause(WINDOW_MS * 3).await;
-}
-
 /// A v2 wake stream of a thread, past its `ready`.
 pub async fn wake_stream(t: &TestServer, thread: &str, key: &str) -> SseReader {
     let path = format!("/api/p/{key}/wakes/stream?thread={thread}&v=2");
@@ -76,10 +66,12 @@ pub async fn wakes(t: &TestServer, key: &str) -> Vec<Value> {
     body["wakes"].as_array().cloned().unwrap_or_default()
 }
 
-/// The first row that `keep` accepts.
+/// Waits for the first row that `keep` accepts.
 pub async fn wake_where(t: &TestServer, key: &str, keep: impl Fn(&Value) -> bool) -> Value {
-    let rows = wakes(t, key).await;
-    rows.into_iter().find(keep).expect("a matching wake row")
+    until("a matching wake row", || async {
+        wakes(t, key).await.into_iter().find(|w| keep(w))
+    })
+    .await
 }
 
 /// `POST /api/p/<key>/wakes` with the CLI's headers.

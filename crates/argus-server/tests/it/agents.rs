@@ -8,9 +8,9 @@
 
 use std::path::Path;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-use crate::wake_rig::{pause, wake_where};
+use crate::wait::until;
+use crate::wake_rig::wake_where;
 use argus_agents::fakes::{agent_record, assistant_line, text_block, touch};
 use argus_agents::{AgentReaper, Ports, ReaperOptions, StdFs, SystemClock};
 use argus_core::Coll;
@@ -83,30 +83,19 @@ fn agent_doc(t: &TestServer, id: &str) -> Option<Value> {
 
 /// Waits until a doc of the agents collection satisfies `check`.
 async fn doc_where(t: &TestServer, id: &str, check: impl Fn(&Value) -> bool) -> Value {
-    let end = Instant::now() + Duration::from_secs(10);
-    loop {
-        if let Some(doc) = agent_doc(t, id).filter(&check) {
-            return doc;
-        }
-        assert!(
-            Instant::now() < end,
-            "timed out waiting for the doc of {id}"
-        );
-        pause(60).await;
-    }
+    until(&format!("the doc of {id}"), || async {
+        agent_doc(t, id).filter(&check)
+    })
+    .await
 }
 
 /// The report of the first run of the reconciler.
 async fn first_run(t: &TestServer) -> Value {
-    let end = Instant::now() + Duration::from_secs(10);
-    loop {
+    until("the first run", || async {
         let body = t.get("/api/agents/reconcile").await.json();
-        if body["ran"] == true && body["projects"]["alpha"].is_object() {
-            return body;
-        }
-        assert!(Instant::now() < end, "timed out waiting for the first run");
-        pause(60).await;
-    }
+        (body["ran"] == true && body["projects"]["alpha"].is_object()).then_some(body)
+    })
+    .await
 }
 
 /// A transcript whose last write was `quiet_min` minutes ago.

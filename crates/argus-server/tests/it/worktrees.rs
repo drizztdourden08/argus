@@ -3,13 +3,15 @@
 //! page and by a thread, the leftover folders and their background deletion, a change of rules,
 //! and shadow mode. Ported from the HTTP side of `worktrees.http.test.mjs` and
 //! `worktrees.fallback.http.test.mjs`; the `coord worktree` verbs stay in the Node `coord` tests.
+//! E2, K4: the worktree scanner and removal routes inside the server, on a throwaway repository with the real git.
+// test-tag: e2e
 
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
 use crate::fixture::git;
-use crate::worktrees_rig::{Rig, Setup, id_of, rule, until, wakes_of};
+use crate::worktrees_rig::{Rig, Setup, id_of, until, wakes_of};
 use argus_testkit::{Request, write_board};
 use argus_worktrees::{GitExec, GitOutput, SystemExec};
 use serde_json::{Value, json};
@@ -33,6 +35,7 @@ async fn row_gone(r: &Rig, name: &str) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_first_scan_makes_a_doc_per_worktree_a_summary_and_one_wake_to_the_rules_thread() {
     let r = Rig::start().await;
     let meta = r.scanned().await;
@@ -73,6 +76,7 @@ async fn the_first_scan_makes_a_doc_per_worktree_a_summary_and_one_wake_to_the_r
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_board_export_keeps_the_scanners_meta_doc_and_its_rows() {
     let r = Rig::start().await;
     let before = r.scanned().await;
@@ -85,6 +89,7 @@ async fn a_board_export_keeps_the_scanners_meta_doc_and_its_rows() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_docs_are_read_only_for_the_page_and_the_collection_is_known_to_the_stream() {
     let r = Rig::start().await;
     r.scanned().await;
@@ -101,6 +106,7 @@ async fn the_docs_are_read_only_for_the_page_and_the_collection_is_known_to_the_
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_page_removes_a_merged_worktree_and_its_merged_branch_the_row_leaves_and_an_activity_line_says_so()
  {
     let r = Rig::start().await;
@@ -147,6 +153,7 @@ async fn the_page_removes_a_merged_worktree_and_its_merged_branch_the_row_leaves
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_cli_caller_must_be_a_live_thread_and_discarding_needs_the_owner_and_the_page_is_never_named_in_a_body()
  {
     let r = Rig::start().await;
@@ -197,6 +204,7 @@ async fn a_cli_caller_must_be_a_live_thread_and_discarding_needs_the_owner_and_t
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_page_may_discard_work_after_a_backup_and_the_gone_worktree_is_pruned() {
     let r = Rig::start().await;
     r.scanned().await;
@@ -279,6 +287,7 @@ async fn sees_leftover(r: &Rig) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_leftover_folder_is_found_by_the_live_check_and_deleted_by_a_background_job() {
     let r = Rig::start().await;
     r.scanned().await;
@@ -323,6 +332,7 @@ async fn a_leftover_folder_is_found_by_the_live_check_and_deleted_by_a_backgroun
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_young_leftover_needs_the_stronger_confirm_from_the_page() {
     let r = Rig::start().await;
     r.scanned().await;
@@ -358,6 +368,7 @@ async fn a_young_leftover_needs_the_stronger_confirm_from_the_page() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn removing_all_old_leftovers_queues_them_one_after_another_and_skips_the_young_with_its_reason()
  {
     let r = Rig::start().await;
@@ -418,6 +429,7 @@ async fn removing_all_old_leftovers_queues_them_one_after_another_and_skips_the_
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_change_of_rules_is_scanned_within_a_moment_and_a_removed_rule_empties_the_tab() {
     let r = Rig::start().await;
     r.scanned().await;
@@ -519,6 +531,7 @@ async fn stubborn_rig(name: &'static str) -> (Rig, std::path::PathBuf) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_worktree_git_could_not_delete_is_finished_by_argus_and_the_branch_goes() {
     let (r, path) = stubborn_rig("cli-stuck").await;
     let out = r
@@ -556,6 +569,7 @@ async fn a_worktree_git_could_not_delete_is_finished_by_argus_and_the_branch_goe
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_folder_git_left_behind_is_a_leftover_without_an_age_limit_for_the_batch() {
     let (r, path) = stubborn_rig("cli-left").await;
     let out = r
@@ -594,6 +608,7 @@ async fn a_folder_git_left_behind_is_a_leftover_without_an_age_limit_for_the_bat
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_threads_release_answers_at_once_with_a_request_the_worker_removes_and_refuses_one_with_work_in_it()
  {
     let r = Rig::start().await;
@@ -656,6 +671,7 @@ async fn a_threads_release_answers_at_once_with_a_request_the_worker_removes_and
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn shadow_mode_scans_and_shows_and_removes_nothing() {
     let r = Rig::with(Setup {
         shadow: true,
@@ -684,6 +700,7 @@ async fn shadow_mode_scans_and_shows_and_removes_nothing() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_scanner_that_is_off_answers_503_and_leaves_no_service() {
     let r = Rig::with(Setup {
         enabled_off: true,
@@ -695,6 +712,5 @@ async fn a_scanner_that_is_off_answers_503_and_leaves_no_service() {
         .page("/api/p/alpha/worktrees/remove", &json!({ "id": "x" }))
         .await;
     assert_eq!((out.status, out.code().as_str()), (503, "unavailable"));
-    let _ = rule(&r.fx);
     r.t.stop(false).await;
 }

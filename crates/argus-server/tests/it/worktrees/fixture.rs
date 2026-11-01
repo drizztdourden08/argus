@@ -8,8 +8,6 @@
 //! - `gone`: added, then its folder deleted
 //! - `plain`: a folder that is not a git work tree, a leftover
 
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;

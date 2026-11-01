@@ -106,8 +106,10 @@ pub(super) fn links_of(board: &Board) -> Vec<Link> {
         .collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: which open things and agents link to a worktree.
     use super::*;
     use serde_json::json;
 
