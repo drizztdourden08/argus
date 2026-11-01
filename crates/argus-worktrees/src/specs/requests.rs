@@ -17,7 +17,7 @@ use crate::request::RemoveInput;
 use crate::requests::{
     KEPT, Mode, Queued, RequestInput, RequestRec, RequestStatus, requests_key, summary_text,
 };
-use crate::specs::request_kit::{beta_request_done, until};
+use crate::specs::request_kit::{add_beta_scanned, beta_request_done, until};
 use crate::sync::locked;
 use crate::testkit::{
     Fixture, Gate, Harness, RemoveMode, backdate, backdate_index, branches, commit, exists_itself,
@@ -837,12 +837,14 @@ fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_ch
 }
 
 /// The live bug of 2026-10-29: Brock's 88 leftovers (10 minutes each) held Tessera's request for hours. Each project has
-/// its own worker now: while alpha's deletion is held, beta's request by path (beta was never scanned) is done.
+/// its own worker now: while alpha's deletion is held, beta's request by path is done. Beta is scanned first, before
+/// alpha renames anything: its first scan would otherwise adopt the folder alpha is deleting and delete it a second time.
 #[test]
 fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another() {
     let (fx, h) = world();
     let slow = leftover_of(&fx, "left-slow", 3.0);
     h.scan();
+    add_beta_scanned(&h);
     let gate = Arc::new(Gate::default());
     *locked(&h.fs.gate) = Some(gate.clone());
     *locked(&h.fs.gate_on) = Some("left-slow".to_string());

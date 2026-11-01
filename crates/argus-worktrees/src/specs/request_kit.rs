@@ -12,10 +12,26 @@ pub fn until(done: impl Fn() -> bool) {
     }
 }
 
-/// Adds the project `beta` (never scanned), asks as the lead to remove `target` there by path, and waits until the
-/// request is done.
+/// Adds the project `beta` once. It shares alpha's board, so its folders are alpha's.
+pub fn add_beta(h: &Harness) {
+    let mut projects = locked(&h.store.projects);
+    if !projects.iter().any(|p| p == "beta") {
+        projects.push("beta".to_string());
+    }
+}
+
+/// Adds `beta` and scans it now. A project's first scan adopts every `.argus-deleting-` folder under its rules as a
+/// crash leftover and finishes it with a job of its own. Beta's folders are alpha's, so a first scan of beta while alpha
+/// is deleting one would start a second job on the same folder. Scanning before alpha deletes anything avoids that.
+pub fn add_beta_scanned(h: &Harness) {
+    add_beta(h);
+    h.svc.scan_now("beta");
+}
+
+/// Adds the project `beta` (unless it is there), asks as the lead to remove `target` there by path, and waits until
+/// the request is done.
 pub fn beta_request_done(h: &Harness, target: String) {
-    locked(&h.store.projects).push("beta".to_string());
+    add_beta(h);
     let mut input = RequestInput::new("beta", Caller::Thread("lead".into()));
     input.targets = vec![target];
     h.svc.request(&input).unwrap();

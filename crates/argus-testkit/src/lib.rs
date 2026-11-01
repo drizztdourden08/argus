@@ -14,5 +14,5 @@ pub use client::{Reply, Request, request, request_at};
 pub use coord_cli::{CliOut, CoordCli, argus_exe};
 pub use fixture::{ago, alpha_board, beta_board, make_home, portfolio_board, write_board};
 pub use png::png;
-pub use server::{TestOptions, TestServer, Tweak};
+pub use server::{TestOptions, TestServer, Tweak, Wakes};
 pub use stream::{Event, SseReader};

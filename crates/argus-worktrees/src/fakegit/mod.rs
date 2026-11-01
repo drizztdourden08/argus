@@ -79,7 +79,7 @@ fn dispatch(state: &mut State, cwd: &str, args: &[String]) -> Run {
     match command.as_str() {
         "worktree" => worktree(repo, w, rest),
         "rev-parse" => read::rev_parse(repo, &repo.worktrees[w], rest),
-        "status" => read::status(repo, &repo.worktrees[w], rest),
+        "status" => Ok(read::status(repo, &repo.worktrees[w], rest)),
         "log" => read::log(repo, &repo.worktrees[w], rest),
         "rev-list" => read::rev_list(repo, &repo.worktrees[w], rest),
         "merge-base" => read::merge_base(repo, &repo.worktrees[w], rest),
@@ -87,14 +87,14 @@ fn dispatch(state: &mut State, cwd: &str, args: &[String]) -> Run {
         "cherry" => read::cherry(repo, &repo.worktrees[w], rest),
         "symbolic-ref" => read::symbolic_ref(repo),
         "config" => read::config(repo, rest),
-        "ls-files" => read::ls_files(repo, &repo.worktrees[w], rest),
+        "ls-files" => Ok(read::ls_files(repo, &repo.worktrees[w], rest)),
         "check-ignore" => read::check_ignore(repo, &repo.worktrees[w], rest),
         "remote" if rest.first().map(String::as_str) == Some("get-url") => {
             read::remote_get_url(repo, rest)
         }
         "remote" => write::remote_add(repo, rest),
         "update-ref" => write::update_ref(repo, rest),
-        "add" => write::stage(repo, w, rest),
+        "add" => Ok(write::stage(repo, w, rest)),
         "commit" => write::commit_staged(repo, w, rest),
         "bundle" => write::bundle(repo, &repo.worktrees[w], rest),
         "diff" => write::diff(repo, &repo.worktrees[w], rest),
@@ -109,12 +109,12 @@ fn worktree(repo: &mut Repo, from: usize, args: &[String]) -> Run {
         return Err(fatal("fake git: worktree takes a verb"));
     };
     match verb.as_str() {
-        "list" => read::worktree_list(repo),
+        "list" => Ok(read::worktree_list(repo)),
         "add" => write::worktree_add(repo, from, rest),
         "remove" => write::worktree_remove(repo, rest),
         "lock" => write::worktree_lock(repo, rest, true),
         "unlock" => write::worktree_lock(repo, rest, false),
-        "prune" => write::worktree_prune(repo, rest),
+        "prune" => Ok(write::worktree_prune(repo, rest)),
         other => Err(fatal(&format!(
             "fake git: worktree {other} is not a command the specs use"
         ))),
@@ -142,6 +142,7 @@ impl FakeGit {
             }],
             ..Repo::default()
         };
+        let _ = write::write_layout(&repo);
         let _ = write::write_head(&repo, 0);
         let _ = write::write_index(&repo, 0);
         Arc::new(Self {

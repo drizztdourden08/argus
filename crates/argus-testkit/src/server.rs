@@ -35,9 +35,19 @@ pub struct TestOptions {
     pub dashboard_home: Option<PathBuf>,
     /// Last say on the serve options (a service's seams).
     pub tweak: Option<Tweak>,
-    /// Hand the wake engine to the test: its periodic timer is off and its clock is manual, so
-    /// it moves only through [`TestServer::tick_wakes`] and [`TestServer::advance_wakes`].
-    pub manual_wakes: bool,
+    /// Who drives the wake engine.
+    pub wakes: Wakes,
+}
+
+/// Who drives the wake engine of a test server.
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub enum Wakes {
+    /// The server's own timer and clock.
+    #[default]
+    Live,
+    /// The test: the periodic timer is off and the clock is manual, so the engine moves only
+    /// through [`TestServer::tick_wakes`] and [`TestServer::advance_wakes`].
+    Manual,
 }
 
 impl Default for TestOptions {
@@ -51,7 +61,7 @@ impl Default for TestOptions {
             coord_home: None,
             dashboard_home: None,
             tweak: None,
-            manual_wakes: false,
+            wakes: Wakes::Live,
         }
     }
 }
@@ -125,7 +135,7 @@ impl TestServer {
         opts.cache.enabled = false;
         opts.records.consumers = argus_server::ConsumerSource::Off;
         opts.run_service.stale_timer = false;
-        let wake_clock = o.manual_wakes.then(|| ManualClock::at(now_ms()));
+        let wake_clock = (o.wakes == Wakes::Manual).then(|| ManualClock::at(now_ms()));
         if let Some(clock) = &wake_clock {
             opts.wake.timer = false;
             opts.wake.clock = Some(Arc::new(clock.clone()));
@@ -183,11 +193,11 @@ impl TestServer {
     /// the reminders and the prune that are due run.
     ///
     /// # Panics
-    /// When the server was not started with `manual_wakes`.
+    /// When the server was not started with `Wakes::Manual`.
     pub fn tick_wakes(&self) {
         assert!(
             self.wake_clock.is_some(),
-            "tick_wakes needs TestOptions::manual_wakes"
+            "tick_wakes needs TestOptions::wakes"
         );
         let wake = self.svc.wake.as_ref().expect("the wake service runs");
         wake.lock()
@@ -198,12 +208,12 @@ impl TestServer {
     /// Moves the wake clock forward by `ms`, then runs one pass of the engine.
     ///
     /// # Panics
-    /// When the server was not started with `manual_wakes`.
+    /// When the server was not started with `Wakes::Manual`.
     pub fn advance_wakes(&self, ms: i64) {
         let clock = self
             .wake_clock
             .as_ref()
-            .expect("advance_wakes needs TestOptions::manual_wakes");
+            .expect("advance_wakes needs TestOptions::wakes");
         clock.advance(ms);
         self.tick_wakes();
     }

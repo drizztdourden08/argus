@@ -7,6 +7,7 @@ use super::read::dirt_of;
 use crate::clock::{Clock, SystemClock};
 use crate::fs::{Fs, RealFs};
 use crate::paths::{base_name, clean_path};
+use std::fmt::Write;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -17,6 +18,15 @@ pub(super) fn write_file(path: &str, text: &str) -> io::Result<()> {
         fs::create_dir_all(parent)?;
     }
     fs::write(path, text)
+}
+
+/// The folders a real `git init` leaves in `.git` that a spec or the fake touches: `info` (a spec writes `info/exclude`
+/// there), `refs/heads`, `refs/tags`. `worktrees` appears with the first linked worktree, as in git.
+pub(super) fn write_layout(repo: &Repo) -> io::Result<()> {
+    for folder in ["info", "refs/heads", "refs/tags"] {
+        fs::create_dir_all(format!("{}/.git/{folder}", repo.path()))?;
+    }
+    Ok(())
 }
 
 /// The `HEAD` file of a checkout.
@@ -102,14 +112,14 @@ pub(super) fn commit_file(
 }
 
 /// `add [-f] <path>...`: the files the next commit takes.
-pub(super) fn stage(repo: &mut Repo, index: usize, args: &[String]) -> Run {
+pub(super) fn stage(repo: &mut Repo, index: usize, args: &[String]) -> String {
     let staged = &mut repo.worktrees[index].staged;
     for path in args.iter().filter(|a| !a.starts_with('-')) {
         if !staged.contains(path) {
             staged.push(path.clone());
         }
     }
-    Ok(String::new())
+    String::new()
 }
 
 /// `commit -q -m <subject>`: the staged files as they are on disk now.
@@ -308,7 +318,7 @@ pub(super) fn worktree_lock(repo: &mut Repo, args: &[String], lock: bool) -> Run
 }
 
 /// `worktree prune [--dry-run --verbose]`: forgets the records whose `.git` file is gone and that are not locked.
-pub(super) fn worktree_prune(repo: &mut Repo, args: &[String]) -> Run {
+pub(super) fn worktree_prune(repo: &mut Repo, args: &[String]) -> String {
     let dry = args.iter().any(|a| a == "--dry-run");
     let gone: Vec<usize> = repo
         .worktrees
@@ -319,22 +329,21 @@ pub(super) fn worktree_prune(repo: &mut Repo, args: &[String]) -> Run {
         .map(|(i, _)| i)
         .collect();
     if dry {
-        return Ok(gone
-            .iter()
-            .map(|&i| {
-                format!(
-                    "Removing worktrees/{}: gitdir file points to non-existent location\n",
-                    repo.worktrees[i].name
-                )
-            })
-            .collect());
+        return gone.iter().fold(String::new(), |mut out, &i| {
+            let _ = writeln!(
+                out,
+                "Removing worktrees/{}: gitdir file points to non-existent location",
+                repo.worktrees[i].name
+            );
+            out
+        });
     }
     for &i in gone.iter().rev() {
         let record = repo.worktrees[i].git_dir(repo.path());
         let _ = fs::remove_dir_all(record);
         repo.worktrees.remove(i);
     }
-    Ok(String::new())
+    String::new()
 }
 
 /// `update-ref -d refs/heads/<branch> <old>`: only while the branch still is `old`.
@@ -404,11 +413,11 @@ pub(super) fn diff(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
         .ok_or_else(|| fatal("fake git: diff takes --output=<file>"))?;
     let mut text = String::new();
     for path in dirt_of(repo, wt).changed {
-        text.push_str(&format!("diff --git a/{path} b/{path}\n"));
+        let _ = writeln!(text, "diff --git a/{path} b/{path}");
         match fs::read_to_string(format!("{}/{path}", wt.path)) {
-            Ok(now) => now
-                .lines()
-                .for_each(|line| text.push_str(&format!("+{line}\n"))),
+            Ok(now) => now.lines().for_each(|line| {
+                let _ = writeln!(text, "+{line}");
+            }),
             Err(_) => text.push_str("deleted file mode 100644\n"),
         }
     }

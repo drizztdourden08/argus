@@ -84,15 +84,27 @@ pub(super) struct Repo {
     pub count: u64,
 }
 
+const SALT: u64 = 0xfa4e_0000_0000_0000;
+
+/// splitmix64: a bijection on `u64`, so two counters never give the same digits.
+fn mix(seed: u64) -> u64 {
+    let mut x = seed.wrapping_add(0x9e37_79b9_7f4a_7c15);
+    x = (x ^ (x >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    x ^ (x >> 31)
+}
+
 impl Repo {
     pub fn path(&self) -> &str {
         self.worktrees.first().map_or("", |w| w.path.as_str())
     }
 
-    /// A new commit id: forty hex digits, never the same twice in a repository.
+    /// A new commit id: forty hex digits that look like a hash (so the first seven tell commits apart), never the same
+    /// twice in a repository: the counter goes through a bijective mix.
     pub fn new_id(&mut self) -> String {
         self.count += 1;
-        format!("{:040x}", (0xfa4e_u128 << 64) + u128::from(self.count))
+        let (a, b) = (mix(self.count), mix(self.count ^ SALT));
+        format!("{a:016x}{b:016x}{:08x}", mix(a ^ b) >> 32)
     }
 
     /// The commits from `tip` down, newest first.

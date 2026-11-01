@@ -3,6 +3,7 @@
 use super::disk::{Dirt, Patterns, dirt};
 use super::model::{Fail, Head, Repo, Run, Wt, fatal, quiet};
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use std::path::Path;
 
 /// The files a checkout's HEAD tracks, with their text.
@@ -42,7 +43,7 @@ pub(super) fn rev_parse(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
         let mut out = String::new();
         for rev in args {
             let id = repo.resolve(Some(wt), rev).ok_or_else(|| unknown(rev))?;
-            out.push_str(&format!("{id}\n"));
+            let _ = writeln!(out, "{id}");
         }
         return Ok(out);
     }
@@ -55,14 +56,14 @@ pub(super) fn rev_parse(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
             Head::Branch(name) => name.as_str(),
             Head::Detached(_) => "HEAD",
         };
-        out.push_str(&format!("{name}\n"));
+        let _ = writeln!(out, "{name}");
     }
     let git_dir = if wt.name.is_empty() {
         ".git".to_string()
     } else {
         wt.git_dir(repo.path())
     };
-    out.push_str(&format!("{git_dir}\n"));
+    let _ = writeln!(out, "{git_dir}");
     Ok(out)
 }
 
@@ -83,7 +84,7 @@ fn upstream_line(repo: &Repo, name: &str, up: &str) -> String {
 }
 
 /// `status --porcelain=v1 [-b]`: the branch line only with `-b`.
-pub(super) fn status(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
+pub(super) fn status(repo: &Repo, wt: &Wt, args: &[String]) -> String {
     let head = match &wt.head {
         Head::Detached(_) => "HEAD (no branch)".to_string(),
         Head::Branch(name) => repo
@@ -97,9 +98,9 @@ pub(super) fn status(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
         String::new()
     };
     for line in dirt_of(repo, wt).lines {
-        out.push_str(&format!("{line}\n"));
+        let _ = writeln!(out, "{line}");
     }
-    Ok(out)
+    out
 }
 
 /// The commits a revision or a `from..to` range names, newest first.
@@ -206,7 +207,10 @@ pub(super) fn cherry(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
     let tip = repo.resolve(Some(wt), name).ok_or_else(|| unknown(name))?;
     let mut ids = repo.beyond(&base, &tip);
     ids.reverse();
-    Ok(ids.iter().map(|id| format!("+ {id}\n")).collect())
+    Ok(ids.iter().fold(String::new(), |mut out, id| {
+        let _ = writeln!(out, "+ {id}");
+        out
+    }))
 }
 
 /// `symbolic-ref -q --short refs/remotes/origin/HEAD`.
@@ -238,16 +242,14 @@ pub(super) fn remote_get_url(repo: &Repo, args: &[String]) -> Run {
 }
 
 /// `worktree list --porcelain`.
-pub(super) fn worktree_list(repo: &Repo) -> Run {
+pub(super) fn worktree_list(repo: &Repo) -> String {
     let mut out = String::new();
     for (index, wt) in repo.worktrees.iter().enumerate() {
-        out.push_str(&format!(
-            "worktree {}\nHEAD {}\n",
-            wt.path,
-            repo.head_id(wt)
-        ));
+        let _ = write!(out, "worktree {}\nHEAD {}\n", wt.path, repo.head_id(wt));
         match &wt.head {
-            Head::Branch(name) => out.push_str(&format!("branch refs/heads/{name}\n")),
+            Head::Branch(name) => {
+                let _ = writeln!(out, "branch refs/heads/{name}");
+            }
             Head::Detached(_) => out.push_str("detached\n"),
         }
         if let Some(reason) = &wt.locked {
@@ -258,11 +260,11 @@ pub(super) fn worktree_list(repo: &Repo) -> Run {
         }
         out.push('\n');
     }
-    Ok(out)
+    out
 }
 
 /// `ls-files --others --exclude-standard -z` and `ls-files --cached -z -- <folder>`.
-pub(super) fn ls_files(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
+pub(super) fn ls_files(repo: &Repo, wt: &Wt, args: &[String]) -> String {
     let names: Vec<String> = if has(args, "--others") {
         dirt_of(repo, wt).others
     } else {
@@ -272,7 +274,10 @@ pub(super) fn ls_files(repo: &Repo, wt: &Wt, args: &[String]) -> Run {
             .filter(|k| k.starts_with(&prefix))
             .collect()
     };
-    Ok(names.iter().map(|n| format!("{n}\0")).collect())
+    names.iter().fold(String::new(), |mut out, name| {
+        let _ = write!(out, "{name}\0");
+        out
+    })
 }
 
 /// `check-ignore -q <folder>`: exit 0 when the folder is ignored, 1 when it is not.
