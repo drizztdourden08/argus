@@ -3,7 +3,7 @@
 
 use crate::batch::{BatchInput, BatchOutcome};
 use crate::board::BoardFacts;
-use crate::board::{Caller, OwnerEntry};
+use crate::board::{Caller, Link, OwnerEntry};
 use crate::clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 use crate::error::WtError;
 use crate::exec::GitOutput;
@@ -335,6 +335,8 @@ pub struct MemStore {
     pub dropped: Mutex<Vec<(Vec<String>, Vec<String>)>>,
     /// The notes posted to inboxes: thread and text.
     pub inbox: Mutex<Vec<(String, String)>>,
+    /// The runs queued or running, or why they could not be read.
+    pub runs: Mutex<Result<Vec<Link>, String>>,
 }
 
 impl MemStore {
@@ -345,6 +347,7 @@ impl MemStore {
             kv: Mutex::new(HashMap::new()),
             dropped: Mutex::new(Vec::new()),
             inbox: Mutex::new(Vec::new()),
+            runs: Mutex::new(Ok(Vec::new())),
         }
     }
 }
@@ -393,6 +396,10 @@ impl WorktreeStore for MemStore {
             locked(&self.inbox).push((thread.to_string(), text.to_string()));
         }
         Ok(known)
+    }
+
+    fn live_runs(&self) -> Result<Vec<Link>, String> {
+        locked(&self.runs).clone()
     }
 }
 

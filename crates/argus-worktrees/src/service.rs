@@ -24,6 +24,7 @@ use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// The settings of the service (`config.json` `worktrees` on the server's side).
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 pub struct Options {
     pub scan_ms: i64,
@@ -45,6 +46,13 @@ pub struct Options {
     pub keep_backup_days: i64,
     /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
     pub run_requests: bool,
+    /// The worktree hygiene: flag the released worktrees of ended sub-agents and remove them after the grace. Off in
+    /// shadow mode.
+    pub release: bool,
+    /// How long a released worktree stays after its thread was told (`worktrees.releaseGraceMs`, 1 hour).
+    pub release_grace_ms: i64,
+    /// A newly released worktree is told once nothing new was released for this long, so a burst makes one wake.
+    pub release_debounce_ms: i64,
 }
 
 impl Default for Options {
@@ -66,6 +74,9 @@ impl Default for Options {
             keep_backups: 30,
             keep_backup_days: 30,
             run_requests: true,
+            release: true,
+            release_grace_ms: 3_600_000,
+            release_debounce_ms: 30_000,
         }
     }
 }
@@ -128,6 +139,7 @@ pub struct Inner {
     pub exclusive: Mutex<()>,
     pub queue: Queue,
     pub requests: Requests,
+    pub(crate) hygiene: crate::hygiene::Memories,
 }
 
 /// The service. Cheap to clone: every clone is the same service.
@@ -155,6 +167,7 @@ impl Service {
             exclusive: Mutex::new(()),
             queue: Queue::default(),
             requests: Requests::default(),
+            hygiene: crate::hygiene::Memories::default(),
         }))
     }
 

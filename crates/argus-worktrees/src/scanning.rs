@@ -121,6 +121,7 @@ impl Service {
             return None;
         }
         self.wake_step(project);
+        self.hygiene_step(project);
         self.prune_state(project);
         if clean {
             self.prune_made(project);

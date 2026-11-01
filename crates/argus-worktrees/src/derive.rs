@@ -59,6 +59,7 @@ impl Service {
                 default_stale_days: Some(self.opts.stale_days),
             };
             let mut doc = doc_of(fact, &judging, request_for(board, &fact.id));
+            doc.hygiene = self.hygiene_of(project, &fact.id);
             if let Some(leftover) = doc.leftover.as_mut() {
                 leftover.made = self.is_made(project, &fact.path);
             }
@@ -198,6 +199,7 @@ impl Service {
             by_status: counts.by_status,
             stale_days: self.opts.stale_days,
             rules: self.rule_summaries(project, board),
+            hygiene: self.hygiene_meta(project),
             error,
         }
     }

@@ -139,7 +139,10 @@ impl Service {
             if self.requests_halted() {
                 return Ok(false);
             }
-            let outcome = self.remove_one(&rec, target);
+            let outcome = match self.still_released(&rec, target) {
+                Ok(()) => self.remove_one(&rec, target),
+                Err(outcome) => outcome,
+            };
             self.update_request(project, id, |r| r.results.push(outcome));
             self.save_requests(project);
         }
@@ -186,6 +189,7 @@ impl Service {
             }
         }
         self.finish_request(project, id);
+        self.after_released(project, id);
         self.deliver_request(project, id);
     }
 }

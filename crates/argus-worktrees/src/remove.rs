@@ -50,15 +50,15 @@ fn relative_folder(root: &str, git: &str) -> String {
 }
 
 /// What losing the folder would cost.
-struct Safety {
+pub(crate) struct Safety {
     unmerged: Option<u32>,
-    kept: bool,
+    pub(crate) kept: bool,
     safe: bool,
 }
 
 impl Safety {
     /// Clean AND HEAD kept by a branch or another ref: removing the FOLDER loses nothing, merged or not.
-    fn of(now: &Fact) -> Self {
+    pub(crate) fn of(now: &Fact) -> Self {
         let unmerged = if now.merged { Some(0) } else { now.unmerged };
         let kept = now.referenced == Some(true)
             || (now.branch.is_some() && !now.detached)
@@ -248,7 +248,7 @@ impl Service {
         self.remove_worktree(input, &board, &fact, &rule)
     }
 
-    fn not_listed(&self, input: &RemoveInput, board: &BoardFacts, wid: &str) -> WtError {
+    pub(crate) fn not_listed(&self, input: &RemoveInput, board: &BoardFacts, wid: &str) -> WtError {
         let rules: Vec<&Rule> = board.valid_rules();
         if let Err(err) = crate::guards::check_caller(board, &input.caller, &rules) {
             return err;

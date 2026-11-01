@@ -58,6 +58,49 @@ pub struct OwnerEntry {
     pub options: Vec<String>,
 }
 
+/// A sub-agent record of the board, as far as the worktree hygiene cares.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AgentFact {
+    pub id: String,
+    /// The thread that started it.
+    pub thread: Option<String>,
+    pub status: String,
+    /// The worktree it names: an absolute path or a folder name.
+    pub worktree: Option<String>,
+    /// Its Claude agent id: its own worktree is `.claude/worktrees/agent-<id>`.
+    pub claude_id: Option<String>,
+    /// When it ended (`finishedAt`).
+    pub ended_ms: Option<i64>,
+}
+
+impl AgentFact {
+    /// Done or stopped: the agent no longer needs its worktree.
+    pub fn ended(&self) -> bool {
+        matches!(self.status.as_str(), "done" | "stopped")
+    }
+
+    /// Still at work (working, waiting, stop-requested).
+    pub fn live(&self) -> bool {
+        matches!(
+            self.status.as_str(),
+            "working" | "waiting" | "stop-requested"
+        )
+    }
+}
+
+/// Something open that may use a worktree: a board item, a pull request, a launcher, a bundle, a run.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Link {
+    /// How a sentence names it: `item I-3`, `PR-2`, `launcher web`, `bundle b1`, `run R-4`.
+    pub what: String,
+    /// The folder it works in.
+    pub path: Option<String>,
+    /// The branch it is about.
+    pub branch: Option<String>,
+    /// Free text that may name the worktree (an item's title and description).
+    pub text: Option<String>,
+}
+
 /// A project's board, read as one snapshot.
 #[derive(Clone, Debug, Default)]
 pub struct BoardFacts {
@@ -67,6 +110,10 @@ pub struct BoardFacts {
     pub answers: HashMap<String, Answer>,
     pub threads: BTreeMap<String, ThreadInfo>,
     pub entries: HashMap<String, OwnerEntry>,
+    /// The sub-agent records.
+    pub agents: Vec<AgentFact>,
+    /// The open items, the open pull requests, the launchers not retired and the bundles not closed.
+    pub links: Vec<Link>,
 }
 
 impl BoardFacts {

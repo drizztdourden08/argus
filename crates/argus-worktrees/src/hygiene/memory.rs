@@ -1,0 +1,172 @@
+//! What the hygiene remembers per project, kept in the key-value table, and how the page reads it.
+
+use crate::clock::iso_from_ms;
+use crate::service::Service;
+use crate::sync::locked;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
+use std::sync::Mutex;
+
+/// The last removals a project keeps for the page.
+const REMOVED_KEPT: usize = 20;
+
+/// The key-value key of a project's hygiene.
+pub fn hygiene_key(project: &str) -> String {
+    format!("worktrees:hygiene:{project}")
+}
+
+/// Where a worktree of an ended sub-agent stands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum HygieneState {
+    /// Every condition holds: Argus removes it after the grace.
+    Released,
+    /// Its agent ended, but something keeps Argus from removing it: the thread decides.
+    Review,
+    /// The thread kept it.
+    Kept,
+}
+
+/// One worktree's mark.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct Mark {
+    pub state: HygieneState,
+    pub path: String,
+    #[serde(default)]
+    pub branch: Option<String>,
+    #[serde(default)]
+    pub thread: Option<String>,
+    #[serde(default)]
+    pub agent: Option<String>,
+    #[serde(default)]
+    pub why: Option<String>,
+    /// When it first was in this state.
+    pub since: i64,
+    /// When its thread was told it is released.
+    #[serde(default)]
+    pub told: Option<i64>,
+    /// The removal request that carries it.
+    #[serde(default)]
+    pub request: Option<String>,
+}
+
+/// A removal the removal itself refused: the worktree is not released again while it stays as it was.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct Refused {
+    pub head: Option<String>,
+    pub dirty: u32,
+    pub why: String,
+}
+
+/// A worktree the hygiene removed, as the page lists it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemovedDoc {
+    pub id: String,
+    pub path: String,
+    pub branch: Option<String>,
+    pub thread: Option<String>,
+    pub at: String,
+    pub text: String,
+}
+
+/// A project's hygiene.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) struct Memory {
+    #[serde(default)]
+    pub marks: BTreeMap<String, Mark>,
+    #[serde(default)]
+    pub refused: BTreeMap<String, Refused>,
+    #[serde(default)]
+    pub removed: Vec<RemovedDoc>,
+}
+
+impl Memory {
+    /// One more removal for the page; the oldest go past the limit.
+    pub fn removed_one(&mut self, done: RemovedDoc) {
+        self.marks.remove(&done.id);
+        self.refused.remove(&done.id);
+        self.removed.retain(|r| r.id != done.id);
+        self.removed.push(done);
+        let extra = self.removed.len().saturating_sub(REMOVED_KEPT);
+        self.removed.drain(..extra);
+    }
+}
+
+/// The hygiene of every project, loaded on first use.
+#[derive(Default)]
+pub(crate) struct Memories(Mutex<HashMap<String, Memory>>);
+
+/// The hygiene part of a row.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HygieneDoc {
+    pub state: HygieneState,
+    pub why: Option<String>,
+    pub agent: Option<String>,
+    pub thread: Option<String>,
+    pub since: String,
+    /// When Argus removes it (a released one whose thread was told).
+    pub goes_at: Option<String>,
+}
+
+/// The hygiene part of the summary.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HygieneMeta {
+    pub on: bool,
+    pub grace_ms: i64,
+    /// The last worktrees the hygiene removed, newest first.
+    pub removed: Vec<RemovedDoc>,
+}
+
+impl Service {
+    /// Runs `f` on the project's hygiene and saves it. Locked for short stretches only: never git, a removal or a
+    /// process listing inside `f`.
+    pub(crate) fn with_hygiene<T>(&self, project: &str, f: impl FnOnce(&mut Memory) -> T) -> T {
+        let mut all = locked(&self.hygiene.0);
+        let memory = all.entry(project.to_string()).or_insert_with(|| {
+            self.deps
+                .store
+                .kv_get(&hygiene_key(project))
+                .and_then(|text| serde_json::from_str(&text).ok())
+                .unwrap_or_default()
+        });
+        let before = memory.clone();
+        let out = f(memory);
+        if *memory != before {
+            let text = serde_json::to_string(&*memory).unwrap_or_default();
+            let _ = self.deps.store.kv_set(&hygiene_key(project), &text);
+        }
+        out
+    }
+
+    /// The row's hygiene, from the last step.
+    pub(crate) fn hygiene_of(&self, project: &str, id: &str) -> Option<HygieneDoc> {
+        let grace = self.opts.release_grace_ms;
+        self.with_hygiene(project, |m| {
+            m.marks.get(id).map(|mark| HygieneDoc {
+                state: mark.state,
+                why: mark.why.clone(),
+                agent: mark.agent.clone(),
+                thread: mark.thread.clone(),
+                since: iso_from_ms(mark.since),
+                goes_at: mark
+                    .told
+                    .filter(|_| mark.state == HygieneState::Released)
+                    .map(|t| iso_from_ms(t + grace)),
+            })
+        })
+    }
+
+    /// The summary's hygiene.
+    pub(crate) fn hygiene_meta(&self, project: &str) -> HygieneMeta {
+        let mut removed = self.with_hygiene(project, |m| m.removed.clone());
+        removed.reverse();
+        HygieneMeta {
+            on: self.opts.release,
+            grace_ms: self.opts.release_grace_ms,
+            removed,
+        }
+    }
+}

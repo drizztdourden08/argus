@@ -17,6 +17,15 @@ pub enum Mode {
     Finished,
     /// Every leftover folder old enough.
     Leftovers,
+    /// The released worktrees of one thread whose grace ended (the hygiene files these, never a thread).
+    Released,
+}
+
+impl Mode {
+    /// Does the request name its targets when it is made?
+    pub fn named(self) -> bool {
+        matches!(self, Self::Targets | Self::Released)
+    }
 }
 
 /// Where a request stands.

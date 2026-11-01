@@ -30,6 +30,7 @@ mod gh;
 mod git;
 mod guard;
 mod guards;
+mod hygiene;
 mod inspect;
 mod job_run;
 mod jobs;
@@ -63,7 +64,9 @@ pub use approval::{approval_of, mentions, names_folder};
 pub use argus_core::StorageError;
 pub use backup::Backup;
 pub use batch::{BatchInput, BatchOutcome, Skipped};
-pub use board::{Answer, BoardFacts, Caller, EntryWorktree, Keep, OwnerEntry, ThreadInfo};
+pub use board::{
+    AgentFact, Answer, BoardFacts, Caller, EntryWorktree, Keep, Link, OwnerEntry, ThreadInfo,
+};
 pub use branch::BranchState;
 pub use clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 pub use doc::{Derived, LeftoverDoc, Meta, RuleSummary, Status, WorktreeDoc};
@@ -74,6 +77,10 @@ pub use fs::{Fs, RealFs};
 pub use gh::{GhRunner, SystemGh};
 pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
+pub use hygiene::{
+    HygieneDoc, HygieneMeta, HygieneState, REASON as REVIEW_REASON, RemovedDoc, Stepped,
+    hygiene_key,
+};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
 pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};

@@ -1,7 +1,7 @@
 //! What the crate asks of the rest of Argus: the board and a small key-value store, the activity log and the wake
 //! queue, the machine's processes.
 
-use crate::board::BoardFacts;
+use crate::board::{BoardFacts, Link};
 use argus_core::StorageError;
 
 /// The storage the crate needs. Rules, keeps and answers live on the project's board; the "already told" and "made by a
@@ -22,6 +22,9 @@ pub trait WorktreeStore: Send + Sync {
     ) -> Result<(), StorageError>;
     /// One note from Argus into a thread's inbox, under the project's board lock. False when the thread is not on the board.
     fn post_inbox(&self, project: &str, thread: &str, text: &str) -> Result<bool, StorageError>;
+    /// The runs queued or running in any project (check runs among them), each with its folder. An error means the
+    /// runs could not be read: no worktree is released then.
+    fn live_runs(&self) -> Result<Vec<Link>, String>;
 }
 
 /// One line of the activity log.
