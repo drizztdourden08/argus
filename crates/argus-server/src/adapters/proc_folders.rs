@@ -86,7 +86,7 @@ impl FolderReader {
         if let Some(board) = self.boards.board(key) {
             out.extend(paths_in(&board["worktreeRules"]));
         }
-        if let Ok(rows) = self.db.list(key, Coll::Worktrees) {
+        if let Ok(rows) = self.db.docs().list(key, Coll::Worktrees) {
             let paths = rows.iter().filter_map(|r| r.data["path"].as_str());
             out.extend(paths.map(str::to_owned));
         }

@@ -85,13 +85,13 @@ impl Scope {
     /// Every project the process touches: by its folder, its executable and its command line.
     #[must_use]
     pub fn owners(&self, proc: &ProcRow) -> BTreeSet<String> {
-        let by_cwd = proc.cwd.as_deref().and_then(|c| self.path_owner(c));
-        let by_exe = proc.path.as_deref().and_then(|p| self.path_owner(p));
-        let by_cmd = self.cmd_owners(&proc.cmd);
-        by_cwd
+        let folder = proc.cwd.as_deref().and_then(|c| self.path_owner(c));
+        let program = proc.path.as_deref().and_then(|p| self.path_owner(p));
+        let named = self.cmd_owners(&proc.cmd);
+        folder
             .into_iter()
-            .chain(by_exe)
-            .chain(by_cmd)
+            .chain(program)
+            .chain(named)
             .map(str::to_string)
             .collect()
     }
@@ -100,10 +100,10 @@ impl Scope {
     /// its command line names.
     #[must_use]
     pub fn owner(&self, proc: &ProcRow) -> Option<String> {
-        let by_cwd = proc.cwd.as_deref().and_then(|c| self.path_owner(c));
-        let by_exe = || proc.path.as_deref().and_then(|p| self.path_owner(p));
-        let by_cmd = || self.cmd_owners(&proc.cmd).into_iter().min();
-        by_cwd.or_else(by_exe).or_else(by_cmd).map(str::to_string)
+        let folder = proc.cwd.as_deref().and_then(|c| self.path_owner(c));
+        let program = || proc.path.as_deref().and_then(|p| self.path_owner(p));
+        let named = || self.cmd_owners(&proc.cmd).into_iter().min();
+        folder.or_else(program).or_else(named).map(str::to_string)
     }
 }
 
