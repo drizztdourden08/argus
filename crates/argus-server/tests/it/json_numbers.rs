@@ -1,6 +1,8 @@
 //! A number with no fraction is written without one wherever a doc or an answer leaves the
 //! server, as Node does: `meta.leftoverOld.days` is `1`, not `1.0`. The stored doc, the doc
 //! route, the list route and the page stream all carry the one rule of `argus_core::json_text`.
+//! K2: whole numbers carry no fraction in docs, answers and the page stream.
+// test-tag: standard
 
 use argus_core::{Coll, DocChange};
 use argus_testkit::{TestOptions, TestServer};

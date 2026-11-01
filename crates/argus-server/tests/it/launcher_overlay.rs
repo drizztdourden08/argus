@@ -1,6 +1,8 @@
 //! The stale marks on the launchers docs of an export, as the Node dashboard shows them: the
 //! newest Play run of a standalone launcher is a use (`lastUsedAt`, `stale`), an older one
 //! changes nothing. Ported from the `overlay` and service cases of `launchers.stale.test.mjs`.
+//! K2: the stale marks of a launchers doc.
+// test-tag: standard
 
 use argus_core::clock::now_ms;
 use argus_core::fixture::ago;

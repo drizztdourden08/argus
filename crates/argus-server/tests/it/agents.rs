@@ -3,6 +3,8 @@
 //! `coord agent reconcile` verb stays with the `coord` port of slice 8), the reaper closes a
 //! quiet agent through the sync service and the closed agent reaches the page doc (the last
 //! case of `agents.reaper.test.mjs`), and the watcher's live view joins the agents docs.
+//! K2, S2: the reconcile report and the reaper through the sync service.
+// test-tag: standard
 
 use std::path::Path;
 use std::sync::Arc;

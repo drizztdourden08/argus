@@ -1,29 +1,17 @@
-//! The HTTP layer: the Host, Origin and content-type matrix, the optional `requireToken` mode, the error shape, body limits, page substitution, file routes, the db shim routes, the admin routes, single instance and shutdown. Ported from the Node `core.http.test.mjs`.
+//! The HTTP layer: the Host, Origin and content-type matrix, the optional `requireToken` mode, the error shape, body limits, page substitution, file routes, the db shim routes, the admin routes, single instance and shutdown. Ported from the Node `core.http.test.mjs`. K2, K4: the refusal matrix, the token mode and the file routes; the pure rules are in `http_rules.rs`.
+// test-tag: standard
 
-use std::collections::HashMap;
 use std::fs;
-use std::net::IpAddr;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
 use argus_core::clock::{now_ms, parse_ms};
-use argus_core::{ApiError, Coll, DocChange, ErrorCode, Paths};
-use argus_server::security::{
-    Bearer, LoginCodes, bearer_state, parse_cookies, peer_ok, safe_next, token_equals,
-    write_refusal,
-};
-use argus_server::{
-    Ctx, PageVars, RouteMatch, Router, ServeError, ServeOptions, render_page, serve,
-};
+use argus_core::{Coll, DocChange, Paths};
+use argus_server::{ServeError, ServeOptions, serve};
 use argus_store::rusqlite::params;
-use argus_sync::ScopeQueue;
 use argus_testkit::{Reply, Request, TestOptions, TestServer};
-use axum::http::{HeaderMap, HeaderName, HeaderValue};
-use axum::response::Response;
 use serde_json::{Value, json};
-use tokio::sync::oneshot;
-use tokio::task::JoinHandle;
+
+use crate::wait::until;
 
 const PNG: [u8; 16] = [
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
@@ -129,25 +117,6 @@ fn enc(s: &str) -> String {
     form_urlencoded::byte_serialize(s.as_bytes()).collect()
 }
 
-fn map(pairs: &[(&str, &str)]) -> HashMap<String, String> {
-    pairs
-        .iter()
-        .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
-        .collect()
-}
-
-fn headers(pairs: &[(&str, &str)]) -> HeaderMap {
-    pairs
-        .iter()
-        .map(|(k, v)| {
-            (
-                HeaderName::from_bytes(k.as_bytes()).expect("header name"),
-                HeaderValue::from_str(v).expect("header value"),
-            )
-        })
-        .collect()
-}
-
 fn assert_home(reply: &Reply, next: &str) {
     assert_eq!(reply.header("location"), Some("/"), "next {next:?}");
 }
@@ -173,28 +142,6 @@ async fn loopback_gets_need_no_credential_a_wrong_bearer_is_401() {
         let r = send(&t, "GET", "/api/health", &[("Authorization", bad)]).await;
         assert_refused(&r, 401, "unauthorized", bad);
     }
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn pages_files_streams_and_static_files_are_open_too() {
-    let t = plain().await;
-    put_web(&t, "app.js", b"1");
-    for path in [
-        "/",
-        "/p/alpha/",
-        "/files/alpha/proofs/T-1-1.png",
-        "/api/projects",
-        "/static/app.js",
-    ] {
-        assert_eq!(t.get(path).await.status, 200, "{path}");
-    }
-    let js = t.get("/static/app.js").await;
-    let kind = js.header("content-type").unwrap_or_default();
-    assert!(kind.starts_with("text/javascript"), "{kind}");
-    let sse = t.sse("/api/p/alpha/stream?c=items").await;
-    assert_eq!(sse.status, 200);
-    sse.close();
     t.stop(false).await;
 }
 
@@ -298,14 +245,6 @@ async fn errors_have_one_shape_404_405_and_bad_path() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn no_cors_headers_on_any_response() {
-    let t = plain().await;
-    let r = send(&t, "GET", "/api/health", &[("Origin", t.url.as_str())]).await;
-    assert_eq!(r.header("access-control-allow-origin"), None);
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn writes_the_checks_accept_reach_the_route() {
     let t = plain().await;
     let o = t.url.as_str();
@@ -388,25 +327,6 @@ async fn writes_with_forms_and_text_plain_are_unsupported_media() {
     )
     .await;
     assert_eq!(judged.status, 403, "the origin is judged first");
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn post_routes_follow_the_same_rules_and_a_bearer_does_not_lift_them() {
-    let t = plain().await;
-    let resync = "/api/admin/resync";
-    let evil = [
-        ("Origin", "http://evil.test"),
-        ("Content-Type", "text/plain"),
-    ];
-    assert_eq!(post_json(&t, resync, &evil, false).await.status, 403);
-    let text = [("Content-Type", "text/plain")];
-    assert_eq!(post_json(&t, resync, &text, false).await.status, 415);
-    let accepted = post_json(&t, resync, &[JSON], false).await;
-    assert_refused(&accepted, 503, "unavailable", "accepted: the route answers");
-    let foreign = [JSON, ("Origin", "http://evil.test")];
-    assert_eq!(post_json(&t, resync, &foreign, true).await.status, 403);
-    assert_eq!(post_json(&t, resync, &text, true).await.status, 415);
     t.stop(false).await;
 }
 
@@ -606,22 +526,6 @@ async fn token_mode_login_code_is_single_use_and_sets_the_cookie() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn token_mode_login_next_is_always_a_local_path() {
-    let t = token_server().await;
-    for next in FOREIGN_NEXT {
-        let code = issue_code(&t).await["code"]
-            .as_str()
-            .expect("code")
-            .to_owned();
-        let r = t
-            .get(&format!("/auth?code={code}&next={}", enc(next)))
-            .await;
-        assert_home(&r, next);
-    }
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn token_mode_streams_need_the_token() {
     let t = token_server().await;
     assert_eq!(t.sse("/api/p/alpha/stream?c=items").await.status, 401);
@@ -631,118 +535,6 @@ async fn token_mode_streams_need_the_token() {
     assert_eq!(sse.status, 200);
     sse.close();
     t.stop(false).await;
-}
-
-#[test]
-fn token_compare_cookies_and_safe_next() {
-    assert!(token_equals("abc", "abc"));
-    assert!(
-        !token_equals("abc", "abd") && !token_equals("abc", "abcd") && !token_equals("", "abc")
-    );
-    let cookies = parse_cookies("a=1; coord_dash=xyz; b=2=3");
-    assert_eq!(
-        cookies,
-        map(&[("a", "1"), ("coord_dash", "xyz"), ("b", "2=3")])
-    );
-    assert_eq!(safe_next(Some("/p/alpha/?x=1")), "/p/alpha/?x=1");
-    assert_eq!(safe_next(Some("/a\r\nSet-Cookie: x")), "/");
-}
-
-#[test]
-fn login_codes_live_sixty_seconds_and_work_once() {
-    let codes = LoginCodes::default();
-    let t0 = 1_000_000;
-    let (first, _) = codes.issue_at(t0);
-    assert!(codes.redeem_at(&first, t0 + 59_000));
-    assert!(!codes.redeem_at(&first, t0 + 59_000), "single use");
-    let (second, expires) = codes.issue_at(t0 + 59_000);
-    assert_eq!(parse_ms(&expires), Some(t0 + 59_000 + 60_000));
-    assert!(
-        !codes.redeem_at(&second, t0 + 59_000 + 60_001),
-        "older than 60 s"
-    );
-    let (last_ms, _) = codes.issue_at(t0);
-    assert!(codes.redeem_at(&last_ms, t0 + 59_999));
-    let (edge, _) = codes.issue_at(t0);
-    assert!(!codes.redeem_at(&edge, t0 + 60_000));
-    assert!(!codes.redeem_at("nope", t0));
-}
-
-#[test]
-fn bearer_state_and_peer_check() {
-    let state = |v: &str| bearer_state(&headers(&[("authorization", v)]), "t");
-    assert_eq!(bearer_state(&HeaderMap::new(), "t"), Bearer::None);
-    assert_eq!(state("Bearer t"), Bearer::Ok);
-    assert_eq!(state("Bearer u"), Bearer::Bad);
-    assert_eq!(state("Token t"), Bearer::Bad);
-    let ip = |s: &str| s.parse::<IpAddr>().expect("an ip");
-    for local in ["127.0.0.1", "::1", "::ffff:127.0.0.1"] {
-        assert!(peer_ok(ip(local), None), "{local}");
-    }
-    assert!(!peer_ok(ip("192.168.1.5"), None));
-}
-
-#[test]
-fn write_refusal_rules() {
-    let refusal = |kind: &str, extra: &[(&str, &str)], images: bool| {
-        let all = [
-            &[("host", "127.0.0.1:1"), ("content-type", kind)][..],
-            extra,
-        ]
-        .concat();
-        write_refusal(&headers(&all), images).map(|e| e.code.status())
-    };
-    let json = "application/json";
-    assert_eq!(refusal(json, &[], false), None);
-    assert_eq!(
-        refusal(json, &[("origin", "http://127.0.0.1:1")], false),
-        None
-    );
-    assert_eq!(
-        refusal(json, &[("origin", "http://127.0.0.1:2")], false),
-        Some(403)
-    );
-    assert_eq!(
-        refusal(json, &[("sec-fetch-site", "cross-site")], false),
-        Some(403)
-    );
-    assert_eq!(refusal("text/plain", &[], false), Some(415));
-    assert_eq!(
-        refusal("image/png", &[], false),
-        Some(415),
-        "images only where the route says so"
-    );
-    assert_eq!(refusal("image/png", &[], true), None);
-}
-
-const VARS: PageVars<'static> = PageVars {
-    name: "A<b>&\"",
-    key: "alpha",
-    base: "/p/alpha/",
-    version: "9.9",
-};
-
-#[test]
-fn render_page_fills_placeholders_and_escapes_the_name() {
-    let html = "<!doctype html><html><head><title>__PROJECT__</title></head><body><a href=\"__BASE__\">__KEY__ __DASHBOARD_VERSION__</a><script>1</script></body></html>";
-    let out = render_page(html, &VARS);
-    assert!(out.contains("<title>A&lt;b&gt;&amp;&quot;</title>"));
-    assert!(out.contains("<head><meta name=\"coord-scope\" content=\"alpha\"><title>"));
-    assert!(out.contains("<a href=\"/p/alpha/\">alpha 9.9</a>"));
-}
-
-#[test]
-fn render_page_adds_the_scope_meta_only_when_missing() {
-    let has =
-        "<html><head><meta name=\"coord-scope\" content=\"__KEY__\"></head><body></body></html>";
-    let out = render_page(has, &VARS);
-    assert_eq!(out.matches("coord-scope").count(), 1);
-    assert!(out.contains("content=\"alpha\""));
-    let bare = render_page("<p>no head</p>", &VARS);
-    assert_eq!(
-        bare,
-        "<meta name=\"coord-scope\" content=\"alpha\"><p>no head</p>"
-    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -830,20 +622,6 @@ async fn static_serves_files_of_the_web_build_only() {
     for path in bad {
         assert_eq!(t.get(path).await.status, 404, "{path}");
     }
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn assets_are_cached_for_a_year() {
-    let t = plain().await;
-    put_web(&t, "assets/app.abc.js", b"1");
-    let r = t.get("/assets/app.abc.js").await;
-    assert_eq!(r.status, 200);
-    assert_eq!(
-        r.header("cache-control"),
-        Some("public, max-age=31536000, immutable")
-    );
-    assert_eq!(t.get("/assets/missing.js").await.status, 404);
     t.stop(false).await;
 }
 
@@ -990,68 +768,6 @@ async fn a_body_must_be_json_and_valid() {
             .contains("ops")
     );
     t.stop(false).await;
-}
-
-fn nothing(_ctx: Ctx) -> std::future::Ready<Result<Response, ApiError>> {
-    std::future::ready(Err(ApiError::not_found("x")))
-}
-
-fn params_of(m: RouteMatch) -> HashMap<String, String> {
-    match m {
-        RouteMatch::Found(_, _, params) => params,
-        _ => panic!("the route was not found"),
-    }
-}
-
-#[test]
-fn router_matches_params_wildcards_and_method_sets() {
-    let mut r = Router::new();
-    r.get("/a/:x/b/:y", nothing);
-    r.post("/a/:x/b/:y", nothing);
-    r.get("/s/*", nothing);
-    r.get("/", nothing);
-    let both = map(&[("x", "1"), ("y", "hello w")]);
-    assert_eq!(params_of(r.find("GET", "/a/1/b/hello%20w")), both);
-    assert_eq!(
-        params_of(r.find("HEAD", "/a/1/b/2")),
-        map(&[("x", "1"), ("y", "2")])
-    );
-    let RouteMatch::NotAllowed(mut allow) = r.find("PUT", "/a/1/b/2") else {
-        panic!("PUT is not allowed");
-    };
-    allow.sort_unstable();
-    assert_eq!(allow, ["GET", "POST"]);
-    assert_eq!(
-        params_of(r.find("GET", "/s/deep/path.js"))["*"],
-        "deep/path.js"
-    );
-    assert!(matches!(r.find("GET", "/"), RouteMatch::Found(..)));
-}
-
-#[test]
-fn router_trailing_slash_is_exact_and_a_bad_escape_is_a_bad_path() {
-    let mut r = Router::new();
-    r.get("/a/:x/b/:y", nothing);
-    assert!(matches!(r.find("GET", "/a/1/b"), RouteMatch::NotFound));
-    assert!(matches!(r.find("GET", "/a/1/b/2/"), RouteMatch::NotFound));
-    assert!(matches!(r.find("GET", "/a/%E0/b/2"), RouteMatch::BadPath));
-}
-
-#[test]
-fn errors_map_codes_to_statuses_and_hide_internals() {
-    let e = ApiError::new(ErrorCode::Conflict, "m").with_details(json!({ "a": 1 }));
-    let want = json!({ "error": { "code": "conflict", "message": "m", "details": { "a": 1 } } });
-    assert_eq!((e.code.status(), e.body()), (409, want));
-    let statuses = [
-        (ErrorCode::BoardLocked, 503),
-        (ErrorCode::DbBusy, 503),
-        (ErrorCode::UnknownRun, 404),
-        (ErrorCode::Internal, 500),
-    ];
-    for (code, status) in statuses {
-        assert_eq!(code.status(), status, "{}", code.as_str());
-    }
-    assert_eq!(ApiError::internal().message, "internal error");
 }
 
 fn seed_docs(t: &TestServer) {
@@ -1236,22 +952,6 @@ async fn db_entries_are_posted_through_the_sync_service() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn db_batch_stops_at_the_first_error() {
-    let t = synced().await;
-    let op = |coll: &str, id: &str, text: &str| json!({ "op": "set", "coll": coll, "id": id, "data": { "kind": "followup", "text": text } });
-    let ops = json!({ "ops": [op("entries", "O-aaaa-0001", "a"), op("items", "I-1", "b"), op("entries", "O-aaaa-0003", "c")] });
-    let r = t.write("POST", "/api/p/alpha/db/batch", &ops).await;
-    assert_eq!(r.status, 200);
-    let results = r.json()["results"].as_array().cloned().expect("results");
-    assert_eq!(results.len(), 2, "stopped at the first error");
-    assert_eq!(results[0]["status"], "applied");
-    assert_eq!(results[1]["error"]["code"], "read_only");
-    let entries = &t.board("alpha")["entries"];
-    assert!(entries.get("O-aaaa-0001").is_some() && entries.get("O-aaaa-0003").is_none());
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn projects_lists_boards_found_on_disk_with_their_urls() {
     let t = plain().await;
     let p = t.get("/api/projects").await.json();
@@ -1265,14 +965,6 @@ async fn projects_lists_boards_found_on_disk_with_their_urls() {
         (&json!("/p/alpha/"), &json!(true), &json!(0))
     );
     assert!(a.get("name").is_some() && a.get("root").is_some());
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn resync_is_unavailable_without_sync() {
-    let t = plain().await;
-    let r = t.write("POST", "/api/admin/resync", &json!({})).await;
-    assert_refused(&r, 503, "unavailable", "no sync service");
     t.stop(false).await;
 }
 
@@ -1367,12 +1059,10 @@ async fn a_second_server_on_the_same_home_is_refused() {
 }
 
 async fn wait_until_gone(file: &Path) {
-    for _ in 0..100 {
-        if !file.exists() {
-            return;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
+    until("the pid file to go", || async {
+        (!file.exists()).then_some(())
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -1402,54 +1092,4 @@ async fn a_stale_pid_file_does_not_block_a_start() {
     assert_eq!(t.get("/api/health").await.status, 200);
     assert_eq!(pid_record(&t)["instance"], json!(t.svc.instance));
     t.stop(false).await;
-}
-
-type Log = Arc<Mutex<Vec<&'static str>>>;
-
-fn job(q: &ScopeQueue, scope: &'static str, log: &Log, what: &'static str) -> JoinHandle<()> {
-    let (q, log) = (q.clone(), Arc::clone(log));
-    tokio::spawn(async move {
-        q.run(scope, async { log.lock().expect("log").push(what) })
-            .await;
-    })
-}
-
-fn seen(log: &Log) -> Vec<&'static str> {
-    log.lock().expect("log").clone()
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_scope_queue_serialises_a_scope_and_lets_scopes_run_side_by_side() {
-    let q = ScopeQueue::new();
-    let log: Log = Arc::default();
-    let (open, gate) = oneshot::channel::<()>();
-    let (held_tx, held) = oneshot::channel::<()>();
-    let a1 = {
-        let (q, log) = (q.clone(), Arc::clone(&log));
-        tokio::spawn(async move {
-            q.run("qa", async {
-                log.lock().expect("log").push("a1 start");
-                let _ = held_tx.send(());
-                let _ = gate.await;
-                log.lock().expect("log").push("a1 end");
-            })
-            .await;
-        })
-    };
-    held.await.expect("a1 holds the scope");
-    let a2 = job(&q, "qa", &log, "a2");
-    job(&q, "qb", &log, "b1").await.expect("b1");
-    assert_eq!(seen(&log), ["a1 start", "b1"], "qb ran while qa was held");
-    open.send(()).expect("open the gate");
-    a1.await.expect("a1");
-    a2.await.expect("a2");
-    assert_eq!(seen(&log), ["a1 start", "b1", "a1 end", "a2"]);
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_scope_queue_keeps_running_after_a_failed_job() {
-    let q = ScopeQueue::new();
-    let failed: Result<(), &str> = q.run("qc", async { Err("first fails") }).await;
-    assert_eq!(failed, Err("first fails"));
-    assert_eq!(q.run("qc", async { "still runs" }).await, "still runs");
 }

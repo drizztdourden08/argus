@@ -1,5 +1,7 @@
 //! The first start of Argus on a home last opened by Node: one backup of the database before
 //! anything writes, then a marker, and never again.
+//! K3: the one backup of the Node database before the first write.
+// test-tag: critical
 
 use std::fs;
 use std::path::Path;

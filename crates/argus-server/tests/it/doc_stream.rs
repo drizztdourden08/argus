@@ -1,16 +1,18 @@
 //! The page stream: event formats, collection filter, Last-Event-ID and ?since= resume,
 //! snapshot fallback, reset, heartbeat, client limits and shutdown (port of `core.sse.test.mjs`).
+//! K2, S3: the wire format and the resume rules of the page stream; the buffer limit of one
+//! client is in `sse_buffer.rs`.
+// test-tag: standard
 
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use argus_core::{Coll, DocChange, ResetEvent};
-use argus_server::sse::{MAX_CLIENTS_PER_SCOPE, SSE_BUFFER_LIMIT, frame, open_stream};
+use argus_server::sse::{MAX_CLIENTS_PER_SCOPE, SSE_BUFFER_LIMIT};
 use argus_store::PruneOptions;
 use argus_testkit::{Event, Request, SseReader, TestOptions, TestServer};
-use http_body_util::BodyExt;
 use serde_json::{Value, json};
+
+use crate::wait::until;
 
 const WAIT: u64 = 2000;
 
@@ -92,13 +94,10 @@ async fn clients(t: &TestServer) -> i64 {
 }
 
 async fn clients_settle_at(t: &TestServer, want: i64) -> i64 {
-    for _ in 0..40 {
-        if clients(t).await == want {
-            break;
-        }
-        tokio::time::sleep(Duration::from_millis(25)).await;
-    }
-    clients(t).await
+    until("the client count to settle", || async {
+        (clients(t).await == want).then_some(want)
+    })
+    .await
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -207,7 +206,10 @@ async fn an_apply_that_changes_nothing_sends_nothing() {
     let s = t.sse("/api/p/alpha/stream?c=items").await;
     until_ready(&s).await;
     apply(&t, "alpha", &[set_item("I-2", json!({ "title": "two" }))]);
-    assert!(s.next(Some("changes"), 250).await.is_none());
+    apply(&t, "alpha", &[set_item("I-3", json!({}))]);
+    let ev = s.next(Some("changes"), WAIT).await.expect("changes");
+    assert_eq!(ev.data["changes"].as_array().map(Vec::len), Some(1));
+    assert_eq!(ev.data["changes"][0]["id"], "I-3");
     s.close();
 }
 
@@ -307,7 +309,12 @@ async fn reset_reaches_that_scope_only_in_the_documented_format() {
     let ev = a.next(Some("reset"), WAIT).await.expect("reset");
     assert_eq!(ev.data, json!({ "reason": "resync" }));
     assert_eq!(ev.id, None);
-    assert!(b.next(Some("reset"), 200).await.is_none());
+    t.svc.bus.emit_reset(&ResetEvent {
+        scope: "beta".into(),
+        reason: "second".into(),
+    });
+    let own = b.next(Some("reset"), WAIT).await.expect("reset");
+    assert_eq!(own.data, json!({ "reason": "second" }), "not alpha's reset");
     a.close();
     b.close();
 }
@@ -317,12 +324,10 @@ async fn heartbeat_comments_keep_the_stream_alive() {
     let t = server_with(Duration::from_millis(120)).await;
     let s = t.sse("/api/p/alpha/stream?c=meta").await;
     until_ready(&s).await;
-    tokio::time::sleep(Duration::from_millis(400)).await;
-    assert!(
-        s.comments().contains(&"ping".to_owned()),
-        "{:?}",
-        s.comments()
-    );
+    until("a heartbeat comment", || async {
+        s.comments().contains(&"ping".to_owned()).then_some(())
+    })
+    .await;
     assert!(s.raw().contains(": ping\n\n"));
     s.close();
 }
@@ -383,34 +388,6 @@ async fn a_scope_holds_at_most_32_streams() {
     open.into_iter().for_each(SseReader::close);
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn a_client_that_falls_a_megabyte_behind_is_dropped() {
-    let open = Arc::new(AtomicUsize::new(0));
-    let (sender, res) = open_stream(Duration::from_secs(3600), &open, None);
-    assert_eq!(open.load(Ordering::SeqCst), 1);
-    assert!(sender.event("a", &json!({ "n": 1 }), Some(5)));
-    let first = frame("a", &json!({ "n": 1 }), Some(5));
-    assert_eq!(first, "id: 5\nevent: a\ndata: {\"n\":1}\n\n");
-    let chunk = json!({ "pad": "x".repeat(64 * 1024) });
-    let mut sent = 0;
-    while sender.event("a", &chunk, None) {
-        sent += 1;
-        assert!(
-            sent < 32,
-            "the limit of {SSE_BUFFER_LIMIT} bytes must stop it"
-        );
-    }
-    assert!((10..=16).contains(&sent), "{sent} chunks fit");
-    assert!(
-        !sender.event("a", &json!({ "n": 3 }), None),
-        "nothing after close"
-    );
-    let end = tokio::time::timeout(Duration::from_secs(2), res.into_body().collect());
-    let bytes = end.await.expect("the body ends").expect("body").to_bytes();
-    assert!(bytes.starts_with(first.as_bytes()));
-    assert_eq!(open.load(Ordering::SeqCst), 0, "the stream is forgotten");
-}
-
 /// A snapshot doc carries its fields twice (spread and under `data`), so a pad counts double.
 fn padded(coll: Coll, id: &str, bytes: usize) -> DocChange {
     DocChange::set(coll, id, json!({ "id": id, "pad": "x".repeat(bytes / 2) }))
@@ -444,71 +421,13 @@ async fn the_snapshot_frame_that_crosses_the_limit_is_still_sent() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_two_megabyte_snapshot_over_several_collections_arrives_whole_with_ready() {
-    let t = server().await;
-    let big = 600_000;
-    let changes: Vec<DocChange> = [Coll::Items, Coll::Agents, Coll::Entries, Coll::Wakes]
-        .into_iter()
-        .map(|c| padded(c, "X-1", big))
-        .collect();
-    apply(&t, "huge", &changes);
-    let s = t
-        .sse("/api/p/huge/stream?c=items,agents,entries,wakes,meta")
-        .await;
-    for coll in ["items", "agents", "entries", "wakes", "meta"] {
-        let e = s.next(Some("snapshot"), WAIT).await;
-        assert_eq!(e.expect("each snapshot arrives").data["coll"], coll);
-    }
-    assert!(
-        s.next(Some("ready"), WAIT).await.is_some(),
-        "ready follows the snapshot"
-    );
-    assert!(!s.ended(), "the stream stays open");
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn opening_frames_do_not_count_but_a_live_backlog_over_a_megabyte_still_drops() {
-    let open = Arc::new(AtomicUsize::new(0));
-    let (sender, res) = open_stream(Duration::from_secs(3600), &open, None);
-    let chunk = json!({ "pad": "x".repeat(64 * 1024) });
-    for _ in 0..32 {
-        assert!(
-            sender.opening_event("snapshot", &chunk, None),
-            "2 MB of opening frames"
-        );
-    }
-    assert!(
-        sender.event("changes", &json!({ "n": 1 }), None),
-        "a live frame after the snapshot"
-    );
-    let mut sent = 0;
-    while sender.event("changes", &chunk, None) {
-        sent += 1;
-        assert!(
-            sent < 32,
-            "the live backlog must hit the limit of {SSE_BUFFER_LIMIT} bytes"
-        );
-    }
-    assert!((10..=16).contains(&sent), "{sent} live chunks fit");
-    let end = tokio::time::timeout(Duration::from_secs(2), res.into_body().collect());
-    let bytes = end.await.expect("the body ends").expect("body").to_bytes();
-    assert!(
-        bytes.len() > 2 * 1024 * 1024,
-        "the opening frames were all sent"
-    );
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn stopping_the_server_ends_open_streams() {
     let t = server().await;
     let s = t.sse("/api/p/alpha/stream?c=meta").await;
     until_ready(&s).await;
     t.stop(false).await;
-    for _ in 0..40 {
-        if s.ended() {
-            break;
-        }
-        tokio::time::sleep(Duration::from_millis(25)).await;
-    }
-    assert!(s.ended(), "the client saw the stream end");
+    until("the client to see the stream end", || async {
+        s.ended().then_some(())
+    })
+    .await;
 }

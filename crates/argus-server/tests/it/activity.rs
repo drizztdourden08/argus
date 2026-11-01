@@ -2,6 +2,8 @@
 //! rebuild after a hard resync, the dashboard's own lines, and the adapters that give every
 //! service crate its activity port. Ported from the hook and route cases of
 //! `activity.test.mjs` and `procs.http.test.mjs`.
+//! K2, K3: the activity route shape, the portfolio docs and the sink adapters.
+// test-tag: standard
 
 use argus_agents::{ActivityLine as AgentLine, ActivitySink as AgentSink};
 use argus_core::{Coll, ResetEvent};

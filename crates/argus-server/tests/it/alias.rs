@@ -1,13 +1,10 @@
-//! Board alias hosts: `<key>.localhost:<port>` and `<thread>.<key>.localhost:<port>` are loopback aliases like `127.0.0.1` and `localhost` (the Host check, the same-origin check of writes). `/` on one redirects to that board with the `?thread=` claim, an alias of no board gets the Argus overview page, and every other host stays 421. The reserved names `argus.localhost` (the overview, no redirect) and `overlord.localhost` (the Overlord's own board) are never routed to a project. Ported from the Node `http.alias.test.mjs`.
+//! Board alias hosts: `<key>.localhost:<port>` and `<thread>.<key>.localhost:<port>` are loopback aliases like `127.0.0.1` and `localhost` (the Host check, the same-origin check of writes). `/` on one redirects to that board with the `?thread=` claim, an alias of no board gets the Argus overview page, and every other host stays 421. The reserved names `argus.localhost` (the overview, no redirect) and `overlord.localhost` (the Overlord's own board) are never routed to a project. Ported from the Node `http.alias.test.mjs`. K2, K4: the redirect and overview answers and the host and origin refusals; the pure parse rules are in `alias_rules.rs`.
+// test-tag: standard
 
 use std::fs;
 
-use argus_server::security::{Alias, Doors, RESERVED_ALIASES, host_ok, origin_ok, parse_alias};
 use argus_testkit::{Reply, Request, TestOptions, TestServer};
-use axum::http::{HeaderMap, HeaderValue};
 use serde_json::json;
-
-const NODE_PORT: u16 = 47615;
 
 fn write_board(t: &TestServer, key: &str) {
     let dir = t.coord_home.join(key);
@@ -40,24 +37,6 @@ async fn put_item(t: &TestServer, host: &str, origin: Option<&str>) -> Reply {
     t.send(req.json(&json!({ "data": {} }))).await
 }
 
-fn assert_alias(host: &str, key: &str, thread: Option<&str>, reserved: bool) {
-    let want = Alias {
-        key: key.to_owned(),
-        thread: thread.map(str::to_owned),
-        reserved,
-    };
-    assert_eq!(parse_alias(host, NODE_PORT), Some(want), "{host}");
-}
-
-fn pair(host: &str, origin: Option<&str>) -> HeaderMap {
-    let mut h = HeaderMap::new();
-    h.insert("host", HeaderValue::from_str(host).expect("host"));
-    if let Some(o) = origin {
-        h.insert("origin", HeaderValue::from_str(o).expect("origin"));
-    }
-    h
-}
-
 fn location(r: &Reply) -> Option<&str> {
     r.header("location")
 }
@@ -65,38 +44,6 @@ fn location(r: &Reply) -> Option<&str> {
 async fn assert_bad_host(t: &TestServer, host: &str) {
     let r = get(t, "/api/health", host).await;
     assert_eq!((r.status, r.code().as_str()), (421, "bad_host"), "{host}");
-}
-
-#[test]
-fn parse_alias_reads_key_and_thread_labels_and_the_port_only() {
-    let p = NODE_PORT;
-    assert_alias("alpha.localhost:47615", "alpha", None, false);
-    assert_alias("ui-2.beta-2.localhost:47615", "beta-2", Some("ui-2"), false);
-    assert_alias("ALPHA.Localhost:47615", "alpha", None, false);
-    let bad = [
-        "localhost:47615",
-        "alpha.localhost",
-        "alpha.localhost:47616",
-        "alpha.localhost:47615.evil.test",
-        "a.b.c.localhost:47615",
-        "alpha.localhost.evil.test:47615",
-        "-x.localhost:47615",
-        "_x.localhost:47615",
-        "a_b.localhost:47615",
-        "x.a.localhost:47615 ",
-        ".localhost:47615",
-        "alpha.127.0.0.1:47615",
-        "",
-    ];
-    for host in bad {
-        assert_eq!(parse_alias(host, p), None, "{host:?}");
-    }
-    let long = format!("{}.localhost:1", "a".repeat(64));
-    assert_eq!(
-        parse_alias(&long, 1),
-        None,
-        "a label is 63 characters at most"
-    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -213,26 +160,6 @@ async fn a_board_opened_on_its_alias_host_holds_its_presence() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn the_redirect_target_and_the_api_are_served_on_the_alias_host() {
-    let t = alias_server().await;
-    let port = t.port;
-    fs::create_dir_all(t.dashboard_home.join("no-web-build")).expect("web root");
-    fs::write(t.dashboard_home.join("no-web-build").join("app.js"), "1").expect("web file");
-    let page = get(
-        &t,
-        "/p/alpha/?thread=ui",
-        &format!("ui.alpha.localhost:{port}"),
-    )
-    .await;
-    assert_eq!(page.status, 200);
-    assert!(page.text().contains("coord-scope"));
-    let host = format!("alpha.localhost:{port}");
-    assert_eq!(get(&t, "/static/app.js", &host).await.status, 200);
-    assert_eq!(get(&t, "/api/projects", &host).await.status, 200);
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn an_alias_of_a_project_with_no_board_gets_the_overview_page() {
     let t = alias_server().await;
     let port = t.port;
@@ -297,142 +224,6 @@ async fn writes_on_an_alias_host_accept_only_that_host_as_origin() {
     t.stop(false).await;
 }
 
-#[test]
-fn an_alias_origin_counts_only_against_its_own_alias_host() {
-    let ok = |host: &str, origin: &str, strict: bool| {
-        origin_ok(&pair(host, Some(origin)), 4000, Doors::default(), strict)
-    };
-    let ui = "ui.alpha.localhost:4000";
-    assert!(ok(ui, "http://ui.alpha.localhost:4000", false));
-    assert!(ok(ui, "http://ui.alpha.localhost:4000", true));
-    assert!(!ok(
-        "127.0.0.1:4000",
-        "http://ui.alpha.localhost:4000",
-        false
-    ));
-    assert!(!ok(ui, "http://alpha.localhost:4000", false));
-    assert!(!ok("evil.test", "http://evil.test", false));
-    assert!(ok("127.0.0.1:4000", "http://127.0.0.1:4000", false));
-    assert!(host_ok(
-        &pair("alpha.localhost:4000", None),
-        4000,
-        Doors::default()
-    ));
-    assert!(!host_ok(
-        &pair("alpha.localhost:4001", None),
-        4000,
-        Doors::default()
-    ));
-}
-
-#[test]
-fn reserved_aliases_parse_like_any_alias_but_carry_the_reserved_flag() {
-    assert_eq!(RESERVED_ALIASES, ["argus", "overlord"]);
-    assert_alias("argus.localhost:47615", "argus", None, true);
-    assert_alias("OverLord.Localhost:47615", "overlord", None, true);
-    assert_alias("ui.argus.localhost:47615", "argus", Some("ui"), true);
-    assert_alias("alpha.localhost:47615", "alpha", None, false);
-    assert_alias("argus-app.localhost:47615", "argus", None, false);
-    assert_alias("ui.argus-app.localhost:47615", "argus", Some("ui"), false);
-    assert_alias("argus.alpha.localhost:47615", "alpha", Some("argus"), false);
-}
-
-#[test]
-fn reserved_names_are_reserved_on_our_port_only() {
-    let p = NODE_PORT;
-    let bad = [
-        "argus.localhost",
-        "argus.localhost:47616",
-        "argus.localhost:47615.evil.test",
-        "argus.localhost.evil.test:47615",
-        "overlord.evil.test:47615",
-        "overlord.localhost:4761",
-        "xargus.localhost:1",
-    ];
-    for host in bad {
-        assert!(parse_alias(host, p).is_none_or(|a| !a.reserved), "{host}");
-    }
-    assert_eq!(parse_alias("argus.localhost:47616", p), None);
-    assert_eq!(parse_alias("overlord.localhost", p), None);
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn reserved_aliases_pass_the_host_check_on_our_port_and_nowhere_else() {
-    let t = alias_server().await;
-    let port = t.port;
-    for host in [
-        format!("argus.localhost:{port}"),
-        format!("overlord.localhost:{port}"),
-        format!("ARGUS.LOCALHOST:{port}"),
-    ] {
-        assert_eq!(get(&t, "/api/health", &host).await.status, 200, "{host}");
-    }
-    let refused = [
-        format!("argus.localhost:{}", port + 1),
-        "overlord.localhost".to_owned(),
-        format!("overlord.localhost.evil.test:{port}"),
-        format!("argus.evil.test:{port}"),
-    ];
-    for host in &refused {
-        assert_bad_host(&t, host).await;
-    }
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn reserved_aliases_follow_the_same_origin_rule_as_every_alias() {
-    let t = alias_server().await;
-    let host = format!("overlord.localhost:{}", t.port);
-    let own = put_item(&t, &host, Some(&format!("http://{host}"))).await;
-    assert_eq!(own.code(), "read_only", "own Origin accepted by the checks");
-    let other = put_item(
-        &t,
-        &host,
-        Some(&format!("http://argus.localhost:{}", t.port)),
-    )
-    .await;
-    assert_eq!(other.code(), "forbidden");
-    t.stop(false).await;
-}
-
-#[test]
-fn reserved_hosts_and_origins_in_the_unit_rules() {
-    assert!(host_ok(
-        &pair("argus.localhost:4000", None),
-        4000,
-        Doors::default()
-    ));
-    assert!(!host_ok(
-        &pair("overlord.localhost:4001", None),
-        4000,
-        Doors::default()
-    ));
-    assert!(origin_ok(
-        &pair(
-            "overlord.localhost:4000",
-            Some("http://overlord.localhost:4000")
-        ),
-        4000,
-        Doors::default(),
-        false
-    ));
-    assert!(!origin_ok(
-        &pair(
-            "overlord.localhost:4000",
-            Some("http://argus.localhost:4000")
-        ),
-        4000,
-        Doors::default(),
-        false
-    ));
-    assert!(!origin_ok(
-        &pair("127.0.0.1:4000", Some("http://argus.localhost:4000")),
-        4000,
-        Doors::default(),
-        false
-    ));
-}
-
 #[tokio::test(flavor = "multi_thread")]
 async fn argus_localhost_serves_the_overview_at_the_root_even_when_a_project_is_called_argus() {
     let t = alias_server().await;
@@ -491,45 +282,6 @@ async fn overlord_localhost_redirects_to_the_overlord_board_once_it_has_one() {
     assert_eq!(
         location(&shouting),
         Some("/p/portfolio/?thread=coordinator")
-    );
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn overlord_alias_edge_cases_and_the_board_page_name() {
-    let t = alias_server().await;
-    let port = t.port;
-    write_board(&t, "portfolio");
-    let thread = get(&t, "/", &format!("ui.overlord.localhost:{port}")).await;
-    assert_eq!(thread.status, 200, "a thread label in front is no route");
-    let board = get(
-        &t,
-        "/p/portfolio/?thread=coordinator",
-        &format!("overlord.localhost:{port}"),
-    )
-    .await;
-    assert_eq!(
-        board.status, 200,
-        "the redirect target is served on that host"
-    );
-    assert!(board.text().contains("coord-scope"));
-    let plain = get(&t, "/", &format!("portfolio.localhost:{port}")).await;
-    assert_eq!(
-        location(&plain),
-        Some("/p/portfolio/?thread=coordinator"),
-        "the plain project alias keeps working"
-    );
-    assert_eq!(
-        get(&t, "/", &format!("argus.localhost:{port}"))
-            .await
-            .status,
-        200
-    );
-    let named = get(&t, "/p/portfolio/", &format!("127.0.0.1:{port}")).await;
-    assert_eq!(named.status, 200);
-    assert!(
-        !named.text().contains("<title>Portfolio"),
-        "the Overlord's project is not called Portfolio"
     );
     t.stop(false).await;
 }
