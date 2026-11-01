@@ -229,7 +229,12 @@ async fn a_worktree_of_a_project_keeps_what_its_lockfile_resolves() {
         &json!([{ "label": "alpha / fresh", "kind": "worktree" }])
     );
     let out = r.cli("/api/cache/prune", &json!({})).await;
-    assert_eq!(out.json()["deleted"].as_array().map(Vec::len), Some(0));
+    assert_eq!(
+        out.json()["deleted"].as_array().map(Vec::len),
+        Some(0),
+        "{}",
+        out.text()
+    );
     assert!(
         cache_dir
             .path()

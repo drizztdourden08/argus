@@ -92,10 +92,10 @@ impl Rig {
 
     /// A call as `who`, on the project `alpha`.
     pub fn call(&self, args: &[&str], who: As) -> Ran {
-        let mut argv: Vec<&str> = args.to_vec();
-        argv.extend(["--project", "alpha"]);
-        argv.extend(who.args());
-        coord(&argv, self.home.env(), self.home.path())
+        let mut line: Vec<&str> = args.to_vec();
+        line.extend(["--project", "alpha"]);
+        line.extend(who.args());
+        coord(&line, self.home.env(), self.home.path())
     }
 
     /// A call that must succeed.
