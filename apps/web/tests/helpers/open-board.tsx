@@ -7,7 +7,8 @@ import { seedBoard } from './seed-board';
 
 const openBoard = async (docs: Record<string, Record<string, object>>) => {
   const view = renderBody();
-  await waitFor(() => expect(view.sources).toHaveLength(1));
+  // The board tabs load lazily: the first case of a run pays the import.
+  await waitFor(() => expect(view.sources).toHaveLength(1), { timeout: 5000 });
   act(() => seedBoard(view.sources[0], docs));
   return view;
 };

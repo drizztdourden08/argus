@@ -54,7 +54,8 @@ const mountBoard = async (board: Board, at = '/p/rotp/#agents') => {
   const fetchMock = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(init?.method === 'POST' ? applied : report))));
   vi.stubGlobal('fetch', fetchMock);
   const view = renderAt(at);
-  await waitFor(() => expect(view.sources).toHaveLength(1));
+  // The board route loads lazily: the first case of a run pays its import.
+  await waitFor(() => expect(view.sources).toHaveLength(1), { timeout: 5000 });
   act(() => seedBoard(view.sources[0], { meta: { board: { project: 'rotp', name: 'Relic of the Past' } }, ...board }));
   return { ...view, fetchMock };
 };
