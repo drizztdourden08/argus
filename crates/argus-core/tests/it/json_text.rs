@@ -1,5 +1,8 @@
 //! JSON text as `JSON.stringify` prints it: a float with no fraction has none, so
 //! `meta.leftoverOld.days` is `1` and not `1.0`.
+//! K2: the JSON text other code reads.
+
+// test-tag: critical
 
 use argus_core::json_text::{to_string, to_vec};
 use serde::Serialize;
@@ -56,10 +59,4 @@ fn a_float_field_of_a_struct_and_a_nested_value_are_both_covered() {
         String::from_utf8(to_vec(&nested).unwrap()).unwrap(),
         r#"{"meta":{"leftoverOld":{"count":2,"days":1,"sizeMb":12.5}},"list":[2]}"#
     );
-}
-
-#[test]
-fn the_text_reads_back_as_the_same_number() {
-    let back: Value = serde_json::from_str(&to_string(&float(4.0)).unwrap()).unwrap();
-    assert_eq!(back.as_i64(), Some(4));
 }

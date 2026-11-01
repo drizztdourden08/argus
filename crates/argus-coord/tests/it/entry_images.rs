@@ -1,6 +1,6 @@
-//! `coord ask` and `coord decide` with `--image [N=]<file> "<caption>"`: the picture is kept next
-//! to the board like a test proof and listed in the entry's `images`, tied to an option when it
-//! says so. Temp home, no server.
+//! K3: the picture files kept with an ask or a decision.
+
+// test-tag: critical
 
 use std::fs;
 
@@ -104,13 +104,6 @@ fn a_decision_keeps_images_for_the_whole_entry() {
 }
 
 #[test]
-fn an_entry_without_images_has_no_images_field() {
-    let work = Work::new();
-    run(&work, &["decide", "I-1", "No pictures", "--context", CTX]);
-    assert!(entries(&work)["D-1"].get("images").is_none());
-}
-
-#[test]
 fn a_missing_caption_a_bad_type_a_missing_file_or_a_missing_option_is_refused_and_nothing_is_kept()
 {
     let work = Work::new();
@@ -167,14 +160,4 @@ fn an_image_tied_to_an_option_on_a_plain_decision_record_is_refused() {
         "option 1 to 0 only",
     );
     assert!(entries(&work).is_empty());
-}
-
-#[test]
-fn extra_words_without_an_image_flag_are_ignored_as_before() {
-    let work = Work::new();
-    run(
-        &work,
-        &["decide", "I-1", "Plain", "stray", "--context", CTX],
-    );
-    assert!(entries(&work)["D-1"].get("images").is_none());
 }

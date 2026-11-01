@@ -1,6 +1,6 @@
-//! Ports the thread and board cases of the Node suites (`board.shortcut` verb cases, the thread
-//! verbs the other suites run in their set-up, `owner.text` limits) and the refusals and output
-//! lines of `thread.mjs`, `dispatch.mjs` and `board.mjs`, in-process on a temp `COORD_HOME`.
+//! K2: the lines and records of coord thread and board.
+
+// test-tag: critical
 
 use crate::thread_support::Cli;
 use serde_json::{Value, json};

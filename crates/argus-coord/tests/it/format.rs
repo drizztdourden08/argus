@@ -1,5 +1,6 @@
-//! Ports the behaviour of `format.mjs` (`ago`, `clipText`, `table`, `say`, `asJson`) with
-//! JavaScript string widths. Node has no test file of its own for it.
+//! K1: the text formats of the CLI.
+
+// test-tag: critical
 
 use argus_coord::cli::Capture;
 use argus_coord::cli::out::{ago, as_json, clip, pad_end, say, table};

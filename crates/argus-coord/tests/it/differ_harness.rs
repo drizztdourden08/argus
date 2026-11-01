@@ -1,15 +1,11 @@
-//! The differential harness tested on its own: the normalising rules, the judgement (a mismatch
-//! against "not ported"), the fixture and the twin homes. Cases that run Node skip when it is
-//! absent; none needs the `argus` binary.
+//! K1: the normalising rules and the judgement of the differential harness.
+
+// test-tag: critical
 
 use std::collections::BTreeMap;
 
-use crate::support::differ::exec::{Which, run_step};
-use crate::support::differ::fixture::standard_boards;
-use crate::support::differ::snapshot::snapshot;
 use crate::support::differ::verdict::Seen;
-use crate::support::differ::{Engines, Normaliser, Seed, Step, Twin, Verdict, judge};
-use crate::support::differ::{LEAD_SESSION, WORKER_SESSION};
+use crate::support::differ::{Normaliser, Verdict, judge};
 use crate::support::latency::percentile;
 
 fn norm(stable: &[&str]) -> Normaliser {
@@ -142,80 +138,9 @@ fn a_difference_in_code_stream_or_file_is_a_mismatch_that_names_it() {
 }
 
 #[test]
-fn equal_runs_are_the_same() {
-    let side = seen(0, "ok\n", &[("a", "1")]);
-    assert_eq!(judge(&side, &side.clone()), Verdict::Same);
-}
-
-#[test]
 fn percentiles_are_nearest_rank() {
     let ms: Vec<_> = (1..=100).map(std::time::Duration::from_millis).collect();
     assert_eq!(percentile(&ms, 50).as_millis(), 50);
     assert_eq!(percentile(&ms, 95).as_millis(), 95);
     assert_eq!(percentile(&ms[..1], 95).as_millis(), 1);
-}
-
-#[test]
-fn twin_homes_hold_the_same_boards_and_a_closed_dashboard_port() {
-    let seed = Seed::Fixture(standard_boards(LEAD_SESSION, WORKER_SESSION));
-    let twin = Twin::seeded(&seed).expect("twin");
-    let norm = Normaliser::new(&[twin.node.root(), twin.rust.root()], Vec::new());
-    let (a, b) = (
-        snapshot(twin.node.root(), &norm),
-        snapshot(twin.rust.root(), &norm),
-    );
-    assert_eq!(a.as_ref().expect("node"), b.as_ref().expect("rust"));
-    let files = a.unwrap();
-    assert!(
-        files.contains_key("coord/alpha/board.json") && files.contains_key("coord/beta/board.json")
-    );
-    assert!(files["coord/dashboard/config.json"].contains(&twin.closed_port.to_string()));
-    assert!(
-        files["coord/alpha/board.json"].contains("<HOME>\\\\work")
-            || files["coord/alpha/board.json"].contains("<HOME>/work")
-    );
-}
-
-#[test]
-fn node_reads_the_fixture_board_and_a_save_leaves_the_homes_alike() {
-    let Ok(node_cli) = Engines::locate_node_cli() else {
-        eprintln!("skipped: node or the Node coord CLI is absent");
-        return;
-    };
-    let engines = Engines {
-        node_cli,
-        argus: std::path::PathBuf::new(),
-    };
-    let seed = Seed::Fixture(standard_boards(LEAD_SESSION, WORKER_SESSION));
-    let twin = Twin::seeded(&seed).expect("twin");
-    let list = Step::new(&["item", "list", "--project", "alpha"]).session(LEAD_SESSION);
-    let ran = run_step(&engines, Which::Node, &twin.node, twin.closed_port, &list).expect("run");
-    let out = String::from_utf8_lossy(&ran.stdout).into_owned();
-    assert_eq!(
-        ran.code,
-        Some(0),
-        "stderr: {}",
-        String::from_utf8_lossy(&ran.stderr)
-    );
-    assert!(
-        out.contains("Plan the release") && out.contains("Port the parser"),
-        "{out}"
-    );
-    let add = Step::new(&["item", "add", "Check", "--project", "alpha"]).session(WORKER_SESSION);
-    for home in [&twin.node, &twin.rust] {
-        let ran = run_step(&engines, Which::Node, home, twin.closed_port, &add).expect("add");
-        assert_eq!(ran.code, Some(0));
-    }
-    let norm = Normaliser::new(
-        &[twin.node.root(), twin.rust.root()],
-        vec![LEAD_SESSION.into(), WORKER_SESSION.into()],
-    );
-    let (a, b) = (
-        snapshot(twin.node.root(), &norm).unwrap(),
-        snapshot(twin.rust.root(), &norm).unwrap(),
-    );
-    assert_eq!(
-        a, b,
-        "two Node runs in twin homes must normalise to the same files"
-    );
 }

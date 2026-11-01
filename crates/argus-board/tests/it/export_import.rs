@@ -1,6 +1,9 @@
 //! The page export and the owner's posts on a board: the context of a question reaches the page
 //! and survives the owner's answer, every reply kind, and the op outcomes (applied, conflict,
 //! refused, duplicate).
+//! K2, K3: the page export and the owner posts.
+
+// test-tag: critical
 
 use crate::common::{alpha, doc, post};
 use argus_board::sync::{export_docs, import_entries};

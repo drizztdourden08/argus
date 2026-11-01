@@ -1,6 +1,6 @@
-//! Ports the CLI cases of `portfolio.longsend.test.mjs` and the registry verbs of `coord
-//! portfolio` against temp boards: `init`, `add`, `remove`, `send` (a note, a decision, `all`, a
-//! project still waiting for its board, the text limits), `tick`, `show` and the retired verbs.
+//! K2: the lines and records of coord portfolio.
+
+// test-tag: critical
 
 use std::fs;
 

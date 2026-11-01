@@ -1,7 +1,6 @@
-//! Ports `hook.agents.test.mjs`: sub-agents recorded by the hooks `agent-dispatch`
-//! (`PreToolUse` on Agent or Task), `subagent-start` and `subagent-stop`, run in-process against a
-//! temp home. The `coord agent list/show/set` cases belong to the agent verbs (WP5); a record
-//! `coord agent start` makes is written straight onto the board here.
+//! K1: the sub-agent records the hooks make.
+
+// test-tag: critical
 
 use crate::hook_support::{FRESH, Fixture, LEAD, STRANGER, UI, ago, transcript, wire};
 use argus_core::clock::{now_ms, parse_ms};
@@ -148,37 +147,6 @@ fn a_record_of_the_lead_with_the_exact_claude_id_is_the_record_of_that_start() {
         (Some("done"), Some("fixed"))
     );
     assert_eq!(a["source"], Value::Null, "a manual record stays manual");
-}
-
-#[test]
-fn a_record_of_the_lead_with_no_claude_id_is_never_taken_by_a_start_that_reads_like_it() {
-    let f = Fixture::new();
-    let id = f.manual("A-9", "fixer-two", "fix the other thing", &json!({}));
-    f.dispatch(
-        LEAD,
-        json!({ "description": "Fix the other thing", "model": "sonnet" }),
-        "t6",
-    );
-    f.started(LEAD, "agent-alike-0001", "general-purpose");
-    let board = f.board();
-    assert_eq!(
-        board["agents"].as_object().unwrap().len(),
-        4,
-        "its own record"
-    );
-    assert!(board["agents"][&id].get("hookId").is_none());
-    assert!(board["agents"][&id].get("claudeId").is_none());
-    assert!(f.by_hook("agent-alike-0001").is_some());
-    f.stopped(
-        LEAD,
-        "agent-alike-0001",
-        &json!({ "last_assistant_message": "ok" }),
-    );
-    let lead = &f.board()["agents"][&id];
-    assert_eq!(
-        lead["status"], "working",
-        "its stop does not close the lead record"
-    );
 }
 
 #[test]

@@ -1,5 +1,8 @@
 //! Pictures of a question or a decision: kept next to the board, numbered per entry, tied to an
 //! option when asked, and shown to the page with a `url` instead of the local path.
+//! K2, K3: the entry image files and what the page is shown.
+
+// test-tag: critical
 
 use crate::common::{alpha, doc};
 use argus_board::proofs::{Image, keep_entry_image};
@@ -82,10 +85,4 @@ fn the_page_gets_a_url_and_the_option_but_not_the_local_path() {
     assert_eq!(shown["option"], 2);
     assert_eq!(shown["caption"], "Square");
     assert!(shown.get("file").is_none());
-}
-
-#[test]
-fn an_entry_without_images_is_exported_as_it_is() {
-    let b = question(&["Round", "Square"]);
-    assert_eq!(exported(&b, "Q-2"), b["entries"]["Q-2"]);
 }

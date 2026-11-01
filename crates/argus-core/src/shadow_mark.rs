@@ -73,6 +73,7 @@ pub fn mark(paths: &Paths) -> io::Result<bool> {
     Ok(true)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::{SHADOW_PORT, mark, marked};

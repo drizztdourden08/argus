@@ -1,8 +1,6 @@
-//! Ports `hook.guard.test.mjs`: `coord hook guard` (`PreToolUse` on the built-in browser's
-//! `tabs_close`) denies it for a registered thread and stays silent for anyone else; the
-//! session-start context tells a thread to keep its board open in the browser pane, asks once
-//! for the board shortcut, and gives the wake line (Monitor wake-stream, a lead on `'*'`). The
-//! wiring cases (`shared/hooks.json`, the render) stay with `ai-config`.
+//! K4: the browser guard and the session-start text.
+
+// test-tag: critical
 
 use std::fs;
 use std::path::{Path, PathBuf};

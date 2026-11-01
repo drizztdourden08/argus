@@ -1,8 +1,6 @@
-//! Ports the helper cases of `board.shortcut.test.mjs` (`shortcut.mjs`): the alias urls, the
-//! rows of a lead, a thread and the Overlord, the merge into `.claude/launch.json` (two-space
-//! JSON, other rows and keys kept, same name replaced in place, idempotent), the refusals that
-//! touch nothing, and `needs_shortcut`. The verb cases (`--thread`, `--root`, the printed lines)
-//! come with the board group.
+//! K1: the shortcut rows and the launch.json merge.
+
+// test-tag: critical
 
 use std::fs;
 use std::path::Path;

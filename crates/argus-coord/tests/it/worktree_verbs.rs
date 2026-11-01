@@ -1,9 +1,6 @@
-//! Ports `worktree.verbs.test.mjs`: `coord worktree rule add|rm`, `rules`, `keep`, `done`,
-//! `list`, `leftovers`, `remove` and `prune` against a temp `COORD_HOME`: the rule record and its
-//! defaults, the same path again updating the rule, every refusal (path, kind, thread, days,
-//! note, the 40-rule cap, a caller with no thread), keep and clear, the answer to an owner
-//! request, an old board reading as no rules, and the verbs that need the dashboard when it is
-//! not running.
+//! K2: the lines and records of coord worktree.
+
+// test-tag: critical
 
 use crate::common::{Home, Ran, coord};
 use crate::remote::{ok, read_board_at, refused};
