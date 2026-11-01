@@ -1,5 +1,6 @@
 //! `logs/tray.log`: one line per event, cut when it grows past 200 kB. A failing log never
 //! disturbs the tray.
+// test-tag: critical
 
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};

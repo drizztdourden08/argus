@@ -1,14 +1,20 @@
 //! Pure rules: definitions read from a board, the final verdict of a run, timestamps, the
-//! agents join, image sniffing and the shape of the page doc.
+//! agents join, image sniffing, spawn options and the shape of the page doc.
+//!
+//! Keep rule: K1, K2.
+// test-tag: critical
 
 use std::sync::Arc;
 
 use argus_launchers::{
-    AgentFilter, BoardFileDefs, DefsSource, EndInput, ExitInfo, ListFilter, MemoryDefs, RunDef,
-    RunKind, RunStatus, agents_with_runs, check_agent, check_key, check_name, check_rid,
-    coerce_def, defs_from_map, format_iso, parse_iso, public_def, sniff_image, verdict,
+    AgentFilter, BoardFileDefs, DefsSource, EndInput, ExitInfo, ListFilter, MemoryDefs,
+    MemoryStore, RunDef, RunKind, RunStatus, RunStore, SpawnRequest, agents_with_runs, check_agent,
+    check_key, check_name, check_rid, coerce_def, defs_from_map, format_iso, parse_iso, public_def,
+    sniff_image, spawn_options, verdict,
 };
 use serde_json::{Value, json};
+
+use crate::common::new_run;
 
 #[test]
 fn build_and_test_definitions_default_to_1800_seconds_and_zero_means_none() {
@@ -292,11 +298,9 @@ fn images_are_known_by_their_magic_number() {
     assert_eq!(sniff_image(b""), None);
 }
 
-#[tokio::test(start_paused = true)]
-async fn the_page_doc_hides_the_command_the_folder_and_the_log_cursor_and_filters_parse() {
-    let env = crate::common::Env::new();
-    env.define("alpha", vec![env.def("hello", "echo secret-looking")]);
-    let row = env.start("alpha", "hello");
+#[test]
+fn the_page_doc_hides_the_command_the_folder_and_the_log_cursor_and_filters_parse() {
+    let row = MemoryStore::new().insert(new_run("R-1", "hello"));
     let doc = row.to_doc();
     for hidden in ["scope", "cmd", "cwd", "logSeq"] {
         assert!(
@@ -306,7 +310,7 @@ async fn the_page_doc_hides_the_command_the_folder_and_the_log_cursor_and_filter
     }
     assert_eq!(
         (doc["id"].as_str(), doc["status"].as_str()),
-        (Some("R-1"), Some("running"))
+        (Some("R-1"), Some("queued"))
     );
     let filter = ListFilter::default().with_statuses("running, queued,,");
     assert_eq!(filter.statuses, ["running", "queued"]);
@@ -326,4 +330,31 @@ async fn the_page_doc_hides_the_command_the_folder_and_the_log_cursor_and_filter
         .row_limit(),
         50
     );
+}
+
+fn request(visible: bool, stdin: bool) -> SpawnRequest {
+    SpawnRequest {
+        cmd: "x".to_owned(),
+        cwd: ".".into(),
+        env: std::collections::BTreeMap::new(),
+        visible,
+        stdin,
+    }
+}
+
+#[test]
+fn spawn_options_a_hidden_run_has_no_console_window_a_window_run_does() {
+    let hidden = spawn_options(&request(false, true));
+    assert!(hidden.hide_window && hidden.stdin_pipe);
+    assert_eq!(hidden.shell, if cfg!(windows) { "cmd.exe" } else { "sh" });
+    let window = spawn_options(&request(true, false));
+    assert!(!window.hide_window);
+    assert!(
+        window.detached,
+        "a console window survives a dashboard restart"
+    );
+    assert!(!window.stdin_pipe);
+    if cfg!(windows) {
+        assert_eq!(window.shell_args, ["/d", "/s", "/c"]);
+    }
 }

@@ -1,6 +1,7 @@
 //! Findings that are not a difference between the two servers: a board file that cannot be read
 //! at all (all NUL bytes after a crash, empty, or not JSON). Both servers would answer from a
 //! hollow board or refuse it, so a run that says only "differs" would hide the cause.
+// test-tag: critical
 
 use std::path::PathBuf;
 

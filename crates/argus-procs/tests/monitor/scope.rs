@@ -1,4 +1,5 @@
-//! The scope rule a thread kill and the reaper share: whose process this is, and each refusal.
+//! K4: The scope rule a thread kill and the reaper share: whose process this is, and each refusal.
+// test-tag: critical
 
 use super::harness::{Spec, proc};
 use argus_procs::{Guard, GuardCtx, ProcRow, ProjectFolders, Scope, refusal};

@@ -1,5 +1,6 @@
 //! Path patterns: dot-separated segments over the keys and indices of a JSON value. `*` is one
 //! segment, `**` is any number of segments (none included), the empty pattern is the root.
+// test-tag: critical
 
 fn segments(pattern: &str) -> Vec<&str> {
     if pattern.is_empty() {

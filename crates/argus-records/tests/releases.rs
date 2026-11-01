@@ -1,5 +1,7 @@
 //! The release store and its feed on a temp folder: the index, half written entries, the made
 //! `latest.yml`, a channel level file that wins, and what the feed refuses.
+//! Keep rule: K2, K4.
+// test-tag: standard
 
 use std::fs;
 use std::path::Path;

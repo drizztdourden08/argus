@@ -1,6 +1,7 @@
 //! The DNS wire format, only as far as a one-question responder needs it (RFC 1035): a query
 //! with one question, and a reply that echoes the question and carries at most one A record.
 //! A question never uses name compression, so a compressed name is a malformed query.
+// test-tag: critical
 
 use std::net::Ipv4Addr;
 

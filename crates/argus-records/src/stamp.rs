@@ -1,5 +1,6 @@
 //! A file's time and size, and a cache of what was parsed from a file under that stamp, so a
 //! rescan of a big record folder only reads the files that changed.
+// test-tag: critical
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};

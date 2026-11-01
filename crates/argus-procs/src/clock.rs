@@ -29,6 +29,7 @@ pub fn parse_iso(text: &str) -> Option<i64> {
         .map(|d| d.timestamp_millis())
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

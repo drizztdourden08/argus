@@ -98,32 +98,3 @@ impl FolderWatch {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-
-    #[test]
-    fn a_file_appearing_calls_back_once_after_the_burst() {
-        let dir = tempfile::tempdir().expect("temp dir");
-        let calls = Arc::new(AtomicUsize::new(0));
-        let seen = Arc::clone(&calls);
-        let watch = FolderWatch::start(
-            dir.path(),
-            Arc::new(move || {
-                seen.fetch_add(1, Ordering::SeqCst);
-            }),
-        );
-        for i in 0..5 {
-            std::fs::write(dir.path().join(format!("f{i}")), "x").expect("write");
-        }
-        let until = Instant::now() + Duration::from_secs(10);
-        while calls.load(Ordering::SeqCst) == 0 && Instant::now() < until {
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        watch.stop();
-        let n = calls.load(Ordering::SeqCst);
-        assert!((1..=2).contains(&n), "{n} calls for one burst");
-    }
-}

@@ -1,6 +1,8 @@
 //! Delete safety of the prune with real links: a directory junction (`mklink /J`) and, where the machine allows one, a
 //! file symlink, pointing at a SIBLING folder of the cache root full of files. The sibling must come out untouched; a
 //! link inside a deleted entry goes with it, and a link in the cache's own folders is never followed.
+//! Keep rule: E2.
+// test-tag: e2e
 
 mod rig;
 
@@ -10,6 +12,7 @@ use rig::{DAY, Rig};
 const NAME: &str = "@drizztdourden08+brock-core";
 
 #[test]
+#[ignore = "e2e"]
 fn a_pruned_entry_takes_its_links_with_it_and_never_their_targets() {
     let rig = Rig::new();
     let sibling = rig.sibling();
@@ -27,6 +30,7 @@ fn a_pruned_entry_takes_its_links_with_it_and_never_their_targets() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn an_entry_or_a_version_that_is_itself_a_junction_is_never_entered() {
     let rig = Rig::new();
     let sibling = rig.sibling();
@@ -46,6 +50,7 @@ fn an_entry_or_a_version_that_is_itself_a_junction_is_never_entered() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_tmp_folder_that_is_a_junction_is_never_entered() {
     let rig = Rig::new();
     let sibling = rig.sibling();

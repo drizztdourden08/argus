@@ -1,8 +1,10 @@
 //! The watcher against the real coord clients: a `coord item add` from another process (the Node
 //! CLI, then `argus coord`, same homes) reaches the page stream within a second, and a board made
 //! by `coord board init` after the server started is mirrored. Ported from the CLI cases of
-//! `sync.watch.test.mjs`; the saves simulated without a CLI are in `watch.rs`. Each case runs once
+//! `sync.watch.test.mjs`. Each case runs once
 //! per client that is found and says why it skips the others.
+//! Keep rule: E2.
+// test-tag: e2e
 
 use std::time::Duration;
 
@@ -17,6 +19,7 @@ async fn run_ok(cli: &CoordCli, t: &TestServer, args: &[&str]) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_cli_change_reaches_the_stream_within_a_second() {
     for cli in CoordCli::locate_each() {
         let t = seeded().await;
@@ -42,6 +45,7 @@ async fn a_cli_change_reaches_the_stream_within_a_second() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_board_made_by_the_cli_after_start_is_mirrored_by_the_poll_or_the_watcher() {
     for cli in CoordCli::locate_each() {
         let t = seeded().await;

@@ -3,6 +3,7 @@
 //! timestamps are equal when they are within the tolerance: two strings that both parse as a
 //! date and time under any key, or two epoch numbers under a timestamp key (`at`, `ts`, `time`,
 //! `since` or a name ending in `At`).
+// test-tag: critical
 
 use std::collections::HashSet;
 

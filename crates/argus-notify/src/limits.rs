@@ -1,5 +1,6 @@
 //! Rate limits over the toasts let through. A ping over a limit is never refused: it is recorded
 //! without a toast, and at most one summary toast a minute per thread says how many.
+// test-tag: critical
 
 use std::collections::{HashMap, VecDeque};
 

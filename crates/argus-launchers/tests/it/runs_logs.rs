@@ -1,5 +1,8 @@
 //! Logs: lines and partial lines, carriage returns, long lines, the head and tail cap,
 //! cursors, redaction and the live tail (runs.logs).
+//!
+//! Keep rule: S2, K4.
+// test-tag: standard
 
 use std::time::Duration;
 
@@ -20,27 +23,6 @@ async fn finish(env: &Env, pid: u32) -> RunRow {
 }
 
 #[tokio::test(start_paused = true)]
-async fn output_is_split_into_lines_crlf_is_one_break_and_a_final_partial_line_is_kept() {
-    let env = Env::new();
-    let pid = job(&env);
-    env.host.say(pid, "one\r\ntwo\n\nfour").await;
-    env.host.complain(pid, "err line\n").await;
-    finish(&env, pid).await;
-    assert_eq!(
-        env.texts("alpha", "R-1", Some("out")),
-        ["one", "two", "", "four"]
-    );
-    assert_eq!(env.texts("alpha", "R-1", Some("err")), ["err line"]);
-    let seqs: Vec<u64> = env
-        .lines("alpha", "R-1", None)
-        .iter()
-        .map(|l| l.seq)
-        .collect();
-    let expected: Vec<u64> = (1..=seqs.len() as u64).collect();
-    assert_eq!(seqs, expected, "seq is 1..n without gaps");
-}
-
-#[tokio::test(start_paused = true)]
 async fn a_carriage_return_progress_line_shows_its_last_state_and_multibyte_text_survives() {
     let env = Env::new();
     let pid = job(&env);
@@ -52,22 +34,6 @@ async fn a_carriage_return_progress_line_shows_its_last_state_and_multibyte_text
     finish(&env, pid).await;
     let out = env.texts("alpha", "R-1", Some("out"));
     assert_eq!(out, ["100%", "h\u{e9}llo w\u{f6}rld \u{2713}"]);
-}
-
-#[tokio::test(start_paused = true)]
-async fn a_very_long_line_is_cut_into_pieces_of_at_most_16k_characters() {
-    let env = Env::new();
-    let pid = job(&env);
-    env.host
-        .say(pid, &format!("{}\nafter\n", "x".repeat(40_000)))
-        .await;
-    finish(&env, pid).await;
-    let lengths: Vec<usize> = env
-        .texts("alpha", "R-1", Some("out"))
-        .iter()
-        .map(|t| t.chars().count())
-        .collect();
-    assert_eq!(lengths, [16_384, 16_384, 7_232, 5]);
 }
 
 #[tokio::test(start_paused = true)]

@@ -1,8 +1,10 @@
-//! One real sample of this machine: it only reads, and checks the row of this test's own process.
+//! E2: One real sample of this machine: it only reads, and checks the row of this test's own process.
+// test-tag: e2e
 
 use argus_procs::{Killer, Sampler, SystemKiller, SystemSampler, platform_name};
 
 #[test]
+#[ignore = "e2e"]
 fn a_real_sample_has_this_process_with_a_plausible_shape() {
     let sample = SystemSampler.sample().unwrap();
     assert_eq!(sample.platform, platform_name());
@@ -23,6 +25,7 @@ fn a_real_sample_has_this_process_with_a_plausible_shape() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_killer_sees_this_process_alive_and_a_missing_one_gone() {
     assert!(SystemKiller.is_alive(std::process::id()));
     assert!(!SystemKiller.is_alive(u32::MAX - 1));

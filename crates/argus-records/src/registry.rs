@@ -1,6 +1,7 @@
 //! The local package registry of the Overlord's `localpkg`: `<home>/index.json` lists the
 //! builds packed from local checkouts (the tarballs sit in `<home>/tgz`), and
 //! `localpkg status --json` lists the checkouts that use them. Read only.
+// test-tag: critical
 
 use std::path::{Path, PathBuf};
 

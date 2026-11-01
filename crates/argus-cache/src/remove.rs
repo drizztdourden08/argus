@@ -1,5 +1,6 @@
 //! Deleting inside the cache root and nowhere else. Every path is checked against the root first; a folder is moved
 //! out of sight into `.tmp/` before it is deleted, so a reader never meets half an entry; a link is never followed.
+// test-tag: critical
 
 use crate::segment::{join, parent};
 use crate::tmp::TMP_DIR;

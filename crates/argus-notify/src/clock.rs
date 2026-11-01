@@ -1,4 +1,5 @@
 //! The time formats of the records.
+// test-tag: critical
 
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;

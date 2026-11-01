@@ -1,6 +1,7 @@
 //! One server of the comparison: its base URL, its bearer when it wants one, and the two things
 //! the comparison asks of it, a probe answered and a stream opened. A client of the server like
 //! any other, and read-only: a probe is a GET or one of the two MCP reads.
+// test-tag: critical
 
 use std::time::Duration;
 

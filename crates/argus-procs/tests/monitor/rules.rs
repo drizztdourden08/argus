@@ -1,4 +1,5 @@
-//! Rule matching and the rules file.
+//! K2: Rule matching and the rules file.
+// test-tag: critical
 
 use super::harness::{Harness, Setup, T0};
 use argus_procs::{

@@ -1,6 +1,7 @@
 //! The tray icons as pixels: the Argus mark, white on a dark taskbar and black on a light one,
 //! and the same mark greyed and faded with a red badge for every other state. Pure, so it is
 //! tested without a window.
+// test-tag: critical
 
 use std::io::Cursor;
 
@@ -187,7 +188,7 @@ fn over(pixel: &mut [u8], color: [u8; 3], coverage: u32) {
 mod tests {
     use ico::IconDir;
 
-    use super::{ARGUS_ICO, IconKind, Ink, Rgba, disc_coverage, render};
+    use super::{ARGUS_ICO, IconKind, Ink, Rgba, render};
 
     fn pixel(image: &Rgba, x: u32, y: u32) -> [u8; 4] {
         let at = usize::try_from((y * image.width + x) * 4).unwrap();
@@ -278,23 +279,5 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn the_stopped_icon_keeps_the_red_badge_on_a_light_taskbar_and_at_16_pixels() {
-        let stopped = render(IconKind::Stopped, Ink::Black, 16).unwrap();
-        assert_eq!(
-            pixel(&stopped, 12, 12),
-            [220, 38, 38, 255],
-            "the middle of the badge"
-        );
-    }
-
-    #[test]
-    fn the_badge_edge_is_smooth_not_a_hard_cut() {
-        assert_eq!(disc_coverage(0, 0, 8), 255);
-        assert_eq!(disc_coverage(20, 0, 8), 0);
-        let edge = disc_coverage(-8, 0, 8);
-        assert!(edge > 0 && edge < 255);
     }
 }

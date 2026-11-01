@@ -2,6 +2,8 @@
 //! `agents.reapMs` is closed as done through the board's locked write, with a note; agents without
 //! a transcript are never closed, a sleep gap between polls skips the poll. Ported from
 //! `agents.reaper.test.mjs`.
+//! K1: when a quiet agent is closed and when it is kept.
+// test-tag: critical
 
 use argus_agents::fakes::{
     JsonBoards, RecordingActivity, agent_record, board_json, thread_record, touch, user_line,

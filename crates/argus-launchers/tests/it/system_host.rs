@@ -2,6 +2,9 @@
 //! to the spawned pid. Only harmless commands run (echo, ping, a node script that ignores the
 //! polite signal) and every test kills what it spawned, by pid, in a guard that also runs when an
 //! assertion fails. The stubborn-process case ports `runs.kill.test.mjs`.
+//!
+//! Keep rule: E2.
+// test-tag: e2e
 #![cfg(windows)]
 
 use std::os::windows::process::CommandExt;
@@ -129,6 +132,7 @@ fn child_ping(shell: u32) -> Option<u32> {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn a_hidden_echo_exits_zero_and_logs_its_output() {
     let real = real(vec![def("hello", "echo hi")]);
     let run = start(&real, "hello");
@@ -139,6 +143,7 @@ async fn a_hidden_echo_exits_zero_and_logs_its_output() {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn a_command_the_shell_cannot_find_fails_with_a_message_on_stderr() {
     let real = real(vec![def("nope", "definitely-not-a-command-xyz")]);
     let run = start(&real, "nope");
@@ -149,6 +154,7 @@ async fn a_command_the_shell_cannot_find_fails_with_a_message_on_stderr() {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn the_run_sees_its_names_and_its_definition_env() {
     let mut hello = def(
         "envy",
@@ -180,6 +186,7 @@ async fn gone((shell, ping): (u32, u32)) {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn stop_kills_the_shell_and_the_process_under_it_and_nothing_else() {
     let (real, rid, pids, _reaper) = ping_tree().await;
     assert!(SystemHost.is_alive(pids.0) && SystemHost.is_alive(pids.1));
@@ -192,6 +199,7 @@ async fn stop_kills_the_shell_and_the_process_under_it_and_nothing_else() {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn shutdown_ends_a_hidden_run_and_leaves_no_process() {
     let (real, rid, pids, _reaper) = ping_tree().await;
     real.svc.shutdown().await;
@@ -213,6 +221,7 @@ fn orphan_row(real: &Real, pid: u32) {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn an_orphan_shell_is_found_alive_and_stop_kills_it() {
     let shell = detached("cmd.exe", &["/d", "/s", "/c", "ping -n 60 127.0.0.1 >nul"]);
     let _reaper = Reaper(vec![shell]);
@@ -232,6 +241,7 @@ async fn an_orphan_shell_is_found_alive_and_stop_kills_it() {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn a_recycled_pid_that_is_not_a_cmd_shell_is_never_killed() {
     let plain = detached("ping.exe", &["-n", "60", "127.0.0.1"]);
     let _reaper = Reaper(vec![plain]);
@@ -244,6 +254,7 @@ async fn a_recycled_pid_that_is_not_a_cmd_shell_is_never_killed() {
 }
 
 #[tokio::test]
+#[ignore = "e2e"]
 async fn a_process_that_ignores_the_polite_signal_is_ended_by_the_forced_kill() {
     let scripts = TempDir::new().unwrap();
     let script = scripts.path().join("stubborn.cjs");

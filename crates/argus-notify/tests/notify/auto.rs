@@ -1,4 +1,6 @@
 //! The automatic pings: a build handed and a question asked, and their de-duplication.
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_notify::{
     AutoConfig, BoardFacts, Bundle, By, EntryFact, Level, NotifyConfig, TestFact, ToastState, iso,

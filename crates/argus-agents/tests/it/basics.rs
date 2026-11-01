@@ -1,5 +1,7 @@
 //! The small building blocks: ISO time, one-line clips, edit lists, config reading, the file
 //! system, and the choice of the thread to wake.
+//! K1: the rules of ISO time, clip, edit lists, stamps, ids, config and the wake target.
+// test-tag: critical
 
 use argus_agents::fakes::{board_json, thread_record};
 use argus_agents::iso::{format_iso, parse_iso};

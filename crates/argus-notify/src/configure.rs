@@ -1,4 +1,5 @@
 //! Changing the per-level settings from the owner's page.
+// test-tag: critical
 
 use crate::config::NotifyConfig;
 use crate::level::{Level, PerLevel};

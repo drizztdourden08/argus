@@ -1,6 +1,7 @@
 //! electron-builder's `latest.yml`, read as lines: the version it names, and a copy whose file
 //! urls point into a version folder. Only the `url` and `path` lines change; the hashes, sizes
 //! and notes stay as electron-builder wrote them.
+// test-tag: critical
 
 fn unquote(value: &str) -> (&str, &str) {
     for quote in ["'", "\""] {

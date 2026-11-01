@@ -63,6 +63,7 @@ pub fn parse_rules_file(text: &str) -> Result<Vec<Rule>, String> {
     checked_rules(list).map_err(|e| format!("{RULES_FILE}: {e}"))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

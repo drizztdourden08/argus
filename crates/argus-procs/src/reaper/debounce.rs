@@ -38,6 +38,7 @@ impl WakeDebounce {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

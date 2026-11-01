@@ -3,6 +3,8 @@
 //! leaves on its record, and how a hand-made record finds its hook record. The pure part of
 //! `hook.transcript`, `hook.agents.claudeid`, `hook.agents` and `hook.agents.binding`; the cases
 //! that run the Node hook script in a child process belong to the coord port.
+//! K1: transcript paths, launched ids, the close of a record and the hook binding.
+// test-tag: critical
 
 use argus_agents::StdFs;
 use argus_agents::fakes::{assistant_line, text_block};

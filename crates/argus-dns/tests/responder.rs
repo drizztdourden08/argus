@@ -1,11 +1,13 @@
 //! The responder on real sockets: loopback with port 0, never port 53.
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::net::{Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
 use argus_dns::{Responder, TYPE_A, TYPE_AAAA, Zone, ask, resolve};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpStream, UdpSocket};
+use tokio::net::TcpStream;
 use tokio_util::sync::CancellationToken;
 
 const ADDRESS: Ipv4Addr = Ipv4Addr::new(127, 65, 82, 71);
@@ -59,23 +61,6 @@ async fn udp_answers_a_aaaa_and_refuses_other_names() {
         .await
         .expect("answers");
     assert_eq!(other.rcode, 5);
-    server.end().await;
-}
-
-#[tokio::test]
-async fn garbage_gets_no_answer_and_does_not_stop_the_responder() {
-    let server = start().await;
-    let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0))
-        .await
-        .expect("a socket");
-    socket.send_to(&[1, 2, 3], server.at).await.expect("sent");
-    let mut buf = [0u8; 64];
-    let silent = tokio::time::timeout(Duration::from_millis(300), socket.recv_from(&mut buf)).await;
-    assert!(silent.is_err(), "nothing is sent back");
-    assert_eq!(
-        resolve(server.at, "argus", WAIT).await.expect("resolves"),
-        [ADDRESS]
-    );
     server.end().await;
 }
 

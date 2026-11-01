@@ -1,6 +1,7 @@
 //! The doc stream of one scope, read from a server for a few seconds: the snapshot frames, one
 //! per collection, and the `ready` frame that ends them. Only these are compared; the `changes`
 //! frames that follow are live and belong to one server's own history.
+// test-tag: critical
 
 use std::time::Duration;
 

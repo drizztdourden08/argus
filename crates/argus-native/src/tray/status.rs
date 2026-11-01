@@ -1,4 +1,5 @@
 //! `argus tray status`: whether the tray runs and whether the owner closed the dashboard from it.
+// test-tag: critical
 
 use super::paths::TrayFiles;
 use super::quit_flag::{self, Boot};

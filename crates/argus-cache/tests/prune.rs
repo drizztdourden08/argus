@@ -1,4 +1,6 @@
 //! The prune rule of the contract on temporary cache roots and temporary project folders.
+//! Keep rule: K1, S2.
+// test-tag: standard
 
 mod rig;
 

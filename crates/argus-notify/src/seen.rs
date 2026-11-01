@@ -1,4 +1,5 @@
 //! The markers of what the owner was already told, kept in kv `notify:seen`.
+// test-tag: critical
 
 use std::collections::BTreeMap;
 

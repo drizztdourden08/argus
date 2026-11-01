@@ -1,4 +1,5 @@
 //! Times for the protocol files: milliseconds since the epoch, and ISO 8601 text in UTC.
+// test-tag: critical
 
 use std::time::{SystemTime, UNIX_EPOCH};
 

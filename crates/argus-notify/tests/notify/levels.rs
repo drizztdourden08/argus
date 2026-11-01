@@ -1,4 +1,6 @@
 //! Levels, config switches, a failing toast, and the activity lines.
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_native::NotifyError;
 use argus_notify::{ActivityLevel, By, Level, NotifyConfig, PingRequest, ToastState};

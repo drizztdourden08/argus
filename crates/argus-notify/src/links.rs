@@ -2,6 +2,7 @@
 //! follow the one link rule of `argus_core::page_url`: the `.localhost` names while the server's
 //! localhost door is bound, else `http://127.0.0.1:<port>`. The local names (`http://rotp.argus/`)
 //! are used only when the owner opted into them and the localhost door is not bound.
+// test-tag: critical
 
 use argus_core::names::Door;
 use argus_core::page_url::{OVERVIEW_LABEL, page_at};
