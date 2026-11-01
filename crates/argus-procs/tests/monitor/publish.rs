@@ -17,8 +17,8 @@ fn harness() -> Harness {
 
 fn one(cpu: i64, mem: u64) -> Vec<ProcRow> {
     vec![proc(Spec {
-        cpu,
         mem,
+        cpu,
         ..Spec::new(701)
     })]
 }

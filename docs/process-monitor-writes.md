@@ -15,7 +15,7 @@ These fields move on every tick by nature, so they are left out of the compariso
 
 - `cpuPct`, `memMB`, `ageMin` and `idleMin` of a row: the page shows them, but a number that
   drifts is not news. Anything they cause that matters shows in `status` or `flags`, which are compared.
-- `sampledAt` and `tookMs` of the meta.
+- `sampledAt`, `tookMs`, `totalMemMB` and each rule's `memMB` of the meta.
 
 Everything else counts: a row added or gone, status, flags, the parent, the rule, the
 protection, the per-rule counts, the rules, the platform and the error.

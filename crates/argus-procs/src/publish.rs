@@ -30,6 +30,10 @@ fn steady_doc(mut doc: ProcDoc) -> ProcDoc {
 fn steady_meta(mut meta: Meta) -> Meta {
     meta.sampled_at = None;
     meta.took_ms = None;
+    meta.total_mem_mb = 0;
+    for rule in &mut meta.by_rule {
+        rule.mem_mb = 0;
+    }
     meta
 }
 

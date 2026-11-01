@@ -349,7 +349,7 @@ fn the_summary_counts_the_rows_by_status_and_reports_each_rule() {
     assert_eq!((meta.count, meta.gone), (5, 1));
     assert_eq!(
         (meta.many_at, meta.too_many, meta.scan_ms),
-        (12, false, 600_000)
+        (12, false, 1_800_000)
     );
     let by: Vec<(&str, usize)> = meta
         .by_status

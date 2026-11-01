@@ -312,6 +312,7 @@ impl Scanner<'_, '_> {
 
 /// Scan every rule. A path two rules reach is listed once, for the first rule. A stored rule with a wildcard path is
 /// invalid: no candidates, no leftovers, reported as `invalid: wildcard path`.
+#[cfg(test)]
 pub fn scan_rules(rules: &[Rule], env: &ScanEnv<'_>) -> ScanResult {
     scan_rules_with(rules, env, None)
 }
