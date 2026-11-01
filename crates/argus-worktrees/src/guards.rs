@@ -147,6 +147,18 @@ pub fn short_cmd(cmd: &str) -> String {
         .collect()
 }
 
+/// Why a fact is outside its rule. A repo rule names only what git lists, so a folder git does not list gets the way to cover it.
+fn outside_text(rule: &Rule, fact: &Fact) -> String {
+    if rule.kind == RuleKind::Repo && fact.repo.is_none() {
+        let parent = parent_of(&fact.path);
+        return format!(
+            "{} is not a worktree that git lists for {} (rule {} is a repo rule): a folder rule on its parent (coord worktree rule add {parent}/) covers leftovers",
+            fact.path, rule.path, rule.id
+        );
+    }
+    format!("{} is outside the project's worktree rules", fact.path)
+}
+
 impl Service {
     /// The rule a fact belongs to, and that it really is under it.
     pub(crate) fn rule_of(&self, board: &BoardFacts, fact: &Fact) -> Result<Rule> {
@@ -181,10 +193,7 @@ impl Service {
         if under {
             Ok(rule.clone())
         } else {
-            Err(forbidden(format!(
-                "{} is outside the project's worktree rules",
-                fact.path
-            )))
+            Err(forbidden(outside_text(rule, fact)))
         }
     }
 
@@ -375,6 +384,22 @@ mod tests {
                 .unwrap()
                 .contains("not under a folder rule")
         );
+    }
+
+    #[test]
+    fn a_folder_under_a_repo_rule_that_git_does_not_list_says_how_to_cover_it() {
+        let repo = Rule::folder("W-4", "X:/Bxel", "lead").repo();
+        let mut fact = crate::fact::blank_fact("X:/Bxel/leftovers/old", &repo, false);
+        let message = outside_text(&repo, &fact);
+        assert_eq!(
+            message,
+            "X:/Bxel/leftovers/old is not a worktree that git lists for X:/Bxel (rule W-4 is a repo rule): a folder rule on its parent (coord worktree rule add X:/Bxel/leftovers/) covers leftovers"
+        );
+        fact.repo = Some("X:/Other".to_string());
+        assert!(outside_text(&repo, &fact).ends_with("is outside the project's worktree rules"));
+        let folder = r1();
+        fact.repo = None;
+        assert!(outside_text(&folder, &fact).ends_with("is outside the project's worktree rules"));
     }
 
     #[test]
