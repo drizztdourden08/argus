@@ -17,7 +17,8 @@ import { OpenThreadContext } from './shared';
 import { useTabBadges, withBadges } from './tab-badges';
 import { ThreadDrawer } from './ThreadDrawer';
 import type { BoardPageProps } from './board.type';
-import { KanbanPurge, useTrashCount } from './tabs/kanban';
+import { useTrashCount } from './tabs/kanban/behavior/useTrashCount';
+import { KanbanPurge } from './tabs/kanban/sub-components/KanbanPurge';
 
 const BoardPage = (props: BoardPageProps) => {
   const { boardKey } = props;

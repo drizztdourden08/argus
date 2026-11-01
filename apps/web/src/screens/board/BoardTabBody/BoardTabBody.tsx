@@ -1,27 +1,22 @@
 /* @layer renderer-app @kind component */
-import { ActivityTab } from '../tabs/activity';
-import { AgentsTab } from '../tabs/agents';
-import { BuildsTab } from '../tabs/builds';
-import { ChangesTab } from '../tabs/changes';
-import { KanbanTab } from '../tabs/kanban';
-import { ReleasesTab } from '../tabs/releases';
-import { TestsTab } from '../tabs/tests';
-import { WorktreesTab } from '../tabs/worktrees';
+import { Suspense } from 'react';
+import { LoadingFallback } from '../../../shell';
 import type { BoardTabBodyProps } from './BoardTabBody.type';
+import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanbanTab, LazyReleasesTab, LazyTestsTab, LazyWorktreesTab } from './lazy-tabs';
 
 const BoardTabBody = (props: BoardTabBodyProps) => {
   const { tab, boardKey, work, handed, more } = props;
   return (
-    <>
-      {tab === 'agents' && <AgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
-      {tab === 'activity' && <ActivityTab boardKey={boardKey} work={work} handed={handed} />}
-      {tab === 'kanban' && <KanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
-      {tab === 'tests' && <TestsTab boardKey={boardKey} />}
-      {tab === 'builds' && <BuildsTab boardKey={boardKey} />}
-      {tab === 'worktrees' && <WorktreesTab boardKey={boardKey} />}
-      {tab === 'changes' && <ChangesTab boardKey={boardKey} />}
-      {tab === 'releases' && <ReleasesTab boardKey={boardKey} />}
-    </>
+    <Suspense fallback={<LoadingFallback />}>
+      {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
+      {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} handed={handed} />}
+      {tab === 'kanban' && <LazyKanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
+      {tab === 'tests' && <LazyTestsTab boardKey={boardKey} />}
+      {tab === 'builds' && <LazyBuildsTab boardKey={boardKey} />}
+      {tab === 'worktrees' && <LazyWorktreesTab boardKey={boardKey} />}
+      {tab === 'changes' && <LazyChangesTab boardKey={boardKey} />}
+      {tab === 'releases' && <LazyReleasesTab boardKey={boardKey} />}
+    </Suspense>
   );
 };
 

@@ -1,0 +1,9 @@
+/* @layer renderer-app @kind barrel */
+export { LazyActivityTab } from './activity-tab';
+export { LazyAgentsTab } from './agents-tab';
+export { LazyBuildsTab } from './builds-tab';
+export { LazyChangesTab } from './changes-tab';
+export { LazyKanbanTab } from './kanban-tab';
+export { LazyReleasesTab } from './releases-tab';
+export { LazyTestsTab } from './tests-tab';
+export { LazyWorktreesTab } from './worktrees-tab';

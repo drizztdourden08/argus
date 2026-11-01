@@ -5,7 +5,7 @@ import { useCollection } from '../../../data/react';
 import { useRemoteSyncs } from '../../../data/remote';
 import { ProjectSwitcher, SyncStamp } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
-import { findLead } from '../tabs/agents';
+import { findLead } from '../tabs/agents/model';
 import { BoardNotices } from './sub-components/BoardNotices';
 import { BoardStamp } from './sub-components/BoardStamp';
 import { BoardWorktrees } from './sub-components/BoardWorktrees';

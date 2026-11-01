@@ -7,7 +7,9 @@ import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
 import { BoardFocus } from '../../src/screens/board/BoardFocus';
-import { KanbanPurge, KanbanTab, useTrashCount } from '../../src/screens/board/tabs/kanban';
+import { KanbanTab } from '../../src/screens/board/tabs/kanban';
+import { useTrashCount } from '../../src/screens/board/tabs/kanban/behavior/useTrashCount';
+import { KanbanPurge } from '../../src/screens/board/tabs/kanban/sub-components/KanbanPurge';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
 

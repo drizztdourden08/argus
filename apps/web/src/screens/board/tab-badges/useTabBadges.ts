@@ -5,7 +5,7 @@ import { useCollection } from '../../../data/react';
 import type { Launcher } from '../../../data/types';
 import type { Worktree } from '../../../data/worktrees';
 import type { BoardWork } from '../feed-model';
-import { useTestsBadge } from '../tabs/tests';
+import { useTestsBadge } from '../tabs/tests/behavior/useTestsBadge';
 import { useMinute } from './behavior/useMinute';
 import { boardBadges } from './tab-badges';
 import type { BoardBadges } from './tab-badges.type';

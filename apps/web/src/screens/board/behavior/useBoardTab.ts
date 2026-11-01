@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 import { useHashTab } from '../../../shell';
 import type { HashTab } from '../../../shell';
 import { BOARD_TAB_IDS } from '../board.constants';
-import { itemHash } from '../tabs/kanban';
+import { itemHash } from '../tabs/kanban/model';
 import { anchorTab } from './anchor-tab';
 
 const useBoardTab = (trashOpen: boolean): HashTab => {

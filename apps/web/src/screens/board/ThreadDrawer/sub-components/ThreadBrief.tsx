@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { EditableMarkdown } from '../../shared';
-import { LIMITS, textProblem } from '../../tabs/kanban';
+import { LIMITS, textProblem } from '../../tabs/kanban/model';
 import type { ThreadBriefProps } from '../ThreadDrawer.type';
 import { ThreadSection } from './ThreadSection';
 
