@@ -1,8 +1,8 @@
 //! The registry on in-memory storage with a manual clock and fake boards: the row states (listening,
 //! waking, idle, fault), a reaction seen through `lastSeen` or an acked inbox, the three ways a wake fails
 //! (queued with nobody listening, delivered with no reaction, a write that throws), one fault per thread,
-//! the single wake of the Overlord, a fault that clears itself only when the thread listens again, the re-alert for a deaf thread, and the
-//! page mirror.
+//! the single notice for the Overlord (a passive `wake-fault`, never a wake), a fault that clears itself only
+//! when the thread listens again, the re-alert for a deaf thread, and the page mirror.
 
 use argus_wake::board::InboxMessage;
 use argus_wake::config::WakeConfig;
@@ -255,23 +255,23 @@ fn a_wake_queued_with_nobody_listening_is_waking_then_a_fault_after_no_listener_
 }
 
 #[test]
-fn the_overlord_is_woken_once_when_a_wake_failed() {
+fn the_overlord_is_told_once_with_a_notice_and_never_woken_when_a_wake_failed() {
     let mut rig = rig();
     let mut main = rig.listen("portfolio", "coordinator", AttachOptions::default());
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
-    assert_eq!(main.count(), 1);
-    let event = main.events()[0].clone();
+    assert_eq!(main.count(), 0, "a wake fault is passive: no model turn");
+    assert_eq!(rig.fault_wakes().len(), 1);
+    let notice = rig.fault_wakes()[0].clone();
     assert_eq!(
-        (event.scope.as_str(), event.thread.as_str()),
+        (notice.scope.as_str(), notice.thread.as_str()),
         ("portfolio", "coordinator")
     );
+    assert_eq!(notice.status, WakeStatus::Passive);
     assert_eq!(
-        event.lines[0],
+        notice.text,
         "alpha/ui: no-listener (queued for 65s, nobody listening)"
     );
-    assert_eq!(rig.fault_wakes().len(), 1);
-    assert_eq!(rig.fault_wakes()[0].scope, "portfolio");
 }
 
 #[test]
@@ -404,13 +404,12 @@ fn a_deaf_thread_with_an_open_fault_that_is_sent_another_wake_tells_the_overlord
         2,
         "a new wake after 10 minutes tells the Overlord again"
     );
-    let last = main.events().last().expect("event").clone();
+    let last = rig.fault_wakes().last().expect("notice").clone();
     assert!(
-        last.lines
-            .last()
-            .expect("line")
+        last.text
             .contains("alpha/ui: a new wake is waiting and nobody listens")
     );
+    assert_eq!(main.count(), 0, "told by notices, never woken");
     send(&mut rig, "ui", "fourth");
     rig.pass(5 * SEC, STEP);
     assert_eq!(
@@ -452,7 +451,7 @@ fn only_clear_fault_clears_it_records_who_and_why_and_a_new_failure_opens_a_new_
 }
 
 #[test]
-fn the_fault_of_the_overlord_itself_shows_on_the_page_and_never_wakes_itself() {
+fn a_fault_notice_for_an_overlord_nobody_hears_is_never_queued_so_it_raises_no_fault_of_its_own() {
     let mut rig = rig();
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
@@ -460,14 +459,10 @@ fn the_fault_of_the_overlord_itself_shows_on_the_page_and_never_wakes_itself() {
     let id = rig.fault_wakes()[0].id.clone();
     assert_eq!(
         rig.store.get(&id).expect("read").expect("row").status,
-        WakeStatus::Queued
+        WakeStatus::Passive
     );
     rig.pass(70 * SEC, STEP);
-    assert_eq!(rig.state("portfolio", "coordinator"), Some(RowState::Fault));
-    assert_eq!(
-        fault_doc(&rig, "portfolio", "coordinator")["reason"],
-        "no-listener"
-    );
+    assert_ne!(rig.state("portfolio", "coordinator"), Some(RowState::Fault));
     assert_eq!(
         rig.fault_wakes().len(),
         1,
@@ -477,7 +472,7 @@ fn the_fault_of_the_overlord_itself_shows_on_the_page_and_never_wakes_itself() {
         .iter()
         .map(|f| format!("{}/{}", f.project, f.thread))
         .collect();
-    assert_eq!(open, ["alpha/ui", "portfolio/coordinator"]);
+    assert_eq!(open, ["alpha/ui"]);
 }
 
 #[test]

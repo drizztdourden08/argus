@@ -1,5 +1,6 @@
 //! The four session hooks: `session-start` (JSON context), `prompt` (plain text when adopted,
-//! still a placeholder, or messages wait), `tool` (JSON context when adopted or messages wait)
+//! still a placeholder, messages wait, or board notices came since the last turn: one digest
+//! line, see [`super::notices`]), `tool` (JSON context when adopted or messages wait)
 //! and `stop` (a block with the messages as the reason). Stop marks the thread idle and never
 //! adopts. A call from a sub-agent (its payload has an `agent_id`) hands no messages over, since
 //! they are its lead's; a `tool` call of the thread itself also keeps its wake listener fresh.
@@ -11,6 +12,7 @@ use super::Said;
 use super::context::{context, render};
 use super::ctx::Hook;
 use super::listen::keep_listener;
+use super::notices::notice_line;
 use super::visit::{Hit, Mode, visit};
 use crate::cli::CoordError;
 
@@ -25,7 +27,13 @@ fn session_start(hook: &Hook<'_>, hit: &Hit, project: &str) -> Value {
 
 fn prompt(hook: &Hook<'_>, hit: &Hit, project: &str) -> Option<Value> {
     let speaks = hit.adopted || truthy(&hit.thread, "placeholder") || !hit.fresh.is_empty();
-    speaks.then(|| Value::String(context(hook, hit, project, false)))
+    let base = speaks.then(|| context(hook, hit, project, false));
+    let text = match (base, notice_line(hook, project, hit)) {
+        (Some(base), Some(notices)) => format!("{base}\n{notices}"),
+        (Some(text), None) | (None, Some(text)) => text,
+        (None, None) => return None,
+    };
+    Some(Value::String(text))
 }
 
 fn tool(hook: &Hook<'_>, hit: &Hit, project: &str) -> Option<Value> {

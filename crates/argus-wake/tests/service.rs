@@ -10,11 +10,13 @@ use argus_wake::service::AppliedPost;
 use argus_wake::testkit::{HOUR, MIN, Rig, SEC, Tap, applied, board, failed_run, thread, wake};
 use argus_wake::time::parse_ms;
 use argus_wake::wake::{WakeRow, WakeStatus};
+use argus_wake::wake_policy::WakePolicy;
 use serde_json::{Value, json};
 
 fn config(window_ms: i64) -> WakeConfig {
     WakeConfig {
         window_ms,
+        policy: WakePolicy::off(),
         ..WakeConfig::default()
     }
 }

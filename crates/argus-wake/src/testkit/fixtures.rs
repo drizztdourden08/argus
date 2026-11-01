@@ -11,6 +11,7 @@ use crate::policy::RunView;
 use crate::service::AppliedPost;
 use crate::time::iso;
 use crate::wake::WakeInput;
+use crate::wake_policy::WakePolicy;
 
 /// `2026-10-22T10:00:00.000Z`, where the fake clocks start.
 pub const START: i64 = 1_792_663_200_000;
@@ -98,11 +99,13 @@ pub fn registry_boards(seen_ago_ms: i64) -> [(&'static str, BoardView); 2] {
     ]
 }
 
-/// The registry tests' settings: windows of 0, a delivered wake faults after 120 s, a queued one after 60 s.
+/// The registry tests' settings: windows of 0, no debounce, a delivered wake faults after 120 s, a
+/// queued one after 60 s.
 #[must_use]
 pub fn registry_config() -> WakeConfig {
     let mut config = WakeConfig {
         window_ms: 0,
+        policy: WakePolicy::off(),
         ..WakeConfig::default()
     };
     config.registry.reaction_ms = 120 * SEC;

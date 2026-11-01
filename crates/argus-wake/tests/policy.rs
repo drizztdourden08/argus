@@ -491,13 +491,13 @@ fn a_post_that_was_not_applied_wakes_nobody() {
 }
 
 #[test]
-fn lead_message_thread_message_and_wake_fault_come_only_from_outside_the_policy() {
-    for reason in ["lead-message", "thread-message", "wake-fault"] {
+fn lead_message_lead_info_thread_message_and_wake_fault_come_only_from_outside_the_policy() {
+    for reason in ["lead-message", "lead-info", "thread-message", "wake-fault"] {
         assert!(WAKE_REASONS.contains(&reason));
     }
     assert_eq!(
         EXTERNAL_REASONS,
-        ["lead-message", "thread-message", "wake-fault"]
+        ["lead-message", "lead-info", "thread-message", "wake-fault"]
     );
     assert!(EXTERNAL_REASONS.iter().all(|r| WAKE_REASONS.contains(r)));
     let board = mk_board(vec![manual("T-5", "ui", "b4", "fail")]);

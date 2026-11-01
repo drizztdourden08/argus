@@ -1,6 +1,6 @@
 //! Wake faults end to end, ported from the HTTP side of `wake.faults.test.mjs`: a wake nobody
 //! listens for becomes a fault, mirrored to the `registry` docs and told once to the main
-//! coordinator; the clear route refuses a browser and anyone but the Overlord. The `coord
+//! coordinator as a passive notice (the wake policy never wakes it for a fault); the clear route refuses a browser and anyone but the Overlord. The `coord
 //! wake-fault` verbs stay in the Node `coord` tests until the `coord` port of slice 8.
 mod wake_rig;
 
@@ -14,7 +14,7 @@ use argus_testkit::{
 };
 use serde_json::{Value, json};
 use tempfile::TempDir;
-use wake_rig::{lines, pause, post_wake, wake_stream, wakes};
+use wake_rig::{pause, post_wake, wake_stream, wakes};
 
 const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
 
@@ -78,7 +78,7 @@ async fn faulted() -> Faulted {
     make_home(home.path());
     write_board(home.path(), "alpha", &alpha_threads(home.path()));
     write_board(home.path(), "portfolio", &overlord_board());
-    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 } });
+    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } });
     let t = TestServer::start(TestOptions {
         coord_home: Some(home.path().to_path_buf()),
         config,
@@ -107,7 +107,7 @@ async fn clear(t: &TestServer, body: &Value) -> u16 {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_is_woken_once_per_fault()
+async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_never_a_wake()
  {
     let f = faulted().await;
     let ui = registry_doc(&f.t, "alpha", "ui").expect("the ui row");
@@ -133,23 +133,21 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_is_w
         "alpha"
     );
 
-    let mut heard: Vec<String> = Vec::new();
-    while heard.iter().filter(|l| l.starts_with("alpha/")).count() < 2 {
-        let e = f
-            .main
-            .next(Some("wake"), 5000)
-            .await
-            .expect("the main coordinator heard it");
-        heard.extend(lines(&e.data));
-    }
-    let mut who: Vec<&str> = heard
-        .iter()
-        .filter(|l| l.starts_with("alpha/"))
-        .filter_map(|l| l.split(':').next())
+    let rows: Vec<Value> = wakes(&f.t, "portfolio")
+        .await
+        .into_iter()
+        .filter(|w| w["reason"] == "wake-fault")
         .collect();
+    assert_eq!(rows.len(), 2, "one notice per fault");
+    assert!(
+        rows.iter().all(|w| w["status"] == "passive"),
+        "a wake fault is a notice on the board, never a wake"
+    );
+    let texts: Vec<&str> = rows.iter().filter_map(|w| w["text"].as_str()).collect();
+    let mut who: Vec<&str> = texts.iter().filter_map(|l| l.split(':').next()).collect();
     who.sort_unstable();
     assert_eq!(who, ["alpha/api", "alpha/ui"]);
-    let line = heard
+    let line = texts
         .iter()
         .find(|l| l.starts_with("alpha/ui"))
         .expect("the ui line");
@@ -158,13 +156,21 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_is_w
         "{line}"
     );
     assert!(line.ends_with("s, nobody listening)"), "{line}");
-    assert_eq!(f.main.queued(), 0, "once per fault");
-    let rows: Vec<Value> = wakes(&f.t, "portfolio")
-        .await
-        .into_iter()
-        .filter(|w| w["reason"] == "wake-fault")
-        .collect();
-    assert_eq!(rows.len(), 2);
+    assert_eq!(f.main.queued(), 0, "the main coordinator was not woken");
+    let digest =
+        f.t.get("/api/p/portfolio/wakes/notices?thread=coordinator")
+            .await
+            .json();
+    assert_eq!(digest["count"], 2);
+    assert_eq!(
+        digest["kinds"],
+        json!([{ "reason": "wake-fault", "count": 2 }])
+    );
+    assert!(
+        digest["line"]
+            .as_str()
+            .is_some_and(|l| l.starts_with("Board notices since your last turn: 2 (wake-fault 2)."))
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
