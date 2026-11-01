@@ -76,7 +76,7 @@ pub(crate) fn build(_svc: &Services, opts: &ServeOptions) -> Option<Arc<CacheSer
 }
 
 pub(crate) fn start(svc: &Arc<Services>) {
-    if svc.cache.is_some() && svc.tasks.cache_timer && !svc.shadow {
+    if svc.cache.is_some() && svc.tasks.runs(crate::services::tasks::Timer::Cache) && !svc.shadow {
         timer::start(svc);
     }
 }

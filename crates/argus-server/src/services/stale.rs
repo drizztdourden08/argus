@@ -76,7 +76,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     if let Some(stale) = svc
         .launcher_stale
         .as_ref()
-        .filter(|_| svc.tasks.stale_timer)
+        .filter(|_| svc.tasks.runs(crate::services::tasks::Timer::Stale))
     {
         svc.tasks.keep(TASK, stale.start());
     }

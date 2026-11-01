@@ -123,7 +123,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     }
     let (asked, scans) = unbounded_channel();
     watch::watch(svc, asked);
-    if svc.tasks.worktree_timers {
+    if svc.tasks.runs(crate::services::tasks::Timer::Worktrees) {
         timers::start(svc, &service, config::timing_of(svc), scans);
     }
 }

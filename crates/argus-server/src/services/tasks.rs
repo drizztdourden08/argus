@@ -8,24 +8,46 @@ use tokio::task::JoinHandle;
 
 use crate::ServeOptions;
 
-/// Whether the timers of the launcher wakes, the wake engine, the worktree scanner and the build cache prune run, and their tasks.
+/// A background timer the options can switch off.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Timer {
+    /// The launcher wakes.
+    Stale,
+    /// The worktree scanner.
+    Worktrees,
+    /// The wake engine.
+    Wake,
+    /// The build cache prune.
+    Cache,
+}
+
+/// Which timers run, and their tasks.
 pub(crate) struct Tasks {
-    pub stale_timer: bool,
-    pub worktree_timers: bool,
-    pub wake_timer: bool,
-    pub cache_timer: bool,
+    timers: Vec<Timer>,
     handles: Mutex<HashMap<&'static str, Vec<JoinHandle<()>>>>,
 }
 
 impl Tasks {
     pub(crate) fn new(opts: &ServeOptions) -> Self {
+        let switches = [
+            (Timer::Stale, opts.run_service.stale_timer),
+            (Timer::Worktrees, opts.worktrees.timers),
+            (Timer::Wake, opts.wake.timer),
+            (Timer::Cache, opts.cache.timers),
+        ];
         Tasks {
-            stale_timer: opts.run_service.stale_timer,
-            worktree_timers: opts.worktrees.timers,
-            wake_timer: opts.wake.timer,
-            cache_timer: opts.cache.timers,
+            timers: switches
+                .into_iter()
+                .filter(|(_, on)| *on)
+                .map(|(t, _)| t)
+                .collect(),
             handles: Mutex::default(),
         }
+    }
+
+    /// Whether `timer` runs.
+    pub(crate) fn runs(&self, timer: Timer) -> bool {
+        self.timers.contains(&timer)
     }
 
     /// Keeps a task of `service` to end it with [`Tasks::abort`].

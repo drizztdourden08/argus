@@ -95,7 +95,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
         return;
     };
     lock(wake).start();
-    if svc.tasks.wake_timer {
+    if svc.tasks.runs(crate::services::tasks::Timer::Wake) {
         let driver = driver::spawn(Arc::clone(wake));
         let stop = svc.stop.clone();
         tokio::spawn(async move {
