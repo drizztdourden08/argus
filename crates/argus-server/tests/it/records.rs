@@ -2,7 +2,7 @@
 //! temp localpkg home: the switch and the replay counts, the release API, the update feed
 //! (ranges, types, refusals, the feed host), the check runs with numbers that survive a
 //! restart, their logs, and the registry. Never the real `~/.coord`, never port 80 or 47615.
-//! K2, K3, K4: the local remote, the release feed, the check runs and the registry over HTTP; the Node status script is in records_node.rs.
+//! K2, K3, K4: the local remote, the release feed, the check runs and the registry over HTTP; the Node status script is in `records_node.rs`.
 // test-tag: standard
 
 use std::fs;

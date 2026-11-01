@@ -1,7 +1,7 @@
 //! The local names in the server: the DNS responder and the front door on a loopback address of
 //! their own, off by default. Every socket is on port 0 (never 53, 80, 47615 or 47616), and the
 //! address is not the default one, so a running Argus of the owner is never in the way.
-//! K2, K4, S3: the responder, the front door and its host refusals on sockets of port 0; the pure host rules are in local_names_rules.rs.
+//! K2, K4, S3: the responder, the front door and its host refusals on sockets of port 0; the pure host rules are in `local_names_rules.rs`.
 // test-tag: standard
 
 use std::net::{Ipv4Addr, SocketAddr};

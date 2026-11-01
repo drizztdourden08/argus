@@ -1,5 +1,5 @@
 //! `notify_owner`: it speaks to the owner and does not post as him.
-//! K2, K4: notify_owner speaks to the owner and refuses bad arguments.
+//! K2, K4: `notify_owner` speaks to the owner and refuses bad arguments.
 // test-tag: critical
 
 use argus_mcp::{CallContext, MemoryBackend};

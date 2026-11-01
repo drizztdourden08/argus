@@ -1,7 +1,7 @@
 //! The localhost door: a second listener on `127.0.0.1` that serves the app for
 //! `<key>.localhost`, independent of the local names. Every socket here is on port 0 (never 80,
 //! 53 or 47615); the port-80 form of the Host is covered by the pure rules at the end.
-//! K2, K4, S3: the localhost door on a socket of port 0; the pure rules are in localhost_door_rules.rs.
+//! K2, K4, S3: the localhost door on a socket of port 0; the pure rules are in `localhost_door_rules.rs`.
 // test-tag: standard
 
 use std::net::{Ipv4Addr, SocketAddr};
