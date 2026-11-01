@@ -13,6 +13,7 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
+use crate::guards::is_brock_lock;
 use crate::inspect::{ScanCtx, inspect_dir};
 use crate::leftover_remove::{Within, git_within, unreadable_refusal};
 use crate::modules::NodeModules;
@@ -225,7 +226,10 @@ impl Service {
         crate::guards::check_caller(&board, &input.caller, &Self::caller_rules(&board, rule))?;
         let rule = self.rule_of(&board, &fact)?;
         self.assert_not_main(&fact)?;
-        Self::assert_not_locked(&fact)?;
+        Self::assert_not_locked(
+            &fact,
+            fact.leftover.is_none() && fact.exists && !input.prune,
+        )?;
         if input.job.is_some() && fact.leftover.is_none() {
             return Err(WtError::new(
                 ErrorCode::Conflict,
@@ -260,10 +264,18 @@ impl Service {
                 ),
             );
         }
+        let no_rule = if rules.is_empty() {
+            format!(
+                "; {} has no valid worktree rule, so Argus lists nothing there: add one first (coord worktree rule add <folder>, with --kind repo for a repository)",
+                input.project
+            )
+        } else {
+            String::new()
+        };
         WtError::new(
             ErrorCode::NotFound,
             format!(
-                "{} is not in the live listing of {} (coord worktree list): Argus only removes what it lists",
+                "{} is not in the live listing of {} (coord worktree list): Argus only removes what it lists{no_rule}",
                 input.id.trim(),
                 input.project
             ),
@@ -364,7 +376,7 @@ impl Service {
             now.repo.clone_from(&fact.repo);
         }
         self.assert_not_main(&now)?;
-        Self::assert_not_locked(&now)?;
+        Self::assert_not_locked(&now, true)?;
         if !now.registered {
             return Err(forbidden(format!(
                 "{} is not a linked worktree its repository lists: Argus never removes it",
@@ -455,6 +467,7 @@ impl Service {
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
         let modules = self.clear_ignored_node_modules(&now);
         self.drop_links_before_git(&now, backup.as_ref(), modules)?;
+        self.lift_brock_lock(&now, backup.as_ref())?;
         let run = self.git_remove(&now)?;
         let discarded = (!safety.safe || plan.force).then_some(Discarded {
             dirty: now.dirty,
@@ -472,6 +485,30 @@ impl Service {
             return self.git_could_not(&finish, backup, discarded);
         }
         Ok(self.removed(&finish, backup, discarded))
+    }
+
+    /// Brock git-locks its clones. When every link is gone and the lock reason (read just now from `git worktree list`)
+    /// is Brock's, the lock is lifted so `git worktree remove` can run. Any other lock was refused earlier.
+    fn lift_brock_lock(&self, now: &Fact, backup: Option<&Backup>) -> Result<()> {
+        if !now.locked.as_deref().is_some_and(is_brock_lock) {
+            return Ok(());
+        }
+        let run = self
+            .deps
+            .git
+            .write(Self::git_repo(now)?, &["worktree", "unlock", &now.path]);
+        if run.ok() {
+            return Ok(());
+        }
+        Err(WtError::new(
+            ErrorCode::GitFailed,
+            format!(
+                "git worktree unlock failed for {}: {}; nothing was removed",
+                now.path,
+                run.failure_text()
+            ),
+        )
+        .with_backup(backup.cloned()))
     }
 
     /// `git worktree remove` (`--force` only for uncommitted changes the caller discards).

@@ -12,6 +12,15 @@ use crate::service::Service;
 /// How long one sample of the machine's processes serves a batch.
 const PROCS_FRESH_MS: i64 = 10_000;
 
+/// Brock locks every clone it makes with a reason that starts with this text. A lock with any other reason was set by
+/// a person or another tool and keeps the worktree.
+const BROCK_LOCK: &str = "cloned node_modules";
+
+/// Is this lock reason Brock's?
+pub(crate) fn is_brock_lock(reason: &str) -> bool {
+    reason.starts_with(BROCK_LOCK)
+}
+
 /// A command line holding `worktree remove|prune` is the request itself (and the shell that runs it): not a user of the folder.
 pub fn is_requester(cmd: &str) -> bool {
     let lower = cmd.to_lowercase();
@@ -200,14 +209,14 @@ impl Service {
         Ok(())
     }
 
-    /// Never a locked worktree.
-    pub(crate) fn assert_not_locked(fact: &Fact) -> Result<()> {
+    /// Never a locked worktree. The one lock Argus lifts itself is Brock's (see [`is_brock_lock`]), and only for a removal.
+    pub(crate) fn assert_not_locked(fact: &Fact, removing: bool) -> Result<()> {
         match &fact.locked {
-            Some(reason) => Err(forbidden(format!(
+            Some(reason) if !(removing && is_brock_lock(reason)) => Err(forbidden(format!(
                 "{} is locked ({reason}): unlock it first (git worktree unlock), Argus never removes a locked worktree",
                 fact.path
             ))),
-            None => Ok(()),
+            _ => Ok(()),
         }
     }
 

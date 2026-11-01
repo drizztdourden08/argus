@@ -46,6 +46,7 @@ fn worktree_write_ok(rest: &[&str]) -> bool {
             let forced = rest.len() == 3 && rest[1] == "--force" && !rest[2].starts_with('-');
             plain || forced
         }
+        Some(&"unlock") => rest.len() == 2 && !rest[1].starts_with('-'),
         Some(&"prune") => rest.len() == 1 || rest == ["prune", "--dry-run", "--verbose"],
         _ => false,
     }
@@ -169,11 +170,12 @@ mod tests {
     #[test]
     fn the_write_door_allows_only_the_removals_own_commands() {
         let sha = "0123456789abcdef0123456789abcdef01234567";
-        let ok: [&[&str]; 11] = [
+        let ok: [&[&str]; 12] = [
             &["worktree", "remove", "X:/w"],
             &["worktree", "remove", "--force", "X:/w"],
             &["worktree", "prune"],
             &["worktree", "prune", "--dry-run", "--verbose"],
+            &["worktree", "unlock", "X:/w"],
             &["update-ref", "-d", "refs/heads/b", sha],
             &["bundle", "create", "f", "b", "--not", "--remotes"],
             &["bundle", "verify", "f"],
@@ -185,7 +187,10 @@ mod tests {
         for args in ok {
             assert!(assert_write_ok(args).is_ok(), "{args:?}");
         }
-        let bad: [&[&str]; 20] = [
+        let bad: [&[&str]; 23] = [
+            &["worktree", "unlock"],
+            &["worktree", "unlock", "--force", "X:/w"],
+            &["worktree", "lock", "X:/w"],
             &["worktree", "remove", "--force", "--force", "X:/w"],
             &["worktree", "add", "x"],
             &["branch", "-D", "b"],

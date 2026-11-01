@@ -778,3 +778,57 @@ fn the_page_keeps_its_own_stronger_confirm_whatever_age_it_asks_for_and_the_serv
     assert_eq!(job_names(&out), ["age-9d"]);
     c.idle();
 }
+
+fn lock_old_merged(reason: &'static str) -> impl FnOnce(&Fixture) {
+    move |fx| {
+        fx.git(&[
+            "worktree",
+            "lock",
+            "--reason",
+            reason,
+            &fx.path("old-merged"),
+        ]);
+    }
+}
+
+fn unlock_calls(s: &Shape) -> usize {
+    s.h.exec
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|c| c.starts_with(&["worktree".to_string(), "unlock".to_string()]))
+        .count()
+}
+
+#[test]
+fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_target_is_touched() {
+    let s = shape(
+        RemoveMode::Real,
+        lock_old_merged("cloned node_modules from main (brock)"),
+    );
+    let out =
+        s.h.rm_with(&s.id("old-merged"), |i| i.branch = true)
+            .unwrap();
+    assert!(out.removed, "{}", out.text);
+    s.h.idle();
+    assert!(!listed(&s.fx.repo).contains(&"old-merged".to_string()));
+    assert!(
+        !exists_itself(&s.fx.path("old-merged")),
+        "the folder is gone"
+    );
+    s.keeps_survive();
+    assert_eq!(unlock_calls(&s), 1);
+}
+
+#[test]
+fn a_worktree_locked_for_another_reason_is_refused_and_stays_with_its_links() {
+    let s = shape(RemoveMode::Real, lock_old_merged("kept for the demo"));
+    let err = s.h.refused(&s.id("old-merged"), |_| {});
+    assert_eq!(err.code, ErrorCode::Forbidden);
+    assert!(err.message.contains("is locked (kept for the demo)"));
+    assert!(listed(&s.fx.repo).contains(&"old-merged".to_string()));
+    assert!(exists_itself(&s.fx.path("old-merged")));
+    assert_eq!(unlock_calls(&s), 0);
+    s.keeps_survive();
+}
