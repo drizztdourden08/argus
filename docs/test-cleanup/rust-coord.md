@@ -12,8 +12,8 @@ also carries `#[ignore = "e2e"]`.
 |---|---|---|---|---|---|---|---|
 | argus-core | 11 | 47 | 10 | 38 | 38 | 0 | 0 |
 | argus-board | 8 | 53 | 8 | 46 | 46 | 0 | 0 |
-| argus-coord | 50 | 437 | 58 | 415 | 300 | 42 | 73 |
-| total | 69 | 537 | 76 | 499 | 384 | 42 | 73 |
+| argus-coord | 50 | 437 | 58 | 419 | 300 | 46 | 73 |
+| total | 69 | 537 | 76 | 503 | 384 | 46 | 73 |
 
 Before and after come from a scan of the base commit (3a35cac) and of this branch. Cases that moved
 to a split file count in the new file, so a "trim" row can show fewer cases than it lost.
@@ -45,8 +45,7 @@ to a split file count in the new file, so a "trim" row can show fewer cases than
 
 `Rig::checkout`, `Rig::put`, `Rig::threads`, `Rig::board` and the constant `WORKER` in
 `argus-coord/tests/it/remote/mod.rs` (no test uses them any more), the `Trickle` reader in
-`client.rs`, and the helpers of the deleted wake-fault cases (`faults`, `faulted`, `as_session`,
-`clear`). The module-level `#![allow(dead_code)]` of `remote/mod.rs` and `hook_support/mod.rs` was
+`client.rs`. The module-level `#![allow(dead_code)]` of `remote/mod.rs` and `hook_support/mod.rs` was
 left, because a shared module can only be proven clean by a compile.
 
 ## W7 (sleeps, real clocks, timing)
@@ -60,8 +59,13 @@ Made deterministic:
 - `argus-core` `fs.rs`: the rename retry pause is 0 ms under `cfg!(test)`, so the retry cases take no
   real time.
 
-Deleted: the client timeout case (a real 1 s timeout), the board lock "runs once released" case
-(150 ms sleep), and the four wake-fault cases whose fixture polls a real server tick for up to 10 s.
+Deleted: the client timeout case (a real 1 s timeout) and the board lock "runs once released" case
+(150 ms sleep).
+
+Restored (I-54): the four wake-fault cases of `wake_faults_cli.rs`, among them the K4 refusal of a
+clear for everyone but the Overlord. Their fixture polled the real wake tick for up to 10 s; it now
+starts the server with `TestOptions::manual_wakes`, so the wake timer is off and the engine runs on a
+manual clock that the test moves with `advance_wakes(ms)`. No sleep, no poll.
 
 Left on purpose, all in e2e files: the node stub polls of `hook_autostart.rs`, the parent-gone poll
 of `hook_listen_process.rs`, the real run scripts of `runs_cli_run.rs`.
@@ -142,7 +146,7 @@ of `hook_listen_process.rs`, the real run scripts of `runs_cli_run.rs`.
 | argus-coord/tests/it/thread_diff.rs | keep | E3 | e2e | 9 | 9 |
 | argus-coord/tests/it/thread_diff_records.rs | keep | E3 | e2e | 2 | 2 |
 | argus-coord/tests/it/thread_verbs.rs | keep | K2 | critical | 15 | 15 |
-| argus-coord/tests/it/wake_faults_cli.rs | trim | K2 | standard | 5 | 1 |
+| argus-coord/tests/it/wake_faults_cli.rs | keep | K2, K4 | standard | 5 | 5 |
 | argus-coord/tests/it/work_differential.rs | keep | E3 | e2e | 14 | 14 |
 | argus-coord/tests/it/work_inbox.rs | keep | S2 | standard | 4 | 4 |
 | argus-coord/tests/it/worktree_verbs.rs | keep | K2 | critical | 13 | 13 |
@@ -186,19 +190,11 @@ Every deleted case is listed, with the rule it broke.
 | inbox_and_a_hook_with_stdin | argus-coord differ_examples.rs | W4 | `work_differential` (inbox) and `hook_differ` (prompt) cover it |
 | twin_homes_hold_the_same_boards_and_a_closed_dashboard_port | argus-coord differ_harness.rs | W5 | tests a fixture of the harness; the node case reads the same homes |
 | equal_runs_are_the_same | argus-coord differ_harness.rs | W5 | the trivial arm of the judge |
-| list_works_for_any_session_and_the_cleared_one_is_not_listed | argus-coord wake_faults_cli.rs | W7 | the fixture polls a real server tick |
-| clear_is_refused_for_everyone_but_the_overlord | argus-coord wake_faults_cli.rs | W7 | K4 by its look; same fixture. See the open question below |
-| clear_needs_a_note_a_target_and_an_open_fault | argus-coord wake_faults_cli.rs | W7 | same fixture |
-| with_both_faults_cleared_the_list_no_longer_shows_them | argus-coord wake_faults_cli.rs | W7 | same fixture |
 | an_alias_of_a_module_is_served_by_that_module | argus-coord route.rs | W4 | the alias table case lists `todo` to `action` |
 | the_session_registry_finds_the_project_for_a_verb | argus-coord route.rs | W9 | project lookup is `project_lookup.rs` |
 
 ## Open questions
 
-- The wake-fault cases (list, clear refused for non-Overlords, clear needs a note) cover a
-  permission rule (K4). They were deleted for W7 because the server's wake engine ticks on a real
-  timer. They can come back once the testkit server can tick its wake engine by hand
-  (Overlord or the server lead: a manual tick seam in `argus-testkit`).
 - Inside the long scenario cases of `build_verbs.rs`, `launcher_verbs.rs`, `thread_verbs.rs` and
   `worktree_verbs.rs` several facts are asserted in one test; they were judged as one case each and
   not split.

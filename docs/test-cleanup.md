@@ -9,9 +9,9 @@ number: only the KEEP and WIPE rules decided. The verdict tables, per file, are 
 
 | | Rust before | Rust after | web before | web after |
 |---|---|---|---|---|
-| cases | 2128 | 1995 | 1036 | 759 |
+| cases | 2128 | 1999 | 1036 | 759 |
 | tagged critical | 0 | 1172 | 0 | 281 |
-| tagged standard | 0 | 446 | 0 | 478 |
+| tagged standard | 0 | 450 | 0 | 478 |
 | tagged e2e | 0 | 377 | 0 | 0 |
 | untagged | 2128 | 0 | 1036 | 0 |
 
@@ -21,7 +21,7 @@ number: only the KEEP and WIPE rules decided. The verdict tables, per file, are 
 
 | Part | Crates or folders | Cases before | Cases after | File |
 |---|---|---|---|---|
-| rust-coord | argus-coord, argus-board, argus-core | 537 | 499 | [rust-coord.md](test-cleanup/rust-coord.md) |
+| rust-coord | argus-coord, argus-board, argus-core | 537 | 503 | [rust-coord.md](test-cleanup/rust-coord.md) |
 | rust-server | argus-server, argus, argus-mcp | 504 | 460 | [rust-server.md](test-cleanup/rust-server.md) |
 | rust-worktrees-wake | argus-worktrees, argus-wake | 478 | 463 | [rust-worktrees-wake.md](test-cleanup/rust-worktrees-wake.md) |
 | rust-other | the other 11 crates | 609 | 573 | [rust-other.md](test-cleanup/rust-other.md) |
@@ -41,7 +41,5 @@ number: only the KEEP and WIPE rules decided. The verdict tables, per file, are 
 
 Each item below is on the Argus board, on hold until the Overlord's signal.
 
-- I-54: the wake-fault clear refusal (K4) cases of argus-coord were deleted for W7 (they polled the real wake
-  tick for 10 s). They come back once the test kit can tick the wake engine by hand.
 - I-53: 213 argus-worktrees cases, the removal and refusal ones among them (K3, K4), are e2e because the
   fixture uses real git. A git fake would let them run as standard.

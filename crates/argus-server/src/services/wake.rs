@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use argus_core::clock::SystemClock;
+use argus_core::clock::{Clock, SystemClock};
 use argus_sync::SyncService;
 use argus_wake::config::WakeConfig;
 use argus_wake::service::driver::{self, SharedWake, lock};
@@ -20,7 +20,7 @@ use crate::adapters::wake::{
 };
 use crate::{ServeOptions, Services};
 
-fn deps(svc: &Services, boards: &Arc<WakeBoards>) -> WakeDeps {
+fn deps(svc: &Services, boards: &Arc<WakeBoards>, clock: Arc<dyn Clock>) -> WakeDeps {
     WakeDeps {
         store: Box::new(SqlWakeStore::new(Arc::clone(&svc.db))),
         faults: Box::new(SqlFaultStore::new(Arc::clone(&svc.db))),
@@ -29,7 +29,7 @@ fn deps(svc: &Services, boards: &Arc<WakeBoards>) -> WakeDeps {
         live: Arc::new(WatcherLive::new(svc.agent_watcher.clone())),
         syncs: Arc::new(FileSyncs::new(svc.paths.coord_home.clone())),
         activity: Some(Arc::new(ActivityAdapter::of(svc))),
-        clock: Arc::new(SystemClock),
+        clock,
     }
 }
 
@@ -49,16 +49,25 @@ fn link(sync: &SyncService, wake: &SharedWake, boards: &Arc<WakeBoards>, stop: &
     });
 }
 
-/// Whether the wake service runs.
-#[derive(Clone, Copy)]
+/// Whether the wake service runs, and the seams a test drives it through.
+#[derive(Clone)]
 pub struct WakeOptions {
     /// Run it; it needs the sync service.
     pub enabled: bool,
+    /// Run the driver that ticks the engine on its own deadlines. A test turns it off and
+    /// ticks by hand.
+    pub timer: bool,
+    /// The clock the engine reads; `None` is the wall clock.
+    pub clock: Option<Arc<dyn Clock>>,
 }
 
 impl Default for WakeOptions {
     fn default() -> Self {
-        WakeOptions { enabled: true }
+        WakeOptions {
+            enabled: true,
+            timer: true,
+            clock: None,
+        }
     }
 }
 
@@ -67,8 +76,13 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<Mutex<Wak
     let boards = Arc::new(WakeBoards::new(svc.boards()));
     let settings = Value::Object(svc.config().extra);
     let config = WakeConfig::from_json(&settings);
+    let clock = opts
+        .wake
+        .clock
+        .clone()
+        .unwrap_or_else(|| Arc::new(SystemClock));
     let wake = Arc::new(Mutex::new(WakeService::new(
-        deps(svc, &boards),
+        deps(svc, &boards, clock),
         &config,
         true,
     )));
@@ -81,12 +95,14 @@ pub(crate) fn start(svc: &Arc<Services>) {
         return;
     };
     lock(wake).start();
-    let driver = driver::spawn(Arc::clone(wake));
-    let stop = svc.stop.clone();
-    tokio::spawn(async move {
-        stop.cancelled().await;
-        driver.abort();
-    });
+    if svc.tasks.wake_timer {
+        let driver = driver::spawn(Arc::clone(wake));
+        let stop = svc.stop.clone();
+        tokio::spawn(async move {
+            stop.cancelled().await;
+            driver.abort();
+        });
+    }
     let service = Arc::clone(wake);
     svc.keep(svc.bus.on_reset(move |e| lock(&service).on_reset(&e.scope)));
 }

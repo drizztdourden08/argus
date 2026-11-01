@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use argus_core::Paths;
+use argus_core::clock::{ManualClock, now_ms};
 use argus_server::{ServeOptions, ServerHandle, Services, serve};
 use serde_json::{Value, json};
 use tempfile::TempDir;
@@ -34,6 +35,9 @@ pub struct TestOptions {
     pub dashboard_home: Option<PathBuf>,
     /// Last say on the serve options (a service's seams).
     pub tweak: Option<Tweak>,
+    /// Hand the wake engine to the test: its periodic timer is off and its clock is manual, so
+    /// it moves only through [`TestServer::tick_wakes`] and [`TestServer::advance_wakes`].
+    pub manual_wakes: bool,
 }
 
 impl Default for TestOptions {
@@ -47,6 +51,7 @@ impl Default for TestOptions {
             coord_home: None,
             dashboard_home: None,
             tweak: None,
+            manual_wakes: false,
         }
     }
 }
@@ -65,6 +70,7 @@ pub struct TestServer {
     pub dashboard_home: PathBuf,
     /// The services.
     pub svc: Arc<Services>,
+    wake_clock: Option<ManualClock>,
     handle: Option<ServerHandle>,
     dirs: Vec<TempDir>,
 }
@@ -119,6 +125,11 @@ impl TestServer {
         opts.cache.enabled = false;
         opts.records.consumers = argus_server::ConsumerSource::Off;
         opts.run_service.stale_timer = false;
+        let wake_clock = o.manual_wakes.then(|| ManualClock::at(now_ms()));
+        if let Some(clock) = &wake_clock {
+            opts.wake.timer = false;
+            opts.wake.clock = Some(Arc::new(clock.clone()));
+        }
         if let Some(tweak) = &o.tweak {
             tweak(&mut opts);
         }
@@ -134,6 +145,7 @@ impl TestServer {
             coord_home,
             dashboard_home,
             svc,
+            wake_clock,
             handle: Some(handle),
             dirs,
         }
@@ -165,6 +177,35 @@ impl TestServer {
     #[must_use]
     pub fn bearer(&self, req: Request) -> Request {
         req.header("Authorization", &format!("Bearer {}", self.token))
+    }
+
+    /// Runs one pass of the wake engine: the windows that are due close, then the registry,
+    /// the reminders and the prune that are due run.
+    ///
+    /// # Panics
+    /// When the server was not started with `manual_wakes`.
+    pub fn tick_wakes(&self) {
+        assert!(
+            self.wake_clock.is_some(),
+            "tick_wakes needs TestOptions::manual_wakes"
+        );
+        let wake = self.svc.wake.as_ref().expect("the wake service runs");
+        wake.lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .tick();
+    }
+
+    /// Moves the wake clock forward by `ms`, then runs one pass of the engine.
+    ///
+    /// # Panics
+    /// When the server was not started with `manual_wakes`.
+    pub fn advance_wakes(&self, ms: i64) {
+        let clock = self
+            .wake_clock
+            .as_ref()
+            .expect("advance_wakes needs TestOptions::manual_wakes");
+        clock.advance(ms);
+        self.tick_wakes();
     }
 
     /// Opens a stream.
