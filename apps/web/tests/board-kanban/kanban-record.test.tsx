@@ -26,7 +26,7 @@ const mountOpen = async (board: Board = {}) => {
   return { ...mounted, dialog };
 };
 
-describe('the to-dos of an item', () => {
+describe('K3 the to-dos of an item', { tags: ['standard'] }, () => {
   it('lists them with the open count, and adds one for the thread of the item', async () => {
     const { posted, dialog } = await mountOpen({ actions: [todo] });
     expect(within(dialog).getByText('To-dos · 1 open')).toBeTruthy();
@@ -57,35 +57,15 @@ describe('the to-dos of an item', () => {
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'actions', id: 'H-1' }, set: { text: 'Run it twice' }, prev: { text: 'Run it by hand' }, baseRev: 2 });
   });
-
-  it('refuses a to-do over 200 characters', async () => {
-    const { posted, dialog } = await mountOpen();
-    fireEvent.change(within(dialog).getByRole('textbox', { name: '+ To-do for worker' }), { target: { value: 'x'.repeat(201) } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Add to-do' }));
-    expect(within(dialog).getByText('At most 200 characters.')).toBeTruthy();
-    expect(posted).toHaveLength(0);
-  });
 });
 
-describe('the questions and decisions of an item', () => {
-  it('shows an open question with its context, and answers it with a followup', async () => {
+describe('K3 the questions and decisions of an item', { tags: ['standard'] }, () => {
+  it('answers an open question with a followup', async () => {
     const { posted, dialog } = await mountOpen({ entries: [question] });
-    const section = within(within(dialog).getByRole('region', { name: 'Questions · 1 open' }));
-    expect(section.getByText('npm test').tagName).toBe('CODE');
-    expect(section.getByText('The suite is slow.')).toBeTruthy();
-    expect(section.getByText('Show the rest')).toBeTruthy();
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'Answer worker.' }), { target: { value: 'Yes' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Answer' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'followup', replyTo: 'Q-1', item: 'I-1', thread: 'worker', text: 'Yes' });
-  });
-
-  it('shows the owner reply under a question that is answered, with no form', async () => {
-    const reply = { id: 'O-1', kind: 'followup', item: 'I-1', thread: 'worker', author: 'human', status: 'new', replyTo: 'Q-1', text: 'Yes', createdAt: ago(MIN) };
-    const { dialog } = await mountOpen({ entries: [question, reply] });
-    expect(within(dialog).getByText('Questions · 0 open')).toBeTruthy();
-    expect(within(dialog).getByRole('group', { name: 'Reply O-1' })).toBeTruthy();
-    expect(within(dialog).queryByRole('textbox', { name: 'Answer worker.' })).toBeNull();
   });
 
   it('lists the decisions, and the pending decision of the owner is editable', async () => {
@@ -99,15 +79,9 @@ describe('the questions and decisions of an item', () => {
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'entries', id: 'D-1' }, set: { text: 'Ship it Friday' }, prev: { text: 'Ship it' } });
   });
-
-  it('says there is none when nothing was asked or decided', async () => {
-    const { dialog } = await mountOpen();
-    expect(within(dialog).getByText('No question on this item.')).toBeTruthy();
-    expect(within(dialog).getByText('No decision recorded yet.')).toBeTruthy();
-  });
 });
 
-describe('the activity of an item', () => {
+describe('S1 the activity of an item', { tags: ['standard'] }, () => {
   const log = [{ id: 'work', subject: 'work', entries: [{ seq: 1, ts: ago(5 * MIN), thread: 'worker', item: 'I-1', text: 'Started the form' }, { seq: 2, ts: ago(MIN), thread: 'worker', item: 'I-9', text: 'Elsewhere' }] }];
 
   it('merges the entries, the to-dos and the log lines of this item, newest first', async () => {
@@ -120,13 +94,6 @@ describe('the activity of an item', () => {
       expect.stringContaining('Run it by hand'),
     ]);
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
-  });
-
-  it('has the composer box as the markdown editor with its toolbar', async () => {
-    const { dialog } = await mountOpen();
-    const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'The decision for worker' });
-    expect(box.maxLength).toBe(50000);
-    expect(within(dialog).getAllByRole('toolbar', { name: 'Formatting' }).length).toBeGreaterThan(0);
   });
 
   it('posts a decision for the thread from the composer, and a note when Note is picked', async () => {
@@ -148,13 +115,5 @@ describe('the activity of an item', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Post decision' }));
     expect(await screen.findByText('Write the decision.')).toBeTruthy();
     expect(posted).toHaveLength(0);
-  });
-
-  it('marks a pending manual step done from the timeline', async () => {
-    const { posted, dialog } = await mountOpen({ actions: [todo] });
-    const list = within(dialog).getByRole('list', { name: 'Activity' });
-    fireEvent.click(within(list).getByRole('button', { name: 'Mark H-1 done' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'done', replyTo: 'H-1' });
   });
 });

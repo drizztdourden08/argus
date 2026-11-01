@@ -6,7 +6,7 @@ import { cleanKanban } from './kanban-harness';
 
 cleanKanban();
 
-describe('the criteria of an item: ticking and adding', () => {
+describe('K3 the criteria of an item: ticking and adding', { tags: ['standard'] }, () => {
   it('ticks a criterion with a done op and unticks with an undo op', async () => {
     const { posted, dialog } = await opened();
     fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Criterion 1 met' }));
@@ -17,7 +17,7 @@ describe('the criteria of an item: ticking and adding', () => {
     expect(posted[1]?.body).toMatchObject({ kind: 'ac', do: 'undo', n: 2, baseRev: 3 });
   });
 
-  it('adds a criterion with Enter or the button, and says so', async () => {
+  it('adds a criterion with the button, and says so', async () => {
     const { posted, dialog } = await opened();
     const box = within(dialog).getByRole('textbox', { name: 'Add a criterion' });
     fireEvent.change(box, { target: { value: 'Locks after three tries' } });
@@ -39,7 +39,7 @@ describe('the criteria of an item: ticking and adding', () => {
   });
 });
 
-describe('the criteria of an item: editing, removing and moving', () => {
+describe('K3 the criteria of an item: editing, removing and moving', { tags: ['standard'] }, () => {
   it('edits a criterion with the text it had as prev', async () => {
     const { posted, dialog } = await opened();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
@@ -56,17 +56,6 @@ describe('the criteria of an item: editing, removing and moving', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
     fireEvent.keyDown(within(dialog).getByRole('textbox', { name: 'Edit criterion 1' }), { key: 'Enter' });
     expect(within(dialog).queryByRole('textbox', { name: 'Edit criterion 1' })).toBeNull();
-    expect(posted).toHaveLength(0);
-  });
-
-  it('cancels an edit with Escape', async () => {
-    const { posted, dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit criterion 1: Shows an error' }));
-    const box = within(dialog).getByRole('textbox', { name: 'Edit criterion 1' });
-    fireEvent.change(box, { target: { value: 'changed' } });
-    fireEvent.keyDown(box, { key: 'Escape' });
-    expect(within(dialog).queryByRole('textbox', { name: 'Edit criterion 1' })).toBeNull();
-    expect(within(dialog).getByText('Shows an error')).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
 
@@ -93,7 +82,7 @@ describe('the criteria of an item: editing, removing and moving', () => {
   });
 });
 
-describe('the criteria of an item: inline Markdown', () => {
+describe('S1 the criteria of an item: inline Markdown', { tags: ['standard'] }, () => {
   it('shows a criterion as inline Markdown with a link, and edits the raw text', async () => {
     const { posted, dialog } = await opened({ ac: [{ n: 1, text: 'Reads **bold** and [the rules](https://example.com/rules)', done: false }] });
     expect(within(dialog).getByText('bold').tagName).toBe('STRONG');

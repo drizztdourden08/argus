@@ -17,7 +17,7 @@ vi.stubGlobal('fetch', fetchMock);
 
 afterEach(() => fetchMock.mockReset());
 
-describe('db routes', () => {
+describe('K2 db routes', { tags: ['critical'] }, () => {
   it('lists, gets, queries, sets and batches', async () => {
     reply({ seq: 1, docs: [] });
     await listDocs('rotp', 'items');
@@ -55,7 +55,7 @@ describe('db routes', () => {
   });
 });
 
-describe('errors', () => {
+describe('K2 api errors', { tags: ['critical'] }, () => {
   it('turns the error shape into an ApiError', async () => {
     reply({ error: { code: 'not_found', message: 'no items doc', details: { id: 'I-9' } } }, 404);
     const failure = await getDoc('rotp', 'items', 'I-9').catch((error: unknown) => error);
@@ -74,7 +74,7 @@ describe('errors', () => {
   });
 });
 
-describe('actions', () => {
+describe('K2 api actions', { tags: ['critical'] }, () => {
   it('posts entries, results, proofs and sends down', async () => {
     reply({ id: 'O-1', status: 'applied', outcome: null, entry: null, seq: 3 });
     await postEntry('rotp', { id: 'O-1', kind: 'ack' });

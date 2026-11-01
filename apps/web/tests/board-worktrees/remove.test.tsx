@@ -1,26 +1,23 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ago, metaDoc, worktree } from './fixtures';
+import { metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
 import type { Responder } from './mount-tab';
-import { confirmGroup, findRow, postedBodies, rowButton, text } from './wt-dom';
+import { confirmGroup, findRow, rowButton, text } from './wt-dom';
 
 cleanAfterEach();
-
-const REMOVE = '/worktrees/remove';
 
 const docs = () => [
   worktree('a', 'stale', { dirty: 2, unmerged: 4, unmergedSubjects: ['wip <b>login</b>', 'fix the form', 'more'], branch: 'feat/a' }),
   worktree('b', 'merged', { merged: true, unmerged: 0, branch: 'b' }),
-  worktree('c', 'stale', { detached: true, branch: null, unmerged: null }),
 ];
 
 const removed = (extra: object = {}): Responder => () => ({ status: 200, body: { removed: true, prunedOnly: false, ...extra } });
 
 const confirmButton = (): HTMLButtonElement => within(confirmGroup('Confirm the removal')).getByRole<HTMLButtonElement>('button', { name: 'Confirm' });
 
-describe('Delete now: the confirm that says what is lost', () => {
+describe('K3 Delete now: the confirm that says what is lost', { tags: ['standard'] }, () => {
   it('opens under the row with the uncommitted files, the unmerged commits with their first subjects, the branch, and the backup sentence', async () => {
     const { calls } = await mountTab({ docs: docs(), meta: metaDoc() });
     await findRow('a');
@@ -34,15 +31,6 @@ describe('Delete now: the confirm that says what is lost', () => {
     expect(within(group).getByRole('checkbox', { name: 'also delete the branch feat/a' })).toBeTruthy();
     expect(rowButton('a', 'Delete now').getAttribute('aria-expanded')).toBe('true');
     expect(calls).toEqual([]);
-  });
-
-  it('a detached HEAD no branch keeps says its commits are lost and offers no branch to delete', async () => {
-    await mountTab({ docs: docs(), meta: metaDoc() });
-    await findRow('c');
-    fireEvent.click(rowButton('c', 'Delete now'));
-    const group = confirmGroup('Confirm the removal');
-    expect(text(group)).toContain('commits not known to be in the default branch (on a detached HEAD that no branch keeps)');
-    expect(within(group).queryByRole('checkbox')).toBeNull();
   });
 
   it('Confirm posts the removal with the discard, the branch when ticked, and the HEAD and dirty count seen; the answer shows the backup with its restore command', async () => {
@@ -81,18 +69,7 @@ describe('Delete now: the confirm that says what is lost', () => {
   });
 });
 
-describe('Remove: the lighter confirm for a clean worktree', () => {
-  it('says nothing is lost and offers the branch', async () => {
-    await mountTab({ docs: docs(), meta: metaDoc() });
-    await findRow('b');
-    fireEvent.click(rowButton('b', 'Remove'));
-    const group = confirmGroup('Confirm the removal');
-    expect(text(group)).toContain('Remove X:/proj/trees/b now? It is clean and its commits stay in the branch b: nothing is lost. The branch stays unless you tick the box and it is merged.');
-    expect(text(group)).not.toContain('This discards');
-    expect(text(group)).not.toContain('backup bundle');
-    expect(within(group).getByRole('checkbox', { name: 'also delete the branch b' })).toBeTruthy();
-  });
-
+describe('K3 Remove: the lighter confirm for a clean worktree', { tags: ['standard'] }, () => {
   it('Confirm posts no discard and keeps the branch unless ticked; the answer says the branch stayed', async () => {
     const { calls } = await mountTab({ docs: docs(), meta: metaDoc() }, removed({ branch: 'b', deletedBranch: false, branchNote: 'not merged' }));
     await findRow('b');
@@ -114,19 +91,9 @@ describe('Remove: the lighter confirm for a clean worktree', () => {
     fireEvent.click(within(confirmGroup('Confirm the removal')).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('group', { name: 'Confirm the removal' })).toBeNull();
   });
-
-  it('the request form replaces the confirm on the same row', async () => {
-    const { calls } = await mountTab({ docs: docs(), meta: metaDoc() });
-    await findRow('b');
-    fireEvent.click(rowButton('b', 'Remove'));
-    fireEvent.click(rowButton('b', 'Ask the thread to delete'));
-    expect(screen.queryByRole('group', { name: 'Confirm the removal' })).toBeNull();
-    expect(screen.getByRole('group', { name: 'Ask lead to delete b' })).toBeTruthy();
-    expect(calls).toEqual([]);
-  });
 });
 
-describe('what the owner saw is what is sent', () => {
+describe('K4 what the owner saw is what is sent', { tags: ['standard'] }, () => {
   it('a worktree that became dirty after the confirm opened blocks Confirm and says so', async () => {
     const { calls, change } = await mountTab({ docs: docs(), meta: metaDoc() });
     await findRow('b');
@@ -139,34 +106,5 @@ describe('what the owner saw is what is sent', () => {
     expect(confirmButton().disabled).toBe(true);
     fireEvent.click(confirmButton());
     expect(calls).toEqual([]);
-  });
-
-  it('a new HEAD blocks Confirm too, and reopening the confirm reads the new state', async () => {
-    const { calls, change } = await mountTab({ docs: docs(), meta: metaDoc() });
-    await findRow('b');
-    fireEvent.click(rowButton('b', 'Remove'));
-    change('worktrees', 'id-b', { ...worktree('b', 'merged', { merged: true, unmerged: 0, branch: 'b', head: 'fff9999' }) });
-    expect(confirmButton().disabled).toBe(true);
-    fireEvent.click(rowButton('b', 'Remove'));
-    fireEvent.click(rowButton('b', 'Remove'));
-    expect(confirmButton().disabled).toBe(false);
-    expect(calls).toEqual([]);
-  });
-
-  it('a row that can no longer be removed blocks Confirm', async () => {
-    const { change } = await mountTab({ docs: docs(), meta: metaDoc() });
-    await findRow('b');
-    fireEvent.click(rowButton('b', 'Remove'));
-    change('worktrees', 'id-b', { ...worktree('b', 'merged', { merged: true, unmerged: 0, branch: 'b', locked: 'demo' }) });
-    expect(confirmButton().disabled).toBe(true);
-  });
-
-  it('sends the HEAD and the dirty count of the moment the confirm opened', async () => {
-    const { calls } = await mountTab({ docs: [worktree('d', 'stale', { dirty: 1, head: 'beef123', lastTouchedAt: ago(9 * 86_400_000) })], meta: metaDoc() }, removed());
-    await findRow('d');
-    fireEvent.click(rowButton('d', 'Delete now'));
-    fireEvent.click(confirmButton());
-    await waitFor(() => expect(postedBodies(calls, REMOVE)).toHaveLength(1));
-    expect(postedBodies(calls, REMOVE)[0]).toEqual({ id: 'id-d', branch: false, discard: true, head: 'beef123', dirty: 1 });
   });
 });

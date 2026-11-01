@@ -22,7 +22,7 @@ const open = async (at: string) => {
   });
 };
 
-describe('the Tests tab on the board page', () => {
+describe('S1 the Tests tab on the board page', { tags: ['standard'] }, () => {
   it('counts the tests to run in its badge', async () => {
     await open('/p/rotp/#tests');
     const tab = await screen.findByRole('tab', { name: /^Tests/ });

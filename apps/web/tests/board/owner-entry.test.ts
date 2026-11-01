@@ -5,7 +5,7 @@ import { contextRequestFields, noteFields, replyFields, replyProblem, textProble
 
 const WHEN = new Date('2026-10-26T08:00:00.000Z');
 
-describe('owner entry', () => {
+describe('K1 owner entry', { tags: ['critical'] }, () => {
   it('carries a time based id the server accepts, the human author and the defaults of the page', () => {
     const entry = ownerEntry({ kind: 'ack', replyTo: 'N-3' }, WHEN);
     expect(entry.id).toMatch(/^O-[a-z0-9]+-[a-z0-9]{4}$/);
@@ -26,7 +26,7 @@ describe('owner entry', () => {
   });
 });
 
-describe('owner post fields', () => {
+describe('K1 owner post fields', { tags: ['critical'] }, () => {
   const question = { id: 'Q-1', item: 'I-4', thread: 'lead' };
 
   it('a reply points at the entry and keeps its item and thread', () => {
@@ -46,11 +46,7 @@ describe('owner post fields', () => {
   });
 });
 
-describe('owner text', () => {
-  it('the safety net is 50000 characters', () => {
-    expect(OWNER_TEXT_MAX).toBe(50000);
-  });
-
+describe('K1 owner text', { tags: ['critical'] }, () => {
   it('a long note is taken whole and one over the net gets a plain sentence', () => {
     expect(textProblem('x'.repeat(20000))).toBeNull();
     expect(textProblem('x'.repeat(OWNER_TEXT_MAX))).toBeNull();

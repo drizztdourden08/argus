@@ -15,7 +15,7 @@ const card = (key: string, extra: Partial<Card> = {}): Card => ({
   key, name: key, state: 'running', root: null, url: `/p/${key}/`, coordinator: { session: 's', link: null, lastSeen: minutesAgo(1), activity: 'idle', note: null }, ...extra,
 });
 
-describe('the state of a lead, from its card', () => {
+describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => {
   it('is not started with no board', () => {
     expect(leadState(card('a', { state: 'not started', coordinator: undefined }), NOW)).toBe('not started');
   });
@@ -39,7 +39,7 @@ describe('the state of a lead, from its card', () => {
   });
 });
 
-describe('what asks for the owner, and the order of the cards', () => {
+describe('K1 what asks for the owner, and the order of the cards', { tags: ['critical'] }, () => {
   const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0 };
 
   it('counts what needs you, the failing tests, the blocked threads and the open decisions', () => {
@@ -76,7 +76,7 @@ describe('what asks for the owner, and the order of the cards', () => {
   });
 });
 
-describe('the master launcher line of a card', () => {
+describe('K1 the master launcher line of a card', { tags: ['critical'] }, () => {
   const master = { name: 'master', title: 'Main', cmd: 'game run', current: true, window: false, play: 'launcher-master', updatedAt: null, by: null };
   const runRow = (extra: Partial<RunRow>): RunRow => ({
     id: 'R-9', scope: 'alpha', name: 'launcher-master', kind: 'launch', status: 'running', exitCode: null, signal: null, pid: 1, visible: false, stdin: false,
@@ -113,7 +113,7 @@ describe('the master launcher line of a card', () => {
   });
 });
 
-describe('the registered strip', () => {
+describe('K1 the registered strip', { tags: ['critical'] }, () => {
   const nameOf = (key: string): string => (key === 'rotp' ? 'RotP' : key);
   const row = (id: string, extra: Partial<RegistryItem> = {}): RegistryItem => ({ id, project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'listening', since: minutesAgo(3), ...extra });
 

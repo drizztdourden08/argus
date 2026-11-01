@@ -28,7 +28,7 @@ const tail: Responder = (call) => {
   return { status: 200, body: { lines: [{ seq: 1, stream: 'out', at: '2026-10-26T10:00:00.000Z', text: 'first line' }], next: 1, dropped: 0 } };
 };
 
-describe('the note of a bundle', () => {
+describe('S1 the note of a bundle', { tags: ['standard'] }, () => {
   it('is a plain folded line, and rich text once opened', async () => {
     const { container } = await mountTab(noted());
     const folded = await screen.findByText('Ship this with notes');
@@ -48,7 +48,7 @@ describe('the note of a bundle', () => {
   });
 });
 
-describe('the terminal under Play', () => {
+describe('S1 the terminal under Play', { tags: ['standard'] }, () => {
   it('is folded by default, even while running: the run and the newest output, nothing loaded', async () => {
     const { calls } = await mountTab(launched([running()]), tail);
     const summary = within((await screen.findByRole('button', { name: 'Terminal' })).parentElement as HTMLElement);

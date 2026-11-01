@@ -110,4 +110,3 @@ const rowOf = (container: HTMLElement, id: string): HTMLElement => {
 };
 
 export { agent, ago, DAY, json, live, MIN, mockApi, mockFetch, renderAgents, rowOf };
-export type { Posted };

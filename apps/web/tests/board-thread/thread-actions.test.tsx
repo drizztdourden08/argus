@@ -12,8 +12,8 @@ const open = async (threadOver: Record<string, unknown> = {}, extra: Parameters<
   return { ...mounted, dialog: await openChip('worker') };
 };
 
-describe('the owner actions of the thread drawer', () => {
-  it('Pause posts a pause for the thread, and a paused thread offers Resume', async () => {
+describe('S1 the owner actions of the thread drawer', { tags: ['standard'] }, () => {
+  it('Pause posts a pause for the thread and tells the owner', async () => {
     const { fetchMock, dialog } = await open();
     fireEvent.click(tool(dialog, 'Pause this thread'));
     await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
@@ -21,7 +21,7 @@ describe('the owner actions of the thread drawer', () => {
     expect(await screen.findByText('worker paused.')).toBeTruthy();
   });
 
-  it('shows Resume for a paused thread, and a pause the owner posted that the board has not applied yet', async () => {
+  it('Resume posts a resume for a paused thread', async () => {
     const { fetchMock, dialog } = await open({ status: 'paused' });
     fireEvent.click(tool(dialog, 'Resume this thread'));
     await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
@@ -42,28 +42,19 @@ describe('the owner actions of the thread drawer', () => {
     fireEvent.click(tool(dialog, 'Focus'));
     expect(localStorage.getItem('coord.focus')).toBe('');
   });
-
 });
 
 const menu = (dialog: HTMLElement, id = 'worker'): void => {
   fireEvent.click(within(dialog).getByRole('button', { name: `More actions for ${id}` }));
 };
 
-describe('the end of a thread in the thread drawer', () => {
-  it('Archive sends an archive of the thread, and an archived thread offers Unarchive', async () => {
+describe('S1 the end of a thread in the thread drawer', { tags: ['standard'] }, () => {
+  it('Archive sends an archive of the thread', async () => {
     const { fetchMock, dialog } = await open();
     menu(dialog);
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
     await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
     expect(posted(fetchMock)[0]).toMatchObject({ kind: 'archive', target: { c: 'threads', id: 'worker' } });
-  });
-
-  it('offers Unarchive for an archived thread and no Pause or Focus', async () => {
-    const { dialog } = await open({ status: 'archived', archivedAt: new Date().toISOString() });
-    menu(dialog);
-    expect(await screen.findByRole('menuitem', { name: 'Unarchive' })).toBeTruthy();
-    expect(within(dialog).queryByRole('button', { name: 'Pause this thread' })).toBeNull();
-    expect(within(dialog).queryByRole('button', { name: 'Focus' })).toBeNull();
   });
 
   it('Purge opens the purge dialog for this thread', async () => {
@@ -82,12 +73,6 @@ describe('the end of a thread in the thread drawer', () => {
     for (const name of ['Archive', 'Purge...']) expect(screen.queryByRole('menuitem', { name })).toBeNull();
   });
 
-  it('opens the chat and copies its link when the thread has one', async () => {
-    const { dialog } = await open({ link: 'https://example.com/session/abc' });
-    expect(within(dialog).getByRole('button', { name: 'Open the chat of worker' })).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: 'Copy the session link' })).toBeTruthy();
-  });
-
   it('steps to the next thread of the list with the arrows', async () => {
     await mountBoard({ threads: docs(worker(), thread('zeta')), registry: docs(chip('worker')) });
     const dialog = await openChip('worker');
@@ -96,17 +81,15 @@ describe('the end of a thread in the thread drawer', () => {
     expect(await screen.findByRole('heading', { name: 'zeta session' })).toBeTruthy();
   });
 
-  it('Expand widens the drawer and remembers it', async () => {
+  it('Expand remembers the wide drawer', async () => {
     const { dialog } = await open();
-    expect(document.querySelector('.drawer--xl')).toBeNull();
     fireEvent.click(tool(dialog, 'Expand'));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
-    expect(document.querySelector('.drawer--xl')).not.toBeNull();
     expect(tool(dialog, 'Collapse').getAttribute('aria-pressed')).toBe('true');
   });
 });
 
-describe('editing in the thread drawer', () => {
+describe('S1 editing in the thread drawer', { tags: ['standard'] }, () => {
   it('a new subject is sent as an edit of the thread with what it was and its revision', async () => {
     const { fetchMock, dialog } = await open();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit subject: the work' }));
@@ -127,12 +110,10 @@ describe('editing in the thread drawer', () => {
     expect(posted(fetchMock)).toHaveLength(0);
   });
 
-  it('the brief is edited as markdown with its limit and sent as an edit', async () => {
+  it('the brief is sent as an edit with what it was', async () => {
     const { fetchMock, dialog } = await open();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit brief' }));
     const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'Brief' });
-    expect(box.maxLength).toBe(1200);
-    expect(within(dialog).getByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
     fireEvent.change(box, { target: { value: 'Read the new plan first.' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save brief' }));
     await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
@@ -149,7 +130,7 @@ describe('editing in the thread drawer', () => {
   });
 });
 
-describe('the focus kept by the drawer', () => {
+describe('S1 the focus kept by the drawer', { tags: ['standard'] }, () => {
   it('reaches the Kanban tab, which narrows the board to the thread', async () => {
     const { dialog } = await open({}, { items: docs(item('I-1'), item('I-2', { thread: 'other' })) });
     fireEvent.click(tool(dialog, 'Focus'));

@@ -8,7 +8,7 @@ const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
-describe('formatAgo', () => {
+describe('K1 formatAgo', { tags: ['critical'] }, () => {
   it('says seconds, minutes, hours and days, rounded', () => {
     expect(formatAgo(before(30 * SECOND), NOW)).toBe('30s');
     expect(formatAgo(before(5 * MINUTE), NOW)).toBe('5m');
@@ -29,14 +29,14 @@ describe('formatAgo', () => {
   });
 });
 
-describe('agoText', () => {
+describe('K1 agoText', { tags: ['critical'] }, () => {
   it('adds ago, and says nothing for a time that is not one', () => {
     expect(agoText(before(5 * MINUTE), NOW)).toBe('5m ago');
     expect(agoText(undefined, NOW)).toBe('');
   });
 });
 
-describe('formatMemory', () => {
+describe('K1 formatMemory', { tags: ['critical'] }, () => {
   it('shows MB under a gigabyte, one decimal of GB up to ten, whole GB after', () => {
     expect(formatMemory(512)).toBe('512 MB');
     expect(formatMemory(1536)).toBe('1.5 GB');
@@ -50,7 +50,7 @@ describe('formatMemory', () => {
   });
 });
 
-describe('formatMinutes', () => {
+describe('K1 formatMinutes', { tags: ['critical'] }, () => {
   it('shows under a minute, minutes, hours with minutes, whole hours and days', () => {
     expect(formatMinutes(0.4)).toBe('<1m');
     expect(formatMinutes(45)).toBe('45m');
@@ -61,7 +61,7 @@ describe('formatMinutes', () => {
   });
 });
 
-describe('formatCpu', () => {
+describe('K1 formatCpu', { tags: ['critical'] }, () => {
   it('keeps one decimal under ten percent and rounds above', () => {
     expect(formatCpu(3.14)).toBe('3.1%');
     expect(formatCpu(42.6)).toBe('43%');
@@ -69,7 +69,7 @@ describe('formatCpu', () => {
   });
 });
 
-describe('clipText and orText', () => {
+describe('K1 clipText and orText', { tags: ['critical'] }, () => {
   it('clips a long text and leaves a short one', () => {
     expect(clipText('abcdef', 4)).toBe('abc...');
     expect(clipText('abc', 4)).toBe('abc');
@@ -82,7 +82,7 @@ describe('clipText and orText', () => {
   });
 });
 
-describe('smartTimes', () => {
+describe('K1 smartTimes', { tags: ['critical'] }, () => {
   it('draws a times sign for an x between digits, as the Inter build of the Node dashboard does', () => {
     expect(smartTimes('1280x720 and 24x24')).toBe('1280\u00d7720 and 24\u00d724');
     expect(smartTimes('a 16x16x16 box')).toBe('a 16\u00d716\u00d716 box');

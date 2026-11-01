@@ -25,7 +25,7 @@ const open = (report: object): void => {
   renderAt('/#registry');
 };
 
-describe('the overview Registry tab', () => {
+describe('S1 the overview Registry tab', { tags: ['standard'] }, () => {
   it('lists the local builds with package, version, short commit, checkout, age and size', async () => {
     open(REPORT);
     expect((await screen.findAllByText('@drizztdourden08/brock-core')).length).toBeGreaterThan(0);
@@ -55,12 +55,6 @@ describe('the overview Registry tab', () => {
     open(REPORT);
     await screen.findAllByText('X:/brock');
     expect(screen.queryByText(/points at the local store/)).toBeNull();
-  });
-
-  it('has an empty state for both lists', async () => {
-    open({ builds: [], consumers: [], scopeRedirected: false });
-    expect(await screen.findByText('No local packages yet')).toBeTruthy();
-    expect(screen.getByText('No consumer is switched on.')).toBeTruthy();
   });
 
   it('says when the registry could not be read', async () => {

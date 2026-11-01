@@ -11,7 +11,7 @@ const cards = {
   argus: { key: 'argus', name: 'Argus', state: 'running', root: null, url: '/p/argus/' },
 };
 
-describe('routing', () => {
+describe('S2 routing', { tags: ['standard'] }, () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
     const { sources } = renderAt('/');
     await waitFor(() => expect(sources).toHaveLength(1));

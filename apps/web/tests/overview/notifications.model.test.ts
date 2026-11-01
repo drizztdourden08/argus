@@ -8,7 +8,7 @@ import { ApiError } from '../../src/data/api';
 
 const note = (id: string, extra: Partial<NoteItem> = {}): NoteItem => ({ id, n: 1, at: '2026-10-26T11:00:00.000Z', level: 'ping', title: 'T', text: 'x', ...extra });
 
-describe('the record and its order', () => {
+describe('K1 the record and its order', { tags: ['critical'] }, () => {
   it('runs newest first by the number, then by the time', () => {
     const rows = [note('n-1', { n: 1 }), note('n-3', { n: 3 }), note('n-2', { n: 2 })];
     expect(sortNotes(rows).map((row) => row.id)).toEqual(['n-3', 'n-2', 'n-1']);
@@ -40,7 +40,7 @@ describe('the record and its order', () => {
   });
 });
 
-describe('what became of the toast', () => {
+describe('K1 what became of the toast', { tags: ['critical'] }, () => {
   it('says shown, with the reason when there is one', () => {
     expect(toastNote(note('a', { toast: 'shown' }))).toEqual({ text: 'toast shown', bad: false });
     expect(toastNote(note('a', { toast: 'shown', why: 'shown as a tray balloon (no PowerShell)' })).text).toBe('toast shown (shown as a tray balloon (no PowerShell))');
@@ -63,7 +63,7 @@ describe('what became of the toast', () => {
   });
 });
 
-describe('the sentences of the test button and the settings', () => {
+describe('K1 the sentences of the test button and the settings', { tags: ['critical'] }, () => {
   it('says the toast should be on screen, or why there was none', () => {
     expect(testSentence({ toast: 'shown' })).toBe('Sent: the toast should be on your screen now.');
     expect(testSentence({ toast: 'limited', why: 'you pinged 4 times in a minute' })).toBe('No toast: you pinged 4 times in a minute. It is recorded below.');
@@ -80,7 +80,7 @@ describe('the sentences of the test button and the settings', () => {
   });
 });
 
-describe('the tip of a setting', () => {
+describe('K1 the tip of a setting', { tags: ['critical'] }, () => {
   it('says what a toast switch does in each state, and that info is recorded only by default', () => {
     expect(settingTip('toast', 'urgent', true)).toBe('A toast is shown for urgent');
     expect(settingTip('toast', 'ping', false)).toBe('No toast for ping');

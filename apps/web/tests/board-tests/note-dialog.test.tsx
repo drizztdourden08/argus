@@ -15,7 +15,7 @@ const board = () => ({
   tests: [testDoc('T-1', { rev: 4, covers: 'AC1' }), doneDoc('T-2', 'fail', 'broken')],
 });
 
-describe('the note dialog of the row menu', () => {
+describe('S1 the note dialog of the row menu', { tags: ['standard'] }, () => {
   it('takes any outcome, but a fail without text is not sent', async () => {
     const { calls } = await mountTab(board());
     const dialog = within(await openFrom('T-1', 'Add a note...'));
@@ -57,7 +57,7 @@ describe('the note dialog of the row menu', () => {
   });
 });
 
-describe('the edit dialog of the row menu', () => {
+describe('S1 the edit dialog of the row menu', { tags: ['standard'] }, () => {
   it('saves the changed fields in one edit with what the owner saw', async () => {
     const { calls } = await mountTab(board());
     const dialog = within(await openFrom('T-1', 'Edit'));

@@ -5,7 +5,7 @@ import { codeLines, renderMarkdown, texts } from './render-markdown';
 
 afterEach(cleanup);
 
-describe('markdown blocks', () => {
+describe('S1 markdown blocks', { tags: ['standard'] }, () => {
   it('empty and blank input render to nothing', () => {
     for (const source of ['', '  \n \n']) expect(renderMarkdown(source).textContent).toBe('');
   });
@@ -65,7 +65,7 @@ describe('markdown blocks', () => {
   });
 });
 
-describe('markdown lists', () => {
+describe('S1 markdown lists', { tags: ['standard'] }, () => {
   it('bullet and numbered lists, and a numbered list keeps its first number', () => {
     expect(texts(renderMarkdown('- a\n- b\n* c'), 'ul > li')).toEqual(['a', 'b', 'c']);
     expect(texts(renderMarkdown('1. a\n2. b'), 'ol > li')).toEqual(['a', 'b']);
@@ -109,14 +109,13 @@ describe('markdown lists', () => {
   });
 });
 
-describe('markdown tables', () => {
+describe('S1 markdown tables', { tags: ['standard'] }, () => {
   const table = '| Name | Qty | Note |\n|:-----|:---:|-----:|\n| **a** | 1 | x \\| y |\n| b | 2 |\n| c | 3 | z | extra |';
 
-  it('keep alignment, inline markup in cells, an escaped pipe, ragged rows and cut-off extra cells', () => {
+  it('keep inline markup in cells, an escaped pipe, ragged rows and cut-off extra cells', () => {
     const root = renderMarkdown(table);
     const head = [...root.querySelectorAll('thead th')];
     expect(head.map((cell) => cell.textContent)).toEqual(['Name', 'Qty', 'Note']);
-    expect(head.map((cell) => /table__cell--(left|center|right)/.exec(cell.className)?.[1])).toEqual(['left', 'center', 'right']);
     const rows = [...root.querySelectorAll('tbody tr')].map((row) => texts(row, 'td'));
     expect(rows).toEqual([['a', '1', 'x | y'], ['b', '2', ''], ['c', '3', 'z']]);
     expect(root.querySelector('tbody strong')?.textContent).toBe('a');

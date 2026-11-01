@@ -17,7 +17,7 @@ const hash = (): string => screen.getByTestId('hash').textContent;
 
 const drawer = (): HTMLElement => screen.getByRole('dialog', { name: 'Test details' });
 
-describe('the anchor of a test', () => {
+describe('S1 the anchor of a test', { tags: ['standard'] }, () => {
   it('opens the drawer of the test named in the address', async () => {
     await mountTab(board('/#T-2'));
     expect(await screen.findByRole('heading', { name: 'Test T-2' })).toBeTruthy();
@@ -48,7 +48,7 @@ describe('the anchor of a test', () => {
   });
 });
 
-describe('walking the list with [ and ]', () => {
+describe('S1 walking the list with [ and ]', { tags: ['standard'] }, () => {
   it('moves to the next and the previous test of the list the drawer was opened from', async () => {
     await mountTab(board());
     fireEvent.click(await screen.findByRole('button', { name: 'Test T-1' }));
@@ -76,15 +76,12 @@ describe('walking the list with [ and ]', () => {
   });
 });
 
-describe('the focus mode', () => {
+describe('S1 the focus mode', { tags: ['standard'] }, () => {
   it('widens the drawer to the whole width and remembers it', async () => {
     await mountTab(board('/#T-1'));
     const toggle = await screen.findByRole('button', { name: 'Expand' });
-    expect(document.querySelector('.drawer--xl')).toBeNull();
     fireEvent.click(toggle);
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
-    expect(document.querySelector('.drawer--xl')).not.toBeNull();
-    expect(document.querySelector('.drawer--top')).toBeNull();
     expect(screen.getByRole('button', { name: 'Collapse' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('0');

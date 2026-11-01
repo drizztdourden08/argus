@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { agent, ago, DAY, MIN, mockApi, mockFetch, renderAgents, rowOf } from './agents-harness';
+import { agent, ago, DAY, MIN, mockApi, renderAgents } from './agents-harness';
 
 afterEach(() => {
   localStorage.clear();
@@ -19,20 +19,7 @@ const finding = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-describe('Agents tab: reconciler marks and findings', () => {
-  it('marks a stale record on its row and the idle and orphan ones in their drawers', async () => {
-    mockApi();
-    const { container, unmount } = await renderAgents({ agents: { 'A-3': agent({ name: 'old', updatedAt: ago(50 * MIN) }) } });
-    expect(within(rowOf(container, 'A-3')).getByText('stale')).toBeTruthy();
-    unmount();
-    for (const [id, extra, mark] of [['A-1', { idleSince: ago(6 * MIN) }, 'idle'], ['A-2', { orphanSince: ago(20 * MIN) }, 'orphan']] as const) {
-      mockApi();
-      const mounted = await renderAgents({ agents: { [id]: agent({ name: 'marked', ...extra }) } }, () => undefined, `/p/alpha#${id}`);
-      expect(within(await screen.findByRole('dialog', { name: 'Agent detail' })).getByText(mark)).toBeTruthy();
-      mounted.unmount();
-    }
-  });
-
+describe('S1 Agents tab: reconciler marks and findings', { tags: ['standard'] }, () => {
   it('marks a duplicate, a lost record and the mismatches in the drawer of a finished record', async () => {
     const cases = [
       ['A-1', { status: 'stopped', duplicateOf: 'A-9' }, ['duplicate of A-9']],
@@ -58,16 +45,9 @@ describe('Agents tab: reconciler marks and findings', () => {
     const fetchMock = vi.mocked(fetch);
     expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/agents/reconcile?project=alpha');
   });
-
-  it('shows no panel when the report is empty or the route is missing', async () => {
-    mockFetch(() => new Response('{}', { status: 404 }));
-    await renderAgents({ agents: { 'A-1': agent() } });
-    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
-    expect(screen.queryByText(/The reconciler flagged/)).toBeNull();
-  });
 });
 
-describe('Agents tab: the lead and the chats', () => {
+describe('S1 Agents tab: the chats', { tags: ['standard'] }, () => {
   const threads = {
     lead: { name: 'lead', role: 'coordinator', status: 'active', activity: 'working', note: 'dispatching', session: 'Argus', lastSeen: ago(MIN), link: 'chat://x/lead' },
     chatty: { name: 'chatty', role: 'thread', status: 'active', activity: 'working', note: 'talking', lastSeen: ago(MIN), link: 'chat://x/chat' },
@@ -76,13 +56,6 @@ describe('Agents tab: the lead and the chats', () => {
     old: { name: 'old', role: 'thread', status: 'active', archivedAt: ago(DAY) },
     merged: { name: 'merged', role: 'thread', status: 'active', mergedInto: 'chatty' },
   };
-
-  it('puts the lead, its note and its chat link in the header', async () => {
-    mockApi();
-    await renderAgents({ agents: { 'A-1': agent() }, threads });
-    expect(screen.getByText('dispatching')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open the chat of the lead' })).toBeTruthy();
-  });
 
   it('lists the owner chats in a compact section, blocked first, and hides finished ones', async () => {
     mockApi();

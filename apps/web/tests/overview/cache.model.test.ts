@@ -6,7 +6,7 @@ import { cacheError, pruneSaid } from '../../src/screens/overview/cache/model';
 
 const EMPTY = { at: '2026-10-29T12:00:00.000Z', deleted: [], abandonedDeleted: 0, freedBytes: 0, refused: [], failed: [] };
 
-describe('formatBytes', () => {
+describe('K1 formatBytes', { tags: ['critical'] }, () => {
   it('uses the unit that keeps a number small and drops the decimal from a hundred', () => {
     expect(formatBytes(0)).toBe('0 B');
     expect(formatBytes(300)).toBe('300 B');
@@ -22,7 +22,7 @@ describe('formatBytes', () => {
   });
 });
 
-describe('the prune sentences', () => {
+describe('K4 the prune sentences', { tags: ['critical'] }, () => {
   it('counts what a prune deleted and what it freed', () => {
     const said = pruneSaid({ ...EMPTY, abandonedDeleted: 2, freedBytes: 2048, deleted: [{ kind: 'package', name: 'n', version: '1.0.0', buildKey: 'node-aa', sizeBytes: 2048 }] });
     expect(said).toEqual({ variant: 'success', message: 'Deleted 1 cache entry and 2 temp folders, 2.0 KB freed.' });

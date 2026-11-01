@@ -12,7 +12,7 @@ const groupOf = (container: HTMLElement, key: string): HTMLElement => container.
 
 const titlesIn = (card: HTMLElement): string[] => [...card.querySelectorAll('[data-test]')].map((row) => row.getAttribute('data-test') ?? '');
 
-describe('grouping', () => {
+describe('S1 grouping', { tags: ['standard'] }, () => {
   it('by item makes one card per item with its tests and no item chip', async () => {
     const { container } = await mountTab(filterBoard());
     await screen.findByText('Login works');
@@ -41,14 +41,9 @@ describe('grouping', () => {
     expect(container.querySelector('[data-bundle="b1"]')).not.toBeNull();
     expect(localStorage.getItem('coord.g.tests3')).toBe('build');
   });
-
-  it('says there is no test at all when the board has none', async () => {
-    await mountTab({});
-    expect(await screen.findByText('No test yet. Threads document every test here with coord test.')).toBeTruthy();
-  });
 });
 
-describe('the order', () => {
+describe('S1 the order', { tags: ['standard'] }, () => {
   const ranked = () => ({
     builds: [buildDoc('b1')],
     tests: [
@@ -68,7 +63,7 @@ describe('the order', () => {
   });
 });
 
-describe('show passed', () => {
+describe('S1 show passed', { tags: ['standard'] }, () => {
   const withPassed = () => ({ builds: [buildDoc('b1')], tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'fine'), doneDoc('T-3', 'fail', 'broken')] });
 
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
@@ -88,7 +83,7 @@ describe('show passed', () => {
   });
 });
 
-describe('closed bundles and the search', () => {
+describe('S1 closed bundles and the search', { tags: ['standard'] }, () => {
   const closed = () => ({
     builds: [buildDoc('open-1'), buildDoc('old-1', { closedAt: '2026-10-25T10:00:00.000Z', closedBy: 'lead' })],
     items: [itemDoc('I-1')],

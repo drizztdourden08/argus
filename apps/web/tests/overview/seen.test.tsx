@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isFresh, useUnread } from '../../src/screens/overview/seen';
 
 const KEY = 'argus.test.seen';
-const minutesAgo = (minutes: number): string => new Date(Date.now() - minutes * 60000).toISOString();
+const NOW = Date.parse('2026-10-26T12:00:00.000Z');
+const minutesAgo = (minutes: number): string => new Date(NOW - minutes * 60000).toISOString();
 
 interface Props {
   items: { at?: string }[];
@@ -13,13 +14,18 @@ interface Props {
 
 const mount = (props: Props) => renderHook((current: Props) => useUnread(KEY, current.items, current.active), { initialProps: props });
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(NOW);
+});
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
-describe('unread since the last visit', () => {
+describe('S1 unread since the last visit', { tags: ['standard'] }, () => {
   it('counts every entry with a time when the tab was never opened, and skips one with no time', () => {
     const view = mount({ items: [{ at: minutesAgo(5) }, { at: minutesAgo(1) }, {}], active: false });
     expect(view.result.current.unread).toHaveLength(2);
@@ -34,7 +40,7 @@ describe('unread since the last visit', () => {
   it('counts nothing while the tab is open, reads everything, and remembers the time', () => {
     const view = mount({ items: [{ at: minutesAgo(5) }], active: true });
     expect(view.result.current.unread).toEqual([]);
-    expect(Date.parse(localStorage.getItem(KEY) ?? '')).toBeGreaterThan(Date.now() - 5000);
+    expect(localStorage.getItem(KEY)).toBe(new Date(NOW).toISOString());
   });
 
   it('keeps what was read as read after the tab is left, and counts what arrives afterwards', () => {
@@ -42,7 +48,7 @@ describe('unread since the last visit', () => {
     const view = mount({ items: [first], active: true });
     view.rerender({ items: [first], active: false });
     expect(view.result.current.unread).toEqual([]);
-    const later = { at: new Date(Date.now() + 60000).toISOString() };
+    const later = { at: new Date(NOW + 60000).toISOString() };
     view.rerender({ items: [first, later], active: false });
     expect(view.result.current.unread).toEqual([later]);
   });

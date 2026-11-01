@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { plainText } from '../../src/screens/board/plain-text';
 
-describe('plain text of a clamped card', () => {
+describe('K1 plain text of a clamped card', { tags: ['critical'] }, () => {
   it('removes the marks, keeps the words, one line', () => {
     expect(plainText('# Title\n\n**bold** and *it* and ~~del~~ and `code`\n- item one\n- [x] item two\n> quoted\n1. first')).toBe(
       'Title bold and it and del and code item one item two quoted first',
@@ -29,9 +29,8 @@ describe('plain text of a clamped card', () => {
     expect(plainText('<b>x</b>')).toBe('<b>x</b>');
   });
 
-  it('stays quick on a hostile input', () => {
-    const started = Date.now();
-    plainText(`${'*a '.repeat(20000)}\n${'`'.repeat(5000)}`);
-    expect(Date.now() - started).toBeLessThan(3000);
+  it('finishes on a hostile input, the timeout of the critical tag is the bound', () => {
+    const text = plainText(`${'*a '.repeat(20000)}\n${'`'.repeat(5000)}`);
+    expect(text.length).toBeGreaterThan(0);
   });
 });

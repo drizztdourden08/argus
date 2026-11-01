@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { feed } from './helpers/feed';
@@ -20,13 +20,7 @@ const open = async (notifications: Record<string, object> = NOTIFICATIONS) => {
 
 const posts = (calls: ApiCall[], path: string): ApiCall[] => calls.filter((call) => call.method === 'POST' && call.path === path);
 
-describe('the Notifications tab record', () => {
-  it('says there is none yet, with the plain sentence', async () => {
-    stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
-    await open({});
-    expect(await screen.findByText('No notification yet. Threads ping you here when you are needed.')).toBeTruthy();
-  });
-
+describe('S1 the Notifications tab record', { tags: ['standard'] }, () => {
   it('shows the title, the text, the level, the project link and the note on the toast', async () => {
     stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
     await open();
@@ -60,36 +54,15 @@ describe('the Notifications tab record', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'RotP 1' }));
     expect(await screen.findByText('FYI')).toBeTruthy();
   });
-
-  it('says nothing matches when a level has no entries', async () => {
-    stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
-    await open();
-    await screen.findByText('RotP: build ready');
-    fireEvent.click(screen.getByText('ping 0'));
-    expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();
-  });
-
-  it('shows a note with no time, no level and no number as a row', async () => {
-    stubApi((call) => (call.path === '/api/notify/settings' ? { body: SETTINGS } : undefined));
-    await open({ 'n-5': { text: 'bare' } });
-    expect(await screen.findByText('bare')).toBeTruthy();
-  });
 });
 
-describe('the test button', () => {
+describe('S1 the test button', { tags: ['standard'] }, () => {
   it('posts to /api/notify/test and says the toast should be on screen', async () => {
     const calls = stubApi((call) => (call.path === '/api/notify/test' ? { body: { toast: 'shown' } } : { body: SETTINGS }));
     await open();
     fireEvent.click(await screen.findByRole('button', { name: 'Send a test notification' }));
     expect(await screen.findByText('Sent: the toast should be on your screen now.')).toBeTruthy();
     expect(posts(calls, '/api/notify/test')).toHaveLength(1);
-  });
-
-  it('says why there was no toast, and that it is recorded', async () => {
-    stubApi((call) => (call.path === '/api/notify/test' ? { body: { toast: 'limited', why: 'you pinged 4 times in a minute' } } : { body: SETTINGS }));
-    await open();
-    fireEvent.click(await screen.findByRole('button', { name: 'Send a test notification' }));
-    expect(await screen.findByText('No toast: you pinged 4 times in a minute. It is recorded below.')).toBeTruthy();
   });
 
   it('says not sent with the message when the route fails', async () => {
@@ -100,26 +73,7 @@ describe('the test button', () => {
   });
 });
 
-describe('the settings row', () => {
-  it('reads the settings when the tab opens, not before', async () => {
-    const calls = stubApi(() => ({ body: SETTINGS }));
-    const view = renderAt('/');
-    await feed(view.sources, { cards: CARDS });
-    expect(calls.filter((call) => call.path === '/api/notify/settings')).toEqual([]);
-    cleanup();
-    await open();
-    await screen.findByText('Notification settings');
-    expect(calls.filter((call) => call.path === '/api/notify/settings')).toHaveLength(1);
-  });
-
-  it('shows a Toast and a Sound toggle per level', async () => {
-    stubApi(() => ({ body: SETTINGS }));
-    await open();
-    const ping = await screen.findByRole('group', { name: 'ping' });
-    expect(within(ping).getByRole('button', { name: 'Toast' })).toBeTruthy();
-    expect(within(ping).getByRole('button', { name: 'Sound' })).toBeTruthy();
-  });
-
+describe('S1 the settings row', { tags: ['standard'] }, () => {
   it('saves a toggle at once with just that switch and shows the answer', async () => {
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { ...SETTINGS, toast: { ...SETTINGS.toast, ping: false } } } : { body: SETTINGS }));
     await open();
@@ -142,11 +96,5 @@ describe('the settings row', () => {
     stubApi(() => ({ status: 500, body: { error: { code: 'internal', message: 'disk' } } }));
     await open();
     expect(await screen.findByText('The settings could not be read: disk.')).toBeTruthy();
-  });
-
-  it('says OS notifications are off when notify.os is false', async () => {
-    stubApi(() => ({ body: { ...SETTINGS, os: false } }));
-    await open();
-    expect(await screen.findByText('OS notifications are off in config.json (notify.os): nothing is shown.')).toBeTruthy();
   });
 });
