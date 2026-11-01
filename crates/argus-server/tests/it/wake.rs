@@ -416,11 +416,12 @@ async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
         "no replay to a legacy listener: its first wake is the live one, which lists what is pending"
     );
     assert!(legacy2.next(Some("wake"), 5000).await.is_some());
-    let row = wake_where(t, "beta", |w| {
-        w["text"] == "live while only legacy listens" && w["status"] == "queued"
-    })
-    .await;
-    assert_eq!(row["listeners"], 0, "dead orphans cannot swallow a wake");
+    let row = wake_where(t, "beta", |w| w["text"] == "live while only legacy listens").await;
+    assert_eq!(
+        row["status"], "queued",
+        "dead orphans cannot swallow a wake: {row}"
+    );
+    assert_eq!(row["listeners"], 0, "{row}");
 
     let modern = wake_stream(t, "coordinator", "beta").await;
     assert!(!legacy.ended(), "a v2 stream does not replace a legacy one");
