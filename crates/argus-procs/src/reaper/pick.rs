@@ -184,6 +184,7 @@ pub(crate) fn pick(sample: &Sample, state: &mut ReaperState, cfg: &ReaperConfig)
     out
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

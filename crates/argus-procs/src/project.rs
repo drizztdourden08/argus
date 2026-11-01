@@ -62,6 +62,7 @@ pub fn project_of(proc: &ProcRow, roots: &[(String, String)]) -> Option<String> 
         .or_else(|| drive_folder(&text))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
