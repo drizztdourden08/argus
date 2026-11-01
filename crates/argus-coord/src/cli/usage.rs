@@ -64,6 +64,7 @@ Coordinator side (the same verbs work on every thread's records; --for <T> creat
 
 Ping the owner (any registered thread, the Overlord too; an OS notification on his screen and a line in Argus > Notifications):
   coord remote ci-root <project> <dir> | <project> --clear      (the integration checkout coord check and coord pr merge run Brock in, for a project whose main checkout lags; kept in ~/.coord/remote.json)
+  coord remote synced [--note "<what went out>"]      (the lead's daily full remote sync is done; recorded per project in ~/.coord/remote.json, Argus wakes the thread after 24 h without one)
   coord remote [status|local|remote]      (the GitHub switch, ~/.coord/remote.json: local = nothing calls gh, the GitHub API or registry and nothing is pushed (the default); remote = the owner's go, set only when he says so)
   coord ping "<text, max 240>" [--title "<t, max 60>"] [--level info|ping|urgent] [--project k]
               (ping only when the owner is needed: a build handed and ready to test, a blocking decision only he can answer, something

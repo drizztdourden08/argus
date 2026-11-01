@@ -23,7 +23,9 @@ fn without_a_file_the_status_is_local_by_default() {
     assert_eq!(ran.code, 0);
     assert_eq!(
         ran.out,
-        format!("remote mode: local (no file: the default while the freeze lasts). {FROZEN}\n")
+        format!(
+            "remote mode: local (no file: the default while the freeze lasts). {FROZEN}\nno remote sync recorded yet.\n"
+        )
     );
     assert!(!home.coord_home().join("remote.json").exists());
     assert_eq!(ran.out, coord(&["remote", "status"], home.env(), &cwd).out);
@@ -74,7 +76,7 @@ fn an_unknown_word_is_refused_with_the_usage_and_writes_nothing() {
     assert_eq!(ran.code, 1);
     assert!(
         ran.err
-            .contains("usage: coord remote [status|local|remote|ci-root <project> <dir>].")
+            .contains("usage: coord remote [status|local|remote|synced|ci-root <project> <dir>].")
     );
     assert!(!home.coord_home().join("remote.json").exists());
 }
@@ -111,7 +113,7 @@ fn ci_root_keeps_the_checkout_and_the_status_lists_it() {
     assert!(written["by"].is_null());
     let status = coord(&["remote"], home.env(), &cwd);
     assert!(
-        status.out.ends_with(&format!("\n  ci-root brock: {dir}\n")),
+        status.out.contains(&format!("\n  ci-root brock: {dir}\n")),
         "{}",
         status.out
     );
@@ -184,5 +186,70 @@ fn ci_root_refuses_a_bad_project_a_missing_folder_and_a_missing_dir() {
     let gone = coord(&["remote", "ci-root", "brock", "nowhere"], home.env(), &cwd);
     assert_eq!(gone.code, 1);
     assert!(gone.err.contains("nowhere does not exist."), "{}", gone.err);
+    assert!(!home.coord_home().join("remote.json").exists());
+}
+
+#[test]
+fn synced_records_the_project_sync_and_the_status_lists_it() {
+    let home = Home::new();
+    let cwd = home.folder("checkout");
+    let note = "pushed 2 PRs, released 0.1.0";
+    let argv = ["remote", "synced", "--project", "demo", "--note", note];
+    let ran = coord(&argv, home.env(), &cwd);
+    assert_eq!(ran.code, 0, "{}", ran.err);
+    let record = file_of(&home)["syncs"]["demo"].clone();
+    let at = record["at"].as_str().unwrap();
+    assert!(argus_core::clock::parse_ms(at).is_some());
+    assert_eq!(record["by"], "demo");
+    assert_eq!(record["note"], note);
+    assert_eq!(
+        ran.out,
+        format!("remote sync of demo recorded at {at}: {note}. Due again in 24 h.\n")
+    );
+    let status = coord(&["remote", "status"], home.env(), &cwd);
+    let listed = format!("\nlast remote sync per lead:\n  demo: {at} ({note})\n");
+    assert!(status.out.ends_with(&listed), "{}", status.out);
+    assert_eq!(read_state(&home.coord_home()).syncs.len(), 1);
+}
+
+#[test]
+fn a_sync_without_a_note_says_so_and_a_mode_switch_keeps_the_records() {
+    let home = Home::new();
+    let cwd = home.folder("checkout");
+    let argv = ["remote", "synced", "--project", "demo", "--as", "lead-1"];
+    let ran = coord(&argv, home.env(), &cwd);
+    assert_eq!(ran.code, 0, "{}", ran.err);
+    let record = file_of(&home)["syncs"]["demo"].clone();
+    assert_eq!(record["by"], "lead-1");
+    assert_eq!(record["note"], "");
+    let at = record["at"].as_str().unwrap();
+    assert_eq!(
+        ran.out,
+        format!("remote sync of demo recorded at {at}. Due again in 24 h.\n")
+    );
+    let env = home.env();
+    let to_remote = coord(&["remote", "remote", "--as", "owner"], env.clone(), &cwd);
+    assert_eq!(to_remote.code, 0);
+    assert_eq!(coord(&["remote", "local"], env, &cwd).code, 0);
+    assert_eq!(file_of(&home)["syncs"]["demo"], record, "a switch keeps it");
+}
+
+#[test]
+fn a_long_note_is_cut_to_400_characters() {
+    let home = Home::new();
+    let cwd = home.folder("checkout");
+    let long = "x".repeat(450);
+    let argv = ["remote", "synced", "--project", "demo", "--note", long.as_str()];
+    assert_eq!(coord(&argv, home.env(), &cwd).code, 0);
+    let note = file_of(&home)["syncs"]["demo"]["note"].clone();
+    assert_eq!(note.as_str().unwrap().len(), 400);
+}
+
+#[test]
+fn synced_without_a_project_is_refused_and_writes_nothing() {
+    let home = Home::new();
+    let cwd = home.folder("checkout");
+    let ran = coord(&["remote", "synced"], home.env(), &cwd);
+    assert_eq!(ran.code, 1);
     assert!(!home.coord_home().join("remote.json").exists());
 }

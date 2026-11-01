@@ -24,6 +24,7 @@ pub mod service;
 pub mod source;
 pub mod sse;
 pub mod store;
+pub mod sync_wakes;
 pub mod testkit;
 pub mod text;
 pub mod time;

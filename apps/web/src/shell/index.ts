@@ -8,5 +8,6 @@ export { ProjectSwitcher } from './ProjectSwitcher';
 export { RegisteredFrame } from './RegisteredFrame';
 export { ReplayTag } from './ReplayTag';
 export { StatusNotice } from './StatusNotice';
+export { SyncStamp } from './SyncStamp';
 export type { HashTab } from './shell.type';
 export { Age } from './Age';

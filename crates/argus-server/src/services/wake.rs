@@ -10,6 +10,7 @@ use argus_sync::SyncService;
 use argus_wake::config::WakeConfig;
 use argus_wake::service::driver::{self, SharedWake, lock};
 use argus_wake::service::{WakeDeps, WakeService};
+use argus_wake::source::FileSyncs;
 use serde_json::Value;
 use tokio_util::sync::CancellationToken;
 
@@ -26,6 +27,7 @@ fn deps(svc: &Services, boards: &Arc<WakeBoards>) -> WakeDeps {
         docs: Arc::new(WakeDocs::new(Arc::clone(&svc.db))),
         boards: Arc::clone(boards) as _,
         live: Arc::new(WatcherLive::new(svc.agent_watcher.clone())),
+        syncs: Arc::new(FileSyncs::new(svc.paths.coord_home.clone())),
         activity: Some(Arc::new(ActivityAdapter::of(svc))),
         clock: Arc::new(SystemClock),
     }

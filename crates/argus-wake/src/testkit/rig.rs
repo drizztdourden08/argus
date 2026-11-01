@@ -10,7 +10,9 @@ use super::listen::Tap;
 use crate::board::BoardView;
 use crate::config::WakeConfig;
 use crate::engine::{AttachOptions, EngineConfig, WakeEngine, channel};
-use crate::memory::{MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore};
+use crate::memory::{
+    MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore, MemorySyncs,
+};
 use crate::registry::RowState;
 use crate::service::{WakeDeps, WakeService};
 use crate::source::NoLive;
@@ -109,6 +111,8 @@ pub struct Rig {
     pub boards: MemoryBoards,
     /// The activity log.
     pub activity: MemoryActivity,
+    /// The remote syncs of the projects.
+    pub syncs: MemorySyncs,
     /// The service.
     pub service: WakeService,
 }
@@ -123,12 +127,14 @@ impl Rig {
         let docs = MemoryDocs::new();
         let boards = MemoryBoards::new();
         let activity = MemoryActivity::new();
+        let syncs = MemorySyncs::new();
         let deps = WakeDeps {
             store: Box::new(store.clone()),
             faults: Box::new(faults.clone()),
             docs: Arc::new(docs.clone()),
             boards: Arc::new(boards.clone()),
             live: Arc::new(NoLive),
+            syncs: Arc::new(syncs.clone()),
             activity: Some(Arc::new(activity.clone())),
             clock: Arc::new(clock.clone()),
         };
@@ -140,6 +146,7 @@ impl Rig {
             docs,
             boards,
             activity,
+            syncs,
             service,
         }
     }

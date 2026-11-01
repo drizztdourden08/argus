@@ -10,7 +10,7 @@ use argus_wake::engine::{AttachOptions, ListenerMessage, channel};
 use argus_wake::memory::{MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore};
 use argus_wake::service::driver::{SharedWake, lock, spawn};
 use argus_wake::service::{WakeDeps, WakeService};
-use argus_wake::source::NoLive;
+use argus_wake::source::{NoLive, NoSyncs};
 use argus_wake::testkit::wake;
 
 fn shared() -> SharedWake {
@@ -20,6 +20,7 @@ fn shared() -> SharedWake {
         docs: Arc::new(MemoryDocs::new()),
         boards: Arc::new(MemoryBoards::new()),
         live: Arc::new(NoLive),
+        syncs: Arc::new(NoSyncs),
         activity: None,
         clock: Arc::new(SystemClock),
     };

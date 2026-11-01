@@ -16,10 +16,19 @@ interface ReplayCounts {
   checks: number;
 }
 
+interface RemoteSync {
+  at: string;
+  by: string | null;
+  note: string;
+}
+
+type SyncMap = Readonly<Record<string, RemoteSync>>;
+
 interface RemoteInfo {
   mode: RemoteMode;
   replay: Partial<ReplayCounts>;
   ciRoots?: Readonly<Record<string, string>>;
+  syncs?: SyncMap;
 }
 
 interface ReleaseAsset {
@@ -128,5 +137,5 @@ interface RemoteRead<T> {
 
 export type {
   CheckQuery, CheckRun, CheckStatus, CheckStep, ProjectReleases, RegistryBuild, RegistryConsumer, RegistryReport, ReleaseChannel,
-  ReleaseVersion, RemoteInfo, RemoteRead, Replay, ReplayCounts, ReplayState,
+  ReleaseVersion, RemoteInfo, RemoteRead, RemoteSync, Replay, ReplayCounts, ReplayState, SyncMap,
 };

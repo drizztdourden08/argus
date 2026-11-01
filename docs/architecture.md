@@ -556,6 +556,7 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `presence` | Open board tabs, `board-closed` faults |
 | `agent_wakes` | `agent-stale` and `agent-checkin` |
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
+| `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
 
 It listens to `Applied` events from the bus and offers `submit(Wake)` to other crates (procs,
 worktrees, agents). It never decides from page data: it reads boards through the `Boards` trait.

@@ -25,8 +25,9 @@ use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE};
 use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
-use crate::source::{AgentLive, BoardSource};
+use crate::source::{AgentLive, BoardSource, SyncSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore};
+use crate::sync_wakes::SyncWakes;
 use crate::wake::WakeInput;
 use argus_core::clock::Clock;
 use periodic::Schedule;
@@ -46,6 +47,8 @@ pub struct WakeDeps {
     pub boards: Arc<dyn BoardSource>,
     /// The live Claude tasks of the sub-agents.
     pub live: Arc<dyn AgentLive>,
+    /// The last remote sync of each project.
+    pub syncs: Arc<dyn SyncSource>,
     /// The activity log, when there is one.
     pub activity: Option<Arc<dyn ActivitySink>>,
     /// The clock.
@@ -75,8 +78,10 @@ pub struct WakeService {
     track_presence: bool,
     agents: AgentWakes,
     items: ItemWakes,
+    sync_wakes: SyncWakes,
     boards: Arc<dyn BoardSource>,
     live: Arc<dyn AgentLive>,
+    syncs: Arc<dyn SyncSource>,
     activity: Option<Arc<dyn ActivitySink>>,
     clock: Arc<dyn Clock>,
     config: WakeConfig,
@@ -117,8 +122,10 @@ impl WakeService {
             track_presence,
             agents: AgentWakes::new(config.agents.clone(), now),
             items: ItemWakes::new(config.items.clone()),
+            sync_wakes: SyncWakes::new(config.syncs.clone(), now),
             boards: deps.boards,
             live: deps.live,
+            syncs: deps.syncs,
             activity: deps.activity,
             clock: deps.clock,
             config: config.clone(),

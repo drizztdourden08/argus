@@ -6,6 +6,7 @@ use super::WakeService;
 use crate::config::WakeConfig;
 use crate::item_wakes::ItemEnv;
 use crate::registry::Registry;
+use crate::sync_wakes::SyncEnv;
 
 const PRUNE_EVERY_MS: i64 = 3_600_000;
 
@@ -14,10 +15,12 @@ pub(super) struct Schedule {
     registry: i64,
     agents: i64,
     items: i64,
+    syncs: i64,
     prune: i64,
     registry_every: i64,
     agents_every: i64,
     items_every: i64,
+    syncs_every: i64,
 }
 
 impl Schedule {
@@ -26,10 +29,12 @@ impl Schedule {
             registry: now + config.registry.tick_ms,
             agents: now + config.agents.tick_ms,
             items: now + config.items.tick_ms,
+            syncs: now + config.syncs.tick_ms,
             prune: now + PRUNE_EVERY_MS,
             registry_every: config.registry.tick_ms,
             agents_every: config.agents.tick_ms,
             items_every: config.items.tick_ms,
+            syncs_every: config.syncs.tick_ms,
         }
     }
 
@@ -37,6 +42,7 @@ impl Schedule {
         self.registry
             .min(self.agents)
             .min(self.items)
+            .min(self.syncs)
             .min(self.prune)
     }
 }
@@ -74,6 +80,10 @@ impl WakeService {
         if now >= self.schedule.items {
             self.schedule.items = now + self.schedule.items_every;
             self.item_tick();
+        }
+        if now >= self.schedule.syncs {
+            self.schedule.syncs = now + self.schedule.syncs_every;
+            self.sync_tick();
         }
         if now >= self.schedule.prune {
             self.schedule.prune = now + PRUNE_EVERY_MS;
@@ -124,6 +134,33 @@ impl WakeService {
             }
         }
         self.submit_logged(&out.wakes, "item wakes");
+        out.wakes.len()
+    }
+
+    /// The remote sync wakes and activity lines due now; returns how many wakes were sent.
+    pub fn sync_tick(&mut self) -> usize {
+        let now = self.clock.now_ms();
+        let store = self.engine.store();
+        let last_sent = |scope: &str, thread: &str, reason: &str, subject: &str| {
+            store
+                .last_at(scope, thread, reason, Some(subject))
+                .unwrap_or_else(|err| {
+                    warn!(%err, "sync wakes: last wake not read");
+                    0
+                })
+        };
+        let env = SyncEnv {
+            boards: self.boards.as_ref(),
+            syncs: self.syncs.as_ref(),
+            last_sent: &last_sent,
+        };
+        let out = self.sync_wakes.tick(now, &env);
+        if let Some(sink) = &self.activity {
+            for line in out.activity {
+                sink.add(line);
+            }
+        }
+        self.submit_logged(&out.wakes, "sync wakes");
         out.wakes.len()
     }
 }

@@ -10,6 +10,7 @@ use crate::registry::{
     DEFAULT_ALIVE_MS, DEFAULT_BOARD_GRACE_MS, DEFAULT_NO_LISTENER_MS, DEFAULT_REACTION_MS,
     DEFAULT_TICK_MS, RegistryConfig,
 };
+use crate::sync_wakes::SyncWakeConfig;
 
 /// The coalescing window when config.json does not say.
 pub const DEFAULT_WINDOW_MS: i64 = 2000;
@@ -61,6 +62,8 @@ pub struct WakeConfig {
     pub agents: AgentWakeConfig,
     /// The Kanban reminders (`items.*`).
     pub items: ItemWakeConfig,
+    /// The remote sync wake (`remoteSync.*`).
+    pub syncs: SyncWakeConfig,
 }
 
 impl Default for WakeConfig {
@@ -89,6 +92,7 @@ impl WakeConfig {
             registry,
             agents: AgentWakeConfig::from_json(config.get("agents").unwrap_or(&Value::Null)),
             items: ItemWakeConfig::from_json(config.get("items").unwrap_or(&Value::Null)),
+            syncs: SyncWakeConfig::from_json(config.get("remoteSync").unwrap_or(&Value::Null)),
         }
     }
 }

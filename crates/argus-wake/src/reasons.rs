@@ -7,7 +7,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 25] = [
+pub const WAKE_REASONS: [&str; 26] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -33,6 +33,7 @@ pub const WAKE_REASONS: [&str; 25] = [
     "worktree-review",
     "launcher-stale",
     "launcher-master-missing",
+    "remote-sync-due",
 ];
 
 /// What the owner is waiting on, and a fault for the Overlord: these close the window at once.
