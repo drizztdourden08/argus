@@ -13,8 +13,8 @@ no store call at all.
 
 These fields move on every tick by nature, so they are left out of the comparison:
 
-- `cpuPct`, `memMB`, `ageMin` and `idleMin` of a row: the page shows them, but a number that drifts is
-  not news. Anything they cause that matters shows in `status` or `flags`, which are compared.
+- `cpuPct`, `memMB`, `ageMin` and `idleMin` of a row: the page shows them, but a number that
+  drifts is not news. Anything they cause that matters shows in `status` or `flags`, which are compared.
 - `sampledAt` and `tookMs` of the meta.
 
 Everything else counts: a row added or gone, status, flags, the parent, the rule, the
