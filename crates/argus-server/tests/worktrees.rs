@@ -599,6 +599,49 @@ async fn a_folder_git_left_behind_is_a_leftover_without_an_age_limit_for_the_bat
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_threads_release_removes_a_safe_worktree_at_once_and_refuses_one_with_work_in_it() {
+    let r = Rig::start().await;
+    r.scanned().await;
+    let dirty = r
+        .cli(
+            "/api/p/alpha/worktrees/release",
+            &json!({ "id": id_of(&r.path("dirty-old")), "by": "ui" }),
+        )
+        .await;
+    assert_eq!((dirty.status, dirty.code().as_str()), (403, "forbidden"));
+    assert!(
+        dirty.json()["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("is not released: it has 1 uncommitted change")
+    );
+    let page = r
+        .page(
+            "/api/p/alpha/worktrees/release",
+            &json!({ "id": id_of(&r.path("old-merged")) }),
+        )
+        .await;
+    assert_eq!(page.status, 403, "release is a thread's word");
+    let done = r
+        .cli(
+            "/api/p/alpha/worktrees/release",
+            &json!({ "id": id_of(&r.path("old-merged")), "by": "ui" }),
+        )
+        .await;
+    assert_eq!(done.status, 200, "{}", done.json());
+    assert_eq!(done.json()["removed"], true);
+    gone(&r.path("old-merged")).await;
+    assert!(r.path("dirty-old").exists());
+    let removed = until("the removal in the summary", || async {
+        let meta = r.meta().await;
+        meta["hygiene"]["removed"][0]["path"].as_str().map(str::to_owned)
+    })
+    .await;
+    assert!(removed.ends_with("/old-merged"), "{removed}");
+    r.t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn shadow_mode_scans_and_shows_and_removes_nothing() {
     let r = Rig::with(Setup {
         shadow: true,
@@ -612,6 +655,7 @@ async fn shadow_mode_scans_and_shows_and_removes_nothing() {
         ("/api/p/alpha/worktrees/remove", json!({ "id": id })),
         ("/api/p/alpha/worktrees/prune", json!({})),
         ("/api/p/alpha/worktrees/leftovers/remove", json!({})),
+        ("/api/p/alpha/worktrees/release", json!({ "id": id })),
     ] {
         let refused = r.page(path, &body).await;
         assert_eq!(
