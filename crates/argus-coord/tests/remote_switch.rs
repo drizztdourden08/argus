@@ -239,7 +239,14 @@ fn a_long_note_is_cut_to_400_characters() {
     let home = Home::new();
     let cwd = home.folder("checkout");
     let long = "x".repeat(450);
-    let argv = ["remote", "synced", "--project", "demo", "--note", long.as_str()];
+    let argv = [
+        "remote",
+        "synced",
+        "--project",
+        "demo",
+        "--note",
+        long.as_str(),
+    ];
     assert_eq!(coord(&argv, home.env(), &cwd).code, 0);
     let note = file_of(&home)["syncs"]["demo"]["note"].clone();
     assert_eq!(note.as_str().unwrap().len(), 400);

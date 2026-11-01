@@ -86,7 +86,9 @@ fn sync_list(state: &State) -> String {
         return "no remote sync recorded yet.".to_owned();
     }
     let rows = state.syncs.iter().fold(String::new(), |all, (key, sync)| {
-        let at = sync.get("at").map_or_else(|| "undefined".to_owned(), js_text);
+        let at = sync
+            .get("at")
+            .map_or_else(|| "undefined".to_owned(), js_text);
         let note = sync
             .get("note")
             .and_then(serde_json::Value::as_str)

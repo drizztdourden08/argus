@@ -7,7 +7,7 @@ use argus_wake::config::WakeConfig;
 use argus_wake::memory::{MemoryBoards, MemorySyncs};
 use argus_wake::reasons::{IMMEDIATE_REASONS, WAKE_REASONS};
 use argus_wake::sync_wakes::{
-    SyncEnv, SyncWakeConfig, SyncWakes, ago_text, due_text, REASON, SYNC_KIND,
+    REASON, SYNC_KIND, SyncEnv, SyncWakeConfig, SyncWakes, ago_text, due_text,
 };
 use argus_wake::testkit::{DAY, HOUR, MIN, Rig, START, board};
 use argus_wake::time::iso;
@@ -123,7 +123,11 @@ fn a_project_that_never_synced_wakes_its_lead_at_24_h_once_and_again_at_48_h() {
     assert_eq!(world.at(72), 1, "and every 24 h after");
     let first = &world.events[0];
     assert_eq!(
-        (first.scope.as_str(), first.thread.as_str(), first.reason.as_str()),
+        (
+            first.scope.as_str(),
+            first.thread.as_str(),
+            first.reason.as_str()
+        ),
         ("alpha", "lead", "remote-sync-due")
     );
     assert_eq!(first.subject.as_deref(), Some("alpha"));
@@ -187,7 +191,8 @@ fn an_archived_or_done_lead_and_a_board_with_no_lead_are_left_alone() {
         assert_eq!(world.at(48), 0, "{status}");
     }
     let mut world = World::new();
-    let no_lead = json!({"threads": {"worker": {"id": "worker", "role": "thread", "status": "active"}}});
+    let no_lead =
+        json!({"threads": {"worker": {"id": "worker", "role": "thread", "status": "active"}}});
     world.boards.set("alpha", board(&no_lead));
     assert_eq!(world.at(48), 0);
     let placeholder = json!({"threads": {"lead": {
@@ -236,7 +241,10 @@ fn a_restart_does_not_send_the_wake_again_at_once() {
     let sent_at = START + 24 * HOUR;
     world.wakes = SyncWakes::new(SyncWakeConfig::default(), START + 26 * HOUR);
     world.last_sent = Box::new(move |scope, thread, reason, subject| {
-        assert_eq!((scope, thread, reason, subject), ("alpha", "lead", REASON, "alpha"));
+        assert_eq!(
+            (scope, thread, reason, subject),
+            ("alpha", "lead", REASON, "alpha")
+        );
         sent_at
     });
     assert_eq!(world.at(27), 0, "the wakes table remembers the last one");
@@ -268,13 +276,19 @@ fn a_new_record_leaves_one_activity_line_and_a_due_wake_one_more() {
     );
     world.sync_at(30);
     world.at(30);
-    assert_eq!(world.lines_of(SYNC_KIND).len(), 2, "a second record, a second line");
+    assert_eq!(
+        world.lines_of(SYNC_KIND).len(),
+        2,
+        "a second record, a second line"
+    );
 }
 
 #[test]
 fn a_record_older_than_the_start_is_not_news() {
     let mut world = World::new();
-    world.syncs.set("alpha", &iso(START - 2 * HOUR), "alpha", "before the start");
+    world
+        .syncs
+        .set("alpha", &iso(START - 2 * HOUR), "alpha", "before the start");
     assert_eq!(world.at(1), 0);
     assert!(world.lines.is_empty(), "{:?}", world.lines);
 }
@@ -332,7 +346,8 @@ fn the_service_ticks_the_wake_logs_the_lines_and_remembers_what_it_sent() {
             .iter()
             .any(|l| l.kind == REASON && l.text == "alpha/lead: remote sync due, last never")
     );
-    rig.syncs.set("alpha", &iso(START + 25 * HOUR), "lead", "pushed");
+    rig.syncs
+        .set("alpha", &iso(START + 25 * HOUR), "lead", "pushed");
     rig.clock.advance(HOUR);
     assert_eq!(rig.service.sync_tick(), 0);
     assert!(

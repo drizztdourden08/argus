@@ -210,8 +210,13 @@ impl SyncWakes {
             project: Some(scope.to_owned()),
             thread: Some(lead.id.clone()),
         });
-        out.wakes
-            .push(WakeInput::about(scope, &lead.id, REASON, scope, due_text(&ago)));
+        out.wakes.push(WakeInput::about(
+            scope,
+            &lead.id,
+            REASON,
+            scope,
+            due_text(&ago),
+        ));
         self.sent.insert(format!("{scope}/{}", lead.id), now);
     }
 
