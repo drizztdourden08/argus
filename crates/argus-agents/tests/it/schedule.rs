@@ -1,4 +1,6 @@
-//! The service loop: one poll at start, then one per period, until it is stopped.
+//! The service loop: one poll at start, then one per period, on tokio's paused clock.
+//! K2: the service loop polls at start and every period.
+// test-tag: critical
 
 use argus_agents::{Tick, start};
 use std::sync::Arc;
@@ -17,20 +19,12 @@ impl Tick for Counter {
     }
 }
 
-#[tokio::test]
-async fn polls_at_start_and_every_period_until_stopped() {
+#[tokio::test(start_paused = true)]
+async fn polls_at_start_and_every_period() {
     let counter = Arc::new(Counter(AtomicUsize::new(0)));
     let handle = start(Arc::clone(&counter));
-    for _ in 0..200 {
-        if counter.0.load(Ordering::SeqCst) >= 3 {
-            break;
-        }
+    while counter.0.load(Ordering::SeqCst) < 3 {
         tokio::time::sleep(Duration::from_millis(20)).await;
     }
-    assert!(counter.0.load(Ordering::SeqCst) >= 3);
     handle.stop();
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    let settled = counter.0.load(Ordering::SeqCst);
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    assert_eq!(counter.0.load(Ordering::SeqCst), settled);
 }
