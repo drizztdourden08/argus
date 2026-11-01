@@ -198,3 +198,19 @@ pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
     call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
     Ok(())
 }
+
+/// `coord worktree release <id|path> [--reason "..."]`: the thread no longer needs it. Argus
+/// checks that nothing uses it and nothing is lost, then removes it at once (the branch too when
+/// merged); anything else is refused with the reason.
+pub(super) fn release(call: &mut Call<'_>) -> Outcome {
+    let id = id_arg(
+        call.positional.first(),
+        "name the worktree: coord worktree release <id|path> [--reason \"...\"].",
+    )?;
+    let by = asker(call)?;
+    let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
+    let project = project_of(call).to_owned();
+    let out = connect(call, false)?.post(&format!("/api/p/{project}/worktrees/release"), &body)?;
+    say_all(call.inv, &removed_lines(&out));
+    Ok(())
+}

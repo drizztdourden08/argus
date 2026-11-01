@@ -21,7 +21,7 @@ use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::verbs::remote::support::link::take_sub;
 
-const VERBS: &str = "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune, request, requests.";
+const VERBS: &str = "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune, release, request, requests.";
 
 fn rule(call: &mut Call<'_>) -> Outcome {
     let action = take_sub(call);
@@ -35,7 +35,7 @@ fn rule(call: &mut Call<'_>) -> Outcome {
     }
 }
 
-/// `coord worktree <rule|rules|list|leftovers|keep|done|remove|prune|request|requests>`.
+/// `coord worktree <rule|rules|list|leftovers|keep|done|remove|prune|release|request|requests>`.
 ///
 /// # Errors
 /// A refusal, or the dashboard's own.
@@ -50,6 +50,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
         Some("done") => keep::done(call),
         Some("remove") => remove::remove(call),
         Some("prune") => remove::prune(call),
+        Some("release") => remove::release(call),
         Some("request") => request::request(call),
         Some("requests") => requests::requests(call),
         _ => Err(CoordError::refuse(VERBS)),

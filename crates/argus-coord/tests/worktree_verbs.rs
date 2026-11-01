@@ -446,6 +446,12 @@ fn remove_and_prune_check_their_arguments_before_the_dashboard_is_asked() {
             "the dashboard is not running",
         ),
         (&["prune"], "the dashboard is not running"),
+        (
+            &["release"],
+            "name the worktree: coord worktree release <id|path>",
+        ),
+        (&["release", "X:/Proj/*"], "one worktree"),
+        (&["release", FOO], "the dashboard is not running"),
     ]);
     refused(
         &w.run(&["remove", FOO], "ghost"),
