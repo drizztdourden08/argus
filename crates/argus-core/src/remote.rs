@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn the_syncs_read_back_and_an_entry_without_a_time_is_left_out() {
         let home = tempfile::tempdir().expect("temp dir");
-        assert!(syncs(home.path()).is_empty());
+        assert_eq!(syncs(home.path()).len(), 0);
         set(
             home.path(),
             r#"{"mode":"local","syncs":{"alpha":{"at":"2026-11-01T10:00:00.000Z","by":"alpha","note":"pushed 2 PRs"},"beta":{"note":"no time"},"gamma":{"at":"2026-11-01T11:00:00.000Z"}}}"#,
