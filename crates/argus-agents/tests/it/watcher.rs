@@ -2,6 +2,8 @@
 //! clock and a fake doc store: offset tailing, a partial last line, `tool_use` to `tool_result`
 //! activity, the last message, the model, usage sums, the stall mark, the missing-file note, and
 //! the end of tailing. Ported from `agents.watcher.test.mjs`.
+//! K1: transcript tailing, activity, usage, stall and the doc update rate.
+// test-tag: critical
 
 use argus_agents::fakes::{
     JsonBoards, MemoryDocs, agent_record, assistant_line, text_block as text,
