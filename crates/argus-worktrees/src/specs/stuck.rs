@@ -22,9 +22,9 @@ fn a_git_that_hangs_past_its_timeout_fails_the_target_and_the_request_goes_on() 
     *locked(&h.exec.mode) = RemoveMode::Untouched;
     let seen: Arc<Mutex<Option<Current>>> = Arc::default();
     let gate = Arc::new(Gate::default());
-    let (svc, held, hold) = (h.svc.clone(), seen.clone(), gate.clone());
+    let (svc, slot, hold) = (h.svc.clone(), seen.clone(), gate.clone());
     *locked(&h.exec.on_remove) = Some(Box::new(move |_| {
-        *locked(&held) = svc.request_list("alpha")[0].current.clone();
+        *locked(&slot) = svc.request_list("alpha")[0].current.clone();
         hold.wait();
     }));
     let mut input = RequestInput::new("alpha", Caller::Thread("lead".into()));

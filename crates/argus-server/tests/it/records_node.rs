@@ -4,7 +4,7 @@
 
 use argus_core::fixture::put_file as put;
 use argus_server::ConsumerStatus;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 #[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]

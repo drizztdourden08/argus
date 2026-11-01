@@ -116,7 +116,7 @@ impl Wire {
             .expect("write");
     }
 
-    async fn line(&mut self) -> Option<Value> {
+    pub(super) async fn line(&mut self) -> Option<Value> {
         let mut line = String::new();
         let read = timeout(
             Duration::from_secs(20),

@@ -5,6 +5,8 @@ use std::path::Path;
 
 use argus_testkit::{TestOptions, TestServer};
 use serde_json::{Value, json};
+
+use crate::wait::until;
 use tempfile::TempDir;
 
 pub const SHA: &str = "0123456789abcdef0123456789abcdef01234567";

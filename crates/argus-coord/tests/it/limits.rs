@@ -2,9 +2,7 @@
 
 // test-tag: critical
 
-use argus_board::limits::{
-    limit, optional_text, require_context, require_str, soft_context, text_list,
-};
+use argus_board::limits::{optional_text, require_context, require_str, soft_context, text_list};
 use serde_json::json;
 
 #[test]
