@@ -1,6 +1,7 @@
 //! The `Range` header of a feed request, for differential downloads. One byte range is served
 //! as a 206; several ranges, a unit other than bytes and a malformed header are ignored and the
 //! whole file is sent (the standard allows it); a range outside the file is a 416.
+// test-tag: critical
 
 /// What to send.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
