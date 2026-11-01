@@ -160,6 +160,7 @@ fn the_verbs_that_need_the_dashboard_say_so_with_it_down() {
             ]),
             lead(&["proc", "list"]),
             lead(&["proc", "rules", "--json"]),
+            lead(&["proc", "kill", "123", "--reason", "it hung"]),
             lead(&["proc", "help"]),
             lead(&["proc", "frobnicate"]),
             lead(&["wake-fault", "list"]),
