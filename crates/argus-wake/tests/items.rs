@@ -6,16 +6,10 @@ use argus_wake::activity::Level;
 use argus_wake::item_wakes::{ItemEnv, ItemWakeConfig, ItemWakes, age_text};
 use argus_wake::memory::MemoryBoards;
 use argus_wake::reasons::{IMMEDIATE_REASONS, WAKE_REASONS};
-use argus_wake::testkit::{DAY, HOUR, MIN, START, board, merge};
+use argus_wake::testkit::{DAY, HOUR, MIN, START, SentLookup, board, merge, never_sent};
 use argus_wake::time::iso;
 use argus_wake::wake::WakeInput;
 use serde_json::{Value, json};
-
-type LastSent = Box<dyn Fn(&str, &str, &str, &str) -> i64>;
-
-fn never() -> LastSent {
-    Box::new(|_, _, _, _| 0)
-}
 
 fn item(id: &str, status: &str, minutes_ago: i64, extra: &Value) -> Value {
     let mut record = json!({
@@ -47,7 +41,7 @@ struct World {
     alpha: Value,
     wakes: ItemWakes,
     events: Vec<WakeInput>,
-    last_sent: LastSent,
+    last_sent: SentLookup,
 }
 
 impl World {
@@ -57,7 +51,7 @@ impl World {
             alpha: empty_board(),
             wakes: ItemWakes::new(ItemWakeConfig::default()),
             events: Vec::new(),
-            last_sent: never(),
+            last_sent: never_sent(),
         };
         world.sync();
         world
@@ -386,7 +380,7 @@ fn a_restart_does_not_remind_again_at_once_when_the_wakes_table_knows_the_last_o
         "reminded two hours ago, before the restart"
     );
     assert_eq!(world.at(hours(10)), 1, "twelve hours after that one");
-    world.last_sent = never();
+    world.last_sent = never_sent();
     world.events.clear();
     world.fresh();
     assert_eq!(

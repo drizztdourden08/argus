@@ -6,8 +6,8 @@ mod listen;
 mod rig;
 
 pub use fixtures::{
-    DAY, HOUR, MIN, SEC, START, applied, board, failed_run, merge, presence_config,
-    registry_boards, registry_config, thread, wake, wake_in,
+    DAY, HOUR, MIN, SEC, START, SentLookup, applied, board, failed_run, merge, never_sent,
+    presence_config, registry_boards, registry_config, thread, wake, wake_in,
 };
 pub use listen::Tap;
 pub use rig::{EngineRig, Rig};

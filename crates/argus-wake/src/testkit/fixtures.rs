@@ -52,6 +52,15 @@ pub fn thread(id: &str, role: &str, extra: &Value) -> Value {
     record
 }
 
+/// A last-wake lookup a test can swap for another one.
+pub type SentLookup = Box<dyn Fn(&str, &str, &str, &str) -> i64>;
+
+/// A wakes table that never sent anything.
+#[must_use]
+pub fn never_sent() -> SentLookup {
+    Box::new(|_, _, _, _| 0)
+}
+
 /// Put the fields of `extra` over `record`.
 pub fn merge(record: &mut Value, extra: &Value) {
     if let (Some(into), Some(fields)) = (record.as_object_mut(), extra.as_object()) {

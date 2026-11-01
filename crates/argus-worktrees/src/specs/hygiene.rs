@@ -38,6 +38,15 @@ fn agents_rule(fx: &Fixture) -> Rule {
     rule_for(fx).filtered(&["agent-*", "named-work"], &[])
 }
 
+/// A harness over the fixture with the release on, the quiet time and the grace of this file.
+fn releasing(fx: &Fixture, rule: Rule) -> Harness {
+    Harness::new(&fx.root, vec![rule], |o| {
+        o.release = true;
+        o.release_debounce_ms = QUIET;
+        o.release_grace_ms = GRACE;
+    })
+}
+
 /// A service over a fixture with one clean worktree `agent-a<n>` per agent (at the tip of main: merged), the agents on
 /// the board, one scan, and the request worker started.
 fn world_with(agents: &[(&str, &str, &str)], prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
@@ -46,11 +55,7 @@ fn world_with(agents: &[(&str, &str, &str)], prep: impl FnOnce(&Fixture)) -> (Fi
         fx.add(&format!("agent-a{n}"));
     }
     prep(&fx);
-    let h = Harness::new(&fx.root, vec![agents_rule(&fx)], |o| {
-        o.release = true;
-        o.release_debounce_ms = QUIET;
-        o.release_grace_ms = GRACE;
-    });
+    let h = releasing(&fx, agents_rule(&fx));
     let ended = h.clock_now() - 1000;
     h.board().agents = agents
         .iter()
@@ -227,11 +232,7 @@ fn a_failed_agent_has_no_running_owner_so_its_clean_worktree_is_released() {
 #[test]
 fn a_worktree_no_agent_record_names_is_released_whatever_its_age() {
     let fx = Fixture::new();
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |o| {
-        o.release = true;
-        o.release_debounce_ms = QUIET;
-        o.release_grace_ms = GRACE;
-    });
+    let h = releasing(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
     for name in ["fresh", "old-unmerged", "old-merged"] {
@@ -260,11 +261,7 @@ fn an_empty_leftover_folder_is_released_and_goes_through_the_leftover_removal() 
     let fx = Fixture::new();
     let empty = fx.path("agent-gone");
     std::fs::create_dir_all(&empty).unwrap();
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |o| {
-        o.release = true;
-        o.release_debounce_ms = QUIET;
-        o.release_grace_ms = GRACE;
-    });
+    let h = releasing(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
     assert_eq!(

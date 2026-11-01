@@ -42,6 +42,12 @@ pub fn positive_ms(value: Option<&Value>, default: i64) -> i64 {
         .unwrap_or(default)
 }
 
+/// A positive number of milliseconds under `key` of a config section, else the default.
+#[must_use]
+pub fn section_ms(section: &Value, key: &str, default: i64) -> i64 {
+    positive_ms(section.get(key), default)
+}
+
 /// A number of milliseconds of at least `min`, else the default.
 #[must_use]
 pub fn ms_at_least(value: Option<&Value>, default: i64, min: i64) -> i64 {

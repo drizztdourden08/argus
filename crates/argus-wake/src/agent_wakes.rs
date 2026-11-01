@@ -16,6 +16,7 @@ use std::time::Duration;
 use serde_json::Value;
 
 use crate::board::{AgentView, BoardView, LIVE_AGENT};
+use crate::config::section_ms;
 use crate::policy::coordinator_in;
 use crate::source::{AgentLive, BoardSource};
 use crate::text::cut;
@@ -56,12 +57,11 @@ impl AgentWakeConfig {
     #[must_use]
     pub fn from_json(section: &Value) -> Self {
         let d = Self::default();
-        let num = |key: &str, default: i64| crate::config::positive_ms(section.get(key), default);
         Self {
-            tick_ms: num("tickMs", d.tick_ms),
-            stale_wake_ms: num("staleWakeMs", d.stale_wake_ms),
-            stale_repeat_ms: num("staleRepeatMs", d.stale_repeat_ms),
-            checkin_ms: num("checkinMs", d.checkin_ms),
+            tick_ms: section_ms(section, "tickMs", d.tick_ms),
+            stale_wake_ms: section_ms(section, "staleWakeMs", d.stale_wake_ms),
+            stale_repeat_ms: section_ms(section, "staleRepeatMs", d.stale_repeat_ms),
+            checkin_ms: section_ms(section, "checkinMs", d.checkin_ms),
         }
     }
 }

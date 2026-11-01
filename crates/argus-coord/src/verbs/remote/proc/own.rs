@@ -25,6 +25,18 @@ fn line(out: &Value, pid: i64, tree: bool) -> String {
     format!("killed {} {pid}{and_tree}.", cell(out.get("name")))
 }
 
+/// Refuses with the dashboard's own words when the kill of `pid` did not happen.
+pub(super) fn ensure_killed(out: &Value, pid: i64) -> Result<(), CoordError> {
+    if js::truthy(&out["killed"]) {
+        return Ok(());
+    }
+    Err(CoordError::refuse(format!(
+        "could not kill {} {pid}: {}",
+        cell(out.get("name")),
+        cell(out.get("error"))
+    )))
+}
+
 /// The thread's kill of its own process `pid`.
 pub(super) fn kill(call: &mut Call<'_>, pid: i64) -> Outcome {
     let env = &call.inv.env;
@@ -41,13 +53,7 @@ pub(super) fn kill(call: &mut Call<'_>, pid: i64) -> Outcome {
     let body = json!({ "by": who.thread, "tree": tree, "reason": reason });
     let path = format!("/api/p/{project}/procs/{pid}/kill");
     let out = dashboard(call)?.post(&path, &body)?;
-    if !js::truthy(&out["killed"]) {
-        return Err(CoordError::refuse(format!(
-            "could not kill {} {pid}: {}",
-            cell(out.get("name")),
-            cell(out.get("error"))
-        )));
-    }
+    ensure_killed(&out, pid)?;
     let said = line(&out, pid, tree);
     call.inv.say(&[&said]);
     Ok(())

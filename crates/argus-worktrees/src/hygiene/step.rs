@@ -6,7 +6,7 @@ use super::memory::{HygieneState, Mark, Memory};
 use super::text::{REASON, review_text};
 use crate::board::{BoardFacts, Caller};
 use crate::fact::Fact;
-use crate::ports::{ActivityLine, WakeEvent};
+use crate::ports::WakeEvent;
 use crate::requests::RequestInput;
 use crate::service::Service;
 use std::collections::BTreeMap;
@@ -186,15 +186,7 @@ impl Service {
                 }
             }
         });
-        for event in &events {
-            self.deps.notifier.activity(ActivityLine {
-                kind: REASON,
-                level: "info",
-                text: format!("{project}/{}: {}", event.thread, event.text),
-                project: project.to_string(),
-                thread: Some(event.thread.clone()),
-            });
-        }
+        self.log_wakes(project, &events);
         events.len()
     }
 

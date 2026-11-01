@@ -69,13 +69,7 @@ pub(super) fn kill(call: &mut Call<'_>) -> Outcome {
     body["reason"] = json!(reason);
     body["by"] = json!(by);
     let out = client.post("/api/procs/kill", &body)?;
-    if !js::truthy(&out["killed"]) {
-        return Err(CoordError::refuse(format!(
-            "could not kill {} {pid}: {}",
-            cell(out.get("name")),
-            cell(out.get("error"))
-        )));
-    }
+    own::ensure_killed(&out, pid)?;
     let and_tree = if tree { " and its tree" } else { "" };
     let line = format!(
         "killed {} {pid}{and_tree} ({}).",

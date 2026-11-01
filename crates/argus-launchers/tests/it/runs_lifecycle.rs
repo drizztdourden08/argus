@@ -35,9 +35,7 @@ async fn a_run_exits_0_logs_its_output_and_shows_up_as_a_run_doc() {
 #[tokio::test(start_paused = true)]
 async fn the_page_doc_has_no_command_and_ends_in_the_final_status() {
     let env = Env::new();
-    env.define("alpha", vec![env.def("hello", "echo hi")]);
-    env.start("alpha", "hello");
-    let pid = env.pid(0);
+    let pid = env.start_hello();
     env.host.say(pid, "hi\n").await;
     env.host.exit(pid, Some(0)).await;
     env.finished("alpha", "R-1").await;
@@ -71,9 +69,7 @@ async fn a_non_zero_exit_is_failed_and_keeps_the_code() {
 #[tokio::test(start_paused = true)]
 async fn an_ended_run_can_be_failed_after_the_fact_and_a_live_one_cannot() {
     let env = Env::new();
-    env.define("alpha", vec![env.def("hello", "echo hi")]);
-    env.start("alpha", "hello");
-    let pid = env.pid(0);
+    let pid = env.start_hello();
     assert_eq!(
         env.svc.fail_ended("alpha", "R-1", "harm"),
         None,

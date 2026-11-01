@@ -28,25 +28,37 @@ fn overlord_board() -> Value {
     b
 }
 
-async fn rig_with(sync: bool) -> Rig {
-    let home = tempfile::tempdir().expect("dashboard home");
-    let rules = json!({ "rules": [{ "name": "test-kids", "match": { "cmd": "procs-http-test" }, "killable": true, "maxMemMB": 1000 }] });
-    std::fs::write(home.path().join("process-rules.json"), rules.to_string()).expect("rules file");
+/// A server over the fake machine and the dashboard home `home`, with the board of project `project` written.
+async fn rig_on(
+    home: tempfile::TempDir,
+    sync: bool,
+    config: Value,
+    project: &str,
+    board: &Value,
+) -> Rig {
     let machine = Arc::new(Machine::with_self());
     let wired = Arc::clone(&machine);
     let t = TestServer::start(TestOptions {
         sync,
+        config,
         dashboard_home: Some(home.path().to_path_buf()),
         tweak: Some(Arc::new(move |opts| machine::install(&wired, opts))),
         ..TestOptions::default()
     })
     .await;
-    write_board(&t.coord_home, "portfolio", &overlord_board());
+    write_board(&t.coord_home, project, board);
     Rig {
         t,
         machine,
         _home: home,
     }
+}
+
+async fn rig_with(sync: bool) -> Rig {
+    let home = tempfile::tempdir().expect("dashboard home");
+    let rules = json!({ "rules": [{ "name": "test-kids", "match": { "cmd": "procs-http-test" }, "killable": true, "maxMemMB": 1000 }] });
+    std::fs::write(home.path().join("process-rules.json"), rules.to_string()).expect("rules file");
+    rig_on(home, sync, json!({}), "portfolio", &overlord_board()).await
 }
 
 async fn rig() -> Rig {
@@ -331,23 +343,9 @@ async fn without_the_monitor_its_routes_answer_503() {
 
 /// A rig whose project `beta` has its root at `/work/beta`, and the beta board.
 async fn own_rig() -> Rig {
-    let machine = Arc::new(Machine::with_self());
-    let wired = Arc::clone(&machine);
     let home = tempfile::tempdir().expect("dashboard home");
-    let t = TestServer::start(TestOptions {
-        sync: false,
-        config: json!({ "projectRoots": { "beta": "/work/beta" } }),
-        dashboard_home: Some(home.path().to_path_buf()),
-        tweak: Some(Arc::new(move |opts| machine::install(&wired, opts))),
-        ..TestOptions::default()
-    })
-    .await;
-    write_board(&t.coord_home, "beta", &beta_board());
-    Rig {
-        t,
-        machine,
-        _home: home,
-    }
+    let config = json!({ "projectRoots": { "beta": "/work/beta" } });
+    rig_on(home, false, config, "beta", &beta_board()).await
 }
 
 fn message(reply: &Reply) -> String {

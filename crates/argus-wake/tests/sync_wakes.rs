@@ -9,16 +9,10 @@ use argus_wake::reasons::{IMMEDIATE_REASONS, WAKE_REASONS};
 use argus_wake::sync_wakes::{
     REASON, SYNC_KIND, SyncEnv, SyncWakeConfig, SyncWakes, ago_text, due_text,
 };
-use argus_wake::testkit::{DAY, HOUR, MIN, Rig, START, board};
+use argus_wake::testkit::{DAY, HOUR, MIN, Rig, START, SentLookup, board, never_sent};
 use argus_wake::time::iso;
 use argus_wake::wake::WakeInput;
 use serde_json::{Value, json};
-
-type LastSent = Box<dyn Fn(&str, &str, &str, &str) -> i64>;
-
-fn never() -> LastSent {
-    Box::new(|_, _, _, _| 0)
-}
 
 fn project(lead_status: &str) -> Value {
     json!({
@@ -36,7 +30,7 @@ struct World {
     boards: MemoryBoards,
     syncs: MemorySyncs,
     wakes: SyncWakes,
-    last_sent: LastSent,
+    last_sent: SentLookup,
     events: Vec<WakeInput>,
     lines: Vec<ActivityLine>,
 }
@@ -47,7 +41,7 @@ impl World {
             boards: MemoryBoards::new(),
             syncs: MemorySyncs::new(),
             wakes: SyncWakes::new(SyncWakeConfig::default(), START),
-            last_sent: never(),
+            last_sent: never_sent(),
             events: Vec::new(),
             lines: Vec::new(),
         };
@@ -255,7 +249,7 @@ fn a_restart_does_not_send_the_wake_again_at_once() {
 fn a_new_record_leaves_one_activity_line_and_a_due_wake_one_more() {
     let mut world = World::new();
     assert_eq!(world.at(1), 0);
-    assert!(world.lines.is_empty());
+    assert_eq!(world.lines, Vec::new());
     world.sync_at(2);
     world.at(2);
     world.at(3);

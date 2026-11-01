@@ -115,6 +115,18 @@ impl Shape {
         (self, out)
     }
 
+    /// Removes `old-merged` with its branch, waits for the worker, and checks git no longer lists it.
+    fn remove_old_merged_gone_from_git(&self) -> RemoveOutcome {
+        let out = self
+            .h
+            .rm_with(&self.id("old-merged"), |i| i.branch = true)
+            .unwrap();
+        assert!(out.removed, "{}", out.text);
+        self.h.idle();
+        assert!(!listed(&self.fx.repo).contains(&"old-merged".to_string()));
+        out
+    }
+
     /// The background job of the removal finished clean.
     pub(super) fn assert_job_done(&self, out: &RemoveOutcome) {
         let job = self
@@ -513,12 +525,7 @@ fn git_says_removed_but_the_folder_is_still_there_it_is_remembered_and_taken_wit
 #[test]
 fn real_git_on_the_pnpm_shape_the_worktree_is_gone_and_no_junction_target_lost_a_file() {
     let s = shape(RemoveMode::Real, |_| {});
-    let out =
-        s.h.rm_with(&s.id("old-merged"), |i| i.branch = true)
-            .unwrap();
-    assert!(out.removed, "{}", out.text);
-    s.h.idle();
-    assert!(!listed(&s.fx.repo).contains(&"old-merged".to_string()));
+    let out = s.remove_old_merged_gone_from_git();
     assert!(
         !fs::read_dir(&s.fx.wts)
             .unwrap()
@@ -807,12 +814,7 @@ fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_t
         RemoveMode::Real,
         lock_old_merged("cloned node_modules from main (brock)"),
     );
-    let out =
-        s.h.rm_with(&s.id("old-merged"), |i| i.branch = true)
-            .unwrap();
-    assert!(out.removed, "{}", out.text);
-    s.h.idle();
-    assert!(!listed(&s.fx.repo).contains(&"old-merged".to_string()));
+    let out = s.remove_old_merged_gone_from_git();
     assert!(
         !exists_itself(&s.fx.path("old-merged")),
         "the folder is gone"

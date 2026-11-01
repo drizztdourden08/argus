@@ -21,6 +21,15 @@ fn sibling(root: &str, name: &str) -> String {
     path
 }
 
+/// A fresh temp folder with a sibling folder full of files and the path of a `victim` to build beside it.
+fn arena(victim: &str) -> (tempfile::TempDir, String, String) {
+    let dir = tempdir().unwrap();
+    let root = root_of(&dir);
+    let side = sibling(&root, "sibling");
+    let victim = join_path(&root, victim);
+    (dir, side, victim)
+}
+
 fn intact(dir: &str) {
     assert_sibling_intact(Path::new(dir));
 }
@@ -75,10 +84,7 @@ fn primitives() -> [(&'static str, Delete); 4] {
 #[test]
 fn every_primitive_deletes_a_folder_and_unlinks_the_links_inside_never_their_targets() {
     for (name, delete) in primitives() {
-        let dir = tempdir().unwrap();
-        let root = root_of(&dir);
-        let side = sibling(&root, "sibling");
-        let victim = join_path(&root, "victim");
+        let (_dir, side, victim) = arena("victim");
         let links = links_inside(&victim, &side);
         delete(&victim).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert!(!exists_itself(&victim), "{name}: the folder is gone");
@@ -91,10 +97,7 @@ fn every_primitive_deletes_a_folder_and_unlinks_the_links_inside_never_their_tar
 fn no_primitive_reaches_the_target_of_a_folder_that_is_itself_a_junction() {
     let mut reached = Vec::new();
     for (name, delete) in primitives() {
-        let dir = tempdir().unwrap();
-        let root = root_of(&dir);
-        let side = sibling(&root, "sibling");
-        let victim = join_path(&root, "victim");
+        let (_dir, side, victim) = arena("victim");
         make_link(&victim, &side);
         delete(&victim).unwrap_or_else(|e| panic!("{name}: {e}"));
         if !exists_itself(&join_path(&side, "keep.txt")) {
@@ -110,10 +113,7 @@ fn no_primitive_reaches_the_target_of_a_folder_that_is_itself_a_junction() {
 
 #[test]
 fn the_pre_pass_unlinks_a_file_symlink_and_a_junction_and_keeps_every_real_file() {
-    let dir = tempdir().unwrap();
-    let root = root_of(&dir);
-    let side = sibling(&root, "sibling");
-    let victim = join_path(&root, "wt");
+    let (_dir, side, victim) = arena("wt");
     let links = links_inside(&victim, &side);
     drop_links(&RealFs, &victim).unwrap();
     links_gone(&links);

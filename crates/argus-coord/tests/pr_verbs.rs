@@ -311,19 +311,28 @@ fn seed_with_pr(coord_home: &Path, folder: &Path) {
     argus_testkit::write_board(coord_home, "alpha", &board);
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn check_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() {
-    let (tools, root) = (
+/// A server whose `checks.command` is a fake `brock` script, with the board seeded by `seed`. The two temp folders
+/// (the script's and the project root) live as long as the second value.
+async fn check_rig(
+    seed: impl FnOnce(&Path, &Path),
+) -> (Rig, (tempfile::TempDir, tempfile::TempDir)) {
+    let dirs = (
         tempfile::tempdir().expect("tools"),
         tempfile::tempdir().expect("root"),
     );
-    let script = tools.path().join("fake-brock.cjs");
+    let script = dirs.0.path().join("fake-brock.cjs");
     let config = json!({
         "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
-        "projectRoots": { "alpha": root.path().display().to_string() },
+        "projectRoots": { "alpha": dirs.1.path().display().to_string() },
     });
-    let rig = Rig::start(config, seed_with_pr).await;
+    let rig = Rig::start(config, seed).await;
     write_fake_script(&rig.t.coord_home, &script);
+    (rig, dirs)
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn check_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() {
+    let (rig, _dirs) = check_rig(seed_with_pr).await;
     let ran = rig.run(&["check", "--pr", "PR-1", "--project", "alpha"]);
     assert_eq!(ok(&ran).trim(), "R-1 C-1 check started");
     let run = rig.t.get("/api/p/alpha/runs/R-1").await.json()["run"].clone();
@@ -350,17 +359,7 @@ async fn check_of_a_pr_without_a_commit_checks_the_head_commit_the_pr_records() 
 
 #[tokio::test(flavor = "multi_thread")]
 async fn check_of_a_run_that_ends_at_once_always_prints_its_record() {
-    let (tools, root) = (
-        tempfile::tempdir().expect("tools"),
-        tempfile::tempdir().expect("root"),
-    );
-    let script = tools.path().join("fake-brock.cjs");
-    let config = json!({
-        "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
-        "projectRoots": { "alpha": root.path().display().to_string() },
-    });
-    let rig = Rig::start(config, seed).await;
-    write_fake_script(&rig.t.coord_home, &script);
+    let (rig, _dirs) = check_rig(seed).await;
     for n in 1..=20 {
         let ran = rig.run(&["check", "--commit", SHA, "--project", "alpha"]);
         assert_eq!(ok(&ran).trim(), format!("R-{n} C-{n} check started"));
@@ -370,17 +369,7 @@ async fn check_of_a_run_that_ends_at_once_always_prints_its_record() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn check_starts_a_run_and_prints_its_run_and_record() {
-    let (tools, root) = (
-        tempfile::tempdir().expect("tools"),
-        tempfile::tempdir().expect("root"),
-    );
-    let script = tools.path().join("fake-brock.cjs");
-    let config = json!({
-        "checks": { "command": format!("node \"{}\"", script.display()), "enabled": true },
-        "projectRoots": { "alpha": root.path().display().to_string() },
-    });
-    let rig = Rig::start(config, seed).await;
-    write_fake_script(&rig.t.coord_home, &script);
+    let (rig, _dirs) = check_rig(seed).await;
     let ran = rig.run(&[
         "check",
         "--commit",

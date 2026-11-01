@@ -3,12 +3,30 @@
 use tracing::warn;
 
 use super::WakeService;
+use crate::activity::ActivityLine;
 use crate::config::WakeConfig;
 use crate::item_wakes::ItemEnv;
 use crate::registry::Registry;
+use crate::store::WakeStore;
 use crate::sync_wakes::SyncEnv;
 
 const PRUNE_EVERY_MS: i64 = 3_600_000;
+
+/// When the wakes table last sent a reminder, as the wake kinds read it; a table that cannot be read says never and
+/// leaves one warning that names `what`.
+fn last_sent_of<'a>(
+    store: &'a dyn WakeStore,
+    what: &'static str,
+) -> impl Fn(&str, &str, &str, &str) -> i64 + 'a {
+    move |scope: &str, thread: &str, reason: &str, subject: &str| {
+        store
+            .last_at(scope, thread, reason, Some(subject))
+            .unwrap_or_else(|err| {
+                warn!(%err, "{what}: last wake not read");
+                0
+            })
+    }
+}
 
 /// When each periodic job runs next.
 pub(super) struct Schedule {
@@ -114,52 +132,38 @@ impl WakeService {
         let now = self.clock.now_ms();
         let main = Some(self.main_thread());
         let store = self.engine.store();
-        let last_sent = |scope: &str, thread: &str, reason: &str, subject: &str| {
-            store
-                .last_at(scope, thread, reason, Some(subject))
-                .unwrap_or_else(|err| {
-                    warn!(%err, "item wakes: last wake not read");
-                    0
-                })
-        };
+        let last_sent = last_sent_of(store, "item wakes");
         let env = ItemEnv {
             boards: self.boards.as_ref(),
             main,
             last_sent: &last_sent,
         };
         let out = self.items.tick(now, &env);
+        self.forward_activity(out.activity);
+        self.submit_logged(&out.wakes, "item wakes");
+        out.wakes.len()
+    }
+
+    fn forward_activity(&self, lines: Vec<ActivityLine>) {
         if let Some(sink) = &self.activity {
-            for line in out.activity {
+            for line in lines {
                 sink.add(line);
             }
         }
-        self.submit_logged(&out.wakes, "item wakes");
-        out.wakes.len()
     }
 
     /// The remote sync wakes and activity lines due now; returns how many wakes were sent.
     pub fn sync_tick(&mut self) -> usize {
         let now = self.clock.now_ms();
         let store = self.engine.store();
-        let last_sent = |scope: &str, thread: &str, reason: &str, subject: &str| {
-            store
-                .last_at(scope, thread, reason, Some(subject))
-                .unwrap_or_else(|err| {
-                    warn!(%err, "sync wakes: last wake not read");
-                    0
-                })
-        };
+        let last_sent = last_sent_of(store, "sync wakes");
         let env = SyncEnv {
             boards: self.boards.as_ref(),
             syncs: self.syncs.as_ref(),
             last_sent: &last_sent,
         };
         let out = self.sync_wakes.tick(now, &env);
-        if let Some(sink) = &self.activity {
-            for line in out.activity {
-                sink.add(line);
-            }
-        }
+        self.forward_activity(out.activity);
         self.submit_logged(&out.wakes, "sync wakes");
         out.wakes.len()
     }

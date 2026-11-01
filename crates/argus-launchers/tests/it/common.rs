@@ -157,6 +157,13 @@ impl Env {
         self.svc.start(key, name, &cli()).unwrap().run
     }
 
+    /// Defines `hello` (`echo hi`) on `alpha`, starts it as the CLI and returns the pid the host handed out.
+    pub fn start_hello(&self) -> u32 {
+        self.define("alpha", vec![self.def("hello", "echo hi")]);
+        self.start("alpha", "hello");
+        self.pid(0)
+    }
+
     pub async fn finished(&self, key: &str, rid: &str) -> RunRow {
         until("the run to finish", || {
             self.svc.get(key, rid).filter(|r| !r.status.is_live())

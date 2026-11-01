@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use serde_json::Value;
 
 use crate::activity::{ActivityLine, Level};
-use crate::config::positive_ms;
+use crate::config::section_ms;
 use crate::reasons::MAIN_SCOPE;
 use crate::source::BoardSource;
 use crate::wake::WakeInput;
@@ -72,15 +72,14 @@ impl ItemWakeConfig {
     #[must_use]
     pub fn from_json(section: &Value) -> Self {
         let d = Self::default();
-        let num = |key: &str, default: i64| positive_ms(section.get(key), default);
         Self {
-            tick_ms: num("tickMs", d.tick_ms),
-            stale_doing_ms: num("staleDoingMs", d.stale_doing_ms),
-            stale_review_ms: num("staleReviewMs", d.stale_review_ms),
-            stale_todo_ms: num("staleTodoMs", d.stale_todo_ms),
-            repeat_ms: num("repeatMs", d.repeat_ms),
-            escalate_ms: num("escalateMs", d.escalate_ms),
-            digest_repeat_ms: num("digestRepeatMs", d.digest_repeat_ms),
+            tick_ms: section_ms(section, "tickMs", d.tick_ms),
+            stale_doing_ms: section_ms(section, "staleDoingMs", d.stale_doing_ms),
+            stale_review_ms: section_ms(section, "staleReviewMs", d.stale_review_ms),
+            stale_todo_ms: section_ms(section, "staleTodoMs", d.stale_todo_ms),
+            repeat_ms: section_ms(section, "repeatMs", d.repeat_ms),
+            escalate_ms: section_ms(section, "escalateMs", d.escalate_ms),
+            digest_repeat_ms: section_ms(section, "digestRepeatMs", d.digest_repeat_ms),
         }
     }
 }

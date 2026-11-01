@@ -15,6 +15,7 @@ use argus_core::remote_state::{
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::resolve::resolve;
 use crate::cli::route::Call;
+use crate::verbs::remote::support::text::is_key;
 use crate::who::find_project;
 
 const USAGE: &str = "usage: coord remote [status|local|remote|synced|ci-root <project> <dir>].";
@@ -129,15 +130,6 @@ fn synced(call: &mut Call<'_>) -> Outcome {
     Ok(())
 }
 
-/// A project key as the boards name them.
-fn is_project(text: &str) -> bool {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .is_some_and(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
-        && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
-}
-
 fn slashed(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
@@ -146,7 +138,7 @@ fn ci_root(call: &mut Call<'_>) -> Outcome {
     let project = call
         .positional
         .get(1)
-        .filter(|p| is_project(p))
+        .filter(|p| is_key(p))
         .cloned()
         .ok_or_else(|| CoordError::refuse(CI_ROOT_USAGE))?;
     let home = home_of(call);
