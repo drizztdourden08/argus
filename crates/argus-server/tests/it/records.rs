@@ -2,6 +2,8 @@
 //! temp localpkg home: the switch and the replay counts, the release API, the update feed
 //! (ranges, types, refusals, the feed host), the check runs with numbers that survive a
 //! restart, their logs, and the registry. Never the real `~/.coord`, never port 80 or 47615.
+//! K2, K3, K4: the local remote, the release feed, the check runs and the registry over HTTP; the Node status script is in records_node.rs.
+// test-tag: standard
 
 use std::fs;
 use std::net::{Ipv4Addr, SocketAddr};
@@ -626,34 +628,4 @@ async fn a_tool_without_the_json_flag_leaves_the_consumers_empty_with_a_note() {
     let none = off.get("/api/registry").await.json();
     assert_eq!(none["consumers"], json!([]));
     off.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_node_status_runs_the_script_with_the_registry_home_and_reports_a_failure() {
-    let dir = tempfile::tempdir().expect("temp dir");
-    put(
-        dir.path(),
-        "ok.mjs",
-        "console.log(JSON.stringify({ consumers: [{ root: process.env.LOCALPKG_HOME }], args: process.argv.slice(2) }));",
-    );
-    put(dir.path(), "bad.mjs", "process.exit(2);");
-    let run = |script: &str, node: &str| argus_server::NodeStatus {
-        node: node.to_owned(),
-        script: dir.path().join(script),
-        home: dir.path().to_path_buf(),
-    };
-    let said = run("ok.mjs", "node").status_json().await.expect("ran");
-    let parsed: Value = serde_json::from_str(&said).expect("json");
-    assert_eq!(parsed["args"], json!(["status", "--json"]));
-    assert_eq!(
-        parsed["consumers"][0]["root"],
-        dir.path().display().to_string()
-    );
-    assert!(run("bad.mjs", "node").status_json().await.is_err());
-    assert!(
-        run("ok.mjs", "no-such-program-argus")
-            .status_json()
-            .await
-            .is_err()
-    );
 }

@@ -109,7 +109,8 @@ async fn a_20000_character_decision_is_stored_whole_handed_to_the_lead_whole_and
     );
     let wake = until("the wake row", || async {
         let rows = wakes(t, "alpha").await;
-        rows.into_iter().find(|w| w["reason"] == "portfolio-decision")
+        rows.into_iter()
+            .find(|w| w["reason"] == "portfolio-decision")
     })
     .await;
     let line = text_of(&wake);

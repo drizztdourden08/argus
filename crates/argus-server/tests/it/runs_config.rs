@@ -1,6 +1,8 @@
 //! The run service reads `config.runs` and `config.attach.maxBytes` on every call, as the Node
 //! service does: a change to the live config applies to the next start and the next
 //! attachment, with no restart.
+//! K2: the live config limits of the run service.
+// test-tag: standard
 
 use crate::runs_rig::Rig;
 use argus_testkit::{Request, TestOptions, png};

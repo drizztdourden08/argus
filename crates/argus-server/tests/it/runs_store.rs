@@ -1,5 +1,7 @@
 //! The run rows in the dashboard database: what a restart does to rows a crash left, retention,
 //! the log cap, the wake link a failed run tells, and the launcher wakes over the boards.
+//! K3, K1: the run rows in the database over a fake process host: crash recovery, retention, the log cap and the wakes.
+// test-tag: standard
 
 use crate::runs_rig::{Rig, until, wakes_of};
 use argus_core::Paths;
@@ -161,17 +163,20 @@ async fn a_run_that_fails_wakes_the_lead_of_its_project() {
     r.cli("POST", "/api/p/alpha/runs/R-2/stop", &json!({}))
         .await;
     assert_eq!(stopped["id"], "R-2");
-    quiet_for_a_moment().await;
-    assert_eq!(
-        wakes_of(&r.t, "alpha", "run-failed").await.len(),
-        1,
-        "a stop is not a failure to act on"
+    r.until_status("R-2", "stopped").await;
+    let pid = u32::try_from(r.begin("fail").await["pid"].as_u64().unwrap()).unwrap();
+    r.host.exit(pid, Some(3)).await;
+    let rows = until("the second failure wake", || async {
+        let rows = wakes_of(&r.t, "alpha", "run-failed").await;
+        (rows.len() >= 2).then_some(rows)
+    })
+    .await;
+    let texts: Vec<&str> = rows.iter().filter_map(|w| w["text"].as_str()).collect();
+    assert!(
+        texts.iter().all(|t| !t.starts_with("R-2")),
+        "a stop is not a failure to act on: {texts:?}"
     );
     r.t.stop(false).await;
-}
-
-async fn quiet_for_a_moment() {
-    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
 }
 
 #[tokio::test(flavor = "multi_thread")]

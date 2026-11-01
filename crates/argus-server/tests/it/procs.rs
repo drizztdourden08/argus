@@ -2,6 +2,8 @@
 //! kills (the page and the Overlord may write, any other CLI caller may not) and the activity
 //! lines they leave. Ported from the HTTP cases of `procs.http.test.mjs`; the `coord proc`
 //! verbs stay in the Node `coord` tests.
+//! K2, K4: the process monitor routes over a fake machine, its rules and the kill guards.
+// test-tag: standard
 
 use crate::machine::{Machine, row};
 use argus_core::Coll;

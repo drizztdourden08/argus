@@ -7,7 +7,6 @@ use axum::http::{HeaderMap, HeaderValue};
 
 use crate::doors::alias;
 
-
 fn headers(host: &str, origin: Option<&str>) -> HeaderMap {
     let mut h = HeaderMap::new();
     h.insert("host", HeaderValue::from_str(host).expect("a host"));

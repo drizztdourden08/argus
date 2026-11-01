@@ -2,6 +2,8 @@
 //! list, logs, the log stream, stdin, attachments, launches and the error shape. Ported from
 //! `runs.http.test.mjs` and the HTTP side of `runs.cli.test.mjs`; the real processes of
 //! `runs.server.test.mjs` are in `runs_server.rs`, the stored rows in `runs_store.rs`.
+//! K2, K3, K4: the run routes, logs, streams, attachments and launches over a fake process host.
+// test-tag: standard
 
 use crate::runs_rig::{Rig, until};
 use argus_testkit::{Event, Request, SseReader, TestOptions, png};
@@ -399,70 +401,6 @@ async fn attachments_a_raw_image_in_the_listing_out_wrong_bytes_and_a_big_body_r
         )
         .await;
     assert_eq!(gone.status, 404);
-    r.t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_line_typed_into_a_running_launch_reaches_its_stdin_and_the_log() {
-    let r = Rig::start().await;
-    r.define(&[("term", json!({ "kind": "launch" })), ("plain", json!({}))]);
-    let pid = pid_of(&r.begin("term").await);
-    let typed = r
-        .page(
-            "POST",
-            "/api/p/alpha/runs/R-1/stdin",
-            &json!({ "text": "hello" }),
-        )
-        .await;
-    assert_eq!(
-        (typed.status, typed.json()),
-        (200, json!({ "ok": true, "bytes": 6 }))
-    );
-    assert_eq!(r.host.stdin_text(pid).await, "hello\n");
-    r.until_line("R-1", "> hello").await;
-    let not_text = r
-        .cli("POST", "/api/p/alpha/runs/R-1/stdin", &json!({ "text": 5 }))
-        .await;
-    assert_eq!(
-        (not_text.status, not_text.code().as_str()),
-        (400, "bad_request")
-    );
-    let huge = r
-        .cli(
-            "POST",
-            "/api/p/alpha/runs/R-1/stdin",
-            &json!({ "text": "x".repeat(5000) }),
-        )
-        .await;
-    assert_eq!(huge.status, 413);
-    let ghost = r
-        .cli(
-            "POST",
-            "/api/p/alpha/runs/R-9/stdin",
-            &json!({ "text": "x" }),
-        )
-        .await;
-    assert_eq!(ghost.status, 404);
-    let plain = r.begin("plain").await;
-    assert_eq!(plain["stdin"], false, "a task has no stdin pipe");
-    let none = r
-        .cli(
-            "POST",
-            "/api/p/alpha/runs/R-2/stdin",
-            &json!({ "text": "x" }),
-        )
-        .await;
-    assert_eq!((none.status, none.code().as_str()), (409, "conflict"));
-    r.host.exit(pid, Some(0)).await;
-    r.until_status("R-1", "exited").await;
-    let over = r
-        .cli(
-            "POST",
-            "/api/p/alpha/runs/R-1/stdin",
-            &json!({ "text": "late" }),
-        )
-        .await;
-    assert_eq!(over.status, 409);
     r.t.stop(false).await;
 }
 

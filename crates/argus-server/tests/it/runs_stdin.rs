@@ -3,6 +3,8 @@
 //! is refused unread, JSON only, GET is not a way to type, and an ended run, a run without stdin,
 //! an unknown run and a bad run id are refused with their codes. Ported from the stdin route
 //! case of `runs.terminal.test.mjs`.
+//! K2, K4: the stdin route of a run and its refusals.
+// test-tag: standard
 
 use crate::runs_rig::Rig;
 use argus_testkit::{Reply, Request};
@@ -39,6 +41,7 @@ async fn page_and_cli_lines_reach_the_process_and_an_empty_line_is_a_valid_enter
     assert_eq!(from_cli.status, 200);
     assert_eq!(type_text(&r, &json!({ "text": "" })).await.status, 200);
     assert_eq!(r.host.stdin_text(pid).await, "from page\nfrom cli\n\n");
+    r.until_line("R-1", "> from page").await;
     r.t.stop(false).await;
 }
 

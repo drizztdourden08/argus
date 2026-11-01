@@ -28,8 +28,11 @@ async fn from_page(t: &TestServer, extra: Value) -> Value {
     data.as_object_mut()
         .expect("an object")
         .extend(extra.as_object().expect("an object").clone());
-    let request = Request::new("PUT", &format!("/api/p/_portfolio/db/entries/{}", post_id()))
-        .json(&json!({ "data": data }));
+    let request = Request::new(
+        "PUT",
+        &format!("/api/p/_portfolio/db/entries/{}", post_id()),
+    )
+    .json(&json!({ "data": data }));
     let reply = t.send(t.page(request)).await;
     assert_eq!(reply.status, 200, "{}", reply.text());
     reply.json()

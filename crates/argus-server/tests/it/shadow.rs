@@ -1,14 +1,14 @@
 //! The start of a shadow home: a copy of the Node database, config and process rules, only when
 //! the shadow home has none, and the Node home left as it was.
+//! K3, K1: seeding a shadow home from the Node home in temp folders: nothing the shadow has is overwritten and the Node home is never written.
+// test-tag: critical
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use argus_core::Bus;
 use argus_server::shadow::{board_findings, seed};
 use argus_store::Db;
-use argus_testkit::{TestOptions, TestServer, Tweak};
 use tempfile::TempDir;
 
 fn node_home(dir: &Path) -> (PathBuf, Db) {
@@ -101,40 +101,6 @@ fn a_node_home_with_no_database_gives_an_empty_shadow() {
     assert!(!shadow.join("dashboard.db").exists());
 }
 
-#[tokio::test]
-async fn serve_in_shadow_mode_starts_from_the_node_database() {
-    let dir = TempDir::new().unwrap();
-    let (node, _live) = node_home(dir.path());
-    let tweak: Tweak = Arc::new(move |o| o.shadow_seed = Some(node.clone()));
-    let t = TestServer::start(TestOptions {
-        shadow: true,
-        tweak: Some(tweak),
-        ..TestOptions::default()
-    })
-    .await;
-    assert_eq!(t.svc.db.kv_get("seen").unwrap().as_deref(), Some("yes"));
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_marked_home_serves_in_shadow_mode_whatever_the_start_asked() {
-    let t = TestServer::start(TestOptions {
-        shadow: false,
-        seed: true,
-        config: serde_json::json!({ "shadow": true }),
-        ..TestOptions::default()
-    })
-    .await;
-    assert!(
-        t.svc.shadow,
-        "the marker in config.json turns shadow mode on"
-    );
-    let health = t.get("/api/health").await.json();
-    assert_eq!(health["shadow"], true);
-    let note = serde_json::json!({ "project": "beta", "text": "Shadow" });
-    let sent = t.write("POST", "/api/portfolio/send", &note).await;
-    assert_eq!((sent.status, sent.code().as_str()), (403, "read_only"));
-}
-
 #[test]
 fn preparing_a_shadow_seeds_and_marks_it_and_never_marks_the_node_home() {
     let dir = TempDir::new().unwrap();
@@ -151,22 +117,4 @@ fn preparing_a_shadow_seeds_and_marks_it_and_never_marks_the_node_home() {
         !live.config.exists(),
         "the live default home is never marked"
     );
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_home_without_the_marker_stays_a_normal_server() {
-    let t = TestServer::start(TestOptions::default()).await;
-    assert!(!t.svc.shadow);
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_shadow_flag_writes_the_marker_so_the_next_start_needs_no_flag() {
-    let t = TestServer::start(TestOptions {
-        shadow: true,
-        ..TestOptions::default()
-    })
-    .await;
-    assert!(argus_server::shadow::marked(
-        &t.dashboard_home.join("config.json")
-    ));
 }

@@ -7,6 +7,8 @@
 //! the client that starts a stopped dashboard from an install dir (both are client behaviour
 //! with a fake install; `argus start` takes the second over at the switch-over). They run with
 //! `argus coord` in slice 8.
+//! E2: the real Node coord run client against a server with real processes.
+// test-tag: e2e
 
 use std::path::Path;
 
@@ -156,6 +158,7 @@ async fn first_define(env: &Env) {
     );
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_the_launch() {
     let Some(env) = Env::start().await else {
@@ -351,6 +354,7 @@ async fn stops_refusals_and_logs(env: &Env) {
     assert!(!tail.stdout.contains("before"), "{}", tail.stdout);
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
     let Some(env) = Env::start().await else {
@@ -366,6 +370,7 @@ async fn start_wait_streams_the_output_and_exits_with_the_run_exit_code() {
     stops_refusals_and_logs(&env).await;
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn a_thread_caller_is_recorded_as_the_starter() {
     let Some(env) = Env::start().await else {
@@ -379,6 +384,7 @@ async fn a_thread_caller_is_recorded_as_the_starter() {
     assert_eq!(env.run_doc("R-1").await["by"], "worker");
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn logs_follow_tails_a_live_run_until_it_ends() {
     let Some(env) = Env::start().await else {

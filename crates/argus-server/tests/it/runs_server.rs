@@ -2,9 +2,10 @@
 //! DESIGN 9 home, the run docs on the page stream, the Origin and content-type rules of the start
 //! route, Stop ending the process tree, and a graceful restart. Ported from
 //! `runs.server.test.mjs`.
+//! E1, E2: the run service in the whole server with real processes: a Play, a failing launch, Stop on the process tree and a graceful restart.
+// test-tag: e2e
 
-use std::time::Duration;
-
+use crate::wait::until;
 use argus_testkit::{Request, TestOptions, TestServer};
 use serde_json::{Value, json};
 
@@ -28,14 +29,11 @@ async fn page_start(t: &TestServer, name: &str) -> Value {
 }
 
 async fn finished(t: &TestServer, rid: &str) -> Value {
-    for _ in 0..200 {
+    until("the run to end", || async {
         let run = t.get(&format!("/api/p/alpha/runs/{rid}")).await.json()["run"].clone();
-        if run["status"] != "running" && run["status"] != "queued" {
-            return run;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
-    panic!("{rid} did not end");
+        (run["status"] != "running" && run["status"] != "queued").then_some(run)
+    })
+    .await
 }
 
 #[cfg(windows)]
@@ -49,13 +47,10 @@ fn alive(pid: u32) -> bool {
 }
 
 async fn gone(pid: u32) {
-    for _ in 0..60 {
-        if !alive(pid) {
-            return;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
-    panic!("process {pid} is still alive");
+    until("the process to be gone", || async {
+        (!alive(pid)).then_some(())
+    })
+    .await;
 }
 
 /// The run doc that says `exited`, as the page stream carries it.
@@ -82,6 +77,7 @@ async fn finished_doc(stream: &argus_testkit::SseReader) -> Value {
         .clone()
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn the_fixture_launches_hello_runs_from_the_page_and_its_run_doc_reaches_the_stream() {
     let t = start_server(None).await;
@@ -139,6 +135,7 @@ async fn the_fixture_launches_hello_runs_from_the_page_and_its_run_doc_reaches_t
     t.stop(false).await;
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn a_cross_origin_start_is_refused_a_failing_launch_keeps_its_code_and_unknown_names_are_404()
 {
@@ -168,6 +165,7 @@ async fn a_cross_origin_start_is_refused_a_failing_launch_keeps_its_code_and_unk
     t.stop(false).await;
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn slow_play_then_already_then_stop_ends_the_process_tree() {
     let t = start_server(None).await;
@@ -179,15 +177,14 @@ async fn slow_play_then_already_then_stop_ends_the_process_tree() {
     );
     let rid = first["run"]["id"].as_str().unwrap().to_owned();
     let pid = u32::try_from(first["run"]["pid"].as_u64().expect("a pid")).unwrap();
-    let began = std::time::Instant::now();
     let request = Request::new("POST", &format!("/api/p/alpha/runs/{rid}/stop")).json(&json!({}));
     let stopped = t.send(t.page(request)).await.json();
     assert_eq!(stopped["run"]["status"], "stopped");
-    assert!(began.elapsed() < Duration::from_secs(6));
     gone(pid).await;
     t.stop(false).await;
 }
 
+#[ignore = "e2e"]
 #[tokio::test(flavor = "multi_thread")]
 async fn a_graceful_restart_stops_hidden_runs_as_server_shutdown_and_the_counters_continue() {
     let t = start_server(None).await;

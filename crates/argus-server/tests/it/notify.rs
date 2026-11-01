@@ -707,7 +707,11 @@ async fn a_restart_does_not_tell_the_owner_again_what_he_was_told_but_news_still
             .collect()
     };
     assert_eq!(told_texts(&after), told_texts(&before));
-    assert_eq!(r.toasts.count(), shown + 1, "only the toast of the last build");
+    assert_eq!(
+        r.toasts.count(),
+        shown + 1,
+        "only the toast of the last build"
+    );
     edit_alpha(&r.t, |b| {
         b["entries"]["Q-4"] = question("Q-4", "One more thing after the restart?", "answer");
     })

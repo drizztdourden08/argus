@@ -12,7 +12,6 @@ use crate::doors::alias;
 
 const ADDRESS: Ipv4Addr = Ipv4Addr::new(127, 65, 82, 72);
 
-
 fn door(port: u16) -> Door {
     Door {
         address: ADDRESS,
