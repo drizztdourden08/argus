@@ -147,58 +147,59 @@ fn named(pid: u32, name: &'static str, cmd: &'static str, path: &'static str) ->
     })
 }
 
+const PROTECTED: [(u32, &str, &str, &str); 8] = [
+    (
+        5001,
+        "claude.exe",
+        "claude --resume",
+        "C:\\claude\\claude.exe",
+    ),
+    (
+        5002,
+        "node.exe",
+        "node C:/npm/@anthropic-ai/claude-code/cli.js",
+        "C:\\nvm4w\\nodejs\\node.exe",
+    ),
+    (
+        77,
+        "argus.exe",
+        "X:\\argus\\argus.exe serve",
+        "X:\\argus\\argus.exe",
+    ),
+    (
+        78,
+        "argus.exe",
+        "X:\\argus\\argus.exe tray",
+        "X:\\argus\\argus.exe",
+    ),
+    (
+        5003,
+        "argus.exe",
+        "C:\\argus\\argus.exe mcp alpha",
+        "C:\\argus\\argus.exe",
+    ),
+    (
+        5004,
+        "svchost.exe",
+        "svchost -k netsvcs",
+        "C:\\Windows\\System32\\svchost.exe",
+    ),
+    (
+        5005,
+        "explorer.exe",
+        "explorer",
+        "C:\\Windows\\explorer.exe",
+    ),
+    (
+        5006,
+        "conhost.exe",
+        "conhost 0x4",
+        "C:\\Windows\\System32\\conhost.exe",
+    ),
+];
+
 fn protected_rows() -> Vec<ProcRow> {
-    let named_rows = [
-        (
-            5001,
-            "claude.exe",
-            "claude --resume",
-            "C:\\claude\\claude.exe",
-        ),
-        (
-            5002,
-            "node.exe",
-            "node C:/npm/@anthropic-ai/claude-code/cli.js",
-            "C:\\nvm4w\\nodejs\\node.exe",
-        ),
-        (
-            77,
-            "argus.exe",
-            "X:\\argus\\argus.exe serve",
-            "X:\\argus\\argus.exe",
-        ),
-        (
-            78,
-            "argus.exe",
-            "X:\\argus\\argus.exe tray",
-            "X:\\argus\\argus.exe",
-        ),
-        (
-            5003,
-            "argus.exe",
-            "C:\\argus\\argus.exe mcp alpha",
-            "C:\\argus\\argus.exe",
-        ),
-        (
-            5004,
-            "svchost.exe",
-            "svchost -k netsvcs",
-            "C:\\Windows\\System32\\svchost.exe",
-        ),
-        (
-            5005,
-            "explorer.exe",
-            "explorer",
-            "C:\\Windows\\explorer.exe",
-        ),
-        (
-            5006,
-            "conhost.exe",
-            "conhost 0x4",
-            "C:\\Windows\\System32\\conhost.exe",
-        ),
-    ];
-    let mut rows: Vec<ProcRow> = named_rows
+    let mut rows: Vec<ProcRow> = PROTECTED
         .into_iter()
         .map(|(pid, name, cmd, path)| named(pid, name, cmd, path))
         .collect();
