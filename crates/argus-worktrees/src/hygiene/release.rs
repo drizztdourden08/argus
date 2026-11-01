@@ -19,9 +19,9 @@ impl Service {
     fn why_not(verdict: &Verdict) -> String {
         match verdict {
             Verdict::Released => "its thread changed".to_string(),
-            Verdict::Quiet => "its sub-agent is at work again".to_string(),
+            Verdict::Quiet => "it is not a worktree Argus removes by itself".to_string(),
             Verdict::Kept(_) => "the thread kept it".to_string(),
-            Verdict::Review(why) => why.clone(),
+            Verdict::InUse(why) | Verdict::Review(why) => why.clone(),
         }
     }
 

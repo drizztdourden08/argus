@@ -15,13 +15,16 @@ pub fn hygiene_key(project: &str) -> String {
     format!("worktrees:hygiene:{project}")
 }
 
-/// Where a worktree of an ended sub-agent stands.
+/// Where a worktree stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HygieneState {
+    /// A running agent owns it, or a process, a run, a launcher, a pull request or work in progress holds it.
+    #[serde(rename = "in-use")]
+    InUse,
     /// Every condition holds: Argus removes it after the grace.
     Released,
-    /// Its agent ended, but something keeps Argus from removing it: the thread decides.
+    /// Something keeps Argus from removing it (uncommitted work, commits no ref keeps, a lock): the thread decides.
     Review,
     /// The thread kept it.
     Kept,

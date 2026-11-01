@@ -185,6 +185,8 @@ impl Service {
             live_ms: self.opts.live_ms,
             took_ms,
             count: counts.counted,
+            listed: counts.listed,
+            running_agents: board.agents.iter().filter(|a| a.live()).count(),
             git: counts.counted - counts.leftovers,
             leftovers: counts.leftovers,
             leftover_mb: round1(counts.measured_mb),
@@ -224,6 +226,7 @@ impl Service {
 struct Counts {
     by_status: BTreeMap<String, usize>,
     counted: usize,
+    listed: usize,
     leftovers: usize,
     measured_mb: f64,
     pending: usize,
@@ -239,6 +242,10 @@ impl Counts {
         Self {
             by_status,
             counted: docs.iter().filter(|d| d.status != Status::Deleting).count(),
+            listed: docs
+                .iter()
+                .filter(|d| !d.main && d.status != Status::Deleting)
+                .count(),
             leftovers: leftover_rows().count(),
             measured_mb: leftover_rows()
                 .filter(|d| d.leftover.as_ref().is_some_and(|l| !l.pending))

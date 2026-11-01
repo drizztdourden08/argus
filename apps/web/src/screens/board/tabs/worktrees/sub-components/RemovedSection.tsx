@@ -10,7 +10,7 @@ const RemovedSection = (props: RemovedSectionProps) => {
   if (removed.length === 0) return null;
   return (
     <Flex direction="column" gap="xs" role="group" aria-label="Worktrees Argus removed by itself">
-      <Text variant="caption" tone="muted">Removed by the worktree hygiene: the worktrees of ended sub-agents, newest first.</Text>
+      <Text variant="caption" tone="muted">Removed by the worktree hygiene: the released worktrees, newest first.</Text>
       {removed.slice(0, REMOVED_SHOWN).map((done) => (
         <Flex key={`${done.id}-${done.at}`} gap="xs" align="center" wrap>
           <Tag title={plainText(done.text)}>removed</Tag>

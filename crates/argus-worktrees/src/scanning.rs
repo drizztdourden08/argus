@@ -11,7 +11,7 @@ use crate::scan::{
     DeletingFolder, RuleInfo, ScanEnv, folder_candidates, mark_leftover, scan_rules,
 };
 use crate::service::{Measured, ScanState, Service};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::time::Instant;
 
 /// What the live check did.
@@ -189,6 +189,26 @@ impl Service {
             state.sigs.insert(project.to_string(), signature);
         }
         changed
+    }
+
+    /// Did an agent of the project end (done, stopped or failed) since the last look at its board? The server scans
+    /// again a moment after, and the hygiene step that follows the scan sweeps the worktree it left. The first look
+    /// only remembers: the first scan at the start sweeps everything.
+    pub fn agents_ended(&self, project: &str) -> bool {
+        let Some(board) = self.deps.store.board(project) else {
+            return false;
+        };
+        let ended: BTreeSet<String> = board
+            .agents
+            .iter()
+            .filter(|a| !a.live() && !a.status.is_empty())
+            .map(|a| a.id.clone())
+            .collect();
+        let before = self
+            .st()
+            .ended_agents
+            .insert(project.to_string(), ended.clone());
+        before.is_some_and(|b| !ended.is_subset(&b))
     }
 
     /// Has the project been scanned since the service started? Before that its worktrees are not known.

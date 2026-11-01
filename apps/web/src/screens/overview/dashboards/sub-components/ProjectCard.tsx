@@ -8,6 +8,7 @@ import { CardFlags } from './CardFlags';
 import { CardFooter } from './CardFooter';
 import { CardHeadline } from './CardHeadline';
 import { CardState } from './CardState';
+import { CardWorktrees } from './CardWorktrees';
 import { MasterRow } from './MasterRow';
 import './ProjectCard.css';
 
@@ -22,6 +23,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <CardState card={card} state={state} now={now} />
         {started && syncs ? <SyncStamp sync={syncs[card.key] ?? null} /> : null}
         {started && <CardCounters card={card} />}
+        {started && <CardWorktrees card={card} />}
         {started && <CardFlags card={card} />}
         {started && <MasterRow card={card} onLog={onLog} />}
         <Spacer />

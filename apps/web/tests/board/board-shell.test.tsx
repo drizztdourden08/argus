@@ -14,10 +14,11 @@ const NOW = new Date().toISOString();
 
 const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activity: 'idle', session: 'RotP', lastSeen: NOW, link: 'chat://lead/1' };
 
-const open = async (at = '/p/rotp/') => {
+const open = async (at = '/p/rotp/', worktrees: object | null = null) => {
   const { sources } = renderAt(at);
   await waitFor(() => expect(sources).toHaveLength(1));
-  act(() => seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: NOW } }, threads: { coordinator: lead } }));
+  const meta = { board: { project: 'rotp', name: 'RotP', updatedAt: NOW }, ...(worktrees ? { worktrees } : {}) };
+  act(() => seedBoard(sources[0], { meta, threads: { coordinator: lead } }));
   return sources;
 };
 
@@ -29,6 +30,22 @@ describe('the board header', () => {
     expect(await screen.findByText('active')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Open the chat of the lead' }).getAttribute('href')).toBe('chat://lead/1');
     expect(screen.getByText(/board updated/)).toBeTruthy();
+  });
+
+  it('counts the worktrees against the running agents and warns when there are more than two beyond', async () => {
+    await open('/p/rotp/', { listed: 4, runningAgents: 2 });
+    const calm = await screen.findByText('worktrees 4 / running agents 2');
+    expect(calm.getAttribute('title')).not.toContain('some are not cleaned');
+    cleanup();
+    await open('/p/rotp/', { listed: 5, runningAgents: 2 });
+    const over = await screen.findByText('worktrees 5 / running agents 2');
+    expect(over.getAttribute('title')).toContain('some are not cleaned');
+  });
+
+  it('shows no worktree counter before the worktrees are counted', async () => {
+    await open();
+    await screen.findByText('Coordination board');
+    expect(screen.queryByText(/^worktrees \d+ \/ running agents/)).toBeNull();
   });
 
   it('puts the tab bar right under the registered strip, with a count on every tab', async () => {

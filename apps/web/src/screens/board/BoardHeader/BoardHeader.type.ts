@@ -21,4 +21,8 @@ interface BoardStampProps {
   updatedAt: string | null;
 }
 
-export type { BoardHeaderProps, BoardStampProps, LeadStatusProps };
+interface BoardWorktreesProps {
+  boardKey: string;
+}
+
+export type { BoardHeaderProps, BoardStampProps, BoardWorktreesProps, LeadStatusProps };

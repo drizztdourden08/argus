@@ -33,14 +33,14 @@ fn cell(id: &str, mark: &Mark, full: bool) -> String {
     format!("{id} {path}{agent}")
 }
 
-/// `2 worktrees of ended sub-agents are released: Argus removes them in 1 hour unless you keep one (...) or release
+/// `2 worktrees are released: Argus removes them in 1 hour unless you keep one (...) or release
 /// it now (...): <id> <path> (A-3), <id> .../agent-b (A-4).` Shrinks until it fits the wake engine's 300 characters.
 pub(crate) fn review_text(list: &[(&String, &Mark)], grace_ms: i64) -> String {
     let count = list.len();
     let (are, them) = if count == 1 {
-        ("worktree of an ended sub-agent is", "it")
+        ("worktree is", "it")
     } else {
-        ("worktrees of ended sub-agents are", "them")
+        ("worktrees are", "them")
     };
     let head = format!(
         "{count} {are} released: Argus removes {them} in {} unless you keep one (coord worktree keep <id> --note \"why\") or release it now (coord worktree release <id>): ",
@@ -93,9 +93,7 @@ mod tests {
         );
         let one = review_text(&[(&a, &ma)], 3_600_000);
         assert!(
-            one.starts_with(
-                "1 worktree of an ended sub-agent is released: Argus removes it in 1 hour"
-            ),
+            one.starts_with("1 worktree is released: Argus removes it in 1 hour"),
             "{one}"
         );
         assert!(

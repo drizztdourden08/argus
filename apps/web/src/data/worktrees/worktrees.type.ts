@@ -147,6 +147,8 @@ interface WorktreesMeta {
   name?: string | null;
   scannedAt?: string | null;
   staleDays?: number;
+  listed?: number | null;
+  runningAgents?: number | null;
   gone?: number;
   tooMany?: boolean;
   rules?: WorktreeRule[];
@@ -154,6 +156,15 @@ interface WorktreesMeta {
   jobs?: BatchJob[];
   requests?: WorktreeRequest[];
   hygiene?: HygieneMeta | null;
+}
+
+interface WorktreeCounter {
+  listed: number;
+  running: number;
+}
+
+interface PortfolioWorktrees {
+  counts?: Record<string, WorktreeCounter>;
 }
 
 interface WorktreeAskInput {
@@ -207,6 +218,6 @@ interface BatchResult {
 }
 
 export type {
-  BackupInfo, BatchJob, BatchResult, HygieneMeta, LeftoverInput, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeHygiene,
+  BackupInfo, BatchJob, BatchResult, HygieneMeta, LeftoverInput, PortfolioWorktrees, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeCounter, WorktreeHygiene,
   WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };

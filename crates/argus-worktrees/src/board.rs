@@ -112,7 +112,7 @@ pub struct BoardFacts {
     pub entries: HashMap<String, OwnerEntry>,
     /// The sub-agent records.
     pub agents: Vec<AgentFact>,
-    /// The open items, the open pull requests, the launchers not retired and the bundles not closed.
+    /// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
     pub links: Vec<Link>,
 }
 

@@ -57,6 +57,15 @@ describe('the totals and the cards', () => {
     expect(screen.getByText('running')).toBeTruthy();
   });
 
+  it('counts the worktrees against the running agents on each card and warns past two beyond', async () => {
+    stubApi();
+    await open({ meta: { worktrees: { counts: { rotp: { listed: 9, running: 2 }, beta: { listed: 3, running: 2 } } } } });
+    const over = await screen.findByText('worktrees 9 / running agents 2');
+    expect(over.getAttribute('title')).toContain('some are not cleaned');
+    const calm = screen.getByText('worktrees 3 / running agents 2');
+    expect(calm.getAttribute('title')).not.toContain('some are not cleaned');
+  });
+
   it('puts the hot card first and gives a link to a board only to a card that has one', async () => {
     stubApi();
     await open();

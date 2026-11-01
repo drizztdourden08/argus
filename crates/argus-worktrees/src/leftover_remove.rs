@@ -254,6 +254,9 @@ impl Service {
         m: &Leftover,
         limit_days: f64,
     ) -> Result<()> {
+        if input.empty_goes && !m.partial && m.files == Some(0) {
+            return Ok(());
+        }
         let made = self.is_made(&input.project, &fact.path);
         let young = !made
             && m.newest_ms

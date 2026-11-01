@@ -36,6 +36,7 @@ export { removedOf } from './removed-of';
 export { requestsOf } from './requests-of';
 export { ruleDetails } from './rule-details';
 export { sizeText } from './size-text';
+export { statusShown } from './status-shown';
 export { statusTip } from './status-tip';
 export { summaryParts } from './summary-parts';
 export { tableRow } from './table-row';

@@ -804,6 +804,8 @@ impl Harness {
             backup_dir: backups.clone(),
             case_insensitive: cfg!(windows),
             drop_links_first: false,
+            // The hygiene has its own specs (`specs/hygiene.rs`) that turn it on.
+            release: false,
             ..Options::default()
         };
         options(&mut opts);

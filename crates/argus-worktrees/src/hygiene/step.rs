@@ -26,6 +26,7 @@ type ByThread = BTreeMap<String, Vec<String>>;
 fn state_of(verdict: &Verdict) -> Option<(HygieneState, Option<String>)> {
     match verdict {
         Verdict::Quiet => None,
+        Verdict::InUse(why) => Some((HygieneState::InUse, Some(why.clone()))),
         Verdict::Released => Some((HygieneState::Released, None)),
         Verdict::Kept(note) => Some((HygieneState::Kept, note.clone())),
         Verdict::Review(why) => Some((HygieneState::Review, Some(why.clone()))),
@@ -213,7 +214,8 @@ impl Service {
             let mut input = RequestInput::new(project, Caller::Thread(thread.clone()));
             input.targets.clone_from(&ids);
             input.branch = true;
-            input.reason = Some("released: its sub-agent ended and nothing uses it".to_string());
+            input.reason =
+                Some("released: no running agent owns it and nothing uses it".to_string());
             let Ok(queued) = self.request_released(&input) else {
                 // The thread may not remove it (the request is refused and logged): it stays released, told.
                 continue;

@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   aboutSize, askProblem, batchNotice, canRemove, compareRows, confirmStale, countRows, daysText, entryProblem, filterRows, isNeeding,
-  isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, removeLook, sizeText, summaryParts,
+  hygieneTag, isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, removeLook, sizeText, statusShown,
+  summaryParts,
   threadOf,
 } from '../../src/screens/board/tabs/worktrees/model';
 import { DAY, ago, leftover, metaDoc, oldMeta, rule, worktree } from './fixtures';
@@ -196,5 +197,26 @@ describe('the sentences', () => {
     ];
     const shown = refusedJobs(oldMeta({ jobs }), new Set(['L-4']), Date.now());
     expect(shown.map((job) => job.id)).toEqual(['L-1']);
+  });
+});
+
+describe('the state a row shows', () => {
+  it('hides the three day "active" status and the staleness of a worktree that is not in review', () => {
+    expect(statusShown(worktree('a', 'active'))).toBe(false);
+    expect(statusShown(worktree('b', 'stale'))).toBe(true);
+    const state = (value: string) => ({ hygiene: { state: value } });
+    expect(statusShown(worktree('c', 'stale', state('review')))).toBe(true);
+    expect(statusShown(worktree('d', 'stale', state('released')))).toBe(false);
+    expect(statusShown(worktree('e', 'merged', state('in-use')))).toBe(false);
+    expect(statusShown(worktree('f', 'kept', state('kept')))).toBe(false);
+    expect(statusShown(worktree('g', 'leftover', state('released')))).toBe(true);
+  });
+
+  it('names the states: in use, released, review and kept (leftover comes from the status)', () => {
+    const tag = (state: string, why?: string) => hygieneTag({ state, why, thread: 'lead' });
+    expect(tag('in-use', 'its agent A-1 is working').text).toBe('in use');
+    expect(tag('released').text).toBe('released');
+    expect(tag('review', 'it is locked (x)').text).toBe('review');
+    expect(tag('kept').text).toBe('kept');
   });
 });

@@ -54,12 +54,15 @@ fn answers_of(raw: &Value) -> HashMap<String, Answer> {
         .collect()
 }
 
+/// Registered and not ended, not a placeholder, not deleted.
+pub(super) fn thread_live(t: &Value) -> bool {
+    t.is_object()
+        && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
+        && t["placeholder"] != true
+        && t["deletedAt"].is_null()
+}
+
 fn threads_of(raw: &Value) -> BTreeMap<String, ThreadInfo> {
-    let live = |t: &Value| {
-        !ENDED.contains(&t["status"].as_str().unwrap_or(""))
-            && t["placeholder"] != true
-            && t["deletedAt"].is_null()
-    };
     raw.as_object()
         .into_iter()
         .flatten()
@@ -68,7 +71,7 @@ fn threads_of(raw: &Value) -> BTreeMap<String, ThreadInfo> {
             let info = ThreadInfo {
                 id,
                 coordinator: t["role"] == "coordinator",
-                live: live(t),
+                live: thread_live(t),
             };
             (key.clone(), info)
         })

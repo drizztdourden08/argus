@@ -47,7 +47,7 @@ pub struct Options {
     pub keep_backup_days: i64,
     /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
     pub run_requests: bool,
-    /// The worktree hygiene: flag the released worktrees of ended sub-agents and remove them after the grace. Off in
+    /// The worktree hygiene: flag the released worktrees (no running agent, nothing holds them, nothing is lost) and remove them after the grace. Off in
     /// shadow mode.
     pub release: bool,
     /// How long a released worktree stays after its thread was told (`worktrees.releaseGraceMs`, 1 hour).
@@ -128,6 +128,8 @@ pub struct State {
     pub jobs: Vec<Job>,
     pub job_seq: u64,
     pub sigs: HashMap<String, String>,
+    /// The agent records that ended (done, stopped, failed), by project, as the last look at the board saw them.
+    pub ended_agents: HashMap<String, BTreeSet<String>>,
     pub measured: HashMap<String, Measured>,
     pub budget_spent_ms: i64,
     pub adopted: HashSet<String>,

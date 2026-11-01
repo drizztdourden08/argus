@@ -1,12 +1,15 @@
 //! What the worktree hygiene reads from a board besides the rules: the sub-agent records, and the
-//! open things that may use a worktree (items, pull requests, launchers, bundles).
+//! open things that may use a worktree (items in progress, pull requests, launchers, bundles).
 
 use argus_board::Board;
 use argus_core::clock::parse_ms;
 use argus_worktrees::{AgentFact, Link};
 use serde_json::{Map, Value};
 
-const OPEN_ITEMS: [&str; 3] = ["todo", "doing", "review"];
+use super::facts::thread_live;
+
+/// The only status of an item that holds a worktree: someone is working on it.
+const WORKING_ITEM: &str = "doing";
 
 fn text(value: &Value) -> Option<String> {
     value
@@ -43,9 +46,15 @@ pub(super) fn agents_of(board: &Board) -> Vec<AgentFact> {
         .collect()
 }
 
+/// Is the item in progress and assigned to a live thread? Any other open item that names a worktree does not hold it.
+fn item_works(board: &Board, item: &Value) -> bool {
+    item["status"] == WORKING_ITEM
+        && text(&item["thread"]).is_some_and(|t| thread_live(&board["threads"][t.as_str()]))
+}
+
 fn item_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
     section(board, "items")
-        .filter(|(_, i)| OPEN_ITEMS.contains(&i["status"].as_str().unwrap_or_default()))
+        .filter(|(_, i)| item_works(board, i))
         .map(|(id, i)| Link {
             what: format!("item {id}"),
             text: Some(format!(
@@ -88,7 +97,7 @@ fn bundle_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
         })
 }
 
-/// The open items, the open pull requests, the launchers not retired and the bundles not closed.
+/// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
 pub(super) fn links_of(board: &Board) -> Vec<Link> {
     item_links(board)
         .chain(pr_links(board))
@@ -107,8 +116,12 @@ mod tests {
         let board: Board = json!({
             "agents": {"A-1": {"id": "A-1", "thread": "lead", "status": "done", "claudeId": "a1",
                 "worktree": null, "finishedAt": "2026-11-01T10:00:00.000Z"}},
-            "items": {"I-1": {"status": "doing", "title": "land agent-a1"},
-                "I-2": {"status": "done", "title": "agent-a1 again"}},
+            "threads": {"lead": {"id": "lead", "status": "active"}, "gone": {"id": "gone", "status": "done"}},
+            "items": {"I-1": {"status": "doing", "thread": "lead", "title": "land agent-a1"},
+                "I-2": {"status": "done", "thread": "lead", "title": "agent-a1 again"},
+                "I-3": {"status": "todo", "thread": "lead", "title": "agent-a1 later"},
+                "I-4": {"status": "doing", "thread": "gone", "title": "agent-a1 by an ended thread"},
+                "I-5": {"status": "doing", "title": "agent-a1 by nobody"}},
             "prs": {"PR-1": {"status": "open", "head": "agent-a1"}, "PR-2": {"status": "merged", "head": "x"}},
             "launchers": {"web": {"cwd": "X:/p/w"}, "old": {"cwd": "X:/p/o", "retiredAt": "2026-10-01T00:00:00.000Z"}},
             "builds": {"b1": {"cwd": "X:/p/b"}, "b2": {"cwd": "X:/p/c", "closedAt": "2026-10-01T00:00:00.000Z"}}

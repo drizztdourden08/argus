@@ -22,7 +22,7 @@ use crate::read::read_board_file;
 use crate::state::State;
 
 const RETRY_LATER: Duration = Duration::from_secs(2);
-const FOREIGN_META: [&str; 1] = ["procs"];
+const FOREIGN_META: [&str; 2] = ["procs", "worktrees"];
 const PROJECT_FOREIGN_META: [&str; 1] = ["worktrees"];
 
 /// What an export wrote.

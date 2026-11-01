@@ -41,6 +41,7 @@ impl Service {
         if rec.mode == super::Mode::Leftovers {
             input.older_than_days = rec.older_than_days;
         }
+        input.empty_goes = rec.mode == super::Mode::Released;
         input
     }
 
