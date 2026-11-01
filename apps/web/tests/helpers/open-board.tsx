@@ -5,10 +5,11 @@ import { expect, vi } from 'vitest';
 import { renderBody } from './render-body';
 import { seedBoard } from './seed-board';
 
+const FIRST_LAZY_LOAD_MS = 5000;
+
 const openBoard = async (docs: Record<string, Record<string, object>>) => {
   const view = renderBody();
-  // The board tabs load lazily: the first case of a run pays the import.
-  await waitFor(() => expect(view.sources).toHaveLength(1), { timeout: 5000 });
+  await waitFor(() => expect(view.sources).toHaveLength(1), { timeout: FIRST_LAZY_LOAD_MS });
   act(() => seedBoard(view.sources[0], docs));
   return view;
 };
