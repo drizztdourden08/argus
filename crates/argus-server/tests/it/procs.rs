@@ -3,13 +3,11 @@
 //! lines they leave. Ported from the HTTP cases of `procs.http.test.mjs`; the `coord proc`
 //! verbs stay in the Node `coord` tests.
 
-mod machine;
-
+use crate::machine::{Machine, row};
 use argus_core::Coll;
 use argus_core::clock::{iso_from_ms, now_ms};
 use argus_core::ids::PORTFOLIO;
 use argus_testkit::{Reply, Request, TestOptions, TestServer, beta_board, write_board};
-use machine::{Machine, row};
 use serde_json::{Value, json};
 use std::sync::Arc;
 
@@ -42,7 +40,7 @@ async fn rig_on(
         sync,
         config,
         dashboard_home: Some(home.path().to_path_buf()),
-        tweak: Some(Arc::new(move |opts| machine::install(&wired, opts))),
+        tweak: Some(Arc::new(move |opts| crate::machine::install(&wired, opts))),
         ..TestOptions::default()
     })
     .await;

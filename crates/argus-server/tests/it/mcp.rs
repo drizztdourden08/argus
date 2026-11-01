@@ -4,13 +4,10 @@
 //! Ported from `mcp.server.test.mjs`, the auth case of `mcp.http.test.mjs` and the MCP case of
 //! `notify.http.test.mjs`. The protocol itself is tested in `argus-mcp`.
 
-#[allow(dead_code)]
-mod toasts;
-#[path = "support/wait.rs"]
-mod wait;
-
 use std::sync::{Arc, PoisonError};
 
+use crate::toasts::Toasts;
+use crate::wait::until;
 use argus_core::config::McpConfig;
 use argus_launchers::FakeHost;
 use argus_native::Notifier;
@@ -18,8 +15,6 @@ use argus_server::ServeOptions;
 use argus_testkit::{Reply, Request, TestOptions, TestServer, png};
 use base64::Engine;
 use serde_json::{Map, Value, json};
-use toasts::Toasts;
-use wait::until;
 
 fn ping() -> Value {
     json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" })

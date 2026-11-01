@@ -4,12 +4,11 @@
 //! lines and the tray balloon. Ported from the HTTP cases of `notify.http.test.mjs`; the cases
 //! that drive the Node `coord` and the MCP tool stay with their own slices.
 
-mod toasts;
-
 use std::path::Path;
 use std::sync::{Arc, PoisonError};
 use std::time::Duration;
 
+use crate::toasts::Toasts;
 use argus_core::Coll;
 use argus_core::clock::{ManualClock, now_ms};
 use argus_core::fixture::test_doc;
@@ -22,7 +21,6 @@ use argus_testkit::{
 };
 use serde_json::{Value, json};
 use tempfile::TempDir;
-use toasts::Toasts;
 
 struct Rig {
     t: TestServer,

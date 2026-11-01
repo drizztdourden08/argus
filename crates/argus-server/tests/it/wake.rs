@@ -5,15 +5,13 @@
 //!
 //! The builds, launchers and rerun cases of `wake.http.test.mjs` belong to the sync and runs
 //! slices, and `coord inbox send` itself to the `coord` port of slice 8.
-mod posting;
-mod wake_rig;
 
-use argus_testkit::TestServer;
-use posting::{doc, post};
-use serde_json::{Value, json};
-use wake_rig::{
+use crate::posting::{doc, post};
+use crate::wake_rig::{
     lines, listeners, pause, post_wake, quiet, result, rig, wake_stream, wake_where, wakes,
 };
+use argus_testkit::TestServer;
+use serde_json::{Value, json};
 
 fn is_wake_id(id: &Value) -> bool {
     let text = id.as_str().unwrap_or_default();

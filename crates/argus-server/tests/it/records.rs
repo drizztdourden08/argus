@@ -3,15 +3,13 @@
 //! (ranges, types, refusals, the feed host), the check runs with numbers that survive a
 //! restart, their logs, and the registry. Never the real `~/.coord`, never port 80 or 47615.
 
-#[path = "support/wait.rs"]
-mod wait;
-
 use std::fs;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::wait::until;
 use argus_core::fixture::{check_run_record, put_file as put};
 use argus_server::{ConsumerSource, ConsumerStatus};
 use argus_testkit::{
@@ -20,7 +18,6 @@ use argus_testkit::{
 use async_trait::async_trait;
 use serde_json::{Value, json};
 use tempfile::TempDir;
-use wait::until;
 
 const LATEST: &str = "version: VER\nfiles:\n  - url: App-Setup-VER.exe\n    sha512: abc==\n    size: 10\npath: App-Setup-VER.exe\nsha512: abc==\n";
 const EXE: &[u8] = b"0123456789";

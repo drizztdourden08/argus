@@ -4,11 +4,8 @@
 //! an unknown run and a bad run id are refused with their codes. Ported from the stdin route
 //! case of `runs.terminal.test.mjs`.
 
-#[path = "runs/rig.rs"]
-mod rig;
-
+use crate::runs_rig::Rig;
 use argus_testkit::{Reply, Request};
-use rig::Rig;
 use serde_json::{Value, json};
 
 const PATH: &str = "/api/p/alpha/runs/R-1/stdin";

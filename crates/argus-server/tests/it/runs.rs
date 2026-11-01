@@ -3,11 +3,8 @@
 //! `runs.http.test.mjs` and the HTTP side of `runs.cli.test.mjs`; the real processes of
 //! `runs.server.test.mjs` are in `runs_server.rs`, the stored rows in `runs_store.rs`.
 
-#[path = "runs/rig.rs"]
-mod rig;
-
+use crate::runs_rig::{Rig, until};
 use argus_testkit::{Event, Request, SseReader, TestOptions, png};
-use rig::{Rig, until};
 use serde_json::{Value, json};
 
 fn pid_of(run: &Value) -> u32 {

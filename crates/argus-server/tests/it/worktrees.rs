@@ -4,19 +4,14 @@
 //! and shadow mode. Ported from the HTTP side of `worktrees.http.test.mjs` and
 //! `worktrees.fallback.http.test.mjs`; the `coord worktree` verbs stay in the Node `coord` tests.
 
-#[path = "worktrees/fixture.rs"]
-mod fixture;
-#[path = "worktrees/rig.rs"]
-mod rig;
-
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::fixture::git;
+use crate::worktrees_rig::{Rig, Setup, id_of, rule, until, wakes_of};
 use argus_testkit::{Request, write_board};
 use argus_worktrees::{GitExec, GitOutput, SystemExec};
-use fixture::git;
-use rig::{Rig, Setup, id_of, rule, until, wakes_of};
 use serde_json::{Value, json};
 
 fn status_counts(meta: &Value) -> Value {

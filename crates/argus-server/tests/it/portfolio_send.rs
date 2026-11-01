@@ -5,15 +5,13 @@
 //! from the CLI side (`coord portfolio send`, the API without a page) keeps the short limits.
 //! Ported from `portfolio.longsend.test.mjs`; the two cases that run the Node coord CLI need
 //! `ARGUS_COORD_CLI`.
-#[path = "wake_rig/mod.rs"]
-mod wake_rig;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use crate::wake_rig::{pause, rig, wakes};
 use argus_board::limits::OWNER_TEXT_MAX;
 use argus_testkit::{CoordCli, Request, TestServer};
 use serde_json::{Value, json};
-use wake_rig::{pause, rig, wakes};
 
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 

@@ -4,16 +4,13 @@
 //! that changed tracked files, and the check lists of the pull requests. Never the real
 //! `~/.coord`, never port 47615, never a real repository (only a temp one the test makes).
 
-#[path = "support/wait.rs"]
-mod wait;
-
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use crate::wait::until;
 use argus_testkit::{Request, TestOptions, TestServer};
 use serde_json::{Value, json};
 use tempfile::TempDir;
-use wait::until;
 
 const SHA: &str = "0123456789abcdef0123456789abcdef01234567";
 const MERGE: &str = "fedcba9876543210fedcba9876543210fedcba98";

@@ -2,19 +2,14 @@
 //! its users, the totals, the prune on demand and the one activity line it leaves, the grace period of the config,
 //! shadow mode, and the wait for the first worktree scan. The prune rule itself is tested in `argus-cache`.
 
-#[path = "worktrees/fixture.rs"]
-mod fixture;
-#[path = "worktrees/rig.rs"]
-mod rig;
-
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::worktrees_rig::{Rig, Setup};
 use argus_core::clock::{iso_from_ms, now_ms};
 use argus_server::CacheOptions;
 use argus_testkit::{TestOptions, TestServer, make_home};
-use rig::{Rig, Setup};
 use serde_json::{Value, json};
 
 const DAY: i64 = 86_400_000;

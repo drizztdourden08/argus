@@ -2,10 +2,10 @@
 //! listens for becomes a fault, mirrored to the `registry` docs and told once to the main
 //! coordinator as a passive notice (the wake policy never wakes it for a fault); the clear route refuses a browser and anyone but the Overlord. The `coord
 //! wake-fault` verbs stay in the Node `coord` tests until the `coord` port of slice 8.
-mod wake_rig;
 
 use std::time::{Duration, Instant};
 
+use crate::wake_rig::{pause, post_wake, wake_stream, wakes};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
@@ -14,7 +14,6 @@ use argus_testkit::{
 };
 use serde_json::{Value, json};
 use tempfile::TempDir;
-use wake_rig::{pause, post_wake, wake_stream, wakes};
 
 const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
 

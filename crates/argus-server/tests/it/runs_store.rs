@@ -1,13 +1,10 @@
 //! The run rows in the dashboard database: what a restart does to rows a crash left, retention,
 //! the log cap, the wake link a failed run tells, and the launcher wakes over the boards.
 
-#[path = "runs/rig.rs"]
-mod rig;
-
+use crate::runs_rig::{Rig, until, wakes_of};
 use argus_core::Paths;
 use argus_store::rusqlite::{Connection, params};
 use argus_testkit::{TestOptions, TestServer, alpha_board, write_board};
-use rig::{Rig, until, wakes_of};
 use serde_json::{Value, json};
 
 /// A row an earlier server left, with the status it died in.

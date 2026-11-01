@@ -2,11 +2,8 @@
 //! service does: a change to the live config applies to the next start and the next
 //! attachment, with no restart.
 
-#[path = "runs/rig.rs"]
-mod rig;
-
+use crate::runs_rig::Rig;
 use argus_testkit::{Request, TestOptions, png};
-use rig::Rig;
 use serde_json::json;
 
 fn set_limits(r: &Rig, max_concurrent: u64, attach_max: u64) {

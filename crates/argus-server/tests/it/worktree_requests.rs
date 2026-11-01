@@ -5,15 +5,10 @@
 //! summary the page reads carries the brief form. A stranger, a thread of another project and the
 //! page are refused. The CLI cases need `ARGUS_COORD_CLI` (Node) or the `argus` binary.
 
-#[path = "worktrees/fixture.rs"]
-mod fixture;
-#[path = "worktrees/rig.rs"]
-mod rig;
-
+use crate::worktrees_rig::{Rig, id_of, until, wakes_of};
 use argus_core::clock::{iso_from_ms, now_ms};
 use argus_testkit::CoordCli;
 use argus_worktrees::requests_key;
-use rig::{Rig, id_of, until, wakes_of};
 use serde_json::{Value, json};
 
 const REQUESTS: &str = "/api/p/alpha/worktrees/requests";

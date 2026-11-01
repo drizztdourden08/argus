@@ -1,13 +1,14 @@
 //! Owner posts over HTTP: every reply kind and the op outcomes (applied, conflict, refused,
 //! duplicate), idempotent ids, the result-note rule, a post waiting on a held board.lock,
 //! proofs, portfolio posts, recovery of a post left `received`, and shadow mode.
-mod posting;
 
 use std::time::{Duration, Instant};
 
+use crate::posting::{
+    cli, cli_to, doc, entry, entry_count, id, inbox, iso, page_put, post, seeded, with,
+};
 use argus_store::rusqlite::params;
 use argus_testkit::{Request, TestOptions, TestServer, png};
-use posting::{cli, cli_to, doc, entry, entry_count, id, inbox, iso, page_put, post, seeded, with};
 use serde_json::{Value, json};
 
 const NOTE: &str = "a note is required for fail, partial and blocked: say what you saw";

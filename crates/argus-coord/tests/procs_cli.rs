@@ -4,7 +4,7 @@
 
 mod common;
 #[allow(dead_code)]
-#[path = "../../argus-server/tests/machine/mod.rs"]
+#[path = "../../argus-server/tests/it/machine/mod.rs"]
 mod machine;
 mod remote;
 

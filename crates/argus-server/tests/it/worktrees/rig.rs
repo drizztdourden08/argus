@@ -14,13 +14,10 @@ use argus_worktrees::{GitExec, ProcInfo, ProcessLister, clean_path, worktree_id}
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
-use super::fixture::Fixture;
-
-#[path = "../support/wait.rs"]
-mod wait;
+use crate::fixture::Fixture;
 
 #[allow(unused_imports)]
-pub use wait::{until, wakes_of};
+pub use crate::wait::{until, wakes_of};
 
 /// A machine with no process on it: a removal never finds its folder in use.
 pub struct NoProcs;

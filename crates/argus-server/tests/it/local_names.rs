@@ -14,10 +14,7 @@ use argus_testkit::{Reply, Request, TestOptions, TestServer, request_at};
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
 
-#[path = "support/doors.rs"]
-mod doors;
-
-use doors::alias;
+use crate::doors::alias;
 
 const ADDRESS: Ipv4Addr = Ipv4Addr::new(127, 65, 82, 72);
 const WAIT: Duration = Duration::from_secs(5);
@@ -159,7 +156,7 @@ async fn a_write_through_a_name_needs_that_name_as_its_origin() {
     let live = up(&t);
     let host = format!("alpha.argus:{}", live.door.port);
     let addr = SocketAddr::from((live.door.address, live.door.port));
-    doors::assert_write_needs_own_origin(addr, &host).await;
+    crate::doors::assert_write_needs_own_origin(addr, &host).await;
     t.stop(false).await;
 }
 

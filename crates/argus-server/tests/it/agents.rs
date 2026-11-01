@@ -3,12 +3,12 @@
 //! `coord agent reconcile` verb stays with the `coord` port of slice 8), the reaper closes a
 //! quiet agent through the sync service and the closed agent reaches the page doc (the last
 //! case of `agents.reaper.test.mjs`), and the watcher's live view joins the agents docs.
-mod wake_rig;
 
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use crate::wake_rig::{pause, wake_where};
 use argus_agents::fakes::{agent_record, assistant_line, text_block, touch};
 use argus_agents::{AgentReaper, Ports, ReaperOptions, StdFs, SystemClock};
 use argus_core::Coll;
@@ -18,7 +18,6 @@ use argus_testkit::{TestOptions, TestServer, alpha_board, make_home, write_board
 use serde_json::{Value, json};
 use tempfile::TempDir;
 use tokio::runtime::Handle;
-use wake_rig::{pause, wake_where};
 
 const MIN: i64 = 60_000;
 const SID: &str = "sess-0000-aaaa";

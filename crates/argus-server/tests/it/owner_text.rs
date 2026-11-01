@@ -2,11 +2,10 @@
 //! the page (source page, author human) is held to the 50000-character safety net only, stored
 //! whole and delivered whole to the thread's inbox. The same text from the CLI (what a model
 //! writes) is still refused at the old limits.
-mod posting;
 
+use crate::posting::{cli, doc, entry_count, inbox, page, page_reply, seeded};
 use argus_board::limits::OWNER_TEXT_MAX;
 use argus_testkit::TestServer;
-use posting::{cli, doc, entry_count, inbox, page, page_reply, seeded};
 use serde_json::{Value, json};
 
 /// A long text with lines, a list and markdown, the way an owner writes feedback.

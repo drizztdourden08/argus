@@ -11,10 +11,7 @@ use axum::http::{HeaderMap, HeaderValue};
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
 
-#[path = "support/doors.rs"]
-mod doors;
-
-use doors::alias;
+use crate::doors::alias;
 
 async fn server(config: Value, door: Option<u16>) -> TestServer {
     let options = TestOptions {
@@ -84,7 +81,7 @@ async fn a_write_through_the_door_needs_that_host_as_its_origin() {
     let t = server(json!({}), Some(0)).await;
     let host = format!("alpha.localhost:{}", door_port(&t));
     let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, door_port(&t)));
-    doors::assert_write_needs_own_origin(addr, &host).await;
+    crate::doors::assert_write_needs_own_origin(addr, &host).await;
     t.stop(false).await;
 }
 

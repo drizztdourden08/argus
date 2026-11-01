@@ -9,10 +9,7 @@ use argus_launchers::FakeHost;
 use argus_testkit::{Reply, Request, SseReader, TestOptions, TestServer, write_board};
 use serde_json::{Value, json};
 
-#[path = "../support/wait.rs"]
-mod wait;
-
-pub use wait::{until, wakes_of};
+pub use crate::wait::{until, wakes_of};
 
 /// A definition the way `coord run define` writes it; `cwd` is a folder that exists.
 pub fn def(name: &str, cwd: &str, extra: &Value) -> Value {
