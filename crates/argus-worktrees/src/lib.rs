@@ -30,6 +30,7 @@ mod gh;
 mod git;
 mod guard;
 mod guards;
+mod holders;
 mod inspect;
 mod job_run;
 mod jobs;
@@ -77,7 +78,9 @@ pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
-pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
+pub use ports::{
+    ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
+};
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use requests::{
     Brief, Current as RequestCurrent, Mode as RequestMode, Outcome as RequestOutcome, Queued,

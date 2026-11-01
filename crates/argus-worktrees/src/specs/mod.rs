@@ -3,6 +3,7 @@
 //! `worktrees.fallback`). They run on temporary folders and repositories the tests create.
 
 mod fallback;
+mod holders;
 mod leftover;
 mod remove;
 mod requests;
