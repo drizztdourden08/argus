@@ -14,6 +14,7 @@
 //! with exit 120 is timed but never gated. A served hook fails the bench above its target; a
 //! served verb that is not a hook fails when its p50 is above Node's.
 
+#[path = "it/support/mod.rs"]
 mod support;
 
 use std::env;

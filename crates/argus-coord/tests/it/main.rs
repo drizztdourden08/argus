@@ -1,0 +1,59 @@
+mod agent_common;
+mod common;
+mod hook_support;
+#[allow(dead_code)]
+#[path = "../../../argus-server/tests/it/machine/mod.rs"]
+mod machine;
+mod remote;
+mod support;
+mod thread_support;
+#[allow(dead_code)]
+#[path = "../../../argus-server/tests/it/toasts/mod.rs"]
+mod toasts;
+mod work_board;
+
+mod agent_diff;
+mod agent_model;
+mod board_shortcut;
+mod board_shortcut_verb;
+mod build_verbs;
+mod caller_lookup;
+mod cli_args;
+mod client;
+mod dashboard_verb;
+mod differ_examples;
+mod differ_harness;
+mod entry_context;
+mod entry_images;
+mod format;
+mod hook_agents;
+mod hook_agents_binding;
+mod hook_agents_id;
+mod hook_autostart;
+mod hook_differ;
+mod hook_guard;
+mod hook_listen;
+mod hook_notices;
+mod hook_session;
+mod hook_transcript;
+mod launch_plan;
+mod launcher_verbs;
+mod lead_verbs;
+mod limits;
+mod ping_cli;
+mod portfolio_cli;
+mod pr_verbs;
+mod procs_cli;
+mod project_lookup;
+mod purge_check_tick;
+mod remote_differ;
+mod remote_switch;
+mod route;
+mod runs_cli;
+mod thread_diff;
+mod thread_diff_records;
+mod thread_verbs;
+mod wake_faults_cli;
+mod work_differential;
+mod work_inbox;
+mod worktree_verbs;
