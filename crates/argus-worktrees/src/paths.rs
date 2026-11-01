@@ -168,6 +168,7 @@ pub fn name_allowed(
     (include.is_empty() || hit(include)) && !hit(exclude)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -179,6 +179,7 @@ pub fn approval_of(board: &BoardFacts, entry_id: &str, fact: &Fact, now_ms: i64)
     ))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

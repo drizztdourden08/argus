@@ -178,6 +178,7 @@ impl Fs for RealFs {
     }
 }
 
+// test-tag: standard
 #[cfg(test)]
 mod tests {
     use super::*;

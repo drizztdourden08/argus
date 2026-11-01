@@ -1,6 +1,9 @@
+//! KEEP: K1.
 //! The wake engine on in-memory storage and a manual clock: coalescing windows, the 8 lines and "+N more",
 //! listener matching (thread, `*`), queued events and their one-time replay inside 24 hours, recovery of
 //! windows left open, the page mirror (last 50), and the listener registry (newer replaces older, legacy).
+
+// test-tag: critical
 
 use std::sync::Arc;
 

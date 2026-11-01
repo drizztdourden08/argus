@@ -1,19 +1,24 @@
-//! The tokio driver on the wall clock: a submitted wake is delivered once its window has passed, with no
-//! one calling `tick`.
+//! KEEP: S2 (the tokio driver and the service together).
+//! The tokio driver on a manual clock: a submitted wake is delivered once its window has passed, with no one
+//! calling `tick`. The driver sleeps in real time for a few milliseconds between ticks, but what the test waits for
+//! is set by the clock it moves, never by how long the sleep took.
+
+// test-tag: standard
 
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
-use argus_wake::SystemClock;
+use argus_wake::ManualClock;
 use argus_wake::config::WakeConfig;
 use argus_wake::engine::{AttachOptions, ListenerMessage, channel};
 use argus_wake::memory::{MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore};
 use argus_wake::service::driver::{SharedWake, lock, spawn};
 use argus_wake::service::{WakeDeps, WakeService};
 use argus_wake::source::{NoLive, NoSyncs};
-use argus_wake::testkit::wake;
+use argus_wake::testkit::{START, wake};
 
-fn shared() -> SharedWake {
+const WINDOW_MS: i64 = 30;
+
+fn shared(clock: &ManualClock) -> SharedWake {
     let deps = WakeDeps {
         store: Box::new(MemoryStore::new()),
         faults: Box::new(MemoryFaults::new()),
@@ -22,10 +27,10 @@ fn shared() -> SharedWake {
         live: Arc::new(NoLive),
         syncs: Arc::new(NoSyncs),
         activity: None,
-        clock: Arc::new(SystemClock),
+        clock: Arc::new(clock.clone()),
     };
     let config = WakeConfig {
-        window_ms: 30,
+        window_ms: WINDOW_MS,
         ..WakeConfig::default()
     };
     Arc::new(Mutex::new(WakeService::new(deps, &config, false)))
@@ -33,33 +38,20 @@ fn shared() -> SharedWake {
 
 #[tokio::test]
 async fn a_wake_is_delivered_when_its_window_closes_without_anyone_ticking() {
-    let service = shared();
+    let clock = ManualClock::at(START);
+    let service = shared(&clock);
     let (sink, mut rx) = channel();
     lock(&service).attach("alpha", "ui", Box::new(sink), AttachOptions::default());
     let driver = spawn(Arc::clone(&service));
     lock(&service)
         .submit(&[wake("ui", "T-1 failed: x"), wake("ui", "T-2 failed: y")])
         .expect("submit");
-    let message = tokio::time::timeout(Duration::from_secs(5), rx.recv())
-        .await
-        .expect("delivered in time")
-        .expect("open");
+    clock.advance(WINDOW_MS);
+    let message = rx.recv().await.expect("open");
     let ListenerMessage::Wake(event) = message else {
         panic!("expected a wake, got {message:?}");
     };
     assert_eq!((event.thread.as_str(), event.count), ("ui", 2));
     assert_eq!(event.lines, ["T-1 failed: x", "T-2 failed: y"]);
     driver.abort();
-}
-
-#[tokio::test]
-async fn a_second_listener_replaces_the_first_and_the_first_is_told_through_its_channel() {
-    let service = shared();
-    let (first, mut old) = channel();
-    let (second, _new) = channel();
-    lock(&service).attach("alpha", "ui", Box::new(first), AttachOptions::default());
-    lock(&service).attach("alpha", "ui", Box::new(second), AttachOptions::default());
-    assert_eq!(old.recv().await, Some(ListenerMessage::Replaced));
-    assert_eq!(old.recv().await, None, "and its stream ends");
-    assert_eq!(lock(&service).listeners("alpha").len(), 1);
 }

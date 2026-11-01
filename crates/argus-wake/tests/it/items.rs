@@ -1,6 +1,9 @@
+//! KEEP: K1.
 //! Wakes about the Kanban: an item that sits on a board for far too long reminds the thread that owns it,
 //! one wake per thread listing the worst, repeated every 12 hours, and the Overlord hears of projects where
 //! it goes on for days. A manual clock drives every tick.
+
+// test-tag: critical
 
 use argus_wake::activity::Level;
 use argus_wake::item_wakes::{ItemEnv, ItemWakeConfig, ItemWakes, age_text};

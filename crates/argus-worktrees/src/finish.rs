@@ -213,6 +213,7 @@ fn branch_sentence(asked: bool, now: &Fact, branch: &BranchOutcome) -> String {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -65,6 +65,7 @@ pub(crate) fn review_text(list: &[(&String, &Mark)], grace_ms: i64) -> String {
     head.chars().take(MAX_TEXT).collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,6 +1,9 @@
+//! KEEP: K4.
 //! The checks behind the wake routes: a wake from outside the policy (`coord lead`, `coord inbox send`) goes
 //! through the engine like any other, only the Overlord clears a fault, and the stream and presence
 //! parameters are cleaned.
+
+// test-tag: critical
 
 use argus_core::ids::is_key;
 use argus_wake::board::BoardView;

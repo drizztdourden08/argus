@@ -1,7 +1,10 @@
+//! KEEP: K1.
 //! The wake policy: the one table that says which reasons wake a thread and which only leave a
 //! notice, a passive reason never reaching a listener (live or replayed), the 5 minute debounce
 //! per thread and the 20 minute digest on a fake clock, the `wakePolicy` settings, and the notice
 //! digest the prompt hook prints.
+
+// test-tag: critical
 
 use argus_wake::config::WakeConfig;
 use argus_wake::engine::{AttachOptions, EngineConfig};
