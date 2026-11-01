@@ -89,6 +89,8 @@ node scripts/rust-tests.mjs --check-tags
 - A file with no tag line or two tag lines is refused (exit 1). `--check-tags` lists every Rust file
   with tests and not exactly one tag, and every e2e file with fewer `#[ignore]` than tests; it only
   reads files. It is the Rust half of the lint rule `local/test-has-one-tag`.
+- Once a week the lead's checker runs `cargo clean --profile dev`: it drops the stale debug build
+  (it reached 170 GiB before the lighter profiles) and leaves `target/release` alone.
 
 ## Workspace layout
 
