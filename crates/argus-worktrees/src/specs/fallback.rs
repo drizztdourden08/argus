@@ -814,7 +814,7 @@ fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_t
         RemoveMode::Real,
         lock_old_merged("cloned node_modules from main (brock)"),
     );
-    let out = s.remove_old_merged_gone_from_git();
+    let _ = s.remove_old_merged_gone_from_git();
     assert!(
         !exists_itself(&s.fx.path("old-merged")),
         "the folder is gone"

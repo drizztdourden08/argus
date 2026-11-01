@@ -131,14 +131,15 @@ impl WakeService {
     pub fn item_tick(&mut self) -> usize {
         let now = self.clock.now_ms();
         let main = Some(self.main_thread());
-        let store = self.engine.store();
-        let last_sent = last_sent_of(store, "item wakes");
-        let env = ItemEnv {
-            boards: self.boards.as_ref(),
-            main,
-            last_sent: &last_sent,
+        let out = {
+            let last_sent = last_sent_of(self.engine.store(), "item wakes");
+            let env = ItemEnv {
+                boards: self.boards.as_ref(),
+                main,
+                last_sent: &last_sent,
+            };
+            self.items.tick(now, &env)
         };
-        let out = self.items.tick(now, &env);
         self.forward_activity(out.activity);
         self.submit_logged(&out.wakes, "item wakes");
         out.wakes.len()
@@ -155,14 +156,15 @@ impl WakeService {
     /// The remote sync wakes and activity lines due now; returns how many wakes were sent.
     pub fn sync_tick(&mut self) -> usize {
         let now = self.clock.now_ms();
-        let store = self.engine.store();
-        let last_sent = last_sent_of(store, "sync wakes");
-        let env = SyncEnv {
-            boards: self.boards.as_ref(),
-            syncs: self.syncs.as_ref(),
-            last_sent: &last_sent,
+        let out = {
+            let last_sent = last_sent_of(self.engine.store(), "sync wakes");
+            let env = SyncEnv {
+                boards: self.boards.as_ref(),
+                syncs: self.syncs.as_ref(),
+                last_sent: &last_sent,
+            };
+            self.sync_wakes.tick(now, &env)
         };
-        let out = self.sync_wakes.tick(now, &env);
         self.forward_activity(out.activity);
         self.submit_logged(&out.wakes, "sync wakes");
         out.wakes.len()
