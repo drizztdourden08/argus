@@ -26,7 +26,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('ScopeStream connection', () => {
+describe('K1 ScopeStream connection', { tags: ['critical'] }, () => {
   it('opens one source for the union of the collections once subscribed', async () => {
     const { stream, sources } = await connected('items', 'threads');
     expect(sources).toHaveLength(1);
@@ -57,7 +57,7 @@ describe('ScopeStream connection', () => {
   });
 });
 
-describe('ScopeStream state', () => {
+describe('K1 ScopeStream state', { tags: ['critical'] }, () => {
   it('keeps a snapshot per collection and tells only that collection', async () => {
     const { stream, sources, listener } = await connected('items');
     stream.subscribe('threads', () => undefined);
@@ -93,7 +93,7 @@ describe('ScopeStream state', () => {
   });
 });
 
-describe('ScopeStream recovery', () => {
+describe('S3 ScopeStream recovery', { tags: ['standard'] }, () => {
   it('resumes from the last seq after an error', async () => {
     vi.useFakeTimers();
     const { sources } = await connected('items');

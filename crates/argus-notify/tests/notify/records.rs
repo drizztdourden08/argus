@@ -1,4 +1,6 @@
 //! Records, docs, the click address, the cap of 50 and the list.
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_native::{TEXT_MAX, TITLE_MAX};
 use argus_notify::{By, Filter, KEEP_ROWS, Level, PingRequest, ToastState};

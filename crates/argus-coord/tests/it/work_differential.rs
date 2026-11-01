@@ -1,10 +1,6 @@
-//! Differential runs of the WP4 verbs (`item`, `test`, `entry` and its aliases, `action`, `lock`,
-//! `log`, `inbox`): the same steps on the Node CLI and on `argus coord`, in twin homes seeded with
-//! the standard fixture (`alpha`: coordinator `lead`, thread `worker`, items I-1 to I-3, one
-//! waiting message). Exit code, stdout, stderr and every file under both homes (`board.json`
-//! byte for byte) must agree after each step. Writes come first in every run, then the reads that
-//! show what they did. They skip with a reason when node, `ai-config` or the `argus` binary is
-//! absent.
+//! E3: parity of the item, test, entry, action, lock, log and inbox verbs against the Node CLI.
+
+// test-tag: e2e
 
 use std::fs;
 
@@ -47,6 +43,7 @@ fn compare_with(test: &str, steps: &[Step], prepare: impl Fn(&Differ)) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn item_add_in_every_shape_and_every_refusal() {
     compare(
         "item_add",
@@ -104,6 +101,7 @@ fn item_add_in_every_shape_and_every_refusal() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn item_set_status_move_and_the_revision_check() {
     compare(
         "item_set",
@@ -154,6 +152,7 @@ fn item_set_status_move_and_the_revision_check() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn item_acceptance_criteria_every_verb() {
     compare(
         "item_ac",
@@ -191,6 +190,7 @@ fn item_acceptance_criteria_every_verb() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn item_soft_verbs_and_unknown_sub_verbs() {
     compare(
         "item_soft",
@@ -307,6 +307,7 @@ fn test_add_set_and_the_parts_second() -> Vec<Step> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn test_add_set_and_the_parts() {
     compare(
         "test_parts",
@@ -319,6 +320,7 @@ fn test_add_set_and_the_parts() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn test_results_move_and_soft_verbs() {
     compare(
         "test_results",
@@ -357,6 +359,7 @@ fn test_results_move_and_soft_verbs() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn test_proofs_are_kept_next_to_the_board() {
     let steps = [
         worker(&["test", "add", "I-2", "With proof"]),
@@ -404,6 +407,7 @@ fn test_proofs_are_kept_next_to_the_board() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn test_spec_files_are_merged_under_the_flags() {
     let spec = r#"{"title":"From file","steps":["one","two"],"pass":["ok"],"mode":"manual","setup":[{"label":"L","text":"T"}],"covers":null}"#;
     let steps = [
@@ -553,6 +557,7 @@ fn entries_ask_decide_notify_message_second() -> Vec<Step> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn entries_ask_decide_notify_message() {
     compare(
         "entry_make",
@@ -642,6 +647,7 @@ fn entries_answer_pick_done_set_move_and_soft_verbs_second() -> Vec<Step> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn entries_answer_pick_done_set_move_and_soft_verbs() {
     compare(
         "entry_change",
@@ -654,6 +660,7 @@ fn entries_answer_pick_done_set_move_and_soft_verbs() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn actions_add_set_done_move_and_soft_verbs() {
     compare(
         "action_all",
@@ -706,6 +713,7 @@ fn actions_add_set_done_move_and_soft_verbs() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn locks_claim_queue_release_free_drop_and_remove() {
     compare(
         "lock_all",
@@ -750,6 +758,7 @@ fn locks_claim_queue_release_free_drop_and_remove() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn log_write_list_and_remove_with_an_audit_line() {
     compare(
         "log_all",
@@ -787,6 +796,7 @@ fn log_write_list_and_remove_with_an_audit_line() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn inbox_read_ack_send_and_remove() {
     compare(
         "inbox_all",

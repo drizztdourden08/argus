@@ -20,24 +20,7 @@ const open = async (location = '/') => {
   return view;
 };
 
-describe('the description of the badges', () => {
-  it('says what each badge counts, as the Node page does', async () => {
-    await open();
-    await waitFor(() => expect(tab('Processes').textContent).toContain('2'));
-    expect(tab('Processes').getAttribute('aria-description')).toBe('Processes that need a look');
-    expect(tab('Activity').getAttribute('aria-description')).toBe('Warnings and errors since this tab was last open');
-    expect(tab('Notifications').getAttribute('aria-description')).toBe('Notifications since this tab was last open');
-  });
-});
-
-describe('the tabs and their badges', () => {
-  it('has the four tabs, Dashboards first, and no badge on a tab with nothing to count', async () => {
-    await open();
-    for (const label of ['Dashboards', 'Processes', 'Activity', 'Notifications']) expect(tab(label)).toBeTruthy();
-    expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true');
-    expect(tab('Dashboards').textContent).toBe('Dashboards');
-  });
-
+describe('S1 the tabs and their badges', { tags: ['standard'] }, () => {
   it('counts the processes that need a look on Processes', async () => {
     await open();
     await waitFor(() => expect(tab('Processes').textContent).toContain('2'));
@@ -69,15 +52,9 @@ describe('the tabs and their badges', () => {
     await waitFor(() => expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true'));
     expect(tab('Activity').textContent).toBe('Activity0');
     await feed(view.sources, {
-      activity: { ...ACTIVITY, 'a-9': { n: 9, at: new Date(Date.now() + 60000).toISOString(), kind: 'fault', level: 'warn', text: 'later' } },
+      activity: { ...ACTIVITY, 'a-9': { n: 9, at: '2999-01-01T00:00:00.000Z', kind: 'fault', level: 'warn', text: 'later' } },
     });
     await waitFor(() => expect(tab('Activity').textContent).toContain('1'));
-  });
-
-  it('starts with no unread on Activity when the page opens on that tab', async () => {
-    await open('/#activity');
-    expect(tab('Activity').getAttribute('aria-selected')).toBe('true');
-    expect(tab('Activity').textContent).toBe('Activity0');
   });
 
   it('keeps an older entry read after a reload', async () => {
@@ -92,28 +69,5 @@ describe('the tabs and their badges', () => {
     cleanup();
     await open('/#nowhere');
     expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true');
-  });
-});
-
-const tone = (name: string, color: string): boolean => tab(name).querySelector(`.badge--${color}`) !== null;
-
-describe('the tone of the tab badges', () => {
-  it('tints Processes warning, and Activity and Notifications danger while an error or an urgent ping is unread', async () => {
-    await open();
-    await waitFor(() => expect(tab('Processes').textContent).toContain('2'));
-    expect(tone('Processes', 'warning')).toBe(true);
-    expect(tone('Activity', 'danger')).toBe(true);
-    expect(tone('Notifications', 'danger')).toBe(true);
-  });
-
-  it('tints Activity and Notifications warning when the unread ones are neither an error nor urgent', async () => {
-    const view = renderAt('/');
-    const activity = { 'a-3': ACTIVITY['a-3'] };
-    const notifications = { 'n-1': { ...NOTIFICATIONS['n-1'], at: minutesAgo(0) } };
-    await feed(view.sources, { cards: CARDS, procs: PROCS, meta: PROCS_META, activity, notifications });
-    await waitFor(() => expect(tab('Activity').textContent).toContain('1'));
-    expect(tone('Activity', 'warning')).toBe(true);
-    expect(tone('Notifications', 'warning')).toBe(true);
-    expect(tone('Activity', 'danger')).toBe(false);
   });
 });

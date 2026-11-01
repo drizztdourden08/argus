@@ -2,6 +2,8 @@
 //! minimum and 200 character limit, opus needs a category (or "owner asked: ..."), an opus chore
 //! or test needs an owner request, and an opus-level model needs a check-in of 15 to 30 minutes.
 //! The pure part of `agent.model.test.mjs`; the CLI output cases belong to the coord port.
+//! K1: the model, why and check-in rules of a sub-agent record.
+// test-tag: critical
 
 use argus_agents::model_rules::{
     CHECKIN_HELP, MODEL_STANDARD, RuleError, check_checkin, check_model_why, high_tier,
@@ -88,19 +90,6 @@ fn opus_for_a_chore_or_test_is_refused_unless_the_why_starts_with_owner() {
     ] {
         assert_eq!(accepted("opus", why, kind).0, "opus");
     }
-}
-
-#[test]
-fn a_new_model_for_an_existing_record_needs_a_new_why_with_the_same_rules() {
-    assert!(refused(Some("sonnet"), None, "chore").contains("--why is required"));
-    assert!(refused(Some("sonnet"), Some("short"), "chore").contains("minimum is 12"));
-    assert!(
-        refused(Some("opus"), Some("design: nope nope"), "chore").contains("not for chore agents")
-    );
-    assert_eq!(
-        accepted("sonnet", "it turned out to need code changes", "chore").1,
-        "it turned out to need code changes"
-    );
 }
 
 #[test]

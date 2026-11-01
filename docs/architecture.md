@@ -49,6 +49,47 @@ Integration tests are one binary per crate: every file is a module of
 `cargo test -p <crate> --test it <module>::`. A test that must run in its own process stays a
 top-level file in `tests/` (`argus-coord`: `latency_bench`, the ignored bench).
 
+### Rust test tags and the runner
+
+Every Rust file that holds a `#[test]` or `#[tokio::test]` carries exactly one tag line, as in the
+owner's test standard (`X:/ai-config/docs/test-standard.md`):
+
+| Tag | Line | Runs |
+|---|---|---|
+| critical | `// test-tag: critical` | every `pnpm test`, for the changed files only |
+| standard | `// test-tag: standard` | `pnpm test:pr`, critical plus standard |
+| e2e | `// test-tag: e2e` | `pnpm test:e2e`; each test also has `#[ignore = "e2e"]` |
+
+The line is the first line after the `//!` header block of a test file, or the line above
+`#[cfg(test)]` for an inline `mod tests`. A file that mixes kinds is split in two.
+
+Parity tests (the `argus-coord` remote differ and anything that compares Node with Rust,
+`argus-parity`) are e2e. They run only before the daily sync, never in a plain `cargo test`.
+
+`scripts/rust-tests.mjs` runs only the tests that cover the changed files. It never runs a whole
+crate by default, never the whole workspace, and runs one `cargo test -p <crate> -j 3` at a time.
+
+```text
+node scripts/rust-tests.mjs --tag critical|standard|e2e --changed [--base <ref>] [--dry-run]
+node scripts/rust-tests.mjs --tag critical|standard|e2e --files <file>... [--dry-run]
+node scripts/rust-tests.mjs --check-tags
+```
+
+- `--changed` takes the files touched since `git merge-base HEAD main` (or `--base`), plus
+  uncommitted and untracked files.
+- A changed test file runs its own module. A changed helper file (no tests) runs the tests of its
+  binary that use the module. A changed source file runs every tagged test of its crate and of the
+  crates that depend on it directly (`--depth <n>` goes further, default 1). A changed crate
+  `Cargo.toml` runs the tagged tests of that crate only.
+- Module paths follow the `mod` declarations, `#[path]` included: `tests/it/<x>.rs` is `<x>::` of
+  `--test it`, `src/specs/<x>.rs` is `specs::<x>::` of `--lib`, an inline `mod tests` in
+  `src/<a>/<b>.rs` is `a::b::tests::`, and `tests/<name>.rs` is its own `--test <name>`.
+- `--ignored` and `--test-threads=1` are added for e2e. Filters are substring matches, so the runner
+  adds `--skip` for a module of another tag that a filter would also match.
+- A file with no tag line or two tag lines is refused (exit 1). `--check-tags` lists every Rust file
+  with tests and not exactly one tag, and every e2e file with fewer `#[ignore]` than tests; it only
+  reads files. It is the Rust half of the lint rule `local/test-has-one-tag`.
+
 ## Workspace layout
 
 ```text

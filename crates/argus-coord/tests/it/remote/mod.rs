@@ -14,7 +14,6 @@ use tempfile::TempDir;
 use crate::common::{Ran, ThreadSpec, board_with, coord};
 
 pub const LEAD: &str = "sess-lead";
-pub const WORKER: &str = "sess-worker";
 pub const MAIN: &str = "sess-main";
 
 /// A test server, its homes, and a folder for checkouts.
@@ -93,26 +92,6 @@ impl Rig {
     /// Runs `coord` with no session, from the rig folder.
     pub fn run(&self, argv: &[&str]) -> Ran {
         self.run_in(argv, None, self.dir.path())
-    }
-
-    /// A checkout of a project under the rig folder.
-    pub fn checkout(&self, key: &str) -> PathBuf {
-        make_checkout(self.dir.path(), key)
-    }
-
-    /// Writes a board of the server's coord home.
-    pub fn put(&self, key: &str, board: &Value) {
-        argus_testkit::write_board(&self.t.coord_home, key, board);
-    }
-
-    /// A board with these threads, written.
-    pub fn threads(&self, key: &str, threads: &[ThreadSpec<'_>]) {
-        self.put(key, &board_with(key, threads));
-    }
-
-    /// The board of a project, parsed.
-    pub fn board(&self, key: &str) -> Value {
-        self.t.board(key)
     }
 
     /// The same rig with its server stopped, homes kept for a look.

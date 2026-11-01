@@ -1,5 +1,6 @@
 //! `argus tray stop`: close the icon only. The tray sees `tray.stop` within a second and exits;
 //! one that ignores it is killed. The server is never touched.
+// test-tag: critical
 
 use std::fs;
 use std::io;

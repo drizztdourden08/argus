@@ -95,12 +95,12 @@ impl Drop for Turn {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::thread;
-    use std::time::Duration;
 
     const TEST: Asker<'static> = Asker {
         what: "a test",
@@ -121,7 +121,9 @@ mod tests {
             let _turn = t.take("p", &TEST, &at_zero);
             d.store(true, Ordering::SeqCst);
         });
-        thread::sleep(Duration::from_millis(50));
+        while locked(&turns.door("p").line).next < 2 {
+            thread::yield_now();
+        }
         drop(first);
         let again = turns.take("p", &TEST, &at_zero);
         assert!(

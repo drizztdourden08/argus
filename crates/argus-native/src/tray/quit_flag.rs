@@ -1,5 +1,6 @@
 //! `quit.flag`: written only by the tray's Quit, so a process that finds the server down knows the
 //! owner closed it on purpose. A flag older than the current boot is from a previous session.
+// test-tag: critical
 
 use std::fs;
 use std::io;

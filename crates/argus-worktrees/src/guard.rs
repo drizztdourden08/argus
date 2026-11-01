@@ -93,6 +93,7 @@ pub fn assert_write_ok(args: &[&str]) -> Result<(), String> {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,8 +1,6 @@
-//! Ports the hook side of `hook.agents.claudeid.test.mjs`: the real id of every sub-agent.
-//! `SubagentStart` stores it as `claudeId` (and `hookId`, the older name) with the `tool_use_id`
-//! of its dispatch; the `PostToolUse` hook of the Agent call (`agent-result`) puts the id Claude
-//! printed on the record of that call, flags a contradiction, or leaves a launch note when
-//! there is no record yet. The `coord agent start|set --claude-id` cases belong to WP5.
+//! K1: the real id of every sub-agent.
+
+// test-tag: critical
 
 use crate::hook_support::{Fixture, LEAD};
 use serde_json::{Value, json};

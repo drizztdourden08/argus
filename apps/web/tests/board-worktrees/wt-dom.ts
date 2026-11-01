@@ -38,7 +38,4 @@ const typeMessage = (value: string): void => {
 
 const confirmGroup = (label: string): HTMLElement => screen.getByRole('group', { name: label });
 
-const postedBodies = (calls: { url: string; body: unknown }[], suffix: string): unknown[] =>
-  calls.filter((call) => call.url.endsWith(suffix)).map((call) => call.body);
-
-export { cellOf, confirmGroup, findRow, hasRowButton, messageBox, postedBodies, rowButton, rowNames, rowOf, text, titleOf, typeMessage };
+export { cellOf, confirmGroup, findRow, hasRowButton, messageBox, rowButton, rowNames, rowOf, text, titleOf, typeMessage };

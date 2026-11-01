@@ -1,5 +1,8 @@
+//! KEEP: K4.
 //! A rename refused because something holds the folder names who holds it: Argus's own live run working at or above
 //! the folder, and on Windows the process that has a file in it open.
+
+// test-tag: e2e
 
 use crate::error::ErrorCode;
 use crate::ports::LiveRun;
@@ -26,6 +29,7 @@ fn run(id: &str, cwd: &str) -> LiveRun {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_live_run_working_above_the_folder_is_named_and_no_rescan_is_asked() {
     let (fx, h) = leftover("junk-run");
     *locked(&h.procs.1) = vec![
@@ -53,6 +57,7 @@ fn a_live_run_working_above_the_folder_is_named_and_no_rescan_is_asked() {
 
 #[cfg(windows)]
 #[test]
+#[ignore = "e2e"]
 fn a_file_held_open_without_share_delete_names_this_process() {
     use crate::ports::ProcInfo;
     use std::os::windows::fs::OpenOptionsExt;

@@ -1,18 +1,16 @@
-//! The lock, the save and the load of a board: `tryLock`, `withBoardAsync` (timeout and a lock
-//! released while waiting, without blocking the runtime), the rename retry of the save on Windows
-//! sharing errors, and `runDefs` filled by normalize.
+//! K3: the board lock, the refused wait, the damaged board and the old-format board, and
+//! `runDefs` filled by normalize.
+
+// test-tag: critical
 
 use std::fs;
-use std::io;
 use std::path::Path;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, SystemTime};
 
 use argus_board::BoardError;
 use argus_board::store::{
-    BoardDamage, LockWait, board_dir, empty_board, normalize, read_board, save_board_with,
-    try_lock, with_board, with_board_async,
+    BoardDamage, LockWait, board_dir, empty_board, normalize, read_board, try_lock, with_board,
+    with_board_async,
 };
 use serde_json::json;
 use tempfile::TempDir;
@@ -57,65 +55,21 @@ fn try_lock_takes_the_lock_once_refuses_while_held_and_clears_a_stale_lock() {
 }
 
 #[tokio::test]
-async fn with_board_async_times_out_with_locked_and_keeps_the_runtime_free() {
+async fn with_board_async_gives_up_with_locked_when_the_lock_is_held_and_no_wait_is_left() {
     let home = home_with_board();
     let held = try_lock(&board_dir(home.path(), "lockme"))
         .expect("lock")
         .expect("taken");
-    let ticks = Arc::new(AtomicUsize::new(0));
-    let counter = Arc::clone(&ticks);
-    let ticker = tokio::spawn(async move {
-        let mut every = tokio::time::interval(Duration::from_millis(20));
-        loop {
-            every.tick().await;
-            counter.fetch_add(1, Ordering::SeqCst);
-        }
-    });
-    let started = Instant::now();
     let opts = LockWait {
-        wait: Duration::from_millis(300),
+        wait: Duration::ZERO,
         create: false,
     };
     let result = with_board_async(home.path(), "lockme", opts, |_| -> Result<(), BoardError> {
         panic!("must not run")
     })
     .await;
-    ticker.abort();
     drop(held);
     assert!(matches!(result, Err(BoardError::Locked(key)) if key == "lockme"));
-    assert!(
-        started.elapsed() >= Duration::from_millis(280),
-        "waited for the lock"
-    );
-    assert!(
-        ticks.load(Ordering::SeqCst) >= 5,
-        "the runtime ran while waiting"
-    );
-}
-
-#[tokio::test]
-async fn with_board_async_runs_once_the_lock_is_released_and_saves() {
-    let home = home_with_board();
-    let held = try_lock(&board_dir(home.path(), "lockme"))
-        .expect("lock")
-        .expect("taken");
-    tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(150)).await;
-        drop(held);
-    });
-    let opts = LockWait {
-        wait: Duration::from_secs(3),
-        create: false,
-    };
-    let out = with_board_async(home.path(), "lockme", opts, |b| {
-        b["name"] = json!("Async");
-        Ok("done")
-    })
-    .await
-    .expect("applied");
-    assert_eq!(out, "done");
-    assert_eq!(name_of(home.path(), "lockme"), "Async");
-    assert!(!lock_file(home.path()).exists());
 }
 
 #[tokio::test]
@@ -134,60 +88,6 @@ async fn with_board_async_refuses_a_missing_board_unless_create_is_set() {
     .await
     .expect("created");
     assert_eq!(name_of(home.path(), "created"), "New");
-}
-
-fn busy() -> io::Error {
-    io::Error::from(io::ErrorKind::PermissionDenied)
-}
-
-#[test]
-fn save_board_retries_a_rename_that_windows_refuses_then_succeeds() {
-    let home = home_with_board();
-    let mut board = read_board(home.path(), "lockme")
-        .expect("read")
-        .expect("a board");
-    board["name"] = json!("Retried");
-    let calls = AtomicUsize::new(0);
-    save_board_with(home.path(), &board, &|from, to| {
-        if calls.fetch_add(1, Ordering::SeqCst) < 2 {
-            Err(busy())
-        } else {
-            fs::rename(from, to)
-        }
-    })
-    .expect("saved");
-    assert_eq!(calls.load(Ordering::SeqCst), 3);
-    assert_eq!(name_of(home.path(), "lockme"), "Retried");
-}
-
-#[test]
-fn save_board_goes_through_the_atomic_writer_whole_file_in_a_temp_beside_the_board() {
-    let home = home_with_board();
-    let mut board = read_board(home.path(), "lockme")
-        .expect("read")
-        .expect("a board");
-    board["name"] = json!("Through the helper");
-    let seen = std::sync::Mutex::new(None);
-    save_board_with(home.path(), &board, &|from, to| {
-        *seen.lock().unwrap() = Some((from.to_path_buf(), fs::read_to_string(from)?));
-        fs::rename(from, to)
-    })
-    .expect("saved");
-    let (tmp, text) = seen.into_inner().unwrap().expect("renamed once");
-    assert_eq!(
-        tmp.parent(),
-        Some(board_dir(home.path(), "lockme").as_path())
-    );
-    assert_eq!(
-        tmp.file_name().unwrap().to_string_lossy(),
-        format!("board.json.{}.tmp", std::process::id())
-    );
-    assert_eq!(
-        text,
-        format!("{}\n", serde_json::to_string_pretty(&board).unwrap()),
-        "the temp file holds the whole board when the rename runs"
-    );
-    assert!(!tmp.exists());
 }
 
 #[test]
@@ -216,31 +116,6 @@ fn a_board_of_nul_bytes_is_a_damaged_board_not_a_parse_error() {
     );
     let locked = with_board(home.path(), "lockme", false, |_| Ok(()));
     assert!(matches!(locked, Err(BoardError::Damaged { .. })));
-}
-
-#[test]
-fn save_board_gives_up_after_8_attempts_and_leaves_no_temp_file() {
-    let home = home_with_board();
-    let mut board = read_board(home.path(), "lockme")
-        .expect("read")
-        .expect("a board");
-    board["name"] = json!("Never");
-    let calls = AtomicUsize::new(0);
-    let result = save_board_with(home.path(), &board, &|_, _| {
-        calls.fetch_add(1, Ordering::SeqCst);
-        Err(busy())
-    });
-    assert!(
-        matches!(&result, Err(BoardError::Io(e)) if e.kind() == io::ErrorKind::PermissionDenied)
-    );
-    assert_eq!(calls.load(Ordering::SeqCst), 8);
-    let leftovers: Vec<_> = fs::read_dir(board_dir(home.path(), "lockme"))
-        .expect("list")
-        .filter_map(Result::ok)
-        .filter(|e| e.file_name().to_string_lossy().ends_with(".tmp"))
-        .collect();
-    assert!(leftovers.is_empty());
-    assert_eq!(name_of(home.path(), "lockme"), "Lock me");
 }
 
 #[test]

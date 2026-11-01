@@ -1,4 +1,7 @@
 //! Attachments: the magic bytes decide, size and run existence are checked.
+//!
+//! Keep rule: K3, K4.
+// test-tag: standard
 
 use crate::common::{Env, EnvOptions, PNG};
 

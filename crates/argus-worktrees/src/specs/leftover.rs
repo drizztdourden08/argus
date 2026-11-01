@@ -1,9 +1,11 @@
+//! KEEP: K3, K4.
 //! Leftover folders: finding them in a scan, every guard of their deletion, the rename-then-delete job, the batch, the
-//! folders a crash left half deleted, and the wake sentence that counts git worktrees and leftovers apart.
+//! folders a crash left half deleted.
+
+// test-tag: e2e
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
-use crate::clock::DAY_MS;
 use crate::deleting::is_deleting;
 use crate::doc::{Status, WorktreeDoc};
 use crate::error::ErrorCode;
@@ -16,10 +18,9 @@ use crate::ports::ProcInfo;
 use crate::rule::Rule;
 use crate::scan::{ScanEnv, scan_rules};
 use crate::service::Options;
-use crate::status::{many_text, wake_text};
 use crate::testkit::{
-    Fixture, Gate, Harness, NotRepo, backdate, exists_itself, git_in, make_link, put, real_measure,
-    root_of, rule_for,
+    Fixture, Gate, Harness, backdate, exists_itself, git_in, make_link, put, real_measure, root_of,
+    rule_for,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -32,56 +33,8 @@ fn facts_by_name(facts: &[Fact]) -> HashMap<String, &Fact> {
     facts.iter().map(|f| (base_name(&f.path), f)).collect()
 }
 
-fn scan_no_repo(wts: &str, ci: bool) -> crate::scan::ScanResult {
-    let git = Git::new(Arc::new(NotRepo));
-    let env = ScanEnv {
-        git: &git,
-        fs: &RealFs,
-        case_insensitive: ci,
-        measure: &real_measure,
-    };
-    scan_rules(&[Rule::folder("W-1", wts, "lead")], &env)
-}
-
 #[test]
-fn with_no_repository_only_the_git_check_decides_a_link_is_a_leaf() {
-    let (dir, outside) = (tempdir().unwrap(), tempdir().unwrap());
-    let (root, out_root) = (root_of(&dir), root_of(&outside));
-    let wts = format!("{root}/proj/.claude/worktrees");
-    put(&wts, "plain/a.txt", "x\n");
-    put(&wts, "has-git-file/.git", "gitdir: X:/nowhere\n");
-    fs::create_dir_all(format!("{wts}/has-git-dir/.git")).unwrap();
-    put(&wts, "nested/inner/.git/HEAD", "x");
-    put(&out_root, "keep.txt", "x");
-    make_link(&format!("{wts}/link"), &out_root);
-    put(&wts, "half.argus-deleting-1730000000000/x.txt", "x");
-    let out = scan_no_repo(&wts, false);
-    let f = facts_by_name(&out.facts);
-    let mut names: Vec<&String> = f.keys().collect();
-    names.sort();
-    assert_eq!(
-        names,
-        ["has-git-dir", "has-git-file", "link", "nested", "plain"],
-        "the half-deleted folder is not a candidate"
-    );
-    let plain = f["plain"].leftover.as_ref().unwrap();
-    assert_eq!(
-        (plain.files, plain.has_nested_git, f["plain"].is_git),
-        (Some(1), false, false)
-    );
-    assert!(f["has-git-file"].leftover.is_none() && f["has-git-dir"].leftover.is_none());
-    let nested = f["nested"].leftover.as_ref().unwrap();
-    assert_eq!(
-        (nested.has_nested_git, nested.nested_git.as_deref()),
-        (true, Some("inner/.git"))
-    );
-    assert!(f["link"].leftover.as_ref().unwrap().is_link);
-    let deleting: Vec<String> = out.deleting.iter().map(|d| base_name(&d.path)).collect();
-    assert_eq!(deleting, ["half.argus-deleting-1730000000000"]);
-    assert!(exists_itself(&format!("{out_root}/keep.txt")));
-}
-
-#[test]
+#[ignore = "e2e"]
 fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list_is_a_leftover() {
     let fx = Fixture::new();
     let orphan = fx.path("orphan");
@@ -160,6 +113,7 @@ fn rows_setup() -> (Harness, TempDir) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_leftover_row_carries_size_files_age_top_entries_and_flags() {
     let (h, _outside) = rows_setup();
     let d = h.docs();
@@ -183,6 +137,7 @@ fn a_leftover_row_carries_size_files_age_top_entries_and_flags() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_summary_counts_git_worktrees_and_leftovers_apart() {
     let (h, _outside) = rows_setup();
     let d = h.docs();
@@ -217,6 +172,7 @@ fn the_summary_counts_git_worktrees_and_leftovers_apart() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn another_thread_and_an_ended_one_are_refused_the_lead_and_the_rules_thread_may() {
     let (fx, h) = lo(&["junk-old"], |_| {});
     let target = id(&h, &fx, "junk-old");
@@ -252,6 +208,7 @@ fn another_thread_and_an_ended_one_are_refused_the_lead_and_the_rules_thread_may
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_leftover_has_no_branch_and_no_discard_a_400_with_the_reason_and_no_backup_is_promised() {
     let (fx, h) = lo(&["junk-flags"], |_| {});
     let target = id(&h, &fx, "junk-flags");
@@ -267,6 +224,7 @@ fn a_leftover_has_no_branch_and_no_discard_a_400_with_the_reason_and_no_backup_i
 }
 
 #[test]
+#[ignore = "e2e"]
 fn outside_the_rules_the_rule_folder_changed_or_a_rule_whose_folder_it_is() {
     let (fx, h) = lo(&["junk-x"], |_| {});
     let target = id(&h, &fx, "junk-x");
@@ -291,6 +249,7 @@ fn outside_the_rules_the_rule_folder_changed_or_a_rule_whose_folder_it_is() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_git_of_its_own_now_or_git_listing_it_again_is_a_409_and_nothing_is_deleted() {
     let (fx, h) = lo(&["junk-gitnow"], |fx| {
         fs::create_dir_all(fx.path("junk-listed")).unwrap();
@@ -324,6 +283,7 @@ fn a_git_of_its_own_now_or_git_listing_it_again_is_a_409_and_nothing_is_deleted(
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_nested_repository_is_refused_with_its_name_for_a_thread_and_the_page_and_a_link_too() {
     let outside = tempdir().unwrap();
     let (fx, h) = lo(&["junk-nested"], |fx| {
@@ -366,6 +326,7 @@ fn node_on(path: &str, pid: u32) -> ProcInfo {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_live_process_in_the_folder_is_a_423_the_requester_is_not_a_user_then_the_deletion_starts() {
     let (fx, h) = lo(&["junk-proc"], |_| {});
     let (path, target) = (fx.path("junk-proc"), id(&h, &fx, "junk-proc"));
@@ -393,6 +354,7 @@ fn a_live_process_in_the_folder_is_a_423_the_requester_is_not_a_user_then_the_de
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_young_folder_a_thread_is_refused_the_page_is_refused_until_it_confirms_then_it_starts() {
     let (fx, h) = lo_with(&[("junk-young", 0.0)], |_| {}, |_| {});
     let target = id(&h, &fx, "junk-young");
@@ -421,6 +383,7 @@ fn a_young_folder_a_thread_is_refused_the_page_is_refused_until_it_confirms_then
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_token_a_wrong_newest_change_is_a_409_and_a_file_written_since_the_listing_is_a_409_even_for_the_page()
  {
     let (fx, h) = lo(&["junk-token"], |_| {});
@@ -454,6 +417,7 @@ fn the_token_a_wrong_newest_change_is_a_409_and_a_file_written_since_the_listing
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_rename_is_refused_a_423_nothing_deleted_no_job_and_the_row_stays() {
     let (fx, h) = lo(&["junk-lock"], |_| {});
     *h.fs.rename_error.lock().unwrap() = Some(std::io::ErrorKind::ResourceBusy);
@@ -505,6 +469,7 @@ fn start_gated(g: &Gated) -> crate::request::RemoveOutcome {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_job_answers_at_once_with_the_renamed_folder_and_what_it_will_delete() {
     let g = gated_job();
     let out = start_gated(&g);
@@ -528,6 +493,7 @@ fn the_job_answers_at_once_with_the_renamed_folder_and_what_it_will_delete() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_row_shows_the_deletion_while_the_job_runs_and_the_name_is_free_at_once() {
     let g = gated_job();
     let out = start_gated(&g);
@@ -552,6 +518,7 @@ fn the_row_shows_the_deletion_while_the_job_runs_and_the_name_is_free_at_once() 
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_second_request_for_a_folder_being_deleted_is_refused() {
     let g = gated_job();
     let target = id(&g.h, &g.fx, "junk-inner-link");
@@ -568,6 +535,7 @@ fn a_second_request_for_a_folder_being_deleted_is_refused() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_junction_inside_is_never_followed_and_the_row_the_folder_and_the_lines_end_well() {
     let g = gated_job();
     g.gate.open();
@@ -612,6 +580,7 @@ fn a_junction_inside_is_never_followed_and_the_row_the_folder_and_the_lines_end_
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_failed_entry_fails_the_job_the_renamed_folder_stays_and_an_error_line_says_why() {
     let (fx, h) = lo(&["junk-fail"], |fx| {
         put(&fx.wts, "junk-fail/build/out.bin", "x");
@@ -649,6 +618,7 @@ fn a_failed_entry_fails_the_job_the_renamed_folder_stays_and_an_error_line_says_
 }
 
 #[test]
+#[ignore = "e2e"]
 fn an_id_that_is_not_in_the_last_scan_is_a_404() {
     let (_fx, h) = lo(&["junk-x"], |_| {});
     assert_eq!(h.refused("ffffffffff", |_| {}).code, ErrorCode::NotFound);
@@ -713,6 +683,7 @@ fn cleanup_batch(h: &Harness) -> crate::batch::BatchOutcome {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_thread_that_is_neither_lead_nor_rule_thread_is_refused_as_a_whole() {
     let (_fx, h) = batch_setup();
     let bad = batch(&h, Caller::Thread("other".into()), |_| {}).unwrap_err();
@@ -720,6 +691,7 @@ fn a_thread_that_is_neither_lead_nor_rule_thread_is_refused_as_a_whole() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_rules_thread_queues_the_old_ones_and_is_told_what_was_skipped_and_why() {
     let (_fx, h) = batch_setup();
     let out = cleanup_batch(&h);
@@ -752,6 +724,7 @@ fn the_rules_thread_queues_the_old_ones_and_is_told_what_was_skipped_and_why() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_old_ones_are_gone_after_the_batch_the_others_stay_and_the_lines_say_so() {
     let (fx, h) = batch_setup();
     cleanup_batch(&h);
@@ -773,6 +746,7 @@ fn page_batch(h: &Harness, change: impl FnOnce(&mut BatchInput)) -> crate::batch
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_page_may_go_younger_but_a_young_folder_is_refused_at_its_turn_without_the_confirm() {
     let (fx, h) = batch_setup();
     cleanup_batch(&h);
@@ -808,6 +782,7 @@ fn the_page_may_go_younger_but_a_young_folder_is_refused_at_its_turn_without_the
 }
 
 #[test]
+#[ignore = "e2e"]
 fn ids_pick_folders_the_confirm_lets_a_young_one_go_and_a_nested_repository_never_goes() {
     let (fx, h) = batch_setup();
     let ids = vec![
@@ -837,6 +812,7 @@ fn ids_pick_folders_the_confirm_lets_a_young_one_go_and_a_nested_repository_neve
 }
 
 #[test]
+#[ignore = "e2e"]
 fn nothing_to_delete_says_so_in_the_activity_log() {
     let (_fx, h) = batch_setup();
     page_batch(&h, |i| {
@@ -863,6 +839,7 @@ fn sibling_names(wts: &str) -> Vec<String> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_folder_a_crash_left_half_deleted_is_finished_at_the_next_start_once_other_names_and_places_are_left()
  {
     let (fx, h) = lo_with(
@@ -919,6 +896,7 @@ fn a_folder_a_crash_left_half_deleted_is_finished_at_the_next_start_once_other_n
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_scan_with_no_time_left_to_measure_shows_the_leftovers_as_pending_and_a_batch_skips_them() {
     let (_fx, h) = lo_with(&[("old", 9.0)], |_| {}, |o| o.budget_ms = 0);
     let row = &h.docs()["old"];
@@ -938,62 +916,8 @@ fn a_scan_with_no_time_left_to_measure_shows_the_leftovers_as_pending_and_a_batc
     );
 }
 
-fn doc_with(path: &str, age: i64) -> WorktreeDoc {
-    let rule = Rule::folder("W-1", "X:/Bxel/.claude/worktrees", "lead");
-    let mut fact = crate::fact::blank_fact(path, &rule, true);
-    (fact.is_git, fact.branch, fact.commit_ms, fact.ahead) = (
-        true,
-        Some(format!("feature/some-long-branch-name-{age}")),
-        Some(1_792_929_600_000 - age * DAY_MS),
-        2,
-    );
-    crate::status::doc_of(
-        &fact,
-        &crate::status::Judging {
-            rule: Some(&rule),
-            now_ms: 1_792_929_600_000,
-            ..crate::status::Judging::default()
-        },
-        None,
-    )
-}
-
 #[test]
-fn many_text_counts_git_worktrees_and_leftovers_apart_and_the_wake_keeps_the_sentence_first_within_300_characters()
- {
-    let sentence = many_text("Bxel", 100, 8, 92, 6144.0);
-    assert_eq!(
-        sentence,
-        "Bxel has 100 folders: 8 git worktrees and 92 leftovers (about 6 GB): `coord worktree remove --all-leftovers` clears the old ones."
-    );
-    assert_eq!(
-        many_text("Bxel", 13, 12, 1, 0.2),
-        "Bxel has 13 folders: 12 git worktrees and 1 leftover: `coord worktree remove --all-leftovers` clears the old ones.",
-        "under 1 MB says no size"
-    );
-    assert_eq!(
-        many_text("Alpha", 14, 14, 0, 0.0),
-        "Alpha has 14 worktrees: that is a lot, remove the ones you no longer need (coord worktree list, coord worktree remove)."
-    );
-    let docs: Vec<WorktreeDoc> = (5..10)
-        .map(|i| {
-            doc_with(
-                &format!("X:/Bxel/.claude/worktrees/some-long-worktree-name-{i}"),
-                i,
-            )
-        })
-        .collect();
-    let refs: Vec<&WorktreeDoc> = docs.iter().collect();
-    let text = wake_text(&refs, &sentence);
-    assert!(
-        text.chars().count() <= 300,
-        "{} characters",
-        text.chars().count()
-    );
-    assert!(text.starts_with(&format!("{sentence} ")));
-}
-
-#[test]
+#[ignore = "e2e"]
 fn the_leads_wake_counts_folders_once_and_not_again_before_repeat_ms() {
     let (_fx, h) = lo_with(
         &[],

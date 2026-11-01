@@ -4,15 +4,15 @@ import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, finishedCount, formatDuration, isQuiet, isStale, itemOptions, MODEL_LOOKS, modelFamily, modelTip,
-  plainText, runSpan, shortBranch, sortActive, sortDone, statusLook, tagLook, tokenLines,
+  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, finishedCount, formatDuration, isQuiet, isStale, itemOptions, modelFamily, modelTip,
+  plainText, runSpan, shortBranch, sortActive, sortDone, statusLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
 const NOW = Date.parse('2026-10-26T12:00:00Z');
 const MIN = 60_000;
 const at = (msAgo: number): string => new Date(NOW - msAgo).toISOString();
 
-describe('formatDuration', () => {
+describe('K1 formatDuration', { tags: ['critical'] }, () => {
   it('writes minutes, hours and days the way the Node page does', () => {
     expect(formatDuration(30_000)).toBe('<1m');
     expect(formatDuration(5 * MIN)).toBe('5m');
@@ -23,7 +23,7 @@ describe('formatDuration', () => {
   });
 });
 
-describe('agent clocks', () => {
+describe('K1 agent clocks', { tags: ['critical'] }, () => {
   it('counts a running agent up to now and a finished one to its end', () => {
     expect(agentElapsed({ status: 'working', startedAt: at(12 * MIN) }, NOW)).toBe('12m');
     expect(agentElapsed({ status: 'done', startedAt: at(30 * MIN), finishedAt: at(10 * MIN) }, NOW)).toBe('20m');
@@ -44,7 +44,7 @@ describe('agent clocks', () => {
   });
 });
 
-describe('agentNow and agentMessage', () => {
+describe('K1 agentNow and agentMessage', { tags: ['critical'] }, () => {
   it('names the tool with the file name for file tools and the summary for the others', () => {
     const tool = (name: string, summary: string) => ({ status: 'working', live: { activity: 'tool', activitySince: at(1000), lastTool: { name, summary } } });
     expect(agentNow(tool('Edit', 'X:\\repo\\src\\a.ts'))?.text).toBe('Edit a.ts');
@@ -66,7 +66,7 @@ describe('agentNow and agentMessage', () => {
   });
 });
 
-describe('text helpers', () => {
+describe('K1 text helpers', { tags: ['critical'] }, () => {
   it('strips the marks of a message and keeps its words on one line', () => {
     expect(plainText('# Title\n\nFixed **bold**, _soft_ and `code`.\n\n- one\n- two\n\n[a link](http://x.test)')).toBe('Title Fixed bold, soft and code. one two a link');
     expect(plainText('```ts\nconst a = 1;\n```')).toBe('const a = 1;');
@@ -83,7 +83,7 @@ describe('text helpers', () => {
   });
 });
 
-describe('model and status', () => {
+describe('K1 model and status', { tags: ['critical'] }, () => {
   it('reads the family of a model name', () => {
     expect(modelFamily('sonnet')).toBe('sonnet');
     expect(modelFamily('opus-5-5')).toBe('opus');
@@ -112,7 +112,7 @@ describe('model and status', () => {
   });
 });
 
-describe('lists', () => {
+describe('K1 lists', { tags: ['critical'] }, () => {
   const doc = (id: string, extra: Record<string, unknown> = {}) => ({ id, status: 'working', ...extra });
 
   it('sorts working agents by start and then by id, finished ones by end, newest first', () => {
@@ -134,14 +134,6 @@ describe('lists', () => {
     expect(options[1]?.label).toBe(`I-1 ${'a'.repeat(40)}`);
   });
 
-  it('tones a model by family: sonnet green, haiku blue, opus and others neutral', () => {
-    expect(MODEL_LOOKS.sonnet.tone).toBe('success');
-    expect(MODEL_LOOKS.haiku.tone).toBe('info');
-    expect(MODEL_LOOKS.opus).toEqual({ tone: 'neutral', dot: true });
-    expect(tagLook('warning')).toEqual({ variant: 'urgency', color: 'warning' });
-    expect(tagLook('neutral')).toEqual({ variant: 'normal', color: 'neutral' });
-  });
-
   it('writes a run span as 1m 05s and 2h 03m', () => {
     const run = (start: string, end: string) => ({ id: 'R-1', name: 'x', status: 'exited', queuedAt: start, startedAt: start, endedAt: end, exitCode: 0, error: null, lastLine: null }) as const;
     expect(runSpan(run('2026-01-01T00:00:00Z', '2026-01-01T00:01:05Z'))).toBe('1m 05s');
@@ -157,7 +149,7 @@ describe('lists', () => {
   });
 });
 
-describe('finishedCount', () => {
+describe('K1 finishedCount', { tags: ['critical'] }, () => {
   const agent = (id: string): WithId<Agent> => ({ id, status: 'done' });
   const run = (id: string, status: string): RunEntry => ({ id, status, queuedAt: at(MIN) }) as RunEntry;
 

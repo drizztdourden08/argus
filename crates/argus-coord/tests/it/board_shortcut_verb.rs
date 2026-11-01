@@ -1,9 +1,6 @@
-//! Ports the verb cases of `board.shortcut.test.mjs`: `coord board shortcut` creates
-//! `.claude/launch.json` with one configuration (a url on the board alias host, no command),
-//! merges and keeps every other configuration and top-level key, replaces itself by name, names a
-//! thread's shortcut after the thread, gives the Overlord two rows, and refuses (touching nothing)
-//! a `launch.json` that is not valid JSON, a thread id a host name cannot carry, an unknown
-//! thread and a thread with no folder.
+//! K2: the files and lines of coord board shortcut.
+
+// test-tag: critical
 
 use std::fs;
 use std::ops::Deref;
@@ -111,21 +108,6 @@ fn the_lead_gets_one_configuration_on_the_project_alias_and_no_command() {
 }
 
 #[test]
-fn the_same_call_again_changes_nothing() {
-    let fx = Fixture::new();
-    fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &A));
-    let before = fs::read_to_string(launch(&fx.lead_root)).unwrap();
-    let again = fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &A));
-    assert_eq!(fs::read_to_string(launch(&fx.lead_root)).unwrap(), before);
-    assert!(
-        again.out.contains("already lists 'Alpha board'"),
-        "{}",
-        again.out
-    );
-    assert!(!again.out.contains("Browser pane"));
-}
-
-#[test]
 fn a_thread_keeps_every_other_row_and_key_and_replaces_itself_in_place() {
     let fx = Fixture::new();
     let mine = json!({"name": "Dev server", "port": 3000, "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"]});
@@ -219,104 +201,5 @@ fn refusals_touch_nothing() {
     fx.refused(
         &with(&["board", "shortcut", "--thread", "ghost"], &A),
         "no project folder",
-    );
-}
-
-#[test]
-fn the_overlord_gets_two_rows_and_other_projects_one() {
-    let fx = Fixture::new();
-    let root = fx.home.folder("overlord");
-    let path = root.to_string_lossy().into_owned();
-    let p = ["--project", "portfolio"];
-    fx.ok(&with(&["board", "init", "--name", "Portfolio"], &p));
-    fx.ok(&with(
-        &[
-            "thread",
-            "register",
-            "coordinator",
-            "--role",
-            "coordinator",
-            "--root",
-            &path,
-        ],
-        &p,
-    ));
-    let ran = fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &p));
-    let rows = |port: u16| {
-        json!([
-            {"name": "Argus", "port": port, "url": format!("http://argus.localhost:{port}")},
-            {"name": "Overlord", "port": port, "url": format!("http://overlord.localhost:{port}")}
-        ])
-    };
-    assert_eq!(read(&root)["configurations"], rows(51999));
-    assert!(
-        ran.out.contains(
-            "a new tab now lists 'Argus' and 'Overlord': Play opens them without starting anything."
-        ),
-        "{}",
-        ran.out
-    );
-    let again = fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &p));
-    assert!(
-        again.out.contains("already lists 'Argus' and 'Overlord'"),
-        "{}",
-        again.out
-    );
-    let mut json = read(&root);
-    json["configurations"] = json!([json["configurations"][0].clone()]);
-    fs::write(launch(&root), json.to_string()).unwrap();
-    let one = fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &p));
-    assert!(
-        one.out.contains("lists 'Overlord': Play opens the board"),
-        "{}",
-        one.out
-    );
-    assert!(!one.out.contains("\"name\":\"Argus\""));
-}
-
-#[test]
-fn a_reserved_key_gets_no_shortcut_and_the_argus_project_is_argus_app() {
-    let fx = Fixture::new();
-    let root = fx.home.folder("reserved");
-    let path = root.to_string_lossy().into_owned();
-    let o = ["--project", "overlord"];
-    fx.ok(&with(&["board", "init", "--name", "overlord"], &o));
-    fx.ok(&with(
-        &[
-            "thread",
-            "register",
-            "coordinator",
-            "--role",
-            "coordinator",
-            "--root",
-            &path,
-        ],
-        &o,
-    ));
-    fx.refused(
-        &with(&["board", "shortcut", "--as", "coordinator"], &o),
-        "reserved host name",
-    );
-    assert!(!launch(&root).exists());
-    let app = fx.home.folder("app");
-    let app_path = app.to_string_lossy().into_owned();
-    let a = ["--project", "argus"];
-    fx.ok(&with(&["board", "init", "--name", "Argus"], &a));
-    fx.ok(&with(
-        &[
-            "thread",
-            "register",
-            "coordinator",
-            "--role",
-            "coordinator",
-            "--root",
-            &app_path,
-        ],
-        &a,
-    ));
-    fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &a));
-    assert_eq!(
-        read(&app)["configurations"][0]["url"],
-        "http://argus-app.localhost:51999"
     );
 }

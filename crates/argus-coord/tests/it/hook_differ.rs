@@ -1,9 +1,6 @@
-//! The hooks on both engines: every event with the stdin JSON Claude Code sends, run in order on
-//! the Node CLI and on `argus coord` in twin homes, compared on the exit code, stdout, stderr and
-//! every file of the homes (board bytes included) after each step. The registered listener is
-//! left out: its stamp holds the pid of each engine and its wait has no end to compare; the
-//! listener cases that end at once are in. Skips with a reason when node, `ai-config` or the
-//! `argus` binary is absent.
+//! E3: parity of every hook event against the Node CLI.
+
+// test-tag: e2e
 
 use crate::support::differ::{Differ, Engines, LEAD_SESSION, Step, WORKER_SESSION};
 use serde_json::json;
@@ -42,6 +39,7 @@ fn run(test: &str, steps: &[Step]) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_session_hooks_and_the_guard_match_node() {
     run(
         "the_session_hooks_and_the_guard_match_node",
@@ -82,6 +80,7 @@ fn lead(event: &str, name: &str, fields: &serde_json::Value) -> Step {
 /// hook switch-over) does not, so a message here would differ by design. That half is tested
 /// in `hook_session.rs`.
 #[test]
+#[ignore = "e2e"]
 fn a_sub_agents_tool_call_marks_no_activity_on_either_engine() {
     let call = |fields: serde_json::Value| lead("tool", "PostToolUse", &fields);
     let steps = [
@@ -157,6 +156,7 @@ fn stops() -> Vec<Step> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_sub_agent_hooks_match_node() {
     let mut steps = dispatches();
     steps.extend(starts_and_results());

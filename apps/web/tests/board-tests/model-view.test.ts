@@ -11,7 +11,7 @@ const tests = (...docs: object[]): TestDoc[] => docs as TestDoc[];
 const builds = (...docs: object[]): BuildDoc[] => docs.map((doc) => ({ ...doc, id: (doc as { tag: string }).tag })) as BuildDoc[];
 const wakes = (...docs: object[]): WakeDoc[] => docs as WakeDoc[];
 
-describe('the saved view', () => {
+describe('K1 the saved view', { tags: ['critical'] }, () => {
   it('reads the Node keys: q, threads, builds, nobuild, status, subject, needs, conf, archived and sort', () => {
     const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', needs: true, conf: true, archived: true, sort: 'updated' });
     const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
@@ -38,7 +38,7 @@ describe('the saved view', () => {
   });
 });
 
-describe('the order of the tests to run', () => {
+describe('K1 the order of the tests to run', { tags: ['critical'] }, () => {
   const docs = tests(testDoc('T-2', { rank: 1, createdAt: 'b', updatedAt: '2' }), testDoc('T-1', { rank: 1, createdAt: 'a', updatedAt: '1' }), testDoc('T-3', { rank: 0, updatedAt: '3' }));
 
   it('is the rank, then the creation time, then the id; or the newest update first', () => {
@@ -47,7 +47,7 @@ describe('the order of the tests to run', () => {
   });
 });
 
-describe('the known builds and the subjects', () => {
+describe('K1 the known builds and the subjects', { tags: ['critical'] }, () => {
   it('lists the declared and used tags, the handed one first, closed ones only on request', () => {
     const closed = builds(buildDoc('b1'), buildDoc('b2', { closedAt: '2026-10-01T00:00:00.000Z' }), buildDoc('b10'));
     const used = tests(testDoc('T-1', { build: 'b3' }), testDoc('T-2', { build: null }));
@@ -66,7 +66,7 @@ describe('the known builds and the subjects', () => {
   });
 });
 
-describe('the edit of a test', () => {
+describe('K1 the edit of a test', { tags: ['critical'] }, () => {
   const test = testDoc('T-1', { covers: null, build: 'bundle-1' }) as TestDoc;
 
   it('sends only what changed, trimmed', () => {
@@ -80,7 +80,7 @@ describe('the edit of a test', () => {
   });
 });
 
-describe('the changes the board did not take', () => {
+describe('K1 the changes the board did not take', { tags: ['critical'] }, () => {
   const entries = (...docs: object[]) => docs as never[];
 
   it('keeps the conflicts and refusals of tests, one per sub-op of a bulk, and marks the conflicted tests', () => {
@@ -91,7 +91,7 @@ describe('the changes the board did not take', () => {
   });
 });
 
-describe('the wake chip', () => {
+describe('K1 the wake chip', { tags: ['critical'] }, () => {
   const NOW = Date.parse('2026-10-26T10:00:00.000Z');
   const done = doneDoc('T-1', 'fail', 'x', { result: { status: 'fail', text: 'x', by: 'human', at: '2026-10-26T09:59:50.000Z' } }) as TestDoc;
   const chip = (list: WakeDoc[], at = NOW) => wakeChip({ test: done, wakes: list, latest: latestWakes(list), now: at });

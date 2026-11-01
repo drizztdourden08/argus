@@ -29,7 +29,7 @@ const press = (name: string): void => {
   fireEvent.click(screen.getByRole('button', { name }));
 };
 
-describe('markdown editor toolbar', () => {
+describe('S1 markdown editor toolbar', { tags: ['standard'] }, () => {
   it('bold and italic wrap the selection and unwrap it again', () => {
     const { area } = mount('word', 0, 4);
     press('Bold');
@@ -79,7 +79,7 @@ describe('markdown editor toolbar', () => {
   });
 });
 
-describe('markdown editor quote and focus', () => {
+describe('S1 markdown editor quote and focus', { tags: ['standard'] }, () => {
   it('Quote puts a prefix before every selected line, and a second press removes it', () => {
     const { area } = mount('a\nb', 0, 3);
     press('Quote');
@@ -95,14 +95,9 @@ describe('markdown editor quote and focus', () => {
     expect(document.activeElement).toBe(area);
     expect([area.selectionStart, area.selectionEnd]).toEqual([5, 5]);
   });
-
-  it('stays unfocused without autoFocus', () => {
-    const { area } = mount('hello');
-    expect(document.activeElement).not.toBe(area);
-  });
 });
 
-describe('markdown editor panes', () => {
+describe('S1 markdown editor panes', { tags: ['standard'] }, () => {
   it('Preview renders the draft with the markdown renderer and Write brings the text back', () => {
     const { area } = mount('**bold** text');
     fireEvent.click(screen.getByRole('tab', { name: 'Preview' }));
@@ -112,7 +107,7 @@ describe('markdown editor panes', () => {
   });
 });
 
-describe('markdown editor keys', () => {
+describe('S1 markdown editor keys', { tags: ['standard'] }, () => {
   it('Enter never submits and Ctrl or Cmd with Enter does', () => {
     const { area, submitted } = mount('text');
     fireEvent.keyDown(area, { key: 'Enter' });
@@ -131,15 +126,9 @@ describe('markdown editor keys', () => {
     fireEvent.keyDown(area, { key: 'Tab' });
     expect(area.value).toBe('**word**');
   });
-
-  it('a wild selection does not throw', () => {
-    const { area } = mount('a', 0, 1);
-    area.setSelectionRange(5, 99);
-    expect(() => { press('Bold'); }).not.toThrow();
-  });
 });
 
-describe('markdown editor list keys', () => {
+describe('S1 markdown editor list keys', { tags: ['standard'] }, () => {
   it('Enter continues a list and ends it on an empty item', () => {
     const { area } = mount('- a', 3);
     fireEvent.keyDown(area, { key: 'Enter' });

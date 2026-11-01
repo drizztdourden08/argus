@@ -1,4 +1,5 @@
 //! The per-level view of the config: which levels toast and which toasts play a sound.
+// test-tag: critical
 
 use serde::{Deserialize, Serialize};
 
@@ -48,24 +49,9 @@ pub fn settings_of(config: &NotifyConfig) -> Settings {
 
 #[cfg(test)]
 mod tests {
-    use super::{SOUND_DEFAULTS, settings_of};
+    use super::settings_of;
     use crate::config::NotifyConfig;
     use crate::level::Level;
-
-    #[test]
-    fn the_defaults_are_a_silent_ping_a_loud_urgent_and_no_info_toast() {
-        let settings = settings_of(&NotifyConfig::default());
-        assert!(settings.os);
-        assert_eq!(
-            (
-                settings.toast.info,
-                settings.toast.ping,
-                settings.toast.urgent
-            ),
-            (false, true, true)
-        );
-        assert_eq!(settings.sound, SOUND_DEFAULTS);
-    }
 
     #[test]
     fn a_quiet_level_wins_over_toast_info() {

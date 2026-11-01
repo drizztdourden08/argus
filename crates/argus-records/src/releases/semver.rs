@@ -1,5 +1,6 @@
 //! Version order of the release store: semver, so `1.10.0` is newer than `1.9.0` and a
 //! prerelease is older than its release. A name that is not a version sorts below every version.
+// test-tag: critical
 
 use std::cmp::Ordering;
 

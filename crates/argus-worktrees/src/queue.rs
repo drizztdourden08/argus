@@ -111,6 +111,7 @@ impl Queues {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,7 +144,6 @@ mod tests {
         for i in 0..5 {
             let (log, ran) = (log.clone(), ran.clone());
             queue.push(Box::new(move || {
-                thread::sleep(std::time::Duration::from_millis(5));
                 log.lock().unwrap().push(i);
                 ran.fetch_add(1, Ordering::SeqCst);
             }));

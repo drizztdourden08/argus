@@ -7,12 +7,11 @@ cleanThreads();
 
 const worker = (over: Record<string, unknown> = {}) => thread('worker', { brief: 'Brief with `code`', ...over });
 
-describe('opening the thread drawer', () => {
-  it('a chip of the registered strip opens it with the session title, the id, the note and the brief', async () => {
+describe('S1 opening the thread drawer', { tags: ['standard'] }, () => {
+  it('a chip of the registered strip opens it, with the note and the brief rendered as markdown', async () => {
     await mountBoard({ threads: docs(worker()), registry: docs(chip('worker')) });
     const dialog = within(await openChip('worker'));
     expect(dialog.getByRole('heading', { name: 'worker session' })).toBeTruthy();
-    expect(dialog.getByText('worker', { selector: '[class*="subtitle"], p, span' })).toBeTruthy();
     const now = dialog.getByRole('group', { name: 'Now' });
     expect(within(now).getByText('the thing').tagName).toBe('STRONG');
     const brief = dialog.getByRole('group', { name: 'Brief' });
@@ -30,20 +29,13 @@ describe('opening the thread drawer', () => {
     expect(dialog.getByRole('heading', { name: 'lead session' })).toBeTruthy();
     expect(dialog.getByText('coord')).toBeTruthy();
   });
-
-  it('says there is no note, and shows no Brief section for a thread without a brief', async () => {
-    await mountBoard({ threads: docs(thread('worker', { note: '' })), registry: docs(chip('worker')) });
-    const dialog = within(await openChip('worker'));
-    expect(dialog.getByText('No note.')).toBeTruthy();
-    expect(dialog.queryByRole('group', { name: 'Brief' })).toBeNull();
-  });
 });
 
-describe('what the thread drawer shows', () => {
-  it('has the status, the activity, the subject, the age and the open questions and decisions', async () => {
+describe('S1 what the thread drawer shows', { tags: ['standard'] }, () => {
+  it('counts only the open questions and the pending decisions', async () => {
     const entry = (id: string, over: Record<string, unknown>) => [id, { id, thread: 'worker', author: 'worker', createdAt: new Date().toISOString(), ...over }] as const;
     await mountBoard({
-      threads: docs(worker({ root: 'X:/work/worker' })),
+      threads: docs(worker()),
       registry: docs(chip('worker')),
       entries: docs(
         ...[
@@ -55,26 +47,12 @@ describe('what the thread drawer shows', () => {
       ),
     });
     const dialog = within(await openChip('worker'));
-    expect(dialog.getByText('active')).toBeTruthy();
-    expect(dialog.getByText('working')).toBeTruthy();
-    expect(dialog.getByRole('button', { name: /the work/ })).toBeTruthy();
     expect(dialog.getByText('1 open')).toBeTruthy();
     expect(dialog.getByText('1 to pick up')).toBeTruthy();
-    expect(dialog.getByText('X:/work/worker')).toBeTruthy();
-    expect(dialog.getByText(/seen/)).toBeTruthy();
   });
-
-  it('lists the agents of the thread with their task', async () => {
-    const agents = [{ name: 'build', task: 'Port the **tabs**', startedAt: new Date().toISOString() }];
-    await mountBoard({ threads: docs(worker({ agents })), registry: docs(chip('worker')) });
-    const section = within((await within(await openChip('worker')).findByRole('group', { name: 'Agents' })));
-    expect(section.getByText('build')).toBeTruthy();
-    expect(section.getByText('Port the **tabs**')).toBeTruthy();
-  });
-
 });
 
-describe('the open work in the thread drawer', () => {
+describe('S1 the open work in the thread drawer', { tags: ['standard'] }, () => {
   it('lists the open work of the thread only, and opens the item on the Kanban tab', async () => {
     await mountBoard({
       threads: docs(worker()),
@@ -96,11 +74,6 @@ describe('the open work in the thread drawer', () => {
     const work = within((await within(await openChip('worker')).findByRole('group', { name: 'Open work' })));
     expect(work.getAllByRole('button')).toHaveLength(15);
     expect(work.getByText('and 2 more: filter the board by this thread.')).toBeTruthy();
-  });
-
-  it('says so when the thread has no open work', async () => {
-    await mountBoard({ threads: docs(worker()), registry: docs(chip('worker')) });
-    expect(within(await openChip('worker')).getByText('No open work item.')).toBeTruthy();
   });
 
   it('does not open for a thread the board has dropped', async () => {

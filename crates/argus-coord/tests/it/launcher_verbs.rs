@@ -1,10 +1,6 @@
-//! Ports `launcher.verbs.test.mjs`: `coord launcher set|keep|retire|list|show` against a temp
-//! `COORD_HOME`: the record and its every field, the refusals (name, limits, kind, a new one without
-//! a command, an empty command, master retired, a caller with no thread, another thread's
-//! launcher), the Play definition `launcher-<name>` kept in step, the order master first then
-//! current, retire and bring back, the usage window and `keep`. The page docs (`exportDocs`) and
-//! the pure usage rule (`usageOf`, `parseEvery`) have their own tests in `argus-board` and
-//! `argus-launchers`.
+//! K2: the lines and records of coord launcher.
+
+// test-tag: critical
 
 #![allow(clippy::too_many_lines, clippy::similar_names)]
 

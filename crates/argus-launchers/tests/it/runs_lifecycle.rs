@@ -1,5 +1,8 @@
 //! Run lifecycle: exited, failed, a refused start, the run docs the pages receive, who may
 //! start what, and the end listeners (runs.lifecycle).
+//!
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::sync::{Arc, Mutex};
 

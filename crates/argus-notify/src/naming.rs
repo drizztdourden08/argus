@@ -1,4 +1,5 @@
 //! Keys, labels, titles and tags of the senders of notifications.
+// test-tag: critical
 
 use std::fmt::Write;
 

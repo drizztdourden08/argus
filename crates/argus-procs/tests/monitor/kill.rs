@@ -1,4 +1,5 @@
-//! Kill guards and kill-rule, over a fake killer that records the pids it was asked to end.
+//! K4: Kill guards and kill-rule, over a fake killer that records the pids it was asked to end.
+// test-tag: critical
 
 use super::harness::{Harness, MIN, Setup, Spec, T0, proc};
 use argus_procs::{ErrorCode, KillRequest, KillRuleOutcome, KillRuleRequest, Level, Source};

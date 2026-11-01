@@ -36,6 +36,7 @@ pub fn compare(a: &str, b: &str) -> Ordering {
     })
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::compare;

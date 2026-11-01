@@ -1,12 +1,13 @@
 /* @layer renderer-app @kind test */
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, expect, vi } from 'vitest';
+import { afterEach, beforeEach, expect, vi } from 'vitest';
 import type { WorktreesMeta } from '../../src/data/worktrees';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { WorktreesTab } from '../../src/screens/board/tabs/worktrees';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
+import { NOW } from './fixtures';
 import type { WorktreeRow } from '../../src/screens/board/tabs/worktrees/model';
 
 interface Board {
@@ -47,8 +48,13 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
 };
 
 const cleanAfterEach = (): void => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+  });
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     window.localStorage.clear();
   });
@@ -77,5 +83,5 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   return { ...view, calls, change, drop };
 };
 
-export { cleanAfterEach, mountTab, SCOPE };
-export type { Call, Responder };
+export { cleanAfterEach, mountTab };
+export type { Responder };

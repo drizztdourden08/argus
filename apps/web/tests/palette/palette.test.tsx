@@ -12,7 +12,7 @@ afterEach(() => {
 
 const board = (name: string, palette?: string) => ({ board: { project: 'x', name, ...(palette ? { palette } : {}) } });
 
-describe('resolvePalette', () => {
+describe('K1 resolvePalette', { tags: ['critical'] }, () => {
   it('maps the built-in project keys and leaves the rest basic', () => {
     expect(resolvePalette('rotp')).toBe('rotp');
     expect(resolvePalette('brock')).toBe('brock');
@@ -29,15 +29,7 @@ describe('resolvePalette', () => {
   });
 });
 
-describe('palette attribute', () => {
-  it('sets data-palette on the document from the key map while a board is open', async () => {
-    const { sources } = renderAt('/p/pixelarttool/');
-    await waitFor(() => expect(sources).toHaveLength(1));
-    act(() => sources[0]?.emit('snapshot', snapshot('pixelarttool', 'meta', board('Bxel'))));
-    expect(await screen.findByRole('heading', { name: 'Bxel' })).toBeTruthy();
-    expect(document.documentElement.dataset.palette).toBe('bxel');
-  });
-
+describe('S1 palette attribute', { tags: ['standard'] }, () => {
   it('follows the palette setting of meta/board live, and basic clears it', async () => {
     const { sources } = renderAt('/p/argus/');
     await waitFor(() => expect(sources).toHaveLength(1));

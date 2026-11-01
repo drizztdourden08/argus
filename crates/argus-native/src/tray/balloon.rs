@@ -1,5 +1,6 @@
 //! The balloon tip: a notification the server could not show as a toast leaves
 //! `tray-notify.json` (`{"title","text"}`, ASCII with `\u` escapes) and the tray shows it.
+// test-tag: critical
 
 use std::fmt::Write;
 use std::fs;

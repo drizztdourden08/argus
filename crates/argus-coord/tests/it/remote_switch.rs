@@ -1,5 +1,6 @@
-//! `coord remote [status|local|remote]` and `coord remote ci-root` against a temp `COORD_HOME`:
-//! the texts and the file are the Node verb's. The real `~/.coord/remote.json` is never touched.
+//! K2: coord remote.
+
+// test-tag: critical
 
 use crate::common::{Home, coord};
 use argus_core::remote::{ci_root_of, ci_roots};

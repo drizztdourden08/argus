@@ -1,5 +1,6 @@
 //! The `replay { state, at, url }` block every record carries: what is left to do on GitHub
 //! when the owner gives the go. Older writers called it `remote`; both are read.
+// test-tag: critical
 
 use serde_json::{Value, json};
 

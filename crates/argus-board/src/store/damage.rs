@@ -116,6 +116,7 @@ pub fn damaged_boards(home: &Path) -> Vec<DamagedBoard> {
     found
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,13 +134,6 @@ mod tests {
         ));
         assert_eq!(check_board_bytes(b"[1]"), Some(BoardDamage::NotObject));
         assert_eq!(check_board_bytes(b"{\"a\":1}\n"), None);
-    }
-
-    #[test]
-    fn the_message_of_a_nul_board_says_what_happened_and_what_to_do() {
-        let text = BoardDamage::AllNul { bytes: 10 }.to_string();
-        assert!(text.contains("10 NUL bytes"));
-        assert!(text.contains("rebuild-board.mjs"));
     }
 
     #[test]

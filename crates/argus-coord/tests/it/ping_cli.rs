@@ -1,6 +1,6 @@
-//! Ports the `coord ping` cases of `notify.http.test.mjs` against an Argus test server whose
-//! toaster shows nothing: the thread, the default title, the sentence, the limit after three a
-//! minute, the levels, the refusals, and the Overlord pinging as the Overlord.
+//! S2: coord ping against an in-process Argus test server.
+
+// test-tag: standard
 
 use std::path::Path;
 use std::sync::Arc;

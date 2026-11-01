@@ -1,11 +1,6 @@
-//! Differential tests of the WP3 verbs on a board that holds records: a thread with items,
-//! criteria, a question, a manual test, an action, a work log line and a lock that a lead waits
-//! for. The records are made by the Node verbs of other groups (the harness runs a verb that is
-//! not ported on Node in both homes, as the shim does), so what is compared is how the thread
-//! verbs, purge and restore treat them: counts, hand-over lines, the backup file, the board.
-//!
-//! A row is who runs it (`l` the lead, `w` the worker) and the words after `coord`;
-//! `--project alpha` is added to each.
+//! E3: parity of done, archive, purge and restore against the Node CLI.
+
+// test-tag: e2e
 
 use std::fs;
 
@@ -143,6 +138,7 @@ fn differ(test: &str) -> Option<Differ> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn done_and_archive_pass_the_locks_on() {
     let Some(differ) = differ("done_and_archive_pass_the_locks_on") else {
         return;
@@ -166,6 +162,7 @@ fn copy_backup(differ: &Differ) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn purge_a_thread_with_records_then_restore_it() {
     let Some(differ) = differ("purge_a_thread_with_records_then_restore_it") else {
         return;

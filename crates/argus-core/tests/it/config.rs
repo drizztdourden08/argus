@@ -1,4 +1,7 @@
 //! Port of `core.config.test.mjs`: paths, config defaults and token, env port, refused host, log redaction and rotation.
+//! K2, K3, K4: the config file, the refused host, the redacted log.
+
+// test-tag: critical
 
 use std::fs;
 use std::io;

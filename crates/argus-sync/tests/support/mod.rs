@@ -1,4 +1,4 @@
-//! What the watcher test binaries share: a seeded server, the stream predicate of a new item, the
+//! What the watcher test binary shares: a seeded server, the stream predicate of a new item, the
 //! time a new item takes to reach the stream, and the wait for a board that appeared after start.
 
 use std::time::{Duration, Instant};

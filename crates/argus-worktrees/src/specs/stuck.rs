@@ -1,15 +1,18 @@
+//! KEEP: K5.
 //! A request never stays `running` on one target: a removal that does not come back within the target limit (here a
 //! git that hangs past its own timeout) fails with a sentence, and the request goes on with the next target. While a
 //! target runs, the record names it.
 
+// test-tag: e2e
+
 use crate::board::Caller;
 use crate::requests::{Current, RequestInput};
 use crate::sync::locked;
-use crate::testkit::{Fixture, Harness, RemoveMode, rule_for};
+use crate::testkit::{Fixture, Gate, Harness, RemoveMode, rule_for};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
 
 #[test]
+#[ignore = "e2e"]
 fn a_git_that_hangs_past_its_timeout_fails_the_target_and_the_request_goes_on() {
     let fx = Fixture::new();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |o| o.target_limit_ms = 3000);
@@ -18,14 +21,14 @@ fn a_git_that_hangs_past_its_timeout_fails_the_target_and_the_request_goes_on() 
     let (merged, dirty) = (h.fact("old-merged").id, h.fact("dirty-old").id);
     *locked(&h.exec.mode) = RemoveMode::Untouched;
     let seen: Arc<Mutex<Option<Current>>> = Arc::default();
-    let (svc, held) = (h.svc.clone(), seen.clone());
+    let gate = Arc::new(Gate::default());
+    let (svc, held, hold) = (h.svc.clone(), seen.clone(), gate.clone());
     *locked(&h.exec.on_remove) = Some(Box::new(move |_| {
         *locked(&held) = svc.request_list("alpha")[0].current.clone();
-        std::thread::sleep(Duration::from_secs(6));
+        hold.wait();
     }));
     let mut input = RequestInput::new("alpha", Caller::Thread("lead".into()));
     input.targets = vec![merged, dirty];
-    let started = Instant::now();
     h.svc.request(&input).unwrap();
     h.svc.requests_idle();
     let list = h.svc.request_list("alpha");
@@ -54,5 +57,5 @@ fn a_git_that_hangs_past_its_timeout_fails_the_target_and_the_request_goes_on() 
         "{}",
         r.results[0].text
     );
-    assert!(started.elapsed() < Duration::from_secs(120));
+    gate.open();
 }

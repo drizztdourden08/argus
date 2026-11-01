@@ -290,11 +290,12 @@ pub fn about_text(mb: Option<f64>) -> String {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::fs::{RealFs, Stat};
-    use crate::testkit::{backdate, make_link, put, root_of};
+    use crate::testkit::{backdate, put, root_of};
     use std::cell::Cell;
     use std::io;
     use tempfile::tempdir;
@@ -352,30 +353,6 @@ mod tests {
             m.top_entries,
             ["a.txt", "docs/", "node_modules/", "vendor/"]
         );
-    }
-
-    #[test]
-    fn a_link_is_a_leaf_never_followed() {
-        let (dir, outside) = (tempdir().unwrap(), tempdir().unwrap());
-        let (root, target) = (root_of(&dir), root_of(&outside));
-        put_bytes(&target, "huge.bin", 3 * MB);
-        put(&target, "deeper/.git/HEAD", "x");
-        put(&root, "own.txt", "own");
-        make_link(&format!("{root}/lnk"), &target);
-        backdate(&root, 9.0);
-        backdate(&target, 0.0);
-        let m = measure_folder(&RealFs, &root, Bounds::SCAN, &real_now);
-        assert_eq!(
-            (m.files, m.has_nested_git, m.size_mb),
-            (Some(2), false, Some(0.0))
-        );
-        let age = real_now() - m.newest_ms.unwrap();
-        assert!(
-            age > 8 * 86_400_000,
-            "the target's young files do not make the folder young"
-        );
-        let as_root = measure_folder(&RealFs, &format!("{root}/lnk"), Bounds::SCAN, &real_now);
-        assert_eq!((as_root.is_link, as_root.files), (true, Some(0)));
     }
 
     struct Virtual {

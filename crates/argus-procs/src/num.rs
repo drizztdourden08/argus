@@ -33,6 +33,7 @@ pub fn mem_mb(bytes: u64) -> i64 {
     i64::try_from(bytes.saturating_add(524_288) / 1_048_576).unwrap_or(i64::MAX)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

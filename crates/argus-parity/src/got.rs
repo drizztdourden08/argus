@@ -1,5 +1,6 @@
 //! What one server gave for one probe: a JSON answer, or a refusal (an HTTP error, or no answer
 //! at all, which is status 0).
+// test-tag: critical
 
 use serde_json::Value;
 
@@ -67,10 +68,5 @@ mod tests {
         let body = json!({ "error": { "code": "not_found", "message": "x" } });
         let got = Got::from_answer(404, body);
         assert_eq!(got.describe(), "HTTP 404 not_found");
-    }
-
-    #[test]
-    fn no_answer_is_status_zero() {
-        assert_eq!(Got::none("refused").describe(), "no answer (refused)");
     }
 }

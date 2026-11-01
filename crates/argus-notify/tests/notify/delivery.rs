@@ -1,4 +1,6 @@
 //! The toast fallback: the tray balloon takes over when the platform refuses a toast.
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::sync::Arc;
 

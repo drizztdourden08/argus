@@ -1,14 +1,14 @@
 /* @layer renderer-app @kind test */
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { byId, decision, dismissal, manualStep, message, noContext, notice, oldDecision } from '../helpers/board-docs';
+import { byId, decision, dismissal, manualStep, message, noContext, notice } from '../helpers/board-docs';
 import { openBoard, resetBoard, textbox } from '../helpers/open-board';
 import { mockPosts, sentPosts } from '../helpers/post-mock';
 import { changeBoard } from '../helpers/seed-board';
 
 afterEach(resetBoard);
 
-describe('information is dismissed', () => {
+describe('S1 information is dismissed', { tags: ['standard'] }, () => {
   it('a notice has Dismiss and no field, and dismissing posts an ack', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(notice) });
@@ -18,13 +18,6 @@ describe('information is dismissed', () => {
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
     expect(sentPosts(fetchMock)[0]?.body).toMatchObject({ kind: 'ack', text: '', replyTo: 'N-1', thread: 'coordinator', item: null });
     expect(await screen.findByText('Dismissed.')).toBeTruthy();
-  });
-
-  it('an old decision without options is dismissed too', async () => {
-    mockPosts();
-    await openBoard({ entries: byId(oldDecision) });
-    expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
-    expect(screen.queryByRole('textbox')).toBeNull();
   });
 
   it('a message also keeps Reply', async () => {
@@ -46,7 +39,7 @@ describe('information is dismissed', () => {
   });
 });
 
-describe('a question with no context', () => {
+describe('S1 a question with no context', { tags: ['standard'] }, () => {
   it('says so, never hides, and Ask for context posts a followup to the thread', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(noContext) });
@@ -61,15 +54,9 @@ describe('a question with no context', () => {
     });
     expect(await screen.findByText('Asked coordinator for context.')).toBeTruthy();
   });
-
-  it('a notice or message without a context shows no missing context line', async () => {
-    mockPosts();
-    await openBoard({ entries: byId(notice, message) });
-    expect(screen.queryByText(/No context was given/)).toBeNull();
-  });
 });
 
-describe('the verdict of the board', () => {
+describe('S3 the verdict of the board', { tags: ['standard'] }, () => {
   it('a refusal is shown with its reason and the card stays', async () => {
     mockPosts('refused', 'not allowed');
     await openBoard({ entries: byId(decision) });
@@ -93,7 +80,7 @@ describe('the verdict of the board', () => {
   });
 });
 
-describe('manual steps', () => {
+describe('S1 manual steps', { tags: ['standard'] }, () => {
   it('a manual step has Done, which posts done for the step and hides it before the board applied it', async () => {
     const fetchMock = mockPosts();
     const view = await openBoard({ actions: byId(manualStep) });

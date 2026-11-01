@@ -1,5 +1,6 @@
-//! Ports the behaviour of `cli-args.mjs` (`parseArgs`, `flag`, `many`). Node has no test file of
-//! its own for it; the cases are the promises of the module and its callers.
+//! K1: the argument parser.
+
+// test-tag: critical
 
 use argus_coord::cli::{Opt, Val, parse_args};
 

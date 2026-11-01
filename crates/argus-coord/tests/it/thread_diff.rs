@@ -1,11 +1,6 @@
-//! Differential tests of the WP3 verbs (threads, board, purge, check, tick, sync import): the
-//! same steps on the Node CLI and on `argus coord`, in twin temp homes seeded with the standard
-//! fixture, comparing the exit code, stdout, stderr and every file (`board.json` byte for byte
-//! after the harness's volatile rules). The read verbs come first, then the write verbs. A test
-//! skips with a reason when node, `ai-config` or the `argus` binary is absent.
-//!
-//! Each row of a table is who runs it (`l` the lead, `w` the worker, `-` nobody, so `--as`
-//! decides) and the words after `coord`; `--project alpha` is added unless the row names one.
+//! E3: parity of the thread and board verbs against the Node CLI.
+
+// test-tag: e2e
 
 use std::fs;
 
@@ -64,6 +59,7 @@ const READS: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn read_verbs_thread_board_check_tick() {
     run("read_verbs_thread_board_check_tick", READS);
 }
@@ -112,6 +108,7 @@ const WORKER_WRITES: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn thread_writes_as_the_worker() {
     run("thread_writes_as_the_worker", WORKER_WRITES);
 }
@@ -201,6 +198,7 @@ const LEAD_WRITES: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn thread_writes_as_the_lead() {
     run("thread_writes_as_the_lead", LEAD_WRITES);
 }
@@ -269,11 +267,13 @@ const REGISTER: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn thread_register_and_naming() {
     run("thread_register_and_naming", REGISTER);
 }
 
 #[test]
+#[ignore = "e2e"]
 fn new_sessions_register_with_a_host_link_and_a_role() {
     let Some(differ) = differ("new_sessions_register_with_a_host_link_and_a_role") else {
         return;
@@ -324,6 +324,7 @@ fn new_sessions_register_with_a_host_link_and_a_role() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_placeholder_folds_into_the_registered_thread() {
     let session = "66666666-6666-4666-8666-666666666666";
     let prompt = format!(r#"{{"session_id":"{session}","hook_event_name":"UserPromptSubmit"}}"#);
@@ -400,6 +401,7 @@ const BOARD_WRITES: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn board_verbs_write_and_create() {
     let Some(differ) = differ("board_verbs_write_and_create") else {
         return;
@@ -461,6 +463,7 @@ const PURGE_DO: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn purge_trash_and_refusals() {
     let Some(differ) = differ("purge_trash_and_refusals") else {
         return;
@@ -483,6 +486,7 @@ const SAVED: &[Row] = &[
 ];
 
 #[test]
+#[ignore = "e2e"]
 fn sync_import_replays_saved_entries() {
     let Some(differ) = differ("sync_import_replays_saved_entries") else {
         return;

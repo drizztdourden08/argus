@@ -1,5 +1,6 @@
 //! Carrying out a plan: whole `<buildKey>` folders, then the empty version and name folders, then the left-over temp
 //! folders. A folder that cannot be moved out of sight stays where it is, whole.
+// test-tag: critical
 
 use crate::entry::Entry;
 use crate::outcome::{Deleted, Outcome};

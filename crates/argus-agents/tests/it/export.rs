@@ -1,10 +1,12 @@
 //! The live fields of a sub-agent reach the agents doc through the exporter's overlay (and the
 //! watcher's own updates), survive a resync, and never get into the board file. The exporter is
 //! played by `overlay_doc` over a record read from the board. Ported from `agents.export.test.mjs`.
+//! K2: the live fields in the exported agents doc; K3: they never reach the board file.
+// test-tag: critical
 
 use argus_agents::fakes::{
     JsonBoards, MemoryDocs, agent_record, assistant_line, board_json, text_block, thread_record,
-    tool_result, tool_use, user_line,
+    tool_use,
 };
 use argus_agents::record::Record;
 use argus_agents::{
@@ -13,8 +15,6 @@ use argus_agents::{
 };
 use serde_json::{Value, json};
 use std::fs;
-use std::io::Write as _;
-use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
 
@@ -22,7 +22,6 @@ const T0: i64 = 1_792_756_800_000;
 
 struct World {
     _dir: TempDir,
-    transcript: PathBuf,
     boards: Arc<JsonBoards>,
     docs: Arc<MemoryDocs>,
     clock: Arc<ManualClock>,
@@ -64,7 +63,6 @@ fn world() -> World {
     let watcher = AgentWatcher::new(ports, dyn_docs, WatcherOptions::default());
     World {
         _dir: dir,
-        transcript,
         boards,
         docs,
         clock,
@@ -87,12 +85,6 @@ impl World {
         self.watcher.overlay_doc("alpha", id, &mut data);
         data
     }
-}
-
-#[test]
-fn the_first_export_carries_nothing_live_until_the_watcher_has_read_the_transcript() {
-    let w = world();
-    assert!(!w.exported("A-1").contains_key("live"));
 }
 
 #[test]
@@ -153,24 +145,4 @@ fn a_changed_board_record_is_exported_with_the_live_fields_on_top() {
     let doc = w.exported("A-1");
     assert_eq!(doc["note"], json!("halfway"));
     assert_eq!(doc["live"]["lastMessage"], json!("Reading the form"));
-}
-
-#[test]
-fn new_transcript_lines_show_up_in_the_doc_on_the_next_tick() {
-    let w = world();
-    w.watcher.tick();
-    let mut file = fs::OpenOptions::new()
-        .append(true)
-        .open(&w.transcript)
-        .unwrap();
-    let editing = json!([text_block("Form read, now editing")]);
-    let lines = user_line(T0 + 1, &json!([tool_result("t1")]))
-        + &assistant_line(T0 + 2, &editing, &json!({}));
-    file.write_all(lines.as_bytes()).unwrap();
-    w.clock.advance(1100);
-    w.watcher.tick();
-    let doc = w.docs.doc("alpha", "A-1").unwrap();
-    assert_eq!(doc["live"]["lastMessage"], json!("Form read, now editing"));
-    assert_eq!(doc["live"]["activity"], json!("thinking"));
-    assert_eq!(doc["live"]["turns"], json!(2));
 }

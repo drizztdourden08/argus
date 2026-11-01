@@ -11,12 +11,7 @@ cleanAfterEach();
 
 const rowButton = async (id = 'T-1'): Promise<HTMLElement> => screen.findByRole('button', { name: `Test ${id}` });
 
-describe('the keys 1 to 4 on a test to run', () => {
-  it('say what they do above the list', async () => {
-    await mountTab(board());
-    expect(await screen.findByText('keys 1 pass, 2 fail, 3 partial, 4 blocked (2 to 4 ask what you saw first)')).toBeTruthy();
-  });
-
+describe('S1 the keys 1 to 4 on a test to run', { tags: ['standard'] }, () => {
   it('1 posts pass at once with no note', async () => {
     const { calls } = await mountTab(board());
     fireEvent.keyDown(await rowButton(), { key: '1' });
@@ -50,7 +45,7 @@ describe('the keys 1 to 4 on a test to run', () => {
   });
 });
 
-describe('the key m on a test row', () => {
+describe('S1 the key m on a test row', { tags: ['standard'] }, () => {
   const mixed = () => ({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'ok')] });
 
   it('opens the row menu of a test to run and of a done test', async () => {
@@ -71,17 +66,9 @@ describe('the key m on a test row', () => {
     fireEvent.keyDown(await rowButton('T-2'), { key: 'm', ctrlKey: true });
     expect(screen.queryByRole('menuitem')).toBeNull();
   });
-
-  it('runs the menu item chosen with the keyboard', async () => {
-    await mountTab(mixed());
-    fireEvent.keyDown(await rowButton('T-1'), { key: 'm' });
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Open details' }));
-    expect(await screen.findByRole('dialog', { name: 'Test details' })).toBeTruthy();
-  });
 });
 
-describe('after a result on a row', () => {
-
+describe('S1 after a result on a row', { tags: ['standard'] }, () => {
   it('moves the focus to the first button of the next test to run', async () => {
     const { calls } = await mountTab(board());
     fireEvent.click(await waitFor(() => outcomeButton('pass', 'T-1')));

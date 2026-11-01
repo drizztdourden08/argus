@@ -5,7 +5,7 @@ import { sortPrs, stepStatus } from '../../src/screens/board/tabs/changes/model'
 import { sortVersions } from '../../src/screens/releases/model';
 import { ago, MIN, prDoc, stepDoc, versionDoc } from './helpers/fixtures';
 
-describe('the duration of a step', () => {
+describe('K1 the duration of a step', { tags: ['critical'] }, () => {
   it('reads in milliseconds, seconds and minutes', () => {
     expect(formatDuration(250)).toBe('250ms');
     expect(formatDuration(1500)).toBe('1.5s');
@@ -21,7 +21,7 @@ describe('the duration of a step', () => {
   });
 });
 
-describe('the state of a step', () => {
+describe('K1 the state of a step', { tags: ['critical'] }, () => {
   it('is its status when it has one', () => {
     expect(stepStatus({ ...stepDoc('a'), status: 'skipped-local' })).toBe('skipped-local');
   });
@@ -33,7 +33,7 @@ describe('the state of a step', () => {
   });
 });
 
-describe('the order of the lists', () => {
+describe('K1 the order of the lists', { tags: ['critical'] }, () => {
   it('puts open pull requests first, then the newest', () => {
     const docs = [prDoc('PR-1', { status: 'merged', createdAt: ago(MIN) }), prDoc('PR-2', { createdAt: ago(9 * MIN) }), prDoc('PR-3', { createdAt: ago(2 * MIN) })];
     expect(sortPrs(docs).map((pr) => pr.id)).toEqual(['PR-3', 'PR-2', 'PR-1']);

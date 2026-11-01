@@ -6,7 +6,7 @@ import { launcherUsage } from '../../src/screens/board/tabs/builds/model/launche
 import { buildDoc, DAY, defDoc, launcherDoc, runDoc, runningDoc, standaloneDoc } from './fixtures';
 import { at, builds, defs, input, launchers, NOW, runs } from './model-docs';
 
-describe('launcherViews', () => {
+describe('K1 launcherViews', { tags: ['critical'] }, () => {
   it('pins master, then current, then name order, and keeps retired ones apart newest first', () => {
     const views = launcherViews(input({
       launchers: launchers(
@@ -70,7 +70,7 @@ describe('launcherViews', () => {
   });
 });
 
-describe('launcherUsage', () => {
+describe('K1 launcherUsage', { tags: ['critical'] }, () => {
   const usage = (doc: object, list: object[] = []) => launcherUsage(launchers(doc)[0] as LauncherDoc, runs(...list), NOW);
 
   it('is none for master, a joined launcher and a retired one', () => {

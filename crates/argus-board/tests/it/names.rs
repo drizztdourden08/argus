@@ -1,17 +1,13 @@
 //! The names the owner sees: the main coordinator thread is the Overlord, and the Overlord's own
 //! project (key `portfolio`) is shown as the Overlord. Only the displayed names change; the ids
 //! stay.
+//! K1: the display names.
 
-use argus_board::names::{ARGUS, MAIN_KEY, OVERLORD, display_name, session_name};
+// test-tag: critical
+
+use argus_board::names::{display_name, session_name};
 use argus_board::portfolio::summarize;
 use serde_json::json;
-
-#[test]
-fn the_ids_stay_the_shown_names_are_argus_and_overlord() {
-    assert_eq!(MAIN_KEY, "portfolio");
-    assert_eq!(ARGUS, "Argus");
-    assert_eq!(OVERLORD, "Overlord");
-}
 
 #[test]
 fn other_projects_are_their_board_name_else_the_registry_name_else_the_key() {

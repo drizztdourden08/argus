@@ -1,10 +1,6 @@
-//! Ports the `coord inbox` cases of `inbox.wake.test.mjs` (the message is queued, and the
-//! dashboard is asked, best effort, to wake the thread: reason `thread-message`, text
-//! `<sender>: <first 100 chars>`; a dashboard that is down never fails the verb; a message to
-//! yourself or to a thread that does not exist wakes nobody) and of `owner.text.test.mjs` (`coord
-//! inbox` prints the whole text of an owner post, and `inbox send` keeps its cap of 240). The
-//! wake stream itself (listeners, replay) is the server's, ported in
-//! `crates/argus-server/tests/it/wake_http.rs`.
+//! S2: coord inbox against a stand-in dashboard that is asked to wake.
+
+// test-tag: standard
 
 use std::fs;
 use std::io::{Read, Write};

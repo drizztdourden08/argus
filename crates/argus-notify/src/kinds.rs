@@ -1,4 +1,5 @@
 //! Who sent a notification and what became of its toast.
+// test-tag: critical
 
 use serde::{Deserialize, Serialize};
 

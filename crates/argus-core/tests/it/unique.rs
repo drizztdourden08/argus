@@ -1,4 +1,7 @@
 //! Distinct items keep the order of their first appearance.
+//! K1: first appearance order.
+
+// test-tag: critical
 
 use argus_core::unique::unique;
 

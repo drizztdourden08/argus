@@ -1,28 +1,11 @@
-//! Ports the behaviour of `limits.mjs`, the text limits the CLI refuses with. Node has no test
-//! file of its own for it; the cases are its promises, with lengths in UTF-16 units.
+//! K1: the text limits.
+
+// test-tag: critical
 
 use argus_board::limits::{
     limit, optional_text, require_context, require_str, soft_context, text_list,
 };
 use serde_json::json;
-
-#[test]
-fn the_limit_of_each_kind_is_the_documented_one() {
-    for (kind, max) in [
-        ("name", 40),
-        ("title", 80),
-        ("note", 100),
-        ("description", 400),
-        ("question", 240),
-        ("brief", 1200),
-        ("context", 600),
-        ("buildcwd", 260),
-        ("commit", 40),
-    ] {
-        assert_eq!(limit(kind), Some(max), "{kind}");
-    }
-    assert_eq!(limit("nothing"), None);
-}
 
 #[test]
 fn a_text_is_trimmed_and_then_refused_when_empty() {

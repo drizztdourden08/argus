@@ -4,6 +4,8 @@
 //! drives the timeouts, and the wake engine records what it is given. The shapes are the real
 //! ones found on disk: `agent-<id>.jsonl`, `agent-<id>.meta.json` with `finished: true` once the
 //! turn ended, `<sessionId>/tasks/<id>.output`. Ported from `agents.reconciler.test.mjs`.
+//! K1: how board records are linked, woken, closed and reopened from Claude data.
+// test-tag: critical
 
 use argus_agents::fakes::{
     JsonBoards, RecordingWakes, agent_record, board_json, thread_record, touch,

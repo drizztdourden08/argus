@@ -1,6 +1,6 @@
-//! Ports the caller rules of `project.mjs` (`resolveThread`, `caller`, `me`): the session id,
-//! the checkout root nobody claimed (the deepest wins, a tie is refused), `--as` and who may use
-//! it, and the heartbeat of the real caller.
+//! K4: who the caller is and who may act as whom.
+
+// test-tag: critical
 
 use std::path::Path;
 

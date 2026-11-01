@@ -313,6 +313,7 @@ impl Service {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

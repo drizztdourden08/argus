@@ -1,6 +1,6 @@
-//! Ports `hook.transcript.test.mjs`: `coord hook subagent-start` stores where the sub-agent
-//! writes its own transcript, from the parent session's `transcript_path`, `session_id` and
-//! `agent_id`: `<dir>/<sid>/subagents/agent-<agentId>.jsonl`.
+//! K1: the sub-agent transcript path.
+
+// test-tag: critical
 
 use crate::hook_support::{Fixture, LEAD};
 use serde_json::{Value, json};

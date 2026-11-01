@@ -189,6 +189,7 @@ pub fn summary_text(rec: &RequestRec) -> String {
     one_line(&text, SUMMARY_MAX)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

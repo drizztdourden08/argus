@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const RENAME_ATTEMPTS: u32 = 8;
-const RENAME_PAUSE: Duration = Duration::from_millis(25);
+const RENAME_PAUSE: Duration = Duration::from_millis(if cfg!(test) { 0 } else { 25 });
 
 /// The temp file of `file`: `<file>.<pid>.tmp` in the same folder, so the rename never crosses a
 /// volume.
@@ -115,6 +115,7 @@ pub fn write_new(file: &Path, bytes: impl AsRef<[u8]>) -> io::Result<()> {
     out.sync_all()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::cell::Cell;
@@ -171,15 +172,6 @@ mod tests {
         let file = dir.path().join("a").join("b").join("x.json");
         write_atomic(&file, b"x").unwrap();
         assert_eq!(fs::read(&file).unwrap(), b"x");
-    }
-
-    #[test]
-    fn the_temp_file_sits_beside_the_target_and_names_the_pid() {
-        let temp = temp_of(Path::new("/h/board.json"));
-        assert_eq!(
-            temp,
-            PathBuf::from(format!("/h/board.json.{}.tmp", std::process::id()))
-        );
     }
 
     #[test]

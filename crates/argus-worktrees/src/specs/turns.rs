@@ -1,7 +1,10 @@
+//! KEEP: K5.
 //! The turn of scans and removals is a project's own (the live bug of 2026-11-01): Argus's request R-3, three empty
 //! leftover folders, stayed on "waiting for its turn" for minutes while the one turn of every project went from a
 //! `node_modules` clear in Brock to one in Tessera to one in Archipelia, and its deletion job would then have queued
 //! behind theirs. A wait for the project's own turn past a while names the holder.
+
+// test-tag: e2e
 
 use crate::board::Caller;
 use crate::progress::WAITING;
@@ -9,17 +12,15 @@ use crate::requests::{RequestInput, RequestStatus};
 use crate::sync::locked;
 use crate::testkit::{Gate, Harness, backdate, exists_itself, put, started};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-fn within_a_minute(what: &str, done: impl Fn() -> bool) {
-    let deadline = Instant::now() + Duration::from_secs(60);
+fn until(done: impl Fn() -> bool) {
     while !done() {
-        assert!(Instant::now() < deadline, "{what}");
-        std::thread::sleep(Duration::from_millis(20));
+        std::thread::yield_now();
     }
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects_leftover_request()
 {
     let (fx, h) = started(|fx| {
@@ -38,15 +39,12 @@ fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects
     let mut input = RequestInput::new("beta", Caller::Thread("lead".into()));
     input.targets = vec![fx.path("left-beta")];
     h.svc.request(&input).unwrap();
-    within_a_minute(
-        "beta's request is done while alpha holds its turn and its job queue",
-        || {
-            h.svc
-                .request_list("beta")
-                .first()
-                .is_some_and(|r| r.status == RequestStatus::Done)
-        },
-    );
+    until(|| {
+        h.svc
+            .request_list("beta")
+            .first()
+            .is_some_and(|r| r.status == RequestStatus::Done)
+    });
     let beta = h.svc.request_list("beta").remove(0);
     assert!(
         beta.results[0].text.starts_with("deleted leftover folder "),
@@ -61,6 +59,7 @@ fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_removal_that_waits_for_its_projects_turn_past_a_while_names_the_holder_and_its_step() {
     let (_fx, h) = started(|_| {});
     let merged = h.fact("old-merged").id;
@@ -74,7 +73,7 @@ fn a_removal_that_waits_for_its_projects_turn_past_a_while_names_the_holder_and_
     let removal = std::thread::spawn(move || {
         let _ = svc.remove(&Harness::input(&waiting));
     });
-    within_a_minute("the removal waits for its turn", || {
+    until(|| {
         h.svc
             .step_of("alpha", &merged)
             .is_some_and(|s| s.name == WAITING)

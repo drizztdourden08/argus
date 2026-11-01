@@ -13,7 +13,7 @@ import { buildDoc, defDoc, doneDoc, launcherDoc, runDoc, testDoc } from './fixtu
 const tests = (...docs: object[]) => docs as TestDoc[];
 const builds = (...docs: object[]) => docs.map((doc) => ({ ...doc, id: (doc as { tag: string }).tag })) as BuildDoc[];
 
-describe('bundle states', () => {
+describe('K1 bundle states', { tags: ['critical'] }, () => {
   it('reads closed from closedAt, draft from status, anything else as ready', () => {
     expect(bundleState(null)).toBe('ready');
     expect(bundleState(buildDoc('b', { status: 'draft' }))).toBe('draft');
@@ -21,7 +21,7 @@ describe('bundle states', () => {
   });
 });
 
-describe('counts', () => {
+describe('K1 counts', { tags: ['critical'] }, () => {
   it('counts to run apart from the results, moved counts as pass, archived tests do not count', () => {
     const rows = tests(
       testDoc('T-1'),
@@ -42,7 +42,7 @@ describe('counts', () => {
   });
 });
 
-describe('grouping into bundles', () => {
+describe('K1 grouping into bundles', { tags: ['critical'] }, () => {
   it('puts the handed bundle first, then the ones with tests to run (newest tag first), the finished ones, then no bundle', () => {
     const rows = tests(
       testDoc('T-1', { build: 'bundle-2' }),
@@ -81,7 +81,7 @@ describe('grouping into bundles', () => {
   });
 });
 
-describe('the launch of a bundle', () => {
+describe('K1 the launch of a bundle', { tags: ['critical'] }, () => {
   const launchers = [{ ...launcherDoc('b1'), id: 'b1' }, { ...launcherDoc('gone', { retiredAt: 'then', retiredBy: 'lead', retireNote: 'replaced' }), id: 'gone' }] as LauncherDoc[];
   const defs = [{ ...defDoc('b1'), id: 'launcher-b1' }, { ...defDoc('x', { launcher: undefined, bundle: 'old', name: 'bundle-old' }), id: 'bundle-old' }] as LaunchDefDoc[];
   const build = (extra: object, tag = 't') => builds(buildDoc(tag, extra))[0] ?? null;
@@ -105,7 +105,7 @@ describe('the launch of a bundle', () => {
   });
 });
 
-describe('the status line of a run', () => {
+describe('K1 the status line of a run', { tags: ['critical'] }, () => {
   const run = (extra: object) => ({ ...runDoc('R-1', 'launcher-b1'), ...extra }) as RunEntry;
 
   it('says queued, then launching until the first output line, then running with the line', () => {
@@ -130,7 +130,7 @@ describe('the status line of a run', () => {
   });
 });
 
-describe('the done order and the note rule', () => {
+describe('K1 the done order and the note rule', { tags: ['critical'] }, () => {
   it('lists the newest result first', () => {
     const rows = tests(
       doneDoc('T-1', 'pass', 'a', { result: { status: 'pass', text: 'a', by: 'human', at: '2026-10-26T08:00:00.000Z' } }),

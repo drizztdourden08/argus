@@ -420,6 +420,7 @@ fn copy_path(source: &str, target: &str) -> std::io::Result<()> {
     copy_atomic(Path::new(source), Path::new(target))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -44,6 +44,7 @@ pub(super) fn idle_option(call: &mut Call<'_>) -> Result<Option<f64>, CoordError
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::minutes_of;

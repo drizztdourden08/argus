@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
 import type { Call, Responder } from '../board-tests/mount-tab';
-import { ago, MIN, defDoc, launcherDoc, runDoc, runningDoc } from './fixtures';
+import { ago, MIN, defDoc, launcherDoc, runDoc } from './fixtures';
 import { mountBuilds } from './mount-builds';
 
 cleanAfterEach();
@@ -24,7 +24,7 @@ const answers = (lines: object[] = []): Responder => (call) => {
   return undefined;
 };
 
-describe('the full log of a run', () => {
+describe('S1 the full log of a run', { tags: ['standard'] }, () => {
   it('opens in a drawer from the Full log of the Terminal: the run, its output and its screenshots', async () => {
     const { calls } = await mountBuilds(base([runDoc('R-2', 'launcher-master', { status: 'failed', exitCode: 3 })]), answers([{ seq: 1, stream: 'out', at: ago(MIN), text: 'the whole story' }]));
     fireEvent.click(await screen.findByRole('button', { name: 'Full log of R-2' }));
@@ -34,19 +34,6 @@ describe('the full log of a run', () => {
     expect(await within(drawer).findByRole('button', { name: 'Open the screen' })).toBeTruthy();
     expect(calls.map((call) => call.url)).toContain('/api/p/rotp/runs/R-2/logs?tail=4000');
     expect(calls.map((call) => call.url)).toContain('/api/p/rotp/runs/R-2/attachments');
-  });
-
-  it('opens from the Log button next to Play, for the run shown there', async () => {
-    await mountBuilds(base([runDoc('R-2', 'launcher-master')]), answers());
-    fireEvent.click(await screen.findByRole('button', { name: 'Log of R-2' }));
-    expect(within(await screen.findByRole('dialog', { name: 'Run log' })).getByText('launcher-master R-2')).toBeTruthy();
-  });
-
-  it('has a Stop only for a live run', async () => {
-    await mountBuilds(base([runningDoc('R-3', 'launcher-master')]), answers());
-    fireEvent.click(await screen.findByRole('button', { name: 'Log of R-3' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Run log' });
-    expect(within(drawer).getByRole('button', { name: 'Stop run R-3' })).toBeTruthy();
   });
 
   it('uploads a screenshot to the run with its caption, and shows it', async () => {

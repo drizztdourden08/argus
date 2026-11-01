@@ -9,6 +9,4 @@ const withDefs = (launchers: Doc[], extra: object = {}) => ({
   ...extra,
 });
 
-const cardOf = (container: HTMLElement, name: string): HTMLElement => container.querySelector<HTMLElement>(`[data-launcher="${name}"]`) as HTMLElement;
-
-export { cardOf, withDefs };
+export { withDefs };

@@ -1,7 +1,6 @@
-//! The coordinator verbs that read or hard-delete: `purge` (dry run, confirm, backup), `restore`,
-//! `trash`, `check`, `tick` and `sync import`, in-process on a temp `COORD_HOME` whose board is
-//! written as a file, with the lines and refusals of `purge.mjs`, `check.mjs`, `tick.mjs` and
-//! `sync.mjs`.
+//! K3: purge, restore, trash, check and tick.
+
+// test-tag: critical
 
 use std::fs;
 

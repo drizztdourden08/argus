@@ -1,6 +1,6 @@
-//! Ports the `coord proc` and `coord activity` cases of `procs.http.test.mjs` against an Argus
-//! test server with a fake machine: list and rules for anyone, rule set and rm and kill only for
-//! the Overlord, and the newest lines of the activity log.
+//! S2: coord proc and activity against an in-process Argus test server with a fake machine.
+
+// test-tag: standard
 
 use std::fs;
 use std::sync::Arc;

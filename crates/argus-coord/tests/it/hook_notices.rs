@@ -1,7 +1,6 @@
-//! The notice digest of the prompt hook: a registered thread's prompt asks the dashboard for the
-//! passive notices since its last turn (its `lastSeen` before the visit) and prints the digest
-//! line it gets; a lead asks for every thread (`*`); no line, or a dashboard that is down, adds
-//! nothing; new messages and the digest come together. A small stand-in serves the routes.
+//! S2: the notice digest of the prompt hook against a stand-in dashboard.
+
+// test-tag: standard
 
 use std::io::Write;
 use std::net::TcpStream;

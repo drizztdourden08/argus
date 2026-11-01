@@ -1,6 +1,7 @@
 //! Paths that must stay inside a store: a request path is split into plain names and walked
 //! from the store root, and nothing that leaves the root, is a link, or is a half-written file
 //! is ever returned.
+// test-tag: critical
 
 use std::path::{Path, PathBuf};
 

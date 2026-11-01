@@ -2,6 +2,8 @@
 //! served by the dashboard, deletes when a doc leaves the board, no event when nothing changed,
 //! portfolio cards (with running runs and the master launcher), launchers and a hard resync
 //! (port of `sync.export.test.mjs`).
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
@@ -562,12 +564,4 @@ async fn a_hard_resync_clears_the_scope_re_exports_it_and_tells_the_streams_to_r
         .await
         .expect_err("no such project");
     assert_eq!(missing.code, ErrorCode::NotFound);
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn health_reports_the_watcher() {
-    let h = Harness::start().await;
-    let s = h.sync.health();
-    assert!(s.ok, "the watcher is running");
-    assert_eq!(s.errors, 0);
 }

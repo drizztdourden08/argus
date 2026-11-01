@@ -1,4 +1,5 @@
 //! The live tray icon: its state, its menu, and what the owner's clicks and the request files ask.
+// test-tag: critical
 
 use std::process;
 use std::sync::Arc;

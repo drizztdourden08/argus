@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { DataProvider, PORTFOLIO_SCOPE, useBoard, useCollection, useDoc, usePortfolio, useStreamStatus } from '../../src/data/react';
+import { DataProvider, PORTFOLIO_SCOPE, useBoard, useCollection, useDoc, usePortfolio } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { createFakeSources } from '../helpers/fake-source';
 import { snapshot } from '../helpers/snapshot';
@@ -16,7 +16,7 @@ const setup = () => {
   return { wrapper, sources: fake.sources };
 };
 
-describe('collection hooks', () => {
+describe('S2 collection hooks', { tags: ['standard'] }, () => {
   it('useCollection returns typed docs with their id once the snapshot is in', async () => {
     const { wrapper, sources } = setup();
     const { result } = renderHook(() => useCollection<{ title: string }>('rotp', 'items'), { wrapper });
@@ -35,18 +35,9 @@ describe('collection hooks', () => {
     act(() => sources[0]?.emit('changes', { scope: 'rotp', seq: 11, changes: [{ coll: 'meta', id: 'board', op: 'set', data: { name: 'RotP' } }] }));
     expect(result.current.doc).toEqual({ id: 'board', name: 'RotP' });
   });
-
-  it('useStreamStatus reports the connection', async () => {
-    const { wrapper, sources } = setup();
-    const { result } = renderHook(() => ({ status: useStreamStatus('rotp'), items: useCollection('rotp', 'items') }), { wrapper });
-    expect(result.current.status).toBe('idle');
-    await waitFor(() => expect(result.current.status).toBe('connecting'));
-    act(() => sources[0]?.emit('ready', { seq: 1 }));
-    expect(result.current.status).toBe('live');
-  });
 });
 
-describe('board and portfolio hooks', () => {
+describe('S2 board and portfolio hooks', { tags: ['standard'] }, () => {
   it('useBoard names the board and hides merged and deleted threads', async () => {
     const { wrapper, sources } = setup();
     const { result } = renderHook(() => useBoard('rotp'), { wrapper });

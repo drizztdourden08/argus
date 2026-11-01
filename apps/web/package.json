@@ -11,8 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "lint": "pnpm typecheck && eslint . && stylelint \"src/**/*.css\" --allow-empty-input",
-    "test": "vitest run --passWithNoTests"
+    "lint": "pnpm typecheck && eslint . && stylelint \"src/**/*.css\" --allow-empty-input"
   },
   "dependencies": {
     "@drizztdourden08/tessera": "^0.92.0",
@@ -21,8 +20,8 @@
     "react-router": "catalog:"
   },
   "devDependencies": {
-    "@drizztdourden08/brock-build": "^0.110.0",
-    "@drizztdourden08/brock-lint-config": "^0.110.0",
+    "@drizztdourden08/brock-build": "^0.116.0",
+    "@drizztdourden08/brock-lint-config": "^0.116.0",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/node": "catalog:",

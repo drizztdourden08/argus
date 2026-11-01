@@ -96,6 +96,7 @@ pub fn remove_entry(fs: &dyn Fs, path: &str, drop_links_first: bool) -> io::Resu
     remove_tree(fs, path)
 }
 
+// test-tag: standard
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,5 +1,6 @@
 //! Content types of the feed. Only plain data types are named; anything else, a page or a
 //! script included, is sent as bytes to download.
+// test-tag: critical
 
 const BYTES: &str = "application/octet-stream";
 

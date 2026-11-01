@@ -2,7 +2,7 @@
 import type { Entry, ItemRef, ThreadChoice } from '../../src/data/kanban';
 import type { WithId } from '../../src/data/react';
 import type { OpNotice } from '../../src/screens/board/shared';
-import type { CardData, KanbanFilters, KanbanPrefs, Needs } from '../../src/screens/board/tabs/kanban/model';
+import type { KanbanFilters, KanbanPrefs, Needs } from '../../src/screens/board/tabs/kanban/model';
 import { DEFAULT_FILTERS, buildView } from '../../src/screens/board/tabs/kanban/model';
 
 const MIN = 60_000;
@@ -53,8 +53,6 @@ const prefs = (extra: Partial<KanbanPrefs> = {}): KanbanPrefs => ({ group: 'stat
 
 const noNeeds: ReadonlyMap<string, Needs> = new Map();
 
-const cardOf = (item: ItemRef): CardData => ({ id: item.id, item, needsYou: false, decisions: 0, quietMs: null, conflicted: false });
-
 interface Setup {
   filters?: Partial<KanbanFilters>;
   prefs?: Partial<KanbanPrefs>;
@@ -83,4 +81,4 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
 const idsIn = (view: ReturnType<typeof viewOf>, column: string): string[] =>
   (view.columns.find((candidate) => candidate.id === column)?.cards ?? []).map((card) => card.id);
 
-export { DAY, HOUR, MIN, NOW, before, cardOf, entryRef, filters, idsIn, itemRef, noNeeds, prefs, threadRef, viewOf };
+export { DAY, HOUR, NOW, before, entryRef, filters, idsIn, itemRef, noNeeds, prefs, threadRef, viewOf };

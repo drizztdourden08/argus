@@ -1,9 +1,6 @@
-//! The server client verbs on the Node CLI and on `argus coord`, in twin temp homes: the board
-//! verbs and every refusal with the dashboard down, then the verbs that read the dashboard with
-//! both engines pointed at one Argus test server, so the answers compare. They skip with a
-//! reason when node, `ai-config` or the `argus` binary is absent (set `ARGUS_EXE`, or build
-//! `-p argus`). A dashboard is never started: every step carries a missing install folder. The
-//! tests are tables of steps, one per verb and refusal, so they are longer than a function should be.
+//! E3: parity of the server client verbs against the Node CLI.
+
+// test-tag: e2e
 
 #![allow(clippy::too_many_lines)]
 
@@ -61,6 +58,7 @@ fn compare(differ: &Differ, steps: &[Step]) -> Report {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn run_definitions_and_every_refusal_with_the_dashboard_down() {
     let Some(d) = differ("run_definitions") else {
         return;
@@ -136,6 +134,7 @@ fn run_definitions_and_every_refusal_with_the_dashboard_down() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_verbs_that_need_the_dashboard_say_so_with_it_down() {
     let Some(d) = differ("verbs_need_the_dashboard") else {
         return;
@@ -170,6 +169,7 @@ fn the_verbs_that_need_the_dashboard_say_so_with_it_down() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_overlord_only_verbs_refuse_everyone_else_and_check_their_arguments() {
     let Some(d) = differ("overlord_only") else {
         return;
@@ -223,6 +223,7 @@ fn the_overlord_only_verbs_refuse_everyone_else_and_check_their_arguments() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn worktree_rules_keeps_and_answers_on_the_board() {
     let Some(d) = differ("worktree_rules") else {
         return;
@@ -379,6 +380,7 @@ fn worktree_rules_keeps_and_answers_on_the_board() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn worktree_arguments_are_refused_alike() {
     let Some(d) = differ("worktree_refusals") else {
         return;
@@ -445,6 +447,7 @@ fn worktree_arguments_are_refused_alike() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn portfolio_registry_sends_lead_messages_and_the_overview() {
     let Some(d) = differ("portfolio_and_lead") else {
         return;
@@ -510,6 +513,7 @@ fn portfolio_registry_sends_lead_messages_and_the_overview() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_verbs_that_read_the_dashboard_answer_alike_from_one_server() {
     let Some(d) = differ("one_server") else {
         return;
@@ -573,6 +577,7 @@ async fn the_verbs_that_read_the_dashboard_answer_alike_from_one_server() {
 /// compare across homes: here both engines tick the same home, Node first, and the Argus tick
 /// must find every card hash unchanged.
 #[test]
+#[ignore = "e2e"]
 fn the_argus_portfolio_tick_hashes_a_card_as_node_does() {
     let Some(d) = differ("portfolio_tick_hashes") else {
         return;
