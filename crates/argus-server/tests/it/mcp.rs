@@ -3,6 +3,8 @@
 //! hidden runs started and read back, the policy of `config.json`, and the `notify_owner` tool.
 //! Ported from `mcp.server.test.mjs`, the auth case of `mcp.http.test.mjs` and the MCP case of
 //! `notify.http.test.mjs`. The protocol itself is tested in `argus-mcp`.
+//! K2, K4: the MCP layer on a live server: auth and refusals, tool results, owner writes and the policy.
+// test-tag: standard
 
 use std::sync::{Arc, PoisonError};
 
@@ -356,22 +358,6 @@ async fn attach_proof_keeps_the_picture_on_the_test_and_returns_a_url_that_serve
         )
         .await;
     assert_eq!(img.status, 200);
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_refused_post_is_an_error_result_or_a_refusal_with_the_board_reason() {
-    let t = seeded().await;
-    let r = tool(
-        &t,
-        "post_entry",
-        json!({ "project": "alpha", "kind": "ack", "replyTo": "E-404" }),
-    )
-    .await;
-    assert!(
-        r["status"] == "applied" || r["$error"] == true || r["status"] == "refused",
-        "{r}"
-    );
     t.stop(false).await;
 }
 

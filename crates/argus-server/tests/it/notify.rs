@@ -3,12 +3,14 @@
 //! limits, the automatic pings from board writes (told once, across a restart), the activity
 //! lines and the tray balloon. Ported from the HTTP cases of `notify.http.test.mjs`; the cases
 //! that drive the Node `coord` and the MCP tool stay with their own slices.
+//! K1, K2, K4: the notification routes, limits and automatic pings, with a manual clock and a worker that takes exports in order.
+// test-tag: standard
 
 use std::path::Path;
 use std::sync::{Arc, PoisonError};
-use std::time::Duration;
 
 use crate::toasts::Toasts;
+use crate::wait::until;
 use argus_core::Coll;
 use argus_core::clock::{ManualClock, now_ms};
 use argus_core::fixture::test_doc;
@@ -135,21 +137,29 @@ fn count_of(list: &[Value], word: &str) -> usize {
         .count()
 }
 
-/// Waits for the worker that tells the owner of an export, up to five seconds.
+/// Waits for the worker that tells the owner of an export.
 async fn told(t: &TestServer, word: &str, count: usize) -> Vec<Value> {
-    for _ in 0..100 {
+    until("the owner to be told", || async {
         let list = notes(t).await;
-        if count_of(&list, word) >= count {
-            return list;
-        }
-        tokio::time::sleep(Duration::from_millis(50)).await;
-    }
-    panic!("the owner was not told {count} time(s) of {word}");
+        (count_of(&list, word) >= count).then_some(list)
+    })
+    .await
 }
 
-/// Lets the worker finish what it was given, so that a ping that must not come has had its time.
-async fn settle() {
-    tokio::time::sleep(Duration::from_millis(400)).await;
+/// Waits until the worker has taken the first export of the server: its markers are saved.
+async fn first_export(t: &TestServer) {
+    until("the first export to be taken", || async {
+        let seen = t.svc.db.kv_get("notify:seen").ok().flatten();
+        seen.filter(|text| text.contains("alpha")).map(|_| ())
+    })
+    .await;
+}
+
+/// The worker takes the exports in order: once the owner is told of a build handed after the
+/// others, every export before it has been taken and any ping it owed has been sent.
+async fn flush(t: &TestServer, tag: &str) {
+    edit_alpha(t, |b| hand_build(b, tag, tag)).await;
+    told(t, tag, 1).await;
 }
 
 async fn edit_alpha(t: &TestServer, change: impl FnOnce(&mut Value)) {
@@ -580,20 +590,25 @@ async fn a_hard_resync_writes_the_docs_again() {
     assert!(doc.expect("read").is_some());
 }
 
-fn hand_b2(board: &mut Value) {
-    board["handedBuild"] = json!("b2");
+fn hand_build(board: &mut Value, tag: &str, title: &str) {
+    board["handedBuild"] = json!(tag);
     board["handedAt"] = json!(ago(0));
-    board["builds"]["b2"] = json!({ "tag": "b2", "title": "Save slots", "thread": "ui" });
-    for (id, title) in [("T-3", "Slots persist"), ("T-4", "Slots survive a crash")] {
-        let fields = json!({ "title": title, "mode": "manual", "build": "b2" });
-        board["tests"][id] = test_doc(id, "I-1", "ui", fields, 4096);
+    board["builds"][tag] = json!({ "tag": tag, "title": title, "thread": "ui" });
+    for (n, text) in [(3, "Slots persist"), (4, "Slots survive a crash")] {
+        let id = format!("T-{tag}-{n}");
+        let fields = json!({ "title": text, "mode": "manual", "build": tag });
+        board["tests"][id.as_str()] = test_doc(&id, "I-1", "ui", fields, 4096);
     }
+}
+
+fn hand_b2(board: &mut Value) {
+    hand_build(board, "b2", "Save slots");
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_build_handed_pings_the_owner_once_and_a_resync_tells_nothing_more() {
     let r = rig().await;
-    settle().await;
+    first_export(&r.t).await;
     assert_eq!(
         count_of(&notes(&r.t).await, ""),
         0,
@@ -602,10 +617,13 @@ async fn a_build_handed_pings_the_owner_once_and_a_resync_tells_nothing_more() {
     edit_alpha(&r.t, hand_b2).await;
     told(&r.t, "ready to test", 1).await;
     edit_alpha(&r.t, |_| {}).await;
-    settle().await;
+    flush(&r.t, "b3").await;
     let list = notes(&r.t).await;
-    assert_eq!(count_of(&list, "ready to test"), 1);
-    let hand = list.iter().find(|n| n["by"] == "auto").expect("the ping");
+    assert_eq!(count_of(&list, "Save slots"), 1);
+    let hand = list
+        .iter()
+        .find(|n| n["by"] == "auto" && n["text"].as_str().is_some_and(|t| t.contains("Save slots")))
+        .expect("the ping");
     let got = (
         &hand["text"],
         &hand["level"],
@@ -630,7 +648,7 @@ async fn a_build_handed_pings_the_owner_once_and_a_resync_tells_nothing_more() {
 #[tokio::test(flavor = "multi_thread")]
 async fn a_question_pings_once_with_the_first_100_characters_and_a_notice_does_not() {
     let r = rig().await;
-    settle().await;
+    first_export(&r.t).await;
     let said = format!(
         "Should the slots be per profile or shared across the whole install? {}",
         "Think about it. ".repeat(10)
@@ -640,9 +658,13 @@ async fn a_question_pings_once_with_the_first_100_characters_and_a_notice_does_n
         b["entries"]["N-2"] = argus_core::fixture::doc("N-2", "ui", json!({ "kind": "notice", "item": null, "thread": "ui", "author": "ui", "text": "just a notice", "level": "info", "status": "open", "replyTo": null, "deliveredAt": null }), 5120);
     })
     .await;
-    let list = told(&r.t, "asks:", 1).await;
-    settle().await;
-    let asks: Vec<&Value> = list.iter().filter(|n| n["by"] == "auto").collect();
+    told(&r.t, "asks:", 1).await;
+    flush(&r.t, "b3").await;
+    let list = notes(&r.t).await;
+    let asks: Vec<&Value> = list
+        .iter()
+        .filter(|n| n["by"] == "auto" && !n["text"].as_str().unwrap_or_default().contains("b3"))
+        .collect();
     assert_eq!(asks.len(), 1);
     let head: String = said.chars().take(100).collect();
     assert_eq!(asks[0]["text"], format!("Alpha asks: {head}\u{2026}"));
@@ -665,42 +687,41 @@ async fn a_question_pings_once_with_the_first_100_characters_and_a_notice_does_n
 #[tokio::test(flavor = "multi_thread")]
 async fn a_restart_does_not_tell_the_owner_again_what_he_was_told_but_news_still_comes() {
     let r = rig().await;
-    settle().await;
+    first_export(&r.t).await;
     edit_alpha(&r.t, hand_b2).await;
     edit_alpha(&r.t, |b| {
         b["entries"]["Q-2"] = question("Q-2", "Per profile?", "answer");
     })
     .await;
     let before = told(&r.t, "asks:", 1).await;
-    settle().await;
     let before: Vec<Value> = before.into_iter().filter(|n| n["by"] == "auto").collect();
     let shown = r.toasts.count();
     let r = restart(r).await;
     r.t.write("POST", "/api/admin/resync", &json!({})).await;
-    settle().await;
+    flush(&r.t, "b3").await;
     let after = notes(&r.t).await;
     let told_texts = |list: &[Value]| -> Vec<Value> {
         list.iter()
-            .filter(|n| n["by"] == "auto")
+            .filter(|n| n["by"] == "auto" && !n["text"].as_str().unwrap_or_default().contains("b3"))
             .map(|n| n["text"].clone())
             .collect()
     };
     assert_eq!(told_texts(&after), told_texts(&before));
-    assert_eq!(r.toasts.count(), shown, "no toast after the restart");
+    assert_eq!(r.toasts.count(), shown + 1, "only the toast of the last build");
     edit_alpha(&r.t, |b| {
         b["entries"]["Q-4"] = question("Q-4", "One more thing after the restart?", "answer");
     })
     .await;
     let list = told(&r.t, "One more thing after the restart", 1).await;
     assert_eq!(count_of(&list, "One more thing after the restart"), 1);
-    assert_eq!(r.toasts.count(), shown + 1);
+    assert_eq!(r.toasts.count(), shown + 2);
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn notify_os_false_records_a_question_without_a_toast_and_auto_ask_false_does_not_record_it()
 {
     let r = rig().await;
-    settle().await;
+    first_export(&r.t).await;
     set_notify(&r.t, |n| n["os"] = json!(false));
     edit_alpha(&r.t, |b| {
         b["entries"]["Q-2"] = question("Q-2", "Question with the OS toasts off?", "answer");
@@ -723,7 +744,7 @@ async fn notify_os_false_records_a_question_without_a_toast_and_auto_ask_false_d
         b["entries"]["Q-3"] = question("Q-3", "Question with auto ask off?", "answer");
     })
     .await;
-    settle().await;
+    flush(&r.t, "b3").await;
     assert_eq!(
         count_of(&notes(&r.t).await, "Question with auto ask off"),
         0

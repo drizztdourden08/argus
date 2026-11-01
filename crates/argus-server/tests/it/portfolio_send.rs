@@ -5,12 +5,15 @@
 //! from the CLI side (`coord portfolio send`, the API without a page) keeps the short limits.
 //! Ported from `portfolio.longsend.test.mjs`; the two cases that run the Node coord CLI need
 //! `ARGUS_COORD_CLI`.
+//! K3, K4: the owner send of the Overlord page, whole to the lead, with the 50000 net and the short limits of the API.
+// test-tag: standard
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use crate::wake_rig::{pause, rig, wakes};
+use crate::wait::until;
+use crate::wake_rig::{rig, wakes};
 use argus_board::limits::OWNER_TEXT_MAX;
-use argus_testkit::{CoordCli, Request, TestServer};
+use argus_testkit::{Request, TestServer};
 use serde_json::{Value, json};
 
 static COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -104,13 +107,12 @@ async fn a_20000_character_decision_is_stored_whole_handed_to_the_lead_whole_and
         text_of(&message).contains(&text),
         "the lead inbox message carries the whole text"
     );
-    pause(500).await;
-    let rows = wakes(t, "alpha").await;
-    let wake = rows
-        .iter()
-        .find(|w| w["reason"] == "portfolio-decision")
-        .expect("the wake row");
-    let line = text_of(wake);
+    let wake = until("the wake row", || async {
+        let rows = wakes(t, "alpha").await;
+        rows.into_iter().find(|w| w["reason"] == "portfolio-decision")
+    })
+    .await;
+    let line = text_of(&wake);
     assert!(
         line.chars().count() < 300,
         "the wake line is {}",
@@ -149,39 +151,6 @@ async fn a_note_to_all_projects_at_20000_characters_reaches_every_lead_whole() {
         let message = inbox_message(t, key, lead["id"].as_str().unwrap_or_default());
         assert!(text_of(&message).contains(&text), "{key}");
     }
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_lead_reads_it_whole_with_coord_inbox_no_ellipsis_nothing_cut() {
-    let Some(cli) = CoordCli::locate() else {
-        return;
-    };
-    let r = rig().await;
-    let t = &r.t;
-    let text = brief(20000);
-    let sent = from_page(
-        t,
-        json!({ "kind": "followup", "project": "beta", "text": text }),
-    )
-    .await;
-    assert_eq!(sent["status"], "delivered", "{sent}");
-    let out = cli
-        .run(
-            t,
-            &["inbox", "--project", "beta", "--as", "coordinator"],
-            &t.coord_home,
-            &[],
-        )
-        .await;
-    assert_eq!(out.status, 0, "{}", out.stderr);
-    assert!(
-        out.stdout.contains(&text),
-        "all 20000 characters are in the output"
-    );
-    assert!(
-        !out.stdout.contains('…'),
-        "nothing is shortened with an ellipsis"
-    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -241,35 +210,4 @@ async fn the_api_without_a_page_keeps_its_limit_and_the_same_call_from_the_page_
         .json(&json!({ "project": "alpha", "text": "a".repeat(5000) }));
     let owner = t.send(t.page(request)).await;
     assert_eq!(owner.status, 200, "{}", owner.text());
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn coord_portfolio_send_refuses_over_240_and_decisions_over_200() {
-    let Some(cli) = CoordCli::locate() else {
-        return;
-    };
-    let r = rig().await;
-    let t = &r.t;
-    let send = |text: String, flag: Option<&'static str>| {
-        let cli = cli.clone();
-        async move {
-            let mut args = vec!["portfolio", "send", "alpha", text.as_str()];
-            args.extend(flag);
-            cli.run(t, &args, &t.coord_home, &[]).await
-        }
-    };
-    let over = send("z".repeat(241), None).await;
-    assert_ne!(over.status, 0);
-    assert!(
-        format!("{}{}", over.stderr, over.stdout).contains("241 chars, the limit is 240"),
-        "{}",
-        over.stderr
-    );
-    let decision = send("z".repeat(201), Some("--decision")).await;
-    assert_ne!(decision.status, 0);
-    assert!(
-        format!("{}{}", decision.stderr, decision.stdout).contains("201 chars, the limit is 200")
-    );
-    let fine = send("z".repeat(240), None).await;
-    assert_eq!(fine.status, 0, "{}", fine.stderr);
 }

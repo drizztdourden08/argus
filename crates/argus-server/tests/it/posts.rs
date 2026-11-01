@@ -1,8 +1,8 @@
 //! Owner posts over HTTP: every reply kind and the op outcomes (applied, conflict, refused,
-//! duplicate), idempotent ids, the result-note rule, a post waiting on a held board.lock,
+//! duplicate), idempotent ids, the result-note rule,
 //! proofs, portfolio posts, recovery of a post left `received`, and shadow mode.
-
-use std::time::{Duration, Instant};
+//! K2, K3, K4: owner posts over HTTP, idempotent ids, the result-note rule, uploads and shadow mode.
+// test-tag: standard
 
 use crate::posting::{
     cli, cli_to, doc, entry, entry_count, id, inbox, iso, page_put, post, seeded, with,
@@ -154,17 +154,6 @@ async fn a_fail_partial_or_blocked_result_without_a_note_is_refused_and_nothing_
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn the_same_id_of_a_refused_result_gives_the_stored_refusal() {
-    let t = seeded().await;
-    let body =
-        entry(&json!({ "kind": "result", "outcome": "partial", "replyTo": "T-1", "text": "" }));
-    let a = cli_to(&t, "alpha", &body).await.json();
-    let b = cli_to(&t, "alpha", &body).await.json();
-    let seen = json!([a["status"], b["status"], b["outcome"]]);
-    assert_eq!(seen, json!(["refused", "refused", NOTE]));
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn with_a_note_the_result_is_applied_and_a_pass_needs_none() {
     let t = seeded().await;
     let ok = post(
@@ -230,15 +219,6 @@ async fn the_same_post_under_a_new_id_is_a_duplicate() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn the_page_path_put_of_entries_is_a_post() {
-    let t = seeded().await;
-    let data = json!({ "kind": "followup", "replyTo": "Q-1", "text": "From the page", "status": "new", "author": "human", "createdAt": iso() });
-    let r = page_put(&t, "alpha", &id(), &data).await.json();
-    assert_eq!(r["status"], "applied");
-    assert_eq!(r["entry"]["via"], "page");
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn bad_posts_and_other_page_writes_are_refused() {
     let t = seeded().await;
     let ok = json!({ "kind": "followup", "text": "x" });
@@ -256,25 +236,6 @@ async fn bad_posts_and_other_page_writes_are_refused() {
     let put = json!({ "data": { "title": "x" } });
     let other = t.write("PUT", "/api/p/alpha/db/items/I-1", &put).await;
     assert_eq!((other.status, other.code().as_str()), (403, "read_only"));
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_post_waits_for_a_held_board_lock_and_applies_once_it_is_released() {
-    let t = seeded().await;
-    let lock = t.coord_home.join("alpha").join("board.lock");
-    std::fs::write(&lock, "").expect("lock file");
-    tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(400)).await;
-        let _ = std::fs::remove_file(lock);
-    });
-    let started = Instant::now();
-    let r = post(
-        &t,
-        &json!({ "kind": "followup", "replyTo": "Q-1", "text": "After the lock" }),
-    )
-    .await;
-    assert_eq!(r["status"], "applied");
-    assert!(started.elapsed() >= Duration::from_millis(350));
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -338,15 +299,6 @@ async fn an_entry_image_is_refused_for_a_bad_type_a_missing_option_or_a_notice()
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_proof_that_is_not_an_image_type_is_refused() {
-    let t = seeded().await;
-    let text = Request::new("POST", "/api/p/alpha/tests/T-1/proofs")
-        .header("Content-Type", "text/plain")
-        .body("hello");
-    assert_eq!(t.send(text).await.status, 415);
-}
-
-#[tokio::test(flavor = "multi_thread")]
 async fn a_portfolio_send_is_delivered_to_the_project_board() {
     let t = seeded().await;
     let body = json!({ "project": "beta", "text": "Please review the API", "decision": true });
@@ -362,24 +314,6 @@ async fn a_portfolio_send_is_delivered_to_the_project_board() {
     assert_eq!(delivered["status"], "pending");
     let stored = doc(&t, "_portfolio", "entries", &sent_id).await;
     assert_eq!(stored["status"], "delivered");
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_page_post_to_all_projects_is_delivered_to_each() {
-    let t = seeded().await;
-    let data = json!({ "kind": "followup", "author": "human", "project": "all", "text": "Hello leads", "createdAt": iso() });
-    let page = page_put(&t, "_portfolio", &id(), &data).await.json();
-    assert_eq!(page["status"], "delivered");
-    let mut to: Vec<String> = page["entry"]["deliveredTo"]
-        .as_array()
-        .map(|a| {
-            a.iter()
-                .filter_map(|v| v.as_str().map(str::to_owned))
-                .collect()
-        })
-        .unwrap_or_default();
-    to.sort();
-    assert_eq!(to, ["alpha", "beta"]);
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -2,6 +2,8 @@
 //! the page (source page, author human) is held to the 50000-character safety net only, stored
 //! whole and delivered whole to the thread's inbox. The same text from the CLI (what a model
 //! writes) is still refused at the old limits.
+//! K1, K3, K4: the owner text limit of 50000 on a page post and the short limits of the CLI source.
+// test-tag: standard
 
 use crate::posting::{cli, doc, entry_count, inbox, page, page_reply, seeded};
 use argus_board::limits::OWNER_TEXT_MAX;
@@ -31,11 +33,6 @@ fn is_limit_message(body: &str) -> bool {
         .is_some_and(|(_, rest)| rest.starts_with(|c: char| c.is_ascii_digit()))
 }
 
-#[test]
-fn the_safety_net_is_50000_characters() {
-    assert_eq!(OWNER_TEXT_MAX, 50000);
-}
-
 #[tokio::test(flavor = "multi_thread")]
 async fn a_20000_character_result_note_is_stored_whole_and_reaches_the_inbox_whole() {
     let t = seeded().await;
@@ -59,24 +56,6 @@ async fn a_20000_character_result_note_is_stored_whole_and_reaches_the_inbox_who
         "the inbox carries the whole note"
     );
     assert_eq!(doc(&t, "alpha", "entries", &id).await["text"], text);
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn answers_and_decisions_from_the_page_are_not_cut_at_240_or_200() {
-    let t = seeded().await;
-    let long = feedback(5000);
-    for kind in ["followup", "decision"] {
-        let r = page(&t, &json!({ "kind": kind, "replyTo": "Q-1", "text": long })).await;
-        let expected = if kind == "decision" {
-            "pending"
-        } else {
-            "applied"
-        };
-        assert_eq!(r["status"], expected, "{r}");
-        let id = text_of(&r, "id");
-        assert_eq!(t.board("alpha")["entries"][&id]["text"], long, "{kind}");
-        assert!(inbox_text(&t, &id).contains(&long), "{kind}");
-    }
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -4,6 +4,7 @@ mod doors;
 mod fixture;
 mod machine;
 mod posting;
+mod pr_rig;
 #[path = "runs/rig.rs"]
 mod runs_rig;
 #[allow(dead_code)]
@@ -35,8 +36,10 @@ mod mcp;
 mod notify;
 mod owner_text;
 mod portfolio_send;
+mod portfolio_send_cli;
 mod posts;
 mod pr_checks;
+mod pr_checks_runs;
 mod procs;
 mod records;
 mod runs;
