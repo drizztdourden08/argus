@@ -37,8 +37,12 @@ async fn remove(ctx: Ctx) -> Reply {
     serve(ctx, input_of, Service::remove, render).await
 }
 
+/// The release answers at once with the request it filed: the removal takes minutes.
 async fn release(ctx: Ctx) -> Reply {
-    serve(ctx, input_of, Service::release, render).await
+    serve(ctx, input_of, Service::release, |queued| {
+        to_value(queued).unwrap_or(Value::Null)
+    })
+    .await
 }
 
 async fn prune(ctx: Ctx) -> Reply {

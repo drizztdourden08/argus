@@ -596,7 +596,8 @@ fn a_burst_of_agents_ending_makes_one_wake_per_thread() {
 }
 
 #[test]
-fn the_threads_own_release_removes_it_at_once_and_refuses_what_is_not_safe() {
+fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_is_not_safe()
+{
     let (fx, h) = world_with(
         &[("1", "lead", "working"), ("2", "lead", "working")],
         |_| {},
@@ -609,12 +610,19 @@ fn the_threads_own_release_removes_it_at_once_and_refuses_what_is_not_safe() {
             Caller::Thread("lead".into()),
         ))
     };
-    let out = release("agent-a1").unwrap();
-    assert!(
-        out.removed && !exists_itself(&fx.path("agent-a1")),
-        "{}",
-        out.text
+    let queued = release("agent-a1").unwrap();
+    assert_eq!(
+        queued.text,
+        format!(
+            "{}: Argus removes it now; the result comes to your inbox (coord worktree requests shows it)",
+            queued.id
+        )
     );
+    h.svc.requests_idle();
+    let done = h.svc.request_list("alpha");
+    assert!(done[0].release && done[0].branch, "{:?}", done[0]);
+    assert_eq!(done[0].removed(), 1, "{:?}", done[0].results);
+    assert!(!exists_itself(&fx.path("agent-a1")));
     assert_eq!(h.meta().hygiene.removed[0].path, fx.path("agent-a1"));
     put(&fx.path("agent-a2"), "wip.txt", "work\n");
     let err = release("agent-a2").unwrap_err();

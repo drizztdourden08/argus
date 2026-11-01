@@ -112,6 +112,9 @@ pub struct RequestRec {
     pub discard: bool,
     pub owner_entry: Option<String>,
     pub reason: Option<String>,
+    /// A thread's own `release`: the worker looks again that nothing uses the worktree, and the hygiene lists what
+    /// went.
+    pub release: bool,
     pub older_than_days: Option<f64>,
     /// `finished` only: also every clean worktree with nothing ahead untouched for this many minutes.
     pub idle_minutes: Option<f64>,

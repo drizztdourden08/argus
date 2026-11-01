@@ -63,7 +63,7 @@ fn listen_once(hook: &Hook<'_>, target: &Target, deadline: i64) -> Heard {
     let wait = max(MIN_WAIT_MS, deadline - now_ms()).unsigned_abs();
     match client.stream(&path, Duration::from_millis(wait)) {
         Ok(body) => read_events(body, &target.thread),
-        Err(ClientError::Http { .. }) => Heard::Ended,
+        Err(ClientError::Http { .. } | ClientError::Timeout(_)) => Heard::Ended,
         Err(ClientError::Down(_)) => Heard::Broken,
     }
 }

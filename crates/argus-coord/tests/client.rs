@@ -263,6 +263,38 @@ fn a_server_that_does_not_answer_is_the_down_error_with_its_cause() {
     );
 }
 
+/// A server that takes the call and never answers it, until the returned sender is dropped.
+fn silent() -> (u16, std::sync::mpsc::Sender<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let (hold, held) = std::sync::mpsc::channel::<()>();
+    thread::spawn(move || {
+        let (_stream, _) = listener.accept().unwrap();
+        let _ = held.recv();
+    });
+    (port, hold)
+}
+
+#[test]
+fn a_server_that_is_up_but_does_not_answer_in_time_is_a_timeout_never_not_running() {
+    let (port, _hold) = silent();
+    let err = client(port, None)
+        .request_within(
+            Duration::from_secs(1),
+            "POST",
+            "/api/p/x/worktrees/release",
+            Some(&json!({})),
+        )
+        .unwrap_err();
+    assert_eq!(err, ClientError::Timeout(1));
+    let said = err.to_string();
+    assert!(
+        said.starts_with("the dashboard did not answer in time (1 s)"),
+        "{said}"
+    );
+    assert!(!said.contains("not running"), "{said}");
+}
+
 #[test]
 fn health_is_true_only_for_a_success_status() {
     let (up, _a) = serve(vec![("200 OK", "{}".to_owned())]);

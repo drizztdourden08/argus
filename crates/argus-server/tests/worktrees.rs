@@ -599,7 +599,8 @@ async fn a_folder_git_left_behind_is_a_leftover_without_an_age_limit_for_the_bat
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_threads_release_removes_a_safe_worktree_at_once_and_refuses_one_with_work_in_it() {
+async fn a_threads_release_answers_at_once_with_a_request_the_worker_removes_and_refuses_one_with_work_in_it()
+ {
     let r = Rig::start().await;
     r.scanned().await;
     let dirty = r
@@ -629,8 +630,24 @@ async fn a_threads_release_removes_a_safe_worktree_at_once_and_refuses_one_with_
         )
         .await;
     assert_eq!(done.status, 200, "{}", done.json());
-    assert_eq!(done.json()["removed"], true);
+    let answer = done.json();
+    assert_eq!(
+        (&answer["id"], &answer["status"]),
+        (&json!("R-1"), &json!("queued")),
+        "the answer is the request filed, not the removal"
+    );
+    assert_eq!(
+        answer["text"],
+        "R-1: Argus removes it now; the result comes to your inbox (coord worktree requests shows it)"
+    );
+    assert!(
+        answer["removed"].is_null(),
+        "nothing was removed before it answered"
+    );
     gone(&r.path("old-merged")).await;
+    let list = r.t.get("/api/p/alpha/worktrees/requests").await.json();
+    assert_eq!(list["requests"][0]["id"], "R-1");
+    assert_eq!(list["requests"][0]["branch"], true);
     assert!(r.path("dirty-old").exists());
     let removed = until("the removal in the summary", || async {
         let meta = r.meta().await;

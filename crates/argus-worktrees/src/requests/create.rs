@@ -215,9 +215,23 @@ impl Service {
         let older_than_days = self.asked_age(input)?;
         let docs = self.list(&input.project);
         let rec = self.add_request(
-            input,
+            (input, false),
             mode,
             (older_than_days, idle_minutes),
+            targets_of(&named, &docs),
+        )?;
+        Ok(self.queued(input, &rec))
+    }
+
+    /// A thread's own release, already checked for its caller: the one worktree is queued for the worker, which
+    /// looks again right before the removal.
+    pub(crate) fn request_release(&self, input: &RequestInput) -> Result<Queued> {
+        let named: Vec<&String> = input.targets.iter().collect();
+        let docs = self.list(&input.project);
+        let rec = self.add_request(
+            (input, true),
+            Mode::Targets,
+            (None, None),
             targets_of(&named, &docs),
         )?;
         Ok(self.queued(input, &rec))
@@ -229,7 +243,7 @@ impl Service {
         let named: Vec<&String> = input.targets.iter().collect();
         let docs = self.list(&input.project);
         let rec = self.add_request(
-            input,
+            (input, false),
             Mode::Released,
             (None, None),
             targets_of(&named, &docs),
@@ -269,7 +283,7 @@ impl Service {
 
     fn add_request(
         &self,
-        input: &RequestInput,
+        (input, release): (&RequestInput, bool),
         mode: Mode,
         (older_than_days, idle_minutes): (Option<f64>, Option<f64>),
         targets: Vec<Target>,
@@ -306,6 +320,7 @@ impl Service {
                     .filter(|r| !r.is_empty()),
                 older_than_days,
                 idle_minutes,
+                release,
                 resolved: mode.named(),
                 targets: if mode.named() { targets } else { Vec::new() },
                 ..RequestRec::default()

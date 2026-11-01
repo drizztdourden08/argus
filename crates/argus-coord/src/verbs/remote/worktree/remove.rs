@@ -11,6 +11,7 @@ use super::path::target_of;
 use super::text::days_text;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
+use crate::client::ClientError;
 use crate::verbs::remote::support::link::{connect, list_of, project_of};
 use crate::verbs::remote::support::scope::require_board;
 use crate::verbs::remote::support::text::{amount_and_unit, cell, say_all, truthy};
@@ -21,6 +22,17 @@ pub(super) fn id_arg(value: Option<&String>, usage: &str) -> Result<String, Coor
     match value.filter(|v| !v.is_empty()) {
         Some(typed) => Ok(target_of(typed)?.0),
         None => Err(CoordError::refuse(usage)),
+    }
+}
+
+/// A call past its time limit is not a stopped dashboard (it answers, only late): the sentence says what may
+/// still be running there and where to look. A refused connection stays "not running".
+fn slow(e: ClientError, what: &str, check: &str) -> CoordError {
+    match e {
+        ClientError::Timeout(secs) => CoordError::refuse(format!(
+            "the dashboard did not answer in time ({secs} s): {what} may still be running; check `{check}`"
+        )),
+        other => other.into(),
     }
 }
 
@@ -78,10 +90,12 @@ fn all_leftovers(call: &mut Call<'_>) -> Outcome {
     body.insert("reason".to_owned(), reason_of(call)?);
     body.insert("by".to_owned(), json!(by));
     let project = project_of(call).to_owned();
-    let out = connect(call, false)?.post(
-        &format!("/api/p/{project}/worktrees/leftovers/remove"),
-        &Value::Object(body),
-    )?;
+    let out = connect(call, false)?
+        .post(
+            &format!("/api/p/{project}/worktrees/leftovers/remove"),
+            &Value::Object(body),
+        )
+        .map_err(|e| slow(e, "the deletion", "coord worktree leftovers"))?;
     say_all(call.inv, &leftover_lines(&out));
     Ok(())
 }
@@ -169,7 +183,9 @@ pub(super) fn remove(call: &mut Call<'_>) -> Outcome {
         "ownerEntry": owner_entry, "reason": reason_of(call)?, "by": by,
     });
     let project = project_of(call).to_owned();
-    let out = connect(call, false)?.post(&format!("/api/p/{project}/worktrees/remove"), &body)?;
+    let out = connect(call, false)?
+        .post(&format!("/api/p/{project}/worktrees/remove"), &body)
+        .map_err(|e| slow(e, "the removal", "coord worktree list"))?;
     let lines = if truthy(&out, "leftover") {
         vec![
             format!("{}.", cell(out.get("text"))),
@@ -194,14 +210,17 @@ pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
     let by = asker(call)?;
     let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
     let project = project_of(call).to_owned();
-    let out = connect(call, false)?.post(&format!("/api/p/{project}/worktrees/prune"), &body)?;
+    let out = connect(call, false)?
+        .post(&format!("/api/p/{project}/worktrees/prune"), &body)
+        .map_err(|e| slow(e, "the prune", "coord worktree list"))?;
     call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
     Ok(())
 }
 
 /// `coord worktree release <id|path> [--reason "..."]`: the thread no longer needs it. Argus
-/// checks that nothing uses it and nothing is lost, then removes it at once (the branch too when
-/// merged); anything else is refused with the reason.
+/// checks that nothing uses it and nothing is lost, files the removal (the branch too when merged)
+/// as a request and answers at once with its id (`R-n: Argus removes it now; the result comes to
+/// your inbox`); anything else is refused with the reason.
 pub(super) fn release(call: &mut Call<'_>) -> Outcome {
     let id = id_arg(
         call.positional.first(),
@@ -210,7 +229,36 @@ pub(super) fn release(call: &mut Call<'_>) -> Outcome {
     let by = asker(call)?;
     let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
     let project = project_of(call).to_owned();
-    let out = connect(call, false)?.post(&format!("/api/p/{project}/worktrees/release"), &body)?;
-    say_all(call.inv, &removed_lines(&out));
+    let out = connect(call, false)?
+        .post(&format!("/api/p/{project}/worktrees/release"), &body)
+        .map_err(|e| slow(e, "the removal", "coord worktree requests"))?;
+    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_timeout_says_the_work_may_still_run_and_a_refused_connection_says_not_running() {
+        let late = slow(
+            ClientError::Timeout(120),
+            "the removal",
+            "coord worktree requests",
+        );
+        assert_eq!(
+            late.to_string(),
+            "the dashboard did not answer in time (120 s): the removal may still be running; check `coord worktree requests`"
+        );
+        let down = slow(
+            ClientError::down(Some("ECONNREFUSED")),
+            "the removal",
+            "coord worktree requests",
+        );
+        assert_eq!(
+            down.to_string(),
+            "the dashboard is not running (dashboard start): ECONNREFUSED"
+        );
+    }
 }

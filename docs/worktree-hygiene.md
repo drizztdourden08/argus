@@ -88,8 +88,9 @@ The numbers are in the worktrees meta of the project (`listed`, `runningAgents`,
 - `coord worktree keep <id|path> --clear` ends the keep.
 - `coord worktree release <id|path> [--reason "..."]` says the thread no longer needs it. After a
   fresh scan Argus checks that nothing holds it and that removing it is safe (not the keep) and
-  removes it at once through the same removal, the branch too when merged. Anything that is not
-  safe is refused with the reason. Route: `POST /api/p/:key/worktrees/release {id, reason?, by}`.
+  answers at once with a removal request of the thread (`R-n`); the project's request worker
+  looks again, removes it through the same removal (the branch too when merged) and the result
+  comes to the thread's inbox. Anything that is not safe is refused with the reason. Route: `POST /api/p/:key/worktrees/release {id, reason?, by}`.
 
 ## The config
 
