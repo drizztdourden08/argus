@@ -183,17 +183,21 @@ impl Service {
             .reason
             .get_or_insert_with(|| format!("released by {thread}"));
         let out = self.remove(&asked)?;
+        self.remember_release(&input.project, &fact, &thread, &out);
+        Ok(out)
+    }
+
+    fn remember_release(&self, project: &str, fact: &Fact, thread: &str, out: &RemoveOutcome) {
         let at = iso_from_ms(self.now());
-        self.with_hygiene(&input.project, |memory| {
+        self.with_hygiene(project, |memory| {
             memory.removed_one(RemovedDoc {
                 id: fact.id.clone(),
                 path: fact.path.clone(),
                 branch: fact.branch.clone(),
-                thread: Some(thread.clone()),
+                thread: Some(thread.to_string()),
                 at,
                 text: out.text.clone(),
             });
         });
-        Ok(out)
     }
 }

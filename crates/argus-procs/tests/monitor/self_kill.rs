@@ -148,69 +148,73 @@ fn named(pid: u32, name: &'static str, cmd: &'static str, path: &'static str) ->
 }
 
 fn protected_rows() -> Vec<ProcRow> {
-    let blank = ProcRow {
-        cmd: String::new(),
-        path: None,
-        cwd: None,
-        ..named(5009, "x.exe", "", "")
-    };
-    vec![
-        named(
+    let named_rows = [
+        (
             5001,
             "claude.exe",
             "claude --resume",
             "C:\\claude\\claude.exe",
         ),
-        named(
+        (
             5002,
             "node.exe",
             "node C:/npm/@anthropic-ai/claude-code/cli.js",
             "C:\\nvm4w\\nodejs\\node.exe",
         ),
-        named(
+        (
             77,
             "argus.exe",
             "X:\\argus\\argus.exe serve",
             "X:\\argus\\argus.exe",
         ),
-        named(
+        (
             78,
             "argus.exe",
             "X:\\argus\\argus.exe tray",
             "X:\\argus\\argus.exe",
         ),
-        named(
+        (
             5003,
             "argus.exe",
             "C:\\argus\\argus.exe mcp alpha",
             "C:\\argus\\argus.exe",
         ),
-        named(
+        (
             5004,
             "svchost.exe",
             "svchost -k netsvcs",
             "C:\\Windows\\System32\\svchost.exe",
         ),
-        named(
+        (
             5005,
             "explorer.exe",
             "explorer",
             "C:\\Windows\\explorer.exe",
         ),
-        named(
+        (
             5006,
             "conhost.exe",
             "conhost 0x4",
             "C:\\Windows\\System32\\conhost.exe",
         ),
-        mine(5007, 100, "X:\\beta\\app"),
-        proc(Spec {
-            cmd: "node c:/tools/run.js",
-            cwd: Some("C:\\Users\\me"),
-            ..Spec::new(5008)
-        }),
-        blank,
-    ]
+    ];
+    let mut rows: Vec<ProcRow> = named_rows
+        .into_iter()
+        .map(|(pid, name, cmd, path)| named(pid, name, cmd, path))
+        .collect();
+    rows.push(mine(5007, 100, "X:\\beta\\app"));
+    rows.push(proc(Spec {
+        cmd: "node c:/tools/run.js",
+        cwd: Some("C:\\Users\\me"),
+        ..Spec::new(5008)
+    }));
+    rows.push(ProcRow {
+        cmd: String::new(),
+        path: None,
+        cwd: None,
+        ..named(5009, "x.exe", "", "")
+    });
+    rows
 }
 
 fn protected_cases() -> Vec<(u32, String)> {
