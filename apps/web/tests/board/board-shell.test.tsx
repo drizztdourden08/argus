@@ -35,11 +35,11 @@ describe('the board header', () => {
   it('counts the worktrees against the running agents and warns when there are more than two beyond', async () => {
     await open('/p/rotp/', { listed: 4, runningAgents: 2 });
     const calm = await screen.findByText('worktrees 4 / running agents 2');
-    expect(calm.getAttribute('title')).not.toContain('some are not cleaned');
+    expect(calm.closest('[title]')?.getAttribute('title')).not.toContain('some are not cleaned');
     cleanup();
     await open('/p/rotp/', { listed: 5, runningAgents: 2 });
     const over = await screen.findByText('worktrees 5 / running agents 2');
-    expect(over.getAttribute('title')).toContain('some are not cleaned');
+    expect(over.closest('[title]')?.getAttribute('title')).toContain('some are not cleaned');
   });
 
   it('shows no worktree counter before the worktrees are counted', async () => {

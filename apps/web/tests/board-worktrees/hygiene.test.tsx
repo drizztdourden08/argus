@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { HOUR, MIN, ago, metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
-import { findRow, text, titleOf } from './wt-dom';
+import { findRow, rowOf, text, titleOf } from './wt-dom';
 
 cleanAfterEach();
 
@@ -40,7 +40,7 @@ describe('the worktree hygiene on the Worktrees tab', () => {
   it('never shows the three day "active" state: the hygiene state is the state', async () => {
     await mountTab({ docs: docs(), meta: metaDoc() });
     await findRow('a');
-    expect(screen.queryByText('active')).toBeNull();
+    for (const name of ['a', 'b', 'c', 'd', 'e', 'f']) expect(within(rowOf(name)).queryByText('active')).toBeNull();
   });
 
   it('keeps the staleness tag only on a row in review or without a hygiene state', async () => {

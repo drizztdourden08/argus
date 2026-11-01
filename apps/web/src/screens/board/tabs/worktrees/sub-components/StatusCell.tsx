@@ -2,6 +2,7 @@
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
 import { hygieneTag, jobText, leftoverFlags, STATUS_LABEL, STATUS_LOOK, statusShown, statusTip, UNKNOWN_STATUS_LOOK, WARNING_LOOK } from '../model';
 import type { CellProps } from '../worktrees.type';
+import { RowFlagTags } from './RowFlagTags';
 
 const StatusCell = (props: CellProps) => {
   const { row } = props;
@@ -10,9 +11,7 @@ const StatusCell = (props: CellProps) => {
     <Flex direction="column" gap="2xs">
       <Flex gap="xs" align="center" wrap>
         {statusShown(row) && <Tag {...(STATUS_LOOK[row.status] ?? UNKNOWN_STATUS_LOOK)} title={statusTip(row)}>{STATUS_LABEL[row.status] ?? row.status}</Tag>}
-        {row.main && <Tag title="The repository's own checkout, not a linked worktree">main</Tag>}
-        {row.locked && <Tag title={`Locked: ${String(row.locked)}`}>locked</Tag>}
-        {row.detached && <Tag title="HEAD is detached">detached</Tag>}
+        <RowFlagTags row={row} />
         {hygiene && <Tag {...hygiene.look} title={hygiene.tip}>{hygiene.text}</Tag>}
         {leftoverFlags(row).map((flag) => <Tag key={flag.text} {...WARNING_LOOK} title={flag.tip}>{flag.text}</Tag>)}
       </Flex>
