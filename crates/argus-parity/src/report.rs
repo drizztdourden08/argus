@@ -1,5 +1,6 @@
 //! The result of a comparison and how it is told: per route equal, differs (with the first paths
 //! that differ) or missing on one side, a summary line, and the exit code.
+// test-tag: critical
 
 use serde_json::{Value, json};
 

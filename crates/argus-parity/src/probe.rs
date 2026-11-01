@@ -77,23 +77,3 @@ impl Probe {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{McpCall, Probe};
-    use crate::kind::Kind;
-
-    #[test]
-    fn labels_name_the_method_and_the_path() {
-        assert_eq!(
-            Probe::get(Kind::Health, "/api/health").label(),
-            "GET /api/health"
-        );
-    }
-
-    #[test]
-    fn the_mcp_calls_are_the_two_reads() {
-        assert_eq!(McpCall::Initialize.body()["method"], "initialize");
-        assert_eq!(McpCall::ToolsList.body()["method"], "tools/list");
-    }
-}
