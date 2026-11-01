@@ -7,7 +7,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 24] = [
+pub const WAKE_REASONS: [&str; 25] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -30,6 +30,7 @@ pub const WAKE_REASONS: [&str; 24] = [
     "kanban-stale",
     "process-alert",
     "worktree-stale",
+    "worktree-review",
     "launcher-stale",
     "launcher-master-missing",
 ];
