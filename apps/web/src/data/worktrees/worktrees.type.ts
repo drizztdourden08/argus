@@ -70,7 +70,32 @@ interface Worktree {
   request?: WorktreeAsk | null;
   leftover?: LeftoverFacts | null;
   job?: WorktreeJob | null;
+  hygiene?: WorktreeHygiene | null;
   error?: string | null;
+}
+
+interface WorktreeHygiene {
+  state: string;
+  why?: string | null;
+  agent?: string | null;
+  thread?: string | null;
+  since?: string | null;
+  goesAt?: string | null;
+}
+
+interface RemovedWorktree {
+  id: string;
+  path: string;
+  branch?: string | null;
+  thread?: string | null;
+  at: string;
+  text: string;
+}
+
+interface HygieneMeta {
+  on: boolean;
+  graceMs: number;
+  removed: RemovedWorktree[];
 }
 
 interface WorktreeRule {
@@ -128,6 +153,7 @@ interface WorktreesMeta {
   leftoverOld?: LeftoverOld | null;
   jobs?: BatchJob[];
   requests?: WorktreeRequest[];
+  hygiene?: HygieneMeta | null;
 }
 
 interface WorktreeAskInput {
@@ -181,6 +207,6 @@ interface BatchResult {
 }
 
 export type {
-  BackupInfo, BatchJob, BatchResult, LeftoverInput, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeJob, WorktreeRequest,
-  WorktreeRule, WorktreesMeta,
+  BackupInfo, BatchJob, BatchResult, HygieneMeta, LeftoverInput, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeHygiene,
+  WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };
