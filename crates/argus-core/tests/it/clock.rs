@@ -1,5 +1,7 @@
-///! K1: the short age text.
+//! K1: the short age text.
+
 // test-tag: critical
+
 use argus_core::clock::age_text;
 
 #[test]

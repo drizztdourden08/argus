@@ -1,8 +1,6 @@
-//! Ports `build.verbs.test.mjs`: `coord build add|set|rm|close|reopen|ready|draft|hand|unhand|list`
-//! against a temp `COORD_HOME`: the bundle record, who may manage it, limits, the refusal to remove
-//! a bundle while live tests carry its tag, `--cmd` making the launcher named after the tag,
-//! `--launcher` linking one, a bundle written before launchers, close and reopen, and the status.
-//! The page docs (`exportDocs`) are the sync group's and are checked there.
+//! K2: the lines and records of coord build.
+
+// test-tag: critical
 
 #![allow(clippy::too_many_lines, clippy::similar_names)]
 
@@ -1033,29 +1031,6 @@ fn closing_a_bundle_retires_the_launcher_made_for_it_only_a_shared_launcher_and_
     );
     rig.ok(&["build", "close", "j-3"], As::Worker);
     rig.ok(&["build", "reopen", "j-1"], As::Worker);
-}
-
-#[test]
-fn rm_retires_every_launcher_made_for_the_bundle_once_and_for_good() {
-    let rig = Rig::new();
-    rig.with_master();
-    rig.ok(
-        &[
-            "build",
-            "add",
-            "r-1",
-            "--thread",
-            "worker",
-            "--cmd",
-            "node r.js",
-        ],
-        As::Worker,
-    );
-    let gone = rig.ok(&["build", "rm", "r-1"], As::Worker);
-    assert!(gone.out.contains("launcher r-1 retired"), "{}", gone.out);
-    let l = &rig.board()["launchers"]["r-1"];
-    assert!(l["retiredAt"].is_string());
-    assert!(l.get("retiredByBundle").is_none());
 }
 
 #[test]

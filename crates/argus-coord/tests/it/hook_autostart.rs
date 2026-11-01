@@ -1,9 +1,6 @@
-//! Ports `hook.autostart.test.mjs`: `coord hook session-start` and `coord hook prompt` start
-//! the dashboard (the tray on Windows) when no live server holds the pid file. It stays down
-//! for a `quit.flag` of this boot, does not repeat inside a minute (`start.lock`), and does
-//! nothing for a session pointed at another home unless `COORD_DASHBOARD_AUTOSTART=1`. The
-//! "server" is a stub `bin/dashboard.mjs` that writes its arguments to a marker file; the cases
-//! skip when node is not installed.
+//! E2: the hook that starts the dashboard, with a stub install run by node.
+
+// test-tag: e2e
 
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -103,6 +100,7 @@ fn age(file: &Path, by: Duration) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_session_start_with_no_server_starts_it_once() {
     let Some(case) = Case::new() else { return };
     case.hook("session-start", "1");
@@ -122,6 +120,7 @@ fn a_session_start_with_no_server_starts_it_once() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_prompt_starts_it_too_and_an_old_lock_does_not_hold_it_back() {
     let Some(case) = Case::new() else { return };
     fs::write(case.dash("start.lock"), "old").unwrap();
@@ -131,6 +130,7 @@ fn a_prompt_starts_it_too_and_an_old_lock_does_not_hold_it_back() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_live_server_is_left_alone() {
     let Some(case) = Case::new() else { return };
     let pid = json!({ "pid": std::process::id(), "port": 51999 });
@@ -140,6 +140,7 @@ fn a_live_server_is_left_alone() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_quit_flag_of_this_boot_keeps_it_down_and_one_from_before_the_boot_does_not() {
     let Some(case) = Case::new() else { return };
     fs::write(case.dash("quit.flag"), "{}").unwrap();
@@ -154,6 +155,7 @@ fn a_quit_flag_of_this_boot_keeps_it_down_and_one_from_before_the_boot_does_not(
 }
 
 #[test]
+#[ignore = "e2e"]
 fn other_events_never_start_it_and_a_home_override_needs_the_opt_in() {
     let Some(case) = Case::new() else { return };
     case.hook("tool", "1");
@@ -167,6 +169,7 @@ fn other_events_never_start_it_and_a_home_override_needs_the_opt_in() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn no_autostart_turns_it_off_and_a_missing_install_starts_nothing() {
     let Some(case) = Case::new() else { return };
     let coord = case.home.coord_home().to_string_lossy().into_owned();

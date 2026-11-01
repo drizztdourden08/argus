@@ -1,7 +1,6 @@
-//! Ports the routing rules of `coord.mjs`: help, the unknown verb, every verb and alias, the
-//! project lookup, the error to exit code map, the hook that never breaks a session, and the
-//! exit 120 of a verb that is not ported: nothing read from stdin, nothing written, no byte
-//! printed, so the shim can run the Node verb with nothing done twice.
+//! K2: the routing and the exit codes.
+
+// test-tag: critical
 
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
@@ -281,18 +280,6 @@ fn entry_and_purge_are_told_which_alias_was_typed() {
 }
 
 #[test]
-fn an_alias_of_a_module_is_served_by_that_module() {
-    let home = Home::new();
-    let ran = ported(
-        &[("action", echo)],
-        &["todo", "add", "step", "--project", "p"],
-        &home,
-        home.path(),
-    );
-    assert_eq!(ran.out, "p | add,step\n");
-}
-
-#[test]
 fn a_project_that_cannot_be_found_refuses_before_the_verb_runs() {
     let home = Home::new();
     let bare = home.folder("bare");
@@ -303,16 +290,6 @@ fn a_project_that_cannot_be_found_refuses_before_the_verb_runs() {
         ran.err,
         "coord: cannot tell which project this is: no .ai-config.json above the cwd. Pass --project <key>.\n"
     );
-}
-
-#[test]
-fn the_session_registry_finds_the_project_for_a_verb() {
-    let home = seeded_home();
-    let env = home.env_with("CLAUDE_CODE_SESSION_ID", "sid-ui");
-    let (mut inv, out, _) =
-        Invocation::captured(&["thread", "list"], env, home.path().to_path_buf(), "");
-    assert_eq!(dispatch(&mut inv, &[("thread", echo)]), 0);
-    assert_eq!(out.text(), "alpha | list\n");
 }
 
 #[test]

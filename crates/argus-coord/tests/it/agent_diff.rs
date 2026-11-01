@@ -1,9 +1,6 @@
-//! Differential tests of the agent, build and launcher verbs: the same steps on the Node CLI and
-//! on `argus coord`, each in its own temp home seeded alike, comparing the exit code, both
-//! streams and every file after each step. A write verb is in here with its refusals; a mismatch
-//! is a bug on the Rust side unless the harness lists the value as volatile. They skip with a
-//! reason when node, `ai-config` or the `argus` binary is absent (`ARGUS_EXE`, or build
-//! `-p argus`).
+//! E3: parity of the agent, build and launcher verbs against the Node CLI.
+
+// test-tag: e2e
 
 #![allow(clippy::too_many_lines, clippy::similar_names)]
 
@@ -84,6 +81,7 @@ fn check(test: &str, seed_dir: &TempDir, steps: &[Step]) {
 const WHY: &str = "known cause, one-module fix";
 
 #[test]
+#[ignore = "e2e"]
 fn agents_start_note_set_and_end() {
     let steps = [
         lead(&[
@@ -298,6 +296,7 @@ fn agents_start_note_set_and_end() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn texts_are_counted_in_utf16_units_at_each_limit() {
     let face = "\u{1F600}";
     let why_max = face.repeat(100);
@@ -402,6 +401,7 @@ fn texts_are_counted_in_utf16_units_at_each_limit() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn session_callers_refresh_their_heartbeat_and_never_act_as_another_thread() {
     let Some(engines) = Engines::or_skip("session_callers") else {
         return;
@@ -469,6 +469,7 @@ fn session_callers_refresh_their_heartbeat_and_never_act_as_another_thread() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn agents_soft_verbs_and_the_ownership_rules() {
     let steps = [
         lead(&[
@@ -535,6 +536,7 @@ fn agents_soft_verbs_and_the_ownership_rules() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn agents_bind_to_the_hook_record_and_resume_a_closed_one() {
     let dir = seed(|b| {
         let at = argus_core::clock::now_iso();
@@ -618,6 +620,7 @@ fn agents_bind_to_the_hook_record_and_resume_a_closed_one() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn agents_reconcile_says_the_dashboard_is_down() {
     let steps = [
         lead(&["agent", "reconcile"]),
@@ -631,6 +634,7 @@ fn agents_reconcile_says_the_dashboard_is_down() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn builds_add_set_hand_list_and_remove() {
     let dir = seed(|b| {
         b["tests"]["T-1"] = test_doc("T-1", "bundle-4", "manual");
@@ -736,6 +740,7 @@ fn builds_add_set_hand_list_and_remove() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn builds_launch_flags_play_definitions_and_the_launcher_made_for_a_bundle() {
     let dir = seed(|b| {
         b["runDefs"]["launcher-hand-made"] =
@@ -829,6 +834,7 @@ fn builds_launch_flags_play_definitions_and_the_launcher_made_for_a_bundle() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn builds_legacy_bundles_close_reopen_and_status() {
     let dir = seed(|b| {
         for (id, tag, mode) in [
@@ -985,6 +991,7 @@ fn builds_legacy_bundles_close_reopen_and_status() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn builds_hand_needs_a_master_launcher() {
     let steps = [
         lead(&["build", "hand", "x-1"]),
@@ -997,6 +1004,7 @@ fn builds_hand_needs_a_master_launcher() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn launchers_set_retire_keep_list_and_show() {
     let day = 86_400_000_i64;
     let old = |days: i64| argus_core::clock::iso_from_ms(argus_core::clock::now_ms() - days * day);

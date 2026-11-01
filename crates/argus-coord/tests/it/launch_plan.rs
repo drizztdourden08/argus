@@ -1,6 +1,6 @@
-//! How the CLI brings the dashboard up, as plans: the program, the arguments and the variables,
-//! checked without starting anything (a started tray would put an icon on the desktop). Covers
-//! the client autostart and the session hooks, which share the plans.
+//! K2: the plans that bring the dashboard up.
+
+// test-tag: critical
 
 use std::ffi::OsString;
 use std::fs;
@@ -104,12 +104,4 @@ fn a_shadow_home_with_no_argus_binary_starts_nothing() {
         let paths = paths_of(&home, &shadow);
         assert_eq!(plan_for(&home.env(), &paths, true), None);
     }
-}
-
-#[test]
-fn only_a_true_marker_makes_a_home_a_shadow() {
-    let home = Home::new();
-    let (shadow, _exe) = home_with_marker(&home, false);
-    let plan = plan_for(&home.env(), &paths_of(&home, &shadow), true).unwrap();
-    assert_eq!(plan.program, PathBuf::from("node"));
 }

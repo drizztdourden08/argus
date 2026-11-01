@@ -1,8 +1,6 @@
-//! The board side of the session hooks (`session-start`, `prompt`, `tool`, `stop`), the cases
-//! the Node suites cover through the other hook files: messages handed over once and marked
-//! delivered, the stop that blocks with them, the heartbeat and activity, the adoption of an
-//! unknown session as a placeholder, a retired session left alone, and the inputs that make a
-//! hook do nothing (no folder, `null`, an unknown event).
+//! K1: the board side of the session hooks.
+
+// test-tag: critical
 
 use crate::hook_support::{Fixture, LEAD, UI, ago, hook_with};
 use argus_coord::Env;

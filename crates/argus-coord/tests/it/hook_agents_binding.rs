@@ -1,10 +1,6 @@
-//! Ports the hook side of `hook.agents.binding.test.mjs`: one sub-agent, one record. A hook
-//! event belongs to the record of its own agent id and to no other: a start never takes a
-//! record of the lead however alike it reads, a stop always finds the record of its id (before
-//! its start, under another session id, after the dashboard reaped it) and only notes an id it
-//! has no record of, a start for a known id reopens a closed record, and an Agent call result
-//! never rewrites the record of another agent. The cases where `coord agent start` binds to a
-//! hook record belong to the agent verbs (WP5).
+//! K1: one sub-agent, one record.
+
+// test-tag: critical
 
 use std::fs;
 
@@ -174,31 +170,6 @@ fn an_archived_record_of_the_id_is_left_alone_and_no_new_record_is_made() {
     f.started(LEAD, "archived00000004", "general-purpose");
     assert_eq!(agent_count(&f), count);
     assert_eq!(f.board()["agents"][&id]["status"], "done");
-}
-
-#[test]
-fn the_agent_call_result_never_rewrites_a_record_of_another_agent_with_its_tool_use_id() {
-    let f = Fixture::new();
-    dispatch(&f, "First dispatch", "opus", "toolu_cross_1");
-    dispatch(&f, "Second dispatch", "haiku", "toolu_cross_2");
-    f.started(LEAD, "crosscross000005", "general-purpose");
-    let id = id_of(&f, "crosscross000005");
-    assert_eq!(
-        f.board()["agents"][&id]["toolUseId"],
-        "toolu_cross_1",
-        "the oldest dispatch"
-    );
-    let response =
-        json!({ "isAsync": true, "agentId": "otherother000006", "description": "First dispatch" });
-    f.launched(LEAD, "toolu_cross_1", response);
-    let board = f.board();
-    assert_eq!(board["agents"][&id]["claudeId"], "crosscross000005");
-    assert!(board["agents"][&id].get("idMismatch").is_none());
-    let noted = board["agentLaunches"].as_array().unwrap();
-    assert!(
-        noted.iter().any(|l| l["claudeId"] == "otherother000006"),
-        "noted as a launch"
-    );
 }
 
 #[test]

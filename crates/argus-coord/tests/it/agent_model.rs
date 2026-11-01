@@ -1,7 +1,6 @@
-//! Ports `agent.model.test.mjs`: `coord agent start|set|list|show` against a temp `COORD_HOME`:
-//! `--model` and `--why` are both required, the 12 char minimum and 200 char limit, opus needs a
-//! category (or "owner asked: ..."), an opus chore or test needs an owner request, `set --model`
-//! needs a new `--why`, the check-in time, and the list column and show output.
+//! K1: the agent model rules, the why and the check-in time.
+
+// test-tag: critical
 
 #![allow(clippy::too_many_lines, clippy::similar_names)]
 

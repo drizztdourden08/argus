@@ -1,7 +1,6 @@
-//! Ports the project and session lookup of `project.mjs` (`findProject`, `projectOfSession`), as
-//! the cases of `hook.guard` and `lead.verbs` rely on it: `--project`, `COORD_PROJECT`, the board
-//! holding a live thread with this session id, the nearest `.ai-config.json`, a `.coord-project`
-//! marker, and the refusal when nothing names a project.
+//! K1: how the project of a call is found.
+
+// test-tag: critical
 
 use std::fs;
 

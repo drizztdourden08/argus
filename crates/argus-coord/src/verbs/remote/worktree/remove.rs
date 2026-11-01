@@ -240,6 +240,7 @@ pub(super) fn release(call: &mut Call<'_>) -> Outcome {
     )
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

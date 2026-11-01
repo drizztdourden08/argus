@@ -1,10 +1,6 @@
-//! Ports `entry.context.test.mjs` (the CLI cases): every question or decision to the owner
-//! carries a context, and a decision carries 2 to 5 options. `coord ask|decide|notify|message|
-//! entry set` against a temp `COORD_HOME`: the refusals (no context, too short, too long, one
-//! option, six options), the accepted shapes, the context stored on the entry, clipped on
-//! information, edited with `entry set --context`. The case "the context reaches the page docs,
-//! and survives importing the owner answer" is the export and import of `argus-board`, ported in
-//! `crates/argus-board/tests/it/export_import.rs`.
+//! K2: the context and the options every owner entry carries.
+
+// test-tag: critical
 
 use crate::work_board::Work;
 use serde_json::json;
