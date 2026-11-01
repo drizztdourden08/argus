@@ -267,12 +267,12 @@ fn a_server_that_does_not_answer_is_the_down_error_with_its_cause() {
 fn silent() -> (u16, std::sync::mpsc::Sender<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
-    let (hold, held) = std::sync::mpsc::channel::<()>();
+    let (release, waiting) = std::sync::mpsc::channel::<()>();
     thread::spawn(move || {
         let (_stream, _) = listener.accept().unwrap();
-        let _ = held.recv();
+        let _ = waiting.recv();
     });
-    (port, hold)
+    (port, release)
 }
 
 #[test]
