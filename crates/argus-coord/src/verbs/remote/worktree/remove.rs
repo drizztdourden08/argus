@@ -202,7 +202,7 @@ pub(super) fn remove(call: &mut Call<'_>) -> Outcome {
 }
 
 /// Posts `{ id, reason, by }` to `/worktrees/<action>` and says the one line Argus answers with.
-fn file_request(call: &mut Call<'_>, id: Value, action: &str, what: &str, check: &str) -> Outcome {
+fn file_request(call: &mut Call<'_>, id: &Value, action: &str, what: &str, check: &str) -> Outcome {
     let by = asker(call)?;
     let body = json!({ "id": id, "reason": reason_of(call)?, "by": by });
     let project = project_of(call).to_owned();
@@ -219,7 +219,7 @@ pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
         Some(typed) => json!(target_of(typed)?.0),
         None => Value::Null,
     };
-    file_request(call, id, "prune", "the prune", "coord worktree list")
+    file_request(call, &id, "prune", "the prune", "coord worktree list")
 }
 
 /// `coord worktree release <id|path> [--reason "..."]`: the thread no longer needs it. Argus
@@ -233,7 +233,7 @@ pub(super) fn release(call: &mut Call<'_>) -> Outcome {
     )?;
     file_request(
         call,
-        json!(id),
+        &json!(id),
         "release",
         "the removal",
         "coord worktree requests",

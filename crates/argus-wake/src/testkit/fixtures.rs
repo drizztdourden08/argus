@@ -57,7 +57,6 @@ pub fn thread(id: &str, role: &str, extra: &Value) -> Value {
 pub type SentLookup = Box<dyn Fn(&str, &str, &str, &str) -> i64>;
 
 /// A wakes table that never sent anything.
-#[must_use]
 pub fn never_sent() -> SentLookup {
     Box::new(|_, _, _, _| 0)
 }
