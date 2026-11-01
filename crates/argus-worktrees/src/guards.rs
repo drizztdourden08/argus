@@ -452,4 +452,32 @@ mod tests {
             ErrorCode::Forbidden
         );
     }
+
+    fn busy(case_insensitive: bool, path: &str, cwd: &str) -> Option<ProcInfo> {
+        let dir = tempfile::tempdir().unwrap();
+        let root = crate::testkit::root_of(&dir);
+        let h = crate::testkit::Harness::new(&root, Vec::new(), |o| {
+            o.case_insensitive = case_insensitive;
+        });
+        *h.procs.0.lock().unwrap() = vec![ProcInfo {
+            pid: 4242,
+            name: "pwsh.exe".into(),
+            cwd: Some(cwd.into()),
+            ..ProcInfo::default()
+        }];
+        h.svc.busy_by(path, false, "removed").unwrap()
+    }
+
+    #[test]
+    fn a_working_folder_inside_the_folder_makes_it_busy_and_the_refusal_names_the_process() {
+        let path = "X:/p/.claude/worktrees/agent-ab12";
+        let user = busy(true, path, "x:\\P\\.claude\\Worktrees\\Agent-AB12\\src").unwrap();
+        assert_eq!(user.pid, 4242);
+        let text = Service::in_use(path, &user, "removed").message;
+        assert!(text.contains("is in use by pwsh.exe 4242"), "{text}");
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees\\agent-ab12").is_some());
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees\\agent-ab12-other").is_none());
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees").is_none());
+        assert!(busy(false, path, "X:/P/.claude/worktrees/AGENT-AB12").is_none());
+    }
 }
