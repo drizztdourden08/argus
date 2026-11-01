@@ -52,6 +52,21 @@ impl Rig {
         seed: impl FnOnce(&Path, &Path),
         tweak: Option<Tweak>,
     ) -> Rig {
+        Rig::start_all(extra, seed, tweak, false).await
+    }
+
+    /// [`Rig::start`] with the wake engine in the test's hands: no timer, a manual clock, moved by
+    /// `rig.t.advance_wakes(ms)`.
+    pub async fn start_manual_wakes(extra: Value, seed: impl FnOnce(&Path, &Path)) -> Rig {
+        Rig::start_all(extra, seed, None, true).await
+    }
+
+    async fn start_all(
+        extra: Value,
+        seed: impl FnOnce(&Path, &Path),
+        tweak: Option<Tweak>,
+        manual_wakes: bool,
+    ) -> Rig {
         let (coord, dir) = (
             TempDir::new().expect("coord"),
             TempDir::new().expect("folder"),
@@ -61,6 +76,7 @@ impl Rig {
             config: quiet(&extra, tweak.is_some()),
             coord_home: Some(coord.path().to_path_buf()),
             tweak,
+            manual_wakes,
             ..TestOptions::default()
         };
         Rig {
