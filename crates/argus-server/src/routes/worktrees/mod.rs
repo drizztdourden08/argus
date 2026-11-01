@@ -6,7 +6,7 @@
 //! - `POST /api/p/:key/worktrees/prune {id?, reason?, by?}` prunes one gone worktree, or every
 //!   gone one of the project
 //! - `POST /api/p/:key/worktrees/release {id, reason?, by}` a thread's release: after a fresh
-//!   scan, nothing may use it and nothing may be lost, then the removal (the branch too when
+//!   look at that one worktree (no scan of the project, so it never waits for a running removal), nothing may use it and nothing may be lost, then the removal (the branch too when
 //!   merged) is filed as a request of the thread and answered at once: `{id, status, text,
 //!   request}`; the project's worker removes it and the result comes to the thread's inbox
 //!   (`docs/worktree-hygiene.md`)

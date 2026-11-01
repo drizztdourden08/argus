@@ -14,6 +14,7 @@ use crate::git::Git;
 use crate::jobs::{Job, JobDoc};
 use crate::measure::{Bounds, Leftover};
 use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WorktreeStore};
+use crate::probe::{Fingerprint, SAFETY_SCAN_MS};
 use crate::queue::Queue;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
@@ -28,6 +29,8 @@ use std::sync::{Arc, Mutex, MutexGuard};
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 pub struct Options {
+    /// The safety scan: every worktree is read with git again this often, whatever the fingerprints say (`scanMs`,
+    /// `SAFETY_SCAN_MS` by default). Between safety scans git runs only for a worktree whose fingerprint changed.
     pub scan_ms: i64,
     pub repeat_ms: i64,
     pub live_ms: i64,
@@ -62,7 +65,7 @@ pub struct Options {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            scan_ms: 10 * 60_000,
+            scan_ms: SAFETY_SCAN_MS,
             repeat_ms: 24 * 3_600_000,
             live_ms: 20_000,
             many_at: 12,
@@ -107,6 +110,12 @@ pub struct ScanState {
     pub facts: Vec<Fact>,
     pub listed: HashSet<String>,
     pub error: Option<String>,
+    /// When a scan last read every worktree with git (a scan that kept some facts leaves it as it was).
+    pub full_ms: i64,
+    /// How the rules sat on disk at this scan (`probe::shape_of`).
+    pub shape: String,
+    /// The fingerprint of each candidate folder when it was read, by path.
+    pub prints: HashMap<String, Fingerprint>,
 }
 
 pub struct Measured {

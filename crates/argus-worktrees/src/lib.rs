@@ -42,6 +42,8 @@ mod modules;
 mod parse;
 mod paths;
 mod ports;
+mod probe;
+mod probing;
 mod progress;
 mod prune;
 mod queue;

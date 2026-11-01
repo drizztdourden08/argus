@@ -658,6 +658,31 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
 }
 
 #[test]
+fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
+    let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
+    let id = h.id_of(&fx.path("agent-a1"));
+    let turn = h.svc.one_at_a_time();
+    let svc = h.svc.clone();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let input = RemoveInput::new("alpha", &id, Caller::Thread("lead".into()));
+        let _ = sender.send(svc.release(&input));
+    });
+    let answered = receiver.recv_timeout(std::time::Duration::from_secs(30));
+    drop(turn);
+    let queued = answered
+        .expect("release answered while the turn was held")
+        .unwrap();
+    assert!(
+        queued.text.contains("Argus removes it now"),
+        "{}",
+        queued.text
+    );
+    h.svc.requests_idle();
+    assert!(!exists_itself(&fx.path("agent-a1")));
+}
+
+#[test]
 fn a_junction_inside_is_removed_as_a_link_and_its_target_stays() {
     let fx = Fixture::new();
     let path = fx.add("agent-a1");

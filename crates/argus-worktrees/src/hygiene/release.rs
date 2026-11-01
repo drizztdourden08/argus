@@ -6,10 +6,12 @@ use super::memory::{Refused, RemovedDoc};
 use crate::clock::iso_from_ms;
 use crate::error::{ErrorCode, Result, WtError};
 use crate::fact::Fact;
+use crate::inspect::{ScanCtx, inspect_dir};
 use crate::paths::{clean_path, is_worktree_id, worktree_id};
 use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::requests::{Mode, Outcome, Queued, RequestInput, RequestRec, Target};
+use crate::rule::Rule;
 use crate::service::Service;
 
 /// The code of a target the look again found no longer released.
@@ -149,11 +151,37 @@ impl Service {
         }
     }
 
-    /// `coord worktree release <id|path>`: the thread no longer needs the worktree. After a fresh scan Argus checks
-    /// that nothing uses it and that removing it loses nothing, then files the removal as a request of the thread
-    /// (the branch too when merged) and answers at once: the removal takes minutes, so the worker carries it out and
-    /// the result comes to the thread's inbox. Anything that is not safe is refused: the thread removes it itself if it
-    /// means to.
+    /// The worktree as it is now, read with git on this thread. It does not take the turn of scans and removals: a
+    /// release must answer while a removal request runs (a scan of the project would wait for it, minutes). The
+    /// request worker scans and looks again right before the removal.
+    fn read_now(&self, listed: &Fact, rule: Option<&Rule>) -> Result<Fact> {
+        let Some(rule) = rule else {
+            return Ok(listed.clone());
+        };
+        let mut ctx = ScanCtx {
+            git: &self.deps.git,
+            fs: self.deps.fs.as_ref(),
+            lists: Vec::new(),
+            case_insensitive: self.ci(),
+        };
+        let now = inspect_dir(&listed.path, rule, &mut ctx);
+        match &now.error {
+            Some(why) => Err(WtError::new(
+                ErrorCode::GitFailed,
+                format!(
+                    "git could not read the state of {} ({why}), so Argus cannot tell whether work would be lost: nothing was done",
+                    listed.path
+                ),
+            )),
+            None => Ok(now),
+        }
+    }
+
+    /// `coord worktree release <id|path>`: the thread no longer needs the worktree. After a fresh look at that one
+    /// worktree (never a scan of the project: that would wait for a running removal) Argus checks that nothing uses it
+    /// and that removing it loses nothing, then files the removal as a request of the thread (the branch too when
+    /// merged) and answers at once: the removal takes minutes, so the worker carries it out and the result comes to the
+    /// thread's inbox. Anything that is not safe is refused: the thread removes it itself if it means to.
     pub fn release(&self, input: &RemoveInput) -> Result<Queued> {
         let Some(thread) = input.caller.thread().map(ToString::to_string) else {
             return Err(forbidden(
@@ -161,19 +189,19 @@ impl Service {
                     .to_string(),
             ));
         };
-        let _ = self.scan_now(&input.project);
-        let (board, fact) = self.listed_fact(input)?;
-        let rule = board.rules.iter().find(|r| r.id == fact.rule);
+        let (board, listed) = self.listed_fact(input)?;
+        let rule = board.rules.iter().find(|r| r.id == listed.rule);
         crate::guards::check_caller(&board, &input.caller, &Self::caller_rules(&board, rule))?;
-        if !Self::judged(&fact) {
+        if !Self::judged(&listed) {
             return Err(WtError::new(
                 ErrorCode::Conflict,
                 format!(
                     "{} is not a linked git worktree: release takes a worktree (coord worktree remove takes a leftover folder)",
-                    fact.path
+                    listed.path
                 ),
             ));
         }
+        let fact = self.read_now(&listed, rule)?;
         let runs = self.deps.store.live_runs();
         let look = Look {
             board: &board,

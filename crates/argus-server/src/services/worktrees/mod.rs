@@ -29,8 +29,9 @@ pub(crate) use publish::publish;
 pub struct WorktreesOptions {
     /// Run the scanner.
     pub enabled: bool,
-    /// Scan on timers: the first scan after `startDelayMs`, then every `scanMs`, the live check
-    /// every `liveMs`, and the rescans a removal or a change of rules asks for.
+    /// Scan on timers: the first scan after `startDelayMs`, then every `liveMs` the live check and
+    /// the look at the disk (a scan only of what changed, and of everything every `scanMs`), and the
+    /// rescans a removal or a change of rules asks for.
     pub timers: bool,
     /// Another way to run `git` than the command.
     pub git: Option<Arc<dyn GitExec>>,
