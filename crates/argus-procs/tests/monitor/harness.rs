@@ -85,6 +85,8 @@ pub struct Fake {
     pub acts: Mutex<Vec<Activity>>,
     pub warns: Mutex<Vec<String>>,
     pub published: Mutex<Option<(Vec<ProcDoc>, Option<Meta>)>>,
+    /// How many times the store was written.
+    pub writes: Mutex<usize>,
     pub killed: Mutex<Vec<u32>>,
     /// Each kill as (pid, tree, the descendants it was given).
     pub trees: Mutex<Vec<(u32, bool, Vec<u32>)>>,
@@ -140,6 +142,10 @@ impl Fake {
         lock(&self.published).clone()
     }
 
+    pub fn writes(&self) -> usize {
+        *lock(&self.writes)
+    }
+
     pub fn wipe(&self) {
         *lock(&self.published) = None;
     }
@@ -173,6 +179,7 @@ impl Sampler for Fake {
 impl ProcsStore for Fake {
     fn replace(&self, docs: &[ProcDoc], meta: Option<&Meta>) -> Result<(), String> {
         *lock(&self.published) = Some((docs.to_vec(), meta.cloned()));
+        *lock(&self.writes) += 1;
         Ok(())
     }
 }

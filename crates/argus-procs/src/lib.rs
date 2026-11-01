@@ -20,6 +20,7 @@ mod normalize;
 mod num;
 mod ports;
 mod project;
+mod publish;
 mod reaper;
 mod responder;
 mod rule;
@@ -54,6 +55,7 @@ pub use ports::{
     Activity, KillResult, Killer, Level, ProcsHost, ProcsStore, Responder, Sampler, WakeRequest,
 };
 pub use project::{ProjectFolders, ProjectRoot, normalize_roots};
+pub use publish::HEARTBEAT_MS;
 pub use reaper::{REAP_KIND, REAP_REASON, ReaperConfig};
 pub use responder::{NoResponder, PowerShellResponder};
 pub use rule::{Match, Rule};

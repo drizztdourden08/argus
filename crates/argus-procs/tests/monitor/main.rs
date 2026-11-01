@@ -4,6 +4,7 @@
 mod alerts;
 mod harness;
 mod kill;
+mod publish;
 mod reaper;
 mod rules;
 mod scope;

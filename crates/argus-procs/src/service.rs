@@ -7,6 +7,7 @@ use crate::error::ProcsError;
 use crate::killing::{KillOutcome, KillRequest, KillRuleOutcome, KillRuleRequest};
 use crate::matcher::CompiledRule;
 use crate::ports::{Killer, ProcsHost, ProcsStore, Responder, Sampler};
+use crate::publish::Published;
 use crate::reaper::ReaperState;
 use crate::rule::Rule;
 use crate::rulebook::{RuleBook, RuleChange};
@@ -81,6 +82,7 @@ pub(crate) struct Inner {
     pub engine: Mutex<Engine>,
     pub book: Mutex<RuleBook>,
     pub view: Mutex<View>,
+    pub published: Mutex<Published>,
 }
 
 pub(crate) fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -120,6 +122,7 @@ impl ProcsService {
             engine: Mutex::new(Engine::default()),
             book: Mutex::new(book),
             view: Mutex::new(View::default()),
+            published: Mutex::new(Published::default()),
         };
         Self {
             inner: Arc::new(inner),
@@ -188,7 +191,7 @@ impl ProcsService {
 
     /// Writes the docs again, after a hard resync wiped the scope.
     pub fn republish(&self) {
-        self.inner.publish();
+        self.inner.republish();
     }
 
     /// The rules in force.
