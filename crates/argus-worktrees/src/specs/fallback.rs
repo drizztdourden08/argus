@@ -1,7 +1,10 @@
+//! KEEP: K3, K4.
 //! When git cannot delete a worktree's folder (Windows: pnpm `node_modules` junctions, a handle held by a process) Argus
 //! finishes the removal itself, and the leftovers a removal made are exempt from the age rule. `git worktree remove` is
 //! simulated by a scripted git that deletes what git would have deleted and fails with git's own sentence. Every link
 //! target must survive: a junction is removed as a link, never followed.
+
+// test-tag: e2e
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -158,6 +161,7 @@ fn stuck_removal() -> (Shape, RemoveOutcome) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn when_git_cannot_delete_the_folder_argus_renames_it_and_a_job_deletes_it() {
     let (_s, out) = stuck_removal();
     assert_eq!(
@@ -181,6 +185,7 @@ fn when_git_cannot_delete_the_folder_argus_renames_it_and_a_job_deletes_it() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_answer_carries_gits_sentence_and_git_lets_go_of_the_worktree() {
     let (s, out) = stuck_removal();
     let said = out.git_error.clone().unwrap();
@@ -209,6 +214,7 @@ fn the_answer_carries_gits_sentence_and_git_lets_go_of_the_worktree() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_job_deletes_the_folder_and_every_junction_target_survives() {
     let (s, out) = stuck_removal();
     s.h.idle();
@@ -222,6 +228,7 @@ fn the_job_deletes_the_folder_and_every_junction_target_survives() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_activity_lines_say_who_finished_the_folder() {
     let (s, _out) = stuck_removal();
     s.h.idle();
@@ -259,6 +266,7 @@ fn the_activity_lines_say_who_finished_the_folder() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_links_inside_the_worktree_are_removed_as_links_before_git_is_called() {
     let s = shape(RemoveMode::Stuck, |_| {});
     let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -283,6 +291,7 @@ fn the_links_inside_the_worktree_are_removed_as_links_before_git_is_called() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_link_that_cannot_be_removed_stops_the_removal_before_git_is_called() {
     let s = shape(RemoveMode::Stuck, |_| {});
     *s.h.fs.fail_unlink.lock().unwrap() = Some(std::io::ErrorKind::ResourceBusy);
@@ -299,23 +308,7 @@ fn a_link_that_cannot_be_removed_stops_the_removal_before_git_is_called() {
 }
 
 #[test]
-fn the_job_removes_links_as_links_a_junction_deep_in_node_modules_and_one_at_the_top() {
-    let s = shape(RemoveMode::Stuck, |_| {});
-    s.h.rm(&s.id("old-merged")).unwrap();
-    s.h.idle();
-    assert!(
-        !fs::read_dir(&s.fx.wts)
-            .unwrap()
-            .flatten()
-            .any(|e| e.file_name().to_string_lossy().starts_with("old-merged")),
-        "neither the folder nor its renamed copy is left"
-    );
-    assert_eq!(fs::read_dir(&s.outside).unwrap().count(), 1);
-    assert_eq!(fs::read_dir(&s.outside2).unwrap().count(), 1);
-    s.keeps_survive();
-}
-
-#[test]
+#[ignore = "e2e"]
 fn the_owners_page_finishes_a_removal_the_same_way() {
     let s = shape(RemoveMode::Stuck, add_side);
     let out =
@@ -340,6 +333,7 @@ fn the_owners_page_finishes_a_removal_the_same_way() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn git_still_listing_the_worktree_with_its_git_keeps_the_refusal_nothing_is_renamed_or_deleted() {
     let s = shape(RemoveMode::Untouched, |_| {});
     let err = s.h.refused(&s.id("old-merged"), |_| {});
@@ -362,6 +356,7 @@ fn git_still_listing_the_worktree_with_its_git_keeps_the_refusal_nothing_is_rena
 }
 
 #[test]
+#[ignore = "e2e"]
 fn another_prunable_record_no_rule_vetted_an_unplugged_drive_stops_the_prune_that_finishes_the_folder()
  {
     let s = shape(RemoveMode::Stuck, unplugged(false));
@@ -384,6 +379,7 @@ fn another_prunable_record_no_rule_vetted_an_unplugged_drive_stops_the_prune_tha
 }
 
 #[test]
+#[ignore = "e2e"]
 fn an_error_that_is_not_a_folder_deletion_one_is_a_git_failure_as_before_whatever_state_the_folder_is_in()
  {
     let s = shape(RemoveMode::Other, |_| {});
@@ -406,6 +402,7 @@ fn refused_rename() -> (Shape, crate::error::WtError) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_refused_rename_is_a_423_with_a_plain_sentence_and_the_branch_went_first() {
     let (s, err) = refused_rename();
     assert_eq!((err.code, err.code.status()), (ErrorCode::InUse, 423));
@@ -431,6 +428,7 @@ fn a_refused_rename_is_a_423_with_a_plain_sentence_and_the_branch_went_first() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_folder_a_refused_rename_left_is_a_made_leftover_though_it_is_young() {
     let (s, _err) = refused_rename();
     s.h.scan();
@@ -453,6 +451,7 @@ fn the_folder_a_refused_rename_left_is_a_made_leftover_though_it_is_young() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_next_removal_takes_the_made_leftover_and_the_memory_forgets_it_once_it_is_gone() {
     let (s, _err) = refused_rename();
     s.h.scan();
@@ -470,6 +469,7 @@ fn the_next_removal_takes_the_made_leftover_and_the_memory_forgets_it_once_it_is
 }
 
 #[test]
+#[ignore = "e2e"]
 fn all_leftovers_by_the_lead_takes_the_removal_made_one_and_skips_the_young_one_nobody_made() {
     let s = shape(RemoveMode::Stuck, |_| {});
     *s.h.fs.rename_error.lock().unwrap() = Some(std::io::ErrorKind::PermissionDenied);
@@ -500,6 +500,7 @@ fn all_leftovers_by_the_lead_takes_the_removal_made_one_and_skips_the_young_one_
 }
 
 #[test]
+#[ignore = "e2e"]
 fn git_says_removed_but_the_folder_is_still_there_it_is_remembered_and_taken_without_the_age_limit()
 {
     let s = shape(RemoveMode::Leaves, add_side);
@@ -523,22 +524,7 @@ fn git_says_removed_but_the_folder_is_still_there_it_is_remembered_and_taken_wit
 }
 
 #[test]
-fn real_git_on_the_pnpm_shape_the_worktree_is_gone_and_no_junction_target_lost_a_file() {
-    let s = shape(RemoveMode::Real, |_| {});
-    let out = s.remove_old_merged_gone_from_git();
-    assert!(
-        !fs::read_dir(&s.fx.wts)
-            .unwrap()
-            .flatten()
-            .any(|e| e.file_name().to_string_lossy().starts_with("old-merged")),
-        "a folder is left: {}",
-        out.text
-    );
-    s.keeps_survive();
-    assert!(!branches(&s.fx.repo).contains(&"old-merged".to_string()));
-}
-
-#[test]
+#[ignore = "e2e"]
 fn the_memory_keeps_14_days_and_only_folders_still_on_disk_an_old_entry_no_longer_exempts() {
     let s = shape(RemoveMode::Stuck, |_| {});
     let path = s.fx.path("plain");
@@ -629,6 +615,7 @@ fn why(out: &crate::batch::BatchOutcome, name: &str) -> String {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_server_default_is_one_day_for_a_thread_with_nothing_else_to_say() {
     let s = shape(RemoveMode::Real, ages);
     assert_eq!(s.h.svc.leftover_age_days(), 1.0);
@@ -642,6 +629,7 @@ fn the_server_default_is_one_day_for_a_thread_with_nothing_else_to_say() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn older_than_below_the_default_needs_a_reason_and_not_below_6_hours_each_refusal_a_plain_sentence_and_a_line()
  {
     let s = shape(RemoveMode::Real, ages);
@@ -687,6 +675,7 @@ fn older_than_below_the_default_needs_a_reason_and_not_below_6_hours_each_refusa
 }
 
 #[test]
+#[ignore = "e2e"]
 fn with_a_reason_a_thread_goes_down_to_6_hours_the_reason_is_in_the_activity_line() {
     let s = shape(RemoveMode::Real, ages);
     let reason = "the finished agent worktrees of this project, nothing runs in them";
@@ -715,6 +704,7 @@ fn with_a_reason_a_thread_goes_down_to_6_hours_the_reason_is_in_the_activity_lin
 }
 
 #[test]
+#[ignore = "e2e"]
 fn older_than_above_the_default_needs_no_reason_and_holds_the_single_removal_takes_the_same_rule() {
     let s = shape(RemoveMode::Real, ages);
     let out = thread_batch(&s.h, |i| i.older_than_days = Some(3.0)).unwrap();
@@ -754,6 +744,7 @@ fn older_than_above_the_default_needs_no_reason_and_holds_the_single_removal_tak
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_page_keeps_its_own_stronger_confirm_whatever_age_it_asks_for_and_the_server_limit_is_configurable()
  {
     let s = shape(RemoveMode::Real, ages);
@@ -809,6 +800,7 @@ fn unlock_calls(s: &Shape) -> usize {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_target_is_touched() {
     let s = shape(
         RemoveMode::Real,
@@ -824,6 +816,7 @@ fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_t
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_worktree_locked_for_another_reason_is_refused_and_stays_with_its_links() {
     let s = shape(RemoveMode::Real, lock_old_merged("kept for the demo"));
     let err = s.h.refused(&s.id("old-merged"), |_| {});

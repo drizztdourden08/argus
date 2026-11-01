@@ -1,7 +1,10 @@
+//! KEEP: K3.
 //! A slow removal: `git worktree remove` gets its own long timeout, a timeout takes the same fallback as a folder git
 //! could not delete, and an ignored, untracked `node_modules` is cleared by Argus before git runs. The timeout is the
 //! scripted git's answer ("git timed out after 900 s"), so no test waits. The first case of the Node file (the writer's
 //! two timeouts) is `git.rs`'s `worktree_remove_alone_gets_the_long_timeout...` and its sibling.
+
+// test-tag: e2e
 
 use super::fallback::{Shape, add_side, shape};
 use crate::error::ErrorCode;
@@ -18,6 +21,7 @@ fn removal_after_timeout() -> (Shape, RemoveOutcome) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn git_times_out_after_deleting_the_files_the_same_fallback_as_directory_not_empty_and_the_junction_targets_survive()
  {
     let (s, out) = removal_after_timeout();
@@ -58,6 +62,7 @@ fn git_times_out_after_deleting_the_files_the_same_fallback_as_directory_not_emp
 }
 
 #[test]
+#[ignore = "e2e"]
 fn git_times_out_and_still_lists_the_worktree_with_its_git_the_refusal_says_so_nothing_is_renamed()
 {
     let s = shape(RemoveMode::TimeoutUntouched, add_side);
@@ -81,6 +86,7 @@ fn modules_of(path: &str) -> String {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_timeout_after_node_modules_was_cleared_says_so_in_the_refusal() {
     let s = shape(RemoveMode::TimeoutUntouched, |_| {});
     let err = s.h.refused(&s.id("old-merged"), |_| {});
@@ -97,6 +103,7 @@ fn a_timeout_after_node_modules_was_cleared_says_so_in_the_refusal() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn node_modules_is_ignored_by_git_argus_clears_it_before_git_runs_and_the_answer_and_the_activity_line_say_so()
  {
     let s = shape(RemoveMode::Stuck, |_| {});
@@ -146,6 +153,7 @@ fn recorded_modules(s: &Shape, name: &str, file: &str) -> Arc<Mutex<Vec<bool>>> 
 }
 
 #[test]
+#[ignore = "e2e"]
 fn node_modules_that_git_does_not_ignore_is_left_to_git_and_says_nothing_about_clearing() {
     let s = shape(RemoveMode::Stuck, |fx| {
         add_side(fx);
@@ -178,6 +186,7 @@ fn node_modules_that_git_does_not_ignore_is_left_to_git_and_says_nothing_about_c
 }
 
 #[test]
+#[ignore = "e2e"]
 fn node_modules_with_a_tracked_file_in_it_is_left_to_git_even_when_a_pattern_ignores_the_name() {
     let s = shape(RemoveMode::Stuck, |fx| {
         add_side(fx);
@@ -198,6 +207,7 @@ fn node_modules_with_a_tracked_file_in_it_is_left_to_git_even_when_a_pattern_ign
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_guards_run_first_a_worktree_with_uncommitted_work_is_refused_before_node_modules_is_touched()
 {
     let s = shape(RemoveMode::Stuck, |fx| {

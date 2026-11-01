@@ -1,5 +1,8 @@
+//! KEEP: K1.
 //! The event-driven scan: a cheap look at file times decides whether a scan runs, and a scan reads with git only the
 //! worktrees whose fingerprint changed. A forced scan and the safety period read everything.
+
+// test-tag: e2e
 
 use crate::probe::SAFETY_SCAN_MS;
 use crate::sync::locked;
@@ -29,6 +32,7 @@ fn statuses_since(h: &Harness, since: usize) -> usize {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn an_unchanged_disk_means_no_scan_and_no_git_process() {
     let (_fx, h) = scanned();
     let before = git_calls(&h);
@@ -38,6 +42,7 @@ fn an_unchanged_disk_means_no_scan_and_no_git_process() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_new_index_time_scans_that_worktree_only_and_the_others_keep_their_facts() {
     let (fx, h) = scanned();
     let rows = h.docs().len();
@@ -54,6 +59,7 @@ fn a_new_index_time_scans_that_worktree_only_and_the_others_keep_their_facts() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_new_head_time_scans_that_worktree() {
     let (fx, h) = scanned();
     let index = index_of(&fx.path("old-merged"));
@@ -65,6 +71,7 @@ fn a_new_head_time_scans_that_worktree() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_worktree_that_comes_is_read_and_the_others_are_not() {
     let (fx, h) = scanned();
     fx.add("brand-new");
@@ -76,6 +83,7 @@ fn a_worktree_that_comes_is_read_and_the_others_are_not() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_worktree_that_goes_is_noticed_without_git() {
     let (fx, h) = scanned();
     std::fs::remove_dir_all(fx.path("old-merged")).unwrap();
@@ -85,6 +93,7 @@ fn a_worktree_that_goes_is_noticed_without_git() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_safety_period_reads_everything_and_finds_what_no_fingerprint_shows() {
     let (fx, h) = scanned();
     put(&fx.path("fresh"), "wip.txt", "work\n");
@@ -103,6 +112,7 @@ fn the_safety_period_reads_everything_and_finds_what_no_fingerprint_shows() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_forced_scan_reads_everything_whatever_the_fingerprints_say() {
     let (_fx, h) = scanned();
     assert!(!h.svc.changed("alpha"));
