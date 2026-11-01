@@ -1,7 +1,5 @@
 //! Helpers shared by the owner post tests: unique post ids, a seeded server, and the calls a
 //! page (a `PUT` of the entries collection) and the CLI (`POST /api/p/:key/entries`) make.
-#![allow(dead_code)]
-
 use argus_core::clock::now_iso;
 pub use argus_sync::new_post_id as id;
 use argus_testkit::{Reply, Request, TestOptions, TestServer};

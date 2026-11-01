@@ -7,7 +7,6 @@ mod posting;
 mod pr_rig;
 #[path = "runs/rig.rs"]
 mod runs_rig;
-#[allow(dead_code)]
 mod toasts;
 #[path = "support/wait.rs"]
 mod wait;

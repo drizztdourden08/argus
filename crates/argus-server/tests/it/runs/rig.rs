@@ -1,8 +1,6 @@
 //! A test server whose run service starts pipes the test drives by hand, and the calls the run
 //! tests make over and over.
 
-#![allow(dead_code, unused_imports)]
-
 use std::sync::Arc;
 
 use argus_launchers::FakeHost;

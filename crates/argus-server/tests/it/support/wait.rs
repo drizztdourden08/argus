@@ -1,7 +1,5 @@
 //! Waiting for what a server does on its own, and reading what it woke.
 
-#![allow(dead_code)]
-
 use std::future::Future;
 use std::time::Duration;
 
