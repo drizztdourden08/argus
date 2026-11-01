@@ -1,11 +1,9 @@
 //! The owner's ops on a board: pause and resume, move, acceptance criteria, create, bulk, the
 //! soft ops, the handed build and purge with its backup.
 
-mod common;
-
+use crate::common::{alpha, post};
 use argus_board::ops::purge_plan;
 use argus_board::sync::import_entries_at;
-use common::{alpha, post};
 use serde_json::{Value, json};
 
 fn with_api_thread() -> Value {

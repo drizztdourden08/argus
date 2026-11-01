@@ -1,10 +1,8 @@
 //! The pull request ops of the local remote: open, update, merge, close and the check list.
 
-mod common;
-
+use crate::common::alpha;
 use argus_board::Board;
 use argus_board::ops::{Status, Who, apply_op};
-use common::alpha;
 use serde_json::{Value, json};
 
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";

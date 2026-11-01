@@ -1,12 +1,10 @@
 //! Pictures of a question or a decision: kept next to the board, numbered per entry, tied to an
 //! option when asked, and shown to the page with a `url` instead of the local path.
 
-mod common;
-
+use crate::common::{alpha, doc};
 use argus_board::proofs::{Image, keep_entry_image};
 use argus_board::sync::export_docs;
 use argus_core::Coll;
-use common::{alpha, doc};
 use serde_json::{Value, json};
 
 const PNG: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];

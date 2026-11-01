@@ -1,13 +1,11 @@
 //! The portfolio: the owner's posts handed down to the project boards, the project list, the
 //! cards, and the proof images of a test.
 
-mod common;
-
+use crate::common::alpha;
 use argus_board::BoardError;
 use argus_board::portfolio::{import_portfolio_entries, project_keys, shape, summarize};
 use argus_board::proofs::keep_proof_bytes;
 use argus_board::store::{read_board, save_board};
-use common::alpha;
 use serde_json::{Value, json};
 use tempfile::TempDir;
 

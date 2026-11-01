@@ -2,12 +2,10 @@
 //! and survives the owner's answer, every reply kind, and the op outcomes (applied, conflict,
 //! refused, duplicate).
 
-mod common;
-
+use crate::common::{alpha, doc, post};
 use argus_board::sync::{export_docs, import_entries};
 use argus_core::Coll;
 use argus_core::clock::now_iso;
-use common::{alpha, doc, post};
 use serde_json::{Value, json};
 
 const CTX: &str = "The login form can remember the email. It changes what is stored on the machine, so it is your call. I will store nothing if unanswered.";
