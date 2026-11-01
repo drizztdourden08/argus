@@ -13,6 +13,7 @@ use argus_coord::Invocation;
 
 mod stand_in;
 
+#[allow(unused_imports)]
 pub use stand_in::{StandIn, fixture};
 
 /// The session ids of the fixture.

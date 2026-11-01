@@ -106,7 +106,7 @@ fn a_passive_reason_is_recorded_and_mirrored_but_never_reaches_a_listener_live_o
     assert!(mirrored.values().all(|d| d["status"] == "passive"));
     let mut late = rig.listen("alpha", "ui", AttachOptions::default());
     assert_eq!(late.count(), 0, "a notice is never replayed");
-    assert!(rig.engine.queued_since("alpha", &iso(0)).is_empty());
+    assert_eq!(rig.engine.queued_since("alpha", &iso(0)).len(), 0);
 }
 
 #[test]
@@ -219,52 +219,31 @@ fn row(n: u64, reason: &str, text: &str, at_ms: i64, status: WakeStatus) -> Wake
     row
 }
 
-#[test]
-fn the_digest_counts_the_notices_since_the_last_turn_by_kind_and_names_the_newest_three() {
-    let rows = [
-        row(
+/// Five notices and one delivered wake after the last turn at `START`, one notice before it.
+fn digest_rows() -> Vec<WakeRow> {
+    let passive = WakeStatus::Passive;
+    [
+        (
             6,
             "worktree-review",
             "3 worktrees need a decision",
-            START + 6 * MIN,
-            WakeStatus::Passive,
+            6,
+            passive,
         ),
-        row(
-            5,
-            "test-fail",
-            "T-1 failed",
-            START + 5 * MIN,
-            WakeStatus::Delivered,
-        ),
-        row(
-            4,
-            "kanban-stale",
-            "I-4 sits in doing",
-            START + 4 * MIN,
-            WakeStatus::Passive,
-        ),
-        row(
-            3,
-            "kanban-stale",
-            "I-5 sits in todo",
-            START + 3 * MIN,
-            WakeStatus::Passive,
-        ),
-        row(
-            2,
-            "process-alert",
-            "vite stale 3h",
-            START + 2 * MIN,
-            WakeStatus::Passive,
-        ),
-        row(
-            1,
-            "kanban-stale",
-            "before the last turn",
-            START - MIN,
-            WakeStatus::Passive,
-        ),
-    ];
+        (5, "test-fail", "T-1 failed", 5, WakeStatus::Delivered),
+        (4, "kanban-stale", "I-4 sits in doing", 4, passive),
+        (3, "kanban-stale", "I-5 sits in todo", 3, passive),
+        (2, "process-alert", "vite stale 3h", 2, passive),
+        (1, "kanban-stale", "before the last turn", -1, passive),
+    ]
+    .into_iter()
+    .map(|(n, reason, text, minutes, status)| row(n, reason, text, START + minutes * MIN, status))
+    .collect()
+}
+
+#[test]
+fn the_digest_counts_the_notices_since_the_last_turn_by_kind_and_names_the_newest_three() {
+    let rows = digest_rows();
     let got = digest(&rows, START);
     assert_eq!(got.count, 4);
     let kinds: Vec<(&str, u32)> = got
