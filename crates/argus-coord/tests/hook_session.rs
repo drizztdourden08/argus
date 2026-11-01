@@ -202,7 +202,7 @@ fn a_sub_agents_tool_call_never_puts_an_idle_lead_back_to_work() {
     assert_eq!(f.board()["threads"]["ui"]["activity"], "working");
 }
 
-fn from_sub_agent(f: &Fixture, sid: &str) -> Value {
+fn is_sub_agent(f: &Fixture, sid: &str) -> Value {
     let mut sub = input(f, sid);
     sub["agent_id"] = json!("a1b2c3d4e5f6a7b8c");
     sub
@@ -218,7 +218,7 @@ fn a_sub_agents_prompt_tool_and_stop_leave_the_inbox_of_its_lead_alone() {
     for event in ["prompt", "tool", "stop"] {
         let f = Fixture::new();
         waiting_for_the_lead(&f);
-        let ran = f.hook(event, &from_sub_agent(&f, UI));
+        let ran = f.hook(event, &is_sub_agent(&f, UI));
         assert_eq!((ran.code, ran.out.as_str()), (0, ""), "{event}");
         assert!(
             f.board()["inbox"]["ui"][0]["deliveredAt"].is_null(),
@@ -234,7 +234,7 @@ fn a_sub_agents_prompt_tool_and_stop_leave_the_inbox_of_its_lead_alone() {
 fn a_sub_agents_session_start_names_no_messages_and_marks_none_delivered() {
     let f = Fixture::new();
     waiting_for_the_lead(&f);
-    let ran = f.hook("session-start", &from_sub_agent(&f, UI));
+    let ran = f.hook("session-start", &is_sub_agent(&f, UI));
     assert!(ran.out.contains("You are thread \\\"ui\\\""), "{}", ran.out);
     assert!(!ran.out.contains("new message(s)"), "{}", ran.out);
     assert!(f.board()["inbox"]["ui"][0]["deliveredAt"].is_null());

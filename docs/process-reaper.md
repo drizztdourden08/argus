@@ -4,7 +4,7 @@
 Two pieces of the process monitor keep the machine free of runs nobody waits on. A thread can
 end a process of its own project with `coord proc kill`. The reaper ends, by itself, the
 searches and the test or build runs that hung. Both share one scope rule, so neither can touch a
-Claude session, the dashboard, another project or the system. This is an Argus feature: the Node
+agent session, the dashboard, another project or the system. This is an Argus feature: the Node
 dashboard only lets the Overlord kill.
 
 The evidence is the machine audit of 2026-11-01: two orphaned `find /` held about four million
@@ -25,7 +25,7 @@ P may end a process only when P is the one project it belongs to.
 
 The rule refuses, with a plain sentence that names the reason:
 
-- a Claude session process (`claude.exe`, a node running Claude Code);
+- an agent session process (`claude.exe`, or a node running the agent CLI);
 - a process of the dashboard itself: the server and its parents, the tray, `argus serve`,
   `argus tray`, an `argus mcp` bridge, and the Node dashboard's own helpers;
 - a system process: the protected names (System, csrss, services, svchost, explorer and the

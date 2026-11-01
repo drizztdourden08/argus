@@ -52,7 +52,7 @@ fn stop(hit: &Hit) -> Option<Value> {
 fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
     match event {
         "stop" => Some("idle"),
-        "tool" if hook.from_sub_agent() => None,
+        "tool" if hook.is_sub_agent() => None,
         _ => Some("working"),
     }
 }
@@ -63,7 +63,7 @@ pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
     let mode = Mode {
         activity: activity_of(hook, event),
         may_adopt: event != "stop",
-        deliver: !hook.from_sub_agent(),
+        deliver: !hook.is_sub_agent(),
     };
     let Some(hit) = visit(hook, &project, mode)? else {
         return Ok(Said::Nothing);

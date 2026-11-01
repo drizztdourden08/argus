@@ -41,7 +41,7 @@ impl<'a> Hook<'a> {
     /// Whether the call is a sub-agent's: its payload carries a non-empty `agent_id` (the rule
     /// of `hook.mjs`). A sub-agent's call neither marks its lead's activity nor takes its
     /// inbox.
-    pub fn from_sub_agent(&self) -> bool {
+    pub fn is_sub_agent(&self) -> bool {
         self.input["agent_id"]
             .as_str()
             .is_some_and(|id| !id.is_empty())

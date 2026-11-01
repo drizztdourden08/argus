@@ -6,7 +6,7 @@ grace, and removes it through the same removal and guards a thread's own `coord 
 goes through. No owner click is needed anywhere on this path. This is an Argus feature: the Node
 dashboard has none.
 
-The goal: the Worktrees list of a project is about one to one with the agents actually working.
+The goal: the Worktrees list of a project is about one to one with the agents that are working.
 
 The code is `crates/argus-worktrees/src/hygiene`.
 

@@ -5,7 +5,7 @@ pull requests, packages, releases and deploys. The lead then records it, Argus s
 last one is, and wakes the lead when a day has passed without one.
 
 The record side lives in the Node `coord` (`shared/tools/coord/remote-mode.mjs`, commit efa8784
-of ai-config) and in the Rust `coord` (`crates/argus-coord/src/verbs/remote/mode.rs`). Both write
+of the config repo) and in the Rust `coord` (`crates/argus-coord/src/verbs/remote/mode.rs`). Both write
 the same file.
 
 ## The record
@@ -25,7 +25,7 @@ It writes `syncs.<project>` in `~/.coord/remote.json` and keeps the mode and the
   the checkout). `by` is `--as`, else the project key. The note is cut to 400 characters.
 - Output: `remote sync of <project> recorded at <iso>[: <note>]. Due again in 24 h.`
 - `coord remote status` adds one line per project after the mode:
-  `last remote sync per lead:` then `  <project>: <iso> (<note>)`, or `no remote sync recorded
+  `last remote sync per lead:` then one line per project, indented, `<project>: <iso> (<note>)`, or `no remote sync recorded
   yet.` when there is none. A mode switch and `ci-root` keep the records.
 - Code: `argus_core::remote_state::record_sync` writes, `argus_core::remote::{syncs, last_sync,
   SyncRecord}` read.
