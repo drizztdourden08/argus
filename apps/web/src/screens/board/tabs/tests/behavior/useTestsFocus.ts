@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useMemo } from 'react';
 import { useStored, useStoredFlag } from '../../../shared';
-import { pausedThreads } from '../../kanban';
+import { pausedThreads } from '../../kanban/model';
 import { focusOptions, STORE_KEYS } from '../model';
 import type { TestsData, TestsFocus } from '../tests.type';
 
