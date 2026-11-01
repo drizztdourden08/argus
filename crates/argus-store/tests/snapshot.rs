@@ -1,4 +1,6 @@
 //! `snapshot`: a copy of a live (WAL) database, the source untouched, no half copy left.
+//! Keep rule: K3.
+// test-tag: standard
 
 use std::fs;
 

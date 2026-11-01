@@ -1,7 +1,7 @@
 //! The check run store on a temp folder: numbering in first-seen order, numbers kept by the
 //! book across a new store (a restart), filters, logs, and torn files.
 //! Keep rule: K3, K4.
-// test-tag: critical
+// test-tag: standard
 
 use std::collections::HashMap;
 use std::fs;

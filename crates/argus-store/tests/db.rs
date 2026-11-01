@@ -1,4 +1,6 @@
 //! Port of `core.db.test.mjs`: migrations, newer-schema refusal, tx, doc store apply, replace, queries, changes, clear, prune, busy.
+//! Keep rule: K3, S2.
+// test-tag: standard
 
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
@@ -532,7 +534,7 @@ fn a_database_locked_by_another_connection_becomes_busy() {
     let file = dir.path().join("busy.db");
     let a = Db::open(&file, Bus::new()).unwrap();
     let b = Db::open(&file, Bus::new()).unwrap();
-    b.with_conn(|c| c.execute_batch("PRAGMA busy_timeout=50"))
+    b.with_conn(|c| c.execute_batch("PRAGMA busy_timeout=0"))
         .unwrap();
     a.with_conn(|c| c.execute_batch("BEGIN IMMEDIATE")).unwrap();
     let locked = b.tx(|_| Ok(()));
