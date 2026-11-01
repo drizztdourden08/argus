@@ -16,7 +16,7 @@ const planOf = (move: DropInput['move'], group: ItemGroup = 'status', order: Ite
 
 const across = (from: string, to: string, index: number) => ({ cardId: 'I-1', from: { columnId: from, index: 0 }, to: { columnId: to, index } });
 
-describe('where a drop puts a card', () => {
+describe('K1 where a drop puts a card', { tags: ['critical'] }, () => {
   it('reads the neighbour in the new column: before the card it lands above', () => {
     expect(planOf(across('todo', 'doing', 0))).toEqual({ kind: 'status', to: 'doing', place: { before: 'I-3' } });
   });
@@ -57,7 +57,7 @@ describe('where a drop puts a card', () => {
   });
 });
 
-describe('what the board refused', () => {
+describe('K1 what the board refused', { tags: ['critical'] }, () => {
   const move = { kind: 'move', target: { c: 'items', id: 'I-1' }, to: { status: 'doing' }, prev: { thread: 'worker', status: 'todo' }, baseRev: 3 };
 
   it('lists a conflicted op with the thread that changed it', () => {
@@ -110,7 +110,7 @@ describe('what the board refused', () => {
   });
 });
 
-describe('what the page remembers', () => {
+describe('K1 what the page remembers', { tags: ['critical'] }, () => {
   it('reads the choices of the Node page: filters with the order, the grouping and the done toggle', () => {
     const stored = parseStored({
       filters: JSON.stringify({ q: 'log', threads: ['worker'], status: 'doing', subject: 'ui', needs: true, conf: true, archived: true, sort: 'updated', builds: ['b-1'] }),
@@ -132,7 +132,7 @@ describe('what the page remembers', () => {
   });
 });
 
-describe('the limits of an edit', () => {
+describe('K1 the limits of an edit', { tags: ['critical'] }, () => {
   it('needs a title and a criterion, and allows the rest to be empty', () => {
     expect(textProblem('title', '  ')).toBe('That cannot be empty.');
     expect(textProblem('criterion', '')).toBe('A criterion cannot be empty.');
@@ -149,7 +149,7 @@ describe('the limits of an edit', () => {
   });
 });
 
-describe('the bulk ops', () => {
+describe('K1 the bulk ops', { tags: ['critical'] }, () => {
   const picked = [itemRef('I-1', { rev: 4 }), itemRef('I-2', { thread: 'other', status: 'doing', rev: 7 })];
 
   it('moves each with what it was and its revision', () => {
@@ -168,7 +168,7 @@ describe('the bulk ops', () => {
   });
 });
 
-describe('the thread seeds', () => {
+describe('K1 the thread seeds', { tags: ['critical'] }, () => {
   it('sees a thread archived by its date as hidden', () => {
     const view = viewOf([], { prefs: { group: 'thread' }, threads: [threadRef('a'), threadRef('b', { archivedAt: '2026-10-01T00:00:00.000Z' })] });
     expect(view.columns.map((column) => column.id)).toEqual(['a']);

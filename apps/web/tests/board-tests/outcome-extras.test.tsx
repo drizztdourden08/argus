@@ -12,7 +12,7 @@ cleanAfterEach();
 
 const proofCalls = (calls: { url: string }[]) => calls.filter((call) => call.url.includes('/proofs'));
 
-describe('a screenshot with the note', () => {
+describe('S1 a screenshot with the note', { tags: ['standard'] }, () => {
   it('is chosen, shown with a remove button, and uploaded after the result posts with the note as caption', async () => {
     const { calls } = await mountTab(board());
     const box = await openBox('fail');
@@ -66,7 +66,7 @@ describe('a screenshot with the note', () => {
   });
 });
 
-describe('run again and the done row', () => {
+describe('S1 run again and the done row', { tags: ['standard'] }, () => {
   it('puts a done test back in To run with a rerun entry; a test still to run has no such button', async () => {
     const { calls } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), doneDoc('T-2', 'fail', 'no luck')] });
     expect(await waitFor(() => outcomeButton('pass', 'T-1'))).toBeTruthy();

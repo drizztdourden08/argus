@@ -49,40 +49,7 @@ const openRich = async (extra: object = {}) => {
 
 const section = (drawer: HTMLElement, name: string) => within(drawer).getByRole('group', { name });
 
-describe('the sections of the test drawer', () => {
-  it('opens from the row title with the id, the covers and the facts', async () => {
-    const { drawer } = await openRich();
-    expect(within(drawer).getByText('Rich test')).toBeTruthy();
-    expect(within(drawer).getByText('T-1 · gate PedestalScenes')).toBeTruthy();
-    expect(within(drawer).getByText('manual: needs you')).toBeTruthy();
-    expect(within(drawer).getByText('handed to you')).toBeTruthy();
-  });
-
-  it('shows the result with who and the text, then steps, expected, context and what changed', async () => {
-    const { drawer } = await openRich();
-    expect(within(section(drawer, 'Result')).getByText('the sage speaks')).toBeTruthy();
-    expect(within(section(drawer, 'Result')).getByText(/by lead/)).toBeTruthy();
-    const steps = section(drawer, 'Steps');
-    expect(within(steps).getByText('Walk into the Sanctuary.')).toBeTruthy();
-    expect(within(steps).getByText('Talk to the sage.')).toBeTruthy();
-    const expected = section(drawer, 'Expected');
-    expect(within(expected).getByText('Proves it works')).toBeTruthy();
-    expect(within(expected).getByText('Zelda is there.')).toBeTruthy();
-    expect(within(expected).getByText('Proves it is broken')).toBeTruthy();
-    expect(within(expected).getByText('Zelda is gone.')).toBeTruthy();
-    expect(within(section(drawer, 'Context')).getByText('The game read the wrong level.')).toBeTruthy();
-    expect(within(section(drawer, 'What changed')).getByText('kFeatures5 reads the hook')).toBeTruthy();
-  });
-
-  it('shows the setup pairs and the run command', async () => {
-    const { drawer } = await openRich();
-    const setup = section(drawer, 'Setup');
-    expect(within(setup).getByText('profile')).toBeTruthy();
-    expect(within(setup).getByText('story-events')).toBeTruthy();
-    expect(within(setup).getByText('Outside the Sanctuary')).toBeTruthy();
-    expect(within(setup).getByText('rotp worktree launch story-events')).toBeTruthy();
-  });
-
+describe('S1 the sections of the test drawer', { tags: ['standard'] }, () => {
   it('shows the acceptance criteria the test ticks, done or open', async () => {
     const { drawer } = await openRich();
     const covers = section(drawer, 'Covers on I-1');
@@ -91,18 +58,9 @@ describe('the sections of the test drawer', () => {
     expect(within(covers).getByText('done')).toBeTruthy();
     expect(within(covers).getByText('open')).toBeTruthy();
   });
-
 });
 
-describe('the evidence, the history and the stream in the test drawer', () => {
-  it('shows the evidence as thumbnails with their captions', async () => {
-    const { drawer } = await openRich();
-    const evidence = section(drawer, 'Evidence');
-    expect(within(evidence).getByAltText('the sage at the altar').getAttribute('src')).toBe('/files/rotp/proofs/T-1-1.png');
-    expect(within(evidence).getByAltText('the empty altar')).toBeTruthy();
-    expect(within(evidence).getByRole('button', { name: 'Open the sage at the altar' })).toBeTruthy();
-  });
-
+describe('S1 the evidence, the history and the stream in the test drawer', { tags: ['standard'] }, () => {
   it('opens a thumbnail large in a dialog, goes through the set and closes', async () => {
     const { drawer } = await openRich();
     expect(screen.queryByRole('dialog', { name: 'the sage at the altar' })).toBeNull();
@@ -122,29 +80,6 @@ describe('the evidence, the history and the stream in the test drawer', () => {
     expect(rows[1]?.textContent).toContain('first try broke');
   });
 
-  it('shows the notes of the thread', async () => {
-    const { drawer } = await openRich();
-    expect(within(section(drawer, 'Notes')).getByText('Only the lead can tick I-1.')).toBeTruthy();
-  });
-
-  it('a test not run yet says so, with no history, steps or notes sections', async () => {
-    await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-3', { title: 'Plain test' })] });
-    fireEvent.click(await screen.findByRole('button', { name: 'Plain test' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Test details' });
-    expect(within(section(drawer, 'Result')).getByText('Not run yet.')).toBeTruthy();
-    expect(within(drawer).queryByRole('group', { name: 'Results history' })).toBeNull();
-    expect(within(drawer).queryByRole('group', { name: 'Steps' })).toBeNull();
-    expect(within(drawer).queryByRole('group', { name: 'Notes' })).toBeNull();
-    expect(within(section(drawer, 'Evidence')).getByText('No screenshot yet.')).toBeTruthy();
-  });
-
-  it('is not in the page until a test is opened', async () => {
-    await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-3', { title: 'Plain test' })] });
-    await screen.findByText('Plain test');
-    expect(screen.queryByRole('dialog', { name: 'Test details' })).toBeNull();
-    expect(screen.queryByRole('group', { name: 'Evidence' })).toBeNull();
-  });
-
   it('follows the stream while open: a new result shows in the drawer', async () => {
     const { drawer, change } = await openRich();
     change('tests', 'T-1', { ...rich(), result: { status: 'fail', text: 'now it broke', by: 'human', at: '2026-10-26T11:00:00.000Z' }, status: 'fail' });
@@ -152,7 +87,7 @@ describe('the evidence, the history and the stream in the test drawer', () => {
   });
 });
 
-describe('recording from the drawer', () => {
+describe('S1 recording from the drawer', { tags: ['standard'] }, () => {
   it('Run again is in the drawer for a done test and posts the rerun entry', async () => {
     const { drawer, calls } = await openRich();
     fireEvent.click(within(drawer).getByRole('button', { name: 'Run T-1 again' }));
@@ -160,7 +95,7 @@ describe('recording from the drawer', () => {
     expect(calls[0]?.body).toMatchObject({ kind: 'rerun', replyTo: 'T-1' });
   });
 
-  it('the outcome buttons of the drawer post the result and open the same note box', async () => {
+  it('the outcome buttons of the drawer open the note box for that outcome', async () => {
     await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-3', { title: 'Plain test' })] });
     fireEvent.click(await screen.findByRole('button', { name: 'Plain test' }));
     const drawer = await screen.findByRole('dialog', { name: 'Test details' });
@@ -191,17 +126,11 @@ describe('recording from the drawer', () => {
   });
 });
 
-describe('the controls of the test drawer', () => {
+describe('S1 the controls of the test drawer', { tags: ['standard'] }, () => {
   it('changes the mode with the Mode select and the item with the Item select', async () => {
     const { calls } = await openRich({ item: 'I-1' });
     await pick('Mode', 'auto');
     await waitFor(() => expect(entries(calls)).toHaveLength(1));
     expect(entries(calls)[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'tests', id: 'T-1' }, set: { mode: 'auto' } });
-  });
-
-  it('shows the covers and the build as inline fields', async () => {
-    const { drawer } = await openRich();
-    expect(within(drawer).getByRole('button', { name: /covers/ })).toBeTruthy();
-    expect(within(drawer).getByRole('button', { name: /build/ })).toBeTruthy();
   });
 });

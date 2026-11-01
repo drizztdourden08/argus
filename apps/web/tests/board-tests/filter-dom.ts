@@ -27,4 +27,4 @@ const pick = async (select: string, option: string): Promise<void> => {
 
 const stored = (key: string): Record<string, unknown> => JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, unknown>;
 
-export { filterBoard, pick, searchBox, stored, typeSearch };
+export { filterBoard, pick, stored, typeSearch };

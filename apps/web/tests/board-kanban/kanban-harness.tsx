@@ -2,7 +2,7 @@
 import { TesseraProvider, ToastStack, toast } from '@drizztdourden08/tessera';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import { afterEach, expect, vi } from 'vitest';
+import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
@@ -60,7 +60,9 @@ const MIN = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
 
-const ago = (ms: number): string => new Date(Date.now() - ms).toISOString();
+const CLOCK = new Date('2026-10-26T12:00:00.000Z');
+
+const ago = (ms: number): string => new Date(CLOCK.getTime() - ms).toISOString();
 
 const item = (id: string, extra: Doc = {}): Doc => ({
   id,
@@ -129,10 +131,14 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
 };
 
 const cleanKanban = (): void => {
+  beforeEach(() => {
+    vi.setSystemTime(CLOCK);
+  });
   afterEach(() => {
     act(() => toast.clear());
     cleanup();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
     localStorage.clear();
   });
 };

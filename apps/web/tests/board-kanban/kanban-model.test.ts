@@ -9,7 +9,7 @@ import { DAY, HOUR, before, entryRef, filters, idsIn, itemRef, noNeeds, threadRe
 const quietOf = (item: ItemRef, needs: ReadonlyMap<string, Needs> = noNeeds): number | null =>
   viewOf([item], { prefs: { showDone: true }, needs }).cards[0]?.quietMs ?? null;
 
-describe('the quiet limits', () => {
+describe('K1 the quiet limits', { tags: ['critical'] }, () => {
   it('marks a doing item after 4 hours, a review item after 6 and a to-do after 24', () => {
     expect(quietOf(itemRef('I-1', { status: 'doing', updatedAt: before(5 * HOUR) }))).toBe(5 * HOUR);
     expect(quietOf(itemRef('I-2', { status: 'doing', updatedAt: before(3 * HOUR) }))).toBeNull();
@@ -45,7 +45,7 @@ describe('the quiet limits', () => {
   });
 });
 
-describe('what waits on the owner', () => {
+describe('K1 what waits on the owner', { tags: ['critical'] }, () => {
   it('counts an open question, a pending decision, a pending to-do and a manual test to run', () => {
     const map = needsMap({
       entries: [entryRef('Q-1'), entryRef('D-1', { kind: 'decision', status: 'pending' }), entryRef('Q-2', { status: 'done' })],
@@ -79,7 +79,7 @@ describe('what waits on the owner', () => {
   });
 });
 
-describe('the board columns', () => {
+describe('K1 the board columns', { tags: ['critical'] }, () => {
   const finished = [itemRef('I-8', { status: 'done' }), itemRef('I-9', { status: 'dropped' })];
   const all = [itemRef('I-1', { status: 'doing' }), ...finished];
 
@@ -148,7 +148,7 @@ describe('the board columns', () => {
   });
 });
 
-describe('the other groupings', () => {
+describe('K1 the other groupings', { tags: ['critical'] }, () => {
   it('makes a column per thread, an empty one for a listed thread, none for the coordinator or a placeholder', () => {
     const threads = [
       threadRef('worker'),
@@ -175,7 +175,7 @@ describe('the other groupings', () => {
   });
 });
 
-describe('the tests a drawer counts', () => {
+describe('K1 the tests a drawer counts', { tags: ['critical'] }, () => {
   const docs = [
     { id: 'T-1' },
     { id: 'T-2', archivedAt: '2026-10-25T21:37:00.080Z' },

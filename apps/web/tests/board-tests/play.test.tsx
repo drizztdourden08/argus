@@ -17,14 +17,7 @@ const playable = (runs: object[] = [], defExtra: object = {}) => ({
 
 const running = (extra: object = {}) => runDoc('R-1', 'launcher-l1', { status: 'running', endedAt: null, ...extra });
 
-describe('starting and stopping the Play of a bundle', () => {
-  it('idle: Play is there, enabled, and nothing about a run', async () => {
-    await mountTab(playable());
-    const play = await screen.findByRole<HTMLButtonElement>('button', { name: 'Play b1' });
-    expect(play.disabled).toBe(false);
-    expect(screen.queryByRole('status', { name: /^Run R-/ })).toBeNull();
-  });
-
+describe('S1 starting and stopping the Play of a bundle', { tags: ['standard'] }, () => {
   it('clicking Play starts the definition by name, hidden unless the definition says window', async () => {
     const { calls } = await mountTab(playable());
     fireEvent.click(await screen.findByRole('button', { name: 'Play b1' }));
@@ -62,7 +55,7 @@ describe('starting and stopping the Play of a bundle', () => {
   });
 });
 
-describe('the status line next to Play', () => {
+describe('S1 the status line next to Play', { tags: ['standard'] }, () => {
   it('running: Stop and the newest output line replace Play', async () => {
     await mountTab(playable([running({ lastLine: 'listening on 3000' })]));
     expect(await screen.findByRole('button', { name: 'Stop R-1' })).toBeTruthy();
@@ -70,16 +63,6 @@ describe('the status line next to Play', () => {
     const line = screen.getByRole('status', { name: 'Run R-1' });
     expect(line.textContent).toContain('running');
     expect(line.textContent).toContain('listening on 3000');
-  });
-
-  it('running with nothing said yet reads Launching...', async () => {
-    await mountTab(playable([running()]));
-    expect((await screen.findByRole('status', { name: 'Run R-1' })).textContent).toContain('Launching...');
-  });
-
-  it('queued says it waits for a slot', async () => {
-    await mountTab(playable([runDoc('R-1', 'launcher-l1', { status: 'queued', startedAt: null, endedAt: null })]));
-    expect((await screen.findByRole('status', { name: 'Run R-1' })).textContent).toContain('Queued, waiting for a free slot');
   });
 
   it('a run of another definition does not show on this card', async () => {

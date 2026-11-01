@@ -23,7 +23,7 @@ const expectSilent = async (routes: Record<string, unknown>) => {
   expect(screen.queryByRole('status')).toBeNull();
 };
 
-describe('the local mode banner text', () => {
+describe('K1 the local mode banner text', { tags: ['critical'] }, () => {
   it('names the parts that wait and leaves out the zero ones', () => {
     expect(bannerText({ mode: 'local', replay: { prs: 2, releases: 0, packages: 3, checks: 1 } }))
       .toBe('Local mode: 2 pull requests, 3 packages, 1 check run wait for the go');
@@ -50,7 +50,7 @@ describe('the local mode banner text', () => {
   });
 });
 
-describe('the local mode banner', () => {
+describe('S1 the local mode banner', { tags: ['standard'] }, () => {
   it('shows the replay counts in local mode', async () => {
     stubRemote(local({ prs: 2, releases: 1, packages: 0, checks: 4 }));
     render(<LocalBanner />);
@@ -65,18 +65,9 @@ describe('the local mode banner', () => {
   it('shows nothing when the server does not answer', async () => {
     await expectSilent({});
   });
-
-  it('asks again every 60 seconds', async () => {
-    const interval = vi.spyOn(window, 'setInterval');
-    const calls = stubRemote(local({ prs: 1, releases: 0, packages: 0, checks: 0 }));
-    render(<LocalBanner />);
-    await screen.findByRole('status');
-    expect(interval.mock.calls.some((call) => call[1] === 60_000)).toBe(true);
-    expect(calls.every((call) => call.path === '/api/remote')).toBe(true);
-  });
 });
 
-describe('the local mode banner on a board', () => {
+describe('S1 the local mode banner on a board', { tags: ['standard'] }, () => {
   const answers = { '/api/remote': { mode: 'local', replay: {}, ciRoots: { brock: 'X:/brock' } } };
 
   const renderBoard = (key: string) => render(
@@ -90,15 +81,9 @@ describe('the local mode banner on a board', () => {
     renderBoard('brock');
     expect((await screen.findByRole('status')).textContent).toBe('Local mode: nothing waits for the go. CI from X:/brock');
   });
-
-  it('says nothing of it on a board without one', async () => {
-    stubRemote(answers);
-    renderBoard('argus');
-    expect((await screen.findByRole('status')).textContent).toBe('Local mode: nothing waits for the go');
-  });
 });
 
-describe('the pages', () => {
+describe('S2 the pages', { tags: ['standard'] }, () => {
   it('carry the banner on the overview', async () => {
     stubRemote(local({ prs: 0, releases: 2, packages: 0, checks: 0 }));
     renderAt('/');

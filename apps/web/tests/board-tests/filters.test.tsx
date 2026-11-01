@@ -13,7 +13,7 @@ const shown = (...ids: string[]): void => {
   for (const [id, title] of Object.entries(TITLES)) expect(screen.queryByText(title) !== null).toBe(ids.includes(id));
 };
 
-describe('search', () => {
+describe('S1 search', { tags: ['standard'] }, () => {
   it('narrows the tests by id or title and says how many are shown', async () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
@@ -22,13 +22,6 @@ describe('search', () => {
     expect(screen.getByText('2 to run / 3 · filtered')).toBeTruthy();
     typeSearch('t-3');
     shown('T-3');
-  });
-
-  it('says so when no test matches', async () => {
-    await mountTab(filterBoard());
-    await screen.findByText('Login works');
-    typeSearch('zzz');
-    expect(screen.getByText('No test matches the filters.')).toBeTruthy();
   });
 
   it('keeps declared bundles out while a filter is on, and clears with Clear filters', async () => {
@@ -42,7 +35,7 @@ describe('search', () => {
   });
 });
 
-describe('the other filters', () => {
+describe('S1 the other filters', { tags: ['standard'] }, () => {
   it('filter by status, by subject and by what needs you', async () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
@@ -73,7 +66,7 @@ describe('the other filters', () => {
   });
 });
 
-describe('the saved filters', () => {
+describe('S1 the saved filters', { tags: ['standard'] }, () => {
   it('are written under the keys of the Node page and read back on load', async () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');

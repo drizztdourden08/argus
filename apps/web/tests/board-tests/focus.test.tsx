@@ -8,7 +8,7 @@ import { mountTab } from './mount-tab';
 
 cleanAfterEach();
 
-describe('the focus row', () => {
+describe('S1 the focus row', { tags: ['standard'] }, () => {
   it('narrows the tests to one thread and says so, and Show all brings them back', async () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');

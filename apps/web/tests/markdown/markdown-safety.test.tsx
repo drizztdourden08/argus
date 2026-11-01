@@ -62,7 +62,7 @@ const VECTORS = [
   '[a]( https://x.test )',
 ];
 
-describe('markdown link allow-list', () => {
+describe('K4 markdown link allow-list', { tags: ['standard'] }, () => {
   it('a link to http, https or mailto stays a link and the others lose it', () => {
     const allowed = renderMarkdown('[a](https://a.test) [b](http://a.test/x?y#z) [c](HTTPS://A.TEST) [d](mailto:a@b.co)');
     expect(allowed.querySelectorAll('a')).toHaveLength(4);
@@ -102,7 +102,7 @@ describe('markdown link allow-list', () => {
   });
 });
 
-describe('markdown against hostile input', () => {
+describe('K4 markdown against hostile input', { tags: ['standard'] }, () => {
   it('the output of every hostile input only has tags, attributes and URLs from the lists', () => {
     for (const vector of VECTORS) {
       const root = renderMarkdown(vector);

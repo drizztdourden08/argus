@@ -6,7 +6,7 @@ import type { RunEntry } from '../../src/data/runs';
 const run = (id: string, queuedAt: string, extra: object = {}): RunEntry =>
   ({ id, name: 'launcher-main', status: 'exited', queuedAt, ...extra }) as RunEntry;
 
-describe('the order of runs', () => {
+describe('K1 the order of runs', { tags: ['critical'] }, () => {
   it('puts the newest queued run first, and the higher run number first between two queued together', () => {
     const same = '2026-10-26T05:37:51.764Z';
     const runs = [run('R-2', same), run('R-10', same), run('R-3', '2026-10-26T23:18:33.444Z'), run('R-1', '2026-10-26T05:14:09.259Z')];

@@ -21,7 +21,7 @@ const posted = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWi
 
 const rowOf = (container: HTMLElement, id: string): HTMLElement => container.querySelector<HTMLElement>(`[data-test="${id}"]`) as HTMLElement;
 
-describe('a change of the owner the board did not take', () => {
+describe('S1 a change of the owner the board did not take', { tags: ['standard'] }, () => {
   it('says who changed the test after the owner looked, and marks the row', async () => {
     const { container } = await mountTab(board([conflictEntry('O-1', 'T-1')]));
     const region = await screen.findByRole('region', { name: REGION });
@@ -75,10 +75,9 @@ describe('a change of the owner the board did not take', () => {
     await screen.findByText('Test T-1');
     expect(screen.queryByRole('region', { name: REGION })).toBeNull();
   });
-
 });
 
-describe('the conflicted tests in the list and the drawer', () => {
+describe('S1 the conflicted tests in the list and the drawer', { tags: ['standard'] }, () => {
   it('narrows the list to the conflicted tests with the conflict switch', async () => {
     await mountTab(board([conflictEntry('O-1', 'T-1')]));
     await screen.findByText('Test T-2');

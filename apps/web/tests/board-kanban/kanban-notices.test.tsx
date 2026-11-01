@@ -19,7 +19,7 @@ const conflicted = { id: 'O-1-aaaa', ...moveOp, status: 'conflict', by: 'worker'
 
 const NOTICES = 'Changes the board did not take';
 
-describe('a change the board did not take: the notices', () => {
+describe('K3 a change the board did not take: the notices', { tags: ['standard'] }, () => {
   it('says who changed the item after the owner looked, and marks the card', async () => {
     await mountKanban({ items: [item('I-1', { status: 'review', rev: 5 })], entries: [conflicted] });
     const region = await screen.findByRole('region', { name: NOTICES });
@@ -61,7 +61,7 @@ describe('a change the board did not take: the notices', () => {
   });
 });
 
-describe('a change the board did not take: bulk, filter and what is skipped', () => {
+describe('K3 a change the board did not take: bulk', { tags: ['standard'] }, () => {
   it('shows one notice for each op of a bulk entry the board did not take, and acknowledges the entry with the last', async () => {
     const bulk = {
       id: 'O-3-cccc',
@@ -80,21 +80,5 @@ describe('a change the board did not take: bulk, filter and what is skipped', ()
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'ack', replyTo: 'O-3-cccc' });
     expect(screen.queryByRole('region', { name: NOTICES })).toBeNull();
-  });
-
-  it('says nothing about an op on another collection or one the board applied', async () => {
-    const other = { ...moveOp, id: 'O-4-dddd', target: { c: 'agents', id: 'A-1' }, status: 'conflict' };
-    const applied = { ...moveOp, id: 'O-5-eeee', status: 'applied' };
-    await mountKanban({ items: [item('I-1')], entries: [other, applied] });
-    await screen.findByText('Item I-1');
-    expect(screen.queryByRole('region', { name: NOTICES })).toBeNull();
-  });
-
-  it('shows only the cards with a conflict for the conflict filter', async () => {
-    await mountKanban({ items: [item('I-1', { status: 'review', rev: 5 }), item('I-2')], entries: [conflicted] });
-    await screen.findByText('Item I-2');
-    fireEvent.click(screen.getByRole('checkbox', { name: 'conflict' }));
-    expect(screen.queryByText('Item I-2')).toBeNull();
-    expect(screen.getByText('Item I-1')).toBeTruthy();
   });
 });

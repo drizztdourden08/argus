@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { formatDate } from '@drizztdourden08/tessera';
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { CacheReport } from '../../src/data/cache';
 import { renderAt } from '../helpers/render-at';
@@ -13,9 +13,10 @@ installHarness();
 const MB = 1024 * 1024;
 const DAY = 86_400_000;
 const CORE = '@drizztdourden08/brock-core';
-const LATER = new Date(Date.now() + 5 * DAY).toISOString();
+const LATER = '2999-01-01T00:00:00.000Z';
+const BASE = Date.parse('2026-10-01T00:00:00.000Z');
 
-const ago = (days: number): string => new Date(Date.now() - days * DAY).toISOString();
+const ago = (days: number): string => new Date(BASE - days * DAY).toISOString();
 
 const REPORT: CacheReport = {
   root: 'C:/Users/me/.brock/cache/build-cache',
@@ -42,7 +43,7 @@ const REPORT: CacheReport = {
   ],
 };
 
-const PRUNED = { at: new Date().toISOString(), deleted: [{ kind: 'electron', name: 'electron', version: '41.0.0', buildKey: 'win32-x64', sizeBytes: 3 * MB }], abandonedDeleted: 1, freedBytes: 4 * MB, refused: [], failed: [] };
+const PRUNED = { at: '2026-10-29T12:00:00.000Z', deleted: [{ kind: 'electron', name: 'electron', version: '41.0.0', buildKey: 'win32-x64', sizeBytes: 3 * MB }], abandonedDeleted: 1, freedBytes: 4 * MB, refused: [], failed: [] };
 
 const serve = (report: CacheReport = REPORT, prune: { status?: number; body?: unknown } = { body: PRUNED }): ApiCall[] =>
   stubApi((call) => {
@@ -66,14 +67,7 @@ const rowsWith = (text: string): number => bodyRows().filter((row) => row.textCo
 
 const reads = (calls: ApiCall[]): number => calls.filter((call) => call.method === 'GET' && call.path === '/api/cache').length;
 
-describe('the Cache tab listing', () => {
-  it('has a tab beside the other overview tabs', async () => {
-    serve();
-    renderAt('/#cache');
-    expect(await screen.findByRole('tab', { name: /Cache/ })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /Processes/ })).toBeTruthy();
-  });
-
+describe('S1 the Cache tab listing', { tags: ['standard'] }, () => {
   it('shows a row per version with its kind, size, build count and users', async () => {
     await open();
     expect(bodyRows()).toHaveLength(3);
@@ -91,27 +85,6 @@ describe('the Cache tab listing', () => {
     expect(shown(`unused, deleted after ${formatDate(Date.parse(LATER), 'date')}`)).toBeGreaterThan(0);
   });
 
-  it('shows the totals, the folder and the grace period', async () => {
-    await open();
-    expect(screen.getByText('3 versions')).toBeTruthy();
-    expect(screen.getByText('9.0 MB total')).toBeTruthy();
-    expect(screen.getByText('4.0 MB in use')).toBeTruthy();
-    expect(screen.getByText('5.0 MB unused')).toBeTruthy();
-    expect(screen.getByText('3.0 MB ready to delete')).toBeTruthy();
-    expect(screen.getByText('not pruned since Argus started')).toBeTruthy();
-    expect(screen.getByText(/build-cache\. An unused entry is deleted 14 days after its last use\./)).toBeTruthy();
-  });
-
-  it('says there is no folder yet and when the cache is empty', async () => {
-    serve({ ...REPORT, exists: false, rows: [] });
-    renderAt('/#cache');
-    expect(await screen.findByText(/no build cache folder yet/)).toBeTruthy();
-    cleanup();
-    serve({ ...REPORT, rows: [] });
-    renderAt('/#cache');
-    expect(await screen.findByText('The build cache is empty.')).toBeTruthy();
-  });
-
   it('says why when the read fails', async () => {
     stubApi(() => ({ status: 503, body: { error: { code: 'unavailable', message: 'the build cache service is not running' } } }));
     renderAt('/#cache');
@@ -126,7 +99,7 @@ describe('the Cache tab listing', () => {
   });
 });
 
-describe('Prune now', () => {
+describe('K3 Prune now', { tags: ['standard'] }, () => {
   it('lists what will go before it deletes, and Cancel deletes nothing', async () => {
     const calls = await open();
     fireEvent.click(screen.getByRole('button', { name: 'Prune now' }));

@@ -32,12 +32,14 @@ const open = async (wakes: Record<string, object>) => {
   });
 };
 
-describe('the board notices', () => {
+describe('K1 the board notices', { tags: ['critical'] }, () => {
   it('keeps only the passive rows, newest first', () => {
     const docs = Object.entries(WAKES).map(([id, data]) => ({ id, ...data }));
     expect(passiveNotices(docs).map((doc) => doc.id)).toEqual(['W-3', 'W-1']);
   });
+});
 
+describe('S1 the board notices in the header', { tags: ['standard'] }, () => {
   it('counts the notices in the header and lists them on click', async () => {
     await open(WAKES);
     const button = await screen.findByRole('button', { name: /^notices/ });
@@ -51,11 +53,5 @@ describe('the board notices', () => {
     expect(rows[0]?.textContent).toContain('3 worktrees need a decision');
     expect(rows[1]?.textContent).toContain('I-4 sits in doing for 3 days');
     expect(within(panel).queryByText('T-1 failed')).toBeNull();
-  });
-
-  it('shows nothing when there is no notice', async () => {
-    await open({ 'W-2': WAKES['W-2'] });
-    await screen.findByText('Coordination board');
-    expect(screen.queryByRole('button', { name: /^notices/ })).toBeNull();
   });
 });

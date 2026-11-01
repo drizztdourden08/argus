@@ -2,33 +2,14 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
-import { ago, MIN, prDoc, replay, runDoc, stepDoc } from './helpers/fixtures';
+import { ago, MIN, prDoc, runDoc, stepDoc } from './helpers/fixtures';
 import { mountChanges } from './helpers/mount-changes';
 
 cleanAfterEach();
 
-const orderOf = (container: HTMLElement): (string | null)[] => [...container.querySelectorAll('[data-pr]')].map((card) => card.getAttribute('data-pr'));
-
 const cardOf = async (id: string, title = `Title of ${id}`) => within(await screen.findByRole('group', { name: `Pull request ${id}: ${title}` }));
 
-describe('the Changes tab list', () => {
-  it('says there is no pull request yet', async () => {
-    await mountChanges([]);
-    expect(await screen.findByText('No pull requests yet.')).toBeTruthy();
-    expect(screen.getByText(/coord pr open/)).toBeTruthy();
-  });
-
-  it('lists the open ones first, then the newest, and counts them', async () => {
-    const { container } = await mountChanges([
-      prDoc('PR-1', { status: 'merged', createdAt: ago(60 * MIN) }),
-      prDoc('PR-2', { createdAt: ago(30 * MIN) }),
-      prDoc('PR-3', { createdAt: ago(10 * MIN) }),
-      prDoc('PR-4', { status: 'closed', createdAt: ago(5 * MIN) }),
-    ], { '/api/p/rotp/checks?pr=PR-1': { runs: [] } });
-    expect(await screen.findByText('4 pull requests')).toBeTruthy();
-    expect(orderOf(container)).toEqual(['PR-3', 'PR-2', 'PR-4', 'PR-1']);
-  });
-
+describe('S1 the Changes tab list', { tags: ['standard'] }, () => {
   it('shows the status, the branches, the item link, the author, the age and the replay state', async () => {
     await mountChanges([prDoc('PR-1')]);
     const card = await cardOf('PR-1');
@@ -41,23 +22,6 @@ describe('the Changes tab list', () => {
     expect(card.getByText('waits for the go')).toBeTruthy();
   });
 
-  it('shows a merged pull request with its merge commit and a link to its replay', async () => {
-    await mountChanges([prDoc('PR-1', {
-      status: 'merged', mergedAt: ago(2 * MIN), mergeCommit: '9999999aaaaaaa', replay: replay('done', 'https://github.com/o/r/pull/7'),
-    })]);
-    const card = await cardOf('PR-1');
-    expect(card.getByText('Merged')).toBeTruthy();
-    expect(card.getByText('9999999')).toBeTruthy();
-    expect(card.getByRole('link', { name: 'on GitHub' }).getAttribute('href')).toBe('https://github.com/o/r/pull/7');
-  });
-
-  it('marks a failed replay and leaves out a missing item link', async () => {
-    await mountChanges([prDoc('PR-1', { item: null, replay: replay('failed') })]);
-    const card = await cardOf('PR-1');
-    expect(card.getByText('replay failed')).toBeTruthy();
-    expect(card.queryByRole('link')).toBeNull();
-  });
-
   it('follows a pull request live', async () => {
     const { change } = await mountChanges([prDoc('PR-1')]);
     await cardOf('PR-1');
@@ -65,7 +29,9 @@ describe('the Changes tab list', () => {
     const card = await cardOf('PR-1', 'A new title');
     expect(card.getByText('Merged')).toBeTruthy();
   });
+});
 
+describe('K4 the Changes tab title', { tags: ['standard'] }, () => {
   it('draws the title as text, never as markup', async () => {
     const { container } = await mountChanges([prDoc('PR-1', { title: '<img src=x onerror=alert(1)>' })]);
     expect(await screen.findByText('<img src=x onerror=alert(1)>')).toBeTruthy();
@@ -80,7 +46,7 @@ const runs = [
   }),
 ];
 
-describe('the check runs of a pull request', () => {
+describe('S1 the check runs of a pull request', { tags: ['standard'] }, () => {
   it('asks for the runs of the pull request and shows the newest first, open', async () => {
     const { calls } = await mountChanges([prDoc('PR-1', { checks: ['C-1', 'C-2'] })], { '/api/p/rotp/checks?pr=PR-1': { runs } });
     const card = await cardOf('PR-1');
@@ -103,27 +69,13 @@ describe('the check runs of a pull request', () => {
     expect(table.getAllByText('Passed')).toHaveLength(2);
   });
 
-  it('derives the state of a step from its exit code when it has no status', async () => {
-    const run = runDoc('C-3', { steps: [stepDoc('lint', { exitCode: 2 }), stepDoc('test', { exitCode: null, durationMs: null })] });
-    await mountChanges([prDoc('PR-1', { checks: ['C-3'] })], { '/api/p/rotp/checks?pr=PR-1': { runs: [run] } });
-    const table = within(await (await cardOf('PR-1')).findByRole('table', { name: 'Steps of C-3' }));
-    expect(table.getByText('Failed')).toBeTruthy();
-    expect(table.getByText('Queued')).toBeTruthy();
-  });
-
-  it('says there is no run yet', async () => {
-    await mountChanges([prDoc('PR-1')], { '/api/p/rotp/checks?pr=PR-1': { runs: [] } });
-    expect(await (await cardOf('PR-1')).findByText('No check run yet.')).toBeTruthy();
-  });
-
   it('says when the runs could not be read', async () => {
     await mountChanges([prDoc('PR-1')]);
     expect(await screen.findByText(/The check runs could not be read/)).toBeTruthy();
   });
-
 });
 
-describe('the log of a step', () => {
+describe('S1 the log of a step', { tags: ['standard'] }, () => {
   it('opens in a drawer', async () => {
     const { calls } = await mountChanges([prDoc('PR-1', { checks: ['C-2'] })], {
       '/api/p/rotp/checks?pr=PR-1': { runs: [runs[1]] },

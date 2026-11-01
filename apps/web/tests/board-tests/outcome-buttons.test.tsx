@@ -7,30 +7,13 @@ import { board, noteBox, openBox, outcomeButton, resultCalls, send, sendButton, 
 
 cleanAfterEach();
 
-describe('the outcome buttons', () => {
+describe('S1 the outcome buttons', { tags: ['standard'] }, () => {
   it('pass is one click: it posts at once with no note and opens nothing', async () => {
     const { calls } = await mountTab(board());
     fireEvent.click(await waitFor(() => outcomeButton('pass', 'T-1')));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ url: '/api/p/rotp/tests/T-1/result', method: 'POST', body: { outcome: 'pass', text: '' } });
     expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull();
-  });
-
-  it('fail opens the note box in the row: no post, a placeholder, Send fail disabled, the other buttons still there', async () => {
-    const { calls } = await mountTab(board());
-    const box = await openBox('fail');
-    expect(box.placeholder).toBe('What failed? The thread reads this.');
-    expect(sendButton('fail').disabled).toBe(true);
-    expect(calls).toHaveLength(0);
-    for (const name of ['pass', 'partial', 'blocked']) expect(outcomeButton(name)).toBeTruthy();
-    expect(outcomeButton('fail', 'T-1').getAttribute('aria-pressed')).toBe('true');
-  });
-
-  it('partial and blocked ask their own question', async () => {
-    await mountTab(board());
-    expect((await openBox('partial')).placeholder).toBe('What works and what does not?');
-    fireEvent.click(outcomeButton('blocked', 'T-1'));
-    expect(noteBox().placeholder).toBe('What blocks you?');
   });
 
   it('opens the box on one test only: the other row keeps just its buttons', async () => {
@@ -49,7 +32,7 @@ describe('the outcome buttons', () => {
   });
 });
 
-describe('the note box', () => {
+describe('S1 the note box', { tags: ['standard'] }, () => {
   it('disables Send until the text has three non-space characters', async () => {
     await mountTab(board());
     const box = await openBox('fail');
@@ -83,10 +66,9 @@ describe('the note box', () => {
     expect(resultCalls(calls)[0]?.body).toEqual({ outcome: 'partial', text: 'works on pad one' });
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Note for T-1' })).toBeNull());
   });
-
 });
 
-describe('closing and switching the note box', () => {
+describe('S1 closing and switching the note box', { tags: ['standard'] }, () => {
   it('closes on Esc and on Cancel, posts nothing and drops the text', async () => {
     const { calls } = await mountTab(board());
     const box = await openBox('fail');

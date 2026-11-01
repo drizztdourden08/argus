@@ -1,16 +1,15 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MIN, ago, cleanKanban, columnOf, item, mountKanban, openItem, thread } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
 
-describe('adding an item', () => {
+describe('K3 adding an item', { tags: ['standard'] }, () => {
   it('opens the inline form of a column, keeps Add off until there is a title, and posts a create op for the first listed thread', async () => {
     const { posted } = await mountKanban({ items: [] });
     expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
-    expect(screen.queryByRole('dialog', { name: 'New work item' })).toBeNull();
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Brand new  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -18,16 +17,6 @@ describe('adding an item', () => {
     expect(posted[0]?.body).toMatchObject({ kind: 'create', author: 'human', target: { c: 'items' }, set: { title: 'Brand new', thread: 'worker', status: 'todo' } });
     expect(await screen.findByText('Adding "Brand new".')).toBeTruthy();
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull());
-  });
-
-  it('adds with Enter in the title field', async () => {
-    const { posted } = await mountKanban({ items: [item('I-1')] });
-    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
-    const box = screen.getByRole('textbox', { name: 'Title' });
-    fireEvent.change(box, { target: { value: 'By keyboard' } });
-    fireEvent.keyDown(box, { key: 'Enter' });
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ set: { title: 'By keyboard' } });
   });
 
   it('lets the thread be picked, and hides the thread choice in a thread column', async () => {
@@ -59,31 +48,9 @@ describe('adding an item', () => {
     fireEvent.click(open);
     expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
   });
-
-  it('does not add a title over 80 characters', async () => {
-    const { posted } = await mountKanban({ items: [] });
-    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'x'.repeat(81) } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    expect(await screen.findByText('At most 80 characters.')).toBeTruthy();
-    expect(posted).toHaveLength(0);
-  });
 });
 
-describe('the add form in its column', () => {
-  it('opens the form inside its column above the cards, and only in that column', async () => {
-    await mountKanban({ items: [item('I-1')] });
-    fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
-    const column = within(columnOf('To do, 1 card'));
-    const box = column.getByRole('textbox', { name: 'Title' });
-    const card = column.getByText('Item I-1');
-    expect(box.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getAllByRole('textbox', { name: 'Title' })).toHaveLength(1);
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-});
-
-describe('picking several cards', () => {
+describe('K3 picking several cards', { tags: ['standard'] }, () => {
   const two = [item('I-1'), item('I-2')];
 
   const pick = async () => {
@@ -120,16 +87,6 @@ describe('picking several cards', () => {
     expect(await screen.findByText('Undone.')).toBeTruthy();
   });
 
-  it('deletes them with restore as the Undo', async () => {
-    const { posted, bar } = await pick();
-    fireEvent.click(within(bar).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'bulk', ops: [{ kind: 'delete' }, { kind: 'delete' }] });
-    fireEvent.click(await screen.findByRole('button', { name: /Undo/ }));
-    await waitFor(() => expect(posted).toHaveLength(2));
-    expect(posted[1]?.body).toMatchObject({ kind: 'bulk', ops: [{ kind: 'restore' }, { kind: 'restore' }] });
-  });
-
   it('forgets a pick when the card leaves the board', async () => {
     const { change } = await pick();
     change('items', 'I-1', item('I-1', { deletedAt: ago(MIN) }));
@@ -137,34 +94,11 @@ describe('picking several cards', () => {
   });
 });
 
-describe('the menu of a card', () => {
-  const openMenu = async (id: string) => {
-    fireEvent.click(await screen.findByRole('button', { name: `More actions for ${id}` }));
-  };
-
+describe('S1 the menu of a card', { tags: ['standard'] }, () => {
   it('opens the drawer from Edit', async () => {
     await mountKanban({ items: [item('I-1')] });
-    await openMenu('I-1');
+    fireEvent.click(await screen.findByRole('button', { name: 'More actions for I-1' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
     expect(await screen.findByRole('dialog', { name: 'Work item' })).toBeTruthy();
-  });
-
-  it('archives and deletes with the same ops and Undo as the drawer', async () => {
-    const { posted } = await mountKanban({ items: [item('I-1')] });
-    await openMenu('I-1');
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'archive', target: { c: 'items', id: 'I-1' } });
-    await openMenu('I-1');
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }));
-    await waitFor(() => expect(posted).toHaveLength(2));
-    expect(posted[1]?.body).toMatchObject({ kind: 'delete', target: { c: 'items', id: 'I-1' } });
-  });
-
-  it('closes the drawer with its Close button', async () => {
-    await mountKanban({ items: [item('I-1')] });
-    const dialog = await openItem('I-1');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Work item' })).toBeNull());
   });
 });

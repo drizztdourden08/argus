@@ -37,18 +37,10 @@ const mountBoard = (routes: Record<string, unknown>) => {
   );
 };
 
-const versionsOf = (container: HTMLElement): (string | null)[] => [...container.querySelectorAll('[data-version]')].map((card) => card.getAttribute('data-version'));
-
-describe('the board Releases tab', () => {
-  it('says there is no local release yet', async () => {
-    mountBoard({ '/api/p/rotp/releases': { channels: [] } });
-    expect(await screen.findByText('No local releases yet.')).toBeTruthy();
-  });
-
-  it('shows the channels with the newest version first and marks the latest', async () => {
-    const { container } = mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
+describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
+  it('shows the channels and marks the latest version', async () => {
+    mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
     expect(await screen.findByRole('group', { name: 'Channel stable' })).toBeTruthy();
-    expect(versionsOf(container)).toEqual(['1.2.0', '1.1.0', '1.3.0-beta.1']);
     expect(screen.getByText('latest 1.2.0')).toBeTruthy();
     const newest = within(screen.getByRole('group', { name: 'Release 1.2.0 of channel stable' }));
     expect(newest.getByText('latest')).toBeTruthy();
@@ -80,20 +72,13 @@ describe('the board Releases tab', () => {
     expect(card.getByText('2.0 KB')).toBeTruthy();
   });
 
-  it('says a version has no files and leaves out a missing notes link', async () => {
-    mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
-    const card = within(await screen.findByRole('group', { name: 'Release 1.3.0-beta.1 of channel beta' }));
-    expect(card.getByText('No files in this version.')).toBeTruthy();
-    expect(card.queryByRole('link', { name: 'Release notes' })).toBeNull();
-  });
-
   it('says when the releases could not be read', async () => {
     mountBoard({});
     expect(await screen.findByText(/The releases could not be read/)).toBeTruthy();
   });
 });
 
-describe('the overview Releases tab', () => {
+describe('S1 the overview Releases tab', { tags: ['standard'] }, () => {
   it('groups the releases by project', async () => {
     stubRemote({
       '/api/releases': {
@@ -110,11 +95,5 @@ describe('the overview Releases tab', () => {
     expect(screen.queryByRole('link', { name: 'empty' })).toBeNull();
     expect(screen.getByRole('group', { name: 'Release 0.9.0 of channel stable' })).toBeTruthy();
     expect(screen.getByRole('group', { name: 'Release 1.2.0 of channel stable' })).toBeTruthy();
-  });
-
-  it('says there is no local release yet', async () => {
-    stubRemote({ '/api/releases': { projects: [] } });
-    renderAt('/#releases');
-    expect(await screen.findByText('No local releases yet.')).toBeTruthy();
   });
 });

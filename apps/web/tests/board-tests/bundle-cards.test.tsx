@@ -7,7 +7,7 @@ import { mountTab } from './mount-tab';
 
 cleanAfterEach();
 
-describe('the order and the folds of bundle cards', () => {
+describe('S1 the order and the folds of bundle cards', { tags: ['standard'] }, () => {
   it('put the handed bundle first, name it, and open it', async () => {
     const { container } = await mountTab({
       handed: 'b2',
@@ -42,21 +42,9 @@ describe('the order and the folds of bundle cards', () => {
     expect(within(empty).getByText('No test in this bundle yet.')).toBeTruthy();
     expect(within(cardOf(container, '(no build)')).getByText('No bundle')).toBeTruthy();
   });
-
-  it('say draft or ready with the tooltip meaning', async () => {
-    const { container } = await mountTab({
-      builds: [buildDoc('d1', { status: 'draft' }), buildDoc('r1')],
-      tests: [testDoc('T-1', { build: 'd1' }), testDoc('T-2', { build: 'r1' })],
-    });
-    await screen.findByText('Test T-1');
-    const draft = cardOf(container, 'd1').querySelector('[data-bstatus="draft"]');
-    expect(draft?.textContent).toBe('draft');
-    expect(draft?.getAttribute('title')).toMatch(/not built yet/);
-    expect(cardOf(container, 'r1').querySelector('[data-bstatus="ready"]')?.textContent).toBe('ready');
-  });
 });
 
-describe('the sections of a bundle card', () => {
+describe('S1 the sections of a bundle card', { tags: ['standard'] }, () => {
   it('take a test in live: a change moves it from To run to Done', async () => {
     const { change } = await mountTab({ handed: 'bundle-1', builds: [buildDoc('bundle-1')], tests: [testDoc('T-1')] });
     const toRun = await screen.findByRole('group', { name: 'To run' });

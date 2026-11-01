@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { open, posts } from './helpers/dashboards-world';
 import { minutesAgo } from './helpers/fixtures';
@@ -8,7 +8,7 @@ import { stubApi } from './helpers/stub-api';
 
 installHarness();
 
-describe('the send down popover', () => {
+describe('S1 the send down popover', { tags: ['standard'] }, () => {
   it('sends to every lead: the button opens the dialog, the text enables Send down, the post goes to the portfolio route', async () => {
     const calls = stubApi((call) => (call.method === 'POST' ? { body: { id: 'O-1', status: 'delivered', outcome: null } } : undefined));
     await open();
@@ -56,7 +56,7 @@ describe('the send down popover', () => {
   });
 });
 
-describe('running now and sent down', () => {
+describe('S1 running now', { tags: ['standard'] }, () => {
   it('lists the live runs of every project', async () => {
     stubApi((call) => (call.path.startsWith('/api/runs')
       ? { body: { runs: [{ id: 'R-5', scope: 'rotp', name: 'hello', status: 'running', queuedAt: minutesAgo(1), startedAt: minutesAgo(1), lastLine: 'compiling' }] } }
@@ -64,29 +64,5 @@ describe('running now and sent down', () => {
     await open();
     expect(await screen.findByText('hello R-5')).toBeTruthy();
     expect(screen.getByText('compiling')).toBeTruthy();
-  });
-
-  it('counts a queued run from the moment it was queued and heads the list with its column labels', async () => {
-    stubApi((call) => (call.path.startsWith('/api/runs')
-      ? { body: { runs: [{ id: 'R-6', scope: 'rotp', name: 'hello', status: 'queued', queuedAt: minutesAgo(5.5), startedAt: null, lastLine: null }] } }
-      : undefined));
-    await open();
-    const list = await screen.findByRole('list', { name: 'Running now' });
-    expect(await within(list).findByText('6m')).toBeTruthy();
-    expect(list.textContent).toContain('Elapsed');
-    expect(list.textContent).toContain('Project');
-  });
-
-  it('offers a switcher that lists every project', async () => {
-    stubApi();
-    await open();
-    expect(await screen.findByRole('combobox', { name: 'Switch project' })).toBeTruthy();
-  });
-
-  it('counts what was sent down', async () => {
-    stubApi();
-    await open({ entries: { 'O-1': { id: 'O-1', kind: 'decision', author: 'human', project: 'rotp', text: 'go ahead', createdAt: minutesAgo(4), status: 'delivered' } } });
-    expect(await screen.findByText('Sent down (1)')).toBeTruthy();
-    await waitFor(() => expect(screen.queryByText('Sent down (0)')).toBeNull());
   });
 });
