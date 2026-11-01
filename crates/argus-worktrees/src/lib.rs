@@ -41,6 +41,7 @@ mod modules;
 mod parse;
 mod paths;
 mod ports;
+mod progress;
 mod prune;
 mod queue;
 mod remove;
@@ -78,6 +79,7 @@ pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
+pub use progress::Step as RemovalStep;
 pub use ports::{
     ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
 };

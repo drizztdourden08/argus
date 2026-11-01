@@ -120,6 +120,8 @@ pub struct State {
     pub gh_cache: HashMap<String, GhCached>,
     pub proc_cache: Option<(i64, Vec<ProcInfo>)>,
     pub rescans: BTreeSet<String>,
+    /// What each running removal does now, by worktree id.
+    pub steps: HashMap<String, crate::progress::Step>,
     pub stopped: bool,
 }
 

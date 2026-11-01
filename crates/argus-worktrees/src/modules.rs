@@ -7,6 +7,7 @@ use crate::fact::Fact;
 use crate::paths::join_path;
 use crate::service::Service;
 use crate::tree::remove_entry;
+use std::io;
 
 /// What Argus did to the `node_modules` of a worktree before git ran.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,12 +48,37 @@ impl Service {
         tracked.code == Some(0) && tracked.stdout.is_empty()
     }
 
+    /// One entry through the junction-safe delete, counted on the removal's step.
+    fn remove_counted(&self, id: &str, path: &str, done: &mut u64) -> io::Result<()> {
+        remove_entry(self.deps.fs.as_ref(), path, self.opts.drop_links_first)?;
+        *done += 1;
+        self.step_done(id, *done);
+        Ok(())
+    }
+
+    /// The folder entry by entry, and one level deeper in a real folder (pnpm's `.pnpm` holds nearly everything), so
+    /// the step shows how far it got. Every entry goes through `remove_entry`: a link as a link, never followed.
+    fn clear_counted(&self, id: &str, modules: &str) -> io::Result<()> {
+        let fs = self.deps.fs.as_ref();
+        let mut done = 0;
+        for entry in fs.read_dir(modules)? {
+            let path = join_path(modules, &entry.name);
+            if fs.lstat(&path).is_ok_and(|s| s.is_dir && !s.is_link) {
+                for inner in fs.read_dir(&path)? {
+                    self.remove_counted(id, &join_path(&path, &inner.name), &mut done)?;
+                }
+            }
+            self.remove_counted(id, &path, &mut done)?;
+        }
+        fs.remove_dir(modules)
+    }
+
     pub(crate) fn clear_ignored_node_modules(&self, now: &Fact) -> NodeModules {
         let modules = join_path(&now.path, "node_modules");
         if !self.modules_are_ours(&now.path, &modules) {
             return NodeModules::Untouched;
         }
-        let _ = remove_entry(self.deps.fs.as_ref(), &modules, self.opts.drop_links_first);
+        let _ = self.clear_counted(&now.id, &modules);
         if self.deps.fs.exists(&modules) {
             NodeModules::Partial
         } else {

@@ -125,6 +125,7 @@ impl Service {
             self.with_requests(project, |store| store.list.iter().rev().cloned().collect());
         for current in list.iter_mut().filter_map(|r| r.current.as_mut()) {
             current.for_s = (now - current.since_ms).max(0) / 1000;
+            current.step = self.step_of(project, &current.id);
         }
         list
     }

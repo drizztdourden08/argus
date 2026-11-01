@@ -78,6 +78,8 @@ pub struct Current {
     pub since: String,
     pub since_ms: i64,
     pub for_s: i64,
+    /// What the removal does now, as of the listing.
+    pub step: Option<crate::progress::Step>,
 }
 
 /// The targets a `finished` or `leftovers` request left alone, and why.
