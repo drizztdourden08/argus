@@ -64,11 +64,11 @@ mod tests {
             ]
         );
         d.push("alpha", "lead", "d".to_string());
-        assert!(d.due(5 * MIN, 10 * MIN).is_empty());
+        assert_eq!(d.due(5 * MIN, 10 * MIN), Vec::new());
         assert_eq!(
             d.due(10 * MIN, 10 * MIN),
             vec![wake("alpha", "lead", &["d"])]
         );
-        assert!(d.due(30 * MIN, 10 * MIN).is_empty());
+        assert_eq!(d.due(30 * MIN, 10 * MIN), Vec::new());
     }
 }

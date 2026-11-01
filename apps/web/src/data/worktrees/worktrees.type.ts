@@ -218,6 +218,6 @@ interface BatchResult {
 }
 
 export type {
-  BackupInfo, BatchJob, BatchResult, HygieneMeta, LeftoverInput, PortfolioWorktrees, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeCounter, WorktreeHygiene,
+  BackupInfo, BatchJob, BatchResult, LeftoverInput, PortfolioWorktrees, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeHygiene,
   WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };
