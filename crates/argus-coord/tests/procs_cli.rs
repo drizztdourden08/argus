@@ -96,9 +96,8 @@ fn overlord(rig: &Rig, words: &[&str]) -> Ran {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn rule_set_rm_and_kill_are_refused_for_everyone_but_the_overlord() {
-    let (rig, _fake, pid) = with_child(41_006).await;
-    let pid_text = pid.to_string();
+async fn rule_set_rm_and_kill_rule_are_refused_for_everyone_but_the_overlord() {
+    let (rig, _fake, _pid) = with_child(41_006).await;
     let set = [
         "rule",
         "set",
@@ -108,7 +107,6 @@ async fn rule_set_rm_and_kill_are_refused_for_everyone_but_the_overlord() {
         "--max-mem",
         "800",
     ];
-    let kill = ["kill", pid_text.as_str(), "--reason", "testing it"];
     let refusals = [
         (
             proc(&rig, &set, Some(ALPHA_LEAD), "checkout-alpha"),
@@ -117,10 +115,6 @@ async fn rule_set_rm_and_kill_are_refused_for_everyone_but_the_overlord() {
         (
             proc(&rig, &set[..5], Some(HELPER), "checkout-portfolio"),
             "change the process rules; thread helper is not the coordinator",
-        ),
-        (
-            proc(&rig, &kill, Some(ALPHA_LEAD), "checkout-alpha"),
-            "kill a process; this session belongs to project alpha",
         ),
         (
             proc(&rig, &["kill-rule", "test-kids"], None, "."),
@@ -134,6 +128,33 @@ async fn rule_set_rm_and_kill_are_refused_for_everyone_but_the_overlord() {
             &format!("{OVERLORD}{text}. Ask it with coord lead portfolio"),
         );
     }
+    rig.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_threads_kill_ends_only_its_own_projects_processes() {
+    let (rig, fake, pid) = with_child(41_009).await;
+    let pid_text = pid.to_string();
+    let kill = [
+        "kill",
+        pid_text.as_str(),
+        "--tree",
+        "--reason",
+        "testing it",
+    ];
+    refused(
+        &proc(&rig, &kill, Some(ALPHA_LEAD), "checkout-alpha"),
+        1,
+        &format!(
+            "node {pid} is not inside a folder of project alpha (its root, its worktrees or its ci root)"
+        ),
+    );
+    refused(
+        &proc(&rig, &kill, None, "."),
+        1,
+        "this session belongs to no project: coord proc kill ends only a process of the thread's own project",
+    );
+    assert!(fake.alive(pid));
     rig.stop().await;
 }
 
