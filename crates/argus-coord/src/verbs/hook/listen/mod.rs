@@ -9,7 +9,12 @@
 //!
 //! A `PostToolUse` listener is skipped while a listener of the thread started in the last two
 //! minutes is alive (the `listen-<project>-<thread>.json` stamp); a `SessionStart` or Stop one
-//! always takes over, since the server keeps one listener per thread.
+//! always takes over, since the server keeps one listener per thread. The `tool` hook keeps a
+//! live listener fresh ([`keep_listener`]), so the one that follows it rarely has to replace it.
+//!
+//! The listener is a process of the hook host, so the host's `asyncRewake` is the only wake
+//! channel: this code never starts one for another process and never needs Node. Under the
+//! shim a Node parent waits on it; called as `argus.exe coord hook listen` there is none.
 
 mod line;
 mod parent;
@@ -67,6 +72,21 @@ fn target_of(board: &Value, project: &str, id: &str) -> Target {
         thread: if lead { "*".to_owned() } else { id.to_owned() },
         label: if label.is_empty() { id } else { label }.to_owned(),
     }
+}
+
+/// The listener check of the `tool` hook, so the `PostToolUse` listener that follows has
+/// nothing to do while a listener waits. A listener that is alive but older than two minutes
+/// is kept fresh (one small file read; a write only then), instead of being replaced by a
+/// new one every two minutes of tool calls. A dead or missing one is left to that listener,
+/// which starts the next. Placeholders and ended threads have none.
+pub fn keep_listener(hook: &Hook<'_>, project: &str, thread: &Value) {
+    let Some(id) = thread["id"].as_str() else {
+        return;
+    };
+    if truthy(thread, "placeholder") || is_ended(&thread["status"]) {
+        return;
+    }
+    stamp::keep(&stamp::file(&hook.paths.home, project, id), listen_ms(hook));
 }
 
 /// Listens for this session's thread until a wake, a replacement or the deadline.

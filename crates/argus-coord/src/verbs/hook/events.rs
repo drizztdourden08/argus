@@ -1,16 +1,17 @@
 //! The four session hooks: `session-start` (JSON context), `prompt` (plain text when adopted,
 //! still a placeholder, or messages wait), `tool` (JSON context when adopted or messages wait)
 //! and `stop` (a block with the messages as the reason). Stop marks the thread idle and never
-//! adopts.
+//! adopts. A call from a sub-agent (its payload has an `agent_id`) hands no messages over, since
+//! they are its lead's; a `tool` call of the thread itself also keeps its wake listener fresh.
 
 use argus_board::json::truthy;
 use serde_json::{Value, json};
 
 use super::Said;
-use super::binding::payload_agent_id;
 use super::context::{context, render};
 use super::ctx::Hook;
-use super::visit::{Hit, visit};
+use super::listen::keep_listener;
+use super::visit::{Hit, Mode, visit};
 use crate::cli::CoordError;
 
 fn session_start(hook: &Hook<'_>, hit: &Hit, project: &str) -> Value {
@@ -51,7 +52,7 @@ fn stop(hit: &Hit) -> Option<Value> {
 fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
     match event {
         "stop" => Some("idle"),
-        "tool" if payload_agent_id(hook).is_some() => None,
+        "tool" if hook.from_sub_agent() => None,
         _ => Some("working"),
     }
 }
@@ -59,9 +60,17 @@ fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
 /// Runs one of the four session hooks.
 pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
     let project = hook.project()?;
-    let Some(hit) = visit(hook, &project, activity_of(hook, event), event != "stop")? else {
+    let mode = Mode {
+        activity: activity_of(hook, event),
+        may_adopt: event != "stop",
+        deliver: !hook.from_sub_agent(),
+    };
+    let Some(hit) = visit(hook, &project, mode)? else {
         return Ok(Said::Nothing);
     };
+    if event == "tool" && mode.deliver {
+        keep_listener(hook, &project, &hit.thread);
+    }
     let out = match event {
         "session-start" => Some(session_start(hook, &hit, &project)),
         "prompt" => prompt(hook, &hit, &project),

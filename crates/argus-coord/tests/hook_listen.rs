@@ -261,6 +261,62 @@ fn a_tool_use_listener_skips_while_a_fresh_one_lives_and_a_stop_always_takes_ove
     );
 }
 
+fn read_stamp(f: &Fixture) -> Value {
+    serde_json::from_str(&fs::read_to_string(stamp(f)).unwrap()).unwrap()
+}
+
+fn write_stamp(f: &Fixture, pid: u32, at: i64, started: i64) {
+    let old = json!({ "pid": pid, "at": at, "started": started });
+    fs::write(stamp(f), old.to_string()).unwrap();
+}
+
+#[test]
+fn the_tool_hook_keeps_a_live_old_listener_fresh_so_the_listener_after_it_has_nothing_to_do() {
+    let server = Server::start(always(None));
+    let f = fixture(&server);
+    let mut other = other_process();
+    let now = argus_core::clock::now_ms();
+    let started = now - 10 * 60_000;
+    write_stamp(&f, other.id(), started, started);
+    let tool = json!({ "session_id": UI, "cwd": f.cwd_text() });
+    assert_eq!(f.hook("tool", &tool).out, "");
+    let kept = read_stamp(&f);
+    assert_eq!(kept["pid"], other.id());
+    assert_eq!(kept["started"], started);
+    assert!(kept["at"].as_i64().unwrap() >= now, "{kept}");
+    let skipped = listen(&f, UI, "PostToolUse", &[]);
+    assert_eq!((skipped.code, skipped.err.as_str()), (0, ""));
+    assert!(server.paths().is_empty(), "no stream was opened");
+    other.kill().ok();
+    other.wait().ok();
+}
+
+#[test]
+fn the_tool_hook_leaves_a_dead_a_spent_or_a_sub_agents_listener_stamp_as_it_is() {
+    let server = Server::start(always(None));
+    let f = fixture(&server);
+    let tool = json!({ "session_id": UI, "cwd": f.cwd_text() });
+    let now = argus_core::clock::now_ms();
+    let old = now - 10 * 60_000;
+    let mut other = other_process();
+    write_stamp(&f, other.id(), old, now - 7 * 3_600_000);
+    f.hook("tool", &tool);
+    assert_eq!(read_stamp(&f)["at"], old, "past its own deadline");
+    write_stamp(&f, other.id(), old, old);
+    let mut sub = tool.clone();
+    sub["agent_id"] = json!("a1b2c3d4e5f6a7b8c");
+    f.hook("tool", &sub);
+    assert_eq!(read_stamp(&f)["at"], old, "a sub-agent keeps nothing");
+    other.kill().ok();
+    other.wait().ok();
+    write_stamp(&f, other.id(), old, old);
+    f.hook("tool", &tool);
+    assert_eq!(read_stamp(&f)["at"], old, "a dead listener is not kept");
+    fs::remove_file(stamp(&f)).unwrap();
+    f.hook("tool", &tool);
+    assert!(!stamp(&f).exists(), "the tool hook never starts a listener");
+}
+
 #[test]
 fn session_start_says_wakes_are_automatic_only_where_the_settings_carry_the_listen_hook() {
     let server = Server::start(always(None));

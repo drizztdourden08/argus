@@ -471,6 +471,67 @@ exit 120, `ARGUS_COORD_PARENT`, the shim log) and confirms the render reached ev
 lead then moves through 3a and 3b on its own. 3c (hooks) needs the Overlord's explicit go,
 because every session depends on it.
 
+### 3c in detail: the hooks
+
+What the Rust hooks do that Node's do not, both owner-approved:
+
+- A call whose payload has a non-empty `agent_id` (a sub-agent's) hands no inbox messages over
+  and marks none delivered, in `session-start`, `prompt`, `tool` and `stop`. They stay in the
+  inbox for the thread's own next hook. Node hands them to the sub-agent. Its activity rule
+  (a sub-agent's `tool` call marks no activity) is the same on both.
+- The `tool` hook of the thread itself keeps its wake listener fresh: when
+  `listen-<project>-<thread>.json` in `$node` names a live process and is older than two
+  minutes, its `at` is set to now (one small read, a write only then). The `hook listen` that
+  follows on `PostToolUse` then skips, instead of replacing a listener that still waits. A dead
+  or missing listener is left to that `hook listen`, which starts the next.
+
+The listener is the only long process. It is a hook host process (`async`, `asyncRewake`), so
+it can only be made by the three `hook listen` entries of `shared/hooks.json`. Through the shim
+each is a Node parent waiting (`spawnSync`) on the `argus.exe coord hook listen` child. For no
+`node ... hook listen` to stay resident, those three entries must call the exe directly. That is
+a render change of the Overlord (the first step below). The other hooks stay on the shim.
+
+The steps, in this order:
+
+1. The Overlord gives the go, the latency bench passes, 3a and 3b have run for a week.
+2. The Overlord renders the three `hook listen` entries (`PostToolUse`, `SessionStart`, `Stop`)
+   of `$cfg\shared\hooks.json` as `<exe> coord hook listen` with `$argus` spelled out and the
+   same `timeout`, `async` and `asyncRewake`, and re-renders every project. Check one
+   `.claude\settings.json`: the line still contains `hook listen`, which is how the session
+   start knows its wake is automatic.
+3. The lead edits `$node\config.json` in one save: `"coordEngine": "argus"`, `"exe"` as it is,
+   and `"coordVerbs"` the full list, the 3a and 3b verbs plus `hook`, or `["*"]` at `done`:
+
+   ```json
+   "coordVerbs": ["activity", "proc", "wake-fault", "check", "tick", "board", "dashboard",
+     "run", "ping", "lead", "portfolio", "worktree", "item", "test", "entry", "ask", "decide",
+     "notify", "message", "answer", "action", "todo", "lock", "log", "inbox", "agent", "build",
+     "launcher", "thread", "dispatch", "purge", "restore", "trash", "sync", "hook"]
+   ```
+
+4. Verify, from any project, after one new prompt in any session:
+
+   ```powershell
+   Get-Content "$node\logs\coord-shim.log" -Tail 5      # no new "fallback to node" lines
+   # The hooks run Argus: a listen stamp written since the flip has a "started" field, which
+   # only the Rust listener writes (Node writes pid and at).
+   Get-ChildItem "$node\listen-*.json" | ForEach-Object { "$($_.Name) $(Get-Content $_ -Raw)" }
+   # No resident Node listener: only argus.exe rows may match.
+   Get-CimInstance Win32_Process |
+     Where-Object { $_.Name -in 'node.exe', 'argus.exe' -and $_.CommandLine -match 'hook listen' } |
+     Select-Object ProcessId, Name, CommandLine
+   ```
+
+   Any `node.exe` row means step 2 did not reach that project (the lead re-renders it, then
+   the next `Stop` of that session replaces the listener, the server keeps one per thread).
+   A direct probe of one hook: `'{}' | & $argus coord hook tool` exits 0 and prints nothing.
+5. Roll back: set `"coordEngine": "node"` in `$node\config.json` (the next hook call runs
+   Node, no restart, no render). The Rust listeners that are running finish by themselves or
+   are replaced at the next `Stop`; they write the same stamps and read the same streams, so
+   nothing needs repair. To go all the way back, the Overlord renders the three entries as
+   `node .ai/tools/coord/coord.mjs hook listen` again. `$env:COORD_ENGINE = 'node'` covers one
+   shell only, and not the direct listen entries.
+
 ## 4. The cut
 
 Who: the Argus lead, in one turn, with the Overlord's shim already landed and the owner's go in

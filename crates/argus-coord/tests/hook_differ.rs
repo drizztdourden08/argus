@@ -77,6 +77,34 @@ fn lead(event: &str, name: &str, fields: &serde_json::Value) -> Step {
     hook(event, &input)
 }
 
+/// The sub-agent rule of the tool hook on both engines: a call whose payload has a non-empty
+/// `agent_id` marks no activity, so an idle lead stays idle; an empty `agent_id`, or a
+/// transcript path alone, is the lead's own call. The board has no waiting message: Node
+/// hands a sub-agent its lead's inbox, and the Argus hook (owner-approved, piece 2 of the
+/// hook switch-over) does not, so a message here would differ by design. That half is tested
+/// in `hook_session.rs`.
+#[test]
+fn a_sub_agents_tool_call_marks_no_activity_on_either_engine() {
+    let call = |fields: serde_json::Value| lead("tool", "PostToolUse", &fields);
+    let steps = [
+        lead("prompt", "UserPromptSubmit", &json!({})),
+        lead("stop", "Stop", &json!({})),
+        call(json!({ "agent_id": "a1111111111111111" })),
+        call(
+            json!({ "agent_id": "a1111111111111111", "agent_transcript_path": "C:/t/agent-a9999999999999999.jsonl" }),
+        ),
+        call(json!({ "agent_id": "" })),
+        lead("stop", "Stop", &json!({})),
+        call(json!({ "agent_transcript_path": "C:/t/agent-a2222222222222222.jsonl" })),
+        lead("stop", "Stop", &json!({})),
+        call(json!({ "agent_id": "a1111111111111111" })),
+    ];
+    run(
+        "a_sub_agents_tool_call_marks_no_activity_on_either_engine",
+        &steps,
+    );
+}
+
 fn dispatches() -> Vec<Step> {
     let tool_input = json!({
         "description": "Run the test suite", "prompt": "run cargo test and report",

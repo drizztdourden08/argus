@@ -38,6 +38,15 @@ impl<'a> Hook<'a> {
         self.input["session_id"].as_str().filter(|s| !s.is_empty())
     }
 
+    /// Whether the call is a sub-agent's: its payload carries a non-empty `agent_id` (the rule
+    /// of `hook.mjs`). A sub-agent's call neither marks its lead's activity nor takes its
+    /// inbox.
+    pub fn from_sub_agent(&self) -> bool {
+        self.input["agent_id"]
+            .as_str()
+            .is_some_and(|id| !id.is_empty())
+    }
+
     /// The project of the hook: found from its folder and session, never from options.
     pub fn project(&self) -> Result<String, CoordError> {
         find_project(self.env, &self.cwd, &Options::default(), self.session_id())

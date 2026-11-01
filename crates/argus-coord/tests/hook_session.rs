@@ -201,3 +201,55 @@ fn a_sub_agents_tool_call_never_puts_an_idle_lead_back_to_work() {
     f.hook("tool", &sub);
     assert_eq!(f.board()["threads"]["ui"]["activity"], "working");
 }
+
+fn from_sub_agent(f: &Fixture, sid: &str) -> Value {
+    let mut sub = input(f, sid);
+    sub["agent_id"] = json!("a1b2c3d4e5f6a7b8c");
+    sub
+}
+
+fn waiting_for_the_lead(f: &Fixture) {
+    with_message(f, "ui", "Start with the parser.");
+    assert!(f.board()["inbox"]["ui"][0]["deliveredAt"].is_null());
+}
+
+#[test]
+fn a_sub_agents_prompt_tool_and_stop_leave_the_inbox_of_its_lead_alone() {
+    for event in ["prompt", "tool", "stop"] {
+        let f = Fixture::new();
+        waiting_for_the_lead(&f);
+        let ran = f.hook(event, &from_sub_agent(&f, UI));
+        assert_eq!((ran.code, ran.out.as_str()), (0, ""), "{event}");
+        assert!(
+            f.board()["inbox"]["ui"][0]["deliveredAt"].is_null(),
+            "{event}"
+        );
+        let lead = f.hook(event, &input(&f, UI));
+        assert!(lead.out.contains("Start with the parser."), "{event}");
+        assert!(f.board()["inbox"]["ui"][0]["deliveredAt"].is_string());
+    }
+}
+
+#[test]
+fn a_sub_agents_session_start_names_no_messages_and_marks_none_delivered() {
+    let f = Fixture::new();
+    waiting_for_the_lead(&f);
+    let ran = f.hook("session-start", &from_sub_agent(&f, UI));
+    assert!(ran.out.contains("You are thread \\\"ui\\\""), "{}", ran.out);
+    assert!(!ran.out.contains("new message(s)"), "{}", ran.out);
+    assert!(f.board()["inbox"]["ui"][0]["deliveredAt"].is_null());
+    let lead = f.hook("session-start", &input(&f, UI));
+    assert!(lead.out.contains("1 new message(s)"), "{}", lead.out);
+}
+
+#[test]
+fn only_a_non_empty_agent_id_makes_a_call_a_sub_agents() {
+    let f = Fixture::new();
+    waiting_for_the_lead(&f);
+    let mut blank = input(&f, UI);
+    blank["agent_id"] = json!("");
+    blank["agent_transcript_path"] = json!("C:/t/agent-a2222222222222222.jsonl");
+    let ran = f.hook("tool", &blank);
+    assert!(ran.out.contains("Start with the parser."), "{}", ran.out);
+    assert!(f.board()["inbox"]["ui"][0]["deliveredAt"].is_string());
+}
