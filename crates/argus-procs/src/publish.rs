@@ -23,6 +23,7 @@ fn steady_doc(mut doc: ProcDoc) -> ProcDoc {
     doc.cpu_pct = None;
     doc.age_min = 0;
     doc.idle_min = 0;
+    doc.mem_mb = 0;
     doc
 }
 

@@ -52,12 +52,14 @@ fn a_row_added_or_gone_writes_at_once() {
 }
 
 #[test]
-fn a_changed_memory_writes_at_once() {
+fn a_changed_memory_waits_for_the_heartbeat() {
     let h = harness();
     h.at(T0, one(0, 100));
     h.at(T0 + STEP, one(0, 140));
+    assert_eq!(h.fake.writes(), 1);
+    h.at(T0 + HEARTBEAT_MS, one(0, 150));
     assert_eq!(h.fake.writes(), 2);
-    assert_eq!(h.fake.published().unwrap().0[0].mem_mb, 140);
+    assert_eq!(h.fake.published().unwrap().0[0].mem_mb, 150);
 }
 
 #[test]
