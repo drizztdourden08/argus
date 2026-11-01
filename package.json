@@ -18,8 +18,8 @@
     "lint:md": "markdownlint-cli2",
     "structure": "brock structure --check",
     "test": "standards test && pnpm test:rust",
-    "test:pr": "standards test pr",
-    "test:e2e": "standards test e2e",
+    "test:pr": "standards test pr && node scripts/rust-tests.mjs --tag standard --changed",
+    "test:e2e": "standards test e2e && node scripts/rust-tests.mjs --tag e2e --changed",
     "test:rust": "node scripts/rust-tests.mjs --tag critical --changed",
     "build": "pnpm --filter ./apps/web build",
     "prose": "brock prose",
@@ -28,8 +28,8 @@
     "icons": "node tools/icons/render-argus-icons.mjs"
   },
   "devDependencies": {
-    "@drizztdourden08/brock-build": "^0.110.0",
-    "@drizztdourden08/brock-lint-config": "^0.110.0",
+    "@drizztdourden08/brock-build": "^0.116.0",
+    "@drizztdourden08/brock-lint-config": "^0.116.0",
     "@drizztdourden08/standards": "^0.13.0",
     "@resvg/resvg-js": "2.6.2",
     "jscpd": "catalog:",
