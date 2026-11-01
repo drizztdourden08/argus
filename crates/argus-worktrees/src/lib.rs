@@ -61,6 +61,8 @@ mod turns;
 mod waking;
 
 #[cfg(test)]
+mod fakegit;
+#[cfg(test)]
 mod specs;
 #[cfg(test)]
 mod testkit;

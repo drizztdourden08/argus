@@ -3,7 +3,7 @@
 //! worktree, a prune forgets only the records Argus vetted, a nested repository or a huge untracked tree is not lost
 //! silently, a moved branch tip is never deleted, and a merged pull request with no head proves nothing.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -33,7 +33,6 @@ fn become_worktree(h: &Harness, fx: &Fixture, name: &str) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_batch_job_whose_row_a_scan_turned_into_a_git_worktree_is_refused_and_nothing_is_deleted() {
     let (fx, h) = started(|fx| fs::create_dir_all(fx.path("junk")).unwrap());
     assert_eq!(h.docs()["junk"].status, crate::doc::Status::Leftover);
@@ -63,9 +62,8 @@ fn a_batch_job_whose_row_a_scan_turned_into_a_git_worktree_is_refused_and_nothin
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_finish_of_a_crashed_deletion_under_a_folder_that_is_a_rules_own_folder_is_refused() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     write(&fx.wts, "crashed.argus-deleting-1730000000001/a.txt", "x");
     let rules = vec![
         rule_for(&fx),
@@ -82,7 +80,6 @@ fn a_finish_of_a_crashed_deletion_under_a_folder_that_is_a_rules_own_folder_is_r
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_worktree_folder_that_is_a_link_is_refused() {
     let (fx, h) = started(|_| {});
     let target = id(&h, &fx, "old-merged");
@@ -102,7 +99,6 @@ fn a_worktree_folder_that_is_a_link_is_refused() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn untracked_files_the_backup_can_only_list_are_said_so_in_the_loss_sentence() {
     let (fx, h) = started(|fx| {
         for i in 0..2001 {
@@ -121,9 +117,8 @@ fn untracked_files_the_backup_can_only_list_are_said_so_in_the_loss_sentence() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_branch_whose_tip_moved_after_the_decision_is_not_deleted() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::with_mode(
         &fx.root,
         board_with(vec![rule_for(&fx)]),
@@ -150,7 +145,6 @@ fn a_branch_whose_tip_moved_after_the_decision_is_not_deleted() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_merged_pull_request_that_names_no_head_is_not_proof_of_a_merge() {
     let fx = pull_request_answer_keeps_branch("[{\"number\":7}]");
     assert!(!exists_itself(&fx.path("old-unmerged")));

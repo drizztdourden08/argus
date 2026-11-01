@@ -13,11 +13,11 @@ use crate::exec::GitOutput;
 use crate::request::Discarded;
 use crate::testkit::{
     Fixture, Harness, backdate_index, branches, commit, exists_itself, git_in, listed, owner_now,
-    started, write,
+    started_on, write,
 };
 
 fn setup(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    started(prep)
+    started_on(Fixture::new(), prep)
 }
 
 fn id(h: &Harness, fx: &Fixture, name: &str) -> String {

@@ -4,7 +4,7 @@
 //! `node_modules` clear in Brock to one in Tessera to one in Archipelia, and its deletion job would then have queued
 //! behind theirs. A wait for the project's own turn past a while names the holder.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::progress::WAITING;
 use crate::specs::request_kit::{beta_request_done, until};
@@ -13,7 +13,6 @@ use crate::testkit::{Gate, Harness, backdate, exists_itself, put, started};
 use std::sync::Arc;
 
 #[test]
-#[ignore = "e2e"]
 fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects_leftover_request()
 {
     let (fx, h) = started(|fx| {
@@ -43,7 +42,6 @@ fn a_turn_and_a_deletion_job_held_by_one_project_do_not_hold_up_another_projects
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_removal_that_waits_for_its_projects_turn_past_a_while_names_the_holder_and_its_step() {
     let (_fx, h) = started(|_| {});
     let merged = h.fact("old-merged").id;

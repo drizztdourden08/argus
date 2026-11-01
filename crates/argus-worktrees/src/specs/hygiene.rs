@@ -1,12 +1,12 @@
 //! KEEP: K3, K4.
-//! Worktree hygiene on real throwaway repositories: a worktree is released when no running agent owns it, nothing
+//! Worktree hygiene on the fake git: a worktree is released when no running agent owns it, nothing
 //! holds it and removing it is safe, whatever its age; its thread hears it once (one `worktree-review` wake per
 //! thread, a burst makes one), and after the grace Argus removes it through the same removal and leaves one inbox
 //! note. Each thing that holds a worktree (a running agent, a link, a process) has its test, then the keep, the
 //! thread's own release, the look again right before removing, the sweep on an agent that ended, the counter, and
 //! the cases that are never automatic.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::board::{AgentFact, Caller, Keep, Link};
 use crate::clock::Clock;
@@ -54,7 +54,7 @@ fn releasing(fx: &Fixture, rule: Rule) -> Harness {
 /// A service over a fixture with one clean worktree `agent-a<n>` per agent (at the tip of main: merged), the agents on
 /// the board, one scan, and the request worker started.
 fn world_with(agents: &[(&str, &str, &str)], prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     for (n, _, _) in agents {
         fx.add(&format!("agent-a{n}"));
     }
@@ -158,7 +158,6 @@ fn blocked_by(change: impl FnOnce(&Fixture, &Harness)) -> String {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_clean_worktree_no_running_agent_owns_is_released_at_once() {
     let (fx, h) = world(|_| {});
     assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Released, None)));
@@ -196,7 +195,6 @@ fn a_clean_worktree_no_running_agent_owns_is_released_at_once() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_running_agent_holds_its_worktree_and_it_shows_in_use() {
     let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
     assert_eq!(
@@ -216,7 +214,6 @@ fn a_running_agent_holds_its_worktree_and_it_shows_in_use() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_running_agent_owns_the_folder_named_after_its_claude_id_though_its_record_names_no_worktree() {
     let (_fx, h) = world_with(&[("1", "lead", "working"), ("2", "lead", "done")], |_| {});
     assert_eq!(h.board().agents[0].worktree, None);
@@ -231,16 +228,14 @@ fn a_running_agent_owns_the_folder_named_after_its_claude_id_though_its_record_n
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_failed_agent_has_no_running_owner_so_its_clean_worktree_is_released() {
     let (_fx, h) = world_with(&[("1", "lead", "failed")], |_| {});
     assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Released, None)));
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_worktree_no_agent_record_names_is_released_whatever_its_age() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = releasing(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
@@ -266,9 +261,8 @@ fn a_worktree_no_agent_record_names_is_released_whatever_its_age() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_empty_leftover_folder_is_released_and_goes_through_the_leftover_removal() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let empty = fx.path("agent-gone");
     std::fs::create_dir_all(&empty).unwrap();
     let h = releasing(&fx, rule_for(&fx));
@@ -284,7 +278,6 @@ fn an_empty_leftover_folder_is_released_and_goes_through_the_leftover_removal() 
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_agent_that_ends_asks_for_a_sweep_and_the_counter_counts_the_running_ones() {
     let (_fx, h) = world_with(
         &[("1", "lead", "working"), ("2", "lead", "working")],
@@ -308,7 +301,6 @@ fn an_agent_that_ends_asks_for_a_sweep_and_the_counter_counts_the_running_ones()
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_agent_that_ended_after_the_scan_waits_for_a_fresh_look() {
     let (_fx, h) = world(|_| {});
     let _ = h.svc.take_rescans();
@@ -319,7 +311,6 @@ fn an_agent_that_ended_after_the_scan_waits_for_a_fresh_look() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_record_that_names_the_worktree_owns_it_too() {
     let (fx, h) = world(|fx| {
         fx.add("named-work");
@@ -338,7 +329,6 @@ fn the_record_that_names_the_worktree_owns_it_too() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_keep_holds_it() {
     let (fx, h) = world(|_| {});
     step(&h, QUIET);
@@ -363,7 +353,6 @@ fn a_keep_holds_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_open_item_that_names_it_blocks_it() {
     let why = used_by(|_, h| {
         h.board().links.push(Link {
@@ -375,7 +364,6 @@ fn an_open_item_that_names_it_blocks_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_open_pull_request_of_its_branch_blocks_it() {
     let why = used_by(|_, h| {
         h.board().links.push(Link {
@@ -387,7 +375,6 @@ fn an_open_pull_request_of_its_branch_blocks_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_launcher_in_it_blocks_it() {
     let why = used_by(|fx, h| {
         h.board().links.push(Link {
@@ -399,7 +386,6 @@ fn a_launcher_in_it_blocks_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_bundle_inside_it_blocks_it() {
     let why = used_by(|fx, h| {
         h.board().links.push(Link {
@@ -411,7 +397,6 @@ fn a_bundle_inside_it_blocks_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_run_or_check_run_in_it_blocks_it_and_unreadable_runs_block_everything() {
     let why = used_by(|fx, h| {
         *locked(&h.store.runs) = Ok(vec![Link {
@@ -428,7 +413,6 @@ fn a_run_or_check_run_in_it_blocks_it_and_unreadable_runs_block_everything() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_process_in_it_blocks_it() {
     let why = used_by(|fx, h| {
         h.clock.advance(10_001);
@@ -443,7 +427,6 @@ fn a_process_in_it_blocks_it() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn uncommitted_work_is_never_automatic() {
     let why = blocked_by(|fx, _| {
         put(&fx.path("agent-a1"), "notes.txt", "not committed\n");
@@ -452,7 +435,6 @@ fn uncommitted_work_is_never_automatic() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn commits_no_ref_keeps_are_never_automatic() {
     let (fx, h) = world_with(&[], |fx| {
         let path = fx.path("agent-a1");
@@ -469,7 +451,6 @@ fn commits_no_ref_keeps_are_never_automatic() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_lock_is_never_automatic_but_brocks_own_lock_is() {
     let why = blocked_by(|fx, _| {
         fx.git(&[
@@ -501,9 +482,8 @@ fn a_lock_is_never_automatic_but_brocks_own_lock_is() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_main_checkout_is_never_automatic() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let main_rule = Rule::folder("W-2", &fx.root, "worker").filtered(&["proj"], &[]);
     let h = Harness::new(&fx.root, vec![main_rule], |o| {
         o.release = true;
@@ -527,7 +507,6 @@ fn a_main_checkout_is_never_automatic() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn after_the_grace_argus_removes_it_with_its_merged_branch_and_leaves_one_note() {
     let (fx, h) = world_with(&[("1", "lead", "done"), ("2", "lead", "done")], |_| {});
     let (one, two) = (fx.path("agent-a1"), fx.path("agent-a2"));
@@ -562,7 +541,6 @@ fn after_the_grace_argus_removes_it_with_its_merged_branch_and_leaves_one_note()
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_file_made_dirty_during_the_grace_stops_the_removal() {
     let (fx, h) = world(|_| {});
     let path = fx.path("agent-a1");
@@ -582,7 +560,6 @@ fn a_file_made_dirty_during_the_grace_stops_the_removal() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_burst_of_agents_ending_makes_one_wake_per_thread() {
     let (fx, h) = world_with(
         &[
@@ -623,7 +600,6 @@ fn a_burst_of_agents_ending_makes_one_wake_per_thread() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_is_not_safe()
 {
     let (fx, h) = world_with(
@@ -686,7 +662,6 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
     let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
     let id = h.id_of(&fx.path("agent-a1"));
@@ -712,9 +687,8 @@ fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_junction_inside_is_removed_as_a_link_and_its_target_stays() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let path = fx.add("agent-a1");
     put(&fx.repo, ".git/info/exclude", "lnk\n");
     let sibling = join_path(&fx.root, "sibling");
@@ -738,7 +712,6 @@ fn a_junction_inside_is_removed_as_a_link_and_its_target_stays() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_restart_keeps_when_it_goes() {
     let (fx, h) = world(|_| {});
     step(&h, QUIET);

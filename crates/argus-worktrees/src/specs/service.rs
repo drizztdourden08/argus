@@ -1,7 +1,7 @@
 //! KEEP: K2.
 //! The service: statuses, the docs and the summary it mirrors, the owner's requests, keeps, and the stale signal.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::board::{Answer, EntryWorktree, Keep, OwnerEntry};
 use crate::clock::{DAY_MS, HOUR_MS};
@@ -43,9 +43,8 @@ fn two_rules_started(fx: &Fixture) -> Harness {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_scan_mirrors_one_doc_per_worktree_and_the_gone_folder_is_not_a_row() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     assert_eq!(
         names_of(&h),
@@ -62,9 +61,8 @@ fn a_scan_mirrors_one_doc_per_worktree_and_the_gone_folder_is_not_a_row() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_row_carries_the_branch_the_commit_the_counts_and_what_the_default_branch_lacks() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     let d = h.docs();
     let fresh = &d["fresh"];
@@ -90,9 +88,8 @@ fn a_row_carries_the_branch_the_commit_the_counts_and_what_the_default_branch_la
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_summary_counts_the_rows_by_status_and_reports_each_rule() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     let meta = h.meta();
     assert_eq!((meta.count, meta.gone), (5, 1));
@@ -139,9 +136,8 @@ fn the_summary_counts_the_rows_by_status_and_reports_each_rule() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_project_with_no_rule_is_not_scanned_no_git_empty_docs() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, Vec::new(), |_| {});
     h.scan();
     assert_eq!(h.svc.deps.git.stats().started, 0);
@@ -151,9 +147,8 @@ fn a_project_with_no_rule_is_not_scanned_no_git_empty_docs() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_default_stale_days_are_configurable() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |o| {
         (o.scan_ms, o.stale_days) = (90_000, 30);
     });
@@ -222,9 +217,8 @@ fn with_requests(fx: &Fixture) -> (Harness, String) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_request_is_the_newest_owner_entry_about_the_worktree() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let (h, _) = with_requests(&fx);
     let asked = h.docs()["old-unmerged"].request.clone().unwrap();
     assert_eq!((asked.id.as_str(), asked.kind.as_str()), ("O-2", "check"));
@@ -237,9 +231,8 @@ fn a_request_is_the_newest_owner_entry_about_the_worktree() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_threads_answer_and_a_keep_show_on_the_row_without_git() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let (h, id) = with_requests(&fx);
     let before = h.svc.deps.git.stats().started;
     let answer = Answer {
@@ -270,9 +263,8 @@ fn the_threads_answer_and_a_keep_show_on_the_row_without_git() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_removed_rule_drops_its_rows_at_once_and_a_changed_rule_asks_for_a_scan() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |_| {});
     assert_eq!(h.docs().len(), 5);
     assert!(
@@ -314,9 +306,8 @@ fn sent(h: &Harness) -> serde_json::Map<String, Value> {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn one_wake_goes_to_the_rules_thread_listing_what_needs_a_decision_worst_first() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |_| {});
     let wakes = h.notes.wakes.lock().unwrap().clone();
     assert_eq!(wakes.len(), 1);
@@ -354,9 +345,8 @@ fn one_wake_goes_to_the_rules_thread_listing_what_needs_a_decision_worst_first()
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_same_state_is_not_told_again_before_repeat_ms_then_once_and_the_state_is_saved() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |o| o.repeat_ms = 24 * HOUR_MS);
     assert_eq!(h.notes.wake_count(), 1);
     h.scan();
@@ -380,9 +370,8 @@ fn the_same_state_is_not_told_again_before_repeat_ms_then_once_and_the_state_is_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_restart_on_the_same_database_does_not_tell_the_thread_again() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let first = started(&fx, |_| {});
     assert_eq!(first.notes.wake_count(), 1);
     first.svc.stop();
@@ -392,9 +381,8 @@ fn a_restart_on_the_same_database_does_not_tell_the_thread_again() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_status_change_is_told_alone_a_keep_silences_it_and_it_is_told_again_when_the_keep_ends() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |o| o.repeat_ms = 400 * 24 * HOUR_MS);
     h.notes.wakes.lock().unwrap().clear();
     fs_write(&fx.path("old-unmerged"), "scratch.txt");
@@ -440,9 +428,8 @@ fn fs_write(dir: &str, name: &str) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn an_ended_thread_is_replaced_by_the_lead_and_with_no_lead_nobody_is_told() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.board().threads.get_mut("worker").unwrap().live = false;
     h.scan();
@@ -458,9 +445,8 @@ fn an_ended_thread_is_replaced_by_the_lead_and_with_no_lead_nobody_is_told() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_path_two_rules_reach_is_listed_once_and_a_refused_wake_is_tried_again_at_the_next_scan() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let rules = vec![rule_for(&fx), Rule::folder("W-2", &fx.repo, "lead").repo()];
     let h = Harness::with_mode(&fx.root, board_with(rules), RemoveMode::Real, |_| {});
     h.scan();
@@ -491,9 +477,8 @@ fn a_path_two_rules_reach_is_listed_once_and_a_refused_wake_is_tried_again_at_th
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_stopped_service_scans_nothing() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.svc.stop();
     assert!(h.svc.scan_now("alpha").is_none());
@@ -503,9 +488,8 @@ fn a_stopped_service_scans_nothing() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_rule_whose_scan_fails_says_so_once_for_the_servers_log() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let plain = format!("{}/plain", fx.wts);
     let h = Harness::new(
         &fx.root,

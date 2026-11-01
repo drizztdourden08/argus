@@ -1,8 +1,9 @@
 //! KEEP: K3, K4.
-//! Removing a worktree on real throwaway repositories: every guard, the safe removals, discarding refused or allowed
-//! by the owner's entry, the backup written first and restored from the bundle, the live check and the kept state.
+//! Removing a worktree on the fake git (`testkit::Fixture::fake`): every guard, the safe removals, discarding refused or
+//! allowed by the owner's entry, the backup written first, the live check and the kept state. The bundle fetched back
+//! by a real git is in `remove_real.rs`.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::board::{Caller, EntryWorktree, Keep, OwnerEntry};
 use crate::clock::DAY_MS;
@@ -21,7 +22,7 @@ use std::path::Path;
 use std::time::Duration;
 
 fn setup(prep: impl FnOnce(&Fixture), options: impl FnOnce(&mut Options)) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     prep(&fx);
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], options);
     h.scan();
@@ -47,7 +48,6 @@ fn add_entries(h: &Harness, entries: Vec<OwnerEntry>) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn only_what_is_in_the_live_listing_an_unknown_id_or_path_is_404_and_the_refusal_is_an_activity_line()
  {
     let (_fx, h) = std_setup();
@@ -67,10 +67,9 @@ fn only_what_is_in_the_live_listing_an_unknown_id_or_path_is_404_and_the_refusal
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_project_with_no_rule_lists_nothing_and_the_404_says_to_add_one_a_path_is_never_taken_as_it_is()
 {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, Vec::new(), |_| {});
     h.scan();
     assert!(h.docs().is_empty());
@@ -88,9 +87,8 @@ fn a_project_with_no_rule_lists_nothing_and_the_404_says_to_add_one_a_path_is_ne
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_repo_rule_lists_the_worktrees_wherever_they_are_and_a_path_names_one() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(
         &fx.root,
         vec![Rule::folder("R-1", &fx.repo, "worker").repo()],
@@ -103,7 +101,6 @@ fn a_repo_rule_lists_the_worktrees_wherever_they_are_and_a_path_names_one() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_rule_that_no_longer_covers_the_folder_is_a_403_never_an_arbitrary_path() {
     let (fx, h) = std_setup();
     h.board().rules[0].path = format!("{}/elsewhere", fx.root);
@@ -114,9 +111,8 @@ fn a_rule_that_no_longer_covers_the_folder_is_a_403_never_an_arbitrary_path() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn never_a_main_checkout_a_folder_rule_that_reaches_the_repository_itself() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(
         &fx.root,
         vec![Rule::folder("W-1", &fx.root, "worker")],
@@ -154,7 +150,6 @@ fn detach_at_main(fx: &Fixture) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn never_a_locked_worktree() {
     let (fx, h) = setup(lock_old_merged, |_| {});
     let err = h.refused(&id(&h, &fx, "old-merged"), |_| {});
@@ -164,7 +159,6 @@ fn never_a_locked_worktree() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_live_process_in_the_folder_is_a_423_and_the_coord_request_that_names_it_is_not_a_user() {
     let (fx, h) = std_setup();
     let path = fx.path("old-merged");
@@ -202,7 +196,6 @@ fn a_live_process_in_the_folder_is_a_423_and_the_coord_request_that_names_it_is_
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_commit_after_the_listing_or_a_head_other_than_the_one_the_caller_saw_is_a_409() {
     let (fx, h) = std_setup();
     let target = id(&h, &fx, "old-merged");
@@ -242,7 +235,6 @@ fn a_commit_after_the_listing_or_a_head_other_than_the_one_the_caller_saw_is_a_4
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_rules_thread_and_the_lead_may_remove_another_thread_or_an_ended_one_may_not() {
     let (fx, h) = std_setup();
     let target = id(&h, &fx, "old-merged");
@@ -265,7 +257,6 @@ fn the_rules_thread_and_the_lead_may_remove_another_thread_or_an_ended_one_may_n
 }
 
 #[test]
-#[ignore = "e2e"]
 fn merged_and_clean_goes_with_no_backup_the_row_leaves_at_once_and_branch_deletes_the_merged_branch()
  {
     let (fx, h) = std_setup();
@@ -303,7 +294,6 @@ fn merged_and_clean_goes_with_no_backup_the_row_leaves_at_once_and_branch_delete
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_clean_worktree_whose_head_is_reachable_from_the_default_branch_goes_with_no_branch_to_delete()
 {
     let (fx, h) = setup(detach_at_main, |_| {});
@@ -317,7 +307,6 @@ fn a_clean_worktree_whose_head_is_reachable_from_the_default_branch_goes_with_no
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_gone_folder_is_pruned_by_id_a_folder_that_exists_is_not_and_prune_with_no_id_prunes_every_gone_one()
  {
     let (fx, h) = std_setup();
@@ -412,7 +401,6 @@ fn assert_not_the_owners_say(h: &Harness, target: &str, entry: &str, reason: &st
 }
 
 #[test]
-#[ignore = "e2e"]
 fn work_no_ref_keeps_is_refused_without_discard() {
     let (fx, h) = setup(loose, |_| {});
     let row = &h.docs()["loose"];
@@ -427,7 +415,6 @@ fn work_no_ref_keeps_is_refused_without_discard() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn discard_without_a_valid_owner_entry_is_refused_for_every_way_an_entry_can_fail() {
     let (fx, h) = setup(loose, |_| {});
     add_entries(&h, bad_entries());
@@ -489,7 +476,16 @@ fn answered_by_decision() -> Vec<OwnerEntry> {
 }
 
 fn discard_by_decision() -> (Fixture, Harness, crate::request::RemoveOutcome, String) {
-    let (fx, h) = setup(dirty_old_unmerged, |_| {});
+    discard_by_decision_on(Fixture::fake())
+}
+
+/// The owner's decision lets the discard of `old-unmerged` through on this fixture (the fake, or a real git).
+pub(super) fn discard_by_decision_on(
+    fx: Fixture,
+) -> (Fixture, Harness, crate::request::RemoveOutcome, String) {
+    dirty_old_unmerged(&fx);
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
     add_entries(&h, answered_by_decision());
     let head = h.docs()["old-unmerged"].head.clone().unwrap();
     let out = h
@@ -505,7 +501,6 @@ fn discard_by_decision() -> (Fixture, Harness, crate::request::RemoveOutcome, St
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_owners_decision_answer_under_the_question_naming_the_folder_lets_the_discard_through() {
     let (fx, _h, out, _head) = discard_by_decision();
     assert_eq!((out.removed, out.deleted_branch), (true, true));
@@ -524,7 +519,6 @@ fn the_owners_decision_answer_under_the_question_naming_the_folder_lets_the_disc
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_bundle_the_patch_and_the_untracked_files_are_written_first() {
     let (_fx, _h, out, head) = discard_by_decision();
     let b = out.backup.clone().unwrap();
@@ -574,9 +568,8 @@ fn the_bundle_the_patch_and_the_untracked_files_are_written_first() {
 }
 
 #[test]
-#[ignore = "e2e"]
-fn the_bundle_gives_the_commit_back_and_the_activity_line_says_how_to_restore() {
-    let (fx, h, out, _head) = discard_by_decision();
+fn the_activity_line_and_the_backup_say_how_to_restore_the_bundle() {
+    let (_fx, h, out, _head) = discard_by_decision();
     let b = out.backup.unwrap();
     assert!(
         b.restore[0].ends_with("old-unmerged:old-unmerged"),
@@ -587,22 +580,6 @@ fn the_bundle_gives_the_commit_back_and_the_activity_line_says_how_to_restore() 
         b.restore[0].contains(".bundle\" old-unmerged"),
         "{}",
         b.restore[0]
-    );
-    git_in(
-        &fx.repo,
-        &[
-            "fetch",
-            "-q",
-            b.bundle.as_deref().unwrap(),
-            "old-unmerged:old-unmerged",
-        ],
-        &[],
-    );
-    let subject = git_in(&fx.repo, &["log", "-1", "--format=%s", "old-unmerged"], &[]);
-    assert_eq!(
-        subject.trim(),
-        "add old.txt",
-        "the bundle gives the commit back"
     );
     let line = h
         .notes
@@ -622,7 +599,6 @@ fn the_bundle_gives_the_commit_back_and_the_activity_line_says_how_to_restore() 
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_followup_that_names_the_folder_is_enough_and_the_page_itself_needs_no_entry() {
     let (fx, h) = std_setup();
     add_entries(
@@ -675,7 +651,6 @@ fn a_followup_that_names_the_folder_is_enough_and_the_page_itself_needs_no_entry
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_backup_that_cannot_be_written_refuses_the_removal() {
     let (fx, h) = setup(loose, |_| {});
     add_entries(&h, vec![owner("O-n", "delete loose")]);
@@ -711,7 +686,6 @@ fn old_file(dir: &str, name: &str, ago_days: f64, offset_secs: u64) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn backups_kept_are_the_last_30_or_the_last_30_days_whichever_is_more() {
     let (_fx, h) = std_setup();
     let dir = h.backups.clone();
@@ -754,7 +728,6 @@ fn backups_kept_are_the_last_30_or_the_last_30_days_whichever_is_more() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_deleted_folder_leaves_the_docs_at_the_live_check_without_git_and_a_new_folder_joins_them() {
     let (fx, h) = std_setup();
     assert_eq!(h.docs()["fresh"].status, Status::Active);
@@ -797,9 +770,8 @@ fn sent_text(h: &Harness) -> String {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn keeps_and_answers_of_worktrees_that_no_longer_exist_leave_the_board() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let gone_id = "abcdef0123";
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.board().keeps.insert(gone_id.into(), day_keep(&h));
@@ -837,7 +809,6 @@ fn keeps_and_answers_of_worktrees_that_no_longer_exist_leave_the_board() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_live_worktree_keeps_its_keep_and_the_sent_map_keeps_live_ones_only() {
     let (fx, h) = std_setup();
     let live = id(&h, &fx, "old-unmerged");
@@ -856,9 +827,8 @@ fn a_live_worktree_keeps_its_keep_and_the_sent_map_keeps_live_ones_only() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_scan_with_a_rule_error_prunes_nothing() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let rules = vec![rule_for(&fx), Rule::folder("W-2", &fx.wts, "worker").repo()];
     let h = Harness::new(&fx.root, rules, |_| {});
     h.board().keeps.insert(
@@ -875,7 +845,6 @@ fn a_scan_with_a_rule_error_prunes_nothing() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn over_many_at_live_folders_the_summary_says_so_and_one_sentence_goes_first_in_the_leads_wake_not_again_before_repeat_ms()
  {
     let (fx, h) = setup(|_| {}, |o| o.many_at = 2);

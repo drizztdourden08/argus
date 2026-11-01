@@ -5,7 +5,7 @@
 //! direct child folder names, and a leftover is never a worktree root git lists, never holds one, never sits inside a
 //! live work tree.
 
-// test-tag: e2e
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -45,7 +45,7 @@ fn page_remove(h: &Harness, id: &str) -> crate::error::WtError {
 }
 
 fn wildcard_setup() -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     live_web_1(&fx);
     let h = Harness::new(
         &fx.root,
@@ -57,7 +57,6 @@ fn wildcard_setup() -> (Fixture, Harness) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_stored_wildcard_rule_is_invalid_no_rows_and_reported_as_invalid() {
     let (_fx, h) = wildcard_setup();
     assert!(
@@ -78,7 +77,6 @@ fn a_stored_wildcard_rule_is_invalid_no_rows_and_reported_as_invalid() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn nothing_is_offered_or_deleted_under_an_invalid_rule() {
     let (fx, h) = wildcard_setup();
     assert_eq!(page_batch(&h).started, 0);
@@ -104,10 +102,9 @@ fn nothing_is_offered_or_deleted_under_an_invalid_rule() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_same_worktree_under_a_literal_parent_rule_with_include_is_one_row_and_its_sub_folders_are_never_candidates()
  {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     live_web_1(&fx);
     let h = Harness::new(
         &fx.root,
@@ -124,7 +121,7 @@ fn junk_setup(
     rules: impl FnOnce(&Fixture) -> Vec<Rule>,
     prep: impl FnOnce(&Fixture),
 ) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     prep(&fx);
     let h = Harness::new(&fx.root, rules(&fx), |_| {});
     h.scan();
@@ -151,7 +148,6 @@ fn add_inner_worktree(fx: &Fixture) {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_folder_that_now_holds_a_worktree_git_lists_is_refused_live_work_not_a_leftover() {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
     assert_eq!(
@@ -185,7 +181,6 @@ fn a_folder_that_now_holds_a_worktree_git_lists_is_refused_live_work_not_a_lefto
 }
 
 #[test]
-#[ignore = "e2e"]
 fn the_bulk_path_applies_the_same_guards_per_folder_the_plain_leftover_beside_it_goes() {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
     add_inner_worktree(&fx);
@@ -209,7 +204,6 @@ fn the_bulk_path_applies_the_same_guards_per_folder_the_plain_leftover_beside_it
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_worktree_that_appears_inside_a_queued_leftover_before_its_turn_makes_that_job_refused_and_nothing_is_deleted()
  {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
@@ -230,7 +224,6 @@ fn a_worktree_that_appears_inside_a_queued_leftover_before_its_turn_makes_that_j
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_folder_inside_a_folder_with_a_git_of_its_own_is_refused() {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
     put(&fx.wts, ".git", "gitdir: /somewhere/else\n");
@@ -241,7 +234,6 @@ fn a_folder_inside_a_folder_with_a_git_of_its_own_is_refused() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_git_file_higher_up_is_refused_but_a_main_repositorys_git_folder_higher_up_is_the_normal_layout()
  {
     let (fx, h) = junk_setup(
@@ -287,7 +279,6 @@ fn a_git_file_higher_up_is_refused_but_a_main_repositorys_git_folder_higher_up_i
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_leftover_with_a_folder_the_walk_cannot_read_is_refused_and_stays() {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
     let target = h.id_of(&format!("{}/junk", fx.wts));
@@ -305,7 +296,6 @@ fn a_leftover_with_a_folder_the_walk_cannot_read_is_refused_and_stays() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_leftover_too_big_to_check_for_nested_repositories_is_refused_and_stays() {
     let (fx, h) = junk_setup(
         |fx| vec![rule_for(fx)],
@@ -329,7 +319,6 @@ fn a_leftover_too_big_to_check_for_nested_repositories_is_refused_and_stays() {
 }
 
 #[test]
-#[ignore = "e2e"]
 fn a_rule_that_is_invalid_or_a_child_its_lists_skip_is_refused_by_the_delete_guards_too() {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
     let target = h.id_of(&format!("{}/junk", fx.wts));

@@ -6,15 +6,16 @@ Verdicts against the shared test standard (`X:/ai-config/docs/test-standard.md`)
 
 | | files before | files after | cases before | cases after | critical | standard | e2e |
 |---|---|---|---|---|---|---|---|
-| argus-worktrees (inline modules in src plus src/specs) | 49 | 55 | 319 | 309 | 84 | 12 | 213 |
+| argus-worktrees (inline modules in src plus src/specs) | 49 | 56 | 319 | 314 | 85 | 186 | 43 |
 | argus-wake (tests/it) | 13 | 13 | 159 | 154 | 146 | 8 | 0 |
-| both | 62 | 68 | 478 | 463 | 230 | 20 | 213 |
+| both | 62 | 69 | 478 | 468 | 231 | 194 | 43 |
 
-Untagged after: 0. Every e2e case also carries `#[ignore = "e2e"]`. Files with tests in argus-worktrees: critical 33, standard 3, e2e 19. In argus-wake: critical 11, standard 2.
+Untagged after: 0. Every e2e case also carries `#[ignore = "e2e"]`. Files with tests in argus-worktrees: critical 33, standard 16, e2e 7. In argus-wake: critical 11, standard 2.
 
 ## Decisions
 
-- **The service harness runs the real git, so its cases are e2e.** `Harness` wraps `ScriptedExec`, which hands every call except `worktree remove` to the real git, and every guard (status, branch, merge-base, ls-files) reads a real repository built by `Fixture`. A fake `h.exec` that carried the removal and refusal cases (K3, K4) as standard would have to emulate git itself, so none was written. All 213 cases that use `Fixture` or `Harness` are e2e; the removal and refusal cases stay, none deleted for being e2e.
+- **The service harness runs on a fake git (I-53).** `Harness` wraps `ScriptedExec`, which hands every call except a simulated `worktree remove` to the git of the fixture. `Fixture::fake()` registers a `FakeGit` (`src/fakegit`) for its folder, so `git_in`, `commit`, `listed`, `branches` and the harness all reach it, and no process starts. `Fixture::new()` stays on the real git. The fake keeps repositories in memory (commits with one parent, branches, remote branches, tags, HEAD per checkout, worktree records, locks, upstreams) and reads the dirty and untracked files from the temporary folder against the files the HEAD commit tracks, with ignore patterns from `info/exclude` and the root `.gitignore`. It writes the folders git keeps (`HEAD`, `index`, loose refs, `worktrees/<name>`) so the scan fingerprints behave. It answers `rev-parse`, `status --porcelain=v1 [-b]`, `log`, `rev-list --count`, `merge-base --is-ancestor`, `for-each-ref --contains`, `cherry`, `symbolic-ref`, `config --get`, `remote get-url|add`, `worktree list|add|remove|lock|unlock|prune`, `update-ref -d`, `bundle create|verify`, `diff HEAD --binary --output=`, `ls-files`, `check-ignore -q`, `add` and `commit -m`; anything else fails with a clear sentence. 170 cases moved to standard; none was deleted.
+- **What stays e2e on the real git, and why.** `safety.rs` (squash merges, a bare origin and a push, `git cherry` patch ids, a real tag: the fake has no merges, no patch ids, no network remotes), `probe.rs` (the fingerprint reads the files real git rewrites), `scan_git.rs` (the real git processes a scan starts and what they leave untouched), `links.rs` (a real `git worktree remove` beside junctions: the smoke for the `node_modules` junction journey), `stuck.rs` (a real 3 s time limit), `exec_real.rs` (real child processes), and `remove_real.rs` (one smoke per journey: remove a merged worktree, refuse a dirty one, a real `git fetch` of the bundle a discard wrote, the git timeout fallback).
 - **Link fixtures are standard, not critical.** `make_link` creates a junction with `cmd /C mklink /J` on Windows, which is a child process. Every case that makes a link (fs.rs, tree.rs, links_fs.rs) is `standard`, and the cases of mixed files were split so no file mixes tags.
 - **Pure files stay critical:** the status judge and wake text (service_status.rs), the nested git walk (rules_walk.rs), the rule and scan cases on a git that says not a repository (scan.rs), the JSON key spelling (wire_answer.rs), and 29 inline modules.
 - **argus-wake is all fake clock.** Debounce and digest cases (wake_policy.rs, engine.rs, items.rs) use `EngineRig` and `Rig` with `ManualClock`: K1 and critical, none touched. `service.rs` runs the whole `WakeService` on in-memory storage (S2), so it is standard; `driver.rs` runs a tokio task with a short real sleep, so it is standard too.
@@ -68,7 +69,7 @@ Paths are under `crates/argus-worktrees/src/`.
 | gh.rs | keep | K4 | critical | 1 | 1 | the default runner only runs `gh pr list` |
 | git.rs | keep | K4 | critical | 7 | 7 | reads are read-only, timeouts, the two-process gate; the gate case lost its 15 ms sleep (Barrier) |
 | guard.rs | keep | K4 | critical | 3 | 3 | which git commands may run |
-| guards.rs | keep | K4 | critical | 4 | 4 | path rules and who may ask |
+| guards.rs | keep | K4 | critical | 4 | 5 | path rules and who may ask; I-55: the sentence for a folder git does not list under a repo rule |
 | holders/mod.rs | keep | K1 | critical | 3 | 3 |  |
 | hygiene/judge.rs | keep | K1 | critical | 2 | 2 |  |
 | hygiene/text.rs | keep | K1 | critical | 1 | 1 |  |
@@ -86,25 +87,26 @@ Paths are under `crates/argus-worktrees/src/`.
 | rule.rs | keep | K4 | critical | 4 | 4 |  |
 | tree.rs | keep | K3 | standard | 4 | 4 | standard: link fixture, as fs.rs |
 | turns.rs | keep | K1 | critical | 2 | 2 | the 50 ms sleep became a wait on the ticket counter |
-| specs/fallback.rs | trim | K3, K4 | e2e | 25 | 23 | 2 deleted (W4) |
-| specs/holders.rs | keep | K4 | e2e | 2 | 2 |  |
-| specs/hygiene.rs | keep | K3, K4 | e2e | 27 | 27 |  |
-| specs/leftover.rs | trim | K3, K4 | e2e | 29 | 27 | 2 moved out (links_fs, service_status), nothing deleted |
+| specs/fallback.rs | trim | K3, K4 | standard | 25 | 23 | 2 deleted (W4); on the fake git |
+| specs/holders.rs | keep | K4 | standard | 2 | 2 | on the fake git |
+| specs/hygiene.rs | keep | K3, K4 | standard | 27 | 27 | on the fake git |
+| specs/leftover.rs | trim | K3, K4 | standard | 29 | 27 | 2 moved out (links_fs, service_status), nothing deleted; on the fake git |
 | specs/links.rs | split | K3 | e2e | 8 | 4 | 4 e2e cases stay; 4 cases moved to links_fs.rs (standard) |
 | specs/probe.rs | keep | K1 | e2e | 7 | 7 |  |
-| specs/remove.rs | keep | K3, K4 | e2e | 25 | 25 |  |
-| specs/requests.rs | keep | K3, K4 | e2e | 15 | 15 | the polling helper within_a_minute became a yield loop |
-| specs/review.rs | trim | K3, K4 | e2e | 9 | 6 | 3 deleted (W4) |
-| specs/round2.rs | keep | K3, K4 | e2e | 10 | 10 |  |
-| specs/rules.rs | split | K4 | e2e | 15 | 11 | 1 deleted (W4); 3 pure walk cases moved to rules_walk.rs (critical) |
+| specs/remove.rs | split | K3, K4 | standard | 25 | 25 | on the fake git; the real `git fetch` of the bundle moved to remove_real.rs, its activity-line half stays here |
+| specs/requests.rs | keep | K3, K4 | standard | 15 | 15 | the polling helper within_a_minute became a yield loop; on the fake git |
+| specs/review.rs | trim | K3, K4 | standard | 9 | 6 | 3 deleted (W4); on the fake git |
+| specs/round2.rs | keep | K3, K4 | standard | 10 | 10 | on the fake git |
+| specs/rules.rs | split | K4 | standard | 15 | 11 | 1 deleted (W4); 3 pure walk cases moved to rules_walk.rs (critical); on the fake git |
 | specs/safety.rs | keep | K3, K4 | e2e | 17 | 17 |  |
 | specs/scan.rs | split | K1 | critical | 12 | 2 | 2 deleted (W4); 2 pure cases stay critical; 8 real git cases moved to scan_git.rs (e2e) |
-| specs/service.rs | split | K2 | e2e | 24 | 16 | 8 pure cases moved to service_status.rs (critical); 16 e2e stay |
-| specs/slow.rs | keep | K3 | e2e | 7 | 7 |  |
+| specs/service.rs | split | K2 | standard | 24 | 16 | 8 pure cases moved to service_status.rs (critical); 16 on the fake git |
+| specs/slow.rs | keep | K3 | standard | 7 | 7 | on the fake git (the timeout is scripted) |
 | specs/stuck.rs | keep | K5 | e2e | 1 | 1 | the 6 s sleep became a Gate; the 3 s limit under test is a real time limit (e2e) |
-| specs/turns.rs | keep | K5 | e2e | 2 | 2 | the polling helper became a yield loop |
-| specs/wire.rs | split | K2 | e2e | 4 | 3 | 3 e2e cases stay; 1 pure case moved to wire_answer.rs (critical) |
+| specs/turns.rs | keep | K5 | standard | 2 | 2 | the polling helper became a yield loop; on the fake git |
+| specs/wire.rs | split | K2 | standard | 4 | 3 | 3 cases stay on the fake git; 1 pure case moved to wire_answer.rs (critical) |
 | specs/exec_real.rs | new | S3 | e2e | 0 | 2 | two real child process cases moved out of exec.rs |
+| specs/remove_real.rs | new | K3, K4 | e2e | 0 | 4 | one smoke per removal journey on the real git: merged goes, dirty is refused, the bundle fetched back, the timeout fallback |
 | specs/links_fs.rs | new | K3 | standard | 0 | 6 | standard: junction fixtures; links.rs pure cases, the leftover scan link case, the measure link case |
 | specs/rules_walk.rs | new | K4 | critical | 0 | 3 | pure cases of the nested git walk |
 | specs/scan_git.rs | new | K1 | e2e | 0 | 8 | the real git cases of scan.rs |
