@@ -578,6 +578,10 @@ Slice 4 ships the PowerShell sampler of the Node server (one hidden `powershell.
 Node while the tab is ported. Slice 6 swaps in the native sampler of `argus-native`. Kills call
 `taskkill /PID n [/T] /F` as Node does.
 
+A thread may end its own project's processes (`coord proc kill` from a project's thread), and the
+reaper ends hung searches and test or build runs after each sample. Both go through one scope
+rule: see [process-reaper.md](process-reaper.md).
+
 ### Worktrees (argus-worktrees)
 
 DESIGN 13.12 module by module: `git` (the read-only allowlist door, 2 processes at most, 10 s
