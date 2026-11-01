@@ -25,7 +25,7 @@ fn reply(mut stream: TcpStream, body: &str) {
 }
 
 /// Answers the health check, and the notices route with `digest`.
-fn serve(digest: Value) -> StandIn {
+fn serve(digest: &Value) -> StandIn {
     let body = digest.to_string();
     StandIn::start(move |_, stream, path| {
         let answer = if path.starts_with("/api/health") {
@@ -61,7 +61,7 @@ fn seen_at(f: &Fixture, id: &str, at: &str) {
 
 #[test]
 fn a_prompt_prints_the_digest_of_the_notices_since_the_thread_last_turn() {
-    let server = serve(digest(Some(LINE)));
+    let server = serve(&digest(Some(LINE)));
     let f = fixture(&server);
     let last_turn = ago(30);
     seen_at(&f, "ui", &last_turn);
@@ -78,7 +78,7 @@ fn a_prompt_prints_the_digest_of_the_notices_since_the_thread_last_turn() {
 
 #[test]
 fn a_lead_asks_for_the_notices_of_every_thread() {
-    let server = serve(digest(Some(LINE)));
+    let server = serve(&digest(Some(LINE)));
     let f = fixture(&server);
     let ran = f.hook("prompt", &input(&f, LEAD));
     assert_eq!(ran.out, LINE);
@@ -93,7 +93,7 @@ fn a_lead_asks_for_the_notices_of_every_thread() {
 
 #[test]
 fn no_notice_and_no_message_say_nothing() {
-    let server = serve(digest(None));
+    let server = serve(&digest(None));
     let f = fixture(&server);
     let ran = f.hook("prompt", &input(&f, UI));
     assert_eq!((ran.code, ran.out.as_str()), (0, ""));
@@ -108,7 +108,7 @@ fn a_dashboard_that_is_down_adds_nothing() {
 
 #[test]
 fn new_messages_and_the_digest_come_in_one_text_the_digest_last() {
-    let server = serve(digest(Some(LINE)));
+    let server = serve(&digest(Some(LINE)));
     let f = fixture(&server);
     let mut board = f.board();
     let message = json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": "Start with the parser.", "ref": null, "deliveredAt": null });

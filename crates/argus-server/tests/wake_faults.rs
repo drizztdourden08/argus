@@ -157,10 +157,15 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
     );
     assert!(line.ends_with("s, nobody listening)"), "{line}");
     assert_eq!(f.main.queued(), 0, "the main coordinator was not woken");
-    let digest =
-        f.t.get("/api/p/portfolio/wakes/notices?thread=coordinator")
-            .await
-            .json();
+    two_fault_notices_in_the_digest(&f.t).await;
+}
+
+/// The main coordinator's prompt digest counts the two fault notices.
+async fn two_fault_notices_in_the_digest(t: &TestServer) {
+    let digest = t
+        .get("/api/p/portfolio/wakes/notices?thread=coordinator")
+        .await
+        .json();
     assert_eq!(digest["count"], 2);
     assert_eq!(
         digest["kinds"],
