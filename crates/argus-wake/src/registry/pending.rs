@@ -5,6 +5,10 @@ use crate::board::ThreadView;
 use crate::time::{iso, parse_ms};
 use crate::wake::WakeRow;
 
+/// The notices the registry and the reminders send the Overlord about faults. They are never waited on:
+/// a fault about them would be a fault about a fault, and the line is sent again while the fault is open.
+const FAULT_NOTICES: [&str; 3] = ["wake-fault", "fault-open", "open-resend"];
+
 /// A wake the registry waits on.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pending {
@@ -51,6 +55,11 @@ impl Registry {
         self.boards.board(scope)?.threads.get(thread).cloned()
     }
 
+    /// Is this a fault notice for the Overlord, which is never waited on?
+    pub(super) fn is_fault_notice(&self, scope: &str, thread: &str, reason: Option<&str>) -> bool {
+        self.is_main(scope, thread) && reason.is_some_and(|r| FAULT_NOTICES.contains(&r))
+    }
+
     pub(super) fn inbox_ids(&self, scope: &str, thread: &str) -> Vec<String> {
         self.boards
             .board(scope)
@@ -66,6 +75,9 @@ impl Registry {
         event: TrackedEvent,
         delivered: bool,
     ) {
+        if self.is_fault_notice(scope, thread, event.reason.as_deref()) {
+            return;
+        }
         let key: Key = (scope.to_owned(), thread.to_owned());
         if let Some(open) = self.open_faults().remove(&key) {
             if !delivered {

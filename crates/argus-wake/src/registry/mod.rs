@@ -16,7 +16,7 @@
 //! delivered and the thread shows no sign of life for more than `reaction_ms`, or when writing it to a
 //! listener threw. A failure opens a fault (one open per project and thread), mirrors it to the row, and
 //! tells the Overlord: a passive `wake-fault` notice, and a real wake `fault-open` at once (not for `board-closed`,
-//! which is the notice only). The fault of the Overlord itself shows on the page only.
+//! which is the notice only). The fault of the Overlord itself shows on the page only, and the fault notices sent to it are never waited on.
 //! A fault ends by itself when the thread listens again (`not-listening`, `no-listener`), when it shows a sign of
 //! life after the fault opened (`no-reaction`, `delivery-error`), when its board opens again, or when the thread
 //! goes idle, since a board is required only inside a turn (`board-closed`). A thread that is sent more wakes while its fault is open tells
@@ -199,7 +199,8 @@ impl Registry {
         for scope in env.engine.known_scopes() {
             for row in env.engine.queued_since(&scope, &since) {
                 let key = (scope.clone(), row.thread.clone());
-                if !self.pending.contains_key(&key) && !open.contains_key(&key) {
+                let notice = self.is_fault_notice(&scope, &row.thread, Some(row.reason.as_str()));
+                if !notice && !self.pending.contains_key(&key) && !open.contains_key(&key) {
                     let inbox = self.inbox_ids(&scope, &row.thread);
                     let pending = Pending::rebuilt(&row, self.started_at, inbox);
                     self.pending.insert(key, pending);
