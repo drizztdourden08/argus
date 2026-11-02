@@ -6,6 +6,7 @@
 //! they are its lead's; a `tool` call of the thread itself also keeps its wake listener fresh.
 
 use argus_board::json::truthy;
+use argus_core::js;
 use serde_json::{Value, json};
 
 use super::Said;
@@ -13,6 +14,7 @@ use super::context::{context, render};
 use super::ctx::Hook;
 use super::listen::keep_listener;
 use super::notices::notice_line;
+use super::read_stamp::stamp;
 use super::visit::{Hit, Mode, visit};
 use crate::cli::CoordError;
 
@@ -65,6 +67,12 @@ fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
     }
 }
 
+/// Whether what the hook printed counts as the thread reading its board messages: it printed
+/// to the thread itself (not a sub-agent), which is registered and was not just adopted.
+fn stamps(hit: &Hit, event: &str, deliver: bool) -> bool {
+    deliver && event != "session-start" && !hit.adopted && !truthy(&hit.thread, "placeholder")
+}
+
 /// Runs one of the four session hooks.
 pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
     let project = hook.project()?;
@@ -85,6 +93,9 @@ pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
         "tool" => tool(hook, &hit, &project),
         _ => stop(&hit),
     };
+    if out.is_some() && stamps(&hit, event, mode.deliver) {
+        stamp(hook, &project, &js::string(&hit.thread["id"]), &hit.fresh);
+    }
     Ok(match out {
         None => Said::Nothing,
         Some(Value::String(text)) => Said::Out(text),

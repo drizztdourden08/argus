@@ -11,6 +11,7 @@ mod reminders;
 mod requests;
 mod service;
 mod stalls_ack;
+mod stalls_history;
 mod stalls_idle;
 mod stalls_silent;
 mod stalls_unread;

@@ -14,6 +14,7 @@ use argus_core::js::encode_uri_component as enc;
 use super::super::Said;
 use super::super::autostart::ensure_dashboard;
 use super::super::ctx::Hook;
+use super::super::read_stamp::stamp_inbox;
 use super::Target;
 use super::line::wake_line;
 use crate::client::{Client, ClientError, DashboardConfig, SseReader, server_port};
@@ -73,7 +74,10 @@ pub fn wait(hook: &Hook<'_>, target: &Target, deadline: i64) -> Said {
     while now_ms() < deadline {
         match listen_once(hook, target, deadline) {
             Heard::Replaced => return Said::Nothing,
-            Heard::Wake(line) => return Said::Wake(line),
+            Heard::Wake(line) => {
+                stamp_inbox(hook, &target.project, &target.id);
+                return Said::Wake(line);
+            }
             Heard::Ended => {}
             Heard::Broken => ensure_dashboard(hook.env, &hook.paths),
         }

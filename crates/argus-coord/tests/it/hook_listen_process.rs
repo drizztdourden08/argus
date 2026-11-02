@@ -11,7 +11,7 @@ use std::process::{Child, Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::hook_support::listen::{always, env_of, listen, serve, wake};
+use crate::hook_support::listen::{always, env_of, listen, serve, streams, wake};
 use crate::hook_support::{Fixture, UI, fixture};
 use serde_json::{Value, json};
 
@@ -56,7 +56,7 @@ fn a_tool_use_listener_skips_while_a_fresh_one_lives_and_a_stop_always_takes_ove
     fs::write(stamp(&f), fresh.to_string()).unwrap();
     let skipped = listen(&f, UI, "PostToolUse", &[]);
     assert_eq!((skipped.code, skipped.err.as_str()), (0, ""));
-    assert_eq!(server.paths().len(), 1, "no second stream");
+    assert_eq!(streams(&server).len(), 1, "no second stream");
     assert_eq!(listen(&f, UI, "Stop", &[]).code, 2, "a Stop takes over");
     other.kill().ok();
     other.wait().ok();

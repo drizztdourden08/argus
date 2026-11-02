@@ -6,6 +6,9 @@
 //! | `unread_ms` (10 min) | an `unread` stall for the Overlord (never about the Overlord itself) |
 //! | `owner_ms` (30 min) | a notice for the owner |
 //!
+//! Only wakes made at or after `since`, the start of the stall watch, are counted: the history from before
+//! it has no read stamps and is never unread.
+//!
 //! Each wake row is read at most once a tick and nothing here writes: the caller sends what comes back.
 
 use std::collections::HashSet;
@@ -40,16 +43,25 @@ pub(super) struct Unread {
 
 struct Scan<'a> {
     now: i64,
+    since: i64,
     env: &'a StallEnv<'a>,
     config: &'a StallConfig,
     acks: Acks<'a>,
 }
 
-/// The ladder over the wake rows of every project, the Overlord's included.
-pub(super) fn scan(now: i64, env: &StallEnv<'_>, config: &StallConfig, kv: &dyn StallKv) -> Unread {
+/// The ladder over the wake rows of every project, the Overlord's included, made at or after `since`
+/// (epoch ms).
+pub(super) fn scan(
+    now: i64,
+    since: i64,
+    env: &StallEnv<'_>,
+    config: &StallConfig,
+    kv: &dyn StallKv,
+) -> Unread {
     let ledger = env.boards.board(PORTFOLIO);
     let scan = Scan {
         now,
+        since,
         env,
         config,
         acks: Acks {
@@ -80,6 +92,7 @@ impl Scan<'_> {
     fn waiting(&self, board: &BoardView, row: &WakeRow, at: i64) -> bool {
         let age = self.now - at;
         is_ackable(&row.reason)
+            && at >= self.since
             && (self.config.nudge_ms..=self.config.horizon_ms).contains(&age)
             && !self.acks.covers(board, row, at)
     }
