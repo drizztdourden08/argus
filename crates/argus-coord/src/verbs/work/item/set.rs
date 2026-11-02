@@ -61,7 +61,7 @@ fn edit(
             r.options,
         )?;
         apply(board, &who, &operation)?;
-        let rev = rev_of(board, "items", &id).to_string();
+        let rev = rev_of(board, "items", &id);
         r.say(&[&said(&id, &rev)]);
         Ok(())
     })

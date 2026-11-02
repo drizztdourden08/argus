@@ -23,7 +23,7 @@ fn asking_queues_one_dep_message_for_the_thread_the_wake_reaches() {
     req.to = Some("dev".to_owned());
     req.ac = vec!["Hook is public".to_owned(), "Docs updated".to_owned()];
     ask_in(h, &req).expect("asked");
-    assert!(messages(h, "beta", "coordinator").is_empty());
+    assert_eq!(messages(h, "beta", "coordinator").len(), 0);
     let sent = messages(h, "beta", "dev");
     assert_eq!(sent.len(), 1);
     assert_eq!(sent[0]["kind"], "dep");
