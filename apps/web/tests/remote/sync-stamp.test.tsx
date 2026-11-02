@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { syncTone } from '../../src/shell/SyncStamp/behavior/sync-tone';
 import { SyncStamp } from '../../src/shell';
@@ -7,6 +7,7 @@ import { feed } from '../overview/helpers/feed';
 import { installHarness } from '../overview/helpers/harness';
 import { stubApi } from '../overview/helpers/stub-api';
 import { renderAt } from '../helpers/render-at';
+import { waitForStream } from '../helpers/wait-for-stream';
 import { seedBoard } from '../helpers/seed-board';
 import { wholeText } from '../helpers/whole-text';
 
@@ -67,7 +68,7 @@ describe('S2 the board header', { tags: ['standard'] }, () => {
   const open = async (syncs: object) => {
     stubApi(answerRemote(syncs));
     const { sources } = renderAt('/p/rotp/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     act(() => seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: new Date(NOW).toISOString() } } }));
   };
 

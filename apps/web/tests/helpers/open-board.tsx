@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { toast } from '@drizztdourden08/tessera';
 import { act, cleanup, screen } from '@testing-library/react';
-import { expect, vi } from 'vitest';
+import { vi } from 'vitest';
 import { renderBody } from './render-body';
 import { seedBoard } from './seed-board';
 import { waitForStream } from './wait-for-stream';
