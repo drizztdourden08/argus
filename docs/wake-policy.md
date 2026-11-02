@@ -38,8 +38,9 @@ A thread is woken for:
 
 It is never woken for, and these stay notices:
 
-- `wake-fault`: `board-closed`, `no-listener`, `no-reaction` (after a restart too),
-  `not-listening` and `delivery-error`, told to the Overlord;
+- `wake-fault`: the record of a fault (`board-closed`, `no-listener`, `no-reaction` (after a restart
+  too), `not-listening` and `delivery-error`) for the Overlord. The Overlord is woken for the
+  fault itself by `fault-open` (see Open faults and notices);
 - `worktree-review`, `worktree-stale`, `launcher-stale`, `launcher-master-missing`;
 - `kanban-stale` (item staleness), `agent-stale` and `agent-checkin` (quiet agent reminders);
 - `remote-sync-due`;
@@ -72,6 +73,35 @@ of the debounce.
 whose `requestedBy` request is `blocked`: the reminder would only nag a thread that cannot act.
 
 The table itself is in `docs/architecture.md` under the wake engine.
+
+## Open faults and notices
+
+A passive notice raised once and never read left faults open for 20 hours. So what stays open
+is pushed (`crates/argus-wake/src/reminders`, driven by `WakeService::reminder_tick`, which the
+service tick runs after each registry tick):
+
+| Reason | Class | Immediate | Who | When | Text |
+|---|---|---|---|---|---|
+| `fault-open` | wake | yes | the Overlord | a wake fault opens (not `board-closed`, which is the `wake-fault` notice only) | `<p>/<thread>: <reason> (<detail>)` |
+| `open-resend` | wake | no | the Overlord | every `reminders.resendMs` (15 min) while a fault, a `worktree-stale` or a `remote-sync-due` notice is open | `2 faults open, oldest 3h; 1 worktree-stale open` |
+
+The line is ONE wake for everything open; the age is the shared age rule (`age_text`). The
+Overlord's own fault is left out of it. The clock starts when something is first seen open and
+stops when nothing is.
+
+- After `reminders.ownerMs` (1 h) a fault also reaches the owner, once, as a toast and a
+  notification, through the owner sink the server plugs in.
+- `board-closed` is raised only for a thread that is working (inside a turn); an idle thread is
+  never faulted, and the fault clears when the thread goes idle or its board opens.
+- A fault clears by itself when its cause is gone, and the activity log says why: the thread
+  listens again (`not-listening`, `no-listener`), it shows a sign of life after the fault opened
+  (`no-reaction`, `delivery-error`), its board opens or it goes idle (`board-closed`).
+- `remote-sync-due` is open while the lead's sync is overdue (a record ends it); `worktree-stale`
+  comes from a notice source the server adds (`WakeService::add_notice_source`).
+
+```json
+{ "reminders": { "resendMs": 900000, "ownerMs": 3600000 } }
+```
 
 ## A passive row
 

@@ -11,7 +11,8 @@ use crate::board::BoardView;
 use crate::config::WakeConfig;
 use crate::engine::{AttachOptions, EngineConfig, WakeEngine, channel};
 use crate::memory::{
-    MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore, MemorySyncs,
+    MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryNotices, MemoryOwner,
+    MemoryStore, MemorySyncs,
 };
 use crate::registry::RowState;
 use crate::service::{WakeDeps, WakeService};
@@ -113,6 +114,10 @@ pub struct Rig {
     pub activity: MemoryActivity,
     /// The remote syncs of the projects.
     pub syncs: MemorySyncs,
+    /// What the owner was told.
+    pub owner: MemoryOwner,
+    /// The open notices of the extra source (`worktree-stale` in the server).
+    pub notices: MemoryNotices,
     /// The service.
     pub service: WakeService,
 }
@@ -128,6 +133,8 @@ impl Rig {
         let boards = MemoryBoards::new();
         let activity = MemoryActivity::new();
         let syncs = MemorySyncs::new();
+        let owner = MemoryOwner::new();
+        let notices = MemoryNotices::new();
         let deps = WakeDeps {
             store: Box::new(store.clone()),
             faults: Box::new(faults.clone()),
@@ -138,7 +145,9 @@ impl Rig {
             activity: Some(Arc::new(activity.clone())),
             clock: Arc::new(clock.clone()),
         };
-        let service = WakeService::new(deps, config, track_presence);
+        let mut service = WakeService::new(deps, config, track_presence);
+        service.set_owner_sink(Arc::new(owner.clone()));
+        service.add_notice_source(Arc::new(notices.clone()));
         Self {
             clock,
             store,
@@ -147,6 +156,8 @@ impl Rig {
             boards,
             activity,
             syncs,
+            owner,
+            notices,
             service,
         }
     }
@@ -244,10 +255,16 @@ impl Rig {
     /// The wakes made for the Overlord about a fault.
     #[must_use]
     pub fn fault_wakes(&self) -> Vec<crate::wake::WakeRow> {
+        self.wakes_of("wake-fault")
+    }
+
+    /// Every wake row of a reason, oldest first.
+    #[must_use]
+    pub fn wakes_of(&self, reason: &str) -> Vec<crate::wake::WakeRow> {
         self.store
             .all()
             .into_iter()
-            .filter(|r| r.reason == "wake-fault")
+            .filter(|r| r.reason == reason)
             .collect()
     }
 }

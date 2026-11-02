@@ -4,6 +4,7 @@
 
 pub mod driver;
 mod periodic;
+mod remind;
 
 use std::sync::Arc;
 
@@ -27,9 +28,10 @@ use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE};
 use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
+use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
 use crate::source::{AgentLive, BoardSource, SyncSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore};
-use crate::sync_wakes::SyncWakes;
+use crate::sync_wakes::{SyncDue, SyncWakes};
 use crate::wake::WakeInput;
 use argus_core::clock::Clock;
 use periodic::Schedule;
@@ -82,6 +84,10 @@ pub struct WakeService {
     items: ItemWakes,
     sync_wakes: SyncWakes,
     dep_wakes: DepWakes,
+    resend: Resend,
+    owner_alerts: OwnerAlerts,
+    owner: Option<Arc<dyn OwnerSink>>,
+    notice_sources: Vec<Arc<dyn NoticeSource>>,
     boards: Arc<dyn BoardSource>,
     live: Arc<dyn AgentLive>,
     syncs: Arc<dyn SyncSource>,
@@ -97,6 +103,12 @@ impl WakeService {
     #[must_use]
     pub fn new(deps: WakeDeps, config: &WakeConfig, track_presence: bool) -> Self {
         let now = deps.clock.now_ms();
+        let sync_due: Arc<dyn NoticeSource> = Arc::new(SyncDue::new(
+            Arc::clone(&deps.boards),
+            Arc::clone(&deps.syncs),
+            config.syncs.due_ms,
+            now,
+        ));
         let engine_config = EngineConfig {
             window_ms: config.window_ms,
             replay_ms: EngineConfig::default().replay_ms,
@@ -128,6 +140,10 @@ impl WakeService {
             items: ItemWakes::new(config.items.clone()),
             sync_wakes: SyncWakes::new(config.syncs.clone(), now),
             dep_wakes: DepWakes::new(config.deps.clone()),
+            resend: Resend::new(config.reminders.resend_ms),
+            owner_alerts: OwnerAlerts::new(config.reminders.owner_ms),
+            owner: None,
+            notice_sources: vec![sync_due],
             boards: deps.boards,
             live: deps.live,
             syncs: deps.syncs,

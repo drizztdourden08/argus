@@ -7,6 +7,7 @@ mod items;
 mod policy;
 mod presence;
 mod registry;
+mod reminders;
 mod requests;
 mod service;
 mod stream;

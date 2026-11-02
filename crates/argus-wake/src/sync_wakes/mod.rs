@@ -12,8 +12,10 @@
 //! The last wake is asked of the wakes table, so a restart does not send it again at once.
 //! The Overlord's own scope has no repository to sync and is left out.
 
+mod due;
 mod text;
 
+pub use due::SyncDue;
 pub use text::{ago_text, due_text};
 
 use std::collections::HashMap;

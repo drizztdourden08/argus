@@ -22,6 +22,7 @@ pub mod policy;
 pub mod presence;
 pub mod reasons;
 pub mod registry;
+pub mod reminders;
 pub mod service;
 pub mod source;
 pub mod sse;

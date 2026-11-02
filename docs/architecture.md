@@ -652,6 +652,8 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
 | `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
+| `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |
+| `open-resend` | wake | to the Overlord every 15 min while a fault, `worktree-stale` or `remote-sync-due` stays open: one coalesced line |
 | `lead-info` | passive | a lead's note, for information only |
 | `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
 | `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
