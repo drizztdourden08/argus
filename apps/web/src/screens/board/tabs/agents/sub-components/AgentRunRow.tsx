@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Box, Button, DateText, Flex, Icon, IconButton, Tag, Text } from '@drizztdourden08/tessera';
+import { Box, Button, Flex, Icon, IconButton, Tag, Text } from '@drizztdourden08/tessera';
 import { isLiveRun, runLine } from '../../../../../data/runs';
 import { formatAgo } from '../../../../../format';
 import { usePlay } from '../../../run-play';
@@ -15,7 +15,7 @@ const detailOf = (props: AgentRunRowProps): string => {
 };
 
 const AgentRunRow = (props: AgentRunRowProps) => {
-  const { run, boardKey, onLog } = props;
+  const { run, boardKey, now, onLog } = props;
   const play = usePlay(boardKey);
   const live = isLiveRun(run);
   return (
@@ -27,7 +27,7 @@ const AgentRunRow = (props: AgentRunRowProps) => {
       </Text>
       <Flex inline gap="sm" align="center">
         <Tag {...tagLook(runLine(run).tone)}>{run.status}</Tag>
-        {live && <DateText value={run.startedAt ?? run.queuedAt} format="elapsed" />}
+        {live && <Text as="span">{runSpan(run, now)}</Text>}
       </Flex>
       <Text as="span" tone="muted" className="agents-run__detail" title={detailOf(props)}>{detailOf(props)}</Text>
       <Flex gap="2xs" align="center" justify="end">

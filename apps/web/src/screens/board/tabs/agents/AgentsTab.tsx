@@ -2,7 +2,7 @@
 import { Box, Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { RunLogDrawer } from '../../run-terminal';
-import { useNow, useStoredFlag } from '../../shared';
+import { SECOND_TICK_MS, useNow, useStoredFlag } from '../../shared';
 import { FINISHED_KEY } from './AgentsTab.constants';
 import type { AgentsTabProps } from './AgentsTab.type';
 import { useAgentActions } from './behavior/useAgentActions';
@@ -27,6 +27,7 @@ const AgentsTab = (props: AgentsTabProps) => {
   const findings = useReconcile(boardKey, view.flagSignature);
   const now = useNow(view.active.length > 0);
   const runs = useAgentRuns(boardKey);
+  const runNow = useNow(runs.live.length > 0, SECOND_TICK_MS);
   const state = useRowState();
   const anchor = useAgentAnchor();
   const [showFinished, setShowFinished] = useStoredFlag(FINISHED_KEY);
@@ -39,7 +40,7 @@ const AgentsTab = (props: AgentsTabProps) => {
       <ReconcilePanel findings={findings} />
       <Box as="section" aria-label="Agents" className="agents-panel">
         <AgentsHeader active={view.active} lead={view.lead} now={now} />
-        <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={now} onLog={setLogId} />
+        <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={runNow} onLog={setLogId} />
         <AgentsBody
           active={view.active}
           done={view.done}

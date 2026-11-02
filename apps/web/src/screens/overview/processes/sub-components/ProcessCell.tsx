@@ -12,6 +12,7 @@ const ProcessCell = (props: ProcessCellProps) => {
   const { row, path, kill } = props;
   const proc = row.item;
   const absent = <Text tone="muted">-</Text>;
+  if (path === 'rule') return <Text size="md">{row.rule}</Text>;
   if (path === 'name') return <NameCell name={row.name} pid={row.pid} />;
   if (path === 'project') return proc.project ? <ProjectLink project={proc.project} tone="link" /> : absent;
   const measure = MEASURE_CELL[path];

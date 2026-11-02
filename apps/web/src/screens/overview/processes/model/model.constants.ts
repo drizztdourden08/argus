@@ -35,7 +35,7 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'kill', label: '', kind: 'string', optional: true },
 ];
 
-const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'memMB', 'cpuPct', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
+const CUSTOM_PATHS: readonly string[] = ['rule', 'name', 'project', 'memMB', 'cpuPct', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];
 
 const COLUMN_SIZE: Readonly<Record<string, Omit<TableColumn, 'path'>>> = {
   rule: { width: 140 },
