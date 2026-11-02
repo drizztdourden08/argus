@@ -32,7 +32,7 @@ const PROC_SCHEMA: readonly FieldDescriptor[] = [
   { path: 'idleMin', label: 'Idle', kind: 'number', optional: true },
   { path: 'status', label: 'Status', kind: 'enum', optional: false, closed: true, options: STATUS_OPTIONS },
   { path: 'cmd', label: 'Command', kind: 'string', optional: true },
-  { path: 'kill', label: 'Kill', kind: 'string', optional: true },
+  { path: 'kill', label: '', kind: 'string', optional: true },
 ];
 
 const CUSTOM_PATHS: readonly string[] = ['name', 'project', 'memMB', 'cpuPct', 'ageMin', 'idleMin', 'status', 'cmd', 'kill'];

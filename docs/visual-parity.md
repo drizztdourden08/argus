@@ -408,7 +408,8 @@ Needs Tessera:
 - 158: a boxed Checkbox (Node draws "needs you", "conflict" and "archived" as small bordered
   boxes with the checkbox inside) and a SegmentedControl size between sm and md (Node segments are 13px
   and 28px, Argus sm is 12px and 22px with almost no padding, Group by and Order).
-- 159: DataTable draws vertical rules between header cells and a "KILL" header on the Processes table,
+- 159: DataTable draws vertical rules between header cells on the Processes table (the "KILL" header is
+  gone: it was the Argus column title, now empty),
   Node has neither; the Processes needs-a-look edge is grey on the basic palette, Node draws it amber
   (rowState edge has no tone).
 - 160: the sign of item 138 in text that goes through a Tessera prop (tags, table cells, InlineEdit
