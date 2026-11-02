@@ -6,6 +6,7 @@
 
 pub mod activity;
 pub mod agent_wakes;
+pub mod blockers;
 pub mod board;
 pub mod config;
 pub mod dep_wakes;
@@ -26,6 +27,7 @@ pub mod reminders;
 pub mod service;
 pub mod source;
 pub mod sse;
+pub mod stall_rules;
 pub mod store;
 pub mod sync_wakes;
 pub mod testkit;

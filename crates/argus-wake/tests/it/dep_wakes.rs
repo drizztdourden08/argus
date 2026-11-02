@@ -178,7 +178,7 @@ fn each_transition_tells_its_side_once_with_the_words_of_the_contract() {
                 "builder",
                 "dep-request",
                 "D-4#1",
-                "alpha/I-7 asks you for I-12 \"Expose the save hook\" (D-4)"
+                "dep D-4: alpha/I-7 needs your I-12 \"Expose the save hook\""
             ),
             (
                 "alpha",

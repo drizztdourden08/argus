@@ -44,6 +44,12 @@ pub struct DepView {
     pub to: DepEnd,
     /// The title of the request.
     pub title: Text,
+    /// `opening`, `open`, `done`, `blocked`...
+    pub state: Text,
+    /// When the dependency first became `open` (ISO).
+    pub opened_at: Text,
+    /// When the assignee first read the request (ISO).
+    pub acked_at: Text,
     /// Why it was last blocked or closed.
     pub reason: Text,
     /// The last transitions, oldest first.

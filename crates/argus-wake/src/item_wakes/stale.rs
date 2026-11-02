@@ -3,8 +3,8 @@
 use std::cmp::Ordering;
 
 use super::ItemWakeConfig;
+use crate::blockers;
 use crate::board::{BoardView, ItemView, LIVE_AGENT, Record};
-use crate::dep_wakes::{RequestedBy, WaitsOn};
 use crate::policy::coordinator_in;
 use crate::reasons::MAIN_SCOPE;
 use crate::source::BoardSource;
@@ -62,7 +62,7 @@ fn stamp(rec: &Record) -> i64 {
 }
 
 /// When the item last changed: itself, and anything that touches it.
-fn last_change(board: &BoardView, item: &ItemView) -> i64 {
+pub(crate) fn last_change(board: &BoardView, item: &ItemView) -> i64 {
     let id = item.rec.id.as_str();
     let own = ms_or_zero(item.rec.updated_at.some()).max(ms_or_zero(item.rec.created_at.some()));
     let records = board
@@ -78,44 +78,33 @@ fn last_change(board: &BoardView, item: &ItemView) -> i64 {
         .fold(own, i64::max)
 }
 
-fn mine(rec: &Record, item_id: &str) -> bool {
-    rec.item.is(item_id) && rec.is_live()
-}
-
-/// Does the item wait on a request to another board, or owe the answer to a request that is blocked?
-fn waits_across_boards(item: &ItemView) -> bool {
-    item.waits_on.as_ref().is_some_and(WaitsOn::is_waiting)
-        || item
-            .requested_by
-            .as_ref()
-            .is_some_and(RequestedBy::is_blocked)
-}
-
 /// Is the item waiting on someone else, so that a reminder to its thread would be wrong?
 fn waiting(board: &BoardView, item: &ItemView) -> bool {
-    if waits_across_boards(item) {
+    if blockers::is_blocked(board, item) {
         return true;
     }
     let id = item.rec.id.as_str();
-    let asks = board.entries.values().any(|e| {
-        mine(&e.rec, id)
-            && ((e.kind.is("question") && e.status.is("open"))
-                || (e.kind.is("decision") && e.status.is("pending")))
-    });
     let todo = board
         .actions
         .values()
-        .any(|a| mine(&a.rec, id) && a.status.is("pending"));
+        .any(|a| a.rec.is_live_on(id) && a.status.is("pending"));
     let handed = board.handed_build.some().is_some_and(|build| {
         board.tests.values().any(|t| {
-            mine(&t.rec, id) && t.mode.is("manual") && t.status.is("pending") && t.build.is(build)
+            t.rec.is_live_on(id)
+                && t.mode.is("manual")
+                && t.status.is("pending")
+                && t.build.is(build)
         })
     });
-    let agent = board
+    todo || handed || has_live_agent(board, id)
+}
+
+/// Does a sub-agent still run on the item?
+pub(crate) fn has_live_agent(board: &BoardView, item_id: &str) -> bool {
+    board
         .agents
         .values()
-        .any(|a| mine(&a.rec, id) && a.status.is_any(&LIVE_AGENT));
-    asks || todo || handed || agent
+        .any(|a| a.rec.is_live_on(item_id) && a.status.is_any(&LIVE_AGENT))
 }
 
 fn stale_in(config: &ItemWakeConfig, now: i64, scope: &str, board: &BoardView) -> Vec<Stale> {
