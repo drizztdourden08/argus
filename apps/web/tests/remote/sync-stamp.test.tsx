@@ -7,7 +7,7 @@ import { feed } from '../overview/helpers/feed';
 import { installHarness } from '../overview/helpers/harness';
 import { stubApi } from '../overview/helpers/stub-api';
 import { renderAt } from '../helpers/render-at';
-import { waitForStream } from '../helpers/wait-for-stream';
+import { liveStream } from '../helpers/wait-for-stream';
 import { seedBoard } from '../helpers/seed-board';
 import { wholeText } from '../helpers/whole-text';
 
@@ -68,8 +68,8 @@ describe('S2 the board header', { tags: ['standard'] }, () => {
   const open = async (syncs: object) => {
     stubApi(answerRemote(syncs));
     const { sources } = renderAt('/p/rotp/');
-    await waitForStream(sources);
-    act(() => seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: new Date(NOW).toISOString() } } }));
+    const board = await liveStream(sources, 'rotp');
+    act(() => seedBoard(board, { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: new Date(NOW).toISOString() } } }));
   };
 
   it('shows when the project last synced with the remote', async () => {
