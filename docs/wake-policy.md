@@ -59,12 +59,13 @@ thread is live, else the lead of that project. A paused thread hears it once it 
 
 | Reason | Class | Immediate | Who | When | Text |
 |---|---|---|---|---|---|
-| `dep-request` | wake | no | the assignee thread, else its lead | the request reaches `open` | `<p>/<I-7> asks you for <I-12> "<title>" (<D-n>)` |
+| `dep-request` | wake | no | the assignee thread, else its lead | the request reaches `open` | `dep <D-n>: <p>/<I-7> needs your <I-12> "<title>"` |
 | `dep-resolved` | wake | yes | the requester thread, else its lead | the assignee item is `done`, `dropped` or `gone` | `<p>/<I-12> is <state> (<D-n>): resume <I-7>` |
 | `dep-blocked` | wake | yes | the requester thread, else its lead | the assignee blocks on the requester | `<p>/<I-12> is blocked on you (<D-n>): <reason>` |
 | `dep-cancelled` | passive | no | the assignee thread | the requester cancels | `<p>/<I-7> cancelled its request <I-12> (<D-n>)` |
 | `dep-reopened` | passive | no | the requester thread | `blocked` or `done` goes back to `open` | `<p>/<I-12> is open again (<D-n>)` |
 
+The hook adds `. Run: coord inbox`, so the thread hears `WAKE ... dep D-11: ... Run: coord inbox`.
 Here `<p>/<I-7>` is the requester item and `<p>/<I-12>` the assignee item, each with its own
 project. Immediate means the window closes at once, and in the debounce the wake goes at the end
 of the debounce.
@@ -83,7 +84,7 @@ service tick runs after each registry tick):
 | Reason | Class | Immediate | Who | When | Text |
 |---|---|---|---|---|---|
 | `fault-open` | wake | yes | the Overlord | a wake fault opens (not `board-closed`, which is the `wake-fault` notice only) | `<p>/<thread>: <reason> (<detail>)` |
-| `open-resend` | wake | no | the Overlord | every `reminders.resendMs` (15 min) while a fault, a `worktree-stale` or a `remote-sync-due` notice is open | `2 faults open, oldest 3h; 1 worktree-stale open` |
+| `open-resend` | wake | no | the Overlord | every `reminders.resendMs` (15 min) while a fault, a `worktree-stale` or a `remote-sync-due` notice or an unacknowledged stall is open | `2 faults open, oldest 3h; 1 worktree-stale open` |
 
 The line is ONE wake for everything open; the age is the shared age rule (`age_text`). The
 Overlord's own fault is left out of it. The clock starts when something is first seen open and
@@ -101,6 +102,41 @@ stops when nothing is.
 
 ```json
 { "reminders": { "resendMs": 900000, "ownerMs": 3600000 } }
+```
+
+## Unread wakes and stalls
+
+A wake the thread skims past is not done. `crates/argus-wake/src/stalls` watches the wakes that ask
+a thread to act (`dep-request`, `item-assigned`, `owner-answer`, `owner-note`, `owner-decision`,
+`portfolio-decision`, `portfolio-note`; never a notice, a fault line, `lead-message`, `stall` or
+`ack-nudge`) and the boards, once a minute (`stall.tickMs`, driven by `WakeService::stall_tick`).
+A wake is acknowledged when the thread read its own inbox after it (`coord inbox`), when the
+thing it asked for happened (the dependency was read or closed, or its item left `todo`; an
+assigned item left `todo` or moved to another thread), or when the thread ended.
+
+| Reason | Class | Immediate | Who | When | Text |
+|---|---|---|---|---|---|
+| `ack-nudge` | wake | yes | the thread that did not read | 5 min after an unacknowledged wake (`stall.nudgeMs`), once | `2nd: <the original text>` |
+| `stall` | wake | yes | the Overlord | a stall is raised, and again every `stall.resendMs` (30 min) until it is acknowledged or clears | `stall: rotp did not read D-11 for 10 min (it is in a turn)` |
+
+- At 10 min (`stall.unreadMs`) an unacknowledged wake becomes an `unread` stall for the Overlord; at
+  30 min (`stall.ownerMs`) the owner also gets a notice. The Overlord's own board gets the nudge and
+  the notice, never a stall about itself.
+- The other stalls come from the boards alone: `unstarted` (a dependency open 30 min with its item
+  still `todo`), `idle` (a live lead with no turn, agent or process for 10 min while an unblocked
+  item is `todo` or `doing`) and `silent` (an item `doing` for 60 min with no board write and no
+  agent). See `crates/argus-wake/src/stall_rules`.
+- A stall is open until its condition clears; the activity log gets a `stall` line when it is
+  raised and a `stall-cleared` line when it clears. The Overlord records `coord stall ack
+  <project> --note "..."`: an acknowledged stall stops its resend and leaves the 15 minute
+  `open-resend` line, and stays on the page until it clears. A new occurrence is a new stall.
+- `stall` is never waited on by the registry, as `fault-open` is not: a fault about a stall line
+  would loop.
+
+```json
+{ "stall": { "enabled": true, "tickMs": 60000, "nudgeMs": 300000, "unreadMs": 600000,
+  "ownerMs": 1800000, "unstartedMs": 1800000, "idleMs": 600000, "silentMs": 3600000,
+  "resendMs": 1800000, "horizonMs": 86400000, "procIdleMin": 10 } }
 ```
 
 ## A passive row

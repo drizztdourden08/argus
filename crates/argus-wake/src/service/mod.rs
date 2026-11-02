@@ -5,6 +5,8 @@
 pub mod driver;
 mod periodic;
 mod remind;
+mod schedule;
+mod stall;
 
 use std::sync::Arc;
 
@@ -26,15 +28,16 @@ use crate::mirror::{WakeDoc, docs_of};
 use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
-use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE};
+use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE, PORTFOLIO};
 use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
 use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
 use crate::source::{AgentLive, BoardSource, SyncSource};
+use crate::stalls::Stalls;
 use crate::store::{RowsQuery, StoreResult, WakeStore};
 use crate::sync_wakes::{SyncDue, SyncWakes};
 use crate::wake::WakeInput;
 use argus_core::clock::Clock;
-use periodic::Schedule;
+use schedule::Schedule;
 
 const DEFAULT_LIST_LIMIT: usize = 50;
 const MAX_LIST_LIMIT: usize = 200;
@@ -84,6 +87,7 @@ pub struct WakeService {
     items: ItemWakes,
     sync_wakes: SyncWakes,
     dep_wakes: DepWakes,
+    stalls: Stalls,
     resend: Resend,
     owner_alerts: OwnerAlerts,
     owner: Option<Arc<dyn OwnerSink>>,
@@ -125,6 +129,7 @@ impl WakeService {
             Some(sink) => Box::new(ActivityFaults::new(deps.faults, Arc::clone(sink))),
             None => deps.faults,
         };
+        let stalls = Stalls::new(config.stall.clone(), Arc::clone(&deps.docs));
         let registry_deps = RegistryDeps {
             boards: Arc::clone(&deps.boards),
             faults,
@@ -140,6 +145,7 @@ impl WakeService {
             items: ItemWakes::new(config.items.clone()),
             sync_wakes: SyncWakes::new(config.syncs.clone(), now),
             dep_wakes: DepWakes::new(config.deps.clone()),
+            stalls,
             resend: Resend::new(config.reminders.resend_ms),
             owner_alerts: OwnerAlerts::new(config.reminders.owner_ms),
             owner: None,
@@ -264,6 +270,9 @@ impl WakeService {
     /// A hard resync wiped the docs of a scope.
     pub fn on_reset(&mut self, scope: &str) {
         self.engine.remirror(scope);
+        if scope == PORTFOLIO {
+            self.stalls.forget_docs();
+        }
         self.with_env(|registry, env| registry.on_reset(env, scope));
     }
 

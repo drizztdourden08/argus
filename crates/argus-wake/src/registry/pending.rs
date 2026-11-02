@@ -7,7 +7,7 @@ use crate::wake::WakeRow;
 
 /// The notices the registry and the reminders send the Overlord about faults. They are never waited on:
 /// a fault about them would be a fault about a fault, and the line is sent again while the fault is open.
-const FAULT_NOTICES: [&str; 3] = ["wake-fault", "fault-open", "open-resend"];
+const FAULT_NOTICES: [&str; 4] = ["wake-fault", "fault-open", "open-resend", "stall"];
 
 /// A wake the registry waits on.
 #[derive(Debug, Clone, PartialEq, Eq)]

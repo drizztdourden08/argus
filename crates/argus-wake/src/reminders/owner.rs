@@ -8,9 +8,17 @@ use crate::activity::fault_line;
 use crate::faults::Fault;
 use crate::time::ms_or_zero;
 
+/// The topic of a notice about a wake fault.
+pub const TOPIC_FAULT: &str = "wake-fault";
+
+/// The topic of a notice about an unread wake.
+pub const TOPIC_STALL: &str = "stall";
+
 /// What the owner is told.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OwnerNotice {
+    /// What the notice is about (`wake-fault` or `stall`); the server keeps one told-mark per topic.
+    pub topic: String,
     /// The headline.
     pub title: String,
     /// The words.
@@ -64,6 +72,7 @@ impl OwnerAlerts {
             let age = now - ms_or_zero(Some(fault.since.as_str()));
             if age >= self.after_ms && self.told.insert(key_of(fault)) {
                 out.push(OwnerNotice {
+                    topic: TOPIC_FAULT.to_owned(),
                     title: format!("Wake fault open for {}", age_text(age)),
                     text: fault_line(fault),
                     project: fault.project.clone(),

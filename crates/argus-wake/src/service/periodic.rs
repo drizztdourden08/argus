@@ -4,14 +4,11 @@ use tracing::warn;
 
 use super::WakeService;
 use crate::activity::ActivityLine;
-use crate::config::WakeConfig;
 use crate::dep_wakes::DepEnv;
 use crate::item_wakes::ItemEnv;
 use crate::registry::Registry;
 use crate::store::WakeStore;
 use crate::sync_wakes::SyncEnv;
-
-const PRUNE_EVERY_MS: i64 = 3_600_000;
 
 /// When the wakes table last sent a reminder, as the wake kinds read it; a table that cannot be read says never and
 /// leaves one warning that names `what`.
@@ -26,48 +23,6 @@ fn last_sent_of<'a>(
                 warn!(%err, "{what}: last wake not read");
                 0
             })
-    }
-}
-
-/// When each periodic job runs next.
-pub(super) struct Schedule {
-    registry: i64,
-    agents: i64,
-    items: i64,
-    syncs: i64,
-    deps: i64,
-    prune: i64,
-    registry_every: i64,
-    agents_every: i64,
-    items_every: i64,
-    syncs_every: i64,
-    deps_every: i64,
-}
-
-impl Schedule {
-    pub(super) fn starting(now: i64, config: &WakeConfig) -> Self {
-        Self {
-            registry: now + config.registry.tick_ms,
-            agents: now + config.agents.tick_ms,
-            items: now + config.items.tick_ms,
-            syncs: now + config.syncs.tick_ms,
-            deps: now + config.deps.tick_ms,
-            prune: now + PRUNE_EVERY_MS,
-            registry_every: config.registry.tick_ms,
-            agents_every: config.agents.tick_ms,
-            items_every: config.items.tick_ms,
-            syncs_every: config.syncs.tick_ms,
-            deps_every: config.deps.tick_ms,
-        }
-    }
-
-    fn earliest(&self) -> i64 {
-        self.registry
-            .min(self.agents)
-            .min(self.items)
-            .min(self.syncs)
-            .min(self.deps)
-            .min(self.prune)
     }
 }
 
@@ -93,29 +48,26 @@ impl WakeService {
         self.engine.tick();
         self.pump();
         let now = self.clock.now_ms();
-        if now >= self.schedule.registry {
-            self.schedule.registry = now + self.schedule.registry_every;
+        if self.schedule.registry.due(now) {
             self.registry_tick();
             self.reminder_tick();
         }
-        if now >= self.schedule.agents {
-            self.schedule.agents = now + self.schedule.agents_every;
+        if self.schedule.agents.due(now) {
             self.agent_tick();
         }
-        if now >= self.schedule.items {
-            self.schedule.items = now + self.schedule.items_every;
+        if self.schedule.items.due(now) {
             self.item_tick();
         }
-        if now >= self.schedule.syncs {
-            self.schedule.syncs = now + self.schedule.syncs_every;
+        if self.schedule.syncs.due(now) {
             self.sync_tick();
         }
-        if now >= self.schedule.deps {
-            self.schedule.deps = now + self.schedule.deps_every;
+        if self.schedule.deps.due(now) {
             self.dep_tick();
         }
-        if now >= self.schedule.prune {
-            self.schedule.prune = now + PRUNE_EVERY_MS;
+        if self.schedule.stalls.due(now) {
+            self.stall_tick();
+        }
+        if self.schedule.prune.due(now) {
             if let Err(err) = self.engine.prune() {
                 warn!(%err, "wake prune failed");
             }
@@ -172,7 +124,7 @@ impl WakeService {
         wakes.len()
     }
 
-    fn forward_activity(&self, lines: Vec<ActivityLine>) {
+    pub(super) fn forward_activity(&self, lines: Vec<ActivityLine>) {
         if let Some(sink) = &self.activity {
             for line in lines {
                 sink.add(line);
