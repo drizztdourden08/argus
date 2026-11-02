@@ -14,8 +14,8 @@ use argus_wake::wake_policy::{WakeClass, class_of};
 use serde_json::json;
 
 use crate::stalls_world::{
-    REQUEST, activity_texts, assert_to, dep_request, item, open_dep, pass, pass_with, touch,
-    working, world,
+    REQUEST, activity_texts, assert_to, assert_unread_assignment, assigned, dep_request, item,
+    open_dep, pass, pass_with, touch, working, world,
 };
 
 #[test]
@@ -102,21 +102,9 @@ fn starting_the_item_clears_the_stall_with_a_log_line() {
 fn an_unread_item_is_named_by_its_reason_and_the_line_says_when_the_lead_is_idle() {
     let mut rig = world(&json!({}), &[item("I-5", "todo", &json!({}))], &json!({}));
     rig.busy.set("rotp", true);
-    let wake = WakeInput::about(
-        "rotp",
-        "lead",
-        "item-assigned",
-        "I-5",
-        "I-5 (I-5 title) was assigned to you by the owner",
-    );
-    rig.service.submit(&[wake]).expect("submit");
+    assigned(&mut rig, "I-5");
     pass(&mut rig, 10);
-    let stalls = rig.wakes_of("stall");
-    assert_eq!(stalls.len(), 1);
-    assert_eq!(
-        stalls[0].text,
-        "stall: rotp did not read item-assigned I-5 for 10 min (it is idle)"
-    );
+    assert_unread_assignment(&rig, "I-5");
 }
 
 #[test]

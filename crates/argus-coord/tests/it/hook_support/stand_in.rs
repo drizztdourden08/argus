@@ -3,12 +3,15 @@
 //! at its port.
 
 use std::fs;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+use serde_json::Value;
+
 use super::Fixture;
+use super::listen::READ_PATH;
 
 pub struct StandIn {
     pub port: u16,
@@ -62,4 +65,30 @@ pub fn fixture(server: &StandIn) -> Fixture {
     let config = f.home.dashboard_home().join("config.json");
     fs::write(config, format!(r#"{{"port":{}}}"#, server.port)).unwrap();
     f
+}
+
+/// Answers a request with a JSON `body`, status 200, and closes.
+pub fn reply(mut stream: TcpStream, body: &str) {
+    let head = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    stream.write_all(head.as_bytes()).ok();
+    stream.write_all(body.as_bytes()).ok();
+    stream.flush().ok();
+}
+
+/// Answers the health check, the read stamp and the notices route with `digest`.
+pub fn digest_dashboard(digest: &Value) -> StandIn {
+    let body = digest.to_string();
+    StandIn::start(move |_, stream, path| {
+        let answer = if path.starts_with("/api/health") {
+            r#"{"ok":true}"#
+        } else if path == READ_PATH {
+            r#"{"acked":[]}"#
+        } else {
+            body.as_str()
+        };
+        reply(stream, answer);
+    })
 }

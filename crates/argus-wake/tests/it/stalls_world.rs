@@ -131,3 +131,28 @@ pub fn activity_texts(rig: &Rig, kind: &str) -> Vec<String> {
         .map(|line| line.text)
         .collect()
 }
+
+/// The owner assigns `id` to the lead of `rotp`.
+///
+/// # Panics
+/// When the wake cannot be recorded.
+pub fn assigned(rig: &mut Rig, id: &str) {
+    let wake = WakeInput::about(
+        "rotp",
+        "lead",
+        "item-assigned",
+        id,
+        format!("{id} ({id} title) was assigned to you by the owner"),
+    );
+    rig.service.submit(&[wake]).expect("submit");
+}
+
+/// The one stall line says the idle lead did not read the assignment of `id` for 10 minutes.
+pub fn assert_unread_assignment(rig: &Rig, id: &str) {
+    let stalls = rig.wakes_of("stall");
+    assert_eq!(stalls.len(), 1);
+    assert_eq!(
+        stalls[0].text,
+        format!("stall: rotp did not read item-assigned {id} for 10 min (it is idle)")
+    );
+}

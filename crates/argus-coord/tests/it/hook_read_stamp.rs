@@ -3,50 +3,20 @@
 
 // test-tag: standard
 
-use std::io::Write;
-use std::net::TcpStream;
-
 use crate::hook_support::listen::{READ_PATH, always, listen, serve, wake};
-use crate::hook_support::{Fixture, LEAD, StandIn, UI, ago, fixture};
-use serde_json::{Value, json};
+use crate::hook_support::{
+    Fixture, LEAD, StandIn, UI, digest_dashboard, fixture, message, session_input as input,
+};
+use serde_json::json;
 
 const LINE: &str = "Board notices since your last turn: 1 (kanban-stale 1). Not wakes: the board header lists them.";
 
-fn reply(mut stream: TcpStream, body: &str) {
-    let head = format!(
-        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-        body.len()
-    );
-    stream.write_all(head.as_bytes()).ok();
-    stream.write_all(body.as_bytes()).ok();
-    stream.flush().ok();
-}
-
-/// Answers the health check, the stamp and the notices route with `line` as the digest.
 fn dashboard(line: Option<&str>) -> StandIn {
-    let digest = json!({ "count": 1, "kinds": [], "newest": [], "line": line }).to_string();
-    StandIn::start(move |_, stream, path| {
-        let answer = if path.starts_with("/api/health") {
-            r#"{"ok":true}"#
-        } else if path == READ_PATH {
-            r#"{"acked":[]}"#
-        } else {
-            digest.as_str()
-        };
-        reply(stream, answer);
-    })
+    digest_dashboard(&json!({ "count": 1, "kinds": [], "newest": [], "line": line }))
 }
 
 fn stamps(server: &StandIn) -> usize {
     server.paths().iter().filter(|p| *p == READ_PATH).count()
-}
-
-fn input(f: &Fixture, sid: &str) -> Value {
-    json!({ "session_id": sid, "cwd": f.cwd_text() })
-}
-
-fn message(text: &str) -> Value {
-    json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": text, "ref": null, "deliveredAt": null })
 }
 
 #[test]

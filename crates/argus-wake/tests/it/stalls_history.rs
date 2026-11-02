@@ -5,21 +5,9 @@
 // test-tag: critical
 
 use argus_wake::testkit::{MIN, Rig, START};
-use argus_wake::wake::WakeInput;
 use serde_json::json;
 
-use crate::stalls_world::{item, pass, world};
-
-fn assigned(rig: &mut Rig, id: &str) {
-    let wake = WakeInput::about(
-        "rotp",
-        "lead",
-        "item-assigned",
-        id,
-        format!("{id} ({id} title) was assigned to you by the owner"),
-    );
-    rig.service.submit(&[wake]).expect("submit");
-}
+use crate::stalls_world::{assert_unread_assignment, assigned, item, pass, world};
 
 fn busy_world() -> Rig {
     let items = [
@@ -52,10 +40,5 @@ fn an_ackable_wake_made_after_the_service_started_still_raises_one() {
     pass(&mut rig, 5);
     assigned(&mut rig, "I-6");
     pass(&mut rig, 10);
-    let stalls = rig.wakes_of("stall");
-    assert_eq!(stalls.len(), 1);
-    assert_eq!(
-        stalls[0].text,
-        "stall: rotp did not read item-assigned I-6 for 10 min (it is idle)"
-    );
+    assert_unread_assignment(&rig, "I-6");
 }

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use super::{Fixture, StandIn, hook_with};
+use super::{Fixture, StandIn, hook_with, reply};
 use crate::common::Ran;
 use argus_coord::Env;
 use serde_json::{Value, json};
@@ -32,21 +32,10 @@ fn answer(mut stream: TcpStream, events: Option<String>) {
 /// The path of the read stamp a hook posts.
 pub const READ_PATH: &str = "/api/p/alpha/inbox/read";
 
-fn acknowledge(mut stream: TcpStream) {
-    let body = r#"{"acked":[]}"#;
-    let head = format!(
-        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-        body.len()
-    );
-    stream.write_all(head.as_bytes()).ok();
-    stream.write_all(body.as_bytes()).ok();
-    stream.flush().ok();
-}
-
 pub fn serve(answer_with: Answer) -> StandIn {
     StandIn::start(move |n, stream, path| {
         if path == READ_PATH {
-            acknowledge(stream);
+            reply(stream, r#"{"acked":[]}"#);
             return;
         }
         let events = answer_with(n);
