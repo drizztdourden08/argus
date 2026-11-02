@@ -2,7 +2,7 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{Found, IdleWatch, Limits, RuleInput, find};
+use super::{Found, IdleWatch, Kind, Limits, RuleInput, find};
 use crate::memory::MemoryBoards;
 use crate::testkit::{HOUR, MIN, START, board, merge, thread};
 use crate::time::iso;
@@ -62,4 +62,15 @@ pub(super) fn run(boards: &MemoryBoards, watch: &IdleWatch, now: i64, busy: bool
             limits: Limits::default(),
         },
     )
+}
+
+/// What [`run`] found of one rule.
+pub(super) fn run_of(
+    kind: Kind,
+    boards: &MemoryBoards,
+    watch: &IdleWatch,
+    (now, busy): (i64, bool),
+) -> Vec<Found> {
+    let all = run(boards, watch, now, busy);
+    all.into_iter().filter(|f| f.kind == kind).collect()
 }

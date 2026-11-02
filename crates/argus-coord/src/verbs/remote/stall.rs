@@ -2,13 +2,13 @@
 //! stalls Argus raised (a thread that did not read, a request left unstarted, an idle lead, a
 //! silent item). Anyone may list; only the Overlord acknowledges, after it looked into it.
 
-use argus_core::js;
 use serde_json::json;
 
 use super::support::link::{connect, take_sub};
+use super::support::note::bounded;
 use super::support::overlord;
 use super::support::query::Query;
-use super::support::text::{cell, collapse, is_key};
+use super::support::text::{cell, is_key};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 
@@ -34,14 +34,11 @@ fn list(call: &mut Call<'_>) -> Outcome {
 }
 
 fn note_of(call: &Call<'_>) -> Result<String, CoordError> {
-    let note = call.options.text("note").map(collapse).unwrap_or_default();
-    let len = js::len(&note);
-    if (NOTE_MIN..=NOTE_MAX).contains(&len) {
-        return Ok(note);
-    }
-    Err(CoordError::refuse(format!(
-        "--note is required, {NOTE_MIN} to {NOTE_MAX} characters: say what you did about the stall (it is {len})."
-    )))
+    bounded(
+        call,
+        (NOTE_MIN, NOTE_MAX),
+        "say what you did about the stall",
+    )
 }
 
 fn ack(call: &mut Call<'_>) -> Outcome {

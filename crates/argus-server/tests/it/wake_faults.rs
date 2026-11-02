@@ -1,6 +1,6 @@
 //! Wake faults end to end, ported from the HTTP side of `wake.faults.test.mjs`: a wake nobody
 //! listens for becomes a fault, mirrored to the `registry` docs and told once to the main
-//! coordinator as a passive notice (the wake policy never wakes it for a fault); the clear route refuses a browser and anyone but the Overlord. The `coord
+//! coordinator as a passive notice and woken at once by one `fault-open` wake; the clear route refuses a browser and anyone but the Overlord. The `coord
 //! wake-fault` verbs stay in the Node `coord` tests until the `coord` port of slice 8.
 //! S2, K2, K4: the fault life cycle and the clear route refusals against an in-process server.
 // test-tag: standard
@@ -103,7 +103,7 @@ async fn clear(t: &TestServer, body: &Value) -> u16 {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_never_a_wake()
+async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_and_one_fault_open_wake()
  {
     let f = faulted().await;
     let ui = registry_doc(&f.t, "alpha", "ui").expect("the ui row");
@@ -129,11 +129,14 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
         "alpha"
     );
 
-    let rows: Vec<Value> = wakes(&f.t, "portfolio")
-        .await
-        .into_iter()
-        .filter(|w| w["reason"] == "wake-fault")
-        .collect();
+    let all = wakes(&f.t, "portfolio").await;
+    let of = |reason: &str| -> Vec<Value> {
+        all.iter()
+            .filter(|w| w["reason"] == reason)
+            .cloned()
+            .collect()
+    };
+    let rows = of("wake-fault");
     assert_eq!(rows.len(), 2, "one notice per fault");
     assert!(
         rows.iter().all(|w| w["status"] == "passive"),
@@ -152,7 +155,18 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
         "{line}"
     );
     assert!(line.ends_with("s, nobody listening)"), "{line}");
-    assert_eq!(f.main.queued(), 0, "the main coordinator was not woken");
+    assert_eq!(
+        of("fault-open").len(),
+        2,
+        "each fault wakes the main coordinator once, at once"
+    );
+    let woken = f.main.next(Some("wake"), 5000).await.expect("a wake event");
+    assert!(
+        woken.data["lines"]
+            .to_string()
+            .contains("no-listener (queued for "),
+        "{woken:?}"
+    );
     two_fault_notices_in_the_digest(&f.t).await;
 }
 

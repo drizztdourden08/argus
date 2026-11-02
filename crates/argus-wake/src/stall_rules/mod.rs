@@ -10,6 +10,7 @@
 mod found;
 mod idle;
 mod idle_lead;
+mod lead;
 mod silent;
 mod text;
 mod unstarted;

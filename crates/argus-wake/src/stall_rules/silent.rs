@@ -57,7 +57,7 @@ mod tests {
     use serde_json::{Value, json};
 
     use crate::memory::MemoryBoards;
-    use crate::stall_rules::fixtures::{NOW, boards, item, project, run};
+    use crate::stall_rules::fixtures::{NOW, boards, item, project, run_of};
     use crate::stall_rules::{Found, IdleWatch, Kind};
     use crate::testkit::{HOUR, MIN};
     use crate::time::iso;
@@ -65,8 +65,7 @@ mod tests {
     fn silent_found(items: &[Value], extra: &Value) -> Vec<Found> {
         let lead = json!({"activity": "working", "lastSeen": iso(NOW)});
         let world: MemoryBoards = boards(&[("rotp", project(&lead, items, extra))]);
-        let all = run(&world, &IdleWatch::new(), NOW, true);
-        all.into_iter().filter(|f| f.kind == Kind::Silent).collect()
+        run_of(Kind::Silent, &world, &IdleWatch::new(), (NOW, true))
     }
 
     fn doing(extra: &Value) -> Value {
