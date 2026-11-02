@@ -6,6 +6,7 @@ import type { ItemBodyProps } from '../drawer-props.type';
 import { useFeedActions } from '../../../OwnerFeed';
 import { ActivitySection } from './ActivitySection';
 import { CriteriaSection } from './CriteriaSection';
+import { DependencySection } from './DependencySection';
 import { DescriptionSection } from './DescriptionSection';
 import { DrawerFacts } from './DrawerFacts';
 import { EntrySection } from './EntrySection';
@@ -22,6 +23,7 @@ const ItemBody = (props: ItemBodyProps) => {
   return (
     <Flex direction="column" gap="lg">
       <DrawerFacts item={item} waiting={waiting} threads={threads} now={now} ops={ops} />
+      <DependencySection item={item} now={now} />
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={own} ops={ops} />
       <TodosSection item={item} todos={record.todos} ops={ops} acts={acts} />

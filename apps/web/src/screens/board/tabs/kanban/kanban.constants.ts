@@ -26,6 +26,8 @@ const STATUS_TONES: Record<string, TagUrgencyColor> = {
   blocked: 'danger',
 };
 
+const DEP_HEADINGS = { waits: 'Waiting on', asked: 'Requested by' } as const;
+
 const NEEDS_YOU_TIP = 'A question, a to-do or a test waits on you.';
 
 const NO_ITEMS_TEXT = 'No work item yet. Threads enter their own as they take work on.';
@@ -57,4 +59,4 @@ const ORDER_HINT = 'Switch the order to Manual to reorder.';
 
 const DONE_TIP = 'The done and dropped items are hidden until you open them. A status filter on Done or Dropped shows them too.';
 
-export { DONE_TIP, EMPTY_COLUMN_STRINGS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
+export { DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };

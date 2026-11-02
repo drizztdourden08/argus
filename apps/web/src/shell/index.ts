@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { useHashTab } from './behavior/useHashTab';
 export { BoardMarkdown, BoardMarkdownEditor } from './markdown';
+export { DepTag } from './DepTag';
 export { LoadingFallback } from './LoadingFallback';
 export { LocalBanner } from './LocalBanner';
 export { PageFrame } from './PageFrame';

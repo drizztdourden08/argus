@@ -4,6 +4,7 @@ const OVERVIEW_TABS = [
   { id: 'processes', label: 'Processes', badgeTitle: 'Processes that need a look' },
   { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
   { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
+  { id: 'dependencies', label: 'Dependencies', badgeTitle: 'Blocked requests and requests open for over 3 days' },
   { id: 'cache', label: 'Cache' },
   { id: 'releases', label: 'Releases' },
   { id: 'registry', label: 'Registry' },
