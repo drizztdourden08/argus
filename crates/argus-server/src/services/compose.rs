@@ -5,8 +5,8 @@
 use std::sync::Arc;
 
 use super::{
-    activity, agents, cache, deps, notify, procs, records, reminders, runs, stale, sync, wake,
-    worktrees,
+    activity, agents, cache, deps, notify, procs, records, reminders, runs, stale, stalls, sync,
+    wake, worktrees,
 };
 use crate::{ServeOptions, Services};
 
@@ -25,6 +25,7 @@ pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {
     svc.notifier = notify::build_notifier(svc, opts);
     svc.notify = notify::build(svc, opts);
     reminders::wire(svc);
+    stalls::wire(svc);
 }
 
 pub(crate) async fn start_all(svc: &Arc<Services>) {

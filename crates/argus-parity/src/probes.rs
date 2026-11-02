@@ -35,13 +35,13 @@ pub fn machine() -> Vec<Probe> {
     ]
 }
 
-/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs` and `deps` are Rust
-/// only), and for a project the launches, runs, wakes and open wake streams.
+/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs`, `deps` and `stalls` are
+/// Rust only), and for a project the launches, runs, wakes and open wake streams.
 #[must_use]
 pub fn scope(key: &str) -> Vec<Probe> {
     let mut out: Vec<Probe> = Coll::ALL
         .iter()
-        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps))
+        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps | Coll::Stalls))
         .map(|c| {
             Probe::get(
                 Kind::Doc(c.as_str()),

@@ -13,8 +13,8 @@ use argus_worktrees::{REASON, Service as WorktreeService};
 
 use crate::Services;
 
-/// Tells the owner of a fault once, for good: the fault is remembered by its project, its thread and
-/// when it opened, so a restart does not toast it again.
+/// Tells the owner of a fault or a stall once, for good: it is remembered by its topic, its project, its
+/// thread and when it opened, so a restart does not toast it again and the two kinds never share a key.
 struct OwnerPings {
     notify: Arc<Notify>,
     db: Arc<Db>,
@@ -23,8 +23,8 @@ struct OwnerPings {
 
 fn told_key(notice: &OwnerNotice) -> String {
     format!(
-        "wake-fault-owner:{}:{}:{}",
-        notice.project, notice.thread, notice.since
+        "{}-owner:{}:{}:{}",
+        notice.topic, notice.project, notice.thread, notice.since
     )
 }
 

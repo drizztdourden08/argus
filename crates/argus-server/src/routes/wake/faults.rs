@@ -26,7 +26,7 @@ pub(super) async fn list(ctx: Ctx) -> Reply {
 }
 
 /// A request a browser sent: from the page, or with fetch metadata or an Origin.
-fn browser_like(ctx: &Ctx) -> bool {
+pub(crate) fn browser_like(ctx: &Ctx) -> bool {
     ctx.auth == Some(AuthKind::Page)
         || ctx.header("sec-fetch-site").is_some()
         || ctx.header("origin").is_some()
