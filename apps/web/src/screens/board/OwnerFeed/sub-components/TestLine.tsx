@@ -14,7 +14,7 @@ const TestLine = (props: TestLineProps) => {
   return (
     <Flex align="center" gap="sm" wrap>
       <Flex className="test-line__main" align="center" gap="sm" wrap>
-        {line.build ? <Tag>{line.build === handed ? `${line.build} · handed to you` : line.build}</Tag> : null}
+        {line.build ? <Tag fill={line.build === handed ? 'solid' : undefined}>{line.build === handed ? `${line.build} · handed to you` : line.build}</Tag> : null}
         <Text className="test-line__text" title={line.hover}>
           {line.count ? <Text weight={600}>{line.count}</Text> : null}
           {line.count ? ' · ' : null}

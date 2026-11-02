@@ -9,7 +9,7 @@ const HandButton = (props: HandButtonProps) => {
   const actions = useTestActions(useTestsShared().boardKey);
   const label = handed ? `Stop handing build ${tag} to you` : `Hand build ${tag} to you`;
   return (
-    <Button size="sm" variant="tertiary" disabled={actions.busy} aria-label={label} onClick={() => void actions.hand(handed ? null : tag)}>
+    <Button size="sm" variant={handed ? 'quiet' : 'tertiary'} disabled={actions.busy} aria-label={label} onClick={() => void actions.hand(handed ? null : tag)}>
       {handed ? 'Unhand' : 'Hand to me'}
     </Button>
   );

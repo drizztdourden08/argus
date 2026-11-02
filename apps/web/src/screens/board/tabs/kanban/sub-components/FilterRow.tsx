@@ -47,9 +47,9 @@ const FilterRow = (props: FilterRowProps) => {
         value={filters.subject || ANY_SUBJECT}
         onChange={(value) => patchFilters({ subject: value === ANY_SUBJECT ? '' : value })}
       />
-      <Checkbox size="sm" label="needs you" checked={filters.needs} onChange={(needs) => patchFilters({ needs })} />
-      <Checkbox size="sm" label="conflict" checked={filters.conflict} onChange={(conflict) => patchFilters({ conflict })} />
-      <Checkbox size="sm" label="archived" checked={filters.archived} onChange={(archived) => patchFilters({ archived })} />
+      <Checkbox size="sm" boxed label="needs you" checked={filters.needs} onChange={(needs) => patchFilters({ needs })} />
+      <Checkbox size="sm" boxed label="conflict" checked={filters.conflict} onChange={(conflict) => patchFilters({ conflict })} />
+      <Checkbox size="sm" boxed label="archived" checked={filters.archived} onChange={(archived) => patchFilters({ archived })} />
       {(filtersActive(filters) || filters.archived) && <Button size="sm" variant="ghost" onClick={clearFilters}>Clear filters</Button>}
     </Flex>
   );

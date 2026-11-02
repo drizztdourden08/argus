@@ -9,8 +9,8 @@ const BundleTags = (props: BundleTagsProps) => {
   const who = bundleOwner(group);
   return (
     <>
-      {group.tag !== NO_BUNDLE && <Tag {...BUNDLE_TAGS[state]} title={BUNDLE_TIPS[state]} data-bstatus={state}>{state}</Tag>}
-      {group.handed && <Tag color="neutral" title={`Build ${group.tag} is the one handed to you`}>handed to you</Tag>}
+      {group.tag !== NO_BUNDLE && <Tag {...BUNDLE_TAGS[state]} fill="tint" title={BUNDLE_TIPS[state]} data-bstatus={state}>{state}</Tag>}
+      {group.handed && <Tag color="neutral" fill="solid" title={`Build ${group.tag} is the one handed to you`}>handed to you</Tag>}
       {who && <Tag title="The thread that owns this bundle">{who}</Tag>}
     </>
   );

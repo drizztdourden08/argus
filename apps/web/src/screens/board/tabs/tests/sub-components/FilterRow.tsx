@@ -13,7 +13,7 @@ const FilterRow = (props: FilterRowProps) => {
       <SearchInput size="sm" width="narrow" aria-label={FIND_TEXT} placeholder={FIND_TEXT} value={filters.query} onChange={(query) => patchFilters({ query })} />
       <FilterSelects {...props} />
       {FILTER_SWITCHES.map(([field, label]) => (
-        <Checkbox key={field} size="sm" label={label} checked={filters[field]} onChange={(on) => patchFilters({ [field]: on })} />
+        <Checkbox key={field} size="sm" boxed label={label} checked={filters[field]} onChange={(on) => patchFilters({ [field]: on })} />
       ))}
       <ClearFilters state={state} />
     </Flex>

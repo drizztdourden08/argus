@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Card, Flex, Pressable, Tag, Text } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
-import { smartTimes } from '../../../../../format';
 import { useDoc } from '../../../../../data/react';
 import type { BoardMeta } from '../../../../../data/types';
 import type { ItemTestsProps } from '../drawer-props.type';
@@ -26,9 +25,9 @@ const ItemTests = (props: ItemTestsProps) => {
                   <Text variant="caption" weight={600} mono>{test.id}</Text>
                   <StatusTag status={test.status} />
                   <StatusTag status={test.mode} />
-                  {test.build ? <Tag color="neutral" title={test.build === handed ? `Build ${test.build} is the one handed to you` : `Build ${test.build}`}>{test.build === handed ? `${test.build} · handed to you` : test.build}</Tag> : null}
+                  {test.build ? <Tag color="neutral" fill={test.build === handed ? 'solid' : undefined} title={test.build === handed ? `Build ${test.build} is the one handed to you` : `Build ${test.build}`}>{test.build === handed ? `${test.build} · handed to you` : test.build}</Tag> : null}
                 </Flex>
-                <Text>{smartTimes(test.title)}</Text>
+                <Text smartTimes>{test.title}</Text>
               </Flex>
             </Pressable>
           </Card>

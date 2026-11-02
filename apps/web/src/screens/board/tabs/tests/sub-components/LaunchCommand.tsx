@@ -30,7 +30,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
         align="start"
         lead={<TextInput readOnly mono grow size="sm" aria-label="Launch command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'} value={launch.cmd} />}
       >
-        <Button size="sm" variant="tertiary" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
+        <Button size="sm" variant="quiet" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
         {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
       </ButtonRow>
