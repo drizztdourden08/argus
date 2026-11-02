@@ -6,7 +6,7 @@
 // test-tag: standard
 
 use crate::wait;
-use crate::wake_rig::{post_wake, wake_stream, wakes};
+use crate::wake_rig::{fault_config, post_wake, wake_stream, wakes};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
@@ -74,7 +74,7 @@ async fn faulted() -> Faulted {
     make_home(home.path());
     write_board(home.path(), "alpha", &alpha_threads(home.path()));
     write_board(home.path(), "portfolio", &overlord_board());
-    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } });
+    let config = fault_config();
     let t = TestServer::start(TestOptions {
         coord_home: Some(home.path().to_path_buf()),
         config,

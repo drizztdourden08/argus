@@ -242,14 +242,19 @@ fn a_board_closed_fault_of_a_working_thread_is_a_notice_and_the_reminder_wakes_i
     );
 }
 
-#[test]
-fn open_notices_join_the_same_line_every_15_minutes_until_they_are_resolved() {
-    let mut rig = Rig::registry(&registry_config(), false);
+fn stale_worktree_rig() -> Rig {
+    let rig = Rig::registry(&registry_config(), false);
     rig.notices.set(vec![OpenNotice {
         reason: "worktree-stale".to_owned(),
         project: "alpha".to_owned(),
         subject: "agent-wt".to_owned(),
     }]);
+    rig
+}
+
+#[test]
+fn open_notices_join_the_same_line_every_15_minutes_until_they_are_resolved() {
+    let mut rig = stale_worktree_rig();
     remind(&mut rig, 16 * MIN);
     let first = rig.wakes_of("open-resend");
     assert_eq!(first.len(), 1);
@@ -265,12 +270,7 @@ fn open_notices_join_the_same_line_every_15_minutes_until_they_are_resolved() {
 
 #[test]
 fn a_remote_sync_that_stays_due_is_sent_again_with_the_other_open_notices() {
-    let mut rig = Rig::registry(&registry_config(), false);
-    rig.notices.set(vec![OpenNotice {
-        reason: "worktree-stale".to_owned(),
-        project: "alpha".to_owned(),
-        subject: "agent-wt".to_owned(),
-    }]);
+    let mut rig = stale_worktree_rig();
     rig.clock.advance(25 * HOUR);
     rig.service.reminder_tick();
     assert_eq!(

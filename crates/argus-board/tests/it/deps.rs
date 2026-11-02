@@ -413,6 +413,10 @@ fn after_beta_change(change: impl FnOnce(&Path)) -> (TempDir, Vec<Transition>) {
     (home, moved)
 }
 
+fn moved_after_edit(key: &str, change: impl FnOnce(&mut Board)) -> Vec<Transition> {
+    after_beta_change(|h| edit(h, key, change)).1
+}
+
 #[test]
 fn reconcile_follows_the_assignee_item_whoever_wrote_it() {
     let (home, moved) = after_beta_change(|h| set_status(h, "beta", "I-3", "done"));
@@ -433,18 +437,14 @@ fn reconcile_follows_the_assignee_item_whoever_wrote_it() {
         inbox_texts(home.path(), "alpha", "dev"),
         ["beta/I-3 is gone (D-1): resume I-1"]
     );
-    let (_, moved) = after_beta_change(|h| {
-        edit(h, "beta", |b| {
-            b["items"]["I-3"]["archivedAt"] = json!(now_iso());
-        });
+    let moved = moved_after_edit("beta", |b| {
+        b["items"]["I-3"]["archivedAt"] = json!(now_iso());
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
-    let (_, moved) = after_beta_change(|h| {
-        edit(h, "beta", |b| {
-            if let Some(items) = b["items"].as_object_mut() {
-                items.shift_remove("I-3");
-            }
-        });
+    let moved = moved_after_edit("beta", |b| {
+        if let Some(items) = b["items"].as_object_mut() {
+            items.shift_remove("I-3");
+        }
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
 }
@@ -454,16 +454,12 @@ fn a_gone_board_or_a_retired_project_ends_the_request() {
     let (home, moved) = after_beta_change(|h| fs::remove_file(board_path(h, "beta")).expect("rm"));
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
     assert_eq!(ledger(home.path(), "D-1")["reason"], "board gone");
-    let (_, moved) = after_beta_change(|h| {
-        edit(h, "_portfolio", |p| {
-            p["projects"]["beta"]["retired"] = json!(true);
-        });
+    let moved = moved_after_edit("_portfolio", |p| {
+        p["projects"]["beta"]["retired"] = json!(true);
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
-    let (_, moved) = after_beta_change(|h| {
-        edit(h, "_portfolio", |p| {
-            p["projects"]["alpha"]["retired"] = json!(true);
-        });
+    let moved = moved_after_edit("_portfolio", |p| {
+        p["projects"]["alpha"]["retired"] = json!(true);
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Cancelled)]);
 }
@@ -480,10 +476,8 @@ fn a_requester_item_that_ends_cancels_the_request_and_tells_the_assignee() {
             .map(String::as_str),
         Some("alpha/I-1 cancelled its request I-3 (D-1)")
     );
-    let (_, moved) = after_beta_change(|h| {
-        edit(h, "alpha", |b| {
-            b["items"]["I-1"]["deletedAt"] = json!(now_iso());
-        });
+    let moved = moved_after_edit("alpha", |b| {
+        b["items"]["I-1"]["deletedAt"] = json!(now_iso());
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Cancelled)]);
 }

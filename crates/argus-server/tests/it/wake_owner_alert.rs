@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use crate::toasts::Toasts;
 use crate::wait::until;
-use crate::wake_rig::post_wake;
+use crate::wake_rig::{fault_config, post_wake};
 use argus_native::Notifier;
 use argus_server::ServeOptions;
 use argus_testkit::{TestOptions, TestServer, Wakes, alpha_board, make_home, write_board};
@@ -21,7 +21,7 @@ async fn faulted_server(toasts: &Arc<Toasts>) -> (TestServer, TempDir) {
     make_home(home.path());
     write_board(home.path(), "alpha", &alpha_board(home.path()));
     let sink: Arc<dyn Notifier> = toasts.clone();
-    let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } });
+    let config = fault_config();
     let t = TestServer::start(TestOptions {
         coord_home: Some(home.path().to_path_buf()),
         config,

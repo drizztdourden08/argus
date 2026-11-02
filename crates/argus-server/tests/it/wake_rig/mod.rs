@@ -103,3 +103,8 @@ pub fn lines(event: &Value) -> Vec<String> {
         })
         .unwrap_or_default()
 }
+
+/// Fast wake timings for the fault tests: a wake nobody hears faults in 300 ms.
+pub fn fault_config() -> Value {
+    json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } })
+}
