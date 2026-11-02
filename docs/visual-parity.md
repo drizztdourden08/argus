@@ -418,11 +418,16 @@ Other (decision for the lead):
   page does not have. Node never renders the reconciler report in the board page (`/api/agents/reconcile`
   is read by the CLI only). It is the one Argus-only block left on a board; it is kept, since removing
   a built feature is not a parity call to make alone.
-- Small size gaps: process rule chips and the Processes rule column are 14px, Node 13px; the overview
-  project card name is 16px, Node 15px; the master label on the card is not bold mono. Row heights on
-  Activity (30px for a one line event, Node 34px) differ by 4px.
-- The live run elapsed text of an Agents run row uses the Tessera elapsed text, Node counts "1m 05s"
-  every second; no live run was on screen in the sweep to compare.
+- Small size gaps, fixed: the process rule chips (name, count and memory) and the Processes rule
+  column are now 13px (Text `size="md"`), as Node. The master label on the overview card is bold
+  mono (600) as Node and now takes the dim tone. Activity one line event rows are 34px as Node (row
+  padding is the 6px size token, was the 4px space step).
+- Small size gap, still open: the overview project card name is 16px (Text variant title), Node 15px.
+  Tessera has no 15px text step (the sizes are 12, 13, 14 and 16), so it needs a Tessera text size
+  between 14 and 16, or a `size="15"` on Text.
+- Live run elapsed text, fixed: an Agents run row now shows the Node text ("42s", "1m 05s", "1h 02m")
+  and ticks every second while a run is live. It uses the shared `useNow` hook with a one second
+  tick (`SECOND_TICK_MS`) and the same `runSpan` formatter as a finished run.
 
 ### Data differences, re-checked
 

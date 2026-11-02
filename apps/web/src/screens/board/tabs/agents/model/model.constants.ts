@@ -3,6 +3,8 @@ import type { AgentField, ModelFamily, ModelLook, StatusLook } from './model.typ
 
 const ACTIVE_STATUSES: readonly string[] = ['working', 'waiting', 'stop-requested'];
 
+const MS_PER_SECOND = 1000;
+
 const MS_PER_MINUTE = 60_000;
 
 const STALE_MS = 45 * MS_PER_MINUTE;
@@ -78,6 +80,7 @@ export {
   MODEL_LOOKS,
   MODEL_FAMILIES,
   MS_PER_MINUTE,
+  MS_PER_SECOND,
   NO_WHY,
   REFUSED_TEXT,
   RUN_CHIPS_SHOWN,

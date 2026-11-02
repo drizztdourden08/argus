@@ -16,7 +16,7 @@ const MasterRow = (props: MasterRowProps) => {
   return (
     <Inline gap="xs" align="center" wrap>
       <Tooltip content={[master.title, master.cmd].filter(Boolean).join('\n') || 'master'}>
-        <Text variant="caption" mono weight={600}>master</Text>
+        <Text variant="caption" tone="dim" mono weight={600}>master</Text>
       </Tooltip>
       {line.running
         ? <Button size="xs" variant="danger" disabled={run.busy} onClick={run.stop}>Stop</Button>
