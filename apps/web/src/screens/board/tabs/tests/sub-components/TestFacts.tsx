@@ -28,7 +28,7 @@ const TestFacts = (props: TestFactsProps) => {
         <Flex gap="xs" align="center">
           <Text variant="caption" tone="muted">Build</Text>
           <InlineEdit label="build" placeholder="add" value={test.build ?? ''} validate={validateBuild} onCommit={(build) => void ops.edit(test, { build: build.trim() })} />
-          {handed && <Tag color="neutral">handed to you</Tag>}
+          {handed && <Tag color="neutral" fill="solid">handed to you</Tag>}
         </Flex>
       </Flex>
     </Flex>

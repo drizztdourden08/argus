@@ -22,7 +22,7 @@ const LauncherCommand = (props: LauncherCardProps) => {
         align="start"
         lead={<TextInput readOnly mono grow size="sm" aria-label="Command line" title={tip} value={cmd} />}
       >
-        <Button size="sm" variant="tertiary" title="Copy the command line" onClick={() => copyText(cmd)}>Copy</Button>
+        <Button size="sm" variant="quiet" title="Copy the command line" onClick={() => copyText(cmd)}>Copy</Button>
         {view.playable && <RunPlay label={launcher.name} def={view.def} hint={noPlayHint(launcher.name)} boardKey={boardKey} runs={runs} />}
         {view.playable && <LogButton run={view.shown} onLog={onLog} />}
       </ButtonRow>

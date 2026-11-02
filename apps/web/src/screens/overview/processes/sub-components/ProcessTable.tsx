@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { DataTable } from '@drizztdourden08/tessera';
-import { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, rowState } from '../model';
+import { CUSTOM_PATHS, PROC_COLUMNS, PROC_SCHEMA, rowTone } from '../model';
 import type { ProcRow } from '../model';
 import { NONE_SHOWN } from '../processes.constants';
 import type { ProcessTableProps } from '../processes.type';
@@ -19,7 +19,8 @@ const ProcessTable = (props: ProcessTableProps) => {
       rowHeight="size-40"
       footer={false}
       headerCase="upper"
-      rowState={rowState}
+      rowTone={rowTone}
+      headerRules={false}
       fallbackColumns={PROC_COLUMNS}
       renderCell={(row, path) => (CUSTOM_PATHS.includes(path) ? <ProcessCell row={row} path={path} kill={kill} /> : undefined)}
       detailRowId={kill.ask?.kind === 'proc' ? kill.ask.id : null}

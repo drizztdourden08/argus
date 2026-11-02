@@ -10,7 +10,7 @@ const PathCell = (props: CellProps) => {
     <Flex direction="column" gap="2xs">
       <Text as="div" variant="caption" tone="dim" mono weight={600}>
         <Flex gap="xs" align="center">
-          <FoldText hug truncate="middle">{row.path}</FoldText>
+          <FoldText hug truncate="path">{row.path}</FoldText>
           <CopyButton text={row.path} label="Copy" showLabel size="xs" />
         </Flex>
       </Text>

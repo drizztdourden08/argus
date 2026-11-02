@@ -12,7 +12,7 @@ const StatusCell = (props: CellProps) => {
       <Flex gap="xs" align="center" wrap>
         {statusShown(row) && <Tag {...(STATUS_LOOK[row.status] ?? UNKNOWN_STATUS_LOOK)} title={statusTip(row)}>{STATUS_LABEL[row.status] ?? row.status}</Tag>}
         <RowFlagTags {...props} />
-        {hygiene && <Tag {...hygiene.look} title={hygiene.tip}>{hygiene.text}</Tag>}
+        {hygiene && <Tag {...hygiene.look} fill="tint" title={hygiene.tip}>{hygiene.text}</Tag>}
         {leftoverFlags(row).map((flag) => <Tag key={flag.text} {...WARNING_LOOK} title={flag.tip}>{flag.text}</Tag>)}
       </Flex>
       {row.job && <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text>}
