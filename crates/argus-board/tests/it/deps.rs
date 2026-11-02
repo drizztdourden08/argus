@@ -45,7 +45,7 @@ fn project_board(key: &str) -> Board {
 }
 
 /// A coord home with a board for each key and the portfolio that registers them.
-fn world(keys: &[&str]) -> TempDir {
+pub(crate) fn world(keys: &[&str]) -> TempDir {
     let home = tempfile::tempdir().expect("temp dir");
     let mut p = json!({"project": "_portfolio", "entries": {}, "projects": {}});
     for key in keys {
@@ -57,7 +57,7 @@ fn world(keys: &[&str]) -> TempDir {
     home
 }
 
-fn read(home: &Path, key: &str) -> Board {
+pub(crate) fn read(home: &Path, key: &str) -> Board {
     read_board(home, key).expect("read").expect("a board")
 }
 
@@ -77,7 +77,7 @@ fn set_status(home: &Path, key: &str, id: &str, status: &str) {
     edit(home, key, |b| b["items"][id]["status"] = json!(status));
 }
 
-fn asking(project: &str, item: &str, target: &str) -> AskRequest {
+pub(crate) fn asking(project: &str, item: &str, target: &str) -> AskRequest {
     serde_json::from_value(json!({
         "project": project, "item": item, "actor": format!("{project}/dev"),
         "target": target, "title": "Expose the save hook",
@@ -90,11 +90,11 @@ fn onto(mut req: AskRequest, item: &str) -> AskRequest {
     req
 }
 
-fn ask_in(home: &Path, req: &AskRequest) -> Result<Done, DepError> {
+pub(crate) fn ask_in(home: &Path, req: &AskRequest) -> Result<Done, DepError> {
     ask(home, req, &BoardRoster::new(home))
 }
 
-fn asked(home: &Path, project: &str, item: &str, target: &str) -> Done {
+pub(crate) fn asked(home: &Path, project: &str, item: &str, target: &str) -> Done {
     ask_in(home, &asking(project, item, target)).expect("asked")
 }
 
@@ -118,7 +118,11 @@ fn reopen_as(home: &Path, project: &str) -> Result<Done, DepError> {
     reopen(home, "D-1", &req)
 }
 
-fn cancel_as(home: &Path, project: &str, reason: Option<&str>) -> Result<Done, DepError> {
+pub(crate) fn cancel_as(
+    home: &Path,
+    project: &str,
+    reason: Option<&str>,
+) -> Result<Done, DepError> {
     let req = CancelRequest {
         reason: reason.map(str::to_owned),
         actor: format!("{project}/dev"),
@@ -126,11 +130,11 @@ fn cancel_as(home: &Path, project: &str, reason: Option<&str>) -> Result<Done, D
     cancel(home, "D-1", &req)
 }
 
-fn ledger(home: &Path, id: &str) -> Value {
+pub(crate) fn ledger(home: &Path, id: &str) -> Value {
     read(home, "_portfolio")["deps"][id].clone()
 }
 
-fn inbox_texts(home: &Path, project: &str, thread: &str) -> Vec<String> {
+pub(crate) fn inbox_texts(home: &Path, project: &str, thread: &str) -> Vec<String> {
     read(home, project)["inbox"][thread]
         .as_array()
         .into_iter()
@@ -185,10 +189,9 @@ fn an_ask_opens_the_request_and_writes_the_ledger_and_both_mirrors() {
         "state": "open",
     });
     assert_eq!(made["requestedBy"], by);
-    assert_eq!(
-        inbox_texts(h, "beta", "coordinator"),
-        ["alpha/I-1 asks you for I-3 \"Expose the save hook\" (D-1)"]
-    );
+    let inbox = inbox_texts(h, "beta", "coordinator");
+    assert_eq!(inbox.len(), 1);
+    assert!(inbox[0].starts_with("dep D-1: alpha/I-1 needs your I-3 \"Expose the save hook\""));
 }
 
 #[test]

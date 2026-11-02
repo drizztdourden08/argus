@@ -34,7 +34,7 @@ pub type Handler = fn(&mut Call<'_>) -> Outcome;
 pub type Entry = (&'static str, Handler);
 
 /// Every verb and alias, with the module that serves it.
-const VERBS: [(&str, &str); 38] = [
+const VERBS: [(&str, &str); 39] = [
     ("hook", "hook"),
     ("dashboard", "dashboard"),
     ("thread", "thread"),
@@ -66,6 +66,7 @@ const VERBS: [(&str, &str); 38] = [
     ("lead", "lead"),
     ("ping", "ping"),
     ("wake-fault", "wakefault"),
+    ("stall", "stall"),
     ("proc", "proc"),
     ("activity", "activity"),
     ("run", "run"),
@@ -76,7 +77,7 @@ const VERBS: [(&str, &str); 38] = [
 ];
 
 /// These modules work outside any project and find their own caller when they need one.
-const NO_PROJECT: [&str; 8] = [
+const NO_PROJECT: [&str; 9] = [
     "hook",
     "portfolio",
     "dashboard",
@@ -85,6 +86,7 @@ const NO_PROJECT: [&str; 8] = [
     "proc",
     "activity",
     "remote",
+    "stall",
 ];
 
 /// These modules serve several verbs and are told which one was typed.

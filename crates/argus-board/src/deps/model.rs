@@ -6,6 +6,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub use super::transition::{Row, Transition};
+
 /// Where a dependency stands.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -105,24 +107,6 @@ pub fn node(project: &str, item: &str) -> String {
     format!("{project}/{item}")
 }
 
-/// One transition in the history of a dependency.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Row {
-    /// Grows forever; names the wake of the transition.
-    pub seq: i64,
-    /// When.
-    pub at: String,
-    /// Who: an actor or `argus`.
-    pub by: String,
-    /// The state before.
-    pub from: DepState,
-    /// The state after.
-    pub to: DepState,
-    /// Why, when it matters.
-    #[serde(default)]
-    pub reason: Option<String>,
-}
-
 /// A dependency: one request from an item of a project to an item of another.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -157,6 +141,12 @@ pub struct Dep {
     /// The last 20 transitions.
     #[serde(default)]
     pub history: Vec<Row>,
+    /// When the assignee first read its inbox while the request was open; written by Argus only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acked_at: Option<String>,
+    /// Who read it: the actor of that inbox read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acked_by: Option<String>,
 }
 
 impl Dep {
@@ -196,19 +186,6 @@ impl Dep {
             self.title
         )
     }
-}
-
-/// A state change the ledger made. The server turns it into a wake (`dep#seq` names it).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct Transition {
-    /// The dependency.
-    pub dep: String,
-    /// The history row number.
-    pub seq: i64,
-    /// The state before.
-    pub from: DepState,
-    /// The state after.
-    pub to: DepState,
 }
 
 /// What a call did: the record as it stands, the transitions it made and one line to print.

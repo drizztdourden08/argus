@@ -38,6 +38,7 @@ pub const PORTED: &[Entry] = &[
     ("activity", remote::activity::handle),
     ("proc", remote::proc::handle),
     ("wakefault", remote::wakefault::handle),
+    ("stall", remote::stall::handle),
     ("worktree", remote::worktree::handle),
     ("lead", remote::lead::handle),
     ("portfolio", remote::portfolio::handle),

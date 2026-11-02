@@ -8,10 +8,10 @@ use crate::Board;
 use crate::inbox::queue;
 use crate::store::{LogLine, append_log};
 
-/// The line of one transition and the side whose inbox gets it.
+/// The line of one transition and the side whose inbox gets it (none: the log only).
 pub(crate) struct Note {
     pub text: String,
-    pub to: Side,
+    pub to: Option<Side>,
 }
 
 fn item_of(dep: &Dep) -> &str {
@@ -31,18 +31,18 @@ pub(crate) fn note(dep: &Dep, t: &Transition) -> Note {
                 item_of(dep),
                 dep.title
             ),
-            to: Side::Assignee,
+            to: None,
         },
         (_, DepState::Open) => Note {
             text: format!("{theirs} is open again ({id})"),
-            to: Side::Requester,
+            to: Some(Side::Requester),
         },
         (_, DepState::Blocked) => Note {
             text: format!(
                 "{theirs} is blocked on you ({id}): {}",
                 dep.reason.as_deref().unwrap_or("no reason given")
             ),
-            to: Side::Requester,
+            to: Some(Side::Requester),
         },
         (_, DepState::Cancelled) => Note {
             text: format!(
@@ -50,11 +50,11 @@ pub(crate) fn note(dep: &Dep, t: &Transition) -> Note {
                 dep.requester(),
                 item_of(dep)
             ),
-            to: Side::Assignee,
+            to: Some(Side::Assignee),
         },
         (_, state) => Note {
             text: format!("{theirs} is {state} ({id}): resume {mine}"),
-            to: Side::Requester,
+            to: Some(Side::Requester),
         },
     }
 }
@@ -73,7 +73,7 @@ pub(crate) fn write(board: &mut Board, dep: &Dep, side: Side, notes: &[Note]) {
             text: &n.text,
         };
         append_log(board, "deps", &line);
-        if n.to != side {
+        if n.to != Some(side) {
             continue;
         }
         if let Some(to) = addressee(board, thread.as_deref()) {

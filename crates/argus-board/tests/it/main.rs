@@ -1,5 +1,6 @@
 mod common;
 
+mod dep_inbox;
 mod deps;
 mod entry_images;
 mod export_import;
