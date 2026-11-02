@@ -16,7 +16,6 @@ const NOTE: &str = "looked into it, the thread was in a long build";
 
 struct Stalled {
     t: TestServer,
-    dep: Value,
     _home: TempDir,
 }
 
@@ -51,17 +50,18 @@ async fn asked(t: &TestServer) -> Value {
     reply.json()["dep"].clone()
 }
 
-/// The request is asked and nobody reads it for 11 minutes.
+/// The request is asked and nobody reads it for 11 minutes. The beta board is exported at once, so the wake engine
+/// sees the item the request added instead of waiting for the file watcher.
 async fn stalled() -> Stalled {
     let (t, home) = server().await;
-    let dep = asked(&t).await;
+    asked(&t).await;
+    let resync = t
+        .write("POST", "/api/admin/resync", &json!({ "project": "beta" }))
+        .await;
+    assert_eq!(resync.status, 200, "{}", resync.text());
     t.advance_wakes(MIN_MS);
     t.advance_wakes(11 * MIN_MS);
-    Stalled {
-        t,
-        dep,
-        _home: home,
-    }
+    Stalled { t, _home: home }
 }
 
 async fn stalls_of(t: &TestServer, project: &str) -> Value {
@@ -165,7 +165,7 @@ async fn the_overlord_acknowledges_every_open_stall_of_a_project_and_the_page_do
     let (status, done) = ack(t, &ack_body("coordinator")).await;
     assert_eq!(status, 200, "{done}");
     let acked = done["acked"].as_array().expect("acked stalls");
-    assert!(!acked.is_empty());
+    assert_ne!(acked.len(), 0);
     assert!(acked.iter().all(|a| a["project"] == "beta"));
     let text = done["text"].as_str().expect("text");
     assert!(
