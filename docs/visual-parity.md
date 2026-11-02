@@ -410,7 +410,7 @@ Needs Tessera:
   and 28px, Argus sm is 12px and 22px with almost no padding, Group by and Order).
 - 159: DataTable draws vertical rules between header cells on the Processes table (the "KILL" header is
   gone: it was the Argus column title, now empty),
-  Node has neither; the Processes needs-a-look edge is grey on the basic palette, Node draws it amber
+  Node has none; the Processes needs-a-look edge is grey on the basic palette, Node draws it amber
   (rowState edge has no tone).
 - 160: the sign of item 138 in text that goes through a Tessera prop (tags, table cells, InlineEdit
   displays other than the item title): a `smartTimes` on Text and Tag, or an Inter build whose `calt`
