@@ -43,6 +43,13 @@ impl Work {
         self.as_thread("worker", words)
     }
 
+    /// Runs `words` as the worker, asserts it passed and gives its output.
+    pub fn worker_ok(&self, words: &[&str]) -> String {
+        let ran = self.worker(words);
+        assert_eq!(ran.code, 0, "{words:?}\n{}\n{}", ran.out, ran.err);
+        ran.out
+    }
+
     pub fn lead(&self, words: &[&str]) -> Ran {
         self.as_thread("coordinator", words)
     }

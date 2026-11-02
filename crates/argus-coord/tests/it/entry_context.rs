@@ -21,9 +21,7 @@ fn refused(work: &Work, words: &[&str], needle: &str) -> String {
 }
 
 fn ok(work: &Work, words: &[&str]) -> String {
-    let ran = work.worker(words);
-    assert_eq!(ran.code, 0, "{words:?}\n{}\n{}", ran.out, ran.err);
-    ran.out
+    work.worker_ok(words)
 }
 
 #[test]
