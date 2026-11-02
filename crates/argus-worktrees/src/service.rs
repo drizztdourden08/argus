@@ -159,6 +159,8 @@ pub struct Inner {
     /// The deletion jobs, one worker per project.
     pub queue: Queues,
     pub requests: Requests,
+    /// The leftover deletions a batch queued and has not carried out, kept for a restart.
+    pub(crate) intents: crate::intents::Intents,
     pub(crate) hygiene: crate::hygiene::Memories,
 }
 
@@ -187,6 +189,7 @@ impl Service {
             exclusive: Turns::default(),
             queue: Queues::default(),
             requests: Requests::default(),
+            intents: crate::intents::Intents::default(),
             hygiene: crate::hygiene::Memories::default(),
         }))
     }

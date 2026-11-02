@@ -33,6 +33,7 @@ mod guards;
 mod holders;
 mod hygiene;
 mod inspect;
+mod intents;
 mod job_run;
 mod jobs;
 mod leftover_remove;

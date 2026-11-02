@@ -6,6 +6,7 @@ use crate::clock::DAY_MS;
 use crate::error::{ErrorCode, Result, WtError};
 use crate::fact::Fact;
 use crate::guards::check_caller;
+use crate::intents::Intent;
 use crate::jobs::{JobDoc, JobKind, JobState, trim_jobs};
 use crate::measure::about_text;
 use crate::paths::{clean_path, is_worktree_id, worktree_id};
@@ -277,6 +278,13 @@ impl Service {
         }));
         let by = input.caller.by_text();
         let mut docs = Vec::new();
+        self.remember_intents(
+            &input.project,
+            queued
+                .iter()
+                .map(|f| Intent::of(f, input, min_days))
+                .collect(),
+        );
         for fact in queued {
             let id = self.new_job(&input.project, fact, &by, JobKind::Leftover);
             let leftover = fact.leftover.clone().unwrap_or_default();
@@ -332,6 +340,7 @@ impl Service {
             crate::sync::locked(tally).started += 1;
             self.run_delete(&id);
         }
+        self.forget_intents(&one.project, std::slice::from_ref(&one.id));
         let done = {
             let mut t = crate::sync::locked(tally);
             t.left -= 1;

@@ -137,6 +137,7 @@ impl Service {
         if self.stopped() {
             return None;
         }
+        self.resume_batches(project);
         self.wake_step(project);
         self.hygiene_step(project);
         self.prune_state(project);
