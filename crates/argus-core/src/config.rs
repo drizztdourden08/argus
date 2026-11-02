@@ -118,6 +118,18 @@ pub struct Config {
     pub extra: Map<String, Value>,
 }
 
+impl Config {
+    /// Whether cross-board dependencies are on (`deps.enabled`, true unless set to false).
+    #[must_use]
+    pub fn deps_enabled(&self) -> bool {
+        self.extra
+            .get("deps")
+            .and_then(|d| d.get("enabled"))
+            .and_then(Value::as_bool)
+            .unwrap_or(true)
+    }
+}
+
 fn defaults() -> Value {
     json!({
         "version": 1,
@@ -131,6 +143,7 @@ fn defaults() -> Value {
         "mcp": { "allow": "*", "deny": [], "readOnly": false },
         "attach": { "maxBytes": 10_485_760, "extraRoots": [] },
         "agents": { "stallMs": 180_000, "reapMs": 1_200_000 },
+        "deps": { "enabled": true },
         "notify": { "os": true, "auto": { "handed": true, "ask": true }, "quietLevels": [], "sound": { "info": false, "ping": false, "urgent": true }, "toastInfo": false },
     })
 }

@@ -224,3 +224,13 @@ fn the_log_rotates_at_the_size_limit_and_keeps_five_files() {
     let newest = format!("{}.1", file.display());
     assert!(fs::read_to_string(newest).unwrap().len() <= 2100);
 }
+
+#[test]
+fn dependencies_are_on_by_default_and_off_when_the_file_says_so() {
+    let (_dir, paths) = fresh();
+    let c = load_config(&paths, None).unwrap();
+    assert!(c.deps_enabled());
+    assert_eq!(read_json(&paths)["deps"], json!({ "enabled": true }));
+    edit_file(&paths, |doc| doc["deps"] = json!({ "enabled": false }));
+    assert!(!load_config(&paths, None).unwrap().deps_enabled());
+}

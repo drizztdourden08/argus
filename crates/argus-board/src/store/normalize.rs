@@ -1,11 +1,12 @@
 //! Older boards predate some collections; normalize fills them in so every verb can rely on
 //! them. A board still on schema 1 is migrated and embedded agents are converted.
 
+use argus_core::ids::PORTFOLIO;
 use serde_json::{Value, json};
 
 use super::migrate::{convert_agents, migrate_to_2};
 use crate::Board;
-use crate::json::{set, slot, unset};
+use crate::json::{default_field, set, slot, unset};
 
 const COLLECTIONS: [&str; 17] = [
     "counters",
@@ -27,6 +28,11 @@ const COLLECTIONS: [&str; 17] = [
     "versions",
 ];
 
+/// Whether a board is the portfolio board (the registry and the dependency ledger).
+fn is_portfolio(board: &Board) -> bool {
+    board["kind"] == "portfolio" || board["project"] == PORTFOLIO
+}
+
 /// Whether a project board is still on a schema before 2 (the portfolio board never is).
 pub(crate) fn stale_schema(board: &Board) -> bool {
     if board["kind"] == "portfolio" {
@@ -39,7 +45,7 @@ pub(crate) fn stale_schema(board: &Board) -> bool {
     }
 }
 
-/// Fill in every collection an older board lacks, migrate schema 1 to 2 and convert embedded
+/// Fill in every collection an older board lacks (the portfolio board also gets its `deps` ledger), migrate schema 1 to 2 and convert embedded
 /// agents into agents docs.
 pub fn normalize(board: &mut Board) {
     for key in COLLECTIONS {
@@ -47,6 +53,9 @@ pub fn normalize(board: &mut Board) {
         if s.is_null() {
             *s = json!({});
         }
+    }
+    if is_portfolio(board) {
+        default_field(board, "deps", json!({}));
     }
     if !board["worktreeRules"].is_array() {
         set(board, "worktreeRules", json!([]));

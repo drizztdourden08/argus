@@ -49,11 +49,13 @@ pub enum Coll {
     Activity,
     /// Owner notifications.
     Notifications,
+    /// Cross-board dependencies (the portfolio ledger).
+    Deps,
 }
 
 impl Coll {
     /// Every collection, in the Node order.
-    pub const ALL: [Coll; 20] = [
+    pub const ALL: [Coll; 21] = [
         Coll::Threads,
         Coll::Items,
         Coll::Tests,
@@ -74,6 +76,7 @@ impl Coll {
         Coll::Procs,
         Coll::Activity,
         Coll::Notifications,
+        Coll::Deps,
     ];
 
     /// The collection's wire name.
@@ -100,6 +103,7 @@ impl Coll {
             Coll::Procs => "procs",
             Coll::Activity => "activity",
             Coll::Notifications => "notifications",
+            Coll::Deps => "deps",
         }
     }
 }

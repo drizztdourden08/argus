@@ -1,5 +1,5 @@
-//! The board as page documents: every doc of the page collections, the portfolio cards when
-//! present, `meta/board`, and `launches/<name>` from the run definitions.
+//! The board as page documents: every doc of the page collections, the portfolio cards and
+//! dependencies when present, `meta/board`, and `launches/<name>` from the run definitions.
 
 use argus_core::clock::now_ms;
 use argus_core::{Coll, DocChange};
@@ -152,6 +152,9 @@ pub fn export_docs(board: &Board, proof_url: &dyn Fn(&Value) -> String) -> Vec<D
     }
     for (id, doc) in section(board, "cards") {
         docs.push(DocChange::set(Coll::Cards, id.clone(), doc.clone()));
+    }
+    for (id, doc) in section(board, "deps") {
+        docs.push(DocChange::set(Coll::Deps, id.clone(), doc.clone()));
     }
     docs.push(DocChange::set(Coll::Meta, "board", board_meta(board)));
     for (name, def) in section(board, "runDefs") {
