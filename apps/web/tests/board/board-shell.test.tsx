@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { seedBoard } from '../helpers/seed-board';
+import { waitForStream } from '../helpers/wait-for-stream';
 
 beforeEach(() => vi.stubGlobal('CSS', { supports: () => false }));
 afterEach(() => {
@@ -16,7 +17,7 @@ const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activ
 
 const open = async (at = '/p/rotp/', worktrees: object | null = null) => {
   const { sources } = renderAt(at);
-  await waitFor(() => expect(sources).toHaveLength(1));
+  await waitForStream(sources);
   const meta = { board: { project: 'rotp', name: 'RotP', updatedAt: NOW }, ...(worktrees ? { worktrees } : {}) };
   act(() => seedBoard(sources[0], { meta, threads: { coordinator: lead } }));
   return sources;

@@ -14,7 +14,8 @@ use argus_wake::wake_policy::{WakeClass, class_of};
 use serde_json::json;
 
 use crate::stalls_world::{
-    REQUEST, activity_texts, dep_request, item, open_dep, pass, pass_with, touch, working, world,
+    REQUEST, activity_texts, assert_to, dep_request, item, open_dep, pass, pass_with, touch,
+    working, world,
 };
 
 #[test]
@@ -27,10 +28,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
     pass_with(&mut rig, 1, working);
     let nudges = rig.wakes_of("ack-nudge");
     assert_eq!(nudges.len(), 1);
-    assert_eq!(
-        (nudges[0].scope.as_str(), nudges[0].thread.as_str()),
-        ("rotp", "lead")
-    );
+    assert_to(&nudges[0], "rotp", "lead");
     assert_eq!(nudges[0].text, format!("2nd: {REQUEST}"));
     assert!(
         rig.wakes_of("stall").is_empty(),
@@ -41,10 +39,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
     pass_with(&mut rig, 1, working);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
-    assert_eq!(
-        (stalls[0].scope.as_str(), stalls[0].thread.as_str()),
-        ("portfolio", "coordinator")
-    );
+    assert_to(&stalls[0], "portfolio", "coordinator");
     assert_eq!(
         stalls[0].text,
         "stall: rotp did not read D-11 for 10 min (it is in a turn)"
@@ -138,10 +133,7 @@ fn the_overlord_hears_the_nudge_and_the_owner_the_toast_but_never_a_stall_about_
     pass(&mut rig, 30);
     let nudges = rig.wakes_of("ack-nudge");
     assert_eq!(nudges.len(), 1);
-    assert_eq!(
-        (nudges[0].scope.as_str(), nudges[0].thread.as_str()),
-        ("portfolio", "coordinator")
-    );
+    assert_to(&nudges[0], "portfolio", "coordinator");
     assert_eq!(rig.wakes_of("stall").len(), 0);
     let notices = rig.owner.notices();
     assert_eq!(notices.len(), 1);

@@ -4,10 +4,10 @@
 //! each, the way the real timer does.
 
 use argus_wake::Clock;
-use argus_wake::testkit::{MIN, Rig, START, board, merge, registry_config, thread};
+use argus_wake::testkit::{MIN, Rig, START, board, by_id, merge, registry_config, thread};
 use argus_wake::time::iso;
-use argus_wake::wake::WakeInput;
-use serde_json::{Map, Value, json};
+use argus_wake::wake::{WakeInput, WakeRow};
+use serde_json::{Value, json};
 
 /// The words of the wake that asks `rotp` for `I-112`.
 pub const REQUEST: &str = "dep D-11: archipelia/I-124 needs your I-112 \"Expose the hook\"";
@@ -23,20 +23,11 @@ pub fn item(id: &str, status: &str, extra: &Value) -> Value {
 }
 
 fn rotp(lead: &Value, items: &[Value], extra: &Value) -> Value {
-    let items: Map<String, Value> = items
-        .iter()
-        .map(|item| {
-            (
-                item["id"].as_str().unwrap_or_default().to_owned(),
-                item.clone(),
-            )
-        })
-        .collect();
     let mut lead_fields = json!({"lastSeen": iso(START)});
     merge(&mut lead_fields, lead);
     let mut value = json!({
         "threads": {"lead": thread("lead", "coordinator", &lead_fields)},
-        "items": items,
+        "items": by_id(items),
         "inbox": {},
     });
     merge(&mut value, extra);
@@ -124,6 +115,11 @@ pub fn touch(rig: &Rig, item: &str, status: &str) {
             i.rec.updated_at = now.as_str().into();
         }
     });
+}
+
+/// The wake is addressed to `thread` of `scope`.
+pub fn assert_to(wake: &WakeRow, scope: &str, thread: &str) {
+    assert_eq!((wake.scope.as_str(), wake.thread.as_str()), (scope, thread));
 }
 
 /// The texts of the activity lines of one kind.

@@ -34,7 +34,7 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::is_blocked;
-    use crate::testkit::board;
+    use crate::testkit::{blocking_causes, board};
 
     fn blocked(item: &Value, entries: &Value) -> bool {
         let mut item = item.clone();
@@ -54,14 +54,8 @@ mod tests {
 
     #[test]
     fn each_of_the_four_causes_blocks_an_item() {
-        let cases = [
-            (json!({"blocker": "needs the schema"}), json!({})),
-            (json!({"waitsOn": {"state": "opening"}}), json!({})),
-            (json!({"waitsOn": {"state": "open"}}), json!({})),
-            (json!({"requestedBy": {"state": "blocked"}}), json!({})),
-            (json!({}), ask("question", "open")),
-            (json!({}), ask("decision", "pending")),
-        ];
+        let mut cases = blocking_causes("I-1");
+        cases.push((json!({"waitsOn": {"state": "opening"}}), json!({})));
         for (item, entries) in cases {
             assert!(blocked(&item, &entries), "{item} {entries}");
         }

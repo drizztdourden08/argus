@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -8,6 +8,7 @@ import { chipLook } from '../../src/screens/board/RegisteredStrip/behavior/chip-
 import { RegisteredStrip } from '../../src/screens/board/RegisteredStrip';
 import { createFakeSources } from '../helpers/fake-source';
 import { changeBoard, seedBoard } from '../helpers/seed-board';
+import { waitForStream } from '../helpers/wait-for-stream';
 
 afterEach(cleanup);
 
@@ -38,7 +39,7 @@ const mount = () => {
 
 const seeded = async (docs: Record<string, Record<string, object>>) => {
   const sources = mount();
-  await waitFor(() => expect(sources).toHaveLength(1));
+  await waitForStream(sources);
   act(() => seedBoard(sources[0], docs));
   return sources;
 };
@@ -48,7 +49,7 @@ const registry = (...rows: RegistryRow[]) => Object.fromEntries(rows.map((entry)
 describe('S1 the Registered strip', { tags: ['standard'] }, () => {
   it('is hidden until a thread is registered, and follows the registry stream', async () => {
     const sources = mount();
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     expect(sources[0]?.url).toContain('registry');
     act(() => seedBoard(sources[0], { registry: {} }));
     expect(screen.queryByRole('status', { name: 'Registered threads' })).toBeNull();

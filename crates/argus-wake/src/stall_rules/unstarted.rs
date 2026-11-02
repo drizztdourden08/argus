@@ -49,8 +49,8 @@ mod tests {
     use serde_json::{Value, json};
 
     use crate::memory::MemoryBoards;
-    use crate::stall_rules::fixtures::{NOW, boards, item, project, run_of};
-    use crate::stall_rules::{Found, IdleWatch, Kind};
+    use crate::stall_rules::fixtures::{NOW, boards, fresh, item, project};
+    use crate::stall_rules::{Found, Kind};
     use crate::testkit::MIN;
     use crate::time::iso;
 
@@ -69,7 +69,7 @@ mod tests {
     }
 
     fn found(boards: &MemoryBoards) -> Vec<Found> {
-        run_of(Kind::Unstarted, boards, &IdleWatch::new(), (NOW, true))
+        fresh(Kind::Unstarted, boards)
     }
 
     #[test]

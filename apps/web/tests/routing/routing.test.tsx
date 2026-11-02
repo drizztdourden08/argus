@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
+import { waitForStream } from '../helpers/wait-for-stream';
 
 afterEach(cleanup);
 
@@ -14,7 +15,7 @@ const cards = {
 describe('S2 routing', { tags: ['standard'] }, () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
     const { sources } = renderAt('/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
     expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
     expect(wanted).toContain('cards');
@@ -26,7 +27,7 @@ describe('S2 routing', { tags: ['standard'] }, () => {
 
   it('shows the board page at /p/:key/ with the registered strip', async () => {
     const { sources } = renderAt('/p/rotp/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     expect(sources[0]?.url.startsWith('/api/p/rotp/stream?c=')).toBe(true);
     expect(sources[0]?.url.split('c=')[1]?.split(',')).toEqual(
       expect.arrayContaining(['actions', 'agents', 'builds', 'entries', 'items', 'log', 'meta', 'registry', 'tests', 'threads']),

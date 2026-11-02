@@ -6,7 +6,7 @@
 
 use serde_json::json;
 
-use crate::stalls_world::{item, pass, silent_world, world};
+use crate::stalls_world::{assert_to, item, pass, silent_world, world};
 
 #[test]
 fn a_doing_item_60_min_without_a_write_or_agent_stalls() {
@@ -16,10 +16,7 @@ fn a_doing_item_60_min_without_a_write_or_agent_stalls() {
     pass(&mut rig, 1);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
-    assert_eq!(
-        (stalls[0].scope.as_str(), stalls[0].thread.as_str()),
-        ("portfolio", "coordinator")
-    );
+    assert_to(&stalls[0], "portfolio", "coordinator");
     assert_eq!(stalls[0].text, "stall: rotp/I-12 doing 60 min, no agent");
     let open = rig.service.stalls(Some("rotp"));
     assert_eq!(

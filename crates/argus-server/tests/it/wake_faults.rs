@@ -102,11 +102,9 @@ async fn clear(t: &TestServer, body: &Value) -> u16 {
     t.write("POST", "/api/wake-faults/clear", body).await.status
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_and_one_fault_open_wake()
- {
-    let f = faulted().await;
-    let ui = registry_doc(&f.t, "alpha", "ui").expect("the ui row");
+/// The faulted `ui` row carries the reason, the registry rows follow and the portfolio page shows it.
+fn the_fault_shows_on_the_rows(t: &TestServer) {
+    let ui = registry_doc(t, "alpha", "ui").expect("the ui row");
     assert_eq!(ui["fault"]["reason"], "no-listener");
     assert!(
         ui["fault"]["detail"]
@@ -114,20 +112,24 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
             .is_some_and(|d| d.contains("nobody listening"))
     );
     assert_eq!(ui["pendingWake"], Value::Null);
+    assert_eq!(state_of(t, "alpha", "coordinator").as_deref(), Some("idle"));
     assert_eq!(
-        state_of(&f.t, "alpha", "coordinator").as_deref(),
-        Some("idle")
-    );
-    assert_eq!(
-        state_of(&f.t, PORTFOLIO, "alpha/ui").as_deref(),
+        state_of(t, PORTFOLIO, "alpha/ui").as_deref(),
         Some("fault"),
         "the portfolio page shows it"
     );
-    assert!(registry_doc(&f.t, PORTFOLIO, "alpha/coordinator").is_some());
+    assert!(registry_doc(t, PORTFOLIO, "alpha/coordinator").is_some());
     assert_eq!(
-        registry_doc(&f.t, PORTFOLIO, "alpha/api").expect("api")["project"],
+        registry_doc(t, PORTFOLIO, "alpha/api").expect("api")["project"],
         "alpha"
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_and_one_fault_open_wake()
+ {
+    let f = faulted().await;
+    the_fault_shows_on_the_rows(&f.t);
 
     let all = wakes(&f.t, "portfolio").await;
     let of = |reason: &str| -> Vec<Value> {

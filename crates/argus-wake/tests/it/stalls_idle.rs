@@ -5,15 +5,12 @@
 
 // test-tag: critical
 
-use serde_json::{Value, json};
+use argus_wake::testkit::blocking_causes;
+use serde_json::json;
 
-use crate::stalls_world::{activity_texts, item, pass, pass_with, working, world};
+use crate::stalls_world::{activity_texts, assert_to, item, pass, pass_with, working, world};
 
 const LINE: &str = "stall: rotp idle 10 min, 1 open items without a blocker (I-4)";
-
-fn ask(kind: &str, status: &str) -> Value {
-    json!({"E-1": {"id": "E-1", "item": "I-4", "kind": kind, "status": status}})
-}
 
 #[test]
 fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {
@@ -24,10 +21,7 @@ fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
     assert_eq!(stalls[0].text, LINE);
-    assert_eq!(
-        (stalls[0].scope.as_str(), stalls[0].thread.as_str()),
-        ("portfolio", "coordinator")
-    );
+    assert_to(&stalls[0], "portfolio", "coordinator");
     let open = rig.service.stalls(Some("rotp"));
     assert_eq!(
         (
@@ -41,14 +35,7 @@ fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {
 
 #[test]
 fn a_blocker_a_dep_wait_or_an_open_ask_keeps_it_quiet() {
-    let cases = [
-        (json!({"blocker": "needs the schema"}), json!({})),
-        (json!({"waitsOn": {"state": "open"}}), json!({})),
-        (json!({"requestedBy": {"state": "blocked"}}), json!({})),
-        (json!({}), ask("question", "open")),
-        (json!({}), ask("decision", "pending")),
-    ];
-    for (extra, entries) in cases {
+    for (extra, entries) in blocking_causes("I-4") {
         let mut rig = world(
             &json!({}),
             &[item("I-4", "todo", &extra)],

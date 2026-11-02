@@ -1,10 +1,10 @@
 //! Boards and a runner for the stall rule tests: project `rotp` with a live lead idle for 20 minutes.
 
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 
 use super::{Found, IdleWatch, Kind, Limits, RuleInput, find};
 use crate::memory::MemoryBoards;
-use crate::testkit::{HOUR, MIN, START, board, merge, thread};
+use crate::testkit::{HOUR, MIN, START, board, by_id, merge, thread};
 use crate::time::iso;
 
 /// The moment every rule test looks at the boards.
@@ -22,20 +22,11 @@ pub(super) fn item(id: &str, status: &str, extra: &Value) -> Value {
 
 /// A project board: the lead (idle, last seen 20 minutes before `NOW`) and the items, plus the `extra` keys.
 pub(super) fn project(lead: &Value, items: &[Value], extra: &Value) -> Value {
-    let items: Map<String, Value> = items
-        .iter()
-        .map(|item| {
-            (
-                item["id"].as_str().unwrap_or_default().to_owned(),
-                item.clone(),
-            )
-        })
-        .collect();
     let mut lead_fields = json!({"lastSeen": iso(NOW - 20 * MIN)});
     merge(&mut lead_fields, lead);
     let mut value = json!({
         "threads": {"lead": thread("lead", "coordinator", &lead_fields)},
-        "items": items,
+        "items": by_id(items),
     });
     merge(&mut value, extra);
     value
@@ -62,6 +53,11 @@ pub(super) fn run(boards: &MemoryBoards, watch: &IdleWatch, now: i64, busy: bool
             limits: Limits::default(),
         },
     )
+}
+
+/// What [`run`] found of one rule on a first sight at `NOW`, every project busy.
+pub(super) fn fresh(kind: Kind, boards: &MemoryBoards) -> Vec<Found> {
+    run_of(kind, boards, &IdleWatch::new(), (NOW, true))
 }
 
 /// What [`run`] found of one rule.

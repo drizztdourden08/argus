@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex, PoisonError};
 
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 use crate::board::BoardView;
 use crate::board::EntryView;
@@ -53,6 +53,34 @@ pub fn thread(id: &str, role: &str, extra: &Value) -> Value {
     });
     merge(&mut record, extra);
     record
+}
+
+/// What blocks a work item, as pairs of item fields and board entries: a blocker text, a dependency wait, a blocked
+/// request and an open ask, for the item `item_id`.
+#[must_use]
+pub fn blocking_causes(item_id: &str) -> Vec<(Value, Value)> {
+    let ask = |kind: &str, status: &str| json!({"E-1": {"id": "E-1", "item": item_id, "kind": kind, "status": status}});
+    vec![
+        (json!({"blocker": "needs the schema"}), json!({})),
+        (json!({"waitsOn": {"state": "open"}}), json!({})),
+        (json!({"requestedBy": {"state": "blocked"}}), json!({})),
+        (json!({}), ask("question", "open")),
+        (json!({}), ask("decision", "pending")),
+    ]
+}
+
+/// Board records keyed by their `id` field.
+#[must_use]
+pub fn by_id(records: &[Value]) -> Map<String, Value> {
+    records
+        .iter()
+        .map(|record| {
+            (
+                record["id"].as_str().unwrap_or_default().to_owned(),
+                record.clone(),
+            )
+        })
+        .collect()
 }
 
 /// A last-wake lookup a test can swap for another one.
