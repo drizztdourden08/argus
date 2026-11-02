@@ -61,6 +61,10 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
         .next(Some("wake"), 5000)
         .await
         .expect("the first event");
+    wake_where(t, "alpha", |w| {
+        w["subject"] == "T-3" && (w["status"] == "delivered" || w["status"] == "coalesced")
+    })
+    .await;
     first.close();
     result(t, "T-4", "blocked", "device missing").await;
     let queued = wake_where(t, "alpha", |w| {

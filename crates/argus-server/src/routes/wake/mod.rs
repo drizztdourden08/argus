@@ -32,7 +32,7 @@ use argus_wake::service::driver::SharedWake;
 
 use crate::{Ctx, RouteOpts, Router};
 
-pub(crate) use faults::browser_like;
+pub(crate) use faults::overlord_call;
 
 const POST_BYTES: usize = 8 * 1024;
 const CLEAR_BYTES: usize = 4 * 1024;
@@ -44,7 +44,7 @@ pub(crate) fn service(ctx: &Ctx) -> Result<SharedWake, ApiError> {
         .ok_or_else(|| ApiError::unavailable("the wake service is not running"))
 }
 
-pub(crate) fn refusal(e: &RequestError) -> ApiError {
+fn refusal(e: &RequestError) -> ApiError {
     let code = match e {
         RequestError::BadRequest(_) => ErrorCode::BadRequest,
         RequestError::Forbidden(_) => ErrorCode::Forbidden,

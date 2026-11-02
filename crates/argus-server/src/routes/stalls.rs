@@ -17,8 +17,7 @@ use argus_wake::text::one_line;
 use serde_json::{Value, json, to_value};
 
 use super::blocking::blocking;
-use super::wake::{browser_like, refusal, service};
-use crate::adapters::wake::view_of;
+use super::wake::{overlord_call, service};
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::{Ctx, Router};
@@ -91,13 +90,7 @@ fn acked_text(project: &str, count: usize) -> String {
 }
 
 async fn ack(ctx: Ctx) -> Reply {
-    let wake = service(&ctx)?;
-    if browser_like(&ctx) {
-        return Err(ApiError::new(ErrorCode::Forbidden, FROM_PAGE));
-    }
-    let body = ctx.json().await?;
-    let portfolio = ctx.svc.boards().board(MAIN_SCOPE).map(|b| view_of(&b));
-    let req = request(&body, portfolio.as_deref()).map_err(|e| refusal(&e))?;
+    let (wake, req) = overlord_call(&ctx, FROM_PAGE, request).await?;
     let project = req.project.clone();
     let by = format!("{MAIN_SCOPE}/{}", req.by);
     let acked = blocking(move || lock(&wake).ack_stalls(&req.project, &by, &req.note)).await?;
