@@ -7,7 +7,7 @@
 use argus_wake::testkit::{MIN, Rig, START};
 use serde_json::json;
 
-use crate::stalls_world::{assert_unread_assignment, assigned, item, pass, world};
+use crate::stalls_world::{assert_unread_assignment, assigned, item, pass, pass_quiet, world};
 
 fn busy_world() -> Rig {
     let items = [
@@ -25,10 +25,7 @@ fn an_ackable_wake_older_than_the_service_never_raises_an_unread_stall() {
     rig.clock.set(START - 20 * MIN);
     assigned(&mut rig, "I-5");
     rig.clock.set(START);
-    pass(&mut rig, 40);
-    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
-    assert_eq!(rig.wakes_of("stall").len(), 0);
-    assert_eq!(rig.owner.notices().len(), 0);
+    pass_quiet(&mut rig, 40);
 }
 
 #[test]

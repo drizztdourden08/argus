@@ -53,6 +53,14 @@ pub fn session_input(f: &Fixture, sid: &str) -> Value {
     json!({ "session_id": sid, "cwd": f.cwd_text() })
 }
 
+/// The prompt hook of thread `ui` after the coordinator left it a message with `text`.
+pub fn prompt_after_message(f: &Fixture, text: &str) -> Ran {
+    let mut board = f.board();
+    board["inbox"]["ui"] = json!([message(text)]);
+    f.save(&board);
+    f.hook("prompt", &session_input(f, UI))
+}
+
 /// A message of the coordinator in an inbox.
 pub fn message(text: &str) -> Value {
     json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": text, "ref": null, "deliveredAt": null })

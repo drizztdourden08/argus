@@ -3,7 +3,8 @@
 // test-tag: standard
 
 use crate::hook_support::{
-    Fixture, LEAD, StandIn, UI, ago, digest_dashboard, fixture, message, session_input as input,
+    Fixture, LEAD, StandIn, UI, ago, digest_dashboard, fixture, prompt_after_message,
+    session_input as input,
 };
 use serde_json::{Value, json};
 
@@ -78,10 +79,7 @@ fn a_dashboard_that_is_down_adds_nothing() {
 fn new_messages_and_the_digest_come_in_one_text_the_digest_last() {
     let server = digest_dashboard(&digest(Some(LINE)));
     let f = fixture(&server);
-    let mut board = f.board();
-    board["inbox"]["ui"] = json!([message("Start with the parser.")]);
-    f.save(&board);
-    let ran = f.hook("prompt", &input(&f, UI));
+    let ran = prompt_after_message(&f, "Start with the parser.");
     assert!(
         ran.out
             .contains("- [note] from coordinator: Start with the parser.")

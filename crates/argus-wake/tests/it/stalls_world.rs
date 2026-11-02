@@ -156,3 +156,11 @@ pub fn assert_unread_assignment(rig: &Rig, id: &str) {
         format!("stall: rotp did not read item-assigned {id} for 10 min (it is idle)")
     );
 }
+
+/// A pass of `minutes` raises no ack nudge, no stall wake and no owner notice.
+pub fn pass_quiet(rig: &mut Rig, minutes: i64) {
+    pass(rig, minutes);
+    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
+    assert_eq!(rig.wakes_of("stall").len(), 0);
+    assert_eq!(rig.owner.notices().len(), 0);
+}

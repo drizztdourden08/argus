@@ -3,9 +3,10 @@
 
 // test-tag: standard
 
-use crate::hook_support::listen::{READ_PATH, always, listen, serve, wake};
+use crate::hook_support::listen::{READ_PATH, listen, serve_one_wake};
 use crate::hook_support::{
-    Fixture, LEAD, StandIn, UI, digest_dashboard, fixture, message, session_input as input,
+    Fixture, LEAD, StandIn, UI, digest_dashboard, fixture, prompt_after_message,
+    session_input as input,
 };
 use serde_json::json;
 
@@ -32,10 +33,7 @@ fn a_prompt_that_prints_the_digest_stamps_the_read() {
 fn a_prompt_that_prints_new_messages_stamps_the_read() {
     let server = dashboard(None);
     let f = fixture(&server);
-    let mut board = f.board();
-    board["inbox"]["ui"] = json!([message("Start with the parser.")]);
-    f.save(&board);
-    let ran = f.hook("prompt", &input(&f, UI));
+    let ran = prompt_after_message(&f, "Start with the parser.");
     assert!(ran.out.contains("Start with the parser."), "{}", ran.out);
     assert_eq!(stamps(&server), 1);
 }
@@ -62,19 +60,14 @@ fn a_sub_agent_call_does_not_stamp_its_lead() {
 #[test]
 fn a_stamp_that_cannot_be_posted_never_breaks_the_hook() {
     let f = Fixture::new();
-    let mut board = f.board();
-    board["inbox"]["ui"] = json!([message("Start with the parser.")]);
-    f.save(&board);
-    let ran = f.hook("prompt", &input(&f, UI));
+    let ran = prompt_after_message(&f, "Start with the parser.");
     assert_eq!(ran.code, 0);
     assert!(ran.out.contains("Start with the parser."), "{}", ran.out);
 }
 
 #[test]
 fn a_heard_wake_stamps_the_read_of_the_thread_that_listens() {
-    let server = serve(always(Some(wake(
-        &json!({ "thread": "ui", "lines": ["lead: look at the build"], "count": 1 }),
-    ))));
+    let server = serve_one_wake();
     let f = fixture(&server);
     let ran = listen(&f, LEAD, "Stop", &[]);
     assert_eq!(ran.code, 2);

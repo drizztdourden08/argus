@@ -56,6 +56,13 @@ pub fn wake(data: &Value) -> String {
     format!("event: wake\ndata: {data}\n\n")
 }
 
+/// A stand-in stream that wakes thread `ui` with one line, once per stream.
+pub fn serve_one_wake() -> StandIn {
+    serve(always(Some(wake(
+        &json!({ "thread": "ui", "lines": ["lead: look at the build"], "count": 1 }),
+    ))))
+}
+
 pub fn always(events: Option<String>) -> Answer {
     Arc::new(move |_| events.clone())
 }

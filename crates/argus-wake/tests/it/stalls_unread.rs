@@ -15,7 +15,7 @@ use serde_json::json;
 
 use crate::stalls_world::{
     REQUEST, activity_texts, assert_to, assert_unread_assignment, assigned, dep_request, item,
-    open_dep, pass, pass_with, touch, working, world,
+    open_dep, pass, pass_quiet, pass_with, touch, working, world,
 };
 
 #[test]
@@ -75,10 +75,7 @@ fn an_inbox_read_before_5_min_stops_the_ladder() {
     dep_request(&mut rig);
     pass(&mut rig, 3);
     rig.service.inbox_read("rotp", "lead");
-    pass(&mut rig, 26);
-    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
-    assert_eq!(rig.wakes_of("stall").len(), 0);
-    assert_eq!(rig.owner.notices().len(), 0);
+    pass_quiet(&mut rig, 26);
     assert_eq!(rig.service.stalls(None).len(), 0);
 }
 
@@ -156,10 +153,7 @@ fn notices_and_fault_lines_are_never_ackable() {
         .map(|reason| WakeInput::about("rotp", "lead", reason, "X-1", "a line"))
         .collect();
     rig.service.submit(&wakes).expect("submit");
-    pass(&mut rig, 40);
-    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
-    assert_eq!(rig.wakes_of("stall").len(), 0);
-    assert_eq!(rig.owner.notices().len(), 0);
+    pass_quiet(&mut rig, 40);
 }
 
 #[test]

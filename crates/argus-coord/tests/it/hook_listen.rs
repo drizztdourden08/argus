@@ -6,15 +6,13 @@
 use std::fs;
 use std::sync::Arc;
 
-use crate::hook_support::listen::{Answer, always, listen, serve, streams, wake};
+use crate::hook_support::listen::{Answer, always, listen, serve, serve_one_wake, streams, wake};
 use crate::hook_support::{LEAD, UI, fixture};
 use serde_json::{Value, json};
 
 #[test]
 fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() {
-    let server = serve(always(Some(wake(
-        &json!({ "thread": "ui", "lines": ["lead: look at the build"], "count": 1 }),
-    ))));
+    let server = serve_one_wake();
     let f = fixture(&server);
     let ran = listen(&f, UI, "Stop", &[]);
     assert_eq!(ran.code, 2);
