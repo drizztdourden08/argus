@@ -1111,3 +1111,11 @@ pub fn pull_request_answer_keeps_branch(answer: &str) -> Fixture {
 pub fn rule_for(fx: &Fixture) -> Rule {
     Rule::folder("W-1", &fx.wts, "worker")
 }
+
+/// The fixture on the real git with its folder rule, scanned once.
+pub fn scanned_real() -> (Fixture, Harness) {
+    let fx = Fixture::new();
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
+    (fx, h)
+}

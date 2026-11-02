@@ -8,21 +8,12 @@
 use super::fallback::shape_on;
 use super::remove::discard_by_decision_on;
 use crate::error::ErrorCode;
-use crate::testkit::{
-    Fixture, Harness, RemoveMode, branches, exists_itself, git_in, listed, rule_for,
-};
-
-fn real_setup() -> (Fixture, Harness) {
-    let fx = Fixture::new();
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-    h.scan();
-    (fx, h)
-}
+use crate::testkit::{Fixture, RemoveMode, branches, exists_itself, git_in, listed, scanned_real};
 
 #[test]
 #[ignore = "e2e"]
 fn a_merged_clean_worktree_goes_with_its_branch_and_git_no_longer_lists_it() {
-    let (fx, h) = real_setup();
+    let (fx, h) = scanned_real();
     let out = h
         .rm_with(&h.id_of(&fx.path("old-merged")), |i| i.branch = true)
         .unwrap();
@@ -36,7 +27,7 @@ fn a_merged_clean_worktree_goes_with_its_branch_and_git_no_longer_lists_it() {
 #[test]
 #[ignore = "e2e"]
 fn a_dirty_worktree_is_refused_without_discard_and_stays() {
-    let (fx, h) = real_setup();
+    let (fx, h) = scanned_real();
     let err = h.refused(&h.id_of(&fx.path("dirty-old")), |_| {});
     assert_eq!(err.code, ErrorCode::Forbidden);
     assert!(

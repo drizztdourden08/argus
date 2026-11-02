@@ -6,16 +6,8 @@
 
 use crate::probe::SAFETY_SCAN_MS;
 use crate::sync::locked;
-use crate::testkit::{Fixture, Harness, days_ago, index_of, put, rule_for, set_mtime};
+use crate::testkit::{Harness, days_ago, index_of, put, scanned_real, set_mtime};
 use std::path::Path;
-
-/// The fixture's four git worktrees that exist (`fresh`, `old-unmerged`, `old-merged`, `dirty-old`), scanned once.
-fn scanned() -> (Fixture, Harness) {
-    let fx = Fixture::new();
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-    h.scan();
-    (fx, h)
-}
 
 const READ_WORKTREES: usize = 4;
 
@@ -42,7 +34,7 @@ fn reads_one_changed(h: &Harness, said: &str) {
 #[test]
 #[ignore = "e2e"]
 fn an_unchanged_disk_means_no_scan_and_no_git_process() {
-    let (_fx, h) = scanned();
+    let (_fx, h) = scanned_real();
     let before = git_calls(&h);
     assert!(!h.svc.changed("alpha"));
     assert!(h.svc.scan_if_changed("alpha").is_none());
@@ -52,7 +44,7 @@ fn an_unchanged_disk_means_no_scan_and_no_git_process() {
 #[test]
 #[ignore = "e2e"]
 fn a_new_index_time_scans_that_worktree_only_and_the_others_keep_their_facts() {
-    let (fx, h) = scanned();
+    let (fx, h) = scanned_real();
     let rows = h.docs().len();
     set_mtime(Path::new(&index_of(&fx.path("fresh"))), days_ago(0.5));
     reads_one_changed(&h, "only the changed worktree");
@@ -66,7 +58,7 @@ fn a_new_index_time_scans_that_worktree_only_and_the_others_keep_their_facts() {
 #[test]
 #[ignore = "e2e"]
 fn a_new_head_time_scans_that_worktree() {
-    let (fx, h) = scanned();
+    let (fx, h) = scanned_real();
     let index = index_of(&fx.path("old-merged"));
     set_mtime(&Path::new(&index).with_file_name("HEAD"), days_ago(1.0));
     reads_one_changed(&h, "the one that changed");
@@ -75,7 +67,7 @@ fn a_new_head_time_scans_that_worktree() {
 #[test]
 #[ignore = "e2e"]
 fn a_worktree_that_comes_is_read_and_the_others_are_not() {
-    let (fx, h) = scanned();
+    let (fx, h) = scanned_real();
     fx.add("brand-new");
     reads_one_changed(&h, "the one that changed");
     assert_eq!(h.fact("brand-new").branch.as_deref(), Some("brand-new"));
@@ -84,7 +76,7 @@ fn a_worktree_that_comes_is_read_and_the_others_are_not() {
 #[test]
 #[ignore = "e2e"]
 fn a_worktree_that_goes_is_noticed_without_git() {
-    let (fx, h) = scanned();
+    let (fx, h) = scanned_real();
     std::fs::remove_dir_all(fx.path("old-merged")).unwrap();
     let before = git_calls(&h);
     assert!(h.svc.changed("alpha"));
@@ -94,7 +86,7 @@ fn a_worktree_that_goes_is_noticed_without_git() {
 #[test]
 #[ignore = "e2e"]
 fn the_safety_period_reads_everything_and_finds_what_no_fingerprint_shows() {
-    let (fx, h) = scanned();
+    let (fx, h) = scanned_real();
     put(&fx.path("fresh"), "wip.txt", "work\n");
     assert!(
         !h.svc.changed("alpha"),
@@ -113,7 +105,7 @@ fn the_safety_period_reads_everything_and_finds_what_no_fingerprint_shows() {
 #[test]
 #[ignore = "e2e"]
 fn a_forced_scan_reads_everything_whatever_the_fingerprints_say() {
-    let (_fx, h) = scanned();
+    let (_fx, h) = scanned_real();
     assert!(!h.svc.changed("alpha"));
     let before = git_calls(&h);
     h.scan();
