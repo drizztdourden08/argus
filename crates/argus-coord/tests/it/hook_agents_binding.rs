@@ -296,3 +296,36 @@ fn a_stop_that_only_waits_on_the_agents_own_background_command_leaves_the_record
     assert_eq!(done["status"], "done");
     assert_eq!(done["result"], "build passed");
 }
+
+#[test]
+fn claude_id_of_a_hand_started_record_takes_the_id_from_the_hooks_own_duplicate_and_closes_that_one()
+ {
+    let f = Fixture::new();
+    let id = f.manual("A-30", "recheck-two", "recheck the wave", &json!({}));
+    dispatch(&f, "Recheck wave results", "sonnet", "toolu_dupe");
+    f.started(LEAD, "agent-dupe-0001", "general-purpose");
+    let twin = id_of(&f, "agent-dupe-0001");
+    let args = [
+        "agent",
+        "set",
+        &id,
+        "--claude-id",
+        "agent-dupe-0001",
+        "--project",
+        "alpha",
+        "--as",
+        "coordinator",
+    ];
+    let ran = crate::common::coord(&args, f.home.env(), &f.cwd);
+    assert_eq!(ran.code, 0, "{}\n{}", ran.out, ran.err);
+    let board = f.board();
+    assert_eq!(board["agents"][&id]["claudeId"], "agent-dupe-0001");
+    assert_eq!(board["agents"][&id]["hookId"], "agent-dupe-0001");
+    assert_eq!(board["agents"][&twin]["duplicateOf"], json!(id));
+    assert_eq!(board["agents"][&twin]["status"], "stopped");
+    assert_eq!(board["agents"][&twin]["hookId"], Value::Null);
+    f.stopped(LEAD, "agent-dupe-0001", &last("rechecked"));
+    let after = f.board();
+    assert_eq!(after["agents"][&id]["status"], "done");
+    assert_eq!(after["agents"][&id]["result"], "rechecked");
+}

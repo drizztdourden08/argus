@@ -12,6 +12,7 @@ use serde_json::Value;
 use super::bind::claude_id;
 use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{Want, agent_mut, clear_ending, named};
+use super::takeover;
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::apply::allow;
@@ -63,28 +64,30 @@ fn add_justification(
     Ok(())
 }
 
+/// Sets the Claude id; returns the hook-made twin that held it, whose record moves onto this one.
 fn add_claude_id(
     board: &Board,
     fields: &mut Fields,
     id: &str,
     run: &Run<'_>,
-) -> Result<(), CoordError> {
+) -> Result<Option<String>, CoordError> {
     let Some(given) = claude_id_option(run.options)? else {
-        return Ok(());
+        return Ok(None);
     };
     let other = section(board, "agents").values().find(|x| {
         display(&x["id"]) != id
             && !truthy(x, "deletedAt")
             && claude_id(x).as_deref() == Some(&given)
     });
-    if let Some(other) = other {
+    if let Some(other) = other.filter(|x| x["source"] != "hook" || truthy(x, "leadBound")) {
         return Err(CoordError::refuse(format!(
             "{} already carries Claude agent id {given}: it is the same sub-agent, keep one record (coord agent done {id}).",
             display(&other["id"])
         )));
     }
+    let twin = other.map(|x| display(&x["id"]));
     fields.insert("claudeId".to_owned(), Value::from(given));
-    Ok(())
+    Ok(twin)
 }
 
 fn add_checkin(
@@ -123,22 +126,22 @@ fn add_status(
     Ok(())
 }
 
-/// What the call changes on the record, every field checked.
+/// What the call changes on the record, every field checked, and the twin record to absorb.
 fn plan(
     board: &Board,
     id: &str,
     run: &Run<'_>,
     status: Option<&str>,
-) -> Result<Fields, CoordError> {
+) -> Result<(Fields, Option<String>), CoordError> {
     let agent = doc(board, "agents", id).cloned().unwrap_or(Value::Null);
     let mut fields = fields_of(board, run.options, &FIELDS)?;
     let model = value(run.options, "model")?;
     let why = value(run.options, "why")?;
     add_justification(&mut fields, &agent, (model, why))?;
-    add_claude_id(board, &mut fields, id, run)?;
+    let twin = add_claude_id(board, &mut fields, id, run)?;
     add_checkin(&mut fields, &agent, model, value(run.options, "checkin")?)?;
     add_status(&mut fields, &agent, id, status)?;
-    Ok(fields)
+    Ok((fields, twin))
 }
 
 fn change(
@@ -168,7 +171,10 @@ fn change(
         check_resume(agent, &id, run)?;
     }
     allow(who, "set", "agents", Some(agent))?;
-    let fields = plan(board, &id, run, status)?;
+    let (mut fields, twin) = plan(board, &id, run, status)?;
+    if let Some(twin) = twin {
+        takeover::absorb(board, &twin, &id, &mut fields, &who.actor)?;
+    }
     let agent = agent_mut(board, &id)?;
     if reopening {
         clear_ending(agent);
