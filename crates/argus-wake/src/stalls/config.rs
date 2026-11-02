@@ -2,6 +2,7 @@
 
 use serde_json::Value;
 
+use super::ackable::is_lead_note;
 use crate::config::section_ms;
 use crate::stall_rules::Limits;
 
@@ -20,6 +21,10 @@ pub struct StallConfig {
     pub unread_ms: i64,
     /// Rule 2: the owner hears of an unread wake after this long (`stall.ownerMs`).
     pub owner_ms: i64,
+    /// Rule 2: an unread `coord lead` note is sent again after this long (`stall.leadNudgeMs`).
+    pub lead_nudge_ms: i64,
+    /// Rule 2: the Overlord hears of an unread `coord lead` note after this long (`stall.leadUnreadMs`).
+    pub lead_unread_ms: i64,
     /// Rule 3: a dependency open with its item still `todo` (`stall.unstartedMs`).
     pub unstarted_ms: i64,
     /// Rule 4: a lead idle with unblocked work (`stall.idleMs`).
@@ -42,6 +47,8 @@ impl Default for StallConfig {
             nudge_ms: 5 * MIN_MS,
             unread_ms: 10 * MIN_MS,
             owner_ms: 30 * MIN_MS,
+            lead_nudge_ms: 3 * MIN_MS,
+            lead_unread_ms: 5 * MIN_MS,
             unstarted_ms: 30 * MIN_MS,
             idle_ms: 10 * MIN_MS,
             silent_ms: 60 * MIN_MS,
@@ -67,12 +74,24 @@ impl StallConfig {
             nudge_ms: ms("nudgeMs", d.nudge_ms),
             unread_ms: ms("unreadMs", d.unread_ms),
             owner_ms: ms("ownerMs", d.owner_ms),
+            lead_nudge_ms: ms("leadNudgeMs", d.lead_nudge_ms),
+            lead_unread_ms: ms("leadUnreadMs", d.lead_unread_ms),
             unstarted_ms: ms("unstartedMs", d.unstarted_ms),
             idle_ms: ms("idleMs", d.idle_ms),
             silent_ms: ms("silentMs", d.silent_ms),
             resend_ms: ms("resendMs", d.resend_ms),
             horizon_ms: ms("horizonMs", d.horizon_ms),
             proc_idle_min: ms("procIdleMin", d.proc_idle_min),
+        }
+    }
+
+    /// Rule 2's first two steps for a wake of this reason: (sent again, the Overlord hears), in ms.
+    #[must_use]
+    pub fn unread_steps(&self, reason: &str) -> (i64, i64) {
+        if is_lead_note(reason) {
+            (self.lead_nudge_ms, self.lead_unread_ms)
+        } else {
+            (self.nudge_ms, self.unread_ms)
         }
     }
 

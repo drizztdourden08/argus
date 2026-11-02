@@ -136,8 +136,6 @@ fn notices_and_fault_lines_are_never_ackable() {
         "wake-fault",
         "fault-open",
         "open-resend",
-        "lead-info",
-        "lead-message",
         "thread-message",
         "agent-idle",
         "test-fail",
@@ -148,7 +146,7 @@ fn notices_and_fault_lines_are_never_ackable() {
     for reason in quiet {
         assert!(!ACKABLE.contains(&reason), "{reason}");
     }
-    let wakes: Vec<WakeInput> = quiet[..10]
+    let wakes: Vec<WakeInput> = quiet[..8]
         .iter()
         .map(|reason| WakeInput::about("rotp", "lead", reason, "X-1", "a line"))
         .collect();

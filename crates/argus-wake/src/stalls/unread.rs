@@ -6,6 +6,8 @@
 //! | `unread_ms` (10 min) | an `unread` stall for the Overlord (never about the Overlord itself) |
 //! | `owner_ms` (30 min) | a notice for the owner |
 //!
+//! A `coord lead` note runs the first two steps sooner: `lead_nudge_ms` (3 min) and `lead_unread_ms` (5 min).
+//!
 //! Only wakes made at or after `since`, the start of the stall watch, are counted: the history from before
 //! it has no read stamps and is never unread.
 //!
@@ -13,7 +15,7 @@
 
 use std::collections::HashSet;
 
-use super::ackable::is_ackable;
+use super::ackable::{is_ackable, is_lead_note};
 use super::acked::Acks;
 use super::config::StallConfig;
 use super::env::StallEnv;
@@ -27,6 +29,7 @@ use crate::wake::{WakeInput, WakeRow};
 
 const NUDGE_REASON: &str = "ack-nudge";
 const MIN_MS: i64 = 60_000;
+const NOTE_CLIP: usize = 80;
 
 /// What the ladder found at one moment.
 #[derive(Default)]
@@ -91,9 +94,10 @@ impl Scan<'_> {
     /// An ackable wake old enough for the first step, young enough to matter, that nobody acknowledged.
     fn waiting(&self, board: &BoardView, row: &WakeRow, at: i64) -> bool {
         let age = self.now - at;
+        let (nudge_ms, _) = self.config.unread_steps(&row.reason);
         is_ackable(&row.reason)
             && at >= self.since
-            && (self.config.nudge_ms..=self.config.horizon_ms).contains(&age)
+            && (nudge_ms..=self.config.horizon_ms).contains(&age)
             && !self.acks.covers(board, row, at)
     }
 
@@ -108,7 +112,8 @@ impl Scan<'_> {
         if age >= self.config.owner_ms {
             out.owner.push(notice(row, age, at, &line));
         }
-        if age >= self.config.unread_ms && row.scope != MAIN_SCOPE {
+        let (_, unread_ms) = self.config.unread_steps(&row.reason);
+        if age >= unread_ms && row.scope != MAIN_SCOPE {
             out.deps.extend(dep_of(row));
             out.stalls.push(found(row, at, line));
         }
@@ -162,10 +167,15 @@ fn dep_of(row: &WakeRow) -> Option<String> {
     Some(subject.split('#').next().unwrap_or(subject).to_owned())
 }
 
-/// What the wake was about: `D-11` for a dependency request, else `<reason> <subject>`.
+/// What the wake was about: `D-11` for a dependency request, the note for a `coord lead` note, else
+/// `<reason> <subject>`.
 fn label(row: &WakeRow) -> String {
     if let Some(dep) = dep_of(row) {
         return dep;
+    }
+    if is_lead_note(&row.reason) {
+        let note: String = row.text.chars().take(NOTE_CLIP).collect();
+        return format!("the lead note \"{note}\"");
     }
     match row.subject.as_deref() {
         Some(subject) => format!("{} {subject}", row.reason),

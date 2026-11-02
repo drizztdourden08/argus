@@ -25,7 +25,7 @@ use std::sync::Arc;
 
 use tracing::warn;
 
-pub use ackable::{ACKABLE, is_ackable};
+pub use ackable::{ACKABLE, LEAD_NOTES, is_ackable};
 pub use config::StallConfig;
 pub use docs::StallInfo;
 pub use env::StallEnv;
