@@ -3,6 +3,7 @@ import { act, cleanup, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolvePalette } from '../../src/palette';
 import { renderAt } from '../helpers/render-at';
+import { waitForStream } from '../helpers/wait-for-stream';
 import { snapshot } from '../helpers/snapshot';
 
 afterEach(() => {
@@ -32,7 +33,7 @@ describe('K1 resolvePalette', { tags: ['critical'] }, () => {
 describe('S1 palette attribute', { tags: ['standard'] }, () => {
   it('follows the palette setting of meta/board live, and basic clears it', async () => {
     const { sources } = renderAt('/p/argus/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     act(() => sources[0]?.emit('snapshot', snapshot('argus', 'meta', board('Argus'))));
     expect(document.documentElement.dataset.palette).toBeUndefined();
     act(() => sources[0]?.emit('changes', { scope: 'argus', seq: 11, changes: [{ coll: 'meta', id: 'board', op: 'set', data: board('Argus', 'brock').board }] }));
@@ -43,7 +44,7 @@ describe('S1 palette attribute', { tags: ['standard'] }, () => {
 
   it('keeps the overview and its project cards on the basic palette, as the Node page does', async () => {
     const { sources } = renderAt('/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     const rotp = { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/' };
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp })));
     const open = await screen.findByRole('button', { name: 'Open the RotP board' });

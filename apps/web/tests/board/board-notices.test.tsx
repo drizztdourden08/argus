@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { passiveNotices } from '../../src/screens/board/BoardHeader/behavior/passive-notices';
 import { renderAt } from '../helpers/render-at';
+import { waitForStream } from '../helpers/wait-for-stream';
 import { seedBoard } from '../helpers/seed-board';
 import { snapshot } from '../helpers/snapshot';
 
@@ -25,7 +26,7 @@ const WAKES = {
 
 const open = async (wakes: Record<string, object>) => {
   const { sources } = renderAt('/p/rotp/');
-  await waitFor(() => expect(sources).toHaveLength(1));
+  await waitForStream(sources);
   act(() => {
     sources[0]?.emit('snapshot', snapshot('rotp', 'wakes', wakes));
     seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: at(0) } }, threads: { coordinator: lead } });
