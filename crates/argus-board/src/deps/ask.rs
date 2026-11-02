@@ -3,7 +3,8 @@
 //! that the next reconcile finishes or cancels.
 //!
 //! 1. portfolio: the checks, then `D-n` in `opening`.
-//! 2. assignee: the item with `requestedBy` (made, or found if an earlier try made it).
+//! 2. assignee: the item with `requestedBy` (made, or found if an earlier try made it) and the
+//!    `dep` message in the inbox of its thread.
 //! 3. requester: `waitsOn` on the item.
 //! 4. portfolio: `to.item` and the state `open`.
 
@@ -19,10 +20,12 @@ use super::mirror::{put, requested_by, waits_on};
 use super::model::{Dep, DepState, Done, Transition};
 use super::plan::{AskRequest, Plan, plan};
 use super::reconcile::reconcile_with;
+use super::request_note::request_note;
 use super::roster::Roster;
 use super::rules::check_new;
 use super::sight::{Seen, find_requested};
 use crate::Board;
+use crate::inbox::post;
 use crate::json::{doc, nullish};
 use crate::store::create_doc;
 use crate::text::slug;
@@ -79,11 +82,27 @@ fn request_item(home: &Path, dep: &Dep, req: &AskRequest, plan: &Plan) -> Result
             return Ok(found);
         }
         let mirror = requested_by(dep, &plan.requester_title);
-        match req.onto.as_deref() {
+        let item = match req.onto.as_deref() {
             Some(onto) => attach(board, onto, mirror, &req.target),
             None => make(board, (req, plan), &mirror),
-        }
+        }?;
+        tell_assignee(board, dep, (req, plan), &item);
+        Ok(item)
     })
+}
+
+/// The one `dep` message in the inbox of the assignee thread: the request, its item, the
+/// acceptance lines and what to do. Reading it is the acknowledgement.
+fn tell_assignee(board: &mut Board, dep: &Dep, (req, plan): (&AskRequest, &Plan), item: &str) {
+    let stored = doc(board, "items", item).cloned().unwrap_or(Value::Null);
+    let text = request_note(dep, item, &stored);
+    post(
+        board,
+        &plan.thread,
+        &req.actor,
+        ("dep", &text),
+        Some(dep.id.as_str()),
+    );
 }
 
 fn attach(board: &mut Board, onto: &str, mirror: Value, target: &str) -> Result<String, DepError> {

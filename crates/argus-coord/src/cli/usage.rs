@@ -90,6 +90,8 @@ Dashboard (the local server for every board page, MCP and runs):
   coord dashboard wake-stream --project <key> --thread <you|*>     (run it under the Monitor tool: one line per wake)
   coord wake-fault list [--all] [--json]         (wakes that failed to reach a thread; the pages show a warning on the Registered strip)
   coord wake-fault clear <project>/<thread> --note "<what was wrong and what you did>"     (the Overlord only)
+  coord stall list [--project k]                 (what Argus found stalled: an unread wake, an unstarted request, an idle lead, a silent item)
+  coord stall ack <project> --note "<what you did>"     (the Overlord only; stops the resends, the stall stays listed until the cause clears)
   coord proc list [--rule r] [--json] | rules      (the process monitor: Argus > Processes; processes.md in the coord skill)
   coord proc rule set <name> [--name-match re] [--cmd-match re] [--path-match re] [--ignore re]... [--max-mem MB] [--max-group-mem MB]
              [--max-age 6h] [--idle 30m] [--orphan|--no-orphan] [--hung|--no-hung] [--killable|--not-killable] [--note "..."] | rule rm <name>

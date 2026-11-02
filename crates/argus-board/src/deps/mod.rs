@@ -6,10 +6,11 @@
 //! never two locks at once, so a crash leaves a state that [`reconcile`] finishes or cancels.
 //! Every call answers the [`Transition`]s it made; the server turns them into wakes.
 //!
-//! * [`ask`], [`close`], [`reopen`], [`cancel`]: the verbs.
+//! * [`ask`], [`ack`], [`close`], [`reopen`], [`cancel`]: the verbs.
 //! * [`reconcile`], [`reconcile_board`], [`sweep`]: follow what the boards say.
 //! * [`list`], [`show`], [`by_item`]: read.
 
+mod ack;
 mod ask;
 mod cycle;
 mod decide;
@@ -21,11 +22,14 @@ mod notice;
 mod plan;
 mod query;
 mod reconcile;
+mod request_note;
 mod resolve;
 mod roster;
 mod rules;
 mod sight;
+mod transition;
 
+pub use ack::ack;
 pub use ask::ask;
 pub use error::{DepError, off};
 pub use model::{Dep, DepState, Done, End, Row, Transition, UnknownState, project_of};
