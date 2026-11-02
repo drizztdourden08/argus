@@ -1,10 +1,11 @@
 //! Argus board: the `board.json` model of the coord CLI, ported from JavaScript so both write
 //! the same files. It reads, normalizes, locks and saves boards, applies the owner's posts
 //! (replies and ops) with the semantics of `coord`, exports a board as page docs and builds the
-//! portfolio cards.
+//! portfolio cards and keeps the ledger of dependencies between projects.
 #![deny(clippy::cognitive_complexity)]
 
 pub mod agents;
+pub mod deps;
 pub mod error;
 pub mod inbox;
 pub mod json;
