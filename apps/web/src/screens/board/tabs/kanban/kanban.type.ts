@@ -148,4 +148,9 @@ interface AddItemDraft {
   itemOf: (title: string) => ItemInput;
 }
 
-export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };
+interface CancelDep {
+  busy: boolean;
+  cancel: () => Promise<void>;
+}
+
+export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };

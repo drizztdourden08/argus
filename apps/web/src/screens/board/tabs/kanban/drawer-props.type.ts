@@ -5,6 +5,7 @@ import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
 import type { FeedActions } from '../../OwnerFeed';
 import type { CriteriaReorder, DrawerNav, ItemOps, KanbanData, RecordActions, Threads } from './kanban.type';
+import type { DepLink, DepView } from './model';
 import type { EntryRow, TimelineRow, TodoRow as TodoEntry } from './record';
 
 interface ItemDrawerProps {
@@ -164,7 +165,36 @@ interface EmptyLineProps {
   children: ReactNode;
 }
 
+interface DependencySectionProps {
+  item: ItemRef;
+  now: number;
+}
+
+interface DependencyViewProps {
+  link: DepLink;
+  now: number;
+}
+
+interface DependencyFactsProps {
+  view: DepView;
+  now: number;
+}
+
+interface DependencyLinkProps {
+  view: DepView;
+}
+
+interface DependencyHistoryProps {
+  rows: DepView['history'];
+  now: number;
+}
+
+interface CancelDependencyProps {
+  dep: string;
+}
+
 export type {
+  CancelDependencyProps, DependencyFactsProps, DependencyHistoryProps, DependencyLinkProps, DependencySectionProps, DependencyViewProps,
   ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
   DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
   ItemTitleProps, StatusTagProps,

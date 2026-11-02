@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
+import type { DepColor, DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { OpNotice, Option } from '../../../shared';
@@ -128,6 +129,30 @@ interface TestScope {
   build?: string | null;
 }
 
+interface DepTagSpec {
+  key: 'waits' | 'asked';
+  color: DepColor;
+  label: string;
+  title: string;
+}
+
+interface DepLink {
+  side: 'waits' | 'asked';
+  dep: string;
+  project: string;
+  item: string;
+  title: string;
+  thread: string | null;
+  state: DepState;
+  since: string | null;
+  reason: string | null;
+}
+
+type DepView = DepLink & {
+  history: DepHistoryRow[];
+  cancellable: boolean;
+};
+
 export type {
-  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
+  AddPreset, BulkSofts, CardData, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
 };
