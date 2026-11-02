@@ -19,7 +19,7 @@ const open = async (deps: Record<string, object> = DEPS, location = '/#dependenc
   return view;
 };
 
-const linksOf = (): string[] => within(screen.getByRole('table', { name: 'Dependencies between projects' })).getAllByRole('link').map((link) => link.textContent ?? '');
+const linksOf = (): string[] => within(screen.getByRole('table', { name: 'Dependencies between projects' })).getAllByRole('link').map((link) => link.textContent);
 
 describe('S1 the Dependencies tab', { tags: ['standard'] }, () => {
   it('lists the open requests, longest wait first, with the item and the other item as links', async () => {

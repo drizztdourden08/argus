@@ -270,6 +270,13 @@ fn a_row_that_the_table_cannot_tell_about_any_more_or_that_says_nothing_is_left_
     assert_eq!(world.tick(), 0, "the words need both items");
 }
 
+fn first_heard(world: &World) -> (&str, &str) {
+    (
+        world.events[0].scope.as_str(),
+        world.events[0].thread.as_str(),
+    )
+}
+
 #[test]
 fn the_thread_of_the_item_hears_it_while_live_else_the_lead_and_a_paused_one_waits_for_its_resume()
 {
@@ -278,10 +285,7 @@ fn the_thread_of_the_item_hears_it_while_live_else_the_lead_and_a_paused_one_wai
     world.sync();
     assert_eq!(world.tick(), 1);
     assert_eq!(
-        (
-            world.events[0].scope.as_str(),
-            world.events[0].thread.as_str()
-        ),
+        first_heard(&world),
         ("alpha", "lead"),
         "the thread ended: its lead hears"
     );
@@ -301,10 +305,7 @@ fn the_thread_of_the_item_hears_it_while_live_else_the_lead_and_a_paused_one_wai
     world.sync();
     assert_eq!(world.tick(), 1);
     assert_eq!(
-        (
-            world.events[0].scope.as_str(),
-            world.events[0].thread.as_str()
-        ),
+        first_heard(&world),
         ("beta", "lead"),
         "the item is gone and its thread ended: the lead hears"
     );

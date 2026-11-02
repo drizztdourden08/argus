@@ -81,5 +81,5 @@ async fn both_tools_are_hidden_and_refused_while_dependencies_are_off() {
     );
     off.err("cancel_dependency", json!({ "id": "D-1" }), "not_found")
         .await;
-    assert!(off.backend.calls().dep_cancel.is_empty());
+    assert_eq!(off.backend.calls().dep_cancel.len(), 0);
 }

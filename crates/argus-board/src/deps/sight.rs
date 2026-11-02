@@ -68,13 +68,13 @@ impl Seen {
 pub(crate) enum Look {
     NoBoard,
     NoItem,
-    Item(Seen),
+    Item(Box<Seen>),
 }
 
 impl Look {
     pub(crate) fn item(&self) -> Option<&Seen> {
         match self {
-            Look::Item(seen) => Some(seen),
+            Look::Item(seen) => Some(seen.as_ref()),
             _ => None,
         }
     }
@@ -95,7 +95,7 @@ pub(crate) fn look_in(board: &Board, item: Option<&str>, dep: &str) -> Look {
         .filter(|id| doc(board, "items", id).is_some())
         .or_else(|| find_requested(board, dep));
     match found.and_then(|id| doc(board, "items", &id).map(|i| Seen::of(&id, i))) {
-        Some(seen) => Look::Item(seen),
+        Some(seen) => Look::Item(Box::new(seen)),
         None => Look::NoItem,
     }
 }

@@ -81,7 +81,7 @@ fn request_item(home: &Path, dep: &Dep, req: &AskRequest, plan: &Plan) -> Result
         let mirror = requested_by(dep, &plan.requester_title);
         match req.onto.as_deref() {
             Some(onto) => attach(board, onto, mirror, &req.target),
-            None => make(board, (req, plan), mirror),
+            None => make(board, (req, plan), &mirror),
         }
     })
 }
@@ -107,7 +107,7 @@ fn object(value: Value) -> Map<String, Value> {
 fn make(
     board: &mut Board,
     (req, plan): (&AskRequest, &Plan),
-    mirror: Value,
+    mirror: &Value,
 ) -> Result<String, DepError> {
     let subject = doc(board, "threads", &plan.thread)
         .and_then(|t| nullish(t, "subject"))

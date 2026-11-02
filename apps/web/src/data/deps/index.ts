@@ -6,5 +6,5 @@ export { depColor } from './dep-color';
 export { depRef } from './dep-ref';
 export { isLive } from './is-live';
 export { isWaiting } from './is-waiting';
-export { DEPS_COLLECTION, LONG_WAIT_MS } from './deps.constants';
+export { LONG_WAIT_MS } from './deps.constants';
 export type * from './deps.type';
