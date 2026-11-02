@@ -43,7 +43,7 @@ describe('S1 the stalls in the Notifications tab', { tags: ['standard'] }, () =>
     const rows = within(list).getAllByRole('listitem');
     expect(rows).toHaveLength(3);
     expect(rows[0]?.textContent).toContain('silent');
-    expect(rows[0]?.textContent).toContain('70m');
+    expect(rows[0]?.textContent).toContain('1h');
     expect(rows[1]?.textContent).toContain('unread');
     expect(rows[2]?.textContent).toContain('idle');
     expect(within(rows[2] as HTMLElement).getByRole('link', { name: 'RotP' }).getAttribute('href')).toBe('/p/rotp/');
