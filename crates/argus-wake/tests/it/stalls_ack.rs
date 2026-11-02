@@ -53,10 +53,9 @@ fn an_acked_stall_stops_its_resends_and_leaves_the_open_resend_line() {
 #[test]
 fn a_new_occurrence_after_a_clear_wakes_again() {
     let mut rig = silent_world();
-    assert!(
-        rig.service
-            .ack_stalls("rotp", BY, "nothing is open")
-            .is_empty()
+    assert_eq!(
+        rig.service.ack_stalls("rotp", BY, "nothing is open").len(),
+        0
     );
     pass(&mut rig, 60);
     let first = rig.service.stalls(None);

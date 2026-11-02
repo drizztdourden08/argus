@@ -106,7 +106,7 @@ fn a_folder_not_measured_at_the_restart_waits_for_a_later_scan_and_a_gone_one_is
     let blind = restarted(&h, &fx, Some(0));
     blind.scan();
     blind.idle();
-    assert!(blind.svc.jobs("alpha").is_empty());
+    assert_eq!(blind.svc.jobs("alpha").len(), 0);
     assert!(exists_itself(&fx.path("old-1")) && exists_itself(&fx.path("old-3")));
     assert!(!written(&blind).contains(&blind.id_of(&fx.path("old-2"))));
     assert!(written(&blind).contains(&blind.id_of(&fx.path("old-1"))));
@@ -130,5 +130,5 @@ fn a_batch_that_ran_to_its_end_leaves_nothing_to_resume() {
     let again = restarted(&h, &fx, None);
     again.scan();
     again.idle();
-    assert!(again.svc.jobs("alpha").is_empty());
+    assert_eq!(again.svc.jobs("alpha").len(), 0);
 }
