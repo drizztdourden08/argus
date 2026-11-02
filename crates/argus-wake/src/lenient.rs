@@ -139,6 +139,26 @@ where
     })
 }
 
+/// A mirror field: an object is one record, an array is many (entries that are not records are
+/// dropped), anything else is none.
+///
+/// # Errors
+/// Never; the signature is the one serde expects.
+pub fn one_or_many<'de, D, T>(d: D) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: DeserializeOwned,
+{
+    Ok(match Value::deserialize(d)? {
+        value @ Value::Object(_) => serde_json::from_value(value).into_iter().collect(),
+        Value::Array(values) => values
+            .into_iter()
+            .filter_map(|v| serde_json::from_value(v).ok())
+            .collect(),
+        _ => Vec::new(),
+    })
+}
+
 /// A record that is an object, or absent.
 ///
 /// # Errors

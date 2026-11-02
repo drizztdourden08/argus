@@ -130,7 +130,7 @@ interface TestScope {
 }
 
 interface DepTagSpec {
-  key: 'waits' | 'asked';
+  key: string;
   color: DepColor;
   label: string;
   title: string;

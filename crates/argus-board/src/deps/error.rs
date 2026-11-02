@@ -65,14 +65,8 @@ pub(crate) fn not_open(node: &str, status: &str) -> DepError {
     ))
 }
 
-pub(crate) fn already_waits(node: &str, other: &str, dep: &str) -> DepError {
-    DepError::Rule(format!(
-        "{node} already waits on {other} ({dep}): cancel it first"
-    ))
-}
-
-pub(crate) fn already_requested(node: &str, by: &str, dep: &str) -> DepError {
-    DepError::Rule(format!("{node} is already requested by {by} ({dep})"))
+pub(crate) fn already_linked(node: &str, other: &str, dep: &str) -> DepError {
+    DepError::Rule(format!("{node} already waits on {other} ({dep})"))
 }
 
 pub(crate) fn closes_loop(path: &str) -> DepError {

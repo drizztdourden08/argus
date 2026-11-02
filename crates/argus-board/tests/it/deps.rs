@@ -172,7 +172,7 @@ fn an_ask_opens_the_request_and_writes_the_ledger_and_both_mirrors() {
     assert_eq!(stored["history"][0]["from"], "opening");
     assert_eq!(stored["history"][0]["to"], "open");
     assert_eq!(done.dep.to_value()["title"], "Expose the save hook");
-    let waits = read(h, "alpha")["items"]["I-1"]["waitsOn"].clone();
+    let waits = read(h, "alpha")["items"]["I-1"]["waitsOn"][0].clone();
     let want = json!({
         "dep": "D-1", "project": "beta", "item": "I-3", "title": "Expose the save hook",
         "state": "open", "since": done.dep.opened_at, "reason": null,
@@ -188,7 +188,7 @@ fn an_ask_opens_the_request_and_writes_the_ledger_and_both_mirrors() {
         "dep": "D-1", "project": "alpha", "item": "I-1", "thread": "dev", "title": "Item I-1",
         "state": "open",
     });
-    assert_eq!(made["requestedBy"], by);
+    assert_eq!(made["requestedBy"], json!([by]));
     let inbox = inbox_texts(h, "beta", "coordinator");
     assert_eq!(inbox.len(), 1);
     assert!(inbox[0].starts_with("dep D-1: alpha/I-1 needs your I-3 \"Expose the save hook\""));
@@ -233,27 +233,52 @@ fn an_ask_that_breaks_a_rule_is_refused_with_the_contract_text() {
 }
 
 #[test]
-fn a_link_has_one_request_and_an_item_is_requested_once() {
+fn a_link_has_one_request_but_an_item_may_be_requested_by_several() {
     let home = world(&["alpha", "beta"]);
     let h = home.path();
     asked(h, "alpha", "I-1", "beta");
     assert_eq!(
-        refused(h, &asking("alpha", "I-1", "beta")),
-        "alpha/I-1 already waits on beta/I-3 (D-1): cancel it first"
+        refused(h, &onto(asking("alpha", "I-1", "beta"), "I-3")),
+        "alpha/I-1 already waits on beta/I-3 (D-1)"
     );
     add_item(h, "alpha", "I-4", "todo");
-    assert_eq!(
-        refused(h, &onto(asking("alpha", "I-4", "beta"), "I-3")),
-        "beta/I-3 is already requested by alpha/I-1 (D-1)"
-    );
+    let other = ask_in(h, &onto(asking("alpha", "I-4", "beta"), "I-3")).expect("a second request");
+    assert_eq!(other.dep.id, "D-2");
+    let requests = &read(h, "beta")["items"]["I-3"]["requestedBy"];
+    assert_eq!(requests[0]["dep"], "D-1");
+    assert_eq!(requests[1]["dep"], "D-2");
+    assert_eq!(requests[1]["item"], "I-4");
     add_item(h, "beta", "I-4", "doing");
-    let second = ask_in(h, &onto(asking("alpha", "I-4", "beta"), "I-4")).expect("onto");
-    assert_eq!(second.dep.id, "D-2");
+    let second = ask_in(h, &onto(asking("alpha", "I-1", "beta"), "I-4")).expect("onto");
+    assert_eq!(second.dep.id, "D-3");
     assert_eq!(second.dep.to.item.as_deref(), Some("I-4"));
     assert_eq!(second.dep.to.thread.as_deref(), Some("dev"));
     let beta = read(h, "beta");
-    assert_eq!(beta["items"]["I-4"]["requestedBy"]["dep"], "D-2");
+    assert_eq!(beta["items"]["I-4"]["requestedBy"][0]["dep"], "D-3");
     assert_eq!(beta["items"]["I-4"]["status"], "doing");
+}
+
+#[test]
+fn an_item_waits_on_two_requests_and_finishing_one_leaves_the_other_open() {
+    let home = world(&["alpha", "beta"]);
+    let h = home.path();
+    asked(h, "alpha", "I-1", "beta");
+    let second = asked(h, "alpha", "I-1", "beta");
+    assert_eq!(second.dep.id, "D-2");
+    assert_eq!(second.dep.to.item.as_deref(), Some("I-4"));
+    let waits = read(h, "alpha")["items"]["I-1"]["waitsOn"].clone();
+    assert_eq!(waits.as_array().map(Vec::len), Some(2));
+    assert_eq!(waits[0]["item"], "I-3");
+    assert_eq!(waits[1]["item"], "I-4");
+    close_as(h, "beta", "done", None).expect("closed");
+    let waits = read(h, "alpha")["items"]["I-1"]["waitsOn"].clone();
+    assert_eq!(waits[0]["state"], "done");
+    assert_eq!(waits[1]["state"], "open");
+    assert_eq!(ledger(h, "D-2")["state"], "open");
+    assert_eq!(
+        read(h, "beta")["items"]["I-4"]["requestedBy"][0]["state"],
+        "open"
+    );
 }
 
 #[test]
@@ -284,7 +309,7 @@ fn closing_as_done_sets_the_item_and_resolves_the_requester() {
     );
     assert_eq!(read(h, "beta")["items"]["I-3"]["status"], "done");
     let alpha = read(h, "alpha");
-    assert_eq!(alpha["items"]["I-1"]["waitsOn"]["state"], "done");
+    assert_eq!(alpha["items"]["I-1"]["waitsOn"][0]["state"], "done");
     assert_eq!(
         inbox_texts(h, "alpha", "dev"),
         ["beta/I-3 is done (D-1): resume I-1"]
@@ -313,8 +338,8 @@ fn blocking_needs_a_reason_wakes_the_requester_and_a_move_to_doing_reopens() {
     );
     let beta = read(h, "beta");
     assert_eq!(beta["items"]["I-3"]["status"], "todo");
-    assert_eq!(beta["items"]["I-3"]["requestedBy"]["state"], "blocked");
-    let waits = &read(h, "alpha")["items"]["I-1"]["waitsOn"];
+    assert_eq!(beta["items"]["I-3"]["requestedBy"][0]["state"], "blocked");
+    let waits = &read(h, "alpha")["items"]["I-1"]["waitsOn"][0];
     assert_eq!(waits["state"], "blocked");
     assert_eq!(waits["reason"], "need the API key");
     assert_eq!(
@@ -383,9 +408,9 @@ fn a_cancel_drops_an_item_nobody_started_and_keeps_one_that_was() {
     assert_eq!(cancelled.dep.reason.as_deref(), Some("not needed"));
     let beta = read(h, "beta");
     assert_eq!(beta["items"]["I-3"]["status"], "dropped");
-    assert_eq!(beta["items"]["I-3"]["requestedBy"]["state"], "cancelled");
+    assert_eq!(beta["items"]["I-3"]["requestedBy"][0]["state"], "cancelled");
     assert_eq!(
-        read(h, "alpha")["items"]["I-1"]["waitsOn"]["state"],
+        read(h, "alpha")["items"]["I-1"]["waitsOn"][0]["state"],
         "cancelled"
     );
     assert_eq!(
@@ -405,7 +430,8 @@ fn a_cancel_drops_an_item_nobody_started_and_keeps_one_that_was() {
     let again = asked(started.path(), "alpha", "I-1", "beta");
     assert_eq!(again.dep.id, "D-2");
     let waits = &read(started.path(), "alpha")["items"]["I-1"]["waitsOn"];
-    assert_eq!(waits["dep"], "D-2");
+    assert_eq!(waits[0]["state"], "cancelled");
+    assert_eq!(waits[1]["dep"], "D-2");
 }
 
 fn after_beta_change(change: impl FnOnce(&Path)) -> (TempDir, Vec<Transition>) {
@@ -425,7 +451,7 @@ fn reconcile_follows_the_assignee_item_whoever_wrote_it() {
     let (home, moved) = after_beta_change(|h| set_status(h, "beta", "I-3", "done"));
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Done)]);
     assert_eq!(
-        read(home.path(), "alpha")["items"]["I-1"]["waitsOn"]["state"],
+        read(home.path(), "alpha")["items"]["I-1"]["waitsOn"][0]["state"],
         "done"
     );
     let (_, moved) = after_beta_change(|h| set_status(h, "beta", "I-3", "dropped"));
@@ -492,7 +518,10 @@ fn a_done_request_comes_back_when_the_item_is_reopened_and_the_link_is_still_ope
     set_status(h, "beta", "I-3", "doing");
     let moved = reconcile(h, "D-1").expect("reconciled");
     assert_eq!(moves(&moved), [(3, DepState::Done, DepState::Open)]);
-    assert_eq!(read(h, "alpha")["items"]["I-1"]["waitsOn"]["state"], "open");
+    assert_eq!(
+        read(h, "alpha")["items"]["I-1"]["waitsOn"][0]["state"],
+        "open"
+    );
     assert_eq!(
         inbox_texts(h, "alpha", "dev").last().map(String::as_str),
         Some("beta/I-3 is open again (D-1)")
@@ -549,9 +578,9 @@ fn an_opening_request_is_finished_when_its_item_exists_and_cancelled_after_a_min
     let moved = reconcile(h, "D-1").expect("reconciled");
     assert_eq!(moves(&moved), [(1, DepState::Opening, DepState::Open)]);
     assert_eq!(ledger(h, "D-1")["to"]["item"], "I-3");
-    assert_eq!(read(h, "alpha")["items"]["I-1"]["waitsOn"]["dep"], "D-1");
+    assert_eq!(read(h, "alpha")["items"]["I-1"]["waitsOn"][0]["dep"], "D-1");
     assert_eq!(
-        read(h, "beta")["items"]["I-3"]["requestedBy"]["project"],
+        read(h, "beta")["items"]["I-3"]["requestedBy"][0]["project"],
         "alpha"
     );
 
@@ -637,7 +666,7 @@ fn the_list_the_item_lookup_and_the_show_answer_from_the_ledger() {
     assert_eq!(none.to_string(), "no dependency on alpha/I-2");
     let shown = show(h, "D-1", Some("beta")).expect("shown");
     assert_eq!(shown.requester["title"], "Item I-1");
-    assert_eq!(shown.assignee["requestedBy"]["dep"], "D-1");
+    assert_eq!(shown.assignee["requestedBy"][0]["dep"], "D-1");
     let stranger = show(h, "D-1", Some("gamma")).expect_err("refused");
     assert_eq!(stranger.to_string(), "D-1 is not a dependency of gamma");
 }
@@ -671,7 +700,7 @@ fn the_ledger_is_exported_to_the_portfolio_scope_and_the_mirrors_survive_a_save(
     assert!(!has(&read(h, "alpha"), Coll::Deps, "D-1"));
     let alpha = read(h, "alpha");
     save_board(h, &alpha).expect("saved");
-    assert_eq!(read(h, "alpha")["items"]["I-1"]["waitsOn"]["dep"], "D-1");
+    assert_eq!(read(h, "alpha")["items"]["I-1"]["waitsOn"][0]["dep"], "D-1");
     assert_eq!("deps".parse::<Coll>(), Ok(Coll::Deps));
     assert!(Coll::ALL.contains(&Coll::Deps));
 }

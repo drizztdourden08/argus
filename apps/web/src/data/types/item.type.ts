@@ -19,8 +19,8 @@ interface WorkItem {
   updatedAt?: string;
   archivedAt?: string;
   deletedAt?: string;
-  waitsOn?: WaitsOn;
-  requestedBy?: RequestedBy;
+  waitsOn?: WaitsOn | WaitsOn[];
+  requestedBy?: RequestedBy | RequestedBy[];
 }
 
 export type { WorkItem };

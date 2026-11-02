@@ -24,8 +24,8 @@ interface Item {
   updatedBy?: string | null;
   archivedAt?: string | null;
   deletedAt?: string | null;
-  waitsOn?: WaitsOn;
-  requestedBy?: RequestedBy;
+  waitsOn?: WaitsOn | WaitsOn[];
+  requestedBy?: RequestedBy | RequestedBy[];
 }
 
 interface ThreadChoice {

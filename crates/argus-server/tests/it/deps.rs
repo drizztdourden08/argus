@@ -39,7 +39,7 @@ async fn an_ask_opens_a_dependency_and_a_close_resolves_it() {
     assert_eq!(opened["dep"]["from"]["project"], "alpha");
     assert_eq!(opened["dep"]["to"]["project"], "beta");
     assert!(opened["text"].as_str().is_some_and(|l| l.contains("D-1")));
-    assert_eq!(t.board("alpha")["items"]["I-1"]["waitsOn"]["dep"], "D-1");
+    assert_eq!(t.board("alpha")["items"]["I-1"]["waitsOn"][0]["dep"], "D-1");
 
     let closed = t
         .write(

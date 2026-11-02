@@ -107,12 +107,12 @@ pub struct ItemView {
     pub thread: Text,
     /// `todo`, `doing`, `review`, `done`, `dropped`.
     pub status: Text,
-    /// The request to another board this item waits on.
-    #[serde(deserialize_with = "lenient::object")]
-    pub waits_on: Option<WaitsOn>,
-    /// The request of another board this item answers.
-    #[serde(deserialize_with = "lenient::object")]
-    pub requested_by: Option<RequestedBy>,
+    /// The requests to other boards this item waits on, one per dependency.
+    #[serde(deserialize_with = "lenient::one_or_many")]
+    pub waits_on: Vec<WaitsOn>,
+    /// The requests of other boards this item answers, one per dependency.
+    #[serde(deserialize_with = "lenient::one_or_many")]
+    pub requested_by: Vec<RequestedBy>,
     /// What the item is blocked on, in words; absent when nothing blocks it.
     pub blocker: Text,
 }

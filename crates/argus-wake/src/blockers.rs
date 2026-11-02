@@ -4,7 +4,8 @@ use crate::board::{BoardView, ItemView};
 use crate::dep_wakes::{RequestedBy, WaitsOn};
 
 /// Is the item blocked: it carries a blocker text, waits on a request to another board, owes the answer to a
-/// blocked request, or has an open owner ask?
+/// blocked request, or has an open owner ask? Any one waiting or blocked request is enough, so an item is
+/// released only when all of them are finished.
 #[must_use]
 pub fn is_blocked(board: &BoardView, item: &ItemView) -> bool {
     item.blocker.some().is_some()
@@ -13,11 +14,8 @@ pub fn is_blocked(board: &BoardView, item: &ItemView) -> bool {
 }
 
 fn waits_across_boards(item: &ItemView) -> bool {
-    item.waits_on.as_ref().is_some_and(WaitsOn::is_waiting)
-        || item
-            .requested_by
-            .as_ref()
-            .is_some_and(RequestedBy::is_blocked)
+    item.waits_on.iter().any(WaitsOn::is_waiting)
+        || item.requested_by.iter().any(RequestedBy::is_blocked)
 }
 
 fn has_open_ask(board: &BoardView, item_id: &str) -> bool {
@@ -59,6 +57,20 @@ mod tests {
         for (item, entries) in cases {
             assert!(blocked(&item, &entries), "{item} {entries}");
         }
+    }
+
+    #[test]
+    fn an_item_waiting_on_several_requests_is_blocked_until_all_are_done() {
+        let waits = |states: [&str; 2]| json!({"waitsOn": [{"dep": "D-1", "state": states[0]}, {"dep": "D-2", "state": states[1]}]});
+        assert!(blocked(&waits(["done", "open"]), &json!({})));
+        assert!(!blocked(&waits(["done", "done"]), &json!({})));
+    }
+
+    #[test]
+    fn an_item_requested_by_several_boards_is_blocked_while_one_request_is_blocked() {
+        let asked = |states: [&str; 2]| json!({"requestedBy": [{"dep": "D-1", "state": states[0]}, {"dep": "D-2", "state": states[1]}]});
+        assert!(blocked(&asked(["open", "blocked"]), &json!({})));
+        assert!(!blocked(&asked(["open", "done"]), &json!({})));
     }
 
     #[test]

@@ -6,6 +6,7 @@ use argus_core::clock::now_ms;
 use serde_json::Value;
 
 use super::cycle;
+use super::mirror::{entries, entry_of};
 use super::model::{Dep, node};
 use crate::Board;
 use crate::error::BoardError;
@@ -22,8 +23,8 @@ pub(crate) struct Seen {
     pub thread: Option<String>,
     pub title: String,
     pub created_by: String,
-    pub waits_on: Value,
-    pub requested_by: Value,
+    pub waits_on: Vec<Value>,
+    pub requested_by: Vec<Value>,
 }
 
 impl Seen {
@@ -36,8 +37,8 @@ impl Seen {
             thread: nullish(item, "thread"),
             title: nullish(item, "title").unwrap_or_default(),
             created_by: nullish(item, "createdBy").unwrap_or_default(),
-            waits_on: item["waitsOn"].clone(),
-            requested_by: item["requestedBy"].clone(),
+            waits_on: entries(&item["waitsOn"]),
+            requested_by: entries(&item["requestedBy"]),
         }
     }
 
@@ -84,7 +85,7 @@ impl Look {
 pub(crate) fn find_requested(board: &Board, dep: &str) -> Option<String> {
     section(board, "items")
         .iter()
-        .find(|(_, item)| item["requestedBy"]["dep"].as_str() == Some(dep))
+        .find(|(_, item)| entry_of(&entries(&item["requestedBy"]), dep).is_some())
         .map(|(id, _)| id.clone())
 }
 

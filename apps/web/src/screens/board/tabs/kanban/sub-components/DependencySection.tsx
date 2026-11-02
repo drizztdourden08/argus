@@ -11,7 +11,7 @@ const DependencySection = (props: DependencySectionProps) => {
   return (
     <Disclosure summary="Dependency" defaultOpen size="sm">
       <Flex direction="column" gap="md">
-        {links.map((link) => <DependencyView key={link.side} link={link} now={now} />)}
+        {links.map((link) => <DependencyView key={`${link.side}-${link.dep}`} link={link} now={now} />)}
       </Flex>
     </Disclosure>
   );

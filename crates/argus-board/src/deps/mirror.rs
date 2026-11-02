@@ -1,6 +1,9 @@
 //! The two mirrors of a dependency: `waitsOn` on the requester item and `requestedBy` on the
 //! assignee item. Only this module writes them. A mirror is a cache of the ledger that carries
-//! the other side's title, so a board page never reads another scope.
+//! the other side's title, so a board page never reads another scope. Each field is a list with
+//! one entry per dependency, so an item can wait on several requests and be asked by several
+//! boards. A board written before the lists holds one object; every reader takes it as a list
+//! of one, and the next write turns it into a list.
 
 use std::path::Path;
 
@@ -40,10 +43,31 @@ fn field(side: Side) -> &'static str {
     }
 }
 
-/// Set a mirror field of an item and mark it changed.
+/// The entries of a mirror field: an object is one entry, an array is its entries, anything else
+/// is none.
+pub(crate) fn entries(field: &Value) -> Vec<Value> {
+    match field {
+        Value::Array(list) => list.clone(),
+        Value::Object(_) => vec![field.clone()],
+        _ => Vec::new(),
+    }
+}
+
+/// The entry of a dependency in a list of mirror entries.
+pub(crate) fn entry_of<'a>(list: &'a [Value], dep: &str) -> Option<&'a Value> {
+    list.iter().find(|e| e["dep"].as_str() == Some(dep))
+}
+
+/// Add an entry to a mirror field of an item, or replace the one the same dependency has, and
+/// mark the item changed. The entries of other dependencies stay as they are.
 pub(crate) fn put(board: &mut Board, item: &str, side: Side, value: Value) {
     if let Some(d) = doc_mut(board, "items", item) {
-        set(d, field(side), value);
+        let mut list = entries(&d[field(side)]);
+        match list.iter_mut().find(|e| e["dep"] == value["dep"]) {
+            Some(slot) => *slot = value,
+            None => list.push(value),
+        }
+        set(d, field(side), list);
     }
     touch(board, "items", item);
 }
@@ -55,11 +79,13 @@ fn desired(side: Side, dep: &Dep, title: &str) -> Value {
     }
 }
 
-fn current(side: Side, seen: &Seen) -> &Value {
-    match side {
+/// The entry this dependency has on one side of an item, if any.
+fn current<'a>(side: Side, dep: &Dep, seen: &'a Seen) -> Option<&'a Value> {
+    let list = match side {
         Side::Requester => &seen.waits_on,
         Side::Assignee => &seen.requested_by,
-    }
+    };
+    entry_of(list, &dep.id)
 }
 
 /// What to write on one side of a dependency.
@@ -85,7 +111,7 @@ fn title_for(side: Side, dep: &Dep, sight: &Sight, seen: &Seen) -> String {
         .item()
         .map(|i| i.title.clone())
         .filter(|t| !t.is_empty())
-        .or_else(|| current(side, seen)["title"].as_str().map(str::to_owned))
+        .or_else(|| current(side, dep, seen).and_then(|c| c["title"].as_str().map(str::to_owned)))
         .unwrap_or_else(|| dep.title.clone())
 }
 
@@ -112,11 +138,9 @@ fn plan(side: Side, dep: &Dep, sight: &Sight, moved: &[Transition]) -> Work {
             notes,
         };
     };
-    let have = current(side, seen);
-    let mine = have.is_null() || have["dep"].as_str() == Some(dep.id.as_str());
     let want = desired(side, dep, &title_for(side, dep, sight, seen));
     Work {
-        mirror: (mine && *have != want).then_some(want),
+        mirror: (current(side, dep, seen) != Some(&want)).then_some(want),
         drop_idle: side == Side::Assignee && idle_copy(dep, seen, moved),
         notes,
     }

@@ -2,6 +2,7 @@
 
 use argus_core::clock::parse_ms;
 
+use super::mirror::entry_of;
 use super::model::{Dep, DepState};
 use super::sight::{Look, Sight};
 
@@ -93,7 +94,7 @@ fn running(dep: &Dep, s: &Sight) -> Verdict {
 fn reopened(dep: &Dep, s: &Sight) -> Verdict {
     let link_open = matches!(
         &s.requester,
-        Look::Item(r) if r.open() && r.waits_on["dep"].as_str() == Some(dep.id.as_str())
+        Look::Item(r) if r.open() && entry_of(&r.waits_on, &dep.id).is_some()
     );
     let item_open = matches!(&s.assignee, Look::Item(a) if a.open());
     if link_open && item_open && !s.loops {

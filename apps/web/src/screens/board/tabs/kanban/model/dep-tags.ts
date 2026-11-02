@@ -7,7 +7,7 @@ import { depTagTitle } from './dep-tag-title';
 import type { DepLink, DepTagSpec } from './model.type';
 
 const tagOf = (link: DepLink, now: number): DepTagSpec => ({
-  key: link.side,
+  key: `${link.side}-${link.dep}`,
   color: link.side === 'asked' ? 'neutral' : depColor(link.state),
   label: depTagLabel(link),
   title: depTagTitle(link, now),

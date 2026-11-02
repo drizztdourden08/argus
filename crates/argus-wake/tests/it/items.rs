@@ -325,6 +325,7 @@ fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_handed_manual_t
 fn an_item_that_waits_on_another_board_or_whose_request_is_blocked_is_skipped_until_the_link_changes()
  {
     let mut world = World::new();
+    // I-1 to I-7 carry the single object a board held before the lists; I-8 and I-9 carry lists.
     let waits = |state: &str| json!({"waitsOn": {"dep": "D-1", "project": "beta", "item": "I-9", "state": state}});
     let asked = |state: &str| json!({"requestedBy": {"dep": "D-2", "project": "beta", "item": "I-3", "state": state}});
     world.add(&item("I-1", "doing", hours(30), &waits("opening")));
@@ -339,11 +340,19 @@ fn an_item_that_waits_on_another_board_or_whose_request_is_blocked_is_skipped_un
         hours(30),
         &json!({"waitsOn": "broken"}),
     ));
-    assert_eq!(world.stale_ids(0), "I-4,I-5,I-6,I-7");
+    let several = |states: [&str; 2]| {
+        json!({"waitsOn": [
+            {"dep": "D-3", "project": "beta", "item": "I-8", "state": states[0]},
+            {"dep": "D-4", "project": "gamma", "item": "I-2", "state": states[1]},
+        ]})
+    };
+    world.add(&item("I-8", "doing", hours(30), &several(["done", "open"])));
+    world.add(&item("I-9", "doing", hours(30), &several(["done", "done"])));
+    assert_eq!(world.stale_ids(0), "I-4,I-5,I-6,I-7,I-9");
     world.alpha["items"]["I-2"]["waitsOn"]["state"] = json!("dropped");
     world.alpha["items"]["I-3"]["requestedBy"]["state"] = json!("open");
     world.sync();
-    assert_eq!(world.stale_ids(0), "I-2,I-3,I-4,I-5,I-6,I-7");
+    assert_eq!(world.stale_ids(0), "I-2,I-3,I-4,I-5,I-6,I-7,I-9");
 }
 
 #[test]
