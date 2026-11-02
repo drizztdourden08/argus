@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
-use super::fixtures::{MIN, START, registry_boards};
+use super::fixtures::{MIN, MemoryBusy, START, registry_boards};
 use super::listen::Tap;
 use crate::board::BoardView;
 use crate::config::WakeConfig;
@@ -17,6 +17,7 @@ use crate::memory::{
 use crate::registry::RowState;
 use crate::service::{WakeDeps, WakeService};
 use crate::source::NoLive;
+use crate::stalls::MemoryKv;
 use crate::wake::WakeInput;
 use argus_core::clock::{Clock, ManualClock};
 
@@ -118,6 +119,10 @@ pub struct Rig {
     pub owner: MemoryOwner,
     /// The open notices of the extra source (`worktree-stale` in the server).
     pub notices: MemoryNotices,
+    /// The projects with a running process, which the stall watch counts as work.
+    pub busy: MemoryBusy,
+    /// The inbox reads and the stall acks.
+    pub kv: MemoryKv,
     /// The service.
     pub service: WakeService,
 }
@@ -135,6 +140,8 @@ impl Rig {
         let syncs = MemorySyncs::new();
         let owner = MemoryOwner::new();
         let notices = MemoryNotices::new();
+        let busy = MemoryBusy::new();
+        let kv = MemoryKv::new();
         let deps = WakeDeps {
             store: Box::new(store.clone()),
             faults: Box::new(faults.clone()),
@@ -148,6 +155,7 @@ impl Rig {
         let mut service = WakeService::new(deps, config, track_presence);
         service.set_owner_sink(Arc::new(owner.clone()));
         service.add_notice_source(Arc::new(notices.clone()));
+        service.set_stall_sources(Arc::new(busy.clone()), Arc::new(kv.clone()));
         Self {
             clock,
             store,
@@ -158,6 +166,8 @@ impl Rig {
             syncs,
             owner,
             notices,
+            busy,
+            kv,
             service,
         }
     }

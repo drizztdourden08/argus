@@ -23,7 +23,8 @@ impl WakeService {
     }
 
     /// The reminders due now: the owner hears of each fault open for an hour, the Overlord hears one
-    /// coalesced line every 15 minutes while anything stays open. Returns how many wakes were sent.
+    /// coalesced line every 15 minutes while anything stays open, an unacknowledged stall among it.
+    /// Returns how many wakes were sent.
     pub fn reminder_tick(&mut self) -> usize {
         let now = self.clock.now_ms();
         let faults = self.registry.faults(false);
@@ -36,6 +37,7 @@ impl WakeService {
             .notice_sources
             .iter()
             .flat_map(|source| source.open(now))
+            .chain(self.stalls.open_notices())
             .collect();
         let Some(line) = self.resend.due(now, &theirs, &notices) else {
             return 0;

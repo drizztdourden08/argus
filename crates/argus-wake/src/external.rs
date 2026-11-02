@@ -5,10 +5,12 @@ use argus_core::ids::is_key;
 use serde_json::Value;
 
 use crate::board::BoardView;
-use crate::reasons::{EXTERNAL_REASONS, MAIN_SCOPE};
+use crate::reasons::EXTERNAL_REASONS;
 use crate::registry::{NOTE_MAX, NOTE_MIN};
 use crate::text::{cut, one_line};
 use crate::wake::WakeInput;
+
+pub use crate::overlord::overlord_only;
 
 /// The longest text an outside wake carries.
 pub const MAX_WAKE_TEXT: usize = 300;
@@ -221,15 +223,7 @@ pub fn clear_request(
         )));
     }
     let by = text_field(body, "by").unwrap_or("");
-    let overlord = portfolio
-        .and_then(|b| b.threads.get(by))
-        .is_some_and(|t| t.role.is("coordinator") && !t.is_ended());
-    if !overlord {
-        let message = format!(
-            "only the Overlord (the coordinator thread of project {MAIN_SCOPE}) may clear a wake fault"
-        );
-        return Err(RequestError::Forbidden(message));
-    }
+    overlord_only(by, portfolio, "clear a wake fault")?;
     Ok(ClearRequest {
         project: project.to_owned(),
         thread: thread.to_owned(),

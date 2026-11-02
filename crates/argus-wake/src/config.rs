@@ -12,6 +12,7 @@ use crate::registry::{
     DEFAULT_TICK_MS, RegistryConfig,
 };
 use crate::reminders::ReminderConfig;
+use crate::stalls::StallConfig;
 use crate::sync_wakes::SyncWakeConfig;
 use crate::wake_policy::WakePolicy;
 
@@ -79,6 +80,8 @@ pub struct WakeConfig {
     pub policy: WakePolicy,
     /// The reminders of what stays open (`reminders.*`).
     pub reminders: ReminderConfig,
+    /// The stall watch (`stall.*`).
+    pub stall: StallConfig,
 }
 
 impl Default for WakeConfig {
@@ -111,6 +114,7 @@ impl WakeConfig {
             deps: DepWakeConfig::from_json(config.get("deps").unwrap_or(&Value::Null)),
             policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
             reminders: ReminderConfig::from_json(config.get("reminders").unwrap_or(&Value::Null)),
+            stall: StallConfig::from_json(config.get("stall").unwrap_or(&Value::Null)),
         }
     }
 }

@@ -1,6 +1,7 @@
 //! Boards, wakes and times the tests of the wake crate share.
 
-use std::sync::Arc;
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex, PoisonError};
 
 use serde_json::{Value, json};
 
@@ -9,6 +10,7 @@ use crate::board::EntryView;
 use crate::config::WakeConfig;
 use crate::policy::RunView;
 use crate::service::AppliedPost;
+use crate::stalls::BusySource;
 use crate::time::iso;
 use crate::wake::WakeInput;
 use crate::wake_policy::WakePolicy;
@@ -150,5 +152,38 @@ pub fn failed_run() -> RunView {
         error: None,
         last_line: Some("\u{1b}[31mNode.js v24.8.0\u{1b}[0m".to_owned()),
         orphan: false,
+    }
+}
+
+/// The projects that have a running process or run, in memory. Clones share their data.
+#[derive(Clone, Default)]
+pub struct MemoryBusy {
+    inner: Arc<Mutex<HashSet<String>>>,
+}
+
+impl MemoryBusy {
+    /// No project is busy.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Say whether a project has work running.
+    pub fn set(&self, project: &str, busy: bool) {
+        let mut all = self.inner.lock().unwrap_or_else(PoisonError::into_inner);
+        if busy {
+            all.insert(project.to_owned());
+        } else {
+            all.remove(project);
+        }
+    }
+}
+
+impl BusySource for MemoryBusy {
+    fn busy(&self, project: &str) -> bool {
+        self.inner
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .contains(project)
     }
 }
