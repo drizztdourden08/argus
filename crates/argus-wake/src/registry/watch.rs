@@ -9,8 +9,6 @@ use crate::engine::ListenerInfo;
 use crate::faults::{ClearFault, Fault};
 use crate::time::{iso, parse_ms};
 
-/// A turn this recent counts as running.
-const BUSY_MS: i64 = 3 * 60 * 1000;
 /// The faults that end by themselves once the thread listens again. A `no-reaction` fault does not:
 /// its wake was delivered to a listener and the thread stayed silent.
 const LISTEN_CLEARS: [&str; 2] = ["not-listening", "no-listener"];
@@ -41,8 +39,7 @@ pub(super) struct Watch<'a> {
 
 impl Registry {
     pub(super) fn in_turn(&self, thread: &ThreadView) -> bool {
-        let seen = parse_ms(thread.last_seen.as_str()).unwrap_or(0);
-        thread.activity.is("working") && self.now() - seen <= BUSY_MS
+        thread.in_turn(self.now())
     }
 
     pub(super) fn heartbeat(&self, thread: &ThreadView) -> bool {

@@ -7,15 +7,15 @@ fn id(dep: &DepView) -> &str {
     dep.id.as_str()
 }
 
-/// `alpha/I-7 asks you for I-12 "Expose the save hook" (D-4)`
+/// `dep D-4: alpha/I-7 needs your I-12 "Expose the save hook"`
 pub(super) fn request(dep: &DepView) -> String {
     format!(
-        "{}/{} asks you for {} \"{}\" ({})",
+        "dep {}: {}/{} needs your {} \"{}\"",
+        id(dep),
         dep.from.project.as_str(),
         dep.from.item.as_str(),
         dep.to.item.as_str(),
-        one_line(dep.title.as_str()),
-        id(dep)
+        one_line(dep.title.as_str())
     )
 }
 

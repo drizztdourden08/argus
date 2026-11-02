@@ -20,7 +20,7 @@ mod text;
 
 pub use argus_core::clock::age_text;
 pub use stale::Stale;
-pub(crate) use stale::target_for;
+pub(crate) use stale::{has_live_agent, last_change, target_for};
 
 use std::collections::HashMap;
 

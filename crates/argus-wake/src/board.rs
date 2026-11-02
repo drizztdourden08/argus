@@ -6,12 +6,16 @@ use serde_json::Value;
 
 use crate::dep_wakes::{DepView, RequestedBy, WaitsOn};
 use crate::lenient::{self, Flag, Num, Text};
+use crate::time::parse_ms;
 
 /// Statuses of a thread that has ended.
 pub const ENDED: [&str; 2] = ["done", "archived"];
 
 /// Statuses of a sub-agent that is still running.
 pub const LIVE_AGENT: [&str; 3] = ["working", "waiting", "stop-requested"];
+
+/// A turn this recent counts as running.
+const BUSY_MS: i64 = 3 * 60 * 1000;
 
 /// The fields every board record shares.
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -38,6 +42,12 @@ impl Record {
     #[must_use]
     pub fn is_live(&self) -> bool {
         self.deleted_at.some().is_none() && self.archived_at.some().is_none()
+    }
+
+    /// Is it a live record of this item?
+    #[must_use]
+    pub fn is_live_on(&self, item_id: &str) -> bool {
+        self.item.is(item_id) && self.is_live()
     }
 }
 
@@ -75,6 +85,13 @@ impl ThreadView {
     pub fn is_live(&self) -> bool {
         !self.is_ended() && !self.placeholder.on()
     }
+
+    /// Is a turn running at `now` (epoch ms): it works and showed a sign of life in the last 3 minutes?
+    #[must_use]
+    pub fn in_turn(&self, now: i64) -> bool {
+        let seen = parse_ms(self.last_seen.as_str()).unwrap_or(0);
+        self.activity.is("working") && now - seen <= BUSY_MS
+    }
 }
 
 /// A work item.
@@ -96,6 +113,8 @@ pub struct ItemView {
     /// The request of another board this item answers.
     #[serde(deserialize_with = "lenient::object")]
     pub requested_by: Option<RequestedBy>,
+    /// What the item is blocked on, in words; absent when nothing blocks it.
+    pub blocker: Text,
 }
 
 /// A test of a bundle.
