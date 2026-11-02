@@ -19,6 +19,8 @@ pub(crate) enum Timer {
     Wake,
     /// The build cache prune.
     Cache,
+    /// The sweep of the open dependencies.
+    Deps,
 }
 
 /// Which timers run, and their tasks.
@@ -34,6 +36,7 @@ impl Tasks {
             (Timer::Worktrees, opts.worktrees.timers),
             (Timer::Wake, opts.wake.timer),
             (Timer::Cache, opts.cache.timers),
+            (Timer::Deps, opts.wake.timer),
         ];
         Tasks {
             timers: switches

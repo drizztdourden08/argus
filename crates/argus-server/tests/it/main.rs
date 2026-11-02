@@ -26,6 +26,7 @@ mod alias;
 mod alias_rules;
 mod cache;
 mod cache_worktree;
+mod deps;
 mod doc_stream;
 mod early_refusal;
 mod first_start;

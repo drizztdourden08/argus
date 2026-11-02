@@ -7,8 +7,14 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-use argus_mcp::{INSTRUCTIONS, PROTOCOL_VERSION, SUPPORTED_VERSIONS, tool_defs};
+use argus_mcp::{DEP_TOOLS, INSTRUCTIONS, PROTOCOL_VERSION, SUPPORTED_VERSIONS, tool_defs};
 use serde_json::Value;
+
+/// The tool definitions the Node server has: ours without the two dependency tools.
+fn node_tools() -> Vec<&'static Value> {
+    let ours = |d: &&Value| !d["name"].as_str().is_some_and(|n| DEP_TOOLS.contains(&n));
+    tool_defs().iter().filter(ours).collect()
+}
 
 const SCRIPT: &str = r"
 const { pathToFileURL } = require('node:url');
@@ -40,7 +46,7 @@ fn the_tool_list_and_the_initialize_text_are_the_node_ones() {
     let Some(node) = node_answer() else {
         return;
     };
-    let ours = serde_json::to_string(tool_defs()).expect("JSON");
+    let ours = serde_json::to_string(&node_tools()).expect("JSON");
     assert_eq!(
         ours,
         node["tools"].to_string(),
@@ -74,8 +80,8 @@ fn rules(list: &Value) -> Vec<String> {
 }
 
 fn names_where(keep: impl Fn(&Value) -> bool) -> Vec<String> {
-    let mut names: Vec<String> = tool_defs()
-        .iter()
+    let mut names: Vec<String> = node_tools()
+        .into_iter()
         .filter(|d| keep(d))
         .filter_map(|d| d["name"].as_str().map(str::to_owned))
         .collect();

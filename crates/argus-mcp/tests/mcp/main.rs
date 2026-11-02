@@ -4,6 +4,7 @@
 mod bridge;
 mod bridge_stub;
 mod defs;
+mod deps;
 mod http;
 mod node_parity;
 mod node_results;

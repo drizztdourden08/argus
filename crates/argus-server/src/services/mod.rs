@@ -37,6 +37,7 @@ pub(crate) mod activity;
 pub(crate) mod agents;
 pub(crate) mod cache;
 pub(crate) mod compose;
+pub(crate) mod deps;
 pub(crate) mod notify;
 pub(crate) mod procs;
 pub(crate) mod records;

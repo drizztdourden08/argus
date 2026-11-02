@@ -3,6 +3,7 @@
 //! health answer.
 
 mod config;
+mod deps;
 mod docs;
 mod errors;
 mod ping;
@@ -138,6 +139,14 @@ impl McpBackend for ServerBackend {
 
     async fn notify(&self, request: &NotifyRequest) -> Result<Value, ToolError> {
         ping::notify(&self.svc, request).await
+    }
+
+    fn deps_enabled(&self) -> bool {
+        deps::enabled(&self.svc)
+    }
+
+    async fn dep_cancel(&self, id: &str, reason: Option<&str>) -> Result<Value, ToolError> {
+        deps::cancel(&self.svc, id, reason).await
     }
 
     async fn health(&self) -> Value {

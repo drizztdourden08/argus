@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use crate::agents::list_agents;
 use crate::backend::McpBackend;
 use crate::call::Call;
+use crate::deps::list_dependencies;
 use crate::error::ToolError;
 use crate::launchers::list_launchers;
 use crate::lists::{get_item, get_test, list_entries, list_items, list_tests, list_threads};
@@ -42,6 +43,7 @@ pub async fn read(name: &str, call: &Call<'_>) -> Option<Result<Value, ToolError
         "run_status" => run_status(b, k, a),
         "list_launchers" => Ok(list_launchers(b, k, a)),
         "run_logs" => run_logs(b, k, a),
+        "list_dependencies" => Ok(list_dependencies(b, a)),
         _ => return None,
     };
     Some(out)

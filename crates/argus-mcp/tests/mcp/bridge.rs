@@ -184,7 +184,7 @@ async fn initialize_tools_list_ping_and_templates_are_answered_locally_with_no_s
         .send(json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }))
         .await;
     let tools = list["result"]["tools"].as_array().expect("tools");
-    assert_eq!(tools.len(), 23);
+    assert_eq!(tools.len(), 25);
     assert!(tools.iter().any(|t| t["name"] == "board_summary"));
     assert_eq!(
         wire.send(json!({ "jsonrpc": "2.0", "id": 3, "method": "ping" }))
@@ -263,7 +263,7 @@ async fn the_server_is_started_as_soon_as_the_bridge_runs_and_initialize_does_no
     let list = wire
         .send(json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }))
         .await;
-    assert_eq!(list["result"]["tools"].as_array().expect("tools").len(), 23);
+    assert_eq!(list["result"]["tools"].as_array().expect("tools").len(), 25);
     assert_eq!(env.launches(), 1, "the launcher ran without any tools/call");
     assert!(
         env.logs()

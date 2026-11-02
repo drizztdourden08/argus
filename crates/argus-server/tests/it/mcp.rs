@@ -151,7 +151,7 @@ async fn initialize_and_tools_list_answer_on_the_live_server() {
     assert_eq!(result["serverInfo"]["name"], "coord-dashboard");
     let list = json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" });
     let tools = rpc(&t, &list).await.json()["result"]["tools"].clone();
-    assert_eq!(tools.as_array().map(Vec::len), Some(23));
+    assert_eq!(tools.as_array().map(Vec::len), Some(25));
     t.stop(false).await;
 }
 

@@ -459,6 +459,14 @@ The exporter is DESIGN 4.2:
 Argus never writes a board from an export, so the watcher event after an Argus write finds equal
 hashes and emits nothing.
 
+The one exception is the cross-board dependencies (`argus_board::deps`). Argus now writes, on its
+own and under the board lock, the `waitsOn` field of a requester item and the `requestedBy` field of
+an assignee item, and the `deps` collection (the ledger, ids `D-n`) of the `_portfolio` board. It
+does so on a `coord dep` call through the routes below, on every export of a project board
+(reconcile, whoever wrote it) and in a sweep every 5 minutes. A reconcile that finds nothing to
+change writes nothing, so the export that follows a write ends the loop. No other field of a board is
+written outside a call of a thread or the owner.
+
 ### Owner posts
 
 `post_entry` is DESIGN 4.3: validate (256 KB body, the `O-<base36>-<4>` id, the reply and op
@@ -553,6 +561,20 @@ the server reloads itself) and reports `rust` in place of `node`.
 | Method | Path | Answer |
 |---|---|---|
 | PUT | `/api/p/:key/palette` | `{palette}` in (`basic brock rotp archipelia bxel`), `{palette}` out, page only |
+| POST | `/api/deps` | ask: `{project, item, actor, target, to?, title, description?, ac?, onto?}`; `{dep, text}` |
+| POST | `/api/deps/:id/close` | `{as: done\|dropped\|blocked, reason?, actor}`; `{dep, text}` |
+| POST | `/api/deps/:id/reopen` | `{actor}`; `{dep, text}` |
+| POST | `/api/deps/:id/cancel` | `{reason?, actor}` (the page is always the actor `owner`); `{dep, text}` |
+| GET | `/api/deps` | `?project=&view=waiting\|for-me\|all&state=`; `{deps, text}` |
+| GET | `/api/deps/:id` | `?project=`; `{dep, requester, assignee, text}` |
+| GET | `/api/deps/by-item/:project/:item` | the live dependency of an item, else its latest; `{dep, text}` |
+
+The dependency routes and the two MCP tools `list_dependencies` and `cancel_dependency` exist in
+Argus only. A refusal is the usual error body with the message of the rule and 400, 404 or 409.
+While `deps.enabled` is false in `config.json` every dependency route answers 404 `dependencies are
+off`, and the two tools are hidden from the server's `tools/list` and refused. In shadow mode the
+writes answer `read_only`. The parity run leaves the routes, the two tools and the fields out of
+the Node comparison.
 
 No other route is added before the switch-over, so the Node and Rust servers answer the same set.
 
@@ -774,7 +796,9 @@ permission rule `mcp__coord-dashboard__<tool>` stays valid. The tool host is wri
 `GET /mcp` 405), because the Node transport is that small and its exact behaviour is the contract.
 `TOOL_DEFS` is a JSON file in the crate, generated once from the Node `tools/list` answer and
 compared with it in a test. Tools: the 23 of DESIGN 7.1, 13.7 and 13.13 (14 read tools, the 8
-tools that act as the owner, and `notify_owner`, which speaks to him).
+tools that act as the owner, and `notify_owner`, which speaks to him), then `list_dependencies`
+(read) and `cancel_dependency` (as the owner), which the comparison leaves out. The stdio bridge
+answers `tools/list` locally and always lists both; a call is refused while dependencies are off.
 Resources and templates as listed there. The permission model (`mcp.allow`, `deny`, `readOnly`)
 is unchanged.
 

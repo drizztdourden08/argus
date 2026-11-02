@@ -7,6 +7,7 @@ use std::sync::{Arc, PoisonError, RwLock};
 
 use argus_agents::AgentWatcher;
 use argus_board::Board;
+use argus_core::ids::PORTFOLIO;
 use argus_wake::board::BoardView;
 use argus_wake::source::{AgentLive, BoardSource};
 use serde::Deserialize;
@@ -57,7 +58,12 @@ impl BoardSource for WakeBoards {
             .collect()
     }
 
+    /// The portfolio board holds the dependency ledger. The sync service announces no export of
+    /// it, so a kept copy would never refresh: it is read from the file each time.
     fn board(&self, scope: &str) -> Option<Arc<BoardView>> {
+        if scope == PORTFOLIO {
+            return self.reader.fresh(scope).map(|b| view_of(&b));
+        }
         let kept = self.kept.read().unwrap_or_else(PoisonError::into_inner);
         if let Some(view) = kept.get(scope) {
             return Some(Arc::clone(view));

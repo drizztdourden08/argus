@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use crate::backend::McpBackend;
 use crate::call::Call;
 use crate::context::CallContext;
-use crate::defs::{tool_def, tool_defs};
+use crate::defs::{is_dep_tool, tool_def, tool_defs};
 use crate::error::ToolError;
 use crate::outcome::ToolOutcome;
 use crate::policy::refusal;
@@ -19,7 +19,10 @@ use crate::rpc::RpcHost;
 use crate::schema::validate;
 use crate::tools::{NO_PROJECT, run};
 
-/// The 23 tools and the resources over one backend.
+/// The refusal of a dependency tool while `deps.enabled` is false.
+const DEPS_OFF: &str = "dependencies are off (deps.enabled is false in config.json)";
+
+/// The tools and the resources over one backend.
 #[derive(Clone)]
 pub struct ToolHost {
     backend: Arc<dyn McpBackend>,
@@ -41,6 +44,9 @@ impl ToolHost {
         };
         if let Some(why) = refusal(&self.backend.policy(), name) {
             return Err(ToolError::new("forbidden", why));
+        }
+        if is_dep_tool(name) && !self.backend.deps_enabled() {
+            return Err(ToolError::not_found(DEPS_OFF));
         }
         let problems = validate(&def["inputSchema"], args, "arguments");
         if problems.is_empty() {
@@ -97,7 +103,9 @@ impl ToolHost {
 #[async_trait]
 impl RpcHost for ToolHost {
     fn list_tools(&self) -> Vec<Value> {
-        tool_defs().to_vec()
+        let deps = self.backend.deps_enabled();
+        let listed = |def: &&Value| deps || !def["name"].as_str().is_some_and(is_dep_tool);
+        tool_defs().iter().filter(listed).cloned().collect()
     }
 
     fn list_resources(&self) -> Vec<Value> {

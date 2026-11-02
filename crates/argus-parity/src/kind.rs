@@ -263,10 +263,17 @@ static MCP_INITIALIZE: Spec = Spec {
     drop_rows: &[],
 };
 
+/// The two dependency tools only Argus has.
+const DEP_TOOLS: &[&str] = &["list_dependencies", "cancel_dependency"];
+
 static MCP_TOOLS: Spec = Spec {
     ignore: &["id"],
     unordered: &[("result.tools", "name")],
-    drop_rows: &[],
+    drop_rows: &[RowDrop {
+        array: "result.tools",
+        field: "name",
+        prefixes: DEP_TOOLS,
+    }],
 };
 
 fn doc_spec(coll: &str) -> &'static Spec {

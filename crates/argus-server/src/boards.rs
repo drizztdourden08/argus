@@ -30,6 +30,16 @@ impl BoardReader {
         kept.or_else(|| read_board(&self.coord_home, key).ok().flatten())
     }
 
+    /// The board file of a key as it is on disk now, else the last good copy. For a board that
+    /// another writer changed a moment ago and the sync service has not exported yet.
+    #[must_use]
+    pub fn fresh(&self, key: &str) -> Option<Board> {
+        read_board(&self.coord_home, key)
+            .ok()
+            .flatten()
+            .or_else(|| self.sync.as_ref().and_then(|s| s.board(key)))
+    }
+
     /// The projects the sync service knows; none without it.
     #[must_use]
     pub fn projects(&self) -> Vec<ProjectRow> {

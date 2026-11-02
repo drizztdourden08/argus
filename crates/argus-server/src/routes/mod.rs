@@ -12,6 +12,7 @@ pub mod cache;
 mod check_guard;
 pub mod check_runs;
 pub mod db;
+pub mod deps;
 pub mod feed;
 pub mod files;
 pub mod mcp;
@@ -32,6 +33,7 @@ pub use params::scan_boards;
 pub fn register_all(router: &mut Router) {
     admin::register(router);
     db::register(router);
+    deps::register(router);
     actions::register(router);
     activity::register(router);
     agents::register(router);

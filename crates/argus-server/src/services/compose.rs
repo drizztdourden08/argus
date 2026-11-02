@@ -4,7 +4,9 @@
 
 use std::sync::Arc;
 
-use super::{activity, agents, cache, notify, procs, records, runs, stale, sync, wake, worktrees};
+use super::{
+    activity, agents, cache, deps, notify, procs, records, runs, stale, sync, wake, worktrees,
+};
 use crate::{ServeOptions, Services};
 
 pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {
@@ -29,6 +31,7 @@ pub(crate) async fn start_all(svc: &Arc<Services>) {
     wake::start(svc);
     stale::start(svc);
     notify::start(svc);
+    deps::start(svc);
     sync::start(svc).await;
     agents::start(svc);
     procs::start(svc);
@@ -46,6 +49,7 @@ pub(crate) fn stop_all(svc: &Services) {
     worktrees::stop(svc);
     procs::stop(svc);
     agents::stop(svc);
+    deps::stop(svc);
     stale::stop(svc);
     wake::stop(svc);
     runs::stop(svc);
