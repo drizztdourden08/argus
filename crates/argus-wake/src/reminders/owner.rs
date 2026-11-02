@@ -19,6 +19,8 @@ pub struct OwnerNotice {
     pub project: String,
     /// The thread.
     pub thread: String,
+    /// When the fault opened (ISO), which with the project and the thread names it for good.
+    pub since: String,
 }
 
 /// Where the owner's notices go. The server plugs the notification service in.
@@ -66,6 +68,7 @@ impl OwnerAlerts {
                     text: fault_line(fault),
                     project: fault.project.clone(),
                     thread: fault.thread.clone(),
+                    since: fault.since.clone(),
                 });
             }
         }

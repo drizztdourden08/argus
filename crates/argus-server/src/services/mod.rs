@@ -41,6 +41,7 @@ pub(crate) mod deps;
 pub(crate) mod notify;
 pub(crate) mod procs;
 pub(crate) mod records;
+pub(crate) mod reminders;
 pub(crate) mod runs;
 pub(crate) mod stale;
 pub(crate) mod sync;

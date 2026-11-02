@@ -60,5 +60,6 @@ mod shadow_server;
 mod sse_buffer;
 mod wake;
 mod wake_faults;
+mod wake_owner_alert;
 mod worktree_requests;
 mod worktrees;
