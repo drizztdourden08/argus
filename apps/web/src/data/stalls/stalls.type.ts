@@ -15,4 +15,4 @@ interface StallDoc {
   ackNote: string | null;
 }
 
-export type { StallDoc, StallKind };
+export type { StallDoc };

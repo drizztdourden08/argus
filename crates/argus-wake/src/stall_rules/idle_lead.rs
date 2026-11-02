@@ -1,10 +1,8 @@
 //! Rule 4: a lead with no turn, no agent and no process for the limit, while unblocked work is open.
 
+use super::lead::{has_running_agent, idle_start, live_lead, open_items};
 use super::{Found, Kind, RuleInput, projects, text};
-use crate::blockers::is_blocked;
-use crate::board::{BoardView, LIVE_AGENT, ThreadView};
-use crate::item_wakes::target_for;
-use crate::time::parse_ms;
+use crate::board::{BoardView, ThreadView};
 
 /// The idle leads with open work at `now`. A project whose lead is gone, paused or busy loses its idle clock.
 pub(super) fn find(now: i64, input: &RuleInput<'_>) -> Vec<Found> {
@@ -37,13 +35,6 @@ fn one(now: i64, input: &RuleInput<'_>, project: &str, board: &BoardView) -> Opt
     })
 }
 
-/// The coordinator when it has a live session and is not paused: a dormant project is not a stall.
-fn live_lead(board: &BoardView) -> Option<(String, &ThreadView)> {
-    let id = board.coordinator()?;
-    let thread = board.threads.get(&id)?;
-    (thread.is_live() && !thread.status.is("paused")).then_some((id, thread))
-}
-
 /// No turn running, no agent of the lead running and no process of the project at work.
 fn is_idle(
     now: i64,
@@ -56,40 +47,13 @@ fn is_idle(
     !lead.in_turn(now) && !has_running_agent(board, lead_id) && !(input.busy)(project)
 }
 
-fn has_running_agent(board: &BoardView, lead_id: &str) -> bool {
-    board
-        .agents
-        .values()
-        .any(|a| a.rec.is_live() && a.thread.is(lead_id) && a.status.is_any(&LIVE_AGENT))
-}
-
-/// When the idleness began as far as the board knows: the lead's last sign of life when it said it was idle,
-/// else now.
-fn idle_start(now: i64, lead: &ThreadView) -> i64 {
-    parse_ms(lead.last_seen.as_str())
-        .filter(|seen| lead.activity.is("idle") && (1..=now).contains(seen))
-        .unwrap_or(now)
-}
-
-/// The `todo` and `doing` items the lead answers for (its own, or a thread that is not live) with no blocker.
-fn open_items(board: &BoardView, lead_id: &str) -> Vec<String> {
-    board
-        .items
-        .values()
-        .filter(|item| item.rec.is_live() && item.status.is_any(&["todo", "doing"]))
-        .filter(|item| target_for(board, item.thread.as_str()).as_deref() == Some(lead_id))
-        .filter(|item| !is_blocked(board, item))
-        .map(|item| item.rec.id.as_str().to_owned())
-        .collect()
-}
-
 // test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
 
     use crate::memory::MemoryBoards;
-    use crate::stall_rules::fixtures::{NOW, boards, item, project, run};
+    use crate::stall_rules::fixtures::{NOW, boards, item, project, run_of};
     use crate::stall_rules::{Found, IdleWatch, Kind};
     use crate::testkit::MIN;
     use crate::time::iso;
@@ -99,8 +63,7 @@ mod tests {
     }
 
     fn idle_found(boards: &MemoryBoards, watch: &IdleWatch, now: i64, busy: bool) -> Vec<Found> {
-        let all = run(boards, watch, now, busy);
-        all.into_iter().filter(|f| f.kind == Kind::Idle).collect()
+        run_of(Kind::Idle, boards, watch, (now, busy))
     }
 
     fn todo(id: &str) -> Value {
