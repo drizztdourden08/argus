@@ -523,6 +523,9 @@ the log. JSON field names and value types are copied from the Node answers; key 
 | GET | `/api/presence` | presence |
 | GET | `/api/wake-faults` | wake faults |
 | POST | `/api/wake-faults/clear` | wake faults (CLI only) |
+| POST | `/api/p/:key/inbox/read` | `{thread, deps?, actor?}`; stamps the read, acknowledges the open dependency requests listed; `{readAt, acked}` |
+| GET | `/api/stalls` | `?project=`; `{stalls, text}`, the open stalls of the stall watch (the page reads the `_portfolio/stalls` docs) |
+| POST | `/api/stalls/ack` | `{project, note, by}`; acknowledges every open stall of a project (CLI and Overlord only); `{acked, text}`, 409 when none is open |
 | GET | `/api/procs` | processes |
 | POST | `/api/procs/sample` | processes |
 | GET, POST | `/api/procs/rules` | processes |

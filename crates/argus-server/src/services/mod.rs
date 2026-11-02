@@ -44,6 +44,7 @@ pub(crate) mod records;
 pub(crate) mod reminders;
 pub(crate) mod runs;
 pub(crate) mod stale;
+pub(crate) mod stalls;
 pub(crate) mod sync;
 pub(crate) mod tasks;
 pub(crate) mod wake;

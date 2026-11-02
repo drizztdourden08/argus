@@ -10,7 +10,9 @@ use std::path::Path;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
-use argus_board::deps::{DepError, Done, Sweep, Transition, off, reconcile_board, sweep};
+use argus_board::deps::{
+    DepError, Done, Sweep, Transition, ack as ack_dep, off, reconcile_board, sweep,
+};
 use argus_core::ids::PORTFOLIO;
 use argus_core::{ApiError, ErrorCode};
 use argus_wake::service::driver::lock;
@@ -84,6 +86,41 @@ pub(crate) async fn act(
         Ok(done)
     })
     .await
+}
+
+/// The dependencies a thread has read in its inbox are acknowledged: those among `ids` that are open, asked
+/// of `project`, and not acknowledged yet. Answers the ids acknowledged now. Best effort, as the verb that
+/// asks is: off, shadow mode and every failure answer what was done, never a refusal.
+pub(crate) async fn ack(
+    svc: &Arc<Services>,
+    project: String,
+    ids: Vec<String>,
+    actor: String,
+) -> Vec<String> {
+    if svc.shadow {
+        return Vec::new();
+    }
+    let held = Arc::clone(svc);
+    let done = run(svc, move |home| {
+        Ok(acked(&held, home, &project, &ids, &actor))
+    })
+    .await;
+    done.unwrap_or_default()
+}
+
+fn acked(svc: &Services, home: &Path, project: &str, ids: &[String], actor: &str) -> Vec<String> {
+    let mut done = Vec::new();
+    for id in ids {
+        match ack_dep(home, id, project, actor) {
+            Ok(true) => done.push(id.clone()),
+            Ok(false) => {}
+            Err(e) => svc.log.error(
+                "dependency ack failed",
+                json!({ "dep": id, "err": e.to_string() }),
+            ),
+        }
+    }
+    done
 }
 
 /// Lets the wake engine look at the ledger now. Takes the engine's lock: blocking.

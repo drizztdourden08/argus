@@ -58,6 +58,7 @@ mod runs_store;
 mod shadow;
 mod shadow_server;
 mod sse_buffer;
+mod stalls;
 mod wake;
 mod wake_faults;
 mod wake_owner_alert;
