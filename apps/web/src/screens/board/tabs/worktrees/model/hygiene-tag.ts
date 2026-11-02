@@ -20,7 +20,7 @@ const hygieneTag = (hygiene: WorktreeHygiene): HygieneTag => {
   const why = hygiene.why ? plainText(hygiene.why) : '';
   if (hygiene.state === 'released') return { ...releasedTag(hygiene), look };
   if (hygiene.state === 'in-use') return { text: 'in use', tip: `In use, so Argus leaves it${why ? `: ${why}` : ''}.`, look };
-  if (hygiene.state === 'kept') return { text: 'kept', tip: `The thread keeps it${why ? `: ${why}` : ''}.`, look };
+  if (hygiene.state === 'kept') return { text: 'kept', tip: `The thread keeps it${why ? `: ${why}` : ''}.`, look, edge: 'dashed' };
   return { text: 'review', tip: `Argus does not remove it by itself: ${why || 'the thread decides'}.`, look };
 };
 

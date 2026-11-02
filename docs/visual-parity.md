@@ -395,9 +395,8 @@ Closed with Tessera 0.96 (spec now ^0.96.0), items 156 to 160, 142 and the card 
 - 157: fixed: Copy (Builds and Tests launch command) and Unhand are Button `variant="quiet"`.
   "handed to you" is a Tag `fill="solid"` (neutral grey) in the bundle tags, the test facts, the
   item drawer build chip and the feed test line. "ready" (Tests and Builds), the lead "active" and
-  "paused" chips and the worktree hygiene chips are Tag `fill="tint"`. Still open: the kept chip is a
-  neutral Tag, and `tint` only draws the tinted border on urgency and category tags, so it stays a
-  plain grey chip (Node draws it dashed grey).
+  "paused" chips and the worktree hygiene chips are Tag `fill="tint"`. The kept chip is a neutral
+  tinted Tag with `edge="dashed"` (Tessera Tag edge), the dashed grey chip of Node.
 - 158: fixed: "needs you", "conflict" and "archived" (Kanban and Tests filter rows) are Checkbox
   `boxed`. Group by and Order are SegmentedControl `size="sm-plus"` (28px segments, 13px), Kanban
   and Tests.
