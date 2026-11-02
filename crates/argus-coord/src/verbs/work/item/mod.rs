@@ -21,6 +21,8 @@ const GROUP: Group = Group {
         ("add", add::add),
         ("set", set::set),
         ("status", set::status),
+        ("block", set::block),
+        ("unblock", set::unblock),
         ("move", set::move_to),
         ("ac", ac::ac),
         ("ac-done", ac::ac_done),
@@ -32,7 +34,7 @@ const GROUP: Group = Group {
         coll: "items",
         after: |_: &mut Board, _: &Value| {},
     }),
-    names: "add, set, status, move, ac, ac-done, ac-rm, archive, unarchive, rm, restore, show, list",
+    names: "add, set, status, block, unblock, move, ac, ac-done, ac-rm, archive, unarchive, rm, restore, show, list",
     typed: None,
 };
 

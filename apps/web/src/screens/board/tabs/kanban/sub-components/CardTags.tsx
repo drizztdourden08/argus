@@ -17,7 +17,8 @@ const CardTags = (props: CardTagsProps) => {
       {card.quietMs !== null && <Tag variant="urgency" color="warning" title={quietTip(item, now)}>{`quiet ${formatAgo(item.updatedAt, now)}`}</Tag>}
       {group !== 'status' && <StatusTag status={item.status} />}
       {depTags(item, now).map((tag) => <DepTag key={tag.key} color={tag.color} title={tag.title}>{tag.label}</DepTag>)}
-      {card.conflicted && <Tag variant="urgency" color="danger">conflict</Tag>}
+      {item.blocker && <Tag variant="urgency" color="warning" title={item.blocker}>{`blocked: ${item.blocker}`}</Tag>}
+      {card.conflicted &&<Tag variant="urgency" color="danger">conflict</Tag>}
       {item.archivedAt && <Tag>archived</Tag>}
     </>
   );

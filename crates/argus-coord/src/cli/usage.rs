@@ -15,7 +15,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord agent done <A|name> ["<result>"] | fail <A|name> "<reason>" | stop <A|name> | archive|unarchive|rm|restore <A|name>...
   coord agent list [--all] [--thread T] [--status s] [--json] | show <A|name>      (a name is your newest running agent with it)
   coord item add "<title>" [--desc "..."] [--ac "..."]... [--subject <s>] [--status <s>] [--before|--after <I>]
-  coord item set <I> [--title t] [--desc d] [--subject s] [--status s] [--if-rev n]    coord item status <I> <s>
+  coord item set <I> [--title t] [--desc d] [--subject s] [--status s] [--if-rev n]    coord item status <I> <s>    coord item block <I> --on "<why>" | unblock <I>
   coord item move <I> [--status s] [--before <I>|--after <I>|--top|--bottom]    archive|unarchive|rm|restore <I> [--reason "..."]
   coord item ac <I> add "<t>" | set <n> "<t>" | done <n> [--undo] | rm <n>[-<m>] | move <n> <pos>
   coord item show <I> | list [--mine] [--status s] [--subject s] [--archived] [--deleted] [--json]

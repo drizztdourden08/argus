@@ -26,7 +26,8 @@ const DrawerFacts = (props: DrawerFactsProps) => {
           />
         </Flex>
       </Flex>
-      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
+      {item.blocker && <Text variant="caption" tone="muted">{`blocked: ${item.blocker}`}</Text>}
+      <Text variant="caption" tone="muted">{`rev${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
     </Flex>
   );
 };

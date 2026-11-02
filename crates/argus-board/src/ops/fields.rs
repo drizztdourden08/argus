@@ -31,8 +31,10 @@ pub(crate) struct EditCtx<'a> {
 pub(crate) fn editable(coll: &str, field: &str) -> bool {
     matches!(
         (coll, field),
-        ("items", "title" | "description" | "subject" | "status")
-            | ("tests", "title" | "covers" | "mode" | "build")
+        (
+            "items",
+            "title" | "description" | "subject" | "status" | "blocker"
+        ) | ("tests", "title" | "covers" | "mode" | "build")
             | ("actions", "text" | "item" | "status")
             | ("entries", "text" | "options")
             | ("threads", "subject" | "brief" | "rank")
@@ -52,6 +54,7 @@ pub(crate) fn check(coll: &str, field: &str, v: &Value, cx: &EditCtx) -> Result<
         )),
         ("items", "subject") => Ok(Value::String(slug(&require_text("subject", v)?))),
         ("items", "status") => one_of(&ITEM_STATUSES, v, "status"),
+        ("items", "blocker") => optional("note", v),
         ("tests", "mode") => one_of(&TEST_MODES, v, "mode"),
         ("actions", "text") => text("action", v),
         ("actions", "status") => one_of(&ACTION_STATUSES, v, "status"),

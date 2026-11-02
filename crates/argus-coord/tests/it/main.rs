@@ -41,6 +41,7 @@ mod hook_listen_process;
 mod hook_notices;
 mod hook_session;
 mod hook_transcript;
+mod item_blocker;
 mod launch_plan;
 mod launcher_verbs;
 mod lead_verbs;

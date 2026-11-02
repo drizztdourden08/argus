@@ -12,6 +12,7 @@ interface Item {
   title: string;
   description?: string | null;
   subject?: string | null;
+  blocker?: string | null;
   thread: string;
   status: string;
   rank?: number;

@@ -34,6 +34,22 @@ fn pause_stops_the_agents_and_frees_the_locks_and_resume_brings_the_thread_back(
 }
 
 #[test]
+fn an_item_takes_a_blocker_and_a_blank_value_clears_it() {
+    let mut b = alpha();
+    let edit = |b: &mut Value, blocker: &str| {
+        let (_, res) = post(
+            b,
+            json!({"kind": "edit", "target": {"c": "items", "id": "I-1"}, "set": {"blocker": blocker}}),
+        );
+        assert_eq!(res.ops.applied, 1);
+    };
+    edit(&mut b, "D-11");
+    assert_eq!(b["items"]["I-1"]["blocker"], "D-11");
+    edit(&mut b, "  ");
+    assert_eq!(b["items"]["I-1"]["blocker"], Value::Null);
+}
+
+#[test]
 fn moving_an_item_to_another_thread_takes_its_tests_and_open_entries_along() {
     let mut b = with_api_thread();
     let (id, res) = post(
