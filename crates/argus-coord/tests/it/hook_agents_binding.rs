@@ -274,3 +274,25 @@ fn the_same_tool_call_announced_twice_is_one_dispatch() {
     f.started(LEAD, "twin-0010", "general-purpose");
     assert_eq!(f.board()["agentDispatches"], json!([]), "consumed once");
 }
+
+#[test]
+fn a_stop_that_only_waits_on_the_agents_own_background_command_leaves_the_record_working() {
+    let f = Fixture::new();
+    dispatch(&f, "Build with a background command", "sonnet", "toolu_w1");
+    f.started(LEAD, "waiting00000005a", "general-purpose");
+    let file = f.home.path().join("agent-waiting00000005a.jsonl");
+    let bash = json!({ "type": "assistant", "message": { "role": "assistant", "content": [{ "type": "tool_use", "name": "Bash", "input": { "command": "pnpm build", "run_in_background": true } }] } });
+    fs::write(&file, format!("{bash}\n")).unwrap();
+    let extra = json!({ "agent_transcript_path": file, "last_assistant_message": "Build running, waiting for it." });
+    f.stopped(LEAD, "waiting00000005a", &extra);
+    let waiting = f.by_hook("waiting00000005a").unwrap();
+    assert_eq!(waiting["status"], "working");
+    assert_eq!(waiting["result"], Value::Null);
+    let handback = json!({ "type": "assistant", "message": { "role": "assistant", "content": [{ "type": "tool_use", "name": "SubagentHandback", "input": {} }] } });
+    fs::write(&file, format!("{bash}\n{handback}\n")).unwrap();
+    let extra = json!({ "agent_transcript_path": file, "last_assistant_message": "build passed" });
+    f.stopped(LEAD, "waiting00000005a", &extra);
+    let done = f.by_hook("waiting00000005a").unwrap();
+    assert_eq!(done["status"], "done");
+    assert_eq!(done["result"], "build passed");
+}

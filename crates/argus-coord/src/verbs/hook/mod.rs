@@ -37,6 +37,7 @@ mod subagent_stop;
 mod thread;
 mod transcript;
 mod visit;
+mod waiting;
 mod wake_line;
 
 use std::io::Write;
