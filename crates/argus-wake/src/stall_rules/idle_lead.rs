@@ -188,7 +188,7 @@ mod tests {
         let worker = json!({"threads": {"lead": {"id": "lead", "role": "coordinator", "status": "active", "activity": "idle", "lastSeen": iso(NOW - 20 * MIN)}, "ui": {"id": "ui", "role": "thread", "status": "active"}}});
         let owned = item("I-4", "todo", &json!({"thread": "ui"}));
         let world = rotp(&json!({}), &[owned], &worker);
-        assert!(idle_found(&world, &IdleWatch::new(), NOW, false).is_empty());
+        assert_eq!(idle_found(&world, &IdleWatch::new(), NOW, false).len(), 0);
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(later[0].since, NOW - 5 * MIN);
         let busy = json!({"activity": "working", "lastSeen": iso(NOW + 7 * MIN)});
         let working = rotp(&busy, &[todo("I-4")], &json!({}));
-        assert!(idle_found(&working, &watch, NOW + 7 * MIN, false).is_empty());
+        assert_eq!(idle_found(&working, &watch, NOW + 7 * MIN, false).len(), 0);
         let quiet = json!({"lastSeen": iso(NOW + 7 * MIN)});
         let again = rotp(&quiet, &[todo("I-4")], &json!({}));
         let restarted = idle_found(&again, &watch, NOW + 8 * MIN, false);
@@ -218,6 +218,6 @@ mod tests {
     #[test]
     fn a_lead_with_no_open_item_left_is_quiet() {
         let world = rotp(&json!({}), &[item("I-4", "done", &json!({}))], &json!({}));
-        assert!(idle_found(&world, &IdleWatch::new(), NOW, false).is_empty());
+        assert_eq!(idle_found(&world, &IdleWatch::new(), NOW, false).len(), 0);
     }
 }

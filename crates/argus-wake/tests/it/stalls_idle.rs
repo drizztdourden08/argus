@@ -19,7 +19,7 @@ fn ask(kind: &str, status: &str) -> Value {
 fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {
     let mut rig = world(&json!({}), &[item("I-4", "todo", &json!({}))], &json!({}));
     pass(&mut rig, 9);
-    assert!(rig.wakes_of("stall").is_empty(), "not before 10 minutes");
+    assert_eq!(rig.wakes_of("stall").len(), 0, "not before 10 minutes");
     pass(&mut rig, 1);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
@@ -55,8 +55,8 @@ fn a_blocker_a_dep_wait_or_an_open_ask_keeps_it_quiet() {
             &json!({"entries": entries}),
         );
         pass(&mut rig, 15);
-        assert!(rig.wakes_of("stall").is_empty(), "{extra} {entries}");
-        assert!(rig.service.stalls(None).is_empty(), "{extra} {entries}");
+        assert_eq!(rig.wakes_of("stall").len(), 0, "{extra} {entries}");
+        assert_eq!(rig.service.stalls(None).len(), 0, "{extra} {entries}");
     }
 }
 
@@ -75,7 +75,7 @@ fn a_turn_an_agent_or_a_busy_process_is_not_idle() {
                 working(rig);
             }
         });
-        assert!(rig.wakes_of("stall").is_empty(), "{case}");
+        assert_eq!(rig.wakes_of("stall").len(), 0, "{case}");
     }
 }
 
@@ -85,7 +85,7 @@ fn the_lead_turning_active_clears_it_with_a_log_line() {
     pass(&mut rig, 10);
     assert_eq!(rig.service.stalls(None).len(), 1);
     pass_with(&mut rig, 1, working);
-    assert!(rig.service.stalls(None).is_empty());
+    assert_eq!(rig.service.stalls(None).len(), 0);
     assert_eq!(
         activity_texts(&rig, "stall-cleared"),
         [format!(

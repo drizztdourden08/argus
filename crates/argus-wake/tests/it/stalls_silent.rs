@@ -12,7 +12,7 @@ use crate::stalls_world::{item, pass, silent_world, world};
 fn a_doing_item_60_min_without_a_write_or_agent_stalls() {
     let mut rig = silent_world();
     pass(&mut rig, 59);
-    assert!(rig.wakes_of("stall").is_empty(), "not before 60 minutes");
+    assert_eq!(rig.wakes_of("stall").len(), 0, "not before 60 minutes");
     pass(&mut rig, 1);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
@@ -41,7 +41,7 @@ fn an_agent_on_it_or_a_blocker_keeps_it_quiet() {
         let mut rig = world(&json!({}), &[item("I-12", "doing", &extra)], &project);
         rig.busy.set("rotp", true);
         pass(&mut rig, 65);
-        assert!(rig.wakes_of("stall").is_empty(), "{extra} {project}");
-        assert!(rig.service.stalls(None).is_empty(), "{extra} {project}");
+        assert_eq!(rig.wakes_of("stall").len(), 0, "{extra} {project}");
+        assert_eq!(rig.service.stalls(None).len(), 0, "{extra} {project}");
     }
 }

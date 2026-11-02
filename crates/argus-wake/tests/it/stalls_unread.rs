@@ -23,7 +23,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
     open_dep(&rig, &json!({}));
     dep_request(&mut rig);
     pass_with(&mut rig, 4, working);
-    assert!(rig.wakes_of("ack-nudge").is_empty(), "not before 5 minutes");
+    assert_eq!(rig.wakes_of("ack-nudge").len(), 0, "not before 5 minutes");
     pass_with(&mut rig, 1, working);
     let nudges = rig.wakes_of("ack-nudge");
     assert_eq!(nudges.len(), 1);
@@ -37,7 +37,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
         "the Overlord waits for 10"
     );
     pass_with(&mut rig, 4, working);
-    assert!(rig.wakes_of("stall").is_empty());
+    assert_eq!(rig.wakes_of("stall").len(), 0);
     pass_with(&mut rig, 1, working);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
@@ -50,7 +50,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
         "stall: rotp did not read D-11 for 10 min (it is in a turn)"
     );
     assert_eq!(activity_texts(&rig, "stall"), [stalls[0].text.clone()]);
-    assert!(rig.owner.notices().is_empty(), "the owner waits for 30");
+    assert_eq!(rig.owner.notices().len(), 0, "the owner waits for 30");
     pass_with(&mut rig, 20, working);
     let notices = rig.owner.notices();
     assert_eq!(notices.len(), 1);
@@ -81,10 +81,10 @@ fn an_inbox_read_before_5_min_stops_the_ladder() {
     pass(&mut rig, 3);
     rig.service.inbox_read("rotp", "lead");
     pass(&mut rig, 26);
-    assert!(rig.wakes_of("ack-nudge").is_empty());
-    assert!(rig.wakes_of("stall").is_empty());
-    assert!(rig.owner.notices().is_empty());
-    assert!(rig.service.stalls(None).is_empty());
+    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
+    assert_eq!(rig.wakes_of("stall").len(), 0);
+    assert_eq!(rig.owner.notices().len(), 0);
+    assert_eq!(rig.service.stalls(None).len(), 0);
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn starting_the_item_clears_the_stall_with_a_log_line() {
     assert_eq!(rig.service.stalls(Some("rotp")).len(), 1);
     touch(&rig, "I-112", "doing");
     pass_with(&mut rig, 1, working);
-    assert!(rig.service.stalls(None).is_empty());
+    assert_eq!(rig.service.stalls(None).len(), 0);
     assert_eq!(
         activity_texts(&rig, "stall-cleared"),
         ["stall cleared: rotp did not read D-11 for 10 min (it is in a turn) (open 11m)"]
@@ -142,7 +142,7 @@ fn the_overlord_hears_the_nudge_and_the_owner_the_toast_but_never_a_stall_about_
         (nudges[0].scope.as_str(), nudges[0].thread.as_str()),
         ("portfolio", "coordinator")
     );
-    assert!(rig.wakes_of("stall").is_empty());
+    assert_eq!(rig.wakes_of("stall").len(), 0);
     let notices = rig.owner.notices();
     assert_eq!(notices.len(), 1);
     assert_eq!(
@@ -177,9 +177,9 @@ fn notices_and_fault_lines_are_never_ackable() {
         .collect();
     rig.service.submit(&wakes).expect("submit");
     pass(&mut rig, 40);
-    assert!(rig.wakes_of("ack-nudge").is_empty());
-    assert!(rig.wakes_of("stall").is_empty());
-    assert!(rig.owner.notices().is_empty());
+    assert_eq!(rig.wakes_of("ack-nudge").len(), 0);
+    assert_eq!(rig.wakes_of("stall").len(), 0);
+    assert_eq!(rig.owner.notices().len(), 0);
 }
 
 #[test]

@@ -22,7 +22,7 @@ fn acked_world() -> Rig {
 fn an_acked_dep_open_30_min_with_its_item_todo_wakes_the_overlord_then_every_30_min() {
     let mut rig = acked_world();
     pass(&mut rig, 29);
-    assert!(rig.wakes_of("stall").is_empty(), "not before 30 minutes");
+    assert_eq!(rig.wakes_of("stall").len(), 0, "not before 30 minutes");
     pass(&mut rig, 1);
     let first = rig.wakes_of("stall");
     assert_eq!(first.len(), 1);
@@ -61,7 +61,7 @@ fn the_item_leaving_todo_clears_it() {
     assert_eq!(rig.service.stalls(None).len(), 1);
     touch(&rig, "I-112", "doing");
     pass(&mut rig, 1);
-    assert!(rig.service.stalls(None).is_empty());
+    assert_eq!(rig.service.stalls(None).len(), 0);
     assert_eq!(
         activity_texts(&rig, "stall-cleared"),
         ["stall cleared: D-11 open 30 min, rotp I-112 still todo (open 31m)"]

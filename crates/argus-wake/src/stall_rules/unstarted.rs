@@ -101,7 +101,7 @@ mod tests {
         ];
         for (state, age, status) in quiet {
             let found = found(&world(state, age, status));
-            assert!(found.is_empty(), "{state} {age} {status}");
+            assert_eq!(found.len(), 0, "{state} {age} {status}");
         }
     }
 
@@ -114,7 +114,7 @@ mod tests {
         let no_item = json!({"deps": {"D-1": {"id": "D-1", "state": "open", "openedAt": opened, "to": other}}});
         for ledger in [no_time, no_item] {
             let world = boards(&[("_portfolio", ledger), ("rotp", rotp("todo"))]);
-            assert!(found(&world).is_empty());
+            assert_eq!(found(&world).len(), 0);
         }
     }
 }

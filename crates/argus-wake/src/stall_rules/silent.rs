@@ -93,17 +93,17 @@ mod tests {
     #[test]
     fn a_recent_write_to_the_item_or_to_a_record_about_it_keeps_it_quiet() {
         let recent = json!({"updatedAt": iso(NOW - 59 * MIN)});
-        assert!(silent_found(&[doing(&recent)], &json!({})).is_empty());
+        assert_eq!(silent_found(&[doing(&recent)], &json!({})).len(), 0);
         let result = json!({"entries": {"E-1": {"item": "I-12", "kind": "result", "createdAt": iso(NOW - 10 * MIN)}}});
-        assert!(silent_found(&[doing(&json!({}))], &result).is_empty());
+        assert_eq!(silent_found(&[doing(&json!({}))], &result).len(), 0);
     }
 
     #[test]
     fn an_agent_on_it_or_a_blocker_keeps_it_quiet() {
         let agent = json!({"agents": {"A-1": {"item": "I-12", "thread": "lead", "status": "working", "createdAt": iso(NOW - 3 * HOUR)}}});
-        assert!(silent_found(&[doing(&json!({}))], &agent).is_empty());
+        assert_eq!(silent_found(&[doing(&json!({}))], &agent).len(), 0);
         let blocked = doing(&json!({"blocker": "waits for the owner's key"}));
-        assert!(silent_found(&[blocked], &json!({})).is_empty());
+        assert_eq!(silent_found(&[blocked], &json!({})).len(), 0);
     }
 
     #[test]
@@ -111,7 +111,7 @@ mod tests {
         let todo = item("I-1", "todo", &json!({}));
         let review = item("I-2", "review", &json!({}));
         let deleted = item("I-3", "doing", &json!({"deletedAt": iso(NOW - HOUR)}));
-        assert!(silent_found(&[todo, review, deleted], &json!({})).is_empty());
+        assert_eq!(silent_found(&[todo, review, deleted], &json!({})).len(), 0);
     }
 
     #[test]

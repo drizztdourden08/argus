@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn forgetting_a_project_starts_its_clock_again() {
         let watch = IdleWatch::new();
-        watch.seen_idle("rotp", 100);
+        assert_eq!(watch.seen_idle("rotp", 100), 100);
         watch.forget("rotp");
         assert_eq!(watch.seen_idle("rotp", 900), 900);
     }

@@ -16,7 +16,7 @@ fn an_acked_stall_stops_its_resends_and_leaves_the_open_resend_line() {
     let mut rig = silent_world();
     pass_reminding(&mut rig, 74);
     assert_eq!(rig.wakes_of("stall").len(), 1);
-    assert!(rig.wakes_of("open-resend").is_empty());
+    assert_eq!(rig.wakes_of("open-resend").len(), 0);
     pass_reminding(&mut rig, 1);
     let lines = rig.wakes_of("open-resend");
     assert_eq!(lines.len(), 1, "15 minutes after the stall was raised");
@@ -39,7 +39,7 @@ fn an_acked_stall_stops_its_resends_and_leaves_the_open_resend_line() {
         .get("_portfolio", "stalls", &acked[0].id)
         .expect("doc");
     assert_eq!(doc["ackedBy"], Value::from(BY));
-    assert!(rig.service.ack_stalls("rotp", BY, "again").is_empty());
+    assert_eq!(rig.service.ack_stalls("rotp", BY, "again").len(), 0);
     pass_reminding(&mut rig, 60);
     assert_eq!(rig.wakes_of("stall").len(), 1, "no resend once acked");
     assert_eq!(rig.wakes_of("open-resend").len(), 1, "and no count");
@@ -65,7 +65,7 @@ fn a_new_occurrence_after_a_clear_wakes_again() {
     pass(&mut rig, 1);
     touch(&rig, "I-12", "doing");
     pass(&mut rig, 1);
-    assert!(rig.service.stalls(None).is_empty());
+    assert_eq!(rig.service.stalls(None).len(), 0);
     assert_eq!(activity_texts(&rig, "stall-cleared").len(), 1);
     pass(&mut rig, 59);
     let rows = rig.wakes_of("stall");
