@@ -11,6 +11,7 @@ import type { NotificationsTabProps } from './notifications.type';
 import { NoteFeed } from './sub-components/NoteFeed';
 import { NoteFilterBar } from './sub-components/NoteFilterBar';
 import { NotifySettings } from './sub-components/NotifySettings';
+import { StallList } from './sub-components/StallList';
 import { TestPingBar } from './sub-components/TestPingBar';
 
 const NotificationsTab = (props: NotificationsTabProps) => {
@@ -26,6 +27,7 @@ const NotificationsTab = (props: NotificationsTabProps) => {
     <Stack gap="md">
       <TestPingBar ping={ping} />
       <NotifySettings state={settings} />
+      <StallList />
       {notes.length === 0
         ? <EmptyState message={NONE_YET} />
         : (

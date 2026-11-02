@@ -14,3 +14,4 @@ export { WorktreeCounter } from './WorktreeCounter';
 export { SyncStamp } from './SyncStamp';
 export type { HashTab } from './shell.type';
 export { Age } from './Age';
+export { BAD_LOOK, CALM_LOOK } from './shell.constants';

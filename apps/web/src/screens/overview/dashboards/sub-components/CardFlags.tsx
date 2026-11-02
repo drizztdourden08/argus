@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Inline, Tag } from '@drizztdourden08/tessera';
-import { BAD_LOOK, WARN_LOOK } from '../dashboards.constants';
+import { BAD_LOOK } from '../../../../shell';
+import { WARN_LOOK } from '../dashboards.constants';
 import type { CardCountersProps } from '../dashboards.type';
 import { attentionOf } from '../model';
 

@@ -30,6 +30,10 @@ interface BoardNoticesProps {
   boardKey: string;
 }
 
+interface BoardStallsProps {
+  boardKey: string;
+}
+
 interface NoticeListProps {
   notices: readonly WithId<Wake>[];
 }
@@ -42,4 +46,4 @@ interface NoticesView {
   close: () => void;
 }
 
-export type { BoardHeaderProps, BoardNoticesProps, BoardStampProps, BoardWorktreesProps, LeadStatusProps, NoticeListProps, NoticesView };
+export type { BoardHeaderProps, BoardNoticesProps, BoardStallsProps, BoardStampProps, BoardWorktreesProps, LeadStatusProps, NoticeListProps, NoticesView };

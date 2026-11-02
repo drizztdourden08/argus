@@ -7,6 +7,7 @@ import { CardCounters } from './CardCounters';
 import { CardFlags } from './CardFlags';
 import { CardFooter } from './CardFooter';
 import { CardHeadline } from './CardHeadline';
+import { CardStalls } from './CardStalls';
 import { CardState } from './CardState';
 import { CardWorktrees } from './CardWorktrees';
 import { MasterRow } from './MasterRow';
@@ -25,6 +26,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         {started && <CardCounters card={card} />}
         {started && <CardWorktrees card={card} />}
         {started && <CardFlags card={card} />}
+        {started && <CardStalls card={card} now={now} />}
         {started && <MasterRow card={card} onLog={onLog} />}
         <Spacer />
         <CardFooter card={card} started={started} send={send} />

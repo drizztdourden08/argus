@@ -107,6 +107,11 @@ interface CardCountersProps {
   card: Card;
 }
 
+interface CardStallsProps {
+  card: Card;
+  now: number;
+}
+
 interface RegistryChipLinkProps {
   row: RegistryItem;
 }
@@ -116,6 +121,6 @@ interface SentRowProps {
 }
 
 export type {
-  CardCountersProps, CardFooterProps, CardHeadlineProps, CardStateProps, CounterTileProps, DashboardsTabProps, DashboardTotalsProps, LogTarget, MasterRowProps, MasterRun, MasterStatusProps,
+  CardCountersProps, CardFooterProps, CardHeadlineProps, CardStallsProps, CardStateProps, CounterTileProps, DashboardsTabProps, DashboardTotalsProps, LogTarget, MasterRowProps, MasterRun, MasterStatusProps,
   ProjectCardProps, ProjectGridProps, RegistryChipLinkProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps,
 };

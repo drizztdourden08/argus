@@ -7,6 +7,7 @@ import { ProjectSwitcher, SyncStamp } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
 import { findLead } from '../tabs/agents/model';
 import { BoardNotices } from './sub-components/BoardNotices';
+import { BoardStalls } from './sub-components/BoardStalls';
 import { BoardStamp } from './sub-components/BoardStamp';
 import { BoardWorktrees } from './sub-components/BoardWorktrees';
 import { LeadStatus } from './sub-components/LeadStatus';
@@ -30,6 +31,7 @@ const BoardHeader = (props: BoardHeaderProps) => {
         <BoardStamp status={status} updatedAt={updatedAt} />
         <BoardWorktrees boardKey={boardKey} />
         <BoardNotices boardKey={boardKey} />
+        <BoardStalls boardKey={boardKey} />
         {syncs ? <SyncStamp sync={syncs[boardKey] ?? null} /> : null}
       </Flex>
       <Flex className="board-header__tools" gap="xs" align="center">
