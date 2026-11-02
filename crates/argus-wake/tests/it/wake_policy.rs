@@ -21,7 +21,7 @@ use serde_json::json;
 
 const WINDOW: i64 = 15 * SEC;
 
-const PASSIVE: [&str; 11] = [
+const PASSIVE: [&str; 13] = [
     "lead-info",
     "wake-fault",
     "agent-stale",
@@ -33,6 +33,8 @@ const PASSIVE: [&str; 11] = [
     "launcher-stale",
     "launcher-master-missing",
     "remote-sync-due",
+    "dep-cancelled",
+    "dep-reopened",
 ];
 
 fn policy_rig(immediate: &[&str]) -> EngineRig {
@@ -83,6 +85,9 @@ fn the_table_wakes_for_owner_work_messages_agents_results_and_own_faults_and_kee
         "bundle-complete",
         "run-failed",
         "process-reaped",
+        "dep-request",
+        "dep-resolved",
+        "dep-blocked",
     ] {
         assert!(!is_passive(reason), "{reason} wakes");
     }

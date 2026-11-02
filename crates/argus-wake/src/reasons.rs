@@ -8,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 28] = [
+pub const WAKE_REASONS: [&str; 33] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -37,10 +37,16 @@ pub const WAKE_REASONS: [&str; 28] = [
     "launcher-stale",
     "launcher-master-missing",
     "remote-sync-due",
+    "dep-request",
+    "dep-resolved",
+    "dep-blocked",
+    "dep-cancelled",
+    "dep-reopened",
 ];
 
-/// What the owner is waiting on, and a fault for the Overlord: these close the window at once.
-pub const IMMEDIATE_REASONS: [&str; 9] = [
+/// What the owner is waiting on, a fault for the Overlord, and a finished or blocked dependency: these close
+/// the window at once.
+pub const IMMEDIATE_REASONS: [&str; 11] = [
     "owner-answer",
     "owner-note",
     "owner-decision",
@@ -50,6 +56,8 @@ pub const IMMEDIATE_REASONS: [&str; 9] = [
     "portfolio-note",
     "wake-fault",
     "run-failed",
+    "dep-resolved",
+    "dep-blocked",
 ];
 
 /// The reasons the wakes route accepts from outside the policy.

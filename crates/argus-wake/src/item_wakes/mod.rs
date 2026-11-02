@@ -11,13 +11,16 @@
 //!
 //! Never reminded: done, dropped, archived or deleted items; an item that waits on someone else (an open
 //! question or decision of the owner, a to-do of the owner, a manual test of the build handed to the
-//! owner, a live sub-agent working on it); a thread that is paused. There are no quiet hours.
+//! owner, a live sub-agent working on it, a request to another board that is still being answered, a
+//! request of another board that was blocked on the requester); a thread that is paused. There are no
+//! quiet hours.
 
 mod stale;
 mod text;
 
 pub use argus_core::clock::age_text;
 pub use stale::Stale;
+pub(crate) use stale::target_for;
 
 use std::collections::HashMap;
 

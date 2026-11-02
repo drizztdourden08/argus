@@ -322,6 +322,31 @@ fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_handed_manual_t
 }
 
 #[test]
+fn an_item_that_waits_on_another_board_or_whose_request_is_blocked_is_skipped_until_the_link_changes()
+ {
+    let mut world = World::new();
+    let waits = |state: &str| json!({"waitsOn": {"dep": "D-1", "project": "beta", "item": "I-9", "state": state}});
+    let asked = |state: &str| json!({"requestedBy": {"dep": "D-2", "project": "beta", "item": "I-3", "state": state}});
+    world.add(&item("I-1", "doing", hours(30), &waits("opening")));
+    world.add(&item("I-2", "doing", hours(30), &waits("open")));
+    world.add(&item("I-3", "doing", hours(30), &asked("blocked")));
+    world.add(&item("I-4", "doing", hours(30), &waits("blocked")));
+    world.add(&item("I-5", "doing", hours(30), &waits("done")));
+    world.add(&item("I-6", "doing", hours(30), &asked("open")));
+    world.add(&item(
+        "I-7",
+        "doing",
+        hours(30),
+        &json!({"waitsOn": "broken"}),
+    ));
+    assert_eq!(world.stale_ids(0), "I-4,I-5,I-6,I-7");
+    world.alpha["items"]["I-2"]["waitsOn"]["state"] = json!("dropped");
+    world.alpha["items"]["I-3"]["requestedBy"]["state"] = json!("open");
+    world.sync();
+    assert_eq!(world.stale_ids(0), "I-2,I-3,I-4,I-5,I-6,I-7");
+}
+
+#[test]
 fn a_paused_thread_is_left_alone_and_an_unpaused_one_is_reminded_again() {
     let mut world = World::new();
     world.add(&item("I-1", "doing", hours(30), &json!({})));

@@ -5,6 +5,7 @@ use tracing::warn;
 use super::WakeService;
 use crate::activity::ActivityLine;
 use crate::config::WakeConfig;
+use crate::dep_wakes::DepEnv;
 use crate::item_wakes::ItemEnv;
 use crate::registry::Registry;
 use crate::store::WakeStore;
@@ -34,11 +35,13 @@ pub(super) struct Schedule {
     agents: i64,
     items: i64,
     syncs: i64,
+    deps: i64,
     prune: i64,
     registry_every: i64,
     agents_every: i64,
     items_every: i64,
     syncs_every: i64,
+    deps_every: i64,
 }
 
 impl Schedule {
@@ -48,11 +51,13 @@ impl Schedule {
             agents: now + config.agents.tick_ms,
             items: now + config.items.tick_ms,
             syncs: now + config.syncs.tick_ms,
+            deps: now + config.deps.tick_ms,
             prune: now + PRUNE_EVERY_MS,
             registry_every: config.registry.tick_ms,
             agents_every: config.agents.tick_ms,
             items_every: config.items.tick_ms,
             syncs_every: config.syncs.tick_ms,
+            deps_every: config.deps.tick_ms,
         }
     }
 
@@ -61,6 +66,7 @@ impl Schedule {
             .min(self.agents)
             .min(self.items)
             .min(self.syncs)
+            .min(self.deps)
             .min(self.prune)
     }
 }
@@ -103,6 +109,10 @@ impl WakeService {
             self.schedule.syncs = now + self.schedule.syncs_every;
             self.sync_tick();
         }
+        if now >= self.schedule.deps {
+            self.schedule.deps = now + self.schedule.deps_every;
+            self.dep_tick();
+        }
         if now >= self.schedule.prune {
             self.schedule.prune = now + PRUNE_EVERY_MS;
             if let Err(err) = self.engine.prune() {
@@ -143,6 +153,22 @@ impl WakeService {
         self.forward_activity(out.activity);
         self.submit_logged(&out.wakes, "item wakes");
         out.wakes.len()
+    }
+
+    /// The dependency wakes due now; returns how many were sent. The server may call it right after it
+    /// reconciled a dependency, so the other side hears at once instead of at the next tick.
+    pub fn dep_tick(&mut self) -> usize {
+        let now = self.clock.now_ms();
+        let wakes = {
+            let last_sent = last_sent_of(self.engine.store(), "dependency wakes");
+            let env = DepEnv {
+                boards: self.boards.as_ref(),
+                last_sent: &last_sent,
+            };
+            self.dep_wakes.tick(now, &env)
+        };
+        self.submit_logged(&wakes, "dependency wakes");
+        wakes.len()
     }
 
     fn forward_activity(&self, lines: Vec<ActivityLine>) {

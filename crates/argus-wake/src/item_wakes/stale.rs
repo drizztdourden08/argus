@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 
 use super::ItemWakeConfig;
 use crate::board::{BoardView, ItemView, LIVE_AGENT, Record};
+use crate::dep_wakes::{RequestedBy, WaitsOn};
 use crate::policy::coordinator_in;
 use crate::reasons::MAIN_SCOPE;
 use crate::source::BoardSource;
@@ -33,22 +34,21 @@ fn limit(config: &ItemWakeConfig, status: &str) -> Option<i64> {
     }
 }
 
-fn target_of(board: &BoardView, item: &ItemView) -> Option<String> {
-    let owner = item
-        .thread
-        .some()
+/// The thread that hears about something on an item owned by `owner`: that thread while it is live, else the
+/// project's lead.
+pub(crate) fn target_for(board: &BoardView, owner: &str) -> Option<String> {
+    let live = Some(owner)
+        .filter(|id| !id.is_empty())
         .and_then(|id| board.threads.get(id))
         .filter(|t| t.is_live());
-    match owner {
-        Some(thread) => Some(
-            thread
-                .id
-                .some()
-                .unwrap_or_else(|| item.thread.as_str())
-                .to_owned(),
-        ),
+    match live {
+        Some(thread) => Some(thread.id.some().unwrap_or(owner).to_owned()),
         None => coordinator_in(Some(board)),
     }
+}
+
+fn target_of(board: &BoardView, item: &ItemView) -> Option<String> {
+    target_for(board, item.thread.as_str())
 }
 
 fn touches(rec: &Record, item_id: &str) -> bool {
@@ -82,8 +82,20 @@ fn mine(rec: &Record, item_id: &str) -> bool {
     rec.item.is(item_id) && rec.is_live()
 }
 
+/// Does the item wait on a request to another board, or owe the answer to a request that is blocked?
+fn waits_across_boards(item: &ItemView) -> bool {
+    item.waits_on.as_ref().is_some_and(WaitsOn::is_waiting)
+        || item
+            .requested_by
+            .as_ref()
+            .is_some_and(RequestedBy::is_blocked)
+}
+
 /// Is the item waiting on someone else, so that a reminder to its thread would be wrong?
 fn waiting(board: &BoardView, item: &ItemView) -> bool {
+    if waits_across_boards(item) {
+        return true;
+    }
     let id = item.rec.id.as_str();
     let asks = board.entries.values().any(|e| {
         mine(&e.rec, id)
