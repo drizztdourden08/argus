@@ -14,6 +14,7 @@ use crate::activity::{ActivityFaults, ActivityLine, ActivitySink, Level};
 use crate::agent_wakes::AgentWakes;
 use crate::board::{BoardView, EntryView};
 use crate::config::WakeConfig;
+use crate::dep_wakes::DepWakes;
 use crate::docs::DocSink;
 use crate::engine::{
     AttachOptions, Attached, EngineConfig, ListenerId, ListenerInfo, ListenerSink, WakeEngine,
@@ -80,6 +81,7 @@ pub struct WakeService {
     agents: AgentWakes,
     items: ItemWakes,
     sync_wakes: SyncWakes,
+    dep_wakes: DepWakes,
     boards: Arc<dyn BoardSource>,
     live: Arc<dyn AgentLive>,
     syncs: Arc<dyn SyncSource>,
@@ -125,6 +127,7 @@ impl WakeService {
             agents: AgentWakes::new(config.agents.clone(), now),
             items: ItemWakes::new(config.items.clone()),
             sync_wakes: SyncWakes::new(config.syncs.clone(), now),
+            dep_wakes: DepWakes::new(config.deps.clone()),
             boards: deps.boards,
             live: deps.live,
             syncs: deps.syncs,

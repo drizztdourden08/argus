@@ -4,6 +4,7 @@ use indexmap::IndexMap;
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::dep_wakes::{DepView, RequestedBy, WaitsOn};
 use crate::lenient::{self, Flag, Num, Text};
 
 /// Statuses of a thread that has ended.
@@ -89,6 +90,12 @@ pub struct ItemView {
     pub thread: Text,
     /// `todo`, `doing`, `review`, `done`, `dropped`.
     pub status: Text,
+    /// The request to another board this item waits on.
+    #[serde(deserialize_with = "lenient::object")]
+    pub waits_on: Option<WaitsOn>,
+    /// The request of another board this item answers.
+    #[serde(deserialize_with = "lenient::object")]
+    pub requested_by: Option<RequestedBy>,
 }
 
 /// A test of a bundle.
@@ -299,6 +306,9 @@ pub struct BoardView {
     pub entries: IndexMap<String, EntryView>,
     /// The bundle handed to the owner.
     pub handed_build: Text,
+    /// The dependency ledger (only the portfolio board holds one).
+    #[serde(deserialize_with = "lenient::map")]
+    pub deps: IndexMap<String, DepView>,
 }
 
 impl BoardView {

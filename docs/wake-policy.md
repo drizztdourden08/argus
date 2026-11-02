@@ -32,7 +32,9 @@ A thread is woken for:
 - one of its agents finished or is gone (`agent-idle`, `agent-orphan`);
 - its own test or run result (`test-*`, `bundle-complete`, `run-failed`);
 - a real fault of its own work (`process-reaped`, a worktree removal it asked for that was
-  refused, which comes as a `thread-message`).
+  refused, which comes as a `thread-message`);
+- a dependency on another board that needs it to act: a request for it (`dep-request`), or the
+  request it made is done, dropped, gone or blocked (`dep-resolved`, `dep-blocked`).
 
 It is never woken for, and these stay notices:
 
@@ -43,7 +45,31 @@ It is never woken for, and these stay notices:
 - `remote-sync-due`;
 - `process-alert` (hogs and orphans, mostly not project work);
 - `lead-info`: a lead's note to another lead (`coord lead <key> "<text>"`, kind note). A lead's
-  decision (`--kind decision`) asks for action and stays `lead-message`.
+  decision (`--kind decision`) asks for action and stays `lead-message`;
+- `dep-cancelled`, `dep-reopened`: a request was withdrawn, or is open again.
+
+## Dependencies
+
+A request from one board to another (`coord dep`) is a record in the ledger on the portfolio
+board. Each transition adds a history row `D-n#seq`, and `crates/argus-wake/src/dep_wakes` turns
+each row into at most one wake. The subject is `D-n#seq`; the wakes table is asked for it, so a
+restart never sends a row twice. The target is the thread of the item on that side while the
+thread is live, else the lead of that project. A paused thread hears it once it resumes.
+
+| Reason | Class | Immediate | Who | When | Text |
+|---|---|---|---|---|---|
+| `dep-request` | wake | no | the assignee thread, else its lead | the request reaches `open` | `<p>/<I-7> asks you for <I-12> "<title>" (<D-n>)` |
+| `dep-resolved` | wake | yes | the requester thread, else its lead | the assignee item is `done`, `dropped` or `gone` | `<p>/<I-12> is <state> (<D-n>): resume <I-7>` |
+| `dep-blocked` | wake | yes | the requester thread, else its lead | the assignee blocks on the requester | `<p>/<I-12> is blocked on you (<D-n>): <reason>` |
+| `dep-cancelled` | passive | no | the assignee thread | the requester cancels | `<p>/<I-7> cancelled its request <I-12> (<D-n>)` |
+| `dep-reopened` | passive | no | the requester thread | `blocked` or `done` goes back to `open` | `<p>/<I-12> is open again (<D-n>)` |
+
+Here `<p>/<I-7>` is the requester item and `<p>/<I-12>` the assignee item, each with its own
+project. Immediate means the window closes at once, and in the debounce the wake goes at the end
+of the debounce.
+
+`kanban-stale` skips an item that waits on a request that is `opening` or `open`, and an item
+whose `requestedBy` request is `blocked`: the reminder would only nag a thread that cannot act.
 
 The table itself is in `docs/architecture.md` under the wake engine.
 

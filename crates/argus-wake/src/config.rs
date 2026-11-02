@@ -5,6 +5,7 @@ use std::time::Duration;
 use serde_json::Value;
 
 use crate::agent_wakes::AgentWakeConfig;
+use crate::dep_wakes::DepWakeConfig;
 use crate::item_wakes::ItemWakeConfig;
 use crate::registry::{
     DEFAULT_ALIVE_MS, DEFAULT_BOARD_GRACE_MS, DEFAULT_NO_LISTENER_MS, DEFAULT_REACTION_MS,
@@ -71,6 +72,8 @@ pub struct WakeConfig {
     pub items: ItemWakeConfig,
     /// The remote sync wake (`remoteSync.*`).
     pub syncs: SyncWakeConfig,
+    /// The dependency wakes (`deps.*`).
+    pub deps: DepWakeConfig,
     /// How often one thread may be woken (`wakePolicy.*`).
     pub policy: WakePolicy,
 }
@@ -102,6 +105,7 @@ impl WakeConfig {
             agents: AgentWakeConfig::from_json(config.get("agents").unwrap_or(&Value::Null)),
             items: ItemWakeConfig::from_json(config.get("items").unwrap_or(&Value::Null)),
             syncs: SyncWakeConfig::from_json(config.get("remoteSync").unwrap_or(&Value::Null)),
+            deps: DepWakeConfig::from_json(config.get("deps").unwrap_or(&Value::Null)),
             policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
         }
     }

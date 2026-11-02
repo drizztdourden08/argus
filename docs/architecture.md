@@ -606,6 +606,7 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `agent_wakes` | `agent-stale` and `agent-checkin` |
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
 | `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
+| `dep_wakes` | `dep-request`, `dep-resolved`, `dep-blocked`, `dep-cancelled` and `dep-reopened` from the history of the dependency ledger, once per `D-n#seq` (docs/wake-policy.md) |
 | `wake_policy` | The one table reason to wake or passive, `class_of`, the `wakePolicy` debounce and digest settings |
 | `notices` | The digest of the passive notices since a thread's last turn, and its one line |
 
@@ -628,6 +629,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
 | `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
+| `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
 | `lead-info` | passive | a lead's note, for information only |
 | `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
 | `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
@@ -636,6 +638,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `worktree-stale`, `worktree-review` | passive | worktree hygiene |
 | `launcher-stale`, `launcher-master-missing` | passive | launcher hygiene |
 | `remote-sync-due` | passive | the daily remote sync reminder |
+| `dep-cancelled`, `dep-reopened` | passive | a request withdrawn, or open again |
 
 A reason the table does not list wakes. On top of the table, `wakePolicy.debounceMs` (5 min)
 lets a thread be woken at most once per window; a wake inside it joins one digest sent

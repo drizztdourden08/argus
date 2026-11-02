@@ -8,6 +8,7 @@ pub mod activity;
 pub mod agent_wakes;
 pub mod board;
 pub mod config;
+pub mod dep_wakes;
 pub mod docs;
 pub mod engine;
 pub mod external;

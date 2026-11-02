@@ -1,5 +1,6 @@
 mod activity;
 mod agents;
+mod dep_wakes;
 mod driver;
 mod engine;
 mod items;
