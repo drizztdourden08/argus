@@ -9,7 +9,7 @@ use std::time::Duration;
 use serde_json::Value;
 
 use super::ctx::Hook;
-use crate::verbs::work::inbox::ack_post::{Read, dep_refs, tell};
+use crate::verbs::work::inbox::ack_post::{Read, dep_refs, tell_within};
 
 /// The longest a hook waits for the stamp.
 const STAMP_TIMEOUT: Duration = Duration::from_millis(800);
@@ -17,7 +17,7 @@ const STAMP_TIMEOUT: Duration = Duration::from_millis(800);
 /// The thread `thread` of `project` was shown `messages`: stamp its read.
 pub fn stamp(hook: &Hook<'_>, project: &str, thread: &str, messages: &[Value]) {
     let read = Read::new(thread, thread, dep_refs(messages));
-    tell(hook.env, &hook.paths, project, &read, Some(STAMP_TIMEOUT));
+    tell_within(&hook.paths, project, &read, STAMP_TIMEOUT);
 }
 
 /// The thread `thread` of `project` was woken: stamp its read, with the dependency requests

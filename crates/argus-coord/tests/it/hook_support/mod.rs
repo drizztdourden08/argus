@@ -15,7 +15,7 @@ pub mod listen;
 mod stand_in;
 
 #[allow(unused_imports)]
-pub use stand_in::{StandIn, fixture};
+pub use stand_in::{StandIn, digest_dashboard, fixture, reply};
 
 /// The session ids of the fixture.
 pub const LEAD: &str = "sid-lead-0001";
@@ -46,6 +46,16 @@ fn agent(id: &str, name: &str, status: &str, started: i64, rank: i64) -> Value {
         "status": status, "note": null, "result": null, "startedAt": ago(started),
         "finishedAt": null, "rev": 1,
     })
+}
+
+/// The JSON a prompt hook gets for session `sid` of the fixture's checkout.
+pub fn session_input(f: &Fixture, sid: &str) -> Value {
+    json!({ "session_id": sid, "cwd": f.cwd_text() })
+}
+
+/// A message of the coordinator in an inbox.
+pub fn message(text: &str) -> Value {
+    json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": text, "ref": null, "deliveredAt": null })
 }
 
 /// The `alpha` board: a coordinator and a `ui` thread bound to their sessions, and two agents

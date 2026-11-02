@@ -8,8 +8,7 @@ use argus_board::json::text;
 use argus_core::Paths;
 use serde_json::{Value, json};
 
-use crate::cli::Env;
-use crate::client::dashboard_client;
+use crate::client::{Client, dashboard_client, dashboard_config};
 use crate::verbs::work::run::Run;
 use crate::who::Caller;
 
@@ -50,24 +49,26 @@ pub(crate) fn dep_refs(messages: &[Value]) -> Vec<String> {
         .collect()
 }
 
-/// Tell the dashboard about the read, within `limit` when there is one. Only a nudge: every
-/// failure is ignored.
-pub(crate) fn tell(env: &Env, paths: &Paths, project: &str, read: &Read, limit: Option<Duration>) {
-    let Ok(client) = dashboard_client(env, paths, false) else {
+fn path_of(project: &str) -> String {
+    format!("/api/p/{project}/inbox/read")
+}
+
+/// Tell the dashboard about the read, within `limit`, without a health check first: the server
+/// is either up or the nudge is dropped. Only a nudge: every failure is ignored.
+pub(crate) fn tell_within(paths: &Paths, project: &str, read: &Read, limit: Duration) {
+    let Some(config) = dashboard_config(paths) else {
         return;
     };
-    let path = format!("/api/p/{project}/inbox/read");
-    let body = read.body();
-    match limit {
-        Some(limit) => client
-            .request_within(limit, "POST", &path, Some(&body))
-            .ok(),
-        None => client.post(&path, &body).ok(),
-    };
+    Client::new(&config)
+        .request_within(limit, "POST", &path_of(project), Some(&read.body()))
+        .ok();
 }
 
 /// Tell the dashboard about the read of `coord inbox`.
 pub(super) fn post(r: &Run<'_>, read: &Read) {
     let paths = r.inv.env.paths(&r.inv.cwd);
-    tell(&r.inv.env, &paths, &r.project, read, None);
+    let Ok(client) = dashboard_client(&r.inv.env, &paths, false) else {
+        return;
+    };
+    client.post(&path_of(&r.project), &read.body()).ok();
 }
