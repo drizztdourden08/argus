@@ -11,6 +11,7 @@ use crate::registry::{
     DEFAULT_ALIVE_MS, DEFAULT_BOARD_GRACE_MS, DEFAULT_NO_LISTENER_MS, DEFAULT_REACTION_MS,
     DEFAULT_TICK_MS, RegistryConfig,
 };
+use crate::reminders::ReminderConfig;
 use crate::sync_wakes::SyncWakeConfig;
 use crate::wake_policy::WakePolicy;
 
@@ -76,6 +77,8 @@ pub struct WakeConfig {
     pub deps: DepWakeConfig,
     /// How often one thread may be woken (`wakePolicy.*`).
     pub policy: WakePolicy,
+    /// The reminders of what stays open (`reminders.*`).
+    pub reminders: ReminderConfig,
 }
 
 impl Default for WakeConfig {
@@ -107,6 +110,7 @@ impl WakeConfig {
             syncs: SyncWakeConfig::from_json(config.get("remoteSync").unwrap_or(&Value::Null)),
             deps: DepWakeConfig::from_json(config.get("deps").unwrap_or(&Value::Null)),
             policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
+            reminders: ReminderConfig::from_json(config.get("reminders").unwrap_or(&Value::Null)),
         }
     }
 }

@@ -8,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 33] = [
+pub const WAKE_REASONS: [&str; 35] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -24,6 +24,8 @@ pub const WAKE_REASONS: [&str; 33] = [
     "lead-info",
     "thread-message",
     "wake-fault",
+    "fault-open",
+    "open-resend",
     "agent-stale",
     "agent-checkin",
     "run-failed",
@@ -46,7 +48,7 @@ pub const WAKE_REASONS: [&str; 33] = [
 
 /// What the owner is waiting on, a fault for the Overlord, and a finished or blocked dependency: these close
 /// the window at once.
-pub const IMMEDIATE_REASONS: [&str; 11] = [
+pub const IMMEDIATE_REASONS: [&str; 12] = [
     "owner-answer",
     "owner-note",
     "owner-decision",
@@ -55,6 +57,7 @@ pub const IMMEDIATE_REASONS: [&str; 11] = [
     "portfolio-decision",
     "portfolio-note",
     "wake-fault",
+    "fault-open",
     "run-failed",
     "dep-resolved",
     "dep-blocked",

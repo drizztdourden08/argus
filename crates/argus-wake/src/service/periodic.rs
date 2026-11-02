@@ -96,6 +96,7 @@ impl WakeService {
         if now >= self.schedule.registry {
             self.schedule.registry = now + self.schedule.registry_every;
             self.registry_tick();
+            self.reminder_tick();
         }
         if now >= self.schedule.agents {
             self.schedule.agents = now + self.schedule.agents_every;

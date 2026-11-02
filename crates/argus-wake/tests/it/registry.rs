@@ -2,8 +2,8 @@
 //! The registry on in-memory storage with a manual clock and fake boards: the row states (listening,
 //! waking, idle, fault), a reaction seen through `lastSeen` or an acked inbox, the three ways a wake fails
 //! (queued with nobody listening, delivered with no reaction, a write that throws), one fault per thread,
-//! the single notice for the Overlord (a passive `wake-fault`, never a wake), a fault that clears itself only
-//! when the thread listens again, the re-alert for a deaf thread, and the page mirror.
+//! the notice for the Overlord (a passive `wake-fault`) and its one real wake (`fault-open`), a fault that
+//! clears itself when the thread listens again or shows a sign of life, the re-alert for a deaf thread, and the page mirror.
 
 // test-tag: critical
 
@@ -258,12 +258,17 @@ fn a_wake_queued_with_nobody_listening_is_waking_then_a_fault_after_no_listener_
 }
 
 #[test]
-fn the_overlord_is_told_once_with_a_notice_and_never_woken_when_a_wake_failed() {
+fn the_overlord_is_told_once_with_a_notice_and_woken_once_when_a_wake_failed() {
     let mut rig = rig();
     let mut main = rig.listen("portfolio", "coordinator", AttachOptions::default());
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
-    assert_eq!(main.count(), 0, "a wake fault is passive: no model turn");
+    assert_eq!(
+        main.count(),
+        1,
+        "the notice is passive, fault-open is the one model turn"
+    );
+    assert_eq!(rig.wakes_of("fault-open").len(), 1);
     assert_eq!(rig.fault_wakes().len(), 1);
     let notice = rig.fault_wakes()[0].clone();
     assert_eq!(
@@ -412,7 +417,11 @@ fn a_deaf_thread_with_an_open_fault_that_is_sent_another_wake_tells_the_overlord
         last.text
             .contains("alpha/ui: a new wake is waiting and nobody listens")
     );
-    assert_eq!(main.count(), 0, "told by notices, never woken");
+    assert_eq!(
+        main.count(),
+        1,
+        "told by notices, woken once when the fault opened"
+    );
     send(&mut rig, "ui", "fourth");
     rig.pass(5 * SEC, STEP);
     assert_eq!(

@@ -11,6 +11,7 @@ use crate::activity::{ActivityLine, ActivitySink};
 use crate::board::BoardView;
 use crate::docs::{Doc, DocSink};
 use crate::faults::{ClearFault, Fault, FaultStore, NewFault};
+use crate::reminders::{NoticeSource, OpenNotice, OwnerNotice, OwnerSink};
 use crate::source::{BoardSource, SyncSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore, prune_cutoff};
 use crate::time::ms_or_zero;
@@ -306,6 +307,57 @@ impl MemoryActivity {
 impl ActivitySink for MemoryActivity {
     fn add(&self, line: ActivityLine) {
         locked(&self.inner).push(line);
+    }
+}
+
+/// What the owner was told, in memory.
+#[derive(Clone, Default)]
+pub struct MemoryOwner {
+    inner: Arc<Mutex<Vec<OwnerNotice>>>,
+}
+
+impl MemoryOwner {
+    /// Nobody told yet.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Every notice, oldest first.
+    #[must_use]
+    pub fn notices(&self) -> Vec<OwnerNotice> {
+        locked(&self.inner).clone()
+    }
+}
+
+impl OwnerSink for MemoryOwner {
+    fn notify(&self, notice: OwnerNotice) {
+        locked(&self.inner).push(notice);
+    }
+}
+
+/// A fixed list of open notices.
+#[derive(Clone, Default)]
+pub struct MemoryNotices {
+    inner: Arc<Mutex<Vec<OpenNotice>>>,
+}
+
+impl MemoryNotices {
+    /// Nothing open.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Replace what is open.
+    pub fn set(&self, notices: Vec<OpenNotice>) {
+        *locked(&self.inner) = notices;
+    }
+}
+
+impl NoticeSource for MemoryNotices {
+    fn open(&self, _now_ms: i64) -> Vec<OpenNotice> {
+        locked(&self.inner).clone()
     }
 }
 
