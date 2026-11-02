@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { BOARD_TAB_LOADERS } from './loaders.constants';
 
-const loadChangesTab = () => import('../../tabs/changes').then((loaded) => ({ default: loaded.ChangesTab }));
+const LazyChangesTab = lazy(BOARD_TAB_LOADERS.changes);
 
-const LazyChangesTab = lazy(loadChangesTab);
-
-export { LazyChangesTab, loadChangesTab };
+export { LazyChangesTab };

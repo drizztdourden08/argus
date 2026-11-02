@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { BOARD_TAB_LOADERS } from './loaders.constants';
 
-const loadAgentsTab = () => import('../../tabs/agents').then((loaded) => ({ default: loaded.AgentsTab }));
+const LazyAgentsTab = lazy(BOARD_TAB_LOADERS.agents);
 
-const LazyAgentsTab = lazy(loadAgentsTab);
-
-export { LazyAgentsTab, loadAgentsTab };
+export { LazyAgentsTab };

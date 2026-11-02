@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { OVERVIEW_TAB_LOADERS } from './loaders.constants';
 
-const loadNotificationsTab = () => import('../notifications/NotificationsTab').then((loaded) => ({ default: loaded.NotificationsTab }));
+const LazyNotificationsTab = lazy(OVERVIEW_TAB_LOADERS.notifications);
 
-const LazyNotificationsTab = lazy(loadNotificationsTab);
-
-export { LazyNotificationsTab, loadNotificationsTab };
+export { LazyNotificationsTab };

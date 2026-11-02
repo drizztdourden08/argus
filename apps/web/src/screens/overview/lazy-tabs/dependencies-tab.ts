@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { OVERVIEW_TAB_LOADERS } from './loaders.constants';
 
-const loadDependenciesTab = () => import('../deps/DepsTab').then((loaded) => ({ default: loaded.DepsTab }));
+const LazyDependenciesTab = lazy(OVERVIEW_TAB_LOADERS.dependencies);
 
-const LazyDependenciesTab = lazy(loadDependenciesTab);
-
-export { LazyDependenciesTab, loadDependenciesTab };
+export { LazyDependenciesTab };

@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { PAGE_LOADERS } from './loaders.constants';
 
-const loadOverviewPage = () => import('../../screens/overview/OverviewPage').then((loaded) => ({ default: loaded.OverviewPage }));
+const LazyOverviewPage = lazy(PAGE_LOADERS.overviewPage);
 
-const LazyOverviewPage = lazy(loadOverviewPage);
-
-export { LazyOverviewPage, loadOverviewPage };
+export { LazyOverviewPage };

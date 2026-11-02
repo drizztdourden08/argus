@@ -1,11 +1,10 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, expect, vi } from 'vitest';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { seedBoard } from '../helpers/seed-board';
+import { liveStream } from '../helpers/wait-for-stream';
 import { toast } from '@drizztdourden08/tessera';
-
-const FIRST_LAZY_LOAD_MS = 5000;
 
 type Docs = Record<string, object>;
 
@@ -56,8 +55,8 @@ const mountBoard = async (board: Board, at = '/p/rotp/#agents') => {
   const fetchMock = vi.fn((_url: string, init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(init?.method === 'POST' ? applied : report))));
   vi.stubGlobal('fetch', fetchMock);
   const view = renderAt(at);
-  await waitFor(() => expect(view.sources).toHaveLength(1), { timeout: FIRST_LAZY_LOAD_MS });
-  act(() => seedBoard(view.sources[0], { meta: { board: { project: 'rotp', name: 'Relic of the Past' } }, ...board }));
+  const stream = await liveStream(view.sources, 'rotp');
+  act(() => seedBoard(stream, { meta: { board: { project: 'rotp', name: 'Relic of the Past' } }, ...board }));
   return { ...view, fetchMock };
 };
 

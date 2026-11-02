@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
+import { BOARD_TAB_LOADERS } from './loaders.constants';
 
-const loadKanbanTab = () => import('../../tabs/kanban').then((loaded) => ({ default: loaded.KanbanTab }));
+const LazyKanbanTab = lazy(BOARD_TAB_LOADERS.kanban);
 
-const LazyKanbanTab = lazy(loadKanbanTab);
-
-export { LazyKanbanTab, loadKanbanTab };
+export { LazyKanbanTab };
