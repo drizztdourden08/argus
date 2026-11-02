@@ -6,7 +6,7 @@
 use std::fs;
 use std::sync::Arc;
 
-use crate::hook_support::listen::{Answer, always, listen, serve, wake};
+use crate::hook_support::listen::{Answer, always, listen, serve, streams, wake};
 use crate::hook_support::{LEAD, UI, fixture};
 use serde_json::{Value, json};
 
@@ -24,7 +24,7 @@ fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() 
     );
     assert_eq!(ran.out, "");
     assert_eq!(
-        server.paths(),
+        streams(&server),
         ["/api/p/alpha/wakes/stream?thread=ui&v=2&id=Alpha%20-%20UI"]
     );
 }
@@ -65,7 +65,7 @@ fn a_lead_listens_for_every_thread_of_its_project() {
     assert_eq!(ran.code, 2);
     assert_eq!(ran.err, "WAKE ui: ui needs something. Run: coord inbox\n");
     assert_eq!(
-        server.paths(),
+        streams(&server),
         ["/api/p/alpha/wakes/stream?thread=*&v=2&id=Alpha"]
     );
 }
@@ -93,7 +93,7 @@ fn a_stream_that_ended_is_joined_again_and_the_wake_still_arrives() {
     let ran = listen(&f, UI, "Stop", &[("COORD_LISTEN_MS", "20000")]);
     assert_eq!(ran.code, 2);
     assert_eq!(ran.err, "WAKE ui: second try. Run: coord inbox\n");
-    assert_eq!(server.paths().len(), 2);
+    assert_eq!(streams(&server).len(), 2);
 }
 
 #[test]

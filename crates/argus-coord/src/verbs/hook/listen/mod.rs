@@ -44,6 +44,8 @@ pub struct Target {
     pub project: String,
     /// The thread id, or `*` for a lead.
     pub thread: String,
+    /// The id of the thread of the session, also for a lead.
+    pub id: String,
     /// The session title, cut to 80 characters.
     pub label: String,
 }
@@ -70,6 +72,7 @@ fn target_of(board: &Value, project: &str, id: &str) -> Target {
     Target {
         project: project.to_owned(),
         thread: if lead { "*".to_owned() } else { id.to_owned() },
+        id: id.to_owned(),
         label: if label.is_empty() { id } else { label }.to_owned(),
     }
 }

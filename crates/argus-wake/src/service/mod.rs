@@ -129,7 +129,7 @@ impl WakeService {
             Some(sink) => Box::new(ActivityFaults::new(deps.faults, Arc::clone(sink))),
             None => deps.faults,
         };
-        let stalls = Stalls::new(config.stall.clone(), Arc::clone(&deps.docs));
+        let stalls = Stalls::new(config.stall.clone(), Arc::clone(&deps.docs), now);
         let registry_deps = RegistryDeps {
             boards: Arc::clone(&deps.boards),
             faults,

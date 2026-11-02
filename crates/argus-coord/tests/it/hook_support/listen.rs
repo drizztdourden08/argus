@@ -29,11 +29,38 @@ fn answer(mut stream: TcpStream, events: Option<String>) {
     thread::sleep(Duration::from_secs(20));
 }
 
+/// The path of the read stamp a hook posts.
+pub const READ_PATH: &str = "/api/p/alpha/inbox/read";
+
+fn acknowledge(mut stream: TcpStream) {
+    let body = r#"{"acked":[]}"#;
+    let head = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    stream.write_all(head.as_bytes()).ok();
+    stream.write_all(body.as_bytes()).ok();
+    stream.flush().ok();
+}
+
 pub fn serve(answer_with: Answer) -> StandIn {
-    StandIn::start(move |n, stream, _| {
+    StandIn::start(move |n, stream, path| {
+        if path == READ_PATH {
+            acknowledge(stream);
+            return;
+        }
         let events = answer_with(n);
         thread::spawn(move || answer(stream, events));
     })
+}
+
+/// The paths of the streams the listener opened, not the read stamps it posted.
+pub fn streams(server: &StandIn) -> Vec<String> {
+    server
+        .paths()
+        .into_iter()
+        .filter(|path| path != READ_PATH)
+        .collect()
 }
 
 pub fn wake(data: &Value) -> String {

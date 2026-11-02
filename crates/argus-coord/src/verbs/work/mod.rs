@@ -6,7 +6,7 @@ mod action;
 mod crud;
 mod entry;
 mod group;
-mod inbox;
+pub(crate) mod inbox;
 mod item;
 mod keys;
 mod listing;

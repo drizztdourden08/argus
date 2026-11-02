@@ -32,6 +32,7 @@ mod input;
 mod kind;
 mod listen;
 mod notices;
+mod read_stamp;
 mod subagent_start;
 mod subagent_stop;
 mod thread;

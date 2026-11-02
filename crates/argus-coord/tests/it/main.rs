@@ -39,6 +39,7 @@ mod hook_guard;
 mod hook_listen;
 mod hook_listen_process;
 mod hook_notices;
+mod hook_read_stamp;
 mod hook_session;
 mod hook_transcript;
 mod item_blocker;

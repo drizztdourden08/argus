@@ -5,6 +5,8 @@
 //! returns what to do: the wakes (a second wake to a thread that has not read, the stall line for the
 //! Overlord), the activity lines, the notices for the owner. The page documents are written here.
 //!
+//! The watch starts with the service (kept in memory): a wake made before it is never unread.
+//!
 //! Only the inbox reads and the acks are stored, in a kv the server plugs in; the open set is never stored.
 
 mod ackable;
@@ -63,14 +65,16 @@ pub struct Stalls {
     kv: Arc<dyn StallKv>,
     idle: IdleWatch,
     book: StallBook,
+    started: i64,
     told: HashSet<Told>,
     written: Option<Vec<Doc>>,
 }
 
 impl Stalls {
-    /// A watch that sees no running process and keeps its kv in memory until the server plugs its own in.
+    /// A watch started at `started` (epoch ms) that sees no running process and keeps its kv in memory until the
+    /// server plugs its own in.
     #[must_use]
-    pub fn new(config: StallConfig, docs: Arc<dyn DocSink>) -> Self {
+    pub fn new(config: StallConfig, docs: Arc<dyn DocSink>, started: i64) -> Self {
         Self {
             config,
             docs,
@@ -78,6 +82,7 @@ impl Stalls {
             kv: Arc::new(MemoryKv::new()),
             idle: IdleWatch::new(),
             book: StallBook::default(),
+            started,
             told: HashSet::new(),
             written: None,
         }
@@ -110,7 +115,7 @@ impl Stalls {
         if !self.config.enabled {
             return StallTick::default();
         }
-        let ladder = unread::scan(now, env, &self.config, self.kv.as_ref());
+        let ladder = unread::scan(now, self.started, env, &self.config, self.kv.as_ref());
         let mut out = StallTick {
             wakes: ladder.nudges,
             owner: self.owner_once(ladder.owner),
