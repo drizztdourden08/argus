@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
 
-const LazyWorktreesTab = lazy(() => import('../../tabs/worktrees').then((loaded) => ({ default: loaded.WorktreesTab })));
+const loadWorktreesTab = () => import('../../tabs/worktrees').then((loaded) => ({ default: loaded.WorktreesTab }));
 
-export { LazyWorktreesTab };
+const LazyWorktreesTab = lazy(loadWorktreesTab);
+
+export { LazyWorktreesTab, loadWorktreesTab };

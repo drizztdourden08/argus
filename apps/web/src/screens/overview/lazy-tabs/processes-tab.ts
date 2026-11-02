@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
 
-const LazyProcessesTab = lazy(() => import('../processes/ProcessesTab').then((loaded) => ({ default: loaded.ProcessesTab })));
+const loadProcessesTab = () => import('../processes/ProcessesTab').then((loaded) => ({ default: loaded.ProcessesTab }));
 
-export { LazyProcessesTab };
+const LazyProcessesTab = lazy(loadProcessesTab);
+
+export { LazyProcessesTab, loadProcessesTab };

@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
 
-const LazyActivityTab = lazy(() => import('../activity/ActivityTab').then((loaded) => ({ default: loaded.ActivityTab })));
+const loadActivityTab = () => import('../activity/ActivityTab').then((loaded) => ({ default: loaded.ActivityTab }));
 
-export { LazyActivityTab };
+const LazyActivityTab = lazy(loadActivityTab);
+
+export { LazyActivityTab, loadActivityTab };

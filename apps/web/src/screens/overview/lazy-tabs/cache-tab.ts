@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind component */
 import { lazy } from 'react';
 
-const LazyCacheTab = lazy(() => import('../cache/CacheTab').then((loaded) => ({ default: loaded.CacheTab })));
+const loadCacheTab = () => import('../cache/CacheTab').then((loaded) => ({ default: loaded.CacheTab }));
 
-export { LazyCacheTab };
+const LazyCacheTab = lazy(loadCacheTab);
+
+export { LazyCacheTab, loadCacheTab };
