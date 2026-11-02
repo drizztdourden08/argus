@@ -1,5 +1,6 @@
 mod common;
 
+mod deps;
 mod entry_images;
 mod export_import;
 mod lock;

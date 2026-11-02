@@ -2,11 +2,10 @@
 //! Cross-board dependencies: ask in four steps, close, reopen and cancel, the rules and their
 //! refusals, reconcile after any writer, the loop walk, the history, and the export.
 
-mod common;
-
 use std::fs;
 use std::path::Path;
 
+use crate::common::{alpha, post};
 use argus_board::Board;
 use argus_board::deps::{
     AskRequest, BoardRoster, CancelRequest, CloseRequest, DepError, DepState, Done, ListFilter,
@@ -19,7 +18,6 @@ use argus_board::sync::export_docs;
 use argus_core::Coll;
 use argus_core::clock::{iso_from_ms, now_iso, now_ms};
 use argus_core::fixture::{by_id, doc, thread};
-use common::{alpha, post};
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
