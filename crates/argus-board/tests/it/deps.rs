@@ -214,7 +214,7 @@ fn an_ask_that_breaks_a_rule_is_refused_with_the_contract_text() {
         "thread T-9 is not live on beta: live threads coordinator, dev"
     );
     edit(h, "beta", |b| {
-        b["threads"]["coordinator"]["status"] = json!("done")
+        b["threads"]["coordinator"]["status"] = json!("done");
     });
     assert_eq!(
         refused(h, &asking("alpha", "I-1", "beta")),
@@ -223,7 +223,7 @@ fn an_ask_that_breaks_a_rule_is_refused_with_the_contract_text() {
     assert!(
         read(h, "_portfolio")["deps"]
             .as_object()
-            .is_some_and(|d| d.is_empty())
+            .is_some_and(serde_json::Map::is_empty)
     );
     let err = ask_in(h, &named).expect_err("refused");
     assert_eq!(err.status(), 409);
@@ -425,7 +425,7 @@ fn reconcile_follows_the_assignee_item_whoever_wrote_it() {
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Dropped)]);
     let (home, moved) = after_beta_change(|h| {
         edit(h, "beta", |b| {
-            b["items"]["I-3"]["deletedAt"] = json!(now_iso())
+            b["items"]["I-3"]["deletedAt"] = json!(now_iso());
         });
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
@@ -435,7 +435,7 @@ fn reconcile_follows_the_assignee_item_whoever_wrote_it() {
     );
     let (_, moved) = after_beta_change(|h| {
         edit(h, "beta", |b| {
-            b["items"]["I-3"]["archivedAt"] = json!(now_iso())
+            b["items"]["I-3"]["archivedAt"] = json!(now_iso());
         });
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
@@ -456,13 +456,13 @@ fn a_gone_board_or_a_retired_project_ends_the_request() {
     assert_eq!(ledger(home.path(), "D-1")["reason"], "board gone");
     let (_, moved) = after_beta_change(|h| {
         edit(h, "_portfolio", |p| {
-            p["projects"]["beta"]["retired"] = json!(true)
+            p["projects"]["beta"]["retired"] = json!(true);
         });
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Gone)]);
     let (_, moved) = after_beta_change(|h| {
         edit(h, "_portfolio", |p| {
-            p["projects"]["alpha"]["retired"] = json!(true)
+            p["projects"]["alpha"]["retired"] = json!(true);
         });
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Cancelled)]);
@@ -482,7 +482,7 @@ fn a_requester_item_that_ends_cancels_the_request_and_tells_the_assignee() {
     );
     let (_, moved) = after_beta_change(|h| {
         edit(h, "alpha", |b| {
-            b["items"]["I-1"]["deletedAt"] = json!(now_iso())
+            b["items"]["I-1"]["deletedAt"] = json!(now_iso());
         });
     });
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Cancelled)]);
@@ -503,10 +503,9 @@ fn a_done_request_comes_back_when_the_item_is_reopened_and_the_link_is_still_ope
     let (closed, _) = after_beta_change(|h| set_status(h, "beta", "I-3", "done"));
     set_status(closed.path(), "alpha", "I-1", "done");
     set_status(closed.path(), "beta", "I-3", "doing");
-    assert!(
-        reconcile(closed.path(), "D-1")
-            .expect("reconciled")
-            .is_empty()
+    assert_eq!(
+        reconcile(closed.path(), "D-1").expect("reconciled").len(),
+        0
     );
     assert_eq!(ledger(closed.path(), "D-1")["state"], "done");
 }
@@ -522,7 +521,7 @@ fn a_reopen_that_would_close_a_loop_stays_done() {
     assert_eq!(moves(&moved), [(2, DepState::Open, DepState::Done)]);
     set_status(h, "beta", "I-4", "doing");
     ask_in(h, &onto(asking("beta", "I-4", "alpha"), "I-1")).expect("asked back");
-    assert!(reconcile(h, "D-1").expect("reconciled").is_empty());
+    assert_eq!(reconcile(h, "D-1").expect("reconciled").len(), 0);
     assert_eq!(ledger(h, "D-1")["state"], "done");
 }
 
@@ -545,7 +544,7 @@ fn an_opening_request_is_finished_when_its_item_exists_and_cancelled_after_a_min
     let home = world(&["alpha", "beta"]);
     let h = home.path();
     crashed_ask(h, &now_iso());
-    assert!(reconcile(h, "D-1").expect("reconciled").is_empty());
+    assert_eq!(reconcile(h, "D-1").expect("reconciled").len(), 0);
     edit(h, "beta", |b| {
         b["items"]["I-3"] = item("I-3", "todo");
         b["items"]["I-3"]["requestedBy"] = json!({"dep": "D-1"});
@@ -570,7 +569,7 @@ fn a_thread_moved_on_the_board_is_copied_into_the_ledger() {
     let (home, moved) = after_beta_change(|h| {
         edit(h, "beta", |b| b["items"]["I-3"]["thread"] = json!("dev"));
     });
-    assert!(moved.is_empty());
+    assert_eq!(moved.len(), 0);
     assert_eq!(ledger(home.path(), "D-1")["to"]["thread"], "dev");
 }
 
@@ -598,23 +597,24 @@ fn a_sweep_and_a_board_reconcile_follow_every_open_request() {
     asked(h, "alpha", "I-1", "beta");
     set_status(h, "beta", "I-3", "done");
     let swept = sweep(h).expect("swept");
-    assert!(swept.failed.is_empty());
+    assert_eq!(swept.failed.len(), 0);
     assert_eq!(
         moves(&swept.transitions),
         [(2, DepState::Open, DepState::Done)]
     );
-    assert!(sweep(h).expect("swept").transitions.is_empty());
+    assert_eq!(sweep(h).expect("swept").transitions.len(), 0);
     set_status(h, "beta", "I-3", "doing");
     let board = reconcile_board(h, "beta").expect("reconciled");
     assert_eq!(
         moves(&board.transitions),
         [(3, DepState::Done, DepState::Open)]
     );
-    assert!(
+    assert_eq!(
         reconcile_board(h, "gamma")
             .expect("reconciled")
             .transitions
-            .is_empty()
+            .len(),
+        0
     );
 }
 
