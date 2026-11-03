@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind component */
 import type { ItemDrawerProps } from '../drawer-props.type';
+import { ItemPane } from '../pane';
 import { RecordDrawer } from '../../../shared';
 import { DrawerNav } from './DrawerNav';
-import { ItemBody } from './ItemBody';
 import { ItemEyebrow } from './ItemEyebrow';
 import { ItemTitle } from './ItemTitle';
 
 const ItemDrawer = (props: ItemDrawerProps) => {
-  const { boardKey, item, tests, threads, actions, waiting, blocking, now, ops, nav, wide, onWide, onClose } = props;
+  const { boardKey, item, items, tests, threads, actions, waiting, blocking, now, ops, nav, wide, onWide, onClose } = props;
   return (
     <RecordDrawer
       open={item !== null}
@@ -18,7 +18,21 @@ const ItemDrawer = (props: ItemDrawerProps) => {
       tools={item && <DrawerNav item={item} ops={ops} nav={nav} wide={wide} onWide={onWide} />}
       onClose={onClose}
     >
-      {item && <ItemBody boardKey={boardKey} item={item} tests={tests} threads={threads} actions={actions} waiting={waiting} blocking={blocking} now={now} ops={ops} />}
+      {item && (
+        <ItemPane
+          boardKey={boardKey}
+          item={item}
+          items={items}
+          tests={tests}
+          threads={threads}
+          actions={actions}
+          waiting={waiting}
+          blocking={blocking}
+          now={now}
+          ops={ops}
+          onOpen={nav.onStep}
+        />
+      )}
     </RecordDrawer>
   );
 };

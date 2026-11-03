@@ -11,6 +11,7 @@ import type { EntryRow, TimelineRow, TodoRow as TodoEntry } from './record';
 interface ItemDrawerProps {
   boardKey: string;
   item: ItemRef | null;
+  items: readonly ItemRef[];
   tests: readonly WithId<Test>[];
   threads: Threads;
   actions: KanbanData['actions'];
@@ -22,18 +23,6 @@ interface ItemDrawerProps {
   wide: boolean;
   onWide: () => void;
   onClose: () => void;
-}
-
-interface ItemBodyProps {
-  boardKey: string;
-  item: ItemRef;
-  tests: readonly WithId<Test>[];
-  threads: Threads;
-  actions: KanbanData['actions'];
-  waiting: boolean;
-  blocking: AskLink | null;
-  now: number;
-  ops: ItemOps;
 }
 
 interface ItemEyebrowProps {
@@ -61,15 +50,6 @@ interface ItemTitleProps {
 interface BlockerLineProps {
   blocker: string;
   link: AskLink | null;
-}
-
-interface DrawerFactsProps {
-  item: ItemRef;
-  waiting: boolean;
-  blocking: AskLink | null;
-  threads: Threads;
-  now: number;
-  ops: ItemOps;
 }
 
 interface DescriptionSectionProps {
@@ -203,8 +183,8 @@ interface CancelDependencyProps {
 
 export type {
   CancelDependencyProps, DependencyFactsProps, DependencyHistoryProps, DependencyLinkProps, DependencySectionProps, DependencyViewProps,
-  ActivitySectionProps, AddLineProps, BlockerLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
-  DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
+  ActivitySectionProps, AddLineProps, BlockerLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps,
+  DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
   ItemTitleProps, StatusTagProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,
 };

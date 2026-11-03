@@ -18,6 +18,7 @@ const itemRecord = (input: RecordInput): ItemRecord => {
   return {
     questions: own.filter((entry) => entry.kind === 'question').map((entry) => entryRow(entry, entries, opened)),
     decisions: own.filter((entry) => entry.kind === 'decision').map((entry) => entryRow(entry, entries, opened)),
+    notes: own.filter((entry) => entry.kind === 'note').map((entry) => entryRow(entry, entries, opened)),
     todos,
     timeline: timelineOf({ itemId, entries: entries.filter((entry) => entry.item === itemId), opened, todos, log }),
   };
