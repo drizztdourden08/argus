@@ -14,11 +14,15 @@ Thread side (every thread; read everything, change only what is yours):
   coord agent note <A|name> "<text>" | set <A|name> [--task t] [--model m --why "..."] [--kind k] [--item I] [--branch b] [--worktree w] [--status waiting|working] [--checkin 15..30]
   coord agent done <A|name> ["<result>"] | fail <A|name> "<reason>" | stop <A|name> | archive|unarchive|rm|restore <A|name>...
   coord agent list [--all] [--thread T] [--status s] [--json] | show <A|name>      (a name is your newest running agent with it)
-  coord item add "<title>" [--desc "..."] [--ac "..."]... [--subject <s>] [--status <s>] [--before|--after <I>]
-  coord item set <I> [--title t] [--desc d] [--subject s] [--status s] [--if-rev n]    coord item status <I> <s>    coord item block <I> --on "<why>" | unblock <I>
+  coord item add "<title>" [--desc "..."] [--ac "..."]... [--status <s>] [--before|--after <I>]
+                 [--type <t>] [--parent <I>] [--assignee <thread|owner>] [--stage <s>] [--field k=v]... [--image <file> "<caption>"]... [--force "<reason>"]   (no --type is a task; coord types lists the types, their stages and fields; each field also has a flag, e.g. --severity S2)
+  coord item set <I> [--title t] [--desc d] [--status s] [--type t] [--parent <I>|none] [--assignee who|none] [--stage s] [--field k=v]... [--image <file> "<caption>"]... [--force "<reason>"] [--if-rev n]
+  coord item status <I> <lane|stage> [--force "<reason>"]    (a lane is todo|doing|review|done|dropped; --force "<reason>" passes a done rule that refuses and is kept as a decision)
+  coord item block <I> --on <I|T|H|Q|D-n> | --todo "<what>" --who <owner|thread|lead:key>    coord item unblock <I> [--from <id>]    (a blocker is an id of this board, never text; another board's work is coord dep ask)
   coord item move <I> [--status s] [--before <I>|--after <I>|--top|--bottom]    archive|unarchive|rm|restore <I> [--reason "..."]
   coord item ac <I> add "<t>" | set <n> "<t>" | done <n> [--undo] | rm <n>[-<m>] | move <n> <pos>
-  coord item show <I> | list [--mine] [--status s] [--subject s] [--archived] [--deleted] [--json]
+  coord item show <I> | list [--mine] [--status s] [--type t] [--assignee who|me] [--open] [--archived] [--deleted] [--json]
+  coord item tree [<I>] [--type t] [--open] [--assignee who|me]    coord item migrate-blockers [--dry-run]    coord types [<type>]
   coord test add <I> "<title>" [--mode auto|manual] [--build <tag>] [--file spec.json] [--ac N]...    coord test show <T> | list [--item I] [--mine] [--build <tag>]
   coord test step|setup|expect|proof <T> ... (add, set <n>, rm <n>)    coord test set <T> ... [--build <tag> | --clear-build]
   coord build list [--json]      (each bundle: build tag, its tests, pass, fail, to run, launch command; which one is handed)
