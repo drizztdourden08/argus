@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
 import { act } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { vi } from 'vitest';
 import { AgentsTab } from '../../src/screens/board/tabs/agents';
 import { mountStreamed } from '../helpers/mount-streamed';
@@ -89,7 +89,9 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
   const { view, source } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[at]}>
-        <AgentsTab boardKey="alpha" onPurge={onPurge} />
+        <Routes>
+          <Route path="/p/:key" element={<AgentsTab boardKey="alpha" onPurge={onPurge} />} />
+        </Routes>
         <Where />
       </MemoryRouter>
       <ToastStack />

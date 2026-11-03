@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind test */
 import { act, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, vi } from 'vitest';
 import type { WorktreesMeta } from '../../src/data/worktrees';
 import { WorktreesTab } from '../../src/screens/board/tabs/worktrees';
@@ -66,7 +67,11 @@ const rowsById = (docs: object[]): Record<string, object> => Object.fromEntries(
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
-  const { view, source } = await mountStreamed(<WorktreesTab boardKey={SCOPE} />);
+  const { view, source } = await mountStreamed(
+    <MemoryRouter>
+      <WorktreesTab boardKey={SCOPE} />
+    </MemoryRouter>,
+  );
   act(() => {
     source?.emit('snapshot', snapshot(SCOPE, 'worktrees', byId(board.docs ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'items', rowsById(board.items ?? [])));
