@@ -18,7 +18,7 @@ pub const MAX_CONNS: usize = 64;
 
 /// The open connections.
 #[derive(Default)]
-pub struct MuxRegistry {
+pub struct Registry {
     conns: Mutex<HashMap<String, Arc<Conn>>>,
 }
 
@@ -28,7 +28,7 @@ fn new_id() -> String {
     argus_core::config::hex(&bytes)
 }
 
-impl MuxRegistry {
+impl Registry {
     fn lock(&self) -> MutexGuard<'_, HashMap<String, Arc<Conn>>> {
         self.conns.lock().unwrap_or_else(PoisonError::into_inner)
     }

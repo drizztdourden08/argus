@@ -1,57 +1,17 @@
-//! The op list of `POST /api/mux/:conn`: each op is parsed from its JSON object, then applied to
-//! the connection's scope handles. A bad op answers its own error and the others still run.
+//! Applies the ops of `POST /api/mux/:conn` to the connection's scope handles. A bad op answers
+//! its own error and the others still run.
 
 use std::collections::HashMap;
 
-use argus_core::ids::is_scope;
 use argus_core::{ApiError, Coll, ErrorCode};
 use argus_store::Db;
 use serde_json::{Value, json};
 
+use super::parse::{Op, OpError, parse};
 use crate::sse::{Fanout, Handle, Kind, SseSender, Target};
 
 /// The scope handles of one connection, by scope.
 pub type Handles = HashMap<String, Handle>;
-
-/// What an op did wrong: a wire code and a message.
-pub struct OpError {
-    code: &'static str,
-    message: String,
-}
-
-impl From<ApiError> for OpError {
-    fn from(e: ApiError) -> Self {
-        OpError {
-            code: e.code.as_str(),
-            message: e.message,
-        }
-    }
-}
-
-impl OpError {
-    fn bad(message: impl Into<String>) -> Self {
-        ApiError::bad_request(message).into()
-    }
-
-    fn to_value(&self) -> Value {
-        json!({ "error": { "code": self.code, "message": self.message } })
-    }
-}
-
-/// One checked op.
-enum Op {
-    Sub {
-        scope: String,
-        colls: Vec<Coll>,
-        since: Option<i64>,
-    },
-    Unsub {
-        scope: String,
-        colls: Option<Vec<Coll>>,
-    },
-    /// A known op whose piece is not built yet.
-    Later(&'static str),
-}
 
 /// What an op needs from the server and the connection.
 pub struct Env<'a> {
@@ -61,65 +21,6 @@ pub struct Env<'a> {
     pub fanout: &'a Fanout,
     /// The stream of the connection.
     pub sender: &'a SseSender,
-}
-
-fn scope_of(raw: &Value) -> Result<String, OpError> {
-    match raw["scope"].as_str().filter(|s| is_scope(s)) {
-        Some(s) => Ok(s.to_owned()),
-        None => Err(OpError::bad("scope must be a project key or _portfolio")),
-    }
-}
-
-fn colls_of(list: &[Value]) -> Result<Vec<Coll>, OpError> {
-    let mut out: Vec<Coll> = Vec::new();
-    for item in list {
-        let name = item.as_str().unwrap_or_default();
-        let c: Coll = name
-            .parse()
-            .map_err(|_| OpError::bad(format!("unknown collection \"{name}\"")))?;
-        if !out.contains(&c) {
-            out.push(c);
-        }
-    }
-    Ok(out)
-}
-
-fn parse_sub(raw: &Value) -> Result<Op, OpError> {
-    let list = raw["colls"].as_array().filter(|l| !l.is_empty());
-    let Some(list) = list else {
-        return Err(OpError::bad("colls must name at least one collection"));
-    };
-    Ok(Op::Sub {
-        scope: scope_of(raw)?,
-        colls: colls_of(list)?,
-        since: raw["since"].as_i64().filter(|n| *n >= 0),
-    })
-}
-
-fn parse_unsub(raw: &Value) -> Result<Op, OpError> {
-    let colls = match raw.get("colls") {
-        None | Some(Value::Null) => None,
-        Some(Value::Array(list)) => Some(colls_of(list)?),
-        Some(_) => return Err(OpError::bad("colls must be a list of collections")),
-    };
-    Ok(Op::Unsub {
-        scope: scope_of(raw)?,
-        colls,
-    })
-}
-
-fn parse(raw: &Value) -> Result<Op, OpError> {
-    match raw["op"].as_str() {
-        Some("sub") => parse_sub(raw),
-        Some("unsub") => parse_unsub(raw),
-        Some("presence") => Ok(Op::Later("presence")),
-        Some("unpresence") => Ok(Op::Later("unpresence")),
-        Some("tail") => Ok(Op::Later("tail")),
-        Some("untail") => Ok(Op::Later("untail")),
-        _ => Err(OpError::bad(
-            "each op is {op: sub|unsub|presence|unpresence|tail|untail, ...}",
-        )),
-    }
 }
 
 fn open_new(

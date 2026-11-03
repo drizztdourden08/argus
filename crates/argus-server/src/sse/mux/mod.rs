@@ -10,10 +10,11 @@
 
 mod conn;
 mod ops;
+mod parse;
 mod registry;
 
 pub use conn::Conn;
-pub use registry::{MAX_CONNS, MuxRegistry};
+pub use registry::{MAX_CONNS, Registry as MuxRegistry};
 
 /// The wire version sent in `hello`.
 pub const VERSION: u32 = 1;

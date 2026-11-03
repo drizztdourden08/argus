@@ -43,6 +43,7 @@ mod localhost_door;
 mod localhost_door_rules;
 mod mcp;
 mod mux_lifecycle;
+mod mux_limits;
 mod mux_stream;
 mod notify;
 mod owner_text;

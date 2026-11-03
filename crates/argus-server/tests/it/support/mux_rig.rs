@@ -4,6 +4,8 @@ use argus_core::{Coll, DocChange};
 use argus_testkit::{Event, SseReader, TestOptions, TestServer};
 use serde_json::{Value, json};
 
+use crate::wait::until;
+
 pub const WAIT: u64 = 2000;
 
 /// A server whose `alpha` scope holds two items and a meta doc, and `beta` one item and a meta
@@ -95,4 +97,18 @@ impl Mux {
             }
         }
     }
+}
+
+pub async fn health_streams(t: &TestServer) -> i64 {
+    t.get("/api/health").await.json()["sse"]["clients"]
+        .as_i64()
+        .expect("a client count")
+}
+
+pub async fn all_forgotten(t: &TestServer) {
+    until("every mux stream to be forgotten", || async {
+        let gone = t.svc.mux.is_empty() && health_streams(t).await == 0;
+        gone.then_some(())
+    })
+    .await;
 }

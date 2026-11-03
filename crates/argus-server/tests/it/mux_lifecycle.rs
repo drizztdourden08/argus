@@ -1,32 +1,14 @@
 //! The mux connection lifecycle: the POST answers (unknown conn, bad bodies, per-op errors), a
-//! closed stream forgotten by health, the registry and the fan-out, shutdown, the 1 MB live
-//! drop and the 64-connection cap.
+//! closed stream forgotten by health, the registry and the fan-out, and shutdown. The 1 MB live
+//! drop and the 64-connection cap are in `mux_limits.rs`.
 // test-tag: critical
 
-use std::time::Duration;
-
-use argus_core::{Coll, DocChange};
-use argus_server::sse::{MAX_CLIENTS_PER_SCOPE, MAX_CONNS};
-use argus_testkit::{Reply, Request, SseReader, TestServer};
-use http_body_util::BodyExt;
+use argus_server::sse::MAX_CLIENTS_PER_SCOPE;
+use argus_testkit::{Reply, Request, TestServer};
 use serde_json::{Value, json};
 
-use crate::mux_rig::{Mux, WAIT, apply, server, sub};
+use crate::mux_rig::{Mux, all_forgotten, health_streams, server, sub};
 use crate::wait::until;
-
-async fn health_streams(t: &TestServer) -> i64 {
-    t.get("/api/health").await.json()["sse"]["clients"]
-        .as_i64()
-        .expect("a client count")
-}
-
-async fn all_forgotten(t: &TestServer) {
-    until("every mux stream to be forgotten", || async {
-        let gone = t.svc.mux.is_empty() && health_streams(t).await == 0;
-        gone.then_some(())
-    })
-    .await;
-}
 
 fn codes(results: &[Value]) -> Vec<String> {
     let code = |r: &Value| r["error"]["code"].as_str().unwrap_or("ok").to_owned();
@@ -153,71 +135,4 @@ async fn stopping_the_server_ends_every_mux_stream() {
     for m in [&busy, &idle] {
         until("the stream to end", || async { m.s.ended().then_some(()) }).await;
     }
-}
-
-fn padded(id: &str) -> DocChange {
-    let pad = "x".repeat(64 * 1024);
-    DocChange::set(Coll::Items, id, json!({ "id": id, "pad": pad }))
-}
-
-fn conn_of(hello: &[u8]) -> String {
-    let text = String::from_utf8_lossy(hello);
-    let data = text
-        .lines()
-        .find_map(|l| l.strip_prefix("data: "))
-        .expect("data");
-    let v: Value = serde_json::from_str(data).expect("hello json");
-    v["conn"].as_str().expect("a conn").to_owned()
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn a_conn_a_megabyte_behind_on_live_frames_is_dropped_and_forgotten() {
-    let t = server().await;
-    let svc = &t.svc;
-    let res = svc
-        .mux
-        .open(&svc.fanout, Duration::from_secs(3600), &svc.streams)
-        .expect("opens");
-    let mut body = res.into_body();
-    let first = body.frame().await.expect("a frame").expect("body");
-    let conn = svc
-        .mux
-        .get(&conn_of(first.data_ref().expect("data")))
-        .expect("conn");
-    let done = conn
-        .apply(&svc.db, &svc.fanout, &[sub("alpha", &["items"])])
-        .expect("applies");
-    assert_eq!(done, [json!({ "ok": true })]);
-    for i in 0..32 {
-        apply(&t, "alpha", &[padded(&format!("P-{i}"))]);
-    }
-    let end = tokio::time::timeout(Duration::from_millis(WAIT), body.collect());
-    let rest = end.await.expect("the body ends").expect("body").to_bytes();
-    let text = String::from_utf8_lossy(&rest);
-    let live = text.matches("event: changes").count();
-    assert!((10..=17).contains(&live), "{live} live frames fit");
-    all_forgotten(&t).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn the_server_holds_at_most_64_conns() {
-    let t = server().await;
-    assert_eq!(MAX_CONNS, 64);
-    let mut open = Vec::new();
-    for i in 0..MAX_CONNS {
-        let s = t.sse("/api/mux").await;
-        assert_eq!(s.status, 200, "conn {i}");
-        open.push(s);
-    }
-    let over = t.sse("/api/mux").await;
-    assert_eq!(over.status, 503);
-    assert_eq!(over.body["error"]["code"], "unavailable");
-    open.pop().map(SseReader::close);
-    let freed = until("a slot to free", || async {
-        let s = t.sse("/api/mux").await;
-        (s.status == 200).then_some(s)
-    })
-    .await;
-    freed.close();
-    open.into_iter().for_each(SseReader::close);
 }
