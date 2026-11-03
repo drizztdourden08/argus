@@ -13,6 +13,7 @@ pub mod error;
 #[cfg(any(test, feature = "testkit"))]
 pub mod fixture;
 pub mod fs;
+mod home_mark;
 pub mod ids;
 pub mod js;
 pub mod json_text;

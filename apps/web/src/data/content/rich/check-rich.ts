@@ -8,8 +8,7 @@ import { refuseImages } from './refuse-images';
 import { refuseLone } from './refuse-lone';
 import { refuseLong } from './refuse-long';
 import { refusePlain } from './refuse-plain';
-
-const LINE_BREAK = /\r?\n/;
+import { LINE_BREAK } from './rich.constants';
 
 const checkRich = (field: string, spec: ItemField, text: string, cx: ContentContext): Verdict => {
   const raw = text

@@ -473,18 +473,6 @@ async fn shadow_mode_reads_and_refuses_every_write() {
     r.define(&[("job", json!({}))]);
     assert_eq!(r.t.get("/api/p/alpha/launches").await.status, 200);
     assert_eq!(r.t.get("/api/p/alpha/runs").await.json()["runs"], json!([]));
-    for (path, body) in [
-        ("/api/p/alpha/runs", json!({ "name": "job" })),
-        ("/api/p/alpha/runs/R-1/stop", json!({})),
-        ("/api/p/alpha/runs/R-1/stdin", json!({ "text": "x" })),
-    ] {
-        let refused = r.cli("POST", path, &body).await;
-        assert_eq!(
-            (refused.status, refused.code().as_str()),
-            (403, "read_only"),
-            "{path}"
-        );
-    }
-    assert!(r.host.requests().is_empty(), "no run starts");
+    r.refuses_every_run(false).await;
     r.t.stop(false).await;
 }

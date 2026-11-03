@@ -47,4 +47,4 @@ type Verdict = Accepted | Rejected;
 
 type RichLine = { kind: 'bullet'; text: string } | { kind: 'image'; n: number | null } | { kind: 'plain'; text: string };
 
-export type { Accepted, ContentContext, Rejected, RefusalKey, RichLine, Verdict };
+export type { ContentContext, Rejected, RefusalKey, RichLine, Verdict };

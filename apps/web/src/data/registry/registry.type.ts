@@ -139,25 +139,4 @@ interface ItemRegistry {
   limits: Record<string, number>;
 }
 
-export type {
-  CardProgress,
-  ContentKind,
-  ContentSettings,
-  DoneRule,
-  FieldGroup,
-  ForbiddenSyntax,
-  ItemField,
-  ItemRegistry,
-  ItemStage,
-  ItemType,
-  ItemTypeCard,
-  LineSettings,
-  OwnerLook,
-  PatternSettings,
-  PeopleLooks,
-  PersonLook,
-  RichSettings,
-  RuleMode,
-  StageGate,
-  SubItemType,
-};
+export type { ContentKind, ItemField, ItemRegistry, ItemStage, ItemType };

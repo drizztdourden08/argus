@@ -7,14 +7,18 @@ use super::announce::{announce, refresh_needs_human};
 use super::authorize::{Check, authorize, owner_of};
 use super::fields::{EditCtx, check, editable};
 use super::move_::hand_over;
-use super::result::{OpResult, version_check};
-use super::target::target_of;
-use super::typed::{self, Outcome};
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
-use crate::json::{display, doc, doc_mut, obj, same, set};
-use crate::store::stamp;
+use super::{
+    result::{OpResult, version_check},
+    target::target_of,
+    typed::{self, Outcome},
+    who::Who,
+};
+use crate::{
+    Board,
+    error::{BoardError, refuse},
+    json::{display, doc, doc_mut, obj, same, set},
+    store::stamp,
+};
 
 /// The fields an edit asks for, refused when there are none.
 fn requested(op: &Value) -> Result<&Map<String, Value>, BoardError> {

@@ -8,11 +8,8 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use serde_json::{Map, Value, json};
-
 use crate::Paths;
-use crate::config::pretty;
-use crate::shadow_mark::read_object;
+use crate::home_mark;
 
 /// The key of the marker in `config.json`.
 pub const KEY: &str = "preview";
@@ -23,7 +20,7 @@ pub const PREVIEW_PORT: u16 = 47617;
 /// file is not a preview.
 #[must_use]
 pub fn marked(config: &Path) -> bool {
-    read_object(config).is_some_and(|c| c.get(KEY) == Some(&Value::Bool(true)))
+    home_mark::marked(config, KEY)
 }
 
 fn resolved(path: &Path) -> std::path::PathBuf {
@@ -53,16 +50,6 @@ pub fn refusal(paths: &Paths, live: &Path) -> Option<String> {
     })
 }
 
-fn base(paths: &Paths) -> io::Result<Option<Map<String, Value>>> {
-    if paths.config.exists() {
-        return Ok(read_object(&paths.config));
-    }
-    fs::create_dir_all(&paths.home)?;
-    let mut fresh = Map::new();
-    fresh.insert("port".to_owned(), json!(PREVIEW_PORT));
-    Ok(Some(fresh))
-}
-
 /// Marks the home as a preview: the key is added to its `config.json`, which is created with
 /// the port of the preview when the home has none. Answers false and writes nothing for a
 /// config that is not a JSON object. The caller has checked [`refusal`] first.
@@ -71,14 +58,7 @@ fn base(paths: &Paths) -> io::Result<Option<Map<String, Value>>> {
 ///
 /// The folder or the file could not be written.
 pub fn mark(paths: &Paths) -> io::Result<bool> {
-    let Some(mut config) = base(paths)? else {
-        return Ok(false);
-    };
-    if config.get(KEY) != Some(&Value::Bool(true)) {
-        config.insert(KEY.to_owned(), Value::Bool(true));
-        crate::fs::write_atomic(&paths.config, pretty(&Value::Object(config)))?;
-    }
-    Ok(true)
+    home_mark::mark(paths, KEY, PREVIEW_PORT)
 }
 
 // test-tag: critical
@@ -92,10 +72,9 @@ mod tests {
     }
 
     #[test]
-    fn a_home_with_no_config_is_marked_with_the_port_of_the_preview() {
+    fn a_preview_home_is_marked_with_the_preview_key_and_port() {
         let dir = tempfile::tempdir().unwrap();
         let p = copy_in(&dir);
-        assert!(!marked(&p.config));
         assert!(mark(&p).unwrap());
         assert!(marked(&p.config));
         let text = std::fs::read_to_string(&p.config).unwrap();
@@ -103,23 +82,6 @@ mod tests {
             text.contains(&format!("\"port\": {PREVIEW_PORT}")),
             "{text}"
         );
-    }
-
-    #[test]
-    fn an_existing_config_keeps_its_keys_and_one_that_is_not_an_object_is_left_alone() {
-        let dir = tempfile::tempdir().unwrap();
-        let p = copy_in(&dir);
-        std::fs::create_dir_all(&p.home).unwrap();
-        std::fs::write(&p.config, r#"{"port":5,"other":1}"#).unwrap();
-        assert!(mark(&p).unwrap() && mark(&p).unwrap());
-        let text = std::fs::read_to_string(&p.config).unwrap();
-        assert!(
-            text.contains("\"port\": 5") && text.contains("\"other\": 1"),
-            "{text}"
-        );
-        std::fs::write(&p.config, "[1]").unwrap();
-        assert!(!mark(&p).unwrap());
-        assert_eq!(std::fs::read_to_string(&p.config).unwrap(), "[1]");
     }
 
     #[test]

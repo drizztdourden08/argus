@@ -71,19 +71,7 @@ async fn a_preview_refuses_play_and_every_run() {
     })
     .await;
     r.define(&[("job", json!({}))]);
-    for (path, body) in [
-        ("/api/p/alpha/runs", json!({ "name": "job" })),
-        ("/api/p/alpha/runs/R-1/stop", json!({})),
-        ("/api/p/alpha/runs/R-1/stdin", json!({ "text": "x" })),
-    ] {
-        let refused = r.page("POST", path, &body).await;
-        assert_eq!(
-            (refused.status, refused.code().as_str()),
-            (403, "read_only"),
-            "{path}"
-        );
-    }
-    assert!(r.host.requests().is_empty(), "no run starts");
+    r.refuses_every_run(true).await;
     r.t.stop(false).await;
 }
 

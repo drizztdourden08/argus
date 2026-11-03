@@ -1,11 +1,9 @@
 /* @layer renderer-app @kind logic */
 import { knowsLead } from '../registry';
 import type { ItemField } from '../registry';
-import { PERSON_PATTERN } from './content.constants';
+import { LEAD_PREFIX, PERSON_PATTERN } from './content.constants';
 import type { ContentContext, Verdict } from './content.type';
 import { reject } from './reject';
-
-const LEAD_PREFIX = 'lead:';
 
 const checkLead = (field: string, spec: ItemField, text: string): Verdict => {
   if (spec.leads && knowsLead(text.slice(LEAD_PREFIX.length))) return { ok: true, value: text };

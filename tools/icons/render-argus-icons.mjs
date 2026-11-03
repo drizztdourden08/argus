@@ -22,11 +22,6 @@ const ICO_LARGEST = 256;
 
 const margin = (size) => Math.round(size / 32);
 
-/**
- * The view box that puts the painted mark (outline plus whole-pixel stroke) inside the square
- * with the same margin on every side, its top edge on a pixel boundary, so a horizontal edge
- * of the mark falls between two rows of pixels instead of across one.
- */
 const frame = (size) => {
   const stroke = STROKE_PX[size] ?? 0;
   const scale = (size - 2 * margin(size) - stroke) / MARK.width;

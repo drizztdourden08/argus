@@ -72,6 +72,25 @@ fn bug_set(title: &str) -> Value {
     json!({"title": title, "thread": "ui", "type": "bug", "fields": {"severity": "S2"}})
 }
 
+/// A board with a bug made by the coordinator and moved by the owner into `stage`.
+fn bug_at(stage: &str) -> (Value, String) {
+    let mut b = alpha();
+    let id = made(&mut b, &lead(), bug_set("Crash"));
+    applied(&edit(&mut b, &Who::human(), &id, json!({"stage": stage})));
+    (b, id)
+}
+
+/// An epic with one story under it; returns the epic id and the story id.
+fn epic_with_story(b: &mut Value) -> (String, String) {
+    let epic = made(b, &lead(), typed("epic", "Release"));
+    let story = made(
+        b,
+        &lead(),
+        json!({"title": "Story", "thread": "ui", "type": "story", "parent": epic}),
+    );
+    (epic, story)
+}
+
 fn forced_decisions(board: &Value) -> usize {
     board["entries"].as_object().map_or(0, |all| {
         all.values()
@@ -156,14 +175,7 @@ fn a_bug_needs_its_severity_and_follows_its_flow() {
 
 #[test]
 fn the_owner_moves_a_bug_freely_but_never_past_the_done_rule() {
-    let mut b = alpha();
-    let id = made(&mut b, &lead(), bug_set("Crash"));
-    applied(&edit(
-        &mut b,
-        &Who::human(),
-        &id,
-        json!({"stage": "fixing"}),
-    ));
+    let (mut b, id) = bug_at("fixing");
     assert_eq!(b["items"][id.as_str()]["status"], "doing");
     let closed = edit(&mut b, &Who::human(), &id, json!({"stage": "closed"}));
     assert!(refused(&closed).contains("no test case is linked"));
@@ -179,14 +191,7 @@ fn the_owner_moves_a_bug_freely_but_never_past_the_done_rule() {
 
 #[test]
 fn force_with_a_reason_overrides_a_refusing_rule_and_records_a_decision() {
-    let mut b = alpha();
-    let id = made(&mut b, &lead(), bug_set("Crash"));
-    applied(&edit(
-        &mut b,
-        &Who::human(),
-        &id,
-        json!({"stage": "verifying"}),
-    ));
+    let (mut b, id) = bug_at("verifying");
     let flag = apply_op(
         &mut b,
         &json!({"kind": "edit", "target": {"c": "items", "id": id}, "set": {"stage": "closed"}, "force": true}),
@@ -397,12 +402,7 @@ fn fields_are_checked_by_the_registry_and_belong_to_the_type() {
 #[test]
 fn a_parent_must_be_allowed_acyclic_and_on_the_board() {
     let mut b = alpha();
-    let epic = made(&mut b, &lead(), typed("epic", "Release"));
-    let story = made(
-        &mut b,
-        &lead(),
-        json!({"title": "Story", "thread": "ui", "type": "story", "parent": epic}),
-    );
+    let (epic, story) = epic_with_story(&mut b);
     let task = made(
         &mut b,
         &lead(),
@@ -446,12 +446,7 @@ fn a_cycle_in_the_parents_is_refused_even_where_the_types_would_allow_it() {
 #[test]
 fn a_retype_keeps_the_lane_and_needs_a_parent_and_children_that_still_fit() {
     let mut b = alpha();
-    let epic = made(&mut b, &lead(), typed("epic", "Release"));
-    let story = made(
-        &mut b,
-        &lead(),
-        json!({"title": "Story", "thread": "ui", "type": "story", "parent": epic}),
-    );
+    let (_, story) = epic_with_story(&mut b);
     let leaf = made(
         &mut b,
         &lead(),

@@ -1,12 +1,10 @@
 /* @layer renderer-app @kind logic */
 import { ITEM_REGISTRY } from '../registry';
 import type { ItemField } from '../registry';
-import { LINE_BLOCK } from './content.constants';
+import { LINE_BLOCK, NEWLINE } from './content.constants';
 import type { Verdict } from './content.type';
 import { reject } from './reject';
 import { within } from './within';
-
-const NEWLINE = /[\n\r]/;
 
 const checkLine = (field: string, spec: ItemField, raw: string): Verdict => {
   const kind = ITEM_REGISTRY.content.line;

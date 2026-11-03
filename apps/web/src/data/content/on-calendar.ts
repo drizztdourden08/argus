@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+import { MONTH_DAYS } from './content.constants';
 
 const isLeap = (year: number): boolean => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 

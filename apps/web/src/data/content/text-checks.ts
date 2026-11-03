@@ -1,15 +1,13 @@
 /* @layer renderer-app @kind logic */
-import type { ContentKind, ItemField } from '../registry';
+import type { ContentKind } from '../registry';
 import { checkChoice } from './check-choice';
 import { checkDate } from './check-date';
 import { checkLine } from './check-line';
 import { checkPerson } from './check-person';
 import { checkRef } from './check-ref';
 import { checkSlug } from './check-slug';
-import type { ContentContext, Verdict } from './content.type';
 import { checkRich } from './rich';
-
-type TextCheck = (field: string, spec: ItemField, text: string, cx: ContentContext) => Verdict;
+import type { TextCheck } from './text-checks.type';
 
 const textChecks: Record<Exclude<ContentKind, 'records'>, TextCheck> = {
   line: checkLine,

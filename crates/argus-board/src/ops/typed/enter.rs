@@ -84,7 +84,10 @@ fn needs_of<'a>(e: &Entry<'a>) -> Vec<(&'a str, Mode)> {
     all
 }
 
-fn findings(e: &Entry) -> Vec<(Mode, String)> {
+/// One thing a stage needs, with the mode that says whether it refuses or warns.
+type Finding = (Mode, String);
+
+fn findings(e: &Entry) -> Vec<Finding> {
     let subject = Subject {
         board: e.board,
         item: e.item,
@@ -100,8 +103,8 @@ fn findings(e: &Entry) -> Vec<(Mode, String)> {
         .collect()
 }
 
-fn settle(e: &Entry, found: Vec<(Mode, String)>) -> Result<Entered, BoardError> {
-    let (hard, soft): (Vec<(Mode, String)>, Vec<(Mode, String)>) = found
+fn settle(e: &Entry, found: Vec<Finding>) -> Result<Entered, BoardError> {
+    let (hard, soft): (Vec<Finding>, Vec<Finding>) = found
         .into_iter()
         .partition(|(mode, _)| *mode == Mode::Refuse);
     let warnings: Vec<String> = soft.into_iter().map(|(_, text)| text).collect();

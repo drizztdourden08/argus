@@ -2,8 +2,7 @@
 import type { ItemField } from '../../registry';
 import type { ContentContext, Rejected, RichLine } from '../content.type';
 import { reject } from '../reject';
-
-const UNKNOWN_IMAGE = ' names an image this record does not have. Add the image first, then use the number it gets.';
+import { UNKNOWN_IMAGE } from './rich.constants';
 
 const refuseImages = (field: string, spec: ItemField, lines: readonly RichLine[], cx: ContentContext): Rejected | null => {
   const images = lines.flatMap((line) => (line.kind === 'image' ? [line.n] : []));

@@ -43,7 +43,7 @@ fn one(image: &Value, seen: &mut Vec<u64>) -> Result<Value, BoardError> {
         return Err(refuse(format!("image {n} is listed twice.")));
     }
     seen.push(n);
-    if !image["file"].as_str().is_some_and(|f| !f.trim().is_empty()) {
+    if image["file"].as_str().is_none_or(|f| f.trim().is_empty()) {
         return Err(refuse(format!("image {n} needs its file.")));
     }
     if !is_digest(&image["sha256"]) {

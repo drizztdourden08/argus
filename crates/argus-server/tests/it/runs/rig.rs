@@ -83,6 +83,28 @@ impl Rig {
         self.t.send(self.t.page(request)).await
     }
 
+    /// Asserts that a start, a stop and a stdin write are each refused with 403 `read_only`, as the
+    /// owner's page or as the CLI, and that no run started.
+    pub async fn refuses_every_run(&self, as_page: bool) {
+        for (path, body) in [
+            ("/api/p/alpha/runs", json!({ "name": "job" })),
+            ("/api/p/alpha/runs/R-1/stop", json!({})),
+            ("/api/p/alpha/runs/R-1/stdin", json!({ "text": "x" })),
+        ] {
+            let refused = if as_page {
+                self.page("POST", path, &body).await
+            } else {
+                self.cli("POST", path, &body).await
+            };
+            assert_eq!(
+                (refused.status, refused.code().as_str()),
+                (403, "read_only"),
+                "{path}"
+            );
+        }
+        assert!(self.host.requests().is_empty(), "no run starts");
+    }
+
     /// Starts a launch as the CLI; the run it answers.
     pub async fn begin(&self, name: &str) -> Value {
         let out = self

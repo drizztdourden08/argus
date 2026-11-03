@@ -121,6 +121,25 @@ where
     })
 }
 
+/// Read any value and turn it into the field, so a field never fails on a wrong type.
+fn lenient<'de, D, R>(d: D, read: impl FnOnce(Value) -> R) -> Result<R, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Value::deserialize(d).map(read)
+}
+
+/// The records of an array; entries that are not records are dropped, anything else is none.
+fn records<T: DeserializeOwned>(value: Value) -> Vec<T> {
+    match value {
+        Value::Array(values) => values
+            .into_iter()
+            .filter_map(|v| serde_json::from_value(v).ok())
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
 /// A list of records; entries that are not records are dropped.
 ///
 /// # Errors
@@ -130,13 +149,7 @@ where
     D: Deserializer<'de>,
     T: DeserializeOwned,
 {
-    Ok(match Value::deserialize(d)? {
-        Value::Array(values) => values
-            .into_iter()
-            .filter_map(|v| serde_json::from_value(v).ok())
-            .collect(),
-        _ => Vec::new(),
-    })
+    lenient(d, records)
 }
 
 /// A mirror field: an object is one record, an array is many (entries that are not records are
@@ -149,13 +162,12 @@ where
     D: Deserializer<'de>,
     T: DeserializeOwned,
 {
-    Ok(match Value::deserialize(d)? {
-        value @ Value::Object(_) => serde_json::from_value(value).into_iter().collect(),
-        Value::Array(values) => values
-            .into_iter()
-            .filter_map(|v| serde_json::from_value(v).ok())
-            .collect(),
-        _ => Vec::new(),
+    lenient(d, |value| {
+        if value.is_object() {
+            serde_json::from_value(value).into_iter().collect()
+        } else {
+            records(value)
+        }
     })
 }
 
@@ -168,7 +180,7 @@ where
     D: Deserializer<'de>,
     T: DeserializeOwned,
 {
-    Ok(match Value::deserialize(d)? {
+    lenient(d, |value| match value {
         value @ Value::Object(_) => serde_json::from_value(value).ok(),
         _ => None,
     })

@@ -2,9 +2,7 @@
 import { RICH_RULE } from '../content.constants';
 import type { Rejected, RichLine } from '../content.type';
 import { reject } from '../reject';
-
-const LEAD_LATE =
-  ': only the first line may be plain text; write the rest as bullets (- point), nested at most two levels, or as images ![caption](img:n).';
+import { LEAD_LATE } from './rich.constants';
 
 const refusePlain = (field: string, lines: readonly RichLine[]): Rejected | null => {
   for (const [index, line] of lines.entries()) {
