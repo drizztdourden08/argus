@@ -6,6 +6,7 @@ import type { LeaderDeps, Wire } from './hub-transport.type';
 import type { HubMessage, TabMessage } from './hub.type';
 import { LeaderHost } from './leader-host';
 import { ListenerTab } from './listener-tab';
+import { TabGate } from './tab-gate';
 import { holdTabLock } from './tab-lock';
 
 const isHubEnvelope = envelopeGuard<HubMessage>(HUB_TYPES);
@@ -15,6 +16,7 @@ class LeaderTab extends ListenerTab {
   private readonly bus: Wire;
   private readonly inbox: Wire;
   private readonly election = new AbortController();
+  private readonly gate = new TabGate((message) => this.post(message));
   private readonly releaseTabLock: () => void;
   private epoch = 0;
   private host: LeaderHost | null = null;
@@ -25,7 +27,7 @@ class LeaderTab extends ListenerTab {
     this.deps = deps;
     this.bus = deps.openWire(BUS_NAME);
     this.inbox = deps.openWire(`${INBOX_PREFIX}${deps.tabId}`);
-    this.releaseTabLock = holdTabLock(deps.locks, deps.tabId);
+    this.releaseTabLock = holdTabLock(deps.locks, deps.tabId, () => this.gate.open());
     this.inbox.listen((data) => this.fromHub(data));
     this.bus.listen((data) => this.fromBus(data));
     deps.locks.request(LEADER_LOCK, { signal: this.election.signal }, () => this.lead()).catch(() => undefined);
@@ -33,8 +35,7 @@ class LeaderTab extends ListenerTab {
   }
 
   send(message: TabMessage): void {
-    if (this.host) return this.host.receiveOwn(message);
-    this.bus.post(envelope(this.tabId, this.epoch, message));
+    this.gate.pass(message);
   }
 
   protected teardown(): void {
@@ -45,6 +46,12 @@ class LeaderTab extends ListenerTab {
     this.releaseTabLock();
     this.inbox.close();
     this.bus.close();
+  }
+
+  private post(message: TabMessage): void {
+    if (this.closed) return;
+    if (this.host) return this.host.receiveOwn(message);
+    this.bus.post(envelope(this.tabId, this.epoch, message));
   }
 
   private lead(): Promise<void> {
