@@ -1,6 +1,8 @@
-//! Rule 3: a dependency that is `open` for the limit while the item it asks for is still `todo`.
+//! Rule 3: a dependency that is `open` for the limit while the item it asks for is still `todo` and
+//! not blocked (an item that waits on something else of its own is not a stall of this dep).
 
 use super::{Found, Kind, RuleInput, text};
+use crate::blockers::is_blocked;
 use crate::dep_wakes::DepView;
 use crate::reasons::PORTFOLIO;
 use crate::time::parse_ms;
@@ -29,7 +31,7 @@ fn one(now: i64, input: &RuleInput<'_>, key: &str, dep: &DepView) -> Option<Foun
     let project = dep.to.project.some()?;
     let board = input.boards.board(project)?;
     let item = board.items.get(dep.to.item.some()?)?;
-    if !(item.rec.is_live() && item.status.is("todo")) {
+    if !(item.rec.is_live() && item.status.is("todo")) || is_blocked(&board, item) {
         return None;
     }
     let id = dep.id.some().unwrap_or(key);
@@ -100,6 +102,23 @@ mod tests {
             let found = found(&world(state, age, status));
             assert_eq!(found.len(), 0, "{state} {age} {status}");
         }
+    }
+
+    #[test]
+    fn an_item_that_carries_a_blocker_is_not_a_stall_of_its_dep() {
+        let open = world("open", 40 * MIN, "todo");
+        assert_eq!(found(&open).len(), 1);
+        let lead = json!({"activity": "working", "lastSeen": iso(NOW)});
+        let waiting = json!({"blocker": "external: archipelia, the lobby"});
+        let rotp = project(&lead, &[item("I-112", "todo", &waiting)], &json!({}));
+        let ledger = json!({"deps": {"D-11": {
+            "id": "D-11", "state": "open", "openedAt": iso(NOW - 40 * MIN),
+            "to": {"project": "rotp", "item": "I-112", "thread": "lead"},
+        }}});
+        assert_eq!(
+            found(&boards(&[("_portfolio", ledger), ("rotp", rotp)])).len(),
+            0
+        );
     }
 
     #[test]
