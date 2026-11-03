@@ -13,7 +13,7 @@ interface Board {
 }
 
 const mountServed = async (itemId: string, board: Board = {}) => {
-  stubFetch();
+  stubFetch(undefined);
   stubEventSource();
   const data = paneData({ boardKey: SCOPE, item: itemRef(itemId) });
   const { view } = await mountBoard(<ServedTab data={data} />, [

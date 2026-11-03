@@ -19,7 +19,7 @@ const IDS = ['T-1', 'T-2', 'T-3', 'T-4'];
 
 const plan = (runs: unknown): ItemRef => ({ id: 'I-1', title: 'Plan', thread: 'worker', status: 'todo', fields: { cases: IDS, runs } });
 
-const rawRun = (n: number, results: object[], extra: object = {}) => ({ n, bundle: 'b1', by: 'human', startedAt: 'a', endedAt: null, results, ...extra });
+const rawRun = (n: number, results: unknown[], extra: object = {}) => ({ n, bundle: 'b1', by: 'human', startedAt: 'a', endedAt: null, results, ...extra });
 
 const result = (test: string, status: string, note = '') => ({ test, status, note, at: 'b' });
 

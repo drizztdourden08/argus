@@ -24,7 +24,7 @@ const RunStage = (props: RunStageProps) => {
       {recorded && <Text variant="caption" tone="muted">{`Recorded in this run: ${recorded.status}${recorded.note ? `, ${recorded.note}` : ''}`}</Text>}
       <NoteField value={stage.note} problem={stage.problem} disabled={stage.busy || !stage.test} onChange={stage.setNote} />
       <OutcomeBar disabled={stage.busy || !stage.test} first={stage.cursor === 0} last={stage.cursor === ids.length - 1} onRecord={stage.record} onStep={stage.step} />
-      <ShortcutList label="Keys" size="sm" items={RUN_KEY_ITEMS} />
+      <ShortcutList label="Keys" size="xs" items={RUN_KEY_ITEMS} />
       <EndRun left={left} ops={ops} />
     </Flex>
   );

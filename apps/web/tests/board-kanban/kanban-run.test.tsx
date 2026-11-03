@@ -175,7 +175,7 @@ describe('I-70 P7 reload and end', { tags: ['standard'] }, () => {
     const { dialog, posted } = await mountRun([ended]);
     const group = await within(dialog).findByRole('group', { name: 'Summary of run 1' });
     expect(within(group).getByText('Run 1 ended: 3 cases')).toBeTruthy();
-    for (const [label, value] of [['Passed', '1'], ['Failed', '1'], ['Partial', '0'], ['Blocked', '0'], ['Skipped', '0'], ['Not run', '1']]) {
+    for (const [label, value] of [['Passed', '1'], ['Failed', '1'], ['Partial', '0'], ['Blocked', '0'], ['Skipped', '0'], ['Not run', '1']] as const) {
       expect(within(group).getByText(label).parentElement?.textContent).toContain(value);
     }
     expect(within(group).getByText('no button')).toBeTruthy();

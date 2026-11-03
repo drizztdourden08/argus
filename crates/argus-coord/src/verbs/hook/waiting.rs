@@ -145,7 +145,11 @@ mod tests {
     }
 
     fn tail(lines: &[Value]) -> String {
-        lines.iter().map(|l| format!("{l}\n")).collect()
+        lines.iter().fold(String::new(), |mut text, line| {
+            text.push_str(&line.to_string());
+            text.push('\n');
+            text
+        })
     }
 
     fn background(id: &str) -> Value {
