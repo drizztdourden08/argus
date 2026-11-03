@@ -4,12 +4,8 @@ import type { WithId } from '../../../../../data/react';
 import { askKind } from './ask-kind';
 import { byCreated } from './by-created';
 import { settledIds } from './settled-ids';
-import type { AskKind, AskLink, EntryDocs } from './model.type';
-
-interface Asking {
-  entry: WithId<Entry>;
-  kind: AskKind;
-}
+import type { Asking } from './ask-links.type';
+import type { AskLink, EntryDocs } from './model.type';
 
 const isLive = (entry: WithId<Entry>): boolean => !entry.deletedAt && !entry.archivedAt;
 
