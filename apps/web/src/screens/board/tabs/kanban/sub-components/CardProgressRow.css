@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind style */
 
-.criteria-bar {
+.card-progress__bar {
   flex: none;
   inline-size: var(--size-48);
 }

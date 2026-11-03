@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind types */
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
-import type { AttentionKind } from './attention';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, AskLink, CardData, ItemGroup, KanbanView } from './model';
+import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -14,21 +13,25 @@ interface KanbanTabProps {
 }
 
 interface KanbanToolbarProps {
+  boardKey: string;
   state: KanbanState;
   view: KanbanView;
+  items: readonly ItemRef[];
   threads: Threads;
-  subjects: readonly string[];
+  selection: Selection;
 }
 
 interface FilterRowProps {
+  boardKey: string;
   state: KanbanState;
+  items: readonly ItemRef[];
   threads: Threads;
-  subjects: readonly string[];
 }
 
 interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
+  selection: Selection;
 }
 
 interface OpNoticesProps {
@@ -51,6 +54,7 @@ interface ColumnAddFormProps {
 }
 
 interface KanbanBodyProps {
+  boardKey: string;
   view: KanbanView;
   state: KanbanState;
   threads: Threads;
@@ -65,6 +69,7 @@ interface KanbanBodyProps {
 }
 
 interface KanbanColumnsProps {
+  boardKey: string;
   view: KanbanView;
   state: KanbanState;
   threads: Threads;
@@ -87,11 +92,13 @@ interface ColumnAddProps {
 }
 
 interface ItemCardProps {
+  boardKey: string;
   card: CardData;
   group: ItemGroup;
   threads: Threads;
   now: number;
   selected: boolean;
+  selecting: boolean;
   ops: ItemOps;
   onToggle: (id: string) => void;
   onMark: (shift: boolean) => void;
@@ -100,8 +107,8 @@ interface ItemCardProps {
 
 interface CardTagsProps {
   card: CardData;
-  group: ItemGroup;
   now: number;
+  onOpen: (id: string) => void;
 }
 
 interface CardFootProps {
@@ -117,25 +124,21 @@ interface CardMenuProps {
   onOpen: (id: string) => void;
 }
 
-interface CriteriaBarProps {
+interface CardProgressRowProps {
+  segments: readonly CardProgress[];
+}
+
+interface ItemTypeMarkProps {
   item: ItemRef;
 }
 
-interface AttentionTagProps {
-  kind: AttentionKind;
-  card: CardData;
-  now: number;
-}
-
-interface DepTagListProps {
+interface AssigneeMarkProps {
   item: ItemRef;
-  now: number;
+  boardKey: string;
+  threads: Threads;
 }
 
-interface AskTagProps {
-  link: AskLink;
-}
 
 export type {
-  AskTagProps, AttentionTagProps, CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, DepTagListProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AssigneeMarkProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterRowProps, ItemCardProps, ItemTypeMarkProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

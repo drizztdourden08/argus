@@ -3,7 +3,7 @@ import type { Entry, ItemRef, ThreadChoice } from '../../src/data/kanban';
 import type { WithId } from '../../src/data/react';
 import type { OpNotice } from '../../src/screens/board/shared';
 import type { Signals } from '../../src/screens/board/tabs/kanban/attention';
-import type { AskLink, KanbanFilters, KanbanPrefs, Needs } from '../../src/screens/board/tabs/kanban/model';
+import type { AskLink, KanbanFilters, KanbanPrefs, Needs, TrailInfo } from '../../src/screens/board/tabs/kanban/model';
 import { DEFAULT_FILTERS, buildView } from '../../src/screens/board/tabs/kanban/model';
 
 const MIN = 60_000;
@@ -18,7 +18,6 @@ const itemRef = (id: string, extra: Partial<ItemRef> = {}): ItemRef => ({
   id,
   title: `Item ${id}`,
   description: '',
-  subject: 'general',
   thread: 'worker',
   status: 'todo',
   rank: 1024,
@@ -60,6 +59,7 @@ interface Setup {
   needs?: ReadonlyMap<string, Needs>;
   asks?: ReadonlyMap<string, AskLink[]>;
   signals?: ReadonlyMap<string, Signals>;
+  trails?: ReadonlyMap<string, TrailInfo>;
   notices?: OpNotice[];
   threads?: WithId<ThreadChoice>[];
   paused?: string[];
@@ -74,6 +74,7 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
     needs: setup.needs ?? noNeeds,
     asks: setup.asks ?? new Map(),
     signals: setup.signals ?? new Map(),
+    trails: setup.trails ?? new Map(),
     notices: setup.notices ?? [],
     filters: filters(setup.filters),
     prefs: prefs(setup.prefs),

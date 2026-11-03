@@ -70,7 +70,6 @@ const item = (id: string, extra: Doc = {}): Doc => ({
   id,
   title: `Item ${id}`,
   description: '',
-  subject: 'general',
   thread: 'worker',
   status: 'todo',
   rank: 1024,

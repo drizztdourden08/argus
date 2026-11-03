@@ -2,7 +2,7 @@
 import { toast } from '@drizztdourden08/tessera';
 import type { ItemRef } from '../../../../../data/kanban';
 import type { DropPlan } from '../model';
-import { ORDER_HINT } from '../kanban.constants';
+import { GROUP_HINT, ORDER_HINT } from '../kanban.constants';
 import type { ItemOps } from '../kanban.type';
 
 const applyDrop = (plan: DropPlan, item: ItemRef, ops: ItemOps): void => {
@@ -13,6 +13,9 @@ const applyDrop = (plan: DropPlan, item: ItemRef, ops: ItemOps): void => {
     case 'order-off':
       toast({ message: ORDER_HINT, variant: 'info' });
       return;
+    case 'group-off':
+      toast({ message: GROUP_HINT, variant: 'info' });
+      return;
     case 'reorder':
       void ops.move(item, plan.place, `Reordered ${id}.`);
       return;
@@ -21,9 +24,6 @@ const applyDrop = (plan: DropPlan, item: ItemRef, ops: ItemOps): void => {
       return;
     case 'thread':
       void ops.move(item, { ...plan.place, thread: plan.to }, `Reassigned ${id} to ${plan.to}.`);
-      return;
-    case 'subject':
-      void ops.setField(item, 'subject', plan.to, `Subject of ${id} is now ${plan.to}.`);
   }
 };
 

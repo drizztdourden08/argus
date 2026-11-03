@@ -12,6 +12,7 @@ const planDrop = (input: DropInput): DropPlan => {
     if (!place || move.from.index === move.to.index) return { kind: 'none' };
     return manual ? { kind: 'reorder', place } : { kind: 'order-off' };
   }
+  if (group !== 'status' && group !== 'thread') return { kind: 'group-off' };
   return { kind: group, to: move.to.columnId, place: manual && place ? place : {} };
 };
 

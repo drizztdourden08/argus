@@ -13,7 +13,7 @@ import { useNow } from './behavior/useNow';
 import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
-import { itemTests, needsYou, subjectsOf } from './model';
+import { itemTests, needsYou } from './model';
 import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
 import { KanbanLegend } from './sub-components/KanbanLegend';
@@ -34,19 +34,19 @@ const KanbanTab = (props: KanbanTabProps) => {
   const drawer = useDrawer(data, view, state.filters);
   const selection = useSelection();
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
-  const subjects = useMemo(() => subjectsOf(data.items), [data.items]);
   const drawerTests = useMemo(() => itemTests(data.tests, data.closedBuilds, state.filters.archived), [data.tests, data.closedBuilds, state.filters.archived]);
   const blocking = (drawer.opened ? data.asks.get(drawer.opened.id) : undefined)?.find((link) => link.via === 'blocker') ?? null;
   if (!data.ready) return <Text tone="muted">Loading the work items.</Text>;
   return (
     <Flex direction="column" gap="md">
       {!panels.trash.open && (
-        <KanbanToolbar state={state} view={view} threads={data.threads} subjects={subjects} />
+        <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} selection={selection} />
       )}
       {!panels.trash.open && <KanbanLegend />}
       <OpNotices ops={notices} />
       {!panels.trash.open && <SelectionBar items={view.cards.map((card) => card.item)} threads={data.threads} selection={selection} ops={bulk} />}
       <KanbanBody
+        boardKey={boardKey}
         view={view}
         state={state}
         threads={data.threads}

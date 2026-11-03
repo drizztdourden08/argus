@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { PostResult } from '../api';
 import type { RequestedBy, WaitsOn } from '../deps';
+import type { ItemTyping } from '../types/item.type';
 
 interface Criterion {
   n?: number;
@@ -8,7 +9,7 @@ interface Criterion {
   done: boolean;
 }
 
-interface Item {
+interface Item extends ItemTyping {
   title: string;
   description?: string | null;
   subject?: string | null;
@@ -146,7 +147,8 @@ interface ItemInput {
   title: string;
   thread: string;
   status: string;
-  subject?: string;
+  parent?: string;
+  assignee?: string;
 }
 
 interface SentBulk {

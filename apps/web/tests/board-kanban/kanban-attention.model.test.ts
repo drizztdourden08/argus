@@ -8,7 +8,11 @@ import { HOUR, before, itemRef, viewOf } from './kanban-docs';
 
 const none = new Set<string>();
 
-const dep = { dep: 'D-4', project: 'rotp', item: 'I-12', title: 'Expose the hook', state: 'open', since: before(HOUR), reason: null } as const;
+const waitsOn = { dep: 'D-4', project: 'rotp', item: 'I-12', title: 'Expose the hook', state: 'open', since: before(HOUR), reason: null } as const;
+
+const depCause = { kind: 'dep-waits', id: 'D-4', label: 'Expose the hook', who: 'lead:rotp' } as const;
+
+const lockCause = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
 
 const kindsOf = (item: ItemRef, setup: { needs?: Partial<Needs>; asks?: AskLink[]; signals?: Partial<Signals> } = {}) => {
   const needs = new Map([[item.id, { questions: 0, decisions: 0, todos: 0, tests: 0, ...setup.needs }]]);
@@ -26,21 +30,31 @@ describe('I-69 which attention kinds a card carries', { tags: ['critical'] }, ()
     expect(kindsOf(itemRef('I-1'), { signals: { failing: 1 } })).toEqual(['test-failing']);
     expect(kindsOf(itemRef('I-1'), { signals: { pending: 1 } })).toEqual(['test-pending']);
     expect(kindsOf(itemRef('I-1'), { signals: { agents: 1 } })).toEqual(['agent']);
-    expect(kindsOf(itemRef('I-1', { waitsOn: dep }))).toEqual(['dependency']);
-    expect(kindsOf(itemRef('I-1', { requestedBy: { dep: 'D-5', project: 'a', item: 'I-7', thread: 'T-2', title: 't', state: 'blocked' } }))).toEqual(['dependency']);
-    expect(kindsOf(itemRef('I-1', { blocker: 'external: legal, the contract' }))).toEqual(['blocked']);
+    expect(kindsOf(itemRef('I-1', { blocked: [depCause] }))).toEqual(['dependency']);
+    expect(kindsOf(itemRef('I-1', { blocked: [{ kind: 'dep-blocked', id: 'D-5', label: 't', who: 'lead:a' }] }))).toEqual(['dependency']);
+    expect(kindsOf(itemRef('I-1', { blocked: [lockCause] }))).toEqual(['blocked']);
+    expect(kindsOf(itemRef('I-1', { blocked: [{ kind: 'legacy', id: 'I-1', label: 'external: legal, the contract' }] }))).toEqual(['blocked']);
     expect(kindsOf(itemRef('I-1', { status: 'doing', updatedAt: before(5 * HOUR) }))).toEqual(['quiet']);
   });
 
-  it('shows nothing for a finished dependency, a plain request or a blocker that names a live ask', () => {
-    expect(kindsOf(itemRef('I-1', { waitsOn: { ...dep, state: 'done' } }))).toEqual([]);
-    expect(kindsOf(itemRef('I-1', { requestedBy: { dep: 'D-5', project: 'a', item: 'I-7', thread: 'T-2', title: 't', state: 'open' } }))).toEqual([]);
-    expect(kindsOf(itemRef('I-1', { blocker: 'Q-4' }), { asks: [{ id: 'Q-4', kind: 'question', via: 'blocker' }] })).toEqual(['question']);
+  it('reads only what the board exported as blocking, so a settled dependency or a plain request shows nothing', () => {
+    expect(kindsOf(itemRef('I-1', { waitsOn: { ...waitsOn, state: 'done' }, blocked: [] }))).toEqual([]);
+    expect(kindsOf(itemRef('I-1', { waitsOn, requestedBy: { dep: 'D-5', project: 'a', item: 'I-7', thread: 'T-2', title: 't', state: 'open' } }))).toEqual([]);
+  });
+
+  it('counts a blocker that names a live ask once, as the question', () => {
+    const blocked = [{ kind: 'legacy', id: 'I-1', label: 'Q-4' }, { kind: 'ask', id: 'Q-4', label: 'Which one?' }] as const;
+    expect(kindsOf(itemRef('I-1', { blocker: 'Q-4', blocked: [...blocked] }), { asks: [{ id: 'Q-4', kind: 'question', via: 'blocker' }] })).toEqual(['question']);
+  });
+
+  it('counts a question or decision that only blocks through a link as a question or decision', () => {
+    expect(kindsOf(itemRef('I-1', { blocked: [{ kind: 'ask', id: 'Q-9', label: 'x' }] }))).toEqual(['question']);
+    expect(kindsOf(itemRef('I-1', { blocked: [{ kind: 'decision', id: 'D-9', label: 'x' }] }))).toEqual(['decision']);
   });
 
   it('puts several kinds in precedence order, whatever order the sources came in (a card that waits on you is never quiet)', () => {
     const asks: AskLink[] = [{ id: 'D-1', kind: 'decision', via: 'item' }, { id: 'Q-1', kind: 'question', via: 'item' }];
-    const item = itemRef('I-1', { status: 'doing', updatedAt: before(5 * HOUR), blocker: 'external: legal', waitsOn: dep });
+    const item = itemRef('I-1', { status: 'doing', updatedAt: before(5 * HOUR), blocked: [depCause, lockCause] });
     const signals = { failing: 1, pending: 1, agents: 1 };
     const all = ATTENTION.map((spec) => spec.kind);
     expect(kindsOf(item, { asks, signals })).toEqual(all.filter((kind) => kind !== 'todo'));

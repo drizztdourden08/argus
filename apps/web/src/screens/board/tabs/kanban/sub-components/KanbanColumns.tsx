@@ -15,7 +15,7 @@ import { QuietBadge } from './QuietBadge';
 const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => card.quietMs !== null).length;
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
-  const { view, state, threads, now, selection, ops, add, focus, onOpen } = props;
+  const { boardKey, view, state, threads, now, selection, ops, add, focus, onOpen } = props;
   const { group, order } = state.prefs;
   const ids = view.columns.flatMap((column) => column.cards.map((card) => card.id));
   const onMove = (move: KanbanMove) => {
@@ -52,11 +52,13 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       onMove={onMove}
       renderCard={(card) => (
         <ItemCard
+          boardKey={boardKey}
           card={card}
           group={group}
           threads={threads}
           now={now}
           selected={selection.has(card.id)}
+          selecting={selection.active}
           ops={ops}
           onToggle={(id) => selection.toggle(id, ids)}
           onMark={selection.mark}
