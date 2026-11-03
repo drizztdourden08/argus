@@ -1,4 +1,5 @@
-//! `coord test add <item> "<title>" [--mode auto|manual] [--build <tag>] [--file spec.json] [flags]`
+//! `coord test add <item> "<title>" [--mode auto|manual] [--build <tag>] [--plan I-n] [--file
+//! spec.json] [flags]` (a new case lands at the end of that plan)
 //! and `coord test set <T> [--file spec.json] [--covers --run --context --changed --note --ac
 //! --mode --title] [--build <tag> | --build "" | --clear-build]`.
 
@@ -8,6 +9,7 @@ use argus_board::store::create_doc;
 use serde_json::{Value, json};
 
 use super::edit::edit;
+use super::plan::append_case;
 use super::spec::{apply_spec, spec_from_options};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{find_live, who_of};
@@ -60,8 +62,16 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         if !argus_core::js::truthy(&test["title"]) {
             return Err(bad("title text is required."));
         }
-        r.say(&[&summary(&test, &display(&item["id"]))]);
-        map_mut(board, "tests").insert(id, test);
+        let line = summary(&test, &display(&item["id"]));
+        map_mut(board, "tests").insert(id.clone(), test);
+        let plan = r.text_opt("plan").map(str::to_owned);
+        if let Some(plan) = &plan {
+            append_case(board, &who, (plan.as_str(), &id), r.options)?;
+        }
+        r.say(&[&line]);
+        if let Some(plan) = &plan {
+            r.say(&[&format!("{id} is a case of {plan}.")]);
+        }
         Ok(())
     })
 }

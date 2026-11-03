@@ -1,11 +1,14 @@
-//! Proof images of tests and pictures of questions and decisions: kept next to the board so they
-//! outlive the worktree they came from.
+//! Proof images of tests and pictures of questions, decisions and items: kept next to the board so
+//! they outlive the worktree they came from.
 
+use std::fmt::Write as _;
+use std::fs;
 use std::path::Path;
 
 use argus_core::clock::now_iso;
 use argus_core::fs::write_atomic;
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 
 use crate::error::{BoardError, refuse};
 use crate::json::{array_mut, display};
@@ -14,6 +17,12 @@ use crate::store::board_dir;
 
 /// The extensions a kept image may have, dot included.
 pub const IMAGE: [&str; 5] = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+
+/// The most bytes a kept image may have (10 MiB, as `attach.maxBytes`).
+pub const MAX_BYTES: u64 = 10_485_760;
+
+/// The most images one item keeps.
+pub const MAX_PER_ITEM: usize = 12;
 
 /// One image to keep: its bytes, its extension (dot included) and its caption.
 #[derive(Debug, Clone, Copy)]
@@ -47,7 +56,7 @@ pub fn keep_proof_bytes(
         ext,
         caption,
     };
-    keep_image(home, key, (test, "proofs"), (image, None))
+    append_image(home, key, (test, "proofs"), (image, None))
 }
 
 /// Keep an image of a question or a decision entry as `<home>/<key>/proofs/<Q>-<n><ext>`, next
@@ -72,10 +81,10 @@ pub fn keep_entry_image(
             )));
         }
     }
-    keep_image(home, key, (entry, "images"), (image, option))
+    append_image(home, key, (entry, "images"), (image, option))
 }
 
-fn keep_image(
+fn append_image(
     home: &Path,
     key: &str,
     (doc, field): (&mut Value, &str),
@@ -105,4 +114,135 @@ fn keep_image(
     }
     array_mut(doc, field).push(record);
     Ok(n)
+}
+
+/// Where an image of an item was kept: its number on the item, its file and its hash.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImageRef {
+    /// The number on the item (`img:<n>` in its rich text); numbers only grow.
+    pub n: i64,
+    /// The file, `<home>/<key>/proofs/<I-n>-<n><ext>`.
+    pub file: String,
+    /// The sha256 of the bytes, 64 hex digits.
+    pub sha256: String,
+    /// The item already held this picture: nothing was written and `n` is the earlier one.
+    pub duplicate: bool,
+}
+
+impl ImageRef {
+    /// The record an item lists under `images`: `{n, file, caption, sha256, at, by}`.
+    #[must_use]
+    pub fn record(&self, caption: &str, by: &str) -> Value {
+        json!({
+            "n": self.n, "file": self.file, "caption": caption, "sha256": self.sha256,
+            "at": now_iso(), "by": by,
+        })
+    }
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().fold(String::new(), |mut out, b| {
+        let _ = write!(out, "{b:02x}");
+        out
+    })
+}
+
+fn extension_of(path: &Path) -> String {
+    path.extension().map_or_else(String::new, |e| {
+        format!(".{}", e.to_string_lossy().to_lowercase())
+    })
+}
+
+fn read_checked(path: &Path) -> Result<(Vec<u8>, String), BoardError> {
+    let ext = extension_of(path);
+    if !IMAGE.contains(&ext.as_str()) {
+        return Err(refuse(format!(
+            "an image must be one of {}.",
+            IMAGE.join(" ")
+        )));
+    }
+    if !path.is_file() {
+        return Err(refuse(format!("no image at {}", path.display())));
+    }
+    let bytes = fs::read(path)?;
+    if bytes.is_empty() || bytes.len() as u64 > MAX_BYTES {
+        return Err(refuse(format!(
+            "{} is {} bytes, an image is 1 to {MAX_BYTES} bytes.",
+            path.display(),
+            bytes.len()
+        )));
+    }
+    Ok((bytes, ext))
+}
+
+fn listed(item: &Value) -> &[Value] {
+    item["images"].as_array().map_or(&[][..], Vec::as_slice)
+}
+
+/// Keep the file at `path` as an image of `item` (a doc of `items`):
+/// `<home>/<key>/proofs/<I-n>-<n><ext>`, numbered after the item's highest image (a removed one
+/// leaves a gap). The same bytes already on the item are not kept again: the earlier image comes
+/// back with `duplicate` set and nothing is written. The item is not changed; the caller adds
+/// [`ImageRef::record`] to its `images` (unless `duplicate`), stamps the item and saves the board.
+///
+/// # Errors
+/// Refused when the file is missing, is not png, jpg, jpeg, gif or webp, is empty or over 10 MiB,
+/// or the item already holds 12 images; the file cannot be written.
+pub fn keep_image(
+    home: &Path,
+    key: &str,
+    item: &Value,
+    path: &Path,
+) -> Result<ImageRef, BoardError> {
+    let (bytes, ext) = read_checked(path)?;
+    let sha256 = hex(&Sha256::digest(&bytes));
+    let kept = listed(item);
+    if let Some(same) = kept.iter().find(|i| i["sha256"].as_str() == Some(&sha256)) {
+        return Ok(ImageRef {
+            n: same["n"].as_i64().unwrap_or_default(),
+            file: display(&same["file"]),
+            sha256,
+            duplicate: true,
+        });
+    }
+    if kept.len() >= MAX_PER_ITEM {
+        return Err(refuse(format!(
+            "{} already has {MAX_PER_ITEM} images; remove one first.",
+            display(&item["id"])
+        )));
+    }
+    let latest = kept
+        .iter()
+        .filter_map(|i| i["n"].as_i64())
+        .fold(0, i64::max);
+    let n = latest + 1;
+    let dest = board_dir(home, key)
+        .join("proofs")
+        .join(format!("{}-{n}{ext}", display(&item["id"])));
+    write_atomic(&dest, &bytes)?;
+    Ok(ImageRef {
+        n,
+        file: dest.to_string_lossy().into_owned(),
+        sha256,
+        duplicate: false,
+    })
+}
+
+/// [`keep_image`] and the item's `images` entry in one step: the image is listed with its caption
+/// and the actor, unless the item held it already. The caller stamps the item and saves the board.
+///
+/// # Errors
+/// Refused as [`keep_image`] refuses, and when the caption is empty or too long.
+pub fn add_item_image(
+    home: &Path,
+    key: &str,
+    item: &mut Value,
+    (path, caption, by): (&Path, &str, &str),
+) -> Result<ImageRef, BoardError> {
+    let note = require_str("caption", caption)?;
+    let kept = keep_image(home, key, item, path)?;
+    if !kept.duplicate {
+        array_mut(item, "images").push(kept.record(&note, by));
+    }
+    Ok(kept)
 }

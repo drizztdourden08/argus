@@ -187,6 +187,7 @@ fn every_alias_names_the_module_that_serves_it() {
         ("decide", "entry"),
         ("notify", "entry"),
         ("message", "entry"),
+        ("note", "entry"),
         ("answer", "entry"),
         ("entry", "entry"),
         ("todo", "action"),
