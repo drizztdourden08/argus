@@ -23,32 +23,23 @@ use tokio::time::{Instant, Interval, interval_at};
 use crate::reply::bytes_reply;
 
 mod fanout;
+mod frame;
 mod run_logs;
 
 pub use fanout::{Fanout, MAX_CLIENTS_PER_SCOPE, StreamRequest};
+pub use frame::{frame, frame_with, mux_frame};
 pub use run_logs::{LogListening, RunLogs};
 
 /// A client this far behind on live frames is dropped.
 pub const SSE_BUFFER_LIMIT: usize = 1024 * 1024;
 
-/// One frame: `id: <id>\nevent: <name>\ndata: <json>\n\n`.
-#[must_use]
-pub fn frame(name: &str, data: &Value, id: Option<i64>) -> String {
-    frame_with(name, data, id.map(|id| id.to_string()).as_deref())
-}
-
-/// A frame whose id is text, such as the wake ids `W-12`.
-#[must_use]
-pub fn frame_with(name: &str, data: &Value, id: Option<&str>) -> String {
-    let head = id.map(|id| format!("id: {id}\n")).unwrap_or_default();
-    let data = argus_core::json_text::to_string(data).unwrap_or_default();
-    format!("{head}event: {name}\ndata: {data}\n\n")
-}
-
 /// A queued frame, and whether it counts toward the live backlog.
 type Frame = (Bytes, bool);
 
-/// The writing side of one stream.
+/// The writing side of one stream. Cloning shares the queue, the backlog count and the closed
+/// flag, so many subscriptions of one connection write through one sender; closing any clone
+/// closes the stream for all of them.
+#[derive(Clone)]
 pub struct SseSender {
     tx: UnboundedSender<Frame>,
     queued: Arc<AtomicUsize>,
@@ -75,10 +66,19 @@ impl SseSender {
     /// limit, which guards live updates only. `false` once the stream is closed.
     #[must_use]
     pub fn opening_event(&self, name: &str, data: &Value, id: Option<i64>) -> bool {
+        self.open(frame(name, data, id))
+    }
+
+    /// An opening frame with no `id:` line, for the mux stream.
+    #[must_use]
+    pub fn mux_opening_event(&self, name: &str, data: &Value) -> bool {
+        self.open(mux_frame(name, data))
+    }
+
+    fn open(&self, text: String) -> bool {
         if self.closed.load(Ordering::SeqCst) {
             return false;
         }
-        let text = frame(name, data, id);
         if self.tx.send((Bytes::from(text), false)).is_err() {
             self.close();
             return false;
@@ -97,6 +97,19 @@ impl SseSender {
     #[must_use]
     pub fn event_with(&self, name: &str, data: &Value, id: &str) -> bool {
         self.push(frame_with(name, data, Some(id)))
+    }
+
+    /// Writes a live event with no `id:` line, for the mux stream; `false` once the stream is
+    /// closed or the client fell behind.
+    #[must_use]
+    pub fn mux_event(&self, name: &str, data: &Value) -> bool {
+        self.push(mux_frame(name, data))
+    }
+
+    /// Whether the stream is closed, by `close` or by a client that fell behind.
+    #[must_use]
+    pub fn is_closed(&self) -> bool {
+        self.closed.load(Ordering::SeqCst)
     }
 
     /// Ends the stream after what is queued.
