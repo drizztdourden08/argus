@@ -73,13 +73,9 @@ const RESULT_PLACEHOLDER = 'recorded on the board';
 
 const ANCHOR_PATTERN = /^T-\d+$/;
 
-const TAB_HASH = 'tests';
-
 const TYPING_SELECTOR = 'input, textarea, select, [contenteditable]';
 
 const WAKE_TICK_MS = 5000;
-
-const MENU_KEY = 'm';
 
 const OUTCOME_BUTTON_SELECTOR = '[role="group"][aria-label^="Run "] button:not(:disabled)';
 
@@ -108,6 +104,16 @@ const NO_TESTS_TEXT = 'No test yet. Threads document every test here with coord 
 
 const NO_MATCH_TEXT = 'No test matches the filters.';
 
+const CASE_KIND = 'test-case';
+
+const NO_PLANS_TEXT = 'No test plan yet.';
+
+const NO_PLAN_GROUP = 'Not in a plan';
+
+const CLOSED_PLANS = 'Closed plans';
+
+const NO_CASES_TIP = 'Add cases to this plan, then start a run.';
+
 const NOTE_DIALOG_TEXT = 'The note is posted with the outcome you pick. Fail, partial and blocked need one; pass does not.';
 
 const MODE_OPTIONS = [
@@ -116,6 +122,6 @@ const MODE_OPTIONS = [
 ];
 
 export {
-  ANCHOR_PATTERN, ANY_CHOICE, BUNDLE_TAGS, BUNDLE_TIPS, COMPOSE_HINTS, FILTER_SWITCHES, FIND_TEXT, KEY_HINT, MENU_KEY, NO_BUILD_VALUE, MODE_OPTIONS, NO_MATCH_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PASSED_TIP, PROGRESS_SEGMENTS,
-  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, TAB_HASH, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
+  ANCHOR_PATTERN, ANY_CHOICE, BUNDLE_TAGS, BUNDLE_TIPS, CASE_KIND, CLOSED_PLANS, COMPOSE_HINTS, FILTER_SWITCHES, FIND_TEXT, KEY_HINT, NO_BUILD_VALUE, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PASSED_TIP, PROGRESS_SEGMENTS,
+  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
 };

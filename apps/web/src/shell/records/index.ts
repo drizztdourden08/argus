@@ -6,6 +6,8 @@ export { groupKeysOf } from './behavior/group-keys-of';
 export { groupRecords } from './behavior/group-records';
 export { legacyOpen } from './behavior/legacy-open';
 export { parseRecord } from './behavior/parse-record';
+export { useRunOps } from './pane/run/behavior/useRunOps';
+export { planProgress } from './pane/run/model/plan-progress';
 export { recordMenuGroups } from './behavior/record-menu-groups';
 export { shownCode } from './behavior/shown-code';
 export { splitRecords } from './behavior/split-records';

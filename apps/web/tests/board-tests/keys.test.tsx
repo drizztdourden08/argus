@@ -9,7 +9,7 @@ import { board, focusedOutcome, noteBox, openBox, outcomeButton, refuseResults, 
 
 cleanAfterEach();
 
-const rowButton = async (id = 'T-1'): Promise<HTMLElement> => screen.findByRole('button', { name: `Test ${id}` });
+const rowButton = async (id = 'T-1'): Promise<HTMLElement> => screen.findByRole('button', { name: new RegExp(`Test ${id}( |$)`) });
 
 describe('S1 the keys 1 to 4 on a test to run', { tags: ['standard'] }, () => {
   it('1 posts pass at once with no note', async () => {
@@ -42,29 +42,6 @@ describe('S1 the keys 1 to 4 on a test to run', { tags: ['standard'] }, () => {
     fireEvent.keyDown(await rowButton('T-2'), { key: '1', ctrlKey: true });
     fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
     expect(resultCalls(calls)).toHaveLength(0);
-  });
-});
-
-describe('S1 the key m on a test row', { tags: ['standard'] }, () => {
-  const mixed = () => ({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'ok')] });
-
-  it('opens the row menu of a test to run and of a done test', async () => {
-    await mountTab(mixed());
-    fireEvent.keyDown(await rowButton('T-1'), { key: 'm' });
-    expect(await screen.findByRole('menuitem', { name: 'Open details' })).toBeTruthy();
-    expect(screen.queryByRole('menuitem', { name: 'Run again' })).toBeNull();
-    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Open details' }), { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Open details' })).toBeNull());
-    fireEvent.keyDown(await rowButton('T-2'), { key: 'M' });
-    expect(await screen.findByRole('menuitem', { name: 'Run again' })).toBeTruthy();
-  });
-
-  it('is typing inside the note box, and does nothing with a modifier held', async () => {
-    await mountTab(board());
-    const box = await openBox('fail');
-    fireEvent.keyDown(box, { key: 'm' });
-    fireEvent.keyDown(await rowButton('T-2'), { key: 'm', ctrlKey: true });
-    expect(screen.queryByRole('menuitem')).toBeNull();
   });
 });
 

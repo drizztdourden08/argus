@@ -20,7 +20,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
     expect(titlesIn(groupOf(container, 'I-2'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'I-1')).getByText('Item I-1')).toBeTruthy();
-    expect(localStorage.getItem('coord.g.tests3')).toBe('item');
+    expect(localStorage.getItem('coord.g.tests4')).toBe('item');
   });
 
   it('by thread follows the item and names the thread by its id', async () => {
@@ -33,13 +33,13 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
   });
 
   it('returns to the bundles and reads the saved choice on load', async () => {
-    localStorage.setItem('coord.g.tests3', 'item');
+    localStorage.setItem('coord.g.tests4', 'item');
     const { container } = await mountTab(filterBoard());
     await screen.findByText('Login works');
     expect(groupOf(container, 'I-1')).not.toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
     expect(container.querySelector('[data-bundle="b1"]')).not.toBeNull();
-    expect(localStorage.getItem('coord.g.tests3')).toBe('build');
+    expect(localStorage.getItem('coord.g.tests4')).toBe('build');
   });
 });
 

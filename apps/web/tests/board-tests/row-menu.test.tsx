@@ -39,10 +39,11 @@ describe('S1 the row menu', { tags: ['standard'] }, () => {
     expect(entries(calls)[2]?.body).toMatchObject({ kind: 'delete', target: { c: 'tests', id: 'T-2' } });
   });
 
-  it('opens the details of the test', async () => {
+  it('opens the test case pane of the test with the open parameter, over the Tests tab', async () => {
     await mountTab(owner());
     await openMenu('T-1');
-    await choose('Open details');
-    expect(await screen.findByRole('dialog', { name: 'Test details' })).toBeTruthy();
+    await choose('Open');
+    await waitFor(() => expect(screen.getByTestId('search').textContent).toBe('?open=T-1'));
+    expect(screen.getByTestId('hash').textContent).toBe('');
   });
 });

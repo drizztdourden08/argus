@@ -17,6 +17,7 @@ type Doc = Record<string, unknown>;
 type Feed = 'tests' | 'builds' | 'launchers' | 'launches' | 'runs' | 'items' | 'threads' | 'entries' | 'wakes';
 
 type Board = Partial<Record<Feed, Doc[]>> & {
+  group?: string;
   handed?: string | null;
   at?: string;
 };
@@ -40,7 +41,17 @@ const FEEDS: [Feed, string][] = [
 ];
 const POSTED = { id: 'O-1', status: 'applied', outcome: null, entry: null, seq: 1 };
 
-const HashProbe = () => <Text data-testid="hash">{useLocation().hash}</Text>;
+const HashProbe = () => {
+  const { hash, search } = useLocation();
+  return (
+    <>
+      <Text data-testid="hash">{hash}</Text>
+      <Text data-testid="search">{search}</Text>
+    </>
+  );
+};
+
+const GROUP_KEY = 'coord.g.tests4';
 
 const defaultReply = (call: Call): Reply => {
   if (call.url.endsWith('/proofs') || call.url.includes('/proofs?')) return { status: 200, body: { test: 'T-1', proof: { n: 1, url: '/files/rotp/proofs/T-1-1.png', caption: 'c' } } };
@@ -67,6 +78,7 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   vi.stubGlobal('CSS', { supports: () => false });
+  if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'build');
   const streams = stubEventSource();
   const calls = stubFetch(respond);
   const fake = createFakeSources();

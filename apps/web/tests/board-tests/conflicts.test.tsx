@@ -77,22 +77,12 @@ describe('S1 a change of the owner the board did not take', { tags: ['standard']
   });
 });
 
-describe('S1 the conflicted tests in the list and the drawer', { tags: ['standard'] }, () => {
+describe('S1 the conflicted tests in the list', { tags: ['standard'] }, () => {
   it('narrows the list to the conflicted tests with the conflict switch', async () => {
     await mountTab(board([conflictEntry('O-1', 'T-1')]));
     await screen.findByText('Test T-2');
     fireEvent.click(screen.getByRole('checkbox', { name: 'conflict' }));
     expect(screen.queryByText('Test T-2')).toBeNull();
     expect(screen.getByText('Test T-1')).toBeTruthy();
-  });
-
-  it('shows the field by field table in the drawer of the test', async () => {
-    await mountTab(board([conflictEntry('O-1', 'T-1')]));
-    fireEvent.click(await screen.findByRole('button', { name: 'Test T-1' }));
-    const drawer = within(await screen.findByRole('dialog', { name: 'Test details' }));
-    const table = drawer.getByRole('table', { name: 'Your change and theirs' });
-    expect(within(table).getByText('I-2')).toBeTruthy();
-    expect(within(table).getByText('I-3')).toBeTruthy();
-    expect(drawer.getByRole('button', { name: 'Use mine' })).toBeTruthy();
   });
 });

@@ -3,8 +3,9 @@ import type { ReactNode } from 'react';
 import type { TestOutcome } from '../../../../data/posts';
 import type { RunEntry } from '../../../../data/runs';
 import type { BundleState } from '../../../../data/types';
-import type { BundleGroup, BundleView, ClosedGroup, Counts, GroupCard, TestDoc, TestNotice, TestsView } from './model';
-import type { NoticeOps, Outcome, RowMenu, TestsState } from './tests.type';
+import type { RecordGroups } from '../../../../shell';
+import type { BundleGroup, BundleView, ClosedGroup, Counts, GroupCard, PlanView, TestDoc, TestNotice, TestsView } from './model';
+import type { NoticeOps, Outcome, TestsState } from './tests.type';
 
 interface TestsTabProps {
   boardKey: string;
@@ -121,14 +122,6 @@ interface TestPartProps {
   test: TestDoc;
 }
 
-interface TestMenuProps extends TestPartProps {
-  menu: RowMenu;
-}
-
-interface TestChipsProps {
-  test: TestDoc;
-}
-
 interface DoneSummaryProps {
   test: TestDoc;
 }
@@ -194,6 +187,41 @@ interface TestCardProps {
   card: GroupCard;
 }
 
+interface PlanSectionsProps {
+  view: TestsView;
+}
+
+interface PlanCardsProps {
+  plans: PlanView[];
+}
+
+interface PlanCardProps {
+  plan: PlanView;
+}
+
+interface PlanFootProps {
+  plan: PlanView;
+  code: string;
+}
+
+interface PlanGroupsProps {
+  groups: RecordGroups<TestDoc>;
+  plans: PlanView[];
+}
+
+interface PlanGroupProps {
+  plan: PlanView;
+  tests: TestDoc[];
+}
+
+interface CaseListProps {
+  tests: TestDoc[];
+}
+
+interface PlanHeaderProps {
+  plan: PlanView;
+}
+
 export type {
-  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestChipsProps, TestMenuProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };

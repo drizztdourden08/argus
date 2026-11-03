@@ -22,7 +22,7 @@ describe('K1 the saved view', { tags: ['critical'] }, () => {
   it('falls back to the defaults for nothing, damage or an unknown group', () => {
     expect(parseStored({ filters: '{oops', group: 'zzz', passed: null, closed: null })).toEqual({
       filters: DEFAULT_FILTERS,
-      prefs: { group: 'build', order: 'rank', showPassed: true, showClosed: false },
+      prefs: { group: 'plan', order: 'rank', showPassed: true, showClosed: false },
     });
   });
 

@@ -1,12 +1,10 @@
 /* @layer renderer-app @kind logic */
 import { useMemo, useState } from 'react';
-import { buildView, conflictedTests, followItemThread, inFocus, latestWakes, visibleTests, wakePending } from '../model';
+import { useRecordOrder, useRecordPane } from '../../../../../shell';
+import { buildView, conflictedTests, followItemThread, inFocus, latestWakes, shownIds, visibleTests, wakePending } from '../model';
 import type { TestsData, TestsScreen, TestsShared } from '../tests.type';
-import { useDrawerNav } from './useDrawerNav';
-import { useDrawerWide } from './useDrawerWide';
 import { useFolds } from './useFolds';
 import { useTestsFocus } from './useTestsFocus';
-import { useTestAnchor } from './useTestAnchor';
 import { useTestNotices } from './useTestNotices';
 import { useTestOps } from './useTestOps';
 import { useTestsState } from './useTestsState';
@@ -18,9 +16,7 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
   const notices = useTestNotices(boardKey, data.entries, data.tests);
   const ops = useTestOps(boardKey);
   const folds = useFolds();
-  const anchor = useTestAnchor();
-  const wide = useDrawerWide();
-  const nav = useDrawerNav(anchor.selected, anchor.open);
+  const pane = useRecordPane();
   const [noteId, setNoteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [logId, setLogId] = useState<string | null>(null);
@@ -36,6 +32,7 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     () => buildView({ tests: visible, builds, items, launchers, defs, handed, filters, prefs, conflicted }),
     [visible, builds, items, launchers, defs, handed, filters, prefs, conflicted],
   );
+  useRecordOrder(useMemo(() => shownIds(view, prefs.group), [view, prefs.group]));
   const latest = useMemo(() => latestWakes(data.wakes), [data.wakes]);
   const shared = useMemo<TestsShared>(() => ({
     boardKey,
@@ -48,11 +45,11 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     showPassed: prefs.showPassed,
     conflicted,
     folds,
-    onOpen: anchor.open,
+    onOpen: pane.open,
     onNote: setNoteId,
     onEdit: setEditId,
     onLog: setLogId,
-  }), [boardKey, ops, items, data.threads, data.wakes, latest, now, prefs, conflicted, folds, anchor.open]);
+  }), [boardKey, ops, items, data.threads, data.wakes, latest, now, prefs, conflicted, folds, pane.open]);
   return {
     state,
     view,
@@ -60,9 +57,6 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     notices,
     visible,
     focus,
-    anchor,
-    nav,
-    wide,
     noteId,
     editId,
     logId,
