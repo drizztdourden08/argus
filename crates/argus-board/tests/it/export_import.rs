@@ -9,7 +9,7 @@ use crate::common::{alpha, doc, exported, post};
 use argus_board::sync::{export_docs, import_entries};
 use argus_core::Coll;
 use argus_core::clock::now_iso;
-use serde_json::{Value, json};
+use serde_json::json;
 
 const CTX: &str = "The login form can remember the email. It changes what is stored on the machine, so it is your call. I will store nothing if unanswered.";
 

@@ -18,9 +18,9 @@ fn stranger() -> Who {
 
 fn run_op(board: &mut Value, who: &Who, kind: &str, plan: &str, rest: Value) -> OpResult {
     let mut op = json!({"kind": kind, "target": {"c": "items", "id": plan}});
-    if let Some(extra) = rest.as_object() {
+    if let Value::Object(extra) = rest {
         for (key, value) in extra {
-            op[key.as_str()] = value.clone();
+            op[key.as_str()] = value;
         }
     }
     apply_op(board, &op, who, None)
