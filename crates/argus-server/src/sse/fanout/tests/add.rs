@@ -83,14 +83,41 @@ async fn the_other_collections_keep_streaming_during_the_add() {
 }
 
 #[tokio::test]
-async fn a_repeat_subscribe_sends_nothing() {
+async fn a_repeat_subscribe_sends_no_snapshot_only_an_empty_ready() {
     let r = rig();
     let (h, mut w) = following_meta(&r).await;
     let target = Target::Add(&h);
     r.fanout
         .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None)
         .unwrap();
-    assert!(w.frames().await.is_empty());
+    let seq = r.db.docs().seq().unwrap();
+    let got = w.frames().await;
+    assert_eq!(names(&got), ["ready"]);
+    assert_eq!(got[0].1, json!({"scope": ALPHA, "seq": seq, "colls": []}));
+}
+
+#[tokio::test]
+async fn a_cancelled_add_hands_its_collections_to_the_add_that_also_asked() {
+    let r = rig();
+    r.set(Coll::Items, "I-1");
+    let (h, mut w) = following_meta(&r).await;
+    let (one, _) = r.fanout.begin(&h, Target::Add(&h), &[Coll::Items]).unwrap();
+    let both = [Coll::Items, Coll::Tests];
+    let (two, read) = r.fanout.begin(&h, Target::Add(&h), &both).unwrap();
+    assert_eq!(read, [Coll::Tests, Coll::Items]);
+    let first = first_frames(&r.db, ALPHA, &read, None).unwrap();
+    r.set(Coll::Items, "I-2");
+    r.fanout.abort(&h, one);
+    r.set(Coll::Items, "I-3");
+    r.fanout.finish(&h, two, &first);
+    let got = w.frames().await;
+    let want = ["snapshot", "snapshot", "changes", "changes", "ready"];
+    assert_eq!(names(&got), want);
+    assert_eq!(got[1].1["coll"], "items");
+    assert_eq!(ids(&got[1].1), ["I-1"]);
+    assert_eq!(ids(&got[2].1), ["I-2"]);
+    assert_eq!(ids(&got[3].1), ["I-3"]);
+    assert_eq!(got[4].1["colls"], json!(["tests", "items"]));
 }
 
 #[tokio::test]

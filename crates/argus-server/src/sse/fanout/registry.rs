@@ -63,7 +63,7 @@ impl Fanout {
     }
 
     /// Starts an add under the lock: registers a new client or finds the existing one, and marks
-    /// the collections new to it pending. Answers the add's token and those collections.
+    /// the collections new to it pending. Answers the add's token and the collections to read.
     pub(super) fn begin(
         &self,
         h: &Handle,

@@ -14,7 +14,25 @@ use crate::sse::SseSender;
 struct Add {
     token: u64,
     colls: Vec<Coll>,
+    /// Asked for too, but already pending in an earlier add; this add takes them over if that
+    /// one is cancelled.
+    waiting: Vec<Coll>,
     buf: Vec<DocsEvent>,
+}
+
+impl Add {
+    /// Takes over a collection of a cancelled add, with the events it buffered, so none between
+    /// the two begins is lost.
+    fn adopt(&mut self, coll: Coll, buf: &[DocsEvent]) {
+        self.waiting.retain(|c| *c != coll);
+        self.colls.push(coll);
+        for e in buf {
+            if !self.buf.iter().any(|b| b.seq == e.seq) {
+                self.buf.push(e.clone());
+            }
+        }
+        self.buf.sort_by_key(|e| e.seq);
+    }
 }
 
 /// One scope of one stream.
@@ -45,23 +63,37 @@ impl Client {
         self.live.contains(&coll) || self.adds.iter().any(|a| a.colls.contains(&coll))
     }
 
-    /// Starts an add; answers the collections that are new to this client, in order. Collections
-    /// it already follows are left alone, so a repeat never sends a second snapshot.
+    fn pending(&self, coll: Coll) -> bool {
+        self.adds.iter().any(|a| a.colls.contains(&coll))
+    }
+
+    /// Starts an add; answers the collections to read, in order: the ones new to this client,
+    /// then the ones only pending in another add (read in case that add is cancelled). Empty when
+    /// nothing is new. Collections already followed are left alone, so a repeat never sends a
+    /// second snapshot.
     pub fn begin_add(&mut self, token: u64, colls: &[Coll]) -> Vec<Coll> {
-        let mut fresh: Vec<Coll> = Vec::new();
+        let (mut fresh, mut waiting): (Vec<Coll>, Vec<Coll>) = (Vec::new(), Vec::new());
         for c in colls {
-            if !self.follows(*c) && !fresh.contains(c) {
+            if fresh.contains(c) || waiting.contains(c) {
+                continue;
+            }
+            if !self.follows(*c) {
                 fresh.push(*c);
+            } else if self.pending(*c) {
+                waiting.push(*c);
             }
         }
-        if !fresh.is_empty() {
-            self.adds.push(Add {
-                token,
-                colls: fresh.clone(),
-                buf: Vec::new(),
-            });
+        if fresh.is_empty() {
+            return fresh;
         }
-        fresh
+        let read = [fresh.as_slice(), waiting.as_slice()].concat();
+        self.adds.push(Add {
+            token,
+            colls: fresh,
+            waiting,
+            buf: Vec::new(),
+        });
+        read
     }
 
     /// Delivers one doc apply: live collections get their frame now, collections being added get
@@ -101,9 +133,10 @@ impl Client {
                 .all(|e| frames::changes(kind, sender, scope, e, keep))
         };
         let sent = frames::opening(kind, sender, scope, first, &add.colls)
-            && match kind {
-                Kind::Legacy => ready() && replay(),
-                Kind::Mux => replay() && ready(),
+            && if matches!(kind, Kind::Mux) {
+                replay() && ready()
+            } else {
+                ready() && replay()
             };
         if sent {
             self.live.extend(add.colls);
@@ -111,9 +144,32 @@ impl Client {
         sent
     }
 
-    /// Drops an add that failed to read.
+    /// Writes `ready` with no collections, for a mux `sub` that named only collections already
+    /// followed, so every `sub` is answered by a `ready`. Legacy streams send nothing.
+    pub fn ack(&self, scope: &str, seq: i64) -> bool {
+        match self.kind {
+            Kind::Mux => frames::ready(self.kind, &self.sender, scope, seq, &[]),
+            Kind::Legacy => true,
+        }
+    }
+
+    /// Ends the stream (shutdown).
+    pub fn close(&self) {
+        self.sender.close();
+    }
+
+    /// Drops an add that failed to read. Another pending add that asked for the same collections
+    /// takes them over, so its `ready` is true.
     pub fn cancel_add(&mut self, token: u64) {
-        self.adds.retain(|a| a.token != token);
+        let Some(i) = self.adds.iter().position(|a| a.token == token) else {
+            return;
+        };
+        let gone = self.adds.remove(i);
+        for coll in &gone.colls {
+            if let Some(heir) = self.adds.iter_mut().find(|a| a.waiting.contains(coll)) {
+                heir.adopt(*coll, &gone.buf);
+            }
+        }
     }
 
     /// Stops following the collections, live or being added.
@@ -123,6 +179,7 @@ impl Client {
         }
         for add in &mut self.adds {
             add.colls.retain(|c| !colls.contains(c));
+            add.waiting.retain(|c| !colls.contains(c));
         }
         self.adds.retain(|a| !a.colls.is_empty());
     }

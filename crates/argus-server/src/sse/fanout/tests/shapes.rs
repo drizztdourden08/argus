@@ -130,3 +130,34 @@ async fn dropping_one_scope_leaves_the_shared_sender_open_for_the_other() {
     assert_eq!(names(&got), ["changes"]);
     assert_eq!(got[0].1["scope"], "beta");
 }
+
+#[tokio::test]
+async fn a_handle_of_another_scope_is_refused() {
+    let r = rig();
+    let w = wire();
+    let target = Target::New(Kind::Mux, &w.sender);
+    let h = r
+        .fanout
+        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None);
+    let h = h.unwrap();
+    let err = r
+        .fanout
+        .subscribe(&r.db, "beta", Target::Add(&h), &[Coll::Items], None)
+        .unwrap_err();
+    assert_eq!(err.code, argus_core::ErrorCode::BadRequest);
+}
+
+#[tokio::test]
+async fn close_all_ends_the_stream_of_every_client() {
+    let r = rig();
+    let w = wire();
+    for scope in ["alpha", "beta"] {
+        let target = Target::New(Kind::Mux, &w.sender);
+        r.fanout
+            .subscribe(&r.db, scope, target, &[Coll::Meta], None)
+            .unwrap();
+    }
+    r.fanout.close_all();
+    assert!(w.sender.is_closed());
+    assert!(r.fanout.lock().is_empty());
+}

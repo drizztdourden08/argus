@@ -93,7 +93,9 @@ impl Fanout {
 
     /// Ends every stream (shutdown).
     pub fn close_all(&self) {
-        self.lock().clear();
+        let mut all = self.lock();
+        all.values().flatten().for_each(Client::close);
+        all.clear();
     }
 
     fn subscribe_to(
@@ -104,11 +106,13 @@ impl Fanout {
         colls: &[Coll],
         since: Option<i64>,
     ) -> Result<(), ApiError> {
-        let (token, fresh) = self.begin(h, target, colls)?;
-        if fresh.is_empty() {
+        let (token, read) = self.begin(h, target, colls)?;
+        if read.is_empty() {
+            let seq = db.docs().seq()?;
+            self.edit(h, |c| c.ack(&h.scope, seq));
             return Ok(());
         }
-        match first_frames(db, &h.scope, &fresh, since) {
+        match first_frames(db, &h.scope, &read, since) {
             Ok(first) => {
                 self.finish(h, token, &first);
                 Ok(())
@@ -122,11 +126,12 @@ impl Fanout {
 
     /// Follows `colls` of `scope`: the missed changes when `since` is servable, else one snapshot
     /// per collection new to the client, then `ready`. Collections the client already follows
-    /// send nothing. The other collections of the client keep streaming meanwhile.
+    /// send no snapshot; when nothing is new a mux client still gets `ready` with no collections.
+    /// The other collections of the client keep streaming meanwhile.
     ///
     /// # Errors
-    /// 400 for no collection; 503 past 32 clients for the scope; 404 when the handle's client
-    /// left; a store failure.
+    /// 400 for no collection or a handle of another scope; 503 past 32 clients for the scope; 404
+    /// when the handle's client left; a store failure.
     pub fn subscribe(
         &self,
         db: &Db,
@@ -137,7 +142,13 @@ impl Fanout {
     ) -> Result<Handle, ApiError> {
         let h = match target {
             Target::New(..) => self.new_handle(scope),
-            Target::Add(h) => h.clone(),
+            Target::Add(h) if h.scope == scope => h.clone(),
+            Target::Add(h) => {
+                return Err(ApiError::bad_request(format!(
+                    "the client follows {}, not {scope}",
+                    h.scope
+                )));
+            }
         };
         self.subscribe_to(db, &h, target, colls, since)?;
         Ok(h)
