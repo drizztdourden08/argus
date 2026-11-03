@@ -23,6 +23,7 @@ mod reply;
 mod router;
 pub mod routes;
 pub mod security;
+mod serve_mode;
 mod server;
 mod services;
 pub mod shadow;
@@ -33,6 +34,7 @@ pub use ctx::{AuthKind, Ctx};
 pub use local_names::{LiveNames, LocalNamesOptions};
 pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
+pub use serve_mode::ServeMode;
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
 pub use services::{
     AgentsOptions, CacheOptions, CacheService, ConsumerSource, ConsumerStatus, Consumers,

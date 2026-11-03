@@ -7,7 +7,7 @@ use argus_core::Paths;
 use argus_core::config::env_port;
 use argus_core::names::HTTP_PORT;
 use argus_server::preview::PREVIEW_PORT;
-use argus_server::{ServeOptions, serve};
+use argus_server::{ServeMode, ServeOptions, serve};
 
 /// The folders of the dashboard: `COORD_HOME` from the environment, and the given home or the
 /// default one.
@@ -32,11 +32,11 @@ fn pick_port(flag: Option<u16>, env: Option<u16>) -> Option<u16> {
     flag.or(env)
 }
 
-fn mode_label(shadow: bool, preview: bool) -> &'static str {
-    match (shadow, preview) {
-        (true, _) => " (shadow)",
-        (_, true) => " (preview)",
-        _ => "",
+fn mode_label(mode: ServeMode) -> &'static str {
+    match mode {
+        ServeMode::Shadow => " (shadow)",
+        ServeMode::Preview => " (preview)",
+        ServeMode::Live => "",
     }
 }
 
@@ -51,16 +51,15 @@ pub async fn run(
     data_dir: Option<PathBuf>,
     mode: (bool, bool),
 ) -> Result<u8, String> {
-    let (shadow, preview) = mode;
+    let mode = ServeMode::of(mode.0, mode.1);
     let paths = paths_of(data_dir);
     if let Some(why) = super::node_guard::refusal(&paths).await {
         return Err(why);
     }
     let mut opts = ServeOptions::new(paths);
-    opts.port = port_of(port)?.or(preview.then_some(PREVIEW_PORT));
-    opts.shadow = shadow;
-    opts.preview = preview;
-    opts.shadow_seed = shadow.then(|| Paths::from_env().home);
+    opts.port = port_of(port)?.or((mode == ServeMode::Preview).then_some(PREVIEW_PORT));
+    opts.mode = mode;
+    opts.shadow_seed = (mode == ServeMode::Shadow).then(|| Paths::from_env().home);
     opts.notify.system = true;
     opts.localhost_door_port = Some(HTTP_PORT);
     let server = serve(opts).await.map_err(|e| e.to_string())?;
@@ -68,7 +67,7 @@ pub async fn run(
         "dashboard listening on {}/ (pid {}){}",
         server.url,
         std::process::id(),
-        mode_label(shadow, preview)
+        mode_label(mode)
     );
     let svc = Arc::clone(&server.svc);
     tokio::spawn(async move {

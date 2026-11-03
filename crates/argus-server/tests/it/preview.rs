@@ -11,12 +11,12 @@ use crate::machine::{Machine, install, row};
 use crate::posting::{cli, entry_count};
 use crate::runs_rig::Rig;
 use argus_core::Paths;
-use argus_server::{ServeError, ServeOptions, serve};
+use argus_server::{ServeError, ServeMode, ServeOptions, serve};
 use argus_testkit::{Request, TestOptions, TestServer, Tweak};
 use serde_json::json;
 
 fn preview_tweak() -> Tweak {
-    Arc::new(|opts: &mut ServeOptions| opts.preview = true)
+    Arc::new(|opts: &mut ServeOptions| opts.mode = ServeMode::Preview)
 }
 
 fn preview_options() -> TestOptions {
@@ -113,7 +113,7 @@ async fn a_preview_refuses_a_process_kill() {
     let t = TestServer::start(TestOptions {
         tweak: Some(Arc::new(move |opts: &mut ServeOptions| {
             install(&wired, opts);
-            opts.preview = true;
+            opts.mode = ServeMode::Preview;
         })),
         ..TestOptions::default()
     })
@@ -140,7 +140,7 @@ async fn a_preview_does_not_start_on_the_live_boards_and_writes_nothing_there() 
     let live = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
     let mut opts = ServeOptions::new(Paths::new(live.path(), Some(home.path().join("dash"))));
-    opts.preview = true;
+    opts.mode = ServeMode::Preview;
     opts.port = Some(0);
     opts.live_coord_home = Some(PathBuf::from(live.path()));
     let refused = serve(opts).await.err().expect("the start is refused");

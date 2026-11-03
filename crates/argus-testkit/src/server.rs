@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use argus_core::Paths;
 use argus_core::clock::{ManualClock, now_ms};
-use argus_server::{ServeOptions, ServerHandle, Services, serve};
+use argus_server::{ServeMode, ServeOptions, ServerHandle, Services, serve};
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
@@ -127,7 +127,7 @@ impl TestServer {
         let mut opts = ServeOptions::new(paths);
         opts.port = Some(0);
         opts.sync = o.sync;
-        opts.shadow = o.shadow;
+        opts.mode = ServeMode::of(o.shadow, false);
         opts.heartbeat = o.heartbeat;
         opts.web_root = Some(dashboard_home.join("no-web-build"));
         opts.procs.enabled = false;

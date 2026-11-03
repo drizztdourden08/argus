@@ -28,6 +28,7 @@ use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::local_names::{self, Front, LocalNamesOptions};
 use crate::localhost_door;
 use crate::security::LoginCodes;
+use crate::serve_mode::ServeMode;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
 use crate::sse::Fanout;
@@ -54,13 +55,11 @@ pub struct ServeOptions {
     pub web_root: Option<PathBuf>,
     /// Run the sync service.
     pub sync: bool,
-    /// Shadow mode: no board writes.
-    pub shadow: bool,
+    /// Live, shadow (no board writes) or preview (a copied home with board writes and no
+    /// outward effect, refused on the live boards).
+    pub mode: ServeMode,
     /// The Node dashboard home a shadow copies its database, config and process rules from.
     pub shadow_seed: Option<PathBuf>,
-    /// Preview mode: a copied home with board writes and no outward effect. Refused on the
-    /// live boards.
-    pub preview: bool,
     /// The live boards folder a preview refuses; `None` is the default `~/.coord`. A test
     /// names a throwaway folder.
     pub live_coord_home: Option<PathBuf>,
@@ -101,9 +100,8 @@ impl ServeOptions {
             heartbeat: Duration::from_secs(15),
             web_root: None,
             sync: true,
-            shadow: false,
+            mode: ServeMode::Live,
             shadow_seed: None,
-            preview: false,
             live_coord_home: None,
             echo_log: false,
             runs: None,
@@ -202,13 +200,13 @@ struct Core {
 
 async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
-    if opts.shadow {
-        shadow::prepare(&paths, opts.shadow_seed.as_deref())?;
-    } else if opts.preview {
-        preview::prepare(&paths, opts.live_coord_home.as_deref())?;
+    match opts.mode {
+        ServeMode::Shadow => shadow::prepare(&paths, opts.shadow_seed.as_deref())?,
+        ServeMode::Preview => preview::prepare(&paths, opts.live_coord_home.as_deref())?,
+        ServeMode::Live => {}
     }
     let config = checked_config(&paths, opts.port).await?;
-    if !opts.shadow && !opts.preview {
+    if opts.mode == ServeMode::Live {
         first_start::back_up_node_database(&paths)?;
     }
     let log = Arc::new(
@@ -219,7 +217,7 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
         )
         .echo(opts.echo_log),
     );
-    if opts.shadow {
+    if opts.mode == ServeMode::Shadow {
         for finding in shadow::board_findings(&paths.coord_home) {
             log.error("board file damaged", json!({ "finding": finding }));
         }
@@ -277,9 +275,9 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         notifier: None,
         instance,
         started_at: now_iso(),
-        shadow: opts.shadow || opts.preview,
-        board_writes: !opts.shadow,
-        preview: opts.preview,
+        shadow: opts.mode.outward_off(),
+        board_writes: opts.mode != ServeMode::Shadow,
+        preview: opts.mode == ServeMode::Preview,
         heartbeat: opts.heartbeat,
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
@@ -300,8 +298,9 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
 /// whatever way the server was started. Shadow outranks preview: it writes nothing.
 fn marked_by_home(opts: &ServeOptions) -> ServeOptions {
     let mut opts = opts.clone();
-    opts.shadow = opts.shadow || shadow::marked(&opts.paths.config);
-    opts.preview = !opts.shadow && (opts.preview || preview::marked(&opts.paths.config));
+    let shadow = opts.mode == ServeMode::Shadow || shadow::marked(&opts.paths.config);
+    let preview = opts.mode == ServeMode::Preview || preview::marked(&opts.paths.config);
+    opts.mode = ServeMode::of(shadow, preview);
     opts
 }
 
