@@ -333,6 +333,31 @@ their own Argus tests and by the owner's check.
 | coord board shortcut | Board shortcut writes launch.json entries on alias hosts as the Node verb. | 8 |
 | coord run client | Run verbs start, wait, stop, list and stream logs through the server and start it when down. | 8 |
 
+## Argus only
+
+These areas have no Node counterpart and no Node test, so the matrix does not cover them. The
+Node dashboard never learns them. A board that uses them stays valid for Node (the new fields are
+optional and kept in order), but Node shows none of it. Each row is proven by Argus tests alone
+(the shared case file for content, the board and coord tests for the rest) and by the owner's check
+in a preview. See `docs/architecture.md`, Item types, for the design.
+
+| Feature area | Acceptance | Slice |
+|---|---|---|
+| Item type registry | One registry file gives the types, stages, fields and limits to Rust and the web, and a critical test checks it against its schema. | Rework |
+| Typed items | An item takes a type, a parent, an assignee, a stage and typed fields; an item with none of them behaves as before. | Rework |
+| Content rules | Rust and the web pass the same case file for every field, and a refusal carries a stable key. | Rework |
+| Stages and done rules | A stage maps to a lane, a refusing rule names what is missing, and `--force` writes a decision. | Rework |
+| One blocked rule | The wake engine, the export and the page agree on every cause, and a settled link never counts. | Rework |
+| Blockers are links | `coord item block` takes an id or a to-do and refuses text; `migrate-blockers --dry-run` writes nothing. | Rework |
+| Dependency trail | The trail walks `blockedBy` and the ledger across boards, cycle safe, and the card and the Links tab show it. | Rework |
+| Item events | Each assignment, stage change, ask, unblock, children done and plan run wakes once and survives a restart. | Rework |
+| Test plans and plan runs | A plan with cases runs end to end, each result also lands on the test, and ending a run sets the stage. | Rework |
+| Notes and to-do assignees | `coord note` keeps a never blocking note, and a to-do goes to the owner, a thread or another lead. | Rework |
+| Item images | An item keeps pictures with a caption and a hash, the same bytes once, and the pane shows them. | Rework |
+| Item pane and card | Every type opens with its registry tabs, and a card shows its type, assignee, chips and progress. | Rework |
+| Tree view | The Kanban tab shows the hierarchy epic, story and leaf with progress, folds per node and opens the pane. | Rework |
+| Preview mode | `argus serve --preview` accepts board writes on a copied home, runs no outward effect and refuses the live home. | Rework |
+
 ## Switch-over checklist
 
 - [ ] Every matrix row is `done` or `n/a`, and every feature area of slices 1 to 7 is accepted.

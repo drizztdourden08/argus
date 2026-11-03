@@ -5,12 +5,12 @@ import { FilterRow } from './FilterRow';
 import { ViewRow } from './ViewRow';
 
 const KanbanToolbar = (props: KanbanToolbarProps) => {
-  const { boardKey, state, view, items, threads, selection } = props;
+  const { boardKey, state, view, items, threads, selection, layout } = props;
   return (
     <Card container role="search" aria-label="Filters">
       <Flex direction="column" gap="sm">
         <FilterRow boardKey={boardKey} state={state} items={items} threads={threads} />
-        <ViewRow state={state} view={view} selection={selection} />
+        <ViewRow state={state} view={view} selection={selection} layout={layout} />
       </Flex>
     </Card>
   );

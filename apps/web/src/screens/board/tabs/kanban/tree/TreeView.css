@@ -1,0 +1,6 @@
+/* @layer renderer-app @kind style */
+
+.item-tree {
+  block-size: 70vh;
+  min-block-size: var(--size-256);
+}
