@@ -6,6 +6,7 @@ use std::sync::Arc;
 use argus_core::Paths;
 use argus_core::config::env_port;
 use argus_core::names::HTTP_PORT;
+use argus_server::preview::PREVIEW_PORT;
 use argus_server::{ServeOptions, serve};
 
 /// The folders of the dashboard: `COORD_HOME` from the environment, and the given home or the
@@ -31,19 +32,34 @@ fn pick_port(flag: Option<u16>, env: Option<u16>) -> Option<u16> {
     flag.or(env)
 }
 
-/// Runs the server until it is told to stop.
+fn mode_label(shadow: bool, preview: bool) -> &'static str {
+    match (shadow, preview) {
+        (true, _) => " (shadow)",
+        (_, true) => " (preview)",
+        _ => "",
+    }
+}
+
+/// Runs the server until it is told to stop. `mode` is `(shadow, preview)`; a preview takes the
+/// port 47617 when nothing else names one, and never the localhost door or the local names.
 ///
 /// # Errors
 ///
 /// The port is refused or the server does not start.
-pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> Result<u8, String> {
+pub async fn run(
+    port: Option<u16>,
+    data_dir: Option<PathBuf>,
+    mode: (bool, bool),
+) -> Result<u8, String> {
+    let (shadow, preview) = mode;
     let paths = paths_of(data_dir);
     if let Some(why) = super::node_guard::refusal(&paths).await {
         return Err(why);
     }
     let mut opts = ServeOptions::new(paths);
-    opts.port = port_of(port)?;
+    opts.port = port_of(port)?.or(preview.then_some(PREVIEW_PORT));
     opts.shadow = shadow;
+    opts.preview = preview;
     opts.shadow_seed = shadow.then(|| Paths::from_env().home);
     opts.notify.system = true;
     opts.localhost_door_port = Some(HTTP_PORT);
@@ -52,7 +68,7 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
         "dashboard listening on {}/ (pid {}){}",
         server.url,
         std::process::id(),
-        if shadow { " (shadow)" } else { "" }
+        mode_label(shadow, preview)
     );
     let svc = Arc::clone(&server.svc);
     tokio::spawn(async move {

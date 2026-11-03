@@ -18,6 +18,7 @@ pub mod instance;
 mod local_names;
 mod localhost_door;
 mod pathing;
+pub mod preview;
 mod reply;
 mod router;
 pub mod routes;

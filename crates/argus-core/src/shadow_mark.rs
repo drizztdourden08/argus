@@ -19,7 +19,7 @@ pub const KEY: &str = "shadow";
 /// The port of a shadow: the Node server keeps 47615 beside it.
 pub const SHADOW_PORT: u16 = 47616;
 
-fn read_object(config: &Path) -> Option<Map<String, Value>> {
+pub(crate) fn read_object(config: &Path) -> Option<Map<String, Value>> {
     let text = fs::read_to_string(config).ok()?;
     match serde_json::from_str::<Value>(text.trim_start_matches('\u{feff}')) {
         Ok(Value::Object(object)) => Some(object),

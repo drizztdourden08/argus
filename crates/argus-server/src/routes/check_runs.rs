@@ -23,7 +23,7 @@ use super::blocking::blocking;
 use super::check_guard::Before;
 use super::params::key;
 use super::runs::{refusal, service};
-use super::write::{actor, object_body, writable};
+use super::write::{actor, object_body, outward};
 use crate::adapters::check_links::{CheckLinks, run_id_of};
 use crate::adapters::runs::RunHost;
 use crate::reply::json_reply;
@@ -390,7 +390,7 @@ fn paused(ctx: &Ctx) -> Result<(), ApiError> {
 }
 
 async fn start(ctx: Ctx) -> Reply {
-    writable(&ctx)?;
+    outward(&ctx)?;
     paused(&ctx)?;
     let runs = service(&ctx)?;
     let body = object_body(&ctx).await?;

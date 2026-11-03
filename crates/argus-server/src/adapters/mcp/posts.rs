@@ -11,7 +11,7 @@ use super::errors::{api, read_only};
 use crate::Services;
 
 fn writer(svc: &Services) -> Result<Arc<SyncService>, ToolError> {
-    if svc.shadow {
+    if !svc.board_writes {
         return Err(read_only("shadow mode: Argus does not write boards"));
     }
     svc.sync

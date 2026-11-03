@@ -46,6 +46,7 @@ mod portfolio_send_cli;
 mod posts;
 mod pr_checks;
 mod pr_checks_runs;
+mod preview;
 mod procs;
 mod records;
 mod records_node;

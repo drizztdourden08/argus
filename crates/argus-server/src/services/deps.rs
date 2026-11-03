@@ -46,9 +46,9 @@ pub(crate) fn enabled(svc: &Services) -> bool {
     svc.config().deps_enabled()
 }
 
-/// A write is refused in shadow mode.
+/// A write is refused in shadow mode (a preview writes boards).
 fn writable(svc: &Services) -> Result<(), ApiError> {
-    if svc.shadow {
+    if !svc.board_writes {
         return Err(ApiError::new(
             ErrorCode::ReadOnly,
             "shadow mode: Argus changes no dependency",
@@ -97,7 +97,7 @@ pub(crate) async fn ack(
     ids: Vec<String>,
     actor: String,
 ) -> Vec<String> {
-    if svc.shadow {
+    if !svc.board_writes {
         return Vec::new();
     }
     let held = Arc::clone(svc);
