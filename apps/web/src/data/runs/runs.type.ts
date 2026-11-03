@@ -64,9 +64,9 @@ interface RunLogLine {
 }
 
 interface RunLogPage {
-  lines: RunLogLine[];
-  next: number;
-  dropped: number;
+  lines?: RunLogLine[];
+  next?: number;
+  dropped?: number;
 }
 
 interface RunLogQuery {

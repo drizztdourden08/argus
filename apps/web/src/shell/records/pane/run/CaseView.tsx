@@ -15,11 +15,11 @@ const CaseView = (props: CaseViewProps) => {
         </Pressable>
         <Text as="span" weight={600} smartTimes>{test.title}</Text>
       </Flex>
-      <CaseLines title="Setup" lines={test.setup.map((entry) => `${entry.label}: ${entry.text}`)} />
-      <CaseLines title="Steps" lines={test.steps} ordered />
-      <CaseLines title="Pass when" lines={test.pass} />
-      <CaseLines title="Fail when" lines={test.fail} />
-      <CaseLines title="Notes" lines={test.notes} />
+      <CaseLines title="Setup" lines={(test.setup ?? []).map((entry) => `${entry.label}: ${entry.text}`)} />
+      <CaseLines title="Steps" lines={test.steps ?? []} ordered />
+      <CaseLines title="Pass when" lines={test.pass ?? []} />
+      <CaseLines title="Fail when" lines={test.fail ?? []} />
+      <CaseLines title="Notes" lines={test.notes ?? []} />
       <CaseLinks test={test} open={open} />
     </Flex>
   );

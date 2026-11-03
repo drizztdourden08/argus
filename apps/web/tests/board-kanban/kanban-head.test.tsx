@@ -51,7 +51,8 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:rotp' });
     expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).closest('svg')).toBeTruthy();
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: PIXEL });
-    expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).getAttribute('src')).toBe(PIXEL);
+    expect(within(headOf('I-2')).getAllByRole('img', { name: LEAD })).toHaveLength(2);
+    expect(headOf('I-2').querySelector('[data-lead-mark] img')?.getAttribute('src')).toBe(PIXEL);
   });
 });
 

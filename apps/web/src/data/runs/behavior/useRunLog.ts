@@ -20,8 +20,8 @@ const useRunLog = (key: string, runId: string | null, options: RunLogOptions): R
     let stop: (() => void) | null = null;
     fetchRunLogs(key, runId, { tail: limit }).then((page) => {
       if (cancelled) return;
-      push(page.lines);
-      if (page.dropped > 0) note(`... ${page.dropped} older lines were dropped to keep the log small`);
+      push(page.lines ?? []);
+      if ((page.dropped ?? 0) > 0) note(`... ${page.dropped} older lines were dropped to keep the log small`);
       if (liveNow.current) stop = tailRun(key, runId, { onLine: (line) => push([line]) }, page.next);
     }, (error: unknown) => {
       if (!cancelled) note(`could not load the output: ${errorMessage(error)}`);

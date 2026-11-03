@@ -12,7 +12,7 @@ const itemPaneData = (item: ItemRef, kanban: KanbanData, shared: Shared): PaneDa
     ...shared,
     item,
     items: kanban.items,
-    tests: allTests.filter((test) => test.item === item.id),
+    tests: allTests.filter((test) => test.item === item.id && !test.archivedAt),
     allTests,
     threads: kanban.threads,
     waiting: needsYou(kanban.needs.get(item.id)),
