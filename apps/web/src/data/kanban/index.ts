@@ -7,6 +7,7 @@ export { criterionOp } from './criterion-op';
 export { editDoc } from './edit-doc';
 export { moveItem } from './move-item';
 export { opVerdict } from './op-verdict';
+export { prevText } from './prev-text';
 export { purgeOp } from './purge-op';
 export { resendOp } from './resend-op';
 export { SOFT_INVERSE } from './kanban.constants';

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { inTab } from './kanban-drawer-dom';
 import { HOUR, ago, boardOf, cleanKanban, item, mountKanban, openItem } from './kanban-harness';
 
 cleanKanban();
@@ -45,7 +46,7 @@ describe('S1 the Dependency section of the drawer', { tags: ['standard'] }, () =
 
   it('shows the state, the other item as a link to its board, the reason and the age', async () => {
     await mountKanban({ items: [blocked()] });
-    const dialog = await openItem('I-1');
+    const dialog = inTab(await openItem('I-1'), 'Links');
     expect(within(dialog).getByText('Dependency')).toBeTruthy();
     expect(within(dialog).getAllByText('blocked').length).toBeGreaterThan(0);
     expect(within(dialog).getByRole('link', { name: 'rotp/I-12 Expose the save hook' }).getAttribute('href')).toBe('/p/rotp#I-12');
@@ -55,13 +56,13 @@ describe('S1 the Dependency section of the drawer', { tags: ['standard'] }, () =
 
   it('has no Dependency section on an item with no dependency', async () => {
     await mountKanban({ items: [item('I-1')] });
-    const dialog = await openItem('I-1');
+    const dialog = inTab(await openItem('I-1'), 'Links');
     expect(within(dialog).queryByText('Dependency')).toBeNull();
   });
 
   it('cancels as the owner and shows the answer text as a toast', async () => {
     const { posted } = await mountKanban({ items: [blocked()] }, (body) => (body.actor === 'owner' ? { dep: {}, text: 'D-4 is cancelled.' } : undefined));
-    const dialog = await openItem('I-1');
+    const dialog = inTab(await openItem('I-1'), 'Links');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(posted.at(-1)).toMatchObject({ url: '/api/deps/D-4/cancel', body: { actor: 'owner' } }));
     expect(await screen.findByText('D-4 is cancelled.')).toBeTruthy();
@@ -69,7 +70,7 @@ describe('S1 the Dependency section of the drawer', { tags: ['standard'] }, () =
 
   it('offers no Cancel once the request is done', async () => {
     await mountKanban({ items: [item('I-1', { waitsOn: waitsOn({ state: 'done' }) })] });
-    const dialog = await openItem('I-1');
+    const dialog = inTab(await openItem('I-1'), 'Links');
     expect(within(dialog).queryByRole('button', { name: 'Cancel' })).toBeNull();
   });
 });

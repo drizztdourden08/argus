@@ -56,7 +56,7 @@ const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delet
 
 const HUMAN = 'human';
 
-const ITEM_HASH = /^[IH]-\d+$/;
+const ITEM_HASH = /^([IH]-\d+)(?:\/([a-z][a-z-]*))?$/;
 
 const PAUSE_KINDS = ['pause', 'resume'];
 

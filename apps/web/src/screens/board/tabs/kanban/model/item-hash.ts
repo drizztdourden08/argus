@@ -1,9 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { ITEM_HASH } from './model.constants';
 
-const itemHash = (hash: string): string | null => {
-  const wanted = hash.replace(/^#/, '');
-  return ITEM_HASH.test(wanted) ? wanted : null;
-};
+const itemHash = (hash: string): string | null => ITEM_HASH.exec(hash.replace(/^#/, ''))?.[1] ?? null;
 
 export { itemHash };

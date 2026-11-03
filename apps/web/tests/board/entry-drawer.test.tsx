@@ -72,6 +72,7 @@ describe('I-68 the entry pane', { tags: ['standard'] }, () => {
   it('opens from the id of an entry in the drawer of the item', async () => {
     await mount('/p/rotp/#I-1');
     const drawer = await screen.findByRole('dialog', { name: 'Work item' });
+    fireEvent.click(within(drawer).getByRole('tab', { name: /^Discussion/ }));
     const links = await within(drawer).findAllByRole('button', { name: 'Open Q-1' });
     fireEvent.click(links[0] as HTMLElement);
     expectDetail(await paneOf());

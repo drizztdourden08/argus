@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useMemo } from 'react';
-import { SOFT_INVERSE, createAction, createItem, criterionOp, editDoc, moveItem, softOp } from '../../../../../data/kanban';
+import { SOFT_INVERSE, createAction, createItem, criterionOp, editDoc, moveItem, prevText, softOp } from '../../../../../data/kanban';
 import type { ItemRef, SoftKind } from '../../../../../data/kanban';
 import { SOFT_LABEL, useWriter } from '../../../shared';
 import type { ItemOps } from '../kanban.type';
@@ -17,7 +17,7 @@ const useItemOps = (boardKey: string): ItemOps => {
     return {
       move: (item, to, message) => write(() => moveItem(boardKey, item, to), message),
       setField: (item, field, value, message) =>
-        write(() => editDoc(boardKey, { c: 'items', id: item.id, rev: item.rev }, { field, prev: item[field] ?? '', value }), message ?? `Saved ${item.id}.`),
+        write(() => editDoc(boardKey, { c: 'items', id: item.id, rev: item.rev }, { field, prev: prevText(item, field), value }), message ?? `Saved ${item.id}.`),
       editRecord: (ref, change, message) => write(() => editDoc(boardKey, ref, change), message),
       criterion: (item, op, message) => write(() => criterionOp(boardKey, item, op), message),
       create: (item) => write(() => createItem(boardKey, item), `Adding "${item.title}".`),

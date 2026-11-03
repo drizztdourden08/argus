@@ -51,6 +51,7 @@ interface TimelineInput {
 interface ItemRecord {
   questions: EntryRow[];
   decisions: EntryRow[];
+  notes: EntryRow[];
   todos: TodoRow[];
   timeline: TimelineRow[];
 }

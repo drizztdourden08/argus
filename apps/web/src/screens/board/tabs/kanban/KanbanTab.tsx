@@ -62,6 +62,7 @@ const KanbanTab = (props: KanbanTabProps) => {
       <ItemDrawer
         boardKey={boardKey}
         item={drawer.opened}
+        items={data.items}
         tests={drawerTests}
         threads={data.threads}
         actions={data.actions}

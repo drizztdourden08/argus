@@ -1,11 +1,12 @@
 /* @layer renderer-app @kind constants */
-const ENTRY_KINDS = ['question', 'decision'];
+const ENTRY_KINDS = ['question', 'decision', 'note'];
 
-const TIMELINE_KINDS = ['question', 'decision', 'followup', 'notice', 'message'];
+const TIMELINE_KINDS = ['question', 'decision', 'note', 'followup', 'notice', 'message'];
 
 const KIND_LABEL: Record<string, string> = {
   question: 'question',
   decision: 'decision',
+  note: 'note',
   followup: 'note',
   notice: 'info',
   message: 'message',

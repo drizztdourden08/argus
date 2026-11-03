@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { waitFor } from '@testing-library/react';
+import { fireEvent, waitFor, within } from '@testing-library/react';
 import { expect } from 'vitest';
 import type { Doc, Posted } from './kanban-harness';
 import { item, mountKanban, openItem } from './kanban-harness';
@@ -21,6 +21,11 @@ const tests = [
   { id: 'T-3', item: 'I-9', title: 'Elsewhere', mode: 'auto', status: 'pass', ac: [] },
 ];
 
+const inTab = (dialog: HTMLElement, name: string): HTMLElement => {
+  fireEvent.click(within(dialog).getByRole('tab', { name: new RegExp(`^${name}`) }));
+  return dialog;
+};
+
 const opened = async (extra: Doc = {}) => {
   const mounted = await mountKanban({ items: [rich(extra)], tests });
   const dialog = await openItem('I-1');
@@ -32,4 +37,4 @@ const postedEdit = async (posted: Posted[], set: Doc, prev: Doc): Promise<void> 
   expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'items', id: 'I-1' }, set, prev, baseRev: 3 });
 };
 
-export { opened, postedEdit, rich };
+export { inTab, opened, postedEdit, rich };

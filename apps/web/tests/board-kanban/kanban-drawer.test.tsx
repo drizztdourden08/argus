@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { opened, rich } from './kanban-drawer-dom';
+import { inTab, opened, rich } from './kanban-drawer-dom';
 import { MIN, ago, cleanKanban, item, mountKanban, openItem } from './kanban-harness';
 
 cleanKanban();
@@ -13,6 +13,7 @@ describe('S1 the detail drawer', { tags: ['standard'] }, () => {
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 1 met' }).checked).toBe(false);
     expect(within(dialog).getByRole<HTMLInputElement>('checkbox', { name: 'Criterion 2 met' }).checked).toBe(true);
     expect(within(dialog).getByText('proved by T-1')).toBeTruthy();
+    inTab(dialog, 'Tests');
     expect(within(dialog).getByText('Tests · 1/2 passing')).toBeTruthy();
     expect(within(dialog).getByText('Wrong password')).toBeTruthy();
     expect(within(dialog).queryByText('Elsewhere')).toBeNull();
@@ -52,7 +53,7 @@ describe('K5 I-86 the tests a drawer counts', { tags: ['standard'] }, () => {
       tests: [{ ...moved, item: 'I-86' }, { ...closed, item: 'I-86' }],
       builds: [{ tag: 'old-1', closedAt: ago(MIN) }],
     });
-    const dialog = await openItem('I-86');
+    const dialog = inTab(await openItem('I-86'), 'Tests');
     expect(within(dialog).getByText('Tests · 0/0 passing')).toBeTruthy();
     expect(within(dialog).queryByText('Moved away')).toBeNull();
   });

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { ReorderDrag } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, RefObject } from 'react';
-import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, ItemInput, ItemRef, MoveTarget, SoftKind, ThreadChoice } from '../../../../data/kanban';
+import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, FieldValue, ItemInput, ItemRef, MoveTarget, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
@@ -113,7 +113,7 @@ interface RecordActions {
 
 interface ItemOps {
   move: (item: ItemRef, to: MoveTarget, message: string) => Promise<boolean>;
-  setField: (item: ItemRef, field: EditField, value: string, message?: string) => Promise<boolean>;
+  setField: (item: ItemRef, field: EditField, value: FieldValue, message?: string) => Promise<boolean>;
   editRecord: (ref: EditRef, change: EditChange, message: string) => Promise<boolean>;
   criterion: (item: ItemRef, op: CriterionOp, message: string) => Promise<boolean>;
   create: (item: ItemInput) => Promise<boolean>;
