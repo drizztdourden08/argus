@@ -53,7 +53,7 @@ describe('S1 what the thread drawer shows', { tags: ['standard'] }, () => {
 });
 
 describe('S1 the open work in the thread drawer', { tags: ['standard'] }, () => {
-  it('lists the open work of the thread only, and opens the item on the Kanban tab', async () => {
+  it('lists the open work of the thread only, and opens the item in its pane', async () => {
     await mountBoard({
       threads: docs(worker()),
       registry: docs(chip('worker')),
@@ -64,8 +64,7 @@ describe('S1 the open work in the thread drawer', { tags: ['standard'] }, () => 
     expect(work.getAllByRole('button').map((button) => button.getAttribute('aria-label'))).toEqual(['Open K-1', 'Open K-5']);
     fireEvent.click(work.getByRole('button', { name: 'Open K-5' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thread detail' })).toBeNull());
-    expect(await screen.findByRole('tab', { name: /^Kanban/ })).toBeTruthy();
-    await waitFor(() => expect(screen.getByRole('tab', { name: /^Kanban/ }).getAttribute('aria-selected')).toBe('true'));
+    expect(await screen.findByRole('dialog', { name: 'Work item' })).toBeTruthy();
   });
 
   it('shows 15 items and says how many more there are', async () => {

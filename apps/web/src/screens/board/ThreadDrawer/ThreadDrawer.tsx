@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { useNavigate } from 'react-router';
+import { useRecordPane } from '../../../shell';
 import { RecordDrawer, WIDE_KEY, nonEmpty, useNow, useStoredFlag } from '../shared';
 import { useThreadOps } from './behavior/useThreadOps';
 import { useThreadOrder } from './behavior/useThreadOrder';
@@ -16,12 +16,12 @@ const ThreadDrawer = (props: ThreadDrawerProps) => {
   const ops = useThreadOps(boardKey);
   const order = useThreadOrder(boardKey);
   const now = useNow(id !== null);
-  const navigate = useNavigate();
+  const pane = useRecordPane();
   const [wide, setWide] = useStoredFlag(WIDE_KEY);
   const { thread } = view;
   const openItem = (itemId: string) => {
     onClose();
-    void navigate({ hash: itemId }, { replace: true });
+    pane.open(itemId);
   };
   return (
     <RecordDrawer
