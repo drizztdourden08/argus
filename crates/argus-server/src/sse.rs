@@ -26,7 +26,7 @@ mod fanout;
 mod frame;
 mod run_logs;
 
-pub use fanout::{Fanout, MAX_CLIENTS_PER_SCOPE, StreamRequest};
+pub use fanout::{Fanout, Handle, Kind, MAX_CLIENTS_PER_SCOPE, StreamRequest, Target};
 pub use frame::{frame, frame_with, mux_frame};
 pub use run_logs::{LogListening, RunLogs};
 
