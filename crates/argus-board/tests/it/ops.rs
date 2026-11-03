@@ -111,7 +111,7 @@ fn the_owner_creates_an_item_with_criteria_for_a_thread() {
     assert_eq!(b["entries"][id.as_str()]["outcome"], "I-3 created");
     let item = &b["items"]["I-3"];
     assert_eq!(item["origin"], "coordinator");
-    assert_eq!(item["subject"], "ui");
+    assert_eq!(item["subject"], Value::Null);
     assert_eq!(item["ac"].as_array().map(Vec::len), Some(2));
     assert_eq!(item["createdBy"], "human");
     assert_eq!(b["counters"]["I"], 3);

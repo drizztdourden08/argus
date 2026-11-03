@@ -4,7 +4,8 @@
 use argus_core::js;
 use serde_json::Value;
 
-use super::target::{ITEM_STATUSES, item_arg, one_of};
+use super::target::{ITEM_STATUSES, item_arg, one_of, record_arg};
+use super::typed;
 use super::who::Who;
 use crate::Board;
 use crate::agents::is_live;
@@ -13,7 +14,6 @@ use crate::json::{display, truthy};
 use crate::limits::{
     OWNER_TEXT_MAX, limit, optional_text, require_text, require_text_max, text_list,
 };
-use crate::text::slug;
 
 const ACTION_STATUSES: [&str; 2] = ["pending", "done"];
 const TEST_MODES: [&str; 2] = ["auto", "manual"];
@@ -27,22 +27,33 @@ pub(crate) struct EditCtx<'a> {
     pub who: &'a Who,
 }
 
-/// Whether a field of a collection can be edited.
+/// Whether a field of a collection can be edited. An item's own fields are edited one by one as
+/// `fields.<id>`.
 pub(crate) fn editable(coll: &str, field: &str) -> bool {
     matches!(
         (coll, field),
         (
             "items",
-            "title" | "description" | "subject" | "status" | "blocker"
+            "title"
+                | "description"
+                | "status"
+                | "blocker"
+                | "type"
+                | "parent"
+                | "assignee"
+                | "stage"
+                | "fields"
+                | "blockedBy"
+                | "images"
         ) | ("tests", "title" | "covers" | "mode" | "build")
-            | ("actions", "text" | "item" | "status")
+            | ("actions", "text" | "item" | "status" | "assignee")
             | ("entries", "text" | "options")
             | ("threads", "subject" | "brief" | "rank")
             | (
                 "agents",
                 "note" | "task" | "item" | "branch" | "worktree" | "status"
             )
-    )
+    ) || (coll == "items" && field.starts_with("fields."))
 }
 
 /// Check one value for a field the collection lets through [`editable`].
@@ -52,7 +63,6 @@ pub(crate) fn check(coll: &str, field: &str, v: &Value, cx: &EditCtx) -> Result<
         ("items", "description") => Ok(Value::String(
             optional_text("description", v)?.unwrap_or_default(),
         )),
-        ("items", "subject") => Ok(Value::String(slug(&require_text("subject", v)?))),
         ("items", "status") => one_of(&ITEM_STATUSES, v, "status"),
         ("items", "blocker") => optional("note", v),
         ("tests", "mode") => one_of(&TEST_MODES, v, "mode"),
@@ -67,7 +77,10 @@ pub(crate) fn check(coll: &str, field: &str, v: &Value, cx: &EditCtx) -> Result<
         ("tests", "covers" | "build")
         | ("threads", "subject" | "brief")
         | ("agents", "branch" | "worktree") => optional(field, v),
-        _ => item_or_none(v, cx),
+        ("actions", "assignee") => typed::todo_assignee(cx.board, v),
+        ("actions", "item") => record_or_none(v, cx),
+        ("agents", "item") => item_or_none(v, cx),
+        _ => Err(refuse(format!("{field} cannot be edited on {coll}."))),
     }
 }
 
@@ -87,12 +100,23 @@ fn item_or_none(v: &Value, cx: &EditCtx) -> Result<Value, BoardError> {
     }
 }
 
+fn record_or_none(v: &Value, cx: &EditCtx) -> Result<Value, BoardError> {
+    if js::truthy(v) {
+        Ok(Value::String(record_arg(cx.board, v)?))
+    } else {
+        Ok(Value::Null)
+    }
+}
+
 fn entry_text(v: &Value, cx: &EditCtx) -> Result<Value, BoardError> {
     let human = cx.who.is_human();
     if human && cx.doc["author"] != "human" {
         return Err(refuse(
             "the owner never edits a thread's own wording; close, archive or delete it instead.",
         ));
+    }
+    if cx.doc["kind"] == "note" {
+        return typed::note_text(cx.board, cx.doc, v);
     }
     let kind = cx.doc["kind"]
         .as_str()

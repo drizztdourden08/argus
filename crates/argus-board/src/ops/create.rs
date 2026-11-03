@@ -6,14 +6,15 @@ use serde_json::{Map, Value, json};
 use super::announce::{announce, coordinator_ids, refresh_needs_human};
 use super::authorize::{Check, authorize};
 use super::result::OpResult;
-use super::target::{ITEM_STATUSES, id_arg, item_arg, one_of, thread_arg};
+use super::target::{ITEM_STATUSES, id_arg, one_of, record_arg, record_thread, thread_arg};
+use super::typed::{self, Outcome};
 use super::who::{Role, Who};
 use crate::Board;
 use crate::error::{BoardError, refuse};
 use crate::json::{display, doc, nullish, obj, shown};
-use crate::limits::{optional_text, require_text, text_list};
+use crate::limits::{require_text, text_list};
 use crate::store::{create_doc, rank_between};
-use crate::text::{clip_text, slug};
+use crate::text::clip_text;
 
 /// The thread a created record belongs to: the one named, else the fallback, else the creator's
 /// own thread, else (the owner creating without naming one) the first live coordinator.
@@ -41,7 +42,19 @@ fn fields_of(value: Value) -> Map<String, Value> {
     }
 }
 
-fn item_fields(
+/// Who made the item: the coordinator side (the owner, or a lead filing for another thread) or
+/// the thread itself.
+fn origin_of(who: &Who, owner: &str) -> &'static str {
+    let from_other_lead = who.role == Role::Coordinator && who.self_id() != Some(owner);
+    if who.is_human() || from_other_lead {
+        "coordinator"
+    } else {
+        "thread"
+    }
+}
+
+/// An item that names no type, parent, assignee, stage or fields: the plain item of always.
+fn plain_item(
     board: &Board,
     who: &Who,
     set: &Map<String, Value>,
@@ -53,30 +66,40 @@ fn item_fields(
         Value::String(s) if !js::trim(&s).is_empty() => require_text("description", &json!(s))?,
         _ => String::new(),
     };
-    let thread_subject = doc(board, "threads", &owner).and_then(|t| nullish(t, "subject"));
-    let subject = optional_text("subject", &get("subject"))?
-        .or(thread_subject)
-        .unwrap_or_else(|| "general".to_owned());
     let status = match set.get("status") {
         None => json!("todo"),
         Some(v) => one_of(&ITEM_STATUSES, v, "status")?,
     };
-    let from_other_lead = who.role == Role::Coordinator && who.self_id() != Some(owner.as_str());
-    let origin = if who.is_human() || from_other_lead {
-        "coordinator"
-    } else {
-        "thread"
-    };
+    let origin = origin_of(who, &owner);
     let ac: Vec<Value> = text_list("ac", &get("ac"), 20)?
         .into_iter()
         .zip(1_u32..)
         .map(|(text, n)| json!({"n": n, "text": text, "done": false}))
         .collect();
     let fields = json!({
-        "title": title, "description": description, "subject": slug(&subject),
+        "title": title, "description": description,
         "thread": owner, "status": status, "origin": origin, "ac": ac,
     });
     Ok((fields_of(fields), owner))
+}
+
+/// The fields of a new item, its thread, and what the typed rules let through. An item that
+/// names a typed field follows the rules of its type; any other is a plain item.
+fn item_fields(
+    board: &Board,
+    who: &Who,
+    set: &Map<String, Value>,
+    op: &Value,
+) -> Result<(Map<String, Value>, String, Outcome), BoardError> {
+    if !typed::wants_create(set) {
+        let (fields, owner) = plain_item(board, who, set)?;
+        return Ok((fields, owner, Outcome::default()));
+    }
+    let named = typed::assignee_hint(board, set)?;
+    let owner = owner_for(board, who, named.as_ref().or(set.get("thread")), None)?;
+    let origin = origin_of(who, &owner);
+    let (fields, outcome) = typed::create_item(board, (who, op), set, (&owner, origin))?;
+    Ok((fields, owner, outcome))
 }
 
 fn action_fields(
@@ -86,19 +109,22 @@ fn action_fields(
 ) -> Result<(Map<String, Value>, String), BoardError> {
     let body = require_text("action", set.get("text").unwrap_or(&Value::Null))?;
     let item = match set.get("item").filter(|v| js::truthy(v)) {
-        Some(v) => Some(item_arg(board, v)?),
+        Some(v) => Some(record_arg(board, v)?),
         None => None,
     };
     let item_thread = item
         .as_deref()
-        .and_then(|i| doc(board, "items", i))
-        .and_then(|i| nullish(i, "thread"));
+        .map(|i| record_thread(board, i))
+        .filter(|t| !t.is_null())
+        .map(|t| display(&t));
     let owner = owner_for(board, who, set.get("thread"), item_thread)?;
     let fields = json!({
         "thread": owner, "item": item, "text": body, "status": "pending",
         "doneAt": null, "ackedAt": null,
     });
-    Ok((fields_of(fields), owner))
+    let mut fields = fields_of(fields);
+    typed::stamp_todo(board, set, &mut fields)?;
+    Ok((fields, owner))
 }
 
 /// Apply a `create` op: a new item (`I-n`) or action (`H-n`).
@@ -106,9 +132,11 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     let coll = op["target"]["c"].as_str();
     let empty = Map::new();
     let set = op["set"].as_object().unwrap_or(&empty);
+    let mut outcome = Outcome::default();
     let (mut fields, owner, prefix) = match coll {
         Some("items") => {
-            let (f, o) = item_fields(board, who, set)?;
+            let (f, o, made) = item_fields(board, who, set, op)?;
+            outcome = made;
             (f, o, "I")
         }
         Some("actions") => {
@@ -132,6 +160,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         fields.insert("rank".into(), js::number(rank));
     }
     let id = create_doc(board, coll, prefix, fields, &who.actor_of())?;
+    outcome.record(board, &id, who)?;
     if coll == "actions" {
         refresh_needs_human(board, &owner);
     }
@@ -141,7 +170,8 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         .unwrap_or_default();
     let said = format!("added {id} ({}) to {owner}", clip_text(&label, 50));
     let notify = announce(board, who, &[Some(owner)], &said, Some(&id));
-    Ok(OpResult::applied(format!("{id} created"))
+    let result = OpResult::applied(format!("{id} created"))
         .with_extra("created", json!({"c": coll, "id": id}))
-        .with_notify(notify))
+        .with_notify(notify);
+    Ok(outcome.finish(result))
 }
