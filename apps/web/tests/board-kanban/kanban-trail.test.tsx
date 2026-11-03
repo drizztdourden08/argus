@@ -102,6 +102,9 @@ describe('I-77 P6 the dependency trail in the Links tab', { tags: ['standard'] }
     await waitFor(() => expect(where.hash).toBe('#I-70'));
   });
 
+});
+
+describe('I-77 P6 the start and the absence of the trail', { tags: ['standard'] }, () => {
   it('offers no click on the start of the trail', async () => {
     const { dialog } = await linksOf(trail([local], 2));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });

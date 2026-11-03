@@ -64,6 +64,14 @@ interface RunPanelProps {
   data: PaneData;
 }
 
+interface RunBodyProps {
+  data: PaneData;
+  run: PlanRun | null;
+  ids: readonly string[];
+  ops: RunOps;
+  bundle: string | null;
+}
+
 interface RunStageProps {
   data: PaneData;
   run: PlanRun;
@@ -135,6 +143,6 @@ interface RunKeyHandlers {
 }
 
 export type {
-  CaseLinesProps, CaseLinksProps, CaseViewProps, EndRunProps, NoteFieldProps, OutcomeBarProps, PlanRun, RunHeadProps, RunKeyHandlers, RunnerAction, RunnerState, RunOps, RunOutcome, RunPanelProps, RunResult, RunStageProps, RunStartProps,
+  CaseLinesProps, RunBodyProps, CaseLinksProps, CaseViewProps, EndRunProps, NoteFieldProps, OutcomeBarProps, PlanRun, RunHeadProps, RunKeyHandlers, RunnerAction, RunnerState, RunOps, RunOutcome, RunPanelProps, RunResult, RunStageProps, RunStartProps,
   RunSummary, RunSummaryProps, SummaryKey,
 };

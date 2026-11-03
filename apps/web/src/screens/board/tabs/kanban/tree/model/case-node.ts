@@ -13,7 +13,7 @@ const caseNode = (plan: ItemRef, id: string, test: Test): TreeNode => ({
   title: test.title,
   stage: test.status,
   status: test.status,
-  assignee: test.mode === MANUAL_MODE ? OWNER : test.thread || OWNER,
+  assignee: test.mode === MANUAL_MODE ? OWNER : test.thread ?? OWNER,
   open: plan.id,
   count: NO_COUNT,
   children: [],

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_FILTERS, filtersActive, planCases, planOptions } from '../../src/screens/board/tabs/tests/model';
 import type { ItemDoc } from '../../src/screens/board/tabs/tests/model';
 import { cleanAfterEach } from './board-dom';
-import { filterBoard, pick, stored } from './filter-dom';
+import { filterBoard, pick, shown, stored } from './filter-dom';
 import { itemDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
@@ -18,12 +18,6 @@ const docs = (...list: object[]): ItemDoc[] => list as ItemDoc[];
 const withPlans = () => {
   const board = filterBoard();
   return { ...board, items: [...board.items, planDoc('I-5', ['T-1', 'T-3']), planDoc('I-6', ['T-2'])] };
-};
-
-const TITLES: Record<string, string> = { 'T-1': 'Login works', 'T-2': 'Logout works', 'T-3': 'Sound plays' };
-
-const shown = (...ids: string[]): void => {
-  for (const [id, title] of Object.entries(TITLES)) expect(screen.queryByText(title) !== null).toBe(ids.includes(id));
 };
 
 describe('I-70 P7 the plan filter model', { tags: ['critical'] }, () => {

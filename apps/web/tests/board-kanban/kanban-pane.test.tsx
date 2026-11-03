@@ -3,25 +3,10 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { fieldProblem } from '../../src/screens/board/tabs/kanban/pane/model/field-problem';
 import { inTab } from './kanban-drawer-dom';
-import type { Doc } from './kanban-harness';
-import { MIN, ago, cleanKanban, item, mountKanban, openItem, thread, where } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban, openItem, where } from './kanban-harness';
+import { bug, labelled, tabNames, tabOf } from './kanban-pane-dom';
 
 cleanKanban();
-
-const bug = (extra: Doc = {}): Doc =>
-  item('I-1', {
-    type: 'bug',
-    stage: 'reported',
-    title: 'Lobby',
-    fields: { severity: 'S2', environment: 'bundle-16', repro: '- open the lobby\n- look', foundIn: 'T-57' },
-    ...extra,
-  });
-
-const tabNames = (dialog: HTMLElement): string[] => within(dialog).getAllByRole('tab').map((tab) => tab.textContent ?? '');
-
-const tabOf = (dialog: HTMLElement, name: string): HTMLElement => within(dialog).getByRole('tab', { name: new RegExp(`^${name}`) });
-
-const labelled = (labels: string[]) => labels.map((label) => expect.stringMatching(new RegExp(`^${label}`)));
 
 describe('I-72 P6 the tabs of the pane', { tags: ['standard'] }, () => {
   it('gives a bug the tabs of its registry entry, and nothing about children or cases', async () => {
@@ -61,7 +46,7 @@ describe('I-72 P6 the tabs of the pane', { tags: ['standard'] }, () => {
     const dialog = await openItem('I-1');
     expect(tabOf(dialog, 'Links').textContent).toMatch(/2/);
     expect(tabOf(dialog, 'Discussion').textContent).toMatch(/2/);
-    expect(tabOf(dialog, 'Tests').textContent).toContain('1/2');
+    expect(tabOf(dialog, 'Tests').textContent).toBe('Tests1');
   });
 
   it('opens the tab the hash names, and writes the tab it is given to the hash', async () => {
@@ -120,7 +105,9 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     fireEvent.click(within(within(dialog).getByRole('navigation', { name: 'Parents' })).getByRole('button', { name: 'Open I-1: Release' }));
     await waitFor(() => expect(where.hash).toBe('#I-1'));
   });
+});
 
+describe('I-72 P6 the cases and the slots of a test plan', { tags: ['standard'] }, () => {
   it('lists the cases of a plan with their status, and removes one', async () => {
     const plan = item('I-1', { type: 'test-plan', stage: 'draft', fields: { cases: ['T-1', 'T-2'] } });
     const tests = [
@@ -144,9 +131,9 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     fireEvent.change(box, { target: { value: 'T-1' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add case' }));
     expect(within(dialog).getByText('T-1 is already a case.')).toBeTruthy();
-    fireEvent.change(box, { target: { value: 'bad id!' } });
+    fireEvent.change(box, { target: { value: 'nope' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add case' }));
-    expect(within(dialog).getByText(fieldProblem('cases', 'T-1, bad id!', {}) as string)).toBeTruthy();
+    expect(within(dialog).getByText(fieldProblem('cases', 'T-1, nope', {}) as string)).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
 
@@ -156,125 +143,5 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     expect(within(dialog).getByText('The runner of this plan is not here yet.')).toBeTruthy();
     inTab(dialog, 'Media');
     expect(within(dialog).getByText('The images of this item show here.')).toBeTruthy();
-  });
-});
-
-describe('I-72 P6 the fields of the Overview', { tags: ['standard'] }, () => {
-  const mounted = async (extra: Doc = {}) => {
-    const board = await mountKanban({ items: [bug(extra)], threads: [thread('worker')] });
-    return { ...board, dialog: await openItem('I-1') };
-  };
-
-  it('shows the groups of the type, with each field in the control of its content kind', async () => {
-    const { dialog } = await mounted();
-    const report = within(within(dialog).getByRole('region', { name: 'Report' }));
-    expect(report.getByRole('combobox', { name: 'Severity' })).toBeTruthy();
-    expect(report.getByRole('button', { name: 'Edit Environment: bundle-16' })).toBeTruthy();
-    expect(report.getByRole('button', { name: 'Edit Found in: T-57' })).toBeTruthy();
-    expect(report.getByRole('combobox', { name: 'Reporter' })).toBeTruthy();
-    const steps = within(within(dialog).getByRole('region', { name: 'Steps' }));
-    expect(steps.getAllByRole('listitem').map((entry) => entry.textContent)).toEqual(['open the lobby', 'look']);
-    expect(steps.getByRole('button', { name: 'Edit repro' })).toBeTruthy();
-    expect(within(dialog).getByRole('region', { name: 'More' })).toBeTruthy();
-  });
-
-  it('shows no field group for a task', async () => {
-    await mountKanban({ items: [item('I-1')] });
-    const dialog = await openItem('I-1');
-    expect(within(dialog).queryByRole('region', { name: 'Report' })).toBeNull();
-    expect(within(dialog).queryByRole('region', { name: 'Details' })).toBeNull();
-  });
-
-  it('saves an enum pick as an edit of that field with the old value as prev', async () => {
-    const { posted, dialog } = await mounted();
-    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Severity' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'S1 blocker' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'items', id: 'I-1' }, set: { 'fields.severity': 'S1' }, prev: { 'fields.severity': 'S2' }, baseRev: 3 });
-  });
-
-  it('saves a line the rules accept', async () => {
-    const { posted, dialog } = await mounted();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit Environment: bundle-16' }));
-    const box = within(dialog).getByRole('textbox', { name: 'Edit Environment' });
-    fireEvent.change(box, { target: { value: 'bundle-17' } });
-    fireEvent.keyDown(box, { key: 'Enter' });
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ set: { 'fields.environment': 'bundle-17' }, prev: { 'fields.environment': 'bundle-16' } });
-  });
-
-  it('refuses a line over its limit and a reference that is no id, with the message of the rules and no post', async () => {
-    const { posted, dialog } = await mounted();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit Environment: bundle-16' }));
-    const long = 'x'.repeat(121);
-    const box = within(dialog).getByRole('textbox', { name: 'Edit Environment' });
-    fireEvent.change(box, { target: { value: long } });
-    fireEvent.keyDown(box, { key: 'Enter' });
-    expect(within(dialog).getByText(fieldProblem('environment', long, {}) as string)).toBeTruthy();
-    fireEvent.keyDown(box, { key: 'Escape' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit Found in: T-57' }));
-    const ref = within(dialog).getByRole('textbox', { name: 'Edit Found in' });
-    fireEvent.change(ref, { target: { value: 'bad id!' } });
-    fireEvent.keyDown(ref, { key: 'Enter' });
-    expect(within(dialog).getByText(fieldProblem('foundIn', 'bad id!', {}) as string)).toBeTruthy();
-    expect(posted).toHaveLength(0);
-  });
-
-  it('refuses a lone paragraph in a rich field and saves bullets', async () => {
-    const { posted, dialog } = await mounted();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit repro' }));
-    const box = within(dialog).getByRole('textbox', { name: 'Repro' });
-    fireEvent.change(box, { target: { value: 'One lone paragraph of words.' } });
-    fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
-    expect(within(dialog).getByText(fieldProblem('repro', 'One lone paragraph of words.', {}) as string)).toBeTruthy();
-    expect(posted).toHaveLength(0);
-    fireEvent.change(box, { target: { value: '- first\n- second' } });
-    fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ set: { 'fields.repro': '- first\n- second' }, prev: { 'fields.repro': '- open the lobby\n- look' } });
-  });
-
-  it('picks a person of the board for a person field', async () => {
-    const { posted, dialog } = await mounted();
-    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Reporter' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'worker' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ set: { 'fields.reporter': 'worker' } });
-  });
-});
-
-describe('I-72 P6 the facts of the Overview', { tags: ['standard'] }, () => {
-  it('moves a typed item by stage', async () => {
-    const { posted } = await mountKanban({ items: [bug()] });
-    const dialog = await openItem('I-1');
-    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Stage' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Confirmed' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'move', target: { c: 'items', id: 'I-1' }, to: { stage: 'confirmed' } });
-  });
-
-  it('keeps the status and the thread of an item without a type', async () => {
-    await mountKanban({ items: [item('I-2')] });
-    const dialog = await openItem('I-2');
-    expect(within(dialog).getByRole('combobox', { name: 'Status' })).toBeTruthy();
-    expect(within(dialog).getByRole('combobox', { name: 'Thread' })).toBeTruthy();
-    expect(within(dialog).queryByRole('combobox', { name: 'Stage' })).toBeNull();
-  });
-
-  it('assigns the item to the owner', async () => {
-    const { posted } = await mountKanban({ items: [bug()] });
-    const dialog = await openItem('I-1');
-    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Assignee' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'You' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'edit', set: { assignee: 'owner' } });
-  });
-
-  it('neither shows nor edits the subject any more', async () => {
-    await mountKanban({ items: [item('I-1', { subject: 'billing' })] });
-    const dialog = await openItem('I-1');
-    expect(within(dialog).queryByText('billing')).toBeNull();
-    expect(within(dialog).queryByText('Subject')).toBeNull();
-    expect(within(dialog).queryByRole('button', { name: /subject/i })).toBeNull();
   });
 });

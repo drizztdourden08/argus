@@ -3,9 +3,8 @@ import { fieldOf } from '../../../../../data/registry';
 import type { DescriptionSectionProps } from '../drawer-props.type';
 import { EditableMarkdown, useBoardKey, useItemMedia } from '../../../shared';
 import { fieldProblem } from '../pane/model/field-problem';
+import { FIELD } from './DescriptionSection.constants';
 import { DrawerSection } from './DrawerSection';
-
-const FIELD = 'description';
 
 const DescriptionSection = (props: DescriptionSectionProps) => {
   const { item, ops } = props;

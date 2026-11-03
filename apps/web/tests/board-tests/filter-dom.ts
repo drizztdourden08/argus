@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen } from '@testing-library/react';
+import { expect } from 'vitest';
 import { buildDoc, itemDoc, testDoc, threadDoc } from './fixtures';
 
 const filterBoard = () => ({
@@ -27,4 +28,10 @@ const pick = async (select: string, option: string): Promise<void> => {
 
 const stored = (key: string): Record<string, unknown> => JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, unknown>;
 
-export { filterBoard, pick, stored, typeSearch };
+const TITLES: Record<string, string> = { 'T-1': 'Login works', 'T-2': 'Logout works', 'T-3': 'Sound plays' };
+
+const shown = (...ids: string[]): void => {
+  for (const [id, title] of Object.entries(TITLES)) expect(screen.queryByText(title) !== null).toBe(ids.includes(id));
+};
+
+export { filterBoard, pick, shown, stored, typeSearch };

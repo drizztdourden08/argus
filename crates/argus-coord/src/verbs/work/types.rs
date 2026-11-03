@@ -2,6 +2,8 @@
 //! line per type; with one, its stages and moves, the rules to enter a stage, its fields with
 //! their limits and the flag that sets each, and the rule that must hold to be done.
 
+use std::fmt::Write;
+
 use argus_board::registry::{
     ContentType, DoneRule, Field, ItemType, Mode, Registry, Stage, registry,
 };
@@ -57,13 +59,13 @@ fn overview(reg: &Registry) -> Vec<String> {
 fn stage_line(stage: &Stage) -> String {
     let mut line = format!("  {} (lane {})", stage.id, stage.lane);
     if let Some(next) = &stage.next {
-        line.push_str(&format!(", then {}", next.join(" | ")));
+        let _ = write!(line, ", then {}", next.join(" | "));
     }
     if !stage.requires.is_empty() {
-        line.push_str(&format!(", needs {}", stage.requires.join(", ")));
+        let _ = write!(line, ", needs {}", stage.requires.join(", "));
     }
     for gate in &stage.gates {
-        line.push_str(&format!(", {} {}", mode_word(gate.mode), gate.need));
+        let _ = write!(line, ", {} {}", mode_word(gate.mode), gate.need);
     }
     line
 }

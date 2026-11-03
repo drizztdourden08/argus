@@ -3,8 +3,7 @@ import type { ItemRef } from '../../../../../../../data/kanban';
 import { EMPTY_SUMMARY, SUMMARY_ROWS } from '../run.constants';
 import type { PlanRun, RunResult, RunSummary } from '../run.type';
 import { isRunStatus } from './is-run-status';
-
-type Raw = Record<string, unknown>;
+import type { Raw } from './runs-of.type';
 
 const record = (value: unknown): Raw | null => (typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Raw) : null);
 

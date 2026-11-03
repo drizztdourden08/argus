@@ -140,7 +140,8 @@ impl Work<'_> {
         for (key, v) in set.iter().filter(|(k, _)| !is_key(k)) {
             let value = match key.as_str() {
                 "status" if self.follows => continue,
-                "title" | "description" if self.follows => self.registry_text(key, v)?,
+                "title" if self.follows => self.registry_text(key, v)?,
+                "description" => self.registry_text(key, v)?,
                 _ => check("items", key, v, self.cx)?,
             };
             self.put(key, value);

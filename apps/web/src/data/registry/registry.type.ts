@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-type ContentKind = 'line' | 'slug' | 'rich' | 'enum' | 'ref' | 'refs' | 'date' | 'person' | 'records';
+type ContentKind = 'line' | 'slug' | 'rich' | 'enum' | 'ref' | 'refs' | 'date' | 'person' | 'flag' | 'records';
 
 type RuleMode = 'warn' | 'refuse';
 

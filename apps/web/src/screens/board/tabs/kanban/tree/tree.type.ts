@@ -73,4 +73,4 @@ interface TreeFoldBarProps {
   fold: FoldState;
 }
 
-export type { FoldState, KanbanLayout, LayoutState, NodeContext, TreeCount, TreeFoldBarProps, TreeNode, TreeNodeKind, TreeProgress, TreeRowProps, TreeSource, TreeViewProps };
+export type { FoldState, KanbanLayout, LayoutState, NodeContext, TreeCount, TreeFoldBarProps, TreeNode, TreeProgress, TreeRowProps, TreeSource, TreeViewProps };

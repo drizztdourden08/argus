@@ -16,7 +16,7 @@ const useRunStage = (props: RunStageProps) => {
   const test = data.allTests.find((candidate) => candidate.id === id);
   const titles = useMemo(() => new Map(data.allTests.map((candidate) => [candidate.id, candidate.title])), [data.allTests]);
   const steps = useMemo(() => caseSteps(run, ids, titles, state.cursor), [run, ids, titles, state.cursor]);
-  const record = useCallback(
+  const send = useCallback(
     async (status: RunStatus) => {
       if (busy || !test) return;
       if (noteProblem(status, state.note)) {
@@ -29,6 +29,12 @@ const useRunStage = (props: RunStageProps) => {
       if (ok) dispatch({ type: 'recorded', total });
     },
     [busy, test, state.note, ops, id, total],
+  );
+  const record = useCallback(
+    (status: RunStatus) => {
+      send(status).catch(() => setBusy(false));
+    },
+    [send],
   );
   const step = useCallback((by: 1 | -1) => dispatch({ type: 'step', by, total }), [total]);
   const goto = useCallback((index: number) => dispatch({ type: 'goto', index, total }), [total]);

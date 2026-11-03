@@ -69,7 +69,7 @@ fn fields_of(
 fn change(r: &mut Run<'_>, place: Option<(&str, Value)>, first_caption: usize) -> Outcome {
     let pictures = picked(r, first_caption)?;
     let fields = fields_of(r, place, &pictures)?;
-    edit_item(r, pictures, fixed(fields, Say::Updated))
+    edit_item(r, &pictures, fixed(fields, Say::Updated))
 }
 
 /// `coord item set`.

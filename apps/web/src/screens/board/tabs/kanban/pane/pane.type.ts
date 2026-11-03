@@ -3,6 +3,7 @@ import type { IconName, TabBadgeTone } from '@drizztdourden08/tessera';
 import type { ComponentType } from 'react';
 import type { ItemRef, MoveTarget } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import type { ItemField } from '../../../../../data/registry';
 import type { ContentContext } from '../../../../../data/content';
 import type { Test } from '../../../../../data/types';
 import type { FeedActions } from '../../../OwnerFeed';
@@ -98,6 +99,12 @@ interface FieldProps {
   open: (id: string) => void;
 }
 
+interface FieldBodyProps {
+  spec: ItemField;
+  text: string;
+  open: (id: string) => void;
+}
+
 interface FieldGroupProps {
   group: FieldGroupModel;
   shared: Omit<FieldProps, 'name'>;
@@ -187,7 +194,7 @@ interface CaseRowProps {
 }
 
 export type {
-  AddChildProps, BlockedSectionProps, CaseRowProps, CauseRowProps, ChildRowProps, FieldGroupModel, FieldGroupProps, FieldProps, FieldSelectProps,
+  AddChildProps, BlockedSectionProps, CaseRowProps, CauseRowProps, ChildRowProps, FieldBodyProps, FieldGroupModel, FieldGroupProps, FieldProps, FieldSelectProps,
   ItemPaneProps, NodeOpens, PaneBadge, PaneBodyProps, PaneCrumbsProps, PaneData, PaneFactsProps, PaneTab, PaneTabsProps, RefTagsProps, StageFact,
   TrailEdge, TrailLabelProps, TrailNode, TrailRowProps, TrailSectionProps, TrailTree,
 };

@@ -9,7 +9,7 @@ import { checkSlug } from './check-slug';
 import { checkRich } from './rich';
 import type { TextCheck } from './text-checks.type';
 
-const textChecks: Record<Exclude<ContentKind, 'records'>, TextCheck> = {
+const textChecks: Record<Exclude<ContentKind, 'flag' | 'records'>, TextCheck> = {
   line: checkLine,
   slug: checkSlug,
   rich: checkRich,

@@ -62,10 +62,7 @@ fn plain_item(
     let get = |key: &str| set.get(key).cloned().unwrap_or(Value::Null);
     let title = require_text("title", &get("title"))?;
     let owner = owner_for(board, who, set.get("thread"), None)?;
-    let description = match get("description") {
-        Value::String(s) if !js::trim(&s).is_empty() => require_text("description", &json!(s))?,
-        _ => String::new(),
-    };
+    let description = typed::description_text(board, &Value::Null, &get("description"))?;
     let status = match set.get("status") {
         None => json!("todo"),
         Some(v) => one_of(&ITEM_STATUSES, v, "status")?,
