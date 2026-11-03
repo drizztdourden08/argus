@@ -65,7 +65,10 @@ fn query_suffix(ctx: &Ctx) -> String {
     if ctx.query_all().is_empty() {
         return String::new();
     }
-    let pairs = ctx.query_all().iter().map(|(k, v)| (k.as_str(), v.as_str()));
+    let pairs = ctx
+        .query_all()
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()));
     let query = form_urlencoded::Serializer::new(String::new())
         .extend_pairs(pairs)
         .finish();

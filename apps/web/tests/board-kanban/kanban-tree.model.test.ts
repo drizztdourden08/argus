@@ -77,7 +77,7 @@ describe('I-70 P9 the tree nests items by their parent', { tags: ['critical'] },
     const cases = find(roots, 'I-1').children;
     expect(cases.map((node) => node.id)).toEqual(['T-2', 'T-1']);
     expect(cases.map((node) => node.kind)).toEqual(['case', 'case']);
-    expect(cases.every((node) => node.open === 'I-1')).toBe(true);
+    expect(cases.every((node) => node.open === 'TP-1')).toBe(true);
   });
 
   it('gives a manual case to the owner and an auto case to its thread', () => {
