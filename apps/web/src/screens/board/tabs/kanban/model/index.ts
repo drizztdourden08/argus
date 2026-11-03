@@ -25,7 +25,6 @@ export { opNotices } from './op-notices';
 export { parseStored } from './parse-stored';
 export { pausedThreads } from './paused-threads';
 export { planDrop } from './plan-drop';
-export { quietTip } from './quiet-tip';
 export { rangeOf } from './range-of';
 export { subjectsOf } from './subjects-of';
 export { textProblem } from './text-problem';
