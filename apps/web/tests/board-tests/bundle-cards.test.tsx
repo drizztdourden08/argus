@@ -14,7 +14,7 @@ describe('S1 the order and the folds of bundle cards', { tags: ['standard'] }, (
       builds: [buildDoc('b1'), buildDoc('b2')],
       tests: [testDoc('T-1', { build: 'b1' }), doneDoc('T-2', 'pass', 'ok', { build: 'b2' })],
     });
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(tagsOf(container)).toEqual(['b2', 'b1']);
     expect(within(cardOf(container, 'b2')).getByText('handed to you')).toBeTruthy();
     expect(isOpen(cardOf(container, 'b2'))).toBe(true);
@@ -25,7 +25,7 @@ describe('S1 the order and the folds of bundle cards', { tags: ['standard'] }, (
       builds: [buildDoc('todo'), buildDoc('finished')],
       tests: [testDoc('T-1', { build: 'todo' }), doneDoc('T-2', 'pass', 'ok', { build: 'finished' })],
     });
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(isOpen(cardOf(container, 'todo'))).toBe(true);
     const finished = cardOf(container, 'finished');
     expect(isOpen(finished)).toBe(false);
@@ -35,7 +35,7 @@ describe('S1 the order and the folds of bundle cards', { tags: ['standard'] }, (
 
   it('show a declared bundle with no test yet, and the tests without a bundle last', async () => {
     const { container } = await mountTab({ builds: [buildDoc('empty-1', { title: 'Nothing yet' })], tests: [testDoc('T-1', { build: null })] });
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(tagsOf(container)).toEqual(['empty-1', '(no build)']);
     const empty = cardOf(container, 'empty-1');
     expect(within(empty).getByText('Nothing yet')).toBeTruthy();
@@ -48,10 +48,10 @@ describe('S1 the sections of a bundle card', { tags: ['standard'] }, () => {
   it('take a test in live: a change moves it from To run to Done', async () => {
     const { change } = await mountTab({ handed: 'bundle-1', builds: [buildDoc('bundle-1')], tests: [testDoc('T-1')] });
     const toRun = await screen.findByRole('group', { name: 'To run' });
-    expect(within(toRun).getByText('Test T-1')).toBeTruthy();
+    expect(within(toRun).getByText('Test number 1')).toBeTruthy();
     change('tests', 'T-1', doneDoc('T-1', 'pass', 'ok'));
     const done = await screen.findByRole('group', { name: 'Done' });
-    expect(within(done).getByText('Test T-1')).toBeTruthy();
+    expect(within(done).getByText('Test number 1')).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'To run' })).getByText('Nothing left to run.')).toBeTruthy();
   });
 
@@ -76,7 +76,7 @@ describe('S1 the sections of a bundle card', { tags: ['standard'] }, () => {
   it('say there is no test at all, and read the archived and deleted ones as absent', async () => {
     await mountTab({ tests: [testDoc('T-1', { archivedAt: 'then' }), testDoc('T-2', { deletedAt: 'then' })] });
     expect(await screen.findByText(/No test yet/)).toBeTruthy();
-    expect(screen.queryByText('Test T-1')).toBeNull();
-    expect(screen.queryByText('Test T-2')).toBeNull();
+    expect(screen.queryByText('Test number 1')).toBeNull();
+    expect(screen.queryByText('Test number 2')).toBeNull();
   });
 });

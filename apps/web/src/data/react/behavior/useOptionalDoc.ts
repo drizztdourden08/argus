@@ -2,8 +2,7 @@
 import { useCallback, useContext, useSyncExternalStore } from 'react';
 import { EMPTY_COLLECTION } from '../../stream';
 import { DataContext } from '../data-context';
-
-const NO_UNSUBSCRIBE = (): void => undefined;
+import { NO_UNSUBSCRIBE } from './useOptionalDoc.constants';
 
 const useOptionalDoc = <T extends object>(scope: string | null, coll: string, id: string): T | null => {
   const streams = useContext(DataContext);

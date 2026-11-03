@@ -10,7 +10,7 @@ import { mountBuilds } from './mount-builds';
 cleanAfterEach();
 
 const itemDoc = (id: string, extra: object = {}) => ({
-  id, title: `Item ${id}`, type: 'task', stage: 'doing', status: 'doing', thread: 'lead', rank: 1024, ...extra,
+  id, title: `Item number ${id.slice(2)}`, type: 'task', stage: 'doing', status: 'doing', thread: 'lead', rank: 1024, ...extra,
 });
 
 const board = () => ({
@@ -30,7 +30,7 @@ describe('P13 the Builds tab by item', { tags: ['standard'] }, () => {
     await screen.findByText('Master build');
     expect(order(container)).toEqual(['master', 'I-2', 'none']);
     const item = groupOf(container, 'I-2');
-    expect(within(item).getByText('Item I-2')).toBeTruthy();
+    expect(within(item).getByText('Item number 2')).toBeTruthy();
     expect(item.querySelector('[data-launcher="web"]')).not.toBeNull();
     const needs = groupOf(container, 'none');
     expect(within(needs).getByText('Needs a link')).toBeTruthy();

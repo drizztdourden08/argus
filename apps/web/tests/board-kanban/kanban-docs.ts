@@ -16,7 +16,7 @@ const before = (ms: number): string => new Date(NOW - ms).toISOString();
 
 const itemRef = (id: string, extra: Partial<ItemRef> = {}): ItemRef => ({
   id,
-  title: `Item ${id}`,
+  title: `Item number ${id.slice(2)}`,
   description: '',
   thread: 'worker',
   status: 'todo',

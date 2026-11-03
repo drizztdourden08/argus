@@ -61,7 +61,7 @@ describe('I-85 every record reference is a link that opens the one pane', { tags
     expect(link.getAttribute('href')).toBe('/p/argus?open=I-12');
   });
 
-  it('links a typed code inside a free text as well as the stored id', () => {
+  it('links both a typed code and the stored id inside a free text', () => {
     const { container } = mount(<Text as="p"><LinkedText text="See B-12 and I-12, not B-12x." /></Text>);
     const links = [...container.querySelectorAll('a')];
     expect(links.map((link) => link.textContent)).toEqual(['B-12', 'I-12']);

@@ -19,7 +19,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Item' }));
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
     expect(titlesIn(groupOf(container, 'I-2'))).toEqual(['T-2']);
-    expect(within(groupOf(container, 'I-1')).getByText('Item I-1')).toBeTruthy();
+    expect(within(groupOf(container, 'I-1')).getByText('Item number 1')).toBeTruthy();
     expect(localStorage.getItem('coord.g.tests4')).toBe('item');
   });
 
@@ -55,7 +55,7 @@ describe('S1 the order', { tags: ['standard'] }, () => {
 
   it('is the manual rank until the owner picks updated, and is saved with the filters', async () => {
     const { container } = await mountTab(ranked());
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(order(container)).toEqual(['T-2', 'T-1']);
     fireEvent.click(screen.getByRole('radio', { name: 'Updated' }));
     expect(order(container)).toEqual(['T-1', 'T-2']);
@@ -68,18 +68,18 @@ describe('S1 show passed', { tags: ['standard'] }, () => {
 
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
     await mountTab(withPassed());
-    await screen.findByText('Test T-2');
+    await screen.findByText('Test number 2');
     fireEvent.click(screen.getByRole('button', { name: 'Hide passed' }));
-    expect(screen.queryByText('Test T-2')).toBeNull();
-    expect(screen.getByText('Test T-3')).toBeTruthy();
+    expect(screen.queryByText('Test number 2')).toBeNull();
+    expect(screen.getByText('Test number 3')).toBeTruthy();
     expect(localStorage.getItem('coord.passed')).toBe('0');
   });
 
   it('reads the saved choice on load', async () => {
     localStorage.setItem('coord.passed', '0');
     await mountTab(withPassed());
-    await screen.findByText('Test T-3');
-    expect(screen.queryByText('Test T-2')).toBeNull();
+    await screen.findByText('Test number 3');
+    expect(screen.queryByText('Test number 2')).toBeNull();
   });
 });
 
@@ -92,14 +92,14 @@ describe('S1 closed bundles and the search', { tags: ['standard'] }, () => {
 
   it('are never reached by a search unless Show closed is on', async () => {
     const off = await mountTab(closed());
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     typeSearch('T-4');
     expect(off.container.querySelector('[data-bundle="old-1"]')).toBeNull();
     off.unmount();
     localStorage.clear();
     localStorage.setItem('coord.closed', '1');
     const on = await mountTab(closed());
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     typeSearch('T-4');
     expect(on.container.querySelector('[data-bundle="old-1"]')).not.toBeNull();
     expect(on.container.querySelector('[data-bundle="open-1"]')).toBeNull();

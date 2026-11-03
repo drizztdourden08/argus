@@ -24,7 +24,7 @@ describe('S1 handing a build to the owner', { tags: ['standard'] }, () => {
 
   it('is not offered for a draft that is not handed', async () => {
     await mountTab({ builds: [buildDoc('d1', { status: 'draft' })], tests: [testDoc('T-1', { build: 'd1' })] });
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByRole('button', { name: /Hand build/ })).toBeNull();
   });
 });

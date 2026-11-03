@@ -83,7 +83,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('opens the case pane over the tab when a row is clicked', async () => {
     await mountTab(board());
-    const buttons = await screen.findAllByRole('button', { name: /Test T-3( |$)/ });
+    const buttons = await screen.findAllByRole('button', { name: /Test number 3( |$)/ });
     fireEvent.click(buttons[0] as HTMLElement);
     await waitFor(() => expect(screen.getByTestId('search').textContent).toBe('?open=T-3'));
     expect(screen.getByTestId('hash').textContent).toBe('');
@@ -91,7 +91,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('records an outcome from the buttons of the row', async () => {
     const { calls } = await mountTab(board());
-    await screen.findByText('Test T-3');
+    await screen.findByText('Test number 3');
     fireEvent.click(outcomeButton('pass', 'T-3'));
     await waitFor(() => expect(resultCalls(calls)).toHaveLength(1));
     expect(resultCalls(calls)[0]?.body).toEqual({ outcome: 'pass', text: '' });
@@ -99,7 +99,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('puts a note box under the row for a fail', async () => {
     await mountTab(board());
-    await screen.findByText('Test T-3');
+    await screen.findByText('Test number 3');
     fireEvent.click(outcomeButton('fail', 'T-3'));
     expect(screen.getByRole('textbox', { name: 'Note for T-3' })).toBeTruthy();
   });

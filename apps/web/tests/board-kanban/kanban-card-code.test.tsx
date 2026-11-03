@@ -21,8 +21,8 @@ describe('I-85 the code of a card is the code of its type', { tags: ['critical']
 
   it('names the card to open by its typed code', async () => {
     await mountKanban(typed);
-    expect(await screen.findByRole('button', { name: 'Open B-1: Item I-1' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Open E-2: Item I-2' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Open B-1: Item number 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open E-2: Item number 2' })).toBeTruthy();
   });
 
   it('opens the pane from the typed code of the head', async () => {

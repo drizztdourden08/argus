@@ -87,7 +87,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     const dialog = inTab(await openItem('I-1'), 'Children');
     expect(tabOf(dialog, 'Children').textContent).toMatch(/1/);
     expect(within(dialog).getByText('Children · 2')).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Open S-2: Item I-2' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open S-2: Item number 2' }));
     await waitFor(() => expect(paneOf().open).toBe('I-2'));
   });
 

@@ -41,7 +41,7 @@ describe('I-61 the blocker of an item', { tags: ['standard'] }, () => {
 
   it('shows no blocker on an item without one', async () => {
     await mountKanban({ items: [item('I-1', { blocker: null })] });
-    await screen.findByText('Item I-1');
+    await screen.findByText('Item number 1');
     expect(screen.queryByTitle(/^Blocked by/)).toBeNull();
   });
 });

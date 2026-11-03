@@ -66,15 +66,15 @@ describe('S1 the terminal under Play', { tags: ['standard'] }, () => {
 
   it('has no panel without a run, for a run of another definition, or for a draft', async () => {
     const idle = await mountTab(launched([]));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByText('Terminal')).toBeNull();
     idle.unmount();
     const other = await mountTab(launched([runDoc('R-9', 'launcher-other', { status: 'running', endedAt: null })]));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByText('Terminal')).toBeNull();
     other.unmount();
     await mountTab(launched([running()], { status: 'draft' }));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByText('Terminal')).toBeNull();
   });
 

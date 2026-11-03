@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex } from '@drizztdourden08/tessera';
 import { ROW_CHIPS_MAX } from '../records.constants';
-import type { RowChipsProps } from '../records.type';
+import type { RowChipsProps } from '../record-rows.type';
 import { RowChipTag } from './RowChipTag';
 
 const RowChips = (props: RowChipsProps) => {

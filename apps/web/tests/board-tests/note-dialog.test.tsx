@@ -69,7 +69,7 @@ describe('S1 the edit dialog of the row menu', { tags: ['standard'] }, () => {
       kind: 'edit',
       target: { c: 'tests', id: 'T-1' },
       set: { title: 'A better title', build: 'bundle-9' },
-      prev: { title: 'Test T-1', build: 'bundle-1' },
+      prev: { title: 'Test number 1', build: 'bundle-1' },
       baseRev: 4,
     });
   });

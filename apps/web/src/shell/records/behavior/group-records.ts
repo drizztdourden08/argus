@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { GroupInfo, RecordGroupData, RecordGroups } from '../records.type';
+import type { GroupInfo, RecordGroupData, RecordGroups } from '../record-rows.type';
 import { UNRANKED } from '../records.constants';
 
 const byRank = (info: (key: string) => GroupInfo | null) => (a: RecordGroupData<unknown>, b: RecordGroupData<unknown>): number =>

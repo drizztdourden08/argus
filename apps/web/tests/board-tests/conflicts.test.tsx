@@ -72,7 +72,7 @@ describe('S1 a change of the owner the board did not take', { tags: ['standard']
       conflictEntry('O-4', 'T-2', { status: 'new' }),
     ];
     await mountTab(board(entries));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByRole('region', { name: REGION })).toBeNull();
   });
 });
@@ -80,9 +80,9 @@ describe('S1 a change of the owner the board did not take', { tags: ['standard']
 describe('S1 the conflicted tests in the list', { tags: ['standard'] }, () => {
   it('narrows the list to the conflicted tests with the conflict switch', async () => {
     await mountTab(board([conflictEntry('O-1', 'T-1')]));
-    await screen.findByText('Test T-2');
+    await screen.findByText('Test number 2');
     fireEvent.click(screen.getByRole('checkbox', { name: 'conflict' }));
-    expect(screen.queryByText('Test T-2')).toBeNull();
-    expect(screen.getByText('Test T-1')).toBeTruthy();
+    expect(screen.queryByText('Test number 2')).toBeNull();
+    expect(screen.getByText('Test number 1')).toBeTruthy();
   });
 });

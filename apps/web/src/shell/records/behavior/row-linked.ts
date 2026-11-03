@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { RowChip } from '../records.type';
+import type { RowChip } from '../record-rows.type';
 import { hasRecords } from './has-records';
 import { parseRecord } from './parse-record';
 

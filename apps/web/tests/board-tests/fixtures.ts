@@ -7,7 +7,7 @@ const testDoc = (id: string, extra: object = {}) => ({
   id,
   item: 'I-1',
   thread: 'lead',
-  title: `Test ${id}`,
+  title: `Test number ${id.slice(2)}`,
   covers: null,
   build: 'bundle-1',
   mode: 'manual',
@@ -67,7 +67,7 @@ const runDoc = (id: string, name: string, extra: object = {}) => exitedRun(id, n
 
 const itemDoc = (id: string, extra: object = {}) => ({
   id,
-  title: `Item ${id}`,
+  title: `Item number ${id.slice(2)}`,
   thread: 'lead',
   subject: 'work',
   status: 'doing',

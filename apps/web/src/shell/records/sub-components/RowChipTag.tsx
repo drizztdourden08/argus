@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Tag } from '@drizztdourden08/tessera';
-import type { RowChipTagProps } from '../records.type';
+import type { RowChipTagProps } from '../record-rows.type';
 import { RecordLink } from './RecordLink';
 import { ShownCode } from './ShownCode';
 

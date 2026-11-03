@@ -16,7 +16,7 @@ const board: Board = {
 
 const openTrash = async (extra: Board = {}, count = 4) => {
   const mounted = await mountKanban({ ...board, ...extra });
-  await screen.findByText('Item I-1');
+  await screen.findByText('Item number 1');
   await moreItem(`Trash (${count})`);
   return mounted;
 };
@@ -30,12 +30,12 @@ describe('K3 the Trash view', { tags: ['standard'] }, () => {
     expect(table.getByText('Dead question')).toBeTruthy();
     expect(table.getAllByText('item')).toHaveLength(2);
     expect(table.getAllByText(/^\d+[mh] · lead$/).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Item I-1')).toBeNull();
+    expect(screen.queryByText('Item number 1')).toBeNull();
   });
 
   it('opens from the More menu, which counts the trash, and Back to the board closes it', async () => {
     await mountKanban(board);
-    await screen.findByText('Item I-1');
+    await screen.findByText('Item number 1');
     expect(screen.queryByRole('button', { name: /^Trash \(/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'More' }));
     expect(await screen.findByRole('menuitem', { name: 'Trash (4)' })).toBeTruthy();
@@ -43,7 +43,7 @@ describe('K3 the Trash view', { tags: ['standard'] }, () => {
     expect(screen.getByRole('table', { name: 'Trash' })).toBeTruthy();
     expect(screen.queryByRole('search', { name: 'Filters' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Back to the board' }));
-    expect(screen.getByText('Item I-1')).toBeTruthy();
+    expect(screen.getByText('Item number 1')).toBeTruthy();
   });
 
   it('restores one row with a restore op that names its collection, and Undo deletes it again', async () => {

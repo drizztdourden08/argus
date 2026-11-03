@@ -131,67 +131,6 @@ interface RecordCardProps {
   onClickCapture?: (event: MouseEvent) => void;
 }
 
-interface RowChip {
-  id: string;
-  text: string;
-  title?: string;
-  link?: string;
-  code?: boolean;
-}
-
-interface RowChipsProps {
-  chips: readonly RowChip[];
-  board: string;
-}
-
-interface RowChipTagProps {
-  chip: RowChip;
-  board: string;
-}
-
-interface LinkedTitleProps {
-  text: string;
-  board: string;
-  onOpen: () => void;
-  weight?: number;
-  clamp?: number;
-  label?: string;
-}
-
-interface RecordRowProps {
-  head: Omit<RecordHeadProps, 'selection' | 'size'>;
-  title: string;
-  onOpen: () => void;
-  chips?: readonly RowChip[];
-  age?: string;
-  trailing?: ReactNode;
-}
-
-interface RecordGroupProps {
-  header: ReactNode;
-  count: number;
-  flagged?: boolean;
-  defaultOpen?: boolean;
-  label: string;
-  children: ReactNode;
-}
-
-interface RecordGroupData<T> {
-  key: string;
-  rows: T[];
-}
-
-interface RecordGroups<T> {
-  groups: RecordGroupData<T>[];
-  none: T[];
-  closed: RecordGroupData<T>[];
-}
-
-interface GroupInfo {
-  rank: number;
-  closed: boolean;
-}
-
 interface ActionDef {
   id: string;
   label: string;
@@ -237,7 +176,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
-  OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
-  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, ShownCodeProps, TextPart, TypeIconProps,
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps,
+  OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
+  RecordPaneState, RecordRef, RecordTarget, ShownCodeProps, TextPart, TypeIconProps,
 };

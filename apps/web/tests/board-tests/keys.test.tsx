@@ -9,7 +9,7 @@ import { board, focusedOutcome, noteBox, openBox, outcomeButton, refuseResults, 
 
 cleanAfterEach();
 
-const rowButton = async (id = 'T-1'): Promise<HTMLElement> => screen.findByRole('button', { name: new RegExp(`Test ${id}( |$)`) });
+const rowButton = async (id = 'T-1'): Promise<HTMLElement> => screen.findByRole('button', { name: new RegExp(`Test number ${id.slice(2)}( |$)`) });
 
 describe('S1 the keys 1 to 4 on a test to run', { tags: ['standard'] }, () => {
   it('1 posts pass at once with no note', async () => {

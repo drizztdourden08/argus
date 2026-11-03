@@ -36,7 +36,7 @@ describe('S1 the dependency chip on the cards', { tags: ['standard'] }, () => {
         item('I-5', { waitsOn: waitsOn({ state: 'cancelled' }), blocked: [] }),
       ],
     });
-    await screen.findByText('Item I-3');
+    await screen.findByText('Item number 3');
     expect(screen.queryByTitle(/waiting on|is blocked/)).toBeNull();
   });
 });

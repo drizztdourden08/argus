@@ -21,8 +21,8 @@ const closedBoard = () => ({
 describe('S1 closed bundles', { tags: ['standard'] }, () => {
   it('are out of the Tests tab and the summary by default', async () => {
     await mountTab(closedBoard());
-    expect(await screen.findByText('Test T-1')).toBeTruthy();
-    expect(screen.queryByText('Test T-3')).toBeNull();
+    expect(await screen.findByText('Test number 1')).toBeTruthy();
+    expect(screen.queryByText('Test number 3')).toBeNull();
     expect(screen.queryByText('old-1')).toBeNull();
     expect(screen.getByText('1 to run / 2')).toBeTruthy();
   });
@@ -44,7 +44,7 @@ describe('S1 closed bundles', { tags: ['standard'] }, () => {
     expect(isOpen(card)).toBe(false);
     fireEvent.click(toggleOf(card));
     expect(isOpen(card)).toBe(true);
-    expect(within(card).getByText('Test T-3')).toBeTruthy();
+    expect(within(card).getByText('Test number 3')).toBeTruthy();
     expect(within(card).queryByRole('button', { name: /Pass|Fail|Partial|Blocked|Play|Hand|again/ })).toBeNull();
   });
 

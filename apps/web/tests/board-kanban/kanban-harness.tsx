@@ -79,7 +79,7 @@ const ago = (ms: number): string => new Date(CLOCK.getTime() - ms).toISOString()
 
 const item = (id: string, extra: Doc = {}): Doc => ({
   id,
-  title: `Item ${id}`,
+  title: `Item number ${id.slice(2)}`,
   description: '',
   thread: 'worker',
   status: 'todo',
@@ -171,7 +171,7 @@ const openItem = async (id: string): Promise<HTMLElement> => {
   return screen.getByRole('dialog', { name: 'Work item' });
 };
 
-const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: new RegExp(`^Move [A-Z]{1,2}-${numberOf(id)} ${title}$`) });
+const gripOf = (id: string, title = `Item number ${numberOf(id)}`): HTMLElement => screen.getByRole('button', { name: new RegExp(`^Move [A-Z]{1,2}-${numberOf(id)} ${title}$`) });
 
 const cardOf = (id: string): HTMLElement => {
   const card = document.querySelector(`[data-item="${id}"]`)?.closest('.kanban__card');

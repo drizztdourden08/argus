@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Disclosure, Flex, Tag } from '@drizztdourden08/tessera';
 import { NO_LINK_FLAG } from '../records.constants';
-import type { RecordGroupProps } from '../records.type';
+import type { RecordGroupProps } from '../record-rows.type';
 
 const RecordGroup = (props: RecordGroupProps) => {
   const { header, count, flagged = false, defaultOpen = true, label, children } = props;

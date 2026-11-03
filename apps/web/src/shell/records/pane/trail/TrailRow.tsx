@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Divider, Flex, Pressable } from '@drizztdourden08/tessera';
 import { nodeOpens } from '../model/node-opens';
-import { nodeCode, nodeRef } from '../model/node-ref';
+import { nodeCode } from '../model/node-code';
+import { nodeRef } from '../model/node-ref';
 import type { TrailRowProps } from './trail.type';
 import { TrailLabel } from './TrailLabel';
 import { useTrailGo } from './useTrailGo';

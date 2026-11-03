@@ -1,20 +1,18 @@
 /* @layer renderer-app @kind logic */
 import { useParams } from 'react-router';
 import { useOptionalDoc } from '../../../data/react';
-import { itemCode } from './item-code';
+import { ownScope } from './own-scope';
 import { parseRecord } from './parse-record';
-
-const ITEMS = 'items';
+import { shownItemCode } from './shown-item-code';
+import { storedItemId } from './stored-item-id';
+import { ITEMS } from './useShownCode.constants';
 
 const useShownCode = (id: string, board?: string): string => {
   const here = useParams().key ?? null;
   const ref = parseRecord(id);
-  const stored = ref && ref.collection === ITEMS && ref.code === ref.id ? ref.id : null;
-  const own = stored !== null && (ref?.board ?? board ?? here) === here;
-  const item = useOptionalDoc<{ type?: string }>(own ? here : null, ITEMS, stored ?? '');
-  if (!stored || !item) return id;
-  const code = itemCode({ id: stored, type: item.type });
-  return ref?.board ? `${ref.board}/${code}` : code;
+  const stored = storedItemId(ref);
+  const item = useOptionalDoc<{ type?: string }>(ownScope(stored, ref, board, here), ITEMS, stored ?? '');
+  return shownItemCode(id, ref, stored, item);
 };
 
 export { useShownCode };

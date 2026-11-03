@@ -19,7 +19,7 @@ describe('S1 the row menu', { tags: ['standard'] }, () => {
     const { calls } = await mountTab(owner());
     await openMenu('T-1');
     await choose('Move to item');
-    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'K-2 Item I-2' }));
+    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'K-2 Item number 2' }));
     await waitFor(() => expect(entries(calls)).toHaveLength(1));
     expect(entries(calls)[0]?.body).toMatchObject({ kind: 'move', target: { c: 'tests', id: 'T-1' }, to: { item: 'I-2' }, prev: { item: 'I-1' }, baseRev: 4 });
   });

@@ -26,3 +26,4 @@ export { RecordRow } from './sub-components/RecordRow';
 export { ShownCode } from './sub-components/ShownCode';
 export { TypeIcon } from './sub-components/TypeIcon';
 export type * from './records.type';
+export type * from './record-rows.type';

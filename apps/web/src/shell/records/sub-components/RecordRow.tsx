@@ -2,7 +2,7 @@
 import { Flex, ListItemRow, Pressable, Text } from '@drizztdourden08/tessera';
 import type { ListItemColumn } from '@drizztdourden08/tessera';
 import { rowLinked } from '../behavior/row-linked';
-import type { RecordRowProps } from '../records.type';
+import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
 import { LinkedTitle } from './LinkedTitle';
 import { RecordMenu } from './RecordMenu';

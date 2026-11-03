@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Box, Text } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, MouseEvent } from 'react';
-import type { LinkedTitleProps } from '../records.type';
+import type { LinkedTitleProps } from '../record-rows.type';
 import { LinkedText } from './LinkedText';
 import { OPEN_KEYS } from './LinkedTitle.constants';
 

@@ -12,35 +12,35 @@ describe('S1 the Kanban columns', { tags: ['standard'] }, () => {
     await mountKanban({ items: [item('I-1', { status: 'doing' }), ...finished] });
     expect(await screen.findByRole('group', { name: 'Doing, 1 card' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: /^Done,/ })).toBeNull();
-    expect(screen.queryByText('Item I-8')).toBeNull();
+    expect(screen.queryByText('Item number 8')).toBeNull();
     expect(screen.getByText(/^1 open \/ 3/)).toBeTruthy();
     const toggle = screen.getByRole('button', { name: 'Show done (2)' });
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(toggle);
-    expect(within(columnOf('Done, 2 cards')).getByText('Item I-8')).toBeTruthy();
-    expect(within(columnOf('Done, 2 cards')).getByText('Item I-9')).toBeTruthy();
+    expect(within(columnOf('Done, 2 cards')).getByText('Item number 8')).toBeTruthy();
+    expect(within(columnOf('Done, 2 cards')).getByText('Item number 9')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Hide done (2)' }).getAttribute('aria-pressed')).toBe('true');
     expect(localStorage.getItem('coord.done2')).toBe('1');
     fireEvent.click(screen.getByRole('button', { name: 'Hide done (2)' }));
-    expect(screen.queryByText('Item I-8')).toBeNull();
+    expect(screen.queryByText('Item number 8')).toBeNull();
     expect(localStorage.getItem('coord.done2')).toBe('0');
   });
 
   it('follows the stream: a status change moves the card, a new item appears', async () => {
     const { change } = await mountKanban({ items: [item('I-1')] });
-    expect(within(await screen.findByRole('group', { name: 'To do, 1 card' })).getByText('Item I-1')).toBeTruthy();
+    expect(within(await screen.findByRole('group', { name: 'To do, 1 card' })).getByText('Item number 1')).toBeTruthy();
     change('items', 'I-1', item('I-1', { status: 'review', rev: 4 }));
-    expect(within(await screen.findByRole('group', { name: 'Review, 1 card' })).getByText('Item I-1')).toBeTruthy();
+    expect(within(await screen.findByRole('group', { name: 'Review, 1 card' })).getByText('Item number 1')).toBeTruthy();
     change('items', 'I-2', item('I-2', { status: 'review' }));
     expect(await screen.findByRole('group', { name: 'Review, 2 cards' })).toBeTruthy();
   });
 
   it('groups by thread with a column for a listed thread that has no item', async () => {
     await mountKanban({ items: [item('I-1')], threads: [thread('worker'), thread('idle')] });
-    await screen.findByText('Item I-1');
+    await screen.findByText('Item number 1');
     fireEvent.click(screen.getByRole('radio', { name: 'Thread' }));
     expect(columnOf('idle, 0 cards')).toBeTruthy();
-    expect(within(columnOf('worker, 1 card')).getByText('Item I-1')).toBeTruthy();
+    expect(within(columnOf('worker, 1 card')).getByText('Item number 1')).toBeTruthy();
     expect(localStorage.getItem('coord.g.items')).toBe('thread');
   });
 });

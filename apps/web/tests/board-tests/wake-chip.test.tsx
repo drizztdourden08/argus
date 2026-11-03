@@ -49,13 +49,13 @@ describe('S1 the wake chip of a done test', { tags: ['standard'] }, () => {
   it('shows nothing for the wake of an earlier result, for a thread result or without any wake', async () => {
     const early = new Date(NOW - 600000).toISOString();
     await mountTab(withWake([wakeDoc('W-1', 'T-1', { at: early })]));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByText(/notified|not listening|waking/)).toBeNull();
   });
 
   it('shows nothing when a thread posted the result', async () => {
     await mountTab(withWake([wakeDoc('W-1', 'T-1', { at: fresh() })], { by: 'lead' }));
-    await screen.findByText('Test T-1');
+    await screen.findByText('Test number 1');
     expect(screen.queryByText(/notified|not listening|waking/)).toBeNull();
   });
 });
