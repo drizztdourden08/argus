@@ -7,7 +7,6 @@ import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
 import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
-import { stubEventSource } from '../helpers/stub-event-source';
 import { byId } from './fixtures';
 
 type Doc = Record<string, unknown>;
@@ -77,7 +76,6 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   vi.stubGlobal('CSS', { supports: () => false });
   if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'build');
-  const streams = stubEventSource();
   const calls = stubFetch(respond);
   const { view, source, live } = await mountStreamed(
     <TesseraProvider overrides={{}}>
@@ -96,7 +94,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   });
   const change = (coll: string, id: string, data: object) =>
     act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
-  return { ...view, calls, change, streams };
+  return { ...view, calls, change };
 };
 
 export { mountTab, stubFetch };

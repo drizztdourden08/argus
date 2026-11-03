@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { DocData } from '../api';
+import type { TabLink } from '../hub/tab-link';
 import type { ScopeStream } from './scope-stream';
 
 type Listener = () => void;
@@ -18,9 +19,8 @@ interface SourceLike {
   close(): void;
 }
 
-type OpenSource = (url: string) => SourceLike;
-
 interface ScopeStreams {
+  link: TabLink;
   get(scope: string): ScopeStream;
 }
 
@@ -61,7 +61,6 @@ export type {
   CollectionState,
   Collections,
   Listener,
-  OpenSource,
   ScopeStreams,
   SnapshotEvent,
   SourceLike,

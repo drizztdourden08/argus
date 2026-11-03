@@ -20,7 +20,7 @@ const renderAt = (location: string) => {
       <ToastStack />
     </DataProvider>,
   );
-  return { ...view, sources: fake.sources };
+  return { ...view, sources: fake.sources, sent: fake.sent };
 };
 
 export { renderAt };

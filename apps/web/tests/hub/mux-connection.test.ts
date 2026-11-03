@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind test */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MuxOp } from '../../src/data/hub';
-import type { FakeSource } from '../helpers/fake-source';
+import type { FakeEventSource } from '../helpers/fake-event-source';
 import { createMuxRig, settle } from '../helpers/mux-rig';
 
 const sub = (scope: string, ...colls: string[]): MuxOp => ({ op: 'sub', scope, colls });
 const resumeOps: MuxOp[] = [{ op: 'sub', scope: 'rotp', colls: ['items'], since: 4 }, sub('rotp', 'threads')];
 
-const hello = (source: FakeSource | undefined, conn: string) => source?.emit('hello', { conn, v: 1 });
+const hello = (source: FakeEventSource | undefined, conn: string) => source?.emit('hello', { conn, v: 1 });
 
 beforeEach(() => {
   vi.useFakeTimers();

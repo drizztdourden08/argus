@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useRef } from 'react';
 import { errorMessage } from '../../api';
+import { useLink } from '../../react';
 import { fetchRunLogs } from '../fetch-run-logs';
 import type { RunLogOptions, RunLogView } from '../runs.type';
 import { tailRun } from '../tail-run';
@@ -8,6 +9,7 @@ import { useLineBuffer } from './useLineBuffer';
 
 const useRunLog = (key: string, runId: string | null, options: RunLogOptions): RunLogView => {
   const { limit, live, enabled } = options;
+  const link = useLink();
   const { lines, push, note, reset, clear } = useLineBuffer(limit);
   const liveNow = useRef(live);
   useEffect(() => {
@@ -22,7 +24,7 @@ const useRunLog = (key: string, runId: string | null, options: RunLogOptions): R
       if (cancelled) return;
       push(page.lines ?? []);
       if ((page.dropped ?? 0) > 0) note(`... ${page.dropped} older lines were dropped to keep the log small`);
-      if (liveNow.current) stop = tailRun(key, runId, { onLine: (line) => push([line]) }, page.next);
+      if (liveNow.current) stop = tailRun(link, key, runId, { onLine: (line) => push([line]) }, page.next);
     }, (error: unknown) => {
       if (!cancelled) note(`could not load the output: ${errorMessage(error)}`);
     });
@@ -30,7 +32,7 @@ const useRunLog = (key: string, runId: string | null, options: RunLogOptions): R
       cancelled = true;
       stop?.();
     };
-  }, [key, runId, enabled, limit, push, note, reset]);
+  }, [link, key, runId, enabled, limit, push, note, reset]);
   return { lines, clear };
 };
 
