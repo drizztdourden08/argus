@@ -12,10 +12,10 @@ const builds = (...docs: object[]): BuildDoc[] => docs.map((doc) => ({ ...doc, i
 const wakes = (...docs: object[]): WakeDoc[] => docs as WakeDoc[];
 
 describe('K1 the saved view', { tags: ['critical'] }, () => {
-  it('reads the Node keys: q, threads, builds, nobuild, status, subject, needs, conf, archived and sort', () => {
-    const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', needs: true, conf: true, archived: true, sort: 'updated' });
+  it('reads the Node keys and plan: q, threads, builds, nobuild, status, subject, plan, needs, conf, archived and sort', () => {
+    const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conf: true, archived: true, sort: 'updated' });
     const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
-    expect(view.filters).toEqual({ query: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', needs: true, conflict: true, archived: true });
+    expect(view.filters).toEqual({ query: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true });
     expect(view.prefs).toEqual({ group: 'item', order: 'updated', showPassed: false, showClosed: true });
   });
 

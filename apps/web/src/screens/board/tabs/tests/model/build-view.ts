@@ -6,6 +6,7 @@ import { groupTests } from './group-tests';
 import { isToRun } from './is-to-run';
 import { matchesFilters } from './matches-filters';
 import type { TestDoc, TestsView, ViewInput } from './model.type';
+import { planCases } from './plan-cases';
 import { resolveLaunch } from './resolve-launch';
 
 const buildView = (input: ViewInput): TestsView => {
@@ -13,7 +14,8 @@ const buildView = (input: ViewInput): TestsView => {
   const closedTags = new Set(builds.filter((build) => build.closedAt).map((build) => build.id));
   const all = input.tests;
   const open = all.filter((test) => !(test.build && closedTags.has(test.build)));
-  const keep = (test: TestDoc): boolean => matchesFilters(test, filters, conflicted.has(test.id));
+  const inPlan = planCases(items, filters.plan);
+  const keep = (test: TestDoc): boolean => (inPlan === null || inPlan.has(test.id)) && matchesFilters(test, filters, conflicted.has(test.id));
   const narrowed = filtersActive(filters);
   const rows = open.filter(keep);
   const bundles = groupBundles({ tests: rows, builds, handed, narrowed }).map((group) => ({ group, launch: resolveLaunch(group.build, launchers, defs) }));

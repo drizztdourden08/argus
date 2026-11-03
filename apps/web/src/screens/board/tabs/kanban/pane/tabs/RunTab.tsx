@@ -1,11 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DrawerSection } from '../../sub-components/DrawerSection';
-import { EmptyLine } from '../../sub-components/EmptyLine';
+import type { PaneBodyProps } from '../pane.type';
+import { RunPanel } from '../run/RunPanel';
 
-const RunTab = () => (
-  <DrawerSection title="Run">
-    <EmptyLine>The runner of this plan is not here yet.</EmptyLine>
-  </DrawerSection>
-);
+const RunTab = (props: PaneBodyProps) => <RunPanel data={props.data} />;
 
 export { RunTab };

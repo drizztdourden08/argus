@@ -70,6 +70,7 @@ interface TestFilters {
   nobuild: boolean;
   status: string;
   subject: string;
+  plan: string;
   needs: boolean;
   conflict: boolean;
   archived: boolean;
