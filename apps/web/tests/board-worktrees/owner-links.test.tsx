@@ -1,18 +1,16 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { metaDoc, worktree } from './fixtures';
-import { cleanAfterEach, mountTab } from './mount-tab';
-import type { Responder } from './mount-tab';
-import { chooseAction, hasAction, openMenu } from './wt-dom';
+import { ownerItem } from '../helpers/owner-item';
+import { pickItem } from '../helpers/pick-item';
+import { chooseAction, cleanAfterEach, hasAction, metaDoc, mountTab, openMenu, worktree } from './wt-kit';
+import type { Responder } from './wt-kit';
 
 cleanAfterEach();
 
-const item = (id: string, extra: object = {}) => ({ id, title: `Title of ${id}`, status: 'doing', thread: 'lead', type: 'task', ...extra });
-
 const board = () => ({
   docs: [worktree('a', 'stale'), worktree('b', 'stale', { item: 'I-3', linkSource: 'manual' }), worktree('c', 'stale', { item: 'I-3', linkSource: 'branch' })],
-  items: [item('I-3'), item('I-9', { status: 'done' }), item('I-8', { deletedAt: '2026-10-01T00:00:00.000Z' })],
+  items: [ownerItem('I-3'), ownerItem('I-9', { status: 'done' }), ownerItem('I-8', { deletedAt: '2026-10-01T00:00:00.000Z' })],
   meta: metaDoc(),
 });
 
@@ -25,12 +23,7 @@ describe('I-85 Link a worktree to an item from the row menu', { tags: ['standard
     const { calls } = await mountTab(board());
     await chooseAction('a', /^Link to an item/);
     const box = await dialog();
-    const link = within(box).getByRole<HTMLButtonElement>('button', { name: 'Link' });
-    expect(link.disabled).toBe(true);
-    fireEvent.click(within(box).getByRole('combobox', { name: 'Item' }));
-    expect(screen.queryByRole('option', { name: /^I-9/ })).toBeNull();
-    expect(screen.queryByRole('option', { name: /^I-8/ })).toBeNull();
-    fireEvent.click(await screen.findByRole('option', { name: /^I-3/ }));
+    const link = await pickItem(box, [/^I-9/, /^I-8/]);
     expect(link.disabled).toBe(false);
     fireEvent.click(link);
     await waitFor(() => expect(calls).toHaveLength(1));

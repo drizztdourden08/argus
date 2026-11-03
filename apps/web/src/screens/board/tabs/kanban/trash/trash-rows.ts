@@ -28,6 +28,6 @@ const rowOf = (c: TrashKind, doc: TrashSource): TrashRow => ({
 });
 
 const trashRows = (input: TrashInput): TrashRow[] =>
-  TRASH_COLLECTIONS.flatMap((c) => input[c].filter((doc) => isTrashed(c, doc)).map((doc) => rowOf(c, doc))).sort((a, b) => b.at.localeCompare(a.at));
+  TRASH_COLLECTIONS.flatMap((c) => (input[c] ?? []).filter((doc) => isTrashed(c, doc)).map((doc) => rowOf(c, doc))).sort((a, b) => b.at.localeCompare(a.at));
 
 export { trashRows };

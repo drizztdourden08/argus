@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { boardCode, stickyCode } from '../../src/shell/records/behavior/board-code';
+import { boardCode } from '../../src/shell/records/behavior/board-code';
 import { hasRecords } from '../../src/shell/records/behavior/has-records';
 import { parseRecord } from '../../src/shell/records/behavior/parse-record';
+import { stickyCode } from '../../src/shell/records/behavior/sticky-code';
 import type { RecordRef } from '../../src/shell/records/records.type';
 
 const must = (token: string): RecordRef => {

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
-
-const LINK_ID = 'link';
+import { LINK_ID } from './with-unlink.constants';
 
 const unlinkItem = (onUnlink: () => void): MenuItem => ({ id: 'unlink', label: 'Unlink from its item', onSelect: onUnlink });
 

@@ -4,8 +4,7 @@ import type { Item } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import { CLOSED_STATUSES } from '../../tabs/kanban/model';
 import { ITEM_LABEL_CHARS, NO_CHOICE } from '../owner-links.constants';
-
-const DEFAULT_TYPE = 'task';
+import { DEFAULT_TYPE } from './open-item-options.constants';
 
 const isOpen = (item: WithId<Item>): boolean => !item.deletedAt && !CLOSED_STATUSES.includes(item.status);
 

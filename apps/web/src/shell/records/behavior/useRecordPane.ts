@@ -3,11 +3,11 @@ import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { OPEN_PARAM, PANE_PARAM, STACK_MAX } from '../records.constants';
 import type { RecordPaneState } from '../records.type';
-import { stickyCode } from './board-code';
 import { parseRecord } from './parse-record';
 import { readStack } from './read-stack';
 import { recordSearch } from './record-search';
 import { stackState } from './stack-state';
+import { stickyCode } from './sticky-code';
 
 const useRecordPane = (): RecordPaneState => {
   const location = useLocation();

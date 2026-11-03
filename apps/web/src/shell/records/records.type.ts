@@ -224,7 +224,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, HeadSize, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
   OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
   RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, TextPart, TypeIconProps,
 };

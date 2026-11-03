@@ -27,4 +27,4 @@ interface OwnerDialogProps {
   onClose: () => void;
 }
 
-export type { OwnerAction, OwnerAsk, OwnerAskState, OwnerDialogProps, OwnerSend };
+export type { OwnerAsk, OwnerAskState, OwnerDialogProps, OwnerSend };
