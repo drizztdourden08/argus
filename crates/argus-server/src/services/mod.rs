@@ -29,7 +29,7 @@ use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
 use crate::local_names::LiveNames;
 use crate::security::LoginCodes;
-use crate::sse::{Fanout, RunLogs};
+use crate::sse::{Fanout, MuxRegistry, RunLogs};
 use crate::web::WebAssets;
 use tasks::Tasks;
 
@@ -128,6 +128,8 @@ pub struct Services {
     pub web: WebAssets,
     /// The doc stream hub.
     pub fanout: Arc<Fanout>,
+    /// The open mux connections.
+    pub mux: Arc<MuxRegistry>,
     /// The live tail of run logs.
     pub run_logs: Arc<RunLogs>,
     /// Open SSE streams.

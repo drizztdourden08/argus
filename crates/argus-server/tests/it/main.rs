@@ -5,6 +5,8 @@ mod doors;
 #[path = "worktrees/fixture.rs"]
 mod fixture;
 mod machine;
+#[path = "support/mux_rig.rs"]
+mod mux_rig;
 #[path = "support/node_home.rs"]
 mod node_home;
 #[path = "support/page_send.rs"]
@@ -40,6 +42,9 @@ mod local_names_rules;
 mod localhost_door;
 mod localhost_door_rules;
 mod mcp;
+mod mux_lifecycle;
+mod mux_limits;
+mod mux_stream;
 mod notify;
 mod owner_text;
 mod portfolio_send;
