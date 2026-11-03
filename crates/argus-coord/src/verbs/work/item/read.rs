@@ -1,11 +1,11 @@
-//! `coord item show <I>` and `coord item list [--mine|--for T] [--status s] [--subject s]
-//! [--archived] [--deleted] [--json]`.
+//! `coord item show <I>` and `coord item list [--mine|--for T] [--status s] [--type t]
+//! [--assignee who|me] [--open] [--archived] [--deleted] [--json]`.
 
 use argus_board::json::display;
 use argus_board::json::truthy;
-use argus_board::text::slug;
 use serde_json::{Value, json};
 
+use super::filters::narrowed;
 use crate::cli::Outcome;
 use crate::cli::out::clip;
 use crate::verbs::work::{
@@ -15,7 +15,7 @@ use crate::verbs::work::{
 };
 
 const ITEMS: Table = Table {
-    head: &["item", "status", "thread", "subject", "ac", "title"],
+    head: &["item", "status", "thread", "ac", "title"],
     empty: "no items.",
 };
 
@@ -43,7 +43,6 @@ fn row(item: &Value, _now: i64) -> Vec<String> {
         cell(&item["id"]),
         cell(&item["status"]),
         cell(&item["thread"]),
-        cell(&item["subject"]),
         format!("{done}/{}", criteria.len()),
         clip(&cell(&item["title"]), 50),
     ]
@@ -54,11 +53,7 @@ fn narrow(board: &argus_board::Board, r: &Run<'_>, items: Vec<Value>) -> Res<Vec
     if let Some(status) = r.text_opt("status") {
         items.retain(|i| i["status"].as_str() == Some(status));
     }
-    if let Some(subject) = r.text_opt("subject") {
-        let wanted = slug(subject);
-        items.retain(|i| i["subject"].as_str() == Some(wanted.as_str()));
-    }
-    Ok(items)
+    narrowed(board, r, items)
 }
 
 /// `coord item list`.

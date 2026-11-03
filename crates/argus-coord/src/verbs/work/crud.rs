@@ -5,7 +5,7 @@
 
 use argus_board::Board;
 use argus_board::json::{as_integer, display, doc, nullish, section, shown, truthy};
-use argus_board::ops::{Check, Status, apply_op, authorize};
+use argus_board::ops::{Check, OpResult, Status, apply_op, authorize};
 use serde_json::{Map, Value, json};
 
 use super::place::rank_to;
@@ -144,14 +144,14 @@ pub fn move_op(coll: &str, id: &str, to: Map<String, Value>, options: &Options) 
     )
 }
 
-/// Applies an op as the caller.
+/// Applies an op as the caller and gives its result, for a verb that says more than "done".
 ///
 /// # Errors
 /// Refused with the outcome of a refused op, or the conflict sentence of a changed record.
-pub fn apply(board: &mut Board, who: &Caller, operation: &Value) -> Res<()> {
+pub fn apply_result(board: &mut Board, who: &Caller, operation: &Value) -> Res<OpResult> {
     let res = apply_op(board, operation, &who_of(who), None);
     match res.status {
-        Status::Applied => Ok(()),
+        Status::Applied => Ok(res),
         Status::Refused => Err(bad(res.outcome)),
         Status::Conflict => Err(bad(format!(
             "{} changed since rev {} (now {}). Read it again and retry.",
@@ -160,6 +160,14 @@ pub fn apply(board: &mut Board, who: &Caller, operation: &Value) -> Res<()> {
             serde_json::to_string(&res.current.unwrap_or_else(|| json!({}))).unwrap_or_default()
         ))),
     }
+}
+
+/// Applies an op as the caller.
+///
+/// # Errors
+/// As [`apply_result`].
+pub fn apply(board: &mut Board, who: &Caller, operation: &Value) -> Res<()> {
+    apply_result(board, who, operation).map(|_| ())
 }
 
 /// The revision of a doc as a message prints it.

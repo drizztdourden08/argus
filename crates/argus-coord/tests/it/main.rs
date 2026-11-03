@@ -43,6 +43,8 @@ mod hook_read_stamp;
 mod hook_session;
 mod hook_transcript;
 mod item_blocker;
+mod item_migrate;
+mod item_typed;
 mod launch_plan;
 mod launcher_verbs;
 mod lead_verbs;

@@ -16,13 +16,14 @@ use argus_coord::cli::route::{Entry, dispatch, module_of};
 use argus_coord::cli::{Call, CoordError, Invocation, Outcome, USAGE};
 
 /// Every verb and alias of `coord.mjs`, with `hook`, `dashboard` and `portfolio`.
-const VERBS: [&str; 37] = [
+const VERBS: [&str; 38] = [
     "hook",
     "dashboard",
     "thread",
     "agent",
     "item",
     "test",
+    "types",
     "build",
     "launcher",
     "ask",
@@ -303,6 +304,7 @@ fn portfolio_dashboard_lead_and_the_server_verbs_need_no_project() {
         "wake-fault",
         "proc",
         "activity",
+        "types",
     ] {
         let module = module_of(verb).unwrap();
         let ran = ported(&[(module, echo)], &[verb, "x"], &home, &bare);

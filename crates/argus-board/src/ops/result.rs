@@ -136,8 +136,14 @@ fn all_fields(doc: &Value, fields: &[String]) -> Map<String, Value> {
     }
 }
 
+/// Whether the op asks to skip the revision check: a `force` flag, not a `force` reason.
+fn skips_check(op: &Value) -> bool {
+    op["force"].as_str().is_none() && truthy(op, "force")
+}
+
 /// The revision check. The writer saw `op.baseRev` (with `op.prev` holding the values it looked
-/// at). Same revision, no revision given (last writer wins) or `force`: go. A newer revision still
+/// at). Same revision, no revision given (last writer wins) or `force: true`: go. A `force` that is
+/// a reason text overrides a rule only, never this check. A newer revision still
 /// passes field by field: a field is fine while it holds what the writer saw or already holds
 /// the new value. Anything else is the writer's edit colliding with someone else's: those fields
 /// come back as `{ field: current value }`.
@@ -148,7 +154,7 @@ pub(crate) fn version_check(
     next: &Map<String, Value>,
 ) -> Option<Map<String, Value>> {
     let base = &op["baseRev"];
-    if truthy(op, "force") || base.is_null() || strict_eq(base, &doc["rev"]) {
+    if skips_check(op) || base.is_null() || strict_eq(base, &doc["rev"]) {
         return None;
     }
     let prev = &op["prev"];

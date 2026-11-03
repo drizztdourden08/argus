@@ -722,3 +722,30 @@ fn a_note_follows_the_rich_text_rules_and_the_ownership_of_its_record() {
         "{foreign}"
     );
 }
+
+#[test]
+fn a_force_reason_overrides_the_rule_but_keeps_the_revision_check() {
+    let (mut b, id) = bug_at("verifying");
+    applied(&edit(
+        &mut b,
+        &Who::human(),
+        &id,
+        json!({"title": "Crash again"}),
+    ));
+    let stale = |force: Value| {
+        json!({
+            "kind": "edit", "target": {"c": "items", "id": id}, "set": {"stage": "closed"},
+            "baseRev": 1, "force": force,
+        })
+    };
+    let kept = apply_op(
+        &mut b,
+        &stale(json!("checked by hand")),
+        &Who::human(),
+        None,
+    );
+    assert_eq!(kept.status, Status::Conflict, "{}", kept.outcome);
+    assert_eq!(b["items"][id.as_str()]["stage"], "verifying");
+    let skipped = apply_op(&mut b, &stale(json!(true)), &Who::human(), None);
+    assert_ne!(skipped.status, Status::Conflict, "{}", skipped.outcome);
+}

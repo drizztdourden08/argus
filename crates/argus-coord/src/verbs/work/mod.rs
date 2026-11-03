@@ -16,6 +16,7 @@ mod place;
 mod run;
 mod soft;
 mod test;
+mod types;
 
 pub use action::handle as action;
 pub use entry::handle as entry;
@@ -24,3 +25,4 @@ pub use item::handle as item;
 pub use lock::handle as lock;
 pub use log::handle as log;
 pub use test::handle as test;
+pub use types::handle as types;

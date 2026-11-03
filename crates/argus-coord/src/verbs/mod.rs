@@ -27,6 +27,7 @@ pub const PORTED: &[Entry] = &[
     ("sync", thread::run_sync),
     ("item", work::item),
     ("test", work::test),
+    ("types", work::types),
     ("entry", work::entry),
     ("action", work::action),
     ("lock", work::lock),
