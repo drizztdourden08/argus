@@ -287,8 +287,8 @@ impl SyncService {
 
 ### argus-server
 
-`axum` routes for every path of the HTTP section below, the security layer, the four SSE
-streams, page serving, `/files`, and the composition root:
+`axum` routes for every path of the HTTP section below, the security layer, the SSE streams (the
+mux stream and the legacy ones), page serving, `/files`, and the composition root:
 
 ```rust
 pub struct Services { pub config, pub paths, pub db: Arc<Db>, pub bus: Bus, pub log: Arc<Logger>,
@@ -672,7 +672,7 @@ the log. JSON field names and value types are copied from the Node answers; key 
 | PUT | `/api/p/:scope/db/:coll/:id` | db shim (entries post, else `read_only`) |
 | PATCH, DELETE | `/api/p/:scope/db/:coll/:id` | db shim (`read_only`) |
 | POST | `/api/p/:scope/db/batch` | db shim |
-| GET | `/api/p/:scope/stream` | doc stream (SSE) |
+| GET | `/api/p/:scope/stream` | doc stream (SSE), kept for the Node shim, the parity tool and scripts; no page opens it |
 | POST | `/api/p/:key/entries` | owner posts |
 | POST | `/api/p/:key/tests/:id/result` | owner posts |
 | POST | `/api/p/:key/tests/:id/proofs` | proofs (image body) |
@@ -684,13 +684,13 @@ the log. JSON field names and value types are copied from the Node answers; key 
 | POST | `/api/p/:key/runs/:rid/stop` | runs |
 | POST | `/api/p/:key/runs/:rid/stdin` | runs |
 | GET | `/api/p/:key/runs/:rid/logs` | runs |
-| GET | `/api/p/:key/runs/:rid/logs/stream` | run log stream (SSE) |
+| GET | `/api/p/:key/runs/:rid/logs/stream` | run log stream (SSE), kept; no page opens it, the tail goes through `/api/mux` |
 | POST, GET | `/api/p/:key/runs/:rid/attachments` | runs (image body on POST) |
 | GET | `/api/p/:key/wakes/stream` | wake stream (SSE) |
 | GET, POST | `/api/p/:key/wakes` | wakes |
 | GET | `/api/p/:key/wakes/listeners` | wakes |
 | GET | `/api/p/:key/wakes/notices` | wakes (the passive notices digest of the prompt hook) |
-| GET | `/api/p/:key/presence` | presence stream (SSE) |
+| GET | `/api/p/:key/presence` | presence stream (SSE), kept; no page opens it, the claim goes through `/api/mux` |
 | GET | `/api/presence` | presence |
 | GET | `/api/wake-faults` | wake faults |
 | POST | `/api/wake-faults/clear` | wake faults (CLI only) |
@@ -734,6 +734,8 @@ the server reloads itself) and reports `rust` in place of `node`.
 
 | Method | Path | Answer |
 |---|---|---|
+| GET | `/api/mux` | one SSE stream per browser (see the SSE contract); its first frame is `hello {conn, v}`; 503 past 64 connections |
+| POST | `/api/mux/:conn` | a batch of 1 to 50 ops, each with its kind in `op`: `sub`, `unsub`, `presence`, `unpresence`, `tail`, `untail`; answers `results` with one result per op, in order; 404 for an unknown conn, 400 for a bad body |
 | PUT | `/api/p/:key/palette` | `{palette}` in (`basic brock rotp archipelia bxel`), `{palette}` out, page only |
 | POST | `/api/deps` | ask: `{project, item, actor, target, to?, title, description?, ac?, onto?}`; `{dep, text}` |
 | POST | `/api/deps/:id/close` | `{as: done\|dropped\|blocked, reason?, actor}`; `{dep, text}` |
@@ -750,7 +752,9 @@ off`, and the two tools are hidden from the server's `tools/list` and refused. I
 writes answer `read_only`. The parity run leaves the routes, the two tools and the fields out of
 the Node comparison.
 
-No other route is added before the switch-over, so the Node and Rust servers answer the same set.
+The two mux routes are Argus only, and the parity run leaves them out, as it does the dependency
+routes. No other route is added before the switch-over, so the Node and Rust servers answer the
+same set.
 
 ### SSE contract
 
@@ -778,12 +782,19 @@ data: {"reason":"resync"}
 
 | Stream | Events | Rules |
 |---|---|---|
-| doc stream | `snapshot`, `ready`, `changes`, `reset` | `c` filter, resume by `Last-Event-ID` or `since`, snapshot fallback, one `changes` per apply, drop at 1 MB buffered, 32 clients per scope |
-| run log stream | `log`, `status` | `after` resume, a first `status`, ends after a final `status` |
+| mux stream (`/api/mux`, one per browser) | `hello`, `snapshot`, `changes`, `ready`, `reset`, `log`, `run`, `tail-end` | `hello {conn, v}` first and not metered; no `id:` lines; `snapshot`, `changes`, `ready` and `reset` carry their `scope`, and `ready` lists the `colls`; a `sub` gets one snapshot per collection it names, or the missed changes when `since` is servable, then `ready`; `log`, `run` and `tail-end` carry their `sub`; drop at 1 MB buffered per connection; 64 connections; the 32 clients per scope count one per browser |
+| doc stream (legacy, `/api/p/:scope/stream`) | `snapshot`, `ready`, `changes`, `reset` | `c` filter, resume by `Last-Event-ID` or `since`, snapshot fallback, one `changes` per apply, drop at 1 MB buffered, 32 clients per scope; bytes unchanged |
+| run log stream (legacy) | `log`, `status` | `after` resume, a first `status`, ends after a final `status` |
 | wake stream | `ready`, `wake`, `replaced` | `thread`, `v=2` one listener per thread key, legacy listeners, queued replay within 24 h, 64 per project |
-| presence stream | `ready` | one per open board tab with `?thread=`, 8 tabs per thread |
+| presence stream (legacy) | `ready` | one per open board tab with `?thread=`, 8 tabs per thread; a mux `presence` op holds the same claim and sends no frame |
 
-Notifications reach the page as `notifications` docs on the `_portfolio` doc stream, as in Node.
+Mux frames have no `id:` line, so a resume names `since` on each `sub`. The mux code is in
+`crates/argus-server/src/sse/mux` (registry, conn, ops, presence, tails) and its routes are in
+`src/routes/mux.rs`. The per-collection `subscribe` and `unsubscribe` of the doc fan-out are in
+`src/sse/fanout`.
+
+Notifications reach the page as `notifications` docs on the `_portfolio` scope of the mux stream,
+as in Node.
 
 ## Services
 
@@ -1106,16 +1117,24 @@ the same tab.
 | Module | Role |
 |---|---|
 | `api` | `fetch` wrapper for `/api/*` with the error shape as a typed error |
-| `scope-stream` | One `EventSource` per scope on `/api/p/:scope/stream`, the shim rules of DESIGN 3.2: state per collection, resume, `reset`, reopen with the union when a collection is added, the error after a 401 or three failed reconnects |
+| `hub` | The one connection per origin (`data/hub`). `connect-hub.ts` picks the tier: a SharedWorker (`hub-worker.ts`, one `Hub` in the worker, one port per tab), else a Web Locks leader tab (`hub-leader.ts`: lock `argus-hub-leader`, BroadcastChannel `argus-hub`, each tab answers on `argus-hub:<tabId>`), else the tab's own `Hub` (`in-page-tab.ts`). When the leader closes, the next tab takes over and every tab sends its state again. Messages on the channel travel in an envelope `{tab, epoch, msg}`, and an older epoch is ignored. `hub.ts` keeps the union of the wants, presences and tails. `scope-cache.ts` keeps each scope's collections, seq and synced set. `subscription-table.ts` turns the union into ops, with a 10 s linger before an unwanted collection is dropped. `mux-connection.ts` owns the one `EventSource` on `/api/mux` and sends one tick's ops in one POST; it reopens on a 404, checks `/api/health` for `unauthorized` and goes `unavailable` after three failures |
+| `tab-link` | One per page, the tab side of the hub (`tab-link.ts`). It holds the page's stable tab id, sends `want`, `unwant`, `presence`, `unpresence`, `tail` and `untail`, and routes each frame to the `ScopeStream` of its scope or to its tail handler. On `hub-hello` it sends its whole state again. A tab sends nothing until it holds its own tab lock (`argus-tab-<tabId>`, `tab-gate.ts`). Otherwise the hub could take that lock first and drop a live tab |
+| `scope-stream` | One mirror per scope (`scope-stream.ts`, built by `scope-streams.ts`) on the page's `TabLink`. It has no `EventSource` and no URL of its own. `subscribe` makes the link want each collection once, and the last listener leaving unwants it. Frames apply through `apply-snapshot.ts` and `apply-changes.ts`, with the state per collection and the status. A collection added later sends only its own snapshot and reopens nothing, unlike the Node page shim (DESIGN 3.2). `DataProvider` takes the page's link, `connectHub()` by default |
 | `use-collection`, `use-doc` | Hooks over `useSyncExternalStore` returning typed docs of a collection or one doc |
 | `posts` | `postEntry`, `recordResult`, `attachProof`, `sendDown`, each returning the `PostResult` |
-| `runs` | `startRun`, `stopRun`, `tailRun` (log SSE), `sendStdin`, `attachToRun`, with an optional scope for the overview's master Play |
-| `presence` | Holds the presence stream while a board is open with `?thread=` |
+| `runs` | `startRun`, `stopRun`, `sendStdin`, `attachToRun`, with an optional scope for the overview's master Play. `tailRun` (`tail-run.ts`) sends `tail` through the link and its stop sends `untail`; lines are delivered once by `seq` |
+| `presence` | No module of its own. `usePresence` (`screens/board/behavior/usePresence.ts`) asks the link for `presence` with `?thread=` and releases it on unmount. A board tab opens no stream for it |
 | `notifications` | `GET /api/notify`, the settings read and write, the test ping |
 | `types` | The doc shapes of every collection, written from the Node contract |
 
 A post never updates the page by itself: the reply arrives after the export, and the `changes`
 event that carries the new state is already on the stream (DESIGN 3.5).
+
+Why one connection: Chromium allows 6 HTTP/1.1 connections per host per profile. Each board tab
+held its own streams (board docs, portfolio docs, presence and an open run log). On 2026-11-03
+three board tabs used all six, and every later request waited for a slot. The hub keeps one
+connection per origin, so a few tabs cannot use up the host. An alias host such as
+`i-86.argus.localhost` is its own origin, with its own six slots and its own hub.
 
 ### Palettes
 
