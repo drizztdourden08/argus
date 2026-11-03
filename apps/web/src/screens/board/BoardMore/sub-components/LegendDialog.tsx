@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, DialogShell, Table, TableCell, TableRow, TableSection, Tag, Text } from '@drizztdourden08/tessera';
+import { AttentionRows } from '../../tabs/kanban/sub-components/AttentionRows';
 import { LEGEND_ENTRIES } from '../BoardMore.constants';
 
 const LegendDialog = (props: { onClose: () => void }) => {
@@ -20,6 +21,7 @@ const LegendDialog = (props: { onClose: () => void }) => {
               <TableCell><Text variant="subtitle">{entry.text}</Text></TableCell>
             </TableRow>
           ))}
+          <AttentionRows />
         </TableSection>
       </Table>
     </DialogShell>

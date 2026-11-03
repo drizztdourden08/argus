@@ -16,6 +16,7 @@ import type { KanbanTabProps } from './kanban-props.type';
 import { itemTests, needsYou, subjectsOf } from './model';
 import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
+import { KanbanLegend } from './sub-components/KanbanLegend';
 import { KanbanToolbar } from './sub-components/KanbanToolbar';
 import { OpNotices } from './sub-components/OpNotices';
 import { SelectionBar } from './sub-components/SelectionBar';
@@ -42,6 +43,7 @@ const KanbanTab = (props: KanbanTabProps) => {
       {!panels.trash.open && (
         <KanbanToolbar state={state} view={view} threads={data.threads} subjects={subjects} />
       )}
+      {!panels.trash.open && <KanbanLegend />}
       <OpNotices ops={notices} />
       {!panels.trash.open && <SelectionBar items={view.cards.map((card) => card.item)} threads={data.threads} selection={selection} ops={bulk} />}
       <KanbanBody

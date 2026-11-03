@@ -47,7 +47,7 @@ describe('I-68 the questions and decisions that wait on an item', { tags: ['crit
   });
 
   it('words a question as waiting on it and a decision as to pick up', () => {
-    expect(askTag({ id: 'Q-4', kind: 'question', via: 'item' })).toMatchObject({ label: 'waiting on Q-4', color: 'warning' });
-    expect(askTag({ id: 'D-2', kind: 'decision', via: 'blocker' })).toMatchObject({ label: 'D-2 to pick up', color: 'info' });
+    expect(askTag({ id: 'Q-4', kind: 'question', via: 'item' })).toMatchObject({ label: 'waiting on Q-4', color: 'danger', icon: 'circle-help' });
+    expect(askTag({ id: 'D-2', kind: 'decision', via: 'blocker' })).toMatchObject({ label: 'D-2 to pick up', color: 'info', icon: 'split' });
   });
 });

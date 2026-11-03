@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { ItemRef } from '../../../../../data/kanban';
+import { NO_SIGNALS, attentionOf } from '../attention';
 import { buildColumns } from './build-columns';
 import { filtersActive } from './filters-active';
 import { listedThreads } from './listed-threads';
@@ -13,7 +14,10 @@ const isClosed = (item: ItemRef): boolean => CLOSED_STATUSES.includes(item.statu
 
 const cardOf = (item: ItemRef, facts: CardFacts, now: number): CardData => {
   const waiting = needsYou(facts.needs);
-  return { id: item.id, item, needsYou: waiting, asks: facts.asks, quietMs: quietMs(item, waiting, now), conflicted: facts.conflicted };
+  const quiet = quietMs(item, waiting, now);
+  const { asks, signals, conflicted } = facts;
+  const attention = attentionOf({ item, needs: facts.needs, asks, signals, quietMs: quiet });
+  return { id: item.id, item, needsYou: waiting, asks, signals, attention, quietMs: quiet, conflicted };
 };
 
 const conflictedIds = (input: ViewInput): Set<string> =>
@@ -25,11 +29,11 @@ const threadKeeper = (input: ViewInput): ((thread: string) => boolean) => {
 };
 
 const buildView = (input: ViewInput): KanbanView => {
-  const { items, threads, needs, asks, filters, prefs, now } = input;
+  const { items, threads, needs, asks, signals, filters, prefs, now } = input;
   const conflicted = conflictedIds(input);
   const keeps = threadKeeper(input);
   const live = items.filter((item) => !item.deletedAt && (filters.archived || !item.archivedAt) && keeps(item.thread));
-  const cards = live.map((item) => cardOf(item, { needs: needs.get(item.id), asks: asks.get(item.id) ?? [], conflicted: conflicted.has(item.id) }, now));
+  const cards = live.map((item) => cardOf(item, { needs: needs.get(item.id), asks: asks.get(item.id) ?? [], signals: signals.get(item.id) ?? NO_SIGNALS, conflicted: conflicted.has(item.id) }, now));
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
   const shown = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
   const filtered = filtersActive(filters);

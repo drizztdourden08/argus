@@ -10,7 +10,7 @@ const AskTag = (props: AskTagProps) => {
   const spec = askTag(link);
   return (
     <Pressable aria-label={`Open ${link.id}`} onClick={() => open(link.id)}>
-      <Tag variant="urgency" color={spec.color} title={spec.title}>{spec.label}</Tag>
+      <Tag variant="urgency" color={spec.color} icon={spec.icon} title={spec.title}>{spec.label}</Tag>
     </Pressable>
   );
 };

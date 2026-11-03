@@ -1,10 +1,11 @@
 /* @layer renderer-app @kind types */
-import type { KanbanColumn, KanbanMove, TagUrgencyColor } from '@drizztdourden08/tessera';
+import type { IconName, KanbanColumn, KanbanMove, TagUrgencyColor } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
 import type { DepColor, DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { OpNotice, Option } from '../../../shared';
+import type { AttentionKind, Signals } from '../attention/attention.type';
 
 type ItemGroup = 'status' | 'subject' | 'thread';
 
@@ -63,6 +64,7 @@ interface AskTagSpec {
   id: string;
   label: string;
   color: TagUrgencyColor;
+  icon: IconName;
   title: string;
 }
 
@@ -71,6 +73,8 @@ interface CardData {
   item: ItemRef;
   needsYou: boolean;
   asks: AskLink[];
+  signals: Signals;
+  attention: AttentionKind[];
   quietMs: number | null;
   conflicted: boolean;
 }
@@ -78,6 +82,7 @@ interface CardData {
 interface CardFacts {
   needs: Needs | undefined;
   asks: AskLink[];
+  signals: Signals;
   conflicted: boolean;
 }
 
@@ -86,6 +91,7 @@ interface ViewInput {
   threads: WithId<ThreadChoice>[];
   needs: ReadonlyMap<string, Needs>;
   asks: ReadonlyMap<string, AskLink[]>;
+  signals: ReadonlyMap<string, Signals>;
   notices: readonly OpNotice[];
   filters: KanbanFilters;
   prefs: KanbanPrefs;
