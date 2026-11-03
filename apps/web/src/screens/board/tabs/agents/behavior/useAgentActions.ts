@@ -2,15 +2,17 @@
 import { useCallback, useMemo } from 'react';
 import { toast } from '@drizztdourden08/tessera';
 import { bulkAgents, cancelStop, requestStop } from '../../../../../data/agents';
-import type { AgentActions, AgentsView } from '../AgentsTab.type';
+import type { Agent } from '../../../../../data/agents';
+import type { WithId } from '../../../../../data/react';
+import type { AgentActions } from '../AgentsTab.type';
 import { agentName, postVerdict } from '../model';
 import { announce } from './announce';
 import { announceFailure } from './announce-failure';
 import { useAgentEdits } from './useAgentEdits';
 import { useLatestAgents } from './useLatestAgents';
 
-const useAgentActions = (boardKey: string, view: AgentsView): AgentActions => {
-  const latest = useLatestAgents(view);
+const useAgentActions = (boardKey: string, agents: readonly WithId<Agent>[]): AgentActions => {
+  const latest = useLatestAgents(agents);
   const edits = useAgentEdits(boardKey, latest);
 
   const cancel = useCallback((id: string, undoes?: string) => {

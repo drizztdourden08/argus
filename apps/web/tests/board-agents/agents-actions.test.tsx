@@ -2,7 +2,7 @@
 import { toast } from '@drizztdourden08/tessera';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { agent, ago, json, MIN, mockApi, mockFetch, renderAgents, rowOf } from './agents-harness';
+import { agent, agentRows, ago, json, MIN, mockApi, mockFetch, renderAgents, rowOf } from './agents-harness';
 
 afterEach(() => {
   localStorage.clear();
@@ -89,19 +89,19 @@ describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] 
     mockApi();
     const { container } = await renderAgents({ agents: board });
     expect(screen.getByRole('button', { name: 'Show finished (1)' })).toBeTruthy();
-    expect(container.querySelector('[data-agent-id="A-3"]')).toBeNull();
+    expect(agentRows(container)).not.toContain('A-3');
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
-    expect(container.querySelector('[data-agent-id="A-3"]')).not.toBeNull();
-    expect(container.querySelectorAll('[data-agent-id]')).toHaveLength(3);
+    expect(agentRows(container)).toContain('A-3');
+    expect(agentRows(container)).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: 'Hide finished (1)' }));
-    expect(container.querySelector('[data-agent-id="A-3"]')).toBeNull();
+    expect(agentRows(container)).not.toContain('A-3');
   });
 
   it('never lists an archived agent', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: board });
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
-    expect(container.querySelector('[data-agent-id="A-4"]')).toBeNull();
+    expect(agentRows(container)).not.toContain('A-4');
   });
 
   it('archives the finished agents in one bulk entry, with Undo', async () => {
@@ -123,17 +123,6 @@ describe('S1 Agents tab: the row actions', { tags: ['standard'] }, () => {
     vi.stubGlobal('CSS', { supports: () => false });
     fireEvent.click(within(rowOf(container, 'A-1')).getByRole('button', { name: 'More actions for A-1' }));
   };
-
-  it('edits the note from the pencil and sends it as an edit with the old note and the revision', async () => {
-    const posted = mockApi();
-    const { container } = await renderAgents({ agents: { 'A-1': agent({ note: 'old note' }) } });
-    fireEvent.click(within(rowOf(container, 'A-1')).getByRole('button', { name: 'Edit the note' }));
-    const field = screen.getByRole('textbox', { name: 'Note' });
-    fireEvent.change(field, { target: { value: 'new note' } });
-    fireEvent.keyDown(field, { key: 'Enter' });
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'agents', id: 'A-1' }, set: { note: 'new note' }, prev: { note: 'old note' }, baseRev: 3 });
-  });
 
   it('archives from the kebab', async () => {
     const posted = mockApi();

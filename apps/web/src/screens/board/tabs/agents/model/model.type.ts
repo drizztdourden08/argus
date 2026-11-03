@@ -29,9 +29,17 @@ interface ModelLook {
 
 type AgentField = 'task' | 'note' | 'branch' | 'worktree';
 
+type WhereKind = 'worktree' | 'master' | 'unknown';
+
+interface WhereLook {
+  kind: WhereKind;
+  text: string;
+  tip: string;
+}
+
 interface Verdict {
   ok: boolean;
   message: string;
 }
 
-export type { AgentField, AgentMark, ModelFamily, ModelLook, NowLine, StatusLook, Verdict };
+export type { AgentField, AgentMark, ModelFamily, ModelLook, NowLine, StatusLook, Verdict, WhereKind, WhereLook };

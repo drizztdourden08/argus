@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, EmptyState, Inline, Stack, Text } from '@drizztdourden08/tessera';
-import { FeedTable } from '../../sub-components/FeedTable';
+import { OverviewList } from '../../records';
 import { NOTHING_MATCHES } from '../activity.constants';
 import type { ActivityFeedProps } from '../activity.type';
 import { ActivityRow } from './ActivityRow';
@@ -11,9 +11,9 @@ const ActivityFeed = (props: ActivityFeedProps) => {
   const part = items.slice(0, shown);
   return (
     <Stack gap="sm">
-      <FeedTable label="Activity">
+      <OverviewList label="Activity">
         {part.map((item) => <ActivityRow key={item.id} item={item} freshSince={freshSince} />)}
-      </FeedTable>
+      </OverviewList>
       {items.length > part.length && (
         <Inline gap="sm" align="center">
           <Button onClick={onMore}>Show more</Button>

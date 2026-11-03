@@ -4,8 +4,8 @@ import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  agentElapsed, agentMessage, agentNow, agentProblem, clipText, findLead, finishedCount, formatDuration, isQuiet, isStale, itemOptions, modelFamily, modelTip,
-  plainText, runSpan, shortBranch, sortActive, sortDone, statusLook, tokenLines,
+  agentChips, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
+  runSpan, sortActive, sortDone, statusLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
 const NOW = Date.parse('2026-10-26T12:00:00Z');
@@ -35,13 +35,6 @@ describe('K1 agent clocks', { tags: ['critical'] }, () => {
     expect(isStale({ status: 'working', updatedAt: at(44 * MIN) }, NOW)).toBe(false);
     expect(isStale({ status: 'waiting', updatedAt: at(90 * MIN) }, NOW)).toBe(false);
   });
-
-  it('calls a working agent quiet when it is stalled or between tools, never without live data', () => {
-    expect(isQuiet({ status: 'working' })).toBe(false);
-    expect(isQuiet({ status: 'working', live: { activity: 'tool' } })).toBe(false);
-    expect(isQuiet({ status: 'working', live: { activity: 'waiting' } })).toBe(true);
-    expect(isQuiet({ status: 'working', live: { activity: 'tool', stalled: true } })).toBe(true);
-  });
 });
 
 describe('K1 agentNow and agentMessage', { tags: ['critical'] }, () => {
@@ -63,23 +56,6 @@ describe('K1 agentNow and agentMessage', { tags: ['critical'] }, () => {
     expect(agentMessage({ status: 'done', result: 'r', live: { lastMessage: 'm' } })).toBe('m');
     expect(agentMessage({ status: 'done', result: 'r' })).toBe('r');
     expect(agentMessage({ status: 'working', result: 'r' })).toBe('');
-  });
-});
-
-describe('K1 text helpers', { tags: ['critical'] }, () => {
-  it('strips the marks of a message and keeps its words on one line', () => {
-    expect(plainText('# Title\n\nFixed **bold**, _soft_ and `code`.\n\n- one\n- two\n\n[a link](http://x.test)')).toBe('Title Fixed bold, soft and code. one two a link');
-    expect(plainText('```ts\nconst a = 1;\n```')).toBe('const a = 1;');
-  });
-
-  it('clips a long text with three dots and leaves a short one alone', () => {
-    expect(clipText('short', 10)).toBe('short');
-    expect(clipText('a long sentence here', 6)).toBe('a long...');
-  });
-
-  it('shortens a branch to what follows the first slash', () => {
-    expect(shortBranch('agent/lead-x')).toBe('lead-x');
-    expect(shortBranch('main')).toBe('main');
   });
 });
 
@@ -127,10 +103,14 @@ describe('K1 lists', { tags: ['critical'] }, () => {
     expect(agentProblem('branch', 'x'.repeat(80))).toBeNull();
   });
 
-  it('lists every live item with a short title, the current one even when gone, and none first', () => {
-    const items = [{ id: 'I-1', title: 'a'.repeat(60), status: 'todo', thread: 't' }, { id: 'I-2', title: 'gone', status: 'todo', thread: 't', deletedAt: 'x' }];
-    const options = itemOptions(items, 'I-7');
-    expect(options.map((option) => option.value)).toEqual(['none', 'I-1', 'I-7']);
+  it('lists the live items not yet linked with a short title, and the add option first', () => {
+    const items = [
+      { id: 'I-1', title: 'a'.repeat(60), status: 'todo', thread: 't' },
+      { id: 'I-2', title: 'gone', status: 'todo', thread: 't', deletedAt: 'x' },
+      { id: 'I-3', title: 'linked', status: 'todo', thread: 't' },
+    ];
+    const options = itemOptions(items, ['I-3']);
+    expect(options.map((option) => option.value)).toEqual(['none', 'I-1']);
     expect(options[1]?.label).toBe(`I-1 ${'a'.repeat(40)}`);
   });
 
@@ -158,5 +138,57 @@ describe('K1 finishedCount', { tags: ['critical'] }, () => {
     const runs = [run('R-1', 'exited'), run('R-2', 'failed'), run('R-3', 'running')];
     expect(finishedCount(agents, runs)).toBe(4);
     expect(finishedCount(agents, [])).toBe(2);
+  });
+});
+
+describe('I-85 P7 agents linked to items and a place', { tags: ['critical'] }, () => {
+  const agent = (extra: Record<string, unknown> = {}): Agent => ({ status: 'working', ...extra });
+  const row = (id: string, extra: Record<string, unknown> = {}): WithId<Agent> => ({ id, ...agent(extra) });
+  const item = (id: string, extra: Record<string, unknown> = {}) => ({ id, title: id, status: 'doing', thread: 't', ...extra });
+
+  it('reads the item list, and the older single item when the list is missing', () => {
+    expect(agentItems(agent({ items: ['I-1', 'I-2'], item: 'I-1' }))).toEqual(['I-1', 'I-2']);
+    expect(agentItems(agent({ item: 'I-3' }))).toEqual(['I-3']);
+    expect(agentItems(agent())).toEqual([]);
+  });
+
+  it('says where an agent works: a worktree folder, master, or unknown', () => {
+    expect(agentWhere(agent({ where: 'X:/p/.claude/worktrees/agent-ab12', whereSource: 'manual' }))).toMatchObject({ kind: 'worktree', text: 'WT agent-ab12' });
+    expect(agentWhere(agent({ where: 'agent-ab12', whereSource: 'auto' })).tip).toBe('agent-ab12 (auto)');
+    expect(agentWhere(agent({ master: true, where: 'master' }))).toMatchObject({ kind: 'master', text: 'master' });
+    expect(agentWhere(agent())).toMatchObject({ kind: 'unknown', text: 'no worktree' });
+  });
+
+  it('puts the where chip first, then the model and the time it has run', () => {
+    const chips = agentChips(agent({ where: 'agent-ab12', model: 'sonnet', startedAt: at(12 * MIN) }), NOW);
+    expect(chips.map((chip) => chip.id)).toEqual(['where', 'model', 'elapsed']);
+    expect(chips[2]?.text).toBe('12m');
+    expect(agentChips(agent(), NOW).map((chip) => chip.id)).toEqual(['where']);
+  });
+
+  it('groups agents by item, lists one that works on two items under both, and flags the ones without an item', () => {
+    const grouped = groupAgents(
+      [row('A-1', { items: ['I-1'] }), row('A-2', { items: ['I-1', 'I-2'] }), row('A-3')],
+      [item('I-1', { rank: 2 }), item('I-2', { rank: 1 })],
+    );
+    expect(grouped.groups.map((group) => group.key)).toEqual(['I-2', 'I-1']);
+    expect(grouped.groups[1]?.rows.map((agentRow) => agentRow.id)).toEqual(['A-1', 'A-2']);
+    expect(grouped.none.map((agentRow) => agentRow.id)).toEqual(['A-3']);
+    expect(grouped.closed).toHaveLength(0);
+  });
+
+  it('folds the groups of closed items apart from the open ones', () => {
+    const grouped = groupAgents([row('A-1', { items: ['I-1'] }), row('A-2', { items: ['I-2'] })], [item('I-1', { status: 'done' }), item('I-2')]);
+    expect(grouped.groups.map((group) => group.key)).toEqual(['I-2']);
+    expect(grouped.closed.map((group) => group.key)).toEqual(['I-1']);
+  });
+});
+
+describe('I-85 P7 agent marks', { tags: ['critical'] }, () => {
+  it('marks a duplicate, a lost record and the mismatches for the Transcript tab', () => {
+    const labels = (extra: Record<string, unknown>) => agentMarks({ status: 'done', ...extra }, NOW).map((mark) => mark.label);
+    expect(labels({ duplicateOf: 'A-9' })).toEqual(['duplicate of A-9']);
+    expect(labels({ lost: true })).toEqual(['lost']);
+    expect(labels({ idMismatch: true, modelMismatch: true, modelUsed: 'opus-5-5' })).toEqual(['id mismatch', 'model mismatch']);
   });
 });

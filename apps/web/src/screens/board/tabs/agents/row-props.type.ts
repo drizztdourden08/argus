@@ -1,30 +1,27 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
-import type { Agent } from '../../../../data/agents';
+import type { Agent, ProjectThread } from '../../../../data/agents';
+import type { Item } from '../../../../data/kanban';
+import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
-import type { AgentActions, RowState } from './AgentsTab.type';
+import type { AgentActions, AgentsView } from './AgentsTab.type';
 
-interface AgentDetailProps {
+type OpenRecord = (code: string, tab?: string) => void;
+
+interface AgentRowProps {
+  boardKey: string;
+  id: string;
+  agent: Agent;
+  threads: AgentsView['threads'];
+  now: number;
+  actions: AgentActions;
+  onOpen: OpenRecord;
+}
+
+interface AgentTrailingProps {
   id: string;
   agent: Agent;
   now: number;
   actions: AgentActions;
-  state: RowState;
-}
-
-interface AgentCellProps {
-  name: string;
-  title?: string;
-  agentId?: string;
-  children?: ReactNode;
-}
-
-interface AgentActionsProps {
-  id: string;
-  agent: Agent;
-  actions: AgentActions;
-  state: RowState;
-  onOpen: (id: string) => void;
 }
 
 interface AgentStopButtonProps {
@@ -33,59 +30,7 @@ interface AgentStopButtonProps {
   actions: AgentActions;
 }
 
-interface AgentBranchButtonProps {
-  branch: string | null | undefined;
-}
-
-interface AgentMenuProps {
-  id: string;
-  agent: Agent;
-  actions: AgentActions;
-  onOpen: (id: string) => void;
-  onEditNote: () => void;
-}
-
-interface AgentNameProps {
-  id: string;
-  agent: Agent;
-  now: number;
-  runs: readonly RunEntry[];
-  onOpen: (id: string) => void;
-  onLog: (id: string) => void;
-}
-
-interface AgentNoteProps {
-  agent: Agent;
-}
-
 interface AgentNowProps {
-  agent: Agent;
-  now: number;
-}
-
-interface AgentMessageProps {
-  id: string;
-  agent: Agent;
-  open: boolean;
-  onToggle: (id: string) => void;
-}
-
-interface AgentFullMessageProps {
-  id: string;
-  agent: Agent;
-  now: number;
-  onClose: (id: string) => void;
-}
-
-interface AgentNoteEditProps {
-  id: string;
-  agent: Agent;
-  actions: AgentActions;
-  onDone: () => void;
-}
-
-interface AgentStatusProps {
-  id: string;
   agent: Agent;
   now: number;
 }
@@ -98,18 +43,28 @@ interface AgentModelProps {
   agent: Agent;
 }
 
-interface AgentTimeProps {
-  agent: Agent;
-  now: number;
+interface ItemHeaderProps {
+  boardKey: string;
+  itemId: string;
+  items: readonly WithId<Item>[];
+  threads: readonly WithId<ProjectThread>[];
+  onOpen: OpenRecord;
 }
 
-interface AgentItemProps {
-  item: string | null | undefined;
+interface ItemGroupProps extends Omit<AgentRowProps, 'id' | 'agent'> {
+  itemId: string;
+  items: readonly WithId<Item>[];
+  agents: readonly WithId<Agent>[];
 }
 
-interface AgentRunChipsProps {
-  runs: readonly RunEntry[];
-  onLog: (id: string) => void;
+interface AgentGroupListProps extends Omit<AgentRowProps, 'id' | 'agent'> {
+  label: string;
+  agents: readonly WithId<Agent>[];
+  items: readonly WithId<Item>[];
+}
+
+interface AgentSectionProps extends AgentGroupListProps {
+  title: string;
 }
 
 interface AgentRunsProps {
@@ -128,24 +83,17 @@ interface AgentRunRowProps {
 }
 
 export type {
-  AgentActionsProps,
-  AgentBranchButtonProps,
-  AgentStopButtonProps,
-  AgentCellProps,
-  AgentFullMessageProps,
-  AgentItemProps,
-  AgentMenuProps,
-  AgentMessageProps,
+  AgentGroupListProps,
   AgentModelProps,
-  AgentNameProps,
-  AgentNoteEditProps,
-  AgentNoteProps,
   AgentNowProps,
-  AgentDetailProps,
-  AgentRunChipsProps,
+  AgentRowProps,
   AgentRunRowProps,
   AgentRunsProps,
-  AgentStatusProps,
+  AgentSectionProps,
   AgentStatusTagProps,
-  AgentTimeProps,
+  AgentStopButtonProps,
+  AgentTrailingProps,
+  ItemGroupProps,
+  ItemHeaderProps,
+  OpenRecord,
 };

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, ToastStack } from '@drizztdourden08/tessera';
 import { act, render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -78,8 +78,13 @@ const mockApi = (report: unknown = emptyReport): Posted[] => {
 
 interface Board {
   agents?: Record<string, object>;
+  items?: Record<string, object>;
   threads?: Record<string, object>;
 }
+
+const Where = () => <output aria-label="where">{useLocation().search}</output>;
+
+const item = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({ title: 'ship it', status: 'doing', thread: 'lead', type: 'task', rank: 1, ...extra });
 
 const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined, at = '/p/alpha#agents') => {
   const fake = createFakeSources();
@@ -88,6 +93,7 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
       <DataProvider streams={createScopeStreams(fake.open)}>
         <MemoryRouter initialEntries={[at]}>
           <AgentsTab boardKey="alpha" onPurge={onPurge} />
+          <Where />
         </MemoryRouter>
         <ToastStack />
       </DataProvider>
@@ -98,15 +104,19 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
     for (const source of fake.sources) {
       source.emit('snapshot', snapshot('alpha', 'agents', board.agents ?? {}));
       source.emit('snapshot', snapshot('alpha', 'threads', board.threads ?? {}));
+      source.emit('snapshot', snapshot('alpha', 'items', board.items ?? {}));
     }
   });
   return { ...view, sources: fake.sources };
 };
 
 const rowOf = (container: HTMLElement, id: string): HTMLElement => {
-  const row = container.querySelector<HTMLElement>(`[data-agent-id="${id}"]`)?.closest<HTMLElement>('[role="row"]');
+  const row = container.querySelector<HTMLElement>(`[data-record="${id}"]`);
   if (!row) throw new Error(`no row for ${id}`);
   return row;
 };
 
-export { agent, ago, DAY, json, live, MIN, mockApi, mockFetch, renderAgents, rowOf };
+const agentRows = (container: HTMLElement): string[] =>
+  [...container.querySelectorAll<HTMLElement>('[data-record^="A-"]')].map((row) => row.dataset.record ?? '');
+
+export { agent, agentRows, ago, DAY, item, json, live, MIN, mockApi, mockFetch, renderAgents, rowOf };

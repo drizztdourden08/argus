@@ -10,5 +10,5 @@ export { settingTip } from './setting-tip';
 export { sortNotes } from './sort-notes';
 export { testSentence } from './test-sentence';
 export { toastNote } from './toast-note';
-export { LEVEL_LOOK, NOTE_ICON, NOTE_TONE, NOTIFY_LEVELS, SETTING_PARTS } from './model.constants';
+export { LEVEL_LOOK, NOTIFY_LEVELS, SETTING_PARTS } from './model.constants';
 export type * from './model.type';

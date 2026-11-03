@@ -18,17 +18,35 @@ const open = async (activity: Record<string, object> = ACTIVITY) => {
   return view;
 };
 
-const rowsOf = (): HTMLElement[] => within(screen.getByRole('table', { name: 'Activity' })).getAllByRole('row');
+const rowsOf = (): HTMLElement[] => [...screen.getByRole('list', { name: 'Activity' }).querySelectorAll<HTMLElement>('[data-record]')];
 
 describe('S1 the Activity tab', { tags: ['standard'] }, () => {
   it('shows the kind, the level, the time and the project and thread of each entry', async () => {
     await open();
     await screen.findByText('R-3 play failed (exit 1)');
     const first = rowsOf()[2] as HTMLElement;
+    expect(first.dataset.record).toBe('R-3');
     expect(within(first).getByText('run')).toBeTruthy();
     expect(within(first).getByText('/ lead')).toBeTruthy();
     expect(within(first).getByRole('link', { name: 'RotP' }).getAttribute('href')).toBe('/p/rotp/');
     expect(first.textContent).toMatch(/\d+[smhd]\sago/);
+  });
+});
+
+describe('I-85 P7 the Activity rows are record rows', { tags: ['critical'] }, () => {
+  it('draws an entry that names a record as that record, and one that names none as a notice with its kind', async () => {
+    await open();
+    await screen.findByText('R-3 play failed (exit 1)');
+    const rows = rowsOf();
+    expect(rows.map((row) => row.dataset.record)).toEqual(['fault', 'note', 'R-3']);
+    expect(rows[2]?.querySelector('[data-type-mark="run"]')).toBeTruthy();
+    expect(rows[1]?.querySelector('[data-type-mark="notice"]')).toBeTruthy();
+  });
+
+  it('shows the assignee as the project lead and a menu per row', async () => {
+    await open();
+    await screen.findByText('R-3 play failed (exit 1)');
+    expect(within(rowsOf()[2] as HTMLElement).getByRole('button', { name: 'More actions for R-3' })).toBeTruthy();
   });
 });
 

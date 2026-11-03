@@ -8,6 +8,12 @@ const DEP_FILTERS: { value: DepFilter; label: string }[] = [
   { value: 'all', label: 'All' },
 ];
 
+const TRAIL_MIN = 2;
+
+const DEP_KIND = 'dependency';
+
+const DEP_PANE_TAB = 'links';
+
 const NO_DEPS: Readonly<Record<DepFilter, string>> = {
   open: 'No request is waiting on another project.',
   blocked: 'No request is blocked.',
@@ -15,6 +21,4 @@ const NO_DEPS: Readonly<Record<DepFilter, string>> = {
   all: 'No dependency between projects yet.',
 };
 
-const DEP_COLUMNS = ['Waiting', 'On', 'State', 'Waiting for', 'Last change'] as const;
-
-export { DEP_COLUMNS, DEP_FILTERS, NO_DEPS };
+export { DEP_FILTERS, DEP_KIND, DEP_PANE_TAB, NO_DEPS, TRAIL_MIN };

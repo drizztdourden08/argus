@@ -7,7 +7,7 @@ import { NO_DEPS } from './deps.constants';
 import { filterDeps, sortDeps } from './model';
 import type { DepFilter } from './model';
 import { DepsFilter } from './sub-components/DepsFilter';
-import { DepsTable } from './sub-components/DepsTable';
+import { DepsList } from './sub-components/DepsList';
 
 const DepsTab = () => {
   const { docs } = useDeps();
@@ -17,7 +17,7 @@ const DepsTab = () => {
   return (
     <Stack gap="md">
       <DepsFilter value={filter} onChange={setFilter} />
-      {rows.length === 0 ? <EmptyState message={NO_DEPS[filter]} /> : <DepsTable docs={rows} now={now} />}
+      {rows.length === 0 ? <EmptyState message={NO_DEPS[filter]} /> : <DepsList docs={rows} all={docs} now={now} />}
     </Stack>
   );
 };
