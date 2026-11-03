@@ -35,7 +35,7 @@ describe('I-85 P1 the web reads the codes and looks of every kind of the record 
     expect(REGISTRY_KINDS).toHaveLength(23);
     expect(codes.slice(0, 9)).toEqual(['epic:E', 'story:S', 'task:K', 'bug:B', 'debt:X', 'test-plan:TP', 'test-case:T', 'build:BL', 'worktree:WT']);
     expect(codes.slice(9, 13)).toEqual(['question:Q', 'decision:D', 'todo:H', 'note:N']);
-    expect(codes.slice(13)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'removal-request:RQ', 'notice:N', 'followup:P', 'message:M']);
+    expect(codes.slice(13)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'notice:N', 'followup:P', 'message:M', 'removal-request:RQ']);
   });
 
   it('gives each of the ten category kinds its own colour and every other kind a tone', () => {

@@ -202,5 +202,5 @@ interface PortfolioWorktrees {
 }
 
 export type {
-  BatchJob, PortfolioWorktrees, RemovedWorktree, RequestOutcome, RequestRecord, RequestTarget, Worktree, WorktreeHygiene, WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
+  BatchJob, PortfolioWorktrees, RemovedWorktree, RequestOutcome, RequestRecord, Worktree, WorktreeHygiene, WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };

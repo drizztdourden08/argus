@@ -40,13 +40,6 @@ interface RecordRowProps {
   trailing?: ReactNode;
 }
 
-interface RowCodeProps {
-  code: string;
-  board: string;
-  linked: boolean;
-  onOpen?: () => void;
-}
-
 interface RowTitleProps {
   title: string;
   board: string;
@@ -90,5 +83,5 @@ interface GroupInfo {
 }
 
 export type {
-  GroupInfo, LinkedTitleProps, RecordGroupData, RecordGroupHeaderProps, RecordGroupProps, RecordGroups, RecordRowProps, RowChip, RowChipTagProps, RowChipsProps, RowCodeProps, RowTitleProps,
+  GroupInfo, LinkedTitleProps, RecordGroupData, RecordGroupHeaderProps, RecordGroupProps, RecordGroups, RecordRowProps, RowChip, RowChipTagProps, RowChipsProps, RowTitleProps,
 };

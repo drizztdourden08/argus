@@ -246,7 +246,7 @@ mod tests {
         };
         assert_eq!(count(Family::Type), 9);
         assert_eq!(count(Family::SubItem), 4);
-        assert_eq!(count(Family::Record), 9);
+        assert_eq!(count(Family::Record), 10);
         let code = |id: &str| registry().kind(id).unwrap().code;
         let want = [
             ("build", "BL"),

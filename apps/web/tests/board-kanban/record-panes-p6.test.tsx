@@ -1,30 +1,18 @@
 /* @layer renderer-app @kind test */
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { kindOf } from '../../src/data/registry';
-import { PANE_TABS } from '../../src/shell/records/pane/pane.constants';
-import { defDoc, launcherDoc, runDoc } from '../board-builds/fixtures';
 import { worktree } from '../board-worktrees/fixtures';
 import { prDoc } from '../remote/helpers/fixtures';
-import { tabNames } from './kanban-pane-dom';
-import { cleanKanban, item, mountKanban } from './kanban-harness';
+import { cleanKanban, mountKanban } from './kanban-harness';
+import { buildBoard, labelsOf, names } from './pane-kit';
 
 cleanKanban();
 
-const labelsOf = (id: string): string[] => (kindOf(id)?.tabs ?? []).filter((tab) => Object.hasOwn(PANE_TABS, tab)).map((tab) => PANE_TABS[tab]?.label ?? tab);
-
-const names = (dialog: HTMLElement): string[] => tabNames(dialog).map((name) => name.replace(/\d+$/, ''));
-
-const board = () => ({
-  items: [item('I-1')],
-  feeds: [
-    { coll: 'launchers', key: 'name', docs: [launcherDoc('web', { for: 'I-1' })] },
-    { coll: 'launches', key: 'name', docs: [defDoc('web')] },
-    { coll: 'runs', key: 'id', docs: [runDoc('R-2', 'launcher-web', { status: 'failed', exitCode: 3 })] },
+const board = () =>
+  buildBoard('R-2', [
     { coll: 'worktrees', key: 'id', docs: [{ ...worktree('a', 'stale', { item: 'I-1' }) }] },
     { coll: 'prs', key: 'id', docs: [prDoc('PR-1')] },
-  ],
-});
+  ]);
 
 describe('I-85 P6 one pane per kind of the Builds, Worktrees and Changes tabs', { tags: ['standard'] }, () => {
   it('opens a build on the Runs tab with its command and its runs', async () => {

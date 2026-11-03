@@ -36,8 +36,8 @@ describe('I-85 P3 the code table comes from the registry', { tags: ['critical'] 
     expect(read('T-3')).toMatchObject({ kind: 'test-case', id: 'T-3' });
     expect(read('DP-4')).toMatchObject({ kind: 'dependency', code: 'DP-4', id: 'D-4' });
     expect(read('D-4')).toMatchObject({ kind: 'decision', id: 'D-4' });
-    expect(read('RQ-59')).toMatchObject({ kind: 'removal-request', collection: 'requests', code: 'RQ-59', id: 'R-59' });
-    expect(read('R-1')).toMatchObject({ kind: 'run', collection: 'runs', code: 'R-1', id: 'R-1' });
+    expect(must('RQ-59')).toMatchObject({ kind: 'removal-request', collection: 'requests', code: 'RQ-59', id: 'R-59' });
+    expect(must('R-1')).toMatchObject({ kind: 'run', collection: 'runs', code: 'R-1', id: 'R-1' });
     expect(read('PR-12')).toMatchObject({ kind: 'change', code: 'PR-12' });
     expect(read('P-5')).toMatchObject({ kind: 'followup' });
     expect(read('F-5')).toMatchObject({ kind: 'followup' });

@@ -75,14 +75,13 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
     expect(within(row as HTMLElement).getByText('1h')).toBeTruthy();
   });
 
-  it('wears the removal request mark and its RQ code is a link that opens the request pane', async () => {
+  it('wears the removal request mark and opens the request pane from its title', async () => {
     const { container } = await mountTab(board());
     await screen.findByText('Removal requests from threads');
     const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]') as HTMLElement;
     expect(row.querySelector('[data-type-mark="removal-request"]')).not.toBeNull();
     expect(row.querySelector('[data-type-mark="worktree"]')).toBeNull();
-    const link = within(row).getByRole('link', { name: 'RQ-3' });
-    expect(link.getAttribute('href')).toBe('/p/alpha?open=RQ-3');
+    expect(within(row).getByRole('button', { name: /^Open RQ-3: / })).toBeTruthy();
   });
 
   it('shows a removed worktree as a WT row with a removed chip and its age', async () => {
