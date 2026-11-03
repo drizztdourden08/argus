@@ -1,20 +1,40 @@
 <!-- @layer docs @kind doc -->
 # Native icons
 
-The Argus mark shows in the app through Tessera's `BrandMark app="argus"`, drawn in `currentColor`.
-The file `apps/web/assets/argus-logo.svg` is the same mark for the tray icon script, a single colour
-drawn with `currentColor`. The owner's rule: the mark is white or black depending on where it sits, or the
-palette primary when it needs emphasis.
+The Argus mark is a faceted stone shield with two eye holes and one emerald facet at the top right
+corner (logo 8, row A). The eyes are real cutouts: the background shows through. Row B is the same
+facets in emerald tones, for use in Tessera. The mark is no longer `currentColor`: it carries its own colour,
+so the tray uses the same picture on a light and a dark taskbar.
+
+## The logo geometry
+
+`tools/icons/argus-facets.mjs` defines the shield once: the outline, the straight-edged facets that
+share their vertices exactly, the two eye squares, which facet is the accent, and the tones of A and B.
+It holds three detail levels of the same outline, each on a whole-number grid:
+
+| Level | Grid | Facets | Sizes in pixels |
+|---|---|---|---|
+| `full` | 64 | 9 | 64 and up |
+| `medium` | 32 | 6 | 32 to 48 |
+| `small` | 16 | 3 | 16 to 28 |
+
+`tools/icons/generate-argus-logos.mjs` writes `apps/web/assets/logo/argus-{a,b}-{full,medium,small}.svg`:
+flat colours, no gradients, no strokes. Each facet that holds an eye is one path with the eye square
+subtracted (`fill-rule="evenodd"`). The `small` files use `shape-rendering="crispEdges"`. For a raster
+size that is not the grid of its level (20, 24 and 28 from `small`, 40 and 48 from `medium`), the
+generator snaps every vertex to whole pixels, mirrored about the centre line so the shield stays
+symmetric, and the eyes land on whole pixels too. It throws if a snapped eye leaves its facet.
 
 ## Where it shows
 
-- **The tray.** White on a dark taskbar and black on a light one. The tray reads
+- **The tray.** The colour mark on both taskbars (the files `argus-white-N.png` and `argus-black-N.png`
+  are the same picture, kept so the tray still picks by theme). The tray reads
   `SystemUsesLightTheme` under `HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`
   at start and every half second, and draws again when it changes. The size follows the small
   icon metric of Windows for the DPI of the screen (`GetSystemMetricsForDpi(SM_CXSMICON)`): 16, 20,
   24, 28, 32, 40, 48 or 64. A stopped or starting server is grey and faded with
   a red badge at the bottom right.
-- **Toasts and the app identity.** `argus.ico` in the basic Tessera primary, so it reads on a
+- **Toasts and the app identity.** `argus.ico`, the colour mark, so it reads on a
   light or a dark toast. The server writes it to the Argus home and registers it as the `IconUri`
   of `Argus.Dashboard`. Toasts carry no image of their own.
 
@@ -30,15 +50,13 @@ drawing shrunk once by an area average.
 
 ## How the files are made
 
-`pnpm icons` runs `tools/icons/render-argus-icons.mjs`. It writes into `crates/argus-native/assets`:
+`pnpm icons` runs `tools/icons/render-argus-icons.mjs`. It first writes the six SVGs, then writes into
+`crates/argus-native/assets`:
 
 - `argus-white-N.png` and `argus-black-N.png` for N in 16, 20, 24, 28, 32, 40, 48 and 64 (the
-  sizes of a small icon at 100, 125, 150, 175, 200, 250, 300 and 400 percent), and 256.
-- `argus.ico` with the sizes 16, 20, 24, 32, 40, 48 and 256 as PNG images.
+  sizes of a small icon at 100, 125, 150, 175, 200, 250, 300 and 400 percent), and 256. Both name
+  sets hold the same A mark: the `small` level for 16 to 28, `medium` for 32 to 48, `full` for 64 and 256.
+- `argus.ico` with the sizes 16, 20, 24, 32, 40, 48 and 256 as PNG images, from the same levels.
 
-The mark is fitted to its own bounding box, not to a square: the painted width fills the square
-minus a margin, and the top edge falls on a pixel boundary, so the horizontal edges sit between
-two rows of pixels. At 32 pixels and below the script adds a stroke of 0.3 pixel in the same
-colour, so the gaps of the eye and the A do not close up. At 16 pixels the edges are not
-anti-aliased (`shape-rendering="crispEdges"`): every pixel is fully on or off, so nothing is
-soft. Run it again after any change to the SVG, and commit the outputs.
+Every size is drawn from a snapped copy of its level, never scaled from a larger picture. Run it again
+after any change to the facets, and commit the outputs.

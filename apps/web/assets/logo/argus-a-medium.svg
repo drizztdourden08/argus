@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img">
+  <title>Argus, stone with emerald corner, medium detail</title>
+  <path d="M2 8L18 2L30 6L30 14L30 18L16 30L2 18ZM7 12L11 12L11 16L7 16ZM21 12L25 12L25 16L21 16Z" fill="#a8a8b0" fill-rule="evenodd"/>
+  <path d="M2 8L18 2L22 7L16 12Z" fill="#d6d6dc" fill-rule="evenodd"/>
+  <path d="M18 2L30 6L30 14L22 7Z" fill="#12a06e" fill-rule="evenodd"/>
+  <path d="M2 8L16 12L16 18L2 18ZM7 12L11 12L11 16L7 16Z" fill="#b8b8bf" fill-rule="evenodd"/>
+  <path d="M22 7L30 14L30 18L16 18L16 12ZM21 12L25 12L25 16L21 16Z" fill="#a8a8b0" fill-rule="evenodd"/>
+  <path d="M2 18L16 18L16 30Z" fill="#a2a2aa" fill-rule="evenodd"/>
+  <path d="M16 18L30 18L16 30Z" fill="#8c8c94" fill-rule="evenodd"/>
+</svg>
