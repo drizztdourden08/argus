@@ -14,6 +14,13 @@ const planDoc = (id: string, cases: string[], extra: object = {}) =>
 
 const run = (results: object[], endedAt: string | null = null) => ({ n: 1, bundle: null, by: 'human', startedAt: '2026-10-26T09:00:00.000Z', endedAt, results });
 
+interface Keyed {
+  key: string;
+  rows: readonly { id: string }[];
+}
+
+const keyedIds = (groups: readonly Keyed[]): [string, string[]][] => groups.map((group) => [group.key, group.rows.map((row) => row.id)]);
+
 const prefs = (group: TestPrefs['group']): TestPrefs => ({ group, order: 'rank', showPassed: true, showClosed: false });
 
 const viewOf = (group: TestPrefs['group'], docs: TestDoc[], plans: ItemDoc[]): TestsView =>
@@ -65,12 +72,12 @@ describe('P5 the cases grouped by plan', { tags: ['critical'] }, () => {
   const grouped = groupByPlan(docs, planViews(plans, ''));
 
   it('puts a case under every plan that holds it', () => {
-    expect(grouped.groups.map((group) => [group.key, group.rows.map((row) => row.id)])).toEqual([['I-5', ['T-1', 'T-2']], ['I-6', ['T-2']]]);
+    expect(keyedIds(grouped.groups)).toEqual([['I-5', ['T-1', 'T-2']], ['I-6', ['T-2']]]);
   });
 
   it('keeps the cases of no plan apart, and the cases of a closed plan in the closed groups', () => {
     expect(grouped.none.map((row) => row.id)).toEqual(['T-3']);
-    expect(grouped.closed.map((group) => [group.key, group.rows.map((row) => row.id)])).toEqual([['I-8', ['T-4']]]);
+    expect(keyedIds(grouped.closed)).toEqual([['I-8', ['T-4']]]);
   });
 
   it('is empty outside the plan grouping, and the view still lists the plans', () => {

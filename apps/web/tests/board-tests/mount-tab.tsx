@@ -1,13 +1,11 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
-import { act, render, waitFor } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import { expect, vi } from 'vitest';
-import { DataProvider } from '../../src/data/react';
-import { createScopeStreams } from '../../src/data/stream';
+import { vi } from 'vitest';
 import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
-import { createFakeSources } from '../helpers/fake-source';
+import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
 import { stubEventSource } from '../helpers/stub-event-source';
 import { byId } from './fixtures';
@@ -81,21 +79,16 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'build');
   const streams = stubEventSource();
   const calls = stubFetch(respond);
-  const fake = createFakeSources();
-  const view = render(
+  const { view, source } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[board.at ?? '/']}>
-        <DataProvider streams={createScopeStreams(fake.open)}>
-          <BoardFocus boardKey={SCOPE} />
-          <TestsTab boardKey={SCOPE} />
-        </DataProvider>
+        <BoardFocus boardKey={SCOPE} />
+        <TestsTab boardKey={SCOPE} />
         <HashProbe />
       </MemoryRouter>
       <ToastStack />
     </TesseraProvider>,
   );
-  await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
-  const source = fake.sources[fake.sources.length - 1];
   const feed = (coll: string, docs: Doc[], key = 'id') => source?.emit('snapshot', snapshot(SCOPE, coll, byId(docs, key)));
   act(() => {
     for (const [coll, key] of FEEDS) feed(coll, board[coll] ?? [], key);

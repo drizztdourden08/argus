@@ -48,8 +48,6 @@ const PURGE_SCOPES: { value: PurgeScope; label: string }[] = [
   { value: 'trash', label: 'Empty the trash (every deleted record)' },
 ];
 
-const KANBAN_HASH = 'kanban';
-
 const NOTE_WORD: Record<NoteKind, string> = { decision: 'decision', followup: 'note' };
 
 const ORDER_HINT = 'Switch the order to Manual to reorder.';
@@ -62,4 +60,4 @@ const AGENT_KIND = 'agent';
 
 const AGENT_WORK_TAB = 'work';
 
-export { AGENT_KIND, AGENT_WORK_TAB, DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
+export { AGENT_KIND, AGENT_WORK_TAB, DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };

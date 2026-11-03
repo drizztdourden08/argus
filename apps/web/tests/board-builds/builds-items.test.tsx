@@ -2,6 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
+import { groupOf, order } from '../helpers/group-dom';
 import { ago, DAY, launcherDoc } from './fixtures';
 import { withDefs } from './list-dom';
 import { mountBuilds } from './mount-builds';
@@ -11,14 +12,6 @@ cleanAfterEach();
 const itemDoc = (id: string, extra: object = {}) => ({
   id, title: `Item ${id}`, type: 'task', stage: 'doing', status: 'doing', thread: 'lead', rank: 1024, ...extra,
 });
-
-const groupOf = (container: HTMLElement, id: string): HTMLElement => {
-  const found = container.querySelector<HTMLElement>(`[data-group="${id}"]`);
-  if (!found) throw new Error(`no group ${id}`);
-  return found;
-};
-
-const order = (container: HTMLElement): (string | null)[] => [...container.querySelectorAll('[data-group]')].map((group) => group.getAttribute('data-group'));
 
 const board = () => ({
   ...withDefs([

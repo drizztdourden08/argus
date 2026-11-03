@@ -17,7 +17,7 @@ const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThread
   const canPlay = view.playable && def !== null && !view.runs.some(isLiveRun);
   const handlers = {
     open: () => pane.open(code),
-    play: canPlay && def ? () => void play.start(def, launcher.name) : undefined,
+    play: canPlay ? () => void play.start(def, launcher.name) : undefined,
     'copy-command': launcher.cmd ? () => copyText(launcher.cmd ?? '') : undefined,
     copy: () => copyText(code),
   };

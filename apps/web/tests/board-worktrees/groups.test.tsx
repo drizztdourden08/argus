@@ -2,18 +2,11 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { itemRef } from '../board-kanban/kanban-docs';
+import { groupOf, order } from '../helpers/group-dom';
 import { metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
 
 cleanAfterEach();
-
-const groupOf = (container: HTMLElement, id: string): HTMLElement => {
-  const found = container.querySelector<HTMLElement>(`[data-group="${id}"]`);
-  if (!found) throw new Error(`no group ${id}`);
-  return found;
-};
-
-const order = (container: HTMLElement): (string | null)[] => [...container.querySelectorAll('[data-group]')].map((group) => group.getAttribute('data-group'));
 
 const board = () => ({
   meta: metaDoc(),

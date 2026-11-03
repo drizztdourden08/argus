@@ -66,5 +66,5 @@ interface ShippedPrRowProps {
 }
 
 export type {
-  ChannelListProps, ChannelSectionProps, FileLineProps, PullRequestDoc, ReleaseScope, Shipped, ShippedPrRowProps, ShippedRowsProps, ShippedSource, VersionCardProps, VersionFilesProps, VersionFootProps,
+  ChannelListProps, ChannelSectionProps, FileLineProps, PullRequestDoc, Shipped, ShippedPrRowProps, ShippedRowsProps, ShippedSource, VersionCardProps, VersionFilesProps, VersionFootProps,
 };

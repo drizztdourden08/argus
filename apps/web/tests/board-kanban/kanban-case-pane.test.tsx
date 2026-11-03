@@ -3,36 +3,9 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { Doc } from './kanban-harness';
 import { DAY, MIN, ago, cleanKanban, item, mountKanban } from './kanban-harness';
+import { caseDoc } from './kanban-case-doc';
 
 cleanKanban();
-
-const caseDoc = (id: string, extra: Doc = {}): Doc => ({
-  id,
-  item: 'I-1',
-  thread: 'worker',
-  title: `Case ${id}`,
-  covers: 'gate PedestalScenes',
-  build: 'b1',
-  mode: 'manual',
-  run: null,
-  context: 'The game read the wrong level.',
-  changed: ['kFeatures5 reads the hook'],
-  setup: [{ label: 'profile', text: 'story-events' }],
-  steps: ['open it', 'look at it'],
-  pass: ['it opens'],
-  fail: ['it breaks'],
-  notes: ['Only the lead can tick I-1.'],
-  ac: [1],
-  status: 'pending',
-  result: null,
-  runs: [],
-  proofs: [],
-  rank: 1,
-  rev: 1,
-  createdAt: ago(DAY),
-  updatedAt: ago(MIN),
-  ...extra,
-});
 
 const done = (id: string): Doc => {
   const result = { status: 'fail', text: 'it broke', by: 'human', at: ago(MIN) };
@@ -50,7 +23,7 @@ const mountCase = async (tests: Doc[], tab = '') => {
 describe('P5 the test case pane', { tags: ['standard'] }, () => {
   it('has the tabs of the test case kind, from the registry', async () => {
     const { dialog } = await mountCase([caseDoc('T-1')]);
-    const names = within(dialog).getAllByRole('tab').map((tab) => tab.textContent ?? '');
+    const names = within(dialog).getAllByRole('tab').map((tab) => tab.textContent);
     for (const name of ['Overview', 'Result', 'Links', 'Discussion', 'Media', 'Activity']) expect(names.some((text) => text.startsWith(name))).toBe(true);
   });
 
@@ -75,8 +48,9 @@ describe('P5 the result tab of the test case pane', { tags: ['standard'] }, () =
   it('holds the outcome buttons and records a pass from them', async () => {
     const { dialog, posted } = await mountCase([caseDoc('T-1')], '/result');
     fireEvent.click(within(await within(dialog).findByRole('group', { name: 'Run T-1' })).getByRole('button', { name: 'pass' }));
-    await waitFor(() => expect(posted.filter((call) => call.url.endsWith('/result'))).toHaveLength(1));
-    expect(posted.find((call) => call.url.endsWith('/result'))?.body).toMatchObject({ outcome: 'pass' });
+    const results = () => posted.filter((call) => call.url.endsWith('/result'));
+    await waitFor(() => expect(results()).toHaveLength(1));
+    expect(results()[0]?.body).toMatchObject({ outcome: 'pass' });
   });
 
   it('asks for a note on a fail', async () => {

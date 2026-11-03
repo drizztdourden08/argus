@@ -107,6 +107,18 @@ const stubPosts = (reply?: Reply): Posted[] => {
   return posted;
 };
 
+type Feed = (coll: string, docs: Doc[]) => void;
+
+const PLAIN_FEEDS = ['items', 'entries', 'actions', 'tests', 'log', 'agents'] as const;
+
+const seedFeeds = (board: Board, feed: Feed): void => {
+  for (const coll of PLAIN_FEEDS) feed(coll, board[coll] ?? []);
+  feed('threads', board.threads ?? [thread('worker')]);
+  feed('builds', (board.builds ?? []).map((build) => ({ ...build, id: build.tag })));
+  for (const extra of board.feeds ?? []) feed(extra.coll, extra.docs.map((doc) => ({ ...doc, id: doc[extra.key] })));
+  feed('meta', [{ id: 'board', project: SCOPE, name: 'Alpha' }]);
+};
+
 const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
   vi.stubGlobal('CSS', { supports: () => false });
   const posted = stubPosts(reply);
@@ -125,19 +137,8 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
     </MemoryRouter>,
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
-  const feed = (coll: string, docs: Doc[]) => fake.sources.forEach((source) => source.emit('snapshot', snapshot(SCOPE, coll, byId(docs))));
-  act(() => {
-    feed('items', board.items ?? []);
-    feed('threads', board.threads ?? [thread('worker')]);
-    feed('entries', board.entries ?? []);
-    feed('actions', board.actions ?? []);
-    feed('tests', board.tests ?? []);
-    feed('builds', (board.builds ?? []).map((build) => ({ ...build, id: build.tag })));
-    feed('log', board.log ?? []);
-    feed('agents', board.agents ?? []);
-    for (const extra of board.feeds ?? []) feed(extra.coll, extra.docs.map((doc) => ({ ...doc, id: doc[extra.key] })));
-    feed('meta', [{ id: 'board', project: SCOPE, name: 'Alpha' }]);
-  });
+  const feed: Feed = (coll, docs) => fake.sources.forEach((source) => source.emit('snapshot', snapshot(SCOPE, coll, byId(docs))));
+  act(() => seedFeeds(board, feed));
   let seq = 98;
   const change = (coll: string, id: string, data: Doc) => {
     seq += 1;

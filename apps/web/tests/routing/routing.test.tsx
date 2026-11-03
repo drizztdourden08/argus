@@ -62,7 +62,9 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     const tab = await screen.findByRole('tab', { name: /^Kanban/ });
     expect(tab.getAttribute('aria-selected')).toBe('true');
   });
+});
 
+describe('S2 routing of pages that do not exist', { tags: ['standard'] }, () => {
   it('shows the not found page for a key that is not a project key, as Node does', () => {
     renderAt('/p/Not_A_Key/');
     expect(screen.getByText('There is no board for "Not_A_Key".')).toBeTruthy();

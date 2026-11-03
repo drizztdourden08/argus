@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import type { PullRequestDoc } from '../../src/screens/releases/releases.type';
 import { itemGroups } from '../../src/screens/board/item-groups/model';
 import { buildCode, buildSignals, launcherViews } from '../../src/screens/board/tabs/builds/model';
+import type { LauncherView } from '../../src/screens/board/tabs/builds/model';
 import { checksProgress, prSignals } from '../../src/screens/board/tabs/changes/model';
 import { shippedOf, releaseCode } from '../../src/screens/releases/model';
 import { checkDocs } from '../../src/shell/records/pane/model/check-docs';
@@ -10,7 +10,7 @@ import { releaseDocs } from '../../src/shell/records/pane/model/release-docs';
 import { itemRef } from '../board-kanban/kanban-docs';
 import { DAY, launcherDoc } from './fixtures';
 import { at, input, launchers } from './model-docs';
-import { prDoc, runDoc, stepDoc, versionDoc } from '../remote/helpers/fixtures';
+import { channelOf, checkRunOf, prOf, versionOf } from './p6-docs';
 
 interface Row {
   id: string;
@@ -29,6 +29,9 @@ const rows: Row[] = [
 const items = [itemRef('I-1', { rank: 20 }), itemRef('I-2', { rank: 10 }), itemRef('I-3', { status: 'done' })];
 
 const ids = (list: Row[]): string[] => list.map((row) => row.id);
+
+const signalIds = (views: readonly LauncherView[], name: string): string[] =>
+  views.filter((view) => view.launcher.name === name).flatMap((view) => buildSignals(view).map((signal) => signal.id));
 
 describe('I-85 P6 the rows grouped by their item', { tags: ['critical'] }, () => {
   const result = itemGroups(rows, items, (row) => row.item);
@@ -61,23 +64,22 @@ describe('I-85 P6 the build record', { tags: ['critical'] }, () => {
 
   it('flags a running build, a build to relink and a build with no item', () => {
     const views = launcherViews(input({ launchers: launchers(launcherDoc('guess', { for: 'I-1', relink: true }), launcherDoc('loose'), launcherDoc('master', { master: true })) }));
-    const ofName = (name: string): string[] => buildSignals(views.live.find((view) => view.launcher.name === name)!).map((signal) => signal.id);
-    expect(ofName('guess')).toEqual(['relink']);
-    expect(ofName('loose')).toEqual(['no-item']);
-    expect(ofName('master')).toEqual([]);
+    expect(signalIds(views.live, 'guess')).toEqual(['relink']);
+    expect(signalIds(views.live, 'loose')).toEqual(['no-item']);
+    expect(signalIds(views.live, 'master')).toEqual([]);
   });
 
   it('never flags nor plays a closed build', () => {
     const views = launcherViews(input({ launchers: launchers(launcherDoc('old', { for: 'I-1', retiredAt: at(DAY), retiredByItem: 'I-1', stage: 'closed' })) }));
     const closed = views.retired[0];
     expect(closed?.playable).toBe(false);
-    expect(buildSignals(closed!)).toEqual([]);
+    expect(closed && buildSignals(closed)).toEqual([]);
   });
 });
 
 describe('I-85 P6 the change record', { tags: ['standard'] }, () => {
-  const failing = [runDoc('C-1', { status: 'fail', steps: [stepDoc('lint', { exitCode: 1 })] })] as never[];
-  const passing = [runDoc('C-2')] as never[];
+  const failing = [checkRunOf('C-1', { status: 'fail', steps: [{ name: 'lint', command: 'pnpm lint', exitCode: 1, durationMs: 1500, required: true }] })];
+  const passing = [checkRunOf('C-2')];
 
   it('counts the steps that passed in the newest run', () => {
     expect(checksProgress(passing)).toMatchObject({ passed: 2, total: 2, failed: false });
@@ -86,11 +88,11 @@ describe('I-85 P6 the change record', { tags: ['standard'] }, () => {
   });
 
   it('signals a failing check or a failed replay on an open pull request only', () => {
-    const open = prDoc('PR-1') as unknown as PullRequestDoc;
+    const open = prOf('PR-1');
     expect(prSignals(open, failing).map((signal) => signal.id)).toEqual(['failing']);
-    const replayed = { ...open, replay: { state: 'failed', at: null, url: null } } as unknown as PullRequestDoc;
+    const replayed = { ...open, replay: { state: 'failed' as const, at: null, url: null } };
     expect(prSignals(replayed, null).map((signal) => signal.id)).toEqual(['conflict']);
-    const merged = { ...open, status: 'merged' } as unknown as PullRequestDoc;
+    const merged = { ...open, status: 'merged' as const };
     expect(prSignals(merged, failing)).toEqual([]);
   });
 
@@ -102,8 +104,8 @@ describe('I-85 P6 the change record', { tags: ['standard'] }, () => {
 });
 
 describe('I-85 P6 the release record', { tags: ['critical'] }, () => {
-  const version = versionDoc('1.2.0', { items: ['I-1', 'I-9'], prs: [{ number: 7, commit: 'abcdef1234567' }, { number: 8, commit: 'ffffffffffff' }] });
-  const local = { ...prDoc('PR-4'), mergeCommit: 'abcdef1234567890' } as unknown as PullRequestDoc;
+  const version = versionOf('1.2.0', { items: ['I-1', 'I-9'], prs: [{ number: 7, commit: 'abcdef1234567' }, { number: 8, commit: 'ffffffffffff' }] });
+  const local = prOf('PR-4', { mergeCommit: 'abcdef1234567890' });
 
   it('writes the code of a release, with the project in front on the overview', () => {
     expect(releaseCode('rotp', '1.2.0', false)).toBe('V-1.2.0');
@@ -111,23 +113,19 @@ describe('I-85 P6 the release record', { tags: ['critical'] }, () => {
   });
 
   it('finds the items a release ships, keeps the unknown ones, and matches a pull request to its local one by merge commit', () => {
-    const shipped = shippedOf(version as never, { items: [itemRef('I-1')], prs: [local] });
+    const shipped = shippedOf(version, { items: [itemRef('I-1')], prs: [local] });
     expect(shipped.items.map((item) => item.id)).toEqual(['I-1']);
     expect(shipped.unknown).toEqual(['I-9']);
     expect(shipped.prs.map((entry) => entry.local?.id ?? null)).toEqual(['PR-4', null]);
   });
 
   it('says nothing is shipped when the release lists nothing', () => {
-    const shipped = shippedOf(versionDoc('1.0.0') as never, { items: [], prs: [] });
+    const shipped = shippedOf(versionOf('1.0.0'), { items: [], prs: [] });
     expect(shipped).toEqual({ items: [], unknown: [], prs: [] });
   });
 
   it('writes a release as a pane document, once per version', () => {
-    const channels = [
-      { channel: 'stable', latest: '1.2.0', versions: [version] },
-      { channel: 'beta', latest: '1.2.0', versions: [version] },
-    ];
-    const docs = releaseDocs(channels as never);
+    const docs = releaseDocs([channelOf('stable', '1.2.0', [version]), channelOf('beta', '1.2.0', [version])]);
     expect(docs).toHaveLength(1);
     expect(docs[0]).toMatchObject({ id: '1.2.0', channel: 'stable', packages: 1, files: 1, items: ['I-1', 'I-9'], prs: ['#7', '#8'] });
   });

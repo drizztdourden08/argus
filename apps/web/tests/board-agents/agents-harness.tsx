@@ -1,12 +1,10 @@
 /* @layer renderer-app @kind test */
-import { TesseraProvider, ToastStack } from '@drizztdourden08/tessera';
-import { act, render, waitFor } from '@testing-library/react';
+import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
+import { act } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
-import { expect, vi } from 'vitest';
-import { DataProvider } from '../../src/data/react';
-import { createScopeStreams } from '../../src/data/stream';
+import { vi } from 'vitest';
 import { AgentsTab } from '../../src/screens/board/tabs/agents';
-import { createFakeSources } from '../helpers/fake-source';
+import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
 
 const MIN = 60_000;
@@ -82,32 +80,26 @@ interface Board {
   threads?: Record<string, object>;
 }
 
-const Where = () => <output aria-label="where">{useLocation().search}</output>;
+const Where = () => <Text as="output" aria-label="where">{useLocation().search}</Text>;
 
 const item = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({ title: 'ship it', status: 'doing', thread: 'lead', type: 'task', rank: 1, ...extra });
 
 const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined, at = '/p/alpha#agents') => {
-  const fake = createFakeSources();
-  const view = render(
+  const { view, source } = await mountStreamed(
     <TesseraProvider overrides={{}}>
-      <DataProvider streams={createScopeStreams(fake.open)}>
-        <MemoryRouter initialEntries={[at]}>
-          <AgentsTab boardKey="alpha" onPurge={onPurge} />
-          <Where />
-        </MemoryRouter>
-        <ToastStack />
-      </DataProvider>
+      <MemoryRouter initialEntries={[at]}>
+        <AgentsTab boardKey="alpha" onPurge={onPurge} />
+        <Where />
+      </MemoryRouter>
+      <ToastStack />
     </TesseraProvider>,
   );
-  await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   act(() => {
-    for (const source of fake.sources) {
-      source.emit('snapshot', snapshot('alpha', 'agents', board.agents ?? {}));
-      source.emit('snapshot', snapshot('alpha', 'threads', board.threads ?? {}));
-      source.emit('snapshot', snapshot('alpha', 'items', board.items ?? {}));
-    }
+    source?.emit('snapshot', snapshot('alpha', 'agents', board.agents ?? {}));
+    source?.emit('snapshot', snapshot('alpha', 'threads', board.threads ?? {}));
+    source?.emit('snapshot', snapshot('alpha', 'items', board.items ?? {}));
   });
-  return { ...view, sources: fake.sources };
+  return view;
 };
 
 const rowOf = (container: HTMLElement, id: string): HTMLElement => {

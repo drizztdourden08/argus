@@ -153,7 +153,7 @@ describe('I-85 P7 agents linked to items and a place', { tags: ['critical'] }, (
   });
 
   it('says where an agent works: a worktree folder, master, or unknown', () => {
-    expect(agentWhere(agent({ where: 'X:/p/.claude/worktrees/agent-ab12', whereSource: 'manual' }))).toMatchObject({ kind: 'worktree', text: 'WT agent-ab12' });
+    expect(agentWhere(agent({ where: 'X:/p/trees/agent-ab12', whereSource: 'manual' }))).toMatchObject({ kind: 'worktree', text: 'WT agent-ab12' });
     expect(agentWhere(agent({ where: 'agent-ab12', whereSource: 'auto' })).tip).toBe('agent-ab12 (auto)');
     expect(agentWhere(agent({ master: true, where: 'master' }))).toMatchObject({ kind: 'master', text: 'master' });
     expect(agentWhere(agent())).toMatchObject({ kind: 'unknown', text: 'no worktree' });

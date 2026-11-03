@@ -57,5 +57,5 @@ interface TerminalInput {
 }
 
 export type {
-  LogButtonProps, OpenLog, PageRunLogProps, RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
+  LogButtonProps, PageRunLogProps, RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
 };

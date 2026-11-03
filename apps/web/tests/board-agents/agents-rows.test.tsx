@@ -58,7 +58,7 @@ describe('I-85 P7 Agents tab: the where chip', { tags: ['critical'] }, () => {
   };
 
   it('names the worktree folder', async () => {
-    expect((await chipsOf({ where: 'X:/p/.claude/worktrees/agent-ab12', whereSource: 'manual' })).getByText('WT agent-ab12')).toBeTruthy();
+    expect((await chipsOf({ where: 'X:/p/trees/agent-ab12', whereSource: 'manual' })).getByText('WT agent-ab12')).toBeTruthy();
   });
 
   it('says master for an agent on the main checkout', async () => {

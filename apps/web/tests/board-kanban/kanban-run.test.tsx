@@ -2,36 +2,13 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { Doc } from './kanban-harness';
-import { DAY, MIN, ago, cleanKanban, item, mountKanban } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban } from './kanban-harness';
+import { caseDoc } from './kanban-case-doc';
 
 cleanKanban();
 
-const caseDoc = (id: string): Doc => ({
-  id,
-  item: 'I-9',
-  thread: 'worker',
-  title: `Case ${id}`,
-  covers: null,
-  build: 'b1',
-  mode: 'manual',
-  run: null,
-  context: null,
-  changed: [],
-  setup: [{ label: 'Start', text: 'launch it' }],
-  steps: ['open it', 'look at it'],
-  pass: ['it opens'],
-  fail: ['it breaks'],
-  notes: [],
-  ac: [],
-  status: 'pending',
-  result: null,
-  runs: [],
-  proofs: [],
-  rank: 1,
-  rev: 1,
-  createdAt: ago(DAY),
-  updatedAt: ago(MIN),
-});
+const runCase = (id: string): Doc =>
+  caseDoc(id, { item: 'I-9', covers: null, context: null, changed: [], setup: [{ label: 'Start', text: 'launch it' }], notes: [], ac: [] });
 
 const CASES = ['T-1', 'T-2', 'T-3'];
 
@@ -41,7 +18,7 @@ const outcome = (test: string, status: string, note = ''): Doc => ({ test, statu
 
 const plan = (runs: Doc[] = []): Doc => item('I-1', { type: 'test-plan', stage: 'running', fields: { cases: CASES, bundle: 'b1', runs } });
 
-const board = (runs: Doc[] = []) => ({ items: [plan(runs)], tests: CASES.map(caseDoc) });
+const board = (runs: Doc[] = []) => ({ items: [plan(runs)], tests: CASES.map(runCase) });
 
 const mountRun = async (runs: Doc[] = []) => {
   const mounted = await mountKanban(board(runs), undefined, '#I-1/run');

@@ -6,10 +6,9 @@ import { formatAgo } from '../../../../../format';
 import { usePlay } from '../../../run-play';
 import type { AgentRunRowProps } from '../row-props.type';
 import { runSpan } from '../model';
+import { PAGE_ORIGIN } from './AgentRunRow.constants';
 
-const PAGE_ORIGIN = 'page';
-
-const detailOf =(props: AgentRunRowProps): string => {
+const detailOf = (props: AgentRunRowProps): string => {
   const { run, now } = props;
   const line = runLine(run);
   if (isLiveRun(run)) return [run.origin ?? '', run.agent ?? '', line.last].filter(Boolean).join(' \u00b7 ');

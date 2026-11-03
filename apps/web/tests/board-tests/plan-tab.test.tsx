@@ -57,8 +57,9 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
     const { container, calls } = await mountTab(board());
     await screen.findAllByText('Plan I-5');
     fireEvent.click(within(cardOf(container, 'TP-5')).getByRole('button', { name: 'Start run' }));
-    await waitFor(() => expect(calls.filter((call) => call.url.endsWith('/entries'))).toHaveLength(1));
-    expect(calls.find((call) => call.url.endsWith('/entries'))?.body).toMatchObject({ kind: 'plan-run-start', target: { c: 'items', id: 'I-5' } });
+    const entries = () => calls.filter((call) => call.url.endsWith('/entries'));
+    await waitFor(() => expect(entries()).toHaveLength(1));
+    expect(entries()[0]?.body).toMatchObject({ kind: 'plan-run-start', target: { c: 'items', id: 'I-5' } });
     await waitFor(() => expect(new URLSearchParams(screen.getByTestId('search').textContent).get('pane')).toBe('run'));
     expect(new URLSearchParams(screen.getByTestId('search').textContent).get('open')).toBe('TP-5');
   });

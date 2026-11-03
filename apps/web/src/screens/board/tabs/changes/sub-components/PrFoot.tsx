@@ -8,7 +8,7 @@ import { checksProgress } from '../model';
 const PrFoot = (props: PrFootProps) => {
   const { pr, runs } = props;
   const progress = checksProgress(runs);
-  const merged = pr.status === 'merged' && pr.mergedAt;
+  const stamp = pr.status === 'merged' && pr.mergedAt ? pr.mergedAt : pr.createdAt;
   return (
     <Flex gap="sm" align="center" wrap>
       <Tag title="Branch into base">{`${pr.head} into ${pr.base}`}</Tag>
@@ -16,7 +16,7 @@ const PrFoot = (props: PrFootProps) => {
       {progress && <Text variant="caption" tone={progress.failed ? 'danger' : 'muted'} title="Steps passed in the newest check run">{`checks ${progress.passed}/${progress.total}`}</Text>}
       <ReplayTag replay={pr.replay} />
       <Spacer />
-      {(merged || pr.createdAt) && <Text variant="caption" tone="muted"><Age value={merged ? pr.mergedAt : pr.createdAt} /></Text>}
+      {stamp ? <Text variant="caption" tone="muted"><Age value={stamp} /></Text> : null}
     </Flex>
   );
 };

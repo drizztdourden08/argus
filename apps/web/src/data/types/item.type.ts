@@ -65,4 +65,4 @@ interface WorkItem {
   requestedBy?: RequestedBy | RequestedBy[];
 }
 
-export type { BlockedCause, BlockedKind, ItemAgent, ItemImage, ItemTyping, WorkItem };
+export type { BlockedCause, BlockedKind, ItemImage, ItemTyping, WorkItem };

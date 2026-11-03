@@ -42,4 +42,4 @@ interface Verdict {
   message: string;
 }
 
-export type { AgentField, AgentMark, ModelFamily, ModelLook, NowLine, StatusLook, Verdict, WhereKind, WhereLook };
+export type { AgentField, AgentMark, ModelFamily, ModelLook, NowLine, StatusLook, Verdict, WhereLook };

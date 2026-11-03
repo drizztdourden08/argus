@@ -35,6 +35,20 @@ interface AgentNowProps {
   now: number;
 }
 
+interface AgentLiveNoteProps {
+  agent: Agent;
+}
+
+interface AgentSessionProps {
+  agent: Agent;
+}
+
+interface AgentReplyProps {
+  title: string;
+  text: string | null | undefined;
+  empty: string;
+}
+
 interface AgentStatusTagProps {
   agent: Agent;
 }
@@ -84,12 +98,15 @@ interface AgentRunRowProps {
 
 export type {
   AgentGroupListProps,
+  AgentLiveNoteProps,
   AgentModelProps,
   AgentNowProps,
+  AgentReplyProps,
   AgentRowProps,
   AgentRunRowProps,
   AgentRunsProps,
   AgentSectionProps,
+  AgentSessionProps,
   AgentStatusTagProps,
   AgentStopButtonProps,
   AgentTrailingProps,
