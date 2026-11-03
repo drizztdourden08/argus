@@ -1,20 +1,12 @@
 /* @layer renderer-app @kind component */
-import { Flex, Text } from '@drizztdourden08/tessera';
-import { fieldOf } from '../../../../data/registry';
-import { fieldLabel } from '../model/field-label';
-import type { FieldProps } from '../pane.type';
+import type { FieldProps } from './fields.type';
 import { FieldEdit } from './FieldEdit';
+import { FieldFrame } from './FieldFrame';
 
-const FieldRow = (props: FieldProps) => {
-  const { name } = props;
-  const spec = fieldOf(name);
-  if (!spec) return null;
-  return (
-    <Flex direction="column" gap="xs">
-      <Text variant="caption" tone="muted">{`${fieldLabel(name)}${spec.required ? ' *' : ''}`}</Text>
-      <FieldEdit {...props} />
-    </Flex>
-  );
-};
+const FieldRow = (props: FieldProps) => (
+  <FieldFrame name={props.name}>
+    <FieldEdit {...props} />
+  </FieldFrame>
+);
 
 export { FieldRow };

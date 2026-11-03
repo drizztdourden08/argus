@@ -3,7 +3,7 @@ import { Card } from '@drizztdourden08/tessera';
 import { RecordCard, useRecordPane } from '../../../../shell';
 import { sectionOf } from '../../feed-model';
 import { cardFacts } from '../behavior/card-facts';
-import { feedMenu } from '../behavior/feed-menu';
+import { feedHead } from '../behavior/feed-head';
 import type { FeedCardViewProps } from '../OwnerFeed.type';
 import { CardBody } from './CardBody';
 import { FeedFacts } from './FeedFacts';
@@ -16,15 +16,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
   return (
     <Card data-feed-type={card.type} edge="left" edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}>
       <RecordCard
-        head={{
-          kind: facts.kind,
-          code: facts.code,
-          assignee: facts.assignee,
-          boardKey: ctx.boardKey,
-          threads: ctx.threads,
-          menu: feedMenu(card, facts, ctx.actions, open),
-          menuLabel: `More actions for ${facts.code}`,
-        }}
+        head={feedHead(card, facts, ctx, open)}
         title={facts.title}
         openLabel={`Open ${facts.code}: ${facts.title}`}
         onOpen={open}

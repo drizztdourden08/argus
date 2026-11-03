@@ -86,14 +86,12 @@ interface AgentRunsProps {
   runs: readonly RunEntry[];
   boardKey: string;
   now: number;
-  onLog: (id: string) => void;
 }
 
 interface AgentRunRowProps {
   run: RunEntry;
   boardKey: string;
   now: number;
-  onLog: (id: string) => void;
 }
 
 export type {

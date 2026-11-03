@@ -1,6 +1,10 @@
 /* @layer renderer-app @kind constants */
 const TAB_FIELDS: readonly string[] = ['cases', 'runs'];
 
+const CASE_FACT_FIELDS: readonly string[] = ['mode', 'bundle'];
+
+const CASE_KIND = 'test-case';
+
 const NO_CHOICE = '(none)';
 
 const CRUMB_MAX = 6;
@@ -15,7 +19,7 @@ const FACT_MAX = 40;
 
 const NAMING_FIELDS: Readonly<Record<string, string>> = { items: 'type', entries: 'kind' };
 
-const EXTRA_STORES: Readonly<Record<string, string>> = { launchers: 'launchers', worktrees: 'worktrees', prs: 'prs', runs: 'runs' };
+const EXTRA_STORES: Readonly<Record<string, string>> = { agents: 'agents', launchers: 'launchers', worktrees: 'worktrees', prs: 'prs', runs: 'runs' };
 
 const FALLBACK_STORE = 'items';
 
@@ -40,4 +44,4 @@ const EDGE_WORDS: Readonly<Record<string, string>> = {
   legacy: 'note',
 };
 
-export { CRUMB_MAX, DRAWER_FALLBACK, DRAWER_LABELS, EDGE_WORDS, ENTRY_LEAVES, EXTRA_STORES, FACT_HIDDEN, FALLBACK_STORE, NAMING_FIELDS, FACT_MAX, LEAF_KINDS, NO_CHOICE, TAB_ALIASES, TAB_FIELDS, TAB_STORE, TITLE_FIELDS };
+export { CASE_FACT_FIELDS, CASE_KIND, CRUMB_MAX, DRAWER_FALLBACK, DRAWER_LABELS, EDGE_WORDS, ENTRY_LEAVES, EXTRA_STORES, FACT_HIDDEN, FALLBACK_STORE, NAMING_FIELDS, FACT_MAX, LEAF_KINDS, NO_CHOICE, TAB_ALIASES, TAB_FIELDS, TAB_STORE, TITLE_FIELDS };

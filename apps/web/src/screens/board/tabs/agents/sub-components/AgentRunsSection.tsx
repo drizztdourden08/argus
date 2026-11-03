@@ -4,13 +4,13 @@ import type { AgentRunsProps } from '../row-props.type';
 import { AgentRunRow } from './AgentRunRow';
 
 const AgentRunsSection = (props: AgentRunsProps) => {
-  const { title, runs, boardKey, now, onLog } = props;
+  const { title, runs, boardKey, now } = props;
   if (runs.length === 0) return null;
   return (
     <Box as="section" aria-label={title} className="agents-runs">
       <Text as="h3" variant="overline" className="agents-runs__title">{`${title} \u00b7 ${runs.length}`}</Text>
       <Flex direction="column" gap="xs" role="list" aria-label={title} className="agents-runs__list">
-        {runs.map((run) => <AgentRunRow key={run.id} run={run} boardKey={boardKey} now={now} onLog={onLog} />)}
+        {runs.map((run) => <AgentRunRow key={run.id} run={run} boardKey={boardKey} now={now} />)}
       </Flex>
     </Box>
   );

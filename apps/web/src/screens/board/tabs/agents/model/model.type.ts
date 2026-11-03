@@ -35,6 +35,7 @@ interface WhereLook {
   kind: WhereKind;
   text: string;
   tip: string;
+  link?: string;
 }
 
 interface Verdict {

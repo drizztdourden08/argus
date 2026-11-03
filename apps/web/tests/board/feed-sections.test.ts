@@ -15,7 +15,7 @@ describe('I-85 P4 the sections of the activity', { tags: ['critical'] }, () => {
   });
 
   it('maps every card type to one registry kind and puts each card in exactly one section', () => {
-    expect(FEED_KIND).toEqual({ decision: 'decision', question: 'question', action: 'todo', test: 'test-case', bundle: 'test-case', message: 'message', notice: 'notice' });
+    expect(FEED_KIND).toEqual({ decision: 'decision', question: 'question', action: 'todo', test: 'test-case', bundle: 'test-case', message: 'message', notice: 'notice', sent: 'followup' });
     const cards = work({ entries: [entry({ id: 'Q-1' }), entry({ id: 'N-1', kind: 'notice' })], actions: [step({ id: 'H-1', assignee: 'lead:a' })], tests: [manual({ id: 'T-1' })] });
     const sections = [...cards.waiting, ...cards.leads, ...cards.notices];
     expect(sections.map((card) => sectionOf(card)).sort()).toEqual(['leads', 'log', 'waiting', 'waiting']);

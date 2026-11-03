@@ -65,6 +65,8 @@ const ADD_ITEM_LABEL = 'add an item';
 
 const MASTER_WORD = 'master';
 
+const LOG_PANE_TAB = 'log';
+
 const NO_ITEM_TITLE = 'No item';
 
 const CLOSED_ITEMS_TITLE = 'Closed items';
@@ -76,6 +78,8 @@ const NO_WORKTREE_TIP = 'No worktree or master is recorded for this agent.';
 const MASTER_TIP = 'Works on the main checkout.';
 
 const WORKTREE_FALLBACK_CODE = 'WT';
+
+const BUILD_FALLBACK_CODE = 'BL';
 
 const NO_RANK = 1_000_000_000;
 
@@ -96,7 +100,9 @@ export {
   HOURS_PER_DAY,
   CLOSED_ITEMS_TITLE,
   ITEM_LABEL_CHARS,
+  LOG_PANE_TAB,
   NO_ITEM,
+  BUILD_FALLBACK_CODE,
   NO_BLOCKERS_LINE,
   NO_ITEM_LINE,
   NO_ITEM_TITLE,

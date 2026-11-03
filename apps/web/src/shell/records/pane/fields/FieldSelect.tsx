@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Select } from '@drizztdourden08/tessera';
-import type { FieldSelectProps } from '../pane.type';
+import type { FieldSelectProps } from './fields.type';
 
 const FieldSelect = (props: FieldSelectProps) => {
   const { label, options, value, onPick } = props;

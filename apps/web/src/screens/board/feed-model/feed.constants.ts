@@ -13,9 +13,14 @@ const FEED_KIND: Record<FeedKind, string> = {
   bundle: 'test-case',
   message: 'message',
   notice: 'notice',
+  sent: 'followup',
 };
 
 const OWNER_ASSIGNEE = 'owner';
+
+const OWNER_AUTHOR = 'human';
+
+const SENT_KINDS: readonly string[] = ['followup', 'message'];
 
 const DEFAULT_ITEM_KIND = 'task';
 
@@ -23,4 +28,4 @@ const FINISHED_ITEM_STATUSES = ['done', 'dropped'];
 
 const CONTEXT_SHOWN_PARAGRAPHS = 2;
 
-export { CONTEXT_SHOWN_PARAGRAPHS, DEFAULT_ITEM_KIND, FEED_KIND, FINISHED_ITEM_STATUSES, NO_NEEDS, OP_KINDS, OWNER_ASSIGNEE };
+export { CONTEXT_SHOWN_PARAGRAPHS, DEFAULT_ITEM_KIND, FEED_KIND, FINISHED_ITEM_STATUSES, NO_NEEDS, OP_KINDS, OWNER_ASSIGNEE, OWNER_AUTHOR, SENT_KINDS };

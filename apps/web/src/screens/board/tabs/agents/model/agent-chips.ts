@@ -8,7 +8,7 @@ import { modelTip } from './model-tip';
 
 const agentChips = (agent: Agent, now: number): RowChip[] => {
   const where = agentWhere(agent);
-  const chips: RowChip[] = [{ id: 'where', text: where.text, title: where.tip }];
+  const chips: RowChip[] = [{ id: 'where', text: where.text, title: where.tip, link: where.link }];
   if (agent.model) chips.push({ id: 'model', text: modelLabel(agent.model), title: modelTip(agent) });
   const elapsed = agentElapsed(agent, now);
   if (elapsed !== '-') chips.push({ id: 'elapsed', text: elapsed, title: 'Time since it started' });

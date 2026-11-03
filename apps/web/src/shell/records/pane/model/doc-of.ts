@@ -10,7 +10,6 @@ const docOf = (target: RecordRef, kanban: KanbanData, other: readonly { id: stri
     entries: kanban.entries,
     actions: kanban.actions,
     tests: kanban.tests,
-    agents: kanban.agents,
   };
   const found = (lists[target.collection] ?? other).find((doc) => doc.id === target.id);
   return found ? asDoc(found) : null;

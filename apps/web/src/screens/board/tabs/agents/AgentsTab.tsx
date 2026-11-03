@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Flex } from '@drizztdourden08/tessera';
-import { useState } from 'react';
 import { useRecordPane } from '../../../../shell';
-import { RunLogDrawer } from '../../run-terminal';
 import { SECOND_TICK_MS, useNow, useStoredFlag } from '../../shared';
 import { FINISHED_KEY } from './AgentsTab.constants';
 import type { AgentsTabProps } from './AgentsTab.type';
@@ -28,14 +26,13 @@ const AgentsTab = (props: AgentsTabProps) => {
   const runNow = useNow(runs.live.length > 0, SECOND_TICK_MS);
   const { open } = useRecordPane();
   const [showFinished, setShowFinished] = useStoredFlag(FINISHED_KEY);
-  const [logId, setLogId] = useState<string | null>(null);
   const count = view.finishedCount;
   return (
     <Flex direction="column" gap="md">
       <ReconcilePanel findings={findings} />
       <Box as="section" aria-label="Agents" className="agents-panel">
         <AgentsHeader active={view.active} lead={view.lead} now={now} />
-        <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={runNow} onLog={setLogId} />
+        <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={runNow} />
         <AgentsBody boardKey={boardKey} view={view} showFinished={showFinished} now={now} actions={actions} onOpen={open} />
         {count > 0 && (
           <AgentsFoot
@@ -46,10 +43,9 @@ const AgentsTab = (props: AgentsTabProps) => {
             onArchive={() => actions.archiveFinished(view.done.map((agent) => agent.id))}
           />
         )}
-        {showFinished && <AgentRunsSection title="Finished runs" runs={runs.finished} boardKey={boardKey} now={now} onLog={setLogId} />}
+        {showFinished && <AgentRunsSection title="Finished runs" runs={runs.finished} boardKey={boardKey} now={now} />}
         <ChatsList boardKey={boardKey} chats={view.chats} now={now} onPurge={onPurge} />
       </Box>
-      <RunLogDrawer run={runs.all.find((run) => run.id === logId) ?? null} boardKey={boardKey} onClose={() => setLogId(null)} />
     </Flex>
   );
 };

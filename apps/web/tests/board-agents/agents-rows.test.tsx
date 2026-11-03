@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { agent, agentRows, item, mockApi, renderAgents, rowOf } from './agents-harness';
+import { MIN, agent, agentRows, ago, item, mockApi, renderAgents, rowOf } from './agents-harness';
 
 afterEach(() => {
   localStorage.clear();
@@ -67,6 +67,35 @@ describe('I-85 P7 Agents tab: the where chip', { tags: ['critical'] }, () => {
 
   it('says no worktree when the place is unknown', async () => {
     expect((await chipsOf({})).getByText('no worktree')).toBeTruthy();
+  });
+
+  it('links the worktree chip to the worktree pane and leaves the row alone', async () => {
+    const row = await chipsOf({ where: 'X:/p/.claude/worktrees/agent-ab12', whereSource: 'manual' });
+    const link = row.getByRole('link', { name: 'WT agent-ab12' });
+    expect(link.getAttribute('href')).toBe('/p/alpha?open=WT-agent-ab12');
+    fireEvent.click(link);
+    expect(where()).toBe('?open=WT-agent-ab12');
+  });
+
+  it('links the master chip to the master build pane', async () => {
+    const row = await chipsOf({ master: true, where: 'master', whereSource: 'manual' });
+    fireEvent.click(row.getByRole('link', { name: 'master' }));
+    expect(where()).toBe('?open=BL-master');
+  });
+
+  it('shows no link when the place is unknown', async () => {
+    expect((await chipsOf({})).queryByRole('link', { name: 'no worktree' })).toBeNull();
+  });
+});
+
+describe('I-85 Agents tab: a run opens its pane', { tags: ['critical'] }, () => {
+  const run = { name: 'build web', kind: 'build', status: 'exited', exitCode: 0, origin: 'cli', by: 'lead', queuedAt: ago(5 * MIN), startedAt: ago(4 * MIN), endedAt: ago(3 * MIN), lastLine: 'done', cmd: 'pnpm build', cwd: 'X:/p' };
+
+  it('opens the run pane on its log tab from the row', async () => {
+    mockApi();
+    await renderAgents({ runs: { 'R-1': run } });
+    fireEvent.click(screen.getByText('build web'));
+    expect(where()).toBe('?open=R-1&pane=log');
   });
 });
 

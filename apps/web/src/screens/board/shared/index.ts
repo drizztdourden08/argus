@@ -8,7 +8,6 @@ export { OpenThreadContext } from './behavior/open-thread-context';
 export { useBoardKey } from './behavior/useBoardKey';
 export { useItemMedia } from './behavior/useItemMedia';
 export { useNow } from './behavior/useNow';
-export { useOpenRunLog } from './behavior/useOpenRunLog';
 export { useOpenThread } from './behavior/useOpenThread';
 export { useStored } from './behavior/useStored';
 export { useStoredFlag } from './behavior/useStoredFlag';

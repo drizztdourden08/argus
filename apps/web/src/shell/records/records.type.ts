@@ -123,6 +123,26 @@ interface RowChip {
   id: string;
   text: string;
   title?: string;
+  link?: string;
+}
+
+interface RowChipsProps {
+  chips: readonly RowChip[];
+  board: string;
+}
+
+interface RowChipTagProps {
+  chip: RowChip;
+  board: string;
+}
+
+interface LinkedTitleProps {
+  text: string;
+  board: string;
+  onOpen: () => void;
+  weight?: number;
+  clamp?: number;
+  label?: string;
 }
 
 interface RecordRowProps {
@@ -204,7 +224,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, HeadSize, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps,
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, HeadSize, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
   OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
-  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, TextPart, TypeIconProps,
+  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, TextPart, TypeIconProps,
 };

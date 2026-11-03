@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import type { ComponentType } from 'react';
 import type { ContentKind } from '../../../../data/registry';
-import type { FieldProps } from '../pane.type';
+import type { FieldProps } from './fields.type';
 import { EnumField } from './EnumField';
 import { LineField } from './LineField';
 import { PersonField } from './PersonField';

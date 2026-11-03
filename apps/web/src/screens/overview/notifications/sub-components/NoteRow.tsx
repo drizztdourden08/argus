@@ -4,7 +4,7 @@ import { Age } from '../../../../shell';
 import { ProjectLink } from '../../projects';
 import { OverviewRow, OWNER_ASSIGNEE, recordOfText } from '../../records';
 import { isFresh } from '../../seen';
-import { LEVEL_LOOK, noteLevel, noteProject, toastNote } from '../model';
+import { LEVEL_LOOK, noteLevel, noteParts, noteProject, toastNote } from '../model';
 import type { NoteRowProps } from '../notifications.type';
 
 const NoteRow = (props: NoteRowProps) => {
@@ -12,8 +12,7 @@ const NoteRow = (props: NoteRowProps) => {
   const level = noteLevel(note);
   const project = noteProject(note);
   const toastText = toastNote(note);
-  const title = note.title || note.text || '';
-  const detail = note.title ? note.text ?? '' : '';
+  const { title, detail } = noteParts(note);
   return (
     <OverviewRow
       target={recordOfText(`${title} ${detail}`, project, level)}

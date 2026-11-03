@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
 import type { BoardAction, Entry, EntryImage, LogLine, WorkItem } from '../../../data/types';
 import type { ThreadChoice } from '../../../data/kanban';
 import type { WithId } from '../../../data/react';
@@ -55,6 +56,23 @@ interface OwnerFeedProps {
 interface FeedGroupProps {
   heading: string;
   cards: FeedCard[];
+  ctx: FeedContext;
+  total?: number;
+  extra?: ReactNode;
+}
+
+interface LeadNotesGroup {
+  lead: string;
+  entries: Entry[];
+}
+
+interface LeadNotesProps {
+  cards: FeedCard[];
+  ctx: FeedContext;
+}
+
+interface SentRowProps {
+  entry: Entry;
   ctx: FeedContext;
 }
 
@@ -175,6 +193,8 @@ export type {
   FeedSectionsProps,
   ImageGroup,
   ItemChipProps,
+  LeadNotesGroup,
+  LeadNotesProps,
   LogFoldProps,
   LogListProps,
   LogSectionProps,
@@ -182,6 +202,7 @@ export type {
   NoticeListProps,
   NoticeRowProps,
   OwnerFeedProps,
+  SentRowProps,
   TestBodyProps,
   TestRef,
 };

@@ -1,16 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useCallback } from 'react';
-import { readBoardReleases, readChecks, useRemoteRead } from '../../../../data/remote';
-import { checkDocs } from '../model/check-docs';
-import { releaseDocs } from '../model/release-docs';
-import type { RemoteDocs, RemoteLoader } from '../pane.type';
-
-const NONE: RemoteDocs['docs'] = [];
-
-const LOADERS: Readonly<Record<string, RemoteLoader>> = {
-  releases: async (boardKey) => releaseDocs(await readBoardReleases(boardKey)),
-  checks: async (boardKey) => checkDocs(await readChecks(boardKey)),
-};
+import { useRemoteRead } from '../../../../data/remote';
+import type { RemoteDocs } from '../pane.type';
+import { LOADERS, NONE } from './useRemoteDocs.constants';
 
 const useRemoteDocs = (boardKey: string, collection: string): RemoteDocs => {
   const remote = Object.hasOwn(LOADERS, collection);

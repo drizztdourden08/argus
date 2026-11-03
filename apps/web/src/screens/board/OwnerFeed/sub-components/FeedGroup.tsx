@@ -4,13 +4,14 @@ import type { FeedGroupProps } from '../OwnerFeed.type';
 import { FeedCardView } from './FeedCardView';
 
 const FeedGroup = (props: FeedGroupProps) => {
-  const { heading, cards, ctx } = props;
+  const { heading, cards, ctx, total = cards.length, extra } = props;
   return (
     <Flex direction="column" gap="sm" role="group" aria-label={heading}>
-      <Text variant="overline" tone="muted">{heading} · {cards.length}</Text>
+      <Text variant="overline" tone="muted">{heading} · {total}</Text>
       {cards.map((card) => (
         <FeedCardView key={`${card.type}:${card.data.id}`} card={card} ctx={ctx} />
       ))}
+      {extra}
     </Flex>
   );
 };

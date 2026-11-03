@@ -3,8 +3,7 @@ import type { IconName, TabBadgeTone } from '@drizztdourden08/tessera';
 import type { ComponentType, ReactNode } from 'react';
 import type { ItemRef, MoveTarget } from '../../../data/kanban';
 import type { WithId } from '../../../data/react';
-import type { ItemField, RegistryKind } from '../../../data/registry';
-import type { ContentContext } from '../../../data/content';
+import type { RegistryKind } from '../../../data/registry';
 import type { Entry, Test } from '../../../data/types';
 import type { FeedActions } from '../../../screens/board/OwnerFeed';
 import type { Option } from '../../../screens/board/shared';
@@ -166,45 +165,10 @@ interface PaneFactsProps {
   data: PaneData;
 }
 
-interface FieldGroupModel {
-  id: string;
-  label: string;
-  fields: readonly string[];
-}
-
-interface FieldProps {
-  name: string;
-  item: ItemRef;
-  ops: ItemOps;
-  cx: ContentContext;
-  people: readonly Option[];
-}
-
-interface FieldBodyProps {
-  spec: ItemField;
-  text: string;
-}
-
-interface FieldGroupProps {
-  group: FieldGroupModel;
-  shared: Omit<FieldProps, 'name'>;
-}
-
 interface CauseRowProps {
   kind: string;
   id: string;
   label: string;
-}
-
-interface FieldSelectProps {
-  label: string;
-  options: readonly Option[];
-  value: string;
-  onPick: (value: string) => void;
-}
-
-interface RefTagsProps {
-  ids: readonly string[];
 }
 
 interface BlockedSectionProps {
@@ -227,7 +191,7 @@ interface CaseRowProps {
 }
 
 export type {
-  AddChildProps, BlockedSectionProps, BuildRecordInput, CaseRowProps, CauseRowProps, ChildRowProps, DocFact, EntryFactsProps, FieldBodyProps, FieldGroupModel, FieldGroupProps, FieldProps, FieldSelectProps,
+  AddChildProps, BlockedSectionProps, BuildRecordInput, CaseRowProps, CauseRowProps, ChildRowProps, DocFact, EntryFactsProps,
   PaneBadge, PaneBodyProps, PaneCrumbsProps, PaneData, PaneDoc, PaneFactsProps, PaneTab, PaneTabsProps, RecordBodyProps, RecordData, RecordFrameProps, RecordLoad, RecordPaneHostProps,
-  RecordPaneProps, RecordPaneToolsProps, RecordDataProps, RefTagsProps, RemoteDocs, RemoteLoader, StageFact, TabPlaceholderProps,
+  RecordPaneProps, RecordPaneToolsProps, RecordDataProps, RemoteDocs, RemoteLoader, StageFact, TabPlaceholderProps,
 };
