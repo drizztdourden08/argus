@@ -56,7 +56,7 @@ pub const IDLE_MAX_MINUTES: f64 = 43_200.0;
 /// Requests of a project that may wait at once.
 pub const MAX_ACTIVE: usize = 20;
 /// How long a sentence of an outcome may be.
-const SENTENCE_MAX: usize = 400;
+const SENTENCE_MAX: usize = 600;
 
 pub(crate) struct State {
     pub stores: HashMap<String, store::Store>,
