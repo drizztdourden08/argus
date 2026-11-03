@@ -21,7 +21,7 @@
     "empty": { "type": "object", "additionalProperties": false },
     "content": {
       "type": "object",
-      "required": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records"],
+      "required": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records", "flag"],
       "additionalProperties": false,
       "properties": {
         "line": {
@@ -68,7 +68,8 @@
         "refs": { "$ref": "#/$defs/empty" },
         "date": { "$ref": "#/$defs/patterned" },
         "person": { "$ref": "#/$defs/patterned" },
-        "records": { "$ref": "#/$defs/empty" }
+        "records": { "$ref": "#/$defs/empty" },
+        "flag": { "$ref": "#/$defs/empty" }
       }
     },
     "patterned": {
@@ -84,7 +85,7 @@
       "properties": {
         "content": {
           "type": "string",
-          "enum": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records"]
+          "enum": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records", "flag"]
         },
         "max": { "type": "integer", "minimum": 1 },
         "required": { "type": "boolean" },
@@ -105,7 +106,10 @@
         "label": { "type": "string" },
         "icon": { "type": "string" },
         "color": { "type": "string" },
-        "collection": { "type": "string", "enum": ["items", "tests"] },
+        "collection": { "type": "string", "enum": ["items", "tests", "launchers", "worktrees"] },
+        "idKey": { "type": "string" },
+        "serves": { "$ref": "#/$defs/names" },
+        "readOnly": { "type": "boolean" },
         "parents": { "$ref": "#/$defs/names" },
         "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } },
         "statuses": { "$ref": "#/$defs/names" },

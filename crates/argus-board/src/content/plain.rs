@@ -1,4 +1,4 @@
-//! The small kinds: a slug, one of a list of values, a date.
+//! The small kinds: a slug, one of a list of values, a date, a flag.
 
 use argus_core::js;
 use serde_json::Value;
@@ -58,4 +58,20 @@ fn on_calendar(text: &str) -> bool {
         _ => return false,
     };
     (1..=days).contains(&day)
+}
+
+/// A flag: `true` or `false`, or the words "true" and "false" a command line gives.
+pub(super) fn flag(field: &str, value: &Value) -> Result<Value, Rejection> {
+    let known = match value {
+        Value::Bool(on) => Some(*on),
+        Value::String(text) => match js::trim(text) {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        },
+        _ => None,
+    };
+    known
+        .map(Value::Bool)
+        .ok_or_else(|| reject("bad-flag", format!("{field} is true or false.")))
 }

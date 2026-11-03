@@ -69,7 +69,9 @@ pub fn create_doc(
     Ok(id)
 }
 
-/// Record a change: who and when, one more revision, and the dirty mark.
+/// Record a change: who and when, one more revision, and the dirty mark. A changed item also
+/// lets its builds follow it ([`crate::served::follow`]), so they close and reopen in the same
+/// board write whatever path changed the item.
 ///
 /// # Errors
 /// Refused when the collection has no such doc.
@@ -82,6 +84,9 @@ pub fn stamp(board: &mut Board, coll: &str, id: &str, actor: &str) -> Result<(),
     set(doc, "updatedBy", actor);
     set(doc, "rev", rev);
     touch(board, coll, id);
+    if coll == "items" {
+        crate::served::follow(board, id, actor);
+    }
     Ok(())
 }
 

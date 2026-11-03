@@ -1,7 +1,7 @@
 //! The words the registry may use for things the code and the web know by name.
 
 /// Tessera icon names the registry may use (`gavel` and `signpost` come with the next Tessera).
-pub(super) const ICONS: [&str; 11] = [
+pub(super) const ICONS: [&str; 13] = [
     "zap",
     "bookmark",
     "circle-check",
@@ -13,6 +13,8 @@ pub(super) const ICONS: [&str; 11] = [
     "gavel",
     "list-checks",
     "message-square",
+    "play",
+    "git-branch",
 ];
 
 /// Tessera tag category colours: the type marks and the people use these.
@@ -27,7 +29,7 @@ pub(super) const PERSON_COLORS: [&str; 2] = ["primary", "neutral"];
 pub(super) const TONES: [&str; 4] = ["danger", "info", "warning", "neutral"];
 
 /// The tabs of the item pane.
-pub(super) const TABS: [&str; 9] = [
+pub(super) const TABS: [&str; 10] = [
     "overview",
     "children",
     "cases",
@@ -36,6 +38,7 @@ pub(super) const TABS: [&str; 9] = [
     "discussion",
     "tests",
     "media",
+    "builds",
     "activity",
 ];
 

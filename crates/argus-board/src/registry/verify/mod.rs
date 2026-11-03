@@ -150,4 +150,62 @@ mod tests {
             "{text}"
         );
     }
+
+    #[test]
+    fn a_build_that_serves_a_type_that_does_not_exist_or_is_not_a_work_item_is_found() {
+        let text = refused(|d| item_type(d, "build")["serves"] = json!(["ghost"]));
+        assert!(text.contains("serves type ghost does not exist"), "{text}");
+        let text = refused(|d| item_type(d, "build")["serves"] = json!(["test-case"]));
+        assert!(
+            text.contains("serves type test-case is not a work item type"),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn a_build_without_serves_or_a_work_item_with_an_id_key_is_found() {
+        let text = refused(|d| item_type(d, "build")["serves"] = json!([]));
+        assert!(
+            text.contains("serves is set exactly on a build type"),
+            "{text}"
+        );
+        let text = refused(|d| item_type(d, "task")["idKey"] = json!("name"));
+        assert!(text.contains("idKey is set exactly"), "{text}");
+        let text = refused(|d| {
+            item_type(d, "worktree")
+                .as_object_mut()
+                .unwrap()
+                .remove("idKey");
+        });
+        assert!(text.contains("idKey is set exactly"), "{text}");
+    }
+
+    #[test]
+    fn a_build_gets_no_tab_and_a_work_item_still_needs_overview_first() {
+        let text = refused(|d| item_type(d, "build")["tabs"] = json!(["overview"]));
+        assert!(text.contains("has no tabs"), "{text}");
+        let text = refused(|d| item_type(d, "task")["tabs"] = json!(["links", "overview"]));
+        assert!(text.contains("the first tab must be overview"), "{text}");
+    }
+
+    #[test]
+    fn a_worktree_with_stages_or_a_build_with_an_unknown_lane_is_found() {
+        let text = refused(|d| {
+            item_type(d, "worktree")["stages"] = json!([{"id": "x", "label": "X", "lane": "todo"}]);
+        });
+        assert!(text.contains("a worktree type has no stages"), "{text}");
+        let text = refused(|d| item_type(d, "build")["stages"][0]["lane"] = json!("later"));
+        assert!(text.contains("unknown lane later"), "{text}");
+    }
+
+    #[test]
+    fn a_flag_field_with_a_max_or_values_is_found() {
+        let text = refused(|d| d["fields"]["master"]["max"] = json!(5));
+        assert!(text.contains("a max is set exactly"), "{text}");
+        let text = refused(|d| d["fields"]["master"]["values"] = json!(["yes"]));
+        assert!(
+            text.contains("values are set exactly on enum fields"),
+            "{text}"
+        );
+    }
 }

@@ -90,6 +90,7 @@ mod tests {
             ContentType::Date,
             ContentType::Person,
             ContentType::Records,
+            ContentType::Flag,
         ] {
             assert!(used.contains(&kind), "no case for {kind:?}");
         }

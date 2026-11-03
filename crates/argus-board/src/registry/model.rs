@@ -75,6 +75,8 @@ pub struct Content {
     pub person: PatternKind,
     /// A list of structured records kept by an op.
     pub records: Plain,
+    /// A true or false switch.
+    pub flag: Plain,
 }
 
 /// The `line` kind.
@@ -159,6 +161,8 @@ pub enum ContentType {
     Person,
     /// A list of structured records.
     Records,
+    /// A true or false switch.
+    Flag,
 }
 
 /// A field: its content kind and its limits.
@@ -201,6 +205,10 @@ pub enum Collection {
     Items,
     /// The `tests` collection (`T-n`).
     Tests,
+    /// The `launchers` collection, keyed by name: the builds.
+    Launchers,
+    /// The worktrees the scanner reports; never written from the board.
+    Worktrees,
 }
 
 /// How strict a rule is.
@@ -231,7 +239,7 @@ pub enum Progress {
 
 /// An item type.
 #[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct ItemType {
     /// The type id (`bug`).
     pub id: String,
@@ -243,8 +251,17 @@ pub struct ItemType {
     pub color: String,
     /// Where its records live.
     pub collection: Collection,
+    /// The key of its records when it is not `id` (a build is its launcher `name`).
+    #[serde(default)]
+    pub id_key: Option<String>,
     /// The types it may sit under; empty means a root only.
     pub parents: Vec<String>,
+    /// The item types a build may serve; empty for every other type.
+    #[serde(default)]
+    pub serves: Vec<String>,
+    /// Whether the board only shows its records and never writes them.
+    #[serde(default)]
+    pub read_only: bool,
     /// Its stages, in flow order (empty for a type with statuses).
     pub stages: Vec<Stage>,
     /// Its statuses, for a type that has no lane.

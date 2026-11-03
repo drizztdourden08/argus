@@ -11,6 +11,7 @@ use crate::blocked::causes;
 use crate::json::{display, obj, section, set};
 use crate::launchers::{bundle_status, is_standalone, joined_bundle, usage_of};
 use crate::names::display_name;
+use crate::served::{is_master, served_by};
 
 /// A field kept as it is, `null` when missing (`doc.x ?? null`).
 fn nn(doc: &Value, key: &str) -> Value {
@@ -59,7 +60,8 @@ fn public_entry(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
 }
 
 /// An item as the page sees it: with `blocked`, why it is blocked, computed from the whole board
-/// and never kept on disk, and its `images` with the `url` the page loads them from.
+/// and never kept on disk, its `images` with the `url` the page loads them from, and `servedBy`, the
+/// counts of the builds and worktrees that serve it (only when something does).
 fn public_item(
     doc: &Value,
     id: &str,
@@ -68,7 +70,31 @@ fn public_item(
 ) -> Value {
     let mut out = public_entry(doc, proof_url);
     set(&mut out, "blocked", json!(causes(board, id)));
+    let served = served_by(board, id);
+    let (builds, closed, worktrees) = (
+        served.builds.len(),
+        served.closed.len(),
+        served.worktree_links.len(),
+    );
+    if builds + closed + worktrees > 0 {
+        let counts = json!({"builds": builds, "closed": closed, "worktrees": worktrees});
+        set(&mut out, "servedBy", counts);
+    }
     out
+}
+
+/// The stage of a build, computed and never kept: closed when retired, draft while its bundle is
+/// a draft or it has no one-line command, else ready.
+fn build_stage(board: &Board, rec: &Value) -> &'static str {
+    if crate::json::truthy(rec, "retiredAt") {
+        return "closed";
+    }
+    let one_line = rec["cmd"]
+        .as_str()
+        .is_some_and(|cmd| !cmd.trim().is_empty() && !cmd.contains(['\n', '\r']));
+    let draft = joined_bundle(board, rec)
+        .is_some_and(|tag| bundle_status(board, &tag, &board["builds"][tag.as_str()]) == "draft");
+    if one_line && !draft { "ready" } else { "draft" }
 }
 
 /// A bundle record as the page sees it: every field present, null when unset.
@@ -102,6 +128,8 @@ fn public_launcher(doc: &Value, id: &str, board: &Board) -> Value {
         "bundle": nn(doc, "bundle"), "useEvery": nn(doc, "useEvery"), "keptAt": nn(doc, "keptAt"),
         "keptBy": nn(doc, "keptBy"), "keptUntil": nn(doc, "keptUntil"), "joined": joined,
         "standalone": is_standalone(board, &rec),
+        "for": nn(doc, "for"), "master": is_master(board, &display(&rec["name"])),
+        "stage": build_stage(board, &rec), "retiredByItem": nn(doc, "retiredByItem"),
         "useEveryMs": usage.as_ref().map_or(Value::Null, |u| json!(u.every_ms)),
         "lastUsedAt": usage.as_ref().map_or(Value::Null, |u| json!(u.last_used_at)),
         "stale": usage.as_ref().is_some_and(|u| u.stale),
