@@ -632,6 +632,7 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
 | `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
 | `dep_wakes` | `dep-request`, `dep-resolved`, `dep-blocked`, `dep-cancelled` and `dep-reopened` from the history of the dependency ledger, once per `D-n#seq` (docs/wake-policy.md) |
+| `item_watch` | Item events from the diff of two exports of a board (`argus_board::item_events`): `item-assigned`, `item-unassigned`, `todo-assigned`, `item-status`, `item-ask`, `item-unblocked`, `children-done`, `plan-run-done`, `todo-quiet`, and the owner notices (docs/wake-policy.md) |
 | `wake_policy` | The one table reason to wake or passive, `class_of`, the `wakePolicy` debounce and digest settings |
 | `notices` | The digest of the passive notices since a thread's last turn, and its one line |
 

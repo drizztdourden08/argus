@@ -15,6 +15,7 @@ pub mod engine;
 pub mod external;
 pub mod faults;
 pub mod item_wakes;
+pub mod item_watch;
 pub mod lenient;
 pub mod memory;
 pub mod mirror;

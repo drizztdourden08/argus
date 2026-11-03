@@ -13,6 +13,12 @@ pub struct AutoConfig {
     pub handed: bool,
     /// A new open question by a thread.
     pub ask: bool,
+    /// An item or a to-do assigned to the owner by a thread (`notify.auto.assigned`).
+    pub assigned: bool,
+    /// A bug the owner reported is ready to verify (`notify.auto.verify`).
+    pub verify: bool,
+    /// A test plan is ready to run (`notify.auto.run`).
+    pub run: bool,
 }
 
 impl Default for AutoConfig {
@@ -20,6 +26,9 @@ impl Default for AutoConfig {
         Self {
             handed: true,
             ask: true,
+            assigned: true,
+            verify: true,
+            run: true,
         }
     }
 }
@@ -62,6 +71,7 @@ mod tests {
             serde_json::from_str(r#"{"quietLevels":["ping"],"sound":{"urgent":false}}"#)
                 .expect("parses");
         assert!(config.os && config.auto.handed && config.auto.ask && !config.toast_info);
+        assert!(config.auto.assigned && config.auto.verify && config.auto.run);
         assert_eq!(config.quiet_levels, ["ping"]);
         assert_eq!(config.sound.urgent, Some(false));
         assert_eq!(config.sound.ping, None);

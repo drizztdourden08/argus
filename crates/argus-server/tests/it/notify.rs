@@ -381,7 +381,7 @@ async fn a_change_of_settings_is_merged_written_to_config_json_and_obeyed_at_onc
     );
     assert_eq!(
         saved["auto"],
-        json!({ "handed": true, "ask": true }),
+        json!({ "handed": true, "ask": true, "assigned": true, "verify": true, "run": true }),
         "the rest of notify is kept"
     );
     let before = r.toasts.count();
@@ -753,4 +753,72 @@ async fn notify_os_false_records_a_question_without_a_toast_and_auto_ask_false_d
         count_of(&notes(&r.t).await, "Question with auto ask off"),
         0
     );
+}
+
+fn owned_item(id: &str, title: &str) -> Value {
+    argus_core::fixture::doc(
+        id,
+        "ui",
+        json!({ "title": title, "thread": "ui", "status": "doing", "assignee": "owner" }),
+        8192,
+    )
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn items_a_thread_assigns_to_the_owner_ping_him_once_inside_the_toast_limits() {
+    let r = rig().await;
+    first_export(&r.t).await;
+    let base = r.toasts.count();
+    edit_alpha(&r.t, |b| {
+        b["items"]["I-1"]["assignee"] = json!("owner");
+        b["items"]["I-1"]["rev"] = json!(2);
+        for n in 3..=6 {
+            let id = format!("I-{n}");
+            b["items"][id.as_str()] = owned_item(&id, &format!("Chore {n}"));
+        }
+    })
+    .await;
+    let list = told(&r.t, "was assigned to you by ui", 5).await;
+    let states: Vec<&str> = list
+        .iter()
+        .filter(|n| n["by"] == "auto")
+        .filter(|n| {
+            n["text"]
+                .as_str()
+                .is_some_and(|t| t.contains("assigned to you"))
+        })
+        .filter_map(|n| n["toast"].as_str())
+        .collect();
+    assert_eq!(states.iter().filter(|s| **s == "shown").count(), 3);
+    assert_eq!(states.iter().filter(|s| **s == "limited").count(), 2);
+    assert_eq!(r.toasts.count() - base, 4, "three toasts and one summary");
+    let r = restart(r).await;
+    r.t.write("POST", "/api/admin/resync", &json!({})).await;
+    flush(&r.t, "b3").await;
+    assert_eq!(count_of(&notes(&r.t).await, "was assigned to you by ui"), 5);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn auto_assigned_false_keeps_the_ping_off_and_a_bug_to_verify_pings_the_owner() {
+    let r = rig().await;
+    first_export(&r.t).await;
+    set_notify(&r.t, |n| n["auto"]["assigned"] = json!(false));
+    edit_alpha(&r.t, |b| {
+        b["items"]["I-7"] = owned_item("I-7", "Switched off");
+    })
+    .await;
+    flush(&r.t, "b3").await;
+    assert_eq!(count_of(&notes(&r.t).await, "Switched off"), 0);
+    edit_alpha(&r.t, |b| {
+        let mut bug = owned_item("I-8", "Login loses the user");
+        bug["assignee"] = json!("ui");
+        bug["type"] = json!("bug");
+        bug["stage"] = json!("verifying");
+        bug["status"] = json!("review");
+        bug["fields"] = json!({ "reporter": "owner" });
+        b["items"]["I-8"] = bug;
+    })
+    .await;
+    let list = told(&r.t, "is ready to verify", 1).await;
+    assert_eq!(count_of(&list, "Login loses the user"), 1);
 }

@@ -149,6 +149,41 @@ fn the_card_of_a_running_project_counts_what_needs_the_owner() {
 }
 
 #[test]
+fn the_card_lists_what_is_assigned_to_the_owner_and_a_to_do_for_a_lead_does_not_need_him() {
+    let home = home_with_alpha();
+    let mut board = alpha();
+    board["items"]["I-1"]["assignee"] = json!("owner");
+    board["items"]["I-1"]["type"] = json!("bug");
+    board["items"]["I-1"]["stage"] = json!("verifying");
+    board["items"]["I-2"]["assignee"] = json!("ui");
+    board["actions"]["H-2"] = json!({
+        "id": "H-2", "thread": "ui", "text": "Ask Tessera", "status": "pending", "assignee": "lead:tessera",
+    });
+    board["actions"]["H-3"] = json!({
+        "id": "H-3", "thread": "ui", "text": "Pay the fee", "status": "pending", "assignee": "owner",
+    });
+    let card = summarize(home.path(), "alpha", &portfolio(), Some(&board));
+    let want = json!([
+        {"id": "I-1", "title": "Login screen", "type": "bug", "stage": "verifying"},
+        {"id": "H-1", "title": "Install the test certificate", "type": "todo", "stage": "pending"},
+        {"id": "H-3", "title": "Pay the fee", "type": "todo", "stage": "pending"},
+    ]);
+    assert_eq!(card["ownerItems"], want);
+    assert_eq!(card["counts"]["needsYou"], 4);
+}
+
+#[test]
+fn a_card_with_nothing_assigned_to_the_owner_has_an_empty_list_and_a_done_item_leaves_it() {
+    let home = home_with_alpha();
+    let mut board = alpha();
+    board["actions"]["H-1"]["status"] = json!("done");
+    board["items"]["I-2"]["assignee"] = json!("owner");
+    board["items"]["I-2"]["status"] = json!("done");
+    let card = summarize(home.path(), "alpha", &portfolio(), Some(&board));
+    assert_eq!(card["ownerItems"].as_array().map(Vec::len), Some(0));
+}
+
+#[test]
 fn proofs_are_kept_next_to_the_board_and_numbered_up() {
     let home = tempfile::tempdir().expect("temp dir");
     let mut test = json!({"id": "T-1", "proofs": []});

@@ -34,7 +34,10 @@ A thread is woken for:
 - a real fault of its own work (`process-reaped`, a worktree removal it asked for that was
   refused, which comes as a `thread-message`);
 - a dependency on another board that needs it to act: a request for it (`dep-request`), or the
-  request it made is done, dropped, gone or blocked (`dep-resolved`, `dep-blocked`).
+  request it made is done, dropped, gone or blocked (`dep-resolved`, `dep-blocked`);
+- a change to an item it works on that asks it to act: an item or a to-do given to it
+  (`item-assigned`, `todo-assigned`), the last blocker of its item settled (`item-unblocked`), every
+  child of its epic or story done (`children-done`), a run of its test plan ended (`plan-run-done`).
 
 It is never woken for, and these stay notices:
 
@@ -47,7 +50,8 @@ It is never woken for, and these stay notices:
 - `process-alert` (hogs and orphans, mostly not project work);
 - `lead-info`: a lead's note to another lead (`coord lead <key> "<text>"`, kind note). A lead's
   decision (`--kind decision`) asks for action and stays `lead-message`;
-- `dep-cancelled`, `dep-reopened`: a request was withdrawn, or is open again.
+- `dep-cancelled`, `dep-reopened`: a request was withdrawn, or is open again;
+- `item-unassigned`, `item-status`, `item-ask`, `todo-quiet`: see Item events.
 
 ## Dependencies
 
@@ -74,6 +78,58 @@ of the debounce.
 whose `requestedBy` request is `blocked`: the reminder would only nag a thread that cannot act.
 
 The table itself is in `docs/architecture.md` under the wake engine.
+
+## Item events
+
+`crates/argus-wake/src/item_watch` compares each export of a project board with the one before,
+through the pure `argus_board::item_events(before, after)`, so a write by a lead's CLI wakes the
+thread it concerns as an owner post does. Each event is `<id>:<rev>:<kind>`; the wakes table is
+asked for it (`last_at`), so a restart that replays an export sends nothing twice. The first export
+of a project after a start only seeds, and a write made while Argus is down is not compared (Argus
+is always on). The owner's own posts keep their path in `policy`: an `item-assigned` wake sent in
+the last minute for the same item is not sent again. When an event changes nothing in the
+`rev` of the record that makes it (a parent whose last child closed, an item whose question was
+answered), the highest `rev` among the records that make it names it, so a second occurrence is
+a new event.
+
+| Event | Who | Reason | Class | Text |
+|---|---|---|---|---|
+| item given to a thread by someone else | the new thread | `item-assigned` | wake | `I-7 (title) was assigned to you by <who>` |
+| item taken away from a thread | the old thread | `item-unassigned` | passive | `I-7 (title) was taken from you by <who>` |
+| to-do given to a thread or to the lead of another project | that thread, or that project's lead | `todo-assigned` | wake | `to-do H-3 (text) was assigned to you by <who>` |
+| stage or lane changed by someone other than the thread that works it | that thread (the accountable thread when the owner holds it) | `item-status` | passive | `I-7 (title) moved doing to review (by <who>)` |
+| a question or decision by another thread on the item | the thread that works it | `item-ask` | passive | `<who> asked on I-7 (Q-4): <text>` |
+| the last blocker of an open item settled | the assignee (the owner: a line in the activity log) | `item-unblocked` | wake | `I-7 (title) is unblocked: Q-4 settled` |
+| every child of an epic or story is done or dropped | the parent's assignee (the owner: a line in the activity log) | `children-done` | wake | `every child of I-7 (title) is done or dropped (3 in all)` |
+| a run of a test plan ended | the plan's thread | `plan-run-done` | wake | `I-9 (title): run 3: 4 pass, 1 fail` |
+| a to-do of another lead that blocks an item, quiet for 24 h | that lead | `todo-quiet` | passive | `to-do H-3 (text) has been quiet for a day and holds I-7 on <p>` |
+| a request to another board that the item waited on landed | as before | `dep-resolved` (from the ledger, see Dependencies) | wake | not sent again here |
+
+None of them is immediate. A change by the thread that holds the item, or a thread giving an item to
+itself, says nothing. Moving an item to another thread is the two assignment events, not also a status
+change. Giving an item to the owner while the same thread stays accountable for it takes nothing away
+from that thread.
+
+Owner notices (a toast `ping` and a line in Notifications, by `auto`) go through the same owner sink
+as the open faults, so they are told once (a mark in kv by topic, project, thread and event) and
+obey the toast limits of `Notify::send` (3 toasts a minute per thread, 8 a minute for all, then
+recorded only with one summary). Each has a switch under `notify.auto`:
+
+| Event | Switch | Title | Text |
+|---|---|---|---|
+| item assigned to the owner by a thread | `assigned` | Assigned to you | `<p>: I-7 (title) was assigned to you by <who>` |
+| to-do assigned to the owner (`assignee` `owner`) | `assigned` | To-do for you | `<p>: to-do H-3 (text) was given to you by <who>` |
+| a bug the owner reported reaches `verifying` | `verify` | Ready to verify | `<p>: I-7 (title) is ready to verify` |
+| a test plan is `ready` and its bundle is ready | `run` | Ready to run | `<p>: test plan I-9 (title) is ready to run on <bundle>` |
+
+A to-do with no assignee is the owner's as before and pings nobody: only an explicit `owner` does.
+The owner never hears of a change he made himself.
+
+A to-do assigned to a thread or to the lead of a project does not count as needing the owner:
+`refresh_needs_human` counts only pending to-dos with no assignee or the assignee `owner`, and so do
+`needsYou` and `ownerItems` on the project cards. `ownerItems` lists `{id, title, type, stage}` for
+the open items whose `assignee` is `owner` and the pending to-dos that wait for him, for the
+"Assigned to you" list of the Notifications tab.
 
 ## Open faults and notices
 

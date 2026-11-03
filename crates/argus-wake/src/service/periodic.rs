@@ -12,7 +12,7 @@ use crate::sync_wakes::SyncEnv;
 
 /// When the wakes table last sent a reminder, as the wake kinds read it; a table that cannot be read says never and
 /// leaves one warning that names `what`.
-fn last_sent_of<'a>(
+pub(super) fn last_sent_of<'a>(
     store: &'a dyn WakeStore,
     what: &'static str,
 ) -> impl Fn(&str, &str, &str, &str) -> i64 + 'a {
@@ -105,7 +105,7 @@ impl WakeService {
         };
         self.forward_activity(out.activity);
         self.submit_logged(&out.wakes, "item wakes");
-        out.wakes.len()
+        out.wakes.len() + self.watch_quiet()
     }
 
     /// The dependency wakes due now; returns how many were sent. The server may call it right after it

@@ -21,7 +21,7 @@ use serde_json::json;
 
 const WINDOW: i64 = 15 * SEC;
 
-const PASSIVE: [&str; 13] = [
+const PASSIVE: [&str; 17] = [
     "lead-info",
     "wake-fault",
     "agent-stale",
@@ -35,6 +35,10 @@ const PASSIVE: [&str; 13] = [
     "remote-sync-due",
     "dep-cancelled",
     "dep-reopened",
+    "item-unassigned",
+    "item-status",
+    "item-ask",
+    "todo-quiet",
 ];
 
 fn policy_rig(immediate: &[&str]) -> EngineRig {

@@ -15,7 +15,10 @@ mod source;
 mod text;
 
 pub use config::ReminderConfig;
-pub use owner::{OwnerAlerts, OwnerNotice, OwnerSink, TOPIC_FAULT, TOPIC_STALL};
+pub use owner::{
+    OwnerAlerts, OwnerNotice, OwnerSink, TOPIC_ASSIGNED, TOPIC_FAULT, TOPIC_RUN, TOPIC_STALL,
+    TOPIC_VERIFY,
+};
 pub use resend::Resend;
 pub use source::{NoticeSource, OpenNotice};
 pub use text::open_line;

@@ -193,7 +193,11 @@ fn nothing_is_told_again_after_a_restart_or_a_resync_and_news_from_the_downtime_
 #[test]
 fn config_auto_switches_each_one_off_and_the_markers_still_move() {
     let config = |handed, ask| NotifyConfig {
-        auto: AutoConfig { handed, ask },
+        auto: AutoConfig {
+            handed,
+            ask,
+            ..AutoConfig::default()
+        },
         ..NotifyConfig::default()
     };
     let h = Harness::named(config(false, true));

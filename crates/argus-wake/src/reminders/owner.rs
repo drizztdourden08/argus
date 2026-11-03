@@ -14,10 +14,19 @@ pub const TOPIC_FAULT: &str = "wake-fault";
 /// The topic of a notice about an unread wake.
 pub const TOPIC_STALL: &str = "stall";
 
+/// The topic of a notice that an item or a to-do was assigned to the owner (`notify.auto.assigned`).
+pub const TOPIC_ASSIGNED: &str = "assigned";
+
+/// The topic of a notice that a bug he reported is ready to verify (`notify.auto.verify`).
+pub const TOPIC_VERIFY: &str = "verify";
+
+/// The topic of a notice that a test plan is ready to run (`notify.auto.run`).
+pub const TOPIC_RUN: &str = "run";
+
 /// What the owner is told.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OwnerNotice {
-    /// What the notice is about (`wake-fault` or `stall`); the server keeps one told-mark per topic.
+    /// What the notice is about (`wake-fault`, `stall`, `assigned`, `verify` or `run`); the server keeps one told-mark per topic.
     pub topic: String,
     /// The headline.
     pub title: String,
@@ -25,9 +34,10 @@ pub struct OwnerNotice {
     pub text: String,
     /// The project of the thread.
     pub project: String,
-    /// The thread.
+    /// The thread: the one that is faulted, or the one that made the change.
     pub thread: String,
-    /// When the fault opened (ISO), which with the project and the thread names it for good.
+    /// When the fault opened (ISO), or the event of an item (`<id>:<rev>:<kind>`); with the topic, the
+    /// project and the thread it names the notice for good.
     pub since: String,
 }
 

@@ -3,6 +3,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU16, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
+use crate::config::AutoConfig;
 use crate::configure::{SettingsPatch, apply, describe};
 use crate::limits::Limiter;
 use crate::links::Links;
@@ -107,6 +108,12 @@ impl Notify {
             ..filter.clone()
         };
         self.ports.store.list(&clamped)
+    }
+
+    /// Which board events ping the owner by themselves, as the config says now.
+    #[must_use]
+    pub fn auto(&self) -> AutoConfig {
+        self.ports.config.load().auto
     }
 
     /// The settings in effect.

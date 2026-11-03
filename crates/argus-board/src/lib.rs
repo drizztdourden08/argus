@@ -10,6 +10,7 @@ pub mod content;
 pub mod deps;
 pub mod error;
 pub mod inbox;
+pub mod item_events;
 pub mod json;
 pub mod launchers;
 pub mod limits;
@@ -25,6 +26,7 @@ pub mod sync;
 pub mod text;
 
 pub use error::BoardError;
+pub use item_events::item_events;
 
 /// A board: always a JSON object. Unknown fields and key order are kept, so the Node CLI and
 /// Argus can write the same file.

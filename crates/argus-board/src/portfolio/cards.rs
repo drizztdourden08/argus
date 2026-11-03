@@ -10,6 +10,7 @@ use crate::agents::live_agent_ids;
 use crate::json::{display, nullish, section, truthy};
 use crate::launchers::{MASTER, has_master, launcher_def_name};
 use crate::names::display_name;
+use crate::portfolio::owner_items::{owner_items, waits_on_owner};
 use crate::store::read_board;
 
 const RECENT: usize = 6;
@@ -90,7 +91,7 @@ fn counts_of(board: &Board, v: &View, open_questions: usize) -> Value {
     let pending_actions = v
         .actions
         .iter()
-        .filter(|a| a["status"] == "pending")
+        .filter(|a| a["status"] == "pending" && waits_on_owner(a))
         .count();
     let manual = v
         .tests
@@ -223,6 +224,7 @@ fn card_of(key: &str, reg: &Value, board: &Board) -> Value {
     put("coordinator", coordinator_of(coord));
     put("counts", counts_of(board, &view, open.len()));
     put("attention", json!(attention_of(&view, &open)));
+    put("ownerItems", json!(owner_items(&view.items, &view.actions)));
     put("recent", Value::Array(recent_of(board, &paused)));
     put("master", master_of(board));
     if !has_master(board) {

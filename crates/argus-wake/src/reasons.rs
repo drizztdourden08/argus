@@ -8,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 37] = [
+pub const WAKE_REASONS: [&str; 45] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -46,6 +46,14 @@ pub const WAKE_REASONS: [&str; 37] = [
     "dep-reopened",
     "ack-nudge",
     "stall",
+    "item-unassigned",
+    "todo-assigned",
+    "item-status",
+    "item-ask",
+    "item-unblocked",
+    "children-done",
+    "plan-run-done",
+    "todo-quiet",
 ];
 
 /// What the owner is waiting on, a fault or a stall for the Overlord, a wake sent again because nobody read

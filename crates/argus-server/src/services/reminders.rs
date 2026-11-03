@@ -5,16 +5,20 @@
 use std::sync::Arc;
 use std::thread;
 
-use argus_notify::{By, Level, Notify, PingRequest};
+use argus_notify::{AutoConfig, By, Level, Notify, PingRequest};
 use argus_store::Db;
-use argus_wake::reminders::{NoticeSource, OpenNotice, OwnerNotice, OwnerSink};
+use argus_wake::reminders::{
+    NoticeSource, OpenNotice, OwnerNotice, OwnerSink, TOPIC_ASSIGNED, TOPIC_RUN, TOPIC_VERIFY,
+};
 use argus_wake::service::driver::lock;
 use argus_worktrees::{REASON, Service as WorktreeService};
 
 use crate::Services;
 
-/// Tells the owner of a fault or a stall once, for good: it is remembered by its topic, its project, its
-/// thread and when it opened, so a restart does not toast it again and the two kinds never share a key.
+/// Tells the owner of a fault, a stall or a change to an item once, for good: it is remembered by its topic,
+/// its project, its thread and when it opened (or the event of the item), so a restart does not toast it
+/// again and the kinds never share a key. A notice goes through `Notify::send`, so the limits of the
+/// toasts hold: a thread gets three toasts a minute, and the rest are recorded with one summary.
 struct OwnerPings {
     notify: Arc<Notify>,
     db: Arc<Db>,
@@ -26,6 +30,16 @@ fn told_key(notice: &OwnerNotice) -> String {
         "{}-owner:{}:{}:{}",
         notice.topic, notice.project, notice.thread, notice.since
     )
+}
+
+/// Is the automatic ping of this topic switched on (`notify.auto`)? The faults and the stalls always are.
+fn switched_on(auto: AutoConfig, topic: &str) -> bool {
+    match topic {
+        TOPIC_ASSIGNED => auto.assigned,
+        TOPIC_VERIFY => auto.verify,
+        TOPIC_RUN => auto.run,
+        _ => true,
+    }
 }
 
 fn ping_of(notice: OwnerNotice) -> PingRequest {
@@ -48,6 +62,9 @@ impl OwnerSink for OwnerPings {
         }
         if !self.shadow {
             let _ = self.db.kv_set(&key, "1");
+        }
+        if !switched_on(self.notify.auto(), &notice.topic) {
+            return;
         }
         let notify = Arc::clone(&self.notify);
         let ping = ping_of(notice);

@@ -7,6 +7,7 @@ mod periodic;
 mod remind;
 mod schedule;
 mod stall;
+mod watch;
 
 use std::sync::Arc;
 
@@ -24,6 +25,7 @@ use crate::engine::{
 };
 use crate::faults::{Fault, FaultStore};
 use crate::item_wakes::ItemWakes;
+use crate::item_watch::ItemWatch;
 use crate::mirror::{WakeDoc, docs_of};
 use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
@@ -85,6 +87,7 @@ pub struct WakeService {
     track_presence: bool,
     agents: AgentWakes,
     items: ItemWakes,
+    watch: ItemWatch,
     sync_wakes: SyncWakes,
     dep_wakes: DepWakes,
     stalls: Stalls,
@@ -143,6 +146,7 @@ impl WakeService {
             track_presence,
             agents: AgentWakes::new(config.agents.clone(), now),
             items: ItemWakes::new(config.items.clone()),
+            watch: ItemWatch::new(),
             sync_wakes: SyncWakes::new(config.syncs.clone(), now),
             dep_wakes: DepWakes::new(config.deps.clone()),
             stalls,
@@ -265,6 +269,7 @@ impl WakeService {
     /// A board was exported again: a heartbeat, a new thread, an acked inbox.
     pub fn on_board(&mut self, scope: &str) {
         self.with_env(|registry, env| registry.on_change(env, scope));
+        self.watch_board(scope);
     }
 
     /// A hard resync wiped the docs of a scope.
