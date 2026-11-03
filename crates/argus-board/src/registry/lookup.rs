@@ -191,6 +191,11 @@ mod tests {
         for other in ["test-case", "build", "worktree", "ghost"] {
             assert!(!reg.can_serve(other), "{other}");
         }
+    }
+
+    #[test]
+    fn the_build_type_is_keyed_by_name_and_has_the_link_fields() {
+        let reg = registry();
         let build = reg.item_type("build").unwrap();
         assert_eq!(build.id_key.as_deref(), Some("name"));
         assert_eq!(build.parents.len(), 0);

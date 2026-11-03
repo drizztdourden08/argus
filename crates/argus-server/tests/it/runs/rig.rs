@@ -102,7 +102,7 @@ impl Rig {
                 "{path}"
             );
         }
-        assert!(self.host.requests().is_empty(), "no run starts");
+        assert_eq!(self.host.requests().len(), 0, "no run starts");
     }
 
     /// Starts a launch as the CLI; the run it answers.

@@ -545,17 +545,28 @@ fn request_and_requests_check_their_arguments_before_the_dashboard_is_asked() {
             "--owner-entry takes one value.",
         ),
     ]);
-    // A switch takes no value: the path after it is a worktree again, so it reaches the dashboard.
+}
+
+/// A switch takes no value: the path after it is a worktree again, so it reaches the dashboard.
+#[test]
+fn a_switch_takes_no_value_so_the_path_after_it_reaches_the_dashboard() {
+    let w = World::new();
     for args in [
         vec!["request", "--branch", FOO],
         vec!["request", FOO, "--discard", "--owner-entry", "O-1"],
-        vec!["request", all, "--older-than", "6h"],
+        vec!["request", "--all-leftovers", "--older-than", "6h"],
         vec!["request", "--finished", "--branch"],
         vec!["requests"],
         vec!["requests", "--json"],
     ] {
         refused(&w.worker(&args), 1, "the dashboard is not running");
     }
+}
+
+#[test]
+fn request_checks_its_idle_age_before_the_dashboard_is_asked() {
+    let w = World::new();
+    let all = "--all-leftovers";
     w.refuse_all(&[
         (
             &["request", FOO, "--idle", "6h"],

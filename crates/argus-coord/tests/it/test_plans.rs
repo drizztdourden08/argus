@@ -155,11 +155,11 @@ fn the_cases_of_a_plan_are_ordered_added_and_removed() {
         "{}",
         gone.err
     );
-    let none = work.worker(&["test", "plan", "cases", "I-2"]);
+    let bare = work.worker(&["test", "plan", "cases", "I-2"]);
     assert!(
-        none.err.contains("usage: coord test plan cases"),
+        bare.err.contains("usage: coord test plan cases"),
         "{}",
-        none.err
+        bare.err
     );
     let task = work.worker(&["test", "plan", "cases", "I-1", "--add", "T-3"]);
     assert!(task.err.contains("I-1 is not a test plan."), "{}", task.err);

@@ -536,7 +536,11 @@ fn the_bundle_the_patch_and_the_untracked_files_are_written_first() {
         b.patch.clone().unwrap(),
         b.untracked.clone().unwrap(),
     );
-    assert!(bundle.ends_with(".bundle") && untracked.ends_with(".untracked.txt"));
+    assert_eq!(
+        Path::new(&bundle).extension().and_then(|e| e.to_str()),
+        Some("bundle")
+    );
+    assert!(untracked.ends_with(".untracked.txt"));
     assert_eq!(
         Path::new(&patch).extension().and_then(|e| e.to_str()),
         Some("patch")

@@ -107,17 +107,19 @@ fn an_item_given_to_the_owner_by_a_thread_is_told_to_him_but_not_when_he_did_it(
     assert_eq!(item_events(&before, &given("human")).len(), 0);
 }
 
+/// A board with the to-do `H-1` on `I-1`, its fields overridden by `extra`.
+fn todo_board(extra: &Value) -> Value {
+    let mut t = json!({"id": "H-1", "text": "Check the log", "status": "pending", "item": "I-1", "rev": 1, "updatedBy": "api"});
+    for (key, value) in extra.as_object().into_iter().flatten() {
+        t[key.as_str()] = value.clone();
+    }
+    board(&[], &json!({"actions": {"H-1": t}}))
+}
+
 #[test]
 fn a_to_do_is_told_to_the_owner_a_lead_or_a_thread_it_names_and_to_nobody_it_does_not() {
-    let todo = |extra: &Value| {
-        let mut t = json!({"id": "H-1", "text": "Check the log", "status": "pending", "item": "I-1", "rev": 1, "updatedBy": "api"});
-        for (key, value) in extra.as_object().into_iter().flatten() {
-            t[key.as_str()] = value.clone();
-        }
-        board(&[], &json!({"actions": {"H-1": t}}))
-    };
     let before = board(&[], &json!({}));
-    let to = |extra: Value| item_events(&before, &todo(&extra));
+    let to = |extra: Value| item_events(&before, &todo_board(&extra));
     assert_eq!(to(json!({"assignee": "owner"}))[0].to, Hearer::Owner);
     assert_eq!(
         to(json!({"assignee": "lead:tessera"}))[0].to,
@@ -282,11 +284,11 @@ fn an_ask_the_owner_answered_to_the_hearers_own_thread_is_told_by_the_answer_not
     let blocked = item("I-1", &json!({"thread": "api"}));
     let settle = |asker: &str, status: &str| {
         let open = board(
-            &[blocked.clone()],
+            std::slice::from_ref(&blocked),
             &json!({"entries": {"Q-1": ask("Q-1", "question", "open", asker)}}),
         );
         let closed = board(
-            &[blocked.clone()],
+            std::slice::from_ref(&blocked),
             &json!({"entries": {"Q-1": ask("Q-1", "question", status, asker)}}),
         );
         item_events(&open, &closed)

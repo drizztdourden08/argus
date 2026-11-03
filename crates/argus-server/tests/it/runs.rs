@@ -341,8 +341,8 @@ async fn stopping_a_run_ends_its_stream_and_a_closed_client_leaves_no_listener()
     r.t.stop(false).await;
 }
 
-#[tokio::test(flavor = "multi_thread")]
-async fn attachments_a_raw_image_in_the_listing_out_wrong_bytes_and_a_big_body_refused() {
+/// A rig with attachments capped at 100 bytes and the run `R-1` of the job already exited.
+async fn rig_with_an_exited_run() -> Rig {
     let config = json!({ "attach": { "maxBytes": 100 } });
     let r = Rig::with(TestOptions {
         config,
@@ -353,6 +353,12 @@ async fn attachments_a_raw_image_in_the_listing_out_wrong_bytes_and_a_big_body_r
     let pid = pid_of(&r.begin("job").await);
     r.host.exit(pid, Some(0)).await;
     r.until_status("R-1", "exited").await;
+    r
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn attachments_a_raw_image_in_the_listing_out_wrong_bytes_and_a_big_body_refused() {
+    let r = rig_with_an_exited_run().await;
     let send = |headers: Vec<(&str, &str)>, body: Vec<u8>, page: bool| {
         let mut request = Request::new(
             "POST",

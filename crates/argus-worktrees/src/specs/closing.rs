@@ -245,7 +245,12 @@ fn commits_no_ref_keeps_are_written_to_a_bundle_first() {
     close_and_wait(&h);
     assert!(!exists_itself(&fx.path("agent-a1")));
     let files = backup_files(&h);
-    assert!(files.iter().any(|f| f.ends_with(".bundle")), "{files:?}");
+    assert!(
+        files.iter().any(|f| Path::new(f)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("bundle"))),
+        "{files:?}"
+    );
     let note = inbox(&h).pop().unwrap().1;
     assert!(
         note.contains(".bundle") && note.contains("restore:"),

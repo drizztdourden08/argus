@@ -1,37 +1,51 @@
 //! Builds closing with their item and coming back with it.
 
-use serde_json::json;
+use serde_json::{Value, json};
 
 use super::{
     applied, board, build, has_play, is_closed, item, owner, retire_by_hand, to_lane, trash,
 };
 
-#[test]
-fn a_story_closes_and_its_two_builds_close_with_it_and_a_reopen_brings_back_those_two() {
+/// A story with three builds, one of them already retired by hand.
+fn story_with_builds() -> Value {
     let mut b = board();
     item(&mut b, "I-1", "story");
     for name in ["web", "api", "old"] {
         build(&mut b, name, Some("I-1"));
     }
     retire_by_hand(&mut b, "old");
+    b
+}
+
+/// A build closed with its item: marked by it, no longer current, and without its Play.
+fn assert_closed_with_item(b: &Value, name: &str) {
+    let rec = &b["launchers"][name];
+    assert_eq!(rec["retiredByItem"], "I-1");
+    assert_eq!(rec["current"], false);
+    assert!(!has_play(b, name), "{name} still has Play");
+}
+
+/// A build brought back with its item: live again, unmarked, and with its Play.
+fn assert_brought_back(b: &Value, name: &str) {
+    assert!(!is_closed(b, name), "{name} stayed closed");
+    assert_eq!(b["launchers"][name].get("retiredByItem"), None);
+    assert!(has_play(b, name), "{name} lost Play");
+}
+
+#[test]
+fn a_story_closes_and_its_two_builds_close_with_it_and_a_reopen_brings_back_those_two() {
+    let mut b = story_with_builds();
     let done = to_lane(&mut b, "I-1", "done");
     applied(&done);
     assert_eq!(done.extra["closedWith"], json!(["api", "web"]));
-    for name in ["web", "api"] {
-        let rec = &b["launchers"][name];
-        assert_eq!(rec["retiredByItem"], "I-1");
-        assert_eq!(rec["current"], false);
-        assert!(!has_play(&b, name), "{name} still has Play");
-    }
+    assert_closed_with_item(&b, "web");
+    assert_closed_with_item(&b, "api");
     assert_eq!(b["launchers"]["old"]["retiredByItem"], json!(null));
     let reopened = to_lane(&mut b, "I-1", "doing");
     applied(&reopened);
     assert_eq!(reopened.extra["reopenedWith"], json!(["api", "web"]));
-    for name in ["web", "api"] {
-        assert!(!is_closed(&b, name), "{name} stayed closed");
-        assert_eq!(b["launchers"][name].get("retiredByItem"), None);
-        assert!(has_play(&b, name), "{name} lost Play");
-    }
+    assert_brought_back(&b, "web");
+    assert_brought_back(&b, "api");
     assert!(is_closed(&b, "old"));
     assert!(!has_play(&b, "old"));
 }

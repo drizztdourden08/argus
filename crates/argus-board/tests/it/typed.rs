@@ -712,10 +712,10 @@ fn a_note_follows_the_rich_text_rules_and_the_ownership_of_its_record() {
         &json!("Seen:\n- the form\n- the error"),
     );
     assert_eq!(bullets.unwrap_or_default(), "N-2");
-    let gone = create_note(&mut b, &lead(), "I-99", &json!("x"))
+    let missing = create_note(&mut b, &lead(), "I-99", &json!("x"))
         .unwrap_err()
         .to_string();
-    assert_eq!(gone, "no item \"I-99\".");
+    assert_eq!(missing, "no item \"I-99\".");
     let blank = create_note(&mut b, &lead(), "I-1", &json!("   "))
         .unwrap_err()
         .to_string();

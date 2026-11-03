@@ -1,10 +1,12 @@
 use serde_json::{Value, json};
 
-use super::{Boards, MAX_DEPTH, summaries, walk};
+use super::{Boards, MAX_DEPTH, Node, summaries, walk};
 use crate::blocked::CauseKind;
 
 fn board(items: Value) -> Value {
-    json!({ "items": items })
+    let mut out = serde_json::Map::new();
+    out.insert("items".to_owned(), items);
+    Value::Object(out)
 }
 
 fn boards(list: &[(&str, Value)]) -> Boards {
@@ -18,15 +20,37 @@ fn waits(dep: &str, (project, item): (&str, &str), state: &str) -> Value {
     json!({ "dep": dep, "project": project, "item": item, "title": "from the mirror", "state": state, "since": "2026-10-30T08:00:00Z" })
 }
 
+/// One request of the ledger: its id, the (project, item) that asks, the one asked, and its state.
+struct Row<'a> {
+    id: &'a str,
+    from: (&'a str, &'a str),
+    to: (&'a str, &'a str),
+    state: &'a str,
+}
+
+fn row<'a>(
+    id: &'a str,
+    from: (&'a str, &'a str),
+    to: (&'a str, &'a str),
+    state: &'a str,
+) -> Row<'a> {
+    Row {
+        id,
+        from,
+        to,
+        state,
+    }
+}
+
 /// A ledger record of a request.
-fn ledger(deps: &[(&str, (&str, &str), (&str, &str), &str)]) -> Value {
+fn ledger(deps: &[Row]) -> Value {
     let mut out = serde_json::Map::new();
-    for (id, from, to, state) in deps {
+    for dep in deps {
         out.insert(
-            (*id).to_owned(),
+            dep.id.to_owned(),
             json!({
-                "id": id, "state": state, "createdAt": "2026-10-29T08:00:00Z", "openedAt": "2026-10-30T09:00:00Z",
-                "from": { "project": from.0, "item": from.1 }, "to": { "project": to.0, "item": to.1 },
+                "id": dep.id, "state": dep.state, "createdAt": "2026-10-29T08:00:00Z", "openedAt": "2026-10-30T09:00:00Z",
+                "from": { "project": dep.from.0, "item": dep.from.1 }, "to": { "project": dep.to.0, "item": dep.to.1 },
             }),
         );
     }
@@ -59,26 +83,24 @@ fn three_boards() -> Boards {
         (
             "_portfolio",
             ledger(&[
-                ("D-21", ("bxel", "I-136"), ("tessera", "I-70"), "open"),
-                ("D-9", ("tessera", "I-70"), ("brock", "I-105"), "open"),
+                row("D-21", ("bxel", "I-136"), ("tessera", "I-70"), "open"),
+                row("D-9", ("tessera", "I-70"), ("brock", "I-105"), "open"),
             ]),
         ),
     ])
 }
 
-#[test]
-fn the_chain_across_three_boards_has_depth_three() {
-    let trail = walk(&three_boards(), "bxel", "I-136");
-    assert_eq!(trail.depth, 3);
-    assert_eq!(trail.open, 3);
-    assert_eq!(trail.root.project, "bxel");
-    assert_eq!(trail.root.title, "Pixel brush");
-    assert_eq!(trail.root.kind.as_deref(), Some("feature"));
-    assert_eq!(trail.root.lane.as_deref(), Some("doing"));
-    assert_eq!(trail.root.stage.as_deref(), Some("building"));
-    assert_eq!(trail.root.assignee.as_deref(), Some("lead:bxel"));
-    assert_eq!(trail.root.edge, None);
-    let middle = &trail.root.children[0];
+fn assert_root(root: &Node) {
+    assert_eq!(root.project, "bxel");
+    assert_eq!(root.title, "Pixel brush");
+    assert_eq!(root.kind.as_deref(), Some("feature"));
+    assert_eq!(root.lane.as_deref(), Some("doing"));
+    assert_eq!(root.stage.as_deref(), Some("building"));
+    assert_eq!(root.assignee.as_deref(), Some("lead:bxel"));
+    assert_eq!(root.edge, None);
+}
+
+fn assert_middle(middle: &Node) {
     assert_eq!(
         (middle.project.as_str(), middle.item.as_str()),
         ("tessera", "I-70")
@@ -89,6 +111,16 @@ fn the_chain_across_three_boards_has_depth_three() {
     assert_eq!(edge.id, "D-21");
     assert_eq!(edge.state.as_deref(), Some("open"));
     assert_eq!(edge.since.as_deref(), Some("2026-10-30T09:00:00Z"));
+}
+
+#[test]
+fn the_chain_across_three_boards_has_depth_three() {
+    let trail = walk(&three_boards(), "bxel", "I-136");
+    assert_eq!(trail.depth, 3);
+    assert_eq!(trail.open, 3);
+    assert_root(&trail.root);
+    let middle = &trail.root.children[0];
+    assert_middle(middle);
     let end = &middle.children[0];
     assert_eq!(
         (end.project.as_str(), end.item.as_str()),
@@ -155,7 +187,10 @@ fn an_open_question_ends_a_branch_as_a_leaf() {
     let trail = walk(&all, "a", "I-1");
     assert_eq!(trail.depth, 3);
     assert_eq!(trail.open, 3);
-    let leaf = &trail.root.children[0].children[0];
+    assert_question_leaf(&trail.root.children[0].children[0]);
+}
+
+fn assert_question_leaf(leaf: &Node) {
     assert_eq!(leaf.item, "Q-4");
     assert_eq!(leaf.title, "Which port?");
     assert_eq!(leaf.kind.as_deref(), Some("question"));
@@ -235,7 +270,7 @@ fn settled_hops_are_skipped() {
         ),
         (
             "_portfolio",
-            ledger(&[("D-1", ("a", "I-1"), ("b", "I-7"), "done")]),
+            ledger(&[row("D-1", ("a", "I-1"), ("b", "I-7"), "done")]),
         ),
     ]);
     let trail = walk(&all, "a", "I-1");
@@ -261,7 +296,7 @@ fn a_request_of_another_board_that_waits_on_this_item_is_followed_to_the_request
         ),
         (
             "_portfolio",
-            ledger(&[("D-3", ("b", "I-9"), ("a", "I-1"), "blocked")]),
+            ledger(&[row("D-3", ("b", "I-9"), ("a", "I-1"), "blocked")]),
         ),
     ]);
     let child = &walk(&all, "a", "I-1").root.children[0];

@@ -713,8 +713,8 @@ fn the_play_name_made_by_hand_is_never_taken_and_a_multi_line_command_gets_no_pl
     assert!(!board.run_defs.contains_key("launcher-multi-1"));
 }
 
-#[test]
-fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
+/// A board with the current launcher `build-2`, set by `worker`.
+fn board_with_build_2() -> LauncherBoard {
     let mut board = board();
     write_launcher(
         &mut board,
@@ -727,6 +727,12 @@ fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
         &ctx(),
     )
     .unwrap();
+    board
+}
+
+#[test]
+fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
+    let mut board = board_with_build_2();
     let note =
         retire_launcher(&mut board, &lead(), "build-2", Some("merged into main"), AT).unwrap();
     assert_eq!(note, "Play removed (launcher-build-2).");

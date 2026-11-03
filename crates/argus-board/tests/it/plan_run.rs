@@ -27,8 +27,8 @@ fn run_op(board: &mut Value, who: &Who, kind: &str, plan: &str, rest: Value) -> 
 }
 
 fn record(board: &mut Value, plan: &str, test: &str, status: &str, note: &str) -> OpResult {
-    let rest = json!({"test": test, "status": status, "note": note});
-    run_op(board, &lead(), "plan-run-record", plan, rest)
+    let extra = json!({"test": test, "status": status, "note": note});
+    run_op(board, &lead(), "plan-run-record", plan, extra)
 }
 
 /// The alpha board with a third test and a plan of the three tests, owned by `ui`.
