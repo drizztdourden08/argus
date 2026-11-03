@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img">
+  <title>Argus, emerald, full detail</title>
+  <path d="M4 16L36 4L60 12L60 28L60 36L46 48L32 60L18 48L4 36ZM14 24L22 24L22 32L14 32ZM42 24L50 24L50 32L42 32Z" fill="#1fa878" fill-rule="evenodd"/>
+  <path d="M4 16L36 4L32 24Z" fill="#3fcf9a" fill-rule="evenodd"/>
+  <path d="M36 4L44 14L32 24Z" fill="#2dba88" fill-rule="evenodd"/>
+  <path d="M36 4L60 12L60 28L44 14Z" fill="#5fd6a6" fill-rule="evenodd"/>
+  <path d="M4 16L32 24L32 36L4 36ZM14 24L22 24L22 32L14 32Z" fill="#25b080" fill-rule="evenodd"/>
+  <path d="M44 14L60 28L60 36L32 36L32 24ZM42 24L50 24L50 32L42 32Z" fill="#1fa878" fill-rule="evenodd"/>
+  <path d="M4 36L32 36L18 48Z" fill="#18a070" fill-rule="evenodd"/>
+  <path d="M18 48L32 36L32 60Z" fill="#12906a" fill-rule="evenodd"/>
+  <path d="M32 36L60 36L46 48Z" fill="#0e8760" fill-rule="evenodd"/>
+  <path d="M32 36L46 48L32 60Z" fill="#0a6f4b" fill-rule="evenodd"/>
+</svg>

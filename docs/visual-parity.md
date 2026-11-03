@@ -375,7 +375,7 @@ this section, this section is true.
     dark app through the text colour; Argus's own Logo component and its SVG parser are gone. It
     sits in the overview header (`md`, before "Argus") and the board header (`lg`). The BrandMark is
     drawn in a square box, so its steps are a little wider than the old wide Logo (24 and 48px, were 26 and
-    39px). `apps/web/assets/argus-logo.svg` stays for the tray icon script. (Headers)
+    39px). `apps/web/assets/argus-logo.svg` is the old letter mark, no longer used by the tray script. (Headers)
 162. fixed: the favicon stays `apps/web/public/static/favicon.svg`, which already switches black on
     light chrome and white on dark with one `prefers-color-scheme` rule. Tessera 0.87 ships no
     single adaptive favicon file (`brand/argus.svg` is black, `brand/dark-ground/argus.svg` white), so
