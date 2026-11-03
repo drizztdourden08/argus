@@ -112,6 +112,6 @@ describe('I-85 P7 Agents tab: the pane', { tags: ['critical'] }, () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-2': agent({ items: ['I-1'] }) }, items: { 'I-1': item() } });
     fireEvent.click(within(rowOf(container, 'K-1')).getByText('ship it'));
-    expect(where()).toBe('?open=I-1');
+    expect(where()).toBe('?open=K-1');
   });
 });

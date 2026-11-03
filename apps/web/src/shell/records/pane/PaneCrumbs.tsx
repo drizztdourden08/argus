@@ -15,7 +15,7 @@ const PaneCrumbs = (props: PaneCrumbsProps) => {
       {crumbs.map((crumb, index) => (
         <Fragment key={crumb.id}>
           {index > 0 && <Icon name="chevron-right" />}
-          <Pressable aria-label={`Open ${itemCode(crumb)}: ${crumb.title}`} onClick={() => onOpen(crumb.id)}>
+          <Pressable aria-label={`Open ${itemCode(crumb)}: ${crumb.title}`} onClick={() => onOpen(itemCode(crumb))}>
             <Flex gap="xs" align="center">
               <ItemTypeMark item={crumb} />
               <Text as="span" variant="caption" mono>{itemCode(crumb)}</Text>

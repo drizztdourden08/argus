@@ -26,7 +26,7 @@ const AssignedList = () => {
             {group.rows.map((row) => (
               <OverviewRow
                 key={`${row.project}:${row.id}`}
-                target={{ kind: row.type, code: itemCode(row), project: row.project, open: row.id }}
+                target={{ kind: row.type, code: itemCode(row), project: row.project, open: itemCode(row) }}
                 assignee={OWNER_ASSIGNEE}
                 title={row.title}
                 chips={[{ id: 'stage', text: row.stage }]}

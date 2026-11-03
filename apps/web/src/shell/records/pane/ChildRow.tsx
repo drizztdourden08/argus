@@ -14,7 +14,7 @@ const ChildRow = (props: ChildRowProps) => {
   return (
     <Flex gap="sm" align="center" wrap role="listitem">
       <ItemTypeMark item={child} />
-      <Pressable aria-label={`Open ${code}: ${child.title}`} onClick={() => data.open(child.id)}>
+      <Pressable aria-label={`Open ${code}: ${child.title}`} onClick={() => data.open(code)}>
         <Flex gap="xs" align="center">
           <Text as="span" variant="caption" weight={600} mono>{code}</Text>
           <Text as="span" smartTimes>{child.title}</Text>

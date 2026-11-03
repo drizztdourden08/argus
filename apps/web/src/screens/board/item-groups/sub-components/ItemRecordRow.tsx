@@ -8,7 +8,7 @@ const ItemRecordRow = (props: ItemGroupHeaderProps) => {
   const pane = useRecordPane();
   const kind = typeOf(item);
   const code = itemCode(item);
-  const open = () => pane.open(item.id);
+  const open = () => pane.open(code);
   const stage = stageLabel(item, 'parent');
   return (
     <RecordRow

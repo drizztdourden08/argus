@@ -108,6 +108,12 @@ impl Ctx {
             .map(|(_, v)| v.as_str())
     }
 
+    /// The whole query as decoded pairs, in request order.
+    #[must_use]
+    pub fn query_all(&self) -> &[(String, String)] {
+        &self.query
+    }
+
     /// A header as text.
     #[must_use]
     pub fn header(&self, name: &str) -> Option<&str> {

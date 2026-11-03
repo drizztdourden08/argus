@@ -45,7 +45,7 @@ describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
   it('writes the open item to the address when a card opens and clears it when the pane closes', async () => {
     await mountKanban({ items: [item('I-1')] });
     await openItem('I-1');
-    expect(paneOf().open).toBe('I-1');
+    expect(paneOf().open).toBe('K-1');
     fireEvent.keyDown(screen.getByRole('dialog', { name: 'Work item' }), { key: 'Escape' });
     await waitFor(() => expect(paneOf().open).toBeNull());
   });
@@ -73,7 +73,7 @@ describe('S1 walking the list with [ and ]', { tags: ['standard'] }, () => {
     await mountKanban(three);
     await openItem('I-2');
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Add a criterion' }), { key: ']' });
-    expect(paneOf().open).toBe('I-2');
+    expect(paneOf().open).toBe('K-2');
   });
 });
 

@@ -25,7 +25,7 @@ const cardMenuGroups = (props: CardMenuProps): MenuGroup[] => {
   };
   const soft = (kindOfSoft: 'archive' | 'unarchive' | 'delete') => () => void ops.soft(kindOfSoft, item);
   const handlers = {
-    open: () => onOpen(id),
+    open: () => onOpen(code),
     [item.archivedAt ? 'unarchive' : 'archive']: soft(item.archivedAt ? 'unarchive' : 'archive'),
     delete: soft('delete'),
     copy: () => copyText(code),

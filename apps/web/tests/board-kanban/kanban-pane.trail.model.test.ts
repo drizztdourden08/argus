@@ -46,7 +46,7 @@ describe('I-72 P6 the dependency trail', { tags: ['standard'] }, () => {
 
   it('opens an item of this board by its pane, one of another board through its board, an entry as an entry', () => {
     expect(nodeOpens(node({ edge: null }), 'alpha')).toBeNull();
-    expect(nodeOpens(node(), 'alpha')).toEqual({ kind: 'item', id: 'I-2' });
+    expect(nodeOpens(node(), 'alpha')).toEqual({ kind: 'item', id: 'K-2' });
     expect(nodeOpens(node({ project: 'rotp', item: 'I-12' }), 'alpha')).toEqual({ kind: 'board', href: '/p/rotp#I-12' });
     expect(nodeOpens(node({ item: 'Q-4', type: 'question' }), 'alpha')).toEqual({ kind: 'entry', id: 'Q-4' });
     expect(nodeOpens(node({ item: 'D-9', type: 'decision' }), 'alpha')).toEqual({ kind: 'entry', id: 'D-9' });

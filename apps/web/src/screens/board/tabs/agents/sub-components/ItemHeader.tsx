@@ -17,11 +17,11 @@ const ItemHeader = (props: ItemHeaderProps) => {
         assignee: assigneeOf(item),
         boardKey,
         threads,
-        menu: recordMenuGroups(kind, code, { open: () => onOpen(item.id) }),
+        menu: recordMenuGroups(kind, code, { open: () => onOpen(code) }),
         menuLabel: `More actions for ${code}`,
       }}
       title={item.title}
-      onOpen={() => onOpen(item.id)}
+      onOpen={() => onOpen(code)}
     />
   );
 };

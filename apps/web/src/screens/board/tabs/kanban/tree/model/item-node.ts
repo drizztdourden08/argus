@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { ItemRef } from '../../../../../../data/kanban';
+import { itemCode } from '../../../../../../shell';
 import { assigneeOf, stageLabel, typeOf } from '../../model';
 import type { NodeContext, TreeNode } from '../tree.type';
 import { caseNode } from './case-node';
@@ -23,7 +24,7 @@ const itemNode = (item: ItemRef, cx: NodeContext): TreeNode => {
     stage: stageLabel(item, 'assignee') ?? item.status,
     status: item.status,
     assignee: assigneeOf(item),
-    open: item.id,
+    open: itemCode(item),
     count: countOf(children),
     children,
   };

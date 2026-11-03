@@ -88,7 +88,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     expect(tabOf(dialog, 'Children').textContent).toMatch(/1/);
     expect(within(dialog).getByText('Children · 2')).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open S-2: Item number 2' }));
-    await waitFor(() => expect(paneOf().open).toBe('I-2'));
+    await waitFor(() => expect(paneOf().open).toBe('S-2'));
   });
 
   it('adds a child of an allowed type under the item', async () => {
@@ -104,7 +104,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     await mountKanban({ items: [epic, story] });
     const dialog = await openItem('I-2');
     fireEvent.click(within(within(dialog).getByRole('navigation', { name: 'Parents' })).getByRole('button', { name: 'Open E-1: Release' }));
-    await waitFor(() => expect(paneOf().open).toBe('I-1'));
+    await waitFor(() => expect(paneOf().open).toBe('E-1'));
   });
 });
 

@@ -582,6 +582,11 @@ async fn board_page_is_served_for_known_keys_only() {
         (redirect.status, redirect.header("location")),
         (302, Some("/p/alpha/"))
     );
+    let kept = t.get("/p/alpha?open=I-81&tab=log").await;
+    assert_eq!(
+        (kept.status, kept.header("location")),
+        (302, Some("/p/alpha/?open=I-81&tab=log"))
+    );
     let refused = [
         ("/p/nope/", "unknown key"),
         ("/p/empty/", "a folder without board.json is no board"),

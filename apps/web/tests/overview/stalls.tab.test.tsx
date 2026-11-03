@@ -74,3 +74,15 @@ describe('S1 the stalls in the board header', { tags: ['standard'] }, () => {
     expect(within(header).queryByText(/stalled: argus/)).toBeNull();
   });
 });
+
+describe('I-85 the item reference in a board header stall', { tags: ['standard'] }, () => {
+  it('is a record link without the board prefix', async () => {
+    const view = renderAt('/p/argus/');
+    await waitFor(() => expect(view.sources.length).toBeGreaterThan(0));
+    await feed(view.sources, { cards: CARDS, stalls: STALLS });
+    const header = await screen.findByRole('banner');
+    const link = await within(header).findByRole('link', { name: 'I-12' });
+    expect(link.getAttribute('href')).toBe('/p/argus?open=I-12');
+    expect(header.textContent).toContain('stalled: I-12 doing 60 min, no agent');
+  });
+});

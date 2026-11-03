@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Badge, Inline, Tag } from '@drizztdourden08/tessera';
-import { stallsOf, stallText, useStalls } from '../../../../data/stalls';
-import { Age, BAD_LOOK } from '../../../../shell';
+import { ownStallText, stallsOf, useStalls } from '../../../../data/stalls';
+import { Age, BAD_LOOK, LinkedText } from '../../../../shell';
 import { STALLS_SHOWN } from '../BoardHeader.constants';
 import type { BoardStallsProps } from '../BoardHeader.type';
 
@@ -13,7 +13,9 @@ const BoardStalls = (props: BoardStallsProps) => {
     <Inline gap="xs" align="center" wrap>
       {stalls.slice(0, STALLS_SHOWN).map((stall) => (
         <Tag key={stall.id} pill {...BAD_LOOK} title={stall.text}>
-          {`stalled: ${stallText(stall.text)} `}
+          {'stalled: '}
+          <LinkedText text={ownStallText(stall.text, props.boardKey)} board={props.boardKey} />
+          {' '}
           <Age value={stall.since} />
         </Tag>
       ))}

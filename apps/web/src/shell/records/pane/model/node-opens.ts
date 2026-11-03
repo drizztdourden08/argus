@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind logic */
+import { itemCode } from '../../behavior/item-code';
 import { ENTRY_LEAVES, LEAF_KINDS } from './pane-model.constants';
 import type { NodeOpens, TrailNode } from '../trail/trail.type';
 
@@ -11,7 +12,7 @@ const nodeOpens = (node: TrailNode, boardKey: string): NodeOpens | null => {
   if (ENTRY_LEAVES.includes(type)) return here ? { kind: 'entry', id: node.item } : across(node);
   if (type === 'test') return here ? { kind: 'test', id: node.item } : across(node);
   if (LEAF_KINDS.includes(type)) return null;
-  return here ? { kind: 'item', id: node.item } : across(node);
+  return here ? { kind: 'item', id: itemCode({ id: node.item, type: node.type }) } : across(node);
 };
 
 export { nodeOpens };

@@ -61,8 +61,20 @@ fn encode(s: &str) -> String {
     })
 }
 
+fn query_suffix(ctx: &Ctx) -> String {
+    if ctx.query_all().is_empty() {
+        return String::new();
+    }
+    let pairs = ctx.query_all().iter().map(|(k, v)| (k.as_str(), v.as_str()));
+    let query = form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(pairs)
+        .finish();
+    format!("?{query}")
+}
+
 async fn slash(ctx: Ctx) -> Reply {
-    Ok(redirect(&format!("/p/{}/", encode(ctx.param("key"))), &[]))
+    let target = format!("/p/{}/{}", encode(ctx.param("key")), query_suffix(&ctx));
+    Ok(redirect(&target, &[]))
 }
 
 async fn board(ctx: Ctx) -> Reply {

@@ -32,7 +32,7 @@ const ItemCard = (props: ItemCardProps) => {
       }}
       title={item.title}
       openLabel={`Open ${code}: ${item.title}`}
-      onOpen={() => onOpen(item.id)}
+      onOpen={() => onOpen(code)}
       signals={<CardTags card={card} now={now} onOpen={onOpen} />}
       foot={<CardFoot card={card} group={group} now={now} />}
       attrs={{ 'data-item': item.id }}

@@ -92,7 +92,7 @@ describe('I-77 P6 the dependency trail in the Links tab', { tags: ['standard'] }
     const { dialog } = await linksOf(trail([local], 2));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
     fireEvent.click(within(tree).getByRole('button', { name: 'Open K-2: Wire the lobby' }));
-    await waitFor(() => expect(paneOf().open).toBe('I-2'));
+    await waitFor(() => expect(paneOf().open).toBe('K-2'));
   });
 
   it('opens a node of another board through the link of that board', async () => {
