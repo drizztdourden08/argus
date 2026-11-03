@@ -245,7 +245,12 @@
         "thread": "coordinator",
         "task": "build the pedestal fix",
         "status": "working",
-        "kind": "build"
+        "kind": "build",
+        "items": ["I-1"],
+        "master": false,
+        "blockedBy": [],
+        "where": "agent-ab12",
+        "whereSource": "auto"
       },
       "A-2": {
         "id": "A-2",

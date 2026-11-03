@@ -6,8 +6,10 @@
 //! * `agent-checkin`: an agent on a model of opus level or above (anything that is not haiku or sonnet)
 //!   wakes its thread every `checkinMin` minutes (15 to 30, the lead's choice, default 20). The clock runs
 //!   from its start, or from when the dashboard started when that was later.
+//! * `agent-unassigned`: an agent with no item `unassigned_ms` (default 10 minutes) after it started leaves
+//!   one passive notice (an agent works on an item, R21); it is not repeated.
 //!
-//! A record the reconciler flagged (`orphanSince`, `idleSince`) gets neither: its own wakes say it better.
+//! A record the reconciler flagged (`orphanSince`, `idleSince`) gets none: its own wakes say it better.
 //! The state is in memory only: a restart forgets what was sent.
 
 use std::collections::{HashMap, HashSet};
@@ -39,6 +41,8 @@ pub struct AgentWakeConfig {
     pub stale_repeat_ms: i64,
     /// The default check-in period.
     pub checkin_ms: i64,
+    /// An agent with no item this long after it started leaves one notice.
+    pub unassigned_ms: i64,
 }
 
 impl Default for AgentWakeConfig {
@@ -48,6 +52,7 @@ impl Default for AgentWakeConfig {
             stale_wake_ms: 20 * 60_000,
             stale_repeat_ms: 30 * 60_000,
             checkin_ms: 20 * 60_000,
+            unassigned_ms: 10 * 60_000,
         }
     }
 }
@@ -62,6 +67,7 @@ impl AgentWakeConfig {
             stale_wake_ms: section_ms(section, "staleWakeMs", d.stale_wake_ms),
             stale_repeat_ms: section_ms(section, "staleRepeatMs", d.stale_repeat_ms),
             checkin_ms: section_ms(section, "checkinMs", d.checkin_ms),
+            unassigned_ms: section_ms(section, "unassignedMs", d.unassigned_ms),
         }
     }
 }
@@ -96,6 +102,7 @@ fn mins(ms: i64) -> String {
 struct Sent {
     stale: i64,
     checkin: i64,
+    unassigned: bool,
 }
 
 /// The agent reminders.
@@ -219,10 +226,39 @@ impl AgentWakes {
                 checkin_text(agent, now),
             ))
         } else {
-            None
+            self.unassigned(now, (scope, thread.as_str()), agent, &mut rec)
         };
         self.sent.insert(key.to_owned(), rec);
         wake
+    }
+
+    /// The one notice of an agent that still has no item `unassigned_ms` after it started.
+    fn unassigned(
+        &self,
+        now: i64,
+        (scope, thread): (&str, &str),
+        agent: &AgentView,
+        rec: &mut Sent,
+    ) -> Option<WakeInput> {
+        let started = ms_or_zero(agent.started_at.some());
+        let waited = started > 0 && now - started >= self.config.unassigned_ms;
+        if rec.unassigned || agent.rec.item.some().is_some() || !waited {
+            return None;
+        }
+        rec.unassigned = true;
+        let text = format!(
+            "{} has no item {} after it started: give it one (coord agent set {} --item I-n).",
+            who(agent),
+            mins(now - started),
+            agent.rec.id.as_str()
+        );
+        Some(WakeInput::about(
+            scope,
+            thread,
+            "agent-unassigned",
+            agent.rec.id.as_str(),
+            text,
+        ))
     }
 }
 

@@ -258,3 +258,18 @@ coord agent start <name> "<task>" ... --item I-n
   and marks the rest `relink`. List them with `coord launcher list` and answer each with
   `coord launcher link <name> I-n`, or retire it.
 - The hooks call none of these, so no hook changes.
+
+## 13. Agents are linked records (I-85 P2)
+
+- `coord agent start <name> "<task>" --model m --why "..." --item I-n [--item I-m ...]
+  (--worktree <path|auto> | --master) [--blocked-by id ...]` is refused without an item or without a
+  place, with the fix in one line. `--worktree auto` means the `agent-<claudeId>` folder Claude makes
+  for the sub-agent (Argus finds it once the scan sees it); `--master` means the main checkout. Put
+  `--master` after the name and the task. `--item` also takes `I-1,I-2`.
+- `coord agent set A-n` gains `--item` (replaces the list, `""` clears), `--add-item I-n`,
+  `--worktree <path|auto>`, `--master` and `--blocked-by id ...` (replaces, `""` clears). A blocker is
+  an I-, T-, H-, Q-, D- or A- id of the board, never text.
+- The record carries `items` (`item` stays the first), `master` and `blockedBy`. The hooks still make
+  their records without them; start (or `agent set`) fills them in.
+- Argus leaves a passive `agent-unassigned` notice for an agent with no item 10 minutes after it
+  started. Skill text: start every sub-agent with `--item` and `--worktree auto` (or `--master`).

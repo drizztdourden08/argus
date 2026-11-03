@@ -1,7 +1,9 @@
-//! `coord agent set <A-id|name> [--task t] [--model m --why "..."] [--kind k] [--item I]
-//! [--branch b] [--worktree w] [--status waiting|working] [--checkin m] [--claude-id id]`: changes
-//! the named fields. A new model needs a new why; `--status` on an ended record is the resume of
-//! the same sub-agent under its Claude id.
+//! `coord agent set <A-id|name> [--task t] [--model m --why "..."] [--kind k] [--item I ...]
+//! [--add-item I] [--branch b] [--worktree w|auto | --master] [--blocked-by id ...]
+//! [--status waiting|working] [--checkin m] [--claude-id id]`: changes the named fields. `--item`
+//! replaces the list of items (`--item ""` clears it), `--add-item` appends, `--blocked-by`
+//! replaces the ids it waits on. A new model needs a new why; `--status` on an ended record is the
+//! resume of the same sub-agent under its Claude id.
 
 use argus_board::Board;
 use argus_board::agents::is_live;
@@ -12,6 +14,7 @@ use serde_json::Value;
 use super::bind::claude_id;
 use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{Want, agent_mut, clear_ending, named};
+use super::links::for_set;
 use super::takeover;
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
@@ -20,7 +23,7 @@ use crate::verbs::agent::base::opt::{given, value};
 use crate::verbs::agent::base::{Run, write};
 use crate::who::Caller;
 
-const FIELDS: [&str; 5] = ["task", "kind", "item", "branch", "worktree"];
+const FIELDS: [&str; 3] = ["task", "kind", "branch"];
 
 /// The model a record has or asked for: the new `--model`, else the one it was recorded with,
 /// else the one its transcript ran on.
@@ -134,7 +137,8 @@ fn plan(
     status: Option<&str>,
 ) -> Result<(Fields, Option<String>), CoordError> {
     let agent = doc(board, "agents", id).cloned().unwrap_or(Value::Null);
-    let mut fields = fields_of(board, run.options, &FIELDS)?;
+    let mut fields = fields_of(run.options, &FIELDS)?;
+    fields.extend(for_set(board, run.options, &agent)?);
     let model = value(run.options, "model")?;
     let why = value(run.options, "why")?;
     add_justification(&mut fields, &agent, (model, why))?;
@@ -181,7 +185,7 @@ fn change(
     }
     if fields.is_empty() {
         return Err(CoordError::refuse(
-            "nothing to change: pass --task, --model with --why, --kind, --item, --branch, --worktree, --status, --claude-id or --checkin (opus-level agents).",
+            "nothing to change: pass --task, --model with --why, --kind, --item, --add-item, --branch, --worktree, --master, --blocked-by, --status, --claude-id or --checkin (opus-level agents).",
         ));
     }
     let keys: Vec<&str> = fields.keys().map(String::as_str).collect();

@@ -6,6 +6,7 @@ mod bind;
 mod fields;
 mod find;
 mod finish;
+mod links;
 mod list;
 mod note;
 mod reconcile;

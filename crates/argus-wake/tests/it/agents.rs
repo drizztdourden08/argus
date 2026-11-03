@@ -27,7 +27,7 @@ impl AgentLive for Live {
 fn agent(id: &str, extra: &Value) -> Value {
     let mut record = json!({
         "id": id, "name": format!("agent {id}"), "thread": "lead", "model": "sonnet", "status": "working",
-        "task": "build the thing", "startedAt": iso(START), "updatedAt": iso(START),
+        "task": "build the thing", "item": "I-1", "startedAt": iso(START), "updatedAt": iso(START),
     });
     argus_wake::testkit::merge(&mut record, extra);
     record
@@ -302,4 +302,45 @@ fn the_periods_come_from_the_agents_section_of_the_config() {
         AgentWakeConfig::default().stale_repeat_ms
     );
     assert_eq!(config.checkin_ms, AgentWakeConfig::default().checkin_ms);
+}
+
+#[test]
+fn an_agent_with_no_item_leaves_one_passive_notice_ten_minutes_after_it_started() {
+    let mut world = World::new();
+    world.add("A-5", &json!({"item": null}));
+    assert_eq!(world.at(9), 0);
+    assert_eq!(world.at(10), 1);
+    let notice = &world.events[0];
+    assert_eq!(
+        (
+            notice.scope.as_str(),
+            notice.thread.as_str(),
+            notice.reason.as_str(),
+            notice.subject.as_deref()
+        ),
+        ("alpha", "lead", "agent-unassigned", Some("A-5"))
+    );
+    assert!(
+        notice.text.contains("has no item 10m after it started"),
+        "{}",
+        notice.text
+    );
+    assert_eq!(world.at(11), 0);
+    assert_eq!(world.at(60), 0, "once only");
+    assert!(argus_wake::wake_policy::is_passive("agent-unassigned"));
+}
+
+#[test]
+fn a_record_the_reconciler_flagged_never_gets_the_unassigned_notice() {
+    let mut world = World::new();
+    world.add("A-5", &json!({"item": null, "idleSince": iso(START)}));
+    assert_eq!(world.at(30), 0);
+    assert_eq!(world.reasons("agent-unassigned"), 0);
+}
+
+#[test]
+fn the_unassigned_period_comes_from_the_agents_section_of_the_config() {
+    let config = AgentWakeConfig::from_json(&json!({"unassignedMs": 30000}));
+    assert_eq!(config.unassigned_ms, 30000);
+    assert_eq!(AgentWakeConfig::default().unassigned_ms, 10 * MIN);
 }

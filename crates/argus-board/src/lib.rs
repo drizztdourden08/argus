@@ -4,6 +4,7 @@
 //! portfolio cards and keeps the ledger of dependencies between projects.
 #![deny(clippy::cognitive_complexity)]
 
+pub mod agent_links;
 pub mod agents;
 pub mod blocked;
 pub mod content;

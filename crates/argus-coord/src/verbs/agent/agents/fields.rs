@@ -1,10 +1,8 @@
-//! The fields an agent verb sets from its options (`AGENT_FIELD` of `agents.mjs`), the model and
+//! The fields an agent verb sets from its options (`task`, `kind`, `branch`), the model and
 //! its justification, the check-in time and the Claude id, each checked as the page's edit
 //! checks it.
 
 use argus_agents::model_rules::{ModelWhy, check_checkin, check_model_why};
-use argus_board::Board;
-use argus_board::json::{display, doc, truthy};
 use argus_board::limits::{optional_text, require_str};
 use argus_core::js;
 use serde_json::{Map, Value};
@@ -29,34 +27,24 @@ fn kind_of(v: &str) -> Result<Value, CoordError> {
     )))
 }
 
-fn item_of(board: &Board, v: &str) -> Result<Value, CoordError> {
-    if v.is_empty() {
-        return Ok(Value::Null);
-    }
-    match doc(board, "items", v) {
-        Some(item) if !truthy(item, "deletedAt") => Ok(Value::from(display(&item["id"]))),
-        _ => Err(CoordError::refuse(format!("no item \"{v}\"."))),
-    }
-}
-
-fn check(board: &Board, key: &str, v: &str) -> Result<Value, CoordError> {
+fn check(key: &str, v: &str) -> Result<Value, CoordError> {
     Ok(match key {
         "task" => Value::from(require_str("task", v)?),
         "kind" => kind_of(v)?,
-        "item" => item_of(board, v)?,
         other => optional_text(other, &Value::from(v))?.map_or(Value::Null, Value::from),
     })
 }
 
-/// The fields the options name among `keys` (`task`, `kind`, `item`, `branch`, `worktree`).
+/// The fields the options name among `keys` (`task`, `kind`, `branch`). The items, the place and
+/// the blockers of an agent are read by [`super::links`].
 ///
 /// # Errors
 /// A bare flag, or a value the field refuses.
-pub fn fields_of(board: &Board, options: &Options, keys: &[&str]) -> Result<Fields, CoordError> {
+pub fn fields_of(options: &Options, keys: &[&str]) -> Result<Fields, CoordError> {
     let mut out = Fields::new();
     for key in keys {
         if let Some(v) = value(options, key)? {
-            out.insert((*key).to_owned(), check(board, key, v)?);
+            out.insert((*key).to_owned(), check(key, v)?);
         }
     }
     Ok(out)

@@ -31,6 +31,7 @@ mod values;
 pub use note::create_note;
 
 pub(crate) use assignee::{hint as assignee_hint, stamp_todo, todo as todo_assignee};
+pub(crate) use blocked_by::check as blocked_by_list;
 pub(crate) use create::{item as create_item, wanted as wants_create};
 pub(crate) use description::written as description_text;
 pub(crate) use edit::{applies as edits, item_edit};

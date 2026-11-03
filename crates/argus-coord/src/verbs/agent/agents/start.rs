@@ -1,6 +1,8 @@
-//! `coord agent start <name> "<task>" --model m --why "..." [--checkin 15..30]`: registers a
-//! running sub-agent and prints its A-id. A record the hooks already made for it is filled in
-//! instead of adding a second one, and a same-named agent still running is marked stopped.
+//! `coord agent start <name> "<task>" --model m --why "..." --item I-n [--item ...] (--worktree
+//! <path|auto> | --master) [--blocked-by id ...] [--checkin 15..30]`: registers a running sub-agent
+//! and prints its A-id. An agent works on an item and runs somewhere, so a start without both is
+//! refused with the fix. A record the hooks already made for it is filled in instead of adding a
+//! second one, and a same-named agent still running is marked stopped.
 
 use argus_agents::model_rules::ModelWhy;
 use argus_agents::text::same_model;
@@ -16,6 +18,7 @@ use serde_json::{Map, Value};
 use super::bind::{claude_id, hook_record, launch_for};
 use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{agent_mut, clear_ending, owner_of};
+use super::links::{for_items, for_start};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::apply::allow_create;
@@ -66,14 +69,6 @@ fn replace_running(
     })
 }
 
-fn for_item(agent: &Value) -> String {
-    if truthy(agent, "item") {
-        format!(" for {}", display(&agent["item"]))
-    } else {
-        String::new()
-    }
-}
-
 /// The hook's record is this agent: it keeps its id, source and transcript, the lead's fields go
 /// on top. Returns the line to print.
 fn bind(
@@ -117,7 +112,7 @@ fn bind(
         let same = same_model(&entry.model.model, &display(&agent["modelUsed"]));
         set(agent, "modelMismatch", !same);
     }
-    let item = for_item(agent);
+    let item = for_items(agent);
     stamp(board, "agents", id, &who.actor)?;
     let running = live_agent_ids(board, Some(&entry.owner)).len();
     let how = if resumed {
@@ -142,8 +137,11 @@ fn add(board: &mut Board, who: &Caller, entry: &Entry<'_>) -> Result<String, Coo
         ("modelWhy", Value::Null),
         ("kind", Value::from("build")),
         ("item", Value::Null),
+        ("items", Value::Array(Vec::new())),
         ("branch", Value::Null),
         ("worktree", Value::Null),
+        ("master", Value::Bool(false)),
+        ("blockedBy", Value::Array(Vec::new())),
         ("status", Value::from("working")),
         ("note", Value::Null),
         ("result", Value::Null),
@@ -161,7 +159,7 @@ fn add(board: &mut Board, who: &Caller, entry: &Entry<'_>) -> Result<String, Coo
         base.insert("checkinMin".to_owned(), Value::from(minutes));
     }
     let id = create_doc(board, "agents", "A", base, &who.actor)?;
-    let item = doc(board, "agents", &id).map(for_item).unwrap_or_default();
+    let item = doc(board, "agents", &id).map(for_items).unwrap_or_default();
     let running = live_agent_ids(board, Some(&entry.owner)).len();
     Ok(format!(
         "{id}: agent {} started on {}{item} ({running} running)",
@@ -190,7 +188,7 @@ fn entry_of<'a>(
 ) -> Result<Entry<'a>, CoordError> {
     let owner = owner_of(board, Some(who), run.options)?;
     allow_create(who, "agents", &owner)?;
-    let fields = fields_of(board, run.options, &["kind", "item", "branch", "worktree"])?;
+    let mut fields = fields_of(run.options, &["kind", "branch"])?;
     let kind = fields
         .get("kind")
         .and_then(Value::as_str)
@@ -201,6 +199,7 @@ fn entry_of<'a>(
         kind,
     )?;
     let checkin = checkin(Some(&model.model), value(run.options, "checkin")?)?;
+    fields.extend(for_start(board, run.options)?);
     let text = format!(
         "{name} {task} {} {}",
         text_of(&fields, "branch"),

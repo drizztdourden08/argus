@@ -13,6 +13,7 @@ use super::{
     typed::{self, Outcome},
     who::Who,
 };
+use crate::agent_links::settle;
 use crate::{
     Board,
     error::{BoardError, refuse},
@@ -74,6 +75,9 @@ fn write_fields(
     }
     if coll == "entries" {
         set(d, "editedAt", now_iso());
+    }
+    if coll == "agents" {
+        settle(d, fields);
     }
     if coll == "actions" && fields.iter().any(|f| f == "status") {
         let done = d["status"] == "done";
