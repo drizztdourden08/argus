@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind barrel */
+export { assigneeOfRecord } from './behavior/assignee-of-record';
+export { shownCode } from './behavior/shown-code';
 export { assigneeLook } from './behavior/assignee-look';
 export { categoryColor } from './behavior/category-color';
 export { groupRecords } from './behavior/group-records';
