@@ -325,6 +325,28 @@ fn a_running_agent_holds_it_and_it_goes_when_the_agent_ends() {
 }
 
 #[test]
+fn a_worktree_doc_names_the_agent_that_owns_it_a_running_one_before_an_ended_one() {
+    let (_fx, h) = world(&["agent-a1", "agent-a2"]);
+    assert_eq!(h.docs()["agent-a1"].link.agent, None);
+    let record = |id: &str, claude: &str, status: &str, ended_ms: Option<i64>| AgentFact {
+        id: id.into(),
+        thread: Some("lead".into()),
+        status: status.into(),
+        claude_id: Some(claude.into()),
+        ended_ms,
+        ..AgentFact::default()
+    };
+    h.board().agents = vec![
+        record("A-1", "a1", "working", None),
+        record("A-2", "a1", "done", Some(h.clock_now() - 1000)),
+        record("A-3", "a2", "done", Some(h.clock_now() - 1000)),
+    ];
+    h.scan();
+    assert_eq!(h.docs()["agent-a1"].link.agent.as_deref(), Some("A-1"));
+    assert_eq!(h.docs()["agent-a2"].link.agent.as_deref(), Some("A-3"));
+}
+
+#[test]
 fn a_process_in_it_holds_it_and_it_goes_when_the_process_ends() {
     let (fx, h) = world(&["agent-a1"]);
     set_lane(&h, "done");

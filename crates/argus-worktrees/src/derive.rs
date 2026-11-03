@@ -84,6 +84,7 @@ impl Service {
             return;
         }
         let link = self.link_of(board, fact);
+        doc.link.agent = self.owners(board, fact).last().map(|a| a.id.clone());
         doc.link.link_source = link.as_ref().map(|l| l.source);
         doc.link.item = link.map(|l| l.item);
         doc.link.unlinked = self.is_flagged_unlinked(project, &fact.id);

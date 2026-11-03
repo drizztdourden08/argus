@@ -2,14 +2,17 @@
 //! beside it. The index is rebuilt by [`ReleaseStore::rescan`]; an entry without a readable
 //! `release.json`, or under a temp name, is not in it (it is half written).
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError, RwLock};
 
 use argus_core::ids::is_key;
+use argus_core::remote::ci_root_of;
 use serde_json::Value;
 
 use super::record::{Place, Release, parse};
 use super::semver::compare;
+use super::shipped::{Shipped, of_range};
 use crate::Replay;
 use crate::safe_path::{children, segment_ok};
 use crate::stamp::StampCache;
@@ -21,6 +24,8 @@ pub struct ReleaseStore {
     root: PathBuf,
     index: RwLock<Arc<Vec<Release>>>,
     cache: Mutex<StampCache<Value>>,
+    /// What git said of a (project, previous commit, commit) triple, kept until the process ends.
+    shipped: Mutex<HashMap<(String, String, String), Shipped>>,
 }
 
 /// The names of the folders in a folder that can be part of the store.
@@ -42,7 +47,45 @@ impl ReleaseStore {
             root: root.to_path_buf(),
             index: RwLock::default(),
             cache: Mutex::default(),
+            shipped: Mutex::default(),
         }
+    }
+
+    /// The items and merged pull requests a release ships: the commits since the previous version
+    /// of its channel, from the project's `ciRoots` checkout. Empty while git cannot answer (the
+    /// next call asks again); a good answer is kept by commit pair.
+    #[must_use]
+    pub fn shipped(&self, release: &Release, previous: Option<&Release>) -> Shipped {
+        let Some(repo) = self
+            .root
+            .parent()
+            .and_then(|home| ci_root_of(home, &release.project))
+        else {
+            return Shipped::default();
+        };
+        let before = previous
+            .map(|p| p.commit.as_str())
+            .filter(|c| !c.is_empty());
+        let key = (
+            release.project.clone(),
+            before.unwrap_or_default().to_owned(),
+            release.commit.clone(),
+        );
+        let kept = self
+            .shipped
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(&key)
+            .cloned();
+        if let Some(found) = kept {
+            return found;
+        }
+        let asked = of_range(Path::new(&repo), before, &release.commit);
+        if let Some(found) = &asked {
+            let mut all = self.shipped.lock().unwrap_or_else(PoisonError::into_inner);
+            all.insert(key, found.clone());
+        }
+        asked.unwrap_or_default()
     }
 
     /// The folder of the store.

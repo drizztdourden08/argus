@@ -28,7 +28,8 @@ fn runs_of(runs: &[Value], agent: &Value) -> Vec<Value> {
     mine
 }
 
-/// The agents, with `runs` newest first, optionally only the live ones or one thread's.
+/// The agents, with `runs` newest first, optionally only the live ones or one thread's. The docs are
+/// the exported ones, so each also carries `items`, `master`, `blockedBy`, `where` and `whereSource`.
 pub fn list_agents(backend: &dyn McpBackend, key: &str, args: &Value) -> Value {
     let live = flag(args, "live");
     let thread = arg_str(args, "thread");

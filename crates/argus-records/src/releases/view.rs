@@ -53,21 +53,26 @@ fn notes_url(store: &ReleaseStore, r: &Release) -> Value {
     }
 }
 
-fn version_json(store: &ReleaseStore, r: &Release) -> Value {
+/// A version with `items` and `prs`: what the commits since the previous version of the channel
+/// name (empty when git cannot be reached).
+fn version_json(store: &ReleaseStore, r: &Release, previous: Option<&Release>) -> Value {
+    let (items, prs) = store.shipped(r, previous).json();
     json!({
         "version": r.version, "tag": r.tag, "commit": r.commit, "title": r.title,
         "publishedAt": r.published_at, "notesUrl": notes_url(store, r),
         "assets": r.assets.iter().map(|a| asset_json(r, a)).collect::<Vec<_>>(),
         "packages": r.packages.iter().map(|p| package_json(r, p)).collect::<Vec<_>>(),
         "replay": replay_json(r.replay.as_ref()),
+        "items": items, "prs": prs,
     })
 }
 
 fn channel_json(store: &ReleaseStore, project: &str, channel: &str) -> Value {
-    let versions: Vec<Value> = store
-        .channel(project, channel)
+    let releases = store.channel(project, channel);
+    let versions: Vec<Value> = releases
         .iter()
-        .map(|r| version_json(store, r))
+        .enumerate()
+        .map(|(at, r)| version_json(store, r, releases.get(at + 1)))
         .collect();
     json!({ "channel": channel, "latest": store.latest(project, channel), "versions": versions })
 }

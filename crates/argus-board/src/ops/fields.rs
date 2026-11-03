@@ -4,6 +4,7 @@
 use argus_core::js;
 use serde_json::Value;
 
+use super::agent_fields;
 use super::target::{ITEM_STATUSES, item_arg, one_of, record_arg};
 use super::typed;
 use super::who::Who;
@@ -51,7 +52,15 @@ pub(crate) fn editable(coll: &str, field: &str) -> bool {
             | ("threads", "subject" | "brief" | "rank")
             | (
                 "agents",
-                "note" | "task" | "item" | "branch" | "worktree" | "status"
+                "note"
+                    | "task"
+                    | "item"
+                    | "items"
+                    | "master"
+                    | "blockedBy"
+                    | "branch"
+                    | "worktree"
+                    | "status"
             )
     ) || (coll == "items" && field.starts_with("fields."))
 }
@@ -78,6 +87,9 @@ pub(crate) fn check(coll: &str, field: &str, v: &Value, cx: &EditCtx) -> Result<
         ("actions", "assignee") => typed::todo_assignee(cx.board, v),
         ("actions", "item") => record_or_none(v, cx),
         ("agents", "item") => item_or_none(v, cx),
+        ("agents", "items") => agent_fields::items(cx.board, v),
+        ("agents", "master") => agent_fields::master(v),
+        ("agents", "blockedBy") => agent_fields::blocked_by(cx.board, v),
         _ => Err(refuse(format!("{field} cannot be edited on {coll}."))),
     }
 }

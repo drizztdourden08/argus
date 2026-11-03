@@ -243,7 +243,7 @@
   {
     "name": "list_agents",
     "title": "List agents",
-    "description": "Sub-agents registered on the board, each with the dashboard runs it started.",
+    "description": "Sub-agents registered on the board, each with the dashboard runs it started, the items it works on (items), where it runs (where: a worktree, its agent-<claudeId> folder or master; whereSource: manual or auto) and what it waits on (blockedBy).",
     "inputSchema": {
       "type": "object",
       "properties": {

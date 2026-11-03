@@ -177,6 +177,10 @@ async fn list_agents_joins_runs_and_filters_live_and_thread() {
         .iter()
         .find(|a| a["id"] == "A-1");
     assert_eq!(ids(builder.expect("A-1"), "runs"), strings(&["R-1"]));
+    let linked = builder.expect("A-1");
+    assert_eq!(linked["items"], json!(["I-1"]));
+    assert_eq!(linked["where"], "agent-ab12");
+    assert_eq!(linked["whereSource"], "auto");
     let live = rig
         .ok("list_agents", json!({ "project": "alpha", "live": true }))
         .await;

@@ -799,7 +799,7 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `listeners` | The SSE listener table, v2 replacement, legacy listeners, labels |
 | `registry` | One row per live thread, states, the three failures, `wake_faults`, the Overlord's wake, the `registry` docs |
 | `presence` | Open board tabs, `board-closed` faults |
-| `agent_wakes` | `agent-stale` and `agent-checkin` |
+| `agent_wakes` | `agent-stale`, `agent-checkin` and `agent-unassigned` |
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
 | `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
 | `dep_wakes` | `dep-request`, `dep-resolved`, `dep-blocked`, `dep-cancelled` and `dep-reopened` from the history of the dependency ledger, once per `D-n#seq` (docs/wake-policy.md) |
@@ -832,6 +832,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `lead-info` | passive | a lead's note, for information only |
 | `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
 | `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
+| `agent-unassigned` | passive | an agent with no item 10 minutes after it started: it works on an item (R21), told once |
 | `kanban-stale` | passive | item staleness |
 | `process-alert` | passive | hogs and orphans the process monitor saw |
 | `worktree-stale`, `worktree-review` | passive | worktree hygiene |
@@ -958,6 +959,22 @@ Three services and one shared reader over one data source (the sub-agent transcr
 
 The folders come from `agents.claudeHome` and `agents.claudeTemp` in config, so tests point them
 at temp folders.
+
+#### Agents are linked records (I-85 P2, R21 and R5)
+
+An agent record carries `items` (the items it works on; `item` stays the first one), `worktree` or
+`master: true` (where it runs) and `blockedBy` (ids of the board, never text). `argus_board::agent_links`
+reads them with a fallback for old records (`item` only, `worktree` only). `coord agent start` by a lead
+refuses a call without `--item` or without `--worktree <path|auto>` / `--master`; the records the
+hooks make are not touched and fill in later through `coord agent set`. The export writes, on each agent
+doc, `items`, `master`, `blockedBy`, `where` (the named worktree, `master`, or the folder
+`agent-<claudeId>`) and `whereSource` (`manual` or `auto`); on each item doc `agents`
+(`{id, name, status}` of the working ones); on each worktree doc `agent` (the owner `judge::owns`
+finds). Nothing is rewritten on disk. `agent-unassigned` is the passive notice of an agent with no item
+10 minutes after it started. Each release version lists `items` (I-n tokens of the commit subjects since
+the previous version of its channel) and `prs` (`{number, commit}` of merges and squashes in that range),
+read from the project's `ciRoots` checkout and cached by commit pair; both are empty when git cannot be
+reached.
 
 ### Activity log
 

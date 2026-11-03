@@ -186,3 +186,94 @@ fn files_are_served_and_everything_that_leaves_the_store_or_lists_it_is_refused(
         assert_eq!(s.serve(bad), None, "{bad}");
     }
 }
+
+fn git(repo: &Path, args: &[&str]) -> String {
+    let out = std::process::Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["-c", "user.name=t", "-c", "user.email=t@example.com"])
+        .args(["-c", "commit.gpgsign=false"])
+        .args(args)
+        .output()
+        .expect("git runs");
+    assert!(out.status.success(), "git {args:?}: {out:?}");
+    String::from_utf8(out.stdout)
+        .expect("utf8")
+        .trim()
+        .to_owned()
+}
+
+fn commit(repo: &Path, subject: &str) -> String {
+    git(repo, &["commit", "--allow-empty", "-m", subject]);
+    git(repo, &["rev-parse", "HEAD"])
+}
+
+fn release_at(root: &Path, version: &str, sha: &str) {
+    let base = format!("brock/latest/{version}");
+    put(
+        root,
+        &format!("{base}/release.json"),
+        record(version, "done").replace("abc1234", sha),
+    );
+}
+
+#[test]
+fn a_version_lists_the_items_and_merged_prs_of_the_commits_since_the_previous_one() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let repo = dir.path().join("repo");
+    fs::create_dir_all(&repo).expect("repo folder");
+    git(&repo, &["init", "-q"]);
+    let first = commit(&repo, "Start the pad (I-1)");
+    commit(&repo, "Fix I-2 and I-3 together");
+    let second = commit(&repo, "Pad overlay for I-7 (#5)");
+    put(
+        dir.path(),
+        "remote.json",
+        json!({ "mode": "local", "ciRoots": { "brock": repo.to_string_lossy() } }).to_string(),
+    );
+    let root = dir.path().join("releases");
+    release_at(&root, "1.0.0", &first);
+    release_at(&root, "1.1.0", &second);
+    let s = store(&dir);
+    let versions = s.channels_json("brock")[0]["versions"].clone();
+    assert_eq!(versions[0]["version"], "1.1.0");
+    assert_eq!(versions[0]["items"], json!(["I-2", "I-3", "I-7"]));
+    assert_eq!(
+        versions[0]["prs"],
+        json!([{ "number": 5, "commit": second }])
+    );
+    assert_eq!(
+        versions[1]["items"],
+        json!(["I-1"]),
+        "no earlier version: the history up to it"
+    );
+    assert_eq!(versions[1]["prs"], json!([]));
+}
+
+#[test]
+fn a_version_has_empty_items_and_prs_when_the_project_has_no_checkout() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    release(
+        &dir.path().join("releases"),
+        "latest",
+        "1.0.0",
+        "done",
+        true,
+    );
+    let versions = store(&dir).channels_json("brock")[0]["versions"].clone();
+    assert_eq!(versions[0]["items"], json!([]));
+    assert_eq!(versions[0]["prs"], json!([]));
+}
+
+#[test]
+fn an_old_record_without_a_commit_is_listed_with_empty_items() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let root = dir.path().join("releases");
+    put(
+        &root,
+        "brock/latest/0.1.0/release.json",
+        json!({ "kind": "release", "project": "brock", "version": "0.1.0" }).to_string(),
+    );
+    let versions = store(&dir).channels_json("brock")[0]["versions"].clone();
+    assert_eq!(versions[0]["items"], json!([]));
+}

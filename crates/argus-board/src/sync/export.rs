@@ -6,6 +6,7 @@ use argus_core::{Coll, DocChange};
 use serde_json::{Map, Value, json};
 
 use super::PAGE_COLLECTIONS;
+use super::agent_docs::{public_agent, working_on};
 use crate::Board;
 use crate::blocked::causes;
 use crate::json::{display, obj, section, set};
@@ -59,8 +60,8 @@ fn public_entry(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
     out
 }
 
-/// An item as the page sees it: with `blocked`, why it is blocked, computed from the whole board
-/// and never kept on disk, its `images` with the `url` the page loads them from, and `servedBy`, the
+/// An item as the page sees it: with `blocked`, why it is blocked, and `agents`, the agents working
+/// on it (both computed from the whole board and never kept on disk), its `images` with the `url` the page loads them from, and `servedBy`, the
 /// counts of the builds and worktrees that serve it (only when something does).
 fn public_item(
     doc: &Value,
@@ -70,6 +71,7 @@ fn public_item(
 ) -> Value {
     let mut out = public_entry(doc, proof_url);
     set(&mut out, "blocked", json!(causes(board, id)));
+    set(&mut out, "agents", working_on(board, id));
     let served = served_by(board, id);
     let (builds, closed, worktrees) = (
         served.builds.len(),
@@ -151,6 +153,7 @@ fn public_doc(
         Coll::Entries => public_entry(doc, proof_url),
         Coll::Builds => public_build(doc, id, board),
         Coll::Launchers => public_launcher(doc, id, board),
+        Coll::Agents => public_agent(doc),
         _ => doc.clone(),
     }
 }

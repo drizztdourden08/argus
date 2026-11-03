@@ -2,6 +2,7 @@
 //! open things that may use a worktree (items in progress, pull requests, launchers, bundles).
 
 use argus_board::Board;
+use argus_board::agent_links::items_of;
 use argus_core::clock::parse_ms;
 use argus_worktrees::{AgentFact, Link};
 use serde_json::{Map, Value};
@@ -36,7 +37,7 @@ fn agent_of(id: &str, rec: &Value) -> AgentFact {
         worktree: text(&rec["worktree"]),
         claude_id: text(&rec["claudeId"]).or_else(|| text(&rec["hookId"])),
         ended_ms: rec["finishedAt"].as_str().and_then(parse_ms),
-        item: text(&rec["item"]),
+        item: text(&rec["item"]).or_else(|| items_of(rec).into_iter().next()),
     }
 }
 
@@ -113,6 +114,15 @@ mod tests {
     //! K1: which open things and agents link to a worktree.
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn an_agent_with_a_list_of_items_links_its_worktree_to_the_first() {
+        let board: Board = json!({
+            "agents": {"A-1": {"id": "A-1", "thread": "lead", "status": "working", "claudeId": "a1",
+                "items": ["I-4", "I-5"]}}
+        });
+        assert_eq!(agents_of(&board)[0].item.as_deref(), Some("I-4"));
+    }
 
     #[test]
     fn the_open_things_and_the_agents_are_read() {

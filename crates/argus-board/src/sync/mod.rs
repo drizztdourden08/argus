@@ -6,6 +6,7 @@
 //! * [`export_docs`]: the board as page documents.
 //! * [`import_entries`]: the owner's new entries applied to the board, under the board lock.
 
+mod agent_docs;
 mod export;
 mod import;
 mod repeat;

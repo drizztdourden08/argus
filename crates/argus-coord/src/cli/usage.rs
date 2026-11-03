@@ -10,8 +10,8 @@ Thread side (every thread; read everything, change only what is yours):
   coord thread set [--subject <s>] [--note "..."] [--status <s>]   coord thread flag <needs-human|blocked> [--clear]
   coord thread list [--all] | show [name] | done | pause [name] | resume [name]
   coord thread archive [name] | unarchive [name]  (session gone: off the list, work stays visible; --as <name> works too)
-  coord agent start <name> "<task>" --model <haiku|sonnet|opus> --why "<justification>" [--checkin 15..30] [--kind build|test|research|chore] [--item I] [--branch b] [--worktree w]   (prints its A-id; --checkin 15..30: minutes between check-in wakes for an opus-level agent, pick by assumed complexity (15 for risky or sprawling work, 30 for a well-bounded task); required for opus level, ignored for haiku/sonnet)
-  coord agent note <A|name> "<text>" | set <A|name> [--task t] [--model m --why "..."] [--kind k] [--item I] [--branch b] [--worktree w] [--status waiting|working] [--checkin 15..30]
+  coord agent start <name> "<task>" --model <haiku|sonnet|opus> --why "<justification>" [--checkin 15..30] [--kind build|test|research|chore] --item I [--item I ...] (--worktree <path|auto> | --master) [--blocked-by id ...] [--branch b]   (prints its A-id; an agent works on an item and runs somewhere, so --item and a place are required; --checkin 15..30: minutes between check-in wakes for an opus-level agent, pick by assumed complexity (15 for risky or sprawling work, 30 for a well-bounded task); required for opus level, ignored for haiku/sonnet)
+  coord agent note <A|name> "<text>" | set <A|name> [--task t] [--model m --why "..."] [--kind k] [--item I ...] [--add-item I] [--branch b] [--worktree w|auto | --master] [--blocked-by id ...] [--status waiting|working] [--checkin 15..30]
   coord agent done <A|name> ["<result>"] | fail <A|name> "<reason>" | stop <A|name> | archive|unarchive|rm|restore <A|name>...
   coord agent list [--all] [--thread T] [--status s] [--json] | show <A|name>      (a name is your newest running agent with it)
   coord item add "<title>" [--desc "..."] [--ac "..."]... [--status <s>] [--before|--after <I>]

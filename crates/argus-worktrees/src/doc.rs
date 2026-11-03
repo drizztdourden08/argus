@@ -88,6 +88,9 @@ pub struct ItemLink {
     /// No item an hour after Argus first saw it (the `no item` chip).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub unlinked: bool,
+    /// The agent record (`A-n`) that owns it: a running one, else the last to end.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent: Option<String>,
 }
 
 /// The doc of one worktree.

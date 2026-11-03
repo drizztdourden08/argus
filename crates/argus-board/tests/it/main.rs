@@ -1,5 +1,6 @@
 mod common;
 
+mod agent_links;
 mod dep_inbox;
 mod deps;
 mod entry_images;

@@ -7,9 +7,17 @@
 use crate::agent_common::{As, Rig};
 use serde_json::{Value, json};
 
+/// A start with the item and the place every lead start needs (I-85 P2), unless `extra` names its own.
 fn start(rig: &Rig, name: &str, extra: &[&str]) -> crate::common::Ran {
+    rig.with_item();
     let mut args = vec!["agent", "start", name, "do the work"];
     args.extend(extra);
+    if !extra.contains(&"--item") {
+        args.extend(["--item", "I-1"]);
+    }
+    if !extra.contains(&"--worktree") && !extra.contains(&"--master") {
+        args.push("--master");
+    }
     rig.call(&args, As::Lead)
 }
 
@@ -535,6 +543,7 @@ fn registering_a_hook_recorded_agent_with_checkin_the_manual_value_wins() {
             "modelUsed": "claude-opus-5-5", "transcriptFile": null, "checkinMin": 20, "rev": 1,
         });
     });
+    rig.with_item();
     let before = rig.board()["agents"].as_object().unwrap().len();
     rig.ok(
         &[
@@ -548,6 +557,9 @@ fn registering_a_hook_recorded_agent_with_checkin_the_manual_value_wins() {
             "design: new overlay layout flow",
             "--checkin",
             "30",
+            "--item",
+            "I-1",
+            "--master",
         ],
         As::Lead,
     );
@@ -576,6 +588,7 @@ fn registering_with_a_claude_id_that_has_no_record_never_takes_another_agents_ho
             "agentType": "general-purpose", "modelUsed": null, "transcriptFile": null, "rev": 1,
         });
     });
+    rig.with_item();
     rig.ok(
         &[
             "agent",
@@ -588,6 +601,9 @@ fn registering_with_a_claude_id_that_has_no_record_never_takes_another_agents_ho
             "known cause, one module",
             "--claude-id",
             "other-id-0001",
+            "--item",
+            "I-1",
+            "--master",
         ],
         As::Lead,
     );
