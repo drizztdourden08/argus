@@ -28,6 +28,7 @@ fn verify_type(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
         say(&format!("unknown field {name}"));
     }
     verify_places(t, &mut say);
+    verify_serves(reg, t, &mut say);
     verify_groups(t, &mut say);
     verify_tabs(t, &mut say);
     verify_done(t, &mut say);
@@ -35,12 +36,39 @@ fn verify_type(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
     super::stages::verify(reg, t, out);
 }
 
+fn verify_serves(reg: &Registry, t: &ItemType, say: &mut impl FnMut(&str)) {
+    for served in &t.serves {
+        match reg.types.iter().find(|s| &s.id == served) {
+            None => say(&format!("serves type {served} does not exist")),
+            Some(s) if s.collection != Collection::Items => {
+                say(&format!("serves type {served} is not a work item type"));
+            }
+            Some(_) => {}
+        }
+    }
+}
+
 fn verify_places(t: &ItemType, say: &mut impl FnMut(&str)) {
     if let Some(chip) = t.card.chips.iter().find(|c| !t.fields.contains(c)) {
         say(&format!("card chip {chip} is not a field of the type"));
     }
-    if t.collection == Collection::Tests && !t.parents.is_empty() {
-        say("a test case has no parent type; plans hold it through their cases");
+    if t.collection != Collection::Items && !t.parents.is_empty() {
+        say("only a work item has a parent type; plans hold a test case through their cases");
+    }
+    verify_keys(t, say);
+}
+
+/// The id key and the served types belong to the types kept outside `items` and `tests`.
+fn verify_keys(t: &ItemType, say: &mut impl FnMut(&str)) {
+    let own = matches!(t.collection, Collection::Launchers | Collection::Worktrees);
+    if own != t.id_key.is_some() {
+        say("idKey is set exactly on a build or worktree type");
+    }
+    if (t.collection == Collection::Launchers) == t.serves.is_empty() {
+        say("serves is set exactly on a build type");
+    }
+    if t.read_only && t.collection == Collection::Items {
+        say("a work item type is written from the board, not read only");
     }
 }
 
@@ -56,7 +84,11 @@ fn verify_groups(t: &ItemType, say: &mut impl FnMut(&str)) {
 }
 
 fn verify_tabs(t: &ItemType, say: &mut impl FnMut(&str)) {
-    if t.tabs.first().map(String::as_str) != Some("overview") {
+    let tabless = matches!(t.collection, Collection::Launchers | Collection::Worktrees);
+    if tabless != t.tabs.is_empty() {
+        say("a build or worktree type has no tabs; every other type has them");
+    }
+    if !tabless && t.tabs.first().map(String::as_str) != Some("overview") {
         say("the first tab must be overview");
     }
     if let Some(tab) = t.tabs.iter().find(|tab| !TABS.contains(&tab.as_str())) {
@@ -70,8 +102,8 @@ fn verify_tabs(t: &ItemType, say: &mut impl FnMut(&str)) {
 
 fn verify_done(t: &ItemType, say: &mut impl FnMut(&str)) {
     let Some(done) = &t.done else { return };
-    if t.collection == Collection::Tests {
-        say("a type with statuses has no done rule");
+    if t.collection != Collection::Items {
+        say("only a work item type has a done rule");
     }
     if let Some(need) = done
         .needs

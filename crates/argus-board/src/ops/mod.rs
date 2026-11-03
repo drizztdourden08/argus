@@ -10,6 +10,7 @@ mod authorize;
 mod backup;
 mod build;
 mod bulk;
+mod closed_with;
 mod create;
 mod edit;
 mod fields;
@@ -75,11 +76,13 @@ fn dispatch(
 /// `refused` (nothing applied; `outcome` says why: `gone`, `in trash`, a refusal from the ownership
 /// rules, or a bad field or value).
 pub fn apply_op(board: &mut Board, op: &Value, who: &Who, home: Option<&Path>) -> OpResult {
-    match dispatch(board, op, who, home) {
+    let was = closed_with::before(board);
+    let result = match dispatch(board, op, who, home) {
         Some(Ok(result)) => result,
         Some(Err(e)) => OpResult::refused(e.to_string()),
         None => OpResult::refused(format!("unknown op \"{}\"", shown(op.get("kind")))),
-    }
+    };
+    closed_with::tell(board, &was, result)
 }
 
 /// `authorize` of `ops.mjs`: refuses with the reason when `who` may not do `verb` on `doc`, a

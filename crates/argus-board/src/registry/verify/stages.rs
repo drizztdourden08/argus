@@ -13,8 +13,15 @@ pub(super) fn verify(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
         Collection::Items => {
             verify_ids(t, &mut say);
             verify_lanes(reg, t, &mut say);
+            verify_covered(reg, t, &mut say);
             verify_steps(t, &mut say);
         }
+        Collection::Launchers => {
+            verify_ids(t, &mut say);
+            verify_lanes(reg, t, &mut say);
+            verify_steps(t, &mut say);
+        }
+        Collection::Worktrees => verify_none(t, &mut say),
     }
 }
 
@@ -43,10 +50,20 @@ fn verify_lanes(reg: &Registry, t: &ItemType, say: &mut impl FnMut(&str)) {
             ));
         }
     }
+}
+
+/// Every lane has a stage: a work item can be dragged to any column.
+fn verify_covered(reg: &Registry, t: &ItemType, say: &mut impl FnMut(&str)) {
     for lane in &reg.lanes {
         if !t.stages.iter().any(|s| &s.lane == lane) {
             say(&format!("no stage is in lane {lane}"));
         }
+    }
+}
+
+fn verify_none(t: &ItemType, say: &mut impl FnMut(&str)) {
+    if !t.stages.is_empty() || !t.statuses.is_empty() {
+        say("a worktree type has no stages and no statuses");
     }
 }
 

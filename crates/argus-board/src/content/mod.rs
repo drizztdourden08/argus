@@ -121,6 +121,7 @@ fn one(field: &str, spec: &Field, value: &Value, cx: &Context<'_>) -> Result<Val
         ContentType::Ref | ContentType::Refs => reference::id(field, spec, text()?, cx),
         ContentType::Person => reference::person(field, spec, text()?, cx),
         ContentType::Records => records(field, value),
+        ContentType::Flag => plain::flag(field, value),
     }
 }
 

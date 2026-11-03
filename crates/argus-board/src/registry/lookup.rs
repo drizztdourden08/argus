@@ -1,6 +1,6 @@
 //! The questions the item ops ask of the registry: a type, a stage, a field, a parent rule.
 
-use super::model::{Field, ItemType, Registry, Stage};
+use super::model::{Collection, Field, ItemType, Registry, Stage};
 
 impl Registry {
     /// The item type with this id.
@@ -26,6 +26,15 @@ impl Registry {
     pub fn allows_parent(&self, child: &str, parent: &str) -> bool {
         self.item_type(child)
             .is_some_and(|t| t.parents.iter().any(|p| p == parent))
+    }
+
+    /// Whether a build may serve an item of type `served`.
+    #[must_use]
+    pub fn can_serve(&self, served: &str) -> bool {
+        self.types
+            .iter()
+            .filter(|t| t.collection == Collection::Launchers)
+            .any(|t| t.serves.iter().any(|s| s == served))
     }
 
     /// Whether `key` is a project whose lead the people list knows.
@@ -77,6 +86,8 @@ mod tests {
             "debt",
             "test-plan",
             "test-case",
+            "build",
+            "worktree",
         ];
         assert_eq!(ids, want);
     }
@@ -169,5 +180,57 @@ mod tests {
                 .requires,
             ["duplicateOf"]
         );
+    }
+
+    #[test]
+    fn a_build_serves_the_work_item_types_and_nothing_else() {
+        let reg = registry();
+        for served in ["epic", "story", "task", "bug", "debt", "test-plan"] {
+            assert!(reg.can_serve(served), "{served}");
+        }
+        for other in ["test-case", "build", "worktree", "ghost"] {
+            assert!(!reg.can_serve(other), "{other}");
+        }
+        let build = reg.item_type("build").unwrap();
+        assert_eq!(build.id_key.as_deref(), Some("name"));
+        assert_eq!(build.parents.len(), 0);
+        assert_eq!(build.tabs.len(), 0);
+        assert!(build.has_field(reg, "for"));
+        assert!(build.has_field(reg, "master"));
+    }
+
+    #[test]
+    fn a_build_stage_is_computed_in_three_lanes() {
+        let build = registry().item_type("build").unwrap();
+        assert_eq!(build.lane_of("draft"), Some("todo"));
+        assert_eq!(build.lane_of("ready"), Some("doing"));
+        assert_eq!(build.lane_of("closed"), Some("done"));
+        assert_eq!(build.lane_of("dropped"), None);
+    }
+
+    #[test]
+    fn a_worktree_is_a_read_only_record_with_no_stage_and_no_tab() {
+        let wt = registry().item_type("worktree").unwrap();
+        assert!(wt.read_only);
+        assert_eq!(wt.id_key.as_deref(), Some("id"));
+        assert_eq!(wt.stages.len(), 0);
+        assert_eq!(wt.tabs.len(), 0);
+        assert!(wt.has_field(registry(), "linkSource"));
+    }
+
+    #[test]
+    fn the_pane_tab_for_builds_sits_before_activity_on_the_types_a_build_serves() {
+        let reg = registry();
+        for id in ["epic", "story", "task", "bug", "debt", "test-plan"] {
+            let tabs = &reg.item_type(id).unwrap().tabs;
+            let at = tabs.iter().position(|t| t == "builds").unwrap();
+            assert_eq!(
+                tabs.get(at + 1).map(String::as_str),
+                Some("activity"),
+                "{id}"
+            );
+        }
+        let case = reg.item_type("test-case").unwrap();
+        assert!(!case.tabs.iter().any(|t| t == "builds"));
     }
 }

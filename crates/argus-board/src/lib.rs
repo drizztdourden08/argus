@@ -21,6 +21,7 @@ pub mod portfolio;
 pub mod proofs;
 pub mod registry;
 pub mod results;
+pub mod served;
 pub mod store;
 pub mod sync;
 pub mod text;

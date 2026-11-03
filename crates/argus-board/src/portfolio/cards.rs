@@ -11,6 +11,7 @@ use crate::json::{display, nullish, section, truthy};
 use crate::launchers::{MASTER, has_master, launcher_def_name};
 use crate::names::display_name;
 use crate::portfolio::owner_items::{owner_items, waits_on_owner};
+use crate::served::master_name;
 use crate::store::read_board;
 
 const RECENT: usize = 6;
@@ -19,18 +20,19 @@ const ATTENTION: usize = 5;
 /// The project's master launcher: what the card's Play starts, by its run name. `None` when the
 /// board has none; `play` is null while it has no Play (retired, several lines).
 fn master_of(board: &Board) -> Value {
-    let l = &board["launchers"][MASTER];
+    let name = master_name(board).unwrap_or_else(|| MASTER.to_owned());
+    let l = &board["launchers"][name.as_str()];
     if l.is_null() {
         return Value::Null;
     }
-    let def = &board["runDefs"][launcher_def_name(MASTER).as_str()];
-    let play = if !truthy(l, "retiredAt") && def["launcher"] == MASTER {
+    let def = &board["runDefs"][launcher_def_name(&name).as_str()];
+    let play = if !truthy(l, "retiredAt") && def["launcher"] == name.as_str() {
         def["name"].clone()
     } else {
         Value::Null
     };
     json!({
-        "name": MASTER, "title": l["title"], "cmd": l["cmd"], "current": l["current"] == true,
+        "name": name, "title": l["title"], "cmd": l["cmd"], "current": l["current"] == true,
         "window": l["window"] == true, "play": play, "updatedAt": l["updatedAt"], "by": l["by"],
     })
 }

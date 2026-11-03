@@ -32,7 +32,8 @@
     "refs": {},
     "date": { "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
     "person": { "pattern": "^[a-z0-9][a-z0-9_-]*$" },
-    "records": {}
+    "records": {},
+    "flag": {}
   },
   "baseFields": ["title", "description", "ac", "subject"],
   "fields": {
@@ -81,7 +82,23 @@
     "assignee": { "content": "person" },
     "todoAssignee": { "content": "person", "leads": true },
     "target": { "content": "date" },
-    "runs": { "content": "records" }
+    "runs": { "content": "records" },
+    "for": { "content": "ref", "to": ["item"] },
+    "master": { "content": "flag" },
+    "cmd": { "content": "line", "max": 400 },
+    "cwd": { "content": "line", "max": 260 },
+    "kind": { "content": "enum", "values": ["app", "dev", "other"] },
+    "window": { "content": "flag" },
+    "current": { "content": "flag" },
+    "useEvery": { "content": "line", "max": 8 },
+    "path": { "content": "line", "max": 260 },
+    "branch": { "content": "line", "max": 80 },
+    "commit": { "content": "line", "max": 40 },
+    "state": { "content": "line", "max": 40 },
+    "dirty": { "content": "line", "max": 12 },
+    "ahead": { "content": "line", "max": 12 },
+    "item": { "content": "ref", "to": ["item"] },
+    "linkSource": { "content": "enum", "values": ["manual", "agent", "branch", "text"] }
   },
   "types": [
     {
@@ -100,7 +117,7 @@
       ],
       "fields": ["goal", "target"],
       "groups": [{ "id": "plan", "label": "Plan", "fields": ["goal", "target"] }],
-      "tabs": ["overview", "children", "links", "discussion", "media", "activity"],
+      "tabs": ["overview", "children", "links", "discussion", "media", "builds", "activity"],
       "card": { "progress": "children", "chips": [] },
       "done": { "needs": ["children"], "mode": "refuse" }
     },
@@ -121,7 +138,7 @@
       ],
       "fields": ["role", "want", "benefit"],
       "groups": [{ "id": "story", "label": "Story", "fields": ["role", "want", "benefit"] }],
-      "tabs": ["overview", "children", "links", "discussion", "tests", "media", "activity"],
+      "tabs": ["overview", "children", "links", "discussion", "tests", "media", "builds", "activity"],
       "card": { "progress": "children-ac", "chips": [] },
       "done": { "needs": ["ac", "children", "tests"], "mode": "refuse" }
     },
@@ -141,7 +158,7 @@
       ],
       "fields": [],
       "groups": [],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
       "card": { "progress": "ac", "chips": [] },
       "done": { "needs": ["ac"], "mode": "warn" }
     },
@@ -166,7 +183,7 @@
         { "id": "report", "label": "Report", "fields": ["severity", "environment", "foundIn", "reporter"] },
         { "id": "repro", "label": "Steps", "fields": ["repro", "expected", "actual"] }
       ],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
       "card": { "progress": "ac", "chips": ["severity"] },
       "done": { "needs": ["verified"], "mode": "refuse" }
     },
@@ -187,7 +204,7 @@
       ],
       "fields": ["area", "cost", "risk", "payoff", "reason"],
       "groups": [{ "id": "debt", "label": "Debt", "fields": ["area", "cost", "risk", "payoff"] }],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
       "card": { "progress": "ac", "chips": ["cost", "risk"] },
       "done": { "needs": ["ac"], "mode": "warn" }
     },
@@ -216,7 +233,7 @@
       ],
       "fields": ["bundle", "cases", "env", "runs"],
       "groups": [{ "id": "plan", "label": "Plan", "fields": ["bundle", "env"] }],
-      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "activity"],
+      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "builds", "activity"],
       "card": { "progress": "run", "chips": ["bundle"] },
       "done": { "needs": ["plan-passed"], "mode": "refuse" }
     },
@@ -232,6 +249,40 @@
       "fields": ["setup", "steps", "pass", "fail", "mode", "bundle"],
       "groups": [],
       "tabs": ["overview", "links", "discussion", "media", "activity"],
+      "card": { "progress": "none", "chips": [] }
+    },
+    {
+      "id": "build",
+      "label": "Build",
+      "icon": "play",
+      "color": "violet",
+      "collection": "launchers",
+      "idKey": "name",
+      "parents": [],
+      "serves": ["epic", "story", "task", "bug", "debt", "test-plan"],
+      "stages": [
+        { "id": "draft", "label": "Draft", "lane": "todo" },
+        { "id": "ready", "label": "Ready", "lane": "doing" },
+        { "id": "closed", "label": "Closed", "lane": "done" }
+      ],
+      "fields": ["for", "master", "cmd", "cwd", "kind", "branch", "commit", "window", "current", "bundle", "useEvery"],
+      "groups": [],
+      "tabs": [],
+      "card": { "progress": "none", "chips": ["master", "kind", "current"] }
+    },
+    {
+      "id": "worktree",
+      "label": "Worktree",
+      "icon": "git-branch",
+      "color": "orange",
+      "collection": "worktrees",
+      "idKey": "id",
+      "readOnly": true,
+      "parents": [],
+      "stages": [],
+      "fields": ["path", "branch", "state", "dirty", "ahead", "item", "linkSource"],
+      "groups": [],
+      "tabs": [],
       "card": { "progress": "none", "chips": [] }
     }
   ],

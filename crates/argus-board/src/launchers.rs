@@ -25,10 +25,10 @@ fn is_live(rec: &Value) -> bool {
     rec.is_object() && !truthy(rec, "retiredAt")
 }
 
-/// Whether the board has a live master launcher.
+/// Whether the board has a live master build.
 #[must_use]
 pub fn has_master(board: &Board) -> bool {
-    is_live(&board["launchers"][MASTER])
+    crate::served::master_name(board).is_some()
 }
 
 fn linked_bundles(board: &Board, name: &str) -> Vec<String> {
@@ -43,7 +43,7 @@ fn linked_bundles(board: &Board, name: &str) -> Vec<String> {
 #[must_use]
 pub fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
     let name = text(rec, "name")?;
-    if name == MASTER {
+    if crate::served::is_master(board, name) {
         return None;
     }
     if truthy(rec, "bundle") {
@@ -54,10 +54,18 @@ pub fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
         .find(|tag| !truthy(&board["builds"][tag.as_str()], "closedAt"))
 }
 
-/// Not master and not joined to a bundle: it has a usage window.
+/// Not the master build, not joined to a bundle and not serving an item: it has a usage window.
+/// A build that serves an item goes with the item and has no window.
 #[must_use]
 pub fn is_standalone(board: &Board, rec: &Value) -> bool {
-    rec.is_object() && text(rec, "name") != Some(MASTER) && joined_bundle(board, rec).is_none()
+    rec.is_object()
+        && !is_master_rec(board, rec)
+        && crate::served::for_of(rec).is_none()
+        && joined_bundle(board, rec).is_none()
+}
+
+fn is_master_rec(board: &Board, rec: &Value) -> bool {
+    text(rec, "name").is_some_and(|name| crate::served::is_master(board, name))
 }
 
 /// A bundle's status besides closed: `draft` or `ready`. A record without a status reads ready
