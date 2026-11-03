@@ -6,7 +6,7 @@
 
 use argus_launchers::launcher::{
     LauncherBoard, LauncherPatch, WriteContext, has_master, is_master, is_standalone,
-    link_launcher, retire_launcher, usage_of, write_launcher,
+    link_launcher, retire_launcher, unlink_launcher, usage_of, write_launcher,
 };
 
 use crate::launcher_rules::{AT, board, launcher, lead, worker};
@@ -165,6 +165,41 @@ fn link_launcher_refuses_a_retired_build_and_a_build_of_another_thread() {
     assert!(other.0.contains("only"), "{other}");
     retire_launcher(&mut board, &lead(), "tool", None, AT).unwrap();
     let retired = link_launcher(&mut board, &lead(), ("tool", "I-9"), AT).unwrap_err();
+    assert!(retired.0.contains("is retired"), "{retired}");
+}
+
+#[test]
+fn unlink_launcher_drops_the_item_of_the_master_build_only() {
+    let mut board = with_build("I-5");
+    link_launcher(&mut board, &lead(), ("master", "I-5"), AT).unwrap();
+    board.launchers.get_mut("master").unwrap().link.relink = true;
+    let gone = unlink_launcher(&mut board, &lead(), "master", AT).unwrap();
+    assert_eq!(gone.as_deref(), Some("I-5"));
+    let rec = &board.launchers["master"];
+    assert!(rec.for_item.is_none() && !rec.link.relink);
+    assert!(
+        board
+            .audit
+            .iter()
+            .any(|l| l.text == "unlinked launcher master from I-5")
+    );
+    let again = unlink_launcher(&mut board, &lead(), "master", AT).unwrap();
+    assert_eq!(again, None);
+    let other = unlink_launcher(&mut board, &lead(), "build-2", AT).unwrap_err();
+    assert!(other.0.contains("Only the master build"), "{other}");
+    assert_eq!(board.launchers["build-2"].for_item.as_deref(), Some("I-5"));
+}
+
+#[test]
+fn unlink_launcher_refuses_a_retired_build_a_missing_one_and_a_build_of_another_thread() {
+    let mut board = board();
+    board.launchers.insert("tool".to_owned(), launcher("tool"));
+    let other = unlink_launcher(&mut board, &worker("other"), "tool", AT).unwrap_err();
+    assert!(other.0.contains("only"), "{other}");
+    let missing = unlink_launcher(&mut board, &lead(), "nope", AT).unwrap_err();
+    assert!(missing.0.contains("no launcher"), "{missing}");
+    retire_launcher(&mut board, &lead(), "tool", None, AT).unwrap();
+    let retired = unlink_launcher(&mut board, &lead(), "tool", AT).unwrap_err();
     assert!(retired.0.contains("is retired"), "{retired}");
 }
 

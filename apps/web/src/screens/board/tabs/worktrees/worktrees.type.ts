@@ -67,6 +67,7 @@ interface WorktreeMenuInput {
   label: string;
   keep: () => void;
   link: () => void;
+  unlink: () => void;
 }
 
 export type {

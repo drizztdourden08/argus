@@ -1,6 +1,7 @@
 //! The `launcher-link` and `launcher-retire` ops: the owner links a build (a launcher) to the open
-//! item it serves, or retires it, as `coord launcher link` and `retire` do. The build is `target.id`;
-//! the payload is in `set`. The master build is never retired.
+//! item it serves, unlinks it (`set.for: null`, the master build only: every other build needs its
+//! item), or retires it, as `coord launcher link`, `unlink` and `retire` do. The build is
+//! `target.id`; the payload is in `set`. The master build is never retired.
 
 use argus_core::clock::now_iso;
 use serde_json::Value;
@@ -27,7 +28,44 @@ fn build_of<'a>(board: &'a Board, op: &Value) -> Result<(String, &'a Value), Boa
     }
 }
 
-/// Link a build to the open item it serves (`set.for`).
+/// Whether the op asks to drop the link: `set.for` is there and `null`.
+fn asks_unlink(op: &Value) -> bool {
+    op["set"].get("for") == Some(&Value::Null)
+}
+
+fn retired_refusal(name: &str, rec: &Value, hint: &str) -> Result<(), BoardError> {
+    if truthy(rec, "retiredAt") {
+        return Err(refuse(format!(
+            "launcher {name} is retired: bring it back with coord launcher set {name} {hint} instead."
+        )));
+    }
+    Ok(())
+}
+
+/// Drop the item a build serves. Only the master build may go without one.
+fn unlink(board: &mut Board, who: &Who, name: &str) -> Result<OpResult, BoardError> {
+    let rec = doc(board, "launchers", name)
+        .ok_or_else(|| refuse(format!("no launcher \"{name}\".")))?;
+    if truthy(rec, "retiredAt") {
+        return Err(refuse(format!("launcher {name} is retired.")));
+    }
+    let Some(item) = for_of(rec).map(str::to_owned) else {
+        return Ok(OpResult::applied(format!("{name} serves no item")));
+    };
+    check_for(board, is_master(board, name), None)?;
+    let actor = who.actor_of();
+    if let Some(rec) = doc_mut(board, "launchers", name) {
+        set(rec, "for", Value::Null);
+        unset(rec, "relink");
+        set(rec, "updatedAt", now_iso());
+        set(rec, "by", actor.as_str());
+    }
+    let line = format!("{} unlinked launcher {name} from {item}", who.label());
+    audit(board, &actor, &line);
+    Ok(OpResult::applied(format!("{name} unlinked from {item}")))
+}
+
+/// Link a build to the open item it serves (`set.for`), or unlink it when `set.for` is `null`.
 pub(crate) fn handle_link(
     board: &mut Board,
     op: &Value,
@@ -35,12 +73,11 @@ pub(crate) fn handle_link(
 ) -> Result<OpResult, BoardError> {
     authorize(who, &Check::new("hand", "threads", None))?;
     let (name, rec) = build_of(board, op)?;
-    let item = op["set"]["for"].as_str().map_or("", str::trim);
-    if truthy(rec, "retiredAt") {
-        return Err(refuse(format!(
-            "launcher {name} is retired: bring it back with coord launcher set {name} --for {item} instead."
-        )));
+    if asks_unlink(op) {
+        return unlink(board, who, &name);
     }
+    let item = op["set"]["for"].as_str().map_or("", str::trim);
+    retired_refusal(&name, rec, &format!("--for {item}"))?;
     if for_of(rec) == Some(item) {
         return Ok(OpResult::applied(format!("{name} already serves {item}")));
     }

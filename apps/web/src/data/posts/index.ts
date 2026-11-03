@@ -12,4 +12,5 @@ export { retireLauncher } from './retire-launcher';
 export { rerunTest } from './rerun-test';
 export { sendDown } from './send-down';
 export { setAvatar } from './set-avatar';
+export { unlinkLauncher } from './unlink-launcher';
 export type * from './posts.type';

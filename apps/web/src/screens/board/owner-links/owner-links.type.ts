@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { PostResult } from '../../../data/api';
 
-type OwnerAction = 'worktree-link' | 'worktree-keep' | 'launcher-link' | 'launcher-retire';
+type OwnerAction = 'worktree-link' | 'worktree-unlink' | 'worktree-keep' | 'launcher-link' | 'launcher-unlink' | 'launcher-retire';
 
 interface OwnerAsk {
   action: OwnerAction;

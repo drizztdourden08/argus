@@ -4,14 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
 import type { Responder } from './mount-tab';
-import { chooseAction } from './wt-dom';
+import { chooseAction, hasAction, openMenu } from './wt-dom';
 
 cleanAfterEach();
 
 const item = (id: string, extra: object = {}) => ({ id, title: `Title of ${id}`, status: 'doing', thread: 'lead', type: 'task', ...extra });
 
 const board = () => ({
-  docs: [worktree('a', 'stale')],
+  docs: [worktree('a', 'stale'), worktree('b', 'stale', { item: 'I-3', linkSource: 'manual' }), worktree('c', 'stale', { item: 'I-3', linkSource: 'branch' })],
   items: [item('I-3'), item('I-9', { status: 'done' }), item('I-8', { deletedAt: '2026-10-01T00:00:00.000Z' })],
   meta: metaDoc(),
 });
@@ -72,5 +72,33 @@ describe('I-85 Keep a worktree from the row menu', { tags: ['standard'] }, () =>
     fireEvent.click(within(await dialog()).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(calls).toEqual([]);
+  });
+});
+
+describe('I-85 Unlink a worktree from the row menu', { tags: ['standard'] }, () => {
+  it('posts worktree-link with a null item after the confirm, then closes', async () => {
+    const { calls } = await mountTab(board());
+    await chooseAction('b', /^Unlink from its item/);
+    fireEvent.click(within(await dialog()).getByRole('button', { name: 'Unlink' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.body).toMatchObject({ kind: 'worktree-link', author: 'human', target: { c: 'worktrees', id: 'id-b' }, set: { item: null } });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('Cancel posts nothing, and only a link made by hand offers Unlink', async () => {
+    const { calls } = await mountTab(board());
+    await chooseAction('b', /^Unlink from its item/);
+    fireEvent.click(within(await dialog()).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(calls).toEqual([]);
+    await openMenu('a');
+    expect(hasAction(/^Unlink from its item/)).toBe(false);
+    expect(hasAction(/^Link to an item/)).toBe(true);
+  });
+
+  it('a link Argus works out from the branch is not offered for Unlink', async () => {
+    await mountTab(board());
+    await openMenu('c');
+    expect(hasAction(/^Unlink from its item/)).toBe(false);
   });
 });

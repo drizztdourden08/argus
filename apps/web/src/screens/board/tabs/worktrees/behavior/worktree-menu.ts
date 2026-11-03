@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup } from '@drizztdourden08/tessera';
 import { recordMenuGroups } from '../../../../../shell';
+import { withUnlink } from '../../../owner-links';
 import { copyText } from '../../../shared';
 import { canRemove, removeLook, threadOf } from '../model';
 import type { WorktreeRow } from '../model';
@@ -25,7 +26,8 @@ const worktreeMenu = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup[] =
   const idle = row.status !== 'deleting';
   const handlers = { open: input.open, keep: idle ? input.keep : undefined, link: idle ? input.link : undefined, copy: () => copyText(input.code) };
   const middle = idle ? [askGroup(row, input), ...removeGroup(row, input)] : [];
-  return recordMenuGroups(WORKTREE_KIND, input.label, handlers, middle);
+  const unlink = idle && row.linkSource === 'manual' ? input.unlink : undefined;
+  return withUnlink(recordMenuGroups(WORKTREE_KIND, input.label, handlers, middle), unlink);
 };
 
 export { worktreeMenu };

@@ -10,7 +10,7 @@ cleanAfterEach();
 const item = (id: string, extra: object = {}) => ({ id, title: `Title of ${id}`, status: 'doing', thread: 'lead', type: 'task', ...extra });
 
 const board = () => ({
-  launchers: [launcherDoc('master', { master: true }), launcherDoc('web')],
+  launchers: [launcherDoc('master', { master: true, for: 'I-3' }), launcherDoc('web', { for: 'I-3' })],
   items: [item('I-3'), item('I-9', { status: 'done' }), item('Q-1', { type: 'question' })],
 });
 
@@ -68,6 +68,28 @@ describe('I-85 Retire a build from the card menu', { tags: ['standard'] }, () =>
     expect(calls).toEqual([]);
     await openMenu('master');
     expect(screen.queryByRole('menuitem', { name: /^Retire/ })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /^Link to an item/ })).not.toBeNull();
+  });
+});
+
+describe('I-85 Unlink the master build from its item', { tags: ['standard'] }, () => {
+  it('posts launcher-link with a null item after the confirm', async () => {
+    const { calls } = await mountBuilds(board());
+    const box = await choose('master', /^Unlink from its item/);
+    fireEvent.click(within(box).getByRole('button', { name: 'Unlink' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.body).toMatchObject({ kind: 'launcher-link', author: 'human', target: { c: 'launchers', id: 'master' }, set: { for: null } });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('Cancel posts nothing, and a build that is not the master has no Unlink entry', async () => {
+    const { calls } = await mountBuilds(board());
+    const box = await choose('master', /^Unlink from its item/);
+    fireEvent.click(within(box).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(calls).toEqual([]);
+    await openMenu('web');
+    expect(screen.queryByRole('menuitem', { name: /^Unlink from its item/ })).toBeNull();
     expect(screen.queryByRole('menuitem', { name: /^Link to an item/ })).not.toBeNull();
   });
 });

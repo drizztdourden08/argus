@@ -120,6 +120,35 @@ fn launcher_link_moves_a_build_to_another_open_item_and_refuses_a_closed_or_miss
 }
 
 #[test]
+fn launcher_unlink_frees_the_master_build_and_refuses_every_other_build() {
+    let rig = Rig::new();
+    rig.with_item();
+    rig.legacy_launcher("master", None);
+    let web = [
+        "launcher",
+        "set",
+        "web-1",
+        "--cmd",
+        "node web.js",
+        "--for",
+        "I-1",
+    ];
+    rig.ok(&web, As::Worker);
+    let bare = rig.refused(&["launcher", "unlink", "web-1"], As::Worker, "--for");
+    assert!(bare.err.contains("Only the master build"), "{}", bare.err);
+    assert_eq!(launcher(&rig, "web-1")["for"], "I-1");
+    rig.ok(&["launcher", "link", "master", "I-1"], As::Lead);
+    assert_eq!(launcher(&rig, "master")["for"], "I-1");
+    let freed = rig.ok(&["launcher", "unlink", "master"], As::Lead);
+    assert!(freed.out.contains("no longer serves I-1"), "{}", freed.out);
+    assert_eq!(launcher(&rig, "master")["for"], Value::Null);
+    let again = rig.ok(&["launcher", "unlink", "master"], As::Lead);
+    assert!(again.out.contains("serves no item"), "{}", again.out);
+    rig.refused(&["launcher", "unlink"], As::Lead, "name the launcher");
+    rig.refused(&["launcher", "unlink", "nope-1"], As::Lead, "no launcher");
+}
+
+#[test]
 fn an_item_that_closes_names_the_builds_that_closed_with_it_and_a_reopen_names_them_again() {
     let rig = Rig::new();
     rig.with_item();
