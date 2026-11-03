@@ -411,7 +411,7 @@ fn work_no_ref_keeps_is_refused_without_discard() {
     );
     let plain = h.refused(&id(&h, &fx, "loose"), |_| {});
     assert_eq!(plain.code, ErrorCode::Forbidden);
-    assert!(plain.message.contains("has 1 commit on a detached HEAD that no branch keeps: removing it discards them. The owner can do it from the page (Delete now), or send discard"));
+    assert!(plain.message.contains("has 1 commit on a detached HEAD that no branch keeps: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page"));
 }
 
 #[test]

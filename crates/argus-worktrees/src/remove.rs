@@ -3,8 +3,9 @@
 //! GUARDS: the caller (the page, or the project's lead or the rule's thread); the id is in the live listing; the folder
 //! is under a current rule; not a main checkout; not locked; the HEAD and dirty count the caller saw still hold; no live
 //! process uses the folder; a fresh read-only look agrees with the row; and the work: removing the folder loses nothing
-//! when it is clean and a branch or ref keeps HEAD. Anything else needs `discard` and the owner's say, and a backup is
-//! written first. Merged or not, the commits stay in the branch.
+//! when it is clean and a branch or ref keeps HEAD. Anything else is refused: the owning lead commits what is worth
+//! keeping, discards the rest inside the worktree and asks again. Only `discard` with the owner's say removes it as it
+//! stands, and a backup is written first. Merged or not, the commits stay in the branch.
 
 use crate::backup::{Backup, Need};
 use crate::board::{BoardFacts, Caller};
@@ -443,7 +444,7 @@ impl Service {
             .join(" and ");
         if !input.discard {
             return Err(forbidden(format!(
-                "{} has {loss}: removing it discards them. The owner can do it from the page (Delete now), or send discard with the owner's entry that asks for it (--discard --owner-entry <id>)",
+                "{} has {loss}: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page, or send discard with his entry (--discard --owner-entry <id>)",
                 now.path
             )));
         }
