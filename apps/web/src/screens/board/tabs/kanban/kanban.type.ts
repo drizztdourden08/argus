@@ -9,7 +9,13 @@ import type { OpNotice } from '../../shared';
 import type { Signals } from './attention';
 import type { TrashPanel } from './trash-props.type';
 import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, TrailInfo } from './model';
-import type { PurgeNotice, TrashRow } from './trash';
+import type { PurgeNotice, TrashRow, TrashSource } from './trash';
+
+/** An agent record as the trash reads it: deleted and archived agents are listed there. */
+interface AgentDoc extends TrashSource {
+  item?: string | null;
+  status?: string;
+}
 
 interface KanbanData {
   ready: boolean;
@@ -18,6 +24,7 @@ interface KanbanData {
   entries: WithId<Entry>[];
   actions: WithId<ActionDoc>[];
   tests: WithId<Test>[];
+  agents: WithId<AgentDoc>[];
   closedBuilds: ReadonlySet<string>;
   needs: ReadonlyMap<string, Needs>;
   asks: ReadonlyMap<string, AskLink[]>;
@@ -137,4 +144,4 @@ interface CancelDep {
   cancel: () => Promise<void>;
 }
 
-export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, Panels, RecordActions, Selection, SoftDoc, Threads };
+export type { AddItemDraft, AgentDoc, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, Panels, RecordActions, Selection, SoftDoc, Threads };
