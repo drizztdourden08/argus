@@ -12,12 +12,13 @@ mod retire;
 mod row;
 mod set;
 mod show;
+mod unlink;
 
 use super::base::opt::{take_sub, unknown_sub};
 use crate::cli::Call;
 use crate::cli::exit::Outcome;
 
-const VERBS: &str = "set, keep, retire, list, show, link";
+const VERBS: &str = "set, keep, retire, list, show, link, unlink";
 
 /// Runs the sub-verb the first word names; the other words stay for it.
 ///
@@ -27,6 +28,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
     match take_sub(&mut call.positional).as_str() {
         "set" => set::run(call),
         "link" => link::run(call),
+        "unlink" => unlink::run(call),
         "keep" => keep::run(call),
         "retire" => retire::run(call),
         "list" => list::run(call),

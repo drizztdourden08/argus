@@ -17,8 +17,12 @@ const WORKTREE_LINK_NOTE = 'A worktree goes with its item: when the item is done
 
 const BUILD_LINK_NOTE = 'A build serves one open item and closes when that item closes.';
 
+const WORKTREE_UNLINK_NOTE = 'Argus still reads the agent, the branch name and the text of items; with none of them the worktree shows no item.';
+
+const BUILD_UNLINK_NOTE = 'Only the master build goes without an item. Every other build keeps the item it serves.';
+
 const KEEP_NOTE = 'A kept worktree is not flagged as stale until the days are over.';
 
 const RETIRE_NOTE = 'A retired build has no Play and moves under Retired. The master build is never retired.';
 
-export { BUILD_KIND, BUILD_LINK_NOTE, DEFAULT_KEEP_DAYS, ITEM_LABEL_CHARS, KEEP_DAYS, KEEP_NOTE, NO_CHOICE, NOTE_MAX, RETIRE_NOTE, WORKTREE_LINK_NOTE };
+export { BUILD_KIND, BUILD_LINK_NOTE, BUILD_UNLINK_NOTE, DEFAULT_KEEP_DAYS, ITEM_LABEL_CHARS, KEEP_DAYS, KEEP_NOTE, NO_CHOICE, NOTE_MAX, RETIRE_NOTE, WORKTREE_LINK_NOTE, WORKTREE_UNLINK_NOTE };

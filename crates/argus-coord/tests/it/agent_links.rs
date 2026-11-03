@@ -132,6 +132,41 @@ fn a_blocker_is_an_id_of_the_board_never_text() {
 }
 
 #[test]
+fn an_item_may_be_written_with_the_letters_of_its_type_and_the_wrong_letters_are_refused() {
+    let rig = rig();
+    rig.edit(|b| b["items"]["I-2"]["type"] = json!("bug"));
+    rig.refused(
+        &base("a1", &["--item", "S-2", "--master"]),
+        As::Lead,
+        "S-2 is not a story: I-2 is a bug, B-2.",
+    );
+    rig.refused(
+        &base("a1", &["--item", "B-9", "--master"]),
+        As::Lead,
+        "no item \"B-9\"",
+    );
+    assert_eq!(
+        rig.board()["agents"]
+            .as_object()
+            .map_or(0, serde_json::Map::len),
+        0
+    );
+    rig.ok(&base("a1", &["--item", "B-2", "--master"]), As::Lead);
+    let a = agent(&rig, "a1");
+    assert_eq!(a["items"], json!(["I-2"]));
+    assert_eq!(a["item"], "I-2");
+    let id = a["id"].as_str().unwrap_or_default().to_owned();
+    rig.ok(&["agent", "set", &id, "--add-item", "K-1"], As::Lead);
+    assert_eq!(agent(&rig, "a1")["items"], json!(["I-2", "I-1"]));
+    rig.refused(
+        &["agent", "set", &id, "--item", "S-2"],
+        As::Lead,
+        "S-2 is not a story: I-2 is a bug, B-2.",
+    );
+    assert_eq!(agent(&rig, "a1")["items"], json!(["I-2", "I-1"]));
+}
+
+#[test]
 fn the_record_a_hook_made_has_no_item_and_a_lead_start_binds_it_and_fills_the_links() {
     let rig = rig();
     rig.edit(|b| {

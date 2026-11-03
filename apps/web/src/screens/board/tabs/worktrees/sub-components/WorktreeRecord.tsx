@@ -17,6 +17,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
   const open = () => pane.open(code);
   const keep = () => owner.open({ action: 'worktree-keep', id: row.id, label });
   const link = () => owner.open({ action: 'worktree-link', id: row.id, label });
+  const unlink = () => owner.open({ action: 'worktree-unlink', id: row.id, label });
   return (
     <Flex direction="column" gap="xs" data-worktree={row.id}>
       <RecordRow
@@ -26,7 +27,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
           assignee: threadOf(row, meta),
           boardKey,
           threads,
-          menu: worktreeMenu(row, { meta, controls, open, code, label, keep, link }),
+          menu: worktreeMenu(row, { meta, controls, open, code, label, keep, link, unlink }),
           menuLabel: `More actions for ${label}`,
         }}
         title={worktreeTitle(row)}

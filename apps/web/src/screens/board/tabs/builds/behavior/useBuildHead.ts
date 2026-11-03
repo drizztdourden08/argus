@@ -5,6 +5,7 @@ import type { RecordHeadProps } from '../../../../../shell/records';
 import { usePlay } from '../../../run-play';
 import { copyText } from '../../../shared';
 import type { GroupThreads } from '../../../item-groups';
+import { withUnlink } from '../../../owner-links';
 import type { OwnerAsk } from '../../../owner-links';
 import { BUILD_KIND } from '../builds.constants';
 import { buildCode, isMaster } from '../model';
@@ -17,6 +18,7 @@ const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThread
   const code = buildCode(launcher.name);
   const canPlay = view.playable && def !== null && !view.runs.some(isLiveRun);
   const live = !launcher.retiredAt;
+  const freeable = live && isMaster(launcher) && Boolean(launcher.for);
   const owner = (action: OwnerAsk['action']) => () => ask({ action, id: launcher.name, label: code });
   const handlers = {
     open: () => pane.open(code),
@@ -32,7 +34,7 @@ const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThread
     assignee: launcher.by ?? launcher.createdBy ?? '',
     boardKey,
     threads,
-    menu: recordMenuGroups(BUILD_KIND, code, handlers),
+    menu: withUnlink(recordMenuGroups(BUILD_KIND, code, handlers), freeable ? owner('launcher-unlink') : undefined),
     menuLabel: `More actions for ${code}`,
   };
 };

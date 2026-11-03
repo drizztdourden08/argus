@@ -191,7 +191,14 @@ mod tests {
     }
 
     fn board() -> Board {
-        json!({"items": {"I-1": {"id": "I-1"}, "I-2": {"id": "I-2"}}, "agents": {"A-1": {"id": "A-1"}}})
+        json!({
+            "items": {
+                "I-1": {"id": "I-1"},
+                "I-2": {"id": "I-2"},
+                "I-3": {"id": "I-3", "type": "bug"},
+            },
+            "agents": {"A-1": {"id": "A-1"}},
+        })
     }
 
     #[test]
@@ -229,6 +236,36 @@ mod tests {
         assert_eq!(fields["blockedBy"], json!(["A-1"]));
         let master = for_start(&b, &options(&["--item", "I-2", "--master"])).expect("fields");
         assert_eq!(master["master"], true);
+    }
+
+    #[test]
+    fn an_item_is_written_with_the_letters_of_its_type_or_as_stored() {
+        let b = board();
+        let args = [
+            "--item", "B-3", "--item", "I-3", "--item", "K-2", "--master",
+        ];
+        let fields = for_start(&b, &options(&args)).expect("fields");
+        assert_eq!(fields["items"], json!(["I-3", "I-2"]));
+        assert_eq!(fields["item"], "I-3");
+        let agent = json!({"item": "I-1", "items": ["I-1"]});
+        let added = for_set(&b, &options(&["--add-item", "B-3"]), &agent).expect("fields");
+        assert_eq!(added["items"], json!(["I-1", "I-3"]));
+        let replaced = for_set(&b, &options(&["--item", "B-3,K-2"]), &agent).expect("fields");
+        assert_eq!(replaced["items"], json!(["I-3", "I-2"]));
+    }
+
+    #[test]
+    fn the_wrong_letters_for_an_item_are_refused_with_the_right_ones() {
+        let b = board();
+        let wrong = for_start(&b, &options(&["--item", "S-3", "--master"])).expect_err("refused");
+        assert_eq!(wrong.to_string(), "S-3 is not a story: I-3 is a bug, B-3.");
+        let agent = json!({"item": "I-1", "items": ["I-1"]});
+        let set = for_set(&b, &options(&["--add-item", "S-3"]), &agent).expect_err("refused");
+        assert_eq!(set.to_string(), "S-3 is not a story: I-3 is a bug, B-3.");
+        let gone = for_start(&b, &options(&["--item", "B-9", "--master"])).expect_err("refused");
+        assert_eq!(gone.to_string(), "no item \"B-9\".");
+        let test = for_start(&b, &options(&["--item", "T-3", "--master"])).expect_err("refused");
+        assert_eq!(test.to_string(), "no item \"T-3\".");
     }
 
     #[test]

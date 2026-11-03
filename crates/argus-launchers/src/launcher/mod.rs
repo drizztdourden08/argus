@@ -32,7 +32,7 @@ pub use every::{EVERY_HELP, EVERY_LEGACY, Every, duration_text, parse_every};
 pub use join::{
     has_master, is_live, is_master, is_standalone, joined_bundle, linked_bundles, made_for,
 };
-pub use link::link_launcher;
+pub use link::{link_launcher, unlink_launcher};
 pub use naming::{
     DEF_PREFIX, KINDS, is_launcher_name, launcher_def_name, launcher_slug, require_launcher_name,
 };

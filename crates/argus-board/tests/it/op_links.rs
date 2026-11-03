@@ -1,5 +1,5 @@
 //! The owner ops that link and keep worktrees and link and retire builds: `worktree-link`,
-//! `worktree-keep`, `launcher-link`, `launcher-retire`. I-85.
+//! `worktree-keep`, `launcher-link` (with a `null` item or build to unlink), `launcher-retire`. I-85.
 
 // test-tag: critical
 
@@ -154,6 +154,31 @@ fn a_build_link_refuses_no_build_no_item_and_a_closed_item() {
         &json!({"for": "T-1"}),
     ));
     assert_eq!(b["launchers"]["web"]["for"], Value::Null);
+}
+
+#[test]
+fn the_master_build_is_unlinked_with_a_null_for_and_any_other_build_keeps_its_item() {
+    let mut b = alpha();
+    let item = story(&mut b);
+    b["launchers"]["main"] = launcher("main", Some(&item));
+    b["launchers"]["main"]["master"] = json!(true);
+    b["launchers"]["web"] = launcher("web", Some(&item));
+    let drop = json!({"for": null});
+    let other = build(&mut b, "launcher-link", "web", &drop);
+    assert!(refused(&other).contains("needs the item it serves"));
+    assert_eq!(b["launchers"]["web"]["for"], json!(item));
+    let done = build(&mut b, "launcher-link", "main", &drop);
+    applied(&done);
+    assert!(done.outcome.contains("unlinked"));
+    assert_eq!(b["launchers"]["main"]["for"], Value::Null);
+    assert_eq!(b["launchers"]["main"]["by"], "human");
+    let again = build(&mut b, "launcher-link", "main", &drop);
+    applied(&again);
+    assert!(again.outcome.contains("serves no item"));
+    refused(&build(&mut b, "launcher-link", "nope", &drop));
+    b["launchers"]["main"]["retiredAt"] = json!("2026-02-01T00:00:00.000Z");
+    let retired = build(&mut b, "launcher-link", "main", &drop);
+    assert!(refused(&retired).contains("retired"));
 }
 
 #[test]

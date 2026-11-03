@@ -8,6 +8,7 @@ use super::target::item_arg;
 use super::typed;
 use crate::Board;
 use crate::error::{BoardError, refuse};
+use crate::ids::resolve;
 use crate::json::{display, doc, truthy};
 
 /// The most items one agent works on.
@@ -30,17 +31,30 @@ fn push_new(out: &mut Vec<String>, id: String) {
     }
 }
 
-/// The items an agent works on: each one a live item of the board, repeats dropped, at most ten.
+/// The item a written id names, as the board stores it: `B-12` is `I-12` when item 12 is a bug.
+/// Refused when it is not a live item, or when the letters are those of another type.
+fn item_named(board: &Board, word: &str) -> Result<String, BoardError> {
+    let id = resolve(board, word)?;
+    item_arg(board, &json!(id)).map_err(|e| {
+        if id == word {
+            e
+        } else {
+            refuse(format!("no item \"{word}\"."))
+        }
+    })
+}
+
+/// The items an agent works on: each one a live item of the board, written as `I-12` or with the
+/// letters of its type (`B-12`), repeats dropped, at most ten.
 ///
 /// # Errors
-/// Refused with `no item "<id>".`, or when the value is not a list or is too long.
+/// Refused with `no item "<id>".`, with the right letters when the written ones are another
+/// type's (`S-12 is not a story: I-12 is a bug, B-12.`), or when the value is not a list or is
+/// too long.
 pub fn checked_items(board: &Board, v: &Value) -> Result<Vec<String>, BoardError> {
     let mut out = Vec::new();
     for entry in list_of(v, "items")? {
-        push_new(
-            &mut out,
-            item_arg(board, &json!(js::trim(&display(entry))))?,
-        );
+        push_new(&mut out, item_named(board, js::trim(&display(entry)))?);
     }
     if out.len() > ITEMS_MAX {
         return Err(refuse(format!(
