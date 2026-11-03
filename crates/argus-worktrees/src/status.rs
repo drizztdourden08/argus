@@ -13,7 +13,7 @@
 
 use crate::board::{Keep, RequestDoc};
 use crate::clock::{DAY_MS, iso_from_ms};
-use crate::doc::{KeptDoc, LeftoverDoc, Status, WorktreeDoc};
+use crate::doc::{ItemLink, KeptDoc, LeftoverDoc, Status, WorktreeDoc};
 use crate::fact::Fact;
 use crate::measure::{Leftover, size_text};
 use crate::paths::base_name;
@@ -171,9 +171,7 @@ pub fn doc_of(fact: &Fact, judging: &Judging<'_>, request: Option<RequestDoc>) -
             .map(|l| leftover_doc(l, judged.touched_ms, judging.now_ms)),
         job: None,
         hygiene: None,
-        item: None,
-        link_source: None,
-        unlinked: false,
+        link: ItemLink::default(),
         error: fact.error.clone(),
     }
 }

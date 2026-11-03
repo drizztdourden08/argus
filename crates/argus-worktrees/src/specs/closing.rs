@@ -198,7 +198,12 @@ fn uncommitted_work_is_written_to_a_patch_first_and_the_note_names_it_and_how_to
     close_and_wait(&h);
     assert!(!exists_itself(&fx.path("agent-a1")));
     let files = backup_files(&h);
-    assert!(files.iter().any(|f| f.ends_with(".patch")), "{files:?}");
+    assert!(
+        files.iter().any(|f| Path::new(f)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("patch"))),
+        "{files:?}"
+    );
     assert!(
         files.iter().any(|f| f.ends_with(".untracked.txt")),
         "{files:?}"
@@ -357,7 +362,7 @@ fn a_reopen_inside_the_grace_cancels_it_and_so_does_a_link_to_another_open_item(
         .insert(h.id_of(&fx.path("agent-a2")), linked("I-2"));
     step(&h, 1);
     h.svc.requests_idle();
-    assert!(h.svc.request_list("alpha").is_empty());
+    assert_eq!(h.svc.request_list("alpha").len(), 0);
     assert!(exists_itself(&fx.path("agent-a1")) && exists_itself(&fx.path("agent-a2")));
     assert_eq!(state(&h, "agent-a1"), Some(HygieneState::Released));
     set_lane(&h, "done");
@@ -485,13 +490,13 @@ fn a_worktree_with_no_item_an_hour_after_it_was_first_seen_is_flagged_and_told_o
         },
         |_| {},
     );
-    assert!(!h.docs()["agent-a9"].unlinked);
+    assert!(!h.docs()["agent-a9"].link.unlinked);
     let early = step(&h, HOUR - 1);
     assert_eq!(early.noticed, 0);
-    assert!(!h.docs()["agent-a9"].unlinked);
+    assert!(!h.docs()["agent-a9"].link.unlinked);
     let flagged = step(&h, 1);
     assert_eq!(flagged.noticed, 1);
-    assert!(h.docs()["agent-a9"].unlinked);
+    assert!(h.docs()["agent-a9"].link.unlinked);
     let told = wakes(&h, "worktree-unlinked");
     assert_eq!(told.len(), 1, "{told:?}");
     assert_eq!(told[0].0, "worker");
@@ -508,7 +513,11 @@ fn a_worktree_with_no_item_an_hour_after_it_was_first_seen_is_flagged_and_told_o
     step(&h, 1);
     let row = &h.docs()["agent-a9"];
     assert_eq!(
-        (row.unlinked, row.item.as_deref(), row.link_source),
+        (
+            row.link.unlinked,
+            row.link.item.as_deref(),
+            row.link.link_source
+        ),
         (false, Some("I-1"), Some(LinkSource::Manual))
     );
 }
@@ -523,7 +532,7 @@ fn a_main_checkout_is_never_flagged_for_having_no_item() {
     step(&h, HOUR);
     let flagged = step(&h, HOUR);
     assert_eq!(flagged.noticed, 0);
-    assert!(!h.docs().get("proj").is_some_and(|d| d.unlinked));
-    assert!(wakes(&h, "worktree-unlinked").is_empty());
+    assert!(!h.docs().get("proj").is_some_and(|d| d.link.unlinked));
+    assert_eq!(wakes(&h, "worktree-unlinked").len(), 0);
     assert!(Path::new(&fx.repo).exists());
 }

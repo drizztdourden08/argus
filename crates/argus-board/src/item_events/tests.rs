@@ -252,14 +252,14 @@ fn the_last_blocker_settling_unblocks_the_item_for_its_assignee() {
     );
     let before = board(
         &[blocked.clone(), item("I-2", &json!({"status": "doing"}))],
-        &json!({"entries": {"Q-1": ask("Q-1", "question", "open", "api")}}),
+        &json!({"entries": {"Q-1": ask("Q-1", "question", "open", "ui")}}),
     );
     let one_left = board(
         &[blocked.clone(), item("I-2", &json!({"status": "done"}))],
-        &json!({"entries": {"Q-1": ask("Q-1", "question", "open", "api")}}),
+        &json!({"entries": {"Q-1": ask("Q-1", "question", "open", "ui")}}),
     );
     assert_eq!(item_events(&before, &one_left).len(), 0);
-    let mut answered = ask("Q-1", "question", "answered", "api");
+    let mut answered = ask("Q-1", "question", "answered", "ui");
     answered["rev"] = json!(4);
     let none_left = board(
         &[blocked, item("I-2", &json!({"status": "done"}))],
@@ -275,6 +275,40 @@ fn the_last_blocker_settling_unblocks_the_item_for_its_assignee() {
         ),
         (EventKind::Unblocked, thread("api"), "Q-1", 4)
     );
+}
+
+#[test]
+fn an_ask_the_owner_answered_to_the_hearers_own_thread_is_told_by_the_answer_not_as_unblocked() {
+    let blocked = item("I-1", &json!({"thread": "api"}));
+    let settle = |asker: &str, status: &str| {
+        let open = board(
+            &[blocked.clone()],
+            &json!({"entries": {"Q-1": ask("Q-1", "question", "open", asker)}}),
+        );
+        let closed = board(
+            &[blocked.clone()],
+            &json!({"entries": {"Q-1": ask("Q-1", "question", status, asker)}}),
+        );
+        item_events(&open, &closed)
+    };
+    assert_eq!(settle("api", "answered").len(), 0);
+    assert_eq!(kinds(&settle("ui", "answered")), ["unblocked"]);
+    assert_eq!(kinds(&settle("api", "dropped")), ["unblocked"]);
+}
+
+#[test]
+fn an_answered_ask_next_to_another_cause_that_settled_is_still_unblocked() {
+    let blocked = item("I-1", &json!({"thread": "api", "blockedBy": ["I-2"]}));
+    let entries = |status: &str| json!({"entries": {"Q-1": ask("Q-1", "question", status, "api")}});
+    let before = board(
+        &[blocked.clone(), item("I-2", &json!({"status": "doing"}))],
+        &entries("open"),
+    );
+    let after = board(
+        &[blocked, item("I-2", &json!({"status": "done"}))],
+        &entries("answered"),
+    );
+    assert_eq!(kinds(&item_events(&before, &after)), ["unblocked"]);
 }
 
 #[test]

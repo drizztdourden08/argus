@@ -75,6 +75,21 @@ pub struct LeftoverDoc {
     pub made: bool,
 }
 
+/// The item a worktree belongs to, and how Argus knows it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ItemLink {
+    /// The item it belongs to (`I-n`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item: Option<String>,
+    /// How Argus knows the item: a link, the owning agent, the branch name or an item's text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_source: Option<LinkSource>,
+    /// No item an hour after Argus first saw it (the `no item` chip).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub unlinked: bool,
+}
+
 /// The doc of one worktree.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -114,15 +129,8 @@ pub struct WorktreeDoc {
     /// Where the worktree stands: in use, released (and when it goes), closing, review or kept.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hygiene: Option<HygieneDoc>,
-    /// The item it belongs to (`I-n`).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub item: Option<String>,
-    /// How Argus knows the item: a link, the owning agent, the branch name or an item's text.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub link_source: Option<LinkSource>,
-    /// No item an hour after Argus first saw it (the `no item` chip).
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub unlinked: bool,
+    #[serde(flatten)]
+    pub link: ItemLink,
     pub error: Option<String>,
 }
 

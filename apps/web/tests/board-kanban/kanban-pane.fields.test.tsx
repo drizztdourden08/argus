@@ -67,9 +67,9 @@ describe('I-72 P6 the rules of the fields of the Overview', { tags: ['standard']
     fireEvent.keyDown(box, { key: 'Escape' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit Found in: T-57' }));
     const ref = within(dialog).getByRole('textbox', { name: 'Edit Found in' });
-    fireEvent.change(ref, { target: { value: 'nope' } });
+    fireEvent.change(ref, { target: { value: 'bad id' } });
     fireEvent.keyDown(ref, { key: 'Enter' });
-    expect(within(dialog).getByText(fieldProblem('foundIn', 'nope', {}) as string)).toBeTruthy();
+    expect(within(dialog).getByText(fieldProblem('foundIn', 'bad id', {}) as string)).toBeTruthy();
     expect(posted).toHaveLength(0);
   });
 
