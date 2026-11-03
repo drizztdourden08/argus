@@ -324,6 +324,20 @@ mod tests {
     }
 
     #[test]
+    fn a_removal_request_is_shown_rq_and_stored_r_and_leaves_the_r_to_the_runs() {
+        let request = registry().kind("removal-request").unwrap();
+        assert_eq!(request.code, "RQ");
+        assert_eq!(request.stored, Some("R"));
+        assert_eq!(request.icon, "trash-2");
+        assert_eq!(request.collection, Collection::Requests);
+        assert_eq!(request.tabs, ["overview", "links", "activity"]);
+        assert_eq!(request.links[0].to, ["worktree"]);
+        assert!(!request.is_work_item());
+        assert_eq!(registry().kind_by_code("RQ").unwrap().id, "removal-request");
+        assert_eq!(registry().kind_by_code("R").unwrap().id, "run");
+    }
+
+    #[test]
     fn a_sub_item_reads_its_title_from_its_field_and_a_record_has_no_stages() {
         let q = registry().kind("question").unwrap();
         assert_eq!(q.title, "question");
@@ -333,7 +347,7 @@ mod tests {
             registry().kind("todo").unwrap().collection,
             Collection::Actions
         );
-        assert_eq!(registry().records.len(), 9);
+        assert_eq!(registry().records.len(), 10);
         assert_eq!(registry().kind("agent").unwrap().tabs[1], "work");
     }
 

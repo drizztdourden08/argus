@@ -34,7 +34,7 @@ interface Posted {
   body: Doc;
 }
 
-type Reply = (body: Doc) => Doc | undefined;
+type Reply = (body: Doc, url: string) => Doc | undefined;
 
 const SCOPE = 'alpha';
 const where = { hash: '', search: '' };
@@ -102,7 +102,7 @@ const stubPosts = (reply?: Reply): Posted[] => {
   vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body ?? '{}')) as Doc;
     posted.push({ url, body });
-    return Promise.resolve(new Response(JSON.stringify(reply?.(body) ?? applied), { status: 200 }));
+    return Promise.resolve(new Response(JSON.stringify(reply?.(body, url) ?? applied), { status: 200 }));
   }));
   return posted;
 };

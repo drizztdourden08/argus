@@ -3,6 +3,8 @@ import type { WorktreeFilter } from './model';
 
 const WORKTREE_KIND = 'worktree';
 
+const REQUEST_KIND = 'removal-request';
+
 const MAIN_TITLE = 'Main checkouts';
 
 const FILTER_KEY = 'coord.wtfilter';
@@ -38,4 +40,4 @@ const ASK_HINTS = {
   check: 'A short message for the thread (optional): what to check',
 } as const;
 
-export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, REMOVED_CHIP, REMOVED_TITLE, REQUESTS_TITLE, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND };
+export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, REMOVED_CHIP, REMOVED_TITLE, REQUEST_KIND, REQUESTS_TITLE, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND };

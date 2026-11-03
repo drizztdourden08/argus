@@ -30,12 +30,12 @@ const CATEGORY_KINDS = ['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'te
 const colorOf = (kind: RegistryKind): string | undefined => kind.look.color;
 
 describe('I-85 P1 the web reads the codes and looks of every kind of the record registry', { tags: ['critical'] }, () => {
-  it('lists the 22 kinds with their code, in the lists of the file', () => {
+  it('lists the 23 kinds with their code, in the lists of the file', () => {
     const codes = REGISTRY_KINDS.map((kind) => `${kind.id}:${kind.code}`);
-    expect(REGISTRY_KINDS).toHaveLength(22);
+    expect(REGISTRY_KINDS).toHaveLength(23);
     expect(codes.slice(0, 9)).toEqual(['epic:E', 'story:S', 'task:K', 'bug:B', 'debt:X', 'test-plan:TP', 'test-case:T', 'build:BL', 'worktree:WT']);
     expect(codes.slice(9, 13)).toEqual(['question:Q', 'decision:D', 'todo:H', 'note:N']);
-    expect(codes.slice(13)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'notice:N', 'followup:P', 'message:M']);
+    expect(codes.slice(13)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'removal-request:RQ', 'notice:N', 'followup:P', 'message:M']);
   });
 
   it('gives each of the ten category kinds its own colour and every other kind a tone', () => {
@@ -75,6 +75,18 @@ describe('I-85 P1 the web reads the codes and looks of every kind of the record 
     expect(dep?.collection).toBe('deps');
   });
 
+  it('shows a removal request as RQ and stores it as R, leaving the bare R to the runs', () => {
+    const request = kindOf('removal-request');
+    expect(request?.code).toBe('RQ');
+    expect(request?.stored).toBe('R');
+    expect(request?.icon).toBe('trash-2');
+    expect(request?.collection).toBe('requests');
+    expect(request?.tabs).toEqual(['overview', 'links', 'activity']);
+    expect(request?.links.map((link) => link.to)).toEqual([['worktree']]);
+    expect(kindByCode('RQ')?.id).toBe('removal-request');
+    expect(kindByCode('R')?.id).toBe('run');
+  });
+
 });
 
 describe('I-85 P1 the web reads the tabs, links and titles of every kind', { tags: ['critical'] }, () => {
@@ -103,7 +115,7 @@ describe('I-85 P1 the web reads the tabs, links and titles of every kind', { tag
   it('keeps the sub-item text field as the title and the records without stages', () => {
     expect(kindOf('question')?.title).toBe('question');
     expect(kindOf('todo')?.collection).toBe('actions');
-    expect(ITEM_REGISTRY.records).toHaveLength(9);
+    expect(ITEM_REGISTRY.records).toHaveLength(10);
     expect(kindOf('change')?.card.progress).toBe('checks');
   });
 });

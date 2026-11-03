@@ -28,6 +28,7 @@ pub(super) fn verify(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
         | Collection::Releases
         | Collection::Deps
         | Collection::Runs
+        | Collection::Requests
         | Collection::Checks
         | Collection::Entries
         | Collection::Actions => {}

@@ -13,6 +13,7 @@ type KindCollection =
   | 'releases'
   | 'deps'
   | 'runs'
+  | 'requests'
   | 'checks'
   | 'entries'
   | 'actions';

@@ -48,6 +48,7 @@ const RECORD_ACTIONS: Readonly<Record<string, readonly ActionDef[]>> = {
   dependency: [OPEN, { id: 'cancel', label: 'Cancel', group: 'soft', tone: 'danger' }, COPY],
   run: [OPEN, { id: 'stop', label: 'Stop', group: 'act' }, COPY],
   check: PLAIN,
+  'removal-request': PLAIN,
   question: PLAIN,
   decision: PLAIN,
   todo: [OPEN, { id: 'done', label: 'Mark done', group: 'act' }, COPY],

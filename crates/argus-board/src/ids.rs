@@ -10,7 +10,7 @@ use serde_json::Value;
 use crate::Board;
 use crate::error::{BoardError, refuse};
 use crate::json::doc;
-use crate::registry::{Kind, registry};
+use crate::registry::{Collection, Kind, registry};
 
 /// The letter an item is stored with.
 const STORED: &str = "I";
@@ -44,13 +44,14 @@ fn item_kind(board: &Board, letters: &str) -> Option<Kind<'static>> {
         .filter(|k| k.is_work_item() && !on_sends)
 }
 
-/// The kind whose records are stored under other letters than it is shown with, when the board
-/// keeps them (a dependency is shown `DP-3` and kept `D-3` on the portfolio board).
+/// The kind whose records are stored under other letters than it is shown with (a dependency is
+/// shown `DP-3` and kept `D-3`, on the portfolio board only where the ledger is; a removal
+/// request is shown `RQ-3` and kept `R-3`, which a bare `R-3` leaves to the runs).
 fn stored_letters(board: &Board, letters: &str) -> Option<&'static str> {
     registry()
         .kind_by_code(letters)
+        .filter(|k| k.collection != Collection::Deps || is_portfolio(board))
         .and_then(|k| k.stored)
-        .filter(|_| is_portfolio(board))
 }
 
 /// The label of the type an item has, in lower case, and its letters.
@@ -222,6 +223,14 @@ mod tests {
         assert_eq!(ok(&portfolio(), "DP-3"), "D-3");
         assert_eq!(ok(&board(), "DP-3"), "DP-3");
         assert_eq!(ok(&portfolio(), "D-3"), "D-3");
+    }
+
+    #[test]
+    fn a_removal_request_is_rq_and_stored_r_on_every_board_while_a_bare_r_stays_a_run() {
+        for b in [board(), portfolio()] {
+            assert_eq!(ok(&b, "RQ-59"), "R-59");
+            assert_eq!(ok(&b, "R-59"), "R-59");
+        }
     }
 
     #[test]

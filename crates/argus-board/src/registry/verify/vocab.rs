@@ -3,7 +3,7 @@
 use super::super::model::Collection;
 
 /// Tessera icon names the registry may use (`gavel` and `signpost` come with the next Tessera).
-pub(super) const ICONS: [&str; 21] = [
+pub(super) const ICONS: [&str; 22] = [
     "zap",
     "bookmark",
     "circle-check",
@@ -25,6 +25,7 @@ pub(super) const ICONS: [&str; 21] = [
     "mail",
     "bell",
     "send",
+    "trash-2",
 ];
 
 /// Tessera tag category colours: the type marks and the people use these.

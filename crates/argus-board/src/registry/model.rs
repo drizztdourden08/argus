@@ -222,6 +222,8 @@ pub enum Collection {
     Deps,
     /// The runs of a build or an agent (`R-n`).
     Runs,
+    /// The worktree removal requests of a project (shown `RQ-n`, stored `R-n`).
+    Requests,
     /// The check runs of a change (`C-n`).
     Checks,
     /// The `entries` collection: questions, decisions, notes, notices, follow-ups, messages.

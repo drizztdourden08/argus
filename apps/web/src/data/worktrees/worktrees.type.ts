@@ -149,6 +149,34 @@ interface WorktreeRequest {
   sentences?: string[];
 }
 
+interface RequestTarget {
+  id: string;
+  label: string;
+}
+
+interface RequestOutcome {
+  id: string;
+  label: string;
+  ok: boolean;
+  text: string;
+}
+
+interface RequestRecord {
+  id: string;
+  by: string;
+  at: string;
+  mode: string;
+  status: string;
+  branch: boolean;
+  reason?: string | null;
+  note?: string | null;
+  targets: RequestTarget[];
+  results: RequestOutcome[];
+  skipped?: { count: number; reasons: string[] } | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+}
+
 interface WorktreesMeta {
   name?: string | null;
   scannedAt?: string | null;
@@ -174,5 +202,5 @@ interface PortfolioWorktrees {
 }
 
 export type {
-  BatchJob, PortfolioWorktrees, RemovedWorktree, Worktree, WorktreeHygiene, WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
+  BatchJob, PortfolioWorktrees, RemovedWorktree, RequestOutcome, RequestRecord, RequestTarget, Worktree, WorktreeHygiene, WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };

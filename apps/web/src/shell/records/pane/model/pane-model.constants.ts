@@ -21,9 +21,11 @@ const NAMING_FIELDS: Readonly<Record<string, string>> = { items: 'type', entries
 
 const EXTRA_STORES: Readonly<Record<string, string>> = { agents: 'agents', launchers: 'launchers', worktrees: 'worktrees', prs: 'prs', runs: 'runs' };
 
+const WORKTREE_KIND = 'worktree';
+
 const FALLBACK_STORE = 'items';
 
-const DRAWER_LABELS: Readonly<Record<string, string>> = { items: 'Work item', entries: 'Entry detail', agents: 'Agent detail', tests: 'Test detail' };
+const DRAWER_LABELS: Readonly<Record<string, string>> = { items: 'Work item', entries: 'Entry detail', agents: 'Agent detail', tests: 'Test detail', requests: 'Removal request' };
 
 const DRAWER_FALLBACK = 'Record detail';
 
@@ -44,4 +46,4 @@ const EDGE_WORDS: Readonly<Record<string, string>> = {
   legacy: 'note',
 };
 
-export { CASE_FACT_FIELDS, CASE_KIND, CRUMB_MAX, DRAWER_FALLBACK, DRAWER_LABELS, EDGE_WORDS, ENTRY_LEAVES, EXTRA_STORES, FACT_HIDDEN, FALLBACK_STORE, NAMING_FIELDS, FACT_MAX, LEAF_KINDS, NO_CHOICE, TAB_ALIASES, TAB_FIELDS, TAB_STORE, TITLE_FIELDS };
+export { CASE_FACT_FIELDS, CASE_KIND, CRUMB_MAX, DRAWER_FALLBACK, DRAWER_LABELS, EDGE_WORDS, ENTRY_LEAVES, EXTRA_STORES, FACT_HIDDEN, FALLBACK_STORE, NAMING_FIELDS, FACT_MAX, LEAF_KINDS, NO_CHOICE, TAB_ALIASES, TAB_FIELDS, TAB_STORE, TITLE_FIELDS, WORKTREE_KIND };

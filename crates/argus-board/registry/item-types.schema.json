@@ -237,7 +237,7 @@
         "tone": { "type": "string" },
         "collection": {
           "type": "string",
-          "enum": ["agents", "prs", "releases", "deps", "runs", "checks", "entries", "actions"]
+          "enum": ["agents", "prs", "releases", "deps", "runs", "requests", "checks", "entries", "actions"]
         },
         "idKey": { "type": "string" },
         "view": { "$ref": "#/$defs/view" },

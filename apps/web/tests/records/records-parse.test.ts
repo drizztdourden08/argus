@@ -36,6 +36,8 @@ describe('I-85 P3 the code table comes from the registry', { tags: ['critical'] 
     expect(read('T-3')).toMatchObject({ kind: 'test-case', id: 'T-3' });
     expect(read('DP-4')).toMatchObject({ kind: 'dependency', code: 'DP-4', id: 'D-4' });
     expect(read('D-4')).toMatchObject({ kind: 'decision', id: 'D-4' });
+    expect(read('RQ-59')).toMatchObject({ kind: 'removal-request', collection: 'requests', code: 'RQ-59', id: 'R-59' });
+    expect(read('R-1')).toMatchObject({ kind: 'run', collection: 'runs', code: 'R-1', id: 'R-1' });
     expect(read('PR-12')).toMatchObject({ kind: 'change', code: 'PR-12' });
     expect(read('P-5')).toMatchObject({ kind: 'followup' });
     expect(read('F-5')).toMatchObject({ kind: 'followup' });
@@ -98,6 +100,8 @@ describe('I-85 P3 the address of an open record', { tags: ['critical'] }, () => 
 describe('I-85 P3 what a record view shows', { tags: ['critical'] }, () => {
   it('shows the code of a kind the way the registry names it', () => {
     expect(shownCode(kind('dependency'), 'D-4')).toBe('DP-4');
+    expect(shownCode(kind('removal-request'), 'R-59')).toBe('RQ-59');
+    expect(shownCode(kind('run'), 'R-59')).toBe('R-59');
     expect(shownCode(kind('build'), 'web')).toBe('BL-web');
     expect(shownCode(kind('release'), '1.2.3')).toBe('V-1.2.3');
     expect(shownCode(kind('task'), 'I-12')).toBe('K-12');

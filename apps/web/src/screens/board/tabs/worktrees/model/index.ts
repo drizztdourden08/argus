@@ -29,6 +29,7 @@ export { removalInput } from './removal-input';
 export { removalNotice } from './removal-notice';
 export { removeLook } from './remove-look';
 export { requestChips } from './request-chips';
+export { requestCode } from './request-code';
 export { requestNote } from './request-note';
 export { requestTitle } from './request-title';
 export { removedLabel } from './removed-label';

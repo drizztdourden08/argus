@@ -670,6 +670,23 @@
       "links": [{ "field": "change", "to": ["change"], "label": "Change", "inverse": "Checks" }]
     },
     {
+      "id": "removal-request",
+      "label": "Removal request",
+      "code": "RQ",
+      "stored": "R",
+      "icon": "trash-2",
+      "tone": "warning",
+      "collection": "requests",
+      "view": "row",
+      "title": "title",
+      "assignee": "by",
+      "tabs": ["overview", "links", "activity"],
+      "card": { "progress": "none", "chips": ["status"] },
+      "links": [
+        { "field": "worktrees", "to": ["worktree"], "label": "Worktrees", "inverse": "Removal requests" }
+      ]
+    },
+    {
       "id": "notice",
       "label": "Notice",
       "code": "N",

@@ -67,12 +67,22 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
   it('shows a request as a row with its code, status chip and age', async () => {
     const { container } = await mountTab(board());
     await screen.findByText('Removal requests from threads');
-    const row = container.querySelector<HTMLElement>('[data-record="R-3"]');
+    const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]');
     expect(row).not.toBeNull();
     expect(text(row as HTMLElement)).toContain('lead asked to remove its 2 worktrees released after the grace');
     expect(within(row as HTMLElement).getByText('done')).toBeTruthy();
     expect(within(row as HTMLElement).getByText('2 removed')).toBeTruthy();
     expect(within(row as HTMLElement).getByText('1h')).toBeTruthy();
+  });
+
+  it('wears the removal request mark and its RQ code is a link that opens the request pane', async () => {
+    const { container } = await mountTab(board());
+    await screen.findByText('Removal requests from threads');
+    const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]') as HTMLElement;
+    expect(row.querySelector('[data-type-mark="removal-request"]')).not.toBeNull();
+    expect(row.querySelector('[data-type-mark="worktree"]')).toBeNull();
+    const link = within(row).getByRole('link', { name: 'RQ-3' });
+    expect(link.getAttribute('href')).toBe('/p/alpha?open=RQ-3');
   });
 
   it('shows a removed worktree as a WT row with a removed chip and its age', async () => {
@@ -89,8 +99,8 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
     const requests = Array.from({ length: 10 }, (_, n) => request({ id: `R-${n + 1}` }));
     const { container } = await mountTab({ docs: [worktree('live', 'active')], meta: metaDoc({ requests }) });
     await screen.findByText('Latest 8 of 10');
-    expect(container.querySelectorAll('[data-record^="R-"]')).toHaveLength(8);
+    expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(8);
     fireEvent.click(screen.getByRole('button', { name: 'Show all 10' }));
-    expect(container.querySelectorAll('[data-record^="R-"]')).toHaveLength(10);
+    expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(10);
   });
 });
