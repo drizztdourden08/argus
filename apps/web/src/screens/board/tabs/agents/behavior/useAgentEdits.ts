@@ -5,6 +5,7 @@ import type { Agent } from '../../../../../data/agents';
 import { SOFT_INVERSE, editDoc, sendOp, softOp } from '../../../../../data/kanban';
 import { SOFT_LABEL, useWriter } from '../../../shared';
 import type { AgentEdits } from '../AgentsTab.type';
+import { agentItems } from '../model';
 
 const useAgentEdits = (boardKey: string, latest: RefObject<Map<string, Agent>>): AgentEdits => {
   const write = useWriter();
@@ -14,11 +15,17 @@ const useAgentEdits = (boardKey: string, latest: RefObject<Map<string, Agent>>):
       if (!agent) return;
       void write(() => editDoc(boardKey, { c: 'agents', id, rev: agent.rev }, { field, prev: agent[field] ?? '', value }), `Saved ${id}.`);
     },
-    setItem: (id, item) => {
+    setItems: (id, items) => {
       const agent = latest.current.get(id);
       if (!agent) return;
-      const fields = { kind: 'edit', target: { c: 'agents', id }, set: { item }, prev: { item: agent.item ?? null }, baseRev: agent.rev };
-      void write(() => sendOp(boardKey, fields), `Item of ${id} is now ${item ?? 'none'}.`);
+      const fields = { kind: 'edit', target: { c: 'agents', id }, set: { items }, prev: { items: agentItems(agent) }, baseRev: agent.rev };
+      void write(() => sendOp(boardKey, fields), items.length === 0 ? `${id} has no item now.` : `Items of ${id}: ${items.join(', ')}.`);
+    },
+    setMaster: (id, master) => {
+      const agent = latest.current.get(id);
+      if (!agent) return;
+      const fields = { kind: 'edit', target: { c: 'agents', id }, set: { master }, prev: { master: agent.master === true }, baseRev: agent.rev };
+      void write(() => sendOp(boardKey, fields), master ? `${id} works on the master checkout.` : `${id} no longer works on the master checkout.`);
     },
     soft: (kind, id) =>
       void write(

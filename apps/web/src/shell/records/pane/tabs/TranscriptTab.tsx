@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { placeholderBody } from '../placeholder-body';
+import { AgentTranscriptBody } from '../../../../screens/board/tabs/agents/pane/AgentTranscriptBody';
 
-const TranscriptTab = placeholderBody('transcript', 'Transcript');
+const TranscriptTab = AgentTranscriptBody;
 
 export { TranscriptTab };

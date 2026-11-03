@@ -8,12 +8,19 @@ interface DepsFilterProps {
   onChange: (value: DepFilter) => void;
 }
 
-interface DepsTableProps {
+interface DepsListProps {
   docs: readonly WithId<DepDoc>[];
+  all: readonly WithId<DepDoc>[];
   now: number;
 }
 
 interface DepRowProps {
+  doc: WithId<DepDoc>;
+  all: readonly WithId<DepDoc>[];
+  now: number;
+}
+
+interface DepWaitProps {
   doc: WithId<DepDoc>;
   now: number;
 }
@@ -22,4 +29,4 @@ interface DepEndCellProps {
   end: DepEnd;
 }
 
-export type { DepEndCellProps, DepRowProps, DepsFilterProps, DepsTableProps };
+export type { DepEndCellProps, DepRowProps, DepsFilterProps, DepsListProps, DepWaitProps };

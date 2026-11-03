@@ -32,6 +32,11 @@ interface Agent {
   task?: string | null;
   kind?: string | null;
   item?: string | null;
+  items?: string[];
+  master?: boolean;
+  blockedBy?: string[];
+  where?: string | null;
+  whereSource?: 'manual' | 'auto' | null;
   model?: string | null;
   modelWhy?: string | null;
   modelUsed?: string | null;

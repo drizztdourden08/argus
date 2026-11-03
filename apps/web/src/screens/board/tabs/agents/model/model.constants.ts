@@ -17,8 +17,6 @@ const HOURS_AS_DAYS_FROM = 48;
 
 const FILE_TOOLS: readonly string[] = ['Edit', 'Write', 'Read', 'MultiEdit', 'NotebookEdit'];
 
-const BUSY_ACTIVITIES: readonly string[] = ['tool', 'thinking'];
-
 const STATUS_LOOKS: Readonly<Record<string, StatusLook>> = {
   working: { label: 'working', tone: 'success' },
   waiting: { label: 'waiting', tone: 'warning' },
@@ -53,11 +51,33 @@ const UNREACHABLE_TEXT = 'Dashboard unreachable, retrying.';
 
 const NO_WHY = 'no justification recorded';
 
-const RUN_CHIPS_SHOWN = 4;
-
 const ITEM_LABEL_CHARS = 40;
 
 const NO_ITEM = 'none';
+
+const NO_ITEM_LINE = 'No item yet. An agent works on at least one item.';
+
+const NO_BLOCKERS_LINE = 'Nothing blocks this agent.';
+
+const NO_RUNS_LINE = 'No run was started by this agent.';
+
+const ADD_ITEM_LABEL = 'add an item';
+
+const MASTER_WORD = 'master';
+
+const NO_ITEM_TITLE = 'No item';
+
+const CLOSED_ITEMS_TITLE = 'Closed items';
+
+const NO_WORKTREE_TEXT = 'no worktree';
+
+const NO_WORKTREE_TIP = 'No worktree or master is recorded for this agent.';
+
+const MASTER_TIP = 'Works on the main checkout.';
+
+const WORKTREE_FALLBACK_CODE = 'WT';
+
+const NO_RANK = 1_000_000_000;
 
 const SECONDS_PER_MINUTE = 60;
 
@@ -65,8 +85,8 @@ const SECONDS_PER_HOUR = 3600;
 
 export {
   ACTIVE_STATUSES,
+  ADD_ITEM_LABEL,
   AGENT_LIMITS,
-  BUSY_ACTIVITIES,
   CHAT_ORDER,
   CONFLICT_TEXT,
   EMPTY_ALL,
@@ -74,8 +94,18 @@ export {
   FILE_TOOLS,
   HOURS_AS_DAYS_FROM,
   HOURS_PER_DAY,
+  CLOSED_ITEMS_TITLE,
   ITEM_LABEL_CHARS,
   NO_ITEM,
+  NO_BLOCKERS_LINE,
+  NO_ITEM_LINE,
+  NO_ITEM_TITLE,
+  NO_RANK,
+  NO_RUNS_LINE,
+  NO_WORKTREE_TEXT,
+  NO_WORKTREE_TIP,
+  MASTER_TIP,
+  MASTER_WORD,
   MINUTES_PER_HOUR,
   MODEL_LOOKS,
   MODEL_FAMILIES,
@@ -83,10 +113,10 @@ export {
   MS_PER_SECOND,
   NO_WHY,
   REFUSED_TEXT,
-  RUN_CHIPS_SHOWN,
   SECONDS_PER_HOUR,
   SECONDS_PER_MINUTE,
   STALE_MS,
   STATUS_LOOKS,
   UNREACHABLE_TEXT,
+  WORKTREE_FALLBACK_CODE,
 };

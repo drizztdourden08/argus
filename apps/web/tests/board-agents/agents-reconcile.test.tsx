@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { agent, ago, DAY, MIN, mockApi, renderAgents } from './agents-harness';
 
@@ -20,21 +20,6 @@ const finding = (extra: Record<string, unknown> = {}) => ({
 });
 
 describe('S1 Agents tab: reconciler marks and findings', { tags: ['standard'] }, () => {
-  it('marks a duplicate, a lost record and the mismatches in the drawer of a finished record', async () => {
-    const cases = [
-      ['A-1', { status: 'stopped', duplicateOf: 'A-9' }, ['duplicate of A-9']],
-      ['A-2', { status: 'stopped', lost: true }, ['lost']],
-      ['A-3', { status: 'done', idMismatch: true, modelMismatch: true, modelUsed: 'opus-5-5' }, ['id mismatch', 'model mismatch']],
-    ] as const;
-    for (const [id, extra, marks] of cases) {
-      mockApi();
-      const mounted = await renderAgents({ agents: { [id]: agent(extra) } }, () => undefined, `/p/alpha#${id}`);
-      const dialog = within(await screen.findByRole('dialog', { name: 'Agent detail' }));
-      for (const mark of marks) expect(dialog.getByText(mark)).toBeTruthy();
-      mounted.unmount();
-    }
-  });
-
   it('asks the board for the reconciler report of this project and lists the findings', async () => {
     mockApi({ ran: true, at: ago(MIN), findings: [finding(), finding({ id: 'A-9', name: 'gone', class: 'orphan', detail: 'no task' })] });
     await renderAgents({ agents: { 'A-8': agent({ name: 'wake', idleSince: ago(MIN) }) } });

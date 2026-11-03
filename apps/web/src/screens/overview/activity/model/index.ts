@@ -2,7 +2,6 @@
 export { countLevels } from './count-levels';
 export { filterActivity } from './filter-activity';
 export { kindCounts } from './kind-counts';
-export { kindIcon } from './kind-icon';
 export { levelOf } from './level-of';
 export { needsAttention } from './needs-attention';
 export { sortActivity } from './sort-activity';

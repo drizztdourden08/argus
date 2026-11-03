@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ActivityItem } from '../../src/screens/overview/activity/model';
-import { countLevels, filterActivity, kindCounts, kindIcon, levelOf, needsAttention, sortActivity } from '../../src/screens/overview/activity/model';
+import { countLevels, filterActivity, kindCounts, levelOf, needsAttention, sortActivity } from '../../src/screens/overview/activity/model';
 import { kindOf } from '../../src/screens/overview/activity/model/kind-of';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
@@ -55,9 +55,5 @@ describe('K1 the filters', { tags: ['critical'] }, () => {
     expect(counts.map(([kind]) => kind)).toEqual(['fault', 'process', 'kill', 'close', 'run', 'wake', 'error', 'note', 'mystery']);
     expect(counts[0]).toEqual(['fault', 2]);
     expect(counts[8]).toEqual(['mystery', 1]);
-  });
-
-  it('gives the note icon to a kind it does not know', () => {
-    expect(kindIcon('mystery')).toBe('file-text');
   });
 });

@@ -1,15 +1,9 @@
 /* @layer renderer-app @kind types */
 import type { Agent, ProjectThread, ReconcileFinding } from '../../../../data/agents';
 import type { WithId } from '../../../../data/react';
-import type { SoftKind } from '../../../../data/kanban';
+import type { Item, SoftKind } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
 import type { AgentField } from './model';
-
-interface AgentAnchor {
-  selected: string | null;
-  open: (id: string) => void;
-  close: () => void;
-}
 
 interface AgentsTabProps {
   boardKey: string;
@@ -20,6 +14,9 @@ interface AgentsView {
   ready: boolean;
   active: WithId<Agent>[];
   done: WithId<Agent>[];
+  all: WithId<Agent>[];
+  items: WithId<Item>[];
+  threads: WithId<ProjectThread>[];
   finishedCount: number;
   lead: WithId<ProjectThread> | null;
   chats: WithId<ProjectThread>[];
@@ -28,7 +25,8 @@ interface AgentsView {
 
 interface AgentEdits {
   setField: (id: string, field: AgentField, value: string) => void;
-  setItem: (id: string, item: string | null) => void;
+  setItems: (id: string, items: readonly string[]) => void;
+  setMaster: (id: string, master: boolean) => void;
   soft: (kind: SoftKind, id: string) => void;
 }
 
@@ -38,19 +36,10 @@ interface AgentActions extends AgentEdits {
   archiveFinished: (ids: readonly string[]) => void;
 }
 
-interface RowState {
-  openMessages: ReadonlySet<string>;
-  editing: string | null;
-  toggleMessage: (id: string) => void;
-  startEdit: (id: string) => void;
-  stopEdit: () => void;
-}
-
 interface AgentRuns {
   all: RunEntry[];
   live: RunEntry[];
   finished: RunEntry[];
-  byAgent: ReadonlyMap<string, RunEntry[]>;
 }
 
 interface AgentsHeaderProps {
@@ -65,15 +54,12 @@ interface LeadLineProps {
 }
 
 interface AgentsBodyProps {
-  active: readonly WithId<Agent>[];
-  done: readonly WithId<Agent>[];
+  boardKey: string;
+  view: AgentsView;
   showFinished: boolean;
   now: number;
   actions: AgentActions;
-  state: RowState;
-  runs: AgentRuns;
-  onOpen: (id: string) => void;
-  onLog: (id: string) => void;
+  onOpen: (code: string, tab?: string) => void;
 }
 
 interface AgentsFootProps {
@@ -104,7 +90,6 @@ interface ChatRowProps {
 
 
 export type {
-  AgentAnchor,
   AgentActions,
   AgentEdits,
   AgentRuns,
@@ -117,5 +102,4 @@ export type {
   ChatsListProps,
   LeadLineProps,
   ReconcilePanelProps,
-  RowState,
 };

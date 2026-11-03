@@ -40,7 +40,7 @@ describe('S1 the stalls in the Notifications tab', { tags: ['standard'] }, () =>
   it('lists the stalls oldest first with the kind, the project and the age', async () => {
     await openTab(STALLS);
     const list = await screen.findByRole('list', { name: 'Stalls' });
-    const rows = within(list).getAllByRole('listitem');
+    const rows = [...list.querySelectorAll<HTMLElement>('[data-record]')];
     expect(rows).toHaveLength(3);
     expect(rows[0]?.textContent).toContain('silent');
     expect(rows[0]?.textContent).toContain('1h');

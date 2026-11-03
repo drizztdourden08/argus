@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind component */
-import { Tag, Text } from '@drizztdourden08/tessera';
-import { LinkedText } from '../../../../shell';
+import { Flex, Tag, Text } from '@drizztdourden08/tessera';
+import { Age } from '../../../../shell';
 import { ProjectLink } from '../../projects';
+import { leadOf, OverviewRow, recordOfText } from '../../records';
 import { isFresh } from '../../seen';
-import { FeedRow } from '../../sub-components/FeedRow';
 import type { ActivityRowProps } from '../activity.type';
-import { kindIcon, LEVEL_TONE, levelOf } from '../model';
+import { LEVEL_TONE, levelOf } from '../model';
 import { kindOf } from '../model/kind-of';
 
 const ActivityRow = (props: ActivityRowProps) => {
@@ -14,17 +14,21 @@ const ActivityRow = (props: ActivityRowProps) => {
   const kind = kindOf(item);
   const project = item.project ?? '';
   return (
-    <FeedRow icon={kindIcon(kind)} tone={LEVEL_TONE[level]} title={`${kind} · ${level}`} at={item.at}>
-      <Text size="md">
-        <Text variant="overline" tone={LEVEL_TONE[level]}>{kind}</Text>
-        {' '}
-        <LinkedText text={item.text ?? ''} board={project || undefined} />
-        {' '}
-        {project ? <ProjectLink project={project} chip /> : null}
-        {item.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${item.thread}`}</Text> : null}
-        {isFresh(item.at, freshSince) ? <> <Tag variant="urgency" color="info" pill>new</Tag></> : null}
-      </Text>
-    </FeedRow>
+    <OverviewRow
+      target={recordOfText(item.text ?? '', project, kind)}
+      assignee={leadOf(project)}
+      title={item.text ?? ''}
+      chips={[{ id: 'kind', text: kind, title: `${kind} · ${level}` }]}
+      trailing={
+        <Flex gap="xs" align="center">
+          <Text variant="caption" tone={LEVEL_TONE[level]}>{level}</Text>
+          {project ? <ProjectLink project={project} chip /> : null}
+          {item.thread ? <Text variant="caption">{`/ ${item.thread}`}</Text> : null}
+          {isFresh(item.at, freshSince) ? <Tag variant="urgency" color="info" pill>new</Tag> : null}
+          {item.at ? <Text variant="caption" tone="muted"><Age value={item.at} ago /></Text> : null}
+        </Flex>
+      }
+    />
   );
 };
 

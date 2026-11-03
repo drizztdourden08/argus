@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconName, TabBadgeTone, TextProps } from '@drizztdourden08/tessera';
-import type { ReactNode } from 'react';
+import type { TabBadgeTone } from '@drizztdourden08/tessera';
 import type { StreamStatus } from '../../data/stream';
 import type { Card } from '../../data/types';
 
@@ -19,19 +18,6 @@ interface ChipFilterProps {
   onChange: (value: string) => void;
 }
 
-interface FeedRowProps {
-  icon: IconName;
-  tone: TextProps['tone'];
-  title?: string;
-  at: string | null | undefined;
-  children: ReactNode;
-}
-
-interface FeedTableProps {
-  label: string;
-  children: ReactNode;
-}
-
 interface OverviewHeaderProps {
   cards: Card[];
 }
@@ -47,4 +33,4 @@ interface TabBodyProps {
   badges: TabBadges;
 }
 
-export type { ChipFilterProps, FeedRowProps, FeedTableProps, OverviewHeaderProps, ProjectSwitcherProps, TabBadges, TabBodyProps };
+export type { ChipFilterProps, OverviewHeaderProps, ProjectSwitcherProps, TabBadges, TabBodyProps };

@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Card, List, ListItem, Small, Stack, Tag, Text } from '@drizztdourden08/tessera';
+import { Card, Flex, Stack, Tag, Text } from '@drizztdourden08/tessera';
 import { stallsOf, useStalls } from '../../../../data/stalls';
-import { Age, BAD_LOOK, CALM_LOOK } from '../../../../shell';
+import { Age, CALM_LOOK } from '../../../../shell';
 import { ProjectLink } from '../../projects';
+import { leadOf, OverviewList, OverviewRow, recordOfText } from '../../records';
 
 const StallList = () => {
   const stalls = stallsOf(useStalls().docs);
@@ -11,17 +12,24 @@ const StallList = () => {
     <Card>
       <Stack gap="xs">
         <Text variant="overline">Stalls</Text>
-        <List aria-label="Stalls">
+        <OverviewList label="Stalls">
           {stalls.map((stall) => (
-            <ListItem key={stall.id} bare>
-              <Small tone="muted"><Age value={stall.since} /></Small>
-              <Tag pill {...BAD_LOOK}>{stall.kind}</Tag>
-              <ProjectLink project={stall.project} />
-              <Small title={stall.text}>{stall.text}</Small>
-              {stall.ackedAt ? <Tag pill {...CALM_LOOK} title={stall.ackNote ?? undefined}>acked</Tag> : null}
-            </ListItem>
+            <OverviewRow
+              key={stall.id}
+              target={recordOfText(`${stall.subject} ${stall.text}`, stall.project, stall.kind)}
+              assignee={leadOf(stall.project)}
+              title={stall.text}
+              chips={[{ id: 'kind', text: stall.kind, title: `Stalled: ${stall.kind}` }]}
+              trailing={
+                <Flex gap="xs" align="center">
+                  {stall.ackedAt ? <Tag pill {...CALM_LOOK} title={stall.ackNote ?? undefined}>acked</Tag> : null}
+                  <ProjectLink project={stall.project} />
+                  <Text variant="caption" tone="muted"><Age value={stall.since} /></Text>
+                </Flex>
+              }
+            />
           ))}
-        </List>
+        </OverviewList>
       </Stack>
     </Card>
   );
