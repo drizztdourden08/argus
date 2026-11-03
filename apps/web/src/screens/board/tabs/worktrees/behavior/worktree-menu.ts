@@ -2,7 +2,7 @@
 import type { MenuGroup } from '@drizztdourden08/tessera';
 import { recordMenuGroups } from '../../../../../shell';
 import { copyText } from '../../../shared';
-import { canRemove, threadOf } from '../model';
+import { canRemove, removeLook, threadOf } from '../model';
 import type { WorktreeRow } from '../model';
 import { ASK_BUTTONS, WORKTREE_KIND } from '../worktrees.constants';
 import type { WorktreeMenuInput } from '../worktrees.type';
@@ -15,14 +15,16 @@ const askGroup = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup => {
   };
 };
 
+const removeGroup = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup[] => {
+  if (!canRemove(row)) return [];
+  const look = removeLook(row);
+  return [{ id: 'remove', items: [{ id: 'remove', label: look.label, description: look.tip, tone: look.danger ? 'danger' : undefined, onSelect: () => input.controls.toggle(row, 'remove') }] }];
+};
+
 const worktreeMenu = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup[] => {
-  const deleting = row.status === 'deleting';
-  const handlers = {
-    open: input.open,
-    remove: !deleting && canRemove(row) ? () => input.controls.toggle(row, 'remove') : undefined,
-    copy: () => copyText(input.code),
-  };
-  return recordMenuGroups(WORKTREE_KIND, input.label, handlers, deleting ? [] : [askGroup(row, input)]);
+  const handlers = { open: input.open, copy: () => copyText(input.code) };
+  const middle = row.status === 'deleting' ? [] : [askGroup(row, input), ...removeGroup(row, input)];
+  return recordMenuGroups(WORKTREE_KIND, input.label, handlers, middle);
 };
 
 export { worktreeMenu };
