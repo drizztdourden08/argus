@@ -1,11 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { TagCategoryColor } from '@drizztdourden08/tessera';
+import type { TypeMarkTone } from '@drizztdourden08/tessera';
 
-const TONE_HUES: Readonly<Record<string, TagCategoryColor>> = {
-  danger: 'rose',
-  warning: 'amber',
-  info: 'blue',
-  success: 'green',
-};
+const MARK_TONES: readonly string[] = ['info', 'success', 'warning', 'danger'] satisfies readonly TypeMarkTone[];
 
-export { TONE_HUES };
+export { MARK_TONES };

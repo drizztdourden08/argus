@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconName, MenuGroup, TagCategoryColor } from '@drizztdourden08/tessera';
+import type { IconName, MenuGroup, TagCategoryColor, TypeMarkTone } from '@drizztdourden08/tessera';
 import type { MouseEvent, ReactNode } from 'react';
 import type { ItemRef, ThreadChoice } from '../../data/kanban';
 import type { WithId } from '../../data/react';
@@ -78,6 +78,12 @@ interface RecordHeadProps {
   menuLabel: string;
   size?: HeadSize;
   selection?: HeadSelection;
+}
+
+/** How a type mark is coloured: the type's category colour, or else its status tone. */
+interface KindMark {
+  color?: TagCategoryColor;
+  tone?: TypeMarkTone;
 }
 
 interface TypeIconProps {
@@ -224,7 +230,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
   OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
   RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, TextPart, TypeIconProps,
 };

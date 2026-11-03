@@ -1,9 +1,17 @@
 /* @layer renderer-app @kind logic */
-import type { TagCategoryColor } from '@drizztdourden08/tessera';
+import type { TypeMarkTone } from '@drizztdourden08/tessera';
 import type { RegistryKind } from '../../../data/registry';
+import type { KindMark } from '../records.type';
 import { categoryColor } from './category-color';
-import { TONE_HUES } from './kind-color.constants';
+import { MARK_TONES } from './kind-color.constants';
 
-const kindColor = (kind: RegistryKind): TagCategoryColor | undefined => categoryColor(kind.look.color) ?? (kind.look.tone ? TONE_HUES[kind.look.tone] : undefined);
+const isMarkTone = (tone: string | undefined): tone is TypeMarkTone => tone !== undefined && MARK_TONES.includes(tone);
 
-export { kindColor };
+const kindMark = (kind: RegistryKind): KindMark => {
+  const color = categoryColor(kind.look.color);
+  if (color) return { color };
+  const { tone } = kind.look;
+  return isMarkTone(tone) ? { tone } : {};
+};
+
+export { kindMark };
