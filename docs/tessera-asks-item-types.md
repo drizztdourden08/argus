@@ -18,13 +18,13 @@ Argus is reworking its board items: typed items (epic, story, task, bug, tech de
 ## SignalStrip
 
 - **Screen.** One row on the item card under the title: the attention signals (questions, failing tests, deps, blocked, quiet, agent, trail depth).
-- **Props.** `items`: a list of `{ id, icon, count?, label, tone, onClick? }` (tone: danger, warning, info, success, neutral). `max?` (otherwise it fits the width). It never wraps: what does not fit folds into a `+N` chip whose tooltip lists the hidden ones.
+- Its props are `items`, a list of `{ id, icon, count?, label, tone, onClick? }` (tone: danger, warning, info, success, neutral). `max?` (otherwise it fits the width). It never wraps: what does not fit folds into a `+N` chip whose tooltip lists the hidden ones.
 - **States.** Chips clickable (Tag onClick) or static; the `+N` chip; empty (renders nothing).
 
 ## OutcomeStrip
 
 - **Screen.** The test plan runner in the item pane (one cell per test case) and the test plan card (small).
-- **Props.** `steps`: `{ id, outcome, label }` where outcome is pass, fail, partial, blocked, skip, pending or current; `onSelect(id)`; `size` (`xs` on the card, `sm` in the runner).
+- Its props are `steps`, each `{ id, outcome, label }`, where outcome is pass, fail, partial, blocked, skip, pending or current; `onSelect(id)`; `size` (`xs` on the card, `sm` in the runner).
 - **States.** Each outcome toned; `current` outlined; hover shows the label.
 
 ## MarkdownEditor: image paste and drop, text counter
@@ -36,7 +36,7 @@ Argus is reworking its board items: typed items (epic, story, task, bug, tech de
 ## MediaGrid
 
 - **Screen.** The Media tab of the item pane and the board-wide Media tab.
-- **Props.** `items`: `{ src, caption, source }` (source: a small tag such as `I-12 description`), `onOpen(index)` opens `MediaViewer` at that image with zoom; `columns?`.
+- Its props are `items`, each `{ src, caption, source }` (source is a small tag such as `I-12 description`), `onOpen(index)` opens `MediaViewer` at that image with zoom; `columns?`.
 - **States.** Empty (an empty state slot), loading thumbnails, a broken image.
 
 ## Text line clamp
