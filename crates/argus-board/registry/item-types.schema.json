@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Argus item type registry",
   "type": "object",
-  "required": ["version", "lanes", "content", "baseFields", "fields", "types", "subItems", "people", "limits"],
+  "required": ["version", "lanes", "content", "baseFields", "fields", "types", "subItems", "records", "people", "limits"],
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
@@ -13,6 +13,7 @@
     "fields": { "type": "object", "additionalProperties": { "$ref": "#/$defs/field" } },
     "types": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/type" } },
     "subItems": { "type": "array", "items": { "$ref": "#/$defs/subItem" } },
+    "records": { "type": "array", "items": { "$ref": "#/$defs/record" } },
     "people": { "$ref": "#/$defs/people" },
     "limits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
   },
@@ -97,13 +98,39 @@
         "leads": { "type": "boolean" }
       }
     },
+    "view": { "type": "string", "enum": ["card", "row"] },
+    "card": {
+      "type": "object",
+      "required": ["progress", "chips"],
+      "additionalProperties": false,
+      "properties": {
+        "progress": { "type": "string", "enum": ["ac", "children", "children-ac", "run", "checks", "none"] },
+        "chips": { "$ref": "#/$defs/names" }
+      }
+    },
+    "link": {
+      "type": "object",
+      "required": ["field", "to", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "to": { "$ref": "#/$defs/names" },
+        "label": { "type": "string" },
+        "inverse": { "type": "string" }
+      }
+    },
+    "links": { "type": "array", "items": { "$ref": "#/$defs/link" } },
     "type": {
       "type": "object",
-      "required": ["id", "label", "icon", "color", "collection", "parents", "stages", "fields", "tabs", "card"],
+      "required": [
+        "id", "label", "code", "icon", "color", "collection", "parents", "stages", "fields",
+        "view", "title", "assignee", "tabs", "card", "links"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
         "label": { "type": "string" },
+        "code": { "type": "string" },
         "icon": { "type": "string" },
         "color": { "type": "string" },
         "collection": { "type": "string", "enum": ["items", "tests", "launchers", "worktrees"] },
@@ -127,16 +154,15 @@
             }
           }
         },
+        "view": { "$ref": "#/$defs/view" },
+        "title": { "type": "string" },
+        "assignee": { "type": "string" },
         "tabs": { "$ref": "#/$defs/names" },
-        "card": {
-          "type": "object",
-          "required": ["progress", "chips"],
-          "additionalProperties": false,
-          "properties": {
-            "progress": { "type": "string", "enum": ["ac", "children", "children-ac", "run", "none"] },
-            "chips": { "$ref": "#/$defs/names" }
-          }
-        },
+        "card": { "$ref": "#/$defs/card" },
+        "links": { "$ref": "#/$defs/links" },
+        "signals": { "$ref": "#/$defs/names" },
+        "groupBy": { "type": "string" },
+        "action": { "type": "string" },
         "done": {
           "type": "object",
           "required": ["needs", "mode"],
@@ -172,16 +198,57 @@
     },
     "subItem": {
       "type": "object",
-      "required": ["id", "store", "prefix", "icon", "tone", "field"],
+      "required": [
+        "id", "label", "code", "store", "icon", "tone", "field", "view", "assignee", "tabs", "card", "links"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
+        "label": { "type": "string" },
+        "code": { "type": "string" },
         "store": { "type": "string", "enum": ["entries", "actions"] },
-        "prefix": { "type": "string" },
         "icon": { "type": "string" },
         "tone": { "type": "string" },
         "blocksWhile": { "type": "string", "enum": ["open", "pending"] },
-        "field": { "type": "string" }
+        "field": { "type": "string" },
+        "view": { "$ref": "#/$defs/view" },
+        "assignee": { "type": "string" },
+        "tabs": { "$ref": "#/$defs/names" },
+        "card": { "$ref": "#/$defs/card" },
+        "links": { "$ref": "#/$defs/links" },
+        "signals": { "$ref": "#/$defs/names" },
+        "groupBy": { "type": "string" },
+        "action": { "type": "string" }
+      }
+    },
+    "record": {
+      "type": "object",
+      "required": ["id", "label", "code", "icon", "collection", "view", "title", "assignee", "tabs", "card", "links"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "code": { "type": "string" },
+        "stored": { "type": "string" },
+        "shares": { "type": "string" },
+        "aliases": { "$ref": "#/$defs/names" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "tone": { "type": "string" },
+        "collection": {
+          "type": "string",
+          "enum": ["agents", "prs", "releases", "deps", "runs", "checks", "entries", "actions"]
+        },
+        "idKey": { "type": "string" },
+        "view": { "$ref": "#/$defs/view" },
+        "title": { "type": "string" },
+        "assignee": { "type": "string" },
+        "tabs": { "$ref": "#/$defs/names" },
+        "card": { "$ref": "#/$defs/card" },
+        "links": { "$ref": "#/$defs/links" },
+        "signals": { "$ref": "#/$defs/names" },
+        "groupBy": { "type": "string" },
+        "action": { "type": "string" }
       }
     },
     "people": {

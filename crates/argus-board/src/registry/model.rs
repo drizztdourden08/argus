@@ -46,6 +46,9 @@ pub struct Registry {
     pub types: Vec<ItemType>,
     /// Questions, decisions, to-dos and notes.
     pub sub_items: Vec<SubItem>,
+    /// The other records the app shows: agents, changes, releases, dependencies, runs, check
+    /// runs, notices, follow-ups and messages.
+    pub records: Vec<Record>,
     /// The owner and the leads, with their initials and colours.
     pub people: People,
     /// The length limit of every kind of free text on the board.
@@ -197,7 +200,7 @@ pub struct Field {
     pub leads: bool,
 }
 
-/// Where the records of a type live.
+/// Where the records of a kind live.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Collection {
@@ -209,6 +212,47 @@ pub enum Collection {
     Launchers,
     /// The worktrees the scanner reports; never written from the board.
     Worktrees,
+    /// The `agents` collection (`A-n`).
+    Agents,
+    /// The `prs` collection (`PR-n`): the changes.
+    Prs,
+    /// The releases the records service builds, by channel and version.
+    Releases,
+    /// The dependency ledger of the portfolio board, stored as `D-n`.
+    Deps,
+    /// The runs of a build or an agent (`R-n`).
+    Runs,
+    /// The check runs of a change (`C-n`).
+    Checks,
+    /// The `entries` collection: questions, decisions, notes, notices, follow-ups, messages.
+    Entries,
+    /// The `actions` collection: the to-dos (`H-n`).
+    Actions,
+}
+
+/// How a kind is drawn in a list.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum View {
+    /// A card, for a short list of important records.
+    Card,
+    /// A dense row.
+    Row,
+}
+
+/// A link a kind carries to records of other kinds.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Link {
+    /// The property of the record that holds the link (an id or a list of ids).
+    pub field: String,
+    /// The kinds it may point to.
+    pub to: Vec<String>,
+    /// The name of the link on this record.
+    pub label: String,
+    /// The name of the same link seen from the other end.
+    #[serde(default)]
+    pub inverse: Option<String>,
 }
 
 /// How strict a rule is.
@@ -233,6 +277,8 @@ pub enum Progress {
     ChildrenAc,
     /// The last plan run.
     Run,
+    /// Checks passed over checks run.
+    Checks,
     /// No bar.
     None,
 }
@@ -245,6 +291,8 @@ pub struct ItemType {
     pub id: String,
     /// The name shown to the owner.
     pub label: String,
+    /// The letters its ids are shown with (`B` for a bug: `B-12` is item `I-12`).
+    pub code: String,
     /// A Tessera icon name.
     pub icon: String,
     /// A Tessera tag category colour.
@@ -272,10 +320,27 @@ pub struct ItemType {
     /// How the overview groups its fields.
     #[serde(default)]
     pub groups: Vec<Group>,
+    /// Whether a list draws it as a card or a row.
+    pub view: View,
+    /// The property shown as its title.
+    pub title: String,
+    /// Where its avatar comes from: a property, `=owner` or `=lead`.
+    pub assignee: String,
     /// Its pane tabs, in order.
     pub tabs: Vec<String>,
     /// What its card shows.
     pub card: Card,
+    /// The links it carries.
+    pub links: Vec<Link>,
+    /// The providers of the signal strip of its card, in order.
+    #[serde(default)]
+    pub signals: Vec<String>,
+    /// The link field a list groups it by.
+    #[serde(default)]
+    pub group_by: Option<String>,
+    /// The primary action of its card.
+    #[serde(default)]
+    pub action: Option<String>,
     /// The rule that must hold before it is done.
     #[serde(default)]
     pub done: Option<DoneRule>,
@@ -370,10 +435,12 @@ pub enum BlocksWhile {
 pub struct SubItem {
     /// The kind name.
     pub id: String,
+    /// The name shown to the owner.
+    pub label: String,
+    /// The letter of its ids (`Q` for `Q-3`).
+    pub code: String,
     /// Where it is stored.
     pub store: Store,
-    /// The letter of its ids (`Q` for `Q-3`).
-    pub prefix: String,
     /// A Tessera icon name.
     pub icon: String,
     /// A tone name.
@@ -381,8 +448,85 @@ pub struct SubItem {
     /// When it blocks its item; absent means never.
     #[serde(default)]
     pub blocks_while: Option<BlocksWhile>,
-    /// The registry field that holds its text.
+    /// The registry field that holds its text, which is its title.
     pub field: String,
+    /// Whether a list draws it as a card or a row.
+    pub view: View,
+    /// Where its avatar comes from: a property, `=owner` or `=lead`.
+    pub assignee: String,
+    /// Its pane tabs, in order.
+    pub tabs: Vec<String>,
+    /// What its card shows.
+    pub card: Card,
+    /// The links it carries.
+    pub links: Vec<Link>,
+    /// The providers of the signal strip of its card, in order.
+    #[serde(default)]
+    pub signals: Vec<String>,
+    /// The link field a list groups it by.
+    #[serde(default)]
+    pub group_by: Option<String>,
+    /// The primary action of its card.
+    #[serde(default)]
+    pub action: Option<String>,
+}
+
+/// A record the app shows that is neither an item type nor a sub-item: an agent, a change, a
+/// release, a dependency, a run, a check run, a notice, a follow-up or a message. It has no
+/// stages and no parent type.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct Record {
+    /// The kind name.
+    pub id: String,
+    /// The name shown to the owner.
+    pub label: String,
+    /// The letters its ids are shown with (`PR` for `PR-4`).
+    pub code: String,
+    /// The letters its ids carry on disk when they differ from the code (a dependency is shown
+    /// `DP-3` and stored `D-3`).
+    #[serde(default)]
+    pub stored: Option<String>,
+    /// The kind whose code and counter it shares (a notice counts with the notes).
+    #[serde(default)]
+    pub shares: Option<String>,
+    /// Older letters its ids were written with and still parse.
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    /// A Tessera icon name.
+    pub icon: String,
+    /// A Tessera tag category colour; a kind has this or a tone.
+    #[serde(default)]
+    pub color: Option<String>,
+    /// A tone name; a kind has this or a colour.
+    #[serde(default)]
+    pub tone: Option<String>,
+    /// Where its records live.
+    pub collection: Collection,
+    /// The key of its records when it is not `id`.
+    #[serde(default)]
+    pub id_key: Option<String>,
+    /// Whether a list draws it as a card or a row.
+    pub view: View,
+    /// The property shown as its title.
+    pub title: String,
+    /// Where its avatar comes from: a property, `=owner` or `=lead`.
+    pub assignee: String,
+    /// Its pane tabs, in order.
+    pub tabs: Vec<String>,
+    /// What its card shows.
+    pub card: Card,
+    /// The links it carries.
+    pub links: Vec<Link>,
+    /// The providers of the signal strip of its card, in order.
+    #[serde(default)]
+    pub signals: Vec<String>,
+    /// The link field a list groups it by.
+    #[serde(default)]
+    pub group_by: Option<String>,
+    /// The primary action of its card.
+    #[serde(default)]
+    pub action: Option<String>,
 }
 
 /// The owner and the leads.

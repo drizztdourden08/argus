@@ -2,6 +2,7 @@
 //! the shared `edit` op applies them, and the verb says what it did.
 
 use argus_board::Board;
+use argus_board::json::display;
 use argus_board::ops::OpResult;
 use serde_json::{Map, Value};
 
@@ -9,7 +10,7 @@ use super::force::{attach, reason};
 use super::images::{Pending, keep_all};
 use super::served_line::{Builds, told};
 use crate::cli::{Options, Outcome};
-use crate::verbs::work::crud::{apply_result, checked, op, rev_of};
+use crate::verbs::work::crud::{apply_result, checked, op, rev_of, stored_links};
 use crate::verbs::work::run::{Res, Run};
 use crate::who::Caller;
 
@@ -80,10 +81,10 @@ pub(super) fn edit_item(
     let force = reason(r.options)?;
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let id = r.arg(0);
-        let item = checked(board, &who, ("items", "set"), id)?;
-        let id = id.unwrap_or_default().to_owned();
-        let plan = plan(board, &who, &item)?;
+        let item = checked(board, &who, ("items", "set"), r.arg(0))?;
+        let id = display(&item["id"]);
+        let mut plan = plan(board, &who, &item)?;
+        stored_links(board, &mut plan.set)?;
         let res = apply_set(
             board,
             &who,

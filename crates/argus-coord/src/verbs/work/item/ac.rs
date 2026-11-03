@@ -2,7 +2,7 @@
 //! Acceptance criteria are numbered by position and tests point at them by number; the shared op
 //! renumbers the rest on rm and move, and each test's covered numbers follow.
 
-use argus_board::json::doc;
+use argus_board::json::{display, doc};
 use argus_board::limits::require_text;
 use argus_core::js;
 use serde_json::{Map, Value, json};
@@ -122,8 +122,8 @@ fn run(r: &mut Run<'_>, id: Option<String>, sub: &str, args: &[String]) -> Outco
     let edit = Edit::parse(sub, args, r.options.flag("undo"))?;
     r.write(|board, r| {
         let who = r.begin(board)?;
-        checked(board, &who, ("items", "ac"), id.as_deref())?;
-        let key = id.unwrap_or_default();
+        let found = checked(board, &who, ("items", "ac"), id.as_deref())?;
+        let key = display(&found["id"]);
         let len = count(board, &key);
         if let Edit::Rm(n, m) = edit {
             if !within(n, m, len) {
