@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { PostResult } from '../api';
 import { ownerEntry, postEntry } from '../posts';
-import type { WorktreeAskInput } from './worktrees.type';
+import type { WorktreeAskInput } from './worktree-actions.type';
 
 const askWorktree = (key: string, input: WorktreeAskInput): Promise<PostResult> => {
   const { id, path, kind, thread, message } = input;

@@ -98,6 +98,13 @@ fn set_cmd(cmd: &str) -> LauncherPatch {
     }
 }
 
+fn serving(cmd: &str) -> LauncherPatch {
+    LauncherPatch {
+        for_item: Some(Some("I-1".to_owned())),
+        ..set_cmd(cmd)
+    }
+}
+
 fn with_every(cmd: &str) -> LauncherPatch {
     LauncherPatch {
         use_every: Some(Some("7d".to_owned())),
@@ -476,7 +483,7 @@ fn set_makes_a_launcher_with_its_play_definition_and_the_same_set_again_changes_
         title: Some(Some("Build two".to_owned())),
         kind: Some("dev".to_owned()),
         current: Some(true),
-        ..with_every("bxel launch build-2")
+        ..serving("bxel launch build-2")
     };
     let made = write_launcher(&mut board, &worker("worker"), "build-2", &patch, &ctx()).unwrap();
     assert!(made.created && made.changed.is_empty());
@@ -524,7 +531,7 @@ fn set_changes_the_flags_given_and_keeps_the_play_definition_in_step() {
         &mut board,
         &worker("worker"),
         "tool",
-        &with_every("run tool"),
+        &serving("run tool"),
         &ctx(),
     )
     .unwrap();
@@ -572,7 +579,7 @@ fn set_refuses_a_new_launcher_without_a_command_and_never_empties_one() {
         .to_string();
     assert!(refused.starts_with("launcher fresh-1 is new: give it the command"));
     assert!(!board.launchers.contains_key("fresh-1"));
-    write_launcher(&mut board, &lead(), "long-1", &with_every("x"), &ctx()).unwrap();
+    write_launcher(&mut board, &lead(), "long-1", &serving("x"), &ctx()).unwrap();
     let empty = write_launcher(&mut board, &lead(), "long-1", &set_cmd(""), &ctx())
         .unwrap_err()
         .to_string();
@@ -585,8 +592,15 @@ fn set_refuses_a_new_launcher_without_a_command_and_never_empties_one() {
 }
 
 #[test]
-fn a_standalone_launcher_needs_use_every_once_master_and_joined_ones_take_none() {
+fn an_old_standalone_launcher_needs_use_every_once_master_and_joined_ones_take_none() {
     let mut board = board();
+    board.launchers.insert(
+        "tool-1".to_owned(),
+        Launcher {
+            use_every: None,
+            ..launcher("tool-1")
+        },
+    );
     let none = write_launcher(
         &mut board,
         &worker("worker"),
@@ -602,8 +616,8 @@ fn a_standalone_launcher_needs_use_every_once_master_and_joined_ones_take_none()
         )
     );
     assert!(none.contains("add --use-every <window> (12h, 3d, 2w or 1mo, from 1h to 365d)"));
-    assert!(
-        !board.launchers.contains_key("tool-1"),
+    assert_eq!(
+        board.launchers["tool-1"].use_every, None,
         "nothing is written"
     );
     let made = write_launcher(
@@ -648,7 +662,10 @@ fn master_and_a_launcher_made_for_a_bundle_take_no_use_every() {
         &mut board,
         &lead(),
         "b1",
-        &with_every("node b1.js"),
+        &LauncherPatch {
+            use_every: Some(Some("7d".to_owned())),
+            ..serving("node b1.js")
+        },
         &for_bundle,
     )
     .unwrap();
@@ -670,7 +687,7 @@ fn the_play_name_made_by_hand_is_never_taken_and_a_multi_line_command_gets_no_pl
         &mut board,
         &lead(),
         "taken",
-        &with_every("node theirs.js"),
+        &serving("node theirs.js"),
         &ctx(),
     )
     .unwrap_err()
@@ -684,7 +701,7 @@ fn the_play_name_made_by_hand_is_never_taken_and_a_multi_line_command_gets_no_pl
         &mut board,
         &lead(),
         "multi-1",
-        &with_every("line one\nline two"),
+        &serving("line one\nline two"),
         &ctx(),
     )
     .unwrap();
@@ -705,7 +722,7 @@ fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
         "build-2",
         &LauncherPatch {
             current: Some(true),
-            ..with_every("go")
+            ..serving("go")
         },
         &ctx(),
     )
@@ -762,14 +779,9 @@ fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
 #[test]
 fn keep_counts_as_a_use_with_who_and_why_and_days_hold_it_fresh() {
     let mut board = board();
-    write_launcher(
-        &mut board,
-        &worker("worker"),
-        "keep-1",
-        &with_every("node keep.js"),
-        &ctx(),
-    )
-    .unwrap();
+    board
+        .launchers
+        .insert("keep-1".to_owned(), launcher("keep-1"));
     let before = board.launchers["keep-1"].updated_at.clone();
     keep_launcher(
         &mut board,

@@ -17,8 +17,8 @@ pub fn is_live(rec: Option<&Launcher>) -> bool {
 /// Whether `name` is the master build: the flagged launcher, or the one named `master` while no
 /// launcher carries the flag.
 pub fn is_master(board: &LauncherBoard, name: &str) -> bool {
-    if board.launchers.values().any(|l| l.master) {
-        board.launchers.get(name).is_some_and(|l| l.master)
+    if board.launchers.values().any(|l| l.link.master) {
+        board.launchers.get(name).is_some_and(|l| l.link.master)
     } else {
         name == MASTER
     }
@@ -26,11 +26,11 @@ pub fn is_master(board: &LauncherBoard, name: &str) -> bool {
 
 /// Every project must have a live master launcher.
 pub fn has_master(board: &LauncherBoard) -> bool {
-    if board.launchers.values().any(|l| l.master) {
+    if board.launchers.values().any(|l| l.link.master) {
         board
             .launchers
             .values()
-            .any(|l| l.master && l.retired_at.is_none())
+            .any(|l| l.link.master && l.retired_at.is_none())
     } else {
         is_live(board.launchers.get(MASTER))
     }

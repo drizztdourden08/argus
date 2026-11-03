@@ -137,10 +137,10 @@ describe('I-72 P6 the cases and the slots of a test plan', { tags: ['standard'] 
     expect(posted).toHaveLength(0);
   });
 
-  it('leaves the Run tab and the Media tab as empty slots', async () => {
+  it('asks for cases on the Run tab of a plan with none, and leaves the Media tab as an empty slot', async () => {
     await mountKanban({ items: [item('I-1', { type: 'test-plan', stage: 'draft' })] });
     const dialog = inTab(await openItem('I-1'), 'Run');
-    expect(within(dialog).getByText('The runner of this plan is not here yet.')).toBeTruthy();
+    expect(within(dialog).getByText('Add cases to this plan, then start a run.')).toBeTruthy();
     inTab(dialog, 'Media');
     expect(within(dialog).getByText('The images of this item show here.')).toBeTruthy();
   });

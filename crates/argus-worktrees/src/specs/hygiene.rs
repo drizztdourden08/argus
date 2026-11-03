@@ -8,16 +8,15 @@
 
 // test-tag: standard
 
-use crate::board::{AgentFact, Caller, Keep, Link};
+use crate::board::{AgentFact, Caller, Link};
 use crate::clock::Clock;
 use crate::hygiene::HygieneState;
 use crate::paths::join_path;
-use crate::ports::ProcInfo;
 use crate::request::RemoveInput;
 use crate::rule::Rule;
 use crate::sync::locked;
 use crate::testkit::{
-    Fixture, Harness, RemoveMode, branches, commit, exists_itself, make_link, put, rule_for,
+    Fixture, Harness, RemoveMode, branches, exists_itself, make_link, put, rule_for,
 };
 use argus_core::fixture::links::{assert_sibling_intact, fill_sibling};
 use std::path::Path;
@@ -333,16 +332,7 @@ fn the_record_that_names_the_worktree_owns_it_too() {
 fn a_keep_holds_it() {
     let (fx, h) = world(|_| {});
     step(&h, QUIET);
-    let id = h.id_of(&fx.path("agent-a1"));
-    let until_ms = h.clock_now() + 86_400_000;
-    h.board().keeps.insert(
-        id,
-        Keep {
-            until_ms,
-            note: Some("still testing".into()),
-            by: Some("lead".into()),
-        },
-    );
+    h.keep_for_a_day(&fx.path("agent-a1"));
     h.svc.hygiene_step("alpha");
     assert_eq!(
         state(&h, "agent-a1"),
@@ -417,12 +407,7 @@ fn a_run_or_check_run_in_it_blocks_it_and_unreadable_runs_block_everything() {
 fn a_process_in_it_blocks_it() {
     let why = used_by(|fx, h| {
         h.clock.advance(10_001);
-        locked(&h.procs.0).push(ProcInfo {
-            pid: 4242,
-            name: "node.exe".into(),
-            cwd: Some(fx.path("agent-a1")),
-            ..ProcInfo::default()
-        });
+        h.run_node_in(&fx.path("agent-a1"));
     });
     assert_eq!(why, "node.exe 4242 uses it");
 }
@@ -437,11 +422,7 @@ fn uncommitted_work_is_never_automatic() {
 
 #[test]
 fn commits_no_ref_keeps_are_never_automatic() {
-    let (fx, h) = world_with(&[], |fx| {
-        let path = fx.path("agent-a1");
-        fx.git(&["worktree", "add", "-q", "--detach", &path]);
-        commit(&path, "d.txt", "detached work\n", 0.0);
-    });
+    let (fx, h) = world_with(&[], |fx| fx.add_detached_work("agent-a1"));
     h.board().agents = vec![agent("1", "lead", "done", h.clock_now() - 1000)];
     h.scan();
     assert_eq!(

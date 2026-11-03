@@ -33,7 +33,7 @@ fn describe(rec: &Launcher) -> String {
     if rec.current {
         parts.push("current".to_owned());
     }
-    if rec.master {
+    if rec.link.master {
         parts.push("master build".to_owned());
     }
     if let Some(item) = rec.for_item.as_deref() {

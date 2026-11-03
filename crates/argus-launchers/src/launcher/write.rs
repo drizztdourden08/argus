@@ -4,6 +4,7 @@ use super::audit::audit;
 use super::authorize::authorize_launcher;
 use super::join::{is_master, joined_bundle};
 use super::master_role;
+use super::need_link;
 use super::play::sync_launcher_play;
 use super::record::{Launcher, LauncherBoard, RuleError, Who};
 
@@ -76,7 +77,7 @@ fn changed_fields(rec: &Launcher, patch: &LauncherPatch) -> Vec<&'static str> {
             differs(&rec.use_every, patch.use_every.as_ref()),
         ),
         ("for", differs(&rec.for_item, patch.for_item.as_ref())),
-        ("master", master_role::wanted(patch) && !rec.master),
+        ("master", master_role::wanted(patch) && !rec.link.master),
     ]
     .into_iter()
     .filter_map(|(name, changed)| changed.then_some(name))
@@ -96,7 +97,7 @@ fn apply_patch(rec: &mut Launcher, patch: &LauncherPatch) {
     set(&mut rec.use_every, patch.use_every.as_ref());
     set(&mut rec.for_item, patch.for_item.as_ref());
     if master_role::wanted(patch) {
-        rec.master = true;
+        rec.link.master = true;
     }
 }
 
@@ -119,13 +120,8 @@ fn new_launcher(name: &str, who: &Who, at: &str, bundle: Option<&str>) -> Launch
 }
 
 /// Refusals that need nothing but the patch and the record: a new launcher needs its
-/// command, an existing one never loses it, and a standalone one needs its window.
-fn check_write(
-    name: &str,
-    have: Option<&Launcher>,
-    patch: &LauncherPatch,
-    standalone: bool,
-) -> Result<(), RuleError> {
+/// command and an existing one never loses it.
+fn check_cmd(name: &str, have: Option<&Launcher>, patch: &LauncherPatch) -> Result<(), RuleError> {
     let cmd = patch.cmd.as_ref().map(|c| c.as_deref().unwrap_or_default());
     if have.is_none() && cmd.is_none_or(str::is_empty) {
         return Err(RuleError::new(format!(
@@ -137,6 +133,16 @@ fn check_write(
             "a launcher always has a command: give --cmd a value, or retire it with coord launcher retire {name}."
         )));
     }
+    Ok(())
+}
+
+/// A standalone launcher needs its window, given now or already stored.
+fn check_every(
+    name: &str,
+    have: Option<&Launcher>,
+    patch: &LauncherPatch,
+    standalone: bool,
+) -> Result<(), RuleError> {
     let every = patch.use_every.as_ref().is_some_and(Option::is_some);
     let stored = have.is_some_and(|h| h.use_every.is_some());
     if standalone && !every && !stored {
@@ -202,6 +208,8 @@ fn has_window(
 /// (not master, not joined to a bundle, not serving an item) must have `useEvery`: given now,
 /// or already stored; one that is master, joined or serving an item takes none and the value
 /// is dropped (`ignored`).
+/// Every build except the master serves an item: a new one without `for`, or a write that
+/// clears the link, is refused.
 /// A refusal leaves the board as it was.
 pub fn write_launcher(
     board: &mut LauncherBoard,
@@ -220,7 +228,9 @@ pub fn write_launcher(
         patch.use_every = None;
         ignored.push("useEvery");
     }
-    check_write(name, have.as_ref(), &patch, standalone)?;
+    check_cmd(name, have.as_ref(), &patch)?;
+    need_link::check(board, name, have.as_ref(), &patch)?;
+    check_every(name, have.as_ref(), &patch, standalone)?;
     let created = have.is_none();
     let mut rec = have
         .clone()

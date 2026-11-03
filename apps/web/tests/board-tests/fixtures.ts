@@ -105,6 +105,6 @@ const conflictEntry = (id: string, test: string, extra: object = {}) => ({
   ...extra,
 });
 
-const byId = (docs: Record<string, unknown>[], key = 'id'): Record<string, object> => Object.fromEntries(docs.map((doc) => [String(doc[key]), doc]));
+const byId = (docs: readonly object[], key = 'id'): Record<string, object> => Object.fromEntries(docs.map((doc) => [String(Reflect.get(doc, key)), doc]));
 
 export { buildDoc, byId, conflictEntry, defDoc, doneDoc, itemDoc, launcherDoc, runDoc, testDoc, threadDoc, wakeDoc };

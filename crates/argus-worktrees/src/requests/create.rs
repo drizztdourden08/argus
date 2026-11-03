@@ -230,39 +230,28 @@ impl Service {
     /// A thread's own release, already checked for its caller: the one worktree is queued for the worker, which
     /// looks again right before the removal.
     pub(crate) fn request_release(&self, input: &RequestInput) -> Result<Queued> {
-        let named: Vec<&String> = input.targets.iter().collect();
-        let docs = self.list(&input.project);
-        let rec = self.add_request(
-            (input, true),
-            Mode::Targets,
-            (None, None),
-            targets_of(&named, &docs),
-        )?;
-        Ok(self.queued(input, &rec))
+        self.queue_named(input, (Mode::Targets, true))
     }
 
     /// The hygiene's request for the released worktrees of one thread, checked for the caller as any other.
     pub(crate) fn request_released(&self, input: &RequestInput) -> Result<Queued> {
         self.authorize_request(input)?;
-        let named: Vec<&String> = input.targets.iter().collect();
-        let docs = self.list(&input.project);
-        let rec = self.add_request(
-            (input, false),
-            Mode::Released,
-            (None, None),
-            targets_of(&named, &docs),
-        )?;
-        Ok(self.queued(input, &rec))
+        self.queue_named(input, (Mode::Released, false))
     }
 
     /// The hygiene's request for the worktrees of one thread whose item closed, checked for the caller as any other.
     pub(crate) fn request_item_closed(&self, input: &RequestInput) -> Result<Queued> {
         self.authorize_request(input)?;
+        self.queue_named(input, (Mode::ItemClosed, false))
+    }
+
+    /// The request for exactly the worktrees the input names, in `mode`; `release` marks a thread's own release.
+    fn queue_named(&self, input: &RequestInput, (mode, release): (Mode, bool)) -> Result<Queued> {
         let named: Vec<&String> = input.targets.iter().collect();
         let docs = self.list(&input.project);
         let rec = self.add_request(
-            (input, false),
-            Mode::ItemClosed,
+            (input, release),
+            mode,
             (None, None),
             targets_of(&named, &docs),
         )?;

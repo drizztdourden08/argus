@@ -7,7 +7,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use argus_board::Board;
 use argus_board::ops::{OpResult, Role, Status, Who};
 use argus_board::store::empty_board;
-use argus_board::sync::{ImportResult, import_entries};
+use argus_board::sync::{ImportResult, export_docs, import_entries};
+use argus_core::Coll;
 use argus_core::clock::now_iso;
 pub use argus_core::fixture::doc;
 use argus_core::fixture::{fill_alpha, merge};
@@ -23,6 +24,15 @@ pub fn alpha() -> Board {
     b["name"] = json!("Alpha");
     fill_alpha(&mut b);
     b
+}
+
+/// The page doc `id` of `coll` as the export writes it, `null` when there is none.
+pub fn exported(board: &Value, coll: Coll, id: &str) -> Value {
+    export_docs(board, &|_| String::new())
+        .into_iter()
+        .find(|d| d.coll == coll && d.id == id)
+        .and_then(|d| d.data)
+        .unwrap_or(Value::Null)
 }
 
 /// An owner post: `body` over the usual page fields, imported into the board.

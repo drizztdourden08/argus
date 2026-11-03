@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { NOW, cleanEntryBoard, mountEntryBoard } from '../helpers/entry-board';
+import { NOW, cleanEntryBoard, entryWork, mountEntryBoard } from '../helpers/entry-board';
 
 cleanEntryBoard();
 
-const work = { id: 'I-1', title: 'Item I-1', thread: 'worker', status: 'doing', rank: 1, rev: 1, createdAt: NOW, updatedAt: NOW };
+const work = entryWork();
 const question = {
   id: 'Q-1',
   kind: 'question',

@@ -155,6 +155,18 @@ impl Rig {
         self.edit(|b| b["items"][id] = item_doc(id, status));
     }
 
+    /// A test plan `id` that names the bundle `tag`: the item a build of that bundle serves.
+    pub fn with_plan(&self, id: &str, tag: &str) {
+        self.edit(|b| {
+            let at = "2026-10-26T12:00:00.000Z";
+            b["items"][id] = json!({
+                "id": id, "type": "test-plan", "title": "Plan", "thread": "worker", "status": "todo",
+                "rev": 1, "rank": 2048, "fields": { "bundle": tag },
+                "createdAt": at, "createdBy": "worker", "updatedAt": at, "updatedBy": "worker",
+            });
+        });
+    }
+
     /// A launcher written before builds served items: no `for`, a usage window when given.
     pub fn legacy_launcher(&self, name: &str, use_every: Option<&str>) {
         self.edit(|b| {

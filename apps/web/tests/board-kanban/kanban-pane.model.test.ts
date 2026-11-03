@@ -17,8 +17,8 @@ import { stageFact } from '../../src/screens/board/tabs/kanban/pane/model/stage-
 import { tabsOf } from '../../src/screens/board/tabs/kanban/pane/model/tabs-of';
 import { testsBadge } from '../../src/screens/board/tabs/kanban/pane/model/tests-badge';
 import { textValue } from '../../src/screens/board/tabs/kanban/pane/model/text-value';
-import type { PaneData } from '../../src/screens/board/tabs/kanban/pane/pane.type';
-import { NOW, itemRef } from './kanban-docs';
+import { itemRef } from './kanban-docs';
+import { paneData } from './pane-data';
 
 const PANE = join(import.meta.dirname, '../../src/screens/board/tabs/kanban/pane');
 
@@ -27,24 +27,6 @@ const SOURCES = ['.', 'tabs', 'fields', 'trail'].flatMap((dir) =>
     .filter((file) => file.endsWith('.tsx'))
     .map((file): [string, string] => [`${dir}/${file}`, readFileSync(join(PANE, dir, file), 'utf8')]),
 );
-
-const data = (extra: Partial<PaneData> = {}): PaneData => ({
-  boardKey: 'alpha',
-  item: itemRef('I-1'),
-  items: [],
-  tests: [],
-  allTests: [],
-  threads: [],
-  record: { questions: [], decisions: [], notes: [], todos: [], timeline: [] },
-  waiting: false,
-  blocking: null,
-  now: NOW,
-  ops: {} as never,
-  acts: {} as never,
-  feed: {} as never,
-  open: () => undefined,
-  ...extra,
-});
 
 describe('I-72 P6 the tabs of an item come from the registry', { tags: ['standard'] }, () => {
   it.each(ITEM_REGISTRY.types.map((type) => [type.id, type.tabs]))('gives a %s the tabs its registry entry lists, in order', (id, tabs) => {
@@ -82,19 +64,19 @@ describe('I-72 P6 the badges of the tabs', { tags: ['standard'] }, () => {
       itemRef('I-5', { parent: 'I-1', archivedAt: '2026-10-01T00:00:00.000Z' }),
       itemRef('I-6', { parent: 'I-9' }),
     ];
-    expect(childrenBadge(data({ items }))?.value).toBe(1);
-    expect(childrenBadge(data())).toBeUndefined();
+    expect(childrenBadge(paneData({ items }))?.value).toBe(1);
+    expect(childrenBadge(paneData())).toBeUndefined();
   });
 
   it('counts the cases of a plan', () => {
-    expect(casesBadge(data({ item: itemRef('I-1', { fields: { cases: ['T-1', 'T-2'] } }) }))?.value).toBe(2);
-    expect(casesBadge(data())).toBeUndefined();
+    expect(casesBadge(paneData({ item: itemRef('I-1', { fields: { cases: ['T-1', 'T-2'] } }) }))?.value).toBe(2);
+    expect(casesBadge(paneData())).toBeUndefined();
   });
 
   it('counts the links that hold the item back, in warning', () => {
     const item = itemRef('I-1', { blocked: [{ kind: 'item', id: 'I-2', label: 'Two' }, { kind: 'ask', id: 'Q-1', label: 'Why' }] });
-    expect(linksBadge(data({ item }))).toMatchObject({ value: 2, tone: 'warn' });
-    expect(linksBadge(data())).toBeUndefined();
+    expect(linksBadge(paneData({ item }))).toMatchObject({ value: 2, tone: 'warn' });
+    expect(linksBadge(paneData())).toBeUndefined();
   });
 
   it('counts the open questions and the pending to-dos', () => {
@@ -105,15 +87,15 @@ describe('I-72 P6 the badges of the tabs', { tags: ['standard'] }, () => {
       todos: [{ action: { id: 'H-1' }, done: false }, { action: { id: 'H-2' }, done: true }],
       timeline: [],
     } as never;
-    expect(discussionBadge(data({ record }))?.value).toBe(2);
-    expect(discussionBadge(data())).toBeUndefined();
+    expect(discussionBadge(paneData({ record }))?.value).toBe(2);
+    expect(discussionBadge(paneData())).toBeUndefined();
   });
 
   it('shows the number of failing tests, in danger while one fails', () => {
     const tests = [{ id: 'T-1', status: 'fail' }, { id: 'T-2', status: 'pass' }, { id: 'T-3', status: 'pass' }] as never;
-    expect(testsBadge(data({ tests }))).toMatchObject({ value: 1, tone: 'danger', title: '1 failing of 3 tests' });
-    expect(testsBadge(data({ tests: [{ id: 'T-2', status: 'pass' }] as never }))).toMatchObject({ value: 0, tone: 'neutral' });
-    expect(testsBadge(data())).toBeUndefined();
+    expect(testsBadge(paneData({ tests }))).toMatchObject({ value: 1, tone: 'danger', title: '1 failing of 3 tests' });
+    expect(testsBadge(paneData({ tests: [{ id: 'T-2', status: 'pass' }] as never }))).toMatchObject({ value: 0, tone: 'neutral' });
+    expect(testsBadge(paneData())).toBeUndefined();
   });
 });
 

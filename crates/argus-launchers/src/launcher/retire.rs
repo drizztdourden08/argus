@@ -7,7 +7,7 @@
 //! (a shared launcher, master), stays.
 
 use super::audit::audit;
-use super::authorize::authorize_launcher;
+use super::authorize::launcher_to_change;
 use super::join::{is_master, joined_bundle, linked_bundles, made_for};
 use super::play::sync_launcher_play;
 use super::record::{LauncherBoard, RuleError, Who};
@@ -27,11 +27,7 @@ pub fn retire_launcher(
             "{name} is never retired: update it with coord launcher set {name} --cmd \"...\" instead."
         )));
     }
-    let rec = board
-        .launchers
-        .get(name)
-        .ok_or_else(|| RuleError::new(format!("no launcher \"{name}\".")))?;
-    authorize_launcher(board, who, Some(rec))?;
+    launcher_to_change(board, who, name)?;
     if let Some(rec) = board.launchers.get_mut(name) {
         rec.retired_at = Some(at.to_owned());
         rec.retired_by = Some(who.actor.clone());
@@ -127,11 +123,7 @@ pub fn keep_launcher(
     (days, note): (Option<i64>, Option<&str>),
     at: &str,
 ) -> Result<(), RuleError> {
-    let rec = board
-        .launchers
-        .get(name)
-        .ok_or_else(|| RuleError::new(format!("no launcher \"{name}\".")))?;
-    authorize_launcher(board, who, Some(rec))?;
+    let rec = launcher_to_change(board, who, name)?;
     if rec.retired_at.is_some() {
         return Err(RuleError::new(format!(
             "launcher {name} is retired: there is nothing to keep (coord launcher set {name} brings it back)."

@@ -9,12 +9,11 @@ use argus_board::served::closure;
 use argus_core::clock::now_iso;
 use serde_json::json;
 
+use super::act::as_caller;
 use super::path::target_of;
 use super::rule_add::audit;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
-use crate::verbs::remote::support::link::project_of;
-use crate::verbs::remote::support::scope::locked;
 use crate::verbs::remote::support::text::cell;
 
 const LINKS: &str = "worktreeLinks";
@@ -45,15 +44,13 @@ pub(super) fn link(call: &mut Call<'_>) -> Outcome {
             "name the worktree and its item: coord worktree link <id|path> <I-n>.",
         ));
     };
-    let project = project_of(call).to_owned();
-    locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
+    as_caller(call, |board, who, scope| {
         let (id, _) = target_of(&target)?;
         check_item(board, &item)?;
         let was = cell(board[LINKS][id.as_str()].get("item"));
         let rec = json!({ "item": item, "by": who.actor, "at": now_iso() });
         map_mut(board, LINKS).insert(id.clone(), rec);
-        audit(board, &who, &format!("linked worktree {id} to {item}"));
+        audit(board, who, &format!("linked worktree {id} to {item}"));
         let before = if was.is_empty() {
             String::new()
         } else {
@@ -73,9 +70,7 @@ pub(super) fn unlink(call: &mut Call<'_>) -> Outcome {
             "name the worktree: coord worktree unlink <id|path>.",
         ));
     };
-    let project = project_of(call).to_owned();
-    locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
+    as_caller(call, |board, who, scope| {
         let (id, _) = target_of(&target)?;
         let Some(gone) = map_mut(board, LINKS).shift_remove(&id) else {
             return Err(CoordError::refuse(format!(
@@ -83,7 +78,7 @@ pub(super) fn unlink(call: &mut Call<'_>) -> Outcome {
             )));
         };
         let item = cell(gone.get("item"));
-        audit(board, &who, &format!("unlinked worktree {id} from {item}"));
+        audit(board, who, &format!("unlinked worktree {id} from {item}"));
         scope.say(&[&format!(
             "{id}: unlinked from {item}. Argus still reads its agent, its branch name and the text of items; with none of them it shows no item."
         )]);

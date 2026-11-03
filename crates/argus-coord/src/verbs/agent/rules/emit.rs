@@ -51,11 +51,11 @@ pub fn launcher_map(l: &Launcher) -> Map<String, Value> {
     }
     put_some(&mut m, "retiredByBundle", l.retired_by_bundle.as_ref());
     put_some(&mut m, "for", l.for_item.as_ref());
-    if l.master {
+    if l.link.master {
         put(&mut m, "master", true);
     }
     put_some(&mut m, "retiredByItem", l.retired_by_item.as_ref());
-    if l.relink {
+    if l.link.relink {
         put(&mut m, "relink", true);
     }
     m

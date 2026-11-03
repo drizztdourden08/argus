@@ -6,15 +6,14 @@
 
 // test-tag: standard
 
-use crate::board::{AgentFact, Caller, ItemFact, Keep, WorktreeLink};
+use crate::board::{AgentFact, Caller, ItemFact, WorktreeLink};
 use crate::hygiene::{HygieneState, Stepped};
 use crate::linking::LinkSource;
-use crate::ports::ProcInfo;
 use crate::request::RemoveInput;
 use crate::requests::Mode;
 use crate::rule::Rule;
 use crate::sync::locked;
-use crate::testkit::{Fixture, Harness, commit, exists_itself, put, rule_for, write};
+use crate::testkit::{Fixture, Harness, exists_itself, put, rule_for, write};
 use std::path::Path;
 
 const CLOSE_GRACE: i64 = 120_000;
@@ -94,6 +93,27 @@ fn review_why(h: &Harness, name: &str) -> String {
 fn step(h: &Harness, ms: i64) -> Stepped {
     h.clock.advance(ms);
     h.svc.hygiene_step("alpha")
+}
+
+/// A holder keeps the worktree of the closed item in use through twice the grace.
+fn holds_through_the_grace(h: &Harness, fx: &Fixture) {
+    h.scan();
+    assert_eq!(state(h, "agent-a1"), Some(HygieneState::InUse));
+    step(h, CLOSE_GRACE * 2);
+    h.svc.requests_idle();
+    assert!(
+        exists_itself(&fx.path("agent-a1")),
+        "a holder keeps it in use"
+    );
+}
+
+/// The holder is gone: the worktree is closing, and it goes after the grace.
+fn goes_after_the_grace(h: &Harness, fx: &Fixture) {
+    h.scan();
+    assert_eq!(state(h, "agent-a1"), Some(HygieneState::Closing));
+    step(h, CLOSE_GRACE);
+    h.svc.requests_idle();
+    assert!(!exists_itself(&fx.path("agent-a1")));
 }
 
 /// The item closes, the grace passes, the request runs.
@@ -217,15 +237,7 @@ fn uncommitted_work_is_written_to_a_patch_first_and_the_note_names_it_and_how_to
 
 #[test]
 fn commits_no_ref_keeps_are_written_to_a_bundle_first() {
-    let (fx, h) = world_with(
-        &[],
-        |fx| {
-            let path = fx.path("agent-a1");
-            fx.git(&["worktree", "add", "-q", "--detach", &path]);
-            commit(&path, "d.txt", "detached work\n", 0.0);
-        },
-        |_| {},
-    );
+    let (fx, h) = world_with(&[], |fx| fx.add_detached_work("agent-a1"), |_| {});
     assert_eq!(
         review_why(&h, "agent-a1"),
         "its HEAD has commits no branch or ref keeps"
@@ -293,24 +305,13 @@ fn a_running_agent_holds_it_and_it_goes_when_the_agent_ends() {
         ..AgentFact::default()
     }];
     set_lane(&h, "done");
-    h.scan();
-    assert_eq!(state(&h, "agent-a1"), Some(HygieneState::InUse));
-    step(&h, CLOSE_GRACE * 2);
-    h.svc.requests_idle();
-    assert!(
-        exists_itself(&fx.path("agent-a1")),
-        "a running agent holds it"
-    );
+    holds_through_the_grace(&h, &fx);
     {
         let mut board = h.board();
         board.agents[0].status = "done".into();
         board.agents[0].ended_ms = Some(ended);
     }
-    h.scan();
-    assert_eq!(state(&h, "agent-a1"), Some(HygieneState::Closing));
-    step(&h, CLOSE_GRACE);
-    h.svc.requests_idle();
-    assert!(!exists_itself(&fx.path("agent-a1")));
+    goes_after_the_grace(&h, &fx);
     assert_eq!(
         inbox(&h).pop().unwrap().0,
         "lead",
@@ -323,24 +324,11 @@ fn a_process_in_it_holds_it_and_it_goes_when_the_process_ends() {
     let (fx, h) = world(&["agent-a1"]);
     set_lane(&h, "done");
     h.clock.advance(10_001);
-    locked(&h.procs.0).push(ProcInfo {
-        pid: 4242,
-        name: "node.exe".into(),
-        cwd: Some(fx.path("agent-a1")),
-        ..ProcInfo::default()
-    });
-    h.scan();
-    assert_eq!(state(&h, "agent-a1"), Some(HygieneState::InUse));
-    step(&h, CLOSE_GRACE * 2);
-    h.svc.requests_idle();
-    assert!(exists_itself(&fx.path("agent-a1")));
+    h.run_node_in(&fx.path("agent-a1"));
+    holds_through_the_grace(&h, &fx);
     locked(&h.procs.0).clear();
     h.clock.advance(10_001);
-    h.scan();
-    assert_eq!(state(&h, "agent-a1"), Some(HygieneState::Closing));
-    step(&h, CLOSE_GRACE);
-    h.svc.requests_idle();
-    assert!(!exists_itself(&fx.path("agent-a1")));
+    goes_after_the_grace(&h, &fx);
 }
 
 #[test]
@@ -378,16 +366,7 @@ fn a_reopen_inside_the_grace_cancels_it_and_so_does_a_link_to_another_open_item(
 #[test]
 fn a_keep_does_not_hold_the_worktree_of_a_closed_item() {
     let (fx, h) = world(&["agent-a1"]);
-    let id = h.id_of(&fx.path("agent-a1"));
-    let until_ms = h.clock_now() + 86_400_000;
-    h.board().keeps.insert(
-        id,
-        Keep {
-            until_ms,
-            note: Some("still testing".into()),
-            by: Some("lead".into()),
-        },
-    );
+    h.keep_for_a_day(&fx.path("agent-a1"));
     h.svc.hygiene_step("alpha");
     assert_eq!(state(&h, "agent-a1"), Some(HygieneState::Kept));
     close_and_wait(&h);

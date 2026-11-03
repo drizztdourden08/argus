@@ -3,7 +3,7 @@
 
 use crate::batch::{BatchInput, BatchOutcome};
 use crate::board::BoardFacts;
-use crate::board::{Caller, Link, OwnerEntry};
+use crate::board::{Caller, Keep, Link, OwnerEntry};
 use crate::clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 use crate::error::WtError;
 use crate::exec::GitOutput;
@@ -366,6 +366,13 @@ impl Fixture {
             &[],
         );
         path
+    }
+
+    /// Adds the worktree `name` on a detached HEAD that holds a commit no branch or ref keeps.
+    pub fn add_detached_work(&self, name: &str) {
+        let path = self.path(name);
+        self.git(&["worktree", "add", "-q", "--detach", &path]);
+        commit(&path, "d.txt", "detached work\n", 0.0);
     }
 
     pub fn path(&self, name: &str) -> String {
@@ -985,6 +992,27 @@ impl Harness {
 
     pub fn clock_now(&self) -> i64 {
         self.clock.now_ms()
+    }
+
+    /// A process named `node.exe` running in the folder `cwd`.
+    pub fn run_node_in(&self, cwd: &str) {
+        locked(&self.procs.0).push(ProcInfo {
+            pid: 4242,
+            name: "node.exe".into(),
+            cwd: Some(cwd.to_owned()),
+            ..ProcInfo::default()
+        });
+    }
+
+    /// The lead keeps the worktree at `path` for a day.
+    pub fn keep_for_a_day(&self, path: &str) {
+        let until_ms = self.clock_now() + 86_400_000;
+        let keep = Keep {
+            until_ms,
+            note: Some("still testing".into()),
+            by: Some("lead".into()),
+        };
+        self.board().keeps.insert(self.id_of(path), keep);
     }
 
     /// The text of the wake sent to `thread`.

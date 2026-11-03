@@ -6,12 +6,12 @@
 // test-tag: critical
 
 use argus_launchers::launcher::{
-    Bundle, BundleStatus, CloseRequest, LauncherBoard, LauncherPatch, WriteContext, check_hand,
-    close_bundle, ensure_bundle, reopen_bundle, restore_made_for, retire_launcher, retire_made_for,
-    set_bundle_status, write_launcher,
+    Bundle, BundleStatus, CloseRequest, Launcher, LauncherBoard, LauncherPatch, WriteContext,
+    check_hand, close_bundle, ensure_bundle, reopen_bundle, restore_made_for, retire_launcher,
+    retire_made_for, set_bundle_status, write_launcher,
 };
 
-use crate::launcher_rules::{AT, board, lead, worker};
+use crate::launcher_rules::{AT, board, launcher, lead, worker};
 
 fn bundle(tag: &str, launcher: Option<&str>) -> Bundle {
     Bundle {
@@ -22,10 +22,10 @@ fn bundle(tag: &str, launcher: Option<&str>) -> Bundle {
     }
 }
 
-fn patch(cmd: &str, every: Option<&str>) -> LauncherPatch {
+fn patch(cmd: &str) -> LauncherPatch {
     LauncherPatch {
         cmd: Some(Some(cmd.to_owned())),
-        use_every: every.map(|e| Some(e.to_owned())),
+        for_item: Some(Some("I-1".to_owned())),
         ..LauncherPatch::default()
     }
 }
@@ -37,32 +37,20 @@ fn made_for_bundle(board: &mut LauncherBoard, tag: &str) {
         bundle: Some(tag),
         at: AT,
     };
-    write_launcher(
-        board,
-        &worker("worker"),
-        tag,
-        &patch("node j.js", None),
-        &ctx,
-    )
-    .unwrap();
+    write_launcher(board, &worker("worker"), tag, &patch("node j.js"), &ctx).unwrap();
     board.builds.insert(tag.to_owned(), bundle(tag, Some(tag)));
 }
 
 fn setup() -> LauncherBoard {
     let mut board = board();
-    let ctx = WriteContext {
-        cwd: "/p",
-        bundle: None,
-        at: AT,
-    };
-    write_launcher(
-        &mut board,
-        &lead(),
-        "shared-1",
-        &patch("game run --shared", Some("30d")),
-        &ctx,
-    )
-    .unwrap();
+    board.launchers.insert(
+        "shared-1".to_owned(),
+        Launcher {
+            cmd: Some("game run --shared".to_owned()),
+            use_every: Some("30d".to_owned()),
+            ..launcher("shared-1")
+        },
+    );
     made_for_bundle(&mut board, "j-1");
     board
         .builds

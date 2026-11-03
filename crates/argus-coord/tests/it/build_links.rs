@@ -11,18 +11,6 @@ fn launcher(rig: &Rig, name: &str) -> Value {
     rig.board()["launchers"][name].clone()
 }
 
-/// A test plan `id` that names the bundle `tag`.
-fn plan(rig: &Rig, id: &str, tag: &str) {
-    rig.edit(|b| {
-        let at = "2026-10-26T12:00:00.000Z";
-        b["items"][id] = json!({
-            "id": id, "type": "test-plan", "title": "Plan", "thread": "worker", "status": "todo",
-            "rev": 1, "rank": 2048, "fields": { "bundle": tag },
-            "createdAt": at, "createdBy": "worker", "updatedAt": at, "updatedBy": "worker",
-        });
-    });
-}
-
 #[test]
 fn a_new_build_needs_the_item_it_serves_and_the_item_must_exist() {
     let rig = Rig::new();
@@ -32,7 +20,7 @@ fn a_new_build_needs_the_item_it_serves_and_the_item_must_exist() {
         As::Worker,
         "--for",
     );
-    assert!(bare.err.contains("--master"), "{}", bare.err);
+    assert!(bare.err.contains("Only the master build"), "{}", bare.err);
     assert!(rig.board()["launchers"].get("web-1").is_none());
     rig.refused(
         &[
@@ -169,7 +157,7 @@ fn an_item_that_closes_names_the_builds_that_closed_with_it_and_a_reopen_names_t
 fn old_board() -> Rig {
     let rig = Rig::new();
     rig.with_test();
-    plan(&rig, "I-2", "alpha-1");
+    rig.with_plan("I-2", "alpha-1");
     rig.legacy_launcher("master", None);
     rig.legacy_launcher("alpha-1", None);
     rig.legacy_launcher("bundle-4", None);

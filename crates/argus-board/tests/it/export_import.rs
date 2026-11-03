@@ -5,21 +5,13 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, doc, post};
+use crate::common::{alpha, doc, exported, post};
 use argus_board::sync::{export_docs, import_entries};
 use argus_core::Coll;
 use argus_core::clock::now_iso;
 use serde_json::{Value, json};
 
 const CTX: &str = "The login form can remember the email. It changes what is stored on the machine, so it is your call. I will store nothing if unanswered.";
-
-fn exported(board: &Value, coll: Coll, id: &str) -> Value {
-    export_docs(board, &|_| String::new())
-        .into_iter()
-        .find(|d| d.coll == coll && d.id == id)
-        .and_then(|d| d.data)
-        .unwrap_or(Value::Null)
-}
 
 #[test]
 fn the_context_reaches_the_page_docs_and_survives_importing_the_owner_answer() {

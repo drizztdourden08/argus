@@ -17,8 +17,6 @@ import { RunTab } from './tabs/RunTab';
 import { ServedTab } from './tabs/ServedTab';
 import { TestsTab } from './tabs/TestsTab';
 
-const PANE_FALLBACK_TAB = 'overview';
-
 const PANE_TABS: Readonly<Record<string, PaneTab>> = {
   overview: { label: 'Overview', icon: 'file-text', Body: OverviewTab },
   children: { label: 'Children', icon: 'git-branch', Body: ChildrenTab, badge: childrenBadge },
@@ -32,4 +30,4 @@ const PANE_TABS: Readonly<Record<string, PaneTab>> = {
   activity: { label: 'Activity', icon: 'history', Body: ActivityTab },
 };
 
-export { PANE_FALLBACK_TAB, PANE_TABS };
+export { PANE_TABS };

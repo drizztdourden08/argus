@@ -3,7 +3,9 @@ import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { PANE_TABS } from '../../src/screens/board/tabs/kanban/pane/pane.constants';
 import { servedBadge } from '../../src/screens/board/tabs/kanban/pane/model/served-badge';
-import type { PaneData } from '../../src/screens/board/tabs/kanban/pane/pane.type';
+import type { ItemRef } from '../../src/data/kanban';
+import { itemRef } from '../board-kanban/kanban-docs';
+import { paneData } from '../board-kanban/pane-data';
 import { cleanAfterEach } from '../board-tests/board-dom';
 import { worktree } from '../board-worktrees/fixtures';
 import { ago, DAY, launcherDoc } from './fixtures';
@@ -12,7 +14,7 @@ import { mountServed } from './mount-served';
 
 cleanAfterEach();
 
-const badge = (servedBy?: object) => servedBadge({ item: { id: 'I-1', servedBy } } as unknown as PaneData);
+const badge = (servedBy?: ItemRef['servedBy']) => servedBadge(paneData({ item: itemRef('I-1', servedBy ? { servedBy } : {}) }));
 
 describe('P13 the Builds tab of the item pane', { tags: ['critical'] }, () => {
   it('is registered as a pane tab with a badge', () => {

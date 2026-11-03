@@ -64,14 +64,23 @@ fn a_build_that_serves_an_item_has_no_usage_window_and_drops_a_use_every() {
 }
 
 #[test]
-fn a_new_build_with_no_link_and_no_window_is_still_refused_on_an_old_board() {
+fn a_new_build_with_no_link_is_refused_and_so_is_clearing_the_link_of_one() {
     let mut board = board();
     let patch = LauncherPatch {
         cmd: Some(Some("game run --two".to_owned())),
         ..LauncherPatch::default()
     };
     let refused = write_launcher(&mut board, &lead(), "build-2", &patch, &ctx()).unwrap_err();
-    assert!(refused.0.contains("--use-every"), "{refused}");
+    assert!(refused.0.contains("pass --for I-n"), "{refused}");
+    assert!(!board.launchers.contains_key("build-2"));
+    let mut linked = with_build("I-5");
+    let clear = LauncherPatch {
+        for_item: Some(None),
+        ..LauncherPatch::default()
+    };
+    let cleared = write_launcher(&mut linked, &lead(), "build-2", &clear, &ctx()).unwrap_err();
+    assert!(cleared.0.contains("pass --for I-n"), "{cleared}");
+    assert_eq!(linked.launchers["build-2"].for_item.as_deref(), Some("I-5"));
 }
 
 #[test]
@@ -80,9 +89,9 @@ fn the_master_role_is_handed_over_by_the_coordinator_and_the_old_master_waits_fo
     let res = write_launcher(&mut board, &lead(), "build-2", &master_patch(), &ctx()).unwrap();
     assert_eq!(res.changed, ["master"]);
     assert_eq!(res.previous_master.as_deref(), Some("master"));
-    assert!(board.launchers["build-2"].master);
-    assert!(!board.launchers["master"].master);
-    assert!(board.launchers["master"].relink);
+    assert!(board.launchers["build-2"].link.master);
+    assert!(!board.launchers["master"].link.master);
+    assert!(board.launchers["master"].link.relink);
     assert!(is_master(&board, "build-2") && !is_master(&board, "master"));
     assert!(has_master(&board));
 }
@@ -99,7 +108,7 @@ fn a_thread_cannot_hand_the_master_role_over() {
     )
     .unwrap_err();
     assert!(refused.0.contains("coordinator"), "{refused}");
-    assert!(!board.launchers["build-2"].master);
+    assert!(!board.launchers["build-2"].link.master);
 }
 
 #[test]
@@ -125,7 +134,7 @@ fn a_new_build_made_as_master_needs_no_window_and_takes_the_role() {
     };
     let made = write_launcher(&mut board, &lead(), "main", &patch, &ctx()).unwrap();
     assert_eq!(made.previous_master.as_deref(), Some("master"));
-    assert!(board.launchers["main"].master && board.launchers["main"].use_every.is_none());
+    assert!(board.launchers["main"].link.master && board.launchers["main"].use_every.is_none());
 }
 
 #[test]
@@ -133,13 +142,13 @@ fn link_launcher_sets_the_item_and_clears_a_pending_relink() {
     let mut board = board();
     board.launchers.insert("tool".to_owned(), {
         let mut rec = launcher("tool");
-        rec.relink = true;
+        rec.link.relink = true;
         rec
     });
     link_launcher(&mut board, &lead(), ("tool", "I-9"), AT).unwrap();
     let rec = &board.launchers["tool"];
     assert_eq!(rec.for_item.as_deref(), Some("I-9"));
-    assert!(!rec.relink);
+    assert!(!rec.link.relink);
     assert!(
         board
             .audit

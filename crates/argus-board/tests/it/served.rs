@@ -4,19 +4,10 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, applied, lead, post};
+use crate::common::{alpha, applied, exported, lead, post};
 use argus_board::ops::{Who, apply_op};
-use argus_board::sync::export_docs;
 use argus_core::Coll;
 use serde_json::{Value, json};
-
-fn exported(board: &Value, coll: Coll, id: &str) -> Value {
-    export_docs(board, &|_| String::new())
-        .into_iter()
-        .find(|d| d.coll == coll && d.id == id)
-        .and_then(|d| d.data)
-        .unwrap_or(Value::Null)
-}
 
 fn launcher(name: &str, serves: Option<&str>) -> Value {
     json!({

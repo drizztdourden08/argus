@@ -4,7 +4,7 @@ use argus_launchers::launcher::{Launcher, MASTER};
 
 /// Why a `--use-every` was not kept: the build has no usage window.
 pub(super) fn ignored_every(name: &str, rec: &Launcher) -> String {
-    if rec.master || name == MASTER {
+    if rec.link.master || name == MASTER {
         return format!("--use-every ignored: {name} has no usage window (it is never stale).");
     }
     match rec.for_item.as_deref() {

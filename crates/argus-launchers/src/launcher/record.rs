@@ -33,6 +33,18 @@ fn app_kind() -> String {
     "app".to_owned()
 }
 
+/// How a build stands with the link rule, kept flat in the JSON (`master`, `relink`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct LinkMark {
+    /// The master build of the board: needs no item and never closes with one.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub master: bool,
+    /// A live build with no clear item, left by `coord build migrate-links` for its lead to link.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub relink: bool,
+}
+
 /// One startable build of a project (`board.launchers[name]`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -69,15 +81,12 @@ pub struct Launcher {
     /// The work item this build serves (`for`): the build closes when the item does.
     #[serde(rename = "for", skip_serializing_if = "Option::is_none")]
     pub for_item: Option<String>,
-    /// The master build of the board: needs no item and never closes with one.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub master: bool,
+    /// The link marks: `master` and `relink`.
+    #[serde(flatten)]
+    pub link: LinkMark,
     /// The item whose closing retired this build; a reopen of it brings the build back.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub retired_by_item: Option<String>,
-    /// A live build with no clear item, left by `coord build migrate-links` for its lead to link.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub relink: bool,
     pub created_at: String,
     pub created_by: Option<String>,
     pub updated_at: String,
@@ -108,9 +117,8 @@ impl Default for Launcher {
             retire_note: None,
             retired_by_bundle: None,
             for_item: None,
-            master: false,
+            link: LinkMark::default(),
             retired_by_item: None,
-            relink: false,
             created_at: String::new(),
             created_by: None,
             updated_at: String::new(),

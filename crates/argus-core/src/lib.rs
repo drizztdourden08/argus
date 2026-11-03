@@ -3,6 +3,7 @@
 //! and the server log.
 #![deny(clippy::cognitive_complexity)]
 
+pub mod build_link;
 pub mod bus;
 pub mod change;
 pub mod clock;

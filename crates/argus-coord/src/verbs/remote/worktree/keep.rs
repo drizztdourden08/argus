@@ -8,13 +8,12 @@ use argus_core::clock::{iso_from_ms, now_iso, parse_ms};
 use argus_core::js;
 use serde_json::{Value, json};
 
+use super::act::as_caller;
 use super::opts::text_opt;
 use super::path::target_of;
 use super::rule_add::audit;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
-use crate::verbs::remote::support::link::project_of;
-use crate::verbs::remote::support::scope::locked;
 use crate::verbs::remote::support::text::{cell, int_within, number_of};
 use crate::who::Caller;
 
@@ -103,10 +102,8 @@ pub(super) fn keep(call: &mut Call<'_>) -> Outcome {
         days: text_opt(&call.options, "days")?,
         clear: call.options.flag("clear"),
     };
-    let project = project_of(call).to_owned();
-    locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
-        let line = match keep_worktree(board, &who, &asked)? {
+    as_caller(call, |board, who, scope| {
+        let line = match keep_worktree(board, who, &asked)? {
             Some(rec) => format!(
                 "{}: kept for {} days (until {}): {}. The stale signal for it is off until then.",
                 cell(rec.get("id")),
@@ -155,10 +152,8 @@ pub(super) fn done(call: &mut Call<'_>) -> Outcome {
         ));
     };
     let note = text_opt(&call.options, "note")?;
-    let project = project_of(call).to_owned();
-    locked(call, &project, false, |board, scope| {
-        let who = scope.begin(board)?;
-        let entry = answer_request(board, &who, &id, note.as_deref())?;
+    as_caller(call, |board, who, scope| {
+        let entry = answer_request(board, who, &id, note.as_deref())?;
         let worktree = &entry["worktree"];
         let place = match worktree.get("path") {
             Some(path) if !path.is_null() => cell(Some(path)),

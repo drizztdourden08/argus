@@ -17,6 +17,10 @@ const NOW = new Date().toISOString();
 
 const worker = { id: 'worker', name: 'worker', session: 'worker', role: 'thread', status: 'active', activity: 'working', lastSeen: NOW };
 
+const entryWork = (extra: object = {}): object => ({
+  id: 'I-1', title: 'Item I-1', thread: 'worker', status: 'doing', rank: 1, rev: 1, createdAt: NOW, updatedAt: NOW, ...extra,
+});
+
 const cleanEntryBoard = (): void => {
   afterEach(() => {
     act(() => toast.clear());
@@ -36,5 +40,5 @@ const mountEntryBoard = async (board: EntryBoard): Promise<void> => {
   act(() => seedBoard(stream, { meta, threads: { worker }, items: { 'I-1': board.work }, entries: board.entries }));
 };
 
-export { NOW, cleanEntryBoard, mountEntryBoard, worker };
+export { NOW, cleanEntryBoard, entryWork, mountEntryBoard, worker };
 export type { EntryBoard };

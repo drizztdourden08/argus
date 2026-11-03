@@ -3,7 +3,7 @@
 //! leaves the audit line.
 
 use super::audit::audit;
-use super::authorize::authorize_launcher;
+use super::authorize::launcher_to_change;
 use super::record::{LauncherBoard, RuleError, Who};
 
 /// Sets the `for` of a live launcher. A build that was waiting for a link (`relink`) is no longer.
@@ -16,11 +16,7 @@ pub fn link_launcher(
     (name, item): (&str, &str),
     at: &str,
 ) -> Result<(), RuleError> {
-    let rec = board
-        .launchers
-        .get(name)
-        .ok_or_else(|| RuleError::new(format!("no launcher \"{name}\".")))?;
-    authorize_launcher(board, who, Some(rec))?;
+    let rec = launcher_to_change(board, who, name)?;
     if rec.retired_at.is_some() {
         return Err(RuleError::new(format!(
             "launcher {name} is retired: bring it back with coord launcher set {name} --for {item} instead."
@@ -28,7 +24,7 @@ pub fn link_launcher(
     }
     if let Some(rec) = board.launchers.get_mut(name) {
         rec.for_item = Some(item.to_owned());
-        rec.relink = false;
+        rec.link.relink = false;
         at.clone_into(&mut rec.updated_at);
         rec.by = Some(who.actor.clone());
     }

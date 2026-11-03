@@ -25,7 +25,7 @@ fn holders(board: &LauncherBoard, to: &str) -> Vec<String> {
     let flagged: Vec<String> = board
         .launchers
         .iter()
-        .filter(|(name, rec)| rec.master && name.as_str() != to)
+        .filter(|(name, rec)| rec.link.master && name.as_str() != to)
         .map(|(name, _)| name.clone())
         .collect();
     if !flagged.is_empty() || to == MASTER {
@@ -53,8 +53,8 @@ pub(super) fn pass_on(
     let old = holders(board, to);
     for name in &old {
         if let Some(rec) = board.launchers.get_mut(name) {
-            rec.master = false;
-            rec.relink = rec.for_item.is_none();
+            rec.link.master = false;
+            rec.link.relink = rec.for_item.is_none();
             at.clone_into(&mut rec.updated_at);
             rec.by = Some(who.actor.clone());
         }

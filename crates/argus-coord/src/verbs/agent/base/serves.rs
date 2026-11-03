@@ -2,7 +2,7 @@
 //! bundle names (the default item of a build made for that bundle).
 
 use argus_board::Board;
-use argus_board::json::{doc, section, truthy};
+use argus_board::json::{section, truthy};
 use argus_board::launchers::MASTER;
 use argus_board::served::{check_for, is_master};
 use argus_launchers::launcher::LauncherPatch;
@@ -41,21 +41,18 @@ fn names_master(board: &Board, name: &str) -> bool {
     is_master(board, name) || (name == MASTER && !flagged)
 }
 
-/// Checks the `for` of a launcher write against the board: a new build needs an item that a
-/// build may serve, an existing one keeps what it has unless a link is given, and only the master
-/// build may go without.
+/// Checks the item a launcher write names against the board: it must be an item a build may
+/// serve. That a non-master build has a link at all is the rule of `write_launcher`, which every
+/// write goes through.
 ///
 /// # Errors
-/// The sentence of the rule: no link, not an item, a type a build cannot serve, a closed item.
+/// The sentence of the rule: not an item, a type a build cannot serve, a closed item.
 pub fn check_link(board: &Board, name: &str, patch: &LauncherPatch) -> Result<(), CoordError> {
+    let Some(Some(id)) = patch.for_item.as_ref() else {
+        return Ok(());
+    };
     let master = patch.master == Some(true) || names_master(board, name);
-    let new = doc(board, "launchers", name).is_none();
-    match patch.for_item.as_ref() {
-        Some(Some(id)) => check_for(board, master, Some(id.as_str())).map_err(CoordError::from),
-        Some(None) if !master => check_for(board, master, None).map_err(CoordError::from),
-        None if new => check_for(board, master, None).map_err(CoordError::from),
-        _ => Ok(()),
-    }
+    check_for(board, master, Some(id.as_str())).map_err(CoordError::from)
 }
 
 /// The ids of the test plans (not in the trash) whose `bundle` field names `tag`.

@@ -4,6 +4,7 @@
 //! its guards. Any registered thread may read and write the rules; `remove`, `prune` and `request`
 //! are the project lead's or the rule thread's.
 
+mod act;
 mod idle;
 mod keep;
 mod leftovers;

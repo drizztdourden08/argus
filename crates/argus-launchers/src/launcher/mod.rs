@@ -11,6 +11,7 @@ mod join;
 mod link;
 mod master_role;
 mod naming;
+mod need_link;
 mod play;
 mod record;
 mod retire;
@@ -37,7 +38,7 @@ pub use naming::{
 };
 pub use play::{project_root, resolve_path, sync_launcher_play};
 pub use record::{
-    AuditLine, Bundle, Launcher, LauncherBoard, MASTER, Role, RuleError, ThreadInfo, Who,
+    AuditLine, Bundle, Launcher, LauncherBoard, LinkMark, MASTER, Role, RuleError, ThreadInfo, Who,
 };
 pub use retire::{keep_launcher, restore_made_for, retire_launcher, retire_made_for};
 pub use shell::{Platform, command_warnings, runs_note, shell_of};

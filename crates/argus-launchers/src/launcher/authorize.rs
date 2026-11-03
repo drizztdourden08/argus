@@ -50,3 +50,17 @@ fn refusal(board: &LauncherBoard, rec: &Launcher, maker: Option<&str>) -> RuleEr
         maker.unwrap_or("coordinator"),
     ))
 }
+
+/// The launcher `name`, when it exists and the caller may change it.
+pub(super) fn launcher_to_change<'a>(
+    board: &'a LauncherBoard,
+    who: &Who,
+    name: &str,
+) -> Result<&'a Launcher, RuleError> {
+    let rec = board
+        .launchers
+        .get(name)
+        .ok_or_else(|| RuleError::new(format!("no launcher \"{name}\".")))?;
+    authorize_launcher(board, who, Some(rec))?;
+    Ok(rec)
+}

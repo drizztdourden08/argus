@@ -86,4 +86,4 @@ interface TestItem {
   ac?: { text: string; done: boolean }[];
 }
 
-export type { Build, BundleState, Launcher, LauncherStage, LaunchDef, RunDoc, TestItem };
+export type { Build, BundleState, Launcher, LaunchDef, RunDoc, TestItem };

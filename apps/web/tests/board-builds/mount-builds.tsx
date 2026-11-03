@@ -1,49 +1,29 @@
 /* @layer renderer-app @kind test */
-import { ToastStack } from '@drizztdourden08/tessera';
-import { act, render, waitFor } from '@testing-library/react';
-import { expect } from 'vitest';
-import { DataProvider } from '../../src/data/react';
-import { createScopeStreams } from '../../src/data/stream';
+import { act } from '@testing-library/react';
 import { BuildsTab } from '../../src/screens/board/tabs/builds';
-import { byId } from '../board-tests/fixtures';
 import { stubFetch } from '../board-tests/mount-tab';
 import type { Responder } from '../board-tests/mount-tab';
-import { createFakeSources } from '../helpers/fake-source';
-import { snapshot } from '../helpers/snapshot';
 import { stubEventSource } from '../helpers/stub-event-source';
-
-type Doc = Record<string, unknown>;
+import { SCOPE, mountBoard } from './mount-board';
 
 interface Board {
-  launchers?: Doc[];
-  launches?: Doc[];
-  runs?: Doc[];
-  builds?: Doc[];
-  items?: Doc[];
+  launchers?: object[];
+  launches?: object[];
+  runs?: object[];
+  builds?: object[];
+  items?: object[];
 }
-
-const SCOPE = 'rotp';
 
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const streams = stubEventSource();
-  const fake = createFakeSources();
-  const view = render(
-    <DataProvider streams={createScopeStreams(fake.open)}>
-      <BuildsTab boardKey={SCOPE} />
-      <ToastStack />
-    </DataProvider>,
-  );
-  await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
-  const source = fake.sources[fake.sources.length - 1];
-  const feed = (coll: string, docs: Doc[], key: string) => source?.emit('snapshot', snapshot(SCOPE, coll, byId(docs, key)));
-  act(() => {
-    feed('launchers', board.launchers ?? [], 'name');
-    feed('launches', board.launches ?? [], 'name');
-    feed('runs', board.runs ?? [], 'id');
-    feed('builds', board.builds ?? [], 'tag');
-    feed('items', board.items ?? [], 'id');
-  });
+  const { view, source } = await mountBoard(<BuildsTab boardKey={SCOPE} />, [
+    { coll: 'launchers', docs: board.launchers ?? [], key: 'name' },
+    { coll: 'launches', docs: board.launches ?? [], key: 'name' },
+    { coll: 'runs', docs: board.runs ?? [], key: 'id' },
+    { coll: 'builds', docs: board.builds ?? [], key: 'tag' },
+    { coll: 'items', docs: board.items ?? [], key: 'id' },
+  ]);
   const change = (coll: string, id: string, data: object) =>
     act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   const remove = (coll: string, id: string) =>

@@ -1,5 +1,6 @@
 //! The link rules of a build's `for`: what a build may serve.
 
+use argus_core::build_link::NEEDS_LINK;
 use serde_json::Value;
 
 use super::state::closure;
@@ -62,9 +63,7 @@ pub fn check_for(board: &Board, master: bool, target: Option<&str>) -> Result<()
         return if master {
             Ok(())
         } else {
-            Err(refuse(
-                "a build needs the item it serves: pass --for I-n. Only the master build goes without one.",
-            ))
+            Err(refuse(NEEDS_LINK))
         };
     };
     if !is_item_id(target) {

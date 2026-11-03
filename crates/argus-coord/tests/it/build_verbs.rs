@@ -66,7 +66,7 @@ fn add_makes_the_record_and_with_cmd_the_launcher_named_after_the_tag_that_it_li
         "{}",
         added.out
     );
-    assert!(added.out.contains("launcher bundle-4, cmd: rotp launch bundle-4 --visible). Launcher bundle-4 set. Play ready (launcher-bundle-4"));
+    assert!(added.out.contains("launcher bundle-4, cmd: rotp launch bundle-4 --visible). Serves I-1. Launcher bundle-4 set. Play ready (launcher-bundle-4"));
     let board = rig.board();
     let rec = &board["builds"]["bundle-4"];
     assert_eq!(
@@ -590,7 +590,7 @@ fn the_launcher_name_is_a_slug_of_the_tag_a_clash_or_a_run_name_made_by_hand_is_
     assert!(rig.board()["runDefs"].get("launcher-far-1").is_some());
     rig.ok(&["build", "add", "bare-1"], As::Lead);
     rig.refused(
-        &["build", "set", "bare-1", "--cwd", "sub"],
+        &["build", "set", "bare-1", "--cwd", "sub", "--for", "I-1"],
         As::Lead,
         "bundle bare-1 has no launcher yet: pass --cmd",
     );
@@ -655,7 +655,7 @@ fn launcher_links_an_existing_launcher_a_missing_or_retired_one_is_refused_and_e
         "pass --launcher <name> or --cmd",
     );
     rig.refused(
-        &["build", "set", "link-1", "--cwd", "sub"],
+        &["build", "set", "link-1", "--cwd", "sub", "--for", "I-1"],
         As::Worker,
         "starts launcher master: change its folder or window with coord launcher set master",
     );
@@ -731,6 +731,7 @@ fn launcher_links_an_existing_launcher_a_missing_or_retired_one_is_refused_and_e
 fn a_legacy_bundle_keeps_its_play_the_next_add_or_set_moves_the_command_to_its_launcher() {
     let rig = Rig::new();
     rig.with_master();
+    rig.with_plan("I-1", "old-rec");
     let sub = rig.home.path().join("sub").to_string_lossy().into_owned();
     rig.edit(|b| {
         let at = b["createdAt"].clone();
@@ -751,7 +752,7 @@ fn a_legacy_bundle_keeps_its_play_the_next_add_or_set_moves_the_command_to_its_l
     );
     let moved = rig.ok(&["build", "set", "old-rec", "--title", "Old one"], As::Lead);
     let text = &moved.out;
-    assert!(text.contains("old-rec: updated (title, launcher, cmd). Launcher old-rec made from its own launch command. Play ready (launcher-old-rec"), "{text}");
+    assert!(text.contains("old-rec: updated (title, launcher, cmd). Serves I-1. Launcher old-rec made from its own launch command. Play ready (launcher-old-rec"), "{text}");
     assert!(
         text.contains("with a console window")
             && text.contains(". Old Play bundle-old-rec removed."),
@@ -1113,8 +1114,7 @@ fn a_launcher_made_for_a_bundle_takes_no_use_every_and_master_takes_none_either(
     );
     let set = rig.ok(&["launcher", "set", "j-1", "--use-every", "3d"], As::Worker);
     assert!(
-        set.out
-            .contains("--use-every ignored: j-1 is joined to a bundle"),
+        set.out.contains("--use-every ignored: j-1 serves I-1"),
         "{}",
         set.out
     );

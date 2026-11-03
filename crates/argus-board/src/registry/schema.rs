@@ -141,6 +141,9 @@ mod tests {
         let kinds = &schema["$defs"]["field"]["properties"]["content"]["enum"];
         assert_eq!(kinds.as_array().unwrap().len(), 10);
         let collections = &schema["$defs"]["type"]["properties"]["collection"]["enum"];
-        assert_eq!(collections, &json!(["items", "tests"]));
+        assert_eq!(
+            collections,
+            &json!(["items", "tests", "launchers", "worktrees"])
+        );
     }
 }
