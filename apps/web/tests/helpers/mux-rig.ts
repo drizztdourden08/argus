@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { MuxConnection } from '../../src/data/hub';
 import type { MuxFrame, MuxOp, MuxOpResult } from '../../src/data/hub';
 import type { StreamStatus } from '../../src/data/stream';
-import { createFakeSources } from './fake-source';
+import { createFakeEventSources } from './fake-event-source';
 
 interface SentPost {
   conn: string;
@@ -16,7 +16,7 @@ interface Reply {
 }
 
 const createMuxRig = (resume: MuxOp[] = []) => {
-  const fake = createFakeSources();
+  const fake = createFakeEventSources();
   const posts: SentPost[] = [];
   const reply: Reply = { status: 200 };
   const frames: MuxFrame[] = [];

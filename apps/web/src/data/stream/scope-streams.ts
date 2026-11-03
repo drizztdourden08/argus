@@ -1,16 +1,15 @@
 /* @layer renderer-app @kind logic */
+import type { TabLink } from '../hub/tab-link';
 import { ScopeStream } from './scope-stream';
-import type { OpenSource, ScopeStreams } from './stream.type';
+import type { ScopeStreams } from './stream.type';
 
-const browserSource: OpenSource = (url) => new EventSource(url);
-
-const createScopeStreams = (openSource: OpenSource = browserSource): ScopeStreams => {
+const createScopeStreams = (link: TabLink): ScopeStreams => {
   const streams = new Map<string, ScopeStream>();
   return {
     get(scope) {
       const known = streams.get(scope);
       if (known) return known;
-      const created = new ScopeStream(scope, openSource);
+      const created = new ScopeStream(scope, link);
       streams.set(scope, created);
       return created;
     },

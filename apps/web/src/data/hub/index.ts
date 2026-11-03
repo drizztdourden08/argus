@@ -2,6 +2,9 @@
 export { createMuxConnection } from './create-mux-connection';
 export { Hub } from './hub';
 export { MuxConnection } from './mux-connection';
+export { TabLink } from './tab-link';
 export { MUX_VERSION } from './hub.constants';
 export type * from './hub-port.type';
 export type * from './hub.type';
+export type * from './tab-handle.type';
+export type * from './tab-link.type';

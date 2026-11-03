@@ -18,8 +18,6 @@ interface SourceLike {
   close(): void;
 }
 
-type OpenSource = (url: string) => SourceLike;
-
 interface ScopeStreams {
   get(scope: string): ScopeStream;
 }
@@ -61,7 +59,6 @@ export type {
   CollectionState,
   Collections,
   Listener,
-  OpenSource,
   ScopeStreams,
   SnapshotEvent,
   SourceLike,

@@ -3,9 +3,9 @@ import { cleanup, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { stubEventSource } from '../helpers/stub-event-source';
-import type { FakeSource } from '../helpers/fake-source';
+import type { FakeEventSource } from '../helpers/fake-event-source';
 
-let streams: FakeSource[] = [];
+let streams: FakeEventSource[] = [];
 
 beforeEach(() => {
   vi.stubGlobal('CSS', { supports: () => false });
@@ -18,10 +18,10 @@ afterEach(() => {
 
 const presenceStreams = () => streams.filter((stream) => stream.url.includes('/presence'));
 
-const heldStream = async (): Promise<URL & { source: FakeSource }> => {
+const heldStream = async (): Promise<URL & { source: FakeEventSource }> => {
   await waitFor(() => expect(presenceStreams()).toHaveLength(1));
   const [source] = presenceStreams();
-  return Object.assign(new URL(source?.url ?? '', 'http://argus.test'), { source: source as FakeSource });
+  return Object.assign(new URL(source?.url ?? '', 'http://argus.test'), { source: source as FakeEventSource });
 };
 
 describe('S2 board presence', { tags: ['standard'] }, () => {
