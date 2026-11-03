@@ -3,8 +3,7 @@ import { Box, Text } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import type { LinkedTitleProps } from '../records.type';
 import { LinkedText } from './LinkedText';
-
-const OPEN_KEYS: readonly string[] = ['Enter', ' '];
+import { OPEN_KEYS } from './LinkedTitle.constants';
 
 const LinkedTitle = (props: LinkedTitleProps) => {
   const { text, board, onOpen, weight, clamp, label } = props;

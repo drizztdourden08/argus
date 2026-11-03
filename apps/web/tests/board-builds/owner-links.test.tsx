@@ -2,16 +2,16 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
+import { ownerItem } from '../helpers/owner-item';
+import { pickItem } from '../helpers/pick-item';
 import { launcherDoc } from './fixtures';
 import { mountBuilds } from './mount-builds';
 
 cleanAfterEach();
 
-const item = (id: string, extra: object = {}) => ({ id, title: `Title of ${id}`, status: 'doing', thread: 'lead', type: 'task', ...extra });
-
 const board = () => ({
   launchers: [launcherDoc('master', { master: true, for: 'I-3' }), launcherDoc('web', { for: 'I-3' })],
-  items: [item('I-3'), item('I-9', { status: 'done' }), item('Q-1', { type: 'question' })],
+  items: [ownerItem('I-3'), ownerItem('I-9', { status: 'done' }), ownerItem('Q-1', { type: 'question' })],
 });
 
 const cardOf = async (name: string): Promise<HTMLElement> => {
@@ -35,12 +35,7 @@ describe('I-85 Link a build to an item from the card menu', { tags: ['standard']
   it('offers the open items a build may serve and posts launcher-link with the chosen one', async () => {
     const { calls } = await mountBuilds(board());
     const box = await choose('web', /^Link to an item/);
-    const link = within(box).getByRole<HTMLButtonElement>('button', { name: 'Link' });
-    expect(link.disabled).toBe(true);
-    fireEvent.click(within(box).getByRole('combobox', { name: 'Item' }));
-    expect(screen.queryByRole('option', { name: /^I-9/ })).toBeNull();
-    expect(screen.queryByRole('option', { name: /^Q-1/ })).toBeNull();
-    fireEvent.click(await screen.findByRole('option', { name: /^I-3/ }));
+    const link = await pickItem(box, [/^I-9/, /^Q-1/]);
     fireEvent.click(link);
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ url: '/api/p/rotp/entries', method: 'POST' });

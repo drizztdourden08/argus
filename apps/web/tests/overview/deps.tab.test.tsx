@@ -1,23 +1,13 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { renderAt } from '../helpers/render-at';
+import { describe, expect, it } from 'vitest';
 import { DEPS, dep } from './helpers/deps';
-import { feed } from './helpers/feed';
-import { CARDS } from './helpers/fixtures';
-import { installHarness } from './helpers/harness';
-import { stubApi } from './helpers/stub-api';
+import { openOverview } from './helpers/open-overview';
+import { setupOverview } from './helpers/setup-overview';
 
-installHarness();
-beforeEach(() => {
-  stubApi();
-});
+setupOverview();
 
-const open = async (deps: Record<string, object> = DEPS, location = '/#dependencies') => {
-  const view = renderAt(location);
-  await feed(view.sources, { cards: CARDS, deps });
-  return view;
-};
+const open = (deps: Record<string, object> = DEPS, location = '/#dependencies') => openOverview(location, deps);
 
 const linksOf = (): string[] => within(screen.getByRole('list', { name: 'Dependencies between projects' })).getAllByRole('link').map((link) => link.textContent);
 

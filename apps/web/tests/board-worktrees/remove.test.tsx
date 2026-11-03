@@ -1,10 +1,8 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { metaDoc, worktree } from './fixtures';
-import { cleanAfterEach, mountTab } from './mount-tab';
-import type { Responder } from './mount-tab';
-import { chooseAction, confirmGroup, findRow, hasAction, openMenu, text } from './wt-dom';
+import { chooseAction, cleanAfterEach, confirmGroup, findRow, hasAction, metaDoc, mountTab, openMenu, text, worktree } from './wt-kit';
+import type { Responder } from './wt-kit';
 
 cleanAfterEach();
 

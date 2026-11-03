@@ -20,7 +20,7 @@ interface TrashSource {
   deleteReason?: string | null;
 }
 
-type TrashInput = Record<TrashKind, readonly TrashSource[]>;
+type TrashInput = Partial<Record<TrashKind, readonly TrashSource[]>>;
 
 interface TrashRow {
   key: string;

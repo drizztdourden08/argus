@@ -11,21 +11,42 @@ import { BUILD_KIND } from '../builds.constants';
 import { buildCode, isMaster } from '../model';
 import type { LauncherView } from '../model';
 
-const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThreads, ask: (ask: OwnerAsk) => void): RecordHeadProps => {
+type Play = ReturnType<typeof usePlay>;
+
+const playHandler = (view: LauncherView, play: Play): (() => void) | undefined => {
   const { launcher, def } = view;
+  const canPlay = view.playable && def !== null && !view.runs.some(isLiveRun);
+  return canPlay ? () => void play.start(def, launcher.name) : undefined;
+};
+
+const commandHandler = (launcher: LauncherView['launcher']): (() => void) | undefined => {
+  const cmd = launcher.cmd;
+  return cmd ? () => copyText(cmd) : undefined;
+};
+
+const ownerHandlers = (launcher: LauncherView['launcher'], code: string, ask: (ask: OwnerAsk) => void) => {
+  const live = !launcher.retiredAt;
+  const owner = (action: OwnerAsk['action']) => () => ask({ action, id: launcher.name, label: code });
+  const master = isMaster(launcher);
+  return {
+    link: live ? owner('launcher-link') : undefined,
+    retire: live && !master ? owner('launcher-retire') : undefined,
+    unlink: live && master && Boolean(launcher.for) ? owner('launcher-unlink') : undefined,
+  };
+};
+
+const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThreads, ask: (ask: OwnerAsk) => void): RecordHeadProps => {
+  const { launcher } = view;
   const pane = useRecordPane();
   const play = usePlay(boardKey);
   const code = buildCode(launcher.name);
-  const canPlay = view.playable && def !== null && !view.runs.some(isLiveRun);
-  const live = !launcher.retiredAt;
-  const freeable = live && isMaster(launcher) && Boolean(launcher.for);
-  const owner = (action: OwnerAsk['action']) => () => ask({ action, id: launcher.name, label: code });
+  const { link, retire, unlink } = ownerHandlers(launcher, code, ask);
   const handlers = {
     open: () => pane.open(code),
-    play: canPlay ? () => void play.start(def, launcher.name) : undefined,
-    'copy-command': launcher.cmd ? () => copyText(launcher.cmd ?? '') : undefined,
-    link: live ? owner('launcher-link') : undefined,
-    retire: live && !isMaster(launcher) ? owner('launcher-retire') : undefined,
+    play: playHandler(view, play),
+    'copy-command': commandHandler(launcher),
+    link,
+    retire,
     copy: () => copyText(code),
   };
   return {
@@ -34,7 +55,7 @@ const useBuildHead = (view: LauncherView, boardKey: string, threads: GroupThread
     assignee: launcher.by ?? launcher.createdBy ?? '',
     boardKey,
     threads,
-    menu: withUnlink(recordMenuGroups(BUILD_KIND, code, handlers), freeable ? owner('launcher-unlink') : undefined),
+    menu: withUnlink(recordMenuGroups(BUILD_KIND, code, handlers), unlink),
     menuLabel: `More actions for ${code}`,
   };
 };

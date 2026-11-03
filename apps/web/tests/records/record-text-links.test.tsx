@@ -75,7 +75,7 @@ describe('I-85 R13 the text of a row links its references', { tags: ['critical']
 });
 
 describe('I-85 a row chip can be a link to a record', { tags: ['critical'] }, () => {
-  const placeChip = { id: 'where', text: 'WT agent-ab12', title: 'X:/p/.claude/worktrees/agent-ab12', link: 'WT-agent-ab12' };
+  const placeChip = { id: 'where', text: 'WT agent-ab12', title: 'X:/p/.trees/agent-ab12', link: 'WT-agent-ab12' };
 
   it('draws the chip as a link to the pane of the record', () => {
     mount(<RecordRow head={head('agent', 'A-2', 'worker')} title="coder" onOpen={vi.fn()} chips={[placeChip]} />);

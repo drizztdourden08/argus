@@ -24,6 +24,7 @@ interface LauncherListProps extends RunScope {
 
 interface LauncherCardProps extends RunScope {
   view: LauncherView;
+  threads: GroupThreads;
 }
 
 interface LauncherPartProps {

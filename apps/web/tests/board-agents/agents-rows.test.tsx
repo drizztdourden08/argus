@@ -70,7 +70,7 @@ describe('I-85 P7 Agents tab: the where chip', { tags: ['critical'] }, () => {
   });
 
   it('links the worktree chip to the worktree pane and leaves the row alone', async () => {
-    const row = await chipsOf({ where: 'X:/p/.claude/worktrees/agent-ab12', whereSource: 'manual' });
+    const row = await chipsOf({ where: 'X:/p/.trees/agent-ab12', whereSource: 'manual' });
     const link = row.getByRole('link', { name: 'WT agent-ab12' });
     expect(link.getAttribute('href')).toBe('/p/alpha?open=WT-agent-ab12');
     fireEvent.click(link);
