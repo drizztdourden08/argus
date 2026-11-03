@@ -14,7 +14,7 @@ const kindsOf = (item: ItemRef, setup: { needs?: Partial<Needs>; asks?: AskLink[
   const needs = new Map([[item.id, { questions: 0, decisions: 0, todos: 0, tests: 0, ...setup.needs }]]);
   const asks = new Map([[item.id, setup.asks ?? []]]);
   const signals = new Map([[item.id, { failing: 0, pending: 0, agents: 0, ...setup.signals }]]);
-  return viewOf([item], { needs, asks, signals }).cards[0].attention;
+  return viewOf([item], { needs, asks, signals }).cards[0]?.attention ?? [];
 };
 
 describe('I-69 which attention kinds a card carries', { tags: ['critical'] }, () => {
