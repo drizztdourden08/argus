@@ -34,7 +34,12 @@ async fn a_conn_a_megabyte_behind_on_live_frames_is_dropped_and_forgotten() {
     let svc = &t.svc;
     let res = svc
         .mux
-        .open(&svc.fanout, Duration::from_secs(3600), &svc.streams)
+        .open(
+            &svc.fanout,
+            Duration::from_secs(3600),
+            &svc.streams,
+            svc.wake.clone(),
+        )
         .expect("opens");
     let mut body = res.into_body();
     let first = body.frame().await.expect("a frame").expect("body");
@@ -43,7 +48,7 @@ async fn a_conn_a_megabyte_behind_on_live_frames_is_dropped_and_forgotten() {
         .get(&conn_of(first.data_ref().expect("data")))
         .expect("conn");
     let done = conn
-        .apply(&svc.db, &svc.fanout, &[sub("alpha", &["items"])])
+        .apply(svc, &[sub("alpha", &["items"])])
         .expect("applies");
     assert_eq!(done, [json!({ "ok": true })]);
     for i in 0..32 {

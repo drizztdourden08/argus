@@ -98,7 +98,7 @@ fn run(env: &Env<'_>, state: &mut State, op: Op) -> Result<(), OpError> {
             );
             Ok(())
         }
-        Op::Presence(claim) => presence::attach(env.wake, &mut state.presence, claim),
+        Op::Presence(claim) => presence::attach(env.wake, &mut state.presence, &claim),
         Op::Unpresence { scope, tab } => {
             presence::detach(env.wake, &mut state.presence, &scope, &tab);
             Ok(())

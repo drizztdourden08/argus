@@ -68,7 +68,11 @@ fn not_running() -> OpError {
 /// # Errors
 /// `unavailable` without a wake service, or when the thread already has the most tabs open and
 /// the tab is not one of them.
-pub fn attach(wake: Option<&SharedWake>, tokens: &mut Tokens, claim: Claim) -> Result<(), OpError> {
+pub fn attach(
+    wake: Option<&SharedWake>,
+    tokens: &mut Tokens,
+    claim: &Claim,
+) -> Result<(), OpError> {
     let wake = wake.ok_or_else(not_running)?;
     let slot = (claim.scope.clone(), claim.tab.clone());
     let mut service = lock(wake);

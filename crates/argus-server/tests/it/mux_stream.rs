@@ -133,7 +133,10 @@ async fn unsub_stops_a_collection_and_then_the_scope() {
     assert_eq!(ev.data["changes"].as_array().map(Vec::len), Some(1));
     assert_eq!(ev.data["changes"][0]["coll"], "meta");
     let all = json!([{ "op": "unsub", "scope": "alpha" }, { "op": "unsub", "scope": "gamma" }]);
-    assert_eq!(m.ops(&t, all).await, [json!({ "ok": true }); 2]);
+    assert_eq!(
+        m.ops(&t, all).await,
+        [json!({ "ok": true }), json!({ "ok": true })]
+    );
     apply(&t, "alpha", &[set_item("I-4")]);
     assert!(m.s.next(Some("changes"), 300).await.is_none());
     let back = m.sub(&t, sub("alpha", &["items"])).await;
