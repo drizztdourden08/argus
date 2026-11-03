@@ -21,7 +21,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use argus_core::{ApiError, Coll, DocsEvent, ResetEvent};
+use argus_core::{ApiError, Bus, Coll, DocsEvent, ResetEvent, Subscription};
 use argus_store::Db;
 use axum::response::Response;
 
@@ -75,6 +75,16 @@ pub struct Fanout {
 }
 
 impl Fanout {
+    /// Follows the bus: doc applies and resets reach the streams until the links are dropped.
+    #[must_use]
+    pub fn link(self: &Arc<Self>, bus: &Bus) -> Vec<Subscription> {
+        let (f1, f2) = (Arc::clone(self), Arc::clone(self));
+        vec![
+            bus.on_docs(move |e| f1.on_docs(e)),
+            bus.on_reset(move |e| f2.on_reset(e)),
+        ]
+    }
+
     /// Delivers one doc apply.
     pub fn on_docs(&self, e: &DocsEvent) {
         let mut all = self.lock();

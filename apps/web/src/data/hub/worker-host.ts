@@ -6,12 +6,7 @@ import { BEAT_MS, DEAD_AFTER_MS, TAB_TYPES, WORKER_IDLE_MS } from './hub-transpo
 import type { HubLike, WorkerHostDeps, Wire } from './hub-transport.type';
 import type { TabMessage } from './hub.type';
 import { watchTab } from './watch-tab';
-
-interface Member {
-  wire: Wire;
-  unwatch: () => void;
-  seen: number;
-}
+import type { Member } from './worker-host.type';
 
 const isTabEnvelope = envelopeGuard<TabMessage>(TAB_TYPES);
 

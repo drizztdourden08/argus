@@ -15,7 +15,7 @@ const createRig = (override: Partial<ConnectEnv> = {}) => {
   const locks = new FakeLocks();
   const network = new FakeNetwork();
   const hubs = createFakeHubs();
-  const onHide = vi.fn();
+  const onHide = vi.fn<(listener: () => void) => void>();
   const env: ConnectEnv = {
     tabId: 't1',
     locks: null,
@@ -95,6 +95,9 @@ describe('C4 connectHub picker', { tags: ['critical'] }, () => {
     expect(rig.locks.isHeld('argus-hub-leader')).toBe(true);
   });
 
+});
+
+describe('C4 connectHub in-tab tier', { tags: ['critical'] }, () => {
   it('falls to an in-tab hub when locks or channels are missing', async () => {
     const lockOnly = createRig();
     lockOnly.env.locks = lockOnly.locks;
@@ -125,7 +128,7 @@ describe('C4 connectHub picker', { tags: ['critical'] }, () => {
     const bare = createRig();
     const handle = connectHub(bare.env);
     expect(bare.onHide).toHaveBeenCalledTimes(1);
-    bare.onHide.mock.calls[0]?.[0]();
+    bare.onHide.mock.calls[0]?.[0]?.();
     expect(bare.hubs.last().received).toEqual([['t1', BYE]]);
     expect(handle.tabId).toBe('t1');
     const locked = createRig();

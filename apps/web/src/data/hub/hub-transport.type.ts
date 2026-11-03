@@ -69,14 +69,11 @@ interface ConnectEnv {
 
 export type {
   ConnectEnv,
-  CreateHub,
   HubEnvelope,
   HubLike,
   InPageDeps,
   LeaderDeps,
   LockManagerLike,
-  LockOptionsLike,
-  OpenWire,
   WorkerHostDeps,
   WorkerTabDeps,
   Wire,

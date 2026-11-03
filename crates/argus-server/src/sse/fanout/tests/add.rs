@@ -9,11 +9,7 @@ use super::*;
 async fn following_meta(r: &Rig) -> (Handle, Wire) {
     r.set(Coll::Meta, "board");
     let mut w = wire();
-    let target = Target::New(Kind::Mux, &w.sender);
-    let h = r
-        .fanout
-        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None);
-    let h = h.expect("subscribed");
+    let h = r.follow_meta(ALPHA, &w);
     assert_eq!(names(&w.frames().await), ["snapshot", "ready"]);
     (h, w)
 }

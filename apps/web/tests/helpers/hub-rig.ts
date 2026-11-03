@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { vi } from 'vitest';
-import { Hub } from '../../src/data/hub';
-import type { HubMessage, MuxFrame, MuxHandlers, MuxOp, MuxOpError, TabMessage } from '../../src/data/hub';
+import { Hub } from '../../src/data/hub/hub';
+import type { HubMessage, MuxFrame, MuxHandlers, MuxOp, TabMessage } from '../../src/data/hub';
 import type { StreamStatus } from '../../src/data/stream';
 
 const createHubRig = (lingerMs?: number) => {
@@ -35,7 +35,7 @@ const createHubRig = (lingerMs?: number) => {
     frame: (frame: MuxFrame) => handlers().onFrame(frame),
     status: (status: StreamStatus) => handlers().onStatus(status),
     resume: (): readonly MuxOp[] => handlers().resume(),
-    opError: (op: MuxOp, error: MuxOpError) => handlers().onOpError(op, error),
+    opError: (op: MuxOp, error: Parameters<MuxHandlers['onOpError']>[1]) => handlers().onOpError(op, error),
     ops: (): MuxOp[] => sent.flat(),
   };
 };

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-type WantsMap = Map<string, Set<string>>;
+import type { WantsMap } from './wants-map.type';
 
 const add = (map: WantsMap, scope: string, coll: string): void => {
   map.set(scope, (map.get(scope) ?? new Set<string>()).add(coll));

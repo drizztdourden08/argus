@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import type { LockManagerLike, LockOptionsLike } from '../../src/data/hub/hub-transport.type';
+import type { LockManagerLike } from '../../src/data/hub/hub-transport.type';
 
 interface Waiter {
   run: () => void;
@@ -9,7 +9,7 @@ class FakeLocks implements LockManagerLike {
   private readonly holders = new Map<string, () => void>();
   private readonly queues = new Map<string, Waiter[]>();
 
-  request = (name: string, options: LockOptionsLike, callback: () => unknown): Promise<unknown> =>
+  request = (name: string, options: Parameters<LockManagerLike['request']>[1], callback: () => unknown): Promise<unknown> =>
     new Promise((resolve, reject) => {
       const waiter: Waiter = { run: () => this.grant(name, callback, resolve) };
       this.queues.set(name, [...(this.queues.get(name) ?? []), waiter]);
@@ -38,11 +38,13 @@ class FakeLocks implements LockManagerLike {
       force = done;
     });
     this.holders.set(name, force);
-    Promise.race([Promise.resolve().then(callback), forced]).then(() => {
-      this.holders.delete(name);
-      resolve(undefined);
-      this.advance(name);
-    });
+    Promise.race([Promise.resolve().then(callback), forced])
+      .then(() => {
+        this.holders.delete(name);
+        resolve(undefined);
+        this.advance(name);
+      })
+      .catch(() => undefined);
   }
 
   private advance(name: string): void {

@@ -7,7 +7,7 @@ const line = (seq: number): RunLogLine => ({ seq, stream: 'out', at: '2026-11-03
 
 const logFrame = (id: string, seq: number) => ({ type: 'log' as const, id, ...line(seq) });
 
-describe('C5 TabLink', { tags: ['critical'] }, () => {
+describe('C5 TabLink wants and presence', { tags: ['critical'] }, () => {
   it('sends a want once per scope and collection and an unwant when it is dropped', () => {
     const { open, sent } = createFakeSources();
     open.want('rotp', 'items');
@@ -53,11 +53,13 @@ describe('C5 TabLink', { tags: ['critical'] }, () => {
     second();
     expect(sent.map((message) => message.type)).toEqual(['presence', 'presence', 'unpresence']);
   });
+});
 
+describe('C5 TabLink tails', { tags: ['critical'] }, () => {
   it('delivers tail lines once by seq to the tail that owns them', () => {
     const { open, handle } = createFakeSources();
-    const onLine = vi.fn();
-    const other = vi.fn();
+    const onLine = vi.fn<(received: RunLogLine) => void>();
+    const other = vi.fn<(received: RunLogLine) => void>();
     open.tail('rotp', 'R-1', 2, { onLine });
     open.tail('rotp', 'R-2', 0, { onLine: other });
     handle.deliver(logFrame('t1', 2));

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { TabLink } from '../../src/data/hub';
+import { TabLink } from '../../src/data/hub/tab-link';
 import type { HubMessage, TabHandle, TabMessage } from '../../src/data/hub';
 
 type Deliver = (message: HubMessage) => void;
@@ -82,7 +82,7 @@ class FakeHandle implements TabHandle {
   private unwant(scope: string, coll: string): void {
     const source = this.openOf(scope);
     source?.colls.delete(coll);
-    if (source && source.colls.size === 0) source.closed = true;
+    if (source?.colls.size === 0) source.closed = true;
   }
 }
 

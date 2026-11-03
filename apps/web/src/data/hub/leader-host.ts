@@ -3,22 +3,10 @@ import { envelope } from './envelope';
 import { envelopeGuard } from './envelope-guard';
 import { helloOf } from './hub-hello';
 import { EVERY_TAB, INBOX_PREFIX, TAB_TYPES } from './hub-transport.constants';
-import type { HubLike, LeaderDeps, Wire } from './hub-transport.type';
+import type { HubLike } from './hub-transport.type';
 import type { HubMessage, TabMessage } from './hub.type';
+import type { Follower, LeaderHostOptions } from './leader-host.type';
 import { watchTab } from './watch-tab';
-
-interface LeaderHostOptions {
-  deps: LeaderDeps;
-  epoch: number;
-  bus: Wire;
-  deliver: (message: HubMessage) => void;
-}
-
-interface Follower {
-  wire: Wire;
-  unwatch: () => void;
-  greeted: boolean;
-}
 
 const isTabEnvelope = envelopeGuard<TabMessage>(TAB_TYPES);
 

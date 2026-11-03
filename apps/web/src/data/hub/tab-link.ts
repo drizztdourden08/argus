@@ -2,7 +2,7 @@
 import { MUX_VERSION } from './hub.constants';
 import type { HubMessage } from './hub.type';
 import type { TabHandle } from './tab-handle.type';
-import type { ScopeRoute, TabTailHandlers, TailEntry } from './tab-link.type';
+import type { ScopeRoute, TabTailHandlers, TailEntry, TailMessage } from './tab-link.type';
 
 class TabLink {
   readonly tabId: string;
@@ -70,17 +70,29 @@ class TabLink {
       case 'hub-hello':
         return this.announce();
       case 'log':
+      case 'run':
+      case 'tail-end':
+        return this.receiveTail(message);
+      case 'snapshot':
+      case 'changes':
+      case 'reset':
+      case 'status':
+        return this.routes.get(message.scope)?.(message);
+    }
+  }
+
+  private receiveTail(message: TailMessage): void {
+    switch (message.type) {
+      case 'log':
         return this.onLog(message);
       case 'run':
         return this.tails.get(message.id)?.handlers.onStatus?.(message.run);
       case 'tail-end':
         return this.untail(message.id)?.handlers.onEnd?.();
-      default:
-        return this.routes.get(message.scope)?.(message);
     }
   }
 
-  private onLog(message: Extract<HubMessage, { type: 'log' }>): void {
+  private onLog(message: Extract<TailMessage, { type: 'log' }>): void {
     const entry = this.tails.get(message.id);
     if (!entry || message.seq <= entry.after) return;
     entry.after = message.seq;

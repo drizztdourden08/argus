@@ -45,7 +45,7 @@ describe('C3 Hub status', { tags: ['critical'] }, () => {
   });
 });
 
-describe('C3 Hub tabs and resume', { tags: ['critical'] }, () => {
+describe('C3 Hub tabs', { tags: ['critical'] }, () => {
   it('unpresences at once when a tab is dropped, and when it says bye', () => {
     const rig = createHubRig();
     rig.send('a', { type: 'presence', scope: 'rotp', thread: 'th-1' });
@@ -83,6 +83,9 @@ describe('C3 Hub tabs and resume', { tags: ['critical'] }, () => {
     expect(rig.ops()).toHaveLength(1);
   });
 
+});
+
+describe('C3 Hub resume and reset', { tags: ['critical'] }, () => {
   it('resumes the whole state on hello: since for synced collections, tails after the last line, presences', () => {
     const rig = loaded();
     rig.send('a', { type: 'want', scope: 'rotp', coll: 'wakes' });

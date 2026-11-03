@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind test */
 import { vi } from 'vitest';
-import { MuxConnection } from '../../src/data/hub';
-import type { MuxFrame, MuxOp, MuxOpResult } from '../../src/data/hub';
+import { MuxConnection } from '../../src/data/hub/mux-connection';
+import type { MuxFrame, MuxOp, MuxOpResult, MuxPostResult } from '../../src/data/hub';
 import type { StreamStatus } from '../../src/data/stream';
 import { createFakeEventSources } from './fake-event-source';
+import type { FakeEventSource } from './fake-event-source';
 
 interface SentPost {
   conn: string;
@@ -23,9 +24,9 @@ const createMuxRig = (resume: MuxOp[] = []) => {
   const statuses: StreamStatus[] = [];
   const health = vi.fn().mockResolvedValue(200);
   const onOpError = vi.fn();
-  const post = async (conn: string, ops: MuxOp[]) => {
+  const post = (conn: string, ops: MuxOp[]): Promise<MuxPostResult> => {
     posts.push({ conn, ops });
-    return { status: reply.status, results: reply.results ?? ops.map((): MuxOpResult => ({ ok: true })) };
+    return Promise.resolve({ status: reply.status, results: reply.results ?? ops.map((): MuxOpResult => ({ ok: true })) });
   };
   const mux = new MuxConnection({
     openSource: fake.open,
@@ -39,6 +40,12 @@ const createMuxRig = (resume: MuxOp[] = []) => {
   return { mux, sources: fake.sources, posts, reply, frames, statuses, health, onOpError };
 };
 
-const settle = (): Promise<void> => vi.advanceTimersByTimeAsync(0);
+const sub = (scope: string, ...colls: string[]): MuxOp => ({ op: 'sub', scope, colls });
 
-export { createMuxRig, settle };
+const hello = (source: FakeEventSource | undefined, conn: string): void => source?.emit('hello', { conn, v: 1 });
+
+const settle = async (): Promise<void> => {
+  await vi.advanceTimersByTimeAsync(0);
+};
+
+export { createMuxRig, hello, settle, sub };

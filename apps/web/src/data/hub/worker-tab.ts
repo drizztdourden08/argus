@@ -4,23 +4,19 @@ import { envelopeGuard } from './envelope-guard';
 import { BEAT_MS, HUB_TYPES } from './hub-transport.constants';
 import type { WorkerTabDeps, Wire } from './hub-transport.type';
 import type { HubMessage, TabMessage } from './hub.type';
-import { Listeners } from './listeners';
-import type { MessageListener, TabHandle } from './tab-handle.type';
+import { ListenerTab } from './listener-tab';
 import { holdTabLock } from './tab-lock';
 
 const isHubEnvelope = envelopeGuard<HubMessage>(HUB_TYPES);
 
-class WorkerTab implements TabHandle {
-  readonly tabId: string;
+class WorkerTab extends ListenerTab {
   private readonly wire: Wire;
-  private readonly listeners = new Listeners();
   private readonly releaseTabLock: () => void;
   private readonly beat: ReturnType<typeof setInterval>;
   private epoch = 0;
-  private closed = false;
 
   constructor(deps: WorkerTabDeps) {
-    this.tabId = deps.tabId;
+    super(deps.tabId);
     this.wire = deps.wire;
     this.releaseTabLock = deps.locks ? holdTabLock(deps.locks, deps.tabId) : () => undefined;
     this.wire.listen((data) => this.receive(data));
@@ -32,18 +28,10 @@ class WorkerTab implements TabHandle {
     if (!this.closed) this.wire.post(envelope(this.tabId, this.epoch, message));
   }
 
-  onMessage(listener: MessageListener): () => void {
-    return this.listeners.add(listener);
-  }
-
-  close(): void {
-    if (this.closed) return;
-    this.send({ type: 'bye' });
-    this.closed = true;
+  protected teardown(): void {
     clearInterval(this.beat);
     this.releaseTabLock();
     this.wire.close();
-    this.listeners.clear();
   }
 
   private receive(data: unknown): void {

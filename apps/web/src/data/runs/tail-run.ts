@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind logic */
 import type { TabLink } from '../hub/tab-link';
 import { LIVE_RUN_STATES } from './runs.constants';
-import type { RunTailHandlers } from './runs.type';
+import type { RunTailHandlers, RunTailTarget } from './runs.type';
 
-const tailRun = (link: TabLink, key: string, runId: string, handlers: RunTailHandlers, after = 0): (() => void) => {
-  const release = link.tail(key, runId, after, {
+const tailRun = (link: TabLink, target: RunTailTarget, handlers: RunTailHandlers): (() => void) => {
+  const release = link.tail(target.key, target.runId, target.after ?? 0, {
     onLine: handlers.onLine,
     onStatus: (run) => {
       handlers.onStatus?.(run);

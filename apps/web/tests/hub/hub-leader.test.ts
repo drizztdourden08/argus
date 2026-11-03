@@ -7,6 +7,16 @@ import { ANNOUNCE, createLeaderRig, START } from '../helpers/leader-rig';
 const hello = (epoch: number): HubMessage => ({ type: 'hub-hello', epoch, v: MUX_VERSION });
 const reset: HubMessage = { type: 'reset', scope: 'rotp' };
 
+const withAnnouncedFollower = async () => {
+  const rig = createLeaderRig();
+  rig.join('a');
+  const b = rig.join('b');
+  await rig.settle();
+  b.handle.send(ANNOUNCE);
+  await rig.settle();
+  return { rig, b };
+};
+
 describe('C4 leader tier election', { tags: ['critical'] }, () => {
   it('lets the first tab lead, runs one hub there and hands the tab its own hello', async () => {
     const rig = createLeaderRig();
@@ -59,17 +69,6 @@ describe('C4 leader tier election', { tags: ['critical'] }, () => {
       ['c', ANNOUNCE],
     ]);
   });
-
-  it('hands over when the leader lock is lost without a close', async () => {
-    const rig = createLeaderRig();
-    rig.join('a');
-    const b = rig.join('b');
-    await rig.settle();
-    rig.locks.crash('argus-hub-leader');
-    await rig.settle();
-    expect(rig.hubs.hubs).toHaveLength(2);
-    expect(b.got.at(-1)).toEqual(hello(START + 1));
-  });
 });
 
 describe('C4 leader tier epochs', { tags: ['critical'] }, () => {
@@ -117,12 +116,7 @@ describe('C4 leader tier epochs', { tags: ['critical'] }, () => {
 
 describe('C4 leader tier tab liveness', { tags: ['critical'] }, () => {
   it('drops a follower at once when its tab lock is released', async () => {
-    const rig = createLeaderRig();
-    rig.join('a');
-    const b = rig.join('b');
-    await rig.settle();
-    b.handle.send(ANNOUNCE);
-    await rig.settle();
+    const { rig } = await withAnnouncedFollower();
     expect(rig.locks.queued('argus-tab-b')).toBe(1);
     rig.locks.crash('argus-tab-b');
     await rig.settle();
@@ -131,12 +125,7 @@ describe('C4 leader tier tab liveness', { tags: ['critical'] }, () => {
   });
 
   it('forgets a follower that says bye and stops watching its lock', async () => {
-    const rig = createLeaderRig();
-    rig.join('a');
-    const b = rig.join('b');
-    await rig.settle();
-    b.handle.send(ANNOUNCE);
-    await rig.settle();
+    const { rig, b } = await withAnnouncedFollower();
     b.handle.close();
     await rig.settle();
     expect(rig.hubs.last().received).toContainEqual(['b', { type: 'bye' }]);
@@ -153,5 +142,16 @@ describe('C4 leader tier tab liveness', { tags: ['critical'] }, () => {
     expect(rig.hubs.last().dispose).toHaveBeenCalledTimes(1);
     expect(rig.locks.isHeld('argus-hub-leader')).toBe(false);
     expect(rig.locks.isHeld('argus-tab-a')).toBe(false);
+  });
+
+  it('hands over when the leader lock is lost without a close', async () => {
+    const rig = createLeaderRig();
+    rig.join('a');
+    const b = rig.join('b');
+    await rig.settle();
+    rig.locks.crash('argus-hub-leader');
+    await rig.settle();
+    expect(rig.hubs.hubs).toHaveLength(2);
+    expect(b.got.at(-1)).toEqual(hello(START + 1));
   });
 });

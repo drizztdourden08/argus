@@ -4,6 +4,8 @@ import type { HubMessage } from './hub.type';
 
 type ScopeMessage = Extract<HubMessage, { type: 'snapshot' | 'changes' | 'reset' | 'status' }>;
 
+type TailMessage = Extract<HubMessage, { type: 'log' | 'run' | 'tail-end' }>;
+
 type ScopeRoute = (message: ScopeMessage) => void;
 
 interface TabTailHandlers {
@@ -19,4 +21,4 @@ interface TailEntry {
   handlers: TabTailHandlers;
 }
 
-export type { ScopeMessage, ScopeRoute, TabTailHandlers, TailEntry };
+export type { ScopeMessage, ScopeRoute, TabTailHandlers, TailEntry, TailMessage };

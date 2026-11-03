@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { vi } from 'vitest';
 import type { HubPort } from '../../src/data/hub/hub-port.type';
-import type { CreateHub, HubLike } from '../../src/data/hub/hub-transport.type';
+import type { HubLike, LeaderDeps } from '../../src/data/hub/hub-transport.type';
 import type { TabMessage } from '../../src/data/hub/hub.type';
 
 interface FakeHub extends HubLike {
@@ -11,7 +11,7 @@ interface FakeHub extends HubLike {
 
 const createFakeHubs = () => {
   const hubs: FakeHub[] = [];
-  const create: CreateHub = (port) => {
+  const create: LeaderDeps['createHub'] = (port) => {
     const received: Array<[string, TabMessage]> = [];
     const hub: FakeHub = {
       port,

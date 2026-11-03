@@ -31,8 +31,17 @@ const createRig = (withLocks: boolean) => {
     const send = (msg: object, epoch = 0) => wire.post({ tab: tabId, epoch, msg });
     return { send, seen };
   };
-  const hold = (tabId: string) => locks.request(`argus-tab-${tabId}`, {}, () => new Promise(() => undefined));
-  return { locks, network, hubs, host, settle, tab, hold };
+  const hold = (tabId: string): void => {
+    locks.request(`argus-tab-${tabId}`, {}, () => new Promise(() => undefined)).catch(() => undefined);
+  };
+  const join = async (tabId: string) => {
+    hold(tabId);
+    const joined = tab(tabId);
+    joined.send(BEAT);
+    await settle();
+    return joined;
+  };
+  return { locks, network, hubs, host, settle, tab, join };
 };
 
 beforeEach(() => {
@@ -47,11 +56,8 @@ afterEach(() => {
 describe('C4 worker host', { tags: ['critical'] }, () => {
   it('says hello to a tab on its first message, runs one hub for all tabs and routes both ways', async () => {
     const rig = createRig(true);
-    const a = rig.tab('a');
-    const b = rig.tab('b');
-    a.send(BEAT);
-    b.send(BEAT);
-    await rig.settle();
+    const a = await rig.join('a');
+    const b = await rig.join('b');
     expect(rig.hubs.hubs).toHaveLength(1);
     expect(a.seen).toEqual([{ tab: 'a', epoch: 5000, msg: { type: 'hub-hello', epoch: 5000, v: 1 } }]);
     expect(b.seen).toHaveLength(1);
@@ -77,13 +83,8 @@ describe('C4 worker host', { tags: ['critical'] }, () => {
 
   it('drops a tab when its lock is granted to the worker, which means the tab is gone', async () => {
     const rig = createRig(true);
-    const a = rig.tab('a');
-    const b = rig.tab('b');
-    rig.hold('a').catch(() => undefined);
-    rig.hold('b').catch(() => undefined);
-    a.send(BEAT);
-    b.send(BEAT);
-    await rig.settle();
+    await rig.join('a');
+    await rig.join('b');
     expect(rig.locks.queued('argus-tab-a')).toBe(1);
     rig.locks.crash('argus-tab-a');
     await rig.settle();
@@ -94,10 +95,7 @@ describe('C4 worker host', { tags: ['critical'] }, () => {
 
   it('forwards bye to the hub and stops watching the lock', async () => {
     const rig = createRig(true);
-    const a = rig.tab('a');
-    rig.hold('a').catch(() => undefined);
-    a.send(BEAT);
-    await rig.settle();
+    const a = await rig.join('a');
     a.send(BYE);
     await rig.settle();
     expect(rig.hubs.last().received).toContainEqual(['a', BYE]);
@@ -126,32 +124,24 @@ describe('C4 worker host without Web Locks', { tags: ['critical'] }, () => {
 describe('C4 worker host lifetime', { tags: ['critical'] }, () => {
   it('disposes the hub a while after the last tab leaves, and makes a new one for the next tab', async () => {
     const rig = createRig(true);
-    const a = rig.tab('a');
-    a.send(BEAT);
-    await rig.settle();
+    const a = await rig.join('a');
     a.send(BYE);
     await rig.settle();
     expect(rig.hubs.last().dispose).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(15_000);
     expect(rig.hubs.hubs[0]?.dispose).toHaveBeenCalledTimes(1);
-    const b = rig.tab('b');
-    b.send(BEAT);
-    await rig.settle();
+    const b = await rig.join('b');
     expect(rig.hubs.hubs).toHaveLength(2);
     expect(b.seen).toHaveLength(1);
   });
 
   it('keeps the hub when a tab comes back inside the idle window, as a reload does', async () => {
     const rig = createRig(true);
-    const a = rig.tab('a');
-    a.send(BEAT);
-    await rig.settle();
+    const a = await rig.join('a');
     a.send(BYE);
     await rig.settle();
     await vi.advanceTimersByTimeAsync(5000);
-    const again = rig.tab('a2');
-    again.send(BEAT);
-    await rig.settle();
+    await rig.join('a2');
     await vi.advanceTimersByTimeAsync(60_000);
     expect(rig.hubs.hubs).toHaveLength(1);
     expect(rig.hubs.last().dispose).not.toHaveBeenCalled();

@@ -1,15 +1,6 @@
 /* @layer renderer-app @kind test */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MuxOp } from '../../src/data/hub/hub.type';
-import { SubscriptionTable } from '../../src/data/hub/subscription-table';
-
-const LINGER_MS = 10_000;
-
-const created = (lingerMs?: number) => {
-  const expired: MuxOp[][] = [];
-  const table = new SubscriptionTable({ onExpire: (ops) => expired.push(ops), lingerMs });
-  return { table, expired };
-};
+import { created, LINGER_MS } from '../helpers/subscription-rig';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -77,102 +68,6 @@ describe('C2 SubscriptionTable union and diff', { tags: ['critical'] }, () => {
       { op: 'sub', scope: 'rotp', colls: ['wakes'] },
       { op: 'unpresence', scope: 'rotp', tab: 'a' },
     ]);
-  });
-});
-
-describe('C2 SubscriptionTable linger', { tags: ['critical'] }, () => {
-  it('keeps a pair another tab still wants', () => {
-    const { table, expired } = created();
-    table.want('a', 'rotp', 'items');
-    table.want('b', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    vi.advanceTimersByTime(LINGER_MS * 2);
-    expect(expired).toEqual([]);
-  });
-
-  it('drops an unwanted pair after 10 s and sends its unsub', () => {
-    const { table, expired } = created();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    expect(table.flush()).toEqual([]);
-    vi.advanceTimersByTime(LINGER_MS - 1);
-    expect(expired).toEqual([]);
-    vi.advanceTimersByTime(1);
-    expect(expired).toEqual([[{ op: 'unsub', scope: 'rotp', colls: ['items'] }]]);
-    expect(table.activeCollections().size).toBe(0);
-  });
-
-  it('cancels the drop when a tab wants the pair again inside the linger', () => {
-    const { table, expired } = created();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    vi.advanceTimersByTime(LINGER_MS / 2);
-    table.want('b', 'rotp', 'items');
-    expect(table.flush()).toEqual([]);
-    vi.advanceTimersByTime(LINGER_MS * 2);
-    expect(expired).toEqual([]);
-    expect(table.activeCollections()).toEqual(new Map([['rotp', ['items']]]));
-  });
-
-  it('starts a fresh linger when the pair is dropped again', () => {
-    const { table, expired } = created();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    vi.advanceTimersByTime(LINGER_MS);
-    expect(expired).toHaveLength(1);
-  });
-
-  it('subscribes again after the pair was dropped', () => {
-    const { table } = created();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    vi.advanceTimersByTime(LINGER_MS);
-    table.want('a', 'rotp', 'items');
-    expect(table.flush()).toEqual([{ op: 'sub', scope: 'rotp', colls: ['items'] }]);
-  });
-
-  it('skips the drop when the pair was wanted again before the next flush', () => {
-    const { table, expired } = created();
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    table.want('a', 'rotp', 'items');
-    vi.advanceTimersByTime(LINGER_MS);
-    expect(expired).toEqual([]);
-    expect(table.flush()).toEqual([]);
-  });
-
-  it('honours a custom linger and stops its timers on dispose', () => {
-    const { table, expired } = created(50);
-    table.want('a', 'rotp', 'items');
-    table.want('a', 'rotp', 'wakes');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.unwant('a', 'rotp', 'wakes');
-    table.flush();
-    vi.advanceTimersByTime(50);
-    expect(expired).toHaveLength(2);
-    table.want('a', 'rotp', 'items');
-    table.flush();
-    table.unwant('a', 'rotp', 'items');
-    table.flush();
-    table.dispose();
-    vi.advanceTimersByTime(LINGER_MS);
-    expect(expired).toHaveLength(2);
   });
 });
 

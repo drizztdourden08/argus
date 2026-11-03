@@ -5,7 +5,7 @@ import type { WireChange } from '../../src/data/stream/stream.type';
 import { snapshot } from '../helpers/snapshot';
 
 const change = (seq: number, ...changes: WireChange[]) => ({ scope: 'rotp', seq, changes });
-const set = (coll: string, id: string, data: object): WireChange => ({ coll, id, op: 'set', data });
+const set = (coll: string, id: string, data: WireChange['data']): WireChange => ({ coll, id, op: 'set', data });
 
 const synced = (colls: Record<string, number>) => {
   const cache = new ScopeCache();

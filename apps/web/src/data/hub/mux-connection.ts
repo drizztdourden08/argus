@@ -65,8 +65,9 @@ class MuxConnection {
     if (source !== this.source) return;
     this.failures = 0;
     this.setStatus('live');
-    if (name === 'hello') this.outbox.attach((JSON.parse(data) as MuxHello).conn, this.options.resume());
-    else this.options.onFrame({ event: name, data: JSON.parse(data) } as MuxFrame);
+    const payload: unknown = JSON.parse(data);
+    if (name === 'hello') this.outbox.attach((payload as MuxHello).conn, this.options.resume());
+    else this.options.onFrame({ event: name, data: payload } as MuxFrame);
   }
 
   private onError(source: SourceLike): void {

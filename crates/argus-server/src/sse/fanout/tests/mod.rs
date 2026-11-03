@@ -31,11 +31,7 @@ pub struct Rig {
 pub fn rig() -> Rig {
     let bus = Bus::new();
     let fanout = Arc::new(Fanout::default());
-    let (f1, f2) = (Arc::clone(&fanout), Arc::clone(&fanout));
-    let links = vec![
-        bus.on_docs(move |e| f1.on_docs(e)),
-        bus.on_reset(move |e| f2.on_reset(e)),
-    ];
+    let links = fanout.link(&bus);
     let dir = tempfile::tempdir().expect("a temp folder");
     let db = Db::open(&dir.path().join("argus.db"), bus).expect("the db opens");
     Rig {
@@ -47,6 +43,13 @@ pub fn rig() -> Rig {
 }
 
 impl Rig {
+    /// A mux client of `scope` that follows `meta`, its opening frames not yet read.
+    pub fn follow_meta(&self, scope: &str, w: &Wire) -> Handle {
+        let target = Target::New(Kind::Mux, &w.sender);
+        let got = self.fanout.subscribe(&self.db, scope, target, &[Coll::Meta], None);
+        got.expect("subscribed")
+    }
+
     /// Writes one doc; the bus carries the event to the fan-out before this returns.
     pub fn set_in(&self, scope: &str, coll: Coll, id: &str) -> i64 {
         let change = DocChange::set(coll, id, json!({ "id": id }));

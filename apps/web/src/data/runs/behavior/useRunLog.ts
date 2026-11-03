@@ -24,7 +24,7 @@ const useRunLog = (key: string, runId: string | null, options: RunLogOptions): R
       if (cancelled) return;
       push(page.lines ?? []);
       if ((page.dropped ?? 0) > 0) note(`... ${page.dropped} older lines were dropped to keep the log small`);
-      if (liveNow.current) stop = tailRun(link, key, runId, { onLine: (line) => push([line]) }, page.next);
+      if (liveNow.current) stop = tailRun(link, { key, runId, after: page.next }, { onLine: (line) => push([line]) });
     }, (error: unknown) => {
       if (!cancelled) note(`could not load the output: ${errorMessage(error)}`);
     });
