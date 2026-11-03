@@ -118,11 +118,11 @@ fn within(n: f64, m: f64, len: usize) -> bool {
 }
 
 /// One criterion change on an item, in one locked write.
-fn run(r: &mut Run<'_>, id: Option<String>, sub: &str, args: &[String]) -> Outcome {
+fn run(r: &mut Run<'_>, id: Option<&str>, sub: &str, args: &[String]) -> Outcome {
     let edit = Edit::parse(sub, args, r.options.flag("undo"))?;
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let found = checked(board, &who, ("items", "ac"), id.as_deref())?;
+        let found = checked(board, &who, ("items", "ac"), id)?;
         let key = display(&found["id"]);
         let len = count(board, &key);
         if let Edit::Rm(n, m) = edit {
@@ -148,12 +148,27 @@ pub(super) fn ac(r: &mut Run<'_>) -> Outcome {
     let words = r.args.clone();
     let word = |i: usize| words.get(i).cloned();
     if word(0).as_deref() == Some("rm") {
-        return run(r, word(1), "rm", words.get(2..).unwrap_or_default());
+        return run(
+            r,
+            word(1).as_deref(),
+            "rm",
+            words.get(2..).unwrap_or_default(),
+        );
     }
     let known = word(1).filter(|s| ["add", "set", "done", "rm", "move"].contains(&s.as_str()));
     match known {
-        Some(sub) => run(r, word(0), &sub, words.get(2..).unwrap_or_default()),
-        None => run(r, word(0), "add", words.get(1..2).unwrap_or_default()),
+        Some(sub) => run(
+            r,
+            word(0).as_deref(),
+            &sub,
+            words.get(2..).unwrap_or_default(),
+        ),
+        None => run(
+            r,
+            word(0).as_deref(),
+            "add",
+            words.get(1..2).unwrap_or_default(),
+        ),
     }
 }
 

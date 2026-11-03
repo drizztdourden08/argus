@@ -27,7 +27,7 @@ pub enum Place {
     Master,
 }
 
-fn refuse(e: BoardError) -> CoordError {
+fn refuse(e: &BoardError) -> CoordError {
     CoordError::refuse(e.to_string())
 }
 
@@ -87,7 +87,7 @@ pub fn place_of(options: &Options) -> Result<Option<Place>, CoordError> {
 
 fn blocked_by(board: &Board, options: &Options) -> Result<Option<Vec<String>>, CoordError> {
     texts(options, "blocked-by")?
-        .map(|ids| checked_blocked_by(board, &json!(ids)).map_err(refuse))
+        .map(|ids| checked_blocked_by(board, &json!(ids)).map_err(|e| refuse(&e)))
         .transpose()
 }
 
@@ -116,7 +116,7 @@ pub fn for_start(board: &Board, options: &Options) -> Result<Fields, CoordError>
     if given.is_empty() {
         return Err(CoordError::refuse(NEEDS_ITEM));
     }
-    let items = checked_items(board, &json!(given)).map_err(refuse)?;
+    let items = checked_items(board, &json!(given)).map_err(|e| refuse(&e))?;
     let place = place_of(options)?.ok_or_else(|| CoordError::refuse(NEEDS_PLACE))?;
     let mut fields = Fields::new();
     put_items(&mut fields, &items);
@@ -141,7 +141,7 @@ fn items_after(
     wanted.extend(added.unwrap_or_default());
     checked_items(board, &json!(wanted))
         .map(Some)
-        .map_err(refuse)
+        .map_err(|e| refuse(&e))
 }
 
 /// The links a set changes: only what the options name.
