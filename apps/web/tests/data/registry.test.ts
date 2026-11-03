@@ -6,7 +6,7 @@ const stageOf = (type: string, stage: string) => itemTypeOf(type)?.stages.find((
 
 describe('K2 the web reads the item type registry file', { tags: ['critical'] }, () => {
   it('lists the types of the design in display order and the five lanes', () => {
-    expect(ITEM_REGISTRY.types.map((type) => type.id)).toEqual(['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'test-case']);
+    expect(ITEM_REGISTRY.types.map((type) => type.id)).toEqual(['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'test-case', 'build', 'worktree']);
     expect(ITEM_REGISTRY.lanes).toEqual(['todo', 'doing', 'review', 'done', 'dropped']);
   });
 

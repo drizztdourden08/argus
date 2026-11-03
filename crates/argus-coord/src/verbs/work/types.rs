@@ -47,7 +47,7 @@ fn overview(reg: &Registry) -> Vec<String> {
     let kinds: Vec<String> = reg
         .sub_items
         .iter()
-        .map(|s| format!("{} {}-n", s.id, s.prefix))
+        .map(|s| format!("{} {}-n", s.id, s.code))
         .collect();
     vec![
         table(&rows),

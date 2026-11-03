@@ -104,6 +104,7 @@
     {
       "id": "epic",
       "label": "Epic",
+      "code": "E",
       "icon": "zap",
       "color": "violet",
       "collection": "items",
@@ -117,13 +118,33 @@
       ],
       "fields": ["goal", "target"],
       "groups": [{ "id": "plan", "label": "Plan", "fields": ["goal", "target"] }],
-      "tabs": ["overview", "children", "links", "discussion", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "children", "links", "discussion", "media", "work", "activity"],
       "card": { "progress": "children", "chips": [] },
+      "links": [
+        {
+          "field": "children",
+          "to": ["story", "task", "bug", "debt", "test-plan"],
+          "label": "Children",
+          "inverse": "Parent"
+        },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
       "done": { "needs": ["children"], "mode": "refuse" }
     },
     {
       "id": "story",
       "label": "Story",
+      "code": "S",
       "icon": "bookmark",
       "color": "green",
       "collection": "items",
@@ -138,13 +159,31 @@
       ],
       "fields": ["role", "want", "benefit"],
       "groups": [{ "id": "story", "label": "Story", "fields": ["role", "want", "benefit"] }],
-      "tabs": ["overview", "children", "links", "discussion", "tests", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "children", "links", "discussion", "tests", "media", "work", "activity"],
       "card": { "progress": "children-ac", "chips": [] },
+      "links": [
+        { "field": "parent", "to": ["epic"], "label": "Parent", "inverse": "Children" },
+        { "field": "children", "to": ["task", "bug", "debt", "test-plan"], "label": "Children", "inverse": "Parent" },
+        { "field": "tests", "to": ["test-case"], "label": "Verified by", "inverse": "Verifies" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
+      "groupBy": "parent",
       "done": { "needs": ["ac", "children", "tests"], "mode": "refuse" }
     },
     {
       "id": "task",
       "label": "Task",
+      "code": "K",
       "icon": "circle-check",
       "color": "blue",
       "collection": "items",
@@ -158,13 +197,30 @@
       ],
       "fields": [],
       "groups": [],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "links", "discussion", "tests", "media", "work", "activity"],
       "card": { "progress": "ac", "chips": [] },
+      "links": [
+        { "field": "parent", "to": ["epic", "story"], "label": "Parent", "inverse": "Children" },
+        { "field": "tests", "to": ["test-case"], "label": "Verified by", "inverse": "Verifies" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
+      "groupBy": "parent",
       "done": { "needs": ["ac"], "mode": "warn" }
     },
     {
       "id": "bug",
       "label": "Bug",
+      "code": "B",
       "icon": "bug",
       "color": "rose",
       "collection": "items",
@@ -183,13 +239,32 @@
         { "id": "report", "label": "Report", "fields": ["severity", "environment", "foundIn", "reporter"] },
         { "id": "repro", "label": "Steps", "fields": ["repro", "expected", "actual"] }
       ],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "links", "discussion", "tests", "media", "work", "activity"],
       "card": { "progress": "ac", "chips": ["severity"] },
+      "links": [
+        { "field": "parent", "to": ["epic", "story"], "label": "Parent", "inverse": "Children" },
+        { "field": "duplicateOf", "to": ["bug"], "label": "Duplicate of", "inverse": "Duplicates" },
+        { "field": "foundIn", "to": ["test-case"], "label": "Found in", "inverse": "Found" },
+        { "field": "tests", "to": ["test-case"], "label": "Verified by", "inverse": "Verifies" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
+      "groupBy": "parent",
       "done": { "needs": ["verified"], "mode": "refuse" }
     },
     {
       "id": "debt",
       "label": "Tech debt",
+      "code": "X",
       "icon": "wrench",
       "color": "amber",
       "collection": "items",
@@ -204,13 +279,30 @@
       ],
       "fields": ["area", "cost", "risk", "payoff", "reason"],
       "groups": [{ "id": "debt", "label": "Debt", "fields": ["area", "cost", "risk", "payoff"] }],
-      "tabs": ["overview", "links", "discussion", "tests", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "links", "discussion", "tests", "media", "work", "activity"],
       "card": { "progress": "ac", "chips": ["cost", "risk"] },
+      "links": [
+        { "field": "parent", "to": ["epic", "story"], "label": "Parent", "inverse": "Children" },
+        { "field": "tests", "to": ["test-case"], "label": "Verified by", "inverse": "Verifies" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
+      "groupBy": "parent",
       "done": { "needs": ["ac"], "mode": "warn" }
     },
     {
       "id": "test-plan",
       "label": "Test plan",
+      "code": "TP",
       "icon": "scroll-text",
       "color": "cyan",
       "collection": "items",
@@ -233,13 +325,31 @@
       ],
       "fields": ["bundle", "cases", "env", "runs"],
       "groups": [{ "id": "plan", "label": "Plan", "fields": ["bundle", "env"] }],
-      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "builds", "activity"],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "work", "activity"],
       "card": { "progress": "run", "chips": ["bundle"] },
+      "links": [
+        { "field": "parent", "to": ["epic", "story"], "label": "Parent", "inverse": "Children" },
+        { "field": "cases", "to": ["test-case"], "label": "Cases", "inverse": "Plans" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "test-case", "question", "decision", "todo", "dependency"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "deps", "to": ["dependency"], "label": "Dependencies", "inverse": "Dependency of" }
+      ],
+      "signals": ["conflict", "needs", "attention", "trail", "archived"],
+      "groupBy": "parent",
+      "action": "start-run",
       "done": { "needs": ["plan-passed"], "mode": "refuse" }
     },
     {
       "id": "test-case",
       "label": "Test case",
+      "code": "T",
       "icon": "flask",
       "color": "teal",
       "collection": "tests",
@@ -248,14 +358,28 @@
       "statuses": ["pending", "pass", "fail", "partial", "blocked", "moved"],
       "fields": ["setup", "steps", "pass", "fail", "mode", "bundle"],
       "groups": [],
-      "tabs": ["overview", "links", "discussion", "media", "activity"],
-      "card": { "progress": "none", "chips": [] }
+      "view": "row",
+      "title": "title",
+      "assignee": "thread",
+      "tabs": ["overview", "result", "links", "discussion", "media", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Verifies",
+          "inverse": "Verified by"
+        },
+        { "field": "plans", "to": ["test-plan"], "label": "Plans", "inverse": "Cases" }
+      ],
+      "groupBy": "plans"
     },
     {
       "id": "build",
       "label": "Build",
+      "code": "BL",
       "icon": "play",
-      "color": "violet",
+      "color": "lime",
       "collection": "launchers",
       "idKey": "name",
       "parents": [],
@@ -267,30 +391,358 @@
       ],
       "fields": ["for", "master", "cmd", "cwd", "kind", "branch", "commit", "window", "current", "bundle", "useEvery"],
       "groups": [],
-      "tabs": [],
-      "card": { "progress": "none", "chips": ["master", "kind", "current"] }
+      "view": "card",
+      "title": "title",
+      "assignee": "by",
+      "tabs": ["overview", "runs", "links", "activity"],
+      "card": { "progress": "none", "chips": ["master", "kind", "current"] },
+      "links": [
+        {
+          "field": "for",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "For",
+          "inverse": "Builds"
+        },
+        { "field": "runs", "to": ["run"], "label": "Runs", "inverse": "Build" }
+      ],
+      "signals": ["live", "stale", "relink"],
+      "groupBy": "for",
+      "action": "play"
     },
     {
       "id": "worktree",
       "label": "Worktree",
+      "code": "WT",
       "icon": "git-branch",
       "color": "orange",
       "collection": "worktrees",
       "idKey": "id",
-      "readOnly": true,
       "parents": [],
+      "readOnly": true,
       "stages": [],
       "fields": ["path", "branch", "state", "dirty", "ahead", "item", "linkSource"],
       "groups": [],
-      "tabs": [],
-      "card": { "progress": "none", "chips": [] }
+      "view": "row",
+      "title": "branch",
+      "assignee": "thread",
+      "tabs": ["overview", "links", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Worktrees"
+        },
+        { "field": "agent", "to": ["agent"], "label": "Agent", "inverse": "Worktree" },
+        { "field": "builds", "to": ["build"], "label": "Builds", "inverse": "Worktree" }
+      ],
+      "groupBy": "item"
     }
   ],
   "subItems": [
-    { "id": "question", "store": "entries", "prefix": "Q", "icon": "circle-help", "tone": "danger", "blocksWhile": "open", "field": "question" },
-    { "id": "decision", "store": "entries", "prefix": "D", "icon": "gavel", "tone": "info", "blocksWhile": "pending", "field": "decision" },
-    { "id": "todo", "store": "actions", "prefix": "H", "icon": "list-checks", "tone": "warning", "blocksWhile": "pending", "field": "todo" },
-    { "id": "note", "store": "entries", "prefix": "N", "icon": "message-square", "tone": "neutral", "field": "note" }
+    {
+      "id": "question",
+      "label": "Question",
+      "code": "Q",
+      "store": "entries",
+      "icon": "circle-help",
+      "tone": "danger",
+      "blocksWhile": "open",
+      "field": "question",
+      "view": "card",
+      "assignee": "=owner",
+      "tabs": ["overview", "discussion", "media", "links", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Questions"
+        }
+      ]
+    },
+    {
+      "id": "decision",
+      "label": "Decision",
+      "code": "D",
+      "store": "entries",
+      "icon": "gavel",
+      "tone": "info",
+      "blocksWhile": "pending",
+      "field": "decision",
+      "view": "card",
+      "assignee": "=owner",
+      "tabs": ["overview", "discussion", "media", "links", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Decisions"
+        }
+      ]
+    },
+    {
+      "id": "todo",
+      "label": "To-do",
+      "code": "H",
+      "store": "actions",
+      "icon": "list-checks",
+      "tone": "warning",
+      "blocksWhile": "pending",
+      "field": "todo",
+      "view": "card",
+      "assignee": "assignee",
+      "tabs": ["overview", "links", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "To-dos"
+        }
+      ]
+    },
+    {
+      "id": "note",
+      "label": "Note",
+      "code": "N",
+      "store": "entries",
+      "icon": "message-square",
+      "tone": "neutral",
+      "field": "note",
+      "view": "card",
+      "assignee": "thread",
+      "tabs": ["overview", "media", "links"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Notes"
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "agent",
+      "label": "Agent",
+      "code": "A",
+      "icon": "robot",
+      "color": "pink",
+      "collection": "agents",
+      "view": "row",
+      "title": "task",
+      "assignee": "thread",
+      "tabs": ["overview", "work", "transcript", "links", "activity"],
+      "card": { "progress": "none", "chips": ["where", "model", "elapsed"] },
+      "links": [
+        {
+          "field": "items",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Items",
+          "inverse": "Agents"
+        },
+        { "field": "worktree", "to": ["worktree"], "label": "Worktree", "inverse": "Agent" },
+        {
+          "field": "blockedBy",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan", "agent", "question", "decision", "todo"],
+          "label": "Blocked by",
+          "inverse": "Blocks"
+        },
+        { "field": "runs", "to": ["run"], "label": "Runs", "inverse": "Agent" }
+      ],
+      "groupBy": "items"
+    },
+    {
+      "id": "change",
+      "label": "Change",
+      "code": "PR",
+      "icon": "git-fork",
+      "tone": "info",
+      "collection": "prs",
+      "view": "card",
+      "title": "title",
+      "assignee": "createdBy",
+      "tabs": ["overview", "checks", "links", "discussion", "activity"],
+      "card": { "progress": "checks", "chips": ["branch", "status"] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Changes"
+        },
+        { "field": "worktree", "to": ["worktree"], "label": "Worktree", "inverse": "Changes" }
+      ],
+      "signals": ["failing", "conflict"],
+      "groupBy": "item"
+    },
+    {
+      "id": "release",
+      "label": "Release",
+      "code": "V",
+      "icon": "tag",
+      "tone": "success",
+      "collection": "releases",
+      "idKey": "version",
+      "view": "card",
+      "title": "title",
+      "assignee": "=lead",
+      "tabs": ["overview", "files", "links", "activity"],
+      "card": { "progress": "none", "chips": ["latest", "packages"] },
+      "links": [
+        {
+          "field": "items",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Ships",
+          "inverse": "Shipped in"
+        },
+        { "field": "prs", "to": ["change"], "label": "Pull requests", "inverse": "Release" }
+      ]
+    },
+    {
+      "id": "dependency",
+      "label": "Dependency",
+      "code": "DP",
+      "stored": "D",
+      "icon": "link",
+      "tone": "neutral",
+      "collection": "deps",
+      "view": "row",
+      "title": "text",
+      "assignee": "from",
+      "tabs": ["overview", "trail", "activity"],
+      "card": { "progress": "none", "chips": ["state", "trail"] },
+      "links": [
+        {
+          "field": "from",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "From",
+          "inverse": "Waits on"
+        },
+        {
+          "field": "to",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "To",
+          "inverse": "Requested by"
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "label": "Run",
+      "code": "R",
+      "icon": "square-code",
+      "tone": "neutral",
+      "collection": "runs",
+      "view": "row",
+      "title": "name",
+      "assignee": "thread",
+      "tabs": ["log", "links"],
+      "card": { "progress": "none", "chips": ["exit"] },
+      "links": [
+        { "field": "build", "to": ["build"], "label": "Build", "inverse": "Runs" },
+        { "field": "agent", "to": ["agent"], "label": "Agent", "inverse": "Runs" }
+      ]
+    },
+    {
+      "id": "check",
+      "label": "Check run",
+      "code": "C",
+      "icon": "list-checks",
+      "tone": "neutral",
+      "collection": "checks",
+      "view": "row",
+      "title": "name",
+      "assignee": "thread",
+      "tabs": ["steps", "log"],
+      "card": { "progress": "none", "chips": ["status"] },
+      "links": [{ "field": "change", "to": ["change"], "label": "Change", "inverse": "Checks" }]
+    },
+    {
+      "id": "notice",
+      "label": "Notice",
+      "code": "N",
+      "shares": "note",
+      "icon": "bell",
+      "tone": "warning",
+      "collection": "entries",
+      "view": "card",
+      "title": "text",
+      "assignee": "thread",
+      "tabs": ["overview", "links"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Notices"
+        },
+        {
+          "field": "about",
+          "to": ["agent", "worktree", "build", "change", "release", "dependency"],
+          "label": "About",
+          "inverse": "Notices"
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "label": "Follow-up",
+      "code": "P",
+      "aliases": ["F"],
+      "icon": "send",
+      "tone": "neutral",
+      "collection": "entries",
+      "view": "card",
+      "title": "text",
+      "assignee": "thread",
+      "tabs": ["overview", "discussion", "links"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Follow-ups"
+        },
+        {
+          "field": "ref",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "About",
+          "inverse": "Follow-ups"
+        }
+      ]
+    },
+    {
+      "id": "message",
+      "label": "Message",
+      "code": "M",
+      "icon": "mail",
+      "tone": "info",
+      "collection": "entries",
+      "view": "card",
+      "title": "text",
+      "assignee": "thread",
+      "tabs": ["overview", "discussion", "links"],
+      "card": { "progress": "none", "chips": [] },
+      "links": [
+        {
+          "field": "item",
+          "to": ["epic", "story", "task", "bug", "debt", "test-plan"],
+          "label": "Item",
+          "inverse": "Messages"
+        }
+      ]
+    }
   ],
   "people": {
     "owner": { "label": "You", "initials": "ME", "color": "primary" },

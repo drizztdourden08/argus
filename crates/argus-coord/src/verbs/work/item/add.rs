@@ -20,7 +20,7 @@ use super::images::{keep_all, picked};
 use super::typed;
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{
-    apply, apply_result, find_doc, is_coordinator, move_op, op, owner_arg, who_of,
+    apply, apply_result, find_doc, is_coordinator, move_op, op, owner_arg, stored_links, who_of,
 };
 use crate::verbs::work::place::rank_to;
 use crate::verbs::work::run::{Res, Run, bad};
@@ -135,6 +135,7 @@ fn typed_item(
         ("thread".to_owned(), json!(owner)),
     ]);
     set.extend(draft.flags);
+    stored_links(board, &mut set)?;
     assign_for(&mut set, options, owner);
     let rest = Map::from_iter([("set".to_owned(), Value::Object(set))]);
     let operation = attach(

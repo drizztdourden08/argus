@@ -1,6 +1,7 @@
 //! `archive | unarchive | rm | restore <id>... [--reason "..."]`: nothing is ever hard-deleted
 //! here. Each id is checked, changed and announced in turn, all in one locked write.
 
+use argus_board::json::display;
 use argus_board::limits::optional_text;
 use argus_board::ops::{Check, authorize};
 use serde_json::Map;
@@ -44,6 +45,7 @@ pub fn run(r: &mut Run<'_>, kind: &Soft, verb: &str) -> Outcome {
         let who = r.begin(board)?;
         for id in r.args.clone() {
             let found = find_doc(board, kind.coll, Some(&id))?;
+            let id = display(&found["id"]);
             authorize(&who_of(&who), &Check::new(verb, kind.coll, Some(&found)))?;
             let mut rest = Map::new();
             if let Some(why) = &reason {

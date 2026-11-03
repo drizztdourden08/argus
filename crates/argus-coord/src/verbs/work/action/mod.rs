@@ -10,7 +10,7 @@ mod read;
 
 use argus_board::Board;
 use argus_board::content::{Context, check};
-use argus_board::json::ids;
+use argus_board::json::{display, ids};
 use argus_board::ops::{record_arg, refresh_needs_human};
 use serde_json::{Value, json};
 
@@ -20,11 +20,14 @@ use super::run::{Res, Run};
 use crate::cli::{Call, Outcome};
 
 /// The to-do is about a record that exists and is not in the trash: an item, or a test (`T-n`).
-fn live_record(board: &Board, id: &str) -> Res<()> {
+/// Gives its id as the board stores it.
+fn live_record(board: &Board, id: &str) -> Res<String> {
     if id.starts_with("T-") {
-        return record_arg(board, &json!(id)).map(|_| ());
+        return record_arg(board, &json!(id)).map(|_| id.to_owned());
     }
-    assert_live(&find_doc(board, "items", Some(id))?, "items")
+    let found = find_doc(board, "items", Some(id))?;
+    assert_live(&found, "items")?;
+    Ok(display(&found["id"]))
 }
 
 /// `--who`: the owner, a thread of the board or `lead:<key>`. `None` when it is not given.

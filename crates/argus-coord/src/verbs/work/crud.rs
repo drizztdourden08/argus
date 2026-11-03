@@ -4,6 +4,7 @@
 //! changes only what it owns and the coordinator changes anything.
 
 use argus_board::Board;
+use argus_board::ids;
 use argus_board::json::{as_integer, display, doc, nullish, section, shown, truthy};
 use argus_board::ops::{Check, OpResult, Status, apply_op, authorize};
 use serde_json::{Map, Value, json};
@@ -28,13 +29,41 @@ pub fn label(coll: &str) -> &str {
     }
 }
 
+/// The id as the board stores it: `B-12` names item `I-12` when that item is a bug. Only the
+/// items have shown letters; every other id is its own.
+///
+/// # Errors
+/// Refused when the letters are another type's, with the right ones in the message.
+pub fn stored_id(board: &Board, coll: &str, id: &str) -> Res<String> {
+    if coll == "items" {
+        ids::resolve(board, id)
+    } else {
+        Ok(id.to_owned())
+    }
+}
+
+/// The item ids a set names (`parent`, `duplicateOf`) turned into stored ids.
+///
+/// # Errors
+/// As [`stored_id`].
+pub fn stored_links(board: &Board, set: &mut Map<String, Value>) -> Res<()> {
+    for key in ["parent", "fields.duplicateOf"] {
+        let Some(id) = set.get(key).and_then(Value::as_str) else {
+            continue;
+        };
+        let stored = stored_id(board, "items", id)?;
+        set.insert(key.to_owned(), json!(stored));
+    }
+    Ok(())
+}
+
 /// The doc of a collection by id, refused when it does not exist.
 ///
 /// # Errors
 /// Refused with `no <label> "<id>".`
 pub fn find_doc(board: &Board, coll: &str, id: Option<&str>) -> Res<Value> {
-    let key = id.unwrap_or_default();
-    match doc(board, coll, key) {
+    let key = stored_id(board, coll, id.unwrap_or_default())?;
+    match doc(board, coll, &key) {
         Some(found) if !found.is_null() => Ok(found.clone()),
         _ => Err(bad(format!("no {} \"{key}\".", label(coll)))),
     }

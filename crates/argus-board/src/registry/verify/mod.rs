@@ -2,6 +2,7 @@
 //! somewhere else in it. The shape itself is checked while parsing ([`super::model`]).
 
 mod fields;
+mod kinds;
 mod people;
 mod stages;
 mod sub_items;
@@ -28,6 +29,7 @@ pub(super) fn problems(reg: &Registry) -> Vec<String> {
     fields::verify(reg, &mut out);
     types::verify(reg, &mut out);
     sub_items::verify(reg, &mut out);
+    kinds::verify(reg, &mut out);
     people::verify(reg, &mut out);
     out
 }
@@ -137,9 +139,12 @@ mod tests {
     }
 
     #[test]
-    fn a_sub_item_with_a_taken_prefix_is_found() {
-        let text = refused(|d| d["subItems"][1]["prefix"] = json!("Q"));
-        assert!(text.contains("prefix is used"), "{text}");
+    fn a_sub_item_with_a_taken_code_is_found() {
+        let text = refused(|d| d["subItems"][1]["code"] = json!("Q"));
+        assert!(
+            text.contains("codes: Q names question and decision"),
+            "{text}"
+        );
     }
 
     #[test]
@@ -181,9 +186,11 @@ mod tests {
     }
 
     #[test]
-    fn a_build_gets_no_tab_and_a_work_item_still_needs_overview_first() {
-        let text = refused(|d| item_type(d, "build")["tabs"] = json!(["overview"]));
-        assert!(text.contains("has no tabs"), "{text}");
+    fn every_type_has_tabs_and_starts_with_overview() {
+        let text = refused(|d| item_type(d, "build")["tabs"] = json!([]));
+        assert!(text.contains("a kind has tabs"), "{text}");
+        let text = refused(|d| item_type(d, "worktree")["tabs"] = json!(["links", "overview"]));
+        assert!(text.contains("the first tab must be overview"), "{text}");
         let text = refused(|d| item_type(d, "task")["tabs"] = json!(["links", "overview"]));
         assert!(text.contains("the first tab must be overview"), "{text}");
     }

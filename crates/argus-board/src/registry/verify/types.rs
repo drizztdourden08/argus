@@ -1,36 +1,24 @@
-//! Checks on the item types: names, parents, fields, tabs, cards and done rules.
-
-use std::collections::HashSet;
+//! Checks on the item types: parents, fields, cards and done rules. What every kind shares (names,
+//! codes, looks, tabs, links) is checked in [`super::kinds`].
 
 use super::super::model::{Collection, ItemType, Registry};
-use super::vocab::{CATEGORY_COLORS, DONE_NEEDS, ICONS, MAX_DEPTH, TABS};
+use super::vocab::{DONE_NEEDS, MAX_DEPTH};
 
 /// Every problem in the types, including the stages of each.
 pub(super) fn verify(reg: &Registry, out: &mut Vec<String>) {
-    let mut seen = HashSet::new();
     for t in &reg.types {
-        if !seen.insert(t.id.as_str()) {
-            out.push(format!("types: {} is listed twice", t.id));
-        }
         verify_type(reg, t, out);
     }
 }
 
 fn verify_type(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
     let mut say = |text: &str| out.push(format!("types.{}: {text}", t.id));
-    if !ICONS.contains(&t.icon.as_str()) {
-        say(&format!("unknown icon {}", t.icon));
-    }
-    if !CATEGORY_COLORS.contains(&t.color.as_str()) {
-        say(&format!("unknown colour {}", t.color));
-    }
     if let Some(name) = t.fields.iter().find(|f| !reg.fields.contains_key(*f)) {
         say(&format!("unknown field {name}"));
     }
     verify_places(t, &mut say);
     verify_serves(reg, t, &mut say);
     verify_groups(t, &mut say);
-    verify_tabs(t, &mut say);
     verify_done(t, &mut say);
     verify_parents(reg, t, &mut say);
     super::stages::verify(reg, t, out);
@@ -80,23 +68,6 @@ fn verify_groups(t: &ItemType, say: &mut impl FnMut(&str)) {
                 group.id
             ));
         }
-    }
-}
-
-fn verify_tabs(t: &ItemType, say: &mut impl FnMut(&str)) {
-    let tabless = matches!(t.collection, Collection::Launchers | Collection::Worktrees);
-    if tabless != t.tabs.is_empty() {
-        say("a build or worktree type has no tabs; every other type has them");
-    }
-    if !tabless && t.tabs.first().map(String::as_str) != Some("overview") {
-        say("the first tab must be overview");
-    }
-    if let Some(tab) = t.tabs.iter().find(|tab| !TABS.contains(&tab.as_str())) {
-        say(&format!("unknown tab {tab}"));
-    }
-    let unique: HashSet<_> = t.tabs.iter().collect();
-    if unique.len() != t.tabs.len() {
-        say("a tab is listed twice");
     }
 }
 

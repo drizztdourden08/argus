@@ -20,10 +20,10 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         let owner = owner_arg(board, &who, r.options)?;
         let check = Check::new("add", "actions", None).to(Some(&owner));
         authorize(&who_of(&who), &check)?;
-        let item = r.text_opt("item").map(str::to_owned);
-        if let Some(id) = &item {
-            live_record(board, id)?;
-        }
+        let item = r
+            .text_opt("item")
+            .map(|id| live_record(board, id))
+            .transpose()?;
         let assignee = assignee_arg(board, r)?;
         let fields = json!({
             "thread": owner, "item": item, "text": text, "status": "pending",

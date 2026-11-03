@@ -28,7 +28,7 @@ use argus_board::ops::{Check, authorize};
 use argus_board::store::create_doc;
 use serde_json::{Map, Value};
 
-use super::crud::{assert_live, label, who_of};
+use super::crud::{assert_live, label, stored_id, who_of};
 use super::group::{Group, Soft, nothing, serve};
 use super::run::{Res, Run, bad};
 use crate::cli::{Call, Outcome};
@@ -96,7 +96,8 @@ fn item_arg(board: &Board, reference: Option<&str>) -> Res<Value> {
     } else {
         "items"
     };
-    let Some(item) = doc(board, coll, id).filter(|i| !i.is_null()) else {
+    let id = stored_id(board, coll, id)?;
+    let Some(item) = doc(board, coll, &id).filter(|i| !i.is_null()) else {
         return Err(bad(format!("no {} \"{id}\".", label(coll))));
     };
     assert_live(item, coll)?;

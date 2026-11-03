@@ -7,7 +7,7 @@ use serde_json::{Map, Value, json};
 
 use super::edit::{Plan, Say, edit_item};
 use crate::cli::Outcome;
-use crate::verbs::work::crud::apply_result;
+use crate::verbs::work::crud::{apply_result, stored_id};
 use crate::verbs::work::run::{Res, Run, bad};
 use crate::who::Caller;
 
@@ -96,7 +96,11 @@ pub(super) fn make_todo(
 fn plan_for(wanted: Blocker) -> impl FnOnce(&mut Board, &Caller, &Value) -> Res<Plan> {
     move |board, by, item| {
         let (target, said) = match &wanted {
-            Blocker::Link(id) => (id.clone(), format!("blocked on {id}.")),
+            Blocker::Link(id) => {
+                let id = stored_id(board, "items", id)?;
+                let said = format!("blocked on {id}.");
+                (id, said)
+            }
             Blocker::Todo { what, who } => {
                 let id = make_todo(board, by, item, (what.as_str(), who.as_str()))?;
                 let said = format!("blocked on {id} (to-do for {who}).");
@@ -148,8 +152,8 @@ fn drop_all(item: &Value) -> Plan {
 /// `coord item unblock <I> [--from <id>]`.
 pub(super) fn unblock(r: &mut Run<'_>) -> Outcome {
     let from = given(r, "from");
-    edit_item(r, &[], move |_, _, item| match &from {
-        Some(id) => drop_one(item, id),
+    edit_item(r, &[], move |board, _, item| match &from {
+        Some(id) => drop_one(item, &stored_id(board, "items", id)?),
         None => Ok(drop_all(item)),
     })
 }

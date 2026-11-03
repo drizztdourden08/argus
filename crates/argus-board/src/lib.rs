@@ -9,6 +9,7 @@ pub mod blocked;
 pub mod content;
 pub mod deps;
 pub mod error;
+pub mod ids;
 pub mod inbox;
 pub mod item_events;
 pub mod json;

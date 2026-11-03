@@ -97,7 +97,7 @@ fn progress(forest: &Forest, item: &Value) -> String {
                 kids
             }
         }
-        Progress::Run | Progress::None => String::new(),
+        Progress::Run | Progress::Checks | Progress::None => String::new(),
     }
 }
 
