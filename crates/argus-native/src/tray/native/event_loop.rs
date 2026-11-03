@@ -34,13 +34,15 @@ pub enum ExitReason {
     Crashed,
 }
 
-/// Runs the tray until it ends. Tells `ready` once the icon is up, or why it could not be.
+/// Runs the tray until it ends. Tells `ready` once the icon is up, or why it could not be. The
+/// process becomes per-monitor DPI aware first, before the tray creates its window.
 pub fn run(
     files: TrayFiles,
     handlers: Arc<Handlers>,
     controls: &Receiver<Control>,
     ready: &Sender<Result<(), TrayError>>,
 ) -> ExitReason {
+    win32::make_dpi_aware();
     match Session::start(files, handlers) {
         Ok(mut session) => {
             let _told = ready.send(Ok(()));

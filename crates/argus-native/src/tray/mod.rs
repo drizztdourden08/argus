@@ -2,6 +2,7 @@
 //! Windows the icon itself on its own thread.
 
 mod balloon;
+mod downscale;
 mod error;
 mod fallback;
 mod gate;
