@@ -117,6 +117,8 @@ interface DrawerToolbarProps {
   wide: boolean;
   onWide: () => void;
   onStep: (id: string) => void;
+  link?: (id: string) => string;
+  before?: ReactNode;
   children?: ReactNode;
 }
 

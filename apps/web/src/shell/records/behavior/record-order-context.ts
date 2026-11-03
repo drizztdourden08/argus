@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { createContext } from 'react';
 import type { RecordOrder } from '../records.type';
-
-const NO_IDS: readonly string[] = [];
+import { NO_IDS } from './record-order-context.constants';
 
 const nobody = (): void => undefined;
 

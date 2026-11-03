@@ -2,9 +2,8 @@
 import type { ItemRef } from '../../../../data/kanban';
 import type { KanbanData } from '../../../../screens/board/tabs/kanban/kanban.type';
 import { itemTests, needsYou } from '../../../../screens/board/tabs/kanban/model';
-import type { PaneData, RecordData } from '../pane.type';
-
-type Shared = Pick<RecordData, 'boardKey' | 'record' | 'now' | 'ops' | 'acts' | 'feed' | 'open'>;
+import type { PaneData } from '../pane.type';
+import type { Shared } from './item-pane-data.type';
 
 const itemPaneData = (item: ItemRef, kanban: KanbanData, shared: Shared): PaneData => {
   const allTests = itemTests(kanban.tests, kanban.closedBuilds, true);

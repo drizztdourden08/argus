@@ -2,7 +2,7 @@
 import { Flex } from '@drizztdourden08/tessera';
 import { DrawerSection } from '../../../../screens/board/tabs/kanban/sub-components/DrawerSection';
 import { EmptyLine } from '../../../../screens/board/tabs/kanban/sub-components/EmptyLine';
-import type { TrailSectionProps } from '../pane.type';
+import type { TrailSectionProps } from './trail.type';
 import { TrailRow } from './TrailRow';
 import { useTrail } from './useTrail';
 

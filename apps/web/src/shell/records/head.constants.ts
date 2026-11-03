@@ -12,4 +12,4 @@ const HEAD_SIZES: Readonly<Record<HeadSize, { px: number; avatar: 'xs' | 'sm' }>
 
 const MENU_ICON = 'ellipsis-vertical';
 
-export { HEAD_AVATAR_SIZE, HEAD_SIZE_PX, HEAD_SIZES, MENU_ICON };
+export { HEAD_SIZE_PX, HEAD_SIZES, MENU_ICON };

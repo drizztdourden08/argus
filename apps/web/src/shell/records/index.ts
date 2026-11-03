@@ -1,15 +1,10 @@
 /* @layer renderer-app @kind barrel */
 export { assigneeLook } from './behavior/assignee-look';
-export { assigneeOfRecord } from './behavior/assignee-of-record';
 export { categoryColor } from './behavior/category-color';
-export { groupKeysOf } from './behavior/group-keys-of';
 export { groupRecords } from './behavior/group-records';
-export { legacyOpen } from './behavior/legacy-open';
 export { parseRecord } from './behavior/parse-record';
 export { recordMenuGroups } from './behavior/record-menu-groups';
-export { shownCode } from './behavior/shown-code';
 export { splitRecords } from './behavior/split-records';
-export { useOrderedIds } from './behavior/useOrderedIds';
 export { useRecordOrder } from './behavior/useRecordOrder';
 export { useRecordPane } from './behavior/useRecordPane';
 export { HEAD_SIZE_PX } from './head.constants';

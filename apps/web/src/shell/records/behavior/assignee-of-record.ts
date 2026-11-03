@@ -1,10 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { RegistryKind } from '../../../data/registry';
+import { FIXED_LEAD, FIXED_OWNER } from './assignee-of-record.constants';
 import { LEAD_PREFIX, OWNER } from './look.constants';
-
-const FIXED_OWNER = '=owner';
-
-const FIXED_LEAD = '=lead';
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 

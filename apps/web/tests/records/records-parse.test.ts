@@ -118,7 +118,8 @@ describe('I-85 P3 what a record view shows', { tags: ['critical'] }, () => {
 
   it('puts closed groups last and ranks the open ones', () => {
     const rows = [{ id: 'a', g: 'x' }, { id: 'b', g: 'y' }, { id: 'c', g: 'z' }, { id: 'd', g: '' }];
-    const info = (key: string) => ({ x: { rank: 2, closed: false }, y: { rank: 1, closed: false }, z: { rank: 0, closed: true } })[key as 'x'] ?? null;
+    const ranks = new Map([['x', { rank: 2, closed: false }], ['y', { rank: 1, closed: false }], ['z', { rank: 0, closed: true }]]);
+    const info = (key: string) => ranks.get(key) ?? null;
     const grouped = groupRecords(rows, (row) => (row.g ? [row.g] : []), info);
     expect(grouped.groups.map((group) => group.key)).toEqual(['y', 'x']);
     expect(grouped.closed.map((group) => group.key)).toEqual(['z']);
@@ -136,7 +137,7 @@ describe('I-85 P3 every kind has its menu', { tags: ['critical'] }, () => {
   it('offers only the actions that have a handler, edit group first and soft group last', () => {
     const groups = recordMenuGroups('task', 'I-1', { open: () => undefined, copy: () => undefined, delete: () => undefined });
     expect(groups.map((group) => group.id)).toEqual(['edit', 'soft']);
-    expect(groups[1]?.items.map((entry) => entry.id)).toEqual(['delete', 'copy']);
+    expect(groups[1]?.items.flatMap((entry) => ('id' in entry ? [entry.id] : []))).toEqual(['delete', 'copy']);
   });
 
   it('puts the middle groups between the edit and the other groups', () => {

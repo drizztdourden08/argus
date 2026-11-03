@@ -1,32 +1,20 @@
 /* @layer renderer-app @kind component */
-import { Button, CopyButton, Flex, Icon, IconButton } from '@drizztdourden08/tessera';
+import { Icon, IconButton } from '@drizztdourden08/tessera';
+import { DrawerToolbar } from '../../../screens/board/shared';
 import { paneLink } from './model/pane-link';
 import type { RecordPaneToolsProps } from './pane.type';
 
 const RecordPaneTools = (props: RecordPaneToolsProps) => {
   const { code, pane, previous, next, wide, onWide, children } = props;
-  const steps = [
-    { key: 'previous', name: 'Previous in the list ([)', target: previous, icon: 'chevron-left' },
-    { key: 'next', name: 'Next in the list (])', target: next, icon: 'chevron-right' },
-  ] as const;
+  const back = pane.canBack ? (
+    <IconButton label="Back" size="xs" variant="ghost" onClick={pane.back}>
+      <Icon name="arrow-left" />
+    </IconButton>
+  ) : null;
   return (
-    <Flex gap="xs" align="center" role="toolbar" aria-label="Record tools">
-      {pane.canBack && (
-        <IconButton label="Back" size="xs" variant="ghost" onClick={pane.back}>
-          <Icon name="arrow-left" />
-        </IconButton>
-      )}
-      <CopyButton text={() => paneLink(code)} label={`Copy a link to ${code}`} variant="ghost" size="xs" />
-      {steps.map((step) => (
-        <IconButton key={step.key} label={step.name} size="xs" variant="ghost" disabled={step.target === null} onClick={() => step.target && pane.step(step.target)}>
-          <Icon name={step.icon} />
-        </IconButton>
-      ))}
-      <Button size="xs" variant="ghost" aria-pressed={wide} title="Focus mode: the drawer takes the whole width" onClick={onWide}>
-        {wide ? 'Collapse' : 'Expand'}
-      </Button>
+    <DrawerToolbar id={code} previous={previous} next={next} label="Record tools" wide={wide} onWide={onWide} onStep={pane.step} link={paneLink} before={back}>
       {children}
-    </Flex>
+    </DrawerToolbar>
   );
 };
 

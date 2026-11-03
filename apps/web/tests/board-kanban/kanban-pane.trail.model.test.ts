@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { nodeOpens } from '../../src/shell/records/pane/model/node-opens';
 import { parseTrail } from '../../src/shell/records/pane/model/parse-trail';
-import type { TrailNode } from '../../src/shell/records/pane/pane.type';
+import type { TrailNode } from '../../src/shell/records/pane/trail/trail.type';
 
 const node = (extra: Partial<TrailNode> = {}): TrailNode => ({
   project: 'alpha',

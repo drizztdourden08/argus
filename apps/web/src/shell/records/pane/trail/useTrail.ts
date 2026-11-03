@@ -4,7 +4,7 @@ import { apiRequest, scopePath } from '../../../../data/api';
 import type { ItemRef } from '../../../../data/kanban';
 import { blockedSignature } from '../../../../screens/board/tabs/kanban/model';
 import { parseTrail } from '../model/parse-trail';
-import type { TrailTree } from '../pane.type';
+import type { TrailTree } from './trail.type';
 
 const useTrail = (boardKey: string, item: ItemRef): TrailTree | null => {
   const [tree, setTree] = useState<TrailTree | null>(null);
