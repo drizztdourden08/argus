@@ -12,19 +12,21 @@ const hasDependency = (facts: AttentionFacts): boolean =>
 const isExternalBlock = (facts: AttentionFacts): boolean =>
   Boolean(facts.item.blocker?.trim()) && !facts.asks.some((link) => link.via === 'blocker');
 
-const APPLIES: Readonly<Record<AttentionKind, (facts: AttentionFacts) => boolean>> = {
-  question: (facts) => hasAsk(facts, 'question'),
-  todo: (facts) => (facts.needs?.todos ?? 0) > 0,
-  'test-failing': (facts) => facts.signals.failing > 0,
-  dependency: hasDependency,
-  blocked: isExternalBlock,
-  'test-pending': (facts) => facts.signals.pending > 0,
-  decision: (facts) => hasAsk(facts, 'decision'),
-  quiet: (facts) => facts.quietMs !== null,
-  agent: (facts) => facts.signals.agents > 0,
-};
+const appliesOf = (facts: AttentionFacts): Record<AttentionKind, boolean> => ({
+  question: hasAsk(facts, 'question'),
+  todo: (facts.needs?.todos ?? 0) > 0,
+  'test-failing': facts.signals.failing > 0,
+  dependency: hasDependency(facts),
+  blocked: isExternalBlock(facts),
+  'test-pending': facts.signals.pending > 0,
+  decision: hasAsk(facts, 'decision'),
+  quiet: facts.quietMs !== null,
+  agent: facts.signals.agents > 0,
+});
 
-const attentionOf = (facts: AttentionFacts): AttentionKind[] =>
-  ATTENTION.filter((spec) => APPLIES[spec.kind](facts)).map((spec) => spec.kind);
+const attentionOf = (facts: AttentionFacts): AttentionKind[] => {
+  const applies = appliesOf(facts);
+  return ATTENTION.filter((spec) => applies[spec.kind]).map((spec) => spec.kind);
+};
 
 export { attentionOf };

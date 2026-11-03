@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { addPreset } from './add-preset';
 export { askLinks } from './ask-links';
+export { attentionText } from './attention-text';
 export { askTag } from './ask-tags';
 export { buildView } from './build-view';
 export { byCreated } from './by-created';

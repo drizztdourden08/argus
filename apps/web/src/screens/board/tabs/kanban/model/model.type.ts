@@ -176,11 +176,16 @@ interface DepLink {
   reason: string | null;
 }
 
+interface AttentionText {
+  label: string;
+  title: string | undefined;
+}
+
 type DepView = DepLink & {
   history: DepHistoryRow[];
   cancellable: boolean;
 };
 
 export type {
-  AddPreset, AskKind, AskLink, AskTagSpec, BulkSofts, CardData, CardFacts, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
+  AddPreset, AskKind, AskLink, AskTagSpec, AttentionText, BulkSofts, CardData, CardFacts, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
 };
