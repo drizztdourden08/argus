@@ -16,6 +16,13 @@ interface BlockedCause {
   who?: string | null;
 }
 
+interface ItemImage {
+  n: number;
+  url: string;
+  caption: string;
+  at?: string;
+}
+
 interface ItemTyping {
   type?: string;
   parent?: string | null;
@@ -24,6 +31,7 @@ interface ItemTyping {
   fields?: Record<string, unknown>;
   blockedBy?: string[];
   blocked?: BlockedCause[];
+  images?: ItemImage[];
 }
 
 interface WorkItem {
@@ -42,4 +50,4 @@ interface WorkItem {
   requestedBy?: RequestedBy | RequestedBy[];
 }
 
-export type { BlockedCause, BlockedKind, ItemTyping, WorkItem };
+export type { BlockedCause, BlockedKind, ItemImage, ItemTyping, WorkItem };

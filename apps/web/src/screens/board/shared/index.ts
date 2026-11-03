@@ -5,6 +5,8 @@ export { copyText } from './behavior/copy-text';
 export { readStored } from './behavior/read-stored';
 export { OpenEntryContext } from './behavior/open-entry-context';
 export { OpenThreadContext } from './behavior/open-thread-context';
+export { useBoardKey } from './behavior/useBoardKey';
+export { useItemMedia } from './behavior/useItemMedia';
 export { useNow } from './behavior/useNow';
 export { useOpenEntry } from './behavior/useOpenEntry';
 export { useOpenThread } from './behavior/useOpenThread';

@@ -4,6 +4,7 @@ const BOARD_TABS = [
   { id: 'activity', label: 'Activity' },
   { id: 'kanban', label: 'Kanban' },
   { id: 'tests', label: 'Tests' },
+  { id: 'media', label: 'Media' },
   { id: 'builds', label: 'Builds' },
   { id: 'worktrees', label: 'Worktrees' },
   { id: 'changes', label: 'Changes' },

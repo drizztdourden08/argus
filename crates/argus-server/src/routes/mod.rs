@@ -16,6 +16,7 @@ pub mod deps;
 pub mod feed;
 pub mod files;
 pub mod inbox;
+pub mod item_images;
 pub mod mcp;
 pub mod notify;
 pub mod pages;
@@ -39,6 +40,7 @@ pub fn register_all(router: &mut Router) {
     db::register(router);
     deps::register(router);
     actions::register(router);
+    item_images::register(router);
     activity::register(router);
     agents::register(router);
     procs::register(router);

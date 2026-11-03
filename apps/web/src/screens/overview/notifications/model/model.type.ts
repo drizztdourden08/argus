@@ -14,9 +14,18 @@ interface NoteFilters {
   project: string;
 }
 
+interface OwnerRow {
+  project: string;
+  name: string;
+  id: string;
+  title: string;
+  type: string;
+  stage: string;
+}
+
 interface ToastNote {
   text: string;
   bad: boolean;
 }
 
-export type { LevelPick, NoteFilters, NoteItem, SettingPart, ToastNote };
+export type { LevelPick, NoteFilters, NoteItem, OwnerRow, SettingPart, ToastNote };

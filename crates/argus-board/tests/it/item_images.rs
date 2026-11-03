@@ -7,7 +7,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::common::alpha;
-use argus_board::proofs::{MAX_BYTES, MAX_PER_ITEM, add_item_image, keep_image};
+use argus_board::proofs::{
+    MAX_BYTES, MAX_PER_ITEM, add_item_image, add_item_image_bytes, keep_image,
+};
 use serde_json::{Value, json};
 
 const PNG: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
@@ -24,6 +26,23 @@ fn item() -> Value {
 
 fn count(item: &Value) -> usize {
     item["images"].as_array().map_or(0, Vec::len)
+}
+
+#[test]
+fn bytes_from_an_upload_are_kept_listed_and_deduplicated() {
+    let home = tempfile::tempdir().expect("home");
+    let mut it = item();
+    let up = (&PNG[..], ".PNG");
+    let first = add_item_image_bytes(home.path(), "alpha", &mut it, up, ("Shot", "human"));
+    assert_eq!(first.expect("first").n, 1);
+    let same = add_item_image_bytes(home.path(), "alpha", &mut it, up, ("Twice", "human"));
+    let same = same.expect("same");
+    assert_eq!((same.n, same.duplicate), (1, true));
+    assert_eq!(count(&it), 1);
+    assert!(home.path().join("alpha/proofs/I-1-1.png").is_file());
+    let text = (&PNG[..], ".txt");
+    let refused = add_item_image_bytes(home.path(), "alpha", &mut it, text, ("No", "human"));
+    assert!(refused.is_err());
 }
 
 #[test]

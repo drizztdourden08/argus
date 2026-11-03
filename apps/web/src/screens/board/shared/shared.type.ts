@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
 import type { OpOutcome, OwnerOp, SentOp } from '../../../data/kanban';
+import type { Pictures } from '../../../data/media';
+import type { ItemImage } from '../../../data/types';
 
 type Writer = (send: () => Promise<SentOp>, done: string, undo?: (sentId: string) => void) => Promise<boolean>;
 
@@ -43,7 +45,22 @@ interface StoredFilters {
   conflict: boolean;
 }
 
+interface ItemMedia {
+  images: readonly ItemImage[];
+  pictures: Pictures;
+  uploading: boolean;
+  attach: (files: File[]) => Promise<ItemImage[]>;
+  media: MarkdownMedia | undefined;
+}
+
+interface MarkdownMedia {
+  pictures: Pictures;
+  count: (text: string) => number;
+  onImageFiles: (files: File[]) => Promise<string>;
+}
+
 interface MarkdownFieldEditorProps {
+  media?: MarkdownMedia;
   noun: string;
   value: string;
   limit: number;
@@ -53,6 +70,7 @@ interface MarkdownFieldEditorProps {
 }
 
 interface EditableMarkdownProps {
+  media?: MarkdownMedia;
   noun: string;
   value: string;
   empty: string;
@@ -106,4 +124,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, EntryLinkProps, FactSelectProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, EntryLinkProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, MarkdownMedia, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };

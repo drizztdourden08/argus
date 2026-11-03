@@ -8,6 +8,7 @@ import { countLevels, filterNotes, projectCounts } from './model';
 import type { NoteFilters } from './model';
 import { NO_FILTERS, NONE_YET } from './notifications.constants';
 import type { NotificationsTabProps } from './notifications.type';
+import { AssignedList } from './sub-components/AssignedList';
 import { NoteFeed } from './sub-components/NoteFeed';
 import { NoteFilterBar } from './sub-components/NoteFilterBar';
 import { NotifySettings } from './sub-components/NotifySettings';
@@ -27,6 +28,7 @@ const NotificationsTab = (props: NotificationsTabProps) => {
     <Stack gap="md">
       <TestPingBar ping={ping} />
       <NotifySettings state={settings} />
+      <AssignedList />
       <StallList />
       {notes.length === 0
         ? <EmptyState message={NONE_YET} />

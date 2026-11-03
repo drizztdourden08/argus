@@ -25,7 +25,7 @@ fn source_of(ctx: &Ctx) -> Source {
     }
 }
 
-fn writer(ctx: &Ctx) -> Result<Arc<SyncService>, ApiError> {
+pub(super) fn writer(ctx: &Ctx) -> Result<Arc<SyncService>, ApiError> {
     if !ctx.svc.board_writes {
         return Err(ApiError::new(
             ErrorCode::ReadOnly,
@@ -77,7 +77,7 @@ async fn result(ctx: Ctx) -> Reply {
 
 /// The body of an image upload as a proof source: the declared type must be an image type and the
 /// body is capped at the attach limit.
-async fn image_body(ctx: &Ctx) -> Result<ProofSource, ApiError> {
+pub(super) async fn image_body(ctx: &Ctx) -> Result<ProofSource, ApiError> {
     let mime = ctx
         .header("content-type")
         .unwrap_or_default()

@@ -36,6 +36,13 @@ interface CardMaster {
   lastRun?: RunRow | null;
 }
 
+interface OwnerItem {
+  id: string;
+  title: string;
+  type: string;
+  stage: string;
+}
+
 interface Card {
   key: string;
   name: string;
@@ -44,6 +51,7 @@ interface Card {
   url: string;
   palette?: string;
   counts?: CardCounts;
+  ownerItems?: OwnerItem[];
   coordinator?: CardCoordinator | null;
   attention?: string[];
   master?: CardMaster | null;
@@ -51,4 +59,4 @@ interface Card {
   updatedAt?: string;
 }
 
-export type { Card };
+export type { Card, OwnerItem };

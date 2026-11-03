@@ -1,11 +1,7 @@
 /* @layer renderer-app @kind component */
-import { DrawerSection } from '../../sub-components/DrawerSection';
-import { EmptyLine } from '../../sub-components/EmptyLine';
+import { MediaPanel } from '../media/MediaPanel';
+import type { PaneBodyProps } from '../pane.type';
 
-const MediaTab = () => (
-  <DrawerSection title="Media">
-    <EmptyLine>The images of this item show here.</EmptyLine>
-  </DrawerSection>
-);
+const MediaTab = (props: PaneBodyProps) => <MediaPanel {...props} />;
 
 export { MediaTab };
