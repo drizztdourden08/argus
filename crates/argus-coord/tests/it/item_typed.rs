@@ -112,11 +112,17 @@ fn add_refuses_what_the_registry_refuses() {
     );
 }
 
-#[test]
-fn add_places_a_child_under_its_parent_and_a_typed_add_for_a_thread_assigns_it() {
+/// An epic I-2 with a story I-3 under it.
+fn epic_with_story() -> Work {
     let work = Work::new();
     work.worker_ok(&["item", "add", "Release", "--type", "epic"]);
     work.worker_ok(&["item", "add", "Story", "--type", "story", "--parent", "I-2"]);
+    work
+}
+
+#[test]
+fn add_places_a_child_under_its_parent_and_a_typed_add_for_a_thread_assigns_it() {
+    let work = epic_with_story();
     assert_eq!(item(&work, "I-3")["parent"], "I-2");
     let refused = work.worker(&[
         "item",
@@ -205,9 +211,7 @@ fn status_takes_a_lane_or_a_stage_and_refuses_a_word_that_is_neither() {
 
 #[test]
 fn a_done_rule_that_refuses_needs_force_and_force_leaves_a_decision() {
-    let work = Work::new();
-    work.worker_ok(&["item", "add", "Release", "--type", "epic"]);
-    work.worker_ok(&["item", "add", "Story", "--type", "story", "--parent", "I-2"]);
+    let work = epic_with_story();
     let refused = work.worker(&["item", "status", "I-2", "done"]);
     assert_eq!(refused.code, 1);
     assert!(
@@ -231,9 +235,7 @@ fn a_done_rule_that_refuses_needs_force_and_force_leaves_a_decision() {
 
 #[test]
 fn force_keeps_the_revision_check_of_if_rev() {
-    let work = Work::new();
-    work.worker_ok(&["item", "add", "Release", "--type", "epic"]);
-    work.worker_ok(&["item", "add", "Story", "--type", "story", "--parent", "I-2"]);
+    let work = epic_with_story();
     work.worker_ok(&["item", "set", "I-2", "--title", "Release 2"]);
     let ran = work.worker(&[
         "item",
@@ -263,9 +265,7 @@ fn a_rule_that_only_warns_prints_the_warning_after_the_line() {
 
 /// An epic I-2 with a story I-3 under it and a task I-4 under the story.
 fn small_tree() -> Work {
-    let work = Work::new();
-    work.worker_ok(&["item", "add", "Release", "--type", "epic"]);
-    work.worker_ok(&["item", "add", "Story", "--type", "story", "--parent", "I-2"]);
+    let work = epic_with_story();
     work.worker_ok(&[
         "item", "add", "Chore", "--type", "task", "--parent", "I-3", "--ac", "One",
     ]);

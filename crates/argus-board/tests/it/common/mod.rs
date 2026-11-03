@@ -5,6 +5,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use argus_board::Board;
+use argus_board::ops::{OpResult, Role, Status, Who};
 use argus_board::store::empty_board;
 use argus_board::sync::{ImportResult, import_entries};
 use argus_core::clock::now_iso;
@@ -33,4 +34,24 @@ pub fn post(board: &mut Board, body: Value) -> (String, ImportResult) {
     let id = entry["id"].as_str().unwrap_or_default().to_owned();
     let result = import_entries(board, vec![entry], &|_| false);
     (id, result)
+}
+
+/// The coordinator, who may do what a lead does.
+pub fn lead() -> Who {
+    Who {
+        thread: Some("coordinator".to_owned()),
+        role: Role::Coordinator,
+        actor: None,
+    }
+}
+
+/// Asserts the op was applied.
+pub fn applied(res: &OpResult) {
+    assert_eq!(res.status, Status::Applied, "{}", res.outcome);
+}
+
+/// Asserts the op was refused and answers the reason.
+pub fn refused(res: &OpResult) -> String {
+    assert_eq!(res.status, Status::Refused, "{}", res.outcome);
+    res.outcome.clone()
 }

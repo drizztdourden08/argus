@@ -56,7 +56,7 @@ const expectDetail = (pane: HTMLElement) => {
 describe('I-68 the entry pane', { tags: ['standard'] }, () => {
   it('opens from the question tag of a card, shows the entry in full, and closes with Escape', async () => {
     await mount('/p/rotp/#kanban');
-    fireEvent.click(await screen.findByText('waiting on Q-1'));
+    fireEvent.click(await screen.findByTitle('Q-1 is an open question, waiting for an answer'));
     const pane = await paneOf();
     expectDetail(pane);
     fireEvent.keyDown(pane, { key: 'Escape' });

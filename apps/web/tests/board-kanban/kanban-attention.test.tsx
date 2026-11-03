@@ -2,15 +2,9 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ATTENTION } from '../../src/screens/board/tabs/kanban/attention';
-import { MIN, ago, boardOf, cleanKanban, item, mountKanban } from './kanban-harness';
+import { MIN, ago, boardOf, cardOf, cleanKanban, item, mountKanban } from './kanban-harness';
 
 cleanKanban();
-
-const cardOf = (id: string): HTMLElement => {
-  const card = document.querySelector(`[data-item="${id}"]`)?.closest('.kanban__card');
-  if (!(card instanceof HTMLElement)) throw new Error(`no card for ${id}`);
-  return card;
-};
 
 const inOrder = (first: HTMLElement, second: HTMLElement): boolean =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -50,6 +44,9 @@ describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
     expect(within(cardOf('I-1')).queryByRole('group', { name: 'Signals' })).toBeNull();
   });
 
+});
+
+describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => {
   it('folds what does not fit into a +N chip', async () => {
     const blocked = [
       { kind: 'dep-waits', id: 'D-4', label: 'Expose the hook', who: 'lead:rotp' },

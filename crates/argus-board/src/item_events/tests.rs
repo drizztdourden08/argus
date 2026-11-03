@@ -1,3 +1,4 @@
+use argus_core::fixture::with_items;
 use serde_json::{Value, json};
 
 use super::{EventKind, Hearer, ItemEvent, item_events};
@@ -12,14 +13,7 @@ fn item(id: &str, extra: &Value) -> Value {
 }
 
 fn board(items: &[Value], rest: &Value) -> Value {
-    let mut out = json!({"items": {}});
-    for it in items {
-        out["items"][it["id"].as_str().unwrap_or_default()] = it.clone();
-    }
-    for (key, value) in rest.as_object().into_iter().flatten() {
-        out[key.as_str()] = value.clone();
-    }
-    out
+    with_items(json!({"items": {}}), items, rest)
 }
 
 fn kinds(events: &[ItemEvent]) -> Vec<&'static str> {

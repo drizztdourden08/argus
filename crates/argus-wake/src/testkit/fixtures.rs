@@ -91,6 +91,26 @@ pub fn never_sent() -> SentLookup {
     Box::new(|_, _, _, _| 0)
 }
 
+/// A wakes table that holds exactly these wakes, each sent at `at`.
+pub fn sent_wakes(wakes: &[WakeInput], at: i64) -> SentLookup {
+    let sent: Vec<(String, String, String, String)> = wakes
+        .iter()
+        .map(|w| {
+            let subject = w.subject.clone().unwrap_or_default();
+            (w.scope.clone(), w.thread.clone(), w.reason.clone(), subject)
+        })
+        .collect();
+    Box::new(move |scope, thread, reason, subject| {
+        let key = (
+            scope.to_owned(),
+            thread.to_owned(),
+            reason.to_owned(),
+            subject.to_owned(),
+        );
+        if sent.contains(&key) { at } else { 0 }
+    })
+}
+
 /// Put the fields of `extra` over `record`.
 pub fn merge(record: &mut Value, extra: &Value) {
     if let (Some(into), Some(fields)) = (record.as_object_mut(), extra.as_object()) {

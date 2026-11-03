@@ -2,8 +2,7 @@
 import type { ItemRef } from '../../../../../data/kanban';
 import { RUN_WORDS } from './model.constants';
 import type { CardProgress } from './model.type';
-
-type Row = Record<string, unknown>;
+import type { Row } from './row.type';
 
 const rowsOf = (value: unknown): Row[] => (Array.isArray(value) ? value.filter((row): row is Row => typeof row === 'object' && row !== null) : []);
 

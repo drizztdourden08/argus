@@ -5,13 +5,16 @@
 
 // test-tag: critical
 
-use argus_wake::item_watch::{ItemWatch, WatchEnv, Watched};
-use argus_wake::memory::MemoryBoards;
-use argus_wake::reasons::{IMMEDIATE_REASONS, WAKE_REASONS};
-use argus_wake::testkit::{HOUR, START, SentLookup, board, never_sent};
-use argus_wake::time::iso;
-use argus_wake::wake::WakeInput;
-use argus_wake::wake_policy::{WakeClass, class_of};
+use argus_core::fixture::with_items;
+use argus_wake::{
+    item_watch::{ItemWatch, WatchEnv, Watched},
+    memory::MemoryBoards,
+    reasons::{IMMEDIATE_REASONS, WAKE_REASONS},
+    testkit::{HOUR, START, SentLookup, board, never_sent, sent_wakes},
+    time::iso,
+    wake::WakeInput,
+    wake_policy::{WakeClass, class_of},
+};
 use serde_json::{Value, json};
 
 fn item(id: &str, extra: &Value) -> Value {
@@ -26,7 +29,7 @@ fn item(id: &str, extra: &Value) -> Value {
 }
 
 fn alpha(items: &[Value], rest: &Value) -> Value {
-    let mut out = json!({
+    let base = json!({
         "threads": {
             "lead": {"id": "lead", "role": "coordinator", "status": "active"},
             "api": {"id": "api", "role": "thread", "status": "active"},
@@ -34,13 +37,7 @@ fn alpha(items: &[Value], rest: &Value) -> Value {
         },
         "items": {},
     });
-    for it in items {
-        out["items"][it["id"].as_str().unwrap_or_default()] = it.clone();
-    }
-    for (key, value) in rest.as_object().into_iter().flatten() {
-        out[key.as_str()] = value.clone();
-    }
-    out
+    with_items(base, items, rest)
 }
 
 fn beta() -> Value {
@@ -90,24 +87,7 @@ impl World {
 
     /// The process restarts: nothing in memory, the wakes table still holds every wake sent.
     fn restart(&mut self) {
-        let sent: Vec<(String, String, String, String)> = self
-            .wakes
-            .iter()
-            .map(|w| {
-                let subject = w.subject.clone().unwrap_or_default();
-                (w.scope.clone(), w.thread.clone(), w.reason.clone(), subject)
-            })
-            .collect();
-        let at = self.now;
-        self.last_sent = Box::new(move |scope, thread, reason, subject| {
-            let key = (
-                scope.to_owned(),
-                thread.to_owned(),
-                reason.to_owned(),
-                subject.to_owned(),
-            );
-            if sent.contains(&key) { at } else { 0 }
-        });
+        self.last_sent = sent_wakes(&self.wakes, self.now);
         self.watch = ItemWatch::new();
     }
 }

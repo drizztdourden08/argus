@@ -196,7 +196,7 @@ fn a_second_change_keeps_what_it_does_not_name_and_leaves_an_activity_line() {
     assert_eq!((toast.info, toast.ping, toast.urgent), (false, true, true));
     assert_eq!(config.sound.urgent, Some(false));
     assert!(
-        config.os && config.auto.handed && config.auto.ask,
+        config.os && config.auto.board.handed && config.auto.board.ask,
         "the other keys stay"
     );
     let line = h.activity.lines().pop().expect("a line");

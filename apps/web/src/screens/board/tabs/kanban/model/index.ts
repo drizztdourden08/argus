@@ -38,6 +38,6 @@ export { typeOf } from './type-of';
 export { validateDecision } from './validate-decision';
 export { validateField } from './validate-field';
 export {
-  DEFAULT_FILTERS, GROUP_OPTIONS, HUMAN, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
+  DEFAULT_FILTERS, GROUP_OPTIONS, HUMAN, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';

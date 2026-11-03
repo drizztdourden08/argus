@@ -155,5 +155,11 @@ const openItem = async (id: string): Promise<HTMLElement> => {
 
 const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: `Move ${id} ${title}` });
 
-export { DAY, HOUR, MIN, ago, boardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, thread, where };
+const cardOf = (id: string): HTMLElement => {
+  const card = document.querySelector(`[data-item="${id}"]`)?.closest('.kanban__card');
+  if (!(card instanceof HTMLElement)) throw new Error(`no card for ${id}`);
+  return card;
+};
+
+export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, thread, where };
 export type { Board, Doc, Posted };

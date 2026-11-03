@@ -4,8 +4,7 @@ import { apiRequest, scopePath } from '../../../../../data/api';
 import type { ItemRef } from '../../../../../data/kanban';
 import { blockedSignature, parseTrails } from '../model';
 import type { TrailInfo } from '../model';
-
-const NO_TRAILS: ReadonlyMap<string, TrailInfo> = new Map();
+import { NO_TRAILS } from './useTrails.constants';
 
 const useTrails = (boardKey: string, items: readonly ItemRef[]): ReadonlyMap<string, TrailInfo> => {
   const [trails, setTrails] = useState(NO_TRAILS);

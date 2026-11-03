@@ -35,9 +35,9 @@ fn told_key(notice: &OwnerNotice) -> String {
 /// Is the automatic ping of this topic switched on (`notify.auto`)? The faults and the stalls always are.
 fn switched_on(auto: AutoConfig, topic: &str) -> bool {
     match topic {
-        TOPIC_ASSIGNED => auto.assigned,
-        TOPIC_VERIFY => auto.verify,
-        TOPIC_RUN => auto.run,
+        TOPIC_ASSIGNED => auto.owner.assigned,
+        TOPIC_VERIFY => auto.owner.verify,
+        TOPIC_RUN => auto.owner.run,
         _ => true,
     }
 }

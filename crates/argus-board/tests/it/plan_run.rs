@@ -4,17 +4,9 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, doc};
-use argus_board::ops::{OpResult, Role, Status, Who, apply_op};
+use crate::common::{alpha, applied, doc, lead, refused};
+use argus_board::ops::{OpResult, Role, Who, apply_op};
 use serde_json::{Value, json};
-
-fn lead() -> Who {
-    Who {
-        thread: Some("coordinator".to_owned()),
-        role: Role::Coordinator,
-        actor: None,
-    }
-}
 
 fn stranger() -> Who {
     Who {
@@ -22,15 +14,6 @@ fn stranger() -> Who {
         role: Role::Thread,
         actor: None,
     }
-}
-
-fn applied(res: &OpResult) {
-    assert_eq!(res.status, Status::Applied, "{}", res.outcome);
-}
-
-fn refused(res: &OpResult) -> String {
-    assert_eq!(res.status, Status::Refused, "{}", res.outcome);
-    res.outcome.clone()
 }
 
 fn run_op(board: &mut Value, who: &Who, kind: &str, plan: &str, rest: Value) -> OpResult {

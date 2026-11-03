@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { boardOf, cleanKanban, item, mountKanban, thread } from './kanban-harness';
+import { boardOf, cardOf, cleanKanban, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
 
@@ -35,10 +35,10 @@ describe('I-72 the selection mode of the cards', { tags: ['standard'] }, () => {
     await mountKanban({ items: [item('I-1')] });
     await screen.findByText('Item I-1');
     expect(screen.queryByRole('checkbox', { name: 'Select I-1' })).toBeNull();
-    expect(screen.getByRole('img', { name: 'Task' })).toBeTruthy();
+    expect(within(cardOf('I-1')).getByRole('img', { name: 'Task' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
     expect(screen.getByRole('checkbox', { name: 'Select I-1' })).toBeTruthy();
-    expect(screen.queryByRole('img', { name: 'Task' })).toBeNull();
+    expect(within(cardOf('I-1')).queryByRole('img', { name: 'Task' })).toBeNull();
   });
 
   it('turns the mode on with a shift-click on a card and picks it', async () => {

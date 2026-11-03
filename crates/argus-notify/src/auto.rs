@@ -91,7 +91,8 @@ fn handed_ping(facts: &BoardFacts, marker: &mut Marker, context: &Context) -> Op
     }
     marker.handed = current;
     let tag = tag?;
-    let told = !context.first && context.auto.handed && context.fresh(facts.handed_at.as_deref());
+    let told =
+        !context.first && context.auto.board.handed && context.fresh(facts.handed_at.as_deref());
     told.then(|| handed_draft(facts, tag, context))
 }
 
@@ -123,8 +124,9 @@ fn question_pings(facts: &BoardFacts, marker: &mut Marker, context: &Context) ->
         if marker.asked.contains(&question.id) {
             continue;
         }
-        let told =
-            !context.first && context.auto.ask && context.fresh(question.created_at.as_deref());
+        let told = !context.first
+            && context.auto.board.ask
+            && context.fresh(question.created_at.as_deref());
         if told {
             drafts.push(question_draft(question, context));
         }

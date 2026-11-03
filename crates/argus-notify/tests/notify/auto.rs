@@ -3,7 +3,8 @@
 // test-tag: standard
 
 use argus_notify::{
-    AutoConfig, BoardFacts, Bundle, By, EntryFact, Level, NotifyConfig, TestFact, ToastState, iso,
+    AutoConfig, BoardFacts, BoardTopics, Bundle, By, EntryFact, Level, NotifyConfig, TestFact,
+    ToastState, iso,
 };
 
 use crate::harness::{Harness, ROTP, T0};
@@ -194,8 +195,7 @@ fn nothing_is_told_again_after_a_restart_or_a_resync_and_news_from_the_downtime_
 fn config_auto_switches_each_one_off_and_the_markers_still_move() {
     let config = |handed, ask| NotifyConfig {
         auto: AutoConfig {
-            handed,
-            ask,
+            board: BoardTopics { handed, ask },
             ..AutoConfig::default()
         },
         ..NotifyConfig::default()

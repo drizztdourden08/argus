@@ -5,20 +5,12 @@
 
 // test-tag: critical
 
-use crate::common::alpha;
+use crate::common::{alpha, applied, lead, refused};
 use argus_board::ops::{OpResult, Role, Status, Who, apply_op, create_note};
 use serde_json::{Value, json};
 
 fn as_owner(board: &mut Value, op: &Value) -> OpResult {
     apply_op(board, op, &Who::human(), None)
-}
-
-fn lead() -> Who {
-    Who {
-        thread: Some("coordinator".to_owned()),
-        role: Role::Coordinator,
-        actor: None,
-    }
 }
 
 fn worker() -> Who {
@@ -27,15 +19,6 @@ fn worker() -> Who {
         role: Role::Thread,
         actor: None,
     }
-}
-
-fn applied(res: &OpResult) {
-    assert_eq!(res.status, Status::Applied, "{}", res.outcome);
-}
-
-fn refused(res: &OpResult) -> String {
-    assert_eq!(res.status, Status::Refused, "{}", res.outcome);
-    res.outcome.clone()
 }
 
 fn make(board: &mut Value, who: &Who, set: Value) -> OpResult {

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { TrailInfo } from './model.type';
-
-type Row = Record<string, unknown>;
+import type { Row } from './row.type';
 
 const isRow = (value: unknown): value is Row => typeof value === 'object' && value !== null && !Array.isArray(value);
 

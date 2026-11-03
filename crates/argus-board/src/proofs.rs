@@ -1,11 +1,11 @@
 //! Proof images of tests and pictures of questions, decisions and items: kept next to the board so
 //! they outlive the worktree they came from.
 
-use std::fmt::Write as _;
 use std::fs;
 use std::path::Path;
 
 use argus_core::clock::now_iso;
+use argus_core::config::hex;
 use argus_core::fs::write_atomic;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -138,13 +138,6 @@ impl ImageRef {
             "at": now_iso(), "by": by,
         })
     }
-}
-
-fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::new(), |mut out, b| {
-        let _ = write!(out, "{b:02x}");
-        out
-    })
 }
 
 fn extension_of(path: &Path) -> String {

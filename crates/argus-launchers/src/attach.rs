@@ -2,9 +2,9 @@
 //! run. The bytes are checked by magic number, never by the claimed type, and stored under
 //! `<dir>/<scope>/<id>.<ext>`; the store keeps the row with the absolute path.
 
-use std::fmt::Write as _;
 use std::path::Path;
 
+use argus_core::config::hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -70,13 +70,6 @@ fn clean_caption(caption: &str) -> Option<String> {
     }
     let clipped: String = out.trim().chars().take(CAPTION_MAX).collect();
     (!clipped.is_empty()).then_some(clipped)
-}
-
-pub(crate) fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::new(), |mut out, b| {
-        let _ = write!(out, "{b:02x}");
-        out
-    })
 }
 
 fn check_claim(claimed: &str, found: &str) -> Result<(), RunError> {

@@ -22,7 +22,7 @@ pub struct WakeBoards {
 /// A board as the wake logic sees it.
 #[must_use]
 pub fn view_of(board: &Board) -> Arc<BoardView> {
-    Arc::new(BoardView::deserialize(board).unwrap_or_default())
+    Arc::new(BoardView::from_json(board.clone()))
 }
 
 impl WakeBoards {

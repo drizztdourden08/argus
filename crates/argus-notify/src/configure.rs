@@ -109,6 +109,6 @@ mod tests {
         assert_eq!(apply(&config, on).quiet_levels, Vec::<String>::new());
         let same = apply(&config, SettingsPatch::default());
         assert_eq!(same.quiet_levels, ["ping"]);
-        assert!(same.os && same.auto.handed);
+        assert!(same.os && same.auto.board.handed);
     }
 }

@@ -8,7 +8,7 @@
 use argus_wake::dep_wakes::{DepEnv, DepWakeConfig, DepWakes};
 use argus_wake::memory::MemoryBoards;
 use argus_wake::reasons::{IMMEDIATE_REASONS, PORTFOLIO, WAKE_REASONS};
-use argus_wake::testkit::{DAY, MIN, START, SentLookup, board, never_sent};
+use argus_wake::testkit::{DAY, MIN, START, SentLookup, board, never_sent, sent_wakes};
 use argus_wake::time::iso;
 use argus_wake::wake::WakeInput;
 use argus_wake::wake_policy::{WakeClass, class_of};
@@ -98,27 +98,7 @@ impl World {
     }
 
     fn restart(&mut self) {
-        let sent: Vec<(String, String, String, String)> = self
-            .events
-            .iter()
-            .map(|e| {
-                (
-                    e.scope.clone(),
-                    e.thread.clone(),
-                    e.reason.clone(),
-                    e.subject.clone().unwrap_or_default(),
-                )
-            })
-            .collect();
-        self.last_sent = Box::new(move |scope, thread, reason, subject| {
-            let key = (
-                scope.to_owned(),
-                thread.to_owned(),
-                reason.to_owned(),
-                subject.to_owned(),
-            );
-            if sent.contains(&key) { START } else { 0 }
-        });
+        self.last_sent = sent_wakes(&self.events, START);
         self.wakes = DepWakes::new(DepWakeConfig::default());
     }
 

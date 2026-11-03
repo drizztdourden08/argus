@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex, PoisonError};
 
 use argus_board::trail::{Summary, summaries};
-use argus_core::ApiError;
 use serde_json::{Map, Value, json};
 
 use super::blocking::blocking;

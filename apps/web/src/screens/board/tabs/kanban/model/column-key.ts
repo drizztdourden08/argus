@@ -6,7 +6,7 @@ import type { CardData, ItemGroup } from './model.type';
 
 const columnKey = (card: CardData, group: ItemGroup): string => {
   if (group === 'assignee') return nonEmpty(assigneeOf(card.item), GENERAL);
-  if (group === 'parent') return card.item.parent || NO_PARENT;
+  if (group === 'parent') return nonEmpty(card.item.parent, NO_PARENT);
   return nonEmpty(card.item.thread, GENERAL);
 };
 

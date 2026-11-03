@@ -28,6 +28,10 @@ interface FilterRowProps {
   threads: Threads;
 }
 
+interface FilterChecksProps {
+  state: KanbanState;
+}
+
 interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
@@ -140,5 +144,5 @@ interface AssigneeMarkProps {
 
 
 export type {
-  AssigneeMarkProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterRowProps, ItemCardProps, ItemTypeMarkProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AssigneeMarkProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, ItemTypeMarkProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

@@ -67,18 +67,26 @@ interface Setup {
   showPaused?: boolean;
 }
 
+const listsOf = (setup: Setup) => ({
+  threads: setup.threads ?? [threadRef('worker')],
+  notices: setup.notices ?? [],
+  paused: new Set(setup.paused ?? []),
+});
+
+const mapsOf = (setup: Setup) => ({
+  needs: setup.needs ?? noNeeds,
+  asks: setup.asks ?? new Map(),
+  signals: setup.signals ?? new Map(),
+  trails: setup.trails ?? new Map(),
+});
+
 const viewOf = (items: ItemRef[], setup: Setup = {}) =>
   buildView({
     items,
-    threads: setup.threads ?? [threadRef('worker')],
-    needs: setup.needs ?? noNeeds,
-    asks: setup.asks ?? new Map(),
-    signals: setup.signals ?? new Map(),
-    trails: setup.trails ?? new Map(),
-    notices: setup.notices ?? [],
+    ...listsOf(setup),
+    ...mapsOf(setup),
     filters: filters(setup.filters),
     prefs: prefs(setup.prefs),
-    paused: new Set(setup.paused ?? []),
     focus: setup.focus ?? '',
     showPaused: setup.showPaused ?? false,
     now: NOW,

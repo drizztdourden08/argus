@@ -46,6 +46,18 @@ pub fn merge(mut base: Value, fields: Value) -> Value {
     base
 }
 
+/// `board` with each of `items` filed under its `id` in `items`, then the fields of `rest` laid over it.
+#[must_use]
+pub fn with_items(mut board: Value, items: &[Value], rest: &Value) -> Value {
+    for it in items {
+        board["items"][it["id"].as_str().unwrap_or_default()] = it.clone();
+    }
+    for (key, value) in rest.as_object().into_iter().flatten() {
+        board[key.as_str()] = value.clone();
+    }
+    board
+}
+
 /// A board doc with its bookkeeping, then `fields`, then revision 1.
 #[must_use]
 pub fn doc(id: &str, by: &str, fields: Value, rank: i64) -> Value {

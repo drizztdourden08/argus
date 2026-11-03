@@ -34,7 +34,7 @@ pub use argus_core::StorageError;
 pub use argus_core::clock::{Clock, ManualClock, SystemClock};
 pub use board::{BoardFacts, Bundle, EntryFact, TestFact};
 pub use clock::{iso, parse_ms};
-pub use config::{AutoConfig, NotifyConfig};
+pub use config::{AutoConfig, BoardTopics, NotifyConfig, OwnerTopics};
 pub use configure::SettingsPatch;
 pub use deliver::{Delivered, Delivery, ToastRequest, TrayFallback};
 pub use kinds::{By, ToastState};

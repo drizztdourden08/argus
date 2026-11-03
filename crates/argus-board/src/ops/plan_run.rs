@@ -269,7 +269,8 @@ impl Given {
 
 fn record(
     board: &mut Board,
-    (op, who): (&Value, &Who),
+    who: &Who,
+    op: &Value,
     (id, plan): (&str, &Value),
 ) -> Result<OpResult, BoardError> {
     let mut runs = runs_of(plan);
@@ -342,7 +343,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     let target = (id.as_str(), &plan);
     match op["kind"].as_str() {
         Some("plan-run-start") => start(board, (op, who), target),
-        Some("plan-run-record") => record(board, (op, who), target),
+        Some("plan-run-record") => record(board, who, op, target),
         _ => end(board, who, target),
     }
 }

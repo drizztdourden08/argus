@@ -103,6 +103,9 @@ describe('K1 the board columns', { tags: ['critical'] }, () => {
     expect(view.columns.map((column) => column.id)).toContain('done');
   });
 
+});
+
+describe('K1 the board filters', { tags: ['critical'] }, () => {
   it('filters by id or title, ignoring case', () => {
     const items = [itemRef('I-1', { title: 'Login page' }), itemRef('I-2', { title: 'Logout' }), itemRef('I-3', { title: 'Other' })];
     expect(viewOf(items, { filters: { query: 'LOG' } }).cards.map((card) => card.id)).toEqual(['I-1', 'I-2']);
