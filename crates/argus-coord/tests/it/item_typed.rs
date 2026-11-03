@@ -200,12 +200,12 @@ fn status_takes_a_lane_or_a_stage_and_refuses_a_word_that_is_neither() {
     );
     let lane = work.worker_ok(&["item", "status", "I-1", "doing"]);
     assert!(lane.starts_with("I-1: status updated (rev "), "{lane}");
-    let word = work.worker(&["item", "status", "I-1", "finished"]);
+    let neither = work.worker(&["item", "status", "I-1", "finished"]);
     assert!(
-        word.err
+        neither.err
             .contains("status must be one of todo, doing, review, done, dropped."),
         "{}",
-        word.err
+        neither.err
     );
 }
 
