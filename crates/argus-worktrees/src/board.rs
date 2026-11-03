@@ -71,6 +71,8 @@ pub struct AgentFact {
     pub claude_id: Option<String>,
     /// When it ended (`finishedAt`).
     pub ended_ms: Option<i64>,
+    /// The item it works for (`item`): the link of its worktree to that item.
+    pub item: Option<String>,
 }
 
 impl AgentFact {
@@ -101,6 +103,33 @@ pub struct Link {
     pub text: Option<String>,
 }
 
+/// A board item, as far as the worktrees tied to it care.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ItemFact {
+    pub id: String,
+    /// Its lane (`todo`, `doing`, `review`, `done`, `dropped`).
+    pub lane: String,
+    /// In the trash.
+    pub trashed: bool,
+    /// Its title and description: free text that may name a worktree.
+    pub text: String,
+}
+
+impl ItemFact {
+    /// Done, dropped or in the trash: the item no longer holds a worktree.
+    pub fn closed(&self) -> bool {
+        self.trashed || matches!(self.lane.as_str(), "done" | "dropped")
+    }
+}
+
+/// An explicit link of a worktree to an item (`coord worktree link`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorktreeLink {
+    pub item: String,
+    pub by: Option<String>,
+    pub at_ms: Option<i64>,
+}
+
 /// A project's board, read as one snapshot.
 #[derive(Clone, Debug, Default)]
 pub struct BoardFacts {
@@ -114,6 +143,10 @@ pub struct BoardFacts {
     pub agents: Vec<AgentFact>,
     /// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
     pub links: Vec<Link>,
+    /// The items, by id.
+    pub items: BTreeMap<String, ItemFact>,
+    /// The explicit links of worktrees to items, by worktree id.
+    pub worktree_links: HashMap<String, WorktreeLink>,
 }
 
 impl BoardFacts {
@@ -149,6 +182,9 @@ pub enum Caller {
     Page,
     /// A registered thread, by id.
     Thread(String),
+    /// Argus itself, for a worktree whose item closed (the hygiene's `item-closed` request). The owner's I-78 request
+    /// is his say for this one path (decision D-42), while `worktrees.closeWithItem` is on.
+    ItemClosed { item: String },
 }
 
 impl Caller {
@@ -160,7 +196,7 @@ impl Caller {
     pub fn thread(&self) -> Option<&str> {
         match self {
             Self::Thread(id) => Some(id),
-            Self::Page => None,
+            Self::Page | Self::ItemClosed { .. } => None,
         }
     }
 
@@ -170,6 +206,7 @@ impl Caller {
             Self::Page => "the owner (page)".to_string(),
             Self::Thread(id) if id.is_empty() => "a thread".to_string(),
             Self::Thread(id) => id.clone(),
+            Self::ItemClosed { item } => format!("closed item {item}"),
         }
     }
 
@@ -179,6 +216,7 @@ impl Caller {
             Self::Page => "for the owner (page)".to_string(),
             Self::Thread(id) if id.is_empty() => "for a thread".to_string(),
             Self::Thread(id) => format!("for {id}"),
+            Self::ItemClosed { item } => format!("for closed item {item}"),
         }
     }
 }

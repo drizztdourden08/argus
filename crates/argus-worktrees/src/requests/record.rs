@@ -19,12 +19,15 @@ pub enum Mode {
     Leftovers,
     /// The released worktrees of one thread whose grace ended (the hygiene files these, never a thread).
     Released,
+    /// The worktrees of one thread whose item closed and whose grace ended (the hygiene files these, never a thread).
+    #[serde(rename = "item-closed")]
+    ItemClosed,
 }
 
 impl Mode {
     /// Does the request name its targets when it is made?
     pub fn named(self) -> bool {
-        matches!(self, Self::Targets | Self::Released)
+        matches!(self, Self::Targets | Self::Released | Self::ItemClosed)
     }
 }
 
@@ -119,6 +122,9 @@ pub struct RequestRec {
     /// `finished` only: also every clean worktree with nothing ahead untouched for this many minutes.
     pub idle_minutes: Option<f64>,
     pub targets: Vec<Target>,
+    /// `item-closed` only: the closed item each target (by worktree id) belongs to.
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub items: std::collections::BTreeMap<String, String>,
     pub resolved: bool,
     pub results: Vec<Outcome>,
     pub skipped: Option<SkippedSummary>,

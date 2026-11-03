@@ -37,6 +37,7 @@ mod intents;
 mod job_run;
 mod jobs;
 mod leftover_remove;
+mod linking;
 mod made;
 mod measure;
 mod modules;
@@ -73,7 +74,8 @@ pub use argus_core::StorageError;
 pub use backup::Backup;
 pub use batch::{BatchInput, BatchOutcome, Skipped};
 pub use board::{
-    AgentFact, Answer, BoardFacts, Caller, EntryWorktree, Keep, Link, OwnerEntry, ThreadInfo,
+    AgentFact, Answer, BoardFacts, Caller, EntryWorktree, ItemFact, Keep, Link, OwnerEntry,
+    ThreadInfo, WorktreeLink,
 };
 pub use branch::BranchState;
 pub use clock::{Clock, ManualClock, SystemClock, iso_from_ms};
@@ -90,6 +92,7 @@ pub use hygiene::{
     hygiene_key,
 };
 pub use jobs::{JobDoc, JobState};
+pub use linking::LinkSource;
 pub use paths::{clean_path, path_key, worktree_id};
 pub use ports::{
     ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
@@ -105,4 +108,4 @@ pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;
 pub use service::{Deps, Options, Service};
 pub use status::wake_text;
-pub use waking::{REASON, sent_key};
+pub use waking::{REASON, UNLINKED_REASON, sent_key};

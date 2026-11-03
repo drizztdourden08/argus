@@ -79,6 +79,7 @@ mod tests {
             thread: Some("lead".into()),
             agent: Some("A-3".into()),
             why: None,
+            item: None,
             since: 0,
             told: None,
             request: None,

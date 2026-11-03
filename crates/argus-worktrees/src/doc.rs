@@ -3,6 +3,7 @@
 use crate::board::RequestDoc;
 use crate::hygiene::{HygieneDoc, HygieneMeta};
 use crate::jobs::JobDoc;
+use crate::linking::LinkSource;
 use crate::requests::Brief;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -110,9 +111,18 @@ pub struct WorktreeDoc {
     pub leftover: Option<LeftoverDoc>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub job: Option<JobDoc>,
-    /// Where the worktree stands: in use, released (and when it goes), review or kept.
+    /// Where the worktree stands: in use, released (and when it goes), closing, review or kept.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hygiene: Option<HygieneDoc>,
+    /// The item it belongs to (`I-n`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item: Option<String>,
+    /// How Argus knows the item: a link, the owning agent, the branch name or an item's text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_source: Option<LinkSource>,
+    /// No item an hour after Argus first saw it (the `no item` chip).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub unlinked: bool,
     pub error: Option<String>,
 }
 

@@ -34,6 +34,7 @@ fn agent(n: &str, thread: &str, status: &str, ended_ms: i64) -> AgentFact {
         worktree: None,
         claude_id: Some(format!("a{n}")),
         ended_ms: Some(ended_ms),
+        item: None,
     }
 }
 

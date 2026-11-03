@@ -1,8 +1,8 @@
 //! Doing a request: a fresh scan, the targets, each one through the very same removal, and the end.
 
-use super::SENTENCE_MAX;
 use super::record::{Outcome, RequestRec, RequestStatus, Target};
 use super::text::one_line;
+use super::{CLOSED_SENTENCE_MAX, SENTENCE_MAX};
 use crate::board::Caller;
 use crate::clock::iso_from_ms;
 use crate::error::WtError;
@@ -21,6 +21,15 @@ fn sentence_of(err: &WtError) -> String {
     }
 }
 
+/// A removal with its item gives the backup and how to restore it in full: the lead's note repeats it.
+fn sentence_max(rec: &RequestRec) -> usize {
+    if rec.mode == super::Mode::ItemClosed {
+        CLOSED_SENTENCE_MAX
+    } else {
+        SENTENCE_MAX
+    }
+}
+
 fn refusal(target: &Target, err: &WtError) -> Outcome {
     Outcome {
         id: target.id.clone(),
@@ -32,10 +41,20 @@ fn refusal(target: &Target, err: &WtError) -> Outcome {
 }
 
 impl Service {
+    /// The caller of a removal: the thread that asked, or Argus for the item that closed.
+    fn caller_of(rec: &RequestRec, target: &Target) -> Caller {
+        match rec.items.get(&target.id) {
+            Some(item) if rec.mode == super::Mode::ItemClosed => {
+                Caller::ItemClosed { item: item.clone() }
+            }
+            _ => Caller::Thread(rec.by.clone()),
+        }
+    }
+
     fn removal_of(rec: &RequestRec, target: &Target) -> RemoveInput {
-        let mut input = RemoveInput::new(&rec.key, &target.id, Caller::Thread(rec.by.clone()));
+        let mut input = RemoveInput::new(&rec.key, &target.id, Self::caller_of(rec, target));
         input.branch = rec.branch;
-        input.discard = rec.discard;
+        input.discard = rec.discard || rec.mode == super::Mode::ItemClosed;
         input.owner_entry.clone_from(&rec.owner_entry);
         input.reason.clone_from(&rec.reason);
         if rec.mode == super::Mode::Leftovers {
@@ -91,7 +110,7 @@ impl Service {
                 self.job_outcome(rec, target, (path, job_id), &done)
             }
             Ok(out) => {
-                let said = one_line(&out.text, SENTENCE_MAX);
+                let said = one_line(&out.text, sentence_max(rec));
                 Outcome {
                     id: target.id.clone(),
                     label: target.label.clone(),

@@ -74,6 +74,8 @@ pub(super) fn options_of(svc: &Services) -> Options {
         release: !svc.shadow && s["release"] != false,
         release_grace_ms: int(&s, "releaseGraceMs", base.release_grace_ms, 0),
         release_debounce_ms: int(&s, "releaseDebounceMs", base.release_debounce_ms, 0),
+        close_with_item: s["closeWithItem"] != false,
+        item_close_grace_ms: int(&s, "itemCloseGraceMs", base.item_close_grace_ms, 0),
         ..base
     };
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {

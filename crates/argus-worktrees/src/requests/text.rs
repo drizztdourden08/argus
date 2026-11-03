@@ -4,6 +4,8 @@ use super::record::{Mode, RequestRec};
 
 const SUMMARY_SENTENCE_MAX: usize = 140;
 const SUMMARY_MAX: usize = 600;
+/// The note of worktrees removed with their item names each backup and how to restore it, so it is longer.
+const CLOSED_MAX: usize = 3000;
 const LABELS_SHOWN: usize = 3;
 
 /// The text on one line: white space folded, cut to `max` characters.
@@ -96,11 +98,37 @@ pub fn what_text(rec: &RequestRec) -> String {
         ),
         Mode::Targets => targets_text(rec, branch),
         Mode::Released => format!("the released {}", targets_text(rec, branch)),
+        Mode::ItemClosed => format!(
+            "the worktrees of closed items, {}",
+            targets_text(rec, branch)
+        ),
+    }
+}
+
+/// `: I-3: removed worktree X:/a/w, backup b.patch (restore: ...) | I-4: ...`: what a request of worktrees whose item
+/// closed removed, each with its backup and how to bring it back (the sentence of the removal says both).
+fn closed_part(rec: &RequestRec) -> String {
+    let went: Vec<String> = rec
+        .results
+        .iter()
+        .filter(|r| r.ok)
+        .map(|r| match rec.items.get(&r.id) {
+            Some(item) => format!("{item}: {}", r.text),
+            None => r.text.clone(),
+        })
+        .collect();
+    if went.is_empty() {
+        String::new()
+    } else {
+        format!(": {}", went.join(" | "))
     }
 }
 
 /// `: X:/a/w, .../v`: what a request of released worktrees removed.
 fn removed_part(rec: &RequestRec) -> String {
+    if rec.mode == Mode::ItemClosed {
+        return closed_part(rec);
+    }
     let went: Vec<&str> = rec
         .results
         .iter()
@@ -181,12 +209,21 @@ pub fn summary_text(rec: &RequestRec) -> String {
         )
     };
     let (id, status) = (&rec.id, rec.status.as_str());
-    let text = if rec.mode == Mode::Released {
-        format!("released worktrees, their grace over (request {id} {status}): {body}")
-    } else {
-        format!("worktree request {id} {status}: {body}")
+    let (text, max) = match rec.mode {
+        Mode::Released => (
+            format!("released worktrees, their grace over (request {id} {status}): {body}"),
+            SUMMARY_MAX,
+        ),
+        Mode::ItemClosed => (
+            format!("worktrees removed with their closed items (request {id} {status}): {body}"),
+            CLOSED_MAX,
+        ),
+        _ => (
+            format!("worktree request {id} {status}: {body}"),
+            SUMMARY_MAX,
+        ),
     };
-    one_line(&text, SUMMARY_MAX)
+    one_line(&text, max)
 }
 
 // test-tag: critical

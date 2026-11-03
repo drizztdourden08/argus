@@ -36,6 +36,7 @@ fn agent_of(id: &str, rec: &Value) -> AgentFact {
         worktree: text(&rec["worktree"]),
         claude_id: text(&rec["claudeId"]).or_else(|| text(&rec["hookId"])),
         ended_ms: rec["finishedAt"].as_str().and_then(parse_ms),
+        item: text(&rec["item"]),
     }
 }
 
@@ -117,7 +118,7 @@ mod tests {
     fn the_open_things_and_the_agents_are_read() {
         let board: Board = json!({
             "agents": {"A-1": {"id": "A-1", "thread": "lead", "status": "done", "claudeId": "a1",
-                "worktree": null, "finishedAt": "2026-11-01T10:00:00.000Z"}},
+                "worktree": null, "finishedAt": "2026-11-01T10:00:00.000Z", "item": "I-1"}},
             "threads": {"lead": {"id": "lead", "status": "active"}, "gone": {"id": "gone", "status": "done"}},
             "items": {"I-1": {"status": "doing", "thread": "lead", "title": "land agent-a1"},
                 "I-2": {"status": "done", "thread": "lead", "title": "agent-a1 again"},
@@ -133,9 +134,10 @@ mod tests {
             (
                 agents[0].claude_id.as_deref(),
                 agents[0].ended(),
-                agents[0].ended_ms.is_some()
+                agents[0].ended_ms.is_some(),
+                agents[0].item.as_deref()
             ),
-            (Some("a1"), true, true)
+            (Some("a1"), true, true, Some("I-1"))
         );
         let whats: Vec<String> = links_of(&board).into_iter().map(|l| l.what).collect();
         assert_eq!(whats, ["item I-1", "PR-1", "launcher web", "bundle b1"]);

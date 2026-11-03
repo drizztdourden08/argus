@@ -419,6 +419,59 @@ impl Service {
         Ok(now)
     }
 
+    /// Why the owner's say for discarding is missing, or none: the page is the owner; a thread needs his entry; Argus
+    /// removing a worktree whose item closed has his I-78 request (decision D-42) while `closeWithItem` is on.
+    fn owner_say_missing(
+        &self,
+        input: &RemoveInput,
+        board: &BoardFacts,
+        now: &Fact,
+    ) -> Option<String> {
+        match &input.caller {
+            Caller::Page => None,
+            Caller::ItemClosed { item } => crate::approval::item_closed_say(
+                board,
+                (item.as_str(), self.opts.close_with_item),
+                now,
+                self.now(),
+            ),
+            Caller::Thread(_) => {
+                let entry = input.owner_entry.as_deref().unwrap_or_default();
+                crate::approval::approval_of(board, entry, now, self.now())
+            }
+        }
+    }
+
+    /// Is discarding `loss` allowed: asked for, the owner's say given, and (when Argus removes a worktree whose item
+    /// closed) a backup that holds all of it.
+    fn may_discard(
+        &self,
+        input: &RemoveInput,
+        board: &BoardFacts,
+        now: &Fact,
+        (loss, partial): (&str, Option<String>),
+    ) -> Result<()> {
+        if !input.discard {
+            return Err(forbidden(format!(
+                "{} has {loss}: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page, or send discard with his entry (--discard --owner-entry <id>)",
+                now.path
+            )));
+        }
+        if let Some(why) = self.owner_say_missing(input, board, now) {
+            return Err(forbidden(format!(
+                "discarding {loss} in {} needs the owner: {why}",
+                now.path
+            )));
+        }
+        match partial {
+            Some(why) => Err(forbidden(format!(
+                "the backup of {} would be partial ({why}): nothing was removed. Commit or move that work, or discard it with the owner's say",
+                now.path
+            ))),
+            None => Ok(()),
+        }
+    }
+
     /// The owner's say and the backup, for anything that is not safe. None when nothing is lost.
     fn authorize(
         &self,
@@ -436,27 +489,16 @@ impl Service {
         } else {
             None
         };
+        let partial = matches!(input.caller, Caller::ItemClosed { .. })
+            .then(|| Self::partial_backup_why(now, warning.as_deref()))
+            .flatten();
         let loss = [Some(safety.loss(now, force_branch)), warning]
             .into_iter()
             .flatten()
             .filter(|l| !l.is_empty())
             .collect::<Vec<_>>()
             .join(" and ");
-        if !input.discard {
-            return Err(forbidden(format!(
-                "{} has {loss}: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page, or send discard with his entry (--discard --owner-entry <id>)",
-                now.path
-            )));
-        }
-        if input.caller != Caller::Page {
-            let entry = input.owner_entry.as_deref().unwrap_or_default();
-            if let Some(why) = crate::approval::approval_of(board, entry, now, self.now()) {
-                return Err(forbidden(format!(
-                    "discarding {loss} in {} needs the owner: {why}",
-                    now.path
-                )));
-            }
-        }
+        self.may_discard(input, board, now, (&loss, partial))?;
         let need = Need {
             bundle: !safety.kept || force_branch,
             patch: now.dirty > 0 || now.nested_git.is_some(),

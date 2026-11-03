@@ -206,6 +206,23 @@ impl Service {
         })
     }
 
+    /// Why the backup of this worktree would only be partial, or none: its untracked files (`untracked`, the sentence
+    /// of `untracked_warning` when it applies) or its nested repository are over the copy limits and would only be
+    /// listed.
+    pub(crate) fn partial_backup_why(fact: &Fact, untracked: Option<&str>) -> Option<String> {
+        if let Some(why) = untracked {
+            return Some(why.to_string());
+        }
+        let git_dir = fact.nested_git.as_deref()?;
+        let folder = parent_of(git_dir);
+        let (files, bytes) = tree_size(&folder);
+        (fact.nested_too_big || files > COPY_MAX_FILES || bytes > COPY_MAX_BYTES).then(|| {
+            format!(
+                "its nested repository {folder} is over the copy limits and would only be listed"
+            )
+        })
+    }
+
     fn write_untracked(&self, fact: &Fact, base: &str, out: &mut Backup) -> Result<()> {
         let untracked = self.untracked_of(fact)?;
         out.untracked_count = untracked.names.len();

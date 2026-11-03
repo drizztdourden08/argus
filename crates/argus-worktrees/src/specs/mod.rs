@@ -6,6 +6,7 @@
 //! and the fake git (`crate::fakegit`, through `testkit::Fixture::fake`). The `e2e` files run the real git through the
 //! service harness and are ignored by a plain `cargo test`.
 
+mod closing;
 mod exec_real;
 mod fallback;
 mod holders;

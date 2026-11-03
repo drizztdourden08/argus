@@ -13,6 +13,7 @@ use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::service::Service;
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 const OWNER_ENTRY_MAX: usize = 60;
 const REASON_MAX: usize = 200;
@@ -35,6 +36,8 @@ pub struct RequestInput {
     pub older_than_days: Option<f64>,
     /// `finished` only: minutes (60 to 43200).
     pub idle_minutes: Option<f64>,
+    /// The hygiene's `item-closed` request: the closed item each target (by worktree id) belongs to.
+    pub items: BTreeMap<String, String>,
 }
 
 impl RequestInput {
@@ -52,6 +55,7 @@ impl RequestInput {
             reason: None,
             older_than_days: None,
             idle_minutes: None,
+            items: BTreeMap::new(),
         }
     }
 }
@@ -251,6 +255,20 @@ impl Service {
         Ok(self.queued(input, &rec))
     }
 
+    /// The hygiene's request for the worktrees of one thread whose item closed, checked for the caller as any other.
+    pub(crate) fn request_item_closed(&self, input: &RequestInput) -> Result<Queued> {
+        self.authorize_request(input)?;
+        let named: Vec<&String> = input.targets.iter().collect();
+        let docs = self.list(&input.project);
+        let rec = self.add_request(
+            (input, false),
+            Mode::ItemClosed,
+            (None, None),
+            targets_of(&named, &docs),
+        )?;
+        Ok(self.queued(input, &rec))
+    }
+
     /// A new request is kept, logged and handed to the worker.
     fn queued(&self, input: &RequestInput, rec: &RequestRec) -> Queued {
         self.save_requests(&input.project);
@@ -322,6 +340,7 @@ impl Service {
                 idle_minutes,
                 release,
                 resolved: mode.named(),
+                items: input.items.clone(),
                 targets: if mode.named() { targets } else { Vec::new() },
                 ..RequestRec::default()
             };

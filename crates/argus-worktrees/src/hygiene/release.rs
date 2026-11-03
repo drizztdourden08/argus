@@ -18,8 +18,13 @@ use crate::service::Service;
 const NOT_RELEASED: &str = "not_released";
 
 impl Service {
-    fn why_not(verdict: &Verdict) -> String {
+    fn why_not(verdict: &Verdict, mode: Mode) -> String {
         match verdict {
+            Verdict::Released if mode == Mode::ItemClosed => {
+                "its item is not closed any more (reopened or linked to another item)".to_string()
+            }
+            Verdict::Closing if mode != Mode::ItemClosed => "its item closed meanwhile".to_string(),
+            Verdict::Closing => "its item or its thread changed".to_string(),
             Verdict::Released => "its thread changed".to_string(),
             Verdict::Quiet => "it is not a worktree Argus removes by itself".to_string(),
             Verdict::Kept(_) => "the thread kept it".to_string(),
@@ -27,15 +32,16 @@ impl Service {
         }
     }
 
-    /// Right before a released worktree is removed: every condition again, on the fresh scan, the board now and the
-    /// processes listed now. A request of another mode passes, except a thread's own release: nothing may use the
-    /// worktree and nothing may be lost, as when it asked.
+    /// Right before a released or closing worktree is removed: every condition again, on the fresh scan, the board now
+    /// and the processes listed now. A request of another mode passes, except a thread's own release: nothing may use
+    /// the worktree and nothing may be lost, as when it asked. A closing one must still belong to the closed item it
+    /// was filed for.
     pub(crate) fn still_released(
         &self,
         rec: &RequestRec,
         target: &Target,
     ) -> std::result::Result<(), Outcome> {
-        if rec.mode != Mode::Released && !rec.release {
+        if !matches!(rec.mode, Mode::Released | Mode::ItemClosed) && !rec.release {
             return Ok(());
         }
         let fact = self.deps.store.board(&rec.key).and_then(|board| {
@@ -74,9 +80,15 @@ impl Service {
         if rec.release {
             return self.blocked_why(look, fact);
         }
-        match self.judge(&rec.key, look, fact) {
-            (Verdict::Released, owner) if owner.thread.as_deref() == Some(rec.by.as_str()) => None,
-            (verdict, _) => Some(Self::why_not(&verdict)),
+        let (verdict, owner) = self.judge(&rec.key, look, fact);
+        let by_it = owner.thread.as_deref() == Some(rec.by.as_str());
+        let filed_for = rec.items.get(&fact.id);
+        match (rec.mode, &verdict) {
+            (Mode::Released, Verdict::Released) if by_it => None,
+            (Mode::ItemClosed, Verdict::Closing) if by_it && filed_for == owner.item.as_ref() => {
+                None
+            }
+            _ => Some(Self::why_not(&verdict, rec.mode)),
         }
     }
 
@@ -85,7 +97,7 @@ impl Service {
     pub(crate) fn after_released(&self, project: &str, id: &str) {
         let Some(rec) = self
             .request_of(project, id)
-            .filter(|r| r.mode == Mode::Released || r.release)
+            .filter(|r| matches!(r.mode, Mode::Released | Mode::ItemClosed) || r.release)
         else {
             return;
         };

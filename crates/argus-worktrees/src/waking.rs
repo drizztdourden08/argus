@@ -14,6 +14,8 @@ use std::collections::{BTreeMap, HashMap};
 
 /// The wake reason for a worktree that needs a decision.
 pub const REASON: &str = "worktree-stale";
+/// The wake reason for a worktree that has had no item for an hour (a passive notice, once).
+pub const UNLINKED_REASON: &str = "worktree-unlinked";
 /// The key of the "too many worktrees" sentence in the sent map.
 pub const MANY_KEY: &str = "__many";
 

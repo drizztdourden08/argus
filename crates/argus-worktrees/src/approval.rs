@@ -179,6 +179,25 @@ pub fn approval_of(board: &BoardFacts, entry_id: &str, fact: &Fact, now_ms: i64)
     ))
 }
 
+/// The say for discarding work when the worktree's item closed (`Caller::ItemClosed`): the owner's I-78 request, decision
+/// D-42, while `worktrees.closeWithItem` is on and the item is closed on the board now. Switched off, the removal needs
+/// the owner's entry exactly as a thread's does (I-67), and says so in the same words.
+pub fn item_closed_say(
+    board: &BoardFacts,
+    (item, on): (&str, bool),
+    fact: &Fact,
+    now_ms: i64,
+) -> Option<String> {
+    if !on {
+        return approval_of(board, "", fact, now_ms);
+    }
+    match board.items.get(item) {
+        Some(found) if found.closed() => None,
+        Some(_) => Some(format!("item {item} is not closed")),
+        None => Some(format!("there is no item {item} on this board")),
+    }
+}
+
 // test-tag: critical
 #[cfg(test)]
 mod tests {

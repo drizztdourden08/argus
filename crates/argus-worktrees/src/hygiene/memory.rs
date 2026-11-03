@@ -24,6 +24,8 @@ pub enum HygieneState {
     InUse,
     /// Every condition holds: Argus removes it after the grace.
     Released,
+    /// Its item closed: Argus removes it after the grace (a reopen inside it cancels), its full backup first.
+    Closing,
     /// Something keeps Argus from removing it (uncommitted work, commits no ref keeps, a lock): the thread decides.
     Review,
     /// The thread kept it.
@@ -43,6 +45,9 @@ pub(crate) struct Mark {
     pub agent: Option<String>,
     #[serde(default)]
     pub why: Option<String>,
+    /// The item of the worktree when that item is closed.
+    #[serde(default)]
+    pub item: Option<String>,
     /// When it first was in this state.
     pub since: i64,
     /// When its thread was told it is released.
@@ -82,6 +87,15 @@ pub(crate) struct Memory {
     pub refused: BTreeMap<String, Refused>,
     #[serde(default)]
     pub removed: Vec<RemovedDoc>,
+    /// When each worktree was first seen, by id.
+    #[serde(default)]
+    pub seen: BTreeMap<String, i64>,
+    /// The worktrees flagged for having no item, by id: whether their thread was told.
+    #[serde(default)]
+    pub unlinked: BTreeMap<String, bool>,
+    /// The worktrees of closed items that stay, by id, with the reason their thread was told.
+    #[serde(default)]
+    pub stuck: BTreeMap<String, String>,
 }
 
 impl Memory {
@@ -89,6 +103,7 @@ impl Memory {
     pub fn removed_one(&mut self, done: RemovedDoc) {
         self.marks.remove(&done.id);
         self.refused.remove(&done.id);
+        self.stuck.remove(&done.id);
         self.removed.retain(|r| r.id != done.id);
         self.removed.push(done);
         let extra = self.removed.len().saturating_sub(REMOVED_KEPT);
@@ -108,8 +123,11 @@ pub struct HygieneDoc {
     pub why: Option<String>,
     pub agent: Option<String>,
     pub thread: Option<String>,
+    /// The closed item the worktree belongs to.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item: Option<String>,
     pub since: String,
-    /// When Argus removes it (a released one whose thread was told).
+    /// When Argus removes it (a released one whose thread was told, or one whose item closed).
     pub goes_at: Option<String>,
 }
 
@@ -119,8 +137,22 @@ pub struct HygieneDoc {
 pub struct HygieneMeta {
     pub on: bool,
     pub grace_ms: i64,
+    /// A worktree is removed with its item (`worktrees.closeWithItem`).
+    pub close_with_item: bool,
+    /// How long after its item closed (`worktrees.itemCloseGraceMs`).
+    pub item_close_grace_ms: i64,
     /// The last worktrees the hygiene removed, newest first.
     pub removed: Vec<RemovedDoc>,
+}
+
+/// When Argus removes the worktree: a released one `grace` after its thread was told, one whose item closed
+/// `close_grace` after it was first seen so.
+fn goes_at(mark: &Mark, grace: i64, close_grace: i64) -> Option<i64> {
+    match mark.state {
+        HygieneState::Released => mark.told.map(|t| t + grace),
+        HygieneState::Closing => Some(mark.since + close_grace),
+        _ => None,
+    }
 }
 
 impl Service {
@@ -146,20 +178,23 @@ impl Service {
 
     /// The row's hygiene, from the last step.
     pub(crate) fn hygiene_of(&self, project: &str, id: &str) -> Option<HygieneDoc> {
-        let grace = self.opts.release_grace_ms;
+        let (grace, close_grace) = (self.opts.release_grace_ms, self.opts.item_close_grace_ms);
         self.with_hygiene(project, |m| {
             m.marks.get(id).map(|mark| HygieneDoc {
                 state: mark.state,
                 why: mark.why.clone(),
                 agent: mark.agent.clone(),
                 thread: mark.thread.clone(),
+                item: mark.item.clone(),
                 since: iso_from_ms(mark.since),
-                goes_at: mark
-                    .told
-                    .filter(|_| mark.state == HygieneState::Released)
-                    .map(|t| iso_from_ms(t + grace)),
+                goes_at: goes_at(mark, grace, close_grace).map(iso_from_ms),
             })
         })
+    }
+
+    /// Is the worktree flagged for having had no item for an hour (the `no item` chip)?
+    pub(crate) fn is_flagged_unlinked(&self, project: &str, id: &str) -> bool {
+        self.with_hygiene(project, |m| m.unlinked.contains_key(id))
     }
 
     /// The summary's hygiene.
@@ -169,6 +204,8 @@ impl Service {
         HygieneMeta {
             on: self.opts.release,
             grace_ms: self.opts.release_grace_ms,
+            close_with_item: self.opts.close_with_item,
+            item_close_grace_ms: self.opts.item_close_grace_ms,
             removed,
         }
     }

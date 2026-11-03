@@ -3,6 +3,7 @@
 use crate::board::{BoardFacts, request_for};
 use crate::clock::iso_from_ms;
 use crate::doc::{Derived, LeftoverOld, Meta, RuleSummary, Status, WorktreeDoc};
+use crate::fact::Fact;
 use crate::jobs::{Job, JobState};
 use crate::rule::{Rule, RuleKind};
 use crate::service::Service;
@@ -60,6 +61,7 @@ impl Service {
             };
             let mut doc = doc_of(fact, &judging, request_for(board, &fact.id));
             doc.hygiene = self.hygiene_of(project, &fact.id);
+            self.mark_item(project, board, fact, &mut doc);
             if let Some(leftover) = doc.leftover.as_mut() {
                 leftover.made = self.is_made(project, &fact.path);
             }
@@ -74,6 +76,17 @@ impl Service {
             docs.push(doc);
         }
         (docs, gone)
+    }
+
+    /// The item of the row, how Argus knows it, and the `no item` flag. A main checkout has none.
+    fn mark_item(&self, project: &str, board: &BoardFacts, fact: &Fact, doc: &mut WorktreeDoc) {
+        if !Self::judged(fact) || fact.main {
+            return;
+        }
+        let link = self.link_of(board, fact);
+        doc.link_source = link.as_ref().map(|l| l.source);
+        doc.item = link.map(|l| l.item);
+        doc.unlinked = self.is_flagged_unlinked(project, &fact.id);
     }
 
     fn renamed_rows(board: &BoardFacts, jobs: &[Job], docs: &mut Vec<WorktreeDoc>) {

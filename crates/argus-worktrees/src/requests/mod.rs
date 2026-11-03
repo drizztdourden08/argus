@@ -57,6 +57,8 @@ pub const IDLE_MAX_MINUTES: f64 = 43_200.0;
 pub const MAX_ACTIVE: usize = 20;
 /// How long a sentence of an outcome may be.
 const SENTENCE_MAX: usize = 600;
+/// How long the sentence of a removal with its closed item may be (it names the backup and how to restore it).
+const CLOSED_SENTENCE_MAX: usize = 1500;
 
 pub(crate) struct State {
     pub stores: HashMap<String, store::Store>,

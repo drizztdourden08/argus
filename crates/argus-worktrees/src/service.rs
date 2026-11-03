@@ -58,6 +58,12 @@ pub struct Options {
     pub release_grace_ms: i64,
     /// A newly released worktree is told once nothing new was released for this long, so a burst makes one wake.
     pub release_debounce_ms: i64,
+    /// A worktree whose item closed is removed with it, its full backup first (`worktrees.closeWithItem`, on). The
+    /// owner's I-78 request is his say for this one path (decision D-42); every other path keeps the I-67 rule.
+    pub close_with_item: bool,
+    /// How long after its item closed such a worktree stays (`worktrees.itemCloseGraceMs`, 2 minutes): a reopen inside
+    /// it cancels the removal.
+    pub item_close_grace_ms: i64,
     /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
     /// than the longest git removal, 15 minutes, and a scan before it).
     pub target_limit_ms: i64,
@@ -85,6 +91,8 @@ impl Default for Options {
             release: true,
             release_grace_ms: 3_600_000,
             release_debounce_ms: 30_000,
+            close_with_item: true,
+            item_close_grace_ms: 120_000,
             target_limit_ms: 30 * 60_000,
         }
     }

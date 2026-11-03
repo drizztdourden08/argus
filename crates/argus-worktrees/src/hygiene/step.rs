@@ -16,6 +16,8 @@ use std::collections::BTreeMap;
 pub struct Stepped {
     /// The `worktree-review` wakes that went.
     pub told: usize,
+    /// The `worktree-unlinked` and `worktree-stale` wakes of worktrees with no item or whose closed item they outlive.
+    pub noticed: usize,
     /// A row changed: the docs are written again.
     pub changed: bool,
 }
@@ -23,17 +25,22 @@ pub struct Stepped {
 /// The ids of one thread's released worktrees.
 type ByThread = BTreeMap<String, Vec<String>>;
 
+/// Why a worktree of a closed item shows `closing`.
+const CLOSING_WHY: &str =
+    "its item is closed: Argus removes it, its full backup first, unless the item is reopened";
+
 fn state_of(verdict: &Verdict) -> Option<(HygieneState, Option<String>)> {
     match verdict {
         Verdict::Quiet => None,
         Verdict::InUse(why) => Some((HygieneState::InUse, Some(why.clone()))),
         Verdict::Released => Some((HygieneState::Released, None)),
+        Verdict::Closing => Some((HygieneState::Closing, Some(CLOSING_WHY.to_string()))),
         Verdict::Kept(note) => Some((HygieneState::Kept, note.clone())),
         Verdict::Review(why) => Some((HygieneState::Review, Some(why.clone()))),
     }
 }
 
-/// The new mark of a worktree; a released one keeps when it was released, told and handed on.
+/// The new mark of a worktree; a released or closing one keeps when it was, told and handed on.
 fn mark_of(
     fact: &Fact,
     verdict: &Verdict,
@@ -43,7 +50,7 @@ fn mark_of(
 ) -> Option<Mark> {
     let (state, why) = state_of(verdict)?;
     let same = prev.filter(|p| p.state == state);
-    let released = same.filter(|_| state == HygieneState::Released);
+    let carried = same.filter(|_| matches!(state, HygieneState::Released | HygieneState::Closing));
     Some(Mark {
         state,
         path: fact.path.clone(),
@@ -51,9 +58,10 @@ fn mark_of(
         thread: owner.thread,
         agent: owner.agent,
         why,
+        item: owner.item,
         since: same.map_or(now, |p| p.since),
-        told: released.and_then(|p| p.told),
-        request: released.and_then(|p| p.request.clone()),
+        told: carried.and_then(|p| p.told),
+        request: carried.and_then(|p| p.request.clone()),
     })
 }
 
@@ -137,9 +145,12 @@ impl Service {
         });
         let told = self.tell_released(project);
         self.hand_on(project, &board);
+        self.hand_on_closed(project, &board);
+        let (noticed, noted) = self.notice_items(project, &board);
         Stepped {
             told,
-            changed: changed || told > 0,
+            noticed,
+            changed: changed || noted || told > 0,
         }
     }
 

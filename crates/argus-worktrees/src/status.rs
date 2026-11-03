@@ -171,6 +171,9 @@ pub fn doc_of(fact: &Fact, judging: &Judging<'_>, request: Option<RequestDoc>) -
             .map(|l| leftover_doc(l, judged.touched_ms, judging.now_ms)),
         job: None,
         hygiene: None,
+        item: None,
+        link_source: None,
+        unlinked: false,
         error: fact.error.clone(),
     }
 }
