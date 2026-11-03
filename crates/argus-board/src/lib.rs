@@ -5,6 +5,7 @@
 #![deny(clippy::cognitive_complexity)]
 
 pub mod agents;
+pub mod blocked;
 pub mod content;
 pub mod deps;
 pub mod error;

@@ -7,6 +7,7 @@ use serde_json::{Map, Value, json};
 
 use super::PAGE_COLLECTIONS;
 use crate::Board;
+use crate::blocked::causes;
 use crate::json::{display, obj, section, set};
 use crate::launchers::{bundle_status, is_standalone, joined_bundle, usage_of};
 use crate::names::display_name;
@@ -57,6 +58,14 @@ fn public_entry(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
     out
 }
 
+/// An item as the page sees it: with `blocked`, why it is blocked, computed from the whole board
+/// and never kept on disk.
+fn public_item(doc: &Value, id: &str, board: &Board) -> Value {
+    let mut out = doc.clone();
+    set(&mut out, "blocked", json!(causes(board, id)));
+    out
+}
+
 /// A bundle record as the page sees it: every field present, null when unset.
 fn public_build(doc: &Value, id: &str, board: &Board) -> Value {
     let tag = match &doc["tag"] {
@@ -104,6 +113,7 @@ fn public_doc(
     proof_url: &dyn Fn(&Value) -> String,
 ) -> Value {
     match coll {
+        Coll::Items => public_item(doc, id, board),
         Coll::Tests => public_test(doc, proof_url),
         Coll::Entries => public_entry(doc, proof_url),
         Coll::Builds => public_build(doc, id, board),

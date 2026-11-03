@@ -1,7 +1,10 @@
 //! The part of a project board the wake logic reads, parsed tolerantly from the board JSON.
 
+use std::sync::Arc;
+
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::de::Error as _;
+use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 
 use crate::dep_wakes::{DepView, RequestedBy, WaitsOn};
@@ -300,7 +303,7 @@ pub struct InboxMessage {
 
 /// A project board, as far as the wakes care.
 #[derive(Debug, Clone, Default, Deserialize)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(remote = "Self", default, rename_all = "camelCase")]
 pub struct BoardView {
     /// The threads by id.
     #[serde(deserialize_with = "lenient::map")]
@@ -328,9 +331,27 @@ pub struct BoardView {
     /// The dependency ledger (only the portfolio board holds one).
     #[serde(deserialize_with = "lenient::map")]
     pub deps: IndexMap<String, DepView>,
+    /// The board JSON these views were read from, for the blocked rule that `argus-board` shares.
+    #[serde(skip)]
+    raw: Arc<Value>,
+}
+
+impl<'de> Deserialize<'de> for BoardView {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = Value::deserialize(deserializer)?;
+        let mut view = BoardView::deserialize(&raw).map_err(D::Error::custom)?;
+        view.raw = Arc::new(raw);
+        Ok(view)
+    }
 }
 
 impl BoardView {
+    /// The board JSON the view was parsed from.
+    #[must_use]
+    pub fn json(&self) -> &Value {
+        &self.raw
+    }
+
     /// A board parsed from its JSON; anything unreadable reads as empty.
     #[must_use]
     pub fn from_json(value: Value) -> Self {

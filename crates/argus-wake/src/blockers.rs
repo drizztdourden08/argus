@@ -1,29 +1,15 @@
 //! The one test of whether a work item is blocked, shared by the stall rules and the stale-item reminders.
 
-use crate::board::{BoardView, ItemView};
-use crate::dep_wakes::{RequestedBy, WaitsOn};
+use argus_board::blocked::causes;
 
-/// Is the item blocked: it carries a blocker text, waits on a request to another board, owes the answer to a
-/// blocked request, or has an open owner ask? Any one waiting or blocked request is enough, so an item is
-/// released only when all of them are finished.
+use crate::board::{BoardView, ItemView};
+
+/// Is the item blocked: does the shared rule of `argus-board` find a cause (a blocker link, a request to or of another
+/// board, an open ask, or the old blocker text)? Any one cause is enough, so an item is released only when all of
+/// them are settled.
 #[must_use]
 pub fn is_blocked(board: &BoardView, item: &ItemView) -> bool {
-    item.blocker.some().is_some()
-        || waits_across_boards(item)
-        || has_open_ask(board, item.rec.id.as_str())
-}
-
-fn waits_across_boards(item: &ItemView) -> bool {
-    item.waits_on.iter().any(WaitsOn::is_waiting)
-        || item.requested_by.iter().any(RequestedBy::is_blocked)
-}
-
-fn has_open_ask(board: &BoardView, item_id: &str) -> bool {
-    board.entries.values().any(|e| {
-        e.rec.is_live_on(item_id)
-            && ((e.kind.is("question") && e.status.is("open"))
-                || (e.kind.is("decision") && e.status.is("pending")))
-    })
+    !causes(board.json(), item.rec.id.as_str()).is_empty()
 }
 
 // test-tag: critical
