@@ -1,16 +1,14 @@
 /* @layer renderer-app @kind component */
-import { Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { CopyValue, Flex, Markdown, Text } from '@drizztdourden08/tessera';
+import { DrawerSection } from '../../../../screens/board/tabs/kanban/sub-components/DrawerSection';
 import { EmptyLine } from '../../../../screens/board/tabs/kanban/sub-components/EmptyLine';
 import { AcList } from '../../../../screens/board/tabs/tests/sub-components/AcList';
-import { DrawerSection } from '../../../../screens/board/tabs/tests/sub-components/DrawerSection';
-import { ExpectedLists } from '../../../../screens/board/tabs/tests/sub-components/ExpectedLists';
-import { SetupList } from '../../../../screens/board/tabs/tests/sub-components/SetupList';
-import { StepList } from '../../../../screens/board/tabs/tests/sub-components/StepList';
 import { TestFacts } from '../../../../screens/board/tabs/tests/sub-components/TestFacts';
-import { TextList } from '../../../../screens/board/tabs/tests/sub-components/TextList';
 import { Age } from '../../../Age';
+import { FieldLines } from '../fields/FieldLines';
 import type { RecordBodyProps } from '../pane.type';
 import { CaseConflicts } from '../testcase/CaseConflicts';
+import { CaseFields } from '../testcase/CaseFields';
 import { useTestCase } from '../testcase/useTestCase';
 
 const TestCaseOverviewTab = (props: RecordBodyProps) => {
@@ -25,10 +23,9 @@ const TestCaseOverviewTab = (props: RecordBodyProps) => {
         {`rev ${test.rev ?? 1}, updated by ${test.updatedBy ?? test.createdBy ?? 'unknown'} `}<Age value={test.updatedAt} /> ago
       </Text>
       {test.context && <DrawerSection title="Context"><Markdown size="sm">{test.context}</Markdown></DrawerSection>}
-      <SetupList test={test} />
-      {test.steps.length > 0 && <DrawerSection title="Steps" count={test.steps.length}><StepList lines={test.steps} /></DrawerSection>}
-      <ExpectedLists test={test} />
-      {test.changed.length > 0 && <DrawerSection title="What changed"><TextList lines={test.changed} label="What changed" /></DrawerSection>}
+      <CaseFields test={test} />
+      {test.run && <DrawerSection title="Run command"><CopyValue value={test.run} label="Run command" mono /></DrawerSection>}
+      {test.changed.length > 0 && <DrawerSection title="What changed"><FieldLines label="What changed" lines={test.changed} /></DrawerSection>}
       <AcList test={test} item={item} />
     </Flex>
   );

@@ -2,7 +2,7 @@
 import { ITEM_REGISTRY } from '../../../../data/registry';
 import type { ItemType } from '../../../../data/registry';
 import { TAB_FIELDS } from './pane-model.constants';
-import type { FieldGroupModel } from '../pane.type';
+import type { FieldGroupModel } from '../fields/fields.type';
 
 const shown = (id: string): boolean => !ITEM_REGISTRY.baseFields.includes(id) && !TAB_FIELDS.includes(id);
 

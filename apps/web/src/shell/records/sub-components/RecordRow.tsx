@@ -1,30 +1,26 @@
 /* @layer renderer-app @kind component */
-import { Flex, ListItemRow, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, ListItemRow, Pressable, Text } from '@drizztdourden08/tessera';
 import type { ListItemColumn } from '@drizztdourden08/tessera';
-import { ROW_CHIPS_MAX } from '../records.constants';
+import { rowLinked } from '../behavior/row-linked';
 import type { RecordRowProps } from '../records.type';
 import { AssigneeMark } from './AssigneeMark';
+import { LinkedTitle } from './LinkedTitle';
 import { RecordMenu } from './RecordMenu';
+import { RowChips } from './RowChips';
 import { TypeIcon } from './TypeIcon';
 
 const RecordRow = (props: RecordRowProps) => {
   const { head, title, onOpen, chips = [], age, trailing } = props;
+  const linked = rowLinked(title, chips);
   const columns: ListItemColumn[] = [];
-  if (chips.length > 0) {
-    columns.push({
-      primary: (
-        <Flex gap="xs" align="center">
-          {chips.slice(0, ROW_CHIPS_MAX).map((chip) => <Tag key={chip.id} title={chip.title}>{chip.text}</Tag>)}
-        </Flex>
-      ),
-    });
-  }
+  if (chips.length > 0) columns.push({ primary: <RowChips chips={chips} board={head.boardKey} /> });
   if (age) columns.push({ primary: <Text variant="caption" tone="muted">{age}</Text>, align: 'end' });
+  const code = <Text as="span" variant="caption" tone="muted" mono>{head.code}</Text>;
   return (
     <ListItemRow
       icon={<TypeIcon kind={head.kind} />}
-      name={<Text clamp={1} smartTimes>{title}</Text>}
-      meta={<Text as="span" variant="caption" tone="muted" mono>{head.code}</Text>}
+      name={linked ? <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} /> : <Text clamp={1} smartTimes>{title}</Text>}
+      meta={linked ? <Pressable onClick={onOpen} title={`Open ${head.code}`}>{code}</Pressable> : code}
       columns={columns}
       action={
         <Flex gap="xs" align="center">
@@ -33,7 +29,7 @@ const RecordRow = (props: RecordRowProps) => {
           <RecordMenu groups={head.menu} label={head.menuLabel} />
         </Flex>
       }
-      onClick={onOpen}
+      onClick={linked ? undefined : onOpen}
       data={{ 'data-record': head.code }}
     />
   );

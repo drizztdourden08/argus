@@ -56,9 +56,9 @@ describe('P5 the test case pane', { tags: ['standard'] }, () => {
 
   it('shows the facts, setup, steps, expected lines and criteria on the overview', async () => {
     const { dialog } = await mountCase([caseDoc('T-1')]);
-    expect(within(dialog).getByRole('group', { name: 'Setup' })).toBeTruthy();
-    expect(within(dialog).getByRole('group', { name: 'Steps · 2' })).toBeTruthy();
-    expect(within(dialog).getByRole('group', { name: 'Expected' })).toBeTruthy();
+    expect(within(dialog).getByRole('region', { name: 'Setup' })).toBeTruthy();
+    expect(within(within(dialog).getByRole('list', { name: 'Steps' })).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(dialog).getByRole('region', { name: 'Expected' })).toBeTruthy();
     expect(within(dialog).getByRole('group', { name: 'Covers on I-1' })).toBeTruthy();
     expect(within(dialog).getByText('The game read the wrong level.')).toBeTruthy();
     expect(within(dialog).queryByText(/is not shown yet/)).toBeNull();

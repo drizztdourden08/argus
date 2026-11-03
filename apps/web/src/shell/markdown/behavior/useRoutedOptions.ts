@@ -9,9 +9,10 @@ import { openLink } from './open-link';
 import { proofImage } from './proof-image';
 
 const useRoutedOptions = (): MarkdownOptions => {
-  const { key } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const pane = useRecordPane();
+  const key = params.key ?? pane.ref?.board ?? undefined;
   return useMemo(
     () => ({
       images: proofImage,

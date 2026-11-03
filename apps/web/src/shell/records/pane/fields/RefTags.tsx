@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag } from '@drizztdourden08/tessera';
 import { RecordLink } from '../../..';
-import type { RefTagsProps } from '../pane.type';
+import type { RefTagsProps } from './fields.type';
 
 const RefTags = (props: RefTagsProps) => {
   const { ids } = props;

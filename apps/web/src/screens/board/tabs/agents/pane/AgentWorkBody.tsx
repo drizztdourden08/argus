@@ -8,7 +8,6 @@ import { AgentRunRow } from '../sub-components/AgentRunRow';
 import { AgentStopLine } from '../sub-components/AgentStopLine';
 import { AgentWhere } from '../sub-components/AgentWhere';
 import { RecordLink } from '../../../../../shell';
-import { useOpenRunLog } from '../../../shared';
 import { useAgentActions } from '../behavior/useAgentActions';
 import { useAgentDoc } from '../behavior/useAgentDoc';
 import { useAgentRuns } from '../behavior/useAgentRuns';
@@ -19,7 +18,6 @@ const AgentWorkBody = (props: RecordBodyProps) => {
   const { agent, agents, ready } = useAgentDoc(boardKey, target.id);
   const actions = useAgentActions(boardKey, agents);
   const runs = useAgentRuns(boardKey);
-  const openLog = useOpenRunLog();
   if (!agent) return <Text tone="muted">{ready ? `${target.id} is not on this board.` : 'Loading the agent.'}</Text>;
   const mine = runs.all.filter((run) => run.agent === agent.id);
   const blockers = agent.blockedBy ?? [];
@@ -43,7 +41,7 @@ const AgentWorkBody = (props: RecordBodyProps) => {
       <DrawerSection title={`Runs · ${mine.length}`}>
         {mine.length === 0 && <EmptyLine>{NO_RUNS_LINE}</EmptyLine>}
         <Flex direction="column" gap="xs" role="list" aria-label="Runs of the agent">
-          {mine.map((run) => <AgentRunRow key={run.id} run={run} boardKey={boardKey} now={now} onLog={openLog} />)}
+          {mine.map((run) => <AgentRunRow key={run.id} run={run} boardKey={boardKey} now={now} />)}
         </Flex>
       </DrawerSection>
     </Flex>

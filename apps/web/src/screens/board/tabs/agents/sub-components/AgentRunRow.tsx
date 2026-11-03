@@ -1,15 +1,15 @@
 /* @layer renderer-app @kind component */
 import { Flex, Icon, IconButton, Text } from '@drizztdourden08/tessera';
-import { RecordRow, recordMenuGroups } from '../../../../../shell';
+import { RecordRow, recordMenuGroups, useRecordPane } from '../../../../../shell';
 import { isLiveRun, runLine } from '../../../../../data/runs';
 import { formatAgo } from '../../../../../format';
 import { usePlay } from '../../../run-play';
 import type { AgentRunRowProps } from '../row-props.type';
-import { runSpan } from '../model';
+import { LOG_PANE_TAB, runSpan } from '../model';
 
 const PAGE_ORIGIN = 'page';
 
-const detailOf =(props: AgentRunRowProps): string => {
+const detailOf = (props: AgentRunRowProps): string => {
   const { run, now } = props;
   const line = runLine(run);
   if (isLiveRun(run)) return [run.origin ?? '', run.agent ?? '', line.last].filter(Boolean).join(' \u00b7 ');
@@ -18,7 +18,9 @@ const detailOf =(props: AgentRunRowProps): string => {
 };
 
 const AgentRunRow = (props: AgentRunRowProps) => {
-  const { run, boardKey, now, onLog } = props;
+  const { run, boardKey, now } = props;
+  const pane = useRecordPane();
+  const openLog = () => pane.open(run.id, LOG_PANE_TAB);
   const play = usePlay(boardKey);
   const live = isLiveRun(run);
   const stop = () => void play.stop(run);
@@ -31,7 +33,7 @@ const AgentRunRow = (props: AgentRunRowProps) => {
         assignee: run.origin === PAGE_ORIGIN ? 'owner' : '',
         boardKey,
         threads: [],
-        menu: recordMenuGroups('run', run.id, { open: () => onLog(run.id), stop: live ? stop : undefined }),
+        menu: recordMenuGroups('run', run.id, { open: openLog, stop: live ? stop : undefined }),
         menuLabel: `More actions for ${run.id}`,
       }}
       title={run.name}
@@ -46,7 +48,7 @@ const AgentRunRow = (props: AgentRunRowProps) => {
           )}
         </Flex>
       }
-      onOpen={() => onLog(run.id)}
+      onOpen={openLog}
     />
   );
 };

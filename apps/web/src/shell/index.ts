@@ -3,10 +3,10 @@ export { useHashTab } from './behavior/useHashTab';
 export { BoardMarkdown, BoardMarkdownEditor } from './markdown';
 export { DepTag } from './DepTag';
 export {
-  assigneeLook, assigneeOfRecord, AssigneeMark, categoryColor, DepRecordLink, groupRecords, HEAD_SIZE_PX, ItemTypeMark, LinkedText, parseRecord, planProgress, RECORD_ACTIONS, RecordCard, RecordGroup,
+  assigneeLook, assigneeOfRecord, AssigneeMark, categoryColor, DepRecordLink, groupRecords, LinkedText, parseRecord, planProgress, RECORD_ACTIONS, RecordCard, RecordGroup,
   RecordHead, RecordLink, recordMenuGroups, RecordPaneScope, RecordRow, shownCode, splitRecords, TypeIcon, useRecordOrder, useRecordPane, useRunOps,
 } from './records';
-export type { ActionHandlers, RecordGroups, RecordRef, RowChip } from './records';
+export type { ActionHandlers, RecordGroups, RecordHeadProps, RowChip } from './records';
 export { LoadingFallback } from './LoadingFallback';
 export { LocalBanner } from './LocalBanner';
 export { PageFrame } from './PageFrame';

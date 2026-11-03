@@ -16,9 +16,13 @@ interface CaseConflictsProps {
   boardKey: string;
 }
 
+interface CaseFieldsProps {
+  test: Test;
+}
+
 interface CaseResultProps {
   test: WithId<Test>;
   boardKey: string;
 }
 
-export type { CaseConflictsProps, CaseResultProps, TestCaseLoad };
+export type { CaseConflictsProps, CaseFieldsProps, CaseResultProps, TestCaseLoad };

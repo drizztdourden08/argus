@@ -6,7 +6,7 @@ import { fieldProblem } from '../model/field-problem';
 import { fieldText } from '../model/field-text';
 import { fieldVerdict } from '../model/field-verdict';
 import { saveField } from '../model/save-field';
-import type { FieldProps } from '../pane.type';
+import type { FieldProps } from './fields.type';
 
 const LineField = (props: FieldProps) => {
   const { name, item, cx } = props;

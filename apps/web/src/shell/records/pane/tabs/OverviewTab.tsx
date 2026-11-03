@@ -3,6 +3,7 @@ import { Flex } from '@drizztdourden08/tessera';
 import { CriteriaSection } from '../../../../screens/board/tabs/kanban/sub-components/CriteriaSection';
 import { DescriptionSection } from '../../../../screens/board/tabs/kanban/sub-components/DescriptionSection';
 import { FieldGroup } from '../fields/FieldGroup';
+import { FieldRow } from '../fields/FieldRow';
 import { fieldGroups } from '../model/field-groups';
 import { paneType } from '../model/pane-type';
 import { peopleOptions } from '../model/people-options';
@@ -17,7 +18,7 @@ const OverviewTab = (props: PaneBodyProps) => {
   return (
     <Flex direction="column" gap="lg">
       <PaneFacts data={data} />
-      {type && fieldGroups(type).map((group) => <FieldGroup key={group.id} group={group} shared={shared} />)}
+      {type && fieldGroups(type).map((group) => <FieldGroup key={group.id} group={group} render={(name) => <FieldRow name={name} {...shared} />} />)}
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={tests} ops={ops} />
     </Flex>

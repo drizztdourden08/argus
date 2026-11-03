@@ -47,16 +47,6 @@ interface DrawerSectionProps {
   children: ReactNode;
 }
 
-interface TextListProps {
-  lines: string[];
-  ordered?: boolean;
-  label: string;
-}
-
-interface StepListProps {
-  lines: string[];
-}
-
 interface NoteDialogProps {
   test: TestDoc;
   onClose: () => void;
@@ -74,5 +64,5 @@ interface TestLayersProps {
 }
 
 export type {
-  AcListProps, DrawerSectionProps, EditDialogProps, EvidenceProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestFactsProps, TestLayersProps, TextListProps,
+  AcListProps, DrawerSectionProps, EditDialogProps, EvidenceProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, TestFactsProps, TestLayersProps,
 };

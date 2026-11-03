@@ -30,5 +30,5 @@ export { sortDone } from './sort-done';
 export { statusLook } from './status-look';
 export { tagLook } from './tag-look';
 export { tokenLines } from './token-lines';
-export { AGENT_LIMITS, CLOSED_ITEMS_TITLE, EMPTY_ALL, EMPTY_RUNNING, MODEL_LOOKS, NO_BLOCKERS_LINE, NO_ITEM, NO_ITEM_LINE, NO_ITEM_TITLE, NO_RUNS_LINE } from './model.constants';
+export { AGENT_LIMITS, CLOSED_ITEMS_TITLE, EMPTY_ALL, EMPTY_RUNNING, LOG_PANE_TAB, MODEL_LOOKS, NO_BLOCKERS_LINE, NO_ITEM, NO_ITEM_LINE, NO_ITEM_TITLE, NO_RUNS_LINE } from './model.constants';
 export type * from './model.type';

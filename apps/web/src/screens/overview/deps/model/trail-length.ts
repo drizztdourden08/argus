@@ -1,9 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { isLive } from '../../../../data/deps';
-import type { DepDoc, DepEnd } from '../../../../data/deps';
-import type { WithId } from '../../../../data/react';
-
-type Dep = WithId<DepDoc>;
+import type { DepEnd } from '../../../../data/deps';
+import type { Dep } from './trail-length.type';
 
 const keyOf = (end: DepEnd): string => `${end.project}/${end.item ?? ''}`;
 

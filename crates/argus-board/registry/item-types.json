@@ -357,7 +357,10 @@
       "stages": [],
       "statuses": ["pending", "pass", "fail", "partial", "blocked", "moved"],
       "fields": ["setup", "steps", "pass", "fail", "mode", "bundle"],
-      "groups": [],
+      "groups": [
+        { "id": "setup", "label": "Setup", "fields": ["setup", "steps"] },
+        { "id": "expected", "label": "Expected", "fields": ["pass", "fail"] }
+      ],
       "view": "row",
       "title": "title",
       "assignee": "thread",

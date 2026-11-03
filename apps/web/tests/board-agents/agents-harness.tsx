@@ -80,6 +80,7 @@ interface Board {
   agents?: Record<string, object>;
   items?: Record<string, object>;
   threads?: Record<string, object>;
+  runs?: Record<string, object>;
 }
 
 const Where = () => <output aria-label="where">{useLocation().search}</output>;
@@ -105,6 +106,7 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
       source.emit('snapshot', snapshot('alpha', 'agents', board.agents ?? {}));
       source.emit('snapshot', snapshot('alpha', 'threads', board.threads ?? {}));
       source.emit('snapshot', snapshot('alpha', 'items', board.items ?? {}));
+      source.emit('snapshot', snapshot('alpha', 'runs', board.runs ?? {}));
     }
   });
   return { ...view, sources: fake.sources };

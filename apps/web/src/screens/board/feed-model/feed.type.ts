@@ -34,12 +34,12 @@ interface BundleGroup {
   tests: ManualTest[];
 }
 
-type FeedKind = 'decision' | 'question' | 'message' | 'notice' | 'action' | 'test' | 'bundle';
+type FeedKind = 'decision' | 'question' | 'message' | 'notice' | 'action' | 'test' | 'bundle' | 'sent';
 
 type AskKind = 'decision' | 'question' | 'message' | 'notice';
 
 type FeedCard =
-  | { type: AskKind; at: string; data: Entry }
+  | { type: AskKind | 'sent'; at: string; data: Entry }
   | { type: 'action'; at: string; data: BoardAction }
   | { type: 'test'; at: string; data: ManualTest }
   | { type: 'bundle'; at: string; data: BundleGroup };

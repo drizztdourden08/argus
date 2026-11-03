@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind component */
-import { RecordRow, recordMenuGroups } from '../../../shell';
+import { RecordRow, recordMenuGroups, useRecordPane } from '../../../shell';
 import { PORTFOLIO_SCOPE } from '../../../data/react';
-import { useOpenRecord } from './useOpenRecord';
 import type { OverviewRowProps } from './records.type';
 
 const OverviewRow = (props: OverviewRowProps) => {
   const { target, assignee, title, chips, trailing, handlers } = props;
-  const open = useOpenRecord();
-  const go = () => open(target);
+  const pane = useRecordPane();
+  const go = () => {
+    if (target.open && target.project) pane.open(`${target.project}/${target.open}`, target.tab);
+  };
   return (
     <RecordRow
       head={{

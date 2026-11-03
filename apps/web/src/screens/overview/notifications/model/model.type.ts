@@ -23,9 +23,14 @@ interface OwnerRow {
   stage: string;
 }
 
+interface NoteParts {
+  title: string;
+  detail: string;
+}
+
 interface ToastNote {
   text: string;
   bad: boolean;
 }
 
-export type { LevelPick, NoteFilters, NoteItem, OwnerRow, SettingPart, ToastNote };
+export type { LevelPick, NoteFilters, NoteItem, NoteParts, OwnerRow, SettingPart, ToastNote };

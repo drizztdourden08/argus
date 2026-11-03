@@ -16,6 +16,8 @@ const entryFacts = (kind: string, entry: Entry, at: string): CardFacts => ({
   assignee: kind === 'message' || kind === 'notice' ? (entry.thread ?? '') : OWNER_ASSIGNEE,
 });
 
+const sentFacts = (entry: Entry, at: string): CardFacts => ({ ...entryFacts(entry.kind, entry, at), assignee: entry.thread ?? '' });
+
 const testFacts = (kind: string, test: TestRef, title: string, at: string): CardFacts => ({
   kind,
   code: test.id,
@@ -29,17 +31,20 @@ const testFacts = (kind: string, test: TestRef, title: string, at: string): Card
 
 const bundleTitle = (count: number, first: string): string => `${count} ${count > 1 ? 'tests' : 'test'} to run: ${first}${count > 1 ? ' ...' : ''}`;
 
+const actionAssignee = (assignee: string | null | undefined): string => (assignee === undefined || assignee === null || assignee === '' ? OWNER_ASSIGNEE : assignee);
+
 const cardFacts = (card: FeedCard): CardFacts => {
   const kind = FEED_KIND[card.type];
   if (card.type === 'action') {
     const { id, text, thread, item, assignee } = card.data;
-    return { kind, code: id, title: plainText(text), thread, item: item ?? null, at: card.at, assignee: assignee || OWNER_ASSIGNEE };
+    return { kind, code: id, title: plainText(text), thread, item: item ?? null, at: card.at, assignee: actionAssignee(assignee) };
   }
   if (card.type === 'test') return testFacts(kind, card.data, card.data.title, card.at);
   if (card.type === 'bundle') {
     const [first] = card.data.tests;
     return testFacts(kind, first ?? { id: card.data.build, thread: card.data.thread }, bundleTitle(card.data.tests.length, first?.title ?? ''), card.at);
   }
+  if (card.type === 'sent') return sentFacts(card.data, card.at);
   return entryFacts(kind, card.data, card.at);
 };
 

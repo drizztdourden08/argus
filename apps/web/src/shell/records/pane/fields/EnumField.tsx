@@ -5,7 +5,7 @@ import { fieldLabel } from '../model/field-label';
 import { fieldText } from '../model/field-text';
 import { NO_CHOICE } from '../model/pane-model.constants';
 import { saveField } from '../model/save-field';
-import type { FieldProps } from '../pane.type';
+import type { FieldProps } from './fields.type';
 import { FieldSelect } from './FieldSelect';
 
 const EnumField = (props: FieldProps) => {

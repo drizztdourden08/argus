@@ -5,7 +5,7 @@ import { fieldText } from '../model/field-text';
 import { fieldVerdict } from '../model/field-verdict';
 import { NO_CHOICE } from '../model/pane-model.constants';
 import { saveField } from '../model/save-field';
-import type { FieldProps } from '../pane.type';
+import type { FieldProps } from './fields.type';
 import { FieldSelect } from './FieldSelect';
 
 const PersonField = (props: FieldProps) => {
