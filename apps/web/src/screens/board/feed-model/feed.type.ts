@@ -78,12 +78,16 @@ interface NeedCount {
 
 type ItemNeeds = ReadonlyMap<string, NeedCount>;
 
+type FeedSection = 'waiting' | 'leads' | 'log';
+
 interface BoardWork {
   ready: boolean;
   waiting: FeedCard[];
+  leads: FeedCard[];
   notices: FeedCard[];
   lines: LogLine[];
   items: WorkItem[];
+  index: ReadonlyMap<string, WorkItem>;
   needs: ItemNeeds;
 }
 
@@ -102,6 +106,7 @@ export type {
   FeedCard,
   FeedInput,
   FeedKind,
+  FeedSection,
   ItemNeeds,
   ManualTest,
   NeedCount,

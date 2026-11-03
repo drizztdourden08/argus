@@ -12,6 +12,7 @@ describe('S1 information is dismissed', { tags: ['standard'] }, () => {
   it('a notice has Dismiss and no field, and dismissing posts an ack', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(notice) });
+    fireEvent.click(screen.getByText('Log · 1'));
     expect(screen.getByText('Notices · 1')).toBeTruthy();
     expect(screen.queryByRole('textbox')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
@@ -24,6 +25,7 @@ describe('S1 information is dismissed', { tags: ['standard'] }, () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(message) });
     expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+    fireEvent.click(screen.getByText('Write a reply'));
     fireEvent.change(textbox('Reply to coordinator.'), { target: { value: 'thanks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
@@ -33,6 +35,7 @@ describe('S1 information is dismissed', { tags: ['standard'] }, () => {
   it('a dismissed card leaves the feed once the ack is on the stream', async () => {
     mockPosts();
     const view = await openBoard({ entries: byId(notice) });
+    fireEvent.click(screen.getByText('Log · 1'));
     expect(screen.getByText('Crash restored')).toBeTruthy();
     act(() => changeBoard(view.sources[0], 'entries', 'O-9', dismissal('N-1')));
     await waitFor(() => expect(screen.queryByText('Crash restored')).toBeNull());
@@ -84,7 +87,7 @@ describe('S1 manual steps', { tags: ['standard'] }, () => {
   it('a manual step has Done, which posts done for the step and hides it before the board applied it', async () => {
     const fetchMock = mockPosts();
     const view = await openBoard({ actions: byId(manualStep) });
-    expect(screen.getByText('manual step')).toBeTruthy();
+    expect(document.querySelector('[data-record="H-1"] [data-type-mark="todo"]')).not.toBeNull();
     expect(screen.getByText('Restart the app')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));

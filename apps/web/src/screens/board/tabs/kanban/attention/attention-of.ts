@@ -16,7 +16,6 @@ const appliesOf = (facts: AttentionFacts): Record<AttentionKind, boolean> => {
     'test-pending': facts.signals.pending > 0,
     decision: askIds(item, asks, 'decision').length > 0,
     quiet: facts.quietMs !== null,
-    agent: facts.signals.agents > 0,
   };
 };
 

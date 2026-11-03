@@ -29,6 +29,12 @@ interface ServedBy {
   worktrees: number;
 }
 
+interface ItemAgent {
+  id: string;
+  name: string;
+  status?: string;
+}
+
 interface ItemTyping {
   type?: string;
   parent?: string | null;
@@ -39,6 +45,7 @@ interface ItemTyping {
   blocked?: BlockedCause[];
   images?: ItemImage[];
   servedBy?: ServedBy;
+  agents?: ItemAgent[];
 }
 
 interface WorkItem {
@@ -47,6 +54,7 @@ interface WorkItem {
   status: string;
   thread: string;
   subject?: string;
+  type?: string;
   description?: string;
   ac?: Criterion[];
   rank?: number;
@@ -57,4 +65,4 @@ interface WorkItem {
   requestedBy?: RequestedBy | RequestedBy[];
 }
 
-export type { BlockedCause, BlockedKind, ItemImage, ItemTyping, WorkItem };
+export type { BlockedCause, BlockedKind, ItemAgent, ItemImage, ItemTyping, WorkItem };

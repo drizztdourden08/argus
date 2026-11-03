@@ -3,7 +3,7 @@ import type { IconName, TagUrgencyColor } from '@drizztdourden08/tessera';
 import type { ItemRef } from '../../../../../data/kanban';
 import type { AskLink, Needs } from '../model/model.type';
 
-type AttentionKind = 'question' | 'todo' | 'test-failing' | 'dependency' | 'blocked' | 'test-pending' | 'decision' | 'quiet' | 'agent';
+type AttentionKind = 'question' | 'todo' | 'test-failing' | 'dependency' | 'blocked' | 'test-pending' | 'decision' | 'quiet';
 
 interface AttentionSpec {
   kind: AttentionKind;
@@ -16,7 +16,6 @@ interface AttentionSpec {
 interface Signals {
   failing: number;
   pending: number;
-  agents: number;
 }
 
 interface AttentionFacts {
@@ -29,7 +28,6 @@ interface AttentionFacts {
 
 interface SignalsInput {
   tests: readonly { item: string | null; status: string; archivedAt?: string | null; deletedAt?: string | null; build?: string | null }[];
-  agents: readonly { item?: string | null; status?: string; archivedAt?: string | null; deletedAt?: string | null }[];
   closedBuilds: ReadonlySet<string>;
 }
 

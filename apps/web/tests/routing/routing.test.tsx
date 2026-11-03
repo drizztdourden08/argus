@@ -40,7 +40,7 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
     expect(within(screen.getByRole('status', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
-    for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Media', 'Builds', 'Worktrees', 'Changes', 'Releases']) {
+    for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees', 'Changes', 'Releases']) {
       expect(screen.getByRole('tab', { name: new RegExp(`^${label}`) })).toBeTruthy();
     }
   });
@@ -48,6 +48,18 @@ describe('S2 routing', { tags: ['standard'] }, () => {
   it('opens the tab named by the hash', async () => {
     renderAt('/p/rotp/#tests');
     const tab = await screen.findByRole('tab', { name: /^Tests/ });
+    expect(tab.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('has no Media tab, because media is a tab of one record pane', async () => {
+    renderAt('/p/rotp/');
+    await screen.findByRole('tab', { name: /^Kanban/ });
+    expect(screen.queryByRole('tab', { name: /^Media/ })).toBeNull();
+  });
+
+  it('sends an old #media address to the Kanban', async () => {
+    renderAt('/p/rotp/#media');
+    const tab = await screen.findByRole('tab', { name: /^Kanban/ });
     expect(tab.getAttribute('aria-selected')).toBe('true');
   });
 

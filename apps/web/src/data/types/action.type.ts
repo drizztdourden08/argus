@@ -4,6 +4,7 @@ interface BoardAction {
   text: string;
   status: string;
   thread: string;
+  assignee?: string | null;
   item?: string | null;
   createdAt: string;
   archivedAt?: string;

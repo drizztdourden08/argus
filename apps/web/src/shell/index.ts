@@ -6,7 +6,7 @@ export {
   assigneeLook, AssigneeMark, categoryColor, DepRecordLink, groupRecords, HEAD_SIZE_PX, ItemTypeMark, LinkedText, parseRecord, RECORD_ACTIONS, RecordCard, RecordGroup, RecordHead, RecordLink,
   recordMenuGroups, RecordPaneScope, RecordRow, splitRecords, TypeIcon, useRecordOrder, useRecordPane,
 } from './records';
-export type { HeadSize, RecordRef } from './records';
+export type { ActionHandlers, HeadSize, RecordRef } from './records';
 export { LoadingFallback } from './LoadingFallback';
 export { LocalBanner } from './LocalBanner';
 export { PageFrame } from './PageFrame';

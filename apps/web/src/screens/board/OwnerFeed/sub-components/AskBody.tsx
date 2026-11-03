@@ -1,21 +1,20 @@
 /* @layer renderer-app @kind component */
-import { Flex, Text } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
+import { useRecordPane } from '../../../../shell';
 import { askMode } from '../../feed-model';
-import { LinkedText } from '../../../../shell';
-import { plainText } from '../../plain-text';
 import type { EntryBodyProps } from '../OwnerFeed.type';
-import { AskForm } from './AskForm';
-import { ContextBlock } from './ContextBlock';
+import { AnswerBlock } from './AnswerBlock';
+import { ContextPreview } from './ContextPreview';
 import { EntryImages } from './EntryImages';
 
 const AskBody = (props: EntryBodyProps) => {
   const { entry, actions } = props;
+  const pane = useRecordPane();
   return (
     <Flex direction="column" gap="sm">
-      <ContextBlock entry={entry} actions={actions} />
-      <Text weight={600} title={entry.text}><LinkedText text={plainText(entry.text)} /></Text>
+      <ContextPreview entry={entry} actions={actions} onMore={() => pane.open(entry.id)} />
       <EntryImages entry={entry} />
-      <AskForm entry={entry} mode={askMode(entry)} actions={actions} />
+      <AnswerBlock entry={entry} mode={askMode(entry)} actions={actions} />
     </Flex>
   );
 };

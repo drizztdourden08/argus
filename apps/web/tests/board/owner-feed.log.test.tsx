@@ -21,9 +21,10 @@ const logItems = () => within(screen.getByRole('list', { name: 'Work log' })).ge
 describe('S1 the view of the activity', { tags: ['standard'] }, () => {
   it('Needs you leaves out the notices and the log, Log only the log, and the choice is remembered', async () => {
     await openBoard({ entries: byId(freeText, notice), log: logOf(2) });
+    expect(screen.getByText('Log · 3')).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: 'Needs you' }));
     expect(screen.getByText('Waiting on you · 1')).toBeTruthy();
-    expect(screen.queryByText('Notices · 1')).toBeNull();
+    expect(screen.queryByText('Log · 3')).toBeNull();
     expect(screen.queryByText('Work log')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Log' }));
     expect(screen.queryByText('Waiting on you · 1')).toBeNull();
@@ -38,6 +39,7 @@ describe('S1 the view of the activity', { tags: ['standard'] }, () => {
 describe('S1 the work log', { tags: ['standard'] }, () => {
   it('shows twelve lines, then 25 more at a time, and Show less goes back', async () => {
     await openBoard({ log: logOf(40) });
+    fireEvent.click(screen.getByText('Log · 40'));
     expect(logItems()).toHaveLength(12);
     fireEvent.click(screen.getByRole('button', { name: 'Show 25 more (28 left)' }));
     expect(logItems()).toHaveLength(37);

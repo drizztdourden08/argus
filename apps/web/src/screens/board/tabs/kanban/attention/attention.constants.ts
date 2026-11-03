@@ -11,21 +11,18 @@ const ATTENTION: readonly AttentionSpec[] = [
   { kind: 'test-pending', icon: 'flask', color: 'info', label: 'test pending', text: 'A test of the item has no result yet.' },
   { kind: 'decision', icon: 'split', color: 'info', label: 'decision', text: 'A decision waits to be picked up.' },
   { kind: 'quiet', icon: 'clock', color: 'warning', label: 'quiet', text: 'The item has had no update for longer than its status allows.' },
-  { kind: 'agent', icon: 'robot', color: 'success', label: 'agent running', text: 'A sub-agent is working on the item.' },
 ];
 
 const ATTENTION_OF: Readonly<Record<AttentionKind, AttentionSpec>> = Object.fromEntries(
   ATTENTION.map((spec) => [spec.kind, spec]),
 ) as Record<AttentionKind, AttentionSpec>;
 
-const NO_SIGNALS: Signals = { failing: 0, pending: 0, agents: 0 };
+const NO_SIGNALS: Signals = { failing: 0, pending: 0 };
 
 const FAILING_STATUSES: readonly string[] = ['fail', 'partial', 'blocked'];
-
-const WORKING_STATUS = 'working';
 
 const DEPENDENCY_KINDS: readonly BlockedKind[] = ['dep-waits', 'dep-blocked'];
 
 const LOCK_KINDS: readonly BlockedKind[] = ['item', 'test', 'todo', 'legacy'];
 
-export { ATTENTION, ATTENTION_OF, DEPENDENCY_KINDS, FAILING_STATUSES, LOCK_KINDS, NO_SIGNALS, WORKING_STATUS };
+export { ATTENTION, ATTENTION_OF, DEPENDENCY_KINDS, FAILING_STATUSES, LOCK_KINDS, NO_SIGNALS };

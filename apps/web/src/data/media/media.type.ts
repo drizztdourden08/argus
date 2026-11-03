@@ -11,21 +11,4 @@ interface Pictures {
   gallery: readonly MediaViewerItem[];
 }
 
-interface Shot {
-  key: string;
-  item: string;
-  title: string;
-  n: number;
-  url: string;
-  caption: string;
-  at: string;
-}
-
-interface ShotSource {
-  id: string;
-  title: string;
-  deletedAt?: string | null;
-  images?: readonly { n: number; url: string; caption: string; at?: string }[];
-}
-
-export type { ItemImageResult, Pictures, Shot, ShotSource };
+export type { ItemImageResult, Pictures };

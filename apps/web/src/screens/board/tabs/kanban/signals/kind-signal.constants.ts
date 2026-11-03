@@ -16,7 +16,6 @@ const SIGNAL_OF: Readonly<Record<AttentionKind, SignalMaker>> = {
   todo: (card) => countSignal('todo', card.needs?.todos ?? 0),
   'test-failing': (card) => countSignal('test-failing', card.signals.failing),
   'test-pending': (card) => countSignal('test-pending', card.signals.pending),
-  agent: (card) => countSignal('agent', card.signals.agents),
 };
 
 export { SIGNAL_OF };

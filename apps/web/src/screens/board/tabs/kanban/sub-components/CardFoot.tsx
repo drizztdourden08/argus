@@ -3,6 +3,7 @@ import { Flex, Spacer, Tag, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { CardFootProps } from '../kanban-props.type';
 import { cardChips, cardProgress, stageLabel } from '../model';
+import { AgentLine } from './AgentLine';
 import { CardProgressRow } from './CardProgressRow';
 
 const CardFoot = (props: CardFootProps) => {
@@ -11,6 +12,7 @@ const CardFoot = (props: CardFootProps) => {
   const stage = stageLabel(item, group);
   return (
     <Flex gap="sm" align="center">
+      <AgentLine item={item} />
       {cardChips(item).map((chip) => <Tag key={chip.id} title={chip.title}>{chip.text}</Tag>)}
       {stage && <Text variant="caption" tone="muted" title="Stage">{stage}</Text>}
       <CardProgressRow segments={cardProgress(card)} />

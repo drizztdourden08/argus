@@ -9,12 +9,7 @@ import type { OpNotice } from '../../shared';
 import type { Signals } from './attention';
 import type { TrashPanel } from './trash-props.type';
 import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, TrailInfo } from './model';
-import type { PurgeNotice, TrashRow, TrashSource } from './trash';
-
-interface AgentDoc extends TrashSource {
-  item?: string | null;
-  status?: string;
-}
+import type { PurgeNotice, TrashRow } from './trash';
 
 interface KanbanData {
   ready: boolean;
@@ -22,7 +17,6 @@ interface KanbanData {
   threads: WithId<ThreadChoice>[];
   entries: WithId<Entry>[];
   actions: WithId<ActionDoc>[];
-  agents: WithId<AgentDoc>[];
   tests: WithId<Test>[];
   closedBuilds: ReadonlySet<string>;
   needs: ReadonlyMap<string, Needs>;
@@ -143,4 +137,4 @@ interface CancelDep {
   cancel: () => Promise<void>;
 }
 
-export type { AddItemDraft, AgentDoc, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, Panels, RecordActions, Selection, SoftDoc, Threads };
+export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, Panels, RecordActions, Selection, SoftDoc, Threads };

@@ -120,6 +120,10 @@ interface CardTagsProps {
   onOpen: (id: string) => void;
 }
 
+interface AgentLineProps {
+  item: ItemRef;
+}
+
 interface CardFootProps {
   card: CardData;
   group: ItemGroup;
@@ -139,5 +143,5 @@ interface CardProgressRowProps {
 
 
 export type {
-  CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

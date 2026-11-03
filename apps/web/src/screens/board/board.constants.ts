@@ -4,7 +4,6 @@ const BOARD_TABS = [
   { id: 'activity', label: 'Activity' },
   { id: 'kanban', label: 'Kanban' },
   { id: 'tests', label: 'Tests' },
-  { id: 'media', label: 'Media' },
   { id: 'builds', label: 'Builds' },
   { id: 'worktrees', label: 'Worktrees' },
   { id: 'changes', label: 'Changes' },
@@ -13,6 +12,8 @@ const BOARD_TABS = [
 
 const BOARD_TAB_IDS = BOARD_TABS.map((tab) => tab.id);
 
+const RETIRED_TABS: ReadonlyMap<string, string> = new Map([['media', 'kanban']]);
+
 const BOARD_KEY_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
-export { BOARD_KEY_PATTERN, BOARD_TAB_IDS, BOARD_TABS };
+export { BOARD_KEY_PATTERN, BOARD_TAB_IDS, BOARD_TABS, RETIRED_TABS };

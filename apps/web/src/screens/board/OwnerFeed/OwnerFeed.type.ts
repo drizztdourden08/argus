@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
-import type { BoardAction, Entry, EntryImage, LogLine } from '../../../data/types';
-import type { AskMode, BoardWork, FeedCard } from '../feed-model';
+import type { BoardAction, Entry, EntryImage, LogLine, WorkItem } from '../../../data/types';
+import type { ThreadChoice } from '../../../data/kanban';
+import type { WithId } from '../../../data/react';
+import type { AskMode, BoardWork, FeedCard, ManualTest } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
 
 type FeedFilter = 'all' | 'you' | 'log';
@@ -16,6 +17,27 @@ interface FeedActions {
   done: (action: BoardAction) => Promise<boolean>;
   askContext: (entry: Entry) => Promise<boolean>;
 }
+
+interface FeedContext {
+  boardKey: string;
+  threads: readonly WithId<ThreadChoice>[];
+  now: number;
+  index: ReadonlyMap<string, WorkItem>;
+  actions: FeedActions;
+}
+
+interface CardFacts {
+  kind: string;
+  code: string;
+  title: string;
+  thread: string | null;
+  item: string | null;
+  at: string;
+  assignee: string;
+  tab?: string;
+}
+
+type TestRef = Pick<ManualTest, 'id' | 'thread' | 'item'>;
 
 interface LogWindow {
   shown: number;
@@ -33,21 +55,26 @@ interface OwnerFeedProps {
 interface FeedGroupProps {
   heading: string;
   cards: FeedCard[];
-  actions: FeedActions;
+  ctx: FeedContext;
 }
 
 interface FeedCardViewProps {
   card: FeedCard;
-  actions: FeedActions;
+  ctx: FeedContext;
 }
 
-interface CardMetaProps {
-  label: string;
+interface CardBodyProps extends FeedCardViewProps {
+  facts: CardFacts;
+}
+
+interface FeedFactsProps {
+  facts: CardFacts;
+  index: ReadonlyMap<string, WorkItem>;
+}
+
+interface ItemChipProps {
   id: string;
-  at: string;
-  thread?: string | null;
-  item?: string | null;
-  menu?: ReactNode;
+  index: ReadonlyMap<string, WorkItem>;
 }
 
 interface CardMenuProps {
@@ -56,18 +83,10 @@ interface CardMenuProps {
   actions: FeedActions;
 }
 
-interface TestLineProps {
-  card: FeedCard & { type: 'test' | 'bundle' };
+interface TestBodyProps {
+  facts: CardFacts;
+  build: string | null;
   handed: string | null;
-}
-
-interface TestLineView {
-  build?: string | null;
-  count: string;
-  title: string;
-  hover: string;
-  thread: string;
-  open: string;
 }
 
 interface EntryBodyProps {
@@ -87,12 +106,18 @@ interface ImageGroup {
 
 interface AskFormProps extends EntryBodyProps {
   mode: AskMode;
+  quick?: boolean;
+}
+
+interface ContextPreviewProps extends EntryBodyProps {
+  onMore: () => void;
 }
 
 interface AskCopy {
   kind: NoteKind;
   label: string;
   verb: string;
+  fold: string;
 }
 
 interface ActionBodyProps {
@@ -100,6 +125,15 @@ interface ActionBodyProps {
   actions: FeedActions;
 }
 
+interface NoticeRowProps {
+  entry: Entry;
+  ctx: FeedContext;
+}
+
+interface NoticeListProps {
+  notices: FeedCard[];
+  ctx: FeedContext;
+}
 
 interface LogListProps {
   lines: LogLine[];
@@ -109,38 +143,45 @@ interface LogSectionProps {
   lines: LogLine[];
 }
 
-interface CardSectionsProps {
+interface LogFoldProps {
   filter: FeedFilter;
-  waiting: FeedCard[];
   notices: FeedCard[];
-  actions: FeedActions;
+  lines: LogLine[];
+  ctx: FeedContext;
 }
 
 interface FeedSectionsProps {
   filter: FeedFilter;
   work: BoardWork;
-  actions: FeedActions;
+  ctx: FeedContext;
 }
 
 export type {
   ActionBodyProps,
   AskCopy,
   AskFormProps,
+  CardBodyProps,
+  CardFacts,
   CardMenuProps,
-  CardMetaProps,
-  CardSectionsProps,
+  ContextPreviewProps,
   EntryBodyProps,
   EntryImagesProps,
   FeedActions,
   FeedCardViewProps,
+  FeedContext,
+  FeedFactsProps,
   FeedFilter,
   FeedGroupProps,
   FeedSectionsProps,
   ImageGroup,
+  ItemChipProps,
+  LogFoldProps,
   LogListProps,
   LogSectionProps,
   LogWindow,
+  NoticeListProps,
+  NoticeRowProps,
   OwnerFeedProps,
-  TestLineProps,
-  TestLineView,
+  TestBodyProps,
+  TestRef,
 };

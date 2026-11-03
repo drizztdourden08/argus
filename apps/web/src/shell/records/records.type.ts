@@ -32,6 +32,7 @@ interface RecordTarget {
 interface RecordLinkProps {
   id: string;
   board?: string;
+  tab?: string;
   children?: ReactNode;
 }
 

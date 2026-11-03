@@ -116,10 +116,10 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
   it('puts needs you first and then each kind in the order of the precedence, with a count and no text', () => {
     const needs = new Map([['I-1', { questions: 1, decisions: 1, todos: 2, tests: 0 }]]);
     const asks = new Map([['I-1', [{ id: 'Q-3', kind: 'question', via: 'item' }, { id: 'D-1', kind: 'decision', via: 'item' }] as const]]);
-    const signals = new Map([['I-1', { failing: 2, pending: 1, agents: 1 }]]);
+    const signals = new Map([['I-1', { failing: 2, pending: 1 }]]);
     const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
-    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency', 'blocked', 'test-pending', 'decision', 'agent']);
+    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency', 'blocked', 'test-pending', 'decision']);
     const counted = signalItems(card, NOW).filter((signal) => signal.id !== 'needs-you');
     expect(counted.every((signal) => typeof signal.count === 'number')).toBe(true);
     expect(signalItems(card, NOW).length).toBeGreaterThan(CARD_SIGNAL_MAX);

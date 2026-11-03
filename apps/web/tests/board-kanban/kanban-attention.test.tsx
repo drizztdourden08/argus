@@ -14,27 +14,24 @@ const chipOf = (card: HTMLElement, title: string): HTMLElement => within(card).g
 describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
   it('shows an icon and a count for each kind in precedence order, and the lead kind colours the edge', async () => {
     await mountKanban({
-      items: [item('I-1'), item('I-2'), item('I-3')],
+      items: [item('I-1'), item('I-2')],
       entries: [{ id: 'D-1', kind: 'decision', item: 'I-1', author: 'worker', status: 'pending', createdAt: ago(MIN) }],
       tests: [
         { id: 'T-1', item: 'I-1', mode: 'auto', status: 'fail', title: 'a', ac: [] },
         { id: 'T-2', item: 'I-2', mode: 'auto', status: 'pending', title: 'b', ac: [] },
       ],
-      agents: [{ id: 'A-1', item: 'I-1', status: 'working', name: 'coder' }, { id: 'A-2', item: 'I-3', status: 'working', name: 'coder' }],
     });
     await boardOf();
     const first = cardOf('I-1');
     const failing = chipOf(first, '1 test failing');
     const decision = chipOf(first, 'D-1 is a decision to pick up');
-    const agent = chipOf(first, '1 agent running');
     expect(inOrder(failing, decision)).toBe(true);
-    expect(inOrder(decision, agent)).toBe(true);
+    expect(within(first).queryByTitle('1 agent running')).toBeNull();
     expect(failing.querySelector('svg')).toBeTruthy();
     expect(failing.textContent).toBe('1');
     expect(cardOf('I-1').className).toContain('card--edge-danger');
     expect(chipOf(cardOf('I-2'), '1 test to run')).toBeTruthy();
     expect(cardOf('I-2').className).toContain('card--edge-info');
-    expect(cardOf('I-3').className).toContain('card--edge-success');
   });
 
   it('draws no edge and no strip on a card with nothing to say', async () => {
@@ -63,12 +60,10 @@ describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => 
         { id: 'T-1', item: 'I-1', mode: 'auto', status: 'fail', title: 'a', ac: [] },
         { id: 'T-2', item: 'I-1', mode: 'auto', status: 'pending', title: 'b', ac: [] },
       ],
-      agents: [{ id: 'A-1', item: 'I-1', status: 'working', name: 'coder' }],
     });
     await boardOf();
     const strip = within(cardOf('I-1')).getByRole('group', { name: 'Signals' });
-    expect(within(strip).getByText('+3')).toBeTruthy();
-    expect(within(strip).queryByTitle('1 agent running')).toBeNull();
+    expect(within(strip).getByText('+2')).toBeTruthy();
   });
 
   it('opens the item from a dependency chip', async () => {

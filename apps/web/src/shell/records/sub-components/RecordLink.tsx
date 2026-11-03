@@ -5,9 +5,9 @@ import type { RecordLinkProps } from '../records.type';
 import { RecordAnchor } from './RecordAnchor';
 
 const RecordLink = (props: RecordLinkProps) => {
-  const { id, board, children } = props;
+  const { id, board, tab, children } = props;
   const parsed = parseRecord(id);
-  const target = parsed && { ...parsed, board: parsed.board ?? board ?? null };
+  const target = parsed && { ...parsed, board: parsed.board ?? board ?? null, tab };
   const label = children ?? <Text as="span" variant="caption" tone="muted" mono>{id}</Text>;
   return <RecordAnchor target={target} label={label} title={`Open ${id}`} />;
 };
