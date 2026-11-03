@@ -82,7 +82,7 @@ describe('I-85 the item reference in a board header stall', { tags: ['standard']
     await feed(view.sources, { cards: CARDS, stalls: STALLS });
     const header = await screen.findByRole('banner');
     const link = await within(header).findByRole('link', { name: 'K-12' });
-    expect(link.getAttribute('href')).toBe('/p/argus?open=I-12');
+    expect(link.getAttribute('href')).toBe('/p/argus?open=K-12');
     expect(header.textContent).toContain('stalled: K-12 doing 60 min, no agent');
   });
 });

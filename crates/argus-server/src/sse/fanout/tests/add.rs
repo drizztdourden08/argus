@@ -138,7 +138,7 @@ async fn unsubscribe_stops_one_collection_and_the_last_one_ends_the_client() {
     assert_eq!(ids(&got[0].1), ["second"]);
     assert!(r.fanout.unsubscribe(&h, &[Coll::Meta]));
     r.set(Coll::Meta, "third");
-    assert!(w.frames().await.is_empty());
+    assert_eq!(w.frames().await, Vec::<(String, serde_json::Value)>::new());
     assert!(r.fanout.lock().is_empty());
 }
 
@@ -152,7 +152,7 @@ async fn a_collection_dropped_while_pending_is_never_sent() {
     assert!(!r.fanout.unsubscribe(&h, &[Coll::Items]));
     r.fanout.finish(&h, token, &first);
     r.set(Coll::Items, "I-2");
-    assert!(w.frames().await.is_empty());
+    assert_eq!(w.frames().await, Vec::<(String, serde_json::Value)>::new());
 }
 
 #[tokio::test]

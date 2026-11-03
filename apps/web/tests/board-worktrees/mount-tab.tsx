@@ -66,6 +66,14 @@ const byId = (docs: WorktreeRow[]): Record<string, object> => Object.fromEntries
 
 const rowsById = (docs: object[]): Record<string, object> => Object.fromEntries(docs.map((doc) => [(doc as { id: string }).id, doc]));
 
+const seeds = (board: Board): [string, Record<string, object>][] => [
+  ['worktrees', byId(board.docs ?? [])],
+  ['items', rowsById(board.items ?? [])],
+  ['threads', rowsById(board.threads ?? [])],
+  ['agents', rowsById(board.agents ?? [])],
+  ['meta', board.meta ? { worktrees: board.meta } : {}],
+];
+
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const { view, source, live } = await mountStreamed(
@@ -74,11 +82,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     </MemoryRouter>,
   );
   act(() => {
-    source?.emit('snapshot', snapshot(SCOPE, 'worktrees', byId(board.docs ?? [])));
-    source?.emit('snapshot', snapshot(SCOPE, 'items', rowsById(board.items ?? [])));
-    source?.emit('snapshot', snapshot(SCOPE, 'threads', rowsById(board.threads ?? [])));
-    source?.emit('snapshot', snapshot(SCOPE, 'agents', rowsById(board.agents ?? [])));
-    source?.emit('snapshot', snapshot(SCOPE, 'meta', board.meta ? { worktrees: board.meta } : {}));
+    for (const [coll, docs] of seeds(board)) source?.emit('snapshot', snapshot(SCOPE, coll, docs));
   });
   const change = (coll: string, id: string, data: object) =>
     act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
