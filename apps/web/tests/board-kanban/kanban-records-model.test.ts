@@ -12,8 +12,10 @@ describe('K1 the presets of + Add', { tags: ['critical'] }, () => {
   it('follows the grouping of the column', () => {
     expect(addPreset('status', 'doing', '')).toEqual({ status: 'doing' });
     expect(addPreset('thread', 'idle', 'other')).toEqual({ thread: 'idle' });
-    expect(addPreset('subject', 'ui', 'other')).toEqual({ subject: 'ui', thread: 'other' });
-    expect(addPreset('subject', 'general', '')).toEqual({});
+    expect(addPreset('parent', 'I-5', 'other')).toEqual({ parent: 'I-5', thread: 'other' });
+    expect(addPreset('parent', 'no-parent', '')).toEqual({});
+    expect(addPreset('assignee', 'owner', '')).toEqual({ assignee: 'owner' });
+    expect(addPreset('assignee', 'worker', '')).toEqual({ thread: 'worker' });
     expect(addPreset('status', null, 'other')).toEqual({ thread: 'other' });
   });
 });

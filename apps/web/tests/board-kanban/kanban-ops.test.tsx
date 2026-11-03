@@ -55,6 +55,7 @@ describe('K3 picking several cards', { tags: ['standard'] }, () => {
 
   const pick = async () => {
     const mounted = await mountKanban({ items: two });
+    fireEvent.click(await screen.findByRole('button', { name: 'Select' }));
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select I-1' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select I-2' }));
     return { ...mounted, bar: screen.getByRole('toolbar', { name: 'Selected items' }) };

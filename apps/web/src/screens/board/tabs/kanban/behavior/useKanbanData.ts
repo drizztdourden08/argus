@@ -6,6 +6,7 @@ import type { Build, Test } from '../../../../../data/types';
 import { OP_KINDS, askLinks, needsMap } from '../model';
 import { signalsMap } from '../attention';
 import type { AgentDoc, KanbanData, SoftDoc } from '../kanban.type';
+import { useTrails } from './useTrails';
 
 const isLive = (doc: SoftDoc): boolean => !doc.deletedAt && !doc.archivedAt;
 
@@ -31,6 +32,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     () => signalsMap({ tests: tests.docs, agents: agents.docs, closedBuilds }),
     [tests.docs, agents.docs, closedBuilds],
   );
+  const trails = useTrails(boardKey, items.docs);
   return {
     ready: items.ready && threads.ready,
     items: items.docs,
@@ -43,6 +45,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     needs,
     asks,
     signals,
+    trails,
   };
 };
 

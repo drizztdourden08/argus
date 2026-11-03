@@ -50,10 +50,11 @@ describe('K1 where a drop puts a card', { tags: ['critical'] }, () => {
     expect(planOf(move)).toEqual({ kind: 'none' });
   });
 
-  it('reassigns for a thread column and sets the subject for a subject column', () => {
-    const items = [itemRef('I-1'), itemRef('I-2', { thread: 'other', subject: 'ui' })];
+  it('reassigns for a thread column and does not move a card across assignee or parent columns', () => {
+    const items = [itemRef('I-1'), itemRef('I-2', { thread: 'other' })];
     expect(planOf(across('worker', 'other', 0), 'thread', 'rank', items)).toEqual({ kind: 'thread', to: 'other', place: { before: 'I-2' } });
-    expect(planOf(across('general', 'ui', 0), 'subject', 'rank', items)).toEqual({ kind: 'subject', to: 'ui', place: { before: 'I-2' } });
+    expect(planOf(across('worker', 'other', 0), 'assignee', 'rank', items)).toEqual({ kind: 'group-off' });
+    expect(planOf(across('worker', 'other', 0), 'parent', 'rank', items)).toEqual({ kind: 'group-off' });
   });
 });
 
@@ -113,12 +114,16 @@ describe('K1 what the board refused', { tags: ['critical'] }, () => {
 describe('K1 what the page remembers', { tags: ['critical'] }, () => {
   it('reads the choices of the Node page: filters with the order, the grouping and the done toggle', () => {
     const stored = parseStored({
-      filters: JSON.stringify({ q: 'log', threads: ['worker'], status: 'doing', subject: 'ui', needs: true, conf: true, archived: true, sort: 'updated', builds: ['b-1'] }),
+      filters: JSON.stringify({ q: 'log', threads: ['worker'], status: 'doing', subject: 'ui', types: ['bug'], assignees: ['owner'], needs: true, conf: true, archived: true, sort: 'updated', builds: ['b-1'] }),
       group: 'thread',
       showDone: '1',
     });
-    expect(stored.filters).toEqual({ query: 'log', threads: ['worker'], status: 'doing', subject: 'ui', needs: true, conflict: true, archived: true });
+    expect(stored.filters).toEqual({ query: 'log', threads: ['worker'], status: 'doing', types: ['bug'], assignees: ['owner'], needs: true, conflict: true, archived: true });
     expect(stored.prefs).toEqual({ group: 'thread', order: 'updated', showDone: true });
+  });
+
+  it('falls back to the status grouping for the retired subject grouping', () => {
+    expect(parseStored({ filters: null, group: 'subject', showDone: null }).prefs.group).toBe('status');
   });
 
   it('falls back to the defaults for nothing, for junk and for a grouping it does not know', () => {
