@@ -10,7 +10,7 @@ const CaseFields = (props: CaseFieldsProps) => {
   const values = caseFields(props.test);
   return (
     <>
-      {caseGroups().map((group) => (
+      {caseGroups(values).map((group) => (
         <FieldGroup
           key={group.id}
           group={group}

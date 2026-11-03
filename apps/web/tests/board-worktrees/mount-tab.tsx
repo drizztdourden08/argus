@@ -67,7 +67,7 @@ const rowsById = (docs: object[]): Record<string, object> => Object.fromEntries(
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
-  const { view, source } = await mountStreamed(
+  const { view, source, live } = await mountStreamed(
     <MemoryRouter>
       <WorktreesTab boardKey={SCOPE} />
     </MemoryRouter>,
@@ -79,9 +79,9 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     source?.emit('snapshot', snapshot(SCOPE, 'meta', board.meta ? { worktrees: board.meta } : {}));
   });
   const change = (coll: string, id: string, data: object) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
+    act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   const drop = (coll: string, id: string) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 100, changes: [{ coll, id, op: 'delete' }] }));
+    act(() => live()?.emit('changes', { scope: SCOPE, seq: 100, changes: [{ coll, id, op: 'delete' }] }));
   return { ...view, calls, change, drop };
 };
 

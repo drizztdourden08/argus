@@ -79,7 +79,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'build');
   const streams = stubEventSource();
   const calls = stubFetch(respond);
-  const { view, source } = await mountStreamed(
+  const { view, source, live } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[board.at ?? '/']}>
         <BoardFocus boardKey={SCOPE} />
@@ -95,7 +95,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     source?.emit('snapshot', snapshot(SCOPE, 'meta', { board: { name: 'RotP', handedBuild: board.handed ?? null } }));
   });
   const change = (coll: string, id: string, data: object) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
+    act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   return { ...view, calls, change, streams };
 };
 

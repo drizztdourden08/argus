@@ -16,7 +16,7 @@ interface Feed {
 const SCOPE = 'rotp';
 
 const mountBoard = async (ui: ReactElement, feeds: readonly Feed[]) => {
-  const { view, source } = await mountStreamed(
+  const { view, source, live } = await mountStreamed(
     <>
       <MemoryRouter>{ui}</MemoryRouter>
       <ToastStack />
@@ -25,7 +25,7 @@ const mountBoard = async (ui: ReactElement, feeds: readonly Feed[]) => {
   act(() => {
     for (const feed of feeds) source?.emit('snapshot', snapshot(SCOPE, feed.coll, byId(feed.docs, feed.key)));
   });
-  return { view, source };
+  return { view, source, live };
 };
 
 export type { Feed };

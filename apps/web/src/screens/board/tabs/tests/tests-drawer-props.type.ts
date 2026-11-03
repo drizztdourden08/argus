@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
 import type { WithId } from '../../../../data/react';
-import type { TestItem } from '../../../../data/types';
+import type { TestItem, TestResult } from '../../../../data/types';
 import type { ItemDoc, TestDoc } from './model';
 import type { TestOps, TestsData, TestsScreen } from './tests.type';
 
@@ -32,7 +32,7 @@ interface ProofUploadFormProps {
 }
 
 interface ResultHistoryProps {
-  runs: TestDoc['runs'];
+  runs: TestResult[];
 }
 
 interface ShotPreviewProps {

@@ -36,9 +36,10 @@ describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
     expect(screen.getByRole('heading', { name: /Login/ })).toBeTruthy();
   });
 
-  it('resolves a to-do anchor to the item it belongs to', async () => {
+  it('resolves a to-do anchor to the pane of that to-do', async () => {
     await mountKanban({ items: [item('I-1', { title: 'Login' })], actions: [{ id: 'H-1', item: 'I-1', thread: 'worker', text: 'Do it', status: 'pending' }] }, undefined, '#H-1');
-    expect(await screen.findByRole('heading', { name: /Login/ })).toBeTruthy();
+    const dialog = await screen.findByRole('dialog', { name: 'Record detail' });
+    expect(within(dialog).getByRole('heading', { name: /Do it/ })).toBeTruthy();
   });
 
   it('writes the open item to the address when a card opens and clears it when the pane closes', async () => {

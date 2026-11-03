@@ -17,7 +17,7 @@ interface Board {
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const streams = stubEventSource();
-  const { view, source } = await mountBoard(<BuildsTab boardKey={SCOPE} />, [
+  const { view, live } = await mountBoard(<BuildsTab boardKey={SCOPE} />, [
     { coll: 'launchers', docs: board.launchers ?? [], key: 'name' },
     { coll: 'launches', docs: board.launches ?? [], key: 'name' },
     { coll: 'runs', docs: board.runs ?? [], key: 'id' },
@@ -25,9 +25,9 @@ const mountBuilds = async (board: Board = {}, respond?: Responder) => {
     { coll: 'items', docs: board.items ?? [], key: 'id' },
   ]);
   const change = (coll: string, id: string, data: object) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
+    act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   const remove = (coll: string, id: string) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 100, changes: [{ coll, id, op: 'delete' }] }));
+    act(() => live()?.emit('changes', { scope: SCOPE, seq: 100, changes: [{ coll, id, op: 'delete' }] }));
   return { ...view, calls, change, remove, streams };
 };
 

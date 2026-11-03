@@ -106,7 +106,7 @@ describe('I-72 P6 the fields of a type', { tags: ['standard'] }, () => {
   });
 
   it('lists the fields of a type that has no group under Details', () => {
-    expect(fieldGroups(itemTypeOf('test-case') as never)).toEqual([{ id: 'more', label: 'Details', fields: ['setup', 'steps', 'pass', 'fail', 'mode', 'bundle'] }]);
+    expect(fieldGroups(itemTypeOf('build') as never)).toEqual([{ id: 'more', label: 'Details', fields: ['for', 'master', 'cmd', 'cwd', 'kind', 'branch', 'commit', 'window', 'current', 'bundle', 'useEvery'] }]);
   });
 
   it('turns the text of a field into its value: a list per line, ids split on commas', () => {

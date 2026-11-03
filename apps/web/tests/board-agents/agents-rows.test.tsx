@@ -94,7 +94,8 @@ describe('I-85 Agents tab: a run opens its pane', { tags: ['critical'] }, () => 
   it('opens the run pane on its log tab from the row', async () => {
     mockApi();
     await renderAgents({ runs: { 'R-1': run } });
-    fireEvent.click(screen.getByText('build web'));
+    fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
+    fireEvent.click(await screen.findByText('build web'));
     expect(where()).toBe('?open=R-1&pane=log');
   });
 });

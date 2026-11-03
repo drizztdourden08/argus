@@ -5,16 +5,16 @@ import { watchStored } from './watch-stored';
 import { writeStored } from './write-stored';
 
 const useStored = (key: string): [string, (next: string) => void] => {
-  const [value, setValue] = useState(() => readStored(key) ?? '');
-  useEffect(() => watchStored(() => setValue(readStored(key) ?? '')), [key]);
+  const [held, setHeld] = useState(() => ({ key, value: readStored(key) ?? '' }));
+  useEffect(() => watchStored(() => setHeld({ key, value: readStored(key) ?? '' })), [key]);
   const update = useCallback(
     (next: string) => {
-      setValue(next);
+      setHeld({ key, value: next });
       writeStored(key, next);
     },
     [key],
   );
-  return [value, update];
+  return [held.key === key ? held.value : (readStored(key) ?? ''), update];
 };
 
 export { useStored };

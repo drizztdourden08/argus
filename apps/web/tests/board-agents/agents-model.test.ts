@@ -111,7 +111,7 @@ describe('K1 lists', { tags: ['critical'] }, () => {
     ];
     const options = itemOptions(items, ['I-3']);
     expect(options.map((option) => option.value)).toEqual(['none', 'I-1']);
-    expect(options[1]?.label).toBe(`I-1 ${'a'.repeat(40)}`);
+    expect(options[1]?.label).toBe(`K-1 ${'a'.repeat(40)}`);
   });
 
   it('writes a run span as 1m 05s and 2h 03m', () => {
