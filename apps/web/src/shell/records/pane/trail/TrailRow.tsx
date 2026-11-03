@@ -2,7 +2,7 @@
 import { Divider, Flex, Pressable } from '@drizztdourden08/tessera';
 import { nodeOpens } from '../model/node-opens';
 import { nodeRef } from '../model/node-ref';
-import type { TrailRowProps } from '../pane.type';
+import type { TrailRowProps } from './trail.type';
 import { TrailLabel } from './TrailLabel';
 import { useTrailGo } from './useTrailGo';
 

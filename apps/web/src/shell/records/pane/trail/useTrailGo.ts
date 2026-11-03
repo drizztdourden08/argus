@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useNavigate } from 'react-router';
-import type { NodeOpens } from '../pane.type';
+import type { NodeOpens } from './trail.type';
 
 const useTrailGo = (open: (id: string) => void): ((target: NodeOpens) => void) => {
   const navigate = useNavigate();

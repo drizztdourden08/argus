@@ -9,7 +9,9 @@ import { recordSearch } from './record-search';
 import { stackState } from './stack-state';
 
 const useRecordPane = (): RecordPaneState => {
-  const { search, hash, state } = useLocation();
+  const location = useLocation();
+  const { search, hash } = location;
+  const state: unknown = location.state;
   const navigate = useNavigate();
   const params = new URLSearchParams(search);
   const code = params.get(OPEN_PARAM);

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { ENTRY_LEAVES, LEAF_KINDS } from './pane-model.constants';
-import type { NodeOpens, TrailNode } from '../pane.type';
+import type { NodeOpens, TrailNode } from '../trail/trail.type';
 
 const across = (node: TrailNode): NodeOpens => ({ kind: 'board', href: `/p/${encodeURIComponent(node.project)}#${node.item}` });
 

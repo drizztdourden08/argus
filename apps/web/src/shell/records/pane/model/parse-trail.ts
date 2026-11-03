@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { TrailEdge, TrailNode, TrailTree } from '../pane.type';
+import type { TrailEdge, TrailNode, TrailTree } from '../trail/trail.type';
 import type { Row } from './parse-trail.type';
 
 const isRow = (value: unknown): value is Row => typeof value === 'object' && value !== null && !Array.isArray(value);

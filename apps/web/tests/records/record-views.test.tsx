@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { TesseraProvider } from '@drizztdourden08/tessera';
+import { TesseraProvider, Text } from '@drizztdourden08/tessera';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -17,7 +17,7 @@ afterEach(() => {
 
 const Where = () => {
   const { search } = useLocation();
-  return <output aria-label="where">{search}</output>;
+  return <Text as="output" aria-label="where">{search}</Text>;
 };
 
 const mount = (node: ReactNode) => {
@@ -74,7 +74,7 @@ describe('I-85 P3 the head of a record, for any kind', { tags: ['critical'] }, (
 describe('I-85 P3 the card, the row and the group', { tags: ['critical'] }, () => {
   it('opens a card from its title, and shows its signals and foot', () => {
     const open = vi.fn();
-    mount(<RecordCard head={head('agent', 'A-2', 'worker')} title="coder" openLabel="Open A-2: coder" onOpen={open} signals={<span>needs you</span>} foot={<span>foot line</span>} />);
+    mount(<RecordCard head={head('agent', 'A-2', 'worker')} title="coder" openLabel="Open A-2: coder" onOpen={open} signals={<Text>needs you</Text>} foot={<Text>foot line</Text>} />);
     fireEvent.click(screen.getByRole('button', { name: 'Open A-2: coder' }));
     expect(open).toHaveBeenCalledTimes(1);
     expect(screen.getByText('needs you')).toBeTruthy();
@@ -92,7 +92,7 @@ describe('I-85 P3 the card, the row and the group', { tags: ['critical'] }, () =
   });
 
   it('shows a group with its count, folded or open, and holds its rows', () => {
-    mount(<RecordGroup header={<span>I-1 Login</span>} count={2} label="Questions of I-1" defaultOpen><span>row one</span><span>row two</span></RecordGroup>);
+    mount(<RecordGroup header={<Text>I-1 Login</Text>} count={2} label="Questions of I-1" defaultOpen><Text>row one</Text><Text>row two</Text></RecordGroup>);
     expect(screen.getByText('I-1 Login')).toBeTruthy();
     expect(screen.getByText('row one')).toBeTruthy();
   });

@@ -199,51 +199,6 @@ interface RefTagsProps {
   ids: readonly string[];
 }
 
-interface TrailEdge {
-  kind: string;
-  id: string;
-  state: string | null;
-  since: string | null;
-}
-
-interface TrailNode {
-  project: string;
-  item: string;
-  title: string;
-  type: string | null;
-  lane: string | null;
-  stage: string | null;
-  assignee: string | null;
-  edge: TrailEdge | null;
-  cycle: boolean;
-  children: TrailNode[];
-}
-
-type NodeOpens = { kind: 'item' | 'entry' | 'test'; id: string } | { kind: 'board'; href: string };
-
-interface TrailTree {
-  depth: number;
-  open: number;
-  root: TrailNode;
-}
-
-interface TrailRowProps {
-  node: TrailNode;
-  boardKey: string;
-  now: number;
-  open: (id: string) => void;
-}
-
-interface TrailLabelProps {
-  node: TrailNode;
-  boardKey: string;
-  now: number;
-}
-
-interface TrailSectionProps {
-  data: PaneData;
-}
-
 interface BlockedSectionProps {
   data: PaneData;
 }
@@ -265,7 +220,6 @@ interface CaseRowProps {
 
 export type {
   AddChildProps, BlockedSectionProps, BuildRecordInput, CaseRowProps, CauseRowProps, ChildRowProps, DocFact, EntryFactsProps, FieldBodyProps, FieldGroupModel, FieldGroupProps, FieldProps, FieldSelectProps,
-  NodeOpens, PaneBadge, PaneBodyProps, PaneCrumbsProps, PaneData, PaneDoc, PaneFactsProps, PaneTab, PaneTabsProps, RecordBodyProps, RecordData, RecordFrameProps, RecordLoad, RecordPaneHostProps,
+  PaneBadge, PaneBodyProps, PaneCrumbsProps, PaneData, PaneDoc, PaneFactsProps, PaneTab, PaneTabsProps, RecordBodyProps, RecordData, RecordFrameProps, RecordLoad, RecordPaneHostProps,
   RecordPaneProps, RecordPaneToolsProps, RecordDataProps, RefTagsProps, StageFact, TabPlaceholderProps,
-  TrailEdge, TrailLabelProps, TrailNode, TrailRowProps, TrailSectionProps, TrailTree,
 };

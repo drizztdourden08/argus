@@ -2,7 +2,7 @@
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
 import { edgeText } from '../model/edge-text';
 import { nodeRef } from '../model/node-ref';
-import type { TrailLabelProps } from '../pane.type';
+import type { TrailLabelProps } from './trail.type';
 import { StatusTag } from '../../../../screens/board/tabs/kanban/sub-components/StatusTag';
 
 const TrailLabel = (props: TrailLabelProps) => {
