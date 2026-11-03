@@ -2,10 +2,11 @@
 
 use std::sync::Arc;
 
+use argus_board::ids::shown;
 use indexmap::IndexMap;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::dep_wakes::{DepView, RequestedBy, WaitsOn};
 use crate::lenient::{self, Flag, Num, Text};
@@ -106,6 +107,9 @@ pub struct ItemView {
     pub rec: Record,
     /// The title.
     pub title: Text,
+    /// The type of the item (`task`, `bug`...); absent on an old item.
+    #[serde(rename = "type")]
+    pub kind: Text,
     /// The owning thread.
     pub thread: Text,
     /// `todo`, `doing`, `review`, `done`, `dropped`.
@@ -118,6 +122,14 @@ pub struct ItemView {
     pub requested_by: Vec<RequestedBy>,
     /// What the item is blocked on, in words; absent when nothing blocks it.
     pub blocker: Text,
+}
+
+impl ItemView {
+    /// The id the owner reads: the letters of its type and its number (`B-12`), not the stored `I-12`.
+    #[must_use]
+    pub fn shown_id(&self) -> String {
+        shown(&json!({"id": self.rec.id.as_str(), "type": self.kind.some()}))
+    }
 }
 
 /// A test of a bundle.

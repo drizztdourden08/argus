@@ -50,6 +50,7 @@ describe('I-85 P3 the code table comes from the registry', { tags: ['critical'] 
   it('keeps the board prefix, and refuses what is not a code', () => {
     expect(read('rotp/BL-web')).toMatchObject({ kind: 'build', board: 'rotp' });
     expect(read('rotp/I-105')).toMatchObject({ id: 'I-105', board: 'rotp' });
+    expect(read('argus/K-79')).toMatchObject({ kind: 'task', id: 'I-79', code: 'K-79', board: 'argus' });
     expect(read('Z-1')).toBeNull();
     expect(read('T-5x')).toBeNull();
     expect(read('t-5')).toBeNull();

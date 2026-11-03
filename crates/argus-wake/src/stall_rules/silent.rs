@@ -47,7 +47,7 @@ fn one(
         lead: board.coordinator().unwrap_or_default(),
         subject: id.to_owned(),
         since: last,
-        text: text::silent(project, id, age),
+        text: text::silent(project, &item.shown_id(), age),
     })
 }
 
@@ -85,9 +85,17 @@ mod tests {
                 lead: "lead".to_owned(),
                 subject: "I-12".to_owned(),
                 since: NOW - HOUR,
-                text: "stall: rotp/I-12 doing 60 min, no agent".to_owned(),
+                text: "stall: rotp/K-12 doing 60 min, no agent".to_owned(),
             }]
         );
+    }
+
+    #[test]
+    fn the_text_names_the_item_with_the_letters_of_its_type() {
+        let written = json!({"updatedAt": iso(NOW - HOUR), "type": "bug"});
+        let found = silent_found(&[doing(&written)], &json!({}));
+        assert_eq!(found[0].text, "stall: rotp/B-12 doing 60 min, no agent");
+        assert_eq!(found[0].subject, "I-12");
     }
 
     #[test]

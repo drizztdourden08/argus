@@ -21,7 +21,7 @@ const STALLS: Record<string, StallDoc> = {
   'rotp:idle:T-1:1': stall('rotp:idle:T-1:1'),
   'rotp:unread:W-9:2': stall('rotp:unread:W-9:2', { kind: 'unread', subject: 'W-9', since: minutesAgo(40), text: 'stall: rotp did not read D-11 for 10 min (it is in a turn)' }),
   'argus:silent:I-12:3': stall('argus:silent:I-12:3', {
-    project: 'argus', kind: 'silent', subject: 'I-12', since: minutesAgo(70), text: 'stall: argus/I-12 doing 60 min, no agent', ackedAt: minutesAgo(5), ackedBy: 'portfolio/T-1', ackNote: 'asked the lead',
+    project: 'argus', kind: 'silent', subject: 'I-12', since: minutesAgo(70), text: 'stall: argus/K-12 doing 60 min, no agent', ackedAt: minutesAgo(5), ackedBy: 'portfolio/T-1', ackNote: 'asked the lead',
   }),
 };
 

@@ -7,10 +7,12 @@ import { fieldText } from '../model/field-text';
 import { fieldVerdict } from '../model/field-verdict';
 import { saveField } from '../model/save-field';
 import type { FieldProps } from './fields.type';
+import './LineField.css';
 
 const LineField = (props: FieldProps) => {
   const { name, item, cx } = props;
   const label = fieldLabel(name);
+  const value = fieldText(name, item.fields?.[name]);
   const commit = (text: string) => {
     const verdict = fieldVerdict(name, text, cx);
     if (verdict.ok) saveField(props, verdict.value);
@@ -18,9 +20,10 @@ const LineField = (props: FieldProps) => {
   return (
     <InlineEdit
       label={label}
-      placeholder={label}
+      placeholder={`add ${label.toLowerCase()}`}
+      className={value === '' ? 'line-field--empty' : undefined}
       multiline={fieldOf(name)?.list !== undefined}
-      value={fieldText(name, item.fields?.[name])}
+      value={value}
       validate={(text) => fieldProblem(name, text, cx)}
       onCommit={commit}
     />

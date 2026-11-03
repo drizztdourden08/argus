@@ -81,8 +81,8 @@ describe('I-85 the item reference in a board header stall', { tags: ['standard']
     await waitFor(() => expect(view.sources.length).toBeGreaterThan(0));
     await feed(view.sources, { cards: CARDS, stalls: STALLS });
     const header = await screen.findByRole('banner');
-    const link = await within(header).findByRole('link', { name: 'I-12' });
+    const link = await within(header).findByRole('link', { name: 'K-12' });
     expect(link.getAttribute('href')).toBe('/p/argus?open=I-12');
-    expect(header.textContent).toContain('stalled: I-12 doing 60 min, no agent');
+    expect(header.textContent).toContain('stalled: K-12 doing 60 min, no agent');
   });
 });

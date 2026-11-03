@@ -32,7 +32,7 @@ pub(super) fn idle(project: &str, age_ms: i64, ids: &[String]) -> String {
     )
 }
 
-/// `stall: rotp/I-12 doing 60 min, no agent`
+/// `stall: rotp/K-12 doing 60 min, no agent` (the item as the owner reads its id)
 pub(super) fn silent(project: &str, item: &str, age_ms: i64) -> String {
     format!(
         "stall: {project}/{item} doing {} min, no agent",
@@ -56,8 +56,8 @@ mod tests {
             "stall: D-11 open 31 min, rotp I-112 still todo"
         );
         assert_eq!(
-            silent("rotp", "I-12", 60 * 60_000),
-            "stall: rotp/I-12 doing 60 min, no agent"
+            silent("rotp", "K-12", 60 * 60_000),
+            "stall: rotp/K-12 doing 60 min, no agent"
         );
         assert_eq!(
             idle("rotp", 12 * 60_000, &ids(3)),

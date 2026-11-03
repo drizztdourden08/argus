@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconName, TabBadgeTone } from '@drizztdourden08/tessera';
+import type { TabBadgeTone } from '@drizztdourden08/tessera';
 import type { ComponentType, ReactNode } from 'react';
 import type { ItemRef, MoveTarget } from '../../../data/kanban';
 import type { WithId } from '../../../data/react';
@@ -109,7 +109,6 @@ interface RecordBodyProps {
 
 interface PaneTab {
   label: string;
-  icon: IconName;
   Body: ComponentType<RecordBodyProps>;
   badge?: (data: RecordData) => PaneBadge | undefined;
 }
