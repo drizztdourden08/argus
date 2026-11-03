@@ -34,7 +34,7 @@ pub type Handler = fn(&mut Call<'_>) -> Outcome;
 pub type Entry = (&'static str, Handler);
 
 /// Every verb and alias, with the module that serves it.
-const VERBS: [(&str, &str); 39] = [
+const VERBS: [(&str, &str); 40] = [
     ("hook", "hook"),
     ("dashboard", "dashboard"),
     ("thread", "thread"),
@@ -47,6 +47,7 @@ const VERBS: [(&str, &str); 39] = [
     ("decide", "entry"),
     ("notify", "entry"),
     ("message", "entry"),
+    ("note", "entry"),
     ("answer", "entry"),
     ("entry", "entry"),
     ("lock", "lock"),

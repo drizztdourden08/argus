@@ -1,4 +1,4 @@
-//! `coord action set <H> [--text] [--item]`, `done <H> [--undo]` and
+//! `coord action set <H> [--text] [--item] [--who]`, `done <H> [--undo]` (the assignee may) and
 //! `move <H> [--to T] [--before|--after <H>|--top|--bottom]`.
 
 use argus_board::json::{display, doc_mut, set as put};
@@ -8,9 +8,10 @@ use argus_board::store::stamp;
 use argus_core::clock::now_iso;
 use serde_json::{Map, Value, json};
 
+use super::{assignee_of, live_record};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{
-    apply, assert_live, checked, find_doc, find_live, move_doc, move_target, op, rev_of, who_of,
+    apply, find_doc, find_live, move_doc, move_target, op, rev_of, who_of,
 };
 use crate::verbs::work::place::has_placement;
 use crate::verbs::work::run::{Run, bad};
@@ -24,6 +25,9 @@ pub(super) fn set(r: &mut Run<'_>) -> Outcome {
     if let Some(item) = r.text_opt("item") {
         fields.insert("item".into(), json!(item));
     }
+    if let Some(who) = r.text_opt("who") {
+        fields.insert("assignee".into(), json!(who));
+    }
     if fields.is_empty() {
         return Err(bad("nothing to change: pass --text or --item.").into());
     }
@@ -36,7 +40,7 @@ pub(super) fn set(r: &mut Run<'_>) -> Outcome {
             .and_then(Value::as_str)
             .filter(|i| !i.is_empty())
         {
-            assert_live(&find_doc(board, "items", Some(item))?, "items")?;
+            live_record(board, item)?;
         }
         authorize(&who_of(&who), &Check::new("set", "actions", Some(&action)))?;
         let names: Vec<&str> = fields.keys().map(String::as_str).collect();
@@ -57,7 +61,10 @@ pub(super) fn done(r: &mut Run<'_>) -> Outcome {
     let undo = r.options.flag("undo");
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let action = checked(board, &who, ("actions", "done"), r.arg(0))?;
+        let action = find_live(board, "actions", r.arg(0))?;
+        if assignee_of(&action) != who.thread {
+            authorize(&who_of(&who), &Check::new("done", "actions", Some(&action)))?;
+        }
         let id = display(&action["id"]);
         if let Some(found) = doc_mut(board, "actions", &id) {
             let done_at = if undo || !found["doneAt"].is_null() {

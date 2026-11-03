@@ -8,6 +8,7 @@
 mod add;
 mod edit;
 mod parts;
+mod plan;
 mod proof;
 mod read;
 mod result;
@@ -26,6 +27,7 @@ const GROUP: Group = Group {
         ("expect", parts::expect),
         ("proof", proof::proof),
         ("result", result::result),
+        ("plan", plan::plan),
         ("move", result::move_to),
         ("show", read::show),
         ("list", read::list),
@@ -34,7 +36,7 @@ const GROUP: Group = Group {
         coll: "tests",
         after: nothing,
     }),
-    names: "add, set, step, setup, expect, proof, result, move, archive, unarchive, rm, restore, show, list",
+    names: "add, set, step, setup, expect, proof, result, move, plan, archive, unarchive, rm, restore, show, list",
     typed: None,
 };
 

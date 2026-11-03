@@ -31,14 +31,14 @@ Thread side (every thread; read everything, change only what is yours):
   coord worktree remove <id|path> [--branch] [--discard --owner-entry <E-id>] [--reason "..."] | prune [<id|path>]    (Argus removes it behind its guards: merged and clean needs nothing, discarding work needs the owner's entry naming it; a backup bundle is written first)
   coord worktree leftovers [--json] | remove --all-leftovers [--older-than 3d] [--reason "..."]    (folders git no longer lists, only files left: listed with size and age; deleted in the background by Argus when nothing touched them for 3 days; no backup is possible; remove <id|path> works on one, without --branch/--discard)
   coord worktree request <id|path>... | --finished [--idle 6h] | --all-leftovers [--older-than 3d] [--branch] [--reason "..."]  |  requests [--json]    (ASKS Argus to remove, for a session whose own safety check refuses remove: deletes nothing itself; Argus removes behind the same guards, one at a time, and one note comes to your inbox; --finished = merged, or stale and clean; --idle D adds clean worktrees with nothing ahead untouched for D, 1h to 30d, 6h by default)
-  coord test result <T> <pass|fail|partial|blocked> "<note>" [--proof <img>]    move <T> --item <I2> | archive|unarchive|rm|restore <T>
+  coord test result <T> <pass|fail|partial|blocked> "<note>" [--proof <img>] [--run <plan I>]    move <T> --item <I2> | archive|unarchive|rm|restore <T>    coord test add <I> "<title>" ... [--plan <plan I>]    (test plans: coord test plan add "<title>" [--parent I] [--bundle <tag>] [--case T]... | cases <plan I> --add T [--before T] | --remove T | start <plan I> [--bundle <tag>] | end <plan I> | show <plan I>; record each case of a run with coord test result <T> <status> "<note>" --run <plan I>, skip is a status too, the result is also written to the test)
   coord ask <I> "<question>" --context "<c>" [--option "<recommended>" --option "<other>"]... [--decide] [--image [N=]<file> "<caption>"]...    coord decide <I> "<decision>" --context "<c>" [--image <file> "<caption>"]...   (context and, for a decision, 2 to 5 options are required; --image is png/jpg/jpeg/gif/webp, 1 B to 10 MiB, one caption of 1 to 120 chars per image after the text in flag order, N= ties it to option N on ask only)
-  coord notify "<text>" [--item I] [--level info|warn|bad] [--context "<c>"]    coord message "<text for the owner>" [--item I] [--context "<c>"]
+  coord notify "<text>" [--item I] [--level info|warn|bad] [--context "<c>"]    coord message "<text for the owner>" [--item I] [--context "<c>"]    coord note <I|T> "<text>"   (an informal remark on an item or a test, up to 300 chars, never blocks it; ask and decide also take a T-n)
   coord entry list [--open] [--kind k] [--mine] [--archived] | show <E> | pick <E> | done <E>
   coord entry set <E> ["<text>"] [--option "..."]... [--context "<c>"] | move <E> --item <I> | archive|unarchive|rm|restore <E>
   coord lock claim <resource> [--desc "..."] | release <resource> | drop <resource> | list
-  coord action (alias todo) add "<manual step for the human>" [--item <I>] [--before|--after <H>] | done <H> [--undo] | show <H> | list
-  coord action set <H> [--text "..."] [--item <I>] | move <H> [--before|--after <H>] | archive|unarchive|rm|restore <H>
+  coord action (alias todo) add "<manual step for the human>" [--item <I|T>] [--who owner|<thread>|lead:<key>] [--before|--after <H>] | done <H> [--undo] | show <H> | list [--who <w>]
+  coord action set <H> [--text "..."] [--item <I|T>] [--who <w>] | move <H> [--before|--after <H>] | archive|unarchive|rm|restore <H>
   coord log "<what just happened>" [--subject <s>] [--item <I>]   coord log list [--subject <s>] | rm <subject> <seq>
   coord inbox [--ack] | rm <m-id>
 
