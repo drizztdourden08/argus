@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, Text } from '@drizztdourden08/tessera';
 import { Age } from '../../Age';
+import { ShownCode } from '../sub-components/ShownCode';
 import type { EntryFactsProps } from './pane.type';
 
 const EntryFacts = (props: EntryFactsProps) => {
@@ -19,7 +20,7 @@ const EntryFacts = (props: EntryFactsProps) => {
           <Text as="span" variant="caption">{fact.value}</Text>
         </Flex>
       ))}
-      {entry.item && <Button size="xs" variant="ghost" onClick={() => onOpenItem(String(entry.item))}>{`Open ${entry.item}`}</Button>}
+      {entry.item && <Button size="xs" variant="ghost" onClick={() => onOpenItem(String(entry.item))}>Open <ShownCode id={String(entry.item)} /></Button>}
     </Flex>
   );
 };

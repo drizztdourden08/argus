@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
-import { recordMenuGroups } from '../../../../../shell';
+import { itemCode, recordMenuGroups } from '../../../../../shell';
 import { copyText } from '../../../shared';
 import type { ItemDoc } from '../model';
 import { CASE_KIND } from '../tests.constants';
@@ -10,7 +10,7 @@ const MOVE_LABEL_CHARS = 40;
 
 const moveTarget = (item: ItemDoc, current: string | null, move: (itemId: string) => void): MenuItem => ({
   id: `item-${item.id}`,
-  label: `${item.id} ${item.title.slice(0, MOVE_LABEL_CHARS)}`,
+  label: `${itemCode(item)} ${item.title.slice(0, MOVE_LABEL_CHARS)}`,
   kind: 'radio',
   checked: item.id === current,
   onSelect: () => {

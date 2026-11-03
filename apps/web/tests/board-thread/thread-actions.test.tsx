@@ -136,7 +136,7 @@ describe('S1 the focus kept by the drawer', { tags: ['standard'] }, () => {
     fireEvent.click(tool(dialog, 'Focus'));
     fireEvent.click(within(dialog).getAllByRole('button', { name: /Close/ })[0] as HTMLElement);
     fireEvent.click(await screen.findByRole('tab', { name: /^Kanban/ }));
-    expect(await screen.findByRole('button', { name: /^Open I-1:/ })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Open I-2:/ })).toBeNull();
+    expect(await screen.findByRole('button', { name: /^Open K-1:/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Open K-2:/ })).toBeNull();
   });
 });

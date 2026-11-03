@@ -87,7 +87,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     const dialog = inTab(await openItem('I-1'), 'Children');
     expect(tabOf(dialog, 'Children').textContent).toMatch(/1/);
     expect(within(dialog).getByText('Children · 2')).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Open I-2: Item I-2' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open S-2: Item I-2' }));
     await waitFor(() => expect(paneOf().open).toBe('I-2'));
   });
 
@@ -103,7 +103,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
   it('shows the parents of an item as crumbs that open them', async () => {
     await mountKanban({ items: [epic, story] });
     const dialog = await openItem('I-2');
-    fireEvent.click(within(within(dialog).getByRole('navigation', { name: 'Parents' })).getByRole('button', { name: 'Open I-1: Release' }));
+    fireEvent.click(within(within(dialog).getByRole('navigation', { name: 'Parents' })).getByRole('button', { name: 'Open E-1: Release' }));
     await waitFor(() => expect(paneOf().open).toBe('I-1'));
   });
 });

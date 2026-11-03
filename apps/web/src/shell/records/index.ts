@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { assigneeOfRecord } from './behavior/assignee-of-record';
+export { itemCode } from './behavior/item-code';
 export { shownCode } from './behavior/shown-code';
 export { assigneeLook } from './behavior/assignee-look';
 export { categoryColor } from './behavior/category-color';
@@ -22,5 +23,6 @@ export { RecordHead } from './sub-components/RecordHead';
 export { RecordLink } from './sub-components/RecordLink';
 export { RecordPaneScope } from './sub-components/RecordPaneScope';
 export { RecordRow } from './sub-components/RecordRow';
+export { ShownCode } from './sub-components/ShownCode';
 export { TypeIcon } from './sub-components/TypeIcon';
 export type * from './records.type';

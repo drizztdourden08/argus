@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Disclosure, Flex } from '@drizztdourden08/tessera';
-import { RecordGroup } from '../../../../shell';
+import { itemCode, RecordGroup } from '../../../../shell';
 import { CLOSED_TITLE } from '../item-groups.constants';
 import type { ClosedGroupsProps } from '../item-groups.type';
 import { ItemGroupHeader } from './ItemGroupHeader';
@@ -18,7 +18,7 @@ const ClosedGroups = <T,>(props: ClosedGroupsProps<T>) => {
                 header={<ItemGroupHeader item={group.item} boardKey={boardKey} threads={threads} />}
                 count={group.rows.length}
                 defaultOpen={false}
-                label={`${label} of ${group.item.id}`}
+                label={`${label} of ${itemCode(group.item)}`}
               >
                 {children(group.rows)}
               </RecordGroup>

@@ -2,6 +2,7 @@
 import type { ItemRef } from '../../../../data/kanban';
 import type { Option } from '../../../../screens/board/shared';
 import { NO_PARENT, NO_PARENT_TITLE, typeOf } from '../../../../screens/board/tabs/kanban/model';
+import { itemCode } from '../../behavior/item-code';
 import { paneType } from './pane-type';
 
 const below = (items: readonly ItemRef[], id: string): Set<string> => {
@@ -20,7 +21,7 @@ const parentChoices = (item: ItemRef, items: readonly ItemRef[]): Option[] => {
   if (!type || type.parents.length === 0) return [];
   const excluded = below(items, item.id);
   const fits = items.filter((other) => !excluded.has(other.id) && !other.deletedAt && type.parents.includes(typeOf(other)));
-  return [{ value: NO_PARENT, label: NO_PARENT_TITLE }, ...fits.map((other) => ({ value: other.id, label: `${other.id} ${other.title}` }))];
+  return [{ value: NO_PARENT, label: NO_PARENT_TITLE }, ...fits.map((other) => ({ value: other.id, label: `${itemCode(other)} ${other.title}` }))];
 };
 
 export { parentChoices };

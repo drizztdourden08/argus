@@ -61,8 +61,8 @@ describe('S1 the open work in the thread drawer', { tags: ['standard'] }, () => 
     });
     const dialog = within(await openChip('worker'));
     const work = within(dialog.getByRole('group', { name: 'Open work' }));
-    expect(work.getAllByRole('button').map((button) => button.getAttribute('aria-label'))).toEqual(['Open I-1', 'Open I-5']);
-    fireEvent.click(work.getByRole('button', { name: 'Open I-5' }));
+    expect(work.getAllByRole('button').map((button) => button.getAttribute('aria-label'))).toEqual(['Open K-1', 'Open K-5']);
+    fireEvent.click(work.getByRole('button', { name: 'Open K-5' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Thread detail' })).toBeNull());
     expect(await screen.findByRole('tab', { name: /^Kanban/ })).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('tab', { name: /^Kanban/ }).getAttribute('aria-selected')).toBe('true'));

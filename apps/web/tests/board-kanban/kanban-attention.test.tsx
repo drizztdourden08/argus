@@ -85,7 +85,7 @@ describe('I-72 the head and the foot of a card', { tags: ['standard'] }, () => {
     const card = within(cardOf('I-1'));
     expect(card.getByRole('img', { name: 'Bug' })).toBeTruthy();
     expect(card.getByRole('img', { name: 'Assigned to you' })).toBeTruthy();
-    expect(card.getByText('I-1')).toBeTruthy();
+    expect(card.getByText('B-1')).toBeTruthy();
     expect(card.getByText('S2')).toBeTruthy();
     expect(card.getByText('Fixing')).toBeTruthy();
     expect(card.queryByText('billing')).toBeNull();

@@ -3,6 +3,7 @@ import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
 import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../../data/kanban';
+import { itemCode } from '../../../../../shell';
 import { applyDrop } from '../behavior/apply-drop';
 import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
@@ -53,7 +54,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       foldable={false}
       stack
       columns={columns}
-      cardLabel={(card) => `${card.id} ${card.item.title}`}
+      cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
       renderCard={(card) => (

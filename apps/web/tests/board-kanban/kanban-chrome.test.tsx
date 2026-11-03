@@ -26,8 +26,8 @@ describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
     const writeText = vi.fn(() => Promise.resolve());
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     const { dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Copy a link to I-1' }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^https?:\/\/[^#?]*\?open=I-1$/)));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Copy a link to K-1' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^https?:\/\/[^#?]*\?open=K-1$/)));
   });
 
   it('opens the drawer of the item named in the address', async () => {

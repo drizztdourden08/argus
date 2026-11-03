@@ -18,10 +18,10 @@ describe('I-85 P7 Agents tab: rows grouped by item', { tags: ['critical'] }, () 
       agents: { 'A-1': agent({ items: ['I-1'] }), 'A-2': agent({ items: ['I-2'] }), 'A-3': agent({ items: ['I-1'] }) },
       items: { 'I-1': item({ title: 'first job', rank: 2 }), 'I-2': item({ title: 'second job', rank: 1 }) },
     });
-    expect(rowOf(container, 'I-1').textContent).toContain('first job');
-    expect(rowOf(container, 'I-2').textContent).toContain('second job');
-    const heads = [...container.querySelectorAll<HTMLElement>('[data-record^="I-"]')].map((row) => row.dataset.record);
-    expect(heads).toEqual(['I-2', 'I-1']);
+    expect(rowOf(container, 'K-1').textContent).toContain('first job');
+    expect(rowOf(container, 'K-2').textContent).toContain('second job');
+    const heads = [...container.querySelectorAll<HTMLElement>('[data-record^="K-"]')].map((row) => row.dataset.record);
+    expect(heads).toEqual(['K-2', 'K-1']);
     expect(agentRows(container)).toEqual(['A-2', 'A-1', 'A-3']);
   });
 
@@ -110,7 +110,7 @@ describe('I-85 P7 Agents tab: the pane', { tags: ['critical'] }, () => {
   it('opens the item pane from the item header', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-2': agent({ items: ['I-1'] }) }, items: { 'I-1': item() } });
-    fireEvent.click(within(rowOf(container, 'I-1')).getByText('ship it'));
+    fireEvent.click(within(rowOf(container, 'K-1')).getByText('ship it'));
     expect(where()).toBe('?open=I-1');
   });
 });

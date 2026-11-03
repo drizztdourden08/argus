@@ -2,7 +2,7 @@
 import { Card, Stack, Text } from '@drizztdourden08/tessera';
 import { useMemo } from 'react';
 import { usePortfolio } from '../../../../data/react';
-import { groupRecords, RecordGroup } from '../../../../shell';
+import { groupRecords, itemCode, RecordGroup } from '../../../../shell';
 import { OverviewRow, OWNER_ASSIGNEE } from '../../records';
 import { ownerRows } from '../model';
 import { ASSIGNED_TITLE } from '../notifications.constants';
@@ -26,7 +26,7 @@ const AssignedList = () => {
             {group.rows.map((row) => (
               <OverviewRow
                 key={`${row.project}:${row.id}`}
-                target={{ kind: row.type, code: row.id, project: row.project, open: row.id }}
+                target={{ kind: row.type, code: itemCode(row), project: row.project, open: row.id }}
                 assignee={OWNER_ASSIGNEE}
                 title={row.title}
                 chips={[{ id: 'stage', text: row.stage }]}

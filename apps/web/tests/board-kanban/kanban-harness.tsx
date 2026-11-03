@@ -164,12 +164,14 @@ const columnOf = (name: string): HTMLElement => screen.getByRole('group', { name
 
 const boardOf = async (): Promise<HTMLElement> => screen.findByRole('group', { name: 'Work items' });
 
+const numberOf = (id: string): string => id.replace(/^I-/, '');
+
 const openItem = async (id: string): Promise<HTMLElement> => {
-  fireEvent.click(await screen.findByRole('button', { name: new RegExp(`^Open ${id}:`) }));
+  fireEvent.click(await screen.findByRole('button', { name: new RegExp(`^Open [A-Z]{1,2}-${numberOf(id)}:`) }));
   return screen.getByRole('dialog', { name: 'Work item' });
 };
 
-const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: `Move ${id} ${title}` });
+const gripOf = (id: string, title = `Item ${id}`): HTMLElement => screen.getByRole('button', { name: new RegExp(`^Move [A-Z]{1,2}-${numberOf(id)} ${title}$`) });
 
 const cardOf = (id: string): HTMLElement => {
   const card = document.querySelector(`[data-item="${id}"]`)?.closest('.kanban__card');

@@ -32,7 +32,7 @@ const expectDetail = (pane: HTMLElement) => {
   expect(inside.getByRole('button', { name: /^Ship now/ })).toBeTruthy();
   expect(inside.getByText('open')).toBeTruthy();
   expect(within(inside.getByRole('group', { name: 'Reply F-1' })).getByText('An earlier note')).toBeTruthy();
-  expect(inside.getByRole('button', { name: 'Open I-1' })).toBeTruthy();
+  expect(inside.getByRole('button', { name: 'Open K-1' })).toBeTruthy();
 };
 
 describe('I-68 the entry pane', { tags: ['standard'] }, () => {

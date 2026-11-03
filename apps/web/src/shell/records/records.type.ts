@@ -36,6 +36,13 @@ interface RecordLinkProps {
   children?: ReactNode;
 }
 
+type ItemLookup = (stored: string) => { type?: string } | undefined;
+
+interface ShownCodeProps {
+  id: string;
+  board?: string;
+}
+
 interface DepRecordLinkProps {
   id: string;
 }
@@ -80,7 +87,6 @@ interface RecordHeadProps {
   selection?: HeadSelection;
 }
 
-/** How a type mark is coloured: the type's category colour, or else its status tone. */
 interface KindMark {
   color?: TagCategoryColor;
   tone?: TypeMarkTone;
@@ -130,6 +136,7 @@ interface RowChip {
   text: string;
   title?: string;
   link?: string;
+  code?: boolean;
 }
 
 interface RowChipsProps {
@@ -230,7 +237,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LinkedTitleProps,
   OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
-  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, TextPart, TypeIconProps,
+  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, RowChip, RowChipsProps, RowChipTagProps, ShownCodeProps, TextPart, TypeIconProps,
 };

@@ -2,6 +2,7 @@
 import type { SelectOption } from '@drizztdourden08/tessera';
 import type { Item } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
+import { itemCode } from '../../../../shell';
 import { CLOSED_STATUSES } from '../../tabs/kanban/model';
 import { ITEM_LABEL_CHARS, NO_CHOICE } from '../owner-links.constants';
 import { DEFAULT_TYPE } from './open-item-options.constants';
@@ -13,7 +14,7 @@ const canServe = (item: WithId<Item>, serves: readonly string[] | undefined): bo
 const openItemOptions = (items: readonly WithId<Item>[], serves: readonly string[] | undefined, placeholder: string): SelectOption[] => {
   const options = items
     .filter((item) => isOpen(item) && canServe(item, serves))
-    .map((item) => ({ value: item.id, label: `${item.id} ${String(item.title).slice(0, ITEM_LABEL_CHARS)}` }));
+    .map((item) => ({ value: item.id, label: `${itemCode(item)} ${String(item.title).slice(0, ITEM_LABEL_CHARS)}` }));
   return [{ value: NO_CHOICE, label: placeholder }, ...options];
 };
 

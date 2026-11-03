@@ -7,7 +7,7 @@ const pickItem = async (box: HTMLElement, hidden: readonly RegExp[]): Promise<HT
   expect(link.disabled).toBe(true);
   fireEvent.click(within(box).getByRole('combobox', { name: 'Item' }));
   hidden.forEach((name) => expect(screen.queryByRole('option', { name })).toBeNull());
-  fireEvent.click(await screen.findByRole('option', { name: /^I-3/ }));
+  fireEvent.click(await screen.findByRole('option', { name: /^K-3/ }));
   return link;
 };
 

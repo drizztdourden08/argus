@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { RecordLink, RecordRow, recordMenuGroups } from '../../../../../shell';
+import { itemCode, RecordLink, RecordRow, recordMenuGroups } from '../../../../../shell';
 import { assigneeOf, typeOf } from '../../kanban/model';
 import type { ItemHeaderProps } from '../row-props.type';
 
@@ -8,16 +8,17 @@ const ItemHeader = (props: ItemHeaderProps) => {
   const item = items.find((candidate) => candidate.id === itemId);
   if (!item) return <RecordLink id={itemId} board={boardKey} />;
   const kind = typeOf(item);
+  const code = itemCode(item);
   return (
     <RecordRow
       head={{
         kind,
-        code: item.id,
+        code,
         assignee: assigneeOf(item),
         boardKey,
         threads,
-        menu: recordMenuGroups(kind, item.id, { open: () => onOpen(item.id) }),
-        menuLabel: `More actions for ${item.id}`,
+        menu: recordMenuGroups(kind, code, { open: () => onOpen(item.id) }),
+        menuLabel: `More actions for ${code}`,
       }}
       title={item.title}
       onOpen={() => onOpen(item.id)}

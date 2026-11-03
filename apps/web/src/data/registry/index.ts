@@ -9,7 +9,7 @@ export { CODE_TABLE, REGISTRY_KINDS } from './kinds.constants';
 export { knowsLead } from './knows-lead';
 export { laneOf } from './lane-of';
 export { limitOf } from './limit-of';
-export { ITEM_REGISTRY } from './registry.constants';
+export { ITEM_REGISTRY, ITEM_STORED } from './registry.constants';
 export { typeHasField } from './type-has-field';
 export type * from './kind.type';
 export type * from './registry.type';

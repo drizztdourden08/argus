@@ -35,7 +35,7 @@ describe('I-85 Link a build to an item from the card menu', { tags: ['standard']
   it('offers the open items a build may serve and posts launcher-link with the chosen one', async () => {
     const { calls } = await mountBuilds(board());
     const box = await choose('web', /^Link to an item/);
-    const link = await pickItem(box, [/^I-9/, /^Q-1/]);
+    const link = await pickItem(box, [/^K-9/, /^Q-1/]);
     fireEvent.click(link);
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ url: '/api/p/rotp/entries', method: 'POST' });

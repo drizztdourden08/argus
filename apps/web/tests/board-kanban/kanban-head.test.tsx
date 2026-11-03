@@ -20,8 +20,8 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
     expect(HEAD_SIZE_PX).toBe(16);
     expect(head.getByRole('img', { name: 'Assigned to you' })).toBeTruthy();
     expect(headOf('I-1').querySelector('[data-type-mark] svg')?.getAttribute('width')).toBe(String(HEAD_SIZE_PX));
-    expect(head.getByText('I-1')).toBeTruthy();
-    expect(head.getByRole('button', { name: 'More actions for I-1' })).toBeTruthy();
+    expect(head.getByText('K-1')).toBeTruthy();
+    expect(head.getByRole('button', { name: 'More actions for K-1' })).toBeTruthy();
   });
 
   it('draws the type as an outline in its colour, with no tile behind it', async () => {

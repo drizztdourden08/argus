@@ -3,8 +3,8 @@ export { useHashTab } from './behavior/useHashTab';
 export { BoardMarkdown, BoardMarkdownEditor } from './markdown';
 export { DepTag } from './DepTag';
 export {
-  assigneeLook, assigneeOfRecord, AssigneeMark, categoryColor, DepRecordLink, groupRecords, LinkedText, parseRecord, planProgress, RECORD_ACTIONS, RecordCard, RecordGroup,
-  RecordHead, RecordLink, recordMenuGroups, RecordPaneScope, RecordRow, shownCode, splitRecords, TypeIcon, useRecordOrder, useRecordPane, useRunOps,
+  assigneeLook, assigneeOfRecord, AssigneeMark, categoryColor, DepRecordLink, groupRecords, itemCode, LinkedText, parseRecord, planProgress, RECORD_ACTIONS, RecordCard, RecordGroup,
+  RecordHead, RecordLink, recordMenuGroups, RecordPaneScope, RecordRow, ShownCode, shownCode, splitRecords, TypeIcon, useRecordOrder, useRecordPane, useRunOps,
 } from './records';
 export type { ActionHandlers, RecordGroups, RecordHeadProps, RowChip } from './records';
 export { LoadingFallback } from './LoadingFallback';

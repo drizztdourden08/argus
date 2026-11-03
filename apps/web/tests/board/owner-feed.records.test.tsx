@@ -37,7 +37,7 @@ describe('I-85 P4 every card says what it is', { tags: ['standard'] }, () => {
     const card = cardOf('Q-1');
     const chip = card.querySelector('[data-item-chip="I-4"]');
     expect(chip?.querySelector('[data-type-mark="bug"]')).not.toBeNull();
-    expect(within(chip as HTMLElement).getByText('I-4 Private repo')).toBeTruthy();
+    expect(within(chip as HTMLElement).getByText('B-4 Private repo')).toBeTruthy();
     expect(before(within(card).getByRole('button', { name: /^Open Q-1/ }), chip as HTMLElement)).toBe(true);
     expect(within(card).queryByText('decision needed')).toBeNull();
   });

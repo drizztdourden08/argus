@@ -24,7 +24,7 @@ describe('I-85 the column header of a parent group', { tags: ['standard'] }, () 
     fireEvent.click(screen.getByRole('radio', { name: 'Parent' }));
     const head = within(columnOf('I-1 Rework, 1 card')).getByRole('heading');
     expect(head.querySelector('[data-type-mark="epic"]')).not.toBeNull();
-    expect(within(head).getByRole('link', { name: 'I-1' })).toBeTruthy();
+    expect(within(head).getByRole('link', { name: 'E-1' })).toBeTruthy();
     expect(within(head).getByText('Rework')).toBeTruthy();
     const none = within(columnOf('No parent, 1 card')).getByRole('heading');
     expect(none.querySelector('[data-type-mark]')).toBeNull();
@@ -37,11 +37,11 @@ describe('S1 selecting a range of cards', { tags: ['standard'] }, () => {
     await mountKanban({ items: [item('I-1', { rank: 1 }), item('I-2', { rank: 2 }), item('I-3', { rank: 3 }), item('I-4', { rank: 4 })] });
     await screen.findByText('Item I-1');
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select I-1' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select I-3' }), { shiftKey: true });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-1' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-3' }), { shiftKey: true });
     expect(screen.getByText('3 selected')).toBeTruthy();
-    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select I-2' }).checked).toBe(true);
-    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select I-4' }).checked).toBe(false);
+    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select K-2' }).checked).toBe(true);
+    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select K-4' }).checked).toBe(false);
   });
 });
 
@@ -49,10 +49,10 @@ describe('I-72 the selection mode of the cards', { tags: ['standard'] }, () => {
   it('shows a type mark and no checkbox until the Select toggle is on', async () => {
     await mountKanban({ items: [item('I-1')] });
     await screen.findByText('Item I-1');
-    expect(screen.queryByRole('checkbox', { name: 'Select I-1' })).toBeNull();
+    expect(screen.queryByRole('checkbox', { name: 'Select K-1' })).toBeNull();
     expect(within(cardOf('I-1')).getByRole('img', { name: 'Task' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
-    expect(screen.getByRole('checkbox', { name: 'Select I-1' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Select K-1' })).toBeTruthy();
     expect(within(cardOf('I-1')).queryByRole('img', { name: 'Task' })).toBeNull();
   });
 
@@ -61,7 +61,7 @@ describe('I-72 the selection mode of the cards', { tags: ['standard'] }, () => {
     await screen.findByText('Item I-1');
     fireEvent.click(document.querySelector('[data-item="I-1"]') as HTMLElement, { shiftKey: true });
     expect(screen.getByText('1 selected')).toBeTruthy();
-    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select I-1' }).checked).toBe(true);
+    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'Select K-1' }).checked).toBe(true);
   });
 });
 

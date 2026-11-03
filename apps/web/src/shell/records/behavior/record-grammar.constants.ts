@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind constants */
-const ITEM_LETTER = 'I';
+import { ITEM_STORED } from '../../../data/registry';
+
+const ITEM_LETTER = ITEM_STORED;
 
 const ITEM_FALLBACK_KIND = 'task';
 

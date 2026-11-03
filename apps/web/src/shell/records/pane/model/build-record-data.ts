@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { entryOf } from '../../../../screens/board/tabs/kanban/record';
+import { resolveCode } from '../../behavior/resolve-code';
 import { shownCode } from '../../behavior/shown-code';
 import type { BuildRecordInput, RecordData } from '../pane.type';
 import { docOf } from './doc-of';
@@ -12,6 +13,7 @@ const buildRecordData = (input: BuildRecordInput): RecordData | null => {
   const kind = kindFor(target, doc);
   const item = target.collection === 'items' ? kanban.items.find((candidate) => candidate.id === target.id && !candidate.deletedAt) : undefined;
   if (!kind || !doc || (target.collection === 'items' && !item)) return null;
+  if (resolveCode(target.code, (stored) => kanban.items.find((candidate) => candidate.id === stored)) === null) return null;
   return {
     ...shared,
     kind,

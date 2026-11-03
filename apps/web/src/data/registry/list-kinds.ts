@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { RegistryKind } from './kind.type';
+import { ITEM_STORED } from './registry.constants';
 import type { ItemRegistry, ItemType, RecordType, SubItemType } from './registry.type';
 
 const fromType = (type: ItemType): RegistryKind => ({
@@ -8,6 +9,7 @@ const fromType = (type: ItemType): RegistryKind => ({
   label: type.label,
   code: type.code,
   aliases: [],
+  stored: type.collection === 'items' ? ITEM_STORED : undefined,
   icon: type.icon,
   look: { color: type.color },
   collection: type.collection,

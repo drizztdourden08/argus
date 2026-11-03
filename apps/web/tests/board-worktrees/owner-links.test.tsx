@@ -23,7 +23,7 @@ describe('I-85 Link a worktree to an item from the row menu', { tags: ['standard
     const { calls } = await mountTab(board());
     await chooseAction('a', /^Link to an item/);
     const box = await dialog();
-    const link = await pickItem(box, [/^I-9/, /^I-8/]);
+    const link = await pickItem(box, [/^K-9/, /^K-8/]);
     expect(link.disabled).toBe(false);
     fireEvent.click(link);
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -37,7 +37,7 @@ describe('I-85 Link a worktree to an item from the row menu', { tags: ['standard
     await chooseAction('a', /^Link to an item/);
     const box = await dialog();
     fireEvent.click(within(box).getByRole('combobox', { name: 'Item' }));
-    fireEvent.click(await screen.findByRole('option', { name: /^I-3/ }));
+    fireEvent.click(await screen.findByRole('option', { name: /^K-3/ }));
     fireEvent.click(within(box).getByRole('button', { name: 'Link' }));
     expect(await within(box).findByText('Refused: no item "I-3" on this board.')).toBeTruthy();
     expect(screen.queryByRole('dialog')).not.toBeNull();

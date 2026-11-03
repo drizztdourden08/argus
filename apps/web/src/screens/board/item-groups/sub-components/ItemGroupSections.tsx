@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Flex, Text } from '@drizztdourden08/tessera';
-import { RecordGroup } from '../../../../shell';
+import { itemCode, RecordGroup } from '../../../../shell';
 import type { ItemGroupSectionsProps } from '../item-groups.type';
 import { ClosedGroups } from './ClosedGroups';
 import { ItemGroupHeader } from './ItemGroupHeader';
@@ -15,7 +15,7 @@ const ItemGroupSections = <T,>(props: ItemGroupSectionsProps<T>) => {
           <RecordGroup
             header={<ItemGroupHeader item={group.item} boardKey={boardKey} threads={threads} />}
             count={group.rows.length}
-            label={`${label} of ${group.item.id}`}
+            label={`${label} of ${itemCode(group.item)}`}
           >
             {children(group.rows)}
           </RecordGroup>

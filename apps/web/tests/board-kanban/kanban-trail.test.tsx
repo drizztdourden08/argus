@@ -68,12 +68,12 @@ describe('I-77 P6 the dependency trail in the Links tab', { tags: ['standard'] }
     const { dialog } = await linksOf(trail([seats, leaf('Q-4', 'question', 'Which seat?')]));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
     expect(within(dialog).getByRole('region', { name: 'Dependency trail · 3 deep, 3 open' })).toBeTruthy();
-    expect(within(tree).getByRole('button', { name: 'Open tessera/I-70: Seats' })).toBeTruthy();
-    expect(within(tree).getByRole('button', { name: 'Open brock/I-105: Tokens' })).toBeTruthy();
+    expect(within(tree).getByRole('button', { name: 'Open tessera/K-70: Seats' })).toBeTruthy();
+    expect(within(tree).getByRole('button', { name: 'Open brock/K-105: Tokens' })).toBeTruthy();
     expect(within(tree).getByRole('button', { name: 'Open Q-4: Which seat?' })).toBeTruthy();
-    const branch = within(tree).getByRole('list', { name: 'Waits on, I-70' });
+    const branch = within(tree).getByRole('list', { name: 'Waits on, K-70' });
     expect(within(branch).getByText('Tokens')).toBeTruthy();
-    expect(within(tree).getByRole('list', { name: 'Waits on, I-1' })).toBeTruthy();
+    expect(within(tree).getByRole('list', { name: 'Waits on, B-1' })).toBeTruthy();
   });
 
   it('says how each node is reached: the kind of link, its id, its state and its age', async () => {
@@ -91,14 +91,14 @@ describe('I-77 P6 the dependency trail in the Links tab', { tags: ['standard'] }
   it('opens the pane of a node of this board when it is clicked', async () => {
     const { dialog } = await linksOf(trail([local], 2));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
-    fireEvent.click(within(tree).getByRole('button', { name: 'Open I-2: Wire the lobby' }));
+    fireEvent.click(within(tree).getByRole('button', { name: 'Open K-2: Wire the lobby' }));
     await waitFor(() => expect(paneOf().open).toBe('I-2'));
   });
 
   it('opens a node of another board through the link of that board', async () => {
     const { dialog } = await linksOf(trail([seats]));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
-    fireEvent.click(within(tree).getByRole('button', { name: 'Open tessera/I-70: Seats' }));
+    fireEvent.click(within(tree).getByRole('button', { name: 'Open tessera/K-70: Seats' }));
     await waitFor(() => expect(paneOf().open).toBe('I-70'));
   });
 
@@ -108,7 +108,7 @@ describe('I-77 P6 the start and the absence of the trail', { tags: ['standard'] 
   it('offers no click on the start of the trail', async () => {
     const { dialog } = await linksOf(trail([local], 2));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
-    expect(within(tree).queryByRole('button', { name: 'Open I-1: Lobby' })).toBeNull();
+    expect(within(tree).queryByRole('button', { name: 'Open B-1: Lobby' })).toBeNull();
     expect(within(tree).getByText('Lobby')).toBeTruthy();
   });
 

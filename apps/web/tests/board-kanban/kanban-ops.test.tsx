@@ -56,8 +56,8 @@ describe('K3 picking several cards', { tags: ['standard'] }, () => {
   const pick = async () => {
     const mounted = await mountKanban({ items: two });
     fireEvent.click(await screen.findByRole('button', { name: 'Select' }));
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select I-1' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select I-2' }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select K-1' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-2' }));
     return { ...mounted, bar: screen.getByRole('toolbar', { name: 'Selected items' }) };
   };
 
@@ -98,7 +98,7 @@ describe('K3 picking several cards', { tags: ['standard'] }, () => {
 describe('S1 the menu of a card', { tags: ['standard'] }, () => {
   it('opens the drawer from Edit', async () => {
     await mountKanban({ items: [item('I-1')] });
-    fireEvent.click(await screen.findByRole('button', { name: 'More actions for I-1' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'More actions for K-1' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
     expect(await screen.findByRole('dialog', { name: 'Work item' })).toBeTruthy();
   });

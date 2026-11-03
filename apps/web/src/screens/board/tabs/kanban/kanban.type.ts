@@ -11,7 +11,6 @@ import type { TrashPanel } from './trash-props.type';
 import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, TrailInfo } from './model';
 import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
-/** An agent record as the trash reads it: deleted and archived agents are listed there. */
 interface AgentDoc extends TrashSource {
   item?: string | null;
   status?: string;

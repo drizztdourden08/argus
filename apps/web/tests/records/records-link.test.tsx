@@ -61,6 +61,14 @@ describe('I-85 every record reference is a link that opens the one pane', { tags
     expect(link.getAttribute('href')).toBe('/p/argus?open=I-12');
   });
 
+  it('links a typed code inside a free text as well as the stored id', () => {
+    const { container } = mount(<Text as="p"><LinkedText text="See B-12 and I-12, not B-12x." /></Text>);
+    const links = [...container.querySelectorAll('a')];
+    expect(links.map((link) => link.textContent)).toEqual(['B-12', 'I-12']);
+    fireEvent.click(links[0] as HTMLElement);
+    expect(where()).toBe('/p/argus?open=B-12');
+  });
+
   it('links the ids inside a free text and leaves the words alone', () => {
     const { container } = mount(<Text as="p"><LinkedText text="Blocked by I-3 until Q-2 is answered (see rotp/I-9), not UTF-8." /></Text>);
     expect([...container.querySelectorAll('a')].map((link) => link.textContent)).toEqual(['I-3', 'Q-2', 'rotp/I-9']);

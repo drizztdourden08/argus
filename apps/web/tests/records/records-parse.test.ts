@@ -99,7 +99,9 @@ describe('I-85 P3 what a record view shows', { tags: ['critical'] }, () => {
     expect(shownCode(kind('dependency'), 'D-4')).toBe('DP-4');
     expect(shownCode(kind('build'), 'web')).toBe('BL-web');
     expect(shownCode(kind('release'), '1.2.3')).toBe('V-1.2.3');
-    expect(shownCode(kind('task'), 'I-12')).toBe('I-12');
+    expect(shownCode(kind('task'), 'I-12')).toBe('K-12');
+    expect(shownCode(kind('bug'), 'I-12')).toBe('B-12');
+    expect(shownCode(kind('test-case'), 'T-3')).toBe('T-3');
   });
 
   it('takes the assignee of a record from the field the registry names', () => {

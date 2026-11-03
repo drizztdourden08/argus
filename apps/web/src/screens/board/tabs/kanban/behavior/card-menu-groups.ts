@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
-import { RECORD_ACTIONS, recordMenuGroups } from '../../../../../shell';
+import { itemCode, RECORD_ACTIONS, recordMenuGroups } from '../../../../../shell';
 import { copyText, threadChoices } from '../../../shared';
 import type { Option } from '../../../shared';
 import type { CardMenuProps } from '../kanban-props.type';
@@ -10,6 +10,7 @@ const cardMenuGroups = (props: CardMenuProps): MenuGroup[] => {
   const { item, threads, ops, onOpen } = props;
   const { id } = item;
   const kind = typeOf(item);
+  const code = itemCode(item);
   const moveRow = (field: 'status' | 'thread', label: string, options: readonly Option[]): MenuItem => ({
     id: field,
     label,
@@ -27,9 +28,9 @@ const cardMenuGroups = (props: CardMenuProps): MenuGroup[] => {
     open: () => onOpen(id),
     [item.archivedAt ? 'unarchive' : 'archive']: soft(item.archivedAt ? 'unarchive' : 'archive'),
     delete: soft('delete'),
-    copy: () => copyText(id),
+    copy: () => copyText(code),
   };
-  return recordMenuGroups(RECORD_ACTIONS[kind] ? kind : DEFAULT_TYPE, id, handlers, [move]);
+  return recordMenuGroups(RECORD_ACTIONS[kind] ? kind : DEFAULT_TYPE, code, handlers, [move]);
 };
 
 export { cardMenuGroups };
