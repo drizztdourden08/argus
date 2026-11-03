@@ -15,9 +15,13 @@ pub struct Tmp {
     pub size_bytes: u64,
 }
 
-/// The folders of `.tmp/` last touched more than a day ago. A link is never listed.
+/// The folders of `.tmp/` last touched more than a day ago. A link is never listed, and nothing is when `.tmp` itself is
+/// a link.
 pub fn stale(fs: &dyn Fs, root: &str, now_ms: i64) -> Vec<Tmp> {
     let dir = join(root, TMP_DIR);
+    if fs.lstat(&dir).is_ok_and(|s| s.is_link) {
+        return Vec::new();
+    }
     let mut found: Vec<Tmp> = fs
         .read_dir(&dir)
         .unwrap_or_default()

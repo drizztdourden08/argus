@@ -156,6 +156,13 @@ pub async fn send_to_lead(call: &Call<'_>) -> Result<Value, ToolError> {
         .await
 }
 
+/// `cancel_dependency`: the owner cancels a dependency.
+pub async fn cancel_dependency(call: &Call<'_>) -> Result<Value, ToolError> {
+    let id = arg(call, "id").unwrap_or_default();
+    let reason = arg(call, "reason");
+    call.backend.dep_cancel(&id, reason.as_deref()).await
+}
+
 /// `notify_owner`: speaks to the owner, so it does not post as him.
 pub async fn notify_owner(call: &Call<'_>) -> Result<Value, ToolError> {
     let request = NotifyRequest {

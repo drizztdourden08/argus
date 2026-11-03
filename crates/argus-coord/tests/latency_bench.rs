@@ -13,7 +13,11 @@
 //! `COORD_BENCH_RUNS` the runs per case (default 200). A verb the Argus side still answers
 //! with exit 120 is timed but never gated. A served hook fails the bench above its target; a
 //! served verb that is not a hook fails when its p50 is above Node's.
+//! E3: a benchmark, Node against argus coord. Run only on purpose.
 
+// test-tag: e2e
+
+#[path = "it/support/mod.rs"]
 mod support;
 
 use std::env;
@@ -152,7 +156,7 @@ fn over(case: &Case, node: &Timing, argus: &Timing) -> Option<String> {
 }
 
 #[test]
-#[ignore = "bench: see the module documentation"]
+#[ignore = "e2e"]
 fn cold_start_latency_against_node() {
     let Some(engines) = Engines::or_skip("cold_start_latency_against_node") else {
         return;

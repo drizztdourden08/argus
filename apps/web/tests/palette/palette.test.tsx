@@ -3,6 +3,7 @@ import { act, cleanup, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { resolvePalette } from '../../src/palette';
 import { renderAt } from '../helpers/render-at';
+import { waitForStream } from '../helpers/wait-for-stream';
 import { snapshot } from '../helpers/snapshot';
 
 afterEach(() => {
@@ -12,7 +13,7 @@ afterEach(() => {
 
 const board = (name: string, palette?: string) => ({ board: { project: 'x', name, ...(palette ? { palette } : {}) } });
 
-describe('resolvePalette', () => {
+describe('K1 resolvePalette', { tags: ['critical'] }, () => {
   it('maps the built-in project keys and leaves the rest basic', () => {
     expect(resolvePalette('rotp')).toBe('rotp');
     expect(resolvePalette('brock')).toBe('brock');
@@ -29,18 +30,10 @@ describe('resolvePalette', () => {
   });
 });
 
-describe('palette attribute', () => {
-  it('sets data-palette on the document from the key map while a board is open', async () => {
-    const { sources } = renderAt('/p/pixelarttool/');
-    await waitFor(() => expect(sources).toHaveLength(1));
-    act(() => sources[0]?.emit('snapshot', snapshot('pixelarttool', 'meta', board('Bxel'))));
-    expect(await screen.findByRole('heading', { name: 'Bxel' })).toBeTruthy();
-    expect(document.documentElement.dataset.palette).toBe('bxel');
-  });
-
+describe('S1 palette attribute', { tags: ['standard'] }, () => {
   it('follows the palette setting of meta/board live, and basic clears it', async () => {
     const { sources } = renderAt('/p/argus/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     act(() => sources[0]?.emit('snapshot', snapshot('argus', 'meta', board('Argus'))));
     expect(document.documentElement.dataset.palette).toBeUndefined();
     act(() => sources[0]?.emit('changes', { scope: 'argus', seq: 11, changes: [{ coll: 'meta', id: 'board', op: 'set', data: board('Argus', 'brock').board }] }));
@@ -51,7 +44,7 @@ describe('palette attribute', () => {
 
   it('keeps the overview and its project cards on the basic palette, as the Node page does', async () => {
     const { sources } = renderAt('/');
-    await waitFor(() => expect(sources).toHaveLength(1));
+    await waitForStream(sources);
     const rotp = { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/' };
     act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp })));
     const open = await screen.findByRole('button', { name: 'Open the RotP board' });

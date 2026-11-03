@@ -1,5 +1,7 @@
 //! Port of `activity.test.mjs`: add, the 1000-row cap, the 300-doc mirror in `_portfolio`, the
 //! query, the logged lines (one per message a minute) and a log that never fails its caller.
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::sync::Arc;
 

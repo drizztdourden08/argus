@@ -7,9 +7,12 @@ import '@drizztdourden08/tessera/palettes/rotp.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './routing/App';
+import { reloadOnStaleBuild } from './routing/reload-on-stale-build';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('index.html has no #root element');
+
+reloadOnStaleBuild();
 
 createRoot(root).render(
   <StrictMode>

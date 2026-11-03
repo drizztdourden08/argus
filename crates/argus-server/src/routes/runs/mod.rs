@@ -17,7 +17,6 @@ use std::sync::Arc;
 
 use argus_core::{ApiError, ErrorCode};
 use argus_launchers::{RunError, RunService, check_key, check_rid};
-use serde_json::Value;
 
 use crate::adapters::runs::RunHost;
 use crate::{AuthKind, Ctx, Router};
@@ -27,14 +26,14 @@ mod control;
 mod logs;
 mod tail;
 
-fn service(ctx: &Ctx) -> Result<Arc<RunService<RunHost>>, ApiError> {
+pub(crate) fn service(ctx: &Ctx) -> Result<Arc<RunService<RunHost>>, ApiError> {
     ctx.svc
         .runs
         .clone()
         .ok_or_else(|| ApiError::unavailable("the run service is not running"))
 }
 
-fn refusal(e: &RunError) -> ApiError {
+pub(crate) fn refusal(e: &RunError) -> ApiError {
     let code = match e.status {
         400 => ErrorCode::BadRequest,
         404 => ErrorCode::UnknownRun,
@@ -75,16 +74,6 @@ fn ids(ctx: &Ctx) -> Result<(String, String), ApiError> {
     let key = check_key(ctx.param("key")).map_err(|e| refusal(&e))?;
     let rid = check_rid(ctx.param("rid")).map_err(|e| refusal(&e))?;
     Ok((key.to_owned(), rid.to_owned()))
-}
-
-/// The JSON body, which must be an object.
-async fn object(ctx: &Ctx) -> Result<Value, ApiError> {
-    let body = ctx.json().await?;
-    if body.is_object() {
-        Ok(body)
-    } else {
-        Err(ApiError::bad_request("expected a JSON object"))
-    }
 }
 
 /// Registers the run routes.

@@ -1,5 +1,6 @@
 //! A small reader of `pnpm-lock.yaml`: the exact versions the `packages:` section resolves for some names. It reads
 //! the keys only (`name@version`, with the peer suffix cut), for lockfile versions 5, 6 and 9, and needs no YAML model.
+// test-tag: critical
 
 use std::collections::BTreeSet;
 

@@ -1,0 +1,303 @@
+{
+  "$schema": "./item-types.schema.json",
+  "version": 1,
+  "lanes": ["todo", "doing", "review", "done", "dropped"],
+  "content": {
+    "line": { "markup": false, "newlines": false, "block": "^([#|>]|```|([-*]|[0-9]+\\.) )" },
+    "slug": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "rich": {
+      "rule": "rich-v1",
+      "bullets": 12,
+      "bulletMax": 160,
+      "leadMax": 160,
+      "shortMax": 120,
+      "bullet": "^ {0,4}([-*]|[0-9]+\\.) [^ \\t]",
+      "image": "^!\\[[^\\]\\n]{1,120}\\]\\(img:([0-9]+)\\)$",
+      "forbidden": [
+        { "name": "heading", "pattern": "^[ \\t]*#" },
+        { "name": "table", "pattern": "^[ \\t]*\\|" },
+        { "name": "quote", "pattern": "^[ \\t]*>" },
+        { "name": "code fence", "pattern": "^[ \\t]*```" },
+        { "name": "html", "pattern": "<[a-zA-Z/]" }
+      ]
+    },
+    "enum": {},
+    "ref": {
+      "kinds": {
+        "item": "^I-[0-9]+$",
+        "test": "^T-[0-9]+$",
+        "bundle": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+      }
+    },
+    "refs": {},
+    "date": { "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "person": { "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+    "records": {}
+  },
+  "baseFields": ["title", "description", "ac", "subject"],
+  "fields": {
+    "title": { "content": "line", "max": 80, "required": true },
+    "description": { "content": "rich", "max": 500, "images": 6 },
+    "goal": { "content": "rich", "max": 500, "images": 6 },
+    "repro": { "content": "rich", "max": 500, "images": 6 },
+    "ac": { "content": "line", "max": 120, "list": 12 },
+    "role": { "content": "line", "max": 80 },
+    "want": { "content": "line", "max": 80 },
+    "benefit": { "content": "line", "max": 80 },
+    "expected": { "content": "line", "max": 200 },
+    "actual": { "content": "line", "max": 200 },
+    "payoff": { "content": "line", "max": 200 },
+    "environment": { "content": "line", "max": 120 },
+    "env": { "content": "line", "max": 120 },
+    "area": { "content": "line", "max": 40 },
+    "subject": { "content": "slug", "max": 40 },
+    "question": { "content": "line", "max": 240 },
+    "option": { "content": "line", "max": 60, "list": 6 },
+    "decision": { "content": "line", "max": 200 },
+    "context": { "content": "line", "max": 600 },
+    "todo": { "content": "line", "max": 200 },
+    "note": { "content": "rich", "max": 300, "images": 3 },
+    "reason": { "content": "line", "max": 120 },
+    "caption": { "content": "line", "max": 120 },
+    "setup": { "content": "line", "max": 300 },
+    "steps": { "content": "line", "max": 240, "list": 15 },
+    "pass": { "content": "line", "max": 200, "list": 8 },
+    "fail": { "content": "line", "max": 200, "list": 8 },
+    "resultNote": { "content": "line", "max": 300 },
+    "severity": {
+      "content": "enum",
+      "values": ["S1", "S2", "S3", "S4"],
+      "labels": ["blocker", "major", "minor", "cosmetic"],
+      "required": true
+    },
+    "cost": { "content": "enum", "values": ["S", "M", "L"] },
+    "risk": { "content": "enum", "values": ["low", "medium", "high"] },
+    "mode": { "content": "enum", "values": ["auto", "manual"] },
+    "foundIn": { "content": "ref", "to": ["test", "bundle"] },
+    "duplicateOf": { "content": "ref", "to": ["item"] },
+    "bundle": { "content": "ref", "to": ["bundle"] },
+    "cases": { "content": "refs", "to": ["test"] },
+    "reporter": { "content": "person" },
+    "assignee": { "content": "person" },
+    "todoAssignee": { "content": "person", "leads": true },
+    "target": { "content": "date" },
+    "runs": { "content": "records" }
+  },
+  "types": [
+    {
+      "id": "epic",
+      "label": "Epic",
+      "icon": "zap",
+      "color": "violet",
+      "collection": "items",
+      "parents": [],
+      "stages": [
+        { "id": "open", "label": "Open", "lane": "todo" },
+        { "id": "active", "label": "Active", "lane": "doing" },
+        { "id": "closing", "label": "Closing", "lane": "review" },
+        { "id": "done", "label": "Done", "lane": "done" },
+        { "id": "dropped", "label": "Dropped", "lane": "dropped" }
+      ],
+      "fields": ["goal", "target"],
+      "groups": [{ "id": "plan", "label": "Plan", "fields": ["goal", "target"] }],
+      "tabs": ["overview", "children", "links", "discussion", "media", "activity"],
+      "card": { "progress": "children", "chips": [] },
+      "done": { "needs": ["children"], "mode": "refuse" }
+    },
+    {
+      "id": "story",
+      "label": "Story",
+      "icon": "bookmark",
+      "color": "green",
+      "collection": "items",
+      "parents": ["epic"],
+      "stages": [
+        { "id": "draft", "label": "Draft", "lane": "todo" },
+        { "id": "ready", "label": "Ready", "lane": "todo" },
+        { "id": "building", "label": "Building", "lane": "doing" },
+        { "id": "review", "label": "Review", "lane": "review" },
+        { "id": "done", "label": "Done", "lane": "done" },
+        { "id": "dropped", "label": "Dropped", "lane": "dropped" }
+      ],
+      "fields": ["role", "want", "benefit"],
+      "groups": [{ "id": "story", "label": "Story", "fields": ["role", "want", "benefit"] }],
+      "tabs": ["overview", "children", "links", "discussion", "tests", "media", "activity"],
+      "card": { "progress": "children-ac", "chips": [] },
+      "done": { "needs": ["ac", "children", "tests"], "mode": "refuse" }
+    },
+    {
+      "id": "task",
+      "label": "Task",
+      "icon": "circle-check",
+      "color": "blue",
+      "collection": "items",
+      "parents": ["epic", "story"],
+      "stages": [
+        { "id": "todo", "label": "To do", "lane": "todo" },
+        { "id": "doing", "label": "Doing", "lane": "doing" },
+        { "id": "review", "label": "Review", "lane": "review" },
+        { "id": "done", "label": "Done", "lane": "done" },
+        { "id": "dropped", "label": "Dropped", "lane": "dropped" }
+      ],
+      "fields": [],
+      "groups": [],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "card": { "progress": "ac", "chips": [] },
+      "done": { "needs": ["ac"], "mode": "warn" }
+    },
+    {
+      "id": "bug",
+      "label": "Bug",
+      "icon": "bug",
+      "color": "rose",
+      "collection": "items",
+      "parents": ["epic", "story"],
+      "stages": [
+        { "id": "reported", "label": "Reported", "lane": "todo", "next": ["confirmed", "wontfix", "duplicate"] },
+        { "id": "confirmed", "label": "Confirmed", "lane": "todo", "next": ["fixing"] },
+        { "id": "fixing", "label": "Fixing", "lane": "doing", "next": ["verifying"] },
+        { "id": "verifying", "label": "Verifying", "lane": "review", "next": ["closed", "fixing"] },
+        { "id": "closed", "label": "Closed", "lane": "done" },
+        { "id": "wontfix", "label": "Won't fix", "lane": "dropped", "requires": ["reason"] },
+        { "id": "duplicate", "label": "Duplicate", "lane": "dropped", "requires": ["duplicateOf"] }
+      ],
+      "fields": ["severity", "repro", "expected", "actual", "environment", "foundIn", "reporter", "duplicateOf", "reason"],
+      "groups": [
+        { "id": "report", "label": "Report", "fields": ["severity", "environment", "foundIn", "reporter"] },
+        { "id": "repro", "label": "Steps", "fields": ["repro", "expected", "actual"] }
+      ],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "card": { "progress": "ac", "chips": ["severity"] },
+      "done": { "needs": ["verified"], "mode": "refuse" }
+    },
+    {
+      "id": "debt",
+      "label": "Tech debt",
+      "icon": "wrench",
+      "color": "amber",
+      "collection": "items",
+      "parents": ["epic", "story"],
+      "stages": [
+        { "id": "noted", "label": "Noted", "lane": "todo" },
+        { "id": "planned", "label": "Planned", "lane": "todo" },
+        { "id": "paying", "label": "Paying", "lane": "doing" },
+        { "id": "review", "label": "Review", "lane": "review" },
+        { "id": "paid", "label": "Paid", "lane": "done" },
+        { "id": "accepted", "label": "Accepted", "lane": "dropped", "requires": ["reason"] }
+      ],
+      "fields": ["area", "cost", "risk", "payoff", "reason"],
+      "groups": [{ "id": "debt", "label": "Debt", "fields": ["area", "cost", "risk", "payoff"] }],
+      "tabs": ["overview", "links", "discussion", "tests", "media", "activity"],
+      "card": { "progress": "ac", "chips": ["cost", "risk"] },
+      "done": { "needs": ["ac"], "mode": "warn" }
+    },
+    {
+      "id": "test-plan",
+      "label": "Test plan",
+      "icon": "scroll-text",
+      "color": "cyan",
+      "collection": "items",
+      "parents": ["epic", "story"],
+      "stages": [
+        { "id": "draft", "label": "Draft", "lane": "todo" },
+        {
+          "id": "ready",
+          "label": "Ready",
+          "lane": "todo",
+          "gates": [
+            { "need": "cases", "mode": "refuse" },
+            { "need": "bundle-ready", "mode": "warn" }
+          ]
+        },
+        { "id": "running", "label": "Running", "lane": "doing" },
+        { "id": "reported", "label": "Reported", "lane": "review" },
+        { "id": "passed", "label": "Passed", "lane": "done" },
+        { "id": "abandoned", "label": "Abandoned", "lane": "dropped" }
+      ],
+      "fields": ["bundle", "cases", "env", "runs"],
+      "groups": [{ "id": "plan", "label": "Plan", "fields": ["bundle", "env"] }],
+      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "activity"],
+      "card": { "progress": "run", "chips": ["bundle"] },
+      "done": { "needs": ["plan-passed"], "mode": "refuse" }
+    },
+    {
+      "id": "test-case",
+      "label": "Test case",
+      "icon": "flask",
+      "color": "teal",
+      "collection": "tests",
+      "parents": [],
+      "stages": [],
+      "statuses": ["pending", "pass", "fail", "partial", "blocked", "moved"],
+      "fields": ["setup", "steps", "pass", "fail", "mode", "bundle"],
+      "groups": [],
+      "tabs": ["overview", "links", "discussion", "media", "activity"],
+      "card": { "progress": "none", "chips": [] }
+    }
+  ],
+  "subItems": [
+    { "id": "question", "store": "entries", "prefix": "Q", "icon": "circle-help", "tone": "danger", "blocksWhile": "open", "field": "question" },
+    { "id": "decision", "store": "entries", "prefix": "D", "icon": "gavel", "tone": "info", "blocksWhile": "pending", "field": "decision" },
+    { "id": "todo", "store": "actions", "prefix": "H", "icon": "list-checks", "tone": "warning", "blocksWhile": "pending", "field": "todo" },
+    { "id": "note", "store": "entries", "prefix": "N", "icon": "message-square", "tone": "neutral", "field": "note" }
+  ],
+  "people": {
+    "owner": { "label": "You", "initials": "ME", "color": "primary" },
+    "leads": {
+      "argus": { "initials": "AR", "color": "blue" },
+      "brock": { "initials": "BR", "color": "orange" },
+      "tessera": { "initials": "TE", "color": "pink" },
+      "rotp": { "initials": "RO", "color": "rose" },
+      "archipelia": { "initials": "AP", "color": "teal" },
+      "pixelarttool": { "initials": "BX", "color": "lime" },
+      "_portfolio": { "initials": "OV", "color": "neutral" }
+    }
+  },
+  "limits": {
+    "name": 40,
+    "subject": 40,
+    "note": 100,
+    "title": 80,
+    "description": 400,
+    "ac": 120,
+    "question": 240,
+    "option": 60,
+    "answer": 600,
+    "followup": 240,
+    "lead": 240,
+    "ping": 240,
+    "decision": 200,
+    "notice": 140,
+    "message": 240,
+    "action": 200,
+    "log": 120,
+    "brief": 1200,
+    "task": 120,
+    "covers": 80,
+    "context": 600,
+    "changed": 240,
+    "label": 40,
+    "setup": 300,
+    "command": 300,
+    "step": 240,
+    "expect": 200,
+    "testnote": 300,
+    "caption": 120,
+    "result": 300,
+    "reason": 120,
+    "model": 40,
+    "modelwhy": 200,
+    "branch": 80,
+    "worktree": 120,
+    "agentnote": 100,
+    "agentresult": 200,
+    "build": 40,
+    "buildnote": 600,
+    "buildcmd": 400,
+    "buildcwd": 260,
+    "launchercmd": 400,
+    "launchercwd": 260,
+    "launchernote": 300,
+    "commit": 40
+  }
+}

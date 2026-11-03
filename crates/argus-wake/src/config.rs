@@ -5,11 +5,16 @@ use std::time::Duration;
 use serde_json::Value;
 
 use crate::agent_wakes::AgentWakeConfig;
+use crate::dep_wakes::DepWakeConfig;
 use crate::item_wakes::ItemWakeConfig;
 use crate::registry::{
     DEFAULT_ALIVE_MS, DEFAULT_BOARD_GRACE_MS, DEFAULT_NO_LISTENER_MS, DEFAULT_REACTION_MS,
     DEFAULT_TICK_MS, RegistryConfig,
 };
+use crate::reminders::ReminderConfig;
+use crate::stalls::StallConfig;
+use crate::sync_wakes::SyncWakeConfig;
+use crate::wake_policy::WakePolicy;
 
 /// The coalescing window when config.json does not say.
 pub const DEFAULT_WINDOW_MS: i64 = 2000;
@@ -41,6 +46,12 @@ pub fn positive_ms(value: Option<&Value>, default: i64) -> i64 {
         .unwrap_or(default)
 }
 
+/// A positive number of milliseconds under `key` of a config section, else the default.
+#[must_use]
+pub fn section_ms(section: &Value, key: &str, default: i64) -> i64 {
+    positive_ms(section.get(key), default)
+}
+
 /// A number of milliseconds of at least `min`, else the default.
 #[must_use]
 pub fn ms_at_least(value: Option<&Value>, default: i64, min: i64) -> i64 {
@@ -61,6 +72,16 @@ pub struct WakeConfig {
     pub agents: AgentWakeConfig,
     /// The Kanban reminders (`items.*`).
     pub items: ItemWakeConfig,
+    /// The remote sync wake (`remoteSync.*`).
+    pub syncs: SyncWakeConfig,
+    /// The dependency wakes (`deps.*`).
+    pub deps: DepWakeConfig,
+    /// How often one thread may be woken (`wakePolicy.*`).
+    pub policy: WakePolicy,
+    /// The reminders of what stays open (`reminders.*`).
+    pub reminders: ReminderConfig,
+    /// The stall watch (`stall.*`).
+    pub stall: StallConfig,
 }
 
 impl Default for WakeConfig {
@@ -89,6 +110,11 @@ impl WakeConfig {
             registry,
             agents: AgentWakeConfig::from_json(config.get("agents").unwrap_or(&Value::Null)),
             items: ItemWakeConfig::from_json(config.get("items").unwrap_or(&Value::Null)),
+            syncs: SyncWakeConfig::from_json(config.get("remoteSync").unwrap_or(&Value::Null)),
+            deps: DepWakeConfig::from_json(config.get("deps").unwrap_or(&Value::Null)),
+            policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
+            reminders: ReminderConfig::from_json(config.get("reminders").unwrap_or(&Value::Null)),
+            stall: StallConfig::from_json(config.get("stall").unwrap_or(&Value::Null)),
         }
     }
 }

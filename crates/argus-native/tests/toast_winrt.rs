@@ -2,6 +2,8 @@
 //! notification carries its tag and group; nothing is shown. Ported from the last case of the
 //! `toastScript` group of `notify.test.mjs` (the PowerShell script and its parse check have no
 //! counterpart: the notifier is native code now).
+//! Keep rule: E2.
+// test-tag: e2e
 #![cfg(windows)]
 
 use argus_native::{GROUP, Level, Payload, Toast};
@@ -35,6 +37,7 @@ fn through_winrt(toast: &Toast) -> (String, String, String) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_xml_of_a_ping_and_of_an_urgent_toast_loads_into_the_winrt_document() {
     for (level, sound) in [
         (Level::Ping, true),

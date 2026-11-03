@@ -1,4 +1,5 @@
 //! Who the toasts come from: the app identity Windows shows on a toast and groups it under.
+// test-tag: critical
 
 use std::path::PathBuf;
 

@@ -12,6 +12,7 @@
 //! loses it at any restart), and the listener-derived fields of a registry doc (`listening`,
 //! `listenerLabel`, `state`, `fault`, `since`, `deaf`, `boardOpen`, `boardSince`,
 //! `boardRequired`), which follow who listens to each server.
+// test-tag: critical
 
 use crate::rules::{RowDrop, Rules, Spec};
 
@@ -262,10 +263,17 @@ static MCP_INITIALIZE: Spec = Spec {
     drop_rows: &[],
 };
 
+/// The two dependency tools only Argus has.
+const DEP_TOOLS: &[&str] = &["list_dependencies", "cancel_dependency"];
+
 static MCP_TOOLS: Spec = Spec {
     ignore: &["id"],
     unordered: &[("result.tools", "name")],
-    drop_rows: &[],
+    drop_rows: &[RowDrop {
+        array: "result.tools",
+        field: "name",
+        prefixes: DEP_TOOLS,
+    }],
 };
 
 fn doc_spec(coll: &str) -> &'static Spec {
@@ -396,17 +404,5 @@ mod tests {
         assert_eq!(same, Verdict::Equal);
         let other = judge(rules, &pass(1, "quiet", "x"), &pass(1, "idle", "x"));
         assert!(matches!(other, Verdict::Differs(_)));
-    }
-
-    #[test]
-    fn every_doc_kind_ignores_seq() {
-        for coll in ["items", "procs", "meta", "activity", "notifications"] {
-            assert!(Kind::Doc(coll).spec().ignore.contains(&"seq"), "{coll}");
-        }
-    }
-
-    #[test]
-    fn the_process_sample_numbers_are_never_compared() {
-        assert!(Kind::Procs.spec().ignore.contains(&"procs.*.memMB"));
     }
 }

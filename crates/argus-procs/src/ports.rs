@@ -1,6 +1,6 @@
 //! What the monitor needs from the outside: a sampler, a store, a host, a kill and a window probe.
 
-use crate::project::ProjectRoot;
+use crate::project::{ProjectFolders, ProjectRoot};
 use crate::types::{Meta, ProcDoc, Sample};
 use std::collections::HashMap;
 
@@ -11,6 +11,11 @@ pub trait Sampler: Send + Sync {
     /// # Errors
     /// The reason the machine could not be read.
     fn sample(&self) -> Result<Sample, String>;
+
+    /// The folder each of these pids runs in; a pid whose folder cannot be read is left out.
+    fn cwds(&self, _pids: &[u32]) -> HashMap<u32, String> {
+        HashMap::new()
+    }
 }
 
 /// Tells which windows do not respond, for the processes whose rule asks for the hung flag.
@@ -77,6 +82,23 @@ pub struct Activity {
 pub trait ProcsHost: Send + Sync {
     /// The folders of the known projects.
     fn project_roots(&self) -> Vec<ProjectRoot>;
+
+    /// Every folder of each known project: its root, its worktrees and its ci root. By default
+    /// only the roots.
+    fn project_folders(&self) -> Vec<ProjectFolders> {
+        self.project_roots()
+            .into_iter()
+            .map(|r| ProjectFolders {
+                key: r.key,
+                folders: vec![r.root],
+            })
+            .collect()
+    }
+
+    /// The lead (coordinator thread) of a project, when it has one.
+    fn lead_of(&self, _project: &str) -> Option<String> {
+        None
+    }
 
     /// The tray's pid, when it runs.
     fn tray_pid(&self) -> Option<u32>;

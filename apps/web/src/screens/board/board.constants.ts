@@ -6,6 +6,8 @@ const BOARD_TABS = [
   { id: 'tests', label: 'Tests' },
   { id: 'builds', label: 'Builds' },
   { id: 'worktrees', label: 'Worktrees' },
+  { id: 'changes', label: 'Changes' },
+  { id: 'releases', label: 'Releases' },
 ];
 
 const BOARD_TAB_IDS = BOARD_TABS.map((tab) => tab.id);

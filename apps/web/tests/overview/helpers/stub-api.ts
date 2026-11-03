@@ -14,12 +14,18 @@ interface ApiReply {
 
 type Replier = (call: ApiCall) => ApiReply | undefined;
 
+const defaultBody = (path: string): unknown => {
+  if (path.startsWith('/api/runs')) return { runs: [] };
+  if (path.startsWith('/api/agents/reconcile')) return { findings: [] };
+  return {};
+};
+
 const stubApi = (reply: Replier = () => undefined): ApiCall[] => {
   const calls: ApiCall[] = [];
   vi.stubGlobal('fetch', vi.fn((path: string, init?: RequestInit) => {
     const call: ApiCall = { path, method: init?.method ?? 'GET', body: init?.body ? JSON.parse(String(init.body)) : undefined };
     calls.push(call);
-    const answer = reply(call) ?? { body: path.startsWith('/api/runs') ? { runs: [] } : {} };
+    const answer = reply(call) ?? { body: defaultBody(path) };
     return Promise.resolve(new Response(JSON.stringify(answer.body ?? {}), { status: answer.status ?? 200 }));
   }));
   return calls;

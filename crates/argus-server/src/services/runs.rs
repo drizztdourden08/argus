@@ -15,6 +15,7 @@ use argus_wake::service::driver::lock;
 use tokio::runtime::{Handle, RuntimeFlavor};
 
 use crate::adapters::runs::{DocRunEvents, RunHost, SqliteRuns, view_of};
+use crate::routes::check_runs::link_on_finish;
 use crate::{ServeOptions, Services};
 
 /// How the run service starts; the fields after `enabled` are seams for tests.
@@ -104,6 +105,7 @@ fn tell_wake_of_ends(svc: &Services, runs: &RunService<RunHost>) {
 pub(crate) fn start(svc: &Arc<Services>) {
     if let Some(runs) = &svc.runs {
         tell_wake_of_ends(svc, runs);
+        link_on_finish(svc, runs);
     }
     if let Some(runs) = svc.runs.as_ref().filter(|_| !svc.shadow) {
         runs.recover();

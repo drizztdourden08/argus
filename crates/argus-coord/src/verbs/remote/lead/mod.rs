@@ -1,7 +1,9 @@
 //! `coord lead <project-key> "<text>" [--kind note|decision]`: lead to lead. One project's lead
 //! messages another project's lead, with no thread of its own on the other board. The message
-//! is queued in the target lead's inbox; the dashboard is then asked, best effort, to wake it. A
-//! dashboard that is down never fails the verb.
+//! is queued in the target lead's inbox; the dashboard is then told, best effort. A decision asks
+//! for action and wakes the lead (`lead-message`); a note is information only and stays a passive
+//! notice on its board (`lead-info`), handed over with its next prompt. A dashboard that is down
+//! never fails the verb.
 
 mod deliver;
 
@@ -83,13 +85,23 @@ fn check_target(call: &Call<'_>, from: &str, target: &str) -> Result<(), CoordEr
     Ok(())
 }
 
-/// The nudge: the target lead is asked to wake. Nothing here ever fails the verb.
-fn wake(call: &Call<'_>, key: &str, thread: &str, from: &str, text: &str) {
+/// The wake reason of a message kind: only a decision asks the other lead for action.
+fn reason_of(kind: &str) -> &'static str {
+    if kind == "decision" {
+        "lead-message"
+    } else {
+        "lead-info"
+    }
+}
+
+/// The nudge: the target lead is told (a wake for a decision, a notice for a note). Nothing
+/// here ever fails the verb.
+fn wake(call: &Call<'_>, key: &str, thread: &str, note: &Note<'_>) {
     let Ok(client) = connect(call, false) else {
         return;
     };
-    let line = format!("{from} lead: {}", js::slice(text, WAKE_CLIP));
-    let body = json!({ "thread": thread, "reason": "lead-message", "text": line });
+    let line = format!("{} lead: {}", note.from, js::slice(note.text, WAKE_CLIP));
+    let body = json!({ "thread": thread, "reason": reason_of(note.kind), "text": line });
     client.post(&format!("/api/p/{key}/wakes"), &body).ok();
 }
 
@@ -116,7 +128,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     let Some(thread) = deliver(&coord_home(call), &target, &note)? else {
         return Err(no_board(&target));
     };
-    wake(call, &target, &thread, &from, &text);
+    wake(call, &target, &thread, &note);
     call.inv
         .say(&[&format!("queued for {target} lead: {text}")]);
     Ok(())

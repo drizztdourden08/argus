@@ -28,53 +28,69 @@ pub struct Hit {
     pub adopted: bool,
     /// What the session titles of this project start with.
     pub name: String,
+    /// The thread's `lastSeen` before this visit: the end of its last turn, which the prompt
+    /// hook's notice digest counts from.
+    pub seen_before: Option<String>,
+}
+
+/// What a visit may do beyond the heartbeat.
+#[derive(Clone, Copy)]
+pub struct Mode {
+    /// The activity to mark the thread with; `None` leaves it (a sub-agent's call).
+    pub activity: Option<&'static str>,
+    /// Whether a session the board has not seen is put on it as a placeholder.
+    pub may_adopt: bool,
+    /// Whether the thread's waiting messages are handed over now (and marked delivered). A
+    /// sub-agent never takes its lead's inbox: the lead would never see those messages.
+    pub deliver: bool,
 }
 
 /// Visits the board for this hook's session. `None` when there is no board, no session, the
 /// session's work here ended, or (without `may_adopt`) the session has no thread.
-pub fn visit(
-    hook: &Hook<'_>,
-    project: &str,
-    activity: Option<&str>,
-    may_adopt: bool,
-) -> Result<Option<Hit>, CoordError> {
+pub fn visit(hook: &Hook<'_>, project: &str, mode: Mode) -> Result<Option<Hit>, CoordError> {
     let Some(sid) = hook.session_id() else {
         return Ok(None);
     };
     let Some(peek) = hook.board(project)? else {
         return Ok(None);
     };
-    if retired(&peek, sid) || (find(&peek, hook).is_none() && !may_adopt) {
+    if retired(&peek, sid) || (find(&peek, hook).is_none() && !mode.may_adopt) {
         return Ok(None);
     }
-    hook.mutate(project, |board| {
-        on_board(board, hook, sid, activity, may_adopt)
-    })
+    hook.mutate(project, |board| on_board(board, hook, sid, mode))
 }
 
 fn on_board(
     board: &mut Board,
     hook: &Hook<'_>,
     sid: &str,
-    activity: Option<&str>,
-    may_adopt: bool,
+    mode: Mode,
 ) -> Result<Option<Hit>, BoardError> {
     if retired(board, sid) {
         return Ok(None);
     }
     let (id, adopted) = match find(board, hook) {
         Some(id) => (id, false),
-        None if may_adopt => (adopt(board, hook, sid, activity.unwrap_or("idle"))?, true),
+        None if mode.may_adopt => (
+            adopt(board, hook, sid, mode.activity.unwrap_or("idle"))?,
+            true,
+        ),
         None => return Ok(None),
     };
-    heartbeat(board, &id, sid, activity);
-    let fresh = deliver(board, &id);
+    let seen_before = doc(board, &id)["lastSeen"].as_str().map(str::to_owned);
+    heartbeat(board, &id, sid, mode.activity);
+    let fresh = if mode.deliver {
+        deliver(board, &id)
+    } else {
+        Vec::new()
+    };
     let name = session_name(&js::string(&board["project"]), board["name"].as_str());
     Ok(Some(Hit {
         thread: doc(board, &id).clone(),
         fresh,
         adopted,
         name,
+        seen_before,
     }))
 }
 

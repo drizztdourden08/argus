@@ -46,4 +46,4 @@ const logCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.incl
 
 const stdinCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWith('/stdin'));
 
-export { board, isOpen, sendLine, typeIntoTerminal, line, logCalls, openTerminal, stdinCalls, summaryOf, tailOf, waitForSummary };
+export { board, isOpen, line, logCalls, openTerminal, stdinCalls, tailOf, typeIntoTerminal, waitForSummary };

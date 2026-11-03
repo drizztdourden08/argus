@@ -102,7 +102,7 @@ binary, so that one file is the whole install. `--print` shows the path and copi
 The verb prints the path and the exact config line to add, `"exe": "<path>"`, and edits no
 config itself.
 
-The in-use rule: self-install works while sessions hold the binary. Every open Claude session
+The in-use rule: self-install works while sessions hold the binary. Every open agent session
 keeps an `argus mcp` bridge running from the installed file, and a running `argus.exe` cannot be
 overwritten or deleted on Windows, but it can be renamed. So the copy goes to a temp name beside
 the target and is renamed over it, and when that fails because the target is in use, the current
@@ -221,6 +221,10 @@ toasts off, no session listening on it. Its run defs and worktree rows still poi
 folders, so nothing in it presses Play on a real launcher or removes a real worktree. The whole
 sequence below has been rehearsed end to end: Argus not in shadow mode on 47617 with writes,
 Node on 47618 reading the database Argus wrote, then the shim path.
+
+The sandbox below acts on real folders and processes. When the owner only needs to try a build
+on a copy of the boards, with writes and no outward effect, use `serve --preview` instead
+(`docs/preview.md`).
 
 Build the sandbox. The sandbox runs a COPY of the binary, never `target\release` while a
 rebuild may follow, and never the installed copy. `argus self-install --dir <sandbox>` makes
@@ -392,7 +396,7 @@ test that holds it.
 - **The verbs.** `start`, `stop`, `status`, `open`, `logs`, `resync` and `token` take
   `--data-dir <folder>` (alias `--home`) like `serve`, so a shadow home is addressed without
   `DASHBOARD_HOME`. The Node guard still refuses `stop`, `start`, `resync` and `token` on a Node
-  server (`tests/cli.rs`: `every_verb_takes_the_data_dir_flag_and_its_home_alias` and
+  server (`tests/it/cli.rs`: `every_verb_takes_the_data_dir_flag_and_its_home_alias` and
   `the_node_guard_holds_for_a_home_addressed_by_the_flag`).
 
 ## 3. The coord engine rollout
@@ -412,7 +416,7 @@ The gate of each step is the same:
 
 - The Rust ports for those verbs pass, and the Node suites for them pass with
   `COORD_ENGINE=argus ARGUS_EXE=$argus node --test <file>` from `$cfg\dashboard`.
-- `crates/argus/tests/coord_diff.rs` and its corpus lines show no difference for the verbs.
+- `crates/argus/tests/it/coord_diff.rs` and its corpus lines show no difference for the verbs.
 - One day of the real-usage replay on fresh copies (layer 4 of `docs/coord-port.md`), kept
   outside the repo.
 - Before the first step, the port fix of blocker 1 is landed and installed. It is what makes
@@ -470,6 +474,67 @@ trigger to flip back, then fix, then repeat the step.
 exit 120, `ARGUS_COORD_PARENT`, the shim log) and confirms the render reached every project. The
 lead then moves through 3a and 3b on its own. 3c (hooks) needs the Overlord's explicit go,
 because every session depends on it.
+
+### 3c in detail: the hooks
+
+What the Rust hooks do that Node's do not, both owner-approved:
+
+- A call whose payload has a non-empty `agent_id` (a sub-agent's) hands no inbox messages over
+  and marks none delivered, in `session-start`, `prompt`, `tool` and `stop`. They stay in the
+  inbox for the thread's own next hook. Node hands them to the sub-agent. Its activity rule
+  (a sub-agent's `tool` call marks no activity) is the same on both.
+- The `tool` hook of the thread itself keeps its wake listener fresh: when
+  `listen-<project>-<thread>.json` in `$node` names a live process and is older than two
+  minutes, its `at` is set to now (one small read, a write only then). The `hook listen` that
+  follows on `PostToolUse` then skips, instead of replacing a listener that still waits. A dead
+  or missing listener is left to that `hook listen`, which starts the next.
+
+The listener is the only long process. It is a hook host process (`async`, `asyncRewake`), so
+it can only be made by the three `hook listen` entries of `shared/hooks.json`. Through the shim
+each is a Node parent waiting (`spawnSync`) on the `argus.exe coord hook listen` child. For no
+`node ... hook listen` to stay resident, those three entries must call the exe directly. That is
+a render change of the Overlord (the first step below). The other hooks stay on the shim.
+
+The steps, in this order:
+
+1. The Overlord gives the go, the latency bench passes, 3a and 3b have run for a week.
+2. The Overlord renders the three `hook listen` entries (`PostToolUse`, `SessionStart`, `Stop`)
+   of `$cfg\shared\hooks.json` as `<exe> coord hook listen` with `$argus` spelled out and the
+   same `timeout`, `async` and `asyncRewake`, and re-renders every project. Check one
+   `.claude\settings.json`: the line still contains `hook listen`, which is how the session
+   start knows its wake is automatic.
+3. The lead edits `$node\config.json` in one save: `"coordEngine": "argus"`, `"exe"` as it is,
+   and `"coordVerbs"` the full list, the 3a and 3b verbs plus `hook`, or `["*"]` at `done`:
+
+   ```json
+   "coordVerbs": ["activity", "proc", "wake-fault", "check", "tick", "board", "dashboard",
+     "run", "ping", "lead", "portfolio", "worktree", "item", "test", "entry", "ask", "decide",
+     "notify", "message", "answer", "action", "todo", "lock", "log", "inbox", "agent", "build",
+     "launcher", "thread", "dispatch", "purge", "restore", "trash", "sync", "hook"]
+   ```
+
+4. Verify, from any project, after one new prompt in any session:
+
+   ```powershell
+   Get-Content "$node\logs\coord-shim.log" -Tail 5      # no new "fallback to node" lines
+   # The hooks run Argus: a listen stamp written since the flip has a "started" field, which
+   # only the Rust listener writes (Node writes pid and at).
+   Get-ChildItem "$node\listen-*.json" | ForEach-Object { "$($_.Name) $(Get-Content $_ -Raw)" }
+   # No resident Node listener: only argus.exe rows may match.
+   Get-CimInstance Win32_Process |
+     Where-Object { $_.Name -in 'node.exe', 'argus.exe' -and $_.CommandLine -match 'hook listen' } |
+     Select-Object ProcessId, Name, CommandLine
+   ```
+
+   Any `node.exe` row means step 2 did not reach that project (the lead re-renders it, then
+   the next `Stop` of that session replaces the listener, the server keeps one per thread).
+   A direct probe of one hook: `'{}' | & $argus coord hook tool` exits 0 and prints nothing.
+5. Roll back: set `"coordEngine": "node"` in `$node\config.json` (the next hook call runs
+   Node, no restart, no render). The Rust listeners that are running finish by themselves or
+   are replaced at the next `Stop`; they write the same stamps and read the same streams, so
+   nothing needs repair. To go all the way back, the Overlord renders the three entries as
+   `node .ai/tools/coord/coord.mjs hook listen` again. `$env:COORD_ENGINE = 'node'` covers one
+   shell only, and not the direct listen entries.
 
 ## 4. The cut
 

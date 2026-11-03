@@ -1,5 +1,6 @@
 //! What the responder says: every name at or under the suffix is the one address of Argus, and
 //! every other name is refused. There is no recursion and no forwarding.
+// test-tag: critical
 
 use std::net::Ipv4Addr;
 

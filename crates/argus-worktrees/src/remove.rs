@@ -3,8 +3,9 @@
 //! GUARDS: the caller (the page, or the project's lead or the rule's thread); the id is in the live listing; the folder
 //! is under a current rule; not a main checkout; not locked; the HEAD and dirty count the caller saw still hold; no live
 //! process uses the folder; a fresh read-only look agrees with the row; and the work: removing the folder loses nothing
-//! when it is clean and a branch or ref keeps HEAD. Anything else needs `discard` and the owner's say, and a backup is
-//! written first. Merged or not, the commits stay in the branch.
+//! when it is clean and a branch or ref keeps HEAD. Anything else is refused: the owning lead commits what is worth
+//! keeping, discards the rest inside the worktree and asks again. Only `discard` with the owner's say removes it as it
+//! stands, and a backup is written first. Merged or not, the commits stay in the branch.
 
 use crate::backup::{Backup, Need};
 use crate::board::{BoardFacts, Caller};
@@ -13,10 +14,12 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::exec::GitOutput;
 use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
+use crate::guards::is_brock_lock;
 use crate::inspect::{ScanCtx, inspect_dir};
 use crate::leftover_remove::{Within, git_within, unreadable_refusal};
 use crate::modules::NodeModules;
 use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
+use crate::progress::{WAITING, target_key};
 use crate::request::{Discarded, RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::Service;
@@ -49,15 +52,15 @@ fn relative_folder(root: &str, git: &str) -> String {
 }
 
 /// What losing the folder would cost.
-struct Safety {
+pub(crate) struct Safety {
     unmerged: Option<u32>,
-    kept: bool,
+    pub(crate) kept: bool,
     safe: bool,
 }
 
 impl Safety {
     /// Clean AND HEAD kept by a branch or another ref: removing the FOLDER loses nothing, merged or not.
-    fn of(now: &Fact) -> Self {
+    pub(crate) fn of(now: &Fact) -> Self {
         let unmerged = if now.merged { Some(0) } else { now.unmerged };
         let kept = now.referenced == Some(true)
             || (now.branch.is_some() && !now.detached)
@@ -134,11 +137,21 @@ impl Service {
         rescan: bool,
         what: impl FnOnce(&mut Trace) -> Result<RemoveOutcome>,
     ) -> Result<RemoveOutcome> {
-        let _one = self.one_at_a_time();
+        self.step(&input.id, WAITING);
         let (who, why) = Self::who_and_why(input);
+        let key = target_key(&input.id, self.ci());
+        let named = if input.id.trim().is_empty() {
+            "every gone worktree"
+        } else {
+            input.id.trim()
+        };
+        let holder = format!("the removal of {named} {who}");
+        let _one = self.one_at_a_time(&input.project, &holder, Some(&key));
+        self.step(&input.id, "checking");
         let mut trace = Trace::default();
         let thread = input.caller.thread();
         let result = what(&mut trace);
+        self.step_end(&input.id);
         match &result {
             Ok(out) => self.note(
                 &input.project,
@@ -172,7 +185,9 @@ impl Service {
                 );
             }
         }
-        if rescan {
+        // A folder in use changed nothing: no rescan, which in a big project holds up the next removal for a whole scan.
+        let in_use = matches!(&result, Err(err) if err.code == ErrorCode::InUse);
+        if rescan && !in_use {
             self.request_rescan(&input.project);
         }
         result
@@ -225,7 +240,10 @@ impl Service {
         crate::guards::check_caller(&board, &input.caller, &Self::caller_rules(&board, rule))?;
         let rule = self.rule_of(&board, &fact)?;
         self.assert_not_main(&fact)?;
-        Self::assert_not_locked(&fact)?;
+        Self::assert_not_locked(
+            &fact,
+            fact.leftover.is_none() && fact.exists && !input.prune,
+        )?;
         if input.job.is_some() && fact.leftover.is_none() {
             return Err(WtError::new(
                 ErrorCode::Conflict,
@@ -244,7 +262,7 @@ impl Service {
         self.remove_worktree(input, &board, &fact, &rule)
     }
 
-    fn not_listed(&self, input: &RemoveInput, board: &BoardFacts, wid: &str) -> WtError {
+    pub(crate) fn not_listed(&self, input: &RemoveInput, board: &BoardFacts, wid: &str) -> WtError {
         let rules: Vec<&Rule> = board.valid_rules();
         if let Err(err) = crate::guards::check_caller(board, &input.caller, &rules) {
             return err;
@@ -260,10 +278,18 @@ impl Service {
                 ),
             );
         }
+        let no_rule = if rules.is_empty() {
+            format!(
+                "; {} has no valid worktree rule, so Argus lists nothing there: add one first (coord worktree rule add <folder>, with --kind repo for a repository)",
+                input.project
+            )
+        } else {
+            String::new()
+        };
         WtError::new(
             ErrorCode::NotFound,
             format!(
-                "{} is not in the live listing of {} (coord worktree list): Argus only removes what it lists",
+                "{} is not in the live listing of {} (coord worktree list): Argus only removes what it lists{no_rule}",
                 input.id.trim(),
                 input.project
             ),
@@ -364,7 +390,7 @@ impl Service {
             now.repo.clone_from(&fact.repo);
         }
         self.assert_not_main(&now)?;
-        Self::assert_not_locked(&now)?;
+        Self::assert_not_locked(&now, true)?;
         if !now.registered {
             return Err(forbidden(format!(
                 "{} is not a linked worktree its repository lists: Argus never removes it",
@@ -418,7 +444,7 @@ impl Service {
             .join(" and ");
         if !input.discard {
             return Err(forbidden(format!(
-                "{} has {loss}: removing it discards them. The owner can do it from the page (Delete now), or send discard with the owner's entry that asks for it (--discard --owner-entry <id>)",
+                "{} has {loss}: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page, or send discard with his entry (--discard --owner-entry <id>)",
                 now.path
             )));
         }
@@ -453,8 +479,12 @@ impl Service {
         let safety = Safety::of(&now);
         let plan = self.plan_branch(input.branch, input.discard, &now);
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
+        self.step(&fact.id, "node_modules clear");
         let modules = self.clear_ignored_node_modules(&now);
+        self.step(&fact.id, "links");
         self.drop_links_before_git(&now, backup.as_ref(), modules)?;
+        self.lift_brock_lock(&now, backup.as_ref())?;
+        self.step(&fact.id, "git worktree remove");
         let run = self.git_remove(&now)?;
         let discarded = (!safety.safe || plan.force).then_some(Discarded {
             dirty: now.dirty,
@@ -472,6 +502,30 @@ impl Service {
             return self.git_could_not(&finish, backup, discarded);
         }
         Ok(self.removed(&finish, backup, discarded))
+    }
+
+    /// Brock git-locks its clones. When every link is gone and the lock reason (read just now from `git worktree list`)
+    /// is Brock's, the lock is lifted so `git worktree remove` can run. Any other lock was refused earlier.
+    fn lift_brock_lock(&self, now: &Fact, backup: Option<&Backup>) -> Result<()> {
+        if !now.locked.as_deref().is_some_and(is_brock_lock) {
+            return Ok(());
+        }
+        let run = self
+            .deps
+            .git
+            .write(Self::git_repo(now)?, &["worktree", "unlock", &now.path]);
+        if run.ok() {
+            return Ok(());
+        }
+        Err(WtError::new(
+            ErrorCode::GitFailed,
+            format!(
+                "git worktree unlock failed for {}: {}; nothing was removed",
+                now.path,
+                run.failure_text()
+            ),
+        )
+        .with_backup(backup.cloned()))
     }
 
     /// `git worktree remove` (`--force` only for uncommitted changes the caller discards).

@@ -1,5 +1,8 @@
 //! The global concurrency limit and its FIFO queue, a queued run that is stopped, the
 //! timeout, and retention (runs.lifecycle).
+//!
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_launchers::{RunLimits, RunStatus};
 

@@ -85,8 +85,10 @@ pub(super) fn register(r: &mut Router) {
     r.add("GET", path, RouteOpts::default(), list);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: the targets and the owner entry of a removal request.
     use super::*;
 
     #[test]

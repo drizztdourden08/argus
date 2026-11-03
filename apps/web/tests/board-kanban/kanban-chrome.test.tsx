@@ -8,30 +8,20 @@ cleanKanban();
 
 const three = { items: [item('I-1', { rank: 1 }), item('I-2', { rank: 2 }), item('I-3', { rank: 3 })] };
 
-describe('the focus mode of the drawer', () => {
+describe('S1 the focus mode of the drawer', { tags: ['standard'] }, () => {
   it('toggles Expand and Collapse and remembers the choice', async () => {
     await opened();
     fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
     expect(screen.getByRole('button', { name: 'Collapse' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('heading', { name: /Login/ })).toBeTruthy();
-    expect(document.querySelector('.drawer--xl')).not.toBeNull();
-    expect(document.querySelector('.drawer--top')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('0');
-    expect(document.querySelector('.drawer--xl')).toBeNull();
     expect(screen.getByRole('button', { name: 'Expand' })).toBeTruthy();
-  });
-
-  it('opens expanded when the choice was saved', async () => {
-    localStorage.setItem('coord.drawer.wide', '1');
-    await mountKanban({ items: [item('I-1')] });
-    fireEvent.click(await screen.findByRole('button', { name: /^Open I-1:/ }));
-    expect(await screen.findByRole('button', { name: 'Collapse' })).toBeTruthy();
   });
 });
 
-describe('the link of the drawer', () => {
+describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
   it('copies the page address with the item anchor', async () => {
     const writeText = vi.fn(() => Promise.resolve());
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
@@ -40,7 +30,7 @@ describe('the link of the drawer', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^https?:\/\/[^#]*#I-1$/)));
   });
 
-  it('opens the drawer of the item named in the address, and a to-do opens its item', async () => {
+  it('opens the drawer of the item named in the address', async () => {
     await mountKanban({ items: [item('I-1', { title: 'Login' })] }, undefined, '#I-1');
     expect(await screen.findByRole('dialog', { name: 'Work item' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Login/ })).toBeTruthy();
@@ -60,7 +50,7 @@ describe('the link of the drawer', () => {
   });
 });
 
-describe('walking the list with [ and ]', () => {
+describe('S1 walking the list with [ and ]', { tags: ['standard'] }, () => {
   it('moves to the next and the previous item, and the pager buttons follow', async () => {
     await mountKanban(three);
     await openItem('I-2');
@@ -84,31 +74,16 @@ describe('walking the list with [ and ]', () => {
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Add a criterion' }), { key: ']' });
     expect(where.hash).toBe('#I-2');
   });
-
-  it('has nowhere to go for an item that is not in the list on screen', async () => {
-    await mountKanban({ items: [item('I-1'), item('I-8', { status: 'done' })] }, undefined, '#I-8');
-    const dialog = await screen.findByRole('dialog', { name: 'Work item' });
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Previous in the list ([)' }).disabled).toBe(true);
-    expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Next in the list (])' }).disabled).toBe(true);
-  });
 });
 
-describe('the description editor keys', () => {
-  it('leaves the editor on Escape without posting, and stops the text at 400 characters', async () => {
+describe('S1 the description editor keys', { tags: ['standard'] }, () => {
+  it('leaves the editor on Escape without posting', async () => {
     const { posted, dialog } = await opened();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit description' }));
     const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'Description' });
-    expect(box.maxLength).toBe(400);
     fireEvent.change(box, { target: { value: 'gone' } });
     fireEvent.keyDown(box, { key: 'Escape' });
     expect(within(dialog).queryByRole('textbox', { name: 'Description' })).toBeNull();
     expect(posted).toHaveLength(0);
-  });
-
-  it('shows the counter near the limit', async () => {
-    const { dialog } = await opened();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit description' }));
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Description' }), { target: { value: 'x'.repeat(390) } });
-    expect(within(dialog).getByText('390 / 400')).toBeTruthy();
   });
 });

@@ -22,7 +22,7 @@ use crate::read::read_board_file;
 use crate::state::State;
 
 const RETRY_LATER: Duration = Duration::from_secs(2);
-const FOREIGN_META: [&str; 1] = ["procs"];
+const FOREIGN_META: [&str; 2] = ["procs", "worktrees"];
 const PROJECT_FOREIGN_META: [&str; 1] = ["worktrees"];
 
 /// What an export wrote.
@@ -43,7 +43,7 @@ fn colls(project: bool) -> Vec<Coll> {
     let mut out = PAGE_COLLECTIONS.to_vec();
     out.extend([Coll::Meta, Coll::Launches]);
     if !project {
-        out.push(Coll::Cards);
+        out.extend([Coll::Cards, Coll::Deps]);
     }
     out
 }

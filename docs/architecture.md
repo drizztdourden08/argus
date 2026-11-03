@@ -44,6 +44,54 @@ The Rust lane runs beside the TypeScript gates and Brock enforces both.
 The Brock cargo lane runs when a root `Cargo.toml` exists. A rule that blocks a sound design goes
 to the Brock lead with `coord lead brock "..."`.
 
+Integration tests are one binary per crate: every file is a module of
+`crates/<crate>/tests/it/main.rs`, so a crate links its tests once. Run one file with
+`cargo test -p <crate> --test it <module>::`. A test that must run in its own process stays a
+top-level file in `tests/` (`argus-coord`: `latency_bench`, the ignored bench).
+
+### Rust test tags and the runner
+
+Every Rust file that holds a `#[test]` or `#[tokio::test]` carries exactly one tag line, as in the
+owner's test standard (`X:/ai-config/docs/test-standard.md`):
+
+| Tag | Line | Runs |
+|---|---|---|
+| critical | `// test-tag: critical` | every `pnpm test`, for the changed files only |
+| standard | `// test-tag: standard` | `pnpm test:pr`, critical plus standard |
+| e2e | `// test-tag: e2e` | `pnpm test:e2e`; each test also has `#[ignore = "e2e"]` |
+
+The line is the first line after the `//!` header block of a test file, or the line above
+`#[cfg(test)]` for an inline `mod tests`. A file that mixes kinds is split in two.
+
+Parity tests (the `argus-coord` remote differ and anything that compares Node with Rust,
+`argus-parity`) are e2e. They run only before the daily sync, never in a plain `cargo test`.
+
+`scripts/rust-tests.mjs` runs only the tests that cover the changed files. It never runs a whole
+crate by default, never the whole workspace, and runs one `cargo test -p <crate> -j 3` at a time.
+
+```text
+node scripts/rust-tests.mjs --tag critical|standard|e2e --changed [--base <ref>] [--dry-run]
+node scripts/rust-tests.mjs --tag critical|standard|e2e --files <file>... [--dry-run]
+node scripts/rust-tests.mjs --check-tags
+```
+
+- `--changed` takes the files touched since `git merge-base HEAD main` (or `--base`), plus
+  uncommitted and untracked files.
+- A changed test file runs its own module. A changed helper file (no tests) runs the tests of its
+  binary that use the module. A changed source file runs every tagged test of its crate and of the
+  crates that depend on it directly (`--depth <n>` goes further, default 1). A changed crate
+  `Cargo.toml` runs the tagged tests of that crate only.
+- Module paths follow the `mod` declarations, `#[path]` included: `tests/it/<x>.rs` is `<x>::` of
+  `--test it`, `src/specs/<x>.rs` is `specs::<x>::` of `--lib`, an inline `mod tests` in
+  `src/<a>/<b>.rs` is `a::b::tests::`, and `tests/<name>.rs` is its own `--test <name>`.
+- `--ignored` and `--test-threads=1` are added for e2e. Filters are substring matches, so the runner
+  adds `--skip` for a module of another tag that a filter would also match.
+- A file with no tag line or two tag lines is refused (exit 1). `--check-tags` lists every Rust file
+  with tests and not exactly one tag, and every e2e file with fewer `#[ignore]` than tests; it only
+  reads files. It is the Rust half of the lint rule `local/test-has-one-tag`.
+- Once a week the lead's checker runs `cargo clean --profile dev`: it drops the stale debug build
+  (it reached 170 GiB before the lighter profiles) and leaves `target/release` alone.
+
 ## Workspace layout
 
 ```text
@@ -266,7 +314,7 @@ One convention for every service, so a service is wired by touching only its own
 | `adapters/<svc>.rs` | the crate's store, host and sink traits implemented over `DocStore`, the tables, `BoardReader`, the wake engine and `ActivityAdapter` |
 | `adapters/activity/<crate>.rs` | the crate's activity port over `ActivityLog` (already written for every crate) |
 | `routes/<svc>.rs` | `register(&mut Router)`, called by one line of `routes::register_all` |
-| `tests/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
+| `tests/it/<svc>.rs` | the Node HTTP test of the service, ported, over `TestServer` |
 
 `services/compose.rs` holds the three orders and already calls every service: `build_all`
 (runs, watcher, sync, reaper, reconciler, wake, stale, procs, worktrees, cache, notify), `start_all` (the
@@ -411,6 +459,14 @@ The exporter is DESIGN 4.2:
 Argus never writes a board from an export, so the watcher event after an Argus write finds equal
 hashes and emits nothing.
 
+The one exception is the cross-board dependencies (`argus_board::deps`). Argus now writes, on its
+own and under the board lock, the `waitsOn` field of a requester item and the `requestedBy` field of
+an assignee item, and the `deps` collection (the ledger, ids `D-n`) of the `_portfolio` board. It
+does so on a `coord dep` call through the routes below, on every export of a project board
+(reconcile, whoever wrote it) and in a sweep every 5 minutes. A reconcile that finds nothing to
+change writes nothing, so the export that follows a write ends the loop. No other field of a board is
+written outside a call of a thread or the owner.
+
 ### Owner posts
 
 `post_entry` is DESIGN 4.3: validate (256 KB body, the `O-<base36>-<4>` id, the reply and op
@@ -462,10 +518,14 @@ the log. JSON field names and value types are copied from the Node answers; key 
 | GET | `/api/p/:key/wakes/stream` | wake stream (SSE) |
 | GET, POST | `/api/p/:key/wakes` | wakes |
 | GET | `/api/p/:key/wakes/listeners` | wakes |
+| GET | `/api/p/:key/wakes/notices` | wakes (the passive notices digest of the prompt hook) |
 | GET | `/api/p/:key/presence` | presence stream (SSE) |
 | GET | `/api/presence` | presence |
 | GET | `/api/wake-faults` | wake faults |
 | POST | `/api/wake-faults/clear` | wake faults (CLI only) |
+| POST | `/api/p/:key/inbox/read` | `{thread, deps?, actor?}`; stamps the read, acknowledges the open dependency requests listed; `{readAt, acked}` |
+| GET | `/api/stalls` | `?project=`; `{stalls, text}`, the open stalls of the stall watch (the page reads the `_portfolio/stalls` docs) |
+| POST | `/api/stalls/ack` | `{project, note, by}`; acknowledges every open stall of a project (CLI and Overlord only); `{acked, text}`, 409 when none is open |
 | GET | `/api/procs` | processes |
 | POST | `/api/procs/sample` | processes |
 | GET, POST | `/api/procs/rules` | processes |
@@ -504,6 +564,20 @@ the server reloads itself) and reports `rust` in place of `node`.
 | Method | Path | Answer |
 |---|---|---|
 | PUT | `/api/p/:key/palette` | `{palette}` in (`basic brock rotp archipelia bxel`), `{palette}` out, page only |
+| POST | `/api/deps` | ask: `{project, item, actor, target, to?, title, description?, ac?, onto?}`; `{dep, text}` |
+| POST | `/api/deps/:id/close` | `{as: done\|dropped\|blocked, reason?, actor}`; `{dep, text}` |
+| POST | `/api/deps/:id/reopen` | `{actor}`; `{dep, text}` |
+| POST | `/api/deps/:id/cancel` | `{reason?, actor}` (the page is always the actor `owner`); `{dep, text}` |
+| GET | `/api/deps` | `?project=&view=waiting\|for-me\|all&state=`; `{deps, text}` |
+| GET | `/api/deps/:id` | `?project=`; `{dep, requester, assignee, text}` |
+| GET | `/api/deps/by-item/:project/:item` | the live dependency of an item, else its latest; `{dep, text}` |
+
+The dependency routes and the two MCP tools `list_dependencies` and `cancel_dependency` exist in
+Argus only. A refusal is the usual error body with the message of the rule and 400, 404 or 409.
+While `deps.enabled` is false in `config.json` every dependency route answers 404 `dependencies are
+off`, and the two tools are hidden from the server's `tools/list` and refused. In shadow mode the
+writes answer `read_only`. The parity run leaves the routes, the two tools and the fields out of
+the Node comparison.
 
 No other route is added before the switch-over, so the Node and Rust servers answer the same set.
 
@@ -556,9 +630,47 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `presence` | Open board tabs, `board-closed` faults |
 | `agent_wakes` | `agent-stale` and `agent-checkin` |
 | `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
+| `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
+| `dep_wakes` | `dep-request`, `dep-resolved`, `dep-blocked`, `dep-cancelled` and `dep-reopened` from the history of the dependency ledger, once per `D-n#seq` (docs/wake-policy.md) |
+| `wake_policy` | The one table reason to wake or passive, `class_of`, the `wakePolicy` debounce and digest settings |
+| `notices` | The digest of the passive notices since a thread's last turn, and its one line |
 
 It listens to `Applied` events from the bus and offers `submit(Wake)` to other crates (procs,
 worktrees, agents). It never decides from page data: it reads boards through the `Boards` trait.
+
+#### The wake table
+
+A thread stays idle until Argus signals a reason on the board (docs/wake-policy.md). The engine
+applies this table in `submit`, the one place every wake is queued, so every producer obeys it. A
+passive row is recorded (status `passive`), mirrored and counted in the board header, and printed
+in the next prompt hook's digest line; it never reaches a listener and is never replayed.
+
+| Reason | Class | Why |
+|---|---|---|
+| `owner-answer`, `owner-note`, `owner-decision`, `item-assigned`, `resume` | wake | the owner posted for this thread |
+| `portfolio-decision`, `portfolio-note` | wake | the Overlord or the owner sent it down |
+| `lead-message` | wake | a lead's decision: it asks for action |
+| `thread-message` | wake | a message to this thread (also a worktree request it filed, done or refused) |
+| `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
+| `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
+| `process-reaped` | wake | the reaper stopped its own hung run |
+| `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
+| `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |
+| `open-resend` | wake | to the Overlord every 15 min while a fault, `worktree-stale` or `remote-sync-due` stays open: one coalesced line |
+| `lead-info` | passive | a lead's note, for information only |
+| `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
+| `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
+| `kanban-stale` | passive | item staleness |
+| `process-alert` | passive | hogs and orphans the process monitor saw |
+| `worktree-stale`, `worktree-review` | passive | worktree hygiene |
+| `launcher-stale`, `launcher-master-missing` | passive | launcher hygiene |
+| `remote-sync-due` | passive | the daily remote sync reminder |
+| `dep-cancelled`, `dep-reopened` | passive | a request withdrawn, or open again |
+
+A reason the table does not list wakes. On top of the table, `wakePolicy.debounceMs` (5 min)
+lets a thread be woken at most once per window; a wake inside it joins one digest sent
+`wakePolicy.digestMs` (20 min) after the last wake, and an owner reason goes at the end of the
+window instead.
 
 ### Process monitor (argus-procs)
 
@@ -576,6 +688,10 @@ Slice 4 ships the PowerShell sampler of the Node server (one hidden `powershell.
 -EncodedCommand` printing `Win32_Process` as JSON, the `ps` parser elsewhere) so the numbers match
 Node while the tab is ported. Slice 6 swaps in the native sampler of `argus-native`. Kills call
 `taskkill /PID n [/T] /F` as Node does.
+
+A thread may end its own project's processes (`coord proc kill` from a project's thread), and the
+reaper ends hung searches and test or build runs after each sample. Both go through one scope
+rule: see [process-reaper.md](process-reaper.md).
 
 ### Worktrees (argus-worktrees)
 
@@ -685,7 +801,9 @@ permission rule `mcp__coord-dashboard__<tool>` stays valid. The tool host is wri
 `GET /mcp` 405), because the Node transport is that small and its exact behaviour is the contract.
 `TOOL_DEFS` is a JSON file in the crate, generated once from the Node `tools/list` answer and
 compared with it in a test. Tools: the 23 of DESIGN 7.1, 13.7 and 13.13 (14 read tools, the 8
-tools that act as the owner, and `notify_owner`, which speaks to him).
+tools that act as the owner, and `notify_owner`, which speaks to him), then `list_dependencies`
+(read) and `cancel_dependency` (as the owner), which the comparison leaves out. The stdio bridge
+answers `tools/list` locally and always lists both; a call is refused while dependencies are off.
 Resources and templates as listed there. The permission model (`mcp.allow`, `deny`, `readOnly`)
 is unchanged.
 

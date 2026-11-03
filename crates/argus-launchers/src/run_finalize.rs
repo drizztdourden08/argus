@@ -67,6 +67,9 @@ impl<H: ProcessHost> RunService<H> {
             ..RunPatch::default()
         };
         self.state().live.remove(&live.id);
+        if let Some(row) = self.get(&live.scope, &live.rid) {
+            self.notify_finishing(&row);
+        }
         let ended = self.set_state(&live.scope, &live.rid, &patch);
         self.prune(&live.scope, &live.name);
         if let Some(row) = &ended {
@@ -126,6 +129,18 @@ impl<H: ProcessHost> RunService<H> {
         self.prune(&row.scope, &row.name);
         self.notify_ended(&ended);
         ended
+    }
+
+    /// An ended run the dashboard found harmful after the fact (a check run that changed tracked
+    /// files): failed, with `error` as its reason. `None` for an unknown or a still live run.
+    pub fn fail_ended(&self, key: &str, rid: &str, error: &str) -> Option<RunRow> {
+        let row = self.get(key, rid).filter(|r| !r.status.is_live())?;
+        let patch = RunPatch {
+            status: Some(RunStatus::Failed),
+            error: Some(Some(error.to_owned())),
+            ..RunPatch::default()
+        };
+        self.set_state(&row.scope, &row.id, &patch)
     }
 
     /// A slot freed: the oldest queued run (any scope) takes it.

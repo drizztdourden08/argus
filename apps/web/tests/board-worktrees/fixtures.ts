@@ -5,10 +5,11 @@ import type { WorktreeRow } from '../../src/screens/board/tabs/worktrees/model';
 const MIN = 60_000;
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
+const NOW = Date.parse('2026-10-26T12:00:00.000Z');
 
 type LeftoverFacts = NonNullable<Worktree['leftover']>;
 
-const ago = (ms: number): string => new Date(Date.now() - ms).toISOString();
+const ago = (ms: number): string => new Date(NOW - ms).toISOString();
 
 const rule = (extra: Partial<WorktreeRule> = {}): WorktreeRule => ({
   id: 'W-1',
@@ -86,4 +87,4 @@ const leftover = (name: string, extra: Partial<Worktree> = {}, facts: Partial<Le
 const oldMeta = (extra: Partial<WorktreesMeta> = {}): WorktreesMeta =>
   metaDoc({ leftoverOld: { days: 3, count: 2, sizeMB: 2048 }, ...extra });
 
-export { DAY, HOUR, MIN, ago, leftover, metaDoc, oldMeta, rule, worktree };
+export { DAY, HOUR, MIN, NOW, ago, leftover, metaDoc, oldMeta, rule, worktree };

@@ -1,11 +1,13 @@
 //! `coord proc kill | kill-rule`: end a process the monitor lists, or every process a rule takes.
-//! The Overlord's only; the dashboard checks it again.
+//! Both are the Overlord's; the dashboard checks it again. Any other thread's `kill` is the kill
+//! of its own project's process ([`super::own`]).
 
 use argus_core::js;
 use serde_json::{Value, json};
 
 use super::dashboard;
 use super::list::mem;
+use super::own;
 use super::patch::older_than;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
@@ -14,7 +16,7 @@ use crate::verbs::remote::support::overlord;
 use crate::verbs::remote::support::text::{cell, collapse, is_integer, number_of};
 
 const ADVICE: &str = "Ask it with coord lead portfolio \"<what and why>\", or the owner uses the buttons on Argus > Processes.";
-const KILL_USAGE: &str = "name the process: coord proc kill <pid> [--tree] --reason \"...\"";
+const KILL_USAGE: &str = "name the process: coord proc kill <pid> [--tree] [--reason \"...\"]";
 
 fn pid_of(call: &Call<'_>) -> Result<i64, CoordError> {
     let n = call.positional.first().map_or(f64::NAN, |p| number_of(p));
@@ -40,11 +42,14 @@ fn reason_of(call: &Call<'_>) -> Result<String, CoordError> {
     Ok(reason)
 }
 
-/// `coord proc kill <pid> [--tree] --reason "..."`.
+/// `coord proc kill <pid> [--tree] [--reason "..."]`: the Overlord's kill of a listed process
+/// (`--reason` required), else the calling thread's kill of its own process.
 pub(super) fn kill(call: &mut Call<'_>) -> Outcome {
     let pid = pid_of(call)?;
+    let Ok(by) = overlord::actor(call, "kill a process", ADVICE) else {
+        return own::kill(call, pid);
+    };
     let reason = reason_of(call)?;
-    let by = overlord::actor(call, "kill a process", ADVICE)?;
     let client = dashboard(call)?;
     let listing = client.get("/api/procs")?;
     let Some(found) = list_of(&listing, "procs")
@@ -64,13 +69,7 @@ pub(super) fn kill(call: &mut Call<'_>) -> Outcome {
     body["reason"] = json!(reason);
     body["by"] = json!(by);
     let out = client.post("/api/procs/kill", &body)?;
-    if !js::truthy(&out["killed"]) {
-        return Err(CoordError::refuse(format!(
-            "could not kill {} {pid}: {}",
-            cell(out.get("name")),
-            cell(out.get("error"))
-        )));
-    }
+    own::ensure_killed(&out, pid)?;
     let and_tree = if tree { " and its tree" } else { "" };
     let line = format!(
         "killed {} {pid}{and_tree} ({}).",

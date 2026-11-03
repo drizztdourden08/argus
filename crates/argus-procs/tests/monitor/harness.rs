@@ -2,9 +2,10 @@
 
 use argus_procs::{
     Activity, KillResult, Killer, Meta, NoResponder, Options, Ports, ProcDoc, ProcRow, ProcsConfig,
-    ProcsHost, ProcsService, ProcsStore, ProjectRoot, Sample, Sampler, WakeRequest,
+    ProcsHost, ProcsService, ProcsStore, ProjectFolders, ProjectRoot, Sample, Sampler, WakeRequest,
 };
 use serde_json::{Value, json};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use tempfile::TempDir;
 
@@ -23,6 +24,7 @@ pub struct Spec {
     pub start: i64,
     pub cpu: i64,
     pub responding: Option<bool>,
+    pub cwd: Option<&'static str>,
 }
 
 impl Spec {
@@ -37,6 +39,7 @@ impl Spec {
             start: T0 - 10 * MIN,
             cpu: 0,
             responding: None,
+            cwd: None,
         }
     }
 }
@@ -52,6 +55,7 @@ pub fn proc(spec: Spec) -> ProcRow {
         start_ms: spec.start,
         cpu_ms: spec.cpu,
         responding: spec.responding,
+        cwd: spec.cwd.map(ToString::to_string),
     }
 }
 
@@ -81,10 +85,43 @@ pub struct Fake {
     pub acts: Mutex<Vec<Activity>>,
     pub warns: Mutex<Vec<String>>,
     pub published: Mutex<Option<(Vec<ProcDoc>, Option<Meta>)>>,
+    /// How many times the store was written.
+    pub writes: Mutex<usize>,
     pub killed: Mutex<Vec<u32>>,
+    /// Each kill as (pid, tree, the descendants it was given).
+    pub trees: Mutex<Vec<(u32, bool, Vec<u32>)>>,
+    /// The folders of the projects; none means the default (the roots).
+    pub folders: Mutex<Option<Vec<ProjectFolders>>>,
+    /// The folders `cwds` answers, for rows sampled without one.
+    pub cwds: Mutex<HashMap<u32, String>>,
+    /// Every kill fails.
+    pub kill_fails: Mutex<bool>,
 }
 
 impl Fake {
+    pub fn trees(&self) -> Vec<(u32, bool, Vec<u32>)> {
+        lock(&self.trees).clone()
+    }
+
+    pub fn set_folders(&self, folders: &[(&str, &[&str])]) {
+        let all = folders
+            .iter()
+            .map(|(key, list)| ProjectFolders {
+                key: (*key).to_string(),
+                folders: list.iter().map(ToString::to_string).collect(),
+            })
+            .collect();
+        *lock(&self.folders) = Some(all);
+    }
+
+    pub fn set_cwd(&self, pid: u32, cwd: &str) {
+        lock(&self.cwds).insert(pid, cwd.to_string());
+    }
+
+    pub fn fail_kills(&self) {
+        *lock(&self.kill_fails) = true;
+    }
+
     pub fn sent(&self) -> Vec<WakeRequest> {
         lock(&self.sent).clone()
     }
@@ -103,6 +140,10 @@ impl Fake {
 
     pub fn published(&self) -> Option<(Vec<ProcDoc>, Option<Meta>)> {
         lock(&self.published).clone()
+    }
+
+    pub fn writes(&self) -> usize {
+        *lock(&self.writes)
     }
 
     pub fn wipe(&self) {
@@ -126,11 +167,19 @@ impl Sampler for Fake {
             procs: lock(&self.current).clone(),
         })
     }
+
+    fn cwds(&self, pids: &[u32]) -> HashMap<u32, String> {
+        let known = lock(&self.cwds);
+        pids.iter()
+            .filter_map(|p| known.get(p).map(|c| (*p, c.clone())))
+            .collect()
+    }
 }
 
 impl ProcsStore for Fake {
     fn replace(&self, docs: &[ProcDoc], meta: Option<&Meta>) -> Result<(), String> {
         *lock(&self.published) = Some((docs.to_vec(), meta.cloned()));
+        *lock(&self.writes) += 1;
         Ok(())
     }
 }
@@ -141,6 +190,22 @@ impl ProcsHost for Fake {
             key: "alpha".to_string(),
             root: "X:\\alpha".to_string(),
         }]
+    }
+
+    fn project_folders(&self) -> Vec<ProjectFolders> {
+        lock(&self.folders).clone().unwrap_or_else(|| {
+            self.project_roots()
+                .into_iter()
+                .map(|r| ProjectFolders {
+                    key: r.key,
+                    folders: vec![r.root],
+                })
+                .collect()
+        })
+    }
+
+    fn lead_of(&self, project: &str) -> Option<String> {
+        Some(format!("{project}-lead"))
     }
 
     fn tray_pid(&self) -> Option<u32> {
@@ -166,8 +231,15 @@ impl ProcsHost for Fake {
 }
 
 impl Killer for Fake {
-    fn kill(&self, pid: u32, _tree: bool, _descendants: &[u32]) -> KillResult {
+    fn kill(&self, pid: u32, tree: bool, descendants: &[u32]) -> KillResult {
+        if *lock(&self.kill_fails) {
+            return KillResult {
+                ok: false,
+                detail: Some("access is denied".to_string()),
+            };
+        }
         lock(&self.killed).push(pid);
+        lock(&self.trees).push((pid, tree, descendants.to_vec()));
         KillResult {
             ok: true,
             detail: None,
@@ -187,6 +259,8 @@ pub struct Setup {
     pub self_pid: Option<u32>,
     pub tray: Option<u32>,
     pub sampler_pid: Option<u32>,
+    /// config.json `procs.reaper`.
+    pub reaper: Option<Value>,
 }
 
 pub struct Harness {
@@ -212,9 +286,12 @@ impl Harness {
             store: fake.clone(),
             host: fake.clone(),
         };
-        let config = setup
+        let mut config = setup
             .repeat_ms
             .map_or(json!({}), |ms| json!({ "repeatMs": ms }));
+        if let Some(reaper) = setup.reaper {
+            config["reaper"] = reaper;
+        }
         let options = Options {
             config: ProcsConfig::from_json(&config),
             rules_file,

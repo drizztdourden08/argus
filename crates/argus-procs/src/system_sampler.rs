@@ -3,8 +3,9 @@
 use crate::clock::now_ms;
 use crate::ports::Sampler;
 use crate::types::{ProcRow, Sample};
+use std::collections::HashMap;
 use std::ffi::OsStr;
-use sysinfo::{Process, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
+use sysinfo::{Pid, Process, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
 
 /// Reads the process table through the operating system.
 #[derive(Debug, Default, Clone, Copy)]
@@ -31,6 +32,7 @@ fn row_of(process: &Process) -> ProcRow {
         start_ms: seconds.saturating_mul(1000),
         cpu_ms: i64::try_from(process.accumulated_cpu_time()).unwrap_or(0),
         responding: None,
+        cwd: None,
     }
 }
 
@@ -65,5 +67,21 @@ impl Sampler for SystemSampler {
             sampler_pid: None,
             procs,
         })
+    }
+
+    fn cwds(&self, pids: &[u32]) -> HashMap<u32, String> {
+        if pids.is_empty() {
+            return HashMap::new();
+        }
+        let ids: Vec<Pid> = pids.iter().map(|p| Pid::from_u32(*p)).collect();
+        let mut system = System::new();
+        let kind = ProcessRefreshKind::nothing().with_cwd(UpdateKind::Always);
+        system.refresh_processes_specifics(ProcessesToUpdate::Some(&ids), true, kind);
+        ids.iter()
+            .filter_map(|id| {
+                let cwd = system.process(*id)?.cwd()?.display().to_string();
+                (!cwd.is_empty()).then_some((id.as_u32(), cwd))
+            })
+            .collect()
     }
 }

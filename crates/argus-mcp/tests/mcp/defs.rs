@@ -1,15 +1,17 @@
 //! The tool definitions.
+//! K2: the tool definitions are the contract of the MCP layer.
+// test-tag: critical
 
 use std::collections::HashSet;
 
 use argus_mcp::{is_mutating, tool_def, tool_defs};
 
 #[test]
-fn there_are_23_tools_with_unique_names_object_schemas_and_annotations() {
+fn there_are_25_tools_with_unique_names_object_schemas_and_annotations() {
     let defs = tool_defs();
-    assert_eq!(defs.len(), 23);
+    assert_eq!(defs.len(), 25);
     let names: HashSet<&str> = defs.iter().filter_map(|d| d["name"].as_str()).collect();
-    assert_eq!(names.len(), 23);
+    assert_eq!(names.len(), 25);
     for d in defs {
         let name = d["name"].as_str().expect("a name");
         assert_eq!(d["inputSchema"]["type"], "object", "{name}");
@@ -24,7 +26,7 @@ fn there_are_23_tools_with_unique_names_object_schemas_and_annotations() {
     let read_only = defs
         .iter()
         .filter(|d| d["annotations"]["readOnlyHint"] == true);
-    assert_eq!(read_only.count(), 14);
+    assert_eq!(read_only.count(), 15);
     assert_eq!(
         tool_def("run_stop").expect("run_stop")["annotations"]["destructiveHint"],
         true

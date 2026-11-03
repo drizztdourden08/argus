@@ -1,6 +1,7 @@
 //! The monitor's settings: config.json `procs`.
 
 use crate::num::to_millis;
+use crate::reaper::ReaperConfig;
 use serde_json::Value;
 
 pub const DEFAULT_SAMPLE_MS: u64 = 30_000;
@@ -8,12 +9,14 @@ pub const DEFAULT_REPEAT_MS: u64 = 12 * 3_600_000;
 pub const DEFAULT_START_DELAY_MS: u64 = 3000;
 const MIN_SAMPLE_MS: f64 = 1000.0;
 
-/// How often to sample, how long an alert waits before it repeats, and the delay of the first sample.
+/// How often to sample, how long an alert waits before it repeats, the delay of the first
+/// sample, and the reaper's settings (`procs.reaper`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProcsConfig {
     pub sample_ms: u64,
     pub repeat_ms: u64,
     pub start_delay_ms: u64,
+    pub reaper: ReaperConfig,
 }
 
 impl Default for ProcsConfig {
@@ -22,11 +25,13 @@ impl Default for ProcsConfig {
             sample_ms: DEFAULT_SAMPLE_MS,
             repeat_ms: DEFAULT_REPEAT_MS,
             start_delay_ms: DEFAULT_START_DELAY_MS,
+            reaper: ReaperConfig::default(),
         }
     }
 }
 
-fn setting(config: &Value, key: &str, default: u64, min: f64) -> u64 {
+/// A setting in milliseconds of at least `min`; a missing or bad value keeps `default`.
+pub(crate) fn setting(config: &Value, key: &str, default: u64, min: f64) -> u64 {
     let number = match config.get(key) {
         Some(Value::Number(n)) => n.as_f64(),
         Some(Value::String(s)) if !s.is_empty() => s.trim().parse().ok(),
@@ -38,17 +43,20 @@ fn setting(config: &Value, key: &str, default: u64, min: f64) -> u64 {
 }
 
 impl ProcsConfig {
-    /// Reads `sampleMs`, `repeatMs` and `startDelayMs`; a missing or bad value keeps its default.
+    /// Reads `sampleMs`, `repeatMs`, `startDelayMs` and `reaper`; a missing or bad value keeps
+    /// its default.
     #[must_use]
     pub fn from_json(config: &Value) -> Self {
         Self {
             sample_ms: setting(config, "sampleMs", DEFAULT_SAMPLE_MS, MIN_SAMPLE_MS),
             repeat_ms: setting(config, "repeatMs", DEFAULT_REPEAT_MS, 1.0),
             start_delay_ms: setting(config, "startDelayMs", DEFAULT_START_DELAY_MS, 0.0),
+            reaper: ReaperConfig::from_json(config.get("reaper").unwrap_or(&Value::Null)),
         }
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

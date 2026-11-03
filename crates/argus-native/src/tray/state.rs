@@ -1,5 +1,6 @@
 //! What the tray shows: the state of the server and how many things wait for the owner. Pure, so
 //! it is tested without a window.
+// test-tag: critical
 
 use super::icon::IconKind;
 

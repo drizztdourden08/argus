@@ -1,4 +1,5 @@
 //! The verdict on one probe: what the two sides gave, put through the rules and compared.
+// test-tag: critical
 
 use serde_json::json;
 

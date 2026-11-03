@@ -1,6 +1,8 @@
 //! `argus parity` against two real test servers on ephemeral ports, started from the same fixture
 //! boards: no route differs; after one doc is changed on one side, exactly that doc's routes
 //! are reported; a server that cannot be reached is an error; and the comparison writes nothing.
+//! Keep rule: E3.
+// test-tag: e2e
 
 use std::path::Path;
 
@@ -73,6 +75,7 @@ fn differing(report: &Report) -> Vec<&str> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn two_servers_on_the_same_boards_have_no_difference() {
     let p = pair().await;
     let report = compare(&options(&p)).await.expect("a report");
@@ -107,6 +110,7 @@ fn change_title(t: &TestServer, title: &str) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_changed_doc_is_reported_with_its_path_and_nothing_else_is() {
     let p = pair().await;
     change_title(&p.right, "A title only the right side has");
@@ -138,6 +142,7 @@ async fn a_changed_doc_is_reported_with_its_path_and_nothing_else_is() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn asking_for_a_project_compares_only_its_scope() {
     let p = pair().await;
     let mut o = options(&p);
@@ -152,6 +157,7 @@ async fn asking_for_a_project_compares_only_its_scope() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn the_comparison_writes_nothing() {
     let p = pair().await;
     let seqs = |p: &Pair| {
@@ -166,6 +172,7 @@ async fn the_comparison_writes_nothing() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_server_that_cannot_be_reached_is_an_error() {
     let p = pair().await;
     let closed = std::net::TcpListener::bind(("127.0.0.1", 0))
@@ -179,6 +186,7 @@ async fn a_server_that_cannot_be_reached_is_an_error() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn skipped_routes_are_listed_and_not_compared() {
     let p = pair().await;
     let mut o = options(&p);
@@ -190,6 +198,7 @@ async fn skipped_routes_are_listed_and_not_compared() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+#[ignore = "e2e"]
 async fn a_board_file_of_nul_bytes_is_its_own_finding_and_fails_the_run() {
     let p = pair().await;
     let coord = tempfile::tempdir().expect("coord home");

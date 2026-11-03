@@ -22,6 +22,9 @@ pub enum ClientError {
     /// The server did not answer; the detail names the cause (`ECONNREFUSED` ...). The Node
     /// client gives this error the exit code 3.
     Down(Option<String>),
+    /// The server accepted the call but did not answer within the time limit (seconds): it is
+    /// running, and the work may still be going on there. Never "not running".
+    Timeout(u64),
     /// The server answered with an error status.
     Http {
         /// The status code.
@@ -46,6 +49,10 @@ impl fmt::Display for ClientError {
         match self {
             ClientError::Down(None) => f.write_str(DOWN_MESSAGE),
             ClientError::Down(Some(detail)) => write!(f, "{DOWN_MESSAGE}: {detail}"),
+            ClientError::Timeout(secs) => write!(
+                f,
+                "the dashboard did not answer in time ({secs} s): the call may still be running there"
+            ),
             ClientError::Http { message, .. } => f.write_str(message),
         }
     }
@@ -68,6 +75,14 @@ fn cause(e: &ureq::Error) -> String {
             "ECONNREFUSED".to_owned()
         }
         other => other.to_string(),
+    }
+}
+
+/// A call that ran past its limit is a timeout; every other failure to reach the server is down.
+fn failed(e: &ureq::Error, timeout: Option<Duration>) -> ClientError {
+    match e {
+        ureq::Error::Timeout(_) => ClientError::Timeout(timeout.map_or(0, |t| t.as_secs())),
+        other => ClientError::down(Some(&cause(other))),
     }
 }
 
@@ -147,7 +162,7 @@ impl Client {
                     .map_err(|e| ClientError::down(Some(&e.to_string())))?,
             ),
         };
-        sent.map_err(|e| ClientError::down(Some(&cause(&e))))
+        sent.map_err(|e| failed(&e, timeout))
     }
 
     /// One call: the JSON of the answer, `Null` for an empty or unparseable body. A plain
@@ -220,7 +235,7 @@ impl Client {
             .map_err(|e| ClientError::down(Some(&e.to_string())))?;
         let response = agent(Some(timeout))
             .run(request)
-            .map_err(|e| ClientError::down(Some(&cause(&e))))?;
+            .map_err(|e| failed(&e, Some(timeout)))?;
         let status = response.status();
         if !status.is_success() {
             let reason = status.canonical_reason().unwrap_or_default().to_owned();

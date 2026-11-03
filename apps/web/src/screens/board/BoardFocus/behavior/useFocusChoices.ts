@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { Entry, ThreadChoice } from '../../../../data/kanban';
 import { useCollection } from '../../../../data/react';
 import { useStored, useStoredFlag } from '../../shared';
-import { focusChoices, pausedThreads, STORE_KEYS } from '../../tabs/kanban';
+import { focusChoices, pausedThreads, STORE_KEYS } from '../../tabs/kanban/model';
 import type { FocusView } from '../BoardFocus.type';
 
 const useFocusChoices = (boardKey: string): FocusView => {

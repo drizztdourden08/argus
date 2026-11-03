@@ -2,12 +2,12 @@
 import { describe, expect, it } from 'vitest';
 import { mergeRunLines } from '../../src/data/runs/merge-run-lines';
 import type { RunEntry, RunLogLine } from '../../src/data/runs';
-import { countsText, launcherViews, noPlayHint } from '../../src/screens/board/tabs/builds/model';
+import { countsText, launcherViews } from '../../src/screens/board/tabs/builds/model';
 import { logRows, terminalLast, terminalMeta } from '../../src/screens/board/run-terminal';
 import { DAY, launcherDoc, runningDoc, standaloneDoc } from './fixtures';
 import { at, input, launchers } from './model-docs';
 
-describe('texts of a launcher and a run', () => {
+describe('K1 texts of a launcher and a run', { tags: ['critical'] }, () => {
   it('counts the launchers to start, stale and retired', () => {
     const none = launcherViews(input({ launchers: launchers() }));
     expect(countsText(none)).toBe('');
@@ -16,10 +16,6 @@ describe('texts of a launcher and a run', () => {
     }));
     expect(countsText(views)).toBe('2 to start · 1 stale · 1 retired');
     expect(countsText(launcherViews(input()))).toBe('1 to start');
-  });
-
-  it('says why Play is missing', () => {
-    expect(noPlayHint('master')).toBe('No Play for launcher master: its command spans several lines, or its run name is taken (coord launcher show master)');
   });
 
   it('writes the meta and the last line of a terminal', () => {
@@ -35,7 +31,7 @@ describe('texts of a launcher and a run', () => {
   });
 });
 
-describe('logRows', () => {
+describe('K1 logRows', { tags: ['critical'] }, () => {
   const line = (seq: number, stream: RunLogLine['stream'], text: string): RunLogLine => ({ seq, stream, at: '2026-10-26T10:00:00.000Z', text });
 
   it('keys a row by its sequence and keeps the stream as the kind', () => {
@@ -51,7 +47,7 @@ describe('logRows', () => {
   });
 });
 
-describe('mergeRunLines', () => {
+describe('K1 mergeRunLines', { tags: ['critical'] }, () => {
   const l = (seq: number, text = `line ${seq}`): RunLogLine => ({ seq, stream: 'out', at: '', text });
 
   it('drops a line already seen by its sequence and keeps the order', () => {

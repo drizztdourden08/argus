@@ -56,6 +56,30 @@ pub(crate) fn item_arg(board: &Board, id: &Value) -> Result<String, BoardError> 
     }
 }
 
+/// A record a question, decision, note or to-do can be about: an item (`I-n`) or a test (`T-n`),
+/// its id, refused when it does not exist or is in the trash.
+///
+/// # Errors
+/// Refused with `no item "<id>".` or `no test "<id>".`
+pub fn record_arg(board: &Board, id: &Value) -> Result<String, BoardError> {
+    let key = display(id);
+    if !key.starts_with("T-") {
+        return item_arg(board, id);
+    }
+    match doc(board, "tests", &key) {
+        Some(test) if !truthy(test, "deletedAt") => Ok(key),
+        _ => Err(refuse(format!("no test \"{key}\"."))),
+    }
+}
+
+/// The thread of an item or a test: `null` when the record is not there.
+#[must_use]
+pub fn record_thread(board: &Board, id: &str) -> Value {
+    doc(board, "items", id)
+        .or_else(|| doc(board, "tests", id))
+        .map_or(Value::Null, |d| d["thread"].clone())
+}
+
 /// `v` when it is one of the words, else a refusal naming them.
 pub(crate) fn one_of(words: &[&str], v: &Value, what: &str) -> Result<Value, BoardError> {
     if v.as_str().is_some_and(|s| words.contains(&s)) {

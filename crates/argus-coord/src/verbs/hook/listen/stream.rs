@@ -14,6 +14,7 @@ use argus_core::js::encode_uri_component as enc;
 use super::super::Said;
 use super::super::autostart::ensure_dashboard;
 use super::super::ctx::Hook;
+use super::super::read_stamp::stamp_inbox;
 use super::Target;
 use super::line::wake_line;
 use crate::client::{Client, ClientError, DashboardConfig, SseReader, server_port};
@@ -63,7 +64,7 @@ fn listen_once(hook: &Hook<'_>, target: &Target, deadline: i64) -> Heard {
     let wait = max(MIN_WAIT_MS, deadline - now_ms()).unsigned_abs();
     match client.stream(&path, Duration::from_millis(wait)) {
         Ok(body) => read_events(body, &target.thread),
-        Err(ClientError::Http { .. }) => Heard::Ended,
+        Err(ClientError::Http { .. } | ClientError::Timeout(_)) => Heard::Ended,
         Err(ClientError::Down(_)) => Heard::Broken,
     }
 }
@@ -73,7 +74,10 @@ pub fn wait(hook: &Hook<'_>, target: &Target, deadline: i64) -> Said {
     while now_ms() < deadline {
         match listen_once(hook, target, deadline) {
             Heard::Replaced => return Said::Nothing,
-            Heard::Wake(line) => return Said::Wake(line),
+            Heard::Wake(line) => {
+                stamp_inbox(hook, &target.project, &target.id);
+                return Said::Wake(line);
+            }
             Heard::Ended => {}
             Heard::Broken => ensure_dashboard(hook.env, &hook.paths),
         }

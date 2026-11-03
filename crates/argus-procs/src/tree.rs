@@ -52,6 +52,7 @@ pub fn chain_of(pid: u32, procs: &[ProcRow]) -> HashSet<u32> {
     out
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -67,6 +68,7 @@ mod tests {
             start_ms,
             cpu_ms: 0,
             responding: None,
+            cwd: None,
         }
     }
 

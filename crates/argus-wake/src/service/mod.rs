@@ -4,6 +4,9 @@
 
 pub mod driver;
 mod periodic;
+mod remind;
+mod schedule;
+mod stall;
 
 use std::sync::Arc;
 
@@ -14,6 +17,7 @@ use crate::activity::{ActivityFaults, ActivityLine, ActivitySink, Level};
 use crate::agent_wakes::AgentWakes;
 use crate::board::{BoardView, EntryView};
 use crate::config::WakeConfig;
+use crate::dep_wakes::DepWakes;
 use crate::docs::DocSink;
 use crate::engine::{
     AttachOptions, Attached, EngineConfig, ListenerId, ListenerInfo, ListenerSink, WakeEngine,
@@ -21,15 +25,19 @@ use crate::engine::{
 use crate::faults::{Fault, FaultStore};
 use crate::item_wakes::ItemWakes;
 use crate::mirror::{WakeDoc, docs_of};
+use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
-use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE};
+use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE, PORTFOLIO};
 use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
-use crate::source::{AgentLive, BoardSource};
+use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
+use crate::source::{AgentLive, BoardSource, SyncSource};
+use crate::stalls::Stalls;
 use crate::store::{RowsQuery, StoreResult, WakeStore};
+use crate::sync_wakes::{SyncDue, SyncWakes};
 use crate::wake::WakeInput;
 use argus_core::clock::Clock;
-use periodic::Schedule;
+use schedule::Schedule;
 
 const DEFAULT_LIST_LIMIT: usize = 50;
 const MAX_LIST_LIMIT: usize = 200;
@@ -46,6 +54,8 @@ pub struct WakeDeps {
     pub boards: Arc<dyn BoardSource>,
     /// The live Claude tasks of the sub-agents.
     pub live: Arc<dyn AgentLive>,
+    /// The last remote sync of each project.
+    pub syncs: Arc<dyn SyncSource>,
     /// The activity log, when there is one.
     pub activity: Option<Arc<dyn ActivitySink>>,
     /// The clock.
@@ -75,8 +85,16 @@ pub struct WakeService {
     track_presence: bool,
     agents: AgentWakes,
     items: ItemWakes,
+    sync_wakes: SyncWakes,
+    dep_wakes: DepWakes,
+    stalls: Stalls,
+    resend: Resend,
+    owner_alerts: OwnerAlerts,
+    owner: Option<Arc<dyn OwnerSink>>,
+    notice_sources: Vec<Arc<dyn NoticeSource>>,
     boards: Arc<dyn BoardSource>,
     live: Arc<dyn AgentLive>,
+    syncs: Arc<dyn SyncSource>,
     activity: Option<Arc<dyn ActivitySink>>,
     clock: Arc<dyn Clock>,
     config: WakeConfig,
@@ -89,10 +107,17 @@ impl WakeService {
     #[must_use]
     pub fn new(deps: WakeDeps, config: &WakeConfig, track_presence: bool) -> Self {
         let now = deps.clock.now_ms();
+        let sync_due: Arc<dyn NoticeSource> = Arc::new(SyncDue::new(
+            Arc::clone(&deps.boards),
+            Arc::clone(&deps.syncs),
+            config.syncs.due_ms,
+            now,
+        ));
         let engine_config = EngineConfig {
             window_ms: config.window_ms,
             replay_ms: EngineConfig::default().replay_ms,
             immediate: IMMEDIATE_REASONS.iter().map(|r| (*r).to_owned()).collect(),
+            policy: config.policy,
         };
         let engine = WakeEngine::new(
             deps.store,
@@ -104,6 +129,7 @@ impl WakeService {
             Some(sink) => Box::new(ActivityFaults::new(deps.faults, Arc::clone(sink))),
             None => deps.faults,
         };
+        let stalls = Stalls::new(config.stall.clone(), Arc::clone(&deps.docs), now);
         let registry_deps = RegistryDeps {
             boards: Arc::clone(&deps.boards),
             faults,
@@ -117,8 +143,16 @@ impl WakeService {
             track_presence,
             agents: AgentWakes::new(config.agents.clone(), now),
             items: ItemWakes::new(config.items.clone()),
+            sync_wakes: SyncWakes::new(config.syncs.clone(), now),
+            dep_wakes: DepWakes::new(config.deps.clone()),
+            stalls,
+            resend: Resend::new(config.reminders.resend_ms),
+            owner_alerts: OwnerAlerts::new(config.reminders.owner_ms),
+            owner: None,
+            notice_sources: vec![sync_due],
             boards: deps.boards,
             live: deps.live,
+            syncs: deps.syncs,
             activity: deps.activity,
             clock: deps.clock,
             config: config.clone(),
@@ -236,6 +270,9 @@ impl WakeService {
     /// A hard resync wiped the docs of a scope.
     pub fn on_reset(&mut self, scope: &str) {
         self.engine.remirror(scope);
+        if scope == PORTFOLIO {
+            self.stalls.forget_docs();
+        }
         self.with_env(|registry, env| registry.on_reset(env, scope));
     }
 
@@ -319,6 +356,20 @@ impl WakeService {
         };
         let rows = self.engine.store().rows(scope, &query)?;
         docs_of(self.engine.store(), &rows)
+    }
+
+    /// The passive notices of a thread (`*`: every thread) made after `since_ms`, read from the
+    /// newest rows of the project: what the prompt hook's digest line says.
+    ///
+    /// # Errors
+    /// When the rows cannot be read.
+    pub fn notices(&self, scope: &str, thread: &str, since_ms: i64) -> StoreResult<NoticeDigest> {
+        let query = RowsQuery {
+            limit: MAX_LIST_LIMIT,
+            thread: Some(thread.to_owned()),
+        };
+        let rows = self.engine.store().rows(scope, &query)?;
+        Ok(digest(&rows, since_ms))
     }
 
     /// The open streams of a project.

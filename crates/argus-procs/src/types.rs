@@ -15,6 +15,9 @@ pub struct ProcRow {
     pub start_ms: i64,
     pub cpu_ms: i64,
     pub responding: Option<bool>,
+    /// The folder it runs in. The real sampler leaves it out (reading it costs a look into the
+    /// process); the kill and the reaper ask [`crate::Sampler::cwds`] for the few they judge.
+    pub cwd: Option<String>,
 }
 
 /// One look at every process of the machine.

@@ -1,5 +1,6 @@
 //! What other processes ask of the running tray through files: close the icon (`tray.stop`), do
 //! what Quit does (`tray.quit`), show a balloon (`tray-notify.json`). The tray looks every tick.
+// test-tag: critical
 
 use std::fs;
 

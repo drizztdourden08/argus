@@ -23,9 +23,9 @@ const RuleCard = (props: RuleCardProps) => {
         onSelect={() => onPick(group.rule)}
       >
         <Inline gap="sm" align="baseline">
-          <Text weight={600}>{group.rule}</Text>
-          <Text variant="subtitle" numeric>{asNumber(group.count) ?? 0}</Text>
-          <Text variant="subtitle" numeric>{`${formatMemory(memory)}${capText}`}</Text>
+          <Text size="md" weight={600}>{group.rule}</Text>
+          <Text variant="subtitle" size="md" numeric>{asNumber(group.count) ?? 0}</Text>
+          <Text variant="subtitle" size="md" numeric>{`${formatMemory(memory)}${capText}`}</Text>
         </Inline>
       </Tag>
       {canKill && (

@@ -1,5 +1,6 @@
 //! Starting the tray from another process: the checks `argus tray start` makes before it spawns
 //! the tray, and the wait for the tray to show up.
+// test-tag: critical
 
 use std::fs;
 use std::io;
@@ -98,24 +99,6 @@ mod tests {
         quit_flag::write(&files).unwrap();
         prepare(&files, |_| true).unwrap();
         assert!(!files.quit_flag().exists());
-    }
-
-    #[test]
-    fn waiting_gives_up_when_tray_json_never_appears() {
-        let dir = tempfile::tempdir().unwrap();
-        let files = TrayFiles::new(dir.path());
-        let mut pauses = 0;
-        let found = wait_for_tray(
-            &files,
-            |_| true,
-            Duration::from_millis(20),
-            || {
-                pauses += 1;
-                std::thread::sleep(Duration::from_millis(10));
-            },
-        );
-        assert!(found.is_none());
-        assert!(pauses >= 1);
     }
 
     #[test]

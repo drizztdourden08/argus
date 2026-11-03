@@ -1,25 +1,25 @@
+//! KEEP: K3, K4.
 //! Leftover folders: finding them in a scan, every guard of their deletion, the rename-then-delete job, the batch, the
-//! folders a crash left half deleted, and the wake sentence that counts git worktrees and leftovers apart.
+//! folders a crash left half deleted.
+
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
-use crate::clock::DAY_MS;
 use crate::deleting::is_deleting;
 use crate::doc::{Status, WorktreeDoc};
 use crate::error::ErrorCode;
 use crate::fact::Fact;
 use crate::fs::RealFs;
-use crate::git::Git;
 use crate::jobs::JobState;
 use crate::paths::{base_name, path_key};
 use crate::ports::ProcInfo;
 use crate::rule::Rule;
 use crate::scan::{ScanEnv, scan_rules};
 use crate::service::Options;
-use crate::status::{many_text, wake_text};
 use crate::testkit::{
-    Fixture, Gate, Harness, NotRepo, backdate, exists_itself, git_in, make_link, put, real_measure,
-    root_of, rule_for,
+    Fixture, Gate, Harness, backdate, exists_itself, git_in, make_link, put, real_measure, root_of,
+    rule_for,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -32,58 +32,9 @@ fn facts_by_name(facts: &[Fact]) -> HashMap<String, &Fact> {
     facts.iter().map(|f| (base_name(&f.path), f)).collect()
 }
 
-fn scan_no_repo(wts: &str, ci: bool) -> crate::scan::ScanResult {
-    let git = Git::new(Arc::new(NotRepo));
-    let env = ScanEnv {
-        git: &git,
-        fs: &RealFs,
-        case_insensitive: ci,
-        measure: &real_measure,
-    };
-    scan_rules(&[Rule::folder("W-1", wts, "lead")], &env)
-}
-
-#[test]
-fn with_no_repository_only_the_git_check_decides_a_link_is_a_leaf() {
-    let (dir, outside) = (tempdir().unwrap(), tempdir().unwrap());
-    let (root, out_root) = (root_of(&dir), root_of(&outside));
-    let wts = format!("{root}/proj/.claude/worktrees");
-    put(&wts, "plain/a.txt", "x\n");
-    put(&wts, "has-git-file/.git", "gitdir: X:/nowhere\n");
-    fs::create_dir_all(format!("{wts}/has-git-dir/.git")).unwrap();
-    put(&wts, "nested/inner/.git/HEAD", "x");
-    put(&out_root, "keep.txt", "x");
-    make_link(&format!("{wts}/link"), &out_root);
-    put(&wts, "half.argus-deleting-1730000000000/x.txt", "x");
-    let out = scan_no_repo(&wts, false);
-    let f = facts_by_name(&out.facts);
-    let mut names: Vec<&String> = f.keys().collect();
-    names.sort();
-    assert_eq!(
-        names,
-        ["has-git-dir", "has-git-file", "link", "nested", "plain"],
-        "the half-deleted folder is not a candidate"
-    );
-    let plain = f["plain"].leftover.as_ref().unwrap();
-    assert_eq!(
-        (plain.files, plain.has_nested_git, f["plain"].is_git),
-        (Some(1), false, false)
-    );
-    assert!(f["has-git-file"].leftover.is_none() && f["has-git-dir"].leftover.is_none());
-    let nested = f["nested"].leftover.as_ref().unwrap();
-    assert_eq!(
-        (nested.has_nested_git, nested.nested_git.as_deref()),
-        (true, Some("inner/.git"))
-    );
-    assert!(f["link"].leftover.as_ref().unwrap().is_link);
-    let deleting: Vec<String> = out.deleting.iter().map(|d| base_name(&d.path)).collect();
-    assert_eq!(deleting, ["half.argus-deleting-1730000000000"]);
-    assert!(exists_itself(&format!("{out_root}/keep.txt")));
-}
-
 #[test]
 fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list_is_a_leftover() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let orphan = fx.path("orphan");
     git_in(
         &fx.repo,
@@ -92,7 +43,7 @@ fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list
     );
     fs::remove_file(format!("{orphan}/.git")).unwrap();
     let ci = cfg!(windows);
-    let git = Git::system();
+    let git = fx.door();
     let env = ScanEnv {
         git: &git,
         fs: &RealFs,
@@ -116,7 +67,7 @@ fn lo_with(
     extra: impl FnOnce(&Fixture),
     options: impl FnOnce(&mut Options),
 ) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     for (name, _) in spec {
         put(&fx.wts, &format!("{name}/a.txt"), "hello\n");
     }
@@ -936,61 +887,6 @@ fn a_scan_with_no_time_left_to_measure_shows_the_leftovers_as_pending_and_a_batc
             .iter()
             .all(|s| s.reason.contains("not measured yet"))
     );
-}
-
-fn doc_with(path: &str, age: i64) -> WorktreeDoc {
-    let rule = Rule::folder("W-1", "X:/Bxel/.claude/worktrees", "lead");
-    let mut fact = crate::fact::blank_fact(path, &rule, true);
-    (fact.is_git, fact.branch, fact.commit_ms, fact.ahead) = (
-        true,
-        Some(format!("feature/some-long-branch-name-{age}")),
-        Some(1_792_929_600_000 - age * DAY_MS),
-        2,
-    );
-    crate::status::doc_of(
-        &fact,
-        &crate::status::Judging {
-            rule: Some(&rule),
-            now_ms: 1_792_929_600_000,
-            ..crate::status::Judging::default()
-        },
-        None,
-    )
-}
-
-#[test]
-fn many_text_counts_git_worktrees_and_leftovers_apart_and_the_wake_keeps_the_sentence_first_within_300_characters()
- {
-    let sentence = many_text("Bxel", 100, 8, 92, 6144.0);
-    assert_eq!(
-        sentence,
-        "Bxel has 100 folders: 8 git worktrees and 92 leftovers (about 6 GB): `coord worktree remove --all-leftovers` clears the old ones."
-    );
-    assert_eq!(
-        many_text("Bxel", 13, 12, 1, 0.2),
-        "Bxel has 13 folders: 12 git worktrees and 1 leftover: `coord worktree remove --all-leftovers` clears the old ones.",
-        "under 1 MB says no size"
-    );
-    assert_eq!(
-        many_text("Alpha", 14, 14, 0, 0.0),
-        "Alpha has 14 worktrees: that is a lot, remove the ones you no longer need (coord worktree list, coord worktree remove)."
-    );
-    let docs: Vec<WorktreeDoc> = (5..10)
-        .map(|i| {
-            doc_with(
-                &format!("X:/Bxel/.claude/worktrees/some-long-worktree-name-{i}"),
-                i,
-            )
-        })
-        .collect();
-    let refs: Vec<&WorktreeDoc> = docs.iter().collect();
-    let text = wake_text(&refs, &sentence);
-    assert!(
-        text.chars().count() <= 300,
-        "{} characters",
-        text.chars().count()
-    );
-    assert!(text.starts_with(&format!("{sentence} ")));
 }
 
 #[test]

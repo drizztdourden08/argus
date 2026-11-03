@@ -55,6 +55,7 @@ pub fn tray_run(home: &Path) -> Vec<OsString> {
     plan(&["tray", "run"], home, Vec::new(), is_shadow(home))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::ffi::OsString;

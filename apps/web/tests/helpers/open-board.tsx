@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind test */
 import { toast } from '@drizztdourden08/tessera';
-import { act, cleanup, screen, waitFor } from '@testing-library/react';
-import { expect, vi } from 'vitest';
+import { act, cleanup, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import { renderBody } from './render-body';
 import { seedBoard } from './seed-board';
+import { waitForStream } from './wait-for-stream';
 
 const openBoard = async (docs: Record<string, Record<string, object>>) => {
   const view = renderBody();
-  await waitFor(() => expect(view.sources).toHaveLength(1));
+  await waitForStream(view.sources);
   act(() => seedBoard(view.sources[0], docs));
   return view;
 };

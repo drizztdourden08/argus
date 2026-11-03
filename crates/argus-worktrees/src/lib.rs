@@ -30,7 +30,10 @@ mod gh;
 mod git;
 mod guard;
 mod guards;
+mod holders;
+mod hygiene;
 mod inspect;
+mod intents;
 mod job_run;
 mod jobs;
 mod leftover_remove;
@@ -40,6 +43,9 @@ mod modules;
 mod parse;
 mod paths;
 mod ports;
+mod probe;
+mod probing;
+mod progress;
 mod prune;
 mod queue;
 mod remove;
@@ -52,8 +58,11 @@ mod service;
 mod status;
 mod sync;
 mod tree;
+mod turns;
 mod waking;
 
+#[cfg(test)]
+mod fakegit;
 #[cfg(test)]
 mod specs;
 #[cfg(test)]
@@ -63,7 +72,9 @@ pub use approval::{approval_of, mentions, names_folder};
 pub use argus_core::StorageError;
 pub use backup::Backup;
 pub use batch::{BatchInput, BatchOutcome, Skipped};
-pub use board::{Answer, BoardFacts, Caller, EntryWorktree, Keep, OwnerEntry, ThreadInfo};
+pub use board::{
+    AgentFact, Answer, BoardFacts, Caller, EntryWorktree, Keep, Link, OwnerEntry, ThreadInfo,
+};
 pub use branch::BranchState;
 pub use clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 pub use doc::{Derived, LeftoverDoc, Meta, RuleSummary, Status, WorktreeDoc};
@@ -74,14 +85,21 @@ pub use fs::{Fs, RealFs};
 pub use gh::{GhRunner, SystemGh};
 pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
+pub use hygiene::{
+    HygieneDoc, HygieneMeta, HygieneState, REASON as REVIEW_REASON, RemovedDoc, Stepped,
+    hygiene_key,
+};
 pub use jobs::{JobDoc, JobState};
 pub use paths::{clean_path, path_key, worktree_id};
-pub use ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
+pub use ports::{
+    ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
+};
+pub use progress::Step as RemovalStep;
 pub use request::{Discarded, RemoveInput, RemoveOutcome};
 pub use requests::{
-    Brief, Mode as RequestMode, Outcome as RequestOutcome, Queued, RequestInput, RequestRec,
-    RequestStatus, Requests, SkippedSummary, Target as RequestTarget, queued_text, requests_key,
-    summary_text, what_text,
+    Brief, Current as RequestCurrent, Mode as RequestMode, Outcome as RequestOutcome, Queued,
+    RequestInput, RequestRec, RequestStatus, Requests, SkippedSummary, Target as RequestTarget,
+    queued_text, requests_key, summary_text, what_text,
 };
 pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;

@@ -9,7 +9,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('markdown inline marks', () => {
+describe('S1 markdown inline marks', { tags: ['standard'] }, () => {
   it('bold, italic, strike and code, in both mark styles', () => {
     const root = renderMarkdown('**b** __b__ *i* _i_ ~~s~~ `c`');
     expect(texts(root, 'strong')).toEqual(['b', 'b']);
@@ -46,7 +46,7 @@ describe('markdown inline marks', () => {
   });
 });
 
-describe('markdown links', () => {
+describe('S1 markdown links', { tags: ['standard'] }, () => {
   it('the text may carry markup', () => {
     const root = renderMarkdown('[**docs**](https://example.com/a?x=1&y=2 "The docs") and [m](mailto:a@b.co)');
     const [docs, mail] = [...root.querySelectorAll('a')];
@@ -104,7 +104,7 @@ describe('markdown links', () => {
   });
 });
 
-describe('markdown images and ids', () => {
+describe('S1 markdown images and ids', { tags: ['standard'] }, () => {
   it('outside a router the images still draw and the ids stay text', () => {
     const { container } = render(<BoardMarkdown>{'![a](/files/p/proofs/a.png) and T-5'}</BoardMarkdown>);
     expect(container.querySelector('img')?.getAttribute('src')).toBe('/files/p/proofs/a.png');

@@ -13,6 +13,7 @@ mod set;
 mod show;
 mod soft;
 mod start;
+mod takeover;
 
 use crate::cli::Call;
 use crate::cli::exit::Outcome;

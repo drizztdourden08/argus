@@ -5,6 +5,7 @@ import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
 import type { FeedActions } from '../../OwnerFeed';
 import type { CriteriaReorder, DrawerNav, ItemOps, KanbanData, RecordActions, Threads } from './kanban.type';
+import type { AskLink, DepLink, DepView } from './model';
 import type { EntryRow, TimelineRow, TodoRow as TodoEntry } from './record';
 
 interface ItemDrawerProps {
@@ -14,6 +15,7 @@ interface ItemDrawerProps {
   threads: Threads;
   actions: KanbanData['actions'];
   waiting: boolean;
+  blocking: AskLink | null;
   now: number;
   ops: ItemOps;
   nav: DrawerNav;
@@ -29,6 +31,7 @@ interface ItemBodyProps {
   threads: Threads;
   actions: KanbanData['actions'];
   waiting: boolean;
+  blocking: AskLink | null;
   now: number;
   ops: ItemOps;
 }
@@ -55,9 +58,15 @@ interface ItemTitleProps {
   ops: ItemOps;
 }
 
+interface BlockerLineProps {
+  blocker: string;
+  link: AskLink | null;
+}
+
 interface DrawerFactsProps {
   item: ItemRef;
   waiting: boolean;
+  blocking: AskLink | null;
   threads: Threads;
   now: number;
   ops: ItemOps;
@@ -164,8 +173,37 @@ interface EmptyLineProps {
   children: ReactNode;
 }
 
+interface DependencySectionProps {
+  item: ItemRef;
+  now: number;
+}
+
+interface DependencyViewProps {
+  link: DepLink;
+  now: number;
+}
+
+interface DependencyFactsProps {
+  view: DepView;
+  now: number;
+}
+
+interface DependencyLinkProps {
+  view: DepView;
+}
+
+interface DependencyHistoryProps {
+  rows: DepView['history'];
+  now: number;
+}
+
+interface CancelDependencyProps {
+  dep: string;
+}
+
 export type {
-  ActivitySectionProps, AddLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
+  CancelDependencyProps, DependencyFactsProps, DependencyHistoryProps, DependencyLinkProps, DependencySectionProps, DependencyViewProps,
+  ActivitySectionProps, AddLineProps, BlockerLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps, DrawerFactsProps,
   DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemBodyProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
   ItemTitleProps, StatusTagProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,

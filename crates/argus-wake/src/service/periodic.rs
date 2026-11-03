@@ -3,41 +3,26 @@
 use tracing::warn;
 
 use super::WakeService;
-use crate::config::WakeConfig;
+use crate::activity::ActivityLine;
+use crate::dep_wakes::DepEnv;
 use crate::item_wakes::ItemEnv;
 use crate::registry::Registry;
+use crate::store::WakeStore;
+use crate::sync_wakes::SyncEnv;
 
-const PRUNE_EVERY_MS: i64 = 3_600_000;
-
-/// When each periodic job runs next.
-pub(super) struct Schedule {
-    registry: i64,
-    agents: i64,
-    items: i64,
-    prune: i64,
-    registry_every: i64,
-    agents_every: i64,
-    items_every: i64,
-}
-
-impl Schedule {
-    pub(super) fn starting(now: i64, config: &WakeConfig) -> Self {
-        Self {
-            registry: now + config.registry.tick_ms,
-            agents: now + config.agents.tick_ms,
-            items: now + config.items.tick_ms,
-            prune: now + PRUNE_EVERY_MS,
-            registry_every: config.registry.tick_ms,
-            agents_every: config.agents.tick_ms,
-            items_every: config.items.tick_ms,
-        }
-    }
-
-    fn earliest(&self) -> i64 {
-        self.registry
-            .min(self.agents)
-            .min(self.items)
-            .min(self.prune)
+/// When the wakes table last sent a reminder, as the wake kinds read it; a table that cannot be read says never and
+/// leaves one warning that names `what`.
+fn last_sent_of<'a>(
+    store: &'a dyn WakeStore,
+    what: &'static str,
+) -> impl Fn(&str, &str, &str, &str) -> i64 + 'a {
+    move |scope: &str, thread: &str, reason: &str, subject: &str| {
+        store
+            .last_at(scope, thread, reason, Some(subject))
+            .unwrap_or_else(|err| {
+                warn!(%err, "{what}: last wake not read");
+                0
+            })
     }
 }
 
@@ -63,20 +48,26 @@ impl WakeService {
         self.engine.tick();
         self.pump();
         let now = self.clock.now_ms();
-        if now >= self.schedule.registry {
-            self.schedule.registry = now + self.schedule.registry_every;
+        if self.schedule.registry.due(now) {
             self.registry_tick();
+            self.reminder_tick();
         }
-        if now >= self.schedule.agents {
-            self.schedule.agents = now + self.schedule.agents_every;
+        if self.schedule.agents.due(now) {
             self.agent_tick();
         }
-        if now >= self.schedule.items {
-            self.schedule.items = now + self.schedule.items_every;
+        if self.schedule.items.due(now) {
             self.item_tick();
         }
-        if now >= self.schedule.prune {
-            self.schedule.prune = now + PRUNE_EVERY_MS;
+        if self.schedule.syncs.due(now) {
+            self.sync_tick();
+        }
+        if self.schedule.deps.due(now) {
+            self.dep_tick();
+        }
+        if self.schedule.stalls.due(now) {
+            self.stall_tick();
+        }
+        if self.schedule.prune.due(now) {
             if let Err(err) = self.engine.prune() {
                 warn!(%err, "wake prune failed");
             }
@@ -103,27 +94,58 @@ impl WakeService {
     pub fn item_tick(&mut self) -> usize {
         let now = self.clock.now_ms();
         let main = Some(self.main_thread());
-        let store = self.engine.store();
-        let last_sent = |scope: &str, thread: &str, reason: &str, subject: &str| {
-            store
-                .last_at(scope, thread, reason, Some(subject))
-                .unwrap_or_else(|err| {
-                    warn!(%err, "item wakes: last wake not read");
-                    0
-                })
+        let out = {
+            let last_sent = last_sent_of(self.engine.store(), "item wakes");
+            let env = ItemEnv {
+                boards: self.boards.as_ref(),
+                main,
+                last_sent: &last_sent,
+            };
+            self.items.tick(now, &env)
         };
-        let env = ItemEnv {
-            boards: self.boards.as_ref(),
-            main,
-            last_sent: &last_sent,
+        self.forward_activity(out.activity);
+        self.submit_logged(&out.wakes, "item wakes");
+        out.wakes.len()
+    }
+
+    /// The dependency wakes due now; returns how many were sent. The server may call it right after it
+    /// reconciled a dependency, so the other side hears at once instead of at the next tick.
+    pub fn dep_tick(&mut self) -> usize {
+        let now = self.clock.now_ms();
+        let wakes = {
+            let last_sent = last_sent_of(self.engine.store(), "dependency wakes");
+            let env = DepEnv {
+                boards: self.boards.as_ref(),
+                last_sent: &last_sent,
+            };
+            self.dep_wakes.tick(now, &env)
         };
-        let out = self.items.tick(now, &env);
+        self.submit_logged(&wakes, "dependency wakes");
+        wakes.len()
+    }
+
+    pub(super) fn forward_activity(&self, lines: Vec<ActivityLine>) {
         if let Some(sink) = &self.activity {
-            for line in out.activity {
+            for line in lines {
                 sink.add(line);
             }
         }
-        self.submit_logged(&out.wakes, "item wakes");
+    }
+
+    /// The remote sync wakes and activity lines due now; returns how many wakes were sent.
+    pub fn sync_tick(&mut self) -> usize {
+        let now = self.clock.now_ms();
+        let out = {
+            let last_sent = last_sent_of(self.engine.store(), "sync wakes");
+            let env = SyncEnv {
+                boards: self.boards.as_ref(),
+                syncs: self.syncs.as_ref(),
+                last_sent: &last_sent,
+            };
+            self.sync_wakes.tick(now, &env)
+        };
+        self.forward_activity(out.activity);
+        self.submit_logged(&out.wakes, "sync wakes");
         out.wakes.len()
     }
 }

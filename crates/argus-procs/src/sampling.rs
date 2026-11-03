@@ -33,17 +33,6 @@ impl Inner {
         )
     }
 
-    /// Writes the listing and its meta to the store.
-    pub(crate) fn publish(&self) {
-        let (docs, meta) = {
-            let view = locked(&self.view);
-            (view.listing.clone(), view.meta.clone())
-        };
-        if let Err(error) = self.ports.store.replace(&docs, meta.as_ref()) {
-            self.ports.host.warn("process docs not written", &error);
-        }
-    }
-
     /// A sample while holding the engine, so samples and kills never overlap.
     pub(crate) fn sample_serial(&self) -> Meta {
         let mut engine = locked(&self.engine);
@@ -101,7 +90,7 @@ impl Inner {
         }
         engine.last_error = Some(message);
         locked(&self.view).meta = Some(meta.clone());
-        self.publish();
+        self.publish_if_changed(None);
         meta
     }
 
@@ -122,6 +111,7 @@ impl Inner {
             roots: &roots,
             guard: &guard,
         };
+        let at = sample.at;
         let ev = evaluate(&mut engine.tracker, &input);
         let mut meta = build_meta(&ev, &self.meta_parts(rules, sample.at, &sample.platform));
         meta.took_ms = Some(to_millis(started.elapsed().as_secs_f64() * 1000.0));
@@ -130,13 +120,14 @@ impl Inner {
             repeat_ms: i64::try_from(self.options.config.repeat_ms).unwrap_or(i64::MAX),
         };
         let due = engine.alerts.due(&ev, &rules.rules, pace);
+        self.reap(&mut engine.reaper, &sample, &guard);
         {
             let mut view = locked(&self.view);
             view.listing = ev.docs;
             view.raw = Some(sample);
             view.meta = Some(meta.clone());
         }
-        self.publish();
+        self.publish_if_changed(Some(at));
         if !due.is_empty() {
             self.wake_overlord(&due);
         }

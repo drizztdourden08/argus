@@ -4,11 +4,12 @@ import { formatAgo } from '../../../../../format';
 import type { DrawerFactsProps } from '../drawer-props.type';
 import { FactSelect, threadChoices } from '../../../shared';
 import { STATUS_OPTIONS, validateField } from '../model';
+import { BlockerLine } from './BlockerLine';
 
 const validateSubject = validateField('subject');
 
 const DrawerFacts = (props: DrawerFactsProps) => {
-  const { item, threads, now, ops } = props;
+  const { item, blocking, threads, now, ops } = props;
   const moved = `Moved ${item.id}.`;
   return (
     <Flex direction="column" gap="sm">
@@ -26,7 +27,8 @@ const DrawerFacts = (props: DrawerFactsProps) => {
           />
         </Flex>
       </Flex>
-      <Text variant="caption" tone="muted">{`rev ${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
+      {item.blocker && <BlockerLine blocker={item.blocker} link={blocking} />}
+      <Text variant="caption" tone="muted">{`rev${item.rev ?? 1}, updated by ${item.updatedBy ?? item.createdBy ?? 'unknown'} ${formatAgo(item.updatedAt, now)} ago`}</Text>
     </Flex>
   );
 };

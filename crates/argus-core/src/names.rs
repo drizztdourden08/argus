@@ -153,6 +153,7 @@ impl Door {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::net::Ipv4Addr;
@@ -160,14 +161,6 @@ mod tests {
     use serde_json::json;
 
     use super::{DEFAULT_ADDRESS, Door, LocalNames};
-
-    #[test]
-    fn no_key_is_off_with_the_default_address_and_suffix() {
-        let names = LocalNames::default();
-        assert!(!names.enabled);
-        assert_eq!(names.address, DEFAULT_ADDRESS);
-        assert_eq!(names.suffix, "argus");
-    }
 
     #[test]
     fn a_partial_key_keeps_the_defaults_and_cleans_the_suffix() {

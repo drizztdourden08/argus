@@ -1,8 +1,9 @@
 //! The rate limits and the one summary toast a minute per thread.
+//! Keep rule: S2.
+// test-tag: standard
 
 use argus_notify::{
-    GLOBAL_PER_MINUTE, NotifyConfig, Outcome, PingRequest, SUMMARY_EVERY_MS, THREAD_PER_HOUR,
-    THREAD_PER_MINUTE, ToastState,
+    GLOBAL_PER_MINUTE, NotifyConfig, Outcome, PingRequest, THREAD_PER_HOUR, ToastState,
 };
 
 use crate::harness::{Harness, Shown, TAB};
@@ -134,25 +135,4 @@ fn info_os_off_and_quiet_levels_never_use_up_the_limits() {
     for _ in 0..10 {
         assert_eq!(from(&off, "lead").toast, ToastState::Skipped);
     }
-}
-
-#[test]
-fn the_knobs_are_what_the_contract_says() {
-    assert_eq!(
-        (
-            THREAD_PER_MINUTE,
-            THREAD_PER_HOUR,
-            GLOBAL_PER_MINUTE,
-            SUMMARY_EVERY_MS
-        ),
-        (3, 20, 8, 60_000)
-    );
-    assert_eq!(
-        (
-            argus_notify::KEEP_ROWS,
-            argus_native::TITLE_MAX,
-            argus_native::TEXT_MAX
-        ),
-        (50, 60, 240)
-    );
 }

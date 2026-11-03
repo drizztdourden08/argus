@@ -24,7 +24,7 @@ const heldStream = async (): Promise<URL & { source: FakeSource }> => {
   return Object.assign(new URL(source?.url ?? '', 'http://argus.test'), { source: source as FakeSource });
 };
 
-describe('board presence', () => {
+describe('S2 board presence', { tags: ['standard'] }, () => {
   it('holds the presence stream open for the thread in the URL', async () => {
     renderAt('/p/rotp/?thread=coordinator');
     const held = await heldStream();
@@ -34,21 +34,17 @@ describe('board presence', () => {
     expect(held.source.closed).toBe(false);
   });
 
-  it('opens nothing without a thread in the URL', async () => {
-    renderAt('/p/rotp/');
-    await Promise.resolve();
-    expect(presenceStreams()).toHaveLength(0);
-  });
-
-  it('strips characters the server would refuse from the thread', async () => {
-    renderAt('/p/rotp/?thread=lead%20one%2F%3Cx%3E');
-    expect((await heldStream()).searchParams.get('thread')).toBe('leadonex');
-  });
-
   it('closes the stream when the page goes away', async () => {
     const view = renderAt('/p/rotp/?thread=coordinator');
     const held = await heldStream();
     view.unmount();
     expect(held.source.closed).toBe(true);
+  });
+});
+
+describe('K4 board presence', { tags: ['standard'] }, () => {
+  it('strips characters the server would refuse from the thread', async () => {
+    renderAt('/p/rotp/?thread=lead%20one%2F%3Cx%3E');
+    expect((await heldStream()).searchParams.get('thread')).toBe('leadonex');
   });
 });

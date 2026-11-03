@@ -12,6 +12,7 @@ use argus_core::clock::now_iso;
 use argus_core::config::{ConfigError, HOST, load_config};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
+use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths};
 use argus_native::TrayFiles;
 use argus_store::{Db, PruneOptions, StoreError};
@@ -27,15 +28,16 @@ use crate::instance::{read_pid_file, running_instance, write_pid_file};
 use crate::local_names::{self, Front, LocalNamesOptions};
 use crate::localhost_door;
 use crate::security::LoginCodes;
+use crate::serve_mode::ServeMode;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
-use crate::shadow;
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
-    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, Router, RunsOptions, Services,
-    WakeOptions, WorktreesOptions, routes,
+    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
+    Services, WakeOptions, WorktreesOptions, routes,
 };
+use crate::{preview, shadow};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -53,10 +55,14 @@ pub struct ServeOptions {
     pub web_root: Option<PathBuf>,
     /// Run the sync service.
     pub sync: bool,
-    /// Shadow mode: no board writes.
-    pub shadow: bool,
+    /// Live, shadow (no board writes) or preview (a copied home with board writes and no
+    /// outward effect, refused on the live boards).
+    pub mode: ServeMode,
     /// The Node dashboard home a shadow copies its database, config and process rules from.
     pub shadow_seed: Option<PathBuf>,
+    /// The live boards folder a preview refuses; `None` is the default `~/.coord`. A test
+    /// names a throwaway folder.
+    pub live_coord_home: Option<PathBuf>,
     /// Also print the log to stderr.
     pub echo_log: bool,
     /// Run counts for the cards.
@@ -69,6 +75,8 @@ pub struct ServeOptions {
     pub worktrees: WorktreesOptions,
     /// The build cache prune.
     pub cache: CacheOptions,
+    /// The release store, check runs and local package registry.
+    pub records: RecordsOptions,
     /// The wake service (it needs the sync service).
     pub wake: WakeOptions,
     /// Which sub-agent services run.
@@ -92,14 +100,16 @@ impl ServeOptions {
             heartbeat: Duration::from_secs(15),
             web_root: None,
             sync: true,
-            shadow: false,
+            mode: ServeMode::Live,
             shadow_seed: None,
+            live_coord_home: None,
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
             cache: CacheOptions::default(),
+            records: RecordsOptions::default(),
             wake: WakeOptions::default(),
             agents: AgentsOptions::default(),
             notify: NotifyOptions::default(),
@@ -129,6 +139,9 @@ pub enum ServeError {
     /// The port is taken.
     #[error("port {0} is in use by another program (or a dashboard of another DASHBOARD_HOME)")]
     PortInUse(u16),
+    /// A preview may not start on the live boards.
+    #[error("{0}")]
+    PreviewRefused(String),
     /// A file could not be written.
     #[error(transparent)]
     Io(#[from] std::io::Error),
@@ -187,11 +200,13 @@ struct Core {
 
 async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
-    if opts.shadow {
-        shadow::prepare(&paths, opts.shadow_seed.as_deref())?;
+    match opts.mode {
+        ServeMode::Shadow => shadow::prepare(&paths, opts.shadow_seed.as_deref())?,
+        ServeMode::Preview => preview::prepare(&paths, opts.live_coord_home.as_deref())?,
+        ServeMode::Live => {}
     }
     let config = checked_config(&paths, opts.port).await?;
-    if !opts.shadow {
+    if opts.mode == ServeMode::Live {
         first_start::back_up_node_database(&paths)?;
     }
     let log = Arc::new(
@@ -202,7 +217,7 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
         )
         .echo(opts.echo_log),
     );
-    if opts.shadow {
+    if opts.mode == ServeMode::Shadow {
         for finding in shadow::board_findings(&paths.coord_home) {
             log.error("board file damaged", json!({ "finding": finding }));
         }
@@ -238,6 +253,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         config,
         env_port: opts.port,
         tray: TrayFiles::new(&paths.home),
+        remote: Arc::new(Switch::new(&paths.coord_home)),
         paths,
         activity: activity::build(&db, &log),
         db,
@@ -254,11 +270,14 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         procs: None,
         worktrees: None,
         cache: None,
+        records: None,
         notify: None,
         notifier: None,
         instance,
         started_at: now_iso(),
-        shadow: opts.shadow,
+        shadow: opts.mode.outward_off(),
+        board_writes: opts.mode != ServeMode::Shadow,
+        preview: opts.mode == ServeMode::Preview,
         heartbeat: opts.heartbeat,
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
@@ -274,11 +293,14 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     })
 }
 
-/// The options with the shadow marker of the home applied: a home marked `"shadow": true` in its
-/// `config.json` always runs in shadow mode, whatever way the server was started.
+/// The options with the markers of the home applied: a home marked `"shadow": true` in its
+/// `config.json` always runs in shadow mode, and one marked `"preview": true` in preview mode,
+/// whatever way the server was started. Shadow outranks preview: it writes nothing.
 fn marked_by_home(opts: &ServeOptions) -> ServeOptions {
     let mut opts = opts.clone();
-    opts.shadow = opts.shadow || shadow::marked(&opts.paths.config);
+    let shadow = opts.mode == ServeMode::Shadow || shadow::marked(&opts.paths.config);
+    let preview = opts.mode == ServeMode::Preview || preview::marked(&opts.paths.config);
+    opts.mode = ServeMode::of(shadow, preview);
     opts
 }
 
@@ -382,11 +404,16 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     };
     let port = listener.local_addr()?.port();
     svc.port.store(port, std::sync::atomic::Ordering::SeqCst);
-    let front = local_names::bind(&svc, &opts.local_names).await;
+    let front = if svc.preview {
+        None
+    } else {
+        local_names::bind(&svc, &opts.local_names).await
+    };
     if let Some(front) = &front {
         let _set = svc.names.set(front.live.clone());
     }
-    let localhost = localhost_door::open(&svc, opts.localhost_door_port).await;
+    let localhost =
+        localhost_door::open(&svc, opts.localhost_door_port.filter(|_| !svc.preview)).await;
     let door_port = svc.localhost_door();
     write_pid_file(
         &svc.paths.pid_file,
@@ -399,7 +426,7 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     compose::start_all(&svc).await;
     prune(&svc);
     spawn_prune(&svc);
-    svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": svc.shadow }));
+    svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": !svc.board_writes, "preview": svc.preview }));
     let names_door = front.map(
         |Front {
              listener,

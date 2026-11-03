@@ -1,18 +1,17 @@
 /* @layer renderer-app @kind component */
-import { ActivityTab } from '../activity/ActivityTab';
-import { CacheTab } from '../cache/CacheTab';
-import { DashboardsTab } from '../dashboards/DashboardsTab';
-import { NotificationsTab } from '../notifications/NotificationsTab';
+import { LazyActivityTab, LazyCacheTab, LazyDashboardsTab, LazyDependenciesTab, LazyNotificationsTab, LazyProcessesTab, LazyRegistryTab, LazyReleasesTab } from '../lazy-tabs';
 import type { TabBodyProps } from '../overview.type';
-import { ProcessesTab } from '../processes/ProcessesTab';
 
 const TabBody = (props: TabBodyProps) => {
   const { tab, cards, status, badges } = props;
-  if (tab === 'processes') return <ProcessesTab />;
-  if (tab === 'activity') return <ActivityTab freshSince={badges.freshActivity} />;
-  if (tab === 'cache') return <CacheTab />;
-  if (tab === 'notifications') return <NotificationsTab freshSince={badges.freshNotifications} />;
-  return <DashboardsTab cards={cards} status={status} />;
+  if (tab === 'processes') return <LazyProcessesTab />;
+  if (tab === 'activity') return <LazyActivityTab freshSince={badges.freshActivity} />;
+  if (tab === 'cache') return <LazyCacheTab />;
+  if (tab === 'releases') return <LazyReleasesTab />;
+  if (tab === 'dependencies') return <LazyDependenciesTab />;
+  if (tab === 'registry') return <LazyRegistryTab />;
+  if (tab === 'notifications') return <LazyNotificationsTab freshSince={badges.freshNotifications} />;
+  return <LazyDashboardsTab cards={cards} status={status} />;
 };
 
 export { TabBody };

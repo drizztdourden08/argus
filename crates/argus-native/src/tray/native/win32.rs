@@ -1,6 +1,6 @@
 //! The only unsafe code of the crate: the Win32 calls the icon library does not cover. Process
 //! liveness, the uptime counter, the single-instance mutex, the message pump, dark popup menus
-//! the balloon tip and the size of a small icon. Every block says why it holds.
+//! the balloon tip, the DPI of the screen and the size of a small icon. Every block says why it holds.
 #![allow(unsafe_code)]
 
 use std::ffi::c_void;
@@ -13,12 +13,16 @@ use windows::Win32::System::SystemInformation::GetTickCount64;
 use windows::Win32::System::Threading::{
     CreateMutexW, GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
 };
+use windows::Win32::UI::HiDpi::{
+    DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, GetDpiForSystem, GetDpiForWindow,
+    GetSystemMetricsForDpi, SetProcessDpiAwarenessContext,
+};
 use windows::Win32::UI::Shell::{
     NIF_INFO, NIIF_INFO, NIM_MODIFY, NOTIFYICONDATAW, Shell_NotifyIconW,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetSystemMetrics, MSG, MsgWaitForMultipleObjects, PM_REMOVE, PeekMessageW,
-    QS_ALLINPUT, SM_CXSMICON, TranslateMessage, WM_QUIT,
+    DispatchMessageW, MSG, MsgWaitForMultipleObjects, PM_REMOVE, PeekMessageW, QS_ALLINPUT,
+    SM_CXSMICON, TranslateMessage, WM_QUIT,
 };
 use windows::core::{HSTRING, PCSTR, w};
 
@@ -131,12 +135,32 @@ pub fn allow_dark_menus() {
     }
 }
 
-/// The width in pixels of a small icon, which is what the notification area draws: 16 at the
-/// usual scale, more on a scaled screen.
-pub fn small_icon_px() -> u32 {
-    // SAFETY: GetSystemMetrics takes an index and reads no memory of ours.
-    let width = unsafe { GetSystemMetrics(SM_CXSMICON) };
-    u32::try_from(width).unwrap_or(16)
+/// Makes this process per-monitor DPI aware (version 2), so Windows hands it the real size of a
+/// small icon and never stretches the bitmaps it draws. Must run before the first window of the
+/// process. Fails, and is ignored, when the awareness was already set.
+pub fn make_dpi_aware() {
+    // SAFETY: SetProcessDpiAwarenessContext takes a constant context value and reads no memory.
+    let _set = unsafe { SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) };
+}
+
+/// The DPI of the screen the notification area is on: that of `window` (the tray window) when
+/// there is one, else that of the system. 96 is 100 percent.
+pub fn dpi(window: Option<*mut c_void>) -> u32 {
+    // SAFETY: GetDpiForWindow takes a handle and returns 0 for one that is not valid.
+    let own = window.map_or(0, |raw| unsafe { GetDpiForWindow(HWND(raw)) });
+    if own != 0 {
+        return own;
+    }
+    // SAFETY: GetDpiForSystem takes no arguments and reads no memory of ours.
+    unsafe { GetDpiForSystem() }
+}
+
+/// The width in pixels of a small icon at `dpi`, which is what the notification area draws:
+/// 16 at 96 dpi, 20 at 120, 24 at 144, 32 at 192.
+pub fn small_icon_px(dpi: u32) -> u32 {
+    // SAFETY: GetSystemMetricsForDpi takes an index and a DPI and reads no memory of ours.
+    let width = unsafe { GetSystemMetricsForDpi(SM_CXSMICON, dpi) };
+    u32::try_from(width).ok().filter(|px| *px > 0).unwrap_or(16)
 }
 
 /// Shows a balloon tip on the notification icon `id` of the window `window`.

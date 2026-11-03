@@ -18,10 +18,12 @@ pub mod instance;
 mod local_names;
 mod localhost_door;
 mod pathing;
+pub mod preview;
 mod reply;
 mod router;
 pub mod routes;
 pub mod security;
+mod serve_mode;
 mod server;
 mod services;
 pub mod shadow;
@@ -32,9 +34,11 @@ pub use ctx::{AuthKind, Ctx};
 pub use local_names::{LiveNames, LocalNamesOptions};
 pub use reply::{html_page, json_reply};
 pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
+pub use serve_mode::ServeMode;
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
 pub use services::{
-    AgentsOptions, CacheOptions, CacheService, NotifyOptions, ProcsOptions, RunsOptions, Services,
+    AgentsOptions, CacheOptions, CacheService, ConsumerSource, ConsumerStatus, Consumers,
+    NodeStatus, NotifyOptions, ProcsOptions, Records, RecordsOptions, RunsOptions, Services,
     WakeHook, WakeOptions, WakeRequest, WorktreesOptions,
 };
 pub use web::{PageVars, WebAssets, render_page};

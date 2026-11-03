@@ -11,11 +11,13 @@ use crate::activity::{ActivityLine, ActivitySink};
 use crate::board::BoardView;
 use crate::docs::{Doc, DocSink};
 use crate::faults::{ClearFault, Fault, FaultStore, NewFault};
-use crate::source::BoardSource;
+use crate::reminders::{NoticeSource, OpenNotice, OwnerNotice, OwnerSink};
+use crate::source::{BoardSource, SyncSource};
 use crate::store::{RowsQuery, StoreResult, WakeStore, prune_cutoff};
 use crate::time::ms_or_zero;
 use crate::wake::{FinishedEvent, WakeInput, WakeRow, WakeStatus};
 use argus_core::StorageError;
+use argus_core::remote::SyncRecord;
 use argus_core::unique::unique;
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -308,6 +310,57 @@ impl ActivitySink for MemoryActivity {
     }
 }
 
+/// What the owner was told, in memory.
+#[derive(Clone, Default)]
+pub struct MemoryOwner {
+    inner: Arc<Mutex<Vec<OwnerNotice>>>,
+}
+
+impl MemoryOwner {
+    /// Nobody told yet.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Every notice, oldest first.
+    #[must_use]
+    pub fn notices(&self) -> Vec<OwnerNotice> {
+        locked(&self.inner).clone()
+    }
+}
+
+impl OwnerSink for MemoryOwner {
+    fn notify(&self, notice: OwnerNotice) {
+        locked(&self.inner).push(notice);
+    }
+}
+
+/// A fixed list of open notices.
+#[derive(Clone, Default)]
+pub struct MemoryNotices {
+    inner: Arc<Mutex<Vec<OpenNotice>>>,
+}
+
+impl MemoryNotices {
+    /// Nothing open.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Replace what is open.
+    pub fn set(&self, notices: Vec<OpenNotice>) {
+        *locked(&self.inner) = notices;
+    }
+}
+
+impl NoticeSource for MemoryNotices {
+    fn open(&self, _now_ms: i64) -> Vec<OpenNotice> {
+        locked(&self.inner).clone()
+    }
+}
+
 /// The project boards in memory.
 #[derive(Clone, Default)]
 pub struct MemoryBoards {
@@ -352,5 +405,37 @@ impl BoardSource for MemoryBoards {
 
     fn board(&self, scope: &str) -> Option<Arc<BoardView>> {
         locked(&self.inner).get(scope).cloned()
+    }
+}
+
+/// The remote syncs in memory. Clones share their data.
+#[derive(Clone, Default)]
+pub struct MemorySyncs {
+    inner: Arc<Mutex<Vec<(String, SyncRecord)>>>,
+}
+
+impl MemorySyncs {
+    /// No syncs.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Record a sync of a project at an ISO time, replacing the one it had.
+    pub fn set(&self, project: &str, at: &str, by: &str, note: &str) {
+        let record = SyncRecord {
+            at: at.to_owned(),
+            by: Some(by.to_owned()),
+            note: note.to_owned(),
+        };
+        let mut all = locked(&self.inner);
+        all.retain(|(key, _)| key != project);
+        all.push((project.to_owned(), record));
+    }
+}
+
+impl SyncSource for MemorySyncs {
+    fn syncs(&self) -> Vec<(String, SyncRecord)> {
+        locked(&self.inner).clone()
     }
 }

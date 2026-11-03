@@ -1,7 +1,10 @@
+//! KEEP: K3.
 //! A slow removal: `git worktree remove` gets its own long timeout, a timeout takes the same fallback as a folder git
 //! could not delete, and an ignored, untracked `node_modules` is cleared by Argus before git runs. The timeout is the
 //! scripted git's answer ("git timed out after 900 s"), so no test waits. The first case of the Node file (the writer's
 //! two timeouts) is `git.rs`'s `worktree_remove_alone_gets_the_long_timeout...` and its sibling.
+
+// test-tag: standard
 
 use super::fallback::{Shape, add_side, shape};
 use crate::error::ErrorCode;

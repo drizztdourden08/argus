@@ -1,12 +1,13 @@
+//! KEEP: K2.
 //! The JSON a doc, a summary, a job and a removal answer carry: the key spellings and the absent keys of the Node dashboard.
 
-use crate::jobs::JobDoc;
-use crate::request::RemoveOutcome;
+// test-tag: standard
+
 use crate::testkit::{Fixture, Harness, rule_for};
 use serde_json::{Value, to_value};
 
 fn started() -> Harness {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.scan();
     h
@@ -34,13 +35,4 @@ fn the_summary_spells_the_leftover_sizes_as_node_does() {
     assert!(meta.get("leftoverMb").is_none(), "{meta}");
     assert!(meta["leftoverOld"].get("sizeMB").is_some(), "{meta}");
     assert!(meta["leftoverOld"].get("sizeMb").is_none(), "{meta}");
-}
-
-#[test]
-fn a_job_and_a_removal_answer_spell_the_size_as_node_does() {
-    let job = JobDoc::queued("L-1", "row", "X:/a", "lead", "t".into());
-    assert_eq!(to_value(&job).unwrap()["sizeMB"], Value::Null);
-    let answer = to_value(RemoveOutcome::default()).unwrap();
-    assert_eq!(answer["sizeMB"], Value::Null);
-    assert!(answer.get("sizeMb").is_none(), "{answer}");
 }

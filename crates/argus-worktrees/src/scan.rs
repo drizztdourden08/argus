@@ -7,12 +7,13 @@ use crate::deleting::{is_deleting, original_name};
 use crate::fact::{Fact, missing_fact};
 use crate::fs::Fs;
 use crate::git::Git;
-use crate::inspect::{RepoList, ScanCtx, inspect_dir};
+use crate::inspect::{RepoList, ScanCtx, inspect_dir, reuse_dir};
 use crate::measure::Leftover;
 use crate::parse::{ListedWorktree, parse_worktree_list};
 use crate::paths::{base_name, clean_path, join_path, parent_of, path_key, same_path, worktree_id};
+use crate::probe::{Fingerprint, Reuse, fingerprint};
 use crate::rule::{Rule, RuleKind};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Folders one rule may give.
 pub const MAX_CANDIDATES: usize = 200;
@@ -43,6 +44,8 @@ pub struct ScanResult {
     /// The path keys of every worktree any listing named.
     pub listed: HashSet<String>,
     pub deleting: Vec<DeletingFolder>,
+    /// The fingerprint each candidate folder had right before it was read, by path.
+    pub prints: HashMap<String, Fingerprint>,
 }
 
 /// What a scan reads with.
@@ -121,6 +124,8 @@ struct Scanner<'a, 'e> {
     facts: Vec<Fact>,
     folder_facts: Vec<usize>,
     deleting: Vec<DeletingFolder>,
+    reuse: Option<&'e Reuse>,
+    prints: HashMap<String, Fingerprint>,
 }
 
 struct Found {
@@ -210,7 +215,21 @@ impl Scanner<'_, '_> {
             if rule.kind == RuleKind::Folder {
                 self.folder_facts.push(self.facts.len());
             }
-            self.facts.push(inspect_dir(dir, rule, &mut self.ctx));
+            let fact = self.read_dir(dir, rule);
+            self.facts.push(fact);
+        }
+    }
+
+    /// One candidate folder: its fingerprint first (so a change during the read shows at the next look), then git, or
+    /// the facts of the last scan when the fingerprint is the same.
+    fn read_dir(&mut self, dir: &str, rule: &Rule) -> Fact {
+        let path = clean_path(dir);
+        let print = fingerprint(self.env.fs, &path);
+        let kept = self.reuse.and_then(|r| r.keeps(&path, &print)).cloned();
+        self.prints.insert(path, print);
+        match kept {
+            Some(kept) => reuse_dir(&kept, dir, rule, &mut self.ctx),
+            None => inspect_dir(dir, rule, &mut self.ctx),
         }
     }
 
@@ -286,13 +305,20 @@ impl Scanner<'_, '_> {
             facts: self.facts,
             listed,
             deleting: self.deleting,
+            prints: self.prints,
         }
     }
 }
 
 /// Scan every rule. A path two rules reach is listed once, for the first rule. A stored rule with a wildcard path is
 /// invalid: no candidates, no leftovers, reported as `invalid: wildcard path`.
+#[cfg(test)]
 pub fn scan_rules(rules: &[Rule], env: &ScanEnv<'_>) -> ScanResult {
+    scan_rules_with(rules, env, None)
+}
+
+/// [`scan_rules`] that keeps the facts of a worktree whose fingerprint is the one `reuse` remembers, and reads the others.
+pub fn scan_rules_with(rules: &[Rule], env: &ScanEnv<'_>, reuse: Option<&Reuse>) -> ScanResult {
     let ctx = ScanCtx {
         git: env.git,
         fs: env.fs,
@@ -306,6 +332,8 @@ pub fn scan_rules(rules: &[Rule], env: &ScanEnv<'_>) -> ScanResult {
         facts: Vec::new(),
         folder_facts: Vec::new(),
         deleting: Vec::new(),
+        reuse,
+        prints: HashMap::new(),
     };
     let infos: Vec<RuleInfo> = rules.iter().map(|rule| scanner.scan_rule(rule)).collect();
     scanner.finish(infos)

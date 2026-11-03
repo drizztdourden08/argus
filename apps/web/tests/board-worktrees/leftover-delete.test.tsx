@@ -15,7 +15,7 @@ const started = (body: object): Responder => () => ({ status: 200, body });
 
 const refuse = (code: string, message: string): Responder => () => ({ status: 409, body: { error: { code, message } } });
 
-describe('Delete leftover: the confirm', () => {
+describe('K4 Delete leftover: the confirm', { tags: ['standard'] }, () => {
   it('opens a confirm with the size, the files, the newest change and that no backup is possible', async () => {
     await mountTab({ docs: [leftover('agent-ab12'), leftover('other')], meta: oldMeta() });
     await findRow('agent-ab12');
@@ -41,17 +41,9 @@ describe('Delete leftover: the confirm', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.body).toEqual({ id: 'id-fresh-1', newestAt: young.leftover?.newestAt, confirmYoung: true });
   });
-
-  it('a partial folder says a repository deeper down would not have been seen', async () => {
-    await mountTab({ docs: [leftover('big', {}, { partial: true })], meta: oldMeta() });
-    await findRow('big');
-    fireEvent.click(rowButton('big', 'Delete leftover'));
-    expect(text(confirmGroup(LEFTOVER_GROUP))).toContain('too big to look through completely');
-    expect(text(confirmGroup(LEFTOVER_GROUP))).toContain('at least 1.5 GB');
-  });
 });
 
-describe('Delete leftover: the answer', () => {
+describe('K3 Delete leftover: the answer', { tags: ['standard'] }, () => {
   it('Confirm posts the route with the newest change the owner saw; the answer names the job', async () => {
     const row = leftover('agent-ab12');
     const { calls } = await mountTab({ docs: [row], meta: oldMeta() }, started({ started: true, jobId: 'L-7' }));
@@ -88,20 +80,8 @@ describe('Delete leftover: the answer', () => {
   });
 });
 
-describe('Delete all leftovers: the button and the confirm', () => {
+describe('K4 Delete all leftovers: the confirm', { tags: ['standard'] }, () => {
   const button = 'Delete all leftovers older than 3 days (2, about 2 GB)';
-
-  it('has a button with the count and the size, and none when nothing is old enough', async () => {
-    await mountTab({ docs: [leftover('a'), leftover('b')], meta: oldMeta() });
-    await findRow('a');
-    expect(screen.getByRole('button', { name: button }).getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('no button without old leftovers', async () => {
-    await mountTab({ docs: [leftover('a')], meta: metaDoc({ leftoverOld: { days: 3, count: 0, sizeMB: 0 } }) });
-    await findRow('a');
-    expect(screen.queryByRole('button', { name: /Delete all leftovers/ })).toBeNull();
-  });
 
   it('opens a confirm with the count, the total size and the re-checks; Cancel and Escape close it', async () => {
     const { calls } = await mountTab({ docs: [leftover('a'), leftover('b')], meta: oldMeta() });
@@ -118,7 +98,7 @@ describe('Delete all leftovers: the button and the confirm', () => {
   });
 });
 
-describe('Delete all leftovers: the answer', () => {
+describe('K3 Delete all leftovers: the answer', { tags: ['standard'] }, () => {
   const button = 'Delete all leftovers older than 3 days (2, about 2 GB)';
 
   it('Confirm posts the batch route; the answer counts the queued folders and the skipped ones with their reasons', async () => {

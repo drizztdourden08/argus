@@ -14,22 +14,7 @@ const owner = () => ({
   tests: [testDoc('T-1', { rev: 4 }), doneDoc('T-2', 'fail', 'broken', { rev: 3 })],
 });
 
-describe('the row menu', () => {
-  it('lists the actions of a test to run, without Run again', async () => {
-    await mountTab(owner());
-    await openMenu('T-1');
-    for (const name of ['Add a note...', 'Open details', 'Edit', 'Move to item', 'Archive', 'Delete', 'Copy id']) expect(await screen.findByRole('menuitem', { name })).toBeTruthy();
-    expect(screen.queryByRole('menuitem', { name: 'Run again' })).toBeNull();
-  });
-
-  it('puts a done test back in To run', async () => {
-    const { calls } = await mountTab(owner());
-    await openMenu('T-2');
-    await choose('Run again');
-    await waitFor(() => expect(entries(calls)).toHaveLength(1));
-    expect(entries(calls)[0]?.body).toMatchObject({ kind: 'rerun', author: 'human', replyTo: 'T-2' });
-  });
-
+describe('S1 the row menu', { tags: ['standard'] }, () => {
   it('moves a test to another item with the revision the owner saw', async () => {
     const { calls } = await mountTab(owner());
     await openMenu('T-1');

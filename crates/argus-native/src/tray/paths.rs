@@ -1,4 +1,5 @@
 //! The files the tray leaves in the dashboard home, readable without the server and the tray.
+// test-tag: critical
 
 use std::path::{Path, PathBuf};
 

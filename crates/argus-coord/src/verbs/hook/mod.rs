@@ -3,7 +3,7 @@
 //! | Event | Claude Code hook | Does |
 //! |---|---|---|
 //! | `session-start` | `SessionStart` | tells a thread who it is, hands its inbox |
-//! | `prompt` | `UserPromptSubmit` | hands new inbox messages over with the prompt |
+//! | `prompt` | `UserPromptSubmit` | hands new inbox messages over with the prompt, and a digest line of the board notices since the last turn |
 //! | `tool` | `PostToolUse` | heartbeat, and new messages mid-turn |
 //! | `stop` | Stop | marks the thread idle; a waiting message keeps it going |
 //! | `guard` | `PreToolUse` `tabs_close` | refuses closing a tab in a registered thread |
@@ -31,11 +31,14 @@ mod guard;
 mod input;
 mod kind;
 mod listen;
+mod notices;
+mod read_stamp;
 mod subagent_start;
 mod subagent_stop;
 mod thread;
 mod transcript;
 mod visit;
+mod waiting;
 mod wake_line;
 
 use std::io::Write;

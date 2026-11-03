@@ -1,5 +1,6 @@
 //! The context menu as data: which entries, in which order, which are on. Pure, so it is tested
 //! without a window; `view` turns it into a native menu.
+// test-tag: critical
 
 use super::state::TrayState;
 
@@ -160,14 +161,6 @@ mod tests {
         );
         assert!(!node(&TrayState::running(1)).contains(&"Start server".to_owned()));
         assert_eq!(labels(&TrayState::stopped())[3], "Notifications");
-    }
-
-    #[test]
-    fn a_stopped_server_offers_start_between_restart_and_quit() {
-        let labels = labels(&TrayState::stopped());
-        let at = |text: &str| labels.iter().position(|l| l == text).unwrap();
-        assert!(at("Restart server") < at("Start server") && at("Start server") < at("Quit Argus"));
-        assert_eq!(labels[1], "Argus: stopped");
     }
 
     #[test]

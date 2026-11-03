@@ -2,8 +2,10 @@
 //! answer and the model its transcript shows. The session need not be the one that started it
 //! (a lead resumed since has a new session id). A stop for an id the board has no record of
 //! touches no record at all, however alike a record of the lead may read: it is noted for the
-//! start that may still come.
+//! start that may still come. A stop that only waits on the agent's own background command
+//! leaves its record working: the final stop, after the handback, closes it.
 
+use argus_agents::hook_logic::failed;
 use argus_board::json::set;
 use argus_board::store::stamp;
 use argus_board::{Board, BoardError};
@@ -16,6 +18,7 @@ use super::ctx::Hook;
 use super::dispatches::{DISPATCH_TTL_MS, recent, store};
 use super::thread::registered;
 use super::transcript::model_of;
+use super::waiting::on_background;
 use crate::cli::CoordError;
 
 /// The stop as the hook saw it.
@@ -23,12 +26,16 @@ struct Stop {
     agent_id: String,
     last: String,
     used: Option<String>,
+    waiting: bool,
 }
 
 fn close_known(board: &mut Board, stop: &Stop, id: &str) -> Result<(), BoardError> {
     let record = &mut board["agents"][id];
     if record["claudeId"].is_null() {
         set(record, "claudeId", stop.agent_id.as_str());
+    }
+    if stop.waiting {
+        return Ok(());
     }
     let actor = js::string(&record["thread"]);
     close(board, id, &stop.last, stop.used.as_deref());
@@ -59,8 +66,10 @@ pub fn run(hook: &Hook<'_>) -> Result<(), CoordError> {
     let last = hook.input["last_assistant_message"]
         .as_str()
         .map_or_else(String::new, |s| js::trim(s).to_owned());
+    let path = &hook.input["agent_transcript_path"];
     let stop = Stop {
-        used: model_of(&hook.input["agent_transcript_path"]),
+        used: model_of(path),
+        waiting: !failed(&last) && on_background(path),
         agent_id,
         last,
     };

@@ -1,5 +1,9 @@
-//! Removing a worktree on real throwaway repositories: every guard, the safe removals, discarding refused or allowed
-//! by the owner's entry, the backup written first and restored from the bundle, the live check and the kept state.
+//! KEEP: K3, K4.
+//! Removing a worktree on the fake git (`testkit::Fixture::fake`): every guard, the safe removals, discarding refused or
+//! allowed by the owner's entry, the backup written first, the live check and the kept state. The bundle fetched back
+//! by a real git is in `remove_real.rs`.
+
+// test-tag: standard
 
 use crate::board::{Caller, EntryWorktree, Keep, OwnerEntry};
 use crate::clock::DAY_MS;
@@ -18,7 +22,7 @@ use std::path::Path;
 use std::time::Duration;
 
 fn setup(prep: impl FnOnce(&Fixture), options: impl FnOnce(&mut Options)) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     prep(&fx);
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], options);
     h.scan();
@@ -63,6 +67,40 @@ fn only_what_is_in_the_live_listing_an_unknown_id_or_path_is_404_and_the_refusal
 }
 
 #[test]
+fn a_project_with_no_rule_lists_nothing_and_the_404_says_to_add_one_a_path_is_never_taken_as_it_is()
+{
+    let fx = Fixture::fake();
+    let h = Harness::new(&fx.root, Vec::new(), |_| {});
+    h.scan();
+    assert!(h.docs().is_empty());
+    let err = h.refused(&fx.path("old-merged"), |i| {
+        i.caller = Caller::Thread("lead".into());
+    });
+    assert_eq!(err.code, ErrorCode::NotFound);
+    assert!(
+        err.message.contains("alpha has no valid worktree rule"),
+        "{}",
+        err.message
+    );
+    assert!(err.message.contains("coord worktree rule add"));
+    assert!(listed(&fx.repo).contains(&"old-merged".to_string()));
+}
+
+#[test]
+fn a_repo_rule_lists_the_worktrees_wherever_they_are_and_a_path_names_one() {
+    let fx = Fixture::fake();
+    let h = Harness::new(
+        &fx.root,
+        vec![Rule::folder("R-1", &fx.repo, "worker").repo()],
+        |_| {},
+    );
+    h.scan();
+    let out = h.rm(&fx.path("old-merged")).unwrap();
+    assert!(out.removed, "{}", out.text);
+    assert!(!listed(&fx.repo).contains(&"old-merged".to_string()));
+}
+
+#[test]
 fn a_rule_that_no_longer_covers_the_folder_is_a_403_never_an_arbitrary_path() {
     let (fx, h) = std_setup();
     h.board().rules[0].path = format!("{}/elsewhere", fx.root);
@@ -74,7 +112,7 @@ fn a_rule_that_no_longer_covers_the_folder_is_a_403_never_an_arbitrary_path() {
 
 #[test]
 fn never_a_main_checkout_a_folder_rule_that_reaches_the_repository_itself() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(
         &fx.root,
         vec![Rule::folder("W-1", &fx.root, "worker")],
@@ -373,7 +411,7 @@ fn work_no_ref_keeps_is_refused_without_discard() {
     );
     let plain = h.refused(&id(&h, &fx, "loose"), |_| {});
     assert_eq!(plain.code, ErrorCode::Forbidden);
-    assert!(plain.message.contains("has 1 commit on a detached HEAD that no branch keeps: removing it discards them. The owner can do it from the page (Delete now), or send discard"));
+    assert!(plain.message.contains("has 1 commit on a detached HEAD that no branch keeps: removing it discards them. The owning lead decides: commit what is worth keeping, discard the rest inside the worktree, then request the removal again (the owner is not asked). Only the owner's own say discards it as it stands: Delete now on the page"));
 }
 
 #[test]
@@ -438,7 +476,16 @@ fn answered_by_decision() -> Vec<OwnerEntry> {
 }
 
 fn discard_by_decision() -> (Fixture, Harness, crate::request::RemoveOutcome, String) {
-    let (fx, h) = setup(dirty_old_unmerged, |_| {});
+    discard_by_decision_on(Fixture::fake())
+}
+
+/// The owner's decision lets the discard of `old-unmerged` through on this fixture (the fake, or a real git).
+pub(super) fn discard_by_decision_on(
+    fx: Fixture,
+) -> (Fixture, Harness, crate::request::RemoveOutcome, String) {
+    dirty_old_unmerged(&fx);
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
     add_entries(&h, answered_by_decision());
     let head = h.docs()["old-unmerged"].head.clone().unwrap();
     let out = h
@@ -521,8 +568,8 @@ fn the_bundle_the_patch_and_the_untracked_files_are_written_first() {
 }
 
 #[test]
-fn the_bundle_gives_the_commit_back_and_the_activity_line_says_how_to_restore() {
-    let (fx, h, out, _head) = discard_by_decision();
+fn the_activity_line_and_the_backup_say_how_to_restore_the_bundle() {
+    let (_fx, h, out, _head) = discard_by_decision();
     let b = out.backup.unwrap();
     assert!(
         b.restore[0].ends_with("old-unmerged:old-unmerged"),
@@ -533,22 +580,6 @@ fn the_bundle_gives_the_commit_back_and_the_activity_line_says_how_to_restore() 
         b.restore[0].contains(".bundle\" old-unmerged"),
         "{}",
         b.restore[0]
-    );
-    git_in(
-        &fx.repo,
-        &[
-            "fetch",
-            "-q",
-            b.bundle.as_deref().unwrap(),
-            "old-unmerged:old-unmerged",
-        ],
-        &[],
-    );
-    let subject = git_in(&fx.repo, &["log", "-1", "--format=%s", "old-unmerged"], &[]);
-    assert_eq!(
-        subject.trim(),
-        "add old.txt",
-        "the bundle gives the commit back"
     );
     let line = h
         .notes
@@ -740,7 +771,7 @@ fn sent_text(h: &Harness) -> String {
 
 #[test]
 fn keeps_and_answers_of_worktrees_that_no_longer_exist_leave_the_board() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let gone_id = "abcdef0123";
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.board().keeps.insert(gone_id.into(), day_keep(&h));
@@ -797,7 +828,7 @@ fn a_live_worktree_keeps_its_keep_and_the_sent_map_keeps_live_ones_only() {
 
 #[test]
 fn a_scan_with_a_rule_error_prunes_nothing() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let rules = vec![rule_for(&fx), Rule::folder("W-2", &fx.wts, "worker").repo()];
     let h = Harness::new(&fx.root, rules, |_| {});
     h.board().keeps.insert(

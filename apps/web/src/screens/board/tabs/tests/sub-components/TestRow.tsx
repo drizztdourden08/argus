@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind component */
 import './TestRow.css';
 import { Box, Pressable, Text } from '@drizztdourden08/tessera';
-import { smartTimes } from '../../../../../format';
 import { rowKeys } from '../behavior/row-keys';
 import { useOutcome } from '../behavior/useOutcome';
 import { useRowMenu } from '../behavior/useRowMenu';
@@ -37,7 +36,7 @@ const TestRow = (props: TestPartProps) => {
       <Text mono variant="caption" tone="muted" className="test-row__id">{test.id}</Text>
       <Box className="test-row__body">
         <Pressable className="test-row__title" title={test.title} onClick={() => onOpen(test.id)}>
-          <Text weight={500}>{smartTimes(test.title)}</Text>
+          <Text weight={500} smartTimes>{test.title}</Text>
         </Pressable>
         {note && <Text variant="caption" tone="muted" title={note} className="test-row__note">{note}</Text>}
         <TestChips test={test} />

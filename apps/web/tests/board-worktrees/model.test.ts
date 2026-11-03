@@ -2,12 +2,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   aboutSize, askProblem, batchNotice, canRemove, compareRows, confirmStale, countRows, daysText, entryProblem, filterRows, isNeeding,
-  isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, removeLook, sizeText, summaryParts,
+  isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, sizeText, statusShown,
+  summaryParts,
   threadOf,
 } from '../../src/screens/board/tabs/worktrees/model';
-import { DAY, ago, leftover, metaDoc, oldMeta, rule, worktree } from './fixtures';
+import { DAY, NOW, ago, leftover, metaDoc, oldMeta, rule, worktree } from './fixtures';
 
-describe('sizes and days', () => {
+describe('K1 sizes and days', { tags: ['critical'] }, () => {
   it('writes megabytes, gigabytes and the small cases like the Node page', () => {
     expect(sizeText(null)).toBe('unknown size');
     expect(sizeText(0.2)).toBe('under 1 MB');
@@ -20,7 +21,7 @@ describe('sizes and days', () => {
   });
 });
 
-describe('the order and the filters', () => {
+describe('K1 the order and the filters', { tags: ['critical'] }, () => {
   const rows = [
     worktree('active-1', 'active', { ageDays: 0 }),
     worktree('stale-1', 'stale'),
@@ -44,7 +45,7 @@ describe('the order and the filters', () => {
   });
 });
 
-describe('what the owner may remove, and how it reads', () => {
+describe('K1 what the owner may remove, and how it reads', { tags: ['critical'] }, () => {
   it('a clean worktree on a branch is safe; uncommitted work or a lone detached HEAD is not', () => {
     expect(isSafe(worktree('a', 'stale'))).toBe(true);
     expect(isSafe(worktree('b', 'stale', { dirty: 2 }))).toBe(false);
@@ -62,12 +63,6 @@ describe('what the owner may remove, and how it reads', () => {
     expect(canRemove(leftover('link', {}, { isLink: true }))).toBe(false);
     expect(canRemove(leftover('new', {}, { pending: true }))).toBe(false);
     expect(canRemove(leftover('going', { status: 'deleting' }))).toBe(false);
-  });
-
-  it('labels: Remove, Delete now, Delete leftover', () => {
-    expect(removeLook(worktree('a', 'stale')).label).toBe('Remove');
-    expect(removeLook(worktree('b', 'stale', { dirty: 1 })).label).toBe('Delete now');
-    expect(removeLook(leftover('c')).label).toBe('Delete leftover');
   });
 
   it('lists what a discard loses: files, the unmerged commits with their first subjects, the branch', () => {
@@ -94,7 +89,7 @@ describe('what the owner may remove, and how it reads', () => {
   });
 });
 
-describe('the panel and what the owner saw', () => {
+describe('K1 the panel and what the owner saw', { tags: ['critical'] }, () => {
   const stale = worktree('a', 'stale');
 
   it('opens, closes on the same button and switches kind, keeping the typed text between delete and check', () => {
@@ -136,7 +131,7 @@ describe('the panel and what the owner saw', () => {
   });
 });
 
-describe('the sentences', () => {
+describe('K1 the sentences', { tags: ['critical'] }, () => {
   it('the thread comes from the row, else from its rule', () => {
     expect(threadOf(worktree('a', 'stale'), null)).toBe('lead');
     expect(threadOf(worktree('a', 'stale', { thread: undefined, rule: 'W-2' }), metaDoc({ rules: [rule({ id: 'W-2', thread: 'worker' })] }))).toBe('worker');
@@ -194,7 +189,20 @@ describe('the sentences', () => {
       { id: 'L-3', state: 'done', name: 'c', finishedAt: ago(60_000) },
       { id: 'L-4', state: 'refused', name: 'd', finishedAt: ago(60_000) },
     ];
-    const shown = refusedJobs(oldMeta({ jobs }), new Set(['L-4']), Date.now());
+    const shown = refusedJobs(oldMeta({ jobs }), new Set(['L-4']), NOW);
     expect(shown.map((job) => job.id)).toEqual(['L-1']);
+  });
+});
+
+describe('K1 the state a row shows', { tags: ['critical'] }, () => {
+  it('hides the three day "active" status and the staleness of a worktree that is not in review', () => {
+    expect(statusShown(worktree('a', 'active'))).toBe(false);
+    expect(statusShown(worktree('b', 'stale'))).toBe(true);
+    const state = (value: string) => ({ hygiene: { state: value } });
+    expect(statusShown(worktree('c', 'stale', state('review')))).toBe(true);
+    expect(statusShown(worktree('d', 'stale', state('released')))).toBe(false);
+    expect(statusShown(worktree('e', 'merged', state('in-use')))).toBe(false);
+    expect(statusShown(worktree('f', 'kept', state('kept')))).toBe(false);
+    expect(statusShown(worktree('g', 'leftover', state('released')))).toBe(true);
   });
 });

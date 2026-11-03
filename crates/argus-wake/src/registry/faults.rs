@@ -13,6 +13,9 @@ use crate::wake::WakeInput;
 const ERROR_CLIP: usize = 200;
 /// A thread with a fault open that is sent another wake tells the Overlord again, at most this often.
 const REALERT_MS: i64 = 10 * 60 * 1000;
+/// The one fault that clears by itself and is only a notice when it opens: the next reminder wakes the
+/// Overlord if it stays open.
+const NOTICE_ONLY: &str = "board-closed";
 
 /// Why a wake failed.
 pub(super) struct Failure<'a> {
@@ -35,7 +38,9 @@ impl Registry {
             .collect()
     }
 
-    /// Open a fault and wake the Overlord, once per thread. The Overlord's own fault wakes nobody.
+    /// Open a fault, leave the Overlord a notice and wake it at once (`fault-open`), once per thread.
+    /// A `board-closed` fault is the notice only: it ends by itself, and the reminder wakes the Overlord
+    /// if it stays open. The Overlord's own fault wakes nobody.
     pub(super) fn raise(
         &mut self,
         env: &mut Env<'_>,
@@ -71,7 +76,10 @@ impl Registry {
                 };
                 format!("{scope}/{thread}: {}{detail}", failure.reason)
             });
-            self.tell_main(env, scope, thread, text);
+            self.tell_main(env, scope, thread, "wake-fault", text.clone());
+            if failure.reason != NOTICE_ONLY {
+                self.tell_main(env, scope, thread, "fault-open", text);
+            }
         }
         Some(fault)
     }
@@ -90,15 +98,15 @@ impl Registry {
             "{scope}/{thread}: a new wake is waiting and nobody listens (fault open since {}, {}). Reach it now with its session (the owner is waiting), then coord wake-fault clear.",
             open.since, open.reason
         );
-        self.tell_main(env, scope, thread, text);
+        self.tell_main(env, scope, thread, "wake-fault", text);
     }
 
-    /// Sends one `wake-fault` wake about `scope/thread` to the Overlord.
-    fn tell_main(&self, env: &mut Env<'_>, scope: &str, thread: &str, text: String) {
+    /// Sends one wake of `reason` about `scope/thread` to the Overlord.
+    fn tell_main(&self, env: &mut Env<'_>, scope: &str, thread: &str, reason: &str, text: String) {
         let wake = WakeInput::about(
             MAIN_SCOPE,
             &self.main_thread(),
-            "wake-fault",
+            reason,
             &format!("{scope}/{thread}"),
             text,
         );

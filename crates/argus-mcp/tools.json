@@ -842,5 +842,67 @@
       "idempotentHint": false,
       "openWorldHint": false
     }
+  },
+  {
+    "name": "list_dependencies",
+    "title": "List dependencies",
+    "description": "Cross-board dependencies: one row per request from an item of one project to an item of another (id, state, from, to, title, reason). Optional project keeps those that start or end there. Only while dependencies are on.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Only the dependencies that start or end on this project (see portfolio_overview)."
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "opening",
+            "open",
+            "done",
+            "dropped",
+            "blocked",
+            "gone",
+            "cancelled"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "cancel_dependency",
+    "title": "Cancel a dependency",
+    "description": "Cancel an open or blocked cross-board dependency as the owner. The requester stops waiting and the assignee item is dropped. Only while dependencies are on.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^D-\\d+$",
+          "description": "Dependency id, e.g. D-4."
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
   }
 ]

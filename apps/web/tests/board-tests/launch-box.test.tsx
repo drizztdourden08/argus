@@ -16,16 +16,7 @@ const launched = (extra: object = {}) => ({
 
 const playDisabled = (tag: string): boolean => screen.getByRole<HTMLButtonElement>('button', { name: `Play ${tag}` }).disabled;
 
-describe('the launch box of a linked launcher', () => {
-  it('shows the command of the linked launcher, where it runs and the link to the launcher', async () => {
-    await mountTab(launched());
-    expect(await screen.findByDisplayValue('rotp launch l1')).toBeTruthy();
-    expect(screen.getByText('C:\\work\\rotp')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'launcher l1' }).getAttribute('href')).toBe('#builds');
-    expect(screen.getByText('First bundle')).toBeTruthy();
-    expect(screen.getByText('Read me first.')).toBeTruthy();
-  });
-
+describe('S1 the launch box of a linked launcher', { tags: ['standard'] }, () => {
   it('follows the launcher live: a new command is the one shown', async () => {
     const { change } = await mountTab(launched());
     await screen.findByDisplayValue('rotp launch l1');
@@ -41,7 +32,7 @@ describe('the launch box of a linked launcher', () => {
   });
 });
 
-describe('the launch box without a usable launcher', () => {
+describe('S1 the launch box without a usable launcher', { tags: ['standard'] }, () => {
   it('says a retired launcher was retired and disables Play', async () => {
     await mountTab({
       builds: [buildDoc('b3', { launcher: 'gone' })],

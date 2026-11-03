@@ -6,9 +6,15 @@ import type { WithId } from '../../../../data/react';
 import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
 import type { OpNotice } from '../../shared';
+import type { Signals } from './attention';
 import type { TrashPanel } from './trash-props.type';
-import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
+import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
 import type { PurgeNotice, TrashRow, TrashSource } from './trash';
+
+interface AgentDoc extends TrashSource {
+  item?: string | null;
+  status?: string;
+}
 
 interface KanbanData {
   ready: boolean;
@@ -16,10 +22,12 @@ interface KanbanData {
   threads: WithId<ThreadChoice>[];
   entries: WithId<Entry>[];
   actions: WithId<ActionDoc>[];
-  agents: WithId<TrashSource>[];
+  agents: WithId<AgentDoc>[];
   tests: WithId<Test>[];
   closedBuilds: ReadonlySet<string>;
   needs: ReadonlyMap<string, Needs>;
+  asks: ReadonlyMap<string, AskLink[]>;
+  signals: ReadonlyMap<string, Signals>;
 }
 
 interface KanbanState {
@@ -148,4 +156,9 @@ interface AddItemDraft {
   itemOf: (title: string) => ItemInput;
 }
 
-export type { AddItemDraft, AddPanel, Adding, BulkOps, BulkTarget, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };
+interface CancelDep {
+  busy: boolean;
+  cancel: () => Promise<void>;
+}
+
+export type { AddItemDraft, AgentDoc, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };

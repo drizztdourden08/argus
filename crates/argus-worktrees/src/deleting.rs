@@ -24,6 +24,7 @@ pub fn deleting_path(path: &str, stamp: i64) -> String {
     format!("{path}{DELETING_MARK}{stamp}")
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

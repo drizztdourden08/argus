@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Grid, Icon, Inline, Tag, Text } from '@drizztdourden08/tessera';
-import { BAD_LOOK, CALM_LOOK } from '../dashboards.constants';
+import { BAD_LOOK, CALM_LOOK } from '../../../../shell';
 import type { CounterTileProps } from '../dashboards.type';
 
 const toneOf = (value: number, bad: boolean): 'danger' | 'muted' | undefined => {

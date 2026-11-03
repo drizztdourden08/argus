@@ -49,11 +49,17 @@ pub enum Coll {
     Activity,
     /// Owner notifications.
     Notifications,
+    /// Local pull requests (`PR-n`), written by Brock's tooling; read only here.
+    Prs,
+    /// Cross-board dependencies (the portfolio ledger).
+    Deps,
+    /// Open stalls of the stall watch (`_portfolio` only), written by the wake engine.
+    Stalls,
 }
 
 impl Coll {
     /// Every collection, in the Node order.
-    pub const ALL: [Coll; 20] = [
+    pub const ALL: [Coll; 23] = [
         Coll::Threads,
         Coll::Items,
         Coll::Tests,
@@ -74,6 +80,9 @@ impl Coll {
         Coll::Procs,
         Coll::Activity,
         Coll::Notifications,
+        Coll::Prs,
+        Coll::Deps,
+        Coll::Stalls,
     ];
 
     /// The collection's wire name.
@@ -100,6 +109,9 @@ impl Coll {
             Coll::Procs => "procs",
             Coll::Activity => "activity",
             Coll::Notifications => "notifications",
+            Coll::Prs => "prs",
+            Coll::Deps => "deps",
+            Coll::Stalls => "stalls",
         }
     }
 }

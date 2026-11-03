@@ -1,7 +1,10 @@
+//! KEEP: K3, K4.
 //! When git cannot delete a worktree's folder (Windows: pnpm `node_modules` junctions, a handle held by a process) Argus
 //! finishes the removal itself, and the leftovers a removal made are exempt from the age rule. `git worktree remove` is
 //! simulated by a scripted git that deletes what git would have deleted and fails with git's own sentence. Every link
 //! target must survive: a junction is removed as a link, never followed.
+
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -49,7 +52,11 @@ fn ensure_links(old_merged: &str, outside: &str, outside2: &str) {
 }
 
 pub(super) fn shape(mode: RemoveMode, prep: impl FnOnce(&Fixture)) -> Shape {
-    let fx = Fixture::new();
+    shape_on(Fixture::fake(), mode, prep)
+}
+
+/// [`shape`] on a fixture the caller made (a real git one for the smoke in `remove_real.rs`).
+pub(super) fn shape_on(fx: Fixture, mode: RemoveMode, prep: impl FnOnce(&Fixture)) -> Shape {
     fs::write(
         format!("{}/.git/info/exclude", fx.repo),
         "node_modules\nlnk-*\nlock\n",
@@ -113,6 +120,18 @@ impl Shape {
             })
             .unwrap();
         (self, out)
+    }
+
+    /// Removes `old-merged` with its branch, waits for the worker, and checks git no longer lists it.
+    fn remove_old_merged_gone_from_git(&self) -> RemoveOutcome {
+        let out = self
+            .h
+            .rm_with(&self.id("old-merged"), |i| i.branch = true)
+            .unwrap();
+        assert!(out.removed, "{}", out.text);
+        self.h.idle();
+        assert!(!listed(&self.fx.repo).contains(&"old-merged".to_string()));
+        out
     }
 
     /// The background job of the removal finished clean.
@@ -283,23 +302,6 @@ fn a_link_that_cannot_be_removed_stops_the_removal_before_git_is_called() {
             && a.get(1).map(String::as_str) == Some("remove")
     });
     assert!(!called, "git was never called");
-    s.keeps_survive();
-}
-
-#[test]
-fn the_job_removes_links_as_links_a_junction_deep_in_node_modules_and_one_at_the_top() {
-    let s = shape(RemoveMode::Stuck, |_| {});
-    s.h.rm(&s.id("old-merged")).unwrap();
-    s.h.idle();
-    assert!(
-        !fs::read_dir(&s.fx.wts)
-            .unwrap()
-            .flatten()
-            .any(|e| e.file_name().to_string_lossy().starts_with("old-merged")),
-        "neither the folder nor its renamed copy is left"
-    );
-    assert_eq!(fs::read_dir(&s.outside).unwrap().count(), 1);
-    assert_eq!(fs::read_dir(&s.outside2).unwrap().count(), 1);
     s.keeps_survive();
 }
 
@@ -508,27 +510,6 @@ fn git_says_removed_but_the_folder_is_still_there_it_is_remembered_and_taken_wit
     assert_eq!(s.h.svc.remove_leftovers(&input).unwrap().started, 1);
     s.h.idle();
     assert!(!exists_itself(&s.fx.path("side")));
-}
-
-#[test]
-fn real_git_on_the_pnpm_shape_the_worktree_is_gone_and_no_junction_target_lost_a_file() {
-    let s = shape(RemoveMode::Real, |_| {});
-    let out =
-        s.h.rm_with(&s.id("old-merged"), |i| i.branch = true)
-            .unwrap();
-    assert!(out.removed, "{}", out.text);
-    s.h.idle();
-    assert!(!listed(&s.fx.repo).contains(&"old-merged".to_string()));
-    assert!(
-        !fs::read_dir(&s.fx.wts)
-            .unwrap()
-            .flatten()
-            .any(|e| e.file_name().to_string_lossy().starts_with("old-merged")),
-        "a folder is left: {}",
-        out.text
-    );
-    s.keeps_survive();
-    assert!(!branches(&s.fx.repo).contains(&"old-merged".to_string()));
 }
 
 #[test]
@@ -777,4 +758,53 @@ fn the_page_keeps_its_own_stronger_confirm_whatever_age_it_asks_for_and_the_serv
     let out = thread_batch(&c, |_| {}).unwrap();
     assert_eq!(job_names(&out), ["age-9d"]);
     c.idle();
+}
+
+fn lock_old_merged(reason: &'static str) -> impl FnOnce(&Fixture) {
+    move |fx| {
+        fx.git(&[
+            "worktree",
+            "lock",
+            "--reason",
+            reason,
+            &fx.path("old-merged"),
+        ]);
+    }
+}
+
+fn unlock_calls(s: &Shape) -> usize {
+    s.h.exec
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|c| c.starts_with(&["worktree".to_string(), "unlock".to_string()]))
+        .count()
+}
+
+#[test]
+fn a_brock_locked_clone_with_junctions_is_unlinked_unlocked_and_removed_and_no_target_is_touched() {
+    let s = shape(
+        RemoveMode::Real,
+        lock_old_merged("cloned node_modules from main (brock)"),
+    );
+    let _ = s.remove_old_merged_gone_from_git();
+    assert!(
+        !exists_itself(&s.fx.path("old-merged")),
+        "the folder is gone"
+    );
+    s.keeps_survive();
+    assert_eq!(unlock_calls(&s), 1);
+}
+
+#[test]
+fn a_worktree_locked_for_another_reason_is_refused_and_stays_with_its_links() {
+    let s = shape(RemoveMode::Real, lock_old_merged("kept for the demo"));
+    let err = s.h.refused(&s.id("old-merged"), |_| {});
+    assert_eq!(err.code, ErrorCode::Forbidden);
+    assert!(err.message.contains("is locked (kept for the demo)"));
+    assert!(listed(&s.fx.repo).contains(&"old-merged".to_string()));
+    assert!(exists_itself(&s.fx.path("old-merged")));
+    assert_eq!(unlock_calls(&s), 0);
+    s.keeps_survive();
 }

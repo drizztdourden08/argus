@@ -36,6 +36,7 @@ impl GhRunner for SystemGh {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -14,7 +14,7 @@ const LEGEND_ENTRIES: readonly LegendEntry[] = [
   { label: 'pass', look: { variant: 'urgency', color: 'success' }, text: 'A test passed.' },
   { label: 'fail', look: { variant: 'urgency', color: 'danger' }, text: 'A test failed (partial and blocked are in the same family).' },
   { label: 'to run', look: { variant: 'urgency', color: 'info' }, text: 'A test still waiting for a result. One click on pass, fail, partial or blocked posts it.' },
-  { label: 'needs you', look: { variant: 'urgency', color: 'warning' }, text: 'Waiting for your answer or your run.' },
+  { label: 'needs you', look: { variant: 'urgency', color: 'danger' }, text: 'A question, a to-do or a test waits on you. The kinds below say which.' },
   { label: 'conflict', look: { variant: 'urgency', color: 'danger' }, text: 'A thread changed the same field after you looked. Nothing of yours was applied.' },
   { label: 'running', look: { variant: 'urgency', color: 'success' }, text: 'A launch the lead defined is running on this machine (queued, exited, failed and stopped are its other states).' },
   { label: 'bundle-2', look: { variant: 'normal', color: 'neutral' }, text: 'The build tag a test carries: a bundle. The one handed to you is filled and sits first.' },

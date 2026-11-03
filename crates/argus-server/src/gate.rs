@@ -19,6 +19,7 @@ use crate::ctx::Parts;
 use crate::pathing::{normalize, query_pairs};
 use crate::reply::{error_reply, html_page, info_page, plain_error};
 use crate::router::{AuthMode, Handler, RouteMatch, Router};
+use crate::routes::feed::feed_path;
 use crate::security::{
     Bearer, Credential, bearer_state, credential, host_ok, looks_like_page, origin_ok, peer_ok,
     write_refusal,
@@ -210,8 +211,9 @@ pub async fn dispatch(
     req: Request<Body>,
 ) -> Response {
     let (parts, body) = req.into_parts();
-    let path = normalize(parts.uri.path());
     let svc = &app.svc;
+    let path = normalize(parts.uri.path());
+    let path = feed_path(&parts.headers, svc.port(), svc.doors(), path);
     let (handler, opts, params, auth) = match admit(&app, peer, &parts, &path) {
         Ok(v) => v,
         Err(res) => {

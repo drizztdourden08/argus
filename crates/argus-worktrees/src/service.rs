@@ -1,7 +1,8 @@
 //! The worktrees service: its settings, its inputs and the state it keeps between calls.
 //!
 //! Scanning never changes a worktree. A removal goes only through the guards in `remove`, `leftover_remove` and
-//! `batch`. Scans and removals run one at a time; deletion jobs run one at a time on a background worker.
+//! `batch`. Scans and removals of a project run one at a time; deletion jobs of a project run one at a time on a
+//! background worker. Another project never waits for them.
 
 use crate::board::BoardFacts;
 use crate::clock::Clock;
@@ -14,17 +15,23 @@ use crate::git::Git;
 use crate::jobs::{Job, JobDoc};
 use crate::measure::{Bounds, Leftover};
 use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WorktreeStore};
-use crate::queue::Queue;
+use crate::probe::{Fingerprint, SAFETY_SCAN_MS};
+use crate::queue::Queues;
 use crate::requests::Requests;
 use crate::scan::RuleInfo;
 use crate::sync::locked;
+use crate::turns::{Asker, Turn, Turns};
+use argus_core::remote::ModeSource;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// The settings of the service (`config.json` `worktrees` on the server's side).
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug)]
 pub struct Options {
+    /// The safety scan: every worktree is read with git again this often, whatever the fingerprints say (`scanMs`,
+    /// `SAFETY_SCAN_MS` by default). Between safety scans git runs only for a worktree whose fingerprint changed.
     pub scan_ms: i64,
     pub repeat_ms: i64,
     pub live_ms: i64,
@@ -44,12 +51,22 @@ pub struct Options {
     pub keep_backup_days: i64,
     /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
     pub run_requests: bool,
+    /// The worktree hygiene: flag the released worktrees (no running agent, nothing holds them, nothing is lost) and remove them after the grace. Off in
+    /// shadow mode.
+    pub release: bool,
+    /// How long a released worktree stays after its thread was told (`worktrees.releaseGraceMs`, 1 hour).
+    pub release_grace_ms: i64,
+    /// A newly released worktree is told once nothing new was released for this long, so a burst makes one wake.
+    pub release_debounce_ms: i64,
+    /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
+    /// than the longest git removal, 15 minutes, and a scan before it).
+    pub target_limit_ms: i64,
 }
 
 impl Default for Options {
     fn default() -> Self {
         Self {
-            scan_ms: 10 * 60_000,
+            scan_ms: SAFETY_SCAN_MS,
             repeat_ms: 24 * 3_600_000,
             live_ms: 20_000,
             many_at: 12,
@@ -65,6 +82,10 @@ impl Default for Options {
             keep_backups: 30,
             keep_backup_days: 30,
             run_requests: true,
+            release: true,
+            release_grace_ms: 3_600_000,
+            release_debounce_ms: 30_000,
+            target_limit_ms: 30 * 60_000,
         }
     }
 }
@@ -76,6 +97,8 @@ pub struct Deps {
     pub fs: Arc<dyn Fs>,
     pub git: Git,
     pub gh: Arc<dyn GhRunner>,
+    /// The local or remote switch: in local mode `gh` is never asked.
+    pub remote: Arc<dyn ModeSource>,
     pub procs: Arc<dyn ProcessLister>,
     pub clock: Arc<dyn Clock>,
 }
@@ -88,6 +111,12 @@ pub struct ScanState {
     pub facts: Vec<Fact>,
     pub listed: HashSet<String>,
     pub error: Option<String>,
+    /// When a scan last read every worktree with git (a scan that kept some facts leaves it as it was).
+    pub full_ms: i64,
+    /// How the rules sat on disk at this scan (`probe::shape_of`).
+    pub shape: String,
+    /// The fingerprint of each candidate folder when it was read, by path.
+    pub prints: HashMap<String, Fingerprint>,
 }
 
 pub struct Measured {
@@ -109,12 +138,16 @@ pub struct State {
     pub jobs: Vec<Job>,
     pub job_seq: u64,
     pub sigs: HashMap<String, String>,
+    /// The agent records that ended (done, stopped, failed), by project, as the last look at the board saw them.
+    pub ended_agents: HashMap<String, BTreeSet<String>>,
     pub measured: HashMap<String, Measured>,
     pub budget_spent_ms: i64,
     pub adopted: HashSet<String>,
     pub gh_cache: HashMap<String, GhCached>,
     pub proc_cache: Option<(i64, Vec<ProcInfo>)>,
     pub rescans: BTreeSet<String>,
+    /// What each running removal does now, by worktree id.
+    pub steps: HashMap<String, crate::progress::Step>,
     pub stopped: bool,
 }
 
@@ -122,9 +155,13 @@ pub struct Inner {
     pub deps: Deps,
     pub opts: Options,
     pub state: Mutex<State>,
-    pub exclusive: Mutex<()>,
-    pub queue: Queue,
+    pub exclusive: Turns,
+    /// The deletion jobs, one worker per project.
+    pub queue: Queues,
     pub requests: Requests,
+    /// The leftover deletions a batch queued and has not carried out, kept for a restart.
+    pub(crate) intents: crate::intents::Intents,
+    pub(crate) hygiene: crate::hygiene::Memories,
 }
 
 /// The service. Cheap to clone: every clone is the same service.
@@ -149,9 +186,11 @@ impl Service {
             deps,
             opts,
             state: Mutex::new(state),
-            exclusive: Mutex::new(()),
-            queue: Queue::default(),
+            exclusive: Turns::default(),
+            queue: Queues::default(),
             requests: Requests::default(),
+            intents: crate::intents::Intents::default(),
+            hygiene: crate::hygiene::Memories::default(),
         }))
     }
 
@@ -159,9 +198,11 @@ impl Service {
         locked(&self.state)
     }
 
-    /// Scans and removals run one at a time: hold this while doing either.
-    pub(crate) fn one_at_a_time(&self) -> MutexGuard<'_, ()> {
-        locked(&self.exclusive)
+    /// Scans and removals of a project run one at a time, first come first served: hold this while doing either.
+    /// `what` names the holder to the ones that wait; `key` is the worktree a removal is on.
+    pub(crate) fn one_at_a_time(&self, project: &str, what: &str, key: Option<&str>) -> Turn {
+        self.exclusive
+            .take(project, &Asker { what, key }, &|| self.now())
     }
 
     pub(crate) fn now(&self) -> i64 {
@@ -303,9 +344,15 @@ impl Service {
             .collect()
     }
 
-    /// Block until every deletion job has run.
+    /// Block until every deletion job of every project has run.
     pub fn jobs_idle(&self) {
-        self.queue.wait_idle();
+        self.queue.wait_all_idle();
+    }
+
+    /// Block until the project's deletion jobs queued so far have run: never for another project's, never for the
+    /// ones queued after.
+    pub(crate) fn jobs_queued_ran(&self, project: &str) {
+        self.queue.of(project).wait_queued();
     }
 }
 

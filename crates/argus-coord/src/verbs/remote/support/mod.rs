@@ -3,6 +3,7 @@
 
 pub mod collate;
 pub mod link;
+pub mod note;
 pub mod overlord;
 pub mod query;
 pub mod scope;

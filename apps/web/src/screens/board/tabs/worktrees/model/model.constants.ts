@@ -3,6 +3,8 @@ import type { TagLook } from '@drizztdourden08/tessera';
 
 const NEED_STATUSES: readonly string[] = ['stale', 'merged', 'dirty-stale'];
 
+const STALENESS_STATUSES: readonly string[] = ['stale', 'merged', 'dirty-stale', 'kept'];
+
 const DEFAULT_LIMIT_DAYS = 3;
 
 const JOB_WINDOW_MS = 3_600_000;
@@ -20,7 +22,6 @@ const GB_STEP = 102.4;
 const UNREACHABLE = 'Dashboard unreachable, retrying.';
 
 const STATUS_TIP: Readonly<Record<string, string>> = {
-  active: 'Touched within the stale limit (the newest of the last commit and the index file).',
   stale: 'Not touched for the stale limit or more, and not merged. The thread was told.',
   merged: 'Merged into the default branch and clean, and not touched for the stale limit: it can go. The thread was told.',
   'dirty-stale': 'Not touched for the stale limit or more, with uncommitted changes: never "can go". The thread was told.',
@@ -60,7 +61,6 @@ const REQUEST_LOOK: Readonly<Record<string, TagLook>> = {
 };
 
 const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
-  active: SUCCESS_LOOK,
   stale: WARNING_LOOK,
   merged: INFO_LOOK,
   'dirty-stale': DANGER_LOOK,
@@ -68,6 +68,14 @@ const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
   error: DANGER_LOOK,
   deleting: WARNING_LOOK,
 };
+
+const HYGIENE_LOOK: Readonly<Record<string, TagLook>> = {
+  'in-use': SUCCESS_LOOK,
+  released: INFO_LOOK,
+  review: WARNING_LOOK,
+};
+
+const REMOVED_SHOWN = 20;
 
 const STATUS_LABEL: Readonly<Record<string, string>> = {
   'dirty-stale': 'dirty, stale',
@@ -84,6 +92,6 @@ const REMOVE_LOOKS = {
 const NOT_REMOVABLE: readonly string[] = ['not-git', 'error', 'leftover', 'deleting'];
 
 export {
-  DEFAULT_LIMIT_DAYS, GB_STEP, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, REQUEST_LOOK, REQUEST_TIP, REQUEST_WAITING, REQUESTS_SHOWN, STATUS_TIP, SUBJECTS_SHOWN,
-  STATUS_LABEL, STATUS_LOOK, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE, WARNING_LOOK,
+  DEFAULT_LIMIT_DAYS, GB_STEP, HYGIENE_LOOK, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, REMOVED_SHOWN, REQUEST_LOOK, REQUEST_TIP, REQUEST_WAITING, REQUESTS_SHOWN, STATUS_TIP, SUBJECTS_SHOWN,
+  STALENESS_STATUSES, STATUS_LABEL, STATUS_LOOK, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE, WARNING_LOOK,
 };

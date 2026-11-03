@@ -1,12 +1,12 @@
 //! `coord wake-fault list | clear`: a wake the dashboard could not get to a thread. Anyone may
 //! list the open faults; only the Overlord clears one, after it found out what is going on.
 
-use argus_core::js;
 use serde_json::{Value, json};
 
 use super::support::link::{connect, list_of};
+use super::support::note::bounded;
 use super::support::overlord;
-use super::support::text::{cell, collapse, is_key, truthy};
+use super::support::text::{cell, is_key, truthy};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::out;
 use crate::cli::route::Call;
@@ -91,14 +91,11 @@ fn target_of(text: Option<&String>) -> Result<(String, String), CoordError> {
 }
 
 fn note_of(call: &Call<'_>) -> Result<String, CoordError> {
-    let note = call.options.text("note").map(collapse).unwrap_or_default();
-    let len = js::len(&note);
-    if (NOTE_MIN..=NOTE_MAX).contains(&len) {
-        return Ok(note);
-    }
-    Err(CoordError::refuse(format!(
-        "--note is required, {NOTE_MIN} to {NOTE_MAX} characters: say what was wrong and what you did (it is {len})."
-    )))
+    bounded(
+        call,
+        (NOTE_MIN, NOTE_MAX),
+        "say what was wrong and what you did",
+    )
 }
 
 fn clear(call: &mut Call<'_>) -> Outcome {

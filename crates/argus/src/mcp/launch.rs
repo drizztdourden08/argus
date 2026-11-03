@@ -55,8 +55,10 @@ pub fn boot_now() -> Option<Boot> {
     None
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K2: the tray start words of a home, and the shadow flag.
     use std::path::Path;
 
     use super::start_plan;

@@ -95,7 +95,29 @@ pub fn what_text(rec: &RequestRec) -> String {
             age_text(rec.older_than_days)
         ),
         Mode::Targets => targets_text(rec, branch),
+        Mode::Released => format!("the released {}", targets_text(rec, branch)),
     }
+}
+
+/// `: X:/a/w, .../v`: what a request of released worktrees removed.
+fn removed_part(rec: &RequestRec) -> String {
+    let went: Vec<&str> = rec
+        .results
+        .iter()
+        .filter(|r| r.ok)
+        .take(LABELS_SHOWN)
+        .map(|r| r.label.as_str())
+        .collect();
+    if rec.mode != Mode::Released || went.is_empty() {
+        return String::new();
+    }
+    let more = rec.removed().saturating_sub(went.len());
+    let tail = if more > 0 {
+        format!(" (+{more} more)")
+    } else {
+        String::new()
+    };
+    format!(" ({}{tail})", went.join(", "))
 }
 
 /// The answer to the thread that asked: nothing is removed by asking.
@@ -151,18 +173,23 @@ pub fn summary_text(rec: &RequestRec) -> String {
             .filter(|n| !n.is_empty())
             .unwrap_or_else(|| "nothing to remove".to_string())
     } else {
-        format!("removed {}{}{skipped}", rec.removed(), refused_part(rec))
+        format!(
+            "removed {}{}{}{skipped}",
+            rec.removed(),
+            removed_part(rec),
+            refused_part(rec)
+        )
     };
-    one_line(
-        &format!(
-            "worktree request {} {}: {body}",
-            rec.id,
-            rec.status.as_str()
-        ),
-        SUMMARY_MAX,
-    )
+    let (id, status) = (&rec.id, rec.status.as_str());
+    let text = if rec.mode == Mode::Released {
+        format!("released worktrees, their grace over (request {id} {status}): {body}")
+    } else {
+        format!("worktree request {id} {status}: {body}")
+    };
+    one_line(&text, SUMMARY_MAX)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

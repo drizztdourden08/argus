@@ -79,6 +79,17 @@ fn set_aside(
     }
 }
 
+/// Deletes a set-aside copy: a file, or a link as a link (a directory junction goes with
+/// `remove_dir`, which removes the link and never enters it). A real folder is left alone.
+fn remove_copy(path: &Path) {
+    if fs::remove_file(path).is_ok() {
+        return;
+    }
+    if fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink()) {
+        let _ = fs::remove_dir(path);
+    }
+}
+
 /// Deletes the copies an earlier install set aside. A copy still in use stays for next time.
 pub(super) fn remove_old_copies(dir: &Path, file_name: &str) {
     let prefix = format!("{file_name}.old-");
@@ -87,13 +98,15 @@ pub(super) fn remove_old_copies(dir: &Path, file_name: &str) {
     };
     for entry in entries.flatten() {
         if entry.file_name().to_string_lossy().starts_with(&prefix) {
-            let _ = fs::remove_file(entry.path());
+            remove_copy(&entry.path());
         }
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K3: replacing the installed binary never loses the old copy.
     use super::*;
     use argus_core::fixture::dir_names as names;
 
@@ -198,3 +211,6 @@ mod tests {
         remove_old_copies(&dir.path().join("missing"), "argus.exe");
     }
 }
+
+#[cfg(test)]
+mod link_tests;

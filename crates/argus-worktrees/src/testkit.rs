@@ -3,21 +3,25 @@
 
 use crate::batch::{BatchInput, BatchOutcome};
 use crate::board::BoardFacts;
-use crate::board::{Caller, OwnerEntry};
+use crate::board::{Caller, Link, OwnerEntry};
 use crate::clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 use crate::error::WtError;
 use crate::exec::GitOutput;
+use crate::fakegit::{self, FakeGit};
 use crate::fs::{Entry, Fs, RealFs, Stat};
 use crate::gh::GhRunner;
 use crate::git::{Git, GitExec, SystemExec};
 use crate::measure::{Bounds, Leftover, measure_folder};
 use crate::paths::{clean_path, join_path};
-use crate::ports::{ActivityLine, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore};
+use crate::ports::{
+    ActivityLine, LiveRun, Notifier, ProcInfo, ProcessLister, WakeEvent, WorktreeStore,
+};
 use crate::request::{RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::service::{Deps, Options, Service};
 use crate::sync::locked;
 use argus_core::StorageError;
+use argus_core::remote::{Mode, ModeSource};
 use std::collections::HashMap;
 use std::fs;
 use std::io;
@@ -57,31 +61,7 @@ pub fn exists_itself(path: &str) -> bool {
 
 /// A symlink (a junction on Windows) at `link` pointing to `target`.
 pub fn make_link(link: &str, target: &str) {
-    if let Some(parent) = Path::new(link).parent() {
-        fs::create_dir_all(parent).unwrap();
-    }
-    link_to(link, target);
-}
-
-#[cfg(windows)]
-fn link_to(link: &str, target: &str) {
-    let status = Command::new("cmd")
-        .args([
-            "/C",
-            "mklink",
-            "/J",
-            &link.replace('/', "\\"),
-            &target.replace('/', "\\"),
-        ])
-        .stdout(std::process::Stdio::null())
-        .status()
-        .unwrap();
-    assert!(status.success(), "mklink /J {link} {target}");
-}
-
-#[cfg(not(windows))]
-fn link_to(link: &str, target: &str) {
-    std::os::unix::fs::symlink(target, link).unwrap();
+    argus_core::fixture::links::junction(Path::new(link), Path::new(target));
 }
 
 pub fn set_mtime(path: &Path, when: SystemTime) {
@@ -133,6 +113,9 @@ fn walk_times(dir: &Path, when: SystemTime) {
 
 /// Run git in a folder; panics with git's message when it fails. Authors are fixed; `env` adds dates.
 pub fn git_in(cwd: &str, args: &[&str], env: &[(&str, &str)]) -> String {
+    if let Some(fake) = fakegit::fake_for(cwd) {
+        return fake.cli(cwd, args);
+    }
     let mut command = Command::new("git");
     command.args(args).current_dir(cwd);
     for (k, v) in [
@@ -158,6 +141,10 @@ pub fn git_in(cwd: &str, args: &[&str], env: &[(&str, &str)]) -> String {
 
 /// Commit a file, dated `days_ago` days back.
 pub fn commit(cwd: &str, name: &str, text: &str, days: f64) {
+    if let Some(fake) = fakegit::fake_for(cwd) {
+        fake.commit_file(cwd, name, text, SystemClock.now_ms() - days_ms(days));
+        return;
+    }
     put(cwd, name, text);
     git_in(cwd, &["add", name], &[]);
     let when = iso_from_ms(SystemClock.now_ms() - days_ms(days));
@@ -186,6 +173,9 @@ pub fn backdate_index(dir: &str, days: f64) {
 
 /// The branches of a repository.
 pub fn branches(repo: &str) -> Vec<String> {
+    if let Some(fake) = fakegit::fake_for(repo) {
+        return fake.branches();
+    }
     git_in(repo, &["branch", "--format=%(refname:short)"], &[])
         .lines()
         .map(str::trim)
@@ -196,6 +186,9 @@ pub fn branches(repo: &str) -> Vec<String> {
 
 /// The names of the worktrees git lists for a repository.
 pub fn listed(repo: &str) -> Vec<String> {
+    if let Some(fake) = fakegit::fake_for(repo) {
+        return fake.listed();
+    }
     git_in(repo, &["worktree", "list", "--porcelain"], &[])
         .lines()
         .filter_map(|l| l.strip_prefix("worktree "))
@@ -294,6 +287,16 @@ pub struct Fixture {
     pub root: String,
     pub repo: String,
     pub wts: String,
+    /// Built on the fake git: every git call under `root` goes to [`FakeGit`], and a case on it is standard.
+    fake: bool,
+}
+
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        if self.fake {
+            fakegit::unregister(&self.root);
+        }
+    }
 }
 
 impl Fixture {
@@ -310,6 +313,30 @@ impl Fixture {
             root,
             repo,
             wts,
+            fake: false,
+        };
+        fx.populate();
+        fx
+    }
+
+    /// The same layout as [`Fixture::new`], built on the fake git: no git process runs for it.
+    pub fn fake() -> Self {
+        let dir = tempfile::tempdir().unwrap();
+        let root = root_of(&dir);
+        let (repo, wts) = (join_path(&root, "proj"), join_path(&root, "proj-worktrees"));
+        fs::create_dir_all(&repo).unwrap();
+        fs::create_dir_all(&wts).unwrap();
+        fakegit::register(&root, FakeGit::init(&repo, "main"));
+        commit(
+            &repo, "a.txt", "one
+", 20.0,
+        );
+        let fx = Self {
+            _dir: dir,
+            root,
+            repo,
+            wts,
+            fake: true,
         };
         fx.populate();
         fx
@@ -345,6 +372,11 @@ impl Fixture {
         join_path(&self.wts, name)
     }
 
+    /// The git door over this fixture's git.
+    pub fn door(&self) -> Git {
+        Git::new(exec_for(&self.root))
+    }
+
     pub fn git(&self, args: &[&str]) -> String {
         git_in(&self.repo, args, &[])
     }
@@ -358,6 +390,8 @@ pub struct MemStore {
     pub dropped: Mutex<Vec<(Vec<String>, Vec<String>)>>,
     /// The notes posted to inboxes: thread and text.
     pub inbox: Mutex<Vec<(String, String)>>,
+    /// The runs queued or running, or why they could not be read.
+    pub runs: Mutex<Result<Vec<Link>, String>>,
 }
 
 impl MemStore {
@@ -368,6 +402,7 @@ impl MemStore {
             kv: Mutex::new(HashMap::new()),
             dropped: Mutex::new(Vec::new()),
             inbox: Mutex::new(Vec::new()),
+            runs: Mutex::new(Ok(Vec::new())),
         }
     }
 }
@@ -417,6 +452,10 @@ impl WorktreeStore for MemStore {
         }
         Ok(known)
     }
+
+    fn live_runs(&self) -> Result<Vec<Link>, String> {
+        locked(&self.runs).clone()
+    }
 }
 
 /// Records the activity lines and the wakes.
@@ -462,13 +501,17 @@ impl Recorder {
     }
 }
 
-/// The processes of the machine, as the test says.
+/// The processes of the machine and Argus's live runs, as the test says.
 #[derive(Default)]
-pub struct FakeProcs(pub Mutex<Vec<ProcInfo>>);
+pub struct FakeProcs(pub Mutex<Vec<ProcInfo>>, pub Mutex<Vec<LiveRun>>);
 
 impl ProcessLister for FakeProcs {
     fn list(&self) -> Result<Vec<ProcInfo>, String> {
         Ok(locked(&self.0).clone())
+    }
+
+    fn runs(&self) -> Vec<LiveRun> {
+        locked(&self.1).clone()
     }
 }
 
@@ -491,6 +534,25 @@ impl GhRunner for FakeGh {
     fn run(&self, _cwd: &str, args: &[String]) -> GitOutput {
         locked(&self.calls).push(args.to_vec());
         locked(&self.answer).clone()
+    }
+}
+
+/// The switch, as the test says: remote until the test makes it local.
+pub struct FakeMode(AtomicBool);
+
+impl FakeMode {
+    pub fn set_local(&self, local: bool) {
+        self.0.store(local, Ordering::SeqCst);
+    }
+}
+
+impl ModeSource for FakeMode {
+    fn mode(&self) -> Mode {
+        if self.0.load(Ordering::SeqCst) {
+            Mode::Local
+        } else {
+            Mode::Remote
+        }
     }
 }
 
@@ -622,9 +684,9 @@ pub enum RemoveMode {
 pub type RemoveHook = Box<dyn Fn(&str) + Send>;
 pub type FailureHook = Box<dyn Fn() + Send>;
 
-/// The real git, except for `worktree remove`, which can fail like git does on a folder it cannot delete.
+/// The real git (or the fake of a fixture), except for `worktree remove`, which can fail like git does on a folder it cannot delete.
 pub struct ScriptedExec {
-    real: SystemExec,
+    real: Arc<dyn GitExec>,
     pub mode: Mutex<RemoveMode>,
     pub calls: Mutex<Vec<Vec<String>>>,
     pub on_remove: Mutex<Option<RemoveHook>>,
@@ -643,9 +705,10 @@ fn timed_out() -> GitOutput {
 }
 
 impl ScriptedExec {
-    pub fn new(mode: RemoveMode) -> Self {
+    /// `real` answers every call but a simulated removal: the real git, or the fake of a fixture.
+    pub fn new(mode: RemoveMode, real: Arc<dyn GitExec>) -> Self {
         Self {
-            real: SystemExec::default(),
+            real,
             mode: Mutex::new(mode),
             calls: Mutex::new(Vec::new()),
             on_remove: Mutex::new(None),
@@ -716,6 +779,14 @@ impl GitExec for ScriptedExec {
     }
 }
 
+/// The git under a folder: the fake of a fixture made with [`Fixture::fake`], else the real one.
+pub fn exec_for(root: &str) -> Arc<dyn GitExec> {
+    match fakegit::fake_for(root) {
+        Some(fake) => fake as Arc<dyn GitExec>,
+        None => Arc::new(SystemExec::default()) as Arc<dyn GitExec>,
+    }
+}
+
 /// A service over a fixture, with every dependency a fake the test can steer.
 pub struct Harness {
     pub svc: Service,
@@ -723,6 +794,7 @@ pub struct Harness {
     pub notes: Arc<Recorder>,
     pub procs: Arc<FakeProcs>,
     pub gh: Arc<FakeGh>,
+    pub mode: Arc<FakeMode>,
     pub clock: Arc<ManualClock>,
     pub exec: Arc<ScriptedExec>,
     pub fs: Arc<HookFs>,
@@ -785,14 +857,17 @@ impl Harness {
             error: Some("ENOENT".to_string()),
             ..GitOutput::default()
         }));
+        let remote = Arc::new(FakeMode(AtomicBool::new(false)));
         let clock = Arc::new(ManualClock::at(SystemClock.now_ms()));
-        let exec = Arc::new(ScriptedExec::new(mode));
+        let exec = Arc::new(ScriptedExec::new(mode, exec_for(root)));
         let hook_fs = Arc::new(HookFs::default());
         let backups = join_path(root, "worktree-backups");
         let mut opts = Options {
             backup_dir: backups.clone(),
             case_insensitive: cfg!(windows),
             drop_links_first: false,
+            // The hygiene has its own specs (`specs/hygiene.rs`) that turn it on.
+            release: false,
             ..Options::default()
         };
         options(&mut opts);
@@ -802,6 +877,7 @@ impl Harness {
             fs: hook_fs.clone(),
             git: Git::new(exec.clone()),
             gh: gh.clone(),
+            remote: remote.clone(),
             procs: procs.clone(),
             clock: clock.clone(),
         };
@@ -811,6 +887,7 @@ impl Harness {
             notes,
             procs,
             gh,
+            mode: remote,
             clock,
             exec,
             fs: hook_fs,
@@ -937,9 +1014,13 @@ impl Harness {
     }
 }
 
-/// A fixture prepared by `prep`, a service over it with the fixture's rule, and one scan.
+/// A fixture on the fake git prepared by `prep`, a service over it with the fixture's rule, and one scan.
 pub fn started(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    started_on(Fixture::fake(), prep)
+}
+
+/// [`started`] on a fixture the caller made (a real git one for a case the fake cannot answer).
+pub fn started_on(fx: Fixture, prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
     prep(&fx);
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.scan();
@@ -1003,7 +1084,7 @@ pub fn refused_for_nested(
 /// A project with a GitHub remote whose pull request lookup answers `answer`, and the removal of the unmerged worktree
 /// with its branch. The branch must survive: the answer proves no merge. Returns the fixture.
 pub fn pull_request_answer_keeps_branch(answer: &str) -> Fixture {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let remote = [
         "remote",
         "add",
@@ -1029,4 +1110,12 @@ pub fn pull_request_answer_keeps_branch(answer: &str) -> Fixture {
 /// The rule of the fixture's folder, for the rule's thread `worker`.
 pub fn rule_for(fx: &Fixture) -> Rule {
     Rule::folder("W-1", &fx.wts, "worker")
+}
+
+/// The fixture on the real git with its folder rule, scanned once.
+pub fn scanned_real() -> (Fixture, Harness) {
+    let fx = Fixture::new();
+    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
+    h.scan();
+    (fx, h)
 }

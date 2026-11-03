@@ -2,6 +2,7 @@
 import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
 import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import { applyDrop } from '../behavior/apply-drop';
+import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { addPreset, planDrop } from '../model';
@@ -47,7 +48,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       stack
       columns={columns}
       cardLabel={(card) => `${card.id} ${card.item.title}`}
-      cardEdgeTone={(card) => (card.needsYou ? 'danger' : undefined)}
+      cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
       renderCard={(card) => (
         <ItemCard

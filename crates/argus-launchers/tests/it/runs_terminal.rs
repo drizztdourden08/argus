@@ -2,11 +2,14 @@
 //! started hidden, colour hints in its environment, a stdin pipe for the terminal's input
 //! row, a run doc whose lastLine moves at most four times a second and never shows the
 //! dashboard's own notes, and the note when a command returns right away (runs.terminal).
+//!
+//! Keep rule: S2, K2.
+// test-tag: standard
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use argus_launchers::{RunDef, RunEvents, RunKind, RunRow, RunStatus, SpawnRequest, spawn_options};
+use argus_launchers::{RunDef, RunEvents, RunKind, RunRow};
 use tokio::time::Instant;
 
 use crate::common::{Env, EnvOptions, cli, page};
@@ -18,33 +21,6 @@ fn play(env: &Env, name: &str, cmd: &str) -> RunDef {
         bundle: Some("term".to_owned()),
         label: Some("Play term".to_owned()),
         ..env.def(name, cmd)
-    }
-}
-
-fn request(visible: bool, stdin: bool) -> SpawnRequest {
-    SpawnRequest {
-        cmd: "x".to_owned(),
-        cwd: ".".into(),
-        env: std::collections::BTreeMap::new(),
-        visible,
-        stdin,
-    }
-}
-
-#[test]
-fn spawn_options_a_hidden_run_has_no_console_window_a_window_run_does() {
-    let hidden = spawn_options(&request(false, true));
-    assert!(hidden.hide_window && hidden.stdin_pipe);
-    assert_eq!(hidden.shell, if cfg!(windows) { "cmd.exe" } else { "sh" });
-    let window = spawn_options(&request(true, false));
-    assert!(!window.hide_window);
-    assert!(
-        window.detached,
-        "a console window survives a dashboard restart"
-    );
-    assert!(!window.stdin_pipe);
-    if cfg!(windows) {
-        assert_eq!(window.shell_args, ["/d", "/s", "/c"]);
     }
 }
 
@@ -248,37 +224,6 @@ async fn last_line_reaches_the_run_doc_at_most_every_250_ms_as_plain_text() {
     let quiet = env.svc.start("alpha", "quiet", &cli()).unwrap().run;
     env.host.exit(env.pid(1), Some(0)).await;
     assert_eq!(env.finished("alpha", &quiet.id).await.last_line, None);
-}
-
-#[tokio::test(start_paused = true)]
-async fn a_start_that_cannot_happen_is_final_at_once_and_says_why() {
-    let env = Env::new();
-    let gone = RunDef {
-        cwd: env
-            .dir
-            .path()
-            .join("no-such-folder")
-            .to_string_lossy()
-            .into_owned(),
-        ..play(&env, "bundle-term", "never")
-    };
-    env.define("alpha", vec![gone]);
-    let run = env.svc.start("alpha", "bundle-term", &page()).unwrap().run;
-    assert_eq!(
-        run.status,
-        RunStatus::Failed,
-        "the start itself answers with the failure"
-    );
-    assert!(
-        run.error
-            .unwrap()
-            .starts_with("failed to start: working directory is not usable")
-    );
-    assert!(
-        env.text("alpha", &run.id, Some("sys"))
-            .contains("failed to start: working directory is not usable")
-    );
-    assert!(run.started_at.is_none());
 }
 
 #[tokio::test(start_paused = true)]

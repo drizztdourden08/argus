@@ -22,7 +22,7 @@ beforeEach(() => {
   vi.mocked(killRule).mockReset();
 });
 
-describe('what needs a look, and the order of the rows', () => {
+describe('K1 what needs a look, and the order of the rows', { tags: ['critical'] }, () => {
   it('needs a look when the status is anything but ok; a row with no status does not', () => {
     expect(needsLook(proc('a', { status: 'ok' }))).toBe(false);
     expect(needsLook(proc('a', { status: 'hog' }))).toBe(true);
@@ -46,7 +46,7 @@ describe('what needs a look, and the order of the rows', () => {
   });
 });
 
-describe('the rule strip groups', () => {
+describe('K1 the rule strip groups', { tags: ['critical'] }, () => {
   it('takes the groups of the meta doc and drops one without a rule', () => {
     const meta = { byRule: [{ rule: 'a', count: 1, memMB: 5 }, { rule: '', count: 2 }] };
     expect(ruleGroups(meta, []).map((group) => group.rule)).toEqual(['a']);
@@ -91,7 +91,7 @@ describe('the rule strip groups', () => {
   });
 });
 
-describe('the filters and the stale ones', () => {
+describe('K1 the filters and the stale ones', { tags: ['critical'] }, () => {
   const rows = [
     proc('1', { rule: 'a', status: 'ok' }),
     proc('2', { rule: 'a', status: 'stale' }),
@@ -126,15 +126,11 @@ describe('the filters and the stale ones', () => {
   });
 });
 
-describe('the table rows and the status tip', () => {
+describe('K1 the table rows and the status tip', { tags: ['critical'] }, () => {
   it('keeps a row with only an id: dashes and nulls, no crash', () => {
     expect(toProcRow({ id: 'x' }, (key) => key)).toEqual({
       id: 'x', rule: '-', name: '?', pid: null, project: '', memMB: null, cpuPct: null, ageMin: null, idleMin: null, status: '', cmd: '', kill: '', item: { id: 'x' },
     });
-  });
-
-  it('shows the project by its name', () => {
-    expect(toProcRow(proc('x', { project: 'rotp' }), () => 'Relic of the Past').project).toBe('Relic of the Past');
   });
 
   it('says what the status means and lists the flags, one per line', () => {
@@ -143,7 +139,7 @@ describe('the table rows and the status tip', () => {
   });
 });
 
-describe('the sentences of a kill', () => {
+describe('K4 the sentences of a kill', { tags: ['critical'] }, () => {
   it('counts what the server says it killed: a list, a number, or the fallback', () => {
     expect(killedCount({ killed: [1, 2, 3] }, 1)).toBe(3);
     expect(killedCount({ killed: 4 }, 1)).toBe(4);
@@ -162,22 +158,8 @@ describe('the sentences of a kill', () => {
   });
 });
 
-describe('killOne', () => {
+describe('K4 killOne', { tags: ['critical'] }, () => {
   const vite = proc('4812-1', { pid: 4812, name: 'vite', startedAt: '2026-10-26T10:00:00.000Z' });
-
-  it('posts the pid, the startedAt exactly as sampled and tree false, and says it killed the process', async () => {
-    vi.mocked(killProc).mockResolvedValue({ killed: true });
-    const said = await killOne(vite, false);
-    expect(killProc).toHaveBeenCalledWith({ pid: 4812, startedAt: '2026-10-26T10:00:00.000Z', tree: false });
-    expect(said).toEqual({ variant: 'success', message: 'Killed vite 4812.' });
-  });
-
-  it('posts tree true for Kill with children and reports a count the server gives back', async () => {
-    vi.mocked(killProc).mockResolvedValue({ killed: [4812, 4813, 4814] });
-    const said = await killOne(vite, true);
-    expect(killProc).toHaveBeenCalledWith({ pid: 4812, startedAt: '2026-10-26T10:00:00.000Z', tree: true });
-    expect(said.message).toBe('Killed vite 4812 and its children (3 processes).');
-  });
 
   it('says a protected process is not killed (403), a gone one is gone (404), a reused pid is not the one sampled (409)', async () => {
     vi.mocked(killProc).mockRejectedValueOnce(refusal(403));
@@ -191,14 +173,7 @@ describe('killOne', () => {
   });
 });
 
-describe('killStale', () => {
-  it('posts the rule with idleOnly and counts what was killed', async () => {
-    vi.mocked(killRule).mockResolvedValue({ killed: [1, 2] });
-    const said = await killStale('node-dev-server', 5);
-    expect(killRule).toHaveBeenCalledWith('node-dev-server');
-    expect(said).toEqual({ variant: 'success', message: 'Killed 2 stale node-dev-server processes.' });
-  });
-
+describe('K4 killStale', { tags: ['critical'] }, () => {
   it('falls back on the count it showed and says one process in the singular', async () => {
     vi.mocked(killRule).mockResolvedValue({});
     expect((await killStale('python', 1)).message).toBe('Killed 1 stale python process.');

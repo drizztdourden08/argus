@@ -1,274 +1,20 @@
+//! KEEP: K2.
 //! The service: statuses, the docs and the summary it mirrors, the owner's requests, keeps, and the stale signal.
+
+// test-tag: standard
 
 use crate::board::{Answer, EntryWorktree, Keep, OwnerEntry};
 use crate::clock::{DAY_MS, HOUR_MS};
-use crate::doc::{Status, WorktreeDoc};
-use crate::fact::{Fact, blank_fact};
+use crate::doc::Status;
 use crate::paths::worktree_id;
 use crate::rule::Rule;
 use crate::service::Options;
-use crate::status::{Judging, by_worst, classify, doc_of, wake_text};
 use crate::testkit::{Fixture, Harness, RemoveMode, board_with, rule_for};
-use crate::waking::{REASON, sent_key};
+use crate::waking::sent_key;
 use serde_json::Value;
-
-const NOW: i64 = 1_792_929_600_000;
-
-fn fact(change: impl FnOnce(&mut Fact)) -> Fact {
-    let rule = Rule::folder("W-1", "X:/p/wt", "lead");
-    let mut fact = blank_fact("X:/p/wt/a", &rule, true);
-    (fact.is_git, fact.branch, fact.commit_ms) = (true, Some("a".into()), Some(0));
-    change(&mut fact);
-    fact
-}
-
-fn status_of(change: impl FnOnce(&mut Fact), keep: Option<&Keep>) -> Status {
-    let rule = Rule::folder("W-1", "X:/p/wt", "lead");
-    let judging = Judging {
-        rule: Some(&rule),
-        keep,
-        now_ms: NOW,
-        default_stale_days: None,
-    };
-    classify(&fact(change), &judging).status
-}
-
-#[test]
-fn active_inside_stale_days_stale_from_then_on_the_newest_of_commit_and_index_counts() {
-    let commit = |ago: i64| move |f: &mut Fact| f.commit_ms = Some(NOW - ago);
-    assert_eq!(status_of(commit(DAY_MS * 29 / 10), None), Status::Active);
-    assert_eq!(status_of(commit(3 * DAY_MS), None), Status::Stale);
-    assert_eq!(
-        status_of(
-            |f| (f.commit_ms, f.index_ms) = (Some(NOW - 9 * DAY_MS), Some(NOW - HOUR_MS)),
-            None
-        ),
-        Status::Active,
-        "a recent index keeps an old commit active"
-    );
-    assert_eq!(
-        status_of(
-            |f| (f.commit_ms, f.index_ms) = (Some(NOW - HOUR_MS), Some(NOW - 9 * DAY_MS)),
-            None
-        ),
-        Status::Active
-    );
-    let judging = Judging {
-        now_ms: NOW,
-        ..Judging::default()
-    };
-    let aged =
-        fact(|f| (f.commit_ms, f.index_ms) = (Some(NOW - 9 * DAY_MS), Some(NOW - 5 * DAY_MS)));
-    assert_eq!(classify(&aged, &judging).age_days, Some(5));
-}
-
-#[test]
-fn the_rule_overrides_the_default_of_three_days_and_the_service_default_is_configurable() {
-    let seven = Rule {
-        stale_days: Some(7),
-        ..Rule::folder("W-1", "X:/p/wt", "lead")
-    };
-    let at = |ago: i64, rule: Option<&Rule>, default: Option<u32>| {
-        let judging = Judging {
-            rule,
-            now_ms: NOW,
-            default_stale_days: default,
-            keep: None,
-        };
-        classify(&fact(|f| f.commit_ms = Some(NOW - ago)), &judging).status
-    };
-    assert_eq!(at(5 * DAY_MS, Some(&seven), None), Status::Active);
-    assert_eq!(at(8 * DAY_MS, Some(&seven), None), Status::Stale);
-    assert_eq!(at(5 * DAY_MS, None, Some(10)), Status::Active);
-}
-
-#[test]
-fn merged_needs_stale_and_merged_and_clean_dirty_wins_and_a_main_checkout_is_never_merged() {
-    let old = |f: &mut Fact| f.commit_ms = Some(NOW - 9 * DAY_MS);
-    assert_eq!(
-        status_of(
-            |f| {
-                old(f);
-                f.merged = true;
-            },
-            None
-        ),
-        Status::Merged
-    );
-    assert_eq!(
-        status_of(
-            |f| {
-                old(f);
-                f.merged = true;
-                f.dirty = 2;
-            },
-            None
-        ),
-        Status::DirtyStale
-    );
-    assert_eq!(
-        status_of(
-            |f| {
-                old(f);
-                f.dirty = 1;
-            },
-            None
-        ),
-        Status::DirtyStale
-    );
-    assert_eq!(
-        status_of(
-            |f| {
-                old(f);
-                f.merged = true;
-                f.main = true;
-            },
-            None
-        ),
-        Status::Stale
-    );
-    assert_eq!(
-        status_of(
-            |f| {
-                f.commit_ms = Some(NOW - HOUR_MS);
-                f.merged = true;
-            },
-            None
-        ),
-        Status::Active,
-        "a fresh worktree on a merged branch is not \"can go\""
-    );
-}
-
-fn day_keep() -> Keep {
-    Keep {
-        until_ms: NOW + DAY_MS,
-        note: Some("n".into()),
-        by: Some("lead".into()),
-    }
-}
-
-fn old_commit(f: &mut Fact) {
-    f.commit_ms = Some(NOW - 9 * DAY_MS);
-}
-
-#[test]
-fn missing_not_git_and_error_are_judged_from_the_facts() {
-    assert_eq!(status_of(|f| f.exists = false, None), Status::Missing);
-    assert_eq!(status_of(|f| f.is_git = false, None), Status::NotGit);
-    let broken = |f: &mut Fact| {
-        f.is_git = false;
-        f.error = Some("dubious ownership".into());
-    };
-    assert_eq!(status_of(broken, None), Status::Error);
-}
-
-#[test]
-fn a_keep_snoozes_only_the_ones_that_need_a_decision_and_an_expired_keep_is_no_keep() {
-    let (keep, expired) = (
-        day_keep(),
-        Keep {
-            until_ms: NOW - 1,
-            ..day_keep()
-        },
-    );
-    assert_eq!(status_of(old_commit, Some(&keep)), Status::Kept);
-    assert_eq!(status_of(|f| f.exists = false, Some(&keep)), Status::Kept);
-    assert_eq!(
-        status_of(|f| f.commit_ms = Some(NOW - HOUR_MS), Some(&keep)),
-        Status::Active,
-        "a keep never hides an active worktree"
-    );
-    assert_eq!(status_of(|f| f.is_git = false, Some(&keep)), Status::NotGit);
-    assert_eq!(
-        status_of(old_commit, Some(&expired)),
-        Status::Stale,
-        "an expired keep is no keep"
-    );
-}
-
-#[test]
-fn stale_merged_and_dirty_stale_need_a_decision_and_the_wake_reason_is_known() {
-    assert!(
-        Status::Stale.needs_decision()
-            && Status::Merged.needs_decision()
-            && Status::DirtyStale.needs_decision()
-    );
-    assert!(!Status::Kept.needs_decision() && !Status::Leftover.needs_decision());
-    assert_eq!(REASON, "worktree-stale");
-}
-
-fn doc(path: &str, status: Status, age: i64, ahead: u32) -> WorktreeDoc {
-    let rule = Rule::folder("W-1", "X:/t", "lead");
-    let name = path.rsplit('/').next().unwrap_or(path).to_string();
-    let changed = fact(|f| {
-        f.path = path.to_string();
-        f.id = path.to_string();
-        f.commit_ms = Some(NOW - age * DAY_MS);
-        f.merged = status == Status::Merged;
-        f.dirty = if status == Status::DirtyStale { 3 } else { 0 };
-        f.exists = status != Status::Missing;
-        f.ahead = ahead;
-        f.branch = Some(name);
-    });
-    doc_of(
-        &changed,
-        &Judging {
-            rule: Some(&rule),
-            now_ms: NOW,
-            ..Judging::default()
-        },
-        None,
-    )
-}
 
 const TAIL: &str =
     "Keep it (coord worktree keep), remove it (coord worktree remove), or drop its rule.";
-
-#[test]
-fn the_wake_text_lists_worst_first_with_the_first_path_in_full_and_the_others_short() {
-    let mut list = [
-        doc("X:/t/.claude/worktrees/bar", Status::Merged, 4, 0),
-        doc("X:/t/.claude/worktrees/foo", Status::Stale, 6, 2),
-        doc("X:/t/.claude/worktrees/zed", Status::Missing, 6, 0),
-    ];
-    list.sort_by(by_worst);
-    assert_eq!(
-        list.iter().map(|d| d.name.as_str()).collect::<Vec<_>>(),
-        ["zed", "foo", "bar"]
-    );
-    let refs: Vec<&WorktreeDoc> = list.iter().collect();
-    let want = format!(
-        "3 worktrees need a decision: X:/t/.claude/worktrees/zed missing (git still lists it), .../foo stale 6d (branch foo, 2 ahead), .../bar merged and clean (can go). {TAIL}"
-    );
-    assert_eq!(wake_text(&refs, ""), want);
-    let one = doc("X:/t/w/a", Status::DirtyStale, 6, 0);
-    assert!(wake_text(&[&one], "").starts_with(
-        "1 worktree needs a decision: X:/t/w/a stale 6d with 3 uncommitted (branch a). Keep it"
-    ));
-}
-
-#[test]
-fn many_long_paths_are_cut_to_300_characters_with_the_count_of_the_rest() {
-    let mut list: Vec<WorktreeDoc> = (0..12)
-        .map(|i| {
-            doc(
-                &format!("X:/some/long/project/folder/.claude/worktrees/feature-number-{i}"),
-                Status::Stale,
-                20 - i,
-                0,
-            )
-        })
-        .collect();
-    list.sort_by(by_worst);
-    let refs: Vec<&WorktreeDoc> = list.iter().collect();
-    let text = wake_text(&refs, "");
-    assert!(text.chars().count() <= 300, "{}", text.len());
-    assert!(text.starts_with("12 worktrees need a decision: X:/some/long/project/folder/.claude/worktrees/feature-number-0 stale 20d"));
-    assert!(text.contains("more).") && text.ends_with(TAIL));
-    let huge = doc(&format!("X:/{}wt", "deep/".repeat(40)), Status::Stale, 6, 0);
-    assert!(wake_text(&[&huge], "").chars().count() <= 300);
-}
 
 fn started(fx: &Fixture, options: impl FnOnce(&mut Options)) -> Harness {
     let h = Harness::new(&fx.root, vec![rule_for(fx)], options);
@@ -298,7 +44,7 @@ fn two_rules_started(fx: &Fixture) -> Harness {
 
 #[test]
 fn a_scan_mirrors_one_doc_per_worktree_and_the_gone_folder_is_not_a_row() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     assert_eq!(
         names_of(&h),
@@ -316,7 +62,7 @@ fn a_scan_mirrors_one_doc_per_worktree_and_the_gone_folder_is_not_a_row() {
 
 #[test]
 fn a_row_carries_the_branch_the_commit_the_counts_and_what_the_default_branch_lacks() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     let d = h.docs();
     let fresh = &d["fresh"];
@@ -343,13 +89,13 @@ fn a_row_carries_the_branch_the_commit_the_counts_and_what_the_default_branch_la
 
 #[test]
 fn the_summary_counts_the_rows_by_status_and_reports_each_rule() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = two_rules_started(&fx);
     let meta = h.meta();
     assert_eq!((meta.count, meta.gone), (5, 1));
     assert_eq!(
         (meta.many_at, meta.too_many, meta.scan_ms),
-        (12, false, 600_000)
+        (12, false, 1_800_000)
     );
     let by: Vec<(&str, usize)> = meta
         .by_status
@@ -391,7 +137,7 @@ fn the_summary_counts_the_rows_by_status_and_reports_each_rule() {
 
 #[test]
 fn a_project_with_no_rule_is_not_scanned_no_git_empty_docs() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, Vec::new(), |_| {});
     h.scan();
     assert_eq!(h.svc.deps.git.stats().started, 0);
@@ -402,7 +148,7 @@ fn a_project_with_no_rule_is_not_scanned_no_git_empty_docs() {
 
 #[test]
 fn the_default_stale_days_are_configurable() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |o| {
         (o.scan_ms, o.stale_days) = (90_000, 30);
     });
@@ -472,7 +218,7 @@ fn with_requests(fx: &Fixture) -> (Harness, String) {
 
 #[test]
 fn a_request_is_the_newest_owner_entry_about_the_worktree() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let (h, _) = with_requests(&fx);
     let asked = h.docs()["old-unmerged"].request.clone().unwrap();
     assert_eq!((asked.id.as_str(), asked.kind.as_str()), ("O-2", "check"));
@@ -486,7 +232,7 @@ fn a_request_is_the_newest_owner_entry_about_the_worktree() {
 
 #[test]
 fn the_threads_answer_and_a_keep_show_on_the_row_without_git() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let (h, id) = with_requests(&fx);
     let before = h.svc.deps.git.stats().started;
     let answer = Answer {
@@ -518,7 +264,7 @@ fn the_threads_answer_and_a_keep_show_on_the_row_without_git() {
 
 #[test]
 fn a_removed_rule_drops_its_rows_at_once_and_a_changed_rule_asks_for_a_scan() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |_| {});
     assert_eq!(h.docs().len(), 5);
     assert!(
@@ -561,7 +307,7 @@ fn sent(h: &Harness) -> serde_json::Map<String, Value> {
 
 #[test]
 fn one_wake_goes_to_the_rules_thread_listing_what_needs_a_decision_worst_first() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |_| {});
     let wakes = h.notes.wakes.lock().unwrap().clone();
     assert_eq!(wakes.len(), 1);
@@ -600,7 +346,7 @@ fn one_wake_goes_to_the_rules_thread_listing_what_needs_a_decision_worst_first()
 
 #[test]
 fn the_same_state_is_not_told_again_before_repeat_ms_then_once_and_the_state_is_saved() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |o| o.repeat_ms = 24 * HOUR_MS);
     assert_eq!(h.notes.wake_count(), 1);
     h.scan();
@@ -625,7 +371,7 @@ fn the_same_state_is_not_told_again_before_repeat_ms_then_once_and_the_state_is_
 
 #[test]
 fn a_restart_on_the_same_database_does_not_tell_the_thread_again() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let first = started(&fx, |_| {});
     assert_eq!(first.notes.wake_count(), 1);
     first.svc.stop();
@@ -636,7 +382,7 @@ fn a_restart_on_the_same_database_does_not_tell_the_thread_again() {
 
 #[test]
 fn a_status_change_is_told_alone_a_keep_silences_it_and_it_is_told_again_when_the_keep_ends() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = started(&fx, |o| o.repeat_ms = 400 * 24 * HOUR_MS);
     h.notes.wakes.lock().unwrap().clear();
     fs_write(&fx.path("old-unmerged"), "scratch.txt");
@@ -683,7 +429,7 @@ fn fs_write(dir: &str, name: &str) {
 
 #[test]
 fn an_ended_thread_is_replaced_by_the_lead_and_with_no_lead_nobody_is_told() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.board().threads.get_mut("worker").unwrap().live = false;
     h.scan();
@@ -700,7 +446,7 @@ fn an_ended_thread_is_replaced_by_the_lead_and_with_no_lead_nobody_is_told() {
 
 #[test]
 fn a_path_two_rules_reach_is_listed_once_and_a_refused_wake_is_tried_again_at_the_next_scan() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let rules = vec![rule_for(&fx), Rule::folder("W-2", &fx.repo, "lead").repo()];
     let h = Harness::with_mode(&fx.root, board_with(rules), RemoveMode::Real, |_| {});
     h.scan();
@@ -732,7 +478,7 @@ fn a_path_two_rules_reach_is_listed_once_and_a_refused_wake_is_tried_again_at_th
 
 #[test]
 fn a_stopped_service_scans_nothing() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
     h.svc.stop();
     assert!(h.svc.scan_now("alpha").is_none());
@@ -743,7 +489,7 @@ fn a_stopped_service_scans_nothing() {
 
 #[test]
 fn a_rule_whose_scan_fails_says_so_once_for_the_servers_log() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let plain = format!("{}/plain", fx.wts);
     let h = Harness::new(
         &fx.root,

@@ -6,7 +6,8 @@ use std::sync::Arc;
 use argus_core::Paths;
 use argus_core::config::env_port;
 use argus_core::names::HTTP_PORT;
-use argus_server::{ServeOptions, serve};
+use argus_server::preview::PREVIEW_PORT;
+use argus_server::{ServeMode, ServeOptions, serve};
 
 /// The folders of the dashboard: `COORD_HOME` from the environment, and the given home or the
 /// default one.
@@ -31,20 +32,34 @@ fn pick_port(flag: Option<u16>, env: Option<u16>) -> Option<u16> {
     flag.or(env)
 }
 
-/// Runs the server until it is told to stop.
+fn mode_label(mode: ServeMode) -> &'static str {
+    match mode {
+        ServeMode::Shadow => " (shadow)",
+        ServeMode::Preview => " (preview)",
+        ServeMode::Live => "",
+    }
+}
+
+/// Runs the server until it is told to stop. `mode` is `(shadow, preview)`; a preview takes the
+/// port 47617 when nothing else names one, and never the localhost door or the local names.
 ///
 /// # Errors
 ///
 /// The port is refused or the server does not start.
-pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> Result<u8, String> {
+pub async fn run(
+    port: Option<u16>,
+    data_dir: Option<PathBuf>,
+    mode: (bool, bool),
+) -> Result<u8, String> {
+    let mode = ServeMode::of(mode.0, mode.1);
     let paths = paths_of(data_dir);
     if let Some(why) = super::node_guard::refusal(&paths).await {
         return Err(why);
     }
     let mut opts = ServeOptions::new(paths);
-    opts.port = port_of(port)?;
-    opts.shadow = shadow;
-    opts.shadow_seed = shadow.then(|| Paths::from_env().home);
+    opts.port = port_of(port)?.or((mode == ServeMode::Preview).then_some(PREVIEW_PORT));
+    opts.mode = mode;
+    opts.shadow_seed = (mode == ServeMode::Shadow).then(|| Paths::from_env().home);
     opts.notify.system = true;
     opts.localhost_door_port = Some(HTTP_PORT);
     let server = serve(opts).await.map_err(|e| e.to_string())?;
@@ -52,7 +67,7 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
         "dashboard listening on {}/ (pid {}){}",
         server.url,
         std::process::id(),
-        if shadow { " (shadow)" } else { "" }
+        mode_label(mode)
     );
     let svc = Arc::clone(&server.svc);
     tokio::spawn(async move {
@@ -64,8 +79,10 @@ pub async fn run(port: Option<u16>, data_dir: Option<PathBuf>, shadow: bool) -> 
     Ok(0)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K1: the order of the port flag, the environment and the config.
     use super::pick_port;
 
     #[test]

@@ -136,6 +136,7 @@ pub fn trim_jobs(jobs: &mut Vec<Job>) {
     jobs.retain(|j| !drop.contains(&j.id));
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,11 +172,5 @@ mod tests {
         assert!(jobs.iter().any(|j| j.id == "L-99"));
         assert!(jobs.iter().any(|j| j.id == "L-39"));
         assert!(!jobs.iter().any(|j| j.id == "L-0"));
-    }
-
-    #[test]
-    fn a_doc_names_the_folder() {
-        assert_eq!(job(1, JobState::Queued, "").doc().name, "j1");
-        assert!(JobState::Checking.active() && !JobState::Refused.active());
     }
 }

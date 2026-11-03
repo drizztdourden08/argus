@@ -254,6 +254,9 @@ impl Service {
         m: &Leftover,
         limit_days: f64,
     ) -> Result<()> {
+        if input.empty_goes && !m.partial && m.files == Some(0) {
+            return Ok(());
+        }
         let made = self.is_made(&input.project, &fact.path);
         let young = !made
             && m.newest_ms
@@ -324,7 +327,8 @@ impl Service {
         rule: &Rule,
         board: &BoardFacts,
     ) -> Result<RemoveOutcome> {
-        if input.branch || input.discard {
+        let branch_asked = input.branch && !input.empty_goes;
+        if branch_asked || input.discard {
             return Err(WtError::new(
                 ErrorCode::BadRequest,
                 format!(
@@ -375,14 +379,7 @@ impl Service {
     ) -> Result<RemoveOutcome> {
         let target = self.deleting_name(&fact.path);
         if let Err(err) = self.deps.fs.rename(&fact.path, &target) {
-            return Err(WtError::new(
-                ErrorCode::InUse,
-                format!(
-                    "{} could not be renamed for deletion ({}): something has it open or locked. Close it and try again; nothing was deleted",
-                    fact.path,
-                    io_code(&err)
-                ),
-            ));
+            return Err(self.rename_refusal(&fact.path, &err));
         }
         let by = input.caller.by_text();
         let job_id = input

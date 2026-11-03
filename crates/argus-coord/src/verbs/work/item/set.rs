@@ -1,5 +1,5 @@
 //! `coord item set <I> [--title] [--desc] [--subject] [--status] [--if-rev n]`,
-//! `coord item status <I> <s>` and `coord item move <I> [--to T] [--status s] [placement]`.
+//! `coord item status <I> <s>`, `coord item block <I> --on "<why>"`, `coord item unblock <I>` and `coord item move <I> [--to T] [--status s] [placement]`.
 
 use argus_board::json::display;
 use argus_board::limits::require_text;
@@ -44,26 +44,35 @@ fn fields_of(r: &Run<'_>, status: Option<&str>) -> Res<Map<String, Value>> {
     Ok(fields)
 }
 
-fn change(r: &mut Run<'_>, status: Option<&str>) -> Outcome {
-    let fields = fields_of(r, status)?;
+/// Sets `fields` on the item the first word names; `said` turns its id and new rev into the line.
+fn edit(
+    r: &mut Run<'_>,
+    fields: &Map<String, Value>,
+    said: impl Fn(&str, &str) -> String,
+) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
         let id = r.arg(0);
         checked(board, &who, ("items", "set"), id)?;
         let id = id.unwrap_or_default().to_owned();
-        let named: Vec<&str> = fields.keys().map(String::as_str).collect();
         let operation = op(
             ("edit", "items", &id),
             Map::from_iter([("set".to_owned(), Value::Object(fields.clone()))]),
             r.options,
         )?;
         apply(board, &who, &operation)?;
-        r.say(&[&format!(
-            "{id}: {} updated (rev {}).",
-            named.join(", "),
-            rev_of(board, "items", &id)
-        )]);
+        let rev = rev_of(board, "items", &id);
+        r.say(&[&said(&id, &rev)]);
         Ok(())
+    })
+}
+
+fn change(r: &mut Run<'_>, status: Option<&str>) -> Outcome {
+    let fields = fields_of(r, status)?;
+    let named: Vec<&str> = fields.keys().map(String::as_str).collect();
+    let named = named.join(", ");
+    edit(r, &fields, |id, rev| {
+        format!("{id}: {named} updated (rev {rev}).")
     })
 }
 
@@ -76,6 +85,36 @@ pub(super) fn set(r: &mut Run<'_>) -> Outcome {
 pub(super) fn status(r: &mut Run<'_>) -> Outcome {
     let given = check_status(&r.arg_json(1))?;
     change(r, Some(&given))
+}
+
+/// Sets or clears the blocker of the item the first word names.
+fn set_blocker(r: &mut Run<'_>, value: Value) -> Outcome {
+    let line = value.as_str().map_or_else(
+        || "blocker cleared.".to_owned(),
+        |on| format!("blocked on {on}."),
+    );
+    let fields = Map::from_iter([("blocker".to_owned(), value)]);
+    edit(r, &fields, |id, _| format!("{id}: {line}"))
+}
+
+/// `coord item block <I> --on "<D-n | Q-n | external: who, what>"`.
+pub(super) fn block(r: &mut Run<'_>) -> Outcome {
+    let on = r
+        .text_opt("on")
+        .filter(|t| !argus_core::js::trim(t).is_empty())
+        .map(str::to_owned);
+    let Some(on) = on else {
+        return Err(bad(
+            "usage: coord item block <I-n> --on \"<D-n | Q-n | external: who, what>\".",
+        )
+        .into());
+    };
+    set_blocker(r, json!(on))
+}
+
+/// `coord item unblock <I>`.
+pub(super) fn unblock(r: &mut Run<'_>) -> Outcome {
+    set_blocker(r, Value::Null)
 }
 
 /// `coord item move`.

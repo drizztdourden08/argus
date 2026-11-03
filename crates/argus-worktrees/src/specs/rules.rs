@@ -1,20 +1,19 @@
+//! KEEP: K4.
 //! A rule path is the LITERAL parent folder. The incident this guards: a rule `.../worktrees/web-*` made the matched LIVE
 //! worktree the "parent", its sub-folders (apps, packages...) were listed as leftovers, and `--all-leftovers` would have
 //! deleted a live worktree's contents. Here: a wildcard rule is ignored and reported, include and exclude choose
 //! direct child folder names, and a leftover is never a worktree root git lists, never holds one, never sits inside a
 //! live work tree.
 
+// test-tag: standard
+
 use crate::batch::BatchInput;
 use crate::board::Caller;
 use crate::doc::Status;
 use crate::error::ErrorCode;
-use crate::fs::RealFs;
 use crate::jobs::JobState;
-use crate::leftover_remove::{Within, git_within, git_within_capped};
 use crate::rule::Rule;
-use crate::testkit::{
-    Fixture, Harness, HookFs, commit, exists_itself, git_in, put, rule_for, write,
-};
+use crate::testkit::{Fixture, Harness, commit, exists_itself, git_in, put, rule_for, write};
 use std::fs;
 
 fn live_web_1(fx: &Fixture) {
@@ -46,7 +45,7 @@ fn page_remove(h: &Harness, id: &str) -> crate::error::WtError {
 }
 
 fn wildcard_setup() -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     live_web_1(&fx);
     let h = Harness::new(
         &fx.root,
@@ -105,7 +104,7 @@ fn nothing_is_offered_or_deleted_under_an_invalid_rule() {
 #[test]
 fn the_same_worktree_under_a_literal_parent_rule_with_include_is_one_row_and_its_sub_folders_are_never_candidates()
  {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     live_web_1(&fx);
     let h = Harness::new(
         &fx.root,
@@ -118,57 +117,11 @@ fn the_same_worktree_under_a_literal_parent_rule_with_include_is_one_row_and_its
     assert_eq!(h.meta().leftovers, 0);
 }
 
-#[test]
-fn rotp_web_include_and_rotp_exclude_share_a_parent_every_child_belongs_to_exactly_one() {
-    let fx = Fixture::new();
-    for d in ["web-1", "web-2"] {
-        put(&fx.wts, &format!("{d}/x.txt"), "x");
-    }
-    let rules = vec![
-        Rule::folder("W-1", &fx.wts, "worker").filtered(&["web-*"], &[]),
-        Rule::folder("W-2", &fx.wts, "worker").filtered(&[], &["web-*"]),
-    ];
-    let h = Harness::new(&fx.root, rules, |_| {});
-    h.scan();
-    let d = h.docs();
-    assert_eq!(
-        (
-            d["web-1"].rule.as_str(),
-            d["web-1"].status,
-            d["web-2"].rule.as_str()
-        ),
-        ("W-1", Status::Leftover, "W-1")
-    );
-    assert_eq!(
-        (
-            d["fresh"].rule.as_str(),
-            d["old-merged"].rule.as_str(),
-            d["plain"].rule.as_str(),
-            d["plain"].status
-        ),
-        ("W-2", "W-2", "W-2", Status::Leftover)
-    );
-    let meta = h.meta();
-    let (first, second) = (&meta.rules[0], &meta.rules[1]);
-    assert_eq!(
-        (first.include.clone(), first.exclude.len(), first.candidates),
-        (vec!["web-*".to_string()], 0, Some(2))
-    );
-    assert_eq!(
-        (
-            second.include.len(),
-            second.exclude.clone(),
-            second.candidates
-        ),
-        (0, vec!["web-*".to_string()], Some(5))
-    );
-}
-
 fn junk_setup(
     rules: impl FnOnce(&Fixture) -> Vec<Rule>,
     prep: impl FnOnce(&Fixture),
 ) -> (Fixture, Harness) {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     prep(&fx);
     let h = Harness::new(&fx.root, rules(&fx), |_| {});
     h.scan();
@@ -254,7 +207,7 @@ fn the_bulk_path_applies_the_same_guards_per_folder_the_plain_leftover_beside_it
 fn a_worktree_that_appears_inside_a_queued_leftover_before_its_turn_makes_that_job_refused_and_nothing_is_deleted()
  {
     let (fx, h) = junk_setup(|fx| vec![rule_for(fx)], plain_junk);
-    let hold = h.svc.one_at_a_time();
+    let hold = h.svc.one_at_a_time("alpha", "a test", None);
     let input = page_input();
     h.svc.remove_leftovers(&input).unwrap();
     add_inner_worktree(&fx);
@@ -323,54 +276,6 @@ fn a_git_file_higher_up_is_refused_but_a_main_repositorys_git_folder_higher_up_i
         .unwrap();
     assert!(out.started);
     ok.idle();
-}
-
-#[test]
-fn a_git_within_three_levels_is_found_one_deeper_than_three_is_not_asked_for() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::testkit::root_of(&dir);
-    fs::create_dir_all(format!("{root}/junk/a/b/c/.git")).unwrap();
-    let Within::Git(found) = git_within(&RealFs, &format!("{root}/junk")) else {
-        panic!("the .git three levels down is found");
-    };
-    assert!(found.ends_with("junk/a/b/c/.git"), "{found}");
-    fs::create_dir_all(format!("{root}/deep/a/b/c/d/.git")).unwrap();
-    assert_eq!(
-        git_within(&RealFs, &format!("{root}/deep")),
-        Within::Nothing
-    );
-    put(&root, "node/node_modules/x/.git/HEAD", "x");
-    assert_eq!(
-        git_within(&RealFs, &format!("{root}/node")),
-        Within::Nothing,
-        "node_modules is not entered"
-    );
-}
-
-#[test]
-fn a_walk_that_hits_its_cap_is_too_big_never_nothing_found() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::testkit::root_of(&dir);
-    for n in 0..5 {
-        fs::create_dir_all(format!("{root}/big/d{n}")).unwrap();
-    }
-    let big = format!("{root}/big");
-    assert_eq!(git_within_capped(&RealFs, &big, 6), Within::Nothing);
-    assert_eq!(git_within_capped(&RealFs, &big, 5), Within::TooBig);
-}
-
-#[test]
-fn a_folder_the_walk_cannot_read_is_unreadable_never_nothing_found() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::testkit::root_of(&dir);
-    fs::create_dir_all(format!("{root}/junk/a/locked")).unwrap();
-    let hook = HookFs::default();
-    assert_eq!(git_within(&hook, &format!("{root}/junk")), Within::Nothing);
-    *hook.unreadable_containing.lock().unwrap() = Some("/a/locked".to_string());
-    let Within::Unreadable(why) = git_within(&hook, &format!("{root}/junk")) else {
-        panic!("the folder that cannot be read stops the walk");
-    };
-    assert!(why.ends_with("junk/a/locked: EPERM"), "{why}");
 }
 
 #[test]

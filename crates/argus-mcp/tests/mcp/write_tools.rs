@@ -1,4 +1,6 @@
 //! The tools that act as the owner.
+//! K2, K4: the tools that act as the owner and their refusals.
+// test-tag: critical
 
 use argus_mcp::{CallContext, RESULT_NOTE_REQUIRED};
 use regex::Regex;

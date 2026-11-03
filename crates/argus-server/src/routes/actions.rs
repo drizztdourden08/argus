@@ -26,7 +26,7 @@ fn source_of(ctx: &Ctx) -> Source {
 }
 
 fn writer(ctx: &Ctx) -> Result<Arc<SyncService>, ApiError> {
-    if ctx.svc.shadow {
+    if !ctx.svc.board_writes {
         return Err(ApiError::new(
             ErrorCode::ReadOnly,
             "shadow mode: Argus does not write boards",

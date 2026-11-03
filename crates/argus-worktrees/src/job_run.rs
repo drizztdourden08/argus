@@ -18,11 +18,14 @@ use std::io;
 struct Failures {
     count: u64,
     first: Option<String>,
+    /// Some entry was refused because something has it open.
+    held: bool,
 }
 
 impl Failures {
     fn add(&mut self, name: &str, err: &io::Error) {
         self.count += 1;
+        self.held |= crate::holders::is_held(err);
         if self.first.is_none() {
             self.first = Some(format!("{name}: {}", io_code(err)));
         }
@@ -99,10 +102,13 @@ impl Service {
             .cloned()
     }
 
-    /// Run a job after the ones queued before it.
+    /// Run a job after the ones of its project queued before it.
     pub(crate) fn enqueue_delete(&self, id: &str) {
+        let project = self.job(id).map(|j| j.project).unwrap_or_default();
         let (service, id) = (self.clone(), id.to_string());
-        self.queue.push(Box::new(move || service.run_delete(&id)));
+        self.queue
+            .of(&project)
+            .push(Box::new(move || service.run_delete(&id)));
     }
 
     fn delete_folder(&self, id: &str, folder: &str) -> Failures {
@@ -164,7 +170,7 @@ impl Service {
         };
         let total = job.total.map_or_else(|| "?".to_string(), |t| t.to_string());
         if failures.count > 0 {
-            let error = failures.text().unwrap_or_default();
+            let error = job.error.clone().unwrap_or_default();
             let text = format!(
                 "deleting {what} {} failed after {} of {total} entries: {error}. It is renamed {} and is finished at the next start ({})",
                 job.path,
@@ -211,6 +217,16 @@ impl Service {
             return;
         };
         let failures = self.delete_folder(id, &job.folder);
+        let error = failures.text().map(|text| {
+            match failures
+                .held
+                .then(|| self.holders_of(&job.folder))
+                .flatten()
+            {
+                Some(who) => format!("{text}; held by {who}: stop it and ask again"),
+                None => text,
+            }
+        });
         let finished = iso_from_ms(self.now());
         self.update_job(id, |j| {
             j.finished_at = Some(finished);
@@ -219,7 +235,7 @@ impl Service {
             } else {
                 JobState::Done
             };
-            j.error = failures.text();
+            j.error = error;
         });
         trim_jobs(&mut self.st().jobs);
         if let Some(done) = self.job(id) {

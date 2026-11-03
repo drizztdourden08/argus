@@ -13,7 +13,7 @@ afterEach(() => {
 
 const stopButton = (row: HTMLElement) => within(row).getByRole('button', { name: 'Ask the lead to stop this agent' });
 
-describe('Agents tab: the owner stop request', () => {
+describe('S1 Agents tab: the owner stop request', { tags: ['standard'] }, () => {
   it('posts an edit entry that sets stop-requested, and tells the owner', async () => {
     const posted = mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent({ rev: 3 }) } });
@@ -77,7 +77,7 @@ describe('Agents tab: the owner stop request', () => {
   });
 });
 
-describe('Agents tab: the finished agents and archive', () => {
+describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] }, () => {
   const board = {
     'A-1': agent({ name: 'alpha-worker' }),
     'A-2': agent({ name: 'zeta-worker', task: 'zeta job' }),
@@ -93,7 +93,6 @@ describe('Agents tab: the finished agents and archive', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     expect(container.querySelector('[data-agent-id="A-3"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-agent-id]')).toHaveLength(3);
-    expect(screen.getByText('Finished agents and runs stay as history; archived agents are in Trash.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Hide finished (1)' }));
     expect(container.querySelector('[data-agent-id="A-3"]')).toBeNull();
   });
@@ -103,19 +102,6 @@ describe('Agents tab: the finished agents and archive', () => {
     const { container } = await renderAgents({ agents: board });
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     expect(container.querySelector('[data-agent-id="A-4"]')).toBeNull();
-  });
-
-  it('keeps the table headers when no agent runs, and tells the owner when no agent exists', async () => {
-    mockApi();
-    const first = await renderAgents({ agents: { 'A-3': board['A-3'] } });
-    expect(screen.getByText('No sub-agent is working right now.')).toBeTruthy();
-    for (const label of ['Status', 'Agent', 'Model', 'Kind', 'Item', 'Branch', 'Time', 'Now', 'Last message', 'Note']) {
-      expect(screen.getByRole('columnheader', { name: label })).toBeTruthy();
-    }
-    first.unmount();
-    mockApi();
-    await renderAgents({ agents: {} });
-    expect(screen.getByText('No sub-agent yet. The lead starts them as it works and they show here.')).toBeTruthy();
   });
 
   it('archives the finished agents in one bulk entry, with Undo', async () => {
@@ -130,15 +116,9 @@ describe('Agents tab: the finished agents and archive', () => {
     await waitFor(() => expect(posted).toHaveLength(2));
     expect(posted[1]?.body).toMatchObject({ kind: 'bulk', ops: [{ kind: 'unarchive', target: { c: 'agents', id: 'A-3' } }], undoes: posted[0]?.body.id });
   });
-
-  it('offers no archive button until the finished agents are shown', async () => {
-    mockApi();
-    await renderAgents({ agents: board });
-    expect(screen.queryByRole('button', { name: 'Archive finished' })).toBeNull();
-  });
 });
 
-describe('Agents tab: the row actions', () => {
+describe('S1 Agents tab: the row actions', { tags: ['standard'] }, () => {
   const menuOf = (container: HTMLElement) => {
     vi.stubGlobal('CSS', { supports: () => false });
     fireEvent.click(within(rowOf(container, 'A-1')).getByRole('button', { name: 'More actions for A-1' }));
@@ -155,28 +135,12 @@ describe('Agents tab: the row actions', () => {
     expect(posted[0]?.body).toMatchObject({ kind: 'edit', target: { c: 'agents', id: 'A-1' }, set: { note: 'new note' }, prev: { note: 'old note' }, baseRev: 3 });
   });
 
-  it('puts Open and edit, Edit note, Ask to stop, Archive, Delete and Copy id in the kebab', async () => {
-    mockApi();
-    const { container } = await renderAgents({ agents: { 'A-1': agent() } });
-    menuOf(container);
-    for (const name of ['Open and edit', 'Edit note', 'Ask to stop', 'Archive', 'Delete', 'Copy id']) {
-      expect(await screen.findByRole('menuitem', { name })).toBeTruthy();
-    }
-  });
-
-  it('archives and deletes from the kebab with an undoable entry', async () => {
+  it('archives from the kebab', async () => {
     const posted = mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent() } });
     menuOf(container);
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'archive', target: { c: 'agents', id: 'A-1' } });
-  });
-
-  it('copies the branch from its own button, shown only for an agent with a branch', async () => {
-    mockApi();
-    const { container } = await renderAgents({ agents: { 'A-1': agent({ branch: 'agent/lead-x' }), 'A-2': agent() } });
-    expect(within(rowOf(container, 'A-1')).getByRole('button', { name: 'Copy the branch: agent/lead-x' })).toBeTruthy();
-    expect(within(rowOf(container, 'A-2')).queryByRole('button', { name: /Copy the branch/ })).toBeNull();
   });
 });

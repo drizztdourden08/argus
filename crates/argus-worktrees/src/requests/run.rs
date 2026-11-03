@@ -7,7 +7,8 @@ use crate::board::Caller;
 use crate::clock::iso_from_ms;
 use crate::error::WtError;
 use crate::jobs::JobState;
-use crate::request::{RemoveInput, RemoveOutcome};
+use crate::progress::target_key;
+use crate::request::RemoveInput;
 use crate::service::Service;
 
 /// The words of a refusal; a blank one still says something.
@@ -40,17 +41,21 @@ impl Service {
         if rec.mode == super::Mode::Leftovers {
             input.older_than_days = rec.older_than_days;
         }
+        input.empty_goes = rec.mode == super::Mode::Released;
         input
     }
 
-    /// A leftover starts a background job: its outcome waits for the job.
-    fn leftover_outcome(&self, rec: &RequestRec, target: &Target, out: &RemoveOutcome) -> Outcome {
-        let path = out.path.as_deref().unwrap_or_default();
-        self.jobs_idle();
-        let job = self
-            .jobs(&rec.key)
-            .into_iter()
-            .find(|j| Some(&j.id) == out.job_id.as_ref());
+    /// A leftover starts a background job (and a folder parked aside before a restart has one already): the outcome
+    /// waits for the job. `done` is the sentence of a job that finished.
+    fn job_outcome(
+        &self,
+        rec: &RequestRec,
+        target: &Target,
+        (path, job_id): (&str, &str),
+        done: &str,
+    ) -> Outcome {
+        self.jobs_queued_ran(&rec.key);
+        let job = self.jobs(&rec.key).into_iter().find(|j| j.id == job_id);
         let unfinished = job.filter(|j| j.state != JobState::Done);
         let (ok, text, code) = match unfinished {
             Some(job) => {
@@ -65,11 +70,7 @@ impl Service {
                     Some("job_failed".to_string()),
                 )
             }
-            None => (
-                true,
-                one_line(&format!("deleted leftover folder {path}"), SENTENCE_MAX),
-                None,
-            ),
+            None => (true, one_line(done, SENTENCE_MAX), None),
         };
         Outcome {
             id: target.id.clone(),
@@ -81,10 +82,13 @@ impl Service {
     }
 
     /// One target through the very same removal the CLI route calls.
-    fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
+    pub(super) fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
         match self.remove(&Self::removal_of(rec, target)) {
             Ok(out) if out.leftover && out.job_id.is_some() => {
-                self.leftover_outcome(rec, target, &out)
+                let path = out.path.as_deref().unwrap_or_default();
+                let job_id = out.job_id.as_deref().unwrap_or_default();
+                let done = format!("deleted leftover folder {path}");
+                self.job_outcome(rec, target, (path, job_id), &done)
             }
             Ok(out) => {
                 let said = one_line(&out.text, SENTENCE_MAX);
@@ -100,8 +104,22 @@ impl Service {
                     code: None,
                 }
             }
-            Err(err) => refusal(target, &err),
+            Err(err) => self
+                .parked_outcome(rec, target)
+                .unwrap_or_else(|| refusal(target, &err)),
         }
+    }
+
+    /// After a restart: the target's folder was already parked aside and a job finishes its deletion (it goes on from
+    /// what is left, never from zero). The request follows that job instead of reporting the removal's refusal.
+    fn parked_outcome(&self, rec: &RequestRec, target: &Target) -> Option<Outcome> {
+        let key = target_key(&target.id, self.ci());
+        let job = self.active_job_for(&rec.key, &key)?;
+        let done = format!(
+            "deleted {}: it was parked aside for deletion before, and Argus finished it",
+            job.path
+        );
+        Some(self.job_outcome(rec, target, (job.path.as_str(), job.id.as_str()), &done))
     }
 
     /// Settle what is to be removed: the named targets, or the ones a listing right now gives.
@@ -139,7 +157,10 @@ impl Service {
             if self.requests_halted() {
                 return Ok(false);
             }
-            let outcome = self.remove_one(&rec, target);
+            let outcome = match self.still_released(&rec, target) {
+                Ok(()) => self.remove_watched(project, &rec, target),
+                Err(outcome) => outcome,
+            };
             self.update_request(project, id, |r| r.results.push(outcome));
             self.save_requests(project);
         }
@@ -186,6 +207,7 @@ impl Service {
             }
         }
         self.finish_request(project, id);
+        self.after_released(project, id);
         self.deliver_request(project, id);
     }
 }

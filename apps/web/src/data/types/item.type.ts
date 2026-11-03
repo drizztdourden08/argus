@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind types */
+import type { RequestedBy, WaitsOn } from '../deps';
+
 interface Criterion {
   n: number;
   text: string;
@@ -17,6 +19,8 @@ interface WorkItem {
   updatedAt?: string;
   archivedAt?: string;
   deletedAt?: string;
+  waitsOn?: WaitsOn | WaitsOn[];
+  requestedBy?: RequestedBy | RequestedBy[];
 }
 
 export type { WorkItem };

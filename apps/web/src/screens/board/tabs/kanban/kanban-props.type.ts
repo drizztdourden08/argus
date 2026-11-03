@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind types */
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
+import type { AttentionKind } from './attention';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, CardData, ItemGroup, KanbanView } from './model';
+import type { AddPreset, AskLink, CardData, ItemGroup, KanbanView } from './model';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -120,6 +121,21 @@ interface CriteriaBarProps {
   item: ItemRef;
 }
 
+interface AttentionTagProps {
+  kind: AttentionKind;
+  card: CardData;
+  now: number;
+}
+
+interface DepTagListProps {
+  item: ItemRef;
+  now: number;
+}
+
+interface AskTagProps {
+  link: AskLink;
+}
+
 export type {
-  CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AskTagProps, AttentionTagProps, CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, DepTagListProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

@@ -1,6 +1,7 @@
 //! The records the server mirrors for the board's Worktrees tab: one doc per worktree, one summary per project.
 
 use crate::board::RequestDoc;
+use crate::hygiene::{HygieneDoc, HygieneMeta};
 use crate::jobs::JobDoc;
 use crate::requests::Brief;
 use serde::Serialize;
@@ -109,6 +110,9 @@ pub struct WorktreeDoc {
     pub leftover: Option<LeftoverDoc>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub job: Option<JobDoc>,
+    /// Where the worktree stands: in use, released (and when it goes), review or kept.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hygiene: Option<HygieneDoc>,
     pub error: Option<String>,
 }
 
@@ -155,6 +159,10 @@ pub struct Meta {
     pub live_ms: i64,
     pub took_ms: Option<i64>,
     pub count: usize,
+    /// The worktrees listed that are not main checkouts or being deleted: the left side of the counter.
+    pub listed: usize,
+    /// The running agent records of the board (working, waiting, stop-requested): the right side of the counter.
+    pub running_agents: usize,
     pub git: usize,
     pub leftovers: usize,
     #[serde(rename = "leftoverMB")]
@@ -171,6 +179,8 @@ pub struct Meta {
     pub by_status: BTreeMap<String, usize>,
     pub stale_days: u32,
     pub rules: Vec<RuleSummary>,
+    /// The hygiene: on, the grace, the last removals.
+    pub hygiene: HygieneMeta,
     pub error: Option<String>,
 }
 

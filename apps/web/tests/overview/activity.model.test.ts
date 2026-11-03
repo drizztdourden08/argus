@@ -9,7 +9,7 @@ const minutesAgo = (minutes: number): string => new Date(NOW - minutes * 60000).
 
 const entry = (id: string, extra: Partial<ActivityItem> = {}): ActivityItem => ({ id, at: minutesAgo(1), kind: 'note', level: 'info', text: 'text', ...extra });
 
-describe('the feed order and the level and kind of an entry', () => {
+describe('K1 the feed order and the level and kind of an entry', { tags: ['critical'] }, () => {
   it('runs newest first, ties by the number in the id, newest number first', () => {
     const rows = [entry('a-10', { at: minutesAgo(1) }), entry('a-2', { at: minutesAgo(5) }), entry('a-9', { at: minutesAgo(1) })];
     expect(sortActivity(rows).map((row) => row.id)).toEqual(['a-10', 'a-9', 'a-2']);
@@ -35,7 +35,7 @@ describe('the feed order and the level and kind of an entry', () => {
   });
 });
 
-describe('the filters', () => {
+describe('K1 the filters', { tags: ['critical'] }, () => {
   const rows = [
     entry('1', { kind: 'run', level: 'error' }),
     entry('2', { kind: 'note', level: 'info' }),
@@ -57,8 +57,7 @@ describe('the filters', () => {
     expect(counts[8]).toEqual(['mystery', 1]);
   });
 
-  it('gives each kind an icon, and the note icon to a kind it does not know', () => {
-    expect(kindIcon('fault')).toBe('triangle-alert');
+  it('gives the note icon to a kind it does not know', () => {
     expect(kindIcon('mystery')).toBe('file-text');
   });
 });

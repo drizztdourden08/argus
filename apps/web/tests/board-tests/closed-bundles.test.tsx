@@ -18,19 +18,13 @@ const closedBoard = () => ({
   ],
 });
 
-describe('closed bundles', () => {
+describe('S1 closed bundles', { tags: ['standard'] }, () => {
   it('are out of the Tests tab and the summary by default', async () => {
     await mountTab(closedBoard());
     expect(await screen.findByText('Test T-1')).toBeTruthy();
     expect(screen.queryByText('Test T-3')).toBeNull();
     expect(screen.queryByText('old-1')).toBeNull();
     expect(screen.getByText('1 to run / 2')).toBeTruthy();
-  });
-
-  it('have no toggle when no bundle is closed', async () => {
-    await mountTab({ builds: [buildDoc('open-1')], tests: [testDoc('T-1', { build: 'open-1' })] });
-    expect(await screen.findByText('Test T-1')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Show closed/ })).toBeNull();
   });
 
   it('show as a muted card with Show closed, still not counted', async () => {

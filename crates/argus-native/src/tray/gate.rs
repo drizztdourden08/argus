@@ -1,5 +1,6 @@
 //! Lets the page open once for a double click: the two clicks of a double click, and a click
 //! right after the menu item, ask for the page twice within moments.
+// test-tag: critical
 
 use std::time::{Duration, Instant};
 

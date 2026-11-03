@@ -1,9 +1,11 @@
 /* @layer renderer-app @kind types */
-import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
+import type { IconName, KanbanColumn, KanbanMove, TagUrgencyColor } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
+import type { DepColor, DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { OpNotice, Option } from '../../../shared';
+import type { AttentionKind, Signals } from '../attention/attention.type';
 
 type ItemGroup = 'status' | 'subject' | 'thread';
 
@@ -50,12 +52,37 @@ interface Needs {
   tests: number;
 }
 
+type AskKind = 'question' | 'decision';
+
+interface AskLink {
+  id: string;
+  kind: AskKind;
+  via: 'item' | 'blocker';
+}
+
+interface AskTagSpec {
+  id: string;
+  label: string;
+  color: TagUrgencyColor;
+  icon: IconName;
+  title: string;
+}
+
 interface CardData {
   id: string;
   item: ItemRef;
   needsYou: boolean;
-  decisions: number;
+  asks: AskLink[];
+  signals: Signals;
+  attention: AttentionKind[];
   quietMs: number | null;
+  conflicted: boolean;
+}
+
+interface CardFacts {
+  needs: Needs | undefined;
+  asks: AskLink[];
+  signals: Signals;
   conflicted: boolean;
 }
 
@@ -63,6 +90,8 @@ interface ViewInput {
   items: ItemRef[];
   threads: WithId<ThreadChoice>[];
   needs: ReadonlyMap<string, Needs>;
+  asks: ReadonlyMap<string, AskLink[]>;
+  signals: ReadonlyMap<string, Signals>;
   notices: readonly OpNotice[];
   filters: KanbanFilters;
   prefs: KanbanPrefs;
@@ -128,6 +157,35 @@ interface TestScope {
   build?: string | null;
 }
 
+interface DepTagSpec {
+  key: string;
+  color: DepColor;
+  label: string;
+  title: string;
+}
+
+interface DepLink {
+  side: 'waits' | 'asked';
+  dep: string;
+  project: string;
+  item: string;
+  title: string;
+  thread: string | null;
+  state: DepState;
+  since: string | null;
+  reason: string | null;
+}
+
+interface AttentionText {
+  label: string;
+  title: string | undefined;
+}
+
+type DepView = DepLink & {
+  history: DepHistoryRow[];
+  cancellable: boolean;
+};
+
 export type {
-  AddPreset, BulkSofts, CardData, ColumnsInput, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
+  AddPreset, AskKind, AskLink, AskTagSpec, AttentionText, BulkSofts, CardData, CardFacts, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
 };

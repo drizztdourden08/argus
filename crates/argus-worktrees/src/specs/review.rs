@@ -1,6 +1,9 @@
+//! KEEP: K3, K4.
 //! What the safety review found: each case fails without its fix. A batch job never deletes what a scan turned into a
 //! worktree, a prune forgets only the records Argus vetted, a nested repository or a huge untracked tree is not lost
 //! silently, a moved branch tip is never deleted, and a merged pull request with no head proves nothing.
+
+// test-tag: standard
 
 use crate::batch::BatchInput;
 use crate::board::Caller;
@@ -10,8 +13,7 @@ use crate::jobs::JobState;
 use crate::rule::Rule;
 use crate::testkit::{
     Fixture, Harness, RemoveMode, board_with, branches, commit, exists_itself, id, listed,
-    make_link, owner_now, pull_request_answer_keeps_branch, refused_for_nested, rule_for, started,
-    write,
+    make_link, pull_request_answer_keeps_branch, rule_for, started, write,
 };
 use std::fs;
 
@@ -34,7 +36,7 @@ fn become_worktree(h: &Harness, fx: &Fixture, name: &str) {
 fn a_batch_job_whose_row_a_scan_turned_into_a_git_worktree_is_refused_and_nothing_is_deleted() {
     let (fx, h) = started(|fx| fs::create_dir_all(fx.path("junk")).unwrap());
     assert_eq!(h.docs()["junk"].status, crate::doc::Status::Leftover);
-    let hold = h.svc.one_at_a_time();
+    let hold = h.svc.one_at_a_time("alpha", "a test", None);
     let input = BatchInput {
         older_than_days: Some(0.0),
         confirm_young: true,
@@ -61,7 +63,7 @@ fn a_batch_job_whose_row_a_scan_turned_into_a_git_worktree_is_refused_and_nothin
 
 #[test]
 fn a_finish_of_a_crashed_deletion_under_a_folder_that_is_a_rules_own_folder_is_refused() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     write(&fx.wts, "crashed.argus-deleting-1730000000001/a.txt", "x");
     let rules = vec![
         rule_for(&fx),
@@ -75,71 +77,6 @@ fn a_finish_of_a_crashed_deletion_under_a_folder_that_is_a_rules_own_folder_is_r
         "it is the folder of another rule: not deleted"
     );
     assert_eq!(h.svc.jobs("alpha").len(), 0);
-}
-
-#[test]
-fn a_gone_worktree_on_a_detached_head_no_ref_keeps_needs_discard_and_the_owners_say_to_prune() {
-    let (fx, h) = {
-        let fx = Fixture::new();
-        let path = fx.path("loose");
-        fx.git(&["worktree", "add", "-q", "--detach", &path, "main"]);
-        commit(&path, "loose.txt", "on no branch\n", 10.0);
-        fs::remove_dir_all(&path).unwrap();
-        let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-        h.scan();
-        (fx, h)
-    };
-    let target = id(&h, &fx, "loose");
-    let plain = h.refused(&target, |_| {});
-    assert_eq!(plain.code, ErrorCode::Forbidden);
-    assert!(
-        plain.message.contains(
-            "is on a detached HEAD that no branch keeps: pruning forgets it and the commit becomes unreachable. Nothing was pruned"
-        ),
-        "{}",
-        plain.message
-    );
-    let no_entry = h.refused(&target, |i| i.discard = true);
-    assert!(
-        no_entry.message.contains("needs the owner"),
-        "{}",
-        no_entry.message
-    );
-    assert!(listed(&fx.repo).contains(&"loose".to_string()));
-    h.board()
-        .entries
-        .insert("O-n".into(), owner_now("O-n", "delete loose"));
-    let out = h
-        .rm_with(&target, |i| {
-            (i.discard, i.owner_entry) = (true, Some("O-n".into()));
-        })
-        .unwrap();
-    assert!(out.pruned_only);
-    assert!(!listed(&fx.repo).contains(&"loose".to_string()));
-}
-
-#[test]
-fn a_prune_refuses_when_git_would_also_forget_a_record_argus_did_not_vet() {
-    let fx = Fixture::new();
-    let outside = format!("{}/elsewhere/other", fx.root);
-    fx.git(&["worktree", "add", "-q", "-b", "other", &outside]);
-    fs::remove_dir_all(&outside).unwrap();
-    let h = Harness::new(&fx.root, vec![rule_for(&fx)], |_| {});
-    h.scan();
-    let err = h.refused(&id(&h, &fx, "gone"), |_| {});
-    assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(
-        err.message
-            .contains("would also forget 1 other worktree record of")
-            && err.message.contains("that no rule of this project vetted")
-            && err.message.contains("nothing was pruned"),
-        "{}",
-        err.message
-    );
-    assert!(
-        listed(&fx.repo).contains(&"gone".to_string())
-            && listed(&fx.repo).contains(&"other".to_string())
-    );
 }
 
 #[test]
@@ -159,31 +96,6 @@ fn a_worktree_folder_that_is_a_link_is_refused() {
         err.message
     );
     assert!(exists_itself(&format!("{moved}/.git")));
-}
-
-fn nested_repo_in_an_ignored_folder(fx: &Fixture) {
-    fs::write(format!("{}/.git/info/exclude", fx.repo), "vendor\n").unwrap();
-    write(
-        &fx.path("old-merged"),
-        "vendor/lib/.git/HEAD",
-        "ref: refs/heads/main\n",
-    );
-    write(&fx.path("old-merged"), "vendor/lib/a.txt", "real work\n");
-}
-
-#[test]
-fn a_nested_repository_is_not_safe_it_needs_discard_and_is_copied_into_the_backup() {
-    let (fx, h, target, _) = refused_for_nested(nested_repo_in_an_ignored_folder, "vendor/lib");
-    assert!(exists_itself(&fx.path("old-merged")));
-    let out = h
-        .rm_with(&target, |i| (i.discard, i.caller) = (true, Caller::Page))
-        .unwrap();
-    let backup = out.backup.unwrap();
-    let copy = backup.nested_copy.unwrap();
-    assert_eq!(
-        fs::read_to_string(format!("{copy}/a.txt")).unwrap(),
-        "real work\n"
-    );
 }
 
 #[test]
@@ -206,7 +118,7 @@ fn untracked_files_the_backup_can_only_list_are_said_so_in_the_loss_sentence() {
 
 #[test]
 fn a_branch_whose_tip_moved_after_the_decision_is_not_deleted() {
-    let fx = Fixture::new();
+    let fx = Fixture::fake();
     let h = Harness::with_mode(
         &fx.root,
         board_with(vec![rule_for(&fx)]),

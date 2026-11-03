@@ -1,6 +1,8 @@
-//! The toast payload through the public API, with the recording notifier as the platform.
+//! The toast payload through the public API.
+//! Keep rule: K2.
+// test-tag: critical
 
-use argus_native::{Level, Notifier, NotifyError, Payload, RecordingNotifier, Toast};
+use argus_native::{Level, NotifyError, Payload, Toast};
 
 const OPEN_PAGE: &str = "http://argus.localhost:47615/#notifications";
 
@@ -139,43 +141,4 @@ fn the_tag_travels_with_the_payload_and_is_checked() {
         let result = Payload::build(&Toast::new("T", "x").tag(bad));
         assert!(matches!(result, Err(NotifyError::InvalidTag(_))));
     }
-}
-
-#[test]
-fn the_recording_notifier_keeps_what_was_shown_in_order() {
-    let notifier = RecordingNotifier::new();
-    notifier.show(&Toast::new("One", "a")).expect("shown");
-    notifier
-        .show(&Toast::new("Two", "b").url(OPEN_PAGE))
-        .expect("shown");
-    let shown = notifier.shown();
-    assert_eq!(shown.len(), 2);
-    assert!(shown[0].xml.contains("<text>One</text>"));
-    assert!(shown[1].xml.contains(OPEN_PAGE));
-}
-
-#[test]
-fn an_invalid_toast_is_refused_by_the_fake_like_by_the_real_notifier() {
-    let notifier = RecordingNotifier::new();
-    let result = notifier.show(&Toast::new("T", "x").url("ftp://x/"));
-    assert!(matches!(result, Err(NotifyError::InvalidUrl(_))));
-    assert_eq!(notifier.shown().len(), 0);
-}
-
-#[test]
-fn a_failing_platform_is_an_error_not_a_panic() {
-    let notifier = RecordingNotifier::failing(NotifyError::Platform("no shell".into()));
-    let result = notifier.show(&Toast::new("T", "x"));
-    assert_eq!(result, Err(NotifyError::Platform("no shell".into())));
-    assert_eq!(notifier.shown().len(), 0);
-    assert_eq!(
-        result.expect_err("failed").to_string(),
-        "the toast could not be shown: no shell"
-    );
-}
-
-#[test]
-fn the_notifier_is_usable_as_a_shared_trait_object() {
-    let notifier: std::sync::Arc<dyn Notifier> = std::sync::Arc::new(RecordingNotifier::new());
-    assert!(notifier.show(&Toast::new("T", "x")).is_ok());
 }

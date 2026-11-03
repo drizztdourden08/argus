@@ -77,6 +77,7 @@ pub fn page_at(door: Option<u16>, port: u16, key: Option<&str>) -> Page {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

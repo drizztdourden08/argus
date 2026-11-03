@@ -30,6 +30,8 @@ pub struct Calls {
     pub run_attach: Vec<Value>,
     /// `notify`: `{title, text, level, project, thread}`.
     pub notify: Vec<Value>,
+    /// `dep_cancel`: `{id, reason}`.
+    pub dep_cancel: Vec<Value>,
 }
 
 struct RunsState {
@@ -44,6 +46,7 @@ pub struct MemoryBackend {
     run_defs: Option<Vec<Value>>,
     sync_up: bool,
     notify_up: bool,
+    deps_up: bool,
     policy: Mutex<McpConfig>,
     attach: AttachConfig,
     roots: Vec<PathBuf>,
@@ -65,6 +68,7 @@ impl MemoryBackend {
             run_defs: None,
             sync_up: true,
             notify_up: false,
+            deps_up: true,
             policy: Mutex::new(McpConfig {
                 allow: json!("*"),
                 deny: Vec::new(),
@@ -107,6 +111,13 @@ impl MemoryBackend {
     #[must_use]
     pub fn with_notify(mut self) -> Self {
         self.notify_up = true;
+        self
+    }
+
+    /// Turn dependencies off: the two dependency tools are hidden and refused.
+    #[must_use]
+    pub fn without_deps(mut self) -> Self {
+        self.deps_up = false;
         self
     }
 
@@ -344,6 +355,15 @@ impl McpBackend for MemoryBackend {
         });
         let toast = request.level != "info";
         Ok(json!({ "recorded": true, "id": "N-1", "level": request.level, "toast": toast }))
+    }
+
+    fn deps_enabled(&self) -> bool {
+        self.deps_up
+    }
+
+    async fn dep_cancel(&self, id: &str, reason: Option<&str>) -> Result<Value, ToolError> {
+        self.record(|c| c.dep_cancel.push(json!({ "id": id, "reason": reason })));
+        Ok(json!({ "dep": { "id": id, "state": "cancelled" }, "text": format!("{id} cancelled") }))
     }
 
     async fn health(&self) -> Value {

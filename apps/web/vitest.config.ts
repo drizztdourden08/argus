@@ -1,17 +1,17 @@
 /* @layer root-config @kind config */
+import { resolve } from 'node:path';
 import { defineBrockVitestConfig } from '@drizztdourden08/brock-build/vitest';
+import { defineStandardsVitest } from '@drizztdourden08/standards/vitest';
 
+// Brock's base keeps the automatic JSX runtime, the react dedupe and the inlined Tessera source;
+// defineStandardsVitest adds the forks pool, the three tags with their timeouts and strictTags.
+// Every file imports the Tessera source barrel (about 5000 modules) into its own fork and jsdom,
+// so the CPU is the limit: the standard caps the workers at 3.
 export default defineBrockVitestConfig(import.meta.dirname, {
+  resolve: { alias: { '@argus/registry': resolve(import.meta.dirname, '../../crates/argus-board/registry') } },
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.test.{ts,tsx}'],
     setupFiles: ['tests/helpers/setup-dom.ts'],
-    // Every file imports the Tessera source barrel (about 5000 modules) into its own fork and
-    // jsdom, so a fork holds several hundred MB and the CPU is the limit. Seven forks at once
-    // starve each other and the first render of a file runs past the test timeout.
-    maxWorkers: 3,
-    // The first mount of a board tab compiles and renders a large Tessera tree; on a shared
-    // machine that alone can pass the 5 s default.
-    testTimeout: 15_000,
   },
-});
+}).then(defineStandardsVitest);

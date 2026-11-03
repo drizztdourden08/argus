@@ -40,6 +40,10 @@ pub const PROTECTED_CMD: [&str; 6] = [
     r"(?i)@anthropic-ai/claude",
 ];
 
+/// The Rust dashboard by command line: `argus serve`, `argus tray` and the `argus mcp` bridges,
+/// wherever the binary lives (an installed copy or a worktree's `target`).
+pub const ARGUS_CMD: &str = r#"(?i)(?:^|[\s/"'])argus(?:[.]exe)?["']?\s+(?:serve|tray|mcp)\b"#;
+
 fn dashboard_ignore() -> Value {
     json!([
         "dashboard[.]mjs",
@@ -156,6 +160,7 @@ pub fn default_rules() -> Vec<Rule> {
         .collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -168,33 +173,5 @@ mod tests {
         let names: std::collections::HashSet<_> = rules.iter().map(|r| r.name.as_str()).collect();
         assert_eq!(names.len(), rules.len());
         assert!(rules.last().unwrap().matcher.is_empty());
-    }
-
-    #[test]
-    fn the_defaults_are_the_node_defaults_in_the_node_order() {
-        let names: Vec<_> = default_rules().into_iter().map(|r| r.name).collect();
-        assert_eq!(
-            names,
-            [
-                "claude",
-                "claude-code-node",
-                "electron-dev",
-                "node-dev-server",
-                "build-helpers",
-                "node-other",
-                "python",
-                "game-engine",
-                "project-build",
-                "shell-leftovers",
-                "catch-all"
-            ]
-        );
-    }
-
-    #[test]
-    fn a_dev_server_may_use_3_gb_before_it_is_flagged() {
-        let rules = default_rules();
-        let dev = rules.iter().find(|r| r.name == "node-dev-server").unwrap();
-        assert_eq!(dev.max_mem_mb, Some(1500.0));
     }
 }

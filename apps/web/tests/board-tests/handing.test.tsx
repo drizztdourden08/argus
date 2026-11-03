@@ -7,7 +7,7 @@ import { mountTab } from './mount-tab';
 
 cleanAfterEach();
 
-describe('handing a build to the owner', () => {
+describe('S1 handing a build to the owner', { tags: ['standard'] }, () => {
   it('Hand to me posts the build entry, and Unhand clears it', async () => {
     const { calls } = await mountTab({
       handed: 'b2',

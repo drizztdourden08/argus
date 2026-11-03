@@ -1,5 +1,5 @@
-//! The process monitor's ports: its docs in the doc store, and its host (the projects, the
-//! tray, the Overlord, the activity log).
+//! The process monitor's ports: its docs in the doc store, and its host (the projects and
+//! their folders, the leads, the tray, the Overlord, the activity log).
 
 use std::sync::{Arc, PoisonError, RwLock};
 
@@ -7,11 +7,14 @@ use argus_board::names::MAIN_KEY;
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, Config, DocChange};
 use argus_native::{TrayFiles, read_live_tray};
-use argus_procs::{Activity, Meta, ProcDoc, ProcsHost, ProcsStore, ProjectRoot, WakeRequest};
+use argus_procs::{
+    Activity, Meta, ProcDoc, ProcsHost, ProcsStore, ProjectFolders, ProjectRoot, WakeRequest,
+};
 use argus_store::Db;
 use serde_json::{Value, to_value};
 
 use super::activity::ActivityAdapter;
+use super::proc_folders::FolderReader;
 use crate::boards::BoardReader;
 use crate::services::{WakeHook, WakeRequest as Wake};
 
@@ -72,11 +75,12 @@ pub struct ProcsHostAdapter {
     tray: TrayFiles,
     activity: ActivityAdapter,
     wake: WakeHook,
+    folders: FolderReader,
 }
 
 impl ProcsHostAdapter {
-    /// A host over the boards, the config, the tray's files, the activity log and the wake
-    /// service.
+    /// A host over the boards, the config, the tray's files, the activity log, the wake
+    /// service and the reader of the project folders.
     #[must_use]
     pub fn new(
         boards: BoardReader,
@@ -84,6 +88,7 @@ impl ProcsHostAdapter {
         tray: TrayFiles,
         activity: ActivityAdapter,
         wake: WakeHook,
+        folders: FolderReader,
     ) -> Self {
         ProcsHostAdapter {
             boards,
@@ -91,6 +96,7 @@ impl ProcsHostAdapter {
             tray,
             activity,
             wake,
+            folders,
         }
     }
 }
@@ -108,6 +114,14 @@ impl ProcsHost for ProcsHostAdapter {
             root: root.clone(),
         });
         known.chain(set).collect()
+    }
+
+    fn project_folders(&self) -> Vec<ProjectFolders> {
+        self.folders.of(self.project_roots())
+    }
+
+    fn lead_of(&self, project: &str) -> Option<String> {
+        self.boards.coordinator(project)
     }
 
     fn tray_pid(&self) -> Option<u32> {

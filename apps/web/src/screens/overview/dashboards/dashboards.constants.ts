@@ -1,14 +1,13 @@
 /* @layer renderer-app @kind constants */
 import type { BadgeColor, IconName, ListItemHeader, ListItemShape, SegmentOption, StatusTone, TagLook } from '@drizztdourden08/tessera';
 import type { RunTone } from '../../../data/runs';
+import { BAD_LOOK, CALM_LOOK } from '../../../shell';
 import type { ChipTone, LeadState, SendKind } from './model';
 
 const SENT_LIMIT = 40;
 
 const WARN_LOOK = { variant: 'urgency', color: 'warning' } as const;
-const CALM_LOOK = { variant: 'normal', color: 'neutral' } as const;
 const GOOD_LOOK = { variant: 'urgency', color: 'success' } as const;
-const BAD_LOOK = { variant: 'urgency', color: 'danger' } as const;
 const INFO_LOOK = { variant: 'urgency', color: 'info' } as const;
 
 const STATE_TONE: Readonly<Record<LeadState, StatusTone>> = {
@@ -86,6 +85,6 @@ const SENT_SHAPE: ListItemShape = { icon: true, columns: 2, action: false };
 const KIND_WORD: Readonly<Record<string, string>> = { decision: 'decision', followup: 'note' };
 
 export {
-  BAD_LOOK, CALM_LOOK, CARD_COLUMN_MIN, REGISTRY_DOT, REGISTRY_ICON, REGISTRY_LOOK, DOT_COLOR, GOOD_LOOK, INFO_LOOK, KIND_WORD, NARROW_COLUMNS, NARROW_QUERY, NO_PLAY, NO_PROJECT, NOTHING_SENT, RUN_DOT, RUNNING_HEADER, SEND_KINDS,
+  CARD_COLUMN_MIN, REGISTRY_DOT, REGISTRY_ICON, REGISTRY_LOOK, DOT_COLOR, GOOD_LOOK, INFO_LOOK, KIND_WORD, NARROW_COLUMNS, NARROW_QUERY, NO_PLAY, NO_PROJECT, NOTHING_SENT, RUN_DOT, RUNNING_HEADER, SEND_KINDS,
   SEND_MESSAGE, SENT_HEADER, SENT_LIMIT, SENT_SHAPE, STATE_TONE, WARN_LOOK,
 };

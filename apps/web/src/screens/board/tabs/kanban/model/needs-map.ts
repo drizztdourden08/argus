@@ -1,12 +1,9 @@
 /* @layer renderer-app @kind logic */
-import type { Entry } from '../../../../../data/kanban';
-import type { WithId } from '../../../../../data/react';
+import { askKind } from './ask-kind';
 import { isUnapplied } from './is-unapplied';
-import { ANSWER_KINDS, HUMAN } from './model.constants';
+import { HUMAN } from './model.constants';
+import { settledIds } from './settled-ids';
 import type { EntryDocs, Needs, NeedsInput } from './model.type';
-
-const repliedTo = (entries: EntryDocs, kinds: readonly string[]): Set<string> =>
-  new Set(entries.filter((entry) => entry.author === HUMAN && kinds.includes(entry.kind) && entry.replyTo).map((entry) => String(entry.replyTo)));
 
 const pendingDone = (entries: EntryDocs): Set<string> =>
   new Set(entries.filter((entry) => entry.author === HUMAN && entry.kind === 'done' && entry.replyTo && isUnapplied(entry)).map((entry) => String(entry.replyTo)));
@@ -18,14 +15,11 @@ const bump = (map: Map<string, Needs>, item: string | null | undefined, field: k
   map.set(item, needs);
 };
 
-const isOpenQuestion = (entry: WithId<Entry>, settled: ReadonlySet<string>): boolean =>
-  entry.kind === 'question' && entry.status === 'open' && !settled.has(entry.id);
-
 const countEntries = (map: Map<string, Needs>, entries: EntryDocs): void => {
-  const settled = new Set([...repliedTo(entries, ANSWER_KINDS), ...repliedTo(entries, ['ack'])]);
+  const settled = settledIds(entries);
   for (const entry of entries) {
-    if (isOpenQuestion(entry, settled)) bump(map, entry.item, 'questions');
-    else if (entry.kind === 'decision' && entry.status === 'pending') bump(map, entry.item, 'decisions');
+    const kind = askKind(entry, settled);
+    if (kind) bump(map, entry.item, kind === 'question' ? 'questions' : 'decisions');
   }
 };
 

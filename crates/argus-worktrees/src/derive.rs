@@ -59,6 +59,7 @@ impl Service {
                 default_stale_days: Some(self.opts.stale_days),
             };
             let mut doc = doc_of(fact, &judging, request_for(board, &fact.id));
+            doc.hygiene = self.hygiene_of(project, &fact.id);
             if let Some(leftover) = doc.leftover.as_mut() {
                 leftover.made = self.is_made(project, &fact.path);
             }
@@ -184,6 +185,8 @@ impl Service {
             live_ms: self.opts.live_ms,
             took_ms,
             count: counts.counted,
+            listed: counts.listed,
+            running_agents: board.agents.iter().filter(|a| a.live()).count(),
             git: counts.counted - counts.leftovers,
             leftovers: counts.leftovers,
             leftover_mb: round1(counts.measured_mb),
@@ -198,6 +201,7 @@ impl Service {
             by_status: counts.by_status,
             stale_days: self.opts.stale_days,
             rules: self.rule_summaries(project, board),
+            hygiene: self.hygiene_meta(project),
             error,
         }
     }
@@ -222,6 +226,7 @@ impl Service {
 struct Counts {
     by_status: BTreeMap<String, usize>,
     counted: usize,
+    listed: usize,
     leftovers: usize,
     measured_mb: f64,
     pending: usize,
@@ -237,6 +242,10 @@ impl Counts {
         Self {
             by_status,
             counted: docs.iter().filter(|d| d.status != Status::Deleting).count(),
+            listed: docs
+                .iter()
+                .filter(|d| !d.main && d.status != Status::Deleting)
+                .count(),
             leftovers: leftover_rows().count(),
             measured_mb: leftover_rows()
                 .filter(|d| d.leftover.as_ref().is_some_and(|l| !l.pending))

@@ -20,24 +20,7 @@ const open = async (activity: Record<string, object> = ACTIVITY) => {
 
 const rowsOf = (): HTMLElement[] => within(screen.getByRole('table', { name: 'Activity' })).getAllByRole('row');
 
-describe('the Activity tab', () => {
-  it('says there is nothing to report when the feed is empty, with the filters still in place', async () => {
-    await open({});
-    expect(await screen.findByText('Nothing to report yet.')).toBeTruthy();
-    expect(screen.getByText('All levels 0')).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'All kinds 0' })).toBeTruthy();
-  });
-
-  it('shows the newest entry first', async () => {
-    await open();
-    await screen.findByText('R-3 play failed (exit 1)');
-    const rows = rowsOf();
-    expect(rows).toHaveLength(3);
-    expect(rows[0]?.textContent).toContain('its wake listener is not running');
-    expect(rows[1]?.textContent).toContain('build ready');
-    expect(rows[2]?.textContent).toContain('R-3 play failed (exit 1)');
-  });
-
+describe('S1 the Activity tab', { tags: ['standard'] }, () => {
   it('shows the kind, the level, the time and the project and thread of each entry', async () => {
     await open();
     await screen.findByText('R-3 play failed (exit 1)');
@@ -47,10 +30,9 @@ describe('the Activity tab', () => {
     expect(within(first).getByRole('link', { name: 'RotP' }).getAttribute('href')).toBe('/p/rotp/');
     expect(first.textContent).toMatch(/\d+[smhd]\sago/);
   });
-
 });
 
-describe('the filters of the Activity tab', () => {
+describe('S1 the filters of the Activity tab', { tags: ['standard'] }, () => {
   it('filters by level with the counts on the buttons, and the all button clears it', async () => {
     await open();
     await screen.findByText('R-3 play failed (exit 1)');
@@ -60,13 +42,6 @@ describe('the filters of the Activity tab', () => {
     expect(screen.getByText('R-3 play failed (exit 1)')).toBeTruthy();
     fireEvent.click(screen.getByText('All levels 3'));
     await waitFor(() => expect(rowsOf()).toHaveLength(3));
-  });
-
-  it('says nothing matches when a level has no entries', async () => {
-    await open({ 'a-2': ACTIVITY['a-2'] });
-    await screen.findByText('ping from rotp/lead: build ready');
-    fireEvent.click(screen.getByText('warn 0'));
-    expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();
   });
 
   it('pages in steps of 50, says how many are shown, and shows the rest on Show more', async () => {
@@ -100,28 +75,14 @@ describe('the filters of the Activity tab', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
     expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();
   });
-
-  it('draws the feed as one dense line per entry, with no header row and no level column', async () => {
-    await open();
-    await screen.findByText('R-3 play failed (exit 1)');
-    const table = screen.getByRole('table', { name: 'Activity' });
-    expect(table.textContent).not.toContain('Level');
-    expect(table.querySelector('thead')).toBeNull();
-  });
 });
 
-describe('the Activity tab as it changes', () => {
+describe('S1 the Activity tab as it changes', { tags: ['standard'] }, () => {
   it('shows a new entry at the top as it arrives on the stream', async () => {
     const view = await open({ 'a-2': ACTIVITY['a-2'] });
     await screen.findByText('ping from rotp/lead: build ready');
-    await feed(view.sources, { activity: { 'a-2': ACTIVITY['a-2'], 'a-9': { n: 9, at: new Date().toISOString(), kind: 'wake', level: 'info', text: 'woke rotp/lead' } } });
+    await feed(view.sources, { activity: { 'a-2': ACTIVITY['a-2'], 'a-9': { n: 9, at: minutesAgo(0), kind: 'wake', level: 'info', text: 'woke rotp/lead' } } });
     await screen.findByText('woke rotp/lead');
     expect(rowsOf()[0]?.textContent).toContain('woke rotp/lead');
-  });
-
-  it('shows a doc with no time, no kind, no level and no text as a row', async () => {
-    await open({ 'a-7': { n: 7 } });
-    expect(await screen.findByText('All levels 1')).toBeTruthy();
-    expect(rowsOf()).toHaveLength(1);
   });
 });

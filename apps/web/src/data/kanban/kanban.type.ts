@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { PostResult } from '../api';
+import type { RequestedBy, WaitsOn } from '../deps';
 
 interface Criterion {
   n?: number;
@@ -11,6 +12,7 @@ interface Item {
   title: string;
   description?: string | null;
   subject?: string | null;
+  blocker?: string | null;
   thread: string;
   status: string;
   rank?: number;
@@ -22,6 +24,8 @@ interface Item {
   updatedBy?: string | null;
   archivedAt?: string | null;
   deletedAt?: string | null;
+  waitsOn?: WaitsOn | WaitsOn[];
+  requestedBy?: RequestedBy | RequestedBy[];
 }
 
 interface ThreadChoice {

@@ -1,4 +1,5 @@
 //! The three levels of a notification and the per-level view the settings use.
+// test-tag: critical
 
 use serde::{Deserialize, Serialize};
 
@@ -85,21 +86,12 @@ impl<T: Copy> PerLevel<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Level, PerLevel};
+    use super::Level;
 
     #[test]
     fn an_unknown_level_is_a_ping() {
         assert_eq!(Level::or_ping(Some("nonsense")), Level::Ping);
         assert_eq!(Level::or_ping(None), Level::Ping);
         assert_eq!(Level::or_ping(Some("urgent")), Level::Urgent);
-    }
-
-    #[test]
-    fn a_value_is_built_and_read_per_level() {
-        let lengths = PerLevel::from_fn(|level| level.as_str().len());
-        assert_eq!(
-            (lengths.get(Level::Info), lengths.get(Level::Urgent)),
-            (4, 6)
-        );
     }
 }

@@ -60,6 +60,7 @@ fn node_join(parts: &[&str]) -> String {
     format!("{prefix}{}", kept.join(sep))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

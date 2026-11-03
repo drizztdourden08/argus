@@ -8,21 +8,41 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const source = join(root, 'apps', 'web', 'assets', 'argus-logo.svg');
 const outDir = join(root, 'crates', 'argus-native', 'assets');
 
-const SIZES = [16, 24, 32, 48, 256];
+const TRAY_SIZES = [16, 20, 24, 28, 32, 40, 48, 64];
+const ICO_SIZES = [16, 20, 24, 32, 40, 48, 256];
+const SIZES = [...new Set([...TRAY_SIZES, ...ICO_SIZES])];
 const INKS = { white: '#ffffff', black: '#000000' };
 const PRIMARY = '#8a8a96';
-const SQUARE = { x: 52, y: 62.5, side: 1150 };
-const BOLD = { 16: 20, 24: 14, 32: 8 };
+const MARK = { x: 67, y: 270, width: 1120, height: 684 };
+const CRISP_UP_TO = 16;
+const STROKE_PX = { 16: 0.3, 20: 0.3, 24: 0.3, 28: 0.3, 32: 0.3 };
 const ICO_HEAD = 6;
 const ICO_ENTRY = 16;
 const ICO_LARGEST = 256;
 
-const tinted = (svg, color, size) => svg
-  .replace('viewBox="0 0 1254 1254"', `viewBox="${SQUARE.x} ${SQUARE.y} ${SQUARE.side} ${SQUARE.side}"`)
-  .replace(
-    'fill="currentColor"',
-    `fill="${color}" stroke="${color}" stroke-width="${BOLD[size] ?? 0}" stroke-linejoin="round"`,
-  );
+const margin = (size) => Math.round(size / 32);
+
+const frame = (size) => {
+  const stroke = STROKE_PX[size] ?? 0;
+  const scale = (size - 2 * margin(size) - stroke) / MARK.width;
+  const unit = 1 / scale;
+  const painted = MARK.height * scale + stroke;
+  const top = Math.round((size - painted) / 2);
+  const x = MARK.x - (stroke * unit) / 2 - margin(size) * unit;
+  const y = MARK.y - (stroke * unit) / 2 - top * unit;
+  return { x, y, side: size * unit, stroke: stroke * unit };
+};
+
+const tinted = (svg, color, size) => {
+  const { x, y, side, stroke } = frame(size);
+  const crisp = size <= CRISP_UP_TO ? ' shape-rendering="crispEdges"' : '';
+  const ink = stroke > 0
+    ? `fill="${color}" stroke="${color}" stroke-width="${stroke}" stroke-linejoin="miter"`
+    : `fill="${color}"`;
+  return svg
+    .replace('viewBox="0 0 1254 1254"', `viewBox="${x} ${y} ${side} ${side}"${crisp}`)
+    .replace('fill="currentColor"', ink);
+};
 
 const png = (svg, size) => new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng();
 
@@ -58,7 +78,7 @@ const writeInks = (svg) => {
 };
 
 const writeIdentity = (svg) => {
-  const images = SIZES.map((size) => ({ size, data: png(tinted(svg, PRIMARY, size), size) }));
+  const images = ICO_SIZES.map((size) => ({ size, data: png(tinted(svg, PRIMARY, size), size) }));
   writeFileSync(join(outDir, 'argus.ico'), ico(images));
 };
 

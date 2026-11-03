@@ -53,8 +53,12 @@ pub fn remove_tree(fs: &dyn Fs, path: &str) -> io::Result<()> {
     fs.remove_tree(path)
 }
 
-/// The walk behind [`Fs::remove_tree`] for a file system with no native delete: `lstat` before every descent.
+/// The walk behind [`Fs::remove_tree`] for a file system with no native delete: `lstat` before every descent, the
+/// folder itself included (a folder that is a link goes as a link).
 pub fn walk_remove<F: Fs + ?Sized>(fs: &F, path: &str) -> io::Result<()> {
+    if fs.lstat(path)?.is_link {
+        return unlink_link(fs, path);
+    }
     for entry in fs.read_dir(path)? {
         let child = join_path(path, &entry.name);
         let stat = match fs.lstat(&child) {
@@ -92,6 +96,7 @@ pub fn remove_entry(fs: &dyn Fs, path: &str, drop_links_first: bool) -> io::Resu
     remove_tree(fs, path)
 }
 
+// test-tag: standard
 #[cfg(test)]
 mod tests {
     use super::*;

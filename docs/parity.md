@@ -56,85 +56,85 @@ their status is `n/a`.
 | Node test file | Feature area | Slice | Rust or web location | Status |
 |---|---|---|---|---|
 | `activity.test.mjs` | Activity log | 4 | `crates/argus-store/tests/activity.rs` | done |
-| `agent.model.test.mjs` | coord agent verbs | 8 | `crates/argus-coord/tests/agent_model.rs` | done |
-| `agents.export.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/export.rs` | done |
-| `agents.reaper.test.mjs` | Agent reaper | 5 | `crates/argus-agents/tests/reaper.rs`, `crates/argus-server/tests/agents.rs` (through the sync service) | done (10 of 10 at `4dbe260`; the 5 worktree-aware cases of `62e66c7` are in the fixes table) |
-| `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/agents_reconcile_http.rs` | done |
-| `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/reconciler.rs`, `crates/argus-wake/tests/agents.rs` (the wake reasons and the flagged record) | done (34 of 34 at `4dbe260`; the 3 reopen cases of `62e66c7` are in the fixes table) |
-| `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/watcher.rs` | done |
+| `agent.model.test.mjs` | coord agent verbs | 8 | `crates/argus-coord/tests/it/agent_model.rs` | done |
+| `agents.export.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/it/export.rs` | done |
+| `agents.reaper.test.mjs` | Agent reaper | 5 | `crates/argus-agents/tests/it/reaper.rs`, `crates/argus-server/tests/it/agents.rs` (through the sync service) | done (10 of 10 at `4dbe260`; the 5 worktree-aware cases of `62e66c7` are in the fixes table) |
+| `agents.reconciler.http.test.mjs` | Agent reconciler | 5 | `crates/argus-server/tests/it/agents_reconcile_http.rs` | done |
+| `agents.reconciler.test.mjs` | Agent reconciler | 5 | `crates/argus-agents/tests/it/reconciler.rs`, `crates/argus-wake/tests/it/agents.rs` (the wake reasons and the flagged record) | done (34 of 34 at `4dbe260`; the 3 reopen cases of `62e66c7` are in the fixes table) |
+| `agents.watcher.test.mjs` | Agents live view | 5 | `crates/argus-agents/tests/it/watcher.rs` | done |
 | `ansi.test.mjs` | ANSI terminal rendering | 5 | `apps/web/src/features/terminal/ansi.test.ts` | n/a (Tessera LogPanel renders ANSI) |
-| `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/board_shortcut.rs` | done |
-| `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/build_verbs.rs` | done |
-| `coord.store.test.mjs` | Board file locking | 5 | `crates/argus-board/tests/lock.rs` | done |
-| `core.cli.test.mjs` | Server CLI and lifecycle | 1 | `crates/argus/tests/cli.rs` | done (start, stop, status, open, logs, resync, token; autostart with slice 7) |
-| `core.config.test.mjs` | Config and data folders | 1 | `crates/argus-core/tests/config.rs` | done |
+| `board.shortcut.test.mjs` | coord board shortcut | 8 | `crates/argus-coord/tests/it/board_shortcut.rs` | done |
+| `build.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/it/build_verbs.rs` | done |
+| `coord.store.test.mjs` | Board file locking | 5 | `crates/argus-board/tests/it/lock.rs` | done |
+| `core.cli.test.mjs` | Server CLI and lifecycle | 1 | `crates/argus/tests/it/cli.rs` | done (start, stop, status, open, logs, resync, token; autostart with slice 7) |
+| `core.config.test.mjs` | Config and data folders | 1 | `crates/argus-core/tests/it/config.rs` | done |
 | `core.db.test.mjs` | SQLite store and migrations; Doc store and change feed | 1 | `crates/argus-store/tests/db.rs` | done |
-| `core.http.test.mjs` | HTTP security and errors | 1 | `crates/argus-server/tests/http_security.rs` | done |
+| `core.http.test.mjs` | HTTP security and errors | 1 | `crates/argus-server/tests/it/http_security.rs` | done |
 | `core.names.test.mjs` | Display names | 1 | `crates/argus-sync/tests/names.rs` | done |
-| `core.sse.test.mjs` | Doc stream SSE | 1 | `crates/argus-server/tests/doc_stream.rs` | done |
-| `entry.context.test.mjs` | coord entry context rules | 8 | `crates/argus-coord/tests/entry_context.rs` | done |
+| `core.sse.test.mjs` | Doc stream SSE | 1 | `crates/argus-server/tests/it/doc_stream.rs` | done |
+| `entry.context.test.mjs` | coord entry context rules | 8 | `crates/argus-coord/tests/it/entry_context.rs` | done |
 | `guard.gate.test.mjs` | none: tests the guard in `ai-config` | none | stays in `ai-config` | n/a |
-| `hook.agents.binding.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_binding.rs` | done |
-| `hook.agents.claudeid.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents_id.rs` | done |
-| `hook.agents.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_agents.rs` | done |
-| `hook.autostart.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_autostart.rs` | done |
-| `hook.guard.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_guard.rs` | done |
-| `hook.listen.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_listen.rs` | done |
-| `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/hook_transcript.rs` | done |
-| `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/alias.rs` | done |
-| `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/inbox_wake.rs` | done |
-| `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/launcher_verbs.rs` | done |
+| `hook.agents.binding.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_agents_binding.rs` | done |
+| `hook.agents.claudeid.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_agents_id.rs` | done |
+| `hook.agents.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_agents.rs` | done |
+| `hook.autostart.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_autostart.rs` | done |
+| `hook.guard.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_guard.rs` | done |
+| `hook.listen.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_listen.rs` | done |
+| `hook.transcript.test.mjs` | coord session hooks | 8 | `crates/argus-coord/tests/it/hook_transcript.rs` | done |
+| `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/it/alias.rs` | done |
+| `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/it/inbox_wake.rs` | done |
+| `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/it/launcher_verbs.rs` | done |
 | `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
-| `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/lead_verbs.rs` | done |
+| `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/it/lead_verbs.rs` | done |
 | `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | n/a (Tessera MediaViewer) |
-| `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/mcp_http.rs` | done |
-| `mcp.install.test.mjs` | MCP install and render | 7 | `crates/argus/tests/install.rs` | done |
-| `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/mcp_server.rs` | done |
-| `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/mcp_stdio.rs` | done |
+| `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/it/mcp_http.rs` | done |
+| `mcp.install.test.mjs` | MCP install and render | 7 | `crates/argus/tests/it/install.rs` | done |
+| `mcp.server.test.mjs` | MCP tool host | 7 | `crates/argus-server/tests/it/mcp_server.rs` | done |
+| `mcp.stdio.test.mjs` | MCP stdio bridge | 7 | `crates/argus/tests/it/mcp_stdio.rs` | done |
 | `mcp.tools.test.mjs` | MCP tool host | 7 | `crates/argus-mcp/tests/tools.rs` | done |
 | `md.test.mjs` | Markdown rendering; Markdown editor | 2, 5 | `apps/web/tests/markdown/*.test.tsx`, `apps/web/tests/board/plain-text.test.ts` | done (all applicable cases ported on Tessera 0.78; the differences on purpose are in Markdown notes) |
-| `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/notify.rs` | done |
+| `notify.http.test.mjs` | Notifications to the owner | 4 | `crates/argus-server/tests/it/notify.rs` | done |
 | `notify.test.mjs` | Notifications to the owner; Native toasts | 4, 6 | `crates/argus-notify/tests/notify/`, `crates/argus-native/tests/toast_payload.rs`, `crates/argus-native/tests/toast_winrt.rs` | done (the `toastScript` and fake PowerShell cases do not apply: the notifier is native) |
-| `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/owner_text.rs` | done |
+| `owner.text.test.mjs` | Owner text limits | 5 | `crates/argus-server/tests/it/owner_text.rs` | done |
 | `pages.agents.test.mjs` | Agents tab | 5 | `apps/web/src/pages/board/agents/AgentsTab.test.tsx` | done |
 | `pages.board.test.mjs` | Board page shell; Board Activity feed; Kanban tab; Tests tab; Builds tab | 2, 5 | `apps/web/tests/board*/` | doing (110 cases matched by title; the note box, Expand, thread drawer, Quote button and focus on open cases closed; the rest in Board page gaps) |
 | `pages.portfolio.test.mjs` | Overview Dashboards tab; Overview Processes tab; Overview Notifications tab | 1, 4 | `apps/web/src/pages/overview/*/*.test.tsx` | done |
 | `pages.registry.test.mjs` | Registered strip | 3 | `apps/web/src/features/registry/RegisteredStrip.test.tsx` | done |
 | `pages.shim.test.mjs` | Web shell and data layer | 1 | `apps/web/src/data/*.test.ts` | done |
 | `pages.worktrees.test.mjs` | Worktrees tab | 5 | `apps/web/src/pages/board/worktrees/WorktreesTab.test.tsx` | done |
-| `portfolio.longsend.test.mjs` | Portfolio send down | 5 | `crates/argus-server/tests/portfolio_send.rs` | done (the two CLI cases need `ARGUS_COORD_CLI`) |
-| `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/procs_http.rs` | done |
+| `portfolio.longsend.test.mjs` | Portfolio send down | 5 | `crates/argus-server/tests/it/portfolio_send.rs` | done (the two CLI cases need `ARGUS_COORD_CLI`) |
+| `procs.http.test.mjs` | Process alerts and kills | 4 | `crates/argus-server/tests/it/procs_http.rs` | done |
 | `procs.monitor.test.mjs` | Process rules and sampling; Process alerts and kills | 4 | `crates/argus-procs/tests/monitor.rs` | done |
 | `procs.sampler.test.mjs` | Process rules and sampling; Native process sampling | 4, 6 | `crates/argus-procs/tests/sampler.rs`, `crates/argus-native/tests/sample.rs` | done |
 | `render.mcp.test.mjs` | MCP install and render | 7 | stays in `ai-config`, run there at switch-over | todo |
 | `render.publish.test.mjs` | none: tests the render in `ai-config` | none | stays in `ai-config` | n/a |
-| `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/runs_cli.rs` | done |
-| `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_http.rs` | done |
+| `runs.cli.test.mjs` | coord run client | 5, 8 | `crates/argus-server/tests/it/runs_cli.rs` | done |
+| `runs.http.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/it/runs_http.rs` | done |
 | `runs.kill.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/it/runs_kill.rs`, `crates/argus-launchers/tests/it/system_host.rs` (the stubborn process) | done |
 | `runs.lifecycle.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/lifecycle.rs` | done |
 | `runs.logs.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/logs.rs` | done |
 | `runs.recover.test.mjs` | Runs lifecycle | 5 | `crates/argus-launchers/tests/recover.rs` | done |
-| `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/runs_server.rs` | done |
-| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/it/runs_terminal.rs`, `crates/argus-server/tests/runs_stdin.rs` (the stdin route) | done |
+| `runs.server.test.mjs` | Runs lifecycle | 5 | `crates/argus-server/tests/it/runs_server.rs` | done |
+| `runs.terminal.test.mjs` | Run logs and terminal | 5 | `crates/argus-launchers/tests/it/runs_terminal.rs`, `crates/argus-server/tests/it/runs_stdin.rs` (the stdin route) | done |
 | `sync.export.test.mjs` | Board ingestion and export; Portfolio cards | 1 | `crates/argus-sync/tests/export.rs` | done |
-| `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/posts.rs` | done |
+| `sync.posts.test.mjs` | Owner posts; Test results and proofs | 5 | `crates/argus-server/tests/it/posts.rs` | done |
 | `sync.watch.test.mjs` | Board ingestion and export | 1 | `crates/argus-sync/tests/watch.rs`, `crates/argus-sync/tests/watch_cli.rs` (Node CLI and `argus coord`) | done |
-| `tray.test.mjs` | Tray icon and menu | 6 | unit tests in `crates/argus-native/src/tray/`, `crates/argus/tests/tray_cli.rs` | done (no case starts the tray: it would put an icon on the owner desktop; the PowerShell script cases do not apply) |
-| `wake.agents.test.mjs` | Agent wakes | 3 | `crates/argus-wake/tests/agent_wakes.rs` | done |
-| `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/wake_stream.rs` | done |
-| `wake.engine.test.mjs` | Wake engine and listeners | 3 | `crates/argus-wake/tests/engine.rs` | done |
-| `wake.faults.test.mjs` | Wake registry and faults | 3 | `crates/argus-server/tests/wake_faults.rs` | done |
-| `wake.http.test.mjs` | Wake engine and listeners | 3, 5 | `crates/argus-server/tests/wake_http.rs` | done |
-| `wake.items.test.mjs` | Kanban stale reminders | 3 | `crates/argus-wake/tests/item_wakes.rs` | done |
-| `wake.policy.test.mjs` | Wake policy | 3 | `crates/argus-wake/tests/policy.rs` | done |
-| `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/presence.rs` (the cc1e7ef cases included: the `working` helper in every board-required case, and a heartbeat a minute ago is not a turn) | done |
-| `wake.registry.test.mjs` | Wake registry and faults | 3 | `crates/argus-wake/tests/registry.rs` | done |
-| `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/worktree_verbs.rs` (the `request`, `requests` and `--idle` argument cases included) | done |
-| `worktrees.requests.http.test.mjs` | Worktree removal requests | 5 | `crates/argus-server/tests/worktree_requests.rs` (HTTP cases, and the `coord` cases through `CoordCli::locate_each`: the Node CLI and `argus coord`) | done |
+| `tray.test.mjs` | Tray icon and menu | 6 | unit tests in `crates/argus-native/src/tray/`, `crates/argus/tests/it/tray_cli.rs` | done (no case starts the tray: it would put an icon on the owner desktop; the PowerShell script cases do not apply) |
+| `wake.agents.test.mjs` | Agent wakes | 3 | `crates/argus-wake/tests/it/agent_wakes.rs` | done |
+| `wake.cli.test.mjs` | Wake stream command | 3 | `crates/argus/tests/it/wake_stream.rs` | done |
+| `wake.engine.test.mjs` | Wake engine and listeners | 3 | `crates/argus-wake/tests/it/engine.rs` | done |
+| `wake.faults.test.mjs` | Wake registry and faults | 3 | `crates/argus-server/tests/it/wake_faults.rs` | done |
+| `wake.http.test.mjs` | Wake engine and listeners | 3, 5 | `crates/argus-server/tests/it/wake_http.rs` | done |
+| `wake.items.test.mjs` | Kanban stale reminders | 3 | `crates/argus-wake/tests/it/item_wakes.rs` | done |
+| `wake.policy.test.mjs` | Wake policy | 3 | `crates/argus-wake/tests/it/policy.rs` | done |
+| `wake.presence.test.mjs` | Board presence | 3 | `crates/argus-wake/tests/it/presence.rs` (the cc1e7ef cases included: the `working` helper in every board-required case, and a heartbeat a minute ago is not a turn) | done |
+| `wake.registry.test.mjs` | Wake registry and faults | 3 | `crates/argus-wake/tests/it/registry.rs` | done |
+| `worktree.verbs.test.mjs` | coord worktree verbs | 8 | `crates/argus-coord/tests/it/worktree_verbs.rs` (the `request`, `requests` and `--idle` argument cases included) | done |
+| `worktrees.requests.http.test.mjs` | Worktree removal requests | 5 | `crates/argus-server/tests/it/worktree_requests.rs` (HTTP cases, and the `coord` cases through `CoordCli::locate_each`: the Node CLI and `argus coord`) | done |
 | `worktrees.requests.test.mjs` | Worktree removal requests | 5 | `crates/argus-worktrees/src/specs/requests.rs` (the 10 cases of `c81fa17` less the beta-project assertion, which is in the HTTP file, one case for a request made before the start, and the 3 `--idle` cases of `2820b32`), `crates/argus-worktrees/src/requests/` unit cases | done |
-| `worktrees.fallback.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_fallback_http.rs` | done |
+| `worktrees.fallback.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/it/worktrees_fallback_http.rs` | done |
 | `worktrees.fallback.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/fallback.rs` | done |
-| `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/worktrees_http.rs` | done |
+| `worktrees.http.test.mjs` | Worktree removal | 5 | `crates/argus-server/tests/it/worktrees_http.rs` | done |
 | `worktrees.leftover.test.mjs` | Leftover folders | 5 | `crates/argus-worktrees/tests/leftover.rs` | done |
 | `worktrees.remove.test.mjs` | Worktree removal | 5 | `crates/argus-worktrees/tests/remove.rs` | done |
 | `worktrees.rules.test.mjs` | Worktree scanner; Leftover folders | 5 | `crates/argus-worktrees/tests/rules.rs` | done |
@@ -191,7 +191,7 @@ where it landed.
 
 | Node commit | Fix | Argus | Status |
 |---|---|---|---|
-| `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/registry.rs` | ported |
+| `db17ac5` | A deaf thread with an open fault tells the Overlord again (at most every 10 min); a `no-listener` fault clears itself when the thread listens | `crates/argus-wake/src/registry` (`faults.rs`, `watch.rs`, `pending.rs`), cases in `crates/argus-wake/tests/it/registry.rs` | ported |
 | `db17ac5` | A worktree discard note counts only with a delete word, no negation and the worktree named | `crates/argus-worktrees/src/approval.rs` (word lists as in Node `remove.mjs`) | ported |
 | `db17ac5` | Listener hook timeout 3 days (the rendered hook timeout; the listener keeps its 6 h default); master launcher for the Overlord project | `docs/coord-port.md` section 3; `crates/argus-coord/src/verbs/hook/listen` | ported |
 | `62e66c7` | Sub-agent hooks bind by exact agent id: no word matching, a known id reopens a record closed for silence, an Agent result never rewrites another agent's record | `crates/argus-coord/src/verbs/hook` (`binding.rs`, `subagent_start.rs`, `subagent_stop.rs`, `agent_result.rs`), cases in `hook_agents*.rs` | ported |
@@ -199,9 +199,9 @@ where it landed.
 | `62e66c7` | The look-again fallback of a removal prunes only vetted records and says `Argus did not prune git's records: ...` | `crates/argus-worktrees/src/finish.rs` (`LetGo`), `remove.rs` | ported |
 | `62e66c7` | A merged pull request without a `headRefOid` (or with one that is no commit id) is no proof of a merge | `crates/argus-worktrees/src/branch.rs` | ported |
 | `62e66c7` | A nested git repository (3 levels down) is unsafe, needs discard and the owner, and is copied into the backup; a failed `git status` refuses the removal with `git_failed` | `crates/argus-worktrees/src/remove.rs`, `backup.rs`, cases in `src/specs/round2.rs` | ported |
-| `62e66c7` | The reaper judges by the session task data (transcript turn, task output) and worktree activity, opus-level agents wait 60 min (`agents.reapOpusMs`), `closedBy: reaper` | `crates/argus-agents/src/evidence/` (shared with the reconciler), `reaper.rs`, `config.rs`, cases in `tests/reaper.rs` | ported |
-| `62e66c7` | The reconciler reopens a record the reaper closed when its task output or worktree shows work after the close, and says why | `crates/argus-agents/src/reconciler/resume.rs`, cases in `tests/reconciler.rs` | ported |
-| `62e66c7` | A hook event binds only by exact agent id (start reopens, stop notes an unknown id, the tool result never rewrites another agent's record) | `crates/argus-coord/src/verbs/hook/` (already exact in WP2), cases in `tests/hook_agents*.rs` | ported |
+| `62e66c7` | The reaper judges by the session task data (transcript turn, task output) and worktree activity, opus-level agents wait 60 min (`agents.reapOpusMs`), `closedBy: reaper` | `crates/argus-agents/src/evidence/` (shared with the reconciler), `reaper.rs`, `config.rs`, cases in `tests/it/reaper.rs` | ported |
+| `62e66c7` | The reconciler reopens a record the reaper closed when its task output or worktree shows work after the close, and says why | `crates/argus-agents/src/reconciler/resume.rs`, cases in `tests/it/reconciler.rs` | ported |
+| `62e66c7` | A hook event binds only by exact agent id (start reopens, stop notes an unknown id, the tool result never rewrites another agent's record) | `crates/argus-coord/src/verbs/hook/` (already exact in WP2), cases in `tests/it/hook_agents*.rs` | ported |
 | `62e66c7` | `coord agent start` with a session id never falls back to word matching: with no record of the id it makes a new one | `crates/argus-coord/src/verbs/agent/agents/start.rs`, case in `tests/agent_model.rs` | ported |
 | `62e66c7` | Dev servers may use 3 GB: only in the owner's live `process-rules.json`, which Argus reads; the built-in default stays Node's 1500 MB | `crates/argus-procs/src/defaults.rs` | ported |
 | `62e66c7` | The `coord` forward shim to `argus coord` is off by default | the config repo only: `forward.mjs` | n/a |
@@ -209,14 +209,14 @@ where it landed.
 | `c81fa17` | The Worktrees tab lists the requests read-only (status chip, who asked, what, counts, the first refusal sentences; the newest 8) | `apps/web/src/screens/board/tabs/worktrees/sub-components/RequestsSection.tsx` and `RequestLine.tsx`, model `request-what.ts` and `request-outcome.ts`; cases in `apps/web/tests/board-worktrees/requests-list.test.tsx`. Built from Tessera `Flex`, `Tag` and `Text` only; nothing is missing | ported |
 | `c81fa17` | A folder that cannot be read fails closed in the nested-repository walks and the leftover measuring | already ported in `e490b2c` (I-26) | ported |
 | `2820b32` | `coord worktree request --finished --idle [D]` also takes clean, merged worktrees with nothing ahead whose newest change is older than D (1h to 30d, 6h by default); `idleMinutes` on the request, the activity line, the queued text and the empty-answer note | `requests/create.rs` (`check_idle`), `requests/resolve.rs` (`is_idle`), `requests/text.rs` (`idle_text`), `idle.rs` of the coord verbs; cases in `src/specs/requests.rs` and `worktree_verbs.rs` | ported |
-| `e9fc73f` | A board write flushes the temp file to the disk before the rename (a power cut left a board of NUL bytes). Every state file takes the same path | `crates/argus-core/src/fs.rs` (`write_atomic`, `write_new`, `copy_atomic`, `flush_file`); callers: board and its backups, purge backup and restore, proofs, config, process rules, shortcut `launch.json`, tray record and flags, pid file, first-start marker, autostart, Desktop config, attachments, worktree backups, shadow seed, database snapshot. Cases in `fs.rs`, `argus-board/tests/lock.rs`, `argus-core/tests/one_writer.rs` | ported |
-| `e9fc73f` | (Argus only) A board file that is all NUL bytes, empty or not JSON is its own finding: `BoardError::Damaged` names the file and the cause, the shadow start logs it, `argus parity` lists it as `FINDING` and fails the run | `crates/argus-board/src/store/damage.rs`, `argus-server/src/shadow.rs`, `argus-parity/src/findings.rs`, cases in `argus-server/tests/shadow.rs` and `argus-parity/tests/two_servers.rs` | ported |
+| `e9fc73f` | A board write flushes the temp file to the disk before the rename (a power cut left a board of NUL bytes). Every state file takes the same path | `crates/argus-core/src/fs.rs` (`write_atomic`, `write_new`, `copy_atomic`, `flush_file`); callers: board and its backups, purge backup and restore, proofs, config, process rules, shortcut `launch.json`, tray record and flags, pid file, first-start marker, autostart, Desktop config, attachments, worktree backups, shadow seed, database snapshot. Cases in `fs.rs` and `argus-board/tests/it/lock.rs` (the source-scan `one_writer.rs` went in the test clean-up, W1) | ported |
+| `e9fc73f` | (Argus only) A board file that is all NUL bytes, empty or not JSON is its own finding: `BoardError::Damaged` names the file and the cause, the shadow start logs it, `argus parity` lists it as `FINDING` and fails the run | `crates/argus-board/src/store/damage.rs`, `argus-server/src/shadow.rs`, `argus-parity/src/findings.rs`, cases in `argus-server/tests/it/shadow.rs` and `argus-parity/tests/two_servers.rs` | ported |
 | `c3b3ea2` | Worktree removal survives a big `node_modules`: `git worktree remove` alone gets `worktrees.removeTimeoutMs` (15 min, other git writes keep 120 s); a timeout or kill takes the "git could not delete the folder" fallback (read-only look, one vetted prune, rename, background job) or is refused with `git timed out after N s; nothing was deleted by Argus` (or `Argus deleted nothing but the/part of the ignored node_modules`); a real, git-ignored `node_modules` with no tracked file is cleared junction-safe after the guards and the backup, before git (`nodeModulesCleared`, text ends `node_modules cleared by Argus first`) | `crates/argus-worktrees/src/git.rs` (`REMOVE_TIMEOUT`, `with_remove_timeout`), `exec.rs` (`was_cut`), `finish.rs`, `modules.rs`, `remove.rs`, `guard.rs` (the `check-ignore` and `ls-files --cached` questions), `crates/argus-server/src/services/worktrees/config.rs`; the 8 cases of `worktrees.fallback.test.mjs` in `src/specs/slow.rs` and `git.rs` | ported |
 
 Where Argus differs from Node on purpose in the doc stream backlog limit (the archipelia board, about 1 MB of snapshot):
 
 - The 1 MB backlog limit guards live updates only. The opening frames (the snapshots, the missed-changes frame and `ready`) are not counted, so a board whose snapshot is larger than 1 MB opens whole. Node counts them, closes the stream part way through the snapshot and the page reconnects forever, never seeing the later collections (builds, launchers, worktrees).
-- Live frames are measured by what the client has not yet read, snapshot bytes left out; a client more than 1 MB behind on live frames is still dropped after the frame that crossed the limit, as in Node. `SseSender::opening_event` in `crates/argus-server/src/sse.rs`; cases in `tests/doc_stream.rs`.
+- Live frames are measured by what the client has not yet read, snapshot bytes left out; a client more than 1 MB behind on live frames is still dropped after the frame that crossed the limit, as in Node. `SseSender::opening_event` in `crates/argus-server/src/sse.rs`; cases in `tests/it/doc_stream.rs`.
 
 Where Argus differs from Node in the `c81fa17` port:
 
@@ -306,6 +306,8 @@ their own Argus tests and by the owner's check.
 | Worktree removal | Every removal guard, backup, branch decision and folder fallback answers as Node. | 5 |
 | Leftover folders | Leftovers are measured, listed and deleted behind the same guards and jobs as Node. | 5 |
 | Worktrees tab | The Worktrees tab shows rows, confirms, requests, leftovers and jobs as the Node page. | 5 |
+| Worktree hygiene (Argus only) | A finished agent's safe, unlinked worktree is told, then removed after the grace; docs/worktree-hygiene.md. | 5 |
+| Dependencies between projects (Argus only) | A request from one board to another is a ledger record with a tag on both cards, a Dependency section in the item drawer with Cancel, and a Dependencies tab on the overview; the Node dashboard has none of it. | 5 |
 | Agents live view | Transcript tailing fills the live agent fields on the docs and never in board.json. | 5 |
 | Agent reaper | Quiet hook records close after the reap delay with the same note and activity line. | 5 |
 | Agent reconciler | Linking, duplicates, idle and orphan classes, reopen and the report route match Node. | 5 |

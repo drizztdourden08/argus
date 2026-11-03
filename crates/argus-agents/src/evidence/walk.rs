@@ -59,6 +59,7 @@ pub(crate) fn newest_file_mtime(fs: &dyn FileSystem, dir: &Path, enough: i64) ->
     walk.newest
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

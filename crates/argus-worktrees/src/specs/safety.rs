@@ -1,8 +1,11 @@
+//! KEEP: K3, K4.
 //! The safety model of removing a worktree: removing the FOLDER of a clean worktree whose HEAD a branch (or another ref)
 //! keeps loses nothing, so it needs no approval, merged or not. Deleting the BRANCH is its own decision: merged by
 //! ancestry into origin's default or the LOCAL default, patch-equivalent, or its GitHub pull request merged; otherwise
 //! kept. Only uncommitted changes and commits on a detached HEAD that no ref keeps are real losses. `gh` is never the
 //! real one here: a fake runner answers, and absent or failing means "not merged".
+
+// test-tag: e2e
 
 use crate::board::Caller;
 use crate::error::ErrorCode;
@@ -10,11 +13,11 @@ use crate::exec::GitOutput;
 use crate::request::Discarded;
 use crate::testkit::{
     Fixture, Harness, backdate_index, branches, commit, exists_itself, git_in, listed, owner_now,
-    started, write,
+    started_on, write,
 };
 
 fn setup(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    started(prep)
+    started_on(Fixture::new(), prep)
 }
 
 fn id(h: &Harness, fx: &Fixture, name: &str) -> String {
@@ -28,6 +31,7 @@ fn tip_of(fx: &Fixture, branch: &str) -> String {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_clean_worktree_on_an_unmerged_branch_goes_with_no_approval_no_backup_and_the_branch_is_kept() {
     let (fx, h) = setup(|_| {});
     let row = h.docs()["old-unmerged"].clone();
@@ -75,6 +79,7 @@ fn a_clean_worktree_on_an_unmerged_branch_goes_with_no_approval_no_backup_and_th
 }
 
 #[test]
+#[ignore = "e2e"]
 fn without_branch_the_branch_is_simply_left() {
     let (fx, h) = setup(|_| {});
     let out = h.rm(&id(&h, &fx, "old-unmerged")).unwrap();
@@ -91,6 +96,7 @@ fn without_branch_the_branch_is_simply_left() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn discarding_the_unmerged_branch_is_the_owners_decision_refused_before_anything_is_removed_then_a_bundle_first()
  {
     let (fx, h) = setup(|_| {});
@@ -126,6 +132,7 @@ fn discarding_the_unmerged_branch_is_the_owners_decision_refused_before_anything
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_dirty_worktree_is_not_removable_without_the_discard_rules_even_on_a_merged_branch() {
     let (fx, h) = setup(|fx| write(&fx.path("old-unmerged"), "scratch.txt", "not committed\n"));
     let err = h.refused(&id(&h, &fx, "old-unmerged"), |_| {});
@@ -183,6 +190,7 @@ fn detached_cases(fx: &Fixture) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_detached_head_a_branch_contains_is_safe_one_with_commits_no_ref_keeps_is_not_even_when_clean()
 {
     let (fx, h) = setup(detached_cases);
@@ -248,6 +256,7 @@ fn squashed(name: &'static str, commits: usize) -> impl FnOnce(&Fixture) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn one_commit_squashed_the_worktree_goes_and_branch_deletes_the_branch_because_its_changes_are_already_in_main()
  {
     let (fx, h) = setup(squashed("sq", 1));
@@ -343,6 +352,7 @@ fn merged_pr(oid: &str) -> String {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn several_commits_squashed_into_one_are_not_patch_equivalent_and_an_absent_gh_means_not_merged() {
     let (fx, h) = setup(github_sq2);
     let kept = h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
@@ -354,6 +364,7 @@ fn several_commits_squashed_into_one_are_not_patch_equivalent_and_an_absent_gh_m
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_failing_gh_garbage_from_gh_and_new_work_after_the_merged_pull_request_are_not_merged() {
     let (fx, h) = setup(github_sq2);
     h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
@@ -376,6 +387,7 @@ fn a_failing_gh_garbage_from_gh_and_new_work_after_the_merged_pull_request_are_n
 }
 
 #[test]
+#[ignore = "e2e"]
 fn gh_is_asked_once_per_branch_and_tip_and_the_answer_is_cached() {
     let (fx, h) = setup(github_sq2);
     h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
@@ -397,6 +409,33 @@ fn gh_is_asked_once_per_branch_and_tip_and_the_answer_is_cached() {
 }
 
 #[test]
+#[ignore = "e2e"]
+fn in_local_mode_gh_is_never_asked_and_a_merged_pull_request_does_not_count() {
+    let (fx, h) = setup(github_sq2);
+    h.mode.set_local(true);
+    gh_says(&h, 0, &merged_pr(&tip_of(&fx, "sq2")));
+    let kept = h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
+    assert_eq!((kept.removed, kept.deleted_branch), (true, false));
+    assert_eq!(kept.branch_note.as_deref(), Some("not merged"));
+    assert!(h.gh.calls.lock().unwrap().is_empty(), "local: no gh call");
+}
+
+#[test]
+#[ignore = "e2e"]
+fn back_in_remote_mode_gh_is_asked_again_and_its_merged_answer_counts() {
+    let (fx, h) = setup(github_sq2);
+    h.mode.set_local(true);
+    let mut seq = 0;
+    gh_says(&h, 0, &merged_pr(&tip_of(&fx, "sq2")));
+    h.rm_with(&id(&h, &fx, "sq2"), |i| i.branch = true).unwrap();
+    assert!(h.gh.calls.lock().unwrap().is_empty());
+    h.mode.set_local(false);
+    assert!(try_again(&h, &fx, &mut seq, false).deleted_branch);
+    assert_eq!(h.gh.calls.lock().unwrap().len(), 1);
+}
+
+#[test]
+#[ignore = "e2e"]
 fn a_new_tip_that_gh_says_was_merged_deletes_the_branch_with_the_reason() {
     let (fx, h) = setup(|fx| {
         squashed("sq2", 2)(fx);
@@ -436,6 +475,7 @@ fn a_new_tip_that_gh_says_was_merged_deletes_the_branch_with_the_reason() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn gh_is_only_asked_when_the_remote_is_github() {
     let (fx, h) = setup(|fx| {
         squashed("sq3", 2)(fx);
@@ -480,6 +520,7 @@ fn like_rotp(fx: &Fixture) {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn a_branch_merged_into_the_local_default_only_says_so_and_one_merged_into_origin_says_that() {
     let (_fx, h) = setup(like_rotp);
     let d = h.docs();
@@ -505,6 +546,7 @@ fn a_branch_merged_into_the_local_default_only_says_so_and_one_merged_into_origi
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_branch_reason_says_which_default_it_was_merged_into_and_an_unmerged_one_is_kept() {
     let (fx, h) = setup(like_rotp);
     let delete = |name: &str| h.rm_with(&id(&h, &fx, name), |i| i.branch = true).unwrap();
@@ -535,6 +577,7 @@ fn the_branch_reason_says_which_default_it_was_merged_into_and_an_unmerged_one_i
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_default_branch_itself_is_never_deleted_from_its_own_worktree() {
     let (fx, h) = setup(|fx| {
         fx.git(&["checkout", "-q", "-b", "dev"]);
@@ -555,6 +598,7 @@ fn the_default_branch_itself_is_never_deleted_from_its_own_worktree() {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn with_no_origin_at_all_the_local_main_is_the_default_and_merged_into_is_its_name() {
     let (_fx, h) = setup(|_| {});
     let d = h.docs();

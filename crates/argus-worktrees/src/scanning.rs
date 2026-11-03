@@ -5,13 +5,14 @@ use crate::doc::Derived;
 use crate::fact::Fact;
 use crate::inspect::{ScanCtx, inspect_dir};
 use crate::measure::{Leftover, measure_folder};
-use crate::paths::path_key;
+use crate::paths::{clean_path, path_key};
+use crate::probe::{fingerprint, shape_of};
 use crate::rule::{Rule, RuleKind};
 use crate::scan::{
-    DeletingFolder, RuleInfo, ScanEnv, folder_candidates, mark_leftover, scan_rules,
+    DeletingFolder, RuleInfo, ScanEnv, folder_candidates, mark_leftover, scan_rules_with,
 };
 use crate::service::{Measured, ScanState, Service};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::time::Instant;
 
 /// What the live check did.
@@ -79,9 +80,16 @@ impl Service {
         }
     }
 
-    /// Scan one project: read every rule, mirror the result, tell the threads, forget what no longer exists.
+    /// Scan one project now: read every rule and every worktree with git, mirror the result, tell the threads, forget
+    /// what no longer exists. This is the forced scan: it never trusts a fingerprint. Whatever asks for a fresh look
+    /// (a rule added, a removal, the request worker, the hygiene, the first scan) comes here.
     pub fn scan_now(&self, project: &str) -> Option<Derived> {
-        let _one = self.one_at_a_time();
+        self.scan_with(project, false)
+    }
+
+    /// A scan that keeps the facts of a worktree whose fingerprint did not change (`keep`), or reads all with git.
+    pub(crate) fn scan_with(&self, project: &str, keep: bool) -> Option<Derived> {
+        let _one = self.one_at_a_time(project, "a scan of the project", None);
         if self.stopped() {
             return None;
         }
@@ -91,6 +99,9 @@ impl Service {
             .insert(project.to_string(), rules_signature(&board.rules));
         let started = self.now();
         let timer = Instant::now();
+        let shape = shape_of(&board.rules, self.deps.fs.as_ref(), self.ci());
+        let kept = if keep { self.kept_of(project) } else { None };
+        let full_ms = kept.as_ref().map_or(started, |k| k.full_ms);
         let scan = if board.rules.is_empty() {
             ScanState {
                 at_ms: started,
@@ -99,11 +110,14 @@ impl Service {
                 facts: Vec::new(),
                 listed: HashSet::new(),
                 error: None,
+                full_ms,
+                shape,
+                prints: HashMap::new(),
             }
         } else {
             self.st().budget_spent_ms = 0;
             let measure = |path: &str| self.measure_leftover(path);
-            let found = scan_rules(&board.rules, &self.scan_env(&measure));
+            let found = scan_rules_with(&board.rules, &self.scan_env(&measure), kept.as_ref());
             self.adopt_deleting(project, &found.deleting, &board.rules);
             ScanState {
                 at_ms: self.now(),
@@ -112,6 +126,9 @@ impl Service {
                 facts: found.facts,
                 listed: found.listed,
                 error: None,
+                full_ms,
+                shape,
+                prints: found.prints,
             }
         };
         let clean = scan.error.is_none();
@@ -120,7 +137,9 @@ impl Service {
         if self.stopped() {
             return None;
         }
+        self.resume_batches(project);
         self.wake_step(project);
+        self.hygiene_step(project);
         self.prune_state(project);
         if clean {
             self.prune_made(project);
@@ -188,6 +207,26 @@ impl Service {
             state.sigs.insert(project.to_string(), signature);
         }
         changed
+    }
+
+    /// Did an agent of the project end (done, stopped or failed) since the last look at its board? The server scans
+    /// again a moment after, and the hygiene step that follows the scan sweeps the worktree it left. The first look
+    /// only remembers: the first scan at the start sweeps everything.
+    pub fn agents_ended(&self, project: &str) -> bool {
+        let Some(board) = self.deps.store.board(project) else {
+            return false;
+        };
+        let ended: BTreeSet<String> = board
+            .agents
+            .iter()
+            .filter(|a| !a.live() && !a.status.is_empty())
+            .map(|a| a.id.clone())
+            .collect();
+        let before = self
+            .st()
+            .ended_agents
+            .insert(project.to_string(), ended.clone());
+        before.is_some_and(|b| !ended.is_subset(&b))
     }
 
     /// Has the project been scanned since the service started? Before that its worktrees are not known.
@@ -270,7 +309,7 @@ impl Service {
     }
 
     fn read_added(&self, project: &str, added: &[(String, Rule)]) {
-        let _one = self.one_at_a_time();
+        let _one = self.one_at_a_time(project, "a look at new folders", None);
         let listed = match self.st().scans.get(project) {
             Some(scan) => scan.listed.clone(),
             None => return,
@@ -285,9 +324,11 @@ impl Service {
             case_insensitive: env.case_insensitive,
         };
         for (dir, rule) in added {
+            let print = fingerprint(env.fs, &clean_path(dir));
             let mut fact = inspect_dir(dir, rule, &mut ctx);
             mark_leftover(&mut fact, &listed, &env);
             if let Some(scan) = self.st().scans.get_mut(project) {
+                scan.prints.insert(fact.path.clone(), print);
                 if !scan.facts.iter().any(|f| f.id == fact.id) {
                     scan.facts.push(fact);
                 }

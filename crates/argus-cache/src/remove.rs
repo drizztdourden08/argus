@@ -1,5 +1,6 @@
 //! Deleting inside the cache root and nowhere else. Every path is checked against the root first; a folder is moved
 //! out of sight into `.tmp/` before it is deleted, so a reader never meets half an entry; a link is never followed.
+// test-tag: critical
 
 use crate::segment::{join, parent};
 use crate::tmp::TMP_DIR;
@@ -41,15 +42,23 @@ pub fn inside(root: &str, path: &str) -> bool {
     is_usable_root(root) && plain && folded(&clean).starts_with(&prefix)
 }
 
+/// Inside the root, and neither the path nor a folder between the root and it is a link: a junction on the way (a
+/// `.tmp` or a version folder made a link) would lead the delete outside the cache.
 fn checked(fs: &dyn Fs, root: &str, path: &str) -> Result<(), RemoveError> {
     if !inside(root, path) {
         return Err(RemoveError::Outside(path.to_owned()));
     }
-    match fs.lstat(path) {
-        Ok(stat) if stat.is_link => Err(RemoveError::Link(path.to_owned())),
-        Ok(_) => Ok(()),
-        Err(e) => Err(e.into()),
+    let base = clean_path(root).trim_end_matches('/').to_owned();
+    let clean = clean_path(path);
+    let rest = clean.get(base.len() + 1..).unwrap_or_default();
+    let mut at = base;
+    for segment in rest.split('/') {
+        at = join(&at, segment);
+        if fs.lstat(&at)?.is_link {
+            return Err(RemoveError::Link(at));
+        }
     }
+    Ok(())
 }
 
 /// Deletes a folder of the cache and everything in it.
@@ -64,6 +73,7 @@ pub fn park(fs: &dyn Fs, root: &str, path: &str, name: &str) -> Result<String, R
     checked(fs, root, path)?;
     let tmp = join(root, TMP_DIR);
     std::fs::create_dir_all(&tmp)?;
+    checked(fs, root, &tmp)?;
     let parked = join(&tmp, name);
     if !inside(root, &parked) {
         return Err(RemoveError::Outside(parked));

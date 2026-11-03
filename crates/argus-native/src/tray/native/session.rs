@@ -1,4 +1,5 @@
 //! The live tray icon: its state, its menu, and what the owner's clicks and the request files ask.
+// test-tag: critical
 
 use std::process;
 use std::sync::Arc;
@@ -32,16 +33,16 @@ static NEXT_ICON_ID: AtomicU32 = AtomicU32::new(1);
 /// How many values of the counter one icon takes.
 const IDS_PER_ICON: u32 = 2;
 
-/// The two icons in the ink of the taskbar they were made for.
+/// The two icons in the ink of the taskbar and the pixel size of the icon slot they were made for.
 struct Icons {
     ink: Ink,
+    size: u32,
     running: Icon,
     stopped: Icon,
 }
 
 impl Icons {
-    fn load(ink: Ink) -> Result<Self, TrayError> {
-        let size = win32::small_icon_px();
+    fn load(ink: Ink, size: u32) -> Result<Self, TrayError> {
         let make = |kind| {
             let image = render(kind, ink, size)?;
             Icon::from_rgba(image.pixels, image.width, image.height)
@@ -49,6 +50,7 @@ impl Icons {
         };
         Ok(Self {
             ink,
+            size,
             running: make(IconKind::Running)?,
             stopped: make(IconKind::Stopped)?,
         })
@@ -81,7 +83,7 @@ impl Session {
     pub fn start(files: TrayFiles, handlers: Arc<Handlers>) -> Result<Self, TrayError> {
         win32::allow_dark_menus();
         let instance = InstanceGuard::acquire(&files.instance_name())?;
-        let icons = Icons::load(taskbar::ink())?;
+        let icons = Icons::load(taskbar::ink(), win32::small_icon_px(win32::dpi(None)))?;
         let state = TrayState::default();
         let menu = view::build(&entries(&state))?;
         let icon_id = NEXT_ICON_ID.fetch_add(IDS_PER_ICON, Ordering::Relaxed) + 1;
@@ -152,13 +154,16 @@ impl Session {
         }
     }
 
-    /// Draws the icon again in the other ink when the owner switched the taskbar theme.
+    /// Draws the icon again when the owner switched the taskbar theme (the other ink) or the
+    /// scale of the screen changed, or the tray moved to a screen of another scale (the size of
+    /// the icon slot): the exact size is drawn, never a stretched one.
     fn follow_taskbar(&mut self) {
         let ink = taskbar::ink();
-        if ink == self.icons.ink {
+        let size = win32::small_icon_px(win32::dpi(Some(self.tray.window_handle())));
+        if ink == self.icons.ink && size == self.icons.size {
             return;
         }
-        match Icons::load(ink) {
+        match Icons::load(ink, size) {
             Ok(icons) => self.icons = icons,
             Err(error) => return self.log.line(&error.to_string()),
         }

@@ -1,4 +1,5 @@
 //! Every reason a wake row can carry, and which of them close the coalescing window at once.
+//! Which of them wake a thread at all is the table of [`crate::wake_policy`].
 
 /// The scope of the portfolio page.
 pub const PORTFOLIO: &str = "_portfolio";
@@ -7,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 24] = [
+pub const WAKE_REASONS: [&str; 37] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -20,8 +21,11 @@ pub const WAKE_REASONS: [&str; 24] = [
     "portfolio-decision",
     "portfolio-note",
     "lead-message",
+    "lead-info",
     "thread-message",
     "wake-fault",
+    "fault-open",
+    "open-resend",
     "agent-stale",
     "agent-checkin",
     "run-failed",
@@ -29,13 +33,24 @@ pub const WAKE_REASONS: [&str; 24] = [
     "agent-idle",
     "kanban-stale",
     "process-alert",
+    "process-reaped",
     "worktree-stale",
+    "worktree-review",
     "launcher-stale",
     "launcher-master-missing",
+    "remote-sync-due",
+    "dep-request",
+    "dep-resolved",
+    "dep-blocked",
+    "dep-cancelled",
+    "dep-reopened",
+    "ack-nudge",
+    "stall",
 ];
 
-/// What the owner is waiting on, and a fault for the Overlord: these close the window at once.
-pub const IMMEDIATE_REASONS: [&str; 9] = [
+/// What the owner is waiting on, a fault or a stall for the Overlord, a wake sent again because nobody read
+/// it, and a finished or blocked dependency: these close the window at once.
+pub const IMMEDIATE_REASONS: [&str; 14] = [
     "owner-answer",
     "owner-note",
     "owner-decision",
@@ -44,11 +59,17 @@ pub const IMMEDIATE_REASONS: [&str; 9] = [
     "portfolio-decision",
     "portfolio-note",
     "wake-fault",
+    "fault-open",
     "run-failed",
+    "dep-resolved",
+    "dep-blocked",
+    "ack-nudge",
+    "stall",
 ];
 
 /// The reasons the wakes route accepts from outside the policy.
-pub const EXTERNAL_REASONS: [&str; 3] = ["lead-message", "thread-message", "wake-fault"];
+pub const EXTERNAL_REASONS: [&str; 4] =
+    ["lead-message", "lead-info", "thread-message", "wake-fault"];
 
 /// Does this reason close the window at once?
 #[must_use]

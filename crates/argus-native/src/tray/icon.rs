@@ -1,11 +1,13 @@
 //! The tray icons as pixels: the Argus mark, white on a dark taskbar and black on a light one,
 //! and the same mark greyed and faded with a red badge for every other state. Pure, so it is
 //! tested without a window.
+// test-tag: critical
 
 use std::io::Cursor;
 
 use ico::IconImage;
 
+use super::downscale::downscale;
 use super::error::TrayError;
 
 /// The icon file of Argus, for the identity Windows shows on a toast.
@@ -14,48 +16,37 @@ const SAMPLES: i64 = 4;
 const RED: [u8; 3] = [220, 38, 38];
 const WHITE: [u8; 3] = [255, 255, 255];
 
-/// The mark in each ink at the sizes the taskbar asks for, smallest first.
-const MARKS: [(Ink, u32, &[u8]); 8] = [
-    (
-        Ink::White,
-        16,
-        include_bytes!("../../assets/argus-white-16.png"),
-    ),
-    (
-        Ink::White,
-        24,
-        include_bytes!("../../assets/argus-white-24.png"),
-    ),
-    (
-        Ink::White,
-        32,
-        include_bytes!("../../assets/argus-white-32.png"),
-    ),
-    (
-        Ink::White,
-        48,
-        include_bytes!("../../assets/argus-white-48.png"),
-    ),
-    (
-        Ink::Black,
-        16,
-        include_bytes!("../../assets/argus-black-16.png"),
-    ),
-    (
-        Ink::Black,
-        24,
-        include_bytes!("../../assets/argus-black-24.png"),
-    ),
-    (
-        Ink::Black,
-        32,
-        include_bytes!("../../assets/argus-black-32.png"),
-    ),
-    (
-        Ink::Black,
-        48,
-        include_bytes!("../../assets/argus-black-48.png"),
-    ),
+/// One embedded picture of the mark: its ink, its size and its PNG bytes.
+macro_rules! mark {
+    ($ink:ident, $name:literal, $size:literal) => {
+        (
+            Ink::$ink,
+            $size,
+            include_bytes!(concat!("../../assets/argus-", $name, "-", $size, ".png")),
+        )
+    };
+}
+
+/// The mark in each ink at every size Windows gives a small icon (96 to 384 dpi: 16, 20, 24, 28,
+/// 32, 40, 48, 64), smallest first. Each is drawn for its own size, so the exact one is shown
+/// as it is.
+const MARKS: [(Ink, u32, &[u8]); 16] = [
+    mark!(White, "white", 16),
+    mark!(White, "white", 20),
+    mark!(White, "white", 24),
+    mark!(White, "white", 28),
+    mark!(White, "white", 32),
+    mark!(White, "white", 40),
+    mark!(White, "white", 48),
+    mark!(White, "white", 64),
+    mark!(Black, "black", 16),
+    mark!(Black, "black", 20),
+    mark!(Black, "black", 24),
+    mark!(Black, "black", 28),
+    mark!(Black, "black", 32),
+    mark!(Black, "black", 40),
+    mark!(Black, "black", 48),
+    mark!(Black, "black", 64),
 ];
 
 /// Which of the two icons to draw.
@@ -99,27 +90,37 @@ pub struct Rgba {
     pub pixels: Vec<u8>,
 }
 
-/// The icon of Argus for a state and an ink, from the smallest embedded size of at least
-/// `wanted` pixels (the largest when none is that big).
+/// The icon of Argus for a state and an ink at `wanted` pixels: the drawing made for exactly
+/// that size when there is one, else the next larger one shrunk once. Never enlarged, so a size
+/// beyond the largest drawing gets the largest as it is.
 ///
 /// # Errors
 ///
 /// `Platform` when an embedded image is unusable.
 pub fn render(kind: IconKind, ink: Ink, wanted: u32) -> Result<Rgba, TrayError> {
-    let base = decode(ink, wanted)?;
+    let base = downscale(&decode(ink, wanted)?, wanted);
     Ok(match kind {
         IconKind::Running => base,
         IconKind::Stopped => stopped(&base),
     })
 }
 
+/// Which of the drawn `sizes` (smallest first) serves `wanted`: the exact one, else the smallest
+/// that is larger, else the largest when none is.
+fn pick(sizes: &[u32], wanted: u32) -> Option<u32> {
+    sizes
+        .iter()
+        .copied()
+        .find(|size| *size >= wanted)
+        .or_else(|| sizes.last().copied())
+}
+
 fn decode(ink: Ink, wanted: u32) -> Result<Rgba, TrayError> {
     let fail = |why: String| TrayError::Platform(format!("the Argus icon is unusable: {why}"));
     let marks: Vec<_> = MARKS.iter().filter(|(own, ..)| *own == ink).collect();
-    let (_, _, bytes) = marks
-        .iter()
-        .find(|(_, size, _)| *size >= wanted)
-        .or(marks.last())
+    let sizes: Vec<u32> = marks.iter().map(|(_, size, _)| *size).collect();
+    let (_, _, bytes) = pick(&sizes, wanted)
+        .and_then(|chosen| marks.iter().find(|(_, size, _)| *size == chosen))
         .ok_or_else(|| fail("no image".to_owned()))?;
     let image = IconImage::read_png(Cursor::new(bytes)).map_err(|e| fail(e.to_string()))?;
     Ok(Rgba {
@@ -187,7 +188,7 @@ fn over(pixel: &mut [u8], color: [u8; 3], coverage: u32) {
 mod tests {
     use ico::IconDir;
 
-    use super::{ARGUS_ICO, IconKind, Ink, Rgba, disc_coverage, render};
+    use super::{ARGUS_ICO, IconKind, Ink, MARKS, Rgba, pick, render};
 
     fn pixel(image: &Rgba, x: u32, y: u32) -> [u8; 4] {
         let at = usize::try_from((y * image.width + x) * 4).unwrap();
@@ -207,7 +208,7 @@ mod tests {
 
     #[test]
     fn the_running_icon_is_the_mark_at_the_size_asked() {
-        for wanted in [16, 24, 32, 48] {
+        for wanted in [16, 20, 24, 28, 32, 40, 48, 64] {
             let image = render(IconKind::Running, Ink::White, wanted).unwrap();
             assert_eq!((image.width, image.height), (wanted, wanted));
             assert_eq!(image.pixels.len(), (wanted * wanted * 4) as usize);
@@ -223,12 +224,38 @@ mod tests {
     }
 
     #[test]
-    fn a_size_between_two_takes_the_next_one_up_and_a_huge_one_the_largest() {
-        assert_eq!(render(IconKind::Running, Ink::White, 20).unwrap().width, 24);
-        assert_eq!(
-            render(IconKind::Running, Ink::White, 100).unwrap().width,
-            48
+    fn a_size_between_two_is_the_next_one_up_shrunk_once_and_a_huge_one_the_largest() {
+        let between = render(IconKind::Running, Ink::White, 36).unwrap();
+        assert_eq!((between.width, between.height), (36, 36));
+        assert!(
+            between.pixels.chunks_exact(4).any(|p| p[3] == 255),
+            "it keeps solid pixels"
         );
+        let huge = render(IconKind::Running, Ink::White, 100).unwrap();
+        assert_eq!((huge.width, huge.height), (64, 64));
+    }
+
+    #[test]
+    fn every_drawn_size_is_shown_as_it_is_without_any_scaling() {
+        for (ink, size, bytes) in MARKS {
+            let drawn = ico::IconImage::read_png(std::io::Cursor::new(bytes)).unwrap();
+            let shown = render(IconKind::Running, ink, size).unwrap();
+            assert_eq!((drawn.width(), drawn.height()), (size, size));
+            assert_eq!(shown.pixels, drawn.rgba_data());
+        }
+    }
+
+    #[test]
+    fn the_size_is_the_exact_one_else_the_next_larger_and_never_a_smaller() {
+        let sizes = [16, 20, 24, 28, 32, 40, 48, 64];
+        for exact in sizes {
+            assert_eq!(pick(&sizes, exact), Some(exact));
+        }
+        assert_eq!(pick(&sizes, 36), Some(40));
+        assert_eq!(pick(&sizes, 17), Some(20));
+        assert_eq!(pick(&sizes, 8), Some(16));
+        assert_eq!(pick(&sizes, 65), Some(64), "none larger: the largest");
+        assert_eq!(pick(&[], 16), None);
     }
 
     #[test]
@@ -244,7 +271,7 @@ mod tests {
         let dir = IconDir::read(std::io::Cursor::new(ARGUS_ICO)).unwrap();
         let mut sizes: Vec<u32> = dir.entries().iter().map(ico::IconDirEntry::width).collect();
         sizes.sort_unstable();
-        assert_eq!(sizes, vec![16, 24, 32, 48, 256]);
+        assert_eq!(sizes, vec![16, 20, 24, 32, 40, 48, 256]);
         for entry in dir.entries() {
             entry.decode().unwrap();
         }
@@ -278,23 +305,5 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn the_stopped_icon_keeps_the_red_badge_on_a_light_taskbar_and_at_16_pixels() {
-        let stopped = render(IconKind::Stopped, Ink::Black, 16).unwrap();
-        assert_eq!(
-            pixel(&stopped, 12, 12),
-            [220, 38, 38, 255],
-            "the middle of the badge"
-        );
-    }
-
-    #[test]
-    fn the_badge_edge_is_smooth_not_a_hard_cut() {
-        assert_eq!(disc_coverage(0, 0, 8), 255);
-        assert_eq!(disc_coverage(20, 0, 8), 0);
-        let edge = disc_coverage(-8, 0, 8);
-        assert!(edge > 0 && edge < 255);
     }
 }

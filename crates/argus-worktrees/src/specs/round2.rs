@@ -1,5 +1,8 @@
+//! KEEP: K3, K4.
 //! Worktree safety round 2 (Node 62e66c7): a prune forgets only vetted records, a merged pull request needs its head, a
 //! nested repository is unsafe and copied into the backup, and a git status that failed is unknown, never clean.
+
+// test-tag: standard
 
 use crate::board::Caller;
 use crate::error::{ErrorCode, WtError};

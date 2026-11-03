@@ -2,16 +2,21 @@
 import { BrandMark, Flex, Stack, Text } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../data/agents';
 import { useCollection } from '../../../data/react';
-import { ProjectSwitcher } from '../../../shell';
+import { useRemoteSyncs } from '../../../data/remote';
+import { ProjectSwitcher, SyncStamp } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
-import { findLead } from '../tabs/agents';
+import { findLead } from '../tabs/agents/model';
+import { BoardNotices } from './sub-components/BoardNotices';
+import { BoardStalls } from './sub-components/BoardStalls';
 import { BoardStamp } from './sub-components/BoardStamp';
+import { BoardWorktrees } from './sub-components/BoardWorktrees';
 import { LeadStatus } from './sub-components/LeadStatus';
 import './BoardHeader.css';
 
 const BoardHeader = (props: BoardHeaderProps) => {
   const { boardKey, name, status, updatedAt, tools } = props;
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
+  const syncs = useRemoteSyncs();
   return (
     <Flex as="header" className="board-header" wrap align="center">
       <Flex className="board-header__brand" align="center" gap="sm">
@@ -24,6 +29,10 @@ const BoardHeader = (props: BoardHeaderProps) => {
       <Flex className="board-header__status" wrap align="center">
         <LeadStatus lead={findLead(threads.docs)} />
         <BoardStamp status={status} updatedAt={updatedAt} />
+        <BoardWorktrees boardKey={boardKey} />
+        <BoardNotices boardKey={boardKey} />
+        <BoardStalls boardKey={boardKey} />
+        {syncs ? <SyncStamp sync={syncs[boardKey] ?? null} /> : null}
       </Flex>
       <Flex className="board-header__tools" gap="xs" align="center">
         <ProjectSwitcher current={boardKey} />

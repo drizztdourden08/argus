@@ -1,17 +1,18 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
-import { jobText, leftoverFlags, STATUS_LABEL, STATUS_LOOK, statusTip, UNKNOWN_STATUS_LOOK, WARNING_LOOK } from '../model';
+import { hygieneTag, jobText, leftoverFlags, STATUS_LABEL, STATUS_LOOK, statusShown, statusTip, UNKNOWN_STATUS_LOOK, WARNING_LOOK } from '../model';
 import type { CellProps } from '../worktrees.type';
+import { RowFlagTags } from './RowFlagTags';
 
 const StatusCell = (props: CellProps) => {
   const { row } = props;
+  const hygiene = row.hygiene ? hygieneTag(row.hygiene) : null;
   return (
     <Flex direction="column" gap="2xs">
       <Flex gap="xs" align="center" wrap>
-        <Tag {...(STATUS_LOOK[row.status] ?? UNKNOWN_STATUS_LOOK)} title={statusTip(row)}>{STATUS_LABEL[row.status] ?? row.status}</Tag>
-        {row.main && <Tag title="The repository's own checkout, not a linked worktree">main</Tag>}
-        {row.locked && <Tag title={`Locked: ${String(row.locked)}`}>locked</Tag>}
-        {row.detached && <Tag title="HEAD is detached">detached</Tag>}
+        {statusShown(row) && <Tag {...(STATUS_LOOK[row.status] ?? UNKNOWN_STATUS_LOOK)} title={statusTip(row)}>{STATUS_LABEL[row.status] ?? row.status}</Tag>}
+        <RowFlagTags {...props} />
+        {hygiene && <Tag {...hygiene.look} fill="tint" edge={hygiene.edge} title={hygiene.tip}>{hygiene.text}</Tag>}
         {leftoverFlags(row).map((flag) => <Tag key={flag.text} {...WARNING_LOOK} title={flag.tip}>{flag.text}</Tag>)}
       </Flex>
       {row.job && <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text>}

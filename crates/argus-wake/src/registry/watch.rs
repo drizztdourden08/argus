@@ -9,13 +9,11 @@ use crate::engine::ListenerInfo;
 use crate::faults::{ClearFault, Fault};
 use crate::time::{iso, parse_ms};
 
-/// A turn this recent counts as running.
-const BUSY_MS: i64 = 3 * 60 * 1000;
 /// The faults that end by themselves once the thread listens again. A `no-reaction` fault does not:
 /// its wake was delivered to a listener and the thread stayed silent.
 const LISTEN_CLEARS: [&str; 2] = ["not-listening", "no-listener"];
 
-type Open = HashMap<Key, Fault>;
+pub(super) type Open = HashMap<Key, Fault>;
 
 /// The listener that covers a thread: its own, or the `*` one for the project's coordinator.
 pub(super) fn listener_of<'a>(
@@ -31,18 +29,17 @@ pub(super) fn listener_of<'a>(
 }
 
 /// What one pass over a thread needs.
-struct Watch<'a> {
-    scope: &'a str,
-    id: &'a str,
-    thread: &'a ThreadView,
+pub(super) struct Watch<'a> {
+    pub(super) scope: &'a str,
+    pub(super) id: &'a str,
+    pub(super) thread: &'a ThreadView,
     listener: Option<&'a ListenerInfo>,
     warm: bool,
 }
 
 impl Registry {
     pub(super) fn in_turn(&self, thread: &ThreadView) -> bool {
-        let seen = parse_ms(thread.last_seen.as_str()).unwrap_or(0);
-        thread.activity.is("working") && self.now() - seen <= BUSY_MS
+        thread.in_turn(self.now())
     }
 
     pub(super) fn heartbeat(&self, thread: &ThreadView) -> bool {
@@ -94,6 +91,7 @@ impl Registry {
             };
             changed |= self.check_listening(env, &watch, open);
             changed |= self.check_board_open(env, &watch, open);
+            changed |= self.check_life(&watch, open);
         }
         changed
     }
@@ -182,7 +180,7 @@ impl Registry {
         true
     }
 
-    fn clear_by_registry(&mut self, w: &Watch<'_>, note: &str) {
+    pub(super) fn clear_by_registry(&mut self, w: &Watch<'_>, note: &str) {
         let request = ClearFault {
             scope: w.scope.to_owned(),
             thread: w.id.to_owned(),

@@ -30,6 +30,8 @@ pub struct RemoveInput {
     pub confirm_young: bool,
     /// A leftover: delete only folders untouched for this many days.
     pub older_than_days: Option<f64>,
+    /// A leftover: a folder with no file in it goes whatever its age (the hygiene's released request).
+    pub(crate) empty_goes: bool,
     pub(crate) prune: bool,
     pub(crate) job: Option<String>,
 }
@@ -49,6 +51,7 @@ impl RemoveInput {
             newest_at_ms: None,
             confirm_young: false,
             older_than_days: None,
+            empty_goes: false,
             prune: false,
             job: None,
         }
@@ -152,6 +155,7 @@ impl RemoveOutcome {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Tabs } from '@drizztdourden08/tessera';
+import { Suspense } from 'react';
 import { usePortfolio } from '../../data/react';
-import { PageFrame, StatusNotice, useHashTab } from '../../shell';
+import { LoadingFallback, PageFrame, StatusNotice, useHashTab } from '../../shell';
 import { useTabBadges } from './behavior/useTabBadges';
 import { OVERVIEW_TAB_IDS, OVERVIEW_TABS } from './overview.constants';
 import { OverviewHeader } from './sub-components/OverviewHeader';
@@ -17,7 +18,9 @@ const OverviewPage = () => {
       <OverviewHeader cards={cards} />
       <StatusNotice status={status} />
       <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero={false} size="lg" selectedTone="neutral" badgeFill="solid" />
-      <TabBody tab={tab} cards={cards} status={status} badges={badges} />
+      <Suspense fallback={<LoadingFallback />}>
+        <TabBody tab={tab} cards={cards} status={status} badges={badges} />
+      </Suspense>
     </PageFrame>
   );
 };

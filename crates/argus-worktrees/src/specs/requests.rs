@@ -1,3 +1,4 @@
+//! KEEP: K3, K4.
 //! Removal requests (Node `c81fa17`, `worktrees.requests.test.mjs`) on real throwaway repositories: a lead whose own
 //! session refuses `coord worktree remove` asks, and the worker removes through the SAME removal. First the guards
 //! (a request has no extra power: uncommitted work and unmerged detached commits are refused with the removal's own
@@ -5,9 +6,10 @@
 //! the page is refused, a restart goes on with what was queued), then the happy paths (named targets with a branch,
 //! `finished`, all leftovers) with the inbox note, the wake, the activity line and the summary of the project.
 
+// test-tag: standard
+
 use crate::board::{Caller, OwnerEntry};
-use crate::clock::Clock;
-use crate::clock::SystemClock;
+use crate::clock::{Clock, SystemClock};
 use crate::error::ErrorCode;
 use crate::jobs::JobState;
 use crate::paths::worktree_id;
@@ -15,6 +17,7 @@ use crate::request::RemoveInput;
 use crate::requests::{
     KEPT, Mode, Queued, RequestInput, RequestRec, RequestStatus, requests_key, summary_text,
 };
+use crate::specs::request_kit::{add_beta_scanned, beta_request_done, until};
 use crate::sync::locked;
 use crate::testkit::{
     Fixture, Gate, Harness, RemoveMode, backdate, backdate_index, branches, commit, exists_itself,
@@ -22,7 +25,6 @@ use crate::testkit::{
 };
 use serde_json::{Value, json};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
 fn lead() -> Caller {
     Caller::Thread("lead".into())
@@ -834,42 +836,26 @@ fn plain_finished_is_unchanged_by_the_idle_worktrees_and_the_shape_of_idle_is_ch
     );
 }
 
-/// Waits up to a minute for `done`.
-fn within_a_minute(what: &str, done: impl Fn() -> bool) {
-    let deadline = Instant::now() + Duration::from_secs(60);
-    while !done() {
-        assert!(Instant::now() < deadline, "{what}");
-        std::thread::sleep(Duration::from_millis(20));
-    }
-}
-
 /// The live bug of 2026-10-29: Brock's 88 leftovers (10 minutes each) held Tessera's request for hours. Each project has
-/// its own worker now: while alpha's deletion is held, beta's request by path (beta was never scanned) is done.
+/// its own worker now: while alpha's deletion is held, beta's request by path is done. Beta is scanned first, before
+/// alpha renames anything: its first scan would otherwise adopt the folder alpha is deleting and delete it a second time.
 #[test]
 fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another() {
     let (fx, h) = world();
     let slow = leftover_of(&fx, "left-slow", 3.0);
     h.scan();
+    add_beta_scanned(&h);
     let gate = Arc::new(Gate::default());
     *locked(&h.fs.gate) = Some(gate.clone());
     *locked(&h.fs.gate_on) = Some("left-slow".to_string());
     let held = ask_lead(&h, &[&slow]);
-    within_a_minute("alpha's deletion is running", || {
+    until(|| {
         h.svc
             .jobs("alpha")
             .iter()
             .any(|j| j.state == JobState::Running)
     });
-    locked(&h.store.projects).push("beta".to_string());
-    let mut input = RequestInput::new("beta", lead());
-    input.targets = vec![fx.path("old-merged")];
-    h.svc.request(&input).unwrap();
-    within_a_minute("beta's request is done while alpha's waits", || {
-        h.svc
-            .request_list("beta")
-            .first()
-            .is_some_and(|r| r.status == RequestStatus::Done)
-    });
+    beta_request_done(&h, fx.path("old-merged"));
     assert!(!exists_itself(&fx.path("old-merged")));
     assert_eq!(
         h.svc.request_list("alpha")[0].status,

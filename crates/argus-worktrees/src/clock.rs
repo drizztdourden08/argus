@@ -24,6 +24,7 @@ pub fn stamp_from_ms(ms: i64) -> String {
         .collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

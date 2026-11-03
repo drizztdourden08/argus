@@ -1,16 +1,24 @@
 //! The part of a project board the wake logic reads, parsed tolerantly from the board JSON.
 
+use std::sync::Arc;
+
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::de::Error as _;
+use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 
+use crate::dep_wakes::{DepView, RequestedBy, WaitsOn};
 use crate::lenient::{self, Flag, Num, Text};
+use crate::time::parse_ms;
 
 /// Statuses of a thread that has ended.
 pub const ENDED: [&str; 2] = ["done", "archived"];
 
 /// Statuses of a sub-agent that is still running.
 pub const LIVE_AGENT: [&str; 3] = ["working", "waiting", "stop-requested"];
+
+/// A turn this recent counts as running.
+const BUSY_MS: i64 = 3 * 60 * 1000;
 
 /// The fields every board record shares.
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -38,6 +46,12 @@ impl Record {
     pub fn is_live(&self) -> bool {
         self.deleted_at.some().is_none() && self.archived_at.some().is_none()
     }
+
+    /// Is it a live record of this item?
+    #[must_use]
+    pub fn is_live_on(&self, item_id: &str) -> bool {
+        self.item.is(item_id) && self.is_live()
+    }
 }
 
 /// A thread of the project.
@@ -56,6 +70,8 @@ pub struct ThreadView {
     pub session: Text,
     /// The last sign of life (ISO).
     pub last_seen: Text,
+    /// When the thread registered on the board (ISO).
+    pub registered_at: Text,
     /// `working` or `idle`.
     pub activity: Text,
 }
@@ -72,6 +88,13 @@ impl ThreadView {
     pub fn is_live(&self) -> bool {
         !self.is_ended() && !self.placeholder.on()
     }
+
+    /// Is a turn running at `now` (epoch ms): it works and showed a sign of life in the last 3 minutes?
+    #[must_use]
+    pub fn in_turn(&self, now: i64) -> bool {
+        let seen = parse_ms(self.last_seen.as_str()).unwrap_or(0);
+        self.activity.is("working") && now - seen <= BUSY_MS
+    }
 }
 
 /// A work item.
@@ -87,6 +110,14 @@ pub struct ItemView {
     pub thread: Text,
     /// `todo`, `doing`, `review`, `done`, `dropped`.
     pub status: Text,
+    /// The requests to other boards this item waits on, one per dependency.
+    #[serde(deserialize_with = "lenient::one_or_many")]
+    pub waits_on: Vec<WaitsOn>,
+    /// The requests of other boards this item answers, one per dependency.
+    #[serde(deserialize_with = "lenient::one_or_many")]
+    pub requested_by: Vec<RequestedBy>,
+    /// What the item is blocked on, in words; absent when nothing blocks it.
+    pub blocker: Text,
 }
 
 /// A test of a bundle.
@@ -272,7 +303,7 @@ pub struct InboxMessage {
 
 /// A project board, as far as the wakes care.
 #[derive(Debug, Clone, Default, Deserialize)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(remote = "Self", default, rename_all = "camelCase")]
 pub struct BoardView {
     /// The threads by id.
     #[serde(deserialize_with = "lenient::map")]
@@ -297,9 +328,30 @@ pub struct BoardView {
     pub entries: IndexMap<String, EntryView>,
     /// The bundle handed to the owner.
     pub handed_build: Text,
+    /// The dependency ledger (only the portfolio board holds one).
+    #[serde(deserialize_with = "lenient::map")]
+    pub deps: IndexMap<String, DepView>,
+    /// The board JSON these views were read from, for the blocked rule that `argus-board` shares.
+    #[serde(skip)]
+    raw: Arc<Value>,
+}
+
+impl<'de> Deserialize<'de> for BoardView {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = Value::deserialize(deserializer)?;
+        let mut view = BoardView::deserialize(&raw).map_err(D::Error::custom)?;
+        view.raw = Arc::new(raw);
+        Ok(view)
+    }
 }
 
 impl BoardView {
+    /// The board JSON the view was parsed from.
+    #[must_use]
+    pub fn json(&self) -> &Value {
+        &self.raw
+    }
+
     /// A board parsed from its JSON; anything unreadable reads as empty.
     #[must_use]
     pub fn from_json(value: Value) -> Self {

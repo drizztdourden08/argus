@@ -388,29 +388,27 @@ this section, this section is true.
 
 ### Still open after the close-out
 
-Needs Tessera:
+Closed with Tessera 0.96 (spec now ^0.96.0), items 156 to 160, 142 and the card name:
 
-- The items 156 to 160 below. Tessera 0.87 closed the FoldText hug, the Kanban toolbar container,
-  the TrackTable `hideBelow` steps, the Drawer tools in the id and tag row and the argus mark
-  in `currentColor` (items 161 to 165).
-- 156: Node draws bundle names (Tests tab heads and group heads) in the title font (Chakra Petch) at the
-  body size (14px, 600). Text variant title is the large step (about 17px) and no prop sets the family
-  at the body size, so Argus keeps mono 14px.
-- 157: a quiet grey button (grey text, subtle border, a lifted fill: Node Copy and Unhand) does not
-  exist (tertiary is a white outline, secondary the palette green), a solid neutral Tag (Node "handed to
-  you" is a filled light grey chip, Argus an outlined dark one), and outlined tinted status chips (Node
-  "ready", "active" and the kept dashed chip draw a coloured border with the tint; Status pill has
-  no border).
-- 158: a boxed Checkbox (Node draws "needs you", "conflict" and "archived" as small bordered
-  boxes with the checkbox inside) and a SegmentedControl size between sm and md (Node segments are 13px
-  and 28px, Argus sm is 12px and 22px with almost no padding, Group by and Order).
-- 159: DataTable draws vertical rules between header cells and a "KILL" header on the Processes table,
-  Node has neither; the Processes needs-a-look edge is grey on the basic palette, Node draws it amber
-  (rowState edge has no tone).
-- 160: the sign of item 138 in text that goes through a Tessera prop (tags, table cells, InlineEdit
-  displays other than the item title): a `smartTimes` on Text and Tag, or an Inter build whose `calt`
-  has the rule. Checked against 0.85 and 0.86: `smartTimes` exists only on Markdown (0.84), no
-  Text, Tag, FoldText or TextInput option came with them, so it stays open.
+- 156: fixed: bundle names (the Tests bundle heads, the closed bundle heads and the group heads)
+  are Text `font="title"` (Chakra Petch 600) at the body size, 14px, as Node. They were mono 14px.
+- 157: fixed: Copy (Builds and Tests launch command) and Unhand are Button `variant="quiet"`.
+  "handed to you" is a Tag `fill="solid"` (neutral grey) in the bundle tags, the test facts, the
+  item drawer build chip and the feed test line. "ready" (Tests and Builds), the lead "active" and
+  "paused" chips and the worktree hygiene chips are Tag `fill="tint"`. The kept chip is a neutral
+  tinted Tag with `edge="dashed"` (Tessera Tag edge), the dashed grey chip of Node.
+- 158: fixed: "needs you", "conflict" and "archived" (Kanban and Tests filter rows) are Checkbox
+  `boxed`. Group by and Order are SegmentedControl `size="sm-plus"` (28px segments, 13px), Kanban
+  and Tests.
+- 159: fixed: the Processes table takes `headerRules={false}` (no vertical header rules) and
+  `rowTone` (warning, an amber left bar on needs-a-look rows); `rowState` and its helper are gone.
+- 160: fixed: Text and FoldText carry `smartTimes` where free text reaches them: item, test
+  and bundle titles in Text, the Worktrees subject in FoldText. Branch names and paths keep the
+  letter x on purpose. Still open: text that is not a Tessera child (a `title` attribute, the
+  InlineEdit display) keeps the `format/` helper.
+- 142: fixed: the Worktrees path cell is FoldText `truncate="path"` (first folder and the file
+  name kept, the middle cut).
+- Overview card name: fixed: Text `variant="title" size="lead"`, 15px as Node.
 
 Other (decision for the lead):
 
@@ -418,11 +416,13 @@ Other (decision for the lead):
   page does not have. Node never renders the reconciler report in the board page (`/api/agents/reconcile`
   is read by the CLI only). It is the one Argus-only block left on a board; it is kept, since removing
   a built feature is not a parity call to make alone.
-- Small size gaps: process rule chips and the Processes rule column are 14px, Node 13px; the overview
-  project card name is 16px, Node 15px; the master label on the card is not bold mono. Row heights on
-  Activity (30px for a one line event, Node 34px) differ by 4px.
-- The live run elapsed text of an Agents run row uses the Tessera elapsed text, Node counts "1m 05s"
-  every second; no live run was on screen in the sweep to compare.
+- Small size gaps, fixed: the process rule chips (name, count and memory) and the Processes rule
+  column are now 13px (Text `size="md"`), as Node. The master label on the overview card is bold
+  mono (600) as Node and now takes the dim tone. Activity one line event rows are 34px as Node (row
+  padding is the 6px size token, was the 4px space step).
+- Live run elapsed text, fixed: an Agents run row now shows the Node text ("42s", "1m 05s", "1h 02m")
+  and ticks every second while a run is live. It uses the shared `useNow` hook with a one second
+  tick (`SECOND_TICK_MS`) and the same `runSpan` formatter as a finished run.
 
 ### Data differences, re-checked
 

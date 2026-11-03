@@ -70,7 +70,32 @@ interface Worktree {
   request?: WorktreeAsk | null;
   leftover?: LeftoverFacts | null;
   job?: WorktreeJob | null;
+  hygiene?: WorktreeHygiene | null;
   error?: string | null;
+}
+
+interface WorktreeHygiene {
+  state: string;
+  why?: string | null;
+  agent?: string | null;
+  thread?: string | null;
+  since?: string | null;
+  goesAt?: string | null;
+}
+
+interface RemovedWorktree {
+  id: string;
+  path: string;
+  branch?: string | null;
+  thread?: string | null;
+  at: string;
+  text: string;
+}
+
+interface HygieneMeta {
+  on: boolean;
+  graceMs: number;
+  removed: RemovedWorktree[];
 }
 
 interface WorktreeRule {
@@ -122,12 +147,24 @@ interface WorktreesMeta {
   name?: string | null;
   scannedAt?: string | null;
   staleDays?: number;
+  listed?: number | null;
+  runningAgents?: number | null;
   gone?: number;
   tooMany?: boolean;
   rules?: WorktreeRule[];
   leftoverOld?: LeftoverOld | null;
   jobs?: BatchJob[];
   requests?: WorktreeRequest[];
+  hygiene?: HygieneMeta | null;
+}
+
+interface WorktreeCounter {
+  listed: number;
+  running: number;
+}
+
+interface PortfolioWorktrees {
+  counts?: Record<string, WorktreeCounter>;
 }
 
 interface WorktreeAskInput {
@@ -181,6 +218,6 @@ interface BatchResult {
 }
 
 export type {
-  BackupInfo, BatchJob, BatchResult, LeftoverInput, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeJob, WorktreeRequest,
-  WorktreeRule, WorktreesMeta,
+  BackupInfo, BatchJob, BatchResult, LeftoverInput, PortfolioWorktrees, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeHygiene,
+  WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };

@@ -3,6 +3,7 @@
 use argus_board::Board;
 use argus_board::store::read_board;
 use argus_core::ApiError;
+use argus_core::clock::{now_ms, parse_ms};
 use argus_wake::external::external_wake;
 use argus_wake::service::driver::lock;
 use serde_json::{json, to_value};
@@ -15,6 +16,8 @@ use crate::routes::blocking::blocking;
 use crate::routes::params::key;
 
 const DEFAULT_LIMIT: usize = 50;
+/// The notices route looks back at most this far.
+const NOTICE_WINDOW_MS: i64 = 24 * 3_600_000;
 
 /// The `limit` query as `Number()` and `Number.isInteger` read it: anything that is not a whole
 /// number is the default, and the rest is held between 1 and 200.
@@ -38,6 +41,22 @@ pub(super) async fn wakes(ctx: Ctx) -> Reply {
         200,
         &json!({ "wakes": to_value(docs).unwrap_or_default() }),
     ))
+}
+
+/// The passive notices of a thread (`*`: every thread) since `since`, at most a day back: the
+/// digest the prompt hook prints.
+pub(super) async fn notices(ctx: Ctx) -> Reply {
+    let wake = service(&ctx)?;
+    let scope = key(&ctx)?;
+    let thread = thread(&ctx)?;
+    let floor = now_ms() - NOTICE_WINDOW_MS;
+    let since = ctx
+        .query("since")
+        .and_then(parse_ms)
+        .map_or(floor, |ms| ms.max(floor));
+    let digest = blocking(move || lock(&wake).notices(&scope, &thread, since)).await?;
+    let digest = digest.map_err(|_| ApiError::internal())?;
+    Ok(json_reply(200, &to_value(digest).unwrap_or_default()))
 }
 
 pub(super) async fn listeners(ctx: Ctx) -> Reply {

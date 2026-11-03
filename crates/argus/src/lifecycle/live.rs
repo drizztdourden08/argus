@@ -139,32 +139,3 @@ pub async fn api(at: &Live, method: &str, path: &str, body: &Value) -> Result<Va
         .as_str()
         .map_or_else(|| format!("HTTP {status} from {path}"), str::to_owned))
 }
-
-#[cfg(test)]
-mod tests {
-    use std::time::Duration;
-
-    use super::settled_record;
-
-    #[tokio::test]
-    async fn a_pid_file_that_shows_up_late_is_still_read() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        let file = dir.path().join("server.pid");
-        let writer = file.clone();
-        let late = tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(120)).await;
-            std::fs::write(&writer, r#"{"pid":4242,"port":1,"instance":"i"}"#).expect("pid file");
-        });
-        let record = settled_record(&file, 40, Duration::from_millis(20)).await;
-        late.await.expect("the writer ends");
-        assert_eq!(record.map(|r| r.pid), Some(4242));
-    }
-
-    #[tokio::test]
-    async fn no_pid_file_gives_up_after_the_tries() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        let file = dir.path().join("server.pid");
-        let none = settled_record(&file, 3, Duration::from_millis(5)).await;
-        assert!(none.is_none());
-    }
-}

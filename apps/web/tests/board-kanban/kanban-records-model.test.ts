@@ -8,7 +8,7 @@ import { DAY, NOW, before, entryRef, threadRef } from './kanban-docs';
 
 const draft = (extra: Partial<PurgeDraft>): PurgeDraft => ({ scope: 'thread', thread: '', keep: [], status: [], idle: 30, confirm: '', ...extra });
 
-describe('the presets of + Add', () => {
+describe('K1 the presets of + Add', { tags: ['critical'] }, () => {
   it('follows the grouping of the column', () => {
     expect(addPreset('status', 'doing', '')).toEqual({ status: 'doing' });
     expect(addPreset('thread', 'idle', 'other')).toEqual({ thread: 'idle' });
@@ -18,7 +18,7 @@ describe('the presets of + Add', () => {
   });
 });
 
-describe('the range of a shift-click', () => {
+describe('K1 the range of a shift-click', { tags: ['critical'] }, () => {
   it('runs from the anchor to the click in either direction, and is the click alone without an anchor', () => {
     const order = ['a', 'b', 'c', 'd'];
     expect(rangeOf(order, 'b', 'd')).toEqual(['b', 'c', 'd']);
@@ -28,7 +28,7 @@ describe('the range of a shift-click', () => {
   });
 });
 
-describe('paused threads and the focus choices', () => {
+describe('K1 paused threads and the focus choices', { tags: ['critical'] }, () => {
   const threads = [threadRef('a'), threadRef('b', { status: 'paused' }), threadRef('lead', { role: 'coordinator' }), threadRef('old', { status: 'done' })];
 
   it('reads the board status and the pause the owner posted that is not applied yet', () => {
@@ -44,7 +44,7 @@ describe('paused threads and the focus choices', () => {
   });
 });
 
-describe('the record of an item', () => {
+describe('K1 the record of an item', { tags: ['critical'] }, () => {
   it('splits questions and decisions, finds the open ones and keeps the replies under them', () => {
     const entries = [
       entryRef('Q-1', { text: 'one?' }),
@@ -60,7 +60,7 @@ describe('the record of an item', () => {
   });
 });
 
-describe('what a purge removes', () => {
+describe('K3 what a purge removes', { tags: ['critical'] }, () => {
   const data: PurgeData = {
     threads: [threadRef('a', { lastSeen: before(40 * DAY) }), threadRef('b', { lastSeen: before(DAY) }), threadRef('lead', { role: 'coordinator', lastSeen: before(90 * DAY) })],
     items: [{ id: 'I-1', thread: 'a', ac: [{}, {}] }, { id: 'I-2', thread: 'b' }],

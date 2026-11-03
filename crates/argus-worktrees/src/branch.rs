@@ -3,7 +3,8 @@
 //!
 //! A branch is MERGED, and may go without anyone's say, when (1) its tip is reachable from a default branch, the
 //! remote's or the local one, (2) none of its commits lacks a patch-equivalent in a default branch (`git cherry`: a
-//! squash of one commit, a rebase merge), or (3) GitHub says its pull request is merged (read-only, never required).
+//! squash of one commit, a rebase merge), or (3) GitHub says its pull request is merged (read-only, never required,
+//! and never asked in local mode).
 //! Whatever cannot be established is "not merged": the branch is kept unless the owner's say discards it.
 
 use crate::exec::first_line;
@@ -129,8 +130,12 @@ impl Service {
     }
 
     /// Does GitHub say the pull request of this branch is merged, and is the branch still what was merged?
-    /// Unknown is false. One question per branch and tip every two minutes.
+    /// Unknown is false. One question per branch and tip every two minutes. In local mode GitHub is not asked at all:
+    /// the branch counts as merged only by ancestry or by `git cherry`.
     fn pr_merged(&self, repo: &str, name: &str, tip: &str) -> bool {
+        if self.deps.remote.is_local() {
+            return false;
+        }
         let key = format!("{}\0{name}", path_key(repo, self.ci()));
         let now = self.now();
         if let Some(hit) = self
@@ -316,6 +321,7 @@ impl Service {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::is_object_id;

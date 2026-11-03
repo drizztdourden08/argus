@@ -50,6 +50,10 @@ pub enum Verb {
         /// Shadow mode: read the boards, never write them.
         #[arg(long)]
         shadow: bool,
+        /// Preview mode: serve a copied home with board writes and no outward effect (default
+        /// port 47617). Refused on the live `~/.coord`.
+        #[arg(long, conflicts_with = "shadow")]
+        preview: bool,
     },
     /// Starts the server hidden in the background and prints its address.
     Start {
@@ -137,7 +141,7 @@ async fn start_verb(
     (foreground, port, wait): (bool, Option<u16>, Option<u64>),
 ) -> Result<u8, String> {
     if foreground {
-        return serve::run(port, Some(paths.home.clone()), false).await;
+        return serve::run(port, Some(paths.home.clone()), (false, false)).await;
     }
     let options = start::Options {
         port,
@@ -196,7 +200,8 @@ pub async fn run(verb: Verb) -> Result<u8, String> {
             port,
             data_dir,
             shadow,
-        } => serve::run(port, data_dir, shadow).await,
+            preview,
+        } => serve::run(port, data_dir, (shadow, preview)).await,
         Verb::Start {
             foreground,
             port,

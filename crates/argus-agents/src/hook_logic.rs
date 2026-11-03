@@ -107,7 +107,9 @@ pub fn transcript_model(fs: &dyn FileSystem, file: &Path) -> Option<String> {
         })
 }
 
-fn failed(last: &str) -> bool {
+/// Whether a last message reads as a failure: it starts with `API Error` or `Error:`, in any case.
+#[must_use]
+pub fn failed(last: &str) -> bool {
     let head = last.trim_start().to_ascii_lowercase();
     head.starts_with("api error") || head.starts_with("error:")
 }

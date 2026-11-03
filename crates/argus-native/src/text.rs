@@ -1,4 +1,5 @@
 //! Plain text for toasts: the cleaning every person-written string goes through, and XML escaping.
+// test-tag: critical
 
 /// The longest toast title, in characters.
 pub const TITLE_MAX: usize = 60;

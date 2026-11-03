@@ -1,6 +1,7 @@
 //! Applies the rules of a route to one answer before the two sides are compared: ignored values
 //! are removed, rows of a server's own life are dropped, and arrays that carry no promised order
 //! are sorted.
+// test-tag: critical
 
 use serde_json::{Map, Value};
 

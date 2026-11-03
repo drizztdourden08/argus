@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, InlineEdit, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../format';
-import { validateField } from '../../tabs/kanban';
+import { validateField } from '../../tabs/kanban/model';
 import type { ThreadFactsProps } from '../ThreadDrawer.type';
 
 const validateSubject = validateField('subject');

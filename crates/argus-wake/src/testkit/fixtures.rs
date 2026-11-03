@@ -1,16 +1,19 @@
 //! Boards, wakes and times the tests of the wake crate share.
 
-use std::sync::Arc;
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex, PoisonError};
 
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 use crate::board::BoardView;
 use crate::board::EntryView;
 use crate::config::WakeConfig;
 use crate::policy::RunView;
 use crate::service::AppliedPost;
+use crate::stalls::BusySource;
 use crate::time::iso;
 use crate::wake::WakeInput;
+use crate::wake_policy::WakePolicy;
 
 /// `2026-10-22T10:00:00.000Z`, where the fake clocks start.
 pub const START: i64 = 1_792_663_200_000;
@@ -52,6 +55,42 @@ pub fn thread(id: &str, role: &str, extra: &Value) -> Value {
     record
 }
 
+/// What blocks a work item, as pairs of item fields and board entries: a blocker text, a dependency wait, a blocked
+/// request and an open ask, for the item `item_id`.
+#[must_use]
+pub fn blocking_causes(item_id: &str) -> Vec<(Value, Value)> {
+    let ask = |kind: &str, status: &str| json!({"E-1": {"id": "E-1", "item": item_id, "kind": kind, "status": status}});
+    vec![
+        (json!({"blocker": "needs the schema"}), json!({})),
+        (json!({"waitsOn": {"state": "open"}}), json!({})),
+        (json!({"requestedBy": {"state": "blocked"}}), json!({})),
+        (json!({}), ask("question", "open")),
+        (json!({}), ask("decision", "pending")),
+    ]
+}
+
+/// Board records keyed by their `id` field.
+#[must_use]
+pub fn by_id(records: &[Value]) -> Map<String, Value> {
+    records
+        .iter()
+        .map(|record| {
+            (
+                record["id"].as_str().unwrap_or_default().to_owned(),
+                record.clone(),
+            )
+        })
+        .collect()
+}
+
+/// A last-wake lookup a test can swap for another one.
+pub type SentLookup = Box<dyn Fn(&str, &str, &str, &str) -> i64>;
+
+/// A wakes table that never sent anything.
+pub fn never_sent() -> SentLookup {
+    Box::new(|_, _, _, _| 0)
+}
+
 /// Put the fields of `extra` over `record`.
 pub fn merge(record: &mut Value, extra: &Value) {
     if let (Some(into), Some(fields)) = (record.as_object_mut(), extra.as_object()) {
@@ -89,11 +128,13 @@ pub fn registry_boards(seen_ago_ms: i64) -> [(&'static str, BoardView); 2] {
     ]
 }
 
-/// The registry tests' settings: windows of 0, a delivered wake faults after 120 s, a queued one after 60 s.
+/// The registry tests' settings: windows of 0, no debounce, a delivered wake faults after 120 s, a
+/// queued one after 60 s.
 #[must_use]
 pub fn registry_config() -> WakeConfig {
     let mut config = WakeConfig {
         window_ms: 0,
+        policy: WakePolicy::off(),
         ..WakeConfig::default()
     };
     config.registry.reaction_ms = 120 * SEC;
@@ -139,5 +180,38 @@ pub fn failed_run() -> RunView {
         error: None,
         last_line: Some("\u{1b}[31mNode.js v24.8.0\u{1b}[0m".to_owned()),
         orphan: false,
+    }
+}
+
+/// The projects that have a running process or run, in memory. Clones share their data.
+#[derive(Clone, Default)]
+pub struct MemoryBusy {
+    inner: Arc<Mutex<HashSet<String>>>,
+}
+
+impl MemoryBusy {
+    /// No project is busy.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Say whether a project has work running.
+    pub fn set(&self, project: &str, busy: bool) {
+        let mut all = self.inner.lock().unwrap_or_else(PoisonError::into_inner);
+        if busy {
+            all.insert(project.to_owned());
+        } else {
+            all.remove(project);
+        }
+    }
+}
+
+impl BusySource for MemoryBusy {
+    fn busy(&self, project: &str) -> bool {
+        self.inner
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .contains(project)
     }
 }

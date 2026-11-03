@@ -179,8 +179,10 @@ pub async fn run(paths: &Paths, names: LocalNames) -> u8 {
     u8::from(!report.answering)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
+    //! K2: the lines of argus dns status.
     use argus_core::names::LocalNames;
 
     use super::{Report, lines};

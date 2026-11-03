@@ -5,15 +5,19 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
-use super::fixtures::{MIN, START, registry_boards};
+use super::fixtures::{MIN, MemoryBusy, START, registry_boards};
 use super::listen::Tap;
 use crate::board::BoardView;
 use crate::config::WakeConfig;
 use crate::engine::{AttachOptions, EngineConfig, WakeEngine, channel};
-use crate::memory::{MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryStore};
+use crate::memory::{
+    MemoryActivity, MemoryBoards, MemoryDocs, MemoryFaults, MemoryNotices, MemoryOwner,
+    MemoryStore, MemorySyncs,
+};
 use crate::registry::RowState;
 use crate::service::{WakeDeps, WakeService};
 use crate::source::NoLive;
+use crate::stalls::MemoryKv;
 use crate::wake::WakeInput;
 use argus_core::clock::{Clock, ManualClock};
 
@@ -109,6 +113,16 @@ pub struct Rig {
     pub boards: MemoryBoards,
     /// The activity log.
     pub activity: MemoryActivity,
+    /// The remote syncs of the projects.
+    pub syncs: MemorySyncs,
+    /// What the owner was told.
+    pub owner: MemoryOwner,
+    /// The open notices of the extra source (`worktree-stale` in the server).
+    pub notices: MemoryNotices,
+    /// The projects with a running process, which the stall watch counts as work.
+    pub busy: MemoryBusy,
+    /// The inbox reads and the stall acks.
+    pub kv: MemoryKv,
     /// The service.
     pub service: WakeService,
 }
@@ -123,16 +137,25 @@ impl Rig {
         let docs = MemoryDocs::new();
         let boards = MemoryBoards::new();
         let activity = MemoryActivity::new();
+        let syncs = MemorySyncs::new();
+        let owner = MemoryOwner::new();
+        let notices = MemoryNotices::new();
+        let busy = MemoryBusy::new();
+        let kv = MemoryKv::new();
         let deps = WakeDeps {
             store: Box::new(store.clone()),
             faults: Box::new(faults.clone()),
             docs: Arc::new(docs.clone()),
             boards: Arc::new(boards.clone()),
             live: Arc::new(NoLive),
+            syncs: Arc::new(syncs.clone()),
             activity: Some(Arc::new(activity.clone())),
             clock: Arc::new(clock.clone()),
         };
-        let service = WakeService::new(deps, config, track_presence);
+        let mut service = WakeService::new(deps, config, track_presence);
+        service.set_owner_sink(Arc::new(owner.clone()));
+        service.add_notice_source(Arc::new(notices.clone()));
+        service.set_stall_sources(Arc::new(busy.clone()), Arc::new(kv.clone()));
         Self {
             clock,
             store,
@@ -140,6 +163,11 @@ impl Rig {
             docs,
             boards,
             activity,
+            syncs,
+            owner,
+            notices,
+            busy,
+            kv,
             service,
         }
     }
@@ -237,10 +265,16 @@ impl Rig {
     /// The wakes made for the Overlord about a fault.
     #[must_use]
     pub fn fault_wakes(&self) -> Vec<crate::wake::WakeRow> {
+        self.wakes_of("wake-fault")
+    }
+
+    /// Every wake row of a reason, oldest first.
+    #[must_use]
+    pub fn wakes_of(&self, reason: &str) -> Vec<crate::wake::WakeRow> {
         self.store
             .all()
             .into_iter()
-            .filter(|r| r.reason == "wake-fault")
+            .filter(|r| r.reason == reason)
             .collect()
     }
 }

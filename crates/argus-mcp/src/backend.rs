@@ -169,6 +169,13 @@ pub trait McpBackend: Send + Sync {
     /// Ping the owner: the notify result (`recorded`, `id`, `level`, `toast`, `why`).
     async fn notify(&self, request: &NotifyRequest) -> Result<Value, ToolError>;
 
+    /// Whether cross-board dependencies are on (`deps.enabled`). The two dependency tools are
+    /// hidden and refused while they are off.
+    fn deps_enabled(&self) -> bool;
+
+    /// Cancel a dependency as the owner: `{dep, text}`.
+    async fn dep_cancel(&self, id: &str, reason: Option<&str>) -> Result<Value, ToolError>;
+
     /// The `health` tool result.
     async fn health(&self) -> Value;
 }

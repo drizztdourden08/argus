@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use argus_agents::{AgentReaper, AgentReconciler, AgentWatcher};
 use argus_core::log::Logger;
+use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths, Subscription};
 use argus_launchers::RunService;
 use argus_launchers::launcher::LauncherStale;
@@ -36,10 +37,14 @@ pub(crate) mod activity;
 pub(crate) mod agents;
 pub(crate) mod cache;
 pub(crate) mod compose;
+pub(crate) mod deps;
 pub(crate) mod notify;
 pub(crate) mod procs;
+pub(crate) mod records;
+pub(crate) mod reminders;
 pub(crate) mod runs;
 pub(crate) mod stale;
+pub(crate) mod stalls;
 pub(crate) mod sync;
 pub(crate) mod tasks;
 pub(crate) mod wake;
@@ -50,6 +55,7 @@ pub use agents::AgentsOptions;
 pub use cache::{CacheOptions, CacheService};
 pub use notify::NotifyOptions;
 pub use procs::ProcsOptions;
+pub use records::{ConsumerSource, ConsumerStatus, Consumers, NodeStatus, Records, RecordsOptions};
 pub use runs::RunsOptions;
 pub use wake::WakeOptions;
 pub use wake_hook::{WakeHook, WakeRequest};
@@ -63,6 +69,8 @@ pub struct Services {
     pub env_port: Option<u16>,
     /// The data folders.
     pub paths: Paths,
+    /// The local or remote switch (`<COORD_HOME>/remote.json`).
+    pub remote: Arc<Switch>,
     /// The database.
     pub db: Arc<Db>,
     /// The event bus.
@@ -96,6 +104,8 @@ pub struct Services {
     pub worktrees: Option<Arc<WorktreeService>>,
     /// The build cache of Brock and Tessera, when on.
     pub cache: Option<Arc<CacheService>>,
+    /// The release store, the check runs and the local package registry, when on.
+    pub records: Option<Arc<Records>>,
     /// The notifications to the owner, when on.
     pub notify: Option<Arc<Notify>>,
     /// The OS toast, when there is one.
@@ -104,8 +114,14 @@ pub struct Services {
     pub instance: String,
     /// When it started.
     pub started_at: String,
-    /// Shadow mode: no outward effect, owner posts answer `read_only`.
+    /// No outward effect: true in shadow mode and in a preview (no worktree removal, kill, run,
+    /// Play, toast, remote call or cache prune).
     pub shadow: bool,
+    /// Board writes (owner posts, test results, dependencies) are accepted: false only in
+    /// shadow mode, where they answer `read_only`.
+    pub board_writes: bool,
+    /// Preview mode: a copied home with board writes and no outward effect.
+    pub preview: bool,
     /// The SSE heartbeat.
     pub heartbeat: Duration,
     /// The web build.

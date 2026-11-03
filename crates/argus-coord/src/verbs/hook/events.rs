@@ -1,16 +1,21 @@
 //! The four session hooks: `session-start` (JSON context), `prompt` (plain text when adopted,
-//! still a placeholder, or messages wait), `tool` (JSON context when adopted or messages wait)
+//! still a placeholder, messages wait, or board notices came since the last turn: one digest
+//! line, see [`super::notices`]), `tool` (JSON context when adopted or messages wait)
 //! and `stop` (a block with the messages as the reason). Stop marks the thread idle and never
-//! adopts.
+//! adopts. A call from a sub-agent (its payload has an `agent_id`) hands no messages over, since
+//! they are its lead's; a `tool` call of the thread itself also keeps its wake listener fresh.
 
 use argus_board::json::truthy;
+use argus_core::js;
 use serde_json::{Value, json};
 
 use super::Said;
-use super::binding::payload_agent_id;
 use super::context::{context, render};
 use super::ctx::Hook;
-use super::visit::{Hit, visit};
+use super::listen::keep_listener;
+use super::notices::notice_line;
+use super::read_stamp::stamp;
+use super::visit::{Hit, Mode, visit};
 use crate::cli::CoordError;
 
 fn session_start(hook: &Hook<'_>, hit: &Hit, project: &str) -> Value {
@@ -24,7 +29,13 @@ fn session_start(hook: &Hook<'_>, hit: &Hit, project: &str) -> Value {
 
 fn prompt(hook: &Hook<'_>, hit: &Hit, project: &str) -> Option<Value> {
     let speaks = hit.adopted || truthy(&hit.thread, "placeholder") || !hit.fresh.is_empty();
-    speaks.then(|| Value::String(context(hook, hit, project, false)))
+    let base = speaks.then(|| context(hook, hit, project, false));
+    let text = match (base, notice_line(hook, project, hit)) {
+        (Some(base), Some(notices)) => format!("{base}\n{notices}"),
+        (Some(text), None) | (None, Some(text)) => text,
+        (None, None) => return None,
+    };
+    Some(Value::String(text))
 }
 
 fn tool(hook: &Hook<'_>, hit: &Hit, project: &str) -> Option<Value> {
@@ -51,23 +62,40 @@ fn stop(hit: &Hit) -> Option<Value> {
 fn activity_of(hook: &Hook<'_>, event: &str) -> Option<&'static str> {
     match event {
         "stop" => Some("idle"),
-        "tool" if payload_agent_id(hook).is_some() => None,
+        "tool" if hook.is_sub_agent() => None,
         _ => Some("working"),
     }
+}
+
+/// Whether what the hook printed counts as the thread reading its board messages: it printed
+/// to the thread itself (not a sub-agent), which is registered and was not just adopted.
+fn stamps(hit: &Hit, event: &str, deliver: bool) -> bool {
+    deliver && event != "session-start" && !hit.adopted && !truthy(&hit.thread, "placeholder")
 }
 
 /// Runs one of the four session hooks.
 pub fn run(hook: &Hook<'_>, event: &str) -> Result<Said, CoordError> {
     let project = hook.project()?;
-    let Some(hit) = visit(hook, &project, activity_of(hook, event), event != "stop")? else {
+    let mode = Mode {
+        activity: activity_of(hook, event),
+        may_adopt: event != "stop",
+        deliver: !hook.is_sub_agent(),
+    };
+    let Some(hit) = visit(hook, &project, mode)? else {
         return Ok(Said::Nothing);
     };
+    if event == "tool" && mode.deliver {
+        keep_listener(hook, &project, &hit.thread);
+    }
     let out = match event {
         "session-start" => Some(session_start(hook, &hit, &project)),
         "prompt" => prompt(hook, &hit, &project),
         "tool" => tool(hook, &hit, &project),
         _ => stop(&hit),
     };
+    if out.is_some() && stamps(&hit, event, mode.deliver) {
+        stamp(hook, &project, &js::string(&hit.thread["id"]), &hit.fresh);
+    }
     Ok(match out {
         None => Said::Nothing,
         Some(Value::String(text)) => Said::Out(text),

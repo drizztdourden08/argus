@@ -1,5 +1,8 @@
 //! The pure pieces of the log path: redaction, plain text, line splitting and the size
 //! window.
+//!
+//! Keep rule: K1, K4.
+// test-tag: critical
 
 use argus_launchers::{
     LineSplitter, LogWindow, MemoryStore, PendingLine, Redactor, RunLimits, RunRow, RunStore,

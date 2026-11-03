@@ -1,4 +1,5 @@
-//! The alert wake: two samples in a row, coalesced, biggest first, repeat and recovery.
+//! K1: The alert wake: two samples in a row, coalesced, biggest first, repeat and recovery.
+// test-tag: critical
 
 use super::harness::{Harness, Setup, Spec, T0, proc};
 use argus_procs::{ALERT_TAIL, ProcRow};

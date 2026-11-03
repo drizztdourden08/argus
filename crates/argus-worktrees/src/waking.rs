@@ -35,6 +35,19 @@ struct Sent {
 type SentMap = HashMap<String, Sent>;
 
 impl Service {
+    /// One activity line per wake just sent, so the log says whom it woke and why.
+    pub(crate) fn log_wakes(&self, project: &str, events: &[WakeEvent]) {
+        for event in events {
+            self.deps.notifier.activity(ActivityLine {
+                kind: event.reason,
+                level: "info",
+                text: format!("{project}/{}: {}", event.thread, event.text),
+                project: project.to_string(),
+                thread: Some(event.thread.clone()),
+            });
+        }
+    }
+
     fn load_sent(&self, project: &str) -> SentMap {
         let text = self
             .deps
@@ -163,15 +176,7 @@ impl Service {
             if self.deps.notifier.wake(&events).is_err() {
                 return 0;
             }
-            for event in &events {
-                self.deps.notifier.activity(ActivityLine {
-                    kind: REASON,
-                    level: "info",
-                    text: format!("{project}/{}: {}", event.thread, event.text),
-                    project: project.to_string(),
-                    thread: Some(event.thread.clone()),
-                });
-            }
+            self.log_wakes(project, &events);
         }
         let _ = self.deps.store.kv_set(
             &sent_key(project),

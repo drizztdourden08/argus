@@ -1,5 +1,6 @@
 //! The comparison itself: find the scopes both servers know, put every probe to both, judge
 //! each pair, then read one doc stream from both and judge its snapshot frames.
+// test-tag: critical
 
 use std::path::PathBuf;
 

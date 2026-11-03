@@ -22,6 +22,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
         <CardMeta
           label={FEED_META[card.type].label}
           id={card.data.id}
+          linked={card.type !== 'action'}
           at={card.at}
           thread={card.data.thread}
           item={card.data.item}

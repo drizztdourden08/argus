@@ -6,6 +6,9 @@ import { AppRoutes } from '../../src/routing/AppRoutes';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { createFakeSources } from './fake-source';
+import { preloadRoutes } from './preload-routes';
+
+preloadRoutes();
 
 const renderAt = (location: string) => {
   const fake = createFakeSources();

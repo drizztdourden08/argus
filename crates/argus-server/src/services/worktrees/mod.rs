@@ -6,6 +6,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use argus_core::remote::ModeSource;
 use argus_worktrees::{
     Deps, Fs, GhRunner, Git, GitExec, ProcessLister, RealFs, Service as WorktreeService,
     SystemClock, SystemExec, SystemGh,
@@ -28,8 +29,9 @@ pub(crate) use publish::publish;
 pub struct WorktreesOptions {
     /// Run the scanner.
     pub enabled: bool,
-    /// Scan on timers: the first scan after `startDelayMs`, then every `scanMs`, the live check
-    /// every `liveMs`, and the rescans a removal or a change of rules asks for.
+    /// Scan on timers: the first scan after `startDelayMs`, then every `liveMs` the live check and
+    /// the look at the disk (a scan only of what changed, and of everything every `scanMs`), and the
+    /// rescans a removal or a change of rules asks for.
     pub timers: bool,
     /// Another way to run `git` than the command.
     pub git: Option<Arc<dyn GitExec>>,
@@ -72,13 +74,15 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
         Arc::clone(&svc.db),
         svc.paths.coord_home.clone(),
         svc.shadow,
-    );
+    )
+    .with_runs(svc.runs.clone());
     let procs: Arc<dyn ProcessLister> = opts
         .procs
         .clone()
-        .unwrap_or_else(|| Arc::new(MachineProcs::new(svc.procs.clone())));
+        .unwrap_or_else(|| Arc::new(MachineProcs::new(svc.procs.clone(), svc.runs.clone())));
     let gh: Arc<dyn GhRunner> = opts.gh.clone().unwrap_or_else(|| Arc::new(SystemGh));
     let fs: Arc<dyn Fs> = Arc::new(RealFs);
+    let remote: Arc<dyn ModeSource> = svc.remote.clone();
     Deps {
         store: Arc::new(store),
         notifier: Arc::new(TreeNotifier::new(
@@ -89,6 +93,7 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
         fs,
         git: git_of(svc, opts),
         gh,
+        remote,
         procs,
         clock: Arc::new(SystemClock),
     }
@@ -118,7 +123,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     }
     let (asked, scans) = unbounded_channel();
     watch::watch(svc, asked);
-    if svc.tasks.worktree_timers {
+    if svc.tasks.runs(crate::services::tasks::Timer::Worktrees) {
         timers::start(svc, &service, config::timing_of(svc), scans);
     }
 }

@@ -170,6 +170,7 @@ pub fn doc_of(fact: &Fact, judging: &Judging<'_>, request: Option<RequestDoc>) -
             .as_ref()
             .map(|l| leftover_doc(l, judged.touched_ms, judging.now_ms)),
         job: None,
+        hygiene: None,
         error: fact.error.clone(),
     }
 }

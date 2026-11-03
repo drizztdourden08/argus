@@ -123,7 +123,7 @@ Each row names the Node module, so the full set of strings is one file away. The
 | `check` | `--stale`, `--json` | none | `# check <key> ...` report or JSON | board (read) | 3 |
 | `tick` | (none), woke | none | JSON `{ wake, attention }`; `woke: ...` | board | 3 |
 | `sync` | import; retired export, pushed, versions, asset | none | JSON import result; `retired: ...` | board, entries dir | 3 |
-| `item` | add, set, status, move, ac (add, set, done, rm, move), ac-done, ac-rm, archive, unarchive, rm, restore, show, list | title, description, subject, ac, reason | `<I>: <title> (<owner>, <n> AC)`, `(rev n)` lines, tables, JSON | board | 4 |
+| `item` | add, set, status, block, unblock, move, ac (add, set, done, rm, move), ac-done, ac-rm, archive, unarchive, rm, restore, show, list | title, description, subject, ac, reason | `<I>: <title> (<owner>, <n> AC)`, `(rev n)` lines, tables, JSON | board | 4 |
 | `test` | add, set, step, setup, expect, proof, result, move, soft verbs, show, list | title, label, step, setup, expect, command, testnote, caption, result, changed, covers, context, build | result lines, tables, JSON; fail needs a note | board, proof files | 4 |
 | `ask`, `decide`, `notify`, `message`, `answer`, `entry` | entry: list, show, pick, done, set, move, soft verbs | question, option, decision, notice, message, answer, context | the context teaching text when missing; 2 to 5 options for a decision | board, inbox | 4 |
 | `action`, `todo` | add, set, done, move, soft verbs, show, list | action, reason | `no manual actions.`, tables | board | 4 |
@@ -390,7 +390,7 @@ That is 181 cases in the dedicated files plus the CLI cases of the shared ones.
    exists, `COORD_ENGINE=argus ARGUS_EXE=<target>/argus.exe node --test` on the slice 8 files runs
    the real Node specification against `argus coord`, unchanged. A file passes on both engines
    before its row turns `done`.
-3. The differential harness (`crates/argus/tests/coord_diff.rs`, skipped with a reason when
+3. The differential harness (`crates/argus/tests/it/coord_diff.rs`, skipped with a reason when
    `ARGUS_COORD_CLI` is unset). Two twin homes are seeded from
    `crates/argus-testkit/fixtures/coord/` (the `alpha`, `beta` and `_portfolio` boards plus a
    hook scenario board). A corpus file holds one command per line, with directives for the

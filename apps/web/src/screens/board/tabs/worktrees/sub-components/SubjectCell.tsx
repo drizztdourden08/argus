@@ -7,7 +7,7 @@ const SubjectCell = (props: CellProps) => {
   const { row } = props;
   const text = isLeftover(row) ? (row.leftover?.topEntries ?? []).join(', ') : row.subject ?? '';
   if (!text) return null;
-  return <Text as="div" variant="subtitle" title={text}><FoldText fill lines={1} overflow="clip">{text}</FoldText></Text>;
+  return <Text as="div" variant="subtitle" title={text}><FoldText fill smartTimes lines={1} overflow="clip">{text}</FoldText></Text>;
 };
 
 export { SubjectCell };

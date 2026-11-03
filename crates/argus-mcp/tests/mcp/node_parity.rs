@@ -1,12 +1,20 @@
 //! The tool list and the `initialize` text compared with the Node server itself. The test
 //! runs only where the Node dashboard is on disk (`ARGUS_NODE_DASHBOARD`, default
 //! `X:/ai-config/dashboard`) and `node` is on the path.
+//! E3: the tool list and initialize text against the Node server.
+// test-tag: e2e
 
 use std::path::PathBuf;
 use std::process::Command;
 
-use argus_mcp::{INSTRUCTIONS, PROTOCOL_VERSION, SUPPORTED_VERSIONS, tool_defs};
+use argus_mcp::{DEP_TOOLS, INSTRUCTIONS, PROTOCOL_VERSION, SUPPORTED_VERSIONS, tool_defs};
 use serde_json::Value;
+
+/// The tool definitions the Node server has: ours without the two dependency tools.
+fn node_tools() -> Vec<&'static Value> {
+    let ours = |d: &&Value| !d["name"].as_str().is_some_and(|n| DEP_TOOLS.contains(&n));
+    tool_defs().iter().filter(ours).collect()
+}
 
 const SCRIPT: &str = r"
 const { pathToFileURL } = require('node:url');
@@ -33,11 +41,12 @@ fn node_answer() -> Option<Value> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_tool_list_and_the_initialize_text_are_the_node_ones() {
     let Some(node) = node_answer() else {
         return;
     };
-    let ours = serde_json::to_string(tool_defs()).expect("JSON");
+    let ours = serde_json::to_string(&node_tools()).expect("JSON");
     assert_eq!(
         ours,
         node["tools"].to_string(),
@@ -71,8 +80,8 @@ fn rules(list: &Value) -> Vec<String> {
 }
 
 fn names_where(keep: impl Fn(&Value) -> bool) -> Vec<String> {
-    let mut names: Vec<String> = tool_defs()
-        .iter()
+    let mut names: Vec<String> = node_tools()
+        .into_iter()
         .filter(|d| keep(d))
         .filter_map(|d| d["name"].as_str().map(str::to_owned))
         .collect();
@@ -81,6 +90,7 @@ fn names_where(keep: impl Fn(&Value) -> bool) -> Vec<String> {
 }
 
 #[test]
+#[ignore = "e2e"]
 fn the_permission_rules_allow_the_reads_and_the_ping_and_ask_for_the_writes() {
     let Some(perms) = permissions() else {
         return;

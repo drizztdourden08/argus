@@ -62,6 +62,7 @@ pub fn hint_of(cmd: &str) -> Option<String> {
         .find_map(|token| word_of(token))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

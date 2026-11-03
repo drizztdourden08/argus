@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 import type { ActionDoc, Entry, Item, ThreadChoice } from '../../../../../data/kanban';
 import { useCollection } from '../../../../../data/react';
 import type { Build, Test } from '../../../../../data/types';
-import { OP_KINDS, needsMap } from '../model';
-import type { TrashSource } from '../trash';
-import type { KanbanData, SoftDoc } from '../kanban.type';
+import { OP_KINDS, askLinks, needsMap } from '../model';
+import { signalsMap } from '../attention';
+import type { AgentDoc, KanbanData, SoftDoc } from '../kanban.type';
 
 const isLive = (doc: SoftDoc): boolean => !doc.deletedAt && !doc.archivedAt;
 
@@ -16,7 +16,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
   const actions = useCollection<ActionDoc>(boardKey, 'actions');
   const tests = useCollection<Test>(boardKey, 'tests');
   const builds = useCollection<Build>(boardKey, 'builds');
-  const agents = useCollection<TrashSource>(boardKey, 'agents');
+  const agents = useCollection<AgentDoc>(boardKey, 'agents');
   const closedBuilds = useMemo(() => new Set(builds.docs.filter((build) => build.closedAt).map((build) => build.id)), [builds.docs]);
   const needs = useMemo(
     () => needsMap({
@@ -25,6 +25,11 @@ const useKanbanData = (boardKey: string): KanbanData => {
       tests: tests.docs.filter((test) => isLive(test) && !(test.build && closedBuilds.has(test.build))),
     }),
     [entries.docs, actions.docs, tests.docs, closedBuilds],
+  );
+  const asks = useMemo(() => askLinks(items.docs, entries.docs), [items.docs, entries.docs]);
+  const signals = useMemo(
+    () => signalsMap({ tests: tests.docs, agents: agents.docs, closedBuilds }),
+    [tests.docs, agents.docs, closedBuilds],
   );
   return {
     ready: items.ready && threads.ready,
@@ -36,6 +41,8 @@ const useKanbanData = (boardKey: string): KanbanData => {
     tests: tests.docs,
     closedBuilds,
     needs,
+    asks,
+    signals,
   };
 };
 

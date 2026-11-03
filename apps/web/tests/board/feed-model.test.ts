@@ -47,7 +47,7 @@ const work = (over: Partial<WorkSources>) =>
 
 const ids = (cards: { data: { id: string } }[]): string[] => cards.map((card) => card.data.id);
 
-describe('what asks the owner', () => {
+describe('K1 what asks the owner', { tags: ['critical'] }, () => {
   it('a question with options is a decision, one without is free text, an old decision wording is information', () => {
     expect(askMode(entry({ id: 'Q-1' }))).toBe('decide');
     expect(askMode(entry({ id: 'Q-2', options: undefined }))).toBe('answer');
@@ -105,7 +105,7 @@ describe('what asks the owner', () => {
   });
 });
 
-describe('manual steps and tests', () => {
+describe('K1 manual steps and tests', { tags: ['critical'] }, () => {
   it('a manual step waits until the owner marks it done, the mark counts until the board applied it', () => {
     const pending = work({ actions: [step({ id: 'H-1' })] });
     expect(ids(pending.waiting)).toEqual(['H-1']);
@@ -146,7 +146,7 @@ describe('manual steps and tests', () => {
   });
 });
 
-describe('what each work item needs', () => {
+describe('K1 what each work item needs', { tags: ['critical'] }, () => {
   it('counts open questions, manual steps, tests to run and decisions waiting to be picked up', () => {
     const { needs } = work({
       entries: [
@@ -163,7 +163,7 @@ describe('what each work item needs', () => {
   });
 });
 
-describe('work items and the log', () => {
+describe('K1 work items and the log', { tags: ['critical'] }, () => {
   const item = (id: string, over: object = {}) => ({ id, title: id, status: 'doing', thread: 'lead', ...over });
 
   it('shows the open items in manual order and hides done, dropped, archived and deleted ones', () => {
@@ -192,7 +192,7 @@ describe('work items and the log', () => {
   });
 });
 
-describe('context of a question', () => {
+describe('K1 context of a question', { tags: ['critical'] }, () => {
   it('only a written context counts', () => {
     expect(hasContext(entry({ id: 'Q-1', context: 'why' }))).toBe(true);
     expect(hasContext(entry({ id: 'Q-2', context: '  \n ' }))).toBe(false);

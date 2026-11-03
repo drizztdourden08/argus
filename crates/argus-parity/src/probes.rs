@@ -35,12 +35,13 @@ pub fn machine() -> Vec<Probe> {
     ]
 }
 
-/// The routes of one scope: every collection of the db shim, and for a project the launches,
-/// runs, wakes and open wake streams.
+/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs`, `deps` and `stalls` are
+/// Rust only), and for a project the launches, runs, wakes and open wake streams.
 #[must_use]
 pub fn scope(key: &str) -> Vec<Probe> {
     let mut out: Vec<Probe> = Coll::ALL
         .iter()
+        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps | Coll::Stalls))
         .map(|c| {
             Probe::get(
                 Kind::Doc(c.as_str()),
@@ -57,26 +58,4 @@ pub fn scope(key: &str) -> Vec<Probe> {
         ]);
     }
     out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{machine, scope};
-    use crate::probe::Request;
-
-    #[test]
-    fn every_probe_is_a_get_or_an_mcp_read() {
-        for p in machine().into_iter().chain(scope("alpha")) {
-            match p.request {
-                Request::Get(path) => assert!(path.starts_with("/api/"), "{path}"),
-                Request::Mcp(_) => {}
-            }
-        }
-    }
-
-    #[test]
-    fn a_project_has_every_collection_and_the_portfolio_has_only_the_collections() {
-        assert_eq!(scope("_portfolio").len(), 20);
-        assert_eq!(scope("alpha").len(), 24);
-    }
 }

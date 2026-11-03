@@ -86,6 +86,7 @@ pub fn io_code(err: &std::io::Error) -> String {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

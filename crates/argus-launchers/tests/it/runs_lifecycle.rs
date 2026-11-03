@@ -1,5 +1,8 @@
 //! Run lifecycle: exited, failed, a refused start, the run docs the pages receive, who may
 //! start what, and the end listeners (runs.lifecycle).
+//!
+//! Keep rule: S2.
+// test-tag: standard
 
 use std::sync::{Arc, Mutex};
 
@@ -35,9 +38,7 @@ async fn a_run_exits_0_logs_its_output_and_shows_up_as_a_run_doc() {
 #[tokio::test(start_paused = true)]
 async fn the_page_doc_has_no_command_and_ends_in_the_final_status() {
     let env = Env::new();
-    env.define("alpha", vec![env.def("hello", "echo hi")]);
-    env.start("alpha", "hello");
-    let pid = env.pid(0);
+    let pid = env.start_hello();
     env.host.say(pid, "hi\n").await;
     env.host.exit(pid, Some(0)).await;
     env.finished("alpha", "R-1").await;
@@ -66,6 +67,29 @@ async fn a_non_zero_exit_is_failed_and_keeps_the_code() {
         env.text("alpha", "R-1", None)
             .contains("exited with code 3")
     );
+}
+
+#[tokio::test(start_paused = true)]
+async fn an_ended_run_can_be_failed_after_the_fact_and_a_live_one_cannot() {
+    let env = Env::new();
+    let pid = env.start_hello();
+    assert_eq!(
+        env.svc.fail_ended("alpha", "R-1", "harm"),
+        None,
+        "still live"
+    );
+    env.host.exit(pid, Some(0)).await;
+    env.finished("alpha", "R-1").await;
+    let failed = env.svc.fail_ended("alpha", "R-1", "harm").unwrap();
+    assert_eq!(
+        (failed.status, failed.error.as_deref(), failed.exit_code),
+        (RunStatus::Failed, Some("harm"), Some(0))
+    );
+    assert_eq!(
+        env.svc.get("alpha", "R-1").unwrap().status,
+        RunStatus::Failed
+    );
+    assert_eq!(env.svc.fail_ended("alpha", "R-9", "harm"), None, "unknown");
 }
 
 #[tokio::test(start_paused = true)]
@@ -245,4 +269,34 @@ async fn end_listeners_hear_failed_and_exited_runs_and_a_panic_stops_nobody() {
         ]
     );
     assert_eq!(env.events.warnings().len(), 2, "each panic is reported");
+}
+
+#[tokio::test(start_paused = true)]
+async fn finish_listeners_see_the_whole_log_of_a_run_that_is_not_yet_reported_ended() {
+    let env = Env::new();
+    env.define("alpha", vec![env.def("quick", "quick")]);
+    env.svc.on_finish(|_, _| panic!("a broken listener"));
+    let seen = Arc::new(Mutex::new(Vec::new()));
+    let sink = Arc::clone(&seen);
+    env.svc.on_finish(move |svc, row| {
+        let options = argus_launchers::LogOptions::default();
+        let page = svc.logs(&row.scope, &row.id, &options).unwrap();
+        let out: Vec<String> = page.lines.iter().map(|l| l.text.clone()).collect();
+        let live = svc.get(&row.scope, &row.id).unwrap().status.is_live();
+        sink.lock().unwrap().push((out, live));
+    });
+    env.start("alpha", "quick");
+    let pid = env.pid(0);
+    env.host.say(pid, "first\nlast\n").await;
+    env.host.exit(pid, Some(0)).await;
+    env.finished("alpha", "R-1").await;
+    let seen = seen.lock().unwrap().clone();
+    assert_eq!(seen.len(), 1);
+    let (lines, live) = &seen[0];
+    assert!(
+        lines.iter().any(|l| l == "last"),
+        "the log is whole: {lines:?}"
+    );
+    assert!(live, "the run is not reported ended yet");
+    assert_eq!(env.events.warnings().len(), 1, "the panic is reported");
 }

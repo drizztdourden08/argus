@@ -12,6 +12,15 @@ use crate::service::Service;
 /// How long one sample of the machine's processes serves a batch.
 const PROCS_FRESH_MS: i64 = 10_000;
 
+/// Brock locks every clone it makes with a reason that starts with this text. A lock with any other reason was set by
+/// a person or another tool and keeps the worktree.
+const BROCK_LOCK: &str = "cloned node_modules";
+
+/// Is this lock reason Brock's?
+pub(crate) fn is_brock_lock(reason: &str) -> bool {
+    reason.starts_with(BROCK_LOCK)
+}
+
 /// A command line holding `worktree remove|prune` is the request itself (and the shell that runs it): not a user of the folder.
 pub fn is_requester(cmd: &str) -> bool {
     let lower = cmd.to_lowercase();
@@ -138,6 +147,18 @@ pub fn short_cmd(cmd: &str) -> String {
         .collect()
 }
 
+/// Why a fact is outside its rule. A repo rule names only what git lists, so a folder git does not list gets the way to cover it.
+fn outside_text(rule: &Rule, fact: &Fact) -> String {
+    if rule.kind == RuleKind::Repo && fact.repo.is_none() {
+        let parent = parent_of(&fact.path);
+        return format!(
+            "{} is not a worktree that git lists for {} (rule {} is a repo rule): a folder rule on its parent (coord worktree rule add {parent}/) covers leftovers",
+            fact.path, rule.path, rule.id
+        );
+    }
+    format!("{} is outside the project's worktree rules", fact.path)
+}
+
 impl Service {
     /// The rule a fact belongs to, and that it really is under it.
     pub(crate) fn rule_of(&self, board: &BoardFacts, fact: &Fact) -> Result<Rule> {
@@ -172,10 +193,7 @@ impl Service {
         if under {
             Ok(rule.clone())
         } else {
-            Err(forbidden(format!(
-                "{} is outside the project's worktree rules",
-                fact.path
-            )))
+            Err(forbidden(outside_text(rule, fact)))
         }
     }
 
@@ -200,14 +218,14 @@ impl Service {
         Ok(())
     }
 
-    /// Never a locked worktree.
-    pub(crate) fn assert_not_locked(fact: &Fact) -> Result<()> {
+    /// Never a locked worktree. The one lock Argus lifts itself is Brock's (see [`is_brock_lock`]), and only for a removal.
+    pub(crate) fn assert_not_locked(fact: &Fact, removing: bool) -> Result<()> {
         match &fact.locked {
-            Some(reason) => Err(forbidden(format!(
+            Some(reason) if !(removing && is_brock_lock(reason)) => Err(forbidden(format!(
                 "{} is locked ({reason}): unlock it first (git worktree unlock), Argus never removes a locked worktree",
                 fact.path
             ))),
-            None => Ok(()),
+            _ => Ok(()),
         }
     }
 
@@ -304,6 +322,7 @@ impl Service {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -365,6 +384,22 @@ mod tests {
                 .unwrap()
                 .contains("not under a folder rule")
         );
+    }
+
+    #[test]
+    fn a_folder_under_a_repo_rule_that_git_does_not_list_says_how_to_cover_it() {
+        let repo = Rule::folder("W-4", "X:/Bxel", "lead").repo();
+        let mut fact = crate::fact::blank_fact("X:/Bxel/leftovers/old", &repo, false);
+        let message = outside_text(&repo, &fact);
+        assert_eq!(
+            message,
+            "X:/Bxel/leftovers/old is not a worktree that git lists for X:/Bxel (rule W-4 is a repo rule): a folder rule on its parent (coord worktree rule add X:/Bxel/leftovers/) covers leftovers"
+        );
+        fact.repo = Some("X:/Other".to_string());
+        assert!(outside_text(&repo, &fact).ends_with("is outside the project's worktree rules"));
+        let folder = r1();
+        fact.repo = None;
+        assert!(outside_text(&folder, &fact).ends_with("is outside the project's worktree rules"));
     }
 
     #[test]
@@ -441,5 +476,33 @@ mod tests {
             ask(Caller::Thread(String::new())).unwrap_err().code,
             ErrorCode::Forbidden
         );
+    }
+
+    fn busy(case_insensitive: bool, path: &str, cwd: &str) -> Option<ProcInfo> {
+        let dir = tempfile::tempdir().unwrap();
+        let root = crate::testkit::root_of(&dir);
+        let h = crate::testkit::Harness::new(&root, Vec::new(), |o| {
+            o.case_insensitive = case_insensitive;
+        });
+        *h.procs.0.lock().unwrap() = vec![ProcInfo {
+            pid: 4242,
+            name: "pwsh.exe".into(),
+            cwd: Some(cwd.into()),
+            ..ProcInfo::default()
+        }];
+        h.svc.busy_by(path, false, "removed").unwrap()
+    }
+
+    #[test]
+    fn a_working_folder_inside_the_folder_makes_it_busy_and_the_refusal_names_the_process() {
+        let path = "X:/p/.claude/worktrees/agent-ab12";
+        let user = busy(true, path, "x:\\P\\.claude\\Worktrees\\Agent-AB12\\src").unwrap();
+        assert_eq!(user.pid, 4242);
+        let text = Service::in_use(path, &user, "removed").message;
+        assert!(text.contains("is in use by pwsh.exe 4242"), "{text}");
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees\\agent-ab12").is_some());
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees\\agent-ab12-other").is_none());
+        assert!(busy(true, path, "X:\\p\\.claude\\worktrees").is_none());
+        assert!(busy(false, path, "X:/P/.claude/worktrees/AGENT-AB12").is_none());
     }
 }

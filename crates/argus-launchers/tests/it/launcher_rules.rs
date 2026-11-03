@@ -1,6 +1,9 @@
 //! The launcher and bundle rules over a board (launcher.verbs and build.verbs, the pure
 //! parts): the usage window, the three kinds of launcher, Play definitions, who may write,
 //! retire and restore with a bundle, keep, the status of a bundle and the hand rules.
+//!
+//! Keep rule: K1, K4.
+// test-tag: critical
 
 use argus_launchers::RunKind;
 use argus_launchers::launcher::BundleStatus::{Draft, Ready};

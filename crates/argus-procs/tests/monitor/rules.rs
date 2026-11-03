@@ -1,4 +1,5 @@
-//! Rule matching and the rules file.
+//! K2: Rule matching and the rules file.
+// test-tag: critical
 
 use super::harness::{Harness, Setup, T0};
 use argus_procs::{
@@ -22,6 +23,7 @@ fn row(name: &str, cmd: &str, path: Option<&str>) -> ProcRow {
         start_ms: 0,
         cpu_ms: 0,
         responding: None,
+        cwd: None,
     }
 }
 

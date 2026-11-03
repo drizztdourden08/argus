@@ -17,6 +17,15 @@ pub enum Mode {
     Finished,
     /// Every leftover folder old enough.
     Leftovers,
+    /// The released worktrees of one thread whose grace ended (the hygiene files these, never a thread).
+    Released,
+}
+
+impl Mode {
+    /// Does the request name its targets when it is made?
+    pub fn named(self) -> bool {
+        matches!(self, Self::Targets | Self::Released)
+    }
 }
 
 /// Where a request stands.
@@ -69,6 +78,19 @@ pub struct Outcome {
     pub code: Option<String>,
 }
 
+/// The target a running request is on, since when, and for how long (seconds, as of the listing).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Current {
+    pub id: String,
+    pub label: String,
+    pub since: String,
+    pub since_ms: i64,
+    pub for_s: i64,
+    /// What the removal does now, as of the listing.
+    pub step: Option<crate::progress::Step>,
+}
+
 /// The targets a `finished` or `leftovers` request left alone, and why.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SkippedSummary {
@@ -90,6 +112,9 @@ pub struct RequestRec {
     pub discard: bool,
     pub owner_entry: Option<String>,
     pub reason: Option<String>,
+    /// A thread's own `release`: the worker looks again that nothing uses the worktree, and the hygiene lists what
+    /// went.
+    pub release: bool,
     pub older_than_days: Option<f64>,
     /// `finished` only: also every clean worktree with nothing ahead untouched for this many minutes.
     pub idle_minutes: Option<f64>,
@@ -102,6 +127,8 @@ pub struct RequestRec {
     pub started_at: Option<String>,
     pub finished_at: Option<String>,
     pub notified: bool,
+    /// While running: the target it is on.
+    pub current: Option<Current>,
 }
 
 impl RequestRec {

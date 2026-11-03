@@ -8,8 +8,8 @@ const BundleName = (props: BundleNameProps) => {
   const name = tag === NO_BUNDLE ? 'No bundle' : tag;
   return (
     <>
-      <Text mono weight={600} tone={muted ? 'muted' : undefined} className="bundle__tag">{name}</Text>
-      {title && <Text tone={muted ? 'muted' : 'dim'} className="bundle__title">{title}</Text>}
+      <Text font="title" tone={muted ? 'muted' : undefined} className="bundle__tag">{name}</Text>
+      {title && <Text smartTimes tone={muted ? 'muted' : 'dim'} className="bundle__title">{title}</Text>}
     </>
   );
 };

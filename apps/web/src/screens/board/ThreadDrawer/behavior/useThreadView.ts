@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { ProjectThread } from '../../../../data/agents';
 import type { Entry, Item } from '../../../../data/kanban';
 import { useCollection } from '../../../../data/react';
-import { pausedThreads } from '../../tabs/kanban';
+import { pausedThreads } from '../../tabs/kanban/model';
 import { NO_THREAD } from '../ThreadDrawer.constants';
 import { openWork } from './open-work';
 import { threadCounts } from './thread-counts';

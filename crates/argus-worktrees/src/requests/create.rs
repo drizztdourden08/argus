@@ -215,11 +215,44 @@ impl Service {
         let older_than_days = self.asked_age(input)?;
         let docs = self.list(&input.project);
         let rec = self.add_request(
-            input,
+            (input, false),
             mode,
             (older_than_days, idle_minutes),
             targets_of(&named, &docs),
         )?;
+        Ok(self.queued(input, &rec))
+    }
+
+    /// A thread's own release, already checked for its caller: the one worktree is queued for the worker, which
+    /// looks again right before the removal.
+    pub(crate) fn request_release(&self, input: &RequestInput) -> Result<Queued> {
+        let named: Vec<&String> = input.targets.iter().collect();
+        let docs = self.list(&input.project);
+        let rec = self.add_request(
+            (input, true),
+            Mode::Targets,
+            (None, None),
+            targets_of(&named, &docs),
+        )?;
+        Ok(self.queued(input, &rec))
+    }
+
+    /// The hygiene's request for the released worktrees of one thread, checked for the caller as any other.
+    pub(crate) fn request_released(&self, input: &RequestInput) -> Result<Queued> {
+        self.authorize_request(input)?;
+        let named: Vec<&String> = input.targets.iter().collect();
+        let docs = self.list(&input.project);
+        let rec = self.add_request(
+            (input, false),
+            Mode::Released,
+            (None, None),
+            targets_of(&named, &docs),
+        )?;
+        Ok(self.queued(input, &rec))
+    }
+
+    /// A new request is kept, logged and handed to the worker.
+    fn queued(&self, input: &RequestInput, rec: &RequestRec) -> Queued {
         self.save_requests(&input.project);
         self.note_request(
             &input.project,
@@ -228,7 +261,7 @@ impl Service {
                 "worktree request {} queued by {}: {}{}",
                 rec.id,
                 rec.by,
-                what_text(&rec),
+                what_text(rec),
                 rec.reason
                     .as_deref()
                     .map(|r| format!(": {r}"))
@@ -239,18 +272,18 @@ impl Service {
         let answer = Queued {
             id: rec.id.clone(),
             status: rec.status,
-            text: queued_text(&rec),
+            text: queued_text(rec),
             request: rec.brief(),
         };
         if self.opts.run_requests {
             self.kick_requests(&input.project);
         }
-        Ok(answer)
+        answer
     }
 
     fn add_request(
         &self,
-        input: &RequestInput,
+        (input, release): (&RequestInput, bool),
         mode: Mode,
         (older_than_days, idle_minutes): (Option<f64>, Option<f64>),
         targets: Vec<Target>,
@@ -287,8 +320,9 @@ impl Service {
                     .filter(|r| !r.is_empty()),
                 older_than_days,
                 idle_minutes,
-                resolved: mode == Mode::Targets,
-                targets: if mode == Mode::Targets { targets } else { Vec::new() },
+                release,
+                resolved: mode.named(),
+                targets: if mode.named() { targets } else { Vec::new() },
                 ..RequestRec::default()
             };
             store.list.push(rec.clone());

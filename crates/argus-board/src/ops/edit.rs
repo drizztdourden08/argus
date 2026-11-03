@@ -6,13 +6,19 @@ use serde_json::{Map, Value};
 use super::announce::{announce, refresh_needs_human};
 use super::authorize::{Check, authorize, owner_of};
 use super::fields::{EditCtx, check, editable};
-use super::result::{OpResult, version_check};
-use super::target::target_of;
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
-use crate::json::{display, doc, doc_mut, find_ids, obj, same, set};
-use crate::store::stamp;
+use super::move_::hand_over;
+use super::{
+    result::{OpResult, version_check},
+    target::target_of,
+    typed::{self, Outcome},
+    who::Who,
+};
+use crate::{
+    Board,
+    error::{BoardError, refuse},
+    json::{display, doc, doc_mut, obj, same, set},
+    store::stamp,
+};
 
 /// The fields an edit asks for, refused when there are none.
 fn requested(op: &Value) -> Result<&Map<String, Value>, BoardError> {
@@ -22,11 +28,18 @@ fn requested(op: &Value) -> Result<&Map<String, Value>, BoardError> {
     }
 }
 
+/// The values to write, checked, and what a typed change let through (nothing for a record that
+/// follows no type).
 fn validate(
     cx: &EditCtx,
     coll: &str,
     set: &Map<String, Value>,
-) -> Result<Map<String, Value>, BoardError> {
+    op: &Value,
+) -> Result<(Map<String, Value>, Outcome), BoardError> {
+    if coll == "items" && typed::edits(cx.doc, set) {
+        let edited = typed::item_edit(cx, set, op)?;
+        return Ok((edited.next, edited.outcome));
+    }
     let mut next = Map::new();
     for (field, value) in set {
         if !editable(coll, field) {
@@ -34,7 +47,7 @@ fn validate(
         }
         next.insert(field.clone(), check(coll, field, value, cx)?);
     }
-    Ok(next)
+    Ok((next, Outcome::default()))
 }
 
 fn checked_fields(op: &Value, next: &Map<String, Value>) -> Vec<String> {
@@ -84,26 +97,17 @@ fn write_fields(
     }
 }
 
-fn follow_subject(board: &mut Board, item_id: &str, actor: &str) -> Result<(), BoardError> {
-    let subject = doc(board, "items", item_id).map_or(Value::Null, |i| i["subject"].clone());
-    for test_id in find_ids(board, "tests", |t| t["item"].as_str() == Some(item_id)) {
-        if let Some(t) = doc_mut(board, "tests", &test_id) {
-            set(t, "subject", subject.clone());
-        }
-        stamp(board, "tests", &test_id, actor)?;
-    }
-    Ok(())
-}
-
+/// What follows a stamped edit: an item that changed thread (its assignee is a thread) takes its
+/// tests and open entries along, and a to-do refreshes the needs-the-owner flag of its thread.
 fn side_effects(
     board: &mut Board,
     (coll, id): (&str, &str),
     fields: &[String],
-    actor: &str,
+    (actor, was): (&str, &Value),
 ) -> Result<(), BoardError> {
     stamp(board, coll, id, actor)?;
-    if coll == "items" && fields.iter().any(|f| f == "subject") {
-        follow_subject(board, id, actor)?;
+    if coll == "items" && fields.iter().any(|f| f == "thread") {
+        hand_over(board, id, was, actor)?;
     }
     if coll == "actions" {
         let thread = doc(board, coll, id).map(|d| display(&d["thread"]));
@@ -142,7 +146,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         doc: &current,
         who,
     };
-    let next = validate(&cx, &coll, set)?;
+    let (next, outcome) = validate(&cx, &coll, set, op)?;
     let checked = checked_fields(op, &next);
     if let Some(collision) = version_check(&current, op, &checked, &next) {
         return Ok(OpResult::conflict(&current, collision));
@@ -156,7 +160,13 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         return Ok(OpResult::applied(format!("{id} already up to date")));
     }
     write_fields(board, (&coll, &id), &next, &fields);
-    side_effects(board, (&coll, &id), &fields, &who.actor_of())?;
+    side_effects(
+        board,
+        (&coll, &id),
+        &fields,
+        (&who.actor_of(), &current["thread"]),
+    )?;
+    outcome.record(board, &id, who)?;
     let updated = doc(board, &coll, &id).cloned().unwrap_or(Value::Null);
     let owner = owner_of(&coll, &updated);
     let notify = announce(
@@ -166,5 +176,6 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         &said(&coll, &updated, &id, &fields),
         Some(&id),
     );
-    Ok(OpResult::applied(format!("{id} edited ({})", fields.join(", "))).with_notify(notify))
+    let result = OpResult::applied(format!("{id} edited ({})", fields.join(", ")));
+    Ok(outcome.finish(result.with_notify(notify)))
 }

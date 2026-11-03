@@ -3,6 +3,7 @@
 //! reads or clears another's with `--for <T>`; `send <T> "<text>"` queues a message for a thread
 //! of this board and asks the dashboard, best effort, to wake it; `rm` drops messages.
 
+pub(crate) mod ack_post;
 mod read;
 mod rm;
 mod send;

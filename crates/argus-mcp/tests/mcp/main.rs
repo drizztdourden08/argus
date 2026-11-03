@@ -2,7 +2,9 @@
 //! `mcp.tools`, `mcp.http`, `mcp.server` (protocol side) and `mcp.stdio` tests.
 
 mod bridge;
+mod bridge_stub;
 mod defs;
+mod deps;
 mod http;
 mod node_parity;
 mod node_results;
