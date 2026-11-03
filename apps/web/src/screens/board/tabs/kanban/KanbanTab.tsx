@@ -35,6 +35,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
   const subjects = useMemo(() => subjectsOf(data.items), [data.items]);
   const drawerTests = useMemo(() => itemTests(data.tests, data.closedBuilds, state.filters.archived), [data.tests, data.closedBuilds, state.filters.archived]);
+  const blocking = (drawer.opened ? data.asks.get(drawer.opened.id) : undefined)?.find((link) => link.via === 'blocker') ?? null;
   if (!data.ready) return <Text tone="muted">Loading the work items.</Text>;
   return (
     <Flex direction="column" gap="md">
@@ -63,6 +64,7 @@ const KanbanTab = (props: KanbanTabProps) => {
         threads={data.threads}
         actions={data.actions}
         waiting={needsYou(drawer.opened ? data.needs.get(drawer.opened.id) : undefined)}
+        blocking={blocking}
         now={now}
         ops={ops}
         nav={drawer.nav}

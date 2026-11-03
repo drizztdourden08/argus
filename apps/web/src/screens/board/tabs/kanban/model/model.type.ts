@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanColumn, KanbanMove, TagUrgencyColor } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
 import type { DepColor, DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
@@ -51,12 +51,33 @@ interface Needs {
   tests: number;
 }
 
+type AskKind = 'question' | 'decision';
+
+interface AskLink {
+  id: string;
+  kind: AskKind;
+  via: 'item' | 'blocker';
+}
+
+interface AskTagSpec {
+  id: string;
+  label: string;
+  color: TagUrgencyColor;
+  title: string;
+}
+
 interface CardData {
   id: string;
   item: ItemRef;
   needsYou: boolean;
-  decisions: number;
+  asks: AskLink[];
   quietMs: number | null;
+  conflicted: boolean;
+}
+
+interface CardFacts {
+  needs: Needs | undefined;
+  asks: AskLink[];
   conflicted: boolean;
 }
 
@@ -64,6 +85,7 @@ interface ViewInput {
   items: ItemRef[];
   threads: WithId<ThreadChoice>[];
   needs: ReadonlyMap<string, Needs>;
+  asks: ReadonlyMap<string, AskLink[]>;
   notices: readonly OpNotice[];
   filters: KanbanFilters;
   prefs: KanbanPrefs;
@@ -154,5 +176,5 @@ type DepView = DepLink & {
 };
 
 export type {
-  AddPreset, BulkSofts, CardData, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
+  AddPreset, AskKind, AskLink, AskTagSpec, BulkSofts, CardData, CardFacts, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
 };

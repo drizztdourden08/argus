@@ -11,9 +11,10 @@ import { BoardFocus } from './BoardFocus';
 import { BoardHeader } from './BoardHeader';
 import { BoardMore, useBoardMore } from './BoardMore';
 import { BoardTabBody } from './BoardTabBody';
+import { EntryDrawer } from './EntryDrawer';
 import { useBoardWork } from './feed-model';
 import { RegisteredStrip } from './RegisteredStrip';
-import { OpenThreadContext } from './shared';
+import { OpenEntryContext, OpenThreadContext } from './shared';
 import { useTabBadges, withBadges } from './tab-badges';
 import { ThreadDrawer } from './ThreadDrawer';
 import type { BoardPageProps } from './board.type';
@@ -25,6 +26,7 @@ const BoardPage = (props: BoardPageProps) => {
   const board = useBoard(boardKey);
   const more = useBoardMore();
   const [openThread, setOpenThread] = useState<string | null>(null);
+  const [openEntry, setOpenEntry] = useState<string | null>(null);
   const { tab, select } = useBoardTab(more.trashOpen);
   const trashCount = useTrashCount(boardKey);
   const work = useBoardWork(boardKey);
@@ -33,26 +35,29 @@ const BoardPage = (props: BoardPageProps) => {
   usePresence(boardKey);
   return (
     <OpenThreadContext.Provider value={setOpenThread}>
-      <PageFrame>
-        <BoardHeader
-          boardKey={boardKey}
-          name={board.name}
-          status={board.status}
-          updatedAt={board.meta?.updatedAt ?? null}
-          tools={<BoardMore boardKey={boardKey} trashCount={trashCount} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />}
-        />
-        <StatusNotice status={board.status} />
-        <RegisteredStrip boardKey={boardKey} />
-        <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={(next) => {
-            more.closeTrash();
-            select(next);
-          }}
-        />
-        <BoardFocus boardKey={boardKey} />
-        <BoardTabBody tab={tab} boardKey={boardKey} work={work} handed={board.meta?.handedBuild ?? null} more={more} />
-        <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
-        <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />
-      </PageFrame>
+      <OpenEntryContext.Provider value={setOpenEntry}>
+        <PageFrame>
+          <BoardHeader
+            boardKey={boardKey}
+            name={board.name}
+            status={board.status}
+            updatedAt={board.meta?.updatedAt ?? null}
+            tools={<BoardMore boardKey={boardKey} trashCount={trashCount} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />}
+          />
+          <StatusNotice status={board.status} />
+          <RegisteredStrip boardKey={boardKey} />
+          <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={(next) => {
+              more.closeTrash();
+              select(next);
+            }}
+          />
+          <BoardFocus boardKey={boardKey} />
+          <BoardTabBody tab={tab} boardKey={boardKey} work={work} handed={board.meta?.handedBuild ?? null} more={more} />
+          <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
+          <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />
+          <EntryDrawer boardKey={boardKey} id={openEntry} onClose={() => setOpenEntry(null)} />
+        </PageFrame>
+      </OpenEntryContext.Provider>
     </OpenThreadContext.Provider>
   );
 };

@@ -72,6 +72,10 @@ interface RecordDrawerProps {
   children?: ReactNode;
 }
 
+interface EntryLinkProps {
+  id: string;
+}
+
 interface FactSelectProps {
   label: string;
   options: readonly Option[];
@@ -102,4 +106,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, EntryLinkProps, FactSelectProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };

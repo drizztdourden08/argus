@@ -14,7 +14,7 @@ import { ItemTests } from './ItemTests';
 import { TodosSection } from './TodosSection';
 
 const ItemBody = (props: ItemBodyProps) => {
-  const { boardKey, item, tests, threads, actions, waiting, now, ops } = props;
+  const { boardKey, item, tests, threads, actions, waiting, blocking, now, ops } = props;
   const record = useItemRecord(boardKey, item.id, actions);
   const acts = useRecordActions(boardKey);
   const feed = useFeedActions(boardKey);
@@ -22,7 +22,7 @@ const ItemBody = (props: ItemBodyProps) => {
   const openQuestions = record.questions.filter((row) => row.open).length;
   return (
     <Flex direction="column" gap="lg">
-      <DrawerFacts item={item} waiting={waiting} threads={threads} now={now} ops={ops} />
+      <DrawerFacts item={item} waiting={waiting} blocking={blocking} threads={threads} now={now} ops={ops} />
       <DependencySection item={item} now={now} />
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={own} ops={ops} />

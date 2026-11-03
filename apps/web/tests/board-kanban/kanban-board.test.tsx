@@ -46,7 +46,7 @@ describe('S1 the Kanban columns', { tags: ['standard'] }, () => {
 });
 
 describe('S1 what a card says about the owner', { tags: ['standard'] }, () => {
-  it('says needs you for a question, a to-do and a manual test, and counts the decisions to pick up', async () => {
+  it('says needs you for a question, a to-do and a manual test, and tags the open question and the decision to pick up', async () => {
     await mountKanban({
       items: [item('I-1'), item('I-2'), item('I-3'), item('I-4')],
       entries: [
@@ -57,7 +57,8 @@ describe('S1 what a card says about the owner', { tags: ['standard'] }, () => {
       tests: [{ id: 'T-1', item: 'I-3', mode: 'manual', status: 'pending', title: 't', ac: [] }],
     });
     expect(within(await boardOf()).getAllByText('needs you')).toHaveLength(3);
-    expect(screen.getByText('1 to decide')).toBeTruthy();
+    expect(screen.getByText('waiting on Q-1')).toBeTruthy();
+    expect(screen.getByText('D-1 to pick up')).toBeTruthy();
   });
 });
 

@@ -44,6 +44,7 @@ interface FeedCardViewProps {
 interface CardMetaProps {
   label: string;
   id: string;
+  linked: boolean;
   at: string;
   thread?: string | null;
   item?: string | null;

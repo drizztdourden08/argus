@@ -3,7 +3,7 @@ import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, CardData, ItemGroup, KanbanView } from './model';
+import type { AddPreset, AskLink, CardData, ItemGroup, KanbanView } from './model';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -120,6 +120,10 @@ interface CriteriaBarProps {
   item: ItemRef;
 }
 
+interface AskTagProps {
+  link: AskLink;
+}
+
 export type {
-  CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AskTagProps, CardFootProps, CardMenuProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, CriteriaBarProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

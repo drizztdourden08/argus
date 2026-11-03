@@ -2,11 +2,18 @@
 import type { ActionDoc } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { Entry as BoardEntry, LogDoc } from '../../../../../data/types';
+import type { OwnerMarks } from '../../../feed-model';
 
 interface EntryRow {
   entry: BoardEntry;
   open: boolean;
   replies: BoardEntry[];
+}
+
+interface EntryState {
+  entries: BoardEntry[];
+  marks: OwnerMarks;
+  opened: Set<string>;
 }
 
 interface TodoRow {
@@ -48,4 +55,4 @@ interface ItemRecord {
   timeline: TimelineRow[];
 }
 
-export type { EntryRow, ItemRecord, RecordInput, TimelineInput, TimelineRow, TodoRow };
+export type { EntryRow, EntryState, ItemRecord, RecordInput, TimelineInput, TimelineRow, TodoRow };

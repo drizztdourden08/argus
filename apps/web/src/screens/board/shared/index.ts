@@ -3,8 +3,10 @@ export { announce } from './behavior/announce';
 export { announceFailure } from './behavior/announce-failure';
 export { copyText } from './behavior/copy-text';
 export { readStored } from './behavior/read-stored';
+export { OpenEntryContext } from './behavior/open-entry-context';
 export { OpenThreadContext } from './behavior/open-thread-context';
 export { useNow } from './behavior/useNow';
+export { useOpenEntry } from './behavior/useOpenEntry';
 export { useOpenThread } from './behavior/useOpenThread';
 export { useStored } from './behavior/useStored';
 export { useStoredFlag } from './behavior/useStoredFlag';
@@ -14,6 +16,7 @@ export { activityTone, bundleState, formatFilters, jsonRecord, neighbours, nonEm
 export { FOCUS_KEY, SECOND_TICK_MS, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { ChatButton } from './sub-components/ChatButton';
 export { DrawerToolbar } from './sub-components/DrawerToolbar';
+export { EntryLink } from './sub-components/EntryLink';
 export { FactSelect } from './sub-components/FactSelect';
 export { EditableMarkdown } from './sub-components/EditableMarkdown';
 export { OpNoticeCallout } from './sub-components/OpNoticeCallout';

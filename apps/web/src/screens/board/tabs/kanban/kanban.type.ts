@@ -7,7 +7,7 @@ import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
 import type { OpNotice } from '../../shared';
 import type { TrashPanel } from './trash-props.type';
-import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
+import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
 import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
 interface KanbanData {
@@ -20,6 +20,7 @@ interface KanbanData {
   tests: WithId<Test>[];
   closedBuilds: ReadonlySet<string>;
   needs: ReadonlyMap<string, Needs>;
+  asks: ReadonlyMap<string, AskLink[]>;
 }
 
 interface KanbanState {

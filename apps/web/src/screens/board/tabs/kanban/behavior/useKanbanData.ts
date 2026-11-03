@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { ActionDoc, Entry, Item, ThreadChoice } from '../../../../../data/kanban';
 import { useCollection } from '../../../../../data/react';
 import type { Build, Test } from '../../../../../data/types';
-import { OP_KINDS, needsMap } from '../model';
+import { OP_KINDS, askLinks, needsMap } from '../model';
 import type { TrashSource } from '../trash';
 import type { KanbanData, SoftDoc } from '../kanban.type';
 
@@ -26,6 +26,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     }),
     [entries.docs, actions.docs, tests.docs, closedBuilds],
   );
+  const asks = useMemo(() => askLinks(items.docs, entries.docs), [items.docs, entries.docs]);
   return {
     ready: items.ready && threads.ready,
     items: items.docs,
@@ -36,6 +37,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     tests: tests.docs,
     closedBuilds,
     needs,
+    asks,
   };
 };
 

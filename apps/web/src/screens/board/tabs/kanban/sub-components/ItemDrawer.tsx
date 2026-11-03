@@ -7,7 +7,7 @@ import { ItemEyebrow } from './ItemEyebrow';
 import { ItemTitle } from './ItemTitle';
 
 const ItemDrawer = (props: ItemDrawerProps) => {
-  const { boardKey, item, tests, threads, actions, waiting, now, ops, nav, wide, onWide, onClose } = props;
+  const { boardKey, item, tests, threads, actions, waiting, blocking, now, ops, nav, wide, onWide, onClose } = props;
   return (
     <RecordDrawer
       open={item !== null}
@@ -18,7 +18,7 @@ const ItemDrawer = (props: ItemDrawerProps) => {
       tools={item && <DrawerNav item={item} ops={ops} nav={nav} wide={wide} onWide={onWide} />}
       onClose={onClose}
     >
-      {item && <ItemBody boardKey={boardKey} item={item} tests={tests} threads={threads} actions={actions} waiting={waiting} now={now} ops={ops} />}
+      {item && <ItemBody boardKey={boardKey} item={item} tests={tests} threads={threads} actions={actions} waiting={waiting} blocking={blocking} now={now} ops={ops} />}
     </RecordDrawer>
   );
 };
