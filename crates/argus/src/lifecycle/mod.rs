@@ -141,7 +141,7 @@ async fn start_verb(
     (foreground, port, wait): (bool, Option<u16>, Option<u64>),
 ) -> Result<u8, String> {
     if foreground {
-        return serve::run(port, Some(paths.home.clone()), false).await;
+        return serve::run(port, Some(paths.home.clone()), (false, false)).await;
     }
     let options = start::Options {
         port,

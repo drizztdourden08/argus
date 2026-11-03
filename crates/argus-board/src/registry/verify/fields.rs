@@ -29,39 +29,53 @@ pub(super) fn verify(reg: &Registry, out: &mut Vec<String>) {
 }
 
 fn verify_field(reg: &Registry, id: &str, field: &Field, out: &mut Vec<String>) {
-    let mut say = |text: &str| out.push(format!("fields.{id}: {text}"));
+    let mut found = verify_shape(field);
+    found.extend(verify_links(reg, field));
+    out.extend(found.into_iter().map(|text| format!("fields.{id}: {text}")));
+}
+
+/// The settings that must match the content type of a field.
+fn verify_shape(field: &Field) -> Vec<String> {
+    let mut found = Vec::new();
     let text = matches!(
         field.content,
         ContentType::Line | ContentType::Slug | ContentType::Rich
     );
     if text != field.max.is_some_and(|n| n > 0) {
-        say("a max is set exactly on line, slug and rich fields");
+        found.push("a max is set exactly on line, slug and rich fields".to_owned());
     }
     if (field.content == ContentType::Rich) != field.images.is_some() {
-        say("images is set exactly on rich fields");
+        found.push("images is set exactly on rich fields".to_owned());
     }
     if (field.content == ContentType::Enum) == field.values.is_empty() {
-        say("values are set exactly on enum fields");
+        found.push("values are set exactly on enum fields".to_owned());
     }
     if !field.labels.is_empty() && field.labels.len() != field.values.len() {
-        say("labels must match values one to one");
+        found.push("labels must match values one to one".to_owned());
     }
+    found
+}
+
+/// The references, people and lists a field may name.
+fn verify_links(reg: &Registry, field: &Field) -> Vec<String> {
+    let mut found = Vec::new();
     let refs = matches!(field.content, ContentType::Ref | ContentType::Refs);
     if refs == field.to.is_empty() {
-        say("to is set exactly on ref and refs fields");
+        found.push("to is set exactly on ref and refs fields".to_owned());
     }
     if let Some(kind) = field
         .to
         .iter()
         .find(|k| !reg.content.reference.kinds.contains_key(*k))
     {
-        say(&format!("unknown ref kind {kind}"));
+        found.push(format!("unknown ref kind {kind}"));
     }
     if field.leads && field.content != ContentType::Person {
-        say("leads is only for person fields");
+        found.push("leads is only for person fields".to_owned());
     }
     let listable = matches!(field.content, ContentType::Line | ContentType::Refs);
     if field.list.is_some() && !listable {
-        say("list is only for line and refs fields");
+        found.push("list is only for line and refs fields".to_owned());
     }
+    found
 }
