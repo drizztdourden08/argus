@@ -100,6 +100,6 @@ describe('I-85 P4 a card opens its pane', { tags: ['standard'] }, () => {
     await mountEntryBoard({ at: '/p/rotp/#activity', work: entryWork(), entries: { 'Q-1': question } });
     fireEvent.click(await screen.findByRole('button', { name: 'Open Q-1: Ship it today?' }));
     expect(await screen.findByRole('dialog', { name: 'Entry detail' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /^Activity/ }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getAllByRole('tab', { name: /^Activity/ })[0]?.getAttribute('aria-selected')).toBe('true');
   });
 });

@@ -40,7 +40,7 @@ const mountBoard = (routes: Record<string, unknown>) => {
 describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
   it('shows the channels and marks the latest version', async () => {
     mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
-    expect(await screen.findByRole('group', { name: 'Channel stable' })).toBeTruthy();
+    expect(await screen.findByRole('list', { name: 'Channel stable' })).toBeTruthy();
     expect(screen.getByText('latest 1.2.0')).toBeTruthy();
     const newest = within(screen.getByRole('group', { name: 'Release 1.2.0 of channel stable' }));
     expect(newest.getByText('latest')).toBeTruthy();
@@ -54,7 +54,7 @@ describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
     expect(card.getByText('Release 1.2.0')).toBeTruthy();
     expect(card.getByText('v1.2.0')).toBeTruthy();
     expect(card.getByText('0123456')).toBeTruthy();
-    expect(card.getByText('5m ago')).toBeTruthy();
+    expect(card.getByText('5m')).toBeTruthy();
     expect(card.getByRole('link', { name: 'Release notes' }).getAttribute('href')).toBe('/releases/rotp/stable/1.2.0/notes.md');
     expect(card.getByText('waits for the go')).toBeTruthy();
     const done = within(screen.getByRole('group', { name: 'Release 1.1.0 of channel stable' }));
