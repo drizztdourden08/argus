@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { RunEntry } from '../../../../data/runs';
+import type { GroupThreads } from '../../item-groups';
 import type { BuildGroups, LauncherViews } from './model';
 
 interface BuildsData {
@@ -7,6 +8,7 @@ interface BuildsData {
   views: LauncherViews;
   groups: BuildGroups;
   runs: RunEntry[];
+  threads: GroupThreads;
 }
 
 interface RetiredFlag {

@@ -61,15 +61,13 @@ describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
     expect(done.getByRole('link', { name: 'on GitHub' }).getAttribute('href')).toBe('https://github.com/o/r/releases/tag/v1.1.0');
   });
 
-  it('lists the assets and packages with their sizes and download links', async () => {
+  it('counts the files and packages of a version on its card and leaves the lists to the Files tab', async () => {
     mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
     const card = within(await screen.findByRole('group', { name: 'Release 1.2.0 of channel stable' }));
-    const asset = card.getByRole('link', { name: 'rotp-1.2.0-setup.exe' });
-    expect(asset.getAttribute('href')).toBe('/releases/rotp/stable/1.2.0/rotp-1.2.0-setup.exe');
-    expect(asset.hasAttribute('download')).toBe(true);
-    expect(card.getByText('120 MB')).toBeTruthy();
-    expect(card.getByRole('link', { name: '@drizztdourden08/brock-core@1.2.0' }).getAttribute('href')).toBe('/releases/rotp/stable/1.2.0/brock-core-1.2.0.tgz');
-    expect(card.getByText('2.0 KB')).toBeTruthy();
+    expect(card.getByText('1 package')).toBeTruthy();
+    expect(card.getByText('1 file')).toBeTruthy();
+    expect(card.queryByRole('link', { name: 'rotp-1.2.0-setup.exe' })).toBeNull();
+    expect(card.getByRole('button', { name: /^Open V-1\.2\.0/ })).toBeTruthy();
   });
 
   it('says when the releases could not be read', async () => {

@@ -26,6 +26,7 @@ interface Board {
   builds?: Doc[];
   log?: Doc[];
   agents?: Doc[];
+  feeds?: { coll: string; key: string; docs: Doc[] }[];
 }
 
 interface Posted {
@@ -134,6 +135,7 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
     feed('builds', (board.builds ?? []).map((build) => ({ ...build, id: build.tag })));
     feed('log', board.log ?? []);
     feed('agents', board.agents ?? []);
+    for (const extra of board.feeds ?? []) feed(extra.coll, extra.docs.map((doc) => ({ ...doc, id: doc[extra.key] })));
     feed('meta', [{ id: 'board', project: SCOPE, name: 'Alpha' }]);
   });
   let seq = 98;

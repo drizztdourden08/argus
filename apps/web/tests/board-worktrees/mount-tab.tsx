@@ -10,6 +10,8 @@ import type { WorktreeRow } from '../../src/screens/board/tabs/worktrees/model';
 
 interface Board {
   docs?: WorktreeRow[];
+  items?: object[];
+  threads?: object[];
   meta?: WorktreesMeta | null;
 }
 
@@ -60,11 +62,15 @@ const cleanAfterEach = (): void => {
 
 const byId = (docs: WorktreeRow[]): Record<string, object> => Object.fromEntries(docs.map((doc) => [doc.id, doc]));
 
+const rowsById = (docs: object[]): Record<string, object> => Object.fromEntries(docs.map((doc) => [(doc as { id: string }).id, doc]));
+
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const { view, source } = await mountStreamed(<WorktreesTab boardKey={SCOPE} />);
   act(() => {
     source?.emit('snapshot', snapshot(SCOPE, 'worktrees', byId(board.docs ?? [])));
+    source?.emit('snapshot', snapshot(SCOPE, 'items', rowsById(board.items ?? [])));
+    source?.emit('snapshot', snapshot(SCOPE, 'threads', rowsById(board.threads ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'meta', board.meta ? { worktrees: board.meta } : {}));
   });
   const change = (coll: string, id: string, data: object) =>

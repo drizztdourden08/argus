@@ -27,7 +27,11 @@ const mountChanges = async (prs: Doc[], routes: Record<string, unknown> = {}) =>
   );
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   const source = fake.sources[fake.sources.length - 1];
-  act(() => source?.emit('snapshot', snapshot(SCOPE, 'prs', byId(prs))));
+  act(() => {
+    source?.emit('snapshot', snapshot(SCOPE, 'prs', byId(prs)));
+    source?.emit('snapshot', snapshot(SCOPE, 'items', {}));
+    source?.emit('snapshot', snapshot(SCOPE, 'threads', {}));
+  });
   const change = (id: string, data: object) =>
     act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll: 'prs', id, op: 'set', data }] }));
   return { ...view, calls, change };

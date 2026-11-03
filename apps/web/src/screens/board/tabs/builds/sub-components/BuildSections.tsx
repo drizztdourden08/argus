@@ -1,25 +1,31 @@
 /* @layer renderer-app @kind component */
-import { MASTER_NOTE, MASTER_TITLE, NEEDS_LINK_NOTE, NEEDS_LINK_TITLE } from '../builds.constants';
+import { ItemGroupSections } from '../../../item-groups';
+import type { ItemGroups } from '../../../item-groups';
+import { NEEDS_LINK_TITLE } from '../builds.constants';
 import type { BuildSectionsProps } from '../builds-props.type';
-import { BuildGroup } from './BuildGroup';
-import { GroupTitle } from './GroupTitle';
-import { ItemHead } from './ItemHead';
+import type { LauncherView } from '../model';
+import { LauncherList } from './LauncherList';
+import { MasterGroup } from './MasterGroup';
 
 const BuildSections = (props: BuildSectionsProps) => {
-  const { groups, boardKey, runs, onLog } = props;
-  const shared = { boardKey, runs, onLog };
+  const { groups, boardKey, runs, threads } = props;
+  const shown: ItemGroups<LauncherView> = {
+    groups: groups.items.map((group) => ({ item: group.item, rows: group.views })),
+    none: groups.needsLink,
+    closed: [],
+  };
   return (
-    <>
-      {groups.master.length > 0 && (
-        <BuildGroup id="master" head={<GroupTitle title={MASTER_TITLE} note={MASTER_NOTE} />} views={groups.master} label={MASTER_TITLE} {...shared} />
-      )}
-      {groups.items.map((group) => (
-        <BuildGroup key={group.item.id} id={group.item.id} head={<ItemHead item={group.item} />} views={group.views} label={`Builds for ${group.item.id}`} {...shared} />
-      ))}
-      {groups.needsLink.length > 0 && (
-        <BuildGroup id="needs-link" head={<GroupTitle title={NEEDS_LINK_TITLE} note={NEEDS_LINK_NOTE} />} views={groups.needsLink} label={NEEDS_LINK_TITLE} {...shared} />
-      )}
-    </>
+    <ItemGroupSections
+      groups={shown}
+      boardKey={boardKey}
+      threads={threads}
+      label="Builds"
+      noneTitle={NEEDS_LINK_TITLE}
+      noneFlag
+      lead={groups.master.length > 0 ? <MasterGroup views={groups.master} boardKey={boardKey} runs={runs} /> : undefined}
+    >
+      {(rows) => <LauncherList views={rows} label="Builds" boardKey={boardKey} runs={runs} />}
+    </ItemGroupSections>
   );
 };
 

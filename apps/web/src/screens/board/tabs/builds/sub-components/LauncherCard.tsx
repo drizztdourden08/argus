@@ -1,25 +1,28 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex } from '@drizztdourden08/tessera';
-import { RunTerminal } from '../../../run-terminal';
+import { Card } from '@drizztdourden08/tessera';
+import { RecordCard, useRecordPane } from '../../../../../shell';
+import { useBuildHead } from '../behavior/useBuildHead';
 import type { LauncherCardProps } from '../builds-props.type';
-import { LauncherCommand } from './LauncherCommand';
-import { LauncherHead } from './LauncherHead';
-import { LauncherMeta } from './LauncherMeta';
-import { LauncherNote } from './LauncherNote';
+import { buildTitle } from '../model';
+import { BuildFoot } from './BuildFoot';
+import { BuildSignals } from './BuildSignals';
 
 const LauncherCard = (props: LauncherCardProps) => {
-  const { view, boardKey, runs, onLog } = props;
+  const { view, boardKey, runs, threads } = props;
   const { launcher } = view;
-  const label = `Launcher ${launcher.name}${launcher.title ? `: ${launcher.title}` : ''}`;
+  const pane = useRecordPane();
+  const head = useBuildHead(view, boardKey, threads);
+  const title = buildTitle(launcher);
   return (
-    <Card data-launcher={launcher.name} role="group" aria-label={label} edge="border" edgeTone={launcher.current ? 'success' : undefined}>
-      <Flex direction="column" gap="sm">
-        <LauncherHead view={view} />
-        <LauncherMeta view={view} />
-        <LauncherNote view={view} />
-        <LauncherCommand view={view} boardKey={boardKey} runs={runs} onLog={onLog} />
-        {view.playable && view.shown && <RunTerminal key={view.shown.id} run={view.shown} boardKey={boardKey} onLog={onLog} />}
-      </Flex>
+    <Card data-launcher={launcher.name} role="group" aria-label={`Build ${head.code}: ${title}`} edge="border" edgeTone={launcher.current ? 'success' : undefined}>
+      <RecordCard
+        head={head}
+        title={title}
+        openLabel={`Open ${head.code}: ${title}`}
+        onOpen={() => pane.open(head.code)}
+        signals={<BuildSignals view={view} code={head.code} />}
+        foot={<BuildFoot view={view} boardKey={boardKey} runs={runs} />}
+      />
     </Card>
   );
 };

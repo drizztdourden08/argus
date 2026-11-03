@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { LauncherList } from '../../../../screens/board/tabs/builds';
-import { useOpenRunLog } from '../../../../screens/board/shared';
 import { DrawerSection } from '../../../../screens/board/tabs/kanban/sub-components/DrawerSection';
 import { EmptyLine } from '../../../../screens/board/tabs/kanban/sub-components/EmptyLine';
 import type { PaneBodyProps } from '../pane.type';
@@ -12,14 +11,13 @@ import { ServedWorktrees } from '../served/ServedWorktrees';
 const ServedTab = (props: PaneBodyProps) => {
   const { boardKey, item } = props.data;
   const served = useServed(boardKey, item.id);
-  const openLog = useOpenRunLog();
   if (!served.ready) return <Text tone="muted">Loading the builds.</Text>;
   return (
     <Flex direction="column" gap="lg">
       <DrawerSection title={`${BUILDS_TITLE} · ${served.builds.length}`}>
         {served.builds.length === 0
           ? <EmptyLine>{NO_BUILDS_TEXT}</EmptyLine>
-          : <LauncherList views={served.builds} label={BUILDS_TITLE} boardKey={boardKey} runs={served.runs} onLog={openLog} />}
+          : <LauncherList views={served.builds} label={BUILDS_TITLE} boardKey={boardKey} runs={served.runs} />}
       </DrawerSection>
       <ServedWorktrees rows={served.worktrees} />
     </Flex>

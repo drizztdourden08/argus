@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind types */
 import type { BatchJob, RemovedWorktree, WorktreeRequest, WorktreeRule, WorktreesMeta } from '../../../../data/worktrees';
 import type { Counts, Notice, Panel, WorktreeFilter, WorktreeRow } from './model';
-import type { AskThread, BatchControls, PanelControls, Removal, RowContext } from './worktrees.type';
+import type { GroupThreads } from '../../item-groups';
+import type { AskThread, BatchControls, PanelControls, Removal } from './worktrees.type';
 
 interface WorktreesTabProps {
   boardKey: string;
@@ -76,12 +77,8 @@ interface LeftoverConfirmProps extends RemoveConfirmProps {
   limit: number;
 }
 
-interface RemoveButtonProps {
-  row: WorktreeRow;
-  context: RowContext;
-}
-
-interface WorktreeTableProps {
+interface WorktreeGroupsProps {
+  boardKey: string;
   rows: WorktreeRow[];
   meta: WorktreesMeta | null;
   controls: PanelControls;
@@ -89,7 +86,18 @@ interface WorktreeTableProps {
   removal: Removal;
 }
 
-interface WorktreeBodyProps extends WorktreeTableProps {
+interface WorktreeRecordProps {
+  boardKey: string;
+  row: WorktreeRow;
+  threads: GroupThreads;
+  now: number;
+  meta: WorktreesMeta | null;
+  controls: PanelControls;
+  ask: AskThread;
+  removal: Removal;
+}
+
+interface WorktreeBodyProps extends WorktreeGroupsProps {
   total: number;
   filter: WorktreeFilter;
   hasRules: boolean;
@@ -122,6 +130,6 @@ interface RequestLineProps {
 
 export type {
   BatchConfirmProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
-  RefusedJobsProps, RemoveButtonProps, RemoveConfirmProps, RemovedSectionProps, RequestFormProps, RequestLineProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
-  WorktreeSummaryProps, WorktreeTableProps, WorktreeToolbarProps, WorktreesTabProps,
+  RefusedJobsProps, RemoveConfirmProps, RemovedSectionProps, RequestFormProps, RequestLineProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
+  WorktreeGroupsProps, WorktreeRecordProps, WorktreeSummaryProps, WorktreeToolbarProps, WorktreesTabProps,
 };

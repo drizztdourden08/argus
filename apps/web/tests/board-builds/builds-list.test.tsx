@@ -20,7 +20,6 @@ describe('S1 the launcher list', { tags: ['standard'] }, () => {
   it('draws the text of a launcher as text, never as markup', async () => {
     const { container } = await mountBuilds(withDefs([launcherDoc('master', { title: '<img src=x onerror=alert(1)>', cmd: 'run "a" <b> & c', branch: '<br>' })]));
     expect(await screen.findByText('<img src=x onerror=alert(1)>')).toBeTruthy();
-    expect(screen.getByDisplayValue('run "a" <b> & c')).toBeTruthy();
     expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('b')).toBeNull();
   });

@@ -15,7 +15,7 @@ const ReleasesTab = () => {
     <Stack gap="md">
       {shown.map((entry) => (
         <Panel key={entry.project} title={<ProjectLink project={entry.project} hash="#releases" />}>
-          <ChannelList channels={entry.channels} />
+          <ChannelList channels={entry.channels} project={entry.project} prefixed />
         </Panel>
       ))}
     </Stack>

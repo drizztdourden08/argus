@@ -60,20 +60,11 @@ const REQUEST_LOOK: Readonly<Record<string, TagLook>> = {
   refused: DANGER_LOOK,
 };
 
-const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
-  stale: WARNING_LOOK,
-  merged: INFO_LOOK,
-  'dirty-stale': DANGER_LOOK,
-  missing: DANGER_LOOK,
-  error: DANGER_LOOK,
-  deleting: WARNING_LOOK,
-};
-
 const HYGIENE_LOOK: Readonly<Record<string, TagLook>> = {
   'in-use': SUCCESS_LOOK,
   released: INFO_LOOK,
-  closing: WARNING_LOOK,
-  review: WARNING_LOOK,
+  closing:
+  review:
 };
 
 const REMOVED_SHOWN = 20;
@@ -94,5 +85,5 @@ const NOT_REMOVABLE: readonly string[] = ['not-git', 'error', 'leftover', 'delet
 
 export {
   DEFAULT_LIMIT_DAYS, GB_STEP, HYGIENE_LOOK, JOB_WINDOW_MS, JOBS_SHOWN, NEED_STATUSES, NOT_REMOVABLE, REASONS_SHOWN, REMOVE_LOOKS, REMOVED_SHOWN, REQUEST_LOOK, REQUEST_TIP, REQUEST_WAITING, REQUESTS_SHOWN, STATUS_TIP, SUBJECTS_SHOWN,
-  STALENESS_STATUSES, STATUS_LABEL, STATUS_LOOK, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE, WARNING_LOOK,
+  STALENESS_STATUSES, STATUS_LABEL, UNKNOWN_SIZE, UNKNOWN_STATUS_LOOK, UNREACHABLE,
 };

@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { IconName, SignalTone } from '@drizztdourden08/tessera';
 import type { WithId } from '../../../../../data/react';
 import type { RunEntry } from '../../../../../data/runs';
 import type { ItemRef } from '../../../../../data/kanban';
@@ -41,6 +42,14 @@ interface LauncherViews {
   hasMaster: boolean;
 }
 
+interface BuildSignal {
+  id: string;
+  icon: IconName;
+  label: string;
+  tone: SignalTone;
+  tab: string;
+}
+
 interface ItemBuilds {
   item: ItemRef;
   views: LauncherView[];
@@ -53,4 +62,4 @@ interface BuildGroups {
   closed: LauncherView[];
 }
 
-export type { BuildDoc, BuildGroups, ItemBuilds, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };
+export type { BuildDoc, BuildGroups, BuildSignal, ItemBuilds, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };

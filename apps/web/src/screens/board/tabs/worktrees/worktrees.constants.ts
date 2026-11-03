@@ -1,6 +1,9 @@
 /* @layer renderer-app @kind constants */
-import type { FieldDescriptor, TableColumn } from '@drizztdourden08/tessera';
 import type { WorktreeFilter } from './model';
+
+const WORKTREE_KIND = 'worktree';
+
+const MAIN_TITLE = 'Main checkouts';
 
 const FILTER_KEY = 'coord.wtfilter';
 
@@ -9,32 +12,6 @@ const RULES_KEY = 'coord.wtrules';
 const FILTER_IDS: readonly WorktreeFilter[] = ['all', 'need', 'left'];
 
 const RULES_STATES: readonly ('0' | '1')[] = ['0', '1'];
-
-const SCHEMA: readonly FieldDescriptor[] = [
-  { path: 'path', label: 'Path', kind: 'string', optional: false },
-  { path: 'status', label: 'Status', kind: 'string', optional: false },
-  { path: 'branch', label: 'Branch', kind: 'string', optional: false },
-  { path: 'item', label: 'Item', kind: 'string', optional: false },
-  { path: 'touched', label: 'Touched', kind: 'string', optional: false },
-  { path: 'ahead', label: 'Ahead / behind', kind: 'number', optional: false },
-  { path: 'dirty', label: 'Dirty', kind: 'number', optional: false },
-  { path: 'subject', label: 'Last commit', kind: 'string', optional: false },
-  { path: 'request', label: 'Request', kind: 'string', optional: false },
-  { path: 'actions', label: 'Actions', kind: 'string', optional: false },
-];
-
-const FALLBACK_COLUMNS: readonly TableColumn[] = [
-  { path: 'path', width: 410 },
-  { path: 'status', width: 110 },
-  { path: 'branch', width: 160 },
-  { path: 'item', width: 120 },
-  { path: 'touched', width: 80 },
-  { path: 'ahead', width: 104 },
-  { path: 'dirty', width: 46 },
-  { path: 'subject', grow: true },
-  { path: 'request', width: 100 },
-  { path: 'actions', width: 170 },
-];
 
 const EXPLAINER_TEXT = 'Where the thread\'s worktrees are, as git sees them now. The thread decides what to do, or you delete one here (a backup is saved first when work would be lost).';
 
@@ -55,4 +32,4 @@ const ASK_HINTS = {
   check: 'A short message for the thread (optional): what to check',
 } as const;
 
-export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, FALLBACK_COLUMNS, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, RULES_KEY, RULES_STATES, SCHEMA, STALE_TEXT };
+export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND };
