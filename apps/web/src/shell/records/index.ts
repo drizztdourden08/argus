@@ -19,6 +19,7 @@ export { LeadMark } from './sub-components/LeadMark';
 export { LinkedText } from './sub-components/LinkedText';
 export { RecordCard } from './sub-components/RecordCard';
 export { RecordGroup } from './sub-components/RecordGroup';
+export { RecordGroupHeader } from './sub-components/RecordGroupHeader';
 export { RecordHead } from './sub-components/RecordHead';
 export { RecordLink } from './sub-components/RecordLink';
 export { RecordPaneScope } from './sub-components/RecordPaneScope';

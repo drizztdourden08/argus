@@ -9,7 +9,7 @@ import type { WorktreeRecordProps } from '../worktrees-props.type';
 import { WorktreeDetail } from './WorktreeDetail';
 
 const WorktreeRecord = (props: WorktreeRecordProps) => {
-  const { boardKey, row, threads, now, meta, controls, ask, removal } = props;
+  const { boardKey, row, threads, agents, now, meta, controls, ask, removal } = props;
   const pane = useRecordPane();
   const code = worktreeCode(row);
   const label = worktreeLabel(row);
@@ -30,7 +30,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
           menu: worktreeMenu(row, { meta, controls, open, code, label, keep, link, unlink }),
           menuLabel: `More actions for ${label}`,
         }}
-        title={worktreeTitle(row)}
+        title={worktreeTitle(row, agents, meta)}
         chips={worktreeChips(row)}
         age={touchedAge(row, now)}
         trailing={row.job ? <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text> : undefined}

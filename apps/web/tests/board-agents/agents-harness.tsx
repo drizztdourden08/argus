@@ -112,7 +112,13 @@ const rowOf = (container: HTMLElement, id: string): HTMLElement => {
   return row;
 };
 
+const headOf = (container: HTMLElement, code: string): HTMLElement => {
+  const head = [...container.querySelectorAll<HTMLElement>('summary')].find((summary) => summary.querySelector('a')?.textContent === code);
+  if (!head) throw new Error(`no group header for ${code}`);
+  return head;
+};
+
 const agentRows = (container: HTMLElement): string[] =>
   [...container.querySelectorAll<HTMLElement>('[data-record^="A-"]')].map((row) => row.dataset.record ?? '');
 
-export { agent, agentRows, ago, DAY, item, json, live, MIN, mockApi, mockFetch, renderAgents, rowOf };
+export { agent, agentRows, ago, DAY, headOf, item, json, live, MIN, mockApi, mockFetch, renderAgents, rowOf };

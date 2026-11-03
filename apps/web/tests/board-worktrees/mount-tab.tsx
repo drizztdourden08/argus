@@ -13,6 +13,7 @@ interface Board {
   docs?: WorktreeRow[];
   items?: object[];
   threads?: object[];
+  agents?: object[];
   meta?: WorktreesMeta | null;
 }
 
@@ -76,6 +77,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     source?.emit('snapshot', snapshot(SCOPE, 'worktrees', byId(board.docs ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'items', rowsById(board.items ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'threads', rowsById(board.threads ?? [])));
+    source?.emit('snapshot', snapshot(SCOPE, 'agents', rowsById(board.agents ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'meta', board.meta ? { worktrees: board.meta } : {}));
   });
   const change = (coll: string, id: string, data: object) =>

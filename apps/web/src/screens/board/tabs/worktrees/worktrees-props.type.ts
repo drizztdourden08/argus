@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind types */
+import type { Agent } from '../../../../data/agents';
+import type { WithId } from '../../../../data/react';
 import type { BatchJob, RemovedWorktree, WorktreeRequest, WorktreeRule, WorktreesMeta } from '../../../../data/worktrees';
 import type { Counts, Notice, Panel, WorktreeFilter, WorktreeRow } from './model';
 import type { GroupThreads } from '../../item-groups';
@@ -90,6 +92,7 @@ interface WorktreeRecordProps {
   boardKey: string;
   row: WorktreeRow;
   threads: GroupThreads;
+  agents: readonly WithId<Agent>[];
   now: number;
   meta: WorktreesMeta | null;
   controls: PanelControls;
@@ -117,19 +120,31 @@ interface RuleLineProps {
 }
 
 interface RequestsSectionProps {
+  boardKey: string;
   requests: WorktreeRequest[];
 }
 
 interface RemovedSectionProps {
+  boardKey: string;
   removed: RemovedWorktree[];
 }
 
-interface RequestLineProps {
+interface RequestRowProps {
   request: WorktreeRequest;
+  boardKey: string;
+  threads: GroupThreads;
+  now: number;
+}
+
+interface RemovedRowProps {
+  done: RemovedWorktree;
+  boardKey: string;
+  threads: GroupThreads;
+  now: number;
 }
 
 export type {
   BatchConfirmProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
-  RefusedJobsProps, RemoveConfirmProps, RemovedSectionProps, RequestFormProps, RequestLineProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
+  RefusedJobsProps, RemoveConfirmProps, RemovedRowProps, RemovedSectionProps, RequestFormProps, RequestRowProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
   WorktreeGroupsProps, WorktreeRecordProps, WorktreeSummaryProps, WorktreeToolbarProps, WorktreesTabProps,
 };
