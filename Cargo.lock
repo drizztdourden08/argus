@@ -349,6 +349,7 @@ dependencies = [
 name = "argus-wake"
 version = "0.1.0"
 dependencies = [
+ "argus-board",
  "argus-core",
  "indexmap",
  "serde",
