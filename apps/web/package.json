@@ -14,7 +14,7 @@
     "lint": "pnpm typecheck && eslint . && stylelint \"src/**/*.css\" --allow-empty-input"
   },
   "dependencies": {
-    "@drizztdourden08/tessera": "^0.97.0",
+    "@drizztdourden08/tessera": "^0.98.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:"
