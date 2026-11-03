@@ -81,11 +81,15 @@ impl WakeService {
 
     /// The agent reminders due now; returns how many wakes were sent.
     pub fn agent_tick(&mut self) -> usize {
-        let wakes = self.agents.tick(
-            self.clock.now_ms(),
-            self.boards.as_ref(),
-            self.live.as_ref(),
-        );
+        let wakes = {
+            let last_sent = last_sent_of(self.engine.store(), "agent wakes");
+            self.agents.tick(
+                self.clock.now_ms(),
+                self.boards.as_ref(),
+                self.live.as_ref(),
+                &last_sent,
+            )
+        };
         self.submit_logged(&wakes, "agent wakes");
         wakes.len()
     }

@@ -3,7 +3,7 @@ import type { FeedKind, NeedCount } from './feed.type';
 
 const NO_NEEDS: NeedCount = { questions: 0, decisions: 0, steps: 0, tests: 0 };
 
-const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar'];
+const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar', 'worktree-link', 'worktree-keep', 'launcher-link', 'launcher-retire'];
 
 const FEED_KIND: Record<FeedKind, string> = {
   decision: 'decision',

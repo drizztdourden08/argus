@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { RecordRow, useRecordPane } from '../../../../../shell';
+import { OwnerOpDialog, useOwnerAsk } from '../../../owner-links';
 import { worktreeMenu } from '../behavior/worktree-menu';
 import { jobText, threadOf, touchedAge, worktreeChips, worktreeCode, worktreeLabel, worktreeTitle } from '../model';
 import { WORKTREE_KIND } from '../worktrees.constants';
@@ -12,7 +13,10 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
   const pane = useRecordPane();
   const code = worktreeCode(row);
   const label = worktreeLabel(row);
+  const owner = useOwnerAsk();
   const open = () => pane.open(code);
+  const keep = () => owner.open({ action: 'worktree-keep', id: row.id, label });
+  const link = () => owner.open({ action: 'worktree-link', id: row.id, label });
   return (
     <Flex direction="column" gap="xs" data-worktree={row.id}>
       <RecordRow
@@ -22,7 +26,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
           assignee: threadOf(row, meta),
           boardKey,
           threads,
-          menu: worktreeMenu(row, { meta, controls, open, code, label }),
+          menu: worktreeMenu(row, { meta, controls, open, code, label, keep, link }),
           menuLabel: `More actions for ${label}`,
         }}
         title={worktreeTitle(row)}
@@ -32,6 +36,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
         onOpen={open}
       />
       <WorktreeDetail row={row} meta={meta} controls={controls} ask={ask} removal={removal} />
+      {owner.ask && <OwnerOpDialog boardKey={boardKey} ask={owner.ask} onClose={owner.close} />}
     </Flex>
   );
 };

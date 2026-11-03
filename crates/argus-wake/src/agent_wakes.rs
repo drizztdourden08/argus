@@ -7,10 +7,11 @@
 //!   wakes its thread every `checkinMin` minutes (15 to 30, the lead's choice, default 20). The clock runs
 //!   from its start, or from when the dashboard started when that was later.
 //! * `agent-unassigned`: an agent with no item `unassigned_ms` (default 10 minutes) after it started leaves
-//!   one passive notice (an agent works on an item, R21); it is not repeated.
+//!   one passive notice (an agent works on an item, R21); it is not repeated, not even after a restart
+//!   (the wakes table remembers it).
 //!
 //! A record the reconciler flagged (`orphanSince`, `idleSince`) gets none: its own wakes say it better.
-//! The state is in memory only: a restart forgets what was sent.
+//! The stale and check-in state is in memory only: a restart forgets what was sent.
 
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
@@ -93,9 +94,19 @@ pub fn checkin_every(agent: &AgentView, default_ms: i64) -> i64 {
     })
 }
 
+/// When the wakes table last sent a reminder: scope, thread, reason, subject; epoch ms, 0 when never.
+pub type LastSent<'a> = &'a dyn Fn(&str, &str, &str, &str) -> i64;
+
 /// `20m`: whole minutes, at least one.
 fn mins(ms: i64) -> String {
     format!("{}m", ((ms + 30_000) / 60_000).max(1))
+}
+
+/// What one tick knows about the moment and the wakes table.
+struct DueCtx<'a> {
+    now: i64,
+    last_sent: LastSent<'a>,
+    activity: Option<&'a str>,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -161,6 +172,7 @@ impl AgentWakes {
         now: i64,
         boards: &dyn BoardSource,
         live: &dyn AgentLive,
+        last_sent: LastSent<'_>,
     ) -> Vec<WakeInput> {
         let mut events = Vec::new();
         let mut seen: HashSet<String> = HashSet::new();
@@ -176,7 +188,12 @@ impl AgentWakes {
                 let key = format!("{scope}/{}", agent.rec.id.as_str());
                 seen.insert(key.clone());
                 let activity = live.last_activity_at(&scope, agent.rec.id.as_str());
-                events.extend(self.due(now, &scope, &board, agent, &key, activity.as_deref()));
+                let ctx = DueCtx {
+                    now,
+                    last_sent,
+                    activity: activity.as_deref(),
+                };
+                events.extend(self.due(&ctx, &scope, &board, agent, &key));
             }
         }
         self.sent.retain(|key, _| seen.contains(key));
@@ -185,13 +202,13 @@ impl AgentWakes {
 
     fn due(
         &mut self,
-        now: i64,
+        ctx: &DueCtx<'_>,
         scope: &str,
         board: &BoardView,
         agent: &AgentView,
         key: &str,
-        activity: Option<&str>,
     ) -> Option<WakeInput> {
+        let (now, activity) = (ctx.now, ctx.activity);
         if agent.orphan_since.some().is_some() || agent.idle_since.some().is_some() {
             return None;
         }
@@ -226,7 +243,7 @@ impl AgentWakes {
                 checkin_text(agent, now),
             ))
         } else {
-            self.unassigned(now, (scope, thread.as_str()), agent, &mut rec)
+            self.unassigned(ctx, (scope, thread.as_str()), agent, &mut rec)
         };
         self.sent.insert(key.to_owned(), rec);
         wake
@@ -235,14 +252,20 @@ impl AgentWakes {
     /// The one notice of an agent that still has no item `unassigned_ms` after it started.
     fn unassigned(
         &self,
-        now: i64,
+        ctx: &DueCtx<'_>,
         (scope, thread): (&str, &str),
         agent: &AgentView,
         rec: &mut Sent,
     ) -> Option<WakeInput> {
+        let now = ctx.now;
         let started = ms_or_zero(agent.started_at.some());
         let waited = started > 0 && now - started >= self.config.unassigned_ms;
         if rec.unassigned || agent.rec.item.some().is_some() || !waited {
+            return None;
+        }
+        let id = agent.rec.id.as_str();
+        if (ctx.last_sent)(scope, thread, "agent-unassigned", id) > 0 {
+            rec.unassigned = true;
             return None;
         }
         rec.unassigned = true;

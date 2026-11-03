@@ -83,7 +83,17 @@ impl World {
     }
 
     fn tick(&mut self, now: i64) -> usize {
-        let out = self.wakes.tick(now, &self.boards, &Live(self.live.clone()));
+        let sent = self.events.clone();
+        let last_sent = |scope: &str, thread: &str, reason: &str, subject: &str| {
+            sent.iter()
+                .filter(|e| (e.scope.as_str(), e.thread.as_str()) == (scope, thread))
+                .filter(|e| e.reason == reason && e.subject.as_deref() == Some(subject))
+                .map(|_| 1)
+                .max()
+                .unwrap_or(0)
+        };
+        let live = Live(self.live.clone());
+        let out = self.wakes.tick(now, &self.boards, &live, &last_sent);
         let sent = out.len();
         self.events.extend(out);
         sent
@@ -286,7 +296,9 @@ fn a_record_the_reconciler_flagged_gets_neither_wake() {
     assert_eq!(world.at(120), 0);
     let mut quiet = AgentWakes::new(AgentWakeConfig::default(), START);
     assert_eq!(
-        quiet.tick(START + 2 * HOUR, &world.boards, &NoLive).len(),
+        quiet
+            .tick(START + 2 * HOUR, &world.boards, &NoLive, &|_, _, _, _| 0)
+            .len(),
         0
     );
 }
@@ -326,7 +338,8 @@ fn an_agent_with_no_item_leaves_one_passive_notice_ten_minutes_after_it_started(
         notice.text
     );
     assert_eq!(world.at(11), 0);
-    assert_eq!(world.at(60), 0, "once only");
+    world.at(60);
+    assert_eq!(world.reasons("agent-unassigned"), 1, "once only");
     assert!(argus_wake::wake_policy::is_passive("agent-unassigned"));
 }
 
@@ -334,8 +347,20 @@ fn an_agent_with_no_item_leaves_one_passive_notice_ten_minutes_after_it_started(
 fn a_record_the_reconciler_flagged_never_gets_the_unassigned_notice() {
     let mut world = World::new();
     world.add("A-5", &json!({"item": null, "idleSince": iso(START)}));
-    assert_eq!(world.at(30), 0);
+    world.at(30);
     assert_eq!(world.reasons("agent-unassigned"), 0);
+}
+
+#[test]
+fn the_unassigned_notice_is_not_repeated_after_a_restart() {
+    let mut world = World::new();
+    world.add("A-5", &json!({"item": null}));
+    world.at(10);
+    assert_eq!(world.reasons("agent-unassigned"), 1);
+    world.wakes = AgentWakes::new(AgentWakeConfig::default(), START + 20 * MIN);
+    world.at(40);
+    world.at(90);
+    assert_eq!(world.reasons("agent-unassigned"), 1);
 }
 
 #[test]

@@ -39,7 +39,7 @@ pub const REPLY_KINDS: [&str; 8] = [
 
 /// The owner's edits, moves, archives, deletes and purges: each is an entry carrying its own
 /// target and fields.
-pub const OP_KINDS: [&str; 15] = [
+pub const OP_KINDS: [&str; 19] = [
     "create",
     "edit",
     "move",
@@ -52,6 +52,10 @@ pub const OP_KINDS: [&str; 15] = [
     "purge",
     "build",
     "avatar",
+    "worktree-link",
+    "worktree-keep",
+    "launcher-link",
+    "launcher-retire",
     "plan-run-start",
     "plan-run-record",
     "plan-run-end",
