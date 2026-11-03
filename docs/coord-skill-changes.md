@@ -263,7 +263,7 @@ coord agent start <name> "<task>" ... --item I-n
 
 - `coord agent start <name> "<task>" --model m --why "..." --item I-n [--item I-m ...]
   (--worktree <path|auto> | --master) [--blocked-by id ...]` is refused without an item or without a
-  place, with the fix in one line. `--worktree auto` means the `agent-<claudeId>` folder Claude makes
+  place, with the fix in one line. `--worktree auto` means the `agent-<claudeId>` folder the session makes
   for the sub-agent (Argus finds it once the scan sees it); `--master` means the main checkout. Put
   `--master` after the name and the task. `--item` also takes `I-1,I-2`.
 - `coord agent set A-n` gains `--item` (replaces the list, `""` clears), `--add-item I-n`,
