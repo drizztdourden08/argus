@@ -24,6 +24,7 @@ fn list_json(rig: &Rig, extra: &[&str]) -> Vec<Value> {
 }
 
 fn made_build_2(rig: &Rig) -> crate::common::Ran {
+    rig.with_item();
     rig.ok(
         &[
             "launcher",
@@ -42,8 +43,8 @@ fn made_build_2(rig: &Rig) -> crate::common::Ran {
             "--kind",
             "dev",
             "--current",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Worker,
     )
@@ -218,13 +219,22 @@ fn set_changes_only_the_flags_given_empty_clears_a_text_field_not_current_window
 #[test]
 fn refusals_a_bad_name_limits_a_kind_no_command_for_a_new_one_an_empty_command() {
     let rig = Rig::new();
+    rig.with_item();
     rig.refused(
-        &["launcher", "set", "Build_2", "--cmd", "x"],
+        &["launcher", "set", "Build_2", "--cmd", "x", "--for", "I-1"],
         As::Lead,
         "not a launcher name",
     );
     rig.refused(
-        &["launcher", "set", &"x".repeat(32), "--cmd", "x"],
+        &[
+            "launcher",
+            "set",
+            &"x".repeat(32),
+            "--cmd",
+            "x",
+            "--for",
+            "I-1",
+        ],
         As::Lead,
         "not a launcher name",
     );
@@ -235,8 +245,8 @@ fn refusals_a_bad_name_limits_a_kind_no_command_for_a_new_one_an_empty_command()
             &"x".repeat(31),
             "--cmd",
             "x",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -252,8 +262,8 @@ fn refusals_a_bad_name_limits_a_kind_no_command_for_a_new_one_an_empty_command()
             "long-1",
             "--cmd",
             &"c".repeat(400),
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -278,7 +288,15 @@ fn refusals_a_bad_name_limits_a_kind_no_command_for_a_new_one_an_empty_command()
         "not both",
     );
     rig.refused(
-        &["launcher", "set", "fresh-1", "--title", "no command"],
+        &[
+            "launcher",
+            "set",
+            "fresh-1",
+            "--title",
+            "no command",
+            "--for",
+            "I-1",
+        ],
         As::Lead,
         "launcher fresh-1 is new: give it the command",
     );
@@ -332,8 +350,8 @@ fn who_may_write_a_thread_makes_one_only_its_maker_or_the_coordinator_change_it_
             "other-1",
             "--cmd",
             "node other.js",
-            "--use-every",
-            "2w",
+            "--for",
+            "I-1",
         ],
         As::Other,
     );
@@ -474,6 +492,7 @@ fn retire_is_off_the_list_back_with_all_no_play_not_current_set_brings_it_back_w
 #[test]
 fn the_play_name_a_definition_made_by_hand_is_never_taken_a_multi_line_command_gets_no_play() {
     let rig = Rig::new();
+    rig.with_item();
     rig.edit(|b| {
         b["runDefs"]["launcher-taken"] =
             json!({ "name": "launcher-taken", "cmd": "node mine.js", "cwd": "x", "kind": "task" });
@@ -485,8 +504,8 @@ fn the_play_name_a_definition_made_by_hand_is_never_taken_a_multi_line_command_g
             "taken",
             "--cmd",
             "node theirs.js",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
         "the run name launcher-taken is already taken by a launch defined with coord run define",
@@ -504,8 +523,8 @@ fn the_play_name_a_definition_made_by_hand_is_never_taken_a_multi_line_command_g
             "multi-1",
             "--cmd",
             "line one\nline two",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -538,6 +557,7 @@ fn a_board_written_before_launchers_reads_with_launchers_empty() {
 #[test]
 fn the_command_line_is_explained_when_set_which_shell_runs_it_hidden_and_warnings_never_block() {
     let rig = Rig::new();
+    rig.with_item();
     let shell = if cfg!(windows) {
         "cmd.exe /d /s /c"
     } else {
@@ -550,8 +570,8 @@ fn the_command_line_is_explained_when_set_which_shell_runs_it_hidden_and_warning
             "shelly",
             "--cmd",
             "bxel build --if-stale && bxel start",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -634,18 +654,15 @@ fn the_command_line_is_explained_when_set_which_shell_runs_it_hidden_and_warning
 }
 
 #[test]
-fn use_every_is_required_for_a_new_standalone_launcher_validated_and_kept_when_set_once() {
+fn use_every_of_an_older_standalone_launcher_is_validated_and_kept_when_set_once() {
     let rig = Rig::new();
+    rig.legacy_launcher("tool-1", None);
     let none = rig.refused(
-        &["launcher", "set", "tool-1", "--cmd", "node tool.js"],
+        &["launcher", "set", "tool-1", "--note", "a note"],
         As::Worker,
         "needs the window you expect it to be used in: add --use-every <window> (12h, 3d, 2w or 1mo, from 1h to 365d)",
     );
     assert!(none.err.contains("reported to you: keep it, retire it or change the window. master and a launcher made for a bundle do not take it"));
-    assert!(
-        rig.board()["launchers"].get("tool-1").is_none(),
-        "nothing is written"
-    );
     for (value, needle) in [
         ("weekly", "--use-every \"weekly\" is not a duration"),
         ("366d", "--use-every 366d is out of range"),
@@ -653,33 +670,17 @@ fn use_every_is_required_for_a_new_standalone_launcher_validated_and_kept_when_s
         ("", "not a duration"),
     ] {
         rig.refused(
-            &[
-                "launcher",
-                "set",
-                "tool-1",
-                "--cmd",
-                "node tool.js",
-                "--use-every",
-                value,
-            ],
+            &["launcher", "set", "tool-1", "--use-every", value],
             As::Worker,
             needle,
         );
     }
     let made = rig.ok(
-        &[
-            "launcher",
-            "set",
-            "tool-1",
-            "--cmd",
-            "node tool.js",
-            "--use-every",
-            "2W",
-        ],
+        &["launcher", "set", "tool-1", "--use-every", "2W"],
         As::Worker,
     );
     assert!(
-        made.out.contains("tool-1: launcher added (") && made.out.contains("used every 2w"),
+        made.out.contains("tool-1: updated (useEvery)"),
         "{}",
         made.out
     );
@@ -770,18 +771,7 @@ fn a_launcher_from_before_the_field_has_none_and_is_treated_as_7d_resaving_it_as
 fn keep_counts_as_a_use_without_running_it_who_and_why_are_recorded_days_holds_it_fresh() {
     let rig = Rig::new();
     rig.with_master();
-    rig.ok(
-        &[
-            "launcher",
-            "set",
-            "keep-1",
-            "--cmd",
-            "node keep.js",
-            "--use-every",
-            "1d",
-        ],
-        As::Worker,
-    );
+    rig.legacy_launcher("keep-1", Some("1d"));
     let before = launcher(&rig, "keep-1");
     let r = rig.ok(
         &[

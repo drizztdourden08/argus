@@ -1,6 +1,7 @@
 //! What the flags of `build add|set` ask for, nothing else: the bundle's own fields (`patch`:
 //! `--title`, `--note`, `--thread`), its launcher's (`launch`: `--cmd`, `--cwd`, `--window`) and
-//! the launcher to link (`--launcher`). An empty value clears a field.
+//! the launcher to link (`--launcher`) and the item the build serves (`--for`). An empty value
+//! clears a field.
 
 use argus_board::Board;
 use argus_board::json::doc;
@@ -11,6 +12,7 @@ use serde_json::Value;
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::opt::{Text, is_list, js_string, not_one_text, one_text};
+use crate::verbs::agent::base::serves::for_flag;
 use crate::verbs::agent::rules::refused;
 
 /// The bundle's own fields.
@@ -88,13 +90,18 @@ pub struct Parts {
     pub launch: Launch,
     /// The launcher to link: `Some(None)` unlinks.
     pub link: Text,
+    /// `--for`: the item the build serves.
+    pub for_item: Text,
 }
 
 impl Parts {
     /// Whether any flag was given.
     #[must_use]
     pub fn any(&self) -> bool {
-        !self.patch.entries().is_empty() || !self.launch.keys().is_empty() || self.link.is_some()
+        !self.patch.entries().is_empty()
+            || !self.launch.keys().is_empty()
+            || self.link.is_some()
+            || self.for_item.is_some()
     }
 }
 
@@ -173,10 +180,17 @@ pub fn parts_from(board: &Board, options: &Options) -> Result<Parts, CoordError>
         window: window_flag(options)?,
     };
     let link = link_flag(options, &launch)?;
+    let for_item = for_flag(options)?;
+    if link.is_some() && for_item.is_some() {
+        return Err(CoordError::refuse(
+            "--for goes with --cmd, not with --launcher: link the launcher to an item with coord launcher link <name> I-n.",
+        ));
+    }
     Ok(Parts {
         patch,
         launch,
         link,
+        for_item,
     })
 }
 

@@ -7,6 +7,7 @@ use serde_json::{Map, Value};
 
 use super::force::{attach, reason};
 use super::images::{Pending, keep_all};
+use super::served_line::{Builds, told};
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{apply_result, checked, op, rev_of};
 use crate::verbs::work::run::{Res, Run};
@@ -94,6 +95,7 @@ pub(super) fn edit_item(
         r.say(&[&said(&plan, &id, (rev.as_str(), pictures.len()))]);
         if let Some(res) = res {
             warnings(r, &res);
+            told(r, board, &id, (&item, &Builds::of_result(&res)));
         }
         Ok(())
     })

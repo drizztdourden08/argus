@@ -6,6 +6,7 @@ mod edit;
 mod hand;
 mod launch;
 mod list;
+mod migrate;
 mod parts;
 mod remove;
 mod rows;
@@ -16,7 +17,7 @@ use crate::cli::Call;
 use crate::cli::exit::Outcome;
 use crate::verbs::agent::base::opt::{take_sub, unknown_sub};
 
-const VERBS: &str = "add, set, rm, close, reopen, ready, draft, hand, unhand, list";
+const VERBS: &str = "add, set, rm, close, reopen, ready, draft, hand, unhand, list, migrate-links";
 
 /// Runs the sub-verb the first word names; the other words stay for it.
 ///
@@ -34,6 +35,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         "hand" => hand::hand(call),
         "unhand" => hand::unhand(call),
         "list" => list::run(call),
+        "migrate-links" => migrate::run(call),
         _ => Err(unknown_sub("build", VERBS)),
     }
 }

@@ -2,13 +2,15 @@
 
 use super::audit::audit;
 use super::authorize::authorize_launcher;
-use super::join::joined_bundle;
+use super::join::{is_master, joined_bundle};
+use super::master_role;
 use super::play::sync_launcher_play;
-use super::record::{Launcher, LauncherBoard, MASTER, RuleError, Who};
+use super::record::{Launcher, LauncherBoard, RuleError, Who};
 
 /// The fields a write changes, already validated by the caller: `None` leaves a field
 /// alone, `Some(None)` clears a text field, `Some(Some(v))` sets it. `use_every` is a
-/// duration text `parse_every` accepted.
+/// duration text `parse_every` accepted. `for_item` is an item id the caller checked (or `None`
+/// inside, to clear the link of the master build).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LauncherPatch {
     pub title: Option<Option<String>>,
@@ -21,6 +23,9 @@ pub struct LauncherPatch {
     pub current: Option<bool>,
     pub window: Option<bool>,
     pub use_every: Option<Option<String>>,
+    pub for_item: Option<Option<String>>,
+    /// `Some(true)` hands the master role to this build; a write never takes the role away.
+    pub master: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -30,6 +35,8 @@ pub struct WriteResult {
     pub changed: Vec<&'static str>,
     pub play: String,
     pub ignored: Vec<&'static str>,
+    /// The build that held the master role before this write handed it over.
+    pub previous_master: Option<String>,
 }
 
 /// Where and when a write happens.
@@ -68,6 +75,8 @@ fn changed_fields(rec: &Launcher, patch: &LauncherPatch) -> Vec<&'static str> {
             "useEvery",
             differs(&rec.use_every, patch.use_every.as_ref()),
         ),
+        ("for", differs(&rec.for_item, patch.for_item.as_ref())),
+        ("master", master_role::wanted(patch) && !rec.master),
     ]
     .into_iter()
     .filter_map(|(name, changed)| changed.then_some(name))
@@ -85,6 +94,10 @@ fn apply_patch(rec: &mut Launcher, patch: &LauncherPatch) {
     set(&mut rec.current, patch.current.as_ref());
     set(&mut rec.window, patch.window.as_ref());
     set(&mut rec.use_every, patch.use_every.as_ref());
+    set(&mut rec.for_item, patch.for_item.as_ref());
+    if master_role::wanted(patch) {
+        rec.master = true;
+    }
 }
 
 fn needs_every(name: &str) -> RuleError {
@@ -140,6 +153,7 @@ fn revive(rec: &mut Launcher) -> bool {
         rec.retired_by = None;
         rec.retire_note = None;
         rec.retired_by_bundle = None;
+        rec.retired_by_item = None;
     }
     revived
 }
@@ -165,9 +179,29 @@ fn audit_text(name: &str, created: bool, revived: bool, changed: &[&str]) -> Str
     format!("{verb} launcher {name}{fields}")
 }
 
+/// Whether the launcher has a usage window after the write: it is not the master build, does not
+/// serve an item and is not joined to a bundle.
+fn has_window(
+    board: &LauncherBoard,
+    name: &str,
+    have: Option<&Launcher>,
+    (patch, ctx): (&LauncherPatch, &WriteContext<'_>),
+) -> bool {
+    let joined = ctx
+        .bundle
+        .map(str::to_owned)
+        .or_else(|| have.and_then(|h| joined_bundle(board, h)));
+    let serves = match patch.for_item.as_ref() {
+        Some(wanted) => wanted.is_some(),
+        None => have.is_some_and(|h| h.for_item.is_some()),
+    };
+    !(is_master(board, name) || master_role::wanted(patch)) && joined.is_none() && !serves
+}
+
 /// Creates or updates one launcher. A retired one is brought back. A standalone launcher
-/// (not master, not joined to a bundle) must have `useEvery`: given now, or already
-/// stored; one that is master or joined takes none and the value is dropped (`ignored`).
+/// (not master, not joined to a bundle, not serving an item) must have `useEvery`: given now,
+/// or already stored; one that is master, joined or serving an item takes none and the value
+/// is dropped (`ignored`).
 /// A refusal leaves the board as it was.
 pub fn write_launcher(
     board: &mut LauncherBoard,
@@ -178,11 +212,8 @@ pub fn write_launcher(
 ) -> Result<WriteResult, RuleError> {
     let have = board.launchers.get(name).cloned();
     authorize_launcher(board, who, have.as_ref())?;
-    let joined = ctx
-        .bundle
-        .map(str::to_owned)
-        .or_else(|| have.as_ref().and_then(|h| joined_bundle(board, h)));
-    let standalone = name != MASTER && joined.is_none();
+    master_role::check_hand(who, patch)?;
+    let standalone = has_window(board, name, have.as_ref(), (patch, ctx));
     let mut patch = patch.clone();
     let mut ignored = Vec::new();
     if patch.use_every.is_some() && !standalone {
@@ -222,11 +253,13 @@ pub fn write_launcher(
             ctx.at,
         );
     }
+    let previous_master = master_role::pass_on(board, &patch, (name, who, ctx.at));
     Ok(WriteResult {
         created,
         revived,
         changed,
         play,
         ignored,
+        previous_master,
     })
 }

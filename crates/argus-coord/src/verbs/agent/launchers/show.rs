@@ -86,6 +86,26 @@ fn window(row: &Row, now_ms: i64) -> Option<String> {
     line("window", &text)
 }
 
+/// The `master` line: only the master build has it.
+fn master_text(rec: &Value) -> String {
+    if truthy(rec, "master") {
+        "the master build: it needs no item and never closes with one".to_owned()
+    } else {
+        String::new()
+    }
+}
+
+/// The `link` line of a live build the migration could not match, and of a closed one.
+fn link_text(name: &str, rec: &Value) -> String {
+    if truthy(rec, "retiredByItem") {
+        return format!("closed with {}", cell(&rec["retiredByItem"]));
+    }
+    if truthy(rec, "relink") {
+        return format!("no item yet: coord launcher link {name} I-n");
+    }
+    String::new()
+}
+
 fn lines(name: &str, row: &Row, now_ms: i64) -> Vec<String> {
     let rec = &row.rec;
     let play = row.play.clone().unwrap_or_else(|| {
@@ -121,6 +141,9 @@ fn lines(name: &str, row: &Row, now_ms: i64) -> Vec<String> {
         line("set", &set),
         line("play", &play),
         line("bundles", &row.bundles.join(", ")),
+        line("for", &cell(&rec["for"])),
+        line("master", &master_text(rec)),
+        line("link", &link_text(name, rec)),
         line("joined", &joined),
         window(row, now_ms),
     ]

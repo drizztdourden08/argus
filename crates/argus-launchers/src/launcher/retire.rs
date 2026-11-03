@@ -8,9 +8,9 @@
 
 use super::audit::audit;
 use super::authorize::authorize_launcher;
-use super::join::{joined_bundle, linked_bundles, made_for};
+use super::join::{is_master, joined_bundle, linked_bundles, made_for};
 use super::play::sync_launcher_play;
-use super::record::{LauncherBoard, MASTER, RuleError, Who};
+use super::record::{LauncherBoard, RuleError, Who};
 use crate::time::{DAY_MS, format_iso, parse_iso};
 
 /// Retires a launcher: no Play, off the list, no longer current. Returns the Play note;
@@ -22,10 +22,10 @@ pub fn retire_launcher(
     note: Option<&str>,
     at: &str,
 ) -> Result<String, RuleError> {
-    if name == MASTER {
-        return Err(RuleError::new(
-            "master is never retired: update it with coord launcher set master --cmd \"...\" instead.",
-        ));
+    if is_master(board, name) {
+        return Err(RuleError::new(format!(
+            "{name} is never retired: update it with coord launcher set {name} --cmd \"...\" instead."
+        )));
     }
     let rec = board
         .launchers
@@ -40,6 +40,7 @@ pub fn retire_launcher(
         at.clone_into(&mut rec.updated_at);
         rec.by = Some(who.actor.clone());
         rec.retired_by_bundle = None;
+        rec.retired_by_item = None;
     }
     let play = sync_launcher_play(board, who, name, None, at)?;
     let why = note.map(|n| format!(": {n}")).unwrap_or_default();
@@ -136,10 +137,10 @@ pub fn keep_launcher(
             "launcher {name} is retired: there is nothing to keep (coord launcher set {name} brings it back)."
         )));
     }
-    if name == MASTER {
-        return Err(RuleError::new(
-            "master has no usage window: it is never stale.",
-        ));
+    if is_master(board, name) {
+        return Err(RuleError::new(format!(
+            "{name} has no usage window: it is never stale."
+        )));
     }
     if let Some(tag) = joined_bundle(board, rec) {
         return Err(RuleError::new(format!(

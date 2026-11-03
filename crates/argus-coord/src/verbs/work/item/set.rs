@@ -5,11 +5,13 @@
 use argus_board::json::display;
 use argus_board::limits::require_text;
 use argus_board::registry::registry;
+use argus_board::served::closed_by_items;
 use serde_json::{Map, Value, json};
 
 use super::add::check_status;
 use super::edit::{Say, edit_item, fixed};
 use super::images::{Pending, picked};
+use super::served_line::{Builds, told};
 use super::{STATUSES, typed};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{find_doc, move_doc, move_target};
@@ -97,14 +99,17 @@ pub(super) fn move_to(r: &mut Run<'_>) -> Outcome {
     }
     r.write(|board, r| {
         let who = r.begin(board)?;
-        let (_, id) = move_doc(board, &who, ("items", r.arg(0)), (to, r.options))?;
+        let was = closed_by_items(board);
+        let (before, id) = move_doc(board, &who, ("items", r.arg(0)), (to, r.options))?;
         let now = find_doc(board, "items", Some(&id))?;
+        let builds = Builds::of_sets(&was, &closed_by_items(board));
         r.say(&[&format!(
             "{id}: {}, {} (rev {}).",
             display(&now["thread"]),
             display(&now["status"]),
             display(&now["rev"])
         )]);
+        told(r, board, &id, (&before, &builds));
         Ok(())
     })
 }

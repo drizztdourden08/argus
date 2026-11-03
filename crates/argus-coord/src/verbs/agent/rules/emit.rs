@@ -16,7 +16,8 @@ fn put_some(map: &mut Map<String, Value>, key: &str, value: Option<&String>) {
 }
 
 /// A launcher record: the literal of `writeLauncher`, then what the flags add, in the order
-/// `window`, `useEvery`, the keep marks and `retiredByBundle`. A keep always leaves `keptNote`
+/// `window`, `useEvery`, the keep marks, `retiredByBundle`, and the item links (`for`, `master`,
+/// `retiredByItem`, `relink`) when they are set. A keep always leaves `keptNote`
 /// (`null` without a note).
 #[must_use]
 pub fn launcher_map(l: &Launcher) -> Map<String, Value> {
@@ -49,6 +50,14 @@ pub fn launcher_map(l: &Launcher) -> Map<String, Value> {
         put_some(&mut m, "keptUntil", l.kept_until.as_ref());
     }
     put_some(&mut m, "retiredByBundle", l.retired_by_bundle.as_ref());
+    put_some(&mut m, "for", l.for_item.as_ref());
+    if l.master {
+        put(&mut m, "master", true);
+    }
+    put_some(&mut m, "retiredByItem", l.retired_by_item.as_ref());
+    if l.relink {
+        put(&mut m, "relink", true);
+    }
     m
 }
 

@@ -5,6 +5,7 @@ pub mod apply;
 pub mod links;
 pub mod opt;
 pub mod scope;
+pub mod serves;
 pub mod show;
 
 pub use scope::{Run, read, write};

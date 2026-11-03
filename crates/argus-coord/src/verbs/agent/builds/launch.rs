@@ -6,7 +6,7 @@
 use argus_board::Board;
 use argus_board::json::{doc, set, truthy, unset};
 use argus_launchers::launcher::{
-    MASTER, WriteContext, launcher_def_name, launcher_slug, retire_launcher, write_launcher,
+    LauncherPatch, WriteContext, launcher_def_name, launcher_slug, retire_launcher, write_launcher,
 };
 use serde_json::Value;
 
@@ -14,6 +14,7 @@ use super::parts::Parts;
 use super::support::bundle_mut;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::links::linked;
+use crate::verbs::agent::base::serves::{check_link, plan_of};
 use crate::verbs::agent::rules;
 use crate::who::Caller;
 
@@ -96,7 +97,9 @@ pub fn retire_orphan(
         return Ok(String::new());
     };
     let kept = doc(board, "launchers", name).is_none_or(|l| {
-        truthy(l, "retiredAt") || l["bundle"].as_str() != Some(tag) || name == MASTER
+        truthy(l, "retiredAt")
+            || l["bundle"].as_str() != Some(tag)
+            || argus_board::served::is_master(board, name)
     });
     if kept || !linked(board, name, Some(tag)).is_empty() {
         return Ok(String::new());
@@ -164,6 +167,55 @@ impl Step<'_> {
         Ok(())
     }
 
+    /// The item the launcher written by this call serves: the one `--for` names, else for a new
+    /// launcher the one test plan that names the bundle. A launcher that exists keeps its link.
+    fn serve_target(&self, own: &str, parts: &Parts) -> Result<Option<String>, CoordError> {
+        if let Some(given) = &parts.for_item {
+            return given.clone().map(Some).ok_or_else(|| {
+                CoordError::refuse(
+                    "--for takes an item id such as I-12: a build always serves one.",
+                )
+            });
+        }
+        if doc(self.board, "launchers", own).is_some() {
+            return Ok(None);
+        }
+        Ok(plan_of(self.board, self.tag))
+    }
+
+    /// `--for` alone: the item the bundle's launcher serves.
+    fn change_for(&mut self, parts: &Parts) -> Result<(), CoordError> {
+        let Some(name) = self.launcher() else {
+            return Err(CoordError::refuse(format!(
+                "bundle {} has no launcher yet: pass --cmd \"<command>\" with --for, or link one with --launcher <name>.",
+                self.tag
+            )));
+        };
+        let patch = LauncherPatch {
+            for_item: parts.for_item.clone(),
+            ..LauncherPatch::default()
+        };
+        check_link(self.board, &name, &patch)?;
+        let cwd = self.cwd;
+        let written = rules::run(self.board, self.who, |b, w, at| {
+            write_launcher(
+                b,
+                w,
+                &name,
+                &patch,
+                &WriteContext {
+                    cwd,
+                    bundle: None,
+                    at,
+                },
+            )
+        })?;
+        if written.changed.contains(&"for") {
+            self.mark("for");
+        }
+        Ok(())
+    }
+
     /// Writes the launcher named after the tag (the flags given, over a legacy command when there
     /// is one) and links it.
     fn move_to(&mut self, own: &str, parts: &Parts) -> Result<(), CoordError> {
@@ -179,6 +231,8 @@ impl Step<'_> {
                 patch.window = Some(true);
             }
         }
+        patch.for_item = self.serve_target(own, parts)?.map(Some);
+        check_link(self.board, own, &patch)?;
         let (tag, cwd) = (self.tag, self.cwd);
         let written = rules::run(self.board, self.who, |b, w, at| {
             write_launcher(
@@ -200,6 +254,12 @@ impl Step<'_> {
         };
         for key in marked {
             self.mark(&key);
+        }
+        if written.changed.contains(&"for") {
+            self.mark("for");
+        }
+        if let Some(Some(item)) = &patch.for_item {
+            self.done.notes.push(format!("serves {item}"));
         }
         if written.created {
             let how = if self.legacy.is_some() && parts.launch.cmd.is_none() {
@@ -230,6 +290,13 @@ impl Step<'_> {
         let target = doc(self.board, "launchers", own).is_some();
         let taken = doc(self.board, "runDefs", &launcher_def_name(own))
             .is_some_and(|d| d["launcher"].as_str() != Some(own));
+        let serves_nothing = plan_of(self.board, self.tag).is_none();
+        if serves_nothing {
+            self.done.notes.push(format!(
+                "its launch command stays on the bundle (no single test plan names it): pass --for I-n with --cmd to move it to launcher {own}"
+            ));
+            return Ok(());
+        }
         if target || !linked(self.board, own, Some(self.tag)).is_empty() || taken {
             self.done.notes.push(format!(
                 "its launch command stays on the bundle (a launcher or run named {own} exists already): link one with --launcher <name>"
@@ -239,8 +306,21 @@ impl Step<'_> {
         self.move_to(own, parts)
     }
 
+    /// The refusal of a new launcher that would serve nothing.
+    fn check_serves(&self, own: &str, parts: &Parts) -> Result<(), CoordError> {
+        let new = doc(self.board, "launchers", own).is_none();
+        if new && parts.for_item.is_none() && plan_of(self.board, self.tag).is_none() {
+            return Err(CoordError::refuse(format!(
+                "a build serves an item and bundle {} names none: pass --for I-n with --cmd (no single test plan names the bundle).",
+                self.tag
+            )));
+        }
+        Ok(())
+    }
+
     /// The refusals before a write the flags asked for.
     fn check_write(&self, own: &str, parts: &Parts) -> Result<(), CoordError> {
+        self.check_serves(own, parts)?;
         let others = linked(self.board, own, Some(self.tag));
         if !others.is_empty() {
             return Err(CoordError::refuse(format!(
@@ -279,6 +359,9 @@ impl Step<'_> {
             self.relink(None)?;
             self.forget();
             return Ok(());
+        }
+        if parts.for_item.is_some() && parts.launch.keys().is_empty() {
+            return self.change_for(parts);
         }
         let touched = !parts.launch.keys().is_empty();
         if !touched && self.legacy.is_none() {

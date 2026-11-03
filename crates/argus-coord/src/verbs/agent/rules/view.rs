@@ -89,7 +89,7 @@ pub fn typed_board(board: &Board) -> Result<LauncherBoard, CoordError> {
             "launcher",
             name,
             rec,
-            &["current", "window"],
+            &["current", "window", "master", "relink"],
             &["name", "kind", "createdAt", "updatedAt"],
         )?;
         typed.launchers.insert(name.clone(), launcher);

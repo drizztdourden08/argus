@@ -3,7 +3,7 @@
 //! and fails honestly what a restart interrupted. Only names reach this service: the command
 //! line, cwd and env always come from the definitions.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
@@ -76,6 +76,8 @@ pub(crate) struct State {
     pub live: HashMap<String, Arc<LiveRun>>,
     pub waiting: HashMap<String, RunDef>,
     pub closing: bool,
+    /// Hidden Play runs whose definition was missing at the last check.
+    pub missing_plays: HashSet<String>,
     pub sweeper: Option<JoinHandle<()>>,
 }
 

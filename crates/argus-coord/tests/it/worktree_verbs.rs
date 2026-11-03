@@ -598,3 +598,52 @@ fn request_and_requests_check_their_arguments_before_the_dashboard_is_asked() {
         "no thread named \"ghost\"",
     );
 }
+
+/// The board with an open item `I-1` and a done item `I-2`.
+fn with_items(w: &World) {
+    let mut board = w.board();
+    let at = "2026-10-26T12:00:00.000Z";
+    for (id, status) in [("I-1", "todo"), ("I-2", "done")] {
+        board["items"][id] = json!({
+            "id": id, "title": "Login", "thread": "worker", "status": status, "rev": 1,
+            "rank": 1024, "createdAt": at, "createdBy": "worker", "updatedAt": at, "updatedBy": "worker",
+        });
+    }
+    w.home.write_board("alpha", &board);
+}
+
+#[test]
+fn link_writes_the_item_the_worktree_belongs_to_and_unlink_takes_it_away() {
+    let w = World::new();
+    with_items(&w);
+    let id = worktree_id(FOO, cfg!(windows));
+    let out = say(&w.worker(&["link", FOO, "I-1"]));
+    assert!(out.contains(&format!("{id}: linked to I-1.")), "{out}");
+    let link = w.board()["worktreeLinks"][id.as_str()].clone();
+    assert_eq!(
+        (link["item"].clone(), link["by"].clone()),
+        (json!("I-1"), json!("worker"))
+    );
+    assert!(link["at"].is_string());
+    let moved = say(&w.worker(&["link", &id, "I-1"]));
+    assert!(moved.contains("It was linked to I-1."), "{moved}");
+    let gone = say(&w.worker(&["unlink", &id]));
+    assert!(
+        gone.contains(&format!("{id}: unlinked from I-1.")),
+        "{gone}"
+    );
+    assert_eq!(w.board()["worktreeLinks"].get(id.as_str()), None);
+}
+
+#[test]
+fn link_and_unlink_refuse_a_missing_word_a_missing_or_closed_item_and_a_link_that_is_not_there() {
+    let w = World::new();
+    with_items(&w);
+    w.refuse_all(&[
+        (&["link", FOO], "coord worktree link <id|path> <I-n>"),
+        (&["link", FOO, "I-9"], "no item \"I-9\""),
+        (&["link", FOO, "I-2"], "I-2 is"),
+        (&["unlink"], "coord worktree unlink <id|path>"),
+        (&["unlink", FOO], "has no link made by hand"),
+    ]);
+}

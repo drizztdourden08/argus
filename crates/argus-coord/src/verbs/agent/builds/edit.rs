@@ -168,7 +168,7 @@ pub fn set_fields(call: &mut Call<'_>) -> Outcome {
         let parts = parts_from(board, run.options)?;
         if !parts.any() {
             return Err(CoordError::refuse(
-                "nothing to change: pass --title --note --launcher --cmd --cwd --thread or --window (\"\" clears a field).",
+                "nothing to change: pass --title --note --launcher --cmd --cwd --thread --window or --for (\"\" clears a field).",
             ));
         }
         authorize_manage(board, who, &[own, parts.patch.thread.clone().flatten()])?;

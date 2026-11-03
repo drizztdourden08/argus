@@ -17,6 +17,7 @@ mod agent_diff;
 mod agent_model;
 mod board_shortcut;
 mod board_shortcut_verb;
+mod build_links;
 mod build_verbs;
 mod caller_lookup;
 mod cli_args;
