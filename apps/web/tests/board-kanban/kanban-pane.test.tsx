@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { EMPTY_MEDIA } from '../../src/screens/board/tabs/kanban/pane/media/media.constants';
 import { fieldProblem } from '../../src/screens/board/tabs/kanban/pane/model/field-problem';
 import { inTab } from './kanban-drawer-dom';
 import { MIN, ago, cleanKanban, item, mountKanban, openItem, where } from './kanban-harness';
@@ -137,11 +138,11 @@ describe('I-72 P6 the cases and the slots of a test plan', { tags: ['standard'] 
     expect(posted).toHaveLength(0);
   });
 
-  it('asks for cases on the Run tab of a plan with none, and leaves the Media tab as an empty slot', async () => {
+  it('asks for cases on the Run tab of a plan with none, and shows the empty state on the Media tab', async () => {
     await mountKanban({ items: [item('I-1', { type: 'test-plan', stage: 'draft' })] });
     const dialog = inTab(await openItem('I-1'), 'Run');
     expect(within(dialog).getByText('Add cases to this plan, then start a run.')).toBeTruthy();
     inTab(dialog, 'Media');
-    expect(within(dialog).getByText('The images of this item show here.')).toBeTruthy();
+    expect(within(dialog).getByText(EMPTY_MEDIA)).toBeTruthy();
   });
 });

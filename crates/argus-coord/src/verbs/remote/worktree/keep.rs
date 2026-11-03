@@ -8,12 +8,12 @@ use argus_core::clock::{iso_from_ms, now_iso, parse_ms};
 use argus_core::js;
 use serde_json::{Value, json};
 
-use super::act::as_caller;
 use super::opts::text_opt;
 use super::path::target_of;
 use super::rule_add::audit;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
+use crate::verbs::remote::support::scope::as_caller;
 use crate::verbs::remote::support::text::{cell, int_within, number_of};
 use crate::who::Caller;
 

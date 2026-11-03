@@ -6,11 +6,12 @@
 use argus_board::Board;
 use argus_board::json::{doc, set, truthy, unset};
 use argus_launchers::launcher::{
-    LauncherPatch, WriteContext, launcher_def_name, launcher_slug, retire_launcher, write_launcher,
+    LauncherPatch, WriteContext, WriteResult, launcher_def_name, launcher_slug, retire_launcher,
+    write_launcher,
 };
 use serde_json::Value;
 
-use super::parts::Parts;
+use super::parts::{Launch, Parts};
 use super::support::bundle_mut;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::links::linked;
@@ -32,6 +33,21 @@ struct Legacy {
     cmd: String,
     cwd: Option<String>,
     window: bool,
+}
+
+impl Legacy {
+    /// Fills what the flags left out of the patch: the command, a working folder, the window.
+    fn fill(&self, patch: &mut LauncherPatch, flags: &Launch) {
+        if patch.cmd.is_none() {
+            patch.cmd = Some(Some(self.cmd.clone()));
+        }
+        if flags.cwd.is_none() && self.cwd.as_deref().is_some_and(|c| !c.is_empty()) {
+            patch.cwd = Some(self.cwd.clone());
+        }
+        if flags.window.is_none() && self.window {
+            patch.window = Some(true);
+        }
+    }
 }
 
 struct Step<'a> {
@@ -216,23 +232,61 @@ impl Step<'_> {
         Ok(())
     }
 
-    /// Writes the launcher named after the tag (the flags given, over a legacy command when there
-    /// is one) and links it.
-    fn move_to(&mut self, own: &str, parts: &Parts) -> Result<(), CoordError> {
+    /// The patch the flags make, a legacy command filling what they leave out.
+    fn move_patch(&self, own: &str, parts: &Parts) -> Result<LauncherPatch, CoordError> {
         let mut patch = parts.launch.patch();
         if let Some(legacy) = &self.legacy {
-            if patch.cmd.is_none() {
-                patch.cmd = Some(Some(legacy.cmd.clone()));
-            }
-            if parts.launch.cwd.is_none() && legacy.cwd.as_deref().is_some_and(|c| !c.is_empty()) {
-                patch.cwd = Some(legacy.cwd.clone());
-            }
-            if parts.launch.window.is_none() && legacy.window {
-                patch.window = Some(true);
-            }
+            legacy.fill(&mut patch, &parts.launch);
         }
         patch.for_item = self.serve_target(own, parts)?.map(Some);
         check_link(self.board, own, &patch)?;
+        Ok(patch)
+    }
+
+    /// Marks the fields a launcher write changed.
+    fn mark_written(&mut self, written: &WriteResult, parts: &Parts) {
+        let marked: Vec<String> = if written.created {
+            parts.launch.keys().into_iter().map(str::to_owned).collect()
+        } else {
+            written.changed.iter().map(|k| (*k).to_owned()).collect()
+        };
+        for key in marked {
+            self.mark(&key);
+        }
+        if written.changed.contains(&"for") {
+            self.mark("for");
+        }
+    }
+
+    /// Adds the notes a launcher write earns: what it serves, that it was made and its Play line.
+    fn note_written(
+        &mut self,
+        own: &str,
+        written: &WriteResult,
+        parts: &Parts,
+        patch: &LauncherPatch,
+    ) {
+        if let Some(Some(item)) = &patch.for_item {
+            self.done.notes.push(format!("serves {item}"));
+        }
+        if written.created {
+            let how = if self.legacy.is_some() && parts.launch.cmd.is_none() {
+                "made from its own launch command"
+            } else {
+                "set"
+            };
+            self.done.notes.push(format!("launcher {own} {how}"));
+        }
+        if !written.play.is_empty() {
+            let play = written.play.strip_suffix('.').unwrap_or(&written.play);
+            self.done.notes.push(play.to_owned());
+        }
+    }
+
+    /// Writes the launcher named after the tag (the flags given, over a legacy command when there
+    /// is one) and links it.
+    fn move_to(&mut self, own: &str, parts: &Parts) -> Result<(), CoordError> {
+        let patch = self.move_patch(own, parts)?;
         let (tag, cwd) = (self.tag, self.cwd);
         let written = rules::run(self.board, self.who, |b, w, at| {
             write_launcher(
@@ -247,37 +301,8 @@ impl Step<'_> {
                 },
             )
         })?;
-        let marked: Vec<String> = if written.created {
-            parts.launch.keys().into_iter().map(str::to_owned).collect()
-        } else {
-            written.changed.iter().map(|k| (*k).to_owned()).collect()
-        };
-        for key in marked {
-            self.mark(&key);
-        }
-        if written.changed.contains(&"for") {
-            self.mark("for");
-        }
-        if let Some(Some(item)) = &patch.for_item {
-            self.done.notes.push(format!("serves {item}"));
-        }
-        if written.created {
-            let how = if self.legacy.is_some() && parts.launch.cmd.is_none() {
-                "made from its own launch command"
-            } else {
-                "set"
-            };
-            self.done.notes.push(format!("launcher {own} {how}"));
-        }
-        if !written.play.is_empty() {
-            self.done.notes.push(
-                written
-                    .play
-                    .strip_suffix('.')
-                    .unwrap_or(&written.play)
-                    .to_owned(),
-            );
-        }
+        self.mark_written(&written, parts);
+        self.note_written(own, &written, parts, &patch);
         self.relink(Some(own))?;
         self.forget();
         Ok(())

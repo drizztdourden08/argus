@@ -9,12 +9,12 @@ use argus_board::served::closure;
 use argus_core::clock::now_iso;
 use serde_json::json;
 
-use super::act::as_caller;
-use super::path::target_of;
-use super::rule_add::audit;
-use crate::cli::exit::{CoordError, Outcome};
-use crate::cli::route::Call;
-use crate::verbs::remote::support::text::cell;
+use super::{path::target_of, rule_add::audit};
+use crate::cli::{
+    exit::{CoordError, Outcome},
+    route::Call,
+};
+use crate::verbs::remote::support::{scope::as_caller, text::cell};
 
 const LINKS: &str = "worktreeLinks";
 

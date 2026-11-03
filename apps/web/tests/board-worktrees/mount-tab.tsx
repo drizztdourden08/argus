@@ -1,11 +1,9 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { act, cleanup } from '@testing-library/react';
+import { afterEach, beforeEach, vi } from 'vitest';
 import type { WorktreesMeta } from '../../src/data/worktrees';
-import { DataProvider } from '../../src/data/react';
-import { createScopeStreams } from '../../src/data/stream';
 import { WorktreesTab } from '../../src/screens/board/tabs/worktrees';
-import { createFakeSources } from '../helpers/fake-source';
+import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
 import { NOW } from './fixtures';
 import type { WorktreeRow } from '../../src/screens/board/tabs/worktrees/model';
@@ -64,14 +62,7 @@ const byId = (docs: WorktreeRow[]): Record<string, object> => Object.fromEntries
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
-  const fake = createFakeSources();
-  const view = render(
-    <DataProvider streams={createScopeStreams(fake.open)}>
-      <WorktreesTab boardKey={SCOPE} />
-    </DataProvider>,
-  );
-  await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
-  const source = fake.sources[fake.sources.length - 1];
+  const { view, source } = await mountStreamed(<WorktreesTab boardKey={SCOPE} />);
   act(() => {
     source?.emit('snapshot', snapshot(SCOPE, 'worktrees', byId(board.docs ?? [])));
     source?.emit('snapshot', snapshot(SCOPE, 'meta', board.meta ? { worktrees: board.meta } : {}));

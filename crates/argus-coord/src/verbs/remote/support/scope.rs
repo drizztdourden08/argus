@@ -90,6 +90,21 @@ pub fn locked<T>(
     .map_err(|e| board_refusal(e, &home, key))
 }
 
+/// Runs `act` on the project's board under its lock, as the thread that called.
+///
+/// # Errors
+/// The board is missing or locked, the caller is unknown, or `act` refuses.
+pub fn as_caller<T>(
+    call: &mut Call<'_>,
+    act: impl FnOnce(&mut Board, &Caller, &mut Scope<'_>) -> Result<T, CoordError>,
+) -> Result<T, CoordError> {
+    let project = project_of(call).to_owned();
+    locked(call, &project, false, |board, scope| {
+        let who = scope.begin(board)?;
+        act(board, &who, scope)
+    })
+}
+
 /// The board of a project, read.
 ///
 /// # Errors
