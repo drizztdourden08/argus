@@ -3,6 +3,6 @@ import { createContext } from 'react';
 
 const nobody = (): void => undefined;
 
-const OpenEntryContext = createContext<(entry: string) => void>(nobody);
+const OpenEntryContext = createContext<(entry: string | null) => void>(nobody);
 
 export { OpenEntryContext };

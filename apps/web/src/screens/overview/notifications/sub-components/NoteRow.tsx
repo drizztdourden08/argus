@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Stack, Tag, Text } from '@drizztdourden08/tessera';
+import { LinkedText } from '../../../../shell';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
 import { FeedRow } from '../../sub-components/FeedRow';
@@ -17,7 +18,7 @@ const NoteRow = (props: NoteRowProps) => {
         <Text>
           <Tag {...LEVEL_LOOK[level]} pill>{level}</Tag>
           {note.title ? <Text weight={600}>{` ${note.title}`}</Text> : null}
-          <Text tone="dim">{` ${note.text ?? ''} `}</Text>
+          <Text tone="dim">{' '}<LinkedText text={note.text ?? ''} board={project || undefined} />{' '}</Text>
           {project ? <ProjectLink project={project} chip /> : null}
           {note.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${note.thread}`}</Text> : null}
           {isFresh(note.at, freshSince) ? <> <Tag variant="urgency" color="info" pill>new</Tag></> : null}

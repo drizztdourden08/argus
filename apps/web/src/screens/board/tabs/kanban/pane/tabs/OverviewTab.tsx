@@ -11,9 +11,9 @@ import type { PaneBodyProps } from '../pane.type';
 
 const OverviewTab = (props: PaneBodyProps) => {
   const { data } = props;
-  const { item, tests, threads, ops, open } = data;
+  const { item, tests, threads, ops } = data;
   const type = paneType(item);
-  const shared = { item, ops, open, people: peopleOptions(threads), cx: { threads: threads.map((thread) => thread.id), images: [] } };
+  const shared = { item, ops, people: peopleOptions(threads), cx: { threads: threads.map((thread) => thread.id), images: [] } };
   return (
     <Flex direction="column" gap="lg">
       <PaneFacts data={data} />

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
-import { EntryLink } from '../../../shared';
+import { RecordLink } from '../../../../../shell';
 import type { BlockerLineProps } from '../drawer-props.type';
 
 const BlockerLine = (props: BlockerLineProps) => {
@@ -9,7 +9,7 @@ const BlockerLine = (props: BlockerLineProps) => {
   return (
     <Flex gap="xs" align="center">
       <Text variant="caption" tone="muted">blocked on</Text>
-      <EntryLink id={link.id} />
+      <RecordLink id={link.id} />
     </Flex>
   );
 };

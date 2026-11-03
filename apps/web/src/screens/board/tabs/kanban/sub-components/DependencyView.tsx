@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { depColor, useDep } from '../../../../../data/deps';
-import { DepTag } from '../../../../../shell';
+import { DepRecordLink, DepTag } from '../../../../../shell';
 import type { DependencyViewProps } from '../drawer-props.type';
 import { DEP_HEADINGS } from '../kanban.constants';
 import { depView } from '../model';
@@ -18,6 +18,7 @@ const DependencyView = (props: DependencyViewProps) => {
     <Flex direction="column" gap="sm">
       <Flex gap="sm" align="center" wrap>
         <DepTag color={depColor(view.state)}>{view.state}</DepTag>
+        <DepRecordLink id={view.dep} />
         <Text variant="caption" tone="muted">{DEP_HEADINGS[view.side]}</Text>
         <DependencyLink view={view} />
         {view.cancellable && <CancelDependency dep={view.dep} />}

@@ -47,7 +47,7 @@ describe('I-68 the entry pane', { tags: ['standard'] }, () => {
 
   it('opens from the id of a card of the owner feed', async () => {
     await mount('/p/rotp/#activity');
-    fireEvent.click(await screen.findByRole('button', { name: 'Open Q-1' }));
+    fireEvent.click(await screen.findByRole('link', { name: 'Q-1' }));
     expectDetail(await paneOf());
   });
 
@@ -55,7 +55,7 @@ describe('I-68 the entry pane', { tags: ['standard'] }, () => {
     await mount('/p/rotp/#I-1');
     const drawer = await screen.findByRole('dialog', { name: 'Work item' });
     fireEvent.click(within(drawer).getByRole('tab', { name: /^Discussion/ }));
-    const links = await within(drawer).findAllByRole('button', { name: 'Open Q-1' });
+    const links = await within(drawer).findAllByRole('link', { name: 'Q-1' });
     fireEvent.click(links[0] as HTMLElement);
     expectDetail(await paneOf());
   });
