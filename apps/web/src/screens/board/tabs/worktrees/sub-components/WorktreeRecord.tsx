@@ -30,7 +30,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
           menu: worktreeMenu(row, { meta, controls, open, code, label, keep, link, unlink }),
           menuLabel: `More actions for ${label}`,
         }}
-        title={worktreeTitle(row, agents, meta)}
+        title={worktreeTitle(row, agents)}
         chips={worktreeChips(row)}
         age={touchedAge(row, now)}
         trailing={row.job ? <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text> : undefined}

@@ -119,6 +119,13 @@ interface RuleLineProps {
   meta: WorktreesMeta | null;
 }
 
+interface CapToggleProps {
+  total: number;
+  limit: number;
+  all: boolean;
+  onToggle: () => void;
+}
+
 interface RequestsSectionProps {
   boardKey: string;
   requests: WorktreeRequest[];
@@ -144,7 +151,7 @@ interface RemovedRowProps {
 }
 
 export type {
-  BatchConfirmProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
+  BatchConfirmProps, CapToggleProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
   RefusedJobsProps, RemoveConfirmProps, RemovedRowProps, RemovedSectionProps, RequestFormProps, RequestRowProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
   WorktreeGroupsProps, WorktreeRecordProps, WorktreeSummaryProps, WorktreeToolbarProps, WorktreesTabProps,
 };

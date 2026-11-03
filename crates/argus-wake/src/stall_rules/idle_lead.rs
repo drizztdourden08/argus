@@ -86,9 +86,20 @@ mod tests {
                 lead: "lead".to_owned(),
                 subject: "lead".to_owned(),
                 since: NOW - 20 * MIN,
-                text: "stall: rotp idle 20 min, 2 open items without a blocker (I-4, I-7)"
+                text: "stall: rotp idle 20 min, 2 open items without a blocker (K-4, K-7)"
                     .to_owned(),
             }]
+        );
+    }
+
+    #[test]
+    fn the_text_lists_the_items_with_the_letters_of_their_type() {
+        let bug = item("I-4", "todo", &json!({"type": "bug"}));
+        let world = rotp(&json!({}), &[bug, todo("I-7")], &json!({}));
+        let found = idle_found(&world, &IdleWatch::new(), NOW, false);
+        assert_eq!(
+            found[0].text,
+            "stall: rotp idle 20 min, 2 open items without a blocker (B-4, K-7)"
         );
     }
 

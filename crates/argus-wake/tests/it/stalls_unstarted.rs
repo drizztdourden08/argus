@@ -32,7 +32,7 @@ fn an_acked_dep_open_30_min_with_its_item_todo_wakes_the_overlord_then_every_30_
     );
     assert_eq!(
         first[0].text,
-        "stall: D-11 open 30 min, rotp I-112 still todo"
+        "stall: D-11 open 30 min, rotp K-112 still todo"
     );
     assert_eq!(
         first[0].subject.as_deref(),
@@ -49,7 +49,7 @@ fn an_acked_dep_open_30_min_with_its_item_todo_wakes_the_overlord_then_every_30_
     assert_eq!(all.len(), 2);
     assert_eq!(
         all[1].text,
-        "stall: D-11 open 60 min, rotp I-112 still todo"
+        "stall: D-11 open 60 min, rotp K-112 still todo"
     );
     assert_eq!(activity_texts(&rig, "stall").len(), 1, "raised once");
 }
@@ -64,7 +64,7 @@ fn the_item_leaving_todo_clears_it() {
     assert_eq!(rig.service.stalls(None).len(), 0);
     assert_eq!(
         activity_texts(&rig, "stall-cleared"),
-        ["stall cleared: D-11 open 30 min, rotp I-112 still todo (open 31m)"]
+        ["stall cleared: D-11 open 30 min, rotp K-112 still todo (open 31m)"]
     );
     pass(&mut rig, 29);
     assert_eq!(

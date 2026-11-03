@@ -1,7 +1,7 @@
 //! What rule 4 asks of the lead and its work: which lead counts, when its idleness began, what is open.
 
 use crate::blockers::is_blocked;
-use crate::board::{BoardView, LIVE_AGENT, ThreadView};
+use crate::board::{BoardView, ItemView, LIVE_AGENT, ThreadView};
 use crate::item_wakes::target_for;
 use crate::time::parse_ms;
 
@@ -28,7 +28,7 @@ pub(super) fn idle_start(now: i64, lead: &ThreadView) -> i64 {
         .unwrap_or(now)
 }
 
-/// The `todo` and `doing` items the lead answers for (its own, or a thread that is not live) with no blocker.
+/// The shown ids (`B-12`) of the `todo` and `doing` items the lead answers for (its own, or a thread that is not live) with no blocker.
 pub(super) fn open_items(board: &BoardView, lead_id: &str) -> Vec<String> {
     board
         .items
@@ -36,6 +36,6 @@ pub(super) fn open_items(board: &BoardView, lead_id: &str) -> Vec<String> {
         .filter(|item| item.rec.is_live() && item.status.is_any(&["todo", "doing"]))
         .filter(|item| target_for(board, item.thread.as_str()).as_deref() == Some(lead_id))
         .filter(|item| !is_blocked(board, item))
-        .map(|item| item.rec.id.as_str().to_owned())
+        .map(ItemView::shown_id)
         .collect()
 }

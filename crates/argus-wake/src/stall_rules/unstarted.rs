@@ -41,7 +41,7 @@ fn one(now: i64, input: &RuleInput<'_>, key: &str, dep: &DepView) -> Option<Foun
         lead: board.coordinator().unwrap_or_default(),
         subject: id.to_owned(),
         since: opened,
-        text: text::unstarted(id, age, project, item.rec.id.as_str()),
+        text: text::unstarted(id, age, project, &item.shown_id()),
     })
 }
 
@@ -85,9 +85,26 @@ mod tests {
                 lead: "lead".to_owned(),
                 subject: "D-11".to_owned(),
                 since: NOW - 31 * MIN,
-                text: "stall: D-11 open 31 min, rotp I-112 still todo".to_owned(),
+                text: "stall: D-11 open 31 min, rotp K-112 still todo".to_owned(),
             }]
         );
+    }
+
+    #[test]
+    fn the_text_names_the_item_with_the_letters_of_its_type() {
+        let lead = json!({"activity": "working", "lastSeen": iso(NOW)});
+        let typed = item("I-112", "todo", &json!({"type": "bug"}));
+        let rotp = project(&lead, &[typed], &json!({}));
+        let ledger = json!({"deps": {"D-11": {
+            "id": "D-11", "state": "open", "openedAt": iso(NOW - 31 * MIN),
+            "to": {"project": "rotp", "item": "I-112", "thread": "lead"},
+        }}});
+        let found = found(&boards(&[("_portfolio", ledger), ("rotp", rotp)]));
+        assert_eq!(
+            found[0].text,
+            "stall: D-11 open 31 min, rotp B-112 still todo"
+        );
+        assert_eq!(found[0].subject, "D-11");
     }
 
     #[test]

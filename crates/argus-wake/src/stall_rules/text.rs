@@ -8,7 +8,7 @@ fn minutes(age_ms: i64) -> i64 {
     age_ms / MIN_MS
 }
 
-/// `stall: D-11 open 30 min, rotp I-112 still todo`
+/// `stall: D-11 open 30 min, rotp I-112 still todo` (the item as the owner reads its id)
 pub(super) fn unstarted(dep: &str, age_ms: i64, project: &str, item: &str) -> String {
     format!(
         "stall: {dep} open {} min, {project} {item} still todo",
@@ -16,7 +16,7 @@ pub(super) fn unstarted(dep: &str, age_ms: i64, project: &str, item: &str) -> St
     )
 }
 
-/// `stall: rotp idle 12 min, 3 open items without a blocker (I-4, I-7, I-9)`; at most 5 ids, then `, ...`.
+/// `stall: rotp idle 12 min, 3 open items without a blocker (K-4, B-7, K-9)`; at most 5 shown ids, then `, ...`.
 pub(super) fn idle(project: &str, age_ms: i64, ids: &[String]) -> String {
     let shown = ids
         .iter()

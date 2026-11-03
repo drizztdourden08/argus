@@ -10,7 +10,7 @@ use serde_json::json;
 
 use crate::stalls_world::{activity_texts, assert_to, item, pass, pass_with, working, world};
 
-const LINE: &str = "stall: rotp idle 10 min, 1 open items without a blocker (I-4)";
+const LINE: &str = "stall: rotp idle 10 min, 1 open items without a blocker (K-4)";
 
 #[test]
 fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {

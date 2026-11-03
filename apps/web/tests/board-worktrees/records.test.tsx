@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { itemRef } from '../board-kanban/kanban-docs';
 import { groupOf } from '../helpers/group-dom';
@@ -19,17 +19,22 @@ describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
     expect(within(await findRow('a')).getByText('Build the pane')).toBeTruthy();
   });
 
-  it('says the branch when it differs from the folder name', async () => {
-    await mountTab({ meta: metaDoc(), docs: [worktree('b', 'active', { branch: 'feat/b' })] });
+  it('says the last commit subject when no agent task is known', async () => {
+    await mountTab({ meta: metaDoc(), docs: [worktree('s', 'active', { subject: 'Fix the pane header' })] });
+    expect(within(await findRow('s')).getByText('Fix the pane header')).toBeTruthy();
+  });
+
+  it('says the branch when it differs from the folder name and there is no subject', async () => {
+    await mountTab({ meta: metaDoc(), docs: [worktree('b', 'active', { branch: 'feat/b', subject: null })] });
     expect(text(await findRow('b'))).toContain('feat/b');
   });
 
-  it('says the folder under the rule when the branch only repeats the folder name', async () => {
-    const row = worktree('agent-c', 'active', { branch: 'worktree-agent-c', path: 'X:/proj/trees/sub/agent-c' });
+  it('never repeats the id: with nothing else to say the row shows its code once', async () => {
+    const row = worktree('agent-c', 'active', { branch: 'worktree-agent-c', subject: null, path: 'X:/proj/trees/sub/agent-c' });
     await mountTab({ meta: metaDoc(), docs: [row] });
     const words = text(await findRow('agent-c'));
-    expect(words).toContain('sub/agent-c');
-    expect(words).not.toContain('worktree-agent-c');
+    expect(words.split('agent-c')).toHaveLength(2);
+    expect(words).not.toContain('sub/agent-c');
   });
 });
 
@@ -76,7 +81,16 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
     const row = container.querySelector<HTMLElement>('[data-record="WT gone"]');
     expect(row).not.toBeNull();
     expect(within(row as HTMLElement).getByText('removed')).toBeTruthy();
-    expect(within(row as HTMLElement).getByText('X:/proj/trees/gone')).toBeTruthy();
+    expect(text(row as HTMLElement)).not.toContain('X:/proj/trees/gone');
     expect(within(row as HTMLElement).getByText('2h')).toBeTruthy();
+  });
+
+  it('says when the requests are capped and shows them all on ask', async () => {
+    const requests = Array.from({ length: 10 }, (_, n) => request({ id: `R-${n + 1}` }));
+    const { container } = await mountTab({ docs: [worktree('live', 'active')], meta: metaDoc({ requests }) });
+    await screen.findByText('Latest 8 of 10');
+    expect(container.querySelectorAll('[data-record^="R-"]')).toHaveLength(8);
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 10' }));
+    expect(container.querySelectorAll('[data-record^="R-"]')).toHaveLength(10);
   });
 });
