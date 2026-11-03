@@ -1,6 +1,8 @@
 //! `coord launcher set <name> --cmd "<command>" [flags]`: make the launcher, or change the flags
 //! given. `--cmd` is required for a new one and never empty; a retired one comes back. A
-//! standalone launcher (not master, not made for a bundle) must have `--use-every`.
+//! standalone launcher (not master, not made for a bundle) must have `--use-every`. A new build
+//! needs `--for I-n`, the item it serves (it closes with that item); `--master` makes it the
+//! master build instead, which needs none and takes the role from the build that had it.
 
 use argus_board::Board;
 use argus_board::json::{doc, truthy};
@@ -11,9 +13,11 @@ use argus_launchers::launcher::{
 
 use super::name::name_arg;
 use super::patch::patch_from;
+use super::report::{handed_over, ignored_every};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::links::linked;
+use crate::verbs::agent::base::serves::check_link;
 use crate::verbs::agent::base::{Run, write};
 use crate::verbs::agent::rules::{self, typed_board};
 
@@ -28,6 +32,12 @@ fn describe(rec: &Launcher) -> String {
     }
     if rec.current {
         parts.push("current".to_owned());
+    }
+    if rec.master {
+        parts.push("master build".to_owned());
+    }
+    if let Some(item) = rec.for_item.as_deref() {
+        parts.push(format!("serves {item}"));
     }
     if let Some(branch) = rec.branch.as_deref().filter(|b| !b.is_empty()) {
         parts.push(format!("branch {branch}"));
@@ -67,11 +77,10 @@ fn notes(
     rec: &Launcher,
 ) -> Result<(), CoordError> {
     if written.ignored.contains(&"useEvery") {
-        run.say(&if name == MASTER {
-            "--use-every ignored: master has no usage window (it is never stale).".to_owned()
-        } else {
-            format!("--use-every ignored: {name} is joined to a bundle, so it has no usage window (it goes with the bundle).")
-        });
+        run.say(&ignored_every(name, rec));
+    }
+    if let Some(old) = written.previous_master.as_deref() {
+        run.say(&handed_over(name, old));
     }
     if written.created || written.changed.contains(&"cmd") {
         let cmd = rec.cmd.as_deref().unwrap_or_default();
@@ -105,9 +114,10 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         let live = have.is_some_and(|h| !truthy(h, "retiredAt"));
         if live && patch == LauncherPatch::default() {
             return Err(CoordError::refuse(
-                "nothing to change: pass --cmd --title --cwd --branch --commit --note --kind --current --window or --use-every (\"\" clears a text field).",
+                "nothing to change: pass --cmd --title --cwd --branch --commit --note --kind --current --window --use-every --for or --master (\"\" clears a text field).",
             ));
         }
+        check_link(board, &name, &patch)?;
         let cwd = run.cwd.to_string_lossy().into_owned();
         let written = rules::run(board, who, |b, w, at| {
             write_launcher(

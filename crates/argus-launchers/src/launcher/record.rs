@@ -66,6 +66,18 @@ pub struct Launcher {
     pub retire_note: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub retired_by_bundle: Option<String>,
+    /// The work item this build serves (`for`): the build closes when the item does.
+    #[serde(rename = "for", skip_serializing_if = "Option::is_none")]
+    pub for_item: Option<String>,
+    /// The master build of the board: needs no item and never closes with one.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub master: bool,
+    /// The item whose closing retired this build; a reopen of it brings the build back.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retired_by_item: Option<String>,
+    /// A live build with no clear item, left by `coord build migrate-links` for its lead to link.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub relink: bool,
     pub created_at: String,
     pub created_by: Option<String>,
     pub updated_at: String,
@@ -95,6 +107,10 @@ impl Default for Launcher {
             retired_by: None,
             retire_note: None,
             retired_by_bundle: None,
+            for_item: None,
+            master: false,
+            retired_by_item: None,
+            relink: false,
             created_at: String::new(),
             created_by: None,
             updated_at: String::new(),

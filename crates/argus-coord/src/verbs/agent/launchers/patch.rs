@@ -1,11 +1,13 @@
 //! What the flags of `coord launcher set` name, nothing else (`patchFrom`): `""` clears a text
-//! field, `--current` / `--not-current` and `--window` / `--no-window` are yes or no pairs.
+//! field, `--current` / `--not-current` and `--window` / `--no-window` are yes or no pairs,
+//! `--for I-n` links the build to the item it serves and `--master` hands the master role to it.
 
 use argus_launchers::launcher::{EVERY_HELP, KINDS, LauncherPatch, parse_every};
 
 use crate::cli::Options;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::opt::{Text, given, is_list, js_string, not_one_text, one_text};
+use crate::verbs::agent::base::serves::for_flag;
 use crate::verbs::agent::rules::refused;
 
 const OFF: [&str; 4] = ["false", "0", "no", "off"];
@@ -74,5 +76,7 @@ pub fn patch_from(options: &Options) -> Result<LauncherPatch, CoordError> {
         current: on_off(options, "current", "not-current")?,
         window: on_off(options, "window", "no-window")?,
         use_every: every_flag(options)?,
+        for_item: for_flag(options)?,
+        master: options.flag("master").then_some(true),
     })
 }

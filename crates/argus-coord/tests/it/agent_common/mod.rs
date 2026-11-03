@@ -7,6 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use argus_board::store::empty_board;
+use argus_core::clock::{iso_from_ms, now_ms};
 use serde_json::{Value, json};
 
 use crate::common::{Home, Ran, coord};
@@ -45,6 +46,14 @@ fn thread(id: &str, role: &str, root: &str, rank: u32) -> Value {
         "updatedAt": "2026-10-01T12:00:00.000Z", "updatedBy": id, "rev": 1, "rank": rank,
         "root": root, "session": null, "sessionId": null, "link": null,
         "status": "active", "lastSeen": "2026-10-01T12:00:00.000Z",
+    })
+}
+
+fn item_doc(id: &str, status: &str) -> Value {
+    let at = "2026-10-26T12:00:00.000Z";
+    json!({
+        "id": id, "title": "Login", "thread": "worker", "status": status, "rev": 1,
+        "rank": 1024, "createdAt": at, "createdBy": "worker", "updatedAt": at, "updatedBy": "worker",
     })
 }
 
@@ -130,6 +139,37 @@ impl Rig {
             &["launcher", "set", "master", "--cmd", "game run"],
             As::Lead,
         );
+    }
+
+    /// A task `I-1`, unless the board has one: the item the builds of a test serve.
+    pub fn with_item(&self) {
+        self.edit(|b| {
+            if b["items"].get("I-1").is_none() {
+                b["items"]["I-1"] = item_doc("I-1", "todo");
+            }
+        });
+    }
+
+    /// A task with the id and status, for a build to serve (or not, when it is closed).
+    pub fn with_item_status(&self, id: &str, status: &str) {
+        self.edit(|b| b["items"][id] = item_doc(id, status));
+    }
+
+    /// A launcher written before builds served items: no `for`, a usage window when given.
+    pub fn legacy_launcher(&self, name: &str, use_every: Option<&str>) {
+        self.edit(|b| {
+            let now = iso_from_ms(now_ms());
+            let mut rec = json!({
+                "name": name, "title": null, "cmd": "node tool.js", "cwd": null, "kind": "app",
+                "branch": null, "commit": null, "note": null, "current": false,
+                "retiredAt": null, "retiredBy": null, "retireNote": null,
+                "createdAt": now, "createdBy": "worker", "updatedAt": now, "by": "worker",
+            });
+            if let Some(every) = use_every {
+                rec["useEvery"] = json!(every);
+            }
+            b["launchers"][name] = rec;
+        });
     }
 
     /// An item `I-1` and a manual test `T-1` of it carrying the build tag `bundle-4`.

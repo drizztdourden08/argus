@@ -38,6 +38,7 @@ mod run_launch;
 mod run_query;
 mod run_recover;
 mod run_retention;
+mod run_retired;
 mod run_service;
 mod run_shutdown;
 mod run_start;

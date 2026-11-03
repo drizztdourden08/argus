@@ -2,9 +2,11 @@
 
 mod common;
 mod launcher_bundles;
+mod launcher_items;
 mod launcher_rules;
 mod launcher_stale;
 mod runs_attach;
+mod runs_closed_plays;
 mod runs_kill;
 mod runs_lifecycle;
 mod runs_limits;

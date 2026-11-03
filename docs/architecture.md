@@ -835,6 +835,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `kanban-stale` | passive | item staleness |
 | `process-alert` | passive | hogs and orphans the process monitor saw |
 | `worktree-stale`, `worktree-review` | passive | worktree hygiene |
+| `worktree-unlinked` | passive | a worktree with no item an hour after Argus first saw it (a main checkout is never flagged) |
 | `launcher-stale`, `launcher-master-missing` | passive | launcher hygiene |
 | `remote-sync-due` | passive | the daily remote sync reminder |
 | `dep-cancelled`, `dep-reopened` | passive | a request withdrawn, or open again |
@@ -900,6 +901,48 @@ what the defs say. Its `launcher_stale` module is the Node `src/launchers/stale.
 10 minutes it sends `launcher-master-missing` to a lead whose board has no live master and
 `launcher-stale` to the thread that made a standalone launcher unused past its window, and it
 keeps the last Play time per launcher in kv (`launcher-played:<scope>:<name>`).
+
+### Builds and worktrees served by items (I-78)
+
+A build is a launcher (`board.launchers[name]`) that serves one work item through its `for` field.
+It lives while the item lives. When the item reaches the done or dropped lane, or goes to the
+trash, the same board write retires its builds (`retiredAt`, `retiredByItem`, `current` false, the
+Play definition moved to `board.closedPlays`). A reopen or a restore brings back the builds that
+the closing retired, never one a hand retired. The board has exactly one master build, the
+launcher with `master: true` (a board not yet migrated has the launcher named `master`). It is
+mandatory, needs no `for` and no item closes it. The rules live in `argus-board::served`
+(`check_for`, `close_builds`, `reopen_builds`, `master_name`, `hand_over_master`).
+
+What the CLI does with them (`argus-coord`):
+
+- `coord launcher set <name> --for I-n` makes a build. A new build without `--for` is refused
+  unless it is the master. `--master` hands the master role to the build and takes it from the
+  one that had it, which is marked `relink` if it served nothing. `coord launcher link <name> I-n`
+  moves a build to another open item and clears `relink`.
+- `coord build add|set <tag> --cmd ... [--for I-n]` makes the launcher named after the bundle. With
+  no `--for` it serves the one test plan whose `bundle` field names the tag, else it is refused.
+- `coord build migrate-links [--dry-run]` runs once per board and is idempotent. The current
+  master build gets its flag, a build whose bundle exactly one test plan names (or whose tests all
+  verify one item) gets that item, a live build with no clear match gets `relink: true`, and a
+  retired build with no clear match is left alone. The Builds tab lists the `relink` ones as
+  "Needs a link".
+- `coord worktree link <id|path> I-n` and `unlink` write `board.worktreeLinks[<worktree id>] =
+  {item, by, at}`. A link made by hand wins over the owning agent's `item`, an `I-n` in the branch
+  name and an item whose text names the folder (`argus-worktrees` `linking.rs`).
+- The item verbs print one line when a move closed or reopened builds with the item
+  (`I-7: closed with it: build bundle-7; worktree 1a2b3c4d5e goes in a short grace`). The names
+  come from `OpResult.extra` (`closedWith`, `reopenedWith`).
+
+A worktree goes with its item. Once the item is closed, hygiene moves the worktree to `closing`
+and removes it after `worktrees.itemCloseGraceMs` (2 minutes by default) with the backup written
+first, as long as `worktrees.closeWithItem` is on. A worktree with no item an hour after Argus
+first saw it is flagged once: the `no item` chip on the Worktrees tab and a passive
+`worktree-unlinked` notice to its thread. Nothing is removed for being unlinked.
+
+A hidden run of a Play whose build closed is stopped by the run service. Every 30 seconds it
+compares its live hidden runs of `launcher-<name>` with the run definitions of the board and
+stops a run whose definition has been missing on two checks in a row (one check can catch the
+board file half written). A visible run is the owner's window and stays, as at shutdown.
 
 ### Agents (argus-agents)
 

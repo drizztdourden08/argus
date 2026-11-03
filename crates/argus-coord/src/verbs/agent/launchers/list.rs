@@ -3,7 +3,9 @@
 
 use std::cmp::Ordering;
 
+use argus_board::Board;
 use argus_board::json::{display, section, shown, truthy};
+use argus_board::served::is_master;
 use argus_launchers::launcher::{EVERY_LEGACY, MASTER, duration_text, has_master};
 use serde_json::{Value, json};
 
@@ -16,10 +18,11 @@ use crate::verbs::agent::base::show::{cell, clip};
 use crate::verbs::agent::rules::typed_board;
 use argus_core::collate::compare;
 
-const HEAD: [&str; 8] = [
+const HEAD: [&str; 9] = [
     "name",
     "kind",
     "current",
+    "for",
     "branch",
     "set",
     "used every",
@@ -28,8 +31,8 @@ const HEAD: [&str; 8] = [
 ];
 
 /// Master first, then the current ones, then the rest by name.
-fn by_pin(a: &Value, b: &Value) -> Ordering {
-    let pin = |l: &Value| (l["name"] == MASTER, truthy(l, "current"));
+fn by_pin(board: &Board, a: &Value, b: &Value) -> Ordering {
+    let pin = |l: &Value| (is_master(board, &display(&l["name"])), truthy(l, "current"));
     let (pa, pb) = (pin(a), pin(b));
     pb.0.cmp(&pa.0)
         .then_with(|| pb.1.cmp(&pa.1))
@@ -101,6 +104,7 @@ fn line(row: &Row, now_ms: i64) -> Vec<String> {
             ""
         }
         .to_owned(),
+        cell(&rec["for"]),
         cell(&rec["branch"]),
         format!(
             "{} {}",
@@ -125,7 +129,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
             .values()
             .filter(|l| all || !truthy(l, "retiredAt"))
             .collect();
-        recs.sort_by(|a, b| by_pin(a, b));
+        recs.sort_by(|a, b| by_pin(board, a, b));
         let rows: Vec<Row> = recs
             .into_iter()
             .map(|l| row_of(board, &typed, l, run.now_ms))
@@ -147,6 +151,17 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         run.say(&table(&lines));
         if !has_master(&typed) {
             run.say(&format!("no master launcher: every project must have one, and coord build hand is refused without it. Set it: coord launcher set {MASTER} --cmd \"<command>\"."));
+        }
+        let waiting: Vec<String> = rows
+            .iter()
+            .filter(|r| truthy(&r.rec, "relink") && !truthy(&r.rec, "retiredAt"))
+            .map(|r| display(&r.rec["name"]))
+            .collect();
+        if !waiting.is_empty() {
+            run.say(&format!(
+                "{}: no item yet (it closes with its item): coord launcher link <name> I-n.",
+                waiting.join(", ")
+            ));
         }
         let legacy: Vec<String> = rows
             .iter()

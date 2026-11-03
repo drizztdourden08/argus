@@ -215,8 +215,46 @@ those keep their behaviour and output.
 ## 11. Order of work for you
 
 1. Wait for the Argus lead to say the rework is deployed locally.
-2. Apply sections 2 to 9 to the skill, and the blocker line of section 4 to every project
+2. Apply sections 2 to 9 and section 12 to the skill, and the blocker line of section 4 to every project
    `CLAUDE.md` working standard.
 3. Re-render every project, and tell the leads.
 4. After the owner's go on the preview, tell each lead to run `coord item migrate-blockers
-   --dry-run`, then without the flag.
+   --dry-run`, then without the flag, and `coord build migrate-links --dry-run`, then without the
+   flag (section 12).
+
+## 12. Builds and worktrees live with their item (I-78)
+
+Add this to `SKILL.md` and to the build and worktree blocks of `thread-verbs.md`.
+
+```
+coord launcher set <name> --cmd "<command>" --for I-n [flags as before]
+coord launcher set <name> --master [--cmd "<command>"]
+coord launcher link <name> I-n
+coord build add|set <tag> --cmd "<command>" [--for I-n]
+coord build migrate-links [--dry-run]
+coord worktree link <id|path> I-n
+coord worktree unlink <id|path>
+coord agent start <name> "<task>" ... --item I-n
+```
+
+- A build serves one work item and closes with it. `--for` takes an `I-n` of the same board whose
+  type is epic, story, task, bug, debt or test-plan, and which is not done, dropped or in the trash.
+  A new build without `--for` is refused, except the master build.
+- A board has one master build, the main checkout's app: mandatory, no item needed, never closed
+  by an item. `coord launcher set <name> --master` hands the role to another build; the build
+  that had it is marked `relink` and waits for `coord launcher link`.
+- `coord build add <tag> --cmd ...` with no `--for` serves the one test plan whose `bundle` field
+  names the tag. With none or several it is refused: pass `--for`.
+- When an item reaches done or dropped, or goes to the trash, its builds close in the same write
+  and its Play definition is dropped. Reopening or restoring the item brings those builds back.
+  The CLI prints `I-7: closed with it: build bundle-7`.
+- A worktree is linked to an item too. Start sub-agents with `coord agent start --item I-n` and
+  Argus links the worktree they use. `coord worktree link` fixes one by hand. When the item closes
+  the worktree is removed after a short grace, with a backup written first, so a lead links a
+  worktree it still needs to another open item. A worktree with no item an hour after Argus saw it
+  produces a passive `worktree-unlinked` notice.
+- Each lead runs `coord build migrate-links --dry-run`, then without the flag, once. It flags the
+  master build, links a build whose bundle one test plan names (or whose tests all verify one item)
+  and marks the rest `relink`. List them with `coord launcher list` and answer each with
+  `coord launcher link <name> I-n`, or retire it.
+- The hooks call none of these, so no hook changes.

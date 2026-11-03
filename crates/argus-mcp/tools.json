@@ -402,7 +402,7 @@
   {
     "name": "list_launchers",
     "title": "List launchers",
-    "description": "What the owner can start from the Builds tab (coord launcher set): each launcher, master first, then the current ones, with its command, folder, kind, branch, commit and note, its Play run name (start it with run_start) and the bundles that link it. Retired ones only with includeRetired.",
+    "description": "What the owner can start from the Builds tab (coord launcher set): each launcher, master first, then the current ones, with its command, folder, kind, branch, commit and note, its Play run name (start it with run_start) and the bundles that link it. Every build but the master serves one work item (for: I-n) and closes with it (retiredByItem names the item whose closing retired it); relink: true marks a build still waiting for a link. Retired ones only with includeRetired.",
     "inputSchema": {
       "type": "object",
       "properties": {

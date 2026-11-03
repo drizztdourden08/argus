@@ -8,6 +8,8 @@ mod bundle;
 mod bundle_ops;
 mod every;
 mod join;
+mod link;
+mod master_role;
 mod naming;
 mod play;
 mod record;
@@ -26,7 +28,10 @@ pub use bundle_ops::{
     set_bundle_status,
 };
 pub use every::{EVERY_HELP, EVERY_LEGACY, Every, duration_text, parse_every};
-pub use join::{has_master, is_live, is_standalone, joined_bundle, linked_bundles, made_for};
+pub use join::{
+    has_master, is_live, is_master, is_standalone, joined_bundle, linked_bundles, made_for,
+};
+pub use link::link_launcher;
 pub use naming::{
     DEF_PREFIX, KINDS, is_launcher_name, launcher_def_name, launcher_slug, require_launcher_name,
 };

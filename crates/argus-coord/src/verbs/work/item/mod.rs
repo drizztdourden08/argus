@@ -15,6 +15,7 @@ mod images;
 mod marks;
 mod migrate;
 mod read;
+mod served_line;
 mod set;
 mod tree;
 mod typed;

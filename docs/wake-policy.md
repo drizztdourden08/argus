@@ -44,7 +44,8 @@ It is never woken for, and these stay notices:
 - `wake-fault`: the record of a fault (`board-closed`, `no-listener`, `no-reaction` (after a restart
   too), `not-listening` and `delivery-error`) for the Overlord. The Overlord is woken for the
   fault itself by `fault-open` (see Open faults and notices);
-- `worktree-review`, `worktree-stale`, `launcher-stale`, `launcher-master-missing`;
+- `worktree-review`, `worktree-stale`, `worktree-unlinked`, `launcher-stale`,
+  `launcher-master-missing`;
 - `kanban-stale` (item staleness), `agent-stale` and `agent-checkin` (quiet agent reminders);
 - `remote-sync-due`;
 - `process-alert` (hogs and orphans, mostly not project work);
@@ -153,6 +154,9 @@ stops when nothing is.
 - A fault clears by itself when its cause is gone, and the activity log says why: the thread
   listens again (`not-listening`, `no-listener`), it shows a sign of life after the fault opened
   (`no-reaction`, `delivery-error`), its board opens or it goes idle (`board-closed`).
+- `worktree-unlinked` is told once per worktree, to its thread, when no item names the worktree an
+  hour after Argus first saw it (a main checkout is never flagged). Link it with `coord worktree
+  link <id|path> I-n`. Nothing is removed for being unlinked, and the notice never wakes.
 - `remote-sync-due` is open while the lead's sync is overdue (a record ends it); `worktree-stale`
   comes from a notice source the server adds (`WakeService::add_notice_source`).
 

@@ -102,6 +102,16 @@ fn request_text(doc: &Value) -> String {
     )
 }
 
+/// The item column: the id and, when Argus worked it out, how; `no item` once it flagged it.
+fn item_cell(doc: &Value) -> String {
+    match (doc["item"].as_str(), doc["linkSource"].as_str()) {
+        (Some(item), Some(source)) if source != "manual" => format!("{item} ({source})"),
+        (Some(item), _) => item.to_owned(),
+        (None, _) if truthy(doc, "unlinked") => "no item".to_owned(),
+        (None, _) => String::new(),
+    }
+}
+
 fn row(doc: &Value, now: i64) -> Vec<String> {
     let touched = if truthy(doc, "lastTouchedAt") {
         out::ago(doc["lastTouchedAt"].as_str(), now)
@@ -122,6 +132,7 @@ fn row(doc: &Value, now: i64) -> Vec<String> {
         cell(doc.get("status")),
         cell(doc.get("path")),
         cell(doc.get("branch")),
+        item_cell(doc),
         touched,
         format!("{}/{}", count("ahead"), count("behind")),
         dirty,
@@ -162,6 +173,7 @@ pub(super) fn list(call: &mut Call<'_>) -> Outcome {
             "status",
             "path",
             "branch",
+            "item",
             "touched",
             "ahead/behind",
             "dirty",

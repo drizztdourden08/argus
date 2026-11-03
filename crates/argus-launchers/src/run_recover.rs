@@ -1,16 +1,17 @@
 //! Restart safety. At boot, before serving, nothing stays "running" or "queued": rows
 //! `running` become `failed` and `orphan` (with a note when the pid still lives), rows
-//! `queued` become `failed`, the run docs are rebuilt and the hourly sweep starts.
-
-use std::time::Duration;
+//! `queued` become `failed`, the run docs are rebuilt and the sweeper starts: the hourly
+//! retention sweep, and every half minute the stop of the hidden runs of a build that closed.
 
 use tokio::runtime::Handle;
 
 use crate::host::ProcessHost;
 use crate::record::{RunPatch, RunRow, RunStatus};
+use crate::run_retired::CLOSED_PLAYS_EVERY;
 use crate::run_service::RunService;
 
-const SWEEP_EVERY: Duration = Duration::from_secs(60 * 60);
+/// Retention runs once per this many ticks of the closed-plays check (an hour).
+const SWEEP_TICKS: u32 = 120;
 
 impl<H: ProcessHost> RunService<H> {
     fn interrupted_patch(&self, row: &RunRow) -> RunPatch {
@@ -63,11 +64,17 @@ impl<H: ProcessHost> RunService<H> {
         };
         let service = self.clone();
         state.sweeper = Some(runtime.spawn(async move {
-            let mut every = tokio::time::interval(SWEEP_EVERY);
+            let mut every = tokio::time::interval(CLOSED_PLAYS_EVERY);
             every.tick().await;
+            let mut until_sweep = SWEEP_TICKS;
             loop {
                 every.tick().await;
-                service.sweep();
+                service.stop_closed_plays().await;
+                until_sweep -= 1;
+                if until_sweep == 0 {
+                    service.sweep();
+                    until_sweep = SWEEP_TICKS;
+                }
             }
         }));
     }

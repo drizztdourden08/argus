@@ -20,6 +20,8 @@ fn bundle_4(rig: &Rig) -> crate::common::Ran {
             "login and settings",
             "--cmd",
             "rotp launch bundle-4 --visible",
+            "--for",
+            "I-1",
             "--cwd",
             &root,
             "--thread",
@@ -55,6 +57,7 @@ fn row(rig: &Rig, tag: &str) -> Value {
 #[test]
 fn add_makes_the_record_and_with_cmd_the_launcher_named_after_the_tag_that_it_links() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.with_test();
     let added = bundle_4(&rig);
@@ -103,6 +106,8 @@ fn add_makes_the_record_and_with_cmd_the_launcher_named_after_the_tag_that_it_li
             "bundle-4",
             "--cmd",
             "rotp launch bundle-4 --visible",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -340,6 +345,7 @@ fn def_of(board: &Value, name: &str) -> Value {
 fn a_cmd_writes_the_launcher_and_its_run_definition_a_changed_cmd_or_cwd_updates_it_clearing_or_rm_retires_it()
  {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     let root = rig.root();
     let added = rig.ok(
@@ -349,6 +355,8 @@ fn a_cmd_writes_the_launcher_and_its_run_definition_a_changed_cmd_or_cwd_updates
             "play-1",
             "--cmd",
             "node app.js",
+            "--for",
+            "I-1",
             "--thread",
             "worker",
         ],
@@ -450,9 +458,19 @@ fn a_cmd_writes_the_launcher_and_its_run_definition_a_changed_cmd_or_cwd_updates
 #[test]
 fn window_gives_the_launcher_a_visible_console_and_no_window_takes_it_away() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     let added = rig.ok(
-        &["build", "add", "win-1", "--cmd", "node app.js", "--window"],
+        &[
+            "build",
+            "add",
+            "win-1",
+            "--cmd",
+            "node app.js",
+            "--for",
+            "I-1",
+            "--window",
+        ],
         As::Lead,
     );
     assert!(added.out.contains("with a console window"), "{}", added.out);
@@ -493,14 +511,34 @@ fn window_gives_the_launcher_a_visible_console_and_no_window_takes_it_away() {
 #[test]
 fn the_launcher_name_is_a_slug_of_the_tag_a_clash_or_a_run_name_made_by_hand_is_refused() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
-    rig.ok(&["build", "add", "V1.2 RC", "--cmd", "node a.js"], As::Lead);
+    rig.ok(
+        &[
+            "build",
+            "add",
+            "V1.2 RC",
+            "--cmd",
+            "node a.js",
+            "--for",
+            "I-1",
+        ],
+        As::Lead,
+    );
     let board = rig.board();
     assert_eq!(board["builds"]["V1.2 RC"]["launcher"], "v1-2-rc");
     assert_eq!(board["launchers"]["v1-2-rc"]["bundle"], "V1.2 RC");
     assert!(board["runDefs"].get("launcher-v1-2-rc").is_some());
     rig.refused(
-        &["build", "add", "v1.2-rc", "--cmd", "node b.js"],
+        &[
+            "build",
+            "add",
+            "v1.2-rc",
+            "--cmd",
+            "node b.js",
+            "--for",
+            "I-1",
+        ],
         As::Lead,
         "launcher v1-2-rc is already linked to bundle V1.2 RC",
     );
@@ -512,7 +550,15 @@ fn the_launcher_name_is_a_slug_of_the_tag_a_clash_or_a_run_name_made_by_hand_is_
             json!({ "name": "launcher-hand-made", "cmd": "node c.js", "cwd": "x", "kind": "task" });
     });
     rig.refused(
-        &["build", "add", "hand-made", "--cmd", "node d.js"],
+        &[
+            "build",
+            "add",
+            "hand-made",
+            "--cmd",
+            "node d.js",
+            "--for",
+            "I-1",
+        ],
         As::Lead,
         "already taken by a launch defined with coord run define",
     );
@@ -533,6 +579,8 @@ fn the_launcher_name_is_a_slug_of_the_tag_a_clash_or_a_run_name_made_by_hand_is_
             "far-1",
             "--cmd",
             "node e.js",
+            "--for",
+            "I-1",
             "--cwd",
             &nowhere.to_string_lossy(),
         ],
@@ -551,6 +599,7 @@ fn the_launcher_name_is_a_slug_of_the_tag_a_clash_or_a_run_name_made_by_hand_is_
 #[test]
 fn launcher_links_an_existing_launcher_a_missing_or_retired_one_is_refused_and_empty_unlinks() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.ok(
         &[
@@ -617,8 +666,8 @@ fn launcher_links_an_existing_launcher_a_missing_or_retired_one_is_refused_and_e
             "old-9",
             "--cmd",
             "game run --old",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -635,8 +684,8 @@ fn launcher_links_an_existing_launcher_a_missing_or_retired_one_is_refused_and_e
             "feat-3",
             "--cmd",
             "game run --feat",
-            "--use-every",
-            "7d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -765,6 +814,7 @@ fn manual_tests(rig: &Rig, tag: &str) {
 #[test]
 fn close_refuses_while_manual_tests_are_still_to_run_force_closes_anyway_reopen_undoes_it() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.with_test();
     manual_tests(&rig, "c-1");
@@ -777,6 +827,8 @@ fn close_refuses_while_manual_tests_are_still_to_run_force_closes_anyway_reopen_
             "worker",
             "--cmd",
             "node c.js",
+            "--for",
+            "I-1",
         ],
         As::Worker,
     );
@@ -883,8 +935,12 @@ fn close_refuses_while_manual_tests_are_still_to_run_force_closes_anyway_reopen_
 fn closing_the_handed_bundle_unhands_it_hand_refuses_a_closed_tag_and_a_tag_with_no_record_can_be_closed()
  {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
-    rig.ok(&["build", "add", "h-1", "--cmd", "node h.js"], As::Lead);
+    rig.ok(
+        &["build", "add", "h-1", "--cmd", "node h.js", "--for", "I-1"],
+        As::Lead,
+    );
     rig.ok(&["build", "ready", "h-1"], As::Lead);
     rig.ok(&["build", "hand", "h-1"], As::Lead);
     assert_eq!(rig.board()["handedBuild"], "h-1");
@@ -937,6 +993,7 @@ fn close_and_reopen_belong_to_the_coordinator_or_the_bundles_own_thread_nobody_e
 #[test]
 fn closing_a_bundle_retires_the_launcher_made_for_it_only_a_shared_launcher_and_master_stay() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.ok(
         &[
@@ -945,8 +1002,8 @@ fn closing_a_bundle_retires_the_launcher_made_for_it_only_a_shared_launcher_and_
             "shared-1",
             "--cmd",
             "game run --shared",
-            "--use-every",
-            "30d",
+            "--for",
+            "I-1",
         ],
         As::Lead,
     );
@@ -959,6 +1016,8 @@ fn closing_a_bundle_retires_the_launcher_made_for_it_only_a_shared_launcher_and_
             "worker",
             "--cmd",
             "node j.js",
+            "--for",
+            "I-1",
         ],
         As::Worker,
     );
@@ -1036,6 +1095,7 @@ fn closing_a_bundle_retires_the_launcher_made_for_it_only_a_shared_launcher_and_
 #[test]
 fn a_launcher_made_for_a_bundle_takes_no_use_every_and_master_takes_none_either() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.ok(
         &[
@@ -1046,6 +1106,8 @@ fn a_launcher_made_for_a_bundle_takes_no_use_every_and_master_takes_none_either(
             "worker",
             "--cmd",
             "node j.js",
+            "--for",
+            "I-1",
         ],
         As::Worker,
     );
@@ -1102,6 +1164,7 @@ fn master_is_mandatory_build_hand_is_refused_without_a_live_master_and_says_how_
 #[test]
 fn a_new_bundle_is_a_draft_that_cannot_be_handed_ready_allows_hand_draft_goes_back_unless_handed() {
     let rig = Rig::new();
+    rig.with_item();
     rig.with_master();
     rig.with_test();
     let status = |tag: &str| row(&rig, tag)["status"].clone();
@@ -1112,6 +1175,8 @@ fn a_new_bundle_is_a_draft_that_cannot_be_handed_ready_allows_hand_draft_goes_ba
             "s-1",
             "--cmd",
             "node s.js",
+            "--for",
+            "I-1",
             "--thread",
             "worker",
         ],

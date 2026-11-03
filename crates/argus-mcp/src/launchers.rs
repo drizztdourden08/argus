@@ -1,4 +1,6 @@
-//! `list_launchers`: the launchers as the Builds tab shows them.
+//! `list_launchers`: the launchers as the Builds tab shows them. A row is the launcher record, so
+//! it carries `for` (the item the build serves), `master`, `retiredByItem` (the item whose closing
+//! retired it) and `relink` (a build waiting for `coord launcher link`) when they are set.
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -10,13 +12,19 @@ use crate::backend::McpBackend;
 use crate::json::{display, nn, text, truthy};
 use argus_core::collate;
 
-fn is_master(l: &Value) -> bool {
-    text(l, "name") == Some("master")
+/// The master build: the launcher carrying the `master` flag, or the one named `master` while no
+/// launcher carries it.
+fn is_master(l: &Value, flagged: bool) -> bool {
+    if flagged {
+        truthy(l, "master")
+    } else {
+        text(l, "name") == Some("master")
+    }
 }
 
-fn pin(x: &Value, y: &Value) -> Ordering {
-    is_master(y)
-        .cmp(&is_master(x))
+fn pin(x: &Value, y: &Value, flagged: bool) -> Ordering {
+    is_master(y, flagged)
+        .cmp(&is_master(x, flagged))
         .then_with(|| truthy(y, "current").cmp(&truthy(x, "current")))
         .then_with(|| collate::compare(&display(x, "name"), &display(y, "name"), true))
 }
@@ -65,13 +73,16 @@ pub fn list_launchers(backend: &dyn McpBackend, key: &str, args: &Value) -> Valu
     let retired = flag(args, "includeRetired");
     let plays = plays(backend, key);
     let builds = backend.docs(key, "builds");
-    let mut rows: Vec<Value> = backend
-        .docs(key, "launchers")
+    let all = backend.docs(key, "launchers");
+    let flagged = all.iter().any(|l| truthy(l, "master"));
+    let mut rows: Vec<Value> = all
         .into_iter()
         .filter(|l| retired || !truthy(l, "retiredAt"))
         .collect();
-    rows.sort_by(pin);
-    let master = rows.iter().any(|l| is_master(l) && !truthy(l, "retiredAt"));
+    rows.sort_by(|x, y| pin(x, y, flagged));
+    let master = rows
+        .iter()
+        .any(|l| is_master(l, flagged) && !truthy(l, "retiredAt"));
     let launchers: Vec<Value> = rows
         .iter()
         .map(|l| launcher_row(l, &plays, &builds))
