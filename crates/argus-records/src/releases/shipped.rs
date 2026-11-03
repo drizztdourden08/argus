@@ -143,7 +143,8 @@ mod tests {
         lines
             .iter()
             .map(|(sha, subject)| format!("{sha}{FIELD}{subject}{RECORD}\n"))
-            .collect()
+            .collect::<Vec<_>>()
+            .concat()
     }
 
     #[test]

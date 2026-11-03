@@ -4,7 +4,7 @@
 
 // test-tag: critical
 
-use crate::agent_common::{As, Rig};
+use crate::agent_common::{As, Rig, agent, hook_agent};
 use argus_core::clock::now_iso;
 use serde_json::{Value, json};
 
@@ -32,13 +32,6 @@ fn base<'a>(name: &'a str, extra: &[&'a str]) -> Vec<&'a str> {
     ];
     args.extend(extra);
     args
-}
-
-fn agent(rig: &Rig, name: &str) -> Value {
-    rig.board()["agents"]
-        .as_object()
-        .and_then(|m| m.values().find(|a| a["name"] == name).cloned())
-        .unwrap_or(Value::Null)
 }
 
 #[test]
@@ -142,16 +135,9 @@ fn a_blocker_is_an_id_of_the_board_never_text() {
 fn the_record_a_hook_made_has_no_item_and_a_lead_start_binds_it_and_fills_the_links() {
     let rig = rig();
     rig.edit(|b| {
-        let at = now_iso();
-        b["agents"]["A-90"] = json!({
-            "id": "A-90", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
-            "updatedBy": "coordinator", "rank": 90000, "name": "pad-overlay",
-            "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": "sonnet",
-            "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
-            "status": "working", "note": null, "result": null, "startedAt": at,
-            "finishedAt": null, "hookId": "hk-90", "claudeId": "hk-90", "source": "hook",
-            "agentType": "general-purpose", "modelUsed": null, "transcriptFile": null, "rev": 1,
-        });
+        let mut rec = hook_agent("pad-overlay", "sonnet");
+        rec["claudeId"] = json!("hk-90");
+        b["agents"]["A-90"] = rec;
     });
     assert_eq!(rig.board()["agents"]["A-90"].get("items"), None);
     rig.ok(

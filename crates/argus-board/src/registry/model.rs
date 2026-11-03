@@ -283,67 +283,50 @@ pub enum Progress {
     None,
 }
 
-/// An item type.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct ItemType {
-    /// The type id (`bug`).
-    pub id: String,
-    /// The name shown to the owner.
-    pub label: String,
-    /// The letters its ids are shown with (`B` for a bug: `B-12` is item `I-12`).
-    pub code: String,
-    /// A Tessera icon name.
-    pub icon: String,
-    /// A Tessera tag category colour.
-    pub color: String,
-    /// Where its records live.
-    pub collection: Collection,
-    /// The key of its records when it is not `id` (a build is its launcher `name`).
-    #[serde(default)]
-    pub id_key: Option<String>,
-    /// The types it may sit under; empty means a root only.
-    pub parents: Vec<String>,
-    /// The item types a build may serve; empty for every other type.
-    #[serde(default)]
-    pub serves: Vec<String>,
-    /// Whether the board only shows its records and never writes them.
-    #[serde(default)]
-    pub read_only: bool,
-    /// Its stages, in flow order (empty for a type with statuses).
-    pub stages: Vec<Stage>,
-    /// Its statuses, for a type that has no lane.
-    #[serde(default)]
-    pub statuses: Vec<String>,
-    /// Its own fields, beyond the base fields.
-    pub fields: Vec<String>,
-    /// How the overview groups its fields.
-    #[serde(default)]
-    pub groups: Vec<Group>,
-    /// Whether a list draws it as a card or a row.
-    pub view: View,
-    /// The property shown as its title.
-    pub title: String,
-    /// Where its avatar comes from: a property, `=owner` or `=lead`.
-    pub assignee: String,
-    /// Its pane tabs, in order.
-    pub tabs: Vec<String>,
-    /// What its card shows.
-    pub card: Card,
-    /// The links it carries.
-    pub links: Vec<Link>,
-    /// The providers of the signal strip of its card, in order.
-    #[serde(default)]
-    pub signals: Vec<String>,
-    /// The link field a list groups it by.
-    #[serde(default)]
-    pub group_by: Option<String>,
-    /// The primary action of its card.
-    #[serde(default)]
-    pub action: Option<String>,
-    /// The rule that must hold before it is done.
-    #[serde(default)]
-    pub done: Option<DoneRule>,
+shown_struct! {
+    /// An item type.
+    #[derive(Debug, Deserialize)]
+    #[serde(deny_unknown_fields, rename_all = "camelCase")]
+    pub struct ItemType {
+        /// The type id (`bug`).
+        pub id: String,
+        /// The name shown to the owner.
+        pub label: String,
+        /// The letters its ids are shown with (`B` for a bug: `B-12` is item `I-12`).
+        pub code: String,
+        /// A Tessera icon name.
+        pub icon: String,
+        /// A Tessera tag category colour.
+        pub color: String,
+        /// Where its records live.
+        pub collection: Collection,
+        /// The key of its records when it is not `id` (a build is its launcher `name`).
+        #[serde(default)]
+        pub id_key: Option<String>,
+        /// The types it may sit under; empty means a root only.
+        pub parents: Vec<String>,
+        /// The item types a build may serve; empty for every other type.
+        #[serde(default)]
+        pub serves: Vec<String>,
+        /// Whether the board only shows its records and never writes them.
+        #[serde(default)]
+        pub read_only: bool,
+        /// Its stages, in flow order (empty for a type with statuses).
+        pub stages: Vec<Stage>,
+        /// Its statuses, for a type that has no lane.
+        #[serde(default)]
+        pub statuses: Vec<String>,
+        /// Its own fields, beyond the base fields.
+        pub fields: Vec<String>,
+        /// How the overview groups its fields.
+        #[serde(default)]
+        pub groups: Vec<Group>,
+        /// The property shown as its title.
+        pub title: String,
+        /// The rule that must hold before it is done.
+        #[serde(default)]
+        pub done: Option<DoneRule>,
+    }
 }
 
 /// A stage of a type, mapped to one lane.
@@ -429,104 +412,70 @@ pub enum BlocksWhile {
     Pending,
 }
 
-/// A small record under an item: a question, decision, to-do or note.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct SubItem {
-    /// The kind name.
-    pub id: String,
-    /// The name shown to the owner.
-    pub label: String,
-    /// The letter of its ids (`Q` for `Q-3`).
-    pub code: String,
-    /// Where it is stored.
-    pub store: Store,
-    /// A Tessera icon name.
-    pub icon: String,
-    /// A tone name.
-    pub tone: String,
-    /// When it blocks its item; absent means never.
-    #[serde(default)]
-    pub blocks_while: Option<BlocksWhile>,
-    /// The registry field that holds its text, which is its title.
-    pub field: String,
-    /// Whether a list draws it as a card or a row.
-    pub view: View,
-    /// Where its avatar comes from: a property, `=owner` or `=lead`.
-    pub assignee: String,
-    /// Its pane tabs, in order.
-    pub tabs: Vec<String>,
-    /// What its card shows.
-    pub card: Card,
-    /// The links it carries.
-    pub links: Vec<Link>,
-    /// The providers of the signal strip of its card, in order.
-    #[serde(default)]
-    pub signals: Vec<String>,
-    /// The link field a list groups it by.
-    #[serde(default)]
-    pub group_by: Option<String>,
-    /// The primary action of its card.
-    #[serde(default)]
-    pub action: Option<String>,
+shown_struct! {
+    /// A small record under an item: a question, decision, to-do or note.
+    #[derive(Debug, Deserialize)]
+    #[serde(deny_unknown_fields, rename_all = "camelCase")]
+    pub struct SubItem {
+        /// The kind name.
+        pub id: String,
+        /// The name shown to the owner.
+        pub label: String,
+        /// The letter of its ids (`Q` for `Q-3`).
+        pub code: String,
+        /// Where it is stored.
+        pub store: Store,
+        /// A Tessera icon name.
+        pub icon: String,
+        /// A tone name.
+        pub tone: String,
+        /// When it blocks its item; absent means never.
+        #[serde(default)]
+        pub blocks_while: Option<BlocksWhile>,
+        /// The registry field that holds its text, which is its title.
+        pub field: String,
+    }
 }
 
-/// A record the app shows that is neither an item type nor a sub-item: an agent, a change, a
-/// release, a dependency, a run, a check run, a notice, a follow-up or a message. It has no
-/// stages and no parent type.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct Record {
-    /// The kind name.
-    pub id: String,
-    /// The name shown to the owner.
-    pub label: String,
-    /// The letters its ids are shown with (`PR` for `PR-4`).
-    pub code: String,
-    /// The letters its ids carry on disk when they differ from the code (a dependency is shown
-    /// `DP-3` and stored `D-3`).
-    #[serde(default)]
-    pub stored: Option<String>,
-    /// The kind whose code and counter it shares (a notice counts with the notes).
-    #[serde(default)]
-    pub shares: Option<String>,
-    /// Older letters its ids were written with and still parse.
-    #[serde(default)]
-    pub aliases: Vec<String>,
-    /// A Tessera icon name.
-    pub icon: String,
-    /// A Tessera tag category colour; a kind has this or a tone.
-    #[serde(default)]
-    pub color: Option<String>,
-    /// A tone name; a kind has this or a colour.
-    #[serde(default)]
-    pub tone: Option<String>,
-    /// Where its records live.
-    pub collection: Collection,
-    /// The key of its records when it is not `id`.
-    #[serde(default)]
-    pub id_key: Option<String>,
-    /// Whether a list draws it as a card or a row.
-    pub view: View,
-    /// The property shown as its title.
-    pub title: String,
-    /// Where its avatar comes from: a property, `=owner` or `=lead`.
-    pub assignee: String,
-    /// Its pane tabs, in order.
-    pub tabs: Vec<String>,
-    /// What its card shows.
-    pub card: Card,
-    /// The links it carries.
-    pub links: Vec<Link>,
-    /// The providers of the signal strip of its card, in order.
-    #[serde(default)]
-    pub signals: Vec<String>,
-    /// The link field a list groups it by.
-    #[serde(default)]
-    pub group_by: Option<String>,
-    /// The primary action of its card.
-    #[serde(default)]
-    pub action: Option<String>,
+shown_struct! {
+    /// A record the app shows that is neither an item type nor a sub-item: an agent, a change, a
+    /// release, a dependency, a run, a check run, a notice, a follow-up or a message. It has no
+    /// stages and no parent type.
+    #[derive(Debug, Deserialize)]
+    #[serde(deny_unknown_fields, rename_all = "camelCase")]
+    pub struct Record {
+        /// The kind name.
+        pub id: String,
+        /// The name shown to the owner.
+        pub label: String,
+        /// The letters its ids are shown with (`PR` for `PR-4`).
+        pub code: String,
+        /// The letters its ids carry on disk when they differ from the code (a dependency is shown
+        /// `DP-3` and stored `D-3`).
+        #[serde(default)]
+        pub stored: Option<String>,
+        /// The kind whose code and counter it shares (a notice counts with the notes).
+        #[serde(default)]
+        pub shares: Option<String>,
+        /// Older letters its ids were written with and still parse.
+        #[serde(default)]
+        pub aliases: Vec<String>,
+        /// A Tessera icon name.
+        pub icon: String,
+        /// A Tessera tag category colour; a kind has this or a tone.
+        #[serde(default)]
+        pub color: Option<String>,
+        /// A tone name; a kind has this or a colour.
+        #[serde(default)]
+        pub tone: Option<String>,
+        /// Where its records live.
+        pub collection: Collection,
+        /// The key of its records when it is not `id`.
+        #[serde(default)]
+        pub id_key: Option<String>,
+        /// The property shown as its title.
+        pub title: String,
+    }
 }
 
 /// The owner and the leads.

@@ -6,6 +6,8 @@ mod kinds;
 mod people;
 mod stages;
 mod sub_items;
+#[cfg(test)]
+mod testing;
 mod types;
 mod vocab;
 
@@ -37,21 +39,10 @@ pub(super) fn problems(reg: &Registry) -> Vec<String> {
 // test-tag: critical
 #[cfg(test)]
 mod tests {
-    use serde_json::{Value, json};
+    use serde_json::json;
 
+    use super::testing::{item_type, refused};
     use crate::registry::load::{SOURCE, parse};
-
-    /// The error text of the shipped file after `edit` changed it.
-    fn refused(edit: impl FnOnce(&mut Value)) -> String {
-        let mut doc: Value = serde_json::from_str(SOURCE).unwrap();
-        edit(&mut doc);
-        parse(&doc.to_string()).unwrap_err().to_string()
-    }
-
-    fn item_type<'a>(doc: &'a mut Value, id: &str) -> &'a mut Value {
-        let all = doc["types"].as_array_mut().unwrap();
-        all.iter_mut().find(|t| t["id"] == id).unwrap()
-    }
 
     #[test]
     fn the_shipped_file_is_consistent() {

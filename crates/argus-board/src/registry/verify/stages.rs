@@ -5,7 +5,8 @@ use std::collections::HashSet;
 use super::super::model::{Collection, ItemType, Registry};
 use super::vocab::GATE_NEEDS;
 
-/// Every problem in the stages of `t`.
+/// Every problem in the stages of `t`. A type kept in the collection of another record is refused
+/// by [`super::kinds`], so it has nothing to check here.
 pub(super) fn verify(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
     let mut say = |text: &str| out.push(format!("types.{}: {text}", t.id));
     match t.collection {
@@ -22,6 +23,14 @@ pub(super) fn verify(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
             verify_steps(t, &mut say);
         }
         Collection::Worktrees => verify_none(t, &mut say),
+        Collection::Agents
+        | Collection::Prs
+        | Collection::Releases
+        | Collection::Deps
+        | Collection::Runs
+        | Collection::Checks
+        | Collection::Entries
+        | Collection::Actions => {}
     }
 }
 

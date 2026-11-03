@@ -190,16 +190,9 @@ fn verify_records(reg: &Registry, out: &mut Vec<String>) {
 // test-tag: critical
 #[cfg(test)]
 mod tests {
-    use serde_json::{Value, json};
+    use serde_json::json;
 
-    use crate::registry::load::{SOURCE, parse};
-
-    /// The error text of the shipped file after `edit` changed it.
-    fn refused(edit: impl FnOnce(&mut Value)) -> String {
-        let mut doc: Value = serde_json::from_str(SOURCE).unwrap();
-        edit(&mut doc);
-        parse(&doc.to_string()).unwrap_err().to_string()
-    }
+    use super::super::testing::refused;
 
     #[test]
     fn two_kinds_with_the_same_code_are_found_but_a_shared_code_is_allowed() {

@@ -4,7 +4,7 @@
 
 #![allow(clippy::too_many_lines, clippy::similar_names)]
 
-use crate::agent_common::{As, Rig};
+use crate::agent_common::{As, Rig, agent, hook_agent};
 use serde_json::{Value, json};
 
 /// A start with the item and the place every lead start needs (I-85 P2), unless `extra` names its own.
@@ -31,13 +31,6 @@ fn start_refused(rig: &Rig, name: &str, extra: &[&str], needle: &str) -> crate::
     assert_ne!(ran.code, 0, "{name} {extra:?} should be refused");
     assert!(ran.err.contains(needle), "{:?} lacks {needle:?}", ran.err);
     ran
-}
-
-fn agent(rig: &Rig, name: &str) -> Value {
-    rig.board()["agents"]
-        .as_object()
-        .and_then(|m| m.values().find(|a| a["name"] == name).cloned())
-        .unwrap_or(Value::Null)
 }
 
 #[test]
@@ -532,16 +525,10 @@ fn set_checkin_changes_it_and_a_new_opus_level_model_needs_one_unless_the_record
 fn registering_a_hook_recorded_agent_with_checkin_the_manual_value_wins() {
     let rig = Rig::new();
     rig.edit(|b| {
-        let at = now_iso();
-        b["agents"]["A-90"] = json!({
-            "id": "A-90", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
-            "updatedBy": "coordinator", "rank": 90000, "name": "rebuild-the-pad-overlay",
-            "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": "opus",
-            "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
-            "status": "working", "note": null, "result": null, "startedAt": at,
-            "finishedAt": null, "hookId": "hk-90", "source": "hook", "agentType": "general-purpose",
-            "modelUsed": "claude-opus-5-5", "transcriptFile": null, "checkinMin": 20, "rev": 1,
-        });
+        let mut rec = hook_agent("rebuild-the-pad-overlay", "opus");
+        rec["modelUsed"] = json!("claude-opus-5-5");
+        rec["checkinMin"] = json!(20);
+        b["agents"]["A-90"] = rec;
     });
     rig.with_item();
     let before = rig.board()["agents"].as_object().unwrap().len();

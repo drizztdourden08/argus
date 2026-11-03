@@ -4,6 +4,9 @@
 //! the binary and parsed once. The item ops, the verbs and the web read their rules from here
 //! ([`registry`] gives the shared copy); nothing else in the code spells a stage or a limit.
 
+#[macro_use]
+mod shown;
+
 mod kinds;
 mod load;
 mod lookup;

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { CodeEntry, RegistryKind } from './registry.type';
+import type { CodeEntry, RegistryKind } from './kind.type';
 
 const byLongestFirst = (a: CodeEntry, b: CodeEntry): number => b.letters.length - a.letters.length || a.letters.localeCompare(b.letters);
 

@@ -25,6 +25,7 @@ const cardProgress = (card: CardData): CardProgress[] => {
       return combined(card);
     case 'run':
       return present([runProgress(card.item)]);
+    case 'checks':
     case 'none':
     case undefined:
       return [];

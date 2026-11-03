@@ -29,7 +29,7 @@ const CATEGORY_KINDS = ['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'te
 
 const colorOf = (kind: RegistryKind): string | undefined => kind.look.color;
 
-describe('I-85 P1 the web reads every kind of the record registry', { tags: ['critical'] }, () => {
+describe('I-85 P1 the web reads the codes and looks of every kind of the record registry', { tags: ['critical'] }, () => {
   it('lists the 22 kinds with their code, in the lists of the file', () => {
     const codes = REGISTRY_KINDS.map((kind) => `${kind.id}:${kind.code}`);
     expect(REGISTRY_KINDS).toHaveLength(22);
@@ -75,6 +75,9 @@ describe('I-85 P1 the web reads every kind of the record registry', { tags: ['cr
     expect(dep?.collection).toBe('deps');
   });
 
+});
+
+describe('I-85 P1 the web reads the tabs, links and titles of every kind', { tags: ['critical'] }, () => {
   it('gives every kind tabs from the fixed list, overview first unless it is a log', () => {
     for (const kind of REGISTRY_KINDS) {
       expect(kind.tabs.length, kind.id).toBeGreaterThan(0);

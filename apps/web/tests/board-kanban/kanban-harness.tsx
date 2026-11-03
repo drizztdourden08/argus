@@ -124,6 +124,7 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
     feed('builds', (board.builds ?? []).map((build) => ({ ...build, id: build.tag })));
     feed('log', board.log ?? []);
     feed('agents', board.agents ?? []);
+    feed('meta', [{ id: 'board', project: SCOPE, name: 'Alpha' }]);
   });
   let seq = 98;
   const change = (coll: string, id: string, data: Doc) => {

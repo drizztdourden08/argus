@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
-import type { ItemRegistry, ItemType, RecordType, RegistryKind, SubItemType } from './registry.type';
+import type { RegistryKind } from './kind.type';
+import type { ItemRegistry, ItemType, RecordType, SubItemType } from './registry.type';
 
 const fromType = (type: ItemType): RegistryKind => ({
   family: 'type',

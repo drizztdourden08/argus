@@ -1,27 +1,9 @@
 /* @layer renderer-app @kind types */
+import type { KindCollection, KindFace } from './kind.type';
+
 type ContentKind = 'line' | 'slug' | 'rich' | 'enum' | 'ref' | 'refs' | 'date' | 'person' | 'flag' | 'records';
 
 type RuleMode = 'warn' | 'refuse';
-
-type CardProgress = 'ac' | 'children' | 'children-ac' | 'run' | 'checks' | 'none';
-
-type KindView = 'card' | 'row';
-
-type KindCollection =
-  | 'items'
-  | 'tests'
-  | 'launchers'
-  | 'worktrees'
-  | 'agents'
-  | 'prs'
-  | 'releases'
-  | 'deps'
-  | 'runs'
-  | 'checks'
-  | 'entries'
-  | 'actions';
-
-type KindFamily = 'type' | 'subItem' | 'record';
 
 interface LineSettings {
   markup: boolean;
@@ -98,30 +80,6 @@ interface DoneRule {
   mode: RuleMode;
 }
 
-interface ItemTypeCard {
-  progress: CardProgress;
-  chips: string[];
-}
-
-interface KindLink {
-  field: string;
-  to: string[];
-  label: string;
-  inverse?: string;
-}
-
-interface KindFace {
-  code: string;
-  view: KindView;
-  assignee: string;
-  tabs: string[];
-  card: ItemTypeCard;
-  links: KindLink[];
-  signals?: string[];
-  groupBy?: string;
-  action?: string;
-}
-
 interface ItemType extends KindFace {
   id: string;
   label: string;
@@ -164,39 +122,6 @@ interface RecordType extends KindFace {
   title: string;
 }
 
-interface KindLook {
-  color?: string;
-  tone?: string;
-}
-
-interface RegistryKind {
-  family: KindFamily;
-  id: string;
-  label: string;
-  code: string;
-  shares?: string;
-  aliases: string[];
-  stored?: string;
-  icon: string;
-  look: KindLook;
-  collection: KindCollection;
-  idKey?: string;
-  view: KindView;
-  title: string;
-  assignee: string;
-  tabs: string[];
-  card: ItemTypeCard;
-  links: KindLink[];
-  signals: string[];
-  groupBy?: string;
-  action?: string;
-}
-
-interface CodeEntry {
-  letters: string;
-  kind: string;
-}
-
 interface PersonLook {
   initials: string;
   color: string;
@@ -226,20 +151,4 @@ interface ItemRegistry {
   limits: Record<string, number>;
 }
 
-export type {
-  CardProgress,
-  CodeEntry,
-  ContentKind,
-  ItemField,
-  ItemRegistry,
-  ItemStage,
-  ItemType,
-  KindCollection,
-  KindFamily,
-  KindLink,
-  KindLook,
-  KindView,
-  RecordType,
-  RegistryKind,
-  SubItemType,
-};
+export type { ContentKind, ItemField, ItemRegistry, ItemStage, ItemType, RecordType, SubItemType };

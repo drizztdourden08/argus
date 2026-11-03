@@ -7,7 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use argus_board::store::empty_board;
-use argus_core::clock::{iso_from_ms, now_ms};
+use argus_core::clock::{iso_from_ms, now_iso, now_ms};
 use serde_json::{Value, json};
 
 use crate::common::{Home, Ran, coord};
@@ -46,6 +46,28 @@ fn thread(id: &str, role: &str, root: &str, rank: u32) -> Value {
         "updatedAt": "2026-10-01T12:00:00.000Z", "updatedBy": id, "rev": 1, "rank": rank,
         "root": root, "session": null, "sessionId": null, "link": null,
         "status": "active", "lastSeen": "2026-10-01T12:00:00.000Z",
+    })
+}
+
+/// The agent record in the board named `name`, or null.
+pub fn agent(rig: &Rig, name: &str) -> Value {
+    rig.board()["agents"]
+        .as_object()
+        .and_then(|m| m.values().find(|a| a["name"] == name).cloned())
+        .unwrap_or(Value::Null)
+}
+
+/// A record the agent hook made: working, with no item, branch or worktree.
+pub fn hook_agent(name: &str, model: &str) -> Value {
+    let at = now_iso();
+    json!({
+        "id": "A-90", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
+        "updatedBy": "coordinator", "rank": 90000, "name": name,
+        "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": model,
+        "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
+        "status": "working", "note": null, "result": null, "startedAt": at,
+        "finishedAt": null, "hookId": "hk-90", "source": "hook", "agentType": "general-purpose",
+        "modelUsed": null, "transcriptFile": null, "rev": 1,
     })
 }
 
