@@ -16,14 +16,14 @@ describe('S1 the Changes tab list', { tags: ['standard'] }, () => {
     expect(card.getByText('Open')).toBeTruthy();
     expect(card.getByText('feat/login into main')).toBeTruthy();
     expect(card.getByRole('button', { name: /^Open PR-1/ })).toBeTruthy();
-    expect(card.getByText('5m ago')).toBeTruthy();
+    expect(card.getByText('5m')).toBeTruthy();
     expect(card.getByText('waits for the go')).toBeTruthy();
   });
 
   it('follows a pull request live', async () => {
     const { change } = await mountChanges([prDoc('PR-1')]);
     await cardOf('PR-1');
-    change('PR-1', prDoc('PR-1', { title: 'A new title', status: 'merged' }));
+    await change('PR-1', prDoc('PR-1', { title: 'A new title', status: 'merged' }));
     const card = await cardOf('PR-1', 'A new title');
     expect(card.getByText('Merged')).toBeTruthy();
   });

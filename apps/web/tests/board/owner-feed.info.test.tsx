@@ -5,6 +5,7 @@ import { byId, decision, dismissal, manualStep, message, noContext, notice } fro
 import { openBoard, resetBoard, textbox } from '../helpers/open-board';
 import { mockPosts, sentPosts } from '../helpers/post-mock';
 import { changeBoard } from '../helpers/seed-board';
+import { liveStream } from '../helpers/wait-for-stream';
 
 afterEach(resetBoard);
 
@@ -37,7 +38,8 @@ describe('S1 information is dismissed', { tags: ['standard'] }, () => {
     const view = await openBoard({ entries: byId(notice) });
     fireEvent.click(screen.getByText('Log · 1'));
     expect(screen.getByText('Crash restored')).toBeTruthy();
-    act(() => changeBoard(view.sources[0], 'entries', 'O-9', dismissal('N-1')));
+    const live = await liveStream(view.sources, 'rotp');
+    act(() => changeBoard(live, 'entries', 'O-9', dismissal('N-1')));
     await waitFor(() => expect(screen.queryByText('Crash restored')).toBeNull());
   });
 });
@@ -93,7 +95,8 @@ describe('S1 manual steps', { tags: ['standard'] }, () => {
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
     expect(sentPosts(fetchMock)[0]?.body).toMatchObject({ kind: 'done', replyTo: 'H-1', thread: 'coordinator', item: 'I-4', text: '' });
     expect(await screen.findByText('H-1 marked done.')).toBeTruthy();
-    act(() => changeBoard(view.sources[0], 'entries', 'O-8', { ...dismissal('H-1', 'O-8'), kind: 'done' }));
+    const live = await liveStream(view.sources, 'rotp');
+    act(() => changeBoard(live, 'entries', 'O-8', { ...dismissal('H-1', 'O-8'), kind: 'done' }));
     await waitFor(() => expect(screen.queryByText('Restart the app')).toBeNull());
   });
 });

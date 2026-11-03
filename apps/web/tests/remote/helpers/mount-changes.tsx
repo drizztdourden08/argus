@@ -8,6 +8,7 @@ import { ChangesTab } from '../../../src/screens/board/tabs/changes';
 import { byId } from '../../board-tests/fixtures';
 import { createFakeSources } from '../../helpers/fake-source';
 import { snapshot } from '../../helpers/snapshot';
+import { liveStream } from '../../helpers/wait-for-stream';
 import { stubRemote } from './stub-remote';
 import type { RemoteCall } from './stub-remote';
 
@@ -32,8 +33,10 @@ const mountChanges = async (prs: Doc[], routes: Record<string, unknown> = {}) =>
     source?.emit('snapshot', snapshot(SCOPE, 'items', {}));
     source?.emit('snapshot', snapshot(SCOPE, 'threads', {}));
   });
-  const change = (id: string, data: object) =>
-    act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll: 'prs', id, op: 'set', data }] }));
+  const change = async (id: string, data: object) => {
+    const live = await liveStream(fake.sources, SCOPE);
+    act(() => live.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll: 'prs', id, op: 'set', data }] }));
+  };
   return { ...view, calls, change };
 };
 
