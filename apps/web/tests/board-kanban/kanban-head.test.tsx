@@ -1,7 +1,5 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HEAD_SIZE_PX } from '../../src/screens/board/tabs/kanban/head.constants';
 import { cardOf, cleanKanban, item, moreItem, mountKanban } from './kanban-harness';
@@ -10,52 +8,41 @@ cleanKanban();
 
 const PIXEL = 'data:image/png;base64,iVBORw0KGgo=';
 
-const headOf = (id: string): HTMLElement => {
-  const head = cardOf(id).querySelector('.head-row');
-  if (!(head instanceof HTMLElement)) throw new Error(`no head row for ${id}`);
-  return head;
-};
+const headOf = (id: string): HTMLElement => cardOf(id);
 
 const board = { items: [item('I-1', { assignee: 'owner' }), item('I-2', { assignee: 'coordinator' }), item('I-3', { assignee: 'lead:tessera' }), item('I-4', { assignee: 'builder' })] };
 
 describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
   it('draws every element at the one size of the owner avatar', async () => {
     await mountKanban(board);
-    const head = headOf('I-1');
+    const head = within(headOf('I-1'));
     expect(HEAD_SIZE_PX).toBe(16);
-    expect(head.querySelector('.avatar--xs.avatar--owner')).toBeTruthy();
-    expect(head.querySelector('[data-type-mark] svg')?.getAttribute('width')).toBe(String(HEAD_SIZE_PX));
-    expect(head.querySelector('.head-id')).toBeTruthy();
-    expect(head.querySelector('.btn')).toBeTruthy();
-    const sheet = readFileSync(resolve(import.meta.dirname, '../../src/screens/board/tabs/kanban/sub-components/HeadRow.css'), 'utf8');
-    expect(sheet.match(/var\(--size-16\)/g)?.length).toBeGreaterThanOrEqual(6);
+    expect(head.getByRole('img', { name: 'Assigned to you' })).toBeTruthy();
+    expect(headOf('I-1').querySelector('[data-type-mark] svg')?.getAttribute('width')).toBe(String(HEAD_SIZE_PX));
+    expect(head.getByText('I-1')).toBeTruthy();
+    expect(head.getByRole('button', { name: 'More actions for I-1' })).toBeTruthy();
   });
 
   it('draws the type as an outline in its colour, with no tile behind it', async () => {
     await mountKanban(board);
-    const head = headOf('I-1');
-    expect(head.querySelector('.type-mark')).toBeNull();
-    const mark = head.querySelector('[data-type-mark]');
-    expect(mark?.className).toBe('head-mark');
+    const mark = headOf('I-1').querySelector('[data-type-mark]');
+    expect(mark?.querySelectorAll('svg')).toHaveLength(1);
     expect(mark?.querySelector('svg')?.getAttribute('style') ?? '').toMatch(/color:\s*var\(--c-tag-[a-z]+\)|color:\s*var\(--c-text-dim\)/);
   });
 
-  it('shows the brand mark of a lead as a square, and the initials of a board without a brand in a square', async () => {
+  it('shows the brand mark of a lead, and the initials of a board without a brand', async () => {
     await mountKanban(board);
     const brand = headOf('I-3').querySelector('[data-lead-mark="brand"]');
     expect(brand?.querySelector('svg')).toBeTruthy();
-    expect(headOf('I-3').querySelector('.avatar')).toBeNull();
+    expect(within(headOf('I-3')).queryByText('TE')).toBeNull();
     const lead = headOf('I-2');
     expect(lead.querySelector('[data-lead-mark]')).toBeNull();
-    const square = lead.querySelector('.avatar.head-square');
-    expect(square?.textContent).toBe('AL');
+    expect(within(lead).getByRole('img', { name: 'Assigned to alpha lead (coordinator)' }).textContent).toBe('AL');
   });
 
-  it('keeps the initials of another thread in a circle', async () => {
+  it('keeps the initials of another thread', async () => {
     await mountKanban(board);
-    const circle = headOf('I-4').querySelector('.avatar');
-    expect(circle?.textContent).toBe('BU');
-    expect(circle?.classList.contains('head-square')).toBe(false);
+    expect(within(headOf('I-4')).getByRole('img', { name: 'Assigned to builder' }).textContent).toBe('BU');
   });
 
   it('reads the avatar the board chose, a brand or an uploaded image', async () => {

@@ -46,18 +46,23 @@ fn signature(e: &Value) -> String {
         get("expect"),
         or("force", json!(false)),
         get("handed"),
+        get("avatar"),
     ]);
     parts.to_string()
 }
 
-/// A build entry has no target: hand, unhand and hand again are all about the one handed build.
+/// A build or avatar entry has no target: hand, unhand and hand again are all about the one handed
+/// build, and every avatar post is about the one avatar of the board.
 fn subject_of(e: &Value) -> Option<String> {
     let named = [&e["target"]["id"], &e["replyTo"]]
         .into_iter()
         .find(|v| !v.is_null());
     match named {
         Some(v) => Some(display(v)),
-        None => (e["kind"] == "build").then(|| "build".to_owned()),
+        None => match e["kind"].as_str() {
+            Some(kind @ ("build" | "avatar")) => Some(kind.to_owned()),
+            _ => None,
+        },
     }
 }
 

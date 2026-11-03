@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind test */
+import { Text } from '@drizztdourden08/tessera';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -9,7 +10,7 @@ afterEach(cleanup);
 
 const Where = () => {
   const { pathname, hash } = useLocation();
-  return <output aria-label="where">{`${pathname}${hash}`}</output>;
+  return <Text as="output" aria-label="where">{`${pathname}${hash}`}</Text>;
 };
 
 const mount = (node: ReactNode, openEntry: (id: string | null) => void = () => undefined) =>
@@ -23,7 +24,7 @@ const mount = (node: ReactNode, openEntry: (id: string | null) => void = () => u
     </MemoryRouter>,
   );
 
-const where = (): string => screen.getByLabelText('where').textContent ?? '';
+const where = (): string => screen.getByLabelText('where').textContent;
 
 describe('I-82 every record reference is a link', { tags: ['standard'] }, () => {
   it('an item id opens that item in the pane of this board', () => {
@@ -71,7 +72,7 @@ describe('I-82 every record reference is a link', { tags: ['standard'] }, () => 
   });
 
   it('links the ids inside a free text and leaves the words alone', () => {
-    const { container } = mount(<p><LinkedText text="Blocked by I-3 until Q-2 is answered (see rotp/I-9), not UTF-8." /></p>);
+    const { container } = mount(<Text as="p"><LinkedText text="Blocked by I-3 until Q-2 is answered (see rotp/I-9), not UTF-8." /></Text>);
     expect([...container.querySelectorAll('a')].map((link) => link.textContent)).toEqual(['I-3', 'Q-2', 'rotp/I-9']);
     expect(container.querySelector('p')?.textContent).toBe('Blocked by I-3 until Q-2 is answered (see rotp/I-9), not UTF-8.');
   });

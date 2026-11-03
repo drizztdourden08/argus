@@ -148,6 +148,15 @@ fn backup_files(h: &Harness) -> Vec<String> {
     names
 }
 
+/// Whether any backup file carries the extension, compared without case.
+fn has_extension(files: &[String], wanted: &str) -> bool {
+    files.iter().any(|f| {
+        Path::new(f)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case(wanted))
+    })
+}
+
 #[test]
 fn a_clean_worktree_of_a_closed_item_goes_after_the_grace_with_no_backup_and_the_lead_gets_one_note()
  {
@@ -218,12 +227,7 @@ fn uncommitted_work_is_written_to_a_patch_first_and_the_note_names_it_and_how_to
     close_and_wait(&h);
     assert!(!exists_itself(&fx.path("agent-a1")));
     let files = backup_files(&h);
-    assert!(
-        files.iter().any(|f| Path::new(f)
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("patch"))),
-        "{files:?}"
-    );
+    assert!(has_extension(&files, "patch"), "{files:?}");
     assert!(
         files.iter().any(|f| f.ends_with(".untracked.txt")),
         "{files:?}"
@@ -245,12 +249,7 @@ fn commits_no_ref_keeps_are_written_to_a_bundle_first() {
     close_and_wait(&h);
     assert!(!exists_itself(&fx.path("agent-a1")));
     let files = backup_files(&h);
-    assert!(
-        files.iter().any(|f| Path::new(f)
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("bundle"))),
-        "{files:?}"
-    );
+    assert!(has_extension(&files, "bundle"), "{files:?}");
     let note = inbox(&h).pop().unwrap().1;
     assert!(
         note.contains(".bundle") && note.contains("restore:"),

@@ -1,9 +1,7 @@
 /* @layer renderer-app @kind logic */
-import { RECORD_TOKEN } from '../records.constants';
 import type { TextPart } from '../records.type';
 import { parseRecord } from './parse-record';
-
-const EVERY_TOKEN = new RegExp(RECORD_TOKEN.source, 'g');
+import { EVERY_TOKEN } from './split-records.constants';
 
 const splitRecords = (text: string): TextPart[] => {
   const parts: TextPart[] = [];

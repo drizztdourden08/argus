@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, ToastStack, toast } from '@drizztdourden08/tessera';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -104,7 +104,9 @@ const mountKanban = async (board: Board = {}, reply?: Reply, hash = '') => {
     <MemoryRouter initialEntries={[`/p/${SCOPE}/${hash}`]}>
       <TesseraProvider overrides={{}}>
         <DataProvider streams={createScopeStreams(fake.open)}>
-          <Stage />
+          <Routes>
+            <Route path="/p/:key/*" element={<Stage />} />
+          </Routes>
           <Probe />
           <ToastStack />
         </DataProvider>

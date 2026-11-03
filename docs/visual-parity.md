@@ -7,6 +7,8 @@ section lists the differences, the most visible first, with the fix in Argus ter
 a piece Tessera does not have yet says so. The gallery `docs/visual-audit/index.html` shows every
 pair with the same numbered list under it.
 
+Waits on Tessera (kanban head row): a 16px IconButton, a 16px Text line, an outline TypeMark and a square image Avatar; until then the card head uses the xs sizes and a circle for lead initials.
+
 ## Re-audit 2026-10-27 (after the fix wave on main)
 
 Argus main (Vite dev server, read only proxy to the Node dashboard) shot again against Node at

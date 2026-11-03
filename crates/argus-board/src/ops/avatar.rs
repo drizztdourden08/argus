@@ -4,13 +4,17 @@
 
 use serde_json::Value;
 
-use super::announce::audit;
-use super::authorize::{Check, authorize};
-use super::result::OpResult;
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
-use crate::json::{nullish, set};
+use super::{
+    announce::audit,
+    authorize::{Check, authorize},
+    result::OpResult,
+    who::Who,
+};
+use crate::{
+    Board,
+    error::{BoardError, refuse},
+    json::{nullish, set},
+};
 
 /// The most characters an uploaded avatar may take as a data URL. An owner post is at most 256 KB
 /// in all, so this leaves room for the rest of the entry.
