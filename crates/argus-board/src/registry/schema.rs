@@ -61,7 +61,7 @@ fn check_object(
         match (&schema["properties"][key], &schema["additionalProperties"]) {
             (Value::Null, Value::Bool(false)) => out.push(format!("{path}: not allowed")),
             (Value::Null, Value::Object(_)) => {
-                walk(root, &schema["additionalProperties"], child, &path, out)
+                walk(root, &schema["additionalProperties"], child, &path, out);
             }
             (Value::Null, _) => {}
             (known, _) => walk(root, known, child, &path, out),

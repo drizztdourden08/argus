@@ -122,7 +122,7 @@ mod tests {
         assert!(reg.allows_parent("bug", "story"));
         assert!(!reg.allows_parent("epic", "epic"));
         assert!(!reg.allows_parent("ghost", "epic"));
-        assert!(reg.item_type("test-case").unwrap().parents.is_empty());
+        assert_eq!(reg.item_type("test-case").unwrap().parents.len(), 0);
     }
 
     #[test]
