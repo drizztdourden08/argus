@@ -53,4 +53,4 @@ interface Test {
   deletedAt?: string | null;
 }
 
-export type { Test };
+export type { Test, TestResult };
