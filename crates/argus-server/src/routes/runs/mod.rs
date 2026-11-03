@@ -24,7 +24,7 @@ use crate::{AuthKind, Ctx, Router};
 mod attach;
 mod control;
 mod logs;
-mod tail;
+pub(crate) mod tail;
 
 pub(crate) fn service(ctx: &Ctx) -> Result<Arc<RunService<RunHost>>, ApiError> {
     ctx.svc

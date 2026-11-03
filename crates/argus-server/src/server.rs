@@ -281,6 +281,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         heartbeat: opts.heartbeat,
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
+        mux: Arc::default(),
         run_logs: Arc::default(),
         streams: Arc::new(AtomicUsize::new(0)),
         codes: LoginCodes::default(),
@@ -359,6 +360,7 @@ async fn serve_app(listener: TcpListener, app: Arc<App>) {
     let signal = async move {
         svc.stop.cancelled().await;
         svc.fanout.close_all();
+        svc.mux.close_all();
     };
     let _ended = axum::serve(listener, make)
         .with_graceful_shutdown(signal)

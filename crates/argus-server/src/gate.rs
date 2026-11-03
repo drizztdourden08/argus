@@ -80,7 +80,8 @@ fn token_mode(
         .get("accept")
         .and_then(|v| v.to_str().ok())
         .is_some_and(|a| a.contains("event-stream"))
-        || path.ends_with("/stream");
+        || path.ends_with("/stream")
+        || path == "/api/mux";
     if (write || stream || path.starts_with("/mcp"))
         && !origin_ok(
             h,

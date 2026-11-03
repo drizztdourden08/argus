@@ -11,8 +11,8 @@ use crate::router::Reply;
 use crate::sse::open_stream;
 use crate::{Ctx, Router};
 
-mod core;
-mod sink;
+pub(crate) mod core;
+pub(crate) mod sink;
 
 use self::core::{Tail, Watching, locked};
 use self::sink::LegacySink;
@@ -36,7 +36,7 @@ async fn stream(ctx: Ctx) -> Reply {
     let (sender, res) = open_stream(ctx.svc.heartbeat, &ctx.svc.streams, Some(on_drop));
     let sink = Box::new(LegacySink::new(sender));
     let tail = Tail::new(runs, (key, rid), start_cursor(&ctx), sink, watching);
-    tail.start(&ctx);
+    tail.start(&ctx.svc);
     Ok(res)
 }
 

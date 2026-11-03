@@ -9,7 +9,7 @@ use argus_core::Coll;
 use argus_launchers::{LogEvent, LogOptions, RunService, RunStatus};
 
 use super::sink::TailSink;
-use crate::Ctx;
+use crate::Services;
 use crate::adapters::runs::RunHost;
 
 const REPLAY_PAGE: usize = 2000;
@@ -49,8 +49,8 @@ impl Tail {
     }
 
     /// Listens, replays what is stored after the cursor, then reports the run's status.
-    pub(crate) fn start(self: &Arc<Self>, ctx: &Ctx) {
-        *locked(&self.watching) = self.watch(ctx);
+    pub(crate) fn start(self: &Arc<Self>, svc: &Services) {
+        *locked(&self.watching) = self.watch(svc);
         self.replay();
         self.status();
     }
@@ -107,15 +107,15 @@ impl Tail {
         }
     }
 
-    fn watch(self: &Arc<Self>, ctx: &Ctx) -> Vec<Box<dyn Any + Send>> {
+    fn watch(self: &Arc<Self>, svc: &Services) -> Vec<Box<dyn Any + Send>> {
         let lines = Arc::clone(self);
         let docs = Arc::clone(self);
-        let line_watch = ctx.svc.run_logs.listen(move |e| {
+        let line_watch = svc.run_logs.listen(move |e| {
             if e.scope == lines.key && e.rid == lines.rid {
                 lines.line(e);
             }
         });
-        let doc_watch = ctx.svc.bus.on_docs(move |e| {
+        let doc_watch = svc.bus.on_docs(move |e| {
             let mine = e.scope == docs.key
                 && e.changes
                     .iter()
