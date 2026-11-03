@@ -94,6 +94,10 @@ interface QuietBadgeProps {
   count: number;
 }
 
+interface ParentHeaderProps {
+  parent: ItemRef;
+}
+
 interface ColumnAddProps {
   title: string;
   open: boolean;
@@ -143,5 +147,5 @@ interface CardProgressRowProps {
 
 
 export type {
-  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

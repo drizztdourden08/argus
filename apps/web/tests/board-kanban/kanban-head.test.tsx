@@ -28,7 +28,7 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
     await mountKanban(board);
     const mark = headOf('I-1').querySelector('[data-type-mark]');
     expect(mark?.querySelectorAll('svg')).toHaveLength(1);
-    expect(mark?.querySelector('svg')?.getAttribute('class') ?? '').toContain('icon--hue');
+    expect(mark?.querySelector('.type-mark--outline.type-mark--xs')).not.toBeNull();
   });
 
   it('shows the brand mark of a lead, and the initials of a board without a brand', async () => {

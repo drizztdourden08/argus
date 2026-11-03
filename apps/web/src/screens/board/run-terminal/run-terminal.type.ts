@@ -33,12 +33,6 @@ interface RunLogDrawerProps {
   onClose: () => void;
 }
 
-interface PageRunLogProps {
-  boardKey: string;
-  id: string | null;
-  onClose: () => void;
-}
-
 interface RunAttachmentsProps {
   boardKey: string;
   runId: string;
@@ -57,5 +51,5 @@ interface TerminalInput {
 }
 
 export type {
-  LogButtonProps, PageRunLogProps, RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
+  LogButtonProps, RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
 };

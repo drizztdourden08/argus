@@ -8,7 +8,7 @@ import { listedThreads } from './listed-threads';
 import { matchesFilters } from './matches-filters';
 import { CLOSED_STATUSES, NO_CHILDREN, TRAIL_MIN_DEPTH } from './model.constants';
 import { needsYou } from './needs-you';
-import { parentTitles } from './parent-titles';
+import { parentItems } from './parent-items';
 import { quietMs } from './quiet-ms';
 import type { CardData, CardFacts, KanbanView, TrailInfo, ViewInput } from './model.type';
 
@@ -50,15 +50,17 @@ const buildView = (input: ViewInput): KanbanView => {
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
   const shown = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
   const filtered = filtersActive(filters);
+  const parents = parentItems(items);
   const seeds = prefs.group === 'thread' && !filtered ? listedThreads(threads) : [];
   return {
-    columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, showClosed, seeds, parents: parentTitles(items) }),
+    columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, showClosed, seeds, parents }),
     cards: shown,
     open: cards.filter((card) => !isClosed(card.item)).length,
     total: cards.length,
     quiet: shown.filter((card) => card.quietMs !== null).length,
     closed: cards.filter((card) => isClosed(card.item)).length,
     filtered,
+    parents,
   };
 };
 

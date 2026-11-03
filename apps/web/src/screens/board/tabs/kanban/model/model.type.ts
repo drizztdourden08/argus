@@ -128,7 +128,7 @@ interface ColumnsInput {
   order: ItemOrder;
   showClosed: boolean;
   seeds: readonly string[];
-  parents: ReadonlyMap<string, string>;
+  parents: ReadonlyMap<string, ItemRef>;
 }
 
 interface KanbanView {
@@ -139,6 +139,7 @@ interface KanbanView {
   quiet: number;
   closed: number;
   filtered: boolean;
+  parents: ReadonlyMap<string, ItemRef>;
 }
 
 type EntryDocs = readonly WithId<Entry>[];

@@ -3,7 +3,6 @@ export { announce } from './behavior/announce';
 export { announceFailure } from './behavior/announce-failure';
 export { copyText } from './behavior/copy-text';
 export { readStored } from './behavior/read-stored';
-export { OpenRunLogContext } from './behavior/open-run-log-context';
 export { OpenThreadContext } from './behavior/open-thread-context';
 export { useBoardKey } from './behavior/useBoardKey';
 export { useItemMedia } from './behavior/useItemMedia';

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { boardOf, cardOf, cleanKanban, item, mountKanban, thread } from './kanban-harness';
+import { boardOf, cardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
 
@@ -14,6 +14,21 @@ describe('S1 the column header: + Add', { tags: ['standard'] }, () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ kind: 'create', target: { c: 'items' }, set: { title: 'New thing', thread: 'worker', status: 'doing' } });
+  });
+});
+
+describe('I-85 the column header of a parent group', { tags: ['standard'] }, () => {
+  it('draws the parent type mark, code and title in the head, and a plain title for the column without a parent', async () => {
+    await mountKanban({ items: [item('I-1', { type: 'epic', title: 'Rework' }), item('I-2', { parent: 'I-1' })] });
+    await screen.findByText('Item I-2');
+    fireEvent.click(screen.getByRole('radio', { name: 'Parent' }));
+    const head = within(columnOf('I-1 Rework, 1 card')).getByRole('heading');
+    expect(head.querySelector('[data-type-mark="epic"]')).not.toBeNull();
+    expect(within(head).getByRole('link', { name: 'I-1' })).toBeTruthy();
+    expect(within(head).getByText('Rework')).toBeTruthy();
+    const none = within(columnOf('No parent, 1 card')).getByRole('heading');
+    expect(none.querySelector('[data-type-mark]')).toBeNull();
+    expect(within(none).getByText('No parent')).toBeTruthy();
   });
 });
 

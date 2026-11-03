@@ -1,0 +1,18 @@
+/* @layer renderer-app @kind component */
+import { Flex, Text } from '@drizztdourden08/tessera';
+import { RecordLink, TypeIcon } from '../../../../../shell';
+import type { ParentHeaderProps } from '../kanban-props.type';
+import { DEFAULT_TYPE } from '../model';
+
+const ParentHeader = (props: ParentHeaderProps) => {
+  const { parent } = props;
+  return (
+    <Flex as="span" gap="xs" align="center">
+      <TypeIcon kind={parent.type ?? DEFAULT_TYPE} />
+      <RecordLink id={parent.id} />
+      <Text as="span" variant="subtitle" clamp={1}>{parent.title}</Text>
+    </Flex>
+  );
+};
+
+export { ParentHeader };
