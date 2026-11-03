@@ -94,6 +94,15 @@ impl Presence {
         }
     }
 
+    /// Whether the tab may register on the thread: it already holds a place there (a renewal
+    /// replaces its entry, whichever stream it came from, so it never counts twice), or the thread
+    /// has fewer than [`MAX_TABS_PER_THREAD`] tabs.
+    #[must_use]
+    pub fn admits(&self, scope: &str, thread: &str, tab: &str) -> bool {
+        let set = self.tabs.get(&(scope.to_owned(), thread.to_owned()));
+        set.is_none_or(|s| s.contains_key(tab) || s.len() < MAX_TABS_PER_THREAD)
+    }
+
     /// A tab's stream closed. A tab that already reconnected keeps its newer entry.
     pub fn detach(&mut self, token: &PresenceToken) {
         let Some(set) = self.tabs.get_mut(&token.key) else {

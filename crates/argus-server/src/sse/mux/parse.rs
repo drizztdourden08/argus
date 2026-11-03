@@ -5,6 +5,7 @@ use argus_core::{ApiError, Coll};
 use serde_json::{Value, json};
 
 use super::presence::{Claim, claim_of, release_of};
+use super::tails::{Want, sub_of, want_of};
 
 /// What an op did wrong: a wire code and a message.
 pub struct OpError {
@@ -49,8 +50,10 @@ pub enum Op {
     Presence(Claim),
     /// The tab no longer has its board open.
     Unpresence { scope: String, tab: String },
-    /// A known op whose piece is not built yet.
-    Later(&'static str),
+    /// Follow the log of a run.
+    Tail(Want),
+    /// Stop following it.
+    Untail { sub: String },
 }
 
 fn scope_of(raw: &Value) -> Result<String, OpError> {
@@ -108,8 +111,8 @@ pub fn parse(raw: &Value) -> Result<Op, OpError> {
         Some("unsub") => parse_unsub(raw),
         Some("presence") => claim_of(raw).map(Op::Presence),
         Some("unpresence") => release_of(raw).map(|(scope, tab)| Op::Unpresence { scope, tab }),
-        Some("tail") => Ok(Op::Later("tail")),
-        Some("untail") => Ok(Op::Later("untail")),
+        Some("tail") => want_of(raw).map(Op::Tail),
+        Some("untail") => sub_of(raw).map(|sub| Op::Untail { sub }),
         _ => Err(OpError::bad(
             "each op is {op: sub|unsub|presence|unpresence|tail|untail, ...}",
         )),

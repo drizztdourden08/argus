@@ -125,6 +125,28 @@ async fn the_ninth_tab_is_an_error_of_its_own_op() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_tab_with_eight_open_reconnects_on_a_new_conn_before_the_old_one_ends() {
+    let (r, old) = opened().await;
+    let t = &r.t;
+    let ops: Vec<Value> = (0..8).map(|n| presence("ui", &format!("tab{n}"))).collect();
+    assert!(all_ok(&old.ops(t, json!(ops)).await));
+    let fresh = Mux::open(t).await;
+    let renewed = fresh.ops(t, json!([presence("ui", "tab0")])).await;
+    assert!(all_ok(&renewed), "a held tab is not refused: {renewed:?}");
+    assert_eq!(open_boards(t).await[0]["tabs"], 8, "it still counts once");
+    let ninth = fresh.ops(t, json!([presence("ui", "extra")])).await;
+    assert_eq!(ninth[0]["error"]["code"], "unavailable");
+    old.s.close();
+    until("the old conn to give back its other seven", || async {
+        let rows = open_boards(t).await;
+        (rows.len() == 1 && rows[0]["tabs"] == 1).then_some(())
+    })
+    .await;
+    fresh.s.close();
+    no_board_open(t).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn a_bad_presence_op_answers_for_itself() {
     let (r, m) = opened().await;
     let t = &r.t;

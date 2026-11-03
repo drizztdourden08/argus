@@ -316,6 +316,13 @@ impl WakeService {
         self.on_board(&scope);
     }
 
+    /// Whether the tab may register on the thread without pushing out another: it is already
+    /// there (a reconnect on a new stream renews its entry) or the thread has room.
+    #[must_use]
+    pub fn presence_admits(&self, scope: &str, thread: &str, tab: &str) -> bool {
+        self.presence.admits(scope, thread, tab)
+    }
+
     /// The threads with an open board.
     #[must_use]
     pub fn presence_list(&self) -> Vec<PresenceRow> {

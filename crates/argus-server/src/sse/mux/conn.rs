@@ -3,12 +3,13 @@
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use argus_core::ApiError;
-use argus_store::Db;
 use argus_wake::service::driver::SharedWake;
 use serde_json::Value;
 
 use super::ops::{self, Env, Handles};
 use super::presence::{self, Tokens};
+use super::tails::{self, Tails};
+use crate::Services;
 use crate::sse::{Fanout, SseSender};
 
 /// What a connection holds, behind the lock that serialises its POSTs and its end.
@@ -16,6 +17,7 @@ use crate::sse::{Fanout, SseSender};
 pub(super) struct State {
     pub(super) handles: Handles,
     pub(super) presence: Tokens,
+    pub(super) tails: Tails,
     closed: bool,
 }
 
@@ -57,21 +59,20 @@ impl Conn {
     ///
     /// # Errors
     /// 404 when the stream is gone.
-    pub fn apply(&self, db: &Db, fanout: &Fanout, list: &[Value]) -> Result<Vec<Value>, ApiError> {
+    pub fn apply(&self, svc: &Services, list: &[Value]) -> Result<Vec<Value>, ApiError> {
         let mut state = self.lock();
         if state.closed {
             return Err(ApiError::not_found("the stream is closed"));
         }
         let env = Env {
-            db,
-            fanout,
+            svc,
             sender: &self.sender,
             wake: self.wake.as_ref(),
         };
         Ok(ops::apply(&env, &mut state, list))
     }
 
-    /// Ends the connection: removes every client it held and gives back every presence claim.
+    /// Ends the connection: removes every client it held, gives back every presence claim and drops every tail.
     /// Safe to call twice.
     pub(super) fn teardown(&self, fanout: &Fanout) {
         let mut state = self.lock();
@@ -80,5 +81,6 @@ impl Conn {
             fanout.drop_client(&h);
         }
         presence::release_all(self.wake.as_ref(), &mut state.presence);
+        tails::release_all(&mut state.tails);
     }
 }

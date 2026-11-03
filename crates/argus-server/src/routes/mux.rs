@@ -35,7 +35,7 @@ async fn post(ctx: Ctx) -> Reply {
             "a batch holds at most {MAX_BATCH} ops"
         )));
     }
-    let results = conn.apply(&ctx.svc.db, &ctx.svc.fanout, ops)?;
+    let results = conn.apply(&ctx.svc, ops)?;
     Ok(json_reply(200, &json!({ "results": results })))
 }
 

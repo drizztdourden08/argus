@@ -46,6 +46,7 @@ mod mux_lifecycle;
 mod mux_limits;
 mod mux_presence;
 mod mux_stream;
+mod mux_tails;
 mod notify;
 mod owner_text;
 mod portfolio_send;

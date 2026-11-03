@@ -4,13 +4,13 @@
 use std::collections::HashMap;
 
 use argus_core::{ApiError, Coll, ErrorCode};
-use argus_store::Db;
 use argus_wake::service::driver::SharedWake;
 use serde_json::{Value, json};
 
 use super::conn::State;
 use super::parse::{Op, OpError, parse};
-use super::presence;
+use super::{presence, tails};
+use crate::Services;
 use crate::sse::{Fanout, Handle, Kind, SseSender, Target};
 
 /// The scope handles of one connection, by scope.
@@ -18,10 +18,9 @@ pub type Handles = HashMap<String, Handle>;
 
 /// What an op needs from the server and the connection.
 pub struct Env<'a> {
-    /// The store the first frames are read from.
-    pub db: &'a Db,
-    /// The fan-out the scope clients live in.
-    pub fanout: &'a Fanout,
+    /// The services: the store the first frames are read from, the fan-out the scope clients
+    /// live in, the run service and the run log feed.
+    pub svc: &'a Services,
     /// The stream of the connection.
     pub sender: &'a SseSender,
     /// The wake service the presence claims go to, when it runs.
@@ -36,7 +35,10 @@ fn open_new(
     since: Option<i64>,
 ) -> Result<(), ApiError> {
     let target = Target::New(Kind::Mux, env.sender);
-    let h = env.fanout.subscribe(env.db, scope, target, colls, since)?;
+    let h = env
+        .svc
+        .fanout
+        .subscribe(&env.svc.db, scope, target, colls, since)?;
     handles.insert(scope.to_owned(), h);
     Ok(())
 }
@@ -52,8 +54,9 @@ fn subscribe(
         return open_new(env, handles, scope, colls, since);
     };
     match env
+        .svc
         .fanout
-        .subscribe(env.db, scope, Target::Add(&h), colls, since)
+        .subscribe(&env.svc.db, scope, Target::Add(&h), colls, since)
     {
         Err(e) if e.code == ErrorCode::NotFound => {
             handles.remove(scope);
@@ -87,7 +90,12 @@ fn run(env: &Env<'_>, state: &mut State, op: Op) -> Result<(), OpError> {
             since,
         } => Ok(subscribe(env, &mut state.handles, &scope, &colls, since)?),
         Op::Unsub { scope, colls } => {
-            unsubscribe(env.fanout, &mut state.handles, &scope, colls.as_deref());
+            unsubscribe(
+                &env.svc.fanout,
+                &mut state.handles,
+                &scope,
+                colls.as_deref(),
+            );
             Ok(())
         }
         Op::Presence(claim) => presence::attach(env.wake, &mut state.presence, claim),
@@ -95,10 +103,11 @@ fn run(env: &Env<'_>, state: &mut State, op: Op) -> Result<(), OpError> {
             presence::detach(env.wake, &mut state.presence, &scope, &tab);
             Ok(())
         }
-        Op::Later(name) => Err(OpError {
-            code: "not_supported",
-            message: format!("the {name} op is not supported by this server yet"),
-        }),
+        Op::Tail(want) => tails::start(env.svc, env.sender, &mut state.tails, want),
+        Op::Untail { sub } => {
+            tails::stop(&mut state.tails, &sub);
+            Ok(())
+        }
     }
 }
 

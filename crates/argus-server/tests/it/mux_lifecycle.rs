@@ -71,7 +71,7 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
         sub("alpha", &["nope"]),
         { "op": "fly" },
         5,
-        { "op": "tail", "sub": "s", "key": "alpha", "rid": "r", "after": 0 },
+        { "op": "tail", "sub": "s", "key": "alpha", "rid": "R-1", "after": 0 },
         { "op": "untail", "sub": "s" },
         sub("alpha", &["meta"]),
     ]);
@@ -82,8 +82,8 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
         "bad_request",
         "bad_request",
         "bad_request",
-        "not_supported",
-        "not_supported",
+        "unavailable",
+        "ok",
         "ok",
     ];
     assert_eq!(codes(&results), want);

@@ -128,6 +128,50 @@ fn tabs_attach_and_detach_a_reconnecting_tab_replaces_itself_and_the_list_and_th
 }
 
 #[test]
+fn a_full_thread_admits_a_tab_it_already_holds_and_no_other() {
+    let mut p = Presence::new();
+    assert!(p.admits("a", "t", "x"), "an empty thread has room");
+    let tokens: Vec<_> = (0..MAX_TABS_PER_THREAD)
+        .map(|i| p.attach("a", "t", &format!("tab{i}"), START))
+        .collect();
+    assert!(!p.admits("a", "t", "extra"), "a ninth tab is not admitted");
+    assert!(p.admits("a", "t", "tab3"), "a tab it holds renews");
+    assert!(
+        p.admits("a", "u", "extra"),
+        "another thread has its own room"
+    );
+    assert!(p.admits("b", "t", "extra"), "so has another project");
+    let renewed = p.attach("a", "t", "tab3", START + SEC);
+    assert_eq!(
+        p.open_of("a", "t").map(|o| o.tabs),
+        Some(MAX_TABS_PER_THREAD)
+    );
+    p.detach(&tokens[3]);
+    assert_eq!(
+        p.open_of("a", "t").map(|o| o.tabs),
+        Some(MAX_TABS_PER_THREAD),
+        "the old stream closing leaves the renewed tab"
+    );
+    p.detach(&renewed);
+    assert!(p.admits("a", "t", "extra"), "a freed place is open");
+}
+
+#[test]
+fn the_service_asks_the_presence_engine() {
+    let mut rig = rig();
+    let tokens: Vec<_> = (0..MAX_TABS_PER_THREAD)
+        .map(|i| {
+            rig.service
+                .presence_attach("alpha", "ui", &format!("tab{i}"))
+        })
+        .collect();
+    assert!(rig.service.presence_admits("alpha", "ui", "tab0"));
+    assert!(!rig.service.presence_admits("alpha", "ui", "extra"));
+    rig.service.presence_detach(&tokens[0]);
+    assert!(rig.service.presence_admits("alpha", "ui", "extra"));
+}
+
+#[test]
 fn an_open_board_keeps_a_listening_thread_clean_and_the_row_says_so() {
     let mut rig = rig();
     let _ui = listen(&mut rig, "alpha", "ui");
