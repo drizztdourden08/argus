@@ -18,7 +18,7 @@ const PASSED_STATUSES = ['pass', 'moved'];
 
 const NO_KEY = 'none';
 
-const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], builds: [], nobuild: false, status: '', subject: '', needs: false, conflict: false, archived: false };
+const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], builds: [], nobuild: false, status: '', subject: '', plan: '', needs: false, conflict: false, archived: false };
 
 const DEFAULT_PREFS: TestPrefs = { group: 'build', order: 'rank', showPassed: true, showClosed: false };
 

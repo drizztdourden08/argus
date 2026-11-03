@@ -73,6 +73,8 @@ interface TestItem {
   title: string;
   thread?: string | null;
   subject?: string | null;
+  type?: string | null;
+  fields?: Record<string, unknown>;
   deletedAt?: string | null;
   ac?: { text: string; done: boolean }[];
 }

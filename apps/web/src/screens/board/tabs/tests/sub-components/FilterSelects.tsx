@@ -6,7 +6,7 @@ import { ChoiceFilter } from './ChoiceFilter';
 import { MultiFilter } from './MultiFilter';
 
 const FilterSelects = (props: FilterRowProps) => {
-  const { state, threads, subjects, builds, handed } = props;
+  const { state, threads, subjects, plans, builds, handed } = props;
   const { filters, patchFilters } = state;
   const buildOptions = [
     ...builds.map((tag) => ({ value: tag, label: tag === handed ? `${tag} · handed to you` : tag })),
@@ -19,6 +19,7 @@ const FilterSelects = (props: FilterRowProps) => {
       <MultiFilter label="Threads" options={threads} values={filters.threads} onPick={(values) => patchFilters({ threads: values })} />
       {builds.length > 0 && <MultiFilter label="Build" options={buildOptions} values={buildValues} onPick={pickBuilds} />}
       <ChoiceFilter label="Status" any="Any status" options={STATUS_FILTERS} value={filters.status} onPick={(status) => patchFilters({ status })} />
+      {plans.length > 0 && <ChoiceFilter label="Plan" any="Any plan" options={plans} value={filters.plan} onPick={(plan) => patchFilters({ plan })} />}
       <ChoiceFilter
         label="Subject"
         any="Any subject"

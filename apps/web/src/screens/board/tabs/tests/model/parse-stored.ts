@@ -25,6 +25,7 @@ const filtersOf = (stored: Stored): TestFilters => ({
   nobuild: flagAt(stored, 'nobuild'),
   status: textAt(stored, 'status'),
   subject: textAt(stored, 'subject'),
+  plan: textAt(stored, 'plan'),
   needs: flagAt(stored, 'needs'),
   conflict: flagAt(stored, 'conf'),
   archived: flagAt(stored, 'archived'),

@@ -2,7 +2,7 @@
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { threadChoices } from '../../shared';
 import { TestsContext } from './behavior/tests-context';
-import { knownBuilds, subjectsOf } from './model';
+import { knownBuilds, planOptions, subjectsOf } from './model';
 import { useTestsData } from './behavior/useTestsData';
 import { useTestsScreen } from './behavior/useTestsScreen';
 import { BundleList } from './sub-components/BundleList';
@@ -27,6 +27,7 @@ const TestsTab = (props: TestsTabProps) => {
           view={view}
           threads={threadChoices(data.threads)}
           subjects={subjectsOf(data.items, data.tests)}
+          plans={planOptions(data.items)}
           builds={knownBuilds(data.tests, data.builds, data.handed, state.prefs.showClosed)}
           handed={data.handed}
         />

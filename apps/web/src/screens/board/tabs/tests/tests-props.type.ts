@@ -40,6 +40,7 @@ interface TestsToolbarProps {
   view: TestsView;
   threads: Option[];
   subjects: string[];
+  plans: Option[];
   builds: string[];
   handed: string | null;
 }
@@ -48,6 +49,7 @@ interface FilterRowProps {
   state: TestsState;
   threads: Option[];
   subjects: string[];
+  plans: Option[];
   builds: string[];
   handed: string | null;
 }

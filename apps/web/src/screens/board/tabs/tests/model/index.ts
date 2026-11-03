@@ -22,6 +22,8 @@ export { noteOutcome } from './note-outcome';
 export { outcomeTitle } from './outcome-title';
 export { noteProblem } from './note-problem';
 export { parseStored } from './parse-stored';
+export { planCases } from './plan-cases';
+export { planOptions } from './plan-options';
 export { playHint } from './play-hint';
 export { postVerdict } from './post-verdict';
 export { previousValues } from './previous-values';
