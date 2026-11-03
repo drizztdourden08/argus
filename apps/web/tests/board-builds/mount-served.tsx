@@ -3,7 +3,6 @@ import { ServedTab } from '../../src/shell/records/pane/tabs/ServedTab';
 import { stubFetch } from '../board-tests/mount-tab';
 import { itemRef } from '../board-kanban/kanban-docs';
 import { paneData } from '../board-kanban/pane-data';
-import { stubEventSource } from '../helpers/stub-event-source';
 import { SCOPE, mountBoard } from './mount-board';
 
 interface Board {
@@ -14,7 +13,6 @@ interface Board {
 
 const mountServed = async (itemId: string, board: Board = {}) => {
   stubFetch(undefined);
-  stubEventSource();
   const data = paneData({ boardKey: SCOPE, item: itemRef(itemId) });
   const { view } = await mountBoard(<ServedTab data={data} />, [
     { coll: 'launchers', docs: board.launchers ?? [], key: 'name' },

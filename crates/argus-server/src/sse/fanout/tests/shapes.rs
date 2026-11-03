@@ -135,11 +135,7 @@ async fn dropping_one_scope_leaves_the_shared_sender_open_for_the_other() {
 async fn a_handle_of_another_scope_is_refused() {
     let r = rig();
     let w = wire();
-    let target = Target::New(Kind::Mux, &w.sender);
-    let h = r
-        .fanout
-        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None);
-    let h = h.unwrap();
+    let h = r.follow_meta(ALPHA, &w);
     let err = r
         .fanout
         .subscribe(&r.db, "beta", Target::Add(&h), &[Coll::Items], None)

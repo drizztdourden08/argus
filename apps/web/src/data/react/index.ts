@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { useBoard } from './behavior/useBoard';
 export { useCollection } from './behavior/useCollection';
+export { useLink } from './behavior/useLink';
 export { useDoc } from './behavior/useDoc';
 export { useOptionalDoc } from './behavior/useOptionalDoc';
 export { usePortfolio } from './behavior/usePortfolio';

@@ -1,50 +1,45 @@
 /* @layer renderer-app @kind test */
 import { cleanup, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TabMessage } from '../../src/data/hub';
 import { renderAt } from '../helpers/render-at';
-import { stubEventSource } from '../helpers/stub-event-source';
-import type { FakeSource } from '../helpers/fake-source';
-
-let streams: FakeSource[] = [];
 
 beforeEach(() => {
   vi.stubGlobal('CSS', { supports: () => false });
-  streams = stubEventSource();
 });
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 
-const presenceStreams = () => streams.filter((stream) => stream.url.includes('/presence'));
-
-const heldStream = async (): Promise<URL & { source: FakeSource }> => {
-  await waitFor(() => expect(presenceStreams()).toHaveLength(1));
-  const [source] = presenceStreams();
-  return Object.assign(new URL(source?.url ?? '', 'http://argus.test'), { source: source as FakeSource });
-};
+const ofType = (sent: TabMessage[], type: TabMessage['type']) => sent.filter((message) => message.type === type);
 
 describe('S2 board presence', { tags: ['standard'] }, () => {
-  it('holds the presence stream open for the thread in the URL', async () => {
-    renderAt('/p/rotp/?thread=coordinator');
-    const held = await heldStream();
-    expect(held.pathname).toBe('/api/p/rotp/presence');
-    expect(held.searchParams.get('thread')).toBe('coordinator');
-    expect(held.searchParams.get('tab')).toMatch(/^[a-z0-9]{1,8}$/);
-    expect(held.source.closed).toBe(false);
+  it('sends presence for the thread in the URL', async () => {
+    const { sent } = renderAt('/p/rotp/?thread=coordinator');
+    await waitFor(() => expect(ofType(sent, 'presence')).toHaveLength(1));
+    expect(ofType(sent, 'presence')[0]).toEqual({ type: 'presence', scope: 'rotp', thread: 'coordinator' });
+    expect(ofType(sent, 'unpresence')).toHaveLength(0);
   });
 
-  it('closes the stream when the page goes away', async () => {
-    const view = renderAt('/p/rotp/?thread=coordinator');
-    const held = await heldStream();
-    view.unmount();
-    expect(held.source.closed).toBe(true);
+  it('sends unpresence when the page goes away', async () => {
+    const { sent, unmount } = renderAt('/p/rotp/?thread=coordinator');
+    await waitFor(() => expect(ofType(sent, 'presence')).toHaveLength(1));
+    unmount();
+    expect(ofType(sent, 'unpresence')).toEqual([{ type: 'unpresence', scope: 'rotp' }]);
+  });
+
+  it('sends no presence without a thread in the URL', async () => {
+    const { sent } = renderAt('/p/rotp/');
+    await waitFor(() => expect(sent.length).toBeGreaterThan(0));
+    expect(ofType(sent, 'presence')).toHaveLength(0);
   });
 });
 
 describe('K4 board presence', { tags: ['standard'] }, () => {
   it('strips characters the server would refuse from the thread', async () => {
-    renderAt('/p/rotp/?thread=lead%20one%2F%3Cx%3E');
-    expect((await heldStream()).searchParams.get('thread')).toBe('leadonex');
+    const { sent } = renderAt('/p/rotp/?thread=lead%20one%2F%3Cx%3E');
+    await waitFor(() => expect(ofType(sent, 'presence')).toHaveLength(1));
+    expect(ofType(sent, 'presence')[0]).toMatchObject({ thread: 'leadonex' });
   });
 });

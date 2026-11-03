@@ -244,11 +244,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     let instance = random_hex(8);
     db.kv_set("instance", &instance)?;
     let fanout = Arc::new(Fanout::default());
-    let (f1, f2) = (Arc::clone(&fanout), Arc::clone(&fanout));
-    let links = vec![
-        bus.on_docs(move |e| f1.on_docs(e)),
-        bus.on_reset(move |e| f2.on_reset(e)),
-    ];
+    let links = fanout.link(&bus);
     Ok(Services {
         config,
         env_port: opts.port,

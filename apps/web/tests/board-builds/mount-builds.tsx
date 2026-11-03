@@ -3,7 +3,6 @@ import { act } from '@testing-library/react';
 import { BuildsTab } from '../../src/screens/board/tabs/builds';
 import { stubFetch } from '../board-tests/mount-tab';
 import type { Responder } from '../board-tests/mount-tab';
-import { stubEventSource } from '../helpers/stub-event-source';
 import { SCOPE, mountBoard } from './mount-board';
 
 interface Board {
@@ -16,7 +15,6 @@ interface Board {
 
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
-  const streams = stubEventSource();
   const { view, live } = await mountBoard(<BuildsTab boardKey={SCOPE} />, [
     { coll: 'launchers', docs: board.launchers ?? [], key: 'name' },
     { coll: 'launches', docs: board.launches ?? [], key: 'name' },
@@ -28,7 +26,7 @@ const mountBuilds = async (board: Board = {}, respond?: Responder) => {
     act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   const remove = (coll: string, id: string) =>
     act(() => live()?.emit('changes', { scope: SCOPE, seq: 100, changes: [{ coll, id, op: 'delete' }] }));
-  return { ...view, calls, change, remove, streams };
+  return { ...view, calls, change, remove };
 };
 
 export { mountBuilds };

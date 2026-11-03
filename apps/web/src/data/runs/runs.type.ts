@@ -92,6 +92,12 @@ interface RunTailHandlers {
   onStatus?: (run: RunRow) => void;
 }
 
+interface RunTailTarget {
+  key: string;
+  runId: string;
+  after?: number;
+}
+
 interface RunLogOptions {
   limit: number;
   live: boolean;
@@ -111,5 +117,5 @@ interface LineBuffer extends RunLogView {
 
 export type {
   LineBuffer, RunAttachment, RunEntry, RunFilter, RunLine, RunLogLine, RunLogOptions, RunLogPage, RunLogQuery, RunLogView, RunRow,
-  RunStatus, RunTailHandlers, RunTone, StartRunInput,
+  RunStatus, RunTailHandlers, RunTailTarget, RunTone, StartRunInput,
 };

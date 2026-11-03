@@ -12,6 +12,7 @@ const REACT_PACKAGES = /node_modules[\\/](react|react-dom|react-router|scheduler
 export default defineConfig({
   plugins: [react()],
   resolve: { dedupe: ['react', 'react-dom'], alias: { '@argus/registry': REGISTRY_DIR } },
+  worker: { format: 'es' },
   build: {
     rollupOptions: {
       output: {
