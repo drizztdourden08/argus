@@ -281,15 +281,16 @@ fn a_stop_that_only_waits_on_the_agents_own_background_command_leaves_the_record
     dispatch(&f, "Build with a background command", "sonnet", "toolu_w1");
     f.started(LEAD, "waiting00000005a", "general-purpose");
     let file = f.home.path().join("agent-waiting00000005a.jsonl");
+    let shape = json!({ "type": "api-request-shape", "tools": [{ "name": "SubagentHandback", "description": "Deliver your final report" }] });
     let bash = json!({ "type": "assistant", "message": { "role": "assistant", "content": [{ "type": "tool_use", "name": "Bash", "input": { "command": "pnpm build", "run_in_background": true } }] } });
-    fs::write(&file, format!("{bash}\n")).unwrap();
+    fs::write(&file, format!("{shape}\n{bash}\n")).unwrap();
     let extra = json!({ "agent_transcript_path": file, "last_assistant_message": "Build running, waiting for it." });
     f.stopped(LEAD, "waiting00000005a", &extra);
     let waiting = f.by_hook("waiting00000005a").unwrap();
     assert_eq!(waiting["status"], "working");
     assert_eq!(waiting["result"], Value::Null);
     let handback = json!({ "type": "assistant", "message": { "role": "assistant", "content": [{ "type": "tool_use", "name": "SubagentHandback", "input": {} }] } });
-    fs::write(&file, format!("{bash}\n{handback}\n")).unwrap();
+    fs::write(&file, format!("{shape}\n{bash}\n{handback}\n")).unwrap();
     let extra = json!({ "agent_transcript_path": file, "last_assistant_message": "build passed" });
     f.stopped(LEAD, "waiting00000005a", &extra);
     let done = f.by_hook("waiting00000005a").unwrap();
