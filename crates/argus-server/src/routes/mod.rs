@@ -18,6 +18,7 @@ pub mod files;
 pub mod inbox;
 pub mod item_images;
 pub mod mcp;
+pub mod mux;
 pub mod notify;
 pub mod pages;
 mod params;
@@ -60,4 +61,5 @@ pub fn register_all(router: &mut Router) {
     pages::register(router);
     files::register(router);
     mcp::register(router);
+    mux::register(router);
 }
