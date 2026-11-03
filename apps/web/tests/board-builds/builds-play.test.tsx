@@ -58,15 +58,14 @@ describe('S1 Stop and the status line', { tags: ['standard'] }, () => {
 });
 
 describe('K4 where Play is hidden', { tags: ['standard'] }, () => {
-  it('a launcher joined to a draft bundle has no Play and no terminal, but shows its command', async () => {
+  it('a launcher joined to a draft bundle has no Play', async () => {
     await mountBuilds({
       launchers: [launcherDoc('master'), launcherDoc('wt-1', { joined: 'b1', bundle: 'b1' })],
       launches: [defDoc('master'), defDoc('wt-1')],
       runs: [runDoc('R-1', 'launcher-wt-1')],
       builds: [buildDoc('b1', { launcher: 'wt-1', status: 'draft' })],
     });
-    expect(await screen.findByDisplayValue('game run --wt-1')).toBeTruthy();
+    await screen.findByText('Master build');
     expect(screen.queryByRole('button', { name: 'Play wt-1' })).toBeNull();
-    expect(screen.queryByRole('status', { name: 'Run R-1' })).toBeNull();
   });
 });

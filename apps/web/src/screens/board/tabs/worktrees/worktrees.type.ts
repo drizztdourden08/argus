@@ -59,18 +59,14 @@ interface BatchControls {
   confirm: () => Promise<void>;
 }
 
-interface RowContext {
-  panel: Panel | null;
-  busy: boolean;
+interface WorktreeMenuInput {
   meta: WorktreesMeta | null;
-  onAsk: (row: WorktreeRow, kind: PanelKind) => void;
-}
-
-interface CellProps {
-  row: WorktreeRow;
-  context: RowContext;
+  controls: PanelControls;
+  open: () => void;
+  code: string;
+  label: string;
 }
 
 export type {
-  Attempt, AskThread, BatchControls, BatchState, CellProps, Guard, Notices, PanelControls, Removal, RowContext, TabPrefs, WorktreesData,
+  Attempt, AskThread, BatchControls, BatchState, Guard, Notices, PanelControls, Removal, TabPrefs, WorktreeMenuInput, WorktreesData,
 };

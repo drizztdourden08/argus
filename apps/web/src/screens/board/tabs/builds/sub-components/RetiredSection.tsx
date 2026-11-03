@@ -4,11 +4,11 @@ import type { RetiredSectionProps } from '../builds-props.type';
 import { LauncherList } from './LauncherList';
 
 const RetiredSection = (props: RetiredSectionProps) => {
-  const { views, flag, boardKey, runs, onLog } = props;
+  const { views, flag, boardKey, runs } = props;
   if (views.length === 0) return null;
   return (
     <Disclosure open={flag.shown} onOpenChange={flag.set} summary={`Closed (${views.length})`}>
-      <LauncherList views={views} label="Closed builds" boardKey={boardKey} runs={runs} onLog={onLog} />
+      <LauncherList views={views} label="Closed builds" boardKey={boardKey} runs={runs} />
     </Disclosure>
   );
 };

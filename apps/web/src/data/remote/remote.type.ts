@@ -45,6 +45,11 @@ interface ReleasePackage {
   url: string;
 }
 
+interface ReleasePr {
+  number: number;
+  commit: string;
+}
+
 interface ReleaseVersion {
   version: string;
   tag: string;
@@ -55,6 +60,8 @@ interface ReleaseVersion {
   assets: ReleaseAsset[];
   packages: ReleasePackage[];
   replay: Replay | null;
+  items?: string[];
+  prs?: ReleasePr[];
 }
 
 interface ReleaseChannel {
@@ -137,5 +144,5 @@ interface RemoteRead<T> {
 
 export type {
   CheckQuery, CheckRun, CheckStatus, CheckStep, ProjectReleases, RegistryBuild, RegistryConsumer, RegistryReport, ReleaseChannel,
-  ReleaseVersion, RemoteInfo, RemoteRead, RemoteSync, Replay, ReplayCounts, ReplayState, SyncMap,
+  ReleasePr, ReleaseVersion, RemoteInfo, RemoteRead, RemoteSync, Replay, ReplayCounts, ReplayState, SyncMap,
 };

@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
-import type { ItemRef } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
-import type { OpenLog } from '../../run-terminal';
+import type { GroupThreads } from '../../item-groups';
 import type { RetiredFlag } from './builds.type';
 import type { BuildGroups, LauncherView } from './model';
 
@@ -19,12 +17,12 @@ interface RunScope {
   runs: RunEntry[];
 }
 
-interface LauncherListProps extends OpenLog, RunScope {
+interface LauncherListProps extends RunScope {
   views: LauncherView[];
   label: string;
 }
 
-interface LauncherCardProps extends OpenLog, RunScope {
+interface LauncherCardProps extends RunScope {
   view: LauncherView;
 }
 
@@ -32,16 +30,26 @@ interface LauncherPartProps {
   view: LauncherView;
 }
 
-interface RetiredSectionProps extends OpenLog, RunScope {
+interface BuildFootProps extends RunScope {
+  view: LauncherView;
+}
+
+interface BuildSignalsProps {
+  view: LauncherView;
+  code: string;
+}
+
+interface RetiredNoteProps extends LauncherPartProps {
+  boardKey: string;
+}
+
+interface RetiredSectionProps extends RunScope {
   views: LauncherView[];
   flag: RetiredFlag;
 }
 
-interface BuildGroupProps extends OpenLog, RunScope {
-  id: string;
-  head: ReactNode;
+interface MasterGroupProps extends RunScope {
   views: LauncherView[];
-  label: string;
 }
 
 interface GroupTitleProps {
@@ -49,14 +57,12 @@ interface GroupTitleProps {
   note: string;
 }
 
-interface ItemHeadProps {
-  item: ItemRef;
-}
-
-interface BuildSectionsProps extends OpenLog, RunScope {
+interface BuildSectionsProps extends RunScope {
   groups: BuildGroups;
+  threads: GroupThreads;
 }
 
 export type {
-  BuildGroupProps, BuildsLeadProps, BuildSectionsProps, BuildsTabProps, GroupTitleProps, ItemHeadProps, LauncherCardProps, LauncherListProps, LauncherPartProps, RetiredSectionProps,
+  BuildFootProps, BuildSectionsProps, BuildSignalsProps, BuildsLeadProps, BuildsTabProps, GroupTitleProps, LauncherCardProps, LauncherListProps, LauncherPartProps, MasterGroupProps,
+  RetiredNoteProps, RetiredSectionProps,
 };

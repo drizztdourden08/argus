@@ -76,6 +76,7 @@ interface Worktree {
   item?: string | null;
   linkSource?: WorktreeLinkSource | null;
   unlinked?: boolean;
+  agent?: string | null;
   error?: string | null;
 }
 

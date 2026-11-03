@@ -16,11 +16,17 @@ const PR_STATUSES = defineStatuses({
   closed: { label: 'Closed', tone: 'neutral' },
 });
 
+const CHANGE_KIND = 'change';
+
+const SIGNAL_MAX = 3;
+
 const LOADING_TEXT = 'Loading the pull requests.';
 
 const EMPTY_TEXT = 'No pull requests yet.';
 
 const EMPTY_HINT = 'A pull request is a record on this board: the registered agent opens one with coord pr open, and it merges after a passing check run.';
+
+const PR_PANE_TAB = 'checks';
 
 const CHECKS_READING = 'Reading the check runs.';
 
@@ -30,4 +36,4 @@ const LOG_READING = 'Reading the log.';
 
 const LOG_EMPTY = 'This step wrote no log.';
 
-export { CHECK_STATUSES, CHECKS_NONE, CHECKS_READING, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, LOG_EMPTY, LOG_READING, PR_STATUSES };
+export { CHANGE_KIND, CHECK_STATUSES, CHECKS_NONE, CHECKS_READING, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, LOG_EMPTY, LOG_READING, PR_PANE_TAB, PR_STATUSES, SIGNAL_MAX };

@@ -2,7 +2,7 @@
 import { Button, EmptyState } from '@drizztdourden08/tessera';
 import { NO_RULES_HINT } from '../worktrees.constants';
 import type { WorktreeBodyProps } from '../worktrees-props.type';
-import { WorktreeTable } from './WorktreeTable';
+import { WorktreeGroups } from './WorktreeGroups';
 
 const WorktreeBody = (props: WorktreeBodyProps) => {
   const { total, filter, hasRules, onShowAll, ...table } = props;
@@ -15,7 +15,7 @@ const WorktreeBody = (props: WorktreeBodyProps) => {
     const message = filter === 'left' ? 'No leftover folders.' : 'Nothing needs a decision.';
     return <EmptyState size="sm" message={message} action={<Button size="sm" variant="ghost" onClick={onShowAll}>{`Show all ${total}`}</Button>} />;
   }
-  return <WorktreeTable {...table} />;
+  return <WorktreeGroups {...table} />;
 };
 
 export { WorktreeBody };

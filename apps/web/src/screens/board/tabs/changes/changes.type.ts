@@ -1,7 +1,9 @@
 /* @layer renderer-app @kind types */
+import type { IconName, SignalTone } from '@drizztdourden08/tessera';
 import type { WithId } from '../../../../data/react';
 import type { CheckRun } from '../../../../data/remote';
 import type { PullRequest } from '../../../../data/types';
+import type { GroupThreads } from '../../item-groups';
 
 interface LogTarget {
   runId: string;
@@ -12,47 +14,47 @@ interface LogTarget {
 
 type PullRequestDoc = WithId<PullRequest>;
 
+interface ChecksProgress {
+  passed: number;
+  total: number;
+  failed: boolean;
+}
+
+interface PrSignal {
+  id: string;
+  icon: IconName;
+  label: string;
+  tone: SignalTone;
+}
+
 interface ChangesTabProps {
   boardKey: string;
 }
 
-interface PrListProps {
+interface PrGroupsProps {
   boardKey: string;
   prs: readonly PullRequestDoc[];
-  onLog: (target: LogTarget) => void;
 }
 
 interface PrCardProps {
   boardKey: string;
   pr: PullRequestDoc;
-  onLog: (target: LogTarget) => void;
+  threads: GroupThreads;
 }
 
-interface PrPartProps {
+interface PrFootProps {
   pr: PullRequestDoc;
+  runs: readonly CheckRun[] | null;
 }
 
-interface PrChecksProps {
-  boardKey: string;
+interface PrSignalsProps {
   pr: PullRequestDoc;
-  onLog: (target: LogTarget) => void;
-}
-
-interface CheckRunViewProps {
-  run: CheckRun;
-  first: boolean;
-  onLog: (target: LogTarget) => void;
+  runs: readonly CheckRun[] | null;
 }
 
 interface StepListProps {
   run: CheckRun;
   onLog: (target: LogTarget) => void;
-}
-
-interface StepLogDrawerProps {
-  boardKey: string;
-  target: LogTarget | null;
-  onClose: () => void;
 }
 
 interface StepLogBodyProps {
@@ -61,6 +63,5 @@ interface StepLogBodyProps {
 }
 
 export type {
-  ChangesTabProps, CheckRunViewProps, LogTarget, PrCardProps, PrChecksProps, PrListProps, PrPartProps, PullRequestDoc, StepListProps,
-  StepLogBodyProps, StepLogDrawerProps,
+  ChangesTabProps, ChecksProgress, LogTarget, PrCardProps, PrFootProps, PrGroupsProps, PrSignal, PrSignalsProps, PullRequestDoc, StepListProps, StepLogBodyProps,
 };

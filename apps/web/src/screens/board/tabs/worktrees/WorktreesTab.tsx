@@ -44,6 +44,7 @@ const WorktreesTab = (props: WorktreesTabProps) => {
       {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
       <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
       <WorktreeBody
+        boardKey={boardKey}
         rows={filterRows(rows, prefs.filter)}
         total={counts.all}
         filter={prefs.filter}

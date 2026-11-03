@@ -77,6 +77,14 @@ interface RecordData {
   open: (code: string, tab?: string) => void;
 }
 
+interface RemoteDocs {
+  remote: boolean;
+  docs: readonly (PaneDoc & { id: string })[];
+  ready: boolean;
+}
+
+type RemoteLoader = (boardKey: string) => Promise<(PaneDoc & { id: string })[]>;
+
 interface RecordLoad {
   data: RecordData | null;
   ready: boolean;
@@ -266,6 +274,6 @@ interface CaseRowProps {
 export type {
   AddChildProps, BlockedSectionProps, BuildRecordInput, CaseRowProps, CauseRowProps, ChildRowProps, DocFact, EntryFactsProps, FieldBodyProps, FieldGroupModel, FieldGroupProps, FieldProps, FieldSelectProps,
   NodeOpens, PaneBadge, PaneBodyProps, PaneCrumbsProps, PaneData, PaneDoc, PaneFactsProps, PaneTab, PaneTabsProps, RecordBodyProps, RecordData, RecordFrameProps, RecordLoad, RecordPaneHostProps,
-  RecordPaneProps, RecordPaneToolsProps, RecordDataProps, RefTagsProps, StageFact, TabPlaceholderProps,
+  RecordPaneProps, RecordPaneToolsProps, RecordDataProps, RefTagsProps, RemoteDocs, RemoteLoader, StageFact, TabPlaceholderProps,
   TrailEdge, TrailLabelProps, TrailNode, TrailRowProps, TrailSectionProps, TrailTree,
 };

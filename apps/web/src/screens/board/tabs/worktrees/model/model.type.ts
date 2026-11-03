@@ -57,21 +57,12 @@ interface RemoveLook {
   tip: string;
 }
 
-interface TableRow {
+interface WorktreeChip {
   id: string;
-  path: string;
-  status: string;
-  branch: string;
-  item: string;
-  touched: string;
-  ahead: number;
-  dirty: number;
-  subject: string;
-  request: string;
-  actions: string;
-  source: WorktreeRow;
+  text: string;
+  title?: string;
 }
 
 export type {
-  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, Seen, SummaryParts, TableRow, WorktreeFilter, WorktreeRow,
+  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, Seen, SummaryParts, WorktreeChip, WorktreeFilter, WorktreeRow,
 };

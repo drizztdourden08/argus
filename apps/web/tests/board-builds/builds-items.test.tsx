@@ -32,18 +32,17 @@ const board = () => ({
 });
 
 describe('P13 the Builds tab by item', { tags: ['standard'] }, () => {
-  it('shows the master build, then each open item, then Needs a link', async () => {
+  it('shows the master build, then each open item, then the builds that need a link', async () => {
     const { container } = await mountBuilds(board());
     await screen.findByText('Master build');
-    expect(order(container)).toEqual(['master', 'I-2', 'needs-link']);
+    expect(order(container)).toEqual(['master', 'I-2', 'none']);
     const item = groupOf(container, 'I-2');
     expect(within(item).getByText('Item I-2')).toBeTruthy();
-    expect(item.querySelector('[href="#I-2"]')).not.toBeNull();
     expect(item.querySelector('[data-launcher="web"]')).not.toBeNull();
-    const needs = groupOf(container, 'needs-link');
+    const needs = groupOf(container, 'none');
+    expect(within(needs).getByText('Needs a link')).toBeTruthy();
     expect(needs.querySelector('[data-launcher="loose"]')).not.toBeNull();
     expect(needs.querySelector('[data-launcher="guess"]')).not.toBeNull();
-    expect(within(needs).getByText('needs a new link')).toBeTruthy();
   });
 
   it('keeps the builds closed with their item in a collapsed Closed section that names the item, without Play', async () => {
@@ -53,8 +52,15 @@ describe('P13 the Builds tab by item', { tags: ['standard'] }, () => {
     expect(details.open).toBe(false);
     fireEvent.click(toggle.closest('summary') as HTMLElement);
     const card = container.querySelector('[data-launcher="gone"]') as HTMLElement;
-    expect(within(card).getByText('closed with I-3')).toBeTruthy();
+    expect(card.textContent).toContain('closed with I-3');
     expect(within(card).queryByRole('button', { name: /play/i })).toBeNull();
-    expect(within(card).getByRole('button', { name: 'Copy' })).toBeTruthy();
+  });
+
+  it('gives the master build no link and a card that opens its pane', async () => {
+    const { container } = await mountBuilds(board());
+    await screen.findByText('Master build');
+    const master = container.querySelector('[data-launcher="master"]') as HTMLElement;
+    expect(within(master).getByRole('button', { name: /^Open BL-master/ })).toBeTruthy();
+    expect(within(master).queryByText(/Serves no item/)).toBeNull();
   });
 });

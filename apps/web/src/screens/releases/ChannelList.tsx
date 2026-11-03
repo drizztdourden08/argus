@@ -4,10 +4,10 @@ import type { ChannelListProps } from './releases.type';
 import { ChannelSection } from './sub-components/ChannelSection';
 
 const ChannelList = (props: ChannelListProps) => {
-  const { channels } = props;
+  const { channels, ...scope } = props;
   return (
     <Flex direction="column" gap="lg">
-      {channels.map((channel) => <ChannelSection key={channel.channel} channel={channel} />)}
+      {channels.map((channel) => <ChannelSection key={channel.channel} channel={channel} {...scope} />)}
     </Flex>
   );
 };

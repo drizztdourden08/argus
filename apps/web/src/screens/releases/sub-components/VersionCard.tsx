@@ -1,29 +1,44 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Link, Tag, Text } from '@drizztdourden08/tessera';
-import { shortCommit } from '../../../format';
-import { Age, ReplayTag } from '../../../shell';
+import { Card, Flex } from '@drizztdourden08/tessera';
+import { RecordCard, recordMenuGroups, useRecordPane } from '../../../shell';
+import { assigneeOfRecord } from '../../../shell/records';
+import { kindOf } from '../../../data/registry';
+import { copyText } from '../../board/shared';
+import { releaseCode } from '../model';
+import { RELEASE_KIND } from '../releases.constants';
 import type { VersionCardProps } from '../releases.type';
-import { VersionFiles } from './VersionFiles';
+import { ShippedRows } from './ShippedRows';
+import { VersionFoot } from './VersionFoot';
 
 const VersionCard = (props: VersionCardProps) => {
-  const { channel, version, latest } = props;
+  const { channel, version, latest, project, prefixed, shipped } = props;
+  const pane = useRecordPane();
+  const code = releaseCode(project, version.version, prefixed);
+  const kind = kindOf(RELEASE_KIND);
+  const title = version.title || `Release ${version.version}`;
+  const open = () => pane.open(code);
   return (
     <Card data-version={version.version} role="group" aria-label={`Release ${version.version} of channel ${channel}`} edge="border" edgeTone={latest ? 'success' : undefined}>
-      <Flex direction="column" gap="sm">
-        <Flex gap="sm" align="center" wrap>
-          <Text weight={600} numeric>{version.version}</Text>
-          {latest && <Tag variant="urgency" color="success" title="The version the update feed points at">latest</Tag>}
-          {version.title && <Text>{version.title}</Text>}
-        </Flex>
-        <Flex gap="md" align="center" wrap>
-          {version.tag && <Tag icon="tag" title="Git tag">{version.tag}</Tag>}
-          <Text variant="caption" tone="muted" title="Commit">{'commit '}<Text variant="caption" tone="dim" mono>{shortCommit(version.commit)}</Text></Text>
-          <Text variant="caption" tone="muted">{'published '}<Age value={version.publishedAt} ago /></Text>
-          {version.notesUrl && <Link href={version.notesUrl} title="Open the release notes">Release notes</Link>}
-          <ReplayTag replay={version.replay} />
-        </Flex>
-        <VersionFiles version={version} />
-      </Flex>
+      <RecordCard
+        head={{
+          kind: RELEASE_KIND,
+          code,
+          assignee: kind ? assigneeOfRecord(kind, {}, project) : '',
+          boardKey: project,
+          threads: [],
+          menu: recordMenuGroups(RELEASE_KIND, code, { open, copy: () => copyText(code) }),
+          menuLabel: `More actions for ${code}`,
+        }}
+        title={title}
+        openLabel={`Open ${code}: ${title}`}
+        onOpen={open}
+        foot={(
+          <Flex direction="column" gap="xs">
+            <VersionFoot version={version} latest={latest} />
+            {shipped && <ShippedRows version={version} project={project} source={shipped} />}
+          </Flex>
+        )}
+      />
     </Card>
   );
 };
