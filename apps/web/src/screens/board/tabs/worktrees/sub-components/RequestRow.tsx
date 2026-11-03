@@ -2,7 +2,8 @@
 import { Text } from '@drizztdourden08/tessera';
 import { RecordRow, recordMenuGroups, useRecordPane } from '../../../../../shell';
 import { formatAgo } from '../../../../../format';
-import { requestChips, requestCode, requestNote, requestTitle } from '../model';
+import { requestTitle } from '../../../../../data/worktrees';
+import { requestChips, requestCode, requestNote } from '../model';
 import { REQUEST_KIND } from '../worktrees.constants';
 import type { RequestRowProps } from '../worktrees-props.type';
 

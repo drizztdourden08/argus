@@ -31,7 +31,6 @@ export { removeLook } from './remove-look';
 export { requestChips } from './request-chips';
 export { requestCode } from './request-code';
 export { requestNote } from './request-note';
-export { requestTitle } from './request-title';
 export { removedLabel } from './removed-label';
 export { removedOf } from './removed-of';
 export { removedTitle } from './removed-title';

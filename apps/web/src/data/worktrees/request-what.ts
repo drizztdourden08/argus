@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { WorktreeRequest } from '../../../../../data/worktrees';
+import type { WorktreeRequest } from './worktrees.type';
 
 const countText = (request: WorktreeRequest): string => `${request.total} worktree${request.total === 1 ? '' : 's'}`;
 
