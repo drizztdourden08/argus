@@ -18,7 +18,11 @@ const countOf = (kind: AttentionKind, card: CardData): number => {
       return card.signals.pending;
     case 'agent':
       return card.signals.agents;
-    default:
+    case 'question':
+    case 'decision':
+    case 'dependency':
+    case 'blocked':
+    case 'quiet':
       return 0;
   }
 };
@@ -34,7 +38,10 @@ const kindSignal = (kind: AttentionKind, card: CardData, now: number): CardSigna
       return lockSignal(card);
     case 'quiet':
       return quietSignal(card, now);
-    default:
+    case 'todo':
+    case 'test-failing':
+    case 'test-pending':
+    case 'agent':
       return countSignal(kind, countOf(kind, card));
   }
 };

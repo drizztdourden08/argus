@@ -95,21 +95,20 @@ pub(super) fn result(r: &mut Run<'_>) -> Outcome {
         let test = checked(board, &who, ("tests", "result"), r.arg(0))?;
         let id = display(&test["id"]);
         let proofs = attach_proofs(r, board, &id)?;
-        let line = match &plan {
-            Some(plan) => through_run(
+        let line = if let Some(plan) = &plan {
+            through_run(
                 r,
                 (&mut *board, &who),
                 (plan.as_str(), &id, &note, proofs.as_slice()),
-            )?,
-            None => {
-                let outcome = Recorded {
-                    status: &status,
-                    text: &note,
-                    by: &who.actor,
-                };
-                record_result(board, &id, &outcome)?;
-                format!("{id}: {}", display(&status))
-            }
+            )?
+        } else {
+            let outcome = Recorded {
+                status: &status,
+                text: &note,
+                by: &who.actor,
+            };
+            record_result(board, &id, &outcome)?;
+            format!("{id}: {}", display(&status))
         };
         let after = find_doc(board, "tests", Some(&id))?;
         let said = if status == "pass" {

@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind component */
 import { EmptyState, Flex, Tree } from '@drizztdourden08/tessera';
 import { useMemo, useState } from 'react';
+import { AssigneeMark } from '../sub-components/AssigneeMark';
 import { useFolds } from './behavior/useFolds';
 import { useTreeRoots } from './behavior/useTreeRoots';
 import { indexNodes } from './model';
-import { TreeAssignee } from './sub-components/TreeAssignee';
 import { TreeBadges } from './sub-components/TreeBadges';
 import { TreeFoldBar } from './sub-components/TreeFoldBar';
 import { TreeLabel } from './sub-components/TreeLabel';
@@ -48,7 +48,7 @@ const TreeView = (props: TreeViewProps) => {
         renderLead={(node) => <TreeLead node={node} boardKey={boardKey} threads={threads} />}
         renderLabel={(node) => <TreeLabel node={node} boardKey={boardKey} threads={threads} />}
         renderBadges={(node) => <TreeBadges node={node} boardKey={boardKey} threads={threads} />}
-        renderTrail={(node) => <TreeAssignee node={node} boardKey={boardKey} threads={threads} />}
+        renderTrail={(node) => <AssigneeMark assignee={node.assignee} boardKey={boardKey} threads={threads} />}
         guides
         rowSize="normal"
         trail="always"

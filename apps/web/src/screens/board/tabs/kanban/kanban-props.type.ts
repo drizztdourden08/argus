@@ -142,7 +142,7 @@ interface ItemTypeMarkProps {
 }
 
 interface AssigneeMarkProps {
-  item: ItemRef;
+  assignee: string;
   boardKey: string;
   threads: Threads;
 }

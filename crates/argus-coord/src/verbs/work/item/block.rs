@@ -95,18 +95,18 @@ pub(super) fn make_todo(
 
 fn plan_for(wanted: Blocker) -> impl FnOnce(&mut Board, &Caller, &Value) -> Res<Plan> {
     move |board, by, item| {
-        let (link, line) = match &wanted {
+        let (target, said) = match &wanted {
             Blocker::Link(id) => (id.clone(), format!("blocked on {id}.")),
             Blocker::Todo { what, who } => {
                 let id = make_todo(board, by, item, (what.as_str(), who.as_str()))?;
-                let line = format!("blocked on {id} (to-do for {who}).");
-                (id, line)
+                let said = format!("blocked on {id} (to-do for {who}).");
+                (id, said)
             }
         };
-        let set = Map::from_iter([("blockedBy".to_owned(), linked(item, &link))]);
+        let set = Map::from_iter([("blockedBy".to_owned(), linked(item, &target))]);
         Ok(Plan {
             set,
-            say: Say::Line(line),
+            say: Say::Line(said),
         })
     }
 }
@@ -114,7 +114,7 @@ fn plan_for(wanted: Blocker) -> impl FnOnce(&mut Board, &Caller, &Value) -> Res<
 /// `coord item block <I> --on <id> | --todo "<what>" --who <who>`.
 pub(super) fn block(r: &mut Run<'_>) -> Outcome {
     let wanted = wanted(r)?;
-    edit_item(r, Vec::new(), plan_for(wanted))
+    edit_item(r, &[], plan_for(wanted))
 }
 
 /// One link dropped, refused when the item is not blocked on it.
@@ -148,7 +148,7 @@ fn drop_all(item: &Value) -> Plan {
 /// `coord item unblock <I> [--from <id>]`.
 pub(super) fn unblock(r: &mut Run<'_>) -> Outcome {
     let from = given(r, "from");
-    edit_item(r, Vec::new(), move |_, _, item| match &from {
+    edit_item(r, &[], move |_, _, item| match &from {
         Some(id) => drop_one(item, id),
         None => Ok(drop_all(item)),
     })

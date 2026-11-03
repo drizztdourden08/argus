@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Pressable, Tag, Text } from '@drizztdourden08/tessera';
-import { stageLabel } from '../model';
+import { assigneeOf, stageLabel } from '../model';
 import { AssigneeMark } from '../sub-components/AssigneeMark';
 import { ItemTypeMark } from '../sub-components/ItemTypeMark';
 import type { ChildRowProps } from './pane.type';
@@ -19,7 +19,7 @@ const ChildRow = (props: ChildRowProps) => {
         </Flex>
       </Pressable>
       <Tag>{stageLabel(child, 'assignee')}</Tag>
-      <AssigneeMark item={child} boardKey={data.boardKey} threads={data.threads} />
+      <AssigneeMark assignee={assigneeOf(child)} boardKey={data.boardKey} threads={data.threads} />
       {criteria.length > 0 && <Text as="span" variant="caption" tone="muted" title={`${met} of ${criteria.length} criteria met`}>{`${met}/${criteria.length}`}</Text>}
     </Flex>
   );

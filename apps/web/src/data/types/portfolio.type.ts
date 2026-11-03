@@ -59,4 +59,4 @@ interface Card {
   updatedAt?: string;
 }
 
-export type { Card, OwnerItem };
+export type { Card };

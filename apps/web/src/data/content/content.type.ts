@@ -13,6 +13,7 @@ type RefusalKey =
   | 'bad-date'
   | 'bad-ref'
   | 'unknown-ref'
+  | 'bad-flag'
   | 'bad-person'
   | 'unknown-person'
   | 'bad-record'

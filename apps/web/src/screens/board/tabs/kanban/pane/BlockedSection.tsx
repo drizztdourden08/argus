@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind component */
 import { Flex } from '@drizztdourden08/tessera';
 import { DrawerSection } from '../sub-components/DrawerSection';
+import { ACROSS } from './BlockedSection.constants';
 import { CauseRow } from './CauseRow';
 import type { BlockedSectionProps } from './pane.type';
-
-const ACROSS = ['dep-waits', 'dep-blocked'];
 
 const BlockedSection = (props: BlockedSectionProps) => {
   const { item, items, open } = props.data;

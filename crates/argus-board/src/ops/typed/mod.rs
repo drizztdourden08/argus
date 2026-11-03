@@ -11,6 +11,7 @@
 mod assignee;
 mod blocked_by;
 mod create;
+mod description;
 mod edit;
 mod enter;
 mod force;
@@ -31,6 +32,7 @@ pub use note::create_note;
 
 pub(crate) use assignee::{hint as assignee_hint, stamp_todo, todo as todo_assignee};
 pub(crate) use create::{item as create_item, wanted as wants_create};
+pub(crate) use description::written as description_text;
 pub(crate) use edit::{applies as edits, item_edit};
 pub(crate) use note::rewrite as note_text;
 pub(crate) use outcome::Outcome;

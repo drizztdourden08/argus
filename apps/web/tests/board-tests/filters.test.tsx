@@ -2,16 +2,10 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { filterBoard, pick, stored, typeSearch } from './filter-dom';
+import { filterBoard, pick, shown, stored, typeSearch } from './filter-dom';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
-
-const TITLES: Record<string, string> = { 'T-1': 'Login works', 'T-2': 'Logout works', 'T-3': 'Sound plays' };
-
-const shown = (...ids: string[]): void => {
-  for (const [id, title] of Object.entries(TITLES)) expect(screen.queryByText(title) !== null).toBe(ids.includes(id));
-};
 
 describe('S1 search', { tags: ['standard'] }, () => {
   it('narrows the tests by id or title and says how many are shown', async () => {

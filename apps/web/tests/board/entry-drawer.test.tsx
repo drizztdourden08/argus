@@ -1,21 +1,10 @@
 /* @layer renderer-app @kind test */
-import { toast } from '@drizztdourden08/tessera';
-import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { renderAt } from '../helpers/render-at';
-import { seedBoard } from '../helpers/seed-board';
-import { liveStream } from '../helpers/wait-for-stream';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { NOW, cleanEntryBoard, mountEntryBoard } from '../helpers/entry-board';
 
-afterEach(() => {
-  act(() => toast.clear());
-  cleanup();
-  vi.unstubAllGlobals();
-  localStorage.clear();
-});
+cleanEntryBoard();
 
-const NOW = new Date().toISOString();
-
-const worker = { id: 'worker', name: 'worker', session: 'worker', role: 'thread', status: 'active', activity: 'working', lastSeen: NOW };
 const work = { id: 'I-1', title: 'Item I-1', thread: 'worker', status: 'doing', rank: 1, rev: 1, createdAt: NOW, updatedAt: NOW };
 const question = {
   id: 'Q-1',
@@ -31,14 +20,7 @@ const question = {
 };
 const note = { id: 'F-1', kind: 'followup', replyTo: 'Q-1', item: 'I-1', thread: 'worker', author: 'worker', text: 'An earlier note', createdAt: NOW };
 
-const mount = async (at: string) => {
-  vi.stubGlobal('CSS', { supports: () => false });
-  vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('{}'))));
-  const view = renderAt(at);
-  const stream = await liveStream(view.sources, 'rotp');
-  const meta = { board: { project: 'rotp', name: 'Relic of the Past' } };
-  act(() => seedBoard(stream, { meta, threads: { worker }, items: { 'I-1': work }, entries: { 'Q-1': question, 'F-1': note } }));
-};
+const mount = (at: string) => mountEntryBoard({ at, work, entries: { 'Q-1': question, 'F-1': note } });
 
 const paneOf = async (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'Entry detail' });
 

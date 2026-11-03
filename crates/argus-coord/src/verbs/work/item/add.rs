@@ -6,8 +6,9 @@
 //! any goes through the `create` op, which checks it against the registry.
 
 use argus_board::Board;
+use argus_board::content::{Context, check};
 use argus_board::json::display;
-use argus_board::limits::{optional_text, require_text};
+use argus_board::limits::require_text;
 use argus_board::ops::{Check, OpResult, authorize};
 use argus_board::store::create_doc;
 use serde_json::{Map, Value, json};
@@ -61,17 +62,15 @@ fn initial_status(r: &Run<'_>) -> Res<String> {
     }
 }
 
-/// The description: checked here for a plain item, left to the registry for a typed one.
-fn description(r: &Run<'_>, is_typed: bool) -> Res<String> {
-    if !is_typed {
-        return Ok(optional_text("description", &r.opt("desc"))?.unwrap_or_default());
-    }
-    let given = r.text_opt("desc").unwrap_or_default();
-    Ok(if argus_core::js::trim(given).is_empty() {
-        String::new()
-    } else {
-        given.to_owned()
-    })
+/// The description, checked by the rich text rule of the registry for every item, typed or not.
+fn description(r: &Run<'_>) -> Res<String> {
+    let cx = Context {
+        images: &[],
+        ids: None,
+        threads: None,
+    };
+    let checked = check("description", &r.opt("desc"), &cx)?;
+    Ok(checked.as_str().unwrap_or_default().to_owned())
 }
 
 fn draft_of(r: &Run<'_>) -> Res<Draft> {
@@ -79,7 +78,7 @@ fn draft_of(r: &Run<'_>) -> Res<Draft> {
     let flags = typed::flags(r)?;
     Ok(Draft {
         title,
-        description: description(r, !flags.is_empty())?,
+        description: description(r)?,
         ac: criteria(r)?,
         status: initial_status(r)?,
         flags,

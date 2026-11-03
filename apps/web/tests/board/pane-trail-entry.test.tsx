@@ -1,21 +1,10 @@
 /* @layer renderer-app @kind test */
-import { toast } from '@drizztdourden08/tessera';
-import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { renderAt } from '../helpers/render-at';
-import { seedBoard } from '../helpers/seed-board';
-import { liveStream } from '../helpers/wait-for-stream';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { NOW, cleanEntryBoard, mountEntryBoard } from '../helpers/entry-board';
 
-afterEach(() => {
-  act(() => toast.clear());
-  cleanup();
-  vi.unstubAllGlobals();
-  localStorage.clear();
-});
+cleanEntryBoard();
 
-const NOW = new Date().toISOString();
-
-const worker = { id: 'worker', name: 'worker', session: 'worker', role: 'thread', status: 'active', activity: 'working', lastSeen: NOW };
 const work = {
   id: 'I-1', title: 'Item I-1', thread: 'worker', status: 'doing', rank: 1, rev: 1, createdAt: NOW, updatedAt: NOW,
   blocked: [{ kind: 'ask', id: 'Q-1', label: 'Ship it today?' }],
@@ -34,14 +23,8 @@ const trail = {
   },
 };
 
-const mount = async () => {
-  vi.stubGlobal('CSS', { supports: () => false });
-  vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(url.endsWith('/trail') ? trail : {})))));
-  const view = renderAt('/p/rotp/#I-1/links');
-  const stream = await liveStream(view.sources, 'rotp');
-  const meta = { board: { project: 'rotp', name: 'Relic of the Past' } };
-  act(() => seedBoard(stream, { meta, threads: { worker }, items: { 'I-1': work }, entries: { 'Q-1': question } }));
-};
+const mount = () =>
+  mountEntryBoard({ at: '/p/rotp/#I-1/links', work, entries: { 'Q-1': question }, body: (url) => (url.endsWith('/trail') ? trail : {}) });
 
 describe('I-77 P6 a leaf of the trail', { tags: ['standard'] }, () => {
   it('opens the entry pane when a question at the end of the trail is clicked', async () => {

@@ -18,7 +18,7 @@ fn text_flag(r: &Run<'_>, name: &str) -> Res<Option<String>> {
 }
 
 /// An assignee, where `none` clears it.
-fn assignee(text: String) -> Value {
+fn assignee(text: &str) -> Value {
     if text == "none" {
         Value::Null
     } else {
@@ -38,7 +38,7 @@ pub(super) fn flags(r: &Run<'_>) -> Res<Map<String, Value>> {
         }
     }
     if let Some(text) = text_flag(r, "assignee")? {
-        set.insert("assignee".to_owned(), assignee(text));
+        set.insert("assignee".to_owned(), assignee(&text));
     }
     for (key, value) in fields::given(r.options)? {
         set.insert(format!("fields.{key}"), value);

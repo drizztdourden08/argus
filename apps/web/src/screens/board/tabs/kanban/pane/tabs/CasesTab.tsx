@@ -7,8 +7,7 @@ import { CaseRow } from '../CaseRow';
 import { caseIds } from '../model/case-ids';
 import { fieldProblem } from '../model/field-problem';
 import type { PaneBodyProps } from '../pane.type';
-
-const CASE_ID_LIMIT = 12;
+import { CASE_ID_LIMIT } from './CasesTab.constants';
 
 const CasesTab = (props: PaneBodyProps) => {
   const { data } = props;

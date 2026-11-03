@@ -60,9 +60,7 @@ pub(crate) fn editable(coll: &str, field: &str) -> bool {
 pub(crate) fn check(coll: &str, field: &str, v: &Value, cx: &EditCtx) -> Result<Value, BoardError> {
     match (coll, field) {
         ("items" | "tests", "title") => text(field, v),
-        ("items", "description") => Ok(Value::String(
-            optional_text("description", v)?.unwrap_or_default(),
-        )),
+        ("items", "description") => typed::description_text(cx.board, &cx.doc["images"], v),
         ("items", "status") => one_of(&ITEM_STATUSES, v, "status"),
         ("items", "blocker") => optional("note", v),
         ("tests", "mode") => one_of(&TEST_MODES, v, "mode"),

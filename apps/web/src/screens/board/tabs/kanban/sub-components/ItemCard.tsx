@@ -2,6 +2,7 @@
 import { Checkbox, Flex, Pressable, Spacer, Text } from '@drizztdourden08/tessera';
 import type { MouseEvent } from 'react';
 import type { ItemCardProps } from '../kanban-props.type';
+import { assigneeOf } from '../model';
 import { AssigneeMark } from './AssigneeMark';
 import { CardFoot } from './CardFoot';
 import { CardMenu } from './CardMenu';
@@ -30,7 +31,7 @@ const ItemCard = (props: ItemCardProps) => {
         )}
         <Text variant="caption" tone="muted" mono>{item.id}</Text>
         <Spacer />
-        <AssigneeMark item={item} boardKey={boardKey} threads={threads} />
+        <AssigneeMark assignee={assigneeOf(item)} boardKey={boardKey} threads={threads} />
         <CardMenu item={item} threads={threads} ops={ops} onOpen={onOpen} />
       </Flex>
       <Pressable onClick={() => onOpen(item.id)} aria-label={`Open ${item.id}: ${item.title}`}>

@@ -146,8 +146,11 @@ fn ask() -> Value {
 #[test]
 fn a_question_by_another_thread_on_your_item_is_a_notice_and_the_answer_unblocks_it() {
     let one = item("I-1", &json!({}));
-    let mut world = World::new(&alpha(&[one.clone()], &json!({"entries": {}})));
-    let asked = world.export(&alpha(&[one.clone()], &json!({"entries": ask()})));
+    let mut world = World::new(&alpha(std::slice::from_ref(&one), &json!({"entries": {}})));
+    let asked = world.export(&alpha(
+        std::slice::from_ref(&one),
+        &json!({"entries": ask()}),
+    ));
     assert_eq!(lines(&asked), [("alpha", "api", "item-ask")]);
     let mut answered = ask();
     answered["Q-1"]["status"] = json!("answered");

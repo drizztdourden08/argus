@@ -124,4 +124,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, EntryLinkProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, MarkdownMedia, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };
+export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, EntryLinkProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };

@@ -73,7 +73,7 @@ fn apply_set(
 /// make them in the same write.
 pub(super) fn edit_item(
     r: &mut Run<'_>,
-    pictures: Vec<Pending>,
+    pictures: &[Pending],
     plan: impl FnOnce(&mut Board, &Caller, &Value) -> Res<Plan>,
 ) -> Outcome {
     let force = reason(r.options)?;
@@ -89,7 +89,7 @@ pub(super) fn edit_item(
             (id.as_str(), &plan.set),
             (r.options, force.as_deref()),
         )?;
-        keep_all(board, r, (id.as_str(), &who), &pictures)?;
+        keep_all(board, r, (id.as_str(), &who), pictures)?;
         let rev = rev_of(board, "items", &id);
         r.say(&[&said(&plan, &id, (rev.as_str(), pictures.len()))]);
         if let Some(res) = res {

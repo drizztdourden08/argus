@@ -598,6 +598,31 @@ fn a_typed_item_takes_its_text_from_the_registry_rules() {
 }
 
 #[test]
+fn an_untyped_item_takes_its_description_by_the_rich_rule_too() {
+    let mut b = alpha();
+    let lone = "This is a long paragraph without any bullet, written the old way, that goes on and on past the short limit of a single line, and then it keeps going for a while longer.";
+    let refused_new = make(
+        &mut b,
+        &lead(),
+        json!({"title": "Plain", "thread": "ui", "description": lone}),
+    );
+    assert!(refused(&refused_new).contains("lone paragraph"));
+    let id = made(
+        &mut b,
+        &lead(),
+        json!({"title": "Plain", "thread": "ui", "description": "Why
+- first"}),
+    );
+    let res = edit(&mut b, &lead(), &id, json!({"description": lone}));
+    assert!(refused(&res).contains("lone paragraph"));
+    assert_eq!(
+        b["items"][id.as_str()]["description"],
+        "Why
+- first"
+    );
+}
+
+#[test]
 fn a_to_do_has_an_assignee_and_may_be_about_a_test() {
     let mut b = alpha();
     let ok = as_owner(
