@@ -72,6 +72,7 @@ const STATUS_LOOK: Readonly<Record<string, TagLook>> = {
 const HYGIENE_LOOK: Readonly<Record<string, TagLook>> = {
   'in-use': SUCCESS_LOOK,
   released: INFO_LOOK,
+  closing: WARNING_LOOK,
   review: WARNING_LOOK,
 };
 

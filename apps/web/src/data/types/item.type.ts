@@ -23,6 +23,12 @@ interface ItemImage {
   at?: string;
 }
 
+interface ServedBy {
+  builds: number;
+  closed: number;
+  worktrees: number;
+}
+
 interface ItemTyping {
   type?: string;
   parent?: string | null;
@@ -32,6 +38,7 @@ interface ItemTyping {
   blockedBy?: string[];
   blocked?: BlockedCause[];
   images?: ItemImage[];
+  servedBy?: ServedBy;
 }
 
 interface WorkItem {
@@ -50,4 +57,4 @@ interface WorkItem {
   requestedBy?: RequestedBy | RequestedBy[];
 }
 
-export type { BlockedCause, BlockedKind, ItemImage, ItemTyping, WorkItem };
+export type { BlockedCause, BlockedKind, ItemImage, ItemTyping, ServedBy, WorkItem };

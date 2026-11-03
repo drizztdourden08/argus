@@ -10,7 +10,7 @@ cleanAfterEach();
 
 afterEach(() => localStorage.clear());
 
-const retiredToggle = (count: number): HTMLElement => screen.getByText(`Retired (${count})`).closest('summary') as HTMLElement;
+const retiredToggle = (count: number): HTMLElement => screen.getByText(`Closed (${count})`).closest('summary') as HTMLElement;
 
 describe('S1 the usage window of a standalone launcher', { tags: ['standard'] }, () => {
   const stale = () => withDefs([
@@ -36,7 +36,7 @@ describe('S1 retired launchers', { tags: ['standard'] }, () => {
 
   it('remember the choice', async () => {
     await mountBuilds(retiredBoard());
-    await screen.findByText('1 to start · 1 retired');
+    await screen.findByText('1 to start · 1 closed');
     fireEvent.click(retiredToggle(1));
     expect(localStorage.getItem('coord.lcretired')).toBe('1');
     fireEvent.click(retiredToggle(1));
@@ -46,7 +46,7 @@ describe('S1 retired launchers', { tags: ['standard'] }, () => {
   it('open at once when the choice was kept', async () => {
     localStorage.setItem('coord.lcretired', '1');
     await mountBuilds(retiredBoard());
-    await screen.findByText('1 to start · 1 retired');
+    await screen.findByText('1 to start · 1 closed');
     expect((retiredToggle(1).closest('details') as HTMLDetailsElement).open).toBe(true);
   });
 });

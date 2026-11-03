@@ -12,26 +12,26 @@ describe('I-72 P6 the tabs of the pane', { tags: ['standard'] }, () => {
   it('gives a bug the tabs of its registry entry, and nothing about children or cases', async () => {
     await mountKanban({ items: [bug()] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Builds', 'Activity']));
     expect(tabOf(dialog, 'Overview').getAttribute('aria-selected')).toBe('true');
   });
 
   it('gives an epic its Children tab and no Tests tab', async () => {
     await mountKanban({ items: [item('I-1', { type: 'epic', stage: 'open' })] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Children', 'Links', 'Discussion', 'Media', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Children', 'Links', 'Discussion', 'Media', 'Builds', 'Activity']));
   });
 
   it('gives a test plan its Cases and Run tabs', async () => {
     await mountKanban({ items: [item('I-1', { type: 'test-plan', stage: 'draft' })] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Cases', 'Run', 'Links', 'Discussion', 'Media', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Cases', 'Run', 'Links', 'Discussion', 'Media', 'Builds', 'Activity']));
   });
 
   it('reads an item without a type as a task', async () => {
     await mountKanban({ items: [item('I-1')] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Builds', 'Activity']));
   });
 
   it('counts waiting links, open questions with pending to-dos, and failing tests in the tab badges', async () => {

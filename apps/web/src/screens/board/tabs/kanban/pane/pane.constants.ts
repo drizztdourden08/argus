@@ -3,6 +3,7 @@ import { casesBadge } from './model/cases-badge';
 import { childrenBadge } from './model/children-badge';
 import { discussionBadge } from './model/discussion-badge';
 import { linksBadge } from './model/links-badge';
+import { servedBadge } from './model/served-badge';
 import { testsBadge } from './model/tests-badge';
 import type { PaneTab } from './pane.type';
 import { ActivityTab } from './tabs/ActivityTab';
@@ -13,6 +14,7 @@ import { LinksTab } from './tabs/LinksTab';
 import { MediaTab } from './tabs/MediaTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { RunTab } from './tabs/RunTab';
+import { ServedTab } from './tabs/ServedTab';
 import { TestsTab } from './tabs/TestsTab';
 
 const PANE_FALLBACK_TAB = 'overview';
@@ -26,6 +28,7 @@ const PANE_TABS: Readonly<Record<string, PaneTab>> = {
   discussion: { label: 'Discussion', icon: 'message-square', Body: DiscussionTab, badge: discussionBadge },
   tests: { label: 'Tests', icon: 'flask', Body: TestsTab, badge: testsBadge },
   media: { label: 'Media', icon: 'image', Body: MediaTab },
+  builds: { label: 'Builds', icon: 'package', Body: ServedTab, badge: servedBadge },
   activity: { label: 'Activity', icon: 'history', Body: ActivityTab },
 };
 

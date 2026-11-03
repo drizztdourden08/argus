@@ -62,6 +62,7 @@ interface TableRow {
   path: string;
   status: string;
   branch: string;
+  item: string;
   touched: string;
   ahead: number;
   dirty: number;

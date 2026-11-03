@@ -43,6 +43,8 @@ interface LeftoverFacts {
   topEntries?: string[];
 }
 
+type WorktreeLinkSource = 'manual' | 'agent' | 'branch' | 'text';
+
 interface Worktree {
   path: string;
   name?: string | null;
@@ -71,6 +73,9 @@ interface Worktree {
   leftover?: LeftoverFacts | null;
   job?: WorktreeJob | null;
   hygiene?: WorktreeHygiene | null;
+  item?: string | null;
+  linkSource?: WorktreeLinkSource | null;
+  unlinked?: boolean;
   error?: string | null;
 }
 
@@ -219,5 +224,5 @@ interface BatchResult {
 
 export type {
   BackupInfo, BatchJob, BatchResult, LeftoverInput, PortfolioWorktrees, RemovedWorktree, RemoveInput, RemoveResult, Worktree, WorktreeAskInput, WorktreeHygiene,
-  WorktreeJob, WorktreeRequest, WorktreeRule, WorktreesMeta,
+  WorktreeJob, WorktreeLinkSource, WorktreeRequest, WorktreeRule, WorktreesMeta,
 };

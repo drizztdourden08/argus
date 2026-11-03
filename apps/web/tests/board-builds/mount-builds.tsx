@@ -19,6 +19,7 @@ interface Board {
   launches?: Doc[];
   runs?: Doc[];
   builds?: Doc[];
+  items?: Doc[];
 }
 
 const SCOPE = 'rotp';
@@ -41,6 +42,7 @@ const mountBuilds = async (board: Board = {}, respond?: Responder) => {
     feed('launches', board.launches ?? [], 'name');
     feed('runs', board.runs ?? [], 'id');
     feed('builds', board.builds ?? [], 'tag');
+    feed('items', board.items ?? [], 'id');
   });
   const change = (coll: string, id: string, data: object) =>
     act(() => source?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));

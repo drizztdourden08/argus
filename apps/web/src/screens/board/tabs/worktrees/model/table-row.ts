@@ -14,6 +14,7 @@ const tableRow = (row: WorktreeRow): TableRow => ({
   path: row.path,
   status: row.status,
   branch: row.branch ?? '',
+  item: row.item ?? '',
   touched: touchedOf(row),
   ahead: row.ahead ?? 0,
   dirty: row.dirty ?? 0,

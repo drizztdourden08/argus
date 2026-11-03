@@ -4,6 +4,7 @@ import { ActionsCell } from './sub-components/ActionsCell';
 import { AheadCell } from './sub-components/AheadCell';
 import { BranchCell } from './sub-components/BranchCell';
 import { DirtyCell } from './sub-components/DirtyCell';
+import { ItemCell } from './sub-components/ItemCell';
 import { PathCell } from './sub-components/PathCell';
 import { RequestCell } from './sub-components/RequestCell';
 import { StatusCell } from './sub-components/StatusCell';
@@ -15,6 +16,7 @@ const CELLS: Readonly<Record<string, ComponentType<CellProps>>> = {
   path: PathCell,
   status: StatusCell,
   branch: BranchCell,
+  item: ItemCell,
   touched: TouchedCell,
   ahead: AheadCell,
   dirty: DirtyCell,

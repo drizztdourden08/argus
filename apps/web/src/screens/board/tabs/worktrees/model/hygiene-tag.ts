@@ -15,10 +15,19 @@ const releasedTag = (hygiene: WorktreeHygiene): Omit<HygieneTag, 'look'> => {
   };
 };
 
+const closingTag = (hygiene: WorktreeHygiene): Omit<HygieneTag, 'look'> => {
+  const when = hygiene.goesAt ? `at ${clockText(hygiene.goesAt)}` : 'after a short grace';
+  return {
+    text: hygiene.goesAt ? `closing, goes ${clockText(hygiene.goesAt)}` : 'closing',
+    tip: `Its item closed: Argus removes it ${when}, its full backup first, unless the item is reopened or the worktree is linked to another open item.`,
+  };
+};
+
 const hygieneTag = (hygiene: WorktreeHygiene): HygieneTag => {
   const look = HYGIENE_LOOK[hygiene.state] ?? UNKNOWN_STATUS_LOOK;
   const why = hygiene.why ? plainText(hygiene.why) : '';
   if (hygiene.state === 'released') return { ...releasedTag(hygiene), look };
+  if (hygiene.state === 'closing') return { ...closingTag(hygiene), look };
   if (hygiene.state === 'in-use') return { text: 'in use', tip: `In use, so Argus leaves it${why ? `: ${why}` : ''}.`, look };
   if (hygiene.state === 'kept') return { text: 'kept', tip: `The thread keeps it${why ? `: ${why}` : ''}.`, look, edge: 'dashed' };
   return { text: 'review', tip: `Argus does not remove it by itself: ${why || 'the thread decides'}.`, look };

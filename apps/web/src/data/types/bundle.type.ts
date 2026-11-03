@@ -16,6 +16,8 @@ interface Build {
   closeNote?: string | null;
 }
 
+type LauncherStage = 'draft' | 'ready' | 'closed';
+
 interface Launcher {
   name: string;
   cmd: string | null;
@@ -40,6 +42,11 @@ interface Launcher {
   useEveryMs?: number | null;
   lastUsedAt?: string | null;
   keptUntil?: string | null;
+  for?: string | null;
+  master?: boolean;
+  stage?: LauncherStage;
+  retiredByItem?: string | null;
+  relink?: boolean;
 }
 
 interface LaunchDef {
@@ -79,4 +86,4 @@ interface TestItem {
   ac?: { text: string; done: boolean }[];
 }
 
-export type { Build, BundleState, Launcher, LaunchDef, RunDoc, TestItem };
+export type { Build, BundleState, Launcher, LauncherStage, LaunchDef, RunDoc, TestItem };

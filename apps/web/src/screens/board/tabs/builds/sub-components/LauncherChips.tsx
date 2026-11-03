@@ -3,6 +3,7 @@ import { Flex, Tag } from '@drizztdourden08/tessera';
 import { MASTER } from '../builds.constants';
 import type { LauncherPartProps } from '../builds-props.type';
 import { BundleLink } from './BundleLink';
+import { LinkChip } from './LinkChip';
 import { RetiredChip } from './RetiredChip';
 
 const LauncherChips = (props: LauncherPartProps) => {
@@ -13,6 +14,7 @@ const LauncherChips = (props: LauncherPartProps) => {
       {launcher.name === MASTER && <Tag title="The main checkout: every project has one">master</Tag>}
       <Tag title={`Kind: ${launcher.kind ?? 'app'}`}>{launcher.kind ?? 'app'}</Tag>
       {launcher.current && <Tag variant="urgency" color="success" title="The valid one to start now">current</Tag>}
+      <LinkChip view={view} />
       <BundleLink view={view} />
       {view.usage?.stale && <Tag variant="urgency" color="warning" title="Not used within its window: the thread that made it decides to keep it, retire it or change the window">stale</Tag>}
       <RetiredChip view={view} />

@@ -14,7 +14,7 @@ describe('K1 texts of a launcher and a run', { tags: ['critical'] }, () => {
     const views = launcherViews(input({
       launchers: launchers(launcherDoc('master'), standaloneDoc('s', { lastUsedAt: at(30 * DAY) }), launcherDoc('r', { retiredAt: at(DAY) })),
     }));
-    expect(countsText(views)).toBe('2 to start · 1 stale · 1 retired');
+    expect(countsText(views)).toBe('2 to start · 1 stale · 1 closed');
     expect(countsText(launcherViews(input()))).toBe('1 to start');
   });
 

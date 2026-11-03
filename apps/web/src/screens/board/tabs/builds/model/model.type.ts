@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../../../data/react';
 import type { RunEntry } from '../../../../../data/runs';
+import type { ItemRef } from '../../../../../data/kanban';
 import type { Build, LaunchDef, Launcher } from '../../../../../data/types';
 
 type LauncherDoc = WithId<Launcher>;
@@ -40,4 +41,16 @@ interface LauncherViews {
   hasMaster: boolean;
 }
 
-export type { BuildDoc, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };
+interface ItemBuilds {
+  item: ItemRef;
+  views: LauncherView[];
+}
+
+interface BuildGroups {
+  master: LauncherView[];
+  items: ItemBuilds[];
+  needsLink: LauncherView[];
+  closed: LauncherView[];
+}
+
+export type { BuildDoc, BuildGroups, ItemBuilds, LauncherDoc, LauncherUsage, LauncherView, LauncherViews, ViewInput };

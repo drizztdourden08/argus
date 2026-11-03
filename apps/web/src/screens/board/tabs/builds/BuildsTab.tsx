@@ -9,7 +9,7 @@ import { countsText } from './model';
 import { Panel } from '../../../../shell';
 import { RunLogDrawer } from '../../run-terminal';
 import { BuildsLead } from './sub-components/BuildsLead';
-import { LauncherList } from './sub-components/LauncherList';
+import { BuildSections } from './sub-components/BuildSections';
 import { RetiredSection } from './sub-components/RetiredSection';
 
 const BuildsTab = (props: BuildsTabProps) => {
@@ -17,7 +17,7 @@ const BuildsTab = (props: BuildsTabProps) => {
   const data = useBuildsData(boardKey);
   const flag = useRetiredShown();
   const [logId, setLogId] = useState<string | null>(null);
-  const { views, runs } = data;
+  const { views, groups, runs } = data;
   if (!data.ready) return <Text tone="muted">Loading the builds.</Text>;
   const counts = countsText(views);
   return (
@@ -25,9 +25,9 @@ const BuildsTab = (props: BuildsTabProps) => {
       <Panel title="Builds" note={<BuildsLead counts={counts} />}>
         {!views.hasMaster && <Callout tone="danger">{NO_MASTER_TEXT}</Callout>}
         {views.live.length > 0
-          ? <LauncherList views={views.live} label="Launchers" boardKey={boardKey} runs={runs} onLog={setLogId} />
+          ? <BuildSections groups={groups} boardKey={boardKey} runs={runs} onLog={setLogId} />
           : <EmptyState message={EMPTY_TEXT} hint={EMPTY_HINT} />}
-        <RetiredSection views={views.retired} flag={flag} boardKey={boardKey} runs={runs} onLog={setLogId} />
+        <RetiredSection views={groups.closed} flag={flag} boardKey={boardKey} runs={runs} onLog={setLogId} />
       </Panel>
       <RunLogDrawer run={runs.find((run) => run.id === logId) ?? null} boardKey={boardKey} onClose={() => setLogId(null)} />
     </>

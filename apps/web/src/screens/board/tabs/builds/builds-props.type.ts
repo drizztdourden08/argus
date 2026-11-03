@@ -1,8 +1,10 @@
 /* @layer renderer-app @kind types */
+import type { ReactNode } from 'react';
+import type { ItemRef } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
 import type { OpenLog } from '../../run-terminal';
 import type { RetiredFlag } from './builds.type';
-import type { LauncherView } from './model';
+import type { BuildGroups, LauncherView } from './model';
 
 interface BuildsTabProps {
   boardKey: string;
@@ -35,6 +37,26 @@ interface RetiredSectionProps extends OpenLog, RunScope {
   flag: RetiredFlag;
 }
 
+interface BuildGroupProps extends OpenLog, RunScope {
+  id: string;
+  head: ReactNode;
+  views: LauncherView[];
+  label: string;
+}
+
+interface GroupTitleProps {
+  title: string;
+  note: string;
+}
+
+interface ItemHeadProps {
+  item: ItemRef;
+}
+
+interface BuildSectionsProps extends OpenLog, RunScope {
+  groups: BuildGroups;
+}
+
 export type {
-  BuildsLeadProps, BuildsTabProps, LauncherCardProps, LauncherListProps, LauncherPartProps, RetiredSectionProps,
+  BuildGroupProps, BuildsLeadProps, BuildSectionsProps, BuildsTabProps, GroupTitleProps, ItemHeadProps, LauncherCardProps, LauncherListProps, LauncherPartProps, RetiredSectionProps,
 };

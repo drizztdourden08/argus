@@ -25,7 +25,7 @@ const viewOf = (launcher: LauncherDoc, input: ViewInput): LauncherView => {
     usage: launcherUsage(launcher, input.runs, input.now),
     uses: usesOf(launcher, input.builds),
     joined,
-    playable: !retired && joined?.status !== 'draft',
+    playable: !retired && launcher.stage !== 'closed' && joined?.status !== 'draft',
     runs,
     shown: runs.find(isLiveRun) ?? runs[0] ?? null,
   };

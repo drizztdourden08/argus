@@ -12,7 +12,7 @@ const lastUse = (launcher: LauncherDoc, runs: readonly RunEntry[]): number =>
   );
 
 const launcherUsage = (launcher: LauncherDoc, runs: readonly RunEntry[], now: number): LauncherUsage | null => {
-  if (!launcher.standalone || launcher.retiredAt) return null;
+  if (!launcher.standalone || launcher.retiredAt || launcher.for) return null;
   const every = Number(launcher.useEveryMs) || DEFAULT_USE_EVERY_MS;
   const last = lastUse(launcher, runs);
   const held = stamp(launcher.keptUntil) > now;
