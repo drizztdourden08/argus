@@ -139,7 +139,7 @@ mod tests {
     fn the_schema_lists_every_type_collection_and_content_kind_the_code_reads() {
         let schema: Value = serde_json::from_str(super::SCHEMA).unwrap();
         let kinds = &schema["$defs"]["field"]["properties"]["content"]["enum"];
-        assert_eq!(kinds.as_array().unwrap().len(), 9);
+        assert_eq!(kinds.as_array().unwrap().len(), 10);
         let collections = &schema["$defs"]["type"]["properties"]["collection"]["enum"];
         assert_eq!(collections, &json!(["items", "tests"]));
     }

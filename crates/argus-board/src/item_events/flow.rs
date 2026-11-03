@@ -4,9 +4,9 @@
 use serde_json::Value;
 
 use super::people::{closed, gone, holder};
-use super::{EventKind, ItemEvent, Moved, Seen};
+use super::{EventKind, Hearer, ItemEvent, Moved, Seen};
 use crate::Board;
-use crate::blocked::causes;
+use crate::blocked::{Cause, CauseKind, causes};
 use crate::json::{doc, section, text};
 
 /// Does the item name anything that may hold it back? The cheap look that spares the full rule.
@@ -23,7 +23,21 @@ fn names_a_hold(m: &Moved<'_>) -> bool {
     linked || m.seen.asked.contains(m.id)
 }
 
-/// An open item that had a reason to wait and has none now. The detail lists the ids that settled.
+/// Did the owner's answer to this ask already wake the hearer? The `owner-answer` wake goes to the thread
+/// that asked, so an answered question of that thread needs no `item-unblocked` wake on top of it.
+fn told_by_answer(after: &Board, cause: &Cause, to: &Hearer) -> bool {
+    let Hearer::Thread(thread) = to else {
+        return false;
+    };
+    cause.kind == CauseKind::Ask
+        && doc(after, "entries", &cause.id).is_some_and(|ask| {
+            let asker = text(ask, "thread").or_else(|| text(ask, "author"));
+            text(ask, "status") == Some("answered") && asker == Some(thread.as_str())
+        })
+}
+
+/// An open item that had a reason to wait and has none now. The detail lists the ids that settled. No
+/// event when every one of them is an ask the owner answered to the hearer's own thread.
 pub(super) fn unblocked(m: &Moved<'_>) -> Vec<ItemEvent> {
     let (Some(to), false) = (holder(m.now), closed(m.now)) else {
         return Vec::new();
@@ -33,6 +47,9 @@ pub(super) fn unblocked(m: &Moved<'_>) -> Vec<ItemEvent> {
     }
     let held = causes(m.seen.before, m.id);
     if held.is_empty() || !causes(m.seen.after, m.id).is_empty() {
+        return Vec::new();
+    }
+    if held.iter().all(|c| told_by_answer(m.seen.after, c, &to)) {
         return Vec::new();
     }
     let ids: Vec<&str> = held.iter().map(|c| c.id.as_str()).collect();
