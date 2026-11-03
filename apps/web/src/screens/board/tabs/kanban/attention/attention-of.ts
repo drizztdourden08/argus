@@ -1,28 +1,24 @@
 /* @layer renderer-app @kind logic */
-import { isWaiting } from '../../../../../data/deps';
-import { depLinks } from '../model/dep-links';
+import { askIds } from './ask-ids';
 import { ATTENTION } from './attention.constants';
 import type { AttentionFacts, AttentionKind } from './attention.type';
+import { dependencyCauses } from './dependency-causes';
+import { lockCauses } from './lock-causes';
 
-const hasAsk = (facts: AttentionFacts, kind: 'question' | 'decision'): boolean => facts.asks.some((link) => link.kind === kind);
-
-const hasDependency = (facts: AttentionFacts): boolean =>
-  depLinks(facts.item).some((link) => link.state === 'blocked' || (link.side === 'waits' && isWaiting(link.state)));
-
-const isExternalBlock = (facts: AttentionFacts): boolean =>
-  Boolean(facts.item.blocker?.trim()) && !facts.asks.some((link) => link.via === 'blocker');
-
-const appliesOf = (facts: AttentionFacts): Record<AttentionKind, boolean> => ({
-  question: hasAsk(facts, 'question'),
-  todo: (facts.needs?.todos ?? 0) > 0,
-  'test-failing': facts.signals.failing > 0,
-  dependency: hasDependency(facts),
-  blocked: isExternalBlock(facts),
-  'test-pending': facts.signals.pending > 0,
-  decision: hasAsk(facts, 'decision'),
-  quiet: facts.quietMs !== null,
-  agent: facts.signals.agents > 0,
-});
+const appliesOf = (facts: AttentionFacts): Record<AttentionKind, boolean> => {
+  const { item, asks } = facts;
+  return {
+    question: askIds(item, asks, 'question').length > 0,
+    todo: (facts.needs?.todos ?? 0) > 0,
+    'test-failing': facts.signals.failing > 0,
+    dependency: dependencyCauses(item).length > 0,
+    blocked: lockCauses(item, asks).length > 0,
+    'test-pending': facts.signals.pending > 0,
+    decision: askIds(item, asks, 'decision').length > 0,
+    quiet: facts.quietMs !== null,
+    agent: facts.signals.agents > 0,
+  };
+};
 
 const attentionOf = (facts: AttentionFacts): AttentionKind[] => {
   const applies = appliesOf(facts);

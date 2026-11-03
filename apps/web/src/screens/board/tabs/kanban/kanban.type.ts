@@ -8,7 +8,7 @@ import type { NoteKind } from '../../owner-posts';
 import type { OpNotice } from '../../shared';
 import type { Signals } from './attention';
 import type { TrashPanel } from './trash-props.type';
-import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs } from './model';
+import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, TrailInfo } from './model';
 import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
 interface AgentDoc extends TrashSource {
@@ -28,6 +28,7 @@ interface KanbanData {
   needs: ReadonlyMap<string, Needs>;
   asks: ReadonlyMap<string, AskLink[]>;
   signals: ReadonlyMap<string, Signals>;
+  trails: ReadonlyMap<string, TrailInfo>;
 }
 
 interface KanbanState {
@@ -137,6 +138,8 @@ interface NoticeOps {
 }
 
 interface Selection {
+  active: boolean;
+  setActive: (active: boolean) => void;
   has: (id: string) => boolean;
   toggle: (id: string, order: readonly string[]) => void;
   mark: (shift: boolean) => void;

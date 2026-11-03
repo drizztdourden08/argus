@@ -63,6 +63,7 @@ mod route;
 mod runs_cli;
 mod runs_cli_run;
 mod runs_cli_server;
+mod test_plans;
 mod thread_diff;
 mod thread_diff_records;
 mod thread_verbs;

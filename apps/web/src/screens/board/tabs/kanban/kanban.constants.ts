@@ -7,9 +7,6 @@ const NOW_TICK_MS = 60_000;
 
 const ANY_STATUS = 'any';
 
-const ANY_SUBJECT = 'any';
-
-
 const BOARD_LABEL = 'Work items';
 
 const EMPTY_COLUMN_STRINGS: TesseraOverrides = { strings: { kanbanBoard: { empty: 'none' } } };
@@ -57,6 +54,8 @@ const NOTE_WORD: Record<NoteKind, string> = { decision: 'decision', followup: 'n
 
 const ORDER_HINT = 'Switch the order to Manual to reorder.';
 
+const GROUP_HINT = 'Group by Status or Thread to move a card across columns.';
+
 const DONE_TIP = 'The done and dropped items are hidden until you open them. A status filter on Done or Dropped shows them too.';
 
-export { DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, ANY_SUBJECT, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
+export { DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, KANBAN_HASH, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, ANY_STATUS, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };

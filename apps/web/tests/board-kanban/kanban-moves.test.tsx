@@ -64,20 +64,13 @@ describe('S1 moving a card in another order or grouping', { tags: ['standard'] }
     expect(await screen.findByText('Reassigned I-1 to other.')).toBeTruthy();
   });
 
-  it('sets the subject with an edit when the board is grouped by subject', async () => {
-    localStorage.setItem('coord.g.items', 'subject');
-    const { posted } = await mountKanban({ items: [item('I-1'), item('I-2', { subject: 'ui' })] });
+  it('tells to group by status or thread instead of moving a card across assignee columns', async () => {
+    localStorage.setItem('coord.g.items', 'assignee');
+    const { posted } = await mountKanban({ items: [item('I-1'), item('I-2', { assignee: 'owner' })] });
     await screen.findByText('Item I-1');
-    key('I-1', 'ArrowRight');
-    await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({
-      kind: 'edit',
-      target: { c: 'items', id: 'I-1' },
-      set: { subject: 'ui' },
-      prev: { subject: 'general' },
-      baseRev: 3,
-    });
-    expect(await screen.findByText('Subject of I-1 is now ui.')).toBeTruthy();
+    key('I-1', 'ArrowLeft');
+    expect(await screen.findByText('Group by Status or Thread to move a card across columns.')).toBeTruthy();
+    expect(posted).toHaveLength(0);
   });
 });
 

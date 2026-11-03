@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { Entry } from '../../src/data/kanban';
-import { askLinks, askTag } from '../../src/screens/board/tabs/kanban/model';
+import { askLinks } from '../../src/screens/board/tabs/kanban/model';
 import { before, entryRef, itemRef } from './kanban-docs';
 
 const decision = (id: string, extra: Partial<Entry> = {}) => entryRef(id, { kind: 'decision', status: 'pending', ...extra });
@@ -44,10 +44,5 @@ describe('I-68 the questions and decisions that wait on an item', { tags: ['crit
     expect(links.get('I-1')).toBeUndefined();
     expect(links.get('I-2')).toBeUndefined();
     expect(links.get('I-3')).toBeUndefined();
-  });
-
-  it('words a question as waiting on it and a decision as to pick up', () => {
-    expect(askTag({ id: 'Q-4', kind: 'question', via: 'item' })).toMatchObject({ label: 'waiting on Q-4', color: 'danger', icon: 'circle-help' });
-    expect(askTag({ id: 'D-2', kind: 'decision', via: 'blocker' })).toMatchObject({ label: 'D-2 to pick up', color: 'info', icon: 'split' });
   });
 });

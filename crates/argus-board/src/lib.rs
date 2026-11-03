@@ -23,6 +23,7 @@ pub mod results;
 pub mod store;
 pub mod sync;
 pub mod text;
+pub mod trail;
 
 pub use error::BoardError;
 

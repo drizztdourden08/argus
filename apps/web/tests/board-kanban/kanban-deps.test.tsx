@@ -11,34 +11,32 @@ const waitsOn = (extra: Record<string, unknown> = {}) => ({
 
 const requestedBy = { dep: 'D-5', project: 'archipelia', item: 'I-7', thread: 'T-2', title: 'Save the game', state: 'open' };
 
-const titleOf = (text: string): string | null => screen.getByText(text).closest('[title]')?.getAttribute('title') ?? null;
+describe('S1 the dependency chip on the cards', { tags: ['standard'] }, () => {
+  const cause = (n: number, extra: Record<string, unknown> = {}) => ({ kind: 'dep-waits', id: `D-${n}`, label: `Request number ${n}`, who: 'lead:rotp', ...extra });
 
-describe('S1 the dependency tags on the cards', { tags: ['standard'] }, () => {
-  it('shows one tag per state and side, with the other title and the age as the tooltip', async () => {
+  it('shows one chip with a count for the requests that still wait, the titles in the tooltip', async () => {
     await mountKanban({
       items: [
-        item('I-1', { waitsOn: waitsOn() }),
-        item('I-2', { waitsOn: waitsOn({ state: 'blocked', reason: 'needs the schema' }) }),
-        item('I-3', { waitsOn: waitsOn({ state: 'done' }) }),
-        item('I-4', { requestedBy }),
-        item('I-5', { waitsOn: waitsOn({ state: 'cancelled' }) }),
+        item('I-1', { waitsOn: waitsOn(), blocked: [cause(4), cause(5), cause(6)] }),
+        item('I-2', { waitsOn: waitsOn({ state: 'blocked', reason: 'needs the schema' }), blocked: [{ kind: 'dep-blocked', id: 'D-5', label: 'Save the game', who: 'lead:archipelia' }] }),
       ],
     });
     const board = within(await boardOf());
-    expect(board.getByText('waiting on rotp/I-12')).toBeTruthy();
-    expect(board.getByText('rotp/I-12 blocked')).toBeTruthy();
-    expect(board.getByText('rotp/I-12 done')).toBeTruthy();
-    expect(board.getByText('for archipelia/I-7')).toBeTruthy();
-    expect(board.getByText('request cancelled')).toBeTruthy();
-    expect(titleOf('waiting on rotp/I-12')).toBe('Expose the save hook. 2h ago');
-    expect(titleOf('rotp/I-12 blocked')).toBe('Expose the save hook. Reason: needs the schema. 2h ago');
-    expect(titleOf('for archipelia/I-7')).toMatch(/^Save the game\./);
+    const three = board.getByTitle('waiting on rotp: Request number 4; waiting on rotp: Request number 5; waiting on rotp: Request number 6');
+    expect(three.textContent).toBe('3');
+    expect(board.getByTitle('request D-5 of archipelia is blocked: Save the game').textContent).toBe('1');
   });
 
-  it('shows no dependency tag on an item with no dependency', async () => {
-    await mountKanban({ items: [item('I-1')] });
-    await screen.findByText('Item I-1');
-    expect(screen.queryByText(/waiting on|request cancelled|^for /)).toBeNull();
+  it('never shows a settled, cancelled or plain request, which the board does not export as blocking', async () => {
+    await mountKanban({
+      items: [
+        item('I-3', { waitsOn: waitsOn({ state: 'done' }), blocked: [] }),
+        item('I-4', { requestedBy, blocked: [] }),
+        item('I-5', { waitsOn: waitsOn({ state: 'cancelled' }), blocked: [] }),
+      ],
+    });
+    await screen.findByText('Item I-3');
+    expect(screen.queryByTitle(/waiting on|is blocked/)).toBeNull();
   });
 });
 

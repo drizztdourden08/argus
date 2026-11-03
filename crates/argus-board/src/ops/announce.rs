@@ -57,8 +57,9 @@ pub(crate) fn announce(
         .collect()
 }
 
-/// A thread needs the human exactly while it has a pending action that is neither archived nor
-/// in the trash.
+/// A thread needs the human exactly while it has a pending action for the owner that is neither
+/// archived nor in the trash. A to-do assigned to a thread or a lead waits for them, not for the
+/// human.
 pub fn refresh_needs_human(board: &mut Board, thread: &str) {
     if doc(board, "threads", thread).is_none() {
         return;
@@ -68,6 +69,7 @@ pub fn refresh_needs_human(board: &mut Board, thread: &str) {
             && a["status"] == "pending"
             && !truthy(a, "deletedAt")
             && !truthy(a, "archivedAt")
+            && matches!(a["assignee"].as_str(), None | Some("owner"))
     })
     .is_empty();
     let Some(t) = doc_mut(board, "threads", thread) else {

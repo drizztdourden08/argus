@@ -48,6 +48,7 @@ const VERBS: [(&str, &str); 40] = [
     ("decide", "entry"),
     ("notify", "entry"),
     ("message", "entry"),
+    ("note", "entry"),
     ("answer", "entry"),
     ("entry", "entry"),
     ("lock", "lock"),

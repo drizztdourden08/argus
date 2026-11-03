@@ -6,7 +6,7 @@ import { GROUP_OPTIONS, ORDER_OPTIONS, countsText } from '../model';
 import type { ItemGroup, ItemOrder } from '../model';
 
 const ViewRow = (props: ViewRowProps) => {
-  const { state, view } = props;
+  const { state, view, selection } = props;
   const { prefs, setGroup, setOrder, setShowDone } = state;
   return (
     <Flex gap="md" align="center" wrap>
@@ -21,6 +21,7 @@ const ViewRow = (props: ViewRowProps) => {
       <Button size="sm" variant="ghost" title={DONE_TIP} aria-pressed={prefs.showDone} onClick={() => setShowDone(!prefs.showDone)}>
         {`${prefs.showDone ? 'Hide' : 'Show'} done (${view.closed})`}
       </Button>
+      <Button size="sm" variant="ghost" aria-pressed={selection.active} onClick={() => selection.setActive(!selection.active)}>Select</Button>
       <Spacer />
       <Text variant="caption" tone="muted" aria-live="polite">{countsText(view)}</Text>
     </Flex>

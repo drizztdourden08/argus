@@ -8,7 +8,7 @@ use argus_board::store::stamp;
 use argus_core::clock::now_iso;
 use serde_json::Value;
 
-use super::{DECISION_OPTIONS, prefix_of};
+use super::{DECISION_OPTIONS, note, prefix_of};
 use crate::cli::{Outcome, Val};
 use crate::verbs::work::crud::{find_live, is_coordinator, who_of};
 use crate::verbs::work::run::{Res, Run, bad};
@@ -35,6 +35,11 @@ pub(super) fn set_text(r: &mut Run<'_>) -> Outcome {
             return Err(bad(format!("{id} is not a text entry.")));
         }
         authorize(&who_of(&who), &Check::new("set", "entries", Some(&e)))?;
+        if kind == "note" {
+            note::reword(board, &who, &id, (&r.arg_json(1), r.options))?;
+            r.say(&[&format!("{id}: reworded.")]);
+            return Ok(());
+        }
         let open = matches!(e["status"].as_str(), Some("open" | "pending"));
         if !is_coordinator(&who) && !open {
             return Err(bad(format!(
