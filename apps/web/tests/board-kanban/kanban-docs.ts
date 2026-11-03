@@ -2,6 +2,7 @@
 import type { Entry, ItemRef, ThreadChoice } from '../../src/data/kanban';
 import type { WithId } from '../../src/data/react';
 import type { OpNotice } from '../../src/screens/board/shared';
+import type { Signals } from '../../src/screens/board/tabs/kanban/attention';
 import type { AskLink, KanbanFilters, KanbanPrefs, Needs } from '../../src/screens/board/tabs/kanban/model';
 import { DEFAULT_FILTERS, buildView } from '../../src/screens/board/tabs/kanban/model';
 
@@ -58,6 +59,7 @@ interface Setup {
   prefs?: Partial<KanbanPrefs>;
   needs?: ReadonlyMap<string, Needs>;
   asks?: ReadonlyMap<string, AskLink[]>;
+  signals?: ReadonlyMap<string, Signals>;
   notices?: OpNotice[];
   threads?: WithId<ThreadChoice>[];
   paused?: string[];
@@ -71,6 +73,7 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
     threads: setup.threads ?? [threadRef('worker')],
     needs: setup.needs ?? noNeeds,
     asks: setup.asks ?? new Map(),
+    signals: setup.signals ?? new Map(),
     notices: setup.notices ?? [],
     filters: filters(setup.filters),
     prefs: prefs(setup.prefs),
