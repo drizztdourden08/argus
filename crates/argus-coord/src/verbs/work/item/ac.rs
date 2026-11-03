@@ -177,7 +177,7 @@ pub(super) fn ac_done(r: &mut Run<'_>) -> Outcome {
     let words = r.args.clone();
     run(
         r,
-        words.first().cloned(),
+        words.first().map(String::as_str),
         "done",
         words.get(1..2).unwrap_or_default(),
     )
@@ -188,7 +188,7 @@ pub(super) fn ac_rm(r: &mut Run<'_>) -> Outcome {
     let words = r.args.clone();
     run(
         r,
-        words.first().cloned(),
+        words.first().map(String::as_str),
         "rm",
         words.get(1..2).unwrap_or_default(),
     )
