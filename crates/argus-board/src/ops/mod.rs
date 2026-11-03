@@ -22,6 +22,7 @@ mod move_;
 mod plan;
 mod plan_run;
 mod pr;
+mod prelude;
 mod purge;
 mod restore;
 mod result;
@@ -51,6 +52,21 @@ pub use result::{Notice, OpResult, Status};
 pub use target::{record_arg, record_thread};
 pub use typed::create_note;
 pub use who::{Role, Who};
+pub use worktree::forget_old_keeps;
+
+/// One op handler.
+type Handler = fn(&mut Board, &Value, &Who) -> Result<OpResult, BoardError>;
+
+/// Runs a handler of the owner's hand-over ops once `who` may hand over to the threads.
+fn handed(
+    board: &mut Board,
+    op: &Value,
+    who: &Who,
+    handler: Handler,
+) -> Result<OpResult, BoardError> {
+    authorize::authorize(who, &authorize::Check::new("hand", "threads", None))?;
+    handler(board, op, who)
+}
 
 fn dispatch(
     board: &mut Board,
@@ -66,12 +82,12 @@ fn dispatch(
         "archive" | "unarchive" | "delete" | "restore" => soft::handle(board, op, who),
         "bulk" => bulk::handle(board, op, who, home),
         "purge" => purge::handle(board, op, who, home),
-        "build" => build::handle(board, op, who),
+        "build" => handed(board, op, who, build::handle),
         "avatar" => avatar::handle(board, op, who),
-        "worktree-link" => worktree::handle_link(board, op, who),
-        "worktree-keep" => worktree::handle_keep(board, op, who),
-        "launcher-link" => launcher::handle_link(board, op, who),
-        "launcher-retire" => launcher::handle_retire(board, op, who),
+        "worktree-link" => handed(board, op, who, worktree::handle_link),
+        "worktree-keep" => handed(board, op, who, worktree::handle_keep),
+        "launcher-link" => handed(board, op, who, launcher::handle_link),
+        "launcher-retire" => handed(board, op, who, launcher::handle_retire),
         kind if plan_run::is_kind(kind) => plan_run::handle(board, op, who),
         kind if pr::is_pr_kind(kind) => pr::handle(board, op, who),
         _ => return None,

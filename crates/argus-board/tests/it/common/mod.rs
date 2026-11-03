@@ -5,7 +5,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use argus_board::Board;
-use argus_board::ops::{OpResult, Role, Status, Who};
+use argus_board::ops::{OpResult, Role, Status, Who, apply_op};
 use argus_board::store::empty_board;
 use argus_board::sync::{ImportResult, export_docs, import_entries};
 use argus_core::Coll;
@@ -64,4 +64,26 @@ pub fn applied(res: &OpResult) {
 pub fn refused(res: &OpResult) -> String {
     assert_eq!(res.status, Status::Refused, "{}", res.outcome);
     res.outcome.clone()
+}
+
+/// A live `app` build named `name` that serves the item `serves` (`None` for none).
+pub fn launcher(name: &str, serves: Option<&str>) -> Value {
+    json!({
+        "name": name, "title": name, "cmd": "node run.js", "cwd": ".", "kind": "app",
+        "current": true, "retiredAt": null, "retiredBy": null, "retireNote": null,
+        "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z",
+        "for": serves,
+    })
+}
+
+/// A story of the `ui` thread created by `who`; answers its id.
+pub fn story_by(board: &mut Value, who: &Who) -> String {
+    let op = json!({"kind": "create", "target": {"c": "items"},
+        "set": {"title": "Lobby", "thread": "ui", "type": "story"}});
+    let res = apply_op(board, &op, who, None);
+    applied(&res);
+    res.extra["created"]["id"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
 }

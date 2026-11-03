@@ -3,28 +3,12 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, applied, post, refused};
+use crate::common::{alpha, applied, launcher, post, refused, story_by};
 use argus_board::ops::{OpResult, Who, apply_op};
 use serde_json::{Value, json};
 
-fn launcher(name: &str, serves: Option<&str>) -> Value {
-    json!({
-        "name": name, "title": name, "cmd": "node run.js", "cwd": ".", "kind": "app",
-        "current": true, "retiredAt": null, "retiredBy": null, "retireNote": null,
-        "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-01T00:00:00.000Z",
-        "for": serves,
-    })
-}
-
 fn story(b: &mut Value) -> String {
-    let op = json!({"kind": "create", "target": {"c": "items"},
-        "set": {"title": "Lobby", "thread": "ui", "type": "story"}});
-    let res = apply_op(b, &op, &Who::human(), None);
-    applied(&res);
-    res.extra["created"]["id"]
-        .as_str()
-        .unwrap_or_default()
-        .to_owned()
+    story_by(b, &Who::human())
 }
 
 fn on(b: &mut Value, kind: &str, (coll, id): (&str, &str), set: &Value) -> OpResult {

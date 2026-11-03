@@ -1,5 +1,6 @@
 //! The list and get tools over threads, items, tests and entries.
 
+use argus_core::op_kinds::is_op_kind;
 use serde_json::{Map, Value, json};
 
 use crate::args::{arg_str, arg_u64, flag};
@@ -9,30 +10,8 @@ use crate::json::{items, nn, pick, text, truthy};
 use crate::project::{clip, need, sorted_docs, visible};
 use crate::summary::item_row;
 
-const OP_KINDS: [&str; 19] = [
-    "create",
-    "edit",
-    "move",
-    "ac",
-    "archive",
-    "unarchive",
-    "delete",
-    "restore",
-    "bulk",
-    "purge",
-    "build",
-    "avatar",
-    "worktree-link",
-    "worktree-keep",
-    "launcher-link",
-    "launcher-retire",
-    "plan-run-start",
-    "plan-run-record",
-    "plan-run-end",
-];
-
 fn is_op(entry: &Value) -> bool {
-    text(entry, "kind").is_some_and(|k| OP_KINDS.contains(&k))
+    text(entry, "kind").is_some_and(is_op_kind)
 }
 
 fn is_text(doc: &Value, key: &str, wanted: &str) -> bool {

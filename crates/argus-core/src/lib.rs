@@ -21,6 +21,7 @@ pub mod json_text;
 pub mod launch;
 pub mod log;
 pub mod names;
+pub mod op_kinds;
 pub mod page_url;
 pub mod paths;
 pub mod preview_mark;

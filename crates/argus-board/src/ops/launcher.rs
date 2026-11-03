@@ -6,12 +6,7 @@
 use argus_core::clock::now_iso;
 use serde_json::Value;
 
-use super::announce::audit;
-use super::authorize::{Check, authorize};
-use super::result::OpResult;
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
+use super::prelude::*;
 use crate::json::{doc, doc_mut, map_mut, set, text, truthy, unset};
 use crate::limits::require_text_max;
 use crate::served::{check_for, check_not_last_master, for_of, is_master};
@@ -71,7 +66,6 @@ pub(crate) fn handle_link(
     op: &Value,
     who: &Who,
 ) -> Result<OpResult, BoardError> {
-    authorize(who, &Check::new("hand", "threads", None))?;
     let (name, rec) = build_of(board, op)?;
     if asks_unlink(op) {
         return unlink(board, who, &name);
@@ -112,7 +106,6 @@ pub(crate) fn handle_retire(
     op: &Value,
     who: &Who,
 ) -> Result<OpResult, BoardError> {
-    authorize(who, &Check::new("hand", "threads", None))?;
     let (name, rec) = build_of(board, op)?;
     if truthy(rec, "retiredAt") {
         return Ok(OpResult::applied(format!("{name} is already retired")));

@@ -14,6 +14,7 @@ mod replies;
 
 use argus_core::Coll;
 
+pub use argus_core::op_kinds::OP_KINDS;
 pub use export::export_docs;
 pub use import::{ImportResult, OpCounts, import_entries, import_entries_at};
 
@@ -37,30 +38,6 @@ pub const REPLY_KINDS: [&str; 8] = [
     "pause", "resume", "followup", "decision", "ack", "done", "result", "rerun",
 ];
 
-/// The owner's edits, moves, archives, deletes and purges: each is an entry carrying its own
-/// target and fields.
-pub const OP_KINDS: [&str; 19] = [
-    "create",
-    "edit",
-    "move",
-    "ac",
-    "archive",
-    "unarchive",
-    "delete",
-    "restore",
-    "bulk",
-    "purge",
-    "build",
-    "avatar",
-    "worktree-link",
-    "worktree-keep",
-    "launcher-link",
-    "launcher-retire",
-    "plan-run-start",
-    "plan-run-record",
-    "plan-run-end",
-];
-
 /// Whether an entry kind is a reply kind.
 #[must_use]
 pub fn is_reply_kind(kind: &str) -> bool {
@@ -70,5 +47,5 @@ pub fn is_reply_kind(kind: &str) -> bool {
 /// Whether an entry kind is an op kind.
 #[must_use]
 pub fn is_op_kind(kind: &str) -> bool {
-    OP_KINDS.contains(&kind)
+    argus_core::op_kinds::is_op_kind(kind)
 }

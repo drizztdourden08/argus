@@ -5,12 +5,7 @@
 use argus_core::clock::{iso_from_ms, now_iso, parse_ms};
 use serde_json::{Value, json};
 
-use super::announce::audit;
-use super::authorize::{Check, authorize};
-use super::result::OpResult;
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
+use super::prelude::*;
 use crate::json::{doc, map_mut, nullish, text};
 use crate::limits::require_text_max;
 use crate::served::closure;
@@ -69,7 +64,6 @@ pub(crate) fn handle_link(
     op: &Value,
     who: &Who,
 ) -> Result<OpResult, BoardError> {
-    authorize(who, &Check::new("hand", "threads", None))?;
     let id = worktree_of(op)?;
     let wanted = &op["set"]["item"];
     if wanted.is_null() {
@@ -100,7 +94,7 @@ fn days_of(set: &Value) -> Result<i64, BoardError> {
 }
 
 /// Forgets the keeps that ended more than 30 days ago.
-fn forget_old(board: &mut Board, now_ms: i64) {
+pub fn forget_old_keeps(board: &mut Board, now_ms: i64) {
     let keeps = map_mut(board, KEEPS);
     let old: Vec<String> = keeps
         .iter()
@@ -132,11 +126,10 @@ pub(crate) fn handle_keep(
     op: &Value,
     who: &Who,
 ) -> Result<OpResult, BoardError> {
-    authorize(who, &Check::new("hand", "threads", None))?;
     let id = worktree_of(op)?;
     let at = now_iso();
     let now_ms = parse_ms(&at).unwrap_or_default();
-    forget_old(board, now_ms);
+    forget_old_keeps(board, now_ms);
     let set = &op["set"];
     if set["clear"] == true {
         return clear_keep(board, who, &id);

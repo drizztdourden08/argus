@@ -4,12 +4,7 @@
 use argus_core::clock::now_iso;
 use serde_json::{Value, json};
 
-use super::announce::audit;
-use super::authorize::{Check, authorize};
-use super::result::OpResult;
-use super::who::Who;
-use crate::Board;
-use crate::error::{BoardError, refuse};
+use super::prelude::*;
 use crate::json::{doc, doc_mut, map_mut, nullish, set, truthy};
 use crate::launchers::bundle_status;
 use crate::limits::require_text;
@@ -53,7 +48,6 @@ fn record(board: &mut Board, who: &Who, tag: Option<&str>, was: Option<&str>) {
 
 /// Hand a build tag to the owner, or take it back with `null`.
 pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResult, BoardError> {
-    authorize(who, &Check::new("hand", "threads", None))?;
     let handed = &op["handed"];
     if !handed.is_null() && !handed.is_string() {
         return Err(refuse("handed must be a build tag or null."));

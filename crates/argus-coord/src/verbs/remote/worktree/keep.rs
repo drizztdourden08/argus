@@ -4,6 +4,7 @@
 use argus_board::Board;
 use argus_board::json::map_mut;
 use argus_board::limits::require_text_max;
+use argus_board::ops::forget_old_keeps;
 use argus_core::clock::{iso_from_ms, now_iso, parse_ms};
 use argus_core::js;
 use serde_json::{Value, json};
@@ -30,21 +31,6 @@ struct Keep {
     clear: bool,
 }
 
-/// Forgets the keeps that ended more than 30 days ago.
-fn forget_old(board: &mut Board, now_ms: i64) {
-    let keeps = map_mut(board, "worktreeKeeps");
-    let old: Vec<String> = keeps
-        .iter()
-        .filter(|(_, k)| {
-            parse_ms(&cell(k.get("until"))).is_some_and(|until| until < now_ms - 30 * DAY_MS)
-        })
-        .map(|(id, _)| id.clone())
-        .collect();
-    for id in old {
-        keeps.shift_remove(&id);
-    }
-}
-
 fn days_of(text: Option<&str>) -> Result<i64, CoordError> {
     let Some(text) = text else {
         return Ok(DEFAULT_KEEP_DAYS);
@@ -63,7 +49,7 @@ fn keep_worktree(
     let (id, path) = target_of(&keep.target)?;
     let at = now_iso();
     let now_ms = parse_ms(&at).unwrap_or_default();
-    forget_old(board, now_ms);
+    forget_old_keeps(board, now_ms);
     if keep.clear {
         if map_mut(board, "worktreeKeeps").shift_remove(&id).is_none() {
             return Err(CoordError::refuse(format!("worktree {id} is not kept.")));
