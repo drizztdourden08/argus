@@ -11,6 +11,7 @@ mod edit;
 mod fields;
 mod filters;
 mod force;
+mod images;
 mod marks;
 mod migrate;
 mod read;

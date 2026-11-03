@@ -15,6 +15,7 @@ use serde_json::{Map, Value, json};
 use super::STATUSES;
 use super::edit::warnings;
 use super::force::{attach, reason};
+use super::images::{keep_all, picked};
 use super::typed;
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{
@@ -155,6 +156,7 @@ fn file_at(options: &Options, board: &mut Board, who: &Caller, id: &str) -> Res<
 /// `coord item add`.
 pub(super) fn add(r: &mut Run<'_>) -> Outcome {
     let draft = draft_of(r)?;
+    let pictures = picked(r, 1)?;
     r.write(|board, r| {
         let who = r.begin(board)?;
         let owner = owner_arg(board, &who, r.options)?;
@@ -166,6 +168,7 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
             let (id, res) = typed_item(board, &who, (owner.as_str(), r.options), draft)?;
             (id, Some(res))
         };
+        keep_all(board, r, (id.as_str(), &who), &pictures)?;
         file_at(r.options, board, &who, &id)?;
         let made = find_doc(board, "items", Some(&id))?;
         let count = made["ac"].as_array().map_or(0, Vec::len);

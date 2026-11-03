@@ -362,3 +362,72 @@ fn types_lists_the_registry_and_describes_one_type() {
         none.err
     );
 }
+
+const PNG: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
+
+fn with_picture(work: &Work, name: &str, bytes: &[u8]) {
+    std::fs::write(work.cwd.join(name), bytes).expect("picture");
+}
+
+fn pictures(work: &Work, id: &str) -> usize {
+    item(work, id)["images"].as_array().map_or(0, Vec::len)
+}
+
+#[test]
+fn add_and_set_keep_a_picture_with_its_caption_and_keep_the_same_bytes_once() {
+    let work = Work::new();
+    with_picture(&work, "shot.png", &PNG);
+    let said = work.worker_ok(&[
+        "item",
+        "add",
+        "With picture",
+        "--image",
+        "shot.png",
+        "The form",
+    ]);
+    assert_eq!(said, "I-2: With picture (worker, 0 AC)\n");
+    assert_eq!(pictures(&work, "I-2"), 1);
+    assert_eq!(item(&work, "I-2")["images"][0]["caption"], "The form");
+    let file = work.home.coord_home().join("alpha/proofs/I-2-1.png");
+    assert!(file.is_file(), "{}", file.display());
+    let again = work.worker_ok(&["item", "set", "I-2", "--image", "shot.png", "Again"]);
+    assert!(again.starts_with("I-2: images updated (rev "), "{again}");
+    assert_eq!(pictures(&work, "I-2"), 1);
+    with_picture(&work, "other.png", &[0x89, b'P', b'N', b'G', 1]);
+    work.worker_ok(&[
+        "item",
+        "set",
+        "I-2",
+        "--title",
+        "Renamed",
+        "--image",
+        "other.png",
+        "Two",
+    ]);
+    assert_eq!(pictures(&work, "I-2"), 2);
+}
+
+#[test]
+fn a_picture_needs_a_caption_a_file_and_a_known_kind() {
+    let work = Work::new();
+    with_picture(&work, "shot.png", &PNG);
+    with_picture(&work, "notes.txt", b"text");
+    let no_caption = work.worker(&["item", "add", "Pic", "--image", "shot.png"]);
+    assert_eq!(no_caption.code, 1);
+    assert!(
+        no_caption.err.contains("each image needs a caption"),
+        "{}",
+        no_caption.err
+    );
+    let missing = work.worker(&["item", "add", "Pic", "--image", "gone.png", "Gone"]);
+    assert!(missing.err.contains("no image at"), "{}", missing.err);
+    let text = work.worker(&["item", "set", "I-1", "--image", "notes.txt", "Notes"]);
+    assert_eq!(text.code, 1);
+    assert_eq!(pictures(&work, "I-1"), 0);
+    assert_eq!(
+        work.board()["items"]
+            .as_object()
+            .map_or(0, serde_json::Map::len),
+        1
+    );
+}

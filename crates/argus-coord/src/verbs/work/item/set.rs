@@ -9,6 +9,7 @@ use serde_json::{Map, Value, json};
 
 use super::add::check_status;
 use super::edit::{Say, edit_item, fixed};
+use super::images::{Pending, picked};
 use super::{STATUSES, typed};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{find_doc, move_doc, move_target};
@@ -46,7 +47,11 @@ fn place_of(given: &Value) -> Res<(&'static str, Value)> {
     check_status(given).map(|lane| ("status", json!(lane)))
 }
 
-fn fields_of(r: &Run<'_>, place: Option<(&str, Value)>) -> Res<Map<String, Value>> {
+fn fields_of(
+    r: &Run<'_>,
+    place: Option<(&str, Value)>,
+    pictures: &[Pending],
+) -> Res<Map<String, Value>> {
     let mut fields = Map::new();
     texts(r, &mut fields)?;
     fields.extend(typed::flags(r)?);
@@ -55,26 +60,27 @@ fn fields_of(r: &Run<'_>, place: Option<(&str, Value)>) -> Res<Map<String, Value
         (None, Some(given)) => fields.insert("status".into(), json!(check_status(&given)?)),
         (None, None) => None,
     };
-    if fields.is_empty() {
+    if fields.is_empty() && pictures.is_empty() {
         return Err(bad(NOTHING));
     }
     Ok(fields)
 }
 
-fn change(r: &mut Run<'_>, place: Option<(&str, Value)>) -> Outcome {
-    let fields = fields_of(r, place)?;
-    edit_item(r, fixed(fields, Say::Updated))
+fn change(r: &mut Run<'_>, place: Option<(&str, Value)>, first_caption: usize) -> Outcome {
+    let pictures = picked(r, first_caption)?;
+    let fields = fields_of(r, place, &pictures)?;
+    edit_item(r, pictures, fixed(fields, Say::Updated))
 }
 
 /// `coord item set`.
 pub(super) fn set(r: &mut Run<'_>) -> Outcome {
-    change(r, None)
+    change(r, None, 1)
 }
 
 /// `coord item status <I> <lane|stage>`: the same as `set` with the lane or stage checked first.
 pub(super) fn status(r: &mut Run<'_>) -> Outcome {
     let place = place_of(&r.arg_json(1))?;
-    change(r, Some(place))
+    change(r, Some(place), 2)
 }
 
 /// `coord item move`.

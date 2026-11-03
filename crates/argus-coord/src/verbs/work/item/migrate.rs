@@ -181,7 +181,7 @@ fn try_link(board: &mut Board, job: &Job<'_>, link: &str, text: &str) -> Res<Str
     make_link(board, job, link).or_else(|_| {
         *board = before;
         let (who, what) = todo_parts(job.item, text);
-        make_todo_link(board, job, (&who, &what))
+        make_todo_link(board, job, (who.as_str(), what.as_str()))
     })
 }
 
@@ -194,7 +194,7 @@ fn carry_out(board: &mut Board, job: &Job<'_>, text: &str) -> Res<String> {
             "dropped (a dependency: the waitsOn mirror already blocks)",
         ),
         Fate::Link(link) => try_link(board, job, &link, text),
-        Fate::Todo { who, what } => make_todo_link(board, job, (&who, &what)),
+        Fate::Todo { who, what } => make_todo_link(board, job, (who.as_str(), what.as_str())),
     }
 }
 

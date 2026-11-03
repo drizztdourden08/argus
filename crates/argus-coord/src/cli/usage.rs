@@ -15,8 +15,8 @@ Thread side (every thread; read everything, change only what is yours):
   coord agent done <A|name> ["<result>"] | fail <A|name> "<reason>" | stop <A|name> | archive|unarchive|rm|restore <A|name>...
   coord agent list [--all] [--thread T] [--status s] [--json] | show <A|name>      (a name is your newest running agent with it)
   coord item add "<title>" [--desc "..."] [--ac "..."]... [--status <s>] [--before|--after <I>]
-                 [--type <t>] [--parent <I>] [--assignee <thread|owner>] [--stage <s>] [--field k=v]... [--force "<reason>"]   (no --type is a task; coord types lists the types, their stages and fields; each field also has a flag, e.g. --severity S2)
-  coord item set <I> [--title t] [--desc d] [--status s] [--type t] [--parent <I>|none] [--assignee who|none] [--stage s] [--field k=v]... [--force "<reason>"] [--if-rev n]
+                 [--type <t>] [--parent <I>] [--assignee <thread|owner>] [--stage <s>] [--field k=v]... [--image <file> "<caption>"]... [--force "<reason>"]   (no --type is a task; coord types lists the types, their stages and fields; each field also has a flag, e.g. --severity S2)
+  coord item set <I> [--title t] [--desc d] [--status s] [--type t] [--parent <I>|none] [--assignee who|none] [--stage s] [--field k=v]... [--image <file> "<caption>"]... [--force "<reason>"] [--if-rev n]
   coord item status <I> <lane|stage> [--force "<reason>"]    (a lane is todo|doing|review|done|dropped; --force "<reason>" passes a done rule that refuses and is kept as a decision)
   coord item block <I> --on <I|T|H|Q|D-n> | --todo "<what>" --who <owner|thread|lead:key>    coord item unblock <I> [--from <id>]    (a blocker is an id of this board, never text; another board's work is coord dep ask)
   coord item move <I> [--status s] [--before <I>|--after <I>|--top|--bottom]    archive|unarchive|rm|restore <I> [--reason "..."]
