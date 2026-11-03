@@ -75,7 +75,9 @@ async fn the_server_holds_at_most_64_conns() {
     let over = t.sse("/api/mux").await;
     assert_eq!(over.status, 503);
     assert_eq!(over.body["error"]["code"], "unavailable");
-    open.pop().map(SseReader::close);
+    if let Some(reader) = open.pop() {
+        reader.close();
+    }
     let freed = until("a slot to free", || async {
         let s = t.sse("/api/mux").await;
         (s.status == 200).then_some(s)

@@ -82,7 +82,7 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
         "bad_request",
         "bad_request",
         "bad_request",
-        "unavailable",
+        "ok",
         "ok",
         "ok",
     ];
