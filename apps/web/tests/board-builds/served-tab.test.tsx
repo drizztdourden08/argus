@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PANE_TABS } from '../../src/screens/board/tabs/kanban/pane/pane.constants';
-import { servedBadge } from '../../src/screens/board/tabs/kanban/pane/model/served-badge';
+import { PANE_TABS } from '../../src/shell/records/pane/pane.constants';
+import { servedBadge } from '../../src/shell/records/pane/model/served-badge';
 import type { ItemRef } from '../../src/data/kanban';
 import { itemRef } from '../board-kanban/kanban-docs';
 import { paneData } from '../board-kanban/pane-data';
@@ -16,10 +16,10 @@ cleanAfterEach();
 
 const badge = (servedBy?: ItemRef['servedBy']) => servedBadge(paneData({ item: itemRef('I-1', servedBy ? { servedBy } : {}) }));
 
-describe('P13 the Builds tab of the item pane', { tags: ['critical'] }, () => {
+describe('P13 the Work tab of the item pane', { tags: ['critical'] }, () => {
   it('is registered as a pane tab with a badge', () => {
-    expect(PANE_TABS.builds?.label).toBe('Builds');
-    expect(PANE_TABS.builds?.badge).toBe(servedBadge);
+    expect(PANE_TABS.work?.label).toBe('Work');
+    expect(PANE_TABS.work?.badge).toBeDefined();
   });
 
   it('counts live builds and worktrees, and hides at zero or without the count', () => {

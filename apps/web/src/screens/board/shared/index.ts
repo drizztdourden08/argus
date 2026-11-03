@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind barrel */
-export { useOpenEntry } from '../../../shell';
 export { announce } from './behavior/announce';
 export { announceFailure } from './behavior/announce-failure';
 export { copyText } from './behavior/copy-text';

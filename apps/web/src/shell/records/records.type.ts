@@ -1,10 +1,19 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
+import type { IconName, MenuGroup, TagCategoryColor } from '@drizztdourden08/tessera';
+import type { MouseEvent, ReactNode } from 'react';
+import type { ItemRef, ThreadChoice } from '../../data/kanban';
+import type { WithId } from '../../data/react';
+import type { KindCollection } from '../../data/registry';
+import type { AvatarSource } from '../../avatar';
 
-type RecordKind = 'item' | 'entry' | 'todo' | 'test' | 'agent';
+type HeadSize = 'xs' | 'sm';
+
+type HeadThreads = readonly WithId<ThreadChoice>[];
 
 interface RecordRef {
-  kind: RecordKind;
+  kind: string;
+  collection: KindCollection;
+  code: string;
   id: string;
   board: string | null;
   tab?: string;
@@ -41,4 +50,160 @@ interface LinkedTextProps {
   board?: string;
 }
 
-export type { DepRecordLinkProps, LinkedTextProps, RecordAnchorProps, RecordKind, RecordLinkProps, RecordRef, RecordTarget, TextPart };
+interface AssigneeLook {
+  label: string;
+  tip: string;
+  initials?: string;
+  icon?: IconName;
+  color?: TagCategoryColor;
+  lead?: string;
+  owner: boolean;
+}
+
+interface HeadSelection {
+  selecting: boolean;
+  selected: boolean;
+  onToggle: () => void;
+  onMark: (shift: boolean) => void;
+}
+
+interface RecordHeadProps {
+  kind: string;
+  code: string;
+  assignee: string;
+  boardKey: string;
+  threads: HeadThreads;
+  menu: readonly MenuGroup[];
+  menuLabel: string;
+  size?: HeadSize;
+  selection?: HeadSelection;
+}
+
+interface TypeIconProps {
+  kind: string;
+  size?: HeadSize;
+}
+
+interface ItemTypeMarkProps {
+  item: ItemRef;
+  size?: HeadSize;
+}
+
+interface AssigneeMarkProps {
+  assignee: string;
+  boardKey: string;
+  threads: HeadThreads;
+  size?: HeadSize;
+}
+
+interface LeadMarkProps {
+  source: AvatarSource;
+  label: string;
+  size?: HeadSize;
+}
+
+interface RecordMenuProps {
+  groups: readonly MenuGroup[];
+  label: string;
+}
+
+interface RecordCardProps {
+  head: RecordHeadProps;
+  title: string;
+  openLabel: string;
+  onOpen: () => void;
+  signals?: ReactNode;
+  foot?: ReactNode;
+  attrs?: Readonly<Record<string, string>>;
+  onClickCapture?: (event: MouseEvent) => void;
+}
+
+interface RowChip {
+  id: string;
+  text: string;
+  title?: string;
+}
+
+interface RecordRowProps {
+  head: Omit<RecordHeadProps, 'selection' | 'size'>;
+  title: string;
+  onOpen: () => void;
+  chips?: readonly RowChip[];
+  age?: string;
+  trailing?: ReactNode;
+}
+
+interface RecordGroupProps {
+  header: ReactNode;
+  count: number;
+  flagged?: boolean;
+  defaultOpen?: boolean;
+  label: string;
+  children: ReactNode;
+}
+
+interface RecordGroupData<T> {
+  key: string;
+  rows: T[];
+}
+
+interface RecordGroups<T> {
+  groups: RecordGroupData<T>[];
+  none: T[];
+  closed: RecordGroupData<T>[];
+}
+
+interface GroupInfo {
+  rank: number;
+  closed: boolean;
+}
+
+interface ActionDef {
+  id: string;
+  label: string;
+  group: 'open' | 'act' | 'soft';
+  tone?: 'danger';
+}
+
+type ActionHandlers = Readonly<Record<string, (() => void) | undefined>>;
+
+interface RecordPaneState {
+  ref: RecordRef | null;
+  tab: string | null;
+  canBack: boolean;
+  open: (code: string, tab?: string) => void;
+  step: (code: string) => void;
+  setTab: (tab: string) => void;
+  back: () => void;
+  close: () => void;
+}
+
+interface OpenOfHref {
+  code: string;
+  tab?: string;
+}
+
+interface LegacyOpen {
+  code: string;
+  tab: string | null;
+}
+
+interface RecordGrammar {
+  token: RegExp;
+  checks: Readonly<Record<string, RegExp>>;
+}
+
+interface RecordOrder {
+  ids: readonly string[];
+  set: (ids: readonly string[]) => void;
+}
+
+interface RecordPaneScopeProps {
+  children: ReactNode;
+}
+
+export type {
+  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, GroupInfo, HeadSize, ItemTypeMarkProps, LeadMarkProps, LegacyOpen, LinkedTextProps,
+  OpenOfHref, RecordAnchorProps, RecordCardProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
+  RecordPaneState, RecordRef, RecordRowProps, RecordTarget, TextPart, TypeIconProps,
+};

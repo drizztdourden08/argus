@@ -4,26 +4,9 @@ import type { ItemRef } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { Entry as BoardEntry, Test } from '../../../../data/types';
 import type { FeedActions } from '../../OwnerFeed';
-import type { CriteriaReorder, DrawerNav, ItemOps, KanbanData, RecordActions, Threads } from './kanban.type';
+import type { CriteriaReorder, ItemOps, RecordActions } from './kanban.type';
 import type { AskLink, DepLink, DepView } from './model';
 import type { EntryRow, TimelineRow, TodoRow as TodoEntry } from './record';
-
-interface ItemDrawerProps {
-  boardKey: string;
-  item: ItemRef | null;
-  items: readonly ItemRef[];
-  tests: readonly WithId<Test>[];
-  threads: Threads;
-  actions: KanbanData['actions'];
-  waiting: boolean;
-  blocking: AskLink | null;
-  now: number;
-  ops: ItemOps;
-  nav: DrawerNav;
-  wide: boolean;
-  onWide: () => void;
-  onClose: () => void;
-}
 
 interface ItemEyebrowProps {
   item: ItemRef;
@@ -32,14 +15,6 @@ interface ItemEyebrowProps {
 
 interface StatusTagProps {
   status: string;
-}
-
-interface DrawerNavProps {
-  item: ItemRef;
-  ops: ItemOps;
-  nav: DrawerNav;
-  wide: boolean;
-  onWide: () => void;
 }
 
 interface ItemTitleProps {
@@ -184,7 +159,7 @@ interface CancelDependencyProps {
 export type {
   CancelDependencyProps, DependencyFactsProps, DependencyHistoryProps, DependencyLinkProps, DependencySectionProps, DependencyViewProps,
   ActivitySectionProps, AddLineProps, BlockerLineProps, ComposerProps, CriteriaSectionProps, CriterionRowProps, DescriptionSectionProps,
-  DrawerNavProps, DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemDrawerProps, ItemEyebrowProps, ItemTestsProps,
+  DrawerSectionProps, EntryBlockProps, EntryHeadProps, EmptyLineProps, EntryReplyProps, EntrySectionProps, ItemEyebrowProps, ItemTestsProps,
   ItemTitleProps, StatusTagProps,
   TimelineLineProps, TodoRowProps, TodosSectionProps,
 };

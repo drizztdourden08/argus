@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind constants */
 import { FOCUS_KEY, WIDE_KEY } from '../../../shared';
 import type { Option } from '../../../shared';
+import { OWNER, OWNER_TITLE } from '../../../../../shell/records/behavior/look.constants';
 import type { ChildCount, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
 
 const MS_PER_HOUR = 3_600_000;
@@ -20,15 +21,11 @@ const CLOSED_STATUSES = ['done', 'dropped'];
 
 const GENERAL = 'general';
 
-const OWNER = 'owner';
-
 const DEFAULT_TYPE = 'task';
 
 const NO_PARENT = 'no-parent';
 
 const NO_PARENT_TITLE = 'No parent';
-
-const OWNER_TITLE = 'You';
 
 const TRAIL_MIN_DEPTH = 3;
 
@@ -56,7 +53,6 @@ const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delet
 
 const HUMAN = 'human';
 
-const ITEM_HASH = /^([IH]-\d+)(?:\/([a-z][a-z-]*))?$/;
 
 const PAUSE_KINDS = ['pause', 'resume'];
 
@@ -103,7 +99,6 @@ export {
   STARTING_STATUS,
   OP_KINDS,
   ORDER_OPTIONS,
-  ITEM_HASH,
   PAUSE_KINDS,
   QUIET_HOURS,
   STATUS_COLUMNS,

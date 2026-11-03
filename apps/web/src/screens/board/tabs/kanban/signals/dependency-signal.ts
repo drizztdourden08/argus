@@ -2,7 +2,7 @@
 import type { ItemRef } from '../../../../../data/kanban';
 import type { BlockedCause } from '../../../../../data/types';
 import { ATTENTION_OF, dependencyCauses } from '../attention';
-import { LEAD_PREFIX } from '../model/look.constants';
+import { LEAD_PREFIX } from '../../../../../shell/records/behavior/look.constants';
 import { OPEN_ITEM } from './signal.constants';
 import type { CardSignal } from './signal.type';
 

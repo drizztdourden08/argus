@@ -6,10 +6,10 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { BoardMarkdown } from '../../src/shell';
 
 const Where = () => {
-  const { pathname, hash } = useLocation();
+  const { pathname, search, hash } = useLocation();
   useEffect(() => {
-    document.title = `${pathname}${hash}`;
-  }, [pathname, hash]);
+    document.title = `${pathname}${search}${hash}`;
+  }, [pathname, search, hash]);
   return null;
 };
 

@@ -3,24 +3,24 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ITEM_REGISTRY, itemTypeOf } from '../../src/data/registry';
-import { hashTab, itemHash, STATUS_OPTIONS } from '../../src/screens/board/tabs/kanban/model';
-import { casesBadge } from '../../src/screens/board/tabs/kanban/pane/model/cases-badge';
-import { childrenBadge } from '../../src/screens/board/tabs/kanban/pane/model/children-badge';
-import { childTypes } from '../../src/screens/board/tabs/kanban/pane/model/child-types';
-import { crumbsOf } from '../../src/screens/board/tabs/kanban/pane/model/crumbs-of';
-import { discussionBadge } from '../../src/screens/board/tabs/kanban/pane/model/discussion-badge';
-import { fieldGroups } from '../../src/screens/board/tabs/kanban/pane/model/field-groups';
-import { fieldProblem } from '../../src/screens/board/tabs/kanban/pane/model/field-problem';
-import { linksBadge } from '../../src/screens/board/tabs/kanban/pane/model/links-badge';
-import { parentChoices } from '../../src/screens/board/tabs/kanban/pane/model/parent-choices';
-import { stageFact } from '../../src/screens/board/tabs/kanban/pane/model/stage-fact';
-import { tabsOf } from '../../src/screens/board/tabs/kanban/pane/model/tabs-of';
-import { testsBadge } from '../../src/screens/board/tabs/kanban/pane/model/tests-badge';
-import { textValue } from '../../src/screens/board/tabs/kanban/pane/model/text-value';
+import { STATUS_OPTIONS } from '../../src/screens/board/tabs/kanban/model';
+import { casesBadge } from '../../src/shell/records/pane/model/cases-badge';
+import { childrenBadge } from '../../src/shell/records/pane/model/children-badge';
+import { childTypes } from '../../src/shell/records/pane/model/child-types';
+import { crumbsOf } from '../../src/shell/records/pane/model/crumbs-of';
+import { discussionBadge } from '../../src/shell/records/pane/model/discussion-badge';
+import { fieldGroups } from '../../src/shell/records/pane/model/field-groups';
+import { fieldProblem } from '../../src/shell/records/pane/model/field-problem';
+import { linksBadge } from '../../src/shell/records/pane/model/links-badge';
+import { parentChoices } from '../../src/shell/records/pane/model/parent-choices';
+import { stageFact } from '../../src/shell/records/pane/model/stage-fact';
+import { tabsOf } from '../../src/shell/records/pane/model/tabs-of';
+import { testsBadge } from '../../src/shell/records/pane/model/tests-badge';
+import { textValue } from '../../src/shell/records/pane/model/text-value';
 import { itemRef } from './kanban-docs';
 import { paneData } from './pane-data';
 
-const PANE = join(import.meta.dirname, '../../src/screens/board/tabs/kanban/pane');
+const PANE = join(import.meta.dirname, '../../src/shell/records/pane');
 
 const SOURCES = ['.', 'tabs', 'fields', 'trail'].flatMap((dir) =>
   readdirSync(join(PANE, dir))
@@ -37,15 +37,6 @@ describe('I-72 P6 the tabs of an item come from the registry', { tags: ['standar
     const task = itemTypeOf('task')?.tabs;
     expect(tabsOf(itemRef('I-1'))).toEqual(task);
     expect(tabsOf(itemRef('I-1', { type: 'nothing' }))).toEqual(task);
-  });
-
-  it('opens a tab from the hash after the item id, and leaves other hashes alone', () => {
-    expect(hashTab('#I-136/links')).toBe('links');
-    expect(hashTab('#I-136')).toBeNull();
-    expect(itemHash('#I-136/links')).toBe('I-136');
-    expect(itemHash('#I-136')).toBe('I-136');
-    expect(itemHash('#kanban')).toBeNull();
-    expect(hashTab('#kanban')).toBeNull();
   });
 });
 

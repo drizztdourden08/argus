@@ -2,7 +2,7 @@
 import { fieldOf } from '../../../../../data/registry';
 import type { DescriptionSectionProps } from '../drawer-props.type';
 import { EditableMarkdown, useBoardKey, useItemMedia } from '../../../shared';
-import { fieldProblem } from '../pane/model/field-problem';
+import { fieldProblem } from '../../../../../shell/records/pane/model/field-problem';
 import { FIELD } from './DescriptionSection.constants';
 import { DrawerSection } from './DrawerSection';
 

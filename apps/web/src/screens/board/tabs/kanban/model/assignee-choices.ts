@@ -2,7 +2,7 @@
 import type { ItemRef, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { Option } from '../../../shared';
-import { assigneeLook } from './assignee-look';
+import { assigneeLook } from '../../../../../shell/records/behavior/assignee-look';
 import { assigneeOf } from './assignee-of';
 import { OWNER } from './model.constants';
 

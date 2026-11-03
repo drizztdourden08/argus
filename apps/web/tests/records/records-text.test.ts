@@ -23,17 +23,20 @@ describe('I-82 the text linker', { tags: ['standard'] }, () => {
     expect(splitRecords('')).toEqual([]);
   });
 
-  it('reads the kind, the board and the item number of a token', () => {
-    expect(parseRecord('I-12')).toEqual({ kind: 'item', id: 'I-12', board: null });
-    expect(parseRecord('E-12')).toEqual({ kind: 'item', id: 'I-12', board: null });
-    expect(parseRecord('S-13')).toEqual({ kind: 'item', id: 'I-13', board: null });
-    expect(parseRecord('rotp/I-105')).toEqual({ kind: 'item', id: 'I-105', board: 'rotp' });
-    expect(parseRecord('Q-4')).toEqual({ kind: 'entry', id: 'Q-4', board: null });
-    expect(parseRecord('D-2')).toEqual({ kind: 'entry', id: 'D-2', board: null });
-    expect(parseRecord('N-1')).toEqual({ kind: 'entry', id: 'N-1', board: null });
-    expect(parseRecord('H-7')).toEqual({ kind: 'todo', id: 'H-7', board: null });
-    expect(parseRecord('T-3')).toEqual({ kind: 'test', id: 'T-3', board: null });
-    expect(parseRecord('A-1')).toEqual({ kind: 'agent', id: 'A-1', board: null });
-    expect(parseRecord('X-1')).toBeNull();
+  it('reads the kind, the board and the stored id of a token', () => {
+    const read = (token: string) => {
+      const ref = parseRecord(token);
+      return ref && { kind: ref.kind, code: ref.code, id: ref.id, board: ref.board };
+    };
+    expect(read('I-12')).toMatchObject({ code: 'I-12', id: 'I-12', board: null });
+    expect(read('E-12')).toEqual({ kind: 'epic', code: 'E-12', id: 'I-12', board: null });
+    expect(read('S-13')).toEqual({ kind: 'story', code: 'S-13', id: 'I-13', board: null });
+    expect(read('rotp/I-105')).toMatchObject({ id: 'I-105', board: 'rotp' });
+    expect(read('Q-4')).toEqual({ kind: 'question', code: 'Q-4', id: 'Q-4', board: null });
+    expect(read('D-2')).toEqual({ kind: 'decision', code: 'D-2', id: 'D-2', board: null });
+    expect(read('H-7')).toEqual({ kind: 'todo', code: 'H-7', id: 'H-7', board: null });
+    expect(read('T-3')).toEqual({ kind: 'test-case', code: 'T-3', id: 'T-3', board: null });
+    expect(read('A-1')).toEqual({ kind: 'agent', code: 'A-1', id: 'A-1', board: null });
+    expect(read('Z-1')).toBeNull();
   });
 });

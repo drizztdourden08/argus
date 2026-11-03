@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { opened } from './kanban-drawer-dom';
-import { cleanKanban, item, mountKanban, openItem, where } from './kanban-harness';
+import { cleanKanban, item, mountKanban, openItem, paneOf } from './kanban-harness';
 
 cleanKanban();
 
@@ -22,12 +22,12 @@ describe('S1 the focus mode of the drawer', { tags: ['standard'] }, () => {
 });
 
 describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
-  it('copies the page address with the item anchor', async () => {
+  it('copies the page address with the item to open', async () => {
     const writeText = vi.fn(() => Promise.resolve());
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     const { dialog } = await opened();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Copy a link to I-1' }));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^https?:\/\/[^#]*#I-1$/)));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^https?:\/\/[^#?]*\?open=I-1$/)));
   });
 
   it('opens the drawer of the item named in the address', async () => {
@@ -41,12 +41,12 @@ describe('S1 the link of the drawer', { tags: ['standard'] }, () => {
     expect(await screen.findByRole('heading', { name: /Login/ })).toBeTruthy();
   });
 
-  it('writes the anchor when a card opens and the tab anchor when the drawer closes', async () => {
+  it('writes the open item to the address when a card opens and clears it when the pane closes', async () => {
     await mountKanban({ items: [item('I-1')] });
     await openItem('I-1');
-    expect(where.hash).toBe('#I-1');
+    expect(paneOf().open).toBe('I-1');
     fireEvent.keyDown(screen.getByRole('dialog', { name: 'Work item' }), { key: 'Escape' });
-    await waitFor(() => expect(where.hash).toBe('#kanban'));
+    await waitFor(() => expect(paneOf().open).toBeNull());
   });
 });
 
@@ -57,14 +57,14 @@ describe('S1 walking the list with [ and ]', { tags: ['standard'] }, () => {
     const dialog = screen.getByRole('dialog', { name: 'Work item' });
     expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Previous in the list ([)' }).disabled).toBe(false);
     fireEvent.keyDown(document.body, { key: ']' });
-    await waitFor(() => expect(where.hash).toBe('#I-3'));
+    await waitFor(() => expect(paneOf().open).toBe('I-3'));
     expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Next in the list (])' }).disabled).toBe(true);
     fireEvent.keyDown(document.body, { key: ']' });
-    expect(where.hash).toBe('#I-3');
+    expect(paneOf().open).toBe('I-3');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Previous in the list ([)' }));
-    await waitFor(() => expect(where.hash).toBe('#I-2'));
+    await waitFor(() => expect(paneOf().open).toBe('I-2'));
     fireEvent.keyDown(document.body, { key: '[' });
-    await waitFor(() => expect(where.hash).toBe('#I-1'));
+    await waitFor(() => expect(paneOf().open).toBe('I-1'));
     expect(within(dialog).getByRole<HTMLButtonElement>('button', { name: 'Previous in the list ([)' }).disabled).toBe(true);
   });
 
@@ -72,7 +72,7 @@ describe('S1 walking the list with [ and ]', { tags: ['standard'] }, () => {
     await mountKanban(three);
     await openItem('I-2');
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Add a criterion' }), { key: ']' });
-    expect(where.hash).toBe('#I-2');
+    expect(paneOf().open).toBe('I-2');
   });
 });
 

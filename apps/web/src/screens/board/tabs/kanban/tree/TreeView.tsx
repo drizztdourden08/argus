@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { EmptyState, Flex, Tree } from '@drizztdourden08/tessera';
 import { useMemo, useState } from 'react';
-import { AssigneeMark } from '../sub-components/AssigneeMark';
+import { AssigneeMark } from '../../../../../shell';
 import { useFolds } from './behavior/useFolds';
 import { useTreeRoots } from './behavior/useTreeRoots';
 import { indexNodes } from './model';

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { fieldProblem } from '../../src/screens/board/tabs/kanban/pane/model/field-problem';
+import { fieldProblem } from '../../src/shell/records/pane/model/field-problem';
 import type { Doc } from './kanban-harness';
 import { cleanKanban, item, mountKanban, openItem, thread } from './kanban-harness';
 import { bug } from './kanban-pane-dom';

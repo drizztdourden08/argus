@@ -3,6 +3,7 @@ import { Tabs } from '@drizztdourden08/tessera';
 import { Suspense } from 'react';
 import { usePortfolio } from '../../data/react';
 import { LoadingFallback, PageFrame, StatusNotice, useHashTab } from '../../shell';
+import { RecordPaneHost } from '../../shell/records/pane';
 import { useTabBadges } from './behavior/useTabBadges';
 import { OVERVIEW_TAB_IDS, OVERVIEW_TABS } from './overview.constants';
 import { OverviewHeader } from './sub-components/OverviewHeader';
@@ -21,6 +22,7 @@ const OverviewPage = () => {
       <Suspense fallback={<LoadingFallback />}>
         <TabBody tab={tab} cards={cards} status={status} badges={badges} />
       </Suspense>
+      <RecordPaneHost />
     </PageFrame>
   );
 };

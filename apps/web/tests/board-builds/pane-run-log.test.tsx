@@ -19,7 +19,7 @@ const board = () => ({
 const answers: Responder = () => ({ status: 200, body: { lines: [], next: 0, dropped: 0, attachments: [] } });
 
 describe('I-78 the run log of the item pane', { tags: ['critical'] }, () => {
-  it('leaves the Work item dialog alone on the Builds tab: no other drawer panel is open over it', async () => {
+  it('leaves the Work item dialog alone on the Work tab: no other drawer panel is open over it', async () => {
     await mountPaneBuilds(board(), '#I-1/builds', answers);
     const pane = await screen.findByRole('dialog', { name: 'Work item' });
     await within(pane).findByText('Builds · 1');

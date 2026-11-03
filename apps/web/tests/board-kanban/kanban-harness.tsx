@@ -8,6 +8,8 @@ import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
 import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { KanbanTab } from '../../src/screens/board/tabs/kanban';
+import { RecordPaneScope } from '../../src/shell';
+import { RecordPaneHost } from '../../src/shell/records/pane';
 import { useTrashCount } from '../../src/screens/board/tabs/kanban/behavior/useTrashCount';
 import { KanbanPurge } from '../../src/screens/board/tabs/kanban/sub-components/KanbanPurge';
 import { createFakeSources } from '../helpers/fake-source';
@@ -34,22 +36,30 @@ interface Posted {
 type Reply = (body: Doc) => Doc | undefined;
 
 const SCOPE = 'alpha';
-const where = { hash: '' };
+const where = { hash: '', search: '' };
+
+const paneOf = (): { open: string | null; pane: string | null } => {
+  const params = new URLSearchParams(where.search);
+  return { open: params.get('open'), pane: params.get('pane') };
+};
 
 const Probe = () => {
-  where.hash = useLocation().hash;
+  const location = useLocation();
+  where.hash = location.hash;
+  where.search = location.search;
   return null;
 };
 const Stage = () => {
   const more = useBoardMore();
   const count = useTrashCount(SCOPE);
   return (
-    <>
+    <RecordPaneScope>
       <BoardMore boardKey={SCOPE} trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
       <BoardFocus boardKey={SCOPE} />
       <KanbanTab boardKey={SCOPE} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />
       <KanbanPurge boardKey={SCOPE} request={more.purge} onClose={more.closePurge} />
-    </>
+      <RecordPaneHost boardKey={SCOPE} />
+    </RecordPaneScope>
   );
 };
 
@@ -164,5 +174,5 @@ const cardOf = (id: string): HTMLElement => {
   return card;
 };
 
-export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, thread, where };
+export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, paneOf, thread, where };
 export type { Board, Doc, Posted };

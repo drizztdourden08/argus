@@ -2,17 +2,17 @@
 import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
 import { planRunOp } from '../../src/data/kanban';
-import { caseSteps } from '../../src/screens/board/tabs/kanban/pane/run/model/case-steps';
-import { firstOpen } from '../../src/screens/board/tabs/kanban/pane/run/model/first-open';
-import { flaggedResults } from '../../src/screens/board/tabs/kanban/pane/run/model/flagged-results';
-import { keyStatus } from '../../src/screens/board/tabs/kanban/pane/run/model/key-status';
-import { lastResult } from '../../src/screens/board/tabs/kanban/pane/run/model/last-result';
-import { noteProblem } from '../../src/screens/board/tabs/kanban/pane/run/model/note-problem';
-import { runnerReducer } from '../../src/screens/board/tabs/kanban/pane/run/model/runner-reducer';
-import { runsOf } from '../../src/screens/board/tabs/kanban/pane/run/model/runs-of';
-import { shownRun } from '../../src/screens/board/tabs/kanban/pane/run/model/shown-run';
-import { summarize } from '../../src/screens/board/tabs/kanban/pane/run/model/summarize';
-import type { PlanRun, RunnerState } from '../../src/screens/board/tabs/kanban/pane/run/run.type';
+import { caseSteps } from '../../src/shell/records/pane/run/model/case-steps';
+import { firstOpen } from '../../src/shell/records/pane/run/model/first-open';
+import { flaggedResults } from '../../src/shell/records/pane/run/model/flagged-results';
+import { keyStatus } from '../../src/shell/records/pane/run/model/key-status';
+import { lastResult } from '../../src/shell/records/pane/run/model/last-result';
+import { noteProblem } from '../../src/shell/records/pane/run/model/note-problem';
+import { runnerReducer } from '../../src/shell/records/pane/run/model/runner-reducer';
+import { runsOf } from '../../src/shell/records/pane/run/model/runs-of';
+import { shownRun } from '../../src/shell/records/pane/run/model/shown-run';
+import { summarize } from '../../src/shell/records/pane/run/model/summarize';
+import type { PlanRun, RunnerState } from '../../src/shell/records/pane/run/run.type';
 import { mockPosts, onlyPost } from '../helpers/post-mock';
 
 const IDS = ['T-1', 'T-2', 'T-3', 'T-4'];

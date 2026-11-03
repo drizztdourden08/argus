@@ -1,13 +1,11 @@
 /* @layer renderer-app @kind component */
-import { Checkbox, Flex, Pressable, Spacer, Text } from '@drizztdourden08/tessera';
+import { RecordCard } from '../../../../../shell';
 import type { MouseEvent } from 'react';
+import { cardMenuGroups } from '../behavior/card-menu-groups';
 import type { ItemCardProps } from '../kanban-props.type';
-import { assigneeOf } from '../model';
-import { AssigneeMark } from './AssigneeMark';
+import { assigneeOf, typeOf } from '../model';
 import { CardFoot } from './CardFoot';
-import { CardMenu } from './CardMenu';
 import { CardTags } from './CardTags';
-import { ItemTypeMark } from './ItemTypeMark';
 
 const ItemCard = (props: ItemCardProps) => {
   const { boardKey, card, group, threads, now, selected, selecting, ops, onToggle, onMark, onOpen } = props;
@@ -20,26 +18,25 @@ const ItemCard = (props: ItemCardProps) => {
     onToggle(item.id);
   };
   return (
-    <Flex direction="column" gap="xs" data-item={item.id} onClickCapture={pick}>
-      <Flex gap="xs" align="center">
-        {selecting ? (
-          <Flex onClickCapture={(event) => onMark(event.shiftKey)}>
-            <Checkbox checked={selected} onChange={() => onToggle(item.id)} ariaLabel={`Select ${item.id}`} size="sm" />
-          </Flex>
-        ) : (
-          <ItemTypeMark item={item} />
-        )}
-        <Text variant="caption" tone="muted" mono>{item.id}</Text>
-        <Spacer />
-        <AssigneeMark assignee={assigneeOf(item)} boardKey={boardKey} threads={threads} />
-        <CardMenu item={item} threads={threads} ops={ops} onOpen={onOpen} />
-      </Flex>
-      <Pressable onClick={() => onOpen(item.id)} aria-label={`Open ${item.id}: ${item.title}`}>
-        <Text weight={500} clamp={3} smartTimes>{item.title}</Text>
-      </Pressable>
-      <CardTags card={card} now={now} onOpen={onOpen} />
-      <CardFoot card={card} group={group} now={now} />
-    </Flex>
+    <RecordCard
+      head={{
+        kind: typeOf(item),
+        code: item.id,
+        assignee: assigneeOf(item),
+        boardKey,
+        threads,
+        menu: cardMenuGroups({ item, threads, ops, onOpen }),
+        menuLabel: `More actions for ${item.id}`,
+        selection: { selecting, selected, onToggle: () => onToggle(item.id), onMark },
+      }}
+      title={item.title}
+      openLabel={`Open ${item.id}: ${item.title}`}
+      onOpen={() => onOpen(item.id)}
+      signals={<CardTags card={card} now={now} onOpen={onOpen} />}
+      foot={<CardFoot card={card} group={group} now={now} />}
+      attrs={{ 'data-item': item.id }}
+      onClickCapture={pick}
+    />
   );
 };
 

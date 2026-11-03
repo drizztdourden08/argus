@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { nodeOpens } from '../../src/screens/board/tabs/kanban/pane/model/node-opens';
-import { parseTrail } from '../../src/screens/board/tabs/kanban/pane/model/parse-trail';
-import type { TrailNode } from '../../src/screens/board/tabs/kanban/pane/pane.type';
+import { nodeOpens } from '../../src/shell/records/pane/model/node-opens';
+import { parseTrail } from '../../src/shell/records/pane/model/parse-trail';
+import type { TrailNode } from '../../src/shell/records/pane/pane.type';
 
 const node = (extra: Partial<TrailNode> = {}): TrailNode => ({
   project: 'alpha',

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { HEAD_SIZE_PX } from '../../src/screens/board/tabs/kanban/head.constants';
+import { HEAD_SIZE_PX } from '../../src/shell/records/head.constants';
 import { cardOf, cleanKanban, item, moreItem, mountKanban } from './kanban-harness';
 
 cleanKanban();
@@ -49,7 +49,7 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
   it('reads the avatar the board chose, a brand or an uploaded image', async () => {
     const view = await mountKanban(board);
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:rotp' });
-    expect(within(headOf('I-2')).getByTitle(LEAD).closest('svg')).toBeTruthy();
+    expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).closest('svg')).toBeTruthy();
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: PIXEL });
     expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).getAttribute('src')).toBe(PIXEL);
   });
@@ -65,7 +65,7 @@ describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
     const post = view.posted.find((sent) => sent.body.kind === 'avatar');
     expect(post?.body).toMatchObject({ kind: 'avatar', avatar: 'brand:brock', author: 'human' });
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:brock' });
-    expect(within(headOf('I-2')).getByTitle(LEAD).closest('svg')).toBeTruthy();
+    expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).closest('svg')).toBeTruthy();
   });
 
   it('refuses an image over the cap before it is posted', async () => {

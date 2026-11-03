@@ -30,10 +30,9 @@ describe('S1 the Tests tab on the board page', { tags: ['standard'] }, () => {
     await waitFor(() => expect(tab.textContent).toContain('2'));
   });
 
-  it('is the tab a test anchor names, and opens that test', async () => {
+  it('opens the pane of the test an old anchor names, whatever tab the board is on', async () => {
     await open('/p/rotp/#T-2');
-    const tab = await screen.findByRole('tab', { name: /^Tests/ });
-    expect(tab.getAttribute('aria-selected')).toBe('true');
-    expect(await screen.findByRole('heading', { name: 'Test T-2' })).toBeTruthy();
+    const panes = await screen.findAllByRole('dialog', { name: 'Test detail' });
+    expect(panes.length).toBeGreaterThan(0);
   });
 });

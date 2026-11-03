@@ -3,16 +3,15 @@ import { Tabs } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useBoard } from '../../data/react';
 import { resolvePalette, useDocumentPalette } from '../../palette';
-import { OpenEntryContext, PageFrame, StatusNotice } from '../../shell';
+import { PageFrame, RecordPaneScope, StatusNotice } from '../../shell';
+import { RecordPaneHost } from '../../shell/records/pane';
 import { useBoardTab } from './behavior/useBoardTab';
-import { useEntryAnchor } from './behavior/useEntryAnchor';
 import { usePresence } from './behavior/usePresence';
 import { BOARD_TABS } from './board.constants';
 import { BoardFocus } from './BoardFocus';
 import { BoardHeader } from './BoardHeader';
 import { BoardMore, useBoardMore } from './BoardMore';
 import { BoardTabBody } from './BoardTabBody';
-import { EntryDrawer } from './EntryDrawer';
 import { useBoardWork } from './feed-model';
 import { RegisteredStrip } from './RegisteredStrip';
 import { PageRunLog } from './run-terminal';
@@ -28,9 +27,7 @@ const BoardPage = (props: BoardPageProps) => {
   const board = useBoard(boardKey);
   const more = useBoardMore();
   const [openThread, setOpenThread] = useState<string | null>(null);
-  const [openEntry, setOpenEntry] = useState<string | null>(null);
   const [openRunLog, setOpenRunLog] = useState<string | null>(null);
-  useEntryAnchor(setOpenEntry);
   const { tab, select } = useBoardTab(more.trashOpen);
   const trashCount = useTrashCount(boardKey);
   const work = useBoardWork(boardKey);
@@ -39,7 +36,7 @@ const BoardPage = (props: BoardPageProps) => {
   usePresence(boardKey);
   return (
     <OpenThreadContext.Provider value={setOpenThread}>
-      <OpenEntryContext.Provider value={setOpenEntry}>
+      <RecordPaneScope>
         <OpenRunLogContext.Provider value={setOpenRunLog}>
           <PageFrame>
             <BoardHeader
@@ -60,11 +57,11 @@ const BoardPage = (props: BoardPageProps) => {
             <BoardTabBody tab={tab} boardKey={boardKey} work={work} handed={board.meta?.handedBuild ?? null} more={more} />
             <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
             <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />
-            <EntryDrawer boardKey={boardKey} id={openEntry} onClose={() => setOpenEntry(null)} />
+            <RecordPaneHost boardKey={boardKey} />
             <PageRunLog boardKey={boardKey} id={openRunLog} onClose={() => setOpenRunLog(null)} />
           </PageFrame>
         </OpenRunLogContext.Provider>
-      </OpenEntryContext.Provider>
+      </RecordPaneScope>
     </OpenThreadContext.Provider>
   );
 };

@@ -156,9 +156,9 @@ describe('S1 markdown images and ids', { tags: ['standard'] }, () => {
     }
   });
 
-  it('ids T-5, I-3, A-2 and H-1 link to their board anchors and the look-alikes stay text', () => {
+  it('ids T-5, I-3, A-2 and H-1 open their record in the pane and the look-alikes stay text', () => {
     const root = renderMarkdown('Fixed T-5 (see I-3, A-2 and H-1) but not XT-5, T-5x, T-5-9, #T-5 or t-5.');
-    expect([...root.querySelectorAll('a')].map((link) => link.getAttribute('href'))).toEqual(['/p/demo#T-5', '/p/demo#I-3', '/p/demo#A-2', '/p/demo#H-1']);
+    expect([...root.querySelectorAll('a')].map((link) => link.getAttribute('href'))).toEqual(['/p/demo?open=T-5', '/p/demo?open=I-3', '/p/demo?open=A-2', '/p/demo?open=H-1']);
   });
 
   it('an id link moves the board to its anchor without a reload and stays text in code and links', () => {
@@ -166,7 +166,7 @@ describe('S1 markdown images and ids', { tags: ['standard'] }, () => {
     const root = renderMarkdown('see I-3 and `T-5` and [A-2](https://a.test)');
     expect(root.querySelectorAll('a')).toHaveLength(2);
     fireEvent.click(root.querySelector('a') as Element);
-    expect(location()).toBe('/p/demo#I-3');
+    expect(location()).toBe('/p/demo?open=I-3');
     expect(open).not.toHaveBeenCalled();
   });
 });

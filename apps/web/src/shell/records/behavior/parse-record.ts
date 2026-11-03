@@ -1,14 +1,25 @@
 /* @layer renderer-app @kind logic */
-import { CODE_KIND, ITEM_CODE, RECORD_PARTS } from '../records.constants';
+import { kindByCode, kindOf } from '../../../data/registry';
+import type { RegistryKind } from '../../../data/registry';
+import { RECORD_PARTS, RECORD_TAILS } from '../records.constants';
 import type { RecordRef } from '../records.type';
+import { ITEM_FALLBACK_KIND, ITEM_LETTER } from './record-grammar.constants';
+
+const kindOfLetters = (letters: string): RegistryKind | undefined => (letters === ITEM_LETTER ? kindOf(ITEM_FALLBACK_KIND) : kindByCode(letters));
+
+const idOf = (kind: RegistryKind, letters: string, rest: string): string => {
+  if (kind.idKey !== undefined) return rest;
+  if (letters === ITEM_LETTER || kind.collection === 'items') return `${ITEM_LETTER}-${rest}`;
+  return `${kind.stored ?? letters}-${rest}`;
+};
 
 const parseRecord = (token: string): RecordRef | null => {
   const found = RECORD_PARTS.exec(token);
   if (!found) return null;
-  const [, board = null, code = '', digits = ''] = found;
-  const kind = CODE_KIND[code];
-  if (!kind) return null;
-  return { kind, board, id: `${kind === 'item' ? ITEM_CODE : code}-${digits}` };
+  const [, board = null, letters = '', rest = ''] = found;
+  const kind = kindOfLetters(letters);
+  if (!kind || !RECORD_TAILS[letters]?.test(rest)) return null;
+  return { kind: kind.id, collection: kind.collection, code: `${letters}-${rest}`, id: idOf(kind, letters, rest), board };
 };
 
 export { parseRecord };

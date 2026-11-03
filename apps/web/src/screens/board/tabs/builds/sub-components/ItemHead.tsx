@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
-import { ItemTypeMark } from '../../kanban/sub-components/ItemTypeMark';
+import { ItemTypeMark } from '../../../../../shell';
 import type { ItemHeadProps } from '../builds-props.type';
 import { stageText } from '../model';
 

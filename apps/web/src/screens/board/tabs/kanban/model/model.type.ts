@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconName, KanbanColumn, KanbanMove, TagCategoryColor } from '@drizztdourden08/tessera';
+import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
 import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
@@ -194,21 +194,11 @@ interface CardProgress {
   title: string;
 }
 
-interface AssigneeLook {
-  label: string;
-  tip: string;
-  initials?: string;
-  icon?: IconName;
-  color?: TagCategoryColor;
-  lead?: string;
-  owner: boolean;
-}
-
 type DepView = DepLink & {
   history: DepHistoryRow[];
   cancellable: boolean;
 };
 
 export type {
-  AddPreset, AskKind, AskLink, AssigneeLook, BulkSofts, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
+  AddPreset, AskKind, AskLink, BulkSofts, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };

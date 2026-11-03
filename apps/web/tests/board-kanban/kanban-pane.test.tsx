@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EMPTY_MEDIA } from '../../src/screens/board/tabs/kanban/pane/media/media.constants';
-import { fieldProblem } from '../../src/screens/board/tabs/kanban/pane/model/field-problem';
+import { EMPTY_MEDIA } from '../../src/shell/records/pane/media/media.constants';
+import { fieldProblem } from '../../src/shell/records/pane/model/field-problem';
 import { inTab } from './kanban-drawer-dom';
-import { MIN, ago, cleanKanban, item, mountKanban, openItem, where } from './kanban-harness';
+import { MIN, ago, cleanKanban, item, mountKanban, openItem, paneOf } from './kanban-harness';
 import { bug, labelled, tabNames, tabOf } from './kanban-pane-dom';
 
 cleanKanban();
@@ -13,26 +13,26 @@ describe('I-72 P6 the tabs of the pane', { tags: ['standard'] }, () => {
   it('gives a bug the tabs of its registry entry, and nothing about children or cases', async () => {
     await mountKanban({ items: [bug()] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Builds', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Work', 'Activity']));
     expect(tabOf(dialog, 'Overview').getAttribute('aria-selected')).toBe('true');
   });
 
   it('gives an epic its Children tab and no Tests tab', async () => {
     await mountKanban({ items: [item('I-1', { type: 'epic', stage: 'open' })] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Children', 'Links', 'Discussion', 'Media', 'Builds', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Children', 'Links', 'Discussion', 'Media', 'Work', 'Activity']));
   });
 
   it('gives a test plan its Cases and Run tabs', async () => {
     await mountKanban({ items: [item('I-1', { type: 'test-plan', stage: 'draft' })] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Cases', 'Run', 'Links', 'Discussion', 'Media', 'Builds', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Cases', 'Run', 'Links', 'Discussion', 'Media', 'Work', 'Activity']));
   });
 
   it('reads an item without a type as a task', async () => {
     await mountKanban({ items: [item('I-1')] });
     const dialog = await openItem('I-1');
-    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Builds', 'Activity']));
+    expect(tabNames(dialog)).toEqual(labelled(['Overview', 'Links', 'Discussion', 'Tests', 'Media', 'Work', 'Activity']));
   });
 
   it('counts waiting links, open questions with pending to-dos, and failing tests in the tab badges', async () => {
@@ -56,7 +56,7 @@ describe('I-72 P6 the tabs of the pane', { tags: ['standard'] }, () => {
     expect(tabOf(dialog, 'Links').getAttribute('aria-selected')).toBe('true');
     expect(within(dialog).getByRole('tabpanel', { name: 'Links' })).toBeTruthy();
     fireEvent.click(tabOf(dialog, 'Discussion'));
-    await waitFor(() => expect(where.hash).toBe('#I-1/discussion'));
+    await waitFor(() => expect(paneOf()).toEqual({ open: 'I-1', pane: 'discussion' }));
     expect(tabOf(dialog, 'Discussion').getAttribute('aria-selected')).toBe('true');
   });
 
@@ -88,7 +88,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     expect(tabOf(dialog, 'Children').textContent).toMatch(/1/);
     expect(within(dialog).getByText('Children · 2')).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open I-2: Item I-2' }));
-    await waitFor(() => expect(where.hash).toBe('#I-2'));
+    await waitFor(() => expect(paneOf().open).toBe('I-2'));
   });
 
   it('adds a child of an allowed type under the item', async () => {
@@ -104,7 +104,7 @@ describe('I-72 P6 the tabs that follow the type', { tags: ['standard'] }, () => 
     await mountKanban({ items: [epic, story] });
     const dialog = await openItem('I-2');
     fireEvent.click(within(within(dialog).getByRole('navigation', { name: 'Parents' })).getByRole('button', { name: 'Open I-1: Release' }));
-    await waitFor(() => expect(where.hash).toBe('#I-1'));
+    await waitFor(() => expect(paneOf().open).toBe('I-1'));
   });
 });
 

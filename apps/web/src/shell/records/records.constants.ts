@@ -1,28 +1,35 @@
 /* @layer renderer-app @kind constants */
-import type { RecordKind } from './records.type';
+import { CODE_TABLE } from '../../data/registry';
+import { buildRecordGrammar } from './behavior/build-record-grammar';
 
-const CODE_KIND: Readonly<Record<string, RecordKind>> = {
-  I: 'item',
-  E: 'item',
-  S: 'item',
-  Q: 'entry',
-  D: 'entry',
-  N: 'entry',
-  H: 'todo',
-  T: 'test',
-  A: 'agent',
-};
+const GRAMMAR = buildRecordGrammar(CODE_TABLE);
 
-const CODES = Object.keys(CODE_KIND).join('');
+const RECORD_TOKEN = GRAMMAR.token;
 
-const RECORD_TOKEN = new RegExp(`(?<![\\w#/-])(?:[a-z][a-z0-9-]*/)?[${CODES}]-\\d+(?!\\w|-\\w)`);
+const RECORD_TAILS = GRAMMAR.checks;
 
-const RECORD_PARTS = /^(?:([a-z][a-z0-9-]*)\/)?([A-Z])-(\d+)$/;
+const RECORD_PARTS = /^(?:([a-z][a-z0-9-]*)\/)?([A-Z]{1,2})-(.+)$/;
 
-const BOARD_HREF = /^\/p\/([^#/]+)#(.+)$/;
+const BOARD_PATH = /^\/p\/([^?#/]+)\?(.*)$/;
 
-const ITEM_CODE = 'I';
+const OPEN_PARAM = 'open';
+
+const PANE_PARAM = 'pane';
+
+const STACK_KEY = 'recordStack';
+
+const STACK_MAX = 20;
+
+const NO_STACK: readonly string[] = [];
+
+const LEGACY_HASH = /^([^/]+)(?:\/([a-z][a-z-]*))?$/;
 
 const DEP_TAB = 'links';
 
-export { BOARD_HREF, CODE_KIND, DEP_TAB, ITEM_CODE, RECORD_PARTS, RECORD_TOKEN };
+const ROW_CHIPS_MAX = 3;
+
+const UNRANKED = Number.MAX_SAFE_INTEGER;
+
+const NO_LINK_FLAG = 'This kind of record needs a link.';
+
+export { BOARD_PATH, DEP_TAB, LEGACY_HASH, NO_LINK_FLAG, NO_STACK, OPEN_PARAM, PANE_PARAM, RECORD_PARTS, RECORD_TAILS, RECORD_TOKEN, ROW_CHIPS_MAX, STACK_KEY, STACK_MAX, UNRANKED };

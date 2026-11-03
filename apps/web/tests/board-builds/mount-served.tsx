@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { ServedTab } from '../../src/screens/board/tabs/kanban/pane/tabs/ServedTab';
+import { ServedTab } from '../../src/shell/records/pane/tabs/ServedTab';
 import { stubFetch } from '../board-tests/mount-tab';
 import { itemRef } from '../board-kanban/kanban-docs';
 import { paneData } from '../board-kanban/pane-data';

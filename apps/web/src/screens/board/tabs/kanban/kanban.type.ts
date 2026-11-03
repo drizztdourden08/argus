@@ -56,12 +56,6 @@ interface CriteriaReorder {
   step: (event: KeyboardEvent<HTMLElement>, index: number) => void;
 }
 
-interface OpenItem {
-  id: string | null;
-  open: (id: string) => void;
-  close: () => void;
-}
-
 interface Adding {
   column: string;
   group: ItemGroup;
@@ -88,21 +82,6 @@ interface KanbanViewInput {
 
 interface KanbanViewResult {
   view: KanbanView;
-}
-
-interface DrawerNav {
-  previous: string | null;
-  next: string | null;
-  onStep: (id: string) => void;
-}
-
-interface DrawerState {
-  opened: ItemRef | null;
-  nav: DrawerNav;
-  wide: boolean;
-  onWide: () => void;
-  open: (id: string) => void;
-  close: () => void;
 }
 
 interface RecordActions {
@@ -164,4 +143,4 @@ interface CancelDep {
   cancel: () => Promise<void>;
 }
 
-export type { AddItemDraft, AgentDoc, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, DrawerNav, DrawerState, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, OpenItem, Panels, RecordActions, Selection, SoftDoc, Threads };
+export type { AddItemDraft, AgentDoc, AddPanel, Adding, BulkOps, BulkTarget, CancelDep, CriteriaReorder, FocusState, ItemOps, KanbanData, KanbanState, KanbanViewInput, KanbanViewResult, NoticeOps, Panels, RecordActions, Selection, SoftDoc, Threads };

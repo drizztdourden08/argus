@@ -10,6 +10,8 @@ import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { PageRunLog } from '../../src/screens/board/run-terminal';
 import { OpenRunLogContext } from '../../src/screens/board/shared';
 import { KanbanTab } from '../../src/screens/board/tabs/kanban';
+import { RecordPaneScope } from '../../src/shell';
+import { RecordPaneHost } from '../../src/shell/records/pane';
 import { byId } from '../board-tests/fixtures';
 import { stubFetch } from '../board-tests/mount-tab';
 import type { Responder } from '../board-tests/mount-tab';
@@ -33,7 +35,10 @@ const Stage = () => {
   return (
     <OpenRunLogContext.Provider value={setLog}>
       <BoardFocus boardKey={SCOPE} />
-      <KanbanTab boardKey={SCOPE} trash={false} onTrashBack={() => undefined} onPurge={() => undefined} />
+      <RecordPaneScope>
+        <KanbanTab boardKey={SCOPE} trash={false} onTrashBack={() => undefined} onPurge={() => undefined} />
+        <RecordPaneHost boardKey={SCOPE} />
+      </RecordPaneScope>
       <PageRunLog boardKey={SCOPE} id={log} onClose={() => setLog(null)} />
     </OpenRunLogContext.Provider>
   );

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import type { PaneData } from '../../src/screens/board/tabs/kanban/pane/pane.type';
+import type { PaneData } from '../../src/shell/records/pane/pane.type';
 import { NOW, itemRef } from './kanban-docs';
 
 const paneData = (extra: Partial<PaneData> = {}): PaneData => ({

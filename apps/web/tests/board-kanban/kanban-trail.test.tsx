@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { inTab } from './kanban-drawer-dom';
 import type { Doc } from './kanban-harness';
-import { HOUR, ago, cleanKanban, item, mountKanban, openItem, where } from './kanban-harness';
+import { HOUR, ago, cleanKanban, item, mountKanban, openItem, paneOf } from './kanban-harness';
 
 cleanKanban();
 
@@ -92,14 +92,14 @@ describe('I-77 P6 the dependency trail in the Links tab', { tags: ['standard'] }
     const { dialog } = await linksOf(trail([local], 2));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
     fireEvent.click(within(tree).getByRole('button', { name: 'Open I-2: Wire the lobby' }));
-    await waitFor(() => expect(where.hash).toBe('#I-2'));
+    await waitFor(() => expect(paneOf().open).toBe('I-2'));
   });
 
   it('opens a node of another board through the link of that board', async () => {
     const { dialog } = await linksOf(trail([seats]));
     const tree = await within(dialog).findByRole('list', { name: 'Dependency trail' });
     fireEvent.click(within(tree).getByRole('button', { name: 'Open tessera/I-70: Seats' }));
-    await waitFor(() => expect(where.hash).toBe('#I-70'));
+    await waitFor(() => expect(paneOf().open).toBe('I-70'));
   });
 
 });

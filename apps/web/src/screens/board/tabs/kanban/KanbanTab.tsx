@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { useMemo } from 'react';
+import { useRecordOrder, useRecordPane } from '../../../../shell';
 import { useBulkOps } from './behavior/useBulkOps';
-import { useDrawer } from './behavior/useDrawer';
 import { useFocusState } from './behavior/useFocusState';
 import { useItemOps } from './behavior/useItemOps';
 import { useKanbanData } from './behavior/useKanbanData';
@@ -13,9 +13,7 @@ import { useNow } from './behavior/useNow';
 import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
-import { itemTests, needsYou } from './model';
 import { useLayout } from './tree';
-import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
 import { KanbanLegend } from './sub-components/KanbanLegend';
 import { KanbanToolbar } from './sub-components/KanbanToolbar';
@@ -32,12 +30,12 @@ const KanbanTab = (props: KanbanTabProps) => {
   const bulk = useBulkOps(boardKey);
   const notices = useNoticeOps(boardKey, data.entries, data.items);
   const { view } = useKanbanView({ data, state, focus, notices, now });
-  const drawer = useDrawer(data, view, state.filters);
+  const pane = useRecordPane();
+  const order = useMemo(() => view.columns.flatMap((column) => column.cards.map((card) => card.id)), [view.columns]);
+  useRecordOrder(order);
   const selection = useSelection();
   const layout = useLayout();
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
-  const drawerTests = useMemo(() => itemTests(data.tests, data.closedBuilds, state.filters.archived), [data.tests, data.closedBuilds, state.filters.archived]);
-  const blocking = (drawer.opened ? data.asks.get(drawer.opened.id) : undefined)?.find((link) => link.via === 'blocker') ?? null;
   if (!data.ready) return <Text tone="muted">Loading the work items.</Text>;
   return (
     <Flex direction="column" gap="md">
@@ -60,24 +58,8 @@ const KanbanTab = (props: KanbanTabProps) => {
         focus={focus.focus}
         layout={layout}
         source={{ items: data.items, tests: data.tests, archived: state.filters.archived }}
-        onOpen={drawer.open}
+        onOpen={pane.open}
         onPurge={() => onPurge('trash')}
-      />
-      <ItemDrawer
-        boardKey={boardKey}
-        item={drawer.opened}
-        items={data.items}
-        tests={drawerTests}
-        threads={data.threads}
-        actions={data.actions}
-        waiting={needsYou(drawer.opened ? data.needs.get(drawer.opened.id) : undefined)}
-        blocking={blocking}
-        now={now}
-        ops={ops}
-        nav={drawer.nav}
-        wide={drawer.wide}
-        onWide={drawer.onWide}
-        onClose={drawer.close}
       />
     </Flex>
   );
