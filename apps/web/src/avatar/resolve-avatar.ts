@@ -13,7 +13,8 @@ const fromSetting = (setting: string): AvatarSource | null => {
 const resolveAvatar = (key: string, setting?: unknown): AvatarSource | null => {
   const chosen = typeof setting === 'string' ? fromSetting(setting) : null;
   if (chosen) return chosen;
-  return Object.hasOwn(KEY_BRANDS, key) ? { kind: 'brand', app: KEY_BRANDS[key] } : null;
+  const app = Object.hasOwn(KEY_BRANDS, key) ? KEY_BRANDS[key] : undefined;
+  return app ? { kind: 'brand', app } : null;
 };
 
 export { resolveAvatar };

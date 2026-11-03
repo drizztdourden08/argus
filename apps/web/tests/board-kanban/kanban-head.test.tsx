@@ -7,6 +7,7 @@ import { cardOf, cleanKanban, item, moreItem, mountKanban } from './kanban-harne
 cleanKanban();
 
 const PIXEL = 'data:image/png;base64,iVBORw0KGgo=';
+const LEAD = 'Assigned to alpha lead (coordinator)';
 
 const headOf = (id: string): HTMLElement => cardOf(id);
 
@@ -48,9 +49,9 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
   it('reads the avatar the board chose, a brand or an uploaded image', async () => {
     const view = await mountKanban(board);
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:rotp' });
-    expect(headOf('I-2').querySelector('[data-lead-mark="brand"] svg')).toBeTruthy();
+    expect(within(headOf('I-2')).getByTitle(LEAD).closest('svg')).toBeTruthy();
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: PIXEL });
-    expect(headOf('I-2').querySelector('[data-lead-mark="image"] img')?.getAttribute('src')).toBe(PIXEL);
+    expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).getAttribute('src')).toBe(PIXEL);
   });
 });
 
@@ -64,7 +65,7 @@ describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
     const post = view.posted.find((sent) => sent.body.kind === 'avatar');
     expect(post?.body).toMatchObject({ kind: 'avatar', avatar: 'brand:brock', author: 'human' });
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:brock' });
-    expect(headOf('I-2').querySelector('[data-lead-mark="brand"]')).toBeTruthy();
+    expect(within(headOf('I-2')).getByTitle(LEAD).closest('svg')).toBeTruthy();
   });
 
   it('refuses an image over the cap before it is posted', async () => {
