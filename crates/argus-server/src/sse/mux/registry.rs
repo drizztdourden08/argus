@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
 
 use argus_core::ApiError;
+use argus_wake::service::driver::SharedWake;
 use axum::response::Response;
 use serde_json::json;
 
@@ -60,6 +61,7 @@ impl Registry {
         fanout: &Arc<Fanout>,
         heartbeat: Duration,
         open: &Arc<AtomicUsize>,
+        wake: Option<SharedWake>,
     ) -> Result<Response, ApiError> {
         let mut conns = self.lock();
         if conns.len() >= MAX_CONNS {
@@ -77,7 +79,7 @@ impl Registry {
         let (sender, res) = open_stream(heartbeat, open, Some(on_drop));
         let hello = json!({ "conn": id, "v": VERSION });
         let _sent = sender.mux_opening_event("hello", &hello);
-        conns.insert(id.clone(), Arc::new(Conn::new(id, sender)));
+        conns.insert(id.clone(), Arc::new(Conn::new(id, sender, wake)));
         Ok(res)
     }
 

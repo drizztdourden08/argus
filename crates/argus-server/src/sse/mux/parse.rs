@@ -4,6 +4,8 @@ use argus_core::ids::is_scope;
 use argus_core::{ApiError, Coll};
 use serde_json::{Value, json};
 
+use super::presence::{Claim, claim_of, release_of};
+
 /// What an op did wrong: a wire code and a message.
 pub struct OpError {
     pub(super) code: &'static str,
@@ -43,6 +45,10 @@ pub enum Op {
         scope: String,
         colls: Option<Vec<Coll>>,
     },
+    /// The tab says which thread has its board open.
+    Presence(Claim),
+    /// The tab no longer has its board open.
+    Unpresence { scope: String, tab: String },
     /// A known op whose piece is not built yet.
     Later(&'static str),
 }
@@ -100,8 +106,8 @@ pub fn parse(raw: &Value) -> Result<Op, OpError> {
     match raw["op"].as_str() {
         Some("sub") => parse_sub(raw),
         Some("unsub") => parse_unsub(raw),
-        Some("presence") => Ok(Op::Later("presence")),
-        Some("unpresence") => Ok(Op::Later("unpresence")),
+        Some("presence") => claim_of(raw).map(Op::Presence),
+        Some("unpresence") => release_of(raw).map(|(scope, tab)| Op::Unpresence { scope, tab }),
         Some("tail") => Ok(Op::Later("tail")),
         Some("untail") => Ok(Op::Later("untail")),
         _ => Err(OpError::bad(

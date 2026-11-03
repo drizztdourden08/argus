@@ -5,12 +5,13 @@
 //!
 //! A connection holds one fan-out client per scope (a `Handle`), all writing through the one
 //! sender of the stream. When the stream body drops, the registry forgets the connection and
-//! removes every client it held. Presence and run-log tail ops are parsed but answer
-//! `not_supported` until their pieces land.
+//! removes every client it held and gives back every presence claim. Run-log tail ops are
+//! parsed but answer `not_supported` until their piece lands.
 
 mod conn;
 mod ops;
 mod parse;
+mod presence;
 mod registry;
 
 pub use conn::Conn;

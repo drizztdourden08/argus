@@ -14,9 +14,9 @@ use crate::router::Reply;
 use crate::{Ctx, Router};
 
 async fn open(ctx: Ctx) -> Reply {
-    ctx.svc
-        .mux
-        .open(&ctx.svc.fanout, ctx.svc.heartbeat, &ctx.svc.streams)
+    let svc = &ctx.svc;
+    svc.mux
+        .open(&svc.fanout, svc.heartbeat, &svc.streams, svc.wake.clone())
 }
 
 async fn post(ctx: Ctx) -> Reply {

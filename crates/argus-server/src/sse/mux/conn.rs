@@ -4,14 +4,18 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use argus_core::ApiError;
 use argus_store::Db;
+use argus_wake::service::driver::SharedWake;
 use serde_json::Value;
 
 use super::ops::{self, Env, Handles};
+use super::presence::{self, Tokens};
 use crate::sse::{Fanout, SseSender};
 
+/// What a connection holds, behind the lock that serialises its POSTs and its end.
 #[derive(Default)]
-struct State {
-    handles: Handles,
+pub(super) struct State {
+    pub(super) handles: Handles,
+    pub(super) presence: Tokens,
     closed: bool,
 }
 
@@ -19,14 +23,16 @@ struct State {
 pub struct Conn {
     id: String,
     sender: SseSender,
+    wake: Option<SharedWake>,
     state: Mutex<State>,
 }
 
 impl Conn {
-    pub(super) fn new(id: String, sender: SseSender) -> Self {
+    pub(super) fn new(id: String, sender: SseSender, wake: Option<SharedWake>) -> Self {
         Conn {
             id,
             sender,
+            wake,
             state: Mutex::new(State::default()),
         }
     }
@@ -60,16 +66,19 @@ impl Conn {
             db,
             fanout,
             sender: &self.sender,
+            wake: self.wake.as_ref(),
         };
-        Ok(ops::apply(&env, &mut state.handles, list))
+        Ok(ops::apply(&env, &mut state, list))
     }
 
-    /// Ends the connection: removes every client it held. Safe to call twice.
+    /// Ends the connection: removes every client it held and gives back every presence claim.
+    /// Safe to call twice.
     pub(super) fn teardown(&self, fanout: &Fanout) {
         let mut state = self.lock();
         state.closed = true;
         for (_, h) in state.handles.drain() {
             fanout.drop_client(&h);
         }
+        presence::release_all(self.wake.as_ref(), &mut state.presence);
     }
 }

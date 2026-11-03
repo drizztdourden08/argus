@@ -71,7 +71,7 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
         sub("alpha", &["nope"]),
         { "op": "fly" },
         5,
-        { "op": "presence", "scope": "alpha", "thread": "t", "tab": "x" },
+        { "op": "tail", "sub": "s", "key": "alpha", "rid": "r", "after": 0 },
         { "op": "untail", "sub": "s" },
         sub("alpha", &["meta"]),
     ]);

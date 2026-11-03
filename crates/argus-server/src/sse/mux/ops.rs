@@ -5,9 +5,12 @@ use std::collections::HashMap;
 
 use argus_core::{ApiError, Coll, ErrorCode};
 use argus_store::Db;
+use argus_wake::service::driver::SharedWake;
 use serde_json::{Value, json};
 
+use super::conn::State;
 use super::parse::{Op, OpError, parse};
+use super::presence;
 use crate::sse::{Fanout, Handle, Kind, SseSender, Target};
 
 /// The scope handles of one connection, by scope.
@@ -21,6 +24,8 @@ pub struct Env<'a> {
     pub fanout: &'a Fanout,
     /// The stream of the connection.
     pub sender: &'a SseSender,
+    /// The wake service the presence claims go to, when it runs.
+    pub wake: Option<&'a SharedWake>,
 }
 
 fn open_new(
@@ -74,15 +79,20 @@ fn unsubscribe(fanout: &Fanout, handles: &mut Handles, scope: &str, colls: Optio
     }
 }
 
-fn run(env: &Env<'_>, handles: &mut Handles, op: Op) -> Result<(), OpError> {
+fn run(env: &Env<'_>, state: &mut State, op: Op) -> Result<(), OpError> {
     match op {
         Op::Sub {
             scope,
             colls,
             since,
-        } => Ok(subscribe(env, handles, &scope, &colls, since)?),
+        } => Ok(subscribe(env, &mut state.handles, &scope, &colls, since)?),
         Op::Unsub { scope, colls } => {
-            unsubscribe(env.fanout, handles, &scope, colls.as_deref());
+            unsubscribe(env.fanout, &mut state.handles, &scope, colls.as_deref());
+            Ok(())
+        }
+        Op::Presence(claim) => presence::attach(env.wake, &mut state.presence, claim),
+        Op::Unpresence { scope, tab } => {
+            presence::detach(env.wake, &mut state.presence, &scope, &tab);
             Ok(())
         }
         Op::Later(name) => Err(OpError {
@@ -93,13 +103,11 @@ fn run(env: &Env<'_>, handles: &mut Handles, op: Op) -> Result<(), OpError> {
 }
 
 /// Applies the ops in order; one result per op: `{ok: true}` or `{error: {code, message}}`.
-pub fn apply(env: &Env<'_>, handles: &mut Handles, ops: &[Value]) -> Vec<Value> {
+pub fn apply(env: &Env<'_>, state: &mut State, ops: &[Value]) -> Vec<Value> {
     ops.iter()
-        .map(
-            |raw| match parse(raw).and_then(|op| run(env, handles, op)) {
-                Ok(()) => json!({ "ok": true }),
-                Err(e) => e.to_value(),
-            },
-        )
+        .map(|raw| match parse(raw).and_then(|op| run(env, state, op)) {
+            Ok(()) => json!({ "ok": true }),
+            Err(e) => e.to_value(),
+        })
         .collect()
 }
