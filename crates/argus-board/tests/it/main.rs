@@ -8,6 +8,7 @@ mod export_import;
 mod item_images;
 mod lock;
 mod names;
+mod op_links;
 mod ops;
 mod plan_run;
 mod portfolio;

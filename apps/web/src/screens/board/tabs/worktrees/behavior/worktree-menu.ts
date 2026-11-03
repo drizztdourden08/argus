@@ -22,8 +22,9 @@ const removeGroup = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup[] =>
 };
 
 const worktreeMenu = (row: WorktreeRow, input: WorktreeMenuInput): MenuGroup[] => {
-  const handlers = { open: input.open, copy: () => copyText(input.code) };
-  const middle = row.status === 'deleting' ? [] : [askGroup(row, input), ...removeGroup(row, input)];
+  const idle = row.status !== 'deleting';
+  const handlers = { open: input.open, keep: idle ? input.keep : undefined, link: idle ? input.link : undefined, copy: () => copyText(input.code) };
+  const middle = idle ? [askGroup(row, input), ...removeGroup(row, input)] : [];
   return recordMenuGroups(WORKTREE_KIND, input.label, handlers, middle);
 };
 
