@@ -21,6 +21,7 @@ mod restore;
 mod result;
 mod soft;
 mod target;
+mod typed;
 mod who;
 
 use std::path::Path;
@@ -39,6 +40,8 @@ pub use plan::{PurgePlan, Selection, purge_plan};
 pub use pr::is_pr_kind;
 pub use restore::restore_from;
 pub use result::{Notice, OpResult, Status};
+pub use target::{record_arg, record_thread};
+pub use typed::create_note;
 pub use who::{Role, Who};
 
 fn dispatch(

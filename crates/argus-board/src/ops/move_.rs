@@ -7,7 +7,10 @@ use serde_json::{Map, Value, json};
 use super::announce::{announce, refresh_needs_human};
 use super::authorize::{Check, authorize};
 use super::result::{OpResult, version_check};
-use super::target::{ITEM_STATUSES, id_arg, item_arg, one_of, target_of, thread_arg};
+use super::target::{
+    ITEM_STATUSES, id_arg, item_arg, one_of, record_arg, record_thread, target_of, thread_arg,
+};
+use super::typed::{self, Outcome};
 use super::who::Who;
 use crate::Board;
 use crate::error::{BoardError, refuse};
@@ -90,7 +93,9 @@ fn plan_test(board: &Board, to: &Map<String, Value>) -> Result<Plan, BoardError>
     let mut changes = Map::new();
     changes.insert("item".into(), json!(item_id));
     changes.insert("thread".into(), item["thread"].clone());
-    changes.insert("subject".into(), item["subject"].clone());
+    if !item["subject"].is_null() {
+        changes.insert("subject".into(), item["subject"].clone());
+    }
     let refs = ac_refs(&item, &item_id, to.get("ac"))?;
     Ok(Plan {
         changes,
@@ -113,9 +118,9 @@ fn plan_entry(board: &Board, to: &Map<String, Value>) -> Result<Plan, BoardError
     }
     let mut changes = Map::new();
     if let Some(target) = to.get("item") {
-        let item_id = item_arg(board, target)?;
-        let thread = doc(board, "items", &item_id).map_or(Value::Null, |i| i["thread"].clone());
-        changes.insert("item".into(), json!(item_id));
+        let record = record_arg(board, target)?;
+        let thread = record_thread(board, &record);
+        changes.insert("item".into(), json!(record));
         changes.insert("thread".into(), thread);
     }
     Ok(Plan::of(changes))
@@ -150,7 +155,7 @@ fn plan(board: &Board, coll: &str, to: &Map<String, Value>) -> Result<Plan, Boar
 
 /// An item changing hands: its tests follow, and so does every open question, decision and
 /// notice routed to the old owner on it.
-fn hand_over(
+pub(super) fn hand_over(
     board: &mut Board,
     item_id: &str,
     from: &Value,
@@ -231,15 +236,30 @@ fn after_move(
     Ok(())
 }
 
+/// A typed item changing stage: the status and stage to write, and what the move let through.
+fn shifted(
+    board: &Board,
+    (coll, current): (&str, &Value),
+    by: (&Who, &Value),
+    plan: &mut Plan,
+    to: &Map<String, Value>,
+) -> Result<Outcome, BoardError> {
+    if coll != "items" {
+        return Ok(Outcome::default());
+    }
+    typed::on_move(board, current, by, &mut plan.changes, to)
+}
+
 /// Apply a `move` op.
 pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResult, BoardError> {
     let (coll, id) = target_of(board, op, false)?;
     let to = obj(&op["to"]);
-    let plan = plan(board, &coll, to)?;
+    let mut plan = plan(board, &coll, to)?;
     let before = to.get("before").and_then(id_arg);
     let after = to.get("after").and_then(id_arg);
     let placed = before.is_some() || after.is_some();
-    if plan.changes.is_empty() && !placed {
+    let staged = coll == "items" && to.get("stage").is_some_and(|s| !s.is_null());
+    if plan.changes.is_empty() && !placed && !staged {
         return Err(refuse("nothing to move."));
     }
     let current = doc(board, &coll, &id).cloned().unwrap_or(Value::Null);
@@ -248,6 +268,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
         who,
         &Check::new("move", &coll, Some(&current)).to(new_thread),
     )?;
+    let outcome = shifted(board, (&coll, &current), (who, op), &mut plan, to)?;
     let rank = if placed {
         Some(rank_between(
             board,
@@ -259,7 +280,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     } else {
         None
     };
-    let named: Vec<String> = ["thread", "status", "item"]
+    let named: Vec<String> = ["thread", "status", "item", "stage"]
         .iter()
         .filter(|k| to.contains_key(**k))
         .map(|k| (*k).to_owned())
@@ -271,6 +292,7 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     write_move(board, (&coll, &id), &plan, rank);
     stamp(board, &coll, &id, &actor)?;
     after_move(board, (&coll, &id), &plan, &current["thread"], &actor)?;
+    outcome.record(board, &id, who)?;
     let now = doc(board, &coll, &id).cloned().unwrap_or(Value::Null);
     let owners = if coll == "threads" {
         vec![Some(id.clone())]
@@ -280,5 +302,5 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     let parts = parts_of(&coll, &plan.changes, placed);
     let said = format!("moved {id} {parts}").trim().to_owned();
     let notify = announce(board, who, &owners, &said, Some(&id));
-    Ok(OpResult::applied(said).with_notify(notify))
+    Ok(outcome.finish(OpResult::applied(said).with_notify(notify)))
 }
