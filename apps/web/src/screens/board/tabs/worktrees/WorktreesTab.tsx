@@ -55,8 +55,8 @@ const WorktreesTab = (props: WorktreesTabProps) => {
         removal={removal}
         onShowAll={() => prefs.setFilter('all')}
       />
-      <RequestsSection requests={requestsOf(meta)} />
-      <RemovedSection removed={removedOf(meta)} />
+      <RequestsSection boardKey={boardKey} requests={requestsOf(meta)} />
+      <RemovedSection boardKey={boardKey} removed={removedOf(meta)} />
       <RulesSection rules={rules} meta={meta} open={prefs.rulesOpen} onOpen={prefs.setRulesOpen} />
     </Panel>
   );

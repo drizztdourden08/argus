@@ -1,28 +1,22 @@
 /* @layer renderer-app @kind component */
-import { Flex, Tag, Text } from '@drizztdourden08/tessera';
-import { Age } from '../../../../../shell';
-import { plainText } from '../../../plain-text';
+import { Text } from '@drizztdourden08/tessera';
+import { RecordGroup } from '../../../../../shell';
+import { useGroupsData } from '../../../item-groups';
+import { useNow } from '../../../shared';
 import { REMOVED_SHOWN } from '../model';
+import { REMOVED_TITLE } from '../worktrees.constants';
 import type { RemovedSectionProps } from '../worktrees-props.type';
+import { RemovedRow } from './RemovedRow';
 
 const RemovedSection = (props: RemovedSectionProps) => {
-  const { removed } = props;
+  const { boardKey, removed } = props;
+  const { threads } = useGroupsData(boardKey);
+  const now = useNow(false);
   if (removed.length === 0) return null;
   return (
-    <Flex direction="column" gap="xs" role="group" aria-label="Worktrees Argus removed by itself">
-      <Text variant="caption" tone="muted">Removed by the worktree hygiene: the released worktrees, newest first.</Text>
-      {removed.slice(0, REMOVED_SHOWN).map((done) => (
-        <Flex key={`${done.id}-${done.at}`} gap="xs" align="center" wrap>
-          <Tag title={plainText(done.text)}>removed</Tag>
-          <Text.B>{done.path}</Text.B>
-          <Text variant="caption">
-            {done.thread ? `${done.thread} · ` : ''}
-            <Age value={done.at} />
-            {' ago'}
-          </Text>
-        </Flex>
-      ))}
-    </Flex>
+    <RecordGroup header={<Text weight={600}>{REMOVED_TITLE}</Text>} count={removed.length} defaultOpen={false} label={REMOVED_TITLE}>
+      {removed.slice(0, REMOVED_SHOWN).map((done) => <RemovedRow key={`${done.id}-${done.at}`} done={done} boardKey={boardKey} threads={threads} now={now} />)}
+    </RecordGroup>
   );
 };
 

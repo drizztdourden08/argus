@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { TagLook } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { RecordHeadProps } from './records.type';
 
@@ -8,6 +9,7 @@ interface RowChip {
   title?: string;
   link?: string;
   code?: boolean;
+  look?: TagLook;
 }
 
 interface RowChipsProps {
@@ -32,10 +34,18 @@ interface LinkedTitleProps {
 interface RecordRowProps {
   head: Omit<RecordHeadProps, 'selection' | 'size'>;
   title: string;
-  onOpen: () => void;
+  onOpen?: () => void;
   chips?: readonly RowChip[];
   age?: string;
   trailing?: ReactNode;
+}
+
+interface RowTitleProps {
+  title: string;
+  board: string;
+  linked: boolean;
+  onOpen?: () => void;
+  label: string;
 }
 
 interface RecordGroupProps {
@@ -45,6 +55,15 @@ interface RecordGroupProps {
   defaultOpen?: boolean;
   label: string;
   children: ReactNode;
+}
+
+interface RecordGroupHeaderProps {
+  kind: string;
+  code: string;
+  title: string;
+  boardKey: string;
+  onOpen: () => void;
+  tag?: { text: string; title?: string };
 }
 
 interface RecordGroupData<T> {
@@ -64,5 +83,5 @@ interface GroupInfo {
 }
 
 export type {
-  GroupInfo, LinkedTitleProps, RecordGroupData, RecordGroupProps, RecordGroups, RecordRowProps, RowChip, RowChipTagProps, RowChipsProps,
+  GroupInfo, LinkedTitleProps, RecordGroupData, RecordGroupHeaderProps, RecordGroupProps, RecordGroups, RecordRowProps, RowChip, RowChipTagProps, RowChipsProps, RowTitleProps,
 };

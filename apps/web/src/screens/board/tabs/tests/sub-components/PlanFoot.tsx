@@ -25,7 +25,7 @@ const PlanFoot = (props: PlanFootProps) => {
   };
   return (
     <Flex direction="column" gap="xs">
-      <BundleProgress counts={plan.counts} />
+      <BundleProgress counts={plan.counts} fill />
       <Flex gap="sm" align="center">
         <Button size="sm" icon={<Icon name="play" />} disabled={empty} title={empty ? NO_CASES_TIP : undefined} onClick={run}>
           {plan.live ? 'Continue run' : 'Start run'}

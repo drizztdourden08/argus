@@ -91,6 +91,7 @@ interface BundleTagsProps {
 
 interface BundleProgressProps {
   counts: Counts;
+  fill?: boolean;
 }
 
 interface LaunchBoxProps {

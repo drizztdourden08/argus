@@ -4,15 +4,14 @@ import type { ListItemColumn } from '@drizztdourden08/tessera';
 import { rowLinked } from '../behavior/row-linked';
 import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
-import { LinkedTitle } from './LinkedTitle';
 import { RecordMenu } from './RecordMenu';
 import { RowChips } from './RowChips';
+import { RowTitle } from './RowTitle';
 import { TypeIcon } from './TypeIcon';
 
 const RecordRow = (props: RecordRowProps) => {
   const { head, title, onOpen, chips = [], age, trailing } = props;
-  const linked = rowLinked(title, chips);
-  const openLabel = `Open ${head.code}: ${title}`;
+  const linked = onOpen !== undefined && rowLinked(title, chips);
   const columns: ListItemColumn[] = [];
   if (chips.length > 0) columns.push({ primary: <RowChips chips={chips} board={head.boardKey} /> });
   if (age) columns.push({ primary: <Text variant="caption" tone="muted">{age}</Text>, align: 'end' });
@@ -20,15 +19,7 @@ const RecordRow = (props: RecordRowProps) => {
   return (
     <ListItemRow
       icon={<TypeIcon kind={head.kind} />}
-      name={
-        linked ? (
-          <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} label={openLabel} />
-        ) : (
-          <Pressable onClick={onOpen} aria-label={openLabel}>
-            <Text clamp={1} smartTimes>{title}</Text>
-          </Pressable>
-        )
-      }
+      name={<RowTitle title={title} board={head.boardKey} linked={linked} onOpen={onOpen} label={`Open ${head.code}: ${title}`} />}
       meta={linked ? <Pressable onClick={onOpen} title={`Open ${head.code}`}>{code}</Pressable> : code}
       columns={columns}
       action={
