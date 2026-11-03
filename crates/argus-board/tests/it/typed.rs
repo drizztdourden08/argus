@@ -9,8 +9,8 @@ use crate::common::alpha;
 use argus_board::ops::{OpResult, Role, Status, Who, apply_op, create_note};
 use serde_json::{Value, json};
 
-fn as_owner(board: &mut Value, op: Value) -> OpResult {
-    apply_op(board, &op, &Who::human(), None)
+fn as_owner(board: &mut Value, op: &Value) -> OpResult {
+    apply_op(board, op, &Who::human(), None)
 }
 
 fn lead() -> Who {
@@ -39,7 +39,8 @@ fn refused(res: &OpResult) -> String {
 }
 
 fn make(board: &mut Value, who: &Who, set: Value) -> OpResult {
-    let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
+    let mut op = json!({"kind": "create", "target": {"c": "items"}});
+    op["set"] = set;
     apply_op(board, &op, who, None)
 }
 
@@ -53,14 +54,14 @@ fn made(board: &mut Value, who: &Who, set: Value) -> String {
 }
 
 fn edit(board: &mut Value, who: &Who, id: &str, set: Value) -> OpResult {
-    let op = json!({"kind": "edit", "target": {"c": "items", "id": id}, "set": set});
+    let mut op = json!({"kind": "edit", "target": {"c": "items", "id": id}});
+    op["set"] = set;
     apply_op(board, &op, who, None)
 }
 
 fn edit_forced(board: &mut Value, who: &Who, id: &str, set: Value, force: &str) -> OpResult {
-    let op = json!({
-        "kind": "edit", "target": {"c": "items", "id": id}, "set": set, "force": force,
-    });
+    let mut op = json!({"kind": "edit", "target": {"c": "items", "id": id}, "force": force});
+    op["set"] = set;
     apply_op(board, &op, who, None)
 }
 
@@ -618,7 +619,7 @@ fn a_to_do_has_an_assignee_and_may_be_about_a_test() {
     let mut b = alpha();
     let ok = as_owner(
         &mut b,
-        json!({"kind": "create", "target": {"c": "actions"},
+        &json!({"kind": "create", "target": {"c": "actions"},
                "set": {"text": "Run the form test", "item": "T-2", "assignee": "lead:brock"}}),
     );
     applied(&ok);
@@ -631,18 +632,18 @@ fn a_to_do_has_an_assignee_and_may_be_about_a_test() {
     assert_eq!(b["actions"][id.as_str()]["assignee"], "lead:brock");
     let ghost = as_owner(
         &mut b,
-        json!({"kind": "create", "target": {"c": "actions"},
+        &json!({"kind": "create", "target": {"c": "actions"},
                "set": {"text": "Who", "item": "I-1", "assignee": "lead:nobody"}}),
     );
     assert!(refused(&ghost).contains("to-dos"));
     let missing = as_owner(
         &mut b,
-        json!({"kind": "create", "target": {"c": "actions"}, "set": {"text": "Test", "item": "T-99"}}),
+        &json!({"kind": "create", "target": {"c": "actions"}, "set": {"text": "Test", "item": "T-99"}}),
     );
     assert_eq!(refused(&missing), "no test \"T-99\".");
     let plain = as_owner(
         &mut b,
-        json!({"kind": "create", "target": {"c": "actions"}, "set": {"text": "Plain", "item": "I-1"}}),
+        &json!({"kind": "create", "target": {"c": "actions"}, "set": {"text": "Plain", "item": "I-1"}}),
     );
     applied(&plain);
     let plain_id = plain.extra["created"]["id"]
@@ -652,7 +653,7 @@ fn a_to_do_has_an_assignee_and_may_be_about_a_test() {
     assert_eq!(b["actions"][plain_id.as_str()].get("assignee"), None);
     let edited = as_owner(
         &mut b,
-        json!({"kind": "edit", "target": {"c": "actions", "id": plain_id},
+        &json!({"kind": "edit", "target": {"c": "actions", "id": plain_id},
                "set": {"assignee": "owner", "item": "T-1"}}),
     );
     applied(&edited);
@@ -665,7 +666,7 @@ fn an_entry_moves_onto_a_test() {
     let mut b = alpha();
     let res = as_owner(
         &mut b,
-        json!({"kind": "move", "target": {"c": "entries", "id": "Q-1"}, "to": {"item": "T-2"}}),
+        &json!({"kind": "move", "target": {"c": "entries", "id": "Q-1"}, "to": {"item": "T-2"}}),
     );
     applied(&res);
     assert_eq!(b["entries"]["Q-1"]["item"], "T-2");

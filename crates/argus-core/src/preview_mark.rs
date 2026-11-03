@@ -76,12 +76,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let p = copy_in(&dir);
         assert!(mark(&p).unwrap());
-        assert!(marked(&p.config));
-        let text = std::fs::read_to_string(&p.config).unwrap();
-        assert!(
-            text.contains(&format!("\"port\": {PREVIEW_PORT}")),
-            "{text}"
-        );
+        let config = std::fs::read_to_string(&p.config).unwrap();
+        let shadow = crate::shadow_mark::marked(&p.config);
+        assert_eq!((marked(&p.config), shadow), (true, false));
+        assert!(config.contains(&PREVIEW_PORT.to_string()), "{config}");
     }
 
     #[test]

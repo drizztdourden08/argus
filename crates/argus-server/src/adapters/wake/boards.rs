@@ -10,7 +10,6 @@ use argus_board::Board;
 use argus_core::ids::PORTFOLIO;
 use argus_wake::board::BoardView;
 use argus_wake::source::{AgentLive, BoardSource};
-use serde::Deserialize;
 
 use crate::boards::BoardReader;
 
