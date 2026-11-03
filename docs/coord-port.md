@@ -520,3 +520,100 @@ entry.images = [{ n, file, caption, option?, url: null, at }]
 4. Nothing else changes: `entry set`, `answer`, `pick` and `done` keep the field untouched, and
    an entry made before this change reads as before.
 5. A purge does not move entry images into the purge folder yet. Their files stay in `proofs/`.
+
+## Typed items, test plans, notes and to-dos
+
+The item-type rework (item I-70) adds verbs and flags to the Rust CLI. Argus only: the Node CLI has
+none of them, and every call the hooks make keeps its output. `coord types` and the usage text come
+from the registry, so they cannot drift (see `docs/architecture.md`, Item types).
+
+### Items
+
+```
+coord item add "<title>" [--type <t>] [--parent <I>] [--assignee <thread|owner>] [--stage <s>]
+               [--field k=v]... [--image <file> "<caption>"]... [--force "<reason>"]
+coord item set <I> [--type t] [--parent <I>|none] [--assignee who|none] [--stage s] [--field k=v]...
+coord item status <I> <lane|stage> [--force "<reason>"]
+coord item tree [<I>] [--type t] [--open] [--assignee who|me]
+coord item list [--type t] [--assignee who|me]
+coord types [<type>]
+```
+
+1. No `--type` makes a task. `--for <T>` still names the accountable thread and also sets the
+   assignee.
+2. `--field k=v` is checked by the registry: the key must be a field of the type and the value must
+   pass its content rule. Each field of the type also has a named flag, for example `--severity S2`
+   or `--repro "..."`. Read `coord types <type>` for the list, with stages, parents and done rules.
+   `coord types` alone lists every type.
+3. `--parent` must be on this board, of a type that may hold the item, and not a cycle. `--parent
+   none` makes the item a root.
+4. `coord item status` takes the five lanes, so every hook and lead keeps working, or a stage name.
+   A lane alone picks the first stage of that lane, or keeps the current stage when it already maps
+   there.
+5. A done rule that refuses stops the move and names what is missing. `--force "<reason>"` passes it
+   and writes a decision `D-n` on the item. A rule in mode `warn` prints the missing parts and moves.
+   `--force` never skips the `--if-rev` check.
+6. `--image <file> "<caption>"` is repeatable on `add` and `set`. The captions are the words after
+   the title (add) or after the item id (set), one per flag, in order. The file is png, jpg, gif or
+   webp up to 10 MiB, 12 pictures to an item, and the same bytes are kept once.
+7. `coord item tree` prints one line per item, children indented under their parent:
+   `I-90 [epic] active  ME  Release 2  7/10` (id, type, stage, assignee, title, progress).
+   `--open` leaves out settled items. `coord item list` gains `--type` and `--assignee`.
+
+### Blockers
+
+```
+coord item block <I> --on <I|T|H|Q|D-n>
+coord item block <I> --todo "<what>" --who <owner|thread|lead:key>
+coord item unblock <I> [--from <id>]
+coord item migrate-blockers [--dry-run]
+```
+
+1. A blocker is an id. `--on` checks that the id exists on this board, is not the item itself and
+   adds no cycle. Free text after `--on` is refused with a sentence that names the two forms.
+2. `--todo` makes a to-do `H-n` for `--who` with `item` set to the blocked item, and links it, in
+   one write. For the owner it feeds his queue. For a lead it wakes that lead.
+3. An id with a project key (`brock/I-4`) is refused. Another board's work is
+   `coord dep ask <key> "<what>" --item <I>`.
+4. `unblock` drops one link with `--from`, or all of them without it.
+5. `migrate-blockers` turns each old text `blocker` into a link or a to-do and clears the text. An
+   id of this board becomes a `blockedBy` link. A ledger `D-n` is dropped, since `waitsOn` already
+   blocks. `external: owner ...` becomes a to-do for the owner. Any other text becomes a to-do for
+   the item's thread. Text on a done or dropped item is cleared. Run it with `--dry-run` first: it
+   prints one line per change and writes nothing. Each lead runs it once on its own board.
+
+### Test plans
+
+```
+coord test plan add "<title>" [--parent I] [--bundle <tag>] [--case T]...
+coord test plan cases <plan I> --add T [--before T] | --remove T
+coord test plan start <plan I> [--bundle <tag>]
+coord test plan end <plan I>
+coord test plan show <plan I>
+coord test add <I> "<title>" ... [--plan <plan I>]
+coord test result <T> <pass|fail|partial|blocked|skip> "<note>" [--proof <img>] [--run <plan I>]
+```
+
+1. A plan is an item of type `test-plan`. Its cases are `T-n` tests in order, and a test may be in
+   many plans.
+2. A plan needs at least one case to reach `ready`. `start` opens a run and moves the plan to
+   `running`; `end` closes it, counts the results and moves the plan to `reported`. One run is open
+   at a time.
+3. `coord test result <T> ... --run <plan I>` records the result in the open run and on the test
+   itself, so the test's own result, its wakes and its proofs stay true. `skip` exists only in the
+   run and writes nothing to the test.
+4. `coord test add ... --plan <plan I>` puts the new case at the end of that plan.
+
+### Notes and to-dos
+
+```
+coord note <I|T> "<text>"
+coord action add "<manual step>" [--item <I|T>] [--who owner|<thread>|lead:<key>]
+coord action list [--who <w>]
+```
+
+1. A note is an informal remark on an item or a test: up to 300 characters, its own id `N-n`, and it
+   never blocks. `coord ask` and `coord decide` also take a `T-n` now.
+2. A to-do has an assignee. With no `--who` it is the owner's, as before. `lead:<key>` sends it to
+   the lead of another project and wakes it (`todo-assigned`). A to-do blocks an item only when it
+   is linked in `blockedBy`.

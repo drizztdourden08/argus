@@ -4,6 +4,7 @@ import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
 import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
+import type { LayoutState, TreeSource } from './tree';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -19,6 +20,7 @@ interface KanbanToolbarProps {
   items: readonly ItemRef[];
   threads: Threads;
   selection: Selection;
+  layout: LayoutState;
 }
 
 interface FilterRowProps {
@@ -36,6 +38,7 @@ interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
   selection: Selection;
+  layout: LayoutState;
 }
 
 interface OpNoticesProps {
@@ -68,6 +71,8 @@ interface KanbanBodyProps {
   trash: TrashPanel;
   add: AddPanel;
   focus: string;
+  layout: LayoutState;
+  source: TreeSource;
   onOpen: (id: string) => void;
   onPurge: () => void;
 }

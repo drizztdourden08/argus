@@ -14,6 +14,7 @@ import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
 import { itemTests, needsYou } from './model';
+import { useLayout } from './tree';
 import { ItemDrawer } from './sub-components/ItemDrawer';
 import { KanbanBody } from './sub-components/KanbanBody';
 import { KanbanLegend } from './sub-components/KanbanLegend';
@@ -33,6 +34,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   const { view } = useKanbanView({ data, state, focus, notices, now });
   const drawer = useDrawer(data, view, state.filters);
   const selection = useSelection();
+  const layout = useLayout();
   const panels = usePanels(data, state, bulk, { open: trash, onBack: onTrashBack });
   const drawerTests = useMemo(() => itemTests(data.tests, data.closedBuilds, state.filters.archived), [data.tests, data.closedBuilds, state.filters.archived]);
   const blocking = (drawer.opened ? data.asks.get(drawer.opened.id) : undefined)?.find((link) => link.via === 'blocker') ?? null;
@@ -40,7 +42,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   return (
     <Flex direction="column" gap="md">
       {!panels.trash.open && (
-        <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} selection={selection} />
+        <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} selection={selection} layout={layout} />
       )}
       {!panels.trash.open && <KanbanLegend />}
       <OpNotices ops={notices} />
@@ -56,6 +58,8 @@ const KanbanTab = (props: KanbanTabProps) => {
         trash={panels.trash}
         add={panels.add}
         focus={focus.focus}
+        layout={layout}
+        source={{ items: data.items, tests: data.tests, archived: state.filters.archived }}
         onOpen={drawer.open}
         onPurge={() => onPurge('trash')}
       />

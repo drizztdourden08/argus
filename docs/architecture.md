@@ -479,6 +479,177 @@ bus as `Applied {scope, entry, status, board, before, source}` for the wake poli
 export goes on the bus as `Exported {key, board}` for the automatic pings and the services that
 judge again on export (worktree statuses, registry).
 
+### Item types
+
+Every work item has a type. The rework (item I-70) adds the types, the hierarchy, the typed
+fields, the one blocked rule, the trail, the item events and the item images. Argus only: the Node
+dashboard knows none of it, and an item without a type still reads and behaves as before.
+
+#### The item type registry
+
+One file holds the whole description: `crates/argus-board/registry/item-types.json`, with its JSON
+schema and a shared case file (`content-cases.json`) next to it. Rust compiles it in with
+`include_str!` and loads it once (`argus_board::registry::registry()`). The web imports the same
+file through the alias `@argus/registry` and reads it in `apps/web/src/data/registry`. The web build
+is embedded in the same binary, so the two cannot drift. A critical test checks the file against its
+schema and every cross reference (a parent type exists, a stage lane is one of the five, a field
+is defined).
+
+The registry holds:
+
+- the lanes: `todo`, `doing`, `review`, `done`, `dropped`;
+- the types, each with a label, a Tessera icon and a category colour, the types it may sit under
+  (`parents`), its stages, its fields and field groups, its pane tabs, its card shape (the progress
+  rule and the chips) and its done rule;
+- the sub-items (question, decision, to-do, note) with their store, id prefix, icon and tone;
+- the content kinds and the field table: which rule a field follows (line, rich, enum, ref and the
+  rest) and its limits;
+- the people looks: the owner and one colour and initials per lead;
+- `limits`, the old per-kind text limits. `limits.rs` reads them from here, so every number is kept.
+
+The types are `epic`, `story`, `task`, `bug`, `debt`, `test-plan` and `test-case`. The hierarchy is
+epic, then story, then a leaf (task, bug, debt or test plan). A leaf may sit under a story or
+straight under an epic, and any type may be a root. A parent is on the same board; across boards the
+dependency ledger is the link. A test case is not an item: it stays a `T-n` in the `tests`
+collection, and the registry wraps it as a type so one renderer draws it. A plan lists its cases in
+`fields.cases`, and a case may sit in many plans.
+
+#### The base item fields
+
+The kept fields are unchanged (`id`, `title`, `description`, `subject`, `thread`, `status`, `ac`,
+the dependency mirrors, the revision and the stamps). These are new and all optional on disk:
+
+| Field | Meaning | When absent |
+|---|---|---|
+| `type` | a registry type id | `task` |
+| `parent` | an `I-n` of this board | a root item |
+| `assignee` | a thread of the board, `owner`, or `lead:<key>` | the item's `thread` |
+| `stage` | a stage id of the type | the first stage of the type in the current lane |
+| `fields` | the type's own fields, keyed by field id | none |
+| `blockedBy` | ids of this board: `I-n`, `T-n`, `H-n`, `Q-n`, `D-n` | none |
+| `images` | `[{n, file, caption, sha256, at, by}]` | none |
+
+No board is rewritten. Every reader applies the defaults, and a field lands on disk when someone
+sets it. The board `schema` stays 2 and unknown fields keep their order on a save. The field
+`subject` is retired from every verb and view; old items still parse. The text field `blocker` is
+retired too (see the blocked rule).
+
+#### Typed fields
+
+Each type adds fields from the registry, checked by `argus_board::content` on every write and by
+`apps/web/src/data/content` for instant feedback in the page. Both run the same cases from
+`content-cases.json`. The kinds are `line` (no markup, no newline), `slug`, `rich`, `enum`, `ref`,
+`refs`, `date`, `person` and `records`. The rich kind follows the rule `rich-v1`: a small Markdown
+subset of bullets and images, one short lead line at most, a lone paragraph refused, about 500
+characters of text and 6 images. A refusal carries a stable key (for example `rich-lone-paragraph`)
+so the page and the CLI say the same thing.
+
+| Type | Own fields |
+|---|---|
+| epic | `goal`, `target` |
+| story | `role`, `want`, `benefit` |
+| task | none |
+| bug | `severity` (required), `repro`, `expected`, `actual`, `environment`, `foundIn`, `reporter`, `duplicateOf` |
+| debt | `area`, `cost`, `risk`, `payoff` |
+| test-plan | `bundle`, `cases`, `env`, `runs` |
+
+#### Stages map to lanes
+
+`status` stays the five lanes, and every older rule (wakes, stalls, the kanban columns) keeps
+reading the lane. Each type has its own stages and each stage maps to one lane. A move to a stage
+sets the lane. A move to a lane alone (`coord item status I-n doing`, a drag) picks the first stage
+of that lane, or keeps the current stage when it already maps there. A stage lists the stages it may
+move to; the owner may always move freely.
+
+A done rule says what a stage needs before the lane `done`. It has a mode: `warn` tells what is
+open and refuses nothing, `refuse` stops the move and names what is missing. `--force "<reason>"`
+passes a refusal and writes a decision `D-n` on the item with the reason, so the override stays
+visible. A forced text edit still checks the revision.
+
+| Type | Done rule | Mode |
+|---|---|---|
+| task | every criterion checked | warn |
+| debt | every criterion checked | warn |
+| epic | every child done or dropped | refuse |
+| story | criteria checked, children settled, every test that verifies it passes | refuse |
+| bug | a linked test passes, or the owner closed it | refuse |
+| test-plan | the last run is complete and every case passes | refuse |
+
+#### The one blocked rule
+
+`argus_board::blocked::causes(&Board, item_id)` returns every reason an item is held back, as
+`Cause {kind, id, label, who}`. The kinds are an unsettled `blockedBy` item, an unpassed test, a
+pending to-do, an open question, a pending decision, a waiting dependency, a dependency blocked on
+the other side, and the legacy text. A settled link (done, dropped, passed, gone) never counts. The
+wake engine calls it for the stall rules, the exporter writes the result as `blocked` on each item
+doc, and the page reads that list and never recomputes it.
+
+A blocker is always an id. Free text is refused; an outside wait is a to-do assigned to the owner or
+a lead and linked in `blockedBy`. Hierarchy is not a dependency: a parent is never blocked by its
+children. A cycle in `blockedBy` is refused at write time. The older text `blocker` counts as the
+`legacy` cause until `coord item migrate-blockers` turns it into links.
+
+#### The trail
+
+The trail follows the blocked rule across boards: the `blockedBy` links, the dependency ledger to
+the other board's item, and open questions and decisions as leaf nodes. It is a tree, cycle safe
+(a node already on the path is shown once and marked), settled hops are skipped and the depth is
+capped at 12. `argus_board::trail::walk` computes it on the server because one board's export cannot
+see the others. `GET /api/p/:key/items/:id/trail` serves the tree and `GET /api/p/:key/trails` the
+depth and open count of every blocked item of a board. The card shows a chip when the depth is 3 or
+more, and the Links tab of the pane draws the tree. The wake engine does not use it.
+
+#### Item events and their wake reasons
+
+`argus_board::item_events::item_events(before, after)` is pure: it compares two states of a board
+and lists what someone must hear of. The producer in `argus-wake` (`item_watch`) runs it on every
+export, so a lead's CLI write wakes a thread as an owner post does. The first export after a start
+only seeds, and each event has the subject `<id>:<rev>:<kind>` asked of the wakes table, so a
+restart sends nothing twice. The table is in `docs/wake-policy.md`.
+
+| Event | Reason | Class |
+|---|---|---|
+| item given to a thread | `item-assigned` | wake |
+| item taken from a thread | `item-unassigned` | passive |
+| to-do given to a thread or a lead | `todo-assigned` | wake |
+| stage or lane changed under its assignee | `item-status` | passive |
+| question or decision by another thread | `item-ask` | passive |
+| the last blocker settled | `item-unblocked` | wake |
+| every child of an epic or story settled | `children-done` | wake |
+| a run of a test plan ended | `plan-run-done` | wake |
+| a blocking to-do quiet for 24 h | `todo-quiet` | passive |
+
+For the owner the same events are notices through the existing sink: an item or to-do assigned to
+him, a bug he reported at `verifying`, and a test plan that is ready to run. They obey the toast
+limits and have switches under `notify.auto`.
+
+#### Plan runs
+
+A run is kept on the plan item in `fields.runs`: its number, bundle, who ran it, its times and one
+result per case (pass, fail, partial, blocked or skip). The ops `plan-run-start`, `plan-run-record`
+and `plan-run-end` change it. Recording a result also records it on the test through the existing
+result op, so the test's own result, its wakes and its proofs stay true. Skip stays in the run.
+There is one open run per plan, and ending it sets the stage to `reported`.
+
+#### Item images
+
+An item keeps pictures like a test keeps proofs: the file is `<COORD_HOME>/<key>/proofs/<I-n>-<n><ext>`
+and `images` lists it with a caption and a `sha256`, so the same bytes pasted twice are kept once.
+The limits are png, jpg, gif or webp, 10 MB a file, 6 images in a rich field, 12 an item and a
+caption of 1 to 120 characters. The CLI adds them with `--image <file> "<caption>"` on
+`coord item add` and `set`. The page reads them through the existing `/files/:key/proofs/` route and
+resolves `img:n` in the Markdown to the file URL.
+
+#### The Tree view
+
+The Kanban tab has a second view next to the columns, chosen in the view row and remembered in the
+browser. It lives in `apps/web/src/screens/board/tabs/kanban/tree`. The model builds the hierarchy
+from `parent` links the registry allows (`allowsParent`): an item whose parent is missing, deleted,
+archived or of a type that may not hold it sits at the top level. A test plan holds its cases as
+children. Progress is the children done over the children, a plan counts its cases passed, and
+dropped children are left out. The filters of the Kanban prune the tree: a shown item keeps the
+folders above it. The page folds per node with the Tessera `Tree`, and a click opens the item pane.
+
 ## HTTP API
 
 The listener binds `127.0.0.1` only, port 47615 by default. Every rule of DESIGN 3 and 8 holds:
