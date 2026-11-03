@@ -23,7 +23,7 @@ const withPlans = () => {
 describe('I-70 P7 the plan filter model', { tags: ['critical'] }, () => {
   it('lists the live test plans by id, and nothing else', () => {
     const items = docs(planDoc('I-10', []), planDoc('I-9', []), planDoc('I-7', [], { deletedAt: 'x' }), itemDoc('I-1'));
-    expect(planOptions(items)).toEqual([{ value: 'I-9', label: 'I-9 Plan I-9' }, { value: 'I-10', label: 'I-10 Plan I-10' }]);
+    expect(planOptions(items)).toEqual([{ value: 'I-9', label: 'TP-9 Plan I-9' }, { value: 'I-10', label: 'TP-10 Plan I-10' }]);
   });
 
   it('reads the cases of the chosen plan, none for no plan, an empty set for an unknown one', () => {
@@ -49,10 +49,10 @@ describe('I-70 P7 the plan filter in the Tests tab', { tags: ['standard'] }, () 
   it('narrows the tests to the cases of the plan, and Clear filters brings them back', async () => {
     await mountTab(withPlans());
     await screen.findByText('Login works');
-    await pick('Plan', 'I-5 Plan I-5');
+    await pick('Plan', 'TP-5 Plan I-5');
     shown('T-1', 'T-3');
     expect(stored('coord.f')).toMatchObject({ plan: 'I-5' });
-    await pick('Plan', 'I-6 Plan I-6');
+    await pick('Plan', 'TP-6 Plan I-6');
     shown('T-2');
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     shown('T-1', 'T-2', 'T-3');

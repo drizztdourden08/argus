@@ -9,7 +9,7 @@ import { outcomeButton, resultCalls } from './outcome-dom';
 cleanAfterEach();
 
 const planDoc = (id: string, cases: string[], extra: object = {}) =>
-  itemDoc(id, { title: `Plan ${id}`, subject: null, type: 'test-plan', stage: 'ready', fields: { cases }, ...extra });
+  itemDoc(id, { title: `Plan number ${id.slice(2)}`, subject: null, type: 'test-plan', stage: 'ready', fields: { cases }, ...extra });
 
 const board = (extra: object[] = []) => ({
   group: 'plan',
@@ -26,10 +26,10 @@ const cardOf = (container: HTMLElement, code: string): HTMLElement => container.
 describe('P5 the plans as cards', { tags: ['standard'] }, () => {
   it('shows a card per plan with its code, title, progress and a Start run button', async () => {
     const { container } = await mountTab(board());
-    await screen.findAllByText('Plan I-5');
+    await screen.findAllByText('Plan number 5');
     expect(container.querySelectorAll('[data-plan]')).toHaveLength(2);
     const card = within(cardOf(container, 'TP-5'));
-    expect(card.getByText('Plan I-5')).toBeTruthy();
+    expect(card.getByText('Plan number 5')).toBeTruthy();
     expect(card.getByText('2 to run')).toBeTruthy();
     expect(card.getByRole('button', { name: 'Start run' })).toBeTruthy();
     expect(card.getByRole('button', { name: 'More actions for TP-5' })).toBeTruthy();
@@ -37,14 +37,14 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
 
   it('cannot start a run on a plan with no case', async () => {
     const { container } = await mountTab(board([planDoc('I-7', [])]));
-    await screen.findAllByText('Plan I-7');
+    await screen.findAllByText('Plan number 7');
     expect(within(cardOf(container, 'TP-7')).getByRole('button', { name: 'Start run' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('offers Continue run while a run is in progress', async () => {
     const live = planDoc('I-8', ['T-1'], { fields: { cases: ['T-1'], runs: [{ n: 1, bundle: null, by: 'human', startedAt: '2026-10-26T09:00:00.000Z', endedAt: null, results: [] }] } });
     const { container } = await mountTab(board([live]));
-    await screen.findAllByText('Plan I-8');
+    await screen.findAllByText('Plan number 8');
     expect(within(cardOf(container, 'TP-8')).getByRole('button', { name: 'Continue run' })).toBeTruthy();
   });
 
@@ -55,7 +55,7 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
 
   it('starts the run on the plan and opens its Run tab', async () => {
     const { container, calls } = await mountTab(board());
-    await screen.findAllByText('Plan I-5');
+    await screen.findAllByText('Plan number 5');
     fireEvent.click(within(cardOf(container, 'TP-5')).getByRole('button', { name: 'Start run' }));
     const entries = () => calls.filter((call) => call.url.endsWith('/entries'));
     await waitFor(() => expect(entries()).toHaveLength(1));
@@ -66,7 +66,7 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
 
   it('opens the plan pane from the title of the card', async () => {
     await mountTab(board());
-    fireEvent.click(await screen.findByRole('button', { name: 'Open TP-6: Plan I-6' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Open TP-6: Plan number 6' }));
     await waitFor(() => expect(new URLSearchParams(screen.getByTestId('search').textContent).get('open')).toBe('TP-6'));
     expect(screen.getByTestId('hash').textContent).toBe('');
   });
@@ -75,7 +75,7 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
 describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
   it('lists a case under every plan that holds it, and the others under Not in a plan', async () => {
     const { container } = await mountTab(board());
-    await screen.findAllByText('Plan I-5');
+    await screen.findAllByText('Plan number 5');
     expect(idsIn(container, 'Cases of TP-5')).toEqual(['T-1', 'T-2']);
     expect(idsIn(container, 'Cases of TP-6')).toEqual(['T-2']);
     expect(idsIn(container, 'Not in a plan')).toEqual(['T-3']);
@@ -106,7 +106,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('groups by plan when nothing was saved, and saves the other choices under a new key', async () => {
     const { container } = await mountTab({ ...board(), group: 'default' });
-    await screen.findAllByText('Plan I-5');
+    await screen.findAllByText('Plan number 5');
     expect(container.querySelector('[data-bundle]')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
     expect(localStorage.getItem('coord.g.tests4')).toBe('build');
