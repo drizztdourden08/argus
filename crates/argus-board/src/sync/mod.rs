@@ -38,7 +38,7 @@ pub const REPLY_KINDS: [&str; 8] = [
 
 /// The owner's edits, moves, archives, deletes and purges: each is an entry carrying its own
 /// target and fields.
-pub const OP_KINDS: [&str; 11] = [
+pub const OP_KINDS: [&str; 14] = [
     "create",
     "edit",
     "move",
@@ -50,6 +50,9 @@ pub const OP_KINDS: [&str; 11] = [
     "bulk",
     "purge",
     "build",
+    "plan-run-start",
+    "plan-run-record",
+    "plan-run-end",
 ];
 
 /// Whether an entry kind is a reply kind.

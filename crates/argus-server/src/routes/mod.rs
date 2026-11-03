@@ -25,6 +25,8 @@ pub mod prs;
 pub mod records;
 pub mod runs;
 pub mod stalls;
+pub mod trail;
+pub mod trails;
 pub mod wake;
 pub mod worktrees;
 mod write;
@@ -44,6 +46,8 @@ pub fn register_all(router: &mut Router) {
     wake::register(router);
     inbox::register(router);
     stalls::register(router);
+    trail::register(router);
+    trails::register(router);
     notify::register(router);
     worktrees::register(router);
     cache::register(router);

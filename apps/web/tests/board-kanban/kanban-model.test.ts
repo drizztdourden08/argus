@@ -109,14 +109,27 @@ describe('K1 the board columns', { tags: ['critical'] }, () => {
     expect(viewOf(items, { filters: { query: 'i-3' } }).cards.map((card) => card.id)).toEqual(['I-3']);
   });
 
-  it('filters by thread, subject, needs you and conflict', () => {
-    const items = [itemRef('I-1'), itemRef('I-2', { thread: 'other', subject: 'ui' })];
+  it('filters by thread, needs you and conflict', () => {
+    const items = [itemRef('I-1'), itemRef('I-2', { thread: 'other' })];
     expect(viewOf(items, { filters: { threads: ['other'] } }).cards.map((card) => card.id)).toEqual(['I-2']);
-    expect(viewOf(items, { filters: { subject: 'ui' } }).cards.map((card) => card.id)).toEqual(['I-2']);
     const needs = new Map([['I-1', { questions: 1, decisions: 0, todos: 0, tests: 0 }]]);
     expect(viewOf(items, { filters: { needs: true }, needs }).cards.map((card) => card.id)).toEqual(['I-1']);
     const notices: OpNotice[] = [{ id: 'O-1', entryId: 'O-1', bulk: false, kind: 'conflict', op: { kind: 'move', target: { c: 'items', id: 'I-2' } }, result: {} }];
     expect(viewOf(items, { filters: { conflict: true }, notices }).cards.map((card) => card.id)).toEqual(['I-2']);
+  });
+
+  it('filters by type, an item without a type being a task', () => {
+    const items = [itemRef('I-1'), itemRef('I-2', { type: 'bug' }), itemRef('I-3', { type: 'epic' })];
+    expect(viewOf(items, { filters: { types: ['bug'] } }).cards.map((card) => card.id)).toEqual(['I-2']);
+    expect(viewOf(items, { filters: { types: ['task', 'epic'] } }).cards.map((card) => card.id)).toEqual(['I-1', 'I-3']);
+  });
+
+  it('filters by assignee, an item without one being held by its thread', () => {
+    const items = [itemRef('I-1'), itemRef('I-2', { assignee: 'owner' }), itemRef('I-3', { assignee: 'lead' })];
+    expect(viewOf(items, { filters: { assignees: ['owner'] } }).cards.map((card) => card.id)).toEqual(['I-2']);
+    expect(viewOf(items, { filters: { assignees: ['worker', 'lead'] } }).cards.map((card) => card.id)).toEqual(['I-1', 'I-3']);
+    expect(filtersActive(filters({ types: ['bug'] }))).toBe(true);
+    expect(filtersActive(filters({ assignees: ['owner'] }))).toBe(true);
   });
 
   it('marks the cards that have a conflict', () => {
@@ -168,10 +181,26 @@ describe('K1 the other groupings', { tags: ['critical'] }, () => {
     expect(view.columns.map((column) => column.id)).toEqual(['worker']);
   });
 
-  it('makes a column per subject, with general for an item without one', () => {
-    const view = viewOf([itemRef('I-1', { subject: 'ui' }), itemRef('I-2', { subject: '' }), itemRef('I-3', { subject: null })], { prefs: { group: 'subject' } });
-    expect(view.columns.map((column) => column.id)).toEqual(['general', 'ui']);
-    expect(idsIn(view, 'general')).toEqual(['I-2', 'I-3']);
+  it('makes a column per assignee, the owner first, an item without one under its thread', () => {
+    const items = [itemRef('I-1', { assignee: 'owner' }), itemRef('I-2', { assignee: 'zed' }), itemRef('I-3'), itemRef('I-4', { assignee: 'worker' })];
+    const view = viewOf(items, { prefs: { group: 'assignee' } });
+    expect(view.columns.map((column) => column.id)).toEqual(['owner', 'worker', 'zed']);
+    expect(view.columns.map((column) => column.title)).toEqual(['You', 'worker', 'zed']);
+    expect(idsIn(view, 'worker')).toEqual(['I-3', 'I-4']);
+  });
+
+  it('makes a column per parent, titled with the parent, and one for the items without a parent last', () => {
+    const items = [
+      itemRef('I-1', { type: 'epic', title: 'Rework' }),
+      itemRef('I-2', { parent: 'I-1', type: 'story' }),
+      itemRef('I-3', { parent: 'I-1' }),
+      itemRef('I-4'),
+    ];
+    const view = viewOf(items, { prefs: { group: 'parent' } });
+    expect(view.columns.map((column) => column.id)).toEqual(['I-1', 'no-parent']);
+    expect(view.columns.map((column) => column.title)).toEqual(['I-1 Rework', 'No parent']);
+    expect(idsIn(view, 'I-1')).toEqual(['I-2', 'I-3']);
+    expect(idsIn(view, 'no-parent')).toEqual(['I-1', 'I-4']);
   });
 });
 

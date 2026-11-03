@@ -7,6 +7,7 @@
 //! | decision | D | either way | a thread records its own (done); the owner's is queued (pending) |
 //! | followup | F | owner to thread | more context, no action required |
 //! | notice | N | thread to owner | feed only, the owner dismisses it |
+//! | note | N | a thread on its own record | `coord note <I-n|T-n> "<text>"`, an informal remark, never blocks |
 //! | message | M | thread to owner | feed only, the owner replies or dismisses |
 //!
 //! The page only ever adds entries (answers, acks, done ticks, test results, edits); it never edits
@@ -17,6 +18,7 @@ mod answer;
 mod change;
 mod images;
 mod make;
+mod note;
 mod read;
 mod reword;
 
@@ -26,18 +28,19 @@ use argus_board::ops::{Check, authorize};
 use argus_board::store::create_doc;
 use serde_json::{Map, Value};
 
-use super::crud::{assert_live, who_of};
+use super::crud::{assert_live, label, who_of};
 use super::group::{Group, Soft, nothing, serve};
 use super::run::{Res, Run, bad};
 use crate::cli::{Call, Outcome};
 use crate::who::Caller;
 
-const KINDS: [(&str, &str); 5] = [
+const KINDS: [(&str, &str); 6] = [
     ("question", "Q"),
     ("followup", "F"),
     ("decision", "D"),
     ("notice", "N"),
     ("message", "M"),
+    ("note", "N"),
 ];
 
 const GROUP: Group = Group {
@@ -47,6 +50,7 @@ const GROUP: Group = Group {
         ("decide", make::decide),
         ("notify", make::notify),
         ("message", make::message),
+        ("note", note::note),
         ("answer", answer::answer),
         ("pick", change::pick),
         ("done", change::done),
@@ -59,7 +63,7 @@ const GROUP: Group = Group {
         coll: "entries",
         after: nothing,
     }),
-    names: "ask, decide, notify, message, answer, pick, done, set, move, archive, unarchive, rm, restore, show, list",
+    names: "ask, decide, notify, message, note, answer, pick, done, set, move, archive, unarchive, rm, restore, show, list",
     typed: Some("entry"),
 };
 
@@ -79,17 +83,23 @@ fn prefix_of(kind: &str) -> Option<&'static str> {
     KINDS.iter().find(|(k, _)| *k == kind).map(|(_, p)| *p)
 }
 
-/// Questions and decisions live inside a work item; the board shows them nowhere else.
+/// Questions and decisions live inside a work item (or a test, `T-n`); the board shows them
+/// nowhere else.
 fn item_arg(board: &Board, reference: Option<&str>) -> Res<Value> {
     let Some(id) = reference.filter(|i| !i.is_empty() && *i != "-") else {
         return Err(bad(
             "name the work item this belongs to (coord item add first if there is none).",
         ));
     };
-    let Some(item) = doc(board, "items", id).filter(|i| !i.is_null()) else {
-        return Err(bad(format!("no item \"{id}\".")));
+    let coll = if id.starts_with("T-") {
+        "tests"
+    } else {
+        "items"
     };
-    assert_live(item, "items")?;
+    let Some(item) = doc(board, coll, id).filter(|i| !i.is_null()) else {
+        return Err(bad(format!("no {} \"{id}\".", label(coll))));
+    };
+    assert_live(item, coll)?;
     Ok(item.clone())
 }
 

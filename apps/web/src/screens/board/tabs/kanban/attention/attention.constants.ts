@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind constants */
+import type { BlockedKind } from '../../../../../data/types';
 import type { AttentionKind, AttentionSpec, Signals } from './attention.type';
 
 const ATTENTION: readonly AttentionSpec[] = [
@@ -23,4 +24,8 @@ const FAILING_STATUSES: readonly string[] = ['fail', 'partial', 'blocked'];
 
 const WORKING_STATUS = 'working';
 
-export { ATTENTION, ATTENTION_OF, FAILING_STATUSES, NO_SIGNALS, WORKING_STATUS };
+const DEPENDENCY_KINDS: readonly BlockedKind[] = ['dep-waits', 'dep-blocked'];
+
+const LOCK_KINDS: readonly BlockedKind[] = ['item', 'test', 'todo', 'legacy'];
+
+export { ATTENTION, ATTENTION_OF, DEPENDENCY_KINDS, FAILING_STATUSES, LOCK_KINDS, NO_SIGNALS, WORKING_STATUS };

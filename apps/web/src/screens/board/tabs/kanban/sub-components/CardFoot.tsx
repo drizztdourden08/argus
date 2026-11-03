@@ -1,18 +1,19 @@
 /* @layer renderer-app @kind component */
-import { Flex, Spacer, Text } from '@drizztdourden08/tessera';
+import { Flex, Spacer, Tag, Text } from '@drizztdourden08/tessera';
 import { formatAgo } from '../../../../../format';
 import type { CardFootProps } from '../kanban-props.type';
-import { CriteriaBar } from './CriteriaBar';
+import { cardChips, cardProgress, stageLabel } from '../model';
+import { CardProgressRow } from './CardProgressRow';
 
 const CardFoot = (props: CardFootProps) => {
   const { card, group, now } = props;
   const { item } = card;
-  const showSubject = group !== 'subject' && item.subject && item.subject !== item.thread;
+  const stage = stageLabel(item, group);
   return (
-    <Flex gap="sm" align="center" wrap>
-      {showSubject && <Text variant="caption" tone="muted" title={`Subject: ${item.subject}`}>{item.subject}</Text>}
-      {group !== 'thread' && <Text variant="caption" tone="muted" title={`Thread: ${item.thread}`}>{item.thread}</Text>}
-      <CriteriaBar item={item} />
+    <Flex gap="sm" align="center">
+      {cardChips(item).map((chip) => <Tag key={chip.id} title={chip.title}>{chip.text}</Tag>)}
+      {stage && <Text variant="caption" tone="muted" title="Stage">{stage}</Text>}
+      <CardProgressRow segments={cardProgress(card)} />
       <Spacer />
       <Text variant="caption" tone="muted">{formatAgo(item.updatedAt, now)}</Text>
     </Flex>

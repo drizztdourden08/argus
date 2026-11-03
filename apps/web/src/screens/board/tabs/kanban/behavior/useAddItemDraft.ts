@@ -11,7 +11,7 @@ const useAddItemDraft = (threads: Threads, preset: AddPreset): AddItemDraft => {
   return {
     thread,
     setThread,
-    itemOf: (title) => ({ title, thread, status: preset.status ?? STARTING_STATUS, ...(preset.subject ? { subject: preset.subject } : {}) }),
+    itemOf: (title) => ({ title, thread, status: preset.status ?? STARTING_STATUS, ...(preset.parent ? { parent: preset.parent } : {}), ...(preset.assignee ? { assignee: preset.assignee } : {}) }),
   };
 };
 

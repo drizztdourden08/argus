@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import { FOCUS_KEY, WIDE_KEY } from '../../../shared';
 import type { Option } from '../../../shared';
-import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
+import type { ChildCount, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
 
 const MS_PER_HOUR = 3_600_000;
 
@@ -20,10 +20,29 @@ const CLOSED_STATUSES = ['done', 'dropped'];
 
 const GENERAL = 'general';
 
+const OWNER = 'owner';
+
+const DEFAULT_TYPE = 'task';
+
+const NO_PARENT = 'no-parent';
+
+const NO_PARENT_TITLE = 'No parent';
+
+const OWNER_TITLE = 'You';
+
+const TRAIL_MIN_DEPTH = 3;
+
+const CHIP_PREFIX: Readonly<Record<string, string>> = { cost: 'cost ', risk: 'risk ' };
+
+const NO_CHILDREN: ChildCount = { done: 0, total: 0 };
+
+const RUN_WORDS: readonly string[] = ['pass', 'fail', 'partial', 'blocked', 'skip'];
+
 const GROUP_OPTIONS: { value: ItemGroup; label: string }[] = [
   { value: 'status', label: 'Status' },
-  { value: 'subject', label: 'Subject' },
   { value: 'thread', label: 'Thread' },
+  { value: 'assignee', label: 'Assignee' },
+  { value: 'parent', label: 'Parent' },
 ];
 
 const ORDER_OPTIONS: { value: ItemOrder; label: string }[] = [
@@ -47,7 +66,7 @@ const BAD_STATUSES = ['conflict', 'refused'];
 
 const STARTING_STATUS = 'todo';
 
-const DEFAULT_FILTERS: KanbanFilters = { query: '', threads: [], status: '', subject: '', needs: false, conflict: false, archived: false };
+const DEFAULT_FILTERS: KanbanFilters = { query: '', threads: [], status: '', types: [], assignees: [], needs: false, conflict: false, archived: false };
 
 const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', showDone: false };
 
@@ -64,14 +83,23 @@ const STORE_KEYS = {
 export {
   ANSWER_KINDS,
   BAD_STATUSES,
+  CHIP_PREFIX,
   CLOSED_STATUSES,
   DEFAULT_FILTERS,
   DEFAULT_PREFS,
+  DEFAULT_TYPE,
   GENERAL,
   GROUP_OPTIONS,
   HUMAN,
   LIMITS,
   MS_PER_HOUR,
+  NO_CHILDREN,
+  NO_PARENT,
+  NO_PARENT_TITLE,
+  OWNER,
+  OWNER_TITLE,
+  RUN_WORDS,
+  TRAIL_MIN_DEPTH,
   STARTING_STATUS,
   OP_KINDS,
   ORDER_OPTIONS,

@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind types */
-import type { IconName, KanbanColumn, KanbanMove, TagUrgencyColor } from '@drizztdourden08/tessera';
+import type { IconName, KanbanColumn, KanbanMove, TagCategoryColor } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
-import type { DepColor, DepHistoryRow, DepState } from '../../../../../data/deps';
+import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { OpNotice, Option } from '../../../shared';
 import type { AttentionKind, Signals } from '../attention/attention.type';
 
-type ItemGroup = 'status' | 'subject' | 'thread';
+type ItemGroup = 'status' | 'thread' | 'assignee' | 'parent';
 
 type ItemOrder = 'rank' | 'updated';
 
@@ -17,7 +17,8 @@ interface KanbanFilters {
   query: string;
   threads: string[];
   status: string;
-  subject: string;
+  types: string[];
+  assignees: string[];
   needs: boolean;
   conflict: boolean;
   archived: boolean;
@@ -60,18 +61,23 @@ interface AskLink {
   via: 'item' | 'blocker';
 }
 
-interface AskTagSpec {
-  id: string;
-  label: string;
-  color: TagUrgencyColor;
-  icon: IconName;
-  title: string;
+interface TrailInfo {
+  depth: number;
+  open: number;
+}
+
+interface ChildCount {
+  done: number;
+  total: number;
 }
 
 interface CardData {
   id: string;
   item: ItemRef;
   needsYou: boolean;
+  needs: Needs | undefined;
+  children: ChildCount;
+  trail: TrailInfo | null;
   asks: AskLink[];
   signals: Signals;
   attention: AttentionKind[];
@@ -81,6 +87,8 @@ interface CardData {
 
 interface CardFacts {
   needs: Needs | undefined;
+  children: ChildCount;
+  trail: TrailInfo | null;
   asks: AskLink[];
   signals: Signals;
   conflicted: boolean;
@@ -92,6 +100,7 @@ interface ViewInput {
   needs: ReadonlyMap<string, Needs>;
   asks: ReadonlyMap<string, AskLink[]>;
   signals: ReadonlyMap<string, Signals>;
+  trails: ReadonlyMap<string, TrailInfo>;
   notices: readonly OpNotice[];
   filters: KanbanFilters;
   prefs: KanbanPrefs;
@@ -104,7 +113,8 @@ interface ViewInput {
 interface AddPreset {
   status?: string;
   thread?: string;
-  subject?: string;
+  parent?: string;
+  assignee?: string;
 }
 
 interface FocusChoices {
@@ -118,6 +128,7 @@ interface ColumnsInput {
   order: ItemOrder;
   showClosed: boolean;
   seeds: readonly string[];
+  parents: ReadonlyMap<string, string>;
 }
 
 interface KanbanView {
@@ -149,19 +160,13 @@ type DropPlan =
   | { kind: 'none' }
   | { kind: 'order-off' }
   | { kind: 'reorder'; place: PlaceAmong }
-  | { kind: 'status' | 'thread' | 'subject'; to: string; place: PlaceAmong };
+  | { kind: 'group-off' }
+  | { kind: 'status' | 'thread'; to: string; place: PlaceAmong };
 
 interface TestScope {
   archivedAt?: string | null;
   deletedAt?: string | null;
   build?: string | null;
-}
-
-interface DepTagSpec {
-  key: string;
-  color: DepColor;
-  label: string;
-  title: string;
 }
 
 interface DepLink {
@@ -176,9 +181,26 @@ interface DepLink {
   reason: string | null;
 }
 
-interface AttentionText {
+interface CardChip {
+  id: string;
+  text: string;
+  title: string;
+}
+
+interface CardProgress {
+  met: number;
+  total: number;
+  text: string;
+  title: string;
+}
+
+interface AssigneeLook {
   label: string;
-  title: string | undefined;
+  tip: string;
+  initials?: string;
+  icon?: IconName;
+  color?: TagCategoryColor;
+  owner: boolean;
 }
 
 type DepView = DepLink & {
@@ -187,5 +209,5 @@ type DepView = DepLink & {
 };
 
 export type {
-  AddPreset, AskKind, AskLink, AskTagSpec, AttentionText, BulkSofts, CardData, CardFacts, ColumnsInput, DepLink, DepTagSpec, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, ViewInput,
+  AddPreset, AskKind, AskLink, AssigneeLook, BulkSofts, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };
