@@ -5,6 +5,7 @@ import type { RecordData } from '../pane.type';
 const textOf = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 const recordTitle = (data: RecordData): string => {
+  if (data.entry) return data.code;
   const doc = data.doc;
   const named = [data.kind.title, ...TITLE_FIELDS].map((field) => textOf(doc?.[field])).find((text) => text !== '');
   return named ?? data.code;

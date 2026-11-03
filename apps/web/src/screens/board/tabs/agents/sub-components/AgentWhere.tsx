@@ -16,7 +16,7 @@ const AgentWhere = (props: AgentFieldProps) => {
       <Box as="dt" className="agents-kv__label">Works in</Box>
       <Box as="dd">
         <Tooltip content={where.tip}>
-          <Tag variant={where.kind === 'unknown' ? 'urgency' : 'normal'} color={where.kind === 'unknown' ? 'warning' : 'neutral'}>{where.text}</Tag>
+          {where.kind === 'unknown' ? <Tag variant="urgency" color="warning">{where.text}</Tag> : <Tag color="neutral">{where.text}</Tag>}
         </Tooltip>
       </Box>
       <Box as="dt" className="agents-kv__label">Master</Box>

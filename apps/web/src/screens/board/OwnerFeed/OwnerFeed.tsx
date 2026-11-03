@@ -14,7 +14,7 @@ const OwnerFeed = (props: OwnerFeedProps) => {
   const { boardKey, work, handed } = props;
   const actions = useFeedActions(boardKey, handed);
   const threads = useCollection<ThreadChoice>(boardKey, 'threads');
-  const now = useNow();
+  const now = useNow(true);
   const [filter, setFilter] = useFeedFilter();
   const count = work.waiting.length;
   const ctx = { boardKey, threads: threads.docs, now, index: work.index, actions };

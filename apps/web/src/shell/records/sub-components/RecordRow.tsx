@@ -12,6 +12,7 @@ import { TypeIcon } from './TypeIcon';
 const RecordRow = (props: RecordRowProps) => {
   const { head, title, onOpen, chips = [], age, trailing } = props;
   const linked = rowLinked(title, chips);
+  const openLabel = `Open ${head.code}: ${title}`;
   const columns: ListItemColumn[] = [];
   if (chips.length > 0) columns.push({ primary: <RowChips chips={chips} board={head.boardKey} /> });
   if (age) columns.push({ primary: <Text variant="caption" tone="muted">{age}</Text>, align: 'end' });
@@ -19,7 +20,15 @@ const RecordRow = (props: RecordRowProps) => {
   return (
     <ListItemRow
       icon={<TypeIcon kind={head.kind} />}
-      name={linked ? <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} label={`Open ${head.code}: ${title}`} /> : <Text clamp={1} smartTimes>{title}</Text>}
+      name={
+        linked ? (
+          <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} label={openLabel} />
+        ) : (
+          <Pressable onClick={onOpen} aria-label={openLabel}>
+            <Text clamp={1} smartTimes>{title}</Text>
+          </Pressable>
+        )
+      }
       meta={linked ? <Pressable onClick={onOpen} title={`Open ${head.code}`}>{code}</Pressable> : code}
       columns={columns}
       action={
@@ -29,7 +38,6 @@ const RecordRow = (props: RecordRowProps) => {
           <RecordMenu groups={head.menu} label={head.menuLabel} />
         </Flex>
       }
-      onClick={linked ? undefined : onOpen}
       data={{ 'data-record': head.code }}
     />
   );

@@ -4,14 +4,15 @@ import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { buildDoc, itemDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
+import type { Doc } from './mount-tab';
 import { outcomeButton, resultCalls } from './outcome-dom';
 
 cleanAfterEach();
 
-const planDoc = (id: string, cases: string[], extra: object = {}) =>
+const planDoc = (id: string, cases: string[], extra: Doc = {}): Doc =>
   itemDoc(id, { title: `Plan number ${id.slice(2)}`, subject: null, type: 'test-plan', stage: 'ready', fields: { cases }, ...extra });
 
-const board = (extra: object[] = []) => ({
+const board = (extra: Doc[] = []) => ({
   group: 'plan',
   builds: [buildDoc('bundle-1')],
   items: [itemDoc('I-1'), planDoc('I-5', ['T-1', 'T-2']), planDoc('I-6', ['T-2']), ...extra],
@@ -83,7 +84,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('opens the case pane over the tab when a row is clicked', async () => {
     await mountTab(board());
-    const buttons = await screen.findAllByRole('button', { name: /Test number 3( |$)/ });
+    const buttons = await screen.findAllByRole('button', { name: 'Open T-3: Test number 3' });
     fireEvent.click(buttons[0] as HTMLElement);
     await waitFor(() => expect(screen.getByTestId('search').textContent).toBe('?open=T-3'));
     expect(screen.getByTestId('hash').textContent).toBe('');

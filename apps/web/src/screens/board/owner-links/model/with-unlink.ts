@@ -5,7 +5,7 @@ import { LINK_ID } from './with-unlink.constants';
 const unlinkItem = (onUnlink: () => void): MenuItem => ({ id: 'unlink', label: 'Unlink from its item', onSelect: onUnlink });
 
 const withItemAfterLink = (group: MenuGroup, item: MenuItem): MenuGroup => {
-  const at = group.items.findIndex((entry) => entry.id === LINK_ID);
+  const at = group.items.findIndex((entry) => 'id' in entry && entry.id === LINK_ID);
   if (at < 0) return group;
   return { ...group, items: [...group.items.slice(0, at + 1), item, ...group.items.slice(at + 1)] };
 };

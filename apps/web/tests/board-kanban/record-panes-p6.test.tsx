@@ -21,7 +21,7 @@ const board = () => ({
     { coll: 'launchers', key: 'name', docs: [launcherDoc('web', { for: 'I-1' })] },
     { coll: 'launches', key: 'name', docs: [defDoc('web')] },
     { coll: 'runs', key: 'id', docs: [runDoc('R-2', 'launcher-web', { status: 'failed', exitCode: 3 })] },
-    { coll: 'worktrees', key: 'id', docs: [worktree('a', 'stale', { item: 'I-1' })] },
+    { coll: 'worktrees', key: 'id', docs: [{ ...worktree('a', 'stale', { item: 'I-1' }) }] },
     { coll: 'prs', key: 'id', docs: [prDoc('PR-1')] },
   ],
 });
