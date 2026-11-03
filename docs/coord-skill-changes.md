@@ -10,7 +10,7 @@ authority for the exact text of each is `coord --help` and `coord types`.
 Do not apply any of this before the Argus build with the rework is deployed locally: the old Node
 CLI refuses the new flags.
 
-## 1. What changed, in short
+## 1. What changed
 
 - Every work item now has a type: `epic`, `story`, `task`, `bug`, `debt` or `test-plan`. No type
   means `task`, so old calls keep working.
