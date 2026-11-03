@@ -44,8 +44,8 @@ fn retired_refusal(name: &str, rec: &Value, hint: &str) -> Result<(), BoardError
 
 /// Drop the item a build serves. Only the master build may go without one.
 fn unlink(board: &mut Board, who: &Who, name: &str) -> Result<OpResult, BoardError> {
-    let rec = doc(board, "launchers", name)
-        .ok_or_else(|| refuse(format!("no launcher \"{name}\".")))?;
+    let rec =
+        doc(board, "launchers", name).ok_or_else(|| refuse(format!("no launcher \"{name}\".")))?;
     if truthy(rec, "retiredAt") {
         return Err(refuse(format!("launcher {name} is retired.")));
     }
