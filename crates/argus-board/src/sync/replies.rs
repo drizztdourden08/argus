@@ -7,10 +7,11 @@ use serde_json::Value;
 use super::is_op_kind;
 use crate::Board;
 use crate::error::BoardError;
-use crate::json::{doc, doc_mut, find_ids, nullish, set, shown, slot, text, truthy};
+use crate::json::{doc, doc_mut, nullish, set, shown, text, truthy};
+use crate::ops::refresh_needs_human;
 use crate::pause::{pause_thread, resume_thread};
 use crate::results::{Outcome, record_result};
-use crate::store::{LogLine, append_log, stamp, touch};
+use crate::store::{LogLine, append_log, stamp};
 
 const HUMAN: &str = "human";
 const OWNER: &str = "the owner";
@@ -28,20 +29,6 @@ fn set_status(board: &mut Board, coll: &str, id: &str, status: &str) -> Result<(
 }
 
 /// The sync flavour of the needs-human flag: no archive or trash filter, always touched.
-fn refresh_needs_human(board: &mut Board, thread: &str) {
-    if doc(board, "threads", thread).is_none() {
-        return;
-    }
-    let needs = !find_ids(board, "actions", |x| {
-        x["thread"].as_str() == Some(thread) && x["status"] == "pending"
-    })
-    .is_empty();
-    if let Some(t) = doc_mut(board, "threads", thread) {
-        set(slot(t, "flags"), "needsHuman", needs);
-    }
-    touch(board, "threads", thread);
-}
-
 fn pause(board: &mut Board, e: &Value) -> Result<Option<String>, BoardError> {
     let key = reply_key(e);
     if pause_thread(board, &key, OWNER)? {
