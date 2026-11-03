@@ -132,12 +132,13 @@ impl Client {
                 .filter(|e| e.seq > first.seq)
                 .all(|e| frames::changes(kind, sender, scope, e, keep))
         };
+        let steps: [&dyn Fn() -> bool; 2] = if matches!(kind, Kind::Mux) {
+            [&replay, &ready]
+        } else {
+            [&ready, &replay]
+        };
         let sent = frames::opening(kind, sender, scope, first, &add.colls)
-            && if matches!(kind, Kind::Mux) {
-                replay() && ready()
-            } else {
-                ready() && replay()
-            };
+            && steps.iter().all(|step| step());
         if sent {
             self.live.extend(add.colls);
         }
