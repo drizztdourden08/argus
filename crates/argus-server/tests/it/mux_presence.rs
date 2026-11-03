@@ -7,7 +7,7 @@ use argus_testkit::TestServer;
 use serde_json::{Value, json};
 
 use crate::mux_rig::Mux;
-use crate::wait::until;
+use crate::wait::{open_boards, until};
 use crate::wake_rig::{Rig, rig};
 
 fn presence(thread: &str, tab: &str) -> Value {
@@ -16,14 +16,6 @@ fn presence(thread: &str, tab: &str) -> Value {
 
 fn unpresence(tab: &str) -> Value {
     json!({ "op": "unpresence", "scope": "alpha", "tab": tab })
-}
-
-async fn open_boards(t: &TestServer) -> Vec<Value> {
-    let body = t.get("/api/presence").await.json();
-    let rows = body["open"].as_array().cloned().unwrap_or_default();
-    rows.into_iter()
-        .filter(|r| r["project"] == "alpha")
-        .collect()
 }
 
 async fn no_board_open(t: &TestServer) {

@@ -26,3 +26,12 @@ pub async fn wakes_of(t: &TestServer, key: &str, reason: &str) -> Vec<Value> {
     let rows = body["wakes"].as_array().cloned().unwrap_or_default();
     rows.into_iter().filter(|w| w["reason"] == reason).collect()
 }
+
+/// The alpha threads with an open board.
+pub async fn open_boards(t: &TestServer) -> Vec<Value> {
+    let body = t.get("/api/presence").await.json();
+    let rows = body["open"].as_array().cloned().unwrap_or_default();
+    rows.into_iter()
+        .filter(|r| r["project"] == "alpha")
+        .collect()
+}

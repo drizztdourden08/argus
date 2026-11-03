@@ -89,7 +89,7 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
     assert_eq!(codes(&results), want);
     assert_eq!(results[7], json!({ "ok": true }));
     let ready = m.until_ready().await;
-    assert_eq!(ready[0].data["coll"], "meta", "the last op ran");
+    assert_eq!(ready[0].data["colls"], json!(["meta"]), "the last op ran");
     m.s.close();
 }
 

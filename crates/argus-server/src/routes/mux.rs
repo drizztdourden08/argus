@@ -8,7 +8,7 @@
 use argus_core::ApiError;
 use serde_json::json;
 
-use super::db::MAX_BATCH;
+use super::db::batch_ops;
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::{Ctx, Router};
@@ -26,15 +26,7 @@ async fn post(ctx: Ctx) -> Reply {
         .get(ctx.param("conn"))
         .ok_or_else(|| ApiError::not_found("unknown mux connection"))?;
     let body = ctx.json().await?;
-    let ops = body["ops"]
-        .as_array()
-        .filter(|o| !o.is_empty())
-        .ok_or_else(|| ApiError::bad_request("ops must be a non-empty array"))?;
-    if ops.len() > MAX_BATCH {
-        return Err(ApiError::bad_request(format!(
-            "a batch holds at most {MAX_BATCH} ops"
-        )));
-    }
+    let ops = batch_ops(&body)?;
     let results = conn.apply(&ctx.svc, ops)?;
     Ok(json_reply(200, &json!({ "results": results })))
 }

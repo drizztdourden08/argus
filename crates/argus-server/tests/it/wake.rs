@@ -9,7 +9,7 @@
 // test-tag: standard
 
 use crate::posting::{doc, post};
-use crate::wait::until;
+use crate::wait::{open_boards, until};
 use crate::wake_rig::{lines, listeners, post_wake, result, rig, wake_stream, wake_where, wakes};
 use argus_testkit::TestServer;
 use serde_json::{Value, json};
@@ -468,15 +468,6 @@ async fn the_listeners_route_lists_open_streams_and_validates_the_project_key() 
     assert_eq!(keys, ["label", "since", "thread", "v"]);
     s.close();
     assert_eq!(t.get("/api/p/Bad_Key/wakes/listeners").await.status, 400);
-}
-
-/// The alpha threads with an open board.
-async fn open_boards(t: &TestServer) -> Vec<Value> {
-    let body = t.get("/api/presence").await.json();
-    let rows = body["open"].as_array().cloned().unwrap_or_default();
-    rows.into_iter()
-        .filter(|r| r["project"] == "alpha")
-        .collect()
 }
 
 #[tokio::test(flavor = "multi_thread")]

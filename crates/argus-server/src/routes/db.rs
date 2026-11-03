@@ -140,9 +140,11 @@ async fn batch_op(ctx: &Ctx, scope: &str, op: &Value) -> Result<Value, ApiError>
     write_doc(ctx, scope, c.as_str(), &op["id"], op.get("data")).await
 }
 
-async fn batch(ctx: Ctx) -> Reply {
-    let scope = scope(&ctx)?;
-    let body = ctx.json().await?;
+/// The `ops` list of a batch body: 1 to [`MAX_BATCH`] ops.
+///
+/// # Errors
+/// 400 when the list is missing, empty or too long.
+pub fn batch_ops(body: &Value) -> Result<&Vec<Value>, ApiError> {
     let ops = body["ops"]
         .as_array()
         .filter(|o| !o.is_empty())
@@ -152,6 +154,13 @@ async fn batch(ctx: Ctx) -> Reply {
             "a batch holds at most {MAX_BATCH} ops"
         )));
     }
+    Ok(ops)
+}
+
+async fn batch(ctx: Ctx) -> Reply {
+    let scope = scope(&ctx)?;
+    let body = ctx.json().await?;
+    let ops = batch_ops(&body)?;
     let mut results = Vec::new();
     for op in ops {
         match batch_op(&ctx, &scope, op).await {
