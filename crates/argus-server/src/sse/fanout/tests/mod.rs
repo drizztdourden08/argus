@@ -46,7 +46,9 @@ impl Rig {
     /// A mux client of `scope` that follows `meta`, its opening frames not yet read.
     pub fn follow_meta(&self, scope: &str, w: &Wire) -> Handle {
         let target = Target::New(Kind::Mux, &w.sender);
-        let got = self.fanout.subscribe(&self.db, scope, target, &[Coll::Meta], None);
+        let got = self
+            .fanout
+            .subscribe(&self.db, scope, target, &[Coll::Meta], None);
         got.expect("subscribed")
     }
 

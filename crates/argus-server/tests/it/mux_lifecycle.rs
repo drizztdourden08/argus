@@ -89,7 +89,16 @@ async fn each_op_answers_for_itself_and_the_others_still_run() {
     assert_eq!(codes(&results), want);
     assert_eq!(results[7], json!({ "ok": true }));
     let ready = m.until_ready().await;
-    assert_eq!(ready[0].data["colls"], json!(["meta"]), "the last op ran");
+    let snapshot = ready.iter().find(|e| e.event == "snapshot");
+    assert_eq!(
+        snapshot.map(|e| &e.data["coll"]),
+        Some(&json!("meta")),
+        "the last op ran"
+    );
+    assert_eq!(
+        ready.last().map(|e| &e.data["colls"]),
+        Some(&json!(["meta"]))
+    );
     m.s.close();
 }
 
