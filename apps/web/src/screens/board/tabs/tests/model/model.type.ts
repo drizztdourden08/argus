@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { RecordGroups } from '../../../../../shell';
 import type { OpNotice } from '../../../shared';
 import type { WithId } from '../../../../../data/react';
 import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../../data/types';
@@ -14,7 +15,7 @@ type WakeDoc = WithId<Wake>;
 
 type LaunchState = 'linked' | 'retired' | 'missing' | 'legacy' | 'none';
 
-type TestGroup = 'build' | 'item' | 'thread';
+type TestGroup = 'plan' | 'build' | 'item' | 'thread';
 
 type TestOrder = 'rank' | 'updated';
 
@@ -114,7 +115,17 @@ interface ViewInput {
   conflicted: ReadonlySet<string>;
 }
 
+interface PlanView {
+  item: ItemDoc;
+  cases: string[];
+  counts: Counts;
+  live: boolean;
+  closed: boolean;
+}
+
 interface TestsView {
+  plans: PlanView[];
+  byPlan: RecordGroups<TestDoc>;
   bundles: BundleView[];
   cards: GroupCard[];
   closed: ClosedGroup[];
@@ -166,6 +177,6 @@ interface EditChange {
 }
 
 export type {
-  BuildDoc, BundleGroup, BundleView, ClosedGroup, Counts, EditChange, FocusOption, FocusScope, GroupCard, GroupInput, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, RawStored, StoredView,
+  BuildDoc, BundleGroup, BundleView, ClosedGroup, Counts, EditChange, FocusOption, FocusScope, GroupCard, GroupInput, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, PlanView, RawStored, StoredView,
   TestChipSet, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, ViewInput, WakeChip, WakeDoc, WakeInput,
 };

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, InlineEdit, Tag, Text } from '@drizztdourden08/tessera';
 import { FactSelect } from '../../../shared';
-import { useTestsShared } from '../behavior/useTestsShared';
 import { fieldValidator, itemChoices } from '../model';
 import { MODE_OPTIONS } from '../tests.constants';
 import type { TestFactsProps } from '../tests-drawer-props.type';
@@ -11,8 +10,7 @@ const validateCovers = fieldValidator('covers');
 const validateBuild = fieldValidator('build');
 
 const TestFacts = (props: TestFactsProps) => {
-  const { test, handed } = props;
-  const { ops, items } = useTestsShared();
+  const { test, handed, ops, items } = props;
   return (
     <Flex direction="column" gap="sm">
       <Flex gap="sm" align="center" wrap>

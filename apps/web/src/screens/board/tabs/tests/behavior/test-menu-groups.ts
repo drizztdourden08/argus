@@ -1,7 +1,9 @@
 /* @layer renderer-app @kind logic */
 import type { MenuGroup, MenuItem } from '@drizztdourden08/tessera';
+import { recordMenuGroups } from '../../../../../shell';
 import { copyText } from '../../../shared';
 import type { ItemDoc } from '../model';
+import { CASE_KIND } from '../tests.constants';
 import type { TestMenuInput } from '../tests.type';
 
 const MOVE_LABEL_CHARS = 40;
@@ -25,13 +27,13 @@ const testMenuGroups = (input: TestMenuInput): MenuGroup[] => {
     : { id: 'archive', label: 'Archive', onSelect: () => void ops.soft('archive', test) };
   const targets = items.filter((item) => !item.deletedAt).map((item) => moveTarget(item, test.item, (itemId) => void ops.move(test, itemId)));
   const again: MenuItem[] = test.status === 'pending' ? [] : [{ id: 'rerun', label: 'Run again', onSelect: rerun }];
-  return [
+  const middle: MenuGroup[] = [
     { id: 'run', items: [{ id: 'note', label: 'Add a note...', onSelect: () => shared.onNote(id) }, ...again] },
-    { id: 'open', items: [{ id: 'details', label: 'Open details', onSelect: () => shared.onOpen(id) }, { id: 'edit', label: 'Edit', onSelect: () => shared.onEdit(id) }] },
+    { id: 'edit', items: [{ id: 'edit', label: 'Edit', onSelect: () => shared.onEdit(id) }] },
     { id: 'move', items: [{ id: 'item', label: 'Move to item', children: targets }] },
-    { id: 'soft', items: [archive, { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void ops.soft('delete', test) }] },
-    { id: 'copy', items: [{ id: 'copy', label: 'Copy id', onSelect: () => copyText(id) }] },
+    { id: 'tidy', items: [archive, { id: 'delete', label: 'Delete', tone: 'danger', onSelect: () => void ops.soft('delete', test) }] },
   ];
+  return recordMenuGroups(CASE_KIND, id, { open: () => shared.onOpen(id), copy: () => copyText(id) }, middle);
 };
 
 export { testMenuGroups };

@@ -34,6 +34,12 @@ interface PlanRun {
   summary: RunSummary | null;
 }
 
+interface PlanProgress {
+  summary: RunSummary;
+  live: boolean;
+  cases: number;
+}
+
 interface RunOutcome {
   status: RunStatus;
   label: string;
@@ -143,6 +149,6 @@ interface RunKeyHandlers {
 }
 
 export type {
-  CaseLinesProps, RunBodyProps, CaseLinksProps, CaseViewProps, EndRunProps, NoteFieldProps, OutcomeBarProps, PlanRun, RunHeadProps, RunKeyHandlers, RunnerAction, RunnerState, RunOps, RunOutcome, RunPanelProps, RunResult, RunStageProps, RunStartProps,
+  CaseLinesProps, PlanProgress, RunBodyProps, CaseLinksProps, CaseViewProps, EndRunProps, NoteFieldProps, OutcomeBarProps, PlanRun, RunHeadProps, RunKeyHandlers, RunnerAction, RunnerState, RunOps, RunOutcome, RunPanelProps, RunResult, RunStageProps, RunStartProps,
   RunSummary, RunSummaryProps, SummaryKey,
 };

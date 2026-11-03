@@ -46,7 +46,7 @@ const runOf = (value: unknown): PlanRun | null => {
   };
 };
 
-const runsOf = (item: ItemRef): PlanRun[] => {
+const runsOf = (item: Pick<ItemRef, 'fields'>): PlanRun[] => {
   const raw = item.fields?.runs;
   return Array.isArray(raw) ? raw.map(runOf).filter((run): run is PlanRun => run !== null) : [];
 };

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { DONE_FOLD_AFTER } from '../model';
 import type { DoneListProps } from '../tests-props.type';
 import { SectionBand } from './SectionBand';
-import { TestRow } from './TestRow';
+import { CaseRow } from './CaseRow';
 
 const DoneList = (props: DoneListProps) => {
   const { tests } = props;
@@ -27,7 +27,7 @@ const DoneList = (props: DoneListProps) => {
           </Button>
         ) : <SectionHeader title="Done" count={tests.length} level={4} />}
       </SectionBand>
-      {shown.map((test) => <TestRow key={test.id} test={test} />)}
+      {shown.map((test) => <CaseRow key={test.id} test={test} />)}
     </Box>
   );
 };

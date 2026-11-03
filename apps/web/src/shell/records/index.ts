@@ -3,6 +3,8 @@ export { assigneeLook } from './behavior/assignee-look';
 export { categoryColor } from './behavior/category-color';
 export { groupRecords } from './behavior/group-records';
 export { parseRecord } from './behavior/parse-record';
+export { useRunOps } from './pane/run/behavior/useRunOps';
+export { planProgress } from './pane/run/model/plan-progress';
 export { recordMenuGroups } from './behavior/record-menu-groups';
 export { splitRecords } from './behavior/split-records';
 export { useRecordOrder } from './behavior/useRecordOrder';

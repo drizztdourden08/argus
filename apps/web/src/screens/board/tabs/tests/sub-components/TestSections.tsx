@@ -6,7 +6,7 @@ import { KEY_HINT } from '../tests.constants';
 import type { TestSectionsProps } from '../tests-props.type';
 import { DoneList } from './DoneList';
 import { SectionBand } from './SectionBand';
-import { TestRow } from './TestRow';
+import { CaseRow } from './CaseRow';
 
 const TestSections = (props: TestSectionsProps) => {
   const { tests, emptyText } = props;
@@ -20,7 +20,7 @@ const TestSections = (props: TestSectionsProps) => {
           <SectionHeader title="To run" count={toRun.length} level={4} action={toRun.length > 0 ? <Text variant="caption" tone="muted" className="test-section__hint">{KEY_HINT}</Text> : undefined} />
         </SectionBand>
         {toRun.length > 0
-          ? toRun.map((test) => <TestRow key={test.id} test={test} />)
+          ? toRun.map((test) => <CaseRow key={test.id} test={test} />)
           : <Text tone="muted" className="test-section__empty">{tests.length > 0 ? 'Nothing left to run.' : emptyText}</Text>}
       </Box>
       {done.length > 0 && <DoneList tests={done} />}

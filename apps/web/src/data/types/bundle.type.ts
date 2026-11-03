@@ -81,7 +81,10 @@ interface TestItem {
   thread?: string | null;
   subject?: string | null;
   type?: string | null;
+  stage?: string | null;
+  assignee?: string | null;
   fields?: Record<string, unknown>;
+  updatedAt?: string;
   deletedAt?: string | null;
   ac?: { text: string; done: boolean }[];
 }

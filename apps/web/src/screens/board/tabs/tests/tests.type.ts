@@ -1,6 +1,4 @@
 /* @layer renderer-app @kind types */
-import type { ContextMenuPoint } from '@drizztdourden08/tessera';
-import type { KeyboardEvent } from 'react';
 import type { PostResult } from '../../../../data/api';
 import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
@@ -77,12 +75,6 @@ interface TestsShared {
   onLog: (runId: string) => void;
 }
 
-interface RowMenu {
-  at: ContextMenuPoint | null;
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-  close: () => void;
-}
-
 interface TestMenuInput {
   test: TestDoc;
   shared: TestsShared;
@@ -96,9 +88,6 @@ interface TestsScreen {
   notices: NoticeOps;
   visible: TestDoc[];
   focus: TestsFocus;
-  anchor: TestAnchor;
-  nav: DrawerNav;
-  wide: DrawerWide;
   noteId: string | null;
   editId: string | null;
   logId: string | null;
@@ -167,23 +156,6 @@ interface Folds {
   set: (key: string, open: boolean) => void;
 }
 
-interface TestAnchor {
-  selected: string | null;
-  open: (testId: string) => void;
-  close: () => void;
-}
-
-interface DrawerNav {
-  previous: string | null;
-  next: string | null;
-  open: (testId: string) => void;
-}
-
-interface DrawerWide {
-  wide: boolean;
-  toggle: () => void;
-}
-
 export type {
-  DrawerNav, DrawerWide, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, RowMenu, TestActions, TestAnchor, TestMenuInput, TestOps, TestsData, TestsFocus, TestsScreen, TestsShared, TestsState,
+  EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestMenuInput, TestOps, TestsData, TestsFocus, TestsScreen, TestsShared, TestsState,
 };

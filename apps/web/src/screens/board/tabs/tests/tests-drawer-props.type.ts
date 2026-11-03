@@ -2,39 +2,18 @@
 import type { ReactNode } from 'react';
 import type { WithId } from '../../../../data/react';
 import type { TestItem } from '../../../../data/types';
-import type { TestDoc } from './model';
-import type { DrawerNav, DrawerWide, NoticeOps, TestsData, TestsScreen } from './tests.type';
-
-interface TestDrawerProps {
-  test: TestDoc | null;
-  item: WithId<TestItem> | null;
-  handed: boolean;
-  nav: DrawerNav;
-  wide: DrawerWide;
-  notices: NoticeOps;
-  onClose: () => void;
-}
-
-interface TestToolsProps {
-  test: TestDoc;
-  nav: DrawerNav;
-  wide: DrawerWide;
-}
+import type { ItemDoc, TestDoc } from './model';
+import type { TestOps, TestsData, TestsScreen } from './tests.type';
 
 interface TestFactsProps {
   test: TestDoc;
   handed: boolean;
+  ops: TestOps;
+  items: ItemDoc[];
 }
 
 interface ResultBlockProps {
   test: TestDoc;
-}
-
-interface TestBodyProps {
-  test: TestDoc;
-  item: WithId<TestItem> | null;
-  handed: boolean;
-  notices: NoticeOps;
 }
 
 interface AcListProps {
@@ -95,5 +74,5 @@ interface TestLayersProps {
 }
 
 export type {
-  AcListProps, DrawerSectionProps, EditDialogProps, EvidenceProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestBodyProps, TestDrawerProps, TestFactsProps, TestLayersProps, TestToolsProps, TextListProps,
+  AcListProps, DrawerSectionProps, EditDialogProps, EvidenceProps, NoteDialogProps, ProofUploadFormProps, ResultBlockProps, ResultHistoryProps, ShotPreviewProps, StepListProps, TestFactsProps, TestLayersProps, TextListProps,
 };

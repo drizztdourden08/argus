@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { buildView } from './build-view';
+export { caseAssignee } from './case-assignee';
+export { caseChips } from './case-chips';
 export { bundleOwner } from './bundle-owner';
 export { byLabel } from './by-label';
 export { changedFields } from './changed-fields';
@@ -13,6 +15,7 @@ export { filtersActive } from './filters-active';
 export { focusOptions } from './focus-options';
 export { followItemThread } from './follow-item-thread';
 export { groupBundles } from './group-bundles';
+export { groupByPlan } from './group-by-plan';
 export { inFocus } from './in-focus';
 export { isToRun } from './is-to-run';
 export { itemChoices } from './item-choices';
@@ -23,7 +26,11 @@ export { outcomeTitle } from './outcome-title';
 export { noteProblem } from './note-problem';
 export { parseStored } from './parse-stored';
 export { planCases } from './plan-cases';
+export { planAssignee } from './plan-assignee';
+export { planCode } from './plan-code';
 export { planOptions } from './plan-options';
+export { planTone } from './plan-tone';
+export { planViews } from './plan-views';
 export { playHint } from './play-hint';
 export { postVerdict } from './post-verdict';
 export { previousValues } from './previous-values';
@@ -32,14 +39,14 @@ export { resultNote } from './result-note';
 export { shownRun } from './shown-run';
 export { sortDone } from './sort-done';
 export { sortToRun } from './sort-to-run';
+export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';
-export { testChips } from './test-chips';
 export { testNotices } from './test-notices';
 export { toRunCount } from './to-run-count';
 export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
 export {
-  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, NO_BUNDLE, ORDER_OPTIONS, STATUS_FILTERS, STORE_KEYS,
+  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, NO_BUNDLE, ORDER_OPTIONS, PLAN_KIND, STATUS_FILTERS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';
