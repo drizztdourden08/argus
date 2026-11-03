@@ -8,15 +8,29 @@ use crate::{AuthKind, Ctx};
 
 const BY_MAX: usize = 60;
 
-/// Refuses a write in shadow mode, where Argus changes nothing outside itself.
+/// Refuses a board write in shadow mode, where Argus writes no board. A preview writes boards.
 ///
 /// # Errors
 /// 403 `read_only` in shadow mode.
 pub fn writable(ctx: &Ctx) -> Result<(), ApiError> {
-    if ctx.svc.shadow {
+    if !ctx.svc.board_writes {
         return Err(ApiError::new(
             ErrorCode::ReadOnly,
             "shadow mode: Argus does not write boards or start runs",
+        ));
+    }
+    Ok(())
+}
+
+/// Refuses an outward effect (a run, a check run, a process kill) in shadow mode and in a preview.
+///
+/// # Errors
+/// 403 `read_only` in shadow mode and in a preview.
+pub fn outward(ctx: &Ctx) -> Result<(), ApiError> {
+    if ctx.svc.shadow {
+        return Err(ApiError::new(
+            ErrorCode::ReadOnly,
+            "shadow or preview mode: Argus has no outward effect (no run, no kill)",
         ));
     }
     Ok(())

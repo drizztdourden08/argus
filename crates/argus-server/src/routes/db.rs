@@ -81,7 +81,7 @@ async fn write_doc(
             js::string(&obj["id"])
         )));
     }
-    if ctx.svc.shadow {
+    if !ctx.svc.board_writes {
         return Err(ApiError::new(
             ErrorCode::ReadOnly,
             "shadow mode: Argus does not write boards",

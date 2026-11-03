@@ -75,7 +75,8 @@ pub(crate) fn health_body(svc: &Services) -> Result<Value, ApiError> {
         "sse": { "clients": svc.streams.load(std::sync::atomic::Ordering::SeqCst) },
         "modules": { "sync": svc.sync.is_some(), "runs": svc.runs.is_some(), "problems": {} },
         "impl": "argus",
-        "shadow": svc.shadow,
+        "shadow": !svc.board_writes,
+        "preview": svc.preview,
         "localhostDoor": svc.localhost_door(),
     });
     if let Some(names) = local_names::health_json(svc) {

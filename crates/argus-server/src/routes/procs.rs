@@ -12,7 +12,8 @@
 //!
 //! Who may change rules or kill: the owner's page, or the Overlord (the coordinator thread of
 //! the portfolio board) named in `by` from the CLI. Anyone may read. A thread may kill only its
-//! own project's processes, through the route of its project.
+//! own project's processes, through the route of its project. A shadow server and a preview
+//! never kill: every kill route answers 403 `read_only`.
 
 mod own;
 
@@ -30,6 +31,7 @@ use serde::Serialize;
 use serde_json::{Value, json, to_value};
 
 use super::blocking::blocking;
+use super::write::outward;
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::{AuthKind, Ctx, RouteOpts, Router};
@@ -208,6 +210,7 @@ async fn remove_rule(ctx: Ctx) -> Reply {
 
 async fn kill(ctx: Ctx) -> Reply {
     let procs = service(&ctx)?;
+    outward(&ctx)?;
     let body = ctx.json().await?;
     let who = caller(&ctx, &body, "kill a process")?;
     let request = KillRequest {
@@ -223,6 +226,7 @@ async fn kill(ctx: Ctx) -> Reply {
 
 async fn kill_rule(ctx: Ctx) -> Reply {
     let procs = service(&ctx)?;
+    outward(&ctx)?;
     let body = ctx.json().await?;
     let Some(rule) = body["rule"].as_str().filter(|r| !r.is_empty()) else {
         return Err(ApiError::bad_request("rule is required"));

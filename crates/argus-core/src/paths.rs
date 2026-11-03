@@ -49,6 +49,12 @@ impl Paths {
         )
     }
 
+    /// The live boards folder: `~/.coord`, whatever `COORD_HOME` says.
+    #[must_use]
+    pub fn live_coord_home() -> PathBuf {
+        absolute(&home_dir().join(".coord"))
+    }
+
     /// The board folder of a project or the portfolio.
     #[must_use]
     pub fn board_dir(&self, key: &str) -> PathBuf {

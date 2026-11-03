@@ -114,8 +114,14 @@ pub struct Services {
     pub instance: String,
     /// When it started.
     pub started_at: String,
-    /// Shadow mode: no outward effect, owner posts answer `read_only`.
+    /// No outward effect: true in shadow mode and in a preview (no worktree removal, kill, run,
+    /// Play, toast, remote call or cache prune).
     pub shadow: bool,
+    /// Board writes (owner posts, test results, dependencies) are accepted: false only in
+    /// shadow mode, where they answer `read_only`.
+    pub board_writes: bool,
+    /// Preview mode: a copied home with board writes and no outward effect.
+    pub preview: bool,
     /// The SSE heartbeat.
     pub heartbeat: Duration,
     /// The web build.

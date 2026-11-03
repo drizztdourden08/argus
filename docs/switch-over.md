@@ -222,6 +222,10 @@ folders, so nothing in it presses Play on a real launcher or removes a real work
 sequence below has been rehearsed end to end: Argus not in shadow mode on 47617 with writes,
 Node on 47618 reading the database Argus wrote, then the shim path.
 
+The sandbox below acts on real folders and processes. When the owner only needs to try a build
+on a copy of the boards, with writes and no outward effect, use `serve --preview` instead
+(`docs/preview.md`).
+
 Build the sandbox. The sandbox runs a COPY of the binary, never `target\release` while a
 rebuild may follow, and never the installed copy. `argus self-install --dir <sandbox>` makes
 that copy. The boards are copied with bash `cp -r`, leaving out `dashboard`, every

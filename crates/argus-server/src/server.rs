@@ -30,13 +30,13 @@ use crate::localhost_door;
 use crate::security::LoginCodes;
 use crate::services::tasks::Tasks;
 use crate::services::{activity, compose};
-use crate::shadow;
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
     AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
     Services, WakeOptions, WorktreesOptions, routes,
 };
+use crate::{preview, shadow};
 
 const PRUNE_EVERY: Duration = Duration::from_secs(3600);
 const FORCE_AFTER: Duration = Duration::from_secs(1);
@@ -58,6 +58,12 @@ pub struct ServeOptions {
     pub shadow: bool,
     /// The Node dashboard home a shadow copies its database, config and process rules from.
     pub shadow_seed: Option<PathBuf>,
+    /// Preview mode: a copied home with board writes and no outward effect. Refused on the
+    /// live boards.
+    pub preview: bool,
+    /// The live boards folder a preview refuses; `None` is the default `~/.coord`. A test
+    /// names a throwaway folder.
+    pub live_coord_home: Option<PathBuf>,
     /// Also print the log to stderr.
     pub echo_log: bool,
     /// Run counts for the cards.
@@ -97,6 +103,8 @@ impl ServeOptions {
             sync: true,
             shadow: false,
             shadow_seed: None,
+            preview: false,
+            live_coord_home: None,
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
@@ -133,6 +141,9 @@ pub enum ServeError {
     /// The port is taken.
     #[error("port {0} is in use by another program (or a dashboard of another DASHBOARD_HOME)")]
     PortInUse(u16),
+    /// A preview may not start on the live boards.
+    #[error("{0}")]
+    PreviewRefused(String),
     /// A file could not be written.
     #[error(transparent)]
     Io(#[from] std::io::Error),
@@ -193,9 +204,11 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     let paths = opts.paths.clone();
     if opts.shadow {
         shadow::prepare(&paths, opts.shadow_seed.as_deref())?;
+    } else if opts.preview {
+        preview::prepare(&paths, opts.live_coord_home.as_deref())?;
     }
     let config = checked_config(&paths, opts.port).await?;
-    if !opts.shadow {
+    if !opts.shadow && !opts.preview {
         first_start::back_up_node_database(&paths)?;
     }
     let log = Arc::new(
@@ -264,7 +277,9 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         notifier: None,
         instance,
         started_at: now_iso(),
-        shadow: opts.shadow,
+        shadow: opts.shadow || opts.preview,
+        board_writes: !opts.shadow,
+        preview: opts.preview,
         heartbeat: opts.heartbeat,
         web: WebAssets::new(opts.web_root.clone()),
         fanout,
@@ -280,11 +295,13 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     })
 }
 
-/// The options with the shadow marker of the home applied: a home marked `"shadow": true` in its
-/// `config.json` always runs in shadow mode, whatever way the server was started.
+/// The options with the markers of the home applied: a home marked `"shadow": true` in its
+/// `config.json` always runs in shadow mode, and one marked `"preview": true` in preview mode,
+/// whatever way the server was started. Shadow outranks preview: it writes nothing.
 fn marked_by_home(opts: &ServeOptions) -> ServeOptions {
     let mut opts = opts.clone();
     opts.shadow = opts.shadow || shadow::marked(&opts.paths.config);
+    opts.preview = !opts.shadow && (opts.preview || preview::marked(&opts.paths.config));
     opts
 }
 
@@ -388,11 +405,16 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     };
     let port = listener.local_addr()?.port();
     svc.port.store(port, std::sync::atomic::Ordering::SeqCst);
-    let front = local_names::bind(&svc, &opts.local_names).await;
+    let front = if svc.preview {
+        None
+    } else {
+        local_names::bind(&svc, &opts.local_names).await
+    };
     if let Some(front) = &front {
         let _set = svc.names.set(front.live.clone());
     }
-    let localhost = localhost_door::open(&svc, opts.localhost_door_port).await;
+    let localhost =
+        localhost_door::open(&svc, opts.localhost_door_port.filter(|_| !svc.preview)).await;
     let door_port = svc.localhost_door();
     write_pid_file(
         &svc.paths.pid_file,
@@ -405,7 +427,7 @@ pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
     compose::start_all(&svc).await;
     prune(&svc);
     spawn_prune(&svc);
-    svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": svc.shadow }));
+    svc.log.info("listening", json!({ "port": port, "pid": std::process::id(), "sync": svc.sync.is_some(), "shadow": !svc.board_writes, "preview": svc.preview }));
     let names_door = front.map(
         |Front {
              listener,
