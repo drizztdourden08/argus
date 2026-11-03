@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { askMode } from '../../feed-model';
+import { LinkedText } from '../../../../shell';
 import { plainText } from '../../plain-text';
 import type { EntryBodyProps } from '../OwnerFeed.type';
 import { AskForm } from './AskForm';
@@ -12,7 +13,7 @@ const AskBody = (props: EntryBodyProps) => {
   return (
     <Flex direction="column" gap="sm">
       <ContextBlock entry={entry} actions={actions} />
-      <Text weight={600} title={entry.text}>{plainText(entry.text)}</Text>
+      <Text weight={600} title={entry.text}><LinkedText text={plainText(entry.text)} /></Text>
       <EntryImages entry={entry} />
       <AskForm entry={entry} mode={askMode(entry)} actions={actions} />
     </Flex>

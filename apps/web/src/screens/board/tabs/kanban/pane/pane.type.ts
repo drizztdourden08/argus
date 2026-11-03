@@ -96,13 +96,11 @@ interface FieldProps {
   ops: ItemOps;
   cx: ContentContext;
   people: readonly Option[];
-  open: (id: string) => void;
 }
 
 interface FieldBodyProps {
   spec: ItemField;
   text: string;
-  open: (id: string) => void;
 }
 
 interface FieldGroupProps {
@@ -114,7 +112,6 @@ interface CauseRowProps {
   kind: string;
   id: string;
   label: string;
-  open: (id: string) => void;
 }
 
 interface FieldSelectProps {
@@ -126,7 +123,6 @@ interface FieldSelectProps {
 
 interface RefTagsProps {
   ids: readonly string[];
-  open: (id: string) => void;
 }
 
 interface TrailEdge {

@@ -7,13 +7,9 @@ const CRUMB_MAX = 6;
 
 const TAB_STORE = 'coord.pane.tab';
 
-const OPENABLE_REF = /^[IT]-\d+$/;
-
 const LEAF_KINDS: readonly string[] = ['question', 'decision', 'test', 'todo', 'request', 'legacy'];
 
 const ENTRY_LEAVES: readonly string[] = ['question', 'decision'];
-
-const ENTRY_CAUSES: readonly string[] = ['ask', 'decision'];
 
 const EDGE_WORDS: Readonly<Record<string, string>> = {
   item: 'blocked by',
@@ -26,4 +22,4 @@ const EDGE_WORDS: Readonly<Record<string, string>> = {
   legacy: 'note',
 };
 
-export { CRUMB_MAX, EDGE_WORDS, ENTRY_CAUSES, ENTRY_LEAVES, LEAF_KINDS, NO_CHOICE, OPENABLE_REF, TAB_FIELDS, TAB_STORE };
+export { CRUMB_MAX, EDGE_WORDS, ENTRY_LEAVES, LEAF_KINDS, NO_CHOICE, TAB_FIELDS, TAB_STORE };

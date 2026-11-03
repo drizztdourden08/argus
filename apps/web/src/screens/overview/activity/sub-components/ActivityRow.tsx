@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Tag, Text } from '@drizztdourden08/tessera';
+import { LinkedText } from '../../../../shell';
 import { ProjectLink } from '../../projects';
 import { isFresh } from '../../seen';
 import { FeedRow } from '../../sub-components/FeedRow';
@@ -16,7 +17,9 @@ const ActivityRow = (props: ActivityRowProps) => {
     <FeedRow icon={kindIcon(kind)} tone={LEVEL_TONE[level]} title={`${kind} · ${level}`} at={item.at}>
       <Text size="md">
         <Text variant="overline" tone={LEVEL_TONE[level]}>{kind}</Text>
-        {` ${item.text ?? ''} `}
+        {' '}
+        <LinkedText text={item.text ?? ''} board={project || undefined} />
+        {' '}
         {project ? <ProjectLink project={project} chip /> : null}
         {item.thread ? <Text variant="caption">{` ${project ? '/ ' : ''}${item.thread}`}</Text> : null}
         {isFresh(item.at, freshSince) ? <> <Tag variant="urgency" color="info" pill>new</Tag></> : null}

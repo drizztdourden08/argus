@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex, InlineEdit, Tag, Text } from '@drizztdourden08/tessera';
+import { Button, Flex, InlineEdit, Tag } from '@drizztdourden08/tessera';
+import { RecordLink } from '../../../../../shell';
 import type { TodoRowProps } from '../drawer-props.type';
 import { validateField } from '../model';
 
@@ -12,7 +13,7 @@ const TodoRow = (props: TodoRowProps) => {
   const reopen = () => void ops.editRecord({ c: 'actions', id: action.id, rev: action.rev }, { field: 'status', prev: 'done', value: 'pending' }, 'To-do reopened.');
   return (
     <Flex gap="sm" align="center" wrap>
-      <Text variant="caption" tone="muted" mono>{action.id}</Text>
+      <RecordLink id={action.id} />
       <InlineEdit
         label={`to-do ${action.id}`}
         placeholder="to-do text"

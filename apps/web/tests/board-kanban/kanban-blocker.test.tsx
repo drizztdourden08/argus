@@ -36,7 +36,7 @@ describe('I-61 the blocker of an item', { tags: ['standard'] }, () => {
     expect(board.queryByTitle(/^Blocked by/)).toBeNull();
     const dialog = await openItem('I-1');
     expect(within(dialog).getByText('blocked on')).toBeTruthy();
-    expect(within(dialog).getByRole('button', { name: 'Open Q-1' })).toBeTruthy();
+    expect(within(dialog).getByRole('link', { name: 'Q-1' })).toBeTruthy();
   });
 
   it('shows no blocker on an item without one', async () => {
