@@ -93,7 +93,10 @@ fn route_entry(board: &Board, e: &Value) -> String {
 
 /// The thread an op entry is about, so purging that thread takes the entry with it.
 fn thread_of_op(board: &Board, e: &Value) -> Value {
-    if matches!(e["kind"].as_str(), Some("bulk" | "purge" | "build")) {
+    if matches!(
+        e["kind"].as_str(),
+        Some("bulk" | "purge" | "build" | "avatar")
+    ) {
         return Value::Null;
     }
     if !e["set"]["thread"].is_null() {

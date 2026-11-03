@@ -4,9 +4,10 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, post};
+use crate::common::{alpha, exported, post};
 use argus_board::ops::purge_plan;
 use argus_board::sync::import_entries_at;
+use argus_core::Coll;
 use serde_json::{Value, json};
 
 fn with_api_thread() -> Value {
@@ -185,6 +186,31 @@ fn handing_a_build_records_it_and_unhanding_clears_it() {
     post(&mut b, json!({"kind": "build", "handed": null}));
     assert_eq!(b["handedBuild"], Value::Null);
     assert_eq!(b["handedAt"], Value::Null);
+}
+
+#[test]
+fn the_lead_avatar_is_a_brand_or_a_small_image_and_the_export_carries_it() {
+    let mut b = alpha();
+    let (_, brand) = post(&mut b, json!({"kind": "avatar", "avatar": "brand:tessera"}));
+    assert_eq!(brand.ops.applied, 1);
+    assert_eq!(b["avatar"], "brand:tessera");
+    assert_eq!(exported(&b, Coll::Meta, "board")["avatar"], "brand:tessera");
+    let image = "data:image/png;base64,iVBORw0KGgo=";
+    post(&mut b, json!({"kind": "avatar", "avatar": image}));
+    assert_eq!(b["avatar"], image);
+    for bad in [
+        json!("brand:nope"),
+        json!("data:image/svg+xml;base64,PHN2Zz4="),
+        json!("data:image/png;base64,not base64!"),
+        json!(format!("data:image/png;base64,{}", "A".repeat(250_000))),
+        json!(7),
+    ] {
+        let (_, res) = post(&mut b, json!({"kind": "avatar", "avatar": bad}));
+        assert_eq!(res.ops.refused, 1);
+    }
+    assert_eq!(b["avatar"], image);
+    post(&mut b, json!({"kind": "avatar", "avatar": null}));
+    assert_eq!(b["avatar"], Value::Null);
 }
 
 #[test]

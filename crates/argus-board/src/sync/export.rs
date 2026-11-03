@@ -178,6 +178,7 @@ fn board_meta(board: &Board) -> Value {
         "name": display_name(&display(&board["project"]), board["name"].as_str(), None),
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
         "handedBuild": nn(board, "handedBuild"), "handedAt": nn(board, "handedAt"),
+        "avatar": nn(board, "avatar"),
     })
 }
 

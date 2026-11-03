@@ -9,7 +9,7 @@ import type { AssigneeLook } from './model.type';
 
 const leadLook = (key: string, tip: string): AssigneeLook => {
   const look = ITEM_REGISTRY.people.leads[key];
-  return { label: `${key} lead`, tip, initials: look?.initials ?? key.slice(0, 2).toUpperCase(), color: categoryColor(look?.color), owner: false };
+  return { label: `${key} lead`, tip, initials: look?.initials ?? key.slice(0, 2).toUpperCase(), color: categoryColor(look?.color), lead: key, owner: false };
 };
 
 const isLead = (assignee: string, threads: readonly WithId<ThreadChoice>[]): boolean =>

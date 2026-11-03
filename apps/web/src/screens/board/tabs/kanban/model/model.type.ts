@@ -200,6 +200,7 @@ interface AssigneeLook {
   initials?: string;
   icon?: IconName;
   color?: TagCategoryColor;
+  lead?: string;
   owner: boolean;
 }
 

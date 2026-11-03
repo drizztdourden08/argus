@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { AvatarSource } from '../../../../avatar';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
@@ -137,8 +138,17 @@ interface CardProgressRowProps {
   segments: readonly CardProgress[];
 }
 
+interface TypeIconProps {
+  typeId: string;
+}
+
 interface ItemTypeMarkProps {
   item: ItemRef;
+}
+
+interface LeadMarkProps {
+  source: AvatarSource;
+  label: string;
 }
 
 interface AssigneeMarkProps {
@@ -149,5 +159,5 @@ interface AssigneeMarkProps {
 
 
 export type {
-  AssigneeMarkProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, ItemTypeMarkProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AssigneeMarkProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, ItemTypeMarkProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, LeadMarkProps, OpNoticesProps, QuietBadgeProps, SelectionBarProps, TypeIconProps, ViewRowProps,
 };

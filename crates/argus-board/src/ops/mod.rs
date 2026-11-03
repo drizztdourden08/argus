@@ -1,12 +1,13 @@
 //! What may change on the board, by whom, and how a change is made. One op is the same shape the
 //! page posts as an entry: `create`, `edit`, `move`, `ac`, `archive`, `unarchive`, `delete`,
-//! `restore`, `bulk`, `purge`, `build`, the test plan run ops (`plan-run-start`, `plan-run-record`, `plan-run-end`) and the pull request ops of the local remote (`pr-open`,
+//! `restore`, `bulk`, `purge`, `build`, `avatar`, the test plan run ops (`plan-run-start`, `plan-run-record`, `plan-run-end`) and the pull request ops of the local remote (`pr-open`,
 //! `pr-update`, `pr-merge`, `pr-close`, `pr-checks`). [`apply_op`] checks the caller, validates, checks the
 //! revision the writer saw, applies, stamps, and tells the owning threads.
 
 mod ac;
 mod announce;
 mod authorize;
+mod avatar;
 mod backup;
 mod build;
 mod bulk;
@@ -61,6 +62,7 @@ fn dispatch(
         "bulk" => bulk::handle(board, op, who, home),
         "purge" => purge::handle(board, op, who, home),
         "build" => build::handle(board, op, who),
+        "avatar" => avatar::handle(board, op, who),
         kind if plan_run::is_kind(kind) => plan_run::handle(board, op, who),
         kind if pr::is_pr_kind(kind) => pr::handle(board, op, who),
         _ => return None,

@@ -1,17 +1,15 @@
 /* @layer renderer-app @kind component */
-import { Flex, Text, TypeMark } from '@drizztdourden08/tessera';
-import type { IconName } from '@drizztdourden08/tessera';
-import { itemTypeOf } from '../../../../../../data/registry';
-import { categoryColor } from '../../model';
+import { Flex, Text } from '@drizztdourden08/tessera';
+import { HEAD_ID_CLASS } from '../../head.constants';
+import { TypeIcon } from '../../sub-components/TypeIcon';
 import type { TreeRowProps } from '../tree.type';
 
 const TreeLead = (props: TreeRowProps) => {
   const { node } = props;
-  const type = itemTypeOf(node.typeId);
   return (
     <Flex gap="xs" align="center">
-      {type && <TypeMark icon={type.icon as IconName} label={type.label} color={categoryColor(type.color)} size="xs" />}
-      <Text as="span" variant="caption" weight={600} mono>{node.id}</Text>
+      <TypeIcon typeId={node.typeId} />
+      <Text as="span" variant="caption" weight={600} mono className={HEAD_ID_CLASS}>{node.id}</Text>
     </Flex>
   );
 };

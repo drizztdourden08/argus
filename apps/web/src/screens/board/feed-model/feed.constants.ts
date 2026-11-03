@@ -3,7 +3,7 @@ import type { FeedKind, NeedCount } from './feed.type';
 
 const NO_NEEDS: NeedCount = { questions: 0, decisions: 0, steps: 0, tests: 0 };
 
-const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
+const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar'];
 
 const FEED_META: Record<FeedKind, { label: string; you: boolean }> = {
   decision: { label: 'decision needed', you: true },

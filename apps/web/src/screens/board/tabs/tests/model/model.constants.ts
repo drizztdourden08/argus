@@ -47,7 +47,7 @@ const EDIT_LIMITS = { title: 80, covers: 80, build: 40, mode: 8 };
 
 const BAD_STATUSES =['conflict', 'refused'];
 
-const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
+const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar'];
 
 export {
   BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_BUNDLE, NO_KEY, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS,

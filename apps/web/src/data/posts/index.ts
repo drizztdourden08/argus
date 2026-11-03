@@ -7,4 +7,5 @@ export { OWNER_TEXT_MAX } from './posts.constants';
 export { recordResult } from './record-result';
 export { rerunTest } from './rerun-test';
 export { sendDown } from './send-down';
+export { setAvatar } from './set-avatar';
 export type * from './posts.type';

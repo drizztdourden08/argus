@@ -52,7 +52,7 @@ const ORDER_OPTIONS: { value: ItemOrder; label: string }[] = [
 
 const LIMITS = { title: 80, subject: 40, description: 400, brief: 1200, criterion: 120, todo: 200 };
 
-const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build'];
+const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar'];
 
 const HUMAN = 'human';
 

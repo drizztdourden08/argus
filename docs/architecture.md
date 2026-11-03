@@ -1118,6 +1118,15 @@ The palette of a board is an Argus setting, stored in kv (`palette:<key>`), expo
 board through the header switcher is a client route change, so the attribute changes in the same
 render and the page follows at once.
 
+### Lead avatar
+
+A project lead wears its app logo on cards, tree rows and lists: a square image, never a circle, at
+the one head size (16 px, `HEAD_SIZE_PX`, the owner avatar). The default is the Tessera brand mark of
+the app the board key belongs to (`pixelarttool` to `bxel`); a board without a brand mark shows its
+initials in a square. The board setting `avatar` (`brand:<app>` or an image data URL of at most 240
+KB) is set by the owner post `{kind: "avatar", avatar}` from More, Lead avatar, held on the board
+and exported on `meta/board`. Other threads keep their initials in a circle.
+
 ### Tessera pieces per screen
 
 | Screen | Tessera pieces |

@@ -9,7 +9,7 @@ use crate::json::{items, nn, pick, text, truthy};
 use crate::project::{clip, need, sorted_docs, visible};
 use crate::summary::item_row;
 
-const OP_KINDS: [&str; 14] = [
+const OP_KINDS: [&str; 15] = [
     "create",
     "edit",
     "move",
@@ -21,6 +21,7 @@ const OP_KINDS: [&str; 14] = [
     "bulk",
     "purge",
     "build",
+    "avatar",
     "plan-run-start",
     "plan-run-record",
     "plan-run-end",
