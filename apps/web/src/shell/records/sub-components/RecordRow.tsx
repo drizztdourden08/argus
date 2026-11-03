@@ -19,7 +19,7 @@ const RecordRow = (props: RecordRowProps) => {
   return (
     <ListItemRow
       icon={<TypeIcon kind={head.kind} />}
-      name={linked ? <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} /> : <Text clamp={1} smartTimes>{title}</Text>}
+      name={linked ? <LinkedTitle text={title} board={head.boardKey} onOpen={onOpen} clamp={1} label={`Open ${head.code}: ${title}`} /> : <Text clamp={1} smartTimes>{title}</Text>}
       meta={linked ? <Pressable onClick={onOpen} title={`Open ${head.code}`}>{code}</Pressable> : code}
       columns={columns}
       action={
