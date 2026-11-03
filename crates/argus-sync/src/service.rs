@@ -274,6 +274,20 @@ impl SyncService {
         self.state.attach_entry_image(key, target, pic, by).await
     }
 
+    /// Keeps a picture on an item and lists it in the item's `images`.
+    ///
+    /// # Errors
+    /// 400, 403, 404, 413 or 415 as [`Self::attach_proof`] answers.
+    pub async fn attach_item_image(
+        &self,
+        key: &str,
+        item_id: &str,
+        pic: (ProofSource, &str),
+        by: &str,
+    ) -> Result<Proof, ApiError> {
+        self.state.attach_item_image(key, item_id, pic, by).await
+    }
+
     /// Applies one pull request op (`pr-open`, `pr-update`, `pr-merge`, `pr-close`,
     /// `pr-checks`) to the `prs` collection as `by`, and exports the board.
     ///

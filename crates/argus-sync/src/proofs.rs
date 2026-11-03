@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use argus_board::limits::limit;
-use argus_board::proofs::{Image, keep_entry_image, keep_proof_bytes};
+use argus_board::proofs::{Image, add_item_image_bytes, keep_entry_image, keep_proof_bytes};
 use argus_board::store::{LockWait, board_path, stamp, with_board_async};
 use argus_board::{Board, BoardError};
 use argus_core::ids::{PORTFOLIO, is_key};
@@ -188,6 +188,24 @@ impl State {
         self.attach(key, target, (src, caption), by).await
     }
 
+    /// Keeps a picture on an item, listed in its `images`; the same bytes twice give the earlier
+    /// picture back.
+    pub async fn attach_item_image(
+        self: &Arc<Self>,
+        key: &str,
+        item_id: &str,
+        (src, caption): (ProofSource, &str),
+        by: &str,
+    ) -> Result<Proof, ApiError> {
+        if !numbered(item_id, &["I"]) {
+            return Err(ApiError::bad_request(format!(
+                "invalid item id \"{item_id}\""
+            )));
+        }
+        self.attach(key, Target::Item(item_id), (src, caption), by)
+            .await
+    }
+
     async fn attach(
         self: &Arc<Self>,
         key: &str,
@@ -231,7 +249,11 @@ impl State {
             })
             .await
             .map_err(|e| match e {
-                BoardError::Refused(m) if m.starts_with("no test") || m.starts_with("no entry") => {
+                BoardError::Refused(m)
+                    if ["no test", "no entry", "no item"]
+                        .iter()
+                        .any(|p| m.starts_with(p)) =>
+                {
                     ApiError::not_found(m)
                 }
                 other => board_error(other),
@@ -263,19 +285,29 @@ enum Target<'a> {
     Test(&'a str),
     /// A question or decision entry, tied to a 1-based option or to none.
     Entry(&'a str, Option<i64>),
+    /// An item, as one of its `images`.
+    Item(&'a str),
 }
 
 impl Target<'_> {
     fn id(&self) -> &str {
         match self {
-            Target::Test(id) | Target::Entry(id, _) => id,
+            Target::Test(id) | Target::Entry(id, _) | Target::Item(id) => id,
         }
     }
 
     fn noun(&self) -> &'static str {
         match self {
             Target::Test(_) => "proof",
-            Target::Entry(..) => "image",
+            Target::Entry(..) | Target::Item(_) => "image",
+        }
+    }
+
+    fn what(&self) -> &'static str {
+        match self {
+            Target::Test(_) => "test",
+            Target::Entry(..) => "entry",
+            Target::Item(_) => "item",
         }
     }
 
@@ -283,13 +315,14 @@ impl Target<'_> {
         match self {
             Target::Test(_) => "tests",
             Target::Entry(..) => "entries",
+            Target::Item(_) => "items",
         }
     }
 
     fn field(&self) -> &'static str {
         match self {
             Target::Test(_) => "proofs",
-            Target::Entry(..) => "images",
+            Target::Entry(..) | Target::Item(_) => "images",
         }
     }
 }
@@ -305,12 +338,7 @@ struct Keep<'a> {
 
 fn keep_on(home: &Path, board: &mut Board, job: &Keep) -> Result<(Board, i64), BoardError> {
     let id = job.target.id();
-    let what = if matches!(job.target, Target::Test(_)) {
-        "test"
-    } else {
-        "entry"
-    };
-    let missing = || BoardError::Refused(format!("no {what} {id} on {}", job.key));
+    let missing = || BoardError::Refused(format!("no {} {id} on {}", job.target.what(), job.key));
     let doc = board
         .get_mut(job.target.coll())
         .and_then(|t| t.get_mut(id))
@@ -318,24 +346,8 @@ fn keep_on(home: &Path, board: &mut Board, job: &Keep) -> Result<(Board, i64), B
     if js::truthy(&doc["deletedAt"]) {
         return Err(missing());
     }
-    if matches!(job.target, Target::Entry(..))
-        && !matches!(doc["kind"].as_str(), Some("question" | "decision"))
-    {
-        return Err(BoardError::Refused(format!(
-            "{id} is not a question or a decision: only those carry images."
-        )));
-    }
-    let image = Image {
-        bytes: job.bytes,
-        ext: job.ext,
-        caption: job.caption,
-    };
-    let n = match job.target {
-        Target::Test(_) => {
-            keep_proof_bytes(home, job.key, doc, image.bytes, image.ext, image.caption)
-        }
-        Target::Entry(_, option) => keep_entry_image(home, job.key, doc, (image, option)),
-    }?;
+    check_kind(&job.target, doc)?;
+    let n = keep_in(home, doc, job)?;
     stamp(
         board,
         job.target.coll(),
@@ -344,4 +356,39 @@ fn keep_on(home: &Path, board: &mut Board, job: &Keep) -> Result<(Board, i64), B
     )?;
     clear_marks(board);
     Ok((board.clone(), n))
+}
+
+/// Only a question or a decision entry carries pictures.
+fn check_kind(target: &Target, doc: &Value) -> Result<(), BoardError> {
+    if matches!(target, Target::Entry(..))
+        && !matches!(doc["kind"].as_str(), Some("question" | "decision"))
+    {
+        return Err(BoardError::Refused(format!(
+            "{} is not a question or a decision: only those carry images.",
+            target.id()
+        )));
+    }
+    Ok(())
+}
+
+fn keep_in(home: &Path, doc: &mut Value, job: &Keep) -> Result<i64, BoardError> {
+    let image = Image {
+        bytes: job.bytes,
+        ext: job.ext,
+        caption: job.caption,
+    };
+    match job.target {
+        Target::Test(_) => {
+            keep_proof_bytes(home, job.key, doc, image.bytes, image.ext, image.caption)
+        }
+        Target::Entry(_, option) => keep_entry_image(home, job.key, doc, (image, option)),
+        Target::Item(_) => add_item_image_bytes(
+            home,
+            job.key,
+            doc,
+            (image.bytes, image.ext),
+            (image.caption, job.by),
+        )
+        .map(|kept| kept.n),
+    }
 }

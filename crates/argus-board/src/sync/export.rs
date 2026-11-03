@@ -59,9 +59,14 @@ fn public_entry(doc: &Value, proof_url: &dyn Fn(&Value) -> String) -> Value {
 }
 
 /// An item as the page sees it: with `blocked`, why it is blocked, computed from the whole board
-/// and never kept on disk.
-fn public_item(doc: &Value, id: &str, board: &Board) -> Value {
-    let mut out = doc.clone();
+/// and never kept on disk, and its `images` with the `url` the page loads them from.
+fn public_item(
+    doc: &Value,
+    id: &str,
+    board: &Board,
+    proof_url: &dyn Fn(&Value) -> String,
+) -> Value {
+    let mut out = public_entry(doc, proof_url);
     set(&mut out, "blocked", json!(causes(board, id)));
     out
 }
@@ -113,7 +118,7 @@ fn public_doc(
     proof_url: &dyn Fn(&Value) -> String,
 ) -> Value {
     match coll {
-        Coll::Items => public_item(doc, id, board),
+        Coll::Items => public_item(doc, id, board, proof_url),
         Coll::Tests => public_test(doc, proof_url),
         Coll::Entries => public_entry(doc, proof_url),
         Coll::Builds => public_build(doc, id, board),

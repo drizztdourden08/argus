@@ -7,7 +7,7 @@ import type { MarkdownFieldEditorProps } from '../shared.type';
 const label = (noun: string): string => `${noun.charAt(0).toUpperCase()}${noun.slice(1)}`;
 
 const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
-  const { noun, value, limit, problem, onSave, onCancel } = props;
+  const { noun, value, limit, problem, media, onSave, onCancel } = props;
   const [draft, setDraft] = useState(value);
   const [found, setFound] = useState<string | null>(null);
   const save = (text: string) => {
@@ -28,6 +28,9 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
         rows={4}
         autoFocus
         maxLength={limit}
+        count={media?.count}
+        onImageFiles={media?.onImageFiles}
+        pictures={media?.pictures}
         error={found}
         onSubmit={save}
         onEscape={onCancel}

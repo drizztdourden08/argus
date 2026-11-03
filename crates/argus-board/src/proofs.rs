@@ -158,14 +158,18 @@ fn read_checked(path: &Path) -> Result<(Vec<u8>, String), BoardError> {
         return Err(refuse(format!("no image at {}", path.display())));
     }
     let bytes = fs::read(path)?;
+    check_size(&bytes, &path.display().to_string())?;
+    Ok((bytes, ext))
+}
+
+fn check_size(bytes: &[u8], what: &str) -> Result<(), BoardError> {
     if bytes.is_empty() || bytes.len() as u64 > MAX_BYTES {
         return Err(refuse(format!(
-            "{} is {} bytes, an image is 1 to {MAX_BYTES} bytes.",
-            path.display(),
+            "{what} is {} bytes, an image is 1 to {MAX_BYTES} bytes.",
             bytes.len()
         )));
     }
-    Ok((bytes, ext))
+    Ok(())
 }
 
 fn listed(item: &Value) -> &[Value] {
@@ -188,7 +192,28 @@ pub fn keep_image(
     path: &Path,
 ) -> Result<ImageRef, BoardError> {
     let (bytes, ext) = read_checked(path)?;
-    let sha256 = hex(&Sha256::digest(&bytes));
+    keep_image_bytes(home, key, item, (&bytes, &ext))
+}
+
+/// [`keep_image`] for bytes already in hand, for example an upload: `ext` includes the dot.
+///
+/// # Errors
+/// Refused as [`keep_image`] refuses, for the bytes and the extension given.
+pub fn keep_image_bytes(
+    home: &Path,
+    key: &str,
+    item: &Value,
+    (bytes, ext): (&[u8], &str),
+) -> Result<ImageRef, BoardError> {
+    let ext = ext.to_lowercase();
+    if !IMAGE.contains(&ext.as_str()) {
+        return Err(refuse(format!(
+            "an image must be one of {}.",
+            IMAGE.join(" ")
+        )));
+    }
+    check_size(bytes, "the image")?;
+    let sha256 = hex(&Sha256::digest(bytes));
     let kept = listed(item);
     if let Some(same) = kept.iter().find(|i| i["sha256"].as_str() == Some(&sha256)) {
         return Ok(ImageRef {
@@ -212,7 +237,7 @@ pub fn keep_image(
     let dest = board_dir(home, key)
         .join("proofs")
         .join(format!("{}-{n}{ext}", display(&item["id"])));
-    write_atomic(&dest, &bytes)?;
+    write_atomic(&dest, bytes)?;
     Ok(ImageRef {
         n,
         file: dest.to_string_lossy().into_owned(),
@@ -234,6 +259,25 @@ pub fn add_item_image(
 ) -> Result<ImageRef, BoardError> {
     let note = require_str("caption", caption)?;
     let kept = keep_image(home, key, item, path)?;
+    if !kept.duplicate {
+        array_mut(item, "images").push(kept.record(&note, by));
+    }
+    Ok(kept)
+}
+
+/// [`add_item_image`] for bytes already in hand, for example an upload: `ext` includes the dot.
+///
+/// # Errors
+/// Refused as [`add_item_image`] refuses, for the bytes and the extension given.
+pub fn add_item_image_bytes(
+    home: &Path,
+    key: &str,
+    item: &mut Value,
+    (bytes, ext): (&[u8], &str),
+    (caption, by): (&str, &str),
+) -> Result<ImageRef, BoardError> {
+    let note = require_str("caption", caption)?;
+    let kept = keep_image_bytes(home, key, item, (bytes, ext))?;
     if !kept.duplicate {
         array_mut(item, "images").push(kept.record(&note, by));
     }

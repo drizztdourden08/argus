@@ -32,6 +32,7 @@ mod early_refusal;
 mod first_start;
 mod http_rules;
 mod http_security;
+mod item_images;
 mod json_numbers;
 mod launcher_overlay;
 mod local_names;

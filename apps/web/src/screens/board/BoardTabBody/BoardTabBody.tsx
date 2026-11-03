@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { LoadingFallback } from '../../../shell';
 import type { BoardTabBodyProps } from './BoardTabBody.type';
-import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanbanTab, LazyReleasesTab, LazyTestsTab, LazyWorktreesTab } from './lazy-tabs';
+import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanbanTab, LazyMediaTab, LazyReleasesTab, LazyTestsTab, LazyWorktreesTab } from './lazy-tabs';
 
 const BoardTabBody = (props: BoardTabBodyProps) => {
   const { tab, boardKey, work, handed, more } = props;
@@ -12,6 +12,7 @@ const BoardTabBody = (props: BoardTabBodyProps) => {
       {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} handed={handed} />}
       {tab === 'kanban' && <LazyKanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
       {tab === 'tests' && <LazyTestsTab boardKey={boardKey} />}
+      {tab === 'media' && <LazyMediaTab boardKey={boardKey} />}
       {tab === 'builds' && <LazyBuildsTab boardKey={boardKey} />}
       {tab === 'worktrees' && <LazyWorktreesTab boardKey={boardKey} />}
       {tab === 'changes' && <LazyChangesTab boardKey={boardKey} />}
