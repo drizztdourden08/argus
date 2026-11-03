@@ -63,7 +63,8 @@ describe('P5 the result tab of the test case pane', { tags: ['standard'] }, () =
   it('shows the result, the history newest first, the notes and Run again for a done test', async () => {
     const { dialog } = await mountCase([done('T-1')], '/result');
     expect(await within(dialog).findByRole('group', { name: 'Result' })).toBeTruthy();
-    const rows = within(within(dialog).getByRole('group', { name: 'Results history · 2' })).getAllByRole('listitem');
+    expect(within(dialog).getByRole('heading', { name: 'Results history · 2' })).toBeTruthy();
+    const rows = within(within(dialog).getByRole('group', { name: 'Results history' })).getAllByRole('listitem');
     expect(rows[0]?.textContent).toContain('it broke');
     expect(rows[1]?.textContent).toContain('first try held');
     expect(within(dialog).getByText('Only the lead can tick I-1.')).toBeTruthy();
@@ -75,7 +76,8 @@ describe('P5 the media tab of the test case pane', { tags: ['standard'] }, () =>
   it('shows the proofs of the test and the upload form', async () => {
     const proofs = [{ n: 1, caption: 'the sage at the altar', url: '/files/alpha/proofs/T-1-1.png', at: ago(MIN) }];
     const { dialog } = await mountCase([caseDoc('T-1', { proofs })], '/media');
-    const evidence = await within(dialog).findByRole('group', { name: 'Evidence · 1' });
+    const evidence = await within(dialog).findByRole('group', { name: 'Evidence' });
+    expect(within(evidence).getByRole('heading', { name: 'Evidence · 1' })).toBeTruthy();
     expect(within(evidence).getByRole('button', { name: 'Open the sage at the altar' })).toBeTruthy();
     expect(within(evidence).getByRole('textbox', { name: 'Caption for T-1' })).toBeTruthy();
   });

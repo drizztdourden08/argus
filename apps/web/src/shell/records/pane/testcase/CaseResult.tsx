@@ -11,6 +11,7 @@ import type { CaseResultProps } from './testcase.type';
 const CaseResult = (props: CaseResultProps) => {
   const { test, boardKey } = props;
   const controls = useOutcome(boardKey, test.id);
+  const notes = test.notes ?? [];
   return (
     <Flex direction="column" gap="lg">
       <Flex gap="sm" align="center" wrap>
@@ -19,10 +20,10 @@ const CaseResult = (props: CaseResultProps) => {
         <RerunButton test={test} boardKey={boardKey} />
       </Flex>
       <ResultBlock test={test} />
-      <ResultHistory runs={test.runs} />
-      {test.notes.length > 0 && (
-        <DrawerSection title="Notes" count={test.notes.length}>
-          {test.notes.map((note, index) => <Callout key={`${index}-${note}`} tone="info"><Markdown size="sm">{note}</Markdown></Callout>)}
+      <ResultHistory runs={test.runs ?? []} />
+      {notes.length > 0 && (
+        <DrawerSection title="Notes" count={notes.length}>
+          {notes.map((note, index) => <Callout key={`${index}-${note}`} tone="info"><Markdown size="sm">{note}</Markdown></Callout>)}
         </DrawerSection>
       )}
     </Flex>

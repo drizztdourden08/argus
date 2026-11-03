@@ -35,6 +35,7 @@ export { playHint } from './play-hint';
 export { postVerdict } from './post-verdict';
 export { previousValues } from './previous-values';
 export { resolveLaunch } from './resolve-launch';
+export { resultNote } from './result-note';
 export { shownRun } from './shown-run';
 export { sortDone } from './sort-done';
 export { sortToRun } from './sort-to-run';

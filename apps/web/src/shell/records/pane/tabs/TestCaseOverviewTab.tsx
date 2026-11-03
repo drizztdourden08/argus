@@ -15,6 +15,7 @@ const TestCaseOverviewTab = (props: RecordBodyProps) => {
   const { data } = props;
   const { test, item, items, handed, ops } = useTestCase(data);
   if (!test) return <EmptyLine>{`Nothing to show for ${data.code}.`}</EmptyLine>;
+  const changed = test.changed ?? [];
   return (
     <Flex direction="column" gap="lg">
       <CaseConflicts testId={test.id} boardKey={data.boardKey} />
@@ -25,7 +26,7 @@ const TestCaseOverviewTab = (props: RecordBodyProps) => {
       {test.context && <DrawerSection title="Context"><Markdown size="sm">{test.context}</Markdown></DrawerSection>}
       <CaseFields test={test} />
       {test.run && <DrawerSection title="Run command"><CopyValue value={test.run} label="Run command" mono /></DrawerSection>}
-      {test.changed.length > 0 && <DrawerSection title="What changed"><FieldLines label="What changed" lines={test.changed} /></DrawerSection>}
+      {changed.length > 0 && <DrawerSection title="What changed"><FieldLines label="What changed" lines={changed} /></DrawerSection>}
       <AcList test={test} item={item} />
     </Flex>
   );

@@ -55,7 +55,7 @@ const NoteDialog = (props: NoteDialogProps) => {
             autoFocus
           />
         </Box>
-        {test.proofs.length > 0 && <ScreenshotGallery shots={test.proofs} />}
+        {(test.proofs ?? []).length > 0 && <ScreenshotGallery shots={test.proofs ?? []} />}
         {draft.shot && <ShotPreview file={draft.shot} testId={test.id} onRemove={draft.removeShot} />}
         <DropZone variant="inline" label="Attach screenshot" accept={IMAGE_TYPES} onDrop={(files) => files[0] && draft.setShot(files[0])} />
         {draft.error && <Callout tone="danger">{draft.error}</Callout>}

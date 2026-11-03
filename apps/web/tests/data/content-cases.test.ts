@@ -39,8 +39,8 @@ describe('K2 the content rules agree with the Rust checker on the shared case fi
     const kinds = new Set(ROWS.flatMap((row) => fieldOf(row.field)?.content ?? []));
     const known = ROWS.filter((row) => row.key !== 'unknown-field').every((row) => fieldOf(row.field) !== undefined);
     expect(known).toBe(true);
-    expect([...kinds].sort()).toEqual(['date', 'enum', 'line', 'person', 'records', 'ref', 'refs', 'rich', 'slug']);
-    expect(Object.keys(ITEM_REGISTRY.content).sort()).toEqual(['date', 'enum', 'line', 'person', 'records', 'ref', 'refs', 'rich', 'slug']);
+    expect([...kinds].sort()).toEqual(['date', 'enum', 'flag', 'line', 'person', 'records', 'ref', 'refs', 'rich', 'slug']);
+    expect(Object.keys(ITEM_REGISTRY.content).sort()).toEqual(['date', 'enum', 'flag', 'line', 'person', 'records', 'ref', 'refs', 'rich', 'slug']);
   });
 });
 
