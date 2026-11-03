@@ -23,7 +23,7 @@ const rowsOf = (): HTMLElement[] => [...screen.getByRole('list', { name: 'Activi
 describe('S1 the Activity tab', { tags: ['standard'] }, () => {
   it('shows the kind, the level, the time and the project and thread of each entry', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     const first = rowsOf()[2] as HTMLElement;
     expect(first.dataset.record).toBe('R-3');
     expect(within(first).getByText('run')).toBeTruthy();
@@ -36,7 +36,7 @@ describe('S1 the Activity tab', { tags: ['standard'] }, () => {
 describe('I-85 P7 the Activity rows are record rows', { tags: ['critical'] }, () => {
   it('draws an entry that names a record as that record, and one that names none as a notice with its kind', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     const rows = rowsOf();
     expect(rows.map((row) => row.dataset.record)).toEqual(['fault', 'note', 'R-3']);
     expect(rows[2]?.querySelector('[data-type-mark="run"]')).toBeTruthy();
@@ -45,7 +45,7 @@ describe('I-85 P7 the Activity rows are record rows', { tags: ['critical'] }, ()
 
   it('shows the assignee as the project lead and a menu per row', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     expect(within(rowsOf()[2] as HTMLElement).getByRole('button', { name: 'More actions for R-3' })).toBeTruthy();
   });
 });
@@ -53,7 +53,7 @@ describe('I-85 P7 the Activity rows are record rows', { tags: ['critical'] }, ()
 describe('S1 the filters of the Activity tab', { tags: ['standard'] }, () => {
   it('filters by level with the counts on the buttons, and the all button clears it', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     expect(screen.getByText('All levels 3')).toBeTruthy();
     fireEvent.click(screen.getByText('error 1'));
     await waitFor(() => expect(rowsOf()).toHaveLength(1));
@@ -74,7 +74,7 @@ describe('S1 the filters of the Activity tab', { tags: ['standard'] }, () => {
 
   it('filters by kind with a chip per kind and its count, the pressed chip again clears it', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     expect(screen.getByRole('radio', { name: 'All kinds 3' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('radio', { name: 'kill 0' })).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
@@ -88,7 +88,7 @@ describe('S1 the filters of the Activity tab', { tags: ['standard'] }, () => {
 
   it('combines the level and the kind filters', async () => {
     await open();
-    await screen.findByText('R-3 play failed (exit 1)');
+    await screen.findByText(/play failed (exit 1)/);
     fireEvent.click(screen.getByText('error 1'));
     fireEvent.click(screen.getByRole('radio', { name: 'fault 1' }));
     expect(await screen.findByText('Nothing matches these filters.')).toBeTruthy();

@@ -66,8 +66,9 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
   });
 
   it('opens the plan pane from the title of the card', async () => {
-    await mountTab(board());
-    fireEvent.click(await screen.findByRole('button', { name: 'Open TP-6: Plan number 6' }));
+    const { container } = await mountTab(board());
+    await screen.findAllByRole('button', { name: 'Open TP-6: Plan number 6' });
+    fireEvent.click(within(cardOf(container, 'TP-6')).getByRole('button', { name: 'Open TP-6: Plan number 6' }));
     await waitFor(() => expect(new URLSearchParams(screen.getByTestId('search').textContent).get('open')).toBe('TP-6'));
     expect(screen.getByTestId('hash').textContent).toBe('');
   });
