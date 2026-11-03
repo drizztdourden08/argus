@@ -104,10 +104,12 @@ interface EditRef {
   rev?: number;
 }
 
+type FieldValue = string | readonly string[] | null;
+
 interface EditChange {
   field: string;
   prev: string;
-  value: string;
+  value: FieldValue;
 }
 
 interface SoftRequest {
@@ -145,6 +147,7 @@ interface CriterionOp {
 
 interface ItemInput {
   title: string;
+  type?: string;
   thread: string;
   status: string;
   parent?: string;
@@ -163,11 +166,11 @@ interface OpVerdict {
 
 type ItemRef = Item & { id: string };
 
-type EditField = 'title' | 'subject' | 'description';
+type EditField = 'title' | 'subject' | 'description' | 'assignee' | 'parent' | `fields.${string}`;
 
-type MoveTarget = PlaceAmong & { status?: string; thread?: string };
+type MoveTarget = PlaceAmong & { status?: string; thread?: string; stage?: string };
 
 export type {
-  ActionDoc, ActionInput, CriterionOp, EditChange, EditField, EditRef, Entry, Item, ItemInput, ItemRef, MoveTarget, OpOutcome, OpVerdict, OwnerOp, PlaceAmong,
+  ActionDoc, ActionInput, CriterionOp, EditChange, EditField, EditRef, Entry, FieldValue, Item, ItemInput, ItemRef, MoveTarget, OpOutcome, OpVerdict, OwnerOp, PlaceAmong,
   PurgeRequest, SentBulk, SentOp, SoftKind, SoftRequest, ThreadChoice,
 };

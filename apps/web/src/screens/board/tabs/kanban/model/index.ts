@@ -18,6 +18,7 @@ export { depLinks } from './dep-links';
 export { depView } from './dep-view';
 export { filtersActive } from './filters-active';
 export { focusChoices } from './focus-choices';
+export { hashTab } from './hash-tab';
 export { historyText } from './history-text';
 export { itemHash } from './item-hash';
 export { itemTests } from './item-tests';
@@ -38,6 +39,6 @@ export { typeOf } from './type-of';
 export { validateDecision } from './validate-decision';
 export { validateField } from './validate-field';
 export {
-  DEFAULT_FILTERS, GROUP_OPTIONS, HUMAN, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
+  CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, OWNER_TITLE, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';
