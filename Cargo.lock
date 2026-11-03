@@ -106,6 +106,7 @@ name = "argus-board"
 version = "0.1.0"
 dependencies = [
  "argus-core",
+ "regex",
  "serde",
  "serde_json",
  "tempfile",

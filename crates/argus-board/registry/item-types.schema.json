@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Argus item type registry",
+  "type": "object",
+  "required": ["version", "lanes", "content", "baseFields", "fields", "types", "subItems", "people", "limits"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "lanes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "content": { "$ref": "#/$defs/content" },
+    "baseFields": { "$ref": "#/$defs/names" },
+    "fields": { "type": "object", "additionalProperties": { "$ref": "#/$defs/field" } },
+    "types": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/type" } },
+    "subItems": { "type": "array", "items": { "$ref": "#/$defs/subItem" } },
+    "people": { "$ref": "#/$defs/people" },
+    "limits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+  },
+  "$defs": {
+    "names": { "type": "array", "items": { "type": "string" } },
+    "empty": { "type": "object", "additionalProperties": false },
+    "content": {
+      "type": "object",
+      "required": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records"],
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "object",
+          "required": ["markup", "newlines", "block"],
+          "additionalProperties": false,
+          "properties": {
+            "markup": { "type": "boolean" },
+            "newlines": { "type": "boolean" },
+            "block": { "type": "string" }
+          }
+        },
+        "slug": { "$ref": "#/$defs/patterned" },
+        "rich": {
+          "type": "object",
+          "required": ["rule", "bullets", "bulletMax", "leadMax", "shortMax", "bullet", "image", "forbidden"],
+          "additionalProperties": false,
+          "properties": {
+            "rule": { "type": "string", "enum": ["rich-v1"] },
+            "bullets": { "type": "integer", "minimum": 1 },
+            "bulletMax": { "type": "integer", "minimum": 1 },
+            "leadMax": { "type": "integer", "minimum": 1 },
+            "shortMax": { "type": "integer", "minimum": 1 },
+            "bullet": { "type": "string" },
+            "image": { "type": "string" },
+            "forbidden": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "pattern"],
+                "additionalProperties": false,
+                "properties": { "name": { "type": "string" }, "pattern": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "enum": { "$ref": "#/$defs/empty" },
+        "ref": {
+          "type": "object",
+          "required": ["kinds"],
+          "additionalProperties": false,
+          "properties": { "kinds": { "type": "object", "additionalProperties": { "type": "string" } } }
+        },
+        "refs": { "$ref": "#/$defs/empty" },
+        "date": { "$ref": "#/$defs/patterned" },
+        "person": { "$ref": "#/$defs/patterned" },
+        "records": { "$ref": "#/$defs/empty" }
+      }
+    },
+    "patterned": {
+      "type": "object",
+      "required": ["pattern"],
+      "additionalProperties": false,
+      "properties": { "pattern": { "type": "string" } }
+    },
+    "field": {
+      "type": "object",
+      "required": ["content"],
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string",
+          "enum": ["line", "slug", "rich", "enum", "ref", "refs", "date", "person", "records"]
+        },
+        "max": { "type": "integer", "minimum": 1 },
+        "required": { "type": "boolean" },
+        "list": { "type": "integer", "minimum": 1 },
+        "images": { "type": "integer", "minimum": 0 },
+        "values": { "$ref": "#/$defs/names" },
+        "labels": { "$ref": "#/$defs/names" },
+        "to": { "$ref": "#/$defs/names" },
+        "leads": { "type": "boolean" }
+      }
+    },
+    "type": {
+      "type": "object",
+      "required": ["id", "label", "icon", "color", "collection", "parents", "stages", "fields", "tabs", "card"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "collection": { "type": "string", "enum": ["items", "tests"] },
+        "parents": { "$ref": "#/$defs/names" },
+        "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } },
+        "statuses": { "$ref": "#/$defs/names" },
+        "fields": { "$ref": "#/$defs/names" },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "fields"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "fields": { "$ref": "#/$defs/names" }
+            }
+          }
+        },
+        "tabs": { "$ref": "#/$defs/names" },
+        "card": {
+          "type": "object",
+          "required": ["progress", "chips"],
+          "additionalProperties": false,
+          "properties": {
+            "progress": { "type": "string", "enum": ["ac", "children", "children-ac", "run", "none"] },
+            "chips": { "$ref": "#/$defs/names" }
+          }
+        },
+        "done": {
+          "type": "object",
+          "required": ["needs", "mode"],
+          "additionalProperties": false,
+          "properties": {
+            "needs": { "$ref": "#/$defs/names" },
+            "mode": { "$ref": "#/$defs/mode" }
+          }
+        }
+      }
+    },
+    "mode": { "type": "string", "enum": ["warn", "refuse"] },
+    "stage": {
+      "type": "object",
+      "required": ["id", "label", "lane"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "lane": { "type": "string" },
+        "next": { "$ref": "#/$defs/names" },
+        "requires": { "$ref": "#/$defs/names" },
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["need", "mode"],
+            "additionalProperties": false,
+            "properties": { "need": { "type": "string" }, "mode": { "$ref": "#/$defs/mode" } }
+          }
+        }
+      }
+    },
+    "subItem": {
+      "type": "object",
+      "required": ["id", "store", "prefix", "icon", "tone", "field"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "store": { "type": "string", "enum": ["entries", "actions"] },
+        "prefix": { "type": "string" },
+        "icon": { "type": "string" },
+        "tone": { "type": "string" },
+        "blocksWhile": { "type": "string", "enum": ["open", "pending"] },
+        "field": { "type": "string" }
+      }
+    },
+    "people": {
+      "type": "object",
+      "required": ["owner", "leads"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "object",
+          "required": ["label", "initials", "color"],
+          "additionalProperties": false,
+          "properties": {
+            "label": { "type": "string" },
+            "initials": { "type": "string" },
+            "color": { "type": "string" }
+          }
+        },
+        "leads": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["initials", "color"],
+            "additionalProperties": false,
+            "properties": { "initials": { "type": "string" }, "color": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

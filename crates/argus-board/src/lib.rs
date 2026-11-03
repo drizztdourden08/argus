@@ -5,6 +5,7 @@
 #![deny(clippy::cognitive_complexity)]
 
 pub mod agents;
+pub mod content;
 pub mod deps;
 pub mod error;
 pub mod inbox;
@@ -16,6 +17,7 @@ pub mod ops;
 pub mod pause;
 pub mod portfolio;
 pub mod proofs;
+pub mod registry;
 pub mod results;
 pub mod store;
 pub mod sync;
