@@ -1,12 +1,12 @@
 /* @layer renderer-app @kind test */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SubscriptionOp } from '../../src/data/hub/subscription-op.type';
+import type { MuxOp } from '../../src/data/hub/hub.type';
 import { SubscriptionTable } from '../../src/data/hub/subscription-table';
 
 const LINGER_MS = 10_000;
 
 const created = (lingerMs?: number) => {
-  const expired: SubscriptionOp[][] = [];
+  const expired: MuxOp[][] = [];
   const table = new SubscriptionTable({ onExpire: (ops) => expired.push(ops), lingerMs });
   return { table, expired };
 };

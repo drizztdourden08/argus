@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { SubscriptionOp } from './subscription-op.type';
+import type { MuxOp } from './hub.type';
 
 interface TailSpec {
   key: string;
@@ -20,7 +20,7 @@ interface TabState {
 }
 
 interface TableOptions {
-  onExpire: (ops: SubscriptionOp[]) => void;
+  onExpire: (ops: MuxOp[]) => void;
   lingerMs?: number;
 }
 

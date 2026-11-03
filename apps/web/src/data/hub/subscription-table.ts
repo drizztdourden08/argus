@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { SubscriptionOp } from './subscription-op.type';
+import type { MuxOp } from './hub.type';
 import { SUBSCRIPTION_LINGER_MS } from './subscription-table.constants';
 import type { PresenceHeld, TabHeld, TableOptions, TabState, TailHeld, TailOwner, TailSpec } from './subscription-table.type';
 import { wantsMap } from './wants-map';
@@ -15,7 +15,7 @@ class SubscriptionTable {
   private readonly tailSent = new Map<string, TailHeld>();
   private readonly owners = new Map<string, TailOwner>();
   private readonly lingerMs: number;
-  private readonly onExpire: (ops: SubscriptionOp[]) => void;
+  private readonly onExpire: (ops: MuxOp[]) => void;
 
   constructor(options: TableOptions) {
     this.lingerMs = options.lingerMs ?? SUBSCRIPTION_LINGER_MS;
@@ -68,14 +68,14 @@ class SubscriptionTable {
     this.tabs.delete(tabId);
   }
 
-  flush(): SubscriptionOp[] {
+  flush(): MuxOp[] {
     return [...this.docOps(), ...this.presenceOps(), ...this.tailOps()];
   }
 
-  resumeOps(): SubscriptionOp[] {
+  resumeOps(): MuxOp[] {
     return [
-      ...[...this.presenceSent.values()].map((held): SubscriptionOp => ({ op: 'presence', ...held })),
-      ...[...this.tailSent.values()].map((held): SubscriptionOp => ({ op: 'tail', ...held })),
+      ...[...this.presenceSent.values()].map((held): MuxOp => ({ op: 'presence', ...held })),
+      ...[...this.tailSent.values()].map((held): MuxOp => ({ op: 'tail', ...held })),
     ];
   }
 
@@ -114,9 +114,9 @@ class SubscriptionTable {
     return wanted;
   }
 
-  private docOps(): SubscriptionOp[] {
+  private docOps(): MuxOp[] {
     const wanted = this.wantedPairs();
-    const ops: SubscriptionOp[] = [];
+    const ops: MuxOp[] = [];
     for (const [scope, colls] of wanted) {
       for (const coll of colls) this.cancelLinger(scope, coll);
       const fresh = [...colls].filter((coll) => !this.active.get(scope)?.has(coll));
@@ -152,12 +152,12 @@ class SubscriptionTable {
     this.onExpire([{ op: 'unsub', scope, colls: [coll] }]);
   }
 
-  private presenceOps(): SubscriptionOp[] {
+  private presenceOps(): MuxOp[] {
     const wanted = new Map<string, PresenceHeld>();
     for (const [tab, held] of this.tabs) {
       for (const [scope, thread] of held.presences) wanted.set(pairKey(tab, scope), { scope, tab, thread });
     }
-    const ops: SubscriptionOp[] = [];
+    const ops: MuxOp[] = [];
     for (const [key, sent] of this.presenceSent) {
       if (wanted.has(key)) continue;
       ops.push({ op: 'unpresence', scope: sent.scope, tab: sent.tab });
@@ -171,12 +171,12 @@ class SubscriptionTable {
     return ops;
   }
 
-  private tailOps(): SubscriptionOp[] {
+  private tailOps(): MuxOp[] {
     const wanted = new Map<string, TailHeld>();
     for (const [tabId, held] of this.tabs) {
       for (const [id, spec] of held.tails) wanted.set(subId(tabId, id), { sub: subId(tabId, id), ...spec });
     }
-    const ops: SubscriptionOp[] = [];
+    const ops: MuxOp[] = [];
     for (const sub of this.tailSent.keys()) {
       if (wanted.has(sub)) continue;
       ops.push({ op: 'untail', sub });

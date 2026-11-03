@@ -3,8 +3,8 @@ import { applyChanges } from '../stream/apply-changes';
 import { applySnapshot } from '../stream/apply-snapshot';
 import { EMPTY_COLLECTION } from '../stream/stream.constants';
 import type { ChangesEvent, CollectionState, SnapshotEvent } from '../stream/stream.type';
+import type { MuxOp } from './hub.type';
 import type { ScopeState } from './scope-cache.type';
-import type { SubscriptionOp } from './subscription-op.type';
 
 const newState = (): ScopeState => ({ collections: new Map(), seq: 0, seqs: new Map(), synced: new Set() });
 
@@ -75,14 +75,14 @@ class ScopeCache {
     state.collections = kept;
   }
 
-  resumeOps(wanted: ReadonlyMap<string, readonly string[]>): SubscriptionOp[] {
+  resumeOps(wanted: ReadonlyMap<string, readonly string[]>): MuxOp[] {
     return [...wanted].flatMap(([scope, colls]) => this.scopeResume(scope, colls));
   }
 
-  private scopeResume(scope: string, colls: readonly string[]): SubscriptionOp[] {
+  private scopeResume(scope: string, colls: readonly string[]): MuxOp[] {
     const resumable = colls.filter((coll) => this.resumeSeq(scope, coll) > 0);
     const rest = colls.filter((coll) => !resumable.includes(coll));
-    const ops: SubscriptionOp[] = [];
+    const ops: MuxOp[] = [];
     if (resumable.length > 0) {
       const since = Math.min(...resumable.map((coll) => this.resumeSeq(scope, coll)));
       ops.push({ op: 'sub', scope, colls: [...resumable], since });
