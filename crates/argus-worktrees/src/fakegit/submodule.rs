@@ -31,6 +31,8 @@ pub enum SubState {
 pub(super) struct Sub {
     pub path: String,
     pub state: SubState,
+    /// Does a remote-tracking ref of the submodule's own repository contain its HEAD?
+    pub pushed: bool,
 }
 
 impl Sub {
@@ -72,19 +74,31 @@ pub(super) fn status(wt: &Wt, args: &[String]) -> Run {
     Ok(out)
 }
 
-/// `status --porcelain` run inside a submodule folder: what is not committed there. None when `cwd` is not one.
-pub(super) fn inside(wt: &Wt, cwd: &str) -> Option<String> {
+/// A command run inside an initialized submodule folder, answered for that submodule: `status --porcelain` (what is not
+/// committed there), `for-each-ref --contains HEAD ... refs/remotes` (a line only when a remote has its HEAD) and
+/// `rev-parse --short HEAD`. None when `cwd` is not one or the command is another.
+pub(super) fn inside(wt: &Wt, cwd: &str, command: &str, args: &[String]) -> Option<String> {
     let ci = cfg!(windows);
     let key = path_key(cwd, ci);
-    let sub = wt
+    let (n, sub) = wt
         .submodules
         .iter()
-        .filter(|s| s.initialized())
-        .find(|s| path_key(&join_path(&wt.path, &s.path), ci) == key)?;
-    Some(match sub.state {
-        SubState::Changed | SubState::Edited => " M src/main.c\n".to_string(),
-        _ => String::new(),
-    })
+        .enumerate()
+        .filter(|(_, s)| s.initialized())
+        .find(|(_, s)| path_key(&join_path(&wt.path, &s.path), ci) == key)?;
+    match command {
+        "status" => Some(match sub.state {
+            SubState::Changed | SubState::Edited => " M src/main.c\n".to_string(),
+            _ => String::new(),
+        }),
+        "for-each-ref" => Some(if sub.pushed {
+            "refs/remotes/origin/main\n".to_string()
+        } else {
+            String::new()
+        }),
+        "rev-parse" if args.iter().any(|a| a == "--short") => Some(format!("{:07x}\n", n + 1)),
+        _ => None,
+    }
 }
 
 /// The superproject's view of its own `status`: `.gitmodules` and the submodule folders are tracked, a submodule that
@@ -135,6 +149,21 @@ impl FakeGit {
         wt.submodules.push(Sub {
             path: path.to_string(),
             state,
+            pushed: true,
         });
+    }
+
+    /// The submodule at `path` holds a commit no remote has (a new submodule is pushed).
+    pub fn unpush_submodule(&self, worktree: &str, path: &str) {
+        let mut guard = locked(&self.state);
+        let (r, w) = guard
+            .locate(worktree)
+            .unwrap_or_else(|fail| panic!("unpush_submodule in {worktree}: {}", fail.msg));
+        let sub = guard.repos[r].worktrees[w]
+            .submodules
+            .iter_mut()
+            .find(|s| s.path == path)
+            .unwrap_or_else(|| panic!("no submodule {path} in {worktree}"));
+        sub.pushed = false;
     }
 }

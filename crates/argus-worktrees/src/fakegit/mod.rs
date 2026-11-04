@@ -79,11 +79,13 @@ fn dispatch(state: &mut State, cwd: &str, args: &[String]) -> Run {
     let Some((command, rest)) = bare(args).split_first() else {
         return Err(fatal("fake git: no command"));
     };
+    if let Some(answer) = submodule::inside(&repo.worktrees[w], cwd, command, rest) {
+        return Ok(answer);
+    }
     match command.as_str() {
         "worktree" => worktree(repo, w, rest),
         "rev-parse" => read::rev_parse(repo, &repo.worktrees[w], rest),
-        "status" => Ok(submodule::inside(&repo.worktrees[w], cwd)
-            .unwrap_or_else(|| read::status(repo, &repo.worktrees[w], rest))),
+        "status" => Ok(read::status(repo, &repo.worktrees[w], rest)),
         "submodule" => submodule::status(&repo.worktrees[w], rest),
         "log" => read::log(repo, &repo.worktrees[w], rest),
         "rev-list" => read::rev_list(repo, &repo.worktrees[w], rest),

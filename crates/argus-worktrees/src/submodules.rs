@@ -128,13 +128,50 @@ impl Service {
         Some(format!("could not be read ({})", run.failure_text()))
     }
 
+    /// A commit only this worktree has: the submodule's git dir lives under the worktree's own and goes with it, local
+    /// branches included, so only a remote-tracking ref keeps a commit. Why HEAD is not on one, or None when it is.
+    fn submodule_unpushed(&self, folder: &str) -> Option<String> {
+        let held = self.deps.git.read(
+            folder,
+            &[
+                "for-each-ref",
+                "--contains",
+                "HEAD",
+                "--count=1",
+                "--format=%(refname)",
+                "refs/remotes",
+            ],
+        );
+        if !held.ok() {
+            return Some(format!(
+                "could not be checked against its remotes ({})",
+                held.failure_text()
+            ));
+        }
+        if !held.stdout.trim().is_empty() {
+            return None;
+        }
+        let short = self
+            .deps
+            .git
+            .read(folder, &["rev-parse", "--short", "HEAD"]);
+        let head = if short.ok() && !short.stdout.trim().is_empty() {
+            short.stdout.trim().to_string()
+        } else {
+            "a commit".to_string()
+        };
+        Some(format!("is at {head} which no remote has (push it first)"))
+    }
+
     /// Why this initialized submodule keeps the worktree, or None when it holds nothing that would be lost.
     fn submodule_problem(&self, worktree: &str, sub: &Sub) -> Option<String> {
         let why = match sub.mark {
             Mark::Moved => Some("moved off its recorded commit".to_string()),
             Mark::Conflict => Some("has a merge conflict".to_string()),
             Mark::Clean | Mark::Uninitialized => {
-                self.submodule_changes(&join_path(worktree, &sub.path))
+                let folder = join_path(worktree, &sub.path);
+                self.submodule_changes(&folder)
+                    .or_else(|| self.submodule_unpushed(&folder))
             }
         };
         why.map(|why| format!("{} {why}", sub.path))
@@ -168,7 +205,7 @@ impl Service {
         Err(WtError::new(
             ErrorCode::Forbidden,
             format!(
-                "{} holds submodules whose work would be lost: {}. Commit and push the work inside each submodule, or put it back on its recorded commit, then request the removal again: nothing was removed{}",
+                "{} holds submodules whose work would be lost: {}. Commit and push the work inside each submodule, put it back on its recorded commit, or keep the worktree (coord worktree keep), then request the removal again: nothing was removed{}",
                 now.path,
                 problems.join("; "),
                 backup_here(backup)

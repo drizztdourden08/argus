@@ -152,3 +152,34 @@ fn an_uninitialized_submodule_does_not_block_the_removal() {
     assert!(out.backup.is_none());
     assert!(!exists_itself(&fx.path("old-merged")));
 }
+
+#[test]
+fn a_clean_submodule_whose_head_no_remote_has_is_refused_by_name_even_with_discard() {
+    let (fx, h, id) = with_submodules(|fx| {
+        fx.submodule("old-merged", "libultraship", SubState::Clean);
+        fx.submodule("old-merged", "torch", SubState::Clean);
+        fx.unpush_submodule("old-merged", "torch");
+    });
+    for discard in [false, true] {
+        let err = h.refused(&id, |i| {
+            if discard {
+                (i.discard, i.caller) = (true, Caller::Page);
+            }
+        });
+        assert_eq!(err.code, ErrorCode::Forbidden);
+        assert!(
+            err.message
+                .contains("torch is at 0000002 which no remote has (push it first)"),
+            "{}",
+            err.message
+        );
+        assert!(
+            !err.message.contains("libultraship"),
+            "a pushed submodule is not named: {}",
+            err.message
+        );
+        assert!(err.message.contains("or keep the worktree"));
+        assert!(err.message.contains("nothing was removed"));
+        still_there(&fx);
+    }
+}

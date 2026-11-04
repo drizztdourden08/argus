@@ -378,6 +378,12 @@ impl Fixture {
         fake.add_submodule(&self.path(name), path, state);
     }
 
+    /// The submodule at `path` of the worktree `name` holds a commit no remote has.
+    pub fn unpush_submodule(&self, name: &str, path: &str) {
+        let fake = fakegit::fake_for(&self.root).expect("a fixture made on the fake git");
+        fake.unpush_submodule(&self.path(name), path);
+    }
+
     /// The git door over this fixture's git.
     pub fn door(&self) -> Git {
         Git::new(exec_for(&self.root))
