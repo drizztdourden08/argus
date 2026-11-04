@@ -78,33 +78,17 @@ fn wakes(h: &Harness) -> Vec<WakeRequest> {
 }
 
 #[test]
-fn an_orphaned_search_is_reaped_with_its_tree_one_line_and_one_wake() {
+fn an_orphaned_search_is_reaped_with_its_tree_one_info_line_and_no_wake() {
     let h = harness(json!({}), 1);
     h.at(T0, vec![search(7001, 4242, T0 - MIN, "X:\\alpha")]);
     assert_eq!(h.fake.trees(), [(7001, true, vec![])]);
     let line = format!("{FIND} 7001: an orphaned search (whatever started it is gone)");
     assert_eq!(
         reap_lines(&h),
-        [(Level::Warn, format!("reaped {line} (project alpha)"))]
+        [(Level::Info, format!("reaped {line} (project alpha)"))]
     );
-    let sent = wakes(&h);
-    assert_eq!(sent.len(), 1);
-    let wake = &sent[0];
-    assert_eq!(
-        (
-            wake.scope.as_str(),
-            wake.thread.as_str(),
-            wake.subject.as_str()
-        ),
-        ("alpha", "alpha-lead", "procs")
-    );
-    assert!(
-        wake.text.starts_with(&format!(
-            "Argus reaped a process tree of this project that hung: {line}. "
-        )),
-        "{}",
-        wake.text
-    );
+    h.at(T0 + 11 * MIN, vec![]);
+    assert_eq!(wakes(&h), Vec::<WakeRequest>::new());
 }
 
 #[test]
@@ -145,7 +129,7 @@ fn a_run_whose_tree_gains_no_cpu_time_for_five_minutes_is_reaped_whole() {
     h.at(T0 + 6 * MIN, vitest_tree(1500));
     assert_eq!(h.fake.trees(), [(7101, true, vec![7102, 7103])]);
     let (level, line) = &reap_lines(&h)[0];
-    assert_eq!(*level, Level::Warn);
+    assert_eq!(*level, Level::Info);
     assert_eq!(
         line,
         &format!(
@@ -287,7 +271,7 @@ fn a_disabled_reaper_does_nothing() {
 }
 
 #[test]
-fn a_failed_reap_writes_one_error_line_and_wakes_nobody() {
+fn a_failed_reap_writes_one_error_line_and_wakes_the_lead_once() {
     let h = harness(json!({}), 1);
     h.fake.fail_kills();
     h.at(T0, vec![search(7001, 4242, T0 - MIN, "X:\\alpha")]);
@@ -301,12 +285,31 @@ fn a_failed_reap_writes_one_error_line_and_wakes_nobody() {
             .starts_with(&format!("could not reap {FIND} 7001: "))
     );
     assert!(lines[0].1.ends_with("(project alpha): access is denied"));
-    assert_eq!(wakes(&h), Vec::<WakeRequest>::new());
+    let sent = wakes(&h);
+    assert_eq!(sent.len(), 1);
+    let wake = &sent[0];
+    assert_eq!(
+        (
+            wake.scope.as_str(),
+            wake.thread.as_str(),
+            wake.subject.as_str()
+        ),
+        ("alpha", "alpha-lead", "procs")
+    );
+    let line =
+        format!("{FIND} 7001: an orphaned search (whatever started it is gone) (access is denied)");
+    assert_eq!(
+        wake.text,
+        format!(
+            "Argus found a hung process tree of this project (orphaned, idle or past its cap) and could not stop it: {line}. Close it, or find what holds it."
+        )
+    );
 }
 
 #[test]
 fn the_wake_is_one_per_thread_per_batch_and_debounced() {
     let h = harness(json!({}), 1);
+    h.fake.fail_kills();
     h.at(
         T0,
         vec![
@@ -324,12 +327,11 @@ fn the_wake_is_one_per_thread_per_batch_and_debounced() {
     assert!(
         first[0]
             .text
-            .starts_with("Argus reaped 2 process trees of this project that hung: ")
+            .starts_with("Argus found 2 hung process trees of this project ")
     );
     assert!(first[0].text.contains(" 7401: ") && first[0].text.contains(" 7402: "));
     h.at(T0 + MIN, vec![search(7403, 4242, T0, "X:\\alpha")]);
     h.at(T0 + 5 * MIN, vec![]);
-    assert_eq!(h.fake.killed(), [7401, 7402, 7404, 7403]);
     assert_eq!(wakes(&h).len(), 2);
     h.at(T0 + 11 * MIN, vec![]);
     let all = wakes(&h);
