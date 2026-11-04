@@ -4,7 +4,9 @@
 
 use std::env;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::hidden_command;
 
 /// The Node CLI the harness takes as the specification, unless `COORD_NODE_CLI` names another.
 const DEFAULT_NODE_CLI: &str = "X:/ai-config/shared/tools/coord/coord.mjs";
@@ -61,7 +63,7 @@ impl Engines {
 }
 
 fn node_runs() -> bool {
-    Command::new("node")
+    hidden_command("node")
         .arg("--version")
         .stdout(Stdio::null())
         .stderr(Stdio::null())

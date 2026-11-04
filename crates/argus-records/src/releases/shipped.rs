@@ -4,7 +4,8 @@
 //! empty list: a release page never fails for this.
 
 use std::path::Path;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use serde_json::{Value, json};
 
@@ -105,17 +106,12 @@ fn is_commit(text: &str) -> bool {
 }
 
 fn git_log(repo: &Path, range: &[String]) -> Option<String> {
-    let mut command = Command::new("git");
+    let mut command = hidden_command("git");
     command
         .arg("-C")
         .arg(repo)
         .args(["log", "--format=%H%x1f%s%x1e"])
         .args(range);
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x0800_0000);
-    }
     let out = command.output().ok().filter(|o| o.status.success())?;
     String::from_utf8(out.stdout).ok()
 }

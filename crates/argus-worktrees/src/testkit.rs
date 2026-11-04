@@ -26,10 +26,12 @@ use std::collections::HashMap;
 use std::fs;
 use std::io;
 use std::path::Path;
-use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, SystemTime};
+
+use argus_core::process::hidden_command;
+
 use tempfile::TempDir;
 
 /// The folder of a temporary directory, as a clean path with its long name (git prints long names).
@@ -116,7 +118,7 @@ pub fn git_in(cwd: &str, args: &[&str], env: &[(&str, &str)]) -> String {
     if let Some(fake) = fakegit::fake_for(cwd) {
         return fake.cli(cwd, args);
     }
-    let mut command = Command::new("git");
+    let mut command = hidden_command("git");
     command.args(args).current_dir(cwd);
     for (k, v) in [
         ("GIT_AUTHOR_NAME", "Test"),

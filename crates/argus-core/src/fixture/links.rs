@@ -25,8 +25,10 @@ pub fn junction(link: &Path, target: &Path) {
 
 #[cfg(windows)]
 fn make_junction(link: &Path, target: &Path) {
+    use crate::process::hidden_command;
+
     let native = |p: &Path| p.to_string_lossy().replace('/', "\\");
-    let status = std::process::Command::new("cmd")
+    let status = hidden_command("cmd")
         .args(["/C", "mklink", "/J"])
         .arg(native(link))
         .arg(native(target))

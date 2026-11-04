@@ -8,7 +8,9 @@
 // test-tag: e2e
 
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::hidden_command;
 
 use tempfile::TempDir;
 
@@ -19,7 +21,7 @@ struct Out {
 }
 
 fn argus(home: &Path, args: &[&str]) -> Out {
-    let out = Command::new(env!("CARGO_BIN_EXE_argus"))
+    let out = hidden_command(env!("CARGO_BIN_EXE_argus"))
         .arg("tray")
         .args(args)
         .arg("--data-dir")
@@ -53,14 +55,11 @@ mod windows {
 
     impl Sleeper {
         fn start() -> Sleeper {
-            use std::os::windows::process::CommandExt;
-            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-            let child = Command::new("ping")
+            let child = hidden_command("ping")
                 .args(["-n", "60", "127.0.0.1"])
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
-                .creation_flags(CREATE_NO_WINDOW)
                 .spawn()
                 .expect("ping starts");
             Sleeper(child)
@@ -138,7 +137,7 @@ mod windows {
             home.path().join("server.pid").exists(),
             "the server was started"
         );
-        let stopped = Command::new(env!("CARGO_BIN_EXE_argus"))
+        let stopped = hidden_command(env!("CARGO_BIN_EXE_argus"))
             .arg("stop")
             .env("COORD_HOME", home.path().join("coord"))
             .env("DASHBOARD_HOME", home.path())

@@ -7,10 +7,11 @@
 // test-tag: e2e
 #![cfg(windows)]
 
-use std::os::windows::process::CommandExt;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+use argus_core::process::hidden_command;
 
 use argus_launchers::{
     MemoryDefs, MemoryStore, ProcessHost, RecordingEvents, RunConfig, RunDef, RunDeps, RunService,
@@ -21,16 +22,13 @@ use tempfile::TempDir;
 
 use crate::common::{left_behind, until};
 
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-
 /// A command that opens no console window and has no stdio.
 fn hidden(program: &str) -> Command {
-    let mut command = Command::new(program);
+    let mut command = hidden_command(program);
     command
         .stdin(Stdio::null())
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .creation_flags(CREATE_NO_WINDOW);
+        .stderr(Stdio::null());
     command
 }
 
