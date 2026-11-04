@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { HealthCheck } from './fallback-tab.type';
 import type { HubPort } from './hub-port.type';
 import type { HubMessage, TabMessage } from './hub.type';
 
@@ -65,6 +66,7 @@ interface ConnectEnv {
   createHub: CreateHub;
   now: () => number;
   onHide: (listener: () => void) => void;
+  health?: HealthCheck;
 }
 
 export type {
