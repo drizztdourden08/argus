@@ -5,7 +5,7 @@ use std::io;
 use std::os::windows::process::CommandExt;
 use std::process::Stdio;
 
-use argus_core::process::{hidden_command, CREATE_NO_WINDOW};
+use argus_core::process::{CREATE_NO_WINDOW, hidden_command};
 
 const DETACHED_PROCESS: u32 = 0x0000_0008;
 const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;

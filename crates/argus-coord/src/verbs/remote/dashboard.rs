@@ -3,7 +3,6 @@
 //! project that has only `coord` can reach it. The command runs as a child process of this
 //! executable (`ARGUS_EXE` names another one) with the streams of this call.
 
-
 use argus_core::process::hidden_command;
 
 use crate::cli::exit::{CoordError, Outcome};
