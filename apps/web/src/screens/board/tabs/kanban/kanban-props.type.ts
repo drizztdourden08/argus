@@ -4,7 +4,7 @@ import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
 import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
-import type { LayoutState, TreeSource } from './tree';
+import type { LayoutState, TreeSource } from '../kanban-tree';
 
 interface KanbanTabProps {
   boardKey: string;

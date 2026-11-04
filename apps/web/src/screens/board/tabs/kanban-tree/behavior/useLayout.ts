@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { useStored } from '../../../../shared';
+import { useStored } from '../../../shared';
 import { LAYOUT_KEY } from '../tree.constants';
 import type { KanbanLayout, LayoutState } from '../tree.type';
 

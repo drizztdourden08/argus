@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
-import { TypeIcon } from '../../../../../../shell';
+import { TypeIcon } from '../../../../../shell';
 import type { TreeRowProps } from '../tree.type';
 
 const TreeLead = (props: TreeRowProps) => {
