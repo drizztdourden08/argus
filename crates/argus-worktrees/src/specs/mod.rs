@@ -32,6 +32,7 @@ mod service;
 mod service_status;
 mod slow;
 mod stuck;
+mod submodules;
 mod turns;
 mod wire;
 mod wire_answer;

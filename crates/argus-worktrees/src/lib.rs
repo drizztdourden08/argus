@@ -57,6 +57,7 @@ mod scan;
 mod scanning;
 mod service;
 mod status;
+mod submodules;
 mod sync;
 mod tree;
 mod turns;

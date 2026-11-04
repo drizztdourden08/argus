@@ -16,7 +16,7 @@ use crate::fact::Fact;
 use crate::finish::{Finish, LetGo};
 use crate::guards::is_brock_lock;
 use crate::inspect::{ScanCtx, inspect_dir};
-use crate::leftover_remove::{Within, git_within, unreadable_refusal};
+use crate::leftover_remove::{Within, git_within_except, unreadable_refusal};
 use crate::modules::NodeModules;
 use crate::paths::{clean_path, is_worktree_id, join_path, parent_of, worktree_id};
 use crate::progress::{WAITING, target_key};
@@ -356,7 +356,8 @@ impl Service {
                 ),
             ));
         }
-        match git_within(self.deps.fs.as_ref(), &fact.path) {
+        let except = self.submodule_folders(&fact.path);
+        match git_within_except(self.deps.fs.as_ref(), &fact.path, &except) {
             Within::Nothing => {}
             Within::Git(git) => now.nested_git = Some(git),
             Within::TooBig => {
@@ -521,13 +522,14 @@ impl Service {
         let safety = Safety::of(&now);
         let plan = self.plan_branch(input.branch, input.discard, &now);
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
+        let submodules = self.check_submodules(&now, backup.as_ref())?;
         self.step(&fact.id, "node_modules clear");
         let modules = self.clear_ignored_node_modules(&now);
         self.step(&fact.id, "links");
         self.drop_links_before_git(&now, backup.as_ref(), modules)?;
         self.lift_brock_lock(&now, backup.as_ref())?;
         self.step(&fact.id, "git worktree remove");
-        let run = self.git_remove(&now)?;
+        let run = self.git_remove(&now, submodules)?;
         let discarded = (!safety.safe || plan.force).then_some(Discarded {
             dirty: now.dirty,
             unmerged: safety.unmerged,
@@ -570,11 +572,12 @@ impl Service {
         .with_backup(backup.cloned()))
     }
 
-    /// `git worktree remove` (`--force` only for uncommitted changes the caller discards).
-    fn git_remove(&self, now: &Fact) -> Result<GitOutput> {
+    /// `git worktree remove`. `--force` for uncommitted changes the caller discards, and for initialized submodules
+    /// (git refuses a worktree that holds one without it; they passed `check_submodules` already).
+    fn git_remove(&self, now: &Fact, submodules: bool) -> Result<GitOutput> {
         let repo = Self::git_repo(now)?;
         let git = &self.deps.git;
-        Ok(if now.dirty > 0 {
+        Ok(if now.dirty > 0 || submodules {
             git.write(repo, &["worktree", "remove", "--force", &now.path])
         } else {
             git.write(repo, &["worktree", "remove", &now.path])

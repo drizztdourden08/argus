@@ -16,6 +16,7 @@ fn read_command_ok(command: &str, rest: &[&str]) -> bool {
         "status" => rest.iter().any(|a| a.starts_with("--porcelain")),
         "symbolic-ref" => positional(rest) == 1,
         "worktree" => rest.first() == Some(&"list"),
+        "submodule" => rest == ["status", "--recursive"],
         "remote" => rest.len() == 2 && rest[0] == "get-url" && !rest[1].starts_with('-'),
         "config" => rest.len() == 2 && rest[0] == "--get" && config_key(rest[1]),
         _ => false,
