@@ -2,7 +2,7 @@
 import { EmptyState } from '@drizztdourden08/tessera';
 import { NO_ITEMS_TEXT } from '../kanban.constants';
 import type { KanbanBodyProps } from '../kanban-props.type';
-import { TreeView } from '../tree';
+import { TreeView } from '../../kanban-tree';
 import { KanbanColumns } from './KanbanColumns';
 import { TrashView } from './TrashView';
 

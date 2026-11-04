@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
-import type { ItemRef } from '../../../../../../data/kanban';
-import { itemCode } from '../../../../../../shell';
-import { assigneeOf, stageLabel, typeOf } from '../../model';
+import type { ItemRef } from '../../../../../data/kanban';
+import { itemCode } from '../../../../../shell';
+import { assigneeOf, stageLabel, typeOf } from '../../kanban/model';
 import type { NodeContext, TreeNode } from '../tree.type';
 import { caseNode } from './case-node';
 import { casesOf } from './cases-of';

@@ -10,7 +10,7 @@ import type { OwnerAsk } from '../../../owner-links';
 import { BUILD_KIND } from '../builds.constants';
 import { buildCode, isMaster } from '../model';
 import type { LauncherView } from '../model';
-import type { Play } from './useBuildHead.type';
+import type { Play } from './use-build-head.type';
 
 const playHandler = (view: LauncherView, play: Play): (() => void) | undefined => {
   const { launcher, def } = view;

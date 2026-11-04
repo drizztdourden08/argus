@@ -4,8 +4,8 @@ import { DONE_TIP } from '../kanban.constants';
 import type { ViewRowProps } from '../kanban-props.type';
 import { GROUP_OPTIONS, ORDER_OPTIONS, countsText } from '../model';
 import type { ItemGroup, ItemOrder } from '../model';
-import { LAYOUT_OPTIONS } from '../tree';
-import type { KanbanLayout } from '../tree';
+import { LAYOUT_OPTIONS } from '../../kanban-tree';
+import type { KanbanLayout } from '../../kanban-tree';
 
 const ViewRow = (props: ViewRowProps) => {
   const { state, view, selection, layout } = props;
