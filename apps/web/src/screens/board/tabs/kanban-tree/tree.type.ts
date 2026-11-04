@@ -2,7 +2,7 @@
 import type { ItemRef, ThreadChoice } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { Test } from '../../../../data/types';
-import type { KanbanView } from '../model';
+import type { KanbanView } from '../kanban/model';
 
 type KanbanLayout = 'columns' | 'tree';
 
