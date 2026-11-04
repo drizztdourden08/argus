@@ -155,12 +155,12 @@ impl Service {
             .deps
             .git
             .read(folder, &["rev-parse", "--short", "HEAD"]);
-        let head = if short.ok() && !short.stdout.trim().is_empty() {
+        let at = if short.ok() && !short.stdout.trim().is_empty() {
             short.stdout.trim().to_string()
         } else {
             "a commit".to_string()
         };
-        Some(format!("is at {head} which no remote has (push it first)"))
+        Some(format!("is at {at} which no remote has (push it first)"))
     }
 
     /// Why this initialized submodule keeps the worktree, or None when it holds nothing that would be lost.
