@@ -6,7 +6,7 @@ import type { ConnectEnv } from '../../src/data/hub/hub-transport.type';
 import { TabLink } from '../../src/data/hub/tab-link';
 import { createFakeHubs } from '../helpers/fake-hub';
 import { FakeLocks } from '../helpers/fake-locks';
-import { FakeNetwork } from '../helpers/fake-network';
+import { FakeNetwork, settleNetwork } from '../helpers/fake-network';
 
 const BYE = { type: 'bye' };
 const fromWorker = (msg: HubMessage) => ({ tab: 't1', epoch: 9, msg });
@@ -31,12 +31,7 @@ const createRig = (reach: number | null, withWorker = true) => {
     onHide: vi.fn(),
     health,
   };
-  const settle = async (): Promise<void> => {
-    for (let round = 0; round < 12; round += 1) {
-      await Promise.resolve();
-      network.flush();
-    }
-  };
+  const settle = (): Promise<void> => settleNetwork(network);
   return { locks, hubs, health, workerSide, seen, env, settle };
 };
 
@@ -50,7 +45,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('C4 hub tier fallback', { tags: ['critical'] }, () => {
+describe('C4 hub tier fallback from the worker', { tags: ['critical'] }, () => {
   it('leaves a worker that never goes live for the leader tier and replays every subscription', async () => {
     const rig = createRig(200);
     const handle = connectHub(rig.env);
@@ -104,7 +99,9 @@ describe('C4 hub tier fallback', { tags: ['critical'] }, () => {
     expect(rig.health).toHaveBeenCalledTimes(2);
     expect(rig.hubs.create).not.toHaveBeenCalled();
   });
+});
 
+describe('C4 hub tier fallback from the leader', { tags: ['critical'] }, () => {
   it('leaves a leader tier that never goes live for the in-tab hub, which is never watched', async () => {
     const rig = createRig(200, false);
     connectHub(rig.env);
