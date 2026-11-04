@@ -1,8 +1,9 @@
 //! The reaper: after each sample it ends, by pid and with its tree, a search left running (an
 //! orphan, or one over its age) and a test or build run that hung (idle tree, or past the cap).
 //! Only inside a known project folder, never the dashboard, a Claude session or anything the
-//! thread kill refuses. Each kill is one activity line, and the project's lead gets one wake per
-//! batch, debounced. Shadow mode only writes what it would do.
+//! thread kill refuses. Each kill is one activity line; a kill that succeeds is only logged, and
+//! the project's lead gets one wake per batch, debounced, only for a tree the reaper could not
+//! kill. Shadow mode only writes what it would do.
 
 mod debounce;
 mod pick;
@@ -22,7 +23,7 @@ use std::collections::{HashMap, HashSet};
 
 /// The kind of the reaper's activity lines.
 pub const REAP_KIND: &str = "proc-reap";
-/// The reason of the reaper's wakes: the thread's own run hung.
+/// The reason of the reaper's wakes: a hung run of the thread's project that could not be killed.
 pub const REAP_REASON: &str = "process-reaped";
 
 const MINUTE_MS: i64 = 60_000;
@@ -129,12 +130,12 @@ struct Pass<'a> {
 
 fn wake_text(lines: &[String]) -> String {
     let what = if lines.len() == 1 {
-        "a process tree".to_string()
+        "a hung process tree".to_string()
     } else {
-        format!("{} process trees", lines.len())
+        format!("{} hung process trees", lines.len())
     };
     format!(
-        "Argus reaped {what} of this project that hung: {}. Each was a run of this project (a search, or a test or build run) that was orphaned, idle or past its cap. If it is still needed, run it again scoped to one folder and with a timeout.",
+        "Argus found {what} of this project (orphaned, idle or past its cap) and could not stop it: {}. Close it, or find what holds it.",
         lines.join("; ")
     )
 }
@@ -196,6 +197,11 @@ impl Inner {
                 let detail = result.detail.as_deref().unwrap_or("refused");
                 let text = format!("could not reap {line} (project {project}): {detail}");
                 self.reap_note(Level::Error, text);
+                if let Some(lead) = self.ports.host.lead_of(&project) {
+                    state
+                        .debounce
+                        .push(&project, &lead, format!("{line} ({detail})"));
+                }
             }
             return;
         }
@@ -205,12 +211,9 @@ impl Inner {
             ", it may still be closing"
         };
         self.reap_note(
-            Level::Warn,
+            Level::Info,
             format!("reaped {line} (project {project}{closing})"),
         );
-        if let Some(lead) = self.ports.host.lead_of(&project) {
-            state.debounce.push(&project, &lead, line);
-        }
     }
 
     fn send_reaped(&self, state: &mut ReaperState, now: i64, window_ms: i64) {
