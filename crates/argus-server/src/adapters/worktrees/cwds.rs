@@ -26,19 +26,21 @@ pub(super) fn cwds_of(pids: &[u32]) -> HashMap<u32, String> {
 #[cfg(test)]
 mod tests {
     use super::cwds_of;
-    use std::process::{Child, Command, Stdio};
+    use std::process::{Child, Stdio};
+
+    use argus_core::process::hidden_command;
 
     /// A child that stays alive until its input closes or it is killed.
     fn idle_child(dir: &std::path::Path) -> Child {
         #[cfg(windows)]
         let mut command = {
-            let mut c = Command::new("cmd");
+            let mut c = hidden_command("cmd");
             c.args(["/c", "pause"]);
             c
         };
         #[cfg(not(windows))]
         let mut command = {
-            let mut c = Command::new("sleep");
+            let mut c = hidden_command("sleep");
             c.arg("60");
             c
         };

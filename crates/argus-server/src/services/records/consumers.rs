@@ -6,6 +6,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use argus_core::process::hidden_command;
+
 use argus_records::registry::consumers_from;
 use async_trait::async_trait;
 use serde_json::Value;
@@ -31,25 +33,16 @@ pub struct NodeStatus {
     pub home: PathBuf,
 }
 
-#[cfg(windows)]
-fn hide_window(command: &mut tokio::process::Command) {
-    command.creation_flags(0x0800_0000);
-}
-
-#[cfg(not(windows))]
-fn hide_window(_command: &mut tokio::process::Command) {}
-
 #[async_trait]
 impl ConsumerStatus for NodeStatus {
     async fn status_json(&self) -> Result<String, String> {
-        let mut command = tokio::process::Command::new(&self.node);
+        let mut command = tokio::process::Command::from(hidden_command(&self.node));
         command
             .arg(&self.script)
             .args(["status", "--json"])
             .env("LOCALPKG_HOME", &self.home)
             .stdin(std::process::Stdio::null())
             .kill_on_drop(true);
-        hide_window(&mut command);
         let run = tokio::time::timeout(LIMIT, command.output());
         let out = run
             .await

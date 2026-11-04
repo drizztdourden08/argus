@@ -3,7 +3,8 @@
 //! project that has only `coord` can reach it. The command runs as a child process of this
 //! executable (`ARGUS_EXE` names another one) with the streams of this call.
 
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
@@ -66,7 +67,7 @@ pub fn run_dashboard(env: &Env, args: &[String]) -> Result<i32, CoordError> {
         None => std::env::current_exe()
             .map_err(|e| CoordError::refuse(format!("could not run the dashboard: {e}")))?,
     };
-    let status = Command::new(exe)
+    let status = hidden_command(exe)
         .args(args)
         .envs(env.iter())
         .status()

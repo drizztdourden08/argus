@@ -3,14 +3,15 @@
 use std::ffi::{OsStr, OsString};
 use std::io;
 use std::os::windows::process::CommandExt;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::{hidden_command, CREATE_NO_WINDOW};
 
 const DETACHED_PROCESS: u32 = 0x0000_0008;
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
 
 fn quiet(program: impl AsRef<OsStr>, args: &[&OsStr], flags: u32) -> io::Result<()> {
-    Command::new(program)
+    hidden_command(program)
         .args(args)
         .creation_flags(flags)
         .stdin(Stdio::null())
@@ -47,7 +48,7 @@ pub fn windowed(program: &str, args: &[&OsStr]) -> io::Result<()> {
 pub fn kill(pid: u32) {
     let pid = pid.to_string();
     let args = ["/PID", &pid, "/T", "/F"].map(OsStr::new);
-    let _ended = Command::new("taskkill")
+    let _ended = hidden_command("taskkill")
         .args(args)
         .creation_flags(CREATE_NO_WINDOW)
         .stdout(Stdio::null())

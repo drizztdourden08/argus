@@ -13,7 +13,9 @@
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::hidden_command;
 
 use argus_core::Paths;
 use argus_core::launch;
@@ -24,7 +26,7 @@ use crate::cli::env::Env;
 
 /// `DETACHED_PROCESS | CREATE_NO_WINDOW`: no console, and not tied to this process.
 #[cfg(windows)]
-const HIDDEN: u32 = 0x0800_0008;
+const HIDDEN: u32 = argus_core::process::CREATE_NO_WINDOW | 0x0000_0008;
 
 /// A program to start.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -114,7 +116,7 @@ pub fn plan(env: &Env, paths: &Paths) -> Option<Plan> {
 /// and the server would hold the pipe the caller reads this call's output from.
 pub fn spawn(env: &Env, plan: &Plan) {
     argus_native::keep_stdio_private();
-    let mut command = Command::new(&plan.program);
+    let mut command = hidden_command(&plan.program);
     command
         .args(&plan.args)
         .envs(env.iter())
