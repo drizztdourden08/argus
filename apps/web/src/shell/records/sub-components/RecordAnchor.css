@@ -1,0 +1,7 @@
+/* @layer renderer-app @kind style */
+
+.record-anchor {
+  display: inline-flex;
+  align-items: center;
+  line-height: var(--leading-16);
+}
