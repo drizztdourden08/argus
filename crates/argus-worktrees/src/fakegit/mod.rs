@@ -4,7 +4,8 @@
 //! It answers exactly the commands this crate sends and parses only the argument lists the crate uses:
 //!
 //! - reads: `rev-parse`, `status --porcelain=v1 -b`, `log`, `rev-list --count`, `merge-base --is-ancestor`,
-//!   `for-each-ref --contains`, `cherry`, `symbolic-ref`, `config --get`, `remote get-url`, `worktree list --porcelain`;
+//!   `for-each-ref --contains`, `cherry`, `symbolic-ref`, `config --get`, `remote get-url`, `worktree list --porcelain`,
+//!   `submodule status --recursive` (submodules come from the fixture, see `submodule.rs`);
 //! - the removal's own commands: `worktree remove|unlock|prune`, `update-ref -d`, `bundle create|verify`,
 //!   `diff HEAD --binary --output=`, `ls-files`, `check-ignore -q`;
 //! - what the specs use to build a repository: `worktree add|lock`, `remote add`, `add`, `commit -m`.
@@ -17,6 +18,7 @@
 mod disk;
 mod model;
 mod read;
+mod submodule;
 mod write;
 
 use crate::exec::GitOutput;
@@ -27,6 +29,7 @@ use model::{Fail, Head, Repo, Run, State, Wt, fatal};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+pub use submodule::SubState;
 
 /// The fake git of one fixture.
 pub struct FakeGit {
@@ -79,7 +82,9 @@ fn dispatch(state: &mut State, cwd: &str, args: &[String]) -> Run {
     match command.as_str() {
         "worktree" => worktree(repo, w, rest),
         "rev-parse" => read::rev_parse(repo, &repo.worktrees[w], rest),
-        "status" => Ok(read::status(repo, &repo.worktrees[w], rest)),
+        "status" => Ok(submodule::inside(&repo.worktrees[w], cwd)
+            .unwrap_or_else(|| read::status(repo, &repo.worktrees[w], rest))),
+        "submodule" => submodule::status(&repo.worktrees[w], rest),
         "log" => read::log(repo, &repo.worktrees[w], rest),
         "rev-list" => read::rev_list(repo, &repo.worktrees[w], rest),
         "merge-base" => read::merge_base(repo, &repo.worktrees[w], rest),
@@ -139,6 +144,7 @@ impl FakeGit {
                 head: Head::Branch(branch.to_string()),
                 locked: None,
                 staged: Vec::new(),
+                submodules: Vec::new(),
             }],
             ..Repo::default()
         };

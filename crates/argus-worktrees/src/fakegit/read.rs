@@ -17,7 +17,9 @@ pub(super) fn tracked_of(repo: &Repo, wt: &Wt) -> BTreeMap<String, String> {
 /// What the disk of a checkout holds against its HEAD.
 pub(super) fn dirt_of(repo: &Repo, wt: &Wt) -> Dirt {
     let patterns = Patterns::read(repo.path(), &wt.path);
-    dirt(&wt.path, &patterns, &tracked_of(repo, wt))
+    let mut found = dirt(&wt.path, &patterns, &tracked_of(repo, wt));
+    super::submodule::adjust(wt, &mut found);
+    found
 }
 
 fn unknown(rev: &str) -> Fail {

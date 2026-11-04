@@ -7,7 +7,7 @@ use crate::board::{Caller, Link, OwnerEntry};
 use crate::clock::{Clock, ManualClock, SystemClock, iso_from_ms};
 use crate::error::WtError;
 use crate::exec::GitOutput;
-use crate::fakegit::{self, FakeGit};
+use crate::fakegit::{self, FakeGit, SubState};
 use crate::fs::{Entry, Fs, RealFs, Stat};
 use crate::gh::GhRunner;
 use crate::git::{Git, GitExec, SystemExec};
@@ -370,6 +370,12 @@ impl Fixture {
 
     pub fn path(&self, name: &str) -> String {
         join_path(&self.wts, name)
+    }
+
+    /// A submodule at `path` in the linked worktree `name`, in this state (fake git only).
+    pub fn submodule(&self, name: &str, path: &str, state: SubState) {
+        let fake = fakegit::fake_for(&self.root).expect("a fixture made on the fake git");
+        fake.add_submodule(&self.path(name), path, state);
     }
 
     /// The git door over this fixture's git.

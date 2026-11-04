@@ -4,6 +4,7 @@
 
 use super::model::{Commit, Fail, Head, Repo, Run, Wt, fatal, io_fatal};
 use super::read::dirt_of;
+use super::submodule;
 use crate::clock::{Clock, SystemClock};
 use crate::fs::{Fs, RealFs};
 use crate::paths::{base_name, clean_path};
@@ -237,6 +238,7 @@ pub(super) fn worktree_add(repo: &mut Repo, from: usize, args: &[String]) -> Run
         head: head.clone(),
         locked: None,
         staged: Vec::new(),
+        submodules: Vec::new(),
     });
     let git_dir = repo.worktrees[index].git_dir(repo.path());
     io_run(fs::create_dir_all(&add.path))?;
@@ -278,6 +280,11 @@ pub(super) fn worktree_remove(repo: &mut Repo, args: &[String]) -> Run {
         return Err(fatal(&format!(
             "cannot remove a locked working tree, lock reason: {reason}\nuse 'remove -f -f' to override or unlock first"
         )));
+    }
+    if !force && submodule::has_initialized(wt) {
+        return Err(fatal(
+            "working trees containing submodules cannot be moved or removed",
+        ));
     }
     let there = Path::new(&wt.path).exists();
     if !force && there && !dirt_of(repo, wt).lines.is_empty() {

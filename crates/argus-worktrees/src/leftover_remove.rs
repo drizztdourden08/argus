@@ -15,6 +15,7 @@ use crate::request::{RemoveInput, RemoveOutcome};
 use crate::rule::Rule;
 use crate::scan::inside_worktree;
 use crate::service::{Service, age_ms};
+use crate::submodules::Except;
 
 /// A thread may go below the server's age limit down to this (6 hours), and only with a reason.
 pub const THREAD_MIN_AGE_DAYS: f64 = 0.25;
@@ -39,7 +40,7 @@ pub(crate) fn unreadable_refusal(path: &str, unreadable: &str, undone: &str) -> 
     )
 }
 
-fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within {
+fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32, except: &Except) -> Within {
     if level > 3 {
         return Within::Nothing;
     }
@@ -52,14 +53,14 @@ fn walk_for_git(fs: &dyn Fs, dir: &str, level: u32, budget: &mut i32) -> Within 
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Within::Nothing,
         Err(err) => return Within::Unreadable(format!("{dir}: {}", io_code(&err))),
     };
-    if level > 0 && entries.iter().any(|e| e.name == ".git") {
+    if level > 0 && entries.iter().any(|e| e.name == ".git") && !except.holds(dir) {
         return Within::Git(join_path(dir, ".git"));
     }
     for entry in entries
         .iter()
         .filter(|e| e.is_dir && !e.is_link && e.name != "node_modules" && e.name != ".git")
     {
-        match walk_for_git(fs, &join_path(dir, &entry.name), level + 1, budget) {
+        match walk_for_git(fs, &join_path(dir, &entry.name), level + 1, budget, except) {
             Within::Nothing => {}
             found => return found,
         }
@@ -76,7 +77,14 @@ pub fn git_within(fs: &dyn Fs, path: &str) -> Within {
 
 pub(crate) fn git_within_capped(fs: &dyn Fs, path: &str, cap: i32) -> Within {
     let mut budget = cap;
-    walk_for_git(fs, path, 0, &mut budget)
+    walk_for_git(fs, path, 0, &mut budget, &Except::none())
+}
+
+/// The same walk for a worktree about to be removed: the `.git` of an initialized submodule (`except`) is that
+/// submodule's own, not a nested repository, so the walk goes on below it.
+pub(crate) fn git_within_except(fs: &dyn Fs, path: &str, except: &Except) -> Within {
+    let mut budget = WALK_CAP;
+    walk_for_git(fs, path, 0, &mut budget, except)
 }
 
 fn conflict(message: String) -> WtError {

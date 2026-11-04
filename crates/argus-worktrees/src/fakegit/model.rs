@@ -56,6 +56,8 @@ pub(super) struct Wt {
     pub locked: Option<String>,
     /// Paths `git add` took for the next `git commit`.
     pub staged: Vec<String>,
+    /// The submodules a spec gave this checkout.
+    pub submodules: Vec<super::submodule::Sub>,
 }
 
 impl Wt {
