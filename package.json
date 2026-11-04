@@ -25,11 +25,13 @@
     "prose": "brock prose",
     "deadcode": "brock knip",
     "duplicates": "jscpd .",
-    "icons": "node tools/icons/render-argus-icons.mjs"
+    "icons": "node tools/icons/render-argus-icons.mjs",
+    "postinstall": "node bin/argus.mjs --link"
   },
   "devDependencies": {
     "@drizztdourden08/brock-build": "^0.116.0",
     "@drizztdourden08/brock-lint-config": "^0.116.0",
+    "@drizztdourden08/brock-thread": "^0.118.0",
     "@drizztdourden08/standards": "^0.14.7",
     "@resvg/resvg-js": "2.6.2",
     "jscpd": "catalog:",
@@ -40,5 +42,8 @@
   "brock": {
     "version": "0.106.0"
   },
-  "packageManager": "pnpm@10.17.0"
+  "packageManager": "pnpm@10.17.0",
+  "bin": {
+    "argus": "./bin/argus.mjs"
+  }
 }
