@@ -296,9 +296,8 @@ fn a_failed_reap_writes_one_error_line_and_wakes_the_lead_once() {
         ),
         ("alpha", "alpha-lead", "procs")
     );
-    let line = format!(
-        "{FIND} 7001: an orphaned search (whatever started it is gone) (access is denied)"
-    );
+    let line =
+        format!("{FIND} 7001: an orphaned search (whatever started it is gone) (access is denied)");
     assert_eq!(
         wake.text,
         format!(
