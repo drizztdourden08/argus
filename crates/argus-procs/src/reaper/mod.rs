@@ -6,6 +6,7 @@
 //! kill. Shadow mode only writes what it would do.
 
 mod debounce;
+mod detail;
 mod pick;
 
 use crate::config::setting;
@@ -182,7 +183,13 @@ impl Inner {
             0 => String::new(),
             n => format!(" and its tree ({n} more)"),
         };
-        let line = format!("{} {}{tree}: {}", exe_of(root), root.pid, candidate.why);
+        let detail = detail::of(root, procs, pass.sample);
+        let line = format!(
+            "{} {}{tree}: {}{detail}",
+            exe_of(root),
+            root.pid,
+            candidate.why
+        );
         if pass.shadow {
             if state.noted.insert(key) {
                 let text =
