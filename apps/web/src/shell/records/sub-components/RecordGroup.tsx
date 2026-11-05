@@ -5,12 +5,11 @@ import type { RecordGroupProps } from '../record-rows.type';
 import { RecordFrame } from './RecordFrame';
 
 const RecordGroup = (props: RecordGroupProps) => {
-  const { header, count, flagged = false, defaultOpen = true, pinTitle = true, label, children } = props;
+  const { header, count, flagged = false, defaultOpen = true, label, children } = props;
   return (
     <RecordFrame
       name={label}
       title={header}
-      pinTitle={pinTitle}
       defaultOpen={defaultOpen}
       content={
         <>

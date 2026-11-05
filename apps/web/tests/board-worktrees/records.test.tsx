@@ -43,7 +43,7 @@ describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
     const { container } = await mountTab({ meta: metaDoc(), items: [itemRef('I-1')], docs: [worktree('linked', 'active', { item: 'I-1' })] });
     await screen.findByText('Item number 1');
     const group = groupOf(container, 'I-1');
-    const head = group.querySelector('.record-frame__head') as HTMLElement;
+    const head = group.querySelector('.record-card__header') as HTMLElement;
     expect(head.querySelector('[data-type-mark]')).not.toBeNull();
     expect(within(group).getByRole('link', { name: /-1/ })).toBeTruthy();
     expect(head.querySelector('[data-record]')).toBeNull();
@@ -56,12 +56,12 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
 
   it('folds both lists by default under a count', async () => {
     const { container } = await mountTab(board());
-    const requests = (await screen.findByText('Removal requests from threads')).closest('.record-frame__head') as HTMLElement;
-    const removed = screen.getByText('Removed by the worktree hygiene').closest('.record-frame__head') as HTMLElement;
+    const requests = (await screen.findByText('Removal requests from threads')).closest('.record-card__header') as HTMLElement;
+    const removed = screen.getByText('Removed by the worktree hygiene').closest('.record-card__header') as HTMLElement;
     expect(requests.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
     expect(removed.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
-    expect(requests.lastElementChild?.textContent).toBe('1');
-    expect(removed.lastElementChild?.textContent).toBe('1');
+    expect(within(requests).getByText('1')).toBeTruthy();
+    expect(within(removed).getByText('1')).toBeTruthy();
     expect(container.querySelector('[data-worktree="id-live"]')).not.toBeNull();
   });
 

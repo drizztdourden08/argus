@@ -89,7 +89,7 @@ interface RecordHeadProps {
   selection?: HeadSelection;
 }
 
-type HeadFrameKeys = 'title' | 'compactTitle' | 'pinTitle' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children';
+type HeadFrameKeys = 'title' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children';
 
 interface RecordHeadViewProps extends RecordHeadProps, Pick<RecordFrameProps, HeadFrameKeys> {}
 

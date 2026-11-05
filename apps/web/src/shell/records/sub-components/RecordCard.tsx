@@ -10,7 +10,6 @@ const RecordCard = (props: RecordCardProps) => {
     <RecordHead
       {...head}
       title={<CardTitle {...parts} clamp={3} />}
-      compactTitle={<CardTitle {...parts} clamp={1} />}
       defaultOpen={defaultOpen}
       content={content}
       attrs={attrs}
