@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { addFlag, openFilters, pickView } from '../helpers/filter-clauses';
+import { openFilters, pickView } from '../helpers/filter-clauses';
 import { DAY, MIN, ago, boardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -90,7 +90,7 @@ describe('K2 the filters stored for the Node page', { tags: ['standard'] }, () =
     await mountKanban({ items: [item('I-1')] });
     await openFilters();
     fireEvent.change(await screen.findByLabelText('Search id or title'), { target: { value: 'abc' } });
-    await addFlag('Needs you');
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Needs you' }));
     expect(JSON.parse(localStorage.getItem('coord.f') ?? '{}')).toMatchObject({ q: 'abc', needs: true, sort: 'rank' });
   });
 });

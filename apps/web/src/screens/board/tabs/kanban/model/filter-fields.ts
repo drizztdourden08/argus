@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { ItemRef } from '../../../../../data/kanban';
 import { flagFields } from '../../../BoardTabsRow';
-import type { ClauseField } from '../../../BoardTabsRow';
+import type { TabField } from '../../../BoardTabsRow';
 import { threadChoices } from '../../../shared';
 import type { Threads } from '../kanban.type';
 import { assigneeChoices } from './assignee-choices';
@@ -9,7 +9,7 @@ import { STATUS_OPTIONS } from './model.constants';
 import type { KanbanFilters } from './model.type';
 import { typeChoices } from './type-choices';
 
-const kanbanFields = (boardKey: string, items: readonly ItemRef[], threads: Threads): ClauseField<KanbanFilters>[] => [
+const kanbanFields = (boardKey: string, items: readonly ItemRef[], threads: Threads): TabField<KanbanFilters>[] => [
   { kind: 'multi', path: 'threads', label: 'Threads', options: threadChoices(threads), read: (filters) => filters.threads, write: (values) => ({ threads: values }) },
   { kind: 'multi', path: 'types', label: 'Type', options: typeChoices(), read: (filters) => filters.types, write: (values) => ({ types: values }) },
   { kind: 'multi', path: 'assignees', label: 'Assignee', options: assigneeChoices(items, boardKey, threads), read: (filters) => filters.assignees, write: (values) => ({ assignees: values }) },
