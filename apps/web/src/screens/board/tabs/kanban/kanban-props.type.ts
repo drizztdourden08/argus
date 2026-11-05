@@ -23,17 +23,6 @@ interface KanbanToolbarProps {
   layout: LayoutState;
 }
 
-interface FilterRowProps {
-  boardKey: string;
-  state: KanbanState;
-  items: readonly ItemRef[];
-  threads: Threads;
-}
-
-interface FilterChecksProps {
-  state: KanbanState;
-}
-
 interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
@@ -147,5 +136,5 @@ interface CardProgressRowProps {
 
 
 export type {
-  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

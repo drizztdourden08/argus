@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, SegmentedControl, Text } from '@drizztdourden08/tessera';
+import { TabFilters } from '../../../BoardTabsRow';
 import { aboutSize, daysText } from '../model';
 import type { WorktreeFilter } from '../model';
 import { EXPLAINER_TEXT, FILTER_LABEL } from '../worktrees.constants';
@@ -19,7 +20,9 @@ const WorktreeToolbar = (props: WorktreeToolbarProps) => {
   return (
     <Flex gap="md" align="center" wrap>
       {about}
-      <SegmentedControl<WorktreeFilter> selectedTone="neutral" aria-label={FILTER_LABEL} size="sm" value={filter} onChange={onFilter} options={options} />
+      <TabFilters tab="worktrees" count={filter === 'all' ? 0 : 1}>
+        <SegmentedControl<WorktreeFilter> selectedTone="neutral" aria-label={FILTER_LABEL} size="sm" value={filter} onChange={onFilter} options={options} />
+      </TabFilters>
       {old && old.count > 0 && (
         <Button size="sm" variant="danger" aria-expanded={batch.state !== null} disabled={batch.busy} onClick={batch.toggle}>
           {`Delete all leftovers older than ${daysText(old.days)} (${old.count}, ${aboutSize(old.sizeMB)})`}

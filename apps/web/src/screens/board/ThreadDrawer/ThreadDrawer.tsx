@@ -30,7 +30,7 @@ const ThreadDrawer = (props: ThreadDrawerProps) => {
       wide={wide}
       eyebrow={thread && <ThreadEyebrow thread={thread} counts={view.counts} />}
       title={thread ? nonEmpty(thread.session, thread.id) : ''}
-      tools={thread && <ThreadTools thread={thread} paused={view.paused} order={order} ops={ops} wide={wide} onWide={() => setWide(!wide)} onPurge={onPurge} />}
+      tools={thread && <ThreadTools boardKey={boardKey} thread={thread} paused={view.paused} order={order} ops={ops} wide={wide} onWide={() => setWide(!wide)} onPurge={onPurge} />}
       onClose={onClose}
     >
       {thread && <ThreadBody view={{ ...view, thread }} now={now} ops={ops} onOpenItem={openItem} />}

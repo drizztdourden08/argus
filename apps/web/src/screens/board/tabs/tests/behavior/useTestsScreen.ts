@@ -12,7 +12,7 @@ import { useWakeClock } from './useWakeClock';
 
 const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
   const state = useTestsState();
-  const focus = useTestsFocus(data);
+  const focus = useTestsFocus(boardKey, data);
   const notices = useTestNotices(boardKey, data.entries, data.tests);
   const ops = useTestOps(boardKey);
   const folds = useFolds();

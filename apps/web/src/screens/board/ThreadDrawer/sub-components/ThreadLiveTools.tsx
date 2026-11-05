@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind component */
 import { Button, Icon, IconButton } from '@drizztdourden08/tessera';
-import { FOCUS_KEY, useStored } from '../../shared';
+import { focusKey, useStored } from '../../shared';
 import type { ThreadLiveToolsProps } from '../ThreadDrawer.type';
 
 const ThreadLiveTools = (props: ThreadLiveToolsProps) => {
-  const { thread, paused, ops } = props;
-  const [focus, setFocus] = useStored(FOCUS_KEY);
+  const { boardKey, thread, paused, ops } = props;
+  const [focus, setFocus] = useStored(focusKey(boardKey));
   const focused = focus === thread.id;
   return (
     <>

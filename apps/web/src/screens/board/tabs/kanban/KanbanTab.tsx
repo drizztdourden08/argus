@@ -24,7 +24,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   const { boardKey, trash, onTrashBack, onPurge } = props;
   const data = useKanbanData(boardKey);
   const state = useKanbanState();
-  const focus = useFocusState();
+  const focus = useFocusState(boardKey);
   const now = useNow();
   const ops = useItemOps(boardKey);
   const bulk = useBulkOps(boardKey);

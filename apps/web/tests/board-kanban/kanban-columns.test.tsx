@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { openFilters } from '../helpers/filter-clauses';
 import { boardOf, cardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -75,29 +76,31 @@ describe('S1 paused threads and the focus', { tags: ['standard'] }, () => {
     await mountKanban(board);
     expect(await screen.findByText('Item number 1')).toBeTruthy();
     expect(screen.queryByText('Item number 2')).toBeNull();
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Show paused (1)' }));
     expect(screen.getByText('Item number 2')).toBeTruthy();
     expect(localStorage.getItem('coord.paused')).toBe('1');
   });
 
-  it('shows only the focused thread, and Show all clears the focus', async () => {
+  it('shows only the focused thread, and All threads clears the focus', async () => {
     await mountKanban({ items: [item('I-1', { thread: 'worker' }), item('I-2', { thread: 'other' })], threads: [thread('worker'), thread('other')] });
     await screen.findByText('Item number 1');
+    await openFilters();
     fireEvent.click(screen.getByRole('combobox', { name: 'Focus' }));
     fireEvent.click(await screen.findByRole('option', { name: 'other' }));
     expect(screen.queryByText('Item number 1')).toBeNull();
     expect(within(await boardOf()).getByText('Item number 2')).toBeTruthy();
-    expect(localStorage.getItem('coord.focus')).toBe('other');
-    expect(screen.getByText('Only other is shown. Its open questions are in Activity.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Show all' }));
+    expect(localStorage.getItem('coord.focus.alpha')).toBe('other');
+    fireEvent.click(screen.getByRole('combobox', { name: 'Focus' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'All threads' }));
     expect(screen.getByText('Item number 1')).toBeTruthy();
-    expect(localStorage.getItem('coord.focus')).toBe('');
+    expect(localStorage.getItem('coord.focus.alpha')).toBe('');
   });
 });
 
 describe('S3 a saved focus on a thread that is gone', { tags: ['standard'] }, () => {
   it('forgets the focus and shows the board', async () => {
-    localStorage.setItem('coord.focus', 'ghost');
+    localStorage.setItem('coord.focus.alpha', 'ghost');
     await mountKanban({ items: [item('I-1')] });
     expect(await screen.findByText('Item number 1')).toBeTruthy();
   });

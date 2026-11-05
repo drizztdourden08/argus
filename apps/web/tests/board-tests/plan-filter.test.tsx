@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_FILTERS, filtersActive, planCases, planOptions } from '../../src/screens/board/tabs/tests/model';
 import type { ItemDoc } from '../../src/screens/board/tabs/tests/model';
 import { cleanAfterEach } from './board-dom';
-import { filterBoard, pick, shown, stored } from './filter-dom';
+import { openFilters, pickClause } from '../helpers/filter-clauses';
+import { filterBoard, shown, stored } from './filter-dom';
 import { itemDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
@@ -43,18 +44,22 @@ describe('I-70 P7 the plan filter in the Tests tab', { tags: ['standard'] }, () 
   it('has no Plan choice on a board without a plan', async () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
-    expect(screen.queryByRole('combobox', { name: 'Plan' })).toBeNull();
+    await openFilters();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
+    expect(await screen.findByRole('menuitem', { name: 'Status' })).toBeTruthy();
+    expect(screen.queryByRole('menuitem', { name: 'Plan' })).toBeNull();
   });
 
-  it('narrows the tests to the cases of the plan, and Clear filters brings them back', async () => {
+  it('narrows the tests to the cases of the plan, and removing the chip brings them back', async () => {
     await mountTab(withPlans());
     await screen.findByText('Login works');
-    await pick('Plan', 'TP-5 Plan I-5');
+    await openFilters();
+    await pickClause('Plan', 'TP-5 Plan I-5');
     shown('T-1', 'T-3');
     expect(stored('coord.f')).toMatchObject({ plan: 'I-5' });
-    await pick('Plan', 'TP-6 Plan I-6');
+    await pickClause('Plan', 'TP-6 Plan I-6');
     shown('T-2');
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove filter on Plan' }));
     shown('T-1', 'T-2', 'T-3');
   });
 

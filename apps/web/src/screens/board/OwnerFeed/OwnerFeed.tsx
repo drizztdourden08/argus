@@ -3,6 +3,7 @@ import { SegmentedControl } from '@drizztdourden08/tessera';
 import { Panel } from '../../../shell';
 import type { ThreadChoice } from '../../../data/kanban';
 import { useCollection } from '../../../data/react';
+import { TabFilters } from '../BoardTabsRow';
 import { useNow } from '../shared';
 import { useFeedActions } from './behavior/useFeedActions';
 import { useFeedFilter } from './behavior/useFeedFilter';
@@ -22,7 +23,11 @@ const OwnerFeed = (props: OwnerFeedProps) => {
     <Panel
       title="Activity"
       note={count > 0 ? `${count} waiting on you` : undefined}
-      tools={<SegmentedControl selectedTone="neutral" size="sm" aria-label="Activity view" value={filter} options={FILTER_OPTIONS} onChange={setFilter} />}
+      tools={(
+        <TabFilters tab="activity" count={filter === 'all' ? 0 : 1}>
+          <SegmentedControl selectedTone="neutral" size="sm" aria-label="Activity view" value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
+        </TabFilters>
+      )}
     >
       <FeedSections filter={filter} work={work} ctx={ctx} />
     </Panel>

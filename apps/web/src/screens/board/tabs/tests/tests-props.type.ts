@@ -16,38 +16,10 @@ interface Option {
   label: string;
 }
 
-interface MultiFilterProps {
-  label: string;
-  options: Option[];
-  values: string[];
-  onPick: (values: string[]) => void;
-}
-
-interface ChoiceFilterProps {
-  label: string;
-  any: string;
-  options: Option[];
-  value: string;
-  onPick: (value: string) => void;
-}
-
-interface ClearFiltersProps {
-  state: TestsState;
-}
-
-
 interface TestsToolbarProps {
+  boardKey: string;
   state: TestsState;
   view: TestsView;
-  threads: Option[];
-  subjects: string[];
-  plans: Option[];
-  builds: string[];
-  handed: string | null;
-}
-
-interface FilterRowProps {
-  state: TestsState;
   threads: Option[];
   subjects: string[];
   plans: Option[];
@@ -224,5 +196,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, BundleCardProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };
