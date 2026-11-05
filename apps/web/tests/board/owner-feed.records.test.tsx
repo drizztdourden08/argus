@@ -41,14 +41,17 @@ describe('I-85 P4 every card says what it is', { tags: ['standard'] }, () => {
     expect(within(card).queryByText('decision needed')).toBeNull();
   });
 
-  it('puts the code and the title of a question on its first row, then the context and the answers', async () => {
+  it('puts the code on the header row of a question, its title on row 2, then the context and the answers', async () => {
     mockPosts();
     await openBoard({ entries: byId(decision) });
     const card = cardOf('Q-1');
-    const row = card.firstElementChild as HTMLElement;
-    expect(within(row).getByText('Q-1')).toBeTruthy();
-    expect(within(row).getByText('Create the private repo?')).toBeTruthy();
-    expect(before(row, within(card).getByRole('button', { name: 'More' }))).toBe(true);
+    const head = card.children[0] as HTMLElement;
+    const body = card.children[1] as HTMLElement;
+    expect(within(head).getByText('Q-1')).toBeTruthy();
+    expect(within(head).queryByText('Create the private repo?')).toBeNull();
+    expect(within(body).getByText('Create the private repo?')).toBeTruthy();
+    expect(before(head, body)).toBe(true);
+    expect(before(within(body).getByText('Create the private repo?'), within(card).getByRole('button', { name: 'More' }))).toBe(true);
     expect(before(within(card).getByRole('button', { name: 'More' }), within(card).getByRole('button', { name: 'Custom answer' }))).toBe(true);
   });
 

@@ -49,4 +49,22 @@ interface FrameLeadProps {
   name: string;
 }
 
-export type { FrameCodeProps, FrameDensity, FrameLeadProps, FrameOpenState, FrameSlotProps, FrameToggleProps, RecordFrameProps };
+interface FrameMarkProps {
+  attrs?: Readonly<Record<string, string>>;
+  children: ReactNode;
+}
+
+interface FrameHeadProps {
+  open: boolean;
+  onToggle: () => void;
+  name: string;
+  kind?: string;
+  icon?: ReactNode;
+  selection?: HeadSelection;
+  code?: ReactNode;
+  headTitle?: ReactNode;
+  content?: ReactNode;
+  menu?: ReactNode;
+}
+
+export type { FrameCodeProps, FrameHeadProps, FrameMarkProps, FrameLeadProps, FrameOpenState, FrameSlotProps, FrameToggleProps, RecordFrameProps };

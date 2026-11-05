@@ -21,6 +21,11 @@ const closedBoard = () => ({
   tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'ok'), testDoc('T-3'), testDoc('T-4'), doneDoc('T-5', 'fail', 'no')],
 });
 
+const showClosed = async () => {
+  await openFilters();
+  fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
+};
+
 describe('S1 closed runs', { tags: ['standard'] }, () => {
   it('are out of the Tests tab by default', async () => {
     const { container } = await mountTab(closedBoard());
@@ -31,8 +36,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('show as a muted card with Show closed', async () => {
     const { container } = await mountTab(closedBoard());
-    await openFilters();
-    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
+    await showClosed();
     const card = cardOf(container, 'I-51');
     expect(card.textContent).toContain('passed');
     expect(within(card).getByRole('group', { name: '1 to run · 1 pass · 1 fail' })).toBeTruthy();
@@ -40,8 +44,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('unfold to read-only rows: no outcome buttons, no Play, no Hand', async () => {
     const { container } = await mountTab(closedBoard());
-    await openFilters();
-    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
+    await showClosed();
     const card = cardOf(container, 'I-51');
     expect(isOpen(card)).toBe(false);
     fireEvent.click(toggleOf(card));
@@ -52,8 +55,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('hide again when the toggle is turned off', async () => {
     const { container } = await mountTab(closedBoard());
-    await openFilters();
-    fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
+    await showClosed();
     expect(cardOf(container, 'I-51')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
     expect(cardOf(container, 'I-51')).toBeNull();
