@@ -8,10 +8,13 @@
 //! - `GET /api/notify[?limit=&level=&project=]` is `{notifications}`, newest first
 //! - `GET /api/notify/settings` is `{os, toast, sound}` per level
 //! - `POST /api/notify/settings {toast?, sound?}` (the owner's page only) changes them
+//! - `GET/POST /api/notify/auto` is `{os, auto: {handed, ask, assigned, verify, run}}`; the POST
+//!   (the owner's page only) takes any subset of those booleans
 //!
 //! Anyone on this machine may ping. `by` is `thread` unless the caller names itself `overlord`
 //! and the board agrees; the page's calls are `page`; `auto` is never taken from outside.
 
+mod auto;
 mod ping;
 mod settings;
 
@@ -130,5 +133,7 @@ pub fn register(r: &mut Router) {
     r.add("POST", "/api/notify/test", small, ping::test);
     r.get("/api/notify/settings", settings::read);
     r.add("POST", "/api/notify/settings", small, settings::change);
+    r.get("/api/notify/auto", auto::read);
+    r.add("POST", "/api/notify/auto", small, auto::change);
     r.get("/api/notify", list);
 }

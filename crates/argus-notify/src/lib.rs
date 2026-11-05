@@ -7,6 +7,7 @@
 //! each board export. The HTTP routes live in the server crate.
 
 mod auto;
+mod auto_settings;
 mod board;
 mod clock;
 mod config;
@@ -32,6 +33,7 @@ mod watch;
 
 pub use argus_core::StorageError;
 pub use argus_core::clock::{Clock, ManualClock, SystemClock};
+pub use auto_settings::{AutoPatch, AutoSettings};
 pub use board::{BoardFacts, EntryFact, HandedRun};
 pub use clock::{iso, parse_ms};
 pub use config::{AutoConfig, BoardTopics, NotifyConfig, OwnerTopics};
