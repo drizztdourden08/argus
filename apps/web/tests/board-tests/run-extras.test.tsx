@@ -29,7 +29,7 @@ const tail: Responder = (call) => {
 describe('S1 the run menu', { tags: ['standard'] }, () => {
   it('opens the full log of the newest run in a drawer', async () => {
     await mountTab(launched([running()]), tail);
-    await openMenu('I-50');
+    await openMenu('TR-50');
     await choose('Log of R-4');
     const drawer = await screen.findByRole('dialog', { name: 'Run log' });
     await waitFor(() => expect(within(drawer).getByText('first line')).toBeTruthy());
@@ -37,7 +37,7 @@ describe('S1 the run menu', { tags: ['standard'] }, () => {
 
   it('has no log item for a draft', async () => {
     await mountTab(launched([running()], { stage: 'draft' }));
-    await openMenu('I-50');
+    await openMenu('TR-50');
     expect(await screen.findByRole('menuitem', { name: 'Open build' })).toBeTruthy();
     expect(screen.queryByRole('menuitem', { name: 'Log of R-4' })).toBeNull();
   });

@@ -25,7 +25,7 @@ describe('I-105 builds filter, sort and group', { tags: ['critical'] }, () => {
   });
 
   it('groups by kind with the unkinded last', () => {
-    const all = views(launcherDoc('a', { kind: 'svc' }), launcherDoc('b'), launcherDoc('c', { kind: 'app' }));
+    const all = views(launcherDoc('a', { kind: 'svc' }), launcherDoc('b', { kind: undefined }), launcherDoc('c', { kind: 'app' }));
     expect(groupByKind(all.live).map((group) => group.label)).toEqual(['app', 'svc', 'No kind']);
   });
 });

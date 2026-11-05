@@ -2,6 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { itemRef } from '../board-kanban/kanban-docs';
+import { addGroup } from '../helpers/filter-clauses';
 import { groupOf } from '../helpers/group-dom';
 import { HOUR, ago } from './fixtures';
 import { cleanAfterEach, findRow, metaDoc, mountTab, text, worktree } from './wt-kit';
@@ -32,7 +33,8 @@ describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
   it('never repeats the id: with nothing else to say the row shows its code once', async () => {
     const row = worktree('agent-c', 'active', { branch: 'worktree-agent-c', subject: null, path: 'X:/proj/trees/sub/agent-c' });
     await mountTab({ meta: metaDoc(), docs: [row] });
-    const words = text(await findRow('agent-c'));
+    const head = (await findRow('agent-c')).querySelector('.record-card__header') as HTMLElement;
+    const words = text(head);
     expect(words.split('agent-c')).toHaveLength(2);
     expect(words).not.toContain('sub/agent-c');
   });
@@ -41,6 +43,7 @@ describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
 describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
   it('spans the width with the type mark, the code link, the title and the count', async () => {
     const { container } = await mountTab({ meta: metaDoc(), items: [itemRef('I-1')], docs: [worktree('linked', 'active', { item: 'I-1' })] });
+    await addGroup('Item');
     await screen.findByText('Item number 1');
     const group = groupOf(container, 'I-1');
     const head = group.querySelector('.record-card__header') as HTMLElement;
@@ -100,6 +103,8 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
     const { container } = await mountTab({ docs: [worktree('live', 'active')], meta: metaDoc({ requests }) });
     await screen.findByText('Latest 8 of 10');
     expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(8);
+    const head = screen.getByText('Removal requests from threads').closest('.record-card__header') as HTMLElement;
+    fireEvent.click(within(head).getByRole('button', { name: 'Expand item' }));
     fireEvent.click(screen.getByRole('button', { name: 'Show all 10' }));
     expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(10);
   });

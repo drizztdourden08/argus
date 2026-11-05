@@ -7,7 +7,7 @@ import { mountChanges } from './helpers/mount-changes';
 
 cleanAfterEach();
 
-const cardOf = async (id: string, title = `Title of ${id}`) => within(await screen.findByRole('group', { name: `Pull request ${id}: ${title}` }));
+const cardOf = async (id: string) => within(await screen.findByRole('group', { name: id }));
 
 describe('S1 the Changes tab list', { tags: ['standard'] }, () => {
   it('shows the status, the branches, the age and the replay state', async () => {
@@ -24,8 +24,9 @@ describe('S1 the Changes tab list', { tags: ['standard'] }, () => {
     const { change } = await mountChanges([prDoc('PR-1')]);
     await cardOf('PR-1');
     await change('PR-1', prDoc('PR-1', { title: 'A new title', status: 'merged' }));
-    const card = await cardOf('PR-1', 'A new title');
+    const card = await cardOf('PR-1');
     expect(card.getByText('Merged')).toBeTruthy();
+    expect(card.getAllByText('A new title').length).toBeGreaterThan(0);
   });
 });
 

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { openFilters } from '../helpers/filter-clauses';
 import { ago, leftover, metaDoc, oldMeta } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
 import type { Responder } from './mount-tab';
@@ -81,6 +82,7 @@ describe('I-85 Delete all leftovers: the confirm and the answer', { tags: ['stan
 
   it('opens a confirm with the count, the total size and the re-checks; Cancel closes it and posts nothing', async () => {
     const { calls } = await mountTab({ docs: [leftover('a'), leftover('b')], meta: oldMeta() });
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: button }));
     const words = text(confirmGroup(BATCH_GROUP));
     expect(words).toContain('Delete 2 leftover folders older than 3 days?');
@@ -95,6 +97,7 @@ describe('I-85 Delete all leftovers: the confirm and the answer', { tags: ['stan
   it('Confirm posts the batch route; the answer counts the queued folders and the skipped ones with their reasons', async () => {
     const skipped = [{ id: 'x', reason: 'holds a nested git repository (inner/.git)' }, { id: 'y', reason: 'holds a nested git repository (inner/.git)' }];
     const { calls } = await mountTab({ docs: [leftover('a'), leftover('b')], meta: oldMeta() }, started({ started: 1, skipped, jobs: [] }));
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: button }));
     fireEvent.click(within(confirmGroup(BATCH_GROUP)).getByRole('button', { name: 'Delete 2 folders' }));
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -107,6 +110,7 @@ describe('I-85 Delete all leftovers: the confirm and the answer', { tags: ['stan
 
   it('a refusal stays in the confirm and can be retried; under 1 MB says so', async () => {
     await mountTab({ docs: [leftover('a')], meta: metaDoc({ leftoverOld: { days: 3, count: 1, sizeMB: 0.2 } }) }, refuse('forbidden', 'only the lead may'));
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Delete all leftovers older than 3 days (1, under 1 MB)' }));
     fireEvent.click(within(confirmGroup(BATCH_GROUP)).getByRole('button', { name: 'Delete 1 folder' }));
     await waitFor(() => expect(text(confirmGroup(BATCH_GROUP))).toContain('Not queued: only the lead may'));

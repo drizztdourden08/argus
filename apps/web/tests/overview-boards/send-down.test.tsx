@@ -50,7 +50,8 @@ describe('P7 running now', { tags: ['standard'] }, () => {
       ? { body: { runs: [{ id: 'R-5', scope: 'rotp', name: 'hello', status: 'running', queuedAt: minutesAgo(1), startedAt: minutesAgo(1), lastLine: 'compiling' }] } }
       : undefined));
     renderNow();
-    expect(await screen.findByText('hello R-5')).toBeTruthy();
+    expect(await screen.findByText('hello')).toBeTruthy();
+    expect(screen.getByText('R-5')).toBeTruthy();
     expect(screen.getByText('compiling')).toBeTruthy();
   });
 });

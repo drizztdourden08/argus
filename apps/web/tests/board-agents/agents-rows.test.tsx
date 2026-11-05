@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MIN, agent, agentRows, ago, headOf, item, mockApi, renderAgents, rowOf } from './agents-harness';
-import { openFilters } from '../helpers/filter-clauses';
+import { addGroup, openFilters } from '../helpers/filter-clauses';
 
 afterEach(() => {
   localStorage.clear();
@@ -19,6 +19,7 @@ describe('I-85 P7 Agents tab: rows grouped by item', { tags: ['critical'] }, () 
       agents: { 'A-1': agent({ items: ['I-1'] }), 'A-2': agent({ items: ['I-2'] }), 'A-3': agent({ items: ['I-1'] }) },
       items: { 'I-1': item({ title: 'first job', rank: 2 }), 'I-2': item({ title: 'second job', rank: 1 }) },
     });
+    await addGroup('Item');
     expect(headOf(container, 'K-1').textContent).toContain('first job');
     expect(headOf(container, 'K-2').textContent).toContain('second job');
     const heads = [...container.querySelectorAll<HTMLElement>('summary')].map((summary) => summary.querySelector('a')?.textContent).filter((code) => code?.startsWith('K-'));
@@ -32,12 +33,14 @@ describe('I-85 P7 Agents tab: rows grouped by item', { tags: ['critical'] }, () 
       agents: { 'A-1': agent({ items: ['I-1', 'I-2'] }) },
       items: { 'I-1': item(), 'I-2': item({ title: 'other' }) },
     });
+    await addGroup('Item');
     expect(agentRows(container)).toEqual(['A-1', 'A-1']);
   });
 
   it('flags the agents that have no item', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent() }, items: {} });
+    await addGroup('Item');
     expect(screen.getByText('No item')).toBeTruthy();
     expect(screen.getByText('no link')).toBeTruthy();
     expect(agentRows(container)).toEqual(['A-1']);
@@ -46,6 +49,7 @@ describe('I-85 P7 Agents tab: rows grouped by item', { tags: ['critical'] }, () 
   it('folds the agents of a closed item', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-1': agent({ items: ['I-1'] }) }, items: { 'I-1': item({ status: 'done' }) } });
+    await addGroup('Item');
     expect(screen.getByText('Closed items')).toBeTruthy();
     expect(container.querySelectorAll('[data-record="A-1"]').length).toBeLessThanOrEqual(1);
   });
@@ -113,6 +117,7 @@ describe('I-85 P7 Agents tab: the pane', { tags: ['critical'] }, () => {
   it('opens the item pane from the item header', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: { 'A-2': agent({ items: ['I-1'] }) }, items: { 'I-1': item() } });
+    await addGroup('Item');
     fireEvent.click(within(headOf(container, 'K-1')).getByText('ship it'));
     expect(where()).toBe('?open=K-1');
   });

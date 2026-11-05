@@ -13,9 +13,9 @@ describe('S1 the focus mode of the drawer', { tags: ['standard'] }, () => {
     await opened();
     fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('1');
-    expect(screen.getByRole('button', { name: 'Collapse' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Collapse', pressed: true }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('heading', { name: /Login/ })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse', pressed: true }));
     expect(localStorage.getItem('coord.drawer.wide')).toBe('0');
     expect(screen.getByRole('button', { name: 'Expand' })).toBeTruthy();
   });

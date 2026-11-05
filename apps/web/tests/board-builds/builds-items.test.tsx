@@ -2,6 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
+import { addGroup } from '../helpers/filter-clauses';
 import { groupOf, order } from '../helpers/group-dom';
 import { ago, DAY, launcherDoc } from './fixtures';
 import { withDefs } from './list-dom';
@@ -28,6 +29,7 @@ describe('P13 the Builds tab by item', { tags: ['standard'] }, () => {
   it('shows the master build, then each open item, then the builds that need a link', async () => {
     const { container } = await mountBuilds(board());
     await screen.findByText('Master build');
+    await addGroup('Item');
     expect(order(container)).toEqual(['master', 'I-2', 'none']);
     const item = groupOf(container, 'I-2');
     expect(within(item).getByText('Item number 2')).toBeTruthy();

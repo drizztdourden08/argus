@@ -2,6 +2,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { itemRef } from '../board-kanban/kanban-docs';
+import { addGroup } from '../helpers/filter-clauses';
 import { groupOf, order } from '../helpers/group-dom';
 import { metaDoc, worktree } from './fixtures';
 import { cleanAfterEach, mountTab } from './mount-tab';
@@ -21,6 +22,7 @@ const board = () => ({
 describe('P6 the Worktrees tab by item', { tags: ['standard'] }, () => {
   it('groups the worktrees under their open item, then the ones with no item, then the main checkouts', async () => {
     const { container } = await mountTab(board());
+    await addGroup('Item');
     await screen.findByText('Main checkouts');
     expect(order(container)).toEqual(['I-1', 'none', 'main']);
     expect(groupOf(container, 'I-1').querySelector('[data-worktree="id-linked"]')).not.toBeNull();
@@ -32,6 +34,7 @@ describe('P6 the Worktrees tab by item', { tags: ['standard'] }, () => {
 
   it('keeps the worktrees of a closed item in a Closed section', async () => {
     const { container } = await mountTab({ ...board(), docs: [worktree('old', 'stale', { item: 'I-2' })] });
+    await addGroup('Item');
     expect(await screen.findByText(/^Closed \(1\)/)).toBeTruthy();
     expect(groupOf(container, 'closed')).toBeTruthy();
   });
