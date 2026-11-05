@@ -24,7 +24,7 @@ fn parent_text(root: &ProcRow, sample: &Sample) -> String {
     }
 }
 
-/// The text appended to a reap line: ` cmd `...`` (when there is one) and the parent.
+/// The text appended to a reap line: the command in backticks (when there is one) and the parent.
 pub(super) fn of(root: &ProcRow, sample: &Sample) -> String {
     let parent = parent_text(root, sample);
     if root.cmd.trim().is_empty() {
@@ -38,10 +38,10 @@ pub(super) fn of(root: &ProcRow, sample: &Sample) -> String {
 mod tests {
     use super::*;
 
-    fn row(pid: u32, ppid: u32, name: &str, cmd: &str) -> ProcRow {
+    fn row(pid: u32, parent_pid: u32, name: &str, cmd: &str) -> ProcRow {
         ProcRow {
             pid,
-            ppid,
+            ppid: parent_pid,
             name: name.into(),
             cmd: cmd.into(),
             path: None,
