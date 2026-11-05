@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind constants */
 import { SHADER_NOISE } from './shader-noise.constants';
-import { SHADER_TRAIL } from './shader-trail.constants';
 
 const MAX_COLORS = 10;
 
@@ -20,10 +19,13 @@ uniform float u_grainOverlay;
 uniform vec2 u_pointer;
 uniform vec4 u_parallax;
 uniform float u_aspect;
+uniform vec2 u_blob;
+uniform float u_blobWeight;
+uniform vec4 u_blobColor;
 
 in vec2 v_objectUV;
 out vec4 fragColor;
-${SHADER_NOISE}${SHADER_TRAIL}
+${SHADER_NOISE}
 vec2 getPosition(int i, float t) {
   float a = float(i) * .37;
   float b = .6 + fract(float(i) / 3.) * .9;
@@ -35,6 +37,10 @@ vec2 getPosition(int i, float t) {
   return .5 + .5 * vec2(x, y);
 }
 
+float spotWeight(vec2 from, vec2 to, float scale) {
+  return scale / (pow(length(from - to), 3.5) + 1e-3);
+}
+
 float getDepth(int i) {
   return mix(u_parallax.y, u_parallax.x, fract(float(i) * .618 + .13));
 }
@@ -43,7 +49,6 @@ void main() {
   vec2 uv = v_objectUV;
   uv += .5;
   vec2 shift = vec2(u_pointer.x, 1. - u_pointer.y) - .5;
-  vec3 trail = trailInk(uv);
   vec2 grainUV = (uv - shift * u_parallax.z) * vec2(1000. * u_aspect, 1000.);
 
   float mixerGrain = 0.;
@@ -65,7 +70,6 @@ void main() {
   vec2 uvRotated = uv - swirlCenter;
   float angle = 3. * u_swirl * radius;
   uvRotated = rotate(uvRotated, -angle) + swirlCenter;
-  uvRotated -= trail.yz * trail.x * u_trailPull;
 
   vec3 color = vec3(0.);
   float opacity = 0.;
@@ -78,18 +82,19 @@ void main() {
     vec3 colorFraction = u_colors[i].rgb * u_colors[i].a;
     float opacityFraction = u_colors[i].a;
 
-    float dist = length(uvRotated - pos);
-
-    dist = pow(dist, 3.5);
-    float weight = 1. / (dist + 1e-3);
+    float weight = spotWeight(uvRotated, pos, 1.);
     color += colorFraction * weight;
     opacity += opacityFraction * weight;
     totalWeight += weight;
   }
 
+  float blobWeight = spotWeight(uvRotated, u_blob, u_blobWeight);
+  color += u_blobColor.rgb * u_blobColor.a * blobWeight;
+  opacity += u_blobColor.a * blobWeight;
+  totalWeight += blobWeight;
+
   color /= max(1e-4, totalWeight);
   opacity /= max(1e-4, totalWeight);
-  color *= 1. - trail.x * u_trailDarkness;
 
   if (u_grainOverlay > 0.) {
     float grainOverlay = valueNoise(rotate(grainUV, 1.) + vec2(3.));

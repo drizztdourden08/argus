@@ -2,6 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import { MOTION, STILL_MOTION } from '../../src/shell/backdrop/backdrop.constants';
 import { motionFor } from '../../src/shell/backdrop/motion-rule';
+import type { BlobState } from '../../src/shell/backdrop/blob.type';
+import { easeBlob } from '../../src/shell/backdrop/ease-blob';
+import { isBlobSettled } from '../../src/shell/backdrop/is-blob-settled';
+import type { PointerPoint } from '../../src/shell/backdrop/pointer-math.type';
 import { easePoint } from '../../src/shell/backdrop/ease-point';
 import { easeStep } from '../../src/shell/backdrop/ease-step';
 import { isSettled } from '../../src/shell/backdrop/is-settled';
@@ -36,6 +40,34 @@ describe('backdrop pointer easing', { tags: ['critical'] }, () => {
   it('reports a settled point', () => {
     expect(isSettled(CENTER, { x: 0.5004, y: 0.5 })).toBe(true);
     expect(isSettled(CENTER, { x: 0.6, y: 0.5 })).toBe(false);
+  });
+});
+
+describe('backdrop cursor blob', { tags: ['critical'] }, () => {
+  const run = (state: BlobState, target: PointerPoint, present: boolean, seconds: number): BlobState => {
+    let next = state;
+    for (let frame = 0; frame < seconds * 60; frame += 1) next = easeBlob(next, target, present, 1 / 60);
+    return next;
+  };
+  const start: BlobState = { point: CENTER, presence: 1 };
+  const far: PointerPoint = { x: 1, y: 1 };
+
+  it('lags behind the pointer instead of snapping', () => {
+    const next = run(start, far, true, 0.3);
+    expect(next.point.x).toBeGreaterThan(0.5);
+    expect(next.point.x).toBeLessThan(0.8);
+  });
+
+  it('eases toward the pointer and settles', () => {
+    const next = run(start, far, true, 8);
+    expect(isBlobSettled(next, far, true)).toBe(true);
+    expect(isBlobSettled(start, far, true)).toBe(false);
+  });
+
+  it('fades its weight to zero when the pointer leaves', () => {
+    const next = run(start, CENTER, false, 2);
+    expect(next.presence).toBeLessThan(0.01);
+    expect(isBlobSettled(run(start, CENTER, false, 4), CENTER, false)).toBe(true);
   });
 });
 

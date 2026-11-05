@@ -1,14 +1,15 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useRef } from 'react';
 import { MAX_FRAME_SECONDS } from './backdrop.constants';
-import { advanceTrail } from './advance-trail';
+import { BLOB } from './blob.constants';
+import type { BlobState } from './blob.type';
+import { easeBlob } from './ease-blob';
 import { easePoint } from './ease-point';
+import { isBlobSettled } from './is-blob-settled';
 import { isSettled } from './is-settled';
 import { mapPointer } from './map-pointer';
 import { CENTER } from './pointer-math.constants';
 import type { DriftFrame, PointerPoint } from './pointer-math.type';
-import type { TrailPoint } from './trail.type';
-import { trailToUniform } from './trail-to-uniform';
 
 const usePointerDrift = (enabled: boolean, onFrame: (frame: DriftFrame) => void): void => {
   const sink = useRef(onFrame);
@@ -16,27 +17,29 @@ const usePointerDrift = (enabled: boolean, onFrame: (frame: DriftFrame) => void)
 
   useEffect(() => {
     if (!enabled) {
-      sink.current({ point: CENTER, trail: trailToUniform([]) });
+      sink.current({ point: CENTER, blob: CENTER, blobWeight: 0 });
       return undefined;
     }
     let shown = CENTER;
     let target = CENTER;
-    let trail: TrailPoint[] = [];
-    let fresh = false;
+    let blob: BlobState = { point: CENTER, presence: 0 };
+    let present = false;
     let frame = 0;
     let last = 0;
     const step = (now: number): void => {
       const seconds = Math.min(MAX_FRAME_SECONDS, (now - last) / 1000);
       last = now;
       shown = isSettled(shown, target) ? target : easePoint(shown, target, seconds);
-      trail = advanceTrail(trail, seconds, fresh ? target : null);
-      fresh = false;
-      sink.current({ point: shown, trail: trailToUniform(trail) });
-      frame = shown === target && trail.length === 0 ? 0 : requestAnimationFrame(step);
+      blob = isBlobSettled(blob, target, present)
+        ? { point: target, presence: present ? 1 : 0 }
+        : easeBlob(blob, target, present, seconds);
+      sink.current({ point: shown, blob: blob.point, blobWeight: BLOB.weight * blob.presence });
+      frame = shown === target && isBlobSettled(blob, target, present) ? 0 : requestAnimationFrame(step);
     };
-    const follow = (next: PointerPoint, moved: boolean): void => {
+    const follow = (next: PointerPoint, inside: boolean): void => {
       target = next;
-      fresh = moved;
+      if (inside && blob.presence === 0) blob = { point: next, presence: 0 };
+      present = inside;
       if (frame === 0) {
         last = performance.now();
         frame = requestAnimationFrame(step);

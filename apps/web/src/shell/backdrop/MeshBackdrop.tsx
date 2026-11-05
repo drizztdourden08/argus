@@ -3,11 +3,10 @@ import { Box } from '@drizztdourden08/tessera';
 import { ShaderMount } from '@paper-design/shaders-react';
 import { useMemo, useRef, useState } from 'react';
 import { GRAIN, POINTER, SIZING_UNIFORMS } from './backdrop.constants';
+import { BLOB } from './blob.constants';
 import { hasWebgl2 } from './has-webgl2';
 import { PARALLAX } from './parallax.constants';
 import { toVec4 } from './to-vec4';
-import { TRAIL } from './trail.constants';
-import { trailToUniform } from './trail-to-uniform';
 import { MAX_COLORS, MESH_SHADER } from './mesh-shader.constants';
 import type { Mount } from './MeshBackdrop.type';
 import { useBackdropColors } from './useBackdropColors';
@@ -26,7 +25,8 @@ const MeshBackdrop = () => {
   usePointerDrift(motion.interactive, (frame) =>
     mount.current?.paperShaderMount?.setUniforms({
       u_pointer: [frame.point.x, frame.point.y],
-      u_trail: frame.trail,
+      u_blob: [frame.blob.x, 1 - frame.blob.y],
+      u_blobWeight: frame.blobWeight,
     }),
   );
 
@@ -41,10 +41,9 @@ const MeshBackdrop = () => {
       u_grainOverlay: GRAIN.overlay,
       u_pointer: [POINTER.center, POINTER.center],
       u_parallax: motion.interactive ? [PARALLAX.near, PARALLAX.far, PARALLAX.grain, PARALLAX.swirl] : [0, 0, 0, 0],
-      u_trail: trailToUniform([]),
-      u_trailDarkness: motion.interactive ? TRAIL.darkness : 0,
-      u_trailPull: TRAIL.pull,
-      u_trailRadius: TRAIL.radius,
+      u_blob: [POINTER.center, POINTER.center],
+      u_blobWeight: 0,
+      u_blobColor: [...BLOB.color],
       u_aspect: aspect,
     }),
     [colors, motion, aspect],
