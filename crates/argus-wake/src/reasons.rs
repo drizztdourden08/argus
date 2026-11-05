@@ -12,7 +12,7 @@ pub const WAKE_REASONS: [&str; 47] = [
     "test-fail",
     "test-partial",
     "test-blocked",
-    "bundle-complete",
+    "run-complete",
     "owner-answer",
     "owner-note",
     "owner-decision",

@@ -1,4 +1,4 @@
-//! Which board events ping the owner: a build handed and a new open question by a thread.
+//! Which board events ping the owner: a run handed and a new open question by a thread.
 //!
 //! The first time a project is seen only sets the markers, so nothing old is told. The markers
 //! move even when a switch is off, so turning it on later does not replay the past. An event older
@@ -6,7 +6,7 @@
 
 use argus_native::plain;
 
-use crate::board::{BoardFacts, EntryFact};
+use crate::board::{BoardFacts, EntryFact, HandedRun};
 use crate::clock::parse_ms;
 use crate::config::AutoConfig;
 use crate::kinds::By;
@@ -15,7 +15,7 @@ use crate::request::PingRequest;
 use crate::seen::Marker;
 
 const FRESH_MS: i64 = 6 * 3_600_000;
-const BUNDLE_TITLE_MAX: usize = 80;
+const RUN_TITLE_MAX: usize = 80;
 const QUESTION_READ_MAX: usize = 400;
 const QUESTION_SHOWN_MAX: usize = 100;
 
@@ -84,28 +84,21 @@ pub fn plan(facts: &BoardFacts, marker: &mut Marker, context: &Context) -> Vec<D
 }
 
 fn handed_ping(facts: &BoardFacts, marker: &mut Marker, context: &Context) -> Option<Draft> {
-    let tag = facts.handed_build.as_deref().filter(|tag| !tag.is_empty());
-    let current = tag.map(|tag| format!("{tag}|{}", facts.handed_at.as_deref().unwrap_or("")));
+    let run = facts.handed.as_ref().filter(|run| !run.id.is_empty());
+    let current = run.map(|run| format!("{}|{}", run.id, run.at.as_deref().unwrap_or("")));
     if current == marker.handed {
         return None;
     }
     marker.handed = current;
-    let tag = tag?;
-    let told =
-        !context.first && context.auto.board.handed && context.fresh(facts.handed_at.as_deref());
-    told.then(|| handed_draft(facts, tag, context))
+    let run = run?;
+    let told = !context.first && context.auto.board.handed && context.fresh(run.at.as_deref());
+    told.then(|| handed_draft(run, context))
 }
 
-fn handed_draft(facts: &BoardFacts, tag: &str, context: &Context) -> Draft {
-    let bundle = facts.bundle.clone().unwrap_or_default();
-    let title = bundle.title.as_deref().filter(|title| !title.is_empty());
-    let shown = plain(title.unwrap_or(tag), BUNDLE_TITLE_MAX);
-    let tests = facts
-        .tests
-        .iter()
-        .filter(|test| !test.removed && test.build.as_deref() == Some(tag))
-        .count();
-    let count = match tests {
+fn handed_draft(run: &HandedRun, context: &Context) -> Draft {
+    let title = run.title.as_deref().filter(|title| !title.is_empty());
+    let shown = plain(title.unwrap_or(&run.id), RUN_TITLE_MAX);
+    let count = match run.tests {
         0 => String::new(),
         1 => " (1 test)".to_owned(),
         n => format!(" ({n} tests)"),
@@ -114,7 +107,7 @@ fn handed_draft(facts: &BoardFacts, tag: &str, context: &Context) -> Draft {
     context.draft(
         format!("{name}: ready to test"),
         format!("{name}: {shown} is ready to test{count}"),
-        bundle.thread,
+        run.thread.clone(),
     )
 }
 

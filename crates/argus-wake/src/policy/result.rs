@@ -1,7 +1,9 @@
-//! A test result of the owner: a failing outcome wakes the test's thread, the pass that finishes a bundle wakes it once.
+//! A test result of the owner: a failing outcome wakes the test's thread, the pass that finishes a run wakes it once.
+
+use serde_json::Value;
 
 use super::{ApplyCtx, FAILING};
-use crate::board::{BoardView, EntryView, TestView};
+use crate::board::{BoardView, EntryView};
 use crate::text::clip_full;
 use crate::wake::WakeInput;
 
@@ -11,16 +13,6 @@ fn word(outcome: &str) -> &'static str {
         "partial" => "partial",
         _ => "blocked",
     }
-}
-
-fn live_manual<'a>(board: Option<&'a BoardView>, thread: &str, build: &str) -> Vec<&'a TestView> {
-    board
-        .into_iter()
-        .flat_map(|b| b.tests.values())
-        .filter(|t| {
-            t.build.is(build) && t.thread.is(thread) && t.mode.is("manual") && t.rec.is_live()
-        })
-        .collect()
 }
 
 pub(super) fn from_result(ctx: &ApplyCtx<'_>, entry: &EntryView) -> Vec<WakeInput> {
@@ -55,37 +47,62 @@ pub(super) fn from_result(ctx: &ApplyCtx<'_>, entry: &EntryView) -> Vec<WakeInpu
             line,
         )];
     }
-    bundle_complete(ctx, board, case, thread)
+    if outcome != "pass" {
+        return Vec::new();
+    }
+    run_complete(ctx, board, case.rec.id.as_str(), thread)
         .into_iter()
         .collect()
 }
 
-fn bundle_complete(
+/// Is the item a test run of this thread that ended (reported or passed)?
+fn ended_run(item: &Value, thread: &str) -> bool {
+    item["type"] == "test-run"
+        && item["thread"] == thread
+        && item["deletedAt"].is_null()
+        && matches!(item["stage"].as_str(), Some("reported" | "passed"))
+}
+
+fn results_of(run: &Value) -> &[Value] {
+    run["fields"]["results"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice)
+}
+
+fn count(run: &Value, wanted: impl Fn(&str) -> bool) -> usize {
+    results_of(run)
+        .iter()
+        .filter(|r| r["status"].as_str().is_some_and(&wanted))
+        .count()
+}
+
+/// The run that this pass finished: it holds a result of the test, ended now and had not ended in the last export.
+fn run_complete(
     ctx: &ApplyCtx<'_>,
     board: &BoardView,
-    case: &TestView,
+    test: &str,
     thread: &str,
 ) -> Option<WakeInput> {
-    let build = case.build.some()?;
-    if ctx.entry?.outcome.as_str() != "pass" {
-        return None;
-    }
-    let group = live_manual(Some(board), thread, build);
-    let pending_before = live_manual(ctx.before, thread, build)
+    let before = ctx.before.map(BoardView::json);
+    let (id, run) = board.json()["items"]
+        .as_object()?
         .iter()
-        .filter(|t| t.status.is("pending"))
-        .count();
-    if group.is_empty() || group.iter().any(|t| t.status.is("pending")) || pending_before == 0 {
-        return None;
-    }
-    let pass = group.iter().filter(|t| t.status.is("pass")).count();
-    let fail = group.iter().filter(|t| t.status.is_any(&FAILING)).count();
-    let line = format!("{build}: all manual tests run, {pass} pass {fail} fail");
+        .find(|(id, run)| {
+            ended_run(run, thread)
+                && results_of(run).iter().any(|r| r["test"] == test)
+                && !before.is_some_and(|b| ended_run(&b["items"][id.as_str()], thread))
+        })?;
+    let pass = count(run, |s| s == "pass");
+    let fail = count(run, |s| FAILING.contains(&s));
+    let line = format!(
+        "run {}: all tests run, {pass} pass {fail} fail",
+        run["n"]
+    );
     Some(WakeInput::about(
         ctx.scope,
         thread,
-        "bundle-complete",
-        build,
+        "run-complete",
+        id,
         line,
     ))
 }

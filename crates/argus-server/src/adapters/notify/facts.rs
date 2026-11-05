@@ -1,8 +1,9 @@
 //! What the automatic pings read of an exported board.
 
 use argus_board::Board;
+use argus_board::launchers::build_ready;
 use argus_core::js::truthy;
-use argus_notify::{BoardFacts, Bundle, EntryFact, TestFact};
+use argus_notify::{BoardFacts, EntryFact, HandedRun};
 use serde_json::Value;
 
 fn text_of(v: &Value) -> Option<String> {
@@ -15,13 +16,6 @@ fn removed(v: &Value) -> bool {
 
 fn values(v: &Value) -> impl Iterator<Item = &Value> {
     v.as_object().into_iter().flat_map(|o| o.values())
-}
-
-fn test_of(test: &Value) -> TestFact {
-    TestFact {
-        build: text_of(&test["build"]),
-        removed: removed(test),
-    }
 }
 
 fn entry_of(entry: &Value) -> EntryFact {
@@ -38,25 +32,45 @@ fn entry_of(entry: &Value) -> EntryFact {
     }
 }
 
-fn bundle_of(board: &Board, tag: Option<&str>) -> Option<Bundle> {
-    let bundle = &board["builds"][tag?];
-    bundle.is_object().then(|| Bundle {
-        title: text_of(&bundle["title"]),
-        thread: text_of(&bundle["thread"]),
-    })
+/// Is the test run ready, with a live build, and given to the owner?
+fn is_handed(board: &Board, run: &Value) -> bool {
+    run["type"] == "test-run"
+        && run["stage"] == "ready"
+        && run["assignee"] == "owner"
+        && !removed(run)
+        && run["fields"]["build"]
+            .as_str()
+            .is_some_and(|name| build_ready(board, name))
+}
+
+fn handed_of(board: &Board, run: &Value) -> HandedRun {
+    let plan = &run["fields"]["plan"];
+    HandedRun {
+        id: text_of(&run["id"]).unwrap_or_default(),
+        title: text_of(&run["title"]),
+        thread: text_of(&run["thread"]),
+        at: text_of(&run["updatedAt"]),
+        tests: values(&board["tests"])
+            .filter(|test| test["item"] == *plan && !removed(test))
+            .count(),
+    }
+}
+
+/// The run handed to the owner: the one changed last.
+fn handed_run(board: &Board) -> Option<HandedRun> {
+    values(&board["items"])
+        .filter(|run| is_handed(board, run))
+        .max_by_key(|run| text_of(&run["updatedAt"]))
+        .map(|run| handed_of(board, run))
 }
 
 /// The facts of the board of `key`; `portfolio` is the board that lists the projects and says
 /// which ones are retired.
 #[must_use]
 pub fn facts_of(key: &str, board: &Board, portfolio: Option<&Board>) -> BoardFacts {
-    let tag = text_of(&board["handedBuild"]).filter(|tag| !tag.is_empty());
     BoardFacts {
         retired: portfolio.is_some_and(|p| truthy(&p["projects"][key]["retired"])),
-        handed_at: text_of(&board["handedAt"]),
-        bundle: bundle_of(board, tag.as_deref()),
-        handed_build: tag,
-        tests: values(&board["tests"]).map(test_of).collect(),
+        handed: handed_run(board),
         entries: values(&board["entries"]).map(entry_of).collect(),
     }
 }

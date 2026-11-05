@@ -32,7 +32,7 @@ mod watch;
 
 pub use argus_core::StorageError;
 pub use argus_core::clock::{Clock, ManualClock, SystemClock};
-pub use board::{BoardFacts, Bundle, EntryFact, TestFact};
+pub use board::{BoardFacts, EntryFact, HandedRun};
 pub use clock::{iso, parse_ms};
 pub use config::{AutoConfig, BoardTopics, NotifyConfig, OwnerTopics};
 pub use configure::SettingsPatch;

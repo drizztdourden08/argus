@@ -256,7 +256,6 @@ fn a_board_with_odd_field_types_still_reads() {
         "threads": {"ui": {"id": 7, "role": ["coordinator"], "status": "active", "placeholder": 0}, "bad": "text"},
         "items": [],
         "tests": {"T-1": {"id": "T-1", "thread": 3, "mode": "manual"}, "T-2": 5},
-        "handedBuild": 9,
     }));
     assert_eq!(odd.threads.len(), 1);
     assert!(odd.threads["ui"].is_live());

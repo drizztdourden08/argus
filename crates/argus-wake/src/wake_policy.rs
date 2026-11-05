@@ -25,7 +25,7 @@ pub const WAKE_CLASSES: [(&str, WakeClass); 47] = [
     ("test-fail", WakeClass::Wake),
     ("test-partial", WakeClass::Wake),
     ("test-blocked", WakeClass::Wake),
-    ("bundle-complete", WakeClass::Wake),
+    ("run-complete", WakeClass::Wake),
     ("owner-answer", WakeClass::Wake),
     ("owner-note", WakeClass::Wake),
     ("owner-decision", WakeClass::Wake),

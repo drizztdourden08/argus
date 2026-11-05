@@ -591,13 +591,15 @@ async fn a_hard_resync_writes_the_docs_again() {
 }
 
 fn hand_build(board: &mut Value, tag: &str, title: &str) {
-    board["handedBuild"] = json!(tag);
-    board["handedAt"] = json!(ago(0));
-    board["builds"][tag] = json!({ "tag": tag, "title": title, "thread": "ui" });
+    board["launchers"][tag] = json!({ "name": tag });
+    board["items"][tag] = json!({
+        "id": tag, "type": "test-run", "title": title, "thread": "ui", "stage": "ready",
+        "assignee": "owner", "updatedAt": ago(0), "fields": { "plan": "I-77", "build": tag }
+    });
     for (n, text) in [(3, "Slots persist"), (4, "Slots survive a crash")] {
         let id = format!("T-{tag}-{n}");
-        let fields = json!({ "title": text, "mode": "manual", "build": tag });
-        board["tests"][id.as_str()] = test_doc(&id, "I-1", "ui", fields, 4096);
+        let fields = json!({ "title": text, "mode": "manual" });
+        board["tests"][id.as_str()] = test_doc(&id, "I-77", "ui", fields, 4096);
     }
 }
 

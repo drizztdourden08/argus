@@ -3,8 +3,8 @@
 // test-tag: standard
 
 use argus_notify::{
-    AutoConfig, BoardFacts, BoardTopics, Bundle, By, EntryFact, Level, NotifyConfig, TestFact,
-    ToastState, iso,
+    AutoConfig, BoardFacts, BoardTopics, By, EntryFact, HandedRun, Level, NotifyConfig, ToastState,
+    iso,
 };
 
 use crate::harness::{Harness, ROTP, T0};
@@ -15,8 +15,11 @@ fn before(ms: i64) -> String {
 
 fn handed(tag: &str, ms: i64) -> BoardFacts {
     BoardFacts {
-        handed_build: Some(tag.into()),
-        handed_at: Some(before(ms)),
+        handed: Some(HandedRun {
+            id: tag.into(),
+            at: Some(before(ms)),
+            ..HandedRun::default()
+        }),
         ..BoardFacts::default()
     }
 }
@@ -61,32 +64,12 @@ fn the_first_sight_of_a_project_only_sets_the_markers_then_a_handed_bundle_pings
     let old = || vec![question("Q-1", "old question")];
     assert_eq!(h.notify.on_board("rotp", &asking(old())).len(), 0);
     assert_eq!(h.store.rows().len(), 0, "nothing old is told");
-    let facts = BoardFacts {
-        bundle: Some(Bundle {
-            title: Some("Save slots".into()),
-            thread: None,
-        }),
-        tests: vec![
-            TestFact {
-                build: Some("b12".into()),
-                removed: false,
-            },
-            TestFact {
-                build: Some("b12".into()),
-                removed: false,
-            },
-            TestFact {
-                build: Some("b12".into()),
-                removed: true,
-            },
-            TestFact {
-                build: Some("other".into()),
-                removed: false,
-            },
-        ],
-        entries: old(),
-        ..handed("b12", 1000)
-    };
+    let mut facts = handed("b12", 1000);
+    if let Some(run) = facts.handed.as_mut() {
+        run.title = Some("Save slots".into());
+        run.tests = 2;
+    }
+    facts.entries = old();
     assert_eq!(h.notify.on_board("rotp", &facts).len(), 1);
     assert_eq!(h.notify.on_board("rotp", &facts).len(), 0, "once");
     let rows = h.store.rows();
