@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex } from '@drizztdourden08/tessera';
+import { useOwnerProfile } from '../../../../owner';
 import { CriteriaSection } from '../../../../screens/board/tabs/kanban/sub-components/CriteriaSection';
 import { DescriptionSection } from '../../../../screens/board/tabs/kanban/sub-components/DescriptionSection';
 import { FieldGroup } from '../fields/FieldGroup';
@@ -13,8 +14,9 @@ import type { PaneBodyProps } from '../pane.type';
 const OverviewTab = (props: PaneBodyProps) => {
   const { data } = props;
   const { item, tests, threads, ops } = data;
+  const owner = useOwnerProfile();
   const type = paneType(item);
-  const shared = { item, ops, people: peopleOptions(threads), cx: { threads: threads.map((thread) => thread.id), images: [] } };
+  const shared = { item, ops, people: peopleOptions(threads, undefined, owner), cx: { threads: threads.map((thread) => thread.id), images: [] } };
   return (
     <Flex direction="column" gap="lg">
       <PaneFacts data={data} />
