@@ -69,11 +69,11 @@ describe('I-72 the assignee of a card', { tags: ['critical'] }, () => {
   });
 });
 
-describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
-  const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
-  const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
-  const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
+const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
+const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
+const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
 
+describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
   it('makes one chip per dependency target and one for the blocker, the dependency with the brand mark of the lead and the blocker with the avatar', () => {
     const card = cardOf(itemRef('I-1', { blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
@@ -108,6 +108,9 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     expect(signalItems(card, NOW)).toEqual([]);
   });
 
+});
+
+describe('I-72 the signal order of a card', { tags: ['critical'] }, () => {
   it('puts needs you first and then each kind in the order of the precedence, with a count and no text', () => {
     const needs = new Map([['I-1', { questions: 1, decisions: 1, todos: 2, tests: 0 }]]);
     const asks = new Map([['I-1', [{ id: 'Q-3', kind: 'question', via: 'item' }, { id: 'D-1', kind: 'decision', via: 'item' }] as const]]);

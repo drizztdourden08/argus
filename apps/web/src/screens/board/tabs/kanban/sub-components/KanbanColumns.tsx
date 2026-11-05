@@ -9,8 +9,7 @@ import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { planDrop } from '../model';
-import type { CardData } from '../model';
-import { columnDefs } from './column-defs';
+import { columnDefs } from './ColumnDefs';
 import { ItemCard } from './ItemCard';
 import { ParentHeader } from './ParentHeader';
 

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { EmptyState } from '@drizztdourden08/tessera';
-import { splitWork } from '../behavior/feed-split';
+import { splitWork } from '../behavior/split-work';
 import type { FeedSectionsProps } from '../OwnerFeed.type';
 import { AskGroup } from './AskGroup';
 import { FeedGroup } from './FeedGroup';

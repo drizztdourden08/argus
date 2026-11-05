@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { EmptyState, Flex } from '@drizztdourden08/tessera';
-import { feedTotal } from '../behavior/feed-split';
+import { feedTotal } from '../behavior/feed-total';
 import type { FeedSectionsProps } from '../OwnerFeed.type';
 import { LogFold } from './LogFold';
 import { WorkGroups } from './WorkGroups';
