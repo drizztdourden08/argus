@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode, MouseEvent } from 'react';
+import type { CardEdge, CardTone, CardVariant } from '@drizztdourden08/tessera';
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import type { HeadSelection } from './records.type';
 
 type FrameDensity = 'card' | 'row';
@@ -9,6 +10,7 @@ interface RecordFrameProps {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   name: string;
+  label?: string;
   kind?: string;
   icon?: ReactNode;
   selection?: HeadSelection;
@@ -17,8 +19,13 @@ interface RecordFrameProps {
   content?: ReactNode;
   menu?: ReactNode;
   density?: FrameDensity;
+  edge?: CardEdge;
+  edgeTone?: CardTone;
+  variant?: CardVariant;
+  className?: string;
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void;
   children?: ReactNode;
 }
 

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { IconName } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
+import type { RecordFrameProps } from '../../../../shell';
 import type { RunEntry } from '../../../../data/runs';
 import type { RunView, TestDoc, TestsView } from './model';
 import type { CaseHead, CaseLayout } from './tests.type';
@@ -17,7 +18,7 @@ interface SectionHeadProps {
   action?: ReactNode;
 }
 
-interface RunFrameProps {
+interface RunFrameProps extends Pick<RecordFrameProps, 'attrs' | 'className' | 'edgeTone'> {
   view: RunView;
   muted?: boolean;
   open: boolean;

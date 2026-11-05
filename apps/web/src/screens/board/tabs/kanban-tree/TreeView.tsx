@@ -5,10 +5,8 @@ import { AssigneeMark } from '../../../../shell';
 import { useFolds } from './behavior/useFolds';
 import { useTreeRoots } from './behavior/useTreeRoots';
 import { indexNodes } from './model';
-import { TreeBadges } from './sub-components/TreeBadges';
 import { TreeFoldBar } from './sub-components/TreeFoldBar';
 import { TreeLabel } from './sub-components/TreeLabel';
-import { TreeLead } from './sub-components/TreeLead';
 import { TREE_EMPTY, TREE_LABEL } from './tree.constants';
 import type { TreeNode, TreeViewProps } from './tree.type';
 import './TreeView.css';
@@ -45,9 +43,7 @@ const TreeView = (props: TreeViewProps) => {
           },
         }}
         onActivate={open}
-        renderLead={(node) => <TreeLead node={node} boardKey={boardKey} threads={threads} />}
         renderLabel={(node) => <TreeLabel node={node} boardKey={boardKey} threads={threads} />}
-        renderBadges={(node) => <TreeBadges node={node} boardKey={boardKey} threads={threads} />}
         renderTrail={(node) => <AssigneeMark assignee={node.assignee} boardKey={boardKey} threads={threads} />}
         guides
         rowSize="normal"

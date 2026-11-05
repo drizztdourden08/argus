@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { CardTone, KanbanGroupFold } from '@drizztdourden08/tessera';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
@@ -81,6 +82,7 @@ interface QuietBadgeProps {
 interface ParentHeaderProps {
   parent: ItemRef;
   withCode: boolean;
+  fold?: KanbanGroupFold;
 }
 
 interface ColumnAddProps {
@@ -98,6 +100,7 @@ interface ItemCardProps {
   selected: boolean;
   selecting: boolean;
   ops: ItemOps;
+  edgeTone: CardTone | undefined;
   onToggle: (id: string) => void;
   onMark: (shift: boolean) => void;
   onOpen: (id: string) => void;

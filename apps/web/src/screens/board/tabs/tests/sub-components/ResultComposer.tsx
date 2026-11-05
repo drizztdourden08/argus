@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Box, Button, Callout, DropZone, Flex, toast } from '@drizztdourden08/tessera';
+import { Box, Button, Callout, DropZone, Flex } from '@drizztdourden08/tessera';
 import { IMAGE_TYPES } from '../../../../../data/api';
 import { OWNER_TEXT_MAX } from '../../../../../data/posts';
 import { BoardMarkdownEditor } from '../../../../../shell';
-import { textProblem } from '../../../owner-posts';
+import { overLimitKeys } from '../behavior/over-limit-keys';
 import { pasteShot } from '../behavior/paste-shot';
 import { noteProblem } from '../model';
 import { COMPOSE_HINTS } from '../tests.constants';
@@ -14,20 +14,15 @@ const ResultComposer = (props: ResultComposerProps) => {
   const { testId, outcome, controls } = props;
   const problem = noteProblem(outcome, controls.text);
   const onPaste = pasteShot(controls.setShot);
-  const submit = () => {
-    const over = textProblem(controls.text);
-    if (over) toast({ variant: 'warning', message: over });
-    else controls.send();
-  };
   return (
     <Flex direction="column" gap="xs" role="group" aria-label={`${outcome} note for ${testId}`}>
-      <Box onPaste={onPaste}>
+      <Box onPaste={onPaste} onKeyDown={overLimitKeys(controls.text)}>
         <BoardMarkdownEditor
           aria-label={`Note for ${testId}`}
           placeholder={COMPOSE_HINTS[outcome]}
           value={controls.text}
           onChange={controls.setText}
-          onSubmit={submit}
+          onSubmit={controls.send}
           submitLabel={`Send ${outcome}`}
           submitDisabled={Boolean(problem) || controls.busy}
           onEscape={controls.cancel}

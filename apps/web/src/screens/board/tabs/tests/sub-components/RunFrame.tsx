@@ -6,10 +6,11 @@ import type { RunFrameProps } from '../tests-head-props.type';
 import { RunChips } from './RunChips';
 
 const RunFrame = (props: RunFrameProps) => {
-  const { view, muted = false, open, onToggle, content, children } = props;
+  const { view, muted = false, open, onToggle, content, children, ...look } = props;
   const title = view.item.title || view.plan?.title;
   return (
     <RecordFrame
+      {...look}
       name={view.item.id}
       kind={RUN_KIND}
       density="row"

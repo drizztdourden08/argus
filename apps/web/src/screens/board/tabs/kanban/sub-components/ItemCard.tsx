@@ -8,7 +8,7 @@ import { CardFoot } from './CardFoot';
 import { CardTags } from './CardTags';
 
 const ItemCard = (props: ItemCardProps) => {
-  const { boardKey, card, group, threads, now, selected, selecting, ops, onToggle, onMark, onOpen } = props;
+  const { boardKey, card, group, threads, now, selected, selecting, ops, edgeTone, onToggle, onMark, onOpen } = props;
   const { item } = card;
   const code = itemCode(item);
   const pick = (event: MouseEvent) => {
@@ -31,6 +31,7 @@ const ItemCard = (props: ItemCardProps) => {
         selection: { selecting, selected, onToggle: () => onToggle(item.id), onMark },
       }}
       title={item.title}
+      edgeTone={edgeTone}
       openLabel={`Open ${code}: ${item.title}`}
       onOpen={() => onOpen(code)}
       signals={<CardTags card={card} now={now} onOpen={onOpen} />}

@@ -1,17 +1,19 @@
 /* @layer renderer-app @kind component */
-import { Flex, Text } from '@drizztdourden08/tessera';
+import { RecordHeader } from '@drizztdourden08/tessera';
 import { RecordLink, TypeIcon } from '../../../../../shell';
 import type { ParentHeaderProps } from '../kanban-props.type';
 import { DEFAULT_TYPE } from '../model';
 
 const ParentHeader = (props: ParentHeaderProps) => {
-  const { parent, withCode } = props;
+  const { parent, withCode, fold } = props;
   return (
-    <Flex as="span" gap="sm" align="center">
-      <TypeIcon kind={parent.type ?? DEFAULT_TYPE} />
-      {withCode ? <RecordLink id={parent.id} /> : null}
-      <Text as="span" variant="subtitle" leading="16" clamp={1}>{parent.title}</Text>
-    </Flex>
+    <RecordHeader
+      density="row"
+      icon={<TypeIcon kind={parent.type ?? DEFAULT_TYPE} />}
+      code={withCode ? <RecordLink id={parent.id} /> : undefined}
+      title={parent.title}
+      chevron={fold && { expanded: fold.open, onToggle: fold.toggle, controls: fold.controls, label: `${fold.open ? 'Collapse' : 'Expand'} ${parent.title}` }}
+    />
   );
 };
 

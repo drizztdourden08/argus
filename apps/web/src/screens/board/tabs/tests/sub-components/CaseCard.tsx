@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Tag } from '@drizztdourden08/tessera';
+import { Flex, Tag } from '@drizztdourden08/tessera';
 import { RecordCard, ShownCode } from '../../../../../shell';
 import { rowKeys } from '../behavior/row-keys';
 import { useCaseHead } from '../behavior/useCaseHead';
@@ -17,21 +17,21 @@ const CaseCard = (props: TestPartProps) => {
     </Flex>
   );
   return (
-    <Card data-swap-item data-test={test.id} data-to-run={toRun ? '' : undefined} onKeyDown={rowKeys(toRun, controls)}>
-      <RecordCard
-        head={head}
-        title={view.title || test.id}
-        openLabel={`Open ${test.id}: ${view.title || test.id}`}
-        onOpen={view.open}
-        signals={chips}
-        foot={(
-          <Flex direction="column" gap="xs">
-            <CaseOutcome test={test} view={view} />
-            {controls.open && <ResultComposer testId={test.id} outcome={controls.open} controls={controls} />}
-          </Flex>
-        )}
-      />
-    </Card>
+    <RecordCard
+      head={head}
+      title={view.title || test.id}
+      openLabel={`Open ${test.id}: ${view.title || test.id}`}
+      onOpen={view.open}
+      signals={chips}
+      attrs={{ 'data-swap-item': '', 'data-test': test.id, ...(toRun ? { 'data-to-run': '' } : {}) }}
+      onKeyDown={rowKeys(toRun, controls)}
+      foot={(
+        <Flex direction="column" gap="xs">
+          <CaseOutcome test={test} view={view} />
+          {controls.open && <ResultComposer testId={test.id} outcome={controls.open} controls={controls} />}
+        </Flex>
+      )}
+    />
   );
 };
 

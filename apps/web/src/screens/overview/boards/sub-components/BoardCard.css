@@ -3,7 +3,7 @@
   min-width: 0;
 }
 
-.board-card[data-started='false'] {
+[data-started='false'] > .board-card {
   border-style: dashed;
   background: transparent;
 }

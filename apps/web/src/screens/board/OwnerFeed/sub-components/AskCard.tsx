@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, Text } from '@drizztdourden08/tessera';
+import { Text } from '@drizztdourden08/tessera';
 import { RecordHead, useRecordPane } from '../../../../shell';
 import { askMode } from '../../feed-model';
 import { askLines } from '../behavior/ask-lines';
@@ -18,14 +18,19 @@ const AskCard = (props: AskCardProps) => {
   const lines = askLines(entry.text);
   const title = <Text weight={500} clamp={1}>{lines.title}</Text>;
   return (
-    <Card data-feed-type={card.type} data-swap-item edge="left" edgeTone="warning">
-      <RecordHead {...feedHead(card, facts, ctx, () => pane.open(facts.code))} title={title} defaultOpen attrs={{ 'data-record': facts.code }}>
-        <ContextPreview entry={entry} actions={ctx.actions} onMore={() => pane.open(entry.id)} />
-        {lines.rest === '' ? null : <Text smartTimes>{lines.rest}</Text>}
-        <EntryImages entry={entry} />
-        <AnswerBlock entry={entry} mode={askMode(entry)} actions={ctx.actions} />
-      </RecordHead>
-    </Card>
+    <RecordHead
+      {...feedHead(card, facts, ctx, () => pane.open(facts.code))}
+      title={title}
+      defaultOpen
+      edge="left"
+      edgeTone="warning"
+      attrs={{ 'data-feed-type': card.type, 'data-swap-item': '', 'data-record': facts.code }}
+    >
+      <ContextPreview entry={entry} actions={ctx.actions} onMore={() => pane.open(entry.id)} />
+      {lines.rest === '' ? null : <Text smartTimes>{lines.rest}</Text>}
+      <EntryImages entry={entry} />
+      <AnswerBlock entry={entry} mode={askMode(entry)} actions={ctx.actions} />
+    </RecordHead>
   );
 };
 

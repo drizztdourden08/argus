@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
-import type { KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanGroupFold, KanbanMove } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../../data/kanban';
 import { itemCode } from '../../../../../shell';
@@ -13,9 +13,9 @@ import { columnDefs } from './ColumnDefs';
 import { ItemCard } from './ItemCard';
 import { ParentHeader } from './ParentHeader';
 
-const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string): ReactNode => {
+const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string, fold: KanbanGroupFold): ReactNode => {
   const parent = parents.get(id);
-  return parent ? <ParentHeader parent={parent} withCode={false} /> : undefined;
+  return parent ? <ParentHeader parent={parent} withCode={false} fold={fold} /> : undefined;
 };
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
@@ -40,13 +40,14 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       grip={false}
       foldable={false}
       stack
+      cardFrame="none"
       columns={columns}
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
       onCardOpen={onCardOpen}
-      renderGroupHeader={(groupId) => frameHeader(view.parents, groupId)}
-      renderCard={(card) => (
+      renderGroupHeader={(groupId, _column, fold) => frameHeader(view.parents, groupId, fold)}
+      renderCard={(card, frame) => (
         <ItemCard
           boardKey={boardKey}
           card={card}
@@ -56,6 +57,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
           selected={selection.has(card.id)}
           selecting={selection.active}
           ops={ops}
+          edgeTone={frame.edgeTone}
           onToggle={(id) => selection.toggle(id, ids)}
           onMark={selection.mark}
           onOpen={onOpen}

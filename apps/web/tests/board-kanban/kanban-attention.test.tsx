@@ -29,15 +29,15 @@ describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
     expect(within(first).queryByTitle('1 agent running')).toBeNull();
     expect(failing.querySelector('svg')).toBeTruthy();
     expect(failing.textContent).toBe('1');
-    expect(cardOf('I-1').className).toContain('card--edge-danger');
+    expect(cardOf('I-1').querySelector('.card--edge-danger')).not.toBeNull();
     expect(chipOf(cardOf('I-2'), '1 test to run')).toBeTruthy();
-    expect(cardOf('I-2').className).toContain('card--edge-info');
+    expect(cardOf('I-2').querySelector('.card--edge-info')).not.toBeNull();
   });
 
   it('draws no edge and no strip on a card with nothing to say', async () => {
     await mountKanban({ items: [item('I-1', { type: 'epic' })] });
     await boardOf();
-    expect(cardOf('I-1').className).not.toContain('card--edge-');
+    expect(cardOf('I-1').querySelector('[class*="card--edge-"]')).toBeNull();
     expect(within(cardOf('I-1')).queryByRole('group', { name: 'Signals' })).toBeNull();
   });
 

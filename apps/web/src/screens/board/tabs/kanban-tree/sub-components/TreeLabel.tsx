@@ -1,9 +1,12 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
+import { RecordHeader } from '@drizztdourden08/tessera';
+import { TypeIcon } from '../../../../../shell';
 import type { TreeRowProps } from '../tree.type';
+import { TreeBadges } from './TreeBadges';
 
-const TreeLabel = (props: TreeRowProps) => (
-  <Text as="span" clamp={1} smartTimes>{props.node.title}</Text>
-);
+const TreeLabel = (props: TreeRowProps) => {
+  const { node } = props;
+  return <RecordHeader density="row" icon={<TypeIcon kind={node.typeId} />} code={node.id} title={node.title} content={<TreeBadges {...props} />} />;
+};
 
 export { TreeLabel };

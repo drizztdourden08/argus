@@ -4,11 +4,12 @@ import { CardTitle } from './CardTitle';
 import { RecordHead } from './RecordHead';
 
 const RecordCard = (props: RecordCardProps) => {
-  const { head, title, openLabel, onOpen, signals, foot, attrs, onClickCapture, defaultOpen = true, content } = props;
+  const { head, title, openLabel, onOpen, signals, foot, attrs, onClickCapture, defaultOpen = true, content, ...look } = props;
   const parts = { title, board: head.boardKey, label: openLabel, onOpen };
   return (
     <RecordHead
       {...head}
+      {...look}
       title={<CardTitle {...parts} clamp={3} />}
       defaultOpen={defaultOpen}
       content={content}

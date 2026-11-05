@@ -89,7 +89,7 @@ interface RecordHeadProps {
   selection?: HeadSelection;
 }
 
-type HeadFrameKeys = 'title' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children';
+type HeadFrameKeys = 'title' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'className' | 'label' | 'onKeyDown';
 
 interface RecordHeadViewProps extends RecordHeadProps, Pick<RecordFrameProps, HeadFrameKeys> {}
 
@@ -137,6 +137,12 @@ interface RecordCardProps {
   onClickCapture?: (event: MouseEvent) => void;
   defaultOpen?: boolean;
   content?: ReactNode;
+  edge?: RecordFrameProps['edge'];
+  edgeTone?: RecordFrameProps['edgeTone'];
+  variant?: RecordFrameProps['variant'];
+  className?: string;
+  label?: string;
+  onKeyDown?: RecordFrameProps['onKeyDown'];
 }
 
 interface ActionDef {
