@@ -57,7 +57,7 @@ describe('K1 the tone of the last remote sync', { tags: ['critical'] }, () => {
 describe('S1 the last remote sync stamp', { tags: ['standard'] }, () => {
   it('shows the age and keeps the note and the setter in the tip', () => {
     render(<SyncStamp sync={syncOf(3)} />);
-    const text = screen.getByText(wholeText(/last remote sync 3h ago/));
+    const text = screen.getByText(wholeText(/sync 3h/));
     expect(text.getAttribute('data-tone')).toBe('muted');
     expect(text.getAttribute('title')).toBe('Recorded by lead: pushed 2 PRs');
   });
@@ -102,24 +102,25 @@ describe('S2 the overview cards', { tags: ['standard'] }, () => {
     gamma: { key: 'gamma', name: 'Gamma', state: 'running', root: null, url: '/p/gamma/', counts: COUNTS, updatedAt: seen, coordinator: lead },
     delta: { key: 'delta', name: 'Delta', state: 'not started', root: null, url: '/p/delta/' },
   };
+  const boards = Object.fromEntries(Object.keys(cards).map((key) => [`BD-${key}`, { key }]));
 
   const open = async (syncs: object) => {
     stubApi(answerRemote(syncs));
     const view = renderAt('/');
-    await feed(view.sources, { cards });
+    await feed(view.sources, { cards, boards });
   };
 
   it('show the age with its tone on every started project', async () => {
     await open({ rotp: syncOf(3), beta: syncOf(22), gamma: syncOf(50), delta: syncOf(1) });
-    expect((await stamp(/last remote sync 3h ago/)).getAttribute('data-tone')).toBe('muted');
-    expect((await stamp(/last remote sync 22h ago/)).getAttribute('data-tone')).toBe('warning');
-    expect((await stamp(/last remote sync 2d ago/)).getAttribute('data-tone')).toBe('danger');
+    expect((await stamp(/^sync 3h$/)).getAttribute('data-tone')).toBe('muted');
+    expect((await stamp(/^sync 22h$/)).getAttribute('data-tone')).toBe('warning');
+    expect((await stamp(/^sync 2d$/)).getAttribute('data-tone')).toBe('danger');
   });
 
   it('say never for a project with no record and show nothing on a card with no board', async () => {
     await open({ rotp: syncOf(3) });
-    await stamp(/last remote sync 3h ago/);
-    expect(screen.getAllByText(wholeText(/last remote sync never/))).toHaveLength(2);
-    expect(screen.getAllByText(wholeText(/last remote sync/))).toHaveLength(3);
+    await stamp(/^sync 3h$/);
+    expect(screen.getAllByText(wholeText(/^sync never$/))).toHaveLength(2);
+    expect(screen.getAllByText(wholeText(/^sync (3h|never)$/))).toHaveLength(3);
   });
 });
