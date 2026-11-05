@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind barrel */
+export { addParentOptions } from './add-parent-options';
 export { addPreset } from './add-preset';
 export { askLinks } from './ask-links';
 export { blockedSignature } from './blocked-signature';

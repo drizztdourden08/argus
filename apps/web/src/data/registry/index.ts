@@ -11,6 +11,7 @@ export { labelOf } from './label-of';
 export { laneOf } from './lane-of';
 export { limitOf } from './limit-of';
 export { ITEM_REGISTRY, ITEM_STORED } from './registry.constants';
+export { requiresParent } from './requires-parent';
 export { typeHasField } from './type-has-field';
 export type * from './kind.type';
 export type * from './registry.type';

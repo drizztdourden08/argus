@@ -4,6 +4,7 @@ import { archivedSignal } from './archived-signal';
 import { conflictSignal } from './conflict-signal';
 import { kindSignals } from './kind-signal';
 import { needsSignal } from './needs-signal';
+import { noEpicSignal } from './no-epic-signal';
 import { TRAIL_AFTER } from './signal.constants';
 import type { CardSignal } from './signal.type';
 import { trailSignal } from './trail-signal';
@@ -18,7 +19,7 @@ const withTrail = (signals: CardSignal[], trail: CardSignal | null): CardSignal[
 };
 
 const attentionSignals = (card: CardData, now: number): CardSignal[] =>
-  present([needsSignal(card), ...card.attention.flatMap((kind) => kindSignals(kind, card, now))]);
+  present([noEpicSignal(card), needsSignal(card), ...card.attention.flatMap((kind) => kindSignals(kind, card, now))]);
 
 const signalItems = (card: CardData, now: number): CardSignal[] => [
   ...present([conflictSignal(card)]),

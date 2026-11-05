@@ -28,6 +28,7 @@ const columnDefs = (props: KanbanColumnsProps): KanbanColumn<CardData>[] => {
           preset={addPreset(group, column.id, focus)}
           group={group}
           threads={threads}
+          items={view.parents}
           onCreate={(item) => void ops.create(item)}
           onClose={add.close}
         />

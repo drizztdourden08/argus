@@ -9,7 +9,7 @@ use super::kind::{DEFAULT_TYPE, check_type, named};
 use super::known::Known;
 use super::outcome::Outcome;
 use super::shift::{Change, shift};
-use super::{assignee, blocked_by, images, tree, values};
+use super::{assignee, blocked_by, images, parent_rule, tree, values};
 use crate::Board;
 use crate::content::check as content_check;
 use crate::error::BoardError;
@@ -68,10 +68,12 @@ impl Fresh<'_> {
     }
 
     fn links(&mut self) -> Result<(), BoardError> {
-        if let Some(v) = self.given("parent") {
-            let parent = tree::check_parent(self.board, None, &self.ty.id, v)?;
-            self.keep_set("parent", parent);
-        }
+        let parent = match self.given("parent") {
+            Some(v) => tree::check_parent(self.board, None, &self.ty.id, v)?,
+            None => Value::Null,
+        };
+        parent_rule::on_create(self.board, self.ty, &parent)?;
+        self.keep_set("parent", parent);
         if let Some(v) = self.given("assignee") {
             let who = assignee::check(self.board, v)?;
             self.keep_set("assignee", who);

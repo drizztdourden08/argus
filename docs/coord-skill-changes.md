@@ -339,3 +339,19 @@ after the Argus build with I-99 is deployed locally. The skill source is
    rule (a plan keeps at least one case) where the plan verbs are shown, if they are shown.
 10. Standing rule for all text: the unit the owner tests is a test run, a plan is what it is run from,
     and a build is the launcher the run carries.
+
+## 15. A story or a task needs a parent (I-102)
+
+Owner rule, 2026-11-04: a story or a task is never created without an epic above it. Apply this
+after the Argus build with I-102 is deployed locally.
+
+- `coord item add` for a story or a task now needs `--parent I-n`. A story's parent is an epic. A
+  task's parent is an epic or a story. A bare `coord item add "<title>"` is a task, so it is
+  refused the same way. The refusal lists the open epics (id and title, at most five).
+- `coord item set <I-n> --parent none` is refused for a story or a task. A bug, a debt and a test
+  plan keep an optional parent.
+- Existing stories and tasks with no parent stay readable and editable in their other fields. The
+  kanban card shows the warning "no epic" on each.
+- In `SKILL.md` and `thread-verbs.md`, show `--parent` in every `item add` example for a story or a
+  task, and add the rule "a story or a task needs an epic parent" next to the type list.
+

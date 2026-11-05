@@ -76,10 +76,18 @@ pub fn launcher(name: &str, serves: Option<&str>) -> Value {
     })
 }
 
-/// A story of the `ui` thread created by `who`; answers its id.
+/// A story of the `ui` thread created by `who` under a fresh epic; answers its id.
 pub fn story_by(board: &mut Value, who: &Who) -> String {
-    let op = json!({"kind": "create", "target": {"c": "items"},
-        "set": {"title": "Lobby", "thread": "ui", "type": "story"}});
+    let epic = item_by(board, who, json!({"title": "Lobbies", "thread": "ui", "type": "epic"}));
+    item_by(
+        board,
+        who,
+        json!({"title": "Lobby", "thread": "ui", "type": "story", "parent": epic}),
+    )
+}
+
+fn item_by(board: &mut Value, who: &Who, set: Value) -> String {
+    let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
     let res = apply_op(board, &op, who, None);
     applied(&res);
     res.extra["created"]["id"]

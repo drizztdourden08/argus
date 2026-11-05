@@ -153,6 +153,7 @@
       "color": "green",
       "collection": "items",
       "parents": ["epic"],
+      "parentRequired": true,
       "stages": [
         { "id": "draft", "label": "Draft", "lane": "todo" },
         { "id": "ready", "label": "Ready", "lane": "todo" },
@@ -192,6 +193,7 @@
       "color": "blue",
       "collection": "items",
       "parents": ["epic", "story"],
+      "parentRequired": true,
       "stages": [
         { "id": "todo", "label": "To do", "lane": "todo" },
         { "id": "doing", "label": "Doing", "lane": "doing" },

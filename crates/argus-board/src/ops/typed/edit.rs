@@ -10,7 +10,7 @@ use super::known::Known;
 use super::outcome::Outcome;
 use super::shift::{Change, shift};
 use super::stage::current;
-use super::{assignee, blocked_by, images, retype, tree, values};
+use super::{assignee, blocked_by, images, parent_rule, retype, tree, values};
 use crate::content::check as content_check;
 use crate::error::{BoardError, refuse};
 use crate::json::{display, set as put_value};
@@ -76,9 +76,13 @@ impl Work<'_> {
             Some(v) => {
                 let parent =
                     tree::check_parent(self.cx.board, Some(self.id.as_str()), &self.ty.id, v)?;
+                parent_rule::on_clear(self.cx.board, self.ty, &parent)?;
                 self.put("parent", parent);
             }
-            None if self.retyping() => retype::parent_fits(self.cx.board, &self.draft, self.ty)?,
+            None if self.retyping() => {
+                parent_rule::on_retype(self.cx.board, self.ty, &self.draft)?;
+                retype::parent_fits(self.cx.board, &self.draft, self.ty)?;
+            }
             None => {}
         }
         Ok(())
