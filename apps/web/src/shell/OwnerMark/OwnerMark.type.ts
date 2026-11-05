@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { OwnerProfile } from '../../owner';
 
-type OwnerMarkSize = 'xs' | 'sm';
+type OwnerMarkSize = 'xs' | 'sm' | 'lg';
 
 interface OwnerMarkProps {
   size?: OwnerMarkSize;

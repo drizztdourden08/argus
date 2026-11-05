@@ -10,7 +10,7 @@ const OwnerMark = (props: OwnerMarkProps) => {
   const shown = profile ?? own;
   const title = label ?? shown.name;
   const face = resolveOwnerFace(shown);
-  if (face.kind === 'brand') return <BrandMark app={face.app} size="sm" variant="app-icon" title={title} />;
+  if (face.kind === 'brand') return <BrandMark app={face.app} size={size === 'lg' ? 'lg' : 'sm'} variant="app-icon" title={title} />;
   if (face.kind === 'image') return <Avatar src={face.src} label={title} variant="owner" size={size} />;
   if (face.kind === 'initials') return <Avatar initials={face.initials} label={title} variant="owner" size={size} />;
   return <Avatar icon={OWNER_ICON} label={title} variant="owner" size={size} />;
