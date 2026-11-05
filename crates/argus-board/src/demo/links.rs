@@ -111,7 +111,7 @@ pub(super) const INCOMING_ITEM: &[Step] = &[
             "--type",
             "epic",
             "--stage",
-            "active",
+            "open",
         ],
     ),
     on(

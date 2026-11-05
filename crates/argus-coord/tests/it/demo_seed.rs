@@ -103,7 +103,7 @@ fn the_seed_has_agents_pull_requests_requests_and_a_release() {
             "{collection} is empty:\n{said}"
         );
     }
-    let ledger = board(&home, "portfolio");
+    let ledger = board(&home, "_portfolio");
     let to: BTreeSet<String> = records(&ledger, "deps")
         .iter()
         .filter_map(|d| d["to"]["project"].as_str().map(str::to_owned))

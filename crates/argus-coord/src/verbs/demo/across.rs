@@ -107,6 +107,10 @@ fn one_request(run: &mut Runner, spec: &DepSpec) -> Result<(), String> {
 
 /// The requests between boards: open and done ones from the demo board, one coming in.
 pub(super) fn dependencies(run: &mut Runner) {
+    let key = run.key().to_owned();
+    let init = words(&["portfolio", "init"]);
+    let made = run.call(&key, "", &init);
+    keep(run, "portfolio", made);
     for spec in OUTGOING.iter().chain([&INCOMING]) {
         match one_request(run, spec) {
             Ok(()) => run.passed += 1,

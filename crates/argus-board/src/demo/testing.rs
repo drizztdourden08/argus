@@ -61,7 +61,7 @@ pub(super) const STEPS: &[Step] = &[
         ],
     ),
     step(
-        "api",
+        "ui",
         "ta3",
         &[
             "test",
@@ -73,7 +73,7 @@ pub(super) const STEPS: &[Step] = &[
         ],
     ),
     step(
-        "api",
+        "ui",
         "ta4",
         &[
             "test",
