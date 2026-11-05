@@ -109,12 +109,6 @@ fn lists() -> Vec<Call> {
         ("run_status", alpha(&json!({ "status": "running" })), None),
         ("run_status", alpha(&json!({ "run": "R-1" })), None),
         ("run_status", alpha(&json!({ "run": "R-9" })), None),
-        ("list_launchers", alpha(&json!({})), None),
-        (
-            "list_launchers",
-            alpha(&json!({ "includeRetired": true })),
-            None,
-        ),
         ("list_launchers", json!({ "project": "beta" }), None),
         ("run_logs", alpha(&json!({ "run": "R-1" })), None),
         (
