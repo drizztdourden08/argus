@@ -5,7 +5,7 @@ import type { TestPingResult } from '../../../../data/types';
 const IDLE_LINE = 'Sends one ping through the same path as a real one.';
 
 const resultLine = (result: TestPingResult): string => {
-  const shown = result.toast === 'shown' || result.toast === 'ok';
+  const shown = result.toast === 'shown';
   const detail = result.why ?? result.toast ?? 'recorded';
   return shown ? 'Sent, the toast showed.' : `Sent, no toast: ${detail}.`;
 };

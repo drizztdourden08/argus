@@ -479,6 +479,20 @@ bus as `Applied {scope, entry, status, board, before, source}` for the wake poli
 export goes on the bus as `Exported {key, board}` for the automatic pings and the services that
 judge again on export (worktree statuses, registry).
 
+### Owner profile
+
+The owner's avatar, display name and initials live on `_portfolio/board.json` as
+`owner: {name, initials, avatar}`, so they stream on the `_portfolio` scope with the board meta.
+A `profile` owner post (`{kind: "profile", avatar?, name?, initials?}`) sets them: a field left out
+is unchanged, `null` restores the default (You, ME, the user icon). The avatar is `initials`,
+`brand:<app>` (the six apps the lead avatar takes), or a png or svg data URL under the board icon
+rules. The name is trimmed to 1 to 40 characters; initials are two upper case letters or digits.
+The entry is kept `applied`, or `refused` with the reason, which is also the post's `outcome`; one
+audit line goes to the portfolio log. The export sends `owner` only when set, an image as
+`/api/owner/avatar?v=<8 hex>`. The page edits it from the app settings dialog (gear and owner
+mark in the shell bar), whose other sections are Notifications, Appearance (three browser flags)
+and System (read only facts). Parity ignores `docs.*.data.owner`.
+
 ### Item types
 
 Every work item has a type. The rework (item I-70) adds the types, the hierarchy, the typed
@@ -756,6 +770,8 @@ the server reloads itself) and reports `rust` in place of `node`.
 | GET | `/api/deps` | `?project=&view=waiting\|for-me\|all&state=`; `{deps, text}` |
 | GET | `/api/deps/:id` | `?project=`; `{dep, requester, assignee, text}` |
 | GET | `/api/deps/by-item/:project/:item` | the live dependency of an item, else its latest; `{dep, text}` |
+| GET | `/api/owner/avatar` | the owner's uploaded avatar bytes from `_portfolio` `owner.avatar`, headers as the board icon route; 404 without an image |
+| GET, POST | `/api/notify/auto` | `{os, auto: {handed, ask, assigned, verify, run}}`; a POST sends any subset, page token only, 400 on an unknown key, one activity line |
 
 The dependency routes and the two MCP tools `list_dependencies` and `cancel_dependency` exist in
 Argus only. A refusal is the usual error body with the message of the rule and 400, 404 or 409.
@@ -1028,7 +1044,7 @@ every ping is recorded and, when its level says so, shown as a Windows toast.
 | Limits | per project and thread 3 a minute and 20 an hour, 8 a minute overall; over a limit the ping is recorded `limited`; one summary toast a minute per thread |
 | Automatic pings | on each board export: a handed build (`ready to test`) and a new open question by a thread; markers in kv `notify:seen` so a restart never tells twice |
 | Activity | one `note` line per `ping` or `urgent`, `warn` when the toast failed |
-| Config | `notify.os`, `notify.auto.handed`, `notify.auto.ask`, `notify.quietLevels`, `notify.sound`, `notify.toastInfo`, read on every send, edited from the Notifications tab |
+| Config | `notify.os`, `notify.auto.*`, `notify.quietLevels`, `notify.sound`, `notify.toastInfo`, read on every send, edited from the app settings dialog (toast and sound through `/api/notify/settings`, `os` and `auto` through `/api/notify/auto`) |
 
 The toast XML is the Node `toastXml` output byte for byte (protocol activation with the board
 URL, a tag of 12 hex characters per project and thread, group `argus`, every value escaped). The
