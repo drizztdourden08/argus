@@ -5,10 +5,10 @@ import { FrameLead } from './FrameLead';
 
 const RecordFrame = (props: RecordFrameProps) => {
   const { name, kind, icon, selection, attrs, onClickCapture, ...card } = props;
-  const hasLead = Boolean(selection?.selecting || icon || kind);
+  const hasLead = selection?.selecting === true || icon !== undefined || kind !== undefined;
   return (
     <Box {...attrs} onClickCapture={onClickCapture}>
-      <RecordCard {...card} icon={hasLead ? <FrameLead kind={kind} icon={icon} selection={selection} name={name} /> : undefined} aria-label={name} />
+      <RecordCard {...card} title={card.title ?? name} icon={hasLead ? <FrameLead kind={kind} icon={icon} selection={selection} name={name} /> : undefined} aria-label={name} />
     </Box>
   );
 };
