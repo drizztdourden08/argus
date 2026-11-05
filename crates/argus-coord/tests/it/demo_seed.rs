@@ -75,6 +75,13 @@ fn the_seed_has_a_record_of_every_kind() {
         &["auto", "manual"],
         "test mode",
     );
+    assert!(said.contains("seeded"), "{said}");
+}
+
+#[test]
+fn the_seed_has_agents_pull_requests_requests_and_a_release() {
+    let (home, said) = seeded();
+    let demo = board(&home, "demo");
     let agents = seen(&demo, "agents", "status");
     assert!(agents.len() >= 3, "agent statuses: {agents:?}");
     has_all(&agents, &["done", "stopped"], "agent status");

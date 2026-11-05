@@ -354,4 +354,3 @@ after the Argus build with I-102 is deployed locally.
   kanban card shows the warning "no epic" on each.
 - In `SKILL.md` and `thread-verbs.md`, show `--parent` in every `item add` example for a story or a
   task, and add the rule "a story or a task needs an epic parent" next to the type list.
-

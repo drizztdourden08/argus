@@ -436,7 +436,8 @@ fn a_parent_must_be_allowed_acyclic_and_on_the_board() {
 fn a_cycle_in_the_parents_is_refused_even_where_the_types_would_allow_it() {
     let mut b = alpha();
     let epic = an_epic(&mut b);
-    let under = |title: &str| json!({"title": title, "thread": "ui", "type": "story", "parent": epic});
+    let under =
+        |title: &str| json!({"title": title, "thread": "ui", "type": "story", "parent": epic});
     let first = made(&mut b, &lead(), under("One"));
     let second = made(&mut b, &lead(), under("Two"));
     b["items"][first.as_str()]["parent"] = json!(second);
