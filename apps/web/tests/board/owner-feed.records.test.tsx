@@ -48,9 +48,10 @@ describe('I-85 P4 every card says what it is', { tags: ['standard'] }, () => {
     const head = card.querySelector('.record-header') as HTMLElement;
     const body = head.nextElementSibling as HTMLElement;
     expect(within(head).getByText('Q-1')).toBeTruthy();
-    expect(within(head).getByText('Create the private repo?')).toBeTruthy();
+    const title = within(card).getByText('Create the private repo?');
+    expect(before(head, title)).toBe(true);
     expect(before(head, body)).toBe(true);
-    expect(before(within(head).getByText('Create the private repo?'), within(card).getByRole('button', { name: 'More' }))).toBe(true);
+    expect(before(title, within(card).getByRole('button', { name: 'More' }))).toBe(true);
     expect(before(within(card).getByRole('button', { name: 'More' }), within(card).getByRole('button', { name: 'Custom answer' }))).toBe(true);
   });
 

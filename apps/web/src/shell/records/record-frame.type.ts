@@ -22,6 +22,7 @@ interface RecordFrameProps {
   edge?: CardEdge;
   edgeTone?: CardTone;
   variant?: CardVariant;
+  fill?: boolean;
   className?: string;
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;

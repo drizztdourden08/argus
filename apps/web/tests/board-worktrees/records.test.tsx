@@ -15,7 +15,7 @@ const gone = { id: 'old', path: 'X:/proj/trees/gone', thread: 'lead', at: ago(2 
 
 const expand = (title: string): void => {
   const head = screen.getByText(title).closest('.record-header') as HTMLElement;
-  fireEvent.click(within(head).getByRole('button', { name: 'Expand item' }));
+  fireEvent.click(within(head).getByRole('button', { name: `Expand ${title}` }));
 };
 
 describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
@@ -51,11 +51,12 @@ describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
     await addGroup('Item');
     await screen.findByText('Item number 1');
     const group = groupOf(container, 'I-1');
-    const head = group.querySelector('.record-header') as HTMLElement;
-    expect(head.querySelector('[data-type-mark]')).not.toBeNull();
+    const frame = group.querySelector('.record-header') as HTMLElement;
+    const head = group.querySelector('[data-type-mark]')?.closest('.record-header') as HTMLElement;
+    expect(head).not.toBeNull();
     expect(within(group).getByRole('link', { name: /-1/ })).toBeTruthy();
     expect(head.querySelector('[data-record]')).toBeNull();
-    expect(head.lastElementChild?.textContent).toBe('1');
+    expect(frame.lastElementChild?.textContent).toBe('1');
   });
 });
 

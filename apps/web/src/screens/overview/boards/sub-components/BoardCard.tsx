@@ -33,6 +33,7 @@ const BoardCard = (props: BoardCardProps) => {
       }}
       className="board-card"
       edge="border"
+      fill
       edgeTone={record.started && card && !record.archived ? cardTone(attentionOf(card)) : undefined}
       attrs={{ 'data-swap-item': record.id, 'data-started': String(record.started) }}
       content={<Avatar size="xs" initials="L" label={lead.tip} status={lead.status} />}
