@@ -31,7 +31,7 @@ describe('S1 the notification settings in the Settings dialog', { tags: ['standa
     fireEvent.click(await screen.findByRole('switch', { name: 'Ping toast' }));
     await waitFor(() => expect(posts(calls)).toHaveLength(1));
     expect(posts(calls)[0]?.body).toEqual({ toast: { ping: false } });
-    await waitFor(() => expect((screen.getByRole('switch', { name: 'Ping toast' }) as HTMLInputElement).checked).toBe(false));
+    await waitFor(() => expect(screen.getByRole<HTMLInputElement>('switch', { name: 'Ping toast' }).checked).toBe(false));
   });
 
   it('shows the refusal on the level row when the save is refused', async () => {

@@ -29,7 +29,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const stamp = async (expected: RegExp): Promise<HTMLElement> => screen.findByText(wholeText(expected));
+const stamp = async (expected: RegExp): Promise<HTMLElement> => {
+  const [first] = await screen.findAllByText(wholeText(expected));
+  if (!first) throw new Error('no sync stamp');
+  return first;
+};
 
 describe('K1 the tone of the last remote sync', { tags: ['critical'] }, () => {
   it('is muted while fresh, amber from 20 h and red past 24 h', () => {
