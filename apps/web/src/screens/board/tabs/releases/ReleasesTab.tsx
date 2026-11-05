@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Callout, EmptyState, Text } from '@drizztdourden08/tessera';
+import { Box, Callout, EmptyState, Flex, Text } from '@drizztdourden08/tessera';
 import { useCallback } from 'react';
 import type { Item } from '../../../../data/kanban';
 import { useCollection } from '../../../../data/react';
@@ -7,8 +7,20 @@ import { readBoardReleases, REMOTE_POLL_MS, useRemoteRead } from '../../../../da
 import type { PullRequest } from '../../../../data/types';
 import { Panel } from '../../../../shell';
 import { ChannelList } from '../../../releases';
-import { EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT } from './releases.constants';
-import type { ReleasesTabProps } from './releases.type';
+import { useTabView } from '../../BoardTabsRow';
+import { viewChannels } from './model/releases-view';
+import { EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT, RELEASES_DIRECTION, RELEASES_FILTERS, RELEASES_ORDERS, RELEASES_TAB } from './releases.constants';
+import type { ReleasesOrder, ReleasesTabProps } from './releases.type';
+import { ReleasesTools } from './ReleasesTools';
+
+const SETUP = {
+  groups: [] as string[],
+  orders: RELEASES_ORDERS.map((choice): ReleasesOrder => choice.id),
+  group: '',
+  order: 'newest' as ReleasesOrder,
+  direction: RELEASES_DIRECTION,
+  filters: RELEASES_FILTERS,
+};
 
 const ReleasesTab = (props: ReleasesTabProps) => {
   const { boardKey } = props;
@@ -16,14 +28,27 @@ const ReleasesTab = (props: ReleasesTabProps) => {
   const { data, error } = useRemoteRead(load, REMOTE_POLL_MS);
   const items = useCollection<Item>(boardKey, 'items');
   const prs = useCollection<PullRequest>(boardKey, 'prs');
+  const view = useTabView(RELEASES_TAB, SETUP);
   if (error && !data) return <Callout tone="danger">{`The releases could not be read: ${error}.`}</Callout>;
   if (!data) return <Text tone="muted">{LOADING_TEXT}</Text>;
+  const shown = viewChannels(data, view.filters, view.order, view.direction);
+  const counted = shown.length === data.length ? `${data.length}` : `${shown.length} of ${data.length}`;
   return (
-    <Panel title="Releases" note={data.length > 0 ? `${data.length} ${data.length === 1 ? 'channel' : 'channels'}` : undefined}>
-      {data.length > 0
-        ? <ChannelList channels={data} project={boardKey} prefixed={false} shipped={{ items: items.docs, prs: prs.docs }} />
-        : <EmptyState message={EMPTY_TEXT} hint={EMPTY_HINT} />}
-    </Panel>
+    <>
+      <ReleasesTools boardKey={boardKey} view={view} channels={data} />
+      <Panel title="Releases" note={data.length > 0 ? `${counted} ${data.length === 1 ? 'channel' : 'channels'}` : undefined}>
+        {shown.length > 0 && (
+          <Flex direction="column" gap="lg">
+            {shown.map((channel) => (
+              <Box key={channel.channel} data-swap-item>
+                <ChannelList channels={[channel]} project={boardKey} prefixed={false} shipped={{ items: items.docs, prs: prs.docs }} />
+              </Box>
+            ))}
+          </Flex>
+        )}
+        {shown.length === 0 && <EmptyState message={data.length > 0 ? NO_MATCH_TEXT : EMPTY_TEXT} hint={data.length > 0 ? undefined : EMPTY_HINT} />}
+      </Panel>
+    </>
   );
 };
 

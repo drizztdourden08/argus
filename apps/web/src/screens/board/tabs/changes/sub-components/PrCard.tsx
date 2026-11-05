@@ -14,7 +14,7 @@ const PrCard = (props: PrCardProps) => {
   const { data } = usePrChecks(boardKey, pr);
   const open = () => pane.open(pr.id);
   return (
-    <Card data-pr={pr.id} role="group" aria-label={`Pull request ${pr.id}: ${pr.title}`} edge="border">
+    <Card data-pr={pr.id} data-swap-itemrole="group" aria-label={`Pull request ${pr.id}: ${pr.title}`} edge="border">
       <RecordCard
         head={{
           kind: CHANGE_KIND,
