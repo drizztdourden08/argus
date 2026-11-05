@@ -3,8 +3,7 @@ import type { SortState } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { SyncMap } from '../../../data/remote';
 import type { Card } from '../../../data/types';
-import type { SendDown } from '../dashboards/dashboards.type';
-import type { LogOpener } from './boards.type';
+import type { LogOpener, SendDown } from './boards.type';
 import type { BoardLive, BoardRecord } from './model';
 
 type GroupMode = 'attention' | 'state' | 'none';

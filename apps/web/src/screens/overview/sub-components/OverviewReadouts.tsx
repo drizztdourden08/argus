@@ -4,7 +4,7 @@ import { PORTFOLIO_SCOPE, useDoc } from '../../../data/react';
 import type { BoardMeta } from '../../../data/types';
 import { Age, CALM_LOOK } from '../../../shell';
 import { boardsTotals } from '../boards/behavior/boards-totals';
-import { GOOD_LOOK, WARN_LOOK } from '../dashboards/dashboards.constants';
+import { GOOD_LOOK, WARN_LOOK } from '../boards/boards-run.constants';
 import type { OverviewAlertsProps } from '../overview.type';
 
 const OverviewReadouts = (props: OverviewAlertsProps) => {

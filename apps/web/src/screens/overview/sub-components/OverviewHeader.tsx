@@ -2,7 +2,7 @@
 import { Box, Button, Icon, OverflowRow, Text } from '@drizztdourden08/tessera';
 import type { OverflowRowItem } from '@drizztdourden08/tessera';
 import { useRef } from 'react';
-import { SendDownPopover } from '../dashboards/sub-components/SendDownPopover';
+import { SendDownPopover } from '../boards/sub-components/SendDownPopover';
 import { boardsToolItems } from '../behavior/boards-tool-items';
 import type { OverviewHeaderProps } from '../overview.type';
 import { NowPopover } from './NowPopover';

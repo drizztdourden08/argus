@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Button, Inline, Text, Tooltip } from '@drizztdourden08/tessera';
-import { NO_PLAY } from '../../dashboards/dashboards.constants';
-import { masterLine } from '../../dashboards/model';
-import { MasterStatus } from '../../dashboards/sub-components/MasterStatus';
+import { NO_PLAY } from '../boards-run.constants';
+import { masterLine } from '../model';
+import { MasterStatus } from './MasterStatus';
 import type { BoardPlayProps } from '../boards.type';
 
 const BoardPlay = (props: BoardPlayProps) => {

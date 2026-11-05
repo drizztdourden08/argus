@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { isLiveRun } from '../../../../data/runs';
 import type { BoardItem } from '../../../../data/boards';
-import { attentionOf } from '../../dashboards/model/attention-of';
-import { leadState } from '../../dashboards/model/lead-state';
+import { attentionOf } from './attention-of';
+import { leadState } from './lead-state';
 import { EMPTY_BOARD_COUNTS } from './board.constants';
 import type { BoardRecord } from './board.type';
 

@@ -1,6 +1,11 @@
 /* @layer renderer-app @kind constants */
 import type { AttentionGroupId, BoardCounts } from './board.type';
 
+const STALE_MINUTES = 60;
+const MS_PER_MINUTE = 60000;
+const ATTENTION_DECISION = /needs a decision/;
+const OWNER_MAX = 50000;
+
 const EMPTY_BOARD_COUNTS: BoardCounts = {
   threads: 0,
   working: 0,
@@ -29,4 +34,4 @@ const GROUP_LABELS: Readonly<Record<AttentionGroupId, string>> = {
 
 const FOLDED_GROUPS: readonly AttentionGroupId[] = ['not-started', 'archived'];
 
-export { EMPTY_BOARD_COUNTS, FOLDED_GROUPS, GROUP_LABELS, GROUP_ORDER };
+export { ATTENTION_DECISION, EMPTY_BOARD_COUNTS, FOLDED_GROUPS, GROUP_LABELS, GROUP_ORDER, MS_PER_MINUTE, OWNER_MAX, STALE_MINUTES };

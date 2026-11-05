@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { BadgeColor, IconName, SignalItem } from '@drizztdourden08/tessera';
-import type { LeadState } from '../dashboards/model';
-import type { SignalId, SignalTone } from './model';
+import type { LeadState, SignalId, SignalTone } from './model';
 
 type StripTone = SignalItem['tone'];
 

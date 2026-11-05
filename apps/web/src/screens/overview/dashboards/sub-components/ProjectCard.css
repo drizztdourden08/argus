@@ -1,9 +1,0 @@
-/* @layer renderer-app @kind style */
-.project-card {
-  min-width: 0;
-}
-
-.project-card[data-state='not started'] {
-  border-style: dashed;
-  background: transparent;
-}

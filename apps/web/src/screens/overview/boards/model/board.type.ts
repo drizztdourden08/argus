@@ -1,6 +1,33 @@
 /* @layer renderer-app @kind types */
-import type { RegistryFault } from '../../../../data/types';
-import type { LeadState } from '../../dashboards/model';
+import type { WithId } from '../../../../data/react';
+import type { RunTone } from '../../../../data/runs';
+import type { RegistryFault, SentEntry } from '../../../../data/types';
+
+type LeadState = 'not started' | 'paused' | 'idle' | 'stale' | 'running';
+
+interface Attention {
+  needs: number;
+  failing: number;
+  blocked: number;
+  decisions: number;
+}
+
+interface SendOutcome {
+  ok: boolean;
+  message: string;
+}
+
+type SendKind = 'decision' | 'followup';
+
+type SentItem = WithId<SentEntry>;
+
+interface MasterLine {
+  head: string;
+  at: string | null;
+  tail: string;
+  tone: RunTone;
+  running: boolean;
+}
 
 interface BoardCounts {
   threads: number;
@@ -84,5 +111,6 @@ interface BoardGroup {
 }
 
 export type {
-  AttentionGroupId, BoardActionId, BoardCounts, BoardGroup, BoardLive, BoardMenuItem, BoardProgress, BoardRecord, BoardSignal, SignalId, SignalTab, SignalTone,
+  Attention, AttentionGroupId, BoardActionId, BoardCounts, BoardGroup, BoardLive, BoardMenuItem, BoardProgress, BoardRecord, BoardSignal, LeadState, MasterLine, SendKind, SendOutcome,
+  SentItem, SignalId, SignalTab, SignalTone,
 };

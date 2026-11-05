@@ -8,7 +8,7 @@ import { useBoardEntries } from './boards/behavior/useBoardEntries';
 import { useWideWindow } from './boards/behavior/useWideWindow';
 import { useOverviewView } from './behavior/useOverviewView';
 import { useTabBadges } from './behavior/useTabBadges';
-import { useSendDown } from './dashboards/behavior/useSendDown';
+import { useSendDown } from './boards/behavior/useSendDown';
 import { OVERVIEW_HASHES, OVERVIEW_TABS, TAB_ALIASES } from './overview.constants';
 import { OverviewHeader } from './sub-components/OverviewHeader';
 import { OverviewTabs } from './sub-components/OverviewTabs';

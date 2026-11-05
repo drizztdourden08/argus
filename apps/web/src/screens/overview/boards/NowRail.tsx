@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Stack } from '@drizztdourden08/tessera';
-import { useRunningRuns } from '../dashboards/behavior/useRunningRuns';
-import { RunningNow } from '../dashboards/sub-components/RunningNow';
-import { SentDown } from '../dashboards/sub-components/SentDown';
+import { useRunningRuns } from './behavior/useRunningRuns';
+import { RunningNow } from './sub-components/RunningNow';
+import { SentDown } from './sub-components/SentDown';
 import type { EntriesProps } from './boards-view.type';
 import { WaitingOnYou } from './sub-components/WaitingOnYou';
 

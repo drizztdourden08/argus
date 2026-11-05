@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind types */
+import type { RefObject } from 'react';
 import type { RemoteSync } from '../../../data/remote';
 import type { RunRow } from '../../../data/runs';
 import type { Card } from '../../../data/types';
-import type { MasterRun, SendDown } from '../dashboards/dashboards.type';
-import type { BoardActionId, BoardLive, BoardRecord } from './model';
+import type { BoardActionId, BoardLive, BoardRecord, MasterLine, SendKind, SentItem } from './model';
 
 type LogOpener = (key: string, run: RunRow) => void;
 
@@ -40,4 +40,50 @@ interface BoardPlayProps {
   onLog: LogOpener;
 }
 
-export type { BoardActions, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardPlayProps, LogOpener };
+interface LogTarget {
+  key: string;
+  run: RunRow;
+}
+
+interface SendDown {
+  target: string | null;
+  name: string;
+  kind: SendKind;
+  text: string;
+  busy: boolean;
+  open: (key: string) => void;
+  close: () => void;
+  setKind: (kind: SendKind) => void;
+  setText: (text: string) => void;
+  send: () => void;
+}
+
+interface SendDownPopoverProps {
+  send: SendDown;
+  owner: string;
+  anchorRef: RefObject<HTMLElement | null>;
+}
+
+interface MasterRun {
+  busy: boolean;
+  play: () => void;
+  stop: () => void;
+}
+
+interface MasterStatusProps {
+  line: MasterLine;
+  run: RunRow;
+  onLog: (run: RunRow) => void;
+}
+
+interface RunningNowProps {
+  runs: readonly RunRow[];
+}
+
+interface SentRowProps {
+  entry: SentItem;
+}
+
+export type {
+  BoardActions, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardPlayProps, LogOpener, LogTarget, MasterRun, MasterStatusProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps,
+};

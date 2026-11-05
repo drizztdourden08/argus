@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { ListItemShape } from '@drizztdourden08/tessera';
-import type { LeadState } from '../dashboards/model';
+import type { LeadState } from './model';
 
 const STATE_ORDER: readonly LeadState[] = ['running', 'idle', 'stale', 'paused', 'not started'];
 
