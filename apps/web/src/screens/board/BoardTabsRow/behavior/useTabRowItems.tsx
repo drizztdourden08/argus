@@ -15,7 +15,7 @@ const useTabRowItems = (props: BoardTabsRowProps): OverflowRowItem[] => {
   const filters = useRegistry(filterRegistry).find((entry) => entry.value.tab === activeTab);
   const [open, setOpen] = useFiltersOpen(activeTab);
   const own = tools.filter((entry) => entry.value.tab === activeTab).flatMap((entry) => entry.value.items);
-  const tabs: OverflowRowItem = { id: TABS_ITEM_ID, pinned: true, node: ({ tight }) => <BoardTabs {...props} tight={tight} /> };
+  const tabs: OverflowRowItem = { id: TABS_ITEM_ID, pinned: true, shrink: true, node: ({ tight }) => <BoardTabs {...props} tight={tight} /> };
   const toggle = filters ? <FiltersToggle open={open} count={filters.value.count} onToggle={() => setOpen(!open)} /> : null;
   const rest = toggle ? [...own, { id: FILTERS_ITEM_ID, pinned: true, node: toggle }] : own;
   return [tabs, ...rest.map((item, index) => (index === 0 ? { ...item, end: true } : item))];
