@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Pressable, Text } from '@drizztdourden08/tessera';
+import { Flex, Pressable, Text } from '@drizztdourden08/tessera';
 import { useNavigate } from 'react-router';
+import { RecordFrame } from '../../../../../shell';
 import type { ItemTestsProps } from '../drawer-props.type';
 import { DrawerSection } from './DrawerSection';
 import { EmptyLine } from './EmptyLine';
@@ -15,18 +16,23 @@ const ItemTests = (props: ItemTestsProps) => {
       {tests.length === 0 && <EmptyLine>No test documented for this item.</EmptyLine>}
       <Flex direction="column" gap="xs">
         {tests.map((test) => (
-          <Card key={test.id} variant="interactive">
-            <Pressable aria-label={`Open ${test.id}: ${test.title}`} onClick={() => void navigate({ hash: test.id })}>
-              <Flex direction="column" gap="xs">
-                <Flex gap="xs" align="center" wrap>
-                  <Text variant="caption" weight={600} mono>{test.id}</Text>
-                  <StatusTag status={test.status} />
-                  <StatusTag status={test.mode} />
-                </Flex>
+          <RecordFrame
+            key={test.id}
+            name={test.id}
+            density="row"
+            code={test.id}
+            title={(
+              <Pressable aria-label={`Open ${test.id}: ${test.title}`} onClick={() => void navigate({ hash: test.id })}>
                 <Text smartTimes>{test.title}</Text>
+              </Pressable>
+            )}
+            content={(
+              <Flex gap="xs" align="center">
+                <StatusTag status={test.status} />
+                <StatusTag status={test.mode} />
               </Flex>
-            </Pressable>
-          </Card>
+            )}
+          />
         ))}
       </Flex>
     </DrawerSection>

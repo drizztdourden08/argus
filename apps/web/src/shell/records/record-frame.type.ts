@@ -26,6 +26,7 @@ interface RecordFrameProps {
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void;
+  onActivate?: () => void;
   children?: ReactNode;
 }
 

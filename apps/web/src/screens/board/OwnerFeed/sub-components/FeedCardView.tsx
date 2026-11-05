@@ -19,6 +19,8 @@ const FeedCardView = (props: FeedCardViewProps) => {
       openLabel={`Open ${facts.code}: ${facts.title}`}
       onOpen={open}
       label={`${facts.code}: ${facts.title}`}
+      onActivate={open}
+      variant="interactive"
       edge="left"
       edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}
       signals={<FeedFacts facts={facts} index={ctx.index} />}
