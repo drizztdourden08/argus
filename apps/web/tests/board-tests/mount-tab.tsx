@@ -8,8 +8,7 @@ import { TestsTab } from '../../src/screens/board/tabs/tests';
 import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
 import { byId } from './fixtures';
-
-type Doc = Record<string, unknown>;
+import type { Doc } from './fixtures';
 
 type Feed = 'tests' | 'launchers' | 'launches' | 'runs' | 'items' | 'threads' | 'entries' | 'wakes';
 
