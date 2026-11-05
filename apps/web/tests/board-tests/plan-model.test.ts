@@ -105,10 +105,10 @@ describe('P5 the head of a case row', { tags: ['critical'] }, () => {
     expect(caseAssignee(testDoc('T-3', { mode: 'auto', thread: null }) as TestDoc)).toBe('');
   });
 
-  it('holds conflict, item, thread, auto and archived chips, leaving out the fact of the group', () => {
+  it('holds conflict, item, thread, mode and archived chips, leaving out the fact of the group', () => {
     const doc = doneDoc('T-1', 'pass', 'ok', { mode: 'auto', archivedAt: 'then' }) as TestDoc;
-    expect(caseChips(doc, 'plan', new Set(['T-1'])).map((chip) => chip.id)).toEqual(['conflict', 'item', 'thread', 'auto', 'archived']);
-    expect(caseChips(doc, 'item', new Set()).map((chip) => chip.id)).toEqual(['thread', 'auto', 'archived']);
-    expect(caseChips(doc, 'thread', new Set()).map((chip) => chip.id)).toEqual(['item', 'auto', 'archived']);
+    expect(caseChips(doc, 'plan', new Set(['T-1'])).map((chip) => chip.id)).toEqual(['conflict', 'item', 'thread', 'mode', 'archived']);
+    expect(caseChips(doc, 'item', new Set()).map((chip) => chip.id)).toEqual(['thread', 'mode', 'archived']);
+    expect(caseChips(doc, 'thread', new Set()).map((chip) => chip.id)).toEqual(['item', 'mode', 'archived']);
   });
 });

@@ -5,8 +5,15 @@ import { ITEM_REGISTRY, allowsParent, fieldOf, firstStageIn, itemTypeOf, knowsLe
 const stageOf = (type: string, stage: string) => itemTypeOf(type)?.stages.find((entry) => entry.id === stage);
 
 describe('K2 the web reads the item type registry file', { tags: ['critical'] }, () => {
+  it('keeps the test runs off the kanban and the plan without bundle', () => {
+    expect(itemTypeOf('test-run')?.hideOnKanban).toBe(true);
+    expect(itemTypeOf('test-plan')?.hideOnKanban).toBeUndefined();
+    expect(typeHasField('test-plan', 'bundle')).toBe(false);
+    expect(typeHasField('test-run', 'results')).toBe(true);
+  });
+
   it('lists the types of the design in display order and the five lanes', () => {
-    expect(ITEM_REGISTRY.types.map((type) => type.id)).toEqual(['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'test-case', 'build', 'worktree']);
+    expect(ITEM_REGISTRY.types.map((type) => type.id)).toEqual(['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'test-run', 'test-case', 'build', 'worktree']);
     expect(ITEM_REGISTRY.lanes).toEqual(['todo', 'doing', 'review', 'done', 'dropped']);
   });
 

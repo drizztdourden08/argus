@@ -101,7 +101,7 @@ describe('I-72 P6 the fields of a type', { tags: ['standard'] }, () => {
   });
 
   it('leaves the cases and the runs of a plan to their own tabs, and the base fields to the Overview', () => {
-    expect(fieldGroups(itemTypeOf('test-plan') as never).map((group) => group.fields)).toEqual([['bundle', 'env']]);
+    expect(fieldGroups(itemTypeOf('test-plan') as never).map((group) => group.fields)).toEqual([['env']]);
     expect(fieldGroups(itemTypeOf('task') as never)).toEqual([]);
   });
 

@@ -12,16 +12,17 @@ const runCase = (id: string): Doc =>
 
 const CASES = ['T-1', 'T-2', 'T-3'];
 
-const run = (results: Doc[] = [], extra: Doc = {}): Doc => ({ n: 1, bundle: 'b1', by: 'human', startedAt: ago(MIN), endedAt: null, results, ...extra });
+const run = (results: Doc[] = [], extra: Doc = {}): Doc =>
+  item('I-11', { type: 'test-run', stage: 'running', status: 'doing', createdBy: 'human', startedAt: ago(MIN), fields: { plan: 'I-1', build: 'b1', results }, ...extra });
 
 const outcome = (test: string, status: string, note = ''): Doc => ({ test, status, note, at: ago(MIN) });
 
-const plan = (runs: Doc[] = []): Doc => item('I-1', { type: 'test-plan', stage: 'running', fields: { cases: CASES, bundle: 'b1', runs } });
+const plan = (): Doc => item('I-1', { type: 'test-plan', stage: 'running', fields: { cases: CASES } });
 
-const board = (runs: Doc[] = []) => ({ items: [plan(runs)], tests: CASES.map(runCase) });
+const board = (runs: Doc[] = []) => ({ items: [plan(), ...runs], tests: CASES.map(runCase) });
 
 const mountRun = async (runs: Doc[] = []) => {
-  const mounted = await mountKanban(board(runs), undefined, '#I-1/run');
+  const mounted = await mountKanban(board(runs), undefined, '#I-1/runs');
   const dialog = await screen.findByRole('dialog', { name: 'Work item' });
   return { ...mounted, dialog };
 };
@@ -131,7 +132,7 @@ describe('I-70 P7 recording', { tags: ['standard'] }, () => {
 });
 
 describe('I-70 P7 reload and end', { tags: ['standard'] }, () => {
-  it('resumes at the first case without a result from fields.runs', async () => {
+  it('resumes at the first case without a result from the test run', async () => {
     const { dialog } = await mountRun([run([outcome('T-1', 'pass'), outcome('T-2', 'skip')])]);
     await onCase(dialog, 'T-3');
     expect(within(dialog).getByText('case 3 of 3')).toBeTruthy();
@@ -147,11 +148,10 @@ describe('I-70 P7 reload and end', { tags: ['standard'] }, () => {
   });
 
   it('shows the summary of an ended run with counts, the flagged cases and a way to start again', async () => {
-    const summary = { pass: 1, fail: 1, partial: 0, blocked: 0, skip: 0, notRun: 1, total: 3 };
-    const ended = run([outcome('T-1', 'pass'), outcome('T-2', 'fail', 'no button')], { endedAt: ago(MIN), summary });
+    const ended = run([outcome('T-1', 'pass'), outcome('T-2', 'fail', 'no button')], { stage: 'reported', endedAt: ago(MIN) });
     const { dialog, posted } = await mountRun([ended]);
-    const group = await within(dialog).findByRole('group', { name: 'Summary of run 1' });
-    expect(within(group).getByText('Run 1 ended: 3 cases')).toBeTruthy();
+    const group = await within(dialog).findByRole('group', { name: 'Summary of run 11' });
+    expect(within(group).getByText('Run 11 ended: 3 cases')).toBeTruthy();
     for (const [label, value] of [['Passed', '1'], ['Failed', '1'], ['Partial', '0'], ['Blocked', '0'], ['Skipped', '0'], ['Not run', '1']] as const) {
       expect(within(group).getByText(label).parentElement?.textContent).toContain(value);
     }
@@ -164,8 +164,7 @@ describe('I-70 P7 reload and end', { tags: ['standard'] }, () => {
   it('moves from the runner to the summary when the board ends the run', async () => {
     const { dialog, change } = await mountRun([run([outcome('T-1', 'pass')])]);
     await onCase(dialog, 'T-2');
-    const summary = { pass: 1, fail: 0, partial: 0, blocked: 0, skip: 0, notRun: 2, total: 3 };
-    change('items', 'I-1', { ...plan([run([outcome('T-1', 'pass')], { endedAt: ago(0), summary })]) });
-    expect(await within(dialog).findByRole('group', { name: 'Summary of run 1' })).toBeTruthy();
+    change('items', 'I-11', run([outcome('T-1', 'pass')], { stage: 'reported', endedAt: ago(0) }));
+    expect(await within(dialog).findByRole('group', { name: 'Summary of run 11' })).toBeTruthy();
   });
 });

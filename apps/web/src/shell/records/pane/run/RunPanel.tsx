@@ -3,7 +3,6 @@ import { DrawerSection } from '../../../../screens/board/tabs/kanban/sub-compone
 import { EmptyLine } from '../../../../screens/board/tabs/kanban/sub-components/EmptyLine';
 import { caseIds } from '../model/case-ids';
 import { useRunOps } from './behavior/useRunOps';
-import { bundleOf } from './model/bundle-of';
 import { runsOf } from './model/runs-of';
 import { shownRun } from './model/shown-run';
 import { RunBody } from './RunBody';
@@ -14,13 +13,13 @@ const RunPanel = (props: RunPanelProps) => {
   const { item, boardKey } = data;
   const ids = caseIds(item);
   const ops = useRunOps(boardKey, item.id);
-  const run = shownRun(runsOf(item));
+  const run = shownRun(runsOf(item.id, data.items));
   return (
     <DrawerSection title="Run">
       {ids.length === 0 ? (
         <EmptyLine>Add cases to this plan, then start a run.</EmptyLine>
       ) : (
-        <RunBody data={data} run={run} ids={ids} ops={ops} bundle={bundleOf(item)} />
+        <RunBody data={data} run={run} ids={ids} ops={ops} />
       )}
     </DrawerSection>
   );

@@ -8,7 +8,7 @@ const RunHead = (props: RunHeadProps) => {
     <Flex direction="column" gap="sm">
       <Flex gap="sm" align="center" wrap>
         <Text as="span" weight={600}>{`Run ${run.n}`}</Text>
-        {run.bundle && <Tag color="neutral" title={`Bundle ${run.bundle}`}>{run.bundle}</Tag>}
+        {run.build && <Tag color="neutral" title={`Build ${run.build}`}>{run.build}</Tag>}
         <Text as="span" variant="caption" tone="muted">{`case ${position} of ${total}`}</Text>
       </Flex>
       <OutcomeStrip aria-label="Cases of this run" steps={steps} size="sm" onSelect={onSelect} />

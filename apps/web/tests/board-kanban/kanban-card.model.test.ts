@@ -25,8 +25,9 @@ describe('I-72 the type chips of a card', { tags: ['critical'] }, () => {
     expect(cardChips(itemRef('I-1', { type: 'debt', fields: { cost: 'L' } })).map((chip) => chip.text)).toEqual(['cost L']);
   });
 
-  it('shows the bundle of a test plan and no chip for the types that have none', () => {
-    expect(cardChips(itemRef('I-1', { type: 'test-plan', fields: { bundle: 'bundle-16' } })).map((chip) => chip.text)).toEqual(['bundle-16']);
+  it('shows the build of a test run and no chip for the types that have none', () => {
+    expect(cardChips(itemRef('I-1', { type: 'test-run', fields: { build: 'main-7' } })).map((chip) => chip.text)).toEqual(['main-7']);
+    expect(cardChips(itemRef('I-1', { type: 'test-plan' }))).toEqual([]);
     expect(cardChips(itemRef('I-1', { type: 'epic', fields: { goal: 'x' } }))).toEqual([]);
     expect(cardChips(itemRef('I-1'))).toEqual([]);
   });
@@ -59,13 +60,20 @@ describe('I-72 the progress of a card', { tags: ['critical'] }, () => {
     expect(cardProgress(cardOf(story)).map((part) => part.text)).toEqual(['3/4']);
   });
 
+  it('leaves the test runs off the board', () => {
+    const view = viewOf([itemRef('I-1', { type: 'test-plan' }), itemRef('I-2', { type: 'test-run', fields: { plan: 'I-1' } })], { prefs: { showDone: true } });
+    expect(view.cards.map((card) => card.id)).toEqual(['I-1']);
+  });
+
   it('words the last run of a test plan with its counts and what is left', () => {
+    const run = (id: string, results: object[], extra: Partial<ItemRef> = {}) => itemRef(id, { type: 'test-run', fields: { plan: 'I-1', results }, ...extra });
     const runs = [
-      { n: 2, results: [{ test: 'T-1', status: 'pass' }] },
-      { n: 3, results: [{ test: 'T-1', status: 'pass' }, { test: 'T-2', status: 'pass' }, { test: 'T-3', status: 'fail' }] },
+      run('I-2', [{ test: 'T-1', status: 'pass' }]),
+      run('I-3', [{ test: 'T-1', status: 'pass' }, { test: 'T-2', status: 'pass' }, { test: 'T-3', status: 'fail' }]),
+      run('I-4', [], { stage: 'abandoned' }),
     ];
-    const plan = itemRef('I-1', { type: 'test-plan', fields: { cases: ['T-1', 'T-2', 'T-3', 'T-4', 'T-5'], runs } });
-    expect(cardProgress(cardOf(plan))).toMatchObject([{ met: 3, total: 5, text: 'run 3: 2 pass 1 fail 2 left' }]);
+    const plan = itemRef('I-1', { type: 'test-plan', fields: { cases: ['T-1', 'T-2', 'T-3', 'T-4', 'T-5'] } });
+    expect(cardProgress(cardOf(plan, runs))).toMatchObject([{ met: 3, total: 5, text: 'run 3: 2 pass 1 fail 2 left' }]);
     expect(cardProgress(cardOf(itemRef('I-2', { type: 'test-plan', fields: { cases: ['T-1'] } })))).toEqual([]);
   });
 });

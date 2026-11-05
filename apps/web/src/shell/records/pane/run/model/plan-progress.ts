@@ -7,9 +7,9 @@ import { runsOf } from './runs-of';
 import { shownRun } from './shown-run';
 import { summarize } from './summarize';
 
-const planProgress = (item: Pick<ItemRef, 'fields'>): PlanProgress => {
+const planProgress = (item: ItemRef, items: readonly ItemRef[]): PlanProgress => {
   const ids = caseIds(item);
-  const run = shownRun(runsOf(item));
+  const run = shownRun(runsOf(item.id, items));
   if (!run) return { summary: { ...EMPTY_SUMMARY, total: ids.length, notRun: ids.length }, live: false, cases: ids.length };
   return { summary: summarize(run, ids), live: run.endedAt === null, cases: ids.length };
 };
