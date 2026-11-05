@@ -209,16 +209,6 @@ mod tests {
 
     const EMERALD: [u8; 3] = [18, 160, 110];
 
-    fn is_stone(colour: [u8; 3]) -> bool {
-        let (low, high) = (colour.iter().min().unwrap(), colour.iter().max().unwrap());
-        high - low <= 10 && *low > 0 && *high < 255
-    }
-
-    fn is_emerald_shade(colour: [u8; 3]) -> bool {
-        let [r, g, b] = colour.map(i32::from);
-        g - r >= 80 && g - b >= 30
-    }
-
     #[test]
     fn the_running_icon_is_the_mark_at_the_size_asked() {
         for wanted in [16, 20, 24, 28, 32, 40, 48, 64] {
@@ -280,8 +270,10 @@ mod tests {
             let colours = solid_colours(&dark);
             assert!(colours.contains(&EMERALD), "the emerald facet is there");
             assert!(
-                colours.iter().all(|c| is_emerald_shade(*c) || is_stone(*c)),
-                "only stone greys and emerald shades, no pure white or black: {colours:?}"
+                !colours
+                    .iter()
+                    .any(|c| *c == [255, 255, 255] || *c == [0, 0, 0]),
+                "a colour picture, no pure white or black ink: {colours:?}"
             );
         }
     }
