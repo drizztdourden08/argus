@@ -17,5 +17,10 @@ const mix = (from: Rgb, to: Rgb, t: number): Rgb => [
 
 const toHex = (color: Rgb): string => `#${color.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 
-export { darken, mix, toHex };
+const toVec4 = (hex: string): [number, number, number, number] => {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return [((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255, 1];
+};
+
+export { darken, mix, toHex, toVec4 };
 export type { Rgb };

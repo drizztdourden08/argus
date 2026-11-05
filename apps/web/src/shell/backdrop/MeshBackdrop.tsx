@@ -1,19 +1,54 @@
 /* @layer renderer-app @kind component */
-import { MeshGradient } from '@paper-design/shaders-react';
+import { ShaderMount } from '@paper-design/shaders-react';
+import { useMemo, useRef } from 'react';
+import { GRAIN, POINTER, SIZING_UNIFORMS } from './backdrop.constants';
+import { toVec4 } from './color-math';
+import { MAX_COLORS, MESH_SHADER } from './mesh-shader';
 import { useBackdropColors } from './useBackdropColors';
 import { useBackdropMotion } from './useBackdropMotion';
+import { usePointerDrift } from './usePointerDrift';
+import { useViewportAspect } from './useViewportAspect';
 import './MeshBackdrop.css';
+
+type Mount = { paperShaderMount?: { setUniforms: (uniforms: Record<string, number | number[]>) => void } } | null;
 
 const MeshBackdrop = () => {
   const colors = useBackdropColors();
   const motion = useBackdropMotion();
+  const aspect = useViewportAspect();
+  const mount = useRef<Mount>(null);
+
+  usePointerDrift(motion.interactive, (point) =>
+    mount.current?.paperShaderMount?.setUniforms({ u_pointer: [point.x, point.y] }),
+  );
+
+  const uniforms = useMemo(
+    () => ({
+      ...SIZING_UNIFORMS,
+      u_colors: colors.slice(0, MAX_COLORS).map(toVec4),
+      u_colorsCount: Math.min(colors.length, MAX_COLORS),
+      u_distortion: motion.distortion,
+      u_swirl: motion.swirl,
+      u_grainMixer: GRAIN.mixer,
+      u_grainOverlay: GRAIN.overlay,
+      u_pointer: [POINTER.center, POINTER.center],
+      u_repel: motion.interactive ? POINTER.repelStrength : 0,
+      u_repelRadius: POINTER.repelRadius,
+      u_parallax: motion.interactive ? POINTER.parallax : 0,
+      u_aspect: aspect,
+    }),
+    [colors, motion, aspect],
+  );
+
   return (
     <div className="mesh-backdrop" aria-hidden="true">
-      <MeshGradient
-        colors={[...colors]}
+      <ShaderMount
+        ref={(element) => {
+          mount.current = element;
+        }}
+        fragmentShader={MESH_SHADER}
+        uniforms={uniforms}
         speed={motion.speed}
-        distortion={motion.distortion}
-        swirl={motion.swirl}
         width="100%"
         height="100%"
       />
