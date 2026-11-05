@@ -131,7 +131,8 @@ Each row names the Node module, so the full set of strings is one file away. The
 | `log` | (write), list, rm | log, subject | `<s> #<n>: removed.`, an `audit` line for another's line | board, inbox | 4 |
 | `inbox` | (read), `--ack`, list, rm, send | followup | `<t>: inbox empty.`, message lines, `queued for <t> (session "...")`; send wakes over HTTP, best effort | board, `POST /api/p/:key/wakes` | 4 |
 | `agent` | start, note, set, done, fail, stop, archive, unarchive, rm, restore, list, show, reconcile | name, task, model, modelwhy, agentnote, agentresult, branch, worktree, reason | `<A>: agent <n> started on <t> (...)`, the model standard and `--why` refusals, check-in rule | board, `GET /api/agents/reconcile` | 5 |
-| `build` | add, set, rm, close, reopen, ready, draft, hand, unhand, list | build, buildnote, buildcmd, buildcwd, title | `handed to the owner: ...`, tables, 29 refusals | board (builds, launchers) | 5 |
+| `build` | rm, migrate-links, and for one release aliases of `test run` (each prints the new verb); `add` and `set` are gone | build | the new verb line | board (launchers) | 5 |
+| `test run` | list, hand, unhand, ready, draft, end, reopen, drop | run, build, title | `handed to the owner: ...`, tables, refusals | board (test-run items, launchers) | 5 |
 | `launcher` | set, keep, retire, list, show | launchercmd, launchercwd, launchernote, branch, commit | show lines, tables, refusals for master and windows | board (launchers) | 5 |
 | `run` | define, undefine, defs, start, stop, status, list, logs | command, reason | run summaries, `--wait` and `--follow` streams, exit 3 when down | board (runDefs), runs API | 6 |
 | `ping` | (text) | ping, title 60 | the notify sentence | `POST /api/notify` | 6 |
@@ -186,7 +187,7 @@ compiles from day one, the same way `services/compose.rs` works in the server.
 | 2 Hooks | The ten hook events, visit and adopt, the context texts, guard, the sub-agent bindings, the listener, the autostart | `argus-agents` `hook_logic`, `text` (bestFit), `model_rules` | `hook.agents`, `hook.agents.binding`, `hook.agents.claudeid`, `hook.autostart`, `hook.guard`, `hook.listen`, `hook.transcript` (80 cases) |
 | 3 Threads and board | thread, dispatch, board, purge, restore, trash, check, tick, sync import | `argus-board` ops, pause, backup, sync import | thread and board cases of `owner.text`, `sync.watch` CLI cases, `board.shortcut` verb cases |
 | 4 Work docs and messages | item, test, entry and its aliases, action, lock, log, inbox | `argus-board` ops (create, edit, ac, move, soft, result), limits, results, proofs | `entry.context` (10), `inbox.wake` (2), the CLI cases of `notify.http` for `ask` |
-| 5 Agents and bundles | agent (with the hook binding of `agent start`), build, launcher | `argus-agents` model rules and records; `argus-launchers` launcher record, write, every, retire | `agent.model` (12), `build.verbs` (23), `launcher.verbs` (16) |
+| 5 Agents and test runs | agent (with the hook binding of `agent start`), build, launcher | `argus-agents` model rules and records; `argus-launchers` launcher record, write, every, retire | `agent.model` (12), `build.verbs` (23), `launcher.verbs` (16) |
 | 6 Server clients | run, ping, activity, proc, wake-fault, worktree, lead, portfolio, dashboard (passthrough becomes an in-process call of the `argus` subcommand) | `argus-board` portfolio deliver and cards; `argus-worktrees` rule parsing; `argus-notify` sentence | `runs.cli` (6), `lead.verbs` (6), `worktree.verbs` (14), `wake.faults` CLI cases, `notify.http` ping cases, `portfolio.longsend` CLI cases, `procs.http` CLI cases |
 | 7 Shim, harness, bench | The forward block for `coord.mjs` (drafted here, landed by the Overlord), the differential harness, the latency bench, the twin-home seeds and corpus | `argus-testkit` | The harness itself; the Node slice 8 suites run with `COORD_ENGINE=argus` |
 
@@ -340,7 +341,7 @@ edit: `coordEngine: "node"`.
 | Phase | State | Who |
 |---|---|---|
 | A | `forward.mjs` rendered into every project, `coordEngine` unset (Node) | Overlord lands and renders |
-| B | `coordEngine: "argus"` with `coordVerbs` growing one group at a time: server clients, then work docs, agents and bundles, threads and board, hooks last | Argus lead, each step after its harness run |
+| B | `coordEngine: "argus"` with `coordVerbs` growing one group at a time: server clients, then work docs, agents and test runs, threads and board, hooks last | Argus lead, each step after its harness run |
 | C | `coordVerbs: ["*"]`; the Node verb modules frozen, kept as the fallback until the owner confirms | Argus lead, then the Overlord |
 | D | Optional: `hooks.json` and the PATH shims call `argus.exe coord` directly, which drops the Node start (the latency win); the Node verb modules leave the render, `coord.mjs` stays a forward stub | Overlord, with the bench numbers |
 
@@ -426,7 +427,7 @@ The bench of section 3 runs with layer 3 on every package landing.
 3. WP2 to WP7 in parallel, one sub-agent each, each in its own worktree. One haiku test agent per
    finished package.
 4. Phase A once the Overlord lands the forward block.
-5. Phase B in the order server clients, work docs, agents and bundles, threads and board, hooks.
+5. Phase B in the order server clients, work docs, agents and test runs, threads and board, hooks.
 6. Phase C, then phase D if the Overlord agrees and the bench shows the gain.
 
 ### Risks
@@ -585,9 +586,11 @@ coord item migrate-blockers [--dry-run]
 ### Test plans
 
 ```
-coord test plan add "<title>" [--parent I] [--bundle <tag>] [--case T]...
+coord test plan add "<title>" [--parent I] --case T [--case T]... [--build <launcher>]
 coord test plan cases <plan I> --add T [--before T] | --remove T
-coord test plan start <plan I> [--bundle <tag>]
+coord test plan run <plan I> [--build <launcher>]
+coord test run list|hand|unhand|ready|draft|end|reopen|drop <run I>
+coord test migrate-runs [--dry-run]
 coord test plan end <plan I>
 coord test plan show <plan I>
 coord test add <I> "<title>" ... [--plan <plan I>]
@@ -596,9 +599,10 @@ coord test result <T> <pass|fail|partial|blocked|skip> "<note>" [--proof <img>] 
 
 1. A plan is an item of type `test-plan`. Its cases are `T-n` tests in order, and a test may be in
    many plans.
-2. A plan needs at least one case to reach `ready`. `start` opens a run and moves the plan to
-   `running`; `end` closes it, counts the results and moves the plan to `reported`. One run is open
-   at a time.
+2. A plan needs at least one case: create refuses none and removing the last case is refused.
+   `run` opens a run (a `test-run` item that carries its build) and moves the plan to `running`;
+   `end` closes it, counts the results and moves the plan to `reported`. One run is open at a
+   time. `--mode ai` is an alias of the stored `auto` mode.
 3. `coord test result <T> ... --run <plan I>` records the result in the open run and on the test
    itself, so the test's own result, its wakes and its proofs stay true. `skip` exists only in the
    run and writes nothing to the test.
