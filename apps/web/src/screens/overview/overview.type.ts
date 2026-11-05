@@ -24,7 +24,7 @@ interface TabBodyProps {
   data: BoardEntries;
   view: OverviewView;
   send: SendDown;
-  wide: boolean;
+  onRail: (shown: boolean) => void;
   badges: TabBadges;
 }
 
@@ -34,7 +34,7 @@ interface OverviewHeaderProps {
   view: OverviewView;
   status: StreamStatus;
   send: SendDown;
-  wide: boolean;
+  railShown: boolean;
 }
 
 interface OverviewAlertsProps {

@@ -11,7 +11,7 @@ import { OverviewReadouts } from './OverviewReadouts';
 import './OverviewHeader.css';
 
 const OverviewHeader = (props: OverviewHeaderProps) => {
-  const { tab, data, view, status, send, wide } = props;
+  const { tab, data, view, status, send, railShown } = props;
   const anchor = useRef<HTMLElement>(null);
   const onBoards = tab === 'boards';
   const items: OverflowRowItem[] = [
@@ -19,7 +19,7 @@ const OverviewHeader = (props: OverviewHeaderProps) => {
     { id: 'readouts', priority: 6, node: <OverviewReadouts entries={data.entries} status={status} /> },
     { id: 'alerts', priority: 7, node: <OverviewAlerts entries={data.entries} status={status} /> },
     ...(onBoards ? boardsToolItems(view) : []),
-    ...(onBoards && !wide ? [{ id: 'now', priority: 5, node: <NowPopover entries={data.entries} /> }] : []),
+    ...(onBoards && !railShown ? [{ id: 'now', priority: 5, node: <NowPopover entries={data.entries} /> }] : []),
     {
       id: 'send',
       priority: 1,

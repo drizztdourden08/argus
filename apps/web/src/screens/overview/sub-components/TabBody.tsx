@@ -4,7 +4,7 @@ import { LazyActivityTab, LazyCacheTab, LazyDependenciesTab, LazyNotificationsTa
 import type { TabBodyProps } from '../overview.type';
 
 const TabBody = (props: TabBodyProps) => {
-  const { tab, data, view, send, wide, badges } = props;
+  const { tab, data, view, send, onRail, badges } = props;
   if (tab === 'processes') return <LazyProcessesTab />;
   if (tab === 'activity') return <LazyActivityTab freshSince={badges.freshActivity} />;
   if (tab === 'cache') return <LazyCacheTab />;
@@ -12,7 +12,7 @@ const TabBody = (props: TabBodyProps) => {
   if (tab === 'dependencies') return <LazyDependenciesTab />;
   if (tab === 'registry') return <LazyRegistryTab />;
   if (tab === 'notifications') return <LazyNotificationsTab freshSince={badges.freshNotifications} />;
-  return <BoardsTab data={data} view={view} send={send} wide={wide} />;
+  return <BoardsTab data={data} view={view} send={send} onRail={onRail} />;
 };
 
 export { TabBody };

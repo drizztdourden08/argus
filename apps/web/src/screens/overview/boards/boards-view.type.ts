@@ -52,7 +52,7 @@ interface BoardsTabProps {
   data: BoardEntries;
   view: OverviewView;
   send: SendDown;
-  wide: boolean;
+  onRail: (shown: boolean) => void;
 }
 
 interface BoardsListProps {
