@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconButtonProps, IconName } from '@drizztdourden08/tessera';
+import type { IconName } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { RunEntry } from '../../../../data/runs';
 import type { RunView, TestDoc, TestsView } from './model';
@@ -16,11 +16,6 @@ interface SectionHeadProps {
   count: number;
   action?: ReactNode;
 }
-
-type TipButtonProps = Omit<IconButtonProps, 'children'> & {
-  icon: IconName;
-  tip: ReactNode;
-};
 
 interface RunTitleProps {
   view: RunView;
@@ -51,5 +46,5 @@ interface TestsSummaryProps {
 }
 
 export type {
-  BuildChipProps, CaseOutcomeProps, LayoutControlProps, RunActionsProps, RunChipsProps, RunTitleProps, SectionHeadProps, TestsSummaryProps, TipButtonProps,
+  BuildChipProps, CaseOutcomeProps, LayoutControlProps, RunActionsProps, RunChipsProps, RunTitleProps, SectionHeadProps, TestsSummaryProps,
 };

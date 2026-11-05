@@ -121,3 +121,20 @@ describe('P4 a board that has not started', { tags: ['standard'] }, () => {
     expect(document.querySelector('[data-swap-item="BD-rotp"]')).toBeTruthy();
   });
 });
+
+describe('P4 the worktree counter of a board card', { tags: ['standard'] }, () => {
+  it('shows the board worktree count and opens its Worktrees tab', async () => {
+    stubApi();
+    renderCard(rotp(), QUIET, { rotp: { listed: 3, running: 2 } });
+    expect(await screen.findByText('worktrees 3 / running agents 2')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open the worktrees of RotP' }));
+    expect(screen.getByTestId('where').textContent).toContain('worktrees');
+  });
+
+  it('shows no counter for a board without worktree data', async () => {
+    stubApi();
+    renderCard(rotp());
+    await screen.findByRole('button', { name: 'Play' });
+    expect(screen.queryByText(/^worktrees /)).toBeNull();
+  });
+});

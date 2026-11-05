@@ -1,12 +1,11 @@
 /* @layer renderer-app @kind component */
-import { Flex, Spacer, Text } from '@drizztdourden08/tessera';
+import { Flex, Icon, IconButton, Spacer, Text } from '@drizztdourden08/tessera';
 import { Age, useRecordPane, useRunOps } from '../../../../../shell';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { countsText } from '../model';
 import { NO_CASES_TIP } from '../tests.constants';
 import type { PlanFootProps } from '../tests-props.type';
 import { RunProgress } from './RunProgress';
-import { TipButton } from './TipButton';
 
 const PlanFoot = (props: PlanFootProps) => {
   const { plan, code } = props;
@@ -23,7 +22,9 @@ const PlanFoot = (props: PlanFootProps) => {
     <Flex direction="column" gap="xs">
       <RunProgress counts={plan.counts} fill />
       <Flex gap="sm" align="center">
-        <TipButton icon="play" tone="accent" label={label} tip={empty ? NO_CASES_TIP : label} disabled={empty} onClick={run} />
+        <IconButton size="xs" tone="accent" label={label} tooltip={empty ? NO_CASES_TIP : label} disabled={empty} onClick={run}>
+          <Icon name="play" />
+        </IconButton>
         <Text variant="caption" tone="muted">{empty ? 'no cases' : countsText(plan.counts)}</Text>
         <Spacer />
         {plan.item.updatedAt && <Text variant="caption" tone="muted"><Age value={plan.item.updatedAt} /></Text>}

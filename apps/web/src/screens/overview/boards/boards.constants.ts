@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { BadgeColor, IconName } from '@drizztdourden08/tessera';
+import type { AvatarStatus, IconName } from '@drizztdourden08/tessera';
 import type { LeadState, SignalId, SignalTone } from './model';
 import type { StripTone } from './boards.type';
 
@@ -24,18 +24,16 @@ const SIGNAL_TONE: Readonly<Record<SignalTone, StripTone>> = {
   muted: 'neutral',
 };
 
-const LEAD_DOT: Readonly<Record<LeadState, BadgeColor>> = {
-  running: 'success',
-  idle: 'warning',
-  stale: 'warning',
-  paused: 'warning',
-  'not started': 'tame',
+const LEAD_STATUS: Readonly<Record<LeadState, AvatarStatus>> = {
+  running: 'running',
+  idle: 'quiet',
+  stale: 'fault',
+  paused: 'quiet',
+  'not started': 'none',
 };
-
-const FAULT_DOT: BadgeColor = 'danger';
 
 const SIGNAL_MAX = 4;
 
 const NEEDS_BOARD: readonly string[] = ['open', 'send', 'play', 'stop'];
 
-export { FAULT_DOT, LEAD_DOT, NEEDS_BOARD, SIGNAL_ICON, SIGNAL_MAX, SIGNAL_TONE };
+export { LEAD_STATUS, NEEDS_BOARD, SIGNAL_ICON, SIGNAL_MAX, SIGNAL_TONE };

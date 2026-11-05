@@ -6,10 +6,11 @@ import { boardRecord } from '../../../../screens/overview/boards/model';
 import { useRecordPane } from '../../behavior/useRecordPane';
 import { usePaneTab } from '../behavior/usePaneTab';
 import { RecordPaneTools } from '../RecordPaneTools';
+import { boardTabIds } from './behavior/board-tab-ids';
 import { useBoardLive } from './behavior/useBoardLive';
 import { BoardArchiveTool } from './BoardArchiveTool';
 import { BOARD_KIND, BOARD_LABEL } from './board.constants';
-import { BOARD_TAB_IDS, BOARD_TABS, TAB_ITEMS } from './board-tabs.constants';
+import { BOARD_TABS } from './board-tabs.constants';
 import type { BoardFrameProps } from './board.type';
 
 const BoardFrame = (props: BoardFrameProps) => {
@@ -18,7 +19,8 @@ const BoardFrame = (props: BoardFrameProps) => {
   const now = useNow();
   const live = useBoardLive(item.doc.key);
   const [wide, setWide] = useStoredFlag(WIDE_KEY);
-  const [active, select] = usePaneTab(BOARD_KIND, BOARD_TAB_IDS);
+  const ids = boardTabIds();
+  const [active, select] = usePaneTab(BOARD_KIND, ids);
   const record = boardRecord(item, now);
   const Body = BOARD_TABS[active]?.Body;
   const data = { ...live, record, card: item.card, code: item.doc.id, now };
@@ -42,7 +44,7 @@ const BoardFrame = (props: BoardFrameProps) => {
       onClose={pane.close}
     >
       <Flex direction="column" gap="md">
-        <Tabs tabs={TAB_ITEMS} activeTab={active} onTabChange={select} />
+        <Tabs tabs={ids.map((id) => ({ id, label: BOARD_TABS[id]?.label ?? id }))} activeTab={active} onTabChange={select} />
         <Flex direction="column" role="tabpanel" aria-label={BOARD_TABS[active]?.label}>
           {Body && <Body data={data} />}
         </Flex>

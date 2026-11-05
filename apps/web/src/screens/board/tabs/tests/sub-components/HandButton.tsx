@@ -1,21 +1,23 @@
 /* @layer renderer-app @kind component */
+import { Icon, IconButton } from '@drizztdourden08/tessera';
 import { useTestActions } from '../behavior/useTestActions';
 import { useTestsShared } from '../behavior/useTestsShared';
 import type { HandButtonProps } from '../tests-props.type';
-import { TipButton } from './TipButton';
 
 const HandButton = (props: HandButtonProps) => {
   const { run, handed } = props;
   const actions = useTestActions(useTestsShared().boardKey);
   return (
-    <TipButton
-      icon="hand"
+    <IconButton
+      size="xs"
       label={handed ? `Stop handing run ${run.id} to you` : `Hand run ${run.id} to you`}
-      tip={handed ? 'Unhand: stop handing this run to you' : 'Hand to me'}
+      tooltip={handed ? 'Unhand: stop handing this run to you' : 'Hand to me'}
       active={handed}
       disabled={actions.busy}
       onClick={() => void actions.hand(run, handed)}
-    />
+    >
+      <Icon name="hand" />
+    </IconButton>
   );
 };
 

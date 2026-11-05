@@ -492,7 +492,7 @@
       "view": "card",
       "title": "name",
       "assignee": "lead",
-      "tabs": ["overview", "links", "activity"],
+      "tabs": ["overview", "work", "items", "tests", "worktrees", "builds", "links", "activity"],
       "card": { "progress": "none", "chips": [] },
       "links": []
     }

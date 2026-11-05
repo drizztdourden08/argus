@@ -42,7 +42,7 @@ pub(super) const PERSON_COLORS: [&str; 2] = ["primary", "neutral"];
 pub(super) const TONES: [&str; 5] = ["danger", "info", "warning", "success", "neutral"];
 
 /// The tabs of a record pane. `builds` is the older name of `work` and stays valid.
-pub(super) const TABS: [&str; 19] = [
+pub(super) const TABS: [&str; 21] = [
     "overview",
     "children",
     "cases",
@@ -62,6 +62,8 @@ pub(super) const TABS: [&str; 19] = [
     "files",
     "transcript",
     "trail",
+    "items",
+    "worktrees",
 ];
 
 /// The words an `assignee` may be besides a property: the owner, or the lead of the board.
