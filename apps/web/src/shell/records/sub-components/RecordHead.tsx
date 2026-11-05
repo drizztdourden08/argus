@@ -7,7 +7,7 @@ import { RecordMenu } from './RecordMenu';
 import { TypeIcon } from './TypeIcon';
 
 const RecordHead = (props: RecordHeadProps) => {
-  const { kind, code, assignee, boardKey, threads, menu, menuLabel, title, size = 'xs', selection } = props;
+  const { kind, code, assignee, boardKey, threads, menu, menuLabel, title, mark, size = 'xs', selection } = props;
   return (
     <Flex gap="xs" align="center">
       {selection?.selecting ? (
@@ -15,7 +15,7 @@ const RecordHead = (props: RecordHeadProps) => {
           <Checkbox checked={selection.selected} onChange={selection.onToggle} ariaLabel={`Select ${code}`} size="sm" />
         </Flex>
       ) : (
-        <TypeIcon kind={kind} size={size} />
+        (mark ?? <TypeIcon kind={kind} size={size} />)
       )}
       <RecordLink id={code} />
       {title}
