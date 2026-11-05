@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { LegendEntry } from './BoardMore.type';
 
-const HIDDEN_KEY = 'coord.hidden';
-
 const HIDDEN_TIP = 'Done threads, archived threads and unnamed new sessions';
 
 const RESOURCES_NOTE = 'A thread claims a resource before it uses the shared thing and releases it after.';
@@ -23,4 +21,4 @@ const LEGEND_ENTRIES: readonly LegendEntry[] = [
   { label: 'ui not listening', look: { variant: 'normal', color: 'neutral' }, text: 'Your click was saved, but nobody was listening for that thread; it sees the result the next time it runs.' },
 ];
 
-export { HIDDEN_KEY, HIDDEN_TIP, LEGEND_ENTRIES, RESOURCES_NOTE };
+export { HIDDEN_TIP, LEGEND_ENTRIES, RESOURCES_NOTE };
