@@ -1,11 +1,12 @@
 /* @layer renderer-app @kind constants */
 const COLOR_TOKENS = ['--c-primary', '--c-secondary', '--c-tertiary', '--c-primary-dim', '--c-bg'] as const;
 
-const BASE_TOKEN = '--c-bg';
+const DEEP_TOKENS: readonly string[] = ['--c-primary-dim', '--c-bg'];
 
 const FALLBACK_COLORS: readonly string[] = ['#1a2433', '#2a1f3a', '#16313a', '#1f2a44', '#0d1118'];
 
-const DARKEN_AMOUNT = 0.55;
+const DARKEN_AMOUNT = 0.3;
+const DEEP_LIFT = 0.35;
 const TRANSITION_MS = 800;
 
 const MOTION = { speed: 0.35, distortion: 0.8, swirl: 0.25, interactive: true } as const;
@@ -39,9 +40,10 @@ const SIZING_UNIFORMS = {
 const PALETTE_ATTRIBUTE = 'data-palette';
 
 export {
-  BASE_TOKEN,
   COLOR_TOKENS,
   DARKEN_AMOUNT,
+  DEEP_LIFT,
+  DEEP_TOKENS,
   FALLBACK_COLORS,
   GRAIN,
   MAX_FRAME_SECONDS,
