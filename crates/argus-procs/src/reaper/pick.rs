@@ -29,6 +29,21 @@ pub(crate) struct Candidate {
     pub why: String,
 }
 
+/// Whether the process still has a live parent: on Windows a parent no younger than the process
+/// (pids are reused), elsewhere any parent row that is not init.
+pub(super) fn parent_alive(sample: &Sample, parent: Option<&ProcRow>, proc: &ProcRow) -> bool {
+    if sample.is_windows() {
+        proc.ppid == 0
+            || parent.is_some_and(|p| {
+                p.start_ms == 0
+                    || proc.start_ms == 0
+                    || p.start_ms <= proc.start_ms + PARENT_SLACK_MS
+            })
+    } else {
+        proc.ppid != 1 && parent.is_some()
+    }
+}
+
 struct View<'a> {
     sample: &'a Sample,
     by_pid: HashMap<u32, &'a ProcRow>,
@@ -36,17 +51,7 @@ struct View<'a> {
 
 impl View<'_> {
     fn parent_alive(&self, proc: &ProcRow) -> bool {
-        let parent = self.by_pid.get(&proc.ppid);
-        if self.sample.is_windows() {
-            proc.ppid == 0
-                || parent.is_some_and(|p| {
-                    p.start_ms == 0
-                        || proc.start_ms == 0
-                        || p.start_ms <= proc.start_ms + PARENT_SLACK_MS
-                })
-        } else {
-            proc.ppid != 1 && parent.is_some()
-        }
+        parent_alive(self.sample, self.by_pid.get(&proc.ppid).copied(), proc)
     }
 
     fn age(&self, proc: &ProcRow) -> i64 {

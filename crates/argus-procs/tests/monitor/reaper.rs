@@ -82,7 +82,9 @@ fn an_orphaned_search_is_reaped_with_its_tree_one_info_line_and_no_wake() {
     let h = harness(json!({}), 1);
     h.at(T0, vec![search(7001, 4242, T0 - MIN, "X:\\alpha")]);
     assert_eq!(h.fake.trees(), [(7001, true, vec![])]);
-    let line = format!("{FIND} 7001: an orphaned search (whatever started it is gone)");
+    let line = format!(
+        "{FIND} 7001: an orphaned search (whatever started it is gone), cmd `find . -name tessera`, parent 4242 gone"
+    );
     assert_eq!(
         reap_lines(&h),
         [(Level::Info, format!("reaped {line} (project alpha)"))]
@@ -104,10 +106,8 @@ fn a_search_is_reaped_past_ten_minutes_and_never_outside_a_project_folder() {
     );
     assert_eq!(h.fake.killed(), [7002]);
     let (_, line) = &reap_lines(&h)[0];
-    assert!(
-        line.ends_with("7002: a search running for 11m (project alpha)"),
-        "{line}"
-    );
+    let tail = "7002: a search running for 11m, cmd `find . -name tessera`, parent explorer.exe 100 (project alpha)";
+    assert!(line.ends_with(tail), "{line}");
 }
 
 /// A vitest run and two workers, each with `cpu` ms of CPU time.
@@ -133,7 +133,7 @@ fn a_run_whose_tree_gains_no_cpu_time_for_five_minutes_is_reaped_whole() {
     assert_eq!(
         line,
         &format!(
-            "reaped {NODE} 7101 and its tree (2 more): a vitest run with no CPU time for 6m (project alpha)"
+            "reaped {NODE} 7101 and its tree (2 more): a vitest run with no CPU time for 6m, cmd `{VITEST}`, parent explorer.exe 100 (project alpha)"
         )
     );
 }
@@ -148,10 +148,10 @@ fn a_busy_run_is_reaped_only_past_the_cap() {
     h.at(T0 + 2 * MIN, busy(60_000));
     assert_eq!(h.fake.killed(), [7111]);
     let (_, line) = &reap_lines(&h)[0];
-    assert!(
-        line.ends_with("7111: a vitest run older than the 30m cap (project alpha)"),
-        "{line}"
+    let tail = format!(
+        "7111: a vitest run older than the 30m cap, cmd `{VITEST}`, parent explorer.exe 100 (project alpha)"
     );
+    assert!(line.ends_with(&tail), "{line}");
 }
 
 #[test]
@@ -256,7 +256,7 @@ fn shadow_mode_writes_what_it_would_reap_once_and_kills_nothing() {
         [(
             Level::Info,
             format!(
-                "would reap {FIND} 7001: an orphaned search (whatever started it is gone) (project alpha; shadow mode, nothing killed)"
+                "would reap {FIND} 7001: an orphaned search (whatever started it is gone), cmd `find . -name tessera`, parent 4242 gone (project alpha; shadow mode, nothing killed)"
             )
         )]
     );
@@ -296,8 +296,9 @@ fn a_failed_reap_writes_one_error_line_and_wakes_the_lead_once() {
         ),
         ("alpha", "alpha-lead", "procs")
     );
-    let line =
-        format!("{FIND} 7001: an orphaned search (whatever started it is gone) (access is denied)");
+    let line = format!(
+        "{FIND} 7001: an orphaned search (whatever started it is gone), cmd `find . -name tessera`, parent 4242 gone (access is denied)"
+    );
     assert_eq!(
         wake.text,
         format!(
