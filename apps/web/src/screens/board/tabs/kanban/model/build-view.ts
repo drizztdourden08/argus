@@ -3,6 +3,7 @@ import type { ItemRef } from '../../../../../data/kanban';
 import { NO_SIGNALS, attentionOf } from '../attention';
 import { buildColumns } from './build-columns';
 import { childCounts } from './child-counts';
+import { groupOf } from './group-of';
 import { filtersActive } from './filters-active';
 import { listedThreads } from './listed-threads';
 import { matchesFilters } from './matches-filters';
@@ -14,12 +15,12 @@ import type { CardData, CardFacts, KanbanView, TrailInfo, ViewInput } from './mo
 
 const isClosed = (item: ItemRef): boolean => CLOSED_STATUSES.includes(item.status);
 
-const cardOf = (item: ItemRef, facts: CardFacts, now: number): CardData => {
+const cardOf = (item: ItemRef, facts: CardFacts, now: number, group: string | undefined): CardData => {
   const waiting = needsYou(facts.needs);
   const quiet = quietMs(item, waiting, now);
   const { asks, signals, conflicted, needs, children, trail } = facts;
   const attention = attentionOf({ item, needs, asks, signals, quietMs: quiet });
-  return { id: item.id, item, needsYou: waiting, needs, children, trail, asks, signals, attention, quietMs: quiet, conflicted };
+  return { id: item.id, item, needsYou: waiting, needs, children, trail, asks, signals, attention, quietMs: quiet, conflicted, ...(group ? { group } : {}) };
 };
 
 const longTrail = (trail: TrailInfo | undefined): TrailInfo | null => (trail && trail.depth >= TRAIL_MIN_DEPTH ? trail : null);
@@ -46,11 +47,11 @@ const buildView = (input: ViewInput): KanbanView => {
     children: children.get(item.id) ?? NO_CHILDREN,
     trail: longTrail(trails.get(item.id)),
   });
-  const cards = live.map((item) => cardOf(item, facts(item), now));
+  const parents = parentItems(items);
+  const cards = live.map((item) => cardOf(item, facts(item), now, groupOf(item, prefs.group, parents)));
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
   const shown = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
   const filtered = filtersActive(filters);
-  const parents = parentItems(items);
   const seeds = prefs.group === 'thread' && !filtered ? listedThreads(threads) : [];
   return {
     columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, showClosed, seeds, parents }),

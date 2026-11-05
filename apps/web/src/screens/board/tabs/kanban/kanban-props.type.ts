@@ -96,6 +96,7 @@ interface QuietBadgeProps {
 
 interface ParentHeaderProps {
   parent: ItemRef;
+  withCode: boolean;
 }
 
 interface ColumnAddProps {

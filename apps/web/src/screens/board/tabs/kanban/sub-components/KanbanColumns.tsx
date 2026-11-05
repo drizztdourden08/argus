@@ -18,7 +18,12 @@ import { QuietBadge } from './QuietBadge';
 
 const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => card.quietMs !== null).length;
 
-const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} /> : undefined);
+const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} withCode /> : undefined);
+
+const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string): ReactNode => {
+  const parent = parents.get(id);
+  return parent ? <ParentHeader parent={parent} withCode={false} /> : undefined;
+};
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
   const { boardKey, view, state, threads, now, selection, ops, add, focus, onOpen } = props;
@@ -57,6 +62,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
+      renderGroupHeader={(groupId) => frameHeader(view.parents, groupId)}
       renderCard={(card) => (
         <ItemCard
           boardKey={boardKey}

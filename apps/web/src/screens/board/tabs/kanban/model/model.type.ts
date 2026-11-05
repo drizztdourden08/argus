@@ -83,6 +83,7 @@ interface CardData {
   attention: AttentionKind[];
   quietMs: number | null;
   conflicted: boolean;
+  group?: string;
 }
 
 interface CardFacts {
