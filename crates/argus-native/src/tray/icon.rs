@@ -202,8 +202,16 @@ mod tests {
             .filter(|p| p[3] == 255)
             .map(|p| [p[0], p[1], p[2]])
             .collect();
+        colours.sort_unstable();
         colours.dedup();
         colours
+    }
+
+    const EMERALD: [u8; 3] = [18, 160, 110];
+
+    fn is_stone(colour: [u8; 3]) -> bool {
+        let (low, high) = (colour.iter().min().unwrap(), colour.iter().max().unwrap());
+        high - low <= 10 && *low > 0 && *high < 255
     }
 
     #[test]
@@ -259,11 +267,18 @@ mod tests {
     }
 
     #[test]
-    fn the_mark_is_white_on_a_dark_taskbar_and_black_on_a_light_one() {
-        let white = render(IconKind::Running, Ink::White, 32).unwrap();
-        let black = render(IconKind::Running, Ink::Black, 32).unwrap();
-        assert_eq!(solid_colours(&white), vec![[255, 255, 255]]);
-        assert_eq!(solid_colours(&black), vec![[0, 0, 0]]);
+    fn the_mark_is_the_same_colour_picture_on_a_dark_and_a_light_taskbar() {
+        for wanted in [16, 32, 64] {
+            let dark = render(IconKind::Running, Ink::White, wanted).unwrap();
+            let light = render(IconKind::Running, Ink::Black, wanted).unwrap();
+            assert_eq!(dark, light, "both inks hold the same mark at {wanted}");
+            let colours = solid_colours(&dark);
+            assert!(colours.contains(&EMERALD), "the emerald facet is there");
+            assert!(
+                colours.iter().all(|c| *c == EMERALD || is_stone(*c)),
+                "only the stone greys and the emerald, no pure white or black: {colours:?}"
+            );
+        }
     }
 
     #[test]
