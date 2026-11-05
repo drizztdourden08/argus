@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
+import type { SortDirection } from '@drizztdourden08/tessera';
+import type { ChangesFilters, ChangesGroup, ChangesOrder } from './changes.type';
 
 const CHECK_STATUSES = defineStatuses({
   queued: { label: 'Queued', tone: 'neutral' },
@@ -36,4 +38,30 @@ const LOG_READING = 'Reading the log.';
 
 const LOG_EMPTY = 'This step wrote no log.';
 
-export { CHANGE_KIND, CHECK_STATUSES, CHECKS_NONE, CHECKS_READING, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, LOG_EMPTY, LOG_READING, PR_PANE_TAB, PR_STATUSES, SIGNAL_MAX };
+const CHANGES_TAB = 'changes';
+
+const CHANGES_GROUPS: readonly { id: ChangesGroup; label: string }[] = [
+  { id: 'item', label: 'Item' },
+  { id: 'status', label: 'Status' },
+  { id: 'none', label: 'None' },
+];
+
+const CHANGES_ORDERS: readonly { id: ChangesOrder; label: string }[] = [
+  { id: 'created', label: 'Created' },
+  { id: 'merged', label: 'Merged' },
+  { id: 'title', label: 'Title' },
+];
+
+const CHANGES_DIRECTION: SortDirection = 'desc';
+
+const CHANGES_FILTERS: ChangesFilters = { query: '', status: '', item: '', author: '', base: '' };
+
+const STATUS_OPTIONS = [
+  { value: 'open', label: 'Open' },
+  { value: 'merged', label: 'Merged' },
+  { value: 'closed', label: 'Closed' },
+];
+
+const NO_MATCH_TEXT = 'No pull request matches the filters.';
+
+export { CHANGE_KIND, CHANGES_DIRECTION, CHANGES_FILTERS, CHANGES_GROUPS, CHANGES_ORDERS, CHANGES_TAB, NO_MATCH_TEXT, STATUS_OPTIONS, CHECK_STATUSES, CHECKS_NONE, CHECKS_READING, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, LOG_EMPTY, LOG_READING, PR_PANE_TAB, PR_STATUSES, SIGNAL_MAX };
