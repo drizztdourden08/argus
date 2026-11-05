@@ -13,7 +13,7 @@ const OTHER_TEXT: &str = "external: brock lead publishes tessera 0.95";
 fn blocked_board() -> Work {
     let work = Work::new();
     for title in ["Two", "Three", "Four", "Five", "Six"] {
-        work.worker_ok(&["item", "add", title]);
+        work.seed_item(title);
     }
     work.worker_ok(&["item", "status", "I-5", "done"]);
     let mut board = work.board();
@@ -109,7 +109,7 @@ fn a_second_run_finds_nothing_and_a_clean_board_says_so() {
 #[test]
 fn an_id_that_would_close_a_cycle_becomes_a_to_do_for_the_thread() {
     let work = Work::new();
-    work.worker_ok(&["item", "add", "Two"]);
+    work.seed_item("Two");
     work.worker_ok(&["item", "block", "I-1", "--on", "I-2"]);
     let mut board = work.board();
     board["items"]["I-2"]["blocker"] = json!("I-1");

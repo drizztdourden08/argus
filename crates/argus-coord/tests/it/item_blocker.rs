@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 /// A board with the item I-1 and a second item I-2.
 fn two_items() -> Work {
     let work = Work::new();
-    work.worker_ok(&["item", "add", "Second"]);
+    work.seed_item("Second");
     work
 }
 

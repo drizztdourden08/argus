@@ -89,6 +89,7 @@ fn item_fields(
     op: &Value,
 ) -> Result<(Map<String, Value>, String, Outcome), BoardError> {
     if !typed::wants_create(set) {
+        typed::plain_needs_parent(board)?;
         let (fields, owner) = plain_item(board, who, set)?;
         return Ok((fields, owner, Outcome::default()));
     }

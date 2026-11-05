@@ -56,6 +56,7 @@ interface ColumnAddFormProps {
   preset: AddPreset;
   group: ItemGroup;
   threads: Threads;
+  items: ReadonlyMap<string, ItemRef>;
   onCreate: (item: ItemInput) => void;
   onClose: () => void;
 }

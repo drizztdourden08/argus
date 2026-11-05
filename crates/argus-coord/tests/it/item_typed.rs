@@ -20,14 +20,20 @@ fn decisions_about(work: &Work, id: &str) -> Vec<Value> {
 }
 
 #[test]
-fn a_plain_add_prints_as_before_and_writes_no_subject_and_no_typed_field() {
+fn a_plain_add_needs_an_epic_and_writes_no_subject_and_no_typed_field() {
     let work = Work::new();
-    let said = work.worker_ok(&["item", "add", "Plain", "--ac", "one", "--ac", "two"]);
+    let bare = work.worker(&["item", "add", "Plain"]);
+    assert_eq!(bare.code, 1);
+    assert!(bare.err.contains("--parent I-n"), "{}", bare.err);
+    let epic = work.seed_epic();
+    let said = work.worker_ok(&[
+        "item", "add", "Plain", "--parent", epic, "--ac", "one", "--ac", "two",
+    ]);
     assert_eq!(said, "I-2: Plain (worker, 2 AC)\n");
     let made = item(&work, "I-2");
     assert_eq!(made["status"], "todo");
     assert_eq!(made["thread"], "worker");
-    for key in ["subject", "type", "assignee", "stage", "fields", "parent"] {
+    for key in ["subject", "type", "assignee", "stage", "fields"] {
         assert!(made.get(key).is_none(), "{key} was written: {made}");
     }
 }
@@ -35,7 +41,8 @@ fn a_plain_add_prints_as_before_and_writes_no_subject_and_no_typed_field() {
 #[test]
 fn the_subject_flag_is_ignored_by_add_and_set() {
     let work = Work::new();
-    work.worker_ok(&["item", "add", "Plain", "--subject", "ui"]);
+    let epic = work.seed_epic();
+    work.worker_ok(&["item", "add", "Plain", "--subject", "ui", "--parent", epic]);
     assert!(item(&work, "I-2").get("subject").is_none());
     let ran = work.worker(&["item", "set", "I-2", "--subject", "ui"]);
     assert_eq!(ran.code, 1);
@@ -96,7 +103,10 @@ fn add_refuses_what_the_registry_refuses() {
         "{}",
         bad_type.err
     );
-    let bad_field = work.worker(&["item", "add", "Odd", "--type", "task", "--field", "mood=ok"]);
+    let epic = work.seed_epic();
+    let bad_field = work.worker(&[
+        "item", "add", "Odd", "--type", "task", "--parent", epic, "--field", "mood=ok",
+    ]);
     assert!(
         bad_field.err.contains("mood is not a field here"),
         "{}",
@@ -108,7 +118,7 @@ fn add_refuses_what_the_registry_refuses() {
         work.board()["items"]
             .as_object()
             .map_or(0, serde_json::Map::len),
-        1
+        2
     );
 }
 
@@ -144,6 +154,8 @@ fn add_places_a_child_under_its_parent_and_a_typed_add_for_a_thread_assigns_it()
         "For the worker",
         "--type",
         "task",
+        "--parent",
+        "I-2",
         "--for",
         "worker",
     ]);
@@ -256,7 +268,10 @@ fn force_keeps_the_revision_check_of_if_rev() {
 #[test]
 fn a_rule_that_only_warns_prints_the_warning_after_the_line() {
     let work = Work::new();
-    work.worker_ok(&["item", "add", "Chore", "--type", "task", "--ac", "Checked"]);
+    let epic = work.seed_epic();
+    work.worker_ok(&[
+        "item", "add", "Chore", "--type", "task", "--parent", epic, "--ac", "Checked",
+    ]);
     let said = work.worker_ok(&["item", "status", "I-2", "done"]);
     let lines: Vec<&str> = said.lines().collect();
     assert!(lines[0].starts_with("I-2: status updated (rev "), "{said}");
@@ -382,6 +397,8 @@ fn add_and_set_keep_a_picture_with_its_caption_and_keep_the_same_bytes_once() {
         "item",
         "add",
         "With picture",
+        "--parent",
+        work.seed_epic(),
         "--image",
         "shot.png",
         "The form",

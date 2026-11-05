@@ -140,6 +140,7 @@
         "readOnly": { "type": "boolean" },
         "hideOnKanban": { "type": "boolean" },
         "parents": { "$ref": "#/$defs/names" },
+        "parentRequired": { "type": "boolean" },
         "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } },
         "statuses": { "$ref": "#/$defs/names" },
         "fields": { "$ref": "#/$defs/names" },

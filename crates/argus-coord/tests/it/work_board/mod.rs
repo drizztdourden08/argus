@@ -61,6 +61,34 @@ impl Work {
         serde_json::from_str(&text).expect("board json")
     }
 
+    /// Adds a plain item the way an older board holds one (a bare `item add` is refused now:
+    /// a task needs a parent). It is a copy of I-1 with the next id and `title`.
+    pub fn seed_item(&self, title: &str) -> String {
+        let mut board = self.board();
+        let n = board["counters"]["I"].as_u64().unwrap_or(1) + 1;
+        let id = format!("I-{n}");
+        let mut item = board["items"]["I-1"].clone();
+        item["id"] = Value::from(id.clone());
+        item["title"] = Value::from(title);
+        board["items"][id.as_str()] = item;
+        board["counters"]["I"] = Value::from(n);
+        self.save(&board);
+        id
+    }
+
+    /// An open epic with a fixed id (`I-90`) that leaves the counter alone, for a story or a task
+    /// to sit under without moving the ids a test counts on.
+    pub fn seed_epic(&self) -> &'static str {
+        let mut board = self.board();
+        let mut item = board["items"]["I-1"].clone();
+        item["id"] = Value::from("I-90");
+        item["title"] = Value::from("Epic");
+        item["type"] = Value::from("epic");
+        board["items"]["I-90"] = item;
+        self.save(&board);
+        "I-90"
+    }
+
     /// Writes a changed board back, as `store.mjs` does.
     pub fn save(&self, board: &Value) {
         let text = serde_json::to_string_pretty(board).expect("board json");

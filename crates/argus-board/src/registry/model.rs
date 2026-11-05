@@ -311,6 +311,9 @@ shown_struct! {
         pub id_key: Option<String>,
         /// The types it may sit under; empty means a root only.
         pub parents: Vec<String>,
+        /// Whether an item of this type must have a parent (a story and a task sit under an epic).
+        #[serde(default)]
+        pub parent_required: bool,
         /// The item types a build may serve; empty for every other type.
         #[serde(default)]
         pub serves: Vec<String>,

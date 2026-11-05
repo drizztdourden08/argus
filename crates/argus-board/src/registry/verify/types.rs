@@ -43,6 +43,9 @@ fn verify_places(t: &ItemType, say: &mut impl FnMut(&str)) {
     if t.collection != Collection::Items && !t.parents.is_empty() {
         say("only a work item has a parent type; plans hold a test case through their cases");
     }
+    if t.parent_required && t.parents.is_empty() {
+        say("a type that requires a parent must name the parent types it may sit under");
+    }
     verify_keys(t, say);
 }
 

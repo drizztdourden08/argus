@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { ITEM_REGISTRY, allowsParent, fieldOf, firstStageIn, itemTypeOf, knowsLead, laneOf, limitOf, typeHasField } from '../../src/data/registry';
+import { ITEM_REGISTRY, allowsParent, fieldOf, firstStageIn, itemTypeOf, knowsLead, laneOf, limitOf, requiresParent, typeHasField } from '../../src/data/registry';
 
 const stageOf = (type: string, stage: string) => itemTypeOf(type)?.stages.find((entry) => entry.id === stage);
 
@@ -25,6 +25,12 @@ describe('K2 the web reads the item type registry file', { tags: ['critical'] },
     expect(firstStageIn('bug', 'todo')?.id).toBe('reported');
     expect(firstStageIn('bug', 'dropped')?.id).toBe('wontfix');
     expect(firstStageIn('story', 'todo')?.id).toBe('draft');
+  });
+
+  it('requires an epic parent for a story and a task only', () => {
+    expect(requiresParent('story')).toBe(true);
+    expect(requiresParent('task')).toBe(true);
+    expect(['epic', 'bug', 'debt', 'test-plan', 'ghost'].some(requiresParent)).toBe(false);
   });
 
   it('follows the parent table of the design', () => {

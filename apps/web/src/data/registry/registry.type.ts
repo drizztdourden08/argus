@@ -92,6 +92,7 @@ interface ItemType extends KindFace {
   readOnly?: boolean;
   hideOnKanban?: boolean;
   parents: string[];
+  parentRequired?: boolean;
   stages: ItemStage[];
   statuses?: string[];
   fields: string[];

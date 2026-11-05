@@ -18,7 +18,8 @@ fn seeded() -> Work {
         "--field",
         "severity=S2",
     ]);
-    work.worker_ok(&["item", "add", "Plan", "--type", "story"]);
+    let epic = work.seed_epic();
+    work.worker_ok(&["item", "add", "Plan", "--type", "story", "--parent", epic]);
     work
 }
 

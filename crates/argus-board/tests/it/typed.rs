@@ -64,6 +64,11 @@ fn bug_at(stage: &str) -> (Value, String) {
     (b, id)
 }
 
+/// A new epic for a story or a task to sit under; answers its id.
+fn an_epic(b: &mut Value) -> String {
+    made(b, &lead(), typed("epic", "Parent epic"))
+}
+
 /// An epic with one story under it; returns the epic id and the story id.
 fn epic_with_story(b: &mut Value) -> (String, String) {
     let epic = made(b, &lead(), typed("epic", "Release"));
@@ -89,11 +94,11 @@ fn forced_decisions(board: &Value) -> usize {
 #[test]
 fn an_item_without_a_type_is_written_and_changed_exactly_as_before() {
     let mut b = alpha();
-    let id = made(
-        &mut b,
-        &Who::human(),
-        json!({"title": "Plain", "thread": "ui", "ac": ["one"]}),
-    );
+    let id = "I-90".to_owned();
+    b["items"][id.as_str()] = json!({
+        "title": "Plain", "thread": "ui", "status": "todo", "origin": "coordinator",
+        "ac": [{"n": 1, "text": "one", "done": false}],
+    });
     let keys: Vec<String> = b["items"][id.as_str()]
         .as_object()
         .map(|m| m.keys().cloned().collect())
@@ -126,10 +131,11 @@ fn an_item_without_a_type_is_written_and_changed_exactly_as_before() {
 #[test]
 fn the_subject_of_an_item_is_never_written_or_edited_again() {
     let mut b = alpha();
+    let epic = an_epic(&mut b);
     let id = made(
         &mut b,
         &Who::human(),
-        json!({"title": "No subject", "thread": "ui", "subject": "ui"}),
+        json!({"title": "No subject", "thread": "ui", "subject": "ui", "parent": epic}),
     );
     assert_eq!(b["items"][id.as_str()].get("subject"), None);
     let res = edit(&mut b, &Who::human(), "I-1", json!({"subject": "other"}));
@@ -244,10 +250,12 @@ fn an_epic_closes_only_when_every_child_is_done_or_dropped() {
 #[test]
 fn a_story_closes_only_with_its_criteria_checked() {
     let mut b = alpha();
+    let epic = an_epic(&mut b);
     let story = made(
         &mut b,
         &lead(),
-        json!({"title": "As a user", "thread": "ui", "type": "story", "ac": ["it works"]}),
+        json!({"title": "As a user", "thread": "ui", "type": "story", "parent": epic,
+               "ac": ["it works"]}),
     );
     let res = edit(&mut b, &Who::human(), &story, json!({"status": "done"}));
     assert!(refused(&res).contains("AC1"));
@@ -263,10 +271,11 @@ fn a_story_closes_only_with_its_criteria_checked() {
 #[test]
 fn a_task_only_warns_about_open_criteria() {
     let mut b = alpha();
+    let epic = an_epic(&mut b);
     let task = made(
         &mut b,
         &lead(),
-        json!({"title": "Do it", "thread": "ui", "type": "task", "ac": ["one"]}),
+        json!({"title": "Do it", "thread": "ui", "type": "task", "parent": epic, "ac": ["one"]}),
     );
     let res = edit(&mut b, &Who::human(), &task, json!({"status": "done"}));
     applied(&res);
@@ -379,7 +388,12 @@ fn fields_are_checked_by_the_registry_and_belong_to_the_type() {
         b["items"][bug.as_str()]["fields"]["expected"],
         "It stays up"
     );
-    let task = made(&mut b, &lead(), typed("task", "Plain task"));
+    let epic = an_epic(&mut b);
+    let task = made(
+        &mut b,
+        &lead(),
+        json!({"title": "Plain task", "thread": "ui", "type": "task", "parent": epic}),
+    );
     let none = edit(&mut b, &lead(), &task, json!({"fields.severity": "S1"}));
     assert!(refused(&none).contains("no fields of its own"));
 }
@@ -421,8 +435,10 @@ fn a_parent_must_be_allowed_acyclic_and_on_the_board() {
 #[test]
 fn a_cycle_in_the_parents_is_refused_even_where_the_types_would_allow_it() {
     let mut b = alpha();
-    let first = made(&mut b, &lead(), typed("story", "One"));
-    let second = made(&mut b, &lead(), typed("story", "Two"));
+    let epic = an_epic(&mut b);
+    let under = |title: &str| json!({"title": title, "thread": "ui", "type": "story", "parent": epic});
+    let first = made(&mut b, &lead(), under("One"));
+    let second = made(&mut b, &lead(), under("Two"));
     b["items"][first.as_str()]["parent"] = json!(second);
     let res = edit(&mut b, &lead(), &second, json!({"parent": first}));
     assert!(refused(&res).contains("would be a cycle"));
@@ -509,16 +525,17 @@ fn a_thread_cannot_hand_its_item_over_through_the_assignee() {
 #[test]
 fn a_new_item_assigned_to_a_thread_belongs_to_that_thread() {
     let mut b = alpha();
+    let epic = an_epic(&mut b);
     let id = made(
         &mut b,
         &Who::human(),
-        json!({"title": "Hand", "assignee": "ui"}),
+        json!({"title": "Hand", "assignee": "ui", "parent": epic}),
     );
     assert_eq!(b["items"][id.as_str()]["thread"], "ui");
     let clash = make(
         &mut b,
         &Who::human(),
-        json!({"title": "Clash", "thread": "coordinator", "assignee": "ui"}),
+        json!({"title": "Clash", "thread": "coordinator", "assignee": "ui", "parent": epic}),
     );
     assert!(refused(&clash).contains("differ"));
 }
@@ -560,10 +577,11 @@ fn images_are_listed_with_their_proof_and_a_rich_text_may_name_them() {
     let mut b = alpha();
     let digest = "a".repeat(64);
     let pic = json!([{"n": 1, "file": "I-2-1.png", "caption": "The form", "sha256": digest}]);
+    let epic = an_epic(&mut b);
     let id = made(
         &mut b,
         &lead(),
-        json!({"title": "Pictured", "thread": "ui", "type": "task", "images": pic,
+        json!({"title": "Pictured", "thread": "ui", "type": "task", "parent": epic, "images": pic,
                "description": "![The form](img:1)"}),
     );
     assert_eq!(b["items"][id.as_str()]["images"][0]["n"], 1);
@@ -586,7 +604,12 @@ fn images_are_listed_with_their_proof_and_a_rich_text_may_name_them() {
 #[test]
 fn a_typed_item_takes_its_text_from_the_registry_rules() {
     let mut b = alpha();
-    let id = made(&mut b, &lead(), typed("task", "Rich"));
+    let epic = an_epic(&mut b);
+    let id = made(
+        &mut b,
+        &lead(),
+        json!({"title": "Rich", "thread": "ui", "type": "task", "parent": epic}),
+    );
     let lone = "This is a long paragraph without any bullet, written the old way, that goes on and on past the short limit of a single line, and then it keeps going for a while longer.";
     let res = edit(&mut b, &lead(), &id, json!({"description": lone}));
     assert!(refused(&res).contains("lone paragraph"));
@@ -602,16 +625,17 @@ fn a_typed_item_takes_its_text_from_the_registry_rules() {
 fn an_untyped_item_takes_its_description_by_the_rich_rule_too() {
     let mut b = alpha();
     let lone = "This is a long paragraph without any bullet, written the old way, that goes on and on past the short limit of a single line, and then it keeps going for a while longer.";
+    let epic = an_epic(&mut b);
     let refused_new = make(
         &mut b,
         &lead(),
-        json!({"title": "Plain", "thread": "ui", "description": lone}),
+        json!({"title": "Plain", "thread": "ui", "parent": epic, "description": lone}),
     );
     assert!(refused(&refused_new).contains("lone paragraph"));
     let id = made(
         &mut b,
         &lead(),
-        json!({"title": "Plain", "thread": "ui", "description": "Why
+        json!({"title": "Plain", "thread": "ui", "parent": epic, "description": "Why
 - first"}),
     );
     let res = edit(&mut b, &lead(), &id, json!({"description": lone}));
@@ -757,4 +781,27 @@ fn a_force_reason_overrides_the_rule_but_keeps_the_revision_check() {
     assert_eq!(b["items"][id.as_str()]["stage"], "verifying");
     let skipped = apply_op(&mut b, &stale(json!(true)), &Who::human(), None);
     assert_ne!(skipped.status, Status::Conflict, "{}", skipped.outcome);
+}
+
+#[test]
+fn a_story_or_task_without_an_epic_is_refused_and_keeps_its_parent_on_edit() {
+    let mut b = alpha();
+    let epic = made(&mut b, &lead(), typed("epic", "Open epic"));
+    for kind in ["story", "task"] {
+        let bare = make(&mut b, &lead(), typed(kind, "Orphan"));
+        let text = refused(&bare);
+        assert!(text.contains("--parent I-n"), "{text}");
+        assert!(text.contains(&format!("{epic} \"Open epic\"")), "{text}");
+    }
+    let plain = make(&mut b, &lead(), json!({"title": "Bare", "thread": "ui"}));
+    assert!(refused(&plain).contains("--parent I-n"));
+    let child = made(
+        &mut b,
+        &lead(),
+        json!({"title": "Part", "thread": "ui", "type": "task", "parent": epic}),
+    );
+    let clear = edit(&mut b, &lead(), &child, json!({"parent": "none"}));
+    assert!(refused(&clear).contains("needs a parent"));
+    let bug = made(&mut b, &lead(), bug_set("Roots are fine"));
+    applied(&edit(&mut b, &lead(), &bug, json!({"parent": "none"})));
 }
