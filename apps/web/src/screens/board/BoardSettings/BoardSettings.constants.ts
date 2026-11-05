@@ -9,7 +9,9 @@ const ICON_SAVED = 'The board icon is saved.';
 
 const ICON_NOTE = 'The icon of this board in the sidebar and on its card. It is separate from the lead avatar.';
 
-const ICON_GRID_NOTE = 'Icon grid comes with the Tessera icon picker';
+const ICON_VALUE_PREFIX = 'icon:';
+
+const ICON_PICKER_LABEL = 'Pick a board icon';
 
 const ICON_TYPES = ['image/png', 'image/svg+xml'];
 
@@ -19,4 +21,4 @@ const ICON_MODES: { value: IconMode; label: string }[] = [
   { value: 'upload', label: 'Upload' },
 ];
 
-export { AVATAR_NOTE, AVATAR_SAVED, ICON_GRID_NOTE, ICON_MODES, ICON_NOTE, ICON_SAVED, ICON_TYPES };
+export { AVATAR_NOTE, AVATAR_SAVED, ICON_MODES, ICON_NOTE, ICON_PICKER_LABEL, ICON_SAVED, ICON_VALUE_PREFIX, ICON_TYPES };

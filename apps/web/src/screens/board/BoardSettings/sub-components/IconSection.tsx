@@ -1,11 +1,13 @@
 /* @layer renderer-app @kind component */
-import { Button, DropZone, Flex, Pressable, SegmentedControl, Text } from '@drizztdourden08/tessera';
+import { Button, DropZone, Flex, IconPicker, Pressable, SegmentedControl, Text } from '@drizztdourden08/tessera';
 import { BRAND_FAMILY, BrandMark } from '@drizztdourden08/tessera/brand';
 import { useState } from 'react';
 import { AVATAR_BRANDS, BRAND_PREFIX } from '../../../../avatar';
+import { BOARD_ICON_NAMES } from '../../../../board-icon';
 import { BoardIcon } from '../../../../shell/BoardIcon';
+import { pickerValue } from '../behavior/picker-value';
 import { useIconChoice } from '../behavior/useIconChoice';
-import { ICON_GRID_NOTE, ICON_MODES, ICON_NOTE, ICON_TYPES } from '../BoardSettings.constants';
+import { ICON_MODES, ICON_NOTE, ICON_PICKER_LABEL, ICON_TYPES } from '../BoardSettings.constants';
 import type { IconMode, SectionProps } from '../BoardSettings.type';
 
 const IconSection = (props: SectionProps) => {
@@ -36,7 +38,16 @@ const IconSection = (props: SectionProps) => {
           ))}
         </Flex>
       )}
-      {mode === 'icon' && <Text variant="caption" tone="muted">{ICON_GRID_NOTE}</Text>}
+      {mode === 'icon' && (
+        <IconPicker
+          label={ICON_PICKER_LABEL}
+          icons={BOARD_ICON_NAMES}
+          allowUpload={false}
+          disabled={choice.busy}
+          value={pickerValue(choice.setting)}
+          onChange={(value) => value.kind === 'icon' && void choice.pickIcon(value.name)}
+        />
+      )}
       {mode === 'upload' && (
         <DropZone variant="inline" size="sm" accept={ICON_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} />
       )}

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { BrandApp } from '@drizztdourden08/tessera/brand';
+import type { BoardIconName } from '../../../board-icon';
 import type { PostResult } from '../../../data/api';
 
 type IconMode = 'brand' | 'icon' | 'upload';
@@ -41,6 +42,7 @@ interface AvatarChoice {
 
 interface IconChoice extends AvatarChoice {
   avatar: string | null;
+  pickIcon: (name: BoardIconName) => Promise<void>;
 }
 
 export type { AvatarChoice, BoardSettingsButtonProps, BoardSettingsDialogProps, IconChoice, IconMode, SectionProps, SettingSave, SettingSaveOptions };
