@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
+import { NO_LIVE } from './board-signals.constants';
 import type { BoardLive, BoardRecord, BoardSignal } from './board.type';
-
-const NO_LIVE: BoardLive = { fault: null, stalls: 0, syncDue: false };
 
 const faultLabel = (live: BoardLive): string => (live.fault?.reason === 'board-closed' ? 'board closed' : 'wake failed');
 

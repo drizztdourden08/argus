@@ -115,7 +115,7 @@ describe('S1 editing in the thread drawer', { tags: ['standard'] }, () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit brief' }));
     const box = within(dialog).getByRole<HTMLTextAreaElement>('textbox', { name: 'Brief' });
     fireEvent.change(box, { target: { value: 'Read the new plan first.' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save brief' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(posted(fetchMock)).toHaveLength(1));
     expect(posted(fetchMock)[0]).toMatchObject({ kind: 'edit', target: { c: 'threads', id: 'worker' }, set: { brief: 'Read the new plan first.' }, prev: { brief: 'Read the plan first.' } });
   });
@@ -124,7 +124,7 @@ describe('S1 editing in the thread drawer', { tags: ['standard'] }, () => {
     const { fetchMock, dialog } = await open();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Edit brief' }));
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'Brief' }), { target: { value: 'x'.repeat(1201) } });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save brief' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     expect(await within(dialog).findByText('At most 1200 characters.')).toBeTruthy();
     expect(posted(fetchMock)).toHaveLength(0);
   });

@@ -7,13 +7,12 @@ import {
   attentionOf, cardCounts, cardTone, leadState, masterLine, registryChip, sortCards, sortRegistry, totalsOf,
 } from '../../src/screens/overview/dashboards/model';
 import { hotOf } from '../../src/screens/overview/dashboards/model/hot-of';
+import { cardAt } from '../overview-boards/helpers';
 
 const NOW = Date.parse('2026-10-26T12:00:00.000Z');
 const minutesAgo = (minutes: number): string => new Date(NOW - minutes * 60000).toISOString();
 
-const card = (key: string, extra: Partial<Card> = {}): Card => ({
-  key, name: key, state: 'running', root: null, url: `/p/${key}/`, coordinator: { session: 's', link: null, lastSeen: minutesAgo(1), activity: 'idle', note: null }, ...extra,
-});
+const card = (key: string, extra: Partial<Card> = {}): Card => cardAt(key, NOW, extra);
 
 describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => {
   it('is not started with no board', () => {

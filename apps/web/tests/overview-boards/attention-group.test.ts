@@ -6,6 +6,10 @@ import { COUNTS, record } from './helpers';
 
 const ARCHIVED = '2026-11-01T00:00:00.000Z';
 
+const keysOf = (group: { boards: readonly { key: string }[] }): string[] => group.boards.map((entry) => entry.key);
+const shapeOf = (group: { id: string; label: string; boards: readonly { key: string }[] }) => [group.id, group.label, keysOf(group)];
+const idKeysOf = (group: { id: string; boards: readonly { key: string }[] }) => [group.id, keysOf(group)];
+
 describe('P3 the attention group of a board', { tags: ['critical'] }, () => {
   it('puts a board that needs you, fails, is blocked, stalls or faults in Needs you', () => {
     expect(attentionGroup(record('a', { counts: { ...COUNTS, needsYou: 1 } }))).toBe('needs-you');
@@ -38,7 +42,7 @@ describe('P3 grouping boards by attention', { tags: ['critical'] }, () => {
 
   it('orders the groups Needs you, Running, Quiet, Not started, Archived', () => {
     const groups = groupBoards(boards);
-    expect(groups.map((group) => [group.id, group.label, group.boards.map((entry) => entry.key)])).toEqual([
+    expect(groups.map(shapeOf)).toEqual([
       ['needs-you', 'Needs you', ['need']],
       ['running', 'Running', ['busy']],
       ['quiet', 'Quiet', ['quiet']],
@@ -54,11 +58,11 @@ describe('P3 grouping boards by attention', { tags: ['critical'] }, () => {
   it('leaves out empty groups and keeps the input order inside a group', () => {
     const groups = groupBoards([record('b'), record('a')]);
     expect(groups.map((group) => group.id)).toEqual(['quiet']);
-    expect(groups[0]?.boards.map((entry) => entry.key)).toEqual(['b', 'a']);
+    expect(groups[0] && keysOf(groups[0])).toEqual(['b', 'a']);
   });
 
   it('reads the live facts of each board through the lookup', () => {
     const groups = groupBoards([record('a'), record('b')], (entry) => ({ fault: null, stalls: entry.key === 'b' ? 1 : 0, syncDue: false }));
-    expect(groups.map((group) => [group.id, group.boards.map((entry) => entry.key)])).toEqual([['needs-you', ['b']], ['quiet', ['a']]]);
+    expect(groups.map(idKeysOf)).toEqual([['needs-you', ['b']], ['quiet', ['a']]]);
   });
 });
