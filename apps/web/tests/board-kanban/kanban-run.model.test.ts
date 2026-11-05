@@ -141,7 +141,7 @@ describe('I-70 P7 the posts', { tags: ['critical'] }, () => {
     const fetchMock = mockPosts();
     await planRunOp('rotp', 'I-1', { do: 'record', test: 'T-2', status: 'fail', note: 'no button' });
     const post = await onlyPost(fetchMock);
-    expect(post?.body).toMatchObject({ kind: 'plan-run-record', target: { c: 'items', id: 'I-1' }, test: 'T-2', status: 'fail', note: 'no button' });
+    expect(post?.body).toMatchObject({ kind: 'plan-run-record', target: { c: 'items', id: 'I-1' }, test: 'T-2', result: 'fail', note: 'no button' });
   });
 
   it('posts plan-run-end', async () => {

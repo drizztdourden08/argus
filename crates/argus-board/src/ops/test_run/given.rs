@@ -31,12 +31,13 @@ fn case_of(board: &Board, who: &Who, op: &Value, plan: &Value) -> Result<Value, 
     Ok(found.clone())
 }
 
+/// The result the op asks for, read from `result`: a posted op's own `status` is the post's state.
 fn status_of(op: &Value) -> Result<&'static str, BoardError> {
-    let asked = op["status"].as_str();
+    let asked = op["result"].as_str();
     let status = STATUSES.iter().find(|s| Some(**s) == asked);
     status
         .copied()
-        .ok_or_else(|| refuse(format!("status must be one of {}.", STATUSES.join(", "))))
+        .ok_or_else(|| refuse(format!("result must be one of {}.", STATUSES.join(", "))))
 }
 
 /// The note of a result: required for a fail, partial or blocked, free for the rest.

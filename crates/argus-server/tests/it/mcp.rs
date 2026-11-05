@@ -188,7 +188,7 @@ async fn reads_overview_summary_and_items() {
         json!({ "project": "alpha", "status": "doing" }),
     )
     .await;
-    assert_eq!(ids(&doing, "items"), ["I-1"]);
+    assert_eq!(ids(&doing, "items"), ["I-1", "I-20", "I-21"]);
     t.stop(false).await;
 }
 
@@ -207,7 +207,7 @@ async fn reads_item_tests_agents_and_entries() {
     .await;
     assert_eq!(ids(&manual, "tests"), ["T-2"]);
     let test = tool(&t, "get_test", json!({ "project": "alpha", "id": "T-2" })).await;
-    assert_eq!(test["test"]["build"], "b1");
+    assert_eq!(test["test"]["title"], "Bad password is refused");
     let live = tool(
         &t,
         "list_agents",
@@ -263,7 +263,8 @@ async fn resources_read_the_same_data() {
     let to_run = read(&t, "board://alpha/tests/to-run").await;
     let groups = to_run["groups"].as_array().expect("groups");
     assert_eq!(groups.len(), 1);
-    assert_eq!(groups[0]["build"], "b1");
+    assert_eq!(groups[0]["run"], "I-21");
+    assert_eq!(groups[0]["build"], "build-1");
     assert_eq!(ids(&groups[0], "tests"), ["T-2"]);
     assert_eq!(read(&t, "runs://alpha/active").await["runs"], json!([]));
     t.stop(false).await;

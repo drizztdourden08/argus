@@ -66,7 +66,7 @@ fn through_run(
     let target = run_target(board, plan)?;
     let rest = serde_json::Map::from_iter([
         ("test".to_owned(), json!(test)),
-        ("status".to_owned(), r.arg_json(1)),
+        ("result".to_owned(), r.arg_json(1)),
         ("note".to_owned(), json!(note)),
         ("proofs".to_owned(), json!(proofs)),
     ]);

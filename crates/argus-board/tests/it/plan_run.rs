@@ -27,7 +27,7 @@ fn run_op(board: &mut Value, who: &Who, kind: &str, plan: &str, rest: Value) -> 
 }
 
 fn record(board: &mut Value, plan: &str, test: &str, status: &str, note: &str) -> OpResult {
-    let extra = json!({"test": test, "status": status, "note": note});
+    let extra = json!({"test": test, "result": status, "note": note});
     run_op(board, &lead(), "plan-run-record", plan, extra)
 }
 
@@ -151,7 +151,7 @@ fn a_plan_has_one_open_run_and_a_ready_run_is_the_one_that_starts() {
         &lead(),
         "plan-run-record",
         "I-90",
-        json!({"test": "T-1", "status": "pass"}),
+        json!({"test": "T-1", "result": "pass"}),
     );
     applied(&on_run);
     assert_eq!(results_of(&b["items"]["I-90"]).len(), 1);
@@ -225,7 +225,7 @@ fn a_result_needs_an_open_run_a_case_a_status_and_a_note_when_it_is_not_a_pass()
     let foreign = record(&mut b, &plan, "T-4", "pass", "");
     assert!(refused(&foreign).contains("T-4 is not a case of"));
     let word = record(&mut b, &plan, "T-1", "moved", "x");
-    assert!(refused(&word).contains("status must be one of"));
+    assert!(refused(&word).contains("result must be one of"));
     for status in ["fail", "partial", "blocked"] {
         let bare = record(&mut b, &plan, "T-1", status, "");
         assert!(
@@ -233,7 +233,7 @@ fn a_result_needs_an_open_run_a_case_a_status_and_a_note_when_it_is_not_a_pass()
             "{status}"
         );
     }
-    let rest = json!({"test": "T-1", "status": "pass", "proofs": [7]});
+    let rest = json!({"test": "T-1", "result": "pass", "proofs": [7]});
     let proof = run_op(&mut b, &lead(), "plan-run-record", &plan, rest);
     assert!(refused(&proof).contains("T-1 has no proof 7"));
     let denied = run_op(
@@ -241,7 +241,7 @@ fn a_result_needs_an_open_run_a_case_a_status_and_a_note_when_it_is_not_a_pass()
         &stranger(),
         "plan-run-record",
         &plan,
-        json!({"test": "T-1", "status": "pass"}),
+        json!({"test": "T-1", "result": "pass"}),
     );
     assert!(refused(&denied).contains("belongs to ui"));
     assert_eq!(results_of(&run_of(&b, &plan, 0)).len(), 0);

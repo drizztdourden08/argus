@@ -89,7 +89,7 @@ describe('I-70 P7 recording', { tags: ['standard'] }, () => {
     await onCase(dialog, 'T-1');
     fireEvent.click(button(dialog, 'Pass'));
     await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', target: { c: 'items', id: 'I-1' }, test: 'T-1', status: 'pass', note: '' });
+    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', target: { c: 'items', id: 'I-1' }, test: 'T-1', result: 'pass', note: '' });
     await onCase(dialog, 'T-2');
   });
 
@@ -98,7 +98,7 @@ describe('I-70 P7 recording', { tags: ['standard'] }, () => {
     await onCase(dialog, 'T-1');
     fireEvent.keyDown(document.body, { key: 's' });
     await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', test: 'T-1', status: 'skip' });
+    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', test: 'T-1', result: 'skip' });
   });
 
   it('refuses a fail without a note, then sends it with the note', async () => {
@@ -111,7 +111,7 @@ describe('I-70 P7 recording', { tags: ['standard'] }, () => {
     expect(within(dialog).queryByRole('alert')).toBeNull();
     fireEvent.click(button(dialog, 'Fail'));
     await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', test: 'T-1', status: 'fail', note: 'no Approve button' });
+    expect(posted[0]?.body).toMatchObject({ kind: 'plan-run-record', test: 'T-1', result: 'fail', note: 'no Approve button' });
     await onCase(dialog, 'T-2');
   });
 

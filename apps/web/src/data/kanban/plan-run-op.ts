@@ -7,7 +7,7 @@ import type { PlanRunAction } from './plan-run.type';
 const bodyOf = (action: PlanRunAction): DocData => {
   if (action.do === 'start') return { kind: 'plan-run-start', build: action.build };
   if (action.do === 'end') return { kind: 'plan-run-end' };
-  return { kind: 'plan-run-record', test: action.test, status: action.status, note: action.note ?? '' };
+  return { kind: 'plan-run-record', test: action.test, result: action.status, note: action.note ?? '' };
 };
 
 const planRunOp = (key: string, planId: string, action: PlanRunAction): Promise<SentOp> =>

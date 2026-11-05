@@ -648,9 +648,10 @@ draft, ready, running, reported, passed and abandoned. A draft has no build. A r
 build that exists and is not retired (the gate `build-ready`). Handing a run to the owner means
 assigning a ready run to him. The ops `plan-run-start`, `plan-run-record` and `plan-run-end` keep
 their names. Start on a plan creates a running run, or starts the plan's ready draft. Record and
-end target the run, and a plan target resolves its open run. Recording a result also records it
-on the test through the existing result op, so the test's own result, its wakes and its proofs
-stay true. Skip stays in the run. There is one open run per plan. Ending a run moves it to
+end target the run, and a plan target resolves its open run. `plan-run-record` names the result
+in `result`, since a posted op's own `status` is the state of the post. Recording a result also
+records it on the test through the existing result op, so the test's own result, its wakes and
+its proofs stay true. Skip stays in the run. There is one open run per plan. Ending a run moves it to
 `passed` when every case passed, else to `reported`, and the plan to `reported`. A plan keeps at
 least one case: create and edit refuse none. Runs are hidden on the kanban and shown in the Tests
 tab and in the plan's Runs tab. The events are `run-ready` (a run became ready for the owner) and
