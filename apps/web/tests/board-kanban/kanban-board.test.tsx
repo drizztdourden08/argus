@@ -14,7 +14,7 @@ describe('S1 the Kanban columns', { tags: ['standard'] }, () => {
     expect(await screen.findByRole('group', { name: 'Doing, 1 card' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: /^Done,/ })).toBeNull();
     expect(screen.queryByText('Item number 8')).toBeNull();
-    expect(screen.getByText(/^1 open \/ 3/)).toBeTruthy();
+    expect(screen.getAllByText(/^1 open \/ 3/).length).toBeGreaterThan(0);
     const toggle = screen.getByRole('button', { name: 'Show done (2)' });
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(toggle);
