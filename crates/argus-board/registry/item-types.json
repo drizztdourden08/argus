@@ -26,7 +26,8 @@
       "kinds": {
         "item": "^I-[0-9]+$",
         "test": "^T-[0-9]+$",
-        "bundle": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        "bundle": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+        "build": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
       }
     },
     "refs": {},
@@ -73,7 +74,7 @@
     },
     "cost": { "content": "enum", "values": ["S", "M", "L"] },
     "risk": { "content": "enum", "values": ["low", "medium", "high"] },
-    "mode": { "content": "enum", "values": ["auto", "manual"] },
+    "mode": { "content": "enum", "values": ["auto", "manual"], "labels": ["AI", "manual"] },
     "foundIn": { "content": "ref", "to": ["test", "bundle"] },
     "duplicateOf": { "content": "ref", "to": ["item"] },
     "bundle": { "content": "ref", "to": ["bundle"] },
@@ -82,7 +83,10 @@
     "assignee": { "content": "person" },
     "todoAssignee": { "content": "person", "leads": true },
     "target": { "content": "date" },
-    "runs": { "content": "records" },
+    "plan": { "content": "ref", "to": ["item"] },
+    "build": { "content": "ref", "to": ["build"] },
+    "results": { "content": "records" },
+    "summary": { "content": "line", "max": 300 },
     "for": { "content": "ref", "to": ["item"] },
     "master": { "content": "flag" },
     "cmd": { "content": "line", "max": 400 },
@@ -314,8 +318,7 @@
           "label": "Ready",
           "lane": "todo",
           "gates": [
-            { "need": "cases", "mode": "refuse" },
-            { "need": "bundle-ready", "mode": "warn" }
+            { "need": "cases", "mode": "refuse" }
           ]
         },
         { "id": "running", "label": "Running", "lane": "doing" },
@@ -323,13 +326,13 @@
         { "id": "passed", "label": "Passed", "lane": "done" },
         { "id": "abandoned", "label": "Abandoned", "lane": "dropped" }
       ],
-      "fields": ["bundle", "cases", "env", "runs"],
-      "groups": [{ "id": "plan", "label": "Plan", "fields": ["bundle", "env"] }],
+      "fields": ["cases", "env"],
+      "groups": [{ "id": "plan", "label": "Plan", "fields": ["env"] }],
       "view": "card",
       "title": "title",
       "assignee": "assignee",
-      "tabs": ["overview", "cases", "run", "links", "discussion", "media", "work", "activity"],
-      "card": { "progress": "run", "chips": ["bundle"] },
+      "tabs": ["overview", "cases", "runs", "links", "discussion", "media", "work", "activity"],
+      "card": { "progress": "run", "chips": [] },
       "links": [
         { "field": "parent", "to": ["epic", "story"], "label": "Parent", "inverse": "Children" },
         { "field": "cases", "to": ["test-case"], "label": "Cases", "inverse": "Plans" },
@@ -347,6 +350,36 @@
       "done": { "needs": ["plan-passed"], "mode": "refuse" }
     },
     {
+      "id": "test-run",
+      "label": "Test run",
+      "code": "TR",
+      "icon": "flag",
+      "color": "cyan",
+      "collection": "items",
+      "parents": [],
+      "hideOnKanban": true,
+      "stages": [
+        { "id": "draft", "label": "Draft", "lane": "todo" },
+        { "id": "ready", "label": "Ready", "lane": "todo", "gates": [{ "need": "build-ready", "mode": "warn" }] },
+        { "id": "running", "label": "Running", "lane": "doing" },
+        { "id": "reported", "label": "Reported", "lane": "review" },
+        { "id": "passed", "label": "Passed", "lane": "done" },
+        { "id": "abandoned", "label": "Abandoned", "lane": "dropped" }
+      ],
+      "fields": ["plan", "build", "results", "summary"],
+      "groups": [{ "id": "run", "label": "Run", "fields": ["plan", "build", "summary"] }],
+      "view": "card",
+      "title": "title",
+      "assignee": "assignee",
+      "tabs": ["overview", "result", "links", "discussion", "media", "activity"],
+      "card": { "progress": "none", "chips": ["build"] },
+      "links": [
+        { "field": "plan", "to": ["test-plan"], "label": "Plan", "inverse": "Runs" }
+      ],
+      "signals": ["attention", "trail", "archived"],
+      "groupBy": "plan"
+    },
+    {
       "id": "test-case",
       "label": "Test case",
       "code": "T",
@@ -356,7 +389,7 @@
       "parents": [],
       "stages": [],
       "statuses": ["pending", "pass", "fail", "partial", "blocked", "moved"],
-      "fields": ["setup", "steps", "pass", "fail", "mode", "bundle"],
+      "fields": ["setup", "steps", "pass", "fail", "mode"],
       "groups": [
         { "id": "setup", "label": "Setup", "fields": ["setup", "steps"] },
         { "id": "expected", "label": "Expected", "fields": ["pass", "fail"] }
@@ -365,7 +398,7 @@
       "title": "title",
       "assignee": "thread",
       "tabs": ["overview", "result", "links", "discussion", "media", "activity"],
-      "card": { "progress": "none", "chips": [] },
+      "card": { "progress": "none", "chips": ["mode"] },
       "links": [
         {
           "field": "item",
@@ -386,7 +419,7 @@
       "collection": "launchers",
       "idKey": "name",
       "parents": [],
-      "serves": ["epic", "story", "task", "bug", "debt", "test-plan"],
+      "serves": ["epic", "story", "task", "bug", "debt", "test-plan", "test-run"],
       "stages": [
         { "id": "draft", "label": "Draft", "lane": "todo" },
         { "id": "ready", "label": "Ready", "lane": "doing" },

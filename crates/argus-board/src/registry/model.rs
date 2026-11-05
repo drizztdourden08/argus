@@ -313,6 +313,9 @@ shown_struct! {
         /// Whether the board only shows its records and never writes them.
         #[serde(default)]
         pub read_only: bool,
+        /// Whether the kanban leaves its records out (a test run shows in the Tests tab).
+        #[serde(default)]
+        pub hide_on_kanban: bool,
         /// Its stages, in flow order (empty for a type with statuses).
         pub stages: Vec<Stage>,
         /// Its statuses, for a type that has no lane.

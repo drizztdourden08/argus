@@ -85,6 +85,7 @@ mod tests {
             "bug",
             "debt",
             "test-plan",
+            "test-run",
             "test-case",
             "build",
             "worktree",
@@ -170,7 +171,7 @@ mod tests {
         let plan = registry().item_type("test-plan").unwrap();
         let ready = plan.stage("ready").unwrap();
         let gates: Vec<_> = ready.gates.iter().map(|g| g.need.as_str()).collect();
-        assert_eq!(gates, ["cases", "bundle-ready"]);
+        assert_eq!(gates, ["cases"]);
         assert_eq!(
             registry()
                 .item_type("bug")
@@ -185,7 +186,7 @@ mod tests {
     #[test]
     fn a_build_serves_the_work_item_types_and_nothing_else() {
         let reg = registry();
-        for served in ["epic", "story", "task", "bug", "debt", "test-plan"] {
+        for served in ["epic", "story", "task", "bug", "debt", "test-plan", "test-run"] {
             assert!(reg.can_serve(served), "{served}");
         }
         for other in ["test-case", "build", "worktree", "ghost"] {

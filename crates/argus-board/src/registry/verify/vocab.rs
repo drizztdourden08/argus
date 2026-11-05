@@ -3,7 +3,7 @@
 use super::super::model::Collection;
 
 /// Tessera icon names the registry may use (`gavel` and `signpost` come with the next Tessera).
-pub(super) const ICONS: [&str; 22] = [
+pub(super) const ICONS: [&str; 23] = [
     "zap",
     "bookmark",
     "circle-check",
@@ -26,6 +26,7 @@ pub(super) const ICONS: [&str; 22] = [
     "bell",
     "send",
     "trash-2",
+    "flag",
 ];
 
 /// Tessera tag category colours: the type marks and the people use these.
@@ -80,7 +81,10 @@ pub(super) const ITEM_LETTER: &str = "I";
 pub(super) const DONE_NEEDS: [&str; 5] = ["ac", "children", "tests", "verified", "plan-passed"];
 
 /// Conditions a stage gate may name.
-pub(super) const GATE_NEEDS: [&str; 2] = ["cases", "bundle-ready"];
+pub(super) const GATE_NEEDS: [&str; 2] = ["cases", "build-ready"];
+
+/// Types that wear the colour of the type they belong to: all ten category colours are taken.
+pub(super) const COLOR_SHARERS: [&str; 1] = ["test-run"];
 
 /// The deepest chain of parents: epic, story, leaf.
 pub(super) const MAX_DEPTH: usize = 3;

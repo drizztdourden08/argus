@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use super::super::kinds::{Family, Kind, Look};
 use super::super::model::Registry;
 use super::vocab::{
-    ASSIGNEE_WORDS, CATEGORY_COLORS, ICONS, ITEM_LETTER, TABS, TONES, TYPE_COLLECTIONS,
+    ASSIGNEE_WORDS, CATEGORY_COLORS, COLOR_SHARERS, ICONS, ITEM_LETTER, TABS, TONES, TYPE_COLLECTIONS,
 };
 
 /// The name of the list a kind comes from, as the problems print it.
@@ -97,7 +97,7 @@ fn verify_shares(kinds: &[Kind<'_>], kind: &Kind<'_>, say: &mut impl FnMut(&str)
 
 fn verify_colors(kinds: &[Kind<'_>], out: &mut Vec<String>) {
     let mut owners: HashMap<&str, &str> = HashMap::new();
-    for kind in kinds {
+    for kind in kinds.iter().filter(|k| !COLOR_SHARERS.contains(&k.id)) {
         if let Look::Color(color) = kind.look {
             if let Some(first) = owners.insert(color, kind.id) {
                 out.push(format!(
