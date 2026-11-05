@@ -57,7 +57,7 @@ describe('S1 the order', { tags: ['standard'] }, () => {
     const { container } = await mountTab(ranked());
     await screen.findByText('Test number 1');
     expect(order(container)).toEqual(['T-2', 'T-1']);
-    await pickView(/^Sort by$/, 'Updated');
+    await pickView(/^Sort: /, 'Updated');
     expect(order(container)).toEqual(['T-1', 'T-2']);
     expect(stored('coord.f')).toMatchObject({ sort: 'updated' });
   });

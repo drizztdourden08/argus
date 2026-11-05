@@ -9,7 +9,7 @@ const withIcon = (tab: TabItem): TabItem => ({ ...tab, icon: tab.icon ?? <Icon n
 const BoardTabs = (props: BoardTabsProps) => {
   const { tabs, activeTab, onTabChange, tight } = props;
   return (
-    <Tabs tabs={tabs.map(withIcon)} activeTab={activeTab} size="lg" selectedTone="neutral" badgeFill="solid" iconOnly={tight} onTabChange={onTabChange} />
+    <Tabs tabs={tabs.map(withIcon)} activeTab={activeTab} size="lg" selectedTone="neutral" badgeFill="solid" iconOnly={tight} hideZero={tight} onTabChange={onTabChange} />
   );
 };
 

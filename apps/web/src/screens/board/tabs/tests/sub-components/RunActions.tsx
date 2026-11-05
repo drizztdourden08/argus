@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { DropdownMenu, Flex } from '@drizztdourden08/tessera';
-import { AssigneeMark } from '../../../../../shell';
+import { AssigneeMark, itemCode } from '../../../../../shell';
 import { useRunMenu } from '../behavior/useRunMenu';
 import { useTestsShared } from '../behavior/useTestsShared';
 import type { RunActionsProps } from '../tests-head-props.type';
@@ -14,7 +14,7 @@ const RunActions = (props: RunActionsProps) => {
   const { boardKey, threads } = useTestsShared();
   const menu = useRunMenu(view, runs);
   const { item } = view;
-  const label = `More actions for ${item.id}`;
+  const label = `More actions for ${itemCode(item)}`;
   return (
     <Flex gap="xs" align="center" className="run-card__end">
       <RunCounts counts={view.counts} />

@@ -18,6 +18,7 @@
 
 .run-card__counts {
   flex: none;
+  inline-size: auto;
 }
 
 .run-card__bar {

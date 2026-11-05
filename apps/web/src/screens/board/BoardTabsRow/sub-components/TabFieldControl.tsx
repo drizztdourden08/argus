@@ -11,6 +11,7 @@ const TabFieldControl = <F,>({ field, filters, patch }: TabFieldControlProps<F>)
     return (
       <Select
         size="sm"
+        width="fit"
         aria-label={field.label}
         prefix={`${field.label}:`}
         multiDisplay="count"
@@ -23,6 +24,7 @@ const TabFieldControl = <F,>({ field, filters, patch }: TabFieldControlProps<F>)
   return (
     <Select
       size="sm"
+      width="fit"
       aria-label={field.label}
       prefix={`${field.label}:`}
       options={[{ value: ANY_VALUE, label: ANY_LABEL }, ...field.options]}

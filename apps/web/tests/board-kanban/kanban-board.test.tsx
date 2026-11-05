@@ -57,7 +57,7 @@ describe('S1 what a card says about the owner', { tags: ['standard'] }, () => {
       actions: [{ id: 'A-1', item: 'I-2', status: 'pending' }],
       tests: [{ id: 'T-1', item: 'I-3', mode: 'manual', status: 'pending', title: 't', ac: [] }],
     });
-    expect(within(await boardOf()).getAllByText('needs you')).toHaveLength(3);
+    expect(within(await boardOf()).getAllByTitle('needs you')).toHaveLength(3);
     expect(screen.getByTitle('Q-1 is an open question, waiting for an answer')).toBeTruthy();
     expect(screen.getByTitle('D-1 is a decision to pick up')).toBeTruthy();
   });

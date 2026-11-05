@@ -13,10 +13,10 @@ const board = (runs: Doc[]) => ({ group: 'run', items: [planDoc('I-9', ['T-1']),
 describe('S1 handing a run to the owner', { tags: ['standard'] }, () => {
   it('Hand to me assigns the run to the owner, and Unhand clears it', async () => {
     const { calls } = await mountTab(board([runOn('I-50', null, { stage: 'ready' }), runOn('I-51', null, { assignee: 'owner' })]));
-    fireEvent.click(await screen.findByRole('button', { name: 'Hand run I-50 to you' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Hand run TR-50 to you' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ url: '/api/p/rotp/entries', method: 'POST', body: { kind: 'edit', target: { c: 'items', id: 'I-50' }, set: { assignee: 'owner' } } });
-    fireEvent.click(screen.getByRole('button', { name: 'Stop handing run I-51 to you' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stop handing run TR-51 to you' }));
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[1]?.body).toMatchObject({ kind: 'edit', target: { c: 'items', id: 'I-51' }, set: { assignee: null } });
   });
