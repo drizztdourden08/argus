@@ -69,6 +69,7 @@ describe('S1 show passed', { tags: ['standard'] }, () => {
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
     await mountTab(withPassed());
     await screen.findByText('Test number 2');
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Show passed' }));
     expect(screen.getByRole('button', { name: 'Show passed' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.queryByText('Test number 2')).toBeNull();
@@ -110,6 +111,7 @@ describe('S1 closed runs and the search', { tags: ['standard'] }, () => {
 
   it('remember the Show closed choice under the key of the Node page', async () => {
     await mountTab(closed());
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     expect(localStorage.getItem('coord.closed')).toBe('1');
     fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
@@ -121,6 +123,7 @@ describe('S1 the case view', { tags: ['standard'] }, () => {
   it('shows rows by default, switches to cards with the same result buttons, and remembers it', async () => {
     const { container } = await mountTab({ tests: [testDoc('T-1')] });
     await screen.findByText('Test number 1');
+    await openFilters();
     expect(screen.getByRole('radio', { name: 'Rows' }).getAttribute('aria-checked')).toBe('true');
     expect(container.querySelector('.test-section__grid')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Cards' }));

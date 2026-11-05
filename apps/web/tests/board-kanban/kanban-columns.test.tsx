@@ -36,6 +36,7 @@ describe('S1 selecting a range of cards', { tags: ['standard'] }, () => {
   it('selects every card between the last click and a shift-click, in the order of the board', async () => {
     await mountKanban({ items: [item('I-1', { rank: 1 }), item('I-2', { rank: 2 }), item('I-3', { rank: 3 }), item('I-4', { rank: 4 })] });
     await screen.findByText('Item number 1');
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-1' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-3' }), { shiftKey: true });
@@ -51,6 +52,7 @@ describe('I-72 the selection mode of the cards', { tags: ['standard'] }, () => {
     await screen.findByText('Item number 1');
     expect(screen.queryByRole('checkbox', { name: 'Select K-1' })).toBeNull();
     expect(within(cardOf('I-1')).getByRole('img', { name: 'Task' })).toBeTruthy();
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
     expect(screen.getByRole('checkbox', { name: 'Select K-1' })).toBeTruthy();
     expect(within(cardOf('I-1')).queryByRole('img', { name: 'Task' })).toBeNull();

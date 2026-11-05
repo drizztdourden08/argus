@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind test */
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_FILTERS, filtersActive, planCases, planOptions } from '../../src/screens/board/tabs/tests/model';
 import type { ItemDoc } from '../../src/screens/board/tabs/tests/model';
 import { cleanAfterEach } from './board-dom';
-import { openFilters } from '../helpers/filter-clauses';
-import { filterBoard, pick, shown, stored } from './filter-dom';
+import { addFilter, changeFilter, openFilters, removeFilter } from '../helpers/filter-clauses';
+import { filterBoard, shown, stored } from './filter-dom';
 import { itemDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
@@ -45,20 +45,22 @@ describe('I-70 P7 the plan filter in the Tests tab', { tags: ['standard'] }, () 
     await mountTab(filterBoard());
     await screen.findByText('Login works');
     await openFilters();
-    expect(await screen.findByRole('combobox', { name: 'Status' })).toBeTruthy();
-    expect(screen.queryByRole('combobox', { name: 'Plan' })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
+    const menu = within(await screen.findByRole('menu'));
+    expect(menu.getByText('Status')).toBeTruthy();
+    expect(menu.queryByText('Plan')).toBeNull();
   });
 
   it('narrows the tests to the cases of the plan, and choosing Any brings them back', async () => {
     await mountTab(withPlans());
     await screen.findByText('Login works');
     await openFilters();
-    await pick('Plan', 'TP-5 Plan I-5');
+    await addFilter('Plan', 'TP-5 Plan I-5');
     shown('T-1', 'T-3');
     expect(stored('coord.f')).toMatchObject({ plan: 'I-5' });
-    await pick('Plan', 'TP-6 Plan I-6');
+    await changeFilter('Plan', 'TP-6 Plan I-6');
     shown('T-2');
-    await pick('Plan', 'Any');
+    await removeFilter('Plan');
     shown('T-1', 'T-2', 'T-3');
   });
 

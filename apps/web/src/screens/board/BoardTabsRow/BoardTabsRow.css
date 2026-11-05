@@ -6,6 +6,25 @@
   padding: var(--space-xs) var(--space-sm);
 }
 
+.tab-well__row {
+  min-inline-size: 0;
+}
+
+.tab-well__tabs {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-well__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-well__row > :not(.tab-well__tabs) {
+  flex: none;
+}
+
 .tab-well__filters:empty {
   display: none;
 }

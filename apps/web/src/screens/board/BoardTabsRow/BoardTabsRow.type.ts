@@ -9,8 +9,12 @@ interface BoardTabsRowProps {
   onTabChange: (tab: string) => void;
 }
 
-interface BoardTabsProps extends BoardTabsRowProps {
-  tight: boolean;
+interface TabRowToggleProps {
+  tab: string;
+}
+
+interface TabToolsRowProps {
+  tab: string;
 }
 
 interface FiltersToggleProps {
@@ -68,18 +72,6 @@ interface TabFilterBarProps<F extends { query: string }> {
   patchFilters: (values: Partial<F>) => void;
   placeholder: string;
   focus?: boolean;
-}
-
-interface TabFieldControlProps<F> {
-  field: TabField<F>;
-  filters: F;
-  patch: (values: Partial<F>) => void;
-}
-
-interface TabFieldControlsProps<F> {
-  fields: readonly TabField<F>[];
-  filters: F;
-  patch: (values: Partial<F>) => void;
 }
 
 interface FlagFilters {
@@ -153,7 +145,7 @@ interface TabView<G extends string, O extends string, F> {
 }
 
 export type {
-  BoardTabsProps, BoardTabsRowProps, FiltersToggleProps, FlagFilters, Registry, RegistryEntry,
-  TabField, TabFieldControlProps, TabFieldControlsProps, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabToolsEntry, TabView,
-  TabViewSetup, ToolToggleProps, ViewChoice,
+  BoardTabsRowProps, FiltersToggleProps, FlagFilters, Registry, RegistryEntry,
+  TabField, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabRowToggleProps, TabToolsEntry, TabToolsRowProps,
+  TabView, TabViewSetup, ToolToggleProps, ViewChoice,
 };

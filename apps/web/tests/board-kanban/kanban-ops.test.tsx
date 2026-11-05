@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MIN, addUnderEpic, ago, cleanKanban, item, mountKanban, thread } from './kanban-harness';
+import { openFilters } from '../helpers/filter-clauses';
 
 cleanKanban();
 
@@ -54,6 +55,7 @@ describe('K3 picking several cards', { tags: ['standard'] }, () => {
 
   const pick = async () => {
     const mounted = await mountKanban({ items: two });
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Select' }));
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select K-1' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select K-2' }));

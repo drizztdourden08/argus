@@ -3,6 +3,7 @@ import { toast } from '@drizztdourden08/tessera';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { agent, agentRows, ago, json, MIN, mockApi, mockFetch, renderAgents, rowOf } from './agents-harness';
+import { openFilters } from '../helpers/filter-clauses';
 
 afterEach(() => {
   localStorage.clear();
@@ -88,6 +89,7 @@ describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] 
   it('shows the running agents first and the finished ones only under Show finished', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: board });
+    await openFilters();
     expect(screen.getByRole('button', { name: 'Show finished (1)' })).toBeTruthy();
     expect(agentRows(container)).not.toContain('A-3');
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
@@ -100,6 +102,7 @@ describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] 
   it('never lists an archived agent', async () => {
     mockApi();
     const { container } = await renderAgents({ agents: board });
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     expect(agentRows(container)).not.toContain('A-4');
   });
@@ -107,6 +110,7 @@ describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] 
   it('archives the finished agents in one bulk entry, with Undo', async () => {
     const posted = mockApi();
     await renderAgents({ agents: board });
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     fireEvent.click(screen.getByRole('button', { name: 'Archive finished' }));
     await waitFor(() => expect(posted).toHaveLength(1));
