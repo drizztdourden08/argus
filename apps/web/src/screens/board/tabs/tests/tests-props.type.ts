@@ -2,9 +2,8 @@
 import type { ReactNode } from 'react';
 import type { TestOutcome } from '../../../../data/posts';
 import type { RunEntry } from '../../../../data/runs';
-import type { BundleState } from '../../../../data/types';
 import type { RecordGroups } from '../../../../shell';
-import type { BundleGroup, BundleView, ClosedGroup, Counts, GroupCard, PlanView, TestDoc, TestNotice, TestsView } from './model';
+import type { Counts, GroupCard, ItemDoc, PlanView, RunView, TestDoc, TestNotice, TestsView } from './model';
 import type { NoticeOps, Outcome, TestsState } from './tests.type';
 
 interface TestsTabProps {
@@ -42,8 +41,6 @@ interface TestsToolbarProps {
   threads: Option[];
   subjects: string[];
   plans: Option[];
-  builds: string[];
-  handed: string | null;
 }
 
 interface FilterRowProps {
@@ -51,8 +48,6 @@ interface FilterRowProps {
   threads: Option[];
   subjects: string[];
   plans: Option[];
-  builds: string[];
-  handed: string | null;
 }
 
 interface ViewRowProps {
@@ -66,47 +61,44 @@ interface TestNoticesProps {
   ops: NoticeOps;
 }
 
-interface BundleCardProps {
-  view: BundleView;
+interface RunCardProps {
+  view: RunView;
   runs: RunEntry[];
   open: boolean;
   onToggle: (open: boolean) => void;
 }
 
-interface BundleHeadProps {
-  group: BundleGroup;
-  state: BundleState;
+interface RunHeadProps {
+  view: RunView;
 }
 
-interface BundleNameProps {
-  tag: string;
+interface RunNameProps {
+  id: string;
   title?: string | null;
   muted?: boolean;
 }
 
-interface BundleTagsProps {
-  group: BundleGroup;
-  state: BundleState;
+interface RunTagsProps {
+  view: RunView;
 }
 
-interface BundleProgressProps {
+interface RunProgressProps {
   counts: Counts;
   fill?: boolean;
 }
 
 interface LaunchBoxProps {
-  view: BundleView;
+  view: RunView;
   runs: RunEntry[];
-  state: BundleState;
 }
 
 interface LaunchNoteProps {
-  tag: string;
+  id: string;
   note: string;
 }
 
 interface HandButtonProps {
-  tag: string;
+  run: ItemDoc;
   handed: boolean;
 }
 
@@ -150,14 +142,14 @@ interface RerunButtonProps {
   boardKey: string;
 }
 
-interface ClosedBundleCardProps {
-  group: ClosedGroup;
+interface ClosedRunCardProps {
+  view: RunView;
   open: boolean;
   onToggle: (open: boolean) => void;
 }
 
 interface LaunchCommandProps {
-  view: BundleView;
+  view: RunView;
   runs: RunEntry[];
   draft: boolean;
 }
@@ -167,14 +159,14 @@ interface DoneListProps {
 }
 
 interface ClosedSectionProps {
-  groups: ClosedGroup[];
+  views: RunView[];
   count: number;
   shown: boolean;
   onShownChange: (shown: boolean) => void;
 }
 
-interface BundleListProps {
-  bundles: BundleView[];
+interface RunListProps {
+  views: RunView[];
   runs: RunEntry[];
   filtered: boolean;
 }
@@ -224,5 +216,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, BundleCardProps, ChoiceFilterProps, MultiFilterProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClearFiltersProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, RunCardProps, ChoiceFilterProps, MultiFilterProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClearFiltersProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, FilterRowProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };

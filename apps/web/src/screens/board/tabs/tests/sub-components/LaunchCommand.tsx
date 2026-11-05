@@ -10,18 +10,18 @@ import type { LaunchCommandProps } from '../tests-props.type';
 const LaunchCommand = (props: LaunchCommandProps) => {
   const { view, runs, draft } = props;
   const { boardKey, onLog } = useTestsShared();
-  const { launch, group } = view;
-  const { tag } = group;
+  const { launch, item } = view;
+  const label = view.build ?? item.id;
   if (!launch.cmd && launch.gone) {
     return (
       <Flex gap="sm" align="center" wrap>
-        <Callout tone="warning">{launch.gone}. The thread links another with coord build set {tag} --launcher NAME.</Callout>
-        <RunPlay label={tag} def={null} hint={launch.gone} boardKey={boardKey} runs={runs} />
+        <Callout tone="warning">{launch.gone}. The thread sets another build on {item.id}.</Callout>
+        <RunPlay label={label} def={null} hint={launch.gone} boardKey={boardKey} runs={runs} />
       </Flex>
     );
   }
   if (!launch.cmd) {
-    return <Text tone="muted">no launch command yet: the thread links a launcher with coord build set {tag} --launcher NAME (or sets one with --cmd).</Text>;
+    return <Text tone="muted">no launch command yet: the thread sets a build with a launcher on {item.id}.</Text>;
   }
   const shown = draft ? null : shownRun(launch, runs);
   return (
@@ -31,7 +31,7 @@ const LaunchCommand = (props: LaunchCommandProps) => {
         lead={<TextInput readOnly mono grow size="sm" aria-label="Launch command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'} value={launch.cmd} />}
       >
         <Button size="sm" variant="quiet" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
-        {!draft && <RunPlay label={tag} def={launch.def} hint={playHint(launch, tag)} boardKey={boardKey} runs={runs} />}
+        {!draft && <RunPlay label={label} def={launch.def} hint={playHint(launch, item.id)} boardKey={boardKey} runs={runs} />}
         <LogButton run={shown} onLog={onLog} />
       </ButtonRow>
       {launch.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{launch.cwd}</Text.Code></Text>}

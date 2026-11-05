@@ -13,13 +13,13 @@ import { useTestCase } from '../testcase/useTestCase';
 
 const TestCaseOverviewTab = (props: RecordBodyProps) => {
   const { data } = props;
-  const { test, item, items, handed, ops } = useTestCase(data);
+  const { test, item, items, ops } = useTestCase(data);
   if (!test) return <EmptyLine>{`Nothing to show for ${data.code}.`}</EmptyLine>;
   const changed = test.changed ?? [];
   return (
     <Flex direction="column" gap="lg">
       <CaseConflicts testId={test.id} boardKey={data.boardKey} />
-      <TestFacts test={test} handed={handed} ops={ops} items={items} />
+      <TestFacts test={test} ops={ops} items={items} />
       <Text variant="caption" tone="muted">
         {`rev ${test.rev ?? 1}, updated by ${test.updatedBy ?? test.createdBy ?? 'unknown'} `}<Age value={test.updatedAt} /> ago
       </Text>

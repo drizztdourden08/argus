@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind barrel */
 export { activityTone } from './activity-tone';
-export { bundleState } from './bundle-state';
 export { formatFilters } from './format-filters';
 export { jsonRecord } from './json-record';
 export { neighbours } from './neighbours';

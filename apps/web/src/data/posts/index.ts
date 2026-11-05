@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind barrel */
 export { attachProof } from './attach-proof';
-export { handBuild } from './hand-build';
 export { keepWorktree } from './keep-worktree';
 export { linkLauncher } from './link-launcher';
 export { linkWorktree } from './link-worktree';

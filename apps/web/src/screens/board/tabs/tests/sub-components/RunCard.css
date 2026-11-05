@@ -1,18 +1,18 @@
-.bundle {
+.run-card {
   min-inline-size: 0;
   overflow: hidden;
 }
 
-.bundle--closed {
+.run-card--closed {
   border-style: dashed;
   background: var(--c-inset);
 }
 
-.bundle__end > * {
+.run-card__end > * {
   white-space: nowrap;
 }
 
-.bundle__launch {
+.run-card__launch {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -21,32 +21,32 @@
   background: var(--c-inset);
 }
 
-.bundle__bar {
+.run-card__bar {
   flex: 0 1 var(--size-128);
   min-inline-size: var(--size-64);
 }
 
 @media (width <= 720px) {
-  .bundle__end {
+  .run-card__end {
     flex-wrap: wrap;
     justify-content: flex-end;
   }
 
-  .bundle__bar {
+  .run-card__bar {
     flex: 1 1 var(--size-80);
     max-inline-size: var(--size-224);
   }
 
-  .bundle__launch {
+  .run-card__launch {
     padding-inline: var(--space-sm);
   }
 }
 
-.bundle__tag {
+.run-card__tag {
   flex: none;
 }
 
-.bundle__title {
+.run-card__title {
   min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;

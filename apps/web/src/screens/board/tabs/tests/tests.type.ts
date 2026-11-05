@@ -4,13 +4,12 @@ import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
-import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../data/types';
+import type { LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../data/types';
 import type { EditChange, FocusOption, FocusScope, ItemDoc, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, WakeDoc } from './model';
 
 interface TestsData {
   ready: boolean;
   tests: WithId<Test>[];
-  builds: WithId<Build>[];
   launchers: WithId<Launcher>[];
   defs: WithId<LaunchDef>[];
   runs: RunEntry[];
@@ -18,7 +17,6 @@ interface TestsData {
   threads: WithId<ThreadChoice>[];
   entries: WithId<Entry>[];
   wakes: WithId<Wake>[];
-  handed: string | null;
 }
 
 interface TestsState {
@@ -148,7 +146,7 @@ interface EditDraft {
 interface TestActions {
   busy: boolean;
   rerun: (testId: string) => Promise<void>;
-  hand: (tag: string | null) => Promise<void>;
+  hand: (run: ItemDoc, handed: boolean) => Promise<void>;
 }
 
 interface Folds {
