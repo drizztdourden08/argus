@@ -4,7 +4,7 @@ import { Age } from '../../../../shell';
 import type { NoticeListProps } from '../BoardHeader.type';
 
 const NoticeList = (props: NoticeListProps) => (
-  <List aria-label="Notices" className="board-notices__list">
+  <List aria-label="Notices">
     {props.notices.map((notice) => (
       <ListItem key={notice.id} bare className="board-notices__row">
         <Small tone="muted">{notice.at ? <Age value={notice.at} /> : null}</Small>

@@ -24,14 +24,16 @@ const open = async (at = '/p/rotp/', worktrees: object | null = null) => {
 };
 
 describe('S1 the board header', { tags: ['standard'] }, () => {
-  it('counts the worktrees against the running agents and warns when there are more than two beyond', async () => {
+  it('links the worktrees and the running agents to their tabs and warns when there are more than two beyond', async () => {
     await open('/p/rotp/', { listed: 4, runningAgents: 2 });
-    const calm = await screen.findByText('worktrees 4 / running agents 2');
-    expect(calm.closest('[title]')?.getAttribute('title')).not.toContain('some are not cleaned');
+    const calm = await screen.findByRole('link', { name: '4 worktrees' });
+    expect(calm.getAttribute('href')).toBe('#worktrees');
+    expect(calm.getAttribute('title')).not.toContain('some are not cleaned');
+    expect(screen.getByRole('link', { name: '2 running' }).getAttribute('href')).toBe('#agents');
     cleanup();
     await open('/p/rotp/', { listed: 5, runningAgents: 2 });
-    const over = await screen.findByText('worktrees 5 / running agents 2');
-    expect(over.closest('[title]')?.getAttribute('title')).toContain('some are not cleaned');
+    const over = await screen.findByRole('link', { name: '5 worktrees' });
+    expect(over.getAttribute('title')).toContain('some are not cleaned');
   });
 });
 

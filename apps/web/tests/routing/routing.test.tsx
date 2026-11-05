@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
@@ -39,7 +39,8 @@ describe('S2 routing', { tags: ['standard'] }, () => {
       }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    expect(within(screen.getByRole('status', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: '1 registered' }));
+    expect(within(await screen.findByRole('dialog', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees', 'Changes', 'Releases']) {
       expect(screen.getByRole('tab', { name: new RegExp(`^${label}`) })).toBeTruthy();
     }

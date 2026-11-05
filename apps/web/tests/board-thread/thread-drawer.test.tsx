@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { chip, cleanThreads, docs, drawerOf, item, mountBoard, openChip, thread } from './thread-harness';
+import { chip, cleanThreads, clickChip, docs, drawerOf, item, mountBoard, openChip, thread } from './thread-harness';
 
 cleanThreads();
 
@@ -77,7 +77,7 @@ describe('S1 the open work in the thread drawer', { tags: ['standard'] }, () => 
 
   it('does not open for a thread the board has dropped', async () => {
     await mountBoard({ threads: docs(worker({ deletedAt: new Date().toISOString() })), registry: docs(chip('worker')) });
-    fireEvent.click(await screen.findByRole('button', { name: 'Open the thread worker' }));
+    await clickChip('worker');
     expect(screen.queryByRole('dialog', { name: 'Thread detail' })).toBeNull();
   });
 });

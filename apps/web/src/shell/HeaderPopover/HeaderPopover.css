@@ -1,0 +1,9 @@
+/* @layer renderer-app @kind style */
+.header-popover {
+  inline-size: min(var(--size-384), calc(100vw - var(--space-xl)));
+}
+
+.header-popover .header-popover__body {
+  max-block-size: var(--size-384);
+  overflow-y: auto;
+}

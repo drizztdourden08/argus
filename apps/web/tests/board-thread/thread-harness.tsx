@@ -62,11 +62,17 @@ const mountBoard = async (board: Board, at = '/p/rotp/#agents') => {
 
 const drawerOf = async (): Promise<HTMLElement> => screen.findByRole('dialog', { name: 'Thread detail' });
 
+const clickChip = async (id: string): Promise<void> => {
+  const name = `Open the thread ${id}`;
+  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: /registered/ }));
+  fireEvent.click(await screen.findByRole('button', { name }));
+};
+
 const openChip = async (id: string): Promise<HTMLElement> => {
-  fireEvent.click(await screen.findByRole('button', { name: `Open the thread ${id}` }));
+  await clickChip(id);
   return drawerOf();
 };
 
 const tool = (dialog: HTMLElement, name: string): HTMLElement => within(dialog).getByRole('button', { name });
 
-export { chip, cleanThreads, docs, drawerOf, item, mountBoard, openChip, posted, thread, tool };
+export { chip, cleanThreads, clickChip, docs, drawerOf, item, mountBoard, openChip, posted, thread, tool };

@@ -5,6 +5,7 @@ type SyncTone = 'muted' | 'warning' | 'danger';
 
 interface SyncStampProps {
   sync: RemoteSync | null;
+  compact?: boolean;
 }
 
 export type { SyncStampProps, SyncTone };

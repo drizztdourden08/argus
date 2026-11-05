@@ -1,9 +1,15 @@
 /* @layer renderer-app @kind types */
 import type { StatusTone } from '@drizztdourden08/tessera';
+import type { ReactNode } from 'react';
 import type { RegistryFault, RegistryRow } from '../../../data/types';
 
 interface RegisteredStripProps {
   boardKey: string;
+  folded?: ReactNode;
+}
+
+interface RegisteredLabelProps {
+  rows: readonly RegistryRow[];
 }
 
 interface RegistryAgent {
@@ -65,6 +71,7 @@ export type {
   ChipTipProps,
   FaultTipProps,
   RegisteredChipProps,
+  RegisteredLabelProps,
   RegisteredStripProps,
   RegisteredView,
   RegistryAgent,

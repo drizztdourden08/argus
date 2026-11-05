@@ -1,40 +1,32 @@
 /* @layer renderer-app @kind component */
-import { BrandMark, Flex, Stack, Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../data/agents';
-import { useCollection } from '../../../data/react';
-import { useRemoteSyncs } from '../../../data/remote';
-import { SyncStamp } from '../../../shell';
-import type { BoardHeaderProps } from './BoardHeader.type';
+import { useCollection, useDoc } from '../../../data/react';
+import type { BoardMeta } from '../../../data/types';
+import { BoardIcon } from '../../../shell/BoardIcon';
 import { findLead } from '../tabs/agents/model';
-import { BoardNotices } from './sub-components/BoardNotices';
-import { BoardStalls } from './sub-components/BoardStalls';
-import { BoardStamp } from './sub-components/BoardStamp';
-import { BoardWorktrees } from './sub-components/BoardWorktrees';
+import { BoardSettingsButton } from '../BoardSettings';
+import { RegisteredStrip } from '../RegisteredStrip';
+import type { BoardHeaderProps } from './BoardHeader.type';
+import { BoardAlerts } from './sub-components/BoardAlerts';
+import { BoardFacts } from './sub-components/BoardFacts';
 import { LeadStatus } from './sub-components/LeadStatus';
 import './BoardHeader.css';
 
 const BoardHeader = (props: BoardHeaderProps) => {
   const { boardKey, name, status, updatedAt, tools } = props;
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
-  const syncs = useRemoteSyncs();
+  const { doc } = useDoc<BoardMeta>(boardKey, 'meta', 'board');
   return (
     <Flex as="header" className="board-header" wrap align="center">
-      <Flex className="board-header__brand" align="center" gap="sm">
-        <BrandMark app="argus" size="lg" />
-        <Stack className="board-header__id" gap="2xs">
-          <Text variant="overline" aria-hidden="true">Coordination board</Text>
-          <Text as="h1" className="board-header__title">{name}</Text>
-        </Stack>
-      </Flex>
-      <Flex className="board-header__status" wrap align="center">
-        <LeadStatus lead={findLead(threads.docs)} />
-        <BoardStamp status={status} updatedAt={updatedAt} />
-        <BoardWorktrees boardKey={boardKey} />
-        <BoardNotices boardKey={boardKey} />
-        <BoardStalls boardKey={boardKey} />
-        {syncs ? <SyncStamp sync={syncs[boardKey] ?? null} /> : null}
-      </Flex>
+      <BoardIcon size="md" boardKey={boardKey} icon={doc?.icon} avatar={doc?.avatar} />
+      <Text as="h1" className="board-header__title">{name}</Text>
+      <LeadStatus lead={findLead(threads.docs)} />
+      <BoardFacts className="board-header__facts" boardKey={boardKey} status={status} updatedAt={updatedAt} />
+      <RegisteredStrip boardKey={boardKey} folded={<BoardFacts boardKey={boardKey} status={status} updatedAt={updatedAt} />} />
+      <BoardAlerts boardKey={boardKey} status={status} />
       <Flex className="board-header__tools" gap="xs" align="center">
+        <BoardSettingsButton boardKey={boardKey} />
         {tools}
       </Flex>
     </Flex>

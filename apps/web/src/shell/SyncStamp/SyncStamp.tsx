@@ -7,12 +7,13 @@ import { syncTone } from './behavior/sync-tone';
 import type { SyncStampProps } from './SyncStamp.type';
 
 const SyncStamp = (props: SyncStampProps) => {
-  const { sync } = props;
+  const { sync, compact = false } = props;
   const now = useAgeClock();
   const tone = syncTone(sync?.at, now);
+  const ago = compact ? null : ' ago';
   return (
     <Text variant="caption" tone={tone} data-tone={tone} title={syncTitle(sync)}>
-      last remote sync {sync ? <><Age value={sync.at} /> ago</> : 'never'}
+      {compact ? 'sync ' : 'last remote sync '}{sync ? <><Age value={sync.at} />{ago}</> : 'never'}
     </Text>
   );
 };

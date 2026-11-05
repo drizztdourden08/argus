@@ -2,7 +2,7 @@
 import { Flex, Tabs } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useBoard } from '../../data/react';
-import { RecordPaneScope, StatusNotice } from '../../shell';
+import { RecordPaneScope } from '../../shell';
 import { RecordPaneHost } from '../../shell/records/pane';
 import { useBoardTab } from './behavior/useBoardTab';
 import { usePresence } from './behavior/usePresence';
@@ -12,7 +12,6 @@ import { BoardHeader } from './BoardHeader';
 import { BoardMore, useBoardMore } from './BoardMore';
 import { BoardTabBody } from './BoardTabBody';
 import { useBoardWork } from './feed-model';
-import { RegisteredStrip } from './RegisteredStrip';
 import { OpenThreadContext } from './shared';
 import { useTabBadges, withBadges } from './tab-badges';
 import { ThreadDrawer } from './ThreadDrawer';
@@ -41,8 +40,6 @@ const BoardPage = (props: BoardPageProps) => {
             updatedAt={board.meta?.updatedAt ?? null}
             tools={<BoardMore boardKey={boardKey} trashCount={trashCount} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />}
           />
-          <StatusNotice status={board.status} />
-          <RegisteredStrip boardKey={boardKey} />
           <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={(next) => {
               more.closeTrash();
               select(next);

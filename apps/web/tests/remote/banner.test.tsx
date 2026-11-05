@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind test */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LocalBanner } from '../../src/shell';
 import { bannerText } from '../../src/shell/LocalBanner/behavior/banner-text';
+import { pillText } from '../../src/shell/LocalBanner/behavior/pill-text';
 import { renderAt } from '../helpers/render-at';
 import { stubRemote } from './helpers/stub-remote';
 
@@ -20,7 +21,12 @@ const expectSilent = async (routes: Record<string, unknown>) => {
   render(<LocalBanner />);
   await waitFor(() => expect(calls).toHaveLength(1));
   await Promise.resolve();
-  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.queryByRole('button', { name: /^Local/ })).toBeNull();
+};
+
+const openPill = async (name: string): Promise<HTMLElement> => {
+  fireEvent.click(await screen.findByRole('button', { name }));
+  return screen.findByRole('dialog', { name: 'Local mode' });
 };
 
 describe('K1 the local mode banner text', { tags: ['critical'] }, () => {
@@ -48,14 +54,20 @@ describe('K1 the local mode banner text', { tags: ['critical'] }, () => {
   it('has no text in remote mode', () => {
     expect(bannerText({ mode: 'remote', replay: { prs: 4, releases: 0, packages: 0, checks: 0 } })).toBeNull();
   });
+
+  it('puts the pull requests and the releases on the pill, with the singular for one', () => {
+    expect(pillText({ mode: 'local', replay: { prs: 74, releases: 4, packages: 3 } })).toBe('Local · 74 PRs · 4 releases');
+    expect(pillText({ mode: 'local', replay: { prs: 1, releases: 1 } })).toBe('Local · 1 PR · 1 release');
+    expect(pillText({ mode: 'local', replay: {} })).toBe('Local · 0 PRs · 0 releases');
+  });
 });
 
-describe('S1 the local mode banner', { tags: ['standard'] }, () => {
-  it('shows the replay counts in local mode', async () => {
+describe('S1 the local mode pill', { tags: ['standard'] }, () => {
+  it('shows the pull requests and releases on the pill and the full text in its popover', async () => {
     stubRemote(local({ prs: 2, releases: 1, packages: 0, checks: 4 }));
     render(<LocalBanner />);
-    const line = await screen.findByRole('status');
-    expect(line.textContent).toBe('Local mode: 2 pull requests, 1 release, 4 check runs wait for the go');
+    const panel = await openPill('Local · 2 PRs · 1 release');
+    expect(within(panel).getByRole('status').textContent).toBe('Local mode: 2 pull requests, 1 release, 4 check runs wait for the go');
   });
 
   it('shows nothing in remote mode', async () => {
@@ -67,8 +79,10 @@ describe('S1 the local mode banner', { tags: ['standard'] }, () => {
   });
 });
 
-describe('S1 the local mode banner on a board', { tags: ['standard'] }, () => {
-  const answers = { '/api/remote': { mode: 'local', replay: {}, ciRoots: { brock: 'X:/brock' } } };
+describe('S1 the local mode pill on a board', { tags: ['standard'] }, () => {
+  const answers = {
+    '/api/remote': { mode: 'local', replay: {}, ciRoots: { brock: 'X:/brock' }, syncs: { brock: { at: new Date().toISOString(), by: 'lead', note: 'pushed' } } },
+  };
 
   const renderBoard = (key: string) => render(
     <MemoryRouter initialEntries={[`/p/${key}`]}>
@@ -79,14 +93,23 @@ describe('S1 the local mode banner on a board', { tags: ['standard'] }, () => {
   it('names the integration checkout of the board it shows', async () => {
     stubRemote(answers);
     renderBoard('brock');
-    expect((await screen.findByRole('status')).textContent).toBe('Local mode: nothing waits for the go. CI from X:/brock');
+    const panel = await openPill('Local · 0 PRs · 0 releases');
+    expect(within(panel).getByRole('status').textContent).toBe('Local mode: nothing waits for the go. CI from X:/brock');
+  });
+
+  it('holds the last remote sync of the board in the popover', async () => {
+    stubRemote(answers);
+    renderBoard('brock');
+    const panel = await openPill('Local · 0 PRs · 0 releases');
+    expect(within(panel).getByText(/last remote sync/)).toBeTruthy();
   });
 });
 
 describe('S2 the pages', { tags: ['standard'] }, () => {
-  it('carry the banner on the overview', async () => {
+  it('carry the pill on the overview', async () => {
     stubRemote(local({ prs: 0, releases: 2, packages: 0, checks: 0 }));
     renderAt('/');
-    expect(await screen.findByText('Local mode: 2 releases wait for the go')).toBeTruthy();
+    const panel = await openPill('Local · 0 PRs · 2 releases');
+    expect(within(panel).getByText('Local mode: 2 releases wait for the go')).toBeTruthy();
   });
 });

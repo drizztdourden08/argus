@@ -57,6 +57,11 @@ describe('S1 the last remote sync stamp', { tags: ['standard'] }, () => {
     expect(text.getAttribute('data-tone')).toBe('muted');
     expect(text.getAttribute('title')).toBe('Recorded by lead: pushed 2 PRs');
   });
+
+  it('drops the words and the ago in its compact form', () => {
+    render(<SyncStamp compact sync={syncOf(3)} />);
+    expect(screen.getByText(wholeText(/^sync 3h$/))).toBeTruthy();
+  });
 });
 
 const answerRemote = (syncs: object) => (call: { path: string }) =>
@@ -74,12 +79,12 @@ describe('S2 the board header', { tags: ['standard'] }, () => {
 
   it('shows when the project last synced with the remote', async () => {
     await open({ rotp: syncOf(3), other: syncOf(30) });
-    expect((await stamp(/last remote sync 3h ago/)).getAttribute('data-tone')).toBe('muted');
+    expect((await stamp(/^sync 3h$/)).getAttribute('data-tone')).toBe('muted');
   });
 
   it('says never when the project has no record', async () => {
     await open({ other: syncOf(1) });
-    expect((await stamp(/last remote sync never/)).getAttribute('data-tone')).toBe('muted');
+    expect((await stamp(/^sync never$/)).getAttribute('data-tone')).toBe('muted');
   });
 });
 

@@ -1,0 +1,12 @@
+/* @layer renderer-app @kind style */
+.registered-strip__folded {
+  display: none;
+}
+
+@media (width < 900px) {
+  .registered-strip__folded {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-sm);
+  }
+}

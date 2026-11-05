@@ -40,13 +40,14 @@ describe('K1 the board notices', { tags: ['critical'] }, () => {
   });
 });
 
-describe('S1 the board notices in the header', { tags: ['standard'] }, () => {
-  it('counts the notices in the header and lists them on click', async () => {
+describe('S1 the board notices in the Alerts popover', { tags: ['standard'] }, () => {
+  it('counts the notices on the Alerts button and lists them under Notices on click', async () => {
     await open(WAKES);
-    const button = await screen.findByRole('button', { name: /^notices/ });
+    const button = await screen.findByRole('button', { name: /^Alerts/ });
     expect(within(button).getByText('2')).toBeTruthy();
     fireEvent.click(button);
-    const panel = await screen.findByRole('dialog', { name: 'Board notices' });
+    const panel = await screen.findByRole('dialog', { name: 'Alerts' });
+    expect(within(panel).getByText('Notices (2)')).toBeTruthy();
     const list = within(panel).getByRole('list', { name: 'Notices' });
     const rows = within(list).getAllByRole('listitem');
     expect(rows).toHaveLength(2);
