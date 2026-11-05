@@ -97,7 +97,7 @@ pub(super) const STEPS: &[Step] = &[
         ],
     ),
     step(
-        "api",
+        "lead",
         "",
         &[
             "note",
