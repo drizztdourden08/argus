@@ -131,7 +131,7 @@ Each row names the Node module, so the full set of strings is one file away. The
 | `log` | (write), list, rm | log, subject | `<s> #<n>: removed.`, an `audit` line for another's line | board, inbox | 4 |
 | `inbox` | (read), `--ack`, list, rm, send | followup | `<t>: inbox empty.`, message lines, `queued for <t> (session "...")`; send wakes over HTTP, best effort | board, `POST /api/p/:key/wakes` | 4 |
 | `agent` | start, note, set, done, fail, stop, archive, unarchive, rm, restore, list, show, reconcile | name, task, model, modelwhy, agentnote, agentresult, branch, worktree, reason | `<A>: agent <n> started on <t> (...)`, the model standard and `--why` refusals, check-in rule | board, `GET /api/agents/reconcile` | 5 |
-| `build` | rm, migrate-links, and for one release aliases of `test run` (each prints the new verb); `add` and `set` are gone | build | the new verb line | board (launchers) | 5 |
+| `build` | migrate-links, and for one release aliases of `test run` (each prints the new verb; `rm` is `run drop`, `close` is `run end`); `add` and `set` are gone | build | the new verb line | board (launchers) | 5 |
 | `test run` | list, hand, unhand, ready, draft, end, reopen, drop | run, build, title | `handed to the owner: ...`, tables, refusals | board (test-run items, launchers) | 5 |
 | `launcher` | set, keep, retire, list, show | launchercmd, launchercwd, launchernote, branch, commit | show lines, tables, refusals for master and windows | board (launchers) | 5 |
 | `run` | define, undefine, defs, start, stop, status, list, logs | command, reason | run summaries, `--wait` and `--follow` streams, exit 3 when down | board (runDefs), runs API | 6 |

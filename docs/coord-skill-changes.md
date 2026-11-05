@@ -301,8 +301,8 @@ after the Argus build with I-99 is deployed locally. The skill source is
   `coord build set` are gone: make the build with `coord launcher set <name> --for I-n`, then put
   it on the run with `--build`. A build made for a run retires when the run is passed or
   abandoned.
-- The test field `build` and its `--build` / `--clear-build` flags on `coord test add|set|list`
-  now name a launcher, not a bundle tag. A case has no `bundle` field.
+- A test case has no `build` or `bundle` field any more: `--build` and `--clear-build` on
+  `coord test add|set` are refused. The build belongs to the run.
 
 ### Files and what to change
 
