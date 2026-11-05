@@ -18,7 +18,7 @@ const AVATAR_MODES: { value: AvatarMode; label: string }[] = [
   { value: 'upload', label: 'Upload' },
 ];
 
-const PREVIEW_SIZE: OwnerMarkSize = 'sm';
+const PREVIEW_SIZE: OwnerMarkSize = 'lg';
 
 const INITIALS_LENGTH = 2;
 
