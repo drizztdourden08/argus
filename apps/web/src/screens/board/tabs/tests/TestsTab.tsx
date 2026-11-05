@@ -2,7 +2,7 @@
 import { Flex, Text } from '@drizztdourden08/tessera';
 import { threadChoices } from '../../shared';
 import { TestsContext } from './behavior/tests-context';
-import { planOptions, subjectsOf } from './model';
+import { planOptions, runOptions, subjectsOf } from './model';
 import { useTestsData } from './behavior/useTestsData';
 import { useTestsScreen } from './behavior/useTestsScreen';
 import { ClosedSection } from './sub-components/ClosedSection';
@@ -30,6 +30,7 @@ const TestsTab = (props: TestsTabProps) => {
           threads={threadChoices(data.threads)}
           subjects={subjectsOf(data.items, data.tests)}
           plans={planOptions(data.items)}
+          runs={runOptions(data.items)}
         />
         <TestNotices label="Changes the board did not take" notices={notices.notices} ops={notices} />
         {state.prefs.group === 'run' && <RunList views={view.runs} runs={data.runs} filtered={view.filtered} />}

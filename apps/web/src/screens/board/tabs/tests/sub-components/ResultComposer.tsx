@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Box, Button, Callout, DropZone, Flex, toast } from '@drizztdourden08/tessera';
 import { IMAGE_TYPES } from '../../../../../data/api';
-import { OwnerBox } from '../../../OwnerBox';
+import { OWNER_TEXT_MAX } from '../../../../../data/posts';
+import { BoardMarkdownEditor } from '../../../../../shell';
 import { textProblem } from '../../../owner-posts';
 import { pasteShot } from '../behavior/paste-shot';
 import { noteProblem } from '../model';
@@ -21,25 +22,25 @@ const ResultComposer = (props: ResultComposerProps) => {
   return (
     <Flex direction="column" gap="xs" role="group" aria-label={`${outcome} note for ${testId}`}>
       <Box onPaste={onPaste}>
-        <OwnerBox
-          ariaLabel={`Note for ${testId}`}
+        <BoardMarkdownEditor
+          aria-label={`Note for ${testId}`}
           placeholder={COMPOSE_HINTS[outcome]}
           value={controls.text}
           onChange={controls.setText}
           onSubmit={submit}
+          submitLabel={`Send ${outcome}`}
           onEscape={controls.cancel}
-          problem={controls.text.length > 0 ? problem : null}
+          actions={<Button size="sm" variant="ghost" onClick={controls.cancel}>Cancel</Button>}
+          error={controls.text.length > 0 ? problem : null}
+          maxLength={OWNER_TEXT_MAX}
           rows={3}
+          layout="tabs"
           autoFocus
         />
       </Box>
       {controls.shot && <ShotPreview file={controls.shot} testId={testId} onRemove={controls.removeShot} />}
       <DropZone variant="inline" label="Attach screenshot" accept={IMAGE_TYPES} onDrop={(files) => files[0] && controls.setShot(files[0])} />
       {controls.error && <Callout tone="danger">{controls.error}</Callout>}
-      <Flex gap="xs" justify="end">
-        <Button size="sm" variant="ghost" onClick={controls.cancel}>Cancel</Button>
-        <Button size="sm" variant="primary" disabled={Boolean(problem) || controls.busy} onClick={controls.send}>{`Send ${outcome}`}</Button>
-      </Flex>
     </Flex>
   );
 };

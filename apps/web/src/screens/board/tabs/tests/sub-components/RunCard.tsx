@@ -10,7 +10,7 @@ import { TestSections } from './TestSections';
 const RunCard = (props: RunCardProps) => {
   const { view, runs, open, onToggle } = props;
   return (
-    <Card flush className="run-card" edgeTone={view.handed ? 'neutral' : undefined} data-run={view.item.id}>
+    <Card flush className="run-card" data-swap-item edgeTone={view.handed ? 'neutral' : undefined} data-run={view.item.id}>
       <Disclosure
         open={open}
         onOpenChange={onToggle}

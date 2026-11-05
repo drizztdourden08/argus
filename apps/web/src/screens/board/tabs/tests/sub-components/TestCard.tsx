@@ -10,7 +10,7 @@ const TestCard = (props: TestCardProps) => {
   const { card } = props;
   const { group } = useTestsShared();
   return (
-    <Box className="run-card" data-group={card.key}>
+    <Box className="run-card" data-swap-item data-group={card.key}>
       <Flex gap="sm" align="center" wrap className="run-card__head">
         <Text font="title">{card.key}</Text>
         {group === 'item' && card.item?.title && <Text tone="dim" smartTimes>{card.item.title}</Text>}

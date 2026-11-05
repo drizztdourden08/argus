@@ -69,7 +69,8 @@ describe('S1 show passed', { tags: ['standard'] }, () => {
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
     await mountTab(withPassed());
     await screen.findByText('Test number 2');
-    fireEvent.click(screen.getByRole('button', { name: 'Hide passed' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show passed' }));
+    expect(screen.getByRole('button', { name: 'Show passed' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.queryByText('Test number 2')).toBeNull();
     expect(screen.getByText('Test number 3')).toBeTruthy();
     expect(localStorage.getItem('coord.passed')).toBe('0');

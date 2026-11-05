@@ -10,7 +10,7 @@ const PlanCard = (props: PlanCardProps) => {
   const { plan } = props;
   const { code, open, head } = usePlanHead(plan);
   return (
-    <Card edgeTone={planTone(plan.counts)} data-plan={code}>
+    <Card edgeTone={planTone(plan.counts)} data-swap-item data-plan={code}>
       <RecordCard
         head={head(`More actions for ${code}`)}
         title={plan.item.title}

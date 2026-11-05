@@ -10,7 +10,7 @@ import { RunName } from './RunName';
 const ClosedRunCard = (props: ClosedRunCardProps) => {
   const { view, open, onToggle } = props;
   return (
-    <Card flush className="run-card run-card--closed" data-run={view.item.id}>
+    <Card flush className="run-card run-card--closed" data-swap-item data-run={view.item.id}>
       <Disclosure
         open={open}
         onOpenChange={onToggle}
