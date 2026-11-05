@@ -1,5 +1,4 @@
 .board-header {
-  gap: var(--space-xs) var(--space-md);
   min-block-size: var(--size-40);
   padding-block: 0 var(--space-xs);
 }
@@ -9,14 +8,4 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-semi);
   line-height: 1.15;
-}
-
-.board-header .board-header__tools {
-  margin-inline-start: auto;
-}
-
-@media (width < 900px) {
-  .board-header .board-header__facts {
-    display: none;
-  }
 }

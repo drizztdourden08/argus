@@ -1,19 +1,17 @@
 /* @layer renderer-app @kind component */
-import { Box, Flex, Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
 import { HeaderPopover } from '../../../shell/HeaderPopover';
 import { useRegisteredView } from './behavior/useRegisteredView';
 import { NO_LOAD, REGISTERED_HINT } from './RegisteredStrip.constants';
 import type { RegisteredStripProps } from './RegisteredStrip.type';
 import { RegisteredChip } from './sub-components/RegisteredChip';
 import { RegisteredLabel } from './sub-components/RegisteredLabel';
-import './RegisteredStrip.css';
 
 const RegisteredStrip = (props: RegisteredStripProps) => {
-  const { boardKey, folded } = props;
+  const { boardKey } = props;
   const { rows, loads } = useRegisteredView(boardKey);
   return (
     <HeaderPopover trigger={<RegisteredLabel rows={rows} />} label="Registered threads" hint={REGISTERED_HINT}>
-      {folded ? <Box className="registered-strip__folded">{folded}</Box> : null}
       {rows.length === 0 ? <Text variant="caption" tone="muted">No thread is registered on this board yet.</Text> : null}
       <Flex gap="xs" wrap>
         {rows.map((row) => (
