@@ -1,15 +1,17 @@
 /* @layer renderer-app @kind logic */
 import { AVATAR_BRANDS, BRAND_PREFIX, KEY_BRANDS } from '../avatar';
 import { BOARD_ICON_NAMES, ICON_MAX, ICON_NAME_PREFIX, ICON_URL_PATTERN, PNG_PREFIX, SVG_PREFIX } from './board-icon.constants';
-import type { BoardIconSource, ResolvedBoardIcon } from './board-icon.type';
+import type { BoardIconName, BoardIconSource, ResolvedBoardIcon } from './board-icon.type';
 
 const parseBrand = (value: string): BoardIconSource | null => {
   const app = AVATAR_BRANDS.find((brand) => brand === value.slice(BRAND_PREFIX.length));
   return app ? { kind: 'brand', app } : null;
 };
 
+const toBoardIconName = (value: string): BoardIconName | undefined => BOARD_ICON_NAMES.find((candidate) => candidate === value);
+
 const parseName = (value: string): BoardIconSource | null => {
-  const name = BOARD_ICON_NAMES.find((candidate) => candidate === value.slice(ICON_NAME_PREFIX.length));
+  const name = toBoardIconName(value.slice(ICON_NAME_PREFIX.length));
   return name ? { kind: 'icon', name } : null;
 };
 
@@ -29,7 +31,7 @@ const defaultSource = (key: string, avatar: unknown): BoardIconSource => {
   const app = Object.hasOwn(KEY_BRANDS, key) ? KEY_BRANDS[key] : undefined;
   if (app) return { kind: 'brand', app };
   const brandAvatar = typeof avatar === 'string' && avatar.startsWith(BRAND_PREFIX) ? parseBrand(avatar) : null;
-  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(key) % BOARD_ICON_NAMES.length] };
+  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(key) % BOARD_ICON_NAMES.length] ?? 'code' };
 };
 
 const resolveBoardIcon = (key: string, icon?: unknown, avatar?: unknown, cardIcon?: unknown): ResolvedBoardIcon => {
@@ -37,4 +39,4 @@ const resolveBoardIcon = (key: string, icon?: unknown, avatar?: unknown, cardIco
   return chosen ? { source: chosen, isDefault: false } : { source: defaultSource(key, avatar), isDefault: true };
 };
 
-export { resolveBoardIcon };
+export { resolveBoardIcon, toBoardIconName };

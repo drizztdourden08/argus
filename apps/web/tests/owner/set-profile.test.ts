@@ -17,10 +17,11 @@ describe('I-111 set-profile', { tags: ['critical'] }, () => {
   it('puts a profile entry on the portfolio scope with only the fields given', async () => {
     const calls = stub('applied', null);
     expect(await setProfile({ avatar: 'initials', name: null })).toBeNull();
-    expect(calls[0].method).toBe('PUT');
-    expect(calls[0].url).toMatch(/\/api\/p\/_portfolio\/db\/entries\/[^/]+$/);
-    expect(calls[0].body.data).toMatchObject({ kind: 'profile', author: 'human', avatar: 'initials', name: null });
-    expect(calls[0].body.data).not.toHaveProperty('initials');
+    const [call] = calls;
+    expect(call?.method).toBe('PUT');
+    expect(call?.url).toMatch(/\/api\/p\/_portfolio\/db\/entries\/[^/]+$/);
+    expect(call?.body.data).toMatchObject({ kind: 'profile', author: 'human', avatar: 'initials', name: null });
+    expect(call?.body.data).not.toHaveProperty('initials');
   });
 
   it('returns the reason when refused', async () => {

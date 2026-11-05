@@ -9,7 +9,7 @@ const parseCssColor = (css: string): Rgb | undefined => {
   context.clearRect(0, 0, 1, 1);
   context.fillStyle = css;
   context.fillRect(0, 0, 1, 1);
-  const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data;
+  const [red = 0, green = 0, blue = 0, alpha = 0] = context.getImageData(0, 0, 1, 1).data;
   return alpha === 0 ? undefined : [red, green, blue];
 };
 

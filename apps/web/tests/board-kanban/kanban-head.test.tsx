@@ -60,7 +60,8 @@ describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
   it('saves a brand mark as an owner post and reads it back', async () => {
     const view = await mountKanban(board);
     const dialog = await openSettings();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Use the Brock mark' }));
+    const marks = within(dialog).getByRole('group', { name: 'Avatar brand marks' });
+    fireEvent.click(within(marks).getByRole('button', { name: 'Use the Brock mark' }));
     await screen.findByText('The lead avatar is saved.');
     const post = view.posted.find((sent) => sent.body.kind === 'avatar');
     expect(post?.body).toMatchObject({ kind: 'avatar', avatar: 'brand:brock', author: 'human' });

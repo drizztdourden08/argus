@@ -2,7 +2,7 @@
 import { Button, DropZone, Flex, IconPicker, SegmentedControl, Text } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { AVATAR_BRANDS, BRAND_PREFIX } from '../../../../avatar';
-import { BOARD_ICON_NAMES } from '../../../../board-icon';
+import { BOARD_ICON_NAMES, toBoardIconName } from '../../../../board-icon';
 import { BoardIcon } from '../../../../shell/BoardIcon';
 import { BrandMarkPicker } from '../../../../shell/BrandMarkPicker';
 import { pickerValue } from '../behavior/picker-value';
@@ -38,7 +38,10 @@ const IconSection = (props: SectionProps) => {
           allowUpload={false}
           disabled={choice.busy}
           value={pickerValue(choice.setting)}
-          onChange={(value) => value.kind === 'icon' && void choice.pickIcon(value.name)}
+          onChange={(value) => {
+            const name = value.kind === 'icon' ? toBoardIconName(value.name) : undefined;
+            if (name) void choice.pickIcon(name);
+          }}
         />
       )}
       {mode === 'upload' && (

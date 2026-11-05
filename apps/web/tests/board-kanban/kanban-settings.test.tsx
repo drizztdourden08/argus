@@ -30,7 +30,9 @@ describe('I-105 the board icon setting', { tags: ['critical'] }, () => {
     const view = await mountKanban();
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', icon: 'brand:brock' });
     const dialog = await openSettings();
-    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Use the default' })[0]);
+    const [reset] = within(dialog).getAllByRole('button', { name: 'Use the default' });
+    if (!reset) throw new Error('no reset button');
+    fireEvent.click(reset);
     await screen.findByText('The board icon is saved.');
     expect(view.posted.find((sent) => sent.body.kind === 'icon')?.body).toMatchObject({ icon: null });
   });

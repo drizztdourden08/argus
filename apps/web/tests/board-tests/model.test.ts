@@ -54,7 +54,7 @@ describe('K1 the runs of the board', { tags: ['critical'] }, () => {
   });
 
   it('keeps the closed runs apart from the open ones and counts them', () => {
-    const view = testsView({ ...input(docs), tests: [], prefs: { group: 'run', order: 'rank', showPassed: true, showClosed: false }, conflicted: new Set() });
+    const view = testsView({ ...input(docs), tests: [], prefs: { group: 'run', order: 'rank', direction: null, showPassed: true, showClosed: false }, conflicted: new Set() });
     expect(view.runs.map((open) => open.item.id)).toEqual(['I-13', 'I-12', 'I-11']);
     expect(view.closed.map((closed) => closed.item.id)).toEqual(['I-15', 'I-14']);
     expect(view.closedCount).toBe(2);

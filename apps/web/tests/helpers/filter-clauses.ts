@@ -9,7 +9,9 @@ const openFilters = async (): Promise<void> => {
 
 const menuChoice = async (name: string): Promise<void> => {
   const menus = await screen.findAllByRole('menu');
-  fireEvent.click(await within(menus[menus.length - 1]).findByText(name));
+  const menu = menus.at(-1);
+  if (!menu) throw new Error('no menu is open');
+  fireEvent.click(await within(menu).findByText(name));
 };
 
 const valueButton = (field: string): HTMLElement | null => screen.queryByRole('button', { name: `Change the ${field} filter value` });
