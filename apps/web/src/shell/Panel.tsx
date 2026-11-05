@@ -5,7 +5,7 @@ import type { PanelProps } from './shell.type';
 const Panel = (props: PanelProps) => {
   const { title, note, tools, children } = props;
   return (
-    <Card>
+    <Card surface="glass">
       <Flex direction="column" gap="sm">
         <Flex justify="between" align="center" gap="md" wrap>
           <Flex gap="sm" align="center" wrap>
