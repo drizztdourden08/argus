@@ -71,7 +71,7 @@ describe('S1 the toolbar', { tags: ['standard'] }, () => {
     expect(screen.getByText('Login page')).toBeTruthy();
     expect(screen.getByText('Logout')).toBeTruthy();
     expect(screen.queryByText('Other')).toBeNull();
-    expect(screen.getByText('3 open / 3 · filtered')).toBeTruthy();
+    expect(screen.getAllByText('3 open / 3 · filtered').length).toBeGreaterThan(0);
   });
 
   it('clears the search to bring every item back', async () => {

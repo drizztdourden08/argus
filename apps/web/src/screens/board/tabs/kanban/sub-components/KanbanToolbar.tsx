@@ -14,7 +14,10 @@ const KanbanToolbar = (props: KanbanToolbarProps) => {
   const { boardKey, state, view, items, threads, selection, layout } = props;
   const { prefs, filters, patchFilters, setGroup, setOrder, setDirection, setShowDone } = state;
   const sortBy = (order: ItemOrder, direction: SortDirection) => {
-    if (order !== prefs.order) setOrder(order);
+    if (order !== prefs.order) {
+      setOrder(order);
+      return;
+    }
     setDirection(direction);
   };
   const layoutControl = (

@@ -12,7 +12,10 @@ const TestsToolbar = (props: TestsToolbarProps) => {
   const { boardKey, state, threads, subjects, plans, runs } = props;
   const { prefs } = state;
   const sortBy = (order: TestOrder, direction: SortDirection) => {
-    if (order !== prefs.order) state.setOrder(order);
+    if (order !== prefs.order) {
+      state.setOrder(order);
+      return;
+    }
     state.setDirection(direction);
   };
   useTabTools('tests', [
