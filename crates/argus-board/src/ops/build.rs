@@ -6,7 +6,6 @@ use serde_json::{Value, json};
 
 use super::prelude::*;
 use crate::json::{doc, doc_mut, map_mut, nullish, set, truthy};
-use crate::launchers::bundle_status;
 use crate::limits::require_text;
 
 /// The bundle record of a build tag, made when a tag is handed without one.
@@ -25,7 +24,7 @@ pub fn ensure_build(board: &mut Board, tag: &str, actor: &str, status: &str) {
 
 fn check_ready(board: &Board, tag: &str) -> Result<(), BoardError> {
     match doc(board, "builds", tag) {
-        Some(rec) if bundle_status(board, tag, rec) == "draft" => Err(refuse(format!(
+        Some(rec) if rec["status"] == "draft" => Err(refuse(format!(
             "bundle {tag} is a draft (not built yet): coord build ready {tag} once it is built and testable, then hand it."
         ))),
         _ => Ok(()),
