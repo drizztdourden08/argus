@@ -110,7 +110,8 @@ pub fn home_with_alpha() -> TempDir {
 
 /// A shaped portfolio board listing `projects`.
 pub fn portfolio_of(projects: Value) -> Value {
-    let mut p = json!({"project": "_portfolio", "entries": {}, "projects": projects});
+    let mut p = json!({"project": "_portfolio", "entries": {}});
+    p["projects"] = projects;
     argus_board::portfolio::shape(&mut p);
     p
 }

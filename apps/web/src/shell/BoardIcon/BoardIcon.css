@@ -8,7 +8,7 @@
 }
 
 .board-icon--sm {
-  --board-icon-size: calc(18 * var(--size-1));
+  --board-icon-size: var(--status-h-sm);
 }
 
 .board-icon--md {

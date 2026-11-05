@@ -1,14 +1,11 @@
 /* @layer renderer-app @kind test */
-import { act, within } from '@testing-library/react';
+import { within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { passiveNotices } from '../../src/screens/board/BoardHeader/behavior/passive-notices';
 import { minutesAgo as at } from '../helpers/minutes-ago';
 import { openAlerts } from '../helpers/open-alerts';
-import { renderAt } from '../helpers/render-at';
-import { seedBoard } from '../helpers/seed-board';
-import { snapshot } from '../helpers/snapshot';
+import { openRotp } from '../helpers/open-rotp';
 import { stubCss } from '../helpers/stub-css';
-import { waitForStream } from '../helpers/wait-for-stream';
 
 stubCss();
 
@@ -20,14 +17,7 @@ const WAKES = {
   'W-3': { thread: 'ui', reason: 'worktree-review', text: '3 worktrees need a decision', status: 'passive', listeners: 0, at: at(10) },
 };
 
-const open = async (wakes: Record<string, object>) => {
-  const { sources } = renderAt('/p/rotp/');
-  await waitForStream(sources);
-  act(() => {
-    sources[0]?.emit('snapshot', snapshot('rotp', 'wakes', wakes));
-    seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: at(0) } }, threads: { coordinator: lead } });
-  });
-};
+const open = (wakes: Record<string, object>) => openRotp({ wakes, threads: { coordinator: lead } });
 
 describe('K1 the board notices', { tags: ['critical'] }, () => {
   it('keeps only the passive rows, newest first', () => {

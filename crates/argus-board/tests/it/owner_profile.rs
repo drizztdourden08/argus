@@ -26,8 +26,11 @@ fn portfolio() -> Value {
 fn profile(home: &TempDir, p: &mut Value, fields: Value) -> (String, Option<String>) {
     let id = format!("O-{}", POSTS.fetch_add(1, Ordering::SeqCst) + 1);
     let mut entry = json!({"id": id, "kind": "profile", "author": "human"});
-    for (k, v) in fields.as_object().expect("fields") {
-        entry[k] = v.clone();
+    let Value::Object(fields) = fields else {
+        panic!("fields")
+    };
+    for (k, v) in fields {
+        entry[&k] = v;
     }
     let out = import_portfolio_entries(home.path(), p, vec![entry]).expect("imported");
     let reason = p["entries"][&id]["reason"].as_str().map(str::to_owned);

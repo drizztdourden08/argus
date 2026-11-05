@@ -85,7 +85,6 @@ interface AlertsView {
 export type {
   AlertSectionProps,
   AlertsLabelProps,
-  AlertsTone,
   AlertsView,
   BoardAlertsProps,
   BoardFactsProps,
@@ -98,5 +97,4 @@ export type {
   BoardWorktreesProps,
   LeadStatusProps,
   NoticeListProps,
-  Offline,
 };
