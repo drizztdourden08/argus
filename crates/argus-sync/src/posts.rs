@@ -247,7 +247,11 @@ impl State {
                 return Err(e);
             }
         };
-        self.finish_post(&id, &status, None);
+        let reason = stored
+            .as_ref()
+            .and_then(|e| e["reason"].as_str())
+            .map(str::to_owned);
+        self.finish_post(&id, &status, reason.as_deref());
         self.hooks.applied(&AppliedPost {
             scope: PORTFOLIO.to_owned(),
             entry: stored.clone(),
@@ -258,7 +262,7 @@ impl State {
         Ok(PostResult {
             id,
             status,
-            outcome: None,
+            outcome: reason,
             entry: stored,
             seq,
         })

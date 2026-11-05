@@ -157,13 +157,17 @@ fn board_meta(board: &Board) -> Value {
     } else {
         board["counters"].clone()
     };
-    json!({
+    let mut meta = json!({
         "project": board["project"],
         "name": display_name(&display(&board["project"]), board["name"].as_str(), None),
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
         "avatar": nn(board, "avatar"),
         "icon": nn(board, "icon"),
-    })
+    });
+    if let Some(owner) = crate::portfolio::export_owner(board) {
+        set(&mut meta, "owner", owner);
+    }
+    meta
 }
 
 /// Every page document of a board, as sets. The caller diffs them against what it stored (a hash

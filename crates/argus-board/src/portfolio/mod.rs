@@ -6,8 +6,10 @@
 mod cards;
 mod deliver;
 mod owner_items;
+mod profile;
 mod registry;
 
 pub use cards::summarize;
 pub use deliver::{PortfolioImport, dispatch_entry, import_portfolio_entries};
+pub(crate) use profile::export_owner;
 pub use registry::{project_keys, shape};

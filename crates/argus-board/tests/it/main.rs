@@ -12,6 +12,7 @@ mod names;
 mod op_links;
 mod ops;
 mod plan_run;
+mod owner_profile;
 mod portfolio;
 mod prs;
 mod served;
