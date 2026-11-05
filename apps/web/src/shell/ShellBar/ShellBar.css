@@ -1,6 +1,6 @@
 .shell-bar {
   min-height: var(--size-40);
-  padding-inline: var(--space-lg);
+  margin: var(--space-md) var(--space-lg) 0;
 }
 
 .shell-bar .shell-bar__status {

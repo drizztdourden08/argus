@@ -14,7 +14,7 @@ const HeaderPopover = (props: HeaderPopoverProps) => {
       </Button>
       {open ? (
         <Anchored anchorRef={anchor} placement="bottom-start" onDismiss={close} className="header-popover" role="dialog" aria-label={label}>
-          <Card>
+          <Card surface="glass">
             <Flex className="header-popover__body" direction="column" gap="sm">
               {children}
             </Flex>
