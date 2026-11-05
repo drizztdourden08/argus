@@ -45,5 +45,6 @@ fn a_launcher_for_a_run_lists_that_run() {
     let got = runs_of(&runs, &plans, &json!({ "name": "build-2", "for": "I-4" }));
     assert_eq!(got.len(), 1);
     assert_eq!(got[0]["toRun"], 3);
-    assert_eq!(runs_of(&runs, &plans, &json!({ "name": "master" })).len(), 0);
+    let master = runs_of(&runs, &plans, &json!({ "name": "master" }));
+    assert_eq!(master.len(), 0);
 }

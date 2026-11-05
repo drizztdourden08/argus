@@ -84,7 +84,8 @@ interface ItemType extends KindFace {
   id: string;
   label: string;
   icon: string;
-  color: string;
+  color?: string;
+  tone?: string;
   collection: 'items' | 'tests' | 'launchers' | 'worktrees';
   idKey?: string;
   serves?: string[];

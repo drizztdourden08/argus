@@ -298,8 +298,12 @@ shown_struct! {
         pub code: String,
         /// A Tessera icon name.
         pub icon: String,
-        /// A Tessera tag category colour.
-        pub color: String,
+        /// A Tessera tag category colour; a type has this or a tone.
+        #[serde(default)]
+        pub color: Option<String>,
+        /// A tone name; a type has this or a colour.
+        #[serde(default)]
+        pub tone: Option<String>,
         /// Where its records live.
         pub collection: Collection,
         /// The key of its records when it is not `id` (a build is its launcher `name`).

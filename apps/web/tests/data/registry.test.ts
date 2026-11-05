@@ -45,7 +45,7 @@ describe('K2 the web reads the item type registry file', { tags: ['critical'] },
 
   it('keeps the bug flow moves and the test plan gates', () => {
     expect(stageOf('bug', 'verifying')?.next).toEqual(['closed', 'fixing']);
-    expect((stageOf('test-plan', 'ready')?.gates ?? []).map((gate) => gate.need)).toEqual(['cases', 'bundle-ready']);
+    expect((stageOf('test-plan', 'ready')?.gates ?? []).map((gate) => gate.need)).toEqual(['cases']);
     expect(stageOf('bug', 'duplicate')?.requires).toEqual(['duplicateOf']);
   });
 

@@ -31,6 +31,7 @@ pub(super) fn verify(reg: &Registry, out: &mut Vec<String>) {
         verify_collection(kind, &mut say);
         verify_links(&kinds, kind, &mut say);
     }
+    verify_types(reg, out);
     verify_records(reg, out);
 }
 
@@ -173,6 +174,15 @@ fn verify_links(kinds: &[Kind<'_>], kind: &Kind<'_>, say: &mut impl FnMut(&str))
     }
     if kind.assignee.starts_with('=') && !ASSIGNEE_WORDS.contains(&kind.assignee) {
         say(&format!("unknown assignee word {}", kind.assignee));
+    }
+}
+
+/// What only an item type can get wrong: a colour and a tone together, or neither.
+fn verify_types(reg: &Registry, out: &mut Vec<String>) {
+    for t in &reg.types {
+        if t.color.is_some() == t.tone.is_some() {
+            out.push(format!("types.{}: set exactly one of color and tone", t.id));
+        }
     }
 }
 
