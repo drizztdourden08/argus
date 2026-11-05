@@ -84,6 +84,7 @@ interface RecordHeadProps {
   menu: readonly MenuGroup[];
   menuLabel: string;
   title?: ReactNode;
+  mark?: ReactNode;
   size?: HeadSize;
   selection?: HeadSelection;
 }

@@ -1,0 +1,9 @@
+/* @layer renderer-app @kind style */
+.board-card {
+  min-width: 0;
+}
+
+.board-card[data-started='false'] {
+  border-style: dashed;
+  background: transparent;
+}
