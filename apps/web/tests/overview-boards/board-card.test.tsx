@@ -47,7 +47,8 @@ describe('P4 sending down from a board card', { tags: ['standard'] }, () => {
     renderCard(rotp());
     fireEvent.click(await screen.findByRole('button', { name: 'Send to all' }));
     const dialog = await screen.findByRole('dialog', { name: 'Send down to all projects' });
-    expect(within(dialog).getByRole('button', { name: 'Send down' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send down' }));
+    expect(posts(calls)).toEqual([]);
     fireEvent.change(within(dialog).getByLabelText('Text to send down'), { target: { value: 'ship it' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Send down' }));
     expect(await screen.findByText('O-1 sent down to all projects.')).toBeTruthy();

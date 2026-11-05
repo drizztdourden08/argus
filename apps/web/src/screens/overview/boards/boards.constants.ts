@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind constants */
-import type { BadgeColor, IconName, SignalItem } from '@drizztdourden08/tessera';
+import type { BadgeColor, IconName } from '@drizztdourden08/tessera';
 import type { LeadState } from '../dashboards/model';
 import type { SignalId, SignalTone } from './model';
-
-type StripTone = SignalItem['tone'];
+import type { StripTone } from './boards.type';
 
 const SIGNAL_ICON: Readonly<Record<SignalId, IconName>> = {
   'needs-you': 'bell',

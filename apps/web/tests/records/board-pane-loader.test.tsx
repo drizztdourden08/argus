@@ -4,8 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RecordPane } from '../../src/shell/records/pane/RecordPane';
 import type { RecordRef } from '../../src/shell/records/records.type';
 
-vi.mock('../../src/shell/records/pane/board/BoardPane', () => ({ BoardPane: () => <p>board pane</p> }));
-vi.mock('../../src/shell/records/pane/ItemRecordPane', () => ({ ItemRecordPane: () => <p>item pane</p> }));
+vi.mock('../../src/shell/records/pane/board/BoardPane', async () => {
+  const { Text } = await import('@drizztdourden08/tessera');
+  return { BoardPane: () => <Text>board pane</Text> };
+});
+vi.mock('../../src/shell/records/pane/ItemRecordPane', async () => {
+  const { Text } = await import('@drizztdourden08/tessera');
+  return { ItemRecordPane: () => <Text>item pane</Text> };
+});
 
 afterEach(cleanup);
 

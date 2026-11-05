@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import type { AskFormProps } from '../OwnerFeed.type';
+import type { AskFormProps } from '../OwnerFeedAsk.type';
 import { DismissButton } from './DismissButton';
 import { ReplyForm } from './ReplyForm';
 

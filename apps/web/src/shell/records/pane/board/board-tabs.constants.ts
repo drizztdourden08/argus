@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind constants */
+import type { TabItem } from '@drizztdourden08/tessera';
 import { BoardActivityTab } from './BoardActivityTab';
 import { BoardBuildsTab } from './BoardBuildsTab';
 import { BoardItemsTab } from './BoardItemsTab';
@@ -22,4 +23,6 @@ const BOARD_TABS: Readonly<Record<string, BoardTab>> = {
 
 const BOARD_TAB_IDS: readonly string[] = Object.keys(BOARD_TABS);
 
-export { BOARD_TAB_IDS, BOARD_TABS };
+const TAB_ITEMS: TabItem[] = BOARD_TAB_IDS.map((id) => ({ id, label: BOARD_TABS[id]?.label ?? id }));
+
+export { BOARD_TAB_IDS, BOARD_TABS, TAB_ITEMS };

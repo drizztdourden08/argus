@@ -4,29 +4,30 @@ import type { BoardItem } from '../../../../data/boards';
 import { attentionOf } from '../../dashboards/model/attention-of';
 import { leadState } from '../../dashboards/model/lead-state';
 import { EMPTY_BOARD_COUNTS } from './board.constants';
-import type { BoardRecord } from './board.type';
+import type { BoardItemCard, BoardItemDoc, BoardRecord } from './board.type';
 
-type Doc = BoardItem['doc'];
-type CardOrNull = BoardItem['card'];
-
-const identity = (doc: Doc, card: CardOrNull): Pick<BoardRecord, 'id' | 'key' | 'name' | 'icon' | 'palette' | 'goal' | 'note' | 'rev'> => ({
-  id: doc.id,
-  key: doc.key,
+const look = (doc: BoardItemDoc, card: BoardItemCard): Pick<BoardRecord, 'name' | 'icon' | 'palette'> => ({
   name: doc.name ?? card?.name ?? doc.key,
   icon: doc.icon ?? card?.icon ?? null,
   palette: card?.palette ?? null,
+});
+
+const identity = (doc: BoardItemDoc, card: BoardItemCard): Pick<BoardRecord, 'id' | 'key' | 'name' | 'icon' | 'palette' | 'goal' | 'note' | 'rev'> => ({
+  id: doc.id,
+  key: doc.key,
+  ...look(doc, card),
   goal: doc.goal ?? '',
   note: doc.note ?? '',
   rev: doc.rev,
 });
 
-const master = (card: CardOrNull): Pick<BoardRecord, 'masterRunning' | 'hasMaster' | 'masterMissing'> => ({
+const master = (card: BoardItemCard): Pick<BoardRecord, 'masterRunning' | 'hasMaster' | 'masterMissing'> => ({
   masterRunning: Boolean(card?.master?.lastRun && isLiveRun(card.master.lastRun)),
   hasMaster: Boolean(card?.master),
   masterMissing: Boolean(card?.masterMissing),
 });
 
-const standing = (doc: Doc, card: CardOrNull, now: number): Pick<BoardRecord, 'archived' | 'started' | 'lead' | 'decisions' | 'counts'> => ({
+const standing = (doc: BoardItemDoc, card: BoardItemCard, now: number): Pick<BoardRecord, 'archived' | 'started' | 'lead' | 'decisions' | 'counts'> => ({
   archived: Boolean(doc.archivedAt),
   started: card !== null && card.state !== 'not started',
   lead: card ? leadState(card, now) : 'not started',

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { Entry } from '../../../../data/types';
 import type { AskMode } from '../../feed-model';
-import type { AskCopy } from '../OwnerFeed.type';
+import type { AskCopy } from '../OwnerFeedAsk.type';
 
 const askCopy = (entry: Entry, mode: AskMode): AskCopy => {
   if (mode === 'decide') return { kind: 'decision', label: 'Or write your own answer', verb: 'Decide', fold: 'Write an answer' };

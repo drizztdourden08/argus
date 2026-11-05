@@ -5,7 +5,7 @@ import { askMode } from '../../feed-model';
 import { askLines } from '../behavior/ask-lines';
 import { cardFacts } from '../behavior/card-facts';
 import { feedHead } from '../behavior/feed-head';
-import type { AskCardProps } from '../OwnerFeed.type';
+import type { AskCardProps } from '../OwnerFeedAsk.type';
 import { AnswerBlock } from './AnswerBlock';
 import { ContextPreview } from './ContextPreview';
 import { EntryImages } from './EntryImages';

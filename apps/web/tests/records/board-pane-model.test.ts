@@ -8,6 +8,8 @@ import { record } from '../overview-boards/helpers';
 
 const item = (id: string, status: string, extra: object = {}) => ({ id, title: id, status, thread: 't', ...extra });
 
+const laneIds = (group: { lane: string; items: { id: string }[] }) => [group.lane, group.items.map((entry) => entry.id)];
+
 describe('I-112 P5 the board pane model', { tags: ['critical'] }, () => {
   it('builds an edit of the goal with the previous text and the base revision', () => {
     const board = { ...record('argus', {}, { goal: 'Ship it', rev: 4 }), id: 'BD-1' };
@@ -16,12 +18,12 @@ describe('I-112 P5 the board pane model', { tags: ['critical'] }, () => {
 
   it('sends a null previous text when the note was empty', () => {
     const board = record('argus');
-    expect(boardEditOp(board, 'note', 'First').prev).toBeNull();
+    expect(boardEditOp(board, 'note', 'First')).toMatchObject({ prev: null });
   });
 
   it('groups open items by lane and leaves out done, archived and deleted ones', () => {
     const groups = openItems([item('I-1', 'doing'), item('I-2', 'todo'), item('I-3', 'done'), item('I-4', 'review', { archivedAt: 'x' }), item('I-5', 'doing', { deletedAt: 'x' })]);
-    expect(groups.map((group) => [group.lane, group.items.map((entry) => entry.id)])).toEqual([
+    expect(groups.map(laneIds)).toEqual([
       ['doing', ['I-1']],
       ['todo', ['I-2']],
     ]);

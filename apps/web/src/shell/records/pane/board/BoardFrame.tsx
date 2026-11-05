@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind component */
 import { Flex, Icon, Tabs, Text } from '@drizztdourden08/tessera';
-import type { TabItem } from '@drizztdourden08/tessera';
 import { RecordDrawer, WIDE_KEY, useStoredFlag } from '../../../../screens/board/shared';
 import { useNow } from '../../../../screens/board/tabs/kanban/behavior/useNow';
 import { boardRecord } from '../../../../screens/overview/boards/model';
@@ -10,10 +9,8 @@ import { RecordPaneTools } from '../RecordPaneTools';
 import { useBoardLive } from './behavior/useBoardLive';
 import { BoardArchiveTool } from './BoardArchiveTool';
 import { BOARD_KIND, BOARD_LABEL } from './board.constants';
-import { BOARD_TAB_IDS, BOARD_TABS } from './board-tabs.constants';
+import { BOARD_TAB_IDS, BOARD_TABS, TAB_ITEMS } from './board-tabs.constants';
 import type { BoardFrameProps } from './board.type';
-
-const TAB_ITEMS: TabItem[] = BOARD_TAB_IDS.map((id) => ({ id, label: BOARD_TABS[id]?.label ?? id }));
 
 const BoardFrame = (props: BoardFrameProps) => {
   const { item } = props;

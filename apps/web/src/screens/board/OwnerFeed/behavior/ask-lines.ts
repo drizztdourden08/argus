@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { plainText } from '../../plain-text';
-import type { AskLines } from '../OwnerFeed.type';
+import type { AskLines } from '../OwnerFeedAsk.type';
 
 const askLines = (text: string): AskLines => {
   const [first = '', ...rest] = text.trim().split('\n');

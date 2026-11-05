@@ -2,7 +2,7 @@
 import { Button, EmptyState, Flex, Text } from '@drizztdourden08/tessera';
 import { useLogWindow } from '../behavior/useLogWindow';
 import { LOG_START, LOG_STEP } from '../OwnerFeed.constants';
-import type { LogSectionProps } from '../OwnerFeed.type';
+import type { LogSectionProps } from '../OwnerFeedLog.type';
 import { LogList } from './LogList';
 
 const LogSection = (props: LogSectionProps) => {

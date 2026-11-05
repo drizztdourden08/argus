@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Disclosure, EmptyState, Flex } from '@drizztdourden08/tessera';
-import type { LogFoldProps } from '../OwnerFeed.type';
+import type { LogFoldProps } from '../OwnerFeedLog.type';
 import { LogSection } from './LogSection';
 import { NoticeList } from './NoticeList';
 
