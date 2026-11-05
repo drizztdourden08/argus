@@ -10,6 +10,7 @@ const BoardSettingsDialog = (props: BoardSettingsDialogProps) => {
     <DialogShell
       open
       size="md"
+      surface="glass"
       title="Board settings"
       onClose={onClose}
       actions={<Button size="sm" variant="ghost" onClick={onClose}>Close</Button>}
