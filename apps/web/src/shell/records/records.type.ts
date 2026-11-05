@@ -136,6 +136,7 @@ interface RecordCardProps {
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;
   defaultOpen?: boolean;
+  content?: ReactNode;
 }
 
 interface ActionDef {

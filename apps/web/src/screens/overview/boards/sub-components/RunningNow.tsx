@@ -1,28 +1,35 @@
 /* @layer renderer-app @kind component */
-import { ListItemList, ListItemRow, Tag } from '@drizztdourden08/tessera';
+import { Tag, Text } from '@drizztdourden08/tessera';
 import { ProjectLink } from '../../projects';
-import { Age } from '../../../../shell';
-import { GOOD_LOOK, RUNNING_HEADER } from '../boards-run.constants';
+import { Age, FrameCode, RecordFrame, RecordGroup } from '../../../../shell';
+import { GOOD_LOOK } from '../boards-run.constants';
 import type { RunningNowProps } from '../boards.type';
 
 const RunningNow = (props: RunningNowProps) => {
   const { runs } = props;
   if (runs.length === 0) return null;
   return (
-    <ListItemList label="Running now" heading="Running now" header={RUNNING_HEADER} count={runs.length}>
+    <RecordGroup header={<Text weight={600}>Running now</Text>} count={runs.length} label="Running now">
       {runs.map((run) => (
-        <ListItemRow
+        <RecordFrame
           key={`${run.scope}/${run.id}`}
+          name={run.id}
+          density="row"
           icon={<Tag {...GOOD_LOOK}>{run.status}</Tag>}
-          name={`${run.name} ${run.id}`}
-          meta={run.lastLine ?? ''}
-          columns={[
-            { primary: <ProjectLink project={run.scope} hash="#agents" /> },
-            { primary: <Age value={run.startedAt ?? run.queuedAt} />, align: 'end' },
-          ]}
-        />
+          code={<FrameCode>{run.id}</FrameCode>}
+          title={<Text clamp={1}>{run.name}</Text>}
+          content={
+            <>
+              <ProjectLink project={run.scope} hash="#agents" />
+              <Age value={run.startedAt ?? run.queuedAt} />
+            </>
+          }
+          attrs={{ role: 'listitem' }}
+        >
+          {run.lastLine && <Text variant="caption" tone="muted">{run.lastLine}</Text>}
+        </RecordFrame>
       ))}
-    </ListItemList>
+    </RecordGroup>
   );
 };
 

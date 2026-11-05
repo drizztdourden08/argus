@@ -38,6 +38,10 @@ interface FrameSlotProps {
   children: ReactNode;
 }
 
+interface FrameCodeProps {
+  children: ReactNode;
+}
+
 interface FrameLeadProps {
   kind?: string;
   icon?: ReactNode;
@@ -45,4 +49,4 @@ interface FrameLeadProps {
   name: string;
 }
 
-export type { FrameDensity, FrameLeadProps, FrameOpenState, FrameSlotProps, FrameToggleProps, RecordFrameProps };
+export type { FrameCodeProps, FrameDensity, FrameLeadProps, FrameOpenState, FrameSlotProps, FrameToggleProps, RecordFrameProps };

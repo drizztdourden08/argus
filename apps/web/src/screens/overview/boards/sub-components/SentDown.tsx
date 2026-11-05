@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Card, Disclosure, ListItemList, Text } from '@drizztdourden08/tessera';
+import { Card, Disclosure, Flex, Text } from '@drizztdourden08/tessera';
 import { useSentDown } from '../behavior/useSentDown';
-import { NOTHING_SENT, SENT_HEADER, SENT_SHAPE } from '../boards-send.constants';
+import { NOTHING_SENT } from '../boards-send.constants';
 import { SentRow } from './SentRow';
 
 const SentDown = () => {
@@ -12,9 +12,9 @@ const SentDown = () => {
         {rows.length === 0
           ? <Text tone="muted">{NOTHING_SENT}</Text>
           : (
-            <ListItemList label="Sent down" header={SENT_HEADER} shape={SENT_SHAPE}>
+            <Flex direction="column" gap="xs" role="list" aria-label="Sent down">
               {rows.map((entry) => <SentRow key={entry.id} entry={entry} />)}
-            </ListItemList>
+            </Flex>
           )}
       </Disclosure>
     </Card>

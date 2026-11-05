@@ -3,6 +3,7 @@ import { Pressable, Text } from '@drizztdourden08/tessera';
 import { rowLinked } from '../behavior/row-linked';
 import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
+import { FrameCode } from './FrameCode';
 import { RecordFrame } from './RecordFrame';
 import { RecordMenu } from './RecordMenu';
 import { RowChips } from './RowChips';
@@ -13,7 +14,7 @@ const RecordRow = (props: RecordRowProps) => {
   const untitled = given === '';
   const title = untitled ? head.code : given;
   const linked = onOpen !== undefined && rowLinked(title, chips);
-  const code = <Text as="span" variant="caption" leading="16" tone="muted" mono>{head.code}</Text>;
+  const code = <FrameCode>{head.code}</FrameCode>;
   const opener = linked ? <Pressable onClick={onOpen} title={`Open ${head.code}`}>{code}</Pressable> : code;
   return (
     <RecordFrame

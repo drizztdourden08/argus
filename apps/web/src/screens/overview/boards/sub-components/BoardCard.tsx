@@ -38,8 +38,8 @@ const BoardCard = (props: BoardCardProps) => {
           menu: boardMenuGroups(record, record.started, handlers),
           menuLabel: `More actions for ${record.id}`,
           mark: record.started ? <Pressable onClick={handlers.open} aria-label={`Open the ${record.name} board`}>{icon}</Pressable> : icon,
-          title: <Avatar size="xs" initials="L" label={lead.tip} status={lead.status} />,
         }}
+        content={<Avatar size="xs" initials="L" label={lead.tip} status={lead.status} />}
         title={record.name}
         openLabel={`Open ${record.id}: ${record.name}`}
         onOpen={() => pane.open(record.id)}

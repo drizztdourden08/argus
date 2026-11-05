@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind component */
-import { ListItemList, Stack } from '@drizztdourden08/tessera';
-import { ROW_SHAPE } from './boards-view.constants';
+import { Flex, Stack } from '@drizztdourden08/tessera';
 import type { BoardsListProps } from './boards-view.type';
 import { BoardRow } from './sub-components/BoardRow';
 import { BoardsGroup } from './sub-components/BoardsGroup';
@@ -11,9 +10,9 @@ const BoardsRows = (props: BoardsListProps) => {
     <Stack gap="md">
       {groups.map((group) => (
         <BoardsGroup key={group.id} group={group}>
-          <ListItemList label={group.label} shape={ROW_SHAPE}>
+          <Flex direction="column" gap="xs" role="list" aria-label={group.label}>
             {group.entries.map((entry) => <BoardRow key={entry.record.id} entry={entry} />)}
-          </ListItemList>
+          </Flex>
         </BoardsGroup>
       ))}
     </Stack>
