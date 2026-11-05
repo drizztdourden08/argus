@@ -4,7 +4,7 @@ import { changedFields, editProblem } from '../model';
 import type { EditChange, TestDoc } from '../model';
 import type { EditDraft, TestOps } from '../tests.type';
 
-const startValue = (test: TestDoc): EditChange => ({ title: test.title, covers: test.covers ?? '', build: test.build ?? '', mode: test.mode });
+const startValue = (test: TestDoc): EditChange => ({ title: test.title, covers: test.covers ?? '', mode: test.mode });
 
 const useEditDraft = (test: TestDoc, ops: TestOps, onDone: () => void): EditDraft => {
   const [value, setValue] = useState<EditChange>(() => startValue(test));

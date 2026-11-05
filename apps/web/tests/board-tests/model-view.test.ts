@@ -2,39 +2,38 @@
 import { describe, expect, it } from 'vitest';
 import { formatFilters } from '../../src/screens/board/shared';
 import {
-  changedFields, conflictedTests, DEFAULT_FILTERS, editProblem, filtersActive, knownBuilds, latestWakes, parseStored, sortToRun, subjectsOf, testNotices, toRunCount, wakeChip,
+  changedFields, conflictedTests, DEFAULT_FILTERS, editProblem, filtersActive, latestWakes, parseStored, sortToRun, subjectsOf, testNotices, toRunCount, wakeChip,
 } from '../../src/screens/board/tabs/tests/model';
-import type { BuildDoc, TestDoc, TestFilters, WakeDoc } from '../../src/screens/board/tabs/tests/model';
-import { buildDoc, conflictEntry, doneDoc, itemDoc, testDoc, wakeDoc } from './fixtures';
+import type { TestDoc, TestFilters, WakeDoc } from '../../src/screens/board/tabs/tests/model';
+import { conflictEntry, doneDoc, itemDoc, testDoc, wakeDoc } from './fixtures';
 
 const tests = (...docs: object[]): TestDoc[] => docs as TestDoc[];
-const builds = (...docs: object[]): BuildDoc[] => docs.map((doc) => ({ ...doc, id: (doc as { tag: string }).tag })) as BuildDoc[];
 const wakes = (...docs: object[]): WakeDoc[] => docs as WakeDoc[];
 
 describe('K1 the saved view', { tags: ['critical'] }, () => {
-  it('reads the Node keys and plan: q, threads, builds, nobuild, status, subject, plan, needs, conf, archived and sort', () => {
-    const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conf: true, archived: true, sort: 'updated' });
+  it('reads the Node keys and plan: q, threads, status, subject, plan, needs, conf, archived and sort', () => {
+    const filters = JSON.stringify({ q: 'x', threads: ['a'], status: 'fail', subject: 's', plan: 'I-5', needs: true, conf: true, archived: true, sort: 'updated' });
     const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
-    expect(view.filters).toEqual({ query: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true });
+    expect(view.filters).toEqual({ query: 'x', threads: ['a'], status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true });
     expect(view.prefs).toEqual({ group: 'item', order: 'updated', showPassed: false, showClosed: true });
   });
 
   it('falls back to the defaults for nothing, damage or an unknown group', () => {
     expect(parseStored({ filters: '{oops', group: 'zzz', passed: null, closed: null })).toEqual({
       filters: DEFAULT_FILTERS,
-      prefs: { group: 'plan', order: 'rank', showPassed: true, showClosed: false },
+      prefs: { group: 'run', order: 'rank', showPassed: true, showClosed: false },
     });
   });
 
   it('writes the filters back without dropping the keys it does not own', () => {
-    const next: TestFilters = { ...DEFAULT_FILTERS, query: 'q', conflict: true, builds: ['b1'] };
-    expect(JSON.parse(formatFilters('{"trash":true}', next, 'updated'))).toMatchObject({ trash: true, q: 'q', conf: true, builds: ['b1'], sort: 'updated' });
+    const next: TestFilters = { ...DEFAULT_FILTERS, query: 'q', conflict: true };
+    expect(JSON.parse(formatFilters('{"trash":true}', next, 'updated'))).toMatchObject({ trash: true, q: 'q', conf: true, sort: 'updated' });
   });
 
   it('counts a filter as on for everything but the archived switch', () => {
     expect(filtersActive(DEFAULT_FILTERS)).toBe(false);
     expect(filtersActive({ ...DEFAULT_FILTERS, archived: true })).toBe(false);
-    expect(filtersActive({ ...DEFAULT_FILTERS, nobuild: true })).toBe(true);
+    expect(filtersActive({ ...DEFAULT_FILTERS, query: 'x' })).toBe(true);
   });
 });
 
@@ -47,36 +46,29 @@ describe('K1 the order of the tests to run', { tags: ['critical'] }, () => {
   });
 });
 
-describe('K1 the known builds and the subjects', { tags: ['critical'] }, () => {
-  it('lists the declared and used tags, the handed one first, closed ones only on request', () => {
-    const closed = builds(buildDoc('b1'), buildDoc('b2', { closedAt: '2026-10-01T00:00:00.000Z' }), buildDoc('b10'));
-    const used = tests(testDoc('T-1', { build: 'b3' }), testDoc('T-2', { build: null }));
-    expect(knownBuilds(used, closed, 'b1', false)).toEqual(['b1', 'b10', 'b3']);
-    expect(knownBuilds(used, closed, null, true)).toEqual(['b10', 'b3', 'b2', 'b1']);
-  });
-
+describe('K1 the subjects', { tags: ['critical'] }, () => {
   it('collects the subjects of the items and the tests, sorted and without blanks', () => {
     const items = [itemDoc('I-1', { subject: 'work' }), itemDoc('I-2', { subject: null })] as never[];
     expect(subjectsOf(items, tests(testDoc('T-1', { subject: 'play' }), testDoc('T-2', { subject: 'work' })))).toEqual(['play', 'work']);
   });
 
-  it('counts the tests to run of the open bundles only', () => {
-    const all = tests(testDoc('T-1'), testDoc('T-2', { build: 'old' }), doneDoc('T-3', 'pass', 'ok'), testDoc('T-4', { archivedAt: 'then' }));
-    expect(toRunCount(all, builds(buildDoc('bundle-1'), buildDoc('old', { closedAt: 'then' })))).toBe(1);
+  it('counts the tests to run, archived ones left out', () => {
+    const all = tests(testDoc('T-1'), testDoc('T-2'), doneDoc('T-3', 'pass', 'ok'), testDoc('T-4', { archivedAt: 'then' }));
+    expect(toRunCount(all)).toBe(2);
   });
 });
 
 describe('K1 the edit of a test', { tags: ['critical'] }, () => {
-  const test = testDoc('T-1', { covers: null, build: 'bundle-1' }) as TestDoc;
+  const test = testDoc('T-1', { covers: null }) as TestDoc;
 
   it('sends only what changed, trimmed', () => {
-    expect(changedFields(test, { title: ' New ', covers: '', build: 'bundle-1', mode: 'manual' })).toEqual({ title: 'New' });
+    expect(changedFields(test, { title: ' New ', covers: '', mode: 'manual' })).toEqual({ title: 'New' });
   });
 
   it('refuses an empty title and a text over its limit', () => {
-    expect(editProblem({ title: ' ', covers: '', build: '', mode: 'auto' })).toBe('The title cannot be empty.');
-    expect(editProblem({ title: 'ok', covers: '', build: 'x'.repeat(41), mode: 'auto' })).toBe('The build is at most 40 characters.');
-    expect(editProblem({ title: 'ok', covers: '', build: '', mode: 'auto' })).toBeNull();
+    expect(editProblem({ title: ' ', covers: '', mode: 'auto' })).toBe('The title cannot be empty.');
+    expect(editProblem({ title: 'ok', covers: 'x'.repeat(81), mode: 'auto' })).toMatch(/at most/);
+    expect(editProblem({ title: 'ok', covers: '', mode: 'auto' })).toBeNull();
   });
 });
 

@@ -2,8 +2,6 @@
 import { FOCUS_KEY } from '../../../shared';
 import type { TestFilters, TestGroup, TestOrder, TestPrefs } from './model.type';
 
-const NO_BUNDLE = '(no build)';
-
 const NOTE_MIN_CHARS = 3;
 
 const DONE_FOLD_AFTER = 5;
@@ -18,15 +16,15 @@ const PASSED_STATUSES = ['pass', 'moved'];
 
 const NO_KEY = 'none';
 
-const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], builds: [], nobuild: false, status: '', subject: '', plan: '', needs: false, conflict: false, archived: false };
+const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], status: '', subject: '', plan: '', needs: false, conflict: false, archived: false };
 
-const DEFAULT_PREFS: TestPrefs = { group: 'plan', order: 'rank', showPassed: true, showClosed: false };
+const DEFAULT_PREFS: TestPrefs = { group: 'run', order: 'rank', showPassed: true, showClosed: false };
 
-const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests4', passed: 'coord.passed', closed: 'coord.closed', focus: FOCUS_KEY, paused: 'coord.paused' };
+const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests5', passed: 'coord.passed', closed: 'coord.closed', focus: FOCUS_KEY, paused: 'coord.paused' };
 
 const GROUP_OPTIONS: { value: TestGroup; label: string }[] = [
+  { value: 'run', label: 'Run' },
   { value: 'plan', label: 'Plan' },
-  { value: 'build', label: 'Bundle' },
   { value: 'item', label: 'Item' },
   { value: 'thread', label: 'Thread' },
 ];
@@ -44,13 +42,15 @@ const STATUS_FILTERS = [
   { value: 'pass', label: 'Passed' },
 ];
 
-const EDIT_LIMITS = { title: 80, covers: 80, build: 40, mode: 8 };
+const EDIT_LIMITS = { title: 80, covers: 80, mode: 8 };
 
 const BAD_STATUSES = ['conflict', 'refused'];
 
 const PLAN_CLOSED_STAGES = ['passed', 'abandoned'];
 
 const PLAN_KIND = 'test-plan';
+
+const RUN_CLOSED_STAGES = ['passed', 'abandoned'];
 
 const OWNER_ASSIGNEE = 'owner';
 
@@ -59,6 +59,6 @@ const AUTO_TIP = 'A thread can run this one itself; you can still post a result'
 const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar', 'worktree-link', 'worktree-keep', 'launcher-link', 'launcher-retire'];
 
 export {
-  AUTO_TIP, BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_BUNDLE, NO_KEY, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS, OWNER_ASSIGNEE,
-  PASSED_STATUSES, PLAN_CLOSED_STAGES, PLAN_KIND, ORDER_OPTIONS, STATUS_FILTERS, STORE_KEYS, WAKE_WAIT_MS,
+  AUTO_TIP, BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_KEY, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS, OWNER_ASSIGNEE,
+  PASSED_STATUSES, PLAN_CLOSED_STAGES, PLAN_KIND, ORDER_OPTIONS, RUN_CLOSED_STAGES, STATUS_FILTERS, STORE_KEYS, WAKE_WAIT_MS,
 };

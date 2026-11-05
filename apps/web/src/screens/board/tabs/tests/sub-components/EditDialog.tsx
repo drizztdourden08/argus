@@ -31,7 +31,6 @@ const EditDialog = (props: EditDialogProps) => {
         <Select aria-label="Mode" size="sm" options={MODE_OPTIONS} value={draft.value.mode} onChange={(value) => draft.set('mode', value)} />
         <Select aria-label="Item" size="sm" options={itemChoices(items)} value={draft.item} onChange={draft.setItem} />
         <TextInput aria-label="Covers" placeholder="Covers" maxLength={EDIT_LIMITS.covers} value={draft.value.covers} onChange={(event) => draft.set('covers', event.target.value)} />
-        <TextInput aria-label="Build" placeholder="Build" maxLength={EDIT_LIMITS.build} value={draft.value.build} onChange={(event) => draft.set('build', event.target.value)} />
         {draft.problem && <Text variant="caption" tone="danger" role="alert">{draft.problem}</Text>}
       </Flex>
     </DialogShell>

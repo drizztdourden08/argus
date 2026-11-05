@@ -11,9 +11,9 @@ const foldedLine = (note: string): string => {
 };
 
 const LaunchNote = (props: LaunchNoteProps) => {
-  const { tag, note } = props;
+  const { id, note } = props;
   const { folds } = useTestsShared();
-  const key = `${tag}#note`;
+  const key = `${id}#note`;
   const open = folds.isOpen(key, false);
   return (
     <Disclosure

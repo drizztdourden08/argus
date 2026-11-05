@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, doneDoc, itemDoc, testDoc } from './fixtures';
+import { doneDoc, itemDoc, testDoc } from './fixtures';
 import { entries, firstResult, openFrom } from './menu-dom';
 import { mountTab } from './mount-tab';
 import { resultCalls } from './outcome-dom';
@@ -10,7 +10,6 @@ import { resultCalls } from './outcome-dom';
 cleanAfterEach();
 
 const board = () => ({
-  builds: [buildDoc('bundle-1')],
   items: [itemDoc('I-1'), itemDoc('I-2')],
   tests: [testDoc('T-1', { rev: 4, covers: 'AC1' }), doneDoc('T-2', 'fail', 'broken')],
 });
@@ -62,14 +61,13 @@ describe('S1 the edit dialog of the row menu', { tags: ['standard'] }, () => {
     const { calls } = await mountTab(board());
     const dialog = within(await openFrom('T-1', 'Edit'));
     fireEvent.change(dialog.getByRole('textbox', { name: 'Title' }), { target: { value: '  A better title ' } });
-    fireEvent.change(dialog.getByRole('textbox', { name: 'Build' }), { target: { value: 'bundle-9' } });
     fireEvent.click(dialog.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(entries(calls)).toHaveLength(1));
     expect(entries(calls)[0]?.body).toMatchObject({
       kind: 'edit',
       target: { c: 'tests', id: 'T-1' },
-      set: { title: 'A better title', build: 'bundle-9' },
-      prev: { title: 'Test number 1', build: 'bundle-1' },
+      set: { title: 'A better title' },
+      prev: { title: 'Test number 1' },
       baseRev: 4,
     });
   });

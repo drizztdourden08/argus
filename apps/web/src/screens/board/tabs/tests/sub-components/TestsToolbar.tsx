@@ -5,11 +5,11 @@ import { FilterRow } from './FilterRow';
 import { ViewRow } from './ViewRow';
 
 const TestsToolbar = (props: TestsToolbarProps) => {
-  const { state, view, threads, subjects, plans, builds, handed } = props;
+  const { state, view, threads, subjects, plans } = props;
   return (
     <Card role="search" aria-label="Filters">
       <Flex direction="column" gap="sm">
-        <FilterRow state={state} threads={threads} subjects={subjects} plans={plans} builds={builds} handed={handed} />
+        <FilterRow state={state} threads={threads} subjects={subjects} plans={plans} />
         <ViewRow state={state} view={view} />
       </Flex>
     </Card>

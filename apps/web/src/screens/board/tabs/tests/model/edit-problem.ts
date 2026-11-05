@@ -8,6 +8,6 @@ const edit = (field: keyof EditChange, draft: EditChange): string | null => {
   return text.length > EDIT_LIMITS[field] ? `The ${field} is at most ${EDIT_LIMITS[field]} characters.` : null;
 };
 
-const editProblem = (draft: EditChange): string | null => edit('title', draft) ?? edit('covers', draft) ?? edit('build', draft);
+const editProblem = (draft: EditChange): string | null => edit('title', draft) ?? edit('covers', draft);
 
 export { editProblem };

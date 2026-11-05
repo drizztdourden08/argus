@@ -7,7 +7,6 @@ import type { TestOps, TestsData, TestsScreen } from './tests.type';
 
 interface TestFactsProps {
   test: TestDoc;
-  handed: boolean;
   ops: TestOps;
   items: ItemDoc[];
 }

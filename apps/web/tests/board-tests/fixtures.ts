@@ -9,7 +9,6 @@ const testDoc = (id: string, extra: object = {}) => ({
   thread: 'lead',
   title: `Test number ${id.slice(2)}`,
   covers: null,
-  build: 'bundle-1',
   mode: 'manual',
   run: null,
   context: null,
@@ -34,22 +33,6 @@ const doneDoc = (id: string, status: string, text: string, extra: object = {}) =
   const result = { status, text, by: 'human', at: NOW };
   return testDoc(id, { status, result, runs: [result], updatedAt: NOW, ...extra });
 };
-
-const buildDoc = (tag: string, extra: object = {}) => ({
-  tag,
-  status: 'ready' as 'draft' | 'ready',
-  title: null,
-  note: null,
-  launcher: null,
-  cmd: null,
-  cwd: null,
-  thread: 'lead',
-  updatedAt: EARLIER,
-  closedAt: null,
-  closedBy: null,
-  closeNote: null,
-  ...extra,
-});
 
 const launcherDoc = (name: string, extra: object = {}) => ({
   name,
@@ -77,6 +60,15 @@ const itemDoc = (id: string, extra: object = {}) => ({
   updatedAt: EARLIER,
   ...extra,
 });
+
+const testRunDoc = (id: string, plan: string, extra: object = {}) =>
+  itemDoc(id, { title: `Run of ${plan}`, subject: null, type: 'test-run', stage: 'running', fields: { plan, build: null, results: [], summary: '' }, ...extra });
+
+const planDoc = (id: string, cases: string[], extra: object = {}) =>
+  itemDoc(id, { title: `Plan number ${id.slice(2)}`, subject: null, type: 'test-plan', stage: 'ready', fields: { cases }, ...extra });
+
+const runOn = (id: string, build: string | null, extra: object = {}) =>
+  testRunDoc(id, 'I-9', { fields: { plan: 'I-9', build, results: [], summary: '' }, ...extra });
 
 const threadDoc = (id: string, extra: object = {}) => ({ id, name: id, session: id, role: 'thread', status: 'active', ...extra });
 
@@ -107,4 +99,4 @@ const conflictEntry = (id: string, test: string, extra: object = {}) => ({
 
 const byId = (docs: readonly object[], key = 'id'): Record<string, object> => Object.fromEntries(docs.map((doc) => [String(Reflect.get(doc, key)), doc]));
 
-export { buildDoc, byId, conflictEntry, defDoc, doneDoc, itemDoc, launcherDoc, runDoc, testDoc, threadDoc, wakeDoc };
+export { byId, conflictEntry, defDoc, doneDoc, itemDoc, launcherDoc, planDoc, runDoc, runOn, testDoc, testRunDoc, threadDoc, wakeDoc };

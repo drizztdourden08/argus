@@ -1,6 +1,4 @@
 /* @layer renderer-app @kind types */
-type BundleState = 'draft' | 'ready' | 'closed';
-
 interface Build {
   tag: string;
   status?: 'draft' | 'ready';
@@ -89,4 +87,4 @@ interface TestItem {
   ac?: { text: string; done: boolean }[];
 }
 
-export type { Build, BundleState, Launcher, LaunchDef, RunDoc, TestItem };
+export type { Build, Launcher, LaunchDef, RunDoc, TestItem };

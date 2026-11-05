@@ -11,11 +11,10 @@ import { byId } from './fixtures';
 
 type Doc = Record<string, unknown>;
 
-type Feed = 'tests' | 'builds' | 'launchers' | 'launches' | 'runs' | 'items' | 'threads' | 'entries' | 'wakes';
+type Feed = 'tests' | 'launchers' | 'launches' | 'runs' | 'items' | 'threads' | 'entries' | 'wakes';
 
 type Board = Partial<Record<Feed, Doc[]>> & {
   group?: string;
-  handed?: string | null;
   at?: string;
 };
 
@@ -34,7 +33,7 @@ type Responder = (call: Call) => Reply | undefined;
 
 const SCOPE = 'rotp';
 const FEEDS: [Feed, string][] = [
-  ['tests', 'id'], ['builds', 'tag'], ['launchers', 'name'], ['launches', 'name'], ['runs', 'id'], ['items', 'id'], ['threads', 'id'], ['entries', 'id'], ['wakes', 'id'],
+  ['tests', 'id'], ['launchers', 'name'], ['launches', 'name'], ['runs', 'id'], ['items', 'id'], ['threads', 'id'], ['entries', 'id'], ['wakes', 'id'],
 ];
 const POSTED = { id: 'O-1', status: 'applied', outcome: null, entry: null, seq: 1 };
 
@@ -48,7 +47,7 @@ const HashProbe = () => {
   );
 };
 
-const GROUP_KEY = 'coord.g.tests4';
+const GROUP_KEY = 'coord.g.tests5';
 
 const defaultReply = (call: Call): Reply => {
   if (call.url.endsWith('/proofs') || call.url.includes('/proofs?')) return { status: 200, body: { test: 'T-1', proof: { n: 1, url: '/files/rotp/proofs/T-1-1.png', caption: 'c' } } };
@@ -75,7 +74,7 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
 
 const mountTab = async (board: Board = {}, respond?: Responder) => {
   vi.stubGlobal('CSS', { supports: () => false });
-  if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'build');
+  if (board.group !== 'default' && (board.group || localStorage.getItem(GROUP_KEY) === null)) localStorage.setItem(GROUP_KEY, board.group ?? 'item');
   const calls = stubFetch(respond);
   const { view, source, live } = await mountStreamed(
     <TesseraProvider overrides={{}}>
@@ -90,7 +89,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   const feed = (coll: string, docs: Doc[], key = 'id') => source?.emit('snapshot', snapshot(SCOPE, coll, byId(docs, key)));
   act(() => {
     for (const [coll, key] of FEEDS) feed(coll, board[coll] ?? [], key);
-    source?.emit('snapshot', snapshot(SCOPE, 'meta', { board: { name: 'RotP', handedBuild: board.handed ?? null } }));
+    source?.emit('snapshot', snapshot(SCOPE, 'meta', { board: { name: 'RotP' } }));
   });
   const change = (coll: string, id: string, data: object) =>
     act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));

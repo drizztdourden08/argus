@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, doneDoc, testDoc } from './fixtures';
+import { doneDoc, testDoc } from './fixtures';
 import { firstResult } from './menu-dom';
 import { mountTab } from './mount-tab';
 import { board, focusedOutcome, noteBox, openBox, outcomeButton, refuseResults, resultCalls, send, type } from './outcome-dom';
@@ -38,7 +38,7 @@ describe('S1 the keys 1 to 4 on a test to run', { tags: ['standard'] }, () => {
   });
 
   it('do nothing with a modifier held, or on a test that is done', async () => {
-    const { calls } = await mountTab({ builds: board().builds, tests: [doneDoc('T-1', 'pass', 'ok'), ...board().tests.slice(1)] });
+    const { calls } = await mountTab({ tests: [doneDoc('T-1', 'pass', 'ok'), ...board().tests.slice(1)] });
     fireEvent.keyDown(await rowButton('T-2'), { key: '1', ctrlKey: true });
     fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
     expect(resultCalls(calls)).toHaveLength(0);
@@ -54,7 +54,7 @@ describe('S1 after a result on a row', { tags: ['standard'] }, () => {
   });
 
   it('moves on after the keys too, and after a fail sent with its note', async () => {
-    const { calls } = await mountTab({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), testDoc('T-2'), testDoc('T-3')] });
+    const { calls } = await mountTab({ tests: [testDoc('T-1'), testDoc('T-2'), testDoc('T-3')] });
     fireEvent.keyDown(await rowButton('T-1'), { key: '1' });
     await firstResult(calls);
     await waitFor(() => expect(focusedOutcome()).toBe('pass T-2'));

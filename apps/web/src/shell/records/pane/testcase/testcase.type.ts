@@ -7,7 +7,6 @@ interface TestCaseLoad {
   test: WithId<Test> | null;
   item: WithId<TestItem> | null;
   items: WithId<TestItem>[];
-  handed: boolean;
   ops: TestOps;
 }
 
