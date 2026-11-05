@@ -15,6 +15,7 @@ interface OwnerBoxProps {
   compact?: boolean;
   onEscape?: () => void;
   actions?: ReactNode;
+  submitLabel?: string;
 }
 
 export type { OwnerBoxProps };
