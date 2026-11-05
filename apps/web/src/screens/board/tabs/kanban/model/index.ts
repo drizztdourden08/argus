@@ -9,6 +9,8 @@ export { buildView } from './build-view';
 export { byCreated } from './by-created';
 export { categoryColor } from '../../../../../shell';
 export { cardChips } from './card-chips';
+export { acSegments } from './ac-segments';
+export { cardBars } from './card-bars';
 export { cardProgress } from './card-progress';
 export { bulkMoves } from './bulk-moves';
 export { bulkSofts } from './bulk-softs';
