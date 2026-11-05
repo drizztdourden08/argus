@@ -13,7 +13,7 @@ const ChatRow = (props: ChatRowProps) => {
   const view = useThreadView(boardKey, chat.id);
   const seen = chat.lastSeen ? `${formatAgo(chat.lastSeen, now)} ago` : 'never';
   return (
-    <Box className={`agents-chat${chat.status === 'paused' ? ' agents-chat--paused' : ''}`} data-chat-id={chat.id}>
+    <Box className={`agents-chat${chat.status === 'paused' ? ' agents-chat--paused' : ''}`} data-chat-id={chat.id} data-swap-item>
       <Box as="span" className="agents-chat__name">
         <Status tone={activityTone(chat.activity)} dot title={orText(chat.activity, 'unknown')} aria-label={orText(chat.activity, 'unknown')}>{null}</Status>
         <Pressable className="agents-name__link" title={`${orText(chat.session, 'no session title')}\nSubject: ${orText(chat.subject, 'none')}\nSeen: ${seen}`} onClick={() => open(chat.id)}>

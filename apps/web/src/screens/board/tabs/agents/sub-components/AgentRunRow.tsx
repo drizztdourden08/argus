@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, Icon, IconButton, Text } from '@drizztdourden08/tessera';
+import { Box, Flex, Icon, IconButton, Text } from '@drizztdourden08/tessera';
 import { RecordRow, recordMenuGroups, useRecordPane } from '../../../../../shell';
 import { isLiveRun, runLine } from '../../../../../data/runs';
 import { formatAgo } from '../../../../../format';
@@ -25,30 +25,32 @@ const AgentRunRow = (props: AgentRunRowProps) => {
   const stop = () => void play.stop(run);
   const line = runLine(run);
   return (
-    <RecordRow
-      head={{
-        kind: 'run',
-        code: run.id,
-        assignee: run.origin === PAGE_ORIGIN ? 'owner' : '',
-        boardKey,
-        threads: [],
-        menu: recordMenuGroups('run', run.id, { open: openLog, stop: live ? stop : undefined }),
-        menuLabel: `More actions for ${run.id}`,
-      }}
-      title={run.name}
-      chips={[{ id: 'status', text: line.label, title: detailOf(props) }, ...(live ? [{ id: 'span', text: runSpan(run, now) }] : [])]}
-      trailing={
-        <Flex gap="xs" align="center">
-          <Text as="span" variant="caption" tone="muted" clamp={1}>{line.last}</Text>
-          {live && (
-            <IconButton label={`Stop run ${run.id}`} variant="ghost" tone="danger" size="2xs" disabled={play.busy} onClick={stop}>
-              <Icon name="square" />
-            </IconButton>
-          )}
-        </Flex>
-      }
-      onOpen={openLog}
-    />
+    <Box data-swap-item>
+      <RecordRow
+        head={{
+          kind: 'run',
+          code: run.id,
+          assignee: run.origin === PAGE_ORIGIN ? 'owner' : '',
+          boardKey,
+          threads: [],
+          menu: recordMenuGroups('run', run.id, { open: openLog, stop: live ? stop : undefined }),
+          menuLabel: `More actions for ${run.id}`,
+        }}
+        title={run.name}
+        chips={[{ id: 'status', text: line.label, title: detailOf(props) }, ...(live ? [{ id: 'span', text: runSpan(run, now) }] : [])]}
+        trailing={
+          <Flex gap="xs" align="center">
+            <Text as="span" variant="caption" tone="muted" clamp={1}>{line.last}</Text>
+            {live && (
+              <IconButton label={`Stop run ${run.id}`} variant="ghost" tone="danger" size="2xs" disabled={play.busy} onClick={stop}>
+                <Icon name="square" />
+              </IconButton>
+            )}
+          </Flex>
+        }
+        onOpen={openLog}
+      />
+    </Box>
   );
 };
 

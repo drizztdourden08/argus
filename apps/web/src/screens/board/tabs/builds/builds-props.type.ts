@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind types */
 import type { RunEntry } from '../../../../data/runs';
 import type { GroupThreads } from '../../item-groups';
-import type { RetiredFlag } from './builds.type';
-import type { BuildGroups, LauncherView } from './model';
+import type { BuildsData, RetiredFlag } from './builds.type';
+import type { TabView } from '../../BoardTabsRow/BoardTabsRow.type';
+import type { BuildFilters, BuildGroup, BuildGroups, BuildOrder, LauncherView } from './model';
 
 interface BuildsTabProps {
   boardKey: string;
@@ -61,9 +62,23 @@ interface GroupTitleProps {
 interface BuildSectionsProps extends RunScope {
   groups: BuildGroups;
   threads: GroupThreads;
+  group: BuildGroup;
+  views: LauncherView[];
+}
+
+interface BuildFlatSectionsProps extends RunScope {
+  groups: BuildGroups;
+  group: BuildGroup;
+  views: LauncherView[];
+}
+
+interface BuildsToolsProps {
+  boardKey: string;
+  tabView: TabView<BuildGroup, BuildOrder, BuildFilters>;
+  data: BuildsData;
 }
 
 export type {
-  BuildFootProps, BuildSectionsProps, BuildSignalsProps, BuildsLeadProps, BuildsTabProps, GroupTitleProps, LauncherCardProps, LauncherListProps, LauncherPartProps, MasterGroupProps,
+  BuildFlatSectionsProps, BuildFootProps, BuildSectionsProps, BuildSignalsProps, BuildsLeadProps, BuildsTabProps, BuildsToolsProps, GroupTitleProps, LauncherCardProps, LauncherListProps, LauncherPartProps, MasterGroupProps,
   RetiredNoteProps, RetiredSectionProps,
 };

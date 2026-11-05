@@ -3,7 +3,8 @@ import type { Agent, ProjectThread, ReconcileFinding } from '../../../../data/ag
 import type { WithId } from '../../../../data/react';
 import type { Item, SoftKind } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
-import type { AgentField } from './model';
+import type { TabView } from '../../BoardTabsRow/BoardTabsRow.type';
+import type { AgentField, AgentFilters, AgentGroup, AgentOrder, ShownAgents } from './model';
 
 interface AgentsTabProps {
   boardKey: string;
@@ -15,6 +16,7 @@ interface AgentsView {
   active: WithId<Agent>[];
   done: WithId<Agent>[];
   all: WithId<Agent>[];
+  shown: ShownAgents;
   items: WithId<Item>[];
   threads: WithId<ProjectThread>[];
   finishedCount: number;
@@ -57,17 +59,22 @@ interface AgentsBodyProps {
   boardKey: string;
   view: AgentsView;
   showFinished: boolean;
+  group: AgentGroup;
   now: number;
   actions: AgentActions;
   onOpen: (code: string, tab?: string) => void;
 }
 
 interface AgentsFootProps {
-  count: number;
-  showFinished: boolean;
   canArchive: boolean;
-  onToggle: () => void;
   onArchive: () => void;
+}
+
+interface AgentsToolsProps {
+  boardKey: string;
+  tabView: TabView<AgentGroup, AgentOrder, AgentFilters>;
+  view: AgentsView;
+  finished: { count: number; shown: boolean; onToggle: () => void };
 }
 
 interface ReconcilePanelProps {
@@ -98,6 +105,7 @@ export type {
   AgentsFootProps,
   AgentsHeaderProps,
   AgentsTabProps,
+  AgentsToolsProps,
   AgentsView,
   ChatsListProps,
   LeadLineProps,
