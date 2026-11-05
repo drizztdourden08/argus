@@ -551,7 +551,8 @@ so the page and the CLI say the same thing.
 | task | none |
 | bug | `severity` (required), `repro`, `expected`, `actual`, `environment`, `foundIn`, `reporter`, `duplicateOf` |
 | debt | `area`, `cost`, `risk`, `payoff` |
-| test-plan | `bundle`, `cases`, `env`, `runs` |
+| test-plan | `cases` (at least one), `env` |
+| test-run | `plan`, `build`, `results`, `summary` |
 
 #### Stages map to lanes
 
@@ -625,11 +626,22 @@ limits and have switches under `notify.auto`.
 
 #### Plan runs
 
-A run is kept on the plan item in `fields.runs`: its number, bundle, who ran it, its times and one
-result per case (pass, fail, partial, blocked or skip). The ops `plan-run-start`, `plan-run-record`
-and `plan-run-end` change it. Recording a result also records it on the test through the existing
-result op, so the test's own result, its wakes and its proofs stay true. Skip stays in the run.
-There is one open run per plan, and ending it sets the stage to `reported`.
+A test plan always holds cases and is run from them. A run is its own item of type `test-run`
+(code `TR`, ids `I-n`, icon `flag`), linked to its plan by the `plan` ref field, not by `parent`.
+It replaces the old bundle. Its fields are `plan`, `build` (a launcher name, checked against
+`launchers`), `results` (`{test, status, note, at, by, proofs}`) and `summary`. The stages are
+draft, ready, running, reported, passed and abandoned. A draft has no build. A ready run has a
+build that exists and is not retired (the gate `build-ready`). Handing a run to the owner means
+assigning a ready run to him. The ops `plan-run-start`, `plan-run-record` and `plan-run-end` keep
+their names. Start on a plan creates a running run, or starts the plan's ready draft. Record and
+end target the run, and a plan target resolves its open run. Recording a result also records it
+on the test through the existing result op, so the test's own result, its wakes and its proofs
+stay true. Skip stays in the run. There is one open run per plan. Ending a run moves it to
+`passed` when every case passed, else to `reported`, and the plan to `reported`. A plan keeps at
+least one case: create and edit refuse none. Runs are hidden on the kanban and shown in the Tests
+tab and in the plan's Runs tab. The events are `run-ready` (a run became ready for the owner) and
+`plan-run-done` (a run ended, with the counts). `coord test migrate-runs [--dry-run]` turns the
+old `fields.runs` and bundles into runs once per board.
 
 #### Item images
 
@@ -835,7 +847,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `lead-message` | wake | a lead's decision: it asks for action |
 | `thread-message` | wake | a message to this thread (also a worktree request it filed, done or refused) |
 | `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
-| `test-fail`, `test-partial`, `test-blocked`, `bundle-complete`, `run-failed` | wake | its own test or run result |
+| `test-fail`, `test-partial`, `test-blocked`, `run-complete`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
 | `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
 | `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |
@@ -900,7 +912,7 @@ leftovers younger than one day only with a reason and never under six hours.
 DESIGN 5, 6 and 13.7. Defs come only from `board.runDefs`, read through `Boards`. Ids `R-<n>` per
 scope from `next_counter`. The lifecycle `queued`, `running`, `exited`, `failed`, `stopped`, the
 `parallel` limit with `already`, `maxConcurrent` queueing, timeouts, the stdin pipe for launch and
-bundle defs, the colour environment for hidden bundle runs, log chunks of 16 KB batched every
+build defs, the colour environment for hidden build runs, log chunks of 16 KB batched every
 250 ms, the head and tail cap, redaction, `lastLine`, retention, the `runs` docs at most four per
 second for progress, boot recovery of orphans, and shutdown that stops hidden runs and leaves
 visible ones.
@@ -908,7 +920,7 @@ visible ones.
 Spawning uses `tokio::process::Command` with `cmd.exe /d /s /c <cmd>`. A hidden run gets
 `CREATE_NO_WINDOW`. A visible run gets `CREATE_NEW_CONSOLE`. Stop is `taskkill /PID <pid> /T`,
 then `/F` after `stopGraceMs`, as in Node. The launcher rules (`launcher-<name>` defs, `master`,
-retire, bundle join, `useEvery`) are board semantics and live in `argus-board`; this crate runs
+retire, `useEvery`) are board semantics and live in `argus-board`; this crate runs
 what the defs say. Its `launcher_stale` module is the Node `src/launchers/stale.mjs`: every
 10 minutes it sends `launcher-master-missing` to a lead whose board has no live master and
 `launcher-stale` to the thread that made a standalone launcher unused past its window, and it
@@ -931,10 +943,13 @@ What the CLI does with them (`argus-coord`):
   unless it is the master. `--master` hands the master role to the build and takes it from the
   one that had it, which is marked `relink` if it served nothing. `coord launcher link <name> I-n`
   moves a build to another open item and clears `relink`.
-- `coord build add|set <tag> --cmd ... [--for I-n]` makes the launcher named after the bundle. With
-  no `--for` it serves the one test plan whose `bundle` field names the tag, else it is refused.
+- A build made for a test run is a launcher whose `for` is the run id. `served::close_builds`
+  retires it when the run is passed or abandoned and `reopen_builds` restores it. A reported run
+  keeps its build. Make one with `coord launcher set <name> --for I-n` and set it on the run with
+  `coord test plan run --build <launcher>`. `coord build add|set` are gone. The other `coord build`
+  verbs stay for one release as aliases that print the new `coord test run` verb.
 - `coord build migrate-links [--dry-run]` runs once per board and is idempotent. The current
-  master build gets its flag, a build whose bundle exactly one test plan names (or whose tests all
+  master build gets its flag, a build that exactly one test plan or run names (or whose tests all
   verify one item) gets that item, a live build with no clear match gets `relink: true`, and a
   retired build with no clear match is left alone. The Builds tab lists the `relink` ones as
   "Needs a link".
@@ -942,7 +957,7 @@ What the CLI does with them (`argus-coord`):
   {item, by, at}`. A link made by hand wins over the owning agent's `item`, an `I-n` in the branch
   name and an item whose text names the folder (`argus-worktrees` `linking.rs`).
 - The item verbs print one line when a move closed or reopened builds with the item
-  (`I-7: closed with it: build bundle-7; worktree 1a2b3c4d5e goes in a short grace`). The names
+  (`I-7: closed with it: build run-7; worktree 1a2b3c4d5e goes in a short grace`). The names
   come from `OpResult.extra` (`closedWith`, `reopenedWith`).
 
 A worktree goes with its item. Once the item is closed, hygiene moves the worktree to `closing`
