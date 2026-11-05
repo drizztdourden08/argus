@@ -14,7 +14,7 @@ describe('K1 the saved view', { tags: ['critical'] }, () => {
   it('reads the Node keys and plan: q, threads, status, subject, plan, needs, conf, archived and sort', () => {
     const filters = JSON.stringify({ q: 'x', threads: ['a'], status: 'fail', subject: 's', plan: 'I-5', needs: true, conf: true, archived: true, sort: 'updated' });
     const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
-    expect(view.filters).toEqual({ query: 'x', threads: ['a'], status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true });
+    expect(view.filters).toEqual({ query: 'x', threads: ['a'], status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true, runs: [] });
     expect(view.prefs).toEqual({ group: 'item', order: 'updated', direction: null, showPassed: false, showClosed: true });
   });
 
