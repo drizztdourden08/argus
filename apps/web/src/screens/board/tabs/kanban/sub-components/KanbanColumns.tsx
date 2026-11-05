@@ -33,6 +33,10 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
     const card = view.cards.find((candidate) => candidate.id === move.cardId);
     if (card) applyDrop(planDrop({ columns: view.columns, move, group, order }), card.item, ops);
   };
+  const onCardOpen = (cardId: string) => {
+    const card = view.cards.find((candidate) => candidate.id === cardId);
+    if (card) onOpen(itemCode(card.item));
+  };
   const columns: KanbanColumn<CardData>[] = view.columns.map((column) => ({
     ...column,
     header: headerOf(group, view.parents.get(column.id)),
@@ -62,6 +66,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
+      onCardOpen={onCardOpen}
       renderGroupHeader={(groupId) => frameHeader(view.parents, groupId)}
       renderCard={(card) => (
         <ItemCard
