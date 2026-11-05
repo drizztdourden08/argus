@@ -1,13 +1,10 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../../data/react';
 import type { NotificationDoc, NotifyLevel } from '../../../../data/types';
-import type { SETTING_PARTS } from './model.constants';
 
 type NoteItem = WithId<NotificationDoc>;
 
 type LevelPick = 'all' | NotifyLevel;
-
-type SettingPart = (typeof SETTING_PARTS)[number];
 
 interface NoteFilters {
   level: LevelPick;
@@ -33,4 +30,4 @@ interface ToastNote {
   bad: boolean;
 }
 
-export type { LevelPick, NoteFilters, NoteItem, NoteParts, OwnerRow, SettingPart, ToastNote };
+export type { LevelPick, NoteFilters, NoteItem, NoteParts, OwnerRow, ToastNote };

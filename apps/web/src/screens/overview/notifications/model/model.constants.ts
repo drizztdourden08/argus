@@ -7,6 +7,4 @@ const LEVEL_LOOK = {
   urgent: { variant: 'urgency', color: 'danger' },
 } as const;
 
-const SETTING_PARTS = ['toast', 'sound'] as const;
-
-export { LEVEL_LOOK, NOTIFY_LEVELS, SETTING_PARTS };
+export { LEVEL_LOOK, NOTIFY_LEVELS };
