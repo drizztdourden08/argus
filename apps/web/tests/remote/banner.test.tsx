@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { LocalBanner } from '../../src/shell';
+import { LocalBanner, useLocalBanner } from '../../src/shell/LocalBanner';
 import { bannerText } from '../../src/shell/LocalBanner/behavior/banner-text';
 import { pillText } from '../../src/shell/LocalBanner/behavior/pill-text';
 import { renderAt } from '../helpers/render-at';
@@ -14,11 +14,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const Banner = () => {
+  const state = useLocalBanner();
+  return state ? <LocalBanner state={state} /> : null;
+};
+
 const local = (replay: object) => ({ '/api/remote': { mode: 'local', replay } });
 
 const expectSilent = async (routes: Record<string, unknown>) => {
   const calls = stubRemote(routes);
-  render(<LocalBanner />);
+  render(<Banner />);
   await waitFor(() => expect(calls).toHaveLength(1));
   await Promise.resolve();
   expect(screen.queryByRole('button', { name: /^Local/ })).toBeNull();
@@ -65,7 +70,7 @@ describe('K1 the local mode banner text', { tags: ['critical'] }, () => {
 describe('S1 the local mode pill', { tags: ['standard'] }, () => {
   it('shows the pull requests and releases on the pill and the full text in its popover', async () => {
     stubRemote(local({ prs: 2, releases: 1, packages: 0, checks: 4 }));
-    render(<LocalBanner />);
+    render(<Banner />);
     const panel = await openPill('Local · 2 PRs · 1 release');
     expect(within(panel).getByRole('status').textContent).toBe('Local mode: 2 pull requests, 1 release, 4 check runs wait for the go');
   });
@@ -86,7 +91,7 @@ describe('S1 the local mode pill on a board', { tags: ['standard'] }, () => {
 
   const renderBoard = (key: string) => render(
     <MemoryRouter initialEntries={[`/p/${key}`]}>
-      <Routes><Route path="/p/:key" element={<LocalBanner />} /></Routes>
+      <Routes><Route path="/p/:key" element={<Banner />} /></Routes>
     </MemoryRouter>,
   );
 

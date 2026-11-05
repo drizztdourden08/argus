@@ -3,11 +3,9 @@ import type { ItemRef } from '../../../../../data/kanban';
 import { itemCode } from '../../../../../shell';
 import type { TabField } from '../../../BoardTabsRow';
 import type { Option } from '../../../shared';
-import { STAGE_CHOICES } from './builds-view.constants';
+import { ITEM_LABEL_CHARS, STAGE_CHOICES } from './builds-view.constants';
 import type { BuildFilterKey, BuildFilters } from './builds-view.type';
 import type { LauncherView, LauncherViews } from './model.type';
-
-const ITEM_LABEL_CHARS = 40;
 
 const multi = (key: BuildFilterKey, label: string, options: readonly Option[]): TabField<BuildFilters> => ({
   kind: 'multi',
@@ -15,7 +13,7 @@ const multi = (key: BuildFilterKey, label: string, options: readonly Option[]): 
   label,
   options,
   read: (filters) => filters[key],
-  write: (values) => ({ [key]: values }) as Partial<BuildFilters>,
+  write: (values) => ({ [key]: values }),
 });
 
 const everyView = (views: LauncherViews): LauncherView[] => [...views.live, ...views.retired];

@@ -2,11 +2,10 @@
 import type { Agent } from '../../../../../data/agents';
 import type { WithId } from '../../../../../data/react';
 import { NONE_LABELS } from './agents-view.constants';
-import type { AgentGroup, KeyGroup } from './agents-view.type';
+import type { KeyGroup } from './agents-view.type';
+import type { KeyedGroup } from './keyed-group.type';
 import { modelFamily } from './model-family';
 import { statusLook } from './status-look';
-
-type KeyedGroup = Exclude<AgentGroup, 'item' | 'none'>;
 
 const keyOf = (agent: Agent, group: KeyedGroup): string => {
   if (group === 'thread') return agent.thread ?? '';

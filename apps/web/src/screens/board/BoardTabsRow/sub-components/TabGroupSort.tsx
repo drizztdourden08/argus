@@ -6,8 +6,9 @@ import type { TabGroupSortProps } from '../BoardTabsRow.type';
 
 const TabGroupSort = <G extends string, O extends string>({ group, sort }: TabGroupSortProps<G, O>) => {
   const pickGroup = (id: string | null) => {
-    const next = group && pickChoice(group.options, id);
-    if (next && group) group.onChange(next);
+    if (!group) return;
+    const next = pickChoice(group.options, id);
+    if (next) group.onChange(next);
   };
   const pickSort = (change: SortState) => {
     const next = pickChoice(sort.options, change.key);

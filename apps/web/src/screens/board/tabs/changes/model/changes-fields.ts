@@ -5,8 +5,7 @@ import type { TabField } from '../../../BoardTabsRow';
 import type { Option } from '../../../shared';
 import { STATUS_OPTIONS } from '../changes.constants';
 import type { ChangesFilters, PullRequestDoc } from '../changes.type';
-
-type FieldPath = keyof Omit<ChangesFilters, 'query'>;
+import type { FieldPath } from './field-path.type';
 
 const distinct = (values: readonly (string | undefined)[]): Option[] =>
   [...new Set(values.filter((value): value is string => Boolean(value)))].sort().map((value) => ({ value, label: value }));

@@ -15,7 +15,7 @@ const multi = (key: AgentFilterKey, label: string, options: readonly Option[]): 
   label,
   options,
   read: (filters) => filters[key],
-  write: (values) => ({ [key]: values }) as Partial<AgentFilters>,
+  write: (values) => ({ [key]: values }),
 });
 
 const itemChoices = (items: readonly WithId<Item>[]): Option[] =>
