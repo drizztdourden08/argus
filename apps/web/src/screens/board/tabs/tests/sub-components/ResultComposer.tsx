@@ -17,7 +17,7 @@ const ResultComposer = (props: ResultComposerProps) => {
   const submit = () => {
     const over = textProblem(controls.text);
     if (over) toast({ variant: 'warning', message: over });
-    else if (!problem && !controls.busy) controls.send();
+    else controls.send();
   };
   return (
     <Flex direction="column" gap="xs" role="group" aria-label={`${outcome} note for ${testId}`}>
@@ -29,6 +29,7 @@ const ResultComposer = (props: ResultComposerProps) => {
           onChange={controls.setText}
           onSubmit={submit}
           submitLabel={`Send ${outcome}`}
+          submitDisabled={Boolean(problem) || controls.busy}
           onEscape={controls.cancel}
           actions={<Button size="sm" variant="ghost" onClick={controls.cancel}>Cancel</Button>}
           error={controls.text.length > 0 ? problem : null}
