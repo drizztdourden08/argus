@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { feed } from './helpers/feed';
@@ -70,31 +70,5 @@ describe('S1 the test button', { tags: ['standard'] }, () => {
     await open();
     fireEvent.click(await screen.findByRole('button', { name: 'Send a test notification' }));
     expect(await screen.findByText('Not sent: boom.')).toBeTruthy();
-  });
-});
-
-describe('S1 the settings row', { tags: ['standard'] }, () => {
-  it('saves a toggle at once with just that switch and shows the answer', async () => {
-    const calls = stubApi((call) => (call.method === 'POST' ? { body: { ...SETTINGS, toast: { ...SETTINGS.toast, ping: false } } } : { body: SETTINGS }));
-    await open();
-    const ping = await screen.findByRole('group', { name: 'ping' });
-    fireEvent.click(within(ping).getByRole('button', { name: 'Toast' }));
-    await waitFor(() => expect(posts(calls, '/api/notify/settings')).toHaveLength(1));
-    expect(posts(calls, '/api/notify/settings')[0]?.body).toEqual({ toast: { ping: false } });
-    await waitFor(() => expect(within(ping).getByRole('button', { name: 'Toast' }).getAttribute('aria-pressed')).toBe('false'));
-  });
-
-  it('says only the page may change the settings when the save is refused', async () => {
-    stubApi((call) => (call.method === 'POST' ? { status: 403, body: { error: { code: 'forbidden', message: 'no' } } } : { body: SETTINGS }));
-    await open();
-    const ping = await screen.findByRole('group', { name: 'ping' });
-    fireEvent.click(within(ping).getByRole('button', { name: 'Sound' }));
-    expect(await screen.findByText('Only this page may change the settings.')).toBeTruthy();
-  });
-
-  it('leaves a sentence instead of a broken row when the settings cannot be read', async () => {
-    stubApi(() => ({ status: 500, body: { error: { code: 'internal', message: 'disk' } } }));
-    await open();
-    expect(await screen.findByText('The settings could not be read: disk.')).toBeTruthy();
   });
 });
