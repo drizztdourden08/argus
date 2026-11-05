@@ -51,7 +51,10 @@ describe('S1 palette attribute', { tags: ['standard'] }, () => {
     const { sources } = renderAt('/');
     await waitForStream(sources);
     const rotp = { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/' };
-    act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp })));
+    act(() => {
+      sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp }));
+      sources[0]?.emit('snapshot', snapshot('_portfolio', 'boards', { 'BD-rotp': { key: 'rotp' } }));
+    });
     const open = await screen.findByRole('button', { name: 'Open the RotP board' });
     expect(open.closest('[data-palette]')).toBeNull();
     expect(document.documentElement.dataset.palette).toBeUndefined();

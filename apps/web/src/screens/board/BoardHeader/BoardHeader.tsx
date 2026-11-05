@@ -5,7 +5,7 @@ import { BoardHeaderRow } from './sub-components/BoardHeaderRow';
 import './BoardHeader.css';
 
 const BoardHeader = (props: BoardHeaderProps) => (
-  <Flex as="header" className="board-header" align="center">
+  <Flex as="header" className="board-header" align="center" aria-label="Board">
     <BoardHeaderRow {...props} />
   </Flex>
 );

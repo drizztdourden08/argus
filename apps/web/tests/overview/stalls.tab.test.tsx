@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind test */
 import { screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { FakeSource } from '../helpers/fake-source';
+import { openAlerts } from '../helpers/open-alerts';
 import { renderAt } from '../helpers/render-at';
 import { feed } from './helpers/feed';
 import { CARDS, NOTIFICATIONS } from './helpers/fixtures';
@@ -65,25 +67,30 @@ describe('S1 the stalls in the Notifications tab', { tags: ['standard'] }, () =>
   });
 });
 
+const portfolioOf = async (view: ReturnType<typeof renderAt>): Promise<FakeSource[]> =>
+  waitFor(() => {
+    const source = view.portfolio();
+    if (!source) throw new Error('no open _portfolio stream yet');
+    return [source];
+  });
+
 describe('S1 the stalls in the board header', { tags: ['standard'] }, () => {
   it('shows the stalls of that board as chips with their age', async () => {
     const view = renderAt('/p/rotp/');
-    await waitFor(() => expect(view.sources.length).toBeGreaterThan(0));
-    await feed(view.sources, { cards: CARDS, stalls: STALLS });
-    const header = await screen.findByRole('banner');
-    await waitFor(() => expect(within(header).getAllByText(/^stalled:/)).toHaveLength(2));
-    expect(within(header).queryByText(/stalled: argus/)).toBeNull();
+    await feed(await portfolioOf(view), { cards: CARDS, stalls: STALLS });
+    const { panel } = await openAlerts();
+    await waitFor(() => expect(within(panel).getAllByText(/^stalled:/)).toHaveLength(2));
+    expect(within(panel).queryByText(/stalled: argus/)).toBeNull();
   });
 });
 
 describe('I-85 the item reference in a board header stall', { tags: ['standard'] }, () => {
   it('is a record link without the board prefix', async () => {
     const view = renderAt('/p/argus/');
-    await waitFor(() => expect(view.sources.length).toBeGreaterThan(0));
-    await feed(view.sources, { cards: CARDS, stalls: STALLS });
-    const header = await screen.findByRole('banner');
-    const link = await within(header).findByRole('link', { name: 'K-12' });
+    await feed(await portfolioOf(view), { cards: CARDS, stalls: STALLS });
+    const { panel } = await openAlerts();
+    const link = await within(panel).findByRole('link', { name: 'K-12' });
     expect(link.getAttribute('href')).toBe('/p/argus?open=K-12');
-    expect(header.textContent).toContain('stalled: K-12 doing 60 min, no agent');
+    expect(panel.textContent).toContain('stalled: K-12 doing 60 min, no agent');
   });
 });
