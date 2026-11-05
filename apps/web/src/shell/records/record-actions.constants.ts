@@ -18,6 +18,7 @@ const RECORD_ACTIONS: Readonly<Record<string, readonly ActionDef[]>> = {
   bug: WORK_ITEM,
   debt: WORK_ITEM,
   'test-plan': WORK_ITEM,
+  board: [EDIT, ARCHIVE, UNARCHIVE, COPY],
   'test-case': PLAIN,
   'test-run': PLAIN,
   build: [

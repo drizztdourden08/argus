@@ -168,6 +168,13 @@ interface NoticeRowProps {
   ctx: FeedContext;
 }
 
+interface EntryRowProps {
+  type: 'notice' | 'sent';
+  entry: Entry;
+  ctx: FeedContext;
+  trailing?: ReactNode;
+}
+
 interface NoticeListProps {
   notices: FeedCard[];
   ctx: FeedContext;
@@ -224,6 +231,7 @@ export type {
   LogListProps,
   LogSectionProps,
   LogWindow,
+  EntryRowProps,
   NoticeListProps,
   NoticeRowProps,
   OwnerFeedProps,
