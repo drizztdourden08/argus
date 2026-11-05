@@ -18,7 +18,6 @@ export { DepRecordLink } from './sub-components/DepRecordLink';
 export { LinkedText } from './sub-components/LinkedText';
 export { RecordCard } from './sub-components/RecordCard';
 export { FrameCode } from './sub-components/FrameCode';
-export { FrameSlot } from './sub-components/FrameSlot';
 export { RecordFrame } from './sub-components/RecordFrame';
 export { RecordGroup } from './sub-components/RecordGroup';
 export { RecordGroupHeader } from './sub-components/RecordGroupHeader';

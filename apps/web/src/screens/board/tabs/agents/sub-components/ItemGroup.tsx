@@ -11,7 +11,6 @@ const ItemGroup = (props: ItemGroupProps) => {
     <RecordGroup
       header={<ItemHeader boardKey={boardKey} itemId={itemId} items={items} threads={threads} onOpen={onOpen} />}
       count={agents.length}
-      pinTitle={false}
       label={`Agents of ${item ? itemCode(item) : itemId}`}
     >
       {agents.map((agent) => (
