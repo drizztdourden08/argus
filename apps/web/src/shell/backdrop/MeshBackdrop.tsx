@@ -3,7 +3,10 @@ import { Box } from '@drizztdourden08/tessera';
 import { ShaderMount } from '@paper-design/shaders-react';
 import { useMemo, useRef } from 'react';
 import { GRAIN, POINTER, SIZING_UNIFORMS } from './backdrop.constants';
+import { PARALLAX } from './parallax.constants';
 import { toVec4 } from './to-vec4';
+import { TRAIL } from './trail.constants';
+import { trailToUniform } from './trail-to-uniform';
 import { MAX_COLORS, MESH_SHADER } from './mesh-shader.constants';
 import type { Mount } from './MeshBackdrop.type';
 import { useBackdropColors } from './useBackdropColors';
@@ -18,8 +21,11 @@ const MeshBackdrop = () => {
   const aspect = useViewportAspect();
   const mount = useRef<Mount>(null);
 
-  usePointerDrift(motion.interactive, (point) =>
-    mount.current?.paperShaderMount?.setUniforms({ u_pointer: [point.x, point.y] }),
+  usePointerDrift(motion.interactive, (frame) =>
+    mount.current?.paperShaderMount?.setUniforms({
+      u_pointer: [frame.point.x, frame.point.y],
+      u_trail: frame.trail,
+    }),
   );
 
   const uniforms = useMemo(
@@ -32,9 +38,11 @@ const MeshBackdrop = () => {
       u_grainMixer: GRAIN.mixer,
       u_grainOverlay: GRAIN.overlay,
       u_pointer: [POINTER.center, POINTER.center],
-      u_repel: motion.interactive ? POINTER.repelStrength : 0,
-      u_repelRadius: POINTER.repelRadius,
-      u_parallax: motion.interactive ? POINTER.parallax : 0,
+      u_parallax: motion.interactive ? [PARALLAX.near, PARALLAX.far, PARALLAX.grain, PARALLAX.swirl] : [0, 0, 0, 0],
+      u_trail: trailToUniform([]),
+      u_trailDarkness: motion.interactive ? TRAIL.darkness : 0,
+      u_trailPull: TRAIL.pull,
+      u_trailRadius: TRAIL.radius,
       u_aspect: aspect,
     }),
     [colors, motion, aspect],
