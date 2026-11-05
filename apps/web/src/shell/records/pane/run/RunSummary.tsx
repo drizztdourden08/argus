@@ -32,7 +32,7 @@ const RunSummary = (props: RunSummaryProps) => {
           ))}
         </Flex>
       )}
-      <RunStart bundle={run.bundle} ops={ops} again />
+      <RunStart ops={ops} again />
     </Flex>
   );
 };

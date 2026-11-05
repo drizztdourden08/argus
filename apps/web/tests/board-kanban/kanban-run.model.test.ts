@@ -17,32 +17,35 @@ import { mockPosts, onlyPost } from '../helpers/post-mock';
 
 const IDS = ['T-1', 'T-2', 'T-3', 'T-4'];
 
-const plan = (runs: unknown): ItemRef => ({ id: 'I-1', title: 'Plan', thread: 'worker', status: 'todo', fields: { cases: IDS, runs } });
-
-const rawRun = (n: number, results: unknown[], extra: object = {}) => ({ n, bundle: 'b1', by: 'human', startedAt: 'a', endedAt: null, results, ...extra });
+const rawRun = (n: number, results: unknown[], extra: Partial<ItemRef> = {}, planId = 'I-1'): ItemRef => ({
+  id: `I-${n + 10}`, title: 'Run', thread: 'worker', status: 'doing', type: 'test-run', stage: 'running', createdBy: 'human', fields: { plan: planId, build: 'b1', results }, ...extra,
+});
 
 const result = (test: string, status: string, note = '') => ({ test, status, note, at: 'b' });
 
-const runOf = (results: object[], extra: object = {}): PlanRun => {
-  const [run] = runsOf(plan([rawRun(1, results, extra)]));
+const runOf = (results: object[], extra: Partial<ItemRef> = {}): PlanRun => {
+  const [run] = runsOf('I-1', [rawRun(1, results, extra)]);
   if (!run) throw new Error('no run');
   return run;
 };
 
 describe('I-70 P7 reading the runs of a plan', { tags: ['critical'] }, () => {
-  it('reads fields.runs and drops what is damaged', () => {
-    const runs = runsOf(plan([rawRun(1, [result('T-1', 'pass'), { test: 'T-2', status: 'maybe' }, 7]), 'junk', { n: 'x' }]));
+  it('reads the test runs of the plan and drops damaged results', () => {
+    const other = rawRun(2, [], {}, 'I-2');
+    const gone = rawRun(3, [], { deletedAt: 'x' });
+    const dropped = rawRun(4, [], { stage: 'abandoned' });
+    const runs = runsOf('I-1', [rawRun(1, [result('T-1', 'pass'), { test: 'T-2', status: 'maybe' }, 7]), other, gone, dropped, { ...rawRun(5, []), type: 'task' }]);
     expect(runs).toHaveLength(1);
-    expect(runs[0]).toMatchObject({ n: 1, bundle: 'b1', endedAt: null, summary: null });
+    expect(runs[0]).toMatchObject({ id: 'I-11', n: 11, build: 'b1', by: 'human', endedAt: null, summary: '' });
     expect(runs[0]?.results).toEqual([result('T-1', 'pass')]);
-    expect(runsOf({ ...plan(null), fields: {} })).toEqual([]);
+    expect(runsOf('I-1', [])).toEqual([]);
   });
 
   it('shows the open run first, else the latest one', () => {
     const open = rawRun(2, []);
-    const done = (n: number) => rawRun(n, [], { endedAt: 'z' });
-    expect(shownRun(runsOf(plan([done(1), open, done(3)])))?.n).toBe(2);
-    expect(shownRun(runsOf(plan([done(3), done(1)])))?.n).toBe(3);
+    const done = (n: number) => rawRun(n, [], { stage: 'passed', updatedAt: 'z' });
+    expect(shownRun(runsOf('I-1', [done(1), open, done(3)]))?.n).toBe(12);
+    expect(shownRun(runsOf('I-1', [done(3), done(1)]))?.n).toBe(13);
     expect(shownRun([])).toBeNull();
   });
 
@@ -59,9 +62,10 @@ describe('I-70 P7 summary and resume', { tags: ['critical'] }, () => {
     expect(summarize(run, IDS)).toEqual({ pass: 1, fail: 0, partial: 0, blocked: 1, skip: 1, notRun: 1, total: 4 });
   });
 
-  it('keeps the summary the server wrote once the run has ended', () => {
-    const stored = { pass: 3, fail: 1, partial: 0, blocked: 0, skip: 0, notRun: 0, total: 4 };
-    expect(summarize(runOf([], { endedAt: 'z', summary: stored }), IDS)).toEqual(stored);
+  it('counts an ended run from its results too', () => {
+    const run = runOf([result('T-1', 'pass'), result('T-2', 'fail', 'x')], { stage: 'reported' });
+    expect(run.endedAt).not.toBeNull();
+    expect(summarize(run, IDS)).toEqual({ pass: 1, fail: 1, partial: 0, blocked: 0, skip: 0, notRun: 2, total: 4 });
   });
 
   it('lists the failed, partial and blocked cases with their notes', () => {
@@ -127,10 +131,10 @@ describe('I-70 P7 the runner state', { tags: ['critical'] }, () => {
 describe('I-70 P7 the posts', { tags: ['critical'] }, () => {
   it('posts plan-run-start on the plan item as the owner', async () => {
     const fetchMock = mockPosts();
-    const sent = await planRunOp('rotp', 'I-1', { do: 'start' });
+    const sent = await planRunOp('rotp', 'I-1', { do: 'start', build: 'b1' });
     expect(sent.result.status).toBe('applied');
     const post = await onlyPost(fetchMock);
-    expect(post?.body).toMatchObject({ kind: 'plan-run-start', author: 'human', target: { c: 'items', id: 'I-1' } });
+    expect(post?.body).toMatchObject({ kind: 'plan-run-start', build: 'b1', author: 'human', target: { c: 'items', id: 'I-1' } });
   });
 
   it('posts plan-run-record with the test, the status and the note', async () => {

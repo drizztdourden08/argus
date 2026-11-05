@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import type { BoardAction, Entry } from '../../src/data/types';
+import type { BoardAction, Entry, WorkItem } from '../../src/data/types';
 import { buildWork } from '../../src/screens/board/feed-model';
 import type { ManualTest, WorkSources } from '../../src/screens/board/feed-model';
 
@@ -42,8 +42,28 @@ const step = (over: Partial<BoardAction> & { id: string }): BoardAction => ({
 });
 
 const work = (over: Partial<WorkSources>) =>
-  buildWork({ entries: [], actions: [], tests: [], builds: [], log: [], items: [], ...over });
+  buildWork({ entries: [], actions: [], tests: [], log: [], items: [], ...over });
+
+const plan = (over: Partial<WorkItem> & { id: string }): WorkItem => ({
+  title: 'a plan',
+  status: 'open',
+  thread: 'lead',
+  type: 'test-plan',
+  ...over,
+});
+
+const run = (over: Partial<WorkItem> & { id: string }): WorkItem => ({
+  title: 'a run',
+  status: 'open',
+  thread: 'lead',
+  type: 'test-run',
+  stage: 'ready',
+  assignee: 'owner',
+  updatedAt: at(6),
+  fields: { plan: 'I-5' },
+  ...over,
+});
 
 const ids = (cards: { data: { id: string } }[]): string[] => cards.map((card) => card.data.id);
 
-export { at, entry, human, ids, manual, step, work };
+export { at, entry, human, ids, manual, plan, run, step, work };

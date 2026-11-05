@@ -2,6 +2,7 @@
 import type { KanbanColumn } from '@drizztdourden08/tessera';
 import { columnKey } from './column-key';
 import { columnOrder } from './column-order';
+import { clusterGroups } from './cluster-groups';
 import { columnTitle } from './column-title';
 import { CLOSED_STATUSES, STATUS_COLUMNS } from './model.constants';
 import { sortCards } from './sort-cards';
@@ -13,7 +14,7 @@ const statusColumns = (input: ColumnsInput): KanbanColumn<CardData>[] =>
   STATUS_COLUMNS.filter((column) => input.showClosed || !CLOSED_STATUSES.includes(column.value)).map((column) => ({
     id: column.value,
     title: column.label,
-    cards: sortCards(input.cards.filter((card) => statusOf(card) === column.value), input.order, input.direction),
+    cards: clusterGroups(sortCards(input.cards.filter((card) => statusOf(card) === column.value), input.order, input.direction)),
   }));
 
 const keyedColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => {
@@ -24,7 +25,7 @@ const keyedColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => {
     if (list) list.push(card);
     else groups.set(key, [card]);
   }
-  return [...groups.keys()].sort(columnOrder(input.group)).map((key) => ({ id: key, title: columnTitle(key, input), cards: sortCards(groups.get(key) ?? [], input.order, input.direction) }));
+  return [...groups.keys()].sort(columnOrder(input.group)).map((key) => ({ id: key, title: columnTitle(key, input), cards: clusterGroups(sortCards(groups.get(key) ?? [], input.order, input.direction)) }));
 };
 
 const buildColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => (input.group === 'status' ? statusColumns(input) : keyedColumns(input));

@@ -132,7 +132,7 @@ impl ItemView {
     }
 }
 
-/// A test of a bundle.
+/// A test case.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct TestView {
@@ -141,7 +141,7 @@ pub struct TestView {
     pub rec: Record,
     /// The thread that owns it.
     pub thread: Text,
-    /// The bundle tag.
+    /// The build the test ran on.
     pub build: Text,
     /// `pending`, `pass`, `fail`...
     pub status: Text,
@@ -338,8 +338,6 @@ pub struct BoardView {
     /// The entries.
     #[serde(deserialize_with = "lenient::map")]
     pub entries: IndexMap<String, EntryView>,
-    /// The bundle handed to the owner.
-    pub handed_build: Text,
     /// The dependency ledger (only the portfolio board holds one).
     #[serde(deserialize_with = "lenient::map")]
     pub deps: IndexMap<String, DepView>,

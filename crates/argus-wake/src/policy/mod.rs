@@ -4,7 +4,7 @@
 //! | owner action | wakes | reason |
 //! |---|---|---|
 //! | result fail, partial, blocked | the test's thread | `test-<outcome>` |
-//! | result pass that finishes the bundle | the test's thread | `bundle-complete` |
+//! | result pass that finishes the run | the test's thread | `run-complete` |
 //! | followup or decision | the thread that asked, or the thread the note is about | `owner-answer`, `owner-note`, `owner-decision` |
 //! | move of an item to a thread | the new thread | `item-assigned` |
 //! | resume of a paused thread | that thread | `resume` |

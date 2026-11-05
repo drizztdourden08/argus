@@ -3,6 +3,8 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+use argus_core::process::hidden_command;
+
 use argus_board::json::doc;
 use serde_json::json;
 
@@ -18,11 +20,11 @@ use crate::verbs::remote::support::scope::require_board;
 fn brock(id: &str) -> Command {
     let words = ["brock", "pr", "merge", "--local", id];
     if cfg!(windows) {
-        let mut command = Command::new("cmd");
+        let mut command = hidden_command("cmd");
         command.args(["/d", "/c"]).args(words);
         command
     } else {
-        let mut command = Command::new(words[0]);
+        let mut command = hidden_command(words[0]);
         command.args(&words[1..]);
         command
     }

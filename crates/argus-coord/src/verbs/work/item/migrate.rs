@@ -19,6 +19,7 @@ use serde_json::{Map, Value};
 use super::block::{is_id, linked, make_todo};
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{apply, op};
+use crate::verbs::work::report_lines::say_report;
 use crate::verbs::work::run::{Res, Run};
 use crate::who::Caller;
 
@@ -268,19 +269,7 @@ fn summary(report: &Report, dry: bool) -> String {
 }
 
 fn print(r: &mut Run<'_>, report: &Report, dry: bool) {
-    let mut lines: Vec<String> = report
-        .lines
-        .iter()
-        .map(|l| {
-            if dry {
-                format!("[dry run] {l}")
-            } else {
-                l.clone()
-            }
-        })
-        .collect();
-    lines.push(summary(report, dry));
-    r.say(&[&lines.join("\n")]);
+    say_report(r, &report.lines, "[dry run]", dry, summary(report, dry));
 }
 
 /// `coord item migrate-blockers [--dry-run]`.

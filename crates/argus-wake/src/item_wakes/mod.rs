@@ -10,7 +10,7 @@
 //!   longer than `escalate_ms` (3 days), so a lead that ignores the reminders is visible.
 //!
 //! Never reminded: done, dropped, archived or deleted items; an item that waits on someone else (an open
-//! question or decision of the owner, a to-do of the owner, a manual test of the build handed to the
+//! question or decision of the owner, a to-do of the owner, a test run handed to the
 //! owner, a live sub-agent working on it, a request to another board that is still being answered, a
 //! request of another board that was blocked on the requester); a thread that is paused. There are no
 //! quiet hours.

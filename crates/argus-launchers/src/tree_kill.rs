@@ -7,6 +7,8 @@
 
 use std::time::Duration;
 
+use argus_core::process::hidden_command;
+
 use sysinfo::{Pid, ProcessesToUpdate, System};
 use tokio::time::{Instant, sleep};
 
@@ -49,11 +51,9 @@ async fn wait_gone(pid: u32, limit: Duration) -> bool {
 
 #[cfg(windows)]
 async fn taskkill(pid: u32, force: bool) -> bool {
-    use std::os::windows::process::CommandExt;
     use std::process::Stdio;
 
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    let mut command = tokio::process::Command::new("taskkill");
+    let mut command = tokio::process::Command::from(hidden_command("taskkill"));
     command.args(["/PID", &pid.to_string(), "/T"]);
     if force {
         command.arg("/F");
@@ -62,7 +62,6 @@ async fn taskkill(pid: u32, force: bool) -> bool {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    command.as_std_mut().creation_flags(CREATE_NO_WINDOW);
     command.status().await.is_ok_and(|status| status.success())
 }
 
@@ -84,7 +83,7 @@ async fn signal(pid: u32, name: &str) {
     use std::process::Stdio;
 
     let send = |target: String| async move {
-        tokio::process::Command::new("kill")
+        tokio::process::Command::from(hidden_command("kill"))
             .args([format!("-{name}"), "--".to_owned(), target])
             .stdin(Stdio::null())
             .stdout(Stdio::null())

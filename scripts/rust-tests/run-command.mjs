@@ -4,7 +4,7 @@ import { countResults } from './count-results.mjs';
 
 const runCommand = (root, command) => new Promise((resolve) => {
   const counts = { passed: 0, failed: 0, ignored: 0 };
-  const child = spawn('cargo', command.args, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn('cargo', command.args, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
   let carry = '';
   child.stdout.on('data', (chunk) => {
     process.stdout.write(chunk);

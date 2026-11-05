@@ -2,7 +2,7 @@
 //! Pure: [`item_events`] compares the board before and after and returns the events of the table in
 //! `docs/wake-policy.md` (assigned, taken away, a to-do assigned, a stage changed, an ask on your
 //! item, a dependency that landed, an item unblocked, every child done, a bug to verify, a test
-//! plan ready to run, a plan run done). Nothing is read from disk and nothing is sent: the wake
+//! run ready to run, a run done). Nothing is read from disk and nothing is sent: the wake
 //! crate turns each event into a wake or an owner notice, once.
 
 mod asks;
@@ -44,8 +44,8 @@ pub enum EventKind {
     DepLanded,
     /// A bug the owner reported reached verifying.
     Verify,
-    /// A test plan is ready and its bundle is ready.
-    PlanReady,
+    /// A test run is ready and its build is live.
+    RunReady,
     /// A run of a test plan ended.
     PlanRunDone,
 }
@@ -64,7 +64,7 @@ impl EventKind {
             Self::ChildrenDone => "children-done",
             Self::DepLanded => "dep-landed",
             Self::Verify => "verify",
-            Self::PlanReady => "plan-ready",
+            Self::RunReady => "run-ready",
             Self::PlanRunDone => "plan-run-done",
         }
     }

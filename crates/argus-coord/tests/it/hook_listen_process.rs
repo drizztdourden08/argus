@@ -7,9 +7,11 @@ use std::env;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
+
+use argus_core::process::hidden_command;
 
 use crate::hook_support::listen::{always, env_of, listen, serve, streams, wake};
 use crate::hook_support::{Fixture, UI, fixture};
@@ -22,11 +24,11 @@ fn stamp(f: &Fixture) -> PathBuf {
 /// A process that lives for a while and is not this one.
 fn other_process() -> Child {
     let mut command = if cfg!(windows) {
-        let mut c = Command::new("ping");
+        let mut c = hidden_command("ping");
         c.args(["-n", "30", "127.0.0.1"]);
         c
     } else {
-        let mut c = Command::new("sleep");
+        let mut c = hidden_command("sleep");
         c.arg("30");
         c
     };
@@ -150,7 +152,7 @@ fn a_listener_ends_silently_when_its_parent_is_gone() {
     let f = fixture(&server);
     let mut parent = other_process();
     let parent_pid = parent.id().to_string();
-    let mut child = Command::new(argus);
+    let mut child = hidden_command(argus);
     for (k, v) in env_of(
         &f,
         &[

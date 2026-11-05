@@ -10,7 +10,7 @@ const FEED_KIND: Record<FeedKind, string> = {
   question: 'question',
   action: 'todo',
   test: 'test-case',
-  bundle: 'test-case',
+  run: 'test-run',
   message: 'message',
   notice: 'notice',
   sent: 'followup',

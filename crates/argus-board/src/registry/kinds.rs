@@ -69,9 +69,9 @@ pub struct Kind<'a> {
     pub action: Option<&'a str>,
 }
 
-/// The look a record names: its colour, else its tone, else the neutral tone.
-fn look_of(rec: &Record) -> Look<'_> {
-    match (&rec.color, &rec.tone) {
+/// The look a kind names: its colour, else its tone, else the neutral tone.
+fn look_of<'a>(color: Option<&'a str>, tone: Option<&'a str>) -> Look<'a> {
+    match (color, tone) {
         (Some(color), _) => Look::Color(color),
         (None, Some(tone)) => Look::Tone(tone),
         (None, None) => Look::Tone("neutral"),
@@ -88,7 +88,7 @@ fn from_type(t: &ItemType) -> Kind<'_> {
         aliases: &[],
         stored: None,
         icon: &t.icon,
-        look: Look::Color(&t.color),
+        look: look_of(t.color.as_deref(), t.tone.as_deref()),
         collection: t.collection,
         id_key: t.id_key.as_deref(),
         view: t.view,
@@ -141,7 +141,7 @@ fn from_record(r: &Record) -> Kind<'_> {
         aliases: &r.aliases,
         stored: r.stored.as_deref(),
         icon: &r.icon,
-        look: look_of(r),
+        look: look_of(r.color.as_deref(), r.tone.as_deref()),
         collection: r.collection,
         id_key: r.id_key.as_deref(),
         view: r.view,
@@ -244,7 +244,7 @@ mod tests {
                 .filter(|k| k.family == family)
                 .count()
         };
-        assert_eq!(count(Family::Type), 9);
+        assert_eq!(count(Family::Type), 10);
         assert_eq!(count(Family::SubItem), 4);
         assert_eq!(count(Family::Record), 10);
         let code = |id: &str| registry().kind(id).unwrap().code;

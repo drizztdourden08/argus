@@ -22,7 +22,6 @@ mod icon_image;
 mod launcher;
 mod move_;
 mod plan;
-mod plan_run;
 mod pr;
 mod prelude;
 mod purge;
@@ -30,6 +29,7 @@ mod restore;
 mod result;
 mod soft;
 mod target;
+mod test_run;
 mod typed;
 mod who;
 mod worktree;
@@ -93,7 +93,7 @@ fn dispatch(
         "worktree-keep" => handed(board, op, who, worktree::handle_keep),
         "launcher-link" => handed(board, op, who, launcher::handle_link),
         "launcher-retire" => handed(board, op, who, launcher::handle_retire),
-        kind if plan_run::is_kind(kind) => plan_run::handle(board, op, who),
+        kind if test_run::is_kind(kind) => test_run::handle(board, op, who),
         kind if pr::is_pr_kind(kind) => pr::handle(board, op, who),
         _ => return None,
     })

@@ -5,7 +5,7 @@ import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, Fie
 import type { WithId } from '../../../../data/react';
 import type { Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
-import type { OpNotice } from '../../shared';
+import type { OpNotice, Option } from '../../shared';
 import type { Signals } from './attention';
 import type { TrashPanel } from './trash-props.type';
 import type { AskLink, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, TrailInfo } from './model';
@@ -136,6 +136,11 @@ type Threads = readonly WithId<ThreadChoice>[];
 interface AddItemDraft {
   thread: string;
   setThread: (thread: string) => void;
+  parent: string;
+  setParent: (parent: string) => void;
+  parentOptions: Option[];
+  needsParent: boolean;
+  ready: boolean;
   itemOf: (title: string) => ItemInput;
 }
 

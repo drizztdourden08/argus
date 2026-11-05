@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind logic */
-import type { ItemRef } from '../../../../../data/kanban';
-import { EMPTY_SUMMARY, SUMMARY_ROWS } from '../run.constants';
-import type { PlanRun, RunResult, RunSummary } from '../run.type';
+import { ENDED_STAGES } from '../run.constants';
+import type { PlanRun, RunResult } from '../run.type';
 import { isRunStatus } from './is-run-status';
-import type { Raw } from './runs-of.type';
+import type { Raw, RunSource } from './runs-of.type';
 
 const record = (value: unknown): Raw | null => (typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Raw) : null);
 
@@ -16,39 +15,30 @@ const resultOf = (value: unknown): RunResult | null => {
   return { test: raw.test, status, note: textOf(raw.note), at: textOf(raw.at) };
 };
 
-const countOf = (raw: Raw, key: string): number => {
-  const value = raw[key];
-  return typeof value === 'number' ? value : 0;
+const numberOf = (id: string): number => Number(id.replace(/^\D+/, ''));
+
+const endedAt = (item: RunSource): string | null => {
+  if (typeof item.endedAt === 'string') return item.endedAt;
+  return ENDED_STAGES.includes(item.stage ?? '') ? item.updatedAt ?? '' : null;
 };
 
-const summaryOf = (value: unknown): RunSummary | null => {
-  const raw = record(value);
-  if (!raw || typeof raw.total !== 'number') return null;
-  const counts = { ...EMPTY_SUMMARY, total: raw.total };
-  SUMMARY_ROWS.forEach(([key]) => {
-    counts[key] = countOf(raw, key);
-  });
-  return counts;
-};
-
-const runOf = (value: unknown): PlanRun | null => {
-  const raw = record(value);
-  if (!raw || typeof raw.n !== 'number') return null;
-  const results = Array.isArray(raw.results) ? raw.results.map(resultOf).filter((result): result is RunResult => result !== null) : [];
+const runOf = (item: RunSource): PlanRun => {
+  const results = item.fields?.results;
   return {
-    n: raw.n,
-    bundle: typeof raw.bundle === 'string' ? raw.bundle : null,
-    by: textOf(raw.by),
-    startedAt: textOf(raw.startedAt),
-    endedAt: typeof raw.endedAt === 'string' ? raw.endedAt : null,
-    results,
-    summary: summaryOf(raw.summary),
+    id: item.id,
+    n: numberOf(item.id),
+    build: textOf(item.fields?.build) || null,
+    by: item.createdBy ?? '',
+    startedAt: item.startedAt ?? item.createdAt ?? '',
+    endedAt: endedAt(item),
+    results: Array.isArray(results) ? results.map(resultOf).filter((result): result is RunResult => result !== null) : [],
+    summary: textOf(item.fields?.summary),
   };
 };
 
-const runsOf = (item: Pick<ItemRef, 'fields'>): PlanRun[] => {
-  const raw = item.fields?.runs;
-  return Array.isArray(raw) ? raw.map(runOf).filter((run): run is PlanRun => run !== null) : [];
-};
+const isRunOf = (item: RunSource, planId: string): boolean =>
+  item.type === 'test-run' && item.fields?.plan === planId && !item.deletedAt && item.stage !== 'abandoned';
+
+const runsOf = (planId: string, items: readonly RunSource[]): PlanRun[] => items.filter((item) => isRunOf(item, planId)).map(runOf);
 
 export { runsOf };

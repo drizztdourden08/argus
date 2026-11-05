@@ -123,7 +123,7 @@
     "type": {
       "type": "object",
       "required": [
-        "id", "label", "code", "icon", "color", "collection", "parents", "stages", "fields",
+        "id", "label", "code", "icon", "collection", "parents", "stages", "fields",
         "view", "title", "assignee", "tabs", "card", "links"
       ],
       "additionalProperties": false,
@@ -133,11 +133,14 @@
         "code": { "type": "string" },
         "icon": { "type": "string" },
         "color": { "type": "string" },
+        "tone": { "type": "string" },
         "collection": { "type": "string", "enum": ["items", "tests", "launchers", "worktrees"] },
         "idKey": { "type": "string" },
         "serves": { "$ref": "#/$defs/names" },
         "readOnly": { "type": "boolean" },
+        "hideOnKanban": { "type": "boolean" },
         "parents": { "$ref": "#/$defs/names" },
+        "parentRequired": { "type": "boolean" },
         "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } },
         "statuses": { "$ref": "#/$defs/names" },
         "fields": { "$ref": "#/$defs/names" },

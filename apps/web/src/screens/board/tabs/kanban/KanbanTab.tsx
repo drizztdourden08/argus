@@ -13,7 +13,7 @@ import { useNow } from './behavior/useNow';
 import { usePanels } from './behavior/usePanels';
 import { useSelection } from './behavior/useSelection';
 import type { KanbanTabProps } from './kanban-props.type';
-import { useLayout } from './tree';
+import { useLayout } from '../kanban-tree';
 import { KanbanBody } from './sub-components/KanbanBody';
 import { KanbanLegend } from './sub-components/KanbanLegend';
 import { KanbanToolbar } from './sub-components/KanbanToolbar';

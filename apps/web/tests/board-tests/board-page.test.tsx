@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
 import { waitForStream } from '../helpers/wait-for-stream';
-import { buildDoc, byId, doneDoc, testDoc } from './fixtures';
+import { byId, doneDoc, testDoc } from './fixtures';
 
 afterEach(() => {
   cleanup();
@@ -18,7 +18,6 @@ const open = async (at: string) => {
   const source = sources[0];
   act(() => {
     source?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
-    source?.emit('snapshot', snapshot('rotp', 'builds', byId([buildDoc('bundle-1')], 'tag')));
     source?.emit('snapshot', snapshot('rotp', 'tests', byId([testDoc('T-1'), testDoc('T-2'), doneDoc('T-3', 'pass', 'ok')])));
   });
 };

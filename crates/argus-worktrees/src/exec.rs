@@ -1,10 +1,12 @@
 //! Running a program with a time limit: the one place a process is spawned.
 
 use std::io::Read;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Stdio};
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
+
+use argus_core::process::hidden_command;
 
 /// What a program said. A failure to run, or to finish in time, is a result and never a panic.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -134,27 +136,17 @@ fn drained(pipe: &Receiver<Vec<u8>>, until: Instant) -> String {
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
-#[cfg(windows)]
-fn hide_window(command: &mut Command) {
-    use std::os::windows::process::CommandExt;
-    command.creation_flags(0x0800_0000);
-}
-
-#[cfg(not(windows))]
-fn hide_window(_command: &mut Command) {}
-
 /// Windows: the `git.exe` of `Git\cmd` is a launcher that starts the real git, so killing the launcher alone leaves the
 /// real git running (and holding the worktree's files). The whole tree goes, by process id, while the launcher still
 /// links it.
 #[cfg(windows)]
 fn kill_tree(child: &Child) {
-    let mut command = Command::new("taskkill");
+    let mut command = hidden_command("taskkill");
     command
         .args(["/PID", &child.id().to_string(), "/T", "/F"])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    hide_window(&mut command);
     let _ = command.status();
 }
 
@@ -181,7 +173,7 @@ fn cut(spec: &Spec<'_>, child: &mut Child) -> GitOutput {
 /// Run a program, wait at most `timeout`, kill it (and what it started) after that. Once it ended, its output is read
 /// for a short grace at most: a child it left behind holding the pipe never holds up the answer.
 pub fn run_command(spec: &Spec<'_>) -> GitOutput {
-    let mut command = Command::new(spec.program);
+    let mut command = hidden_command(spec.program);
     command
         .args(spec.args)
         .current_dir(spec.cwd)
@@ -191,7 +183,6 @@ pub fn run_command(spec: &Spec<'_>) -> GitOutput {
     for (key, value) in spec.env {
         command.env(key, value);
     }
-    hide_window(&mut command);
     let mut child = match command.spawn() {
         Ok(child) => child,
         Err(err) => return GitOutput::refused(&err.to_string()),

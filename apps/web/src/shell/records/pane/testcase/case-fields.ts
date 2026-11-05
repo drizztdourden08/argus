@@ -7,7 +7,6 @@ const caseFields = (test: Test): Readonly<Record<string, unknown>> => ({
   pass: test.pass ?? [],
   fail: test.fail ?? [],
   mode: test.mode,
-  bundle: test.build ?? '',
 });
 
 export { caseFields };

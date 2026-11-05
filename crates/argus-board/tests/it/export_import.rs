@@ -72,7 +72,7 @@ fn the_export_has_every_page_collection_the_meta_and_the_cards() {
     assert_eq!(proof["url"], "/files/1");
     let meta = exported(&b, Coll::Meta, "board");
     assert_eq!(meta["name"], "Alpha");
-    assert_eq!(meta["handedBuild"], "b1");
+    assert!(meta.get("handedBuild").is_none());
 }
 
 #[test]

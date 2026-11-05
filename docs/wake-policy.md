@@ -30,7 +30,7 @@ A thread is woken for:
   `portfolio-*` sent down by the Overlord);
 - a message to it that needs action (`thread-message`, and `lead-message` for a lead's decision);
 - one of its agents finished or is gone (`agent-idle`, `agent-orphan`);
-- its own test or run result (`test-*`, `bundle-complete`, `run-failed`);
+- its own test or run result (`test-*`, `run-complete`, `run-failed`);
 - a real fault of its own work (`process-reaped`, a worktree removal it asked for that was
   refused, which comes as a `thread-message`);
 - a dependency on another board that needs it to act: a request for it (`dep-request`), or the
@@ -78,6 +78,8 @@ of the debounce.
 
 `kanban-stale` skips an item that waits on a request that is `opening` or `open`, and an item
 whose `requestedBy` request is `blocked`: the reminder would only nag a thread that cannot act.
+A test run that is `ready` and assigned to the owner (and the plan of one) counts as waiting on
+the owner, so `kanban-stale` does not nag the lead about it.
 
 The table itself is in `docs/architecture.md` under the wake engine.
 
@@ -122,7 +124,7 @@ recorded only with one summary). Each has a switch under `notify.auto`:
 | item assigned to the owner by a thread | `assigned` | Assigned to you | `<p>: I-7 (title) was assigned to you by <who>` |
 | to-do assigned to the owner (`assignee` `owner`) | `assigned` | To-do for you | `<p>: to-do H-3 (text) was given to you by <who>` |
 | a bug the owner reported reaches `verifying` | `verify` | Ready to verify | `<p>: I-7 (title) is ready to verify` |
-| a test plan is `ready` and its bundle is ready | `run` | Ready to run | `<p>: test plan I-9 (title) is ready to run on <bundle>` |
+| a test run is `ready` and assigned to the owner (handed) | `run` | Ready to run | `<p>: test run I-9 (title) is ready to run on <build>` |
 
 A to-do with no assignee is the owner's as before and pings nobody: only an explicit `owner` does.
 The owner never hears of a change he made himself.

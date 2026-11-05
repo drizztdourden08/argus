@@ -1,12 +1,12 @@
 //! The board summary and the manual tests still to run, read from the mirrored docs, the same
 //! data the pages show.
 
-use argus_core::js;
 use serde_json::{Map, Value, json};
 
 use crate::backend::{McpBackend, RunFilter};
+use crate::handed::handed_run;
 use crate::json::{items, nn, pick, same, text, truthy};
-use crate::project::{by_id, visible};
+use crate::project::visible;
 
 const LIVE_AGENT: [&str; 3] = ["working", "waiting", "stop-requested"];
 
@@ -96,7 +96,7 @@ fn summary_from_docs(backend: &dyn McpBackend, key: &str) -> Value {
         "items": visible_docs(backend, key, "items").iter().map(|i| Value::Object(item_row(i))).collect::<Vec<_>>(),
         "openQuestions": ids_where(&entries, "question", "open"),
         "pendingDecisions": ids_where(&entries, "decision", "pending"),
-        "handedBuild": nn(&meta, "handedBuild").cloned().unwrap_or(Value::Null),
+        "handedRun": handed_run(backend, key),
         "tests": visible_docs(backend, key, "tests").iter().map(test_row).collect::<Vec<_>>(),
         "pendingActions": pending,
         "locks": backend.docs(key, "locks").iter().map(lock_row).collect::<Vec<_>>(),
@@ -120,7 +120,7 @@ pub fn run_counts(backend: &dyn McpBackend, key: &str) -> Value {
 }
 
 /// The board in one call: the coord summary when the sync service holds the board, else the
-/// same shape from the docs, without `artifact`, `dirty` and `inbox`, plus the runs.
+/// same shape from the docs, without `artifact`, `dirty` and `inbox`, plus the runs and the run handed to the owner.
 #[must_use]
 pub fn board_summary(backend: &dyn McpBackend, key: &str) -> Value {
     let base = backend
@@ -133,51 +133,7 @@ pub fn board_summary(backend: &dyn McpBackend, key: &str) -> Value {
         rest.shift_remove(dropped);
     }
     rest.insert("runs".into(), run_counts(backend, key));
-    let own = rest.get("handedBuild").filter(|v| !v.is_null()).cloned();
-    let handed = own
-        .or_else(|| handed_build(backend, key))
-        .unwrap_or(Value::Null);
-    rest.insert("handedBuild".into(), handed);
+    rest.shift_remove("handedBuild");
+    rest.insert("handedRun".into(), handed_run(backend, key));
     Value::Object(rest)
-}
-
-fn handed_build(backend: &dyn McpBackend, key: &str) -> Option<Value> {
-    backend
-        .doc(key, "meta", "board")
-        .and_then(|meta| nn(&meta, "handedBuild").cloned())
-}
-
-fn group_of<'a>(groups: &'a mut Vec<Value>, tag: &Value, handed: Option<&Value>) -> &'a mut Value {
-    let at = groups.iter().position(|g| g["build"] == *tag);
-    let index = at.unwrap_or_else(|| {
-        let is_handed = !tag.is_null() && handed == Some(tag);
-        groups.push(json!({ "build": tag, "handed": is_handed, "tests": [] }));
-        groups.len() - 1
-    });
-    &mut groups[index]
-}
-
-/// Manual tests not run yet, grouped by build tag, the handed build first.
-#[must_use]
-pub fn tests_to_run(backend: &dyn McpBackend, key: &str) -> Value {
-    let handed = handed_build(backend, key);
-    let mut rows = visible_docs(backend, key, "tests");
-    rows.retain(|t| text(t, "mode") == Some("manual") && text(t, "status") == Some("pending"));
-    rows.sort_by(by_id);
-    let mut groups: Vec<Value> = Vec::new();
-    for t in &rows {
-        let tag = nn(t, "build").cloned().unwrap_or(Value::Null);
-        let group = group_of(&mut groups, &tag, handed.as_ref());
-        let mut row = Map::new();
-        pick(&mut row, t, &["id", "item", "title"]);
-        row.insert(
-            "covers".into(),
-            nn(t, "covers").cloned().unwrap_or(Value::Null),
-        );
-        if let Some(list) = group["tests"].as_array_mut() {
-            list.push(Value::Object(row));
-        }
-    }
-    groups.sort_by_key(|g| std::cmp::Reverse(js::truthy(&g["handed"])));
-    json!({ "handedBuild": handed.unwrap_or(Value::Null), "groups": groups })
 }

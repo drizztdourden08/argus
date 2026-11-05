@@ -3,20 +3,19 @@ import type { SortDirection } from '@drizztdourden08/tessera';
 import type { RecordGroups } from '../../../../../shell';
 import type { OpNotice } from '../../../shared';
 import type { WithId } from '../../../../../data/react';
-import type { Build, LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../../data/types';
+import type { LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../../data/types';
 
 type TestNotice = OpNotice;
 
 type TestDoc = WithId<Test>;
-type BuildDoc = WithId<Build>;
 type LauncherDoc = WithId<Launcher>;
 type LaunchDefDoc = WithId<LaunchDef>;
 type ItemDoc = WithId<TestItem>;
 type WakeDoc = WithId<Wake>;
 
-type LaunchState = 'linked' | 'retired' | 'missing' | 'legacy' | 'none';
+type LaunchState = 'linked' | 'retired' | 'missing' | 'none';
 
-type TestGroup = 'plan' | 'build' | 'item' | 'thread';
+type TestGroup = 'run' | 'plan' | 'item' | 'thread';
 
 type TestOrder = 'rank' | 'updated';
 
@@ -35,41 +34,25 @@ interface LaunchInfo {
   cwd: string;
   def: LaunchDefDoc | null;
   gone: string;
+  note: string;
+  updatedAt: string;
 }
 
-interface BundleGroup {
-  tag: string;
-  build: BuildDoc | null;
-  tests: TestDoc[];
-  counts: Counts;
+interface RunView {
+  item: ItemDoc;
+  plan: ItemDoc | null;
+  build: string | null;
+  stage: string;
   handed: boolean;
-  open: boolean;
-}
-
-interface BundleView {
-  group: BundleGroup;
-  launch: LaunchInfo;
-}
-
-interface ClosedGroup {
-  tag: string;
-  build: BuildDoc;
   tests: TestDoc[];
   counts: Counts;
-}
-
-interface GroupInput {
-  tests: readonly TestDoc[];
-  builds: readonly BuildDoc[];
-  handed: string | null;
-  narrowed?: boolean;
+  launch: LaunchInfo;
+  open: boolean;
 }
 
 interface TestFilters {
   query: string;
   threads: string[];
-  builds: string[];
-  nobuild: boolean;
   status: string;
   subject: string;
   plan: string;
@@ -108,11 +91,9 @@ interface GroupCard {
 
 interface ViewInput {
   tests: readonly TestDoc[];
-  builds: readonly BuildDoc[];
   items: readonly ItemDoc[];
   launchers: readonly LauncherDoc[];
   defs: readonly LaunchDefDoc[];
-  handed: string | null;
   filters: TestFilters;
   prefs: TestPrefs;
   conflicted: ReadonlySet<string>;
@@ -129,9 +110,9 @@ interface PlanView {
 interface TestsView {
   plans: PlanView[];
   byPlan: RecordGroups<TestDoc>;
-  bundles: BundleView[];
+  runs: RunView[];
   cards: GroupCard[];
-  closed: ClosedGroup[];
+  closed: RunView[];
   toRun: number;
   total: number;
   filtered: boolean;
@@ -175,11 +156,10 @@ interface FocusOption {
 interface EditChange {
   title: string;
   covers: string;
-  build: string;
   mode: string;
 }
 
 export type {
-  BuildDoc, BundleGroup, BundleView, ClosedGroup, Counts, EditChange, FocusOption, FocusScope, GroupCard, GroupInput, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, PlanView, RawStored, StoredView,
+  Counts, EditChange, FocusOption, FocusScope, GroupCard, ItemDoc, LaunchDefDoc, LauncherDoc, LaunchInfo, PlanView, RawStored, RunView, StoredView,
   TestChipSet, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, ViewInput, WakeChip, WakeDoc, WakeInput,
 };

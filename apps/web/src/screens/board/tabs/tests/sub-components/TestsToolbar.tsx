@@ -9,9 +9,9 @@ import { ViewMenu } from './ViewMenu';
 import { ViewRow } from './ViewRow';
 
 const TestsToolbar = (props: TestsToolbarProps) => {
-  const { boardKey, state, view, threads, subjects, plans, builds, handed } = props;
+  const { boardKey, state, view, threads, subjects, plans } = props;
   const { filters, patchFilters } = state;
-  const bar = useClauseFilters(testsFields({ threads, subjects, plans, builds, handed }), filters, patchFilters);
+  const bar = useClauseFilters(testsFields({ threads, subjects, plans }), filters, patchFilters);
   const focused = useFocusActive(boardKey);
   const count = bar.count + (filters.query ? 1 : 0) + (focused ? 1 : 0);
   return (

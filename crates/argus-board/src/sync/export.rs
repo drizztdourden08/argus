@@ -10,7 +10,7 @@ use super::agent_docs::{public_agent, working_on};
 use crate::Board;
 use crate::blocked::causes;
 use crate::json::{display, obj, section, set};
-use crate::launchers::{bundle_status, is_standalone, joined_bundle, usage_of};
+use crate::launchers::{is_standalone, joined_bundle, usage_of};
 use crate::names::display_name;
 use crate::served::{is_master, served_by};
 
@@ -85,34 +85,16 @@ fn public_item(
     out
 }
 
-/// The stage of a build, computed and never kept: closed when retired, draft while its bundle is
-/// a draft or it has no one-line command, else ready.
-fn build_stage(board: &Board, rec: &Value) -> &'static str {
+/// The stage of a build, computed and never kept: closed when retired, draft while it has no
+/// one-line command, else ready.
+fn build_stage(rec: &Value) -> &'static str {
     if crate::json::truthy(rec, "retiredAt") {
         return "closed";
     }
     let one_line = rec["cmd"]
         .as_str()
         .is_some_and(|cmd| !cmd.trim().is_empty() && !cmd.contains(['\n', '\r']));
-    let draft = joined_bundle(board, rec)
-        .is_some_and(|tag| bundle_status(board, &tag, &board["builds"][tag.as_str()]) == "draft");
-    if one_line && !draft { "ready" } else { "draft" }
-}
-
-/// A bundle record as the page sees it: every field present, null when unset.
-fn public_build(doc: &Value, id: &str, board: &Board) -> Value {
-    let tag = match &doc["tag"] {
-        Value::Null => json!(id),
-        t => t.clone(),
-    };
-    json!({
-        "tag": tag, "status": bundle_status(board, &display(&tag), doc), "title": nn(doc, "title"),
-        "note": nn(doc, "note"), "launcher": nn(doc, "launcher"), "cmd": nn(doc, "cmd"),
-        "cwd": nn(doc, "cwd"), "thread": nn(doc, "thread"), "createdAt": nn(doc, "createdAt"),
-        "updatedAt": nn(doc, "updatedAt"), "createdBy": nn(doc, "createdBy"),
-        "closedAt": nn(doc, "closedAt"), "closedBy": nn(doc, "closedBy"),
-        "closeNote": nn(doc, "closeNote"),
-    })
+    if one_line { "ready" } else { "draft" }
 }
 
 /// A launcher as the page sees it: every field present, null or false when unset, with what the
@@ -131,7 +113,7 @@ fn public_launcher(doc: &Value, id: &str, board: &Board) -> Value {
         "keptBy": nn(doc, "keptBy"), "keptUntil": nn(doc, "keptUntil"), "joined": joined,
         "standalone": is_standalone(board, &rec),
         "for": nn(doc, "for"), "master": is_master(board, &display(&rec["name"])),
-        "stage": build_stage(board, &rec), "retiredByItem": nn(doc, "retiredByItem"),
+        "stage": build_stage(&rec), "retiredByItem": nn(doc, "retiredByItem"),
         "useEveryMs": usage.as_ref().map_or(Value::Null, |u| json!(u.every_ms)),
         "lastUsedAt": usage.as_ref().map_or(Value::Null, |u| json!(u.last_used_at)),
         "stale": usage.as_ref().is_some_and(|u| u.stale),
@@ -151,7 +133,6 @@ fn public_doc(
         Coll::Items => public_item(doc, id, board, proof_url),
         Coll::Tests => public_test(doc, proof_url),
         Coll::Entries => public_entry(doc, proof_url),
-        Coll::Builds => public_build(doc, id, board),
         Coll::Launchers => public_launcher(doc, id, board),
         Coll::Agents => public_agent(doc),
         _ => doc.clone(),
@@ -180,7 +161,6 @@ fn board_meta(board: &Board) -> Value {
         "project": board["project"],
         "name": display_name(&display(&board["project"]), board["name"].as_str(), None),
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
-        "handedBuild": nn(board, "handedBuild"), "handedAt": nn(board, "handedAt"),
         "avatar": nn(board, "avatar"),
         "icon": nn(board, "icon"),
     })

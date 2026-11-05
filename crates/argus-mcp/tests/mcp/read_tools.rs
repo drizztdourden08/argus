@@ -22,11 +22,18 @@ async fn health_and_portfolio_overview() {
 }
 
 #[tokio::test]
-async fn board_summary_builds_the_shape_and_adds_runs_and_the_handed_build() {
+async fn board_summary_builds_the_shape_and_adds_runs_and_the_handed_run() {
     let rig = &Rig::new();
     let s = rig.ok("board_summary", json!({ "project": "alpha" })).await;
     assert_eq!(s["project"], "alpha");
-    assert_eq!(s["handedBuild"], "b1");
+    assert_eq!(
+        s["handedRun"],
+        json!({
+            "id": "I-6", "title": "Pedestal run 1", "build": "build-1",
+            "thread": "coordinator", "at": "2026-10-22T10:00:00.000Z"
+        })
+    );
+    assert!(s.get("handedBuild").is_none());
     assert_eq!(s["runs"], json!({ "running": 1, "queued": 0 }));
     assert_eq!(s["openQuestions"], json!(["Q-1"]));
     assert_eq!(s["pendingDecisions"], json!(["D-1"]));
@@ -69,7 +76,7 @@ async fn board_summary_keeps_the_node_key_order() {
         "items",
         "openQuestions",
         "pendingDecisions",
-        "handedBuild",
+        "handedRun",
         "tests",
         "pendingActions",
         "locks",
@@ -101,7 +108,7 @@ async fn list_items_filters_hides_deleted_and_shows_archived_on_request() {
     let list = |args: Value| async move { ids(&rig.ok("list_items", args).await, "items") };
     assert_eq!(
         list(json!({ "project": "alpha" })).await,
-        strings(&["I-1", "I-2"])
+        strings(&["I-1", "I-2", "I-5", "I-6"])
     );
     assert_eq!(
         list(json!({ "project": "alpha", "status": "todo" })).await,
@@ -195,7 +202,7 @@ async fn list_agents_joins_runs_and_filters_live_and_thread() {
 }
 
 #[tokio::test]
-async fn list_launchers_puts_master_first_and_joins_play_and_bundles() {
+async fn list_launchers_puts_master_first_and_joins_play_and_runs() {
     let rig = &Rig::new();
     let names = |r: &Value| -> Vec<String> {
         r["launchers"]
@@ -211,10 +218,14 @@ async fn list_launchers_puts_master_first_and_joins_play_and_bundles() {
     assert_eq!(names(&r), strings(&["master", "build-1"]));
     assert_eq!(r["master"], true);
     let b1 = &r["launchers"][1];
-    let got = json!({ "play": b1["play"], "bundles": b1["bundles"], "cmd": b1["cmd"], "current": b1["current"] });
+    let got = json!({ "play": b1["play"], "runs": b1["runs"], "cmd": b1["cmd"], "current": b1["current"] });
     assert_eq!(
         got,
-        json!({ "play": "launcher-build-1", "bundles": ["b1"], "cmd": "game run --wt build-1", "current": true })
+        json!({
+            "play": "launcher-build-1",
+            "runs": [{ "id": "I-6", "title": "Pedestal run 1", "plan": "I-5", "build": "build-1", "stage": "ready", "pass": 1, "fail": 0, "toRun": 1 }],
+            "cmd": "game run --wt build-1", "current": true
+        })
     );
     assert_eq!(r["launchers"][0]["play"], "launcher-master");
     let all = rig

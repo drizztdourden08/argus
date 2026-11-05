@@ -99,9 +99,14 @@ fn adding_and_removing_acceptance_criteria_renumbers_what_the_tests_cover() {
 #[test]
 fn the_owner_creates_an_item_with_criteria_for_a_thread() {
     let mut b = alpha();
+    let (_, made) = post(
+        &mut b,
+        json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "Home", "thread": "ui", "type": "epic"}}),
+    );
+    assert_eq!(made.ops.applied, 1);
     let (id, res) = post(
         &mut b,
-        json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "New thing", "thread": "ui", "ac": ["one", "two"]}}),
+        json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "New thing", "thread": "ui", "parent": "I-3", "ac": ["one", "two"]}}),
     );
     assert_eq!(
         res.ops.applied,
@@ -109,13 +114,13 @@ fn the_owner_creates_an_item_with_criteria_for_a_thread() {
         "{}",
         b["entries"][id.as_str()]["outcome"]
     );
-    assert_eq!(b["entries"][id.as_str()]["outcome"], "I-3 created");
-    let item = &b["items"]["I-3"];
+    assert_eq!(b["entries"][id.as_str()]["outcome"], "I-4 created");
+    let item = &b["items"]["I-4"];
     assert_eq!(item["origin"], "coordinator");
     assert_eq!(item["subject"], Value::Null);
     assert_eq!(item["ac"].as_array().map(Vec::len), Some(2));
     assert_eq!(item["createdBy"], "human");
-    assert_eq!(b["counters"]["I"], 3);
+    assert_eq!(b["counters"]["I"], 4);
 }
 
 #[test]
@@ -218,7 +223,7 @@ fn a_confirmed_purge_writes_a_backup_then_removes_the_thread_and_what_it_owns() 
     let home = tempfile::tempdir().expect("temp dir");
     let mut b = with_api_thread();
     let plan = purge_plan(&b, &json!({"threads": ["ui"]})).expect("plan");
-    assert_eq!(plan.counts["items"], 2);
+    assert_eq!(plan.counts["items"], 4);
     let entry = json!({
         "id": "O-purge", "kind": "purge", "author": "human", "status": "new", "createdAt": argus_core::clock::now_iso(),
         "criteria": {"threads": ["ui"]}, "confirm": "alpha", "expect": plan.counts,

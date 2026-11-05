@@ -1,3 +1,5 @@
+// test-tag: critical
+
 use argus_core::fixture::with_items;
 use serde_json::{Value, json};
 
@@ -417,49 +419,54 @@ fn a_bug_someone_else_reported_is_not_the_owners_to_verify() {
     assert_eq!(item_events(&before, &after).len(), 0);
 }
 
-fn plan(stage: &str, bundle: &str, runs: &Value) -> Value {
+fn run(stage: &str, build: &str, results: &Value) -> Value {
     item(
         "I-9",
-        &json!({"type": "test-plan", "thread": "qa", "stage": stage, "updatedBy": "qa", "rev": 3,
-            "fields": {"bundle": bundle, "runs": runs}}),
+        &json!({"type": "test-run", "thread": "qa", "stage": stage, "updatedBy": "qa", "rev": 3,
+            "n": 3, "fields": {"plan": "I-8", "build": build, "results": results}}),
     )
 }
 
-fn builds(status: &str) -> Value {
-    json!({"builds": {"bundle-1": {"status": status}}})
+fn launchers(retired: bool) -> Value {
+    let launcher = if retired {
+        json!({"retiredAt": "2026-11-04T10:00:00Z"})
+    } else {
+        json!({"name": "build-1"})
+    };
+    json!({"launchers": {"build-1": launcher}})
 }
 
 #[test]
-fn a_plan_that_is_ready_with_a_ready_bundle_is_told_to_the_owner_once() {
+fn a_run_that_is_ready_with_a_live_build_is_told_to_the_owner_once() {
     let none = json!([]);
-    let before = board(&[plan("draft", "bundle-1", &none)], &builds("ready"));
-    let after = board(&[plan("ready", "bundle-1", &none)], &builds("ready"));
+    let before = board(&[run("draft", "build-1", &none)], &launchers(false));
+    let after = board(&[run("ready", "build-1", &none)], &launchers(false));
     let event = only(item_events(&before, &after));
     assert_eq!(
         (event.kind, event.to.clone(), event.detail.as_str()),
-        (EventKind::PlanReady, Hearer::Owner, "bundle-1")
+        (EventKind::RunReady, Hearer::Owner, "build-1")
     );
     assert_eq!(item_events(&after, &after).len(), 0);
 }
 
 #[test]
-fn a_plan_waits_for_its_bundle_and_is_told_when_the_bundle_turns_ready() {
+fn a_run_waits_for_its_build_and_is_told_when_the_build_turns_live() {
     let none = json!([]);
-    let draft = board(&[plan("ready", "bundle-1", &none)], &builds("draft"));
-    let before = board(&[plan("draft", "bundle-1", &none)], &builds("draft"));
-    assert_eq!(item_events(&before, &draft).len(), 0);
-    let ready = board(&[plan("ready", "bundle-1", &none)], &builds("ready"));
-    assert_eq!(kinds(&item_events(&draft, &ready)), ["plan-ready"]);
+    let retired = board(&[run("ready", "build-1", &none)], &launchers(true));
+    let before = board(&[run("draft", "build-1", &none)], &launchers(true));
+    assert_eq!(item_events(&before, &retired).len(), 0);
+    let live = board(&[run("ready", "build-1", &none)], &launchers(false));
+    assert_eq!(kinds(&item_events(&retired, &live)), ["run-ready"]);
 }
 
 #[test]
-fn a_run_that_ended_is_told_to_the_plans_thread_with_its_counts() {
-    let open = json!([{"n": 3, "endedAt": null, "results": [{"test": "T-1", "status": "pass"}]}]);
-    let ended = json!([{"n": 3, "endedAt": "2026-11-02T10:00:00Z", "results": [
+fn a_run_that_ended_is_told_to_its_thread_with_its_counts() {
+    let open = json!([{"test": "T-1", "status": "pass"}]);
+    let ended = json!([
         {"test": "T-1", "status": "pass"}, {"test": "T-2", "status": "pass"},
-        {"test": "T-3", "status": "fail"}, {"test": "T-4", "status": "skip"}]}]);
-    let before = board(&[plan("running", "bundle-1", &open)], &builds("ready"));
-    let after = board(&[plan("reported", "bundle-1", &ended)], &builds("ready"));
+        {"test": "T-3", "status": "fail"}, {"test": "T-4", "status": "skip"}]);
+    let before = board(&[run("running", "build-1", &open)], &launchers(false));
+    let after = board(&[run("reported", "build-1", &ended)], &launchers(false));
     let events = item_events(&before, &after);
     let event = events
         .iter()

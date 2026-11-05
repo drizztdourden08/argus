@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { openBroadcastWire } from './broadcast-wire';
+import { fetchHealth } from './fetch-health';
 import { Hub } from './hub';
 import { HUB_WORKER_NAME } from './hub-transport.constants';
 import type { ConnectEnv, Wire } from './hub-transport.type';
@@ -17,6 +18,7 @@ const browserEnv = (): ConnectEnv => ({
   createHub: (port) => new Hub({ port }),
   now: Date.now,
   onHide: (listener) => globalThis.addEventListener('pagehide', listener),
+  health: fetchHealth,
 });
 
 export { browserEnv };

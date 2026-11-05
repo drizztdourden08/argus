@@ -5,6 +5,8 @@ use std::io;
 use std::process::{ExitStatus, Stdio};
 use std::time::Duration;
 
+use argus_core::process::{CREATE_NO_WINDOW, hidden_command};
+
 use tokio::process::Command;
 use tokio::sync::oneshot;
 
@@ -21,7 +23,6 @@ pub struct SystemHost;
 fn shell_command(request: &SpawnRequest, options: &SpawnOptions) -> Command {
     use std::os::windows::process::CommandExt;
 
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     const DETACHED_PROCESS: u32 = 0x0000_0008;
     const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
     let program = std::env::var("ComSpec").unwrap_or_else(|_| options.shell.to_owned());
@@ -32,7 +33,7 @@ fn shell_command(request: &SpawnRequest, options: &SpawnOptions) -> Command {
     } else {
         0
     };
-    let mut command = Command::new(program);
+    let mut command = Command::from(hidden_command(program));
     command
         .as_std_mut()
         .args(options.shell_args)
@@ -45,7 +46,7 @@ fn shell_command(request: &SpawnRequest, options: &SpawnOptions) -> Command {
 fn shell_command(request: &SpawnRequest, options: &SpawnOptions) -> Command {
     use std::os::unix::process::CommandExt;
 
-    let mut command = Command::new(options.shell);
+    let mut command = Command::from(hidden_command(options.shell));
     command
         .as_std_mut()
         .args(options.shell_args)

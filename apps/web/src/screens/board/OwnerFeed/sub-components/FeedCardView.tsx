@@ -14,14 +14,22 @@ const FeedCardView = (props: FeedCardViewProps) => {
   const facts = cardFacts(card);
   const open = () => pane.open(facts.code, facts.tab);
   return (
-    <Card data-feed-type={card.type} edge="left" edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}>
+    <Card
+      data-feed-type={card.type}
+      variant="interactive"
+      edge="left"
+      edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}
+      role="group"
+      aria-label={`${facts.code}: ${facts.title}`}
+      onActivate={open}
+    >
       <RecordCard
         head={feedHead(card, facts, ctx, open)}
         title={facts.title}
         openLabel={`Open ${facts.code}: ${facts.title}`}
         onOpen={open}
         signals={<FeedFacts facts={facts} index={ctx.index} />}
-        foot={<CardBody card={card} ctx={ctx} facts={facts} />}
+        foot={<CardBody card={card} ctx={ctx} />}
         attrs={{ 'data-record': facts.code }}
       />
     </Card>

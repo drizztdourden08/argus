@@ -35,7 +35,7 @@ fn empty_board() -> Value {
             "other": {"id": "other", "role": "thread", "status": "active"},
             "gone": {"id": "gone", "status": "done"},
         },
-        "items": {}, "tests": {}, "actions": {}, "agents": {}, "entries": {}, "handedBuild": null,
+        "items": {}, "tests": {}, "actions": {}, "agents": {}, "entries": {},
     })
 }
 
@@ -287,7 +287,7 @@ fn what_touches_the_item_counts_a_test_a_to_do_a_finished_agent_a_note() {
 }
 
 #[test]
-fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_handed_manual_test_an_owner_to_do_a_live_sub_agent()
+fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_run_handed_to_the_owner_an_owner_to_do_a_live_sub_agent()
  {
     let mut world = World::new();
     for n in 1..=6 {
@@ -296,9 +296,7 @@ fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_handed_manual_t
     let old = iso(START - 30 * HOUR);
     world.put("entries", &json!({"id": "Q-1", "item": "I-1", "kind": "question", "status": "open", "createdAt": old}));
     world.put("entries", &json!({"id": "Q-2", "item": "I-6", "kind": "question", "status": "answered", "createdAt": old}));
-    world.alpha["handedBuild"] = json!("bundle-4");
-    world.put("tests", &json!({"id": "T-1", "item": "I-2", "mode": "manual", "status": "pending", "build": "bundle-4", "updatedAt": old}));
-    world.put("tests", &json!({"id": "T-2", "item": "I-6", "mode": "manual", "status": "pending", "build": "bundle-3", "updatedAt": old}));
+    world.put("items", &json!({"id": "I-7", "type": "test-run", "stage": "ready", "assignee": "owner", "fields": {"plan": "I-2", "build": "b4"}, "updatedAt": old}));
     world.put(
         "actions",
         &json!({"id": "H-1", "item": "I-3", "status": "pending", "updatedAt": old}),

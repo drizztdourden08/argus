@@ -2,7 +2,6 @@
 import { defineStatuses } from '@drizztdourden08/tessera';
 import type { ButtonVariant, CardTone, StackedBarColor, TagLook } from '@drizztdourden08/tessera';
 import type { TestOutcome } from '../../../../data/posts';
-import type { BundleState } from '../../../../data/types';
 import type { Counts, WakeChip } from './model';
 
 const TEST_STATUSES = defineStatuses({
@@ -36,16 +35,22 @@ const WAKE_TAGS: Record<WakeChip['tone'], TagLook> = {
   neutral: { variant: 'normal', color: 'neutral' },
 };
 
-const BUNDLE_TAGS: Record<BundleState, TagLook> = {
+const RUN_TAGS: Record<string, TagLook> = {
   draft: { variant: 'urgency', color: 'warning' },
   ready: { variant: 'urgency', color: 'success' },
-  closed: { variant: 'normal', color: 'neutral' },
+  running: { variant: 'urgency', color: 'info' },
+  reported: { variant: 'urgency', color: 'warning' },
+  passed: { variant: 'normal', color: 'neutral' },
+  abandoned: { variant: 'normal', color: 'neutral' },
 };
 
-const BUNDLE_TIPS: Record<BundleState, string> = {
-  draft: 'Draft: not built yet. Its tests can be written, but there is no Play and it cannot be handed to you.',
+const RUN_TIPS: Record<string, string> = {
+  draft: 'Draft: no build yet. There is no Play and it cannot be handed to you.',
   ready: 'Ready: built and testable.',
-  closed: 'Closed: finished and landed.',
+  running: 'Running: someone is going through the cases.',
+  reported: 'Reported: the results are in and wait for review.',
+  passed: 'Passed: finished and landed.',
+  abandoned: 'Abandoned: dropped without a verdict.',
 };
 
 const OUTCOMES: { id: TestOutcome; label: string; variant: ButtonVariant }[] = [
@@ -85,14 +90,14 @@ const KEY_HINT = 'keys 1 pass, 2 fail, 3 partial, 4 blocked (2 to 4 ask what you
 
 const NOTE_FOLD_CHARS = 160;
 
-const NO_BUILD_VALUE = '(no build)';
-
 const FIND_TEXT = 'Search id or title';
 
 
-const PASSED_TIP = 'The passed tests of open bundles.';
+const PASSED_TIP = 'The passed tests of open runs.';
 
 const NO_TESTS_TEXT = 'No test yet. Threads document every test here with coord test.';
+
+const NO_RUNS_TEXT = 'No test run yet. A thread starts one from a test plan.';
 
 const NO_MATCH_TEXT = 'No test matches the filters.';
 
@@ -114,6 +119,6 @@ const MODE_OPTIONS = [
 ];
 
 export {
-  ANCHOR_PATTERN, BUNDLE_TAGS, BUNDLE_TIPS, CASE_KIND, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, NO_BUILD_VALUE, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PASSED_TIP, PROGRESS_SEGMENTS,
-  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
+  ANCHOR_PATTERN, CASE_KIND, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_RUNS_TEXT, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PASSED_TIP, PROGRESS_SEGMENTS,
+  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, RUN_TAGS, RUN_TIPS, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
 };

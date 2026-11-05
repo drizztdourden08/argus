@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, conflictEntry, itemDoc, testDoc } from './fixtures';
+import { conflictEntry, itemDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import type { Call } from './mount-tab';
 
@@ -11,7 +11,6 @@ cleanAfterEach();
 const REGION = 'Changes the board did not take';
 
 const board = (entries: object[]) => ({
-  builds: [buildDoc('bundle-1')],
   items: [itemDoc('I-1'), itemDoc('I-2')],
   tests: [testDoc('T-1', { rev: 5 }), testDoc('T-2', { rev: 5 })],
   entries: entries as Record<string, unknown>[],

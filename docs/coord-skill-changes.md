@@ -273,3 +273,85 @@ coord agent start <name> "<task>" ... --item I-n
   their records without them; start (or `agent set`) fills them in.
 - Argus leaves a passive `agent-unassigned` notice for an agent with no item 10 minutes after it
   started. Skill text: start every sub-agent with `--item` and `--worktree auto` (or `--master`).
+
+## 14. Test runs replace bundles (I-99)
+
+A request from the Argus lead to the Overlord, item I-99. A test plan always holds test cases and is
+run from them. A run is a `test-run` item that carries its build. The bundle is gone. Apply this
+after the Argus build with I-99 is deployed locally. The skill source is
+`X:/ai-config/shared/skills/coord/*`. Every file with a bundle mention is listed here.
+
+### New and changed verbs
+
+- `coord test run list|hand|unhand|ready|draft|end|reopen|drop <run I>`. `list` replaces
+  `coord build list`. `hand` assigns a ready run to the owner and `unhand` takes it back. `ready`
+  and `draft` move a run between draft and ready (ready needs a build that exists and is live).
+  `end` finishes it (passed when every case passed, else reported). `reopen` brings back an
+  ended run. `drop` abandons it.
+- `coord test plan add "<title>" --case T [--case T]... [--build <launcher>]`. A plan needs at
+  least one case. Removing the last case is refused. `--bundle` is gone.
+- `coord test plan run <plan I> --build <launcher>` starts a run on that build (it replaces
+  `plan start --bundle`).
+- `coord test add ... --mode ai|manual`. Stored values stay `auto` and `manual`; `ai` is an alias of
+  `auto`. The page shows AI or manual on every case.
+- `coord test migrate-runs [--dry-run]`: each lead runs it once on its board. It turns every
+  plan run and every bundle tag into a run, keeps the data and marks the board. Run it with
+  `--dry-run` first.
+- `coord build ...` stays for one release as aliases that print the new verb. `coord build add` and
+  `coord build set` are gone: make the build with `coord launcher set <name> --for I-n`, then put
+  it on the run with `--build`. A build made for a run retires when the run is passed or
+  abandoned.
+- A test case has no `build` or `bundle` field any more: `--build` and `--clear-build` on
+  `coord test add|set` are refused. The build belongs to the run.
+
+### Files and what to change
+
+1. `coordinator-builds.md` (35 mentions, rewrite). Title and intro: hand the owner a run, not a
+   bundle. Replace steps 1 to 5 (`build add|set|rm`, `ready|draft`, `hand|unhand`, `list`,
+   `close|reopen`) with the `coord test run` verbs above. Drop the "bundle record" text (title,
+   note, thread) and the `--cmd`, `--cwd`, `--window` and `--launcher` flags of `build add`. Keep
+   the launcher link text: the run's build is a launcher. The automatic ping now reads "a run is
+   ready to test" and fires when a ready run is assigned to the owner. Line 66 names `coord build
+   hand`.
+2. `coordinator-launchers.md` (16 mentions). Lines 47 to 55: "Without a live master `coord build
+   hand`" becomes `coord test run hand`. Rule 2 "A launcher made for a bundle goes with it" becomes
+   "for a run": a build made with `--for <run>` retires when the run is passed or abandoned and
+   `reopen` restores it. Delete the `coord build add|set <tag> --cmd` and "for bundle <tag>" text.
+   Line 60: "a bundle's launcher takes none" becomes "a run's build". Lines 75 to 83: drop "Link each
+   bundle to its launcher: `coord build set`" and "Relink or close the bundles"; the
+   manager-of-the-bundle sentence names the run.
+3. `tests.md` (8 mentions). Line 25: the `build` field is a launcher name, not "bundle-1". Lines
+   72 to 81: "I was handed xyz" now means a run handed by `coord test run hand`; the examples use a
+   launcher name and `coord test run list`, not `coord build list`. Add the `mode` row (AI or
+   manual) and the "plan needs a case" rule. Replace `--bundle` and `plan start` in the plan text.
+4. `SKILL.md` lines 132 and 133: "Bundles and builds" becomes "Test runs and builds", and "The lead
+   hands builds to the owner (`coord build hand`)" becomes `coord test run hand`.
+5. `coordinator.md` line 150: the `coordinator-builds.md` row reads "handing the owner a test run".
+6. `coordinator-wakes.md` line 50: "the pass that leaves no manual test of a bundle pending" becomes
+   the `run-complete` wake: the pass that leaves no manual test of a run pending (once, with the
+   counts). The reason `bundle-complete` is renamed `run-complete`.
+7. `portfolio.md` line 151: "when a lead hands a bundle (`<Project>: <bundle> is ready to test
+   (N tests)`)" becomes "when a lead hands a run (`<Project>: test run I-n (title) is ready to run
+   on <build>`)".
+8. `coordinator-worktrees.md` lines 79 and 81: a git bundle file in the worktree backups. Not a
+   test bundle: leave it.
+9. `thread-verbs.md` and `coordinator-board-admin.md`: no bundle mention today. Add the test plan
+   rule (a plan keeps at least one case) where the plan verbs are shown, if they are shown.
+10. Standing rule for all text: the unit the owner tests is a test run, a plan is what it is run from,
+    and a build is the launcher the run carries.
+
+## 15. A story or a task needs a parent (I-102)
+
+Owner rule, 2026-11-04: a story or a task is never created without an epic above it. Apply this
+after the Argus build with I-102 is deployed locally.
+
+- `coord item add` for a story or a task now needs `--parent I-n`. A story's parent is an epic. A
+  task's parent is an epic or a story. A bare `coord item add "<title>"` is a task, so it is
+  refused the same way. The refusal lists the open epics (id and title, at most five).
+- `coord item set <I-n> --parent none` is refused for a story or a task. A bug, a debt and a test
+  plan keep an optional parent.
+- Existing stories and tasks with no parent stay readable and editable in their other fields. The
+  kanban card shows the warning "no epic" on each.
+- In `SKILL.md` and `thread-verbs.md`, show `--parent` in every `item add` example for a story or a
+  task, and add the rule "a story or a task needs an epic parent" next to the type list.
+

@@ -21,6 +21,8 @@ interface Item extends ItemTyping {
   ac?: Criterion[];
   createdAt?: string;
   createdBy?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
   updatedAt?: string;
   updatedBy?: string | null;
   archivedAt?: string | null;

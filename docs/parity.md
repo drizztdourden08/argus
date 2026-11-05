@@ -84,7 +84,7 @@ their status is `n/a`.
 | `http.alias.test.mjs` | Board alias hosts | 1 | `crates/argus-server/tests/it/alias.rs` | done |
 | `inbox.wake.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/it/inbox_wake.rs` | done |
 | `launcher.verbs.test.mjs` | coord build and launcher verbs | 8 | `crates/argus-coord/tests/it/launcher_verbs.rs` | done |
-| `launchers.stale.test.mjs` | Launchers and bundles | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
+| `launchers.stale.test.mjs` | Launchers and builds | 5 | `crates/argus-launchers/tests/launcher_stale.rs` | done |
 | `lead.verbs.test.mjs` | coord lead, inbox and ping | 8 | `crates/argus-coord/tests/it/lead_verbs.rs` | done |
 | `lightbox.test.mjs` | Proof images and lightbox | 2 | `apps/web/src/features/proofs/ProofViewer.test.tsx` | n/a (Tessera MediaViewer) |
 | `mcp.http.test.mjs` | MCP HTTP transport | 7 | `crates/argus-server/tests/it/mcp_http.rs` | done |
@@ -297,10 +297,10 @@ their own Argus tests and by the owner's check.
 | Portfolio send down | A send from the overview reaches the lead's board and inbox whole, with the same wake line. | 5 |
 | Test results and proofs | Results and pasted proofs land on the board and show at once; fail needs a note. | 5 |
 | Kanban tab | The Kanban shows, filters and moves items, hides done ones and marks quiet ones. | 5 |
-| Tests tab | The Tests tab groups by bundle, records results, attaches proofs and hides closed bundles. | 5 |
+| Tests tab | The Tests tab groups by run, records results, attaches proofs and hides finished runs. | 5 |
 | Runs lifecycle | Defined runs start, queue, stop, time out, recover and stay hidden as the Node runs do. | 5 |
 | Run logs and terminal | Logs chunk, cap, redact and stream; the terminal shows colours, stdin and the last line. | 5 |
-| Launchers and bundles | Launcher and bundle docs, Play defs, master, join, usage window and stale wakes match Node. | 5 |
+| Launchers and builds | Launcher docs, Play defs, master, usage window and stale wakes match Node. | 5 |
 | Builds tab | The Builds tab lists launchers with Play, Stop, terminal, Retired list and warnings. | 5 |
 | Worktree scanner | Rules, scans, statuses and stale wakes give the Node rows and texts on throwaway repos. | 5 |
 | Worktree removal | Every removal guard, backup, branch decision and folder fallback answers as Node. | 5 |
@@ -357,6 +357,19 @@ in a preview. See `docs/architecture.md`, Item types, for the design.
 | Item pane and card | Every type opens with its registry tabs, and a card shows its type, assignee, chips and progress. | Rework |
 | Tree view | The Kanban tab shows the hierarchy epic, story and leaf with progress, folds per node and opens the pane. | Rework |
 | Preview mode | `argus serve --preview` accepts board writes on a copied home, runs no outward effect and refuses the live home. | Rework |
+
+## Deliberate divergences: test runs replace bundles (I-99)
+
+The Node dashboard keeps bundles. Argus replaced them with test runs on 2026-11-04, and these
+differences are on purpose. The Node tests that cover the old shape are not ported as written.
+
+| Area | Node spec | Argus |
+|---|---|---|
+| Plan runs | None. A bundle tag groups tests and has no run items. | A plan runs as `test-run` items (`I-n`, stages draft, ready, running, reported, passed, abandoned) that carry their build and results. |
+| MCP `list_launchers` | Rows carry `bundles`. | Rows carry `runs` (id, title, plan, build, stage, pass, fail, toRun). The Node comparisons for the bundle rows were dropped. |
+| MCP `board_summary` | Reports the handed bundle (`handedBuild`). | Reports the handed run: the ready test run assigned to the owner. |
+| Hand to the owner | `handedBuild` in the board meta. | Assign a ready run to the owner. `board.handedBuild` and `board.builds` are no longer read. |
+| Test plan | May hold no cases and names a `bundle`. | Always holds at least one case and has no `bundle` or `runs` field. |
 
 ## Switch-over checklist
 

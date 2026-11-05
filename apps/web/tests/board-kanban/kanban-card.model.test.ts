@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
-import { assigneeLook, cardChips, cardProgress, parseTrails, stageLabel } from '../../src/screens/board/tabs/kanban/model';
+import { acSegments, assigneeLook, cardBars, cardChips, cardProgress, parseTrails, stageLabel } from '../../src/screens/board/tabs/kanban/model';
 import type { CardData } from '../../src/screens/board/tabs/kanban/model';
-import { CARD_SIGNAL_MAX, signalItems } from '../../src/screens/board/tabs/kanban/signals';
+import { signalItems } from '../../src/screens/board/tabs/kanban/signals';
 import { HOUR, NOW, before, itemRef, threadRef, viewOf } from './kanban-docs';
 
 const criteria = (met: number, total: number) => Array.from({ length: total }, (_, index) => ({ n: index + 1, text: `c${index + 1}`, done: index < met }));
@@ -25,47 +25,29 @@ describe('I-72 the type chips of a card', { tags: ['critical'] }, () => {
     expect(cardChips(itemRef('I-1', { type: 'debt', fields: { cost: 'L' } })).map((chip) => chip.text)).toEqual(['cost L']);
   });
 
-  it('shows the bundle of a test plan and no chip for the types that have none', () => {
-    expect(cardChips(itemRef('I-1', { type: 'test-plan', fields: { bundle: 'bundle-16' } })).map((chip) => chip.text)).toEqual(['bundle-16']);
+  it('shows the build of a test run and no chip for the types that have none', () => {
+    expect(cardChips(itemRef('I-1', { type: 'test-run', fields: { build: 'main-7' } })).map((chip) => chip.text)).toEqual(['main-7']);
+    expect(cardChips(itemRef('I-1', { type: 'test-plan' }))).toEqual([]);
     expect(cardChips(itemRef('I-1', { type: 'epic', fields: { goal: 'x' } }))).toEqual([]);
     expect(cardChips(itemRef('I-1'))).toEqual([]);
   });
 });
 
 describe('I-72 the progress of a card', { tags: ['critical'] }, () => {
-  it('counts the criteria met of a task, a bug and a tech debt, and shows no bar without criteria', () => {
-    expect(cardProgress(cardOf(itemRef('I-1', { ac: criteria(1, 3) })))).toMatchObject([{ met: 1, total: 3, text: '1/3' }]);
-    expect(cardProgress(cardOf(itemRef('I-1', { type: 'bug', ac: criteria(1, 4) })))).toMatchObject([{ met: 1, total: 4 }]);
-    expect(cardProgress(cardOf(itemRef('I-1', { type: 'debt', ac: criteria(0, 2) })))).toMatchObject([{ met: 0, total: 2 }]);
-    expect(cardProgress(cardOf(itemRef('I-1')))).toEqual([]);
-  });
-
-  it('counts the children done of an epic, leaving out dropped, archived and deleted children', () => {
-    const epic = itemRef('I-1', { type: 'epic' });
-    const children = [
-      itemRef('I-2', { parent: 'I-1', status: 'done' }),
-      itemRef('I-3', { parent: 'I-1' }),
-      itemRef('I-4', { parent: 'I-1', status: 'dropped' }),
-      itemRef('I-5', { parent: 'I-1', archivedAt: before(HOUR) }),
-      itemRef('I-6', { parent: 'I-1', deletedAt: before(HOUR) }),
-    ];
-    expect(cardProgress(cardOf(epic, children))).toMatchObject([{ met: 1, total: 2, text: '1/2 children' }]);
-  });
-
-  it('shows the children and then the criteria of a story', () => {
-    const story = itemRef('I-1', { type: 'story', ac: criteria(3, 4) });
-    const children = [itemRef('I-2', { parent: 'I-1', status: 'done' }), itemRef('I-3', { parent: 'I-1', status: 'done' }), itemRef('I-4', { parent: 'I-1' })];
-    expect(cardProgress(cardOf(story, children)).map((part) => part.text)).toEqual(['2/3', '+ AC 3/4']);
-    expect(cardProgress(cardOf(story)).map((part) => part.text)).toEqual(['3/4']);
+  it('leaves the test runs off the board', () => {
+    const view = viewOf([itemRef('I-1', { type: 'test-plan' }), itemRef('I-2', { type: 'test-run', fields: { plan: 'I-1' } })], { prefs: { showDone: true } });
+    expect(view.cards.map((card) => card.id)).toEqual(['I-1']);
   });
 
   it('words the last run of a test plan with its counts and what is left', () => {
+    const run = (id: string, results: object[], extra: Partial<ItemRef> = {}) => itemRef(id, { type: 'test-run', fields: { plan: 'I-1', results }, ...extra });
     const runs = [
-      { n: 2, results: [{ test: 'T-1', status: 'pass' }] },
-      { n: 3, results: [{ test: 'T-1', status: 'pass' }, { test: 'T-2', status: 'pass' }, { test: 'T-3', status: 'fail' }] },
+      run('I-2', [{ test: 'T-1', status: 'pass' }]),
+      run('I-3', [{ test: 'T-1', status: 'pass' }, { test: 'T-2', status: 'pass' }, { test: 'T-3', status: 'fail' }]),
+      run('I-4', [], { stage: 'abandoned' }),
     ];
-    const plan = itemRef('I-1', { type: 'test-plan', fields: { cases: ['T-1', 'T-2', 'T-3', 'T-4', 'T-5'], runs } });
-    expect(cardProgress(cardOf(plan))).toMatchObject([{ met: 3, total: 5, text: 'run 3: 2 pass 1 fail 2 left' }]);
+    const plan = itemRef('I-1', { type: 'test-plan', fields: { cases: ['T-1', 'T-2', 'T-3', 'T-4', 'T-5'] } });
+    expect(cardProgress(cardOf(plan, runs))).toMatchObject([{ met: 3, total: 5, text: 'run 3: 2 pass 1 fail 2 left' }]);
     expect(cardProgress(cardOf(itemRef('I-2', { type: 'test-plan', fields: { cases: ['T-1'] } })))).toEqual([]);
   });
 });
@@ -95,17 +77,38 @@ describe('I-72 the assignee of a card', { tags: ['critical'] }, () => {
   });
 });
 
-describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
-  const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
-  const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
-  const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
+const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
+const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
+const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
 
-  it('makes one chip for three long dependencies and a blocker, so no row can wrap', () => {
+describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
+  it('makes one chip per dependency target and one for the blocker, the dependency with the brand mark of the lead and the blocker with the avatar', () => {
     const card = cardOf(itemRef('I-1', { blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
-    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency', 3], ['blocked', 1]]);
+    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', undefined], ['blocked', 1]]);
     expect(signals[1]?.label).toBe('Blocked by H-12 (owner): push go');
     expect(signals[0]?.label).toContain('waiting on brock: A very long request title number 2');
+    expect(signals[0]?.brand).toBe('brock');
+    expect(signals[0]?.avatar).toBeUndefined();
+    expect(signals[1]?.avatar).toMatchObject({ label: 'You', variant: 'owner' });
+  });
+
+  it('makes several dependency chips for several targets', () => {
+    const other = { ...dep(4), who: 'lead:rotp' } as const;
+    const card = cardOf(itemRef('I-1', { blocked: [dep(1), other] }));
+    expect(idsOf(card)).toEqual(['dependency-brock', 'dependency-rotp']);
+  });
+
+  it('keeps the avatar for a lead of a board with no brand', () => {
+    const unknown = { ...dep(5), who: 'lead:mystery' } as const;
+    const signal = signalItems(cardOf(itemRef('I-1', { blocked: [unknown] })), NOW)[0];
+    expect(signal?.brand).toBeUndefined();
+    expect(signal?.avatar).toMatchObject({ initials: 'MY' });
+  });
+
+  it('shows the quiet signal as its hours', () => {
+    const card = cardOf(itemRef('I-1', { status: 'doing', updatedAt: before(42 * HOUR) }));
+    expect(signalItems(card, NOW).find((signal) => signal.id === 'quiet')?.count).toBe('42h');
   });
 
   it('shows nothing for a settled dependency, which the board no longer exports as blocking', () => {
@@ -113,16 +116,19 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     expect(signalItems(card, NOW)).toEqual([]);
   });
 
+});
+
+describe('I-72 the signal order of a card', { tags: ['critical'] }, () => {
   it('puts needs you first and then each kind in the order of the precedence, with a count and no text', () => {
     const needs = new Map([['I-1', { questions: 1, decisions: 1, todos: 2, tests: 0 }]]);
     const asks = new Map([['I-1', [{ id: 'Q-3', kind: 'question', via: 'item' }, { id: 'D-1', kind: 'decision', via: 'item' }] as const]]);
     const signals = new Map([['I-1', { failing: 2, pending: 1 }]]);
     const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
-    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency', 'blocked', 'test-pending', 'decision']);
-    const counted = signalItems(card, NOW).filter((signal) => signal.id !== 'needs-you');
-    expect(counted.every((signal) => typeof signal.count === 'number')).toBe(true);
-    expect(signalItems(card, NOW).length).toBeGreaterThan(CARD_SIGNAL_MAX);
+    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency-brock', 'blocked', 'test-pending', 'decision']);
+    const items = signalItems(card, NOW);
+    expect(items.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
+    expect(items.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
   });
 
   it('opens the entry for a single question and the item for several', () => {
@@ -135,10 +141,10 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
   it('adds the trail chip after the dependency chips from depth 3 and not before', () => {
     const item = itemRef('I-1', { blocked: [dep(1)] });
     const deep = cardOf(item, [], { trails: new Map([['I-1', { depth: 3, open: 2 }]]) });
-    expect(idsOf(deep)).toEqual(['dependency', 'trail']);
+    expect(idsOf(deep)).toEqual(['dependency-brock', 'trail']);
     expect(signalItems(deep, NOW)[1]).toMatchObject({ icon: 'signpost', count: 3, label: 'trail 3, 2 open', tone: 'neutral' });
-    expect(idsOf(cardOf(item, [], { trails: new Map([['I-1', { depth: 2, open: 1 }]]) }))).toEqual(['dependency']);
-    expect(idsOf(cardOf(item))).toEqual(['dependency']);
+    expect(idsOf(cardOf(item, [], { trails: new Map([['I-1', { depth: 2, open: 1 }]]) }))).toEqual(['dependency-brock']);
+    expect(idsOf(cardOf(item))).toEqual(['dependency-brock']);
   });
 
   it('keeps the conflict first and the archived mark last', () => {
@@ -156,5 +162,40 @@ describe('I-72 the trails of the board', { tags: ['critical'] }, () => {
     expect(parseTrails([{ id: 'I-5', depth: 3, open: 1 }])).toEqual(new Map([['I-5', { depth: 3, open: 1 }]]));
     expect(parseTrails(null)).toEqual(new Map());
     expect(parseTrails({ id: 'entry', status: 'applied' })).toEqual(new Map());
+  });
+});
+
+describe('I-95 the bars of a card', { tags: ['critical'] }, () => {
+  it('draws one segment per criterion, met in success and open in track', () => {
+    const bars = cardBars(cardOf(itemRef('I-1', { ac: criteria(1, 3) })));
+    expect(acSegments(bars.criteria).map((segment) => segment.tone)).toEqual(['success', 'track', 'track']);
+    expect(cardBars(cardOf(itemRef('I-1'))).criteria).toEqual([]);
+  });
+
+  it('draws one segment per live child, in the colour of its type when done and track when open', () => {
+    const epic = itemRef('I-1', { type: 'epic' });
+    const children = [
+      itemRef('I-2', { parent: 'I-1', status: 'done', type: 'bug' }),
+      itemRef('I-3', { parent: 'I-1' }),
+      itemRef('I-4', { parent: 'I-1', status: 'dropped' }),
+    ];
+    const work = cardBars(cardOf(epic, children)).work;
+    expect(work.map((segment) => segment.tone === 'track')).toEqual([false, true]);
+    expect(work[0]?.label).toContain('done');
+    expect(work[1]?.label).toContain('Item number 3');
+  });
+
+  it('adds the dependencies of the item after its children', () => {
+    const waits = { dep: 'D-1', project: 'alpha', item: 'Q-7', title: 'Which?', state: 'open' as const, since: before(HOUR), reason: null };
+    const done = { ...waits, dep: 'D-2', item: 'I-9', state: 'done' as const };
+    const work = cardBars(cardOf(itemRef('I-1', { waitsOn: [waits, done] }))).work;
+    expect(work.map((segment) => segment.tone === 'track')).toEqual([true, false]);
+  });
+
+  it('shows both bars on a story and none on a test plan', () => {
+    const story = itemRef('I-1', { type: 'story', ac: criteria(3, 4) });
+    const bars = cardBars(cardOf(story, [itemRef('I-2', { parent: 'I-1', status: 'done' })]));
+    expect([bars.work.length, bars.criteria.length]).toEqual([1, 4]);
+    expect(cardBars(cardOf(itemRef('I-3', { type: 'test-plan' })))).toEqual({ work: [], criteria: [] });
   });
 });

@@ -11,7 +11,7 @@ const fromType = (type: ItemType): RegistryKind => ({
   aliases: [],
   stored: type.collection === 'items' ? ITEM_STORED : undefined,
   icon: type.icon,
-  look: { color: type.color },
+  look: { color: type.color, tone: type.tone },
   collection: type.collection,
   idKey: type.idKey,
   view: type.view,

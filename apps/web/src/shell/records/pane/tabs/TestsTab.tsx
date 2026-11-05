@@ -3,8 +3,8 @@ import { ItemTests } from '../../../../screens/board/tabs/kanban/sub-components/
 import type { PaneBodyProps } from '../pane.type';
 
 const TestsTab = (props: PaneBodyProps) => {
-  const { boardKey, tests } = props.data;
-  return <ItemTests boardKey={boardKey} tests={tests} />;
+  const { tests } = props.data;
+  return <ItemTests tests={tests} />;
 };
 
 export { TestsTab };

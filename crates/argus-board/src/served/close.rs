@@ -1,7 +1,8 @@
 //! Closing the builds of an item that closed, and bringing them back when it reopens. Board
 //! fields only: the names are those a hand retire writes (`retiredAt`, `retiredBy`, `retireNote`,
 //! `current`), plus `retiredByItem`, which remembers the item so a reopen restores these builds
-//! and never one retired by hand.
+//! and never one retired by hand. A build made for a test run serves the run (`for`), so it
+//! closes when the run is done or dropped (passed or abandoned).
 
 use std::collections::BTreeSet;
 
@@ -70,8 +71,8 @@ pub fn close_builds(board: &mut Board, item: &str, who: &str, at: &str) -> Vec<S
     names
 }
 
-/// Brings back the builds that closing `item` retired. A build retired by hand, or by a bundle,
-/// stays retired. Returns the names restored.
+/// Brings back the builds that closing `item` retired. A build retired by hand stays
+/// retired. Returns the names restored.
 pub fn reopen_builds(board: &mut Board, item: &str, who: &str, at: &str) -> Vec<String> {
     let names = serving(board, item, |rec| {
         is_retired(rec) && rec["retiredByItem"].as_str() == Some(item)

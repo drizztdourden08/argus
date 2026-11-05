@@ -1,18 +1,16 @@
-//! The launcher and bundle rules over a board (launcher.verbs and build.verbs, the pure
-//! parts): the usage window, the three kinds of launcher, Play definitions, who may write,
-//! retire and restore with a bundle, keep, the status of a bundle and the hand rules.
+//! The launcher rules over a board (launcher.verbs, the pure parts): the usage window, the
+//! kinds of launcher, Play definitions, who may write, retire, keep and the link state of the
+//! build a test run names.
 //!
 //! Keep rule: K1, K4.
 // test-tag: critical
 
 use argus_launchers::RunKind;
-use argus_launchers::launcher::BundleStatus::{Draft, Ready};
 use argus_launchers::launcher::{
-    Bundle, BundleStatus, EVERY_HELP, Launcher, LauncherBoard, LauncherPatch, LinkState, Platform,
-    Role, ThreadInfo, Who, WriteContext, authorize_launcher, bundle_status, command_warnings,
-    duration_text, has_master, is_standalone, joined_bundle, keep_launcher, launcher_slug,
-    listed_status, parse_every, require_launcher_name, resolve_bundle, resolve_path,
-    retire_launcher, shell_of, usage_of, write_launcher,
+    Bundle, EVERY_HELP, Launcher, LauncherBoard, LauncherPatch, LinkState, Platform, Role,
+    ThreadInfo, Who, WriteContext, authorize_launcher, command_warnings, duration_text, has_master,
+    is_standalone, joined_bundle, keep_launcher, launcher_slug, parse_every, require_launcher_name,
+    resolve_launcher, resolve_path, retire_launcher, shell_of, usage_of, write_launcher,
 };
 
 pub const AT: &str = "2026-10-24T00:00:00.000Z";
@@ -234,24 +232,22 @@ fn usage_a_launcher_without_the_field_counts_as_7d_and_master_joined_and_retired
 }
 
 #[test]
-fn usage_a_launcher_linked_by_an_open_bundle_is_joined_and_standalone_again_when_it_closes() {
-    let mut board = LauncherBoard::default();
-    board.builds.insert(
-        "b2".to_owned(),
-        Bundle {
-            launcher: Some("tool".to_owned()),
-            ..bundle("b2")
-        },
-    );
+fn usage_a_build_serving_a_run_or_carrying_a_legacy_tag_has_no_window_and_a_plain_one_has() {
+    let board = LauncherBoard::default();
     let tool = launcher("tool");
-    assert_eq!(joined_bundle(&board, &tool).as_deref(), Some("b2"));
-    assert!(
-        usage_of(&board, &tool, i64::MAX / 2, 0).is_none(),
-        "linked by an open bundle"
-    );
-    board.builds.get_mut("b2").unwrap().closed_at = Some(AT.to_owned());
     assert!(is_standalone(&board, &tool));
     assert!(usage_of(&board, &tool, i64::MAX / 2, 0).unwrap().stale);
+    let for_run = Launcher {
+        for_item: Some("I-7".to_owned()),
+        ..launcher("tool")
+    };
+    assert!(!is_standalone(&board, &for_run));
+    let tagged = Launcher {
+        bundle: Some("b2".to_owned()),
+        ..launcher("tool")
+    };
+    assert_eq!(joined_bundle(&board, &tagged).as_deref(), Some("b2"));
+    assert!(!is_standalone(&board, &tagged));
     assert_eq!(
         joined_bundle(&board, &launcher("master")),
         None,
@@ -270,61 +266,7 @@ fn master_is_mandatory_a_live_master_counts_a_retired_one_does_not() {
 }
 
 #[test]
-fn the_status_of_a_bundle_without_one_reads_ready_when_handed_or_starting_something() {
-    let mut board = board();
-    board.handed_build = Some("old-handed".to_owned());
-    let records = [
-        (
-            "old-launcher",
-            Bundle {
-                launcher: Some("master".to_owned()),
-                ..bundle("old-launcher")
-            },
-        ),
-        (
-            "old-cmd",
-            Bundle {
-                cmd: Some("rotp launch".to_owned()),
-                ..bundle("old-cmd")
-            },
-        ),
-        ("old-handed", bundle("old-handed")),
-        ("old-bare", bundle("old-bare")),
-        (
-            "was-handed",
-            Bundle {
-                last_handed_at: Some(AT.to_owned()),
-                ..bundle("was-handed")
-            },
-        ),
-        (
-            "explicit",
-            Bundle {
-                status: Some("draft".to_owned()),
-                launcher: Some("master".to_owned()),
-                ..bundle("explicit")
-            },
-        ),
-    ];
-    let statuses: Vec<BundleStatus> = records
-        .iter()
-        .map(|(tag, rec)| bundle_status(&board, tag, Some(rec)))
-        .collect();
-    assert_eq!(statuses, [Ready, Ready, Ready, Draft, Ready, Draft]);
-    assert_eq!(bundle_status(&board, "missing", None), Draft);
-    let closed = Bundle {
-        closed_at: Some(AT.to_owned()),
-        ..bundle("old-bare")
-    };
-    assert_eq!(
-        listed_status(&board, "old-bare", &closed),
-        BundleStatus::Closed
-    );
-    assert_eq!(BundleStatus::Closed.as_str(), "closed");
-}
-
-#[test]
-fn a_bundle_starts_its_linked_launcher_or_its_legacy_command() {
+fn a_run_starts_the_build_it_names_live_retired_missing_or_none() {
     let mut board = board();
     board.launchers.insert(
         "gone".to_owned(),
@@ -333,38 +275,20 @@ fn a_bundle_starts_its_linked_launcher_or_its_legacy_command() {
             ..launcher("gone")
         },
     );
-    let link = |name: &str| Bundle {
-        launcher: Some(name.to_owned()),
-        ..bundle("b")
-    };
-    let linked = resolve_bundle(&board, Some(&link("master")));
+    let linked = resolve_launcher(&board, Some("master"));
     assert_eq!(
         (linked.state, linked.cmd.as_deref()),
         (LinkState::Linked, Some("run master"))
     );
     assert_eq!(
-        resolve_bundle(&board, Some(&link("gone"))).state,
+        resolve_launcher(&board, Some("gone")).state,
         LinkState::Retired
     );
     assert_eq!(
-        resolve_bundle(&board, Some(&link("nope"))).state,
+        resolve_launcher(&board, Some("nope")).state,
         LinkState::Missing
     );
-    let legacy = Bundle {
-        cmd: Some("rotp launch".to_owned()),
-        cwd: Some("sub".to_owned()),
-        ..bundle("b")
-    };
-    let resolved = resolve_bundle(&board, Some(&legacy));
-    assert_eq!(
-        (resolved.state, resolved.cwd.as_deref()),
-        (LinkState::Legacy, Some("sub"))
-    );
-    assert_eq!(
-        resolve_bundle(&board, Some(&bundle("b"))).state,
-        LinkState::None
-    );
-    assert_eq!(resolve_bundle(&board, None).state, LinkState::None);
+    assert_eq!(resolve_launcher(&board, None).state, LinkState::None);
     assert_eq!(LinkState::Missing.as_str(), "missing");
 }
 

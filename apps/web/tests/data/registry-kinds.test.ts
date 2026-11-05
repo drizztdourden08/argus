@@ -30,15 +30,15 @@ const CATEGORY_KINDS = ['epic', 'story', 'task', 'bug', 'debt', 'test-plan', 'te
 const colorOf = (kind: RegistryKind): string | undefined => kind.look.color;
 
 describe('I-85 P1 the web reads the codes and looks of every kind of the record registry', { tags: ['critical'] }, () => {
-  it('lists the 23 kinds with their code, in the lists of the file', () => {
+  it('lists the 24 kinds with their code, in the lists of the file', () => {
     const codes = REGISTRY_KINDS.map((kind) => `${kind.id}:${kind.code}`);
-    expect(REGISTRY_KINDS).toHaveLength(23);
-    expect(codes.slice(0, 9)).toEqual(['epic:E', 'story:S', 'task:K', 'bug:B', 'debt:X', 'test-plan:TP', 'test-case:T', 'build:BL', 'worktree:WT']);
-    expect(codes.slice(9, 13)).toEqual(['question:Q', 'decision:D', 'todo:H', 'note:N']);
-    expect(codes.slice(13)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'notice:N', 'followup:P', 'message:M', 'removal-request:RQ']);
+    expect(REGISTRY_KINDS).toHaveLength(24);
+    expect(codes.slice(0, 10)).toEqual(['epic:E', 'story:S', 'task:K', 'bug:B', 'debt:X', 'test-plan:TP', 'test-run:TR', 'test-case:T', 'build:BL', 'worktree:WT']);
+    expect(codes.slice(10, 14)).toEqual(['question:Q', 'decision:D', 'todo:H', 'note:N']);
+    expect(codes.slice(14)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'notice:N', 'followup:P', 'message:M', 'removal-request:RQ']);
   });
 
-  it('gives each of the ten category kinds its own colour and every other kind a tone', () => {
+  it('gives each of the ten category kinds a colour and every other kind, the test run among them, a tone', () => {
     const colored = REGISTRY_KINDS.filter((kind) => colorOf(kind) !== undefined);
     expect(colored.map((kind) => kind.id).sort()).toEqual([...CATEGORY_KINDS].sort());
     expect(new Set(colored.map(colorOf)).size).toBe(10);
@@ -46,6 +46,7 @@ describe('I-85 P1 the web reads the codes and looks of every kind of the record 
     expect(kindOf('agent')?.look.color).toBe('pink');
     expect(kindOf('question')?.look.tone).toBe('danger');
     expect(kindOf('release')?.look.tone).toBe('success');
+    expect(kindOf('test-run')?.look.tone).toBe('info');
   });
 
   it('reads the code table longest letters first and leaves the N to the notes', () => {

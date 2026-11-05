@@ -61,6 +61,7 @@ pub struct RunDef {
     pub kind: RunKind,
     pub env: BTreeMap<String, String>,
     pub hand: bool,
+    /// A legacy bundle tag on a stored definition; nothing writes it any more.
     pub bundle: Option<String>,
     pub launcher: Option<String>,
     pub window: bool,
@@ -98,7 +99,7 @@ impl Default for RunDef {
 }
 
 impl RunDef {
-    /// True for a definition made by a launcher or a bundle: it keeps a stdin pipe and
+    /// True for a definition made by a launcher or a legacy bundle: it keeps a stdin pipe and
     /// asks the tool for colour.
     pub fn is_playable(&self) -> bool {
         self.bundle.is_some() || self.launcher.is_some()

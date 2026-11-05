@@ -6,8 +6,8 @@ import type { ColumnAddFormProps } from '../kanban-props.type';
 import { textProblem } from '../model';
 
 const ColumnAddForm = (props: ColumnAddFormProps) => {
-  const { preset, group, threads, onCreate, onClose } = props;
-  const draft = useAddItemDraft(threads, preset);
+  const { preset, group, threads, items, onCreate, onClose } = props;
+  const draft = useAddItemDraft(threads, preset, items);
   const create = (title: string) => {
     const problem = textProblem('title', title);
     if (problem) {
@@ -23,11 +23,16 @@ const ColumnAddForm = (props: ColumnAddFormProps) => {
       label="Title"
       placeholder="New work item title"
       submitLabel="Add"
-      canSubmit={draft.thread !== ''}
+      canSubmit={draft.ready}
       onCreate={create}
       onCancel={onClose}
       extraFields={
-        group === 'thread' ? undefined : <Select aria-label="Thread" size="sm" options={threadChoices(threads)} value={draft.thread} onChange={draft.setThread} />
+        <>
+          {group === 'thread' ? null : <Select aria-label="Thread" size="sm" options={threadChoices(threads)} value={draft.thread} onChange={draft.setThread} />}
+          {draft.needsParent ? (
+            <Select aria-label="Epic" size="sm" placeholder="Epic (required)" options={draft.parentOptions} value={draft.parent} onChange={draft.setParent} />
+          ) : null}
+        </>
       }
     />
   );

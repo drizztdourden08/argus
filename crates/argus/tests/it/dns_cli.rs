@@ -5,7 +5,8 @@
 // test-tag: e2e
 
 use std::path::Path;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use crate::common::Out;
 use argus_testkit::{TestOptions, TestServer};
@@ -15,7 +16,7 @@ use tempfile::TempDir;
 const ADDRESS: &str = "127.65.82.73";
 
 fn argus(coord_home: &Path, home: &Path, args: &[&str]) -> Out {
-    Command::new(env!("CARGO_BIN_EXE_argus"))
+    hidden_command(env!("CARGO_BIN_EXE_argus"))
         .args(args)
         .env("COORD_HOME", coord_home)
         .env("DASHBOARD_HOME", home)

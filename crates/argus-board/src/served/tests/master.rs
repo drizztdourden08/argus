@@ -1,5 +1,7 @@
 //! The master build: one per board, never taken away, never serving the rule of the others.
 
+// test-tag: critical
+
 use serde_json::json;
 
 use super::{board, build, retire_by_hand};

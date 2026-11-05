@@ -1,7 +1,7 @@
 /* @layer tooling-scripts @kind logic */
 import { execFileSync } from 'node:child_process';
 
-const git = (root, args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+const git = (root, args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
 
 const lines = (text) => text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 

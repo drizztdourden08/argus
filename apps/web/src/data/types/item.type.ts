@@ -48,13 +48,13 @@ interface ItemTyping {
   agents?: ItemAgent[];
 }
 
-interface WorkItem {
+interface WorkItem extends ItemTyping {
   id: string;
   title: string;
   status: string;
   thread: string;
   subject?: string;
-  type?: string;
+  n?: number;
   description?: string;
   ac?: Criterion[];
   rank?: number;

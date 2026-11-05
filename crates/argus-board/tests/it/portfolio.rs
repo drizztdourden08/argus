@@ -137,7 +137,7 @@ fn the_card_of_a_running_project_counts_what_needs_the_owner() {
     assert_eq!(card["coordinator"]["session"], "Alpha");
     assert_eq!(card["counts"]["threads"], 1);
     assert_eq!(card["counts"]["needsYou"], 3);
-    assert_eq!(card["counts"]["itemsOpen"], 2);
+    assert_eq!(card["counts"]["itemsOpen"], 4);
     assert_eq!(card["counts"]["testsPass"], 1);
     assert_eq!(card["counts"]["tests"], 2);
     assert_eq!(card["counts"]["agents"], 1);
@@ -165,6 +165,7 @@ fn the_card_lists_what_is_assigned_to_the_owner_and_a_to_do_for_a_lead_does_not_
     let card = summarize(home.path(), "alpha", &portfolio(), Some(&board));
     let want = json!([
         {"id": "I-1", "title": "Login screen", "type": "bug", "stage": "verifying"},
+        {"id": "I-21", "title": "Login smoke run 1", "type": "test-run", "stage": "ready"},
         {"id": "H-1", "title": "Install the test certificate", "type": "todo", "stage": "pending"},
         {"id": "H-3", "title": "Pay the fee", "type": "todo", "stage": "pending"},
     ]);
@@ -179,6 +180,7 @@ fn a_card_with_nothing_assigned_to_the_owner_has_an_empty_list_and_a_done_item_l
     board["actions"]["H-1"]["status"] = json!("done");
     board["items"]["I-2"]["assignee"] = json!("owner");
     board["items"]["I-2"]["status"] = json!("done");
+    board["items"]["I-21"]["status"] = json!("done");
     let card = summarize(home.path(), "alpha", &portfolio(), Some(&board));
     assert_eq!(card["ownerItems"].as_array().map(Vec::len), Some(0));
 }

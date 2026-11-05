@@ -4,7 +4,7 @@ import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
 import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
-import type { LayoutState, TreeSource } from './tree';
+import type { LayoutState, TreeSource } from '../kanban-tree';
 
 interface KanbanTabProps {
   boardKey: string;
@@ -49,6 +49,7 @@ interface ColumnAddFormProps {
   preset: AddPreset;
   group: ItemGroup;
   threads: Threads;
+  items: ReadonlyMap<string, ItemRef>;
   onCreate: (item: ItemInput) => void;
   onClose: () => void;
 }
@@ -89,6 +90,7 @@ interface QuietBadgeProps {
 
 interface ParentHeaderProps {
   parent: ItemRef;
+  withCode: boolean;
 }
 
 interface ColumnAddProps {
@@ -134,11 +136,19 @@ interface CardMenuProps {
   onOpen: (id: string) => void;
 }
 
+interface AcListProps {
+  criteria: NonNullable<ItemRef['ac']>;
+}
+
+interface CardBarsProps {
+  card: CardData;
+}
+
 interface CardProgressRowProps {
   segments: readonly CardProgress[];
 }
 
 
 export type {
-  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewMenuProps, ViewRowProps,
+  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewMenuProps, ViewRowProps,
 };

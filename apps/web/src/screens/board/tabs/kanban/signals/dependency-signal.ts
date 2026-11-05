@@ -5,6 +5,8 @@ import { ATTENTION_OF, dependencyCauses } from '../attention';
 import { LEAD_PREFIX } from '../../../../../shell/records/behavior/look.constants';
 import { OPEN_ITEM } from './signal.constants';
 import type { CardSignal } from './signal.type';
+import { KEY_BRANDS } from '../../../../../avatar/avatar.constants';
+import { whoAvatar } from './who-avatar';
 
 const projectOf = (cause: BlockedCause): string => (cause.who ?? '').replace(LEAD_PREFIX, '') || 'another board';
 
@@ -13,11 +15,21 @@ const depText = (cause: BlockedCause): string =>
     ? `waiting on ${projectOf(cause)}: ${cause.label}`
     : `request ${cause.id} of ${projectOf(cause)} is blocked: ${cause.label}`;
 
-const dependencySignal = (item: ItemRef): CardSignal | null => {
-  const causes = dependencyCauses(item);
-  if (causes.length === 0) return null;
-  const { icon, color } = ATTENTION_OF.dependency;
-  return { id: 'dependency', icon, count: causes.length, label: causes.map(depText).join('; '), tone: color, opens: OPEN_ITEM };
+const byTarget = (causes: readonly BlockedCause[]): Map<string, BlockedCause[]> => {
+  const groups = new Map<string, BlockedCause[]>();
+  for (const cause of causes) groups.set(projectOf(cause), [...(groups.get(projectOf(cause)) ?? []), cause]);
+  return groups;
 };
 
-export { dependencySignal };
+const dependencySignals = (item: ItemRef): CardSignal[] => {
+  const { icon, color } = ATTENTION_OF.dependency;
+  return [...byTarget(dependencyCauses(item))].map(([target, causes]) => {
+    const who = causes[0]?.who;
+    const signal: CardSignal = { id: `dependency-${target}`, icon, label: causes.map(depText).join('; '), tone: color, opens: OPEN_ITEM };
+    const brand = KEY_BRANDS[target];
+    if (brand && who?.startsWith(LEAD_PREFIX)) return { ...signal, brand };
+    return who ? { ...signal, avatar: whoAvatar(who) } : signal;
+  });
+};
+
+export { dependencySignals };

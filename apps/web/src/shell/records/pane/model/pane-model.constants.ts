@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 const TAB_FIELDS: readonly string[] = ['cases', 'runs'];
 
-const CASE_FACT_FIELDS: readonly string[] = ['mode', 'bundle'];
+const CASE_FACT_FIELDS: readonly string[] = ['mode'];
 
 const CASE_KIND = 'test-case';
 

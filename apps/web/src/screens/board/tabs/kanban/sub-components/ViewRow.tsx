@@ -3,8 +3,8 @@ import { Button, Flex, SegmentedControl, Spacer, Text } from '@drizztdourden08/t
 import { DONE_TIP } from '../kanban.constants';
 import type { ViewRowProps } from '../kanban-props.type';
 import { countsText } from '../model';
-import { LAYOUT_OPTIONS } from '../tree';
-import type { KanbanLayout } from '../tree';
+import { LAYOUT_OPTIONS } from '../../kanban-tree';
+import type { KanbanLayout } from '../../kanban-tree';
 
 const ViewRow = (props: ViewRowProps) => {
   const { state, view, selection, layout } = props;

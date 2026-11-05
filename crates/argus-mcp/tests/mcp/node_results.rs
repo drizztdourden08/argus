@@ -5,7 +5,8 @@
 // test-tag: e2e
 
 use std::path::PathBuf;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use argus_mcp::{CallContext, RpcHost};
 use serde_json::{Value, json};
@@ -109,12 +110,6 @@ fn lists() -> Vec<Call> {
         ("run_status", alpha(&json!({ "status": "running" })), None),
         ("run_status", alpha(&json!({ "run": "R-1" })), None),
         ("run_status", alpha(&json!({ "run": "R-9" })), None),
-        ("list_launchers", alpha(&json!({})), None),
-        (
-            "list_launchers",
-            alpha(&json!({ "includeRetired": true })),
-            None,
-        ),
         ("list_launchers", json!({ "project": "beta" }), None),
         ("run_logs", alpha(&json!({ "run": "R-1" })), None),
         (
@@ -228,7 +223,7 @@ fn node_output(calls: &[(&str, Value, Option<&str>)]) -> Option<Vec<String>> {
         return None;
     }
     let plan = json!({ "calls": calls, "uris": URIS });
-    let out = Command::new("node")
+    let out = hidden_command("node")
         .args(["-e", SCRIPT, &dir, &plan.to_string()])
         .output()
         .ok()?;

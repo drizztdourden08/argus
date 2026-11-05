@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind barrel */
+export { addParentOptions } from './add-parent-options';
 export { addPreset } from './add-preset';
 export { askLinks } from './ask-links';
 export { blockedSignature } from './blocked-signature';
@@ -9,6 +10,8 @@ export { buildView } from './build-view';
 export { byCreated } from './by-created';
 export { categoryColor } from '../../../../../shell';
 export { cardChips } from './card-chips';
+export { acSegments } from './ac-segments';
+export { cardBars } from './card-bars';
 export { cardProgress } from './card-progress';
 export { bulkMoves } from './bulk-moves';
 export { bulkSofts } from './bulk-softs';

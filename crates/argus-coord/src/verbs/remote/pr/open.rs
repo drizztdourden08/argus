@@ -1,7 +1,9 @@
 //! `coord pr open "<title>" --head <branch> [--base main] [--item I-n] [--body text]`.
 
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::hidden_command;
 
 use serde_json::json;
 
@@ -16,7 +18,7 @@ fn commit_of(root: &Path, head: &str) -> Option<String> {
         return None;
     }
     let spec = format!("{head}^{{commit}}");
-    let out = Command::new("git")
+    let out = hidden_command("git")
         .args(["rev-parse", "--verify", "--quiet", &spec])
         .current_dir(root)
         .stdin(Stdio::null())

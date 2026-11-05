@@ -47,4 +47,11 @@ class FakeNetwork {
   }
 }
 
-export { FakeNetwork };
+const settleNetwork = async (network: FakeNetwork): Promise<void> => {
+  for (let round = 0; round < 12; round += 1) {
+    await Promise.resolve();
+    network.flush();
+  }
+};
+
+export { FakeNetwork, settleNetwork };

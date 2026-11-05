@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { EditChange, TestDoc } from './model.type';
 
-const FIELDS: (keyof EditChange)[] = ['title', 'covers', 'build', 'mode'];
+const FIELDS: (keyof EditChange)[] = ['title', 'covers', 'mode'];
 
 const changedFields = (test: TestDoc, draft: EditChange): Partial<EditChange> => {
   const changed: Partial<EditChange> = {};

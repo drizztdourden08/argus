@@ -34,7 +34,7 @@
   {
     "name": "board_summary",
     "title": "Board summary",
-    "description": "A project board in one call: threads with notes, items with AC progress, open questions, pending decisions, tests, locks, runs running and queued, the handed build.",
+    "description": "A project board in one call: threads with notes, items with AC progress, open questions, pending decisions, tests, locks, runs running and queued, the test run handed to the owner.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -402,7 +402,7 @@
   {
     "name": "list_launchers",
     "title": "List launchers",
-    "description": "What the owner can start from the Builds tab (coord launcher set): each launcher, master first, then the current ones, with its command, folder, kind, branch, commit and note, its Play run name (start it with run_start) and the bundles that link it. Every build but the master serves one work item (for: I-n) and closes with it (retiredByItem names the item whose closing retired it); relink: true marks a build still waiting for a link. Retired ones only with includeRetired.",
+    "description": "What the owner can start from the Builds tab (coord launcher set): each launcher, master first, then the current ones, with its command, folder, kind, branch, commit and note, its Play run name (start it with run_start) and its test runs (runs: id, title, plan, build, stage, and pass, fail and toRun counts against the plan's cases). A launcher's runs are the test runs whose build names it, plus the run it is for. Every build but the master serves one work item (for: I-n) and closes with it (retiredByItem names the item whose closing retired it); relink: true marks a build still waiting for a link. Retired ones only with includeRetired.",
     "inputSchema": {
       "type": "object",
       "properties": {

@@ -298,8 +298,12 @@ shown_struct! {
         pub code: String,
         /// A Tessera icon name.
         pub icon: String,
-        /// A Tessera tag category colour.
-        pub color: String,
+        /// A Tessera tag category colour; a type has this or a tone.
+        #[serde(default)]
+        pub color: Option<String>,
+        /// A tone name; a type has this or a colour.
+        #[serde(default)]
+        pub tone: Option<String>,
         /// Where its records live.
         pub collection: Collection,
         /// The key of its records when it is not `id` (a build is its launcher `name`).
@@ -307,12 +311,18 @@ shown_struct! {
         pub id_key: Option<String>,
         /// The types it may sit under; empty means a root only.
         pub parents: Vec<String>,
+        /// Whether an item of this type must have a parent (a story and a task sit under an epic).
+        #[serde(default)]
+        pub parent_required: bool,
         /// The item types a build may serve; empty for every other type.
         #[serde(default)]
         pub serves: Vec<String>,
         /// Whether the board only shows its records and never writes them.
         #[serde(default)]
         pub read_only: bool,
+        /// Whether the kanban leaves its records out (a test run shows in the Tests tab).
+        #[serde(default)]
+        pub hide_on_kanban: bool,
         /// Its stages, in flow order (empty for a type with statuses).
         pub stages: Vec<Stage>,
         /// Its statuses, for a type that has no lane.

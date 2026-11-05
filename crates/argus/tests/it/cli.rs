@@ -7,7 +7,8 @@
 // test-tag: e2e
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use crate::common::Out;
 use argus_server::instance::{PROBE_ENV, call};
@@ -36,7 +37,7 @@ impl Home {
 
     /// A run whose `DASHBOARD_HOME` is `env_home`, to prove that `--data-dir` beats it.
     fn run_with_env_home(&self, env_home: &Path, args: &[&str]) -> Out {
-        Command::new(env!("CARGO_BIN_EXE_argus"))
+        hidden_command(env!("CARGO_BIN_EXE_argus"))
             .args(args)
             .env("COORD_HOME", self.dir.path())
             .env("DASHBOARD_HOME", env_home)
@@ -368,7 +369,7 @@ fn without_a_flag_or_the_environment_the_server_takes_the_port_of_the_config() {
     let config = serde_json::json!({ "host": "127.0.0.1", "port": port });
     std::fs::write(home.dashboard().join("config.json"), config.to_string()).expect("a config");
     let run = |args: &[&str]| {
-        Command::new(env!("CARGO_BIN_EXE_argus"))
+        hidden_command(env!("CARGO_BIN_EXE_argus"))
             .args(args)
             .env("COORD_HOME", home.dir.path())
             .env("DASHBOARD_HOME", home.dashboard())

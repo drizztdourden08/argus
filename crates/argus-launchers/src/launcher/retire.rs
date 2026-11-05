@@ -8,7 +8,7 @@
 
 use super::audit::audit;
 use super::authorize::launcher_to_change;
-use super::join::{is_master, joined_bundle, linked_bundles, made_for};
+use super::join::{is_master, joined_bundle};
 use super::play::sync_launcher_play;
 use super::record::{LauncherBoard, RuleError, Who};
 use crate::time::{DAY_MS, format_iso, parse_iso};
@@ -44,75 +44,6 @@ pub fn retire_launcher(
     Ok(play)
 }
 
-/// A bundle closed (or removed): the launchers made for it go with it. `remember` marks
-/// them with the bundle so that a reopen brings them back (a removal marks nothing).
-/// Returns the names retired.
-pub fn retire_made_for(
-    board: &mut LauncherBoard,
-    who: &Who,
-    tag: &str,
-    (why, remember): (&str, bool),
-    at: &str,
-) -> Result<Vec<String>, RuleError> {
-    let mut gone = Vec::new();
-    for name in made_for(board, tag) {
-        let retired = board
-            .launchers
-            .get(&name)
-            .is_some_and(|l| l.retired_at.is_some());
-        let shared = linked_bundles(board, &name, Some(tag))
-            .iter()
-            .any(|t| board.builds.get(t).is_none_or(|b| b.closed_at.is_none()));
-        if retired || shared {
-            continue;
-        }
-        retire_launcher(board, who, &name, Some(why), at)?;
-        if let (true, Some(rec)) = (remember, board.launchers.get_mut(&name)) {
-            rec.retired_by_bundle = Some(tag.to_owned());
-        }
-        gone.push(name);
-    }
-    Ok(gone)
-}
-
-/// A bundle reopened: the launchers its close retired come back (one retired some other
-/// way stays retired). Returns the names.
-pub fn restore_made_for(
-    board: &mut LauncherBoard,
-    who: &Who,
-    tag: &str,
-    cwd: Option<&str>,
-    at: &str,
-) -> Result<Vec<String>, RuleError> {
-    let mut back = Vec::new();
-    for name in made_for(board, tag) {
-        let closed_by_this = board
-            .launchers
-            .get(&name)
-            .is_some_and(|l| l.retired_at.is_some() && l.retired_by_bundle.as_deref() == Some(tag));
-        if !closed_by_this {
-            continue;
-        }
-        if let Some(rec) = board.launchers.get_mut(&name) {
-            rec.retired_at = None;
-            rec.retired_by = None;
-            rec.retire_note = None;
-            rec.retired_by_bundle = None;
-            at.clone_into(&mut rec.updated_at);
-            rec.by = Some(who.actor.clone());
-        }
-        sync_launcher_play(board, who, &name, cwd, at)?;
-        audit(
-            board,
-            who,
-            &format!("brought back launcher {name} (bundle {tag} reopened)"),
-            at,
-        );
-        back.push(name);
-    }
-    Ok(back)
-}
-
 /// `coord launcher keep`: counts as a use without running it. `days` holds it fresh until
 /// then; without, one more full window from now. Records who and why. Only a standalone,
 /// live launcher has a window to keep.
@@ -136,7 +67,7 @@ pub fn keep_launcher(
     }
     if let Some(tag) = joined_bundle(board, rec) {
         return Err(RuleError::new(format!(
-            "launcher {name} is joined to bundle {tag}: it has no usage window, it goes with the bundle."
+            "launcher {name} carries bundle tag {tag}: it has no usage window."
         )));
     }
     let until = days.map(|d| format_iso(parse_iso(at).unwrap_or(0) + d * DAY_MS));

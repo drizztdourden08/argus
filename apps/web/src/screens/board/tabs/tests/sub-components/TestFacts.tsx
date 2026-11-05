@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, InlineEdit, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, InlineEdit, Text } from '@drizztdourden08/tessera';
 import { FactSelect } from '../../../shared';
 import { fieldValidator, itemChoices } from '../model';
 import { MODE_OPTIONS } from '../tests.constants';
@@ -7,10 +7,9 @@ import type { TestFactsProps } from '../tests-drawer-props.type';
 import { FactTags } from './FactTags';
 
 const validateCovers = fieldValidator('covers');
-const validateBuild = fieldValidator('build');
 
 const TestFacts = (props: TestFactsProps) => {
-  const { test, handed, ops, items } = props;
+  const { test, ops, items } = props;
   return (
     <Flex direction="column" gap="sm">
       <Flex gap="sm" align="center" wrap>
@@ -22,11 +21,6 @@ const TestFacts = (props: TestFactsProps) => {
         <Flex gap="xs" align="center">
           <Text variant="caption" tone="muted">Covers</Text>
           <InlineEdit label="covers" placeholder="add" value={test.covers ?? ''} validate={validateCovers} onCommit={(covers) => void ops.edit(test, { covers: covers.trim() })} />
-        </Flex>
-        <Flex gap="xs" align="center">
-          <Text variant="caption" tone="muted">Build</Text>
-          <InlineEdit label="build" placeholder="add" value={test.build ?? ''} validate={validateBuild} onCommit={(build) => void ops.edit(test, { build: build.trim() })} />
-          {handed && <Tag color="neutral" fill="solid">handed to you</Tag>}
         </Flex>
       </Flex>
     </Flex>

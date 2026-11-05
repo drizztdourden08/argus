@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import type { Agent } from '../../../../../data/agents';
 import { useCollection } from '../../../../../data/react';
-import type { AgentDocLoad } from './useAgentDoc.type';
+import type { AgentDocLoad } from './use-agent-doc.type';
 
 const useAgentDoc = (boardKey: string, id: string): AgentDocLoad => {
   const loaded = useCollection<Agent>(boardKey, 'agents');

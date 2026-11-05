@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import { itemBody } from './item-body';
+import { itemBody } from './ItemBody';
 import { casesBadge } from './model/cases-badge';
 import { childrenBadge } from './model/children-badge';
 import { discussionBadge } from './model/discussion-badge';
@@ -8,7 +8,7 @@ import { linksBadge } from './model/links-badge';
 import { servedBadge } from './model/served-badge';
 import { testsBadge } from './model/tests-badge';
 import type { PaneTab } from './pane.type';
-import { placeholderBody } from './placeholder-body';
+import { placeholderBody } from './PlaceholderBody';
 import { ActivityTab } from './tabs/ActivityTab';
 import { CasesTab } from './tabs/CasesTab';
 import { ChecksTab } from './tabs/ChecksTab';
@@ -37,14 +37,13 @@ const PANE_TABS: Readonly<Record<string, PaneTab>> = {
   overview: { label: 'Overview', Body: itemBody(OverviewTab, RecordOverviewTab) },
   children: { label: 'Children', Body: itemBody(ChildrenTab, placeholderBody('children', 'Children')), badge: itemBadge(childrenBadge) },
   cases: { label: 'Cases', Body: itemBody(CasesTab, placeholderBody('cases', 'Cases')), badge: itemBadge(casesBadge) },
-  run: { label: 'Run', Body: itemBody(RunTab, placeholderBody('run', 'Run')) },
   links: { label: 'Links', Body: itemBody(LinksTab, RecordLinksTab), badge: itemBadge(linksBadge) },
   discussion: { label: 'Discussion', Body: itemBody(DiscussionTab, RecordDiscussionTab), badge: itemBadge(discussionBadge) },
   tests: { label: 'Tests', Body: itemBody(TestsTab, placeholderBody('tests', 'Tests')), badge: itemBadge(testsBadge) },
   media: { label: 'Media', Body: itemBody(MediaTab, RecordMediaTab) },
   work: { label: 'Work', Body: WorkTab, badge: itemBadge(servedBadge) },
   result: { label: 'Result', Body: ResultTab },
-  runs: { label: 'Runs', Body: RunsTab },
+  runs: { label: 'Runs', Body: itemBody(RunTab, RunsTab) },
   log: { label: 'Log', Body: LogTab },
   checks: { label: 'Checks', Body: ChecksTab },
   steps: { label: 'Steps', Body: StepsTab },

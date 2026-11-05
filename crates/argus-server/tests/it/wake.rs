@@ -51,7 +51,7 @@ async fn wake_doc(t: &TestServer, row: &Value) -> Value {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bundle_wakes_once() {
+async fn an_event_nobody_heard_is_replayed_once_and_the_wake_stays_in_order() {
     let r = rig().await;
     let t = &r.t;
     let first = wake_stream(t, "ui", "alpha").await;
@@ -90,18 +90,6 @@ async fn an_event_nobody_heard_is_replayed_once_and_a_pass_that_completes_the_bu
     })
     .await;
     assert_eq!(delivered["listeners"], 1);
-
-    result(t, "T-5", "pass", "ok").await;
-    let done = late.next(Some("wake"), 5000).await.expect("the bundle");
-    assert_eq!(
-        lines(&done.data),
-        ["b1: all manual tests run, 1 pass 3 fail"]
-    );
-    let row = wake_where(t, "alpha", |w| w["reason"] == "bundle-complete").await;
-    assert_eq!(row["subject"], "b1");
-    assert_eq!(row["thread"], "ui");
-    assert_eq!(row["listeners"], 1);
-    assert_eq!(row["status"], "delivered");
 
     let second = wake_stream(t, "ui", "alpha").await;
     let after = json!({ "thread": "ui", "reason": "thread-message", "text": "lead: after" });

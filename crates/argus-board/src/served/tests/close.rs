@@ -1,5 +1,7 @@
 //! Builds closing with their item and coming back with it.
 
+// test-tag: critical
+
 use serde_json::{Value, json};
 
 use super::{

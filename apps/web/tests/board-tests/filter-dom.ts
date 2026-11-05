@@ -1,16 +1,15 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen } from '@testing-library/react';
 import { expect } from 'vitest';
-import { buildDoc, itemDoc, testDoc, threadDoc } from './fixtures';
+import { itemDoc, testDoc, threadDoc } from './fixtures';
 
 const filterBoard = () => ({
-  builds: [buildDoc('b1'), buildDoc('b2')],
   items: [itemDoc('I-1', { thread: 'lead', subject: 'work' }), itemDoc('I-2', { thread: 'coder', subject: 'play' })],
   threads: [threadDoc('lead'), threadDoc('coder')],
   tests: [
-    testDoc('T-1', { title: 'Login works', item: 'I-1', build: 'b1', subject: 'work' }),
-    testDoc('T-2', { title: 'Logout works', item: 'I-2', build: 'b2', subject: 'play', mode: 'auto' }),
-    testDoc('T-3', { title: 'Sound plays', item: 'I-1', build: null, subject: 'work', status: 'fail' }),
+    testDoc('T-1', { title: 'Login works', item: 'I-1', subject: 'work' }),
+    testDoc('T-2', { title: 'Logout works', item: 'I-2', subject: 'play', mode: 'auto' }),
+    testDoc('T-3', { title: 'Sound plays', item: 'I-1', subject: 'work', status: 'fail' }),
   ],
 });
 

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useMemo, useState } from 'react';
 import { useRecordOrder, useRecordPane } from '../../../../../shell';
-import { buildView, conflictedTests, followItemThread, inFocus, latestWakes, shownIds, visibleTests, wakePending } from '../model';
+import { conflictedTests, followItemThread, inFocus, latestWakes, shownIds, testsView, visibleTests, wakePending } from '../model';
 import type { TestsData, TestsScreen, TestsShared } from '../tests.type';
 import { useFolds } from './useFolds';
 import { useTestsFocus } from './useTestsFocus';
@@ -22,15 +22,15 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
   const [logId, setLogId] = useState<string | null>(null);
   const now = useWakeClock(wakePending(data.wakes, Date.now()));
   const { filters, prefs } = state;
-  const { items, builds, launchers, defs, handed } = data;
+  const { items, launchers, defs } = data;
   const conflicted = useMemo(() => conflictedTests(notices.notices), [notices.notices]);
   const visible = useMemo(
     () => inFocus(visibleTests(followItemThread(data.tests, items), filters.archived), focus.scope),
     [data.tests, items, filters.archived, focus.scope],
   );
   const view = useMemo(
-    () => buildView({ tests: visible, builds, items, launchers, defs, handed, filters, prefs, conflicted }),
-    [visible, builds, items, launchers, defs, handed, filters, prefs, conflicted],
+    () => testsView({ tests: visible, items, launchers, defs, filters, prefs, conflicted }),
+    [visible, items, launchers, defs, filters, prefs, conflicted],
   );
   useRecordOrder(useMemo(() => shownIds(view, prefs.group), [view, prefs.group]));
   const latest = useMemo(() => latestWakes(data.wakes), [data.wakes]);

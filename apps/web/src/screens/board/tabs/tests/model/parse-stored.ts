@@ -22,8 +22,6 @@ const filtersOf = (stored: Stored): TestFilters => ({
   ...DEFAULT_FILTERS,
   query: textAt(stored, 'q'),
   threads: listAt(stored, 'threads'),
-  builds: listAt(stored, 'builds'),
-  nobuild: flagAt(stored, 'nobuild'),
   status: textAt(stored, 'status'),
   subject: textAt(stored, 'subject'),
   plan: textAt(stored, 'plan'),

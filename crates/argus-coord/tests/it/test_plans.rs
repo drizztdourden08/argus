@@ -63,7 +63,8 @@ fn a_plan_with_three_cases_runs_end_to_end() {
     assert!(shown.contains("T-1  pass"), "{shown}");
     assert!(shown.contains("T-2  skip"), "{shown}");
     assert!(shown.contains("T-3  fail"), "{shown}");
-    assert!(shown.contains("run 1: open, 3 result(s)"), "{shown}");
+    assert!(shown.contains("I-3 (run 1): running"), "{shown}");
+    assert!(shown.contains("AI"), "{shown}");
     let ended = work.worker_ok(&["test", "plan", "end", "I-2"]);
     assert!(
         ended.contains("1 pass, 1 fail, 0 partial, 0 blocked, 1 skip, 0 not run"),
@@ -71,9 +72,17 @@ fn a_plan_with_three_cases_runs_end_to_end() {
     );
     let board = work.board();
     assert_eq!(board["items"]["I-2"]["stage"], "reported");
-    let run = &board["items"]["I-2"]["fields"]["runs"][0];
-    assert_eq!(run["summary"]["total"], 3);
-    assert_eq!(run["results"][2]["note"], "no seat freed");
+    let run = &board["items"]["I-3"];
+    assert_eq!(run["type"], "test-run");
+    assert_eq!(run["stage"], "reported");
+    assert_eq!(run["fields"]["plan"], "I-2");
+    assert!(
+        run["fields"]["summary"]
+            .as_str()
+            .is_some_and(|s| s.starts_with("1 pass, 1 fail")),
+        "{run}"
+    );
+    assert_eq!(run["fields"]["results"][2]["note"], "no seat freed");
     let again = work.worker(&["test", "plan", "end", "I-2"]);
     assert_eq!(again.code, 1);
     assert!(again.err.contains("has no open run"), "{}", again.err);
@@ -96,7 +105,7 @@ fn a_plan_run_writes_the_result_to_the_test_and_a_skip_writes_nothing() {
     assert_eq!(board["tests"]["T-2"]["status"], "pending");
     assert_eq!(board["tests"]["T-2"]["result"], Value::Null);
     assert_eq!(
-        board["items"]["I-2"]["fields"]["runs"][0]["results"][1]["status"],
+        board["items"]["I-3"]["fields"]["results"][1]["status"],
         "skip"
     );
 }
@@ -316,4 +325,42 @@ fn the_assignee_ticks_a_to_do_that_belongs_to_another_thread() {
     let ticked = work.worker_ok(&["action", "done", "H-1"]);
     assert!(ticked.contains("H-1: done (by worker)"), "{ticked}");
     assert_eq!(work.board()["actions"]["H-1"]["status"], "done");
+}
+
+#[test]
+fn a_plan_needs_a_case_and_a_run_lists_with_its_counts() {
+    let work = planned();
+    let bare = work.worker(&["test", "plan", "add", "Empty"]);
+    assert_eq!(bare.code, 1);
+    assert!(bare.err.contains("at least one case"), "{}", bare.err);
+    let old = work.worker(&[
+        "test", "plan", "add", "Old", "--case", "T-1", "--bundle", "b1",
+    ]);
+    assert!(old.err.contains("--bundle is gone"), "{}", old.err);
+    work.worker_ok(&["test", "plan", "run", "I-2"]);
+    work.worker_ok(&["test", "result", "T-1", "pass", "ok", "--run", "I-3"]);
+    let listed = work.worker_ok(&["test", "run", "list"]);
+    assert!(
+        listed.contains("I-3") && listed.contains("running"),
+        "{listed}"
+    );
+    let rows: Value =
+        serde_json::from_str(&work.worker_ok(&["test", "run", "list", "--json"])).expect("json");
+    assert_eq!(rows[0]["plan"], "I-2");
+    assert_eq!(rows[0]["pass"], 1);
+    assert_eq!(rows[0]["toRun"], 1);
+    let old = work.worker_ok(&["build", "list"]);
+    assert!(old.contains("coord test run list"), "{old}");
+}
+
+#[test]
+fn a_test_case_is_ai_or_manual_and_has_no_build() {
+    let work = planned();
+    let said = work.worker_ok(&["test", "add", "I-1", "By hand", "--mode", "manual"]);
+    assert!(said.contains("(manual, on I-1"), "{said}");
+    let alias = work.worker_ok(&["test", "add", "I-1", "By robot", "--mode", "ai"]);
+    assert!(alias.contains("(AI, on I-1"), "{alias}");
+    assert_eq!(work.board()["tests"]["T-5"]["mode"], "auto");
+    let build = work.worker(&["test", "set", "T-1", "--build", "b1"]);
+    assert!(build.err.contains("--build is gone"), "{}", build.err);
 }

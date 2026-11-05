@@ -25,13 +25,14 @@ interface RunSummary {
 }
 
 interface PlanRun {
+  id: string;
   n: number;
-  bundle: string | null;
+  build: string | null;
   by: string;
   startedAt: string;
   endedAt: string | null;
   results: RunResult[];
-  summary: RunSummary | null;
+  summary: string;
 }
 
 interface PlanProgress {
@@ -75,7 +76,6 @@ interface RunBodyProps {
   run: PlanRun | null;
   ids: readonly string[];
   ops: RunOps;
-  bundle: string | null;
 }
 
 interface RunStageProps {
@@ -138,7 +138,6 @@ interface RunSummaryProps {
 }
 
 interface RunStartProps {
-  bundle: string | null;
   ops: RunOps;
   again: boolean;
 }

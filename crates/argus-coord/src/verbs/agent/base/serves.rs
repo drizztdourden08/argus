@@ -65,10 +65,3 @@ pub fn plans_naming(board: &Board, tag: &str) -> Vec<String> {
         .map(|(id, _)| id.clone())
         .collect()
 }
-
-/// The one test plan that names `tag`, `None` for none or several.
-#[must_use]
-pub fn plan_of(board: &Board, tag: &str) -> Option<String> {
-    let mut plans = plans_naming(board, tag);
-    (plans.len() == 1).then(|| plans.remove(0))
-}

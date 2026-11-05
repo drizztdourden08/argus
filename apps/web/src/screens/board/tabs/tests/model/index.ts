@@ -1,11 +1,8 @@
 /* @layer renderer-app @kind barrel */
-export { buildView } from './build-view';
 export { caseAssignee } from './case-assignee';
 export { caseChips } from './case-chips';
-export { bundleOwner } from './bundle-owner';
 export { byLabel } from './by-label';
 export { changedFields } from './changed-fields';
-export { closedBundles } from './closed-bundles';
 export { conflictedTests } from './conflicted-tests';
 export { countsText } from './counts-text';
 export { doneTests } from './done-tests';
@@ -14,12 +11,10 @@ export { fieldValidator } from './field-validator';
 export { filtersActive } from './filters-active';
 export { focusOptions } from './focus-options';
 export { followItemThread } from './follow-item-thread';
-export { groupBundles } from './group-bundles';
 export { groupByPlan } from './group-by-plan';
 export { inFocus } from './in-focus';
 export { isToRun } from './is-to-run';
 export { itemChoices } from './item-choices';
-export { knownBuilds } from './known-builds';
 export { latestWakes } from './latest-wakes';
 export { noteOutcome } from './note-outcome';
 export { outcomeTitle } from './outcome-title';
@@ -43,11 +38,12 @@ export { sortToRun } from './sort-to-run';
 export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';
 export { testNotices } from './test-notices';
+export { testsView } from './tests-view';
 export { toRunCount } from './to-run-count';
 export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
 export {
-  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, NO_BUNDLE, ORDER_OPTIONS, PLAN_KIND, STATUS_FILTERS, STORE_KEYS,
+  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, ORDER_OPTIONS, OWNER_ASSIGNEE, PLAN_KIND, STATUS_FILTERS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';
