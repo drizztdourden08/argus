@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
-import { assigneeLook, cardChips, cardProgress, parseTrails, stageLabel } from '../../src/screens/board/tabs/kanban/model';
+import { acSegments, assigneeLook, cardBars, cardChips, cardProgress, parseTrails, stageLabel } from '../../src/screens/board/tabs/kanban/model';
 import type { CardData } from '../../src/screens/board/tabs/kanban/model';
 import { signalItems } from '../../src/screens/board/tabs/kanban/signals';
 import { HOUR, NOW, before, itemRef, threadRef, viewOf } from './kanban-docs';
@@ -34,32 +34,6 @@ describe('I-72 the type chips of a card', { tags: ['critical'] }, () => {
 });
 
 describe('I-72 the progress of a card', { tags: ['critical'] }, () => {
-  it('counts the criteria met of a task, a bug and a tech debt, and shows no bar without criteria', () => {
-    expect(cardProgress(cardOf(itemRef('I-1', { ac: criteria(1, 3) })))).toMatchObject([{ met: 1, total: 3, text: '1/3' }]);
-    expect(cardProgress(cardOf(itemRef('I-1', { type: 'bug', ac: criteria(1, 4) })))).toMatchObject([{ met: 1, total: 4 }]);
-    expect(cardProgress(cardOf(itemRef('I-1', { type: 'debt', ac: criteria(0, 2) })))).toMatchObject([{ met: 0, total: 2 }]);
-    expect(cardProgress(cardOf(itemRef('I-1')))).toEqual([]);
-  });
-
-  it('counts the children done of an epic, leaving out dropped, archived and deleted children', () => {
-    const epic = itemRef('I-1', { type: 'epic' });
-    const children = [
-      itemRef('I-2', { parent: 'I-1', status: 'done' }),
-      itemRef('I-3', { parent: 'I-1' }),
-      itemRef('I-4', { parent: 'I-1', status: 'dropped' }),
-      itemRef('I-5', { parent: 'I-1', archivedAt: before(HOUR) }),
-      itemRef('I-6', { parent: 'I-1', deletedAt: before(HOUR) }),
-    ];
-    expect(cardProgress(cardOf(epic, children))).toMatchObject([{ met: 1, total: 2, text: '1/2 children' }]);
-  });
-
-  it('shows the children and then the criteria of a story', () => {
-    const story = itemRef('I-1', { type: 'story', ac: criteria(3, 4) });
-    const children = [itemRef('I-2', { parent: 'I-1', status: 'done' }), itemRef('I-3', { parent: 'I-1', status: 'done' }), itemRef('I-4', { parent: 'I-1' })];
-    expect(cardProgress(cardOf(story, children)).map((part) => part.text)).toEqual(['2/3', '+ AC 3/4']);
-    expect(cardProgress(cardOf(story)).map((part) => part.text)).toEqual(['3/4']);
-  });
-
   it('leaves the test runs off the board', () => {
     const view = viewOf([itemRef('I-1', { type: 'test-plan' }), itemRef('I-2', { type: 'test-run', fields: { plan: 'I-1' } })], { prefs: { showDone: true } });
     expect(view.cards.map((card) => card.id)).toEqual(['I-1']);
@@ -177,5 +151,40 @@ describe('I-72 the trails of the board', { tags: ['critical'] }, () => {
     expect(parseTrails([{ id: 'I-5', depth: 3, open: 1 }])).toEqual(new Map([['I-5', { depth: 3, open: 1 }]]));
     expect(parseTrails(null)).toEqual(new Map());
     expect(parseTrails({ id: 'entry', status: 'applied' })).toEqual(new Map());
+  });
+});
+
+describe('I-95 the bars of a card', { tags: ['critical'] }, () => {
+  it('draws one segment per criterion, met in success and open in track', () => {
+    const bars = cardBars(cardOf(itemRef('I-1', { ac: criteria(1, 3) })));
+    expect(acSegments(bars.criteria).map((segment) => segment.tone)).toEqual(['success', 'track', 'track']);
+    expect(cardBars(cardOf(itemRef('I-1'))).criteria).toEqual([]);
+  });
+
+  it('draws one segment per live child, in the colour of its type when done and track when open', () => {
+    const epic = itemRef('I-1', { type: 'epic' });
+    const children = [
+      itemRef('I-2', { parent: 'I-1', status: 'done', type: 'bug' }),
+      itemRef('I-3', { parent: 'I-1' }),
+      itemRef('I-4', { parent: 'I-1', status: 'dropped' }),
+    ];
+    const work = cardBars(cardOf(epic, children)).work;
+    expect(work.map((segment) => segment.tone === 'track')).toEqual([false, true]);
+    expect(work[0]?.label).toContain('done');
+    expect(work[1]?.label).toContain('Item number 3');
+  });
+
+  it('adds the dependencies of the item after its children', () => {
+    const waits = { dep: 'D-1', project: 'alpha', item: 'Q-7', title: 'Which?', state: 'open' as const, since: before(HOUR), reason: null };
+    const done = { ...waits, dep: 'D-2', item: 'I-9', state: 'done' as const };
+    const work = cardBars(cardOf(itemRef('I-1', { waitsOn: [waits, done] }))).work;
+    expect(work.map((segment) => segment.tone === 'track')).toEqual([true, false]);
+  });
+
+  it('shows both bars on a story and none on a test plan', () => {
+    const story = itemRef('I-1', { type: 'story', ac: criteria(3, 4) });
+    const bars = cardBars(cardOf(story, [itemRef('I-2', { parent: 'I-1', status: 'done' })]));
+    expect([bars.work.length, bars.criteria.length]).toEqual([1, 4]);
+    expect(cardBars(cardOf(itemRef('I-3', { type: 'test-plan' })))).toEqual({ work: [], criteria: [] });
   });
 });

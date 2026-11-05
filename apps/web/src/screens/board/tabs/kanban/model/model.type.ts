@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanColumn, KanbanMove, SegmentedBarSegment } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
 import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
@@ -69,6 +69,12 @@ interface TrailInfo {
 interface ChildCount {
   done: number;
   total: number;
+  items: readonly ItemRef[];
+}
+
+interface CardBars {
+  work: readonly SegmentedBarSegment[];
+  criteria: NonNullable<ItemRef['ac']>;
 }
 
 interface CardData {
@@ -204,5 +210,5 @@ type DepView = DepLink & {
 };
 
 export type {
-  AddPreset, AskKind, AskLink, BulkSofts, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
+  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };
