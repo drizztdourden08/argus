@@ -150,7 +150,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
         lines.extend(rows.iter().map(|r| line(r, run.now_ms)));
         run.say(&table(&lines));
         if !has_master(&typed) {
-            run.say(&format!("no master launcher: every project must have one, and coord build hand is refused without it. Set it: coord launcher set {MASTER} --cmd \"<command>\"."));
+            run.say(&format!("no master launcher: every project must have one, and coord test run hand is refused without it. Set it: coord launcher set {MASTER} --cmd \"<command>\"."));
         }
         let waiting: Vec<String> = rows
             .iter()

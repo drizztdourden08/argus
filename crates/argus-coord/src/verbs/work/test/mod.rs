@@ -12,7 +12,10 @@ mod plan;
 mod proof;
 mod read;
 mod result;
+mod runs;
 mod spec;
+
+pub use runs::alias;
 
 use super::group::{Group, Soft, nothing, serve};
 use crate::cli::{Call, Outcome};
@@ -28,6 +31,7 @@ const GROUP: Group = Group {
         ("proof", proof::proof),
         ("result", result::result),
         ("plan", plan::plan),
+        ("run", runs::run),
         ("move", result::move_to),
         ("show", read::show),
         ("list", read::list),
@@ -36,7 +40,7 @@ const GROUP: Group = Group {
         coll: "tests",
         after: nothing,
     }),
-    names: "add, set, step, setup, expect, proof, result, move, plan, archive, unarchive, rm, restore, show, list",
+    names: "add, set, step, setup, expect, proof, result, move, plan, run, archive, unarchive, rm, restore, show, list",
     typed: None,
 };
 

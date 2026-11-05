@@ -1,6 +1,7 @@
 //! `coord test result <T> <pass|fail|partial|blocked|moved> "<note>" [--proof <image> --caption
-//! "..."] [--run <plan>]` and `coord test move <T> --item <I2> [--ac N]...`. With `--run` the
-//! result goes into the open run of that test plan (which also records it on the test), and
+//! "..."] [--run <plan|run>]` and `coord test move <T> --item <I2> [--ac N]...`. With `--run` the
+//! result goes into the open run of that test plan, or the run itself (which also records it on
+//! the test), and
 //! `skip` is a status too: it stays in the run and writes nothing to the test.
 
 use argus_board::json::{display, doc_mut};
@@ -10,7 +11,7 @@ use argus_board::results::{Outcome as Recorded, record_result};
 use argus_board::store::stamp;
 use serde_json::{Value, json};
 
-use super::plan::{plan_of, send};
+use super::plan::send;
 use super::proof::keep_proof;
 use super::spec::ac_numbers;
 use crate::cli::{Outcome, Val};
@@ -46,21 +47,30 @@ fn valid(status: &Value, in_run: bool) -> bool {
         .is_some_and(|s| RESULTS.contains(&s) || (in_run && s == "skip"))
 }
 
-/// The result written into the open run of a plan; the run records it on the test as well.
+/// The test plan or test run an argument names.
+fn run_target(board: &Value, id: &str) -> Res<String> {
+    let found = find_live(board, "items", Some(id))?;
+    if found["type"] != "test-plan" && found["type"] != "test-run" {
+        return Err(bad(format!("{id} is not a test plan or a test run.")));
+    }
+    Ok(display(&found["id"]))
+}
+
+/// The result written into the open run of a plan or into a run; the run records it on the test
+/// as well.
 fn through_run(
     r: &Run<'_>,
     (board, who): (&mut Value, &Caller),
     (plan, test, note, proofs): (&str, &str, &str, &[i64]),
 ) -> Res<String> {
-    let plan = plan_of(board, Some(plan))?;
+    let target = run_target(board, plan)?;
     let rest = serde_json::Map::from_iter([
         ("test".to_owned(), json!(test)),
         ("status".to_owned(), r.arg_json(1)),
         ("note".to_owned(), json!(note)),
         ("proofs".to_owned(), json!(proofs)),
     ]);
-    let target = ("plan-run-record", "items", display(&plan["id"]));
-    let operation = op((target.0, target.1, &target.2), rest, r.options)?;
+    let operation = op(("plan-run-record", "items", &target), rest, r.options)?;
     Ok(send(board, who, &operation)?.outcome)
 }
 

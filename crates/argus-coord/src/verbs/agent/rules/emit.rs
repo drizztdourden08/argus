@@ -2,7 +2,7 @@
 //! code creates and fills them, so a new record and a changed one are the same bytes.
 
 use argus_launchers::RunDef;
-use argus_launchers::launcher::{Bundle, Launcher};
+use argus_launchers::launcher::Launcher;
 use serde_json::{Map, Value, json};
 
 fn put(map: &mut Map<String, Value>, key: &str, value: impl Into<Value>) {
@@ -57,39 +57,6 @@ pub fn launcher_map(l: &Launcher) -> Map<String, Value> {
     put_some(&mut m, "retiredByItem", l.retired_by_item.as_ref());
     if l.link.relink {
         put(&mut m, "relink", true);
-    }
-    m
-}
-
-/// A bundle record: the literal of `ensureBuild`, then the close marks and the last hand. A
-/// bundle that was closed keeps the three close keys (`null` once reopened); `fresh` is a record
-/// the board does not hold yet, which starts as a draft.
-#[must_use]
-pub fn bundle_map(b: &Bundle, was_closed: bool, fresh: bool) -> Map<String, Value> {
-    let mut m = Map::new();
-    put(&mut m, "tag", b.tag.as_str());
-    match (&b.status, fresh) {
-        (Some(status), _) => put(&mut m, "status", status.as_str()),
-        (None, true) => put(&mut m, "status", "draft"),
-        (None, false) => {}
-    }
-    put(&mut m, "title", b.title.clone());
-    put(&mut m, "note", b.note.clone());
-    put(&mut m, "launcher", b.launcher.clone());
-    put(&mut m, "thread", b.thread.clone());
-    put(&mut m, "createdAt", b.created_at.clone());
-    put(&mut m, "updatedAt", b.updated_at.clone());
-    put(&mut m, "createdBy", b.created_by.clone());
-    if was_closed || b.closed_at.is_some() {
-        put(&mut m, "closedAt", b.closed_at.clone());
-        put(&mut m, "closedBy", b.closed_by.clone());
-        put(&mut m, "closeNote", b.close_note.clone());
-    }
-    put_some(&mut m, "lastHandedAt", b.last_handed_at.as_ref());
-    put_some(&mut m, "cmd", b.cmd.as_ref());
-    put_some(&mut m, "cwd", b.cwd.as_ref());
-    if b.window {
-        put(&mut m, "window", true);
     }
     m
 }

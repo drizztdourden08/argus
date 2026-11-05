@@ -1,7 +1,7 @@
-//! `coord test add <item> "<title>" [--mode auto|manual] [--build <tag>] [--plan I-n] [--file
+//! `coord test add <item> "<title>" [--mode ai|manual] [--plan I-n] [--file
 //! spec.json] [flags]` (a new case lands at the end of that plan)
 //! and `coord test set <T> [--file spec.json] [--covers --run --context --changed --note --ac
-//! --mode --title] [--build <tag> | --build "" | --clear-build]`.
+//! --mode --title]`.
 
 use argus_board::json::{display, doc, map_mut};
 use argus_board::ops::{Check, authorize};
@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::edit::edit;
 use super::plan::append_case;
-use super::spec::{apply_spec, spec_from_options};
+use super::spec::{apply_spec, mode_label, spec_from_options};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::{find_live, who_of};
 use crate::verbs::work::run::{Run, bad};
@@ -18,7 +18,7 @@ use crate::verbs::work::run::{Run, bad};
 fn blank_test(item: &Value) -> serde_json::Map<String, Value> {
     let fields = json!({
         "item": item["id"], "thread": item["thread"], "subject": item["subject"],
-        "title": null, "covers": null, "build": null, "mode": "auto", "run": null,
+        "title": null, "covers": null, "mode": "auto", "run": null,
         "context": null, "changed": [], "setup": [], "steps": [], "pass": [], "fail": [],
         "notes": [], "ac": [], "status": "pending", "result": null, "runs": [], "proofs": [],
     });
@@ -26,16 +26,14 @@ fn blank_test(item: &Value) -> serde_json::Map<String, Value> {
 }
 
 fn summary(test: &Value, item_id: &str) -> String {
-    let build = test["build"].as_str().filter(|b| !b.is_empty());
     let acs: Vec<String> = test["ac"]
         .as_array()
         .map_or_else(Vec::new, |a| a.iter().map(display).collect());
     format!(
-        "{}: {} ({}, on {item_id}{}{})",
+        "{}: {} ({}, on {item_id}{})",
         display(&test["id"]),
         display(&test["title"]),
-        display(&test["mode"]),
-        build.map_or_else(String::new, |b| format!(", build {b}")),
+        mode_label(&test["mode"]),
         if acs.is_empty() {
             String::new()
         } else {
@@ -82,7 +80,7 @@ pub(super) fn set_fields(r: &mut Run<'_>) -> Outcome {
         let spec = spec_from_options(r)?;
         if spec.is_empty() {
             return Err(bad(
-                "nothing to change: pass --file or flags such as --title --covers --run --context --mode --changed --note --ac --build.",
+                "nothing to change: pass --file or flags such as --title --covers --run --context --mode --changed --note --ac.",
             ));
         }
         apply_spec(test, item, &spec)?;

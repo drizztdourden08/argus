@@ -1,41 +1,38 @@
-//! `coord build`: bundles. A build tag with the tests that carry it, and the launcher the owner
-//! starts it with. The owner says "the app I was handed is xyz" and tests everything tagged xyz.
+//! `coord build`: the old bundle verbs, kept one release as aliases of the verbs of test runs
+//! (`coord test run ...`): each prints the new verb and then does it. A bundle is a run now, so
+//! `add` and `set` have nothing to make or change and point to the verbs that do.
 
-mod close;
-mod edit;
-mod hand;
-mod launch;
-mod list;
 mod migrate;
-mod parts;
-mod remove;
-mod rows;
-mod status;
 mod support;
 
 use crate::cli::Call;
-use crate::cli::exit::Outcome;
+use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::opt::{take_sub, unknown_sub};
+use crate::verbs::work::test_run_alias;
 
 const VERBS: &str = "add, set, rm, close, reopen, ready, draft, hand, unhand, list, migrate-links";
+
+/// The refusal of a verb that has no run to make or change.
+fn gone(old: &str, new: &str) -> Outcome {
+    Err(CoordError::refuse(format!(
+        "coord build {old} is gone: a bundle is a test run now. Use {new}."
+    )))
+}
 
 /// Runs the sub-verb the first word names; the other words stay for it.
 ///
 /// # Errors
 /// A sub-verb that does not exist, or the refusal of the sub-verb.
 pub fn run(call: &mut Call<'_>) -> Outcome {
-    match take_sub(&mut call.positional).as_str() {
-        "add" => edit::add(call),
-        "set" => edit::set_fields(call),
-        "rm" => remove::run(call),
-        "close" => close::close(call),
-        "reopen" => close::reopen(call),
-        "ready" => status::run(call, true),
-        "draft" => status::run(call, false),
-        "hand" => hand::hand(call),
-        "unhand" => hand::unhand(call),
-        "list" => list::run(call),
-        "migrate-links" => migrate::run(call),
-        _ => Err(unknown_sub("build", VERBS)),
-    }
+    let old = take_sub(&mut call.positional);
+    let new = match old.as_str() {
+        "add" => return gone("add", "coord test plan run <plan> --build <launcher>"),
+        "set" => return gone("set", "coord item set <run> --field build=<launcher>"),
+        "migrate-links" => return migrate::run(call),
+        "rm" => "drop",
+        "close" => "end",
+        "reopen" | "ready" | "draft" | "hand" | "unhand" | "list" => old.as_str(),
+        _ => return Err(unknown_sub("build", VERBS)),
+    };
+    test_run_alias(call, (&old, new))
 }

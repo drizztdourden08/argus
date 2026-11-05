@@ -24,5 +24,6 @@ pub use inbox::handle as inbox;
 pub use item::handle as item;
 pub use lock::handle as lock;
 pub use log::handle as log;
+pub use test::alias as test_run_alias;
 pub use test::handle as test;
 pub use types::handle as types;
