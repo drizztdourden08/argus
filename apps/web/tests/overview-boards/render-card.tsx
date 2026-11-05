@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { Button, ToastStack } from '@drizztdourden08/tessera';
+import { Button, Text, ToastStack } from '@drizztdourden08/tessera';
 import { act, render } from '@testing-library/react';
 import { useRef } from 'react';
 import { MemoryRouter, useLocation } from 'react-router';
@@ -21,7 +21,7 @@ interface HostProps {
   live: BoardLive;
 }
 
-const Where = () => <output data-testid="where">{useLocation().search}</output>;
+const Where = () => <Text as="output" data-testid="where">{useLocation().search}</Text>;
 
 const Host = (props: HostProps) => {
   const { item, live } = props;

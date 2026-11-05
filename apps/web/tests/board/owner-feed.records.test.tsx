@@ -124,7 +124,8 @@ describe('I-85 P4 a card opens its pane', { tags: ['standard'] }, () => {
     const question = { id: 'Q-1', kind: 'question', item: 'I-1', thread: 'worker', author: 'worker', status: 'open', text: 'Ship it today?', options: ['Ship now', 'Wait'], createdAt: NOW };
     await mountEntryBoard({ at: '/p/rotp/#activity', work: entryWork(), entries: { 'Q-1': question } });
     fireEvent.click(await screen.findByRole('link', { name: 'Q-1' }));
-    expect(await screen.findByRole('dialog', { name: 'Entry detail' })).toBeTruthy();
-    expect(screen.getAllByRole('tab', { name: /^Activity/ })[0]?.getAttribute('aria-selected')).toBe('true');
+    const pane = await screen.findByRole('dialog', { name: 'Entry detail' });
+    const pageTab = screen.getAllByRole('tab', { name: /^Activity/ }).find((tab) => !pane.contains(tab));
+    expect(pageTab?.getAttribute('aria-selected')).toBe('true');
   });
 });

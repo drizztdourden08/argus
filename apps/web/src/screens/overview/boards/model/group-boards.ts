@@ -3,7 +3,7 @@ import { attentionGroup } from './attention-group';
 import { FOLDED_GROUPS, GROUP_LABELS, GROUP_ORDER } from './board.constants';
 import type { BoardGroup, BoardLive, BoardRecord } from './board.type';
 
-const groupBoards = (records: readonly BoardRecord[], liveOf?: (record: BoardRecord) => BoardLive): BoardGroup[] =>
+const groupBoards = (records: readonly BoardRecord[], liveOf?: (record: BoardRecord) => BoardLive | undefined): BoardGroup[] =>
   GROUP_ORDER.map((id) => ({
     id,
     label: GROUP_LABELS[id],
