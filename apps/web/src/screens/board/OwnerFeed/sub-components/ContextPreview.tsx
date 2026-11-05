@@ -3,7 +3,7 @@ import { Button, Flex, Text } from '@drizztdourden08/tessera';
 import { contextParts, hasContext } from '../../feed-model';
 import { plainText } from '../../plain-text';
 import { CONTEXT_LINES, CONTEXT_MORE_CHARS } from '../OwnerFeed.constants';
-import type { ContextPreviewProps } from '../OwnerFeed.type';
+import type { ContextPreviewProps } from '../OwnerFeedAsk.type';
 import { ContextBlock } from './ContextBlock';
 
 const ContextPreview = (props: ContextPreviewProps) => {

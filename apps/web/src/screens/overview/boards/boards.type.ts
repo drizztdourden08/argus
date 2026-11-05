@@ -1,9 +1,12 @@
 /* @layer renderer-app @kind types */
+import type { SignalItem } from '@drizztdourden08/tessera';
 import type { RemoteSync } from '../../../data/remote';
 import type { RunRow } from '../../../data/runs';
 import type { Card } from '../../../data/types';
 import type { MasterRun, SendDown } from '../dashboards/dashboards.type';
 import type { BoardActionId, BoardLive, BoardRecord } from './model';
+
+type StripTone = SignalItem['tone'];
 
 type LogOpener = (key: string, run: RunRow) => void;
 
@@ -40,4 +43,4 @@ interface BoardPlayProps {
   onLog: LogOpener;
 }
 
-export type { BoardActions, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardPlayProps, LogOpener };
+export type { BoardActions, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardPlayProps, LogOpener, StripTone };

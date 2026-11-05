@@ -1,6 +1,11 @@
 /* @layer renderer-app @kind types */
+import type { BoardItem } from '../../../../data/boards';
 import type { RegistryFault } from '../../../../data/types';
 import type { LeadState } from '../../dashboards/model';
+
+type BoardItemDoc = BoardItem['doc'];
+
+type BoardItemCard = BoardItem['card'];
 
 interface BoardCounts {
   threads: number;
@@ -84,5 +89,5 @@ interface BoardGroup {
 }
 
 export type {
-  AttentionGroupId, BoardActionId, BoardCounts, BoardGroup, BoardLive, BoardMenuItem, BoardProgress, BoardRecord, BoardSignal, SignalId, SignalTab, SignalTone,
+  AttentionGroupId, BoardActionId, BoardCounts, BoardGroup, BoardItemCard, BoardItemDoc, BoardLive, BoardMenuItem, BoardProgress, BoardRecord, BoardSignal, SignalId, SignalTab, SignalTone,
 };

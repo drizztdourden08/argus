@@ -21,7 +21,7 @@ const RunActions = (props: RunActionsProps) => {
       <RunProgress counts={view.counts} />
       <RunPlayButton view={view} runs={runs} />
       {(view.stage === 'ready' || view.handed) && <HandButton run={item} handed={view.handed} />}
-      <AssigneeMark assignee={item.assignee || item.thread || ''} boardKey={boardKey} threads={threads} />
+      <AssigneeMark assignee={item.assignee ?? item.thread ?? ''} boardKey={boardKey} threads={threads} />
       <DropdownMenu label={label} trigger={{ label, icon: 'ellipsis-vertical', iconOnly: true }} groups={menu} variant="ghost" size="2xs" align="end" itemSize="roomy" />
     </Flex>
   );

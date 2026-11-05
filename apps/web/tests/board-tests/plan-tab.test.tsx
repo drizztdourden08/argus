@@ -107,7 +107,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
 
   it('groups by run when nothing was saved, and saves the other choices under a new key', async () => {
     const { container } = await mountTab({ ...board([testRunDoc('I-20', 'I-5')]), group: 'default' });
-    await screen.findAllByText('Plan number 5');
+    await screen.findByLabelText('Open plan TP-5: Plan number 5');
     expect(container.querySelector('[data-run="I-20"]')).not.toBeNull();
     expect(container.querySelector('[data-plan]')).toBeNull();
     await pickView(/^Group/, 'Plan');

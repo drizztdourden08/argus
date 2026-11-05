@@ -1,17 +1,10 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
-import type { BoardAction, Entry, EntryImage, LogLine, WorkItem } from '../../../data/types';
+import type { BoardAction, Entry, EntryImage, WorkItem } from '../../../data/types';
 import type { ThreadChoice } from '../../../data/kanban';
 import type { WithId } from '../../../data/react';
-import type { AskMode, BoardWork, FeedCard, ManualTest, RunCard } from '../feed-model';
+import type { BoardWork, FeedCard, ManualTest, RunCard } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
-
-type AskFeedCard = Extract<FeedCard, { data: Entry }>;
-
-interface AskLines {
-  title: string;
-  rest: string;
-}
 
 type FeedFilter = 'all' | 'you' | 'log';
 
@@ -52,13 +45,6 @@ interface CardFacts {
 
 type TestRef = Pick<ManualTest, 'id' | 'thread' | 'item'>;
 
-interface LogWindow {
-  shown: number;
-  left: number;
-  more: () => void;
-  less: () => void;
-}
-
 interface OwnerFeedProps {
   boardKey: string;
   work: BoardWork;
@@ -70,12 +56,6 @@ interface FeedGroupProps {
   ctx: FeedContext;
   total?: number;
   extra?: ReactNode;
-}
-
-interface AskGroupProps {
-  heading: string;
-  cards: AskFeedCard[];
-  ctx: FeedContext;
 }
 
 interface LeadNotesGroup {
@@ -95,11 +75,6 @@ interface SentRowProps {
 
 interface FeedCardViewProps {
   card: FeedCard;
-  ctx: FeedContext;
-}
-
-interface AskCardProps {
-  card: AskFeedCard;
   ctx: FeedContext;
 }
 
@@ -142,22 +117,6 @@ interface ImageGroup {
   shots: EntryImage[];
 }
 
-interface AskFormProps extends EntryBodyProps {
-  mode: AskMode;
-  quick?: boolean;
-}
-
-interface ContextPreviewProps extends EntryBodyProps {
-  onMore: () => void;
-}
-
-interface AskCopy {
-  kind: NoteKind;
-  label: string;
-  verb: string;
-  fold: string;
-}
-
 interface ActionBodyProps {
   action: BoardAction;
   actions: FeedActions;
@@ -180,21 +139,6 @@ interface NoticeListProps {
   ctx: FeedContext;
 }
 
-interface LogListProps {
-  lines: LogLine[];
-}
-
-interface LogSectionProps {
-  lines: LogLine[];
-}
-
-interface LogFoldProps {
-  filter: FeedFilter;
-  notices: FeedCard[];
-  lines: LogLine[];
-  ctx: FeedContext;
-}
-
 interface FeedSectionsProps {
   filter: FeedFilter;
   work: BoardWork;
@@ -203,16 +147,9 @@ interface FeedSectionsProps {
 
 export type {
   ActionBodyProps,
-  AskCardProps,
-  AskCopy,
-  AskGroupProps,
-  AskFeedCard,
-  AskLines,
-  AskFormProps,
   BuildTagProps,
   CardFacts,
   CardMenuProps,
-  ContextPreviewProps,
   EntryBodyProps,
   EntryImagesProps,
   FeedActions,
@@ -227,10 +164,6 @@ export type {
   ItemChipProps,
   LeadNotesGroup,
   LeadNotesProps,
-  LogFoldProps,
-  LogListProps,
-  LogSectionProps,
-  LogWindow,
   EntryRowProps,
   NoticeListProps,
   NoticeRowProps,

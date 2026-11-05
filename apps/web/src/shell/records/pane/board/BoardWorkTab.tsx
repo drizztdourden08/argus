@@ -9,7 +9,7 @@ import { liveAgents } from './model/live-agents';
 const BoardWorkTab = (props: BoardTabProps) => {
   const { data } = props;
   const agents = liveAgents(data.agents);
-  const blocked = data.items.filter((item) => !item.deletedAt && !item.archivedAt && (item.blocker || (item.blocked?.length ?? 0) > 0));
+  const blocked = data.items.filter((item) => !item.deletedAt && !item.archivedAt && ((item.blocker ?? '') !== '' || (item.blocked?.length ?? 0) > 0));
   return (
     <Flex direction="column" gap="lg">
       <BoardList title="Live agents" empty="No agent is working." count={agents.length}>

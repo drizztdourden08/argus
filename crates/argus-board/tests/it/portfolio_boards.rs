@@ -22,7 +22,7 @@ fn reconciled() -> (tempfile::TempDir, Value) {
     (home, p)
 }
 
-fn owner_op(id: &str, kind: &str, author: &str, rest: Value) -> Value {
+fn owner_op(id: &str, kind: &str, author: &str, rest: &Value) -> Value {
     let mut op = json!({
         "id": id, "kind": kind, "author": author, "target": {"c": "boards", "id": "BD-1"},
         "createdAt": argus_core::clock::now_iso(),
@@ -103,7 +103,7 @@ fn an_owner_edit_changes_goal_and_note_only() {
     let status = send(
         home.path(),
         &mut p,
-        owner_op("O-1", "edit", "human", json!({"set": set})),
+        owner_op("O-1", "edit", "human", &json!({"set": set})),
     );
     assert_eq!(status, "applied");
     let item = &p["boards"]["BD-1"];
@@ -127,7 +127,7 @@ fn an_edit_of_key_or_created_is_refused() {
         let status = send(
             home.path(),
             &mut p,
-            owner_op(&id, "edit", "human", json!({"set": set})),
+            owner_op(&id, "edit", "human", &json!({"set": set})),
         );
         assert_eq!(status, "refused");
     }
@@ -142,7 +142,7 @@ fn a_thread_author_is_refused() {
     let status = send(
         home.path(),
         &mut p,
-        owner_op("O-1", "edit", "ui", json!({"set": set})),
+        owner_op("O-1", "edit", "ui", &json!({"set": set})),
     );
     assert_eq!(status, "refused");
     assert_eq!(p["boards"]["BD-1"], before);
@@ -154,7 +154,7 @@ fn archive_retires_the_project_in_the_same_write() {
     let status = send(
         home.path(),
         &mut p,
-        owner_op("O-1", "archive", "human", json!({})),
+        owner_op("O-1", "archive", "human", &json!({})),
     );
     assert_eq!(status, "applied");
     assert_eq!(p["projects"]["alpha"]["retired"], true);
@@ -163,7 +163,7 @@ fn archive_retires_the_project_in_the_same_write() {
     let status = send(
         home.path(),
         &mut p,
-        owner_op("O-2", "unarchive", "human", json!({})),
+        owner_op("O-2", "unarchive", "human", &json!({})),
     );
     assert_eq!(status, "applied");
     assert!(p["projects"]["alpha"]["retired"].is_null());
@@ -176,7 +176,7 @@ fn delete_and_purge_of_a_board_item_are_refused() {
     let (home, mut p) = reconciled();
     for (n, kind) in ["delete", "purge"].into_iter().enumerate() {
         let id = format!("O-{n}");
-        let status = send(home.path(), &mut p, owner_op(&id, kind, "human", json!({})));
+        let status = send(home.path(), &mut p, owner_op(&id, kind, "human", &json!({})));
         assert_eq!(status, "refused");
     }
     assert_eq!(p["boards"].as_object().expect("boards").len(), 2);
