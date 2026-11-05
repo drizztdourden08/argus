@@ -49,6 +49,7 @@ pub use backup::{PurgeDone, apply_purge, count_line};
 pub use build::ensure_build;
 pub use icon::ICON_NAMES;
 pub use icon_image::{icon_bytes, is_image_icon};
+pub(crate) use avatar::BRAND_APPS;
 pub(crate) use icon_image::check_image;
 pub use plan::{PurgePlan, Selection, purge_plan};
 pub use pr::is_pr_kind;

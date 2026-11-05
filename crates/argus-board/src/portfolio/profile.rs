@@ -8,11 +8,8 @@ use sha2::{Digest, Sha256};
 
 use crate::Board;
 use crate::json::{map_mut, set, unset};
-use crate::ops::{check_image, is_image_icon};
+use crate::ops::{BRAND_APPS, check_image, is_image_icon};
 use crate::store::{LogLine, push_log_line, touch};
-
-/// The Tessera apps whose brand mark may be picked.
-const BRAND_APPS: [&str; 6] = ["tessera", "rotp", "archipelia", "brock", "bxel", "argus"];
 
 const NAME_MAX: usize = 40;
 
