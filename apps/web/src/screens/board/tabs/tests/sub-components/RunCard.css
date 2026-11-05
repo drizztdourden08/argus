@@ -8,11 +8,6 @@
   background: var(--c-inset);
 }
 
-.run-card__name {
-  flex: 1 1 var(--size-224);
-  min-inline-size: 0;
-}
-
 .run-card__end > * {
   white-space: nowrap;
 }
@@ -38,10 +33,6 @@
   white-space: nowrap;
 }
 
-.run-card__head {
-  padding: var(--space-sm) var(--space-md);
-}
-
 @media (width <= 720px) {
   .run-card__end {
     flex-wrap: wrap;
@@ -50,9 +41,5 @@
 
   .run-card__bar {
     display: none;
-  }
-
-  .run-card__head {
-    padding-inline: var(--space-sm);
   }
 }

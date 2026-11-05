@@ -17,9 +17,13 @@ interface SectionHeadProps {
   action?: ReactNode;
 }
 
-interface RunTitleProps {
+interface RunFrameProps {
   view: RunView;
   muted?: boolean;
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  content: ReactNode;
+  children: ReactNode;
 }
 
 interface RunChipsProps {
@@ -46,5 +50,5 @@ interface TestsSummaryProps {
 }
 
 export type {
-  BuildChipProps, CaseOutcomeProps, LayoutControlProps, RunActionsProps, RunChipsProps, RunTitleProps, SectionHeadProps, TestsSummaryProps,
+  BuildChipProps, CaseOutcomeProps, LayoutControlProps, RunActionsProps, RunChipsProps, RunFrameProps, SectionHeadProps, TestsSummaryProps,
 };

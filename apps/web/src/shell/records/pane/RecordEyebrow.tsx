@@ -22,8 +22,10 @@ const RecordEyebrow = (props: RecordDataProps) => {
         menu={menu}
         menuLabel={`More actions for ${code}`}
         size="sm"
-      />
-      {item && <ItemEyebrow item={item.item} waiting={item.waiting} />}
+        defaultOpen
+      >
+        {item && <ItemEyebrow item={item.item} waiting={item.waiting} />}
+      </RecordHead>
     </Flex>
   );
 };

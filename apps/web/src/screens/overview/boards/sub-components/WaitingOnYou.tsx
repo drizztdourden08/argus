@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { ListItemList, ListItemRow, Tag } from '@drizztdourden08/tessera';
-import { CALM_LOOK } from '../../../../shell';
+import { Text } from '@drizztdourden08/tessera';
+import { FrameCode, RecordFrame, RecordGroup, TypeIcon } from '../../../../shell';
 import { ProjectLink } from '../../projects';
 import type { EntriesProps } from '../boards-view.type';
 
@@ -8,17 +8,22 @@ const WaitingOnYou = (props: EntriesProps) => {
   const waiting = props.entries.flatMap(({ record, card }) => (record.archived ? [] : (card?.ownerItems ?? []).map((item) => ({ board: record.key, item }))));
   if (waiting.length === 0) return null;
   return (
-    <ListItemList label="Waiting on you" heading="Waiting on you" count={waiting.length}>
+    <RecordGroup header={<Text weight={600}>Waiting on you</Text>} count={waiting.length} label="Waiting on you">
       {waiting.map(({ board, item }) => (
-        <ListItemRow
+        <RecordFrame
           key={`${board}/${item.id}`}
-          icon={<Tag {...CALM_LOOK}>{item.type}</Tag>}
-          name={`${item.id} ${item.title}`}
-          meta={item.stage}
-          columns={[{ primary: <ProjectLink project={board} /> }]}
-        />
+          name={item.id}
+          density="row"
+          icon={<TypeIcon kind={item.type} />}
+          code={<FrameCode>{item.id}</FrameCode>}
+          title={<Text clamp={1}>{item.title}</Text>}
+          content={<ProjectLink project={board} />}
+          attrs={{ role: 'listitem' }}
+        >
+          {item.stage && <Text variant="caption" tone="muted">{item.stage}</Text>}
+        </RecordFrame>
       ))}
-    </ListItemList>
+    </RecordGroup>
   );
 };
 

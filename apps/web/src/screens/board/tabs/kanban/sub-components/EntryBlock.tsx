@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Card, Divider, Flex, InlineEdit } from '@drizztdourden08/tessera';
-import { BoardMarkdown } from '../../../../../shell';
+import { BoardMarkdown, parseRecord, RecordFrame, RecordLink } from '../../../../../shell';
 import { askMode, hasContext } from '../../../feed-model';
-import { AskForm, ContextBlock, EntryImages } from '../../../OwnerFeed';
+import { AskForm, CardMenu, ContextBlock, EntryImages } from '../../../OwnerFeed';
 import type { EntryBlockProps } from '../drawer-props.type';
 import { validateDecision } from '../model';
 import { EntryHead } from './EntryHead';
@@ -15,8 +15,14 @@ const EntryBlock = (props: EntryBlockProps) => {
   const showContext = entry.author !== 'human' && (row.open || hasContext(entry));
   return (
     <Card>
-      <Flex direction="column" gap="xs">
-        <EntryHead entry={entry} feed={feed} now={now} />
+      <RecordFrame
+        name={entry.id}
+        kind={parseRecord(entry.id)?.kind}
+        defaultOpen
+        code={<RecordLink id={entry.id} />}
+        content={<EntryHead entry={entry} now={now} />}
+        menu={<CardMenu collection="entries" id={entry.id} actions={feed} />}
+      >
         {showContext && <ContextBlock entry={entry} actions={feed} />}
         {editable ? (
           <InlineEdit
@@ -38,7 +44,7 @@ const EntryBlock = (props: EntryBlockProps) => {
           </Flex>
         ))}
         {row.open && <AskForm entry={entry} mode={askMode(entry)} actions={feed} />}
-      </Flex>
+      </RecordFrame>
     </Card>
   );
 };

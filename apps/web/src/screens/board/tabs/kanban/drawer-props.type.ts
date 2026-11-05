@@ -90,7 +90,6 @@ interface EntryBlockProps {
 
 interface EntryHeadProps {
   entry: BoardEntry;
-  feed: FeedActions;
   now: number;
 }
 

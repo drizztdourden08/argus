@@ -1,28 +1,29 @@
 /* @layer renderer-app @kind component */
-import { Checkbox, Flex, Spacer } from '@drizztdourden08/tessera';
-import type { RecordHeadProps } from '../records.type';
+import type { RecordHeadViewProps } from '../records.type';
 import { AssigneeMark } from './AssigneeMark';
+import { RecordFrame } from './RecordFrame';
 import { RecordLink } from './RecordLink';
 import { RecordMenu } from './RecordMenu';
 import { TypeIcon } from './TypeIcon';
 
-const RecordHead = (props: RecordHeadProps) => {
-  const { kind, code, assignee, boardKey, threads, menu, menuLabel, title, mark, size = 'xs', selection } = props;
+const RecordHead = (props: RecordHeadViewProps) => {
+  const { kind, code, assignee, boardKey, threads, menu, menuLabel, mark, size, selection, content, ...frame } = props;
   return (
-    <Flex gap="xs" align="center">
-      {selection?.selecting ? (
-        <Flex onClickCapture={(event) => selection.onMark(event.shiftKey)}>
-          <Checkbox checked={selection.selected} onChange={selection.onToggle} ariaLabel={`Select ${code}`} size="sm" />
-        </Flex>
-      ) : (
-        (mark ?? <TypeIcon kind={kind} size={size} />)
-      )}
-      <RecordLink id={code} />
-      {title}
-      <Spacer />
-      <AssigneeMark assignee={assignee} boardKey={boardKey} threads={threads} size={size} />
-      <RecordMenu groups={menu} label={menuLabel} />
-    </Flex>
+    <RecordFrame
+      {...frame}
+      name={code}
+      icon={mark ?? (size ? <TypeIcon kind={kind} size={size} /> : undefined)}
+      kind={kind}
+      selection={selection}
+      code={<RecordLink id={code} />}
+      content={
+        <>
+          {content}
+          <AssigneeMark assignee={assignee} boardKey={boardKey} threads={threads} size={size} />
+        </>
+      }
+      menu={<RecordMenu groups={menu} label={menuLabel} />}
+    />
   );
 };
 
