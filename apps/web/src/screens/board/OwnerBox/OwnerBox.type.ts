@@ -14,7 +14,7 @@ interface OwnerBoxProps {
   autoFocus?: boolean;
   compact?: boolean;
   onEscape?: () => void;
-  toolbarEnd?: ReactNode;
+  actions?: ReactNode;
 }
 
 export type { OwnerBoxProps };
