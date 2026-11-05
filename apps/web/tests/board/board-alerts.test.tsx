@@ -1,19 +1,15 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { minutesAgo as at } from '../helpers/minutes-ago';
+import { openAlerts } from '../helpers/open-alerts';
 import { renderAt } from '../helpers/render-at';
 import { seedBoard } from '../helpers/seed-board';
 import { snapshot } from '../helpers/snapshot';
+import { stubCss } from '../helpers/stub-css';
 import { waitForStream } from '../helpers/wait-for-stream';
 
-beforeEach(() => vi.stubGlobal('CSS', { supports: () => false }));
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-const NOW = Date.now();
-const at = (minutesAgo: number): string => new Date(NOW - minutesAgo * 60_000).toISOString();
+stubCss();
 
 const fault = { id: 'ui', project: 'rotp', thread: 'ui', session: 'ui', role: 'thread', state: 'fault', fault: { since: at(5), reason: 'no-listener' } };
 
@@ -31,10 +27,8 @@ const open = async () => {
 describe('S1 the Alerts popover', { tags: ['standard'] }, () => {
   it('counts faults and notices in the danger tone and lists each under its own section', async () => {
     await open();
-    const button = await screen.findByRole('button', { name: /^Alerts/ });
+    const { button, panel } = await openAlerts();
     expect(within(button).getByText('2')).toBeTruthy();
-    fireEvent.click(button);
-    const panel = await screen.findByRole('dialog', { name: 'Alerts' });
     expect(within(panel).getByText('Faults (1)')).toBeTruthy();
     expect(within(within(panel).getByRole('list', { name: 'Faults' })).getByText(/Wake failed: no listener/)).toBeTruthy();
     expect(within(panel).getByText('Notices (1)')).toBeTruthy();
@@ -45,9 +39,7 @@ describe('S1 the Alerts popover', { tags: ['standard'] }, () => {
     const { sources } = renderAt('/p/rotp/');
     await waitForStream(sources);
     act(() => seedBoard(sources[0], { meta: { board: { project: 'rotp', name: 'RotP', updatedAt: at(0) } } }));
-    const button = await screen.findByRole('button', { name: /^Alerts/ });
-    fireEvent.click(button);
-    const panel = await screen.findByRole('dialog', { name: 'Alerts' });
+    const { panel } = await openAlerts();
     expect(within(panel).getByText('Nothing needs attention.')).toBeTruthy();
   });
 });

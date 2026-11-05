@@ -7,18 +7,18 @@ import { useSwitchBoard } from '../../src/shell/BoardSwitcher';
 
 const wrapper = (entry: string) => ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={[entry]}>{children}</MemoryRouter>;
 
-const probe = () => ({ go: useSwitchBoard(), location: useLocation() });
+const useProbe = () => ({ go: useSwitchBoard(), location: useLocation() });
 
 describe('I-106 useSwitchBoard', { tags: ['critical'] }, () => {
   it('pushes the other board and keeps the hash', () => {
-    const { result } = renderHook(probe, { wrapper: wrapper('/p/rotp/#tests') });
+    const { result } = renderHook(useProbe, { wrapper: wrapper('/p/rotp/#tests') });
     act(() => result.current.go('argus'));
     expect(result.current.location.pathname).toBe('/p/argus/');
     expect(result.current.location.hash).toBe('#tests');
   });
 
   it('lets the last switch win', () => {
-    const { result } = renderHook(probe, { wrapper: wrapper('/p/rotp/') });
+    const { result } = renderHook(useProbe, { wrapper: wrapper('/p/rotp/') });
     act(() => {
       result.current.go('argus');
       result.current.go('brock');

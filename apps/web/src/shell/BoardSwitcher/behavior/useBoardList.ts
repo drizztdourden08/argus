@@ -1,14 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useMemo } from 'react';
-import type { Card } from '../../../data/types';
 import { usePortfolio } from '../../../data/react';
-import type { BoardOption } from '../BoardSwitcher.type';
 import { boardOption } from './board-option';
-
-interface BoardList {
-  cards: Card[];
-  options: BoardOption[];
-}
+import type { BoardList } from './board-list.type';
 
 const useBoardList = (): BoardList => {
   const { cards } = usePortfolio();

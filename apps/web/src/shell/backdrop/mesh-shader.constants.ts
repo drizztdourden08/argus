@@ -1,11 +1,4 @@
 /* @layer renderer-app @kind constants */
-/*
- * Adapted from the mesh gradient fragment shader of Paper Shaders
- * (https://github.com/paper-design/shaders), Apache License 2.0.
- * Changes: the colour spots are pushed away from the pointer (u_pointer, u_repel, u_repelRadius)
- * and shifted by a per-spot depth from the pointer offset (u_parallax); the grain follows the
- * canvas aspect (u_aspect). The vertex shader and the sizing uniforms are Paper's own.
- */
 const MAX_COLORS = 10;
 
 const MESH_SHADER = `#version 300 es

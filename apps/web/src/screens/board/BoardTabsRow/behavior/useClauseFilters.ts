@@ -2,7 +2,10 @@
 import type { FilterClause } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import type { ClauseField, ClauseFilters } from '../BoardTabsRow.type';
-import { descriptorOf, fromClauses, settled, toClauses } from './clauses';
+import { descriptorOf } from './descriptor-of';
+import { fromClauses } from './from-clauses';
+import { settled } from './settled';
+import { toClauses } from './to-clauses';
 
 const useClauseFilters = <F>(fields: readonly ClauseField<F>[], filters: F, patch: (values: Partial<F>) => void): ClauseFilters => {
   const stored = toClauses(fields, filters);

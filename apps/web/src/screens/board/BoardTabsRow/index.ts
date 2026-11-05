@@ -1,9 +1,7 @@
 /* @layer renderer-app @kind barrel */
-export { useClauseFilters } from './behavior/useClauseFilters';
 export { BoardTabsRow } from './BoardTabsRow';
-export { ClauseFilterRow } from './sub-components/ClauseFilterRow';
-export { TabTools } from './sub-components/TabTools';
+export { flagFields } from './behavior/flag-fields';
 export { TabFilters } from './sub-components/TabFilters';
-export { TabFiltersSlot } from './sub-components/TabFiltersSlot';
-export { TabToolsSlot } from './sub-components/TabToolsSlot';
-export type { ClauseField, ClauseFilters } from './BoardTabsRow.type';
+export { TabFilterSet } from './sub-components/TabFilterSet';
+export { TabViewMenu } from './sub-components/TabViewMenu';
+export type { ClauseField } from './BoardTabsRow.type';

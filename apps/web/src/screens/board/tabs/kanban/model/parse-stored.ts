@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { jsonRecord } from '../../../shared';
 import { DEFAULT_FILTERS, DEFAULT_PREFS, GROUP_OPTIONS } from './model.constants';
-import { directionOf } from './sort-direction';
+import { directionOf } from './direction-of';
 import type { ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, RawStored, StoredView } from './model.type';
 
 const text = (value: unknown): string => (typeof value === 'string' ? value : '');

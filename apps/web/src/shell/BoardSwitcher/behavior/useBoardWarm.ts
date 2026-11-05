@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useEffect } from 'react';
 import { useStreams } from '../../../data/react/behavior/useStreams';
-
-const WARM_COLLECTIONS = ['meta', 'threads'] as const;
+import { WARM_COLLECTIONS } from './board-warm.constants';
 
 const noop = (): void => undefined;
 

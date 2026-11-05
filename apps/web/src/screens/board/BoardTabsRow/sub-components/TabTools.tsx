@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { createPortal } from 'react-dom';
-import { toolsSlot, useSlotNode } from '../behavior/slot-store';
+import { toolsSlot } from '../behavior/tools-slot';
+import { useSlotNode } from '../behavior/useSlotNode';
 import type { PortalProps } from '../BoardTabsRow.type';
 
 const TabTools = ({ children }: PortalProps) => {

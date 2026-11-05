@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { BASE_TOKEN, COLOR_TOKENS, DARKEN_AMOUNT } from './backdrop.constants';
-import { darken } from './color-math';
-import type { Rgb } from './color-math';
+import { darken } from './darken';
+import type { Rgb } from './color-math.type';
 
 const parseCssColor = (css: string): Rgb | undefined => {
   const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
