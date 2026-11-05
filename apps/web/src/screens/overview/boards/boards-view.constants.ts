@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind constants */
-import type { ListItemShape } from '@drizztdourden08/tessera';
 import type { LeadState } from './model';
 
 const STATE_ORDER: readonly LeadState[] = ['running', 'idle', 'stale', 'paused', 'not started'];
@@ -23,6 +22,4 @@ const RAIL_LABEL = 'Now';
 
 const BOARD_COLUMN_MIN = 280;
 
-const ROW_SHAPE: ListItemShape = { icon: true, columns: 3, action: false };
-
-export { ALL_BOARDS, BOARD_COLUMN_MIN, NO_BOARDS, NO_BOARDS_YET, RAIL_BREAKPOINT, RAIL_LABEL, ROW_SHAPE, STATE_LABELS, STATE_ORDER };
+export { ALL_BOARDS, BOARD_COLUMN_MIN, NO_BOARDS, NO_BOARDS_YET, RAIL_BREAKPOINT, RAIL_LABEL, STATE_LABELS, STATE_ORDER };

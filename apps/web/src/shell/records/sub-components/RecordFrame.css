@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind style */
 
 .record-frame__head {
-  min-height: var(--control-h-sm, 2rem);
+  min-height: var(--size-32);
   padding-block: var(--space-xs);
 }
 

@@ -31,19 +31,20 @@ const removeGroup = async (option: string): Promise<void> => {
   fireEvent.click(await screen.findByRole('button', { name: `Remove grouping by ${option}` }));
 };
 
+const chooseValue = async (fieldLabel: string, valueLabel: string): Promise<void> => {
+  const trigger = await screen.findByRole('button', { name: `Change the ${fieldLabel} filter value` });
+  if (trigger.getAttribute('aria-expanded') !== 'true') fireEvent.click(trigger);
+  await menuChoice(valueLabel);
+};
+
 const addFilter = async (fieldLabel: string, valueLabel?: string): Promise<void> => {
   await openFilters();
   fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
   await menuChoice(fieldLabel);
-  if (valueLabel === undefined) return;
-  await screen.findByRole('button', { name: `Change the ${fieldLabel} filter value` });
-  await menuChoice(valueLabel);
+  if (valueLabel !== undefined) await chooseValue(fieldLabel, valueLabel);
 };
 
-const changeFilter = async (fieldLabel: string, valueLabel: string): Promise<void> => {
-  fireEvent.click(await screen.findByRole('button', { name: `Change the ${fieldLabel} filter value` }));
-  await menuChoice(valueLabel);
-};
+const changeFilter = chooseValue;
 
 const removeFilter = async (fieldLabel: string): Promise<void> => {
   fireEvent.click(await screen.findByRole('button', { name: `Remove filter on ${fieldLabel}` }));
