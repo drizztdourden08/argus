@@ -107,9 +107,9 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
     expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency-brock', 'blocked', 'test-pending', 'decision']);
-    const signals = signalItems(card, NOW);
-    expect(signals.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
-    expect(signals.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
+    const items = signalItems(card, NOW);
+    expect(items.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
+    expect(items.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
   });
 
   it('opens the entry for a single question and the item for several', () => {
