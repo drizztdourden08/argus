@@ -3,6 +3,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU16, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
+use crate::auto_settings::{AutoPatch, AutoSettings, apply_auto, auto_of, describe_auto};
 use crate::config::AutoConfig;
 use crate::configure::{SettingsPatch, apply, describe};
 use crate::limits::Limiter;
@@ -133,6 +134,26 @@ impl Notify {
         self.ports.config.save(&next)?;
         let settings = settings_of(&next);
         self.activity(ActivityLevel::Info, describe(settings));
+        Ok(settings)
+    }
+
+    /// The OS switch and the five automatic pings in effect.
+    #[must_use]
+    pub fn auto_settings(&self) -> AutoSettings {
+        auto_of(&self.ports.config.load())
+    }
+
+    /// Changes some of the OS switch and the automatic pings, writes the config and answers
+    /// what is now in effect. Toast and sound settings are untouched.
+    ///
+    /// # Errors
+    ///
+    /// When `config.json` cannot be written; nothing changed then.
+    pub fn set_auto(&self, patch: AutoPatch) -> Result<AutoSettings, StorageError> {
+        let next = apply_auto(&self.ports.config.load(), patch);
+        self.ports.config.save(&next)?;
+        let settings = auto_of(&next);
+        self.activity(ActivityLevel::Info, describe_auto(settings));
         Ok(settings)
     }
 
