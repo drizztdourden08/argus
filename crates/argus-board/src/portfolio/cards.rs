@@ -3,13 +3,16 @@
 use std::collections::HashSet;
 use std::path::Path;
 
+use argus_core::config::hex;
 use serde_json::{Map, Value, json};
+use sha2::{Digest, Sha256};
 
 use crate::Board;
 use crate::agents::live_agent_ids;
 use crate::json::{display, nullish, section, truthy};
 use crate::launchers::{MASTER, has_master, launcher_def_name};
 use crate::names::display_name;
+use crate::ops::is_image_icon;
 use crate::portfolio::owner_items::{owner_items, waits_on_owner};
 use crate::served::master_name;
 use crate::store::read_board;
@@ -184,6 +187,17 @@ fn coordinator_of(coord: Option<&Value>) -> Value {
     })
 }
 
+/// The icon a card shows: a brand or a curated name as is, an image as the url that serves it. The
+/// url carries a short hash of the image so a new image is fetched anew.
+fn icon_of(key: &str, board: &Board) -> Option<String> {
+    let icon = nullish(board, "icon")?;
+    if !is_image_icon(&icon) {
+        return Some(icon);
+    }
+    let digest = hex(&Sha256::digest(icon.as_bytes()));
+    Some(format!("/api/p/{key}/icon?v={}", &digest[..8]))
+}
+
 fn card_of(key: &str, reg: &Value, board: &Board) -> Value {
     let (view, paused) = view_of(board);
     let coord = view
@@ -222,6 +236,9 @@ fn card_of(key: &str, reg: &Value, board: &Board) -> Value {
         }),
     );
     put("root", root);
+    if let Some(icon) = icon_of(key, board) {
+        put("icon", json!(icon));
+    }
     put("url", json!(format!("/p/{key}/")));
     put("coordinator", coordinator_of(coord));
     put("counts", counts_of(board, &view, open.len()));
