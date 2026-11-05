@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Box, TypeMark } from '@drizztdourden08/tessera';
+import { Flex, TypeMark } from '@drizztdourden08/tessera';
 import type { IconName } from '@drizztdourden08/tessera';
 import { kindOf } from '../../../data/registry';
 import { kindMark } from '../behavior/kind-color';
@@ -10,9 +10,9 @@ const TypeIcon = (props: TypeIconProps) => {
   const kind = kindOf(id);
   if (!kind) return null;
   return (
-    <Box as="span" data-type-mark={kind.id}>
+    <Flex as="span" inline align="center" data-type-mark={kind.id}>
       <TypeMark icon={kind.icon as IconName} label={kind.label} {...kindMark(kind)} size={size} variant="outline" />
-    </Box>
+    </Flex>
   );
 };
 
