@@ -25,7 +25,7 @@ const dependencySignals = (item: ItemRef): CardSignal[] => {
   const { icon, color } = ATTENTION_OF.dependency;
   return [...byTarget(dependencyCauses(item))].map(([target, causes]) => {
     const who = causes[0]?.who;
-    const signal: CardSignal = { id: `dependency-${target}`, icon, label: causes.map(depText).join('; '), tone: color, opens: OPEN_ITEM };
+    const signal: CardSignal = { id: `dependency-${target}`, icon, count: causes.length, label: causes.map(depText).join('; '), tone: color, opens: OPEN_ITEM };
     const brand = KEY_BRANDS[target];
     if (brand && who?.startsWith(LEAD_PREFIX)) return { ...signal, brand };
     return who ? { ...signal, avatar: whoAvatar(who) } : signal;
