@@ -11,8 +11,6 @@ export { LoadingFallback } from './LoadingFallback';
 export { LocalBanner } from './LocalBanner';
 export { PageFrame } from './PageFrame';
 export { Panel } from './Panel';
-export { BoardSwitcher } from './BoardSwitcher';
-export { ModeSwitch } from './ModeSwitch';
 export { RegisteredFrame } from './RegisteredFrame';
 export { ReplayTag } from './ReplayTag';
 export { StatusNotice } from './StatusNotice';
