@@ -4,6 +4,8 @@ import type { BuildFilters, BuildGroup, BuildOrder } from './builds-view.type';
 
 const BUILDS_TAB = 'builds';
 
+const ITEM_LABEL_CHARS = 40;
+
 const BUILD_FILTERS: BuildFilters = { query: '', item: [], kind: [], stage: [] };
 
 const BUILD_GROUP_IDS: readonly BuildGroup[] = ['item', 'kind', 'none'];
@@ -27,4 +29,4 @@ const NO_KIND_LABEL = 'No kind';
 
 const SEARCH_PLACEHOLDER = 'Search name, tag or branch';
 
-export { BUILD_FILTERS, BUILD_GROUP_IDS, BUILD_GROUPS, BUILD_ORDER_IDS, BUILD_ORDERS, BUILDS_TAB, NO_KIND_LABEL, SEARCH_PLACEHOLDER, STAGE_CHOICES };
+export { BUILD_FILTERS, BUILD_GROUP_IDS, BUILD_GROUPS, BUILD_ORDER_IDS, BUILD_ORDERS, BUILDS_TAB, ITEM_LABEL_CHARS, NO_KIND_LABEL, SEARCH_PLACEHOLDER, STAGE_CHOICES };

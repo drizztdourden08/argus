@@ -4,13 +4,13 @@ import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
 import { AGENT_FILTERS, agentsView, groupAgentsBy } from '../../src/screens/board/tabs/agents/model';
 
-const agent = (id: string, extra: Partial<Agent> = {}): WithId<Agent> => ({ id, status: 'working', ...extra }) as WithId<Agent>;
+const agent = (id: string, extra: Partial<Agent> = {}): WithId<Agent> => ({ id, status: 'working', ...extra });
 
 const ids = (list: WithId<Agent>[]): string[] => list.map((entry) => entry.id);
 
 describe('I-105 agents filter, sort and group', { tags: ['critical'] }, () => {
   const base = {
-    active: [agent('A-1', { name: 'beta', thread: 'x', model: 'claude-haiku-5' }), agent('A-2', { name: 'alpha', thread: 'y', model: 'claude-opus-5', note: 'fix login' })],
+    active: [agent('A-1', { name: 'beta', thread: 'x', model: 'session-haiku-5' }), agent('A-2', { name: 'alpha', thread: 'y', model: 'session-opus-5', note: 'fix login' })],
     done: [],
   };
 

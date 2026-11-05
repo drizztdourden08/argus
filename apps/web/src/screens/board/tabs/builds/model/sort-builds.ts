@@ -11,10 +11,10 @@ const pinRank = (view: LauncherView): number => {
 
 const byName = (a: LauncherView, b: LauncherView): number => a.launcher.name.localeCompare(b.launcher.name, undefined, { numeric: true });
 
-const byUpdated = (a: LauncherView, b: LauncherView): number => String(a.launcher.updatedAt ?? '').localeCompare(String(b.launcher.updatedAt ?? ''));
+const newestFirst = (a: LauncherView, b: LauncherView): number => String(a.launcher.updatedAt ?? '').localeCompare(String(b.launcher.updatedAt ?? ''));
 
 const sortBuilds = (views: readonly LauncherView[], order: BuildOrder, direction: SortDirection): LauncherView[] => {
-  const compare = order === 'name' ? byName : byUpdated;
+  const compare = order === 'name' ? byName : newestFirst;
   const sign = direction === 'desc' ? -1 : 1;
   return [...views].sort((a, b) => pinRank(a) - pinRank(b) || sign * compare(a, b) || byName(a, b));
 };

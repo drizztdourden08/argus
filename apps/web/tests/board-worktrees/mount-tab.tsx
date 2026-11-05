@@ -3,6 +3,7 @@ import { act, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, vi } from 'vitest';
 import type { WorktreesMeta } from '../../src/data/worktrees';
+import { BoardTabsRow } from '../../src/screens/board/BoardTabsRow';
 import { WorktreesTab } from '../../src/screens/board/tabs/worktrees';
 import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
@@ -78,6 +79,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const { view, source, live } = await mountStreamed(
     <MemoryRouter>
+      <BoardTabsRow tabs={[{ id: 'worktrees', label: 'Worktrees' }]} activeTab="worktrees" onTabChange={() => undefined} />
       <WorktreesTab boardKey={SCOPE} />
     </MemoryRouter>,
   );

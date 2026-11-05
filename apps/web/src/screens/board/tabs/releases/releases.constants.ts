@@ -21,4 +21,13 @@ const RELEASES_DIRECTION: SortDirection = 'desc';
 
 const RELEASES_FILTERS: ReleasesFilters = { query: '', channel: '' };
 
-export { EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT, RELEASES_DIRECTION, RELEASES_FILTERS, RELEASES_ORDERS, RELEASES_TAB };
+const RELEASES_SETUP = {
+  groups: [] as string[],
+  orders: RELEASES_ORDERS.map((choice): ReleasesOrder => choice.id),
+  group: '',
+  order: 'newest' as ReleasesOrder,
+  direction: RELEASES_DIRECTION,
+  filters: RELEASES_FILTERS,
+};
+
+export { EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT, RELEASES_DIRECTION, RELEASES_FILTERS, RELEASES_ORDERS, RELEASES_SETUP, RELEASES_TAB };

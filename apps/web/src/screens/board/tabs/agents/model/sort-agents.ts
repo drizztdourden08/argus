@@ -2,21 +2,20 @@
 import type { SortDirection } from '@drizztdourden08/tessera';
 import type { Agent } from '../../../../../data/agents';
 import type { WithId } from '../../../../../data/react';
+import type { AgentCompare } from './agent-compare.type';
 import { agentName } from './agent-name';
 import type { AgentOrder } from './agents-view.type';
 import { startMs } from './start-ms';
 
-type Compare = (a: WithId<Agent>, b: WithId<Agent>) => number;
+const byStarted: AgentCompare = (a, b) => (startMs(a) || 0) - (startMs(b) || 0);
 
-const byStarted: Compare = (a, b) => (startMs(a) || 0) - (startMs(b) || 0);
+const byName: AgentCompare = (a, b) => agentName(a, a.id).localeCompare(agentName(b, b.id), undefined, { numeric: true });
 
-const byName: Compare = (a, b) => agentName(a, a.id).localeCompare(agentName(b, b.id), undefined, { numeric: true });
-
-const COMPARES: Readonly<Record<'started' | 'name', Compare>> = { started: byStarted, name: byName };
+const compareOf = (order: 'started' | 'name'): AgentCompare => (order === 'started' ? byStarted : byName);
 
 const sortAgents = (agents: readonly WithId<Agent>[], order: AgentOrder, direction: SortDirection): WithId<Agent>[] => {
   if (order === 'updated') return direction === 'desc' ? [...agents] : [...agents].reverse();
-  const compare = COMPARES[order];
+  const compare = compareOf(order);
   const sign = direction === 'desc' ? -1 : 1;
   return [...agents].sort((a, b) => sign * compare(a, b));
 };

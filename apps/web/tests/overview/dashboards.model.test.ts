@@ -22,7 +22,7 @@ describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => 
 
   it('is paused or idle with no live coordinator, by whether threads are paused', () => {
     expect(leadState(card('a', { coordinator: null }), NOW)).toBe('idle');
-    expect(leadState(card('a', { coordinator: null, counts: { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, paused: 2 } }), NOW)).toBe('paused');
+    expect(leadState(card('a', { coordinator: null, counts: { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0, paused: 2 } }), NOW)).toBe('paused');
   });
 
   it('is stale when the coordinator was not seen for an hour', () => {
@@ -31,7 +31,7 @@ describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => 
   });
 
   it('is running when the coordinator works, or any thread or agent works, else idle', () => {
-    const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0 };
+    const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0 };
     expect(leadState(card('a', { coordinator: { session: 's', link: null, lastSeen: minutesAgo(1), activity: 'working', note: null } }), NOW)).toBe('running');
     expect(leadState(card('a', { counts: { ...base, working: 1 } }), NOW)).toBe('running');
     expect(leadState(card('a', { counts: { ...base, agents: 2 } }), NOW)).toBe('running');
@@ -40,7 +40,7 @@ describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => 
 });
 
 describe('K1 what asks for the owner, and the order of the cards', { tags: ['critical'] }, () => {
-  const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0 };
+  const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0 };
 
   it('counts what needs you, the failing tests, the blocked threads and the open decisions', () => {
     const hot = card('a', { counts: { ...base, needsYou: 2, testsFailing: 1, blocked: 3 }, attention: ['Q-1 needs a decision: x', 'T-2 failing: y', 'Q-4 needs a decision: z'] });

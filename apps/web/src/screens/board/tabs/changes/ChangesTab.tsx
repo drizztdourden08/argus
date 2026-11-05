@@ -5,26 +5,17 @@ import type { PullRequest } from '../../../../data/types';
 import { Panel } from '../../../../shell';
 import { useTabView } from '../../BoardTabsRow';
 import { useGroupsData } from '../../item-groups';
-import { CHANGES_DIRECTION, CHANGES_FILTERS, CHANGES_GROUPS, CHANGES_ORDERS, CHANGES_TAB, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT } from './changes.constants';
-import type { ChangesGroup, ChangesOrder, ChangesTabProps } from './changes.type';
+import { CHANGES_SETUP, CHANGES_TAB, EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT } from './changes.constants';
+import type { ChangesTabProps } from './changes.type';
 import { ChangesTools } from './ChangesTools';
 import { viewPrs } from './model';
 import { PrGroups } from './sub-components/PrGroups';
-
-const SETUP = {
-  groups: CHANGES_GROUPS.map((choice): ChangesGroup => choice.id),
-  orders: CHANGES_ORDERS.map((choice): ChangesOrder => choice.id),
-  group: 'item' as ChangesGroup,
-  order: 'created' as ChangesOrder,
-  direction: CHANGES_DIRECTION,
-  filters: CHANGES_FILTERS,
-};
 
 const ChangesTab = (props: ChangesTabProps) => {
   const { boardKey } = props;
   const prs = useCollection<PullRequest>(boardKey, 'prs');
   const data = useGroupsData(boardKey);
-  const view = useTabView(CHANGES_TAB, SETUP);
+  const view = useTabView(CHANGES_TAB, CHANGES_SETUP);
   if (!prs.ready) return <Text tone="muted">{LOADING_TEXT}</Text>;
   const shown = viewPrs(prs.docs, view.filters, view.order, view.direction);
   const total = prs.docs.length;

@@ -19,13 +19,17 @@ const rank = (view: RunView): number => {
 
 const byRank = (a: RunView, b: RunView): number => rank(a) - rank(b) || compareIds(b.item.id, a.item.id);
 
-const matches = (view: RunView, filters: TestFilters): boolean => {
+const inScope = (view: RunView, filters: TestFilters): boolean => {
   if (filters.plan && view.plan?.id !== filters.plan) return false;
-  if (filters.runs.length > 0 && !filters.runs.includes(view.item.id)) return false;
-  const query = filters.query.trim().toLowerCase();
+  return filters.runs.length === 0 || filters.runs.includes(view.item.id);
+};
+
+const matchesQuery = (view: RunView, query: string): boolean => {
   if (!query) return true;
   return [view.item.id, view.plan?.id ?? '', view.plan?.title ?? '', view.build ?? ''].some((text) => text.toLowerCase().includes(query));
 };
+
+const matches = (view: RunView, filters: TestFilters): boolean => inScope(view, filters) && matchesQuery(view, filters.query.trim().toLowerCase());
 
 const runItems = (items: readonly ItemDoc[]): ItemDoc[] => items.filter((item) => item.type === 'test-run' && !item.deletedAt);
 
