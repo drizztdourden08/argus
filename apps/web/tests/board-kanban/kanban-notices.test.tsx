@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MIN, ago, boardOf, cleanKanban, item, mountKanban } from './kanban-harness';
+import { MIN, ago, boardOf, cardOf, cleanKanban, item, mountKanban } from './kanban-harness';
 
 cleanKanban();
 
@@ -24,7 +24,8 @@ describe('K3 a change the board did not take: the notices', { tags: ['standard']
     await mountKanban({ items: [item('I-1', { status: 'review', rev: 5 })], entries: [conflicted] });
     const region = await screen.findByRole('region', { name: NOTICES });
     expect(within(region).getByText('Conflict on I-1: worker changed it after you looked. Nothing of yours was applied.')).toBeTruthy();
-    expect(within(await boardOf()).getByText('conflict')).toBeTruthy();
+    await boardOf();
+    expect(within(within(cardOf('I-1')).getByRole('group', { name: 'Signals' })).getByTitle('conflict')).toBeTruthy();
   });
 
   it('keeps theirs by acknowledging the entry', async () => {
