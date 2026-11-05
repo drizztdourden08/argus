@@ -231,7 +231,7 @@ mod tests {
     #[test]
     fn a_category_colour_worn_twice_or_a_record_with_both_looks_is_found() {
         let text = refused(|d| d["types"][7]["color"] = json!("violet"));
-        assert!(text.contains("violet is worn by epic and build"), "{text}");
+        assert!(text.contains("violet is worn by epic and test-case"), "{text}");
         let text = refused(|d| d["records"][0]["tone"] = json!("info"));
         assert!(text.contains("set exactly one of color and tone"), "{text}");
         let text = refused(|d| d["records"][1]["tone"] = json!("loud"));
