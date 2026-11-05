@@ -21,6 +21,7 @@ const byRank = (a: RunView, b: RunView): number => rank(a) - rank(b) || compareI
 
 const matches = (view: RunView, filters: TestFilters): boolean => {
   if (filters.plan && view.plan?.id !== filters.plan) return false;
+  if (filters.runs.length > 0 && !filters.runs.includes(view.item.id)) return false;
   const query = filters.query.trim().toLowerCase();
   if (!query) return true;
   return [view.item.id, view.plan?.id ?? '', view.plan?.title ?? '', view.build ?? ''].some((text) => text.toLowerCase().includes(query));

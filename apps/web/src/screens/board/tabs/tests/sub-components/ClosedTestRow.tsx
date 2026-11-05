@@ -11,7 +11,7 @@ const ClosedTestRow = (props: DoneSummaryProps) => {
   const { test } = props;
   const { boardKey, threads, onOpen } = useTestsShared();
   return (
-    <Box data-test={test.id}>
+    <Box data-swap-item data-test={test.id}>
       <RecordRow
         head={{ kind: CASE_KIND, code: test.id, assignee: caseAssignee(test), boardKey, threads, menu: [], menuLabel: `More actions for ${test.id}` }}
         title={test.title}

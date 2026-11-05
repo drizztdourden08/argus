@@ -21,7 +21,7 @@ const CaseRow = (props: TestPartProps) => {
   const actions = useTestActions(boardKey);
   const toRun = isToRun(test);
   return (
-    <Box data-test={test.id} data-to-run={toRun ? '' : undefined} onKeyDown={rowKeys(toRun, controls)}>
+    <Box data-swap-item data-test={test.id} data-to-run={toRun ? '' : undefined} onKeyDown={rowKeys(toRun, controls)}>
       <RecordRow
         head={{
           kind: CASE_KIND,

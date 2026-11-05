@@ -2,8 +2,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { addFlag, openFilters, pickClause } from '../helpers/filter-clauses';
-import { filterBoard, shown, stored, typeSearch } from './filter-dom';
+import { openFilters } from '../helpers/filter-clauses';
+import { filterBoard, pick, shown, stored, typeSearch } from './filter-dom';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
@@ -27,13 +27,13 @@ describe('S1 the other filters', { tags: ['standard'] }, () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
     await openFilters();
-    await pickClause('Status', 'Failed');
+    await pick('Status', 'Failed');
     shown('T-3');
-    fireEvent.click(screen.getByRole('button', { name: 'Remove filter on Status' }));
-    await pickClause('Subject', 'play');
+    await pick('Status', 'Any');
+    await pick('Subject', 'play');
     shown('T-2');
-    fireEvent.click(screen.getByRole('button', { name: 'Remove filter on Subject' }));
-    await addFlag('Needs you');
+    await pick('Subject', 'Any');
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Needs you' }));
     shown('T-1');
   });
 
@@ -41,7 +41,7 @@ describe('S1 the other filters', { tags: ['standard'] }, () => {
     await mountTab(filterBoard());
     await screen.findByText('Login works');
     await openFilters();
-    await pickClause('Threads', 'coder');
+    await pick('Threads', 'coder');
     shown('T-2');
   });
 });
@@ -52,7 +52,7 @@ describe('S1 the saved filters', { tags: ['standard'] }, () => {
     await screen.findByText('Login works');
     await openFilters();
     typeSearch('works');
-    await addFlag('Archived');
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Archived' }));
     expect(stored('coord.f')).toMatchObject({ q: 'works', archived: true, sort: 'rank' });
   });
 

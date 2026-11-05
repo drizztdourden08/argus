@@ -53,6 +53,7 @@ interface RunView {
 interface TestFilters {
   query: string;
   threads: string[];
+  runs: string[];
   status: string;
   subject: string;
   plan: string;

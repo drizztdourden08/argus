@@ -21,12 +21,8 @@ interface TestsToolbarProps {
   view: TestsView;
   threads: Option[];
   subjects: string[];
+  runs: Option[];
   plans: Option[];
-}
-
-interface ViewRowProps {
-  state: TestsState;
-  view: TestsView;
 }
 
 interface TestNoticesProps {
@@ -190,5 +186,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, RunCardProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, RunCardProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps,
 };
