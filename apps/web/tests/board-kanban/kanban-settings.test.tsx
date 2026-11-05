@@ -23,6 +23,7 @@ describe('I-105 the board icon setting', { tags: ['critical'] }, () => {
     const input = dialog.querySelector('input[type="file"]');
     if (!(input instanceof HTMLInputElement)) throw new Error('no file input');
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.gif', { type: 'image/gif' })] } });
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Only PNG and SVG');
     expect(view.posted.some((sent) => sent.body.kind === 'icon')).toBe(false);
   });
 

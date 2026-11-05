@@ -45,7 +45,7 @@ const IconSection = (props: SectionProps) => {
         />
       )}
       {mode === 'upload' && (
-        <DropZone variant="inline" size="sm" accept={ICON_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} />
+        <DropZone variant="inline" size="sm" accept={ICON_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} onReject={choice.reject} />
       )}
       {choice.problem && <Text variant="caption" tone="danger" role="alert">{choice.problem}</Text>}
     </Flex>

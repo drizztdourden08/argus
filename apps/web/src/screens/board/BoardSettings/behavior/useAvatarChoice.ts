@@ -5,7 +5,7 @@ import { BRAND_PREFIX, fileToAvatar } from '../../../../avatar';
 import { setAvatar } from '../../../../data/posts';
 import { useDoc } from '../../../../data/react';
 import type { BoardMeta } from '../../../../data/types';
-import { AVATAR_SAVED } from '../BoardSettings.constants';
+import { AVATAR_REFUSED, AVATAR_SAVED } from '../BoardSettings.constants';
 import type { AvatarChoice } from '../BoardSettings.type';
 import { useSettingSave } from './useSettingSave';
 
@@ -22,7 +22,8 @@ const useAvatarChoice = (boardKey: string): AvatarChoice => {
       setProblem(error instanceof Error ? error.message : 'That image could not be used.');
     }
   }, [save, setProblem]);
-  return { setting, busy, problem, pickBrand, upload, reset };
+  const reject = useCallback(() => setProblem(AVATAR_REFUSED), [setProblem]);
+  return { setting, busy, problem, pickBrand, upload, reject, reset };
 };
 
 export { useAvatarChoice };

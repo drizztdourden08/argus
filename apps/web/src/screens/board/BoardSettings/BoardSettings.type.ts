@@ -37,6 +37,7 @@ interface AvatarChoice {
   problem: string | null;
   pickBrand: (app: BrandApp) => Promise<void>;
   upload: (files: File[]) => Promise<void>;
+  reject: () => void;
   reset: () => Promise<void>;
 }
 

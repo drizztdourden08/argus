@@ -7,7 +7,7 @@ import { setIcon } from '../../../../data/posts';
 import { useDoc } from '../../../../data/react';
 import type { BoardIconName } from '../../../../board-icon';
 import type { BoardMeta } from '../../../../data/types';
-import { ICON_SAVED, ICON_VALUE_PREFIX } from '../BoardSettings.constants';
+import { ICON_REFUSED, ICON_SAVED, ICON_VALUE_PREFIX } from '../BoardSettings.constants';
 import type { IconChoice } from '../BoardSettings.type';
 import { useSettingSave } from './useSettingSave';
 
@@ -23,7 +23,8 @@ const useIconChoice = (boardKey: string): IconChoice => {
     if (result.ok) await save(result.url);
     else setProblem(result.reason);
   }, [save, setProblem]);
-  return { setting: meta?.icon ?? null, avatar: meta?.avatar ?? null, busy, problem, pickBrand, pickIcon, upload, reset };
+  const reject = useCallback(() => setProblem(ICON_REFUSED), [setProblem]);
+  return { setting: meta?.icon ?? null, avatar: meta?.avatar ?? null, busy, problem, pickBrand, pickIcon, upload, reject, reset };
 };
 
 export { useIconChoice };

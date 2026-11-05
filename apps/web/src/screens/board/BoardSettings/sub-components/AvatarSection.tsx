@@ -19,7 +19,7 @@ const AvatarSection = (props: SectionProps) => {
         disabled={choice.busy}
         onPick={(app) => void choice.pickBrand(app)}
       />
-      <DropZone variant="inline" size="sm" accept={AVATAR_TYPES} label="Upload an image" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} />
+      <DropZone variant="inline" size="sm" accept={AVATAR_TYPES} label="Upload an image" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} onReject={choice.reject} />
       <AvatarReset disabled={choice.busy || choice.setting === null} problem={choice.problem} onReset={() => void choice.reset()} />
     </Flex>
   );
