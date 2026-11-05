@@ -13,7 +13,7 @@ use crate::posts::{Source, new_post_id};
 
 const MAX_ENTRY_BYTES: usize = 256 * 1024;
 const RESULTS: [&str; 4] = ["pass", "fail", "partial", "blocked"];
-const PORTFOLIO_KINDS: [&str; 2] = ["decision", "followup"];
+const PORTFOLIO_KINDS: [&str; 3] = ["decision", "followup", "profile"];
 const SERVER_FIELDS: [&str; 12] = [
     "appliedAt",
     "current",
@@ -153,6 +153,11 @@ fn stamp_owner(e: &mut Map<String, Value>, source: Source, via: Option<&str>) {
 }
 
 fn finish_portfolio(mut e: Map<String, Value>) -> Result<Value, ApiError> {
+    if e.get("kind").is_some_and(|k| k == "profile") {
+        e.remove("status");
+        e.remove("outcome");
+        return Ok(Value::Object(e));
+    }
     let project = e.get("project").and_then(Value::as_str);
     if !project.is_some_and(|p| p == "all" || is_key(p)) {
         return Err(bad("project must be a project key or \"all\""));

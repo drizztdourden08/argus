@@ -5,6 +5,7 @@ use std::path::Path;
 
 use serde_json::{Map, Value, json};
 
+use super::profile;
 use super::registry::project_keys;
 use crate::Board;
 use crate::error::BoardError;
@@ -187,9 +188,12 @@ pub fn import_portfolio_entries(
         let id = display(&e["id"]);
         let status = if let Some(known) = doc(p, "entries", &id) {
             nullish(known, "status").unwrap_or_else(|| "duplicate".to_owned())
-        } else if e["author"] != "human"
-            || !e["kind"].as_str().is_some_and(|k| POST_KINDS.contains(&k))
-        {
+        } else if e["author"] != "human" {
+            "refused".to_owned()
+        } else if e["kind"] == "profile" {
+            out.imported += 1;
+            profile::import(p, &id, e)
+        } else if !e["kind"].as_str().is_some_and(|k| POST_KINDS.contains(&k)) {
             "refused".to_owned()
         } else {
             crate::json::map_mut(p, "entries").insert(id.clone(), e.clone());
