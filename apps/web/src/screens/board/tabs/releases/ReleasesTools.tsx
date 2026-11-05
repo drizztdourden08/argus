@@ -19,7 +19,7 @@ const ReleasesTools = (props: ReleasesToolsProps) => {
   ];
   useTabTools(RELEASES_TAB, [{ id: 'releases-view', priority: 5, node: <TabGroupSort sort={sort} /> }]);
   return (
-    <TabFilterBar tab={RELEASES_TAB} boardKey={boardKey} fields={fields} filters={view.filters} patchFilters={view.patchFilters} placeholder="Search channel or version" />
+    <TabFilterBar tab={RELEASES_TAB} boardKey={boardKey} fields={fields} filters={view.filters} patchFilters={view.patchFilters} placeholder="Search channel or version" focus={false} />
   );
 };
 

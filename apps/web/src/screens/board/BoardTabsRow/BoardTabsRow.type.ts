@@ -67,6 +67,8 @@ interface TabFilterBarProps<F extends { query: string }> {
   filters: F;
   patchFilters: (values: Partial<F>) => void;
   placeholder: string;
+  /** False on a tab without threads (Releases): no Focus chip. */
+  focus?: boolean;
 }
 
 interface TabFieldControlProps<F> {

@@ -7,8 +7,8 @@ import { TabFieldControls } from './TabFieldControls';
 import { TabFilterRow } from './TabFilterRow';
 
 const TabFilterBar = <F extends { query: string }>(props: TabFilterBarProps<F>) => {
-  const { tab, boardKey, fields, filters, patchFilters, placeholder } = props;
-  const focused = useFocusActive(boardKey);
+  const { tab, boardKey, fields, filters, patchFilters, placeholder, focus = true } = props;
+  const focused = useFocusActive(boardKey) && focus;
   const count = fields.filter((field) => fieldIsSet(field, filters)).length + (filters.query ? 1 : 0) + (focused ? 1 : 0);
   return (
     <TabFilterRow tab={tab} count={count}>
@@ -17,7 +17,7 @@ const TabFilterBar = <F extends { query: string }>(props: TabFilterBarProps<F>) 
         onSearchChange={(query) => patchFilters({ query } as Partial<F>)}
         searchPlaceholder={placeholder}
         searchLabel={placeholder}
-        leading={<BoardFocus boardKey={boardKey} />}
+        leading={focus ? <BoardFocus boardKey={boardKey} /> : undefined}
         extra={<TabFieldControls fields={fields} filters={filters} patch={patchFilters} />}
       />
     </TabFilterRow>
