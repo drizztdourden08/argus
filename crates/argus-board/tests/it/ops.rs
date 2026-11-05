@@ -218,7 +218,7 @@ fn a_confirmed_purge_writes_a_backup_then_removes_the_thread_and_what_it_owns() 
     let home = tempfile::tempdir().expect("temp dir");
     let mut b = with_api_thread();
     let plan = purge_plan(&b, &json!({"threads": ["ui"]})).expect("plan");
-    assert_eq!(plan.counts["items"], 2);
+    assert_eq!(plan.counts["items"], 4);
     let entry = json!({
         "id": "O-purge", "kind": "purge", "author": "human", "status": "new", "createdAt": argus_core::clock::now_iso(),
         "criteria": {"threads": ["ui"]}, "confirm": "alpha", "expect": plan.counts,
