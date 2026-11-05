@@ -2,12 +2,13 @@
 import { Avatar, Box, Tooltip } from '@drizztdourden08/tessera';
 import { BrandMark } from '@drizztdourden08/tessera/brand';
 import type { LeadMarkProps } from '../records.type';
+import './FrameMark.css';
 
 const LeadMark = (props: LeadMarkProps) => {
   const { source, label, size = 'xs' } = props;
   return (
     <Tooltip content={label}>
-      <Box as="span" data-lead-mark={source.kind}>
+      <Box as="span" className="frame-mark" data-lead-mark={source.kind}>
         {source.kind === 'brand' ? (
           <BrandMark app={source.app} size="sm" variant="app-icon" title={label} />
         ) : (

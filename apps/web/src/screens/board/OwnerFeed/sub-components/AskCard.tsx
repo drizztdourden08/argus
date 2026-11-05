@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Card, Flex, Text } from '@drizztdourden08/tessera';
+import { Card, Text } from '@drizztdourden08/tessera';
 import { RecordHead, useRecordPane } from '../../../../shell';
 import { askMode } from '../../feed-model';
 import { askLines } from '../behavior/ask-lines';
@@ -19,13 +19,12 @@ const AskCard = (props: AskCardProps) => {
   const title = <Text weight={500} clamp={1}>{lines.title}</Text>;
   return (
     <Card data-feed-type={card.type} data-swap-item edge="left" edgeTone="warning">
-      <Flex direction="column" gap="xs" data-record={facts.code}>
-        <RecordHead {...feedHead(card, facts, ctx, () => pane.open(facts.code))} title={title} />
+      <RecordHead {...feedHead(card, facts, ctx, () => pane.open(facts.code))} title={title} defaultOpen attrs={{ 'data-record': facts.code }}>
         <ContextPreview entry={entry} actions={ctx.actions} onMore={() => pane.open(entry.id)} />
         {lines.rest === '' ? null : <Text smartTimes>{lines.rest}</Text>}
         <EntryImages entry={entry} />
         <AnswerBlock entry={entry} mode={askMode(entry)} actions={ctx.actions} />
-      </Flex>
+      </RecordHead>
     </Card>
   );
 };

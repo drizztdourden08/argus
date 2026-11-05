@@ -5,6 +5,7 @@ import type { ItemRef, ThreadChoice } from '../../data/kanban';
 import type { WithId } from '../../data/react';
 import type { KindCollection } from '../../data/registry';
 import type { AvatarSource } from '../../avatar';
+import type { RecordFrameProps } from './record-frame.type';
 
 type HeadSize = 'xs' | 'sm';
 
@@ -83,11 +84,14 @@ interface RecordHeadProps {
   threads: HeadThreads;
   menu: readonly MenuGroup[];
   menuLabel: string;
-  title?: ReactNode;
   mark?: ReactNode;
   size?: HeadSize;
   selection?: HeadSelection;
 }
+
+type HeadFrameKeys = 'title' | 'compactTitle' | 'pinTitle' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children';
+
+interface RecordHeadViewProps extends RecordHeadProps, Pick<RecordFrameProps, HeadFrameKeys> {}
 
 interface KindMark {
   color?: TagCategoryColor;
@@ -131,6 +135,7 @@ interface RecordCardProps {
   foot?: ReactNode;
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;
+  defaultOpen?: boolean;
 }
 
 interface ActionDef {
@@ -179,6 +184,6 @@ interface RecordPaneScopeProps {
 
 export type {
   ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps,
-  OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
+  OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordHeadViewProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
   RecordPaneState, RecordRef, RecordTarget, ShownCodeProps, TextPart, TypeIconProps,
 };
