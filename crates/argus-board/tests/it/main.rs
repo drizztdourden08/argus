@@ -2,6 +2,7 @@ mod common;
 
 mod agent_links;
 mod dep_inbox;
+mod board_icon;
 mod deps;
 mod entry_images;
 mod export_import;

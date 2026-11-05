@@ -95,7 +95,7 @@ fn route_entry(board: &Board, e: &Value) -> String {
 fn thread_of_op(board: &Board, e: &Value) -> Value {
     if matches!(
         e["kind"].as_str(),
-        Some("bulk" | "purge" | "build" | "avatar")
+        Some("bulk" | "purge" | "build" | "avatar" | "icon")
     ) {
         return Value::Null;
     }

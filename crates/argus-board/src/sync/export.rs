@@ -182,6 +182,7 @@ fn board_meta(board: &Board) -> Value {
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
         "handedBuild": nn(board, "handedBuild"), "handedAt": nn(board, "handedAt"),
         "avatar": nn(board, "avatar"),
+        "icon": nn(board, "icon"),
     })
 }
 
