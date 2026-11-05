@@ -8,7 +8,7 @@ const SVG = 'data:image/svg+xml;base64,AAAA';
 describe('I-109 the icon of a board', { tags: ['critical'] }, () => {
   it('reads brand, curated icon, png, svg and card url settings', () => {
     expect(resolveBoardIcon('x', 'brand:rotp').source).toEqual({ kind: 'brand', app: 'rotp' });
-    expect(resolveBoardIcon('x', 'icon:rocket').source).toEqual({ kind: 'icon', name: 'rocket' });
+    expect(resolveBoardIcon('x', 'icon:package').source).toEqual({ kind: 'icon', name: 'package' });
     expect(resolveBoardIcon('x', PNG).source).toEqual({ kind: 'image', src: PNG });
     expect(resolveBoardIcon('x', SVG).source).toEqual({ kind: 'image', src: SVG });
     const url = '/api/p/x/icon?v=0a1b2c3d';

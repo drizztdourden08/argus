@@ -1,21 +1,21 @@
 /* @layer renderer-app @kind constants */
 const BOARD_ICON_NAMES = [
-  'rocket',
-  'boxes',
-  'hammer',
-  'flask-conical',
   'gamepad-2',
   'palette',
-  'brain',
+  'flask',
+  'book',
   'globe',
-  'terminal',
   'database',
-  'shield',
-  'zap',
-  'leaf',
+  'code',
+  'cpu',
+  'package',
+  'compass',
+  'layers',
+  'network',
   'music',
   'camera',
-  'book-open',
+  'heart',
+  'zap',
 ] as const;
 
 const ICON_MAX = 64 * 1024;
