@@ -225,35 +225,11 @@ fn base_json() -> Value {
 }
 
 #[test]
-fn a_pass_wakes_nobody_while_the_run_is_still_running() {
+fn a_pass_wakes_nobody_even_the_one_that_ends_a_run() {
     let running = with_run(base_json(), "running", "ui", &results());
     quiet(&alpha(&running, Some(&running)).wakes(&result("T-3", "pass", "", "O-1")));
-}
-
-#[test]
-fn the_pass_that_ends_the_run_wakes_once_with_the_counts() {
-    let before = with_run(base_json(), "running", "ui", &results());
     let after = with_run(base_json(), "reported", "ui", &results());
-    let wakes = alpha(&after, Some(&before)).wakes(&result("T-3", "pass", "", "O-1"));
-    assert_eq!(
-        wakes,
-        [WakeInput::about(
-            "alpha",
-            "ui",
-            "run-complete",
-            "I-9",
-            "run 4: all tests run, 2 pass 1 fail"
-        )]
-    );
-}
-
-#[test]
-fn a_pass_on_a_run_that_had_already_ended_or_belongs_to_another_thread_wakes_nobody() {
-    let done = with_run(base_json(), "passed", "ui", &results());
-    quiet(&alpha(&done, Some(&done)).wakes(&result("T-3", "pass", "", "O-1")));
-    let before = with_run(base_json(), "running", "api", &results());
-    let other = with_run(base_json(), "reported", "api", &results());
-    quiet(&alpha(&other, Some(&before)).wakes(&result("T-3", "pass", "", "O-1")));
+    quiet(&alpha(&after, Some(&running)).wakes(&result("T-3", "pass", "", "O-1")));
 }
 
 #[test]

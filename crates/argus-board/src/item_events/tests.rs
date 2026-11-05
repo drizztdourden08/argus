@@ -460,6 +460,18 @@ fn a_run_waits_for_its_build_and_is_told_when_the_build_turns_live() {
 }
 
 #[test]
+fn a_run_handed_to_the_owner_is_left_to_the_handed_ping() {
+    let none = json!([]);
+    let mut handed = run("ready", "build-1", &none);
+    handed["assignee"] = json!("owner");
+    let before = board(&[run("draft", "build-1", &none)], &launchers(false));
+    let after = board(&[handed.clone()], &launchers(false));
+    assert_eq!(item_events(&before, &after).len(), 0);
+    let retired = board(&[handed], &launchers(true));
+    assert_eq!(kinds(&item_events(&before, &retired)), ["assigned"]);
+}
+
+#[test]
 fn a_run_that_ended_is_told_to_its_thread_with_its_counts() {
     let open = json!([{"test": "T-1", "status": "pass"}]);
     let ended = json!([

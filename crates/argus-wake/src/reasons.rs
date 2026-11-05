@@ -8,11 +8,10 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 47] = [
+pub const WAKE_REASONS: [&str; 46] = [
     "test-fail",
     "test-partial",
     "test-blocked",
-    "run-complete",
     "owner-answer",
     "owner-note",
     "owner-decision",

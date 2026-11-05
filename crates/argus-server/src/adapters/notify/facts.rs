@@ -1,7 +1,7 @@
 //! What the automatic pings read of an exported board.
 
 use argus_board::Board;
-use argus_board::launchers::build_ready;
+use argus_board::handed::is_handed_run;
 use argus_core::js::truthy;
 use argus_notify::{BoardFacts, EntryFact, HandedRun};
 use serde_json::Value;
@@ -32,17 +32,6 @@ fn entry_of(entry: &Value) -> EntryFact {
     }
 }
 
-/// Is the test run ready, with a live build, and given to the owner?
-fn is_handed(board: &Board, run: &Value) -> bool {
-    run["type"] == "test-run"
-        && run["stage"] == "ready"
-        && run["assignee"] == "owner"
-        && !removed(run)
-        && run["fields"]["build"]
-            .as_str()
-            .is_some_and(|name| build_ready(board, name))
-}
-
 fn handed_of(board: &Board, run: &Value) -> HandedRun {
     let plan = &run["fields"]["plan"];
     HandedRun {
@@ -59,7 +48,7 @@ fn handed_of(board: &Board, run: &Value) -> HandedRun {
 /// The run handed to the owner: the one changed last.
 fn handed_run(board: &Board) -> Option<HandedRun> {
     values(&board["items"])
-        .filter(|run| is_handed(board, run))
+        .filter(|run| is_handed_run(board, run))
         .max_by_key(|run| text_of(&run["updatedAt"]))
         .map(|run| handed_of(board, run))
 }

@@ -20,6 +20,7 @@ use std::collections::HashSet;
 use serde_json::Value;
 
 use crate::Board;
+use crate::handed::is_handed_run;
 use crate::json::{section, text};
 use people::gone;
 
@@ -196,5 +197,13 @@ fn of_item(m: &Moved<'_>) -> Vec<ItemEvent> {
     out.extend(flow::dep_landed(m));
     out.extend(plans::ready(m));
     out.extend(plans::run_done(m));
+    if is_handed_run(m.seen.after, m.now) {
+        out.retain(|e| !told_by_handed_ping(e));
+    }
     out
+}
+
+/// An owner notice about a handed run that the notify handed ping already tells (D-64).
+fn told_by_handed_ping(event: &ItemEvent) -> bool {
+    event.to == Hearer::Owner && matches!(event.kind, EventKind::RunReady | EventKind::Assigned)
 }

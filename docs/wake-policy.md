@@ -30,7 +30,7 @@ A thread is woken for:
   `portfolio-*` sent down by the Overlord);
 - a message to it that needs action (`thread-message`, and `lead-message` for a lead's decision);
 - one of its agents finished or is gone (`agent-idle`, `agent-orphan`);
-- its own test or run result (`test-*`, `run-complete`, `run-failed`);
+- its own test or run result (`test-*`, `run-failed`; a run of its plan that ended is `plan-run-done`);
 - a real fault of its own work (`process-reaped`, a worktree removal it asked for that was
   refused, which comes as a `thread-message`);
 - a dependency on another board that needs it to act: a request for it (`dep-request`), or the
@@ -124,7 +124,12 @@ recorded only with one summary). Each has a switch under `notify.auto`:
 | item assigned to the owner by a thread | `assigned` | Assigned to you | `<p>: I-7 (title) was assigned to you by <who>` |
 | to-do assigned to the owner (`assignee` `owner`) | `assigned` | To-do for you | `<p>: to-do H-3 (text) was given to you by <who>` |
 | a bug the owner reported reaches `verifying` | `verify` | Ready to verify | `<p>: I-7 (title) is ready to verify` |
-| a test run is `ready` and assigned to the owner (handed) | `run` | Ready to run | `<p>: test run I-9 (title) is ready to run on <build>` |
+| a test run becomes `ready` on a live build, not handed to the owner | `run` | Ready to run | `<p>: test run I-9 (title) is ready to run on <build>` |
+| a test run is handed: `ready`, assigned to the owner, build live | `handed` | Ready to test | `<Project>: <title> is ready to test (N tests)` (the notify handed ping, not the item watch) |
+
+A handed run pings the owner once, through the notify handed ping (D-64). The item watch sends
+neither the `run` notice nor the assigned notice for it; one check, `argus_board::handed`, says
+which run is handed for both.
 
 A to-do with no assignee is the owner's as before and pings nobody: only an explicit `owner` does.
 The owner never hears of a change he made himself.

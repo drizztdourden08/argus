@@ -655,8 +655,10 @@ its proofs stay true. Skip stays in the run. There is one open run per plan. End
 `passed` when every case passed, else to `reported`, and the plan to `reported`. A plan keeps at
 least one case: create and edit refuse none. Runs are hidden on the kanban and shown in the Tests
 tab and in the plan's Runs tab. The events are `run-ready` (a run became ready for the owner) and
-`plan-run-done` (a run ended, with the counts). `coord test migrate-runs [--dry-run]` turns the
-old `fields.runs` and bundles into runs once per board.
+`plan-run-done` (a run ended, with the counts). A handed run is told once, by the notify handed
+ping; the item watch sends no `run-ready` or assigned notice for it (D-64).
+`coord test migrate-runs [--dry-run]` turns the old `fields.runs` and bundles into runs once per
+board.
 
 #### Item images
 
@@ -864,7 +866,7 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `lead-message` | wake | a lead's decision: it asks for action |
 | `thread-message` | wake | a message to this thread (also a worktree request it filed, done or refused) |
 | `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
-| `test-fail`, `test-partial`, `test-blocked`, `run-complete`, `run-failed` | wake | its own test or run result |
+| `test-fail`, `test-partial`, `test-blocked`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
 | `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
 | `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |

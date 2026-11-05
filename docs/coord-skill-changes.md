@@ -328,8 +328,8 @@ after the Argus build with I-99 is deployed locally. The skill source is
    hands builds to the owner (`coord build hand`)" becomes `coord test run hand`.
 5. `coordinator.md` line 150: the `coordinator-builds.md` row reads "handing the owner a test run".
 6. `coordinator-wakes.md` line 50: "the pass that leaves no manual test of a bundle pending" becomes
-   the `run-complete` wake: the pass that leaves no manual test of a run pending (once, with the
-   counts). The reason `bundle-complete` is renamed `run-complete`.
+   the `plan-run-done` wake: a run of the thread's plan ended (once, with the counts). The reason
+   `bundle-complete` goes; there is no `run-complete` (D-63).
 7. `portfolio.md` line 151: "when a lead hands a bundle (`<Project>: <bundle> is ready to test
    (N tests)`)" becomes "when a lead hands a run (`<Project>: test run I-n (title) is ready to run
    on <build>`)".

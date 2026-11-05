@@ -11,6 +11,7 @@ pub mod content;
 pub mod demo;
 pub mod deps;
 pub mod error;
+pub mod handed;
 pub mod ids;
 pub mod inbox;
 pub mod item_events;
