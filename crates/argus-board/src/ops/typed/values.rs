@@ -69,3 +69,13 @@ pub(crate) fn require(ty: &ItemType, fields: &Value) -> Result<(), BoardError> {
     }
     Ok(())
 }
+
+/// Refuses a test plan left without a case: a plan is always run from its cases.
+pub(crate) fn keep_a_case(ty: &ItemType, fields: &Value) -> Result<(), BoardError> {
+    if ty.id == "test-plan" && fields["cases"].as_array().is_none_or(Vec::is_empty) {
+        return Err(refuse(
+            "a test plan keeps at least one case: give cases=T-n in fields.",
+        ));
+    }
+    Ok(())
+}
