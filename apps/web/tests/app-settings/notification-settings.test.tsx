@@ -38,7 +38,7 @@ describe('S1 the notification settings in the Settings dialog', { tags: ['standa
     stubApi((call) => (call.method === 'POST' ? { status: 403, body: { error: { code: 'forbidden', message: 'no' } } } : { body: SETTINGS }));
     await openNotifications();
     fireEvent.click(await screen.findByRole('switch', { name: 'Ping sound' }));
-    expect(await screen.findByText('no')).toBeTruthy();
+    expect(await screen.findByText('Only this page may change the settings.')).toBeTruthy();
   });
 
   it('leaves a sentence instead of a broken row when the settings cannot be read', async () => {

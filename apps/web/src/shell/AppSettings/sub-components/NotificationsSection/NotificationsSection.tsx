@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { SettingsSection } from '@drizztdourden08/tessera';
+import { Callout, SettingsSection } from '@drizztdourden08/tessera';
 import type { SettingsSectionRow } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useNotifySettings } from '../../../../data/notify';
@@ -22,6 +22,7 @@ const NotificationsSection = () => {
     description: test.line,
     actions: [{ id: 'send', label: 'Send', loading: test.busy, onSelect: test.send }],
   };
+  if (settings.problem) return <Callout tone="danger">{`The settings could not be read: ${settings.problem}.`}</Callout>;
   const top = withProblem([osRow(settings, report), ...levelRows(settings, report)], refused);
   return (
     <>

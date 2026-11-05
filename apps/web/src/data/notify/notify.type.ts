@@ -35,6 +35,7 @@ interface NotifyState {
   os: boolean;
   auto: AutoLevels;
   ready: boolean;
+  problem: string | null;
 }
 
 type Refusal = string | null;

@@ -4,6 +4,7 @@ import type { NotifyLevel } from '../types';
 import type { AutoAnswer, AutoPatch, LevelPatch, NotifyState, Refusal } from './notify.type';
 import { readAuto } from './read-auto';
 import { readSettings } from './read-settings';
+import { refusalText } from './refusal-text';
 import { EMPTY, EMPTY_AUTO } from './settings-store.constants';
 import { writeAuto } from './write-auto';
 import { writeSettings } from './write-settings';
@@ -30,9 +31,10 @@ const withAuto = (answer: AutoAnswer): NotifyState => ({ ...state, os: answer.os
 
 const load = (): Promise<void> => {
   loading ??= Promise.all([readSettings(), readAuto()]).then(
-    ([levels, auto]) => publish({ ...withAuto(auto), toast: levels.toast ?? {}, sound: levels.sound ?? {}, ready: true }),
-    () => {
+    ([levels, auto]) => publish({ ...withAuto(auto), toast: levels.toast ?? {}, sound: levels.sound ?? {}, ready: true, problem: null }),
+    (failure: unknown) => {
       loading = null;
+      publish({ ...state, problem: errorMessage(failure) });
     },
   );
   return loading;
@@ -54,7 +56,7 @@ const saveLevel = async (level: NotifyLevel, patch: LevelPatch): Promise<Refusal
     return null;
   } catch (failure) {
     publish({ ...state, toast: before.toast, sound: before.sound });
-    return errorMessage(failure);
+    return refusalText(failure);
   }
 };
 
@@ -66,7 +68,7 @@ const saveAuto = async (patch: AutoPatch): Promise<Refusal> => {
     return null;
   } catch (failure) {
     publish({ ...state, os: before.os, auto: before.auto });
-    return errorMessage(failure);
+    return refusalText(failure);
   }
 };
 
