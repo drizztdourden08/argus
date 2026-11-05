@@ -1,5 +1,7 @@
 //! The link rules of `for`, and what serves an item.
 
+// test-tag: critical
+
 use serde_json::json;
 
 use super::{applied, board, build, item, retire_by_hand, to_lane};

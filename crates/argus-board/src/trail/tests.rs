@@ -1,3 +1,5 @@
+// test-tag: critical
+
 use serde_json::{Value, json};
 
 use super::{Boards, MAX_DEPTH, Node, summaries, walk};

@@ -19,6 +19,7 @@ use serde_json::{Map, Value};
 use super::block::{is_id, linked, make_todo};
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{apply, op};
+use crate::verbs::work::report_lines::say_report;
 use crate::verbs::work::run::{Res, Run};
 use crate::who::Caller;
 

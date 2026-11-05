@@ -1,3 +1,5 @@
+// test-tag: critical
+
 use argus_core::fixture::with_items;
 use serde_json::{Value, json};
 

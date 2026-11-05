@@ -38,7 +38,7 @@ describe('I-85 P1 the web reads the codes and looks of every kind of the record 
     expect(codes.slice(14)).toEqual(['agent:A', 'change:PR', 'release:V', 'dependency:DP', 'run:R', 'check:C', 'notice:N', 'followup:P', 'message:M', 'removal-request:RQ']);
   });
 
-  it('gives each of the eleven category kinds a colour (the test run shares the plan's) and every other kind a tone', () => {
+  it('gives each of the eleven category kinds a colour (the test run shares the colour of the plan) and every other kind a tone', () => {
     const colored = REGISTRY_KINDS.filter((kind) => colorOf(kind) !== undefined);
     expect(colored.map((kind) => kind.id).sort()).toEqual([...CATEGORY_KINDS].sort());
     expect(new Set(colored.map(colorOf)).size).toBe(10);

@@ -1,3 +1,5 @@
+// test-tag: critical
+
 use serde_json::{Value, json};
 
 use super::{is_migrated, migrate_runs};
