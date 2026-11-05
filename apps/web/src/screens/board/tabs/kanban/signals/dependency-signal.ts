@@ -5,7 +5,7 @@ import { ATTENTION_OF, dependencyCauses } from '../attention';
 import { LEAD_PREFIX } from '../../../../../shell/records/behavior/look.constants';
 import { OPEN_ITEM } from './signal.constants';
 import type { CardSignal } from './signal.type';
-import { KEY_BRANDS } from '../../../../../avatar/avatar.constants';
+import { KEY_BRANDS } from '../../../../../avatar';
 import { whoAvatar } from './who-avatar';
 
 const projectOf = (cause: BlockedCause): string => (cause.who ?? '').replace(LEAD_PREFIX, '') || 'another board';
