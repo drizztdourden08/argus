@@ -12,7 +12,7 @@ const ProcessFilters = (props: ProcessFiltersProps) => {
       <Inline gap="sm" align="center" wrap role="radiogroup" aria-label="Show processes">
         {choices.map((choice) => (
           <Tag pill size="lg" selectedTone="neutral" key={choice.value} {...CALM_LOOK} role="radio" selected={filters.status === choice.value} onSelect={() => onChange({ ...filters, status: choice.value })}>
-            <Inline gap="xs" align="baseline">
+            <Inline gap="xs" align="center">
               {choice.label}
               <Text variant="caption" numeric>{choice.count}</Text>
             </Inline>

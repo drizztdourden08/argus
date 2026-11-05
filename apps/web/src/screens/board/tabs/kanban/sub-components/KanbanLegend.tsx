@@ -8,7 +8,7 @@ const KanbanLegend = () => {
   const [open, setOpen] = useState(false);
   return (
     <Flex direction="column" gap="xs">
-      <Flex gap="sm" align="start">
+      <Flex gap="sm" align="center">
         <TypeRows />
         <Spacer />
         <IconButton label={open ? 'Hide legend' : 'Show legend'} size="xs" variant="ghost" aria-expanded={open} onClick={() => setOpen(!open)}>

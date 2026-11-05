@@ -22,7 +22,7 @@ const RuleCard = (props: RuleCardProps) => {
         selectedTone="neutral"
         onSelect={() => onPick(group.rule)}
       >
-        <Inline gap="sm" align="baseline">
+        <Inline gap="sm" align="center">
           <Text size="md" weight={600}>{group.rule}</Text>
           <Text variant="subtitle" size="md" numeric>{asNumber(group.count) ?? 0}</Text>
           <Text variant="subtitle" size="md" numeric>{`${formatMemory(memory)}${capText}`}</Text>
