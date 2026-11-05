@@ -1,0 +1,19 @@
+.board-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--board-icon-size);
+  block-size: var(--board-icon-size);
+}
+
+.board-icon--tile {
+  border-radius: var(--radius-md);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-text);
+}
+
+.board-icon--image {
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}

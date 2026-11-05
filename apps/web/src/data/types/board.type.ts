@@ -5,6 +5,7 @@ interface BoardMeta {
   updatedAt: string;
   palette?: string;
   avatar?: string | null;
+  icon?: string | null;
   handedBuild: string | null;
   handedAt: string | null;
 }

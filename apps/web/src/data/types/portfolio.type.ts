@@ -50,6 +50,7 @@ interface Card {
   root: string | null;
   url: string;
   palette?: string;
+  icon?: string;
   counts?: CardCounts;
   ownerItems?: OwnerItem[];
   coordinator?: CardCoordinator | null;
