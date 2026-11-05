@@ -268,19 +268,7 @@ fn summary(report: &Report, dry: bool) -> String {
 }
 
 fn print(r: &mut Run<'_>, report: &Report, dry: bool) {
-    let mut lines: Vec<String> = report
-        .lines
-        .iter()
-        .map(|l| {
-            if dry {
-                format!("[dry run] {l}")
-            } else {
-                l.clone()
-            }
-        })
-        .collect();
-    lines.push(summary(report, dry));
-    r.say(&[&lines.join("\n")]);
+    say_report(r, &report.lines, "[dry run]", dry, summary(report, dry));
 }
 
 /// `coord item migrate-blockers [--dry-run]`.

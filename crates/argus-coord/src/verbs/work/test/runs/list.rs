@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-use super::rows::rows;
+use super::run_rows::rows;
 use crate::cli::Outcome;
 use crate::cli::out::{as_json, table};
 use crate::verbs::work::listing::cell;

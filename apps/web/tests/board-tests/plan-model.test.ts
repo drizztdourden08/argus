@@ -102,13 +102,13 @@ describe('P5 the cases grouped by plan', { tags: ['critical'] }, () => {
 
 describe('P5 the head of a case row', { tags: ['critical'] }, () => {
   it('is assigned to the owner when the test is manual, else to its thread', () => {
-    expect(caseAssignee(testDoc('T-1', { mode: 'manual', thread: 'lead' }) as TestDoc)).toBe('owner');
-    expect(caseAssignee(testDoc('T-2', { mode: 'auto', thread: 'lead' }) as TestDoc)).toBe('lead');
-    expect(caseAssignee(testDoc('T-3', { mode: 'auto', thread: null }) as TestDoc)).toBe('');
+    expect(caseAssignee(testDoc('T-1', { mode: 'manual', thread: 'lead' }) as unknown as TestDoc)).toBe('owner');
+    expect(caseAssignee(testDoc('T-2', { mode: 'auto', thread: 'lead' }) as unknown as TestDoc)).toBe('lead');
+    expect(caseAssignee(testDoc('T-3', { mode: 'auto', thread: null }) as unknown as TestDoc)).toBe('');
   });
 
   it('holds conflict, item, thread, mode and archived chips, leaving out the fact of the group', () => {
-    const doc = doneDoc('T-1', 'pass', 'ok', { mode: 'auto', archivedAt: 'then' }) as TestDoc;
+    const doc = doneDoc('T-1', 'pass', 'ok', { mode: 'auto', archivedAt: 'then' }) as unknown as TestDoc;
     expect(caseChips(doc, 'plan', new Set(['T-1'])).map((chip) => chip.id)).toEqual(['conflict', 'item', 'thread', 'mode', 'archived']);
     expect(caseChips(doc, 'item', new Set()).map((chip) => chip.id)).toEqual(['thread', 'mode', 'archived']);
     expect(caseChips(doc, 'thread', new Set()).map((chip) => chip.id)).toEqual(['item', 'mode', 'archived']);

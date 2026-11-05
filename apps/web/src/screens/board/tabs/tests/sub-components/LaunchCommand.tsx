@@ -26,6 +26,29 @@ const LaunchFrom = (props: { name: string }) => (
   </Flex>
 );
 
+const CommandBar = (props: LaunchCommandProps & { shown: ReturnType<typeof shownRun> }) => {
+  const { view, runs, draft, shown } = props;
+  const { boardKey, onLog } = useTestsShared();
+  const { launch, item } = view;
+  return (
+    <ButtonRow
+      align="start"
+      lead={<TextInput readOnly mono grow size="sm" aria-label="Launch command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'} value={launch.cmd} />}
+    >
+      <Button size="sm" variant="quiet" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
+      {!draft && <RunPlay label={view.build ?? item.id} def={launch.def} hint={playHint(launch, item.id)} boardKey={boardKey} runs={runs} />}
+      <LogButton run={shown} onLog={onLog} />
+    </ButtonRow>
+  );
+};
+
+const LaunchExtras = (props: { cwd: string | null | undefined; name: string | null | undefined }) => (
+  <>
+    {props.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{props.cwd}</Text.Code></Text>}
+    {props.name && <LaunchFrom name={props.name} />}
+  </>
+);
+
 const LaunchCommand = (props: LaunchCommandProps) => {
   const { view, runs, draft } = props;
   const { boardKey, onLog } = useTestsShared();
@@ -37,16 +60,8 @@ const LaunchCommand = (props: LaunchCommandProps) => {
   const shown = draft ? null : shownRun(launch, runs);
   return (
     <Flex direction="column" gap="xs">
-      <ButtonRow
-        align="start"
-        lead={<TextInput readOnly mono grow size="sm" aria-label="Launch command" title={launch.cwd ? `Run in ${launch.cwd}` : 'Launch command'} value={launch.cmd} />}
-      >
-        <Button size="sm" variant="quiet" title="Copy the command line" onClick={() => copyText(launch.cmd)}>Copy</Button>
-        {!draft && <RunPlay label={view.build ?? item.id} def={launch.def} hint={playHint(launch, item.id)} boardKey={boardKey} runs={runs} />}
-        <LogButton run={shown} onLog={onLog} />
-      </ButtonRow>
-      {launch.cwd && <Text variant="caption" tone="muted">run in <Text.Code>{launch.cwd}</Text.Code></Text>}
-      {launch.name && <LaunchFrom name={launch.name} />}
+      <CommandBar {...props} shown={shown} />
+      <LaunchExtras cwd={launch.cwd} name={launch.name} />
       {shown && <RunTerminal key={shown.id} run={shown} boardKey={boardKey} onLog={onLog} />}
     </Flex>
   );

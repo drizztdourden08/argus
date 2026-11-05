@@ -110,7 +110,7 @@ fn launcher_row(l: &Value, plays: &HashMap<String, Value>, runs: Vec<Value>) -> 
 /// The launchers, master first, then the current ones, with their Play run name and test runs.
 pub fn list_launchers(backend: &dyn McpBackend, key: &str, args: &Value) -> Value {
     let retired = flag(args, "includeRetired");
-    let plays = plays(backend, key);
+    let play_runs = plays(backend, key);
     let docs = backend.docs(key, "items");
     let plans: HashMap<&str, &Value> = docs
         .iter()
@@ -130,7 +130,7 @@ pub fn list_launchers(backend: &dyn McpBackend, key: &str, args: &Value) -> Valu
         .any(|l| is_master(l, flagged) && !truthy(l, "retiredAt"));
     let launchers: Vec<Value> = rows
         .iter()
-        .map(|l| launcher_row(l, &plays, runs_of(&runs, &plans, l)))
+        .map(|l| launcher_row(l, &play_runs, runs_of(&runs, &plans, l)))
         .collect();
     json!({ "launchers": launchers, "master": master })
 }

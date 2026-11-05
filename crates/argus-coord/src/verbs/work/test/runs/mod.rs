@@ -13,9 +13,9 @@ mod change;
 mod end;
 mod hand;
 mod list;
-mod rows;
+mod run_rows;
 
-pub(in crate::verbs::work::test) use rows::rows;
+pub(in crate::verbs::work::test) use run_rows::rows;
 
 use argus_board::Board;
 use argus_board::json::display;

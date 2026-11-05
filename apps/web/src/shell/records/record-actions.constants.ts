@@ -19,6 +19,7 @@ const RECORD_ACTIONS: Readonly<Record<string, readonly ActionDef[]>> = {
   debt: WORK_ITEM,
   'test-plan': WORK_ITEM,
   'test-case': PLAIN,
+  'test-run': PLAIN,
   build: [
     OPEN,
     { id: 'play', label: 'Play', group: 'act' },

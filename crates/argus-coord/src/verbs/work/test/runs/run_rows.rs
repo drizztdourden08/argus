@@ -43,7 +43,7 @@ fn row(board: &Board, run: &Value) -> Value {
 }
 
 /// The rows of the runs on the board (of one plan, when `plan` is given), by plan and number.
-pub(super) fn rows(board: &Board, plan: Option<&str>) -> Vec<Value> {
+pub(in crate::verbs::work::test) fn rows(board: &Board, plan: Option<&str>) -> Vec<Value> {
     let mut out: Vec<Value> = section(board, "items")
         .values()
         .filter(|i| i["type"] == "test-run" && !truthy(i, "deletedAt"))

@@ -93,7 +93,7 @@ describe('K1 the launch of a run', { tags: ['critical'] }, () => {
 });
 
 describe('K1 the status line of a run', { tags: ['critical'] }, () => {
-  const run = (extra: object) => ({ ...runDoc('R-1', 'launcher-b1'), ...extra }) as RunEntry;
+  const run = (extra: object) => ({ ...runDoc('R-1', 'launcher-b1'), ...extra }) as unknown as RunEntry;
 
   it('says queued, then launching until the first output line, then running with the line', () => {
     expect(runLine(run({ status: 'queued' })).label).toBe('Queued, waiting for a free slot');

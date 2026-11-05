@@ -13,6 +13,7 @@ mod listing;
 mod lock;
 mod log;
 mod place;
+mod report_lines;
 mod run;
 mod soft;
 mod test;

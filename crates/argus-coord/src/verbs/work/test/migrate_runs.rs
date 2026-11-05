@@ -6,6 +6,7 @@ use argus_board::migrate_runs::{Report, migrate_runs};
 use argus_board::ops::Role;
 
 use crate::cli::Outcome;
+use crate::verbs::work::report_lines::say_report;
 use crate::verbs::work::run::{Res, Run, bad};
 use crate::who::Caller;
 
@@ -25,19 +26,7 @@ fn summary(report: &Report, dry: bool) -> String {
 }
 
 fn print(r: &mut Run<'_>, report: &Report, dry: bool) {
-    let mut lines: Vec<String> = report
-        .lines
-        .iter()
-        .map(|l| {
-            if dry {
-                format!("would: {l}")
-            } else {
-                l.clone()
-            }
-        })
-        .collect();
-    lines.push(summary(report, dry));
-    r.say(&[&lines.join("\n")]);
+    say_report(r, &report.lines, "would:", dry, summary(report, dry));
 }
 
 fn lead_only(by: &Caller) -> Res<()> {

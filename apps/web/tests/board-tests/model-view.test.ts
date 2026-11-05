@@ -59,7 +59,7 @@ describe('K1 the subjects', { tags: ['critical'] }, () => {
 });
 
 describe('K1 the edit of a test', { tags: ['critical'] }, () => {
-  const test = testDoc('T-1', { covers: null }) as TestDoc;
+  const test = testDoc('T-1', { covers: null }) as unknown as TestDoc;
 
   it('sends only what changed, trimmed', () => {
     expect(changedFields(test, { title: ' New ', covers: '', mode: 'manual' })).toEqual({ title: 'New' });
@@ -85,7 +85,7 @@ describe('K1 the changes the board did not take', { tags: ['critical'] }, () => 
 
 describe('K1 the wake chip', { tags: ['critical'] }, () => {
   const NOW = Date.parse('2026-10-26T10:00:00.000Z');
-  const done = doneDoc('T-1', 'fail', 'x', { result: { status: 'fail', text: 'x', by: 'human', at: '2026-10-26T09:59:50.000Z' } }) as TestDoc;
+  const done = doneDoc('T-1', 'fail', 'x', { result: { status: 'fail', text: 'x', by: 'human', at: '2026-10-26T09:59:50.000Z' } }) as unknown as TestDoc;
   const chip = (list: WakeDoc[], at = NOW) => wakeChip({ test: done, wakes: list, latest: latestWakes(list), now: at });
 
   it('goes from waking to not listening once the coalescing window has passed', () => {
