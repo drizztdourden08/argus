@@ -53,17 +53,14 @@ async fn reads_return_the_same_data_as_the_tools() {
             .await
             .expect("to-run"),
     );
-    assert_eq!(to_run["handedBuild"], "b1");
+    assert_eq!(to_run["handedRun"]["id"], "I-6");
     let groups: Vec<Value> = to_run["groups"]
         .as_array()
         .expect("groups")
         .iter()
-        .map(|g| json!([g["build"], g["handed"], g["tests"][0]["id"]]))
+        .map(|g| json!([g["run"], g["build"], g["handed"], g["tests"][0]["id"]]))
         .collect();
-    assert_eq!(
-        groups,
-        [json!(["b1", true, "T-1"]), json!(["b2", false, "T-3"])]
-    );
+    assert_eq!(groups, [json!(["I-6", "build-1", true, "T-1"])]);
     let active = json_of(&read(&rig, "runs://alpha/active").await.expect("active"));
     assert_eq!(
         active["runs"]

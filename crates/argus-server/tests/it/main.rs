@@ -72,5 +72,6 @@ mod trail;
 mod wake;
 mod wake_faults;
 mod wake_owner_alert;
+mod wake_run_complete;
 mod worktree_requests;
 mod worktrees;

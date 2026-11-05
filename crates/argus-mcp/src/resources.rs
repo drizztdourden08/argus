@@ -12,7 +12,8 @@ use crate::json::text;
 use crate::project::require_project;
 use crate::read_tools::portfolio_cards;
 use crate::runs_view::RUNS_DOWN;
-use crate::summary::{board_summary, tests_to_run};
+use crate::summary::board_summary;
+use crate::to_run::tests_to_run;
 
 static URI: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([a-z]+)://([^/]+)(/.*)?$").expect("a fixed pattern"));
@@ -42,7 +43,7 @@ pub fn list_resources(backend: &dyn McpBackend) -> Vec<Value> {
         out.push(json!({
             "uri": format!("board://{key}/tests/to-run"), "name": format!("{key}-tests-to-run"),
             "title": format!("{key}: manual tests to run"),
-            "description": "Manual tests not run yet, grouped by build.",
+            "description": "Manual tests not run yet, grouped by test run.",
             "mimeType": "application/json"
         }));
         out.push(json!({

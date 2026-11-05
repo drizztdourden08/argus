@@ -34,7 +34,7 @@
   {
     "name": "board_summary",
     "title": "Board summary",
-    "description": "A project board in one call: threads with notes, items with AC progress, open questions, pending decisions, tests, locks, runs running and queued, the handed build.",
+    "description": "A project board in one call: threads with notes, items with AC progress, open questions, pending decisions, tests, locks, runs running and queued, the test run handed to the owner.",
     "inputSchema": {
       "type": "object",
       "properties": {

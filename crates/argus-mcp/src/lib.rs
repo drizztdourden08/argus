@@ -24,6 +24,7 @@ mod defs;
 mod deps;
 mod error;
 mod files;
+mod handed;
 mod host;
 mod http;
 mod ids;
@@ -44,6 +45,7 @@ mod runs_view;
 mod schema;
 mod search;
 mod summary;
+mod to_run;
 mod tools;
 mod write_tools;
 

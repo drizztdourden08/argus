@@ -176,9 +176,11 @@ async fn reads_overview_summary_items_item_tests_agents_entries_search_and_defs(
     assert_eq!(keys, ["alpha", "beta"]);
     let sum = tool(&t, "board_summary", json!({ "project": "alpha" })).await;
     assert_eq!(sum["project"], "alpha");
-    assert_eq!(sum["handedBuild"], "b1");
+    assert_eq!(sum["handedRun"]["id"], "I-21");
+    assert_eq!(sum["handedRun"]["build"], "build-1");
+    assert!(sum.get("handedBuild").is_none());
     assert_eq!(sum["openQuestions"], json!(["Q-1"]));
-    assert_eq!(sum["items"].as_array().map(Vec::len), Some(2));
+    assert_eq!(sum["items"].as_array().map(Vec::len), Some(4));
     assert!(sum.get("artifact").is_none());
     let doing = tool(
         &t,

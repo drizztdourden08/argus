@@ -5,9 +5,7 @@
         "project": "alpha",
         "name": "Alpha",
         "updatedAt": "2026-10-22T10:00:00.000Z",
-        "counters": {},
-        "handedBuild": "b1",
-        "handedAt": "2026-10-22T10:00:00.000Z"
+        "counters": {}
       }
     },
     "threads": {
@@ -109,6 +107,44 @@
         "title": "Deleted scene",
         "deletedAt": "2026-10-22T10:00:00.000Z",
         "ac": []
+      },
+      "I-5": {
+        "id": "I-5",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "doing",
+        "thread": "coordinator",
+        "subject": "lead",
+        "title": "Pedestal plan",
+        "type": "test-plan",
+        "stage": "ready",
+        "ac": [],
+        "fields": {
+          "cases": ["T-1", "T-3"]
+        }
+      },
+      "I-6": {
+        "id": "I-6",
+        "rev": 1,
+        "createdAt": "2026-10-22T10:00:00.000Z",
+        "updatedAt": "2026-10-22T10:00:00.000Z",
+        "status": "doing",
+        "thread": "coordinator",
+        "subject": "lead",
+        "title": "Pedestal run 1",
+        "type": "test-run",
+        "stage": "ready",
+        "assignee": "owner",
+        "n": 1,
+        "ac": [],
+        "fields": {
+          "plan": "I-5",
+          "build": "build-1",
+          "results": [
+            { "test": "T-3", "status": "pass", "note": "", "at": "2026-10-22T10:00:00.000Z", "by": "owner", "proofs": [] }
+          ]
+        }
       }
     },
     "tests": {
@@ -314,21 +350,6 @@
         "env": {},
         "hand": true,
         "kind": "launch"
-      }
-    },
-    "builds": {
-      "b1": {
-        "tag": "b1",
-        "title": "First",
-        "launcher": "build-1",
-        "thread": "coordinator"
-      },
-      "b2": {
-        "tag": "b2",
-        "title": "Second",
-        "launcher": null,
-        "cmd": "old way",
-        "thread": "story"
       }
     },
     "launchers": {
