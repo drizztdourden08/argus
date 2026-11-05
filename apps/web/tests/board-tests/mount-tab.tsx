@@ -91,7 +91,7 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
     source?.emit('snapshot', snapshot(SCOPE, 'meta', { board: { name: 'RotP' } }));
   });
   const change = (coll: string, id: string, data: object) =>
-    act(() => live()?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
+    act(() => live(SCOPE)?.emit('changes', { scope: SCOPE, seq: 99, changes: [{ coll, id, op: 'set', data }] }));
   return { ...view, calls, change };
 };
 

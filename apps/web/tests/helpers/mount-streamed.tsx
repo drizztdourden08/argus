@@ -12,7 +12,8 @@ const mountStreamed = async (ui: ReactElement) => {
   const view = render(<DataProvider streams={createScopeStreams(fake.open)}>{ui}</DataProvider>);
   await waitFor(() => expect(fake.sources.length).toBeGreaterThan(0));
   const source = fake.sources[fake.sources.length - 1];
-  const live = (): FakeSource | undefined => [...fake.sources].reverse().find((candidate) => !candidate.closed);
+  const live = (scope?: string): FakeSource | undefined =>
+    [...fake.sources].reverse().find((candidate) => !candidate.closed && (scope === undefined || candidate.scope === scope));
   return { view, source, live };
 };
 
