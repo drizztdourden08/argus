@@ -12,6 +12,7 @@ type KindCollection =
   | 'prs'
   | 'releases'
   | 'deps'
+  | 'boards'
   | 'runs'
   | 'requests'
   | 'checks'
