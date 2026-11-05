@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
+import { BoardSettingsButton } from '../../src/screens/board/BoardSettings';
 import { BoardFocus } from '../../src/screens/board/BoardFocus';
 import { KanbanTab } from '../../src/screens/board/tabs/kanban';
 import { RecordPaneScope } from '../../src/shell';
@@ -56,12 +57,18 @@ const Stage = () => {
   return (
     <RecordPaneScope>
       <BoardMore boardKey={SCOPE} trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
+      <BoardSettingsButton boardKey={SCOPE} />
       <BoardFocus boardKey={SCOPE} />
       <KanbanTab boardKey={SCOPE} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />
       <KanbanPurge boardKey={SCOPE} request={more.purge} onClose={more.closePurge} />
       <RecordPaneHost boardKey={SCOPE} />
     </RecordPaneScope>
   );
+};
+
+const openSettings = async (): Promise<HTMLElement> => {
+  fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+  return screen.findByRole('dialog', { name: 'Board settings' });
 };
 
 const moreItem = async (name: string | RegExp) => {
@@ -179,5 +186,5 @@ const cardOf = (id: string): HTMLElement => {
   return card;
 };
 
-export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, paneOf, thread, where };
+export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, openSettings, paneOf, thread, where };
 export type { Board, Doc, Posted };
