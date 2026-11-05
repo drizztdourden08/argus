@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { jsonRecord } from '../../../shared';
 import { DEFAULT_FILTERS, DEFAULT_PREFS, GROUP_OPTIONS } from './model.constants';
+import { directionOf } from './sort-direction';
 import type { RawStored, StoredView, TestFilters, TestGroup, TestOrder } from './model.type';
 
 type Stored = Record<string, unknown>;
@@ -39,7 +40,7 @@ const parseStored = (raw: RawStored): StoredView => {
   const stored = jsonRecord(raw.filters);
   return {
     filters: filtersOf(stored),
-    prefs: { group: groupOf(raw.group), order: orderOf(stored), showPassed: raw.passed !== '0', showClosed: raw.closed === '1' },
+    prefs: { group: groupOf(raw.group), order: orderOf(stored), direction: directionOf(raw.direction), showPassed: raw.passed !== '0', showClosed: raw.closed === '1' },
   };
 };
 

@@ -42,6 +42,7 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     wakes: { all: data.wakes, latest, now },
     group: prefs.group,
     order: prefs.order,
+    direction: prefs.direction,
     showPassed: prefs.showPassed,
     conflicted,
     folds,

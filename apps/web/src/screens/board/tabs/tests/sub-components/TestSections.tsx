@@ -10,8 +10,8 @@ import { CaseRow } from './CaseRow';
 
 const TestSections = (props: TestSectionsProps) => {
   const { tests, emptyText } = props;
-  const { order, showPassed } = useTestsShared();
-  const toRun = sortToRun(tests.filter(isToRun), order);
+  const { order, direction, showPassed } = useTestsShared();
+  const toRun = sortToRun(tests.filter(isToRun), order, direction);
   const done = doneTests(tests, showPassed);
   return (
     <>

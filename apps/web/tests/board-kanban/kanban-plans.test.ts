@@ -119,7 +119,7 @@ describe('K1 what the page remembers', { tags: ['critical'] }, () => {
       showDone: '1',
     });
     expect(stored.filters).toEqual({ query: 'log', threads: ['worker'], status: 'doing', types: ['bug'], assignees: ['owner'], needs: true, conflict: true, archived: true });
-    expect(stored.prefs).toEqual({ group: 'thread', order: 'updated', showDone: true });
+    expect(stored.prefs).toEqual({ group: 'thread', order: 'updated', direction: null, showDone: true });
   });
 
   it('falls back to the status grouping for the retired subject grouping', () => {

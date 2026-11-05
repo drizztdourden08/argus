@@ -64,12 +64,13 @@ const STARTING_STATUS = 'todo';
 
 const DEFAULT_FILTERS: KanbanFilters = { query: '', threads: [], status: '', types: [], assignees: [], needs: false, conflict: false, archived: false };
 
-const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', showDone: false };
+const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', direction: null, showDone: false };
 
 const STORE_KEYS = {
   filters: 'coord.f',
   group: 'coord.g.items',
   order: 'coord.sort',
+  direction: 'coord.sortdir',
   showDone: 'coord.done2',
   showPaused: 'coord.paused',
   wide: WIDE_KEY,

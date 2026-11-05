@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { SortDirection } from '@drizztdourden08/tessera';
 import type { RecordGroups } from '../../../../../shell';
 import type { OpNotice } from '../../../shared';
 import type { WithId } from '../../../../../data/react';
@@ -80,6 +81,7 @@ interface TestFilters {
 interface TestPrefs {
   group: TestGroup;
   order: TestOrder;
+  direction: SortDirection | null;
   showPassed: boolean;
   showClosed: boolean;
 }
@@ -92,6 +94,7 @@ interface StoredView {
 interface RawStored {
   filters: string | null;
   group: string | null;
+  direction?: string | null;
   passed: string | null;
   closed: string | null;
 }

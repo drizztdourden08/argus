@@ -26,6 +26,7 @@ export { needsMap } from './needs-map';
 export { needsYou } from './needs-you';
 export { opNotices } from './op-notices';
 export { parseStored } from './parse-stored';
+export { isNatural, shownDirection } from './sort-direction';
 export { parseTrails } from './parse-trails';
 export { pausedThreads } from './paused-threads';
 export { planDrop } from './plan-drop';

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanColumn, KanbanMove, SortDirection } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
 import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
@@ -27,6 +27,7 @@ interface KanbanFilters {
 interface KanbanPrefs {
   group: ItemGroup;
   order: ItemOrder;
+  direction: SortDirection | null;
   showDone: boolean;
 }
 
@@ -38,6 +39,7 @@ interface StoredView {
 interface RawStored {
   filters: string | null;
   group: string | null;
+  direction?: string | null;
   showDone: string | null;
 }
 
@@ -126,6 +128,7 @@ interface ColumnsInput {
   cards: readonly CardData[];
   group: ItemGroup;
   order: ItemOrder;
+  direction: SortDirection | null;
   showClosed: boolean;
   seeds: readonly string[];
   parents: ReadonlyMap<string, ItemRef>;
@@ -155,6 +158,7 @@ interface DropInput {
   move: KanbanMove;
   group: ItemGroup;
   order: ItemOrder;
+  direction?: SortDirection | null;
 }
 
 type DropPlan =

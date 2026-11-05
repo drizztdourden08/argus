@@ -6,8 +6,8 @@ import { CaseRow } from './CaseRow';
 
 const CaseList = (props: CaseListProps) => {
   const { tests } = props;
-  const { order, showPassed } = useTestsShared();
-  const rows = [...sortToRun(tests.filter(isToRun), order), ...doneTests(tests, showPassed)];
+  const { order, direction, showPassed } = useTestsShared();
+  const rows = [...sortToRun(tests.filter(isToRun), order, direction), ...doneTests(tests, showPassed)];
   return <>{rows.map((test) => <CaseRow key={test.id} test={test} />)}</>;
 };
 

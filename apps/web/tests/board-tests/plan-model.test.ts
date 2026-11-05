@@ -21,7 +21,7 @@ interface Keyed {
 
 const keyedIds = (groups: readonly Keyed[]): [string, string[]][] => groups.map((group) => [group.key, group.rows.map((row) => row.id)]);
 
-const prefs = (group: TestPrefs['group']): TestPrefs => ({ group, order: 'rank', showPassed: true, showClosed: false });
+const prefs = (group: TestPrefs['group']): TestPrefs => ({ group, order: 'rank', direction: null, showPassed: true, showClosed: false });
 
 const viewOf = (group: TestPrefs['group'], docs: TestDoc[], plans: ItemDoc[]): TestsView =>
   buildView({ tests: docs, builds: [], items: plans, launchers: [], defs: [], handed: null, filters: DEFAULT_FILTERS, prefs: prefs(group), conflicted: new Set() });

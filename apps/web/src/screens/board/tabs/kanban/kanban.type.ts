@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { ReorderDrag } from '@drizztdourden08/tessera';
+import type { ReorderDrag, SortDirection } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, RefObject } from 'react';
 import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, FieldValue, ItemInput, ItemRef, MoveTarget, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
@@ -38,6 +38,7 @@ interface KanbanState {
   clearFilters: () => void;
   setGroup: (group: ItemGroup) => void;
   setOrder: (order: ItemOrder) => void;
+  setDirection: (direction: SortDirection) => void;
   setShowDone: (show: boolean) => void;
 }
 

@@ -3,20 +3,20 @@ import { ViewControls } from '@drizztdourden08/tessera';
 import type { SortState } from '@drizztdourden08/tessera';
 import { TabTools } from '../../../BoardTabsRow';
 import type { ViewMenuProps } from '../kanban-props.type';
-import { GROUP_OPTIONS, ORDER_OPTIONS } from '../model';
-
-const SORT_DIRECTION = { rank: 'asc', updated: 'desc' } as const;
+import { GROUP_OPTIONS, ORDER_OPTIONS, shownDirection } from '../model';
 
 const ViewMenu = ({ state }: ViewMenuProps) => {
-  const { prefs, setGroup, setOrder } = state;
-  const sort: SortState = { key: prefs.order, direction: SORT_DIRECTION[prefs.order] };
+  const { prefs, setGroup, setOrder, setDirection } = state;
+  const sort: SortState = { key: prefs.order, direction: shownDirection(prefs.order, prefs.direction) };
   const pickGroup = (id: string | null) => {
     const next = GROUP_OPTIONS.find((option) => option.id === id);
     if (next) setGroup(next.id);
   };
   const pickOrder = (change: SortState) => {
     const next = ORDER_OPTIONS.find((option) => option.id === change.key);
-    if (next) setOrder(next.id);
+    if (!next) return;
+    if (next.id === prefs.order) setDirection(change.direction);
+    else setOrder(next.id);
   };
   return (
     <TabTools>

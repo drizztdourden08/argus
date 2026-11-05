@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { SortDirection } from '@drizztdourden08/tessera';
 import type { PostResult } from '../../../../data/api';
 import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
@@ -28,6 +29,7 @@ interface TestsState {
   clearFilters: () => void;
   setGroup: (group: TestGroup) => void;
   setOrder: (order: TestOrder) => void;
+  setDirection: (direction: SortDirection) => void;
   setShowPassed: (show: boolean) => void;
   setShowClosed: (show: boolean) => void;
 }
@@ -66,6 +68,7 @@ interface TestsShared {
   wakes: WakeLookup;
   group: TestGroup;
   order: TestOrder;
+  direction: SortDirection | null;
   showPassed: boolean;
   conflicted: ReadonlySet<string>;
   folds: Folds;

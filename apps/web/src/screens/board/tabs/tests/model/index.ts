@@ -38,6 +38,7 @@ export { resolveLaunch } from './resolve-launch';
 export { resultNote } from './result-note';
 export { shownRun } from './shown-run';
 export { sortDone } from './sort-done';
+export { isNatural, shownDirection } from './sort-direction';
 export { sortToRun } from './sort-to-run';
 export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';

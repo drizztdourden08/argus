@@ -19,9 +19,9 @@ const NO_KEY = 'none';
 
 const DEFAULT_FILTERS: TestFilters = { query: '', threads: [], builds: [], nobuild: false, status: '', subject: '', plan: '', needs: false, conflict: false, archived: false };
 
-const DEFAULT_PREFS: TestPrefs = { group: 'plan', order: 'rank', showPassed: true, showClosed: false };
+const DEFAULT_PREFS: TestPrefs = { group: 'plan', order: 'rank', direction: null, showPassed: true, showClosed: false };
 
-const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests4', passed: 'coord.passed', closed: 'coord.closed', paused: 'coord.paused' };
+const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests4', direction: 'coord.sortdir.tests', passed: 'coord.passed', closed: 'coord.closed', paused: 'coord.paused' };
 
 const GROUP_OPTIONS: { id: TestGroup; label: string }[] = [
   { id: 'plan', label: 'Plan' },

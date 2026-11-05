@@ -22,11 +22,11 @@ const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
   const { boardKey, view, state, threads, now, selection, ops, add, focus, onOpen } = props;
-  const { group, order } = state.prefs;
+  const { group, order, direction } = state.prefs;
   const ids = view.columns.flatMap((column) => column.cards.map((card) => card.id));
   const onMove = (move: KanbanMove) => {
     const card = view.cards.find((candidate) => candidate.id === move.cardId);
-    if (card) applyDrop(planDrop({ columns: view.columns, move, group, order }), card.item, ops);
+    if (card) applyDrop(planDrop({ columns: view.columns, move, group, order, direction }), card.item, ops);
   };
   const columns: KanbanColumn<CardData>[] = view.columns.map((column) => ({
     ...column,

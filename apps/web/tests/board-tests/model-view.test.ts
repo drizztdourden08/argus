@@ -16,13 +16,13 @@ describe('K1 the saved view', { tags: ['critical'] }, () => {
     const filters = JSON.stringify({ q: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conf: true, archived: true, sort: 'updated' });
     const view = parseStored({ filters, group: 'item', passed: '0', closed: '1' });
     expect(view.filters).toEqual({ query: 'x', threads: ['a'], builds: ['b1'], nobuild: true, status: 'fail', subject: 's', plan: 'I-5', needs: true, conflict: true, archived: true });
-    expect(view.prefs).toEqual({ group: 'item', order: 'updated', showPassed: false, showClosed: true });
+    expect(view.prefs).toEqual({ group: 'item', order: 'updated', direction: null, showPassed: false, showClosed: true });
   });
 
   it('falls back to the defaults for nothing, damage or an unknown group', () => {
     expect(parseStored({ filters: '{oops', group: 'zzz', passed: null, closed: null })).toEqual({
       filters: DEFAULT_FILTERS,
-      prefs: { group: 'plan', order: 'rank', showPassed: true, showClosed: false },
+      prefs: { group: 'plan', order: 'rank', direction: null, showPassed: true, showClosed: false },
     });
   });
 

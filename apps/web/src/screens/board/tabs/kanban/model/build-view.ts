@@ -53,7 +53,7 @@ const buildView = (input: ViewInput): KanbanView => {
   const parents = parentItems(items);
   const seeds = prefs.group === 'thread' && !filtered ? listedThreads(threads) : [];
   return {
-    columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, showClosed, seeds, parents }),
+    columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, direction: prefs.direction, showClosed, seeds, parents }),
     cards: shown,
     open: cards.filter((card) => !isClosed(card.item)).length,
     total: cards.length,
