@@ -11,6 +11,7 @@ const cards = {
   rotp: { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/' },
   argus: { key: 'argus', name: 'Argus', state: 'running', root: null, url: '/p/argus/' },
 };
+const boards = Object.fromEntries(Object.keys(cards).map((key) => [`BD-${key}`, { key }]));
 
 describe('S2 routing', { tags: ['standard'] }, () => {
   it('shows the overview at / with the projects from the cards stream', async () => {
@@ -19,7 +20,11 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
     expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
     expect(wanted).toContain('cards');
-    act(() => sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards)));
+    expect(wanted).toContain('boards');
+    act(() => {
+      sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards));
+      sources[0]?.emit('snapshot', snapshot('_portfolio', 'boards', boards));
+    });
     expect(await screen.findByText('RotP')).toBeTruthy();
     const buttons = screen.getAllByRole('button', { name: /^Open the .+ board$/ });
     expect(buttons).toHaveLength(2);

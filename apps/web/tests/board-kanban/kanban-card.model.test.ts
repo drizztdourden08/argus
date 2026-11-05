@@ -85,7 +85,7 @@ describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
   it('makes one chip per dependency target and one for the blocker, the dependency with the brand mark of the lead and the blocker with the avatar', () => {
     const card = cardOf(itemRef('I-1', { parent: 'I-9', blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
-    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', undefined], ['blocked', 1]]);
+    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', 3], ['blocked', 1]]);
     expect(signals[1]?.label).toBe('Blocked by H-12 (owner): push go');
     expect(signals[0]?.label).toContain('waiting on brock: A very long request title number 2');
     expect(signals[0]?.brand).toBe('brock');
