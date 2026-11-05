@@ -142,11 +142,19 @@ interface CardMenuProps {
   onOpen: (id: string) => void;
 }
 
+interface AcListProps {
+  criteria: NonNullable<ItemRef['ac']>;
+}
+
+interface CardBarsProps {
+  card: CardData;
+}
+
 interface CardProgressRowProps {
   segments: readonly CardProgress[];
 }
 
 
 export type {
-  AgentLineProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
+  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, FilterChecksProps, FilterRowProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

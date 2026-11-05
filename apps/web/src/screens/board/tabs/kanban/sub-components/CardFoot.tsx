@@ -4,6 +4,7 @@ import { formatAgo } from '../../../../../format';
 import type { CardFootProps } from '../kanban-props.type';
 import { cardChips, cardProgress, stageLabel } from '../model';
 import { AgentLine } from './AgentLine';
+import { CardBars } from './CardBars';
 import { CardProgressRow } from './CardProgressRow';
 
 const CardFoot = (props: CardFootProps) => {
@@ -11,13 +12,16 @@ const CardFoot = (props: CardFootProps) => {
   const { item } = card;
   const stage = stageLabel(item, group);
   return (
-    <Flex gap="sm" align="center">
-      <AgentLine item={item} />
-      {cardChips(item).map((chip) => <Tag key={chip.id} title={chip.title}>{chip.text}</Tag>)}
-      {stage && <Text variant="caption" tone="muted" title="Stage">{stage}</Text>}
-      <CardProgressRow segments={cardProgress(card)} />
-      <Spacer />
-      <Text variant="caption" tone="muted">{formatAgo(item.updatedAt, now)}</Text>
+    <Flex direction="column" gap="xs">
+      <Flex gap="sm" align="center">
+        <AgentLine item={item} />
+        {cardChips(item).map((chip) => <Tag key={chip.id} title={chip.title}>{chip.text}</Tag>)}
+        {stage && <Text variant="caption" tone="muted" title="Stage">{stage}</Text>}
+        <CardProgressRow segments={cardProgress(card)} />
+        <Spacer />
+        <Text variant="caption" tone="muted">{formatAgo(item.updatedAt, now)}</Text>
+      </Flex>
+      <CardBars card={card} />
     </Flex>
   );
 };
