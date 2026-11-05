@@ -9,6 +9,7 @@
 }
 
 .run-card__name {
+  flex: 1 1 var(--size-224);
   min-inline-size: 0;
 }
 
