@@ -2,7 +2,7 @@
 import type { RunEntry } from '../../../../data/runs';
 import type { GroupThreads } from '../../item-groups';
 import type { BuildsData, RetiredFlag } from './builds.type';
-import type { TabView } from '../../BoardTabsRow/BoardTabsRow.type';
+import type { TabView } from '../../BoardTabsRow';
 import type { BuildFilters, BuildGroup, BuildGroups, BuildOrder, LauncherView } from './model';
 
 interface BuildsTabProps {

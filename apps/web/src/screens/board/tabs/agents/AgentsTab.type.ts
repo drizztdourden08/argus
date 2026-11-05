@@ -3,7 +3,7 @@ import type { Agent, ProjectThread, ReconcileFinding } from '../../../../data/ag
 import type { WithId } from '../../../../data/react';
 import type { Item, SoftKind } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
-import type { TabView } from '../../BoardTabsRow/BoardTabsRow.type';
+import type { TabView } from '../../BoardTabsRow';
 import type { AgentField, AgentFilters, AgentGroup, AgentOrder, ShownAgents } from './model';
 
 interface AgentsTabProps {

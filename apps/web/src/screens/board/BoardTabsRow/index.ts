@@ -8,4 +8,4 @@ export { TabFilterBar } from './sub-components/TabFilterBar';
 export { TabFilterRow } from './sub-components/TabFilterRow';
 export { TabGroupSort } from './sub-components/TabGroupSort';
 export { ToolToggle } from './sub-components/ToolToggle';
-export type { TabField } from './BoardTabsRow.type';
+export type { TabField, TabView } from './BoardTabsRow.type';
