@@ -12,6 +12,12 @@ interface SendDownInput {
   decision?: boolean;
 }
 
+interface ProfileFields {
+  avatar?: string | null;
+  name?: string | null;
+  initials?: string | null;
+}
+
 type OwnerFields = {
   kind: string;
   text?: string;
@@ -20,4 +26,4 @@ type OwnerFields = {
   thread?: string | null;
 };
 
-export type { OwnerFields, ProofResult, SendDownInput, TestOutcome };
+export type { OwnerFields, ProfileFields, ProofResult, SendDownInput, TestOutcome };
