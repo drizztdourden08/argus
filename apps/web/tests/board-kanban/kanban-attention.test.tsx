@@ -93,19 +93,19 @@ describe('I-72 the head and the foot of a card', { tags: ['standard'] }, () => {
   });
 });
 
-describe('I-69 the legend under the toolbar', { tags: ['standard'] }, () => {
-  it('is folded and lists every type mark and every kind with its icon', async () => {
+describe('I-97 the legend under the toolbar', { tags: ['standard'] }, () => {
+  it('always shows every type mark, and its end chevron opens every kind with its icon', async () => {
     await mountKanban({ items: [item('I-1')] });
     await boardOf();
-    const legend = screen.getByText('Legend').closest('details');
-    expect(legend).not.toBeNull();
-    expect(legend?.open).toBe(false);
-    const rows = within(legend as HTMLElement);
-    for (const type of ['Epic', 'Story', 'Task', 'Bug', 'Tech debt', 'Test plan']) expect(rows.getByRole('img', { name: type, hidden: true })).toBeTruthy();
+    for (const type of ['Epic', 'Story', 'Task', 'Bug', 'Tech debt', 'Test plan']) expect(screen.getAllByRole('img', { name: type, hidden: true }).length).toBeGreaterThan(0);
+    const chevron = screen.getByRole('button', { name: 'Show legend' });
+    expect(chevron.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByText(ATTENTION[0]?.text ?? '')).toBeNull();
+    fireEvent.click(chevron);
+    expect(screen.getByRole('button', { name: 'Hide legend' }).getAttribute('aria-expanded')).toBe('true');
     for (const spec of ATTENTION) {
-      const tag = rows.getByText(spec.label);
-      expect(tag.parentElement?.querySelector('svg')).not.toBeNull();
-      expect(rows.getByText(spec.text)).toBeTruthy();
+      expect(screen.getByRole('group', { name: spec.label }).querySelector('svg')).not.toBeNull();
+      expect(screen.getByText(spec.text)).toBeTruthy();
     }
   });
 });
