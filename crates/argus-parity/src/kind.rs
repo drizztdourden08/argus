@@ -96,6 +96,7 @@ static DOC_META: Spec = Spec {
         "docs.*.data.totalMemMB",
         "docs.*.data.rulesFile",
         "docs.*.data.byRule.*.memMB",
+        "docs.*.data.owner",
     ],
     unordered: &[("docs", "id")],
     drop_rows: &[],

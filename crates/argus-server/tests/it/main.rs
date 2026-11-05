@@ -49,6 +49,7 @@ mod mux_presence;
 mod mux_stream;
 mod mux_tails;
 mod notify;
+mod owner_avatar;
 mod owner_text;
 mod portfolio_send;
 mod portfolio_send_cli;

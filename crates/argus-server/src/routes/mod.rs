@@ -9,6 +9,7 @@ pub mod admin;
 pub mod agents;
 mod blocking;
 pub mod board_icon;
+pub mod owner_avatar;
 pub mod cache;
 mod check_guard;
 pub mod check_runs;
@@ -44,6 +45,7 @@ pub fn register_all(router: &mut Router) {
     actions::register(router);
     item_images::register(router);
     board_icon::register(router);
+    owner_avatar::register(router);
     activity::register(router);
     agents::register(router);
     procs::register(router);
