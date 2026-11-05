@@ -35,7 +35,7 @@ const WorktreeToolbar = (props: WorktreeToolbarProps) => {
   );
   const items = counts.all === 0 ? [] : [
     { id: 'show', priority: 4, node: show },
-    { id: 'group-sort', priority: 5, node: <TabGroupSort group={{ options: GROUP_CHOICES, value: view.group, onChange: view.setGroup }} sort={sort} /> },
+    { id: 'group-sort', priority: 5, node: <TabGroupSort group={{ options: GROUP_CHOICES, value: view.group, empty: 'none', onChange: view.setGroup }} sort={sort} /> },
     ...(clean ? [{ id: 'delete-leftovers', priority: 1, node: clean }] : []),
   ];
   useTabTools('worktrees', items);

@@ -10,7 +10,7 @@ const AgentsTools = (props: AgentsToolsProps) => {
     {
       id: 'group-sort',
       priority: 5,
-      node: <TabGroupSort group={{ options: AGENT_GROUPS, value: group, onChange: setGroup }} sort={{ options: AGENT_ORDERS, order, direction, onChange: setSort }} />,
+      node: <TabGroupSort group={{ options: AGENT_GROUPS, value: group, empty: 'none', onChange: setGroup }} sort={{ options: AGENT_ORDERS, order, direction, onChange: setSort }} />,
     },
     { id: 'show-finished', priority: 3, node: <ToolToggle label="Show finished" count={finished.count} pressed={finished.shown} onToggle={finished.onToggle} /> },
   ]);

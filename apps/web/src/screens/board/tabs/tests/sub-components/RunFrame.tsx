@@ -17,7 +17,6 @@ const RunFrame = (props: RunFrameProps) => {
       onOpenChange={onToggle}
       code={<Text font="title" tone={muted ? 'muted' : undefined} className="run-card__tag"><ShownCode id={view.item.id} /></Text>}
       title={title && <Text smartTimes tone={muted ? 'muted' : 'dim'} className="run-card__title">{title}</Text>}
-      pinTitle
       content={
         <>
           <RunChips view={view} />

@@ -14,7 +14,7 @@ import { BuildsTools } from './BuildsTools';
 
 const BuildsTab = (props: BuildsTabProps) => {
   const { boardKey } = props;
-  const tabView = useTabView(BUILDS_TAB, { groups: BUILD_GROUP_IDS, orders: BUILD_ORDER_IDS, group: 'item', order: 'updated', direction: 'desc', filters: BUILD_FILTERS });
+  const tabView = useTabView(BUILDS_TAB, { groups: BUILD_GROUP_IDS, orders: BUILD_ORDER_IDS, group: 'none', order: 'updated', direction: 'desc', filters: BUILD_FILTERS });
   const data = useBuildsData(boardKey);
   const flag = useRetiredShown();
   const { views, runs, threads } = data;

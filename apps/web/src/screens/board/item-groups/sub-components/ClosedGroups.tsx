@@ -18,6 +18,7 @@ const ClosedGroups = <T,>(props: ClosedGroupsProps<T>) => {
                 header={<ItemGroupHeader item={group.item} boardKey={boardKey} threads={threads} />}
                 count={group.rows.length}
                 defaultOpen={false}
+                pinTitle={false}
                 label={`${label} of ${itemCode(group.item)}`}
               >
                 {children(group.rows)}

@@ -7,7 +7,7 @@ import { changesFields } from './model';
 const ChangesTools = (props: ChangesToolsProps) => {
   const { boardKey, view, prs, items } = props;
   const sort = { options: CHANGES_ORDERS, order: view.order, direction: view.direction, onChange: view.setSort };
-  const group = { options: CHANGES_GROUPS, value: view.group, onChange: view.setGroup };
+  const group = { options: CHANGES_GROUPS, value: view.group, empty: 'none' as const, onChange: view.setGroup };
   useTabTools(CHANGES_TAB, [{ id: 'changes-view', priority: 5, node: <TabGroupSort group={group} sort={sort} /> }]);
   return (
     <TabFilterBar

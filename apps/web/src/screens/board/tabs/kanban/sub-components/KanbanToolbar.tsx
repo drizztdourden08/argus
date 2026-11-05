@@ -25,7 +25,7 @@ const KanbanToolbar = (props: KanbanToolbarProps) => {
   );
   const groupSort = (
     <TabGroupSort
-      group={{ options: GROUP_OPTIONS, value: prefs.group, onChange: setGroup }}
+      group={{ options: GROUP_OPTIONS, value: prefs.group, empty: 'status', onChange: setGroup }}
       sort={{ options: ORDER_OPTIONS, order: prefs.order, direction: shownDirection(prefs.order, prefs.direction), onChange: sortBy }}
     />
   );

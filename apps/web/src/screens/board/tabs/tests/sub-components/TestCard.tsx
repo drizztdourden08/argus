@@ -19,7 +19,6 @@ const TestCard = (props: TestCardProps) => {
         kind={item ? (item.type ?? 'task') : undefined}
         density="row"
         defaultOpen
-        pinTitle
         code={<Text font="title" className="run-card__tag">{card.key}</Text>}
         title={item?.title && <Text tone="dim" smartTimes className="run-card__title">{item.title}</Text>}
         content={

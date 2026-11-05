@@ -61,6 +61,7 @@ interface RecordGroupProps {
   count: number;
   flagged?: boolean;
   defaultOpen?: boolean;
+  pinTitle?: boolean;
   label: string;
   children: ReactNode;
 }

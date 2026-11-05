@@ -88,6 +88,7 @@ interface ViewChoice<Id extends string> {
 interface GroupPart<G extends string> {
   options: readonly ViewChoice<G>[];
   value: G;
+  empty: G;
   onChange: (group: G) => void;
 }
 

@@ -10,7 +10,7 @@ const BuildsTools = (props: BuildsToolsProps) => {
     {
       id: 'group-sort',
       priority: 5,
-      node: <TabGroupSort group={{ options: BUILD_GROUPS, value: group, onChange: setGroup }} sort={{ options: BUILD_ORDERS, order, direction, onChange: setSort }} />,
+      node: <TabGroupSort group={{ options: BUILD_GROUPS, value: group, empty: 'none', onChange: setGroup }} sort={{ options: BUILD_ORDERS, order, direction, onChange: setSort }} />,
     },
   ]);
   return (

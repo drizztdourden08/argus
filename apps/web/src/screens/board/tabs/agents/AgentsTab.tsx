@@ -21,7 +21,7 @@ import './AgentsTab.css';
 
 const AgentsTab = (props: AgentsTabProps) => {
   const { boardKey, onPurge } = props;
-  const tabView = useTabView(AGENTS_TAB, { groups: AGENT_GROUP_IDS, orders: AGENT_ORDER_IDS, group: 'item', order: 'updated', direction: 'desc', filters: AGENT_FILTERS });
+  const tabView = useTabView(AGENTS_TAB, { groups: AGENT_GROUP_IDS, orders: AGENT_ORDER_IDS, group: 'none', order: 'updated', direction: 'desc', filters: AGENT_FILTERS });
   const view = useAgentsView(boardKey, { filters: tabView.filters, order: tabView.order, direction: tabView.direction });
   const actions = useAgentActions(boardKey, view.all);
   const findings = useReconcile(boardKey, view.flagSignature);
