@@ -93,7 +93,7 @@ describe('S1 Agents tab: the finished agents and archive', { tags: ['standard'] 
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     expect(agentRows(container)).toContain('A-3');
     expect(agentRows(container)).toHaveLength(3);
-    fireEvent.click(screen.getByRole('button', { name: 'Hide finished (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     expect(agentRows(container)).not.toContain('A-3');
   });
 

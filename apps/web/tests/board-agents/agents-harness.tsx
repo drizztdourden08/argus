@@ -3,6 +3,7 @@ import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
 import { act } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { vi } from 'vitest';
+import { BoardTabsRow } from '../../src/screens/board/BoardTabsRow';
 import { AgentsTab } from '../../src/screens/board/tabs/agents';
 import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
@@ -89,6 +90,7 @@ const renderAgents = async (board: Board, onPurge: (thread: string) => void = ()
   const { view, source } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[at]}>
+        <BoardTabsRow tabs={[{ id: 'agents', label: 'Agents' }]} activeTab="agents" onTabChange={() => undefined} />
         <Routes>
           <Route path="/p/:key" element={<AgentsTab boardKey="alpha" onPurge={onPurge} />} />
         </Routes>
