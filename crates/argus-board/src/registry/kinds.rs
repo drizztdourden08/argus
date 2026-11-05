@@ -333,7 +333,16 @@ mod tests {
         assert_eq!(board.assignee, "lead");
         assert_eq!(
             board.tabs,
-            ["overview", "work", "items", "tests", "worktrees", "builds", "links", "activity"]
+            [
+                "overview",
+                "work",
+                "items",
+                "tests",
+                "worktrees",
+                "builds",
+                "links",
+                "activity"
+            ]
         );
         assert!(!board.is_work_item());
         assert_eq!(registry().kind_by_code("BD").unwrap().id, "board");

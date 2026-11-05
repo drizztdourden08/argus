@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useRemoteSyncs } from '../../../data/remote';
 import { RunLogDrawer } from '../../board/run-terminal';
 import { useNow } from '../clock';
-import { useRunningRuns } from './behavior/useRunningRuns';
 import type { LogTarget } from './boards.type';
 import { arrangeEntries } from './behavior/arrange-entries';
 import { groupEntries } from './behavior/group-entries';

@@ -176,7 +176,11 @@ fn delete_and_purge_of_a_board_item_are_refused() {
     let (home, mut p) = reconciled();
     for (n, kind) in ["delete", "purge"].into_iter().enumerate() {
         let id = format!("O-{n}");
-        let status = send(home.path(), &mut p, owner_op(&id, kind, "human", &json!({})));
+        let status = send(
+            home.path(),
+            &mut p,
+            owner_op(&id, kind, "human", &json!({})),
+        );
         assert_eq!(status, "refused");
     }
     assert_eq!(p["boards"].as_object().expect("boards").len(), 2);
