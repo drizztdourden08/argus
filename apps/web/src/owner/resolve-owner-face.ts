@@ -2,9 +2,8 @@
 import { AVATAR_BRANDS, BRAND_PREFIX } from '../avatar';
 import { ICON_MAX } from '../board-icon';
 import { INITIALS_AVATAR, OWNER_IMAGE_PATTERN } from './owner.constants';
+import { DEFAULT_FACE } from './resolve-owner-face.constants';
 import type { OwnerFace, OwnerProfile } from './owner.type';
-
-const DEFAULT_FACE: OwnerFace = { kind: 'default' };
 
 const brandFace = (avatar: string): OwnerFace => {
   const app = AVATAR_BRANDS.find((brand) => brand === avatar.slice(BRAND_PREFIX.length));

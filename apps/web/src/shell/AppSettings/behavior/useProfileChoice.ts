@@ -8,10 +8,8 @@ import { writeErrorText } from '../../../data/api';
 import { setProfile } from '../../../data/posts';
 import type { ProfileFields } from '../../../data/posts';
 import { INITIALS_AVATAR, resolveOwnerFace, useOwnerProfile } from '../../../owner';
-import { INITIALS_LENGTH, PROFILE_SAVED } from '../AppSettings.constants';
+import { INITIALS_LENGTH, MODE_OF_KIND, PROFILE_SAVED } from '../AppSettings.constants';
 import type { AvatarMode, ProfileChoice } from '../AppSettings.type';
-
-const MODE_OF_KIND: Record<string, AvatarMode> = { default: 'default', initials: 'initials', brand: 'brand', image: 'upload' };
 
 const useProfileChoice = (): ProfileChoice => {
   const profile = useOwnerProfile();

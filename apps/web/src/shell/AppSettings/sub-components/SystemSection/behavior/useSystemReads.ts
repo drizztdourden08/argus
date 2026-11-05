@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
-import { apiRequest } from '../../../../data/api';
-import { readRemote, useRemoteRead } from '../../../../data/remote';
-import type { HealthInfo, SystemReads, VersionInfo } from './system.type';
+import { apiRequest } from '../../../../../data/api';
+import { readRemote, useRemoteRead } from '../../../../../data/remote';
+import type { HealthInfo, SystemReads, VersionInfo } from '../SystemSection.type';
 
 const readHealth = (): Promise<HealthInfo> => apiRequest<HealthInfo>('/api/health');
 const readVersion = (): Promise<VersionInfo> => apiRequest<VersionInfo>('/api/version');

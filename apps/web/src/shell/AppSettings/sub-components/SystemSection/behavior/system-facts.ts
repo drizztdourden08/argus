@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind logic */
-import type { RemoteInfo } from '../../../../data/remote';
-import { formatAgo } from '../../../../format';
-import type { HealthInfo, SystemFact, SystemReads } from './system.type';
-
-const UNKNOWN = 'unknown';
+import type { RemoteInfo } from '../../../../../data/remote';
+import { formatAgo } from '../../../../../format';
+import type { HealthInfo, SystemFact, SystemReads } from '../SystemSection.type';
+import { UNKNOWN } from './system-facts.constants';
 
 const modeOf = (health: HealthInfo | null): string => {
   if (!health) return UNKNOWN;

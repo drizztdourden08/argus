@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { FactsPanel, Paragraph, SettingsSection } from '@drizztdourden08/tessera';
-import { systemFacts } from './system-facts';
-import { useSystemReads } from './useSystemReads';
+import { systemFacts } from './behavior/system-facts';
+import { useSystemReads } from './behavior/useSystemReads';
 
 const SystemSection = () => {
   const facts = systemFacts(useSystemReads(), Date.now());

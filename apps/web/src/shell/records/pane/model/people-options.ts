@@ -13,4 +13,4 @@ const peopleOptions = (threads: Threads, current?: string, owner: OwnerProfile =
   ...threadChoices(threads, current),
 ];
 
-export { ownerLabel, peopleOptions };
+export { peopleOptions };

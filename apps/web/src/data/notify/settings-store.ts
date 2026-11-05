@@ -4,11 +4,9 @@ import type { NotifyLevel } from '../types';
 import type { AutoAnswer, AutoPatch, LevelPatch, NotifyState, Refusal } from './notify.type';
 import { readAuto } from './read-auto';
 import { readSettings } from './read-settings';
+import { EMPTY, EMPTY_AUTO } from './settings-store.constants';
 import { writeAuto } from './write-auto';
 import { writeSettings } from './write-settings';
-
-const EMPTY_AUTO = { handed: false, ask: false, assigned: false, verify: false, run: false };
-const EMPTY: NotifyState = { toast: {}, sound: {}, os: false, auto: EMPTY_AUTO, ready: false };
 
 let state: NotifyState = EMPTY;
 let loading: Promise<void> | null = null;
@@ -77,4 +75,6 @@ const resetStore = (): void => {
   state = EMPTY;
 };
 
-export { getState, load, resetStore, saveAuto, saveLevel, subscribe };
+const settingsStore = { getState, load, resetStore, saveAuto, saveLevel, subscribe };
+
+export { settingsStore };

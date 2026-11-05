@@ -2,11 +2,11 @@
 import { Button, DialogShell, SegmentedControl } from '@drizztdourden08/tessera';
 import { SECTIONS } from '../AppSettings.constants';
 import type { AppSettingsDialogProps } from '../AppSettings.type';
-import { SECTION_VIEWS } from '../section-views';
+import { sectionView } from '../behavior/section-view';
 
 const AppSettingsDialog = (props: AppSettingsDialogProps) => {
   const { section, onSection, onClose } = props;
-  const View = SECTION_VIEWS[section];
+  const View = sectionView(section);
   return (
     <DialogShell
       open

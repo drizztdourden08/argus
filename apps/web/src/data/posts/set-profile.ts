@@ -2,9 +2,8 @@
 import { setDoc } from '../api';
 import { PORTFOLIO_SCOPE } from '../react';
 import { ownerEntry } from './owner-entry';
+import { REFUSED_DEFAULT } from './set-profile.constants';
 import type { ProfileFields } from './posts.type';
-
-const REFUSED_DEFAULT = 'The profile was refused.';
 
 const setProfile = async (fields: ProfileFields): Promise<string | null> => {
   const entry = ownerEntry({ kind: 'profile', ...fields });

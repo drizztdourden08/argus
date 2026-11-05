@@ -3,7 +3,7 @@ import { BrandMark, Card, Flex } from '@drizztdourden08/tessera';
 import { BoardSwitcher } from '../BoardSwitcher';
 import { LocalBanner } from '../LocalBanner';
 import { ModeSwitch } from '../ModeSwitch';
-import { SettingsEntries } from './SettingsEntries';
+import { SettingsEntries } from './sub-components/SettingsEntries';
 import type { ShellBarProps } from './ShellBar.type';
 import './ShellBar.css';
 

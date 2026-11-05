@@ -12,7 +12,7 @@ const AssigneeMark = (props: AssigneeMarkProps) => {
   const { assignee, boardKey, threads, size = 'xs' } = props;
   const look = assigneeLook(assignee, boardKey, threads);
   const setting = useDoc<BoardMeta>(boardKey, 'meta', 'board').doc?.avatar;
-  if (look.owner) return <OwnerMark label={look.label} size={size} />;
+  if (look.owner) return <OwnerMark label={look.tip} size={size} />;
   const source = look.lead === undefined ? null : resolveAvatar(look.lead, look.lead === boardKey ? setting : undefined);
   if (source) return <LeadMark source={source} label={look.tip} size={size} />;
   if (look.icon) return <Avatar label={look.tip} icon={look.icon} color={look.color} variant="default" size={size} />;

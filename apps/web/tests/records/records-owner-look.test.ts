@@ -1,3 +1,4 @@
+/* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { assigneeLook } from '../../src/shell/records/behavior/assignee-look';
 import { peopleOptions } from '../../src/shell/records/pane/model/people-options';

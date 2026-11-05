@@ -1,16 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { AutoLevels } from '../../../../data/notify';
-import type { NotifyLevel } from '../../../../data/types';
-
-interface LevelLabel {
-  level: NotifyLevel;
-  title: string;
-}
-
-interface AutoLabel {
-  key: keyof AutoLevels;
-  title: string;
-}
+import type { AutoLabel, LevelLabel } from './NotificationsSection.type';
 
 const LEVELS: readonly LevelLabel[] = [
   { level: 'info', title: 'Info' },
@@ -26,5 +15,6 @@ const AUTO_PINGS: readonly AutoLabel[] = [
   { key: 'run', title: 'A test plan is ready to run' },
 ];
 
-export { AUTO_PINGS, LEVELS };
-export type { AutoLabel, LevelLabel };
+const IDLE_LINE = 'Sends one ping through the same path as a real one.';
+
+export { AUTO_PINGS, IDLE_LINE, LEVELS };

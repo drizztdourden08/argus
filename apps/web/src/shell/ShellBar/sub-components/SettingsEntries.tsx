@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Icon, IconButton } from '@drizztdourden08/tessera';
-import { useOwnerProfile } from '../../owner';
-import { useAppSettings } from '../AppSettings';
-import { OwnerMark } from '../OwnerMark';
+import { useOwnerProfile } from '../../../owner';
+import { useAppSettings } from '../../AppSettings';
+import { OwnerMark } from '../../OwnerMark';
 
 const SettingsEntries = () => {
   const { openSettings } = useAppSettings();

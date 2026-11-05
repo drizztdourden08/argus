@@ -1,13 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Inline, Toggle } from '@drizztdourden08/tessera';
-
-interface LevelControlProps {
-  title: string;
-  toast: boolean;
-  sound: boolean;
-  onToast: (on: boolean) => void;
-  onSound: (on: boolean) => void;
-}
+import type { LevelControlProps } from './LevelControl.type';
 
 const LevelControl = (props: LevelControlProps) => {
   const { title, toast, sound, onToast, onSound } = props;
@@ -20,4 +13,3 @@ const LevelControl = (props: LevelControlProps) => {
 };
 
 export { LevelControl };
-export type { LevelControlProps };
