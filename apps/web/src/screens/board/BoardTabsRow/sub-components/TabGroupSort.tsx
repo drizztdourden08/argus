@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind component */
-import { Flex, GroupControl, SortControl } from '@drizztdourden08/tessera';
+import { Flex, GroupBar, SortControl } from '@drizztdourden08/tessera';
 import type { SortState } from '@drizztdourden08/tessera';
 import { pickChoice } from '../behavior/pick-choice';
 import type { TabGroupSortProps } from '../BoardTabsRow.type';
 
 const TabGroupSort = <G extends string, O extends string>({ group, sort }: TabGroupSortProps<G, O>) => {
-  const pickGroup = (id: string | null) => {
+  const pickGroup = (ids: string[]) => {
     if (!group) return;
-    const next = pickChoice(group.options, id);
+    const next = ids.length === 0 ? group.empty : pickChoice(group.options, ids.at(-1) ?? null);
     if (next) group.onChange(next);
   };
   const pickSort = (change: SortState) => {
@@ -16,7 +16,14 @@ const TabGroupSort = <G extends string, O extends string>({ group, sort }: TabGr
   };
   return (
     <Flex inline gap="xs" align="center">
-      {group && <GroupControl options={group.options} value={group.value} onChange={pickGroup} />}
+      {group && (
+        <GroupBar
+          options={group.options.filter((option) => option.id !== group.empty)}
+          value={group.value === group.empty ? [] : [group.value]}
+          maxLevels={1}
+          onChange={pickGroup}
+        />
+      )}
       <SortControl options={sort.options} value={{ key: sort.order, direction: sort.direction }} onChange={pickSort} />
     </Flex>
   );

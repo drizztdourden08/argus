@@ -24,7 +24,7 @@ const TestsToolbar = (props: TestsToolbarProps) => {
       priority: 5,
       node: (
         <TabGroupSort
-          group={{ options: GROUP_OPTIONS, value: prefs.group, onChange: state.setGroup }}
+          group={{ options: GROUP_OPTIONS, value: prefs.group, empty: 'run', onChange: state.setGroup }}
           sort={{ options: ORDER_OPTIONS, order: prefs.order, direction: shownDirection(prefs.order, prefs.direction), onChange: sortBy }}
         />
       ),

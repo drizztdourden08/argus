@@ -10,7 +10,7 @@ const PlanGroup = (props: PlanGroupProps) => {
   const { plan, tests } = props;
   return (
     <Box data-swap-item>
-      <RecordGroup header={<PlanHeader plan={plan} />} count={tests.length} label={`Cases of ${planCode(plan.item.id)}`} defaultOpen={!plan.closed}>
+      <RecordGroup pinTitle={false} header={<PlanHeader plan={plan} />} count={tests.length} label={`Cases of ${planCode(plan.item.id)}`} defaultOpen={!plan.closed}>
         <CaseList tests={tests} />
       </RecordGroup>
     </Box>

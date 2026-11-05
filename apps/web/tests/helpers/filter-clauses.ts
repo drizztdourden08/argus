@@ -20,6 +20,17 @@ const pickView = async (trigger: RegExp, option: string): Promise<void> => {
   await menuChoice(option);
 };
 
+const addGroup = async (option: string): Promise<void> => {
+  await openFilters();
+  fireEvent.click(await screen.findByRole('button', { name: 'Add group' }));
+  await menuChoice(option);
+};
+
+const removeGroup = async (option: string): Promise<void> => {
+  await openFilters();
+  fireEvent.click(await screen.findByRole('button', { name: `Remove grouping by ${option}` }));
+};
+
 const addFilter = async (fieldLabel: string, valueLabel?: string): Promise<void> => {
   await openFilters();
   fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
@@ -38,4 +49,4 @@ const removeFilter = async (fieldLabel: string): Promise<void> => {
   fireEvent.click(await screen.findByRole('button', { name: `Remove filter on ${fieldLabel}` }));
 };
 
-export { addFilter, changeFilter, openFilters, pickView, removeFilter };
+export { addFilter, addGroup, changeFilter, openFilters, pickView, removeFilter, removeGroup };

@@ -67,7 +67,7 @@ const NO_MATCH_TEXT = 'No pull request matches the filters.';
 const CHANGES_SETUP = {
   groups: CHANGES_GROUPS.map((choice): ChangesGroup => choice.id),
   orders: CHANGES_ORDERS.map((choice): ChangesOrder => choice.id),
-  group: 'item' as ChangesGroup,
+  group: 'none' as ChangesGroup,
   order: 'created' as ChangesOrder,
   direction: CHANGES_DIRECTION,
   filters: CHANGES_FILTERS,

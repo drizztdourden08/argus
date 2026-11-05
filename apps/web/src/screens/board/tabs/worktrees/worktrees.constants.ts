@@ -44,7 +44,7 @@ const KIND_OPTIONS = [
 const WORKTREE_VIEW = {
   groups: GROUP_CHOICES.map((choice) => choice.id),
   orders: ORDER_CHOICES.map((choice) => choice.id),
-  group: 'item' as WorktreeGroup,
+  group: 'none' as WorktreeGroup,
   order: 'need' as WorktreeOrder,
   direction: 'desc' as const,
   filters: { query: '', threads: [], statuses: [], kinds: [] } as WorktreeFilters,

@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { pickView } from '../helpers/filter-clauses';
+import { addGroup } from '../helpers/filter-clauses';
 import { itemDoc, testDoc, testRunDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import type { Doc } from './mount-tab';
@@ -110,7 +110,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
     await screen.findByLabelText('Open plan TP-5: Plan number 5');
     expect(container.querySelector('[data-run="I-20"]')).not.toBeNull();
     expect(container.querySelector('[data-plan]')).toBeNull();
-    await pickView(/^Group/, 'Plan');
+    await addGroup('Plan');
     expect(localStorage.getItem('coord.g.tests5')).toBe('plan');
   });
 });

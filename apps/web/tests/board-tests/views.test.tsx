@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { openFilters, pickView } from '../helpers/filter-clauses';
+import { addGroup, openFilters, pickView, removeGroup } from '../helpers/filter-clauses';
 import { filterBoard, stored, typeSearch } from './filter-dom';
 import { doneDoc, itemDoc, testDoc, testRunDoc, threadDoc } from './fixtures';
 import { mountTab } from './mount-tab';
@@ -17,7 +17,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
   it('by item makes one card per item with its tests and no item chip', async () => {
     const { container } = await mountTab(filterBoard());
     await screen.findByText('Login works');
-    await pickView(/^Group/, 'Item');
+    await addGroup('Item');
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
     expect(titlesIn(groupOf(container, 'I-2'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'I-1')).getByText('Item number 1')).toBeTruthy();
@@ -28,7 +28,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     const board = { ...filterBoard(), threads: [threadDoc('lead', { session: 'Overlord' }), threadDoc('coder')] };
     const { container } = await mountTab(board);
     await screen.findByText('Login works');
-    await pickView(/^Group/, 'Thread');
+    await addGroup('Thread');
     expect(titlesIn(groupOf(container, 'coder'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'lead')).getAllByText('lead').length).toBeGreaterThan(0);
   });
@@ -38,7 +38,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     const { container } = await mountTab({ ...filterBoard(), items: [...filterBoard().items, testRunDoc('I-30', 'I-9')] });
     await screen.findByText('Login works');
     expect(groupOf(container, 'I-1')).not.toBeNull();
-    await pickView(/^Group/, 'Run');
+    await removeGroup('Item');
     expect(container.querySelector('[data-run="I-30"]')).not.toBeNull();
     expect(localStorage.getItem('coord.g.tests5')).toBe('run');
   });
