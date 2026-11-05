@@ -174,6 +174,22 @@ fn a_card_with_nothing_assigned_to_the_owner_has_an_empty_list_and_a_done_item_l
 }
 
 #[test]
+fn counts_done_counts_done_items_of_live_threads() {
+    let home = home_with_alpha();
+    let mut board = alpha();
+    board["threads"]["old"] = json!({"id": "old", "status": "archived"});
+    let done = |id: &str, thread: &str, stage: &str| {
+        json!({"id": id, "thread": thread, "title": id, "status": "todo", "stage": stage})
+    };
+    board["items"]["I-10"] = done("I-10", "ui", "done");
+    board["items"]["I-11"] = done("I-11", "old", "done");
+    board["items"]["I-12"] = done("I-12", "gone", "done");
+    board["items"]["I-13"] = done("I-13", "ui", "doing");
+    let card = summarize(home.path(), "alpha", &portfolio(), Some(&board));
+    assert_eq!(card["counts"]["done"], 1);
+}
+
+#[test]
 fn proofs_are_kept_next_to_the_board_and_numbered_up() {
     let home = tempfile::tempdir().expect("temp dir");
     let mut test = json!({"id": "T-1", "proofs": []});
