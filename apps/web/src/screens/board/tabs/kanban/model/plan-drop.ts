@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind logic */
 import { moveCard } from '@drizztdourden08/tessera';
-import type { KanbanMove } from '@drizztdourden08/tessera';
 import type { PlaceAmong } from '../../../../../data/kanban';
 import { placeAmong } from './place-among';
 import type { DropInput, DropPlan } from './model.type';
-import { isNatural } from './sort-direction';
+import { isNatural } from './is-natural';
 
 const manual = (input: DropInput): boolean => input.order === 'rank' && isNatural(input.order, input.direction);
 

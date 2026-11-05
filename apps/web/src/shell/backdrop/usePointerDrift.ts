@@ -1,8 +1,11 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useRef } from 'react';
 import { MAX_FRAME_SECONDS } from './backdrop.constants';
-import { CENTER, easePoint, isSettled, mapPointer } from './pointer-math';
-import type { PointerPoint } from './pointer-math';
+import { easePoint } from './ease-point';
+import { isSettled } from './is-settled';
+import { mapPointer } from './map-pointer';
+import { CENTER } from './pointer-math.constants';
+import type { PointerPoint } from './pointer-math.type';
 
 const usePointerDrift = (enabled: boolean, onPoint: (point: PointerPoint) => void): void => {
   const sink = useRef(onPoint);

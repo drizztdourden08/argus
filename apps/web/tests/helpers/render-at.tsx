@@ -18,7 +18,7 @@ const withoutPortfolio = (all: FakeSource[]): FakeSource[] =>
     get: (_target, prop) => {
       const view = all.filter((source) => source.scope !== PORTFOLIO);
       const value: unknown = Reflect.get(view, prop);
-      return typeof value === 'function' ? value.bind(view) : value;
+      return typeof value === 'function' ? (value as (...args: unknown[]) => unknown).bind(view) : value;
     },
   });
 

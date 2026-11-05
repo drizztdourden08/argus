@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useState } from 'react';
 import { FALLBACK_COLORS, PALETTE_ATTRIBUTE, TRANSITION_MS } from './backdrop.constants';
-import { mix, toHex } from './color-math';
-import type { Rgb } from './color-math';
+import { mix } from './mix';
+import { toHex } from './to-hex';
+import type { Rgb } from './color-math.type';
 import { readPaletteColors } from './palette-colors';
 
 const useBackdropColors = (): readonly string[] => {

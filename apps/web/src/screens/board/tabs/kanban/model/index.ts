@@ -3,7 +3,6 @@ export { addParentOptions } from './add-parent-options';
 export { addPreset } from './add-preset';
 export { askLinks } from './ask-links';
 export { blockedSignature } from './blocked-signature';
-export { assigneeChoices } from './assignee-choices';
 export { assigneeLook } from '../../../../../shell';
 export { assigneeOf } from './assignee-of';
 export { buildView } from './build-view';
@@ -29,18 +28,17 @@ export { needsMap } from './needs-map';
 export { needsYou } from './needs-you';
 export { opNotices } from './op-notices';
 export { parseStored } from './parse-stored';
-export { isNatural, shownDirection } from './sort-direction';
+export { shownDirection } from './shown-direction';
 export { parseTrails } from './parse-trails';
 export { pausedThreads } from './paused-threads';
 export { planDrop } from './plan-drop';
 export { rangeOf } from './range-of';
 export { stageLabel } from './stage-label';
 export { textProblem } from './text-problem';
-export { typeChoices } from './type-choices';
 export { typeOf } from './type-of';
 export { validateDecision } from './validate-decision';
 export { validateField } from './validate-field';
 export {
-  CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, OWNER_TITLE, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
+  CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';

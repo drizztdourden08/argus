@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Card } from '@drizztdourden08/tessera';
 import { createPortal } from 'react-dom';
-import { filtersSlot, useSlotNode } from '../behavior/slot-store';
+import { filtersSlot } from '../behavior/filters-slot';
+import { useSlotNode } from '../behavior/useSlotNode';
 import { useFiltersOpen } from '../behavior/useFiltersOpen';
 import { FILTERS_LABEL } from '../BoardTabsRow.constants';
 import type { TabFiltersProps } from '../BoardTabsRow.type';

@@ -1,16 +1,16 @@
 /* @layer renderer-app @kind component */
+import { Box } from '@drizztdourden08/tessera';
 import { ShaderMount } from '@paper-design/shaders-react';
 import { useMemo, useRef } from 'react';
 import { GRAIN, POINTER, SIZING_UNIFORMS } from './backdrop.constants';
-import { toVec4 } from './color-math';
-import { MAX_COLORS, MESH_SHADER } from './mesh-shader';
+import { toVec4 } from './to-vec4';
+import { MAX_COLORS, MESH_SHADER } from './mesh-shader.constants';
+import type { Mount } from './MeshBackdrop.type';
 import { useBackdropColors } from './useBackdropColors';
 import { useBackdropMotion } from './useBackdropMotion';
 import { usePointerDrift } from './usePointerDrift';
 import { useViewportAspect } from './useViewportAspect';
 import './MeshBackdrop.css';
-
-type Mount = { paperShaderMount?: { setUniforms: (uniforms: Record<string, number | number[]>) => void } } | null;
 
 const MeshBackdrop = () => {
   const colors = useBackdropColors();
@@ -41,7 +41,7 @@ const MeshBackdrop = () => {
   );
 
   return (
-    <div className="mesh-backdrop" aria-hidden="true">
+    <Box className="mesh-backdrop" aria-hidden="true">
       <ShaderMount
         ref={(element) => {
           mount.current = element;
@@ -52,7 +52,7 @@ const MeshBackdrop = () => {
         width="100%"
         height="100%"
       />
-    </div>
+    </Box>
   );
 };
 

@@ -2,7 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import { MOTION, STILL_MOTION } from '../../src/shell/backdrop/backdrop.constants';
 import { motionFor } from '../../src/shell/backdrop/motion-rule';
-import { CENTER, easePoint, easeStep, isSettled, mapPointer } from '../../src/shell/backdrop/pointer-math';
+import { easePoint } from '../../src/shell/backdrop/ease-point';
+import { easeStep } from '../../src/shell/backdrop/ease-step';
+import { isSettled } from '../../src/shell/backdrop/is-settled';
+import { mapPointer } from '../../src/shell/backdrop/map-pointer';
+import { CENTER } from '../../src/shell/backdrop/pointer-math.constants';
 
 describe('backdrop pointer easing', { tags: ['critical'] }, () => {
   it('converges toward the target and never overshoots', () => {

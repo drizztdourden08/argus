@@ -7,6 +7,18 @@
   block-size: var(--board-icon-size);
 }
 
+.board-icon--sm {
+  --board-icon-size: calc(18 * var(--size-1));
+}
+
+.board-icon--md {
+  --board-icon-size: var(--size-28);
+}
+
+.board-icon--lg {
+  --board-icon-size: var(--size-48);
+}
+
 .board-icon--tile {
   border-radius: var(--radius-md);
   background: var(--c-primary-soft);

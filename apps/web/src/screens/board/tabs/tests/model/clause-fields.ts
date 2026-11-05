@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind logic */
+import { flagFields } from '../../../BoardTabsRow';
 import type { ClauseField } from '../../../BoardTabsRow';
 import type { Option } from '../../../shared';
 import { STATUS_FILTERS } from './model.constants';
@@ -26,9 +27,7 @@ const testsFields = (input: FieldInput): Field[] => [
     read: (filters) => filters.subject,
     write: (subject) => ({ subject }),
   },
-  { kind: 'flag', path: 'needs', label: 'Needs you', read: (filters) => filters.needs, write: (needs) => ({ needs }) },
-  { kind: 'flag', path: 'conflict', label: 'Conflict', read: (filters) => filters.conflict, write: (conflict) => ({ conflict }) },
-  { kind: 'flag', path: 'archived', label: 'Archived', read: (filters) => filters.archived, write: (archived) => ({ archived }) },
+  ...flagFields<TestFilters>(),
 ];
 
 export { testsFields };

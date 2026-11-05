@@ -1,20 +1,16 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { passiveNotices } from '../../src/screens/board/BoardHeader/behavior/passive-notices';
+import { minutesAgo as at } from '../helpers/minutes-ago';
+import { openAlerts } from '../helpers/open-alerts';
 import { renderAt } from '../helpers/render-at';
-import { waitForStream } from '../helpers/wait-for-stream';
 import { seedBoard } from '../helpers/seed-board';
 import { snapshot } from '../helpers/snapshot';
+import { stubCss } from '../helpers/stub-css';
+import { waitForStream } from '../helpers/wait-for-stream';
 
-beforeEach(() => vi.stubGlobal('CSS', { supports: () => false }));
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
-const NOW = Date.now();
-const at = (minutesAgo: number): string => new Date(NOW - minutesAgo * 60_000).toISOString();
+stubCss();
 
 const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activity: 'idle', session: 'RotP', lastSeen: at(0) };
 
@@ -43,10 +39,8 @@ describe('K1 the board notices', { tags: ['critical'] }, () => {
 describe('S1 the board notices in the Alerts popover', { tags: ['standard'] }, () => {
   it('counts the notices on the Alerts button and lists them under Notices on click', async () => {
     await open(WAKES);
-    const button = await screen.findByRole('button', { name: /^Alerts/ });
+    const { button, panel } = await openAlerts();
     expect(within(button).getByText('2')).toBeTruthy();
-    fireEvent.click(button);
-    const panel = await screen.findByRole('dialog', { name: 'Alerts' });
     expect(within(panel).getByText('Notices (2)')).toBeTruthy();
     const list = within(panel).getByRole('list', { name: 'Notices' });
     const rows = within(list).getAllByRole('listitem');

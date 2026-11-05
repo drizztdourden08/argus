@@ -23,10 +23,6 @@ interface KanbanToolbarProps {
   layout: LayoutState;
 }
 
-interface ViewMenuProps {
-  state: KanbanState;
-}
-
 interface ViewRowProps {
   state: KanbanState;
   view: KanbanView;
@@ -150,5 +146,5 @@ interface CardProgressRowProps {
 
 
 export type {
-  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewMenuProps, ViewRowProps,
+  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps, ViewRowProps,
 };

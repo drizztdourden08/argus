@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useState } from 'react';
 import type { MOTION, STILL_MOTION } from './backdrop.constants';
+import { REDUCED_QUERY } from './backdrop-motion.constants';
 import { motionFor } from './motion-rule';
-
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
 const useBackdropMotion = (): typeof MOTION | typeof STILL_MOTION => {
   const [reduced, setReduced] = useState(() => window.matchMedia(REDUCED_QUERY).matches);

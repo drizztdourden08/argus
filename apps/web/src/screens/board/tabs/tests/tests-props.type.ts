@@ -24,10 +24,6 @@ interface TestsToolbarProps {
   plans: Option[];
 }
 
-interface ViewMenuProps {
-  state: TestsState;
-}
-
 interface ViewRowProps {
   state: TestsState;
   view: TestsView;
@@ -194,5 +190,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, RunCardProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewMenuProps, ViewRowProps,
+  TestsTabProps, RunCardProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
 };

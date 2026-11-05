@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { ParsedShellMode } from '../AppShell.type';
-
-const BOARD_PATH_PATTERN = /^\/p\/([^/]+)\/?$/;
+import { BOARD_PATH_PATTERN } from './parse-shell-mode.constants';
 
 const decode = (value: string): string => {
   try {

@@ -1,17 +1,15 @@
 /* @layer renderer-app @kind test */
 import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { minutesAgo } from '../helpers/minutes-ago';
 import { renderAt } from '../helpers/render-at';
 import { seedBoard } from '../helpers/seed-board';
+import { stubCss } from '../helpers/stub-css';
 import { waitForStream } from '../helpers/wait-for-stream';
 
-beforeEach(() => vi.stubGlobal('CSS', { supports: () => false }));
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
+stubCss();
 
-const NOW = new Date().toISOString();
+const NOW = minutesAgo(0);
 
 const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activity: 'idle', session: 'RotP', lastSeen: NOW, link: 'chat://lead/1' };
 

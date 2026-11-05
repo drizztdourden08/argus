@@ -33,7 +33,7 @@ export { resolveLaunch } from './resolve-launch';
 export { resultNote } from './result-note';
 export { shownRun } from './shown-run';
 export { sortDone } from './sort-done';
-export { isNatural, shownDirection } from './sort-direction';
+export { shownDirection } from './sort-direction';
 export { sortToRun } from './sort-to-run';
 export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';
@@ -44,6 +44,6 @@ export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
 export {
-  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, ORDER_OPTIONS, OWNER_ASSIGNEE, PLAN_KIND, STATUS_FILTERS, STORE_KEYS,
+  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, ORDER_OPTIONS, OWNER_ASSIGNEE, PLAN_KIND, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';
