@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind component */
 import './RunCard.css';
-import { Card, Disclosure, Flex, Tag, Text } from '@drizztdourden08/tessera';
-import { countsText } from '../model';
-import { RUN_TAGS, RUN_TIPS } from '../tests.constants';
+import './SectionHead.css';
+import { Card, Disclosure, Flex, Text } from '@drizztdourden08/tessera';
 import type { ClosedRunCardProps } from '../tests-props.type';
 import { ClosedTestRow } from './ClosedTestRow';
-import { RunName } from './RunName';
+import { RunCounts } from './RunCounts';
+import { RunTitle } from './RunTitle';
 
 const ClosedRunCard = (props: ClosedRunCardProps) => {
   const { view, open, onToggle } = props;
@@ -14,13 +14,9 @@ const ClosedRunCard = (props: ClosedRunCardProps) => {
       <Disclosure
         open={open}
         onOpenChange={onToggle}
-        summary={<RunName id={view.item.id} title={view.plan?.title} muted />}
-        end={(
-          <Flex gap="sm" align="center" className="run-card__end">
-            <Tag {...(RUN_TAGS[view.stage] ?? RUN_TAGS.passed)} title={RUN_TIPS[view.stage]}>{view.stage}</Tag>
-            <Text variant="caption" tone="muted">{countsText(view.counts)}</Text>
-          </Flex>
-        )}
+        summary={<RunTitle view={view} muted />}
+        end={<Flex gap="xs" align="center" className="run-card__end"><RunCounts counts={view.counts} /></Flex>}
+        wrapEnd
       >
         {view.tests.length > 0
           ? view.tests.map((test) => <ClosedTestRow key={test.id} test={test} />)

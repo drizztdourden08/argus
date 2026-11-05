@@ -4,6 +4,7 @@ import { formatFilters, readStored, writeStored } from '../../../shared';
 import { DEFAULT_FILTERS, parseStored, shownDirection, STORE_KEYS } from '../model';
 import type { StoredView, TestFilters, TestPrefs } from '../model';
 import type { TestsState } from '../tests.type';
+import { useCaseLayout } from './useCaseLayout';
 
 const loadView = (): StoredView =>
   parseStored({
@@ -24,6 +25,7 @@ const saveView = ({ filters, prefs }: StoredView): void => {
 
 const useTestsState = (): TestsState => {
   const [view, setView] = useState<StoredView>(loadView);
+  const [layout, setLayout] = useCaseLayout();
   useEffect(() => saveView(view), [view]);
   const patchFilters = useCallback((patch: Partial<TestFilters>) => setView((now) => ({ ...now, filters: { ...now.filters, ...patch } })), []);
   const patchPrefs = useCallback((patch: Partial<TestPrefs>) => setView((now) => ({ ...now, prefs: { ...now.prefs, ...patch } })), []);
@@ -31,6 +33,8 @@ const useTestsState = (): TestsState => {
   return {
     filters: view.filters,
     prefs: view.prefs,
+    layout,
+    setLayout,
     patchFilters,
     clearFilters,
     setGroup: (group) => patchPrefs({ group }),

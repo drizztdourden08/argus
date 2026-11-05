@@ -14,7 +14,7 @@ const outcomeButton = (outcome: string, id = 'T-1', scope: Pick<typeof screen, '
 
 const focusedOutcome = (): string => {
   const group = document.activeElement?.closest('[role="group"]')?.getAttribute('aria-label') ?? '';
-  return `${document.activeElement?.textContent ?? ''} ${group.replace(/^Run /, '')}`;
+  return `${document.activeElement?.getAttribute('aria-label') ?? ''} ${group.replace(/^Run /, '')}`;
 };
 
 const openBox = async (outcome: string, id = 'T-1'): Promise<HTMLTextAreaElement> => {

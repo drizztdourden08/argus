@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
-import type { ButtonVariant, CardTone, StackedBarColor, TagLook } from '@drizztdourden08/tessera';
+import type { CardTone, IconButtonVariant, IconName, SegmentOption, SignalTone, StackedBarColor, TagLook } from '@drizztdourden08/tessera';
 import type { TestOutcome } from '../../../../data/posts';
 import type { Counts, WakeChip } from './model';
+import type { CaseLayout } from './tests.type';
 
 const TEST_STATUSES = defineStatuses({
   pending: { label: 'To run', tone: 'warning' },
@@ -53,19 +54,28 @@ const RUN_TIPS: Record<string, string> = {
   abandoned: 'Abandoned: dropped without a verdict.',
 };
 
-const OUTCOMES: { id: TestOutcome; label: string; variant: ButtonVariant }[] = [
-  { id: 'pass', label: 'pass', variant: 'success' },
-  { id: 'fail', label: 'fail', variant: 'danger' },
-  { id: 'partial', label: 'partial', variant: 'warning' },
-  { id: 'blocked', label: 'blocked', variant: 'info' },
+const OUTCOMES: { id: TestOutcome; label: string; variant: IconButtonVariant; icon: IconName }[] = [
+  { id: 'pass', label: 'pass', variant: 'success', icon: 'circle-check' },
+  { id: 'fail', label: 'fail', variant: 'danger', icon: 'circle-x' },
+  { id: 'partial', label: 'partial', variant: 'warning', icon: 'circle-dot' },
+  { id: 'blocked', label: 'blocked', variant: 'info', icon: 'lock' },
 ];
 
-const PROGRESS_SEGMENTS: { id: keyof Counts; label: string; color: StackedBarColor }[] = [
-  { id: 'pass', label: 'pass', color: 'success' },
-  { id: 'fail', label: 'fail', color: 'danger' },
-  { id: 'partial', label: 'partial', color: 'warning' },
-  { id: 'blocked', label: 'blocked', color: 'info' },
-  { id: 'run', label: 'to run', color: 'neutral' },
+const PROGRESS_SEGMENTS: { id: keyof Counts; label: string; color: StackedBarColor & SignalTone; icon: IconName }[] = [
+  { id: 'pass', label: 'pass', color: 'success', icon: 'circle-check' },
+  { id: 'fail', label: 'fail', color: 'danger', icon: 'circle-x' },
+  { id: 'partial', label: 'partial', color: 'warning', icon: 'circle-dot' },
+  { id: 'blocked', label: 'blocked', color: 'info', icon: 'lock' },
+  { id: 'run', label: 'to run', color: 'neutral', icon: 'list-checks' },
+];
+
+const LAYOUT_KEY = 'argus.tab.tests.layout';
+
+const CASE_CARD_WIDTH = 272;
+
+const LAYOUT_CHOICES: SegmentOption<CaseLayout>[] = [
+  { value: 'rows', icon: 'rows-3', hint: { label: 'Rows', description: 'One line per case' } },
+  { value: 'cards', icon: 'layout-grid', hint: { label: 'Cards', description: 'Case cards that wrap' } },
 ];
 
 const COMPOSE_HINTS: Record<string, string> = {
@@ -88,8 +98,6 @@ const RUN_ROW_SELECTOR = '[data-test][data-to-run]';
 
 const KEY_HINT = 'keys 1 pass, 2 fail, 3 partial, 4 blocked (2 to 4 ask what you saw first)';
 
-const NOTE_FOLD_CHARS = 160;
-
 const FIND_TEXT = 'Search id or title';
 
 const NO_TESTS_TEXT = 'No test yet. Threads document every test here with coord test.';
@@ -99,6 +107,12 @@ const NO_RUNS_TEXT = 'No test run yet. A thread starts one from a test plan.';
 const NO_MATCH_TEXT = 'No test matches the filters.';
 
 const CASE_KIND = 'test-case';
+
+const RUN_KIND = 'test-run';
+
+const BUILD_KIND = 'build';
+
+const BUILD_TIP = 'Open the build: its command line, Play, terminal and logs';
 
 const NO_PLANS_TEXT = 'No test plan yet.';
 
@@ -116,6 +130,6 @@ const MODE_OPTIONS = [
 ];
 
 export {
-  ANCHOR_PATTERN, CASE_KIND, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_RUNS_TEXT, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, NOTE_FOLD_CHARS, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PROGRESS_SEGMENTS,
-  RESULT_PLACEHOLDER, RESULT_TONES, RUN_ROW_SELECTOR, RUN_TAGS, RUN_TIPS, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
+  ANCHOR_PATTERN, BUILD_KIND, BUILD_TIP, CASE_CARD_WIDTH, CASE_KIND, LAYOUT_CHOICES, LAYOUT_KEY, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_RUNS_TEXT, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PROGRESS_SEGMENTS,
+  RESULT_PLACEHOLDER, RESULT_TONES, RUN_KIND, RUN_ROW_SELECTOR, RUN_TAGS, RUN_TIPS, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
 };

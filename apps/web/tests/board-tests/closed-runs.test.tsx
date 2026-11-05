@@ -33,7 +33,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     const card = cardOf(container, 'I-51');
     expect(card.textContent).toContain('passed');
-    expect(card.textContent).toContain('1 to run · 1 pass · 1 fail');
+    expect(within(card).getByRole('group', { name: '1 to run · 1 pass · 1 fail' })).toBeTruthy();
   });
 
   it('unfold to read-only rows: no outcome buttons, no Play, no Hand', async () => {
@@ -44,7 +44,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
     fireEvent.click(toggleOf(card));
     expect(isOpen(card)).toBe(true);
     expect(within(card).getByText('Test number 4')).toBeTruthy();
-    expect(within(card).queryByRole('button', { name: /Pass|Fail|Partial|Blocked|Play|Hand|again/ })).toBeNull();
+    expect(within(card).queryByRole('button', { name: /^(pass|fail|partial|blocked)$|Play|Hand|again/ })).toBeNull();
   });
 
   it('hide again when the toggle is turned off', async () => {

@@ -9,6 +9,7 @@ import { planCases } from './plan-cases';
 import { planViews } from './plan-views';
 import { runCases } from './run-cases';
 import { runClosed } from './run-closed';
+import { tally } from './tally';
 import { closedOf, openOf, runItems, runViews } from './run-views';
 
 const testsView = (input: ViewInput): TestsView => {
@@ -20,6 +21,7 @@ const testsView = (input: ViewInput): TestsView => {
   const rows = input.tests.filter(keep);
   const plans = planViews(items, filters.plan);
   const runs = runViews({ items, tests: rows, launchers, defs, filters });
+  const all = tally(input.tests);
   return {
     plans,
     byPlan: groupByPlan(prefs.group === 'plan' ? rows : [], plans),
@@ -27,6 +29,8 @@ const testsView = (input: ViewInput): TestsView => {
     cards: prefs.group === 'item' || prefs.group === 'thread' ? groupTests(rows, prefs.group, items) : [],
     closed: closedOf(runs),
     toRun: input.tests.filter(isToRun).length,
+    failed: all.fail,
+    passed: all.pass,
     total: input.tests.length,
     filtered: filtersActive(filters),
     closedCount: runItems(items).filter((item) => runClosed(item.stage)).length,

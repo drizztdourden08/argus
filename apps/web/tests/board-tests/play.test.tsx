@@ -56,36 +56,22 @@ describe('S1 starting and stopping the Play of a run', { tags: ['standard'] }, (
   });
 });
 
-describe('S1 the status line next to Play', { tags: ['standard'] }, () => {
-  it('running: Stop and the newest output line replace Play', async () => {
+describe('S1 the Play icon follows the newest run of its build', { tags: ['standard'] }, () => {
+  it('running: Stop replaces Play', async () => {
     await mountTab(playable([running({ lastLine: 'listening on 3000' })]));
     expect(await screen.findByRole('button', { name: 'Stop R-1' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Play l1' })).toBeNull();
-    const line = screen.getByRole('status', { name: 'Run R-1' });
-    expect(line.textContent).toContain('running');
-    expect(line.textContent).toContain('listening on 3000');
   });
 
-  it('a run of another definition does not show on this card', async () => {
+  it('a run of another definition leaves Play in place', async () => {
     await mountTab(playable([runDoc('R-1', 'launcher-other', { status: 'running', endedAt: null })]));
     expect(await screen.findByRole('button', { name: 'Play l1' })).toBeTruthy();
-    expect(screen.queryByRole('status', { name: /^Run R-/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Stop R-1' })).toBeNull();
   });
 
-  it('finished: how it ended and the last line, with Play again', async () => {
+  it('finished: Play is back', async () => {
     await mountTab(playable([runDoc('R-1', 'launcher-l1', { status: 'failed', exitCode: 3, lastLine: 'boom' })]));
-    const line = await screen.findByRole('status', { name: 'Run R-1' });
-    expect(line.textContent).toContain('failed (exit 3)');
-    expect(line.textContent).toContain('boom');
-    expect(screen.getByRole('button', { name: 'Play l1' })).toBeTruthy();
-  });
-
-  it('shows the newest of several finished runs', async () => {
-    await mountTab(playable([
-      runDoc('R-1', 'launcher-l1', { queuedAt: '2026-10-25T00:00:00.000Z', lastLine: 'older' }),
-      runDoc('R-2', 'launcher-l1', { queuedAt: '2026-10-26T00:00:00.000Z', lastLine: 'newer' }),
-    ]));
-    expect((await screen.findByRole('status', { name: 'Run R-2' })).textContent).toContain('newer');
-    expect(screen.queryByRole('status', { name: 'Run R-1' })).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Play l1' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Stop R-1' })).toBeNull();
   });
 });
