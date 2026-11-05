@@ -55,11 +55,13 @@ pub enum Coll {
     Deps,
     /// Open stalls of the stall watch (`_portfolio` only), written by the wake engine.
     Stalls,
+    /// Board items of the portfolio (`BD-n`), one per project board.
+    Boards,
 }
 
 impl Coll {
     /// Every collection, in the Node order.
-    pub const ALL: [Coll; 23] = [
+    pub const ALL: [Coll; 24] = [
         Coll::Threads,
         Coll::Items,
         Coll::Tests,
@@ -83,6 +85,7 @@ impl Coll {
         Coll::Prs,
         Coll::Deps,
         Coll::Stalls,
+        Coll::Boards,
     ];
 
     /// The collection's wire name.
@@ -112,6 +115,7 @@ impl Coll {
             Coll::Prs => "prs",
             Coll::Deps => "deps",
             Coll::Stalls => "stalls",
+            Coll::Boards => "boards",
         }
     }
 }
@@ -135,5 +139,17 @@ impl FromStr for Coll {
             .into_iter()
             .find(|c| c.as_str() == s)
             .ok_or_else(|| UnknownColl(s.to_owned()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Coll;
+
+    #[test]
+    fn boards_parses_and_is_listed() {
+        assert_eq!("boards".parse::<Coll>(), Ok(Coll::Boards));
+        assert_eq!(Coll::Boards.as_str(), "boards");
+        assert!(Coll::ALL.contains(&Coll::Boards));
     }
 }

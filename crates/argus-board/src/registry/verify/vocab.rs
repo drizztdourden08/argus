@@ -3,7 +3,7 @@
 use super::super::model::Collection;
 
 /// Tessera icon names the registry may use (`gavel` and `signpost` come with the next Tessera).
-pub(super) const ICONS: [&str; 23] = [
+pub(super) const ICONS: [&str; 24] = [
     "zap",
     "bookmark",
     "circle-check",
@@ -27,6 +27,7 @@ pub(super) const ICONS: [&str; 23] = [
     "send",
     "trash-2",
     "flag",
+    "layout-dashboard",
 ];
 
 /// Tessera tag category colours: the type marks and the people use these.
@@ -67,11 +68,12 @@ pub(super) const TABS: [&str; 19] = [
 pub(super) const ASSIGNEE_WORDS: [&str; 2] = ["=owner", "=lead"];
 
 /// The collections the item types live in; every other record has one of its own.
-pub(super) const TYPE_COLLECTIONS: [Collection; 4] = [
+pub(super) const TYPE_COLLECTIONS: [Collection; 5] = [
     Collection::Items,
     Collection::Tests,
     Collection::Launchers,
     Collection::Worktrees,
+    Collection::Boards,
 ];
 
 /// The letter an item is stored with on disk (`I-12`); no kind takes it as a code.

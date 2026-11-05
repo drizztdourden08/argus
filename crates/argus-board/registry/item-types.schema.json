@@ -134,7 +134,7 @@
         "icon": { "type": "string" },
         "color": { "type": "string" },
         "tone": { "type": "string" },
-        "collection": { "type": "string", "enum": ["items", "tests", "launchers", "worktrees"] },
+        "collection": { "type": "string", "enum": ["items", "tests", "launchers", "worktrees", "boards"] },
         "idKey": { "type": "string" },
         "serves": { "$ref": "#/$defs/names" },
         "readOnly": { "type": "boolean" },

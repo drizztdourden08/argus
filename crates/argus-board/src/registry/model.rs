@@ -212,6 +212,8 @@ pub enum Collection {
     Launchers,
     /// The worktrees the scanner reports; never written from the board.
     Worktrees,
+    /// The board items of the portfolio (`BD-n`): one per project board.
+    Boards,
     /// The `agents` collection (`A-n`).
     Agents,
     /// The `prs` collection (`PR-n`): the changes.

@@ -324,6 +324,18 @@ mod tests {
     }
 
     #[test]
+    fn a_board_is_a_type_on_the_boards_collection_and_not_a_work_item() {
+        let board = registry().kind("board").unwrap();
+        assert_eq!(board.code, "BD");
+        assert_eq!(board.icon, "layout-dashboard");
+        assert_eq!(board.collection, Collection::Boards);
+        assert_eq!(board.title, "name");
+        assert_eq!(board.assignee, "lead");
+        assert!(!board.is_work_item());
+        assert_eq!(registry().kind_by_code("BD").unwrap().id, "board");
+    }
+
+    #[test]
     fn a_removal_request_is_shown_rq_and_stored_r_and_leaves_the_r_to_the_runs() {
         let request = registry().kind("removal-request").unwrap();
         assert_eq!(request.code, "RQ");

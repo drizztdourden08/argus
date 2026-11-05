@@ -142,7 +142,7 @@ fn verify_tabs(kind: &Kind<'_>, say: &mut impl FnMut(&str)) {
 fn verify_collection(kind: &Kind<'_>, say: &mut impl FnMut(&str)) {
     let of_a_type = TYPE_COLLECTIONS.contains(&kind.collection);
     if kind.family == Family::Type && !of_a_type {
-        say("a type lives in items, tests, launchers or worktrees");
+        say("a type lives in items, tests, launchers, worktrees or boards");
     }
     if kind.family == Family::Record && of_a_type {
         say("a record that is not an item type lives in a collection of its own");
