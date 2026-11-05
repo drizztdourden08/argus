@@ -1,12 +1,12 @@
-//! WP5: `coord agent`, `coord build` and `coord launcher`: the sub-agents a thread runs, the
-//! bundles of tests the owner is handed, and the launchers the owner can start.
+//! WP5: `coord agent`, `coord build` and `coord launcher`: the sub-agents a thread runs, the old
+//! bundle verbs (aliases of `coord test run`), and the launchers the owner can start.
 //!
 //! ```text
 //! base/       how a verb reaches the board, options, ownership rules, sort order
 //! rules/      the launcher and bundle rules of `argus-launchers` run on the JSON board
 //! agents/     agent: start, note, set, done, fail, stop, archive, unarchive, rm, restore,
 //!             list, show, reconcile
-//! builds/     build: add, set, rm, close, reopen, ready, draft, hand, unhand, list
+//! builds/     build: the aliases of the test run verbs, migrate-links
 //! launchers/  launcher: set, keep, retire, list, show
 //! ```
 
@@ -14,7 +14,7 @@ mod agents;
 pub mod base;
 mod builds;
 mod launchers;
-mod rules;
+pub(crate) mod rules;
 
 use crate::cli::Call;
 use crate::cli::exit::Outcome;

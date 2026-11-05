@@ -1,12 +1,12 @@
 //! The launcher side of a board as the typed rules of `argus-launchers` read it: the records of
-//! `launchers` and `builds`, the Play definitions of `runDefs`, the threads and the handed build.
+//! `launchers`, the Play definitions of `runDefs` and the threads.
 //! The board itself stays JSON, so nothing the rules do not know is lost.
 
 use argus_board::Board;
 use argus_board::json::{section, truthy};
 use argus_board::ops::Role;
 use argus_launchers::RunDef;
-use argus_launchers::launcher::{Bundle, Launcher, LauncherBoard, ThreadInfo, Who};
+use argus_launchers::launcher::{Launcher, LauncherBoard, ThreadInfo, Who};
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 
@@ -77,13 +77,9 @@ fn run_def(name: &str, def: &Value) -> RunDef {
 /// The typed view of the board.
 ///
 /// # Errors
-/// A launcher or bundle record is not of a readable shape.
+/// A launcher record is not of a readable shape.
 pub fn typed_board(board: &Board) -> Result<LauncherBoard, CoordError> {
-    let mut typed = LauncherBoard {
-        handed_build: text(board, "handedBuild"),
-        handed_at: text(board, "handedAt"),
-        ..LauncherBoard::default()
-    };
+    let mut typed = LauncherBoard::default();
     for (name, rec) in section(board, "launchers") {
         let launcher: Launcher = record(
             "launcher",
@@ -93,10 +89,6 @@ pub fn typed_board(board: &Board) -> Result<LauncherBoard, CoordError> {
             &["name", "kind", "createdAt", "updatedAt"],
         )?;
         typed.launchers.insert(name.clone(), launcher);
-    }
-    for (tag, rec) in section(board, "builds") {
-        let bundle: Bundle = record("bundle", tag, rec, &["window"], &["tag"])?;
-        typed.builds.insert(tag.clone(), bundle);
     }
     for (id, t) in section(board, "threads") {
         typed.threads.insert(id.clone(), thread_info(t));

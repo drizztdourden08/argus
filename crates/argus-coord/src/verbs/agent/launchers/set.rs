@@ -95,7 +95,7 @@ fn notes(
     }
     if name != MASTER && !has_master(&typed_board(board)?) {
         run.say(&format!(
-            "warning: this project has no master launcher and needs one (the main checkout's app): coord launcher set {MASTER} --cmd \"<command>\". Until then coord build hand is refused."
+            "warning: this project has no master launcher and needs one (the main checkout's app): coord launcher set {MASTER} --cmd \"<command>\". Until then coord test run hand is refused."
         ));
     }
     Ok(())

@@ -1,14 +1,14 @@
 //! Writing what the rules changed back onto the JSON board: only the records that differ, only
 //! the keys that differ (a key keeps its place, a new key goes last), the Play definitions as
-//! whole objects, the handed build and the audit lines the rules wrote.
+//! whole objects and the audit lines the rules wrote.
 
 use argus_board::Board;
-use argus_board::json::{map_mut, section, set, unset};
+use argus_board::json::{map_mut, set, unset};
 use argus_board::store::{LogLine, append_log};
 use argus_launchers::launcher::LauncherBoard;
 use serde_json::{Map, Value};
 
-use super::emit::{bundle_map, def_map, launcher_map};
+use super::emit::{def_map, launcher_map};
 
 /// Sets the keys of `after` that differ from `before` on the record, and drops the keys `after`
 /// no longer has.
@@ -55,24 +55,6 @@ fn launchers(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard) {
     }
 }
 
-fn bundles(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard) {
-    for (tag, rec) in &after.builds {
-        let was = before.builds.get(tag);
-        if was == Some(rec) {
-            continue;
-        }
-        let fresh = !section(board, "builds").contains_key(tag);
-        let closed = was.is_some_and(|b| b.closed_at.is_some());
-        put(
-            board,
-            "builds",
-            tag,
-            bundle_map(rec, closed, fresh),
-            was.map(|b| bundle_map(b, false, false)),
-        );
-    }
-}
-
 fn definitions(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard) {
     for (name, def) in &after.run_defs {
         if before.run_defs.get(name) != Some(def) {
@@ -91,12 +73,7 @@ fn definitions(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard)
 /// Writes the difference between the rules' board before and after onto the JSON board.
 pub fn commit(board: &mut Board, before: &LauncherBoard, after: &LauncherBoard) {
     launchers(board, before, after);
-    bundles(board, before, after);
     definitions(board, before, after);
-    if before.handed_build != after.handed_build || before.handed_at != after.handed_at {
-        set(board, "handedBuild", after.handed_build.clone());
-        set(board, "handedAt", after.handed_at.clone());
-    }
     for line in &after.audit {
         let entry = LogLine {
             thread: &line.thread,

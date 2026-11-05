@@ -16,7 +16,7 @@ use crate::verbs::work::run::{Res, Run, bad};
 /// How one field of a spec is checked and turned into what the test stores.
 type Check = fn(&Value, &Value) -> Res<Value>;
 
-const FIELDS: [(&str, Check); 13] = [
+const FIELDS: [(&str, Check); 12] = [
     ("title", |v, _| Ok(json!(require_text("title", v)?))),
     ("covers", |v, _| optional("covers", v)),
     ("mode", mode),
@@ -29,7 +29,6 @@ const FIELDS: [(&str, Check); 13] = [
     ("fail", |v, _| list("expect", v, 8)),
     ("notes", |v, _| list("testnote", v, 5)),
     ("ac", acceptance),
-    ("build", |v, _| optional("build", v)),
 ];
 
 const NOT_A_LIST: &str = "(intermediate value).map is not a function";
@@ -51,11 +50,18 @@ fn list(kind: &str, v: &Value, max: usize) -> Res<Value> {
     Ok(json!(text_list(kind, v, max)?))
 }
 
+/// A test case is run by AI (stored as `auto`) or by hand (`manual`); `ai` is an alias of `auto`.
 fn mode(v: &Value, _item: &Value) -> Res<Value> {
-    match v.as_str().filter(|m| ["auto", "manual"].contains(m)) {
-        Some(_) => Ok(v.clone()),
-        None => Err(bad("mode must be auto or manual.")),
+    match v.as_str() {
+        Some("ai" | "auto") => Ok(json!("auto")),
+        Some("manual") => Ok(v.clone()),
+        _ => Err(bad("mode must be ai or manual.")),
     }
+}
+
+/// How a mode is shown: AI or manual.
+pub(super) fn mode_label(mode: &Value) -> &'static str {
+    if mode == "manual" { "manual" } else { "AI" }
 }
 
 fn setup(v: &Value, _item: &Value) -> Res<Value> {
@@ -142,16 +148,10 @@ pub(super) fn spec_from_options(r: &Run<'_>) -> Res<Map<String, Value>> {
             spec.insert(key.to_owned(), texts(r, name));
         }
     }
-    if r.options.json("build") == Some(json!(true)) {
+    if r.options.json("build").is_some() || r.options.flag("clear-build") {
         return Err(bad(
-            "--build needs a tag (--build \"\" or --clear-build removes it).",
+            "--build is gone from test cases: the build belongs to the run (coord test plan run <plan> --build <launcher>).",
         ));
-    }
-    if let Some(tag) = r.text_opt("build") {
-        spec.insert("build".into(), json!(tag));
-    }
-    if r.options.flag("clear-build") {
-        spec.insert("build".into(), json!(""));
     }
     Ok(spec)
 }

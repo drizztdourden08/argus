@@ -3,9 +3,9 @@
 //! to the test itself.
 //!
 //! ```text
-//! coord test plan add "<title>" [--parent I-n] [--bundle tag] [--case T-n]...
+//! coord test plan add "<title>" --case T-n [--case T-m]... [--parent I-n] [--build <launcher>]
 //! coord test plan cases I-n --add T-n [--before T-m] | --remove T-n
-//! coord test plan start I-n [--bundle tag]     coord test plan end I-n     coord test plan show I-n
+//! coord test plan run I-n [--build <launcher>]     coord test plan end I-n     coord test plan show I-n
 //! coord test result T-n <status> "<note>" --run I-n
 //! ```
 
@@ -34,10 +34,10 @@ pub(super) fn plan(r: &mut Run<'_>) -> Outcome {
     match sub.as_str() {
         "add" => add::add(r),
         "cases" => cases::cases(r),
-        "start" => run::start(r),
+        "run" | "start" => run::start(r),
         "end" => run::end(r),
         "show" => show::show(r),
-        _ => Err(bad("plan verb must be one of add, cases, start, end, show.").into()),
+        _ => Err(bad("plan verb must be one of add, cases, run, start, end, show.").into()),
     }
 }
 
