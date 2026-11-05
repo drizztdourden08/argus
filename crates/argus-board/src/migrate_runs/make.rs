@@ -71,6 +71,9 @@ pub(super) fn plan(
     (tag, cases): (&str, &[String]),
 ) -> Result<String, BoardError> {
     let mut item = base(title, "test-plan", "draft", thread);
-    item.insert("fields".to_owned(), json!({"cases": cases, "legacyBundle": tag}));
+    item.insert(
+        "fields".to_owned(),
+        json!({"cases": cases, "legacyBundle": tag}),
+    );
     create_doc(board, "items", "I", item, by)
 }

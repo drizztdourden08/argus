@@ -13,7 +13,9 @@ use crate::verbs::work::{
 };
 
 const TESTS: Table = Table {
-    head: &["test", "status", "mode", "item", "thread", "proofs", "title"],
+    head: &[
+        "test", "status", "mode", "item", "thread", "proofs", "title",
+    ],
     empty: "no tests.",
 };
 

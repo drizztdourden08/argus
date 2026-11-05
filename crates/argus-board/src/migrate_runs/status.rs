@@ -44,7 +44,14 @@ pub(super) fn stage_of(
     results: &[Value],
 ) -> (&'static str, Option<&'static str>) {
     if truthy(rec, "closedAt") {
-        return (if all_passed(results) { "passed" } else { "reported" }, None);
+        return (
+            if all_passed(results) {
+                "passed"
+            } else {
+                "reported"
+            },
+            None,
+        );
     }
     if board["handedBuild"].as_str() == Some(tag) {
         return ("ready", Some("owner"));
@@ -56,5 +63,7 @@ pub(super) fn stage_of(
 /// The launcher a bundle record starts, when the board has it.
 pub(super) fn build_of(board: &Board, rec: &Value) -> Option<String> {
     let name = rec["launcher"].as_str().filter(|n| !n.is_empty())?;
-    board["launchers"][name].is_object().then(|| name.to_owned())
+    board["launchers"][name]
+        .is_object()
+        .then(|| name.to_owned())
 }

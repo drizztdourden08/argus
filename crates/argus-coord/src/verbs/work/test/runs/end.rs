@@ -45,13 +45,16 @@ pub(super) fn reopen(r: &mut Run<'_>) -> Outcome {
             return Ok(());
         }
         set_run(board, &who, (&id, json!({ "stage": "reported" })), r)?;
-        r.say(&[&format!("{id}: reopened (reported); the build made for it is back.")]);
+        r.say(&[&format!(
+            "{id}: reopened (reported); the build made for it is back."
+        )]);
         Ok(())
     })
 }
 
 /// `coord test run drop`.
 pub(super) fn drop_run(r: &mut Run<'_>) -> Outcome {
-    let say = |_: &Value, id: &str| format!("{id}: abandoned; the build made for it retires with it.");
+    let say =
+        |_: &Value, id: &str| format!("{id}: abandoned; the build made for it retires with it.");
     change(r, json!({ "stage": "abandoned" }), |_, _| Ok(()), say)
 }

@@ -65,11 +65,23 @@ fn plan_for(
     if named.is_some() || tests.is_empty() {
         return Ok(named);
     }
-    let title = rec["title"].as_str().filter(|t| !t.is_empty()).unwrap_or(tag);
-    let thread = rec["thread"].as_str().filter(|t| !t.is_empty()).unwrap_or(actor);
-    let id = plan(board, (&format!("Bundle {title}"), thread, actor), (tag, tests))?;
+    let title = rec["title"]
+        .as_str()
+        .filter(|t| !t.is_empty())
+        .unwrap_or(tag);
+    let thread = rec["thread"]
+        .as_str()
+        .filter(|t| !t.is_empty())
+        .unwrap_or(actor);
+    let id = plan(
+        board,
+        (&format!("Bundle {title}"), thread, actor),
+        (tag, tests),
+    )?;
     report.plans += 1;
-    report.lines.push(format!("bundle {tag} gets the new plan {id}"));
+    report
+        .lines
+        .push(format!("bundle {tag} gets the new plan {id}"));
     Ok(Some(id))
 }
 
@@ -82,11 +94,15 @@ fn migrate_tag(
     let rec = board["builds"][tag].clone();
     let tests = tagged(board, tag);
     let Some(plan_id) = plan_for(board, (tag, &rec, &tests), actor, report)? else {
-        report.lines.push(format!("bundle {tag} has no test and no plan: skipped"));
+        report
+            .lines
+            .push(format!("bundle {tag} has no test and no plan: skipped"));
         return Ok(());
     };
     if has_legacy(board, &plan_id, ("legacyBundle", tag)) {
-        report.lines.push(format!("bundle {tag} is already a run of {plan_id}"));
+        report
+            .lines
+            .push(format!("bundle {tag} is already a run of {plan_id}"));
         return Ok(());
     }
     let results = results_of(board, &tests);
@@ -113,7 +129,9 @@ fn migrate_tag(
     };
     let id = run(board, new)?;
     report.from_bundles += 1;
-    report.lines.push(format!("bundle {tag} becomes {id}, run {n} of {plan_id} ({stage})"));
+    report.lines.push(format!(
+        "bundle {tag} becomes {id}, run {n} of {plan_id} ({stage})"
+    ));
     Ok(())
 }
 

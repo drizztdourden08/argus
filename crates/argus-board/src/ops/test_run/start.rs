@@ -69,12 +69,11 @@ pub(super) fn start(
             "{id} has no test case yet (add one with coord test plan cases)."
         )));
     }
-    let run_id = match ready_of(found, &runs)? {
-        Some(ready) => begin(board, op, &ready)?,
-        None => {
-            let build = named(board, op)?;
-            create(board, (op, who), (found, next_n(&runs), build))?
-        }
+    let run_id = if let Some(ready) = ready_of(found, &runs)? {
+        begin(board, op, &ready)?
+    } else {
+        let build = named(board, op)?;
+        create(board, (op, who), (found, next_n(&runs), build))?
     };
     plan_to(board, id, "running")?;
     let n = doc(board, "items", &run_id).map_or_else(String::new, |r| display(&r["n"]));

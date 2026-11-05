@@ -9,7 +9,8 @@ fn build_list_says_the_new_verb_and_lists_the_runs() {
     let rig = Rig::new();
     let ran = rig.ok(&["build", "list"], As::Nobody);
     assert!(
-        ran.out.contains("coord build list is now coord test run list"),
+        ran.out
+            .contains("coord build list is now coord test run list"),
         "{}",
         ran.out
     );

@@ -94,10 +94,7 @@ fn run_complete(
         })?;
     let pass = count(run, |s| s == "pass");
     let fail = count(run, |s| FAILING.contains(&s));
-    let line = format!(
-        "run {}: all tests run, {pass} pass {fail} fail",
-        run["n"]
-    );
+    let line = format!("run {}: all tests run, {pass} pass {fail} fail", run["n"]);
     Some(WakeInput::about(
         ctx.scope,
         thread,

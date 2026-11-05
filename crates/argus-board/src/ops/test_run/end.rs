@@ -40,7 +40,15 @@ pub(super) fn end(board: &mut Board, who: &Who, found: &Found) -> Result<OpResul
         set(item, "endedAt", now_iso());
         map_mut(item, "fields").insert("summary".to_owned(), Value::String(line.clone()));
     }
-    run_to(board, &run_id, if all_passed(&summary) { "passed" } else { "reported" })?;
+    run_to(
+        board,
+        &run_id,
+        if all_passed(&summary) {
+            "passed"
+        } else {
+            "reported"
+        },
+    )?;
     plan_to(board, &found.plan_id, "reported")?;
     let said = format!("{} run {n} ended: {line}", found.plan_id);
     finish(board, who, (&found.plan_id, &run_id), said).map(|r| r.with_extra("summary", summary))

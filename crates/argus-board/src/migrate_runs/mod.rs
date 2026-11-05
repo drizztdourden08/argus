@@ -68,7 +68,10 @@ fn runs_of(board: &Board, plan: &str) -> Vec<Value> {
 
 /// The number the next run of the plan gets.
 fn next_n(board: &Board, plan: &str) -> i64 {
-    let highest = runs_of(board, plan).iter().filter_map(|r| r["n"].as_i64()).max();
+    let highest = runs_of(board, plan)
+        .iter()
+        .filter_map(|r| r["n"].as_i64())
+        .max();
     highest.unwrap_or(0) + 1
 }
 

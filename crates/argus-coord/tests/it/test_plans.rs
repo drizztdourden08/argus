@@ -333,12 +333,17 @@ fn a_plan_needs_a_case_and_a_run_lists_with_its_counts() {
     let bare = work.worker(&["test", "plan", "add", "Empty"]);
     assert_eq!(bare.code, 1);
     assert!(bare.err.contains("at least one case"), "{}", bare.err);
-    let old = work.worker(&["test", "plan", "add", "Old", "--case", "T-1", "--bundle", "b1"]);
+    let old = work.worker(&[
+        "test", "plan", "add", "Old", "--case", "T-1", "--bundle", "b1",
+    ]);
     assert!(old.err.contains("--bundle is gone"), "{}", old.err);
     work.worker_ok(&["test", "plan", "run", "I-2"]);
     work.worker_ok(&["test", "result", "T-1", "pass", "ok", "--run", "I-3"]);
     let listed = work.worker_ok(&["test", "run", "list"]);
-    assert!(listed.contains("I-3") && listed.contains("running"), "{listed}");
+    assert!(
+        listed.contains("I-3") && listed.contains("running"),
+        "{listed}"
+    );
     let rows: Value =
         serde_json::from_str(&work.worker_ok(&["test", "run", "list", "--json"])).expect("json");
     assert_eq!(rows[0]["plan"], "I-2");

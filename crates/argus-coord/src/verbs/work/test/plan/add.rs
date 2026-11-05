@@ -44,10 +44,9 @@ fn create_op(set: Map<String, Value>, r: &Run<'_>) -> Res<Value> {
 pub(super) fn add(r: &mut Run<'_>) -> Outcome {
     let title = require_text("title", &r.arg_json(0))?;
     if r.text_opt("bundle").is_some() {
-        return Err(bad(
-            "--bundle is gone: a run carries its build, pass --build <launcher>.",
-        )
-        .into());
+        return Err(
+            bad("--bundle is gone: a run carries its build, pass --build <launcher>.").into(),
+        );
     }
     r.write(|board, r| {
         let who = r.begin(board)?;

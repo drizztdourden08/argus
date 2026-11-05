@@ -73,7 +73,10 @@ fn run_of(b: &Value, plan: &str, at: usize) -> Value {
 }
 
 fn results_of(run: &Value) -> Vec<Value> {
-    run["fields"]["results"].as_array().cloned().unwrap_or_default()
+    run["fields"]["results"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
 }
 
 #[test]
@@ -161,7 +164,8 @@ fn a_plan_keeps_at_least_one_case() {
     let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
     let empty = apply_op(&mut b, &op, &lead(), None);
     assert!(refused(&empty).contains("keeps at least one case"));
-    let op = json!({"kind": "edit", "target": {"c": "items", "id": plan}, "set": {"fields.cases": []}});
+    let op =
+        json!({"kind": "edit", "target": {"c": "items", "id": plan}, "set": {"fields.cases": []}});
     let emptied = apply_op(&mut b, &op, &lead(), None);
     assert!(refused(&emptied).contains("keeps at least one case"));
     let fields = &b["items"][plan.as_str()]["fields"];
@@ -252,8 +256,7 @@ fn ending_a_run_counts_the_last_result_of_each_case_and_reports_the_plan() {
     applied(&record(&mut b, &plan, "T-2", "blocked", "no device"));
     let end = run_op(&mut b, &lead(), "plan-run-end", &plan, json!({}));
     applied(&end);
-    let summary =
-        json!({"pass": 1, "fail": 0, "partial": 0, "blocked": 1, "skip": 0, "notRun": 1, "total": 3});
+    let summary = json!({"pass": 1, "fail": 0, "partial": 0, "blocked": 1, "skip": 0, "notRun": 1, "total": 3});
     assert_eq!(end.extra["summary"], summary);
     let run = run_of(&b, &plan, 0);
     assert_eq!(

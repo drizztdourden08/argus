@@ -35,7 +35,9 @@ fn runs(b: &Board) -> Vec<Value> {
 }
 
 fn legacy_run(b: &Board, key: &str) -> Value {
-    let found = runs(b).into_iter().find(|r| r["fields"]["legacyRun"] == key);
+    let found = runs(b)
+        .into_iter()
+        .find(|r| r["fields"]["legacyRun"] == key);
     found.unwrap()
 }
 
@@ -65,7 +67,9 @@ fn a_plan_run_keeps_its_numbers_and_results() {
 fn a_bundle_a_plan_run_covers_makes_no_second_run() {
     let mut b = board();
     migrate_runs(&mut b, "overlord").unwrap();
-    let of_plan = runs(&b).into_iter().filter(|r| r["fields"]["plan"] == "I-1");
+    let of_plan = runs(&b)
+        .into_iter()
+        .filter(|r| r["fields"]["plan"] == "I-1");
     assert_eq!(of_plan.count(), 1);
 }
 
@@ -109,13 +113,19 @@ fn legacy_fields_stay_and_the_board_is_marked() {
     let mut b = board();
     let before = b.clone();
     let report = migrate_runs(&mut b, "overlord").unwrap();
-    assert_eq!(b["items"]["I-1"]["fields"]["runs"], before["items"]["I-1"]["fields"]["runs"]);
+    assert_eq!(
+        b["items"]["I-1"]["fields"]["runs"],
+        before["items"]["I-1"]["fields"]["runs"]
+    );
     assert_eq!(b["items"]["I-1"]["fields"]["bundle"], "b1");
     assert_eq!(b["builds"], before["builds"]);
     assert_eq!(b["tests"], before["tests"]);
     assert_eq!(b["handedBuild"], "b3");
     assert!(is_migrated(&b));
-    assert_eq!((report.from_plan_runs, report.from_bundles, report.plans), (1, 2, 2));
+    assert_eq!(
+        (report.from_plan_runs, report.from_bundles, report.plans),
+        (1, 2, 2)
+    );
 }
 
 #[test]

@@ -5,7 +5,8 @@ use std::collections::{HashMap, HashSet};
 use super::super::kinds::{Family, Kind, Look};
 use super::super::model::Registry;
 use super::vocab::{
-    ASSIGNEE_WORDS, CATEGORY_COLORS, COLOR_SHARERS, ICONS, ITEM_LETTER, TABS, TONES, TYPE_COLLECTIONS,
+    ASSIGNEE_WORDS, CATEGORY_COLORS, COLOR_SHARERS, ICONS, ITEM_LETTER, TABS, TONES,
+    TYPE_COLLECTIONS,
 };
 
 /// The name of the list a kind comes from, as the problems print it.

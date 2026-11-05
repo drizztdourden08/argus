@@ -11,8 +11,8 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 
 use argus_launchers::launcher::{
-    Launcher, LauncherBoard, LauncherStale, MASTER, REASON_MASTER, REASON_STALE,
-    StaleConfig, StaleEnv, StaleItem, StaleNote, ThreadInfo, WakeEvent, master_text, stale_text,
+    Launcher, LauncherBoard, LauncherStale, MASTER, REASON_MASTER, REASON_STALE, StaleConfig,
+    StaleEnv, StaleItem, StaleNote, ThreadInfo, WakeEvent, master_text, stale_text,
 };
 use argus_launchers::{ManualClock, format_iso};
 use serde_json::{Value, json};

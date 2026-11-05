@@ -52,7 +52,10 @@ fn migrate_one(
         || (String::new(), String::new()),
         |p| (display(&p["title"]), display(&p["thread"])),
     );
-    let by = old["by"].as_str().filter(|b| !b.is_empty()).unwrap_or(actor);
+    let by = old["by"]
+        .as_str()
+        .filter(|b| !b.is_empty())
+        .unwrap_or(actor);
     let new = NewRun {
         plan: plan.to_owned(),
         plan_title: title,

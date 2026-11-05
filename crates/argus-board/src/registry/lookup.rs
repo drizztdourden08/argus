@@ -186,7 +186,15 @@ mod tests {
     #[test]
     fn a_build_serves_the_work_item_types_and_nothing_else() {
         let reg = registry();
-        for served in ["epic", "story", "task", "bug", "debt", "test-plan", "test-run"] {
+        for served in [
+            "epic",
+            "story",
+            "task",
+            "bug",
+            "debt",
+            "test-plan",
+            "test-run",
+        ] {
             assert!(reg.can_serve(served), "{served}");
         }
         for other in ["test-case", "build", "worktree", "ghost"] {

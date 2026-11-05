@@ -28,7 +28,13 @@ fn print(r: &mut Run<'_>, report: &Report, dry: bool) {
     let mut lines: Vec<String> = report
         .lines
         .iter()
-        .map(|l| if dry { format!("would: {l}") } else { l.clone() })
+        .map(|l| {
+            if dry {
+                format!("would: {l}")
+            } else {
+                l.clone()
+            }
+        })
         .collect();
     lines.push(summary(report, dry));
     r.say(&[&lines.join("\n")]);

@@ -42,7 +42,10 @@ pub(super) fn hand(r: &mut Run<'_>) -> Outcome {
         master_ready(board)
     };
     let say = |run: &Value, id: &str| {
-        format!("{id}: ready, handed to the owner (build {}).", display(&run["fields"]["build"]))
+        format!(
+            "{id}: ready, handed to the owner (build {}).",
+            display(&run["fields"]["build"])
+        )
     };
     change(r, fields, check, say)
 }
