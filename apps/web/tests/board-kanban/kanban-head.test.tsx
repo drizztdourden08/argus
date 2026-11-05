@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { HEAD_SIZE_PX } from '../../src/shell/records/head.constants';
-import { cardOf, cleanKanban, item, moreItem, mountKanban } from './kanban-harness';
+import { cardOf, cleanKanban, item, mountKanban, openSettings } from './kanban-harness';
 
 cleanKanban();
 
@@ -59,8 +59,7 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
 describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
   it('saves a brand mark as an owner post and reads it back', async () => {
     const view = await mountKanban(board);
-    await moreItem(/Lead avatar/);
-    const dialog = await screen.findByRole('dialog', { name: 'Lead avatar' });
+    const dialog = await openSettings();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Use the Brock mark' }));
     await screen.findByText('The lead avatar is saved.');
     const post = view.posted.find((sent) => sent.body.kind === 'avatar');
@@ -71,8 +70,7 @@ describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
 
   it('refuses an image over the cap before it is posted', async () => {
     const view = await mountKanban(board);
-    await moreItem(/Lead avatar/);
-    const dialog = await screen.findByRole('dialog', { name: 'Lead avatar' });
+    const dialog = await openSettings();
     const input = dialog.querySelector('input[type="file"]');
     if (!(input instanceof HTMLInputElement)) throw new Error('no file input');
     const big = new File([new Uint8Array(300 * 1024)], 'big.png', { type: 'image/png' });

@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind types */
 import type { TagLook } from '@drizztdourden08/tessera';
-import type { BrandApp } from '@drizztdourden08/tessera/brand';
 import type { PurgeRequest } from '../tabs/kanban';
 
 interface BoardMoreProps {
@@ -33,29 +32,16 @@ interface MoreCounts {
   locks: readonly (Lock & { id: string })[];
 }
 
-type MoreDialog = 'locks' | 'legend' | 'avatar' | null;
+type MoreDialog = 'locks' | 'legend' | null;
 
 interface MoreDialogsProps {
-  boardKey: string;
   dialog: MoreDialog;
   locks: MoreCounts['locks'];
   held: number;
   onClose: () => void;
 }
 
-interface AvatarDialogProps {
-  boardKey: string;
-  onClose: () => void;
-}
 
-interface AvatarChoice {
-  setting: string | null;
-  busy: boolean;
-  problem: string | null;
-  pickBrand: (app: BrandApp) => Promise<void>;
-  upload: (files: File[]) => Promise<void>;
-  reset: () => Promise<void>;
-}
 
 interface LegendEntry {
   label: string;
@@ -63,4 +49,4 @@ interface LegendEntry {
   text: string;
 }
 
-export type { AvatarChoice, AvatarDialogProps, BoardMoreProps, BoardMoreState, LegendEntry, Lock, MoreCounts, MoreDialog, MoreDialogsProps };
+export type { BoardMoreProps, BoardMoreState, LegendEntry, Lock, MoreCounts, MoreDialog, MoreDialogsProps };

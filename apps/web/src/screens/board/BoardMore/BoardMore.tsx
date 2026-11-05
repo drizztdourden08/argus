@@ -23,7 +23,6 @@ const BoardMore = (props: BoardMoreProps) => {
             items: [
               { id: 'trash', label: `Trash (${trashCount})`, onSelect: onTrash },
               { id: 'locks', label: `Resources and locks (${counts.held} held)`, onSelect: () => setDialog('locks') },
-              { id: 'avatar', label: 'Lead avatar...', onSelect: () => setDialog('avatar') },
               { id: 'legend', label: 'Legend', onSelect: () => setDialog('legend') },
               { id: 'hidden', label: `${showHidden ? 'Hide' : 'Show'} hidden (${counts.hidden})`, description: HIDDEN_TIP, onSelect: () => setShowHidden(!showHidden) },
               { id: 'purge', label: 'Purge threads and records...', tone: 'danger', onSelect: onPurge },
@@ -35,7 +34,7 @@ const BoardMore = (props: BoardMoreProps) => {
         align="end"
         itemSize="roomy"
       />
-      <MoreDialogs boardKey={boardKey} dialog={dialog} locks={counts.locks} held={counts.held} onClose={() => setDialog(null)} />
+      <MoreDialogs dialog={dialog} locks={counts.locks} held={counts.held} onClose={() => setDialog(null)} />
     </>
   );
 };

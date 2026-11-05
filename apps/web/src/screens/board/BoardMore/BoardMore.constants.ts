@@ -5,10 +5,6 @@ const HIDDEN_KEY = 'coord.hidden';
 
 const HIDDEN_TIP = 'Done threads, archived threads and unnamed new sessions';
 
-const AVATAR_SAVED = 'The lead avatar is saved.';
-
-const AVATAR_NOTE = 'The picture this project lead wears on cards and lists. Pick a brand mark or upload an image up to 180 KB.';
-
 const RESOURCES_NOTE = 'A thread claims a resource before it uses the shared thing and releases it after.';
 
 const LEGEND_ENTRIES: readonly LegendEntry[] = [
@@ -27,4 +23,4 @@ const LEGEND_ENTRIES: readonly LegendEntry[] = [
   { label: 'ui not listening', look: { variant: 'normal', color: 'neutral' }, text: 'Your click was saved, but nobody was listening for that thread; it sees the result the next time it runs.' },
 ];
 
-export { AVATAR_NOTE, AVATAR_SAVED, HIDDEN_KEY, HIDDEN_TIP, LEGEND_ENTRIES, RESOURCES_NOTE };
+export { HIDDEN_KEY, HIDDEN_TIP, LEGEND_ENTRIES, RESOURCES_NOTE };
