@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useBoard } from '../../data/react';
 import { RecordPaneScope } from '../../shell';
 import { RecordPaneHost } from '../../shell/records/pane';
+import { useResetOnBoard } from './behavior/useResetOnBoard';
 import { useBoardTab } from './behavior/useBoardTab';
 import { usePresence } from './behavior/usePresence';
 import { BOARD_TABS } from './board.constants';
@@ -29,6 +30,11 @@ const BoardPage = (props: BoardPageProps) => {
   const work = useBoardWork(boardKey);
   const badges = useTabBadges(boardKey, work);
   usePresence(boardKey);
+  useResetOnBoard(boardKey, () => {
+    setOpenThread(null);
+    more.closeTrash();
+    more.closePurge();
+  });
   return (
     <OpenThreadContext.Provider value={setOpenThread}>
       <RecordPaneScope>
