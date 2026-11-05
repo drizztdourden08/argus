@@ -3,13 +3,7 @@
 use super::run::Run;
 
 /// Says the `lines` (prefixed with `tag` and a space on a dry run) and then the `summary`.
-pub(super) fn say_report(
-    r: &mut Run<'_>,
-    lines: &[String],
-    tag: &str,
-    dry: bool,
-    summary: String,
-) {
+pub(super) fn say_report(r: &mut Run<'_>, lines: &[String], tag: &str, dry: bool, summary: String) {
     let mut out: Vec<String> = lines
         .iter()
         .map(|l| if dry { format!("{tag} {l}") } else { l.clone() })
