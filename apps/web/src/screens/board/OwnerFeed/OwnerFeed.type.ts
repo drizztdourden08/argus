@@ -6,7 +6,14 @@ import type { WithId } from '../../../data/react';
 import type { AskMode, BoardWork, FeedCard, ManualTest } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
 
-type FeedFilter = 'all' | 'you' | 'log';
+type AskFeedCard = Extract<FeedCard, { data: Entry }>;
+
+interface AskLines {
+  title: string;
+  rest: string;
+}
+
+type FeedFilter ='all' | 'you' | 'log';
 
 interface FeedActions {
   isBusy: (key: string) => boolean;
@@ -61,6 +68,12 @@ interface FeedGroupProps {
   extra?: ReactNode;
 }
 
+interface AskGroupProps {
+  heading: string;
+  cards: AskFeedCard[];
+  ctx: FeedContext;
+}
+
 interface LeadNotesGroup {
   lead: string;
   entries: Entry[];
@@ -81,8 +94,9 @@ interface FeedCardViewProps {
   ctx: FeedContext;
 }
 
-interface CardBodyProps extends FeedCardViewProps {
-  facts: CardFacts;
+interface AskCardProps {
+  card: AskFeedCard;
+  ctx: FeedContext;
 }
 
 interface FeedFactsProps {
@@ -102,7 +116,6 @@ interface CardMenuProps {
 }
 
 interface TestBodyProps {
-  facts: CardFacts;
   build: string | null;
   handed: string | null;
 }
@@ -176,9 +189,12 @@ interface FeedSectionsProps {
 
 export type {
   ActionBodyProps,
+  AskCardProps,
   AskCopy,
+  AskGroupProps,
+  AskFeedCard,
+  AskLines,
   AskFormProps,
-  CardBodyProps,
   CardFacts,
   CardMenuProps,
   ContextPreviewProps,
