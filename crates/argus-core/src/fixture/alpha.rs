@@ -1,6 +1,7 @@
 //! The `alpha` board of the dashboard tests: a coordinator and a `ui` thread, items with AC, an
-//! auto test that passed and a manual test of the handed build `b1`, a question, a notice, a
-//! pending action, agents working and done, a lock and a log.
+//! auto test that passed and a manual test, a test plan of the manual test and a ready run of it
+//! handed to the owner on the live build `build-1`, a question, a notice, a pending action,
+//! agents working and done, a lock and a log.
 
 use serde_json::{Value, json};
 
@@ -21,8 +22,7 @@ pub fn fill_alpha(board: &mut Value) {
     board["agents"] = agents;
     board["locks"] = json!({ "dev-server": { "resource": "dev-server", "description": "port 3000", "holder": "ui", "since": ago(10), "queue": [], "updatedAt": ago(10) } });
     board["log"] = json!({ "ui": { "subject": "ui", "entries": [{ "seq": 1, "ts": ago(20), "thread": "ui", "item": "I-1", "text": "form scaffolded" }, { "seq": 2, "ts": ago(10), "thread": "ui", "item": "I-1", "text": "T-1 pass: Form renders" }], "updatedAt": ago(10) } });
-    board["handedBuild"] = json!("b1");
-    board["handedAt"] = json!(ago(8));
+    board["launchers"] = json!({ "build-1": { "name": "build-1", "title": "Login build", "updatedAt": ago(9), "retiredAt": null } });
 }
 
 fn items() -> Value {
@@ -38,6 +38,18 @@ fn items() -> Value {
             "ui",
             json!({ "title": "Settings page", "description": null, "subject": "ui", "thread": "ui", "status": "todo", "origin": "coordinator", "ac": [] }),
             2048,
+        ),
+        doc(
+            "I-20",
+            "ui",
+            json!({ "title": "Login smoke", "description": null, "subject": "ui", "thread": "ui", "status": "doing", "origin": "thread", "type": "test-plan", "stage": "ready", "ac": [], "fields": { "cases": ["T-2"] } }),
+            3072,
+        ),
+        doc(
+            "I-21",
+            "ui",
+            json!({ "title": "Login smoke run 1", "description": null, "subject": "ui", "thread": "ui", "status": "doing", "origin": "thread", "type": "test-run", "stage": "ready", "assignee": "owner", "n": 1, "startedAt": null, "endedAt": null, "updatedAt": ago(8), "ac": [], "fields": { "plan": "I-20", "build": "build-1", "results": [] } }),
+            4096,
         ),
     ])
 }
@@ -56,7 +68,7 @@ fn tests() -> Value {
             "T-2",
             "I-1",
             "ui",
-            json!({ "title": "Bad password is refused", "mode": "manual", "build": "b1", "steps": ["Open the app", "Type a wrong password"], "pass": ["an error shows"], "fail": ["it logs in"], "ac": [2] }),
+            json!({ "title": "Bad password is refused", "mode": "manual", "steps": ["Open the app", "Type a wrong password"], "pass": ["an error shows"], "fail": ["it logs in"], "ac": [2] }),
             2048,
         ),
     ])
