@@ -8,8 +8,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
 
-use argus_board::sync::{PAGE_COLLECTIONS, export_docs};
 use argus_board::store::{board_dir, try_lock};
+use argus_board::sync::{PAGE_COLLECTIONS, export_docs};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
 use argus_core::{

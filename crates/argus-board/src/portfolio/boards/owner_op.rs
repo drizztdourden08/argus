@@ -91,7 +91,12 @@ pub fn apply_owner_op(home: &Path, p: &mut Board, op: &Value) -> OpResult {
 
 /// Applies a post aimed at a board item and keeps it with its `status` (`applied`, `refused` or
 /// `conflict`) and `outcome`. Returns the status.
-pub(super) fn import(home: &Path, p: &mut Board, id: &str, mut entry: Value) -> String {
+pub(in crate::portfolio) fn import(
+    home: &Path,
+    p: &mut Board,
+    id: &str,
+    mut entry: Value,
+) -> String {
     let result = apply_owner_op(home, p, &entry);
     let status = result.status.as_str();
     set(&mut entry, "status", status);

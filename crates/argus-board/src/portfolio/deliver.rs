@@ -5,8 +5,8 @@ use std::path::Path;
 
 use serde_json::{Map, Value, json};
 
-use super::{boards, profile};
 use super::registry::project_keys;
+use super::{boards, profile};
 use crate::Board;
 use crate::error::BoardError;
 use crate::inbox::{Message, message_id, push};
