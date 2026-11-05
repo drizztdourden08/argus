@@ -2,7 +2,3 @@
   min-height: var(--size-40);
   margin: var(--space-md) var(--space-lg) 0;
 }
-
-.shell-bar .shell-bar__status {
-  margin-inline-start: auto;
-}

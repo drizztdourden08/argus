@@ -27,13 +27,12 @@ interface BoardStampProps {
   updatedAt: string | null;
 }
 
-interface BoardFactsProps extends BoardStampProps {
-  boardKey: string;
-  className?: string;
+interface BoardRunningProps {
+  runningAgents: number;
 }
 
-interface BoardWorktreesProps {
-  boardKey: string;
+interface BoardWorktreesProps extends BoardRunningProps {
+  listed: number;
 }
 
 interface BoardSyncProps {
@@ -87,10 +86,10 @@ export type {
   AlertsLabelProps,
   AlertsView,
   BoardAlertsProps,
-  BoardFactsProps,
   BoardFaultsProps,
   BoardHeaderProps,
   BoardNoticesProps,
+  BoardRunningProps,
   BoardStallsProps,
   BoardStampProps,
   BoardSyncProps,
