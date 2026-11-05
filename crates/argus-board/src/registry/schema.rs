@@ -143,7 +143,7 @@ mod tests {
         let collections = &schema["$defs"]["type"]["properties"]["collection"]["enum"];
         assert_eq!(
             collections,
-            &json!(["items", "tests", "launchers", "worktrees"])
+            &json!(["items", "tests", "launchers", "worktrees", "boards"])
         );
         let records = &schema["$defs"]["record"]["properties"]["collection"]["enum"];
         assert_eq!(records.as_array().unwrap().len(), 9);

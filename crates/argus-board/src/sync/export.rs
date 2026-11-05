@@ -198,7 +198,11 @@ pub fn export_docs(board: &Board, proof_url: &dyn Fn(&Value) -> String) -> Vec<D
         docs.push(DocChange::set(Coll::Deps, id.clone(), doc.clone()));
     }
     for (id, doc) in section(board, "boards") {
-        docs.push(DocChange::set(Coll::Boards, id.clone(), board_doc(doc, board)));
+        docs.push(DocChange::set(
+            Coll::Boards,
+            id.clone(),
+            board_doc(doc, board),
+        ));
     }
     docs.push(DocChange::set(Coll::Meta, "board", board_meta(board)));
     for (name, def) in section(board, "runDefs") {

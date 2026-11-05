@@ -89,6 +89,7 @@ mod tests {
             "test-case",
             "build",
             "worktree",
+            "board",
         ];
         assert_eq!(ids, want);
     }

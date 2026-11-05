@@ -178,9 +178,7 @@ fn counts_done_counts_done_items_of_live_threads() {
     let home = home_with_alpha();
     let mut board = alpha();
     board["threads"]["old"] = json!({"id": "old", "status": "archived"});
-    let done = |id: &str, thread: &str, stage: &str| {
-        json!({"id": id, "thread": thread, "title": id, "status": "todo", "stage": stage})
-    };
+    let done = |id: &str, thread: &str, stage: &str| json!({"id": id, "thread": thread, "title": id, "status": "todo", "stage": stage});
     board["items"]["I-10"] = done("I-10", "ui", "done");
     board["items"]["I-11"] = done("I-11", "old", "done");
     board["items"]["I-12"] = done("I-12", "gone", "done");
