@@ -5,8 +5,8 @@ use serde_json::Value;
 use super::tree::children_of;
 use crate::Board;
 use crate::json::{display, doc, section, truthy};
-use crate::launchers::bundle_status;
 use crate::ops::Who;
+use crate::ops::test_run::{cases_of, is_ended, last_status, runs_of};
 
 /// What a condition is asked about: the board, the item as it will be, and who acts.
 pub(crate) struct Subject<'a> {
@@ -23,9 +23,9 @@ pub(crate) fn missing(need: &str, s: &Subject) -> Vec<String> {
         "children" => open_children(s),
         "tests" => unpassed_tests(s),
         "verified" => unverified(s),
-        "plan-passed" => plan_not_passed(s.item),
+        "plan-passed" => plan_not_passed(s),
         "cases" => no_cases(s.item),
-        "bundle-ready" => bundle_not_ready(s),
+        "build-ready" => build_not_ready(s),
         _ => Vec::new(),
     }
 }
@@ -121,39 +121,18 @@ fn unverified(s: &Subject) -> Vec<String> {
     }
 }
 
-fn cases_of(item: &Value) -> Vec<String> {
-    item["fields"]["cases"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|c| c.as_str().map(str::to_owned))
-        .collect()
-}
-
-fn case_passed(run: &Value, case: &str) -> bool {
-    let results = run["results"].as_array().cloned().unwrap_or_default();
-    results
-        .iter()
-        .rev()
-        .find(|r| r["test"].as_str() == Some(case))
-        .is_some_and(|r| r["status"] == "pass")
-}
-
-fn plan_not_passed(item: &Value) -> Vec<String> {
-    let runs = item["fields"]["runs"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default();
-    let Some(run) = runs.last() else {
+fn plan_not_passed(s: &Subject) -> Vec<String> {
+    let runs = runs_of(s.board, id_of(s.item));
+    let Some(run) = runs.iter().rfind(|r| r["stage"] != "abandoned") else {
         return vec!["the plan has no run yet".to_owned()];
     };
     let n = display(&run["n"]);
-    if run["endedAt"].is_null() {
+    if !is_ended(run) {
         return vec![format!("run {n} is still open")];
     }
-    let failed: Vec<String> = cases_of(item)
+    let failed: Vec<String> = cases_of(s.item)
         .into_iter()
-        .filter(|c| !case_passed(run, c))
+        .filter(|c| last_status(run, c) != Some("pass"))
         .collect();
     listed(&format!("cases not passed in run {n}"), &failed)
 }
@@ -166,12 +145,12 @@ fn no_cases(item: &Value) -> Vec<String> {
     }
 }
 
-fn bundle_not_ready(s: &Subject) -> Vec<String> {
-    let Some(tag) = s.item["fields"]["bundle"].as_str() else {
-        return vec!["no bundle is set".to_owned()];
+fn build_not_ready(s: &Subject) -> Vec<String> {
+    let Some(name) = s.item["fields"]["build"].as_str() else {
+        return vec!["no build is set".to_owned()];
     };
-    match doc(s.board, "builds", tag) {
-        Some(rec) if bundle_status(s.board, tag, rec) == "ready" => Vec::new(),
-        _ => vec![format!("bundle {tag} is not ready")],
+    match doc(s.board, "launchers", name) {
+        Some(rec) if !truthy(rec, "retiredAt") => Vec::new(),
+        _ => vec![format!("build {name} is not live")],
     }
 }

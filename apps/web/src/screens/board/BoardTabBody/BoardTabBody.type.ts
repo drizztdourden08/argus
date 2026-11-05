@@ -6,7 +6,6 @@ interface BoardTabBodyProps {
   tab: string;
   boardKey: string;
   work: BoardWork;
-  handed: string | null;
   more: BoardMoreState;
 }
 

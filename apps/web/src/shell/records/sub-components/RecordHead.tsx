@@ -7,7 +7,7 @@ import { RecordMenu } from './RecordMenu';
 import { TypeIcon } from './TypeIcon';
 
 const RecordHead = (props: RecordHeadProps) => {
-  const { kind, code, assignee, boardKey, threads, menu, menuLabel, size = 'xs', selection } = props;
+  const { kind, code, assignee, boardKey, threads, menu, menuLabel, title, size = 'xs', selection } = props;
   return (
     <Flex gap="xs" align="center">
       {selection?.selecting ? (
@@ -18,6 +18,7 @@ const RecordHead = (props: RecordHeadProps) => {
         <TypeIcon kind={kind} size={size} />
       )}
       <RecordLink id={code} />
+      {title}
       <Spacer />
       <AssigneeMark assignee={assignee} boardKey={boardKey} threads={threads} size={size} />
       <RecordMenu groups={menu} label={menuLabel} />

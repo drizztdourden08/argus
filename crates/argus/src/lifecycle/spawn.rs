@@ -6,13 +6,16 @@ use std::fs::File;
 use std::io;
 use std::process::{Child, Command, Stdio};
 
+use argus_core::process::hidden_command;
+
 #[cfg(windows)]
 mod flags {
     use std::os::windows::process::CommandExt;
     use std::process::Command;
 
+    use argus_core::process::CREATE_NO_WINDOW;
+
     const DETACHED_PROCESS: u32 = 0x0000_0008;
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
 
     /// Apart from this process: no console, no window, outside the job it runs in.
@@ -46,7 +49,7 @@ mod flags {
 }
 
 fn command(args: &[OsString], breakaway: bool, stderr: &File) -> io::Result<Command> {
-    let mut command = Command::new(std::env::current_exe()?);
+    let mut command = hidden_command(std::env::current_exe()?);
     command
         .args(args)
         .stdin(Stdio::null())
@@ -82,7 +85,7 @@ pub fn browser(url: &str) -> io::Result<()> {
     } else {
         ("xdg-open", vec![url])
     };
-    let mut command = Command::new(program);
+    let mut command = hidden_command(program);
     command
         .args(args)
         .stdin(Stdio::null())
@@ -97,11 +100,11 @@ pub fn browser(url: &str) -> io::Result<()> {
 pub fn kill_tree(pid: u32) {
     let pid = pid.to_string();
     let mut command = if cfg!(windows) {
-        let mut c = Command::new("taskkill");
+        let mut c = hidden_command("taskkill");
         c.args(["/PID", &pid, "/T", "/F"]);
         c
     } else {
-        let mut c = Command::new("kill");
+        let mut c = hidden_command("kill");
         c.args(["-9", &pid]);
         c
     };

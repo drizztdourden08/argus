@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { IconName, SignalTone } from '@drizztdourden08/tessera';
+import type { AvatarProps, IconName, SignalTone } from '@drizztdourden08/tessera';
 
 type SignalOpens = { kind: 'item' } | { kind: 'entry'; id: string };
 
@@ -10,6 +10,7 @@ interface CardSignal {
   label: string;
   tone: SignalTone;
   opens: SignalOpens;
+  avatar?: AvatarProps;
 }
 
 interface SignalOpener {

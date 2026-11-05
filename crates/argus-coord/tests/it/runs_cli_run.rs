@@ -4,7 +4,8 @@
 // test-tag: e2e
 
 use std::fs;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use crate::common::{Home, coord};
 use crate::remote::{Rig, env_plus, ok};
@@ -175,9 +176,9 @@ if (process.argv[2] === 'start') {
 
 fn kill(pid: &str) {
     let mut command = if cfg!(windows) {
-        Command::new("taskkill")
+        hidden_command("taskkill")
     } else {
-        Command::new("kill")
+        hidden_command("kill")
     };
     let args: Vec<&str> = if cfg!(windows) {
         vec!["/PID", pid, "/F", "/T"]
@@ -205,7 +206,7 @@ fn home_with_fake_install() -> (Home, std::path::PathBuf) {
 }
 
 fn node_missing() -> bool {
-    let missing = Command::new("node").arg("--version").output().is_err();
+    let missing = hidden_command("node").arg("--version").output().is_err();
     if missing {
         eprintln!("skipped: node is not installed");
     }
@@ -260,7 +261,7 @@ fn the_server_the_client_starts_does_not_hold_the_pipes_of_its_caller() {
         return;
     };
     let (home, install) = home_with_fake_install();
-    let mut command = Command::new(exe);
+    let mut command = hidden_command(exe);
     command
         .args(["coord", "run", "list", "--project", "alpha"])
         .current_dir(home.path())
@@ -273,8 +274,6 @@ fn the_server_the_client_starts_does_not_hold_the_pipes_of_its_caller() {
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
-    #[cfg(windows)]
-    std::os::windows::process::CommandExt::creation_flags(&mut command, 0x0800_0000);
     let child = command.spawn().expect("argus coord");
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || tx.send(child.wait_with_output()).ok());

@@ -4,6 +4,10 @@ import type { CardData } from '../model';
 import { SIGNAL_OF } from './kind-signal.constants';
 import type { CardSignal } from './signal.type';
 
-const kindSignal = (kind: AttentionKind, card: CardData, now: number): CardSignal | null => SIGNAL_OF[kind](card, now);
+const kindSignals = (kind: AttentionKind, card: CardData, now: number): CardSignal[] => {
+  const made = SIGNAL_OF[kind](card, now);
+  if (made === null) return [];
+  return Array.isArray(made) ? made : [made];
+};
 
-export { kindSignal };
+export { kindSignals };

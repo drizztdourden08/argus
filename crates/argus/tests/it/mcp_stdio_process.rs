@@ -5,7 +5,9 @@
 use std::fs;
 use std::io::{BufRead, BufReader as StdReader, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+
+use argus_core::process::hidden_command;
 
 use crate::mcp_stdio::init;
 use argus_testkit::{TestOptions, TestServer};
@@ -29,7 +31,7 @@ struct Child {
 
 impl Child {
     fn start(home: &Path, project: Option<&str>) -> Child {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_argus"));
+        let mut command = hidden_command(env!("CARGO_BIN_EXE_argus"));
         command.arg("mcp").arg("--data-dir").arg(home);
         if let Some(key) = project {
             command.args(["--project", key]);

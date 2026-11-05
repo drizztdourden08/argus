@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import { itemBody } from './item-body';
+import { itemBody } from './ItemBody';
 import { casesBadge } from './model/cases-badge';
 import { childrenBadge } from './model/children-badge';
 import { discussionBadge } from './model/discussion-badge';
@@ -8,7 +8,7 @@ import { linksBadge } from './model/links-badge';
 import { servedBadge } from './model/served-badge';
 import { testsBadge } from './model/tests-badge';
 import type { PaneTab } from './pane.type';
-import { placeholderBody } from './placeholder-body';
+import { placeholderBody } from './PlaceholderBody';
 import { ActivityTab } from './tabs/ActivityTab';
 import { CasesTab } from './tabs/CasesTab';
 import { ChecksTab } from './tabs/ChecksTab';

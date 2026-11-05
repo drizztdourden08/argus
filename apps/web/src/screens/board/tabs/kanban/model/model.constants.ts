@@ -31,7 +31,13 @@ const TRAIL_MIN_DEPTH = 3;
 
 const CHIP_PREFIX: Readonly<Record<string, string>> = { cost: 'cost ', risk: 'risk ' };
 
-const NO_CHILDREN: ChildCount = { done: 0, total: 0 };
+const NO_CHILDREN: ChildCount = { done: 0, total: 0, items: [] };
+
+const WITH_CHILDREN: readonly string[] = ['children', 'children-ac'];
+
+const WITH_CRITERIA: readonly string[] = ['ac', 'children-ac'];
+
+const SETTLED_DEPS: readonly string[] = ['dropped', 'gone', 'cancelled'];
 
 const RUN_WORDS: readonly string[] = ['pass', 'fail', 'partial', 'blocked', 'skip'];
 
@@ -101,7 +107,10 @@ export {
   ORDER_OPTIONS,
   PAUSE_KINDS,
   QUIET_HOURS,
+  SETTLED_DEPS,
   STATUS_COLUMNS,
   STATUS_OPTIONS,
   STORE_KEYS,
+  WITH_CHILDREN,
+  WITH_CRITERIA,
 };

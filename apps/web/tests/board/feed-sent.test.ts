@@ -13,7 +13,7 @@ const sent = (over: Partial<Entry> & { id: string }): Entry => ({
   ...over,
 });
 
-const work = (entries: Entry[]) => buildWork({ entries, actions: [], tests: [], builds: [], log: [], items: [] });
+const work = (entries: Entry[]) => buildWork({ entries, actions: [], tests: [], log: [], items: [] });
 
 describe('I-85 what the owner sent and no lead applied yet', { tags: ['critical'] }, () => {
   it('shows an unapplied followup and message in the section for the leads', () => {

@@ -6,24 +6,18 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
-
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+use argus_core::process::hidden_command;
 
 /// The most a helper may run before it is stopped.
 pub const TIMEOUT: Duration = Duration::from_secs(30);
 
 fn hidden(program: &str, args: &[String]) -> Command {
-    let mut command = Command::new(program);
+    let mut command = hidden_command(program);
     command
         .args(args)
         .stdin(Stdio::null())
         .stderr(Stdio::piped())
         .stdout(Stdio::piped());
-    #[cfg(windows)]
-    command.creation_flags(CREATE_NO_WINDOW);
     command
 }
 

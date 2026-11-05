@@ -18,7 +18,12 @@ import { QuietBadge } from './QuietBadge';
 
 const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => card.quietMs !== null).length;
 
-const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} /> : undefined);
+const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} withCode /> : undefined);
+
+const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string): ReactNode => {
+  const parent = parents.get(id);
+  return parent ? <ParentHeader parent={parent} withCode={false} /> : undefined;
+};
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
   const { boardKey, view, state, threads, now, selection, ops, add, focus, onOpen } = props;
@@ -27,6 +32,10 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
   const onMove = (move: KanbanMove) => {
     const card = view.cards.find((candidate) => candidate.id === move.cardId);
     if (card) applyDrop(planDrop({ columns: view.columns, move, group, order }), card.item, ops);
+  };
+  const onCardOpen = (cardId: string) => {
+    const card = view.cards.find((candidate) => candidate.id === cardId);
+    if (card) onOpen(itemCode(card.item));
   };
   const columns: KanbanColumn<CardData>[] = view.columns.map((column) => ({
     ...column,
@@ -57,6 +66,8 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
+      onCardOpen={onCardOpen}
+      renderGroupHeader={(groupId) => frameHeader(view.parents, groupId)}
       renderCard={(card) => (
         <ItemCard
           boardKey={boardKey}

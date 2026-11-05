@@ -10,10 +10,10 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::time::{Duration, SystemTime};
 
 use argus_core::clock::{iso_from_ms, now_ms};
+use argus_core::process::hidden_command;
 use filetime::{FileTime, set_file_mtime};
 use tempfile::TempDir;
 
@@ -21,7 +21,7 @@ pub const DAY_MS: i64 = 86_400_000;
 
 /// Runs git in `cwd` as a test author; the output text.
 pub fn git(cwd: &Path, args: &[&str], dated: Option<i64>) -> String {
-    let mut command = Command::new("git");
+    let mut command = hidden_command("git");
     command.args(args).current_dir(cwd);
     for (name, value) in [("NAME", "Test"), ("EMAIL", "test@example.test")] {
         command.env(format!("GIT_AUTHOR_{name}"), value);

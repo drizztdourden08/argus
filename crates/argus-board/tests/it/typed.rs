@@ -5,7 +5,7 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, applied, lead, refused};
+use crate::common::{alpha, applied, doc, lead, refused};
 use argus_board::ops::{OpResult, Role, Status, Who, apply_op, create_note};
 use serde_json::{Value, json};
 
@@ -310,46 +310,47 @@ fn a_stage_and_a_status_that_disagree_are_refused() {
     assert!(refused(&unknown).contains("has the stages"));
 }
 
+fn plan_set(title: &str) -> Value {
+    json!({"title": title, "thread": "ui", "type": "test-plan", "fields": {"cases": ["T-1"]}})
+}
+
 #[test]
-fn a_test_plan_needs_cases_to_be_ready_and_a_bundle_only_warns() {
+fn a_test_plan_always_keeps_a_case() {
     let mut b = alpha();
-    let plan = made(&mut b, &lead(), typed("test-plan", "Smoke"));
-    let res = edit(&mut b, &lead(), &plan, json!({"stage": "ready"}));
-    assert!(refused(&res).contains("no test case yet"));
-    let ready = edit(
-        &mut b,
-        &lead(),
-        &plan,
-        json!({"stage": "ready", "fields.cases": ["T-1"]}),
-    );
+    let bare = make(&mut b, &lead(), typed("test-plan", "Smoke"));
+    assert!(refused(&bare).contains("keeps at least one case"));
+    let plan = made(&mut b, &lead(), plan_set("Smoke"));
+    let ready = edit(&mut b, &lead(), &plan, json!({"stage": "ready"}));
     applied(&ready);
-    assert_eq!(ready.extra["warnings"], json!(["no bundle is set"]));
     assert_eq!(b["items"][plan.as_str()]["fields"]["cases"], json!(["T-1"]));
+    let emptied = edit(&mut b, &lead(), &plan, json!({"fields.cases": []}));
+    assert!(refused(&emptied).contains("keeps at least one case"));
+    assert_eq!(b["items"][plan.as_str()]["fields"]["cases"], json!(["T-1"]));
+}
+
+fn run_of(plan: &str, stage: &str, status: &str) -> Value {
+    doc(
+        "I-90",
+        "ui",
+        json!({
+            "type": "test-run", "stage": stage, "status": "review", "n": 1,
+            "endedAt": "2026-11-02T10:00:00Z",
+            "fields": {"plan": plan, "results": [{"test": "T-1", "status": status}]},
+        }),
+        9000,
+    )
 }
 
 #[test]
 fn a_test_plan_passes_only_when_its_last_run_passed_every_case() {
     let mut b = alpha();
-    let plan = made(&mut b, &lead(), typed("test-plan", "Smoke"));
-    applied(&edit(
-        &mut b,
-        &lead(),
-        &plan,
-        json!({"fields": {"cases": ["T-1"]}}),
-    ));
+    let plan = made(&mut b, &lead(), plan_set("Smoke"));
     let none = edit(&mut b, &Who::human(), &plan, json!({"stage": "passed"}));
     assert!(refused(&none).contains("no run yet"));
-    let failed = json!([{"n": 1, "endedAt": "2026-11-02T10:00:00Z", "results": [{"test": "T-1", "status": "fail"}]}]);
-    applied(&edit(
-        &mut b,
-        &lead(),
-        &plan,
-        json!({"fields.runs": failed}),
-    ));
+    b["items"]["I-90"] = run_of(&plan, "reported", "fail");
     let res = edit(&mut b, &Who::human(), &plan, json!({"stage": "passed"}));
     assert!(refused(&res).contains("cases not passed in run 1: T-1"));
-    let good = json!([{"n": 1, "endedAt": "2026-11-02T10:00:00Z", "results": [{"test": "T-1", "status": "pass"}]}]);
-    applied(&edit(&mut b, &lead(), &plan, json!({"fields.runs": good})));
+    b["items"]["I-90"] = run_of(&plan, "passed", "pass");
     applied(&edit(
         &mut b,
         &Who::human(),

@@ -2,8 +2,6 @@
 import type { AttentionKind } from '../attention';
 import type { SignalOpens } from './signal.type';
 
-const CARD_SIGNAL_MAX = 6;
-
 const OPEN_ITEM: SignalOpens = { kind: 'item' };
 
 const NEEDS_SIGNAL = 'needs-you';
@@ -18,4 +16,4 @@ const PLURAL_TEXT: Readonly<Partial<Record<AttentionKind, readonly [string, stri
   'test-pending': ['test to run', 'tests to run'],
 };
 
-export { CARD_SIGNAL_MAX, NEEDS_SIGNAL, OPEN_ITEM, PLURAL_TEXT, TRAIL_AFTER, TRAIL_SIGNAL };
+export { NEEDS_SIGNAL, OPEN_ITEM, PLURAL_TEXT, TRAIL_AFTER, TRAIL_SIGNAL };

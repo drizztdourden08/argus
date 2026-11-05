@@ -51,7 +51,7 @@ const BoardPage = (props: BoardPageProps) => {
             }}
           />
           <BoardFocus boardKey={boardKey} />
-          <BoardTabBody tab={tab} boardKey={boardKey} work={work} handed={board.meta?.handedBuild ?? null} more={more} />
+          <BoardTabBody tab={tab} boardKey={boardKey} work={work} more={more} />
           <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
           <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />
           <RecordPaneHost boardKey={boardKey} />

@@ -16,6 +16,7 @@ pub mod item_events;
 pub mod json;
 pub mod launchers;
 pub mod limits;
+pub mod migrate_runs;
 pub mod names;
 pub mod ops;
 pub mod pause;

@@ -1,6 +1,6 @@
-//! The runs of a test plan: a run is kept on the plan item, each result is also written to its
-//! test, a skip stays in the run, one run is open at a time and ending it counts the results.
-//! I-70 P3b.
+//! The runs of a test plan: a run is an item of its own that links its plan, each result is also
+//! written to its test, a skip stays in the run, one run is open per plan and ending it counts
+//! the results. I-70 P3b, I-99.
 
 // test-tag: critical
 
@@ -34,7 +34,7 @@ fn record(board: &mut Value, plan: &str, test: &str, status: &str, note: &str) -
 /// The alpha board with a third test and a plan of the three tests, owned by `ui`.
 fn plan_board() -> (Value, String) {
     let mut b = alpha();
-    b["builds"]["b1"] = json!({"tag": "b1"});
+    b["launchers"]["l1"] = json!({"name": "l1"});
     b["tests"]["T-3"] = doc(
         "T-3",
         "ui",
@@ -55,8 +55,25 @@ fn plan_board() -> (Value, String) {
     (b, id.to_owned())
 }
 
+/// The runs of a plan, oldest first.
+fn runs_of(b: &Value, plan: &str) -> Vec<Value> {
+    let mut runs: Vec<Value> = b["items"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .map(|(_, item)| item.clone())
+        .filter(|i| i["type"] == "test-run" && i["fields"]["plan"] == plan)
+        .collect();
+    runs.sort_by_key(|r| r["n"].as_i64().unwrap_or_default());
+    runs
+}
+
 fn run_of(b: &Value, plan: &str, at: usize) -> Value {
-    b["items"][plan]["fields"]["runs"][at].clone()
+    runs_of(b, plan)[at].clone()
+}
+
+fn results_of(run: &Value) -> Vec<Value> {
+    run["fields"]["results"].as_array().cloned().unwrap_or_default()
 }
 
 #[test]
@@ -67,14 +84,17 @@ fn a_run_starts_once_and_moves_the_plan_to_running() {
         &lead(),
         "plan-run-start",
         &plan,
-        json!({"bundle": "b1"}),
+        json!({"build": "l1"}),
     );
     applied(&start);
     assert_eq!(start.outcome, format!("{plan} run 1 started"));
     let run = run_of(&b, &plan, 0);
     assert_eq!(run["n"], 1);
-    assert_eq!(run["bundle"], "b1");
-    assert_eq!(run["by"], "coordinator");
+    assert_eq!(run["fields"]["build"], "l1");
+    assert_eq!(run["fields"]["plan"], plan.as_str());
+    assert_eq!(run["createdBy"], "coordinator");
+    assert_eq!(run["stage"], "running");
+    assert_eq!(run["status"], "doing");
     assert_eq!(run["endedAt"], Value::Null);
     assert_eq!(b["items"][plan.as_str()]["stage"], "running");
     assert_eq!(b["items"][plan.as_str()]["status"], "doing");
@@ -86,24 +106,66 @@ fn a_run_starts_once_and_moves_the_plan_to_running() {
         &lead(),
         "plan-run-start",
         &plan,
-        json!({"bundle": "nope"}),
+        json!({"build": "nope"}),
     );
     assert!(refused(&bad).contains("not on this board"));
 }
 
 #[test]
-fn a_plan_without_cases_or_a_stranger_cannot_start_a_run() {
+fn a_stranger_or_a_task_cannot_start_a_run() {
     let (mut b, plan) = plan_board();
     let denied = run_op(&mut b, &stranger(), "plan-run-start", &plan, json!({}));
     assert!(refused(&denied).contains("belongs to ui"));
-    let op = json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "Empty", "thread": "ui", "type": "test-plan"}});
-    let empty = apply_op(&mut b, &op, &lead(), None);
-    applied(&empty);
-    let id = empty.extra["created"]["id"].as_str().unwrap_or_default();
-    let none = run_op(&mut b, &lead(), "plan-run-start", id, json!({}));
-    assert!(refused(&none).contains("has no test case yet"));
     let task = run_op(&mut b, &lead(), "plan-run-start", "I-1", json!({}));
     assert_eq!(refused(&task), "I-1 is not a test plan.");
+    assert!(runs_of(&b, &plan).is_empty());
+}
+
+#[test]
+fn a_plan_has_one_open_run_and_a_ready_run_is_the_one_that_starts() {
+    let (mut b, plan) = plan_board();
+    let ready = doc(
+        "I-90",
+        "ui",
+        json!({
+            "type": "test-run", "stage": "ready", "status": "todo", "n": 1, "title": "Run 1",
+            "endedAt": null, "fields": {"plan": plan, "build": "l1"},
+        }),
+        9000,
+    );
+    b["items"]["I-90"] = ready;
+    let start = run_op(&mut b, &lead(), "plan-run-start", &plan, json!({}));
+    applied(&start);
+    assert_eq!(start.outcome, format!("{plan} run 1 started"));
+    assert_eq!(runs_of(&b, &plan).len(), 1);
+    assert_eq!(b["items"]["I-90"]["stage"], "running");
+    assert_eq!(b["items"][plan.as_str()]["stage"], "running");
+    let second = run_op(&mut b, &lead(), "plan-run-start", &plan, json!({}));
+    assert!(refused(&second).contains("already has run 1 open"));
+    assert_eq!(runs_of(&b, &plan).len(), 1);
+    let on_run = run_op(
+        &mut b,
+        &lead(),
+        "plan-run-record",
+        "I-90",
+        json!({"test": "T-1", "status": "pass"}),
+    );
+    applied(&on_run);
+    assert_eq!(results_of(&b["items"]["I-90"]).len(), 1);
+}
+
+#[test]
+fn a_plan_keeps_at_least_one_case() {
+    let (mut b, plan) = plan_board();
+    let set = json!({"title": "Empty", "thread": "ui", "type": "test-plan"});
+    let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
+    let empty = apply_op(&mut b, &op, &lead(), None);
+    assert!(refused(&empty).contains("keeps at least one case"));
+    let op = json!({"kind": "edit", "target": {"c": "items", "id": plan}, "set": {"fields.cases": []}});
+    let emptied = apply_op(&mut b, &op, &lead(), None);
+    assert!(refused(&emptied).contains("keeps at least one case"));
+    let fields = &b["items"][plan.as_str()]["fields"];
+    assert_eq!(fields["cases"], json!(["T-1", "T-2", "T-3"]));
 }
 
 #[test]
@@ -127,7 +189,7 @@ fn a_result_in_a_run_is_also_written_to_its_test() {
         b["tests"]["T-3"]["result"]["text"],
         format!("pass in run 1 of {plan}")
     );
-    let results = run_of(&b, &plan, 0)["results"].clone();
+    let results = Value::Array(results_of(&run_of(&b, &plan, 0)));
     assert_eq!(results.as_array().map_or(0, Vec::len), 2);
     assert_eq!(results[0]["status"], "fail");
     assert_eq!(results[0]["note"], "the join hangs");
@@ -141,7 +203,7 @@ fn a_skip_stays_in_the_run_and_writes_nothing_to_the_test() {
     let before = b["tests"]["T-2"].clone();
     applied(&record(&mut b, &plan, "T-2", "skip", ""));
     assert_eq!(b["tests"]["T-2"], before);
-    assert_eq!(run_of(&b, &plan, 0)["results"][0]["status"], "skip");
+    assert_eq!(results_of(&run_of(&b, &plan, 0))[0]["status"], "skip");
 }
 
 #[test]
@@ -178,12 +240,7 @@ fn a_result_needs_an_open_run_a_case_a_status_and_a_note_when_it_is_not_a_pass()
         json!({"test": "T-1", "status": "pass"}),
     );
     assert!(refused(&denied).contains("belongs to ui"));
-    assert_eq!(
-        run_of(&b, &plan, 0)["results"]
-            .as_array()
-            .map_or(0, Vec::len),
-        0
-    );
+    assert!(results_of(&run_of(&b, &plan, 0)).is_empty());
 }
 
 #[test]
@@ -195,13 +252,17 @@ fn ending_a_run_counts_the_last_result_of_each_case_and_reports_the_plan() {
     applied(&record(&mut b, &plan, "T-2", "blocked", "no device"));
     let end = run_op(&mut b, &lead(), "plan-run-end", &plan, json!({}));
     applied(&end);
-    let summary = run_of(&b, &plan, 0)["summary"].clone();
-    assert_eq!(
-        summary,
-        json!({"pass": 1, "fail": 0, "partial": 0, "blocked": 1, "skip": 0, "notRun": 1, "total": 3})
-    );
+    let summary =
+        json!({"pass": 1, "fail": 0, "partial": 0, "blocked": 1, "skip": 0, "notRun": 1, "total": 3});
     assert_eq!(end.extra["summary"], summary);
-    assert_ne!(run_of(&b, &plan, 0)["endedAt"], Value::Null);
+    let run = run_of(&b, &plan, 0);
+    assert_eq!(
+        run["fields"]["summary"],
+        "1 pass, 0 fail, 0 partial, 1 blocked, 0 skip, 1 not run"
+    );
+    assert_ne!(run["endedAt"], Value::Null);
+    assert_eq!(run["stage"], "reported");
+    assert_eq!(run["status"], "review");
     assert_eq!(b["items"][plan.as_str()]["stage"], "reported");
     assert_eq!(b["items"][plan.as_str()]["status"], "review");
     let late = record(&mut b, &plan, "T-3", "pass", "");
@@ -209,6 +270,7 @@ fn ending_a_run_counts_the_last_result_of_each_case_and_reports_the_plan() {
     let second = run_op(&mut b, &lead(), "plan-run-start", &plan, json!({}));
     applied(&second);
     assert_eq!(second.outcome, format!("{plan} run 2 started"));
+    assert_eq!(runs_of(&b, &plan).len(), 2);
 }
 
 #[test]
@@ -219,6 +281,8 @@ fn a_run_that_passed_every_case_lets_the_owner_pass_the_plan() {
         applied(&record(&mut b, &plan, test, "pass", ""));
     }
     applied(&run_op(&mut b, &lead(), "plan-run-end", &plan, json!({})));
+    assert_eq!(run_of(&b, &plan, 0)["stage"], "passed");
+    assert_eq!(run_of(&b, &plan, 0)["status"], "done");
     let edit =
         json!({"kind": "edit", "target": {"c": "items", "id": plan}, "set": {"stage": "passed"}});
     applied(&apply_op(&mut b, &edit, &Who::human(), None));

@@ -4,7 +4,6 @@ import type { BoardWork } from '../../feed-model';
 interface ActivityTabProps {
   boardKey: string;
   work: BoardWork;
-  handed: string | null;
 }
 
 export type { ActivityTabProps };

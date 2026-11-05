@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useRemoteRead } from '../../../../data/remote';
 import type { RemoteDocs } from '../pane.type';
-import { LOADERS, NONE } from './useRemoteDocs.constants';
+import { LOADERS, NONE } from './use-remote-docs.constants';
 
 const useRemoteDocs = (boardKey: string, collection: string): RemoteDocs => {
   const remote = Object.hasOwn(LOADERS, collection);
