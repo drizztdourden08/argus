@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MIN, ago, cleanKanban, item, mountKanban, thread } from './kanban-harness';
+import { MIN, addUnderEpic, ago, cleanKanban, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
 
@@ -13,10 +13,7 @@ describe('K3 adding an item', { tags: ['standard'] }, () => {
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Brand new  ' } });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
-    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
+    await addUnderEpic(posted);
     expect(posted[0]?.body).toMatchObject({ kind: 'create', author: 'human', target: { c: 'items' }, set: { title: 'Brand new', thread: 'worker', status: 'todo', parent: 'I-9' } });
     expect(await screen.findByText('Adding "Brand new".')).toBeTruthy();
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull());
@@ -29,10 +26,7 @@ describe('K3 adding an item', { tags: ['standard'] }, () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'For idle' } });
     fireEvent.click(screen.getByRole('combobox', { name: 'Thread' }));
     fireEvent.click(await screen.findByRole('option', { name: 'idle' }));
-    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
+    await addUnderEpic(posted);
     expect(posted[0]?.body).toMatchObject({ set: { title: 'For idle', thread: 'idle' } });
     unmount();
     localStorage.setItem('coord.g.items', 'thread');

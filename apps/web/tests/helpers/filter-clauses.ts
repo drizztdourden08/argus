@@ -16,27 +16,9 @@ const menuChoice = async (name: string): Promise<void> => {
 
 const valueButton = (field: string): HTMLElement | null => screen.queryByRole('button', { name: `Change the ${field} filter value` });
 
-const pickClause = async (field: string, option: string): Promise<void> => {
-  const chip = valueButton(field);
-  if (chip) {
-    fireEvent.click(chip);
-  } else {
-    fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
-    await menuChoice(field);
-  }
-  await menuChoice(option);
-  const after = valueButton(field);
-  if (after?.getAttribute('aria-expanded') === 'true') fireEvent.click(after);
-};
-
-const addFlag = async (field: string): Promise<void> => {
-  fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
-  await menuChoice(field);
-};
-
 const pickView = async (trigger: RegExp, option: string): Promise<void> => {
   fireEvent.click(await screen.findByRole('button', { name: trigger }));
   await menuChoice(option);
 };
 
-export { addFlag, openFilters, pickClause, pickView };
+export { openFilters, pickView };

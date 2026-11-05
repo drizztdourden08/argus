@@ -15,7 +15,6 @@ export { useRecordPane } from './behavior/useRecordPane';
 export { RECORD_ACTIONS } from './record-actions.constants';
 export { AssigneeMark } from './sub-components/AssigneeMark';
 export { DepRecordLink } from './sub-components/DepRecordLink';
-export { LeadMark } from './sub-components/LeadMark';
 export { LinkedText } from './sub-components/LinkedText';
 export { RecordCard } from './sub-components/RecordCard';
 export { RecordGroup } from './sub-components/RecordGroup';

@@ -27,23 +27,6 @@ const prDoc = (id: string, extra: object = {}) => ({
 
 const stepDoc = (name: string, extra: object = {}) => ({ name, command: `pnpm ${name}`, exitCode: 0, durationMs: 1500, required: true, ...extra });
 
-const runDoc = (id: string, extra: object = {}) => ({
-  id,
-  runId: `run-${id}`,
-  project: 'rotp',
-  branch: 'feat/login',
-  commit: 'abcdef1234567',
-  pr: 'PR-1',
-  trigger: 'pr',
-  status: 'pass',
-  startedAt: ago(4 * MIN),
-  finishedAt: ago(3 * MIN),
-  steps: [stepDoc('lint'), stepDoc('test', { durationMs: 65_000 })],
-  runner: { host: 'box', os: 'win32', node: '24.0.0', pnpm: '10.0.0' },
-  summary: 'All required steps passed',
-  ...extra,
-});
-
 const versionDoc = (version: string, extra: object = {}) => ({
   version,
   tag: `v${version}`,
@@ -57,4 +40,4 @@ const versionDoc = (version: string, extra: object = {}) => ({
   ...extra,
 });
 
-export { ago, MIN, prDoc, replay, runDoc, stepDoc, versionDoc };
+export { ago, MIN, prDoc, replay, stepDoc, versionDoc };

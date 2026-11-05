@@ -25,4 +25,4 @@ const STALLS: Record<string, StallDoc> = {
   }),
 };
 
-export { STALLS, stall };
+export { STALLS };

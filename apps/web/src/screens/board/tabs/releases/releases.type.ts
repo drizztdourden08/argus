@@ -27,4 +27,4 @@ interface ReleasesToolsProps {
   channels: readonly ReleaseChannel[];
 }
 
-export type { ReleasesFilters, ReleasesOrder, ReleasesTabProps, ReleasesToolsProps, ReleasesView };
+export type { ReleasesFilters, ReleasesOrder, ReleasesTabProps, ReleasesToolsProps };

@@ -10,12 +10,6 @@ interface StatusNoticeProps {
   status: StreamStatus;
 }
 
-interface RegisteredFrameProps {
-  label: string;
-  rows: readonly { state: string }[];
-  children: ReactNode;
-}
-
 interface PanelProps {
   title: ReactNode;
   note?: ReactNode;
@@ -28,4 +22,4 @@ interface HashTab {
   select: (tab: string) => void;
 }
 
-export type { HashTab, PageFrameProps, PanelProps, RegisteredFrameProps, StatusNoticeProps };
+export type { HashTab, PageFrameProps, PanelProps, StatusNoticeProps };

@@ -160,7 +160,7 @@ interface TabView<G extends string, O extends string, F> {
 }
 
 export type {
-  BoardTabsProps, BoardTabsRowProps, FiltersToggleProps, FlagField, FlagFilters, GroupPart, MultiField, Registry, RegistryEntry, SingleField, SortPart,
+  BoardTabsProps, BoardTabsRowProps, FiltersToggleProps, FlagFilters, Registry, RegistryEntry,
   TabField, TabFieldControlProps, TabFieldControlsProps, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabToolsEntry, TabView,
-  TabViewSetup, ToolToggleProps, ViewChoice, ViewState,
+  TabViewSetup, ToolToggleProps, ViewChoice,
 };

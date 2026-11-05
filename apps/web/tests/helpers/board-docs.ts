@@ -18,8 +18,6 @@ const freeText = { ...base, id: 'Q-2', kind: 'question', text: 'Which name?', co
 
 const noContext = { ...base, id: 'Q-3', kind: 'question', text: 'Is this clear?' };
 
-const oldDecision = { ...base, id: 'Q-4', kind: 'question', needs: 'decision', text: 'Old wording', context: 'Some context for the old one.' };
-
 const notice = { ...base, id: 'N-1', kind: 'notice', text: 'Crash restored', level: 'warn' };
 
 const message = { ...base, id: 'M-1', kind: 'message', text: 'Owner resumed the thread' };
@@ -39,4 +37,4 @@ const dismissal = (target: string, id = 'O-9') => ({
 const byId = (...docs: ({ id: string } & Record<string, unknown>)[]): Record<string, object> =>
   Object.fromEntries(docs.map((doc) => [doc.id, doc]));
 
-export { NOW, byId, decision, dismissal, freeText, manualStep, message, noContext, notice, oldDecision };
+export { NOW, byId, decision, dismissal, freeText, manualStep, message, noContext, notice };

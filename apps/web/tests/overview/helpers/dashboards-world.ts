@@ -2,7 +2,6 @@
 import { renderAt } from '../../helpers/render-at';
 import { feed } from './feed';
 import { minutesAgo } from './fixtures';
-import type { ApiCall } from './stub-api';
 
 const COUNTS = { threads: 2, working: 1, blocked: 1, needsYou: 2, itemsOpen: 5, tests: 10, testsPass: 7, testsFailing: 1, agents: 2 };
 
@@ -30,6 +29,4 @@ const open = async (extra: Record<string, object> = {}) => {
   return view;
 };
 
-const posts = (calls: ApiCall[]): ApiCall[] => calls.filter((call) => call.method === 'POST');
-
-export { cards, MASTER, open, posts };
+export { cards, open };

@@ -27,4 +27,3 @@ const createFakeHubs = () => {
 };
 
 export { createFakeHubs };
-export type { FakeHub };

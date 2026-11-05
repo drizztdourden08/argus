@@ -100,5 +100,5 @@ interface StepLogBodyProps {
 }
 
 export type {
-  ChangesFilters, ChangesGroup, ChangesOrder, ChangesTabProps, ChangesToolsProps, ChangesView, ChecksProgress, LogTarget, PrCardProps, PrFootProps, PrGroupsProps, PrListProps, PrSignal, PrSignalsProps, PullRequestDoc, StepListProps, StepLogBodyProps,
+  ChangesFilters, ChangesGroup, ChangesOrder, ChangesTabProps, ChangesToolsProps, ChecksProgress, LogTarget, PrCardProps, PrFootProps, PrGroupsProps, PrListProps, PrSignal, PrSignalsProps, PullRequestDoc, StepListProps, StepLogBodyProps,
 };
