@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind component */
-import { Button, DropZone, Flex, IconPicker, Pressable, SegmentedControl, Text } from '@drizztdourden08/tessera';
-import { BRAND_FAMILY, BrandMark } from '@drizztdourden08/tessera/brand';
+import { Button, DropZone, Flex, IconPicker, SegmentedControl, Text } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { AVATAR_BRANDS, BRAND_PREFIX } from '../../../../avatar';
 import { BOARD_ICON_NAMES } from '../../../../board-icon';
 import { BoardIcon } from '../../../../shell/BoardIcon';
+import { BrandMarkPicker } from '../../../../shell/BrandMarkPicker';
 import { pickerValue } from '../behavior/picker-value';
 import { useIconChoice } from '../behavior/useIconChoice';
 import { ICON_MODES, ICON_NOTE, ICON_PICKER_LABEL, ICON_TYPES } from '../BoardSettings.constants';
@@ -24,19 +24,12 @@ const IconSection = (props: SectionProps) => {
       </Flex>
       <SegmentedControl selectedTone="neutral" size="sm" aria-label="Icon source" value={mode} options={ICON_MODES} onChange={setMode} />
       {mode === 'brand' && (
-        <Flex gap="sm" align="center" wrap role="group" aria-label="Icon brand marks">
-          {AVATAR_BRANDS.map((app) => (
-            <Pressable
-              key={app}
-              aria-label={`Use the ${BRAND_FAMILY[app].name} mark as the icon`}
-              aria-pressed={choice.setting === `${BRAND_PREFIX}${app}`}
-              disabled={choice.busy}
-              onClick={() => void choice.pickBrand(app)}
-            >
-              <BrandMark app={app} size="lg" variant="app-icon" title={BRAND_FAMILY[app].name} />
-            </Pressable>
-          ))}
-        </Flex>
+        <BrandMarkPicker
+          label="Icon brand marks"
+          value={AVATAR_BRANDS.find((app) => choice.setting === `${BRAND_PREFIX}${app}`) ?? null}
+          disabled={choice.busy}
+          onPick={(app) => void choice.pickBrand(app)}
+        />
       )}
       {mode === 'icon' && (
         <IconPicker
