@@ -10,7 +10,6 @@ import { resultCalls } from './outcome-dom';
 cleanAfterEach();
 
 const board = () => ({
-  builds: [buildDoc('bundle-1')],
   items: [itemDoc('I-1'), itemDoc('I-2')],
   tests: [testDoc('T-1', { rev: 4, covers: 'AC1' }), doneDoc('T-2', 'fail', 'broken')],
 });

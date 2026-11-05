@@ -8,10 +8,11 @@ import { mountTab } from './mount-tab';
 cleanAfterEach();
 
 const launched = (extra: object = {}) => ({
-  builds: [buildDoc('b1', { launcher: 'l1', title: 'First bundle', note: 'Read me first.' })],
+  group: 'run',
+  items: [planDoc('I-9', ['T-1']), runOn('I-50', 'l1')],
   launchers: [launcherDoc('l1', { cwd: 'C:\\work\\rotp', ...extra })],
   launches: [defDoc('l1')],
-  tests: [testDoc('T-1', { build: 'b1' })],
+  tests: [testDoc('T-1')],
 });
 
 const playDisabled = (tag: string): boolean => screen.getByRole<HTMLButtonElement>('button', { name: `Play ${tag}` }).disabled;
