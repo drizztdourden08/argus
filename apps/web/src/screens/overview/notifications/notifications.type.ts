@@ -1,16 +1,8 @@
 /* @layer renderer-app @kind types */
-import type { NotifyLevel, NotifySettings } from '../../../data/types';
-import type { LevelPick, NoteFilters, NoteItem, SettingPart } from './model';
+import type { LevelPick, NoteFilters, NoteItem } from './model';
 
 interface NotificationsTabProps {
   freshSince: number;
-}
-
-interface SettingsState {
-  settings: NotifySettings | null;
-  error: string;
-  busy: boolean;
-  toggle: (part: SettingPart, level: NotifyLevel) => void;
 }
 
 interface TestPing {
@@ -21,18 +13,6 @@ interface TestPing {
 
 interface TestPingProps {
   ping: TestPing;
-}
-
-interface NotifySettingsProps {
-  state: SettingsState;
-}
-
-interface SettingToggleProps {
-  part: SettingPart;
-  level: NotifyLevel;
-  on: boolean;
-  busy: boolean;
-  onToggle: () => void;
 }
 
 interface NoteFiltersProps {
@@ -52,4 +32,4 @@ interface NoteRowProps {
   freshSince: number;
 }
 
-export type { NoteFeedProps, NoteFiltersProps, NoteRowProps, NotificationsTabProps, NotifySettingsProps, SettingsState, SettingToggleProps, TestPing, TestPingProps };
+export type { NoteFeedProps, NoteFiltersProps, NoteRowProps, NotificationsTabProps, TestPing, TestPingProps };

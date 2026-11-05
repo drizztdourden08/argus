@@ -3,6 +3,7 @@ import { BrandMark, Card, Flex } from '@drizztdourden08/tessera';
 import { BoardSwitcher } from '../BoardSwitcher';
 import { LocalBanner } from '../LocalBanner';
 import { ModeSwitch } from '../ModeSwitch';
+import { SettingsEntries } from './SettingsEntries';
 import type { ShellBarProps } from './ShellBar.type';
 import './ShellBar.css';
 
@@ -14,8 +15,9 @@ const ShellBar = (props: ShellBarProps) => {
         <BrandMark app="argus" size="sm" />
         <ModeSwitch mode={mode} boardsAvailable={boardsAvailable} onChange={onMode} />
         {mode === 'boards' ? <BoardSwitcher boardKey={boardKey} /> : null}
-        <Flex className="shell-bar__status" align="center">
+        <Flex className="shell-bar__status" align="center" gap="sm">
           <LocalBanner />
+          <SettingsEntries />
         </Flex>
       </Flex>
     </Card>
