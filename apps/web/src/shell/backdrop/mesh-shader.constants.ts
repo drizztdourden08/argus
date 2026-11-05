@@ -1,4 +1,7 @@
 /* @layer renderer-app @kind constants */
+import { SHADER_NOISE } from './shader-noise.constants';
+import { SHADER_TRAIL } from './shader-trail.constants';
+
 const MAX_COLORS = 10;
 
 const MESH_SHADER = `#version 300 es
@@ -15,37 +18,12 @@ uniform float u_grainMixer;
 uniform float u_grainOverlay;
 
 uniform vec2 u_pointer;
-uniform float u_repel;
-uniform float u_repelRadius;
-uniform float u_parallax;
+uniform vec4 u_parallax;
 uniform float u_aspect;
 
 in vec2 v_objectUV;
 out vec4 fragColor;
-
-vec2 rotate(vec2 uv, float th) {
-  return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
-}
-
-float hash21(vec2 p) {
-  p = fract(p * vec2(0.3183099, 0.3678794)) + 0.1;
-  p += dot(p, p + 19.19);
-  return fract(p.x * p.y);
-}
-
-float valueNoise(vec2 st) {
-  vec2 i = floor(st);
-  vec2 f = fract(st);
-  float a = hash21(i);
-  float b = hash21(i + vec2(1.0, 0.0));
-  float c = hash21(i + vec2(0.0, 1.0));
-  float d = hash21(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  float x1 = mix(a, b, u.x);
-  float x2 = mix(c, d, u.x);
-  return mix(x1, x2, u.y);
-}
-
+${SHADER_NOISE}${SHADER_TRAIL}
 vec2 getPosition(int i, float t) {
   float a = float(i) * .37;
   float b = .6 + fract(float(i) / 3.) * .9;
@@ -58,23 +36,15 @@ vec2 getPosition(int i, float t) {
 }
 
 float getDepth(int i) {
-  return fract(float(i) * .618 + .13) * 2. - 1.;
-}
-
-vec2 applyPointer(vec2 pos, int i, vec2 pointer) {
-  pos -= (pointer - .5) * u_parallax * getDepth(i);
-  vec2 away = (pos - pointer) * vec2(u_aspect, 1.);
-  float dist = length(away);
-  float room = 1. - smoothstep(0., u_repelRadius, dist);
-  vec2 direction = away / max(dist, 1e-4);
-  return pos + direction * room * room * u_repel * vec2(1. / u_aspect, 1.);
+  return mix(u_parallax.y, u_parallax.x, fract(float(i) * .618 + .13));
 }
 
 void main() {
   vec2 uv = v_objectUV;
   uv += .5;
-  vec2 grainUV = uv * vec2(1000. * u_aspect, 1000.);
-  vec2 pointer = vec2(u_pointer.x, 1. - u_pointer.y);
+  vec2 shift = vec2(u_pointer.x, 1. - u_pointer.y) - .5;
+  vec3 trail = trailInk(uv);
+  vec2 grainUV = (uv - shift * u_parallax.z) * vec2(1000. * u_aspect, 1000.);
 
   float mixerGrain = 0.;
   if (u_grainMixer > 0.) {
@@ -84,18 +54,18 @@ void main() {
   const float firstFrameOffset = 41.5;
   float t = .5 * (u_time + firstFrameOffset);
 
-  float radius = smoothstep(0., 1., length(uv - .5));
+  vec2 swirlCenter = vec2(.5) - shift * u_parallax.w;
+  float radius = smoothstep(0., 1., length(uv - swirlCenter));
   float center = 1. - radius;
   for (float i = 1.; i <= 2.; i++) {
     uv.x += u_distortion * center / i * sin(t + i * .4 * smoothstep(.0, 1., uv.y)) * cos(.2 * t + i * 2.4 * smoothstep(.0, 1., uv.y));
     uv.y += u_distortion * center / i * cos(t + i * 2. * smoothstep(.0, 1., uv.x));
   }
 
-  vec2 uvRotated = uv;
-  uvRotated -= vec2(.5);
+  vec2 uvRotated = uv - swirlCenter;
   float angle = 3. * u_swirl * radius;
-  uvRotated = rotate(uvRotated, -angle);
-  uvRotated += vec2(.5);
+  uvRotated = rotate(uvRotated, -angle) + swirlCenter;
+  uvRotated -= trail.yz * trail.x * u_trailPull;
 
   vec3 color = vec3(0.);
   float opacity = 0.;
@@ -104,7 +74,7 @@ void main() {
   for (int i = 0; i < ${MAX_COLORS}; i++) {
     if (i >= int(u_colorsCount)) break;
 
-    vec2 pos = applyPointer(getPosition(i, t), i, pointer) + mixerGrain;
+    vec2 pos = getPosition(i, t) - shift * getDepth(i) + mixerGrain;
     vec3 colorFraction = u_colors[i].rgb * u_colors[i].a;
     float opacityFraction = u_colors[i].a;
 
@@ -119,6 +89,7 @@ void main() {
 
   color /= max(1e-4, totalWeight);
   opacity /= max(1e-4, totalWeight);
+  color *= 1. - trail.x * u_trailDarkness;
 
   if (u_grainOverlay > 0.) {
     float grainOverlay = valueNoise(rotate(grainUV, 1.) + vec2(3.));

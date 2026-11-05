@@ -15,12 +15,9 @@ const STILL_MOTION = { speed: 0, distortion: 0.8, swirl: 0.25, interactive: fals
 const GRAIN = { mixer: 0.6, overlay: 0.45 } as const;
 
 const POINTER = {
-  settleSeconds: 1.8,
+  settleSeconds: 1,
   rest: 0.0005,
   center: 0.5,
-  repelStrength: 0.34,
-  repelRadius: 0.38,
-  parallax: 0.09,
 } as const;
 
 const MAX_FRAME_SECONDS = 0.1;
