@@ -4,6 +4,7 @@ import { useFocusActive } from '../../../BoardFocus';
 import { ClauseFilterRow, TabFilters, useClauseFilters } from '../../../BoardTabsRow';
 import { kanbanFields } from '../model/clause-fields';
 import type { KanbanToolbarProps } from '../kanban-props.type';
+import { ViewMenu } from './ViewMenu';
 import { ViewRow } from './ViewRow';
 
 const KanbanToolbar = (props: KanbanToolbarProps) => {
@@ -14,6 +15,7 @@ const KanbanToolbar = (props: KanbanToolbarProps) => {
   const count = bar.count + (filters.query ? 1 : 0) + (focused ? 1 : 0);
   return (
     <>
+      <ViewMenu state={state} />
       <TabFilters tab="kanban" count={count}>
         <ClauseFilterRow boardKey={boardKey} search={filters.query} placeholder="Search id or title" onSearch={(query) => patchFilters({ query })} bar={bar} />
       </TabFilters>

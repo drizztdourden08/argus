@@ -35,16 +35,16 @@ const NO_CHILDREN: ChildCount = { done: 0, total: 0 };
 
 const RUN_WORDS: readonly string[] = ['pass', 'fail', 'partial', 'blocked', 'skip'];
 
-const GROUP_OPTIONS: { value: ItemGroup; label: string }[] = [
-  { value: 'status', label: 'Status' },
-  { value: 'thread', label: 'Thread' },
-  { value: 'assignee', label: 'Assignee' },
-  { value: 'parent', label: 'Parent' },
+const GROUP_OPTIONS: { id: ItemGroup; label: string }[] = [
+  { id: 'status', label: 'Status' },
+  { id: 'thread', label: 'Thread' },
+  { id: 'assignee', label: 'Assignee' },
+  { id: 'parent', label: 'Parent' },
 ];
 
-const ORDER_OPTIONS: { value: ItemOrder; label: string }[] = [
-  { value: 'rank', label: 'Manual' },
-  { value: 'updated', label: 'Updated' },
+const ORDER_OPTIONS: { id: ItemOrder; label: string }[] = [
+  { id: 'rank', label: 'Manual' },
+  { id: 'updated', label: 'Updated' },
 ];
 
 const LIMITS = { title: 80, subject: 40, description: 400, brief: 1200, criterion: 120, todo: 200 };

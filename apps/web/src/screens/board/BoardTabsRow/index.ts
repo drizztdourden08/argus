@@ -2,6 +2,7 @@
 export { useClauseFilters } from './behavior/useClauseFilters';
 export { BoardTabsRow } from './BoardTabsRow';
 export { ClauseFilterRow } from './sub-components/ClauseFilterRow';
+export { TabTools } from './sub-components/TabTools';
 export { TabFilters } from './sub-components/TabFilters';
 export { TabFiltersSlot } from './sub-components/TabFiltersSlot';
 export { TabToolsSlot } from './sub-components/TabToolsSlot';

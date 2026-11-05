@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { openFilters } from '../helpers/filter-clauses';
+import { openFilters, pickView } from '../helpers/filter-clauses';
 import { filterBoard, stored, typeSearch } from './filter-dom';
 import { buildDoc, doneDoc, itemDoc, testDoc, threadDoc } from './fixtures';
 import { mountTab } from './mount-tab';
@@ -17,7 +17,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
   it('by item makes one card per item with its tests and no item chip', async () => {
     const { container } = await mountTab(filterBoard());
     await screen.findByText('Login works');
-    fireEvent.click(screen.getByRole('radio', { name: 'Item' }));
+    await pickView(/^Group/, 'Item');
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
     expect(titlesIn(groupOf(container, 'I-2'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'I-1')).getByText('Item number 1')).toBeTruthy();
@@ -28,7 +28,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     const board = { ...filterBoard(), threads: [threadDoc('lead', { session: 'Overlord' }), threadDoc('coder')] };
     const { container } = await mountTab(board);
     await screen.findByText('Login works');
-    fireEvent.click(screen.getByRole('radio', { name: 'Thread' }));
+    await pickView(/^Group/, 'Thread');
     expect(titlesIn(groupOf(container, 'coder'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'lead')).getAllByText('lead').length).toBeGreaterThan(0);
   });
@@ -38,7 +38,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     const { container } = await mountTab(filterBoard());
     await screen.findByText('Login works');
     expect(groupOf(container, 'I-1')).not.toBeNull();
-    fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
+    await pickView(/^Group/, 'Bundle');
     expect(container.querySelector('[data-bundle="b1"]')).not.toBeNull();
     expect(localStorage.getItem('coord.g.tests4')).toBe('build');
   });
@@ -58,7 +58,7 @@ describe('S1 the order', { tags: ['standard'] }, () => {
     const { container } = await mountTab(ranked());
     await screen.findByText('Test number 1');
     expect(order(container)).toEqual(['T-2', 'T-1']);
-    fireEvent.click(screen.getByRole('radio', { name: 'Updated' }));
+    await pickView(/^Sort/, 'Updated');
     expect(order(container)).toEqual(['T-1', 'T-2']);
     expect(stored('coord.f')).toMatchObject({ sort: 'updated' });
   });

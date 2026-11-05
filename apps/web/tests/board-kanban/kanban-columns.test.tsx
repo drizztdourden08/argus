@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { openFilters } from '../helpers/filter-clauses';
+import { openFilters, pickView } from '../helpers/filter-clauses';
 import { boardOf, cardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -22,7 +22,7 @@ describe('I-85 the column header of a parent group', { tags: ['standard'] }, () 
   it('draws the parent type mark, code and title in the head, and a plain title for the column without a parent', async () => {
     await mountKanban({ items: [item('I-1', { type: 'epic', title: 'Rework' }), item('I-2', { parent: 'I-1' })] });
     await screen.findByText('Item number 2');
-    fireEvent.click(screen.getByRole('radio', { name: 'Parent' }));
+    await pickView(/^Group/, 'Parent');
     const head = within(columnOf('I-1 Rework, 1 card')).getByRole('heading');
     expect(head.querySelector('[data-type-mark="epic"]')).not.toBeNull();
     expect(within(head).getByRole('link', { name: 'E-1' })).toBeTruthy();

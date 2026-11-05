@@ -21,7 +21,7 @@ const filtersOf = (stored: Record<string, unknown>): KanbanFilters => ({
   archived: flag(stored.archived),
 });
 
-const groupOf = (raw: string | null): ItemGroup => GROUP_OPTIONS.find((option) => option.value === raw)?.value ?? DEFAULT_PREFS.group;
+const groupOf = (raw: string | null): ItemGroup => GROUP_OPTIONS.find((option) => option.id === raw)?.id ?? DEFAULT_PREFS.group;
 
 const orderOf = (stored: Record<string, unknown>): ItemOrder => (stored.sort === 'updated' ? 'updated' : DEFAULT_PREFS.order);
 

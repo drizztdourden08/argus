@@ -32,4 +32,9 @@ const addFlag = async (field: string): Promise<void> => {
   await menuChoice(field);
 };
 
-export { addFlag, openFilters, pickClause };
+const pickView = async (trigger: RegExp, option: string): Promise<void> => {
+  fireEvent.click(await screen.findByRole('button', { name: trigger }));
+  await menuChoice(option);
+};
+
+export { addFlag, openFilters, pickClause, pickView };

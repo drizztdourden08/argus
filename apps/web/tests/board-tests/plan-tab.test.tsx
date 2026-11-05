@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
+import { pickView } from '../helpers/filter-clauses';
 import { buildDoc, itemDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import type { Doc } from './mount-tab';
@@ -110,7 +111,7 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
     const { container } = await mountTab({ ...board(), group: 'default' });
     await screen.findAllByText('Plan number 5');
     expect(container.querySelector('[data-bundle]')).toBeNull();
-    fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
+    await pickView(/^Group/, 'Bundle');
     expect(localStorage.getItem('coord.g.tests4')).toBe('build');
   });
 });

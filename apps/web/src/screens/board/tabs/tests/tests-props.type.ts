@@ -27,6 +27,10 @@ interface TestsToolbarProps {
   handed: string | null;
 }
 
+interface ViewMenuProps {
+  state: TestsState;
+}
+
 interface ViewRowProps {
   state: TestsState;
   view: TestsView;
@@ -196,5 +200,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, BundleCardProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewRowProps,
+  TestsTabProps, BundleCardProps, BundleHeadProps, BundleListProps, BundleNameProps, BundleProgressProps, BundleTagsProps, ClosedBundleCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps, ViewMenuProps, ViewRowProps,
 };

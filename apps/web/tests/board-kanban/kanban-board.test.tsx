@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { addFlag, openFilters } from '../helpers/filter-clauses';
+import { addFlag, openFilters, pickView } from '../helpers/filter-clauses';
 import { DAY, MIN, ago, boardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -39,7 +39,7 @@ describe('S1 the Kanban columns', { tags: ['standard'] }, () => {
   it('groups by thread with a column for a listed thread that has no item', async () => {
     await mountKanban({ items: [item('I-1')], threads: [thread('worker'), thread('idle')] });
     await screen.findByText('Item number 1');
-    fireEvent.click(screen.getByRole('radio', { name: 'Thread' }));
+    await pickView(/^Group/, 'Thread');
     expect(columnOf('idle, 0 cards')).toBeTruthy();
     expect(within(columnOf('worker, 1 card')).getByText('Item number 1')).toBeTruthy();
     expect(localStorage.getItem('coord.g.items')).toBe('thread');

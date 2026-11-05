@@ -31,7 +31,7 @@ const filtersOf = (stored: Stored): TestFilters => ({
   archived: flagAt(stored, 'archived'),
 });
 
-const groupOf = (raw: string | null): TestGroup => GROUP_OPTIONS.find((option) => option.value === raw)?.value ?? DEFAULT_PREFS.group;
+const groupOf = (raw: string | null): TestGroup => GROUP_OPTIONS.find((option) => option.id === raw)?.id ?? DEFAULT_PREFS.group;
 
 const orderOf = (stored: Stored): TestOrder => (textAt(stored, 'sort') === 'updated' ? 'updated' : DEFAULT_PREFS.order);
 

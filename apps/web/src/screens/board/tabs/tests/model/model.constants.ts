@@ -23,16 +23,16 @@ const DEFAULT_PREFS: TestPrefs = { group: 'plan', order: 'rank', showPassed: tru
 
 const STORE_KEYS = { filters: 'coord.f', group: 'coord.g.tests4', passed: 'coord.passed', closed: 'coord.closed', paused: 'coord.paused' };
 
-const GROUP_OPTIONS: { value: TestGroup; label: string }[] = [
-  { value: 'plan', label: 'Plan' },
-  { value: 'build', label: 'Bundle' },
-  { value: 'item', label: 'Item' },
-  { value: 'thread', label: 'Thread' },
+const GROUP_OPTIONS: { id: TestGroup; label: string }[] = [
+  { id: 'plan', label: 'Plan' },
+  { id: 'build', label: 'Bundle' },
+  { id: 'item', label: 'Item' },
+  { id: 'thread', label: 'Thread' },
 ];
 
-const ORDER_OPTIONS: { value: TestOrder; label: string }[] = [
-  { value: 'rank', label: 'Manual' },
-  { value: 'updated', label: 'Updated' },
+const ORDER_OPTIONS: { id: TestOrder; label: string }[] = [
+  { id: 'rank', label: 'Manual' },
+  { id: 'updated', label: 'Updated' },
 ];
 
 const STATUS_FILTERS = [
