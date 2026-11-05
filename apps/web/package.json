@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@drizztdourden08/tessera": "^0.100.2",
+    "@paper-design/shaders-react": "0.0.82",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:"
