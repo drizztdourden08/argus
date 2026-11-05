@@ -3,7 +3,7 @@ import { ListItemRow, Tag } from '@drizztdourden08/tessera';
 import { Age, CALM_LOOK } from '../../../../shell';
 import { BoardIcon } from '../../../../shell/BoardIcon';
 import { useRecordPane } from '../../../../shell/records';
-import { WARN_LOOK } from '../../dashboards/dashboards.constants';
+import { WARN_LOOK } from '../boards-run.constants';
 import type { BoardRowProps } from '../boards-view.type';
 
 const BoardRow = (props: BoardRowProps) => {

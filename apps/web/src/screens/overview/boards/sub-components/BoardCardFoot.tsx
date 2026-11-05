@@ -6,7 +6,7 @@ import { SyncStamp, WorktreeCounter } from '../../../../shell';
 import { PORTFOLIO_SCOPE, useDoc } from '../../../../data/react';
 import type { PortfolioWorktrees } from '../../../../data/worktrees';
 import { CardProgressRow } from '../../../board/tabs/kanban/sub-components/CardProgressRow';
-import { SendDownPopover } from '../../dashboards/sub-components/SendDownPopover';
+import { SendDownPopover } from './SendDownPopover';
 import { agentsText } from '../behavior/agents-text';
 import { progressSegments } from '../behavior/progress-segments';
 import type { BoardCardFootProps } from '../boards.type';

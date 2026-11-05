@@ -2,7 +2,7 @@
 import type { TabBadgeTone, TabItem } from '@drizztdourden08/tessera';
 import type { StreamStatus } from '../../data/stream';
 import type { BoardEntries, BoardEntry, OverviewView } from './boards/boards-view.type';
-import type { SendDown } from './dashboards/dashboards.type';
+import type { SendDown } from './boards/boards.type';
 
 interface TabBadges {
   counts: Record<string, number>;

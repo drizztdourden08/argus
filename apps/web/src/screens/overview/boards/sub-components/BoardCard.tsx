@@ -2,14 +2,13 @@
 import { Badge, Box, Card, FoldText, Pressable, SignalStrip, Text } from '@drizztdourden08/tessera';
 import { RecordCard, useRecordPane } from '../../../../shell/records';
 import { BoardIcon } from '../../../../shell/BoardIcon';
-import { attentionOf, cardTone } from '../../dashboards/model';
+import { attentionOf, boardSignals, cardTone } from '../model';
 import { boardMenuGroups } from '../behavior/board-menu-groups';
 import { leadDot } from '../behavior/lead-dot';
 import { signalItems } from '../behavior/signal-items';
 import { useBoardActions } from '../behavior/useBoardActions';
 import { SIGNAL_MAX } from '../boards.constants';
 import type { BoardCardProps } from '../boards.type';
-import { boardSignals } from '../model';
 import { BoardCardFoot } from './BoardCardFoot';
 import './BoardCard.css';
 
