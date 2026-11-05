@@ -5,6 +5,7 @@ import { ATTENTION_OF, dependencyCauses } from '../attention';
 import { LEAD_PREFIX } from '../../../../../shell/records/behavior/look.constants';
 import { OPEN_ITEM } from './signal.constants';
 import type { CardSignal } from './signal.type';
+import { KEY_BRANDS } from '../../../../../avatar/avatar.constants';
 import { whoAvatar } from './who-avatar';
 
 const projectOf = (cause: BlockedCause): string => (cause.who ?? '').replace(LEAD_PREFIX, '') || 'another board';
@@ -25,6 +26,8 @@ const dependencySignals = (item: ItemRef): CardSignal[] => {
   return [...byTarget(dependencyCauses(item))].map(([target, causes]) => {
     const who = causes[0]?.who;
     const signal: CardSignal = { id: `dependency-${target}`, icon, label: causes.map(depText).join('; '), tone: color, opens: OPEN_ITEM };
+    const brand = KEY_BRANDS[target];
+    if (brand && who?.startsWith(LEAD_PREFIX)) return { ...signal, brand };
     return who ? { ...signal, avatar: whoAvatar(who) } : signal;
   });
 };

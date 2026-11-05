@@ -3,8 +3,6 @@ import { Card } from '@drizztdourden08/tessera';
 import { RecordCard, useRecordPane } from '../../../../shell';
 import { sectionOf } from '../../feed-model';
 import { cardFacts } from '../behavior/card-facts';
-import { cardClick } from '../behavior/card-click';
-import { cardKey } from '../behavior/card-key';
 import { feedHead } from '../behavior/feed-head';
 import type { FeedCardViewProps } from '../OwnerFeed.type';
 import { CardBody } from './CardBody';
@@ -22,10 +20,8 @@ const FeedCardView = (props: FeedCardViewProps) => {
       edge="left"
       edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}
       role="group"
-      tabIndex={0}
       aria-label={`${facts.code}: ${facts.title}`}
-      onClick={cardClick(open)}
-      onKeyDown={cardKey(open)}
+      onActivate={open}
     >
       <RecordCard
         head={feedHead(card, facts, ctx, open)}
