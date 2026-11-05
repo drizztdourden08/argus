@@ -43,10 +43,11 @@ describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
     const { container } = await mountTab({ meta: metaDoc(), items: [itemRef('I-1')], docs: [worktree('linked', 'active', { item: 'I-1' })] });
     await screen.findByText('Item number 1');
     const group = groupOf(container, 'I-1');
-    expect(group.querySelector('summary [data-type-mark]')).not.toBeNull();
+    const head = group.querySelector('.record-frame__head') as HTMLElement;
+    expect(head.querySelector('[data-type-mark]')).not.toBeNull();
     expect(within(group).getByRole('link', { name: /-1/ })).toBeTruthy();
-    expect(group.querySelector('summary [data-record]')).toBeNull();
-    expect(group.querySelector('.disclosure__end')?.textContent).toBe('1');
+    expect(head.querySelector('[data-record]')).toBeNull();
+    expect(head.lastElementChild?.textContent).toBe('1');
   });
 });
 
@@ -55,12 +56,12 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
 
   it('folds both lists by default under a count', async () => {
     const { container } = await mountTab(board());
-    const requests = (await screen.findByText('Removal requests from threads')).closest('details');
-    const removed = screen.getByText('Removed by the worktree hygiene').closest('details');
-    expect(requests?.open).toBe(false);
-    expect(removed?.open).toBe(false);
-    expect(requests?.querySelector('.disclosure__end')?.textContent).toBe('1');
-    expect(removed?.querySelector('.disclosure__end')?.textContent).toBe('1');
+    const requests = (await screen.findByText('Removal requests from threads')).closest('.record-frame__head') as HTMLElement;
+    const removed = screen.getByText('Removed by the worktree hygiene').closest('.record-frame__head') as HTMLElement;
+    expect(requests.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
+    expect(removed.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
+    expect(requests.lastElementChild?.textContent).toBe('1');
+    expect(removed.lastElementChild?.textContent).toBe('1');
     expect(container.querySelector('[data-worktree="id-live"]')).not.toBeNull();
   });
 
