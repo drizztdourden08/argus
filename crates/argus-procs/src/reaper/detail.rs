@@ -16,8 +16,8 @@ fn cmd_text(cmd: &str) -> String {
 }
 
 /// `parent <name> <ppid>` for a live parent in the sample, else `parent <ppid> gone`.
-fn parent_text(root: &ProcRow, procs: &[ProcRow], sample: &Sample) -> String {
-    let parent = procs.iter().find(|p| p.pid == root.ppid);
+fn parent_text(root: &ProcRow, sample: &Sample) -> String {
+    let parent = sample.procs.iter().find(|p| p.pid == root.ppid);
     match parent.filter(|p| parent_alive(sample, Some(p), root)) {
         Some(p) => format!("parent {} {}", p.name, p.pid),
         None => format!("parent {} gone", root.ppid),
@@ -25,8 +25,8 @@ fn parent_text(root: &ProcRow, procs: &[ProcRow], sample: &Sample) -> String {
 }
 
 /// The text appended to a reap line: ` cmd `...`` (when there is one) and the parent.
-pub(super) fn of(root: &ProcRow, procs: &[ProcRow], sample: &Sample) -> String {
-    let parent = parent_text(root, procs, sample);
+pub(super) fn of(root: &ProcRow, sample: &Sample) -> String {
+    let parent = parent_text(root, sample);
     if root.cmd.trim().is_empty() {
         return format!(", {parent}");
     }
@@ -55,17 +55,22 @@ mod tests {
 
     fn sample(procs: Vec<ProcRow>) -> Sample {
         Sample {
+            at: 0,
+            platform: "linux".into(),
+            sampler_pid: None,
             procs,
-            ..Sample::default()
         }
     }
 
     #[test]
     fn a_live_parent_is_named_with_its_pid() {
-        let procs = vec![row(5, 9, "bash.exe", ""), row(7, 5, "grep.exe", "grep -n foo bar.txt")];
+        let procs = vec![
+            row(5, 9, "bash.exe", ""),
+            row(7, 5, "grep.exe", "grep -n foo bar.txt"),
+        ];
         let s = sample(procs.clone());
         assert_eq!(
-            of(&procs[1], &procs, &s),
+            of(&procs[1], &s),
             ", cmd `grep -n foo bar.txt`, parent bash.exe 5"
         );
     }
@@ -74,7 +79,7 @@ mod tests {
     fn a_missing_parent_is_gone_and_an_empty_command_is_skipped() {
         let procs = vec![row(7, 5, "grep.exe", "")];
         let s = sample(procs.clone());
-        assert_eq!(of(&procs[0], &procs, &s), ", parent 5 gone");
+        assert_eq!(of(&procs[0], &s), ", parent 5 gone");
     }
 
     #[test]

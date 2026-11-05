@@ -183,7 +183,7 @@ impl Inner {
             0 => String::new(),
             n => format!(" and its tree ({n} more)"),
         };
-        let detail = detail::of(root, procs, pass.sample);
+        let detail = detail::of(root, pass.sample);
         let line = format!(
             "{} {}{tree}: {}{detail}",
             exe_of(root),
