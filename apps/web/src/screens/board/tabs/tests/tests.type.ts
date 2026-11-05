@@ -4,6 +4,7 @@ import type { PostResult } from '../../../../data/api';
 import type { Entry, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { TestOutcome } from '../../../../data/posts';
 import type { WithId } from '../../../../data/react';
+import type { RecordHeadProps, RowChip } from '../../../../shell';
 import type { RunEntry } from '../../../../data/runs';
 import type { LaunchDef, Launcher, Test, TestItem, Wake } from '../../../../data/types';
 import type { EditChange, FocusOption, FocusScope, ItemDoc, TestDoc, TestFilters, TestGroup, TestNotice, TestOrder, TestPrefs, TestsView, WakeDoc } from './model';
@@ -20,9 +21,13 @@ interface TestsData {
   wakes: WithId<Wake>[];
 }
 
+type CaseLayout = 'rows' | 'cards';
+
 interface TestsState {
   filters: TestFilters;
   prefs: TestPrefs;
+  layout: CaseLayout;
+  setLayout: (layout: CaseLayout) => void;
   patchFilters: (patch: Partial<TestFilters>) => void;
   clearFilters: () => void;
   setGroup: (group: TestGroup) => void;
@@ -68,6 +73,7 @@ interface TestsShared {
   order: TestOrder;
   direction: SortDirection | null;
   showPassed: boolean;
+  layout: CaseLayout;
   conflicted: ReadonlySet<string>;
   folds: Folds;
   onOpen: (testId: string) => void;
@@ -152,11 +158,20 @@ interface TestActions {
   hand: (run: ItemDoc, handed: boolean) => Promise<void>;
 }
 
+interface CaseHead {
+  head: RecordHeadProps;
+  title: string;
+  chips: RowChip[];
+  toRun: boolean;
+  controls: Outcome;
+  open: () => void;
+}
+
 interface Folds {
   isOpen: (key: string, fallback: boolean) => boolean;
   set: (key: string, open: boolean) => void;
 }
 
 export type {
-  EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestMenuInput, TestOps, TestsData, TestsFocus, TestsScreen, TestsShared, TestsState,
+  CaseHead, CaseLayout, EditDraft, Folds, NoteDraft, NoticeOps, Outcome, OwnerPost, ProofUpload, RecordResult, TestActions, TestMenuInput, TestOps, TestsData, TestsFocus, TestsScreen, TestsShared, TestsState,
 };

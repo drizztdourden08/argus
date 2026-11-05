@@ -11,6 +11,7 @@ import { PlanSections } from './sub-components/PlanSections';
 import { RunList } from './sub-components/RunList';
 import { TestLayers } from './sub-components/TestLayers';
 import { TestNotices } from './sub-components/TestNotices';
+import { TestsSummary } from './sub-components/TestsSummary';
 import { TestsToolbar } from './sub-components/TestsToolbar';
 import type { TestsTabProps } from './tests-props.type';
 
@@ -26,12 +27,12 @@ const TestsTab = (props: TestsTabProps) => {
         <TestsToolbar
           boardKey={boardKey}
           state={state}
-          view={view}
           threads={threadChoices(data.threads)}
           subjects={subjectsOf(data.items, data.tests)}
           plans={planOptions(data.items)}
           runs={runOptions(data.items)}
         />
+        <TestsSummary view={view} />
         <TestNotices label="Changes the board did not take" notices={notices.notices} ops={notices} />
         {state.prefs.group === 'run' && <RunList views={view.runs} runs={data.runs} filtered={view.filtered} />}
         {state.prefs.group === 'plan' && <PlanSections view={view} />}

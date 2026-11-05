@@ -44,13 +44,14 @@ const useTestsScreen = (boardKey: string, data: TestsData): TestsScreen => {
     order: prefs.order,
     direction: prefs.direction,
     showPassed: prefs.showPassed,
+    layout: state.layout,
     conflicted,
     folds,
     onOpen: pane.open,
     onNote: setNoteId,
     onEdit: setEditId,
     onLog: setLogId,
-  }), [boardKey, ops, items, data.threads, data.wakes, latest, now, prefs, conflicted, folds, pane.open]);
+  }), [boardKey, ops, items, data.threads, data.wakes, latest, now, prefs, state.layout, conflicted, folds, pane.open]);
   return {
     state,
     view,

@@ -1,27 +1,31 @@
 /* @layer renderer-app @kind component */
-import { Box, Flex, Spacer, Text } from '@drizztdourden08/tessera';
+import './RunCard.css';
+import { Card, Flex, Spacer, Text } from '@drizztdourden08/tessera';
+import { TypeIcon } from '../../../../../shell';
 import { useTestsShared } from '../behavior/useTestsShared';
-import { countsText } from '../model';
 import type { TestCardProps } from '../tests-props.type';
+import { RunCounts } from './RunCounts';
 import { RunProgress } from './RunProgress';
 import { TestSections } from './TestSections';
 
 const TestCard = (props: TestCardProps) => {
   const { card } = props;
   const { group } = useTestsShared();
+  const item = group === 'item' ? card.item : null;
   return (
-    <Box className="run-card" data-swap-item data-group={card.key}>
-      <Flex gap="sm" align="center" wrap className="run-card__head">
-        <Text font="title">{card.key}</Text>
-        {group === 'item' && card.item?.title && <Text tone="dim" smartTimes>{card.item.title}</Text>}
+    <Card flush className="run-card" data-swap-item data-group={card.key}>
+      <Flex gap="xs" align="center" wrap className="run-card__head">
+        {item && <TypeIcon kind={item.type ?? 'task'} />}
+        <Text font="title" className="run-card__tag">{card.key}</Text>
+        {item?.title && <Text tone="dim" smartTimes className="run-card__title">{item.title}</Text>}
         <Spacer />
-        <Text variant="caption" tone="dim">{countsText(card.counts)}</Text>
-        <RunProgress counts={card.counts} />
+        <Flex gap="xs" align="center" className="run-card__end">
+          <RunCounts counts={card.counts} />
+          <RunProgress counts={card.counts} />
+        </Flex>
       </Flex>
-      <Box className="run-card__body">
-        <TestSections tests={card.tests} emptyText="none" />
-      </Box>
-    </Box>
+      <TestSections tests={card.tests} emptyText="none" />
+    </Card>
   );
 };
 

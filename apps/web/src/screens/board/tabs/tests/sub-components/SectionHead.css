@@ -1,0 +1,23 @@
+.test-section__head {
+  padding: var(--space-sm) var(--space-md) var(--space-2xs);
+}
+
+.test-section__empty {
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+}
+
+.test-section__grid {
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+}
+
+@media (width <= 720px) {
+  .test-section__head,
+  .test-section__empty,
+  .test-section__grid {
+    padding-inline: var(--space-sm);
+  }
+
+  .test-section__hint {
+    display: none;
+  }
+}

@@ -38,6 +38,7 @@ export { shownDirection } from './sort-direction';
 export { sortToRun } from './sort-to-run';
 export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';
+export { summarySignals } from './summary-signals';
 export { testNotices } from './test-notices';
 export { testsView } from './tests-view';
 export { toRunCount } from './to-run-count';

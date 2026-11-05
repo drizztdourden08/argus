@@ -115,6 +115,8 @@ interface TestsView {
   cards: GroupCard[];
   closed: RunView[];
   toRun: number;
+  failed: number;
+  passed: number;
   total: number;
   filtered: boolean;
   closedCount: number;

@@ -15,7 +15,8 @@ describe('S1 search', { tags: ['standard'] }, () => {
     await openFilters();
     typeSearch('logout');
     shown('T-2');
-    expect(screen.getByText('2 to run / 3 · filtered')).toBeTruthy();
+    expect(screen.getByText('2 of 3 cases to run')).toBeTruthy();
+    expect(screen.getByText('filtered')).toBeTruthy();
     typeSearch('t-3');
     shown('T-3');
   });

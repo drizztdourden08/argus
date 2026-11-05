@@ -116,3 +116,16 @@ describe('S1 closed runs and the search', { tags: ['standard'] }, () => {
     expect(localStorage.getItem('coord.closed')).toBe('0');
   });
 });
+
+describe('S1 the case view', { tags: ['standard'] }, () => {
+  it('shows rows by default, switches to cards with the same result buttons, and remembers it', async () => {
+    const { container } = await mountTab({ tests: [testDoc('T-1')] });
+    await screen.findByText('Test number 1');
+    expect(screen.getByRole('radio', { name: 'Rows' }).getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector('.test-section__grid')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'Cards' }));
+    expect(localStorage.getItem('argus.tab.tests.layout')).toBe('cards');
+    expect(container.querySelector('.test-section__grid [data-test="T-1"]')).not.toBeNull();
+    expect(within(screen.getByRole('group', { name: 'Run T-1' })).getByRole('button', { name: 'fail' })).toBeTruthy();
+  });
+});

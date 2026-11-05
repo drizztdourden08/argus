@@ -19,7 +19,7 @@ describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () =
     await screen.findByText('Test number 1');
     expect(tagsOf(container)).toEqual(['I-51', 'I-50']);
     expect(within(cardOf(container, 'I-51')).getByText('handed to you')).toBeTruthy();
-    expect(within(cardOf(container, 'I-51')).getByText('Plan number 9')).toBeTruthy();
+    expect(within(cardOf(container, 'I-51')).getByRole('button', { name: /Plan number 9/ })).toBeTruthy();
     expect(isOpen(cardOf(container, 'I-51'))).toBe(true);
   });
 
@@ -37,7 +37,7 @@ describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () =
     const results = [{ test: 'T-1', status: 'pass', note: '', at: 'x' }];
     const { container } = await mountTab(board([runOn('I-50', null, { fields: { plan: 'I-9', build: null, results, summary: '' } })], [testDoc('T-1'), testDoc('T-2')]));
     await screen.findByText('Test number 2');
-    expect(cardOf(container, 'I-50').textContent).toContain('1 to run · 1 pass');
+    expect(within(cardOf(container, 'I-50')).getByRole('group', { name: '1 to run · 1 pass' })).toBeTruthy();
   });
 
   it('say there is no run yet', async () => {

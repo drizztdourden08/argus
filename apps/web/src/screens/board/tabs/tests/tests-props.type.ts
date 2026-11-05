@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
 import type { TestOutcome } from '../../../../data/posts';
 import type { RunEntry } from '../../../../data/runs';
 import type { RecordGroups } from '../../../../shell';
@@ -18,7 +17,6 @@ interface Option {
 interface TestsToolbarProps {
   boardKey: string;
   state: TestsState;
-  view: TestsView;
   threads: Option[];
   subjects: string[];
   runs: Option[];
@@ -38,33 +36,9 @@ interface RunCardProps {
   onToggle: (open: boolean) => void;
 }
 
-interface RunHeadProps {
-  view: RunView;
-}
-
-interface RunNameProps {
-  id: string;
-  title?: string | null;
-  muted?: boolean;
-}
-
-interface RunTagsProps {
-  view: RunView;
-}
-
 interface RunProgressProps {
   counts: Counts;
   fill?: boolean;
-}
-
-interface LaunchBoxProps {
-  view: RunView;
-  runs: RunEntry[];
-}
-
-interface LaunchNoteProps {
-  id: string;
-  note: string;
 }
 
 interface HandButtonProps {
@@ -75,10 +49,6 @@ interface HandButtonProps {
 interface TestSectionsProps {
   tests: TestDoc[];
   emptyText: string;
-}
-
-interface SectionBandProps {
-  children: ReactNode;
 }
 
 interface TestPartProps {
@@ -116,12 +86,6 @@ interface ClosedRunCardProps {
   view: RunView;
   open: boolean;
   onToggle: (open: boolean) => void;
-}
-
-interface LaunchCommandProps {
-  view: RunView;
-  runs: RunEntry[];
-  draft: boolean;
 }
 
 interface DoneListProps {
@@ -186,5 +150,5 @@ interface PlanHeaderProps {
 }
 
 export type {
-  TestsTabProps, RunCardProps, RunHeadProps, RunListProps, RunNameProps, RunProgressProps, RunTagsProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, LaunchBoxProps, LaunchCommandProps, LaunchNoteProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, SectionBandProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps,
+  TestsTabProps, RunCardProps, RunListProps, RunProgressProps, ClosedRunCardProps, CaseListProps, ClosedSectionProps, DoneListProps, DoneSummaryProps, GroupListProps, HandButtonProps, OutcomeButtonsProps, OutcomeControlsProps, PlanCardProps, PlanCardsProps, PlanFootProps, PlanGroupProps, PlanGroupsProps, PlanHeaderProps, PlanSectionsProps, RerunButtonProps, ResultComposerProps, TestCardProps, TestNoticesProps, TestPartProps, TestSectionsProps, TestsToolbarProps,
 };
