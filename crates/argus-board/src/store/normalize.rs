@@ -46,7 +46,7 @@ pub(crate) fn stale_schema(board: &Board) -> bool {
     }
 }
 
-/// Fill in every collection an older board lacks (the portfolio board also gets its `deps` ledger), migrate schema 1 to 2 and convert embedded
+/// Fill in every collection an older board lacks (the portfolio board also gets its `deps` ledger and `boards`), migrate schema 1 to 2 and convert embedded
 /// agents into agents docs.
 pub fn normalize(board: &mut Board) {
     for key in COLLECTIONS {
@@ -57,6 +57,7 @@ pub fn normalize(board: &mut Board) {
     }
     if is_portfolio(board) {
         default_field(board, "deps", json!({}));
+        default_field(board, "boards", json!({}));
     }
     if !board["worktreeRules"].is_array() {
         set(board, "worktreeRules", json!([]));

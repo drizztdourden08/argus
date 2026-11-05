@@ -35,13 +35,13 @@ pub fn machine() -> Vec<Probe> {
     ]
 }
 
-/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs`, `deps` and `stalls` are
+/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs`, `deps`, `stalls` and `boards` are
 /// Rust only), and for a project the launches, runs, wakes and open wake streams.
 #[must_use]
 pub fn scope(key: &str) -> Vec<Probe> {
     let mut out: Vec<Probe> = Coll::ALL
         .iter()
-        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps | Coll::Stalls))
+        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps | Coll::Stalls | Coll::Boards))
         .map(|c| {
             Probe::get(
                 Kind::Doc(c.as_str()),
@@ -58,4 +58,18 @@ pub fn scope(key: &str) -> Vec<Probe> {
         ]);
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::scope;
+    use crate::kind::Kind;
+
+    #[test]
+    fn boards_is_rust_only_like_deps() {
+        let kinds: Vec<_> = scope("alpha").into_iter().map(|p| p.kind).collect();
+        assert!(!kinds.contains(&Kind::Doc("boards")));
+        assert!(!kinds.contains(&Kind::Doc("deps")));
+        assert!(kinds.contains(&Kind::Doc("cards")));
+    }
 }

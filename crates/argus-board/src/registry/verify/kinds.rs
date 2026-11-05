@@ -5,7 +5,8 @@ use std::collections::{HashMap, HashSet};
 use super::super::kinds::{Family, Kind, Look};
 use super::super::model::Registry;
 use super::vocab::{
-    ASSIGNEE_WORDS, CATEGORY_COLORS, ICONS, ITEM_LETTER, TABS, TONES, TYPE_COLLECTIONS,
+    ASSIGNEE_WORDS, CATEGORY_COLORS, ICONS, ITEM_LETTER, PERSON_COLORS, TABS, TONES,
+    TYPE_COLLECTIONS,
 };
 
 /// The name of the list a kind comes from, as the problems print it.
@@ -114,7 +115,7 @@ fn verify_look(kind: &Kind<'_>, say: &mut impl FnMut(&str)) {
         say(&format!("unknown icon {}", kind.icon));
     }
     match kind.look {
-        Look::Color(c) if !CATEGORY_COLORS.contains(&c) => say(&format!("unknown colour {c}")),
+        Look::Color(c) if !CATEGORY_COLORS.contains(&c) && !PERSON_COLORS.contains(&c) => say(&format!("unknown colour {c}")),
         Look::Tone(t) if !TONES.contains(&t) => say(&format!("unknown tone {t}")),
         _ => {}
     }
@@ -140,7 +141,7 @@ fn verify_tabs(kind: &Kind<'_>, say: &mut impl FnMut(&str)) {
 fn verify_collection(kind: &Kind<'_>, say: &mut impl FnMut(&str)) {
     let of_a_type = TYPE_COLLECTIONS.contains(&kind.collection);
     if kind.family == Family::Type && !of_a_type {
-        say("a type lives in items, tests, launchers or worktrees");
+        say("a type lives in items, tests, launchers, worktrees or boards");
     }
     if kind.family == Family::Record && of_a_type {
         say("a record that is not an item type lives in a collection of its own");

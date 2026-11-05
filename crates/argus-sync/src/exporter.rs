@@ -43,7 +43,7 @@ fn colls(project: bool) -> Vec<Coll> {
     let mut out = PAGE_COLLECTIONS.to_vec();
     out.extend([Coll::Meta, Coll::Launches]);
     if !project {
-        out.extend([Coll::Cards, Coll::Deps]);
+        out.extend([Coll::Cards, Coll::Deps, Coll::Boards]);
     }
     out
 }

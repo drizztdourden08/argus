@@ -226,6 +226,13 @@ mod tests {
     }
 
     #[test]
+    fn bd_3_comes_back_as_it_is() {
+        for b in [board(), portfolio()] {
+            assert_eq!(ok(&b, "BD-3"), "BD-3");
+        }
+    }
+
+    #[test]
     fn a_removal_request_is_rq_and_stored_r_on_every_board_while_a_bare_r_stays_a_run() {
         for b in [board(), portfolio()] {
             assert_eq!(ok(&b, "RQ-59"), "R-59");

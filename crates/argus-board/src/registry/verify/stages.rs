@@ -22,7 +22,7 @@ pub(super) fn verify(reg: &Registry, t: &ItemType, out: &mut Vec<String>) {
             verify_lanes(reg, t, &mut say);
             verify_steps(t, &mut say);
         }
-        Collection::Worktrees => verify_none(t, &mut say),
+        Collection::Worktrees | Collection::Boards => verify_none(t, &mut say),
         Collection::Agents
         | Collection::Prs
         | Collection::Releases

@@ -206,3 +206,15 @@ fn the_owner_edits_his_own_decision_past_200_characters_but_never_a_threads_ques
         "Should the form remember the user?"
     );
 }
+
+#[test]
+fn the_portfolio_exports_board_items_with_name_and_icon() {
+    let mut b = alpha();
+    b["cards"] = json!({"beta": {"key": "beta", "name": "Beta", "icon": "rocket"}});
+    b["boards"] = json!({"BD-1": {"id": "BD-1", "key": "beta", "goal": "ship"}});
+    let board = exported(&b, Coll::Boards, "BD-1");
+    assert_eq!(board["key"], "beta");
+    assert_eq!(board["goal"], "ship");
+    assert_eq!(board["name"], "Beta");
+    assert_eq!(board["icon"], "rocket");
+}

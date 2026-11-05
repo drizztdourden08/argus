@@ -98,7 +98,8 @@
     "dirty": { "content": "line", "max": 12 },
     "ahead": { "content": "line", "max": 12 },
     "item": { "content": "ref", "to": ["item"] },
-    "linkSource": { "content": "enum", "values": ["manual", "agent", "branch", "text"] }
+    "linkSource": { "content": "enum", "values": ["manual", "agent", "branch", "text"] },
+    "key": { "content": "slug", "max": 40 }
   },
   "types": [
     {
@@ -441,6 +442,24 @@
         { "field": "builds", "to": ["build"], "label": "Builds", "inverse": "Worktree" }
       ],
       "groupBy": "item"
+    },
+    {
+      "id": "board",
+      "label": "Board",
+      "code": "BD",
+      "icon": "layout-dashboard",
+      "color": "neutral",
+      "collection": "boards",
+      "parents": [],
+      "stages": [],
+      "fields": ["key", "goal", "note"],
+      "groups": [{ "id": "plan", "label": "Plan", "fields": ["goal", "note"] }],
+      "view": "card",
+      "title": "name",
+      "assignee": "lead",
+      "tabs": ["overview", "links", "activity"],
+      "card": { "progress": "none", "chips": [] },
+      "links": []
     }
   ],
   "subItems": [

@@ -185,6 +185,15 @@ fn board_meta(board: &Board) -> Value {
     })
 }
 
+/// A board item as the page sees it: its own fields, with the `name` and `icon` of the card of its key.
+fn board_doc(doc: &Value, board: &Board) -> Value {
+    let card = &board["cards"][doc["key"].as_str().unwrap_or_default()];
+    let mut out = doc.clone();
+    set(&mut out, "name", card["name"].clone());
+    set(&mut out, "icon", card["icon"].clone());
+    out
+}
+
 /// Every page document of a board, as sets. The caller diffs them against what it stored (a hash
 /// per doc): what is missing from this list is deleted there. `proof_url` is called only for a
 /// proof kept on disk (one with a `file`).
@@ -202,6 +211,9 @@ pub fn export_docs(board: &Board, proof_url: &dyn Fn(&Value) -> String) -> Vec<D
     }
     for (id, doc) in section(board, "deps") {
         docs.push(DocChange::set(Coll::Deps, id.clone(), doc.clone()));
+    }
+    for (id, doc) in section(board, "boards") {
+        docs.push(DocChange::set(Coll::Boards, id.clone(), board_doc(doc, board)));
     }
     docs.push(DocChange::set(Coll::Meta, "board", board_meta(board)));
     for (name, def) in section(board, "runDefs") {
