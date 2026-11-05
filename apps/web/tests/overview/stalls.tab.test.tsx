@@ -15,18 +15,19 @@ beforeEach(() => {
 });
 
 describe('S1 the stalls on the overview card', { tags: ['standard'] }, () => {
-  it('shows a red stalled chip per open stall on its project card, with the age as the title', async () => {
+  it('shows one red stalled chip on its project card, each open stall and its age in the title', async () => {
     await open({ stalls: STALLS });
-    const idle = await screen.findByText('stalled: rotp idle 12 min, 3 open items without a blocker (I-4, I-7, I-9)');
-    expect(idle.closest('[title]')?.getAttribute('title')).toBe('open 12m');
-    expect(screen.getByText('stalled: rotp did not read D-11 for 10 min (it is in a turn)')).toBeTruthy();
-    expect(screen.queryByText(/stalled: argus/)).toBeNull();
+    const [chip] = await screen.findAllByTitle(/^stalled: rotp idle 12 min/);
+    const title = chip?.getAttribute('title') ?? '';
+    expect(title).toContain('stalled: rotp idle 12 min, 3 open items without a blocker (I-4, I-7, I-9) (open 12m)');
+    expect(title).toContain('stalled: rotp did not read D-11 for 10 min (it is in a turn)');
+    expect(screen.queryByTitle(/stalled: argus/)).toBeNull();
   });
 
   it('shows no chip on a card without a stall', async () => {
     await open({ stalls: {} });
     await screen.findByText(cards.rotp.name);
-    expect(screen.queryByText(/^stalled:/)).toBeNull();
+    expect(screen.queryByTitle(/^stalled:/)).toBeNull();
   });
 });
 

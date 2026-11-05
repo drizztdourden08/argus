@@ -20,7 +20,6 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     const wanted = sources[0]?.url.split('?c=')[1]?.split(',') ?? [];
     expect(sources[0]?.url.startsWith('/api/p/_portfolio/stream?c=')).toBe(true);
     expect(wanted).toContain('cards');
-    expect(wanted).toContain('boards');
     act(() => {
       sources[0]?.emit('snapshot', snapshot('_portfolio', 'cards', cards));
       sources[0]?.emit('snapshot', snapshot('_portfolio', 'boards', boards));

@@ -72,6 +72,7 @@ interface BoardRecord {
 interface BoardLive {
   fault: RegistryFault | null;
   stalls: number;
+  stallLines?: readonly string[];
   syncDue: boolean;
 }
 
