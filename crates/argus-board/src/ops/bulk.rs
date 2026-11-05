@@ -31,7 +31,7 @@ fn run_sub(
     home: Option<&Path>,
 ) -> OpResult {
     match sub["kind"].as_str() {
-        Some(kind @ ("bulk" | "purge" | "build" | "avatar")) => {
+        Some(kind @ ("bulk" | "purge" | "build" | "avatar" | "icon")) => {
             OpResult::refused(format!("a {kind} cannot be inside a bulk."))
         }
         _ => apply_op(board, &merged(op, sub), who, home),

@@ -1,6 +1,6 @@
 //! What may change on the board, by whom, and how a change is made. One op is the same shape the
 //! page posts as an entry: `create`, `edit`, `move`, `ac`, `archive`, `unarchive`, `delete`,
-//! `restore`, `bulk`, `purge`, `build`, `avatar`, the owner's worktree and build ops (`worktree-link`,
+//! `restore`, `bulk`, `purge`, `build`, `avatar`, `icon`, the owner's worktree and build ops (`worktree-link`,
 //! `worktree-keep`, `launcher-link`, `launcher-retire`), the test plan run ops (`plan-run-start`, `plan-run-record`, `plan-run-end`) and the pull request ops of the local remote (`pr-open`,
 //! `pr-update`, `pr-merge`, `pr-close`, `pr-checks`). [`apply_op`] checks the caller, validates, checks the
 //! revision the writer saw, applies, stamps, and tells the owning threads.
@@ -17,6 +17,8 @@ mod closed_with;
 mod create;
 mod edit;
 mod fields;
+mod icon;
+mod icon_image;
 mod launcher;
 mod move_;
 mod plan;
@@ -45,6 +47,8 @@ pub use announce::refresh_needs_human;
 pub use authorize::{Check, authorize};
 pub use backup::{PurgeDone, apply_purge, count_line};
 pub use build::ensure_build;
+pub use icon::ICON_NAMES;
+pub use icon_image::{icon_bytes, is_image_icon};
 pub use plan::{PurgePlan, Selection, purge_plan};
 pub use pr::is_pr_kind;
 pub use restore::restore_from;
@@ -84,6 +88,7 @@ fn dispatch(
         "purge" => purge::handle(board, op, who, home),
         "build" => handed(board, op, who, build::handle),
         "avatar" => avatar::handle(board, op, who),
+        "icon" => icon::handle(board, op, who),
         "worktree-link" => handed(board, op, who, worktree::handle_link),
         "worktree-keep" => handed(board, op, who, worktree::handle_keep),
         "launcher-link" => handed(board, op, who, launcher::handle_link),

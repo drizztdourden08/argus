@@ -3,7 +3,7 @@
 //! and fields, applied to the board through the same ops the CLI uses.
 
 /// Every op kind an entry may carry.
-pub const OP_KINDS: [&str; 19] = [
+pub const OP_KINDS: [&str; 20] = [
     "create",
     "edit",
     "move",
@@ -16,6 +16,7 @@ pub const OP_KINDS: [&str; 19] = [
     "purge",
     "build",
     "avatar",
+    "icon",
     "worktree-link",
     "worktree-keep",
     "launcher-link",
