@@ -29,6 +29,7 @@ pub mod prs;
 pub mod records;
 pub mod runs;
 pub mod stalls;
+mod stored_image;
 pub mod trail;
 pub mod trails;
 pub mod wake;

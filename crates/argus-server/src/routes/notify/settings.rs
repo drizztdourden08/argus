@@ -4,7 +4,7 @@ use argus_core::{ApiError, ErrorCode};
 use argus_notify::{Level, PerLevel, SettingsPatch};
 use serde_json::{Value, to_value};
 
-use super::{LEVEL_WORDS, service};
+use super::{LEVEL_WORDS, saved_reply, service};
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::routes::blocking::blocking;
@@ -63,12 +63,5 @@ pub async fn change(ctx: Ctx) -> Reply {
         sound: part_of(&body, "sound")?,
     };
     let saved = blocking(move || notify.configure(patch)).await?;
-    let settings = saved.map_err(|e| {
-        let why: String = e.to_string().chars().take(120).collect();
-        ApiError::new(
-            ErrorCode::Internal,
-            format!("the settings could not be saved: {why}"),
-        )
-    })?;
-    Ok(json_reply(200, &to_value(settings).unwrap_or(Value::Null)))
+    saved_reply(saved)
 }

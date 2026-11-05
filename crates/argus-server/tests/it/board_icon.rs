@@ -2,7 +2,7 @@
 //! and a board with a brand, a curated name or no icon is a 404.
 // test-tag: critical
 
-use crate::posting::{post, seeded};
+use crate::posting::{assert_png_served, post, seeded};
 use serde_json::json;
 
 const PNG: &str = "data:image/png;base64,iVBORw0KGgo=";
@@ -15,17 +15,7 @@ async fn an_image_icon_is_served_with_its_type_and_the_safety_headers() {
     post(&t, &json!({"kind": "icon", "icon": PNG})).await;
     let r = t.get("/api/p/alpha/icon").await;
     assert_eq!(r.status, 200);
-    assert_eq!(r.body, [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]);
-    assert_eq!(r.header("content-type"), Some("image/png"));
-    assert_eq!(
-        r.header("cache-control"),
-        Some("public, max-age=31536000, immutable")
-    );
-    assert_eq!(
-        r.header("content-security-policy"),
-        Some("default-src 'none'; style-src 'unsafe-inline'")
-    );
-    assert_eq!(r.header("x-content-type-options"), Some("nosniff"));
+    assert_png_served(&r);
     post(&t, &json!({"kind": "icon", "icon": SVG})).await;
     let svg = t.get("/api/p/alpha/icon?v=abcd1234").await;
     assert_eq!(svg.header("content-type"), Some("image/svg+xml"));

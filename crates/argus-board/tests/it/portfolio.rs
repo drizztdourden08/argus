@@ -4,27 +4,15 @@
 
 // test-tag: critical
 
-use crate::common::alpha;
+use crate::common::{alpha, home_with_alpha, portfolio_of};
 use argus_board::BoardError;
-use argus_board::portfolio::{import_portfolio_entries, project_keys, shape, summarize};
+use argus_board::portfolio::{import_portfolio_entries, project_keys, summarize};
 use argus_board::proofs::keep_proof_bytes;
-use argus_board::store::{read_board, save_board};
+use argus_board::store::read_board;
 use serde_json::{Value, json};
-use tempfile::TempDir;
-
-fn home_with_alpha() -> TempDir {
-    let home = tempfile::tempdir().expect("temp dir");
-    save_board(home.path(), &alpha()).expect("save alpha");
-    home
-}
 
 fn portfolio() -> Value {
-    let mut p = json!({
-        "project": "_portfolio", "entries": {},
-        "projects": {"alpha": {"key": "alpha", "name": "Alpha", "root": null}},
-    });
-    shape(&mut p);
-    p
+    portfolio_of(json!({"alpha": {"key": "alpha", "name": "Alpha", "root": null}}))
 }
 
 fn post(id: &str, kind: &str, project: &str) -> Value {

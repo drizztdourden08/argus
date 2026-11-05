@@ -33,7 +33,7 @@ fn sextet(b: u8) -> Option<u32> {
 }
 
 fn decode_group(group: &[u8]) -> Option<Vec<u8>> {
-    let pad = group.iter().filter(|b| **b == b'=').count();
+    let pad = group.iter().rev().take_while(|b| **b == b'=').count();
     if pad > 2 || group[..4 - pad].contains(&b'=') {
         return None;
     }
@@ -115,4 +115,19 @@ pub(crate) fn check_image(value: &str) -> Result<(), String> {
         check_svg(&bytes)?;
     }
     Ok(())
+}
+
+/// The text of an `avatar` or `icon` value: `None` for `null`, which clears it.
+///
+/// # Errors
+/// Refused when the value is neither a text nor `null`.
+pub(crate) fn text_or_clear<'a>(
+    value: &'a serde_json::Value,
+    what: &str,
+) -> Result<Option<&'a str>, crate::error::BoardError> {
+    match value.as_str() {
+        Some(text) => Ok(Some(text)),
+        None if value.is_null() => Ok(None),
+        None => Err(crate::error::refuse(format!("{what} must be a text or null."))),
+    }
 }

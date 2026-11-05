@@ -4,7 +4,7 @@ use argus_core::{ApiError, ErrorCode};
 use argus_notify::AutoPatch;
 use serde_json::{Map, Value, to_value};
 
-use super::service;
+use super::{saved_reply, service};
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::routes::blocking::blocking;
@@ -69,12 +69,5 @@ pub async fn change(ctx: Ctx) -> Reply {
     }
     let patch = patch_of(&ctx.json().await?)?;
     let saved = blocking(move || notify.set_auto(patch)).await?;
-    let settings = saved.map_err(|e| {
-        let why: String = e.to_string().chars().take(120).collect();
-        ApiError::new(
-            ErrorCode::Internal,
-            format!("the settings could not be saved: {why}"),
-        )
-    })?;
-    Ok(json_reply(200, &to_value(settings).unwrap_or(Value::Null)))
+    saved_reply(saved)
 }

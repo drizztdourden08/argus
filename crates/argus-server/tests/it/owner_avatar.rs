@@ -5,7 +5,7 @@
 use argus_testkit::{TestServer, write_board};
 use serde_json::{Value, json};
 
-use crate::posting::seeded;
+use crate::posting::{assert_png_served, seeded};
 
 const PNG: &str = "data:image/png;base64,iVBORw0KGgo=";
 
@@ -21,17 +21,7 @@ async fn an_image_avatar_is_served_with_its_type_and_the_safety_headers() {
     set_owner(&t, &json!({"name": "Ann", "avatar": PNG}));
     let r = t.get("/api/owner/avatar?v=abcd1234").await;
     assert_eq!(r.status, 200);
-    assert_eq!(r.body, [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]);
-    assert_eq!(r.header("content-type"), Some("image/png"));
-    assert_eq!(
-        r.header("cache-control"),
-        Some("public, max-age=31536000, immutable")
-    );
-    assert_eq!(
-        r.header("content-security-policy"),
-        Some("default-src 'none'; style-src 'unsafe-inline'")
-    );
-    assert_eq!(r.header("x-content-type-options"), Some("nosniff"));
+    assert_png_served(&r);
 }
 
 #[tokio::test(flavor = "multi_thread")]

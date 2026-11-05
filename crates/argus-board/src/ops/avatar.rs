@@ -7,6 +7,7 @@ use serde_json::Value;
 use super::{
     announce::audit,
     authorize::{Check, authorize},
+    icon_image::text_or_clear,
     result::OpResult,
     who::Who,
 };
@@ -61,12 +62,8 @@ fn check_image(text: &str) -> Result<(), BoardError> {
 /// # Errors
 /// Refused when the value is neither a brand, an image data URL within the cap, nor `null`.
 fn check(value: &Value) -> Result<Option<String>, BoardError> {
-    let Some(text) = value.as_str() else {
-        return if value.is_null() {
-            Ok(None)
-        } else {
-            Err(refuse("avatar must be a text or null."))
-        };
+    let Some(text) = text_or_clear(value, "avatar")? else {
+        return Ok(None);
     };
     if let Some(app) = text.strip_prefix("brand:") {
         return if BRAND_APPS.contains(&app) {

@@ -18,11 +18,13 @@ mod auto;
 mod ping;
 mod settings;
 
+use std::fmt::Display;
 use std::sync::Arc;
 
-use argus_core::ApiError;
+use argus_core::{ApiError, ErrorCode};
 use argus_notify::{Filter, Level, Notification, Notify, Outcome};
 use axum::response::Response;
+use serde::Serialize;
 use serde_json::{Value, json, to_value};
 
 use crate::reply::json_reply;
@@ -39,6 +41,18 @@ fn service(ctx: &Ctx) -> Result<Arc<Notify>, ApiError> {
         .notify
         .clone()
         .ok_or_else(|| ApiError::unavailable("notifications are off"))
+}
+
+/// The answer to a settings change: the saved settings, or a 500 that says why they were not.
+fn saved_reply<T: Serialize, E: Display>(saved: Result<T, E>) -> Reply {
+    let settings = saved.map_err(|e| {
+        let why: String = e.to_string().chars().take(120).collect();
+        ApiError::new(
+            ErrorCode::Internal,
+            format!("the settings could not be saved: {why}"),
+        )
+    })?;
+    Ok(json_reply(200, &to_value(settings).unwrap_or(Value::Null)))
 }
 
 fn answer(outcome: &Outcome) -> Response {

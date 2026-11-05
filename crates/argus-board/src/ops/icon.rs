@@ -8,7 +8,7 @@ use serde_json::Value;
 use super::{
     announce::audit,
     authorize::{Check, authorize},
-    icon_image::{check_image, is_image_icon},
+    icon_image::{check_image, is_image_icon, text_or_clear},
     result::OpResult,
     who::Who,
 };
@@ -68,12 +68,8 @@ fn check_named(text: &str) -> Option<Result<(), BoardError>> {
 /// # Errors
 /// Refused when the value is none of a brand, a curated name, a safe image data URL or `null`.
 fn check(value: &Value) -> Result<Option<String>, BoardError> {
-    let Some(text) = value.as_str() else {
-        return if value.is_null() {
-            Ok(None)
-        } else {
-            Err(refuse("icon must be a text or null."))
-        };
+    let Some(text) = text_or_clear(value, "icon")? else {
+        return Ok(None);
     };
     if let Some(done) = check_named(text) {
         return done.map(|()| Some(text.to_owned()));

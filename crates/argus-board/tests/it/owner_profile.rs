@@ -4,9 +4,9 @@
 
 // test-tag: critical
 
-use crate::common::{alpha, exported};
-use argus_board::portfolio::{import_portfolio_entries, shape};
-use argus_board::store::{read_board, save_board};
+use crate::common::{exported, home_with_alpha as home, portfolio_of};
+use argus_board::portfolio::import_portfolio_entries;
+use argus_board::store::read_board;
 use argus_core::Coll;
 use serde_json::{Value, json};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -18,16 +18,8 @@ const SVG: &str =
 const SVG_SCRIPT: &str = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxzY3JpcHQ+eDwvc2NyaXB0Pjwvc3ZnPg==";
 static POSTS: AtomicUsize = AtomicUsize::new(0);
 
-fn home() -> TempDir {
-    let home = tempfile::tempdir().expect("temp dir");
-    save_board(home.path(), &alpha()).expect("save alpha");
-    home
-}
-
 fn portfolio() -> Value {
-    let mut p = json!({"project": "_portfolio", "entries": {}, "projects": {}});
-    shape(&mut p);
-    p
+    portfolio_of(json!({}))
 }
 
 /// Posts a profile; returns its status and the reason when refused.

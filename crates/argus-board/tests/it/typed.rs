@@ -428,8 +428,9 @@ fn a_parent_must_be_allowed_acyclic_and_on_the_board() {
     assert!(refused(&under_task).contains("a task sits under"));
     let ghost = edit(&mut b, &lead(), &task, json!({"parent": "I-99"}));
     assert_eq!(refused(&ghost), "no item \"I-99\".");
-    applied(&edit(&mut b, &lead(), &task, json!({"parent": "none"})));
-    assert_eq!(b["items"][task.as_str()]["parent"], Value::Null);
+    let cleared = edit(&mut b, &lead(), &task, json!({"parent": "none"}));
+    assert!(refused(&cleared).contains("needs a parent"));
+    assert_eq!(b["items"][task.as_str()]["parent"], json!(story));
 }
 
 #[test]

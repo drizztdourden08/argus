@@ -13,6 +13,7 @@ use argus_core::clock::now_iso;
 pub use argus_core::fixture::doc;
 use argus_core::fixture::{fill_alpha, merge};
 use serde_json::{Value, json};
+use tempfile::TempDir;
 
 static POSTS: AtomicUsize = AtomicUsize::new(0);
 
@@ -98,4 +99,18 @@ fn item_by(board: &mut Value, who: &Who, set: &Value) -> String {
         .as_str()
         .unwrap_or_default()
         .to_owned()
+}
+
+/// A temp home holding the saved `alpha` board.
+pub fn home_with_alpha() -> TempDir {
+    let home = tempfile::tempdir().expect("temp dir");
+    argus_board::store::save_board(home.path(), &alpha()).expect("save alpha");
+    home
+}
+
+/// A shaped portfolio board listing `projects`.
+pub fn portfolio_of(projects: Value) -> Value {
+    let mut p = json!({"project": "_portfolio", "entries": {}, "projects": projects});
+    argus_board::portfolio::shape(&mut p);
+    p
 }

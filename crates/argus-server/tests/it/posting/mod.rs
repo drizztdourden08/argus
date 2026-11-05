@@ -88,3 +88,18 @@ pub fn entry_count(t: &TestServer, key: &str) -> usize {
         .as_object()
         .map_or(0, serde_json::Map::len)
 }
+
+/// Asserts the reply is the tiny PNG of the icon tests with the cache and safety headers.
+pub fn assert_png_served(r: &Reply) {
+    assert_eq!(r.body, [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]);
+    assert_eq!(r.header("content-type"), Some("image/png"));
+    assert_eq!(
+        r.header("cache-control"),
+        Some("public, max-age=31536000, immutable")
+    );
+    assert_eq!(
+        r.header("content-security-policy"),
+        Some("default-src 'none'; style-src 'unsafe-inline'")
+    );
+    assert_eq!(r.header("x-content-type-options"), Some("nosniff"));
+}
