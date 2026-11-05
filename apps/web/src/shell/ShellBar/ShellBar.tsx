@@ -16,7 +16,7 @@ const ShellBar = (props: ShellBarProps) => {
     { id: 'mode', pinned: true, node: <ModeSwitch mode={mode} boardsAvailable={boardsAvailable} onChange={onMode} /> },
     ...(mode === 'boards' ? [{ id: 'boards', priority: 5, node: <BoardSwitcher boardKey={boardKey} /> }] : []),
     ...(local ? [{ id: 'local', priority: 3, node: <LocalBanner state={local} /> }] : []),
-    { id: 'owner', pinned: true, node: <SettingsEntries /> },
+    { id: 'owner', pinned: true, end: true, node: <SettingsEntries /> },
   ];
   return (
     <Card surface="glass" className="shell-bar">

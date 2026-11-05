@@ -46,7 +46,7 @@ const BoardHeaderRow = (props: BoardHeaderProps) => {
     ...(syncs ? [{ id: 'sync', priority: 1, node: <BoardSync boardKey={boardKey} /> }] : []),
     { id: 'registered', priority: 3, node: <RegisteredStrip boardKey={boardKey} /> },
     { id: 'alerts', priority: 5, node: <BoardAlerts boardKey={boardKey} status={status} /> },
-    { id: 'settings', pinned: true, node: <BoardSettingsButton boardKey={boardKey} /> },
+    { id: 'settings', pinned: true, end: true, node: <BoardSettingsButton boardKey={boardKey} /> },
     { id: 'more', pinned: true, node: tools },
   ];
   return <OverflowRow items={items} />;
