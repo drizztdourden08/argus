@@ -195,7 +195,7 @@ async fn list_agents_joins_runs_and_filters_live_and_thread() {
 }
 
 #[tokio::test]
-async fn list_launchers_puts_master_first_and_joins_play_and_bundles() {
+async fn list_launchers_puts_master_first_and_joins_play_and_runs() {
     let rig = &Rig::new();
     let names = |r: &Value| -> Vec<String> {
         r["launchers"]
@@ -211,10 +211,10 @@ async fn list_launchers_puts_master_first_and_joins_play_and_bundles() {
     assert_eq!(names(&r), strings(&["master", "build-1"]));
     assert_eq!(r["master"], true);
     let b1 = &r["launchers"][1];
-    let got = json!({ "play": b1["play"], "bundles": b1["bundles"], "cmd": b1["cmd"], "current": b1["current"] });
+    let got = json!({ "play": b1["play"], "runs": b1["runs"], "cmd": b1["cmd"], "current": b1["current"] });
     assert_eq!(
         got,
-        json!({ "play": "launcher-build-1", "bundles": ["b1"], "cmd": "game run --wt build-1", "current": true })
+        json!({ "play": "launcher-build-1", "runs": [], "cmd": "game run --wt build-1", "current": true })
     );
     assert_eq!(r["launchers"][0]["play"], "launcher-master");
     let all = rig
