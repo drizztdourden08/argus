@@ -126,7 +126,7 @@ describe('K1 what each work item needs', { tags: ['critical'] }, () => {
         entry({ id: 'Q-3', item: 'I-2', status: 'closed' }),
       ],
       actions: [step({ id: 'H-1', item: 'I-1' })],
-      tests: [manual({ id: 'T-1', item: 'I-2', build: 'b' }), manual({ id: 'T-2', item: 'I-2', build: 'b' })],
+      tests: [manual({ id: 'T-1', item: 'I-2' }), manual({ id: 'T-2', item: 'I-2' })],
     });
     expect(needs.get('I-1')).toEqual({ questions: 2, decisions: 1, steps: 1, tests: 0 });
     expect(needs.get('I-2')).toEqual({ questions: 0, decisions: 0, steps: 0, tests: 2 });

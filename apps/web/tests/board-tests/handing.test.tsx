@@ -3,11 +3,12 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { planDoc, runOn, testDoc } from './fixtures';
+import type { Doc } from './fixtures';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
 
-const board = (runs: object[]) => ({ group: 'run', items: [planDoc('I-9', ['T-1']), ...runs], tests: [testDoc('T-1')] });
+const board = (runs: Doc[]) => ({ group: 'run', items: [planDoc('I-9', ['T-1']), ...runs], tests: [testDoc('T-1')] });
 
 describe('S1 handing a run to the owner', { tags: ['standard'] }, () => {
   it('Hand to me assigns the run to the owner, and Unhand clears it', async () => {

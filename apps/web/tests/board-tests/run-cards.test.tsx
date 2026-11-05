@@ -3,11 +3,12 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cardOf, cleanAfterEach, isOpen, tagsOf, toggleOf } from './board-dom';
 import { doneDoc, planDoc, runOn, testDoc } from './fixtures';
+import type { Doc } from './fixtures';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
 
-const board = (runs: object[], tests: object[], cases = ['T-1', 'T-2']) => ({ group: 'run', items: [planDoc('I-9', cases), ...runs], tests });
+const board = (runs: Doc[], tests: Doc[], cases = ['T-1', 'T-2']) => ({ group: 'run', items: [planDoc('I-9', cases), ...runs], tests });
 
 describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () => {
   it('put the handed run first, name it, and open it', async () => {

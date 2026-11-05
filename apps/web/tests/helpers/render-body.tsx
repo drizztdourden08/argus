@@ -15,7 +15,7 @@ const Body = (props: { boardKey: string }) => {
   return (
     <>
       <RegisteredStrip boardKey={boardKey} />
-      <ActivityTab boardKey={boardKey} work={work} handed={null} />
+      <ActivityTab boardKey={boardKey} work={work} />
     </>
   );
 };
