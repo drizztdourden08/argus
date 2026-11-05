@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind component */
+import { ContentSwap } from '@drizztdourden08/tessera';
 import { Suspense } from 'react';
 import { LoadingFallback } from '../../../shell';
 import type { BoardTabBodyProps } from './BoardTabBody.type';
@@ -7,16 +8,18 @@ import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanb
 const BoardTabBody = (props: BoardTabBodyProps) => {
   const { tab, boardKey, work, more } = props;
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
-      {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} />}
-      {tab === 'kanban' && <LazyKanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
-      {tab === 'tests' && <LazyTestsTab boardKey={boardKey} />}
-      {tab === 'builds' && <LazyBuildsTab boardKey={boardKey} />}
-      {tab === 'worktrees' && <LazyWorktreesTab boardKey={boardKey} />}
-      {tab === 'changes' && <LazyChangesTab boardKey={boardKey} />}
-      {tab === 'releases' && <LazyReleasesTab boardKey={boardKey} />}
-    </Suspense>
+    <ContentSwap swapKey={`${boardKey}:${tab}`} effect="reflow">
+      <Suspense fallback={<LoadingFallback />}>
+        {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
+        {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} />}
+        {tab === 'kanban' && <LazyKanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
+        {tab === 'tests' && <LazyTestsTab boardKey={boardKey} />}
+        {tab === 'builds' && <LazyBuildsTab boardKey={boardKey} />}
+        {tab === 'worktrees' && <LazyWorktreesTab boardKey={boardKey} />}
+        {tab === 'changes' && <LazyChangesTab boardKey={boardKey} />}
+        {tab === 'releases' && <LazyReleasesTab boardKey={boardKey} />}
+      </Suspense>
+    </ContentSwap>
   );
 };
 

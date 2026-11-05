@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind component */
-import { ContentSwap } from '@drizztdourden08/tessera';
 import { useBoard, usePortfolio } from '../../../data/react';
 import { resolvePalette, useShellPalette } from '../../../palette';
 import { BoardPage } from '../BoardPage';
@@ -12,11 +11,7 @@ const BoardStage = (props: BoardStageProps) => {
   const { cards } = usePortfolio();
   const shown = useShownBoard(boardKey, ready);
   useShellPalette(resolvePalette(shown, cards.find((card) => card.key === shown)?.palette));
-  return (
-    <ContentSwap swapKey={shown} effect="fade">
-      <BoardPage boardKey={shown} />
-    </ContentSwap>
-  );
+  return <BoardPage boardKey={shown} />;
 };
 
 export { BoardStage };
