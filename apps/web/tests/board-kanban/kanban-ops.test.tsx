@@ -23,12 +23,14 @@ describe('K3 adding an item', { tags: ['standard'] }, () => {
   });
 
   it('lets the thread be picked, and hides the thread choice in a thread column', async () => {
-    const { posted, unmount } = await mountKanban({ items: [item('I-1')], threads: [thread('worker'), thread('idle')] });
+    const { posted, unmount } = await mountKanban({ items: [item('I-1'), item('I-9', { type: 'epic', status: 'doing' })], threads: [thread('worker'), thread('idle')] });
     fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
     expect(screen.getByRole('combobox', { name: 'Thread' })).toBeTruthy();
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'For idle' } });
     fireEvent.click(screen.getByRole('combobox', { name: 'Thread' }));
     fireEvent.click(await screen.findByRole('option', { name: 'idle' }));
+    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]?.body).toMatchObject({ set: { title: 'For idle', thread: 'idle' } });
