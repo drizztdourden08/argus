@@ -1,0 +1,9 @@
+.app-shell {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.app-shell .app-shell__backdrop {
+  position: fixed;
+  z-index: -1;
+}

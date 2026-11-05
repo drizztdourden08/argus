@@ -2,6 +2,6 @@
 import { lazy } from 'react';
 import { PAGE_LOADERS } from './loaders.constants';
 
-const LazyBoardRoute = lazy(PAGE_LOADERS.boardRoute);
+const LazyBoardMode = lazy(PAGE_LOADERS.boardMode);
 
-export { LazyBoardRoute };
+export { LazyBoardMode };

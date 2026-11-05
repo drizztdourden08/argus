@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Tabs } from '@drizztdourden08/tessera';
+import { Flex, Tabs } from '@drizztdourden08/tessera';
 import { Suspense } from 'react';
 import { usePortfolio } from '../../data/react';
-import { LoadingFallback, PageFrame, RecordPaneScope, StatusNotice, useHashTab } from '../../shell';
+import { LoadingFallback, RecordPaneScope, StatusNotice, useHashTab } from '../../shell';
 import { RecordPaneHost } from '../../shell/records/pane';
 import { useTabBadges } from './behavior/useTabBadges';
 import { OVERVIEW_TAB_IDS, OVERVIEW_TABS } from './overview.constants';
@@ -16,15 +16,15 @@ const OverviewPage = () => {
   const tabs = OVERVIEW_TABS.map((item) => ({ ...item, badge: badges.counts[item.id], badgeTone: badges.tones[item.id] }));
   return (
     <RecordPaneScope>
-      <PageFrame>
-        <OverviewHeader cards={cards} />
+      <Flex direction="column" gap="md">
+        <OverviewHeader />
         <StatusNotice status={status} />
         <Tabs tabs={tabs} activeTab={tab} onTabChange={select} hideZero={false} size="lg" selectedTone="neutral" badgeFill="solid" />
         <Suspense fallback={<LoadingFallback />}>
           <TabBody tab={tab} cards={cards} status={status} badges={badges} />
         </Suspense>
         <RecordPaneHost />
-      </PageFrame>
+      </Flex>
     </RecordPaneScope>
   );
 };

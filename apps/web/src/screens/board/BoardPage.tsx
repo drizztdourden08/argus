@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Tabs } from '@drizztdourden08/tessera';
+import { Flex, Tabs } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useBoard } from '../../data/react';
-import { resolvePalette, useDocumentPalette } from '../../palette';
-import { PageFrame, RecordPaneScope, StatusNotice } from '../../shell';
+import { RecordPaneScope, StatusNotice } from '../../shell';
 import { RecordPaneHost } from '../../shell/records/pane';
 import { useBoardTab } from './behavior/useBoardTab';
 import { usePresence } from './behavior/usePresence';
@@ -30,12 +29,11 @@ const BoardPage = (props: BoardPageProps) => {
   const trashCount = useTrashCount(boardKey);
   const work = useBoardWork(boardKey);
   const badges = useTabBadges(boardKey, work);
-  useDocumentPalette(resolvePalette(boardKey, board.meta?.palette));
   usePresence(boardKey);
   return (
     <OpenThreadContext.Provider value={setOpenThread}>
       <RecordPaneScope>
-        <PageFrame>
+        <Flex direction="column" gap="md">
           <BoardHeader
             boardKey={boardKey}
             name={board.name}
@@ -55,7 +53,7 @@ const BoardPage = (props: BoardPageProps) => {
           <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
           <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />
           <RecordPaneHost boardKey={boardKey} />
-        </PageFrame>
+        </Flex>
       </RecordPaneScope>
     </OpenThreadContext.Provider>
   );

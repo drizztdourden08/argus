@@ -18,14 +18,6 @@ interface ChipFilterProps {
   onChange: (value: string) => void;
 }
 
-interface OverviewHeaderProps {
-  cards: Card[];
-}
-
-interface ProjectSwitcherProps {
-  cards: Card[];
-}
-
 interface TabBodyProps {
   tab: string;
   cards: Card[];
@@ -33,4 +25,4 @@ interface TabBodyProps {
   badges: TabBadges;
 }
 
-export type { ChipFilterProps, OverviewHeaderProps, ProjectSwitcherProps, TabBadges, TabBodyProps };
+export type { ChipFilterProps, TabBadges, TabBodyProps };

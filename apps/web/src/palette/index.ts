@@ -1,3 +1,3 @@
 /* @layer renderer-app @kind barrel */
-export { useDocumentPalette } from './behavior/useDocumentPalette';
+export { useShellPalette } from './behavior/useShellPalette';
 export { resolvePalette } from './resolve-palette';

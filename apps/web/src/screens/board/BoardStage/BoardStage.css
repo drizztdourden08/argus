@@ -1,0 +1,27 @@
+.board-stage {
+  transition: none;
+}
+
+.board-stage[data-phase='leaving'],
+.board-stage[data-phase='swap'] {
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--size-4)));
+  filter: blur(var(--size-4));
+  pointer-events: none;
+}
+
+.board-stage[data-phase='leaving'] {
+  transition: opacity var(--duration-normal) ease, transform var(--duration-normal) ease, filter var(--duration-normal) ease;
+}
+
+.board-stage[data-phase='entering'] {
+  transition: opacity var(--duration-slow) ease, transform var(--duration-slow) ease, filter var(--duration-slow) ease;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-stage,
+  .board-stage[data-phase] {
+    transition: none;
+  }
+}

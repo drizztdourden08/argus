@@ -31,14 +31,19 @@ describe('K1 resolvePalette', { tags: ['critical'] }, () => {
 });
 
 describe('S1 palette attribute', { tags: ['standard'] }, () => {
-  it('follows the palette setting of meta/board live, and basic clears it', async () => {
-    const { sources } = renderAt('/p/argus/');
+  it('follows the palette setting of the board card live, and basic clears it', async () => {
+    const { sources, portfolio } = renderAt('/p/argus/');
     await waitForStream(sources);
-    act(() => sources[0]?.emit('snapshot', snapshot('argus', 'meta', board('Argus'))));
+    await waitFor(() => expect(portfolio()).toBeTruthy());
+    const card = (palette?: string) => ({ key: 'argus', name: 'Argus', state: 'running', root: null, url: '/p/argus/', ...(palette ? { palette } : {}) });
+    act(() => {
+      sources[0]?.emit('snapshot', snapshot('argus', 'meta', board('Argus')));
+      portfolio()?.emit('snapshot', snapshot('_portfolio', 'cards', { argus: card() }));
+    });
     expect(document.documentElement.dataset.palette).toBeUndefined();
-    act(() => sources[0]?.emit('changes', { scope: 'argus', seq: 11, changes: [{ coll: 'meta', id: 'board', op: 'set', data: board('Argus', 'brock').board }] }));
+    act(() => portfolio()?.emit('changes', { scope: '_portfolio', seq: 11, changes: [{ coll: 'cards', id: 'argus', op: 'set', data: card('brock') }] }));
     await waitFor(() => expect(document.documentElement.dataset.palette).toBe('brock'));
-    act(() => sources[0]?.emit('changes', { scope: 'argus', seq: 12, changes: [{ coll: 'meta', id: 'board', op: 'set', data: board('Argus', 'basic').board }] }));
+    act(() => portfolio()?.emit('changes', { scope: '_portfolio', seq: 12, changes: [{ coll: 'cards', id: 'argus', op: 'set', data: card('basic') }] }));
     await waitFor(() => expect(document.documentElement.dataset.palette).toBeUndefined());
   });
 

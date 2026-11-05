@@ -1,0 +1,8 @@
+.shell-bar {
+  min-height: var(--size-40);
+  padding-inline: var(--space-lg);
+}
+
+.shell-bar .shell-bar__status {
+  margin-inline-start: auto;
+}

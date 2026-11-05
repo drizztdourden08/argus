@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { renderAt } from '../helpers/render-at';
 import { snapshot } from '../helpers/snapshot';
 import { waitForStream } from '../helpers/wait-for-stream';
@@ -70,11 +70,11 @@ describe('S2 routing of pages that do not exist', { tags: ['standard'] }, () => 
     expect(screen.getByText('There is no board for "Not_A_Key".')).toBeTruthy();
   });
 
-  it('shows the not found page for a board the project list does not know,', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify([{ key: 'rotp', name: 'RotP', root: null, url: '/p/rotp/', hasBoard: true, running: 0 }])))));
-    renderAt('/p/ghost/');
+  it('shows the not found page for a board the portfolio cards do not know,', async () => {
+    const { portfolio } = renderAt('/p/ghost/');
+    await waitFor(() => expect(portfolio()).toBeTruthy());
+    act(() => portfolio()?.emit('snapshot', snapshot('_portfolio', 'cards', { rotp: cards.rotp })));
     expect(await screen.findByText('There is no board for "ghost".')).toBeTruthy();
-    vi.unstubAllGlobals();
   });
 
   it('shows the not found page for an unknown path', () => {

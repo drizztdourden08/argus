@@ -1,3 +1,3 @@
 /* @layer renderer-app @kind barrel */
-export { LazyBoardRoute } from './board-route';
-export { LazyOverviewPage } from './overview-page';
+export { LazyBoardMode } from './board-mode';
+export { LazyOverviewMode } from './overview-mode';

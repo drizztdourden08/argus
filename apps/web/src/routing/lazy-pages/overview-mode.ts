@@ -2,6 +2,6 @@
 import { lazy } from 'react';
 import { PAGE_LOADERS } from './loaders.constants';
 
-const LazyOverviewPage = lazy(PAGE_LOADERS.overviewPage);
+const LazyOverviewMode = lazy(PAGE_LOADERS.overviewMode);
 
-export { LazyOverviewPage };
+export { LazyOverviewMode };

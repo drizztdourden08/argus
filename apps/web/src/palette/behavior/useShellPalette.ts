@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import type { Palette } from '../palette.type';
 
-const useDocumentPalette = (palette: Palette | undefined): void => {
+const useShellPalette = (palette: Palette | undefined): void => {
   useEffect(() => {
     const root = document.documentElement;
     if (palette) root.dataset.palette = palette;
@@ -13,4 +13,4 @@ const useDocumentPalette = (palette: Palette | undefined): void => {
   }, [palette]);
 };
 
-export { useDocumentPalette };
+export { useShellPalette };

@@ -7,6 +7,4 @@ const NOTICES = {
 const CALM_LOOK = { variant: 'normal', color: 'neutral' } as const;
 const BAD_LOOK = { variant: 'urgency', color: 'danger' } as const;
 
-const OVERVIEW_OPTION = { value: '', label: 'Argus overview' } as const;
-
-export { BAD_LOOK, CALM_LOOK, NOTICES, OVERVIEW_OPTION };
+export { BAD_LOOK, CALM_LOOK, NOTICES };

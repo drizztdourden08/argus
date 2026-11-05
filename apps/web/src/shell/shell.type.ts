@@ -23,13 +23,9 @@ interface PanelProps {
   children: ReactNode;
 }
 
-interface ProjectSwitcherProps {
-  current?: string | null;
-}
-
 interface HashTab {
   tab: string;
   select: (tab: string) => void;
 }
 
-export type { HashTab, PageFrameProps, PanelProps, ProjectSwitcherProps, RegisteredFrameProps, StatusNoticeProps };
+export type { HashTab, PageFrameProps, PanelProps, RegisteredFrameProps, StatusNoticeProps };

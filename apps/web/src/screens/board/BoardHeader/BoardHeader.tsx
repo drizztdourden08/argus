@@ -3,7 +3,7 @@ import { BrandMark, Flex, Stack, Text } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../data/agents';
 import { useCollection } from '../../../data/react';
 import { useRemoteSyncs } from '../../../data/remote';
-import { ProjectSwitcher, SyncStamp } from '../../../shell';
+import { SyncStamp } from '../../../shell';
 import type { BoardHeaderProps } from './BoardHeader.type';
 import { findLead } from '../tabs/agents/model';
 import { BoardNotices } from './sub-components/BoardNotices';
@@ -35,7 +35,6 @@ const BoardHeader = (props: BoardHeaderProps) => {
         {syncs ? <SyncStamp sync={syncs[boardKey] ?? null} /> : null}
       </Flex>
       <Flex className="board-header__tools" gap="xs" align="center">
-        <ProjectSwitcher current={boardKey} />
         {tools}
       </Flex>
     </Flex>

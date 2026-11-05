@@ -8,7 +8,3 @@
   font-weight: var(--weight-semi);
   line-height: 1.4;
 }
-
-.overview-header .overview-header__tools {
-  margin-inline-start: auto;
-}
