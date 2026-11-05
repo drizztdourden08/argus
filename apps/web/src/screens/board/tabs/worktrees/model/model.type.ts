@@ -6,6 +6,23 @@ type WorktreeRow = WithId<Worktree>;
 
 type WorktreeFilter = 'all' | 'need' | 'left';
 
+type WorktreeGroup = 'item' | 'thread' | 'status' | 'none';
+
+type WorktreeOrder = 'need' | 'age' | 'path' | 'size';
+
+interface WorktreeFilters {
+  query: string;
+  threads: string[];
+  statuses: string[];
+  kinds: string[];
+}
+
+interface RowGroup {
+  key: string;
+  label: string;
+  rows: WorktreeRow[];
+}
+
 type PanelKind = 'delete' | 'check' | 'remove';
 
 interface Seen {
@@ -64,5 +81,5 @@ interface WorktreeChip {
 }
 
 export type {
-  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, Seen, SummaryParts, WorktreeChip, WorktreeFilter, WorktreeRow,
+  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, RowGroup, Seen, SummaryParts, WorktreeChip, WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder, WorktreeRow,
 };

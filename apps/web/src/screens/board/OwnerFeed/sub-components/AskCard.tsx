@@ -18,7 +18,7 @@ const AskCard = (props: AskCardProps) => {
   const lines = askLines(entry.text);
   const title = <Text weight={500} clamp={1}>{lines.title}</Text>;
   return (
-    <Card data-feed-type={card.type} edge="left" edgeTone="warning">
+    <Card data-feed-type={card.type} data-swap-item edge="left" edgeTone="warning">
       <Flex direction="column" gap="xs" data-record={facts.code}>
         <RecordHead {...feedHead(card, facts, ctx, () => pane.open(facts.code))} title={title} />
         <ContextPreview entry={entry} actions={ctx.actions} onMore={() => pane.open(entry.id)} />

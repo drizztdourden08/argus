@@ -13,7 +13,13 @@ interface AskLines {
   rest: string;
 }
 
-type FeedFilter ='all' | 'you' | 'log';
+type FeedFilter = 'all' | 'you' | 'log';
+
+interface FeedFilters {
+  query: string;
+  authors: string[];
+  kinds: string[];
+}
 
 interface FeedActions {
   isBusy: (key: string) => boolean;
@@ -207,6 +213,7 @@ export type {
   FeedContext,
   FeedFactsProps,
   FeedFilter,
+  FeedFilters,
   FeedGroupProps,
   FeedSectionsProps,
   ImageGroup,

@@ -12,6 +12,7 @@ const WorktreeBody = (props: WorktreeBodyProps) => {
     return <EmptyState message="No worktrees found under the rules." hint={hint} />;
   }
   if (table.rows.length === 0) {
+    if (filter === 'all') return <EmptyState size="sm" message="No worktree matches the filters." />;
     const message = filter === 'left' ? 'No leftover folders.' : 'Nothing needs a decision.';
     return <EmptyState size="sm" message={message} action={<Button size="sm" variant="ghost" onClick={onShowAll}>{`Show all ${total}`}</Button>} />;
   }
