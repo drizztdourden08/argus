@@ -23,11 +23,11 @@ describe('S1 the view of the activity', { tags: ['standard'] }, () => {
     await openBoard({ entries: byId(freeText, notice), log: logOf(2) });
     expect(screen.getByText('Log · 3')).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: 'Needs you' }));
-    expect(screen.getByText('Waiting on you · 1')).toBeTruthy();
+    expect(screen.getByText('Questions and decisions · 1')).toBeTruthy();
     expect(screen.queryByText('Log · 3')).toBeNull();
     expect(screen.queryByText('Work log')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: 'Log' }));
-    expect(screen.queryByText('Waiting on you · 1')).toBeNull();
+    expect(screen.queryByText('Questions and decisions · 1')).toBeNull();
     expect(screen.getByText('Work log')).toBeTruthy();
     expect(window.localStorage.getItem('coord.feed')).toBe('log');
     cleanup();
