@@ -8,6 +8,7 @@ pub mod agent_links;
 pub mod agents;
 pub mod blocked;
 pub mod content;
+pub mod demo;
 pub mod deps;
 pub mod error;
 pub mod ids;

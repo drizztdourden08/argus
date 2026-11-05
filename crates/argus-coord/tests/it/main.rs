@@ -25,6 +25,7 @@ mod cli_args;
 mod client;
 mod client_config;
 mod dashboard_verb;
+mod demo_seed;
 mod dashboard_verb_run;
 mod differ_examples;
 mod differ_harness;

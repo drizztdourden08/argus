@@ -65,3 +65,40 @@ All hidden, with no window on the owner's desktop.
    end the turn.
 7. Stop it with `"$p\bin\argus.exe" stop --data-dir "$p\dashboard"`, by its pid file. Delete the
    preview folder afterwards with the junction-safe rule: it holds no links, check first.
+
+## The demo board: `coord demo seed`
+
+A preview home with real boards copied in shows only what the owner already has. To see every
+record kind at once, seed a demo board into a separate preview home:
+
+```text
+COORD_HOME=<preview home> coord demo seed [--project <key>]
+```
+
+The default key is `demo`. The verb fills that board with:
+
+- an epic with stories and tasks in every stage (each has an epic parent), a bug and a debt;
+- test cases tagged AI and manual, plans, and runs in the stages draft, ready, running, reported
+  and passed, with a build (launcher) linked to the running and the ready run;
+- agents that run, are done, are stopped or failed, with their model and reason, and worktrees
+  linked to some of them;
+- asks with options, a decision, notices, notes, a to-do, a lock, a log line, an inbox message;
+- pull requests that are open, merged and closed, and a process definition (`coord run define`);
+- requests to the tessera, brock and archipelia boards (open and done) and one from brock to
+  the demo board, so brand marks show on the cards;
+- releases under `<preview home>/releases/<key>/`.
+
+Rules, kept by the verb:
+
+- It refuses when `COORD_HOME` is unset, or is the live home (`~/.coord`) or inside it. It never
+  writes to the live boards, and the requests between boards live only in the same preview home.
+- It refuses when the board already exists. To seed again, delete the folder
+  `<preview home>/<key>` first. The request ledger lives on the `portfolio` board of that home.
+- The target boards (tessera, brock, archipelia) are created with a lead when the home has none;
+  a board that is already there is left as it is.
+- Every record is written through the real verbs and board ops, so it passes the same checks as
+  a hand made one. A step that fails is printed and the rest still run; the exit code is 1.
+- A live process run (the run history row in the server's database) is not seeded: the verb
+  has no database. The process definition is.
+
+The worktree folders are made under `<preview home>/<key>-worktrees`.
