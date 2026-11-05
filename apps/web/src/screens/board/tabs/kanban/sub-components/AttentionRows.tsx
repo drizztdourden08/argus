@@ -6,7 +6,7 @@ const AttentionRows = () => (
   <>
     {ATTENTION.map((spec) => (
       <TableRow key={spec.kind}>
-        <TableCell><SignalStrip items={[{ id: spec.kind, icon: spec.icon, label: spec.label, tone: spec.color }]} aria-label={spec.label} /></TableCell>
+        <TableCell><SignalStrip items={[{ id: spec.kind, icon: spec.icon, label: spec.label, tone: spec.color }]} iconOnly aria-label={spec.label} /></TableCell>
         <TableCell><Text variant="subtitle">{spec.text}</Text></TableCell>
       </TableRow>
     ))}
