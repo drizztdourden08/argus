@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { FieldDescriptor, FilterClause, SortDirection, TabItem } from '@drizztdourden08/tessera';
+import type { OverflowRowItem, SortDirection, TabItem } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { Option } from '../shared';
 
@@ -9,23 +9,30 @@ interface BoardTabsRowProps {
   onTabChange: (tab: string) => void;
 }
 
+interface BoardTabsProps extends BoardTabsRowProps {
+  tight: boolean;
+}
+
 interface FiltersToggleProps {
   open: boolean;
   count: number;
   onToggle: () => void;
 }
 
-interface TabFiltersProps {
+interface ToolToggleProps {
+  label: string;
+  pressed: boolean;
+  count?: number;
+  onToggle: () => void;
+}
+
+interface TabFilterRowProps {
   tab: string;
   count: number;
   children: ReactNode;
 }
 
-interface PortalProps {
-  children: ReactNode;
-}
-
-interface ChoiceField<F> {
+interface MultiField<F> {
   kind: 'multi';
   path: string;
   label: string;
@@ -34,7 +41,7 @@ interface ChoiceField<F> {
   write: (values: string[]) => Partial<F>;
 }
 
-interface PickField<F> {
+interface SingleField<F> {
   kind: 'single';
   path: string;
   label: string;
@@ -51,21 +58,27 @@ interface FlagField<F> {
   write: (on: boolean) => Partial<F>;
 }
 
-type ClauseField<F> = ChoiceField<F> | PickField<F> | FlagField<F>;
+type TabField<F> = MultiField<F> | SingleField<F> | FlagField<F>;
 
-interface ClauseFilters {
-  schema: readonly FieldDescriptor[];
-  clauses: readonly FilterClause[];
-  onChange: (next: readonly FilterClause[]) => void;
-  count: number;
+interface TabFilterBarProps<F extends { query: string }> {
+  tab: string;
+  boardKey: string;
+  fields: readonly TabField<F>[];
+  filters: F;
+  patchFilters: (values: Partial<F>) => void;
+  placeholder: string;
 }
 
-interface ClauseFilterRowProps {
-  boardKey: string;
-  search: string;
-  placeholder: string;
-  onSearch: (query: string) => void;
-  bar: ClauseFilters;
+interface TabFieldControlProps<F> {
+  field: TabField<F>;
+  filters: F;
+  patch: (values: Partial<F>) => void;
+}
+
+interface TabFieldControlsProps<F> {
+  fields: readonly TabField<F>[];
+  filters: F;
+  patch: (values: Partial<F>) => void;
 }
 
 interface FlagFilters {
@@ -77,6 +90,24 @@ interface FlagFilters {
 interface ViewChoice<Id extends string> {
   id: Id;
   label: string;
+}
+
+interface GroupPart<G extends string> {
+  options: readonly ViewChoice<G>[];
+  value: G;
+  onChange: (group: G) => void;
+}
+
+interface SortPart<O extends string> {
+  options: readonly ViewChoice<O>[];
+  order: O;
+  direction: SortDirection;
+  onChange: (order: O, direction: SortDirection) => void;
+}
+
+interface TabGroupSortProps<G extends string, O extends string> {
+  group?: GroupPart<G>;
+  sort: SortPart<O>;
 }
 
 interface ViewState<G extends string, O extends string> {
@@ -93,15 +124,49 @@ interface TabViewMenuProps<G extends string, O extends string> {
   shown: (order: O, direction: SortDirection | null) => SortDirection;
 }
 
-interface TabFilterSetProps<F extends { query: string }> {
+interface TabToolsEntry {
   tab: string;
-  boardKey: string;
-  fields: readonly ClauseField<F>[];
+  items: readonly OverflowRowItem[];
+}
+
+interface TabFilterInfo {
+  tab: string;
+  count: number;
+}
+
+interface RegistryEntry<T> {
+  key: string;
+  value: T;
+}
+
+interface Registry<T> {
+  set: (key: string, value: T) => void;
+  clear: (key: string) => void;
+  subscribe: (listener: () => void) => () => void;
+  get: () => readonly RegistryEntry<T>[];
+}
+
+interface TabViewSetup<G extends string, O extends string, F> {
+  groups: readonly G[];
+  orders: readonly O[];
+  group: G;
+  order: O;
+  direction: SortDirection;
+  filters: F;
+}
+
+interface TabView<G extends string, O extends string, F> {
+  group: G;
+  setGroup: (group: G) => void;
+  order: O;
+  direction: SortDirection;
+  setSort: (order: O, direction: SortDirection) => void;
   filters: F;
   patchFilters: (values: Partial<F>) => void;
-  placeholder: string;
 }
 
 export type {
-  BoardTabsRowProps, ClauseField, ClauseFilterRowProps, ClauseFilters, FiltersToggleProps, FlagFilters, PortalProps, TabFilterSetProps, TabFiltersProps, TabViewMenuProps,
+  BoardTabsProps, BoardTabsRowProps, FiltersToggleProps, FlagField, FlagFilters, GroupPart, MultiField, Registry, RegistryEntry, SingleField, SortPart,
+  TabField, TabFieldControlProps, TabFieldControlsProps, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabToolsEntry, TabView, TabViewMenuProps,
+  TabViewSetup, ToolToggleProps, ViewChoice, ViewState,
 };

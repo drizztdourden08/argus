@@ -1,19 +1,17 @@
 /* @layer renderer-app @kind component */
-import { Flex, Tabs } from '@drizztdourden08/tessera';
+import { Box, OverflowRow } from '@drizztdourden08/tessera';
+import { filtersSlot } from './behavior/filters-slot';
+import { useTabRowItems } from './behavior/useTabRowItems';
 import type { BoardTabsRowProps } from './BoardTabsRow.type';
-import { TabFiltersSlot } from './sub-components/TabFiltersSlot';
-import { TabToolsSlot } from './sub-components/TabToolsSlot';
+import './BoardTabsRow.css';
 
 const BoardTabsRow = (props: BoardTabsRowProps) => {
-  const { tabs, activeTab, onTabChange } = props;
+  const items = useTabRowItems(props);
   return (
-    <Flex direction="column" gap="sm">
-      <Flex justify="between" align="center" gap="md" wrap>
-        <Tabs tabs={tabs} activeTab={activeTab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={onTabChange} />
-        <TabToolsSlot />
-      </Flex>
-      <TabFiltersSlot />
-    </Flex>
+    <Box surface="sunken" className="tab-well">
+      <OverflowRow className="tab-well__row" items={items} />
+      <Box ref={filtersSlot.set} className="tab-well__filters" />
+    </Box>
   );
 };
 

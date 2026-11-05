@@ -1,7 +1,14 @@
 /* @layer renderer-app @kind barrel */
 export { BoardTabsRow } from './BoardTabsRow';
 export { flagFields } from './behavior/flag-fields';
-export { TabFilters } from './sub-components/TabFilters';
-export { TabFilterSet } from './sub-components/TabFilterSet';
+export { useTabTools } from './behavior/useTabTools';
+export { useTabView } from './behavior/useTabView';
+export { FiltersToggle } from './sub-components/FiltersToggle';
+export { TabFilterBar } from './sub-components/TabFilterBar';
+export { TabFilterRow } from './sub-components/TabFilterRow';
+export { TabGroupSort } from './sub-components/TabGroupSort';
 export { TabViewMenu } from './sub-components/TabViewMenu';
-export type { ClauseField } from './BoardTabsRow.type';
+export { ToolToggle } from './sub-components/ToolToggle';
+export { TabFilterBar as TabFilterSet } from './sub-components/TabFilterBar';
+export { TabFilterRow as TabFilters } from './sub-components/TabFilterRow';
+export type { TabField, TabField as ClauseField } from './BoardTabsRow.type';
