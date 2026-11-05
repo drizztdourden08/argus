@@ -93,6 +93,9 @@ impl Work<'_> {
         if self.retyping() {
             values::require(self.ty, &self.draft["fields"])?;
         }
+        if self.retyping() || given.contains_key("cases") {
+            values::keep_a_case(self.ty, &self.draft["fields"])?;
+        }
         Ok(())
     }
 

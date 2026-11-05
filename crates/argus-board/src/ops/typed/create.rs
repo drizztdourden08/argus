@@ -87,6 +87,7 @@ impl Fresh<'_> {
         let given = values::given(self.set)?;
         let merged = values::merge(&self.known, self.ty, &Value::Null, &given)?;
         values::require(self.ty, &merged)?;
+        values::keep_a_case(self.ty, &merged)?;
         if !given.is_empty() {
             self.keep("fields", merged);
         }

@@ -32,7 +32,7 @@ impl Known {
     }
 }
 
-/// The items and tests that are not in the trash, and the build tags.
+/// The items and tests that are not in the trash, the bundle tags and the launcher names.
 fn live_ids(board: &Board) -> Vec<String> {
     let mut all: Vec<String> = Vec::new();
     for coll in ["items", "tests"] {
@@ -43,5 +43,6 @@ fn live_ids(board: &Board) -> Vec<String> {
         all.extend(live);
     }
     all.extend(ids(board, "builds"));
+    all.extend(ids(board, "launchers"));
     all
 }
