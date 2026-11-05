@@ -27,14 +27,13 @@ const RecordRow = (props: RecordRowProps) => {
         <>
           {chips.length > 0 && <RowChips chips={chips} board={head.boardKey} />}
           {trailing}
+          {age !== undefined && <Text variant="caption" leading="16" tone="muted">{age}</Text>}
           <AssigneeMark assignee={head.assignee} boardKey={head.boardKey} threads={head.threads} />
         </>
       }
       menu={<RecordMenu groups={head.menu} label={head.menuLabel} />}
       attrs={{ role: 'listitem', 'data-record': head.code }}
-    >
-      <Text variant="caption" leading="16" tone="muted">{age ?? head.code}</Text>
-    </RecordFrame>
+    />
   );
 };
 

@@ -115,7 +115,7 @@ const rowOf = (container: HTMLElement, id: string): HTMLElement => {
 };
 
 const headOf = (container: HTMLElement, code: string): HTMLElement => {
-  const head = [...container.querySelectorAll<HTMLElement>('summary')].find((summary) => summary.querySelector('a')?.textContent === code);
+  const head = [...container.querySelectorAll<HTMLElement>('.record-header')].find((summary) => summary.querySelector('a')?.textContent === code);
   if (!head) throw new Error(`no group header for ${code}`);
   return head;
 };

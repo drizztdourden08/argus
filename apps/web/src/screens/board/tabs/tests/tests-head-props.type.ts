@@ -18,7 +18,7 @@ interface SectionHeadProps {
   action?: ReactNode;
 }
 
-interface RunFrameProps extends Pick<RecordFrameProps, 'attrs' | 'className' | 'edgeTone'> {
+interface RunFrameProps extends Pick<RecordFrameProps, 'attrs' | 'className'>, Partial<Pick<RecordFrameProps, 'edgeTone'>> {
   view: RunView;
   muted?: boolean;
   open: boolean;

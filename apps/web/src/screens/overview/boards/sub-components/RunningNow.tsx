@@ -22,12 +22,11 @@ const RunningNow = (props: RunningNowProps) => {
             <>
               <ProjectLink project={run.scope} hash="#agents" />
               <Age value={run.startedAt ?? run.queuedAt} />
+              {run.lastLine && <Text variant="caption" tone="muted" clamp={1}>{run.lastLine}</Text>}
             </>
           }
           attrs={{ role: 'listitem' }}
-        >
-          {run.lastLine && <Text variant="caption" tone="muted">{run.lastLine}</Text>}
-        </RecordFrame>
+        />
       ))}
     </RecordGroup>
   );

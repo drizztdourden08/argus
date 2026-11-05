@@ -13,6 +13,11 @@ const request = (extra: object = {}) => ({ id: 'R-3', by: 'lead', at: ago(HOUR),
 
 const gone = { id: 'old', path: 'X:/proj/trees/gone', thread: 'lead', at: ago(2 * HOUR), text: 'Removed gone' };
 
+const expand = (title: string): void => {
+  const head = screen.getByText(title).closest('.record-header') as HTMLElement;
+  fireEvent.click(within(head).getByRole('button', { name: 'Expand item' }));
+};
+
 describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
   it('says the task of the agent that owns the worktree', async () => {
     const agents = [{ id: 'A-1', name: 'builder', task: 'Build the pane', status: 'running' }];
@@ -33,7 +38,7 @@ describe('I-85 the title of a worktree row', { tags: ['standard'] }, () => {
   it('never repeats the id: with nothing else to say the row shows its code once', async () => {
     const row = worktree('agent-c', 'active', { branch: 'worktree-agent-c', subject: null, path: 'X:/proj/trees/sub/agent-c' });
     await mountTab({ meta: metaDoc(), docs: [row] });
-    const head = (await findRow('agent-c')).querySelector('.record-card__header') as HTMLElement;
+    const head = (await findRow('agent-c')).querySelector('.record-header') as HTMLElement;
     const words = text(head);
     expect(words.split('agent-c')).toHaveLength(2);
     expect(words).not.toContain('sub/agent-c');
@@ -46,7 +51,7 @@ describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
     await addGroup('Item');
     await screen.findByText('Item number 1');
     const group = groupOf(container, 'I-1');
-    const head = group.querySelector('.record-card__header') as HTMLElement;
+    const head = group.querySelector('.record-header') as HTMLElement;
     expect(head.querySelector('[data-type-mark]')).not.toBeNull();
     expect(within(group).getByRole('link', { name: /-1/ })).toBeTruthy();
     expect(head.querySelector('[data-record]')).toBeNull();
@@ -59,8 +64,8 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
 
   it('folds both lists by default under a count', async () => {
     const { container } = await mountTab(board());
-    const requests = (await screen.findByText('Removal requests from threads')).closest('.record-card__header') as HTMLElement;
-    const removed = screen.getByText('Removed by the worktree hygiene').closest('.record-card__header') as HTMLElement;
+    const requests = (await screen.findByText('Removal requests from threads')).closest('.record-header') as HTMLElement;
+    const removed = screen.getByText('Removed by the worktree hygiene').closest('.record-header') as HTMLElement;
     expect(requests.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
     expect(removed.querySelector('[aria-expanded]')?.getAttribute('aria-expanded')).toBe('false');
     expect(within(requests).getByText('1')).toBeTruthy();
@@ -71,6 +76,7 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
   it('shows a request as a row with its code, status chip and age', async () => {
     const { container } = await mountTab(board());
     await screen.findByText('Removal requests from threads');
+    expand('Removal requests from threads');
     const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]');
     expect(row).not.toBeNull();
     expect(text(row as HTMLElement)).toContain('lead asked to remove its 2 worktrees released after the grace');
@@ -82,6 +88,7 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
   it('wears the removal request mark and opens the request pane from its title', async () => {
     const { container } = await mountTab(board());
     await screen.findByText('Removal requests from threads');
+    expand('Removal requests from threads');
     const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]') as HTMLElement;
     expect(row.querySelector('[data-type-mark="removal-request"]')).not.toBeNull();
     expect(row.querySelector('[data-type-mark="worktree"]')).toBeNull();
@@ -91,6 +98,7 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
   it('shows a removed worktree as a WT row with a removed chip and its age', async () => {
     const { container } = await mountTab(board());
     await screen.findByText('Removed by the worktree hygiene');
+    expand('Removed by the worktree hygiene');
     const row = container.querySelector<HTMLElement>('[data-record="WT gone"]');
     expect(row).not.toBeNull();
     expect(within(row as HTMLElement).getByText('removed')).toBeTruthy();
@@ -101,10 +109,10 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
   it('says when the requests are capped and shows them all on ask', async () => {
     const requests = Array.from({ length: 10 }, (_, n) => request({ id: `R-${n + 1}` }));
     const { container } = await mountTab({ docs: [worktree('live', 'active')], meta: metaDoc({ requests }) });
+    await screen.findByText('Removal requests from threads');
+    expand('Removal requests from threads');
     await screen.findByText('Latest 8 of 10');
     expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(8);
-    const head = screen.getByText('Removal requests from threads').closest('.record-card__header') as HTMLElement;
-    fireEvent.click(within(head).getByRole('button', { name: 'Expand item' }));
     fireEvent.click(screen.getByRole('button', { name: 'Show all 10' }));
     expect(container.querySelectorAll('[data-record^="RQ-"]')).toHaveLength(10);
   });

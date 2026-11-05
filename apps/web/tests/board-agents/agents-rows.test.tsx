@@ -22,7 +22,7 @@ describe('I-85 P7 Agents tab: rows grouped by item', { tags: ['critical'] }, () 
     await addGroup('Item');
     expect(headOf(container, 'K-1').textContent).toContain('first job');
     expect(headOf(container, 'K-2').textContent).toContain('second job');
-    const heads = [...container.querySelectorAll<HTMLElement>('summary')].map((summary) => summary.querySelector('a')?.textContent).filter((code) => code?.startsWith('K-'));
+    const heads = [...container.querySelectorAll<HTMLElement>('.record-header')].map((summary) => summary.querySelector('a')?.textContent).filter((code) => code?.startsWith('K-'));
     expect(heads).toEqual(['K-2', 'K-1']);
     expect(agentRows(container)).toEqual(['A-2', 'A-1', 'A-3']);
   });

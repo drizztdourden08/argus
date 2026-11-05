@@ -26,7 +26,6 @@ const PrCard = (props: PrCardProps) => {
       title={pr.title}
       openLabel={`Open ${pr.id}: ${pr.title}`}
       onOpen={open}
-      label={`Pull request ${pr.id}: ${pr.title}`}
       edge="border"
       attrs={{ 'data-pr': pr.id, 'data-swap-item': '' }}
       signals={<PrSignals pr={pr} runs={data} />}

@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind test */
 import { act } from '@testing-library/react';
+import { BoardTabsRow } from '../../src/screens/board/BoardTabsRow';
 import { BuildsTab } from '../../src/screens/board/tabs/builds';
 import { stubFetch } from '../board-tests/mount-tab';
 import type { Responder } from '../board-tests/mount-tab';
@@ -15,7 +16,13 @@ interface Board {
 
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
-  const { view, live } = await mountBoard(<BuildsTab boardKey={SCOPE} />, [
+  const ui = (
+    <>
+      <BoardTabsRow tabs={[{ id: 'builds', label: 'Builds' }]} activeTab="builds" onTabChange={() => undefined} />
+      <BuildsTab boardKey={SCOPE} />
+    </>
+  );
+  const { view, live } = await mountBoard(ui, [
     { coll: 'launchers', docs: board.launchers ?? [], key: 'name' },
     { coll: 'launches', docs: board.launches ?? [], key: 'name' },
     { coll: 'runs', docs: board.runs ?? [], key: 'id' },

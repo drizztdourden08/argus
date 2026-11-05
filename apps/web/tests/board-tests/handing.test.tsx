@@ -23,7 +23,7 @@ describe('S1 handing a run to the owner', { tags: ['standard'] }, () => {
 
   it('is not offered for a draft that is not handed', async () => {
     await mountTab(board([runOn('I-52', null, { stage: 'draft' })]));
-    await screen.findByText('Test number 1');
+    await waitFor(() => expect(document.querySelector('[data-run="I-52"]')).not.toBeNull());
     expect(screen.queryByRole('button', { name: /Hand run/ })).toBeNull();
   });
 });

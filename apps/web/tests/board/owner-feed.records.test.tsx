@@ -45,8 +45,8 @@ describe('I-85 P4 every card says what it is', { tags: ['standard'] }, () => {
     mockPosts();
     await openBoard({ entries: byId(decision) });
     const card = cardOf('Q-1');
-    const head = card.children[0] as HTMLElement;
-    const body = card.children[1] as HTMLElement;
+    const head = card.querySelector('.record-header') as HTMLElement;
+    const body = head.nextElementSibling as HTMLElement;
     expect(within(head).getByText('Q-1')).toBeTruthy();
     expect(within(head).getByText('Create the private repo?')).toBeTruthy();
     expect(before(head, body)).toBe(true);

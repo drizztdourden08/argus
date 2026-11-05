@@ -15,7 +15,7 @@ const titlesIn = (card: HTMLElement): string[] => [...card.querySelectorAll('[da
 
 describe('S1 grouping', { tags: ['standard'] }, () => {
   it('by item makes one card per item with its tests and no item chip', async () => {
-    const { container } = await mountTab(filterBoard());
+    const { container } = await mountTab({ ...filterBoard(), group: 'default' });
     await screen.findByText('Login works');
     await addGroup('Item');
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
@@ -25,7 +25,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
   });
 
   it('by thread follows the item and names the thread by its id', async () => {
-    const board = { ...filterBoard(), threads: [threadDoc('lead', { session: 'Overlord' }), threadDoc('coder')] };
+    const board = { ...filterBoard(), group: 'default', threads: [threadDoc('lead', { session: 'Overlord' }), threadDoc('coder')] };
     const { container } = await mountTab(board);
     await screen.findByText('Login works');
     await addGroup('Thread');
