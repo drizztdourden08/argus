@@ -22,19 +22,18 @@ interface ManualTest {
   deletedAt?: string;
 }
 
-interface BuildRef {
+interface RunCard {
   id: string;
-  closedAt?: string | null;
-}
-
-interface BundleGroup {
-  id: string;
-  build: string;
+  n: number;
+  plan: string;
+  planTitle: string;
+  build: string | null;
+  cases: number;
   thread: string;
-  tests: ManualTest[];
+  reported: boolean;
 }
 
-type FeedKind = 'decision' | 'question' | 'message' | 'notice' | 'action' | 'test' | 'bundle' | 'sent';
+type FeedKind = 'decision' | 'question' | 'message' | 'notice' | 'action' | 'test' | 'run' | 'sent';
 
 type AskKind = 'decision' | 'question' | 'message' | 'notice';
 
@@ -42,7 +41,7 @@ type FeedCard =
   | { type: AskKind | 'sent'; at: string; data: Entry }
   | { type: 'action'; at: string; data: BoardAction }
   | { type: 'test'; at: string; data: ManualTest }
-  | { type: 'bundle'; at: string; data: BundleGroup };
+  | { type: 'run'; at: string; data: RunCard };
 
 type AskMode = 'decide' | 'answer' | 'info';
 
@@ -56,7 +55,7 @@ interface FeedInput {
   entries: Entry[];
   actions: BoardAction[];
   tests: ManualTest[];
-  closed: ReadonlySet<string>;
+  items: WorkItem[];
   marks: OwnerMarks;
 }
 
@@ -64,7 +63,6 @@ interface WorkSources {
   entries: Entry[];
   actions: BoardAction[];
   tests: ManualTest[];
-  builds: BuildRef[];
   log: { subject?: string; entries?: LogLine[] }[];
   items: WorkItem[];
 }
@@ -100,8 +98,6 @@ export type {
   AskKind,
   AskMode,
   BoardWork,
-  BuildRef,
-  BundleGroup,
   ContextParts,
   FeedCard,
   FeedInput,
@@ -111,5 +107,6 @@ export type {
   ManualTest,
   NeedCount,
   OwnerMarks,
+  RunCard,
   WorkSources,
 };

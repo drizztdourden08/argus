@@ -6,13 +6,12 @@ import { contextRequestFields, replyFields, replyProblem, useOwnerPost } from '.
 import { SOFT_LABEL, useWriter } from '../../shared';
 import type { FeedActions } from '../OwnerFeed.type';
 
-const useFeedActions = (boardKey: string, handed: string | null = null): FeedActions => {
+const useFeedActions = (boardKey: string): FeedActions => {
   const { isBusy, submit } = useOwnerPost(boardKey);
   const write = useWriter();
   return useMemo(
     () => ({
       isBusy,
-      handed,
       soft: (kind, c, id) =>
         write(
           () => softOp(boardKey, { kind, c, id }),
@@ -38,7 +37,7 @@ const useFeedActions = (boardKey: string, handed: string | null = null): FeedAct
       askContext: (entry) =>
         submit({ key: `askctx:${entry.id}`, fields: contextRequestFields(entry), said: `Asked ${entry.thread} for context.` }),
     }),
-    [boardKey, handed, isBusy, submit, write],
+    [boardKey, isBusy, submit, write],
   );
 };
 

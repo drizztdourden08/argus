@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { BoardAction, Entry, EntryImage, LogLine, WorkItem } from '../../../data/types';
 import type { ThreadChoice } from '../../../data/kanban';
 import type { WithId } from '../../../data/react';
-import type { AskMode, BoardWork, FeedCard, ManualTest } from '../feed-model';
+import type { AskMode, BoardWork, FeedCard, ManualTest, RunCard } from '../feed-model';
 import type { NoteKind } from '../owner-posts';
 
 type AskFeedCard = Extract<FeedCard, { data: Entry }>;
@@ -17,7 +17,6 @@ type FeedFilter ='all' | 'you' | 'log';
 
 interface FeedActions {
   isBusy: (key: string) => boolean;
-  handed: string | null;
   soft: (kind: 'archive' | 'delete', c: 'entries' | 'actions', id: string) => Promise<boolean>;
   choose: (entry: Entry, option: string) => Promise<boolean>;
   reply: (entry: Entry, kind: NoteKind, text: string) => Promise<boolean>;
@@ -57,7 +56,6 @@ interface LogWindow {
 interface OwnerFeedProps {
   boardKey: string;
   work: BoardWork;
-  handed: string | null;
 }
 
 interface FeedGroupProps {
@@ -115,9 +113,12 @@ interface CardMenuProps {
   actions: FeedActions;
 }
 
-interface TestBodyProps {
+interface BuildTagProps {
   build: string | null;
-  handed: string | null;
+}
+
+interface RunBodyProps {
+  run: RunCard;
 }
 
 interface EntryBodyProps {
@@ -195,6 +196,7 @@ export type {
   AskFeedCard,
   AskLines,
   AskFormProps,
+  BuildTagProps,
   CardFacts,
   CardMenuProps,
   ContextPreviewProps,
@@ -219,6 +221,6 @@ export type {
   NoticeRowProps,
   OwnerFeedProps,
   SentRowProps,
-  TestBodyProps,
+  RunBodyProps,
   TestRef,
 };

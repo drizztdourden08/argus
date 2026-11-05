@@ -16,7 +16,7 @@ const softGroup = (collection: 'entries' | 'actions', id: string, actions: FeedA
 
 const feedMenu = (card: FeedCard, facts: CardFacts, actions: FeedActions, onOpen: () => void): MenuGroup[] => {
   const base: ActionHandlers = { open: onOpen, copy: () => copyText(facts.code) };
-  if (card.type === 'test' || card.type === 'bundle') return recordMenuGroups(facts.kind, facts.code, base);
+  if (card.type === 'test' || card.type === 'run') return recordMenuGroups(facts.kind, facts.code, base);
   if (card.type === 'action') {
     const action = card.data;
     return recordMenuGroups(facts.kind, facts.code, { ...base, done: () => void actions.done(action) }, [softGroup('actions', facts.code, actions)]);

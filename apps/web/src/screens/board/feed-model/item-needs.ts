@@ -12,7 +12,7 @@ const bump = (needs: Map<string, NeedCount>, item: string | null | undefined, fi
 const countCard = (needs: Map<string, NeedCount>, card: FeedCard): void => {
   if (card.type === 'action') bump(needs, card.data.item, 'steps');
   else if (card.type === 'test') bump(needs, card.data.item, 'tests');
-  else if (card.type === 'bundle') for (const test of card.data.tests) bump(needs, test.item, 'tests');
+  else if (card.type === 'run') bump(needs, card.data.plan, 'tests');
   else if (card.type === 'decision' || card.type === 'question') bump(needs, card.data.item, 'questions');
 };
 

@@ -19,9 +19,8 @@ const indexOf = (items: WorkItem[]): ReadonlyMap<string, WorkItem> => new Map(it
 
 const buildWork = (sources: WorkSources): Omit<BoardWork, 'ready'> => {
   const entries = sources.entries.filter((entry) => isVisible(entry) && !OP_KINDS.includes(entry.kind));
-  const closed = new Set(sources.builds.filter((build) => build.closedAt).map((build) => build.id));
   const actions = sources.actions.filter(isVisible);
-  const cards = buildFeed({ entries, actions, tests: sources.tests, closed, marks: ownerMarks(entries) });
+  const cards = buildFeed({ entries, actions, tests: sources.tests, items: sources.items.filter(isVisible), marks: ownerMarks(entries) });
   return {
     waiting: cards.filter((card) => sectionOf(card) === 'waiting'),
     leads: cards.filter((card) => sectionOf(card) === 'leads'),
