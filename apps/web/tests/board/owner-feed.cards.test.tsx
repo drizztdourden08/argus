@@ -29,7 +29,7 @@ describe('S1 a decision card', { tags: ['standard'] }, () => {
   it('a written own answer is sent as a decision, trimmed, and the box empties', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(decision) });
-    fireEvent.click(screen.getByText('Write an answer'));
+    fireEvent.click(screen.getByRole('button', { name: 'Custom answer' }));
     const field = textbox('Or write your own answer');
     fireEvent.change(field, { target: { value: '  Yes, but public  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Decide' }));

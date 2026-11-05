@@ -16,7 +16,7 @@ describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () =
       [runOn('I-50', null, { stage: 'draft' }), runOn('I-51', null, { stage: 'ready', assignee: 'owner' })],
       [testDoc('T-1'), doneDoc('T-2', 'pass', 'ok')],
     ));
-    await screen.findByText('Test number 1');
+    await screen.findAllByText('Test number 1');
     expect(tagsOf(container)).toEqual(['I-51', 'I-50']);
     expect(within(cardOf(container, 'I-51')).getByText('handed to you')).toBeTruthy();
     expect(within(cardOf(container, 'I-51')).getByRole('button', { name: /Plan number 9/ })).toBeTruthy();
@@ -25,7 +25,7 @@ describe('S1 the order and the folds of run cards', { tags: ['standard'] }, () =
 
   it('open a running run, fold a draft, and a click on the header overrides that', async () => {
     const { container } = await mountTab(board([runOn('I-50', null), runOn('I-51', null, { stage: 'draft' })], [testDoc('T-1')]));
-    await screen.findByText('Test number 1');
+    await screen.findAllByText('Test number 1');
     expect(isOpen(cardOf(container, 'I-50'))).toBe(true);
     const draft = cardOf(container, 'I-51');
     expect(isOpen(draft)).toBe(false);
