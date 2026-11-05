@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { askMode, contextParts, hasContext } from '../../src/screens/board/feed-model';
-import { at, entry, human, ids, manual, step, work } from './feed-docs';
+import { at, entry, human, ids, manual, plan, run, step, work } from './feed-docs';
 
 describe('K1 what asks the owner', { tags: ['critical'] }, () => {
   it('a question with options is a decision, one without is free text, an old decision wording is information', () => {
@@ -75,16 +75,35 @@ describe('K1 manual steps and tests', { tags: ['critical'] }, () => {
     expect(work({ actions: [step({ id: 'H-1', status: 'done' })] }).waiting).toEqual([]);
   });
 
-  it('the tests of one bundle are ONE card with a count, a bundle of five is not five cards', () => {
-    const tests = ['T-5', 'T-2', 'T-10', 'T-1', 'T-3'].map((id, index) => manual({ id, build: 'bundle-4', rank: index === 0 ? 50 : index }));
-    const { waiting } = work({ tests });
+  it('a ready run assigned to the owner is ONE run card with its plan, build and case count', () => {
+    const { waiting, needs } = work({
+      items: [
+        plan({ id: 'I-5', title: 'Login flow', fields: { cases: ['T-1', 'T-2', 'T-3'] } }),
+        run({ id: 'I-6', n: 2, fields: { plan: 'I-5', build: 'b-7' } }),
+      ],
+    });
     expect(waiting).toHaveLength(1);
     const card = waiting[0];
-    expect(card?.type).toBe('bundle');
-    if (card?.type === 'bundle') expect(card.data.tests.map((test) => test.id)).toEqual(['T-2', 'T-10', 'T-1', 'T-3', 'T-5']);
+    expect(card?.type).toBe('run');
+    if (card?.type === 'run') expect(card.data).toMatchObject({ id: 'I-6', n: 2, planTitle: 'Login flow', build: 'b-7', cases: 3, reported: false });
+    expect(needs.get('I-5')?.tests).toBe(1);
   });
 
-  it('a test with no bundle stays its own card, automatic and finished tests do not wait on the owner', () => {
+  it('a reported run waits for the owner to pass it, a running, passed or lead-held run does not show', () => {
+    const items = [
+      plan({ id: 'I-5' }),
+      run({ id: 'I-6', stage: 'reported', assignee: null }),
+      run({ id: 'I-7', stage: 'running' }),
+      run({ id: 'I-8', stage: 'passed' }),
+      run({ id: 'I-9', assignee: 'lead' }),
+      run({ id: 'I-10', deletedAt: at(3) }),
+    ];
+    const { waiting } = work({ items });
+    expect(waiting.map((card) => [card.type, card.data.id])).toEqual([['run', 'I-6']]);
+    if (waiting[0]?.type === 'run') expect(waiting[0].data.reported).toBe(true);
+  });
+
+  it('a test with no build stays its own card, automatic and finished tests do not wait on the owner', () => {
     const { waiting } = work({
       tests: [
         manual({ id: 'T-1' }),
@@ -94,11 +113,6 @@ describe('K1 manual steps and tests', { tags: ['critical'] }, () => {
       ],
     });
     expect(waiting.map((card) => [card.type, card.data.id])).toEqual([['test', 'T-1']]);
-  });
-
-  it('a closed bundle is out of the feed', () => {
-    const { waiting } = work({ tests: [manual({ id: 'T-1', build: 'old' }), manual({ id: 'T-2', build: 'new' })], builds: [{ id: 'old', closedAt: at(3) }, { id: 'new' }] });
-    expect(waiting.map((card) => card.data.id)).toEqual(['new']);
   });
 });
 

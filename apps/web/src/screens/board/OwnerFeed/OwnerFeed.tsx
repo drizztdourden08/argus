@@ -11,8 +11,8 @@ import type { OwnerFeedProps } from './OwnerFeed.type';
 import { FeedSections } from './sub-components/FeedSections';
 
 const OwnerFeed = (props: OwnerFeedProps) => {
-  const { boardKey, work, handed } = props;
-  const actions = useFeedActions(boardKey, handed);
+  const { boardKey, work } = props;
+  const actions = useFeedActions(boardKey);
   const threads = useCollection<ThreadChoice>(boardKey, 'threads');
   const now = useNow(true);
   const [filter, setFilter] = useFeedFilter();
