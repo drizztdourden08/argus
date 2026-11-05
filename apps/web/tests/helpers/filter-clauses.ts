@@ -14,8 +14,6 @@ const menuChoice = async (name: string): Promise<void> => {
   fireEvent.click(await within(menu).findByText(name));
 };
 
-const valueButton = (field: string): HTMLElement | null => screen.queryByRole('button', { name: `Change the ${field} filter value` });
-
 const pickView = async (trigger: RegExp, option: string): Promise<void> => {
   fireEvent.click(await screen.findByRole('button', { name: trigger }));
   await menuChoice(option);

@@ -111,13 +111,6 @@ interface TabGroupSortProps<G extends string, O extends string> {
   sort: SortPart<O>;
 }
 
-interface ViewState<G extends string, O extends string> {
-  prefs: { group: G; order: O; direction: SortDirection | null };
-  setGroup: (group: G) => void;
-  setOrder: (order: O) => void;
-  setDirection: (direction: SortDirection) => void;
-}
-
 interface TabToolsEntry {
   tab: string;
   items: readonly OverflowRowItem[];
