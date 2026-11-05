@@ -8,6 +8,7 @@ use crate::store::empty_board;
 
 fn board() -> Board {
     let mut b = empty_board("p");
+    b["counters"] = json!({"I": 1});
     b["items"] = json!({
         "I-1": {"id": "I-1", "type": "test-plan", "title": "Login", "thread": "argus", "stage": "reported",
             "fields": {"bundle": "b1", "cases": ["T-1"], "runs": [
@@ -145,7 +146,7 @@ fn a_tag_with_no_test_and_no_plan_is_skipped() {
     let mut b = empty_board("p");
     b["builds"] = json!({"lonely": {"tag": "lonely", "status": "draft"}});
     let report = migrate_runs(&mut b, "overlord").unwrap();
-    assert!(runs(&b).is_empty());
+    assert_eq!(runs(&b).len(), 0);
     assert_eq!(report.from_bundles, 0);
     assert!(is_migrated(&b));
 }

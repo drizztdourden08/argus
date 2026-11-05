@@ -121,7 +121,7 @@ fn a_stranger_or_a_task_cannot_start_a_run() {
     assert!(refused(&denied).contains("belongs to ui"));
     let task = run_op(&mut b, &lead(), "plan-run-start", "I-1", json!({}));
     assert_eq!(refused(&task), "I-1 is not a test plan.");
-    assert!(runs_of(&b, &plan).is_empty());
+    assert_eq!(runs_of(&b, &plan).len(), 0);
 }
 
 #[test]
@@ -244,7 +244,7 @@ fn a_result_needs_an_open_run_a_case_a_status_and_a_note_when_it_is_not_a_pass()
         json!({"test": "T-1", "status": "pass"}),
     );
     assert!(refused(&denied).contains("belongs to ui"));
-    assert!(results_of(&run_of(&b, &plan, 0)).is_empty());
+    assert_eq!(results_of(&run_of(&b, &plan, 0)).len(), 0);
 }
 
 #[test]

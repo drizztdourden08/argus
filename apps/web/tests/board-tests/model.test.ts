@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { runLine } from '../../src/data/runs';
-import type { RunEntry } from '../../src/data/runs';
 import {
   countsText, DEFAULT_FILTERS, noteProblem, resolveLaunch, sortDone, testsView, visibleTests,
 } from '../../src/screens/board/tabs/tests/model';

@@ -176,19 +176,16 @@ fn the_last_child_done_tells_the_parents_assignee_and_a_plan_run_ending_tells_th
     ));
     assert_eq!(lines(&out), [("alpha", "lead", "children-done")]);
     assert!(out.wakes[0].text.contains("every child of I-1"));
-    let plan = |stage: &str, ended: &Value, rev: i64| {
+    let run = |stage: &str, rev: i64| {
         item(
             "I-9",
-            &json!({"type": "test-plan", "stage": stage, "rev": rev, "fields": {"runs": [
-                {"n": 1, "endedAt": ended, "results": [
-                    {"test": "T-1", "status": "pass"}, {"test": "T-2", "status": "fail"}]}]}}),
+            &json!({"type": "test-run", "stage": stage, "rev": rev, "n": 1, "fields": {
+                "plan": "I-8", "results": [
+                    {"test": "T-1", "status": "pass"}, {"test": "T-2", "status": "fail"}]}}),
         )
     };
-    let mut world = World::new(&alpha(&[plan("running", &Value::Null, 2)], &json!({})));
-    let out = world.export(&alpha(
-        &[plan("reported", &json!("2026-11-02T10:00:00Z"), 3)],
-        &json!({}),
-    ));
+    let mut world = World::new(&alpha(&[run("running", 2)], &json!({})));
+    let out = world.export(&alpha(&[run("reported", 3)], &json!({})));
     assert_eq!(lines(&out), [("alpha", "api", "plan-run-done")]);
     assert!(out.wakes[0].text.ends_with("run 1: 1 pass, 1 fail"));
 }

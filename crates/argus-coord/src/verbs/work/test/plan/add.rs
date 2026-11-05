@@ -22,7 +22,7 @@ fn cases_of(r: &Run<'_>) -> Res<Vec<Value>> {
     Ok(cases)
 }
 
-fn set_of(r: &Run<'_>, (title, owner): (&str, &str), cases: Vec<Value>) -> Map<String, Value> {
+fn set_of(r: &Run<'_>, (title, owner): (&str, &str), cases: &[Value]) -> Map<String, Value> {
     let mut set = Map::from_iter([
         ("title".to_owned(), json!(title)),
         ("type".to_owned(), json!("test-plan")),
@@ -53,7 +53,7 @@ pub(super) fn add(r: &mut Run<'_>) -> Outcome {
         let owner = owner_arg(board, &who, r.options)?;
         let cases = cases_of(r)?;
         let count = cases.len();
-        let operation = create_op(set_of(r, (&title, &owner), cases), r)?;
+        let operation = create_op(set_of(r, (&title, &owner), &cases), r)?;
         let res = send(board, &who, &operation)?;
         let id = display(&res.extra["created"]["id"]);
         r.say(&[&format!(

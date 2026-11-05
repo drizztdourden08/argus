@@ -354,7 +354,7 @@
       "label": "Test run",
       "code": "TR",
       "icon": "flag",
-      "color": "cyan",
+      "tone": "info",
       "collection": "items",
       "parents": [],
       "hideOnKanban": true,
