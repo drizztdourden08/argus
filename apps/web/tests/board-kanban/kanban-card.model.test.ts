@@ -77,18 +77,19 @@ describe('I-72 the assignee of a card', { tags: ['critical'] }, () => {
   });
 });
 
-describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
-  const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
-  const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
-  const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
+const dep = (n: number) => ({ kind: 'dep-waits', id: `D-${n}`, label: `A very long request title number ${n} that would break a row`, who: 'lead:brock' }) as const;
+const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
+const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
 
-  it('makes one chip per dependency target and one for the blocker, each with the avatar of who it waits on', () => {
+describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
+  it('makes one chip per dependency target and one for the blocker, the dependency with the brand mark of the lead and the blocker with the avatar', () => {
     const card = cardOf(itemRef('I-1', { blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
     expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', undefined], ['blocked', 1]]);
     expect(signals[1]?.label).toBe('Blocked by H-12 (owner): push go');
     expect(signals[0]?.label).toContain('waiting on brock: A very long request title number 2');
-    expect(signals[0]?.avatar).toMatchObject({ label: 'brock lead', initials: 'BR' });
+    expect(signals[0]?.brand).toBe('brock');
+    expect(signals[0]?.avatar).toBeUndefined();
     expect(signals[1]?.avatar).toMatchObject({ label: 'You', variant: 'owner' });
   });
 
@@ -98,9 +99,16 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     expect(idsOf(card)).toEqual(['dependency-brock', 'dependency-rotp']);
   });
 
+  it('keeps the avatar for a lead of a board with no brand', () => {
+    const unknown = { ...dep(5), who: 'lead:mystery' } as const;
+    const signal = signalItems(cardOf(itemRef('I-1', { blocked: [unknown] })), NOW)[0];
+    expect(signal?.brand).toBeUndefined();
+    expect(signal?.avatar).toMatchObject({ initials: 'MY' });
+  });
+
   it('shows the quiet signal as its hours', () => {
     const card = cardOf(itemRef('I-1', { status: 'doing', updatedAt: before(42 * HOUR) }));
-    expect(signalItems(card, NOW).find((signal) => signal.id === 'quiet')?.count).toBe(42);
+    expect(signalItems(card, NOW).find((signal) => signal.id === 'quiet')?.count).toBe('42h');
   });
 
   it('shows nothing for a settled dependency, which the board no longer exports as blocking', () => {
@@ -108,6 +116,9 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     expect(signalItems(card, NOW)).toEqual([]);
   });
 
+});
+
+describe('I-72 the signal order of a card', { tags: ['critical'] }, () => {
   it('puts needs you first and then each kind in the order of the precedence, with a count and no text', () => {
     const needs = new Map([['I-1', { questions: 1, decisions: 1, todos: 2, tests: 0 }]]);
     const asks = new Map([['I-1', [{ id: 'Q-3', kind: 'question', via: 'item' }, { id: 'D-1', kind: 'decision', via: 'item' }] as const]]);
@@ -115,9 +126,9 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
     expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency-brock', 'blocked', 'test-pending', 'decision']);
-    const signals = signalItems(card, NOW);
-    expect(signals.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
-    expect(signals.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
+    const items = signalItems(card, NOW);
+    expect(items.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
+    expect(items.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
   });
 
   it('opens the entry for a single question and the item for several', () => {

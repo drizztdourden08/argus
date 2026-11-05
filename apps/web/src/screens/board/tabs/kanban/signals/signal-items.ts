@@ -18,7 +18,7 @@ const withTrail = (signals: CardSignal[], trail: CardSignal | null): CardSignal[
 };
 
 const attentionSignals = (card: CardData, now: number): CardSignal[] =>
-  present([needsSignal(card), ......card.attention.flatMap((kind) => kindSignals(kind, card, now))]);
+  present([needsSignal(card), ...card.attention.flatMap((kind) => kindSignals(kind, card, now))]);
 
 const signalItems = (card: CardData, now: number): CardSignal[] => [
   ...present([conflictSignal(card)]),
