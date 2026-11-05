@@ -27,7 +27,7 @@ const BoardsTab = (props: BoardsTabProps) => {
     <Stack gap="md">
       <AsideLayout
         main={
-          <ContentSwap swapKey={`${layout}|${group}|${sort.key}|${sort.direction}|${search}`} effect="reflow">
+          <ContentSwap swapKey={`${layout}|${group}|${sort.key}|${sort.direction}|${search}`} effect="reflow" sequence="out-in">
             {groups.length === 0
               ? <EmptyState message={empty} />
               : <List groups={groups} now={now} send={send} syncs={syncs} onLog={(key, run) => setLog({ key, run })} />}

@@ -8,7 +8,7 @@ import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanb
 const BoardTabBody = (props: BoardTabBodyProps) => {
   const { tab, boardKey, work, more } = props;
   return (
-    <ContentSwap swapKey={`${boardKey}:${tab}`} effect="reflow">
+    <ContentSwap swapKey={`${boardKey}:${tab}`} effect="reflow" sequence="out-in">
       <Suspense fallback={<LoadingFallback />}>
         {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
         {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} />}
