@@ -31,9 +31,11 @@ const EMPTY_TEXT = 'Nothing to start yet.';
 
 const EMPTY_HINT = 'The registered agent fills this list: coord launcher set master --cmd "..." for the main checkout, and one build per item with --for I-n. --current marks the one to start now.';
 
+const NO_MATCH_TEXT = 'No build matches the filters.';
+
 const NO_MASTER_TEXT = 'No master launcher: the thread must set one. Every project has a master (the main checkout\'s app): coord launcher set master --cmd "...". Until then no build can be handed to you, and the lead has been told.';
 
 export {
   BUILD_KIND, CLOCK_TICK_MS, DEFAULT_USE_EVERY, DEFAULT_USE_EVERY_MS, EMPTY_HINT, EMPTY_TEXT, LEAD_TEXT, MASTER, MASTER_NOTE, MASTER_TITLE,
-  NEEDS_LINK_TITLE, NO_MASTER_TEXT, RETIRED_KEY, SHELL_NAME, SIGNAL_MAX, STAGE_LABELS, TITLE_WORDS,
+  NEEDS_LINK_TITLE, NO_MASTER_TEXT, NO_MATCH_TEXT, RETIRED_KEY, SHELL_NAME, SIGNAL_MAX, STAGE_LABELS, TITLE_WORDS,
 };

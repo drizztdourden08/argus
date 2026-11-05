@@ -4,6 +4,7 @@ import type { Item } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
 import type { AgentActions, AgentsView } from './AgentsTab.type';
+import type { AgentGroup } from './model';
 
 type OpenRecord = (code: string, tab?: string) => void;
 
@@ -79,6 +80,11 @@ interface AgentGroupListProps extends Omit<AgentRowProps, 'id' | 'agent'> {
 
 interface AgentSectionProps extends AgentGroupListProps {
   title: string;
+  group: AgentGroup;
+}
+
+interface AgentKeyGroupsProps extends Omit<AgentGroupListProps, 'items'> {
+  group: AgentGroup;
 }
 
 interface AgentRunsProps {
@@ -96,6 +102,7 @@ interface AgentRunRowProps {
 
 export type {
   AgentGroupListProps,
+  AgentKeyGroupsProps,
   AgentLiveNoteProps,
   AgentModelProps,
   AgentNowProps,

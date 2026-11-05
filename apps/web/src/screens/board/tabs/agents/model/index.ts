@@ -1,5 +1,12 @@
 /* @layer renderer-app @kind barrel */
 export { agentChips } from './agent-chips';
+export { agentFields } from './agent-fields';
+export { agentsView } from './agents-view';
+export { groupAgentsBy } from './group-agents-by';
+export { matchAgent } from './match-agent';
+export { sortAgents } from './sort-agents';
+export { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_GROUPS, AGENT_ORDER_IDS, AGENT_ORDERS, AGENTS_TAB, NONE_LABELS, SEARCH_PLACEHOLDER } from './agents-view.constants';
+export type * from './agents-view.type';
 export { agentElapsed } from './agent-elapsed';
 export { agentItems } from './agent-items';
 export { agentMarks } from './agent-marks';

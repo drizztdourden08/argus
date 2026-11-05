@@ -16,7 +16,7 @@ const LauncherCard = (props: LauncherCardProps) => {
   const head = useBuildHead(view, boardKey, threads, owner.open);
   const title = buildTitle(launcher);
   return (
-    <Card data-launcher={launcher.name} role="group" aria-label={`Build ${head.code}: ${title}`} edge="border" edgeTone={launcher.current ? 'success' : undefined}>
+    <Card data-swap-item data-launcher={launcher.name} role="group" aria-label={`Build ${head.code}: ${title}`} edge="border" edgeTone={launcher.current ? 'success' : undefined}>
       <RecordCard
         head={head}
         title={title}

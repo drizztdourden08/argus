@@ -20,7 +20,7 @@ const useBuildsData = (boardKey: string): BuildsData => {
     [launchers.docs, defs.docs, runs.docs, builds.docs, now],
   );
   const groups = useMemo(() => groupByItem(views, items.docs), [views, items.docs]);
-  return { ready: launchers.ready && items.ready, views, groups, runs: runs.docs, threads: threads.docs };
+  return { ready: launchers.ready && items.ready, views, groups, items: items.docs, runs: runs.docs, threads: threads.docs };
 };
 
 export { useBuildsData };

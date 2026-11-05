@@ -4,11 +4,13 @@ import type { ItemGroups } from '../../../item-groups';
 import { NEEDS_LINK_TITLE } from '../builds.constants';
 import type { BuildSectionsProps } from '../builds-props.type';
 import type { LauncherView } from '../model';
+import { BuildFlatSections } from './BuildFlatSections';
 import { LauncherList } from './LauncherList';
 import { MasterGroup } from './MasterGroup';
 
 const BuildSections = (props: BuildSectionsProps) => {
-  const { groups, boardKey, runs, threads } = props;
+  const { groups, boardKey, runs, threads, group, views } = props;
+  if (group !== 'item') return <BuildFlatSections groups={groups} group={group} views={views} boardKey={boardKey} runs={runs} />;
   const shown: ItemGroups<LauncherView> = {
     groups: groups.items.map((group) => ({ item: group.item, rows: group.views })),
     none: groups.needsLink,
