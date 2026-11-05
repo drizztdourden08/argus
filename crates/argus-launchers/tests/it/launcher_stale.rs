@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 
 use argus_launchers::launcher::{
-    Bundle, Launcher, LauncherBoard, LauncherStale, MASTER, REASON_MASTER, REASON_STALE,
+    Launcher, LauncherBoard, LauncherStale, MASTER, REASON_MASTER, REASON_STALE,
     StaleConfig, StaleEnv, StaleItem, StaleNote, ThreadInfo, WakeEvent, master_text, stale_text,
 };
 use argus_launchers::{ManualClock, format_iso};
@@ -342,33 +342,14 @@ fn the_window_is_a_strict_past_and_the_newest_of_play_record_and_keep_counts() {
 }
 
 #[test]
-fn master_a_launcher_made_for_a_bundle_one_linked_by_an_open_bundle_and_a_retired_one_have_no_window()
- {
+fn master_a_legacy_bundle_tag_a_build_serving_a_run_and_a_retired_one_have_no_window() {
     let world = world();
     world.add(vec![
         launcher("made-1", |l| l.bundle = Some("b1".to_owned())),
-        launcher("linked-1", |_| {}),
-        launcher("closed-link", |_| {}),
+        launcher("run-1", |l| l.for_item = Some("I-9".to_owned())),
         launcher("old-1", |l| l.retired_at = Some(format_iso(START - DAY))),
     ]);
-    world.edit(|b| {
-        let bundle = |tag: &str, launcher: Option<&str>, closed: bool| Bundle {
-            tag: tag.to_owned(),
-            launcher: launcher.map(str::to_owned),
-            closed_at: closed.then(|| format_iso(START)),
-            ..Bundle::default()
-        };
-        b.builds.insert("b1".to_owned(), bundle("b1", None, false));
-        b.builds
-            .insert("b2".to_owned(), bundle("b2", Some("linked-1"), false));
-        b.builds
-            .insert("b3".to_owned(), bundle("b3", Some("closed-link"), true));
-    });
-    assert_eq!(
-        names(&world),
-        ["closed-link"],
-        "its only bundle is closed: standalone again"
-    );
+    assert!(names(&world).is_empty());
 }
 
 #[test]

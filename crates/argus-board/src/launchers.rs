@@ -1,12 +1,12 @@
-//! Launchers (what the owner can start) and bundles, as far as the page export and the cards
-//! need them: which launcher is master, joined or standalone, its usage window, and a bundle's
-//! status.
+//! Launchers (what the owner can start), as far as the page export and the cards need them:
+//! which launcher is master, joined or standalone, its usage window, and whether the build a
+//! test run names is live.
 
 use argus_core::clock::{iso_from_ms, parse_ms};
 use serde_json::Value;
 
 use crate::Board;
-use crate::json::{section, text, truthy};
+use crate::json::{text, truthy};
 
 /// The launcher every project is expected to have.
 pub const MASTER: &str = "master";
@@ -31,31 +31,19 @@ pub fn has_master(board: &Board) -> bool {
     crate::served::master_name(board).is_some()
 }
 
-fn linked_bundles(board: &Board, name: &str) -> Vec<String> {
-    section(board, "builds")
-        .iter()
-        .filter(|(_, b)| b["launcher"].as_str() == Some(name))
-        .map(|(tag, _)| tag.clone())
-        .collect()
-}
-
-/// The bundle a launcher is joined to: the one it was made for, else an open bundle that links it.
+/// The legacy bundle tag a launcher was made for (`bundle` on the record); nothing sets it any
+/// more. Master is never joined.
 #[must_use]
 pub fn joined_bundle(board: &Board, rec: &Value) -> Option<String> {
     let name = text(rec, "name")?;
     if crate::served::is_master(board, name) {
         return None;
     }
-    if truthy(rec, "bundle") {
-        return Some(crate::json::display(&rec["bundle"]));
-    }
-    linked_bundles(board, name)
-        .into_iter()
-        .find(|tag| !truthy(&board["builds"][tag.as_str()], "closedAt"))
+    truthy(rec, "bundle").then(|| crate::json::display(&rec["bundle"]))
 }
 
-/// Not the master build, not joined to a bundle and not serving an item: it has a usage window.
-/// A build that serves an item goes with the item and has no window.
+/// Not the master build, not carrying a legacy bundle tag and not serving an item: it has a usage
+/// window. A build that serves an item (a test run included) goes with the item and has no window.
 #[must_use]
 pub fn is_standalone(board: &Board, rec: &Value) -> bool {
     rec.is_object()
@@ -68,24 +56,10 @@ fn is_master_rec(board: &Board, rec: &Value) -> bool {
     text(rec, "name").is_some_and(|name| crate::served::is_master(board, name))
 }
 
-/// A bundle's status besides closed: `draft` or `ready`. A record without a status reads ready
-/// when it was ever handed or starts something, else draft.
+/// Whether the build a test run names (`build`, a launcher name) is set and live.
 #[must_use]
-pub fn bundle_status(board: &Board, tag: &str, rec: &Value) -> &'static str {
-    match rec["status"].as_str() {
-        Some("draft") => return "draft",
-        Some("ready") => return "ready",
-        _ => {}
-    }
-    if !rec.is_object() {
-        return "draft";
-    }
-    let handed = board["handedBuild"].as_str() == Some(tag);
-    if handed || truthy(rec, "lastHandedAt") || truthy(rec, "launcher") || truthy(rec, "cmd") {
-        "ready"
-    } else {
-        "draft"
-    }
+pub fn build_ready(board: &Board, launcher: &str) -> bool {
+    !launcher.is_empty() && is_live(&board["launchers"][launcher])
 }
 
 /// The usage of a live standalone launcher.

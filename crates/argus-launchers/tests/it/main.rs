@@ -1,7 +1,7 @@
 #![allow(clippy::assert_is_empty)]
 
 mod common;
-mod launcher_bundles;
+mod launcher_runs;
 mod launcher_items;
 mod launcher_rules;
 mod launcher_stale;

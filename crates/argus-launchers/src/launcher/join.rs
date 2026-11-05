@@ -3,12 +3,14 @@
 //! - master: the main checkout's app; mandatory, never retired, no usage window. It is the
 //!   launcher with the `master` flag; a board not yet migrated has the launcher named `master`.
 //! - served: it carries a `for` link to a work item and goes with the item (I-78).
-//! - joined: made for a bundle (`bundle` on the record, set by `coord build --cmd`) or
-//!   linked by an open bundle; it goes with the bundle, no usage window.
+//! - legacy joined: a record that still carries a bundle tag; no usage window.
 //! - standalone: everything else on a board not yet migrated (a worktree app, a dev tool);
 //!   `useEvery` is mandatory.
+//!
+//! A build made for a test run is a served launcher: `for` names the run, and
+//! `served::close_builds` retires it when the run ends.
 
-use super::record::{Launcher, LauncherBoard, MASTER};
+use super::record::{Launcher, LauncherBoard, MASTER, RuleError};
 
 pub fn is_live(rec: Option<&Launcher>) -> bool {
     rec.is_some_and(|r| r.retired_at.is_none())
@@ -36,43 +38,27 @@ pub fn has_master(board: &LauncherBoard) -> bool {
     }
 }
 
-/// The tags of the bundles that link the launcher (except `but`).
-pub fn linked_bundles(board: &LauncherBoard, name: &str, but: Option<&str>) -> Vec<String> {
-    board
-        .builds
-        .iter()
-        .filter(|(tag, bundle)| {
-            bundle.launcher.as_deref() == Some(name) && Some(tag.as_str()) != but
-        })
-        .map(|(tag, _)| tag.clone())
-        .collect()
-}
-
-/// The bundle a launcher goes with: the one it was made for, else the first open bundle
-/// that links it; master is never joined.
+/// The legacy bundle tag a launcher was made for (`bundle` on the record). Nothing sets it
+/// any more; a launcher that still carries one keeps no usage window. Master is never joined.
 pub fn joined_bundle(board: &LauncherBoard, rec: &Launcher) -> Option<String> {
     if is_master(board, &rec.name) {
         return None;
     }
-    if rec.bundle.is_some() {
-        return rec.bundle.clone();
-    }
-    linked_bundles(board, &rec.name, None)
-        .into_iter()
-        .find(|tag| board.builds.get(tag).is_none_or(|b| b.closed_at.is_none()))
+    rec.bundle.clone()
 }
 
-/// Not the master build, not serving an item and not joined to a bundle: it has a usage window.
+/// Not the master build, not serving an item and not carrying a legacy bundle tag: it has a
+/// usage window.
 pub fn is_standalone(board: &LauncherBoard, rec: &Launcher) -> bool {
     !is_master(board, &rec.name) && rec.for_item.is_none() && joined_bundle(board, rec).is_none()
 }
 
-/// The launchers made for a bundle (`coord build --cmd`), master never.
-pub fn made_for(board: &LauncherBoard, tag: &str) -> Vec<String> {
-    board
-        .launchers
-        .values()
-        .filter(|l| l.bundle.as_deref() == Some(tag) && !is_master(board, &l.name))
-        .map(|l| l.name.clone())
-        .collect()
+/// A test run is handed to the owner only while the project has a master launcher.
+pub fn require_master(board: &LauncherBoard) -> Result<(), RuleError> {
+    if has_master(board) {
+        return Ok(());
+    }
+    Err(RuleError::new(format!(
+        "this project has no master launcher, so nothing can be handed to the owner yet: every project must have one (the main checkout's app). Set master first: coord launcher set {MASTER} --cmd \"<command that starts it>\"."
+    )))
 }
