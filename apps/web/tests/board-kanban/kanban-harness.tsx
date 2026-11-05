@@ -7,8 +7,7 @@ import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
 import { BoardMore, useBoardMore } from '../../src/screens/board/BoardMore';
 import { BoardSettingsButton } from '../../src/screens/board/BoardSettings';
-import { TabFiltersSlot } from '../../src/screens/board/BoardTabsRow/sub-components/TabFiltersSlot';
-import { TabToolsSlot } from '../../src/screens/board/BoardTabsRow/sub-components/TabToolsSlot';
+import { BoardTabsRow } from '../../src/screens/board/BoardTabsRow';
 import { KanbanTab } from '../../src/screens/board/tabs/kanban';
 import { RecordPaneScope } from '../../src/shell';
 import { RecordPaneHost } from '../../src/shell/records/pane';
@@ -59,8 +58,7 @@ const Stage = () => {
     <RecordPaneScope>
       <BoardMore boardKey={SCOPE} trashCount={count} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />
       <BoardSettingsButton boardKey={SCOPE} />
-      <TabToolsSlot />
-      <TabFiltersSlot />
+      <BoardTabsRow tabs={[{ id: 'kanban', label: 'Kanban' }]} activeTab="kanban" onTabChange={() => undefined} />
       <KanbanTab boardKey={SCOPE} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />
       <KanbanPurge boardKey={SCOPE} request={more.purge} onClose={more.closePurge} />
       <RecordPaneHost boardKey={SCOPE} />
