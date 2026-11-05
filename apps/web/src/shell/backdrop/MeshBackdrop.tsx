@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
 import { Box } from '@drizztdourden08/tessera';
 import { ShaderMount } from '@paper-design/shaders-react';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { GRAIN, POINTER, SIZING_UNIFORMS } from './backdrop.constants';
+import { hasWebgl2 } from './has-webgl2';
 import { PARALLAX } from './parallax.constants';
 import { toVec4 } from './to-vec4';
 import { TRAIL } from './trail.constants';
@@ -20,6 +21,7 @@ const MeshBackdrop = () => {
   const motion = useBackdropMotion();
   const aspect = useViewportAspect();
   const mount = useRef<Mount>(null);
+  const [webgl] = useState(hasWebgl2);
 
   usePointerDrift(motion.interactive, (frame) =>
     mount.current?.paperShaderMount?.setUniforms({
@@ -50,16 +52,18 @@ const MeshBackdrop = () => {
 
   return (
     <Box className="mesh-backdrop" aria-hidden="true">
-      <ShaderMount
-        ref={(element) => {
-          mount.current = element;
-        }}
-        fragmentShader={MESH_SHADER}
-        uniforms={uniforms}
-        speed={motion.speed}
-        width="100%"
-        height="100%"
-      />
+      {webgl && (
+        <ShaderMount
+          ref={(element) => {
+            mount.current = element;
+          }}
+          fragmentShader={MESH_SHADER}
+          uniforms={uniforms}
+          speed={motion.speed}
+          width="100%"
+          height="100%"
+        />
+      )}
     </Box>
   );
 };
