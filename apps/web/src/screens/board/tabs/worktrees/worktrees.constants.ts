@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import type { WorktreeFilter } from './model';
+import type { WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder } from './model';
 
 const WORKTREE_KIND = 'worktree';
 
@@ -21,6 +21,37 @@ const NO_RULES_HINT = 'The registered thread adds the places once: coord worktre
 
 const FILTER_LABEL = 'Show';
 
+const GROUP_CHOICES: { id: WorktreeGroup; label: string }[] = [
+  { id: 'item', label: 'Item' },
+  { id: 'thread', label: 'Thread' },
+  { id: 'status', label: 'Status' },
+  { id: 'none', label: 'None' },
+];
+
+const ORDER_CHOICES: { id: WorktreeOrder; label: string }[] = [
+  { id: 'need', label: 'Need first' },
+  { id: 'age', label: 'Age' },
+  { id: 'path', label: 'Path' },
+  { id: 'size', label: 'Size' },
+];
+
+const KIND_OPTIONS = [
+  { value: 'worktree', label: 'Worktree' },
+  { value: 'main', label: 'Main checkout' },
+  { value: 'leftover', label: 'Leftover folder' },
+];
+
+const WORKTREE_VIEW = {
+  groups: GROUP_CHOICES.map((choice) => choice.id),
+  orders: ORDER_CHOICES.map((choice) => choice.id),
+  group: 'item' as WorktreeGroup,
+  order: 'need' as WorktreeOrder,
+  direction: 'desc' as const,
+  filters: { query: '', threads: [], statuses: [], kinds: [] } as WorktreeFilters,
+};
+
+const NO_THREAD_TITLE = 'No thread';
+
 const REQUESTS_TITLE = 'Removal requests from threads';
 
 const REMOVED_TITLE = 'Removed by the worktree hygiene';
@@ -40,4 +71,7 @@ const ASK_HINTS = {
   check: 'A short message for the thread (optional): what to check',
 } as const;
 
-export { ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, REMOVED_CHIP, REMOVED_TITLE, REQUEST_KIND, REQUESTS_TITLE, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND };
+export {
+  ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, GROUP_CHOICES, KIND_OPTIONS, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, NO_THREAD_TITLE, ORDER_CHOICES, REMOVED_CHIP, REMOVED_TITLE,
+  REQUEST_KIND, REQUESTS_TITLE, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND, WORKTREE_VIEW,
+};

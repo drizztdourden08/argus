@@ -9,7 +9,7 @@ import { usePanel } from './behavior/usePanel';
 import { useRemoval } from './behavior/useRemoval';
 import { useTabPrefs } from './behavior/useTabPrefs';
 import { useWorktreesData } from './behavior/useWorktreesData';
-import { countRows, filterRows, refusedJobs, removedOf, requestsOf } from './model';
+import { applyRowFilters, countRows, filterRows, refusedJobs, removedOf, requestsOf, sortRows } from './model';
 import { LeftoverBatchConfirm } from './sub-components/LeftoverBatchConfirm';
 import { NoticeBanner } from './sub-components/NoticeBanner';
 import { RefusedJobs } from './sub-components/RefusedJobs';
@@ -34,18 +34,21 @@ const WorktreesTab = (props: WorktreesTabProps) => {
   if (!ready) return <Text tone="muted">Loading the worktrees.</Text>;
   const counts = countRows(rows);
   const rules = meta?.rules ?? [];
+  const { view } = prefs;
+  const shown = sortRows(applyRowFilters(filterRows(rows, prefs.filter), view.filters, meta), view.order, view.direction);
   return (
     <Panel
       title="Worktrees"
       note={rules.length > 0 ? <WorktreeSummary counts={counts} meta={meta} /> : undefined}
-      tools={<WorktreeToolbar filter={prefs.filter} onFilter={prefs.setFilter} counts={counts} meta={meta} batch={batch} />}
     >
+      <WorktreeToolbar boardKey={boardKey} rows={rows} prefs={prefs} counts={counts} meta={meta} batch={batch} />
       <LeftoverBatchConfirm meta={meta} batch={batch} />
       {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
       <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
       <WorktreeBody
         boardKey={boardKey}
-        rows={filterRows(rows, prefs.filter)}
+        rows={shown}
+        group={view.group}
         total={counts.all}
         filter={prefs.filter}
         hasRules={rules.length > 0}

@@ -1,6 +1,9 @@
 /* @layer renderer-app @kind types */
+import type { useTabView } from '../../BoardTabsRow';
 import type { WorktreesMeta } from '../../../../data/worktrees';
-import type { Notice, Panel, PanelKind, WorktreeFilter, WorktreeRow } from './model';
+import type { Notice, Panel, PanelKind, WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder, WorktreeRow } from './model';
+
+type WorktreeView = ReturnType<typeof useTabView<WorktreeGroup, WorktreeOrder, WorktreeFilters>>;
 
 type Attempt<T> = { ok: true; value: T } | { ok: false; error: unknown };
 
@@ -20,6 +23,7 @@ interface TabPrefs {
   setFilter: (filter: WorktreeFilter) => void;
   rulesOpen: boolean;
   setRulesOpen: (open: boolean) => void;
+  view: WorktreeView;
 }
 
 interface Notices {

@@ -2,9 +2,9 @@
 import type { Agent } from '../../../../data/agents';
 import type { WithId } from '../../../../data/react';
 import type { BatchJob, RemovedWorktree, WorktreeRequest, WorktreeRule, WorktreesMeta } from '../../../../data/worktrees';
-import type { Counts, Notice, Panel, WorktreeFilter, WorktreeRow } from './model';
+import type { Counts, Notice, Panel, WorktreeFilter, WorktreeGroup, WorktreeRow } from './model';
 import type { GroupThreads } from '../../item-groups';
-import type { AskThread, BatchControls, PanelControls, Removal } from './worktrees.type';
+import type { AskThread, BatchControls, PanelControls, Removal, TabPrefs } from './worktrees.type';
 
 interface WorktreesTabProps {
   boardKey: string;
@@ -16,8 +16,9 @@ interface WorktreeSummaryProps {
 }
 
 interface WorktreeToolbarProps {
-  filter: WorktreeFilter;
-  onFilter: (filter: WorktreeFilter) => void;
+  boardKey: string;
+  rows: WorktreeRow[];
+  prefs: TabPrefs;
   counts: Counts;
   meta: WorktreesMeta | null;
   batch: BatchControls;
@@ -82,6 +83,7 @@ interface LeftoverConfirmProps extends RemoveConfirmProps {
 interface WorktreeGroupsProps {
   boardKey: string;
   rows: WorktreeRow[];
+  group: WorktreeGroup;
   meta: WorktreesMeta | null;
   controls: PanelControls;
   ask: AskThread;

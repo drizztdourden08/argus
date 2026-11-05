@@ -10,7 +10,7 @@ const LogList = (props: LogListProps) => {
   return (
     <List aria-label="Work log" className="log-list">
       {lines.map((line) => (
-        <ListItem key={`${line.subject}:${line.seq}:${line.ts}`} bare className="log-list__row">
+        <ListItem key={`${line.subject}:${line.seq}:${line.ts}`} data-swap-item bare className="log-list__row">
           <Small tone="muted" className="log-list__age"><Age value={line.ts} /></Small>
           <Small tone="info" className="log-list__source" title={line.thread}>{line.thread}</Small>
           <Small className="log-list__text" title={line.text}>

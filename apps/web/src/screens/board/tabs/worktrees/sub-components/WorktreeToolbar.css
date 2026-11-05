@@ -1,5 +1,4 @@
 .worktree-toolbar__about {
-  flex: 1 1 var(--size-384);
   max-inline-size: var(--size-512);
   min-inline-size: 0;
 }

@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind component */
+import { Flex } from '@drizztdourden08/tessera';
 import { RecordRow } from '../../../../../shell';
 import { formatAgo } from '../../../../../format';
 import { plainText } from '../../../plain-text';
@@ -10,12 +11,14 @@ const RemovedRow = (props: RemovedRowProps) => {
   const { done, boardKey, threads, now } = props;
   const label = removedLabel(done);
   return (
-    <RecordRow
-      head={{ kind: WORKTREE_KIND, code: label, assignee: done.thread ?? '', boardKey, threads, menu: [], menuLabel: `More actions for ${label}` }}
-      title={removedTitle(done)}
-      chips={[{ id: 'removed', text: REMOVED_CHIP, title: plainText(done.text) }]}
-      age={formatAgo(done.at, now)}
-    />
+    <Flex direction="column" data-swap-item>
+      <RecordRow
+        head={{ kind: WORKTREE_KIND, code: label, assignee: done.thread ?? '', boardKey, threads, menu: [], menuLabel: `More actions for ${label}` }}
+        title={removedTitle(done)}
+        chips={[{ id: 'removed', text: REMOVED_CHIP, title: plainText(done.text) }]}
+        age={formatAgo(done.at, now)}
+      />
+    </Flex>
   );
 };
 

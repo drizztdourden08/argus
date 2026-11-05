@@ -19,7 +19,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
   const link = () => owner.open({ action: 'worktree-link', id: row.id, label });
   const unlink = () => owner.open({ action: 'worktree-unlink', id: row.id, label });
   return (
-    <Flex direction="column" gap="xs" data-worktree={row.id}>
+    <Flex direction="column" gap="xs" data-worktree={row.id} data-swap-item>
       <RecordRow
         head={{
           kind: WORKTREE_KIND,

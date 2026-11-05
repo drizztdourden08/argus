@@ -16,6 +16,7 @@ const FeedCardView = (props: FeedCardViewProps) => {
   return (
     <Card
       data-feed-type={card.type}
+      data-swap-item
       variant="interactive"
       edge="left"
       edgeTone={sectionOf(card) === 'waiting' ? 'warning' : undefined}
