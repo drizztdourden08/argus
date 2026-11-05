@@ -77,6 +77,7 @@ interface CardData {
   needsYou: boolean;
   needs: Needs | undefined;
   children: ChildCount;
+  lastRun: ItemRef | null;
   trail: TrailInfo | null;
   asks: AskLink[];
   signals: Signals;
@@ -88,6 +89,7 @@ interface CardData {
 interface CardFacts {
   needs: Needs | undefined;
   children: ChildCount;
+  lastRun: ItemRef | null;
   trail: TrailInfo | null;
   asks: AskLink[];
   signals: Signals;

@@ -7,6 +7,7 @@ export { kindByCode } from './kind-by-code';
 export { kindOf } from './kind-of';
 export { CODE_TABLE, REGISTRY_KINDS } from './kinds.constants';
 export { knowsLead } from './knows-lead';
+export { labelOf } from './label-of';
 export { laneOf } from './lane-of';
 export { limitOf } from './limit-of';
 export { ITEM_REGISTRY, ITEM_STORED } from './registry.constants';

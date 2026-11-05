@@ -4,7 +4,6 @@ import type { PlanRun, RunSummary } from '../run.type';
 import { lastResult } from './last-result';
 
 const summarize = (run: PlanRun, ids: readonly string[]): RunSummary => {
-  if (run.endedAt !== null && run.summary) return run.summary;
   const counts: RunSummary = { ...EMPTY_SUMMARY, total: ids.length };
   ids.forEach((id) => {
     const status = lastResult(run, id)?.status;
