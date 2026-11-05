@@ -5,8 +5,6 @@ interface BoardMeta {
   updatedAt: string;
   palette?: string;
   avatar?: string | null;
-  handedBuild: string | null;
-  handedAt: string | null;
 }
 
 interface ThreadFlags {

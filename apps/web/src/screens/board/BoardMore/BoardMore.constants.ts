@@ -21,8 +21,8 @@ const LEGEND_ENTRIES: readonly LegendEntry[] = [
   { label: 'needs you', look: { variant: 'urgency', color: 'danger' }, text: 'A question, a to-do or a test waits on you. The kinds below say which.' },
   { label: 'conflict', look: { variant: 'urgency', color: 'danger' }, text: 'A thread changed the same field after you looked. Nothing of yours was applied.' },
   { label: 'running', look: { variant: 'urgency', color: 'success' }, text: 'A launch the lead defined is running on this machine (queued, exited, failed and stopped are its other states).' },
-  { label: 'bundle-2', look: { variant: 'normal', color: 'neutral' }, text: 'The build tag a test carries: a bundle. The one handed to you is filled and sits first.' },
-  { label: 'current', look: { variant: 'urgency', color: 'success' }, text: 'On the Builds tab: the launcher that is valid to start now. A bundle shows the launcher it starts as a link to that tab.' },
+  { label: 'run', look: { variant: 'normal', color: 'neutral' }, text: 'A test run of a plan against a build. The one handed to you sits first on the Tests tab.' },
+  { label: 'current', look: { variant: 'urgency', color: 'success' }, text: 'On the Builds tab: the launcher that is valid to start now. A run shows the launcher it starts as a link to that tab.' },
   { label: 'ui notified', look: { variant: 'urgency', color: 'success' }, text: 'Your click woke the thread, which was listening.' },
   { label: 'ui not listening', look: { variant: 'normal', color: 'neutral' }, text: 'Your click was saved, but nobody was listening for that thread; it sees the result the next time it runs.' },
 ];

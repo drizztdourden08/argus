@@ -69,7 +69,6 @@ interface TodoRowProps {
 }
 
 interface ItemTestsProps {
-  boardKey: string;
   tests: readonly WithId<Test>[];
 }
 
