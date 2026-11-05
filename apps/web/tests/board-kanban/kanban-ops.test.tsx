@@ -7,14 +7,17 @@ cleanKanban();
 
 describe('K3 adding an item', { tags: ['standard'] }, () => {
   it('opens the inline form of a column, keeps Add off until there is a title, and posts a create op for the first listed thread', async () => {
-    const { posted } = await mountKanban({ items: [] });
+    const { posted } = await mountKanban({ items: [item('I-9', { type: 'epic', status: 'doing' })] });
     expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'Add a work item to To do' }));
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Brand new  ' } });
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add' }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'create', author: 'human', target: { c: 'items' }, set: { title: 'Brand new', thread: 'worker', status: 'todo' } });
+    expect(posted[0]?.body).toMatchObject({ kind: 'create', author: 'human', target: { c: 'items' }, set: { title: 'Brand new', thread: 'worker', status: 'todo', parent: 'I-9' } });
     expect(await screen.findByText('Adding "Brand new".')).toBeTruthy();
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull());
   });

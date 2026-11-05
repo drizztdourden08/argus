@@ -8,13 +8,15 @@ cleanKanban();
 
 describe('S1 the column header: + Add', { tags: ['standard'] }, () => {
   it('adds an item to a status column with that status', async () => {
-    const { posted } = await mountKanban({ items: [item('I-1')] });
+    const { posted } = await mountKanban({ items: [item('I-1'), item('I-9', { type: 'epic' })] });
     await screen.findByText('Item number 1');
     fireEvent.click(screen.getByRole('button', { name: 'Add a work item to Doing' }));
     fireEvent.change(await screen.findByRole('textbox', { name: 'Title' }), { target: { value: 'New thing' } });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(posted).toHaveLength(1));
-    expect(posted[0]?.body).toMatchObject({ kind: 'create', target: { c: 'items' }, set: { title: 'New thing', thread: 'worker', status: 'doing' } });
+    expect(posted[0]?.body).toMatchObject({ kind: 'create', target: { c: 'items' }, set: { title: 'New thing', thread: 'worker', status: 'doing', parent: 'I-9' } });
   });
 });
 

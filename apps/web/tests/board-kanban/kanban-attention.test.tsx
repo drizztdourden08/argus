@@ -35,7 +35,7 @@ describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
   });
 
   it('draws no edge and no strip on a card with nothing to say', async () => {
-    await mountKanban({ items: [item('I-1')] });
+    await mountKanban({ items: [item('I-1', { type: 'epic' })] });
     await boardOf();
     expect(cardOf('I-1').className).not.toContain('card--edge-');
     expect(within(cardOf('I-1')).queryByRole('group', { name: 'Signals' })).toBeNull();
