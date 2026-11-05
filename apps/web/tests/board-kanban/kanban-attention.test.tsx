@@ -43,8 +43,8 @@ describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
 
 });
 
-describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => {
-  it('folds what does not fit into a +N chip', async () => {
+describe('I-69 the signal strip wraps and opens', { tags: ['standard'] }, () => {
+  it('shows every chip over several lines, with no +N chip and the avatar of who it waits on', async () => {
     const blocked = [
       { kind: 'dep-waits', id: 'D-4', label: 'Expose the hook', who: 'lead:rotp' },
       { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' },
@@ -63,7 +63,10 @@ describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => 
     });
     await boardOf();
     const strip = within(cardOf('I-1')).getByRole('group', { name: 'Signals' });
-    expect(within(strip).getByText('+2')).toBeTruthy();
+    expect(within(strip).queryByText(/^\+\d+$/)).toBeNull();
+    expect(within(strip).getByTitle('waiting on rotp: Expose the hook')).toBeTruthy();
+    expect(within(within(strip).getByTitle('Blocked by H-12 (owner): push go')).getByRole('img', { name: 'You' })).toBeTruthy();
+    expect(within(strip).getByTitle('1 test failing').textContent).toBe('1');
   });
 
   it('opens the item from a dependency chip', async () => {
