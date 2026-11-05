@@ -31,7 +31,7 @@ describe('P6 the boards view', { tags: ['critical'] }, () => {
 
   it('groups by attention with the quiet boards after the ones that need you, and one group for none', () => {
     const entries = [entry('beta'), entry('alpha', NEEDS)];
-    expect(groupEntries(entries, 'attention').map((group) => group.label)).toEqual(['Needs you', 'Running']);
+    expect(groupEntries(entries, 'attention').map((group) => group.label)).toEqual(['Needs you', 'Quiet']);
     expect(groupEntries(entries, 'none').map((group) => group.entries.length)).toEqual([2]);
     expect(groupEntries([], 'none')).toEqual([]);
   });

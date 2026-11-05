@@ -31,6 +31,7 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
             onSubmit={send.send}
             submitLabel="Send down"
             error={over}
+            submitDisabled={over !== null}
           />
         </Flex>
       </Card>

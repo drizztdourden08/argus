@@ -20,9 +20,9 @@ describe('backdrop pointer easing', { tags: ['critical'] }, () => {
     expect(value).toBeGreaterThan(0.999);
   });
 
-  it('settles in about two seconds', () => {
+  it('settles in about one second', () => {
     let value = 0;
-    for (let frame = 0; frame < 108; frame += 1) value = easeStep(value, 1, 1 / 60);
+    for (let frame = 0; frame < 60; frame += 1) value = easeStep(value, 1, 1 / 60);
     expect(value).toBeGreaterThan(0.94);
     expect(value).toBeLessThan(0.99);
   });
