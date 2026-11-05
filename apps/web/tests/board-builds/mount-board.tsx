@@ -28,5 +28,4 @@ const mountBoard = async (ui: ReactElement, feeds: readonly Feed[]) => {
   return { view, source, live };
 };
 
-export type { Feed };
 export { SCOPE, mountBoard };

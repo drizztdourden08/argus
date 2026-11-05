@@ -186,5 +186,12 @@ const cardOf = (id: string): HTMLElement => {
   return card;
 };
 
-export { DAY, HOUR, MIN, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, openSettings, paneOf, thread, where };
+const addUnderEpic = async (posted: readonly Posted[]): Promise<void> => {
+  fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+  await waitFor(() => expect(posted).toHaveLength(1));
+};
+
+export { DAY, HOUR, MIN, addUnderEpic, ago, boardOf, cardOf, cleanKanban, columnOf, gripOf, item, moreItem, mountKanban, openItem, openSettings, paneOf, thread };
 export type { Board, Doc, Posted };

@@ -14,7 +14,6 @@ const parseCssColor = (css: string): Rgb | undefined => {
   return alpha === 0 ? undefined : [red, green, blue];
 };
 
-/* The deep tones are lifted toward the first spot, so they read as shades of the palette and not as black holes. */
 const toSpot = (token: string, color: Rgb, lead: Rgb | undefined): Rgb => {
   if (!DEEP_TOKENS.includes(token)) return darken(color, DARKEN_AMOUNT);
   return lead ? mix(color, lead, DEEP_LIFT) : color;

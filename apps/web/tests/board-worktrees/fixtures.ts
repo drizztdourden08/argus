@@ -87,4 +87,4 @@ const leftover = (name: string, extra: Partial<Worktree> = {}, facts: Partial<Le
 const oldMeta = (extra: Partial<WorktreesMeta> = {}): WorktreesMeta =>
   metaDoc({ leftoverOld: { days: 3, count: 2, sizeMB: 2048 }, ...extra });
 
-export { DAY, HOUR, MIN, NOW, ago, leftover, metaDoc, oldMeta, rule, worktree };
+export { DAY, HOUR, NOW, ago, leftover, metaDoc, oldMeta, rule, worktree };

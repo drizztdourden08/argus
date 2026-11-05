@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { openFilters, pickView } from '../helpers/filter-clauses';
-import { boardOf, cardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
+import { addUnderEpic, boardOf, cardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
 
@@ -12,10 +12,7 @@ describe('S1 the column header: + Add', { tags: ['standard'] }, () => {
     await screen.findByText('Item number 1');
     fireEvent.click(screen.getByRole('button', { name: 'Add a work item to Doing' }));
     fireEvent.change(await screen.findByRole('textbox', { name: 'Title' }), { target: { value: 'New thing' } });
-    fireEvent.click(screen.getByRole('combobox', { name: 'Epic' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'I-9 Item number 9' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    await waitFor(() => expect(posted).toHaveLength(1));
+    await addUnderEpic(posted);
     expect(posted[0]?.body).toMatchObject({ kind: 'create', target: { c: 'items' }, set: { title: 'New thing', thread: 'worker', status: 'doing', parent: 'I-9' } });
   });
 });

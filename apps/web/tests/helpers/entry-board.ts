@@ -40,5 +40,4 @@ const mountEntryBoard = async (board: EntryBoard): Promise<void> => {
   act(() => seedBoard(stream, { meta, threads: { worker }, items: { 'I-1': board.work }, entries: board.entries }));
 };
 
-export { NOW, cleanEntryBoard, entryWork, mountEntryBoard, worker };
-export type { EntryBoard };
+export { NOW, cleanEntryBoard, entryWork, mountEntryBoard };

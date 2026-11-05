@@ -1,8 +1,4 @@
 /* @layer renderer-app @kind style */
-/*
- * The shell is its own stacking context, so the backdrop at z-index -1 paints above the
- * page background that the Tessera reset puts on html, body and #root, and below the shell content.
- */
 .app-shell {
   position: relative;
   isolation: isolate;

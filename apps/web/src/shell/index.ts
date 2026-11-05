@@ -8,10 +8,8 @@ export {
 } from './records';
 export type { ActionHandlers, RecordGroups, RecordHeadProps, RowChip } from './records';
 export { LoadingFallback } from './LoadingFallback';
-export { LocalBanner } from './LocalBanner';
 export { PageFrame } from './PageFrame';
 export { Panel } from './Panel';
-export { RegisteredFrame } from './RegisteredFrame';
 export { ReplayTag } from './ReplayTag';
 export { StatusNotice } from './StatusNotice';
 export { WorktreeCounter } from './WorktreeCounter';

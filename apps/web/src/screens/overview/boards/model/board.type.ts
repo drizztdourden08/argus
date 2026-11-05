@@ -117,5 +117,5 @@ interface BoardGroup {
 
 export type {
   Attention, AttentionGroupId, BoardActionId, BoardCounts, BoardGroup, BoardItemCard, BoardItemDoc, BoardLive, BoardMenuItem, BoardProgress, BoardRecord, BoardSignal, LeadState, MasterLine, SendKind,
-  SendOutcome, SentItem, SignalId, SignalTab, SignalTone,
+  SendOutcome, SentItem, SignalId, SignalTone,
 };
