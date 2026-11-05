@@ -46,7 +46,7 @@ fn reason_of(kind: EventKind) -> Option<&'static str> {
         EventKind::Unblocked => Some("item-unblocked"),
         EventKind::ChildrenDone => Some("children-done"),
         EventKind::PlanRunDone => Some("plan-run-done"),
-        EventKind::DepLanded | EventKind::Verify | EventKind::PlanReady => None,
+        EventKind::DepLanded | EventKind::Verify | EventKind::RunReady => None,
     }
 }
 
@@ -54,7 +54,7 @@ fn reason_of(kind: EventKind) -> Option<&'static str> {
 fn topic_of(event: &ItemEvent) -> Option<&'static str> {
     match (event.kind, &event.to) {
         (EventKind::Verify, _) => Some(TOPIC_VERIFY),
-        (EventKind::PlanReady, _) => Some(TOPIC_RUN),
+        (EventKind::RunReady, _) => Some(TOPIC_RUN),
         (EventKind::Assigned | EventKind::TodoAssigned, Hearer::Owner) => Some(TOPIC_ASSIGNED),
         _ => None,
     }

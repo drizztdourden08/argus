@@ -88,7 +88,7 @@ fn the_table_wakes_for_owner_work_messages_agents_results_and_own_faults_and_kee
         "test-fail",
         "test-partial",
         "test-blocked",
-        "bundle-complete",
+        "run-complete",
         "run-failed",
         "process-reaped",
         "dep-request",

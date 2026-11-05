@@ -42,7 +42,7 @@ pub(super) fn wake_line(event: &ItemEvent) -> String {
             event.detail
         ),
         EventKind::PlanRunDone => format!("{what}: {}", event.detail),
-        EventKind::DepLanded | EventKind::Verify | EventKind::PlanReady => what,
+        EventKind::DepLanded | EventKind::Verify | EventKind::RunReady => what,
     }
 }
 
@@ -55,10 +55,10 @@ pub(super) fn notice_words(event: &ItemEvent, project: &str) -> (String, String)
             "Ready to verify".to_owned(),
             format!("{project}: {what} is ready to verify"),
         ),
-        EventKind::PlanReady => (
+        EventKind::RunReady => (
             "Ready to run".to_owned(),
             format!(
-                "{project}: test plan {what} is ready to run on {}",
+                "{project}: test run {what} is ready to run on {}",
                 event.detail
             ),
         ),

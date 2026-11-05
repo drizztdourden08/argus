@@ -88,15 +88,20 @@ fn waiting(board: &BoardView, item: &ItemView) -> bool {
         .actions
         .values()
         .any(|a| a.rec.is_live_on(id) && a.status.is("pending"));
-    let handed = board.handed_build.some().is_some_and(|build| {
-        board.tests.values().any(|t| {
-            t.rec.is_live_on(id)
-                && t.mode.is("manual")
-                && t.status.is("pending")
-                && t.build.is(build)
+    todo || handed_run(board, id) || has_live_agent(board, id)
+}
+
+/// Is the item a test run handed to the owner (ready and assigned to him), or the plan of one?
+fn handed_run(board: &BoardView, id: &str) -> bool {
+    board.json()["items"].as_object().is_some_and(|items| {
+        items.values().any(|run| {
+            run["type"] == "test-run"
+                && run["stage"] == "ready"
+                && run["assignee"] == "owner"
+                && run["deletedAt"].is_null()
+                && (run["id"] == id || run["fields"]["plan"] == id)
         })
-    });
-    todo || handed || has_live_agent(board, id)
+    })
 }
 
 /// Does a sub-agent still run on the item?

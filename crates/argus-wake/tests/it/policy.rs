@@ -195,70 +195,65 @@ fn partial_and_blocked_wake_too_and_carry_the_owner_note() {
     );
 }
 
-#[test]
-fn a_pass_wakes_nobody_while_a_manual_test_of_the_bundle_is_still_pending() {
-    let before = mk_board(vec![
-        manual("T-1", "ui", "b4", "pending"),
-        manual("T-2", "ui", "b4", "pending"),
-    ]);
-    let board = mk_board(vec![
-        manual("T-1", "ui", "b4", "pass"),
-        manual("T-2", "ui", "b4", "pending"),
-    ]);
-    quiet(&alpha(&board, Some(&before)).wakes(&result("T-1", "pass", "", "O-1")));
+fn with_run(mut raw: Value, stage: &str, thread: &str, results: &Value) -> BoardView {
+    raw["items"]["I-9"] = json!({
+        "id": "I-9", "type": "test-run", "thread": thread, "stage": stage, "n": 4,
+        "fields": {"plan": "I-1", "results": results}
+    });
+    board(&raw)
+}
+
+fn results() -> Value {
+    json!([
+        {"test": "T-1", "status": "pass"},
+        {"test": "T-2", "status": "fail"},
+        {"test": "T-3", "status": "pass"},
+    ])
+}
+
+fn base_json() -> Value {
+    json!({
+        "threads": {
+            "coordinator": {"id": "coordinator", "role": "coordinator", "status": "active"},
+            "ui": {"id": "ui", "status": "active"},
+        },
+        "items": {},
+        "tests": {
+            "T-3": {"id": "T-3", "thread": "ui", "status": "pass", "mode": "manual", "item": "I-1"},
+        },
+    })
 }
 
 #[test]
-fn the_pass_that_leaves_no_pending_manual_test_wakes_once_with_the_counts() {
-    let b4 = "bundle-4";
-    let before = mk_board(vec![
-        manual("T-1", "ui", b4, "pass"),
-        manual("T-2", "ui", b4, "fail"),
-        manual("T-3", "ui", b4, "pending"),
-        manual("T-4", "api", b4, "pending"),
-    ]);
-    let mut archived = manual("T-9", "ui", b4, "pending");
-    archived["archivedAt"] = json!("x");
-    let board = mk_board(vec![
-        manual("T-1", "ui", b4, "pass"),
-        manual("T-2", "ui", b4, "fail"),
-        manual("T-3", "ui", b4, "pass"),
-        manual("T-4", "api", b4, "pending"),
-        archived,
-        test_record("T-8", "ui", Some(b4), "pending", "auto"),
-    ]);
-    let wakes = alpha(&board, Some(&before)).wakes(&result("T-3", "pass", "", "O-1"));
+fn a_pass_wakes_nobody_while_the_run_is_still_running() {
+    let running = with_run(base_json(), "running", "ui", &results());
+    quiet(&alpha(&running, Some(&running)).wakes(&result("T-3", "pass", "", "O-1")));
+}
+
+#[test]
+fn the_pass_that_ends_the_run_wakes_once_with_the_counts() {
+    let before = with_run(base_json(), "running", "ui", &results());
+    let after = with_run(base_json(), "reported", "ui", &results());
+    let wakes = alpha(&after, Some(&before)).wakes(&result("T-3", "pass", "", "O-1"));
     assert_eq!(
         wakes,
         [WakeInput::about(
             "alpha",
             "ui",
-            "bundle-complete",
-            b4,
-            "bundle-4: all manual tests run, 2 pass 1 fail"
+            "run-complete",
+            "I-9",
+            "run 4: all tests run, 2 pass 1 fail"
         )]
     );
 }
 
 #[test]
-fn a_pass_on_a_finished_bundle_or_on_a_test_with_no_build_wakes_nobody() {
-    let done = mk_board(vec![
-        manual("T-1", "ui", "b4", "pass"),
-        manual("T-2", "ui", "b4", "pass"),
-    ]);
-    quiet(&alpha(&done, Some(&done)).wakes(&result("T-2", "pass", "", "O-1")));
-    let bare = mk_board(vec![test_record("T-1", "ui", None, "pass", "manual")]);
-    let bare_before = mk_board(vec![test_record("T-1", "ui", None, "pending", "manual")]);
-    quiet(&alpha(&bare, Some(&bare_before)).wakes(&result("T-1", "pass", "", "O-1")));
-    let all = mk_board(vec![manual("T-1", "ui", "b4", "pass")]);
-    let auto = mk_board(vec![test_record(
-        "T-1",
-        "ui",
-        Some("b4"),
-        "pending",
-        "auto",
-    )]);
-    quiet(&alpha(&all, Some(&auto)).wakes(&result("T-1", "pass", "", "O-1")));
+fn a_pass_on_a_run_that_had_already_ended_or_belongs_to_another_thread_wakes_nobody() {
+    let done = with_run(base_json(), "passed", "ui", &results());
+    quiet(&alpha(&done, Some(&done)).wakes(&result("T-3", "pass", "", "O-1")));
+    let before = with_run(base_json(), "running", "api", &results());
+    let other = with_run(base_json(), "reported", "api", &results());
+    quiet(&alpha(&other, Some(&before)).wakes(&result("T-3", "pass", "", "O-1")));
 }
 
 #[test]

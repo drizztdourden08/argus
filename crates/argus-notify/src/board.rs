@@ -1,21 +1,18 @@
 //! What the automatic pings read of a project's board, in the plain form the server fills in.
 
-/// The bundle a build was handed as.
+/// A test run handed to the owner: ready, with a live build, assigned to him.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Bundle {
-    /// The bundle title.
+pub struct HandedRun {
+    /// The run id.
+    pub id: String,
+    /// The run title.
     pub title: Option<String>,
-    /// The thread that built it.
+    /// The thread of its plan.
     pub thread: Option<String>,
-}
-
-/// One test of the board.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct TestFact {
-    /// The build tag the test carries.
-    pub build: Option<String>,
-    /// Trashed or archived.
-    pub removed: bool,
+    /// When it was handed (its last change), ISO 8601.
+    pub at: Option<String>,
+    /// How many tests the plan holds.
+    pub tests: usize,
 }
 
 /// One entry of the board.
@@ -46,14 +43,8 @@ pub struct EntryFact {
 pub struct BoardFacts {
     /// True when the portfolio board retired the project.
     pub retired: bool,
-    /// The tag of the build handed to the owner, if any.
-    pub handed_build: Option<String>,
-    /// When it was handed, ISO 8601.
-    pub handed_at: Option<String>,
-    /// The bundle of that tag.
-    pub bundle: Option<Bundle>,
-    /// The tests of the board.
-    pub tests: Vec<TestFact>,
+    /// The run handed to the owner, if any.
+    pub handed: Option<HandedRun>,
     /// The entries of the board.
     pub entries: Vec<EntryFact>,
 }

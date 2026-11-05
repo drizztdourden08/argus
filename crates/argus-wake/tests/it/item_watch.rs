@@ -261,10 +261,10 @@ fn the_owner_is_noticed_of_an_assignment_a_bug_to_verify_and_a_plan_to_run() {
     let plan = |stage: &str| {
         item(
             "I-3",
-            &json!({"type": "test-plan", "stage": stage, "rev": 2, "fields": {"bundle": "b1"}}),
+            &json!({"type": "test-run", "stage": stage, "rev": 2, "fields": {"plan": "I-2", "build": "b1"}}),
         )
     };
-    let builds = json!({"builds": {"b1": {"status": "ready"}}});
+    let builds = json!({"launchers": {"b1": {"name": "b1"}}});
     let mut world = World::new(&alpha(&[plan("draft")], &builds));
     let out = world.export(&alpha(&[plan("ready")], &builds));
     assert_eq!(

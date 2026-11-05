@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 
 const ASKED_KEEP: usize = 200;
 
-/// The markers of one project: the handed build (`<tag>|<handedAt>`) and the last questions told.
+/// The markers of one project: the handed run (`<run id>|<time>`) and the last questions told.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Marker {
-    /// The build handed when last seen.
+    /// The run handed when last seen.
     #[serde(default)]
     pub handed: Option<String>,
     /// The ids of the last 200 questions seen.
