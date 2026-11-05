@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind types */
-import type { TabBadgeTone } from '@drizztdourden08/tessera';
+import type { TabBadgeTone, TabItem } from '@drizztdourden08/tessera';
 import type { StreamStatus } from '../../data/stream';
-import type { Card } from '../../data/types';
+import type { BoardEntries, BoardEntry, OverviewView } from './boards/boards-view.type';
+import type { SendDown } from './dashboards/dashboards.type';
 
 interface TabBadges {
   counts: Record<string, number>;
@@ -20,9 +21,31 @@ interface ChipFilterProps {
 
 interface TabBodyProps {
   tab: string;
-  cards: Card[];
-  status: StreamStatus;
+  data: BoardEntries;
+  view: OverviewView;
+  send: SendDown;
+  wide: boolean;
   badges: TabBadges;
 }
 
-export type { ChipFilterProps, TabBadges, TabBodyProps };
+interface OverviewHeaderProps {
+  tab: string;
+  data: BoardEntries;
+  view: OverviewView;
+  status: StreamStatus;
+  send: SendDown;
+  wide: boolean;
+}
+
+interface OverviewAlertsProps {
+  entries: readonly BoardEntry[];
+  status: StreamStatus;
+}
+
+interface OverviewTabsProps {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+export type { ChipFilterProps, OverviewAlertsProps, OverviewHeaderProps, OverviewTabsProps, TabBadges, TabBodyProps };

@@ -48,8 +48,8 @@ describe('S1 the tabs and their badges', { tags: ['standard'] }, () => {
   it('keeps only what arrives later as unread after the tab was read', async () => {
     const view = await open('/#activity');
     await waitFor(() => expect(localStorage.getItem('argus.activity.seen')).not.toBeNull());
-    fireEvent.click(tab('Dashboards'));
-    await waitFor(() => expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true'));
+    fireEvent.click(tab('Boards'));
+    await waitFor(() => expect(tab('Boards').getAttribute('aria-selected')).toBe('true'));
     expect(tab('Activity').textContent).toBe('Activity0');
     await feed(view.sources, {
       activity: { ...ACTIVITY, 'a-9': { n: 9, at: '2999-01-01T00:00:00.000Z', kind: 'fault', level: 'warn', text: 'later' } },
@@ -63,11 +63,11 @@ describe('S1 the tabs and their badges', { tags: ['standard'] }, () => {
     expect(tab('Activity').textContent).toBe('Activity0');
   });
 
-  it('opens the tab named by the hash, and falls back on Dashboards for a hash it does not know', async () => {
+  it('opens the tab named by the hash, and falls back on Boards for a hash it does not know', async () => {
     await open('/#notifications');
     expect(tab('Notifications').getAttribute('aria-selected')).toBe('true');
     cleanup();
     await open('/#nowhere');
-    expect(tab('Dashboards').getAttribute('aria-selected')).toBe('true');
+    expect(tab('Boards').getAttribute('aria-selected')).toBe('true');
   });
 });

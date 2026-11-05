@@ -22,9 +22,11 @@ const cards = {
   delta: { key: 'delta', name: 'Delta', state: 'not started', root: null, url: '/p/delta/' },
 };
 
+const boards = Object.fromEntries(Object.keys(cards).map((key) => [`BD-${key}`, { id: `BD-${key}`, key }]));
+
 const open = async (extra: Record<string, object> = {}) => {
   const view = renderAt('/');
-  await feed(view.sources, { cards, ...extra });
+  await feed(view.sources, { cards, boards, ...extra });
   return view;
 };
 
