@@ -156,7 +156,7 @@ async fn initialize_and_tools_list_answer_on_the_live_server() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn reads_overview_summary_items_item_tests_agents_entries_search_and_defs() {
+async fn reads_overview_summary_and_items() {
     let t = seeded().await;
     assert_eq!(tool(&t, "health", json!({})).await["ok"], true);
     let cards = tool(&t, "portfolio_overview", json!({})).await;
@@ -189,6 +189,12 @@ async fn reads_overview_summary_items_item_tests_agents_entries_search_and_defs(
     )
     .await;
     assert_eq!(ids(&doing, "items"), ["I-1"]);
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn reads_item_tests_agents_and_entries() {
+    let t = seeded().await;
     let item = tool(&t, "get_item", json!({ "project": "alpha", "id": "I-1" })).await;
     assert_eq!(item["item"]["title"], "Login screen");
     assert_eq!(ids(&item, "tests"), ["T-1", "T-2"]);

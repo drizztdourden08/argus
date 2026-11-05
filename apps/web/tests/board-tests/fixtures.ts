@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind test */
+import type { RunEntry } from '../../src/data/runs';
+import type { TestDoc } from '../../src/screens/board/tabs/tests/model';
 import { exitedRun, launchDef } from '../helpers/launch-docs';
 type Doc = Record<string, unknown>;
 
@@ -99,7 +101,29 @@ const conflictEntry = (id: string, test: string, extra: object = {}): Doc => ({
   ...extra,
 });
 
+const blankTest: TestDoc = {
+  id: 'T-0',
+  item: null,
+  thread: null,
+  title: '',
+  covers: null,
+  mode: 'manual',
+  run: null,
+  context: null,
+  ac: [],
+  status: 'pending',
+  result: null,
+  createdAt: EARLIER,
+  updatedAt: EARLIER,
+};
+
+const blankRun: RunEntry = { id: 'R-0', name: '', status: 'exited', exitCode: 0, queuedAt: EARLIER, startedAt: EARLIER, endedAt: NOW, error: null, lastLine: null };
+
+const asTestDoc = (doc: Doc): TestDoc => Object.assign({}, blankTest, doc);
+
+const asRunEntry = (doc: Doc): RunEntry => Object.assign({}, blankRun, doc);
+
 const byId = (docs: readonly object[], key = 'id'): Record<string, object> => Object.fromEntries(docs.map((doc) => [String(Reflect.get(doc, key)), doc]));
 
 export type { Doc };
-export { byId, conflictEntry, defDoc, doneDoc, itemDoc, launcherDoc, planDoc, runDoc, runOn, testDoc, testRunDoc, threadDoc, wakeDoc };
+export { asRunEntry, asTestDoc, byId, conflictEntry, defDoc, doneDoc, itemDoc, launcherDoc, planDoc, runDoc, runOn, testDoc, testRunDoc, threadDoc, wakeDoc };

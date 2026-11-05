@@ -9,7 +9,7 @@ import { runCounts } from '../../src/screens/board/tabs/tests/model/run-counts';
 import { runViews } from '../../src/screens/board/tabs/tests/model/run-views';
 import { tally } from '../../src/screens/board/tabs/tests/model/tally';
 import type { ItemDoc, LaunchDefDoc, LauncherDoc, TestDoc } from '../../src/screens/board/tabs/tests/model';
-import { defDoc, doneDoc, itemDoc, launcherDoc, runDoc, testDoc, testRunDoc } from './fixtures';
+import { asRunEntry, defDoc, doneDoc, itemDoc, launcherDoc, runDoc, testDoc, testRunDoc } from './fixtures';
 
 const tests = (...docs: object[]) => docs as TestDoc[];
 const items = (...docs: object[]) => docs as ItemDoc[];
@@ -93,7 +93,7 @@ describe('K1 the launch of a run', { tags: ['critical'] }, () => {
 });
 
 describe('K1 the status line of a run', { tags: ['critical'] }, () => {
-  const run = (extra: object) => ({ ...runDoc('R-1', 'launcher-b1'), ...extra }) as unknown as RunEntry;
+  const run = (extra: object) => asRunEntry({ ...runDoc('R-1', 'launcher-b1'), ...extra });
 
   it('says queued, then launching until the first output line, then running with the line', () => {
     expect(runLine(run({ status: 'queued' })).label).toBe('Queued, waiting for a free slot');
