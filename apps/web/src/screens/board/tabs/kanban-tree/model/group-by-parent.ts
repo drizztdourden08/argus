@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { ItemRef } from '../../../../../../data/kanban';
+import type { ItemRef } from '../../../../../data/kanban';
 import { byRank } from './by-rank';
 
 const groupByParent = (items: readonly ItemRef[]): Map<string, ItemRef[]> => {

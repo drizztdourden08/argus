@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
-import { StatusTag } from '../../sub-components/StatusTag';
+import { StatusTag } from '../../kanban/sub-components/StatusTag';
 import { progressOf } from '../model';
 import type { TreeRowProps } from '../tree.type';
 

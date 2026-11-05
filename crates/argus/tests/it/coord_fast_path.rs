@@ -6,10 +6,12 @@
 
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Output, Stdio};
+use std::process::{Output, Stdio};
+
+use argus_core::process::hidden_command;
 
 fn argus(args: &[&str], home: &Path, stdin: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_argus"))
+    let mut child = hidden_command(env!("CARGO_BIN_EXE_argus"))
         .arg("coord")
         .args(args)
         .env("COORD_HOME", home.join("coord"))

@@ -43,8 +43,8 @@ describe('I-69 the signal strip on a card', { tags: ['standard'] }, () => {
 
 });
 
-describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => {
-  it('folds what does not fit into a +N chip', async () => {
+describe('I-69 the signal strip wraps and opens', { tags: ['standard'] }, () => {
+  it('shows every chip over several lines, with no +N chip and the avatar of who it waits on', async () => {
     const blocked = [
       { kind: 'dep-waits', id: 'D-4', label: 'Expose the hook', who: 'lead:rotp' },
       { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' },
@@ -63,7 +63,10 @@ describe('I-69 the signal strip folds and opens', { tags: ['standard'] }, () => 
     });
     await boardOf();
     const strip = within(cardOf('I-1')).getByRole('group', { name: 'Signals' });
-    expect(within(strip).getByText('+2')).toBeTruthy();
+    expect(within(strip).queryByText(/^\+\d+$/)).toBeNull();
+    expect(within(strip).getByTitle('waiting on rotp: Expose the hook')).toBeTruthy();
+    expect(within(within(strip).getByTitle('Blocked by H-12 (owner): push go')).getByRole('img', { name: 'You' })).toBeTruthy();
+    expect(within(strip).getByTitle('1 test failing').textContent).toBe('1');
   });
 
   it('opens the item from a dependency chip', async () => {
@@ -93,19 +96,19 @@ describe('I-72 the head and the foot of a card', { tags: ['standard'] }, () => {
   });
 });
 
-describe('I-69 the legend under the toolbar', { tags: ['standard'] }, () => {
-  it('is folded and lists every type mark and every kind with its icon', async () => {
+describe('I-97 the legend under the toolbar', { tags: ['standard'] }, () => {
+  it('always shows every type mark, and its end chevron opens every kind with its icon', async () => {
     await mountKanban({ items: [item('I-1')] });
     await boardOf();
-    const legend = screen.getByText('Legend').closest('details');
-    expect(legend).not.toBeNull();
-    expect(legend?.open).toBe(false);
-    const rows = within(legend as HTMLElement);
-    for (const type of ['Epic', 'Story', 'Task', 'Bug', 'Tech debt', 'Test plan']) expect(rows.getByRole('img', { name: type, hidden: true })).toBeTruthy();
+    for (const type of ['Epic', 'Story', 'Task', 'Bug', 'Tech debt', 'Test plan']) expect(screen.getAllByRole('img', { name: type, hidden: true }).length).toBeGreaterThan(0);
+    const chevron = screen.getByRole('button', { name: 'Show legend' });
+    expect(chevron.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByText(ATTENTION[0]?.text ?? '')).toBeNull();
+    fireEvent.click(chevron);
+    expect(screen.getByRole('button', { name: 'Hide legend' }).getAttribute('aria-expanded')).toBe('true');
     for (const spec of ATTENTION) {
-      const tag = rows.getByText(spec.label);
-      expect(tag.parentElement?.querySelector('svg')).not.toBeNull();
-      expect(rows.getByText(spec.text)).toBeTruthy();
+      expect(screen.getByRole('group', { name: spec.label }).querySelector('svg')).not.toBeNull();
+      expect(screen.getByText(spec.text)).toBeTruthy();
     }
   });
 });

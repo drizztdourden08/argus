@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ItemRef } from '../../src/data/kanban';
 import { assigneeLook, cardChips, cardProgress, parseTrails, stageLabel } from '../../src/screens/board/tabs/kanban/model';
 import type { CardData } from '../../src/screens/board/tabs/kanban/model';
-import { CARD_SIGNAL_MAX, signalItems } from '../../src/screens/board/tabs/kanban/signals';
+import { signalItems } from '../../src/screens/board/tabs/kanban/signals';
 import { HOUR, NOW, before, itemRef, threadRef, viewOf } from './kanban-docs';
 
 const criteria = (met: number, total: number) => Array.from({ length: total }, (_, index) => ({ n: index + 1, text: `c${index + 1}`, done: index < met }));
@@ -108,12 +108,25 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
   const lock = { kind: 'todo', id: 'H-12', label: 'push go', who: 'owner' } as const;
   const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.id);
 
-  it('makes one chip for three long dependencies and a blocker, so no row can wrap', () => {
+  it('makes one chip per dependency target and one for the blocker, each with the avatar of who it waits on', () => {
     const card = cardOf(itemRef('I-1', { blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
-    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency', 3], ['blocked', 1]]);
+    expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', undefined], ['blocked', 1]]);
     expect(signals[1]?.label).toBe('Blocked by H-12 (owner): push go');
     expect(signals[0]?.label).toContain('waiting on brock: A very long request title number 2');
+    expect(signals[0]?.avatar).toMatchObject({ label: 'brock lead', initials: 'BR' });
+    expect(signals[1]?.avatar).toMatchObject({ label: 'You', variant: 'owner' });
+  });
+
+  it('makes several dependency chips for several targets', () => {
+    const other = { ...dep(4), who: 'lead:rotp' } as const;
+    const card = cardOf(itemRef('I-1', { blocked: [dep(1), other] }));
+    expect(idsOf(card)).toEqual(['dependency-brock', 'dependency-rotp']);
+  });
+
+  it('shows the quiet signal as its hours', () => {
+    const card = cardOf(itemRef('I-1', { status: 'doing', updatedAt: before(42 * HOUR) }));
+    expect(signalItems(card, NOW).find((signal) => signal.id === 'quiet')?.count).toBe(42);
   });
 
   it('shows nothing for a settled dependency, which the board no longer exports as blocking', () => {
@@ -127,10 +140,10 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
     const signals = new Map([['I-1', { failing: 2, pending: 1 }]]);
     const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
-    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency', 'blocked', 'test-pending', 'decision']);
-    const counted = signalItems(card, NOW).filter((signal) => signal.id !== 'needs-you');
-    expect(counted.every((signal) => typeof signal.count === 'number')).toBe(true);
-    expect(signalItems(card, NOW).length).toBeGreaterThan(CARD_SIGNAL_MAX);
+    expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency-brock', 'blocked', 'test-pending', 'decision']);
+    const signals = signalItems(card, NOW);
+    expect(signals.find((signal) => signal.id === 'needs-you')?.avatar).toMatchObject({ variant: 'owner' });
+    expect(signals.find((signal) => signal.id === 'todo')).toMatchObject({ count: 2, avatar: { variant: 'owner' } });
   });
 
   it('opens the entry for a single question and the item for several', () => {
@@ -143,10 +156,10 @@ describe('I-72 the signal strip of a card', { tags: ['critical'] }, () => {
   it('adds the trail chip after the dependency chips from depth 3 and not before', () => {
     const item = itemRef('I-1', { blocked: [dep(1)] });
     const deep = cardOf(item, [], { trails: new Map([['I-1', { depth: 3, open: 2 }]]) });
-    expect(idsOf(deep)).toEqual(['dependency', 'trail']);
+    expect(idsOf(deep)).toEqual(['dependency-brock', 'trail']);
     expect(signalItems(deep, NOW)[1]).toMatchObject({ icon: 'signpost', count: 3, label: 'trail 3, 2 open', tone: 'neutral' });
-    expect(idsOf(cardOf(item, [], { trails: new Map([['I-1', { depth: 2, open: 1 }]]) }))).toEqual(['dependency']);
-    expect(idsOf(cardOf(item))).toEqual(['dependency']);
+    expect(idsOf(cardOf(item, [], { trails: new Map([['I-1', { depth: 2, open: 1 }]]) }))).toEqual(['dependency-brock']);
+    expect(idsOf(cardOf(item))).toEqual(['dependency-brock']);
   });
 
   it('keeps the conflict first and the archived mark last', () => {

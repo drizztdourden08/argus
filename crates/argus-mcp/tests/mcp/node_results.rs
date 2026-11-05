@@ -5,7 +5,8 @@
 // test-tag: e2e
 
 use std::path::PathBuf;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use argus_mcp::{CallContext, RpcHost};
 use serde_json::{Value, json};
@@ -222,7 +223,7 @@ fn node_output(calls: &[(&str, Value, Option<&str>)]) -> Option<Vec<String>> {
         return None;
     }
     let plan = json!({ "calls": calls, "uris": URIS });
-    let out = Command::new("node")
+    let out = hidden_command("node")
         .args(["-e", SCRIPT, &dir, &plan.to_string()])
         .output()
         .ok()?;

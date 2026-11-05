@@ -6,6 +6,8 @@
 use std::fs;
 use std::path::Path;
 
+use argus_core::process::hidden_command;
+
 use argus_core::fixture::put_file as put;
 use argus_records::releases::{ReleaseStore, Served};
 use serde_json::{Value, json};
@@ -188,7 +190,7 @@ fn files_are_served_and_everything_that_leaves_the_store_or_lists_it_is_refused(
 }
 
 fn git(repo: &Path, args: &[&str]) -> String {
-    let out = std::process::Command::new("git")
+    let out = hidden_command("git")
         .arg("-C")
         .arg(repo)
         .args(["-c", "user.name=t", "-c", "user.email=t@example.com"])

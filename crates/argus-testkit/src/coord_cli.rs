@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::Duration;
 
+use argus_core::process::hidden_command;
+
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 
@@ -89,12 +91,12 @@ impl CoordCli {
     fn command(&self) -> Command {
         match &self.engine {
             Engine::Node(script) => {
-                let mut command = Command::new("node");
+                let mut command = Command::from(hidden_command("node"));
                 command.arg("--no-warnings").arg(script);
                 command
             }
             Engine::Argus(exe) => {
-                let mut command = Command::new(exe);
+                let mut command = Command::from(hidden_command(exe));
                 command.arg("coord");
                 command
             }
@@ -135,7 +137,6 @@ impl CoordCli {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
-        hide_window(&mut command);
         collect(command, input).await
     }
 }
@@ -153,15 +154,6 @@ pub fn argus_exe() -> Option<PathBuf> {
     });
     named.or(beside).filter(|exe| exe.is_file())
 }
-
-#[cfg(windows)]
-fn hide_window(command: &mut Command) {
-    const NO_WINDOW: u32 = 0x0800_0000;
-    command.creation_flags(NO_WINDOW);
-}
-
-#[cfg(not(windows))]
-fn hide_window(_command: &mut Command) {}
 
 async fn collect(mut command: Command, input: &str) -> CliOut {
     let Ok(mut child) = command.spawn() else {

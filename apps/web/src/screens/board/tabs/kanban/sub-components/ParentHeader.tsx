@@ -5,11 +5,11 @@ import type { ParentHeaderProps } from '../kanban-props.type';
 import { DEFAULT_TYPE } from '../model';
 
 const ParentHeader = (props: ParentHeaderProps) => {
-  const { parent } = props;
+  const { parent, withCode } = props;
   return (
     <Flex as="span" gap="xs" align="center">
       <TypeIcon kind={parent.type ?? DEFAULT_TYPE} />
-      <RecordLink id={parent.id} />
+      {withCode ? <RecordLink id={parent.id} /> : null}
       <Text as="span" variant="subtitle" clamp={1}>{parent.title}</Text>
     </Flex>
   );

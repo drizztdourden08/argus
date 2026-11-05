@@ -5,6 +5,8 @@ use std::fs;
 use std::io::{self, Write};
 use std::process::{Command, Stdio};
 
+use argus_core::process::hidden_command;
+
 use super::engines::Engines;
 use super::homes::Home;
 use super::step::Step;
@@ -77,12 +79,12 @@ pub fn run_step(
 fn base_command(engines: &Engines, which: Which) -> Command {
     match which {
         Which::Node => {
-            let mut command = Command::new("node");
+            let mut command = hidden_command("node");
             command.arg(&engines.node_cli).env("COORD_ENGINE", "node");
             command
         }
         Which::Argus => {
-            let mut command = Command::new(&engines.argus);
+            let mut command = hidden_command(&engines.argus);
             command.arg("coord");
             command
         }

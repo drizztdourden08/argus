@@ -1,2 +1,7 @@
 too-many-lines-threshold = 60
 cognitive-complexity-threshold = 10
+
+disallowed-methods = [
+    { path = "std::process::Command::new", reason = "use argus_core::process::hidden_command so no console window opens on Windows" },
+    { path = "tokio::process::Command::new", reason = "use tokio::process::Command::from(argus_core::process::hidden_command(..)) so no console window opens on Windows" },
+]

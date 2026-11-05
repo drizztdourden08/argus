@@ -83,6 +83,7 @@ interface RecordHeadProps {
   threads: HeadThreads;
   menu: readonly MenuGroup[];
   menuLabel: string;
+  title?: ReactNode;
   size?: HeadSize;
   selection?: HeadSelection;
 }

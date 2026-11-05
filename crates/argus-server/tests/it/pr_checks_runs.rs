@@ -6,6 +6,8 @@
 
 use std::path::Path;
 
+use argus_core::process::hidden_command;
+
 use crate::pr_rig::{SHA, linked_record, open_pr, rig, start_check};
 use crate::wait::until;
 use serde_json::{Value, json};
@@ -192,7 +194,7 @@ fn set_ci_root(coord_home: &Path, dir: &Path) {
 }
 
 fn git(dir: &Path, args: &[&str]) {
-    let status = std::process::Command::new("git")
+    let status = hidden_command("git")
         .args([
             "-c",
             "user.name=t",

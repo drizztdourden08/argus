@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { LoadingFallback } from '../../../shell';
 import type { BoardTabBodyProps } from './BoardTabBody.type';
-import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanbanTab, LazyReleasesTab, LazyTestsTab, LazyWorktreesTab } from './lazy-tabs';
+import { LazyActivityTab, LazyAgentsTab, LazyBuildsTab, LazyChangesTab, LazyKanbanTab, LazyReleasesTab, LazyTestsTab, LazyWorktreesTab } from './behavior';
 
 const BoardTabBody = (props: BoardTabBodyProps) => {
   const { tab, boardKey, work, handed, more } = props;

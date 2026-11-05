@@ -2,14 +2,14 @@
 import { describe, expect, it } from 'vitest';
 import type { WithId } from '../../src/data/react';
 import type { Test } from '../../src/data/types';
-import { branchKeys } from '../../src/screens/board/tabs/kanban/tree/model/branch-keys';
-import { buildTree } from '../../src/screens/board/tabs/kanban/tree/model/build-tree';
-import { closedAfter } from '../../src/screens/board/tabs/kanban/tree/model/closed-after';
-import { indexNodes } from '../../src/screens/board/tabs/kanban/tree/model/index-nodes';
-import { openKeys } from '../../src/screens/board/tabs/kanban/tree/model/open-keys';
-import { progressOf } from '../../src/screens/board/tabs/kanban/tree/model/progress-of';
-import { pruneTree } from '../../src/screens/board/tabs/kanban/tree/model/prune-tree';
-import type { TreeNode, TreeSource } from '../../src/screens/board/tabs/kanban/tree/tree.type';
+import { branchKeys } from '../../src/screens/board/tabs/kanban-tree/model/branch-keys';
+import { buildTree } from '../../src/screens/board/tabs/kanban-tree/model/build-tree';
+import { closedAfter } from '../../src/screens/board/tabs/kanban-tree/model/closed-after';
+import { indexNodes } from '../../src/screens/board/tabs/kanban-tree/model/index-nodes';
+import { openKeys } from '../../src/screens/board/tabs/kanban-tree/model/open-keys';
+import { progressOf } from '../../src/screens/board/tabs/kanban-tree/model/progress-of';
+import { pruneTree } from '../../src/screens/board/tabs/kanban-tree/model/prune-tree';
+import type { TreeNode, TreeSource } from '../../src/screens/board/tabs/kanban-tree/tree.type';
 import { HOUR, before, itemRef } from './kanban-docs';
 
 const testRef = (id: string, extra: Partial<Test> = {}): WithId<Test> =>

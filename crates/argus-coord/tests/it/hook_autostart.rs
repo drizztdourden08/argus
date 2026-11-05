@@ -4,9 +4,11 @@
 
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
+
+use argus_core::process::hidden_command;
 
 use crate::common::Home;
 use crate::hook_support::hook_with;
@@ -19,7 +21,7 @@ struct Case {
 }
 
 fn node_runs() -> bool {
-    let ran = Command::new("node")
+    let ran = hidden_command("node")
         .arg("--version")
         .stdout(Stdio::null())
         .status();

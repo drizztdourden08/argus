@@ -5,7 +5,8 @@
 // test-tag: e2e
 
 use std::path::PathBuf;
-use std::process::Command;
+
+use argus_core::process::hidden_command;
 
 use argus_mcp::{DEP_TOOLS, INSTRUCTIONS, PROTOCOL_VERSION, SUPPORTED_VERSIONS, tool_defs};
 use serde_json::Value;
@@ -33,7 +34,7 @@ fn node_answer() -> Option<Value> {
     if !PathBuf::from(&dir).join("src/mcp/tools.mjs").exists() {
         return None;
     }
-    let out = Command::new("node")
+    let out = hidden_command("node")
         .args(["-e", SCRIPT, &dir])
         .output()
         .ok()?;

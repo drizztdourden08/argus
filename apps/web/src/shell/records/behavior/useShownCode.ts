@@ -5,7 +5,7 @@ import { ownScope } from './own-scope';
 import { parseRecord } from './parse-record';
 import { shownItemCode } from './shown-item-code';
 import { storedItemId } from './stored-item-id';
-import { ITEMS } from './useShownCode.constants';
+import { ITEMS } from './use-shown-code.constants';
 
 const useShownCode = (id: string, board?: string): string => {
   const here = useParams().key ?? null;

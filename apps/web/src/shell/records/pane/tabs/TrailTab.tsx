@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { placeholderBody } from '../placeholder-body';
+import { placeholderBody } from '../PlaceholderBody';
 
 const TrailTab = placeholderBody('trail', 'Trail');
 

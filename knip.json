@@ -10,6 +10,9 @@
       ],
       "project": [
         "*.{mjs,ts}"
+      ],
+      "ignoreDependencies": [
+        "@drizztdourden08/brock-thread"
       ]
     },
     "apps/web": {

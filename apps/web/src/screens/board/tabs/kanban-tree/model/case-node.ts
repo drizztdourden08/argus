@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
-import type { ItemRef } from '../../../../../../data/kanban';
-import type { Test } from '../../../../../../data/types';
-import { itemCode } from '../../../../../../shell';
-import { OWNER } from '../../model';
+import type { ItemRef } from '../../../../../data/kanban';
+import type { Test } from '../../../../../data/types';
+import { itemCode } from '../../../../../shell';
+import { OWNER } from '../../kanban/model';
 import { CASE_TYPE, MANUAL_MODE, NO_COUNT } from '../tree.constants';
 import type { TreeNode } from '../tree.type';
 

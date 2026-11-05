@@ -4,7 +4,9 @@
 //! E2, K2: the real binary answers a forwarded call with the Node text.
 // test-tag: e2e
 
-use std::process::{Command, Output};
+use std::process::Output;
+
+use argus_core::process::hidden_command;
 
 use tempfile::TempDir;
 
@@ -13,7 +15,7 @@ const USAGE_HEAD: &str =
 const USAGE_TAIL: &str = "  install-mcp [--desktop [--write]] [--code [--dir <project dir>]]\n";
 
 fn run(home: &TempDir, forwarded: bool, args: &[&str]) -> Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_argus"));
+    let mut command = hidden_command(env!("CARGO_BIN_EXE_argus"));
     command
         .args(args)
         .env("COORD_HOME", home.path())
