@@ -22,7 +22,8 @@ use crate::{
 const AVATAR_MAX: usize = 240 * 1024;
 
 /// The Tessera apps whose brand mark may be picked.
-pub(crate) const BRAND_APPS: [&str; 6] = ["tessera", "rotp", "archipelia", "brock", "bxel", "argus"];
+pub(crate) const BRAND_APPS: [&str; 6] =
+    ["tessera", "rotp", "archipelia", "brock", "bxel", "argus"];
 
 const IMAGE_PREFIXES: [&str; 4] = [
     "data:image/png;base64,",

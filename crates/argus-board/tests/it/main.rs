@@ -1,8 +1,8 @@
 mod common;
 
 mod agent_links;
-mod dep_inbox;
 mod board_icon;
+mod dep_inbox;
 mod deps;
 mod entry_images;
 mod export_import;
@@ -11,8 +11,8 @@ mod lock;
 mod names;
 mod op_links;
 mod ops;
-mod plan_run;
 mod owner_profile;
+mod plan_run;
 mod portfolio;
 mod prs;
 mod served;

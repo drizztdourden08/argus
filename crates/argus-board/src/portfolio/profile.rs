@@ -52,7 +52,9 @@ fn check_name(value: &Value) -> Result<String, String> {
 fn check_initials(value: &Value) -> Result<String, String> {
     let text = text_of(value, "initials")?;
     let fits = text.chars().count() == 2
-        && text.chars().all(|c| c.is_alphanumeric() && !c.is_lowercase());
+        && text
+            .chars()
+            .all(|c| c.is_alphanumeric() && !c.is_lowercase());
     if fits {
         Ok(text.to_owned())
     } else {

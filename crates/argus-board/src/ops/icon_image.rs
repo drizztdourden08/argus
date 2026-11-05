@@ -128,6 +128,8 @@ pub(crate) fn text_or_clear<'a>(
     match value.as_str() {
         Some(text) => Ok(Some(text)),
         None if value.is_null() => Ok(None),
-        None => Err(crate::error::refuse(format!("{what} must be a text or null."))),
+        None => Err(crate::error::refuse(format!(
+            "{what} must be a text or null."
+        ))),
     }
 }
