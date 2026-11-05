@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { BackdropLayer } from '@drizztdourden08/tessera';
+import { BackdropLayer, Box } from '@drizztdourden08/tessera';
 import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 import { AppSettingsProvider } from '../AppSettings';
@@ -16,7 +16,7 @@ const AppShell = () => {
   usePreloadPages();
   return (
     <AppSettingsProvider>
-      <div className="app-shell">
+      <Box className="app-shell">
         <BackdropLayer className="app-shell__backdrop" backdrop={{ kind: 'node', node: <MeshBackdrop /> }} />
         <ShellBar mode={mode} boardKey={boardKey} boardsAvailable={boardsAvailable} onMode={select} />
         <PageFrame>
@@ -24,7 +24,7 @@ const AppShell = () => {
             <Outlet />
           </Suspense>
         </PageFrame>
-      </div>
+      </Box>
     </AppSettingsProvider>
   );
 };

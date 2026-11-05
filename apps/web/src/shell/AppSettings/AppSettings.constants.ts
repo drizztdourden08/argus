@@ -18,6 +18,8 @@ const AVATAR_MODES: { value: AvatarMode; label: string }[] = [
   { value: 'upload', label: 'Upload' },
 ];
 
+const MODE_OF_KIND: Record<string, AvatarMode> = { default: 'default', initials: 'initials', brand: 'brand', image: 'upload' };
+
 const PREVIEW_SIZE: OwnerMarkSize = 'lg';
 
 const INITIALS_LENGTH = 2;
@@ -38,6 +40,7 @@ export {
   FIRST_SECTION,
   INITIALS_LENGTH,
   INITIALS_NOTE,
+  MODE_OF_KIND,
   NAME_NOTE,
   PREVIEW_SIZE,
   PROFILE_SAVED,

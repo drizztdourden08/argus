@@ -1,13 +1,10 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useState } from 'react';
-import type { TestPingResult } from '../../../../data/types';
-import { failureLine, IDLE_LINE, resultLine } from './test-line';
-
-interface TestNotification {
-  line: string;
-  busy: boolean;
-  send: () => void;
-}
+import type { TestPingResult } from '../../../../../data/types';
+import { IDLE_LINE } from '../NotificationsSection.constants';
+import type { TestNotification } from '../NotificationsSection.type';
+import { failureLine } from './failure-line';
+import { resultLine } from './result-line';
 
 const useTestNotification = (run: () => Promise<TestPingResult>): TestNotification => {
   const [line, setLine] = useState(IDLE_LINE);
@@ -23,4 +20,3 @@ const useTestNotification = (run: () => Promise<TestPingResult>): TestNotificati
 };
 
 export { useTestNotification };
-export type { TestNotification };

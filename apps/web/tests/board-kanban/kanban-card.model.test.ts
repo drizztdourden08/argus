@@ -83,7 +83,7 @@ const idsOf = (card: CardData) => signalItems(card, NOW).map((signal) => signal.
 
 describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
   it('makes one chip per dependency target and one for the blocker, the dependency with the brand mark of the lead and the blocker with the avatar', () => {
-    const card = cardOf(itemRef('I-1', { blocked: [dep(1), dep(2), dep(3), lock] }));
+    const card = cardOf(itemRef('I-1', { parent: 'I-9', blocked: [dep(1), dep(2), dep(3), lock] }));
     const signals = signalItems(card, NOW);
     expect(signals.map((signal) => [signal.id, signal.count])).toEqual([['dependency-brock', undefined], ['blocked', 1]]);
     expect(signals[1]?.label).toBe('Blocked by H-12 (owner): push go');
@@ -95,13 +95,13 @@ describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
 
   it('makes several dependency chips for several targets', () => {
     const other = { ...dep(4), who: 'lead:rotp' } as const;
-    const card = cardOf(itemRef('I-1', { blocked: [dep(1), other] }));
+    const card = cardOf(itemRef('I-1', { parent: 'I-9', blocked: [dep(1), other] }));
     expect(idsOf(card)).toEqual(['dependency-brock', 'dependency-rotp']);
   });
 
   it('keeps the avatar for a lead of a board with no brand', () => {
     const unknown = { ...dep(5), who: 'lead:mystery' } as const;
-    const signal = signalItems(cardOf(itemRef('I-1', { blocked: [unknown] })), NOW)[0];
+    const signal = signalItems(cardOf(itemRef('I-1', { parent: 'I-9', blocked: [unknown] })), NOW)[0];
     expect(signal?.brand).toBeUndefined();
     expect(signal?.avatar).toMatchObject({ initials: 'MY' });
   });
@@ -112,7 +112,7 @@ describe('I-72 the signal chips of a card', { tags: ['critical'] }, () => {
   });
 
   it('shows nothing for a settled dependency, which the board no longer exports as blocking', () => {
-    const card = cardOf(itemRef('I-1', { waitsOn: { dep: 'D-4', project: 'rotp', item: 'I-12', title: 't', state: 'done', since: before(HOUR), reason: null }, blocked: [] }));
+    const card = cardOf(itemRef('I-1', { parent: 'I-9', waitsOn: { dep: 'D-4', project: 'rotp', item: 'I-12', title: 't', state: 'done', since: before(HOUR), reason: null }, blocked: [] }));
     expect(signalItems(card, NOW)).toEqual([]);
   });
 
@@ -123,7 +123,7 @@ describe('I-72 the signal order of a card', { tags: ['critical'] }, () => {
     const needs = new Map([['I-1', { questions: 1, decisions: 1, todos: 2, tests: 0 }]]);
     const asks = new Map([['I-1', [{ id: 'Q-3', kind: 'question', via: 'item' }, { id: 'D-1', kind: 'decision', via: 'item' }] as const]]);
     const signals = new Map([['I-1', { failing: 2, pending: 1 }]]);
-    const item = itemRef('I-1', { status: 'doing', blocked: [dep(1), lock] });
+    const item = itemRef('I-1', { parent: 'I-9', status: 'doing', blocked: [dep(1), lock] });
     const card = cardOf(item, [], { needs, asks: new Map([['I-1', [...(asks.get('I-1') ?? [])]]]), signals });
     expect(idsOf(card)).toEqual(['needs-you', 'question', 'todo', 'test-failing', 'dependency-brock', 'blocked', 'test-pending', 'decision']);
     const items = signalItems(card, NOW);
@@ -139,7 +139,7 @@ describe('I-72 the signal order of a card', { tags: ['critical'] }, () => {
   });
 
   it('adds the trail chip after the dependency chips from depth 3 and not before', () => {
-    const item = itemRef('I-1', { blocked: [dep(1)] });
+    const item = itemRef('I-1', { parent: 'I-9', blocked: [dep(1)] });
     const deep = cardOf(item, [], { trails: new Map([['I-1', { depth: 3, open: 2 }]]) });
     expect(idsOf(deep)).toEqual(['dependency-brock', 'trail']);
     expect(signalItems(deep, NOW)[1]).toMatchObject({ icon: 'signpost', count: 3, label: 'trail 3, 2 open', tone: 'neutral' });

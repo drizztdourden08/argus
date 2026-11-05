@@ -7,7 +7,7 @@ afterEach(() => vi.unstubAllGlobals());
 const stub = (status: string, outcome: string | null) => {
   const calls: { url: string; method?: string; body: { data: Record<string, unknown> } }[] = [];
   vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
-    calls.push({ url, method: init?.method, body: JSON.parse(String(init?.body)) });
+    calls.push({ url, method: init?.method, body: JSON.parse(String(init?.body)) as { data: Record<string, unknown> } });
     return Promise.resolve(new Response(JSON.stringify({ id: 'e', status, outcome, entry: null, seq: 1 }), { status: 200 }));
   }));
   return calls;

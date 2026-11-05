@@ -3,8 +3,10 @@ import { SettingsSection } from '@drizztdourden08/tessera';
 import type { SettingsSectionRow } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useNotifySettings } from '../../../../data/notify';
-import { autoRows, levelRows, osRow } from './notification-rows';
-import { useTestNotification } from './useTestNotification';
+import { autoRows } from './behavior/auto-rows';
+import { levelRows } from './behavior/level-rows';
+import { osRow } from './behavior/os-row';
+import { useTestNotification } from './behavior/useTestNotification';
 
 const withProblem = (rows: SettingsSectionRow[], refused: Record<string, string>): SettingsSectionRow[] =>
   rows.map((row) => (refused[row.id] ? { ...row, problem: refused[row.id] } : row));

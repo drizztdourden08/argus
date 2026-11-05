@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Button, DropZone, Flex, SegmentedControl, Text } from '@drizztdourden08/tessera';
+import { DropZone, Flex, SegmentedControl } from '@drizztdourden08/tessera';
+import { AvatarReset } from '../../AvatarReset';
 import { BrandMarkPicker } from '../../BrandMarkPicker';
 import { OwnerMark } from '../../OwnerMark';
 import { AVATAR_MODES, PREVIEW_SIZE, UPLOAD_TYPES } from '../AppSettings.constants';
@@ -26,10 +27,7 @@ const AvatarRow = (props: { choice: ProfileChoice }) => {
       {choice.mode === 'upload' && (
         <DropZone variant="inline" size="sm" accept={UPLOAD_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} />
       )}
-      <Flex gap="sm" align="center">
-        <Button size="sm" variant="secondary" disabled={choice.busy || choice.avatar === null} onClick={() => void choice.reset()}>Use the default</Button>
-        {choice.problem && <Text variant="caption" tone="danger" role="alert">{choice.problem}</Text>}
-      </Flex>
+      <AvatarReset disabled={choice.busy || choice.avatar === null} problem={choice.problem} onReset={() => void choice.reset()} />
     </Flex>
   );
 };

@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { systemFacts } from '../../src/shell/AppSettings/sections/SystemSection/system-facts';
+import { systemFacts } from '../../src/shell/AppSettings/sub-components/SystemSection/behavior/system-facts';
 
 const NOW = Date.parse('2026-11-04T12:00:00Z');
 const labelled = (facts: { label: string; value: string }[]) => Object.fromEntries(facts.map((f) => [f.label, f.value]));

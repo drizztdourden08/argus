@@ -1,6 +1,8 @@
 /* @layer renderer-app @kind test */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getState, load, resetStore, saveAuto, saveLevel } from '../../../src/data/notify/settings-store';
+import { settingsStore } from '../../../src/data/notify/settings-store';
+
+const { getState, load, resetStore, saveAuto, saveLevel } = settingsStore;
 
 const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);

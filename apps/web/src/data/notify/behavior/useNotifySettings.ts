@@ -2,7 +2,9 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import type { NotifySettingsHook } from '../notify.type';
 import { sendTest } from '../send-test';
-import { getState, load, saveAuto, saveLevel, subscribe } from '../settings-store';
+import { settingsStore } from '../settings-store';
+
+const { getState, load, saveAuto, saveLevel, subscribe } = settingsStore;
 
 const useNotifySettings = (): NotifySettingsHook => {
   const state = useSyncExternalStore(subscribe, getState);
