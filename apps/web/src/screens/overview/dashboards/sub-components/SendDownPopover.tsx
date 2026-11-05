@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Anchored, Button, Card, Flex, Icon, IconButton, SegmentedControl, Text } from '@drizztdourden08/tessera';
+import { Anchored, Card, Flex, Icon, IconButton, SegmentedControl, Text } from '@drizztdourden08/tessera';
 import { BoardMarkdownEditor } from '../../../../shell';
 import { SEND_KINDS, SEND_MESSAGE } from '../dashboards.constants';
 import type { SendDownPopoverProps } from '../dashboards.type';
@@ -10,7 +10,6 @@ import './SendDownPopover.css';
 const SendDownPopover = (props: SendDownPopoverProps) => {
   const { send, owner, anchorRef } = props;
   if (send.target !== owner) return null;
-  const empty = send.text.trim().length === 0;
   const over = send.text.length > OWNER_MAX ? sendProblem(send.text) : null;
   return (
     <Anchored anchorRef={anchorRef} placement="bottom-start" onDismiss={send.close} className="send-down" role="dialog" aria-label={`Send down to ${send.name}`}>
@@ -30,12 +29,9 @@ const SendDownPopover = (props: SendDownPopoverProps) => {
             value={send.text}
             onChange={send.setText}
             onSubmit={send.send}
+            submitLabel="Send down"
             error={over}
           />
-          <Flex gap="sm" align="center">
-            <Button size="sm" variant="primary" disabled={send.busy || empty || over !== null} title="Send down (Ctrl+Enter)" onClick={send.send}>Send down</Button>
-            <Text variant="caption" tone="muted">Ctrl+Enter sends</Text>
-          </Flex>
         </Flex>
       </Card>
     </Anchored>

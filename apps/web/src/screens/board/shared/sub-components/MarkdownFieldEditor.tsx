@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, Icon, IconButton } from '@drizztdourden08/tessera';
+import { Button, Flex } from '@drizztdourden08/tessera';
 import { BoardMarkdownEditor } from '../../../../shell';
 import { useState } from 'react';
 import type { MarkdownFieldEditorProps } from '../shared.type';
@@ -34,11 +34,9 @@ const MarkdownFieldEditor = (props: MarkdownFieldEditorProps) => {
         error={found}
         onSubmit={save}
         onEscape={onCancel}
+        submitLabel="Save"
+        actions={<Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>}
       />
-      <Flex gap="xs" justify="end">
-        <IconButton label={`Save ${noun}`} size="sm" variant="secondary" onClick={() => save(draft)}><Icon name="check" /></IconButton>
-        <IconButton label="Cancel" size="sm" variant="ghost" onClick={onCancel}><Icon name="x" /></IconButton>
-      </Flex>
     </Flex>
   );
 };

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Button, Flex } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { OwnerBox } from '../../OwnerBox';
 import { askCopy } from '../behavior/ask-copy';
@@ -13,11 +13,10 @@ const ReplyForm = (props: AskFormProps) => {
   const copy = askCopy(entry, mode);
   const busy = actions.isBusy(`answer:${entry.id}`);
   const send = () => void actions.reply(entry, copy.kind, text).then((taken) => taken && setText(''));
-  const verb = <Button size="sm" variant={mode === 'answer' ? 'primary' : 'tertiary'} disabled={busy} onClick={send}>{copy.verb}</Button>;
   return (
     <Flex direction="column" gap="xs">
       {quick && mode === 'decide' ? <OptionButtons entry={entry} actions={actions} /> : null}
-      <OwnerBox compact ariaLabel={copy.label} placeholder={copy.label} value={text} onChange={setText} rows={3} onSubmit={send} disabled={busy} actions={verb} />
+      <OwnerBox compact ariaLabel={copy.label} placeholder={copy.label} value={text} onChange={setText} rows={3} onSubmit={send} disabled={busy} submitLabel={copy.verb} />
       {quick && entry.kind === 'message' ? <Flex gap="xs"><DismissButton entry={entry} actions={actions} /></Flex> : null}
     </Flex>
   );
