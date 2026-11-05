@@ -3,12 +3,14 @@
 //! keeps the registry of projects and the entries the owner posted on the Argus page; the
 //! project cards are computed from every project's board.
 
+mod boards;
 mod cards;
 mod deliver;
 mod owner_items;
 mod profile;
 mod registry;
 
+pub use boards::{apply_owner_op, needs_reconcile, reconcile};
 pub use cards::summarize;
 pub use deliver::{PortfolioImport, dispatch_entry, import_portfolio_entries};
 pub(crate) use profile::export_owner;

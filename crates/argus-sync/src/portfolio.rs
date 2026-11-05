@@ -7,7 +7,8 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use argus_board::portfolio::{
-    dispatch_entry, import_portfolio_entries, project_keys, shape, summarize,
+    dispatch_entry, import_portfolio_entries, needs_reconcile, project_keys, reconcile, shape,
+    summarize,
 };
 use argus_board::store::{LockWait, with_board_async};
 use argus_board::{Board, BoardError};
@@ -135,6 +136,27 @@ impl State {
         .map_err(board_error)
     }
 
+    /// Gives every project a board item. The unlocked read decides first; the write happens
+    /// under the portfolio lock only when something is missing or out of date.
+    async fn reconcile_boards(self: &Arc<Self>, p: Board) -> Result<Board, ApiError> {
+        if !needs_reconcile(self.coord_home(), &p) {
+            return Ok(p);
+        }
+        let home = self.coord_home().to_path_buf();
+        let opts = LockWait {
+            create: true,
+            ..LockWait::default()
+        };
+        with_board_async(self.coord_home(), PORTFOLIO, opts, |pp| {
+            shape(pp);
+            reconcile(&home, pp);
+            clear_marks(pp);
+            Ok(pp.clone())
+        })
+        .await
+        .map_err(board_error)
+    }
+
     /// Recomputes every card and exports the portfolio scope.
     pub async fn refresh_portfolio(self: &Arc<Self>) -> Result<Option<Exported>, ApiError> {
         if self.stopped() {
@@ -145,6 +167,7 @@ impl State {
             .map_err(board_error)?;
         let mut p = read.unwrap_or_else(blank_portfolio);
         shape(&mut p);
+        let p = self.reconcile_boards(p).await?;
         let (p, newly) = self.retry_pending(p).await?;
         let out = self.export_with_cards(p)?;
         for key in newly {

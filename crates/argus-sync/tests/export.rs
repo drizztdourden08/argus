@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
 
 use argus_board::sync::{PAGE_COLLECTIONS, export_docs};
+use argus_board::store::{board_dir, try_lock};
 use argus_core::log::{LOG_MAX_BYTES, Logger};
 use argus_core::redact::Redactor;
 use argus_core::{
@@ -428,6 +429,26 @@ async fn a_proof_from_a_path_inside_an_allowed_root_is_kept() {
         h.docs("alpha", Coll::Tests)["T-1"]["proofs"][0]["caption"],
         "T-1 proof"
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_first_refresh_writes_board_items_and_the_next_takes_no_lock() {
+    let h = Harness::start().await;
+    assert_eq!(h.keys("_portfolio", Coll::Boards), ["BD-1", "BD-2"]);
+    let stored = h.read("_portfolio");
+    assert_eq!(stored["boards"]["BD-1"]["key"], "alpha");
+    assert_eq!(stored["boards"]["BD-2"]["key"], "beta");
+    assert_eq!(stored["counters"]["BD"], 2);
+    let _held = try_lock(&board_dir(h.home(), "_portfolio"))
+        .expect("lock")
+        .expect("free");
+    let again = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        h.sync.resync(Some("_portfolio"), false),
+    )
+    .await;
+    assert!(again.expect("no wait for the lock").is_ok());
+    assert_eq!(h.read("_portfolio")["counters"]["BD"], 2);
 }
 
 #[tokio::test(flavor = "multi_thread")]

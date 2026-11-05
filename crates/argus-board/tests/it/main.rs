@@ -14,6 +14,7 @@ mod ops;
 mod owner_profile;
 mod plan_run;
 mod portfolio;
+mod portfolio_boards;
 mod prs;
 mod served;
 mod typed;
