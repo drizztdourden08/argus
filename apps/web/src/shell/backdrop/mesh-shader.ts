@@ -1,0 +1,149 @@
+/* @layer renderer-app @kind constants */
+/*
+ * Adapted from the mesh gradient fragment shader of Paper Shaders
+ * (https://github.com/paper-design/shaders), Apache License 2.0.
+ * Changes: the colour spots are pushed away from the pointer (u_pointer, u_repel, u_repelRadius)
+ * and shifted by a per-spot depth from the pointer offset (u_parallax); the grain follows the
+ * canvas aspect (u_aspect). The vertex shader and the sizing uniforms are Paper's own.
+ */
+const MAX_COLORS = 10;
+
+const MESH_SHADER = `#version 300 es
+precision mediump float;
+
+uniform float u_time;
+
+uniform vec4 u_colors[${MAX_COLORS}];
+uniform float u_colorsCount;
+
+uniform float u_distortion;
+uniform float u_swirl;
+uniform float u_grainMixer;
+uniform float u_grainOverlay;
+
+uniform vec2 u_pointer;
+uniform float u_repel;
+uniform float u_repelRadius;
+uniform float u_parallax;
+uniform float u_aspect;
+
+in vec2 v_objectUV;
+out vec4 fragColor;
+
+vec2 rotate(vec2 uv, float th) {
+  return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+}
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(0.3183099, 0.3678794)) + 0.1;
+  p += dot(p, p + 19.19);
+  return fract(p.x * p.y);
+}
+
+float valueNoise(vec2 st) {
+  vec2 i = floor(st);
+  vec2 f = fract(st);
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  float x1 = mix(a, b, u.x);
+  float x2 = mix(c, d, u.x);
+  return mix(x1, x2, u.y);
+}
+
+vec2 getPosition(int i, float t) {
+  float a = float(i) * .37;
+  float b = .6 + fract(float(i) / 3.) * .9;
+  float c = .8 + fract(float(i + 1) / 4.);
+
+  float x = sin(t * b + a);
+  float y = cos(t * c + a * 1.5);
+
+  return .5 + .5 * vec2(x, y);
+}
+
+float getDepth(int i) {
+  return fract(float(i) * .618 + .13) * 2. - 1.;
+}
+
+vec2 applyPointer(vec2 pos, int i, vec2 pointer) {
+  pos -= (pointer - .5) * u_parallax * getDepth(i);
+  vec2 away = (pos - pointer) * vec2(u_aspect, 1.);
+  float dist = length(away);
+  float room = 1. - smoothstep(0., u_repelRadius, dist);
+  vec2 direction = away / max(dist, 1e-4);
+  return pos + direction * room * room * u_repel * vec2(1. / u_aspect, 1.);
+}
+
+void main() {
+  vec2 uv = v_objectUV;
+  uv += .5;
+  vec2 grainUV = uv * vec2(1000. * u_aspect, 1000.);
+  vec2 pointer = vec2(u_pointer.x, 1. - u_pointer.y);
+
+  float mixerGrain = 0.;
+  if (u_grainMixer > 0.) {
+    mixerGrain = .4 * u_grainMixer * (valueNoise(grainUV) - .5);
+  }
+
+  const float firstFrameOffset = 41.5;
+  float t = .5 * (u_time + firstFrameOffset);
+
+  float radius = smoothstep(0., 1., length(uv - .5));
+  float center = 1. - radius;
+  for (float i = 1.; i <= 2.; i++) {
+    uv.x += u_distortion * center / i * sin(t + i * .4 * smoothstep(.0, 1., uv.y)) * cos(.2 * t + i * 2.4 * smoothstep(.0, 1., uv.y));
+    uv.y += u_distortion * center / i * cos(t + i * 2. * smoothstep(.0, 1., uv.x));
+  }
+
+  vec2 uvRotated = uv;
+  uvRotated -= vec2(.5);
+  float angle = 3. * u_swirl * radius;
+  uvRotated = rotate(uvRotated, -angle);
+  uvRotated += vec2(.5);
+
+  vec3 color = vec3(0.);
+  float opacity = 0.;
+  float totalWeight = 0.;
+
+  for (int i = 0; i < ${MAX_COLORS}; i++) {
+    if (i >= int(u_colorsCount)) break;
+
+    vec2 pos = applyPointer(getPosition(i, t), i, pointer) + mixerGrain;
+    vec3 colorFraction = u_colors[i].rgb * u_colors[i].a;
+    float opacityFraction = u_colors[i].a;
+
+    float dist = length(uvRotated - pos);
+
+    dist = pow(dist, 3.5);
+    float weight = 1. / (dist + 1e-3);
+    color += colorFraction * weight;
+    opacity += opacityFraction * weight;
+    totalWeight += weight;
+  }
+
+  color /= max(1e-4, totalWeight);
+  opacity /= max(1e-4, totalWeight);
+
+  if (u_grainOverlay > 0.) {
+    float grainOverlay = valueNoise(rotate(grainUV, 1.) + vec2(3.));
+    grainOverlay = mix(grainOverlay, valueNoise(rotate(grainUV, 2.) + vec2(-1.)), .5);
+    grainOverlay = pow(grainOverlay, 1.3);
+
+    float grainOverlayV = grainOverlay * 2. - 1.;
+    vec3 grainOverlayColor = vec3(step(0., grainOverlayV));
+    float grainOverlayStrength = u_grainOverlay * abs(grainOverlayV);
+    grainOverlayStrength = pow(grainOverlayStrength, .8);
+    color = mix(color, grainOverlayColor, .35 * grainOverlayStrength);
+
+    opacity += .5 * grainOverlayStrength;
+  }
+  opacity = clamp(opacity, 0., 1.);
+
+  fragColor = vec4(color, opacity);
+}
+`;
+
+export { MAX_COLORS, MESH_SHADER };

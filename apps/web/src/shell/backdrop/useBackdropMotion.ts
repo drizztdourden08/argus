@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useState } from 'react';
-import { MOTION, STILL_MOTION } from './backdrop.constants';
+import type { MOTION, STILL_MOTION } from './backdrop.constants';
+import { motionFor } from './motion-rule';
 
 const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
@@ -20,7 +21,7 @@ const useBackdropMotion = (): typeof MOTION | typeof STILL_MOTION => {
     };
   }, []);
 
-  return reduced || !visible ? STILL_MOTION : MOTION;
+  return motionFor(reduced, visible);
 };
 
 export { useBackdropMotion };
