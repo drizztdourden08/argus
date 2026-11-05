@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Box, Flex } from '@drizztdourden08/tessera';
 import { useRecordPane } from '../../../../shell';
-import { SECOND_TICK_MS, useNow, useStoredFlag } from '../../shared';
-import { FINISHED_KEY } from './AgentsTab.constants';
+import { FINISHED_KEY, useStoredFlag } from '../../../../stored';
+import { SECOND_TICK_MS, useNow } from '../../shared';
 import type { AgentsTabProps } from './AgentsTab.type';
 import { useAgentActions } from './behavior/useAgentActions';
 import { useAgentRuns } from './behavior/useAgentRuns';

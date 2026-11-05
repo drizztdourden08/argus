@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind component */
 import { DropdownMenu } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import { useStoredFlag } from '../shared';
+import { HIDDEN_KEY, useStoredFlag } from '../../../stored';
 import { useMoreCounts } from './behavior/useMoreCounts';
-import { HIDDEN_KEY, HIDDEN_TIP } from './BoardMore.constants';
+import { HIDDEN_TIP } from './BoardMore.constants';
 import type { BoardMoreProps, MoreDialog } from './BoardMore.type';
 import { MoreDialogs } from './sub-components/MoreDialogs';
 
