@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, Tabs } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useBoard } from '../../data/react';
 import { RecordPaneScope } from '../../shell';
@@ -7,10 +7,10 @@ import { RecordPaneHost } from '../../shell/records/pane';
 import { useBoardTab } from './behavior/useBoardTab';
 import { usePresence } from './behavior/usePresence';
 import { BOARD_TABS } from './board.constants';
-import { BoardFocus } from './BoardFocus';
 import { BoardHeader } from './BoardHeader';
 import { BoardMore, useBoardMore } from './BoardMore';
 import { BoardTabBody } from './BoardTabBody';
+import { BoardTabsRow } from './BoardTabsRow';
 import { useBoardWork } from './feed-model';
 import { OpenThreadContext } from './shared';
 import { useTabBadges, withBadges } from './tab-badges';
@@ -40,12 +40,11 @@ const BoardPage = (props: BoardPageProps) => {
             updatedAt={board.meta?.updatedAt ?? null}
             tools={<BoardMore boardKey={boardKey} trashCount={trashCount} onTrash={more.openTrash} onPurge={() => more.openPurge({ scope: 'thread' })} />}
           />
-          <Tabs tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} size="lg" selectedTone="neutral" badgeFill="solid" onTabChange={(next) => {
+          <BoardTabsRow tabs={withBadges(BOARD_TABS, badges)} activeTab={more.trashOpen ? '' : tab} onTabChange={(next) => {
               more.closeTrash();
               select(next);
             }}
           />
-          <BoardFocus boardKey={boardKey} />
           <BoardTabBody tab={tab} boardKey={boardKey} work={work} handed={board.meta?.handedBuild ?? null} more={more} />
           <KanbanPurge boardKey={boardKey} request={more.purge} onClose={more.closePurge} />
           <ThreadDrawer boardKey={boardKey} id={openThread} onClose={() => setOpenThread(null)} onPurge={(name) => more.openPurge({ scope: 'thread', thread: name })} />

@@ -1,12 +1,12 @@
 /* @layer renderer-app @kind logic */
 import { useMemo } from 'react';
-import { useStored, useStoredFlag } from '../../../shared';
+import { focusKey, useStored, useStoredFlag } from '../../../shared';
 import { pausedThreads } from '../../kanban/model';
 import { focusOptions, STORE_KEYS } from '../model';
 import type { TestsData, TestsFocus } from '../tests.type';
 
-const useTestsFocus = (data: TestsData): TestsFocus => {
-  const [stored, setFocus] = useStored(STORE_KEYS.focus);
+const useTestsFocus = (boardKey: string, data: TestsData): TestsFocus => {
+  const [stored, setFocus] = useStored(focusKey(boardKey));
   const [showPaused, setShowPaused] = useStoredFlag(STORE_KEYS.paused);
   const paused = useMemo(() => pausedThreads(data.threads, data.entries), [data.threads, data.entries]);
   const options = useMemo(() => focusOptions(data.threads, paused), [data.threads, paused]);

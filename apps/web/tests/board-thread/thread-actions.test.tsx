@@ -37,10 +37,10 @@ describe('S1 the owner actions of the thread drawer', { tags: ['standard'] }, ()
   it('Focus keeps the thread in the focus of the board and a second press lets it go', async () => {
     const { dialog } = await open();
     fireEvent.click(tool(dialog, 'Focus'));
-    expect(localStorage.getItem('coord.focus')).toBe('worker');
+    expect(localStorage.getItem('coord.focus.rotp')).toBe('worker');
     expect(tool(dialog, 'Focus').getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(tool(dialog, 'Focus'));
-    expect(localStorage.getItem('coord.focus')).toBe('');
+    expect(localStorage.getItem('coord.focus.rotp')).toBe('');
   });
 });
 

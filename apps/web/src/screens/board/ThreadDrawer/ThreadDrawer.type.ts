@@ -45,6 +45,7 @@ interface ThreadEyebrowProps {
 }
 
 interface ThreadToolsProps {
+  boardKey: string;
   thread: ThreadDoc;
   paused: boolean;
   order: readonly string[];
@@ -61,6 +62,7 @@ interface ThreadState {
 }
 
 interface ThreadLiveToolsProps {
+  boardKey: string;
   thread: ThreadDoc;
   paused: boolean;
   ops: ThreadOps;

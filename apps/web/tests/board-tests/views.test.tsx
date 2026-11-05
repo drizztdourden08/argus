@@ -2,6 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
+import { openFilters } from '../helpers/filter-clauses';
 import { filterBoard, stored, typeSearch } from './filter-dom';
 import { buildDoc, doneDoc, itemDoc, testDoc, threadDoc } from './fixtures';
 import { mountTab } from './mount-tab';
@@ -93,6 +94,7 @@ describe('S1 closed bundles and the search', { tags: ['standard'] }, () => {
   it('are never reached by a search unless Show closed is on', async () => {
     const off = await mountTab(closed());
     await screen.findByText('Test number 1');
+    await openFilters();
     typeSearch('T-4');
     expect(off.container.querySelector('[data-bundle="old-1"]')).toBeNull();
     off.unmount();
@@ -100,6 +102,7 @@ describe('S1 closed bundles and the search', { tags: ['standard'] }, () => {
     localStorage.setItem('coord.closed', '1');
     const on = await mountTab(closed());
     await screen.findByText('Test number 1');
+    await openFilters();
     typeSearch('T-4');
     expect(on.container.querySelector('[data-bundle="old-1"]')).not.toBeNull();
     expect(on.container.querySelector('[data-bundle="open-1"]')).toBeNull();

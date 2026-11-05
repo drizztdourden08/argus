@@ -2,6 +2,7 @@
 export { announce } from './behavior/announce';
 export { announceFailure } from './behavior/announce-failure';
 export { copyText } from './behavior/copy-text';
+export { focusKey } from './behavior/focus-key';
 export { readStored } from './behavior/read-stored';
 export { OpenThreadContext } from './behavior/open-thread-context';
 export { useBoardKey } from './behavior/useBoardKey';
@@ -13,7 +14,7 @@ export { useStoredFlag } from './behavior/useStoredFlag';
 export { useWriter } from './behavior/useWriter';
 export { writeStored } from './behavior/write-stored';
 export { activityTone, bundleState, formatFilters, jsonRecord, neighbours, nonEmpty, threadChoices } from './model';
-export { FOCUS_KEY, SECOND_TICK_MS, SOFT_LABEL, WIDE_KEY } from './shared.constants';
+export { SECOND_TICK_MS, SOFT_LABEL, WIDE_KEY } from './shared.constants';
 export { ChatButton } from './sub-components/ChatButton';
 export { DrawerToolbar } from './sub-components/DrawerToolbar';
 export { FactSelect } from './sub-components/FactSelect';

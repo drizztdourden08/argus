@@ -24,6 +24,7 @@ const TestsTab = (props: TestsTabProps) => {
     <TestsContext.Provider value={screen.shared}>
       <Flex direction="column" gap="md">
         <TestsToolbar
+          boardKey={boardKey}
           state={state}
           view={view}
           threads={threadChoices(data.threads)}

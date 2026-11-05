@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind constants */
-import { FOCUS_KEY, WIDE_KEY } from '../../../shared';
+import { WIDE_KEY } from '../../../shared';
 import type { Option } from '../../../shared';
 import { OWNER, OWNER_TITLE } from '../../../../../shell/records/behavior/look.constants';
 import type { ChildCount, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
@@ -71,7 +71,6 @@ const STORE_KEYS = {
   group: 'coord.g.items',
   order: 'coord.sort',
   showDone: 'coord.done2',
-  focus: FOCUS_KEY,
   showPaused: 'coord.paused',
   wide: WIDE_KEY,
 };

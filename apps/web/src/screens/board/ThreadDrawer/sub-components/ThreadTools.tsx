@@ -7,12 +7,12 @@ import { ThreadLiveTools } from './ThreadLiveTools';
 import { ThreadMenu } from './ThreadMenu';
 
 const ThreadTools = (props: ThreadToolsProps) => {
-  const { thread, paused, order, ops, wide, onWide, onPurge } = props;
+  const { boardKey, thread, paused, order, ops, wide, onWide, onPurge } = props;
   const state = threadState(thread);
   const open = useOpenThread();
   return (
     <DrawerToolbar id={thread.id} {...neighbours(order, thread.id)} label="Thread tools" wide={wide} onWide={onWide} onStep={open}>
-      {state.live && <ThreadLiveTools thread={thread} paused={paused} ops={ops} />}
+      {state.live && <ThreadLiveTools boardKey={boardKey} thread={thread} paused={paused} ops={ops} />}
       {thread.link && <ChatButton link={thread.link} label={`Open the chat of ${thread.id}`} size="xs" />}
       {thread.link && <CopyButton text={thread.link} label="Copy the session link" variant="ghost" size="xs" />}
       <ThreadMenu thread={thread} paused={paused} ops={ops} onPurge={onPurge} />

@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { addFlag, openFilters } from '../helpers/filter-clauses';
 import { DAY, MIN, ago, boardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -65,6 +66,7 @@ describe('S1 what a card says about the owner', { tags: ['standard'] }, () => {
 describe('S1 the toolbar', { tags: ['standard'] }, () => {
   it('searches the id and the title', async () => {
     await mountKanban({ items: [item('I-1', { title: 'Login page' }), item('I-2', { title: 'Logout' }), item('I-3', { title: 'Other' })] });
+    await openFilters();
     fireEvent.change(await screen.findByLabelText('Search id or title'), { target: { value: 'log' } });
     expect(screen.getByText('Login page')).toBeTruthy();
     expect(screen.getByText('Logout')).toBeTruthy();
@@ -72,23 +74,23 @@ describe('S1 the toolbar', { tags: ['standard'] }, () => {
     expect(screen.getByText('3 open / 3 · filtered')).toBeTruthy();
   });
 
-  it('clears the filters with one button, which only shows while one is on', async () => {
+  it('clears the search to bring every item back', async () => {
     await mountKanban({ items: [item('I-1', { title: 'Login page' }), item('I-2', { title: 'Other' })] });
     await screen.findByText('Login page');
-    expect(screen.queryByRole('button', { name: 'Clear filters' })).toBeNull();
+    await openFilters();
     fireEvent.change(screen.getByLabelText('Search id or title'), { target: { value: 'login' } });
     expect(screen.queryByText('Other')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.change(screen.getByLabelText('Search id or title'), { target: { value: '' } });
     expect(screen.getByText('Other')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Clear filters' })).toBeNull();
   });
 });
 
 describe('K2 the filters stored for the Node page', { tags: ['standard'] }, () => {
   it('remembers the filters in the shape of the Node page, with the order inside them', async () => {
     await mountKanban({ items: [item('I-1')] });
+    await openFilters();
     fireEvent.change(await screen.findByLabelText('Search id or title'), { target: { value: 'abc' } });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'needs you' }));
+    await addFlag('Needs you');
     expect(JSON.parse(localStorage.getItem('coord.f') ?? '{}')).toMatchObject({ q: 'abc', needs: true, sort: 'rank' });
   });
 });

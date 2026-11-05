@@ -3,7 +3,7 @@ import { TesseraProvider, Text, ToastStack } from '@drizztdourden08/tessera';
 import { act } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { vi } from 'vitest';
-import { BoardFocus } from '../../src/screens/board/BoardFocus';
+import { TabFiltersSlot, TabToolsSlot } from '../../src/screens/board/BoardTabsRow';
 import { TestsTab } from '../../src/screens/board/tabs/tests';
 import { mountStreamed } from '../helpers/mount-streamed';
 import { snapshot } from '../helpers/snapshot';
@@ -80,7 +80,8 @@ const mountTab = async (board: Board = {}, respond?: Responder) => {
   const { view, source, live } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[board.at ?? '/']}>
-        <BoardFocus boardKey={SCOPE} />
+        <TabToolsSlot />
+        <TabFiltersSlot />
         <TestsTab boardKey={SCOPE} />
         <HashProbe />
       </MemoryRouter>

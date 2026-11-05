@@ -9,7 +9,7 @@ const BoardFocus = (props: BoardFocusProps) => {
   const { focus, showPaused, choices } = useFocusChoices(boardKey);
   const focused = choices.options.find((option) => option.value === focus.focus);
   return (
-    <Flex gap="sm" align="center" wrap>
+    <Flex gap="sm" align="center" wrap inline>
       <Text variant="caption" tone="muted">Focus</Text>
       <Flex inline>
         <Select
@@ -20,8 +20,6 @@ const BoardFocus = (props: BoardFocusProps) => {
           onChange={(value) => focus.setFocus(value === ALL_THREADS ? '' : value)}
         />
       </Flex>
-      {focused && <Button size="sm" variant="ghost" onClick={() => focus.setFocus('')}>Show all</Button>}
-      {focused && <Text variant="caption" tone="muted">{`Only ${focused.label} is shown. Its open questions are in Activity.`}</Text>}
       {choices.pausedCount > 0 && (
         <Button size="sm" variant="ghost" onClick={() => showPaused.set(!showPaused.on)}>
           {`${showPaused.on ? 'Hide' : 'Show'} paused (${choices.pausedCount})`}
