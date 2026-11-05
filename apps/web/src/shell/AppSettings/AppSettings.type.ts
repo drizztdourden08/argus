@@ -38,6 +38,7 @@ interface ProfileChoice {
   chooseMode: (mode: AvatarMode) => Promise<void>;
   pickBrand: (app: BrandApp) => Promise<void>;
   upload: (files: File[]) => Promise<void>;
+  reject: () => void;
   reset: () => Promise<void>;
   saveName: (value: string) => Promise<void>;
   saveInitials: (value: string) => Promise<void>;

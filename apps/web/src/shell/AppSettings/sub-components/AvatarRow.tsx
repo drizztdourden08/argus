@@ -25,7 +25,7 @@ const AvatarRow = (props: { choice: ProfileChoice }) => {
         <BrandMarkPicker label="Avatar brand marks" value={choice.brand} disabled={choice.busy} onPick={(app) => void choice.pickBrand(app)} />
       )}
       {choice.mode === 'upload' && (
-        <DropZone variant="inline" size="sm" accept={UPLOAD_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} />
+        <DropZone variant="inline" size="sm" accept={UPLOAD_TYPES} label="Upload a PNG or SVG" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} onReject={choice.reject} />
       )}
       <AvatarReset disabled={choice.busy || choice.avatar === null} problem={choice.problem} onReset={() => void choice.reset()} />
     </Flex>

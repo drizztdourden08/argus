@@ -8,7 +8,7 @@ import { writeErrorText } from '../../../data/api';
 import { setProfile } from '../../../data/posts';
 import type { ProfileFields } from '../../../data/posts';
 import { INITIALS_AVATAR, resolveOwnerFace, useOwnerProfile } from '../../../owner';
-import { INITIALS_LENGTH, MODE_OF_KIND, PROFILE_SAVED } from '../AppSettings.constants';
+import { INITIALS_LENGTH, MODE_OF_KIND, PROFILE_SAVED, UPLOAD_REFUSED } from '../AppSettings.constants';
 import type { AvatarMode, ProfileChoice } from '../AppSettings.type';
 
 const useProfileChoice = (): ProfileChoice => {
@@ -49,7 +49,8 @@ const useProfileChoice = (): ProfileChoice => {
   const saveInitials = useCallback((value: string) => save({ initials: value.trim().slice(0, INITIALS_LENGTH) || null }), [save]);
   const brand = face.kind === 'brand' ? face.app : null;
   const mode = picked ?? MODE_OF_KIND[face.kind] ?? 'default';
-  return { ...profile, brand, mode, busy, problem, chooseMode, pickBrand, upload, reset, saveName, saveInitials };
+  const reject = useCallback(() => setProblem(UPLOAD_REFUSED), []);
+  return { ...profile, brand, mode, busy, problem, chooseMode, pickBrand, upload, reject, reset, saveName, saveInitials };
 };
 
 export { useProfileChoice };

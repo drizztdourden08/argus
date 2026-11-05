@@ -33,6 +33,7 @@ const NAME_NOTE = 'Shown in tooltips and in the assignee picker. Leave it empty 
 const INITIALS_NOTE = 'Two characters for the Initials avatar. Leave it empty to go back to ME.';
 
 const UPLOAD_TYPES = ['image/png', 'image/svg+xml'];
+const UPLOAD_REFUSED = 'Only PNG and SVG';
 
 export {
   AVATAR_MODES,
@@ -45,5 +46,6 @@ export {
   PREVIEW_SIZE,
   PROFILE_SAVED,
   SECTIONS,
+  UPLOAD_REFUSED,
   UPLOAD_TYPES,
 };
