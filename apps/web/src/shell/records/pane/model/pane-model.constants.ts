@@ -25,7 +25,7 @@ const WORKTREE_KIND = 'worktree';
 
 const FALLBACK_STORE = 'items';
 
-const DRAWER_LABELS: Readonly<Record<string, string>> = { items: 'Work item', entries: 'Entry detail', agents: 'Agent detail', tests: 'Test detail', requests: 'Removal request' };
+const DRAWER_LABELS: Readonly<Record<string, string>> = { items: 'Work item', boards: 'Board', entries: 'Entry detail', agents: 'Agent detail', tests: 'Test detail', requests: 'Removal request' };
 
 const DRAWER_FALLBACK = 'Record detail';
 
