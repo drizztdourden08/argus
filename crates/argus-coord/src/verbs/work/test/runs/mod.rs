@@ -9,6 +9,7 @@
 //! coord test run end <run> | reopen <run> | drop <run>
 //! ```
 
+mod change;
 mod end;
 mod hand;
 mod list;

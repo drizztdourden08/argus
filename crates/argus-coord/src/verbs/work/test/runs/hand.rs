@@ -7,7 +7,7 @@ use argus_board::json::display;
 use argus_launchers::launcher::require_master;
 use serde_json::{Value, json};
 
-use super::{run_item, set_run};
+use super::change::change;
 use crate::cli::Outcome;
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::rules::typed_board;
@@ -36,41 +36,25 @@ fn handable(run: &Value) -> Res<()> {
 
 /// `coord test run hand`.
 pub(super) fn hand(r: &mut Run<'_>) -> Outcome {
-    r.write(|board, r| {
-        let who = r.begin(board)?;
-        let run = run_item(board, r.arg(0))?;
-        handable(&run)?;
-        master_ready(board)?;
-        let id = display(&run["id"]);
-        let fields = json!({ "stage": "ready", "assignee": "owner" });
-        set_run(board, &who, (&id, fields), r)?;
-        let build = display(&run["fields"]["build"]);
-        r.say(&[&format!("{id}: ready, handed to the owner (build {build}).")]);
-        Ok(())
-    })
+    let fields = json!({ "stage": "ready", "assignee": "owner" });
+    let check = |board: &Board, run: &Value| {
+        handable(run)?;
+        master_ready(board)
+    };
+    let say = |run: &Value, id: &str| {
+        format!("{id}: ready, handed to the owner (build {}).", display(&run["fields"]["build"]))
+    };
+    change(r, fields, check, say)
 }
 
 /// `coord test run unhand`.
 pub(super) fn unhand(r: &mut Run<'_>) -> Outcome {
-    r.write(|board, r| {
-        let who = r.begin(board)?;
-        let run = run_item(board, r.arg(0))?;
-        let id = display(&run["id"]);
-        set_run(board, &who, (&id, json!({ "assignee": null })), r)?;
-        r.say(&[&format!("{id}: no longer handed to the owner.")]);
-        Ok(())
-    })
+    let say = |_: &Value, id: &str| format!("{id}: no longer handed to the owner.");
+    change(r, json!({ "assignee": null }), |_, _| Ok(()), say)
 }
 
 /// `coord test run ready` and `draft`: the stage a draft or ready run moves to.
 pub(super) fn stage(r: &mut Run<'_>, stage: &str) -> Outcome {
-    r.write(|board, r| {
-        let who = r.begin(board)?;
-        let run = run_item(board, r.arg(0))?;
-        handable(&run)?;
-        let id = display(&run["id"]);
-        set_run(board, &who, (&id, json!({ "stage": stage })), r)?;
-        r.say(&[&format!("{id}: {stage}.")]);
-        Ok(())
-    })
+    let say = |_: &Value, id: &str| format!("{id}: {stage}.");
+    change(r, json!({ "stage": stage }), |_, run| handable(run), say)
 }

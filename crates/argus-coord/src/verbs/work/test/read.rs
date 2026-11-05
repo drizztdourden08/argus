@@ -5,11 +5,12 @@ use argus_board::Board;
 use serde_json::Value;
 
 use super::spec::mode_label;
-use crate::cli::Outcome;
-use crate::cli::out::clip;
-use crate::verbs::work::crud::find_doc;
-use crate::verbs::work::listing::{Table, cell, list_docs, print_json, scoped};
-use crate::verbs::work::run::{Res, Run};
+use crate::cli::{Outcome, out::clip};
+use crate::verbs::work::{
+    crud::find_doc,
+    listing::{Table, cell, list_docs, print_json, scoped},
+    run::{Res, Run},
+};
 
 const TESTS: Table = Table {
     head: &["test", "status", "mode", "item", "thread", "proofs", "title"],

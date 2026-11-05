@@ -93,8 +93,7 @@ fn build_stage(rec: &Value) -> &'static str {
     }
     let one_line = rec["cmd"]
         .as_str()
-        .is_some_and(|cmd| !cmd.trim().is_empty() && !cmd.contains(['
-', '']));
+        .is_some_and(|cmd| !cmd.trim().is_empty() && !cmd.contains(['\n', '\r']));
     if one_line { "ready" } else { "draft" }
 }
 
