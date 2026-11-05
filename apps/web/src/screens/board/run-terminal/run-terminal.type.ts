@@ -6,10 +6,6 @@ interface OpenLog {
   onLog: (runId: string) => void;
 }
 
-interface LogButtonProps extends OpenLog {
-  run: RunEntry | null;
-}
-
 interface RunTerminalProps extends OpenLog {
   run: RunEntry;
   boardKey: string;
@@ -51,5 +47,5 @@ interface TerminalInput {
 }
 
 export type {
-  LogButtonProps, RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
+  RunAttachments, RunAttachmentsProps, RunLogDrawerProps, RunStopButtonProps, RunTerminalProps, TerminalBodyProps, TerminalInput,
 };
