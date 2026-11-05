@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, defDoc, launcherDoc, runDoc, testDoc } from './fixtures';
+import { defDoc, launcherDoc, planDoc, runDoc, runOn, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import type { Responder } from './mount-tab';
 
@@ -10,13 +10,12 @@ cleanAfterEach();
 
 const NOTE = 'Ship **this** with [notes](https://example.com/n)';
 
-const noted = () => ({ builds: [buildDoc('b1', { note: NOTE })], tests: [testDoc('T-1', { build: 'b1' })] });
-
-const launched = (runs: object[], build: object = {}) => ({
-  builds: [buildDoc('b1', { launcher: 'l1', ...build })],
-  launchers: [launcherDoc('l1')],
+const launched = (runs: object[], run: object = {}, launcher: object = {}) => ({
+  group: 'run',
+  items: [planDoc('I-9', ['T-1']), runOn('I-50', 'l1', run)],
+  launchers: [launcherDoc('l1', launcher)],
   launches: [defDoc('l1')],
-  tests: [testDoc('T-1', { build: 'b1' })],
+  tests: [testDoc('T-1')],
   runs: runs as Record<string, unknown>[],
 });
 
@@ -28,9 +27,9 @@ const tail: Responder = (call) => {
   return { status: 200, body: { lines: [{ seq: 1, stream: 'out', at: '2026-10-26T10:00:00.000Z', text: 'first line' }], next: 1, dropped: 0 } };
 };
 
-describe('S1 the note of a bundle', { tags: ['standard'] }, () => {
+describe('S1 the note of a launcher on a run', { tags: ['standard'] }, () => {
   it('is a plain folded line, and rich text once opened', async () => {
-    const { container } = await mountTab(noted());
+    const { container } = await mountTab(launched([], {}, { note: NOTE }));
     const folded = await screen.findByText('Ship this with notes');
     expect(container.querySelector('a[href="https://example.com/n"]')).toBeNull();
     fireEvent.click(folded.closest('summary') as HTMLElement);
@@ -41,7 +40,7 @@ describe('S1 the note of a bundle', { tags: ['standard'] }, () => {
   });
 
   it('is cut to one short line when it is long', async () => {
-    await mountTab({ builds: [buildDoc('b1', { note: 'word '.repeat(80) })], tests: [testDoc('T-1', { build: 'b1' })] });
+    await mountTab(launched([], {}, { note: 'word '.repeat(80) }));
     const line = await screen.findByText(/^word word/);
     expect(line.textContent.endsWith('...')).toBe(true);
     expect(line.textContent.length).toBeLessThan(170);
@@ -73,7 +72,7 @@ describe('S1 the terminal under Play', { tags: ['standard'] }, () => {
     await screen.findByText('Test number 1');
     expect(screen.queryByText('Terminal')).toBeNull();
     other.unmount();
-    await mountTab(launched([running()], { status: 'draft' }));
+    await mountTab(launched([running()], { stage: 'draft' }));
     await screen.findByText('Test number 1');
     expect(screen.queryByText('Terminal')).toBeNull();
   });

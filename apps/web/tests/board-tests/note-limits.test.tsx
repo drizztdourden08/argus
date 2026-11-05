@@ -2,7 +2,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, testDoc } from './fixtures';
+import { testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import { noteBox, openBox, resultCalls, send, sendButton, type } from './outcome-dom';
 
@@ -10,7 +10,7 @@ cleanAfterEach();
 
 const LIMIT = 50000;
 const SENTENCE = `This text is ${LIMIT + 1} characters and one post takes ${LIMIT} at most: shorten it or post it in two parts.`;
-const board = () => ({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1')] });
+const board = () => ({ tests: [testDoc('T-1')] });
 
 describe('S3 the length of a note', { tags: ['standard'] }, () => {
   it('a long note is posted whole: 20000 characters, no counter, no refusal', async () => {

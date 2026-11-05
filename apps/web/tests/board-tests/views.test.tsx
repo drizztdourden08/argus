@@ -3,7 +3,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { filterBoard, stored, typeSearch } from './filter-dom';
-import { buildDoc, doneDoc, itemDoc, testDoc, threadDoc } from './fixtures';
+import { doneDoc, itemDoc, testDoc, testRunDoc, threadDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
@@ -20,7 +20,7 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     expect(titlesIn(groupOf(container, 'I-1'))).toEqual(['T-1', 'T-3']);
     expect(titlesIn(groupOf(container, 'I-2'))).toEqual(['T-2']);
     expect(within(groupOf(container, 'I-1')).getByText('Item number 1')).toBeTruthy();
-    expect(localStorage.getItem('coord.g.tests4')).toBe('item');
+    expect(localStorage.getItem('coord.g.tests5')).toBe('item');
   });
 
   it('by thread follows the item and names the thread by its id', async () => {
@@ -32,20 +32,19 @@ describe('S1 grouping', { tags: ['standard'] }, () => {
     expect(within(groupOf(container, 'lead')).getAllByText('lead').length).toBeGreaterThan(0);
   });
 
-  it('returns to the bundles and reads the saved choice on load', async () => {
-    localStorage.setItem('coord.g.tests4', 'item');
-    const { container } = await mountTab(filterBoard());
+  it('returns to the runs and reads the saved choice on load', async () => {
+    localStorage.setItem('coord.g.tests5', 'item');
+    const { container } = await mountTab({ ...filterBoard(), items: [...filterBoard().items, testRunDoc('I-30', 'I-9')] });
     await screen.findByText('Login works');
     expect(groupOf(container, 'I-1')).not.toBeNull();
-    fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
-    expect(container.querySelector('[data-bundle="b1"]')).not.toBeNull();
-    expect(localStorage.getItem('coord.g.tests4')).toBe('build');
+    fireEvent.click(screen.getByRole('radio', { name: 'Run' }));
+    expect(container.querySelector('[data-run="I-30"]')).not.toBeNull();
+    expect(localStorage.getItem('coord.g.tests5')).toBe('run');
   });
 });
 
 describe('S1 the order', { tags: ['standard'] }, () => {
   const ranked = () => ({
-    builds: [buildDoc('b1')],
     tests: [
       testDoc('T-1', { rank: 2, updatedAt: '2026-10-26T09:30:00.000Z' }),
       testDoc('T-2', { rank: 1, updatedAt: '2026-10-26T09:10:00.000Z' }),
@@ -64,7 +63,7 @@ describe('S1 the order', { tags: ['standard'] }, () => {
 });
 
 describe('S1 show passed', { tags: ['standard'] }, () => {
-  const withPassed = () => ({ builds: [buildDoc('b1')], tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'fine'), doneDoc('T-3', 'fail', 'broken')] });
+  const withPassed = () => ({ tests: [testDoc('T-1'), doneDoc('T-2', 'pass', 'fine'), doneDoc('T-3', 'fail', 'broken')] });
 
   it('is on by default, hides the passed tests when turned off and remembers it', async () => {
     await mountTab(withPassed());
@@ -83,26 +82,26 @@ describe('S1 show passed', { tags: ['standard'] }, () => {
   });
 });
 
-describe('S1 closed bundles and the search', { tags: ['standard'] }, () => {
+describe('S1 closed runs and the search', { tags: ['standard'] }, () => {
   const closed = () => ({
-    builds: [buildDoc('open-1'), buildDoc('old-1', { closedAt: '2026-10-25T10:00:00.000Z', closedBy: 'lead' })],
-    items: [itemDoc('I-1')],
-    tests: [testDoc('T-1', { build: 'open-1' }), testDoc('T-4', { build: 'old-1' })],
+    group: 'item',
+    items: [itemDoc('I-1'), testRunDoc('I-40', 'I-9'), testRunDoc('I-41', 'I-9', { stage: 'passed' })],
+    tests: [testDoc('T-1')],
   });
 
   it('are never reached by a search unless Show closed is on', async () => {
     const off = await mountTab(closed());
     await screen.findByText('Test number 1');
-    typeSearch('T-4');
-    expect(off.container.querySelector('[data-bundle="old-1"]')).toBeNull();
+    typeSearch('I-41');
+    expect(off.container.querySelector('[data-run="I-41"]')).toBeNull();
     off.unmount();
     localStorage.clear();
     localStorage.setItem('coord.closed', '1');
     const on = await mountTab(closed());
     await screen.findByText('Test number 1');
-    typeSearch('T-4');
-    expect(on.container.querySelector('[data-bundle="old-1"]')).not.toBeNull();
-    expect(on.container.querySelector('[data-bundle="open-1"]')).toBeNull();
+    typeSearch('I-41');
+    expect(on.container.querySelector('[data-run="I-41"]')).not.toBeNull();
+    expect(on.container.querySelector('[data-run="I-40"]')).toBeNull();
   });
 
   it('remember the Show closed choice under the key of the Node page', async () => {

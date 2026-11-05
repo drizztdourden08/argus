@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, itemDoc, testDoc } from './fixtures';
+import { itemDoc, testDoc, testRunDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 import type { Doc } from './mount-tab';
 import { outcomeButton, resultCalls } from './outcome-dom';
@@ -14,7 +14,6 @@ const planDoc = (id: string, cases: string[], extra: Doc = {}): Doc =>
 
 const board = (extra: Doc[] = []) => ({
   group: 'plan',
-  builds: [buildDoc('bundle-1')],
   items: [itemDoc('I-1'), planDoc('I-5', ['T-1', 'T-2']), planDoc('I-6', ['T-2']), ...extra],
   tests: [testDoc('T-1'), testDoc('T-2'), testDoc('T-3')],
 });
@@ -43,8 +42,7 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
   });
 
   it('offers Continue run while a run is in progress', async () => {
-    const live = planDoc('I-8', ['T-1'], { fields: { cases: ['T-1'], runs: [{ n: 1, bundle: null, by: 'human', startedAt: '2026-10-26T09:00:00.000Z', endedAt: null, results: [] }] } });
-    const { container } = await mountTab(board([live]));
+    const { container } = await mountTab(board([planDoc('I-8', ['T-1']), testRunDoc('I-20', 'I-8')]));
     await screen.findAllByText('Plan number 8');
     expect(within(cardOf(container, 'TP-8')).getByRole('button', { name: 'Continue run' })).toBeTruthy();
   });
@@ -61,7 +59,7 @@ describe('P5 the plans as cards', { tags: ['standard'] }, () => {
     const entries = () => calls.filter((call) => call.url.endsWith('/entries'));
     await waitFor(() => expect(entries()).toHaveLength(1));
     expect(entries()[0]?.body).toMatchObject({ kind: 'plan-run-start', target: { c: 'items', id: 'I-5' } });
-    await waitFor(() => expect(new URLSearchParams(screen.getByTestId('search').textContent).get('pane')).toBe('run'));
+    await waitFor(() => expect(new URLSearchParams(screen.getByTestId('search').textContent).get('pane')).toBe('runs'));
     expect(new URLSearchParams(screen.getByTestId('search').textContent).get('open')).toBe('TP-5');
   });
 
@@ -106,12 +104,12 @@ describe('P5 the cases as rows grouped by plan', { tags: ['standard'] }, () => {
     expect(screen.getByRole('textbox', { name: 'Note for T-3' })).toBeTruthy();
   });
 
-  it('groups by plan when nothing was saved, and saves the other choices under a new key', async () => {
+  it('groups by run when nothing was saved, and saves the other choices under a new key', async () => {
     const { container } = await mountTab({ ...board(), group: 'default' });
     await screen.findAllByText('Plan number 5');
-    expect(container.querySelector('[data-bundle]')).toBeNull();
-    fireEvent.click(screen.getByRole('radio', { name: 'Bundle' }));
-    expect(localStorage.getItem('coord.g.tests4')).toBe('build');
+    expect(container.querySelector('[data-plan]')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'Plan' }));
+    expect(localStorage.getItem('coord.g.tests5')).toBe('plan');
   });
 });
 
@@ -119,7 +117,7 @@ describe('I-85 the plan card and the plan group header', { tags: ['standard'] },
   it('lets the progress bar of the plan card fill the width, not a fixed height', async () => {
     const { container } = await mountTab(board());
     await screen.findAllByText('Plan number 5');
-    expect(cardOf(container, 'TP-5').querySelector('.bundle__bar')).toBeNull();
+    expect(cardOf(container, 'TP-5').querySelector('.run-card__bar')).toBeNull();
   });
 
   it('heads the cases of a plan with the type mark, the code link, the title and the count', async () => {

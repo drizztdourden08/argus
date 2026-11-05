@@ -2,7 +2,7 @@
 import { screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanAfterEach } from './board-dom';
-import { buildDoc, doneDoc, wakeDoc } from './fixtures';
+import { doneDoc, wakeDoc } from './fixtures';
 import { mountTab } from './mount-tab';
 
 cleanAfterEach();
@@ -21,8 +21,6 @@ afterEach(() => {
 const fresh = () => new Date(NOW - 2000).toISOString();
 
 const withWake = (wakes: object[], result: object = {}) => ({
-  handed: 'bundle-1',
-  builds: [buildDoc('bundle-1')],
   tests: [doneDoc('T-1', 'fail', 'broken', { result: { status: 'fail', text: 'broken', by: 'human', at: fresh(), ...result } })],
   wakes: wakes as Record<string, unknown>[],
 });

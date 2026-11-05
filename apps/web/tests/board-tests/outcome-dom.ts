@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
-import { buildDoc, testDoc } from './fixtures';
+import { testDoc } from './fixtures';
 import type { Call, Responder } from './mount-tab';
 
-const board = () => ({ builds: [buildDoc('bundle-1')], tests: [testDoc('T-1'), testDoc('T-2')] });
+const board = () => ({ tests: [testDoc('T-1'), testDoc('T-2')] });
 
 const resultCalls = (calls: Call[]): Call[] => calls.filter((call) => call.url.endsWith('/result'));
 
