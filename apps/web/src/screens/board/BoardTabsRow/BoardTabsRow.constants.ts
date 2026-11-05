@@ -5,7 +5,6 @@ const FILTERS_OPEN_KEY = 'argus.filters.open';
 
 const FILTERS_LABEL = 'Filters';
 
-const ANY_TAB = '*';
 
 const ANY_VALUE = 'any';
 
@@ -28,4 +27,4 @@ const TAB_ICONS: Readonly<Record<string, IconName>> = {
   releases: 'tag',
 };
 
-export { ANY_LABEL, ANY_TAB, ANY_VALUE, DEFAULT_TAB_ICON, FILTERS_ITEM_ID, FILTERS_LABEL, FILTERS_OPEN_KEY, TAB_ICONS, TABS_ITEM_ID };
+export { ANY_LABEL, ANY_VALUE, DEFAULT_TAB_ICON, FILTERS_ITEM_ID, FILTERS_LABEL, FILTERS_OPEN_KEY, TAB_ICONS, TABS_ITEM_ID };

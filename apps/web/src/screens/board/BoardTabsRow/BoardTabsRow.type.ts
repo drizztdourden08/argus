@@ -119,13 +119,6 @@ interface ViewState<G extends string, O extends string> {
   setDirection: (direction: SortDirection) => void;
 }
 
-interface TabViewMenuProps<G extends string, O extends string> {
-  groups: readonly ViewChoice<G>[];
-  orders: readonly ViewChoice<O>[];
-  state: ViewState<G, O>;
-  shown: (order: O, direction: SortDirection | null) => SortDirection;
-}
-
 interface TabToolsEntry {
   tab: string;
   items: readonly OverflowRowItem[];
@@ -169,6 +162,6 @@ interface TabView<G extends string, O extends string, F> {
 
 export type {
   BoardTabsProps, BoardTabsRowProps, FiltersToggleProps, FlagField, FlagFilters, GroupPart, MultiField, Registry, RegistryEntry, SingleField, SortPart,
-  TabField, TabFieldControlProps, TabFieldControlsProps, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabToolsEntry, TabView, TabViewMenuProps,
+  TabField, TabFieldControlProps, TabFieldControlsProps, TabFilterBarProps, TabFilterInfo, TabFilterRowProps, TabGroupSortProps, TabToolsEntry, TabView,
   TabViewSetup, ToolToggleProps, ViewChoice, ViewState,
 };
