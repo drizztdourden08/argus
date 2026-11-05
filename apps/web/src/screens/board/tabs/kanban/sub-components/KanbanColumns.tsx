@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
-import type { KanbanColumn, KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanMove } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../../data/kanban';
 import { itemCode } from '../../../../../shell';
@@ -8,17 +8,11 @@ import { applyDrop } from '../behavior/apply-drop';
 import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
-import { addPreset, planDrop } from '../model';
-import type { CardData, ItemGroup } from '../model';
-import { ColumnAdd } from './ColumnAdd';
-import { ColumnAddForm } from './ColumnAddForm';
+import { planDrop } from '../model';
+import type { CardData } from '../model';
+import { columnDefs } from './column-defs';
 import { ItemCard } from './ItemCard';
 import { ParentHeader } from './ParentHeader';
-import { QuietBadge } from './QuietBadge';
-
-const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => card.quietMs !== null).length;
-
-const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} withCode /> : undefined);
 
 const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string): ReactNode => {
   const parent = parents.get(id);
@@ -26,7 +20,7 @@ const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string): ReactNo
 };
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
-  const { boardKey, view, state, threads, now, selection, ops, add, focus, onOpen } = props;
+  const { boardKey, view, state, threads, now, selection, ops, onOpen } = props;
   const { group, order } = state.prefs;
   const ids = view.columns.flatMap((column) => column.cards.map((card) => card.id));
   const onMove = (move: KanbanMove) => {
@@ -37,22 +31,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
     const card = view.cards.find((candidate) => candidate.id === cardId);
     if (card) onOpen(itemCode(card.item));
   };
-  const columns: KanbanColumn<CardData>[] = view.columns.map((column) => ({
-    ...column,
-    header: headerOf(group, view.parents.get(column.id)),
-    badge: quietIn(column.cards) > 0 ? <QuietBadge count={quietIn(column.cards)} /> : undefined,
-    action: <ColumnAdd title={column.title} open={add.column === column.id} onToggle={() => add.toggle(column.id)} />,
-    top:
-      add.column === column.id ? (
-        <ColumnAddForm
-          preset={addPreset(group, column.id, focus)}
-          group={group}
-          threads={threads}
-          onCreate={(item) => void ops.create(item)}
-          onClose={add.close}
-        />
-      ) : undefined,
-  }));
+  const columns = columnDefs(props);
   return (
     <TesseraProvider overrides={EMPTY_COLUMN_STRINGS}>
     <KanbanBoard

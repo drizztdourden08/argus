@@ -11,10 +11,4 @@ const cardClick = (open: () => void) => (event: MouseEvent) => {
   if (!ownsEvent(event)) open();
 };
 
-const cardKey = (open: () => void) => (event: KeyboardEvent) => {
-  if ((event.key !== 'Enter' && event.key !== ' ') || ownsEvent(event)) return;
-  event.preventDefault();
-  open();
-};
-
-export { cardClick, cardKey };
+export { cardClick, ownsEvent };
