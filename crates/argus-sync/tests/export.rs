@@ -219,19 +219,11 @@ fn export_docs_covers_every_page_collection_meta_and_launches_without_env_values
     let meta = doc_data(&docs, Coll::Meta, "board");
     let mut keys: Vec<&String> = meta.as_object().unwrap().keys().collect();
     keys.sort();
-    assert_eq!(
-        keys,
-        [
-            "avatar",
-            "counters",
-            "handedAt",
-            "handedBuild",
-            "name",
-            "project",
-            "updatedAt"
-        ]
+    assert_eq!(keys, ["avatar", "counters", "name", "project", "updatedAt"]);
+    assert!(
+        meta.get("handedBuild").is_none(),
+        "runs replace the handed build"
     );
-    assert_eq!(meta["handedBuild"], "b1");
     assert_eq!(
         doc_data(&docs, Coll::Launches, "hello")["env"],
         json!({ "API_TOKEN": "" })
@@ -261,7 +253,7 @@ fn an_agent_record_carries_model_why_and_one_without_it_stays_as_it_is() {
 #[tokio::test(flavor = "multi_thread")]
 async fn start_mirrors_every_board_and_the_portfolio_cards() {
     let h = Harness::start().await;
-    assert_eq!(h.keys("alpha", Coll::Items), ["I-1", "I-2"]);
+    assert_eq!(h.keys("alpha", Coll::Items), ["I-1", "I-2", "I-20", "I-21"]);
     assert_eq!(h.docs("alpha", Coll::Meta)["board"]["project"], "alpha");
     let defs = ["app", "fail", "hello", "slow"];
     assert_eq!(h.keys("alpha", Coll::Launches), defs);
