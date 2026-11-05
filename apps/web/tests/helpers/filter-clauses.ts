@@ -15,8 +15,27 @@ const menuChoice = async (name: string): Promise<void> => {
 };
 
 const pickView = async (trigger: RegExp, option: string): Promise<void> => {
+  await openFilters();
   fireEvent.click(await screen.findByRole('button', { name: trigger }));
   await menuChoice(option);
 };
 
-export { openFilters, pickView };
+const addFilter = async (fieldLabel: string, valueLabel?: string): Promise<void> => {
+  await openFilters();
+  fireEvent.click(await screen.findByRole('button', { name: 'Add filter' }));
+  await menuChoice(fieldLabel);
+  if (valueLabel === undefined) return;
+  await screen.findByRole('button', { name: `Change the ${fieldLabel} filter value` });
+  await menuChoice(valueLabel);
+};
+
+const changeFilter = async (fieldLabel: string, valueLabel: string): Promise<void> => {
+  fireEvent.click(await screen.findByRole('button', { name: `Change the ${fieldLabel} filter value` }));
+  await menuChoice(valueLabel);
+};
+
+const removeFilter = async (fieldLabel: string): Promise<void> => {
+  fireEvent.click(await screen.findByRole('button', { name: `Remove filter on ${fieldLabel}` }));
+};
+
+export { addFilter, changeFilter, openFilters, pickView, removeFilter };

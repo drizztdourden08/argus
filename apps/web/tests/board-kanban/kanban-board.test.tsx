@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { openFilters, pickView } from '../helpers/filter-clauses';
+import { addFilter, openFilters, pickView } from '../helpers/filter-clauses';
 import { DAY, MIN, ago, boardOf, cleanKanban, columnOf, item, mountKanban, thread } from './kanban-harness';
 
 cleanKanban();
@@ -15,6 +15,7 @@ describe('S1 the Kanban columns', { tags: ['standard'] }, () => {
     expect(screen.queryByRole('group', { name: /^Done,/ })).toBeNull();
     expect(screen.queryByText('Item number 8')).toBeNull();
     expect(screen.getAllByText(/^1 open \/ 3/).length).toBeGreaterThan(0);
+    await openFilters();
     const toggle = screen.getByRole('button', { name: 'Show done (2)' });
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(toggle);
@@ -90,7 +91,7 @@ describe('K2 the filters stored for the Node page', { tags: ['standard'] }, () =
     await mountKanban({ items: [item('I-1')] });
     await openFilters();
     fireEvent.change(await screen.findByLabelText('Search id or title'), { target: { value: 'abc' } });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Needs you' }));
+    await addFilter('Needs you');
     expect(JSON.parse(localStorage.getItem('coord.f') ?? '{}')).toMatchObject({ q: 'abc', needs: true, sort: 'rank' });
   });
 });

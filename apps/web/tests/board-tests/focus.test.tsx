@@ -18,7 +18,7 @@ describe('S1 the focus row', { tags: ['standard'] }, () => {
     expect(screen.queryByText('Login works')).toBeNull();
     expect(screen.getByText('Logout works')).toBeTruthy();
     expect(localStorage.getItem('coord.focus.rotp')).toBe('coder');
-    expect(screen.getByRole('button', { name: /^Filters/ }).textContent).toContain('1');
+    expect(screen.getByRole('img', { name: '1 active' })).toBeTruthy();
     await pick('Focus', 'All threads');
     expect(await screen.findByText('Login works')).toBeTruthy();
     expect(localStorage.getItem('coord.focus.rotp')).toBe('');

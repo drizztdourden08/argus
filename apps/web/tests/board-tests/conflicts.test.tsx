@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { openFilters } from '../helpers/filter-clauses';
+import { addFilter, openFilters } from '../helpers/filter-clauses';
 import { cleanAfterEach } from './board-dom';
 import { conflictEntry, itemDoc, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
@@ -82,7 +82,7 @@ describe('S1 the conflicted tests in the list', { tags: ['standard'] }, () => {
     await mountTab(board([conflictEntry('O-1', 'T-1')]));
     await screen.findByText('Test number 2');
     await openFilters();
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Conflict' }));
+    await addFilter('Conflict');
     expect(screen.queryByText('Test number 2')).toBeNull();
     expect(screen.getByText('Test number 1')).toBeTruthy();
   });

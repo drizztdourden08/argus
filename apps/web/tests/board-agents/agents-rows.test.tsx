@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MIN, agent, agentRows, ago, headOf, item, mockApi, renderAgents, rowOf } from './agents-harness';
+import { openFilters } from '../helpers/filter-clauses';
 
 afterEach(() => {
   localStorage.clear();
@@ -94,6 +95,7 @@ describe('I-85 Agents tab: a run opens its pane', { tags: ['critical'] }, () => 
   it('opens the run pane on its log tab from the row', async () => {
     mockApi();
     await renderAgents({ runs: { 'R-1': run } });
+    await openFilters();
     fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
     fireEvent.click(await screen.findByText('build web'));
     expect(where()).toBe('?open=R-1&pane=log');

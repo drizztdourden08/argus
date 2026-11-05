@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { cardOf, cleanAfterEach, isOpen, toggleOf } from './board-dom';
 import { doneDoc, planDoc, runOn, testDoc } from './fixtures';
 import { mountTab } from './mount-tab';
+import { openFilters } from '../helpers/filter-clauses';
 
 cleanAfterEach();
 
@@ -30,6 +31,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('show as a muted card with Show closed', async () => {
     const { container } = await mountTab(closedBoard());
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     const card = cardOf(container, 'I-51');
     expect(card.textContent).toContain('passed');
@@ -38,6 +40,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('unfold to read-only rows: no outcome buttons, no Play, no Hand', async () => {
     const { container } = await mountTab(closedBoard());
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     const card = cardOf(container, 'I-51');
     expect(isOpen(card)).toBe(false);
@@ -49,6 +52,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
 
   it('hide again when the toggle is turned off', async () => {
     const { container } = await mountTab(closedBoard());
+    await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     expect(cardOf(container, 'I-51')).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { byId, freeText, notice } from '../helpers/board-docs';
 import { openBoard, resetBoard } from '../helpers/open-board';
 import { mockPosts } from '../helpers/post-mock';
+import { openFilters } from '../helpers/filter-clauses';
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -22,6 +23,7 @@ describe('S1 the view of the activity', { tags: ['standard'] }, () => {
   it('Needs you leaves out the notices and the log, Log only the log, and the choice is remembered', async () => {
     await openBoard({ entries: byId(freeText, notice), log: logOf(2) });
     expect(screen.getByText('Log · 3')).toBeTruthy();
+    await openFilters();
     fireEvent.click(screen.getByRole('radio', { name: 'Needs you' }));
     expect(screen.getByText('Questions and decisions · 1')).toBeTruthy();
     expect(screen.queryByText('Log · 3')).toBeNull();
