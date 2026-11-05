@@ -88,6 +88,16 @@ fn is_blocked(t: &Value) -> bool {
     t["status"] == "blocked" || truthy(&t["flags"], "blocked")
 }
 
+/// The shown items in stage done (else status done) that belong to a live thread.
+fn done_of_live_threads(v: &View) -> usize {
+    let live: HashSet<String> = v.live.iter().map(|t| display(&t["id"])).collect();
+    v.items
+        .iter()
+        .filter(|i| i["stage"] == "done" || (!truthy(i, "stage") && i["status"] == "done"))
+        .filter(|i| i["thread"].as_str().is_some_and(|t| live.contains(t)))
+        .count()
+}
+
 fn counts_of(board: &Board, v: &View, open_questions: usize) -> Value {
     let live = &v.live;
     let pending_actions = v
@@ -113,7 +123,7 @@ fn counts_of(board: &Board, v: &View, open_questions: usize) -> Value {
         "blocked": live.iter().filter(|t| is_blocked(t)).count(),
         "needsYou": open_questions + pending_actions + manual,
         "itemsOpen": v.items.iter().filter(|i| !matches!(i["status"].as_str(), Some("done" | "dropped"))).count(),
-        "doing": items("doing"), "review": items("review"),
+        "doing": items("doing"), "review": items("review"), "done": done_of_live_threads(v),
         "testsPass": tests(&["pass"]), "tests": v.tests.len(),
         "testsFailing": tests(&["fail", "partial", "blocked"]),
         "agents": live.iter().map(|t| live_agent_ids(board, t["id"].as_str()).len()).sum::<usize>(),

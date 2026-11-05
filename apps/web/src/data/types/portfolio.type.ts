@@ -9,6 +9,7 @@ interface CardCounts {
   itemsOpen: number;
   doing?: number;
   review?: number;
+  done: number;
   testsPass?: number;
   tests?: number;
   testsFailing?: number;
