@@ -47,7 +47,7 @@ const fileToIcon = async (file: File): Promise<IconFileResult> => {
   try {
     if (file.type === 'image/png') return await fromPng(file);
     if (file.type === 'image/svg+xml') return await fromSvg(file);
-    return refuse('Only PNG and SVG images can be a board icon.');
+    return refuse('Only PNG and SVG images can be used here.');
   } catch (error) {
     return refuse(error instanceof Error ? error.message : 'That image could not be read.');
   }

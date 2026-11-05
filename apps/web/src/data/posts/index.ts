@@ -12,5 +12,6 @@ export { rerunTest } from './rerun-test';
 export { sendDown } from './send-down';
 export { setAvatar } from './set-avatar';
 export { setIcon } from './set-icon';
+export { setProfile } from './set-profile';
 export { unlinkLauncher } from './unlink-launcher';
 export type * from './posts.type';
