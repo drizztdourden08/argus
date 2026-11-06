@@ -30,7 +30,7 @@ const STATUS_TIP: Readonly<Record<string, string>> = {
   leftover: 'git no longer lists this folder; only files are left',
   deleting: 'Argus is deleting this leftover folder in the background; the row goes when the folder is gone.',
   error: 'Git could not be read in this folder.',
-  kept: 'An old board keep: no stale signal until the date. It does not hold the worktree; only the Overlord's exception list does.',
+  kept: 'An old board keep: no stale signal until the date. It does not hold the worktree; only the exception list of the Overlord does.',
 };
 
 const REQUESTS_SHOWN = 8;

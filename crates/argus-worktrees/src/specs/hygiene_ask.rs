@@ -19,7 +19,9 @@ use std::path::Path;
 
 /// Agent 1's worktree with one uncommitted file.
 fn dirty_world() -> (Fixture, Harness) {
-    world(|fx| put(&fx.path("agent-a1"), "wip.txt", "not committed\n"))
+    world(|fx| {
+        put(&fx.path("agent-a1"), "wip.txt", "not committed\n");
+    })
 }
 
 /// The lead is asked: the debounce over.
@@ -59,7 +61,14 @@ fn work_left_on_an_unattached_worktree_asks_its_lead_once_with_both_commands() {
     assert_eq!(told.len(), 1, "{told:?}");
     assert_eq!((told[0].0.as_str(), told[0].1.as_str()), ("alpha", "lead"));
     assert!(told[0].2.chars().count() <= 300);
-    assert!(h.docs()["agent-a1"].hygiene.clone().unwrap().asked_at.is_some());
+    assert!(
+        h.docs()["agent-a1"]
+            .hygiene
+            .clone()
+            .unwrap()
+            .asked_at
+            .is_some()
+    );
     assert_eq!(step(&h, DEBOUNCE).told, 0, "asked once");
     h.svc.requests_idle();
     assert!(exists_itself(&path), "nothing goes without the approval");
@@ -67,15 +76,29 @@ fn work_left_on_an_unattached_worktree_asks_its_lead_once_with_both_commands() {
 
 #[test]
 fn commits_no_ref_keeps_and_a_lock_ask_too_and_the_lock_says_to_unlock_first() {
-    let (_fx, h) = world_with(&[("1", "lead", "done")], |fx| fx.add_detached_work("agent-a1"));
-    assert_eq!(left_why(&h, "agent-a1"), "its HEAD has commits no branch or ref keeps");
+    let (_fx, h) = world_with(&[("1", "lead", "done")], |fx| {
+        fx.add_detached_work("agent-a1")
+    });
+    assert_eq!(
+        left_why(&h, "agent-a1"),
+        "its HEAD has commits no branch or ref keeps"
+    );
     let (fx, h) = world(|fx| {
-        fx.git(&["worktree", "lock", "--reason", "owner: hands off", &fx.path("agent-a1")]);
+        fx.git(&[
+            "worktree",
+            "lock",
+            "--reason",
+            "owner: hands off",
+            &fx.path("agent-a1"),
+        ]);
     });
     asked(&h);
     let note = notes_of(&h, "lead").pop().unwrap();
     assert!(
-        note.contains(&format!("unlock it first (git worktree unlock {})", fx.path("agent-a1"))),
+        note.contains(&format!(
+            "unlock it first (git worktree unlock {})",
+            fx.path("agent-a1")
+        )),
         "{note}"
     );
 }
@@ -85,7 +108,11 @@ fn an_ask_unanswered_for_30_minutes_is_reported_to_the_overlord_once() {
     let (fx, h) = dirty_world();
     let path = fx.path("agent-a1");
     asked(&h);
-    assert_eq!(step(&h, REPORT).told, 0, "no Overlord to tell: it tries again");
+    assert_eq!(
+        step(&h, REPORT).told,
+        0,
+        "no Overlord to tell: it tries again"
+    );
     add_overlord(&h);
     assert_eq!(step(&h, 1).told, 1);
     let id = h.id_of(&path);
@@ -95,14 +122,26 @@ fn an_ask_unanswered_for_30_minutes_is_reported_to_the_overlord_once() {
             && note.contains("it has 1 uncommitted change")
             && note.contains("Backup first:")
             && note.contains("(lead lead)")
-            && note.contains(&format!("Delete: coord worktree approve {id} --project alpha")),
+            && note.contains(&format!(
+                "Delete: coord worktree approve {id} --project alpha"
+            )),
         "{note}"
     );
     let told = wakes(&h, "worktree-report");
     assert_eq!(told.len(), 1, "{told:?}");
-    assert_eq!((told[0].0.as_str(), told[0].1.as_str()), ("portfolio", "overlord"));
+    assert_eq!(
+        (told[0].0.as_str(), told[0].1.as_str()),
+        ("portfolio", "overlord")
+    );
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Reported));
-    assert!(h.docs()["agent-a1"].hygiene.clone().unwrap().reported_at.is_some());
+    assert!(
+        h.docs()["agent-a1"]
+            .hygiene
+            .clone()
+            .unwrap()
+            .reported_at
+            .is_some()
+    );
     assert_eq!(step(&h, REPORT).told, 0, "reported once");
     assert!(exists_itself(&path));
 }
@@ -121,8 +160,14 @@ fn the_overlords_delete_writes_a_full_backup_and_his_result_lands_on_his_board()
     let files = backup_files(&h);
     assert!(has_extension(&files, "patch"), "{files:?}");
     let note = notes_of(&h, "overlord").pop().unwrap();
-    assert!(note.starts_with("approved worktree removal (request R-1 done)"), "{note}");
-    assert!(note.contains(".patch") && note.contains("restore:"), "{note}");
+    assert!(
+        note.starts_with("approved worktree removal (request R-1 done)"),
+        "{note}"
+    );
+    assert!(
+        note.contains(".patch") && note.contains("restore:"),
+        "{note}"
+    );
     assert_eq!(state(&h, "agent-a1"), None);
 }
 
@@ -143,14 +188,19 @@ fn the_leads_approval_writes_a_full_backup_removes_it_and_keeps_its_branch() {
         "{files:?}"
     );
     let note = notes_of(&h, "lead").pop().unwrap();
-    assert!(note.starts_with("approved worktree removal (request R-1 done)"), "{note}");
+    assert!(
+        note.starts_with("approved worktree removal (request R-1 done)"),
+        "{note}"
+    );
     let request = &h.svc.request_list("alpha")[0];
     assert!(request.discard && !request.branch, "{request:?}");
 }
 
 #[test]
 fn commits_no_ref_keeps_go_to_a_bundle_on_approval() {
-    let (fx, h) = world_with(&[("1", "lead", "done")], |fx| fx.add_detached_work("agent-a1"));
+    let (fx, h) = world_with(&[("1", "lead", "done")], |fx| {
+        fx.add_detached_work("agent-a1")
+    });
     asked(&h);
     h.svc
         .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
@@ -168,18 +218,28 @@ fn an_approval_is_refused_while_anything_is_attached_and_to_the_page_and_a_stran
     let path = fx.path("agent-a1");
     let err = h.svc.approve(&input_by(&h, &path, "lead")).unwrap_err();
     assert!(
-        err.message.contains("was not approved for removal: its agent A-1 is working"),
+        err.message
+            .contains("was not approved for removal: its agent A-1 is working"),
         "{}",
         err.message
     );
     let mut page = input_by(&h, &path, "lead");
     page.caller = Caller::Page;
     let err = h.svc.approve(&page).unwrap_err();
-    assert!(err.message.contains("approve is a lead's or the Overlord's word"), "{}", err.message);
+    assert!(
+        err.message
+            .contains("approve is a lead's or the Overlord's word"),
+        "{}",
+        err.message
+    );
     h.board().agents[0].status = "done".into();
     h.scan();
     let err = h.svc.approve(&input_by(&h, &path, "other")).unwrap_err();
-    assert!(err.message.contains("other may not remove it"), "{}", err.message);
+    assert!(
+        err.message.contains("other may not remove it"),
+        "{}",
+        err.message
+    );
     assert!(exists_itself(&path));
 }
 
@@ -197,8 +257,15 @@ fn a_backup_that_would_be_partial_refuses_even_the_approval() {
     h.svc.requests_idle();
     assert!(exists_itself(&fx.path("agent-a1")), "nothing was removed");
     let note = notes_of(&h, "lead").pop().unwrap();
-    assert!(note.contains("refused 1") && note.contains("the backup of"), "{note}");
-    assert_eq!(backup_files(&h).len(), 0, "a partial backup is never written");
+    assert!(
+        note.contains("refused 1") && note.contains("the backup of"),
+        "{note}"
+    );
+    assert_eq!(
+        backup_files(&h).len(),
+        0,
+        "a partial backup is never written"
+    );
     step(&h, 1);
     assert!(left_why(&h, "agent-a1").starts_with("Argus could not remove it: "));
     assert_eq!(step(&h, DEBOUNCE).told, 0, "the lead is not asked again");
@@ -212,7 +279,10 @@ fn an_agent_back_on_it_stops_the_ask_and_a_later_detach_asks_again() {
     h.board().agents[0].status = "working".into();
     step(&h, REPORT);
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Attached));
-    assert!(notes_of(&h, "overlord").is_empty(), "never reported while attached");
+    assert!(
+        notes_of(&h, "overlord").is_empty(),
+        "never reported while attached"
+    );
     let ended = h.clock_now() - 1;
     {
         let mut board = h.board();
@@ -247,11 +317,18 @@ fn only_the_overlord_keeps_and_his_exception_holds_until_he_clears_it() {
     h.svc.hygiene_step("alpha");
     assert_eq!(
         state(&h, "agent-a1"),
-        Some((HygieneState::Exception, Some("the owner tests it tonight".into())))
+        Some((
+            HygieneState::Exception,
+            Some("the owner tests it tonight".into())
+        ))
     );
     put(&path, "wip.txt", "not committed\n");
     h.scan();
-    assert_eq!(step(&h, DEBOUNCE + REPORT).told, 0, "never asked, never reported");
+    assert_eq!(
+        step(&h, DEBOUNCE + REPORT).told,
+        0,
+        "never asked, never reported"
+    );
     h.svc.requests_idle();
     assert!(exists_itself(&path) && h.svc.request_list("alpha").is_empty());
     let err = h.svc.approve(&input_by(&h, &path, "lead")).unwrap_err();
@@ -273,12 +350,25 @@ fn an_exception_ends_at_its_until() {
     h.svc.keep(&input).unwrap();
     step(&h, HOUR - 1);
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
-    assert!(h.docs()["agent-a1"].hygiene.clone().unwrap().until.is_some());
+    assert!(
+        h.docs()["agent-a1"]
+            .hygiene
+            .clone()
+            .unwrap()
+            .until
+            .is_some()
+    );
     step(&h, 1);
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
     let mut past = keep_by(&h, &path, "overlord");
     past.until_ms = Some(h.clock_now());
-    assert!(h.svc.keep(&past).unwrap_err().message.contains("--until must be in the future"));
+    assert!(
+        h.svc
+            .keep(&past)
+            .unwrap_err()
+            .message
+            .contains("--until must be in the future")
+    );
 }
 
 fn linked(item: &str) -> WorktreeLink {
@@ -295,7 +385,11 @@ fn a_worktree_with_no_item_an_hour_after_it_was_first_seen_is_flagged_and_told_o
     let fx = Fixture::fake();
     fx.add("agent-a9");
     put(&fx.path("agent-a9"), "wip.txt", "not committed\n");
-    let h = Harness::new(&fx.root, vec![rule_for(&fx).filtered(&["agent-*"], &[])], hygiene_on);
+    let h = Harness::new(
+        &fx.root,
+        vec![rule_for(&fx).filtered(&["agent-*"], &[])],
+        hygiene_on,
+    );
     h.board().items.insert(
         "I-1".into(),
         ItemFact {
@@ -319,14 +413,21 @@ fn a_worktree_with_no_item_an_hour_after_it_was_first_seen_is_flagged_and_told_o
     assert!(told[0].2.contains(&fx.path("agent-a9")), "{}", told[0].2);
     assert_eq!(step(&h, HOUR).noticed, 0, "told once");
     h.svc.requests_idle();
-    assert!(exists_itself(&fx.path("agent-a9")), "having no item is not a reason to remove");
+    assert!(
+        exists_itself(&fx.path("agent-a9")),
+        "having no item is not a reason to remove"
+    );
     h.board()
         .worktree_links
         .insert(h.id_of(&fx.path("agent-a9")), linked("I-1"));
     step(&h, 1);
     let row = &h.docs()["agent-a9"];
     assert_eq!(
-        (row.link.unlinked, row.link.item.as_deref(), row.link.link_source),
+        (
+            row.link.unlinked,
+            row.link.item.as_deref(),
+            row.link.link_source
+        ),
         (false, Some("I-1"), Some(LinkSource::Manual))
     );
 }

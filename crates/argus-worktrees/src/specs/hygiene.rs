@@ -39,7 +39,10 @@ fn attached_by(change: impl FnOnce(&Fixture, &Harness)) -> String {
     change(&fx, &h);
     h.scan();
     let why = attached_why(&h, "agent-a1");
-    assert!(!through_debounce(&h, &fx.path("agent-a1")), "{why}: it must stay");
+    assert!(
+        !through_debounce(&h, &fx.path("agent-a1")),
+        "{why}: it must stay"
+    );
     why
 }
 
@@ -56,7 +59,10 @@ fn a_clean_worktree_nothing_is_attached_to_goes_after_the_debounce() {
     assert_eq!(state(&h, "fresh"), None, "the rule does not list it");
     step(&h, DEBOUNCE - 1);
     h.svc.requests_idle();
-    assert!(h.svc.request_list("alpha").is_empty(), "the debounce is not over");
+    assert!(
+        h.svc.request_list("alpha").is_empty(),
+        "the debounce is not over"
+    );
     assert!(through_debounce(&h, &fx.path("agent-a1")));
     assert_eq!(state(&h, "agent-a1"), None);
 }
@@ -95,7 +101,11 @@ fn a_running_agent_attaches_its_worktree() {
     for status in ["waiting", "stop-requested"] {
         h.board().agents[0].status = status.to_string();
         h.svc.hygiene_step("alpha");
-        assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Attached), "{status}");
+        assert_eq!(
+            kind(&h, "agent-a1"),
+            Some(HygieneState::Attached),
+            "{status}"
+        );
     }
     assert!(!through_debounce(&h, &fx.path("agent-a1")));
 }
@@ -121,7 +131,11 @@ fn a_worktree_no_agent_record_names_is_judged_whatever_its_age() {
     h.scan();
     h.svc.start();
     for name in ["fresh", "old-unmerged", "old-merged"] {
-        assert_eq!(state(&h, name), Some((HygieneState::Removing, None)), "{name}");
+        assert_eq!(
+            state(&h, name),
+            Some((HygieneState::Removing, None)),
+            "{name}"
+        );
     }
     assert!(left_why(&h, "dirty-old").contains("uncommitted"));
     assert_eq!(state(&h, "plain"), None, "a leftover that holds a file");
@@ -130,7 +144,10 @@ fn a_worktree_no_agent_record_names_is_judged_whatever_its_age() {
     for name in ["fresh", "old-unmerged", "old-merged"] {
         assert!(!exists_itself(&fx.path(name)), "{name} should be gone");
     }
-    assert!(exists_itself(&fx.path("dirty-old")), "it waits for its lead");
+    assert!(
+        exists_itself(&fx.path("dirty-old")),
+        "it waits for its lead"
+    );
     assert!(branches(&fx.repo).contains(&"old-unmerged".to_string()));
     let (thread, _) = inbox(&h)
         .into_iter()
@@ -147,7 +164,10 @@ fn an_empty_leftover_folder_goes_through_the_leftover_removal() {
     let h = hygienic(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
-    assert_eq!(state(&h, "agent-gone"), Some((HygieneState::Removing, None)));
+    assert_eq!(
+        state(&h, "agent-gone"),
+        Some((HygieneState::Removing, None))
+    );
     assert_eq!(state(&h, "plain"), None, "a folder that holds a file stays");
     assert!(through_debounce(&h, &empty));
     assert!(exists_itself(&fx.path("plain")));
@@ -155,8 +175,14 @@ fn an_empty_leftover_folder_goes_through_the_leftover_removal() {
 
 #[test]
 fn an_agent_that_ends_asks_for_a_sweep_and_the_counter_counts_the_running_ones() {
-    let (_fx, h) = world_with(&[("1", "lead", "working"), ("2", "lead", "working")], |_| {});
-    assert!(!h.svc.agents_ended("alpha"), "the first look only remembers");
+    let (_fx, h) = world_with(
+        &[("1", "lead", "working"), ("2", "lead", "working")],
+        |_| {},
+    );
+    assert!(
+        !h.svc.agents_ended("alpha"),
+        "the first look only remembers"
+    );
     assert!(!h.svc.agents_ended("alpha"));
     let meta = h.meta();
     assert_eq!((meta.listed, meta.running_agents), (2, 2));
@@ -262,7 +288,10 @@ fn a_run_that_starts_in_the_debounce_stops_the_removal_and_its_end_starts_the_de
     *locked(&h.store.runs) = Ok(Vec::new());
     step(&h, DEBOUNCE - 1);
     h.svc.requests_idle();
-    assert!(exists_itself(&path), "a new debounce began when the run ended");
+    assert!(
+        exists_itself(&path),
+        "a new debounce began when the run ended"
+    );
     step(&h, 1);
     h.svc.requests_idle();
     assert!(!exists_itself(&path));
@@ -299,7 +328,13 @@ fn a_keep_a_thread_wrote_on_the_board_does_not_hold_it() {
 #[test]
 fn a_lock_waits_for_the_lead_but_brocks_own_lock_does_not() {
     let (fx, h) = world(|fx| {
-        fx.git(&["worktree", "lock", "--reason", "owner: hands off", &fx.path("agent-a1")]);
+        fx.git(&[
+            "worktree",
+            "lock",
+            "--reason",
+            "owner: hands off",
+            &fx.path("agent-a1"),
+        ]);
     });
     assert_eq!(left_why(&h, "agent-a1"), "it is locked (owner: hands off)");
     assert!(!through_debounce(&h, &fx.path("agent-a1")));
@@ -331,7 +366,11 @@ fn a_main_checkout_is_never_the_hygienes() {
     }];
     h.scan();
     h.svc.start();
-    assert_eq!(state(&h, "proj"), None, "the hygiene never judges a main checkout");
+    assert_eq!(
+        state(&h, "proj"),
+        None,
+        "the hygiene never judges a main checkout"
+    );
     step(&h, DEBOUNCE * 100);
     h.svc.requests_idle();
     assert_eq!(h.svc.request_list("alpha").len(), 0);
@@ -339,13 +378,18 @@ fn a_main_checkout_is_never_the_hygienes() {
 }
 
 #[test]
-fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_holds_work()
-{
-    let (fx, h) = world_with(&[("1", "lead", "working"), ("2", "lead", "working")], |_| {});
+fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_holds_work() {
+    let (fx, h) = world_with(
+        &[("1", "lead", "working"), ("2", "lead", "working")],
+        |_| {},
+    );
     let release = |name: &str| {
         let id = h.id_of(&fx.path(name));
-        h.svc
-            .release(&RemoveInput::new("alpha", &id, Caller::Thread("lead".into())))
+        h.svc.release(&RemoveInput::new(
+            "alpha",
+            &id,
+            Caller::Thread("lead".into()),
+        ))
     };
     h.board().agents[0].status = "done".into();
     h.scan();
@@ -365,7 +409,8 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
     assert_eq!(h.meta().hygiene.removed[0].path, fx.path("agent-a1"));
     let err = release("agent-a2").unwrap_err();
     assert!(
-        err.message.contains("is not released: its agent A-2 is working"),
+        err.message
+            .contains("is not released: its agent A-2 is working"),
         "{}",
         err.message
     );
@@ -374,7 +419,8 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
     h.scan();
     let err = release("agent-a2").unwrap_err();
     assert!(
-        err.message.contains("is not released: it has 1 uncommitted change")
+        err.message
+            .contains("is not released: it has 1 uncommitted change")
             && err.message.contains("coord worktree approve"),
         "{}",
         err.message
@@ -385,7 +431,11 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
         &h.id_of(&fx.path("agent-a2")),
         Caller::Page,
     ));
-    assert!(page.unwrap_err().message.contains("release is a thread's word"));
+    assert!(
+        page.unwrap_err()
+            .message
+            .contains("release is a thread's word")
+    );
 }
 
 #[test]
@@ -404,7 +454,11 @@ fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
     let queued = answered
         .expect("release answered while the turn was held")
         .unwrap();
-    assert!(queued.text.contains("Argus removes it now"), "{}", queued.text);
+    assert!(
+        queued.text.contains("Argus removes it now"),
+        "{}",
+        queued.text
+    );
     h.svc.requests_idle();
     assert!(!exists_itself(&fx.path("agent-a1")));
 }
@@ -437,5 +491,8 @@ fn a_restart_keeps_when_it_goes() {
     let again = Harness::on_store(h.store.clone(), &fx.root, RemoveMode::Real, hygiene_on);
     again.clock.set(h.clock.now_ms());
     again.scan();
-    assert_eq!(again.docs()["agent-a1"].hygiene.clone().unwrap().goes_at, goes);
+    assert_eq!(
+        again.docs()["agent-a1"].hygiene.clone().unwrap().goes_at,
+        goes
+    );
 }

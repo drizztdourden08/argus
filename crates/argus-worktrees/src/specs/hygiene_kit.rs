@@ -48,7 +48,10 @@ pub fn hygienic(fx: &Fixture, rule: Rule) -> Harness {
 
 /// A service over a fixture with one clean worktree `agent-a<n>` per agent (at the tip of main: merged), the agents on
 /// the board, one scan, and the request worker started.
-pub fn world_with(agents: &[(&str, &str, &str)], prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
+pub fn world_with(
+    agents: &[(&str, &str, &str)],
+    prep: impl FnOnce(&Fixture),
+) -> (Fixture, Harness) {
     let fx = Fixture::fake();
     for (n, _, _) in agents {
         fx.add(&format!("agent-a{n}"));

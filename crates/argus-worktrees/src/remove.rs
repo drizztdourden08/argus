@@ -429,8 +429,10 @@ impl Service {
         now: &Fact,
     ) -> Option<String> {
         match &input.caller {
-            Caller::Page => None,
-            Caller::Hygiene { approved_by: Some(_) } => None,
+            Caller::Page
+            | Caller::Hygiene {
+                approved_by: Some(_),
+            } => None,
             Caller::Hygiene { approved_by: None } => {
                 Some("nothing may be lost before the lead approves".to_string())
             }

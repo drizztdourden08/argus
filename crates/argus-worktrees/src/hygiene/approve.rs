@@ -18,7 +18,13 @@ use argus_core::ids::OVERLORD_PROJECT;
 impl Service {
     /// May `by` approve this removal? The Overlord always may (his result lands on his board when he is not a thread
     /// of the project); the owning lead may; any other thread as its rule allows a removal.
-    fn approver(&self, project: &str, board: &BoardFacts, fact: &Fact, by: &str) -> Result<Option<String>> {
+    fn approver(
+        &self,
+        project: &str,
+        board: &BoardFacts,
+        fact: &Fact,
+        by: &str,
+    ) -> Result<Option<String>> {
         if self.overlord().as_deref() == Some(by) {
             return Ok(board
                 .live_thread(by)

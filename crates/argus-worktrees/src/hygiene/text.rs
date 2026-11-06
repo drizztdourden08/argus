@@ -176,16 +176,28 @@ mod tests {
     #[test]
     fn the_ask_names_the_commands_and_the_wake_fits() {
         let id = "1a2b3c4d5e".to_string();
-        let m = mark("X:/p/.claude/worktrees/agent-a", "it has 2 uncommitted changes");
+        let m = mark(
+            "X:/p/.claude/worktrees/agent-a",
+            "it has 2 uncommitted changes",
+        );
         let note = ask_note("alpha", &[(&id, &m)], 1_800_000);
         assert!(note.contains("unanswered in 30 minutes"), "{note}");
-        assert!(note.contains("coord worktree approve 1a2b3c4d5e --project alpha"), "{note}");
-        assert!(note.contains("coord lead portfolio \"keep worktree 1a2b3c4d5e of alpha"), "{note}");
+        assert!(
+            note.contains("coord worktree approve 1a2b3c4d5e --project alpha"),
+            "{note}"
+        );
+        assert!(
+            note.contains("coord lead portfolio \"keep worktree 1a2b3c4d5e of alpha"),
+            "{note}"
+        );
         let many: Vec<(String, Mark)> = (0..9)
             .map(|n| {
                 (
                     format!("{n:010}"),
-                    mark(&format!("X:/a/very/long/path/to/the/worktrees/agent-{n}"), "x"),
+                    mark(
+                        &format!("X:/a/very/long/path/to/the/worktrees/agent-{n}"),
+                        "x",
+                    ),
                 )
             })
             .collect();

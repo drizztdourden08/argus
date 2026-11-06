@@ -183,7 +183,12 @@ impl Service {
 
     /// A running agent owns it, or an agent that ended after the last scan has not been looked at since (it counts as
     /// attached until the rescan it asks for).
-    fn held_by_agent(&self, look: &Look<'_>, project: &str, owners: &[&AgentFact]) -> Option<String> {
+    fn held_by_agent(
+        &self,
+        look: &Look<'_>,
+        project: &str,
+        owners: &[&AgentFact],
+    ) -> Option<String> {
         if let Some(running) = owners.iter().find(|a| a.live()) {
             return Some(format!("its agent {} is {}", running.id, running.status));
         }
@@ -220,7 +225,9 @@ impl Service {
 
     /// Not the hygiene's at all: a main checkout, a folder its repository does not list, one outside its rule.
     fn outside(&self, board: &BoardFacts, fact: &Fact) -> bool {
-        self.assert_not_main(fact).is_err() || !fact.registered || self.rule_of(board, fact).is_err()
+        self.assert_not_main(fact).is_err()
+            || !fact.registered
+            || self.rule_of(board, fact).is_err()
     }
 
     /// The verdict on one worktree and whom it is about, whatever its age.

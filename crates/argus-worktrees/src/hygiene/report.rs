@@ -66,7 +66,9 @@ impl Service {
     fn tell_overlord(&self, project: &str, overlord: &str, list: &[Reported<'_>]) -> bool {
         let note = report_note(list, self.opts.report_after_ms);
         let posted = matches!(
-            self.deps.store.post_inbox(OVERLORD_PROJECT, overlord, &note),
+            self.deps
+                .store
+                .post_inbox(OVERLORD_PROJECT, overlord, &note),
             Ok(true)
         );
         let event = WakeEvent {
@@ -76,7 +78,11 @@ impl Service {
             subject: overlord.to_string(),
             text: report_wake(list),
         };
-        let woke = self.deps.notifier.wake(std::slice::from_ref(&event)).is_ok();
+        let woke = self
+            .deps
+            .notifier
+            .wake(std::slice::from_ref(&event))
+            .is_ok();
         if woke {
             self.log_wakes(project, &[event]);
         }

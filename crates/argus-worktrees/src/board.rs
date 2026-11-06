@@ -209,7 +209,9 @@ impl Caller {
             Self::Thread(id) if id.is_empty() => "a thread".to_string(),
             Self::Thread(id) => id.clone(),
             Self::Hygiene { approved_by: None } => "the hygiene".to_string(),
-            Self::Hygiene { approved_by: Some(by) } => format!("the hygiene, approved by {by}"),
+            Self::Hygiene {
+                approved_by: Some(by),
+            } => format!("the hygiene, approved by {by}"),
         }
     }
 

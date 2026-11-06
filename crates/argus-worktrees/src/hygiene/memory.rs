@@ -181,7 +181,8 @@ pub struct HygieneMeta {
 
 /// When Argus removes the worktree: a clean one nothing is attached to, the debounce after it was first seen so.
 fn goes_at(mark: &Mark, debounce: i64) -> Option<i64> {
-    (mark.state == HygieneState::Removing && mark.request.is_none()).then_some(mark.since + debounce)
+    (mark.state == HygieneState::Removing && mark.request.is_none())
+        .then_some(mark.since + debounce)
 }
 
 impl Service {

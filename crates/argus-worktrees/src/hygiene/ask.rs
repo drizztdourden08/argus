@@ -59,7 +59,11 @@ impl Service {
             subject: lead.to_string(),
             text: ask_wake(&refs),
         };
-        let woke = self.deps.notifier.wake(std::slice::from_ref(&event)).is_ok();
+        let woke = self
+            .deps
+            .notifier
+            .wake(std::slice::from_ref(&event))
+            .is_ok();
         if woke {
             self.log_wakes(project, &[event]);
         }

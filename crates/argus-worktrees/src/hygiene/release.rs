@@ -25,9 +25,9 @@ pub(super) fn why_not(verdict: &Verdict, approved: bool) -> Option<String> {
         Verdict::Clean => None,
         Verdict::Left(_) if approved => None,
         Verdict::Left(why) | Verdict::Attached(why) => Some(why.clone()),
-        Verdict::Exception(reason) => Some(format!(
-            "it is on the Overlord's exception list ({reason})"
-        )),
+        Verdict::Exception(reason) => {
+            Some(format!("it is on the Overlord's exception list ({reason})"))
+        }
         Verdict::Quiet => Some("it is not a worktree Argus removes by itself".to_string()),
     }
 }
@@ -77,8 +77,9 @@ impl Service {
         let why = match found {
             None => "it is not in the listing any more".to_string(),
             Some((board, fact)) => {
-                let verdict =
-                    self.look_now(&rec.key, &board, &fact, |look| self.judge(&rec.key, look, &fact).0);
+                let verdict = self.look_now(&rec.key, &board, &fact, |look| {
+                    self.judge(&rec.key, look, &fact).0
+                });
                 match why_not(&verdict, rec.mode == Mode::Approved) {
                     None => return Ok(()),
                     Some(why) => why,

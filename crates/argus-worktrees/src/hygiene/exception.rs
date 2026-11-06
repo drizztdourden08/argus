@@ -45,11 +45,18 @@ impl Service {
         if !by.is_empty() && self.overlord().as_deref() == Some(by.as_str()) {
             return Ok(by);
         }
-        let who = if by.is_empty() { "the page" } else { by.as_str() };
+        let who = if by.is_empty() {
+            "the page"
+        } else {
+            by.as_str()
+        };
         self.note(
             &input.project,
             "warn",
-            &format!("refused a worktree keep of {} from {who}: only the Overlord keeps", input.id),
+            &format!(
+                "refused a worktree keep of {} from {who}: only the Overlord keeps",
+                input.id
+            ),
             input.caller.thread(),
         );
         Err(forbidden(format!(
@@ -74,7 +81,10 @@ impl Service {
             );
             return Ok(Kept {
                 id: fact.id,
-                text: format!("{} is off the exception list: the hygiene judges it again", fact.path),
+                text: format!(
+                    "{} is off the exception list: the hygiene judges it again",
+                    fact.path
+                ),
             });
         }
         let reason: String = input

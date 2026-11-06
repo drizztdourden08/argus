@@ -97,10 +97,7 @@ pub fn what_text(rec: &RequestRec) -> String {
             age_text(rec.older_than_days)
         ),
         Mode::Targets => targets_text(rec, branch),
-        Mode::Detached => format!(
-            "the {} nothing is attached to",
-            targets_text(rec, branch)
-        ),
+        Mode::Detached => format!("the {} nothing is attached to", targets_text(rec, branch)),
         Mode::Approved => format!(
             "with what is left on it, full backup first, {}",
             targets_text(rec, branch)
