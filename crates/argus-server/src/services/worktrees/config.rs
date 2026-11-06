@@ -71,11 +71,9 @@ pub(super) fn options_of(svc: &Services) -> Options {
             .to_string_lossy()
             .into_owned(),
         run_requests: !svc.shadow,
-        release: !svc.shadow && s["release"] != false,
-        release_grace_ms: int(&s, "releaseGraceMs", base.release_grace_ms, 0),
-        release_debounce_ms: int(&s, "releaseDebounceMs", base.release_debounce_ms, 0),
-        close_with_item: s["closeWithItem"] != false,
-        item_close_grace_ms: int(&s, "itemCloseGraceMs", base.item_close_grace_ms, 0),
+        hygiene: !svc.shadow && s["hygiene"] != false && s["release"] != false,
+        detach_debounce_ms: int(&s, "detachDebounceMs", base.detach_debounce_ms, 0),
+        report_after_ms: int(&s, "reportAfterMs", base.report_after_ms, 0),
         ..base
     };
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {

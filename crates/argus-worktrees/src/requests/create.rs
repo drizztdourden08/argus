@@ -13,7 +13,6 @@ use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::service::Service;
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 const OWNER_ENTRY_MAX: usize = 60;
 const REASON_MAX: usize = 200;
@@ -36,8 +35,8 @@ pub struct RequestInput {
     pub older_than_days: Option<f64>,
     /// `finished` only: minutes (60 to 43200).
     pub idle_minutes: Option<f64>,
-    /// The hygiene's `item-closed` request: the closed item each target (by worktree id) belongs to.
-    pub items: BTreeMap<String, String>,
+    /// The board whose inbox gets the result, when it is not the project's own (the Overlord's approval).
+    pub inbox: Option<String>,
 }
 
 impl RequestInput {
@@ -55,7 +54,7 @@ impl RequestInput {
             reason: None,
             older_than_days: None,
             idle_minutes: None,
-            items: BTreeMap::new(),
+            inbox: None,
         }
     }
 }
@@ -233,16 +232,10 @@ impl Service {
         self.queue_named(input, (Mode::Targets, true))
     }
 
-    /// The hygiene's request for the released worktrees of one thread, checked for the caller as any other.
-    pub(crate) fn request_released(&self, input: &RequestInput) -> Result<Queued> {
-        self.authorize_request(input)?;
-        self.queue_named(input, (Mode::Released, false))
-    }
-
-    /// The hygiene's request for the worktrees of one thread whose item closed, checked for the caller as any other.
-    pub(crate) fn request_item_closed(&self, input: &RequestInput) -> Result<Queued> {
-        self.authorize_request(input)?;
-        self.queue_named(input, (Mode::ItemClosed, false))
+    /// A request of the hygiene: the detached worktrees it removes itself, or one a lead or the Overlord approved.
+    /// Argus files it, so no caller rule applies; the caller names the thread told of the result.
+    pub(crate) fn request_hygiene(&self, input: &RequestInput, mode: Mode) -> Result<Queued> {
+        self.queue_named(input, (mode, false))
     }
 
     /// The request for exactly the worktrees the input names, in `mode`; `release` marks a thread's own release.
@@ -329,7 +322,7 @@ impl Service {
                 idle_minutes,
                 release,
                 resolved: mode.named(),
-                items: input.items.clone(),
+                inbox: input.inbox.clone(),
                 targets: if mode.named() { targets } else { Vec::new() },
                 ..RequestRec::default()
             };

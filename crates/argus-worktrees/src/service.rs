@@ -51,19 +51,16 @@ pub struct Options {
     pub keep_backup_days: i64,
     /// Run the removal requests of threads (a restart resumes them). Off in shadow mode and in tests that steer the worker.
     pub run_requests: bool,
-    /// The worktree hygiene: flag the released worktrees (no running agent, nothing holds them, nothing is lost) and remove them after the grace. Off in
-    /// shadow mode.
-    pub release: bool,
-    /// How long a released worktree stays after its thread was told (`worktrees.releaseGraceMs`, 1 hour).
-    pub release_grace_ms: i64,
-    /// A newly released worktree is told once nothing new was released for this long, so a burst makes one wake.
-    pub release_debounce_ms: i64,
-    /// A worktree whose item closed is removed with it, its full backup first (`worktrees.closeWithItem`, on). The
-    /// owner's I-78 request is his say for this one path (decision D-42); every other path keeps the I-67 rule.
-    pub close_with_item: bool,
-    /// How long after its item closed such a worktree stays (`worktrees.itemCloseGraceMs`, 2 minutes): a reopen inside
-    /// it cancels the removal.
-    pub item_close_grace_ms: i64,
+    /// The worktree hygiene (`worktrees.hygiene`, on; off in shadow mode): a worktree no agent, thread, run or process
+    /// is attached to is removed, or its lead is asked when something would be lost, and the Overlord is told after
+    /// `report_after_ms`.
+    pub hygiene: bool,
+    /// How long a worktree stays unattached before the hygiene acts on it (`worktrees.detachDebounceMs`, 1 minute), so
+    /// an agent that ends and a new one that starts in the same folder do not cause a removal.
+    pub detach_debounce_ms: i64,
+    /// How long the lead's approval ask stays unanswered before the Overlord is told (`worktrees.reportAfterMs`,
+    /// 30 minutes).
+    pub report_after_ms: i64,
     /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
     /// than the longest git removal, 15 minutes, and a scan before it).
     pub target_limit_ms: i64,
@@ -88,11 +85,9 @@ impl Default for Options {
             keep_backups: 30,
             keep_backup_days: 30,
             run_requests: true,
-            release: true,
-            release_grace_ms: 3_600_000,
-            release_debounce_ms: 30_000,
-            close_with_item: true,
-            item_close_grace_ms: 120_000,
+            hygiene: true,
+            detach_debounce_ms: 60_000,
+            report_after_ms: 30 * 60_000,
             target_limit_ms: 30 * 60_000,
         }
     }

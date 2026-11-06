@@ -2,7 +2,7 @@
 
 use super::record::{Outcome, RequestRec, RequestStatus, Target};
 use super::text::one_line;
-use super::{CLOSED_SENTENCE_MAX, SENTENCE_MAX};
+use super::{APPROVED_SENTENCE_MAX, Mode, SENTENCE_MAX};
 use crate::board::Caller;
 use crate::clock::iso_from_ms;
 use crate::error::WtError;
@@ -21,10 +21,10 @@ fn sentence_of(err: &WtError) -> String {
     }
 }
 
-/// A removal with its item gives the backup and how to restore it in full: the lead's note repeats it.
+/// An approved removal gives the backup and how to restore it in full: the note repeats it.
 fn sentence_max(rec: &RequestRec) -> usize {
-    if rec.mode == super::Mode::ItemClosed {
-        CLOSED_SENTENCE_MAX
+    if rec.mode == Mode::Approved {
+        APPROVED_SENTENCE_MAX
     } else {
         SENTENCE_MAX
     }
@@ -41,26 +41,27 @@ fn refusal(target: &Target, err: &WtError) -> Outcome {
 }
 
 impl Service {
-    /// The caller of a removal: the thread that asked, or Argus for the item that closed.
-    fn caller_of(rec: &RequestRec, target: &Target) -> Caller {
-        match rec.items.get(&target.id) {
-            Some(item) if rec.mode == super::Mode::ItemClosed => {
-                Caller::ItemClosed { item: item.clone() }
-            }
+    /// The caller of a removal: the thread that asked, or the hygiene (with the approval, when one was given).
+    fn caller_of(rec: &RequestRec) -> Caller {
+        match rec.mode {
+            Mode::Detached => Caller::Hygiene { approved_by: None },
+            Mode::Approved => Caller::Hygiene {
+                approved_by: Some(rec.by.clone()),
+            },
             _ => Caller::Thread(rec.by.clone()),
         }
     }
 
     fn removal_of(rec: &RequestRec, target: &Target) -> RemoveInput {
-        let mut input = RemoveInput::new(&rec.key, &target.id, Self::caller_of(rec, target));
+        let mut input = RemoveInput::new(&rec.key, &target.id, Self::caller_of(rec));
         input.branch = rec.branch;
-        input.discard = rec.discard || rec.mode == super::Mode::ItemClosed;
+        input.discard = rec.discard;
         input.owner_entry.clone_from(&rec.owner_entry);
         input.reason.clone_from(&rec.reason);
-        if rec.mode == super::Mode::Leftovers {
+        if rec.mode == Mode::Leftovers {
             input.older_than_days = rec.older_than_days;
         }
-        input.empty_goes = rec.mode == super::Mode::Released;
+        input.empty_goes = matches!(rec.mode, Mode::Detached | Mode::Approved);
         input
     }
 
@@ -176,7 +177,7 @@ impl Service {
             if self.requests_halted() {
                 return Ok(false);
             }
-            let outcome = match self.still_released(&rec, target) {
+            let outcome = match self.still_free(&rec, target) {
                 Ok(()) => self.remove_watched(project, &rec, target),
                 Err(outcome) => outcome,
             };
@@ -226,7 +227,7 @@ impl Service {
             }
         }
         self.finish_request(project, id);
-        self.after_released(project, id);
+        self.after_hygiene(project, id);
         self.deliver_request(project, id);
     }
 }

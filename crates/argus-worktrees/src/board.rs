@@ -90,10 +90,10 @@ impl AgentFact {
     }
 }
 
-/// Something open that may use a worktree: a board item, a pull request, a launcher, a bundle, a run.
+/// Something open that works in a worktree: a board item in progress, a launcher, a bundle, a run.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Link {
-    /// How a sentence names it: `item I-3`, `PR-2`, `launcher web`, `bundle b1`, `run R-4`.
+    /// How a sentence names it: `item I-3`, `launcher web`, `bundle b1`, `run R-4`.
     pub what: String,
     /// The folder it works in.
     pub path: Option<String>,
@@ -111,6 +111,8 @@ pub struct ItemFact {
     pub lane: String,
     /// In the trash.
     pub trashed: bool,
+    /// The thread it is assigned to: the lead the hygiene asks about a worktree linked to it.
+    pub thread: Option<String>,
     /// Its title and description: free text that may name a worktree.
     pub text: String,
 }
@@ -141,7 +143,7 @@ pub struct BoardFacts {
     pub entries: HashMap<String, OwnerEntry>,
     /// The sub-agent records.
     pub agents: Vec<AgentFact>,
-    /// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
+    /// The items in progress of a live thread, the launchers not retired and the bundles not closed.
     pub links: Vec<Link>,
     /// The items, by id.
     pub items: BTreeMap<String, ItemFact>,
@@ -182,9 +184,9 @@ pub enum Caller {
     Page,
     /// A registered thread, by id.
     Thread(String),
-    /// Argus itself, for a worktree whose item closed (the hygiene's `item-closed` request). The owner's I-78 request
-    /// is his say for this one path (decision D-42), while `worktrees.closeWithItem` is on.
-    ItemClosed { item: String },
+    /// Argus itself, for a worktree nothing is attached to (the owner's rule of 2026-11-06). With `approved_by`, the
+    /// lead or the Overlord approved discarding what is left on it (full backup first); without it, nothing may be lost.
+    Hygiene { approved_by: Option<String> },
 }
 
 impl Caller {
@@ -196,7 +198,7 @@ impl Caller {
     pub fn thread(&self) -> Option<&str> {
         match self {
             Self::Thread(id) => Some(id),
-            Self::Page | Self::ItemClosed { .. } => None,
+            Self::Page | Self::Hygiene { .. } => None,
         }
     }
 
@@ -206,7 +208,8 @@ impl Caller {
             Self::Page => "the owner (page)".to_string(),
             Self::Thread(id) if id.is_empty() => "a thread".to_string(),
             Self::Thread(id) => id.clone(),
-            Self::ItemClosed { item } => format!("closed item {item}"),
+            Self::Hygiene { approved_by: None } => "the hygiene".to_string(),
+            Self::Hygiene { approved_by: Some(by) } => format!("the hygiene, approved by {by}"),
         }
     }
 
@@ -216,7 +219,7 @@ impl Caller {
             Self::Page => "for the owner (page)".to_string(),
             Self::Thread(id) if id.is_empty() => "for a thread".to_string(),
             Self::Thread(id) => format!("for {id}"),
-            Self::ItemClosed { item } => format!("for closed item {item}"),
+            Self::Hygiene { .. } => format!("for {}", self.by_text()),
         }
     }
 }
