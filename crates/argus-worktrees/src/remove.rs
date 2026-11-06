@@ -420,8 +420,8 @@ impl Service {
         Ok(now)
     }
 
-    /// Why the owner's say for discarding is missing, or none: the page is the owner; a thread needs his entry; Argus
-    /// removing a worktree whose item closed has his I-78 request (decision D-42) while `closeWithItem` is on.
+    /// Why the owner's say for discarding is missing, or none: the page is the owner; a thread needs his entry; the
+    /// hygiene has his rule of 2026-11-06 once the lead or the Overlord approved, and no say at all before that.
     fn owner_say_missing(
         &self,
         input: &RemoveInput,
@@ -429,13 +429,13 @@ impl Service {
         now: &Fact,
     ) -> Option<String> {
         match &input.caller {
-            Caller::Page => None,
-            Caller::ItemClosed { item } => crate::approval::item_closed_say(
-                board,
-                (item.as_str(), self.opts.close_with_item),
-                now,
-                self.now(),
-            ),
+            Caller::Page
+            | Caller::Hygiene {
+                approved_by: Some(_),
+            } => None,
+            Caller::Hygiene { approved_by: None } => {
+                Some("nothing may be lost before the lead approves".to_string())
+            }
             Caller::Thread(_) => {
                 let entry = input.owner_entry.as_deref().unwrap_or_default();
                 crate::approval::approval_of(board, entry, now, self.now())
@@ -443,8 +443,8 @@ impl Service {
         }
     }
 
-    /// Is discarding `loss` allowed: asked for, the owner's say given, and (when Argus removes a worktree whose item
-    /// closed) a backup that holds all of it.
+    /// Is discarding `loss` allowed: asked for, the owner's say given, and (when the hygiene removes it) a backup that
+    /// holds all of it.
     fn may_discard(
         &self,
         input: &RemoveInput,
@@ -490,7 +490,7 @@ impl Service {
         } else {
             None
         };
-        let partial = matches!(input.caller, Caller::ItemClosed { .. })
+        let partial = matches!(input.caller, Caller::Hygiene { .. })
             .then(|| Self::partial_backup_why(now, warning.as_deref()))
             .flatten();
         let loss = [Some(safety.loss(now, force_branch)), warning]

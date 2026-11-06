@@ -17,17 +17,18 @@ pub enum Mode {
     Finished,
     /// Every leftover folder old enough.
     Leftovers,
-    /// The released worktrees of one thread whose grace ended (the hygiene files these, never a thread).
-    Released,
-    /// The worktrees of one thread whose item closed and whose grace ended (the hygiene files these, never a thread).
-    #[serde(rename = "item-closed")]
-    ItemClosed,
+    /// The clean worktrees of one thread that nothing is attached to (the hygiene files these, never a thread).
+    #[serde(alias = "released")]
+    Detached,
+    /// A worktree the lead or the Overlord approved removing with what is left on it, full backup first (`approve`).
+    #[serde(alias = "item-closed")]
+    Approved,
 }
 
 impl Mode {
     /// Does the request name its targets when it is made?
     pub fn named(self) -> bool {
-        matches!(self, Self::Targets | Self::Released | Self::ItemClosed)
+        matches!(self, Self::Targets | Self::Detached | Self::Approved)
     }
 }
 
@@ -122,9 +123,9 @@ pub struct RequestRec {
     /// `finished` only: also every clean worktree with nothing ahead untouched for this many minutes.
     pub idle_minutes: Option<f64>,
     pub targets: Vec<Target>,
-    /// `item-closed` only: the closed item each target (by worktree id) belongs to.
-    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    pub items: std::collections::BTreeMap<String, String>,
+    /// The board whose inbox gets the result, when it is not the project's own (the Overlord's approval: `_portfolio`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inbox: Option<String>,
     pub resolved: bool,
     pub results: Vec<Outcome>,
     pub skipped: Option<SkippedSummary>,

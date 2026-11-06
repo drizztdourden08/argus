@@ -10,6 +10,13 @@
 //!   merged) is filed as a request of the thread and answered at once: `{id, status, text,
 //!   request}`; the project's worker removes it and the result comes to the thread's inbox
 //!   (`docs/worktree-hygiene.md`)
+//! - `POST /api/p/:key/worktrees/approve {id, reason?, by}` the owning lead or the Overlord approves removing a
+//!   worktree that holds work and nothing is attached to: Argus files an `approved` request (a full backup, then the
+//!   removal, the branch kept) and answers at once: `{id, status, text, request}`; the result comes to the approver's
+//!   inbox
+//! - `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by}` the Overlord's exception list: a
+//!   worktree on it is never removed or reported (`until` an ISO date or milliseconds; `clear` takes it off). Anyone
+//!   else is refused with 403 `forbidden` and told to ask the Overlord: `{id, text}`
 //! - `POST /api/p/:key/worktrees/leftovers/remove {ids?, olderThanDays?, confirmYoung?, reason?,
 //!   by?}` queues every old leftover folder for deletion in the background
 //! - `POST /api/p/:key/worktrees/requests {targets? | finished? | allLeftovers?, branch?, discard?,
@@ -37,6 +44,7 @@ use crate::routes::params;
 use crate::services::worktrees::publish;
 use crate::{AuthKind, Ctx, RouteOpts, Router};
 
+mod hygiene;
 mod leftovers;
 mod remove;
 mod requests;
@@ -107,7 +115,7 @@ fn refusal(e: &WtError) -> Response {
     json_reply(e.code.status(), &json!({ "error": error }))
 }
 
-/// What the three routes share: the checks, the body, the call on a thread that may block, the
+/// What the routes share: the checks, the body, the call on a thread that may block, the
 /// rows written again, and the answer.
 async fn serve<I: Send + 'static, T: Send + 'static>(
     ctx: Ctx,
@@ -148,6 +156,7 @@ where
 /// Registers the worktree routes.
 pub fn register(r: &mut Router) {
     remove::register(r);
+    hygiene::register(r);
     leftovers::register(r);
     requests::register(r);
 }

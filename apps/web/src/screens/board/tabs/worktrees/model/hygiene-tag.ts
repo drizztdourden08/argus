@@ -6,31 +6,52 @@ import { HYGIENE_LOOK, UNKNOWN_STATUS_LOOK } from './model.constants';
 
 const clockText = (iso: string): string => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-const releasedTag = (hygiene: WorktreeHygiene): Omit<HygieneTag, 'look'> => {
-  const thread = hygiene.thread ?? 'the thread';
-  const when = hygiene.goesAt ? `at ${clockText(hygiene.goesAt)}` : `one grace after ${thread} is told`;
+const removingTag = (hygiene: WorktreeHygiene): Omit<HygieneTag, 'look'> => {
+  const when = hygiene.goesAt ? `at ${clockText(hygiene.goesAt)}` : 'now';
   return {
-    text: hygiene.goesAt ? `released, goes ${clockText(hygiene.goesAt)}` : 'released',
-    tip: `No running agent owns it, nothing uses it and removing it loses nothing: Argus removes it ${when}, unless ${thread} keeps it (coord worktree keep) or releases it now (coord worktree release).`,
+    text: hygiene.goesAt ? `removing, goes ${clockText(hygiene.goesAt)}` : 'removing',
+    tip: `Nothing is attached to it and removing it loses nothing: Argus removes it ${when}, its merged branch too. An agent, a run or a process on it stops that.`,
   };
 };
 
-const closingTag = (hygiene: WorktreeHygiene): Omit<HygieneTag, 'look'> => {
-  const when = hygiene.goesAt ? `at ${clockText(hygiene.goesAt)}` : 'after a short grace';
+const awaitingTag = (hygiene: WorktreeHygiene, why: string): Omit<HygieneTag, 'look'> => {
+  const lead = hygiene.thread ?? 'its lead';
+  const asked = hygiene.askedAt ? `${lead} was asked at ${clockText(hygiene.askedAt)}` : `${lead} is asked`;
   return {
-    text: hygiene.goesAt ? `closing, goes ${clockText(hygiene.goesAt)}` : 'closing',
-    tip: `Its item closed: Argus removes it ${when}, its full backup first, unless the item is reopened or the worktree is linked to another open item.`,
+    text: hygiene.askedAt ? 'lead asked' : 'awaiting lead',
+    tip: `Nothing is attached to it but it holds work: ${why || 'work would be lost'}. ${asked} to approve the removal (coord worktree approve) or to ask the Overlord for an exception. Unanswered, it goes to the Overlord.`,
   };
+};
+
+const reportedTag = (hygiene: WorktreeHygiene, why: string): Omit<HygieneTag, 'look'> => {
+  const at = hygiene.reportedAt ? ` at ${clockText(hygiene.reportedAt)}` : '';
+  return {
+    text: 'with the Overlord',
+    tip: `Its lead did not answer: the Overlord was told${at} to delete it or keep it. Left on it: ${why || 'work'}.`,
+  };
+};
+
+const exceptionTag = (hygiene: WorktreeHygiene, why: string): Omit<HygieneTag, 'look'> => {
+  const until = hygiene.until ? ` until ${hygiene.until.slice(0, 10)}` : '';
+  return {
+    text: 'exception',
+    tip: `On the Overlord's exception list${until}${why ? `: ${why}` : ''}. Argus never removes or reports it.`,
+    edge: 'dashed',
+  };
+};
+
+const shownOf = (hygiene: WorktreeHygiene, why: string): Omit<HygieneTag, 'look'> => {
+  if (hygiene.state === 'removing') return removingTag(hygiene);
+  if (hygiene.state === 'awaiting-lead') return awaitingTag(hygiene, why);
+  if (hygiene.state === 'reported') return reportedTag(hygiene, why);
+  if (hygiene.state === 'exception') return exceptionTag(hygiene, why);
+  return { text: 'attached', tip: `Attached, so Argus leaves it${why ? `: ${why}` : ''}.` };
 };
 
 const hygieneTag = (hygiene: WorktreeHygiene): HygieneTag => {
   const look = HYGIENE_LOOK[hygiene.state] ?? UNKNOWN_STATUS_LOOK;
   const why = hygiene.why ? plainText(hygiene.why) : '';
-  if (hygiene.state === 'released') return { ...releasedTag(hygiene), look };
-  if (hygiene.state === 'closing') return { ...closingTag(hygiene), look };
-  if (hygiene.state === 'in-use') return { text: 'in use', tip: `In use, so Argus leaves it${why ? `: ${why}` : ''}.`, look };
-  if (hygiene.state === 'kept') return { text: 'kept', tip: `The thread keeps it${why ? `: ${why}` : ''}.`, look, edge: 'dashed' };
-  return { text: 'review', tip: `Argus does not remove it by itself: ${why || 'the thread decides'}.`, look };
+  return { ...shownOf(hygiene, why), look };
 };
 
 export { hygieneTag };

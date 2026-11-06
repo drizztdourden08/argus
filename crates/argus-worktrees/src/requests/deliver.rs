@@ -27,19 +27,18 @@ impl Service {
         });
     }
 
-    /// Tell the thread, once. The wake goes only when the note reached an inbox.
+    /// Tell the thread, once, on the project's board or on the board the request names (the Overlord's portfolio).
+    /// The wake goes only when the note reached an inbox.
     pub(crate) fn deliver_request(&self, project: &str, id: &str) {
         let Some(rec) = self.request_of(project, id).filter(|r| !r.notified) else {
             return;
         };
         let text = summary_text(&rec);
-        let posted = matches!(
-            self.deps.store.post_inbox(project, &rec.by, &text),
-            Ok(true)
-        );
+        let board = rec.inbox.as_deref().unwrap_or(project);
+        let posted = matches!(self.deps.store.post_inbox(board, &rec.by, &text), Ok(true));
         if posted {
             let wake = WakeEvent {
-                scope: project.to_string(),
+                scope: board.to_string(),
                 thread: rec.by.clone(),
                 reason: REASON,
                 subject: rec.by.clone(),

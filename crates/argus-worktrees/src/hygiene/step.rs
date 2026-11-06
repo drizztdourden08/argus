@@ -1,46 +1,38 @@
-//! One step of the hygiene: judge every worktree, tell the threads what was released, and hand the ones whose grace
-//! ended to the request worker.
+//! One step of the hygiene: judge every worktree, mark it, remove the clean ones nothing is attached to, ask the lead
+//! about the ones that hold work, and tell the Overlord of the asks left unanswered.
 
 use super::judge::{Look, Owner, Verdict};
-use super::memory::{HygieneState, Mark, Memory};
-use super::text::{REASON, review_text};
+use super::memory::{HygieneState, Mark};
 use crate::board::{BoardFacts, Caller};
 use crate::fact::Fact;
-use crate::ports::WakeEvent;
-use crate::requests::RequestInput;
+use crate::requests::{Mode, RequestInput};
 use crate::service::Service;
 use std::collections::BTreeMap;
 
 /// What one step did.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Stepped {
-    /// The `worktree-review` wakes that went.
+    /// The approval asks to leads and the reports to the Overlord that went.
     pub told: usize,
-    /// The `worktree-unlinked` and `worktree-stale` wakes of worktrees with no item or whose closed item they outlive.
+    /// The `worktree-unlinked` wakes of worktrees with no item.
     pub noticed: usize,
     /// A row changed: the docs are written again.
     pub changed: bool,
 }
 
-/// The ids of one thread's released worktrees.
-type ByThread = BTreeMap<String, Vec<String>>;
-
-/// Why a worktree of a closed item shows `closing`.
-const CLOSING_WHY: &str =
-    "its item is closed: Argus removes it, its full backup first, unless the item is reopened";
-
+/// The state and the sentence a verdict gives.
 fn state_of(verdict: &Verdict) -> Option<(HygieneState, Option<String>)> {
     match verdict {
         Verdict::Quiet => None,
-        Verdict::InUse(why) => Some((HygieneState::InUse, Some(why.clone()))),
-        Verdict::Released => Some((HygieneState::Released, None)),
-        Verdict::Closing => Some((HygieneState::Closing, Some(CLOSING_WHY.to_string()))),
-        Verdict::Kept(note) => Some((HygieneState::Kept, note.clone())),
-        Verdict::Review(why) => Some((HygieneState::Review, Some(why.clone()))),
+        Verdict::Attached(why) => Some((HygieneState::Attached, Some(why.clone()))),
+        Verdict::Exception(reason) => Some((HygieneState::Exception, Some(reason.clone()))),
+        Verdict::Clean => Some((HygieneState::Removing, None)),
+        Verdict::Left(what) => Some((HygieneState::AwaitingLead, Some(what.clone()))),
     }
 }
 
-/// The new mark of a worktree; a released or closing one keeps when it was, told and handed on.
+/// The new mark of a worktree. While nothing is attached it keeps when that began and its request; while it still
+/// holds work it keeps when its lead was asked and when the Overlord was told. A removal in flight shows `removing`.
 fn mark_of(
     fact: &Fact,
     verdict: &Verdict,
@@ -49,34 +41,32 @@ fn mark_of(
     now: i64,
 ) -> Option<Mark> {
     let (state, why) = state_of(verdict)?;
-    let same = prev.filter(|p| p.state == state);
-    let carried = same.filter(|_| matches!(state, HygieneState::Released | HygieneState::Closing));
+    let free = prev.filter(|p| p.state.free() && state.free());
+    let left = free.filter(|_| state == HygieneState::AwaitingLead);
+    let request = free.and_then(|p| p.request.clone());
+    let reported = left.and_then(|p| p.reported);
+    let shown = if request.is_some() {
+        HygieneState::Removing
+    } else if reported.is_some() {
+        HygieneState::Reported
+    } else {
+        state
+    };
+    let since = free
+        .or_else(|| prev.filter(|p| p.state == state))
+        .map_or(now, |p| p.since);
     Some(Mark {
-        state,
+        state: shown,
         path: fact.path.clone(),
         branch: fact.branch.clone(),
         thread: owner.thread,
         agent: owner.agent,
         why,
-        item: owner.item,
-        since: same.map_or(now, |p| p.since),
-        told: carried.and_then(|p| p.told),
-        request: carried.and_then(|p| p.request.clone()),
+        since,
+        asked: left.and_then(|p| p.asked),
+        reported,
+        request,
     })
-}
-
-/// The released marks of a thread that pass `due`, by thread.
-fn released_by(memory: &Memory, due: impl Fn(&Mark) -> bool) -> ByThread {
-    let mut out = ByThread::new();
-    for (id, mark) in &memory.marks {
-        if mark.state != HygieneState::Released || !due(mark) {
-            continue;
-        }
-        if let Some(thread) = &mark.thread {
-            out.entry(thread.clone()).or_default().push(id.clone());
-        }
-    }
-    out
 }
 
 impl Service {
@@ -88,7 +78,8 @@ impl Service {
         scanned_ms: i64,
     ) -> Vec<(Fact, Verdict, Owner)> {
         let runs = self.deps.store.live_runs();
-        let refused = self.with_hygiene(project, |m| m.refused.clone());
+        let (refused, exceptions) =
+            self.with_hygiene(project, |m| (m.refused.clone(), m.exceptions.clone()));
         self.facts_of(project)
             .into_iter()
             .map(|fact| {
@@ -98,6 +89,7 @@ impl Service {
                     scanned_ms,
                     fresh: false,
                     refused: refused.get(&fact.id),
+                    exception: exceptions.get(&fact.id),
                 };
                 let (verdict, owner) = self.judge(project, &look, &fact);
                 (fact, verdict, owner)
@@ -117,9 +109,29 @@ impl Service {
         (!failed).then_some(scan.at_ms)
     }
 
-    /// One step: judge, tell, hand on. Says how many wakes went and whether a row changed.
+    /// Mark every worktree of the last clean scan. True when a mark changed.
+    fn mark_all(&self, project: &str, board: &BoardFacts, scanned_ms: i64) -> bool {
+        let alive: Vec<String> = self.facts_of(project).into_iter().map(|f| f.id).collect();
+        let now = self.now();
+        self.with_hygiene(project, |memory| memory.prune_exceptions(&alive, now));
+        let judged = self.verdicts(project, board, scanned_ms);
+        self.with_hygiene(project, |memory| {
+            let before = std::mem::take(&mut memory.marks);
+            memory.marks = judged
+                .into_iter()
+                .filter_map(|(fact, verdict, owner)| {
+                    let id = fact.id.clone();
+                    mark_of(&fact, &verdict, owner, before.get(&id), now).map(|m| (id, m))
+                })
+                .collect();
+            memory.refused.retain(|id, _| alive.contains(id));
+            memory.marks != before
+        })
+    }
+
+    /// One step: mark, remove, ask, report. Says how many wakes went and whether a row changed.
     pub fn hygiene_step(&self, project: &str) -> Stepped {
-        if !self.opts.release || self.stopped() {
+        if !self.opts.hygiene || self.stopped() {
             return Stepped::default();
         }
         let (Some(board), Some(scanned_ms)) =
@@ -127,102 +139,45 @@ impl Service {
         else {
             return Stepped::default();
         };
-        let judged = self.verdicts(project, &board, scanned_ms);
-        let alive: Vec<String> = judged.iter().map(|(f, _, _)| f.id.clone()).collect();
-        let now = self.now();
-        let changed = self.with_hygiene(project, |memory| {
-            let before = std::mem::take(&mut memory.marks);
-            let marks = judged
-                .into_iter()
-                .filter_map(|(fact, verdict, owner)| {
-                    let id = fact.id.clone();
-                    mark_of(&fact, &verdict, owner, before.get(&id), now).map(|m| (id, m))
-                })
-                .collect();
-            memory.marks = marks;
-            memory.refused.retain(|id, _| alive.contains(id));
-            memory.marks != before
-        });
-        let told = self.tell_released(project);
-        self.hand_on(project, &board);
-        self.hand_on_closed(project, &board);
+        let changed = self.mark_all(project, &board, scanned_ms);
+        let filed = self.remove_detached(project);
+        let told = self.ask_leads(project) + self.report_overlord(project);
         let (noticed, noted) = self.notice_items(project, &board);
         Stepped {
             told,
             noticed,
-            changed: changed || noted || told > 0,
+            changed: changed || filed || noted || told > 0,
         }
     }
 
-    /// ONE `worktree-review` wake per thread for what it was not told yet, once nothing new came for the debounce.
-    fn tell_released(&self, project: &str) -> usize {
+    /// The clean worktrees nothing has been attached to for the debounce go to the request worker: one request per
+    /// lead, told of the result. True when a request was filed.
+    fn remove_detached(&self, project: &str) -> bool {
         let now = self.now();
-        let quiet = self.opts.release_debounce_ms;
-        let (events, ids) = self.with_hygiene(project, |memory| {
-            let untold = released_by(memory, |m| m.told.is_none());
-            let mut events = Vec::new();
-            let mut ids = Vec::new();
-            for (thread, list) in untold {
-                let newest = list
-                    .iter()
-                    .filter_map(|id| memory.marks.get(id))
-                    .map(|m| m.since)
-                    .max()
-                    .unwrap_or(now);
-                if now - newest < quiet {
-                    continue;
-                }
-                let shown: Vec<(&String, &Mark)> = list
-                    .iter()
-                    .filter_map(|id| memory.marks.get(id).map(|m| (id, m)))
-                    .collect();
-                events.push(WakeEvent {
-                    scope: project.to_string(),
-                    thread: thread.clone(),
-                    reason: REASON,
-                    subject: thread.clone(),
-                    text: review_text(&shown, self.opts.release_grace_ms),
-                });
-                ids.extend(list);
-            }
-            (events, ids)
-        });
-        if events.is_empty() || self.deps.notifier.wake(&events).is_err() {
-            return 0;
-        }
-        self.with_hygiene(project, |memory| {
-            for id in &ids {
-                if let Some(mark) = memory.marks.get_mut(id) {
-                    mark.told = Some(now);
-                }
-            }
-        });
-        self.log_wakes(project, &events);
-        events.len()
-    }
-
-    /// The released worktrees whose grace ended go to the request worker: one request per thread.
-    fn hand_on(&self, project: &str, board: &BoardFacts) {
-        let now = self.now();
-        let grace = self.opts.release_grace_ms;
+        let debounce = self.opts.detach_debounce_ms;
         let due = self.with_hygiene(project, |memory| {
-            released_by(memory, |m| {
-                m.request.is_none() && m.told.is_some_and(|t| now - t >= grace)
-            })
-        });
-        for (thread, ids) in due {
-            if board.live_thread(&thread).is_none() {
-                continue;
+            let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            for (id, mark) in &memory.marks {
+                let ready = mark.state == HygieneState::Removing
+                    && mark.request.is_none()
+                    && now - mark.since >= debounce;
+                if ready {
+                    let thread = mark.thread.clone().unwrap_or_default();
+                    out.entry(thread).or_default().push(id.clone());
+                }
             }
-            let mut input = RequestInput::new(project, Caller::Thread(thread.clone()));
+            out
+        });
+        let mut filed = false;
+        for (thread, ids) in due {
+            let mut input = RequestInput::new(project, Caller::Thread(thread));
             input.targets.clone_from(&ids);
             input.branch = true;
-            input.reason =
-                Some("released: no running agent owns it and nothing uses it".to_string());
-            let Ok(queued) = self.request_released(&input) else {
-                // The thread may not remove it (the request is refused and logged): it stays released, told.
+            input.reason = Some("nothing is attached to it and nothing would be lost".to_string());
+            let Ok(queued) = self.request_hygiene(&input, Mode::Detached) else {
                 continue;
             };
+            filed = true;
             self.with_hygiene(project, |memory| {
                 for id in &ids {
                     if let Some(mark) = memory.marks.get_mut(id) {
@@ -231,5 +186,6 @@ impl Service {
                 }
             });
         }
+        filed
     }
 }

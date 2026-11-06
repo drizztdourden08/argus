@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
+import type { WorktreeHygiene } from '../../src/data/worktrees';
 import {
   aboutSize, askProblem, batchNotice, canRemove, compareRows, confirmStale, countRows, daysText, entryProblem, filterRows, isNeeding,
   isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, sizeText, statusShown,
@@ -195,14 +196,15 @@ describe('K1 the sentences', { tags: ['critical'] }, () => {
 });
 
 describe('K1 the state a row shows', { tags: ['critical'] }, () => {
-  it('hides the three day "active" status and the staleness of a worktree that is not in review', () => {
+  it('hides the three day "active" status and the staleness of a worktree that does not wait on its lead or the Overlord', () => {
     expect(statusShown(worktree('a', 'active'))).toBe(false);
     expect(statusShown(worktree('b', 'stale'))).toBe(true);
-    const state = (value: string) => ({ hygiene: { state: value } });
-    expect(statusShown(worktree('c', 'stale', state('review')))).toBe(true);
-    expect(statusShown(worktree('d', 'stale', state('released')))).toBe(false);
-    expect(statusShown(worktree('e', 'merged', state('in-use')))).toBe(false);
-    expect(statusShown(worktree('f', 'kept', state('kept')))).toBe(false);
-    expect(statusShown(worktree('g', 'leftover', state('released')))).toBe(true);
+    const state = (value: WorktreeHygiene['state']) => ({ hygiene: { state: value } });
+    expect(statusShown(worktree('c', 'stale', state('awaiting-lead')))).toBe(true);
+    expect(statusShown(worktree('c2', 'stale', state('reported')))).toBe(true);
+    expect(statusShown(worktree('d', 'stale', state('removing')))).toBe(false);
+    expect(statusShown(worktree('e', 'merged', state('attached')))).toBe(false);
+    expect(statusShown(worktree('f', 'kept', state('exception')))).toBe(false);
+    expect(statusShown(worktree('g', 'leftover', state('removing')))).toBe(true);
   });
 });

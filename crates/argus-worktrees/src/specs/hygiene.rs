@@ -1,10 +1,9 @@
 //! KEEP: K3, K4.
-//! Worktree hygiene on the fake git: a worktree is released when no running agent owns it, nothing
-//! holds it and removing it is safe, whatever its age; its thread hears it once (one `worktree-review` wake per
-//! thread, a burst makes one), and after the grace Argus removes it through the same removal and leaves one inbox
-//! note. Each thing that holds a worktree (a running agent, a link, a process) has its test, then the keep, the
-//! thread's own release, the look again right before removing, the sweep on an agent that ended, the counter, and
-//! the cases that are never automatic.
+//! Worktree hygiene on the fake git, the part with nothing left to lose: a worktree is attached while a running agent
+//! owns it, a link or a run is in it or a process uses it; once nothing is attached and nothing would be lost, Argus
+//! removes it after the debounce through the same removal and leaves one inbox note per lead. Each thing that attaches
+//! a worktree has its test, then the look again right before removing, an agent or a run that comes back, the thread's
+//! own release, the board keep that no longer holds it, and the cases the hygiene never touches.
 
 // test-tag: standard
 
@@ -14,105 +13,16 @@ use crate::hygiene::HygieneState;
 use crate::paths::join_path;
 use crate::request::RemoveInput;
 use crate::rule::Rule;
+use crate::specs::hygiene_kit::{
+    DEBOUNCE, agent, agents_rule, attached_why, hygiene_on, hygienic, inbox, kind, left_why, state,
+    step, through_debounce, world, world_with,
+};
 use crate::sync::locked;
 use crate::testkit::{
     Fixture, Harness, RemoveMode, branches, exists_itself, make_link, put, rule_for,
 };
 use argus_core::fixture::links::{assert_sibling_intact, fill_sibling};
 use std::path::Path;
-
-const GRACE: i64 = 3_600_000;
-
-const QUIET: i64 = 30_000;
-
-fn agent(n: &str, thread: &str, status: &str, ended_ms: i64) -> AgentFact {
-    AgentFact {
-        id: format!("A-{n}"),
-        thread: Some(thread.to_string()),
-        status: status.to_string(),
-        worktree: None,
-        claude_id: Some(format!("a{n}")),
-        ended_ms: Some(ended_ms),
-        item: None,
-    }
-}
-
-/// The rule over the agents' own folders and `named-work`: the other worktrees of the fixture are not listed.
-fn agents_rule(fx: &Fixture) -> Rule {
-    rule_for(fx).filtered(&["agent-*", "named-work"], &[])
-}
-
-/// A harness over the fixture with the release on, the quiet time and the grace of this file.
-fn releasing(fx: &Fixture, rule: Rule) -> Harness {
-    Harness::new(&fx.root, vec![rule], |o| {
-        o.release = true;
-        o.release_debounce_ms = QUIET;
-        o.release_grace_ms = GRACE;
-    })
-}
-
-/// A service over a fixture with one clean worktree `agent-a<n>` per agent (at the tip of main: merged), the agents on
-/// the board, one scan, and the request worker started.
-fn world_with(agents: &[(&str, &str, &str)], prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    let fx = Fixture::fake();
-    for (n, _, _) in agents {
-        fx.add(&format!("agent-a{n}"));
-    }
-    prep(&fx);
-    let h = releasing(&fx, agents_rule(&fx));
-    let ended = h.clock_now() - 1000;
-    h.board().agents = agents
-        .iter()
-        .map(|(n, thread, status)| agent(n, thread, status, ended))
-        .collect();
-    h.scan();
-    h.svc.start();
-    (fx, h)
-}
-
-fn world(prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
-    world_with(&[("1", "lead", "done")], prep)
-}
-
-fn state(h: &Harness, name: &str) -> Option<(HygieneState, Option<String>)> {
-    h.docs()
-        .get(name)
-        .and_then(|d| d.hygiene.clone())
-        .map(|g| (g.state, g.why))
-}
-
-/// The reason the worktree is in review; fails the test when it is not.
-fn review_why(h: &Harness, name: &str) -> String {
-    match state(h, name) {
-        Some((HygieneState::Review, Some(why))) => why,
-        other => panic!("{name} should be in review, it is {other:?}"),
-    }
-}
-
-fn step(h: &Harness, ms: i64) -> usize {
-    h.clock.advance(ms);
-    h.svc.hygiene_step("alpha").told
-}
-
-fn reviews(h: &Harness) -> Vec<(String, String)> {
-    locked(&h.notes.wakes)
-        .iter()
-        .filter(|w| w.reason == "worktree-review")
-        .map(|w| (w.thread.clone(), w.text.clone()))
-        .collect()
-}
-
-fn inbox(h: &Harness) -> Vec<(String, String)> {
-    locked(&h.store.inbox).clone()
-}
-
-/// Told, then the grace over: the request runs. Returns whether the folder is gone.
-fn through_grace(h: &Harness, path: &str) -> bool {
-    step(h, QUIET);
-    step(h, GRACE);
-    h.svc.requests_idle();
-    !exists_itself(path)
-}
 
 fn link(what: &str) -> Link {
     Link {
@@ -121,159 +31,145 @@ fn link(what: &str) -> Link {
     }
 }
 
-/// The worktree of agent 1 with something added to the board or the machine, judged after a fresh scan: why it stays,
-/// and whether it is in use or in review.
-fn held_by(change: impl FnOnce(&Fixture, &Harness)) -> (HygieneState, String) {
+/// The worktree of agent 1 with something attached to it on the board or the machine, judged after a fresh scan: why
+/// it is attached. It must stay past the debounce.
+fn attached_by(change: impl FnOnce(&Fixture, &Harness)) -> String {
     let (fx, h) = world(|_| {});
-    assert_eq!(
-        state(&h, "agent-a1").map(|s| s.0),
-        Some(HygieneState::Released)
-    );
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
     change(&fx, &h);
     h.scan();
-    let held = match state(&h, "agent-a1") {
-        Some((s @ (HygieneState::Review | HygieneState::InUse), Some(why))) => (s, why),
-        other => panic!("agent-a1 should be held, it is {other:?}"),
-    };
+    let why = attached_why(&h, "agent-a1");
     assert!(
-        !through_grace(&h, &fx.path("agent-a1")),
-        "{}: it must stay",
-        held.1
+        !through_debounce(&h, &fx.path("agent-a1")),
+        "{why}: it must stay"
     );
-    held
-}
-
-/// Held by something that uses it: shown in use.
-fn used_by(change: impl FnOnce(&Fixture, &Harness)) -> String {
-    let (kind, why) = held_by(change);
-    assert_eq!(kind, HygieneState::InUse, "{why}");
-    why
-}
-
-/// Held because removing it is not safe or not known to be: shown in review.
-fn blocked_by(change: impl FnOnce(&Fixture, &Harness)) -> String {
-    let (kind, why) = held_by(change);
-    assert_eq!(kind, HygieneState::Review, "{why}");
     why
 }
 
 #[test]
-fn a_clean_worktree_no_running_agent_owns_is_released_at_once() {
+fn a_clean_worktree_nothing_is_attached_to_goes_after_the_debounce() {
     let (fx, h) = world(|_| {});
-    assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Released, None)));
-    let row = &h.docs()["agent-a1"];
-    let hygiene = row.hygiene.as_ref().unwrap();
+    assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Removing, None)));
+    let hygiene = h.docs()["agent-a1"].hygiene.clone().unwrap();
     assert_eq!(
-        (
-            hygiene.agent.as_deref(),
-            hygiene.thread.as_deref(),
-            hygiene.goes_at.as_deref()
-        ),
-        (Some("A-1"), Some("lead"), None)
+        (hygiene.agent.as_deref(), hygiene.thread.as_deref()),
+        (Some("A-1"), Some("lead"))
     );
+    assert!(hygiene.goes_at.is_some());
     assert_eq!(state(&h, "fresh"), None, "the rule does not list it");
+    step(&h, DEBOUNCE - 1);
+    h.svc.requests_idle();
     assert!(
-        reviews(&h).is_empty(),
-        "the wake waits for the burst to end"
+        h.svc.request_list("alpha").is_empty(),
+        "the debounce is not over"
     );
-    assert_eq!(step(&h, QUIET), 1);
-    let (thread, text) = reviews(&h).pop().unwrap();
+    assert!(through_debounce(&h, &fx.path("agent-a1")));
+    assert_eq!(state(&h, "agent-a1"), None);
+}
+
+#[test]
+fn the_removal_takes_the_merged_branches_and_leaves_one_note_per_lead() {
+    let (fx, h) = world_with(&[("1", "lead", "done"), ("2", "lead", "done")], |_| {});
+    let (one, two) = (fx.path("agent-a1"), fx.path("agent-a2"));
+    assert!(through_debounce(&h, &one) && !exists_itself(&two));
+    let left = branches(&fx.repo);
+    assert!(
+        !left.contains(&"agent-a1".to_string()) && !left.contains(&"agent-a2".to_string()),
+        "{left:?}"
+    );
+    let notes = inbox(&h);
+    assert_eq!(notes.len(), 1, "{notes:?}");
+    let (thread, text) = &notes[0];
     assert_eq!(thread, "lead");
     assert!(
-        text.contains(&fx.path("agent-a1")) && text.contains("in 1 hour"),
+        text.starts_with(
+            "worktrees nothing was attached to, removed by Argus (request R-1 done): removed 2 ("
+        ),
         "{text}"
     );
-    assert!(
-        h.docs()["agent-a1"]
-            .hygiene
-            .as_ref()
-            .unwrap()
-            .goes_at
-            .is_some()
-    );
-    assert_eq!(step(&h, QUIET), 0, "told once");
+    assert!(text.contains(&one), "{text}");
+    let removed = h.meta().hygiene.removed;
+    assert_eq!(removed.len(), 2);
+    let request = &h.svc.request_list("alpha")[0];
+    assert!(request.branch && !request.discard, "{request:?}");
 }
 
 #[test]
-fn a_running_agent_holds_its_worktree_and_it_shows_in_use() {
+fn a_running_agent_attaches_its_worktree() {
     let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
-    assert_eq!(
-        state(&h, "agent-a1"),
-        Some((HygieneState::InUse, Some("its agent A-1 is working".into())))
-    );
+    assert_eq!(attached_why(&h, "agent-a1"), "its agent A-1 is working");
     for status in ["waiting", "stop-requested"] {
         h.board().agents[0].status = status.to_string();
         h.svc.hygiene_step("alpha");
         assert_eq!(
-            state(&h, "agent-a1").map(|s| s.0),
-            Some(HygieneState::InUse),
+            kind(&h, "agent-a1"),
+            Some(HygieneState::Attached),
             "{status}"
         );
     }
-    assert!(!through_grace(&h, &fx.path("agent-a1")));
+    assert!(!through_debounce(&h, &fx.path("agent-a1")));
 }
 
 #[test]
 fn a_running_agent_owns_the_folder_named_after_its_claude_id_though_its_record_names_no_worktree() {
     let (_fx, h) = world_with(&[("1", "lead", "working"), ("2", "lead", "done")], |_| {});
     assert_eq!(h.board().agents[0].worktree, None);
-    assert_eq!(
-        state(&h, "agent-a1").map(|s| s.0),
-        Some(HygieneState::InUse)
-    );
-    assert_eq!(
-        state(&h, "agent-a2").map(|s| s.0),
-        Some(HygieneState::Released)
-    );
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Attached));
+    assert_eq!(kind(&h, "agent-a2"), Some(HygieneState::Removing));
 }
 
 #[test]
-fn a_failed_agent_has_no_running_owner_so_its_clean_worktree_is_released() {
+fn a_failed_agent_leaves_its_clean_worktree_unattached() {
     let (_fx, h) = world_with(&[("1", "lead", "failed")], |_| {});
-    assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Released, None)));
+    assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Removing, None)));
 }
 
 #[test]
-fn a_worktree_no_agent_record_names_is_released_whatever_its_age() {
+fn a_worktree_no_agent_record_names_is_judged_whatever_its_age() {
     let fx = Fixture::fake();
-    let h = releasing(&fx, rule_for(&fx));
+    let h = hygienic(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
     for name in ["fresh", "old-unmerged", "old-merged"] {
         assert_eq!(
             state(&h, name),
-            Some((HygieneState::Released, None)),
+            Some((HygieneState::Removing, None)),
             "{name}"
         );
     }
-    assert!(review_why(&h, "dirty-old").contains("uncommitted"));
+    assert!(left_why(&h, "dirty-old").contains("uncommitted"));
     assert_eq!(state(&h, "plain"), None, "a leftover that holds a file");
-    assert_eq!(step(&h, QUIET), 1, "one wake for the rule's thread");
-    let (thread, text) = reviews(&h).pop().unwrap();
-    assert_eq!(thread, "worker");
-    assert!(text.starts_with("3 worktrees are released"), "{text}");
-    step(&h, GRACE);
+    step(&h, DEBOUNCE);
     h.svc.requests_idle();
     for name in ["fresh", "old-unmerged", "old-merged"] {
         assert!(!exists_itself(&fx.path(name)), "{name} should be gone");
     }
-    assert!(exists_itself(&fx.path("dirty-old")), "never automatic");
+    assert!(
+        exists_itself(&fx.path("dirty-old")),
+        "it waits for its lead"
+    );
+    assert!(branches(&fx.repo).contains(&"old-unmerged".to_string()));
+    let (thread, _) = inbox(&h)
+        .into_iter()
+        .find(|(_, t)| t.starts_with("worktrees nothing was attached to"))
+        .unwrap();
+    assert_eq!(thread, "worker", "the rule's thread");
 }
 
 #[test]
-fn an_empty_leftover_folder_is_released_and_goes_through_the_leftover_removal() {
+fn an_empty_leftover_folder_goes_through_the_leftover_removal() {
     let fx = Fixture::fake();
     let empty = fx.path("agent-gone");
     std::fs::create_dir_all(&empty).unwrap();
-    let h = releasing(&fx, rule_for(&fx));
+    let h = hygienic(&fx, rule_for(&fx));
     h.scan();
     h.svc.start();
     assert_eq!(
         state(&h, "agent-gone"),
-        Some((HygieneState::Released, None))
+        Some((HygieneState::Removing, None))
     );
     assert_eq!(state(&h, "plain"), None, "a folder that holds a file stays");
-    assert!(through_grace(&h, &empty));
+    assert!(through_debounce(&h, &empty));
     assert!(exists_itself(&fx.path("plain")));
 }
 
@@ -301,12 +197,12 @@ fn an_agent_that_ends_asks_for_a_sweep_and_the_counter_counts_the_running_ones()
 }
 
 #[test]
-fn an_agent_that_ended_after_the_scan_waits_for_a_fresh_look() {
+fn an_agent_that_ended_after_the_scan_stays_attached_until_a_fresh_look() {
     let (_fx, h) = world(|_| {});
     let _ = h.svc.take_rescans();
     h.board().agents[0].ended_ms = Some(h.clock_now() + 5000);
     h.svc.hygiene_step("alpha");
-    assert!(review_why(&h, "agent-a1").contains("looks at it again first"));
+    assert!(attached_why(&h, "agent-a1").contains("looks at it again first"));
     assert_eq!(h.svc.take_rescans(), vec!["alpha".to_string()]);
 }
 
@@ -319,93 +215,57 @@ fn the_record_that_names_the_worktree_owns_it_too() {
     h.board().agents.push(AgentFact {
         worktree: Some(fx.path("named-work")),
         claude_id: None,
-        ..agent("2", "lead", "done", ended)
+        ..agent("2", "lead", "working", ended)
     });
     h.svc.hygiene_step("alpha");
-    assert_eq!(
-        state(&h, "named-work").map(|s| s.0),
-        Some(HygieneState::Released)
-    );
+    assert_eq!(attached_why(&h, "named-work"), "its agent A-2 is working");
 }
 
 #[test]
-fn a_keep_holds_it() {
-    let (fx, h) = world(|_| {});
-    step(&h, QUIET);
-    h.keep_for_a_day(&fx.path("agent-a1"));
-    h.svc.hygiene_step("alpha");
-    assert_eq!(
-        state(&h, "agent-a1"),
-        Some((HygieneState::Kept, Some("still testing".into())))
-    );
-    step(&h, GRACE);
-    h.svc.requests_idle();
-    assert!(exists_itself(&fx.path("agent-a1")) && h.svc.request_list("alpha").is_empty());
-}
-
-#[test]
-fn an_open_item_that_names_it_blocks_it() {
-    let why = used_by(|_, h| {
+fn an_open_item_that_names_it_attaches_it() {
+    let why = attached_by(|_, h| {
         h.board().links.push(Link {
             text: Some("land the agent-a1 work first".into()),
             ..link("item I-4")
         });
     });
-    assert_eq!(why, "item I-4 uses it");
+    assert_eq!(why, "item I-4 works in it");
 }
 
 #[test]
-fn an_open_pull_request_of_its_branch_blocks_it() {
-    let why = used_by(|_, h| {
-        h.board().links.push(Link {
-            branch: Some("agent-a1".into()),
-            ..link("PR-2")
-        });
-    });
-    assert_eq!(why, "PR-2 uses it");
-}
-
-#[test]
-fn a_launcher_in_it_blocks_it() {
-    let why = used_by(|fx, h| {
+fn a_launcher_or_a_bundle_in_it_attaches_it() {
+    let why = attached_by(|fx, h| {
         h.board().links.push(Link {
             path: Some(fx.path("agent-a1")),
             ..link("launcher web")
         });
     });
-    assert_eq!(why, "launcher web uses it");
-}
-
-#[test]
-fn a_bundle_inside_it_blocks_it() {
-    let why = used_by(|fx, h| {
+    assert_eq!(why, "launcher web works in it");
+    let why = attached_by(|fx, h| {
         h.board().links.push(Link {
             path: Some(join_path(&fx.path("agent-a1"), "apps/web")),
             ..link("bundle b1")
         });
     });
-    assert_eq!(why, "bundle b1 uses it");
+    assert_eq!(why, "bundle b1 works in it");
 }
 
 #[test]
-fn a_run_or_check_run_in_it_blocks_it_and_unreadable_runs_block_everything() {
-    let why = used_by(|fx, h| {
+fn a_run_or_check_run_in_it_attaches_it_and_unreadable_runs_attach_everything() {
+    let why = attached_by(|fx, h| {
         *locked(&h.store.runs) = Ok(vec![Link {
             path: Some(fx.path("agent-a1")),
             ..link("run R-7")
         }]);
     });
-    assert_eq!(why, "run R-7 uses it");
-    let why = blocked_by(|_, h| *locked(&h.store.runs) = Err("database is locked".into()));
-    assert!(
-        why.contains("the runs could not be read (database is locked)"),
-        "{why}"
-    );
+    assert_eq!(why, "run R-7 works in it");
+    let why = attached_by(|_, h| *locked(&h.store.runs) = Err("database is locked".into()));
+    assert_eq!(why, "the runs could not be read (database is locked)");
 }
 
 #[test]
-fn a_process_in_it_blocks_it() {
-    let why = used_by(|fx, h| {
+fn a_process_in_it_attaches_it() {
+    let why = attached_by(|fx, h| {
         h.clock.advance(10_001);
         h.run_node_in(&fx.path("agent-a1"));
     });
@@ -413,28 +273,62 @@ fn a_process_in_it_blocks_it() {
 }
 
 #[test]
-fn uncommitted_work_is_never_automatic() {
-    let why = blocked_by(|fx, _| {
-        put(&fx.path("agent-a1"), "notes.txt", "not committed\n");
-    });
-    assert_eq!(why, "it has 1 uncommitted change");
-}
-
-#[test]
-fn commits_no_ref_keeps_are_never_automatic() {
-    let (fx, h) = world_with(&[], |fx| fx.add_detached_work("agent-a1"));
-    h.board().agents = vec![agent("1", "lead", "done", h.clock_now() - 1000)];
-    h.scan();
-    assert_eq!(
-        review_why(&h, "agent-a1"),
-        "its HEAD has commits no branch or ref keeps"
+fn a_run_that_starts_in_the_debounce_stops_the_removal_and_its_end_starts_the_debounce_again() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    step(&h, DEBOUNCE - 1000);
+    *locked(&h.store.runs) = Ok(vec![Link {
+        path: Some(path.clone()),
+        ..link("run R-7")
+    }]);
+    step(&h, 1000);
+    h.svc.requests_idle();
+    assert_eq!(attached_why(&h, "agent-a1"), "run R-7 works in it");
+    assert!(exists_itself(&path) && h.svc.request_list("alpha").is_empty());
+    *locked(&h.store.runs) = Ok(Vec::new());
+    step(&h, 0); // the step that sees the run gone starts the new debounce
+    step(&h, DEBOUNCE - 1);
+    h.svc.requests_idle();
+    assert!(
+        exists_itself(&path),
+        "a new debounce began when the run ended"
     );
-    assert!(!through_grace(&h, &fx.path("agent-a1")));
+    step(&h, 1);
+    h.svc.requests_idle();
+    assert!(!exists_itself(&path));
 }
 
 #[test]
-fn a_lock_is_never_automatic_but_brocks_own_lock_is() {
-    let why = blocked_by(|fx, _| {
+fn a_file_made_dirty_during_the_debounce_stops_the_removal() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    put(&path, "late.txt", "written during the debounce\n");
+    assert!(
+        !through_debounce(&h, &path),
+        "the look again right before removing sees it"
+    );
+    assert!(exists_itself(&join_path(&path, "late.txt")));
+    let (_, text) = inbox(&h).pop().unwrap();
+    assert!(
+        text.contains("was not removed") && text.contains("uncommitted"),
+        "{text}"
+    );
+    h.scan();
+    assert!(left_why(&h, "agent-a1").contains("uncommitted"));
+}
+
+#[test]
+fn a_keep_a_thread_wrote_on_the_board_does_not_hold_it() {
+    let (fx, h) = world(|_| {});
+    h.keep_for_a_day(&fx.path("agent-a1"));
+    h.svc.hygiene_step("alpha");
+    assert_eq!(state(&h, "agent-a1"), Some((HygieneState::Removing, None)));
+    assert!(through_debounce(&h, &fx.path("agent-a1")));
+}
+
+#[test]
+fn a_lock_waits_for_the_lead_but_brocks_own_lock_does_not() {
+    let (fx, h) = world(|fx| {
         fx.git(&[
             "worktree",
             "lock",
@@ -443,7 +337,8 @@ fn a_lock_is_never_automatic_but_brocks_own_lock_is() {
             &fx.path("agent-a1"),
         ]);
     });
-    assert_eq!(why, "it is locked (owner: hands off)");
+    assert_eq!(left_why(&h, "agent-a1"), "it is locked (owner: hands off)");
+    assert!(!through_debounce(&h, &fx.path("agent-a1")));
     let (fx, h) = world(|fx| {
         fx.git(&[
             "worktree",
@@ -453,24 +348,18 @@ fn a_lock_is_never_automatic_but_brocks_own_lock_is() {
             &fx.path("agent-a1"),
         ]);
     });
-    assert_eq!(
-        state(&h, "agent-a1").map(|s| s.0),
-        Some(HygieneState::Released)
-    );
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
     assert!(
-        through_grace(&h, &fx.path("agent-a1")),
+        through_debounce(&h, &fx.path("agent-a1")),
         "the removal lifts Brock's lock"
     );
 }
 
 #[test]
-fn a_main_checkout_is_never_automatic() {
+fn a_main_checkout_is_never_the_hygienes() {
     let fx = Fixture::fake();
     let main_rule = Rule::folder("W-2", &fx.root, "worker").filtered(&["proj"], &[]);
-    let h = Harness::new(&fx.root, vec![main_rule], |o| {
-        o.release = true;
-        o.release_grace_ms = GRACE;
-    });
+    let h = Harness::new(&fx.root, vec![main_rule], hygiene_on);
     h.board().agents = vec![AgentFact {
         worktree: Some(fx.repo.clone()),
         claude_id: None,
@@ -483,107 +372,14 @@ fn a_main_checkout_is_never_automatic() {
         None,
         "the hygiene never judges a main checkout"
     );
-    step(&h, GRACE * 2);
+    step(&h, DEBOUNCE * 100);
     h.svc.requests_idle();
     assert_eq!(h.svc.request_list("alpha").len(), 0);
+    assert_eq!(inbox(&h), Vec::<(String, String)>::new());
 }
 
 #[test]
-fn after_the_grace_argus_removes_it_with_its_merged_branch_and_leaves_one_note() {
-    let (fx, h) = world_with(&[("1", "lead", "done"), ("2", "lead", "done")], |_| {});
-    let (one, two) = (fx.path("agent-a1"), fx.path("agent-a2"));
-    step(&h, QUIET);
-    step(&h, GRACE - 1);
-    h.svc.requests_idle();
-    assert!(
-        h.svc.request_list("alpha").is_empty(),
-        "the grace is not over"
-    );
-    step(&h, 1);
-    h.svc.requests_idle();
-    assert!(!exists_itself(&one) && !exists_itself(&two));
-    let left = branches(&fx.repo);
-    assert!(
-        !left.contains(&"agent-a1".to_string()) && !left.contains(&"agent-a2".to_string()),
-        "{left:?}"
-    );
-    let notes = inbox(&h);
-    assert_eq!(notes.len(), 1, "{notes:?}");
-    let (thread, text) = &notes[0];
-    assert_eq!(thread, "lead");
-    assert!(
-        text.starts_with("released worktrees, their grace over (request R-1 done): removed 2 ("),
-        "{text}"
-    );
-    assert!(text.contains(&one), "{text}");
-    let removed = h.meta().hygiene.removed;
-    assert_eq!(removed.len(), 2);
-    assert!(removed.iter().all(|r| r.thread.as_deref() == Some("lead")));
-    assert_eq!(state(&h, "agent-a1"), None);
-}
-
-#[test]
-fn a_file_made_dirty_during_the_grace_stops_the_removal() {
-    let (fx, h) = world(|_| {});
-    let path = fx.path("agent-a1");
-    step(&h, QUIET);
-    put(&path, "late.txt", "written during the grace\n");
-    assert!(
-        !through_grace(&h, &path),
-        "the look again right before removing sees it"
-    );
-    assert!(exists_itself(&join_path(&path, "late.txt")));
-    let (_, text) = inbox(&h).pop().unwrap();
-    assert!(
-        text.contains("was not removed: it has 1 uncommitted change"),
-        "{text}"
-    );
-    assert!(review_why(&h, "agent-a1").contains("uncommitted"));
-}
-
-#[test]
-fn a_burst_of_agents_ending_makes_one_wake_per_thread() {
-    let (fx, h) = world_with(
-        &[
-            ("1", "lead", "done"),
-            ("2", "lead", "working"),
-            ("3", "lead", "working"),
-            ("4", "worker", "done"),
-        ],
-        |_| {},
-    );
-    for n in [1, 2] {
-        step(&h, 10_000);
-        let ended = h.clock_now() - 1;
-        let mut board = h.board();
-        board.agents[n].status = "done".into();
-        board.agents[n].ended_ms = Some(ended);
-        drop(board);
-        h.scan();
-    }
-    assert_eq!(
-        step(&h, QUIET - 1),
-        1,
-        "the worker's one worktree is told, the lead's burst is not over"
-    );
-    assert_eq!(step(&h, 1), 1);
-    assert_eq!(step(&h, QUIET), 0);
-    let mut wakes = reviews(&h);
-    wakes.sort();
-    assert_eq!(wakes.len(), 2);
-    assert_eq!(wakes[0].0, "lead");
-    assert!(
-        wakes[0].1.starts_with("3 worktrees are released"),
-        "{}",
-        wakes[0].1
-    );
-    assert_eq!(wakes[1].0, "worker");
-    assert!(wakes[1].1.contains(&fx.path("agent-a4")));
-}
-
-#[test]
-fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_is_not_safe()
-{
+fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses_what_holds_work() {
     let (fx, h) = world_with(
         &[("1", "lead", "working"), ("2", "lead", "working")],
         |_| {},
@@ -596,6 +392,8 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
             Caller::Thread("lead".into()),
         ))
     };
+    h.board().agents[0].status = "done".into();
+    h.scan();
     let queued = release("agent-a1").unwrap();
     assert_eq!(
         queued.text,
@@ -610,11 +408,21 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
     assert_eq!(done[0].removed(), 1, "{:?}", done[0].results);
     assert!(!exists_itself(&fx.path("agent-a1")));
     assert_eq!(h.meta().hygiene.removed[0].path, fx.path("agent-a1"));
-    put(&fx.path("agent-a2"), "wip.txt", "work\n");
     let err = release("agent-a2").unwrap_err();
     assert!(
         err.message
-            .contains("is not released: it has 1 uncommitted change"),
+            .contains("is not released: its agent A-2 is working"),
+        "{}",
+        err.message
+    );
+    h.board().agents[1].status = "done".into();
+    put(&fx.path("agent-a2"), "wip.txt", "work\n");
+    h.scan();
+    let err = release("agent-a2").unwrap_err();
+    assert!(
+        err.message
+            .contains("is not released: it has 1 uncommitted change")
+            && err.message.contains("coord worktree approve"),
         "{}",
         err.message
     );
@@ -629,23 +437,11 @@ fn the_threads_own_release_answers_with_a_request_the_worker_removes_and_refuses
             .message
             .contains("release is a thread's word")
     );
-    let stranger = RemoveInput::new(
-        "alpha",
-        &h.id_of(&fx.path("agent-a2")),
-        Caller::Thread("other".into()),
-    );
-    assert!(
-        h.svc
-            .release(&stranger)
-            .unwrap_err()
-            .message
-            .contains("other may not remove it")
-    );
 }
 
 #[test]
 fn the_threads_release_answers_at_once_while_a_removal_holds_the_turn() {
-    let (fx, h) = world_with(&[("1", "lead", "working")], |_| {});
+    let (fx, h) = world(|_| {});
     let id = h.id_of(&fx.path("agent-a1"));
     let turn = h.svc.one_at_a_time("alpha", "a test", None);
     let svc = h.svc.clone();
@@ -677,31 +473,23 @@ fn a_junction_inside_is_removed_as_a_link_and_its_target_stays() {
     fill_sibling(Path::new(&sibling));
     make_link(&join_path(&path, "lnk"), &sibling);
     let h = Harness::new(&fx.root, vec![agents_rule(&fx)], |o| {
-        o.release = true;
-        o.release_grace_ms = GRACE;
-        o.release_debounce_ms = QUIET;
+        hygiene_on(o);
         o.drop_links_first = true;
     });
     h.board().agents = vec![agent("1", "lead", "done", h.clock_now() - 1000)];
     h.scan();
     h.svc.start();
-    assert_eq!(
-        state(&h, "agent-a1").map(|s| s.0),
-        Some(HygieneState::Released)
-    );
-    assert!(through_grace(&h, &path));
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
+    assert!(through_debounce(&h, &path));
     assert_sibling_intact(Path::new(&sibling));
 }
 
 #[test]
 fn a_restart_keeps_when_it_goes() {
     let (fx, h) = world(|_| {});
-    step(&h, QUIET);
+    step(&h, DEBOUNCE / 2);
     let goes = h.docs()["agent-a1"].hygiene.clone().unwrap().goes_at;
-    let again = Harness::on_store(h.store.clone(), &fx.root, RemoveMode::Real, |o| {
-        o.release = true;
-        o.release_grace_ms = GRACE;
-    });
+    let again = Harness::on_store(h.store.clone(), &fx.root, RemoveMode::Real, hygiene_on);
     again.clock.set(h.clock.now_ms());
     again.scan();
     assert_eq!(

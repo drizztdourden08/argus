@@ -135,13 +135,17 @@ fn entries_of(raw: &Value) -> HashMap<String, OwnerEntry> {
         .collect()
 }
 
-/// Every item with its lane and whether it is in the trash: a worktree closes with its item when the item is done,
-/// dropped or trashed. The text is what may name a worktree.
+/// Every item with its lane, whether it is in the trash and its thread. The text is what may name a worktree; the thread
+/// is the lead the hygiene asks about a worktree linked to it.
 fn items_of(raw: &Value) -> BTreeMap<String, ItemFact> {
     let item = |id: &String, rec: &Value| ItemFact {
         id: id.clone(),
         lane: rec["status"].as_str().unwrap_or("todo").to_owned(),
         trashed: !rec["deletedAt"].is_null(),
+        thread: rec["thread"]
+            .as_str()
+            .filter(|t| !t.is_empty())
+            .map(str::to_owned),
         text: format!(
             "{} {}",
             rec["title"].as_str().unwrap_or_default(),

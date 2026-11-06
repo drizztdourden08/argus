@@ -4,8 +4,8 @@ use super::record::{Mode, RequestRec};
 
 const SUMMARY_SENTENCE_MAX: usize = 140;
 const SUMMARY_MAX: usize = 600;
-/// The note of worktrees removed with their item names each backup and how to restore it, so it is longer.
-const CLOSED_MAX: usize = 3000;
+/// The note of an approved removal names the backup and how to restore it, so it is longer.
+const APPROVED_MAX: usize = 3000;
 const LABELS_SHOWN: usize = 3;
 
 /// The text on one line: white space folded, cut to `max` characters.
@@ -97,25 +97,22 @@ pub fn what_text(rec: &RequestRec) -> String {
             age_text(rec.older_than_days)
         ),
         Mode::Targets => targets_text(rec, branch),
-        Mode::Released => format!("the released {}", targets_text(rec, branch)),
-        Mode::ItemClosed => format!(
-            "the worktrees of closed items, {}",
+        Mode::Detached => format!("the {} nothing is attached to", targets_text(rec, branch)),
+        Mode::Approved => format!(
+            "with what is left on it, full backup first, {}",
             targets_text(rec, branch)
         ),
     }
 }
 
-/// `: I-3: removed worktree X:/a/w, backup b.patch (restore: ...) | I-4: ...`: what a request of worktrees whose item
-/// closed removed, each with its backup and how to bring it back (the sentence of the removal says both).
-fn closed_part(rec: &RequestRec) -> String {
-    let went: Vec<String> = rec
+/// `: removed worktree X:/a/w, backup b.patch (restore: ...)`: what an approved removal did, with its backup and how to
+/// bring it back (the sentence of the removal says both).
+fn approved_part(rec: &RequestRec) -> String {
+    let went: Vec<&str> = rec
         .results
         .iter()
         .filter(|r| r.ok)
-        .map(|r| match rec.items.get(&r.id) {
-            Some(item) => format!("{item}: {}", r.text),
-            None => r.text.clone(),
-        })
+        .map(|r| r.text.as_str())
         .collect();
     if went.is_empty() {
         String::new()
@@ -124,10 +121,10 @@ fn closed_part(rec: &RequestRec) -> String {
     }
 }
 
-/// `: X:/a/w, .../v`: what a request of released worktrees removed.
+/// `: X:/a/w, .../v`: what a request of detached worktrees removed.
 fn removed_part(rec: &RequestRec) -> String {
-    if rec.mode == Mode::ItemClosed {
-        return closed_part(rec);
+    if rec.mode == Mode::Approved {
+        return approved_part(rec);
     }
     let went: Vec<&str> = rec
         .results
@@ -136,7 +133,7 @@ fn removed_part(rec: &RequestRec) -> String {
         .take(LABELS_SHOWN)
         .map(|r| r.label.as_str())
         .collect();
-    if rec.mode != Mode::Released || went.is_empty() {
+    if rec.mode != Mode::Detached || went.is_empty() {
         return String::new();
     }
     let more = rec.removed().saturating_sub(went.len());
@@ -210,13 +207,15 @@ pub fn summary_text(rec: &RequestRec) -> String {
     };
     let (id, status) = (&rec.id, rec.status.as_str());
     let (text, max) = match rec.mode {
-        Mode::Released => (
-            format!("released worktrees, their grace over (request {id} {status}): {body}"),
+        Mode::Detached => (
+            format!(
+                "worktrees nothing was attached to, removed by Argus (request {id} {status}): {body}"
+            ),
             SUMMARY_MAX,
         ),
-        Mode::ItemClosed => (
-            format!("worktrees removed with their closed items (request {id} {status}): {body}"),
-            CLOSED_MAX,
+        Mode::Approved => (
+            format!("approved worktree removal (request {id} {status}): {body}"),
+            APPROVED_MAX,
         ),
         _ => (
             format!("worktree request {id} {status}: {body}"),

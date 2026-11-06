@@ -21,7 +21,7 @@ pub enum WakeClass {
 }
 
 /// Every reason of [`crate::reasons::WAKE_REASONS`] and its class.
-pub const WAKE_CLASSES: [(&str, WakeClass); 46] = [
+pub const WAKE_CLASSES: [(&str, WakeClass); 48] = [
     ("test-fail", WakeClass::Wake),
     ("test-partial", WakeClass::Wake),
     ("test-blocked", WakeClass::Wake),
@@ -50,6 +50,8 @@ pub const WAKE_CLASSES: [(&str, WakeClass); 46] = [
     ("worktree-stale", WakeClass::Passive),
     ("worktree-review", WakeClass::Passive),
     ("worktree-unlinked", WakeClass::Passive),
+    ("worktree-approve", WakeClass::Wake),
+    ("worktree-report", WakeClass::Wake),
     ("launcher-stale", WakeClass::Passive),
     ("launcher-master-missing", WakeClass::Passive),
     ("remote-sync-due", WakeClass::Passive),

@@ -1,56 +1,69 @@
-//! Worktree hygiene: a worktree nobody works in goes by itself, with no human click.
+//! Worktree hygiene: the link between an agent and its worktree is mandatory (the owner's rule of 2026-11-06). A
+//! worktree, never a main checkout, that nothing is attached to is removed, or its lead approves its removal, or the
+//! Overlord deletes it or keeps it as an exception.
 //!
-//! RELEASED: a worktree is released when every condition holds (`judge`), whatever its age:
-//! - no running agent owns it: no sub-agent record that is working, waiting or stop-requested has it as its folder
-//!   (`.claude/worktrees/agent-<claudeId>`) or in its `worktree`. No record at all, or only done, stopped or failed
-//!   ones, is no running owner
-//! - nothing holds it: no unexpired keep, no pull request of its branch, no item in progress of a live thread that
-//!   names it, no launcher, bundle or run (check runs among them) in it, and no live process uses it
-//! - safe: not a main checkout, inside its rule, not locked (Brock's own lock aside), clean, and its HEAD kept by a
-//!   branch or a ref (or merged)
+//! ATTACHED (`judge`): a worktree is attached while any of these holds:
+//! - a running sub-agent record (working, waiting, stop-requested) owns it: its folder is
+//!   `.claude/worktrees/agent-<claudeId>`, or its `worktree` names it. An agent that ended after the last scan counts
+//!   until the rescan it asks for
+//! - a live thread works in it: an item in progress of a live thread names it (a feature thread's session is seen
+//!   through its agent record or such an item; the board has no folder per thread)
+//! - a launcher, a bundle or a run (check runs among them) is in it
+//! - a live process uses it
 //!
-//! A leftover folder with no file in it is released the same way and goes through the leftover removal.
+//! A list Argus cannot read (the runs, the processes) counts as attached. An open pull request does not: its branch
+//! outlives the folder.
 //!
-//! CLOSING WITH THE ITEM (owner, I-78; his say for this one path is decision D-42): a worktree belongs to an item
-//! (`linking`: an explicit link, the owning agent's item, an `I-n` in the branch, an open item that names it). When
-//! that item is done, dropped or trashed the worktree is `closing`: a keep does not hold it, and uncommitted work or
-//! commits no ref keeps do not stop it, because the full backup comes first. `item_close_grace_ms` (2 minutes) after
-//! Argus first saw it so, the closing worktrees of a thread go as one removal request of mode `item-closed`
-//! (`Caller::ItemClosed`, `discard` set). The request worker judges each again right before removing it: a reopen or
-//! a relink cancels. What still stops it: a running agent or a live process in it (it waits), a main checkout, a
-//! worktree outside a rule, a lock that is not Brock's, and a backup that would be partial (untracked files or a nested
-//! repository over the copy limits). Those stay in `review` with "its item I-n closed, but ...", told to the lead once
-//! as `worktree-stale`. `worktrees.closeWithItem` off turns the whole path off: the I-67 rule applies unchanged.
-//! A worktree with no item an hour after Argus first saw it is told once as `worktree-unlinked`, never removed for that.
+//! NOT ATTACHED, NOTHING LEFT (`removing`): clean, its HEAD kept by a branch or a ref, not locked (Brock's own lock
+//! aside). Once nothing has been attached for `detach_debounce_ms` (1 minute) Argus removes it through the very same
+//! `Service::remove` and its guards (links first, Brock's lock, the branch only when merged), as one `detached` request
+//! per owning lead (`Caller::Hygiene` with no approval: nothing may be lost). The lead gets one inbox note of what went.
+//! A leftover folder with no file in it goes the same way, through the leftover removal.
 //!
-//! STATES (the Worktrees tab): in use (a running agent owns it, or something holds it), released (and when it goes),
-//! review (dirty, commits no ref keeps, locked, a failed removal: the thread decides), kept. The 3 day "active" of the
-//! staleness check is not a state.
+//! NOT ATTACHED, SOMETHING LEFT (`awaiting-lead`, `ask`): uncommitted changes, commits no ref keeps, a lock that is not
+//! Brock's, or a removal that failed. The owning lead (the last agent's thread while it lives, else the thread of the
+//! item it belongs to, else the thread of its rule, else the board's lead) is asked ONCE: an inbox note with the
+//! approve command and the way to ask the Overlord for an exception, and a `worktree-approve` wake.
+//! `coord worktree approve <id>` (`approve`) files an `approved` request: a full backup, then the removal with what is
+//! left (`Caller::Hygiene` with the approval, the branch kept). A lock still stops it: the ask says to unlock first. A
+//! backup that would be partial (untracked files or a nested repository over the copy limits) refuses it too.
 //!
-//! FLOW (`step`, right after every scan, so after the first scan at the start and after the scan an agent that ended
-//! asks for, and on the server's live tick): a newly released worktree is told to its thread with ONE
-//! `worktree-review` wake per thread, once nothing new was released for `release_debounce_ms` (a burst makes one
-//! wake). `release_grace_ms` after the wake, the released worktrees of a thread go as one removal request of mode
-//! `released`, by that thread: the request worker scans afresh, judges each one again right before removing it
-//! (`still_released`), and removes it through the very same `Service::remove` and its guards (links first, backups,
-//! Brock's lock, the branch only when merged). The thread gets one inbox note of what went. `coord worktree release
-//! <id>` removes one at once through the same removal (`release`); `coord worktree keep` stops it. Anything else
-//! (dirty, commits no ref keeps, locked, in use, a main checkout, outside a rule) is never removed automatically: it
-//! shows `review` or `in use` with the reason and stays on the `worktree-stale` path.
+//! REPORTED (`report`): `report_after_ms` (30 minutes) after the ask, still unattached and unanswered, the worktree is
+//! reported ONCE to the Overlord (the lead of the `portfolio` project): an inbox note on his board with the worktree,
+//! what is left, the backup path and the one delete command (`coord worktree approve <id> --project <p>`), and a
+//! `worktree-report` wake.
 //!
-//! STATE: what each worktree is, when it was told, its request, what Argus could not remove, and the last removals,
-//! in the key-value table (`worktrees:hygiene:<project>`), so a restart keeps the grace.
+//! EXCEPTION (`exception`): `coord worktree keep <id> --note "why"` is the Overlord's word only; a thread that calls it
+//! is refused and told to ask with `coord lead portfolio "..."`. An exception is never removed and never reported. It
+//! ends at its `until`, when the Overlord clears it, or when its worktree is gone. The keeps threads wrote on the board
+//! before 2026-11-06 do not hold a worktree here (they still snooze the `worktree-stale` signal).
+//!
+//! Anything attached again (an agent, a run) stops all of this: the mark goes back to `attached`, and a later detach
+//! starts over (a new debounce, a new ask).
+//!
+//! FLOW (`step`, right after every scan and on the server's live tick): mark every worktree, file the removals that
+//! are due, ask the leads, report the asks left unanswered, then the `worktree-unlinked` notice (`notices`: a worktree
+//! with no item an hour after Argus first saw it, told once, never removed for that). The request worker judges each
+//! worktree again right before removing it (`still_free`): a detached one must still be clean and unattached, an
+//! approved one still unattached and not an exception.
+//!
+//! STATE: each worktree's mark (state, owning lead, since, asked, reported, request), what Argus could not remove, the
+//! exception list and the last removals, in the key-value table (`worktrees:hygiene:<project>`), so a restart keeps
+//! every time.
 
-mod closing;
+mod approve;
+mod ask;
+mod exception;
 mod judge;
 mod memory;
 mod notices;
 mod release;
+mod report;
 mod step;
 mod text;
 
+pub use exception::{KeepInput, Kept};
 pub use memory::{HygieneDoc, HygieneMeta, HygieneState, RemovedDoc, hygiene_key};
 pub use step::Stepped;
-pub use text::REASON;
 
 pub(crate) use memory::Memories;

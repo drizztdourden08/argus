@@ -20,7 +20,11 @@
 //!   request goes on; while one runs, the record's `current` names it with the seconds it has been on it
 //! - outcome: every target ends with a sentence; the request is `done` (nothing refused), `partial`, or `refused`
 //! - follow-up: when a request finishes, ONE short note goes to the inbox of the requesting thread (from Argus) with a
-//!   `thread-message` wake, and an activity line `worktree-request`
+//!   `thread-message` wake, and an activity line `worktree-request`; the Overlord's approval lands on the portfolio
+//!   board instead (`inbox`)
+//! - hygiene: `detached` (the clean worktrees nothing is attached to, removed by Argus) and `approved` (a worktree a
+//!   lead or the Overlord approved removing with what is left on it, full backup first) are filed by the hygiene and
+//!   the approve verb, never by a thread's `request`
 
 mod create;
 mod deliver;
@@ -57,8 +61,8 @@ pub const IDLE_MAX_MINUTES: f64 = 43_200.0;
 pub const MAX_ACTIVE: usize = 20;
 /// How long a sentence of an outcome may be.
 const SENTENCE_MAX: usize = 600;
-/// How long the sentence of a removal with its closed item may be (it names the backup and how to restore it).
-const CLOSED_SENTENCE_MAX: usize = 1500;
+/// How long the sentence of an approved removal may be (it names the backup and how to restore it).
+const APPROVED_SENTENCE_MAX: usize = 1500;
 
 pub(crate) struct State {
     pub stores: HashMap<String, store::Store>,

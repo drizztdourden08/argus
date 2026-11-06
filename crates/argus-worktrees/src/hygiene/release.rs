@@ -1,8 +1,9 @@
-//! Removing released worktrees: the look again right before each removal, what the request worker leaves in the
-//! hygiene, and a thread's own `release`.
+//! Removing what the hygiene hands on: the look again right before each removal, what the request worker leaves in
+//! the hygiene, a fresh read of one worktree, and a thread's own `release`.
 
 use super::judge::{Look, Verdict};
 use super::memory::{Refused, RemovedDoc};
+use crate::board::BoardFacts;
 use crate::clock::iso_from_ms;
 use crate::error::{ErrorCode, Result, WtError};
 use crate::fact::Fact;
@@ -14,53 +15,72 @@ use crate::requests::{Mode, Outcome, Queued, RequestInput, RequestRec, Target};
 use crate::rule::Rule;
 use crate::service::Service;
 
-/// The code of a target the look again found no longer released.
-const NOT_RELEASED: &str = "not_released";
+/// The code of a target the look again found attached, excepted or changed.
+const NOT_FREE: &str = "not_free";
+
+/// Why a removal may not go on for this verdict, or none: a clean worktree always may, one that holds work only once
+/// its lead or the Overlord approved.
+pub(super) fn why_not(verdict: &Verdict, approved: bool) -> Option<String> {
+    match verdict {
+        Verdict::Clean => None,
+        Verdict::Left(_) if approved => None,
+        Verdict::Left(why) | Verdict::Attached(why) => Some(why.clone()),
+        Verdict::Exception(reason) => {
+            Some(format!("it is on the Overlord's exception list ({reason})"))
+        }
+        Verdict::Quiet => Some("it is not a worktree Argus removes by itself".to_string()),
+    }
+}
 
 impl Service {
-    fn why_not(verdict: &Verdict, mode: Mode) -> String {
-        match verdict {
-            Verdict::Released if mode == Mode::ItemClosed => {
-                "its item is not closed any more (reopened or linked to another item)".to_string()
-            }
-            Verdict::Closing if mode != Mode::ItemClosed => "its item closed meanwhile".to_string(),
-            Verdict::Closing => "its item or its thread changed".to_string(),
-            Verdict::Released => "its thread changed".to_string(),
-            Verdict::Quiet => "it is not a worktree Argus removes by itself".to_string(),
-            Verdict::Kept(_) => "the thread kept it".to_string(),
-            Verdict::InUse(why) | Verdict::Review(why) => why.clone(),
-        }
+    /// The look of one worktree right now: the board, the runs and the processes listed afresh.
+    pub(super) fn look_now<T>(
+        &self,
+        project: &str,
+        board: &BoardFacts,
+        fact: &Fact,
+        judge: impl FnOnce(&Look<'_>) -> T,
+    ) -> T {
+        let runs = self.deps.store.live_runs();
+        let (refused, exception) = self.with_hygiene(project, |m| {
+            (
+                m.refused.get(&fact.id).cloned(),
+                m.exceptions.get(&fact.id).cloned(),
+            )
+        });
+        let look = Look {
+            board,
+            runs: &runs,
+            scanned_ms: self.now(),
+            fresh: true,
+            refused: refused.as_ref(),
+            exception: exception.as_ref(),
+        };
+        judge(&look)
     }
 
-    /// Right before a released or closing worktree is removed: every condition again, on the fresh scan, the board now
-    /// and the processes listed now. A request of another mode passes, except a thread's own release: nothing may use
-    /// the worktree and nothing may be lost, as when it asked. A closing one must still belong to the closed item it
-    /// was filed for.
-    pub(crate) fn still_released(
+    /// Right before a hygiene removal, and a thread's own release: the verdict again, on the fresh scan, the board now
+    /// and the processes listed now. A detached worktree and a release must still be clean and unattached; an
+    /// approved one must still be unattached and not an exception. A request of another mode passes.
+    pub(crate) fn still_free(
         &self,
         rec: &RequestRec,
         target: &Target,
     ) -> std::result::Result<(), Outcome> {
-        if !matches!(rec.mode, Mode::Released | Mode::ItemClosed) && !rec.release {
+        if !matches!(rec.mode, Mode::Detached | Mode::Approved) && !rec.release {
             return Ok(());
         }
-        let fact = self.deps.store.board(&rec.key).and_then(|board| {
+        let found = self.deps.store.board(&rec.key).and_then(|board| {
             self.fact_of(&rec.key, &target.id, &board)
                 .map(|f| (board, f))
         });
-        let why = match fact {
+        let why = match found {
             None => "it is not in the listing any more".to_string(),
             Some((board, fact)) => {
-                let runs = self.deps.store.live_runs();
-                let refused = self.with_hygiene(&rec.key, |m| m.refused.get(&fact.id).cloned());
-                let look = Look {
-                    board: &board,
-                    runs: &runs,
-                    scanned_ms: self.now(),
-                    fresh: true,
-                    refused: refused.as_ref(),
-                };
-                match self.looked_again(rec, &look, &fact) {
+                let verdict = self.look_now(&rec.key, &board, &fact, |look| {
+                    self.judge(&rec.key, look, &fact).0
+                });
+                match why_not(&verdict, rec.mode == Mode::Approved) {
                     None => return Ok(()),
                     Some(why) => why,
                 }
@@ -71,33 +91,17 @@ impl Service {
             label: target.label.clone(),
             ok: false,
             text: format!("{} was not removed: {why}", target.label),
-            code: Some(NOT_RELEASED.to_string()),
+            code: Some(NOT_FREE.to_string()),
         })
     }
 
-    /// Why the worktree of a request is no longer to be removed, or none when it still is.
-    fn looked_again(&self, rec: &RequestRec, look: &Look<'_>, fact: &Fact) -> Option<String> {
-        if rec.release {
-            return self.blocked_why(look, fact);
-        }
-        let (verdict, owner) = self.judge(&rec.key, look, fact);
-        let by_it = owner.thread.as_deref() == Some(rec.by.as_str());
-        let filed_for = rec.items.get(&fact.id);
-        match (rec.mode, &verdict) {
-            (Mode::Released, Verdict::Released) if by_it => None,
-            (Mode::ItemClosed, Verdict::Closing) if by_it && filed_for == owner.item.as_ref() => {
-                None
-            }
-            _ => Some(Self::why_not(&verdict, rec.mode)),
-        }
-    }
-
-    /// A request of released worktrees ended: what went is listed for the page, what the removal refused is not
-    /// released again while it stays as it is, and the rest is judged afresh by the next step.
-    pub(crate) fn after_released(&self, project: &str, id: &str) {
+    /// A hygiene request or a release ended: what went is listed for the page; what the removal refused is clean no
+    /// more while it stays as it is (its lead is asked about it); the mark lets go of the request, keeping when its
+    /// lead was asked and when the Overlord was told.
+    pub(crate) fn after_hygiene(&self, project: &str, id: &str) {
         let Some(rec) = self
             .request_of(project, id)
-            .filter(|r| matches!(r.mode, Mode::Released | Mode::ItemClosed) || r.release)
+            .filter(|r| matches!(r.mode, Mode::Detached | Mode::Approved) || r.release)
         else {
             return;
         };
@@ -105,17 +109,13 @@ impl Service {
         let at = iso_from_ms(self.now());
         self.with_hygiene(project, |memory| {
             for result in &rec.results {
+                let fact = facts.iter().find(|f| f.id == result.id);
                 if result.ok {
                     let branch = memory
                         .marks
                         .get(&result.id)
                         .and_then(|m| m.branch.clone())
-                        .or_else(|| {
-                            facts
-                                .iter()
-                                .find(|f| f.id == result.id)
-                                .and_then(|f| f.branch.clone())
-                        });
+                        .or_else(|| fact.and_then(|f| f.branch.clone()));
                     memory.removed_one(RemovedDoc {
                         id: result.id.clone(),
                         path: result.label.clone(),
@@ -126,30 +126,29 @@ impl Service {
                     });
                     continue;
                 }
-                let carried = memory
+                if let Some(mark) = memory
                     .marks
-                    .get(&result.id)
-                    .is_some_and(|m| m.request.as_deref() == Some(id));
-                if carried {
-                    memory.marks.remove(&result.id);
+                    .get_mut(&result.id)
+                    .filter(|m| m.request.as_deref() == Some(id))
+                {
+                    mark.request = None;
                 }
-                if result.code.as_deref() != Some(NOT_RELEASED) {
-                    if let Some(fact) = facts.iter().find(|f| f.id == result.id) {
-                        memory.refused.insert(
-                            result.id.clone(),
-                            Refused {
-                                head: fact.head.clone(),
-                                dirty: fact.dirty,
-                                why: result.text.clone(),
-                            },
-                        );
-                    }
+                if let Some(fact) = fact.filter(|_| result.code.as_deref() != Some(NOT_FREE)) {
+                    memory.refused.insert(
+                        result.id.clone(),
+                        Refused {
+                            head: fact.head.clone(),
+                            dirty: fact.dirty,
+                            why: result.text.clone(),
+                        },
+                    );
                 }
             }
         });
     }
 
-    fn listed_fact(&self, input: &RemoveInput) -> Result<(crate::board::BoardFacts, Fact)> {
+    /// The listed worktree an id or a path names, with the board.
+    pub(super) fn listed_fact(&self, input: &RemoveInput) -> Result<(BoardFacts, Fact)> {
         let board = self.board(&input.project)?;
         let id = input.id.trim();
         let wid = if is_worktree_id(id) {
@@ -164,9 +163,9 @@ impl Service {
     }
 
     /// The worktree as it is now, read with git on this thread. It does not take the turn of scans and removals: a
-    /// release must answer while a removal request runs (a scan of the project would wait for it, minutes). The
-    /// request worker scans and looks again right before the removal.
-    fn read_now(&self, listed: &Fact, rule: Option<&Rule>) -> Result<Fact> {
+    /// release or an approval must answer while a removal request runs (a scan of the project would wait for it,
+    /// minutes). The request worker scans and looks again right before the removal.
+    pub(super) fn read_now(&self, listed: &Fact, rule: Option<&Rule>) -> Result<Fact> {
         let Some(rule) = rule else {
             return Ok(listed.clone());
         };
@@ -189,11 +188,25 @@ impl Service {
         }
     }
 
+    /// A linked git worktree, or the sentence that says the verb takes one.
+    pub(super) fn worktree_only(listed: &Fact, verb: &str) -> Result<()> {
+        if Self::judged(listed) {
+            return Ok(());
+        }
+        Err(WtError::new(
+            ErrorCode::Conflict,
+            format!(
+                "{} is not a linked git worktree: {verb} takes a worktree (coord worktree remove takes a leftover folder)",
+                listed.path
+            ),
+        ))
+    }
+
     /// `coord worktree release <id|path>`: the thread no longer needs the worktree. After a fresh look at that one
-    /// worktree (never a scan of the project: that would wait for a running removal) Argus checks that nothing uses it
-    /// and that removing it loses nothing, then files the removal as a request of the thread (the branch too when
-    /// merged) and answers at once: the removal takes minutes, so the worker carries it out and the result comes to the
-    /// thread's inbox. Anything that is not safe is refused: the thread removes it itself if it means to.
+    /// worktree (never a scan of the project: that would wait for a running removal) Argus checks that nothing is
+    /// attached and that removing it loses nothing, then files the removal as a request of the thread (the branch too
+    /// when merged) and answers at once: the worker carries it out and the result comes to the thread's inbox.
+    /// Anything that holds work is refused: the lead approves that one (`coord worktree approve`).
     pub fn release(&self, input: &RemoveInput) -> Result<Queued> {
         let Some(thread) = input.caller.thread().map(ToString::to_string) else {
             return Err(forbidden(
@@ -204,27 +217,14 @@ impl Service {
         let (board, listed) = self.listed_fact(input)?;
         let rule = board.rules.iter().find(|r| r.id == listed.rule);
         crate::guards::check_caller(&board, &input.caller, &Self::caller_rules(&board, rule))?;
-        if !Self::judged(&listed) {
-            return Err(WtError::new(
-                ErrorCode::Conflict,
-                format!(
-                    "{} is not a linked git worktree: release takes a worktree (coord worktree remove takes a leftover folder)",
-                    listed.path
-                ),
-            ));
-        }
+        Self::worktree_only(&listed, "release")?;
         let fact = self.read_now(&listed, rule)?;
-        let runs = self.deps.store.live_runs();
-        let look = Look {
-            board: &board,
-            runs: &runs,
-            scanned_ms: self.now(),
-            fresh: true,
-            refused: None,
-        };
-        if let Some(why) = self.blocked_why(&look, &fact) {
+        let verdict = self.look_now(&input.project, &board, &fact, |look| {
+            self.judge(&input.project, look, &fact).0
+        });
+        if let Some(why) = why_not(&verdict, false) {
             let text = format!(
-                "{} is not released: {why}. Argus removes a worktree by itself only when nothing uses it and nothing is lost; nothing was removed",
+                "{} is not released: {why}. Argus removes a worktree on a release only when nothing is attached and nothing is lost; its lead approves the rest (coord worktree approve <id>). Nothing was removed",
                 fact.path
             );
             self.note(

@@ -868,6 +868,8 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `agent-idle`, `agent-orphan` | wake | one of its agents finished or is gone |
 | `test-fail`, `test-partial`, `test-blocked`, `run-failed` | wake | its own test or run result |
 | `process-reaped` | wake | the reaper stopped its own hung run |
+| `worktree-approve` | wake | an unattached worktree of its holds work: approve its removal or ask the Overlord for an exception (`docs/worktree-hygiene.md`) |
+| `worktree-report` | wake | to the Overlord: a lead left a `worktree-approve` ask unanswered for 30 minutes: delete it or keep it |
 | `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
 | `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |
 | `open-resend` | wake | to the Overlord every 15 min while a fault, `worktree-stale` or `remote-sync-due` stays open: one coalesced line |
@@ -877,7 +879,8 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `agent-unassigned` | passive | an agent with no item 10 minutes after it started: it works on an item (R21), told once |
 | `kanban-stale` | passive | item staleness |
 | `process-alert` | passive | hogs and orphans the process monitor saw |
-| `worktree-stale`, `worktree-review` | passive | worktree hygiene |
+| `worktree-stale` | passive | worktree staleness |
+| `worktree-review` | passive | no longer sent (the hygiene of 2026-11-06 asks with `worktree-approve`); kept for old rows |
 | `worktree-unlinked` | passive | a worktree with no item an hour after Argus first saw it (a main checkout is never flagged) |
 | `launcher-stale`, `launcher-master-missing` | passive | launcher hygiene |
 | `remote-sync-due` | passive | the daily remote sync reminder |
@@ -976,12 +979,14 @@ What the CLI does with them (`argus-coord`):
   {item, by, at}`. A link made by hand wins over the owning agent's `item`, an `I-n` in the branch
   name and an item whose text names the folder (`argus-worktrees` `linking.rs`).
 - The item verbs print one line when a move closed or reopened builds with the item
-  (`I-7: closed with it: build run-7; worktree 1a2b3c4d5e goes in a short grace`). The names
+  (`I-7: closed with it: build run-7`). The names
   come from `OpResult.extra` (`closedWith`, `reopenedWith`).
 
-A worktree goes with its item. Once the item is closed, hygiene moves the worktree to `closing`
-and removes it after `worktrees.itemCloseGraceMs` (2 minutes by default) with the backup written
-first, as long as `worktrees.closeWithItem` is on. A worktree with no item an hour after Argus
+A worktree goes when nothing is attached to it any more (the owner's rule of 2026-11-06, which
+replaced the removal with its item): no running agent, no live thread working in it, no run,
+launcher or process. A clean one is removed after a 1 minute debounce; one that holds work asks
+its lead to approve, and goes to the Overlord after 30 minutes unanswered; only the Overlord
+keeps one (`docs/worktree-hygiene.md`). A worktree with no item an hour after Argus
 first saw it is flagged once: the `no item` chip on the Worktrees tab and a passive
 `worktree-unlinked` notice to its thread. Nothing is removed for being unlinked.
 

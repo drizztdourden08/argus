@@ -1,5 +1,6 @@
 //! What the worktree hygiene reads from a board besides the rules: the sub-agent records, and the
-//! open things that may use a worktree (items in progress, pull requests, launchers, bundles).
+//! open things that work in a worktree (items in progress, launchers, bundles). A pull request does not: its branch
+//! outlives the folder.
 
 use argus_board::Board;
 use argus_board::agent_links::items_of;
@@ -68,16 +69,6 @@ fn item_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
         })
 }
 
-fn pr_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
-    section(board, "prs")
-        .filter(|(_, p)| p["status"] == "open")
-        .map(|(id, p)| Link {
-            what: id.clone(),
-            branch: text(&p["head"]),
-            ..Link::default()
-        })
-}
-
 fn launcher_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
     section(board, "launchers")
         .filter(|(_, l)| l["retiredAt"].is_null())
@@ -99,10 +90,9 @@ fn bundle_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
         })
 }
 
-/// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
+/// The items in progress of a live thread, the launchers not retired and the bundles not closed.
 pub(super) fn links_of(board: &Board) -> Vec<Link> {
     item_links(board)
-        .chain(pr_links(board))
         .chain(launcher_links(board))
         .chain(bundle_links(board))
         .collect()
@@ -150,6 +140,6 @@ mod tests {
             (Some("a1"), true, true, Some("I-1"))
         );
         let whats: Vec<String> = links_of(&board).into_iter().map(|l| l.what).collect();
-        assert_eq!(whats, ["item I-1", "PR-1", "launcher web", "bundle b1"]);
+        assert_eq!(whats, ["item I-1", "launcher web", "bundle b1"]);
     }
 }

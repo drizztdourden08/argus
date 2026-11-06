@@ -154,6 +154,7 @@ mod tests {
                     id: id.into(),
                     lane: lane.into(),
                     trashed: false,
+                    thread: None,
                     text: text.into(),
                 },
             );

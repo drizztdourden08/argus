@@ -200,7 +200,7 @@ pub struct Meta {
     pub by_status: BTreeMap<String, usize>,
     pub stale_days: u32,
     pub rules: Vec<RuleSummary>,
-    /// The hygiene: on, the grace, the last removals.
+    /// The hygiene: on, the debounce, the report delay, the last removals.
     pub hygiene: HygieneMeta,
     pub error: Option<String>,
 }
