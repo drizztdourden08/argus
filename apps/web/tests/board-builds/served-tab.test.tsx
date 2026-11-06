@@ -37,7 +37,7 @@ describe('P13 the Work tab of the item pane', { tags: ['critical'] }, () => {
         launcherDoc('master', { master: true }),
       ]),
       worktrees: [
-        worktree('agent-1', 'stale', { item: 'I-1', linkSource: 'agent', branch: 'feat-1', dirty: 2, hygiene: { state: 'closing', why: 'its item is closed' } }),
+        worktree('agent-1', 'stale', { item: 'I-1', linkSource: 'agent', branch: 'feat-1', dirty: 2, hygiene: { state: 'awaiting-lead', why: 'it has 2 uncommitted changes' } }),
         worktree('agent-2', 'active', { item: 'I-2' }),
       ],
     });
@@ -52,7 +52,7 @@ describe('P13 the Work tab of the item pane', { tags: ['critical'] }, () => {
     const line = rows[0] as HTMLElement;
     expect(line.textContent).toContain('agent-1');
     expect(line.textContent).toContain('feat-1');
-    expect(within(line).getByText('closing')).toBeTruthy();
+    expect(within(line).getByText('awaiting lead')).toBeTruthy();
     expect(within(line).getByText('linked by agent')).toBeTruthy();
     expect(within(line).getByText('2 dirty')).toBeTruthy();
   });

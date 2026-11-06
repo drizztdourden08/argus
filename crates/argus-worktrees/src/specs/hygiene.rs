@@ -286,6 +286,7 @@ fn a_run_that_starts_in_the_debounce_stops_the_removal_and_its_end_starts_the_de
     assert_eq!(attached_why(&h, "agent-a1"), "run R-7 works in it");
     assert!(exists_itself(&path) && h.svc.request_list("alpha").is_empty());
     *locked(&h.store.runs) = Ok(Vec::new());
+    step(&h, 0); // the step that sees the run gone starts the new debounce
     step(&h, DEBOUNCE - 1);
     h.svc.requests_idle();
     assert!(
@@ -374,7 +375,7 @@ fn a_main_checkout_is_never_the_hygienes() {
     step(&h, DEBOUNCE * 100);
     h.svc.requests_idle();
     assert_eq!(h.svc.request_list("alpha").len(), 0);
-    assert!(inbox(&h).is_empty());
+    assert_eq!(inbox(&h), Vec::<(String, String)>::new());
 }
 
 #[test]

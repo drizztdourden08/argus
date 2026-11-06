@@ -24,6 +24,15 @@ fn dirty_world() -> (Fixture, Harness) {
     })
 }
 
+/// Agent 1's worktree on a detached HEAD with a commit no branch or ref keeps. Git refuses a second worktree in the
+/// same folder, so its clean worktree goes first.
+fn detached_world() -> (Fixture, Harness) {
+    world(|fx| {
+        fx.git(&["worktree", "remove", &fx.path("agent-a1")]);
+        fx.add_detached_work("agent-a1");
+    })
+}
+
 /// The lead is asked: the debounce over.
 fn asked(h: &Harness) {
     assert_eq!(step(h, DEBOUNCE).told, 1);
@@ -76,9 +85,7 @@ fn work_left_on_an_unattached_worktree_asks_its_lead_once_with_both_commands() {
 
 #[test]
 fn commits_no_ref_keeps_and_a_lock_ask_too_and_the_lock_says_to_unlock_first() {
-    let (_fx, h) = world_with(&[("1", "lead", "done")], |fx| {
-        fx.add_detached_work("agent-a1")
-    });
+    let (_fx, h) = detached_world();
     assert_eq!(
         left_why(&h, "agent-a1"),
         "its HEAD has commits no branch or ref keeps"
@@ -198,9 +205,7 @@ fn the_leads_approval_writes_a_full_backup_removes_it_and_keeps_its_branch() {
 
 #[test]
 fn commits_no_ref_keeps_go_to_a_bundle_on_approval() {
-    let (fx, h) = world_with(&[("1", "lead", "done")], |fx| {
-        fx.add_detached_work("agent-a1")
-    });
+    let (fx, h) = detached_world();
     asked(&h);
     h.svc
         .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
@@ -442,6 +447,9 @@ fn a_main_checkout_is_never_flagged_for_having_no_item() {
     step(&h, HOUR);
     assert_eq!(step(&h, HOUR).noticed, 0);
     assert!(!h.docs().get("proj").is_some_and(|d| d.link.unlinked));
-    assert!(wakes(&h, "worktree-unlinked").is_empty());
+    assert_eq!(
+        wakes(&h, "worktree-unlinked"),
+        Vec::<(String, String, String)>::new()
+    );
     assert!(Path::new(&fx.repo).exists());
 }
