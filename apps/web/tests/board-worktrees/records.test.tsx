@@ -9,7 +9,7 @@ import { cleanAfterEach, findRow, metaDoc, mountTab, text, worktree } from './wt
 
 cleanAfterEach();
 
-const request = (extra: object = {}) => ({ id: 'R-3', by: 'lead', at: ago(HOUR), mode: 'released', status: 'done', total: 2, removed: 2, refused: 0, ...extra });
+const request = (extra: object = {}) => ({ id: 'R-3', by: 'lead', at: ago(HOUR), mode: 'detached', status: 'done', total: 2, removed: 2, refused: 0, ...extra });
 
 const gone = { id: 'old', path: 'X:/proj/trees/gone', thread: 'lead', at: ago(2 * HOUR), text: 'Removed gone' };
 
@@ -61,7 +61,7 @@ describe('I-85 the group header of an item', { tags: ['standard'] }, () => {
 });
 
 describe('I-85 the requests and the removed worktrees as rows', { tags: ['standard'] }, () => {
-  const board = () => ({ docs: [worktree('live', 'active')], meta: metaDoc({ requests: [request()], hygiene: { on: true, graceMs: 0, removed: [gone] } }) });
+  const board = () => ({ docs: [worktree('live', 'active')], meta: metaDoc({ requests: [request()], hygiene: { on: true, debounceMs: 60_000, reportAfterMs: 1_800_000, removed: [gone] } }) });
 
   it('folds both lists by default under a count', async () => {
     const { container } = await mountTab(board());
@@ -80,7 +80,7 @@ describe('I-85 the requests and the removed worktrees as rows', { tags: ['standa
     expand('Removal requests from threads');
     const row = container.querySelector<HTMLElement>('[data-record="RQ-3"]');
     expect(row).not.toBeNull();
-    expect(text(row as HTMLElement)).toContain('lead asked to remove its 2 worktrees released after the grace');
+    expect(text(row as HTMLElement)).toContain('lead asked to remove its 2 worktrees nothing was attached to');
     expect(within(row as HTMLElement).getByText('done')).toBeTruthy();
     expect(within(row as HTMLElement).getByText('2 removed')).toBeTruthy();
     expect(within(row as HTMLElement).getByText('1h')).toBeTruthy();

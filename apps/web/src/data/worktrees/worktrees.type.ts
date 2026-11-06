@@ -80,13 +80,18 @@ interface Worktree {
   error?: string | null;
 }
 
+type HygieneState = 'attached' | 'removing' | 'awaiting-lead' | 'reported' | 'exception';
+
 interface WorktreeHygiene {
-  state: string;
+  state: HygieneState;
   why?: string | null;
   agent?: string | null;
   thread?: string | null;
   since?: string | null;
   goesAt?: string | null;
+  askedAt?: string | null;
+  reportedAt?: string | null;
+  until?: string | null;
 }
 
 interface RemovedWorktree {
@@ -100,7 +105,8 @@ interface RemovedWorktree {
 
 interface HygieneMeta {
   on: boolean;
-  graceMs: number;
+  debounceMs: number;
+  reportAfterMs: number;
   removed: RemovedWorktree[];
 }
 
