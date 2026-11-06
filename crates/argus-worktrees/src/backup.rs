@@ -79,6 +79,19 @@ fn backup_group(name: &str) -> String {
     name.to_string()
 }
 
+/// `<project>-<branch or folder>-<head7>`: the name of a backup of `fact` before its time stamp.
+fn backup_base(project: &str, fact: &Fact) -> String {
+    let head: String = fact
+        .head
+        .as_deref()
+        .unwrap_or("nohead")
+        .chars()
+        .take(7)
+        .collect();
+    let name = fact.branch.clone().unwrap_or_else(|| base_name(&fact.path));
+    format!("{}-{}-{head}", safe_name(project), safe_name(&name))
+}
+
 fn modified_ms(path: &Path) -> Option<i64> {
     fs::metadata(path)
         .ok()?
@@ -90,6 +103,11 @@ fn modified_ms(path: &Path) -> Option<i64> {
 impl Service {
     fn backup_root(&self) -> String {
         clean_path(&self.opts.backup_dir)
+    }
+
+    /// Where a backup of `fact` written now goes, up to its time stamp: `<root>/<project>-<branch>-<head7>-`.
+    pub(crate) fn backup_prefix(&self, project: &str, fact: &Fact) -> String {
+        format!("{}/{}-", self.backup_root(), backup_base(project, fact))
     }
 
     /// Keep the newest `keep_backups`, and anything younger than `keep_backup_days`.
@@ -334,18 +352,9 @@ impl Service {
 
     /// Write the backup of what removing `fact` would lose; `backup_failed` when it cannot be written.
     pub(crate) fn write_backup(&self, project: &str, fact: &Fact, need: Need) -> Result<Backup> {
-        let head: String = fact
-            .head
-            .as_deref()
-            .unwrap_or("nohead")
-            .chars()
-            .take(7)
-            .collect();
-        let name = fact.branch.clone().unwrap_or_else(|| base_name(&fact.path));
         let base = format!(
-            "{}-{}-{head}-{}",
-            safe_name(project),
-            safe_name(&name),
+            "{}-{}",
+            backup_base(project, fact),
             stamp_from_ms(self.now())
         );
         let dir = self.backup_root();

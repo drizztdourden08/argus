@@ -15,21 +15,31 @@ pub fn hygiene_key(project: &str) -> String {
     format!("worktrees:hygiene:{project}")
 }
 
-/// Where a worktree stands.
+/// Where a worktree stands. The aliases read the states of the rule before 2026-11-06.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case")]
 pub enum HygieneState {
-    /// A running agent owns it, or a process, a run, a launcher, a pull request or work in progress holds it.
-    #[serde(rename = "in-use")]
-    InUse,
-    /// Every condition holds: Argus removes it after the grace.
-    Released,
-    /// Its item closed: Argus removes it after the grace (a reopen inside it cancels), its full backup first.
-    Closing,
-    /// Something keeps Argus from removing it (uncommitted work, commits no ref keeps, a lock): the thread decides.
-    Review,
-    /// The thread kept it.
-    Kept,
+    /// An agent, work in progress, a launcher, a bundle, a run or a process is attached to it.
+    #[serde(alias = "in-use")]
+    Attached,
+    /// Nothing is attached and nothing would be lost: Argus removes it, or a removal it approved runs.
+    #[serde(alias = "released", alias = "closing")]
+    Removing,
+    /// Nothing is attached but something would be lost: its lead is asked to approve the removal.
+    #[serde(alias = "review")]
+    AwaitingLead,
+    /// The lead did not answer in time: the Overlord was told to delete it.
+    Reported,
+    /// On the Overlord's exception list: never removed, never reported.
+    #[serde(alias = "kept")]
+    Exception,
+}
+
+impl HygieneState {
+    /// Nothing is attached and it is not an exception.
+    pub(crate) fn free(self) -> bool {
+        matches!(self, Self::Removing | Self::AwaitingLead | Self::Reported)
+    }
 }
 
 /// One worktree's mark.
@@ -39,31 +49,48 @@ pub(crate) struct Mark {
     pub path: String,
     #[serde(default)]
     pub branch: Option<String>,
+    /// The owning lead: the thread asked, and the one told of the removal.
     #[serde(default)]
     pub thread: Option<String>,
     #[serde(default)]
     pub agent: Option<String>,
+    /// Why it is attached, what would be lost, or the reason of its exception.
     #[serde(default)]
     pub why: Option<String>,
-    /// The item of the worktree when that item is closed.
-    #[serde(default)]
-    pub item: Option<String>,
-    /// When it first was in this state.
+    /// When it entered this state; for a worktree nothing is attached to, when it was first seen so.
     pub since: i64,
-    /// When its thread was told it is released.
+    /// When its lead was asked to approve the removal.
     #[serde(default)]
-    pub told: Option<i64>,
+    pub asked: Option<i64>,
+    /// When the Overlord was told.
+    #[serde(default)]
+    pub reported: Option<i64>,
     /// The removal request that carries it.
     #[serde(default)]
     pub request: Option<String>,
 }
 
-/// A removal the removal itself refused: the worktree is not released again while it stays as it was.
+/// A removal the removal itself refused: the worktree is clean no more while it stays as it was.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Refused {
     pub head: Option<String>,
     pub dirty: u32,
     pub why: String,
+}
+
+/// A worktree on the Overlord's exception list.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Exception {
+    pub path: String,
+    pub reason: String,
+    /// The lead that asked the Overlord for it.
+    pub asked_by: Option<String>,
+    /// The Overlord's thread that wrote it.
+    pub by: String,
+    pub at: i64,
+    /// When it ends; none holds until the Overlord clears it.
+    pub until: Option<i64>,
 }
 
 /// A worktree the hygiene removed, as the page lists it.
@@ -93,9 +120,9 @@ pub(crate) struct Memory {
     /// The worktrees flagged for having no item, by id: whether their thread was told.
     #[serde(default)]
     pub unlinked: BTreeMap<String, bool>,
-    /// The worktrees of closed items that stay, by id, with the reason their thread was told.
+    /// The Overlord's exception list, by worktree id.
     #[serde(default)]
-    pub stuck: BTreeMap<String, String>,
+    pub exceptions: BTreeMap<String, Exception>,
 }
 
 impl Memory {
@@ -103,11 +130,16 @@ impl Memory {
     pub fn removed_one(&mut self, done: RemovedDoc) {
         self.marks.remove(&done.id);
         self.refused.remove(&done.id);
-        self.stuck.remove(&done.id);
         self.removed.retain(|r| r.id != done.id);
         self.removed.push(done);
         let extra = self.removed.len().saturating_sub(REMOVED_KEPT);
         self.removed.drain(..extra);
+    }
+
+    /// The exceptions that still hold: not expired, and their worktree still listed.
+    pub fn prune_exceptions(&mut self, alive: &[String], now: i64) {
+        self.exceptions
+            .retain(|id, e| alive.contains(id) && e.until.is_none_or(|u| u > now));
     }
 }
 
@@ -123,12 +155,15 @@ pub struct HygieneDoc {
     pub why: Option<String>,
     pub agent: Option<String>,
     pub thread: Option<String>,
-    /// The closed item the worktree belongs to.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub item: Option<String>,
     pub since: String,
-    /// When Argus removes it (a released one whose thread was told, or one whose item closed).
+    /// When Argus removes it (a clean one nothing is attached to, once the debounce ends).
     pub goes_at: Option<String>,
+    /// When its lead was asked to approve the removal.
+    pub asked_at: Option<String>,
+    /// When the Overlord was told.
+    pub reported_at: Option<String>,
+    /// When its exception ends.
+    pub until: Option<String>,
 }
 
 /// The hygiene part of the summary.
@@ -136,23 +171,17 @@ pub struct HygieneDoc {
 #[serde(rename_all = "camelCase")]
 pub struct HygieneMeta {
     pub on: bool,
-    pub grace_ms: i64,
-    /// A worktree is removed with its item (`worktrees.closeWithItem`).
-    pub close_with_item: bool,
-    /// How long after its item closed (`worktrees.itemCloseGraceMs`).
-    pub item_close_grace_ms: i64,
+    /// How long a worktree stays unattached before the hygiene acts.
+    pub debounce_ms: i64,
+    /// How long the lead's ask stays unanswered before the Overlord is told.
+    pub report_after_ms: i64,
     /// The last worktrees the hygiene removed, newest first.
     pub removed: Vec<RemovedDoc>,
 }
 
-/// When Argus removes the worktree: a released one `grace` after its thread was told, one whose item closed
-/// `close_grace` after it was first seen so.
-fn goes_at(mark: &Mark, grace: i64, close_grace: i64) -> Option<i64> {
-    match mark.state {
-        HygieneState::Released => mark.told.map(|t| t + grace),
-        HygieneState::Closing => Some(mark.since + close_grace),
-        _ => None,
-    }
+/// When Argus removes the worktree: a clean one nothing is attached to, the debounce after it was first seen so.
+fn goes_at(mark: &Mark, debounce: i64) -> Option<i64> {
+    (mark.state == HygieneState::Removing && mark.request.is_none()).then_some(mark.since + debounce)
 }
 
 impl Service {
@@ -178,16 +207,21 @@ impl Service {
 
     /// The row's hygiene, from the last step.
     pub(crate) fn hygiene_of(&self, project: &str, id: &str) -> Option<HygieneDoc> {
-        let (grace, close_grace) = (self.opts.release_grace_ms, self.opts.item_close_grace_ms);
+        let debounce = self.opts.detach_debounce_ms;
         self.with_hygiene(project, |m| {
+            let until = m.exceptions.get(id).and_then(|e| e.until);
             m.marks.get(id).map(|mark| HygieneDoc {
                 state: mark.state,
                 why: mark.why.clone(),
                 agent: mark.agent.clone(),
                 thread: mark.thread.clone(),
-                item: mark.item.clone(),
                 since: iso_from_ms(mark.since),
-                goes_at: goes_at(mark, grace, close_grace).map(iso_from_ms),
+                goes_at: goes_at(mark, debounce).map(iso_from_ms),
+                asked_at: mark.asked.map(iso_from_ms),
+                reported_at: mark.reported.map(iso_from_ms),
+                until: until
+                    .filter(|_| mark.state == HygieneState::Exception)
+                    .map(iso_from_ms),
             })
         })
     }
@@ -202,10 +236,9 @@ impl Service {
         let mut removed = self.with_hygiene(project, |m| m.removed.clone());
         removed.reverse();
         HygieneMeta {
-            on: self.opts.release,
-            grace_ms: self.opts.release_grace_ms,
-            close_with_item: self.opts.close_with_item,
-            item_close_grace_ms: self.opts.item_close_grace_ms,
+            on: self.opts.hygiene,
+            debounce_ms: self.opts.detach_debounce_ms,
+            report_after_ms: self.opts.report_after_ms,
             removed,
         }
     }

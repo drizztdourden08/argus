@@ -1,10 +1,10 @@
-//! Is a worktree released? Who owns it, what links it, and whether removing it is safe.
+//! Is a worktree attached? Who owns it, what holds it, and what removing it would lose.
 
-use super::memory::Refused;
+use super::memory::{Exception, Refused};
 use crate::approval::{mentions, names_folder};
-use crate::board::{AgentFact, BoardFacts, Caller, Link};
+use crate::board::{AgentFact, BoardFacts, Link};
 use crate::fact::Fact;
-use crate::guards::{check_caller, is_brock_lock};
+use crate::guards::is_brock_lock;
 use crate::linking::{agent_item, resolve};
 use crate::paths::{base_name, clean_path, is_below, same_path};
 use crate::remove::{Safety, plural};
@@ -13,27 +13,25 @@ use crate::service::Service;
 /// What the hygiene makes of one worktree.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Verdict {
-    /// Not the hygiene's: a main checkout, a folder that is not a work tree, a leftover that holds files.
+    /// Not the hygiene's: a main checkout, a folder its repository does not list, one outside its rule, a leftover
+    /// that holds files.
     Quiet,
-    /// A running agent owns it, or a process, a run, a launcher, a pull request or work in progress holds it.
-    InUse(String),
-    /// Nothing holds it and removing it loses nothing.
-    Released,
-    /// Its item closed and nothing holds it: it goes after the grace, its full backup first.
-    Closing,
-    /// The thread keeps it.
-    Kept(Option<String>),
-    /// Something keeps Argus from removing it.
-    Review(String),
+    /// A running agent owns it, or work in progress, a launcher, a bundle, a run or a live process is in it (or Argus
+    /// cannot tell, which counts the same).
+    Attached(String),
+    /// On the Overlord's exception list, with its reason.
+    Exception(String),
+    /// Nothing is attached and removing it loses nothing.
+    Clean,
+    /// Nothing is attached but something would be lost: the sentence says what.
+    Left(String),
 }
 
-/// Who a verdict is about: the agent that owned the worktree and the thread that is told.
+/// Who a verdict is about: the agent that owned the worktree and the lead who is asked.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct Owner {
     pub agent: Option<String>,
     pub thread: Option<String>,
-    /// The item it belongs to, when that item is closed.
-    pub item: Option<String>,
 }
 
 /// What a judging reads besides the fact.
@@ -45,6 +43,7 @@ pub(crate) struct Look<'a> {
     /// Right before a removal: the processes are listed afresh, not from the short cache.
     pub fresh: bool,
     pub refused: Option<&'a Refused>,
+    pub exception: Option<&'a Exception>,
 }
 
 /// What the hygiene judges: a linked git worktree, or a leftover folder with no file in it.
@@ -52,15 +51,6 @@ pub(crate) struct Look<'a> {
 enum Shape {
     Worktree,
     EmptyLeftover,
-}
-
-/// What holds a worktree besides its agents.
-enum Linked {
-    Free,
-    /// Something uses it: the sentence says what.
-    Uses(String),
-    /// Argus could not tell (the runs or the processes could not be read).
-    Unknown(String),
 }
 
 fn absolute(path: &str) -> bool {
@@ -100,7 +90,7 @@ fn owns(agent: &AgentFact, fact: &Fact, ci: bool) -> bool {
     own || named
 }
 
-/// Does this open thing use the worktree: its folder, its branch, or its text names it?
+/// Does this open thing work in the worktree: its folder, its branch, or its text names it?
 fn links_to(link: &Link, fact: &Fact, ci: bool) -> bool {
     let folder = link
         .path
@@ -123,8 +113,8 @@ fn lock_why(fact: &Fact) -> Option<String> {
         .map(|reason| format!("it is locked ({reason})"))
 }
 
-/// Why removing it is never automatic, or none.
-fn unsafe_why(fact: &Fact) -> Option<String> {
+/// What removing it would lose or what stops a plain removal, or none.
+fn left_why(fact: &Fact) -> Option<String> {
     if let Some(why) = lock_why(fact) {
         return Some(why);
     }
@@ -152,26 +142,30 @@ fn shape_of(fact: &Fact) -> Option<Shape> {
 }
 
 impl Service {
-    /// The thread told about a worktree: the owning agent's when it may remove it, else the rule's, else the lead.
-    pub(crate) fn told_thread(
+    /// The lead asked about a worktree: the thread of its last agent while that thread lives, else the thread of the
+    /// item it belongs to, else the thread of its rule, else the board's lead.
+    pub(crate) fn owning_lead(
+        &self,
         board: &BoardFacts,
         fact: &Fact,
-        agent: Option<&AgentFact>,
+        owners: &[&AgentFact],
     ) -> Option<String> {
-        let rule = board.rules.iter().find(|r| r.id == fact.rule);
-        let rules = Self::caller_rules(board, rule);
-        let may = |t: &String| check_caller(board, &Caller::Thread(t.clone()), &rules).is_ok();
-        agent
-            .and_then(|a| a.thread.clone())
-            .filter(may)
-            .or_else(|| {
-                rule.and_then(|r| r.thread.as_deref())
-                    .and_then(|t| board.live_thread(t))
-            })
+        let live = |t: Option<&str>| t.and_then(|t| board.live_thread(t));
+        let item_thread = || {
+            let link = resolve(board, fact, agent_item(owners), self.ci())?;
+            live(board.items.get(&link.item)?.thread.as_deref())
+        };
+        let rule_thread = || {
+            let rule = board.rules.iter().find(|r| r.id == fact.rule)?;
+            live(rule.thread.as_deref())
+        };
+        live(owners.last().and_then(|a| a.thread.as_deref()))
+            .or_else(item_thread)
+            .or_else(rule_thread)
             .or_else(|| board.coordinator())
     }
 
-    /// The agents that own the worktree, and the one the verdict names (the last to end, a running one after all).
+    /// The agents that own the worktree, the last to end last (a running one after all).
     pub(crate) fn owners<'a>(&self, board: &'a BoardFacts, fact: &Fact) -> Vec<&'a AgentFact> {
         let mut found: Vec<&AgentFact> = board
             .agents
@@ -187,35 +181,25 @@ impl Service {
         fact.exists && fact.is_git && fact.leftover.is_none() && fact.error.is_none()
     }
 
-    /// A running agent owns it, or an agent that ended after the last scan has not been looked at since. `None` when
-    /// no agent holds it.
-    fn held_by_agent(
-        &self,
-        look: &Look<'_>,
-        project: &str,
-        owners: &[&AgentFact],
-    ) -> Option<Verdict> {
+    /// A running agent owns it, or an agent that ended after the last scan has not been looked at since (it counts as
+    /// attached until the rescan it asks for).
+    fn held_by_agent(&self, look: &Look<'_>, project: &str, owners: &[&AgentFact]) -> Option<String> {
         if let Some(running) = owners.iter().find(|a| a.live()) {
-            return Some(Verdict::InUse(format!(
-                "its agent {} is {}",
-                running.id, running.status
-            )));
+            return Some(format!("its agent {} is {}", running.id, running.status));
         }
         let ended = owners.iter().filter_map(|a| a.ended_ms).max()?;
-        if ended > look.scanned_ms {
+        (ended > look.scanned_ms).then(|| {
             self.request_rescan(project);
-            return Some(Verdict::Review(
-                "its agent ended after the last scan: Argus looks at it again first".to_string(),
-            ));
-        }
-        None
+            "its agent ended after the last scan: Argus looks at it again first".to_string()
+        })
     }
 
-    /// What holds it: an open thing that names it, a run in it, a process that uses it.
-    fn linked(&self, look: &Look<'_>, fact: &Fact) -> Linked {
+    /// What is attached besides its agents: an open thing that works in it, a run in it, a process that uses it. A
+    /// list Argus cannot read counts as attached.
+    fn attached_why(&self, look: &Look<'_>, fact: &Fact) -> Option<String> {
         let runs = match look.runs {
             Ok(runs) => runs,
-            Err(err) => return Linked::Unknown(format!("the runs could not be read ({err})")),
+            Err(err) => return Some(format!("the runs could not be read ({err})")),
         };
         let ci = self.ci();
         if let Some(link) = look
@@ -225,138 +209,58 @@ impl Service {
             .chain(runs)
             .find(|l| links_to(l, fact, ci))
         {
-            return Linked::Uses(format!("{} uses it", link.what));
+            return Some(format!("{} works in it", link.what));
         }
         match self.busy_by(&fact.path, !look.fresh, "removed") {
-            Err(err) => Linked::Unknown(err.message),
-            Ok(Some(user)) => {
-                Linked::Uses(format!("{} {} uses it", base_name(&user.name), user.pid))
-            }
-            Ok(None) => Linked::Free,
+            Err(err) => Some(err.message),
+            Ok(Some(user)) => Some(format!("{} {} uses it", base_name(&user.name), user.pid)),
+            Ok(None) => None,
         }
     }
 
-    /// Condition (c) and the never-automatic cases. For a worktree whose item closed the work is backed up first, so
-    /// only what the backup cannot undo stops it: a main checkout, a worktree its repository does not list, a rule
-    /// that does not cover it, a lock that is not Brock's.
-    fn safety_why(&self, board: &BoardFacts, fact: &Fact, closing: bool) -> Option<String> {
-        if let Err(err) = self.assert_not_main(fact) {
-            return Some(err.message);
-        }
-        if !fact.registered {
-            return Some("it is not a linked worktree its repository lists".to_string());
-        }
-        if let Err(err) = self.rule_of(board, fact) {
-            return Some(err.message);
-        }
-        if closing {
-            lock_why(fact)
-        } else {
-            unsafe_why(fact)
-        }
+    /// Not the hygiene's at all: a main checkout, a folder its repository does not list, one outside its rule.
+    fn outside(&self, board: &BoardFacts, fact: &Fact) -> bool {
+        self.assert_not_main(fact).is_err() || !fact.registered || self.rule_of(board, fact).is_err()
     }
 
-    /// What a thread's own release is checked against: the safety, then what holds it.
-    pub(crate) fn blocked_why(&self, look: &Look<'_>, fact: &Fact) -> Option<String> {
-        if let Some(why) = self.safety_why(look.board, fact, false) {
-            return Some(why);
-        }
-        match self.linked(look, fact) {
-            Linked::Free => None,
-            Linked::Uses(why) | Linked::Unknown(why) => Some(why),
-        }
-    }
-
-    /// The item of the worktree when that item is closed and the worktree closes with it.
-    fn closed_item(&self, look: &Look<'_>, fact: &Fact, owners: &[&AgentFact]) -> Option<String> {
-        if !self.opts.close_with_item {
-            return None;
-        }
-        let link = resolve(look.board, fact, agent_item(owners), self.ci())?;
-        look.board
-            .items
-            .get(&link.item)
-            .filter(|item| item.closed())
-            .map(|item| item.id.clone())
-    }
-
-    /// The verdict on one worktree and whom it is about. Whatever its age: a worktree no running agent owns, nothing
-    /// holds, that is clean and whose HEAD is kept is released; one whose item closed goes the same way with a backup.
+    /// The verdict on one worktree and whom it is about, whatever its age.
     pub(crate) fn judge(&self, project: &str, look: &Look<'_>, fact: &Fact) -> (Verdict, Owner) {
         let Some(shape) = shape_of(fact) else {
             return (Verdict::Quiet, Owner::default());
         };
+        if shape == Shape::Worktree && self.outside(look.board, fact) {
+            return (Verdict::Quiet, Owner::default());
+        }
         let owners = self.owners(look.board, fact);
-        let last = owners.last().copied();
-        let closed = (shape == Shape::Worktree)
-            .then(|| self.closed_item(look, fact, &owners))
-            .flatten();
         let owner = Owner {
-            agent: last.map(|a| a.id.clone()),
-            thread: Self::told_thread(look.board, fact, last),
-            item: closed.clone(),
+            agent: owners.last().map(|a| a.id.clone()),
+            thread: self.owning_lead(look.board, fact, &owners),
         };
-        let verdict = self
+        if let Some(exception) = look.exception {
+            return (Verdict::Exception(exception.reason.clone()), owner);
+        }
+        let attached = self
             .held_by_agent(look, project, &owners)
-            .unwrap_or_else(|| self.verdict_of(look, fact, shape, closed.as_deref()));
-        (verdict, owner)
+            .or_else(|| self.attached_why(look, fact));
+        if let Some(why) = attached {
+            return (Verdict::Attached(why), owner);
+        }
+        (Self::free_verdict(look, fact, shape), owner)
     }
 
-    /// What stops the worktree before anything else is asked: what Argus could not remove, the thread's keep (not
-    /// for a closed item: a keep does not hold it, link it to another open item instead), the safety.
-    fn stopped_by(
-        &self,
-        look: &Look<'_>,
-        fact: &Fact,
-        shape: Shape,
-        closed: Option<&str>,
-    ) -> Option<Verdict> {
+    /// Nothing is attached: clean, or what would be lost (what Argus could not remove before counts while the
+    /// worktree stays as it was).
+    fn free_verdict(look: &Look<'_>, fact: &Fact, shape: Shape) -> Verdict {
         if let Some(refused) = look
             .refused
             .filter(|r| r.head == fact.head && r.dirty == fact.dirty)
         {
-            let why = format!("Argus could not remove it: {}", refused.why);
-            return Some(Verdict::Review(because(closed, why)));
+            return Verdict::Left(format!("Argus could not remove it: {}", refused.why));
         }
-        let keep = look
-            .board
-            .keeps
-            .get(&fact.id)
-            .filter(|k| k.until_ms > self.now() && closed.is_none());
-        if let Some(keep) = keep {
-            return Some(Verdict::Kept(keep.note.clone()));
+        if shape == Shape::EmptyLeftover {
+            return Verdict::Clean;
         }
-        if shape != Shape::Worktree {
-            return None;
-        }
-        self.safety_why(look.board, fact, closed.is_some())
-            .map(|why| Verdict::Review(because(closed, why)))
-    }
-
-    fn verdict_of(
-        &self,
-        look: &Look<'_>,
-        fact: &Fact,
-        shape: Shape,
-        closed: Option<&str>,
-    ) -> Verdict {
-        if let Some(stopped) = self.stopped_by(look, fact, shape, closed) {
-            return stopped;
-        }
-        match self.linked(look, fact) {
-            Linked::Free if closed.is_some() => Verdict::Closing,
-            Linked::Free => Verdict::Released,
-            Linked::Uses(why) => Verdict::InUse(why),
-            Linked::Unknown(why) => Verdict::Review(because(closed, why)),
-        }
-    }
-}
-
-/// `its item I-4 closed, but <why>` for a worktree of a closed item, else the reason as it is.
-fn because(closed: Option<&str>, why: String) -> String {
-    match closed {
-        Some(item) => format!("its item {item} closed, but {why}"),
-        None => why,
+        left_why(fact).map_or(Verdict::Clean, Verdict::Left)
     }
 }
 
