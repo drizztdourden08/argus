@@ -20,6 +20,7 @@ mod remove;
 mod remove_real;
 mod request_kit;
 mod requests;
+mod release_probe;
 mod review;
 mod round2;
 mod rules;

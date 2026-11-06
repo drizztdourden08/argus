@@ -518,6 +518,7 @@ impl Service {
         if let Some(user) = self.busy_by(&fact.path, false, "removed")? {
             return Err(Self::in_use(&fact.path, &user, "removed"));
         }
+        self.probe_release(&fact.path)?;
         let now = self.look_again(input, fact, rule)?;
         let safety = Safety::of(&now);
         let plan = self.plan_branch(input.branch, input.discard, &now);

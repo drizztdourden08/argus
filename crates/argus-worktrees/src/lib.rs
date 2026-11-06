@@ -50,6 +50,7 @@ mod progress;
 mod prune;
 mod queue;
 mod remove;
+mod release_probe;
 mod request;
 mod requests;
 mod rule;

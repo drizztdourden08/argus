@@ -602,6 +602,8 @@ impl Gate {
 #[derive(Default)]
 pub struct HookFs {
     pub rename_error: Mutex<Option<io::ErrorKind>>,
+    /// The release probe's renames (to a probe name and back) fail with this error.
+    pub probe_error: Mutex<Option<io::ErrorKind>>,
     pub fail_remove_containing: Mutex<Option<String>>,
     pub fail_unlink: Mutex<Option<io::ErrorKind>>,
     /// Listing a folder whose path contains this text fails like a folder without the right to read it.
@@ -659,6 +661,13 @@ impl Fs for HookFs {
     }
 
     fn rename(&self, from: &str, to: &str) -> io::Result<()> {
+        let mark = crate::release_probe::PROBE_MARK;
+        if from.contains(mark) || to.contains(mark) {
+            return match *locked(&self.probe_error) {
+                Some(kind) => Err(io::Error::from(kind)),
+                None => RealFs.rename(from, to),
+            };
+        }
         match *locked(&self.rename_error) {
             Some(kind) => Err(io::Error::from(kind)),
             None => RealFs.rename(from, to),
