@@ -403,9 +403,11 @@ impl Fixture {
     }
 }
 
-/// What a store keeps for the tests: one project, `alpha`, unless a test adds more that share its board.
+/// What a store keeps for the tests: one project, `alpha`, unless a test adds more that share its board. A board of its
+/// own (the Overlord's `portfolio`) goes in `others`; it is not a project the service scans.
 pub struct MemStore {
     pub board: Mutex<BoardFacts>,
+    pub others: Mutex<HashMap<String, BoardFacts>>,
     pub projects: Mutex<Vec<String>>,
     pub kv: Mutex<HashMap<String, String>>,
     pub dropped: Mutex<Vec<(Vec<String>, Vec<String>)>>,
@@ -419,6 +421,7 @@ impl MemStore {
     pub fn new(board: BoardFacts) -> Self {
         Self {
             board: Mutex::new(board),
+            others: Mutex::new(HashMap::new()),
             projects: Mutex::new(vec!["alpha".to_string()]),
             kv: Mutex::new(HashMap::new()),
             dropped: Mutex::new(Vec::new()),
@@ -430,6 +433,9 @@ impl MemStore {
 
 impl WorktreeStore for MemStore {
     fn board(&self, project: &str) -> Option<BoardFacts> {
+        if let Some(other) = locked(&self.others).get(project) {
+            return Some(other.clone());
+        }
         locked(&self.projects)
             .iter()
             .any(|p| p == project)
@@ -466,8 +472,11 @@ impl WorktreeStore for MemStore {
         Ok(())
     }
 
-    fn post_inbox(&self, _project: &str, thread: &str, text: &str) -> Result<bool, StorageError> {
-        let known = locked(&self.board).threads.contains_key(thread);
+    fn post_inbox(&self, project: &str, thread: &str, text: &str) -> Result<bool, StorageError> {
+        let known = match locked(&self.others).get(project) {
+            Some(other) => other.threads.contains_key(thread),
+            None => locked(&self.board).threads.contains_key(thread),
+        };
         if known {
             locked(&self.inbox).push((thread.to_string(), text.to_string()));
         }
@@ -897,7 +906,7 @@ impl Harness {
             case_insensitive: cfg!(windows),
             drop_links_first: false,
             // The hygiene has its own specs (`specs/hygiene.rs`) that turn it on.
-            release: false,
+            hygiene: false,
             ..Options::default()
         };
         options(&mut opts);
