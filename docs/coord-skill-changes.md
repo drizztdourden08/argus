@@ -354,3 +354,70 @@ after the Argus build with I-102 is deployed locally.
   kanban card shows the warning "no epic" on each.
 - In `SKILL.md` and `thread-verbs.md`, show `--parent` in every `item add` example for a story or a
   task, and add the rule "a story or a task needs an epic parent" next to the type list.
+
+## 16. Worktree hygiene: attached, approve, report, exception (2026-11-06)
+
+Owner rule, 2026-11-06: the link between an agent and its worktree is mandatory. A worktree,
+never a main checkout, with nothing attached is removed, or its lead approves the removal, or the
+Overlord deletes it or keeps it as an exception. Apply this after the Argus build with the new
+hygiene is deployed locally. The server side is done (`docs/worktree-hygiene.md`); the CLI text
+and the verbs below are the Overlord's.
+
+### CLI
+
+1. `crates/argus-coord/src/cli/usage.rs` line 37, the keep line, becomes:
+
+   ```
+   coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear] [--project p] | done <request id> --note "..."    (the Overlord only: the exception list; a worktree on it is never removed or reported; a lead asks with coord lead portfolio "keep worktree <id> of <p>: <why>")
+   ```
+
+   `keep.rs` (`verbs/remote/worktree/keep.rs`) must stop writing the board `worktreeKeeps` (board
+   op `handle_keep` in `argus-board/src/ops/worktree.rs`) and POST
+   `/api/p/<p>/worktrees/keep {id, note, until, askedBy, clear, by}` instead, then print the
+   answer's text. `until` is an ISO date or milliseconds. `--days n` goes; a thread's keep is
+   refused by the server with a message that names the Overlord.
+2. Line 38, the link line, keeps its verbs and changes its note to:
+
+   ```
+   (a worktree goes when nothing is attached to it: no running agent, live thread, run, launcher or process; clean ones go after 1 minute, ones with work ask their lead)
+   ```
+
+3. `verbs/remote/worktree/link.rs` line 60: the sentence "It goes with {item}: when {item} is
+   done or dropped, Argus removes it after a short grace (the backup is written first). Link it to
+   another open item to keep it." becomes "A link names its item; the worktree stays while an
+   agent, a live thread working on the item, a run or a process is attached."
+4. A new verb, `coord worktree approve <id|path> [--project p] [--reason "..."]`. It POSTs
+   `/api/p/<p>/worktrees/approve {id, reason, by}` through the existing
+   `file_request(call, id, "approve", ...)` and prints the answer's text. Its usage line:
+
+   ```
+   coord worktree approve <id|path> [--project p] [--reason "..."]    (the owning lead or the Overlord approves removing an unattached worktree that holds work: full backup first, then removed with what is left; its branch stays)
+   ```
+
+5. `coord worktree release` (doc comment in `verbs/remote/worktree/remove.rs` line 225, and a
+   usage line if one is added): no grace any more. "Removed at once when nothing is attached and
+   nothing would be lost; work left needs coord worktree approve."
+
+### Skill text
+
+In `SKILL.md`, `thread-verbs.md`, `coordinator-worktrees.md` and `coordinator-wakes.md`:
+
+- A worktree must stay attached while it is needed: a running agent, a live thread working in it,
+  a run, a launcher or a process. An open pull request does not attach it.
+- Unattached and clean, it is removed after 1 minute (its merged branch too) and the lead gets
+  one inbox note of what went.
+- Unattached with work left (changes, commits no ref keeps, a lock, a failed removal): one
+  `worktree-approve` wake and an inbox note. Approve with `coord worktree approve <id>`, or ask
+  the Overlord for an exception with `coord lead portfolio "keep worktree <id> of <p>: <why>"`.
+  A lock still stops the approval: unlock first.
+- Unanswered for 30 minutes, the Overlord gets one `worktree-report` wake and a note on his board.
+  He deletes with `coord worktree approve <id> --project <p>` or keeps with
+  `coord worktree keep <id> --project <p> --note "why" [--until <date>]`.
+- Only the Overlord keeps. A thread's keep is refused. Board keeps written before 2026-11-06 no
+  longer hold a worktree; they only snooze `worktree-stale`.
+- `coordinator-wakes.md`: add `worktree-approve` (lead) and `worktree-report` (Overlord) to the
+  wake list; `worktree-review` is no longer sent.
+- Section 12 above: replace "When the item closes the worktree is removed after a short grace,
+  with a backup written first, so a lead links a worktree it still needs to another open item."
+  with "The worktree stays while something is attached to it; once nothing is, it goes as this
+  section 16 says."

@@ -35,6 +35,9 @@ A thread is woken for:
   refused, which comes as a `thread-message`);
 - a dependency on another board that needs it to act: a request for it (`dep-request`), or the
   request it made is done, dropped, gone or blocked (`dep-resolved`, `dep-blocked`);
+- a worktree of its with nothing attached that still holds work: approve its removal or ask the
+  Overlord for an exception (`worktree-approve`, once per worktree); for the Overlord, such an ask
+  left unanswered for 30 minutes (`worktree-report`, once);
 - a change to an item it works on that asks it to act: an item or a to-do given to it
   (`item-assigned`, `todo-assigned`), the last blocker of its item settled (`item-unblocked`), every
   child of its epic or story done (`children-done`), a run of its test plan ended (`plan-run-done`).
@@ -44,7 +47,7 @@ It is never woken for, and these stay notices:
 - `wake-fault`: the record of a fault (`board-closed`, `no-listener`, `no-reaction` (after a restart
   too), `not-listening` and `delivery-error`) for the Overlord. The Overlord is woken for the
   fault itself by `fault-open` (see Open faults and notices);
-- `worktree-review`, `worktree-stale`, `worktree-unlinked`, `launcher-stale`,
+- `worktree-stale`, `worktree-unlinked`, `launcher-stale`, `worktree-review` (no longer sent),
   `launcher-master-missing`;
 - `kanban-stale` (item staleness), `agent-stale` and `agent-checkin` (quiet agent reminders),
   `agent-unassigned` (an agent with no item 10 minutes after it started, once);
