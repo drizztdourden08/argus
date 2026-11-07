@@ -137,7 +137,9 @@ fn the_page_and_an_empty_list_cannot_approve_several() {
 
 #[test]
 fn an_approved_removal_deletes_a_merged_branch() {
-    let (fx, h) = world(|fx| put(&fx.path("agent-a1"), "wip.txt", "not committed\n"));
+    let (fx, h) = world(|fx| {
+        put(&fx.path("agent-a1"), "wip.txt", "not committed\n");
+    });
     asked(&h);
     h.svc
         .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
