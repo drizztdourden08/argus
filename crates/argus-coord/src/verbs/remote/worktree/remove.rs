@@ -27,7 +27,7 @@ pub(super) fn id_arg(value: Option<&String>, usage: &str) -> Result<String, Coor
 
 /// A call past its time limit is not a stopped dashboard (it answers, only late): the sentence says what may
 /// still be running there and where to look. A refused connection stays "not running".
-fn slow(e: ClientError, what: &str, check: &str) -> CoordError {
+pub(super) fn slow(e: ClientError, what: &str, check: &str) -> CoordError {
     match e {
         ClientError::Timeout(secs) => CoordError::refuse(format!(
             "the dashboard did not answer in time ({secs} s): {what} may still be running; check `{check}`"
@@ -213,6 +213,29 @@ fn file_request(call: &mut Call<'_>, id: &Value, action: &str, what: &str, check
     Ok(())
 }
 
+/// `coord worktree approve <id|path>... [--project p] [--reason "..."]`: the owning lead or the
+/// Overlord approves removing unattached worktrees that hold work (full backup first; the branch
+/// stays). POSTs `{ ids, reason, by }`.
+pub(super) fn approve(call: &mut Call<'_>) -> Outcome {
+    let usage = "name the worktree: coord worktree approve <id|path>... [--project p] [--reason \"...\"].";
+    if call.positional.is_empty() {
+        return Err(CoordError::refuse(usage));
+    }
+    let ids = call
+        .positional
+        .iter()
+        .map(|typed| id_arg(Some(typed), usage))
+        .collect::<Result<Vec<_>, _>>()?;
+    let (by, _) = super::keep::actor_of(call)?;
+    let body = json!({ "ids": ids, "reason": reason_of(call)?, "by": by });
+    let project = project_of(call).to_owned();
+    let out = connect(call, false)?
+        .post(&format!("/api/p/{project}/worktrees/approve"), &body)
+        .map_err(|e| slow(e, "the removal", "coord worktree requests"))?;
+    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
+    Ok(())
+}
+
 /// `coord worktree prune [<id|path>]`.
 pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
     let id = match call.positional.first().filter(|v| !v.is_empty()) {
@@ -222,10 +245,8 @@ pub(super) fn prune(call: &mut Call<'_>) -> Outcome {
     file_request(call, &id, "prune", "the prune", "coord worktree list")
 }
 
-/// `coord worktree release <id|path> [--reason "..."]`: the thread no longer needs it. Argus
-/// checks that nothing uses it and nothing is lost, files the removal (the branch too when merged)
-/// as a request and answers at once with its id (`R-n: Argus removes it now; the result comes to
-/// your inbox`); anything else is refused with the reason.
+/// `coord worktree release <id|path> [--reason "..."]`: no grace any more. Removed at once when
+/// nothing is attached and nothing would be lost; work left needs `coord worktree approve`.
 pub(super) fn release(call: &mut Call<'_>) -> Outcome {
     let id = id_arg(
         call.positional.first(),

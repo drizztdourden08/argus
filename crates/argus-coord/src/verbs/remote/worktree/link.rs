@@ -57,7 +57,7 @@ pub(super) fn link(call: &mut Call<'_>) -> Outcome {
             format!(" It was linked to {was}.")
         };
         scope.say(&[&format!(
-            "{id}: linked to {item}.{before} It goes with {item}: when {item} is done or dropped, Argus removes it after a short grace (the backup is written first). Link it to another open item to keep it."
+            "{id}: linked to {item}.{before} A link names its item; the worktree stays while an agent, a live thread working on the item, a run or a process is attached."
         )]);
         Ok(())
     })
