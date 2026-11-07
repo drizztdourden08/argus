@@ -1,11 +1,11 @@
-//! Doing a request: a fresh scan, the targets, each one through the very same removal, and the end.
+//! Doing a request: a kept scan, the targets, each one through the very same removal, one rescan, and the end.
 
 use super::record::{Outcome, RequestRec, RequestStatus, Target};
 use super::text::one_line;
 use super::{CLOSED_SENTENCE_MAX, SENTENCE_MAX};
 use crate::board::Caller;
 use crate::clock::iso_from_ms;
-use crate::error::WtError;
+use crate::error::{ErrorCode, WtError};
 use crate::jobs::JobState;
 use crate::progress::target_key;
 use crate::request::RemoveInput;
@@ -102,7 +102,7 @@ impl Service {
 
     /// One target through the very same removal the CLI route calls.
     pub(super) fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
-        match self.remove(&Self::removal_of(rec, target)) {
+        match self.remove_in_request(&Self::removal_of(rec, target)) {
             Ok(out) if out.leftover && out.job_id.is_some() => {
                 let path = out.path.as_deref().unwrap_or_default();
                 let job_id = out.job_id.as_deref().unwrap_or_default();
@@ -163,8 +163,10 @@ impl Service {
     }
 
     /// The targets with no outcome yet, one at a time. False when the worker was stopped on the way.
+    /// The scan first keeps the facts of a worktree whose fingerprint did not change (I-134: a full scan of a big
+    /// project took over a minute); each removal still looks at its own target again with git before it touches it.
     fn run_targets(&self, project: &str, id: &str) -> Result<bool, WtError> {
-        let _ = self.scan_now(project);
+        let _ = self.scan_with(project, true);
         if self.requests_halted() {
             return Ok(false);
         }
@@ -184,6 +186,19 @@ impl Service {
             self.save_requests(project);
         }
         Ok(true)
+    }
+
+    /// One rescan for the whole request, unless every target was left as it was because it is in use.
+    fn rescan_after(&self, project: &str, id: &str) {
+        let in_use = Some(ErrorCode::InUse.as_str());
+        let changed = self.request_of(project, id).is_some_and(|rec| {
+            rec.results
+                .iter()
+                .any(|r| r.ok || r.code.as_deref() != in_use)
+        });
+        if changed {
+            self.request_rescan(project);
+        }
     }
 
     fn finish_request(&self, project: &str, id: &str) {
@@ -207,7 +222,9 @@ impl Service {
             rec.started_at.get_or_insert(started);
         });
         self.save_requests(project);
-        match self.run_targets(project, id) {
+        let ran = self.run_targets(project, id);
+        self.rescan_after(project, id);
+        match ran {
             Ok(false) => return,
             Ok(true) => {}
             Err(err) => {
