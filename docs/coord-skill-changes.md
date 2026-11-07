@@ -398,7 +398,7 @@ and the verbs below are the Overlord's.
    usage line:
 
    ```
-   coord worktree approve <id|path>... [--project p] [--reason "..."]    (the owning lead or the Overlord approves removing unattached worktrees that hold work, one or several ids in one request: full backup first, then removed with what is left; its branch stays)
+   coord worktree approve <id|path>... [--project p] [--reason "..."]    (the owning lead or the Overlord approves removing unattached worktrees that hold work, one or several ids in one request: full backup first, then removed with what is left; its branch goes when merged, stays when not)
    ```
 
 5. `coord worktree release` (doc comment in `verbs/remote/worktree/remove.rs` line 225, and a

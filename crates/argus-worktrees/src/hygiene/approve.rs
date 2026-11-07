@@ -1,7 +1,7 @@
 //! `coord worktree approve <id>...`: the owning lead (or a thread the worktree's rule allows) or the Overlord approves
 //! removing worktrees that hold work. Argus files ONE `approved` request for every id that passes, so the queue's cap
-//! counts it once: the worker writes a full backup of each, then removes it with what is left on it (its branch is
-//! kept). The route does no git and no backup: it checks the ids against the last scan and the board, once. The result
+//! counts it once: the worker writes a full backup of each, then removes it with what is left on it (its branch goes
+//! when merged and stays when not: the approval covers the work in the folder, never an unmerged branch). The route does no git and no backup: it checks the ids against the last scan and the board, once. The result
 //! comes to the approver's inbox, on the Overlord's own board when he approved from outside the project.
 
 use super::memory::HygieneState;
@@ -205,6 +205,7 @@ impl Service {
         let mut ask = RequestInput::new(project, Caller::Thread(by.to_string()));
         ask.targets = vetted.facts.iter().map(|f| f.id.clone()).collect();
         ask.discard = true;
+        ask.branch = true;
         ask.inbox = vetted.inbox;
         ask.reason = Some(reason.map_or_else(|| format!("approved by {by}"), ToString::to_string));
         let targets = vetted
@@ -226,11 +227,11 @@ impl Service {
         });
         queued.text = match vetted.facts.as_slice() {
             [one] => format!(
-                "{}: Argus writes a full backup of {}, then removes it with what is left (its branch stays); the result comes to your inbox",
+                "{}: Argus writes a full backup of {}, then removes it with what is left (its branch goes when merged and stays when not); the result comes to your inbox",
                 queued.id, one.path
             ),
             many => format!(
-                "{}: Argus writes a full backup of each of {} worktrees, then removes each with what is left (their branches stay); the result comes to your inbox",
+                "{}: Argus writes a full backup of each of {} worktrees, then removes each with what is left (each branch goes when merged and stays when not); the result comes to your inbox",
                 queued.id,
                 many.len()
             ),

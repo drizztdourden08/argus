@@ -67,7 +67,7 @@ Argus judges every worktree right after every scan and on every live tick (`live
 - **The approval.** `coord worktree approve <id>...` files ONE request of mode `approved` for every
   id that passes (so the queue's cap of 20 waiting requests counts it once): a full
   backup of each (a patch of the changes, the untracked files, a bundle of commits no ref keeps),
-  then the removal with what is left. Its branch stays. The route does no git and no backup: it
+  then the removal with what is left. Its branch goes when it is merged and stays when it is not (the approval covers the work in the folder, never an unmerged branch). The route does no git and no backup: it
   checks every id against the last scan and the board once, files the request and answers; the
   backups and removals are the request worker's. An id that fails (not listed, attached, kept,
   locked) is reported by id in the answer and the rest go ahead. A lock still stops it: the ask says to unlock first.

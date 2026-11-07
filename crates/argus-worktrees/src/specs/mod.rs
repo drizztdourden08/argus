@@ -10,6 +10,7 @@ mod exec_real;
 mod fallback;
 mod holders;
 mod hygiene;
+mod hygiene_approve;
 mod hygiene_ask;
 mod hygiene_kit;
 mod leftover;
