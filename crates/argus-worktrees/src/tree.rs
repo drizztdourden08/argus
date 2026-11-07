@@ -7,13 +7,9 @@ use crate::fs::Fs;
 use crate::paths::join_path;
 use std::io;
 
-/// Remove a link as a link: unlink it, else remove it as a folder junction.
+/// Remove a link as a link, never what it points to (see [`Fs::remove_link`]).
 pub fn unlink_link<F: Fs + ?Sized>(fs: &F, path: &str) -> io::Result<()> {
-    match fs.remove_file(path) {
-        Ok(()) => Ok(()),
-        Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(_) => fs.remove_dir(path),
-    }
+    fs.remove_link(path)
 }
 
 /// Every link below `dir` (pnpm's `node_modules` is full of junctions) is removed as a link, walking real folders only.

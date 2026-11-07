@@ -878,3 +878,15 @@ fn over_many_at_live_folders_the_summary_says_so_and_one_sentence_goes_first_in_
     assert!(text.starts_with("Alpha has 5 folders: 4 git worktrees and 1 leftover: `coord worktree remove --all-leftovers` clears the old ones. 3 worktrees need a decision: "), "first in the same wake line: {text}");
     assert!(text.chars().count() <= 300);
 }
+
+/// I-134: the request worker's removal asks for no rescan of its own; the worker asks for one when the request ends.
+#[test]
+fn the_request_workers_removal_asks_for_no_rescan_of_its_own() {
+    let (fx, h) = std_setup();
+    let _ = h.svc.take_rescans();
+    let input = Harness::input(&id(&h, &fx, "old-merged"));
+    let out = h.svc.remove_in_request(&input).unwrap();
+    assert!(out.removed, "{}", out.text);
+    assert!(!exists_itself(&fx.path("old-merged")));
+    assert_eq!(h.svc.take_rescans().len(), 0);
+}

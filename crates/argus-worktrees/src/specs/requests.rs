@@ -871,3 +871,15 @@ fn a_long_request_of_one_project_does_not_hold_up_a_request_by_path_of_another()
     );
     assert!(locked(&h.notes.problems).is_empty());
 }
+
+/// I-134: the targets of a request ask for no rescan each; the request asks for one when it ends.
+#[test]
+fn a_request_that_removed_a_worktree_asks_for_one_rescan_when_it_ends() {
+    let (fx, h) = world();
+    let _ = h.svc.take_rescans();
+    ask_lead(&h, &[&id(&h, &fx, "old-merged")]);
+    let r = only(&h).remove(0);
+    assert_eq!(r.status, RequestStatus::Done, "{:?}", r.results);
+    assert!(!exists_itself(&fx.path("old-merged")));
+    assert_eq!(h.svc.take_rescans(), ["alpha"]);
+}

@@ -10,7 +10,7 @@
 //!   `leftovers` (every leftover folder old enough, each through `remove` on its own)
 //! - caller: checked when the request is made (a stranger project or thread: forbidden; the page may not ask, it removes
 //!   directly) and again by `remove` for every target
-//! - worker: one per project, one target at a time, oldest request first; each request starts with a fresh scan. A
+//! - worker: one per project, one target at a time, oldest request first; each request starts with a kept scan and ends with one rescan. A
 //!   long request of one project (88 leftovers of 10 minutes each) never holds up the requests of another. The
 //!   removals, the scans and the deletion jobs run one at a time within a project (`Service::one_at_a_time`, the
 //!   project's job queue), never across projects; a target that waits for its turn past a while names the holder

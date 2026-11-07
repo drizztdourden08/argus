@@ -45,6 +45,11 @@ pub trait Fs: Send + Sync {
     fn remove_file(&self, path: &str) -> io::Result<()>;
     /// Remove an empty folder, or a junction as a link.
     fn remove_dir(&self, path: &str) -> io::Result<()>;
+    /// Remove a link as a link, never what it points to. A missing path counts as removed. The default unlinks it,
+    /// else removes it as a folder junction.
+    fn remove_link(&self, path: &str) -> io::Result<()> {
+        either_removes(path, |p| self.remove_file(p), |p| self.remove_dir(p))
+    }
     /// Delete a folder and everything in it. A link inside is removed as a link, never followed.
     fn remove_tree(&self, path: &str) -> io::Result<()> {
         crate::tree::walk_remove(self, path)
@@ -75,6 +80,39 @@ fn stat_of(meta: &Metadata) -> Stat {
         mtime_ms: meta.modified().ok().map(system_ms),
         size: meta.len(),
     }
+}
+
+/// Does the OS see this entry as a folder? On Windows a junction or a folder symlink carries the folder attribute
+/// and only `remove_dir` takes it away: `remove_file` fails with access denied, which `retried` sleeps on.
+#[cfg(windows)]
+fn removed_as_dir(meta: &Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    meta.file_attributes() & 0x10 != 0
+}
+
+#[cfg(not(windows))]
+fn removed_as_dir(meta: &Metadata) -> bool {
+    meta.is_dir()
+}
+
+fn gone(result: &io::Result<()>) -> bool {
+    match result {
+        Ok(()) => true,
+        Err(err) => err.kind() == io::ErrorKind::NotFound,
+    }
+}
+
+/// Try `first`, then `second`; a missing path counts as removed. When both fail, the error of `first` is kept.
+fn either_removes(
+    path: &str,
+    first: impl FnOnce(&str) -> io::Result<()>,
+    second: impl FnOnce(&str) -> io::Result<()>,
+) -> io::Result<()> {
+    let tried = first(path);
+    if gone(&tried) || gone(&second(path)) {
+        return Ok(());
+    }
+    tried
 }
 
 const RETRIES: u32 = 3;
@@ -173,6 +211,21 @@ impl Fs for RealFs {
         retried(path, || fs::remove_dir(path))
     }
 
+    /// One `lstat` picks the call that fits the entry, so a junction costs one `remove_dir` instead of three slept
+    /// retries of `remove_file` first (I-134: a pnpm `node_modules` holds thousands of junctions).
+    fn remove_link(&self, path: &str) -> io::Result<()> {
+        let meta = match fs::symlink_metadata(path) {
+            Ok(meta) => meta,
+            Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(err) => return Err(err),
+        };
+        if removed_as_dir(&meta) {
+            either_removes(path, |p| self.remove_dir(p), |p| self.remove_file(p))
+        } else {
+            either_removes(path, |p| self.remove_file(p), |p| self.remove_dir(p))
+        }
+    }
+
     fn remove_tree(&self, path: &str) -> io::Result<()> {
         retried(path, || fs::remove_dir_all(path))
     }
@@ -226,14 +279,64 @@ mod tests {
         put(&target, "keep.txt", "precious");
         let link = join_path(&root, "lnk");
         make_link(&link, &target);
-        let fs = RealFs;
-        fs.remove_file(&link)
-            .or_else(|_| fs.remove_dir(&link))
-            .unwrap();
+        RealFs.remove_link(&link).unwrap();
         assert!(!exists_itself(&link));
         assert_eq!(
             std::fs::read_to_string(join_path(&target, "keep.txt")).unwrap(),
             "precious"
         );
+    }
+
+    #[test]
+    fn folder_links_go_at_once_without_the_slept_retries() {
+        let dir = tempdir().unwrap();
+        let outside = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().into_owned();
+        let target = outside.path().to_string_lossy().into_owned();
+        put(&target, "keep.txt", "precious");
+        let links: Vec<String> = (0..20)
+            .map(|i| join_path(&root, &format!("lnk{i}")))
+            .collect();
+        for link in &links {
+            make_link(link, &target);
+        }
+        let started = std::time::Instant::now();
+        for link in &links {
+            RealFs.remove_link(link).unwrap();
+        }
+        assert!(started.elapsed() < Duration::from_millis(1000));
+        assert!(links.iter().all(|link| !exists_itself(link)));
+        assert!(fs::metadata(join_path(&target, "keep.txt")).is_ok());
+    }
+
+    #[test]
+    fn remove_link_takes_a_plain_file_and_counts_a_missing_path_as_removed() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().into_owned();
+        put(&root, "plain.txt", "x");
+        let plain = join_path(&root, "plain.txt");
+        RealFs.remove_link(&plain).unwrap();
+        assert!(!exists_itself(&plain));
+        RealFs.remove_link(&join_path(&root, "never")).unwrap();
+    }
+
+    #[test]
+    fn remove_link_leaves_a_real_folder_with_content_in_place() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().into_owned();
+        put(&root, "real/a.txt", "a");
+        let real = join_path(&root, "real");
+        assert!(RealFs.remove_link(&real).is_err());
+        assert_eq!(fs::read_to_string(join_path(&real, "a.txt")).unwrap(), "a");
+    }
+
+    #[test]
+    fn either_removes_falls_back_and_keeps_the_first_error() {
+        let denied = || -> io::Result<()> { Err(io::ErrorKind::PermissionDenied.into()) };
+        let missing = || -> io::Result<()> { Err(io::ErrorKind::NotFound.into()) };
+        assert!(either_removes("x", |_| denied(), |_| missing()).is_ok());
+        assert!(either_removes("x", |_| denied(), |_| Ok(())).is_ok());
+        let failed = either_removes("x", |_| denied(), |_| Err(io::Error::other("second")));
+        assert_eq!(failed.unwrap_err().kind(), io::ErrorKind::PermissionDenied);
     }
 }

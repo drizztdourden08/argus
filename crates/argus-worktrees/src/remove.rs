@@ -198,6 +198,12 @@ impl Service {
         self.guarded(input, true, |trace| self.run(input, trace))
     }
 
+    /// The same removal for the request worker, with no rescan per target: the worker asks for one when the request
+    /// ends (I-134: in a big project each rescan held the next target's turn for a whole full scan).
+    pub(crate) fn remove_in_request(&self, input: &RemoveInput) -> Result<RemoveOutcome> {
+        self.guarded(input, false, |trace| self.run(input, trace))
+    }
+
     /// Prune one gone worktree (by id or path), or with no id every gone one of the project.
     pub fn prune(&self, input: &RemoveInput) -> Result<RemoveOutcome> {
         if !input.id.trim().is_empty() {
