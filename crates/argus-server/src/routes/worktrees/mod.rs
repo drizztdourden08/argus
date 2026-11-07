@@ -15,7 +15,7 @@
 //!   then the removal, the branches kept) and answers at once without reading git. With `id`: `{id, status, text,
 //!   request}`, or the refusal. With `ids`: `{queued, refused: [{id, code, text}]}` (`queued` is null when none
 //!   passed); the ids that pass go ahead. The result comes to the approver's inbox
-//! - `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by}` the Overlord's exception list: a
+//! - `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by, byProject}` the Overlord's exception list: a
 //!   worktree on it is never removed or reported (`until` an ISO date or milliseconds; `clear` takes it off). Anyone
 //!   else is refused with 403 `forbidden` and told to ask the Overlord: `{id, text}`
 //! - `POST /api/p/:key/worktrees/leftovers/remove {ids?, olderThanDays?, confirmYoung?, reason?,

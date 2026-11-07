@@ -42,6 +42,7 @@ fn keep_by(h: &Harness, path: &str, by: &str) -> KeepInput {
     KeepInput {
         project: "alpha".into(),
         caller: Caller::Thread(by.into()),
+        by_project: Some("portfolio".into()),
         id: h.id_of(path),
         note: Some("the owner tests it tonight".into()),
         until_ms: None,
@@ -299,6 +300,24 @@ fn an_agent_back_on_it_stops_the_ask_and_a_later_detach_asks_again() {
     assert_eq!(step(&h, DEBOUNCE).told, 1, "a new debounce, a new ask");
     assert_eq!(notes_of(&h, "lead").len(), 2);
     assert!(exists_itself(&fx.path("agent-a1")));
+}
+
+#[test]
+fn a_lead_thread_named_like_the_coordinator_is_refused_without_the_portfolio_board() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    add_overlord(&h);
+    for from in [Some("alpha"), None] {
+        let mut input = keep_by(&h, &path, "overlord");
+        input.by_project = from.map(Into::into);
+        let refused = h.svc.keep(&input).unwrap_err();
+        assert!(
+            refused.message.starts_with("only the Overlord puts a worktree"),
+            "{from:?}: {}",
+            refused.message
+        );
+    }
+    assert!(h.svc.keep(&keep_by(&h, &path, "overlord")).is_ok());
 }
 
 #[test]

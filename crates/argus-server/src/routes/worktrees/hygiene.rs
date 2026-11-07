@@ -71,6 +71,7 @@ fn keep_input(ctx: &Ctx, key: &str, body: &Value) -> KeepInput {
     KeepInput {
         project: key.to_string(),
         caller: caller(ctx, body),
+        by_project: text_of(&body["byProject"], NAME_MAX),
         id: id_of(&body["id"]),
         note: text_of(&body["note"], NOTE_MAX),
         until_ms: until_of(&body["until"]),

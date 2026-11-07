@@ -8,6 +8,7 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::service::Service;
+use argus_core::ids::OVERLORD_PROJECT;
 use serde::Serialize;
 
 const NOTE_MAX: usize = 300;
@@ -17,6 +18,9 @@ const NOTE_MAX: usize = 300;
 pub struct KeepInput {
     pub project: String,
     pub caller: Caller,
+    /// The board the caller speaks from. Every lead's thread is named `coordinator`, so the name alone proves
+    /// nothing: only a caller from the `portfolio` board who is that board's coordinator is the Overlord.
+    pub by_project: Option<String>,
     /// The worktree's id or path.
     pub id: String,
     pub note: Option<String>,
@@ -42,7 +46,8 @@ impl Service {
     /// Only the Overlord writes the list; anyone else is told whom to ask.
     fn overlord_only(&self, input: &KeepInput) -> Result<String> {
         let by = input.caller.thread().unwrap_or_default().to_string();
-        if !by.is_empty() && self.overlord().as_deref() == Some(by.as_str()) {
+        let from_portfolio = input.by_project.as_deref() == Some(OVERLORD_PROJECT);
+        if from_portfolio && !by.is_empty() && self.overlord().as_deref() == Some(by.as_str()) {
             return Ok(by);
         }
         let who = if by.is_empty() {
