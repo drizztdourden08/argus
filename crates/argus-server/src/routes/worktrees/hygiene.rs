@@ -2,21 +2,55 @@
 //! Overlord's exception list.
 
 use argus_core::clock::parse_ms;
-use argus_worktrees::{KeepInput, RemoveInput, Service};
+use argus_worktrees::{ApproveInput, KeepInput, RemoveInput, Service, WtError};
 use serde_json::{Value, to_value};
 
 use super::{caller, id_of, post, reason, serve};
 use crate::router::Reply;
 use crate::{Ctx, Router};
 
-const BODY_BYTES: usize = 4 * 1024;
+const BODY_BYTES: usize = 16 * 1024;
 const NAME_MAX: usize = 60;
 const NOTE_MAX: usize = 300;
 
-fn approve_input(ctx: &Ctx, key: &str, body: &Value) -> RemoveInput {
-    let mut input = RemoveInput::new(key, &id_of(&body["id"]), caller(ctx, body));
-    input.reason = reason(body);
-    input
+/// An approval: `ids` (several, answered `{queued, refused}`) or the single `id` (answered with the request itself).
+struct Approval {
+    input: ApproveInput,
+    several: bool,
+}
+
+fn approve_input(ctx: &Ctx, key: &str, body: &Value) -> Approval {
+    let listed = body["ids"].as_array();
+    let mut ids: Vec<String> = listed
+        .map(|all| all.iter().map(id_of).filter(|id| !id.is_empty()).collect())
+        .unwrap_or_default();
+    let single = id_of(&body["id"]);
+    if listed.is_none() || !single.is_empty() {
+        ids.push(single);
+    }
+    Approval {
+        input: ApproveInput {
+            project: key.to_string(),
+            ids,
+            caller: caller(ctx, body),
+            reason: reason(body),
+        },
+        several: listed.is_some(),
+    }
+}
+
+fn approve_call(service: &Service, approval: &Approval) -> Result<Value, WtError> {
+    let input = &approval.input;
+    if approval.several {
+        return service
+            .approve_many(input)
+            .map(|done| to_value(done).unwrap_or(Value::Null));
+    }
+    let mut one = RemoveInput::new(&input.project, &input.ids[0], input.caller.clone());
+    one.reason.clone_from(&input.reason);
+    service
+        .approve(&one)
+        .map(|queued| to_value(queued).unwrap_or(Value::Null))
 }
 
 /// `until` as an ISO date or a number of milliseconds.
@@ -45,12 +79,9 @@ fn keep_input(ctx: &Ctx, key: &str, body: &Value) -> KeepInput {
     }
 }
 
-/// The approval answers at once with the request it filed: the backup and the removal take minutes.
+/// The approval answers at once with the one request it filed: the backup and the removal take minutes.
 async fn approve(ctx: Ctx) -> Reply {
-    serve(ctx, approve_input, Service::approve, |queued| {
-        to_value(queued).unwrap_or(Value::Null)
-    })
-    .await
+    serve(ctx, approve_input, approve_call, |answer| answer).await
 }
 
 async fn keep(ctx: Ctx) -> Reply {

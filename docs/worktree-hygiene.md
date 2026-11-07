@@ -64,9 +64,13 @@ Argus judges every worktree right after every scan and on every live tick (`live
   for an exception, and a `worktree-approve` wake. The owning lead is the thread of the worktree's
   last agent while it lives, else the thread of the item it belongs to, else the thread of its
   rule, else the board's lead.
-- **The approval.** `coord worktree approve <id>` files a request of mode `approved`: a full
-  backup (a patch of the changes, the untracked files, a bundle of commits no ref keeps), then the
-  removal with what is left. Its branch stays. A lock still stops it: the ask says to unlock first.
+- **The approval.** `coord worktree approve <id>...` files ONE request of mode `approved` for every
+  id that passes (so the queue's cap of 20 waiting requests counts it once): a full
+  backup of each (a patch of the changes, the untracked files, a bundle of commits no ref keeps),
+  then the removal with what is left. Its branch stays. The route does no git and no backup: it
+  checks every id against the last scan and the board once, files the request and answers; the
+  backups and removals are the request worker's. An id that fails (not listed, attached, kept,
+  locked) is reported by id in the answer and the rest go ahead. A lock still stops it: the ask says to unlock first.
   A backup that would be partial (untracked files or a nested repository over the copy limits)
   refuses it too, and the worktree waits on its lead with the reason.
 - **30 minutes unanswered.** `reportAfterMs` after the ask, still unattached and unanswered, the
@@ -139,11 +143,16 @@ The numbers are in the worktrees meta of the project (`listed`, `runningAgents`,
   looks again, removes it (the branch too when merged) and the result comes to the thread's inbox.
   Anything that holds work is refused: its lead approves that one. Route:
   `POST /api/p/:key/worktrees/release {id, reason?, by}`.
-- `coord worktree approve <id|path> [--project p] [--reason "..."]`: the owning lead, a thread its
-  rule allows, or the Overlord approves removing a worktree that holds work. Refused while anything
-  is attached or while it is an exception. The result comes to the approver's inbox, on the
-  Overlord's own board when he approved from outside the project. Route:
-  `POST /api/p/:key/worktrees/approve {id, reason?, by}`.
+- `coord worktree approve <id|path>... [--project p] [--reason "..."]`: the owning lead, a thread its
+  rule allows, or the Overlord approves removing worktrees that hold work; it takes several ids.
+  Refused while anything is attached or while it is an exception. The result comes to the
+  approver's inbox, on the Overlord's own board when he approved from outside the project. Route:
+  `POST /api/p/:key/worktrees/approve {id | ids, reason?, by}`. With `id` the answer is the request
+  (`{id, status, text, request}`) or the refusal. With `ids` it is `{queued, refused}`: `queued` is
+  the one request for the ids that passed (null when none did) and `refused` lists
+  `{id, code, text}` for each that did not. Why it answers fast: it uses the last scan, reads no
+  git and writes no backup, derives no listing, and the id list shares one board read (the first
+  version re-read the worktree with git, derived the whole listing and rewrote every row per id).
 - `coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear]`:
   the Overlord only. Route:
   `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by}` (`until` is an ISO

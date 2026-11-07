@@ -386,12 +386,17 @@ and the verbs below are the Overlord's.
    done or dropped, Argus removes it after a short grace (the backup is written first). Link it to
    another open item to keep it." becomes "A link names its item; the worktree stays while an
    agent, a live thread working on the item, a run or a process is attached."
-4. A new verb, `coord worktree approve <id|path> [--project p] [--reason "..."]`. It POSTs
-   `/api/p/<p>/worktrees/approve {id, reason, by}` through the existing
-   `file_request(call, id, "approve", ...)` and prints the answer's text. Its usage line:
+4. A new verb, `coord worktree approve <id|path>... [--project p] [--reason "..."]`. It takes
+   several ids (I-129): with one it POSTs `/api/p/<p>/worktrees/approve {id, reason, by}` as before;
+   with several it POSTs `{ids: [...], reason, by}`. The answer of `ids` is
+   `{queued: {id, status, text, request} | null, refused: [{id, code, text}]}`: one removal request
+   for every id that passed (it counts once against the queue's cap of 20) and one line per id that
+   did not (not listed, attached, kept, locked); print `queued.text` and each refused id with its
+   text. Through the existing `file_request(call, id, "approve", ...)` for the single form. Its
+   usage line:
 
    ```
-   coord worktree approve <id|path> [--project p] [--reason "..."]    (the owning lead or the Overlord approves removing an unattached worktree that holds work: full backup first, then removed with what is left; its branch stays)
+   coord worktree approve <id|path>... [--project p] [--reason "..."]    (the owning lead or the Overlord approves removing unattached worktrees that hold work, one or several ids in one request: full backup first, then removed with what is left; its branch stays)
    ```
 
 5. `coord worktree release` (doc comment in `verbs/remote/worktree/remove.rs` line 225, and a

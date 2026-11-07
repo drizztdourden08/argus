@@ -238,6 +238,17 @@ impl Service {
         self.queue_named(input, (mode, false))
     }
 
+    /// The request of an approval: the targets are already named and labelled from the listing the approval read once,
+    /// so no listing is derived again here.
+    pub(crate) fn request_approved(
+        &self,
+        input: &RequestInput,
+        targets: Vec<Target>,
+    ) -> Result<Queued> {
+        let rec = self.add_request((input, false), Mode::Approved, (None, None), targets)?;
+        Ok(self.queued(input, &rec))
+    }
+
     /// The request for exactly the worktrees the input names, in `mode`; `release` marks a thread's own release.
     fn queue_named(&self, input: &RequestInput, (mode, release): (Mode, bool)) -> Result<Queued> {
         let named: Vec<&String> = input.targets.iter().collect();
