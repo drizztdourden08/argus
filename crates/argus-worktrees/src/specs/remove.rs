@@ -888,5 +888,5 @@ fn the_request_workers_removal_asks_for_no_rescan_of_its_own() {
     let out = h.svc.remove_in_request(&input).unwrap();
     assert!(out.removed, "{}", out.text);
     assert!(!exists_itself(&fx.path("old-merged")));
-    assert!(h.svc.take_rescans().is_empty());
+    assert_eq!(h.svc.take_rescans().len(), 0);
 }
