@@ -105,7 +105,7 @@ fn when_every_id_is_refused_no_request_is_filed() {
         .unwrap();
     assert!(done.queued.is_none());
     assert_eq!(done.refused.len(), 1);
-    assert!(h.svc.request_list("alpha").is_empty());
+    assert_eq!(h.svc.request_list("alpha").len(), 0);
 }
 
 #[test]
