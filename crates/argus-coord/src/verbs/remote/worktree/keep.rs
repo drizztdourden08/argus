@@ -1,107 +1,79 @@
-//! `coord worktree keep | done`: snooze the stale signal of one worktree, and answer a request
-//! of the owner (the Delete or Check button of the Worktrees tab).
+//! `coord worktree keep | done`: the Overlord's exception list (Argus keeps it, the verb POSTs), and
+//! the answer to a request of the owner (the Delete or Check button of the Worktrees tab).
 
 use argus_board::Board;
 use argus_board::json::map_mut;
 use argus_board::limits::require_text_max;
-use argus_board::ops::forget_old_keeps;
-use argus_core::clock::{iso_from_ms, now_iso, parse_ms};
+use argus_core::clock::now_iso;
 use argus_core::js;
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 use super::opts::text_opt;
-use super::path::target_of;
+use super::remove::{id_arg, slow};
 use super::rule_add::audit;
+use crate::cli::Options;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
-use crate::verbs::remote::support::scope::as_caller;
-use crate::verbs::remote::support::text::{cell, int_within, number_of};
-use crate::who::Caller;
+use crate::verbs::remote::support::link::{connect, project_of};
+use crate::verbs::remote::support::scope::{as_caller, require_board};
+use crate::verbs::remote::support::text::cell;
+use crate::who::{Caller, caller, find_project};
 
-const DAY_MS: i64 = 86_400_000;
-const DEFAULT_KEEP_DAYS: i64 = 7;
-const MAX_KEEP_DAYS: f64 = 365.0;
 const NOTE_MAX: usize = 300;
+const KEEP_USAGE: &str = "name the worktree: coord worktree keep <id|path> --note \"why\" [--until <date>] [--asked-by <thread>] [--clear] [--project p].";
 
-/// What `keep` was asked for.
-struct Keep {
-    target: String,
-    note: Option<String>,
-    days: Option<String>,
-    clear: bool,
+/// The thread that makes the call and the project it belongs to: its own project, which is not
+/// the `--project` of the call when the Overlord acts on another board.
+pub(super) fn actor_of(call: &Call<'_>) -> Result<(String, String), CoordError> {
+    let env = &call.inv.env;
+    let own = find_project(env, &call.inv.cwd, &Options::default(), env.session_id())
+        .unwrap_or_else(|_| project_of(call).to_owned());
+    let board = require_board(call, &own)?;
+    let who = caller(&board, &call.inv.cwd, env, &call.options)?;
+    Ok((who.actor, own))
 }
 
-fn days_of(text: Option<&str>) -> Result<i64, CoordError> {
-    let Some(text) = text else {
-        return Ok(DEFAULT_KEEP_DAYS);
-    };
-    int_within(number_of(text), 1.0, MAX_KEEP_DAYS)
-        .ok_or_else(|| CoordError::refuse("--days takes a whole number of days from 1 to 365."))
-}
-
-/// Snoozes (or with `clear` ends the snooze of) one worktree. Returns the record, `None` when it
-/// was cleared.
-fn keep_worktree(
-    board: &mut Board,
-    who: &Caller,
-    keep: &Keep,
-) -> Result<Option<Value>, CoordError> {
-    let (id, path) = target_of(&keep.target)?;
-    let at = now_iso();
-    let now_ms = parse_ms(&at).unwrap_or_default();
-    forget_old_keeps(board, now_ms);
-    if keep.clear {
-        if map_mut(board, "worktreeKeeps").shift_remove(&id).is_none() {
-            return Err(CoordError::refuse(format!("worktree {id} is not kept.")));
-        }
-        audit(board, who, &format!("cleared the keep of worktree {id}"));
-        return Ok(None);
+/// An ISO date stays text, a run of digits is milliseconds.
+fn until_of(text: &str) -> Value {
+    match text.parse::<i64>() {
+        Ok(ms) => json!(ms),
+        Err(_) => json!(text),
     }
-    let n = days_of(keep.days.as_deref())?;
-    let note = json!(keep.note);
-    let why = require_text_max("note", &note, NOTE_MAX)?;
-    let known = board["worktreeKeeps"][id.as_str()]["path"].clone();
-    let path = path.map_or(known, |p| json!(p));
-    let rec = json!({
-        "id": id, "path": path, "until": iso_from_ms(now_ms + n * DAY_MS),
-        "note": why, "by": who.actor, "at": at,
-    });
-    map_mut(board, "worktreeKeeps").insert(id.clone(), rec.clone());
-    audit(
-        board,
-        who,
-        &format!("kept worktree {id} for {n} days: {why}"),
-    );
-    Ok(Some(rec))
 }
 
-/// `coord worktree keep <id|path> --note "why" [--days n | --clear]`.
+/// `coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear]`:
+/// POSTs `/api/p/<p>/worktrees/keep`; Argus refuses anyone but the Overlord, naming the Overlord.
 pub(super) fn keep(call: &mut Call<'_>) -> Outcome {
-    let Some(target) = call.positional.first().filter(|t| !t.is_empty()).cloned() else {
+    if call.options.get("days").is_some() {
         return Err(CoordError::refuse(
-            "name the worktree: coord worktree keep <id|path> --note \"why\" [--days n].",
+            "--days is gone: a keep lasts until --until <date>, or until --clear.",
         ));
-    };
-    let asked = Keep {
-        target,
-        note: text_opt(&call.options, "note")?,
-        days: text_opt(&call.options, "days")?,
-        clear: call.options.flag("clear"),
-    };
-    as_caller(call, |board, who, scope| {
-        let line = match keep_worktree(board, who, &asked)? {
-            Some(rec) => format!(
-                "{}: kept for {} days (until {}): {}. The stale signal for it is off until then.",
-                cell(rec.get("id")),
-                asked.days.as_deref().unwrap_or("7"),
-                cell(rec.get("until")).chars().take(10).collect::<String>(),
-                cell(rec.get("note"))
-            ),
-            None => "keep cleared: the stale signal for it is on again.".to_owned(),
-        };
-        scope.say(&[&line]);
-        Ok(())
-    })
+    }
+    let id = id_arg(call.positional.first(), KEEP_USAGE)?;
+    let (by, by_project) = actor_of(call)?;
+    let mut body = Map::new();
+    body.insert("id".to_owned(), json!(id));
+    body.insert("note".to_owned(), json!(text_opt(&call.options, "note")?));
+    if let Some(until) = text_opt(&call.options, "until")? {
+        body.insert("until".to_owned(), until_of(&until));
+    }
+    if let Some(asked) = text_opt(&call.options, "asked-by")? {
+        body.insert("askedBy".to_owned(), json!(asked));
+    }
+    if call.options.flag("clear") {
+        body.insert("clear".to_owned(), json!(true));
+    }
+    body.insert("by".to_owned(), json!(by));
+    body.insert("byProject".to_owned(), json!(by_project));
+    let project = project_of(call).to_owned();
+    let out = connect(call, false)?
+        .post(
+            &format!("/api/p/{project}/worktrees/keep"),
+            &Value::Object(body),
+        )
+        .map_err(|e| slow(e, "the keep", "coord worktree list"))?;
+    call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
+    Ok(())
 }
 
 /// The answer of a thread to an owner request (an entry that carries `worktree`).

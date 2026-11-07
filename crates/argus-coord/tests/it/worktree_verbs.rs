@@ -330,47 +330,21 @@ fn at_most_40_rules_and_an_update_is_not_an_addition() {
 }
 
 #[test]
-fn keep_snoozes_one_worktree_by_path_or_id_needs_a_note_and_clear_ends_it() {
+fn keep_checks_its_arguments_then_asks_the_dashboard_and_days_is_gone() {
     let w = World::new();
-    refused(&w.worker(&["keep", FOO]), 1, "note text is required");
-    let out = say(&w.worker(&[
-        "keep",
-        "X:\\Proj\\.claude\\worktrees\\foo",
-        "--note",
-        "the owner wants it",
-    ]));
-    let id = worktree_id(FOO, cfg!(windows));
-    assert!(out.contains(&format!("{id}: kept for 7 days")), "{out}");
-    let keep = w.board()["worktreeKeeps"][id.as_str()].clone();
-    assert_eq!(
-        (
-            keep["path"].clone(),
-            keep["note"].clone(),
-            keep["by"].clone()
-        ),
-        (json!(FOO), json!("the owner wants it"), json!("worker"))
-    );
-    ok(&w.worker(&["keep", &id, "--note", "two weeks", "--days", "14"]));
-    let keep = w.board()["worktreeKeeps"][id.as_str()].clone();
-    assert_eq!(
-        keep["path"], FOO,
-        "the id alone keeps the path already known"
-    );
-    let span = |k: &Value| {
-        k["until"]
-            .as_str()
-            .map(str::to_owned)
-            .zip(k["at"].as_str().map(str::to_owned))
-    };
-    assert!(span(&keep).is_some_and(|(until, at)| until > at));
     w.refuse_all(&[
-        (&["keep", &id, "--note", "x", "--days", "0"], "1 to 365"),
-        (&["keep", "X:/Proj/*", "--note", "x"], "one worktree"),
         (&["keep"], "name the worktree"),
+        (&["keep", "X:/Proj/*", "--note", "x"], "one worktree"),
+        (
+            &["keep", FOO, "--note", "x", "--days", "14"],
+            "--days is gone",
+        ),
+        (
+            &["keep", FOO, "--note", "x", "--until", "2026-12-01"],
+            "the dashboard is not running",
+        ),
+        (&["keep", FOO, "--clear"], "the dashboard is not running"),
     ]);
-    assert!(ok(&w.worker(&["keep", &id, "--clear"])).contains("keep cleared"));
-    assert!(w.board()["worktreeKeeps"][id.as_str()].is_null());
-    refused(&w.worker(&["keep", &id, "--clear"]), 1, "is not kept");
 }
 
 #[test]
@@ -446,6 +420,15 @@ fn remove_and_prune_check_their_arguments_before_the_dashboard_is_asked() {
         ),
         (&["release", "X:/Proj/*"], "one worktree"),
         (&["release", FOO], "the dashboard is not running"),
+        (
+            &["approve"],
+            "name the worktree: coord worktree approve <id|path>",
+        ),
+        (&["approve", "X:/Proj/*"], "one worktree"),
+        (
+            &["approve", FOO, "X:/Proj/b"],
+            "the dashboard is not running",
+        ),
     ]);
     refused(
         &w.run(&["remove", FOO], "ghost"),
