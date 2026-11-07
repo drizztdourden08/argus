@@ -90,7 +90,8 @@ pub use gh::{GhRunner, SystemGh};
 pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use hygiene::{
-    HygieneDoc, HygieneMeta, HygieneState, KeepInput, Kept, RemovedDoc, Stepped, hygiene_key,
+    ApproveInput, Approved, HygieneDoc, HygieneMeta, HygieneState, KeepInput, Kept, NotApproved,
+    RemovedDoc, Stepped, hygiene_key,
 };
 pub use jobs::{JobDoc, JobState};
 pub use linking::LinkSource;

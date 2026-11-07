@@ -150,15 +150,21 @@ impl Service {
     /// The listed worktree an id or a path names, with the board.
     pub(super) fn listed_fact(&self, input: &RemoveInput) -> Result<(BoardFacts, Fact)> {
         let board = self.board(&input.project)?;
+        let fact = self.listed_in(input, &board)?;
+        Ok((board, fact))
+    }
+
+    /// The listed worktree an id or a path names, on a board read once.
+    pub(super) fn listed_in(&self, input: &RemoveInput, board: &BoardFacts) -> Result<Fact> {
         let id = input.id.trim();
         let wid = if is_worktree_id(id) {
             id.to_string()
         } else {
             worktree_id(&clean_path(id), self.ci())
         };
-        match self.fact_of(&input.project, &wid, &board) {
-            Some(fact) => Ok((board, fact)),
-            None => Err(self.not_listed(input, &board, &wid)),
+        match self.fact_of(&input.project, &wid, board) {
+            Some(fact) => Ok(fact),
+            None => Err(self.not_listed(input, board, &wid)),
         }
     }
 

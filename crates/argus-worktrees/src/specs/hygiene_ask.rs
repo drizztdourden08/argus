@@ -42,6 +42,7 @@ fn keep_by(h: &Harness, path: &str, by: &str) -> KeepInput {
     KeepInput {
         project: "alpha".into(),
         caller: Caller::Thread(by.into()),
+        by_project: Some("portfolio".into()),
         id: h.id_of(path),
         note: Some("the owner tests it tonight".into()),
         until_ms: None,
@@ -179,16 +180,20 @@ fn the_overlords_delete_writes_a_full_backup_and_his_result_lands_on_his_board()
 }
 
 #[test]
-fn the_leads_approval_writes_a_full_backup_removes_it_and_keeps_its_branch() {
+fn the_leads_approval_writes_a_full_backup_and_removes_it_with_its_merged_branch() {
     let (fx, h) = dirty_world();
     let path = fx.path("agent-a1");
     asked(&h);
     let queued = h.svc.approve(&input_by(&h, &path, "lead")).unwrap();
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
-    assert!(queued.text.contains("its branch stays"), "{}", queued.text);
+    assert!(
+        queued.text.contains("its branch goes when merged"),
+        "{}",
+        queued.text
+    );
     h.svc.requests_idle();
     assert!(!exists_itself(&path));
-    assert!(branches(&fx.repo).contains(&"agent-a1".to_string()));
+    assert!(!branches(&fx.repo).contains(&"agent-a1".to_string()));
     let files = backup_files(&h);
     assert!(
         has_extension(&files, "patch") && files.iter().any(|f| f.ends_with(".untracked.txt")),
@@ -200,7 +205,7 @@ fn the_leads_approval_writes_a_full_backup_removes_it_and_keeps_its_branch() {
         "{note}"
     );
     let request = &h.svc.request_list("alpha")[0];
-    assert!(request.discard && !request.branch, "{request:?}");
+    assert!(request.discard && request.branch, "{request:?}");
 }
 
 #[test]
@@ -299,6 +304,26 @@ fn an_agent_back_on_it_stops_the_ask_and_a_later_detach_asks_again() {
     assert_eq!(step(&h, DEBOUNCE).told, 1, "a new debounce, a new ask");
     assert_eq!(notes_of(&h, "lead").len(), 2);
     assert!(exists_itself(&fx.path("agent-a1")));
+}
+
+#[test]
+fn a_lead_thread_named_like_the_coordinator_is_refused_without_the_portfolio_board() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    add_overlord(&h);
+    for from in [Some("alpha"), None] {
+        let mut input = keep_by(&h, &path, "overlord");
+        input.by_project = from.map(Into::into);
+        let refused = h.svc.keep(&input).unwrap_err();
+        assert!(
+            refused
+                .message
+                .starts_with("only the Overlord puts a worktree"),
+            "{from:?}: {}",
+            refused.message
+        );
+    }
+    assert!(h.svc.keep(&keep_by(&h, &path, "overlord")).is_ok());
 }
 
 #[test]

@@ -521,7 +521,8 @@ impl Service {
         self.probe_release(&fact.path)?;
         let now = self.look_again(input, fact, rule)?;
         let safety = Safety::of(&now);
-        let plan = self.plan_branch(input.branch, input.discard, &now);
+        let owner_says = input.discard && !matches!(input.caller, Caller::Hygiene { .. });
+        let plan = self.plan_branch(input.branch, owner_says, &now);
         let backup = self.authorize(input, board, &now, &safety, plan.force)?;
         let submodules = self.check_submodules(&now, backup.as_ref())?;
         self.step(&fact.id, "node_modules clear");
