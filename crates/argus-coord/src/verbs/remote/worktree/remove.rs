@@ -217,7 +217,8 @@ fn file_request(call: &mut Call<'_>, id: &Value, action: &str, what: &str, check
 /// Overlord approves removing unattached worktrees that hold work (full backup first; the branch
 /// stays). POSTs `{ ids, reason, by }`.
 pub(super) fn approve(call: &mut Call<'_>) -> Outcome {
-    let usage = "name the worktree: coord worktree approve <id|path>... [--project p] [--reason \"...\"].";
+    let usage =
+        "name the worktree: coord worktree approve <id|path>... [--project p] [--reason \"...\"].";
     if call.positional.is_empty() {
         return Err(CoordError::refuse(usage));
     }

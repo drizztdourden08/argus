@@ -425,7 +425,10 @@ fn remove_and_prune_check_their_arguments_before_the_dashboard_is_asked() {
             "name the worktree: coord worktree approve <id|path>",
         ),
         (&["approve", "X:/Proj/*"], "one worktree"),
-        (&["approve", FOO, "X:/Proj/b"], "the dashboard is not running"),
+        (
+            &["approve", FOO, "X:/Proj/b"],
+            "the dashboard is not running",
+        ),
     ]);
     refused(
         &w.run(&["remove", FOO], "ghost"),

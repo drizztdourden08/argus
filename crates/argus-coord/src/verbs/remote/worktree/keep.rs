@@ -67,7 +67,10 @@ pub(super) fn keep(call: &mut Call<'_>) -> Outcome {
     body.insert("byProject".to_owned(), json!(by_project));
     let project = project_of(call).to_owned();
     let out = connect(call, false)?
-        .post(&format!("/api/p/{project}/worktrees/keep"), &Value::Object(body))
+        .post(
+            &format!("/api/p/{project}/worktrees/keep"),
+            &Value::Object(body),
+        )
         .map_err(|e| slow(e, "the keep", "coord worktree list"))?;
     call.inv.say(&[&format!("{}.", cell(out.get("text")))]);
     Ok(())
