@@ -315,15 +315,43 @@ impl Planner<'_> {
             .flatten()
             .rev()
             .filter_map(Value::as_str);
+        let project = record
+            .get("cwd")
+            .and_then(Value::as_str)
+            .map(project_folder);
         for sid in current.into_iter().chain(prior) {
             let found = self.transcripts.find(sid);
             match found.as_slice() {
                 [] => {}
                 [path] => return self.is_valid(path),
-                _ => return false,
+                many => return self.in_own_project(many, project.as_deref()),
             }
         }
         false
+    }
+
+    /// A chat whose project moved keeps one transcript per project folder; the one in the
+    /// folder of its current `cwd` is its own. Anything else stays ambiguous.
+    fn in_own_project(&mut self, found: &[PathBuf], project: Option<&str>) -> bool {
+        let Some(project) = project else {
+            return false;
+        };
+        let own: Vec<&PathBuf> = found
+            .iter()
+            .filter(|p| {
+                p.parent()
+                    .and_then(Path::file_name)
+                    .and_then(|n| n.to_str())
+                    .is_some_and(|n| n.eq_ignore_ascii_case(project))
+            })
+            .collect();
+        match own.as_slice() {
+            [path] => {
+                let path = (*path).clone();
+                self.is_valid(&path)
+            }
+            _ => false,
+        }
     }
 
     fn is_valid(&mut self, path: &Path) -> bool {
@@ -708,5 +736,30 @@ mod tests {
             .filter(|s| !s.is_empty())
             .collect();
         assert!(ids.windows(2).all(|w| w[0] <= w[1]));
+    }
+}
+
+/// The projects folder name Claude Code gives a working folder: every character that is not a
+/// letter or a digit becomes `-` (`X:\relic-of-the-past` is `X--relic-of-the-past`).
+fn project_folder(cwd: &str) -> String {
+    cwd.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect()
+}
+
+#[cfg(test)]
+mod project_folder_tests {
+    use super::project_folder;
+
+    #[test]
+    fn munges_like_claude_code() {
+        assert_eq!(
+            project_folder(r"X:\relic-of-the-past"),
+            "X--relic-of-the-past"
+        );
+        assert_eq!(
+            project_folder(r"E:\GameProjects\relic"),
+            "E--GameProjects-relic"
+        );
     }
 }
