@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { ReviewEdit } from '../../../../data/types';
-import type { ReviewFilter } from './review.type';
+import type { ReviewFilter, Side } from './review.type';
 
 const REVIEW_PATH = '/api/accounts/review';
 const APPLY_PATH = '/api/accounts/review/apply';
@@ -42,7 +42,13 @@ const NO_ROWS: never[] = [];
 
 const CHOICE_SKIP = 'skip';
 
+const SIDE_LOOK: Readonly<Record<Side, { label: string; icon: 'arrow-left' | 'arrow-right' | 'pause' }>> = {
+  left: { label: 'Take left', icon: 'arrow-left' },
+  right: { label: 'Take right', icon: 'arrow-right' },
+  skip: { label: 'Skip', icon: 'pause' },
+};
+
 export {
   APPLY_NOTE, APPLY_PATH, APPLY_STARTED, BUSY_TEXT, CHOICE_SKIP, CLEANUP_NONE, CLEANUP_NOTE, CLEANUP_PATH, DAY_MS, DEFAULT_DAYS, EDIT_LABEL, EMPTY_REVIEW,
-  FILTER_OPTIONS, NO_FOLDER, NO_FOLDER_VALUE, NO_FOLDER_ID, NO_ROWS, NOTHING_TEXT, READ_ONLY_TEXT, REVIEW_PATH, SCAN_TEXT,
+  FILTER_OPTIONS, NO_FOLDER, NO_FOLDER_VALUE, NO_FOLDER_ID, NO_ROWS, NOTHING_TEXT, READ_ONLY_TEXT, REVIEW_PATH, SCAN_TEXT, SIDE_LOOK,
 };

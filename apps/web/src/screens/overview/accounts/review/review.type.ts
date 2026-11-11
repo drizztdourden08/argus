@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { TreeEnv } from './review-props.type';
+import type { TreeEnv } from './review-tree-props.type';
 import type { CleanupDoc, ReviewAccount, ReviewDoc, ReviewEdit, ReviewRow } from '../../../../data/types';
 
 type ReviewFilter = 'all' | 'differences' | 'archived';
@@ -37,7 +37,38 @@ interface FeedState {
   error: string | null;
 }
 
-type RowActionName = 'rename' | 'delete_folder' | 'new_folder' | 'move' | 'archive' | 'unarchive' | 'delete_chat';
+type RowActionName = 'rename' | 'delete_folder' | 'new_folder' | 'archive' | 'unarchive' | 'delete_chat';
+
+type Side = 'left' | 'right' | 'skip';
+
+type ChooseFn = (rowId: string, choice: string, fallback: string) => void;
+
+interface SideState {
+  enabled: boolean;
+  active: boolean;
+}
+
+interface Pair {
+  left: string;
+  right: string;
+}
+
+interface ChooseSideArgs {
+  rows: readonly ReviewRow[];
+  side: Side;
+  pair: Pair;
+  revert: boolean;
+  onChoose: ChooseFn;
+}
+
+interface RowView {
+  present: boolean;
+  kids: boolean;
+  collapsed: boolean;
+  archived: string | null;
+  note: string | null;
+  count: number | null;
+}
 
 interface RowAction {
   name: RowActionName;
@@ -48,25 +79,11 @@ interface RowAction {
 
 type RowActFn = (action: RowAction) => void;
 
-interface MenuContext {
-  row: ReviewRow;
-  account: string;
-  act: RowActFn;
-}
-
-interface SelectState {
-  checked: boolean;
-  mixed: boolean;
-}
-
 type ReviewDialog =
   | { kind: 'rename'; account: string; folder: string }
   | { kind: 'new'; account: string }
-  | { kind: 'move'; account: string; ids: readonly string[] }
   | { kind: 'cleanup' }
   | { kind: 'apply' };
-
-type Selection = Readonly<Record<string, readonly string[]>>;
 
 interface DecisionState {
   decisions: Decisions;
@@ -79,12 +96,6 @@ interface EditStage {
   remove: (key: number) => void;
 }
 
-interface SelectionState {
-  selection: Selection;
-  set: (account: string, ids: readonly string[], on: boolean) => void;
-  clear: (account: string) => void;
-}
-
 interface DialogState {
   dialog: ReviewDialog | null;
   open: (next: ReviewDialog) => void;
@@ -94,6 +105,7 @@ interface DialogState {
 interface CollapseState {
   collapsed: ReadonlySet<string>;
   toggle: (rowId: string) => void;
+  setAll: (ids: ReadonlySet<string>) => void;
 }
 
 interface CleanupState {
@@ -121,11 +133,14 @@ interface ReviewDeck {
   choices: DecisionState;
   staged: EditStage;
   edits: readonly ReviewEdit[];
-  picks: SelectionState;
   dialog: DialogState;
   submit: ApplyState;
   names: EditNames;
   env: TreeEnv;
+  hovered: string | null;
+  setHovered: (rowId: string | null) => void;
+  expandAll: () => void;
+  collapseAll: () => void;
   changed: number;
   count: number;
 }
@@ -136,6 +151,6 @@ interface TotalLine {
 }
 
 export type {
-  ApplyState, BulkWant, ChatEdit, ChatOp, CleanupState, CollapseState, DecisionState, DialogState, Decisions, EditNames, EditStager, EditStage, FeedState, ReviewDeck, ReviewDialog, ReviewFeed, ReviewFilter, MenuContext, RowAction,
-  RowActFn, RowActionName, SelectState, Selection, SelectionState, StagedEdit, TotalLine,
+  ApplyState, BulkWant, ChatEdit, ChatOp, ChooseFn, ChooseSideArgs, CleanupState, CollapseState, DecisionState, DialogState, Decisions, EditNames, EditStager, EditStage, FeedState, Pair, ReviewDeck, ReviewDialog, ReviewFeed,
+  ReviewFilter, RowView, RowAction, RowActFn, Side, SideState, StagedEdit, TotalLine,
 };

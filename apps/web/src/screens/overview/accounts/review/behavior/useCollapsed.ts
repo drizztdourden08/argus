@@ -13,7 +13,9 @@ const useCollapsed = (): CollapseState => {
     });
   }, []);
 
-  return { collapsed, toggle };
+  const setAll = useCallback((ids: ReadonlySet<string>) => setCollapsed(ids), []);
+
+  return { collapsed, toggle, setAll };
 };
 
 export { useCollapsed };

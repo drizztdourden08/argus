@@ -1,0 +1,127 @@
+/* @layer renderer-app @kind style */
+.review-tree {
+  --review-tree-row: var(--size-32);
+  --review-tree-step: var(--size-20);
+  --review-tree-slot: var(--size-16);
+
+  display: flex;
+  align-items: flex-start;
+  inline-size: 100%;
+}
+
+.review-tree-panel {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.review-tree-gutter {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  inline-size: calc(4 * var(--size-20) + 3 * var(--space-2xs) + 2 * var(--space-sm));
+}
+
+.review-tree-head,
+.review-tree-row,
+.review-tree-gutter-cell {
+  box-sizing: border-box;
+  block-size: var(--review-tree-row);
+}
+
+.review-tree-head {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-sm);
+  border-block-end: var(--border-width-thin) solid var(--c-border);
+  color: var(--c-text-muted);
+}
+
+.review-tree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-inline-end: var(--space-sm);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.review-tree-step {
+  flex: none;
+  align-self: stretch;
+  inline-size: var(--review-tree-step);
+  border-inline-start: var(--border-width-thin) solid var(--c-border);
+}
+
+.review-tree-slot,
+.review-tree-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--review-tree-slot);
+  block-size: var(--review-tree-slot);
+}
+
+.review-tree-name {
+  display: flex;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.review-tree-title {
+  flex: 0 1 auto;
+  min-inline-size: var(--size-80);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-tree-count,
+.review-tree-note {
+  flex: none;
+}
+
+.review-tree-notes {
+  flex: 0 100 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.review-tree-row--same .review-tree-title {
+  color: var(--c-text-dim);
+}
+
+.review-tree-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  margin-inline-start: auto;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.review-tree-row--hot .review-tree-actions,
+.review-tree-actions:focus-within {
+  opacity: 1;
+}
+
+.review-tree-row--hot,
+.review-tree-gutter-cell--hot {
+  background: var(--c-hover);
+}
+
+.review-tree-gutter-cell {
+  display: grid;
+  grid-template-columns: repeat(4, var(--size-20));
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
+.review-tree-slot-gap {
+  inline-size: var(--size-20);
+}

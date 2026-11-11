@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { CleanupDoc, ReviewAccount, ReviewDiff, ReviewDoc, ReviewEdit, ReviewRow } from '../../../../data/types';
-import type { CleanupState, Decisions, EditNames, ReviewDialog, ReviewFilter, RowAction, Selection, StagedEdit, TotalLine } from './review.type';
+import type { CleanupDoc, ReviewAccount, ReviewDoc, ReviewEdit } from '../../../../data/types';
+import type { CleanupState, EditNames, ReviewDialog, ReviewFilter, StagedEdit, TotalLine } from './review.type';
 
 interface ReviewViewProps {
   onBack: () => void;
@@ -16,19 +16,6 @@ interface ReviewBodyProps {
   onApplied: () => void;
 }
 
-interface TreeEnv {
-  decisions: Decisions;
-  collapsed: ReadonlySet<string>;
-  selection: Selection;
-  pending: ReadonlySet<string>;
-  members: ReadonlyMap<string, ReadonlyMap<string, readonly string[]>>;
-  now: number;
-  onToggle: (rowId: string) => void;
-  onSelect: (account: string, ids: readonly string[], on: boolean) => void;
-  onAct: (action: RowAction) => void;
-  onChoose: (rowId: string, choice: string, fallback: string) => void;
-}
-
 interface ReviewToolbarProps {
   accounts: readonly ReviewAccount[];
   counts: ReviewDoc['counts'];
@@ -39,6 +26,8 @@ interface ReviewToolbarProps {
   onFilter: (next: ReviewFilter) => void;
   onBack: () => void;
   onRescan: () => void;
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
   onCleanup: () => void;
   onApply: () => void;
 }
@@ -72,70 +61,9 @@ interface PendingPanelProps {
   onRemove: (key: number) => void;
 }
 
-interface BulkBarsProps {
-  accounts: readonly ReviewAccount[];
-  rows: readonly ReviewRow[];
-  selection: Selection;
-  onStage: (edits: readonly ReviewEdit[]) => void;
-  onMove: (account: string, ids: readonly string[]) => void;
-  onClear: (account: string) => void;
-}
-
-interface BulkBarProps {
-  label: string;
-  total: number;
-  archive: number;
-  unarchive: number;
-  remove: number;
-  onArchive: () => void;
-  onUnarchive: () => void;
-  onMove: () => void;
-  onDelete: () => void;
-  onClear: () => void;
-}
-
-interface ReviewTableProps {
-  accounts: readonly ReviewAccount[];
-  rows: readonly ReviewRow[];
-  env: TreeEnv;
-}
-
-interface ReviewTableRowProps {
-  accounts: readonly ReviewAccount[];
-  row: ReviewRow;
-  env: TreeEnv;
-}
-
-interface TreeCellProps {
-  row: ReviewRow;
-  account: ReviewAccount;
-  env: TreeEnv;
-}
-
-interface CellLeadProps {
-  row: ReviewRow;
-  account: string;
-  checked: boolean;
-  mixed: boolean;
-  env: TreeEnv;
-}
-
-interface RowGlyphProps {
-  row: ReviewRow;
-  collapsed: boolean;
-  onToggle: () => void;
-}
-
-interface ChoiceChipProps {
-  diff: ReviewDiff;
-  choice: string;
-  onChoose: (choice: string) => void;
-}
-
 interface ReviewDialogsProps {
   dialog: ReviewDialog | null;
   accounts: readonly ReviewAccount[];
-  rows: readonly ReviewRow[];
   choiceLines: readonly TotalLine[];
   editLines: readonly TotalLine[];
   count: number;
@@ -151,14 +79,6 @@ interface NameDialogProps {
   initial: string;
   confirmLabel: string;
   onConfirm: (name: string) => void;
-  onCancel: () => void;
-}
-
-interface MoveDialogProps {
-  account: string;
-  count: number;
-  folders: readonly string[];
-  onConfirm: (folder: string | null) => void;
   onCancel: () => void;
 }
 
@@ -191,7 +111,6 @@ interface TotalListProps {
 }
 
 export type {
-  ApplyDialogProps, BulkBarProps, BulkBarsProps, CellLeadProps, CellNotesProps, ChoiceChipProps, CleanupDialogProps, CleanupListProps, MoveDialogProps, NameDialogProps,
-  PendingPanelProps, ReviewBodyProps, ReviewChipsProps, ReviewDialogsProps, ReviewEmptyProps, ReviewTableProps, ReviewTableRowProps, ReviewToolbarProps, ReviewViewProps,
-  RowGlyphProps, ScanStatusProps, TotalListProps, TreeCellProps, TreeEnv,
+  ApplyDialogProps, CellNotesProps, CleanupDialogProps, CleanupListProps, NameDialogProps, PendingPanelProps, ReviewBodyProps, ReviewChipsProps, ReviewDialogsProps,
+  ReviewEmptyProps, ReviewToolbarProps, ReviewViewProps, ScanStatusProps, TotalListProps,
 };
