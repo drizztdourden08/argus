@@ -138,9 +138,12 @@ pub fn capitalised(key: &str) -> String {
 }
 
 fn account_of(index: usize, key: &str, dir: &Path, home: Option<&Scope>) -> Account {
+    let id = login_identity(dir);
     Account {
         key: key.to_owned(),
-        label: capitalised(key),
+        label: id.email.clone().unwrap_or_else(|| capitalised(key)),
+        email: id.email,
+        plan: id.plan,
         color: COLORS[index % COLORS.len()].to_owned(),
         desktop_account: home.map(|s| s.account.clone()),
         desktop_org: home.map(|s| s.org.clone()),
@@ -177,16 +180,72 @@ pub fn discover(app: Option<&Path>, cli_root: &Path, probe: &dyn AuthProbe) -> V
         .collect()
 }
 
-/// The account a CLI folder is signed in to, from its `.claude.json` (`oauthAccount`). Several
-/// accounts can hold a scope of the same organization (old sync tools made such cross copies), so
-/// the account, not only the organization, picks the home scope.
+/// Who a CLI folder is signed in as, from its `.claude.json` (`oauthAccount`).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LoginIdentity {
+    /// The account uuid.
+    pub account: Option<String>,
+    /// The email address.
+    pub email: Option<String>,
+    /// The plan as Claude names it.
+    pub plan: Option<String>,
+}
+
+/// Reads [`LoginIdentity`] from a CLI folder; empty when the file is missing or unreadable.
+#[must_use]
+pub fn login_identity(dir: &Path) -> LoginIdentity {
+    let Some(value) = std::fs::read_to_string(dir.join(".claude.json"))
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+    else {
+        return LoginIdentity::default();
+    };
+    let field = |name: &str| {
+        value
+            .pointer(&format!("/oauthAccount/{name}"))
+            .and_then(serde_json::Value::as_str)
+            .filter(|s| !s.is_empty())
+            .map(str::to_owned)
+    };
+    LoginIdentity {
+        account: field("accountUuid"),
+        email: field("emailAddress"),
+        plan: field("planDisplayName"),
+    }
+}
+
+/// The account a CLI folder is signed in to. Several accounts can hold a scope of the same
+/// organization (old sync tools made such cross copies), so the account, not only the
+/// organization, picks the home scope.
 fn login_account(dir: &Path) -> Option<String> {
-    let text = std::fs::read_to_string(dir.join(".claude.json")).ok()?;
-    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
-    value
-        .pointer("/oauthAccount/accountUuid")
-        .and_then(serde_json::Value::as_str)
-        .map(str::to_owned)
+    login_identity(dir).account
+}
+
+/// Refreshes each account's email and plan from its CLI login, and replaces a label that was
+/// only made from the folder name (`Hotmail` for `hotmail`) with the email. A label the owner
+/// typed stays. Answers whether anything changed.
+pub fn refresh_identities(accounts: &mut [Account]) -> bool {
+    let mut changed = false;
+    for account in accounts {
+        let id = login_identity(Path::new(&account.cli_dir));
+        if let Some(email) = id
+            .email
+            .as_ref()
+            .filter(|_| account.label == capitalised(&account.key))
+        {
+            account.label.clone_from(email);
+            changed = true;
+        }
+        if id.email.is_some() && account.email != id.email {
+            account.email = id.email;
+            changed = true;
+        }
+        if id.plan.is_some() && account.plan != id.plan {
+            account.plan = id.plan;
+            changed = true;
+        }
+    }
+    changed
 }
 
 // test-tag: critical
@@ -262,7 +321,10 @@ mod tests {
         let probe = FakeProbe(vec![("hotmail", "o2"), ("second", "o3")]);
         let found = discover(Some(app.path()), root.path(), &probe);
         assert_eq!(found.len(), 2);
-        assert_eq!(found[0].label, "Hotmail");
+        assert_eq!(
+            found[0].label, "Hotmail",
+            "no .claude.json: the folder name stays the label"
+        );
         assert_eq!(found[0].desktop_account.as_deref(), Some("a1"));
         assert_eq!(found[0].desktop_org.as_deref(), Some("o2"));
         assert_eq!(found[1].desktop_account.as_deref(), Some("a2"));
@@ -287,6 +349,28 @@ mod tests {
         );
         assert_eq!(found[0].desktop_account.as_deref(), Some("a2"));
         assert_eq!(found[0].desktop_org.as_deref(), Some("o2"));
+    }
+
+    #[test]
+    fn the_email_becomes_the_label_and_replaces_a_folder_label() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = root.path().join("hotmail");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join(".claude.json"),
+            r#"{"oauthAccount":{"accountUuid":"a1","emailAddress":"me@example.com","planDisplayName":"Max 20x"}}"#,
+        )
+        .unwrap();
+        let mut found = discover(None, root.path(), &FakeProbe(vec![]));
+        assert_eq!(found[0].label, "me@example.com");
+        assert_eq!(found[0].plan.as_deref(), Some("Max 20x"));
+        found[0].label = "Hotmail".to_owned();
+        found[0].email = None;
+        assert!(refresh_identities(&mut found));
+        assert_eq!(found[0].label, "me@example.com");
+        found[0].label = "Work".to_owned();
+        assert!(!refresh_identities(&mut found));
+        assert_eq!(found[0].label, "Work", "a label the owner typed stays");
     }
 
     #[test]

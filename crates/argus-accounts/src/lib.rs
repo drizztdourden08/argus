@@ -31,7 +31,9 @@ pub use ports::{
     Catalog, Clock, Credentials, DesktopApp, HandoverStore, LoginVault, Resumer, SidebarStore,
     Threads, UsageSource,
 };
-pub use registry::{AuthProbe, ClaudeAuthProbe, discover, find_app_data, find_cli_exe};
+pub use registry::{
+    AuthProbe, ClaudeAuthProbe, discover, find_app_data, find_cli_exe, refresh_identities,
+};
 pub use types::{
     Account, AccountKey, CliStatus, HandoverMode, Rules, Scope, Severity, Usage, UsageLimit,
 };

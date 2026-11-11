@@ -355,6 +355,8 @@ mod tests {
                 desktop_account: None,
                 desktop_org: None,
                 cli_dir: String::new(),
+                email: None,
+                plan: None,
                 can_receive: true,
                 rules: Rules {
                     auto_switch: auto,

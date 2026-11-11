@@ -18,10 +18,13 @@ const desktopLine = (login: AccountDoc['desktopLogin']): string =>
 const chatLine = (chats: AccountDoc['chats']): string =>
   `${chats?.total ?? 0} chats, ${chats?.archived ?? 0} archived, ${chats?.folders ?? 0} folders`;
 
+const idLine = (id: string): string => `Account ${id}`;
+
 const AccountFacts = (props: AccountFactsProps) => {
-  const { cli, desktopLogin, chats } = props.account;
+  const { cli, desktopLogin, chats, accountId } = props.account;
   return (
     <Stack gap="xs">
+      {accountId && <Text variant="subtitle" size="md" title={accountId}>{idLine(accountId)}</Text>}
       <Text variant="subtitle" size="md">{cliLine(cli)}</Text>
       <Text variant="subtitle" size="md">{desktopLine(desktopLogin)}</Text>
       <Text variant="subtitle" size="md">{chatLine(chats)}</Text>

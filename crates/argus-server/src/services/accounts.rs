@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
     HttpUsage, Poll, PollResult, ReadOnlyCredentials, Usage, UsageSource, discover, find_app_data,
-    find_cli_exe, next_interval, poll_all,
+    find_cli_exe, next_interval, poll_all, refresh_identities,
 };
 use argus_core::ConfigError;
 use argus_core::clock::now_ms;
@@ -360,9 +360,17 @@ pub(crate) fn last_known_account(app: &Path) -> Option<String> {
 
 fn load(svc: &Services, accounts: &AccountsService) {
     let mut config = accounts.config();
+    let mut changed = false;
     if config.accounts.is_empty() {
         config = accounts.discover();
-        if !config.accounts.is_empty() && !svc.shadow {
+        changed = !config.accounts.is_empty();
+    } else if refresh_identities(&mut config.accounts) {
+        // Emails and plans come from each CLI login; old folder-name labels become the email.
+        accounts.set_config(config.clone());
+        changed = true;
+    }
+    {
+        if changed && !svc.shadow {
             if let Err(e) = save(svc, &config) {
                 svc.log.error(
                     "accounts config not saved",

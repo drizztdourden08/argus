@@ -106,6 +106,12 @@ pub struct Account {
     pub desktop_org: Option<String>,
     /// The folder `CLAUDE_CONFIG_DIR` points at for this account.
     pub cli_dir: String,
+    /// The email of the login, from the CLI folder's `.claude.json`.
+    #[serde(default)]
+    pub email: Option<String>,
+    /// The plan as Claude names it (`Max 20x`), from the same file.
+    #[serde(default)]
+    pub plan: Option<String>,
     /// A switch may land here.
     #[serde(default = "yes")]
     pub can_receive: bool,

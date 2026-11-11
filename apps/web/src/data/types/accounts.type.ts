@@ -24,6 +24,8 @@ interface AccountDoc {
   color?: string;
   active?: boolean;
   plan?: string | null;
+  email?: string | null;
+  accountId?: string | null;
   cli?: { loggedIn?: boolean; loginExpiresAt?: string | null; orgId?: string | null };
   desktopLogin?: { saved?: boolean; savedAt?: string | null };
   limits?: AccountLimit[];

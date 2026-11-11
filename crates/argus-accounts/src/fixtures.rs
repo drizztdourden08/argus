@@ -16,6 +16,8 @@ pub(crate) fn account_in(
         desktop_account,
         desktop_org,
         cli_dir: String::new(),
+        email: None,
+        plan: None,
         can_receive: true,
         rules: Rules::default(),
     }
