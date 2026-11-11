@@ -10,6 +10,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+argus-accounts = { path = "../argus-accounts" }
 argus-agents = { path = "../argus-agents" }
 argus-board = { path = "../argus-board" }
 argus-cache = { path = "../argus-cache" }

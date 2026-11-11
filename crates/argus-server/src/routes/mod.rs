@@ -3,6 +3,7 @@
 
 use crate::Router;
 
+pub mod accounts;
 pub mod actions;
 pub mod activity;
 pub mod admin;
@@ -50,6 +51,7 @@ pub fn register_all(router: &mut Router) {
     activity::register(router);
     agents::register(router);
     procs::register(router);
+    accounts::register(router);
     runs::register(router);
     wake::register(router);
     inbox::register(router);

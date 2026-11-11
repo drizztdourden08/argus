@@ -57,11 +57,21 @@ pub enum Coll {
     Stalls,
     /// Board items of the portfolio (`BD-n`), one per project board.
     Boards,
+    /// Claude accounts of the owner (`_portfolio` only), one doc per account key.
+    Accounts,
+    /// The state docs of the accounts service: `drift`, `run`, `switch`, `cycle`.
+    #[serde(rename = "accountsState")]
+    AccountsState,
+    /// The steps of the running or last account sync, by zero-padded sequence.
+    #[serde(rename = "syncSteps")]
+    SyncSteps,
+    /// Handover records (`H-n`) of an account switch.
+    Handovers,
 }
 
 impl Coll {
     /// Every collection, in the Node order.
-    pub const ALL: [Coll; 24] = [
+    pub const ALL: [Coll; 28] = [
         Coll::Threads,
         Coll::Items,
         Coll::Tests,
@@ -86,6 +96,10 @@ impl Coll {
         Coll::Deps,
         Coll::Stalls,
         Coll::Boards,
+        Coll::Accounts,
+        Coll::AccountsState,
+        Coll::SyncSteps,
+        Coll::Handovers,
     ];
 
     /// The collection's wire name.
@@ -116,6 +130,10 @@ impl Coll {
             Coll::Deps => "deps",
             Coll::Stalls => "stalls",
             Coll::Boards => "boards",
+            Coll::Accounts => "accounts",
+            Coll::AccountsState => "accountsState",
+            Coll::SyncSteps => "syncSteps",
+            Coll::Handovers => "handovers",
         }
     }
 }

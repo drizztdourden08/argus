@@ -3,6 +3,7 @@
 //! the activity log. One module per service crate, written when that crate is wired; the
 //! activity sinks of every crate are in [`activity`].
 
+pub mod accounts;
 pub mod activity;
 pub mod agents;
 pub mod check_links;

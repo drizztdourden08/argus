@@ -35,13 +35,25 @@ pub fn machine() -> Vec<Probe> {
     ]
 }
 
-/// The routes of one scope: every collection of the db shim that the Node dashboard also has (`prs`, `deps`, `stalls` and `boards` are
-/// Rust only), and for a project the launches, runs, wakes and open wake streams.
+/// The collections only the Rust server has.
+const RUST_ONLY: [Coll; 8] = [
+    Coll::Prs,
+    Coll::Deps,
+    Coll::Stalls,
+    Coll::Boards,
+    Coll::Accounts,
+    Coll::AccountsState,
+    Coll::SyncSteps,
+    Coll::Handovers,
+];
+
+/// The routes of one scope: every collection of the db shim that the Node dashboard also has
+/// (those of [`RUST_ONLY`] are left out), and for a project the launches, runs, wakes and open wake streams.
 #[must_use]
 pub fn scope(key: &str) -> Vec<Probe> {
     let mut out: Vec<Probe> = Coll::ALL
         .iter()
-        .filter(|c| !matches!(c, Coll::Prs | Coll::Deps | Coll::Stalls | Coll::Boards))
+        .filter(|c| !RUST_ONLY.contains(c))
         .map(|c| {
             Probe::get(
                 Kind::Doc(c.as_str()),

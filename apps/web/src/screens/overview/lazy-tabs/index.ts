@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind barrel */
+export { LazyAccountsTab } from './accounts-tab';
 export { LazyActivityTab } from './activity-tab';
 export { LazyCacheTab } from './cache-tab';
 export { LazyDependenciesTab } from './dependencies-tab';

@@ -33,6 +33,7 @@ use crate::sse::{Fanout, MuxRegistry, RunLogs};
 use crate::web::WebAssets;
 use tasks::Tasks;
 
+pub(crate) mod accounts;
 pub(crate) mod activity;
 pub(crate) mod agents;
 pub(crate) mod cache;
@@ -51,6 +52,7 @@ pub(crate) mod wake;
 pub(crate) mod wake_hook;
 pub(crate) mod worktrees;
 
+pub use accounts::{AccountsOptions, AccountsService};
 pub use agents::AgentsOptions;
 pub use cache::{CacheOptions, CacheService};
 pub use notify::NotifyOptions;
@@ -100,6 +102,8 @@ pub struct Services {
     pub agent_reconciler: Option<Arc<AgentReconciler>>,
     /// The process monitor, when on.
     pub procs: Option<Arc<ProcsService>>,
+    /// The Claude accounts, when on.
+    pub accounts: Option<Arc<AccountsService>>,
     /// The worktree scanner, when on.
     pub worktrees: Option<Arc<WorktreeService>>,
     /// The build cache of Brock and Tessera, when on.

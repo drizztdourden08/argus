@@ -21,6 +21,8 @@ pub(crate) enum Timer {
     Cache,
     /// The sweep of the open dependencies.
     Deps,
+    /// The usage poll of the Claude accounts.
+    Accounts,
 }
 
 /// Which timers run, and their tasks.
@@ -37,6 +39,7 @@ impl Tasks {
             (Timer::Wake, opts.wake.timer),
             (Timer::Cache, opts.cache.timers),
             (Timer::Deps, opts.wake.timer),
+            (Timer::Accounts, opts.accounts.timer),
         ];
         Tasks {
             timers: switches

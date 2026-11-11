@@ -5,6 +5,7 @@ import type { BoardsLayout } from './boards/boards-view.type';
 const OVERVIEW_TABS = [
   { id: 'boards', label: 'Boards' },
   { id: 'processes', label: 'Processes', badgeTitle: 'Processes that need a look' },
+  { id: 'accounts', label: 'Accounts', badgeTitle: 'Accounts at a limit' },
   { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
   { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
   { id: 'dependencies', label: 'Dependencies', badgeTitle: 'Blocked requests and requests open for over 3 days' },
@@ -22,6 +23,7 @@ const OVERVIEW_HASHES = [...OVERVIEW_TAB_IDS, ...Object.keys(TAB_ALIASES)];
 const TAB_ICONS: Readonly<Record<string, IconName>> = {
   boards: 'layout-dashboard',
   processes: 'cpu',
+  accounts: 'user',
   activity: 'scroll-text',
   notifications: 'bell',
   dependencies: 'link',

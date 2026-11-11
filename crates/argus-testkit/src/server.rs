@@ -131,6 +131,7 @@ impl TestServer {
         opts.heartbeat = o.heartbeat;
         opts.web_root = Some(dashboard_home.join("no-web-build"));
         opts.procs.enabled = false;
+        opts.accounts.enabled = false;
         opts.worktrees.timers = false;
         opts.cache.enabled = false;
         opts.records.consumers = argus_server::ConsumerSource::Off;

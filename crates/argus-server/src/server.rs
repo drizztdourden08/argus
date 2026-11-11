@@ -34,7 +34,7 @@ use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
-    AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
+    AccountsOptions, AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
     Services, WakeOptions, WorktreesOptions, routes,
 };
 use crate::{preview, shadow};
@@ -69,6 +69,8 @@ pub struct ServeOptions {
     pub runs: Option<Arc<dyn RunsView>>,
     /// The process monitor.
     pub procs: ProcsOptions,
+    /// The Claude accounts.
+    pub accounts: AccountsOptions,
     /// The run service and the launcher wakes.
     pub run_service: RunsOptions,
     /// The worktree scanner.
@@ -106,6 +108,7 @@ impl ServeOptions {
             echo_log: false,
             runs: None,
             procs: ProcsOptions::default(),
+            accounts: AccountsOptions::default(),
             run_service: RunsOptions::default(),
             worktrees: WorktreesOptions::default(),
             cache: CacheOptions::default(),
@@ -264,6 +267,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         agent_reaper: None,
         agent_reconciler: None,
         procs: None,
+        accounts: None,
         worktrees: None,
         cache: None,
         records: None,

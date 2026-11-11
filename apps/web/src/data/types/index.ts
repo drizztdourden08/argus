@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind barrel */
+export type * from './accounts.type';
 export type * from './action.type';
+
 export type * from './activity.type';
 export type * from './board.type';
 export type * from './bundle.type';
