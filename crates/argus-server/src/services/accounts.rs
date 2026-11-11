@@ -8,7 +8,8 @@ use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
-    HttpUsage, Poll, PollResult, UsageSource, discover, find_app_data, next_interval, poll_all,
+    HttpUsage, Poll, PollResult, ReadOnlyCredentials, Usage, UsageSource, discover, find_app_data,
+    next_interval, poll_all,
 };
 use argus_core::ConfigError;
 use argus_core::clock::now_ms;
@@ -217,6 +218,43 @@ pub(crate) fn save(svc: &Services, config: &AccountsConfig) -> Result<(), Config
     save_config(&svc.paths, &all, svc.env_port)
 }
 
+/// The environment variable that lets a preview (never a shadow run) read live usage.
+pub(crate) const PREVIEW_USAGE_ENV: &str = "ARGUS_PREVIEW_ACCOUNTS_USAGE";
+
+/// Whether the usage endpoint may be asked: always outside shadow and preview; in a preview
+/// only with the opt-in set to `1`; never in a plain shadow run.
+pub(crate) fn live_usage_allowed(shadow: bool, preview: bool, opt_in: Option<&str>) -> bool {
+    !shadow || (preview && opt_in == Some("1"))
+}
+
+/// A usage source that answers nothing, so the poll falls back to the Desktop log.
+struct SilentUsage(Arc<dyn UsageSource>, bool);
+
+impl UsageSource for SilentUsage {
+    fn fetch(&self, access_token: &str) -> Result<Usage, String> {
+        if self.1 {
+            self.0.fetch(access_token)
+        } else {
+            Err("shadow or preview mode: no live usage read".to_owned())
+        }
+    }
+}
+
+/// Logins that are read and never renewed, whatever sits behind them.
+struct NoRenewal(Arc<dyn Credentials>);
+
+impl Credentials for NoRenewal {
+    fn access_token(&self, dir: &Path) -> Result<String, String> {
+        ReadOnlyCredentials.access_token(dir)
+    }
+    fn expires_at(&self, dir: &Path) -> Option<i64> {
+        self.0.expires_at(dir)
+    }
+    fn refresh(&self, dir: &Path) -> Result<String, String> {
+        ReadOnlyCredentials.refresh(dir)
+    }
+}
+
 pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<AccountsService>> {
     let setting = svc.config().extra.get(NAME).cloned().unwrap_or_default();
     let config = AccountsConfig::from_json(&setting);
@@ -226,16 +264,33 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<AccountsS
         .clone()
         .unwrap_or_else(|| Arc::new(ClaudeAuthProbe));
     let docs = AccountsDocs::new(Arc::clone(&svc.db));
-    let ports = UsagePorts {
-        source: opts
-            .accounts
-            .usage
-            .clone()
-            .unwrap_or_else(|| Arc::new(HttpUsage)),
-        creds: opts.accounts.credentials.clone().unwrap_or_else(|| {
+    let source: Arc<dyn UsageSource> = opts
+        .accounts
+        .usage
+        .clone()
+        .unwrap_or_else(|| Arc::new(HttpUsage));
+    let opt_in = std::env::var(PREVIEW_USAGE_ENV).ok();
+    let live = live_usage_allowed(svc.shadow, svc.preview, opt_in.as_deref());
+    let creds: Arc<dyn Credentials> = if svc.shadow {
+        Arc::new(NoRenewal(
+            opts.accounts
+                .credentials
+                .clone()
+                .unwrap_or_else(|| Arc::new(ReadOnlyCredentials)),
+        ))
+    } else {
+        opts.accounts.credentials.clone().unwrap_or_else(|| {
             let app = find_app_data(config.app_data.as_deref());
             Arc::new(CliCredentials::new(app))
-        }),
+        })
+    };
+    let ports = UsagePorts {
+        source: if svc.shadow {
+            Arc::new(SilentUsage(source, live))
+        } else {
+            source
+        },
+        creds,
         log: Arc::clone(&svc.log),
     };
     (opts.accounts.enabled && config.enabled)
@@ -283,7 +338,9 @@ pub(crate) fn start(svc: &Arc<Services>) {
     super::accounts_sync::attach(svc, &accounts);
     super::accounts_sync::start(svc, &accounts);
     super::accounts_rules::start(svc, &accounts);
-    super::accounts_resume::start(svc);
+    if !svc.shadow {
+        super::accounts_resume::start(svc);
+    }
     let owned = Arc::clone(svc);
     let polling = svc.tasks.runs(Timer::Accounts);
     let task = tokio::spawn(async move {
@@ -356,4 +413,18 @@ async fn poll_loop(accounts: &Arc<AccountsService>) {
 
 pub(crate) fn stop(svc: &Services) {
     svc.tasks.abort(NAME);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::live_usage_allowed;
+
+    #[test]
+    fn live_usage_needs_no_shadow_or_a_preview_opt_in() {
+        assert!(live_usage_allowed(false, false, None));
+        assert!(!live_usage_allowed(true, false, Some("1")));
+        assert!(!live_usage_allowed(true, true, None));
+        assert!(!live_usage_allowed(true, true, Some("0")));
+        assert!(live_usage_allowed(true, true, Some("1")));
+    }
 }

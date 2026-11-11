@@ -26,7 +26,7 @@ pub mod usage;
 mod fixtures;
 
 pub use config::{AccountsConfig, ArchiveRule, EstimateDefaults};
-pub use credentials::CliCredentials;
+pub use credentials::{CliCredentials, ReadOnlyCredentials};
 pub use ports::{
     Catalog, Clock, Credentials, DesktopApp, HandoverStore, LoginVault, Resumer, SidebarStore,
     Threads, UsageSource,

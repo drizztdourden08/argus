@@ -22,6 +22,7 @@ mod wake_rig;
 #[path = "worktrees/rig.rs"]
 mod worktrees_rig;
 
+mod accounts_shadow;
 mod activity;
 mod agents;
 mod alias;

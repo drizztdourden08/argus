@@ -251,6 +251,27 @@ impl Credentials for CliCredentials {
     }
 }
 
+/// The CLI logins read as they are: no CLI is run, no token is renewed and no file is written.
+/// What a shadow or preview server uses.
+pub struct ReadOnlyCredentials;
+
+/// Why a read-only login is never renewed.
+pub const NO_RENEWAL: &str = "shadow or preview mode: a login is never renewed";
+
+impl Credentials for ReadOnlyCredentials {
+    fn access_token(&self, cli_dir: &Path) -> Result<String, String> {
+        read_login(cli_dir).map(|l| l.token)
+    }
+
+    fn expires_at(&self, cli_dir: &Path) -> Option<i64> {
+        read_login(cli_dir).ok().and_then(|l| l.expires_at)
+    }
+
+    fn refresh(&self, _cli_dir: &Path) -> Result<String, String> {
+        Err(NO_RENEWAL.to_owned())
+    }
+}
+
 // test-tag: critical
 #[cfg(test)]
 mod tests {
@@ -453,5 +474,22 @@ mod tests {
         let err = store_grant(dir.path(), &grant, "r-old", NOW).unwrap_err();
         assert!(!err.contains("r-by-cli") && !err.contains("r-old"));
         assert_eq!(fs::read_to_string(dir.path().join(FILE)).unwrap(), before);
+    }
+}
+
+#[cfg(test)]
+mod read_only_tests {
+    use super::*;
+
+    #[test]
+    fn a_read_only_login_is_never_renewed_or_written() {
+        let dir = tempfile::tempdir().unwrap();
+        let text = r#"{"claudeAiOauth":{"accessToken":"t","refreshToken":"r","expiresAt":1}}"#;
+        fs::write(dir.path().join(FILE), text).unwrap();
+        let creds = ReadOnlyCredentials;
+        assert_eq!(creds.access_token(dir.path()).unwrap(), "t");
+        assert_eq!(creds.expires_at(dir.path()), Some(1));
+        assert_eq!(creds.refresh(dir.path()).unwrap_err(), NO_RENEWAL);
+        assert_eq!(fs::read_to_string(dir.path().join(FILE)).unwrap(), text);
     }
 }

@@ -523,7 +523,9 @@ pub(crate) async fn end_countdown(accounts: &AccountsService) -> bool {
 pub(crate) fn start(svc: &Arc<Services>, accounts: &Arc<AccountsService>) {
     let desk = RulesDesk::new(Arc::new(live::Live::new(svc, accounts)));
     let _ = accounts.rules.set(Arc::clone(&desk));
-    if !svc.tasks.runs(Timer::Accounts) {
+    // Shadow and preview: the desk exists (cancel answers) but decides nothing, so no countdown,
+    // handover cycle or switch ever starts.
+    if svc.shadow || !svc.tasks.runs(Timer::Accounts) {
         return;
     }
     let events = accounts.cycle_events();

@@ -27,6 +27,10 @@ outward effect is off.
 - The port is 47617 when no `--port` and no `DASHBOARD_PORT` is given. The live dashboard keeps
   47615 and the shadow 47616.
 
+## Accounts in a preview
+
+The accounts feature is read-only in a preview and in shadow mode. A sync that applies, an undo, a Desktop switch (also "anyway"), saving a login and writing the accounts settings (shadow only; a preview home is a copy, so its settings may change) answer 403 `read_only`. Dry runs, compare, the GET routes, the handover route and a switch cancel stay open. The switching rules start no countdown, handover cycle or switch, nothing is written to Claude's scheduled tasks, the start-up repair of a cut-short switch does not run, and a login is never renewed. Usage is read from the Desktop log only. To see live usage in a preview, start it with `ARGUS_PREVIEW_ACCOUNTS_USAGE=1`; it only reads the usage endpoint with the logins as they are, and a shadow run ignores the variable.
+
 ## The refusal to start
 
 A preview refuses to start, with a message, when `COORD_HOME` is the live `~/.coord` (the

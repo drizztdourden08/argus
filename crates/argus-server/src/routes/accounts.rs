@@ -27,6 +27,20 @@ use crate::{Ctx, RouteOpts, Router};
 
 const SETTINGS_BYTES: usize = 64 * 1024;
 
+/// Refuses what changes Claude's data, logins or tasks in shadow mode and in a preview.
+///
+/// # Errors
+/// 403 `read_only` in shadow mode and in a preview.
+pub(crate) fn outward(ctx: &Ctx, what: &str) -> Result<(), ApiError> {
+    if ctx.svc.shadow {
+        return Err(ApiError::new(
+            ErrorCode::ReadOnly,
+            format!("shadow or preview mode: Argus does not {what}; accounts are read-only"),
+        ));
+    }
+    Ok(())
+}
+
 fn service(ctx: &Ctx) -> Result<Arc<AccountsService>, ApiError> {
     ctx.svc
         .accounts
@@ -67,6 +81,13 @@ async fn settings(ctx: Ctx) -> Reply {
 }
 
 async fn update(ctx: Ctx) -> Reply {
+    // A preview home is a copy, so its settings may change; a shadow home writes nothing.
+    if !ctx.svc.board_writes {
+        return Err(ApiError::new(
+            ErrorCode::ReadOnly,
+            "shadow mode: Argus does not write the accounts settings",
+        ));
+    }
     let accounts = service(&ctx)?;
     let body: Value = ctx.json().await?;
     let config = accounts.update(&body).map_err(ApiError::bad_request)?;
@@ -95,6 +116,9 @@ async fn sync(ctx: Ctx) -> Reply {
     let accounts = service(&ctx)?;
     let body: Value = ctx.json().await?;
     let dry_run = body.get("dryRun").and_then(Value::as_bool).unwrap_or(true);
+    if !dry_run {
+        outward(&ctx, "apply a sync")?;
+    }
     if accounts.sync_active() {
         return Err(sync_error(SYNC_BUSY.to_owned()));
     }
@@ -106,6 +130,7 @@ async fn sync(ctx: Ctx) -> Reply {
 }
 
 async fn undo(ctx: Ctx) -> Reply {
+    outward(&ctx, "undo a sync")?;
     let accounts = service(&ctx)?;
     let body: Value = ctx.json().await?;
     let dir = body
