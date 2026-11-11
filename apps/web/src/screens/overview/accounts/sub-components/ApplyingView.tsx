@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Stack } from '@drizztdourden08/tessera';
-import { useCompareFeed } from '../behavior/useCompareFeed';
 import { useRunFeed } from '../behavior/useRunFeed';
+import { useReviewFeed } from '../review';
 import type { ApplyingViewProps } from '../compare.type';
 import { ApplyingProgress } from './ApplyingProgress';
 import { ApplyingTable } from './ApplyingTable';
@@ -12,7 +12,7 @@ import { StepLog } from './StepLog';
 const ApplyingView = (props: ApplyingViewProps) => {
   const { actions, onBack } = props;
   const { run, steps } = useRunFeed();
-  const feed = useCompareFeed();
+  const feed = useReviewFeed();
   return (
     <Stack gap="md">
       <ApplyingProgress run={run} />

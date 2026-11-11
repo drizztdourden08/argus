@@ -64,6 +64,13 @@ fn write(catalog: &dyn Catalog, change: &Change) -> Result<(), String> {
                 .ok_or_else(|| format!("{} has no archive list", label(change)))?;
             catalog.write_archived(&change.scope, &ids)
         }
+        ChangeKind::DeleteSession => {
+            let at = change
+                .data
+                .as_i64()
+                .ok_or_else(|| format!("{} has no delete time", label(change)))?;
+            catalog.delete_session(&change.scope, &change.session_id, at)
+        }
     }
 }
 

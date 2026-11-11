@@ -170,7 +170,7 @@ impl Planned {
     }
 }
 
-fn millis(record: &Value, key: &str) -> Option<i64> {
+pub(super) fn millis(record: &Value, key: &str) -> Option<i64> {
     let v = record.get(key)?;
     v.as_i64().or_else(|| {
         // JSON numbers the app writes as floats are whole milliseconds.
@@ -179,7 +179,7 @@ fn millis(record: &Value, key: &str) -> Option<i64> {
     })
 }
 
-fn parent_of(record: &Value) -> Option<String> {
+pub(super) fn parent_of(record: &Value) -> Option<String> {
     if record.get("lineageDetached") == Some(&Value::Bool(true)) {
         return None;
     }
@@ -252,10 +252,11 @@ fn lineage_only(before: &Value, after: &Value) -> bool {
     before != after && strip(before) == strip(after)
 }
 
-fn kind_of(scan: &Scan, change: &Change) -> StepKind {
+pub(super) fn kind_of(scan: &Scan, change: &Change) -> StepKind {
     match change.kind {
         ChangeKind::CopySession => StepKind::CopySession,
         ChangeKind::ArchiveIndex => StepKind::Archive,
+        ChangeKind::DeleteSession => StepKind::DeleteChat,
         ChangeKind::UpdateSession => {
             let before = scan
                 .scopes
@@ -323,7 +324,7 @@ pub fn scan_and_plan(env: &Env) -> Result<Planned, String> {
 }
 
 /// The name an account goes by in a step: its key, or the scope name when no account owns it.
-fn account_of(accounts: &[Account], scope: &Scope) -> String {
+pub(super) fn account_of(accounts: &[Account], scope: &Scope) -> String {
     let owns = |a: &&Account| a.desktop_account.as_deref() == Some(scope.account.as_str());
     let home = |a: &&Account| a.desktop_org.as_deref() == Some(scope.org.as_str());
     accounts
@@ -334,16 +335,44 @@ fn account_of(accounts: &[Account], scope: &Scope) -> String {
 }
 
 /// The run in progress: numbers the steps, tells the sink and the progress callback.
-struct Run<'a> {
-    env: &'a Env<'a>,
+pub(super) struct Run<'a> {
+    pub(super) env: &'a Env<'a>,
     sink: &'a dyn StepSink,
     on_progress: &'a mut dyn FnMut(&Progress),
     seq: u64,
-    progress: Progress,
+    pub(super) progress: Progress,
 }
 
-impl Run<'_> {
-    fn phase(&mut self, phase: Phase) {
+impl<'a> Run<'a> {
+    /// A run that has not reported anything yet.
+    pub(super) fn new(
+        env: &'a Env<'a>,
+        sink: &'a dyn StepSink,
+        on_progress: &'a mut dyn FnMut(&Progress),
+    ) -> Self {
+        Run {
+            env,
+            sink,
+            on_progress,
+            seq: 0,
+            progress: Progress {
+                phase: Phase::Scan,
+                step: 0,
+                total: 0,
+                backup_dir: None,
+            },
+        }
+    }
+
+    /// Reports the start; an apply first forgets the steps of the last run.
+    pub(super) fn start(&mut self, mode: Mode) {
+        if mode == Mode::Apply {
+            self.sink.clear();
+        }
+        (self.on_progress)(&self.progress);
+    }
+
+    pub(super) fn phase(&mut self, phase: Phase) {
         self.progress.phase = phase;
         (self.on_progress)(&self.progress);
     }
@@ -397,22 +426,8 @@ pub fn run(
     sink: &dyn StepSink,
     on_progress: &mut dyn FnMut(&Progress),
 ) -> Result<Summary, String> {
-    let mut run = Run {
-        env,
-        sink,
-        on_progress,
-        seq: 0,
-        progress: Progress {
-            phase: Phase::Scan,
-            step: 0,
-            total: 0,
-            backup_dir: None,
-        },
-    };
-    if mode == Mode::Apply {
-        sink.clear();
-    }
-    (run.on_progress)(&run.progress);
+    let mut run = Run::new(env, sink, on_progress);
+    run.start(mode);
     let result = run_inner(&mut run, mode);
     run.phase(if result.is_ok() {
         Phase::Done
@@ -446,19 +461,38 @@ fn run_inner(run: &mut Run, mode: Mode) -> Result<Summary, String> {
         summary.verified = true;
         return Ok(summary);
     }
-    run.progress.total = total_steps(&planned);
-    let backup_dir = back_up(run, &planned)?;
-    summary.backup_dir = Some(backup_dir.clone());
+    let backup_dir = write_planned(run, &planned, &|env| {
+        let again = scan_and_plan(env)?;
+        let left = again.catalog.changes.len() + again.folders.steps.len();
+        if left > 0 {
+            return Err(format!("{left} changes are still planned"));
+        }
+        Ok(())
+    })?;
+    summary.backup_dir = Some(backup_dir);
+    summary.verified = true;
+    Ok(summary)
+}
+
+/// Backs up, writes the chat files and the sidebar storage of a plan, then runs `check` as the
+/// verify step. Returns the backup folder.
+pub(super) fn write_planned(
+    run: &mut Run,
+    planned: &Planned,
+    check: &dyn Fn(&Env) -> Result<(), String>,
+) -> Result<String, String> {
+    let env = run.env;
+    run.progress.total = total_steps(planned);
+    let backup_dir = back_up(run, planned)?;
     run.phase(Phase::Apply);
-    let written = write_chats(run, &planned).and_then(|()| write_folders(run, &planned));
+    let written = write_chats(run, planned).and_then(|()| write_folders(run, planned));
     // The undo needs to know what the run wrote, also when it stopped half way.
     let recorded = backup::record_applied(Path::new(&backup_dir), env.app, &planned.catalog);
     written?;
     recorded.map_err(|e| format!("the backup {backup_dir} was not updated: {e}"))?;
     run.phase(Phase::Verify);
-    verify(run, &backup_dir)?;
-    summary.verified = true;
-    Ok(summary)
+    verify(run, &backup_dir, check)?;
+    Ok(backup_dir)
 }
 
 fn total_steps(planned: &Planned) -> u64 {
@@ -566,26 +600,12 @@ fn write_folders(run: &mut Run, planned: &Planned) -> Result<(), String> {
     let mut shown = Vec::new();
     let mut reordered = 0;
     for step in &planned.folders.steps {
-        match step {
-            FolderStep::CreateFolder { scope, name, .. } => {
-                let account = account_of_name(env.accounts, scope);
-                shown.push(run.begin(StepKind::CreateFolder, (&account, "", ""), name, ""));
+        match shown_as(planned, env.accounts, step) {
+            Some(line) => {
+                let who = (line.account.as_str(), line.session_id, line.title.as_str());
+                shown.push(run.begin(line.kind, who, line.folder, &line.detail));
             }
-            FolderStep::AssignChat {
-                scope,
-                session_id,
-                folder_name,
-            } => {
-                let account = account_of_name(env.accounts, scope);
-                let title = title_in(&planned.scan, scope, session_id);
-                shown.push(run.begin(
-                    StepKind::AssignFolder,
-                    (&account, session_id, &title),
-                    folder_name,
-                    "",
-                ));
-            }
-            FolderStep::ReorderFolder { .. } => reordered += 1,
+            None => reordered += 1,
         }
     }
     let detail = format!("{reordered} folders reordered");
@@ -603,6 +623,60 @@ fn write_folders(run: &mut Run, planned: &Planned) -> Result<(), String> {
     }
     run.finish(storage, state, note);
     written.map_err(|e| format!("the sidebar storage was not written: {e}"))
+}
+
+/// How a folder step shows in the step log.
+struct Shown<'a> {
+    kind: StepKind,
+    account: String,
+    session_id: &'a str,
+    title: String,
+    folder: &'a str,
+    detail: String,
+}
+
+/// The log line of a folder step; none for a reorder, which only counts.
+fn shown_as<'a>(
+    planned: &Planned,
+    accounts: &[Account],
+    step: &'a FolderStep,
+) -> Option<Shown<'a>> {
+    let line = |kind, folder: &'a str| Shown {
+        kind,
+        account: account_of_name(accounts, step.scope()),
+        session_id: "",
+        title: String::new(),
+        folder,
+        detail: String::new(),
+    };
+    let chat = |kind, session_id: &'a str, folder: &'a str| Shown {
+        session_id,
+        title: title_in(&planned.scan, step.scope(), session_id),
+        ..line(kind, folder)
+    };
+    Some(match step {
+        FolderStep::CreateFolder { name, .. } => line(StepKind::CreateFolder, name),
+        FolderStep::AssignChat {
+            session_id,
+            folder_name,
+            ..
+        } => chat(StepKind::AssignFolder, session_id, folder_name),
+        FolderStep::MoveChat {
+            session_id,
+            folder_name,
+            ..
+        } => chat(
+            StepKind::MoveChat,
+            session_id,
+            folder_name.as_deref().unwrap_or_default(),
+        ),
+        FolderStep::RenameFolder { name, new_name, .. } => Shown {
+            detail: format!("renamed to {new_name}"),
+            ..line(StepKind::RenameFolder, name)
+        },
+        FolderStep::DeleteFolder { name, .. } => line(StepKind::DeleteFolder, name),
+        FolderStep::ReorderFolder { .. } => return None,
+    })
 }
 
 /// The account of a scope given by name (`<account>/<org>`).
@@ -624,19 +698,13 @@ fn title_in(scan: &Scan, scope: &str, session_id: &str) -> String {
         .unwrap_or_default()
 }
 
-fn verify(run: &mut Run, backup_dir: &str) -> Result<(), String> {
+fn verify(
+    run: &mut Run,
+    backup_dir: &str,
+    check: &dyn Fn(&Env) -> Result<(), String>,
+) -> Result<(), String> {
     let step = run.begin(StepKind::Verify, ("", "", ""), "", "");
-    let again = scan_and_plan(run.env);
-    let left = match &again {
-        Ok(p) => p.catalog.changes.len() + p.folders.steps.len(),
-        Err(_) => 0,
-    };
-    let failure = match again {
-        Err(e) => Some(e),
-        Ok(_) if left > 0 => Some(format!("{left} changes are still planned")),
-        Ok(_) => None,
-    };
-    match failure {
+    match check(run.env).err() {
         None => {
             run.finish(step, StepState::Done, None);
             Ok(())

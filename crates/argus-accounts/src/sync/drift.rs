@@ -57,8 +57,12 @@ pub fn drift_of(planned: &Planned) -> Drift {
     }
     for step in &planned.folders.steps {
         match step {
-            FolderStep::CreateFolder { .. } => by.folder += 1,
-            FolderStep::AssignChat { .. } | FolderStep::ReorderFolder { .. } => by.membership += 1,
+            FolderStep::CreateFolder { .. }
+            | FolderStep::RenameFolder { .. }
+            | FolderStep::DeleteFolder { .. } => by.folder += 1,
+            FolderStep::AssignChat { .. }
+            | FolderStep::ReorderFolder { .. }
+            | FolderStep::MoveChat { .. } => by.membership += 1,
         }
     }
     Drift {

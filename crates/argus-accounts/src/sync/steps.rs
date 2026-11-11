@@ -24,6 +24,14 @@ pub enum StepKind {
     AssignFolder,
     /// The sidebar keys are written to the Desktop app's storage.
     WriteStorage,
+    /// The owner moved a chat to another folder, or out of any.
+    MoveChat,
+    /// The owner deleted an archived chat: its record goes, its tombstone is written.
+    DeleteChat,
+    /// The owner renamed a folder.
+    RenameFolder,
+    /// The owner deleted a folder; its chats are no longer filed.
+    DeleteFolder,
     /// The re-plan after the writes is empty.
     Verify,
 }

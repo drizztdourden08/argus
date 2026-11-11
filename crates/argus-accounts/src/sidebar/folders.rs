@@ -33,14 +33,33 @@ pub enum FolderStep {
     },
     /// The order of the chats inside a folder was rewritten to follow the leading scope.
     ReorderFolder { scope: String, name: String },
+    /// The owner moved a chat into a folder, or out of any (`folder_name` none).
+    MoveChat {
+        scope: String,
+        session_id: String,
+        folder_name: Option<String>,
+    },
+    /// The owner renamed a folder.
+    RenameFolder {
+        scope: String,
+        name: String,
+        new_name: String,
+    },
+    /// The owner deleted a folder; its chats are no longer filed.
+    DeleteFolder { scope: String, name: String },
 }
 
 impl FolderStep {
-    fn scope(&self) -> &str {
+    /// The scope the step changes.
+    #[must_use]
+    pub fn scope(&self) -> &str {
         match self {
             Self::CreateFolder { scope, .. }
             | Self::AssignChat { scope, .. }
-            | Self::ReorderFolder { scope, .. } => scope,
+            | Self::ReorderFolder { scope, .. }
+            | Self::MoveChat { scope, .. }
+            | Self::RenameFolder { scope, .. }
+            | Self::DeleteFolder { scope, .. } => scope,
         }
     }
 }
@@ -86,7 +105,7 @@ pub fn plan_folders(
     Ok(FolderPlan { steps, keys: next })
 }
 
-fn has_entry(wrapper: &Value, scope: &str) -> bool {
+pub(super) fn has_entry(wrapper: &Value, scope: &str) -> bool {
     wrapper.get("value").and_then(|v| v.get(scope)).is_some()
 }
 
@@ -102,20 +121,20 @@ fn check_shape(keys: &SidebarKeys, scope: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn entry<'a>(wrapper: &'a Value, scope: &str) -> Option<&'a Value> {
+pub(super) fn entry<'a>(wrapper: &'a Value, scope: &str) -> Option<&'a Value> {
     wrapper.get("value")?.get(scope)
 }
 
-fn entry_mut<'a>(wrapper: &'a mut Value, scope: &str) -> Option<&'a mut Value> {
+pub(super) fn entry_mut<'a>(wrapper: &'a mut Value, scope: &str) -> Option<&'a mut Value> {
     wrapper.get_mut("value")?.get_mut(scope)
 }
 
-fn text<'a>(v: &'a Value, field: &str) -> Option<&'a str> {
+pub(super) fn text<'a>(v: &'a Value, field: &str) -> Option<&'a str> {
     v.get(field).and_then(Value::as_str)
 }
 
 /// The scope's manual folders as (id, name), in the order of its groups list.
-fn folder_list(keys: &SidebarKeys, scope: &str) -> Vec<(String, String)> {
+pub(super) fn folder_list(keys: &SidebarKeys, scope: &str) -> Vec<(String, String)> {
     let groups = entry(&keys.group_scopes, scope).and_then(|e| e.get("groups"));
     groups
         .and_then(Value::as_array)
@@ -127,31 +146,31 @@ fn folder_list(keys: &SidebarKeys, scope: &str) -> Vec<(String, String)> {
         .unwrap_or_default()
 }
 
-fn folder_id(keys: &SidebarKeys, scope: &str, name: &str) -> Option<String> {
+pub(super) fn folder_id(keys: &SidebarKeys, scope: &str, name: &str) -> Option<String> {
     folder_list(keys, scope)
         .into_iter()
         .find(|(_, n)| n == name)
         .map(|(id, _)| id)
 }
 
-fn folder_name(keys: &SidebarKeys, scope: &str, id: &str) -> Option<String> {
+pub(super) fn folder_name(keys: &SidebarKeys, scope: &str, id: &str) -> Option<String> {
     folder_list(keys, scope)
         .into_iter()
         .find(|(i, _)| i == id)
         .map(|(_, n)| n)
 }
 
-fn chat_key(session_id: &str) -> String {
+pub(super) fn chat_key(session_id: &str) -> String {
     format!("code:{session_id}")
 }
 
 /// The id of the folder a chat is in, in a scope.
-fn assigned_id(keys: &SidebarKeys, scope: &str, session_id: &str) -> Option<String> {
+pub(super) fn assigned_id(keys: &SidebarKeys, scope: &str, session_id: &str) -> Option<String> {
     let assignments = entry(&keys.group_scopes, scope)?.get("assignments")?;
     text(assignments, &chat_key(session_id)).map(str::to_owned)
 }
 
-fn order_list(keys: &SidebarKeys, scope: &str, folder_id: &str) -> Vec<String> {
+pub(super) fn order_list(keys: &SidebarKeys, scope: &str, folder_id: &str) -> Vec<String> {
     entry(&keys.group_scopes, scope)
         .and_then(|e| e.get("order"))
         .and_then(|o| o.get(folder_id))
@@ -164,7 +183,12 @@ fn order_list(keys: &SidebarKeys, scope: &str, folder_id: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn set_order_list(keys: &mut SidebarKeys, scope: &str, folder_id: &str, list: &[String]) {
+pub(super) fn set_order_list(
+    keys: &mut SidebarKeys,
+    scope: &str,
+    folder_id: &str,
+    list: &[String],
+) {
     let Some(e) = entry_mut(&mut keys.group_scopes, scope).and_then(Value::as_object_mut) else {
         return;
     };
@@ -231,7 +255,7 @@ fn find_group(keys: &SidebarKeys, scope: &str, id: &str) -> Option<Value> {
     groups.iter().find(|g| text(g, "id") == Some(id)).cloned()
 }
 
-fn find_section(keys: &SidebarKeys, scope: &str, id: &str) -> Option<Value> {
+pub(super) fn find_section(keys: &SidebarKeys, scope: &str, id: &str) -> Option<Value> {
     let sections = entry(&keys.code_sections, scope)?
         .get("sections")?
         .as_array()?;
@@ -251,7 +275,7 @@ fn insert_group(keys: &mut SidebarKeys, scope: &str, group: Value, prev_id: Opti
     list.insert(at, group);
 }
 
-fn is_manual(section: &Value) -> bool {
+pub(super) fn is_manual(section: &Value) -> bool {
     text(section, "kind") == Some("manual")
 }
 
@@ -406,7 +430,7 @@ fn move_chat(
     });
 }
 
-fn set_assignment(keys: &mut SidebarKeys, scope: &str, key: &str, folder_id: &str) {
+pub(super) fn set_assignment(keys: &mut SidebarKeys, scope: &str, key: &str, folder_id: &str) {
     let Some(e) = entry_mut(&mut keys.group_scopes, scope).and_then(Value::as_object_mut) else {
         return;
     };
@@ -511,7 +535,12 @@ fn follow_order(
 
 fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
     let changed: BTreeSet<&str> = steps.iter().map(FolderStep::scope).collect();
-    for scope in changed {
+    mirror_scopes(keys, &changed);
+}
+
+/// Makes the app's copies in `dframe-store` follow the two folder keys for each scope given.
+pub(super) fn mirror_scopes(keys: &mut SidebarKeys, changed: &BTreeSet<&str>) {
+    for &scope in changed {
         let Some(groups) = entry(&keys.group_scopes, scope).cloned() else {
             continue;
         };

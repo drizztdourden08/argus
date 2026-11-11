@@ -38,6 +38,7 @@ pub(crate) mod accounts_alerts;
 pub(crate) mod accounts_estimates;
 pub(crate) mod accounts_handover;
 pub(crate) mod accounts_resume;
+pub(crate) mod accounts_review;
 pub(crate) mod accounts_rules;
 pub(crate) mod accounts_switch;
 pub(crate) mod accounts_sync;

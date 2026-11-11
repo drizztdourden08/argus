@@ -1,4 +1,4 @@
 /* @layer renderer-app @kind constants */
-const HIDE_QUIET = { showSame: false, showArchived: false };
+const NO_COLLAPSED: ReadonlySet<string> = new Set<string>();
 
-export { HIDE_QUIET };
+export { NO_COLLAPSED };

@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind logic */
-import type { CompareRow } from '../../../../data/types';
+import type { ReviewRow } from '../../../../data/types';
 import type { RowMark, SyncStep } from '../compare.type';
 import { FOLDER_KINDS } from './row-marks.constants';
 
-const rowIdOf = (step: SyncStep, rows: readonly CompareRow[]): string | null => {
+const rowIdOf = (step: SyncStep, rows: readonly ReviewRow[]): string | null => {
   if (step.sessionId) {
     const chat = rows.find((row) => row.id === step.sessionId);
     if (chat) return chat.id;
@@ -14,7 +14,7 @@ const rowIdOf = (step: SyncStep, rows: readonly CompareRow[]): string | null => 
   return null;
 };
 
-const rowMarks = (rows: readonly CompareRow[], steps: readonly SyncStep[]): Map<string, RowMark> => {
+const rowMarks = (rows: readonly ReviewRow[], steps: readonly SyncStep[]): Map<string, RowMark> => {
   const marks = new Map<string, RowMark>();
   for (const step of steps) {
     const id = rowIdOf(step, rows);

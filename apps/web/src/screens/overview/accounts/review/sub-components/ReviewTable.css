@@ -1,0 +1,5 @@
+/* @layer renderer-app @kind style */
+.review-mid {
+  inline-size: var(--size-160);
+  white-space: nowrap;
+}

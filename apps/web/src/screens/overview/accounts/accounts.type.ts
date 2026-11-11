@@ -17,7 +17,7 @@ interface AccountActions {
   undo: () => void;
 }
 
-type AccountsView = 'overview' | 'compare' | 'applying';
+type AccountsView = 'overview' | 'review' | 'applying';
 
 interface AccountsSummaryProps {
   accounts: readonly Account[];
@@ -27,7 +27,7 @@ interface AccountsSummaryProps {
 interface SyncRowProps {
   drift: number;
   actions: AccountActions;
-  onCompare: () => void;
+  onReview: () => void;
 }
 
 interface AccountCardProps {

@@ -8,7 +8,7 @@ import { useAccountView } from './behavior/useAccountView';
 import { AccountCard } from './sub-components/AccountCard';
 import { AccountsSummary } from './sub-components/AccountsSummary';
 import { ApplyingView } from './sub-components/ApplyingView';
-import { CompareView } from './sub-components/CompareView';
+import { ReviewView } from './review';
 import { SyncRow } from './sub-components/SyncRow';
 import { SwitchDialog, useSwitchTarget } from './switch';
 
@@ -18,7 +18,7 @@ const AccountsTab = () => {
   const rules = useAccountsSettings();
   const target = useSwitchTarget();
   const actions = useAccountActions(() => show('applying'));
-  if (view === 'compare') return <CompareView actions={actions} onBack={() => show('overview')} />;
+  if (view === 'review') return <ReviewView onBack={() => show('overview')} onApplied={() => show('applying')} />;
   if (view === 'applying') return <ApplyingView actions={actions} onBack={() => show('overview')} />;
   if (accounts.length === 0) return ready ? <EmptyState message={NONE_FOUND} /> : null;
   const total = drift?.total ?? 0;
@@ -27,7 +27,7 @@ const AccountsTab = () => {
     <Stack gap="md">
       <AccountsSummary accounts={accounts} drift={total} />
       {accounts.map((account) => <AccountCard key={account.id} account={account} actions={actions} rules={rules} onSwitch={target.open} />)}
-      <SyncRow drift={total} actions={actions} onCompare={() => show('compare')} />
+      <SyncRow drift={total} actions={actions} onReview={() => show('review')} />
       {switching && <SwitchDialog target={switching} accounts={accounts} onClose={target.close} />}
     </Stack>
   );

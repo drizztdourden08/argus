@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../data/react';
-import type { AccountsRun, CompareAccount, CompareCell, CompareDoc, CompareRow, CompareStatus, SyncStepDoc } from '../../../data/types';
+import type { AccountsRun, ReviewAccount, ReviewCell, ReviewDoc, ReviewRow, ReviewStatus, SyncStepDoc } from '../../../data/types';
 import type { AccountActions } from './accounts.type';
 
 type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
@@ -13,32 +13,9 @@ interface ChipLook {
 
 type SyncStep = WithId<SyncStepDoc>;
 
-interface CompareFeed {
-  data: CompareDoc | null;
-  loading: boolean;
-  error: string | null;
-  rescan: () => void;
-}
-
 interface RunFeed {
   run: AccountsRun | null;
   steps: SyncStep[];
-}
-
-interface PlanFlow {
-  busy: boolean;
-  note: string | null;
-  run: () => void;
-}
-
-interface RowFilter {
-  showSame: boolean;
-  showArchived: boolean;
-}
-
-interface CompareViewProps {
-  actions: AccountActions;
-  onBack: () => void;
 }
 
 interface ApplyingViewProps {
@@ -51,43 +28,23 @@ interface ApplyingProgressProps {
 }
 
 interface ApplyingTableProps {
-  data: CompareDoc | null;
+  data: ReviewDoc | null;
   steps: readonly SyncStep[];
 }
 
-interface CompareBodyProps {
-  data: CompareDoc;
-  rows: readonly CompareRow[];
-}
-
 interface CellChipProps {
-  status: CompareStatus | undefined;
-}
-
-interface CompareToolbarProps {
-  filter: RowFilter;
-  busy: boolean;
-  onFilter: (next: RowFilter) => void;
-  onBack: () => void;
-  onRescan: () => void;
-  onPlan: () => void;
-  onSync: () => void;
-}
-
-interface CompareSummaryProps {
-  rows: readonly CompareRow[];
-  same: number;
+  status: ReviewStatus | undefined;
 }
 
 interface CompareTableProps {
-  accounts: readonly CompareAccount[];
-  rows: readonly CompareRow[];
+  accounts: readonly ReviewAccount[];
+  rows: readonly ReviewRow[];
   marks?: ReadonlyMap<string, RowMark>;
 }
 
 interface CompareCellViewProps {
-  row: CompareRow;
-  cell: CompareCell | undefined;
+  row: ReviewRow;
+  cell: ReviewCell | undefined;
 }
 
 interface StatusChipProps {
@@ -105,7 +62,7 @@ interface StepKindTagsProps {
 
 interface StepLogProps {
   steps: readonly SyncStep[];
-  accounts: readonly CompareAccount[];
+  accounts: readonly ReviewAccount[];
 }
 
 interface RunFinishProps {
@@ -117,6 +74,6 @@ interface RunFinishProps {
 }
 
 export type {
-  ApplyingProgressProps, ApplyingTableProps, ApplyingViewProps, CellChipProps, ChipLook, CompareBodyProps, CompareCellViewProps, CompareFeed, CompareSummaryProps, CompareTableProps, CompareToolbarProps,
-  CompareViewProps, PlanFlow, RowFilter, RowMark, RowMarkCellProps, RunFeed, RunFinishProps, StatusChipProps, StepKindTagsProps, StepLogProps, SyncStep,
+  ApplyingProgressProps, ApplyingTableProps, ApplyingViewProps, CellChipProps, ChipLook, CompareCellViewProps, CompareTableProps,
+  RowMark, RowMarkCellProps, RunFeed, RunFinishProps, StatusChipProps, StepKindTagsProps, StepLogProps, SyncStep,
 };

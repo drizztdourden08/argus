@@ -70,8 +70,9 @@ async fn post(t: &TestServer, path: &str, body: &Value) -> (u16, String) {
     (r.status, r.code())
 }
 
-const REFUSED: [(&str, &str); 6] = [
+const REFUSED: [(&str, &str); 7] = [
     ("/api/accounts/sync", r#"{"dryRun":false}"#),
+    ("/api/accounts/review/apply", r#"{"decisions":{}}"#),
     ("/api/accounts/sync/undo", "{}"),
     ("/api/accounts/switch", r#"{"to":"a"}"#),
     ("/api/accounts/switch/anyway", "{}"),

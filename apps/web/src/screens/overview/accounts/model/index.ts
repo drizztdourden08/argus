@@ -10,8 +10,5 @@ export { rowMarks } from './row-marks';
 export { ruleChips } from './rule-chips';
 export { severityOf } from './severity-of';
 export { signalsOf } from './signals-of';
-export { statusCounts } from './status-counts';
 export { stepKinds } from './step-kinds';
-export { summaryText } from './summary-text';
-export { visibleRows } from './visible-rows';
 export { weeklyPercent } from './weekly-percent';

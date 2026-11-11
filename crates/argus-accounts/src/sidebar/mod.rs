@@ -2,11 +2,13 @@
 //! `LevelDB`: [`store`] reads and writes them, [`folders`] works out, as pure functions, which
 //! folders and memberships each account scope is missing.
 
+pub mod edit;
 pub mod folders;
 pub mod store;
 
 use serde_json::{Map, Value, json};
 
+pub use edit::{FolderEditor, chat_folder};
 pub use folders::{FolderPlan, FolderStep, Presence, fresh_folder_id, plan_folders};
 pub use store::LevelDbSidebar;
 

@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind constants */
-import type { CompareStatus, RunPhase, SyncStepKind } from '../../../data/types';
+import type { ReviewStatus, RunPhase, SyncStepKind } from '../../../data/types';
 import type { ChipLook } from './compare.type';
 
 const SYNC_STEPS_COLL = 'syncSteps';
 const RUN_DOC = 'run';
-const COMPARE_PATH = '/api/accounts/compare';
 const SYNC_PATH = '/api/accounts/sync';
 const UNDO_PATH = '/api/accounts/sync/undo';
 
@@ -12,7 +11,7 @@ const LOG_LIMIT = 30;
 const INDENT = '\u2003';
 const ACTIVE_PHASES: ReadonlySet<RunPhase> = new Set<RunPhase>(['scan', 'plan', 'backup', 'apply', 'verify']);
 
-const STATUS_LOOK: Readonly<Record<CompareStatus, ChipLook>> = {
+const STATUS_LOOK: Readonly<Record<ReviewStatus, ChipLook>> = {
   same: { label: 'same', tone: 'success' },
   subthread: { label: '', tone: 'neutral' },
   missing: { label: 'will be created', tone: 'info' },
@@ -24,8 +23,8 @@ const STATUS_LOOK: Readonly<Record<CompareStatus, ChipLook>> = {
   folder_differs: { label: 'different folder', tone: 'warning' },
 };
 
-const GHOST_STATUSES: ReadonlySet<CompareStatus> = new Set<CompareStatus>(['missing', 'will_create']);
-const QUIET_STATUSES: ReadonlySet<CompareStatus> = new Set<CompareStatus>(['same', 'subthread']);
+const GHOST_STATUSES: ReadonlySet<ReviewStatus> = new Set<ReviewStatus>(['missing', 'will_create']);
+const QUIET_STATUSES: ReadonlySet<ReviewStatus> = new Set<ReviewStatus>(['same', 'subthread']);
 
 const STEP_KIND_LABEL: Readonly<Record<SyncStepKind, string>> = {
   backup: 'Backup',
@@ -37,6 +36,10 @@ const STEP_KIND_LABEL: Readonly<Record<SyncStepKind, string>> = {
   assign_folder: 'File in folder',
   write_storage: 'Write folder storage',
   verify: 'Verify',
+  move_chat: 'Move chat',
+  delete_chat: 'Delete chat',
+  rename_folder: 'Rename folder',
+  delete_folder: 'Delete folder',
 };
 
 const STEP_KINDS = Object.keys(STEP_KIND_LABEL) as SyncStepKind[];
@@ -54,10 +57,8 @@ const PHASE_LABEL: Readonly<Record<RunPhase, string>> = {
 
 const MATCH_TEXT = 'Both accounts match';
 const FAILED_TEXT = 'The sync stopped before it finished.';
-const NOTHING_TEXT = 'Nothing to change.';
-const EMPTY_COMPARE = 'No chats or folders found in the accounts.';
 
 export {
-  ACTIVE_PHASES, COMPARE_PATH, EMPTY_COMPARE, FAILED_TEXT, GHOST_STATUSES, INDENT, LOG_LIMIT, MATCH_TEXT, NOTHING_TEXT, PHASE_LABEL,
+  ACTIVE_PHASES, FAILED_TEXT, GHOST_STATUSES, INDENT, LOG_LIMIT, MATCH_TEXT, PHASE_LABEL,
   QUIET_STATUSES, RUN_DOC, STATUS_LOOK, STEP_KIND_LABEL, STEP_KINDS, SYNC_PATH, SYNC_STEPS_COLL, UNDO_PATH,
 };

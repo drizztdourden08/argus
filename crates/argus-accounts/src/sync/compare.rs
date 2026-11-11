@@ -10,7 +10,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use super::drift::drift_of;
-use super::job::{Chat, Planned};
+use super::job::{Chat, Planned, ScopeScan};
 use crate::catalog::plan::ChangeKind;
 use crate::sidebar::FolderStep;
 use crate::types::{Account, Scope};
@@ -181,14 +181,19 @@ struct Col<'a> {
     folders: Folders,
 }
 
+/// The scan of an account's home scope: its own Desktop account and organization.
+pub(super) fn home_scan<'a>(planned: &'a Planned, account: &Account) -> Option<&'a ScopeScan> {
+    planned.scan.scopes.iter().find(|s| {
+        account.desktop_account.as_deref() == Some(s.scope.account.as_str())
+            && account.desktop_org.as_deref() == Some(s.scope.org.as_str())
+    })
+}
+
 fn columns<'a>(planned: &'a Planned, accounts: &[Account]) -> Vec<Col<'a>> {
     accounts
         .iter()
         .filter_map(|a| {
-            let scan = planned.scan.scopes.iter().find(|s| {
-                a.desktop_account.as_deref() == Some(s.scope.account.as_str())
-                    && a.desktop_org.as_deref() == Some(s.scope.org.as_str())
-            })?;
+            let scan = home_scan(planned, a)?;
             let scope = scan.scope.clone();
             Some(Col {
                 column: Column {

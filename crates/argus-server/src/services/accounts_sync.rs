@@ -71,6 +71,16 @@ impl SyncState {
     }
 }
 
+/// The turn of a run that outlives the call that started it, like a review run in the
+/// background; released when dropped.
+pub(crate) struct OwnedTurn(Arc<AccountsService>);
+
+impl Drop for OwnedTurn {
+    fn drop(&mut self) {
+        self.0.sync.active.store(false, Ordering::SeqCst);
+    }
+}
+
 /// The result of an undo.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Undone {
@@ -94,6 +104,18 @@ impl AccountsService {
         self.sync.active.load(Ordering::SeqCst)
     }
 
+    /// Takes the turn for a run that goes on in the background.
+    ///
+    /// # Errors
+    /// [`SYNC_BUSY`] while another run holds it.
+    pub(crate) fn take_owned(self: &Arc<Self>) -> Result<OwnedTurn, String> {
+        if self.sync.active.swap(true, Ordering::SeqCst) {
+            Err(SYNC_BUSY.to_owned())
+        } else {
+            Ok(OwnedTurn(Arc::clone(self)))
+        }
+    }
+
     fn backups(&self) -> Result<&Path, String> {
         self.sync
             .backups
@@ -103,7 +125,7 @@ impl AccountsService {
     }
 
     /// Runs `f` over the job's environment: the app's data, the catalog and the sidebar.
-    fn with_env<T>(&self, f: impl FnOnce(&Env) -> T) -> Result<T, String> {
+    pub(crate) fn with_env<T>(&self, f: impl FnOnce(&Env) -> T) -> Result<T, String> {
         let config = self.config();
         let app = find_app_data(config.app_data.as_deref())
             .ok_or_else(|| "the Claude Desktop data folder was not found".to_owned())?;
@@ -181,7 +203,7 @@ impl AccountsService {
         result
     }
 
-    fn put_run(&self, doc: &Value) {
+    pub(crate) fn put_run(&self, doc: &Value) {
         if let Err(e) = self.docs.put(Coll::AccountsState, "run", doc.clone()) {
             self.log
                 .error("accounts run doc not written", json!({ "error": e }));
@@ -263,7 +285,7 @@ impl AccountsService {
     }
 }
 
-fn merge(into: &mut Value, from: serde_json::Map<String, Value>) {
+pub(crate) fn merge(into: &mut Value, from: serde_json::Map<String, Value>) {
     if let Some(map) = into.as_object_mut() {
         map.extend(from);
     }

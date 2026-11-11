@@ -31,6 +31,9 @@ pub enum ChangeKind {
     UpdateSession,
     /// The scope's archive index follows its records.
     ArchiveIndex,
+    /// A chat record is removed and its tombstone written, as the app deletes a chat; `data`
+    /// is the time of the delete in epoch milliseconds. Only the sync review plans this.
+    DeleteSession,
 }
 
 /// One file to write.

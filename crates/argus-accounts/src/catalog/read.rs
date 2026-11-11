@@ -70,6 +70,15 @@ pub fn is_session_id(id: &str) -> bool {
     id.strip_prefix("local_").is_some_and(is_uuid)
 }
 
+/// The tombstone file name of a chat: `deleted_<uuid>`, without the `local_` prefix.
+#[must_use]
+pub fn tombstone_name(id: &str) -> String {
+    format!(
+        "{TOMBSTONE_PREFIX}{}",
+        id.strip_prefix("local_").unwrap_or(id)
+    )
+}
+
 /// 36 characters of hex digits and dashes.
 #[must_use]
 pub fn is_uuid(text: &str) -> bool {
@@ -212,6 +221,13 @@ impl Catalog for FsCatalog {
             .filter_map(|n| n.strip_prefix(TOMBSTONE_PREFIX))
             .map(|rest| format!("local_{}", rest.strip_suffix(".json").unwrap_or(rest)))
             .collect())
+    }
+
+    fn delete_session(&self, scope: &Scope, id: &str, at_ms: i64) -> Result<(), String> {
+        let record = self.session_file(scope, id)?;
+        let tombstone = self.file(scope, &tombstone_name(id))?;
+        write_atomic(&tombstone, at_ms.to_string().as_bytes())?;
+        fs::remove_file(&record).map_err(|e| io_err(&record, &e))
     }
 
     fn file_sha256(&self, scope: &Scope, file: &str) -> Result<Option<String>, String> {

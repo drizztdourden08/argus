@@ -40,41 +40,6 @@ interface AccountsDrift {
   byKind?: Record<string, number>;
 }
 
-type CompareStatus =
-  | 'same' | 'missing' | 'will_create' | 'only_here' | 'folder_differs'
-  | 'archived_here_only' | 'active_here_only' | 'not_subthread' | 'subthread';
-
-interface CompareCell {
-  present?: boolean;
-  folder?: string | null;
-  archived?: boolean;
-  parentId?: string | null;
-  status?: CompareStatus;
-}
-
-interface CompareRow {
-  id: string;
-  kind: 'folder' | 'chat';
-  depth: number;
-  parentId?: string | null;
-  title: string;
-  cells: Record<string, CompareCell | undefined>;
-}
-
-interface CompareAccount {
-  key: string;
-  label?: string;
-  color?: string;
-  scope?: string;
-}
-
-interface CompareDoc {
-  scannedAt?: string | null;
-  accounts: CompareAccount[];
-  rows: CompareRow[];
-  counts?: { same?: number; different?: number; byKind?: Record<string, number> };
-}
-
 type RunPhase = 'idle' | 'scan' | 'plan' | 'backup' | 'apply' | 'verify' | 'done' | 'failed';
 
 interface AccountsRun {
@@ -89,7 +54,8 @@ interface AccountsRun {
 
 type SyncStepKind =
   | 'backup' | 'copy_session' | 'update_session' | 'link_thread' | 'archive'
-  | 'create_folder' | 'assign_folder' | 'write_storage' | 'verify';
+  | 'create_folder' | 'assign_folder' | 'write_storage' | 'verify'
+  | 'move_chat' | 'delete_chat' | 'rename_folder' | 'delete_folder';
 
 interface SyncStepDoc {
   seq?: number;
@@ -193,8 +159,7 @@ interface AccountsSettings {
 }
 
 export type {
-  AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, CompareAccount, CompareCell, CompareDoc,
-  CompareRow, CompareStatus, RunPhase, SyncStepDoc, SyncStepKind,
+  AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsCycle, AccountsSettings, AccountsSwitch, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
   SwitchPhase, SwitchStepStatus,
 };

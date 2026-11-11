@@ -16,8 +16,8 @@ use time::OffsetDateTime;
 use time::macros::format_description;
 
 use crate::catalog::merge::sha256_hex;
-use crate::catalog::plan::Plan;
-use crate::catalog::read::{file_names, write_atomic};
+use crate::catalog::plan::{Change, ChangeKind, Plan};
+use crate::catalog::read::{file_names, tombstone_name, write_atomic};
 use crate::sidebar::store::ensure_unlocked;
 use crate::types::Scope;
 
@@ -130,6 +130,12 @@ fn session_file(app: &Path, scope: &Scope, file: &str) -> PathBuf {
         .join(file)
 }
 
+/// The tombstone a delete writes; an undo moves it aside like any file the run created.
+fn tombstone_of(app: &Path, change: &Change) -> Option<PathBuf> {
+    (change.kind == ChangeKind::DeleteSession)
+        .then(|| session_file(app, &change.scope, &tombstone_name(&change.session_id)))
+}
+
 /// A fresh folder under `root` named for the time; a second run in the same second gets `-2`.
 fn fresh_dir(root: &Path, stamp: &str) -> Result<PathBuf, String> {
     for n in 1..100 {
@@ -157,6 +163,9 @@ pub fn create(root: &Path, app: &Path, plan: &Plan, stamp: &str) -> Result<PathB
     let mut created = Vec::new();
     for (n, change) in plan.changes.iter().enumerate() {
         let path = session_file(app, &change.scope, &change.file);
+        if let Some(tombstone) = tombstone_of(app, change) {
+            created.push(tombstone.display().to_string());
+        }
         let Some(expected) = &change.before_sha256 else {
             created.push(path.display().to_string());
             continue;
@@ -201,8 +210,10 @@ pub fn record_applied(dir: &Path, app: &Path, plan: &Plan) -> Result<(), String>
     let mut files = BTreeMap::new();
     for change in &plan.changes {
         let path = session_file(app, &change.scope, &change.file);
-        if let Ok(bytes) = fs::read(&path) {
-            files.insert(path.display().to_string(), sha256_hex(&bytes));
+        for path in std::iter::once(path).chain(tombstone_of(app, change)) {
+            if let Ok(bytes) = fs::read(&path) {
+                files.insert(path.display().to_string(), sha256_hex(&bytes));
+            }
         }
     }
     let leveldb = match &manifest.leveldb {

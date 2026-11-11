@@ -1,6 +1,6 @@
 //! How many chats and folders each account's home scope holds, for the account cards.
 
-use super::compare::folders_of;
+use super::compare::{folders_of, home_scan};
 use super::job::Planned;
 use crate::types::Account;
 
@@ -21,10 +21,7 @@ pub fn chat_counts(planned: &Planned, accounts: &[Account]) -> Vec<(String, Chat
     accounts
         .iter()
         .filter_map(|a| {
-            let scan = planned.scan.scopes.iter().find(|s| {
-                a.desktop_account.as_deref() == Some(s.scope.account.as_str())
-                    && a.desktop_org.as_deref() == Some(s.scope.org.as_str())
-            })?;
+            let scan = home_scan(planned, a)?;
             let counts = ChatCounts {
                 total: scan.chats.len(),
                 archived: scan.chats.values().filter(|c| c.archived).count(),

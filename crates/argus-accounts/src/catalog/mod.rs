@@ -14,7 +14,7 @@ pub use read::{FsCatalog, FsTranscripts};
 #[cfg(test)]
 pub(crate) mod fixtures {
     use std::fs;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     use serde_json::{Value, json};
     use tempfile::TempDir;
@@ -63,6 +63,11 @@ pub(crate) mod fixtures {
             Fixture {
                 dir: TempDir::new().expect("temp dir"),
             }
+        }
+
+        /// The folder that plays the Desktop app's data folder.
+        pub(crate) fn root(&self) -> &Path {
+            self.dir.path()
         }
 
         fn sessions(&self) -> PathBuf {

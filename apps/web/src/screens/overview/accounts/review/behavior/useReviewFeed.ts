@@ -1,17 +1,16 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useEffect, useState } from 'react';
-import { apiRequest, errorMessage } from '../../../../data/api';
-import type { CompareDoc } from '../../../../data/types';
-import { COMPARE_PATH } from '../compare.constants';
-import type { CompareFeed } from '../compare.type';
-import type { FeedState } from './compare-feed.type';
+import { apiRequest, errorMessage } from '../../../../../data/api';
+import type { ReviewDoc } from '../../../../../data/types';
+import { REVIEW_PATH } from '../review.constants';
+import type { FeedState, ReviewFeed } from '../review.type';
 
-const useCompareFeed = (): CompareFeed => {
+const useReviewFeed = (): ReviewFeed => {
   const [state, setState] = useState<FeedState>({ data: null, loading: true, error: null });
 
   const rescan = useCallback(() => {
     setState((prev) => ({ ...prev, loading: true }));
-    apiRequest<CompareDoc>(COMPARE_PATH).then(
+    apiRequest<ReviewDoc>(REVIEW_PATH).then(
       (data) => setState({ data, loading: false, error: null }),
       (failure: unknown) => setState((prev) => ({ ...prev, loading: false, error: errorMessage(failure) })),
     );
@@ -22,4 +21,4 @@ const useCompareFeed = (): CompareFeed => {
   return { ...state, rescan };
 };
 
-export { useCompareFeed };
+export { useReviewFeed };

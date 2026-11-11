@@ -46,6 +46,9 @@ pub trait Catalog: Send + Sync {
     fn session_mtime_ms(&self, scope: &Scope, id: &str) -> Result<i64, String>;
     /// The chat ids that have a tombstone (`deleted_<uuid>`) in the scope, as `local_<uuid>`.
     fn tombstones(&self, scope: &Scope) -> Result<Vec<String>, String>;
+    /// Deletes a chat the way the app does: writes its tombstone `deleted_<uuid>` holding
+    /// `at_ms` as text, then removes the record. The transcript is never touched.
+    fn delete_session(&self, scope: &Scope, id: &str, at_ms: i64) -> Result<(), String>;
     /// The SHA-256 (lower hex) of a file of the scope, `None` when it does not exist. `file` is
     /// a bare file name: `local_<uuid>.json` or `archived-sessions.idx`.
     fn file_sha256(&self, scope: &Scope, file: &str) -> Result<Option<String>, String>;
