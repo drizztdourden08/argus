@@ -5,7 +5,12 @@ import type { AccountFactsProps } from '../accounts.type';
 
 const dayOf = (value: string | number | null | undefined): string => (value ? new Date(value).toLocaleDateString('en-CA') : '');
 
-const cliLine = (cli: AccountDoc['cli']): string => (cli?.loggedIn ? `CLI login valid until ${dayOf(cli.expiresAt)}` : 'CLI not signed in');
+const shortDayOf = (value: string): string => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+const cliLine = (cli: AccountDoc['cli']): string => {
+  if (!cli?.loggedIn) return 'CLI login needed';
+  return cli.loginExpiresAt ? `CLI signed in until ${shortDayOf(cli.loginExpiresAt)}` : 'CLI signed in';
+};
 
 const desktopLine = (login: AccountDoc['desktopLogin']): string =>
   login?.saved ? `Desktop login saved ${dayOf(login.savedAt)}` : 'Desktop login not saved';

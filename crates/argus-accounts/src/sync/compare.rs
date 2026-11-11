@@ -113,16 +113,16 @@ pub struct Compare {
 }
 
 /// The sidebar folders of one scope.
-struct Folders {
+pub(super) struct Folders {
     /// Names in the order the app lists them.
-    names: Vec<String>,
+    pub(super) names: Vec<String>,
     /// Chat id to its folder name.
     of_chat: HashMap<String, String>,
     /// Folder name to the chat ids in its order list.
     order: HashMap<String, Vec<String>>,
 }
 
-fn folders_of(planned: &Planned, scope: &str) -> Folders {
+pub(super) fn folders_of(planned: &Planned, scope: &str) -> Folders {
     let entry = planned
         .scan
         .keys

@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use argus_accounts::sync::ChatCounts;
 use argus_accounts::sync::{StepSink, SyncStep};
 use argus_accounts::{Account, PollResult};
 use argus_core::ids::PORTFOLIO;
@@ -37,8 +38,45 @@ impl AccountsDocs {
     pub fn put_accounts(&self, accounts: &[Account]) -> Result<(), String> {
         let changes = accounts
             .iter()
-            .map(|a| DocChange::set(Coll::Accounts, a.key.clone(), account_doc(a)))
+            .map(|a| {
+                let mut doc = account_doc(a);
+                if let Some(chats) = self.current_chats(a) {
+                    doc["chats"] = chats;
+                }
+                DocChange::set(Coll::Accounts, a.key.clone(), doc)
+            })
             .collect::<Vec<_>>();
+        self.apply(&changes)
+    }
+
+    fn current_chats(&self, account: &Account) -> Option<Value> {
+        let row = self
+            .db
+            .docs()
+            .get(PORTFOLIO, Coll::Accounts, &account.key)
+            .ok()??;
+        row.data.get("chats").cloned()
+    }
+
+    /// Writes the chat counts of each account into its doc, keeping the other fields.
+    ///
+    /// # Errors
+    /// When the store refuses the write.
+    pub fn put_chat_counts(
+        &self,
+        accounts: &[Account],
+        counts: &[(String, ChatCounts)],
+    ) -> Result<(), String> {
+        let mut changes = Vec::new();
+        for (key, c) in counts {
+            let Some(account) = accounts.iter().find(|a| &a.key == key) else {
+                continue;
+            };
+            let mut doc = self.current(account)?;
+            doc["chats"] =
+                json!({ "total": c.total, "archived": c.archived, "folders": c.folders });
+            changes.push(DocChange::set(Coll::Accounts, key.clone(), doc));
+        }
         self.apply(&changes)
     }
 
@@ -112,7 +150,7 @@ pub fn account_doc(account: &Account) -> Value {
         "color": account.color,
         "active": false,
         "plan": null,
-        "cli": { "loggedIn": false, "expiresAt": null, "orgId": account.desktop_org },
+        "cli": { "loggedIn": false, "loginExpiresAt": null, "orgId": account.desktop_org },
         "desktopLogin": { "saved": false, "savedAt": null },
         "limits": [],
         "readAt": null,
@@ -138,6 +176,6 @@ fn merge_usage(doc: &mut Value, account: &Account, result: &PollResult, active: 
     object.insert("burnPerMin".to_owned(), json!(result.burn_per_min));
     object.insert(
         "cli".to_owned(),
-        json!({ "loggedIn": result.logged_in, "expiresAt": result.expires_at, "orgId": org }),
+        json!({ "loggedIn": result.logged_in, "loginExpiresAt": result.login_expires_at, "orgId": org }),
     );
 }

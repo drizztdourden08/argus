@@ -4,12 +4,14 @@
 
 pub mod backup;
 pub mod compare;
+pub mod counts;
 pub mod drift;
 pub mod job;
 pub mod steps;
 
 pub use backup::{Manifest, UndoReport, undo};
 pub use compare::{Compare, build_compare};
+pub use counts::{ChatCounts, chat_counts};
 pub use drift::{Drift, drift_of};
 pub use job::{Env, Mode, Phase, Progress, Summary, lock_running, run, scan_and_plan};
 pub use steps::{StepKind, StepSink, StepState, SyncStep};

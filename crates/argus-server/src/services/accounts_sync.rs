@@ -12,8 +12,8 @@ use argus_accounts::find_app_data;
 use argus_accounts::sidebar::LevelDbSidebar;
 use argus_accounts::sync::backup::{self, UndoReport};
 use argus_accounts::sync::{
-    Compare, Drift, Env, Mode, Progress, Summary, build_compare, drift_of, lock_running, run,
-    scan_and_plan,
+    Compare, Drift, Env, Mode, Progress, Summary, build_compare, chat_counts, drift_of,
+    lock_running, run, scan_and_plan,
 };
 use argus_core::Coll;
 use argus_core::clock::now_ms;
@@ -205,15 +205,24 @@ impl AccountsService {
     }
 
     /// Counts the drift now, without a run; skipped while a sync or a switch runs.
-    fn scan_drift(&self) {
+    pub(crate) fn scan_drift(&self) {
         if accounts_switch::is_running() {
             return;
         }
         let Ok(_turn) = self.sync.take() else {
             return;
         };
-        match self.with_env(|env| scan_and_plan(env).map(|p| drift_of(&p))) {
-            Ok(Ok(drift)) => self.put_drift(&drift),
+        let accounts = self.config().accounts;
+        let scanned = self
+            .with_env(|env| scan_and_plan(env).map(|p| (drift_of(&p), chat_counts(&p, &accounts))));
+        match scanned {
+            Ok(Ok((drift, counts))) => {
+                self.put_drift(&drift);
+                if let Err(e) = self.docs.put_chat_counts(&accounts, &counts) {
+                    self.log
+                        .error("accounts chat counts not written", json!({ "error": e }));
+                }
+            }
             Ok(Err(e)) | Err(e) => self
                 .log
                 .warn("accounts drift scan failed", json!({ "error": e })),

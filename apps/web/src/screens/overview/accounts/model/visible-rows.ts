@@ -14,21 +14,37 @@ const isArchivedEverywhere = (row: CompareRow): boolean => {
 const chatShown = (row: CompareRow, filter: RowFilter): boolean =>
   (filter.showSame || !isSame(row)) && (filter.showArchived || !isArchivedEverywhere(row));
 
-const keepWithParents = (row: CompareRow, byId: ReadonlyMap<string, CompareRow>, keep: Set<string>): void => {
-  let cur: CompareRow | undefined = row;
-  while (cur && !keep.has(cur.id)) {
-    keep.add(cur.id);
-    cur = cur.parentId ? byId.get(cur.parentId) : undefined;
+const headersOf = (rows: readonly CompareRow[]): Map<string, string> => {
+  const headers = new Map<string, string>();
+  const above: string[] = [];
+  for (const row of rows) {
+    above.length = row.depth;
+    const header = row.parentId ?? above[row.depth - 1];
+    if (header) headers.set(row.id, header);
+    above[row.depth] = row.id;
+  }
+  return headers;
+};
+
+const keepWithParents = (id: string, headers: ReadonlyMap<string, string>, keep: Set<string>): void => {
+  let cur: string | undefined = id;
+  while (cur && !keep.has(cur)) {
+    keep.add(cur);
+    cur = headers.get(cur);
   }
 };
 
-const visibleRows = (rows: readonly CompareRow[], filter: RowFilter): CompareRow[] => {
-  const byId = new Map(rows.map((row) => [row.id, row]));
+const keptIds = (rows: readonly CompareRow[], headers: ReadonlyMap<string, string>, filter: RowFilter): Set<string> => {
   const keep = new Set<string>();
   for (const row of rows) {
-    if (row.kind === 'chat' && chatShown(row, filter)) keepWithParents(row, byId, keep);
+    if (row.kind === 'chat' && chatShown(row, filter)) keepWithParents(row.id, headers, keep);
     else if (row.kind === 'folder' && (filter.showSame || !isSame(row))) keep.add(row.id);
   }
+  return keep;
+};
+
+const visibleRows = (rows: readonly CompareRow[], filter: RowFilter): CompareRow[] => {
+  const keep = keptIds(rows, headersOf(rows), filter);
   return rows.filter((row) => keep.has(row.id));
 };
 

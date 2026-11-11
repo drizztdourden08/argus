@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
     HttpUsage, Poll, PollResult, ReadOnlyCredentials, Usage, UsageSource, discover, find_app_data,
-    next_interval, poll_all,
+    find_cli_exe, next_interval, poll_all,
 };
 use argus_core::ConfigError;
 use argus_core::clock::now_ms;
@@ -25,6 +25,17 @@ use crate::{ServeOptions, Services};
 use argus_accounts::alerts::Snapshot;
 
 const NAME: &str = "accounts";
+/// How long a login's expiry is kept before the CLI is asked again.
+const LOGIN_EVERY_MS: i64 = 3_600_000;
+
+/// A login expiry as the CLI prints it: an ISO text, or epoch milliseconds.
+fn login_iso(value: &Value) -> Option<String> {
+    match value {
+        Value::String(text) if !text.is_empty() => Some(text.clone()),
+        Value::Number(n) => n.as_i64().map(argus_core::clock::iso_from_ms),
+        _ => None,
+    }
+}
 
 /// How the accounts service starts; the fields after `enabled` are seams for tests.
 #[derive(Clone)]
@@ -61,6 +72,8 @@ pub struct AccountsService {
     source: Arc<dyn UsageSource>,
     creds: Arc<dyn Credentials>,
     burn: Mutex<BurnHistory>,
+    probe_login: bool,
+    logins: Mutex<HashMap<String, (i64, Option<String>)>>,
     latest: RwLock<HashMap<String, PollResult>>,
     pub(crate) log: Arc<Logger>,
     polled: watch::Sender<Arc<Vec<PollResult>>>,
@@ -77,6 +90,8 @@ pub struct UsagePorts {
     pub creds: Arc<dyn Credentials>,
     /// Where the poll reports what went wrong.
     pub log: Arc<Logger>,
+    /// Whether the CLI may be asked when each login expires (never in a plain shadow run).
+    pub probe_login: bool,
 }
 
 impl AccountsService {
@@ -96,6 +111,8 @@ impl AccountsService {
             creds: ports.creds,
             log: ports.log,
             burn: Mutex::default(),
+            probe_login: ports.probe_login,
+            logins: Mutex::default(),
             latest: RwLock::default(),
             polled: watch::channel(Arc::new(Vec::new())).0,
             handovers: OnceLock::new(),
@@ -143,6 +160,7 @@ impl AccountsService {
             let mut burn = self.burn.lock().unwrap_or_else(PoisonError::into_inner);
             poll_all(&config.accounts, &poll, &mut burn, now_ms())
         };
+        let results = self.with_login_expiry(results, app.as_deref(), &config.accounts);
         let active = app.as_deref().and_then(last_known_account);
         if let Err(e) = self
             .docs
@@ -160,6 +178,38 @@ impl AccountsService {
         *self.latest.write().unwrap_or_else(PoisonError::into_inner) =
             results.iter().map(|r| (r.key.clone(), r.clone())).collect();
         self.polled.send_replace(Arc::new(results.clone()));
+        results
+    }
+
+    /// `results` with each login's expiry from `claude auth status`, asked at most once an hour.
+    fn with_login_expiry(
+        &self,
+        mut results: Vec<PollResult>,
+        app: Option<&Path>,
+        accounts: &[Account],
+    ) -> Vec<PollResult> {
+        let exe = app.and_then(find_cli_exe).filter(|_| self.probe_login);
+        let now = now_ms();
+        let mut cache = self.logins.lock().unwrap_or_else(PoisonError::into_inner);
+        for result in &mut results {
+            let known = cache.get(&result.key).cloned();
+            let fresh = known
+                .as_ref()
+                .is_some_and(|(at, _)| now - at < LOGIN_EVERY_MS);
+            let expiry = match (&exe, accounts.iter().find(|a| a.key == result.key)) {
+                (Some(exe), Some(account)) if !fresh => {
+                    let status = self.probe.status(exe, Path::new(&account.cli_dir));
+                    let value = status
+                        .and_then(|s| s.login_expires_at)
+                        .and_then(|v| login_iso(&v))
+                        .or_else(|| known.and_then(|(_, v)| v));
+                    cache.insert(result.key.clone(), (now, value.clone()));
+                    value
+                }
+                _ => known.and_then(|(_, v)| v),
+            };
+            result.login_expires_at = expiry;
+        }
         results
     }
 
@@ -292,6 +342,7 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<AccountsS
         },
         creds,
         log: Arc::clone(&svc.log),
+        probe_login: live,
     };
     (opts.accounts.enabled && config.enabled)
         .then(|| Arc::new(AccountsService::new(config, probe, docs, ports)))
@@ -325,6 +376,7 @@ fn load(svc: &Services, accounts: &AccountsService) {
             .error("accounts docs not written", json!({ "error": e }));
     }
     super::accounts_switch::publish_logins(svc, accounts);
+    accounts.scan_drift();
     if !svc.shadow {
         super::accounts_switch::repair_interrupted(svc, accounts);
     }

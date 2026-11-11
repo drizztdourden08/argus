@@ -25,8 +25,9 @@ pub struct PollResult {
     pub usage: Usage,
     /// Percent per minute of the binding limit over the last minutes; `None` when unknown.
     pub burn_per_min: Option<f64>,
-    /// When the CLI login expires, epoch milliseconds.
-    pub expires_at: Option<i64>,
+    /// When the CLI login expires (ISO), as `claude auth status` last said; filled in by the
+    /// caller, never by the poll.
+    pub login_expires_at: Option<String>,
     /// Whether the account folder holds a login the endpoint accepted or at least gave a token.
     pub logged_in: bool,
     /// Why the live read failed, for the log; never holds a token.
@@ -106,7 +107,6 @@ fn poll_one(account: &Account, poll: &Poll<'_>, burn: &mut BurnHistory, now_ms: 
     let dir = Path::new(&account.cli_dir);
     let live = fetch(dir, poll);
     let logged_in = poll.creds.access_token(dir).is_ok();
-    let expires_at = poll.creds.expires_at(dir);
     let (usage, failure) = match live {
         Ok(mut usage) => {
             usage.read_at = Some(iso_from_ms(now_ms));
@@ -121,7 +121,7 @@ fn poll_one(account: &Account, poll: &Poll<'_>, burn: &mut BurnHistory, now_ms: 
         key: account.key.clone(),
         usage,
         burn_per_min: burn.per_min(&account.key),
-        expires_at,
+        login_expires_at: None,
         logged_in,
         failure,
     }
@@ -240,7 +240,7 @@ mod tests {
         );
         assert!(r.failure.is_none());
         assert!((r.usage.limits[0].percent - 40.0).abs() < f64::EPSILON);
-        assert_eq!(r.expires_at, Some(5));
+        assert_eq!(r.login_expires_at, None);
         assert!(r.usage.read_at.is_some());
     }
 
@@ -296,7 +296,7 @@ mod tests {
             key: "a".to_owned(),
             usage: usage(p),
             burn_per_min: None,
-            expires_at: None,
+            login_expires_at: None,
             logged_in: true,
             failure: None,
         };
