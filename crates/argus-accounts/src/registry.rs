@@ -164,10 +164,29 @@ pub fn discover(app: Option<&Path>, cli_root: &Path, probe: &dyn AuthProbe) -> V
                 .as_deref()
                 .and_then(|exe| probe.status(exe, dir))
                 .and_then(|status| status.org_id);
-            let home = org.and_then(|o| scopes.iter().find(|s| s.org == o));
+            let owner = login_account(dir);
+            let home = org.and_then(|o| {
+                let same_org = scopes.iter().filter(|s| s.org == o);
+                owner
+                    .as_deref()
+                    .and_then(|a| same_org.clone().find(|s| s.account == a))
+                    .or_else(|| same_org.clone().next())
+            });
             account_of(i, key, dir, home)
         })
         .collect()
+}
+
+/// The account a CLI folder is signed in to, from its `.claude.json` (`oauthAccount`). Several
+/// accounts can hold a scope of the same organization (old sync tools made such cross copies), so
+/// the account, not only the organization, picks the home scope.
+fn login_account(dir: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(dir.join(".claude.json")).ok()?;
+    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
+    value
+        .pointer("/oauthAccount/accountUuid")
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_owned)
 }
 
 // test-tag: critical
@@ -247,6 +266,27 @@ mod tests {
         assert_eq!(found[0].desktop_account.as_deref(), Some("a1"));
         assert_eq!(found[0].desktop_org.as_deref(), Some("o2"));
         assert_eq!(found[1].desktop_account.as_deref(), Some("a2"));
+    }
+
+    #[test]
+    fn the_login_account_wins_over_a_cross_scope_of_the_same_org() {
+        // a1 also holds a copy of a2's organization (made by an old sync tool).
+        let app = app_with(&[("a1", "o1"), ("a1", "o2"), ("a2", "o2")], true);
+        let root = tempfile::tempdir().unwrap();
+        let second = root.path().join("second");
+        fs::create_dir_all(&second).unwrap();
+        fs::write(
+            second.join(".claude.json"),
+            r#"{"oauthAccount":{"accountUuid":"a2","organizationUuid":"o2"}}"#,
+        )
+        .unwrap();
+        let found = discover(
+            Some(app.path()),
+            root.path(),
+            &FakeProbe(vec![("second", "o2")]),
+        );
+        assert_eq!(found[0].desktop_account.as_deref(), Some("a2"));
+        assert_eq!(found[0].desktop_org.as_deref(), Some("o2"));
     }
 
     #[test]
