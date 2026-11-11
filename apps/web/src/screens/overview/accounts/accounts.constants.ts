@@ -5,7 +5,7 @@ const ACCOUNTS_COLL = 'accounts';
 const ACCOUNTS_STATE_COLL = 'accountsState';
 const DRIFT_DOC = 'drift';
 
-const NONE_FOUND = 'No Claude accounts yet. Argus finds them under Claude-Data and .claude-accounts.';
+const NONE_FOUND = 'No accounts yet. Argus finds them in the Desktop data folders and the extra account folders.';
 const ACTIVE_NOTE = 'Desktop is on this one';
 
 const SEVERITY_LOOK: Readonly<Record<AccountSeverity, { color: 'success' | 'warning' | 'danger'; label: string }>> = {
@@ -24,7 +24,7 @@ const KIND_LABEL: Readonly<Record<string, string>> = {
 
 const RESET_FORMAT: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
 
-const DRIFT_TIP = 'Differences between the Claude Desktop sidebars of the accounts';
+const DRIFT_TIP = 'Differences between the Desktop sidebars of the accounts';
 
 const DEFAULT_SWITCH_AT = 98;
 const DEFAULT_HANDOVER_PERCENT = 95;

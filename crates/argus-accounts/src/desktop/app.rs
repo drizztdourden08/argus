@@ -18,7 +18,13 @@ use crate::sync::lock_running;
 
 /// How long `close` waits for the app to go away.
 pub const CLOSE_WAIT: Duration = Duration::from_secs(20);
+/// How long `start` waits for the app to hold its lock.
+pub const START_WAIT: Duration = Duration::from_secs(60);
 const POLL: Duration = Duration::from_millis(500);
+/// Why a close that left the app running failed.
+pub const NOT_QUIT: &str = "Claude did not quit; it was probably kept in the system tray. \
+    Quit it from its tray icon, or turn off its keep-running-in-the-tray option in Claude's \
+    settings, then switch again";
 /// A chat whose record changed this recently counts as in a turn.
 const ACTIVE_WITHIN_MS: i64 = 90_000;
 /// A user message with no turn end after it counts as a running turn for this long.
@@ -27,6 +33,8 @@ const OPEN_FRAME_MS: i64 = 30 * 60 * 1000;
 /// The folder the app is installed in, from the package list.
 const INSTALL_SCRIPT: &str =
     "(Get-AppxPackage -Name Claude | Select-Object -First 1).InstallLocation";
+/// The version of the installed package.
+const VERSION_SCRIPT: &str = "(Get-AppxPackage -Name Claude | Select-Object -First 1).Version";
 /// The id of the app's Start menu tile.
 const APP_ID_SCRIPT: &str =
     "(Get-StartApps | Where-Object Name -eq 'Claude' | Select-Object -First 1).AppID";
@@ -202,17 +210,38 @@ impl DesktopApp for ClaudeDesktop {
         if wait_until(CLOSE_WAIT, POLL, || !self.is_running()) {
             Ok(())
         } else {
-            Err("Claude is still open after 20 seconds; close it yourself and try again".to_owned())
+            Err(NOT_QUIT.to_owned())
         }
     }
 
+    /// Asks Explorer to open the app's tile. Explorer often exits with code 1 even when the app
+    /// started, so its exit code says nothing: the app holding its LOCK within 60 seconds is the
+    /// only success signal. Only a launch that could not be made at all is an error right away.
     fn start(&self) -> Result<(), String> {
         let target = start_target(&self.app_id()?)?;
         hidden_command("explorer.exe")
             .arg(target)
             .status()
-            .map(|_| ())
-            .map_err(|e| format!("Claude did not start: {e}"))
+            .map_err(|e| format!("Claude did not start: {e}"))?;
+        if wait_until(START_WAIT, POLL, || self.is_running()) {
+            Ok(())
+        } else {
+            Err("Claude did not start within 60 seconds".to_owned())
+        }
+    }
+
+    fn config_touched_since(&self, since_ms: i64) -> bool {
+        std::fs::metadata(self.app.join("config.json"))
+            .and_then(|meta| meta.modified())
+            .ok()
+            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+            .is_some_and(|age| i64::try_from(age.as_millis()).is_ok_and(|ms| ms > since_ms))
+    }
+
+    fn version(&self) -> Option<String> {
+        powershell(VERSION_SCRIPT)
+            .ok()
+            .filter(|text| !text.is_empty())
     }
 }
 
@@ -222,7 +251,30 @@ mod tests {
 
     use serde_json::json;
 
-    use super::{close_script, looks_mid_turn, start_target, wait_until};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::{ClaudeDesktop, NOT_QUIT, close_script, looks_mid_turn, start_target, wait_until};
+    use crate::ports::DesktopApp;
+
+    fn now_ms() -> i64 {
+        let age = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+        i64::try_from(age.as_millis()).unwrap()
+    }
+
+    #[test]
+    fn a_close_that_leaves_claude_in_the_tray_says_so_and_never_kills() {
+        assert!(NOT_QUIT.contains("tray") && NOT_QUIT.contains("settings"));
+    }
+
+    #[test]
+    fn config_touched_since_compares_the_file_time() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let desktop = ClaudeDesktop::new(dir.path());
+        assert!(!desktop.config_touched_since(0));
+        std::fs::write(dir.path().join("config.json"), "{}").unwrap();
+        assert!(desktop.config_touched_since(now_ms() - 60_000));
+        assert!(!desktop.config_touched_since(now_ms() + 60_000));
+    }
 
     #[test]
     fn close_script_is_limited_to_the_install_folder() {

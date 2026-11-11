@@ -1,7 +1,7 @@
 //! The Claude accounts, a mount of [`AccountsService`]:
 //!
-//! - `GET /api/accounts` is `{accounts, config}`: the known accounts and the settings without
-//!   them
+//! - `GET /api/accounts` is `{accounts, config, appVersion}`: the known accounts, the settings
+//!   without them and the installed Claude version (null when unreadable)
 //! - `POST /api/accounts/usage/refresh` reads every account's usage now and answers
 //!   `{results}` with one entry per account
 //! - `GET /api/accounts/settings` is the whole settings object, accounts included
@@ -21,6 +21,7 @@ use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::AccountsService;
 use crate::services::accounts::save;
+use crate::services::accounts_switch::app_version;
 use crate::services::accounts_sync::SYNC_BUSY;
 use crate::{Ctx, RouteOpts, Router};
 
@@ -40,7 +41,12 @@ async fn listing(ctx: Ctx) -> Reply {
     if let Some(object) = view.as_object_mut() {
         object.remove("accounts");
     }
-    let body = json!({ "accounts": config.accounts, "config": view });
+    let service = Arc::clone(&accounts);
+    let version = tokio::task::spawn_blocking(move || app_version(&service))
+        .await
+        .ok()
+        .flatten();
+    let body = json!({ "accounts": config.accounts, "config": view, "appVersion": version });
     Ok(json_reply(200, &body))
 }
 
@@ -92,7 +98,7 @@ async fn sync(ctx: Ctx) -> Reply {
     if accounts.sync_active() {
         return Err(sync_error(SYNC_BUSY.to_owned()));
     }
-    let summary = tokio::task::spawn_blocking(move || accounts.sync(dry_run))
+    let summary = tokio::task::spawn_blocking(move || accounts.try_sync(dry_run))
         .await
         .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))?
         .map_err(sync_error)?;
@@ -106,11 +112,17 @@ async fn undo(ctx: Ctx) -> Reply {
         .get("backupDir")
         .and_then(Value::as_str)
         .map(str::to_owned);
-    let done = tokio::task::spawn_blocking(move || accounts.undo_sync(dir.as_deref()))
+    let force = body.get("force").and_then(Value::as_bool).unwrap_or(false);
+    let done = tokio::task::spawn_blocking(move || accounts.undo_sync(dir.as_deref(), force))
         .await
         .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))?
         .map_err(sync_error)?;
-    let report = json!({ "restored": done.report.restored, "movedAside": done.report.moved_aside });
+    let report = json!({
+        "restored": done.report.restored,
+        "movedAside": done.report.moved_aside,
+        "saved": done.report.saved,
+        "kept": done.report.kept,
+    });
     Ok(json_reply(
         200,
         &json!({ "backupDir": done.backup_dir, "report": report }),

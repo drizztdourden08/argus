@@ -532,7 +532,8 @@ fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
             .entry("customGroupsByScope")
             .or_insert_with(|| Value::Object(Map::new()));
         if let Some(map) = by_scope.as_object_mut() {
-            map.insert(scope.to_owned(), groups);
+            let merged = merge_groups(map.get(scope), &groups);
+            map.insert(scope.to_owned(), merged);
         }
     }
 }
@@ -558,7 +559,7 @@ fn mirror_sections(
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    let mirrored = sections
+    let mut mirrored: Vec<Value> = sections
         .iter()
         .map(|section| {
             let id = text(section, "id").unwrap_or_default();
@@ -572,7 +573,73 @@ fn mirror_sections(
             out
         })
         .collect();
+    for kept in old {
+        let id = text(&kept, "id").unwrap_or_default();
+        if !sections.iter().any(|s| text(s, "id") == Some(id)) {
+            mirrored.push(kept);
+        }
+    }
     entry.insert("sections".to_owned(), Value::Array(mirrored));
+}
+
+/// The app's `customGroupsByScope` entry with the planned groups laid over it: the planned
+/// groups come first, then the app's groups the plan does not know; assignments and order
+/// lists the app holds stay unless the plan sets them.
+fn merge_groups(app: Option<&Value>, planned: &Value) -> Value {
+    let Some(app) = app.filter(|a| a.is_object()) else {
+        return planned.clone();
+    };
+    let mut out = app.clone();
+    let list = |v: &Value| v.get("groups").and_then(Value::as_array).cloned();
+    let mut groups = list(planned).unwrap_or_default();
+    for old in list(app).unwrap_or_default() {
+        let id = text(&old, "id").unwrap_or_default();
+        if !groups.iter().any(|g| text(g, "id") == Some(id)) {
+            groups.push(old);
+        }
+    }
+    out["groups"] = Value::Array(groups);
+    let mut assignments = app
+        .get("assignments")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    for (key, folder) in planned
+        .get("assignments")
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten()
+    {
+        assignments.insert(key.clone(), folder.clone());
+    }
+    let mut order = app
+        .get("order")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    for (folder, wanted) in planned
+        .get("order")
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten()
+    {
+        let mut list = wanted.as_array().cloned().unwrap_or_default();
+        let extras = order.get(folder).and_then(Value::as_array).cloned();
+        for old in extras.into_iter().flatten() {
+            let elsewhere = old
+                .as_str()
+                .and_then(|k| assignments.get(k))
+                .and_then(Value::as_str)
+                .is_some_and(|f| f != folder);
+            if !elsewhere && !list.contains(&old) {
+                list.push(old);
+            }
+        }
+        order.insert(folder.clone(), Value::Array(list));
+    }
+    out["assignments"] = Value::Object(assignments);
+    out["order"] = Value::Object(order);
+    out
 }
 
 /// The folder's order list, then the members the app listed that are neither in it nor
@@ -685,6 +752,50 @@ mod tests {
 
     fn run(k: &SidebarKeys, p: &Presence) -> FolderPlan {
         plan_folders(k, p, &mut counter()).unwrap()
+    }
+
+    #[test]
+    fn merging_keeps_what_the_app_holds_and_the_plan_does_not_touch() {
+        let app = json!({
+            "groups": [{"id": "cg-x", "name": "Mine", "mode": "code"}],
+            "assignments": {"code:keep": "cg-x", "code:moved": "cg-x"},
+            "order": {"cg-x": ["code:keep", "code:moved"], "cg-new": ["code:late"]},
+            "extra": 1
+        });
+        let planned = json!({
+            "groups": [{"id": "cg-new", "name": "New", "mode": "code"}],
+            "assignments": {"code:moved": "cg-new"},
+            "order": {"cg-new": ["code:moved"]}
+        });
+        let merged = merge_groups(Some(&app), &planned);
+        assert_eq!(merged["groups"].as_array().unwrap().len(), 2);
+        assert_eq!(merged["groups"][0]["id"], "cg-new");
+        assert_eq!(merged["assignments"]["code:keep"], "cg-x");
+        assert_eq!(merged["assignments"]["code:moved"], "cg-new");
+        assert_eq!(
+            merged["order"]["cg-new"],
+            json!(["code:moved", "code:late"])
+        );
+        assert_eq!(merged["order"]["cg-x"], json!(["code:keep", "code:moved"]));
+        assert_eq!(merged["extra"], 1);
+        assert_eq!(merge_groups(None, &planned), planned);
+    }
+
+    #[test]
+    fn a_section_only_the_app_has_survives_the_mirror() {
+        let mut state = serde_json::from_value::<Map<String, Value>>(json!({
+            "codeSidebarByScope": {A: {"sections": [
+                {"id": "app-only", "kind": "manual", "order": 7, "members": ["code:z"]}
+            ]}}
+        }))
+        .unwrap();
+        let sections = [section("pinned", "pinned", "Pinned", 0)];
+        mirror_sections(&mut state, A, &sections, &json!({}));
+        let out = state["codeSidebarByScope"][A]["sections"]
+            .as_array()
+            .unwrap();
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[1]["id"], "app-only");
     }
 
     #[test]

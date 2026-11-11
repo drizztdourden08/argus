@@ -21,6 +21,9 @@ pub const KEY_NAMES: [&str; 3] = [
     "dframe-store",
 ];
 
+/// Why a write is refused when the live keys are not the scanned ones.
+pub const CHANGED: &str = "folders changed since the scan; run the sync again";
+
 const UTF16: u8 = 0;
 const LATIN1: u8 = 1;
 
@@ -216,11 +219,13 @@ impl LevelDbSidebar {
     }
 
     /// Writes the three keys to the live folder. Their wrapper timestamps become now and each
-    /// value keeps its encoding byte.
+    /// value keeps its encoding byte. `scanned` is what the plan was made from: the live keys
+    /// are read again first and the write is refused when they differ from it.
     ///
     /// # Errors
-    /// When Claude holds the store's lock, or on any read or write failure.
-    pub fn write_keys(&self, keys: &SidebarKeys) -> Result<(), String> {
+    /// When Claude holds the store's lock, the live keys changed since the scan, or on any
+    /// read or write failure.
+    pub fn write_keys(&self, keys: &SidebarKeys, scanned: &SidebarKeys) -> Result<(), String> {
         ensure_unlocked(&self.dir)?;
         let mut stamped = keys.clone();
         let now = now_ms();
@@ -232,6 +237,10 @@ impl LevelDbSidebar {
             &stamped.dframe_store,
         ];
         let mut db = open_db(&self.dir)?;
+        if load_keys(&mut db)? != *scanned {
+            let _ = db.close();
+            return Err(CHANGED.to_owned());
+        }
         for ((name, value), enc) in KEY_NAMES.iter().zip(values).zip(stamped.encodings) {
             let raw = encode_value(enc, value)?;
             db.put(&full_key(name), &raw)
@@ -249,8 +258,11 @@ impl SidebarStore for LevelDbSidebar {
         self.read_keys().map(|k| k.to_value())
     }
 
-    fn write(&self, keys: &Value) -> Result<(), String> {
-        self.write_keys(&SidebarKeys::from_value(keys)?)
+    fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String> {
+        self.write_keys(
+            &SidebarKeys::from_value(keys)?,
+            &SidebarKeys::from_value(scanned)?,
+        )
     }
 }
 
@@ -313,6 +325,31 @@ mod tests {
             encodings: [1, 0, 1],
         };
         assert_eq!(SidebarKeys::from_value(&keys.to_value()).unwrap(), keys);
+    }
+
+    #[test]
+    fn a_write_is_refused_when_the_live_keys_are_not_the_scanned_ones() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut opt = Options::default();
+        opt.create_if_missing = true;
+        let mut db = DB::open(dir.path(), opt).unwrap();
+        let live = SidebarKeys {
+            code_sections: json!({"value": {}, "tabId": "", "timestamp": 1}),
+            group_scopes: json!({"value": {}, "tabId": "", "timestamp": 1}),
+            dframe_store: json!({"state": {}}),
+            encodings: [1, 1, 1],
+        };
+        let values = [&live.code_sections, &live.group_scopes, &live.dframe_store];
+        for (name, value) in KEY_NAMES.iter().zip(values) {
+            db.put(&full_key(name), &encode_value(1, value).unwrap())
+                .unwrap();
+        }
+        db.close().unwrap();
+        let store = LevelDbSidebar::at(dir.path().to_path_buf());
+        let mut stale = live.clone();
+        stale.dframe_store = json!({"state": {"older": true}});
+        assert_eq!(store.write_keys(&live, &stale), Err(CHANGED.to_owned()));
+        assert!(store.write_keys(&live, &live).is_ok());
     }
 
     #[test]

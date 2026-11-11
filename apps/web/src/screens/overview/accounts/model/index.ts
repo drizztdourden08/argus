@@ -1,8 +1,10 @@
 /* @layer renderer-app @kind barrel */
 export { countCritical } from './count-critical';
-export { handoverKind, handoverRule } from './handover-kind';
+export { handoverKind } from './handover-kind';
+export { handoverRule } from './handover-rule';
 export { limitLabel } from './limit-label';
-export { orderedSteps, recentSteps } from './recent-steps';
+export { orderedSteps } from './ordered-steps';
+export { recentSteps } from './recent-steps';
 export { resetText } from './reset-text';
 export { rowMarks } from './row-marks';
 export { ruleChips } from './rule-chips';

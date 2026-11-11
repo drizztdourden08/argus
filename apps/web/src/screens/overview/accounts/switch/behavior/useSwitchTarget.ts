@@ -1,12 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { useEffect, useState } from 'react';
+import type { SwitchTarget } from './switch-target.type';
 import { useSwitchLink } from './useSwitchLink';
-
-interface SwitchTarget {
-  key: string | null;
-  open: (key: string) => void;
-  close: () => void;
-}
 
 const useSwitchTarget = (): SwitchTarget => {
   const link = useSwitchLink();
@@ -21,4 +16,3 @@ const useSwitchTarget = (): SwitchTarget => {
 };
 
 export { useSwitchTarget };
-export type { SwitchTarget };

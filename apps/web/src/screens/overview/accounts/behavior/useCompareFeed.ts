@@ -4,12 +4,7 @@ import { apiRequest, errorMessage } from '../../../../data/api';
 import type { CompareDoc } from '../../../../data/types';
 import { COMPARE_PATH } from '../compare.constants';
 import type { CompareFeed } from '../compare.type';
-
-interface FeedState {
-  data: CompareDoc | null;
-  loading: boolean;
-  error: string | null;
-}
+import type { FeedState } from './compare-feed.type';
 
 const useCompareFeed = (): CompareFeed => {
   const [state, setState] = useState<FeedState>({ data: null, loading: true, error: null });

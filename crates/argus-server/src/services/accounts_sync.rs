@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use argus_accounts::catalog::{FsCatalog, FsTranscripts};
 use argus_accounts::find_app_data;
@@ -20,6 +20,7 @@ use argus_core::clock::now_ms;
 use serde_json::{Value, json};
 
 use super::AccountsService;
+use super::accounts_switch;
 use super::tasks::Timer;
 use crate::Services;
 use crate::adapters::accounts_threads::SystemNow;
@@ -28,6 +29,9 @@ const NAME: &str = "accounts";
 /// What a second sync answers while one runs; the route turns it into a 409.
 pub const SYNC_BUSY: &str = "a sync is already running";
 const DRIFT_EVERY: Duration = Duration::from_secs(600);
+/// How long a switch waits for a run or a drift scan that holds the turn.
+const TURN_WAIT: Duration = Duration::from_secs(120);
+const TURN_POLL: Duration = Duration::from_millis(200);
 
 /// Where the backups go and whether a run is active.
 #[derive(Default)]
@@ -51,6 +55,18 @@ impl SyncState {
             Err(SYNC_BUSY.to_owned())
         } else {
             Ok(Turn(&self.active))
+        }
+    }
+
+    /// Like [`Self::take`], but waits up to `limit` for the turn.
+    fn take_waiting(&self, limit: Duration) -> Result<Turn<'_>, String> {
+        let started = Instant::now();
+        loop {
+            match self.take() {
+                Ok(turn) => return Ok(turn),
+                Err(busy) if started.elapsed() >= limit => return Err(busy),
+                Err(_) => std::thread::sleep(TURN_POLL),
+            }
         }
     }
 }
@@ -109,14 +125,29 @@ impl AccountsService {
         Ok(f(&env))
     }
 
+    /// [`Self::try_sync`], but when a run or a drift scan holds the turn it waits for it, up to
+    /// two minutes. The switch uses this so a scan never makes it fail; the web route uses
+    /// `try_sync` and answers 409 instead.
+    ///
+    /// # Errors
+    /// [`SYNC_BUSY`] when the turn did not come free in time, or the reason the run failed.
+    pub fn sync(&self, dry_run: bool) -> Result<Summary, String> {
+        let turn = self.sync.take_waiting(TURN_WAIT)?;
+        self.run_sync(&turn, dry_run)
+    }
+
     /// Plans (a dry run) or applies the sync of chats and folders between the accounts.
     /// Blocking, and one run at a time. The `run` doc follows the phases, the `SyncSteps` docs
     /// the steps of an apply, and the `drift` doc is rewritten when the run ends.
     ///
     /// # Errors
     /// [`SYNC_BUSY`] while another run is active, or the reason the run failed.
-    pub fn sync(&self, dry_run: bool) -> Result<Summary, String> {
-        let _turn = self.sync.take()?;
+    pub fn try_sync(&self, dry_run: bool) -> Result<Summary, String> {
+        let turn = self.sync.take()?;
+        self.run_sync(&turn, dry_run)
+    }
+
+    fn run_sync(&self, _turn: &Turn<'_>, dry_run: bool) -> Result<Summary, String> {
         let mode = if dry_run { Mode::DryRun } else { Mode::Apply };
         let started = now_ms();
         let mut doc = json!({
@@ -173,8 +204,11 @@ impl AccountsService {
         self.with_env(|env| scan_and_plan(env).map(|p| build_compare(&p, &accounts)))?
     }
 
-    /// Counts the drift now, without a run; skipped while a sync runs.
+    /// Counts the drift now, without a run; skipped while a sync or a switch runs.
     fn scan_drift(&self) {
+        if accounts_switch::is_running() {
+            return;
+        }
         let Ok(_turn) = self.sync.take() else {
             return;
         };
@@ -187,19 +221,21 @@ impl AccountsService {
     }
 
     /// Puts a backup back: the one in `dir`, which must be under the backups folder, else the
-    /// last one. Blocking, and not while a sync runs.
+    /// last one. Blocking, and not while a sync runs. Files that changed since the sync are
+    /// kept and reported unless `force`; every file that is overwritten is copied into the
+    /// backup's `after-apply` first.
     ///
     /// # Errors
     /// [`SYNC_BUSY`], no backup, a path outside the backups, or why the undo failed (Claude
     /// holds the storage, a copy was damaged).
-    pub fn undo_sync(&self, dir: Option<&str>) -> Result<Undone, String> {
+    pub fn undo_sync(&self, dir: Option<&str>, force: bool) -> Result<Undone, String> {
         let _turn = self.sync.take()?;
         let root = self.backups()?;
         let chosen = match dir {
             Some(d) => inside(root, Path::new(d))?,
             None => backup::last(root).ok_or("there is no backup to undo")?,
         };
-        let report = backup::undo(&chosen)?;
+        let report = backup::undo(&chosen, force)?;
         Ok(Undone {
             backup_dir: chosen.display().to_string(),
             report,
@@ -259,4 +295,39 @@ pub(crate) fn start(svc: &Arc<Services>, accounts: &Arc<AccountsService>) {
         }
     });
     svc.tasks.keep(NAME, task);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_waiting_turn_comes_when_the_holder_lets_go() {
+        let state = SyncState::default();
+        std::thread::scope(|scope| {
+            let held = state.take().unwrap();
+            scope.spawn(move || {
+                std::thread::sleep(Duration::from_millis(100));
+                drop(held);
+            });
+            assert!(state.take_waiting(Duration::from_secs(5)).is_ok());
+        });
+    }
+
+    #[test]
+    fn a_waiting_turn_gives_up_busy() {
+        let state = SyncState::default();
+        let _held = state.take().unwrap();
+        let started = Instant::now();
+        let busy = state.take_waiting(Duration::from_millis(300)).err();
+        assert_eq!(busy.as_deref(), Some(SYNC_BUSY));
+        assert!(started.elapsed() >= Duration::from_millis(300));
+    }
+
+    #[test]
+    fn a_plain_take_does_not_wait() {
+        let state = SyncState::default();
+        let _held = state.take().unwrap();
+        assert_eq!(state.take().err().as_deref(), Some(SYNC_BUSY));
+    }
 }

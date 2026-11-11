@@ -2,8 +2,8 @@
 import type { SettingsAccount } from '../../../../data/types';
 
 const ACCOUNTS_COLL = 'accounts';
-const ACCOUNTS_TITLE = 'Claude accounts';
-const ACCOUNTS_NOTE = 'Switching Desktop between Claude accounts. A new account is discovered fully on the next Argus start.';
+const ACCOUNTS_TITLE = 'Desktop accounts';
+const ACCOUNTS_NOTE = 'Switching Desktop between accounts. A new account is discovered fully on the next Argus start.';
 const ADD_LABEL = 'Add account';
 const SAVE_LABEL = 'Save';
 const RESET_K_LABEL = 'Reset k';

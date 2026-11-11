@@ -63,8 +63,9 @@ pub trait Transcripts: Send + Sync {
 pub trait SidebarStore: Send + Sync {
     /// The three folder keys as one object, read from a copy so Claude may be running.
     fn read(&self) -> Result<Value, String>;
-    /// Writes the three keys together; the Desktop app must be closed.
-    fn write(&self, keys: &Value) -> Result<(), String>;
+    /// Writes the three keys together; the Desktop app must be closed. `scanned` is the value
+    /// the plan was made from; the write is refused when the live keys no longer equal it.
+    fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String>;
 }
 
 /// The Desktop app as a program on this PC.
@@ -75,8 +76,12 @@ pub trait DesktopApp: Send + Sync {
     fn turn_in_progress(&self) -> bool;
     /// Closes the main window politely; never kills by name.
     fn close(&self) -> Result<(), String>;
-    /// Starts the app again.
+    /// Starts the app again. Succeeds only once the app holds its lock (it runs).
     fn start(&self) -> Result<(), String>;
+    /// Whether the app wrote its `config.json` after `since_ms` (epoch milliseconds).
+    fn config_touched_since(&self, since_ms: i64) -> bool;
+    /// The installed Claude package version, if it can be read.
+    fn version(&self) -> Option<String>;
 }
 
 /// The saved Desktop logins, one per account.

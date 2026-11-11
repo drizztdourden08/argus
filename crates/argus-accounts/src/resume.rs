@@ -12,8 +12,11 @@ use serde_json::{Map, Value, json};
 
 use crate::catalog::read::write_atomic;
 use crate::handover::HandoverState;
+use crate::sync::lock_running;
 use crate::types::Scope;
 
+/// The id of a task starts with this; the rest is the `SW-n` of its cycle.
+const ID_PREFIX: &str = "argus-resume-";
 /// The folder of a task's scope holds this file.
 const TASKS_FILE: &str = "scheduled-tasks.json";
 /// The folder of the Desktop app that holds the chat records and task files by scope.
@@ -165,21 +168,49 @@ fn save_tasks(path: &Path, root: &Value) -> Result<(), String> {
     write_atomic(path, text.as_bytes())
 }
 
+/// The app reads and rewrites `scheduled-tasks.json` while it runs, so it is only written with
+/// Claude closed.
+fn ensure_closed(app: &Path) -> Result<(), String> {
+    if lock_running(app) {
+        Err(
+            "Claude Desktop is running: the scheduled tasks are only changed while it is closed"
+                .into(),
+        )
+    } else {
+        Ok(())
+    }
+}
+
+/// Copies the current file to `scheduled-tasks.json.bak-<SW-n>` beside it, when there is one.
+fn backup_tasks(path: &Path, task_id: &str) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    let cycle = task_id.strip_prefix(ID_PREFIX).unwrap_or(task_id);
+    let copy = path.with_file_name(format!("{TASKS_FILE}.bak-{cycle}"));
+    fs::copy(path, &copy)
+        .map(|_| ())
+        .map_err(|e| format!("{}: {e}", copy.display()))
+}
+
 /// Writes the task's `SKILL.md` under `skill_root` and adds or replaces its entry in the scope's
-/// `scheduled-tasks.json` (created when missing). Every other task and field stays.
+/// `scheduled-tasks.json` (created when missing), after a backup copy of that file. Every other
+/// task and field stays.
 ///
 /// # Errors
-/// A file cannot be read, parsed or written.
+/// Claude Desktop is running, or a file cannot be read, parsed or written.
 pub fn write_task(
     app: &Path,
     scope: &Scope,
     task: &ResumeTask,
     skill_root: &Path,
 ) -> Result<(), String> {
-    let skill = skill_root.join(&task.id).join("SKILL.md");
-    write_atomic(&skill, skill_text(task).as_bytes())?;
+    ensure_closed(app)?;
     let path = tasks_path(app, scope);
     let mut root = read_tasks(&path)?;
+    backup_tasks(&path, &task.id)?;
+    let skill = skill_root.join(&task.id).join("SKILL.md");
+    write_atomic(&skill, skill_text(task).as_bytes())?;
     let list = list_of(&mut root)?;
     let entry = entry_of(task, &skill);
     match list.iter().position(|t| t["id"] == json!(task.id)) {
@@ -192,8 +223,9 @@ pub fn write_task(
 /// Removes the task's entry and its skill folder. A missing task is not an error.
 ///
 /// # Errors
-/// A file cannot be read, parsed or written.
+/// Claude Desktop is running, or a file cannot be read, parsed or written.
 pub fn remove_task(app: &Path, scope: &Scope, id: &str, skill_root: &Path) -> Result<(), String> {
+    ensure_closed(app)?;
     let path = tasks_path(app, scope);
     if path.exists() {
         let mut root = read_tasks(&path)?;
@@ -374,5 +406,48 @@ mod tests {
         root["scheduledTasks"][0]["id"] = json!(ID);
         fs::write(&path, root.to_string()).unwrap();
         assert!(has_run(&app, &scope(), ID).unwrap());
+    }
+
+    #[test]
+    fn a_write_keeps_a_backup_named_after_the_cycle() {
+        let temp = tempfile::tempdir().unwrap();
+        let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
+        let path = fixture(&app);
+        let before = fs::read_to_string(&path).unwrap();
+        write_task(&app, &scope(), &task(), &skills).unwrap();
+        let backup = path.with_file_name("scheduled-tasks.json.bak-SW-3");
+        assert_eq!(fs::read_to_string(backup).unwrap(), before);
+    }
+
+    #[cfg(windows)]
+    fn hold_lock(app: &Path) -> fs::File {
+        use std::os::windows::fs::OpenOptionsExt;
+        let dir = app.join("Local Storage").join("leveldb");
+        fs::create_dir_all(&dir).unwrap();
+        fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .share_mode(0)
+            .open(dir.join("LOCK"))
+            .unwrap()
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn nothing_is_written_or_removed_while_claude_runs() {
+        let temp = tempfile::tempdir().unwrap();
+        let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
+        let path = fixture(&app);
+        let before = fs::read_to_string(&path).unwrap();
+        let _lock = hold_lock(&app);
+        assert!(write_task(&app, &scope(), &task(), &skills).is_err());
+        assert!(remove_task(&app, &scope(), "old", &skills).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), before);
+        assert!(!skills.join(ID).exists());
+        assert!(
+            !path
+                .with_file_name("scheduled-tasks.json.bak-SW-3")
+                .exists()
+        );
     }
 }

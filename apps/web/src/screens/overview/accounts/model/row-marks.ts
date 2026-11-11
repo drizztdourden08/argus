@@ -1,8 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { CompareRow } from '../../../../data/types';
 import type { RowMark, SyncStep } from '../compare.type';
-
-const FOLDER_KINDS = new Set(['create_folder', 'write_storage']);
+import { FOLDER_KINDS } from './row-marks.constants';
 
 const rowIdOf = (step: SyncStep, rows: readonly CompareRow[]): string | null => {
   if (step.sessionId) {

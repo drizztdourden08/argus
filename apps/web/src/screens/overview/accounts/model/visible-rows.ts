@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind logic */
-import type { CompareCell, CompareRow } from '../../../../data/types';
+import type { CompareRow } from '../../../../data/types';
 import { QUIET_STATUSES } from '../compare.constants';
 import type { RowFilter } from '../compare.type';
-
-const cellsOf = (row: CompareRow): CompareCell[] => Object.values(row.cells).filter((cell): cell is CompareCell => cell !== undefined);
+import { cellsOf } from './cells-of';
 
 const isSame = (row: CompareRow): boolean => cellsOf(row).every((cell) => cell.status === undefined || QUIET_STATUSES.has(cell.status));
 
@@ -33,4 +32,4 @@ const visibleRows = (rows: readonly CompareRow[], filter: RowFilter): CompareRow
   return rows.filter((row) => keep.has(row.id));
 };
 
-export { cellsOf, visibleRows };
+export { visibleRows };

@@ -145,14 +145,21 @@ the open items whose `assignee` is `owner` and the pending to-dos that wait for 
 
 ## Account handovers
 
-The accounts service (I-135) asks the working leads for a handover before it switches the Desktop
-app to another Claude account. The subject is the handover record `H-n`.
+The accounts service (I-135, `docs/accounts.md`) asks the working leads for a handover before it
+switches the Desktop app to another account. The subject is the handover record `H-n`. A lead is
+working when its thread is inside a turn or it has a live agent record; an idle lead is not asked.
 
 | Reason | Class | Immediate | Who | When |
 |---|---|---|---|---|
 | `handover-estimate` | wake | yes | a working lead | the account nears its switch point: answer with `coord handover estimate` and keep working |
 | `handover-request` | wake | yes | a working lead | the ask point: bring each agent to a safe point, write `handover.md`, run `coord handover write` |
 | `handover-ready` | passive | no | the Overlord | a lead marked its handover ready |
+
+`handover-estimate` and `handover-request` skip the wake debounce (`DEBOUNCE_BYPASS_REASONS` in
+`crates/argus-wake/src/reasons.rs`, applied in `engine/policy.rs`): a lead woken a minute ago still
+gets them at once, because the switch does not wait for a digest. They are also immediate, so the
+window closes at once. Only the coordinator of a board (the Overlord on `portfolio`) answers with
+`coord handover estimate`, `write` or `status`.
 
 ## Open faults and notices
 

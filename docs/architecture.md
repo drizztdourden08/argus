@@ -112,6 +112,7 @@ crates/
   argus-cache/              Brock's build cache: read it, who uses each entry, prune (docs/build-cache.md)
   argus-launchers/          run defs, runs, spawn, kill, logs, attachments, launchers
   argus-agents/             sub-agent transcript watcher, reaper, reconciler
+  argus-accounts/           Desktop accounts: usage, chat and folder sync, switch, handovers
   argus-notify/             notification model, store, fan-out
   argus-native/             Windows tray, toasts, native process sampling
   argus-mcp/                MCP tool host, JSON-RPC, stdio bridge
@@ -143,6 +144,7 @@ in its row.
 | `argus-cache` (added) | The build cache of Brock and Tessera: entries, lockfile users, the prune rule | core, worktrees (its junction-safe file system) |
 | `argus-launchers` | Runs and launchers: defs, lifecycle, spawn, logs, stdin, attachments, launcher wakes | core, store, board, wake |
 | `argus-agents` (added) | Sub-agent liveness, three services with one data source | core, store, board, wake |
+| `argus-accounts` (added, I-135) | The Desktop accounts of the owner: usage poll, chat and folder sync, login vault, switch, switch rules, handover cycle, resume task | core |
 | `argus-notify` | Notifications to the owner: record, limits, automatic pings, toast with tray fallback | core, store, board, native |
 | `argus-native` | Windows APIs only: tray, toasts, process sampling, single-instance mutex | core |
 | `argus-mcp` | MCP tools and resources, JSON-RPC handling, the stdio bridge | core, store, board, sync, launchers, wake |
@@ -774,6 +776,9 @@ the server reloads itself) and reports `rust` in place of `node`.
 | GET | `/api/deps/:id` | `?project=`; `{dep, requester, assignee, text}` |
 | GET | `/api/deps/by-item/:project/:item` | the live dependency of an item, else its latest; `{dep, text}` |
 | GET | `/api/owner/avatar` | the owner's uploaded avatar bytes from `_portfolio` `owner.avatar`, headers as the board icon route; 404 without an image |
+| GET | `/api/accounts`, `/api/accounts/compare`, `/api/accounts/cycle`, `/api/accounts/tray` | the accounts, the compare rows, the handover cycle, the tray lines (`docs/accounts.md`) |
+| POST | `/api/accounts/usage/refresh`, `/api/accounts/sync`, `/api/accounts/sync/undo`, `/api/accounts/login/save`, `/api/accounts/switch`, `/api/accounts/switch/anyway`, `/api/accounts/switch/cancel`, `/api/accounts/handover` | poll now, plan or apply the sync, undo it, save a Desktop login, switch, stop waiting for handovers, cancel, and the handover calls of `coord handover` |
+| GET, POST | `/api/accounts/settings` | the `accounts` settings; a POST replaces the keys sent and saves `config.json` |
 | GET, POST | `/api/notify/auto` | `{os, auto: {handed, ask, assigned, verify, run}}`; a POST sends any subset, page token only, 400 on an unknown key, one activity line |
 
 The dependency routes and the two MCP tools `list_dependencies` and `cancel_dependency` exist in
@@ -871,6 +876,8 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `worktree-approve` | wake | an unattached worktree of its holds work: approve its removal or ask the Overlord for an exception (`docs/worktree-hygiene.md`) |
 | `worktree-report` | wake | to the Overlord: a lead left a `worktree-approve` ask unanswered for 30 minutes: delete it or keep it |
 | `dep-request`, `dep-resolved`, `dep-blocked` | wake | a request from or to another board needs this thread (`dep-resolved` and `dep-blocked` are immediate) |
+| `handover-estimate`, `handover-request` | wake | the accounts service asks a working lead for a handover estimate, then for the handover, before an account switch; both skip the debounce below and are immediate |
+| `handover-ready` | passive | a lead marked its handover ready: a notice to the Overlord |
 | `fault-open` | wake | an open wake fault, told to the Overlord at once (not for `board-closed`); immediate |
 | `open-resend` | wake | to the Overlord every 15 min while a fault, `worktree-stale` or `remote-sync-due` stays open: one coalesced line |
 | `lead-info` | passive | a lead's note, for information only |
@@ -889,7 +896,8 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 A reason the table does not list wakes. On top of the table, `wakePolicy.debounceMs` (5 min)
 lets a thread be woken at most once per window; a wake inside it joins one digest sent
 `wakePolicy.digestMs` (20 min) after the last wake, and an owner reason goes at the end of the
-window instead.
+window instead. `handover-estimate` and `handover-request` skip the debounce (`bypasses_debounce`),
+because an account switch does not wait for a digest.
 
 ### Process monitor (argus-procs)
 
@@ -1059,6 +1067,25 @@ URL, a tag of 12 hex characters per project and thread, group `argus`, every val
 sender is a trait so slice 4 can ship the Node sender (one hidden `powershell.exe` with the XML in
 the environment) and slice 6 the native one. A failed toast falls back to the tray balloon, as in
 Node.
+
+### Desktop accounts (argus-accounts)
+
+I-135. The full page is `docs/accounts.md`. The crate holds the pure parts and the ports (the
+outside world is a trait, so tests fake it); the server composes it in `services/accounts*.rs`,
+`adapters/accounts*.rs` and `routes/accounts*.rs`, started with the other services as the
+`accounts` service. A service that is off answers 503 on its routes.
+
+| Part | Design |
+|---|---|
+| Crate | `crates/argus-accounts`: registry and discovery, `usage/` (poll, parse, fallback), `credentials`, `catalog/` (chat records, merge, plan, apply), `sidebar/` (LevelDB folders), `sync/` (job, backup, compare, drift), `desktop/` (app, login vault, switch), `alerts`, `rules`, `handover/` (records, protocol, estimator, desk, texts), `resume` |
+| Ports | `ports.rs`: the auth probe, the usage source, the credentials, the catalog, the transcripts, the sidebar store, the desktop app, the login vault, the clock |
+| Timers | one switch, `Timer::Accounts`, kept in `Services::tasks`: the usage poll every `pollMinutes` (5), or `fastPollSeconds` (60) once a limit is at `fastAt` (80); the drift scan every 10 minutes; the rules after each poll and each cycle event; the resume watcher every 30 seconds |
+| Colls (`_portfolio`) | `Accounts` (a doc per account key), `AccountsState` (`drift`, `run`, `switch`, `cycle`), `SyncSteps` (a doc per step), `Handovers` (`H-n` per lead) |
+| Routes | `/api/accounts` and its `usage/refresh`, `compare`, `sync`, `sync/undo`, `login/save`, `switch`, `switch/anyway`, `switch/cancel`, `cycle`, `handover`, `settings` and `tray` (table under Routes added by Argus) |
+| Wakes | `handover-estimate` and `handover-request` to a working lead, `handover-ready` to the Overlord (`docs/wake-policy.md`) |
+| Coord | `coord handover estimate`, `write` and `status` in `argus-coord`, for a board's coordinator only |
+| Data on disk | `<DASHBOARD_HOME>ccounts\logins` (saved Desktop logins) and `<DASHBOARD_HOME>ccountsackups` (sync backups); settings under `accounts` in `config.json` |
+| Safety | nothing is written while the app holds its lock; a sync backs up first and can be undone; a failed switch puts the old login back; a token is never logged, shown or sent anywhere but the usage and token calls; no process is killed by name |
 
 ### Native helper (argus-native)
 

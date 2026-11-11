@@ -270,6 +270,9 @@ fn load(svc: &Services, accounts: &AccountsService) {
             .error("accounts docs not written", json!({ "error": e }));
     }
     super::accounts_switch::publish_logins(svc, accounts);
+    if !svc.shadow {
+        super::accounts_switch::repair_interrupted(svc, accounts);
+    }
 }
 
 pub(crate) fn start(svc: &Arc<Services>) {

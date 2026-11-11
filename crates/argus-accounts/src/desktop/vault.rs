@@ -26,6 +26,8 @@ const ACCOUNT_KEY: &str = "lastKnownAccountUuid";
 const COOKIES: &str = "Cookies";
 const JOURNAL: &str = "Cookies-journal";
 const LOGIN_FILE: &str = "login.json";
+const LOGIN_PREV: &str = "login.prev.json";
+const COOKIES_PREV: &str = "Cookies.prev";
 
 /// The Desktop account that is logged in now, from `<app>\config.json`.
 #[must_use]
@@ -131,6 +133,59 @@ impl FsVault {
                 .map_err(|e| io_err("cannot remove", &journal, &e)),
         }
     }
+
+    /// Keeps the entry that is about to be overwritten as `login.prev.json` and `Cookies.prev`,
+    /// one generation back.
+    fn keep_previous(folder: &Path) -> Result<(), String> {
+        for (name, prev) in [(LOGIN_FILE, LOGIN_PREV), (COOKIES, COOKIES_PREV)] {
+            let from = folder.join(name);
+            if from.exists() {
+                let to = folder.join(prev);
+                fs::copy(&from, &to).map_err(|e| io_err("cannot keep", &to, &e))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// One file of a staged replacement: `Some` bytes are written, `None` removes the file.
+type Replacement = (PathBuf, Option<Vec<u8>>);
+
+/// Replaces several files so a failure while writing leaves every one of them as it was: all new
+/// contents are written to temp files next to their targets first, and only then renamed over.
+fn replace_all(files: Vec<Replacement>) -> Result<(), String> {
+    let mut staged: Vec<(PathBuf, Option<PathBuf>)> = Vec::new();
+    for (dest, bytes) in files {
+        let temp = bytes.map(|bytes| stage(&dest, &bytes)).transpose();
+        match temp {
+            Ok(temp) => staged.push((dest, temp)),
+            Err(e) => {
+                discard(&staged);
+                return Err(e);
+            }
+        }
+    }
+    for (dest, temp) in &staged {
+        let moved = match temp {
+            Some(temp) => fs::rename(temp, dest),
+            None => fs::remove_file(dest).or_else(ignore_missing),
+        };
+        moved.map_err(|e| io_err("cannot replace", dest, &e))?;
+    }
+    Ok(())
+}
+
+fn stage(dest: &Path, bytes: &[u8]) -> Result<PathBuf, String> {
+    let name = dest.file_name().and_then(|n| n.to_str()).unwrap_or("file");
+    let temp = dest.with_file_name(format!("{name}.argus-new"));
+    fs::write(&temp, bytes).map_err(|e| io_err("cannot write", &temp, &e))?;
+    Ok(temp)
+}
+
+fn discard(staged: &[(PathBuf, Option<PathBuf>)]) {
+    for temp in staged.iter().filter_map(|(_, temp)| temp.as_ref()) {
+        let _ = fs::remove_file(temp);
+    }
 }
 
 fn ignore_missing(e: std::io::Error) -> std::io::Result<()> {
@@ -187,6 +242,7 @@ impl LoginVault for FsVault {
         }
         let folder = self.folder(account)?;
         self.prepare(&folder)?;
+        Self::keep_previous(&folder)?;
         Self::copy_cookies(&self.cookie_dir(), &folder)?;
         let record = json!({
             "accountUuid": uuid,
@@ -217,8 +273,13 @@ impl LoginVault for FsVault {
         let folder = self.folder(account)?;
         let cookies = self.cookie_dir();
         fs::create_dir_all(&cookies).map_err(|e| io_err("cannot create", &cookies, &e))?;
-        Self::copy_cookies(&folder, &cookies)?;
-        write_atomic(&self.config_path(), &bytes)
+        let main = folder.join(COOKIES);
+        let jar = fs::read(&main).map_err(|e| io_err("cannot read", &main, &e))?;
+        replace_all(vec![
+            (cookies.join(COOKIES), Some(jar)),
+            (cookies.join(JOURNAL), fs::read(folder.join(JOURNAL)).ok()),
+            (self.config_path(), Some(bytes)),
+        ])
     }
 
     fn saved_at(&self, account: &Account) -> Option<String> {
@@ -346,6 +407,45 @@ mod tests {
                 .unwrap_err()
                 .contains("does not belong")
         );
+    }
+
+    #[test]
+    fn a_second_save_keeps_the_first_as_the_previous_generation() {
+        let (_dir, vault) = fixture();
+        let a = account("a", "uuid-a");
+        write_app(&vault.app, "uuid-a", "tok-1", "cookies-1");
+        vault.save(&a).unwrap();
+        assert!(!vault.root.join("a").join("login.prev.json").exists());
+        write_app(&vault.app, "uuid-a", "tok-2", "cookies-2");
+        vault.save(&a).unwrap();
+        let folder = vault.root.join("a");
+        assert_eq!(
+            fs::read_to_string(folder.join("Cookies.prev")).unwrap(),
+            "cookies-1"
+        );
+        assert_eq!(
+            fs::read_to_string(folder.join("Cookies")).unwrap(),
+            "cookies-2"
+        );
+        let prev: Value =
+            serde_json::from_str(&fs::read_to_string(folder.join("login.prev.json")).unwrap())
+                .unwrap();
+        assert_eq!(prev["config"]["oauth:tokenCache"], "tok-1");
+    }
+
+    #[test]
+    fn restore_leaves_no_temp_files_behind() {
+        let (_dir, vault) = fixture();
+        write_app(&vault.app, "uuid-a", "tok-a", "cookies-a");
+        vault.save(&account("a", "uuid-a")).unwrap();
+        vault.restore(&account("a", "uuid-a")).unwrap();
+        let leftovers = |dir: &Path| {
+            fs::read_dir(dir)
+                .unwrap()
+                .flatten()
+                .any(|e| e.file_name().to_string_lossy().ends_with(".argus-new"))
+        };
+        assert!(!leftovers(&vault.app) && !leftovers(&vault.app.join("Network")));
     }
 
     #[test]

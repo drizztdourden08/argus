@@ -447,12 +447,16 @@ fn run_inner(run: &mut Run, mode: Mode) -> Result<Summary, String> {
         return Ok(summary);
     }
     run.progress.total = total_steps(&planned);
-    summary.backup_dir = Some(back_up(run, &planned)?);
+    let backup_dir = back_up(run, &planned)?;
+    summary.backup_dir = Some(backup_dir.clone());
     run.phase(Phase::Apply);
-    write_chats(run, &planned)?;
-    write_folders(run, &planned)?;
+    let written = write_chats(run, &planned).and_then(|()| write_folders(run, &planned));
+    // The undo needs to know what the run wrote, also when it stopped half way.
+    let recorded = backup::record_applied(Path::new(&backup_dir), env.app, &planned.catalog);
+    written?;
+    recorded.map_err(|e| format!("the backup {backup_dir} was not updated: {e}"))?;
     run.phase(Phase::Verify);
-    verify(run, summary.backup_dir.as_deref().unwrap_or_default())?;
+    verify(run, &backup_dir)?;
     summary.verified = true;
     Ok(summary)
 }
@@ -487,36 +491,67 @@ fn back_up(run: &mut Run, planned: &Planned) -> Result<String, String> {
     }
 }
 
+/// How many chat files are written between two checks that Claude is still closed.
+const BATCH: usize = 20;
+
+const STARTED: &str =
+    "Claude Desktop started during the sync; the run stopped, close it and run the sync again";
+
+/// Calls `each(offset, batch)` for consecutive batches of `items`, checking before every batch
+/// that Claude Desktop is still closed.
+fn in_batches<'a, T>(
+    items: &'a [T],
+    running: &dyn Fn() -> bool,
+    mut each: impl FnMut(usize, &'a [T]) -> Result<(), String>,
+) -> Result<(), String> {
+    let mut offset = 0;
+    for batch in items.chunks(BATCH) {
+        if running() {
+            return Err(STARTED.to_owned());
+        }
+        each(offset, batch)?;
+        offset += batch.len();
+    }
+    Ok(())
+}
+
 fn write_chats(run: &mut Run, planned: &Planned) -> Result<(), String> {
+    let env = run.env;
+    in_batches(&planned.catalog.changes, env.running, |offset, changes| {
+        let part = Plan {
+            changes: changes.to_vec(),
+            ..Plan::default()
+        };
+        write_batch(run, &part, &planned.kinds[offset..offset + changes.len()])
+    })
+}
+
+fn write_batch(run: &mut Run, part: &Plan, kinds: &[StepKind]) -> Result<(), String> {
     let env = run.env;
     let mut index = 0;
     let mut current: Option<SyncStep> = None;
-    apply(
-        env.catalog,
-        &planned.catalog,
-        |change, status| match status {
-            StepStatus::Running => {
-                let account = account_of(env.accounts, &change.scope);
-                let who = (
-                    account.as_str(),
-                    change.session_id.as_str(),
-                    change.title.as_str(),
-                );
-                current = Some(run.begin(planned.kinds[index], who, "", &change.file));
+    apply(env.catalog, part, |change, status| match status {
+        StepStatus::Running => {
+            let account = account_of(env.accounts, &change.scope);
+            let who = (
+                account.as_str(),
+                change.session_id.as_str(),
+                change.title.as_str(),
+            );
+            current = Some(run.begin(kinds[index], who, "", &change.file));
+        }
+        StepStatus::Done => {
+            if let Some(step) = current.take() {
+                run.finish(step, StepState::Done, None);
             }
-            StepStatus::Done => {
-                if let Some(step) = current.take() {
-                    run.finish(step, StepState::Done, None);
-                }
-                index += 1;
+            index += 1;
+        }
+        StepStatus::Failed(e) => {
+            if let Some(step) = current.take() {
+                run.finish(step, StepState::Failed, Some(e));
             }
-            StepStatus::Failed(e) => {
-                if let Some(step) = current.take() {
-                    run.finish(step, StepState::Failed, Some(e));
-                }
-            }
-        },
-    )
+        }
+    })
     .map(|_| ())
 }
 
@@ -525,6 +560,9 @@ fn write_folders(run: &mut Run, planned: &Planned) -> Result<(), String> {
         return Ok(());
     }
     let env = run.env;
+    if (env.running)() {
+        return Err(STARTED.to_owned());
+    }
     let mut shown = Vec::new();
     let mut reordered = 0;
     for step in &planned.folders.steps {
@@ -552,7 +590,10 @@ fn write_folders(run: &mut Run, planned: &Planned) -> Result<(), String> {
     }
     let detail = format!("{reordered} folders reordered");
     let storage = run.begin(StepKind::WriteStorage, ("", "", ""), "", &detail);
-    let written = env.sidebar.write(&planned.folders.keys.to_value());
+    let written = env.sidebar.write(
+        &planned.folders.keys.to_value(),
+        &planned.scan.keys.to_value(),
+    );
     let (state, note) = match &written {
         Ok(()) => (StepState::Done, None),
         Err(e) => (StepState::Failed, Some(e.clone())),
@@ -606,5 +647,41 @@ fn verify(run: &mut Run, backup_dir: &str) -> Result<(), String> {
                 "verify failed: {e}; undo with the backup {backup_dir}"
             ))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::Cell;
+
+    use super::*;
+
+    #[test]
+    fn writes_go_in_batches_and_stop_when_claude_starts() {
+        let items: Vec<u32> = (0..50).collect();
+        let checks = Cell::new(0);
+        let running = || {
+            checks.set(checks.get() + 1);
+            checks.get() > 2
+        };
+        let mut seen = Vec::new();
+        let result = in_batches(&items, &running, |offset, batch| {
+            seen.push((offset, batch.len()));
+            Ok(())
+        });
+        assert_eq!(result, Err(STARTED.to_owned()));
+        assert_eq!(seen, vec![(0, BATCH), (BATCH, BATCH)]);
+    }
+
+    #[test]
+    fn every_item_is_written_while_claude_stays_closed() {
+        let items: Vec<u32> = (0..45).collect();
+        let mut written = 0;
+        let result = in_batches(&items, &|| false, |_, batch| {
+            written += batch.len();
+            Ok(())
+        });
+        assert!(result.is_ok());
+        assert_eq!(written, 45);
     }
 }

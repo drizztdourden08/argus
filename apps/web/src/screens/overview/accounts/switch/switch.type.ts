@@ -21,6 +21,27 @@ interface SwitchDialogProps {
   onClose: () => void;
 }
 
+interface SwitchFooterProps {
+  target: Account;
+  feed: SwitchFeed;
+  actions: SwitchActions;
+  handover: boolean;
+  onClose: () => void;
+}
+
+interface SwitchBodyProps {
+  target: Account;
+  accounts: readonly Account[];
+  feed: SwitchFeed;
+  actions: SwitchActions;
+  handover: boolean;
+  onHandover: (next: boolean) => void;
+}
+
+interface SwitchOutcomeProps {
+  feed: SwitchFeed;
+}
+
 interface SwitchStepsProps {
   feed: SwitchFeed;
   actions: SwitchActions;
@@ -39,4 +60,4 @@ interface HandoverLineProps {
   doc: HandoverDoc;
 }
 
-export type { CyclePanelProps, HandoverLineProps, SwitchActions, SwitchDialogProps, SwitchFeed, SwitchLink, SwitchStepsProps };
+export type { CyclePanelProps, HandoverLineProps, SwitchActions, SwitchBodyProps, SwitchDialogProps, SwitchFeed, SwitchFooterProps, SwitchLink, SwitchOutcomeProps, SwitchStepsProps };

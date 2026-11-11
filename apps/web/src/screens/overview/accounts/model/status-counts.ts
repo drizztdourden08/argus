@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { CompareRow, CompareStatus } from '../../../../data/types';
 import { QUIET_STATUSES } from '../compare.constants';
-import { cellsOf } from './visible-rows';
+import { cellsOf } from './cells-of';
 
 const statusCounts = (rows: readonly CompareRow[]): Map<CompareStatus, number> => {
   const counts = new Map<CompareStatus, number>();

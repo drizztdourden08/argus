@@ -2,13 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { AccountsSettings, SettingsAccount } from '../../../../../data/types';
 import { BLANK_ACCOUNT } from '../AccountsSection.constants';
-
-interface AccountsDraft {
-  draft: AccountsSettings | null;
-  patch: (change: Partial<AccountsSettings>) => void;
-  changeAccount: (index: number, change: Partial<SettingsAccount>) => void;
-  addAccount: () => void;
-}
+import type { AccountsDraft } from './accounts-draft.type';
 
 const useAccountsDraft = (saved: AccountsSettings | null): AccountsDraft => {
   const [draft, setDraft] = useState<AccountsSettings | null>(saved);
@@ -27,4 +21,3 @@ const useAccountsDraft = (saved: AccountsSettings | null): AccountsDraft => {
 };
 
 export { useAccountsDraft };
-export type { AccountsDraft };

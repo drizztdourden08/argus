@@ -195,6 +195,6 @@ interface AccountsSettings {
 export type {
   AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, CompareAccount, CompareCell, CompareDoc,
   CompareRow, CompareStatus, RunPhase, SyncStepDoc, SyncStepKind,
-  AccountsCycle, AccountsSettings, AccountsSwitch, EstimateDefaults, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
-  SettingsRules, SwitchPhase, SwitchStepDoc, SwitchStepStatus,
+  AccountsCycle, AccountsSettings, AccountsSwitch, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
+  SwitchPhase, SwitchStepStatus,
 };

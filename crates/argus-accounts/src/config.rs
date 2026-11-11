@@ -74,6 +74,9 @@ pub struct AccountsConfig {
     pub estimate_defaults: EstimateDefaults,
     /// Calibration factor of the estimates.
     pub k: f64,
+    /// The Claude package version a switch by hand last confirmed; automatic switches need the
+    /// installed version to be this one.
+    pub verified_app_version: Option<String>,
     /// The known accounts; empty until discovery fills it.
     pub accounts: Vec<Account>,
 }
@@ -92,6 +95,7 @@ impl Default for AccountsConfig {
             archive_rule: ArchiveRule::default(),
             estimate_defaults: EstimateDefaults::default(),
             k: 1.0,
+            verified_app_version: None,
             accounts: Vec::new(),
         }
     }

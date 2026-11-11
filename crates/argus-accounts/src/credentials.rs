@@ -1,8 +1,9 @@
 //! The CLI logins in the account folders. The access token is read from
 //! `<cliDir>/.credentials.json`. A refresh first asks the CLI to refresh its own login; when the
 //! token did not change, the OAuth `refresh_token` grant is done here and the new tokens are
-//! written back into the file. A login that expires within ten minutes is renewed before it is
-//! used. No token is ever put in an error text.
+//! written back into the file. A login is renewed only when its token is expired or the usage
+//! endpoint answered 401, never ahead of time, so the CLI keeps the lead on its own login. No
+//! token is ever put in an error text.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,8 +21,6 @@ const TOKEN_URL: &str = "https://platform.claude.com/v1/oauth/token";
 const CLIENT_ID: &str = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
 const SCOPE: &str = "user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload user:plugins";
 const TIMEOUT: Duration = Duration::from_secs(20);
-/// A login that expires within this many milliseconds is renewed before it is used.
-const RENEW_AHEAD_MS: i64 = 10 * 60 * 1000;
 
 /// What the credentials file holds that the poller needs.
 struct Login {
@@ -127,8 +126,15 @@ fn grant_of(body: &Value) -> Result<Grant, String> {
 }
 
 /// Writes a grant into the login file: `accessToken`, `refreshToken` (when sent) and
-/// `expiresAt`. Every other field and the order of the keys stay.
-fn store_grant(cli_dir: &Path, grant: &Grant, now_ms: i64) -> Result<(), String> {
+/// `expiresAt`. Every other field and the order of the keys stay. The file is read again first:
+/// when its `refreshToken` is no longer `started_with` (the refresh token the exchange began
+/// with) the CLI renewed in the meantime, and nothing is written.
+fn store_grant(
+    cli_dir: &Path,
+    grant: &Grant,
+    started_with: &str,
+    now_ms: i64,
+) -> Result<(), String> {
     let path = cli_dir.join(FILE);
     let text = fs::read_to_string(&path)
         .map_err(|e| format!("no CLI login file in the account folder: {}", e.kind()))?;
@@ -138,6 +144,9 @@ fn store_grant(cli_dir: &Path, grant: &Grant, now_ms: i64) -> Result<(), String>
         .get_mut("claudeAiOauth")
         .and_then(Value::as_object_mut)
         .ok_or_else(|| "the CLI login file has no login".to_owned())?;
+    if oauth.get("refreshToken").and_then(Value::as_str) != Some(started_with) {
+        return Err("the CLI login changed during the renewal; nothing was written".to_owned());
+    }
     oauth.insert("accessToken".to_owned(), json!(grant.access_token));
     if let Some(refresh) = &grant.refresh_token {
         oauth.insert("refreshToken".to_owned(), json!(refresh));
@@ -159,7 +168,7 @@ fn renew(cli_dir: &Path, endpoint: &dyn TokenEndpoint, now_ms: i64) -> Result<St
         .refresh_token
         .ok_or_else(|| "the CLI login has no refresh token".to_owned())?;
     let grant = endpoint.exchange(&refresh)?;
-    store_grant(cli_dir, &grant, now_ms)?;
+    store_grant(cli_dir, &grant, &refresh, now_ms)?;
     Ok(grant.access_token)
 }
 
@@ -219,15 +228,14 @@ impl CliCredentials {
         ))
     }
 
-    /// The access token, renewed first when it expires within ten minutes. A renewal that fails
-    /// leaves the token in the file, which may still be good.
+    /// The access token as the file holds it. Only an expired token is renewed first (through
+    /// [`Self::refresh_at`], which asks the CLI before the grant); a renewal that fails leaves
+    /// the token in the file.
     fn token_at(&self, cli_dir: &Path, now_ms: i64) -> Result<String, String> {
         let login = read_login(cli_dir)?;
-        let due = login
-            .expires_at
-            .is_some_and(|at| at.saturating_sub(now_ms) < RENEW_AHEAD_MS);
-        if due && login.refresh_token.is_some() {
-            if let Ok(fresh) = renew(cli_dir, self.endpoint.as_ref(), now_ms) {
+        let expired = login.expires_at.is_some_and(|at| at <= now_ms);
+        if expired {
+            if let Ok(fresh) = self.refresh_at(cli_dir, now_ms) {
                 return Ok(fresh);
             }
         }
@@ -339,7 +347,7 @@ mod tests {
             refresh_token: Some("r-new".to_owned()),
             expires_in: 3600,
         };
-        store_grant(dir.path(), &grant, NOW).unwrap();
+        store_grant(dir.path(), &grant, "r-old", NOW).unwrap();
         let text = fs::read_to_string(dir.path().join(FILE)).unwrap();
         let expected = format!(
             r#"{{"claudeAiOauth":{{"accessToken":"a-new","refreshToken":"r-new","expiresAt":{},"scopes":["user:profile"],"subscriptionType":"max"}},"other":{{"keep":true}}}}"#,
@@ -358,7 +366,7 @@ mod tests {
             refresh_token: None,
             expires_in: 60,
         };
-        store_grant(dir.path(), &grant, NOW).unwrap();
+        store_grant(dir.path(), &grant, "r-old", NOW).unwrap();
         let login = read_login(dir.path()).unwrap();
         assert_eq!(login.token, "a-new");
         assert_eq!(login.refresh_token.as_deref(), Some("r-old"));
@@ -374,7 +382,7 @@ mod tests {
             refresh_token: None,
             expires_in: 1,
         };
-        store_grant(dir.path(), &grant, NOW).unwrap();
+        store_grant(dir.path(), &grant, "r-old", NOW).unwrap();
         let text = fs::read_to_string(dir.path().join(FILE)).unwrap();
         assert!(text.contains("\n  \"claudeAiOauth\""));
     }
@@ -407,35 +415,47 @@ mod tests {
         assert_eq!(fake.calls.load(Ordering::SeqCst), 0);
     }
 
+    fn with_expiry(at: i64) -> String {
+        LOGIN.replace("\"expiresAt\":5", &format!("\"expiresAt\":{at}"))
+    }
+
     #[test]
-    fn a_login_near_its_end_is_renewed_before_use() {
-        let near = LOGIN.replace(
-            "\"expiresAt\":5",
-            &format!("\"expiresAt\":{}", NOW + 60_000),
-        );
-        let dir = folder_with(&near);
+    fn an_expired_login_is_renewed_before_use() {
+        let dir = folder_with(&with_expiry(NOW - 1));
         let (creds, fake) = creds(Fake::granting("a-new", None, 3600));
         assert_eq!(creds.token_at(dir.path(), NOW).unwrap(), "a-new");
         assert_eq!(fake.calls.load(Ordering::SeqCst), 1);
     }
 
     #[test]
-    fn a_login_far_from_its_end_is_not_touched() {
-        let far = LOGIN.replace(
-            "\"expiresAt\":5",
-            &format!("\"expiresAt\":{}", NOW + 3_600_000),
-        );
-        let dir = folder_with(&far);
-        let (creds, fake) = creds(Fake::granting("a-new", None, 3600));
-        assert_eq!(creds.token_at(dir.path(), NOW).unwrap(), "a-old");
-        assert_eq!(fake.calls.load(Ordering::SeqCst), 0);
+    fn a_login_that_is_still_valid_is_never_renewed_ahead_of_time() {
+        for at in [NOW + 1, NOW + 60_000, NOW + 3_600_000] {
+            let dir = folder_with(&with_expiry(at));
+            let (creds, fake) = creds(Fake::granting("a-new", None, 3600));
+            assert_eq!(creds.token_at(dir.path(), NOW).unwrap(), "a-old");
+            assert_eq!(fake.calls.load(Ordering::SeqCst), 0);
+        }
     }
 
     #[test]
-    fn a_failed_early_renewal_keeps_the_token_in_the_file() {
-        let dir = folder_with(LOGIN);
+    fn a_failed_renewal_of_an_expired_login_keeps_the_token_in_the_file() {
+        let dir = folder_with(&with_expiry(NOW - 1));
         let (creds, fake) = creds(Fake::failing("down"));
         assert_eq!(creds.token_at(dir.path(), NOW).unwrap(), "a-old");
         assert_eq!(fake.calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn a_grant_is_not_written_when_the_refresh_token_changed_meanwhile() {
+        let dir = folder_with(&LOGIN.replace("r-old", "r-by-cli"));
+        let before = fs::read_to_string(dir.path().join(FILE)).unwrap();
+        let grant = Grant {
+            access_token: "a-new".to_owned(),
+            refresh_token: Some("r-new".to_owned()),
+            expires_in: 60,
+        };
+        let err = store_grant(dir.path(), &grant, "r-old", NOW).unwrap_err();
+        assert!(!err.contains("r-by-cli") && !err.contains("r-old"));
+        assert_eq!(fs::read_to_string(dir.path().join(FILE)).unwrap(), before);
     }
 }

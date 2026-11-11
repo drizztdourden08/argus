@@ -4,19 +4,21 @@
 //! `cancel` works until Claude is about to close. The saved Desktop logins live in the vault
 //! under `<DASHBOARD_HOME>\accounts\logins`; their state is shown in the `Accounts` docs.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use argus_accounts::desktop::{
-    ClaudeDesktop, Done, FsVault, Plan, Stages, Step, Stop, Timing, last_known_account,
+    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, Stop, Timing,
+    last_known_account, repair,
 };
 use argus_accounts::handover::{CycleEvent, CycleMode, StartRequest};
-use argus_accounts::{Account, LoginVault, Scope, find_app_data};
+use argus_accounts::{Account, DesktopApp, LoginVault, Scope, find_app_data};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
+use argus_notify::{By, Level, PingRequest};
 use serde_json::{Value, json};
 use tokio::sync::broadcast::Receiver;
 
@@ -26,7 +28,40 @@ use crate::Services;
 
 /// What a second switch answers while one runs; the route turns it into a 409.
 pub const SWITCH_BUSY: &str = "a switch is already running";
+/// Why an automatic switch is held while a cut-short switch is not repaired.
+pub const INTERRUPTED: &str = "interrupted switch, will repair at the next switch";
 const SWITCH_DOC: &str = "switch";
+
+/// The Claude package version, read at start-up and on each switch.
+static VERSION: Mutex<Option<String>> = Mutex::new(None);
+/// The version the owner was last told about, so the notice goes out once per version.
+static TOLD_VERSION: Mutex<Option<String>> = Mutex::new(None);
+
+fn cached_version() -> Option<String> {
+    VERSION
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clone()
+}
+
+/// Reads the installed Claude version and keeps it. Blocking (runs PowerShell).
+fn refresh_version(app: &Path) -> Option<String> {
+    let found = ClaudeDesktop::new(app).version();
+    *VERSION.lock().unwrap_or_else(PoisonError::into_inner) = found.clone();
+    found
+}
+
+/// The Claude version, read once and kept; a switch and start-up read it again. Blocking.
+pub fn app_version(accounts: &AccountsService) -> Option<String> {
+    cached_version().or_else(|| {
+        let app = find_app_data(accounts.config().app_data.as_deref())?;
+        refresh_version(&app)
+    })
+}
+
+fn journal_of(svc: &Services) -> Journal {
+    Journal::new(&svc.paths.home.join("accounts").join("switch-journal.json"))
+}
 /// How long the switch waits for the handovers.
 const HANDOVER_WAIT: Duration = Duration::from_secs(600);
 const HANDOVER_POLL: Duration = Duration::from_millis(250);
@@ -178,11 +213,31 @@ pub fn prepare(
     if !target.can_receive || target.desktop_account.is_none() || target.desktop_org.is_none() {
         return Err(format!("{} cannot be switched to", target.label));
     }
+    let vault = FsVault::new(&app, &logins_root(svc));
+    if origin == Origin::Rule {
+        if vault.saved_at(&target).is_none() {
+            return Err(format!("{} has no saved login yet", target.label));
+        }
+        version_gate(svc, &config)?;
+    }
+    let leftover = match repair(
+        &journal_of(svc),
+        &ClaudeDesktop::new(&app),
+        &vault,
+        &config.accounts,
+    )? {
+        Repair::Blocked { .. } if origin == Origin::Rule => return Err(INTERRUPTED.to_owned()),
+        Repair::Blocked { from } => Some(from),
+        _ => None,
+    };
     let active = last_known_account(&app);
     let from = config
         .accounts
         .iter()
-        .find(|a| a.desktop_account.is_some() && a.desktop_account == active)
+        .find(|a| match &leftover {
+            Some(key) => &a.key == key,
+            None => a.desktop_account.is_some() && a.desktop_account == active,
+        })
         .cloned()
         .ok_or("Claude Desktop is not on a known account")?;
     if from.key == target.key {
@@ -203,6 +258,31 @@ pub fn prepare(
         control,
         _slot: slot,
     })
+}
+
+/// An automatic switch needs the installed Claude to be the version a switch by hand confirmed.
+fn version_gate(svc: &Services, config: &argus_accounts::AccountsConfig) -> Result<(), String> {
+    let current = cached_version().ok_or("the Claude version could not be read")?;
+    if config.verified_app_version.as_deref() == Some(current.as_str()) {
+        return Ok(());
+    }
+    let text = format!("Claude updated to {current}; do one switch by hand so Argus can check it");
+    let mut told = TOLD_VERSION.lock().unwrap_or_else(PoisonError::into_inner);
+    if told.as_deref() != Some(current.as_str()) {
+        *told = Some(current);
+        if let Some(notify) = &svc.notify {
+            notify.send(PingRequest {
+                title: Some("Claude was updated".to_owned()),
+                text: text.clone(),
+                level: Level::Ping,
+                project: None,
+                thread: None,
+                by: By::Auto,
+                url: Some(format!("http://127.0.0.1:{}/?tab=accounts", svc.port())),
+            });
+        }
+    }
+    Err(text)
 }
 
 /// The id of the switch: the one a countdown already shows, else a new one.
@@ -232,6 +312,16 @@ pub async fn switch_to(
     origin: Origin,
     handover: bool,
 ) -> Result<(), String> {
+    if origin == Origin::Rule {
+        // The gate reads the cached version; make it current first (PowerShell, off the runtime).
+        if let Some(accounts) = svc.accounts.clone() {
+            let _ = tokio::task::spawn_blocking(move || {
+                find_app_data(accounts.config().app_data.as_deref())
+                    .and_then(|app| refresh_version(&app))
+            })
+            .await;
+        }
+    }
     prepare(svc, to, origin, handover)?.run().await
 }
 
@@ -278,7 +368,11 @@ impl Prepared {
         let desktop = ClaudeDesktop::new(&self.app);
         let vault = FsVault::new(&self.app, &logins_root(&self.svc));
         let stages = ServerStages::new(&self);
+        refresh_version(&self.app);
+        let journal = journal_of(&self.svc);
         let plan = Plan {
+            id: &self.id,
+            journal: &journal,
             from: &self.from,
             to: &self.to,
             handover: self.handover,
@@ -300,14 +394,35 @@ impl Prepared {
         if let Err(why) = &outcome {
             self.put(&last.0, &last.1, Some(why));
         }
+        if done == Done::Switched && self.origin == Origin::Owner {
+            self.verify_version();
+        }
         outcome
+    }
+
+    /// A switch by hand confirmed the account: the installed Claude version is now the verified one.
+    fn verify_version(&self) {
+        let Some(version) = cached_version() else {
+            return;
+        };
+        let saved = self
+            .accounts
+            .update(&json!({ "verifiedAppVersion": version }))
+            .and_then(|config| {
+                super::accounts::save(&self.svc, &config).map_err(|e| e.to_string())
+            });
+        if let Err(e) = saved {
+            self.svc
+                .log
+                .error("accounts verified version not saved", json!({ "error": e }));
+        }
     }
 }
 
 /// The result a [`Done`] makes, with the reason in plain words.
 fn outcome_of(done: &Done) -> Result<(), String> {
     match done {
-        Done::Switched => Ok(()),
+        Done::Switched | Done::Noted(_) => Ok(()),
         Done::Cancelled => Err("the switch was cancelled".to_owned()),
         Done::Failed { reason, rollback } => Err(match rollback {
             Ok(()) => format!("{reason}; Claude was started again as before"),
@@ -441,10 +556,66 @@ impl Stages for ServerStages<'_> {
     fn active_account(&self) -> Option<String> {
         last_known_account(&self.run.app)
     }
+
+    fn closed(&self) {
+        let (Some(account), Some(org)) =
+            (&self.run.from.desktop_account, &self.run.from.desktop_org)
+        else {
+            return;
+        };
+        let scope = Scope {
+            account: account.clone(),
+            org: org.clone(),
+        };
+        if let Err(e) = super::accounts_resume::cleanup_pending(&self.run.svc, &scope) {
+            self.run
+                .svc
+                .log
+                .warn("accounts resume task not cleaned up", json!({ "error": e }));
+        }
+    }
+}
+
+/// Looks for a cut-short switch at start-up and repairs it when Claude is closed; when Claude
+/// runs, the `switch` doc says it failed and the repair waits for the next switch. Blocking.
+pub(crate) fn repair_interrupted(svc: &Services, accounts: &AccountsService) {
+    let config = accounts.config();
+    let Some(app) = find_app_data(config.app_data.as_deref()) else {
+        return;
+    };
+    refresh_version(&app);
+    let journal = journal_of(svc);
+    let vault = FsVault::new(&app, &logins_root(svc));
+    match repair(
+        &journal,
+        &ClaudeDesktop::new(&app),
+        &vault,
+        &config.accounts,
+    ) {
+        Ok(Repair::Clean) => {}
+        Ok(Repair::Repaired { from }) => svc.log.warn(
+            "accounts interrupted switch repaired",
+            json!({ "from": from }),
+        ),
+        Ok(Repair::Blocked { from }) => {
+            let entry = journal.read();
+            let id = entry.map_or_else(|| "SW-0".to_owned(), |e| e.id);
+            let doc = switch_doc(&id, (&from, ""), Origin::Owner, "failed", &[]);
+            let doc = with_error(doc, Some(INTERRUPTED));
+            if let Err(e) = accounts.docs.put(Coll::AccountsState, SWITCH_DOC, doc) {
+                svc.log
+                    .error("accounts switch doc not written", json!({ "error": e }));
+            }
+        }
+        Err(e) => svc.log.error(
+            "accounts interrupted switch not repaired",
+            json!({ "error": e }),
+        ),
+    }
 }
 
 /// `<DASHBOARD_HOME>\accounts\logins`.
-fn logins_root(svc: &Services) -> PathBuf {
+pub(crate) fn logins_root(svc: &Services) -> PathBuf {
     svc.paths.home.join("accounts").join("logins")
 }
 
@@ -461,6 +632,13 @@ pub fn save_login(
     let config = accounts.config();
     let app = find_app_data(config.app_data.as_deref())
         .ok_or("the Claude Desktop data folder was not found")?;
+    if argus_accounts::sync::lock_running(&app) {
+        return Err(
+            "Claude is running, so its login cannot be saved safely. Close Claude and save again; \
+             a switch saves the login for you"
+                .to_owned(),
+        );
+    }
     let active = last_known_account(&app);
     let account = config
         .accounts
@@ -555,6 +733,16 @@ mod tests {
         assert_eq!(doc["steps"][0]["status"], "running");
         assert!(doc["error"].is_null());
         assert_eq!(with_error(doc, Some("boom"))["error"], "boom");
+    }
+
+    #[test]
+    fn a_noted_switch_is_not_an_error() {
+        assert!(outcome_of(&Done::Noted("not signed in".to_owned())).is_ok());
+    }
+
+    #[test]
+    fn the_interrupted_text_names_the_repair() {
+        assert!(super::INTERRUPTED.contains("repair at the next switch"));
     }
 
     #[test]

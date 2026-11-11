@@ -2,9 +2,11 @@
 //! leads of the handover cycle, and the watcher that ends it. The switch calls
 //! [`schedule_for_cycle`] with Claude closed, just before starting it; the task fires a few
 //! minutes later in the Overlord's session and reports each lead to
-//! `POST /api/accounts/handover` (`resumed` or `not_resumed`). The watcher removes the task once
-//! it ran and the leads reported, or after 30 minutes, and marks the leads that never reported
-//! as not resumed so the cycle ends in its final state.
+//! `POST /api/accounts/handover` (`resumed` or `not_resumed`). The watcher never touches the
+//! scheduled-tasks file, which the app owns while it runs: once the task ran and the leads
+//! reported, or after 30 minutes, it marks the task done in Argus ("done, remove at next close")
+//! and marks the leads that never reported as not resumed so the cycle ends in its final state.
+//! [`cleanup_pending`] removes a finished task, and the switch calls it while Claude is closed.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -42,6 +44,9 @@ struct Pending {
     fire_at: i64,
     #[serde(default)]
     ran_at: Option<i64>,
+    /// The task is finished; its entry and folder go at the next close of Claude.
+    #[serde(default)]
+    done: bool,
 }
 
 /// What the watcher does with the pending task now.
@@ -147,6 +152,9 @@ pub fn schedule_for_cycle(svc: &Services, target: &Scope) -> Result<Option<Strin
     }
     let app = find_app_data(accounts.config().app_data.as_deref())
         .ok_or("the Claude Desktop data folder was not found")?;
+    if let Some(old) = load_pending(svc).filter(|p| p.done) {
+        cleanup_pending(svc, &old.scope)?;
+    }
     let fire_at = now_ms() + FIRE_AFTER_MS;
     let task = ResumeTask {
         id: format!("argus-resume-{}", cycle.id),
@@ -161,6 +169,7 @@ pub fn schedule_for_cycle(svc: &Services, target: &Scope) -> Result<Option<Strin
         scope: target.clone(),
         fire_at,
         ran_at: None,
+        done: false,
     };
     save_pending(svc, Some(&pending))?;
     Ok(Some(task.id))
@@ -192,28 +201,45 @@ fn all_reported(svc: &Services) -> bool {
         .is_none_or(|c| !c.leads.iter().any(|h| h.state.awaits_resume()))
 }
 
+/// Ends the resume in Argus only: the leads are closed and the task is marked done. Its files
+/// stay until [`cleanup_pending`] runs with Claude closed.
 fn finish(svc: &Services, pending: &Pending) {
     close_cycle(svc);
-    let removed = svc
+    let done = Pending {
+        done: true,
+        ..pending.clone()
+    };
+    if let Err(e) = save_pending(svc, Some(&done)) {
+        svc.log
+            .error("accounts resume state not saved", json!({ "error": e }));
+    }
+}
+
+/// Removes the finished resume task of `scope` (its `SKILL.md` folder and its entry in
+/// `scheduled-tasks.json`) and forgets it. Nothing happens when no finished task of that scope
+/// waits. The switch calls this at its close step, with Claude closed; while Claude runs it
+/// refuses and the task stays pending.
+///
+/// # Errors
+/// No accounts service, the Desktop data folder is not found, Claude is running, or a file
+/// cannot be changed.
+pub fn cleanup_pending(svc: &Services, scope: &Scope) -> Result<(), String> {
+    let Some(pending) = load_pending(svc).filter(|p| p.done && p.scope == *scope) else {
+        return Ok(());
+    };
+    let accounts = svc
         .accounts
         .as_ref()
-        .and_then(|a| find_app_data(a.config().app_data.as_deref()))
-        .map_or(Ok(()), |app| {
-            remove_task(&app, &pending.scope, &pending.id, &skill_root())
-        });
-    if let Err(e) = removed {
-        svc.log
-            .warn("accounts resume task not removed", json!({ "error": e }));
-    }
-    if let Err(e) = save_pending(svc, None) {
-        svc.log
-            .error("accounts resume state not cleared", json!({ "error": e }));
-    }
+        .ok_or("the accounts service is not running")?;
+    let app = find_app_data(accounts.config().app_data.as_deref())
+        .ok_or("the Claude Desktop data folder was not found")?;
+    remove_task(&app, &pending.scope, &pending.id, &skill_root())?;
+    save_pending(svc, None)
 }
 
 /// One look at the pending task.
 fn watch_once(svc: &Services, now: i64) {
-    let Some(pending) = load_pending(svc) else {
+    let Some(pending) = load_pending(svc).filter(|p| !p.done) else {
         return;
     };
     let Some(app) = svc
@@ -272,6 +298,7 @@ mod tests {
             },
             fire_at: 1_000,
             ran_at,
+            done: false,
         }
     }
 
@@ -335,5 +362,15 @@ mod tests {
             verdict(&p, false, false, 1_000 + GIVE_UP_MS),
             Verdict::Finish
         );
+    }
+
+    #[test]
+    fn a_pending_task_is_not_done_until_marked_and_the_mark_survives_the_database() {
+        let old = r#"{"id":"argus-resume-SW-1","scope":{"account":"a","org":"o"},"fireAt":1}"#;
+        let p: Pending = serde_json::from_str(old).unwrap();
+        assert!(!p.done && p.ran_at.is_none());
+        let done = Pending { done: true, ..p };
+        let back: Pending = serde_json::from_str(&serde_json::to_string(&done).unwrap()).unwrap();
+        assert!(back.done);
     }
 }

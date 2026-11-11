@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Inline, Select, Tag, Toggle } from '@drizztdourden08/tessera';
-import { AUTO_SWITCH_LABEL, CAN_RECEIVE_LABEL, DEFAULT_SWITCH_AT, HANDOVER_LABEL, HANDOVER_OPTIONS } from '../accounts.constants';
+import { AUTO_SWITCH_LABEL, CAN_RECEIVE_LABEL, HANDOVER_LABEL, HANDOVER_OPTIONS } from '../accounts.constants';
 import type { RuleChipsProps } from '../accounts.type';
 import { handoverKind, handoverRule, ruleChips } from '../model';
 import { PercentField } from './PercentField';
@@ -14,7 +14,7 @@ const RuleChips = (props: RuleChipsProps) => {
   return (
     <Inline gap="md" align="center" wrap>
       <Toggle size="sm" label={AUTO_SWITCH_LABEL} checked={mine.rules.autoSwitch} disabled={rules.busy} onChange={(autoSwitch) => change({ autoSwitch })} />
-      {mine.rules.autoSwitch && <PercentField label={AUTO_SWITCH_LABEL} value={mine.rules.switchAt ?? DEFAULT_SWITCH_AT} disabled={rules.busy} onCommit={(switchAt) => change({ switchAt })} />}
+      {mine.rules.autoSwitch && <PercentField label={AUTO_SWITCH_LABEL} value={mine.rules.switchAt} disabled={rules.busy} onCommit={(switchAt) => change({ switchAt })} />}
       <Select size="sm" width="fit" aria-label={HANDOVER_LABEL} options={HANDOVER_OPTIONS} value={kind} onChange={(next) => change({ handover: handoverRule(next as typeof kind, mine.rules.handover) })} />
       {typeof mine.rules.handover === 'number' && <PercentField label={HANDOVER_LABEL} value={mine.rules.handover} disabled={rules.busy} onCommit={(handover) => change({ handover })} />}
       <Toggle size="sm" label={CAN_RECEIVE_LABEL} checked={mine.canReceive} disabled={rules.busy} onChange={(canReceive) => void rules.changeAccount(mine.key, { canReceive })} />

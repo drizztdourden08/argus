@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../data/react';
-import type { AccountsRun, CompareAccount, CompareCell, CompareDoc, CompareRow, SyncStepDoc } from '../../../data/types';
+import type { AccountsRun, CompareAccount, CompareCell, CompareDoc, CompareRow, CompareStatus, SyncStepDoc } from '../../../data/types';
 import type { AccountActions } from './accounts.type';
 
 type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
@@ -44,6 +44,24 @@ interface CompareViewProps {
 interface ApplyingViewProps {
   actions: AccountActions;
   onBack: () => void;
+}
+
+interface ApplyingProgressProps {
+  run: AccountsRun | null;
+}
+
+interface ApplyingTableProps {
+  data: CompareDoc | null;
+  steps: readonly SyncStep[];
+}
+
+interface CompareBodyProps {
+  data: CompareDoc;
+  rows: readonly CompareRow[];
+}
+
+interface CellChipProps {
+  status: CompareStatus | undefined;
 }
 
 interface CompareToolbarProps {
@@ -99,6 +117,6 @@ interface RunFinishProps {
 }
 
 export type {
-  ApplyingViewProps, ChipLook, ChipTone, CompareCellViewProps, CompareFeed, CompareSummaryProps, CompareTableProps, CompareToolbarProps,
+  ApplyingProgressProps, ApplyingTableProps, ApplyingViewProps, CellChipProps, ChipLook, CompareBodyProps, CompareCellViewProps, CompareFeed, CompareSummaryProps, CompareTableProps, CompareToolbarProps,
   CompareViewProps, PlanFlow, RowFilter, RowMark, RowMarkCellProps, RunFeed, RunFinishProps, StatusChipProps, StepKindTagsProps, StepLogProps, SyncStep,
 };

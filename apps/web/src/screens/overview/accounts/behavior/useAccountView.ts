@@ -5,11 +5,7 @@ import type { AccountsRun } from '../../../../data/types';
 import { ACCOUNTS_STATE_COLL } from '../accounts.constants';
 import type { AccountsView } from '../accounts.type';
 import { ACTIVE_PHASES, RUN_DOC } from '../compare.constants';
-
-interface AccountViewState {
-  view: AccountsView;
-  show: (next: AccountsView) => void;
-}
+import type { AccountViewState } from './account-view.type';
 
 const useAccountView = (): AccountViewState => {
   const [chosen, show] = useState<AccountsView>('overview');

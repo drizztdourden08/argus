@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { AccountRules } from '../../../../data/types';
+import { DEFAULT_SWITCH_AT } from '../accounts.constants';
 
 const handoverText = (handover: AccountRules['handover']): string => {
   if (typeof handover === 'number') return `Handover at ${handover}%`;
@@ -7,7 +8,7 @@ const handoverText = (handover: AccountRules['handover']): string => {
 };
 
 const ruleChips = (rules: AccountRules | undefined): string[] => [
-  rules?.autoSwitch ? `Auto-switch at ${rules.switchAt ?? 98}%` : 'Auto-switch off',
+  rules?.autoSwitch ? `Auto-switch at ${rules.switchAt ?? DEFAULT_SWITCH_AT}%` : 'Auto-switch off',
   handoverText(rules?.handover),
 ];
 

@@ -1,6 +1,10 @@
 /* @layer renderer-app @kind barrel */
+export { canCancel } from './can-cancel';
 export { countdownText } from './countdown-text';
-export { handoverEstimate, handoverTitle, notAsked } from './handover-text';
+export { handoverEstimate } from './handover-estimate';
+export { handoverTitle } from './handover-title';
+export { isOver } from './is-over';
+export { isRunning } from './is-running';
+export { notAsked } from './not-asked';
 export { readyCount } from './ready-count';
-export { canCancel, isOver, isRunning } from './switch-state';
 export { toMs } from './to-ms';

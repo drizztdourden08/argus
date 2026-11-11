@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { HandoverDoc } from '../../../../../data/types';
 
-const handoverTitle = (doc: HandoverDoc): string => (doc.thread ? `${doc.board ?? ''} / ${doc.thread}` : (doc.board ?? doc.id ?? ''));
-
 const handoverEstimate = (doc: HandoverDoc): string => {
   const estimate = doc.estimate;
   if (!estimate) return '';
@@ -12,7 +10,4 @@ const handoverEstimate = (doc: HandoverDoc): string => {
   return [agents, percent, minutes].filter(Boolean).join(' · ');
 };
 
-const notAsked = (leads: readonly string[] | undefined, handovers: readonly HandoverDoc[]): number =>
-  (leads ?? []).filter((id) => !handovers.some((doc) => doc.id === id)).length;
-
-export { handoverEstimate, handoverTitle, notAsked };
+export { handoverEstimate };

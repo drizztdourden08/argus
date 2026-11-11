@@ -185,8 +185,16 @@ impl Catalog for FsCatalog {
     }
 
     fn write_archived(&self, scope: &Scope, ids: &[String]) -> Result<(), String> {
-        let index = json!({ "v": 1, "archived": ids });
-        write_atomic(&self.file(scope, INDEX_FILE)?, &json_bytes(&index))
+        let path = self.file(scope, INDEX_FILE)?;
+        // Every other field of the app's index stays as it is.
+        let mut index = fs::read(&path)
+            .ok()
+            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+            .filter(Value::is_object)
+            .unwrap_or_else(|| json!({}));
+        index["v"] = json!(1);
+        index["archived"] = json!(ids);
+        write_atomic(&path, &json_bytes(&index))
     }
 
     fn session_mtime_ms(&self, scope: &Scope, id: &str) -> Result<i64, String> {
@@ -347,6 +355,25 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
+    }
+
+    #[test]
+    fn writing_the_index_keeps_its_other_fields() {
+        let dir = tempdir().unwrap();
+        let folder = dir.path().join("acct").join("org");
+        fs::create_dir_all(&folder).unwrap();
+        fs::write(
+            folder.join("archived-sessions.idx"),
+            br#"{"v":1,"archived":[],"other":{"x":1}}"#,
+        )
+        .unwrap();
+        let catalog = FsCatalog::new(dir.path());
+        catalog.write_archived(&scope(), &[SID.to_owned()]).unwrap();
+        let now: serde_json::Value =
+            serde_json::from_slice(&fs::read(folder.join("archived-sessions.idx")).unwrap())
+                .unwrap();
+        assert_eq!(now["other"]["x"], 1);
+        assert_eq!(now["archived"], json!([SID]));
     }
 
     #[test]

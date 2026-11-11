@@ -4,6 +4,8 @@
 
 use std::sync::Arc;
 
+use argus_accounts::LoginVault;
+use argus_accounts::desktop::FsVault;
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, DeskError, Outcome, StartRequest};
 use argus_accounts::rules::{CycleView, Estimates, LeadKey, View};
 use argus_accounts::{Account, AccountsConfig, PollResult, Severity, binding_limit, find_app_data};
@@ -19,7 +21,7 @@ use crate::services::AccountsService;
 use crate::services::accounts::last_known_account;
 use crate::services::accounts_estimates::{LeadRef, estimate_state};
 use crate::services::accounts_handover::Handovers;
-use crate::services::accounts_switch::{Origin, is_running, switch_to};
+use crate::services::accounts_switch::{Origin, is_running, logins_root, switch_to};
 
 const SWITCH_DOC: &str = "switch";
 
@@ -29,12 +31,13 @@ pub(super) struct Live {
     accounts: Arc<AccountsService>,
 }
 
-fn view_of(account: &Account, polled: Option<&PollResult>) -> View {
+fn view_of(account: &Account, polled: Option<&PollResult>, has_login: bool) -> View {
     let limit = polled.and_then(|p| binding_limit(&p.usage));
     View {
         key: account.key.clone(),
         label: account.label.clone(),
-        can_receive: account.can_receive,
+        // A rule may only switch to an account whose Desktop login is saved.
+        can_receive: account.can_receive && has_login,
         rules: account.rules.clone(),
         percent: limit.map(|l| l.percent),
         critical: limit.is_some_and(|l| l.severity == Severity::Critical),
@@ -112,10 +115,12 @@ impl Live {
     fn read(&self) -> Snapshot {
         let config = self.accounts.config();
         let latest = self.accounts.latest_usage();
+        let app = find_app_data(config.app_data.as_deref()).unwrap_or_default();
+        let vault = FsVault::new(&app, &logins_root(&self.svc));
         let accounts = config
             .accounts
             .iter()
-            .map(|a| view_of(a, latest.get(&a.key)))
+            .map(|a| view_of(a, latest.get(&a.key), vault.saved_at(a).is_some()))
             .collect();
         let active = active_key(&config);
         let estimates = active
