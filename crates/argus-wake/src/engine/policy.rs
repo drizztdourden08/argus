@@ -5,6 +5,7 @@
 use tracing::warn;
 
 use super::{Group, Key, WakeEngine};
+use crate::reasons::bypasses_debounce;
 use crate::wake::{FinishedEvent, WakeRow, WakeStatus};
 
 /// Where [`WakeEngine::place`] put a row.
@@ -37,7 +38,11 @@ impl WakeEngine {
     pub(super) fn place(&mut self, key: &Key, row: WakeRow, immediate: bool) -> Placed {
         let now = self.clock.now_ms();
         let last = self.woken.get(key).copied();
-        let held = self.config.policy.held_until(last, now, immediate);
+        let held = if bypasses_debounce(&row.reason) {
+            None
+        } else {
+            self.config.policy.held_until(last, now, immediate)
+        };
         if let Some(group) = self.groups.iter_mut().find(|g| g.key == *key) {
             group.rows.push(row);
             if !group.held {

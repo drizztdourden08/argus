@@ -14,7 +14,10 @@ interface AccountActions {
   busy: boolean;
   switchTo: (key: string) => void;
   sync: () => void;
+  undo: () => void;
 }
+
+type AccountsView = 'overview' | 'compare' | 'applying';
 
 interface AccountsSummaryProps {
   accounts: readonly Account[];
@@ -24,6 +27,7 @@ interface AccountsSummaryProps {
 interface SyncRowProps {
   drift: number;
   actions: AccountActions;
+  onCompare: () => void;
 }
 
 interface AccountCardProps {
@@ -43,4 +47,4 @@ interface RuleChipsProps {
   account: Account;
 }
 
-export type { Account, AccountActions, AccountCardProps, AccountFactsProps, AccountsFeed, AccountsSummaryProps, LimitMeterProps, RuleChipsProps, SyncRowProps };
+export type { Account, AccountActions, AccountCardProps, AccountFactsProps, AccountsFeed, AccountsSummaryProps, AccountsView, LimitMeterProps, RuleChipsProps, SyncRowProps };

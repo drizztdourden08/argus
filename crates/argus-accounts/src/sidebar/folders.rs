@@ -22,7 +22,8 @@ pub enum FolderStep {
         scope: String,
         name: String,
         new_id: String,
-        order: f64,
+        /// The section's position in the scope, from 0.
+        order: i64,
     },
     /// A chat moved into the folder it has in the scope it was focused in last.
     AssignChat {
@@ -78,6 +79,7 @@ pub fn plan_folders(
     }
     let mut steps = Vec::new();
     create_missing(&mut next, &scopes, new_id, &mut steps)?;
+    fill_orders(&mut next, &scopes, presence, &mut steps);
     assign_chats(&mut next, &scopes, presence, &mut steps);
     reorder_folders(&mut next, &scopes, presence, &mut steps);
     mirror_into_store(&mut next, &steps);
@@ -209,7 +211,7 @@ fn insert_folder(
     (source, src_id): (&str, &str),
     (target, id): (&str, &str),
     previous: Option<&str>,
-) -> Result<f64, String> {
+) -> Result<i64, String> {
     let mut group = find_group(keys, source, src_id)
         .ok_or_else(|| format!("scope {source}: folder {src_id} has no group"))?;
     let mut section = find_section(keys, source, src_id)
@@ -249,48 +251,71 @@ fn insert_group(keys: &mut SidebarKeys, scope: &str, group: Value, prev_id: Opti
     list.insert(at, group);
 }
 
-fn section_order(section: &Value) -> Option<f64> {
-    section.get("order").and_then(Value::as_f64)
-}
-
 fn is_manual(section: &Value) -> bool {
     text(section, "kind") == Some("manual")
 }
 
 /// Puts the section after the previous folder's section (before the first manual section when
-/// there is none) and gives it an `order` between its neighbours. Returns that order.
+/// there is none), then numbers every section of the scope 0..n in list order, so `order`
+/// stays an integer. Returns the new section's number.
 fn insert_section(
     keys: &mut SidebarKeys,
     scope: &str,
-    mut section: Value,
+    section: Value,
     prev_id: Option<&str>,
-) -> f64 {
-    let own = section_order(&section).unwrap_or(0.0);
+) -> i64 {
     let Some(list) = entry_mut(&mut keys.code_sections, scope)
         .and_then(|e| e.get_mut("sections"))
         .and_then(Value::as_array_mut)
     else {
-        return own;
+        return 0;
     };
-    let prev_at = prev_id.and_then(|p| list.iter().position(|s| text(s, "id") == Some(p)));
-    let at = prev_at
+    let at = prev_id
+        .and_then(|p| list.iter().position(|s| text(s, "id") == Some(p)))
         .map(|i| i + 1)
         .or_else(|| list.iter().position(is_manual))
         .unwrap_or(list.len());
-    let before = prev_at.and_then(|i| section_order(&list[i]));
-    let after = list
-        .get(at)
-        .filter(|s| is_manual(s))
-        .and_then(section_order);
-    let order = match (before, after) {
-        (Some(a), Some(b)) => f64::midpoint(a, b),
-        (Some(a), None) => a + 1.0,
-        (None, Some(b)) => b - 1.0,
-        (None, None) => own,
-    };
-    section["order"] = json!(order);
     list.insert(at, section);
-    order
+    for (n, s) in (0_i64..).zip(list.iter_mut()) {
+        s["order"] = json!(n);
+    }
+    i64::try_from(at).unwrap_or(0)
+}
+
+// Step 1b: a chat assigned to a folder but missing from its order list is appended to it.
+
+fn fill_orders(
+    keys: &mut SidebarKeys,
+    scopes: &[String],
+    presence: &Presence,
+    steps: &mut Vec<FolderStep>,
+) {
+    for scope in scopes {
+        let Some(here) = presence.get(scope) else {
+            continue;
+        };
+        let mut missing: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for sid in here.keys() {
+            let Some(folder) = assigned_id(keys, scope, sid) else {
+                continue;
+            };
+            let key = chat_key(sid);
+            if !order_list(keys, scope, &folder).contains(&key) {
+                missing.entry(folder).or_default().push(key);
+            }
+        }
+        for (folder, add) in missing {
+            let mut list = order_list(keys, scope, &folder);
+            list.extend(add);
+            set_order_list(keys, scope, &folder, list);
+            if let Some(name) = folder_name(keys, scope, &folder) {
+                steps.push(FolderStep::ReorderFolder {
+                    scope: scope.clone(),
+                    name,
+                });
+            }
+        }
+    }
 }
 
 // Step 2: a chat's folder follows the scope where it was focused last.
@@ -481,7 +506,8 @@ fn follow_order(
     }
 }
 
-// The app's own copy of the groups, kept equal for every scope the plan changed.
+// The app's own copies, kept equal for every scope the plan changed: `customGroupsByScope`
+// holds the groups, `codeSidebarByScope` the sections with the members of each folder.
 
 fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
     let changed: BTreeSet<&str> = steps.iter().map(FolderStep::scope).collect();
@@ -489,6 +515,11 @@ fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
         let Some(groups) = entry(&keys.group_scopes, scope).cloned() else {
             continue;
         };
+        let sections = entry(&keys.code_sections, scope)
+            .and_then(|e| e.get("sections"))
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
         let Some(state) = keys
             .dframe_store
             .get_mut("state")
@@ -496,6 +527,7 @@ fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
         else {
             continue;
         };
+        mirror_sections(state, scope, &sections, &groups);
         let by_scope = state
             .entry("customGroupsByScope")
             .or_insert_with(|| Value::Object(Map::new()));
@@ -503,6 +535,69 @@ fn mirror_into_store(keys: &mut SidebarKeys, steps: &[FolderStep]) {
             map.insert(scope.to_owned(), groups);
         }
     }
+}
+
+/// Rewrites the scope's `codeSidebarByScope` sections from the code sections: the same list
+/// and order, each folder's members following its order list. Other fields of an existing
+/// section stay. A scope the app has no entry for is left alone.
+fn mirror_sections(
+    state: &mut Map<String, Value>,
+    scope: &str,
+    sections: &[Value],
+    groups: &Value,
+) {
+    let Some(entry) = state
+        .get_mut("codeSidebarByScope")
+        .and_then(|m| m.get_mut(scope))
+        .and_then(Value::as_object_mut)
+    else {
+        return;
+    };
+    let old: Vec<Value> = entry
+        .get("sections")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let mirrored = sections
+        .iter()
+        .map(|section| {
+            let id = text(section, "id").unwrap_or_default();
+            let previous = old.iter().find(|o| text(o, "id") == Some(id));
+            let mut out = previous.unwrap_or(section).clone();
+            out["order"] = section.get("order").cloned().unwrap_or(Value::Null);
+            if is_manual(section) {
+                out["name"] = section.get("name").cloned().unwrap_or(Value::Null);
+                out["members"] = json!(members_of(id, previous, groups));
+            }
+            out
+        })
+        .collect();
+    entry.insert("sections".to_owned(), Value::Array(mirrored));
+}
+
+/// The folder's order list, then the members the app listed that are neither in it nor
+/// assigned to another folder.
+fn members_of(id: &str, previous: Option<&Value>, groups: &Value) -> Vec<String> {
+    let strings = |v: Option<&Value>| -> Vec<String> {
+        v.and_then(Value::as_array)
+            .map(|a| {
+                a.iter()
+                    .filter_map(|m| m.as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    let mut members = strings(groups.get("order").and_then(|o| o.get(id)));
+    let assignments = groups.get("assignments");
+    for old in strings(previous.and_then(|p| p.get("members"))) {
+        let elsewhere = assignments
+            .and_then(|a| text(a, &old))
+            .is_some_and(|f| f != id);
+        if !elsewhere && !members.contains(&old) {
+            members.push(old);
+        }
+    }
+    members
 }
 
 #[cfg(test)]
@@ -545,19 +640,32 @@ mod tests {
         )
     }
 
+    /// The app's `codeSidebarByScope` entry: the sections with each folder's members filled in.
+    fn app_sections(code: &Value, groups: &Value) -> Value {
+        let mut sections = code["sections"].clone();
+        for s in sections.as_array_mut().unwrap() {
+            if is_manual(s) {
+                s["members"] = groups["order"][s["id"].as_str().unwrap()].clone();
+            }
+        }
+        json!({"migratedFrom": 1, "sections": sections})
+    }
+
     fn keys(scopes: &[(&str, (Value, Value))]) -> SidebarKeys {
         let mut code = Map::new();
         let mut groups = Map::new();
         let mut custom = Map::new();
+        let mut sidebar = Map::new();
         for (scope, (c, g)) in scopes {
             code.insert((*scope).into(), c.clone());
             groups.insert((*scope).into(), g.clone());
             custom.insert((*scope).into(), g.clone());
+            sidebar.insert((*scope).into(), app_sections(c, g));
         }
         SidebarKeys {
             code_sections: json!({"value": code, "tabId": "", "timestamp": 1}),
             group_scopes: json!({"value": groups, "tabId": "", "timestamp": 1}),
-            dframe_store: json!({"state": {"customGroupsByScope": custom, "codeSidebarByScope": {}}, "version": 3}),
+            dframe_store: json!({"state": {"customGroupsByScope": custom, "codeSidebarByScope": sidebar}, "version": 3}),
             encodings: [1, 1, 1],
         }
     }
@@ -594,7 +702,7 @@ mod tests {
                 scope: B.into(),
                 name: "Beta".into(),
                 new_id: "cg-new-1".into(),
-                order: 1.5,
+                order: 2,
             }]
         );
         let names: Vec<String> = folder_list(&plan.keys, B)
@@ -609,6 +717,54 @@ mod tests {
             .map(|s| s["id"].as_str().unwrap())
             .collect();
         assert_eq!(ids, ["pinned", "cg-b1", "cg-new-1", "cg-b3", "sessions"]);
+        let orders: Vec<&Value> = plan.keys.code_sections["value"][B]["sections"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| &s["order"])
+            .collect();
+        assert_eq!(orders, [0, 1, 2, 3, 4]);
+        assert!(orders.iter().all(|o| o.is_i64()));
+        let mirrored: Vec<&str> =
+            plan.keys.dframe_store["state"]["codeSidebarByScope"][B]["sections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|s| s["id"].as_str().unwrap())
+                .collect();
+        assert_eq!(mirrored, ids);
+    }
+
+    #[test]
+    fn chats_missing_from_an_order_list_are_appended() {
+        let a = scope_data(&[("cg-a1", "Alpha")], &[("local_1", Some("cg-a1"))]);
+        let b = scope_data(&[("cg-b1", "Alpha")], &[("local_1", Some("cg-b1"))]);
+        let mut k = keys(&[(A, a), (B, b)]);
+        k.group_scopes["value"][B]["assignments"]["code:local_2"] = json!("cg-b1");
+        let plan = run(
+            &k,
+            &presence(&[("local_1", 1)], &[("local_1", 1), ("local_2", 2)]),
+        );
+        assert_eq!(
+            plan.steps,
+            vec![FolderStep::ReorderFolder {
+                scope: B.into(),
+                name: "Alpha".into()
+            }]
+        );
+        let order = &plan.keys.group_scopes["value"][B]["order"]["cg-b1"];
+        assert_eq!(order, &json!(["code:local_1", "code:local_2"]));
+        let members =
+            &plan.keys.dframe_store["state"]["codeSidebarByScope"][B]["sections"][1]["members"];
+        assert_eq!(members, order);
+        assert!(
+            run(
+                &plan.keys,
+                &presence(&[("local_1", 1)], &[("local_1", 1), ("local_2", 2)])
+            )
+            .steps
+            .is_empty()
+        );
     }
 
     #[test]
@@ -720,7 +876,11 @@ mod tests {
                 .unwrap()
                 .iter()
                 .filter(|s| !is_manual(s))
-                .cloned()
+                .map(|s| {
+                    let mut s = s.clone();
+                    s.as_object_mut().unwrap().remove("order");
+                    s
+                })
                 .collect()
         };
         assert_eq!(system(&plan.keys), system(&k));

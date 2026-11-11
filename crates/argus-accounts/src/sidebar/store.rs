@@ -174,7 +174,7 @@ fn open_exclusive(lock: &Path) -> std::io::Result<File> {
 }
 
 /// Refuses when another process holds the folder's `LOCK`: an exclusive open of it then fails.
-fn ensure_unlocked(dir: &Path) -> Result<(), String> {
+pub(crate) fn ensure_unlocked(dir: &Path) -> Result<(), String> {
     match open_exclusive(&dir.join("LOCK")) {
         Ok(_) => Ok(()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),

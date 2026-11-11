@@ -16,7 +16,17 @@ pub fn build(entries: &[Entry]) -> Result<Menu, TrayError> {
                 label,
                 enabled,
             } => menu.append(&MenuItem::with_id(
-                MenuId::new(command.id()),
+                MenuId::new(command.item_id()),
+                label,
+                *enabled,
+                None,
+            )),
+            Entry::Account {
+                command,
+                label,
+                enabled,
+            } => menu.append(&MenuItem::with_id(
+                MenuId::new(command.item_id()),
                 label,
                 *enabled,
                 None,

@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use argus_accounts::sync::{StepSink, SyncStep};
 use argus_accounts::{Account, PollResult};
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, DocChange};
@@ -81,6 +82,24 @@ impl AccountsDocs {
                 Ok(())
             })
             .map_err(|e| e.to_string())
+    }
+}
+
+impl StepSink for AccountsDocs {
+    fn clear(&self) {
+        let Ok(rows) = self.db.docs().list(PORTFOLIO, Coll::SyncSteps) else {
+            return;
+        };
+        let gone = rows
+            .into_iter()
+            .map(|r| DocChange::delete(Coll::SyncSteps, r.id))
+            .collect();
+        // A step log that cannot be cleared is shown stale; the run goes on.
+        let _ = self.apply(gone);
+    }
+
+    fn put(&self, step: &SyncStep) {
+        let _ = self.put(Coll::SyncSteps, &step.doc_id(), step.to_doc());
     }
 }
 

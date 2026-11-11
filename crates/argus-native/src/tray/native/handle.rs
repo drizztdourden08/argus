@@ -7,6 +7,7 @@ use std::thread::{Builder, JoinHandle};
 
 use super::event_loop::{Control, ExitReason, run};
 use super::handlers::Handlers;
+use crate::tray::accounts::AccountLines;
 use crate::tray::balloon::Balloon;
 use crate::tray::error::TrayError;
 use crate::tray::menu::Command;
@@ -58,6 +59,11 @@ impl TrayHandle {
         let _sent = self.controls.send(Control::SetState(state));
     }
 
+    /// Shows the accounts section of the menu. Ignored once Quit is being carried out.
+    pub fn set_accounts(&self, accounts: AccountLines) {
+        let _sent = self.controls.send(Control::SetAccounts(accounts));
+    }
+
     /// Shows a balloon tip on the icon.
     pub fn show_balloon(&self, balloon: Balloon) {
         let _sent = self.controls.send(Control::Balloon(balloon));
@@ -71,7 +77,7 @@ impl TrayHandle {
     }
 
     /// Registers what happens for the other menu items and for a click on the icon: `Open`,
-    /// `OpenNotifications`, `OpenLogs`, `Restart` and `Start`. It runs on the tray thread, so it
+    /// `OpenNotifications`, `OpenLogs`, `Restart`, `Start`, `SwitchDesktop` and `CancelSwitch`. It runs on the tray thread, so it
     /// must return quickly.
     pub fn on_command(&self, handler: impl Fn(Command) + Send + 'static) {
         self.handlers.set_command(Box::new(handler));

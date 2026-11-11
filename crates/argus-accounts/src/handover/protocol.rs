@@ -157,7 +157,7 @@ pub fn check_estimate(estimate: &Estimate) -> Result<(), ProtocolError> {
     Ok(())
 }
 
-fn handover_of(id: String, cycle: &str, lead: &Lead, state: HandoverState) -> Handover {
+fn handover_of(id: String, cycle: &str, lead: &Lead, state: HandoverState, now: &str) -> Handover {
     Handover {
         id,
         cycle: cycle.to_owned(),
@@ -169,7 +169,8 @@ fn handover_of(id: String, cycle: &str, lead: &Lead, state: HandoverState) -> Ha
         estimate: None,
         file: None,
         agents: lead.agents.clone(),
-        asked_at: None,
+        estimate_asked_at: (state == HandoverState::EstimateAsked).then(|| now.to_owned()),
+        asked_at: (state == HandoverState::Asked).then(|| now.to_owned()),
         ready_at: None,
     }
 }
@@ -193,7 +194,15 @@ pub fn start(
 ) -> (Cycle, Vec<Effect>) {
     let leads = leads
         .iter()
-        .map(|lead| handover_of(next_id(), &spec.id, lead, HandoverState::EstimateAsked))
+        .map(|lead| {
+            handover_of(
+                next_id(),
+                &spec.id,
+                lead,
+                HandoverState::EstimateAsked,
+                &spec.now,
+            )
+        })
         .collect();
     let mut cycle = Cycle {
         id: spec.id,
@@ -231,6 +240,62 @@ impl Cycle {
                 board: board.to_owned(),
                 thread: thread.to_owned(),
             })
+    }
+
+    /// A lead that started working after the cycle did. In an estimating cycle it is asked for an
+    /// estimate; in an asked cycle it is asked for its handover at once. A lead already in the
+    /// cycle is left as it is.
+    ///
+    /// # Errors
+    /// The cycle no longer waits on its leads.
+    pub fn add_lead(
+        &mut self,
+        lead: &Lead,
+        id: String,
+        now: &str,
+    ) -> Result<Vec<Effect>, ProtocolError> {
+        if !self.phase.is_open() {
+            return Err(ProtocolError::Closed(self.phase));
+        }
+        if self.handover_of(&lead.board, &lead.thread).is_some() {
+            return Ok(Vec::new());
+        }
+        let (state, kind) = if self.phase == CyclePhase::Estimating {
+            (HandoverState::EstimateAsked, WakeKind::Estimate)
+        } else {
+            (HandoverState::Asked, WakeKind::Request)
+        };
+        let h = handover_of(id, &self.id, lead, state, now);
+        let effect = wake(&h, kind);
+        self.leads.push(h);
+        Ok(vec![effect])
+    }
+
+    /// Asks a lead for a fresh estimate: it keeps its last one until it answers. Only while the
+    /// cycle is estimating and the lead has not been asked for its handover.
+    ///
+    /// # Errors
+    /// The lead is not in the cycle, the cycle is not estimating, or the handover is past the
+    /// estimate.
+    pub fn re_ask_estimate(
+        &mut self,
+        board: &str,
+        thread: &str,
+        now: &str,
+    ) -> Result<Vec<Effect>, ProtocolError> {
+        if self.phase != CyclePhase::Estimating {
+            return Err(ProtocolError::Closed(self.phase));
+        }
+        let h = self.open_handover(board, thread)?;
+        if !matches!(
+            h.state,
+            HandoverState::EstimateAsked | HandoverState::Estimated
+        ) {
+            return Err(ProtocolError::Finished(h.state));
+        }
+        h.state = HandoverState::EstimateAsked;
+        h.estimate_asked_at = Some(now.to_owned());
+        Ok(vec![wake(h, WakeKind::Estimate)])
     }
 
     /// A lead's estimate: kept on its handover, which moves from estimate asked to estimated.
@@ -545,6 +610,67 @@ mod tests {
             .on_estimate("rotp", "coordinator", estimate(f64::NAN))
             .unwrap_err();
         assert_eq!(err.status(), 400);
+    }
+
+    #[test]
+    fn a_new_lead_in_an_estimating_cycle_gets_an_estimate_wake() {
+        let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
+        let effects = c.add_lead(&lead("brock"), "H-2".into(), NOW).unwrap();
+        assert_eq!(kinds(&effects), [WakeKind::Estimate]);
+        assert_eq!(c.leads[1].state, HandoverState::EstimateAsked);
+        assert_eq!(c.leads[1].estimate_asked_at.as_deref(), Some(NOW));
+        assert!(
+            c.add_lead(&lead("brock"), "H-3".into(), NOW)
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(c.leads.len(), 2, "a lead is added once");
+    }
+
+    #[test]
+    fn a_new_lead_in_an_asked_cycle_gets_the_request_at_once() {
+        let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
+        let effects = c.add_lead(&lead("brock"), "H-2".into(), NOW).unwrap();
+        assert_eq!(kinds(&effects), [WakeKind::Request]);
+        assert_eq!(c.leads[1].state, HandoverState::Asked);
+        assert_eq!(c.leads[1].asked_at.as_deref(), Some(NOW));
+        assert!(!c.all_ready());
+    }
+
+    #[test]
+    fn a_new_lead_after_the_cycle_closed_is_refused() {
+        let (mut c, _) = cycle(CycleMode::Now, &[]);
+        let err = c.add_lead(&lead("brock"), "H-1".into(), NOW).unwrap_err();
+        assert_eq!(err.status(), 409);
+    }
+
+    #[test]
+    fn re_asking_keeps_the_last_estimate_and_wakes_the_lead_again() {
+        let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
+        c.on_estimate("rotp", "coordinator", estimate(0.6)).unwrap();
+        let effects = c.re_ask_estimate("rotp", "coordinator", NOW).unwrap();
+        assert_eq!(kinds(&effects), [WakeKind::Estimate]);
+        assert_eq!(c.leads[0].state, HandoverState::EstimateAsked);
+        assert_eq!(c.leads[0].estimate.as_ref().map(|e| e.percent), Some(0.6));
+        assert_eq!(c.leads[0].estimate_asked_at.as_deref(), Some(NOW));
+    }
+
+    #[test]
+    fn re_asking_is_refused_once_the_leads_were_asked_for_the_handover() {
+        let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
+        assert_eq!(
+            c.re_ask_estimate("tessera", "coordinator", NOW)
+                .unwrap_err()
+                .status(),
+            404
+        );
+        c.ask_all(None, NOW);
+        assert_eq!(
+            c.re_ask_estimate("rotp", "coordinator", NOW)
+                .unwrap_err()
+                .status(),
+            409
+        );
     }
 
     #[test]

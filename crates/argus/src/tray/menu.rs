@@ -28,6 +28,18 @@ fn shown(address: &str) -> &str {
     address.split('?').next().unwrap_or(address)
 }
 
+/// A key as one query value: anything but letters, digits, `-`, `_` and `.` becomes `%XX`.
+fn encoded(key: &str) -> String {
+    key.bytes()
+        .map(|b| match b {
+            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.' => {
+                char::from(b).to_string()
+            }
+            _ => format!("%{b:02X}"),
+        })
+        .collect()
+}
+
 impl Menu {
     pub fn note(&self, text: &str) {
         log::line(&self.files, text);
@@ -104,6 +116,11 @@ impl Menu {
                 self.start().await;
             }
             Command::Quit => self.quit().await,
+            Command::SwitchDesktop(key) => {
+                self.show(what, &format!("/?tab=accounts&switch={}", encoded(&key)))
+                    .await;
+            }
+            Command::CancelSwitch => self.report(what, self.server.cancel_switch().await),
         }
     }
 }
@@ -219,6 +236,24 @@ mod tests {
         let watched = menu.spawn("open", async { panic!("boom") });
         watched.await.expect("the watcher ends");
         assert!(log_of(&menu).contains("open: the task failed"));
+        test.stop(false).await;
+    }
+
+    #[test]
+    fn an_account_key_is_one_safe_query_value() {
+        assert_eq!(super::encoded("hot-mail_2.x"), "hot-mail_2.x");
+        assert_eq!(super::encoded("a b&c"), "a%20b%26c");
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn switch_desktop_opens_the_accounts_tab_with_the_key() {
+        let test = server(json!({})).await;
+        let seen = Seen::default();
+        let menu = menu(&test, recording(&seen, Ok(())));
+        menu.run(Command::SwitchDesktop("second".to_owned())).await;
+        let opened = seen.lock().unwrap_or_else(PoisonError::into_inner).clone();
+        let base = format!("http://127.0.0.1:{}", test.port);
+        assert_eq!(opened, [format!("{base}/?tab=accounts&switch=second")]);
         test.stop(false).await;
     }
 }

@@ -181,7 +181,7 @@ fn load_scope(catalog: &dyn Catalog, scope: Scope) -> Result<ScopeData, String> 
 }
 
 /// A record that ran in Claude Code on this PC: not a remote one, with a valid CLI session id.
-fn is_syncable(record: &Value, id: &str) -> bool {
+pub(crate) fn is_syncable(record: &Value, id: &str) -> bool {
     let remote = |key: &str| record.get(key).is_some_and(|v| !v.is_null());
     record.get("sessionId").and_then(Value::as_str) == Some(id)
         && !remote("sshConfig")

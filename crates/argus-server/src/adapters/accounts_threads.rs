@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use argus_accounts::handover::{AgentStop, Cycle, Lead, READY_REASON, WakeKind};
+use argus_accounts::handover::{AgentLoad, AgentStop, Cycle, Lead, READY_REASON, WakeKind};
 use argus_accounts::{Clock, HandoverStore, Threads};
 use argus_board::names::MAIN_KEY;
 use argus_core::clock::now_ms;
@@ -74,6 +74,22 @@ fn live_agents(board: &BoardView, lead: &str) -> Vec<AgentStop> {
         .collect()
 }
 
+/// The live agent records of a lead with the model each runs on. The boards do not know an
+/// agent's context size, so it stays unknown and the estimator applies no long-context factor.
+fn live_loads(board: &BoardView, lead: &str) -> Vec<AgentLoad> {
+    board
+        .agents
+        .iter()
+        .filter(|(_, a)| a.rec.is_live() && a.thread.is(lead) && a.status.is_any(&LIVE_AGENT))
+        .map(|(key, _)| AgentLoad {
+            model: board.json()["agents"][key]["model"]
+                .as_str()
+                .map(str::to_owned),
+            context_tokens: None,
+        })
+        .collect()
+}
+
 /// The lead of a board when it is working at `now`: inside a turn, or with a live agent.
 fn working_lead(key: &str, board: &BoardView, now: i64) -> Option<Lead> {
     let (id, thread) = live_lead(board)?;
@@ -114,6 +130,13 @@ impl Threads for BoardThreads {
     ) -> Result<(), String> {
         let wake = WakeRequest::about(board, thread, kind.reason(), subject, text);
         self.wake.submit(&[wake])
+    }
+
+    fn agent_loads(&self, board: &str, thread: &str) -> Vec<AgentLoad> {
+        self.boards
+            .board(board)
+            .map(|raw| live_loads(&BoardView::from_json(raw), thread))
+            .unwrap_or_default()
     }
 
     fn notice(&self, subject: &str, text: &str) -> Result<(), String> {

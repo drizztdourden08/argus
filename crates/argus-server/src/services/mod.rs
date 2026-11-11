@@ -35,7 +35,9 @@ use tasks::Tasks;
 
 pub(crate) mod accounts;
 pub(crate) mod accounts_alerts;
+pub(crate) mod accounts_estimates;
 pub(crate) mod accounts_handover;
+pub(crate) mod accounts_sync;
 pub(crate) mod activity;
 pub(crate) mod agents;
 pub(crate) mod cache;
@@ -56,6 +58,7 @@ pub(crate) mod worktrees;
 
 pub use accounts::{AccountsOptions, AccountsService};
 pub use accounts_alerts::AccountAlerts;
+pub use accounts_estimates::{EstimateState, LeadRef, LeadState, estimate_state, learn_from_cycle};
 pub use agents::AgentsOptions;
 pub use cache::{CacheOptions, CacheService};
 pub use notify::NotifyOptions;

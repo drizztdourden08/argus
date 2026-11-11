@@ -38,7 +38,8 @@ pub use serve_mode::ServeMode;
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
 pub use services::{
     AccountsOptions, AccountsService, AgentsOptions, CacheOptions, CacheService, ConsumerSource,
-    ConsumerStatus, Consumers, NodeStatus, NotifyOptions, ProcsOptions, Records, RecordsOptions,
-    RunsOptions, Services, WakeHook, WakeOptions, WakeRequest, WorktreesOptions,
+    ConsumerStatus, Consumers, EstimateState, LeadRef, LeadState, NodeStatus, NotifyOptions,
+    ProcsOptions, Records, RecordsOptions, RunsOptions, Services, WakeHook, WakeOptions,
+    WakeRequest, WorktreesOptions, estimate_state, learn_from_cycle,
 };
 pub use web::{PageVars, WebAssets, render_page};

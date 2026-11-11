@@ -11,6 +11,7 @@ pub mod handover;
 pub mod ports;
 pub mod registry;
 pub mod sidebar;
+pub mod sync;
 pub mod types;
 pub mod usage;
 

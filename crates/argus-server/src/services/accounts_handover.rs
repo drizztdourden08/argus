@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use argus_accounts::binding_limit;
 use argus_accounts::handover::{
-    CycleEvent, Desk, DeskError, LeadAction, LeadReply, Outcome, StartRequest,
+    CycleEvent, Desk, DeskError, Lead, LeadAction, LeadReply, Outcome, StartRequest,
 };
 use serde_json::json;
 use tokio::sync::broadcast;
@@ -88,6 +88,28 @@ impl Handovers {
     /// See [`Desk::cut_off_rest`].
     pub fn cut_off_rest(&self, use_now: Option<f64>) -> Result<Outcome, DeskError> {
         self.published(self.desk.cut_off_rest(use_now))
+    }
+
+    /// Asks a lead of the estimating cycle for a fresh estimate. Blocking.
+    ///
+    /// # Errors
+    /// See [`Desk::re_ask_estimate`].
+    pub fn re_ask_estimate(
+        &self,
+        lead: (&str, &str),
+        accounts: &AccountsService,
+    ) -> Result<Outcome, DeskError> {
+        let defaults = accounts.config().estimate_defaults;
+        self.desk.re_ask_estimate(lead, &defaults)
+    }
+
+    /// Adds a lead that started working after the cycle did. Blocking.
+    ///
+    /// # Errors
+    /// See [`Desk::add_lead`].
+    pub fn add_lead(&self, lead: &Lead, accounts: &AccountsService) -> Result<Outcome, DeskError> {
+        let defaults = accounts.config().estimate_defaults;
+        self.desk.add_lead(lead, &defaults)
     }
 
     /// A lead's request, with the use of the cycle's account now. Blocking.

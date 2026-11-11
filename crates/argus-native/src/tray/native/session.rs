@@ -15,12 +15,13 @@ use super::opener;
 use super::taskbar;
 use super::view;
 use super::win32::{self, InstanceGuard};
+use crate::tray::accounts::AccountLines;
 use crate::tray::balloon::Balloon;
 use crate::tray::error::TrayError;
 use crate::tray::gate::OpenGate;
 use crate::tray::icon::{IconKind, Ink, render};
 use crate::tray::log::TrayLog;
-use crate::tray::menu::{Command, entries};
+use crate::tray::menu::{Command, entries_with};
 use crate::tray::paths::TrayFiles;
 use crate::tray::state::TrayState;
 use crate::tray::watch::{self, Request};
@@ -69,6 +70,7 @@ pub struct Session {
     icons: Icons,
     icon_id: u32,
     state: TrayState,
+    accounts: AccountLines,
     quitting: bool,
     files: TrayFiles,
     log: TrayLog,
@@ -85,7 +87,7 @@ impl Session {
         let instance = InstanceGuard::acquire(&files.instance_name())?;
         let icons = Icons::load(taskbar::ink(), win32::small_icon_px(win32::dpi(None)))?;
         let state = TrayState::default();
-        let menu = view::build(&entries(&state))?;
+        let menu = view::build(&entries_with(&state, &AccountLines::default()))?;
         let icon_id = NEXT_ICON_ID.fetch_add(IDS_PER_ICON, Ordering::Relaxed) + 1;
         let tray = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
@@ -102,6 +104,7 @@ impl Session {
             icons,
             icon_id,
             state,
+            accounts: AccountLines::default(),
             quitting: false,
             log: TrayLog::new(files.clone()),
             files,
@@ -115,6 +118,17 @@ impl Session {
     pub fn apply_state(&mut self, state: TrayState) {
         if !self.quitting && state != self.state {
             self.show(state);
+        }
+    }
+
+    /// Shows the accounts section. Ignored while Quit is carried out.
+    pub fn apply_accounts(&mut self, accounts: AccountLines) {
+        if self.quitting || accounts == self.accounts {
+            return;
+        }
+        self.accounts = accounts;
+        if let Err(error) = self.paint_menu() {
+            self.log.line(&error.to_string());
         }
     }
 
@@ -177,8 +191,8 @@ impl Session {
         match command {
             Command::Quit => self.quit(),
             Command::Open => self.open(),
-            Command::OpenNotifications => self.show_page(command),
-            Command::Restart | Command::Start if self.quitting => {}
+            Command::OpenNotifications | Command::SwitchDesktop(_) => self.show_page(command),
+            Command::Restart | Command::Start | Command::CancelSwitch if self.quitting => {}
             other => self.fire(other),
         }
     }
@@ -205,7 +219,7 @@ impl Session {
     }
 
     fn fire(&self, command: Command) {
-        if !self.handlers.fire_command(command) {
+        if !self.handlers.fire_command(command.clone()) {
             self.log
                 .line(&format!("{}: nothing handles the menu yet", command.id()));
         }
@@ -242,7 +256,11 @@ impl Session {
             let icon = self.icons.of(self.state.icon());
             self.tray.set_icon(Some(icon)).map_err(platform)?;
         }
-        let menu = view::build(&entries(&self.state))?;
+        self.paint_menu()
+    }
+
+    fn paint_menu(&self) -> Result<(), TrayError> {
+        let menu = view::build(&entries_with(&self.state, &self.accounts))?;
         self.tray.set_menu(Some(Box::new(menu)));
         Ok(())
     }

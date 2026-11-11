@@ -6,7 +6,7 @@ use std::time::Duration;
 use argus_core::config::load_config;
 use argus_core::page_url::page;
 use argus_core::{Config, Paths};
-use argus_native::TrayState;
+use argus_native::{AccountLine, AccountLines, TrayState};
 use argus_server::instance::{PidRecord, call, probe, read_pid_file};
 use serde_json::Value;
 use tokio::time::sleep;
@@ -129,6 +129,39 @@ impl Server {
         }
     }
 
+    /// The accounts section of the menu: read from the server's `GET /api/accounts/tray`. Empty
+    /// when the server is down, has no accounts service, or answers something else.
+    pub async fn accounts(&self) -> AccountLines {
+        let Some((record, _)) = self.live().await else {
+            return AccountLines::default();
+        };
+        let token = self.config().map(|c| c.token);
+        let answer = call(record.port, "GET", "/api/accounts/tray", token.as_deref()).await;
+        answer
+            .filter(|(status, _)| *status == 200)
+            .map(|(_, body)| account_lines(&body))
+            .unwrap_or_default()
+    }
+
+    /// Asks the server to cancel the switch countdown.
+    ///
+    /// # Errors
+    ///
+    /// The server does not answer or refuses.
+    pub async fn cancel_switch(&self) -> Result<(), String> {
+        let (record, _) = self
+            .live()
+            .await
+            .ok_or("the server did not answer its health check")?;
+        let token = self.config().map(|c| c.token);
+        let path = "/api/accounts/switch/cancel";
+        match call(record.port, "POST", path, token.as_deref()).await {
+            Some((status, _)) if status < 300 => Ok(()),
+            Some((status, _)) => Err(format!("the server answered {status}")),
+            None => Err("the cancel call got no answer".to_owned()),
+        }
+    }
+
     /// The address of a page of the running server: under the localhost names when the server
     /// says its localhost door is bound (`http://argus.localhost/`), else on `127.0.0.1`. With
     /// the token hardening on, it carries a one-time code that signs the page in.
@@ -151,6 +184,40 @@ impl Server {
         let next = next.replace('#', "%23");
         Ok(format!("{base}/auth?code={code}&next={next}"))
     }
+}
+
+/// The menu lines of a `GET /api/accounts/tray` body; nothing readable gives no lines.
+fn account_lines(body: &str) -> AccountLines {
+    let Ok(reply) = serde_json::from_str::<Value>(body) else {
+        return AccountLines::default();
+    };
+    let lines = reply["accounts"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|account| {
+            let key = account["key"].as_str()?;
+            Some(AccountLine {
+                key: key.to_owned(),
+                label: account["label"].as_str().unwrap_or(key).to_owned(),
+                weekly: account["weekly"].as_f64().map(percent),
+                active: account["active"].as_bool().unwrap_or(false),
+            })
+        })
+        .collect();
+    AccountLines {
+        lines,
+        switching: reply["switching"].as_bool().unwrap_or(false),
+    }
+}
+
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "a percent is clamped to 0..=999 first"
+)]
+fn percent(value: f64) -> u32 {
+    value.round().clamp(0.0, 999.0) as u32
 }
 
 async fn sign_in_code(port: u16, token: &str) -> Result<String, String> {
@@ -201,5 +268,22 @@ mod tests {
             .expect("a running server needs no start");
         assert!(!server.is_starting());
         test.stop(false).await;
+    }
+
+    #[test]
+    fn the_tray_answer_becomes_menu_lines() {
+        let body = r#"{"accounts":[{"key":"a","label":"Alpha","weekly":41.6,"active":true},
+            {"key":"b","weekly":null,"active":false},{"label":"no key"}],"switching":true}"#;
+        let lines = super::account_lines(body);
+        assert!(lines.switching);
+        assert_eq!(lines.lines.len(), 2);
+        assert_eq!(lines.lines[0].weekly, Some(42));
+        assert!(lines.lines[0].active);
+        assert_eq!(lines.lines[1].label, "b");
+        assert_eq!(lines.lines[1].weekly, None);
+        assert_eq!(
+            super::account_lines("nonsense"),
+            argus_native::AccountLines::default()
+        );
     }
 }

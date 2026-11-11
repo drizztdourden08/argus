@@ -84,6 +84,16 @@ pub const IMMEDIATE_REASONS: [&str; 16] = [
     "handover-request",
 ];
 
+/// The reasons that skip the wake debounce: a handover must reach its lead even when the thread was
+/// woken a minute ago, because the account switch will not wait for a digest.
+pub const DEBOUNCE_BYPASS_REASONS: [&str; 2] = ["handover-estimate", "handover-request"];
+
+/// Does this reason skip the wake debounce?
+#[must_use]
+pub fn bypasses_debounce(reason: &str) -> bool {
+    DEBOUNCE_BYPASS_REASONS.contains(&reason)
+}
+
 /// The reasons the wakes route accepts from outside the policy.
 pub const EXTERNAL_REASONS: [&str; 4] =
     ["lead-message", "lead-info", "thread-message", "wake-fault"];

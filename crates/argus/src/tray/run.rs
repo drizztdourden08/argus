@@ -42,7 +42,9 @@ async fn watch(tray: &TrayHandle, menu: &Menu) {
     loop {
         tokio::select! {
             () = sleep_until(due) => {
-                tray.set_state(menu.server.state().await);
+                let state = menu.server.state().await;
+                tray.set_accounts(menu.server.accounts().await);
+                tray.set_state(state);
                 let wait = if menu.server.is_starting() { POLL_STARTING } else { POLL };
                 due = Instant::now() + wait;
             }

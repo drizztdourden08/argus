@@ -161,6 +161,9 @@ pub struct Handover {
     /// The lead's agents: the live ones when the cycle started, then what the lead reported.
     #[serde(default)]
     pub agents: Vec<AgentStop>,
+    /// When the handover-estimate wake last went out, ISO 8601.
+    #[serde(default)]
+    pub estimate_asked_at: Option<String>,
     /// When the handover-request wake went out, ISO 8601.
     #[serde(default)]
     pub asked_at: Option<String>,
@@ -255,6 +258,7 @@ mod tests {
             estimate: None,
             file: None,
             agents: Vec::new(),
+            estimate_asked_at: None,
             asked_at: None,
             ready_at: None,
         }

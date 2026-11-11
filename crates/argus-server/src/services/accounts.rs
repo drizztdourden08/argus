@@ -56,14 +56,15 @@ impl Default for AccountsOptions {
 pub struct AccountsService {
     config: RwLock<AccountsConfig>,
     probe: Arc<dyn AuthProbe>,
-    docs: AccountsDocs,
+    pub(crate) docs: AccountsDocs,
     source: Arc<dyn UsageSource>,
     creds: Arc<dyn Credentials>,
     burn: Mutex<BurnHistory>,
     latest: RwLock<HashMap<String, PollResult>>,
-    log: Arc<Logger>,
+    pub(crate) log: Arc<Logger>,
     polled: watch::Sender<Arc<Vec<PollResult>>>,
     pub(crate) handovers: OnceLock<Arc<super::accounts_handover::Handovers>>,
+    pub(crate) sync: super::accounts_sync::SyncState,
 }
 
 /// The outside world of the usage poll.
@@ -96,6 +97,7 @@ impl AccountsService {
             latest: RwLock::default(),
             polled: watch::channel(Arc::new(Vec::new())).0,
             handovers: OnceLock::new(),
+            sync: super::accounts_sync::SyncState::default(),
         }
     }
 
@@ -272,6 +274,8 @@ pub(crate) fn start(svc: &Arc<Services>) {
         return;
     };
     super::accounts_handover::attach(svc, &accounts);
+    super::accounts_sync::attach(svc, &accounts);
+    super::accounts_sync::start(svc, &accounts);
     let owned = Arc::clone(svc);
     let polling = svc.tasks.runs(Timer::Accounts);
     let task = tokio::spawn(async move {

@@ -1,6 +1,7 @@
 //! The tray icon of Argus: what it shows, the files other processes use to talk to it, and on
 //! Windows the icon itself on its own thread.
 
+mod accounts;
 mod balloon;
 mod downscale;
 mod error;
@@ -21,12 +22,13 @@ mod stopping;
 mod timestamp;
 mod watch;
 
+pub use accounts::{AccountLine, AccountLines};
 pub use balloon::{Balloon, write as write_balloon};
 pub use error::TrayError;
 pub use fallback::{Delivery, FallbackNotifier};
 pub use icon::{ARGUS_ICO, IconKind, Ink, Rgba, render as render_icon};
 pub use launch::{Launch, prepare as prepare_launch, wait_for_tray};
-pub use menu::{Command, Entry, entries as menu_entries};
+pub use menu::{Command, Entry, entries as menu_entries, entries_with as menu_entries_with};
 #[cfg(windows)]
 pub use native::{ExitReason, TrayHandle, open_url, process_alive};
 pub use paths::TrayFiles;

@@ -198,6 +198,22 @@ fn after_the_debounce_a_wake_goes_on_the_usual_window_and_the_debounce_is_per_th
 }
 
 #[test]
+fn handover_wakes_skip_the_debounce_and_the_other_wakes_stay_held() {
+    let mut rig = policy_rig(&["handover-estimate", "handover-request", "owner-note"]);
+    let mut lead = rig.listen("alpha", "lead", AttachOptions::default());
+    rig.submit(&[wake_in("alpha", "lead", "first", "owner-note")]);
+    assert_eq!(lead.count(), 1);
+    rig.advance(MIN);
+    rig.submit(&[wake_in("alpha", "lead", "estimate", "handover-estimate")]);
+    assert_eq!(lead.count(), 2, "an estimate wake goes at once");
+    rig.advance(MIN);
+    rig.submit(&[wake_in("alpha", "lead", "again", "owner-note")]);
+    assert_eq!(lead.count(), 2, "an owner note inside the debounce is held");
+    rig.submit(&[wake_in("alpha", "lead", "request", "handover-request")]);
+    assert_eq!(lead.count(), 3, "a request wake releases the held window");
+}
+
+#[test]
 fn the_policy_comes_from_the_wake_policy_section_and_0_turns_the_debounce_off() {
     let defaults = WakeConfig::default().policy;
     assert_eq!(

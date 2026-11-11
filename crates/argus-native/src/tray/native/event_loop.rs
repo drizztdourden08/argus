@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use super::handlers::Handlers;
 use super::session::Session;
 use super::win32;
+use crate::tray::accounts::AccountLines;
 use crate::tray::balloon::Balloon;
 use crate::tray::error::TrayError;
 use crate::tray::paths::TrayFiles;
@@ -19,6 +20,7 @@ const TICK: Duration = Duration::from_millis(500);
 /// A message from the handle to the tray thread.
 pub enum Control {
     SetState(TrayState),
+    SetAccounts(AccountLines),
     Balloon(Balloon),
     Shutdown,
 }
@@ -78,6 +80,7 @@ fn take_controls(session: &mut Session, controls: &Receiver<Control>) -> Option<
     loop {
         match controls.try_recv() {
             Ok(Control::SetState(state)) => session.apply_state(state),
+            Ok(Control::SetAccounts(accounts)) => session.apply_accounts(accounts),
             Ok(Control::Balloon(balloon)) => session.balloon(&balloon),
             Ok(Control::Shutdown) | Err(TryRecvError::Disconnected) => {
                 return Some(ExitReason::Shutdown);

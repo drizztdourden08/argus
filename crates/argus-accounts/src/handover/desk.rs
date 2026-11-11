@@ -8,8 +8,9 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use argus_core::clock::iso_from_ms;
 
+use super::estimator::AgentLoad;
 use super::protocol::{CycleEvent, Effect, ProtocolError, Start, WakeKind, start};
-use super::records::{AgentStop, Cycle, CycleMode, Estimate, Handover};
+use super::records::{AgentStop, Cycle, CycleMode, Estimate, Handover, Lead};
 use super::texts::{estimate_wake, expects, ready_notice, request_wake};
 use crate::config::EstimateDefaults;
 use crate::ports::{Clock, HandoverStore, Threads};
@@ -225,6 +226,44 @@ impl Desk {
     pub fn cut_off_rest(&self, use_now: Option<f64>) -> Result<Outcome, DeskError> {
         let (cycle, effects) = self.change(|c| Ok(c.cut_off_rest(use_now)))?;
         Ok(self.carry_out(cycle, effects, &EstimateDefaults::default()))
+    }
+
+    /// The leads working now, as the boards say.
+    #[must_use]
+    pub fn working_leads(&self) -> Vec<Lead> {
+        self.threads.working_leads()
+    }
+
+    /// The live agents of a lead with their model and context size.
+    #[must_use]
+    pub fn agent_loads(&self, board: &str, thread: &str) -> Vec<AgentLoad> {
+        self.threads.agent_loads(board, thread)
+    }
+
+    /// Asks a lead of the estimating cycle for a fresh estimate.
+    ///
+    /// # Errors
+    /// No cycle, the lead is not in it, the cycle is not estimating, or the store refused.
+    pub fn re_ask_estimate(
+        &self,
+        (board, thread): (&str, &str),
+        defaults: &EstimateDefaults,
+    ) -> Result<Outcome, DeskError> {
+        let now = self.now();
+        let (cycle, effects) = self.change(|c| Ok(c.re_ask_estimate(board, thread, &now)?))?;
+        Ok(self.carry_out(cycle, effects, defaults))
+    }
+
+    /// Adds a lead that started working after the cycle did: it gets an estimate wake in an
+    /// estimating cycle and the handover request at once in an asked one.
+    ///
+    /// # Errors
+    /// No cycle, the cycle is closed, or the store refused.
+    pub fn add_lead(&self, lead: &Lead, defaults: &EstimateDefaults) -> Result<Outcome, DeskError> {
+        let now = self.now();
+        let id = self.next_id("H")?;
+        let (cycle, effects) = self.change(|c| Ok(c.add_lead(lead, id, &now)?))?;
+        Ok(self.carry_out(cycle, effects, defaults))
     }
 
     /// The resumer's verdict on one handover.
@@ -505,5 +544,19 @@ mod tests {
             .unwrap();
         let again = Desk::new(world.clone(), world.clone(), world).unwrap();
         assert_eq!(again.cycle().map(|c| c.id), Some("SW-1".into()));
+    }
+
+    #[test]
+    fn a_re_asked_lead_and_a_lead_added_mid_cycle_are_woken() {
+        let (world, desk) = desk(&["rotp"]);
+        let defaults = EstimateDefaults::default();
+        desk.start(request(CycleMode::Auto), &defaults).unwrap();
+        let added = desk.add_lead(&lead("brock"), &defaults).unwrap();
+        assert_eq!(added.cycle.leads.len(), 2);
+        desk.re_ask_estimate(("rotp", "coordinator"), &defaults)
+            .unwrap();
+        let wakes = world.wakes.lock().unwrap();
+        assert_eq!(wakes.len(), 3);
+        assert!(wakes.iter().all(|(_, kind, _)| *kind == WakeKind::Estimate));
     }
 }

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-use crate::handover::{Cycle, Lead, WakeKind};
+use crate::handover::{AgentLoad, Cycle, Lead, WakeKind};
 use crate::types::{Account, Scope, Usage};
 
 /// Reads an account's usage from the usage endpoint.
@@ -104,6 +104,11 @@ pub trait Threads: Send + Sync {
     ) -> Result<(), String>;
     /// Leaves the Overlord a notice (not a wake) that a handover is ready.
     fn notice(&self, subject: &str, text: &str) -> Result<(), String>;
+    /// The live agents of a lead with their model and, when known, their context size, for the
+    /// estimator's prior. A port that cannot tell answers with none.
+    fn agent_loads(&self, _board: &str, _thread: &str) -> Vec<AgentLoad> {
+        Vec::new()
+    }
 }
 
 /// Where the handover cycle and its counters are kept.
