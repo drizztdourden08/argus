@@ -376,7 +376,7 @@ fn load(svc: &Services, accounts: &AccountsService) {
             .error("accounts docs not written", json!({ "error": e }));
     }
     super::accounts_switch::publish_logins(svc, accounts);
-    accounts.scan_drift();
+    accounts.scan_drift_now();
     if !svc.shadow {
         super::accounts_switch::repair_interrupted(svc, accounts);
     }

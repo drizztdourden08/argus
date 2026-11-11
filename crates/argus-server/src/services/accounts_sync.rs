@@ -204,12 +204,23 @@ impl AccountsService {
         self.with_env(|env| scan_and_plan(env).map(|p| build_compare(&p, &accounts)))?
     }
 
-    /// Counts the drift now, without a run; skipped while a sync or a switch runs.
+    /// Counts the drift now, without a run; skipped while a sync or a switch runs, and before
+    /// any account is known (the first tick can come before discovery).
     pub(crate) fn scan_drift(&self) {
-        if accounts_switch::is_running() {
+        self.scan_drift_with(self.sync.take());
+    }
+
+    /// The start-up scan: it waits for a tick that holds the turn instead of skipping, so the
+    /// account cards get their counts right after discovery.
+    pub(crate) fn scan_drift_now(&self) {
+        self.scan_drift_with(self.sync.take_waiting(TURN_WAIT));
+    }
+
+    fn scan_drift_with(&self, turn: Result<Turn<'_>, String>) {
+        if accounts_switch::is_running() || self.config().accounts.is_empty() {
             return;
         }
-        let Ok(_turn) = self.sync.take() else {
+        let Ok(_turn) = turn else {
             return;
         };
         let accounts = self.config().accounts;
