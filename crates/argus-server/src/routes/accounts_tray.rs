@@ -64,6 +64,7 @@ pub fn register(r: &mut Router) {
     r.get("/api/accounts/tray", tray);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

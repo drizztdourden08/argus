@@ -440,6 +440,7 @@ fn on_countdown(facts: &Facts<'_>, countdown: &Countdown) -> Vec<Decision> {
     }]
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -815,6 +816,7 @@ mod tests {
     #[test]
     fn a_hold_off_stops_the_rule_until_the_use_falls_five_points_under() {
         let mut s = setup(view("a", 99.0, 10), view("b", 10.0, 20));
+        s.accounts[0].resets_at_ms = Some(5_000_000);
         s.hold_offs = vec![HoldOff::after_cancel(&s.accounts[0])];
         assert!(run(&s).is_empty());
         s.accounts[0].percent = Some(94.0);
@@ -864,7 +866,9 @@ mod tests {
 
     #[test]
     fn a_hold_off_of_another_account_does_not_hold_this_one() {
-        let mut s = setup(view("a", 99.0, 10), view("b", 10.0, 20));
+        let mut s = setup(view("a", 99.0, 10), view("b", 96.0, 20));
+        s.accounts[0].resets_at_ms = Some(5_000_000);
+        s.accounts[1].resets_at_ms = Some(5_000_000);
         s.hold_offs = vec![HoldOff::after_cancel(&s.accounts[1])];
         assert_eq!(run(&s), vec![countdown_to("b")]);
     }

@@ -87,6 +87,7 @@ pub trait StepSink: Send + Sync {
     fn put(&self, step: &SyncStep);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -151,6 +151,7 @@ impl AccountsConfig {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

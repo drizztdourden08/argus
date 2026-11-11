@@ -89,23 +89,20 @@ pub fn apply(
     Ok(plan.changes.len())
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
     use super::{StepStatus, apply, preflight};
-    use crate::catalog::fixtures::{Fixture, record, session_id};
+    use crate::catalog::fixtures::{Fixture, record, scope, session_id, three_scopes};
     use crate::catalog::plan::{ChangeKind, build_plan};
     use crate::config::ArchiveRule;
     use crate::ports::Catalog;
 
     fn busy_fixture() -> Fixture {
         let fx = Fixture::new();
-        let (a, b, c) = (
-            fx.scope("a1", "o1"),
-            fx.scope("a2", "o2"),
-            fx.scope("a3", "o3"),
-        );
+        let (a, b, c) = three_scopes();
         fx.ensure(&c);
         let mut old = record(1, 10);
         old["permissionMode"] = json!("plan");
@@ -168,7 +165,7 @@ mod tests {
         let mut steps = 0;
         assert!(apply(&fx.catalog(), &plan, |_, _| steps += 1).is_err());
         assert_eq!(steps, 0, "nothing is written after a failed preflight");
-        let b = fx.scope("a3", "o3");
+        let b = scope("a3", "o3");
         assert!(fx.catalog().session_ids(&b).unwrap().is_empty());
     }
 

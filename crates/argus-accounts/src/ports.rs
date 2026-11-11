@@ -59,7 +59,7 @@ pub trait Transcripts: Send + Sync {
     fn is_valid(&self, path: &Path) -> bool;
 }
 
-/// The Desktop app's sidebar folders, kept in its LevelDB.
+/// The Desktop app's sidebar folders, kept in its `LevelDB`.
 pub trait SidebarStore: Send + Sync {
     /// The three folder keys as one object, read from a copy so Claude may be running.
     fn read(&self) -> Result<Value, String>;

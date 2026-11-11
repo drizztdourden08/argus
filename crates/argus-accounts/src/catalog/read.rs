@@ -98,7 +98,7 @@ fn sub_dirs(path: &Path) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-fn file_names(path: &Path) -> Result<Vec<String>, String> {
+pub(crate) fn file_names(path: &Path) -> Result<Vec<String>, String> {
     let mut names: Vec<String> = read_dirs(path)?
         .iter()
         .filter(|e| e.path().is_file())
@@ -303,7 +303,7 @@ pub fn valid_transcript(path: &Path) -> bool {
         let uuid = object.get("uuid").and_then(Value::as_str);
         match (session, uuid) {
             (Some(s), Some(u)) if !found_own && is_uuid(s) && is_uuid(u) => {
-                inherited.push(u.to_owned())
+                inherited.push(u.to_owned());
             }
             _ => return false,
         }
@@ -311,6 +311,7 @@ pub fn valid_transcript(path: &Path) -> bool {
     found_own && (inherited.is_empty() || linked)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -329,6 +330,15 @@ mod tests {
             account: "acct".to_owned(),
             org: "org".to_owned(),
         }
+    }
+
+    /// A temp root whose `acct/org` folder holds one file.
+    fn root_with(name: &str, body: &[u8]) -> (tempfile::TempDir, std::path::PathBuf) {
+        let dir = tempdir().unwrap();
+        let folder = dir.path().join("acct").join("org");
+        fs::create_dir_all(&folder).unwrap();
+        fs::write(folder.join(name), body).unwrap();
+        (dir, folder)
     }
 
     #[test]
@@ -359,14 +369,10 @@ mod tests {
 
     #[test]
     fn writing_the_index_keeps_its_other_fields() {
-        let dir = tempdir().unwrap();
-        let folder = dir.path().join("acct").join("org");
-        fs::create_dir_all(&folder).unwrap();
-        fs::write(
-            folder.join("archived-sessions.idx"),
+        let (dir, folder) = root_with(
+            "archived-sessions.idx",
             br#"{"v":1,"archived":[],"other":{"x":1}}"#,
-        )
-        .unwrap();
+        );
         let catalog = FsCatalog::new(dir.path());
         catalog.write_archived(&scope(), &[SID.to_owned()]).unwrap();
         let now: serde_json::Value =
@@ -378,14 +384,7 @@ mod tests {
 
     #[test]
     fn tombstones_are_listed_as_chat_ids() {
-        let dir = tempdir().unwrap();
-        let folder = dir.path().join("acct").join("org");
-        fs::create_dir_all(&folder).unwrap();
-        fs::write(
-            folder.join("deleted_22222222-2222-2222-2222-222222222222"),
-            b"",
-        )
-        .unwrap();
+        let (dir, _folder) = root_with("deleted_22222222-2222-2222-2222-222222222222", b"");
         let catalog = FsCatalog::new(dir.path());
         assert_eq!(
             catalog.tombstones(&scope()).unwrap(),

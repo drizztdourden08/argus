@@ -184,7 +184,10 @@ impl ClaudeDesktop {
 
 fn is_chat_record(path: &Path) -> bool {
     let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    name.starts_with("local_") && name.ends_with(".json")
+    name.starts_with("local_")
+        && path
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
 }
 
 impl DesktopApp for ClaudeDesktop {
@@ -245,6 +248,7 @@ impl DesktopApp for ClaudeDesktop {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::time::Duration;

@@ -255,6 +255,7 @@ pub fn has_run(app: &Path, scope: &Scope, id: &str) -> Result<bool, String> {
         .is_some_and(|t| t.get("lastRunAt").is_some_and(|v| !v.is_null())))
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -335,11 +336,17 @@ mod tests {
         assert!(!prompt.contains('\u{2014}') && !prompt.contains('\u{2013}'));
     }
 
-    #[test]
-    fn a_task_is_added_beside_the_others_without_touching_them() {
+    /// A temp folder with the app folder holding the fixture file, and a skills folder.
+    fn world() -> (tempfile::TempDir, PathBuf, PathBuf, PathBuf) {
         let temp = tempfile::tempdir().unwrap();
         let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
         let path = fixture(&app);
+        (temp, app, skills, path)
+    }
+
+    #[test]
+    fn a_task_is_added_beside_the_others_without_touching_them() {
+        let (_temp, app, skills, path) = world();
         write_task(&app, &scope(), &task(), &skills).unwrap();
         let root = read(&path);
         let list = root["scheduledTasks"].as_array().unwrap();
@@ -379,9 +386,7 @@ mod tests {
 
     #[test]
     fn removing_drops_the_entry_and_the_folder_only() {
-        let temp = tempfile::tempdir().unwrap();
-        let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
-        let path = fixture(&app);
+        let (_temp, app, skills, path) = world();
         write_task(&app, &scope(), &task(), &skills).unwrap();
         remove_task(&app, &scope(), ID, &skills).unwrap();
         let ids: Vec<Value> = read(&path)["scheduledTasks"]
@@ -410,9 +415,7 @@ mod tests {
 
     #[test]
     fn a_write_keeps_a_backup_named_after_the_cycle() {
-        let temp = tempfile::tempdir().unwrap();
-        let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
-        let path = fixture(&app);
+        let (_temp, app, skills, path) = world();
         let before = fs::read_to_string(&path).unwrap();
         write_task(&app, &scope(), &task(), &skills).unwrap();
         let backup = path.with_file_name("scheduled-tasks.json.bak-SW-3");
@@ -427,6 +430,7 @@ mod tests {
         fs::OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(false)
             .share_mode(0)
             .open(dir.join("LOCK"))
             .unwrap()
@@ -435,9 +439,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn nothing_is_written_or_removed_while_claude_runs() {
-        let temp = tempfile::tempdir().unwrap();
-        let (app, skills) = (temp.path().join("app"), temp.path().join("skills"));
-        let path = fixture(&app);
+        let (_temp, app, skills, path) = world();
         let before = fs::read_to_string(&path).unwrap();
         let _lock = hold_lock(&app);
         assert!(write_task(&app, &scope(), &task(), &skills).is_err());

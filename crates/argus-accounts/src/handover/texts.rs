@@ -76,6 +76,7 @@ pub fn expects(h: &Handover, defaults: &EstimateDefaults) -> (&'static str, Stri
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::{WAKE_MAX, estimate_wake, request_wake};

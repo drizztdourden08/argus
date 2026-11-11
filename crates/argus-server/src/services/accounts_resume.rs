@@ -282,6 +282,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     svc.tasks.keep(NAME, task);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use argus_accounts::Scope;

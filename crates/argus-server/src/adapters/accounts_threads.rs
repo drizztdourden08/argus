@@ -50,8 +50,11 @@ impl BoardThreads {
 /// The coordinator of a board when it is a live, unpaused session.
 fn live_lead(board: &BoardView) -> Option<(String, &ThreadView)> {
     let id = board.coordinator()?;
-    let thread = board.threads.get(&id)?;
-    (thread.is_live() && !thread.status.is("paused")).then_some((id, thread))
+    let live = board
+        .threads
+        .get(&id)
+        .filter(|t| t.is_live() && !t.status.is("paused"))?;
+    Some((id, live))
 }
 
 /// The live agent records of a lead, with the branch each works on.
@@ -203,6 +206,7 @@ impl HandoverStore for HandoverDocs {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use argus_core::clock::iso_from_ms;
@@ -230,7 +234,7 @@ mod tests {
     fn a_lead_inside_a_turn_is_working() {
         let lead = working_lead("rotp", &board("working", 60_000, "done"), NOW).unwrap();
         assert_eq!(lead.session_id.as_deref(), Some("s-1"));
-        assert!(lead.agents.is_empty());
+        assert_eq!(lead.agents.len(), 0);
     }
 
     #[test]

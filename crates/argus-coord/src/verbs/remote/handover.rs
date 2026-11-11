@@ -187,6 +187,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

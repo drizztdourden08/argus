@@ -27,7 +27,7 @@ impl AccountsDocs {
     /// # Errors
     /// When the store refuses the write.
     pub fn put(&self, coll: Coll, id: &str, data: Value) -> Result<(), String> {
-        self.apply(vec![DocChange::set(coll, id.to_owned(), data)])
+        self.apply(&[DocChange::set(coll, id.to_owned(), data)])
     }
 
     /// Sets the `Accounts` doc of every account, with no usage read yet.
@@ -38,8 +38,8 @@ impl AccountsDocs {
         let changes = accounts
             .iter()
             .map(|a| DocChange::set(Coll::Accounts, a.key.clone(), account_doc(a)))
-            .collect();
-        self.apply(changes)
+            .collect::<Vec<_>>();
+        self.apply(&changes)
     }
 
     /// Writes what a poll found into the `Accounts` docs, keeping the fields other pieces own.
@@ -63,7 +63,7 @@ impl AccountsDocs {
             merge_usage(&mut doc, account, result, is_active);
             changes.push(DocChange::set(Coll::Accounts, account.key.clone(), doc));
         }
-        self.apply(changes)
+        self.apply(&changes)
     }
 
     fn current(&self, account: &Account) -> Result<Value, String> {
@@ -75,10 +75,10 @@ impl AccountsDocs {
         Ok(row.map_or_else(|| account_doc(account), |r| r.data))
     }
 
-    fn apply(&self, changes: Vec<DocChange>) -> Result<(), String> {
+    fn apply(&self, changes: &[DocChange]) -> Result<(), String> {
         self.db
             .tx(|tx| {
-                tx.apply(PORTFOLIO, &changes)?;
+                tx.apply(PORTFOLIO, changes)?;
                 Ok(())
             })
             .map_err(|e| e.to_string())
@@ -93,9 +93,9 @@ impl StepSink for AccountsDocs {
         let gone = rows
             .into_iter()
             .map(|r| DocChange::delete(Coll::SyncSteps, r.id))
-            .collect();
+            .collect::<Vec<_>>();
         // A step log that cannot be cleared is shown stale; the run goes on.
-        let _ = self.apply(gone);
+        let _ = self.apply(&gone);
     }
 
     fn put(&self, step: &SyncStep) {

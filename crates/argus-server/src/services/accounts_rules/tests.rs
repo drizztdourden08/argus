@@ -1,4 +1,7 @@
+// test-tag: critical
 //! The rules service over a fake world and a paused clock.
+
+#![allow(clippy::assert_is_empty)]
 
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
@@ -134,7 +137,7 @@ fn view(key: &str, percent: f64, handover: HandoverMode) -> View {
         },
         percent: Some(percent),
         critical: false,
-        resets_at_ms: Some(1),
+        resets_at_ms: Some(4_000_000_000_000),
     }
 }
 

@@ -237,6 +237,7 @@ pub fn calibrate(k: f64, cost: CycleCost) -> f64 {
     (k + LEARNING_RATE * (target - k)).clamp(K_RANGE.0, K_RANGE.1)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::super::records::{Cycle, CycleMode, CyclePhase, Estimate, Handover, HandoverState};

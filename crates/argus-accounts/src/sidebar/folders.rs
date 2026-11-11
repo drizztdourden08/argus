@@ -164,7 +164,7 @@ fn order_list(keys: &SidebarKeys, scope: &str, folder_id: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn set_order_list(keys: &mut SidebarKeys, scope: &str, folder_id: &str, list: Vec<String>) {
+fn set_order_list(keys: &mut SidebarKeys, scope: &str, folder_id: &str, list: &[String]) {
     let Some(e) = entry_mut(&mut keys.group_scopes, scope).and_then(Value::as_object_mut) else {
         return;
     };
@@ -307,7 +307,7 @@ fn fill_orders(
         for (folder, add) in missing {
             let mut list = order_list(keys, scope, &folder);
             list.extend(add);
-            set_order_list(keys, scope, &folder, list);
+            set_order_list(keys, scope, &folder, &list);
             if let Some(name) = folder_name(keys, scope, &folder) {
                 steps.push(FolderStep::ReorderFolder {
                     scope: scope.clone(),
@@ -389,16 +389,16 @@ fn move_chat(
     }
     let key = chat_key(sid);
     if let Some(old_id) = old {
-        let rest = order_list(keys, scope, &old_id)
+        let rest: Vec<String> = order_list(keys, scope, &old_id)
             .into_iter()
             .filter(|k| *k != key)
             .collect();
-        set_order_list(keys, scope, &old_id, rest);
+        set_order_list(keys, scope, &old_id, &rest);
     }
     set_assignment(keys, scope, &key, &new_folder);
     let mut list = order_list(keys, scope, &new_folder);
     list.push(key);
-    set_order_list(keys, scope, &new_folder, list);
+    set_order_list(keys, scope, &new_folder, &list);
     steps.push(FolderStep::AssignChat {
         scope: scope.to_owned(),
         session_id: sid.to_owned(),
@@ -498,7 +498,7 @@ fn follow_order(
     let placed: BTreeSet<String> = wanted.iter().cloned().collect();
     wanted.extend(current.iter().filter(|k| !placed.contains(*k)).cloned());
     if wanted != current {
-        set_order_list(keys, scope, &id, wanted);
+        set_order_list(keys, scope, &id, &wanted);
         steps.push(FolderStep::ReorderFolder {
             scope: scope.to_owned(),
             name: name.to_owned(),
@@ -667,6 +667,7 @@ fn members_of(id: &str, previous: Option<&Value>, groups: &Value) -> Vec<String>
     members
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

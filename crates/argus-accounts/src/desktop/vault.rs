@@ -291,6 +291,7 @@ impl LoginVault for FsVault {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -300,20 +301,12 @@ mod tests {
     use tempfile::TempDir;
 
     use super::{FsVault, last_known_account};
+    use crate::fixtures::account_in;
     use crate::ports::LoginVault;
-    use crate::types::{Account, Rules};
+    use crate::types::Account;
 
     fn account(key: &str, uuid: &str) -> Account {
-        Account {
-            key: key.to_owned(),
-            label: key.to_owned(),
-            color: "#000000".to_owned(),
-            desktop_account: Some(uuid.to_owned()),
-            desktop_org: None,
-            cli_dir: String::new(),
-            can_receive: true,
-            rules: Rules::default(),
-        }
+        account_in(key, key, Some(uuid.to_owned()), None)
     }
 
     fn write_app(app: &Path, uuid: &str, token: &str, cookies: &str) {

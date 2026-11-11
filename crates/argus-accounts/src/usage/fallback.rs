@@ -43,6 +43,7 @@ pub fn latest_sample(app: &Path, org: &str) -> Option<Usage> {
     })
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

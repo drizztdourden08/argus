@@ -364,6 +364,7 @@ impl Desk {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;

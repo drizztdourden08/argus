@@ -484,6 +484,7 @@ impl Cycle {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::super::records::{AgentStop, CycleMode, CyclePhase, Estimate, HandoverState, Lead};

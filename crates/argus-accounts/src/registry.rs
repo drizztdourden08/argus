@@ -170,6 +170,7 @@ pub fn discover(app: Option<&Path>, cli_root: &Path, probe: &dyn AuthProbe) -> V
         .collect()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::fs;

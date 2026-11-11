@@ -548,6 +548,7 @@ fn roll_back(
     app.start()
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
@@ -557,8 +558,9 @@ mod tests {
 
     use super::{Done, Plan, Stages, Step, StepStatus, Stop, Timing, run};
     use crate::desktop::journal::{Entry, Journal};
+    use crate::fixtures::account;
     use crate::ports::{DesktopApp, LoginVault};
-    use crate::types::{Account, Rules};
+    use crate::types::Account;
 
     type Log = Mutex<Vec<String>>;
 
@@ -659,19 +661,6 @@ mod tests {
         }
         fn closed(&self) {
             *self.closed_calls.lock().unwrap() += 1;
-        }
-    }
-
-    fn account(key: &str) -> Account {
-        Account {
-            key: key.to_owned(),
-            label: key.to_owned(),
-            color: "#000000".to_owned(),
-            desktop_account: Some(format!("uuid-{key}")),
-            desktop_org: None,
-            cli_dir: String::new(),
-            can_receive: true,
-            rules: Rules::default(),
         }
     }
 

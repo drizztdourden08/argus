@@ -72,6 +72,7 @@ pub fn scope(key: &str) -> Vec<Probe> {
     out
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::scope;

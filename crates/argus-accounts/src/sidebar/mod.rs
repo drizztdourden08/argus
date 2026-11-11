@@ -1,5 +1,5 @@
 //! The Desktop app's sidebar folders. They live in three keys of the app's Local Storage
-//! LevelDB: [`store`] reads and writes them, [`folders`] works out, as pure functions, which
+//! `LevelDB`: [`store`] reads and writes them, [`folders`] works out, as pure functions, which
 //! folders and memberships each account scope is missing.
 
 pub mod folders;

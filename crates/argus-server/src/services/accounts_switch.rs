@@ -47,7 +47,10 @@ fn cached_version() -> Option<String> {
 /// Reads the installed Claude version and keeps it. Blocking (runs PowerShell).
 fn refresh_version(app: &Path) -> Option<String> {
     let found = ClaudeDesktop::new(app).version();
-    *VERSION.lock().unwrap_or_else(PoisonError::into_inner) = found.clone();
+    VERSION
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clone_from(&found);
     found
 }
 
@@ -186,6 +189,21 @@ pub struct Prepared {
     _slot: Slot,
 }
 
+/// The account Desktop is on: the one a half-done switch left, else the one that is signed in.
+fn source_account(
+    accounts: &[Account],
+    leftover: Option<&String>,
+    active: Option<&String>,
+) -> Option<Account> {
+    accounts
+        .iter()
+        .find(|a| match leftover {
+            Some(key) => &a.key == key,
+            None => a.desktop_account.is_some() && a.desktop_account.as_ref() == active,
+        })
+        .cloned()
+}
+
 /// Checks a switch to `to` and takes the one switch slot.
 ///
 /// # Errors
@@ -231,14 +249,7 @@ pub fn prepare(
         _ => None,
     };
     let active = last_known_account(&app);
-    let from = config
-        .accounts
-        .iter()
-        .find(|a| match &leftover {
-            Some(key) => &a.key == key,
-            None => a.desktop_account.is_some() && a.desktop_account == active,
-        })
-        .cloned()
+    let from = source_account(&config.accounts, leftover.as_ref(), active.as_ref())
         .ok_or("Claude Desktop is not on a known account")?;
     if from.key == target.key {
         return Err(format!("Claude Desktop is already on {}", target.label));
@@ -697,6 +708,7 @@ fn put_login(
     accounts.docs.put(Coll::Accounts, key, doc)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use argus_accounts::desktop::{Done, Step, StepStatus};

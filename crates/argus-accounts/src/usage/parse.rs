@@ -92,6 +92,7 @@ fn text(item: &Value, key: &str) -> Option<String> {
     item.get(key).and_then(Value::as_str).map(str::to_owned)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

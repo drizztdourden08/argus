@@ -42,6 +42,18 @@ pub(crate) mod fixtures {
         })
     }
 
+    pub(crate) fn scope(account: &str, org: &str) -> Scope {
+        Scope {
+            account: account.to_owned(),
+            org: org.to_owned(),
+        }
+    }
+
+    /// The scopes `a1/o1`, `a2/o2` and `a3/o3`; none exists until it is written to.
+    pub(crate) fn three_scopes() -> (Scope, Scope, Scope) {
+        (scope("a1", "o1"), scope("a2", "o2"), scope("a3", "o3"))
+    }
+
     pub(crate) struct Fixture {
         dir: TempDir,
     }
@@ -59,13 +71,6 @@ pub(crate) mod fixtures {
 
         fn projects(&self) -> PathBuf {
             self.dir.path().join("projects")
-        }
-
-        pub(crate) fn scope(&self, account: &str, org: &str) -> Scope {
-            Scope {
-                account: account.to_owned(),
-                org: org.to_owned(),
-            }
         }
 
         fn folder(&self, scope: &Scope) -> PathBuf {

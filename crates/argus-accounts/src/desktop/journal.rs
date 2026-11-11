@@ -148,6 +148,7 @@ pub fn repair(
     Ok(Repair::Repaired { from: entry.from })
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
@@ -155,8 +156,9 @@ mod tests {
     use tempfile::TempDir;
 
     use super::{Entry, Journal, Repair, repair};
+    use crate::fixtures::account;
     use crate::ports::{DesktopApp, LoginVault};
-    use crate::types::{Account, Rules};
+    use crate::types::Account;
 
     struct Fake {
         running: bool,
@@ -194,19 +196,6 @@ mod tests {
         }
         fn saved_at(&self, _: &Account) -> Option<String> {
             None
-        }
-    }
-
-    fn account(key: &str) -> Account {
-        Account {
-            key: key.to_owned(),
-            label: key.to_owned(),
-            color: "#000000".to_owned(),
-            desktop_account: Some(format!("uuid-{key}")),
-            desktop_org: None,
-            cli_dir: String::new(),
-            can_receive: true,
-            rules: Rules::default(),
         }
     }
 

@@ -23,7 +23,7 @@ use argus_core::clock::now_ms;
 use argus_notify::Level;
 use async_trait::async_trait;
 use serde_json::{Value, json};
-use tokio::sync::{Mutex, broadcast, watch};
+use tokio::sync::{Mutex, MutexGuard, broadcast, watch};
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
@@ -216,50 +216,70 @@ impl RulesDesk {
         let use_now = view_of(snapshot, &active).and_then(|v| v.percent);
         let mut go = None;
         for decision in decisions {
-            match decision {
-                Decision::ClearHoldOff { account } => {
-                    state.hold_offs.retain(|h| h.account != account);
-                }
-                Decision::StartEstimates(leads) => {
-                    for lead in &leads {
-                        self.note("estimate wake", self.world.re_ask(lead).await);
-                    }
-                }
-                Decision::AddLeads(leads) => {
-                    for lead in &leads {
-                        self.note("lead not added", self.world.add_lead(lead).await);
-                    }
-                }
-                Decision::StartCycle { mode, ask_at } => {
-                    let started = self.world.start_cycle(&active, mode, ask_at, use_now).await;
-                    if started.is_err() {
-                        self.note("handover cycle not started", started);
-                        break;
-                    }
-                }
-                Decision::AskAll => {
-                    self.note("handover request", self.world.ask_all(use_now).await)
-                }
-                Decision::CutOffRest => {
-                    self.note(
-                        "handovers not cut off",
-                        self.world.cut_off_rest(use_now).await,
-                    );
-                }
-                Decision::StartCountdown { to, reason } => {
-                    self.start_countdown(state, snapshot, &to, reason).await;
-                }
-                Decision::Switch { to } => {
-                    go = self.begin_switch(state, snapshot, &active, to);
-                }
-                Decision::StandDown { reason } => self.stand_down(state, snapshot, reason).await,
-                Decision::NotifyNoTarget { window } => {
-                    self.tell_no_target(snapshot, &active).await;
-                    state.told = Some(window);
-                }
+            if let Decision::Switch { to } = decision {
+                go = Self::begin_switch(state, snapshot, &active, to);
+            } else if !self
+                .carry_out(state, snapshot, (&active, use_now), decision)
+                .await
+            {
+                break;
             }
         }
         go
+    }
+
+    async fn ask_leads(&self, leads: &[LeadKey]) {
+        for lead in leads {
+            self.note("estimate wake", self.world.re_ask(lead).await);
+        }
+    }
+
+    async fn add_leads(&self, leads: &[LeadKey]) {
+        for lead in leads {
+            self.note("lead not added", self.world.add_lead(lead).await);
+        }
+    }
+
+    /// Does one decision other than a switch; false when the rest of the decisions must wait.
+    async fn carry_out(
+        &self,
+        state: &mut State,
+        snapshot: &Snapshot,
+        (active, use_now): (&str, Option<f64>),
+        decision: Decision,
+    ) -> bool {
+        match decision {
+            Decision::ClearHoldOff { account } => {
+                state.hold_offs.retain(|h| h.account != account);
+            }
+            Decision::StartEstimates(leads) => self.ask_leads(&leads).await,
+            Decision::AddLeads(leads) => self.add_leads(&leads).await,
+            Decision::StartCycle { mode, ask_at } => {
+                let started = self.world.start_cycle(active, mode, ask_at, use_now).await;
+                let ok = started.is_ok();
+                self.note("handover cycle not started", started);
+                return ok;
+            }
+            Decision::AskAll => {
+                self.note("handover request", self.world.ask_all(use_now).await);
+            }
+            Decision::CutOffRest => {
+                self.note(
+                    "handovers not cut off",
+                    self.world.cut_off_rest(use_now).await,
+                );
+            }
+            Decision::StartCountdown { to, reason } => {
+                self.start_countdown(state, snapshot, &to, reason).await;
+            }
+            Decision::Switch { .. } => {}
+            Decision::StandDown { reason } => self.stand_down(state, snapshot, reason).await,
+            Decision::NotifyNoTarget { window } => {
+                self.tell_no_target(snapshot, active).await;
+                state.told = Some(window);
+            }
+        }
+        true
     }
 
     fn note(&self, what: &str, result: Result<(), String>) {
@@ -307,13 +327,7 @@ impl RulesDesk {
         tokio::spawn(wait_out(self.me.clone()))
     }
 
-    fn begin_switch(
-        &self,
-        state: &mut State,
-        snapshot: &Snapshot,
-        from: &str,
-        to: String,
-    ) -> Option<Go> {
+    fn begin_switch(state: &mut State, snapshot: &Snapshot, from: &str, to: String) -> Option<Go> {
         state.countdown = None;
         let view = view_of(snapshot, from)?;
         let cycle = Self::cycle_view(state, snapshot);
@@ -372,16 +386,23 @@ impl RulesDesk {
         }
     }
 
+    /// Takes the running countdown out of the state and stops its task, with the state still
+    /// locked and the snapshot read; `None` when no countdown runs.
+    async fn stop_countdown(&self) -> Option<(MutexGuard<'_, State>, Running, Snapshot)> {
+        let mut state = self.state.lock().await;
+        let running = state.countdown.take()?;
+        running.task.abort();
+        let snapshot = self.world.snapshot().await;
+        Some((state, running, snapshot))
+    }
+
     /// Ends a running countdown at the owner's cancel and holds the rule off. Returns whether
     /// a countdown ran.
     pub(crate) async fn cancel(&self) -> bool {
-        let mut state = self.state.lock().await;
-        let Some(running) = state.countdown.take() else {
+        let Some((mut state, running, snapshot)) = self.stop_countdown().await else {
             return false;
         };
-        running.task.abort();
         let Countdown { from, to, .. } = running.countdown;
-        let snapshot = self.world.snapshot().await;
         if let Some(view) = view_of(&snapshot, &from) {
             state.hold_offs.retain(|h| h.account != from);
             state.hold_offs.push(HoldOff::after_cancel(view));
@@ -396,12 +417,9 @@ impl RulesDesk {
     /// The owner chose Switch now during a countdown: drops the countdown, without a hold-off
     /// and without a doc write (the switch reuses the countdown's id and writes the doc).
     pub(crate) async fn end(&self) -> bool {
-        let mut state = self.state.lock().await;
-        let Some(running) = state.countdown.take() else {
+        let Some((mut state, _running, snapshot)) = self.stop_countdown().await else {
             return false;
         };
-        running.task.abort();
-        let snapshot = self.world.snapshot().await;
         if Self::cycle_view(&state, &snapshot) == CycleView::Ready {
             state.spent.clone_from(&snapshot.cycle_id);
         }

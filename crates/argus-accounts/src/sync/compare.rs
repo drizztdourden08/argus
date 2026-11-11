@@ -286,12 +286,10 @@ fn chat_cell(cols: &[Col], col: &Col, planned: &Planned, id: &str) -> Cell {
     }
 }
 
-fn chat_status(
-    chat: &Chat,
-    folder: Option<&String>,
-    others: &[(&Chat, Option<&String>)],
-    columns: usize,
-) -> Status {
+/// A chat of another account that holds the same conversation, with the folder it sits in there.
+type Peer<'a> = (&'a Chat, Option<&'a String>);
+
+fn chat_status(chat: &Chat, folder: Option<&String>, others: &[Peer], columns: usize) -> Status {
     if others.is_empty() {
         return if columns > 1 {
             Status::OnlyHere
@@ -299,7 +297,7 @@ fn chat_status(
             Status::Same
         };
     }
-    let any = |f: &dyn Fn(&(&Chat, Option<&String>)) -> bool| others.iter().any(f);
+    let any = |f: &dyn Fn(&Peer) -> bool| others.iter().any(f);
     if chat.archived && any(&|(o, _)| !o.archived) {
         Status::ArchivedHereOnly
     } else if !chat.archived && any(&|(o, _)| o.archived) {
@@ -476,31 +474,28 @@ fn tally(rows: &[Row]) -> (usize, usize) {
     (same, rows.len() - same)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
     use super::*;
     use crate::catalog::plan::Plan;
+    use crate::fixtures::account_in;
     use crate::sidebar::{FolderPlan, SidebarKeys};
     use crate::sync::job::{Scan, ScopeScan};
-    use crate::types::Rules;
 
     const A: &str = "acct-a/org-a";
     const B: &str = "acct-b/org-b";
 
     fn account(key: &str, scope: &str) -> Account {
         let (acct, org) = scope.split_once('/').unwrap();
-        Account {
-            key: key.to_owned(),
-            label: key.to_uppercase(),
-            color: "#000000".to_owned(),
-            desktop_account: Some(acct.to_owned()),
-            desktop_org: Some(org.to_owned()),
-            cli_dir: String::new(),
-            can_receive: true,
-            rules: Rules::default(),
-        }
+        account_in(
+            key,
+            &key.to_uppercase(),
+            Some(acct.to_owned()),
+            Some(org.to_owned()),
+        )
     }
 
     fn chat(title: &str, focused: i64, parent: Option<&str>, archived: bool) -> Chat {
@@ -527,8 +522,11 @@ mod tests {
         }
     }
 
-    /// Folders per scope: (name, chat ids in order).
-    fn keys(per_scope: &[(&str, Vec<(&str, Vec<&str>)>)]) -> SidebarKeys {
+    /// A folder: its name and the chat ids in order.
+    type FolderSpec<'a> = (&'a str, Vec<&'a str>);
+
+    /// Folders per scope.
+    fn keys(per_scope: &[(&str, Vec<FolderSpec>)]) -> SidebarKeys {
         let mut groups = serde_json::Map::new();
         for (scope, folders) in per_scope {
             let mut list = Vec::new();

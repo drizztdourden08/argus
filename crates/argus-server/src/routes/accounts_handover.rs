@@ -17,11 +17,8 @@ use argus_core::clock::now_iso;
 use argus_core::{ApiError, ErrorCode};
 use serde_json::{Value, json};
 
-use crate::reply::json_reply;
-use crate::router::Reply;
-use crate::services::AccountsService;
 use crate::services::accounts_handover::Handovers;
-use crate::{Ctx, RouteOpts, Router};
+use crate::{Ctx, RouteOpts, Router, reply::json_reply, router::Reply, services::AccountsService};
 
 const HANDOVER_BYTES: usize = 16 * 1024;
 const NOTE_MAX: usize = 300;
@@ -191,6 +188,7 @@ pub fn register(r: &mut Router) {
     r.add("POST", "/api/accounts/handover", opts, handover);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use argus_accounts::handover::LeadAction;

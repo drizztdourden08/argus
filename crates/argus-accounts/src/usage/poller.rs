@@ -166,13 +166,14 @@ pub fn next_interval(config: &AccountsConfig, results: &[PollResult]) -> Duratio
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use std::sync::Mutex;
 
     use super::*;
-    use crate::types::{Rules, Severity};
+    use crate::fixtures::account_in;
+    use crate::types::Severity;
 
     struct FakeSource(Mutex<Vec<Result<Usage, String>>>);
     impl UsageSource for FakeSource {
@@ -216,16 +217,7 @@ mod tests {
     }
 
     fn account(org: Option<&str>) -> Account {
-        Account {
-            key: "a".to_owned(),
-            label: "A".to_owned(),
-            color: "#000000".to_owned(),
-            desktop_account: None,
-            desktop_org: org.map(str::to_owned),
-            cli_dir: PathBuf::from("x").display().to_string(),
-            can_receive: true,
-            rules: Rules::default(),
-        }
+        account_in("a", "A", None, org.map(str::to_owned))
     }
 
     fn run(source: Vec<Result<Usage, String>>, refresh: Result<String, String>) -> PollResult {

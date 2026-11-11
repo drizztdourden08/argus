@@ -650,6 +650,7 @@ fn verify(run: &mut Run, backup_dir: &str) -> Result<(), String> {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::cell::Cell;

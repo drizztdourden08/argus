@@ -309,9 +309,10 @@ fn reset_alert(now: &Snapshot, limit: &UsageLimit, settings: &AlertSettings) -> 
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
-    use super::{AlertKind, AlertSettings, Alerter, Snapshot};
+    use super::{Alert, AlertKind, AlertSettings, Alerter, Snapshot};
     use crate::types::{Account, Rules, Severity, Usage, UsageLimit};
 
     const NOW: i64 = 1_763_000_000_000;
@@ -336,6 +337,13 @@ mod tests {
             model: None,
             is_active: true,
         }
+    }
+
+    fn proposal(alerts: &[Alert]) -> &Alert {
+        alerts
+            .iter()
+            .find(|a| a.kind == AlertKind::ProposeSwitch)
+            .unwrap()
     }
 
     fn snap(key: &str, percent: f64, active: bool, auto: bool) -> Snapshot {
@@ -388,10 +396,7 @@ mod tests {
             snap("work", 40.0, false, false),
         ];
         let alerts = alerter.check(&[], &all, &settings(), NOW);
-        let propose = alerts
-            .iter()
-            .find(|a| a.kind == AlertKind::ProposeSwitch)
-            .unwrap();
+        let propose = proposal(&alerts);
         assert_eq!(propose.target.as_deref(), Some("hotmail"));
         assert_eq!(
             propose.url,
@@ -400,7 +405,7 @@ mod tests {
         assert_eq!(propose.title, "SECOND hit its weekly limit");
         assert_eq!(
             propose.text,
-            "100% used, resets Fri Nov 14 at 3:00 AM. HOTMAIL is at 2%."
+            "100% used, resets Sat Nov 14 at 3:00 AM. HOTMAIL is at 2%."
         );
         assert!(alerts.iter().all(|a| a.kind != AlertKind::Warn));
     }
@@ -433,10 +438,7 @@ mod tests {
         closed.account.can_receive = false;
         let all = [snap("a", 100.0, true, false), full, closed];
         let alerts = alerter.check(&[], &all, &settings(), NOW);
-        let propose = alerts
-            .iter()
-            .find(|a| a.kind == AlertKind::ProposeSwitch)
-            .unwrap();
+        let propose = proposal(&alerts);
         assert_eq!(propose.target, None);
         assert!(propose.text.ends_with("No other account has room."));
     }

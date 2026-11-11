@@ -1,6 +1,6 @@
 [package]
 name = "argus-accounts"
-description = "Argus Claude accounts: discovery, usage, chat sync, switching and handover."
+description = "Desktop app accounts: usage, sync and switching"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -297,6 +297,7 @@ pub(crate) fn start(svc: &Arc<Services>, accounts: &Arc<AccountsService>) {
     svc.tasks.keep(NAME, task);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::*;

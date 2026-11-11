@@ -3,6 +3,10 @@
 //! types, the config and the ports defined here. The outside world (the usage endpoint, the
 //! login files, the Desktop app, the boards) is reached only through [`ports`], so tests fake it.
 
+// The tests assert emptiness with `assert!(x.is_empty())`, as `argus-launchers` does.
+#![cfg_attr(test, allow(clippy::assert_is_empty))]
+#![allow(clippy::missing_errors_doc)]
+
 pub mod alerts;
 pub mod catalog;
 pub mod config;
@@ -17,6 +21,9 @@ pub mod sidebar;
 pub mod sync;
 pub mod types;
 pub mod usage;
+
+#[cfg(test)]
+mod fixtures;
 
 pub use config::{AccountsConfig, ArchiveRule, EstimateDefaults};
 pub use credentials::CliCredentials;

@@ -71,6 +71,7 @@ fn request_of(alert: Alert) -> PingRequest {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use argus_accounts::alerts::{Alert, AlertKind};

@@ -302,6 +302,7 @@ pub fn set_artifacts(record: &mut Value, artifacts: &[Value]) {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

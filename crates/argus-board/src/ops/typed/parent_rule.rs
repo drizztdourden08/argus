@@ -76,6 +76,7 @@ pub(crate) fn on_retype(board: &Board, ty: &ItemType, item: &Value) -> Result<()
     Ok(())
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

@@ -4,8 +4,8 @@
 
 use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
+use argus_core::clock::now_ms;
 use rusty_leveldb::{DB, Options};
 use serde_json::Value;
 
@@ -95,17 +95,11 @@ fn full_key(name: &str) -> Vec<u8> {
     k
 }
 
-fn now_ms() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .ok()
-        .and_then(|d| i64::try_from(d.as_millis()).ok())
-        .unwrap_or(0)
-}
-
 fn open_db(dir: &Path) -> Result<DB, String> {
-    let mut opt = Options::default();
-    opt.create_if_missing = false;
+    let opt = Options {
+        create_if_missing: false,
+        ..Options::default()
+    };
     DB::open(dir, opt).map_err(|e| format!("cannot open the sidebar store {}: {e}", dir.display()))
 }
 
@@ -199,7 +193,7 @@ impl LevelDbSidebar {
         Self::at(app_data.join("Local Storage").join("leveldb"))
     }
 
-    /// The store in the LevelDB folder `dir` itself.
+    /// The store in the `LevelDB` folder `dir` itself.
     #[must_use]
     pub fn at(dir: PathBuf) -> Self {
         Self { dir }
@@ -266,6 +260,7 @@ impl SidebarStore for LevelDbSidebar {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -330,8 +325,10 @@ mod tests {
     #[test]
     fn a_write_is_refused_when_the_live_keys_are_not_the_scanned_ones() {
         let dir = tempfile::tempdir().unwrap();
-        let mut opt = Options::default();
-        opt.create_if_missing = true;
+        let opt = Options {
+            create_if_missing: true,
+            ..Options::default()
+        };
         let mut db = DB::open(dir.path(), opt).unwrap();
         let live = SidebarKeys {
             code_sections: json!({"value": {}, "tabId": "", "timestamp": 1}),

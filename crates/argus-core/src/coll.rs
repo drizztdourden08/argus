@@ -160,6 +160,7 @@ impl FromStr for Coll {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::Coll;

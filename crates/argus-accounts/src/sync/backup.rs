@@ -1,9 +1,9 @@
 //! The backup a sync run takes before it writes, and the undo that puts it back. A backup folder
 //! holds a copy of every file the run will overwrite, the whole `Local Storage\leveldb` folder
-//! of the Desktop app (without its `LOCK`) and a `manifest.json` with the SHA-256 of each copy.
+//! of the Desktop app (without its `LOCK`) and a `manifest.json` with the `SHA-256` of each copy.
 //! Nothing is ever deleted: an undo moves the files the run created into the backup folder, and
 //! copies every live file it is about to overwrite into `after-apply` first. After the writes the
-//! manifest also holds the SHA-256 of what the run wrote, so an undo can tell a file the sync
+//! manifest also holds the `SHA-256` of what the run wrote, so an undo can tell a file the sync
 //! left alone from one that changed afterwards (work done since) and keep the latter.
 
 use std::collections::BTreeMap;
@@ -17,7 +17,7 @@ use time::macros::format_description;
 
 use crate::catalog::merge::sha256_hex;
 use crate::catalog::plan::Plan;
-use crate::catalog::read::write_atomic;
+use crate::catalog::read::{file_names, write_atomic};
 use crate::sidebar::store::ensure_unlocked;
 use crate::types::Scope;
 
@@ -36,27 +36,27 @@ pub struct FileEntry {
     pub original: String,
     /// The copy, relative to the backup folder.
     pub copy: String,
-    /// SHA-256 of the file, lower hex.
+    /// `SHA-256` of the file, lower hex.
     pub sha256: String,
 }
 
-/// The backed-up LevelDB folder.
+/// The backed-up `LevelDB` folder.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LevelDbEntry {
     /// The live folder.
     pub dir: String,
     /// The copy, relative to the backup folder.
     pub copy: String,
-    /// The files copied, with their SHA-256.
+    /// The files copied, with their `SHA-256`.
     pub files: Vec<LevelFile>,
 }
 
-/// One file of the LevelDB folder.
+/// One file of the `LevelDB` folder.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LevelFile {
     /// The file name.
     pub name: String,
-    /// SHA-256 of the file, lower hex.
+    /// `SHA-256` of the file, lower hex.
     pub sha256: String,
 }
 
@@ -79,13 +79,13 @@ pub struct Manifest {
     pub applied: Option<Applied>,
 }
 
-/// The SHA-256 of what a run wrote.
+/// The `SHA-256` of what a run wrote.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Applied {
     /// Chat files and indexes by their path in the Desktop app's data; a file that was not
     /// there has no entry.
     pub files: BTreeMap<String, String>,
-    /// The LevelDB files after the sidebar write, without `LOCK`.
+    /// The `LevelDB` files after the sidebar write, without `LOCK`.
     pub leveldb: Vec<LevelFile>,
 }
 
@@ -93,7 +93,7 @@ pub struct Applied {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoReport {
-    /// Files put back, the LevelDB ones included.
+    /// Files put back, the `LevelDB` ones included.
     pub restored: usize,
     /// Files the run had created, moved into the backup folder.
     pub moved_aside: usize,
@@ -147,7 +147,7 @@ fn fresh_dir(root: &Path, stamp: &str) -> Result<PathBuf, String> {
     Err(format!("no free backup folder under {}", root.display()))
 }
 
-/// Copies what the plan will touch, and the LevelDB folder, into a new folder under `root`.
+/// Copies what the plan will touch, and the `LevelDB` folder, into a new folder under `root`.
 ///
 /// # Errors
 /// When a file cannot be read or copied, or a file differs from what the plan read.
@@ -190,7 +190,7 @@ pub fn create(root: &Path, app: &Path, plan: &Plan, stamp: &str) -> Result<PathB
     Ok(dir)
 }
 
-/// Writes into the manifest the SHA-256 of every file the run wrote and of the LevelDB files, so
+/// Writes into the manifest the `SHA-256` of every file the run wrote and of the `LevelDB` files, so
 /// an undo can tell later work from the sync's own writes. Call it after the writes, also when
 /// they stopped half way.
 ///
@@ -214,13 +214,13 @@ pub fn record_applied(dir: &Path, app: &Path, plan: &Plan) -> Result<(), String>
     write_atomic(&dir.join(MANIFEST), &text)
 }
 
-/// The files of a folder with their SHA-256, without `LOCK`; empty when it is not there.
+/// The files of a folder with their `SHA-256`, without `LOCK`; empty when it is not there.
 fn hash_files(dir: &Path) -> Result<Vec<LevelFile>, String> {
     if !dir.is_dir() {
         return Ok(Vec::new());
     }
     let mut out = Vec::new();
-    for name in list_files(dir)? {
+    for name in file_names(dir)? {
         if name != LOCK {
             let sha256 = sha256_hex(&read(&dir.join(&name))?);
             out.push(LevelFile { name, sha256 });
@@ -237,7 +237,7 @@ fn copy_leveldb(app: &Path, backup: &Path) -> Result<Option<LevelDbEntry>, Strin
     let target = backup.join(LEVELDB_DIR);
     fs::create_dir_all(&target).map_err(|e| io_err(&target, &e))?;
     let mut files = Vec::new();
-    for name in list_files(&live)? {
+    for name in file_names(&live)? {
         if name == LOCK {
             continue;
         }
@@ -253,17 +253,6 @@ fn copy_leveldb(app: &Path, backup: &Path) -> Result<Option<LevelDbEntry>, Strin
         copy: LEVELDB_DIR.to_owned(),
         files,
     }))
-}
-
-fn list_files(dir: &Path) -> Result<Vec<String>, String> {
-    let mut names: Vec<String> = fs::read_dir(dir)
-        .map_err(|e| io_err(dir, &e))?
-        .filter_map(Result::ok)
-        .filter(|e| e.path().is_file())
-        .filter_map(|e| e.file_name().into_string().ok())
-        .collect();
-    names.sort();
-    Ok(names)
 }
 
 /// The newest backup folder under `root` that has a manifest.
@@ -288,16 +277,16 @@ pub fn read_manifest(dir: &Path) -> Result<Manifest, String> {
     serde_json::from_slice(&read(&path)?).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-/// Puts a backup back byte for byte and checks the SHA-256 of every file after. Before a live
-/// file is overwritten it is copied into `after-apply`. Files the run created, and LevelDB
+/// Puts a backup back byte for byte and checks the `SHA-256` of every file after. Before a live
+/// file is overwritten it is copied into `after-apply`. Files the run created, and `LevelDB`
 /// files the backup does not have, are moved there too; nothing is deleted.
 ///
-/// A file whose SHA-256 differs from what the run wrote (work happened after the sync) is left
-/// alone and listed in the report, unless `force`. When any LevelDB file differs, the whole
-/// LevelDB part is left alone without `force`.
+/// A file whose `SHA-256` differs from what the run wrote (work happened after the sync) is left
+/// alone and listed in the report, unless `force`. When any `LevelDB` file differs, the whole
+/// `LevelDB` part is left alone without `force`.
 ///
 /// # Errors
-/// When Claude holds the LevelDB `LOCK`, a copy no longer matches its manifest entry (nothing
+/// When Claude holds the `LevelDB` `LOCK`, a copy no longer matches its manifest entry (nothing
 /// is changed then), or a file cannot be restored or fails its check.
 pub fn undo(dir: &Path, force: bool) -> Result<UndoReport, String> {
     let manifest = read_manifest(dir)?;
@@ -356,7 +345,7 @@ fn changed_since(applied: Option<&Applied>, path: &Path) -> bool {
     fs::read(path).is_ok_and(|bytes| &sha256_hex(&bytes) != want)
 }
 
-/// Every copy in the backup still has the SHA-256 the manifest says.
+/// Every copy in the backup still has the `SHA-256` the manifest says.
 fn check_copies(dir: &Path, manifest: &Manifest) -> Result<(), String> {
     for entry in &manifest.files {
         verify(&dir.join(&entry.copy), &entry.sha256)?;
@@ -402,7 +391,7 @@ fn undo_leveldb(
     }
     let after = dir.join(AFTER_DIR);
     let kept: Vec<&str> = entry.files.iter().map(|f| f.name.as_str()).collect();
-    for name in list_files(live)? {
+    for name in file_names(live)? {
         if name != LOCK && !kept.contains(&name.as_str()) {
             let aside = after.join(LEVELDB_DIR).join(&name);
             report.moved_aside += usize::from(move_aside(&live.join(&name), &aside)?);
@@ -458,6 +447,7 @@ fn move_aside(from: &Path, aside: &Path) -> Result<bool, String> {
     Ok(true)
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -485,7 +475,7 @@ mod tests {
         }
     }
 
-    /// An app folder with one chat record, an archive index and a LevelDB folder, and a plan
+    /// An app folder with one chat record, an archive index and a `LevelDB` folder, and a plan
     /// that overwrites the record and the index and creates one more record.
     struct World {
         app: TempDir,
@@ -532,6 +522,15 @@ mod tests {
                 },
                 ..world
             }
+        }
+
+        /// A world after a backup, an apply and the record of what the apply wrote.
+        fn applied() -> (World, PathBuf) {
+            let w = World::new();
+            let dir = w.backup();
+            w.apply();
+            record_applied(&dir, w.app.path(), &w.plan).unwrap();
+            (w, dir)
         }
 
         fn sessions(&self) -> PathBuf {
@@ -583,10 +582,7 @@ mod tests {
 
     #[test]
     fn undo_puts_every_byte_back_and_deletes_nothing() {
-        let w = World::new();
-        let dir = w.backup();
-        w.apply();
-        record_applied(&dir, w.app.path(), &w.plan).unwrap();
+        let (w, dir) = World::applied();
         let report = undo(&dir, false).unwrap();
         assert_eq!(report.restored, 4);
         assert_eq!(report.moved_aside, 2);
@@ -602,7 +598,7 @@ mod tests {
         assert!(!w.sessions().join("local_2.json").exists());
         assert!(!w.level().join("000004.log").exists());
         let aside = dir.join("after-apply");
-        assert_eq!(read_back(aside.join("files/00002-local_2.json")), b"copied");
+        assert_eq!(read_back(aside.join("files/00000-local_2.json")), b"copied");
         assert_eq!(read_back(aside.join("leveldb/000004.log")), b"appended");
         let live = aside.join("live");
         assert_eq!(
@@ -614,10 +610,7 @@ mod tests {
 
     #[test]
     fn work_after_the_sync_is_kept_unless_forced() {
-        let w = World::new();
-        let dir = w.backup();
-        w.apply();
-        record_applied(&dir, w.app.path(), &w.plan).unwrap();
+        let (w, dir) = World::applied();
         fs::write(w.sessions().join("local_1.json"), b"worked on since").unwrap();
         fs::write(w.sessions().join("local_2.json"), b"edited copy").unwrap();
         let report = undo(&dir, false).unwrap();
@@ -638,10 +631,7 @@ mod tests {
 
     #[test]
     fn a_changed_leveldb_is_refused_without_force() {
-        let w = World::new();
-        let dir = w.backup();
-        w.apply();
-        record_applied(&dir, w.app.path(), &w.plan).unwrap();
+        let (w, dir) = World::applied();
         fs::write(w.level().join("000004.log"), b"claude wrote more").unwrap();
         let report = undo(&dir, false).unwrap();
         assert_eq!(report.kept.len(), 1);

@@ -480,17 +480,33 @@ fn apply_overlay(record: &mut Value, overlay: &Overlay) {
     set_artifacts(record, &overlay.artifacts);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
     use super::{ChangeKind, Plan, build_plan};
-    use crate::catalog::fixtures::{Fixture, cli_id, record, session_id};
+    use crate::catalog::fixtures::{Fixture, cli_id, record, scope, session_id, three_scopes};
     use crate::config::ArchiveRule;
     use crate::ports::Catalog;
+    use crate::types::Scope;
 
     fn plan(fx: &Fixture, rule: ArchiveRule) -> Plan {
         build_plan(&fx.catalog(), &fx.transcripts(), rule).unwrap()
+    }
+
+    /// A fixture and two scopes in it, neither holding anything yet.
+    fn two_scopes() -> (Fixture, Scope, Scope) {
+        let fx = Fixture::new();
+        let (a, b) = (scope("a1", "o1"), scope("a2", "o2"));
+        (fx, a, b)
+    }
+
+    /// The same, with the second scope made to exist.
+    fn with_empty_b() -> (Fixture, Scope, Scope) {
+        let (fx, a, b) = two_scopes();
+        fx.ensure(&b);
+        (fx, a, b)
     }
 
     fn kinds(plan: &Plan) -> Vec<ChangeKind> {
@@ -499,9 +515,7 @@ mod tests {
 
     #[test]
     fn copies_a_missing_chat_with_portable_fields_only() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, b) = with_empty_b();
         let mut rec = record(1, 10);
         rec["permissionMode"] = json!("bypassPermissions");
         rec["enabledMcpTools"] = json!(["x"]);
@@ -520,8 +534,7 @@ mod tests {
 
     #[test]
     fn update_takes_history_from_the_newest_copy_and_keeps_account_settings() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
+        let (fx, a, b) = two_scopes();
         let mut old = record(1, 10);
         old["permissionMode"] = json!("plan");
         let mut new = record(1, 20);
@@ -540,8 +553,7 @@ mod tests {
 
     #[test]
     fn equal_activity_with_different_history_is_a_conflict() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
+        let (fx, a, b) = two_scopes();
         let mut other = record(1, 10);
         other["title"] = json!("different");
         fx.put(&a, 1, &record(1, 10));
@@ -555,9 +567,7 @@ mod tests {
 
     #[test]
     fn a_tombstone_is_never_resurrected() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, b) = with_empty_b();
         fx.put(&a, 1, &record(1, 10));
         fx.transcript(1);
         fx.tombstone(&b, 1);
@@ -569,9 +579,7 @@ mod tests {
 
     #[test]
     fn records_that_never_ran_or_run_remotely_are_skipped() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, _) = with_empty_b();
         let mut never = record(1, 10);
         never.as_object_mut().unwrap().remove("cliSessionId");
         let mut ssh = record(2, 10);
@@ -586,9 +594,7 @@ mod tests {
 
     #[test]
     fn a_missing_or_invalid_transcript_blocks_the_chat() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, _) = with_empty_b();
         fx.put(&a, 1, &record(1, 10));
         fx.put(&a, 2, &record(2, 10));
         fx.bad_transcript(2);
@@ -599,9 +605,7 @@ mod tests {
 
     #[test]
     fn the_same_transcript_in_two_projects_is_ambiguous() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, _) = with_empty_b();
         fx.put(&a, 1, &record(1, 10));
         fx.transcript(1);
         fx.transcript_in(1, "other-project");
@@ -612,9 +616,7 @@ mod tests {
 
     #[test]
     fn the_prior_transcript_is_used_when_the_current_one_is_absent() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
-        fx.ensure(&b);
+        let (fx, a, _) = with_empty_b();
         let mut rec = record(1, 10);
         rec["priorCliSessionIds"] = json!([cli_id(9)]);
         fx.put(&a, 1, &rec);
@@ -626,11 +628,7 @@ mod tests {
     #[test]
     fn a_link_travels_unless_a_copy_detached_it() {
         let fx = Fixture::new();
-        let (a, b, c) = (
-            fx.scope("a1", "o1"),
-            fx.scope("a2", "o2"),
-            fx.scope("a3", "o3"),
-        );
+        let (a, b, c) = three_scopes();
         let mut linked = record(1, 10);
         linked["spawnedFrom"] = json!({ "sessionId": "local_parent", "name": "p" });
         linked["dispatchParentId"] = json!("d1");
@@ -657,8 +655,7 @@ mod tests {
 
     #[test]
     fn archived_follows_the_newest_change_and_the_index_follows_the_records() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
+        let (fx, a, b) = two_scopes();
         let mut archived = record(1, 10);
         archived["isArchived"] = json!(true);
         archived["lastFocusedAt"] = json!(5);
@@ -687,8 +684,7 @@ mod tests {
 
     #[test]
     fn anywhere_archives_everywhere_and_indexes_follow() {
-        let fx = Fixture::new();
-        let (a, b) = (fx.scope("a1", "o1"), fx.scope("a2", "o2"));
+        let (fx, a, b) = two_scopes();
         let mut archived = record(1, 10);
         archived["isArchived"] = json!(true);
         fx.put(&a, 1, &archived);
@@ -715,11 +711,7 @@ mod tests {
     #[test]
     fn the_order_is_deterministic() {
         let fx = Fixture::new();
-        let (a, b, c) = (
-            fx.scope("a1", "o1"),
-            fx.scope("a2", "o2"),
-            fx.scope("a3", "o3"),
-        );
+        let (a, b, c) = three_scopes();
         fx.ensure(&b);
         fx.ensure(&c);
         for n in [3, 1, 2] {

@@ -192,6 +192,7 @@ pub struct Usage {
     pub error: Option<String>,
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use serde_json::json;

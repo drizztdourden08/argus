@@ -9,6 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use argus_core::clock::now_ms;
 use argus_core::process::hidden_command;
 use serde_json::{Value, json};
 
@@ -172,13 +173,6 @@ fn renew(cli_dir: &Path, endpoint: &dyn TokenEndpoint, now_ms: i64) -> Result<St
     Ok(grant.access_token)
 }
 
-fn now_ms() -> i64 {
-    let since = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default();
-    i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
-}
-
 /// The CLI logins, refreshed by running the CLI that the Desktop app carries and, when that
 /// changes nothing, by the OAuth refresh grant.
 pub struct CliCredentials {
@@ -257,6 +251,7 @@ impl Credentials for CliCredentials {
     }
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -375,8 +370,9 @@ mod tests {
 
     #[test]
     fn a_pretty_file_stays_pretty() {
-        let dir =
-            folder_with("{\n  \"claudeAiOauth\": {\n    \"accessToken\": \"a-old\"\n  }\n}\n");
+        let dir = folder_with(
+            "{\n  \"claudeAiOauth\": {\n    \"accessToken\": \"a-old\",\n    \"refreshToken\": \"r-old\"\n  }\n}\n",
+        );
         let grant = Grant {
             access_token: "a-new".to_owned(),
             refresh_token: None,

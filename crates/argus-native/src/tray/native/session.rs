@@ -191,15 +191,15 @@ impl Session {
         match command {
             Command::Quit => self.quit(),
             Command::Open => self.open(),
-            Command::OpenNotifications | Command::SwitchDesktop(_) => self.show_page(command),
+            Command::OpenNotifications | Command::SwitchDesktop(_) => self.show_page(&command),
             Command::Restart | Command::Start | Command::CancelSwitch if self.quitting => {}
-            other => self.fire(other),
+            other => self.fire(&other),
         }
     }
 
     fn open(&mut self) {
         if self.gate.allow(Instant::now()) {
-            self.show_page(Command::Open);
+            self.show_page(&Command::Open);
         } else {
             self.log
                 .line("open: ignored, the page was asked for less than 2 s ago");
@@ -208,7 +208,7 @@ impl Session {
 
     /// Hands the foreground right of this click on, while the tray still holds it, then asks
     /// for the page.
-    fn show_page(&self, command: Command) {
+    fn show_page(&self, command: &Command) {
         if let Err(why) = opener::pass_foreground() {
             self.log.line(&format!(
                 "{}: the browser may open behind: {why}",
@@ -218,7 +218,7 @@ impl Session {
         self.fire(command);
     }
 
-    fn fire(&self, command: Command) {
+    fn fire(&self, command: &Command) {
         if !self.handlers.fire_command(command.clone()) {
             self.log
                 .line(&format!("{}: nothing handles the menu yet", command.id()));
