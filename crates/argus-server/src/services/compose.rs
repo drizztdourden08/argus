@@ -5,8 +5,8 @@
 use std::sync::Arc;
 
 use super::{
-    accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale, stalls, sync,
-    wake, worktrees,
+    accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale,
+    stalls, sync, wake, worktrees,
 };
 use crate::{ServeOptions, Services};
 

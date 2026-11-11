@@ -3,17 +3,26 @@
 //! types, the config and the ports defined here. The outside world (the usage endpoint, the
 //! login files, the Desktop app, the boards) is reached only through [`ports`], so tests fake it.
 
+pub mod alerts;
+pub mod catalog;
 pub mod config;
+pub mod credentials;
+pub mod handover;
 pub mod ports;
 pub mod registry;
+pub mod sidebar;
 pub mod types;
+pub mod usage;
 
 pub use config::{AccountsConfig, ArchiveRule, EstimateDefaults};
+pub use credentials::CliCredentials;
 pub use ports::{
-    Catalog, Clock, Credentials, DesktopApp, LoginVault, Resumer, SidebarStore, Threads,
-    UsageSource,
+    Catalog, Clock, Credentials, DesktopApp, HandoverStore, LoginVault, Resumer, SidebarStore,
+    Threads, UsageSource,
 };
 pub use registry::{AuthProbe, ClaudeAuthProbe, discover, find_app_data, find_cli_exe};
 pub use types::{
     Account, AccountKey, CliStatus, HandoverMode, Rules, Scope, Severity, Usage, UsageLimit,
 };
+pub use usage::HttpUsage;
+pub use usage::poller::{BurnHistory, Poll, PollResult, binding_limit, next_interval, poll_all};

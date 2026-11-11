@@ -34,8 +34,8 @@ use crate::services::{activity, compose};
 use crate::sse::Fanout;
 use crate::web::WebAssets;
 use crate::{
-    AccountsOptions, AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions, Router, RunsOptions,
-    Services, WakeOptions, WorktreesOptions, routes,
+    AccountsOptions, AgentsOptions, CacheOptions, NotifyOptions, ProcsOptions, RecordsOptions,
+    Router, RunsOptions, Services, WakeOptions, WorktreesOptions, routes,
 };
 use crate::{preview, shadow};
 

@@ -209,8 +209,14 @@ mod tests {
 
     #[test]
     fn handover_writes_back_as_read() {
-        assert_eq!(serde_json::to_value(HandoverMode::Auto).unwrap(), json!("auto"));
-        assert_eq!(serde_json::to_value(HandoverMode::At(90.0)).unwrap(), json!(90.0));
+        assert_eq!(
+            serde_json::to_value(HandoverMode::Auto).unwrap(),
+            json!("auto")
+        );
+        assert_eq!(
+            serde_json::to_value(HandoverMode::At(90.0)).unwrap(),
+            json!(90.0)
+        );
     }
 
     #[test]

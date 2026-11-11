@@ -46,4 +46,5 @@ pub const PORTED: &[Entry] = &[
     ("lead", remote::lead::handle),
     ("portfolio", remote::portfolio::handle),
     ("dashboard", remote::dashboard::handle),
+    ("handover", remote::handover::handle),
 ];

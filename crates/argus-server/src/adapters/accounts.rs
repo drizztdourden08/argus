@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use argus_accounts::Account;
+use argus_accounts::{Account, PollResult};
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, DocChange};
 use argus_store::Db;
@@ -41,6 +41,39 @@ impl AccountsDocs {
         self.apply(changes)
     }
 
+    /// Writes what a poll found into the `Accounts` docs, keeping the fields other pieces own.
+    /// `active` is the Desktop account uuid that is logged in now.
+    ///
+    /// # Errors
+    /// When the store refuses the write.
+    pub fn put_usage(
+        &self,
+        accounts: &[Account],
+        results: &[PollResult],
+        active: Option<&str>,
+    ) -> Result<(), String> {
+        let mut changes = Vec::new();
+        for result in results {
+            let Some(account) = accounts.iter().find(|a| a.key == result.key) else {
+                continue;
+            };
+            let mut doc = self.current(account)?;
+            let is_active = active.is_some() && active == account.desktop_account.as_deref();
+            merge_usage(&mut doc, account, result, is_active);
+            changes.push(DocChange::set(Coll::Accounts, account.key.clone(), doc));
+        }
+        self.apply(changes)
+    }
+
+    fn current(&self, account: &Account) -> Result<Value, String> {
+        let row = self
+            .db
+            .docs()
+            .get(PORTFOLIO, Coll::Accounts, &account.key)
+            .map_err(|e| e.to_string())?;
+        Ok(row.map_or_else(|| account_doc(account), |r| r.data))
+    }
+
     fn apply(&self, changes: Vec<DocChange>) -> Result<(), String> {
         self.db
             .tx(|tx| {
@@ -69,4 +102,23 @@ pub fn account_doc(account: &Account) -> Value {
         "rules": to_value(&account.rules).unwrap_or(Value::Null),
         "chats": { "total": 0, "archived": 0, "folders": 0 },
     })
+}
+
+fn merge_usage(doc: &mut Value, account: &Account, result: &PollResult, active: bool) {
+    let Some(object) = doc.as_object_mut() else {
+        return;
+    };
+    let org = account.desktop_org.clone();
+    object.insert("active".to_owned(), json!(active));
+    object.insert(
+        "limits".to_owned(),
+        to_value(&result.usage.limits).unwrap_or(Value::Null),
+    );
+    object.insert("readAt".to_owned(), json!(result.usage.read_at));
+    object.insert("error".to_owned(), json!(result.usage.error));
+    object.insert("burnPerMin".to_owned(), json!(result.burn_per_min));
+    object.insert(
+        "cli".to_owned(),
+        json!({ "loggedIn": result.logged_in, "expiresAt": result.expires_at, "orgId": org }),
+    );
 }

@@ -2,6 +2,8 @@
 //!
 //! - `GET /api/accounts` is `{accounts, config}`: the known accounts and the settings without
 //!   them
+//! - `POST /api/accounts/usage/refresh` reads every account's usage now and answers
+//!   `{results}` with one entry per account
 //! - `GET /api/accounts/settings` is the whole settings object, accounts included
 //! - `POST /api/accounts/settings {<keys>}` replaces the keys sent, saves `config.json` and
 //!   answers the whole settings object
@@ -37,6 +39,18 @@ async fn listing(ctx: Ctx) -> Reply {
     Ok(json_reply(200, &body))
 }
 
+async fn refresh(ctx: Ctx) -> Reply {
+    let results = service(&ctx)?
+        .poll_now()
+        .await
+        .map_err(|e| ApiError::new(ErrorCode::Internal, e))?;
+    let view: Vec<Value> = results
+        .iter()
+        .map(|r| json!({ "key": r.key, "usage": r.usage, "burnPerMin": r.burn_per_min }))
+        .collect();
+    Ok(json_reply(200, &json!({ "results": view })))
+}
+
 async fn settings(ctx: Ctx) -> Reply {
     Ok(json_reply(200, &service(&ctx)?.config().to_json()))
 }
@@ -56,6 +70,7 @@ pub fn register(r: &mut Router) {
         ..RouteOpts::default()
     };
     r.get("/api/accounts", listing);
+    r.post("/api/accounts/usage/refresh", refresh);
     r.get("/api/accounts/settings", settings);
     r.add("POST", "/api/accounts/settings", opts, update);
 }

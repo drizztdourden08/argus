@@ -143,6 +143,17 @@ A to-do assigned to a thread or to the lead of a project does not count as needi
 the open items whose `assignee` is `owner` and the pending to-dos that wait for him, for the
 "Assigned to you" list of the Notifications tab.
 
+## Account handovers
+
+The accounts service (I-135) asks the working leads for a handover before it switches the Desktop
+app to another Claude account. The subject is the handover record `H-n`.
+
+| Reason | Class | Immediate | Who | When |
+|---|---|---|---|---|
+| `handover-estimate` | wake | yes | a working lead | the account nears its switch point: answer with `coord handover estimate` and keep working |
+| `handover-request` | wake | yes | a working lead | the ask point: bring each agent to a safe point, write `handover.md`, run `coord handover write` |
+| `handover-ready` | passive | no | the Overlord | a lead marked its handover ready |
+
 ## Open faults and notices
 
 A passive notice raised once and never read left faults open for 20 hours. So what stays open

@@ -8,7 +8,7 @@ pub const PORTFOLIO: &str = "_portfolio";
 pub const MAIN_SCOPE: &str = "portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 48] = [
+pub const WAKE_REASONS: [&str; 51] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -57,11 +57,15 @@ pub const WAKE_REASONS: [&str; 48] = [
     "children-done",
     "plan-run-done",
     "todo-quiet",
+    "handover-estimate",
+    "handover-request",
+    "handover-ready",
 ];
 
 /// What the owner is waiting on, a fault or a stall for the Overlord, a wake sent again because nobody read
-/// it, and a finished or blocked dependency: these close the window at once.
-pub const IMMEDIATE_REASONS: [&str; 14] = [
+/// it, a finished or blocked dependency, and the accounts service asking a lead for a handover estimate or a
+/// handover before an account switch: these close the window at once.
+pub const IMMEDIATE_REASONS: [&str; 16] = [
     "owner-answer",
     "owner-note",
     "owner-decision",
@@ -76,6 +80,8 @@ pub const IMMEDIATE_REASONS: [&str; 14] = [
     "dep-blocked",
     "ack-nudge",
     "stall",
+    "handover-estimate",
+    "handover-request",
 ];
 
 /// The reasons the wakes route accepts from outside the policy.

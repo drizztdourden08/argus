@@ -37,8 +37,8 @@ pub use router::{AuthMode, Handler, RouteMatch, RouteOpts, Router};
 pub use serve_mode::ServeMode;
 pub use server::{ServeError, ServeOptions, ServerHandle, serve};
 pub use services::{
-    AccountsOptions, AccountsService, AgentsOptions, CacheOptions, CacheService, ConsumerSource, ConsumerStatus, Consumers,
-    NodeStatus, NotifyOptions, ProcsOptions, Records, RecordsOptions, RunsOptions, Services,
-    WakeHook, WakeOptions, WakeRequest, WorktreesOptions,
+    AccountsOptions, AccountsService, AgentsOptions, CacheOptions, CacheService, ConsumerSource,
+    ConsumerStatus, Consumers, NodeStatus, NotifyOptions, ProcsOptions, Records, RecordsOptions,
+    RunsOptions, Services, WakeHook, WakeOptions, WakeRequest, WorktreesOptions,
 };
 pub use web::{PageVars, WebAssets, render_page};

@@ -153,11 +153,7 @@ fn account_of(index: usize, key: &str, dir: &Path, home: Option<&Scope>) -> Acco
 /// The accounts of this PC. A CLI folder is matched to the scope whose organization is the
 /// organization of its login; a folder the CLI cannot answer for stays a CLI-only account.
 #[must_use]
-pub fn discover(
-    app: Option<&Path>,
-    cli_root: &Path,
-    probe: &dyn AuthProbe,
-) -> Vec<Account> {
+pub fn discover(app: Option<&Path>, cli_root: &Path, probe: &dyn AuthProbe) -> Vec<Account> {
     let exe = app.and_then(find_cli_exe);
     let scopes = app.map(scan_scopes).unwrap_or_default();
     scan_cli_dirs(cli_root)
@@ -193,7 +189,11 @@ mod tests {
     fn app_with(scopes: &[(&str, &str)], cli: bool) -> tempfile::TempDir {
         let app = tempfile::tempdir().unwrap();
         for (account, org) in scopes {
-            let dir = app.path().join("claude-code-sessions").join(account).join(org);
+            let dir = app
+                .path()
+                .join("claude-code-sessions")
+                .join(account)
+                .join(org);
             fs::create_dir_all(dir).unwrap();
         }
         if cli {

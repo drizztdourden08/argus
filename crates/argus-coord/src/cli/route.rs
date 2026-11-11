@@ -34,7 +34,7 @@ pub type Handler = fn(&mut Call<'_>) -> Outcome;
 pub type Entry = (&'static str, Handler);
 
 /// Every verb and alias, with the module that serves it.
-const VERBS: [(&str, &str); 42] = [
+const VERBS: [(&str, &str); 43] = [
     ("hook", "hook"),
     ("dashboard", "dashboard"),
     ("thread", "thread"),
@@ -77,6 +77,7 @@ const VERBS: [(&str, &str); 42] = [
     ("pr", "pr"),
     ("dep", "dep"),
     ("demo", "demo"),
+    ("handover", "handover"),
 ];
 
 /// These modules work outside any project and find their own caller when they need one.

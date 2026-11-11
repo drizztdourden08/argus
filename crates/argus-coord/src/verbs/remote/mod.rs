@@ -1,10 +1,11 @@
 //! WP6, the server clients: the verbs that talk to the dashboard (`run`, `ping`, `activity`,
-//! `proc`, `stall`, `wake-fault`, `worktree`, `lead`, `portfolio`, `dashboard`). Each is a module here
+//! `proc`, `stall`, `wake-fault`, `worktree`, `lead`, `portfolio`, `dashboard`, `handover`). Each is a module here
 //! with its handler, and one row of [`PORTED`](crate::verbs::PORTED).
 
 pub mod activity;
 pub mod ci;
 pub mod dashboard;
+pub mod handover;
 pub mod lead;
 pub mod mode;
 pub mod ping;
