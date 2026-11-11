@@ -21,11 +21,10 @@ const useAccountActions = (onSync: () => void): AccountActions => {
       .finally(() => setBusy(false));
   }, []);
 
-  const switchTo = useCallback((key: string) => post('/api/accounts/switch', { to: key, handover: true }, `Switching Desktop to ${key}.`), [post]);
   const sync = useCallback(() => post(SYNC_PATH, { dryRun: false }, 'Sidebar sync started.', onSync), [post, onSync]);
   const undo = useCallback(() => post(UNDO_PATH, undefined, 'Undoing the last sync.'), [post]);
 
-  return { busy, switchTo, sync, undo };
+  return { busy, sync, undo };
 };
 
 export { useAccountActions };

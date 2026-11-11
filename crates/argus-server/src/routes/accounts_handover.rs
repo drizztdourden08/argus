@@ -7,6 +7,8 @@
 //!   `write` (`file`, `agentsDetail: [{id, branch, stop}]`) or `status`. The answer is
 //!   `{handover, next, expects, cycle: {id, phase}}`: the lead's record and what Argus expects
 //!   of it next, as a word and as a sentence
+//! - `action` `resumed` or `not_resumed` (`board`, `thread`) is the resume task's verdict on a
+//!   lead after the switch; the answer is `{handover, cycle: {id, phase}}`
 
 use std::sync::Arc;
 
@@ -127,9 +129,35 @@ async fn cycle(ctx: Ctx) -> Reply {
     Ok(json_reply(200, &body))
 }
 
+/// `resumed` or `not_resumed`: the resume task's verdict on one lead of the cycle.
+fn resume_report(handovers: &Handovers, body: &Value, resumed: bool) -> Reply {
+    let board = text(body, "board").ok_or_else(|| ApiError::bad_request("board is required"))?;
+    let thread = text(body, "thread").ok_or_else(|| ApiError::bad_request("thread is required"))?;
+    let desk = handovers.desk();
+    let id = desk
+        .cycle()
+        .and_then(|c| c.handover_of(board, thread).map(|h| h.id.clone()))
+        .ok_or_else(|| ApiError::not_found("no such lead in the handover cycle"))?;
+    let handover = desk
+        .mark_resumed(&id, resumed)
+        .map_err(|e| desk_error(&e))?;
+    let cycle = desk
+        .cycle()
+        .map(|c| json!({ "id": c.id, "phase": c.phase }));
+    Ok(json_reply(
+        200,
+        &json!({ "handover": handover, "cycle": cycle }),
+    ))
+}
+
 async fn handover(ctx: Ctx) -> Reply {
     let (accounts, handovers) = services(&ctx)?;
     let body: Value = ctx.json().await?;
+    match text(&body, "action") {
+        Some("resumed") => return resume_report(&handovers, &body, true),
+        Some("not_resumed") => return resume_report(&handovers, &body, false),
+        _ => {}
+    }
     let action = action_of(&body)?;
     let board = text(&body, "board")
         .ok_or_else(|| ApiError::bad_request("board is required"))?

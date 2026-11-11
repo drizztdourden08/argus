@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { ComponentType } from 'react';
 import type { SectionId } from '../AppSettings.type';
+import { AccountsSection } from '../sub-components/AccountsSection';
 import { AppearanceSection } from '../sub-components/AppearanceSection';
 import { NotificationsSection } from '../sub-components/NotificationsSection';
 import { ProfileSection } from '../sub-components/ProfileSection';
@@ -11,6 +12,7 @@ const sectionView = (id: SectionId): ComponentType => {
     profile: ProfileSection,
     notifications: NotificationsSection,
     appearance: AppearanceSection,
+    accounts: AccountsSection,
     system: SystemSection,
   };
   return views[id];

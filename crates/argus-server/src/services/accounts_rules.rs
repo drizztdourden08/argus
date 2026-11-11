@@ -1,0 +1,517 @@
+//! The switching rules of the accounts service. After every usage poll and every handover cycle
+//! event the pure rules of `argus_accounts::rules` say what to do; this carries it out: it opens
+//! and asks the handover cycle, runs the one-minute countdown (the `switch` state doc, one urgent
+//! toast), re-checks at its end and calls the switch, keeps the hold-offs a cancel leaves and
+//! teaches the estimator from each finished cycle.
+//!
+//! The outside world is the [`World`] trait, so tests fake the boards, the toasts and the
+//! switch; the clock is the tokio clock, so tests pause it.
+
+mod live;
+
+use std::sync::{Arc, Weak};
+use std::time::Duration;
+
+use argus_accounts::PollResult;
+use argus_accounts::handover::{CycleEvent, CycleMode};
+use argus_accounts::rules::{
+    Countdown, CountdownReason, CycleView, Decision, Estimates, Facts, GRACE_MS, HoldOff, LeadKey,
+    StandDownReason, View, Window, decide,
+};
+use argus_accounts::types::HandoverMode;
+use argus_core::clock::now_ms;
+use argus_notify::Level;
+use async_trait::async_trait;
+use serde_json::{Value, json};
+use tokio::sync::{Mutex, broadcast, watch};
+use tokio::task::JoinHandle;
+use tokio::time::Instant;
+
+use super::AccountsService;
+use super::tasks::Timer;
+use crate::Services;
+
+const NAME: &str = "accounts";
+
+/// What the rules read of the world in one go.
+#[derive(Clone)]
+pub(crate) struct Snapshot {
+    /// Every account with its usage.
+    pub accounts: Vec<View>,
+    /// The account Claude runs as.
+    pub active: Option<String>,
+    /// The estimator's word on the active account.
+    pub estimates: Option<Estimates>,
+    /// The cycle of the active account.
+    pub cycle: CycleView,
+    /// The id of the last cycle, whatever it is for.
+    pub cycle_id: Option<String>,
+}
+
+/// The outside world of the rules.
+#[async_trait]
+pub(crate) trait World: Send + Sync {
+    /// The accounts, the active one, the estimates and the cycle now.
+    async fn snapshot(&self) -> Snapshot;
+    /// Opens a handover cycle for `account`.
+    async fn start_cycle(
+        &self,
+        account: &str,
+        mode: CycleMode,
+        ask_at: Option<f64>,
+        use_now: Option<f64>,
+    ) -> Result<(), String>;
+    /// The ask point: every lead owes its handover.
+    async fn ask_all(&self, use_now: Option<f64>) -> Result<(), String>;
+    /// The switch point came first.
+    async fn cut_off_rest(&self, use_now: Option<f64>) -> Result<(), String>;
+    /// Asks a lead for a fresh estimate.
+    async fn re_ask(&self, lead: &LeadKey) -> Result<(), String>;
+    /// Adds a lead that started working after the cycle did.
+    async fn add_lead(&self, lead: &LeadKey) -> Result<(), String>;
+    /// Calls the handover cycle off.
+    async fn cancel_cycle(&self);
+    /// Writes the `switch` state doc.
+    async fn publish(&self, doc: Value);
+    /// Shows a toast.
+    async fn toast(&self, level: Level, title: &str, text: &str);
+    /// Reads every account's usage now.
+    async fn refresh(&self);
+    /// Teaches the estimator from a finished cycle.
+    async fn learn(&self, cycle_id: &str);
+    /// Switches the Desktop app to `to`; returns when the switch is over.
+    async fn switch(&self, to: &str, handover: bool) -> Result<(), String>;
+    /// Whether a switch runs now, whoever started it.
+    fn switching(&self) -> bool;
+    /// Logs something that went wrong.
+    fn warn(&self, what: &str, detail: &str);
+}
+
+/// The tokio clock read as epoch milliseconds, so a paused clock moves the rules' time too.
+struct Clock {
+    wall_ms: i64,
+    at: Instant,
+}
+
+impl Clock {
+    fn start() -> Self {
+        Clock {
+            wall_ms: now_ms(),
+            at: Instant::now(),
+        }
+    }
+
+    fn now_ms(&self) -> i64 {
+        self.wall_ms + i64::try_from(self.at.elapsed().as_millis()).unwrap_or(i64::MAX)
+    }
+}
+
+struct Running {
+    countdown: Countdown,
+    id: String,
+    task: JoinHandle<()>,
+}
+
+#[derive(Default)]
+struct State {
+    countdown: Option<Running>,
+    hold_offs: Vec<HoldOff>,
+    told: Option<Window>,
+    /// The cycle a switch was already made from; it does not start another countdown.
+    spent: Option<String>,
+    learned: Option<String>,
+    switching: bool,
+}
+
+/// A switch to make once the state lock is free.
+struct Go {
+    from: HoldOff,
+    to: String,
+    handover: bool,
+}
+
+/// The rules over a world.
+pub(crate) struct RulesDesk {
+    world: Arc<dyn World>,
+    clock: Clock,
+    state: Mutex<State>,
+    me: Weak<RulesDesk>,
+}
+
+fn switch_doc(id: &str, from: &str, to: &str, phase: &str) -> Value {
+    json!({
+        "id": id, "from": from, "to": to, "startedBy": "rule", "phase": phase,
+        "countdownEndsAt": null, "steps": [], "error": null,
+    })
+}
+
+fn label_of(snapshot: &Snapshot, key: &str) -> String {
+    snapshot
+        .accounts
+        .iter()
+        .find(|v| v.key == key)
+        .map_or_else(|| key.to_owned(), |v| v.label.clone())
+}
+
+fn view_of<'a>(snapshot: &'a Snapshot, key: &str) -> Option<&'a View> {
+    snapshot.accounts.iter().find(|v| v.key == key)
+}
+
+impl RulesDesk {
+    pub(crate) fn new(world: Arc<dyn World>) -> Arc<Self> {
+        Arc::new_cyclic(|me| RulesDesk {
+            world,
+            clock: Clock::start(),
+            state: Mutex::default(),
+            me: me.clone(),
+        })
+    }
+
+    /// Reads the world, decides and carries the decisions out. Called after every poll and
+    /// every cycle event.
+    pub(crate) async fn evaluate(&self) {
+        let go = {
+            let mut state = self.state.lock().await;
+            if state.switching || self.world.switching() {
+                return;
+            }
+            let snapshot = self.world.snapshot().await;
+            let decisions = self.decisions(&state, &snapshot);
+            self.apply(&mut state, &snapshot, decisions).await
+        };
+        if let Some(go) = go {
+            self.switch(go).await;
+        }
+    }
+
+    fn cycle_view(state: &State, snapshot: &Snapshot) -> CycleView {
+        let spent = state.spent.is_some() && snapshot.cycle_id == state.spent;
+        if spent && snapshot.cycle == CycleView::Ready {
+            CycleView::None
+        } else {
+            snapshot.cycle
+        }
+    }
+
+    fn decisions(&self, state: &State, snapshot: &Snapshot) -> Vec<Decision> {
+        decide(&Facts {
+            accounts: &snapshot.accounts,
+            active: snapshot.active.as_deref(),
+            estimates: snapshot.estimates.as_ref(),
+            cycle: Self::cycle_view(state, snapshot),
+            hold_offs: &state.hold_offs,
+            countdown: state.countdown.as_ref().map(|r| &r.countdown),
+            told: state.told.as_ref(),
+            now_ms: self.clock.now_ms(),
+        })
+    }
+
+    async fn apply(
+        &self,
+        state: &mut State,
+        snapshot: &Snapshot,
+        decisions: Vec<Decision>,
+    ) -> Option<Go> {
+        let active = snapshot.active.clone().unwrap_or_default();
+        let use_now = view_of(snapshot, &active).and_then(|v| v.percent);
+        let mut go = None;
+        for decision in decisions {
+            match decision {
+                Decision::ClearHoldOff { account } => {
+                    state.hold_offs.retain(|h| h.account != account);
+                }
+                Decision::StartEstimates(leads) => {
+                    for lead in &leads {
+                        self.note("estimate wake", self.world.re_ask(lead).await);
+                    }
+                }
+                Decision::AddLeads(leads) => {
+                    for lead in &leads {
+                        self.note("lead not added", self.world.add_lead(lead).await);
+                    }
+                }
+                Decision::StartCycle { mode, ask_at } => {
+                    let started = self.world.start_cycle(&active, mode, ask_at, use_now).await;
+                    if started.is_err() {
+                        self.note("handover cycle not started", started);
+                        break;
+                    }
+                }
+                Decision::AskAll => {
+                    self.note("handover request", self.world.ask_all(use_now).await)
+                }
+                Decision::CutOffRest => {
+                    self.note(
+                        "handovers not cut off",
+                        self.world.cut_off_rest(use_now).await,
+                    );
+                }
+                Decision::StartCountdown { to, reason } => {
+                    self.start_countdown(state, snapshot, &to, reason).await;
+                }
+                Decision::Switch { to } => {
+                    go = self.begin_switch(state, snapshot, &active, to);
+                }
+                Decision::StandDown { reason } => self.stand_down(state, snapshot, reason).await,
+                Decision::NotifyNoTarget { window } => {
+                    self.tell_no_target(snapshot, &active).await;
+                    state.told = Some(window);
+                }
+            }
+        }
+        go
+    }
+
+    fn note(&self, what: &str, result: Result<(), String>) {
+        if let Err(e) = result {
+            self.world.warn(what, &e);
+        }
+    }
+
+    async fn start_countdown(
+        &self,
+        state: &mut State,
+        snapshot: &Snapshot,
+        to: &str,
+        reason: CountdownReason,
+    ) {
+        let from = snapshot.active.clone().unwrap_or_default();
+        let ends_at_ms = self.clock.now_ms() + GRACE_MS;
+        let id = format!("SW-{}", self.clock.now_ms());
+        let mut doc = switch_doc(&id, &from, to, "countdown");
+        doc["countdownEndsAt"] = json!(ends_at_ms);
+        self.world.publish(doc).await;
+        let label = label_of(snapshot, to);
+        let text = countdown_text(reason, &label_of(snapshot, &from));
+        self.world
+            .toast(
+                Level::Urgent,
+                &format!("Switching to {label} in 1 minute"),
+                &text,
+            )
+            .await;
+        let task = self.spawn_wait();
+        state.countdown = Some(Running {
+            countdown: Countdown {
+                from,
+                to: to.to_owned(),
+                ends_at_ms,
+            },
+            id,
+            task,
+        });
+    }
+
+    /// The countdown task, started from a plain function so the async calls do not form a cycle.
+    fn spawn_wait(&self) -> JoinHandle<()> {
+        tokio::spawn(wait_out(self.me.clone()))
+    }
+
+    fn begin_switch(
+        &self,
+        state: &mut State,
+        snapshot: &Snapshot,
+        from: &str,
+        to: String,
+    ) -> Option<Go> {
+        state.countdown = None;
+        let view = view_of(snapshot, from)?;
+        let cycle = Self::cycle_view(state, snapshot);
+        if cycle == CycleView::Ready {
+            state.spent.clone_from(&snapshot.cycle_id);
+        }
+        state.switching = true;
+        Some(Go {
+            from: HoldOff::after_cancel(view),
+            to,
+            handover: view.rules.handover != HandoverMode::Off && cycle != CycleView::Ready,
+        })
+    }
+
+    async fn stand_down(&self, state: &mut State, snapshot: &Snapshot, reason: StandDownReason) {
+        let Some(running) = state.countdown.take() else {
+            return;
+        };
+        let Countdown { from, to, .. } = running.countdown;
+        let mut doc = switch_doc(&running.id, &from, &to, "cancelled");
+        doc["error"] = json!(format!("Stood down: {}.", reason.text()));
+        self.world.publish(doc).await;
+        let text = format!(
+            "The switch to {} stood down: {}.",
+            label_of(snapshot, &to),
+            reason.text()
+        );
+        self.world
+            .toast(Level::Info, "Switch stood down", &text)
+            .await;
+    }
+
+    async fn tell_no_target(&self, snapshot: &Snapshot, active: &str) {
+        let label = label_of(snapshot, active);
+        let text = format!(
+            "{label} is nearly spent and no other account has room. Open the Accounts tab to resume here when it resets."
+        );
+        self.world
+            .toast(
+                Level::Info,
+                &format!("{label} has nowhere to switch"),
+                &text,
+            )
+            .await;
+    }
+
+    /// Makes the switch; a failed one holds the rule off so it does not start again at once.
+    async fn switch(&self, go: Go) {
+        let result = self.world.switch(&go.to, go.handover).await;
+        let mut state = self.state.lock().await;
+        state.switching = false;
+        if let Err(e) = result {
+            self.world.warn("rule switch failed", &e);
+            state.hold_offs.retain(|h| h.account != go.from.account);
+            state.hold_offs.push(go.from);
+        }
+    }
+
+    /// Ends a running countdown at the owner's cancel and holds the rule off. Returns whether
+    /// a countdown ran.
+    pub(crate) async fn cancel(&self) -> bool {
+        let mut state = self.state.lock().await;
+        let Some(running) = state.countdown.take() else {
+            return false;
+        };
+        running.task.abort();
+        let Countdown { from, to, .. } = running.countdown;
+        let snapshot = self.world.snapshot().await;
+        if let Some(view) = view_of(&snapshot, &from) {
+            state.hold_offs.retain(|h| h.account != from);
+            state.hold_offs.push(HoldOff::after_cancel(view));
+        }
+        self.world.cancel_cycle().await;
+        self.world
+            .publish(switch_doc(&running.id, &from, &to, "cancelled"))
+            .await;
+        true
+    }
+
+    /// The owner chose Switch now during a countdown: drops the countdown, without a hold-off
+    /// and without a doc write (the switch reuses the countdown's id and writes the doc).
+    pub(crate) async fn end(&self) -> bool {
+        let mut state = self.state.lock().await;
+        let Some(running) = state.countdown.take() else {
+            return false;
+        };
+        running.task.abort();
+        let snapshot = self.world.snapshot().await;
+        if Self::cycle_view(&state, &snapshot) == CycleView::Ready {
+            state.spent.clone_from(&snapshot.cycle_id);
+        }
+        true
+    }
+
+    /// A cycle became ready: learn from it, then see whether the countdown starts.
+    async fn on_event(&self, event: CycleEvent) {
+        let fresh = {
+            let mut state = self.state.lock().await;
+            let fresh = state.learned.as_deref() != Some(event.cycle.as_str());
+            if fresh {
+                state.learned = Some(event.cycle.clone());
+            }
+            fresh
+        };
+        if fresh {
+            self.world.learn(&event.cycle).await;
+        }
+        self.evaluate().await;
+    }
+}
+
+fn countdown_text(reason: CountdownReason, from: &str) -> String {
+    match reason {
+        CountdownReason::SwitchPoint => {
+            format!("{from} reached its switch point. Open the Accounts tab to cancel.")
+        }
+        CountdownReason::HandoversReady => {
+            format!("Every handover from {from} is written. Open the Accounts tab to cancel.")
+        }
+    }
+}
+
+/// The countdown task: waits out the grace, reads the usage again, then lets the rules re-check.
+async fn wait_out(desk: Weak<RulesDesk>) {
+    tokio::time::sleep(Duration::from_millis(GRACE_MS.unsigned_abs())).await;
+    let Some(desk) = desk.upgrade() else {
+        return;
+    };
+    desk.world.refresh().await;
+    desk.evaluate().await;
+}
+
+enum Heard {
+    Ready(CycleEvent),
+    Missed,
+}
+
+async fn next_event(events: &mut Option<broadcast::Receiver<CycleEvent>>) -> Heard {
+    let Some(rx) = events else {
+        return std::future::pending().await;
+    };
+    match rx.recv().await {
+        Ok(event) => Heard::Ready(event),
+        Err(broadcast::error::RecvError::Lagged(_)) => Heard::Missed,
+        Err(broadcast::error::RecvError::Closed) => std::future::pending().await,
+    }
+}
+
+/// Runs the rules after every poll and every cycle event until a channel closes.
+pub(crate) async fn run(
+    desk: Arc<RulesDesk>,
+    mut polled: watch::Receiver<Arc<Vec<PollResult>>>,
+    mut events: Option<broadcast::Receiver<CycleEvent>>,
+) {
+    loop {
+        tokio::select! {
+            changed = polled.changed() => {
+                if changed.is_err() {
+                    return;
+                }
+                drop(polled.borrow_and_update());
+                desk.evaluate().await;
+            }
+            heard = next_event(&mut events) => match heard {
+                Heard::Ready(event) => desk.on_event(event).await,
+                Heard::Missed => desk.evaluate().await,
+            }
+        }
+    }
+}
+
+/// Ends the countdown of a rule, if one runs, and holds that rule off. The cancel route of the
+/// switch calls it before it cancels a switch that is already under way.
+pub(crate) async fn cancel_countdown(accounts: &AccountsService) -> bool {
+    match accounts.rules.get() {
+        Some(desk) => desk.cancel().await,
+        None => false,
+    }
+}
+
+/// Ends the countdown of a rule for the owner's Switch now: no hold-off, no second countdown.
+pub(crate) async fn end_countdown(accounts: &AccountsService) -> bool {
+    match accounts.rules.get() {
+        Some(desk) => desk.end().await,
+        None => false,
+    }
+}
+
+pub(crate) fn start(svc: &Arc<Services>, accounts: &Arc<AccountsService>) {
+    let desk = RulesDesk::new(Arc::new(live::Live::new(svc, accounts)));
+    let _ = accounts.rules.set(Arc::clone(&desk));
+    if !svc.tasks.runs(Timer::Accounts) {
+        return;
+    }
+    let events = accounts.cycle_events();
+    let task = tokio::spawn(run(desk, accounts.subscribe(), events));
+    svc.tasks.keep(NAME, task);
+}
+
+#[cfg(test)]
+mod tests;

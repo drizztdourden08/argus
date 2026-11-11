@@ -6,6 +6,7 @@ const SECTIONS: { value: SectionId; label: string }[] = [
   { value: 'profile', label: 'Profile' },
   { value: 'notifications', label: 'Notifications' },
   { value: 'appearance', label: 'Appearance' },
+  { value: 'accounts', label: 'Accounts' },
   { value: 'system', label: 'System' },
 ];
 

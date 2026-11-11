@@ -2,7 +2,7 @@
 import type { BrandApp } from '@drizztdourden08/tessera/brand';
 import type { ReactNode } from 'react';
 
-type SectionId = 'profile' | 'notifications' | 'appearance' | 'system';
+type SectionId = 'profile' | 'notifications' | 'appearance' | 'accounts' | 'system';
 
 type AvatarMode = 'default' | 'initials' | 'brand' | 'upload';
 

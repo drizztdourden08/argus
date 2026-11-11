@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { AccountsSettingsApi } from '../../../data/accounts';
 import type { WithId } from '../../../data/react';
 import type { AccountDoc, AccountLimit, AccountsDrift } from '../../../data/types';
 
@@ -12,7 +13,6 @@ interface AccountsFeed {
 
 interface AccountActions {
   busy: boolean;
-  switchTo: (key: string) => void;
   sync: () => void;
   undo: () => void;
 }
@@ -33,6 +33,8 @@ interface SyncRowProps {
 interface AccountCardProps {
   account: Account;
   actions: AccountActions;
+  rules: AccountsSettingsApi;
+  onSwitch: (key: string) => void;
 }
 
 interface LimitMeterProps {
@@ -45,6 +47,14 @@ interface AccountFactsProps {
 
 interface RuleChipsProps {
   account: Account;
+  rules: AccountsSettingsApi;
 }
 
-export type { Account, AccountActions, AccountCardProps, AccountFactsProps, AccountsFeed, AccountsSummaryProps, AccountsView, LimitMeterProps, RuleChipsProps, SyncRowProps };
+interface PercentFieldProps {
+  value: number;
+  label: string;
+  disabled: boolean;
+  onCommit: (value: number) => void;
+}
+
+export type { Account, AccountActions, AccountCardProps, AccountFactsProps, AccountsFeed, AccountsSummaryProps, AccountsView, LimitMeterProps, PercentFieldProps, RuleChipsProps, SyncRowProps };

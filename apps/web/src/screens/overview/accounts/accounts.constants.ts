@@ -26,6 +26,18 @@ const RESET_FORMAT: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'sho
 
 const DRIFT_TIP = 'Differences between the Claude Desktop sidebars of the accounts';
 
+const DEFAULT_SWITCH_AT = 98;
+const DEFAULT_HANDOVER_PERCENT = 95;
+const AUTO_SWITCH_LABEL = 'Auto-switch';
+const HANDOVER_LABEL = 'Handover';
+const CAN_RECEIVE_LABEL = 'Can be switched to';
+const HANDOVER_OPTIONS = [
+  { value: 'off', label: 'Handover off' },
+  { value: 'percent', label: 'Handover at a percent' },
+  { value: 'auto', label: 'Handover auto' },
+];
+
 export {
+  AUTO_SWITCH_LABEL, CAN_RECEIVE_LABEL, DEFAULT_HANDOVER_PERCENT, DEFAULT_SWITCH_AT, HANDOVER_LABEL, HANDOVER_OPTIONS,
   ACCOUNTS_COLL, ACCOUNTS_STATE_COLL, ACTIVE_NOTE, DRIFT_DOC, DRIFT_TIP, KIND_LABEL, METER_TONE, NONE_FOUND, RESET_FORMAT, SEVERITY_LOOK,
 };

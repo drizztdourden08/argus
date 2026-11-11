@@ -3,12 +3,13 @@ import { Button, Callout, Card, Inline, Stack, Tag, Text } from '@drizztdourden0
 import { ACTIVE_NOTE, SEVERITY_LOOK } from '../accounts.constants';
 import type { AccountCardProps } from '../accounts.type';
 import { severityOf } from '../model';
+import { CyclePanel } from '../switch';
 import { AccountFacts } from './AccountFacts';
 import { LimitMeter } from './LimitMeter';
 import { RuleChips } from './RuleChips';
 
 const AccountCard = (props: AccountCardProps) => {
-  const { account, actions } = props;
+  const { account, actions, rules, onSwitch } = props;
   const look = SEVERITY_LOOK[severityOf(account)];
   const label = account.label ?? account.key ?? 'Account';
   const limits = (account.limits ?? []).filter((limit) => limit.isActive !== false);
@@ -25,9 +26,10 @@ const AccountCard = (props: AccountCardProps) => {
         {account.error && <Callout tone="warning">{account.error}</Callout>}
         {limits.map((limit) => <LimitMeter key={`${limit.kind}-${limit.model ?? ''}`} limit={limit} />)}
         <AccountFacts account={account} />
-        <RuleChips account={account} />
+        <RuleChips account={account} rules={rules} />
+        <CyclePanel account={account} />
         <Inline gap="sm">
-          <Button size="sm" disabled={account.active === true || actions.busy} onClick={() => actions.switchTo(account.key ?? account.id)}>Switch here</Button>
+          <Button size="sm" disabled={account.active === true} onClick={() => onSwitch(account.key ?? account.id)}>Switch here</Button>
           <Button size="sm" variant="secondary" disabled={actions.busy} onClick={actions.sync}>Sync only</Button>
         </Inline>
       </Stack>

@@ -65,6 +65,7 @@ pub struct AccountsService {
     polled: watch::Sender<Arc<Vec<PollResult>>>,
     pub(crate) handovers: OnceLock<Arc<super::accounts_handover::Handovers>>,
     pub(crate) sync: super::accounts_sync::SyncState,
+    pub(crate) rules: OnceLock<Arc<super::accounts_rules::RulesDesk>>,
 }
 
 /// The outside world of the usage poll.
@@ -98,6 +99,7 @@ impl AccountsService {
             polled: watch::channel(Arc::new(Vec::new())).0,
             handovers: OnceLock::new(),
             sync: super::accounts_sync::SyncState::default(),
+            rules: OnceLock::new(),
         }
     }
 
@@ -241,7 +243,7 @@ pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<AccountsS
 }
 
 /// The Desktop account that is logged in now, from `<app>/config.json`.
-fn last_known_account(app: &Path) -> Option<String> {
+pub(crate) fn last_known_account(app: &Path) -> Option<String> {
     let text = std::fs::read_to_string(app.join("config.json")).ok()?;
     let config: Value = serde_json::from_str(&text).ok()?;
     config
@@ -267,6 +269,7 @@ fn load(svc: &Services, accounts: &AccountsService) {
         svc.log
             .error("accounts docs not written", json!({ "error": e }));
     }
+    super::accounts_switch::publish_logins(svc, accounts);
 }
 
 pub(crate) fn start(svc: &Arc<Services>) {
@@ -276,6 +279,8 @@ pub(crate) fn start(svc: &Arc<Services>) {
     super::accounts_handover::attach(svc, &accounts);
     super::accounts_sync::attach(svc, &accounts);
     super::accounts_sync::start(svc, &accounts);
+    super::accounts_rules::start(svc, &accounts);
+    super::accounts_resume::start(svc);
     let owned = Arc::clone(svc);
     let polling = svc.tasks.runs(Timer::Accounts);
     let task = tokio::spawn(async move {
