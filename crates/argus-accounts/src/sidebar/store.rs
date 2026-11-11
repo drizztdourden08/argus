@@ -6,7 +6,7 @@ use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
 
 use argus_core::clock::now_ms;
-use rusty_leveldb::{DB, Options};
+use rusty_leveldb::{DB, LdbIterator, Options};
 use serde_json::Value;
 
 use super::SidebarKeys;
@@ -103,12 +103,23 @@ fn open_db(dir: &Path) -> Result<DB, String> {
     DB::open(dir, opt).map_err(|e| format!("cannot open the sidebar store {}: {e}", dir.display()))
 }
 
+/// Reads the three keys by walking the store. A point lookup consults the tables' bloom
+/// filters, whose policy Chromium sets differently, so after the app compacts its store a
+/// lookup can miss a key that is there; a full walk never does.
 fn load_keys(db: &mut DB) -> Result<SidebarKeys, String> {
+    let wanted: Vec<Vec<u8>> = KEY_NAMES.iter().map(|n| full_key(n)).collect();
+    let mut found: Vec<Option<Vec<u8>>> = vec![None; wanted.len()];
+    let mut iter = db
+        .new_iter()
+        .map_err(|e| format!("cannot walk the sidebar store: {e}"))?;
+    while let Some((key, value)) = iter.next() {
+        if let Some(i) = wanted.iter().position(|w| *w == key) {
+            found[i] = Some(value);
+        }
+    }
     let mut parts: Vec<(u8, Value)> = Vec::with_capacity(3);
-    for name in KEY_NAMES {
-        let raw = db
-            .get(&full_key(name))
-            .ok_or_else(|| format!("the sidebar store has no `{name}` key"))?;
+    for (name, raw) in KEY_NAMES.iter().zip(found) {
+        let raw = raw.ok_or_else(|| format!("the sidebar store has no `{name}` key"))?;
         parts.push(decode_value(&raw).map_err(|e| format!("{name}: {e}"))?);
     }
     let (e2, dframe_store) = parts.remove(2);
