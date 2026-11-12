@@ -99,9 +99,23 @@ fn bundle_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
         })
 }
 
-/// The items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
+/// A live thread holds the folder it works in. A thread that ended or was deleted holds nothing.
+fn thread_links(board: &Board) -> impl Iterator<Item = Link> + '_ {
+    section(board, "threads")
+        .filter(|(_, t)| thread_live(t))
+        .filter_map(|(name, t)| {
+            Some(Link {
+                what: format!("thread {name}"),
+                path: Some(text(&t["root"])?),
+                ..Link::default()
+            })
+        })
+}
+
+/// The live threads' folders, the items in progress of a live thread, the open pull requests, the launchers not retired and the bundles not closed.
 pub(super) fn links_of(board: &Board) -> Vec<Link> {
-    item_links(board)
+    thread_links(board)
+        .chain(item_links(board))
         .chain(pr_links(board))
         .chain(launcher_links(board))
         .chain(bundle_links(board))
@@ -113,6 +127,7 @@ pub(super) fn links_of(board: &Board) -> Vec<Link> {
 mod tests {
     //! K1: which open things and agents link to a worktree.
     use super::*;
+    use argus_worktrees::path_key;
     use serde_json::json;
 
     #[test]
@@ -122,6 +137,33 @@ mod tests {
                 "items": ["I-4", "I-5"]}}
         });
         assert_eq!(agents_of(&board)[0].item.as_deref(), Some("I-4"));
+    }
+
+    #[test]
+    fn a_live_thread_with_a_root_holds_it_and_an_ended_or_rootless_one_does_not() {
+        let board: Board = json!({
+            "threads": {
+                "live": {"id": "live", "status": "active", "root": "X:\\argus\\.claude\\worktrees\\i135-accounts"},
+                "done": {"id": "done", "status": "done", "root": "X:\\p\\done"},
+                "gone": {"id": "gone", "status": "active", "root": "X:\\p\\gone", "deletedAt": "2026-10-01T00:00:00.000Z"},
+                "bare": {"id": "bare", "status": "active"}
+            }
+        });
+        let links = links_of(&board);
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0].what, "thread live");
+    }
+
+    #[test]
+    fn a_backslash_root_names_the_same_place_as_the_forward_slash_worktree() {
+        let board: Board = json!({
+            "threads": {"t": {"id": "t", "status": "active", "root": "X:\\argus\\.claude\\worktrees\\i135-accounts"}}
+        });
+        let path = links_of(&board)[0].path.clone().unwrap_or_default();
+        assert_eq!(
+            path_key(&path, true),
+            path_key("x:/argus/.claude/worktrees/i135-accounts", true)
+        );
     }
 
     #[test]
