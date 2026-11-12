@@ -54,10 +54,10 @@ fn unblock_clears_the_legacy_text_and_refuses_a_link_it_does_not_have() {
 }
 
 #[test]
-fn a_text_blocker_is_refused_with_the_hint_and_nothing_is_written() {
+fn a_plain_text_blocker_is_refused_with_the_hint_and_nothing_is_written() {
     let work = two_items();
     let before = work.board();
-    let ran = work.worker(&["item", "block", "I-1", "--on", "external: owner, a go"]);
+    let ran = work.worker(&["item", "block", "I-1", "--on", "needs the schema"]);
     assert_eq!(ran.code, 1);
     assert!(
         ran.err.contains("a blocker is an id, not text"),
@@ -71,6 +71,21 @@ fn a_text_blocker_is_refused_with_the_hint_and_nothing_is_written() {
         ran.err
     );
     assert_eq!(work.board(), before);
+}
+
+#[test]
+fn an_external_blocker_is_stored_as_text_and_unblock_clears_it() {
+    let work = two_items();
+    let said = work.worker_ok(&["item", "block", "I-1", "--on", "External: owner, a go"]);
+    assert!(said.contains("I-1: blocked on External: owner, a go."), "{said}");
+    let item = work.board()["items"]["I-1"].clone();
+    assert_eq!(item["blocker"], "External: owner, a go");
+    assert_eq!(item["blockedBy"], Value::Null);
+    let said = work.worker_ok(&["item", "unblock", "I-1"]);
+    assert!(said.contains("I-1: blocker cleared."), "{said}");
+    assert_eq!(work.board()["items"]["I-1"]["blocker"], Value::Null);
+    let ran = work.worker(&["item", "block", "I-1", "--on", "external:  "]);
+    assert_eq!(ran.code, 1);
 }
 
 #[test]

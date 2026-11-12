@@ -1,6 +1,6 @@
-//! `coord item block <I> --on <id> | --todo "<what>" --who <who>` and `coord item unblock <I>
-//! [--from <id>]`. A blocker is an id of this board: a record that is open, or a to-do made here
-//! for whoever must act. Free text is refused with what to do instead.
+//! `coord item block <I> --on <id | external: who, what> | --todo "<what>" --who <who>` and
+//! `coord item unblock <I> [--from <id>]`. A blocker is an id of this board, a to-do made here for
+//! whoever must act, or an `external:` text. Other free text is refused with what to do instead.
 
 use argus_board::Board;
 use serde_json::{Map, Value, json};
@@ -11,12 +11,14 @@ use crate::verbs::work::crud::{apply_result, stored_id};
 use crate::verbs::work::run::{Res, Run, bad};
 use crate::who::Caller;
 
-const USAGE: &str = "usage: coord item block <I-n> --on <I-n|T-n|H-n|Q-n|D-n> | --todo \"<what>\" --who <owner|thread|lead:key>.";
+const USAGE: &str = "usage: coord item block <I-n> --on <I-n|T-n|H-n|Q-n|D-n|\"external: who, what\"> | --todo \"<what>\" --who <owner|thread|lead:key>.";
 
 /// What blocks the item.
 enum Blocker {
     /// A record of this board.
     Link(String),
+    /// The text of an `external:` blocker, kept on the item.
+    External(String),
     /// A to-do to make for `who`.
     Todo { what: String, who: String },
 }
@@ -31,13 +33,19 @@ pub(super) fn is_id(word: &str) -> bool {
     })
 }
 
+/// The text of an `external: who, what` blocker, trimmed.
+fn external(on: &str) -> Option<String> {
+    let (head, text) = on.split_once(':')?;
+    (head.eq_ignore_ascii_case("external") && !text.trim().is_empty()).then(|| on.to_owned())
+}
+
 /// The refusal of an `--on` that is not an id of this board.
 fn refuse_on(on: &str, item: &str) -> String {
     if let Some((key, _)) = on.split_once('/').filter(|(_, id)| is_id(id)) {
         return format!("{on} is on another board: coord dep ask {key} \"<what>\" --item {item}.");
     }
     format!(
-        "a blocker is an id, not text: \"{on}\". Link a record of this board with --on <I-n|T-n|H-n|Q-n|D-n>, or make a to-do for whoever must act: coord item block {item} --todo \"<what>\" --who owner|<thread>|lead:<key>. Another lead's work is coord dep ask <key> \"<what>\" --item {item}."
+        "a blocker is an id, not text: \"{on}\". Link a record of this board with --on <I-n|T-n|H-n|Q-n|D-n>, name an outside wait with --on \"external: who, what\", or make a to-do for whoever must act: coord item block {item} --todo \"<what>\" --who owner|<thread>|lead:<key>. Another lead's work is coord dep ask <key> \"<what>\" --item {item}."
     )
 }
 
@@ -52,7 +60,9 @@ fn wanted(r: &Run<'_>) -> Res<Blocker> {
     let item = r.arg(0).unwrap_or_default();
     match (given(r, "on"), given(r, "todo"), given(r, "who")) {
         (Some(on), None, None) if is_id(&on) => Ok(Blocker::Link(on)),
-        (Some(on), None, None) => Err(bad(refuse_on(&on, item))),
+        (Some(on), None, None) => external(&on)
+            .map(Blocker::External)
+            .ok_or_else(|| bad(refuse_on(&on, item))),
         (None, Some(what), Some(who)) => Ok(Blocker::Todo { what, who }),
         (None, Some(_), None) => Err(bad(
             "--todo needs --who <owner|thread|lead:key>: who must act.",
@@ -96,6 +106,11 @@ pub(super) fn make_todo(
 fn plan_for(wanted: Blocker) -> impl FnOnce(&mut Board, &Caller, &Value) -> Res<Plan> {
     move |board, by, item| {
         let (target, said) = match &wanted {
+            Blocker::External(text) => {
+                let set = Map::from_iter([("blocker".to_owned(), json!(text))]);
+                let say = Say::Line(format!("blocked on {text}."));
+                return Ok(Plan { set, say });
+            }
             Blocker::Link(id) => {
                 let id = stored_id(board, "items", id)?;
                 let said = format!("blocked on {id}.");
@@ -176,7 +191,7 @@ mod tests {
 
     #[test]
     fn a_text_gets_the_hint_and_another_board_the_dep_ask() {
-        let text = refuse_on("external: owner, a go", "I-4");
+        let text = refuse_on("needs the schema", "I-4");
         assert!(text.contains("a blocker is an id, not text"), "{text}");
         assert!(text.contains("coord item block I-4 --todo"), "{text}");
         let other = refuse_on("brock/I-9", "I-4");
