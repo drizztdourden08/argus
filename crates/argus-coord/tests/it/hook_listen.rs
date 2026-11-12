@@ -76,8 +76,11 @@ fn a_lead_skips_the_wakes_it_sent_and_hears_the_next_one_from_another_sender() {
     let f = fixture(&server);
     let ran = listen(&f, LEAD, "SessionStart", &[]);
     assert_eq!(ran.code, 2);
-    assert_eq!(ran.err, "WAKE ui: ui: done. Run: coord inbox
-");
+    assert_eq!(
+        ran.err,
+        "WAKE ui: ui: done. Run: coord inbox
+"
+    );
     assert_eq!(streams(&server).len(), 1);
 }
 
@@ -88,8 +91,11 @@ fn a_thread_listener_still_wakes_for_a_line_that_starts_with_its_own_id() {
     let f = fixture(&server);
     let ran = listen(&f, UI, "Stop", &[]);
     assert_eq!(ran.code, 2);
-    assert_eq!(ran.err, "WAKE ui: ui: from me. Run: coord inbox
-");
+    assert_eq!(
+        ran.err,
+        "WAKE ui: ui: from me. Run: coord inbox
+"
+    );
 }
 
 #[test]
