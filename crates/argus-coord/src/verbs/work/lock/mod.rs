@@ -138,6 +138,12 @@ fn hand_on(board: &mut Board, resource: &str, next: Option<&str>, from: &str) {
     if let Some(holder) = holder {
         let whose = agent.map_or_else(String::new, |a| format!(" (agent {a})"));
         let text = format!("{resource} is yours now{whose} (released by {from}).");
-        post(board, &holder, from, ("lock-granted", &text), Some(resource));
+        post(
+            board,
+            &holder,
+            from,
+            ("lock-granted", &text),
+            Some(resource),
+        );
     }
 }

@@ -18,7 +18,10 @@ fn two_agents() -> Work {
 fn holder_agent_is_recorded_and_the_holder_stays_the_thread() {
     let work = Work::new();
     let said = work.worker_ok(&["lock", "claim", "build", "--agent", "A-1"]);
-    assert!(said.contains("coord lock release build --agent A-1"), "{said}");
+    assert!(
+        said.contains("coord lock release build --agent A-1"),
+        "{said}"
+    );
     let lock = work.board()["locks"]["build"].clone();
     assert_eq!(lock["holder"], "worker");
     assert_eq!(lock["holderAgent"], "A-1");
@@ -67,7 +70,10 @@ fn a_release_by_the_wrong_agent_is_refused() {
 fn drop_leaves_the_queue_as_that_agent_only() {
     let work = two_agents();
     work.worker_ok(&["lock", "drop", "build"]);
-    assert_eq!(work.board()["locks"]["build"]["queue"], json!(["worker#A-2"]));
+    assert_eq!(
+        work.board()["locks"]["build"]["queue"],
+        json!(["worker#A-2"])
+    );
     work.worker_ok(&["lock", "drop", "build", "--agent", "A-2"]);
     assert_eq!(work.board()["locks"]["build"]["queue"], json!([]));
 }

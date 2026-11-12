@@ -32,7 +32,11 @@ fn start_with_prompt(f: &Fixture, agent_id: &str, prompt: &str) {
     let sub = dir.join(LEAD).join("subagents");
     fs::create_dir_all(&sub).unwrap();
     let line = json!({ "type": "user", "message": { "role": "user", "content": prompt } });
-    fs::write(sub.join(format!("agent-{agent_id}.jsonl")), format!("{line}\n")).unwrap();
+    fs::write(
+        sub.join(format!("agent-{agent_id}.jsonl")),
+        format!("{line}\n"),
+    )
+    .unwrap();
     let body = json!({
         "session_id": LEAD, "cwd": f.cwd_text(), "hook_event_name": "SubagentStart",
         "agent_id": agent_id, "agent_type": "general-purpose",

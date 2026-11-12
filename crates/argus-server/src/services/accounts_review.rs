@@ -136,7 +136,7 @@ impl ReviewRun {
                         json!({ "desktop": state, "phase": "waiting_for_quit", "detail": QUIT_BY_HAND }),
                     ),
                     "closed" => {
-                        update(json!({ "desktop": state, "phase": "scan", "detail": null }))
+                        update(json!({ "desktop": state, "phase": "scan", "detail": null }));
                     }
                     _ => update(json!({ "desktop": state })),
                 };
