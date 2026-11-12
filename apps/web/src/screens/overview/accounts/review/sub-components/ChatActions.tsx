@@ -13,7 +13,7 @@ const ChatActions = (props: RowActionsProps) => {
     <>
       <MoveMenu {...props} />
       {archived ? <ActionButton label="Unarchive" icon="rotate-ccw" onClick={act('unarchive')} /> : <ActionButton label="Archive" icon="archive" onClick={act('archive')} />}
-      {archived && <ActionButton label="Delete" icon="trash-2" danger onClick={act('delete_chat')} />}
+      <ActionButton label="Delete" icon="trash-2" danger onClick={act('delete_chat')} />
       {kids && <ScopeMenu row={row} account={account} env={env} label="This chat with its sub-threads" />}
     </>
   );

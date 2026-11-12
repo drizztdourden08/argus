@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../data/react';
-import type { AccountsRun, ReviewAccount, ReviewCell, ReviewDoc, ReviewRow, ReviewStatus, SyncStepDoc } from '../../../data/types';
+import type { AccountsRun, RunResult, ReviewAccount, ReviewCell, ReviewDoc, ReviewRow, ReviewStatus, SyncStepDoc } from '../../../data/types';
 import type { AccountActions } from './accounts.type';
 
 type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
@@ -67,7 +67,7 @@ interface StepLogProps {
 
 interface RunFinishProps {
   phase: string;
-  result: string | null | undefined;
+  result: RunResult | string | null | undefined;
   busy: boolean;
   onUndo: () => void;
   onBack: () => void;

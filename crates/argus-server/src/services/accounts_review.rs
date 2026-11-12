@@ -6,14 +6,15 @@
 
 use std::cell::RefCell;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use argus_accounts::DesktopApp;
 use argus_accounts::desktop::ClaudeDesktop;
 use argus_accounts::desktop::app::wait_until;
 use argus_accounts::find_app_data;
 use argus_accounts::sync::review::{Cleanup, Request, Review, build_review, cleanup, run_review};
 use argus_accounts::sync::{Progress, Summary, scan_and_plan};
+use argus_accounts::{DesktopApp, QUIT_BY_HAND, Quit};
 use argus_core::clock::now_ms;
 use serde_json::{Value, json};
 
@@ -28,6 +29,21 @@ pub const CLEANUP_DAYS: u32 = 30;
 /// How long a run waits for Claude's storage lock to come free after the close.
 const LOCK_WAIT: Duration = Duration::from_secs(20);
 const LOCK_POLL: Duration = Duration::from_millis(250);
+
+/// Set by [`cancel`] while a run waits for the owner to quit Desktop.
+static CANCELLED: AtomicBool = AtomicBool::new(false);
+/// Whether a run waits for the owner to quit Desktop from its tray.
+static WAITING: AtomicBool = AtomicBool::new(false);
+
+/// Cancels a review run that waits for the owner to quit Desktop. True when it was stopped;
+/// false when no run waits (a run that is writing is never cut short).
+pub fn cancel() -> bool {
+    let waiting = WAITING.load(Ordering::SeqCst);
+    if waiting {
+        CANCELLED.store(true, Ordering::SeqCst);
+    }
+    waiting
+}
 
 impl AccountsService {
     /// The rows of the sync review, with a choice per difference.
@@ -115,9 +131,25 @@ impl ReviewRun {
         let result = match find_app_data(accounts.config().app_data.as_deref()) {
             Some(app) => {
                 let desktop = ClaudeDesktop::new(&app);
-                let mut note = |state: &str| update(json!({ "desktop": state }));
+                let mut note = |state: &str| match state {
+                    "waiting_for_quit" => update(
+                        json!({ "desktop": state, "phase": "waiting_for_quit", "detail": QUIT_BY_HAND }),
+                    ),
+                    "closed" => {
+                        update(json!({ "desktop": state, "phase": "scan", "detail": null }))
+                    }
+                    _ => update(json!({ "desktop": state })),
+                };
                 let work = || write(&accounts, &request, &update);
-                with_desktop_closed(&desktop, close_desktop, &mut note, work)
+                let cancelled = || CANCELLED.load(Ordering::SeqCst);
+                let quit = (
+                    accounts.config().force_quit,
+                    &cancelled as &dyn Fn() -> bool,
+                );
+                CANCELLED.store(false, Ordering::SeqCst);
+                let closed = with_desktop_closed(&desktop, close_desktop, quit, &mut note, work);
+                WAITING.store(false, Ordering::SeqCst);
+                closed
             }
             None => Err("the Claude Desktop data folder was not found".to_owned()),
         };
@@ -154,7 +186,7 @@ fn set(doc: &mut Value, fields: Value) {
 
 /// Runs `work` with Claude Desktop closed. When Desktop runs it is closed politely (refused
 /// without `close`), the storage lock must come free, and it is started again after `work`,
-/// whatever `work` answered. `note` hears `closing`, `closed`, `starting`, `started` or why the
+/// whatever `work` answered. `note` hears `closing`, `waiting_for_quit`, `closed`, `starting`, `started` or why the
 /// start failed.
 ///
 /// # Errors
@@ -162,6 +194,7 @@ fn set(doc: &mut Value, fields: Value) {
 pub(crate) fn with_desktop_closed<T>(
     desktop: &dyn DesktopApp,
     close: bool,
+    (force, cancelled): (bool, &dyn Fn() -> bool),
     note: &mut dyn FnMut(&str),
     work: impl FnOnce() -> Result<T, String>,
 ) -> Result<T, String> {
@@ -171,7 +204,16 @@ pub(crate) fn with_desktop_closed<T>(
             return Err("Claude Desktop is running; close it or let Argus close it".to_owned());
         }
         note("closing");
-        desktop.close()?;
+        let mut waiting = |_: &str| {
+            WAITING.store(true, Ordering::SeqCst);
+            note("waiting_for_quit");
+        };
+        desktop.close(&mut Quit {
+            force,
+            cancelled,
+            waiting: &mut waiting,
+        })?;
+        WAITING.store(false, Ordering::SeqCst);
         if !wait_until(LOCK_WAIT, LOCK_POLL, || !desktop.is_running()) {
             return Err("Claude Desktop still holds its storage; nothing was written".to_owned());
         }
@@ -196,6 +238,8 @@ mod tests {
 
     use super::*;
 
+    const NO_QUIT: (bool, &dyn Fn() -> bool) = (false, &|| false);
+
     #[derive(Default)]
     struct Fake {
         running: AtomicBool,
@@ -216,7 +260,7 @@ mod tests {
         fn turn_in_progress(&self) -> bool {
             false
         }
-        fn close(&self) -> Result<(), String> {
+        fn close(&self, _: &mut Quit) -> Result<(), String> {
             self.log("close");
             if self.refuse_close {
                 return Err("still open".to_owned());
@@ -247,9 +291,13 @@ mod tests {
     fn a_running_desktop_is_closed_for_the_work_and_started_again() {
         let fake = running();
         let mut notes = Vec::new();
-        let seen = with_desktop_closed(&fake, true, &mut |n| notes.push(n.to_owned()), || {
-            Ok::<bool, String>(fake.is_running())
-        });
+        let seen = with_desktop_closed(
+            &fake,
+            true,
+            NO_QUIT,
+            &mut |n| notes.push(n.to_owned()),
+            || Ok::<bool, String>(fake.is_running()),
+        );
         assert_eq!(seen, Ok(false), "the work ran with Desktop closed");
         assert_eq!(*fake.calls.lock().unwrap(), ["close", "start"]);
         assert_eq!(notes, ["closing", "closed", "starting", "started"]);
@@ -258,8 +306,9 @@ mod tests {
     #[test]
     fn desktop_starts_again_when_the_work_fails() {
         let fake = running();
-        let result =
-            with_desktop_closed(&fake, true, &mut |_| {}, || Err::<(), _>("boom".to_owned()));
+        let result = with_desktop_closed(&fake, true, NO_QUIT, &mut |_| {}, || {
+            Err::<(), _>("boom".to_owned())
+        });
         assert_eq!(result, Err("boom".to_owned()));
         assert!(fake.is_running());
     }
@@ -267,7 +316,7 @@ mod tests {
     #[test]
     fn a_closed_desktop_is_neither_closed_nor_started() {
         let fake = Fake::default();
-        let result = with_desktop_closed(&fake, true, &mut |_| {}, || Ok::<u8, String>(1));
+        let result = with_desktop_closed(&fake, true, NO_QUIT, &mut |_| {}, || Ok::<u8, String>(1));
         assert_eq!(result, Ok(1));
         assert!(fake.calls.lock().unwrap().is_empty());
     }
@@ -276,7 +325,7 @@ mod tests {
     fn without_leave_to_close_a_running_desktop_nothing_runs() {
         let fake = running();
         let mut ran = false;
-        let result = with_desktop_closed(&fake, false, &mut |_| {}, || {
+        let result = with_desktop_closed(&fake, false, NO_QUIT, &mut |_| {}, || {
             ran = true;
             Ok::<(), String>(())
         });
@@ -291,7 +340,7 @@ mod tests {
             ..running()
         };
         let mut ran = false;
-        let result = with_desktop_closed(&fake, true, &mut |_| {}, || {
+        let result = with_desktop_closed(&fake, true, NO_QUIT, &mut |_| {}, || {
             ran = true;
             Ok::<(), String>(())
         });

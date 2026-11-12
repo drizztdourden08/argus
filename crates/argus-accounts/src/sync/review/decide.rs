@@ -39,7 +39,7 @@ pub enum Edit {
     Archive { account: String, session_id: String },
     /// Takes a chat out of the archive.
     Unarchive { account: String, session_id: String },
-    /// Deletes an archived chat as the app does.
+    /// Deletes a chat, archived or not, as the app does.
     DeleteChat { account: String, session_id: String },
     /// Renames a folder.
     RenameFolder {
@@ -57,7 +57,7 @@ pub enum Edit {
 ///
 /// # Errors
 /// When the automatic plan fails, a row or a choice is unknown, an edit names an unknown
-/// account, chat or folder, a chat to delete is not archived, or a file cannot be read.
+/// account, chat or folder, or a file cannot be read.
 pub fn plan_review(
     env: &Env,
     scan: Scan,
@@ -343,11 +343,6 @@ impl Decider<'_, '_> {
         let scopes = self.account_scopes(account)?;
         if self.look.records.current(scopes[0], id).is_none() {
             return Err(format!("unknown chat {id} on {account}"));
-        }
-        if self.look.records.archived(scopes[0], id) != Some(true) {
-            return Err(format!(
-                "chat {id} on {account} is not archived; only archived chats can be deleted"
-            ));
         }
         for i in scopes {
             self.look.records.delete(i, id);

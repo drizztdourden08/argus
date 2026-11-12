@@ -19,6 +19,7 @@ const scopeEditItems = (args: ScopeMenuArgs): MenuItem[] => {
     { id: 'archive-all', label: `Archive all (${active.length})`, icon: 'archive', count: active.length, onSelect: stage('archive', active) },
     { id: 'unarchive-all', label: `Unarchive all (${archived.length})`, icon: 'rotate-ccw', count: archived.length, onSelect: stage('unarchive', archived) },
     { id: 'move-all', label: `Move all to... (${all.length})`, icon: 'folder', count: all.length, children: moveItems(env.folders.get(account) ?? [], moveAll) },
+    { id: 'delete-all', label: `Delete all (${all.length})`, icon: 'trash-2', tone: 'danger', count: all.length, onSelect: stage('delete_chat', all) },
     { id: 'delete-archived', label: `Delete archived ones (${archived.length})`, icon: 'trash-2', tone: 'danger', count: archived.length, onSelect: stage('delete_chat', archived) },
   ];
   return items.filter((item) => item.count > 0).map(({ count: _count, ...item }): MenuItem => item);

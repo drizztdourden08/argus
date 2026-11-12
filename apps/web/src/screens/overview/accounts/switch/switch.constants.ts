@@ -13,7 +13,7 @@ const SWITCH_LINK_PARAM = 'switch';
 const TAB_LINK_PARAM = 'tab';
 
 const FINISHED_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['idle', 'done', 'cancelled', 'failed']);
-const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover']);
+const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover', 'waiting_for_quit']);
 const READY_STATES: ReadonlySet<HandoverState> = new Set<HandoverState>(['ready', 'cut_off', 'resumed', 'not_resumed']);
 
 const STEP_MARK: Readonly<Record<SwitchStepStatus, string>> = {
@@ -54,6 +54,8 @@ const STATE_TONE: Readonly<Record<HandoverState, 'info' | 'success' | 'warning'>
   not_resumed: 'warning',
 };
 
+const WAITING_PHASE: SwitchPhase = 'waiting_for_quit';
+const QUIT_TEXT = 'Quit Desktop from its tray icon (right-click, Quit); Argus continues as soon as it has quit';
 const DIALOG_TITLE = 'Switch Desktop to';
 const HANDOVER_TOGGLE = 'Ask working leads for a handover first';
 const HANDOVER_TOGGLE_HELP = 'Each lead writes down where it is, and the new account picks the work up from those notes.';
@@ -76,6 +78,7 @@ const SWITCH_CANCELLED_TOAST = 'Switch cancelled.';
 
 
 export {
+  QUIT_TEXT, WAITING_PHASE,
   ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, CANCELABLE_PHASES, CANCEL_LABEL, CANCEL_PATH, CLOSE_LABEL, CYCLE_DOC, CYCLE_TITLE, DESKTOP_CLOSES, DIALOG_TITLE,
   FINISHED_PHASES, HANDOVERS_COLL, HANDOVER_STEP, HANDOVER_TOGGLE, HANDOVER_TOGGLE_HELP, NOT_ASKED_TEXT, NOW_LABEL, READY_STATES, REASON_OWNER, REASON_RULE, START_LABEL, STATE_LABEL,
   STATE_TONE, STEP_MARK, STEP_TONE, SWITCH_CANCELLED, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_DONE, SWITCH_LINK_PARAM, SWITCH_PATH,

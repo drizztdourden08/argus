@@ -71,14 +71,35 @@ pub trait SidebarStore: Send + Sync {
     fn write(&self, keys: &Value, scanned: &Value) -> Result<(), String>;
 }
 
+/// What a cancelled wait for the quit answers.
+pub const QUIT_CANCELLED: &str = "cancelled while waiting for Claude Desktop to quit";
+/// The detail shown while Desktop must be quit by hand.
+pub const QUIT_BY_HAND: &str =
+    "Quit Desktop from its tray icon (right-click, Quit); Argus continues as soon as it has quit";
+
+/// How a close goes on when the polite close is not enough.
+pub struct Quit<'a> {
+    /// End the Claude processes by PID when the polite close failed.
+    pub force: bool,
+    /// Whether the owner cancelled; asked while waiting.
+    pub cancelled: &'a dyn Fn() -> bool,
+    /// Told the detail text when the close starts waiting for the owner.
+    pub waiting: &'a mut dyn FnMut(&str),
+}
+
 /// The Desktop app as a program on this PC.
 pub trait DesktopApp: Send + Sync {
     /// Whether Claude Desktop runs.
     fn is_running(&self) -> bool;
     /// Whether a chat is in the middle of a turn.
     fn turn_in_progress(&self) -> bool;
-    /// Closes the main window politely; never kills by name.
-    fn close(&self) -> Result<(), String>;
+    /// Closes the app: politely first, then (with `quit.force`) by PID for the Claude processes
+    /// only, never by name. A close that leaves the app in the tray waits for the owner to quit
+    /// it, tells `quit.waiting` why, and stops when `quit.cancelled` turns true.
+    ///
+    /// # Errors
+    /// [`QUIT_CANCELLED`] when cancelled, else why the app did not quit.
+    fn close(&self, quit: &mut Quit) -> Result<(), String>;
     /// Starts the app again. Succeeds only once the app holds its lock (it runs).
     fn start(&self) -> Result<(), String>;
     /// Whether the app wrote its `config.json` after `since_ms` (epoch milliseconds).

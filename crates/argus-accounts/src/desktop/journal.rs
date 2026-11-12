@@ -172,7 +172,7 @@ mod tests {
         fn turn_in_progress(&self) -> bool {
             false
         }
-        fn close(&self) -> Result<(), String> {
+        fn close(&self, _: &mut crate::ports::Quit) -> Result<(), String> {
             Ok(())
         }
         fn start(&self) -> Result<(), String> {

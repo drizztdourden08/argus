@@ -42,17 +42,26 @@ interface AccountsDrift {
   byKind?: Record<string, number>;
 }
 
-type RunPhase = 'idle' | 'scan' | 'plan' | 'backup' | 'apply' | 'verify' | 'done' | 'failed';
+type RunPhase = 'idle' | 'scan' | 'waiting_for_quit' | 'plan' | 'backup' | 'apply' | 'verify' | 'done' | 'failed';
 
 interface AccountsRun {
   phase?: RunPhase;
+  detail?: string | null;
   step?: number;
   total?: number;
   backupDir?: string | null;
   startedAt?: string | null;
   finishedAt?: string | null;
-  result?: string | null;
+  result?: RunResult | string | null;
 }
+
+type RunResult = {
+  error?: string;
+  copies?: number;
+  updates?: number;
+  writes?: number;
+  verified?: boolean;
+};
 
 type SyncStepKind =
   | 'backup' | 'copy_session' | 'update_session' | 'link_thread' | 'archive'
@@ -72,7 +81,7 @@ interface SyncStepDoc {
 }
 
 type SwitchPhase =
-  | 'idle' | 'countdown' | 'handover' | 'closing' | 'saving_login' | 'syncing' | 'restoring_login'
+  | 'idle' | 'countdown' | 'handover' | 'closing' | 'waiting_for_quit' | 'saving_login' | 'syncing' | 'restoring_login'
   | 'scheduling_resume' | 'starting' | 'confirming' | 'done' | 'cancelled' | 'failed';
 
 type SwitchStepStatus = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
@@ -152,6 +161,7 @@ interface AccountsSettings {
   pollMinutes: number;
   fastPollSeconds: number;
   fastAt: number;
+  forceQuit: boolean;
   warnAt: number;
   proposeAt: number;
   archiveRule: 'newest' | 'anywhere';
@@ -163,5 +173,5 @@ interface AccountsSettings {
 export type {
   AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsCycle, AccountsSettings, AccountsSwitch, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
-  SwitchPhase, SwitchStepStatus,
+  SwitchPhase, SwitchStepStatus, RunResult,
 };

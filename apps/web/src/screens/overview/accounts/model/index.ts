@@ -5,6 +5,7 @@ export { handoverRule } from './handover-rule';
 export { limitLabel } from './limit-label';
 export { orderedSteps } from './ordered-steps';
 export { recentSteps } from './recent-steps';
+export { runResultText } from './run-result-text';
 export { resetText } from './reset-text';
 export { rowMarks } from './row-marks';
 export { ruleChips } from './rule-chips';

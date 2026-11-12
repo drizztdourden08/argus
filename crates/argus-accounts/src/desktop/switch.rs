@@ -24,7 +24,7 @@ use serde::Serialize;
 
 use crate::desktop::app::wait_until;
 use crate::desktop::journal::{Entry, Journal};
-use crate::ports::{DesktopApp, LoginVault};
+use crate::ports::{DesktopApp, LoginVault, QUIT_CANCELLED, Quit};
 use crate::types::Account;
 
 /// How long `confirm` waits for the app to show the target account.
@@ -131,6 +131,8 @@ pub struct Plan<'a> {
     pub to: &'a Account,
     /// Whether handovers come first.
     pub handover: bool,
+    /// End the Claude processes by PID when the polite close fails.
+    pub force_quit: bool,
 }
 
 /// How the switch ended.
@@ -240,7 +242,11 @@ impl<'a> Steps<'a> {
     }
 }
 
-/// Runs the switch. `cancel` is asked before Claude closes and nowhere later.
+/// The phase while Claude is kept in the tray and the owner has to quit it.
+pub const WAITING_PHASE: &str = "waiting_for_quit";
+
+/// Runs the switch. `cancel` is asked before Claude closes and while the close waits for the
+/// owner to quit Claude from its tray; nowhere later.
 pub fn run(
     plan: &Plan,
     app: &dyn DesktopApp,
@@ -281,8 +287,12 @@ fn drive(
     if cancel() {
         return Done::Cancelled;
     }
-    if let Err(why) = close_step(app, steps) {
-        return failed(why);
+    if let Err(why) = close_step(app, plan.force_quit, cancel, steps) {
+        return if why == QUIT_CANCELLED {
+            Done::Cancelled
+        } else {
+            failed(why)
+        };
     }
     stages.closed();
     let mut flow = Flow {
@@ -295,7 +305,7 @@ fn drive(
     match result {
         Ok(note) => finished(plan, note),
         Err(why) => {
-            let rollback = roll_back(plan.from, app, vault, flow.restore);
+            let rollback = roll_back(plan.from, app, vault, (flow.restore, plan.force_quit));
             if rollback.is_ok() {
                 let _ = plan.journal.clear();
             }
@@ -357,10 +367,24 @@ fn handover_step(plan: &Plan, stages: &dyn Stages, steps: &mut Steps) -> Option<
 }
 
 /// Closes Claude. A close that failed leaves the app as it was: started again if it went away.
-fn close_step(app: &dyn DesktopApp, steps: &mut Steps) -> Result<(), String> {
+fn close_step(
+    app: &dyn DesktopApp,
+    force: bool,
+    cancel: Cancel,
+    steps: &mut Steps,
+) -> Result<(), String> {
     steps.begin(1);
     let mid_turn = app.turn_in_progress();
-    let result = app.close().map(|()| {
+    let mut waiting = |detail: &str| {
+        detail.clone_into(&mut steps.list[1].detail);
+        steps.show(WAITING_PHASE);
+    };
+    let mut quit = Quit {
+        force,
+        cancelled: cancel,
+        waiting: &mut waiting,
+    };
+    let result = app.close(&mut quit).map(|()| {
         if mid_turn {
             "closed; a chat looked mid-turn".to_owned()
         } else {
@@ -537,10 +561,15 @@ fn roll_back(
     from: &Account,
     app: &dyn DesktopApp,
     vault: &dyn LoginVault,
-    restore: bool,
+    (restore, force): (bool, bool),
 ) -> Result<(), String> {
     if app.is_running() {
-        app.close()?;
+        let mut quit = Quit {
+            force,
+            cancelled: &|| false,
+            waiting: &mut |_| {},
+        };
+        app.close(&mut quit)?;
     }
     if restore {
         vault.restore(from)?;
@@ -613,7 +642,7 @@ mod tests {
         fn turn_in_progress(&self) -> bool {
             false
         }
-        fn close(&self) -> Result<(), String> {
+        fn close(&self, _: &mut crate::ports::Quit) -> Result<(), String> {
             self.note("close")?;
             *self.running.lock().unwrap() = false;
             Ok(())
@@ -687,6 +716,7 @@ mod tests {
             from: &from,
             to: &to,
             handover,
+            force_quit: false,
         };
         let timing = Timing {
             confirm: Duration::from_millis(20),

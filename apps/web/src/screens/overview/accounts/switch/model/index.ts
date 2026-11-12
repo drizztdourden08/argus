@@ -6,5 +6,6 @@ export { handoverTitle } from './handover-title';
 export { isOver } from './is-over';
 export { isRunning } from './is-running';
 export { notAsked } from './not-asked';
+export { quitDetail } from './quit-detail';
 export { readyCount } from './ready-count';
 export { toMs } from './to-ms';

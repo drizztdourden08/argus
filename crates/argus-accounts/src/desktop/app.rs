@@ -1,8 +1,10 @@
 //! The real [`DesktopApp`]: Claude Desktop, the MSIX app, on this PC.
 //!
-//! Nothing here kills a process. `close` asks the main window of each process that lives in the
-//! app's install folder to close, the way the close button does, and waits. `start` goes through
-//! the Start menu app id, the way a click on the tile does.
+//! `close` asks the main window of each process that lives in the app's install folder to close,
+//! the way the close button does, and waits. The app often stays in the system tray; then `close`
+//! waits for the owner to quit it from the tray, or, when told to force, ends the processes of
+//! the install folder by PID (never by image name). `start` goes through the Start menu app id,
+//! the way a click on the tile does.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
@@ -13,11 +15,17 @@ use argus_core::process::hidden_command;
 use serde_json::Value;
 
 use crate::desktop::vault::last_known_account;
-use crate::ports::DesktopApp;
+use crate::ports::{DesktopApp, QUIT_BY_HAND, QUIT_CANCELLED, Quit};
 use crate::sync::lock_running;
 
-/// How long `close` waits for the app to go away.
+/// How long `close` waits for the polite close before it asks the owner to quit by hand.
 pub const CLOSE_WAIT: Duration = Duration::from_secs(20);
+/// How long `close` waits for the owner to quit the app from its tray.
+pub const QUIT_WAIT: Duration = Duration::from_secs(600);
+/// How often the wait for the quit looks at the lock.
+pub const QUIT_POLL: Duration = Duration::from_secs(2);
+/// How long a forced close waits after the plain `taskkill` before it adds `/F`.
+pub const KILL_GRACE: Duration = Duration::from_secs(10);
 /// How long `start` waits for the app to hold its lock.
 pub const START_WAIT: Duration = Duration::from_secs(60);
 const POLL: Duration = Duration::from_millis(500);
@@ -50,6 +58,73 @@ pub fn close_script(install: &str) -> String {
          $_.Path.StartsWith($root, [StringComparison]::OrdinalIgnoreCase) }} | \
          ForEach-Object {{ [void]$_.CloseMainWindow() }}"
     )
+}
+
+/// The script that lists the process ids inside `install`, one per line.
+#[must_use]
+pub fn pids_script(install: &str) -> String {
+    let folder = format!("{}\\", install.trim_end_matches('\\')).replace('\'', "''");
+    format!(
+        "$root = '{folder}'; \
+         Get-Process | Where-Object {{ $_.Path -and \
+         $_.Path.StartsWith($root, [StringComparison]::OrdinalIgnoreCase) }} | \
+         ForEach-Object {{ $_.Id }}"
+    )
+}
+
+/// The process ids a [`pids_script`] printed; lines that are not numbers are dropped.
+#[must_use]
+pub fn parse_pids(output: &str) -> Vec<u32> {
+    output
+        .lines()
+        .filter_map(|line| line.trim().parse().ok())
+        .collect()
+}
+
+/// The `taskkill` arguments for one PID: with its children, forced only when asked.
+#[must_use]
+pub fn taskkill_args(pid: u32, force: bool) -> Vec<String> {
+    let mut args = vec!["/PID".to_owned(), pid.to_string(), "/T".to_owned()];
+    if force {
+        args.push("/F".to_owned());
+    }
+    args
+}
+
+/// Waits for `gone` after the polite close: `grace`, then (with `force`) `kill` once and `grace`
+/// again, then up to `limit` for the owner, looking every `poll`. `waiting` hears the detail when
+/// the wait for the owner starts. Cancel is asked while waiting for the owner.
+///
+/// # Errors
+/// [`QUIT_CANCELLED`] when cancelled, [`NOT_QUIT`] when `limit` passed.
+pub fn await_quit(
+    quit: &mut Quit,
+    (grace, limit, poll): (Duration, Duration, Duration),
+    gone: &dyn Fn() -> bool,
+    kill: &mut dyn FnMut(),
+) -> Result<(), String> {
+    if wait_until(grace, poll.min(POLL), gone) {
+        return Ok(());
+    }
+    if quit.force {
+        kill();
+        if wait_until(grace, poll.min(POLL), gone) {
+            return Ok(());
+        }
+    }
+    (quit.waiting)(QUIT_BY_HAND);
+    let mut cancelled = false;
+    let freed = wait_until(limit, poll, || {
+        cancelled = (quit.cancelled)();
+        cancelled || gone()
+    });
+    if cancelled && !gone() {
+        Err(QUIT_CANCELLED.to_owned())
+    } else if freed {
+        Ok(())
+    } else {
+        Err(NOT_QUIT.to_owned())
+    }
 }
 
 /// The argument that makes Explorer start the app: `shell:AppsFolder\<id>`.
@@ -182,6 +257,29 @@ impl ClaudeDesktop {
     }
 }
 
+/// Ends the processes of the install folder by PID: `taskkill /T` first, `/T /F` on what is
+/// left after [`KILL_GRACE`]. Failures are ignored; the wait for the lock says what happened.
+fn kill_claude(install: &str) {
+    let pids = |script: &str| {
+        powershell(script)
+            .map(|out| parse_pids(&out))
+            .unwrap_or_default()
+    };
+    let list = pids(&pids_script(install));
+    let run = |pid: u32, force: bool| {
+        let _ = hidden_command("taskkill")
+            .args(taskkill_args(pid, force))
+            .output();
+    };
+    for pid in &list {
+        run(*pid, false);
+    }
+    std::thread::sleep(KILL_GRACE);
+    for pid in pids(&pids_script(install)) {
+        run(pid, true);
+    }
+}
+
 fn is_chat_record(path: &Path) -> bool {
     let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
     name.starts_with("local_")
@@ -205,16 +303,16 @@ impl DesktopApp for ClaudeDesktop {
         })
     }
 
-    fn close(&self) -> Result<(), String> {
+    fn close(&self, quit: &mut Quit) -> Result<(), String> {
         if !self.is_running() {
             return Ok(());
         }
-        powershell(&close_script(&self.install_folder()?))?;
-        if wait_until(CLOSE_WAIT, POLL, || !self.is_running()) {
-            Ok(())
-        } else {
-            Err(NOT_QUIT.to_owned())
-        }
+        let install = self.install_folder()?;
+        powershell(&close_script(&install))?;
+        let limits = (CLOSE_WAIT, QUIT_WAIT, QUIT_POLL);
+        await_quit(quit, limits, &|| !self.is_running(), &mut || {
+            kill_claude(&install);
+        })
     }
 
     /// Asks Explorer to open the app's tile. Explorer often exits with code 1 even when the app
@@ -257,8 +355,11 @@ mod tests {
 
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{ClaudeDesktop, NOT_QUIT, close_script, looks_mid_turn, start_target, wait_until};
-    use crate::ports::DesktopApp;
+    use super::{
+        ClaudeDesktop, NOT_QUIT, await_quit, close_script, looks_mid_turn, parse_pids, pids_script,
+        start_target, taskkill_args, wait_until,
+    };
+    use crate::ports::{DesktopApp, QUIT_BY_HAND, QUIT_CANCELLED, Quit};
 
     fn now_ms() -> i64 {
         let age = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
@@ -350,5 +451,108 @@ mod tests {
             &json!({ "isArchived": true, "lastActivityAt": now }),
             now
         ));
+    }
+
+    const MS: Duration = Duration::from_millis(1);
+    const LIMITS: (Duration, Duration, Duration) =
+        (Duration::from_millis(5), Duration::from_millis(40), MS);
+
+    #[test]
+    fn a_quit_in_the_grace_needs_no_waiting_text() {
+        let mut told = Vec::new();
+        let result = await_quit(
+            &mut Quit {
+                force: false,
+                cancelled: &|| false,
+                waiting: &mut |t| told.push(t.to_owned()),
+            },
+            LIMITS,
+            &|| true,
+            &mut || panic!("no kill"),
+        );
+        assert_eq!(result, Ok(()));
+        assert_eq!(told.len(), 0);
+    }
+
+    #[test]
+    fn a_tray_app_makes_the_close_wait_and_say_so() {
+        let mut told = Vec::new();
+        let result = await_quit(
+            &mut Quit {
+                force: false,
+                cancelled: &|| false,
+                waiting: &mut |t| told.push(t.to_owned()),
+            },
+            LIMITS,
+            &|| false,
+            &mut || panic!("no kill"),
+        );
+        assert_eq!(result, Err(NOT_QUIT.to_owned()));
+        assert_eq!(told, [QUIT_BY_HAND]);
+    }
+
+    #[test]
+    fn the_owner_quitting_during_the_wait_ends_it_well() {
+        let looks = std::cell::Cell::new(0);
+        let result = await_quit(
+            &mut Quit {
+                force: false,
+                cancelled: &|| false,
+                waiting: &mut |_| {},
+            },
+            LIMITS,
+            &|| {
+                looks.set(looks.get() + 1);
+                looks.get() > 12
+            },
+            &mut || {},
+        );
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn cancel_ends_the_wait() {
+        let result = await_quit(
+            &mut Quit {
+                force: false,
+                cancelled: &|| true,
+                waiting: &mut |_| {},
+            },
+            LIMITS,
+            &|| false,
+            &mut || {},
+        );
+        assert_eq!(result, Err(QUIT_CANCELLED.to_owned()));
+    }
+
+    #[test]
+    fn force_kills_once_and_a_freed_lock_ends_the_close() {
+        let killed = std::cell::Cell::new(0);
+        let result = await_quit(
+            &mut Quit {
+                force: true,
+                cancelled: &|| false,
+                waiting: &mut |_| panic!("no wait"),
+            },
+            LIMITS,
+            &|| killed.get() > 0,
+            &mut || killed.set(killed.get() + 1),
+        );
+        assert_eq!(result, Ok(()));
+        assert_eq!(killed.get(), 1);
+    }
+
+    #[test]
+    fn pids_come_from_the_install_folder_only() {
+        let script = pids_script("C:\\Apps\\Claude_1\\");
+        assert!(script.contains("'C:\\Apps\\Claude_1\\'"));
+        assert!(script.contains("StartsWith($root"));
+        assert_eq!(parse_pids("12\r\n\nx\n 7 \n"), [12, 7]);
+    }
+
+    #[test]
+    fn taskkill_is_never_forced_before_the_grace_and_never_by_name() {
+        assert_eq!(taskkill_args(5, false), ["/PID", "5", "/T"]);
+        assert_eq!(taskkill_args(5, true), ["/PID", "5", "/T", "/F"]);
     }
 }

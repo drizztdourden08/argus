@@ -14,6 +14,7 @@ use serde_json::{Value, json};
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::routes::accounts::outward;
+use crate::services::accounts_review;
 use crate::services::accounts_rules::{cancel_countdown, end_countdown};
 use crate::services::accounts_switch::{
     Origin, SWITCH_BUSY, cancel, prepare, request_anyway, save_login,
@@ -65,7 +66,7 @@ async fn cancelling(ctx: Ctx) -> Reply {
     };
     Ok(json_reply(
         200,
-        &json!({ "cancelled": countdown || cancel() }),
+        &json!({ "cancelled": countdown || cancel() || accounts_review::cancel() }),
     ))
 }
 

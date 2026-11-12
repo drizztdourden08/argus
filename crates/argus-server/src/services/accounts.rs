@@ -8,8 +8,8 @@ use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 
 use argus_accounts::{
     Account, AccountsConfig, AuthProbe, BurnHistory, ClaudeAuthProbe, CliCredentials, Credentials,
-    HttpUsage, Poll, PollResult, ReadOnlyCredentials, Usage, UsageSource, discover, find_app_data,
-    find_cli_exe, next_interval, poll_all, refresh_identities,
+    HttpUsage, Poll, PollResult, ReadOnlyCredentials, Schedule, Usage, UsageSource, discover,
+    find_app_data, find_cli_exe, poll_all, refresh_identities,
 };
 use argus_core::ConfigError;
 use argus_core::clock::now_ms;
@@ -72,6 +72,7 @@ pub struct AccountsService {
     source: Arc<dyn UsageSource>,
     creds: Arc<dyn Credentials>,
     burn: Mutex<BurnHistory>,
+    schedule: Mutex<Schedule>,
     probe_login: bool,
     logins: Mutex<HashMap<String, (i64, Option<String>)>>,
     latest: RwLock<HashMap<String, PollResult>>,
@@ -111,6 +112,7 @@ impl AccountsService {
             creds: ports.creds,
             log: ports.log,
             burn: Mutex::default(),
+            schedule: Mutex::default(),
             probe_login: ports.probe_login,
             logins: Mutex::default(),
             latest: RwLock::default(),
@@ -151,17 +153,25 @@ impl AccountsService {
     fn poll_blocking(&self) -> Vec<PollResult> {
         let config = self.config();
         let app = find_app_data(config.app_data.as_deref());
+        let active = app.as_deref().and_then(last_known_account);
         let poll = Poll {
             source: &*self.source,
             creds: &*self.creds,
             app: app.as_deref(),
+            config: &config,
+            active: active.as_deref(),
         };
         let results = {
             let mut burn = self.burn.lock().unwrap_or_else(PoisonError::into_inner);
-            poll_all(&config.accounts, &poll, &mut burn, now_ms())
+            let mut schedule = self.schedule.lock().unwrap_or_else(PoisonError::into_inner);
+            poll_all(
+                &config.accounts,
+                &poll,
+                (&mut burn, &mut schedule),
+                now_ms(),
+            )
         };
         let results = self.with_login_expiry(results, app.as_deref(), &config.accounts);
-        let active = app.as_deref().and_then(last_known_account);
         if let Err(e) = self
             .docs
             .put_usage(&config.accounts, &results, active.as_deref())
@@ -179,6 +189,14 @@ impl AccountsService {
             results.iter().map(|r| (r.key.clone(), r.clone())).collect();
         self.polled.send_replace(Arc::new(results.clone()));
         results
+    }
+
+    /// How long the poll loop sleeps: until the first account is due again.
+    fn next_poll_in(&self) -> std::time::Duration {
+        self.schedule
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .wait(now_ms())
     }
 
     /// `results` with each login's expiry from `claude auth status`, asked at most once an hour.
@@ -464,10 +482,10 @@ fn snapshots_of(accounts: &AccountsService, results: &[PollResult]) -> Vec<Snaps
 /// Polls on the computed interval until the task is aborted.
 async fn poll_loop(accounts: &Arc<AccountsService>) {
     loop {
-        let Ok(results) = accounts.poll_now().await else {
+        if accounts.poll_now().await.is_err() {
             return;
-        };
-        tokio::time::sleep(next_interval(&accounts.config(), &results)).await;
+        }
+        tokio::time::sleep(accounts.next_poll_in()).await;
     }
 }
 

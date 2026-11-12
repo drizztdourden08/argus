@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use argus_core::clock::iso_from_ms;
 
-use super::UNAUTHORIZED;
 use super::fallback::latest_sample;
+use super::{UNAUTHORIZED, rate_limit_of};
 use crate::config::AccountsConfig;
 use crate::ports::{Credentials, UsageSource};
 use crate::types::{Account, Usage, UsageLimit};
@@ -88,22 +88,84 @@ pub struct Poll<'a> {
     pub creds: &'a dyn Credentials,
     /// The Desktop app folder, for the log fallback.
     pub app: Option<&'a Path>,
+    /// The settings: the intervals and `fast_at`.
+    pub config: &'a AccountsConfig,
+    /// The Desktop account Claude Desktop is on now, if it is known.
+    pub active: Option<&'a str>,
 }
 
-/// Reads every account's usage once.
+/// No account is read more often than this, whatever the settings say.
+pub const MIN_GAP: Duration = Duration::from_secs(60);
+/// The longest an account is backed off after a 429.
+pub const MAX_BACKOFF: Duration = Duration::from_secs(30 * 60);
+/// The error shown on the last good read of a rate-limited account, before the time.
+const RATE_LIMITED_TEXT: &str = "rate limited, retrying at ";
+
+/// When each account may be read next, and what it showed last.
+#[derive(Debug, Default)]
+pub struct Schedule {
+    slots: HashMap<String, Slot>,
+}
+
+#[derive(Debug, Default)]
+struct Slot {
+    /// Not read again before this (epoch milliseconds).
+    not_before: i64,
+    /// The wait of the last 429, doubled by the next one; zero after a success.
+    backoff_ms: i64,
+    /// The last result of the account, shown again while it is not read.
+    last: Option<PollResult>,
+    /// The last good read.
+    good: Option<Usage>,
+}
+
+impl Schedule {
+    /// How long until the first account is due, at least a second.
+    #[must_use]
+    pub fn wait(&self, now_ms: i64) -> Duration {
+        let soonest = self.slots.values().map(|s| s.not_before).min();
+        let ms = soonest.map_or(millis(MIN_GAP), |at| at - now_ms);
+        Duration::from_millis(u64::try_from(ms.max(1000)).unwrap_or(1000))
+    }
+}
+
+fn millis(d: Duration) -> i64 {
+    i64::try_from(d.as_millis()).unwrap_or(i64::MAX)
+}
+
+/// Reads the accounts that are due, once. An account that is not due (it was read less than a
+/// minute ago, or it is backed off after a 429) keeps its last result.
 pub fn poll_all(
     accounts: &[Account],
     poll: &Poll<'_>,
-    burn: &mut BurnHistory,
+    state: (&mut BurnHistory, &mut Schedule),
     now_ms: i64,
 ) -> Vec<PollResult> {
+    let (burn, schedule) = state;
+    schedule
+        .slots
+        .retain(|key, _| accounts.iter().any(|a| &a.key == key));
     accounts
         .iter()
-        .map(|account| poll_one(account, poll, burn, now_ms))
+        .map(|account| {
+            let slot = schedule.slots.entry(account.key.clone()).or_default();
+            if let Some(last) = slot.last.as_ref().filter(|_| now_ms < slot.not_before) {
+                return last.clone();
+            }
+            let result = poll_one(account, poll, burn, slot, now_ms);
+            slot.last = Some(result.clone());
+            result
+        })
         .collect()
 }
 
-fn poll_one(account: &Account, poll: &Poll<'_>, burn: &mut BurnHistory, now_ms: i64) -> PollResult {
+fn poll_one(
+    account: &Account,
+    poll: &Poll<'_>,
+    burn: &mut BurnHistory,
+    slot: &mut Slot,
+    now_ms: i64,
+) -> PollResult {
     let dir = Path::new(&account.cli_dir);
     let live = fetch(dir, poll);
     let logged_in = poll.creds.access_token(dir).is_ok();
@@ -113,9 +175,20 @@ fn poll_one(account: &Account, poll: &Poll<'_>, burn: &mut BurnHistory, now_ms: 
             if let Some(limit) = binding_limit(&usage) {
                 burn.record(&account.key, now_ms, limit.percent);
             }
+            let wait = next_interval(poll.config, account, poll.active, &usage);
+            slot.not_before = now_ms + millis(wait);
+            slot.backoff_ms = 0;
+            slot.good = Some(usage.clone());
             (usage, None)
         }
-        Err(e) => (fallback(account, poll.app, &e), Some(e)),
+        Err(e) => {
+            if let Some(asked) = rate_limit_of(&e) {
+                rate_limited_read(account, poll, slot, asked, now_ms)
+            } else {
+                slot.not_before = now_ms + millis(MIN_GAP);
+                (fallback(account, poll.app, &e), Some(e))
+            }
+        }
     };
     PollResult {
         key: account.key.clone(),
@@ -125,6 +198,37 @@ fn poll_one(account: &Account, poll: &Poll<'_>, burn: &mut BurnHistory, now_ms: 
         logged_in,
         failure,
     }
+}
+
+/// The result of a 429: the last good read with the time of the next try. The account waits what
+/// `Retry-After` asked for, else twice its last wait (its own interval the first time), at most
+/// [`MAX_BACKOFF`] and at least [`MIN_GAP`].
+fn rate_limited_read(
+    account: &Account,
+    poll: &Poll<'_>,
+    slot: &mut Slot,
+    asked: Option<u64>,
+    now_ms: i64,
+) -> (Usage, Option<String>) {
+    let own = slot.good.as_ref().map_or_else(
+        || next_interval(poll.config, account, poll.active, &Usage::default()),
+        |u| next_interval(poll.config, account, poll.active, u),
+    );
+    let wait = match asked {
+        Some(secs) => Duration::from_secs(secs),
+        None if slot.backoff_ms > 0 => Duration::from_millis(slot.backoff_ms.unsigned_abs() * 2),
+        None => own * 2,
+    };
+    let wait = wait.clamp(MIN_GAP, MAX_BACKOFF);
+    slot.backoff_ms = millis(wait);
+    slot.not_before = now_ms + millis(wait);
+    let text = format!("{RATE_LIMITED_TEXT}{}", iso_from_ms(slot.not_before));
+    let mut usage = slot
+        .good
+        .clone()
+        .unwrap_or_else(|| fallback(account, poll.app, &text));
+    usage.error = Some(text.clone());
+    (usage, Some(text))
 }
 
 fn fetch(dir: &Path, poll: &Poll<'_>) -> Result<Usage, String> {
@@ -151,19 +255,25 @@ fn fallback(account: &Account, app: Option<&Path>, failure: &str) -> Usage {
     usage
 }
 
-/// How long to wait before the next pass: the fast interval once any binding limit is at
-/// `fast_at` or more, else the normal one.
+/// How long to wait before reading `account` again. The fast interval applies only to the account
+/// Desktop is on, and only while its binding limit is from `fast_at` up to 99 percent: an account
+/// at its limit waits for the reset at the normal interval. Never under a minute.
 #[must_use]
-pub fn next_interval(config: &AccountsConfig, results: &[PollResult]) -> Duration {
-    let hot = results
-        .iter()
-        .filter_map(|r| binding_limit(&r.usage))
-        .any(|l| l.percent >= config.fast_at);
-    if hot {
+pub fn next_interval(
+    config: &AccountsConfig,
+    account: &Account,
+    active: Option<&str>,
+    usage: &Usage,
+) -> Duration {
+    let on_desktop = active.is_some() && account.desktop_account.as_deref() == active;
+    let hot =
+        binding_limit(usage).is_some_and(|l| l.percent >= config.fast_at && l.percent <= 99.0);
+    let wait = if on_desktop && hot {
         Duration::from_secs(config.fast_poll_seconds.max(1))
     } else {
         Duration::from_secs(config.poll_minutes.max(1) * 60)
-    }
+    };
+    wait.max(MIN_GAP)
 }
 
 // test-tag: critical
@@ -174,6 +284,7 @@ mod tests {
     use super::*;
     use crate::fixtures::account_in;
     use crate::types::Severity;
+    use crate::usage::rate_limited;
 
     struct FakeSource(Mutex<Vec<Result<Usage, String>>>);
     impl UsageSource for FakeSource {
@@ -223,13 +334,17 @@ mod tests {
     fn run(source: Vec<Result<Usage, String>>, refresh: Result<String, String>) -> PollResult {
         let source = FakeSource(Mutex::new(source));
         let creds = FakeCreds { refresh };
+        let config = AccountsConfig::default();
         let poll = Poll {
             source: &source,
             creds: &creds,
             app: None,
+            config: &config,
+            active: None,
         };
         let mut burn = BurnHistory::default();
-        poll_all(&[account(None)], &poll, &mut burn, 1000).remove(0)
+        let mut schedule = Schedule::default();
+        poll_all(&[account(None)], &poll, (&mut burn, &mut schedule), 1000).remove(0)
     }
 
     #[test]
@@ -289,24 +404,96 @@ mod tests {
         assert!((binding_limit(&u).unwrap().percent - 60.0).abs() < f64::EPSILON);
     }
 
+    fn on_desktop() -> Account {
+        account_in("a", "A", Some("acc-1".to_owned()), None)
+    }
+
     #[test]
-    fn the_interval_speeds_up_near_the_limit() {
+    fn fast_polling_is_for_the_desktop_account_between_fast_at_and_99() {
         let config = AccountsConfig::default();
-        let result = |p| PollResult {
-            key: "a".to_owned(),
-            usage: usage(p),
-            burn_per_min: None,
-            login_expires_at: None,
-            logged_in: true,
-            failure: None,
+        let normal = Duration::from_secs(config.poll_minutes * 60);
+        let fast = Duration::from_secs(config.fast_poll_seconds);
+        let at = |account: &Account, active, p| next_interval(&config, account, active, &usage(p));
+        assert_eq!(at(&on_desktop(), Some("acc-1"), 10.0), normal);
+        assert_eq!(at(&on_desktop(), Some("acc-1"), config.fast_at), fast);
+        assert_eq!(at(&on_desktop(), Some("acc-1"), 99.0), fast);
+        assert_eq!(at(&on_desktop(), Some("acc-1"), 100.0), normal);
+        assert_eq!(at(&on_desktop(), Some("other"), 90.0), normal);
+        assert_eq!(at(&on_desktop(), None, 90.0), normal);
+    }
+
+    #[test]
+    fn an_interval_is_never_under_a_minute() {
+        let config = AccountsConfig {
+            fast_poll_seconds: 5,
+            ..AccountsConfig::default()
         };
-        assert_eq!(
-            next_interval(&config, &[result(10.0)]),
-            Duration::from_secs(config.poll_minutes * 60)
-        );
-        assert_eq!(
-            next_interval(&config, &[result(10.0), result(config.fast_at)]),
-            Duration::from_secs(config.fast_poll_seconds)
-        );
+        let wait = next_interval(&config, &on_desktop(), Some("acc-1"), &usage(90.0));
+        assert_eq!(wait, MIN_GAP);
+    }
+
+    fn pass(source: Vec<Result<Usage, String>>, schedule: &mut Schedule, now: i64) -> PollResult {
+        let source = FakeSource(Mutex::new(source));
+        let creds = FakeCreds {
+            refresh: Err("no".to_owned()),
+        };
+        let config = AccountsConfig::default();
+        let poll = Poll {
+            source: &source,
+            creds: &creds,
+            app: None,
+            config: &config,
+            active: None,
+        };
+        let mut burn = BurnHistory::default();
+        poll_all(&[account(None)], &poll, (&mut burn, schedule), now).remove(0)
+    }
+
+    #[test]
+    fn a_429_backs_off_and_keeps_the_last_good_read() {
+        let mut schedule = Schedule::default();
+        let good = pass(vec![Ok(usage(40.0))], &mut schedule, 0);
+        assert!(good.failure.is_none());
+        let first = pass(vec![Err(rate_limited(None))], &mut schedule, 300_000);
+        assert!((first.usage.limits[0].percent - 40.0).abs() < f64::EPSILON);
+        let error = first.usage.error.clone().unwrap();
+        assert!(error.starts_with("rate limited, retrying at "), "{error}");
+        // The account's own interval is 5 minutes; the first back-off doubles it.
+        assert_eq!(schedule.slots["a"].backoff_ms, 600_000);
+        let second = pass(vec![Err(rate_limited(None))], &mut schedule, 900_000);
+        assert!(second.usage.error.is_some());
+        assert_eq!(schedule.slots["a"].backoff_ms, 1_200_000);
+        let third = pass(vec![Err(rate_limited(None))], &mut schedule, 2_100_000);
+        assert!(third.failure.is_some());
+        assert_eq!(schedule.slots["a"].backoff_ms, 1_800_000);
+        let fresh = pass(vec![Ok(usage(41.0))], &mut schedule, 4_000_000);
+        assert_eq!(schedule.slots["a"].backoff_ms, 0);
+        assert!(fresh.failure.is_none());
+    }
+
+    #[test]
+    fn retry_after_is_honoured_and_floored_at_a_minute() {
+        let mut schedule = Schedule::default();
+        pass(vec![Err(rate_limited(Some(900)))], &mut schedule, 0);
+        assert_eq!(schedule.slots["a"].not_before, 900_000);
+        pass(vec![Err(rate_limited(Some(3)))], &mut schedule, 900_000);
+        assert_eq!(schedule.slots["a"].not_before, 900_000 + 60_000);
+    }
+
+    #[test]
+    fn an_account_is_not_read_again_inside_its_wait() {
+        let mut schedule = Schedule::default();
+        pass(vec![Ok(usage(10.0))], &mut schedule, 0);
+        // The source would panic when asked: the second pass must not read.
+        let again = pass(vec![], &mut schedule, 59_000);
+        assert!((again.usage.limits[0].percent - 10.0).abs() < f64::EPSILON);
+        assert_eq!(schedule.wait(59_000), Duration::from_secs(241));
+    }
+
+    #[test]
+    fn the_429_error_round_trips() {
+        assert_eq!(rate_limit_of(&rate_limited(Some(12))), Some(Some(12)));
+        assert_eq!(rate_limit_of(&rate_limited(None)), Some(None));
+        assert_eq!(rate_limit_of("boom"), None);
     }
 }

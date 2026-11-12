@@ -6,10 +6,13 @@ const SYNC_STEPS_COLL = 'syncSteps';
 const RUN_DOC = 'run';
 const SYNC_PATH = '/api/accounts/sync';
 const UNDO_PATH = '/api/accounts/sync/undo';
+const QUIT_CANCEL_PATH = '/api/accounts/switch/cancel';
+const QUIT_CANCEL_LABEL = 'Cancel';
+const QUIT_FALLBACK = 'Quit Desktop from its tray icon (right-click, Quit); Argus continues as soon as it has quit';
 
 const LOG_LIMIT = 30;
 const INDENT = '\u2003';
-const ACTIVE_PHASES: ReadonlySet<RunPhase> = new Set<RunPhase>(['scan', 'plan', 'backup', 'apply', 'verify']);
+const ACTIVE_PHASES: ReadonlySet<RunPhase> = new Set<RunPhase>(['scan', 'waiting_for_quit', 'plan', 'backup', 'apply', 'verify']);
 
 const STATUS_LOOK: Readonly<Record<ReviewStatus, ChipLook>> = {
   same: { label: 'same', tone: 'success' },
@@ -47,6 +50,7 @@ const STEP_KINDS = Object.keys(STEP_KIND_LABEL) as SyncStepKind[];
 const PHASE_LABEL: Readonly<Record<RunPhase, string>> = {
   idle: 'Starting',
   scan: 'Scanning',
+  waiting_for_quit: 'Waiting for Desktop to quit',
   plan: 'Planning',
   backup: 'Backing up',
   apply: 'Applying',
@@ -59,6 +63,6 @@ const MATCH_TEXT = 'Both accounts match';
 const FAILED_TEXT = 'The sync stopped before it finished.';
 
 export {
-  ACTIVE_PHASES, FAILED_TEXT, GHOST_STATUSES, INDENT, LOG_LIMIT, MATCH_TEXT, PHASE_LABEL,
+  ACTIVE_PHASES, FAILED_TEXT, QUIT_CANCEL_LABEL, QUIT_CANCEL_PATH, QUIT_FALLBACK, GHOST_STATUSES, INDENT, LOG_LIMIT, MATCH_TEXT, PHASE_LABEL,
   QUIET_STATUSES, RUN_DOC, STATUS_LOOK, STEP_KIND_LABEL, STEP_KINDS, SYNC_PATH, SYNC_STEPS_COLL, UNDO_PATH,
 };

@@ -584,11 +584,10 @@ fn delete_chat_writes_the_apps_tombstone_and_undo_brings_the_record_back() {
 }
 
 #[test]
-fn delete_chat_is_only_for_archived_chats_and_known_ones() {
+fn delete_chat_takes_active_chats_too_but_only_known_ones() {
     let world = World::new();
     let active = edits(json!([{"op": "delete_chat", "account": "h", "sessionId": session_id(7)}]));
-    let err = world.plan(&active).unwrap_err();
-    assert!(err.contains("not archived"), "{err}");
+    assert!(world.plan(&active).is_ok());
     let unknown = edits(json!([{"op": "delete_chat", "account": "s", "sessionId": session_id(1)}]));
     assert!(world.plan(&unknown).unwrap_err().contains(&session_id(1)));
     let nobody = edits(json!([{"op": "archive", "account": "x", "sessionId": session_id(1)}]));

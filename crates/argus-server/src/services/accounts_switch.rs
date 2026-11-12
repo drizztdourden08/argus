@@ -10,11 +10,11 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use argus_accounts::desktop::{
-    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, Stop, Timing,
+    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, Stop, Timing, WAITING_PHASE,
     last_known_account, repair,
 };
 use argus_accounts::handover::{CycleEvent, CycleMode, StartRequest};
-use argus_accounts::{Account, DesktopApp, LoginVault, Scope, find_app_data};
+use argus_accounts::{Account, DesktopApp, LoginVault, QUIT_BY_HAND, Scope, find_app_data};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
@@ -91,6 +91,8 @@ impl Origin {
 struct Gate {
     cancelled: bool,
     closing: bool,
+    /// Claude is in the tray and the close waits for the owner to quit it: cancel works again.
+    waiting: bool,
 }
 
 /// The cancel and "anyway" switches of the running switch.
@@ -104,11 +106,18 @@ impl Control {
     /// The owner cancels; false once Claude is closing.
     fn cancel(&self) -> bool {
         let mut gate = self.gate.lock().unwrap_or_else(PoisonError::into_inner);
-        if gate.closing {
+        if gate.closing && !gate.waiting {
             return false;
         }
         gate.cancelled = true;
         true
+    }
+
+    fn set_waiting(&self, waiting: bool) {
+        self.gate
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .waiting = waiting;
     }
 
     fn cancelled(&self) -> bool {
@@ -387,8 +396,10 @@ impl Prepared {
             from: &self.from,
             to: &self.to,
             handover: self.handover,
+            force_quit: self.accounts.config().force_quit,
         };
         let mut last = (String::from("idle"), Vec::new());
+        let mut told = false;
         let done = argus_accounts::desktop::run(
             &plan,
             &desktop,
@@ -397,6 +408,12 @@ impl Prepared {
             &|| self.control.last_call(),
             Timing::default(),
             &mut |phase, steps| {
+                let waiting = phase == WAITING_PHASE;
+                self.control.set_waiting(waiting);
+                if waiting && self.origin == Origin::Rule && !told {
+                    told = true;
+                    self.tell_to_quit();
+                }
                 self.put(phase, steps, None);
                 last = (phase.to_owned(), steps.to_vec());
             },
@@ -409,6 +426,25 @@ impl Prepared {
             self.verify_version();
         }
         outcome
+    }
+
+    /// An automatic switch cannot finish until the owner quits Desktop from its tray.
+    fn tell_to_quit(&self) {
+        let Some(notify) = &self.svc.notify else {
+            return;
+        };
+        notify.send(PingRequest {
+            title: Some("Quit Desktop from its tray to finish the switch".to_owned()),
+            text: QUIT_BY_HAND.to_owned(),
+            level: Level::Urgent,
+            project: None,
+            thread: None,
+            by: By::Auto,
+            url: Some(format!(
+                "http://127.0.0.1:{}/?tab=accounts",
+                self.svc.port()
+            )),
+        });
     }
 
     /// A switch by hand confirmed the account: the installed Claude version is now the verified one.

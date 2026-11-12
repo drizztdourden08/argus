@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Button, Callout, Inline, Paragraph, SettingsSection, Stack, toast } from '@drizztdourden08/tessera';
+import { Button, Callout, Inline, Paragraph, SettingsSection, Stack, toast, Toggle } from '@drizztdourden08/tessera';
 import { useAccountsSettings } from '../../../../data/accounts';
 import { PORTFOLIO_SCOPE, useCollection } from '../../../../data/react';
 import type { AccountDoc } from '../../../../data/types';
-import { ACCOUNTS_COLL, ACCOUNTS_NOTE, ACCOUNTS_TITLE, ADD_LABEL, SAVED_TEXT, SAVE_LABEL } from './AccountsSection.constants';
+import { ACCOUNTS_COLL, ACCOUNTS_NOTE, ACCOUNTS_TITLE, ADD_LABEL, FORCE_QUIT_LABEL, SAVED_TEXT, SAVE_LABEL } from './AccountsSection.constants';
 import { useAccountsDraft } from './behavior/useAccountsDraft';
 import { AccountRow } from './sub-components/AccountRow';
 import { EstimateFields } from './sub-components/EstimateFields';
@@ -29,6 +29,7 @@ const AccountsSection = () => {
           <Button size="sm" variant="secondary" onClick={addAccount}>{ADD_LABEL}</Button>
           <Button size="sm" disabled={api.busy} onClick={save}>{SAVE_LABEL}</Button>
         </Inline>
+        <Toggle checked={draft.forceQuit === true} onChange={(forceQuit) => patch({ forceQuit })} label={FORCE_QUIT_LABEL} />
         <ThresholdFields draft={draft} onChange={patch} />
         <EstimateFields draft={draft} onChange={patch} />
       </Stack>

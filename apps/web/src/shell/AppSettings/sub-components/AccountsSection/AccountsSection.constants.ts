@@ -10,6 +10,7 @@ const RESET_K_LABEL = 'Reset k';
 const SAVED_TEXT = 'Accounts settings saved.';
 const NEW_KEY_HINT = 'Short key';
 const DEFAULT_COLOR = '#8a8f98';
+const FORCE_QUIT_LABEL = 'End Desktop if it stays in the tray (it may lose its last few seconds of unsaved sidebar changes)';
 
 const HANDOVER_CHOICES = [
   { value: 'off', label: 'Handover off' },
@@ -45,6 +46,6 @@ const BLANK_ACCOUNT: Omit<SettingsAccount, 'key' | 'label' | 'cliDir'> = {
 };
 
 export {
-  ACCOUNTS_COLL, ACCOUNTS_NOTE, ACCOUNTS_TITLE, ADD_LABEL, ARCHIVE_CHOICES, BLANK_ACCOUNT, DEFAULT_COLOR, ESTIMATE_FIELDS, HANDOVER_CHOICES,
+  ACCOUNTS_COLL, ACCOUNTS_NOTE, ACCOUNTS_TITLE, ADD_LABEL, ARCHIVE_CHOICES, BLANK_ACCOUNT, DEFAULT_COLOR, ESTIMATE_FIELDS, FORCE_QUIT_LABEL, HANDOVER_CHOICES,
   NEW_KEY_HINT, RESET_K_LABEL, SAVED_TEXT, SAVE_LABEL, THRESHOLD_FIELDS,
 };

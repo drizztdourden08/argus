@@ -77,6 +77,9 @@ pub struct AccountsConfig {
     /// The Claude package version a switch by hand last confirmed; automatic switches need the
     /// installed version to be this one.
     pub verified_app_version: Option<String>,
+    /// End Claude Desktop by PID when it stays in the tray after a polite close. Off by default:
+    /// Desktop may lose its last few seconds of unsaved sidebar changes.
+    pub force_quit: bool,
     /// The known accounts; empty until discovery fills it.
     pub accounts: Vec<Account>,
 }
@@ -96,6 +99,7 @@ impl Default for AccountsConfig {
             estimate_defaults: EstimateDefaults::default(),
             k: 1.0,
             verified_app_version: None,
+            force_quit: false,
             accounts: Vec::new(),
         }
     }
@@ -191,6 +195,15 @@ mod tests {
         assert_eq!(next.poll_minutes, 9);
         assert!(base.patched(&json!({ "pollMinutes": "soon" })).is_err());
         assert!(base.patched(&json!(3)).is_err());
+    }
+
+    #[test]
+    fn force_quit_is_off_until_asked_for() {
+        let base = AccountsConfig::default();
+        assert!(!base.force_quit);
+        let on = base.patched(&json!({ "forceQuit": true })).unwrap();
+        assert!(on.force_quit);
+        assert_eq!(on.to_json()["forceQuit"], json!(true));
     }
 
     #[test]
