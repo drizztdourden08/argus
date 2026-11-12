@@ -19,7 +19,7 @@ use super::dispatches::take_dispatch;
 use super::input::clip;
 use super::kind::kind_of;
 use super::thread::registered;
-use super::transcript::file_of;
+use super::transcript::{file_of, prompt_of};
 use crate::cli::CoordError;
 
 const REOPENED: &str = "resumed (its SubagentStart arrived again), reopened automatically";
@@ -153,7 +153,8 @@ fn on_board(board: &mut Board, hook: &Hook<'_>, agent_id: &str) -> Result<(), Bo
     }
     let kind = Some(clip(&hook.input["agent_type"], 60)).filter(|k| !k.is_empty());
     let kind = kind.unwrap_or_else(|| "agent".to_owned());
-    let dispatch = take_dispatch(board, &thread, &kind);
+    let prompt = prompt_of(&file);
+    let dispatch = take_dispatch(board, &thread, &kind, prompt.as_deref());
     let start = Start {
         agent_id: agent_id.to_owned(),
         file,

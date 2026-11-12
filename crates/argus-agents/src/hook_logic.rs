@@ -88,14 +88,53 @@ pub fn launched_id(response: &Value) -> Option<String> {
     id_after_label(&text)
 }
 
+fn head_entries(fs: &dyn FileSystem, file: &Path) -> Option<Vec<Value>> {
+    let size = fs.stat(file)?.size.min(HEAD_BYTES);
+    let bytes = fs.read_at(file, 0, usize::try_from(size).ok()?).ok()?;
+    Some(
+        String::from_utf8_lossy(&bytes)
+            .split('\n')
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .collect(),
+    )
+}
+
+fn is_user(entry: &Value) -> bool {
+    let by_role = entry.pointer("/message/role").and_then(Value::as_str);
+    let by_type = entry.get("type").and_then(Value::as_str);
+    by_role == Some("user") || by_type == Some("user")
+}
+
+fn text_of(content: &Value) -> Option<String> {
+    match content {
+        Value::String(s) => Some(s.clone()),
+        Value::Array(parts) => {
+            let texts: Vec<&str> = parts
+                .iter()
+                .filter_map(|p| p.get("text").and_then(Value::as_str))
+                .collect();
+            (!texts.is_empty()).then(|| texts.join("\n"))
+        }
+        _ => None,
+    }
+}
+
+/// The text of the first user line of a transcript (the prompt a sub-agent was given), read from
+/// the head of the file only.
+#[must_use]
+pub fn transcript_first_prompt(fs: &dyn FileSystem, file: &Path) -> Option<String> {
+    head_entries(fs, file)?
+        .iter()
+        .filter(|entry| is_user(entry))
+        .find_map(|entry| text_of(entry.pointer("/message/content")?))
+        .filter(|text| !text.trim().is_empty())
+}
+
 /// The model of the first assistant line of a transcript, read from the head of the file only.
 #[must_use]
 pub fn transcript_model(fs: &dyn FileSystem, file: &Path) -> Option<String> {
-    let size = fs.stat(file)?.size.min(HEAD_BYTES);
-    let bytes = fs.read_at(file, 0, usize::try_from(size).ok()?).ok()?;
-    String::from_utf8_lossy(&bytes)
-        .split('\n')
-        .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+    head_entries(fs, file)?
+        .into_iter()
         .filter(|entry| {
             let by_role = entry.pointer("/message/role").and_then(Value::as_str);
             let by_type = entry.get("type").and_then(Value::as_str);

@@ -35,6 +35,7 @@ mod format;
 mod hook_agents;
 mod hook_agents_binding;
 mod hook_agents_id;
+mod hook_agents_prompt;
 mod hook_autostart;
 mod hook_differ;
 mod hook_guard;
