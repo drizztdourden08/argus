@@ -3,6 +3,7 @@
 //! tells the releasing thread who to message so the next one starts right away. The coordinator
 //! can also free a lock by force (`free [--to T]`) or delete it (`rm`).
 
+mod agent;
 mod force;
 mod hold;
 mod read;
@@ -17,6 +18,7 @@ use argus_core::clock::now_iso;
 use argus_core::js;
 use serde_json::{Value, json};
 
+use self::agent::{agent_of, thread_of};
 use super::crud::who_of;
 use super::group::{Group, serve};
 use super::run::{Res, Run, bad};
@@ -104,34 +106,38 @@ fn queue_of(lock: &Value) -> Vec<Value> {
 }
 
 /// Hands the lock to `next`, or to the head of the queue; none leaves it free. The new holder is
-/// told.
+/// told. A queue entry `T#A-n` makes the thread `T` the holder and `A-n` its agent.
 fn hand_on(board: &mut Board, resource: &str, next: Option<&str>, from: &str) {
     let Some(lock) = doc_mut(board, "locks", resource) else {
         return;
     };
     let mut queue = queue_of(lock);
     if let Some(next) = next {
-        queue.retain(|id| id.as_str() != Some(next));
+        queue.retain(|e| e.as_str().map(thread_of) != Some(next));
     }
-    let holder = match next {
-        Some(next) => json!(next),
-        None if queue.is_empty() => Value::Null,
-        None => queue.remove(0),
+    let entry = match next {
+        Some(next) => Some(next.to_owned()),
+        None if queue.is_empty() => None,
+        None => Some(display(&queue.remove(0))),
     };
+    let holder = entry.as_deref().map(thread_of).map(str::to_owned);
+    let agent = entry.as_deref().and_then(agent_of).map(str::to_owned);
     set(lock, "queue", Value::Array(queue));
-    set(lock, "holder", holder.clone());
+    set(lock, "holder", json!(holder));
+    set(lock, "holderAgent", json!(agent));
     set(
         lock,
         "since",
-        if holder.is_null() {
-            Value::Null
-        } else {
+        if holder.is_some() {
             json!(now_iso())
+        } else {
+            Value::Null
         },
     );
     touched(board, resource);
-    if let Some(holder) = holder.as_str() {
-        let text = format!("{resource} is yours now (released by {from}).");
-        post(board, holder, from, ("lock-granted", &text), Some(resource));
+    if let Some(holder) = holder {
+        let whose = agent.map_or_else(String::new, |a| format!(" (agent {a})"));
+        let text = format!("{resource} is yours now{whose} (released by {from}).");
+        post(board, &holder, from, ("lock-granted", &text), Some(resource));
     }
 }
