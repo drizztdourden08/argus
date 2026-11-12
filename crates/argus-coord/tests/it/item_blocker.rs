@@ -77,7 +77,10 @@ fn a_plain_text_blocker_is_refused_with_the_hint_and_nothing_is_written() {
 fn an_external_blocker_is_stored_as_text_and_unblock_clears_it() {
     let work = two_items();
     let said = work.worker_ok(&["item", "block", "I-1", "--on", "External: owner, a go"]);
-    assert!(said.contains("I-1: blocked on External: owner, a go."), "{said}");
+    assert!(
+        said.contains("I-1: blocked on External: owner, a go."),
+        "{said}"
+    );
     let item = work.board()["items"]["I-1"].clone();
     assert_eq!(item["blocker"], "External: owner, a go");
     assert_eq!(item["blockedBy"], Value::Null);
