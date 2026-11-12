@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use argus_agents::fs::StdFs;
-use argus_agents::hook_logic::{subagent_transcript, transcript_model};
+use argus_agents::hook_logic::{subagent_transcript, transcript_first_prompt, transcript_model};
 use serde_json::Value;
 
 use super::ctx::Hook;
@@ -20,6 +20,12 @@ pub fn file_of(hook: &Hook<'_>, agent_id: &str) -> Value {
     subagent_transcript(Some(&parent), Some(&sid), agent_id).map_or(Value::Null, |file| {
         Value::String(resolve(Path::new(""), &file).to_string_lossy().into_owned())
     })
+}
+
+/// The first prompt of the sub-agent transcript at `file`, from its head only.
+pub fn prompt_of(file: &Value) -> Option<String> {
+    let file = file.as_str().filter(|f| !f.is_empty())?;
+    transcript_first_prompt(&StdFs, Path::new(file))
 }
 
 /// The model of the first assistant line of the transcript at `file`, from its head only.

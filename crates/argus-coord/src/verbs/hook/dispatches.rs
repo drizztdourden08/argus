@@ -42,13 +42,35 @@ pub fn store(board: &mut Board, key: &str, mut list: Vec<Value>) {
     set(board, key, Value::Array(list));
 }
 
-/// The pending dispatch a starting sub-agent most likely is: the same thread, the same type
-/// first, else the oldest of the thread. It leaves the list (which is written back, aged).
-pub fn take_dispatch(board: &mut Board, thread: &str, kind: &str) -> Option<Value> {
+const HEAD_CHARS: usize = 200;
+
+/// A prompt as it is compared: whitespace collapsed, cut to its first 200 characters.
+fn head_of(text: &str) -> String {
+    let words: Vec<&str> = text.split_whitespace().collect();
+    words.join(" ").chars().take(HEAD_CHARS).collect()
+}
+
+/// The pending dispatch a starting sub-agent most likely is: the same thread, the one whose
+/// prompt head is the sub-agent's own first prompt, else the same type, else the oldest of the
+/// thread. It leaves the list (which is written back, aged).
+pub fn take_dispatch(
+    board: &mut Board,
+    thread: &str,
+    kind: &str,
+    prompt: Option<&str>,
+) -> Option<Value> {
     let mut list = recent(&board["agentDispatches"], DISPATCH_TTL_MS);
     let mine: Vec<usize> = (0..list.len())
         .filter(|&i| list[i]["thread"].as_str() == Some(thread))
         .collect();
+    let own_head = prompt.map(head_of).filter(|h| !h.is_empty());
+    let same_prompt = |i: &&usize| {
+        let stored = list[**i]["promptHead"].as_str().map(head_of);
+        match (&stored, &own_head) {
+            (Some(s), Some(o)) => !s.is_empty() && (s.starts_with(o) || o.starts_with(s)),
+            _ => false,
+        }
+    };
     let same_type = |i: &&usize| {
         let t = &list[**i]["type"];
         if js::truthy(t) {
@@ -57,7 +79,12 @@ pub fn take_dispatch(board: &mut Board, thread: &str, kind: &str) -> Option<Valu
             kind == "general-purpose"
         }
     };
-    let pick = mine.iter().find(same_type).or(mine.first()).copied();
+    let pick = mine
+        .iter()
+        .find(same_prompt)
+        .or_else(|| mine.iter().find(same_type))
+        .or(mine.first())
+        .copied();
     let taken = pick.map(|i| list.remove(i));
     set(board, "agentDispatches", Value::Array(list));
     taken
