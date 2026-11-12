@@ -175,7 +175,7 @@ fn block_without_a_target_is_refused_with_the_usage() {
         assert_eq!(ran.code, 1, "{words:?}");
         assert!(
             ran.err.contains(
-                "usage: coord item block <I-n> --on <I-n|T-n|H-n|Q-n|D-n> | --todo \"<what>\" --who <owner|thread|lead:key>."
+                "usage: coord item block <I-n> --on <I-n|T-n|H-n|Q-n|D-n|\"external: who, what\"> | --todo \"<what>\" --who <owner|thread|lead:key>."
             ),
             "{}",
             ran.err
