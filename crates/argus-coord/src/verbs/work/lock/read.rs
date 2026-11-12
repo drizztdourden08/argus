@@ -3,7 +3,7 @@
 use argus_board::json::{nullish, section};
 use serde_json::Value;
 
-use super::holder_of;
+use super::agent::holder_text;
 use crate::cli::Outcome;
 use crate::cli::out::{ago, table};
 use crate::verbs::work::keys::js_keys;
@@ -12,7 +12,7 @@ use crate::verbs::work::run::Run;
 const HEAD: [&str; 5] = ["resource", "holder", "since", "queue", "about"];
 
 fn row(lock: &Value, now: i64) -> Vec<String> {
-    let holder = holder_of(lock);
+    let holder = holder_text(lock);
     let queue: Vec<String> = super::queue_of(lock)
         .iter()
         .map(argus_board::json::display)

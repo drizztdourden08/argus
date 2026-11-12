@@ -43,7 +43,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord notify "<text>" [--item I] [--level info|warn|bad] [--context "<c>"]    coord message "<text for the owner>" [--item I] [--context "<c>"]    coord note <I|T> "<text>"   (an informal remark on an item or a test, up to 300 chars, never blocks it; ask and decide also take a T-n)
   coord entry list [--open] [--kind k] [--mine] [--archived] | show <E> | pick <E> | done <E>
   coord entry set <E> ["<text>"] [--option "..."]... [--context "<c>"] | move <E> --item <I> | archive|unarchive|rm|restore <E>
-  coord lock claim <resource> [--desc "..."] | release <resource> | drop <resource> | list
+  coord lock claim <resource> [--desc "..."] [--agent A-n] | release <resource> [--agent A-n] | drop <resource> | list    (a sub-agent passes its own --agent: it shares the lead's identity)
   coord action (alias todo) add "<manual step for the human>" [--item <I|T>] [--who owner|<thread>|lead:<key>] [--before|--after <H>] | done <H> [--undo] | show <H> | list [--who <w>]
   coord action set <H> [--text "..."] [--item <I|T>] [--who <w>] | move <H> [--before|--after <H>] | archive|unarchive|rm|restore <H>
   coord log "<what just happened>" [--subject <s>] [--item <I>]   coord log list [--subject <s>] | rm <subject> <seq>

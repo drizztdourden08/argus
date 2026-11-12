@@ -53,6 +53,7 @@ mod launcher_verbs;
 mod lead_verbs;
 mod lead_verbs_wake;
 mod limits;
+mod lock_agents;
 mod ping_cli;
 mod portfolio_cli;
 mod pr_verbs;

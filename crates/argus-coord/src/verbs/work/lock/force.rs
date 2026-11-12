@@ -4,6 +4,7 @@ use argus_board::inbox::post;
 use argus_board::json::doc;
 use argus_board::store::remove_doc;
 
+use super::agent::thread_of;
 use super::{find_lock, hand_on, holder_of, on_lock, queue_of};
 use crate::cli::Outcome;
 use crate::verbs::work::crud::thread_arg;
@@ -40,11 +41,12 @@ pub(super) fn free(r: &mut Run<'_>) -> Outcome {
 pub(super) fn rm(r: &mut Run<'_>) -> Outcome {
     on_lock(r, "rm", |board, r, (who, resource, lock)| {
         let mut waiting: Vec<String> = holder_of(lock).into_iter().collect();
-        waiting.extend(
-            queue_of(lock)
-                .iter()
-                .filter_map(|id| id.as_str().map(str::to_owned)),
-        );
+        for entry in queue_of(lock).iter().filter_map(|id| id.as_str()) {
+            let thread = thread_of(entry).to_owned();
+            if !waiting.contains(&thread) {
+                waiting.push(thread);
+            }
+        }
         let text = format!("{resource} was removed by {}.", who.actor);
         for id in waiting {
             if doc(board, "threads", &id).is_some_and(|t| !t.is_null()) {
