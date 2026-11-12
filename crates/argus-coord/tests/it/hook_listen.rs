@@ -69,6 +69,30 @@ fn a_lead_listens_for_every_thread_of_its_project() {
 }
 
 #[test]
+fn a_lead_skips_the_wakes_it_sent_and_hears_the_next_one_from_another_sender() {
+    let own = wake(&json!({ "thread": "ui", "lines": ["coordinator: do it"], "count": 1 }));
+    let other = wake(&json!({ "thread": "ui", "lines": ["ui: done"], "count": 1 }));
+    let server = serve(always(Some(format!("{own}{other}"))));
+    let f = fixture(&server);
+    let ran = listen(&f, LEAD, "SessionStart", &[]);
+    assert_eq!(ran.code, 2);
+    assert_eq!(ran.err, "WAKE ui: ui: done. Run: coord inbox
+");
+    assert_eq!(streams(&server).len(), 1);
+}
+
+#[test]
+fn a_thread_listener_still_wakes_for_a_line_that_starts_with_its_own_id() {
+    let own = wake(&json!({ "thread": "ui", "lines": ["ui: from me"], "count": 1 }));
+    let server = serve(always(Some(own)));
+    let f = fixture(&server);
+    let ran = listen(&f, UI, "Stop", &[]);
+    assert_eq!(ran.code, 2);
+    assert_eq!(ran.err, "WAKE ui: ui: from me. Run: coord inbox
+");
+}
+
+#[test]
 fn an_unregistered_session_exits_0_with_nothing_to_say_and_opens_no_stream() {
     let server = serve(always(None));
     let f = fixture(&server);

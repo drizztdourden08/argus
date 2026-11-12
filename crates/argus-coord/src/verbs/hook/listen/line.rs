@@ -1,6 +1,7 @@
 //! The line a heard wake prints on stderr, the text Claude Code wakes the model with:
 //! `WAKE <thread>: <lines joined by "; ">[ (<n> wakes)]. Run: coord inbox`, or
-//! `WAKE <thread>: see coord inbox` when the event data cannot be read.
+//! `WAKE <thread>: see coord inbox` when the event data cannot be read. A wake sent by
+//! `coord inbox send` reads `<sender id>: <text>`, which is how a lead knows its own.
 
 use argus_board::json::{display, shown};
 use argus_core::js;
@@ -66,4 +67,22 @@ pub fn wake_line(data: &str, thread: &str) -> String {
         .ok()
         .and_then(|v| line_of(&v))
         .unwrap_or_else(|| format!("WAKE {thread}: see coord inbox"))
+}
+
+/// Whether every line of the event data `data` was sent by the thread `id` itself (`<id>: ...`),
+/// so a lead listening to every thread need not wake for the wakes it made.
+pub fn all_from(data: &str, id: &str) -> bool {
+    let prefix = format!("{id}: ");
+    let Ok(Value::Object(event)) = serde_json::from_str::<Value>(data) else {
+        return false;
+    };
+    match event.get("lines") {
+        Some(Value::Array(lines)) => {
+            !lines.is_empty()
+                && lines
+                    .iter()
+                    .all(|l| l.as_str().is_some_and(|t| t.starts_with(&prefix)))
+        }
+        _ => false,
+    }
 }

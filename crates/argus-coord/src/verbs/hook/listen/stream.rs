@@ -16,7 +16,7 @@ use super::super::autostart::ensure_dashboard;
 use super::super::ctx::Hook;
 use super::super::read_stamp::stamp_inbox;
 use super::Target;
-use super::line::wake_line;
+use super::line::{all_from, wake_line};
 use crate::client::{Client, ClientError, DashboardConfig, SseReader, server_port};
 
 const RETRY_MS: i64 = 5000;
@@ -34,13 +34,19 @@ enum Heard {
     Broken,
 }
 
-fn read_events(body: Box<dyn Read + Send>, thread: &str) -> Heard {
+/// A lead (`*`) skips the wakes its own thread sent; everyone else hears every wake.
+fn own_wake(target: &Target, data: &str) -> bool {
+    target.thread == "*" && all_from(data, &target.id)
+}
+
+fn read_events(body: Box<dyn Read + Send>, target: &Target) -> Heard {
     let mut reader = SseReader::new(body);
     loop {
         match reader.next_event() {
             Ok(Some(event)) if event.name == "replaced" => return Heard::Replaced,
+            Ok(Some(event)) if event.name == "wake" && own_wake(target, &event.data) => {}
             Ok(Some(event)) if event.name == "wake" && !event.data.is_empty() => {
-                return Heard::Wake(wake_line(&event.data, thread));
+                return Heard::Wake(wake_line(&event.data, &target.thread));
             }
             Ok(Some(_)) => {}
             Ok(None) => return Heard::Ended,
@@ -63,7 +69,7 @@ fn listen_once(hook: &Hook<'_>, target: &Target, deadline: i64) -> Heard {
     );
     let wait = max(MIN_WAIT_MS, deadline - now_ms()).unsigned_abs();
     match client.stream(&path, Duration::from_millis(wait)) {
-        Ok(body) => read_events(body, &target.thread),
+        Ok(body) => read_events(body, target),
         Err(ClientError::Http { .. } | ClientError::Timeout(_)) => Heard::Ended,
         Err(ClientError::Down(_)) => Heard::Broken,
     }
