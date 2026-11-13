@@ -83,6 +83,14 @@ class SubscriptionTable {
     return new Map([...this.active].map(([scope, colls]) => [scope, [...colls]]));
   }
 
+  isActive(scope: string, coll: string): boolean {
+    return this.active.get(scope)?.has(coll) ?? false;
+  }
+
+  forget(scope: string, colls: readonly string[]): void {
+    for (const coll of colls) wantsMap.remove(this.active, scope, coll);
+  }
+
   wantingTabs(scope: string, coll: string): string[] {
     return [...this.tabs].filter(([, held]) => held.wants.get(scope)?.has(coll)).map(([tabId]) => tabId);
   }
