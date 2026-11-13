@@ -134,7 +134,7 @@ impl Service {
         let facts = self.facts_of(project);
         let seen: Vec<&Fact> = facts
             .iter()
-            .filter(|f| Self::judged(f) && !f.main)
+            .filter(|f| Self::judged(f) && !f.main && !self.reports_only(board, &f.rule))
             .collect();
         let loose = self.loose_of(board, &seen);
         let now = self.now();

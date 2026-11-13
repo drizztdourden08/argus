@@ -18,7 +18,7 @@ fn text(value: &Value) -> Option<String> {
     value.as_str().map(str::to_owned)
 }
 
-fn rules_of(raw: &Value) -> Vec<Rule> {
+pub(super) fn rules_of(raw: &Value) -> Vec<Rule> {
     raw.as_array()
         .into_iter()
         .flatten()

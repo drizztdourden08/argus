@@ -13,6 +13,7 @@
 )]
 
 mod approval;
+mod auto;
 mod backup;
 mod batch;
 mod board;
@@ -75,6 +76,7 @@ mod testkit;
 
 pub use approval::{approval_of, mentions, names_folder};
 pub use argus_core::StorageError;
+pub use auto::{AutoBoard, AutoMode, AutoRule, ExtraRepo, auto_rules};
 pub use backup::Backup;
 pub use batch::{BatchInput, BatchOutcome, Skipped};
 pub use board::{
@@ -93,7 +95,7 @@ pub use git::{Git, GitExec, REMOVE_TIMEOUT, SystemExec};
 pub use guard::{assert_read_only, assert_write_ok};
 pub use hygiene::{
     ApproveInput, Approved, HygieneDoc, HygieneMeta, HygieneState, KeepInput, Kept, NotApproved,
-    RemovedDoc, Stepped, hygiene_key,
+    PlanRow, RemovedDoc, Stepped, hygiene_key,
 };
 pub use jobs::{JobDoc, JobState};
 pub use linking::LinkSource;

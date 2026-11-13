@@ -53,6 +53,7 @@
 
 mod approve;
 mod ask;
+mod auto_plan;
 mod exception;
 mod gone;
 mod judge;
@@ -65,6 +66,7 @@ mod text;
 mod unlock;
 
 pub use approve::{ApproveInput, Approved, NotApproved};
+pub use auto_plan::PlanRow;
 pub use exception::{KeepInput, Kept};
 pub use memory::{HygieneDoc, HygieneMeta, HygieneState, RemovedDoc, hygiene_key};
 pub use step::Stepped;

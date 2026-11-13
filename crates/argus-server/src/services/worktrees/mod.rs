@@ -75,7 +75,8 @@ fn deps_of(svc: &Services, opts: &WorktreesOptions) -> Deps {
         svc.paths.coord_home.clone(),
         svc.shadow,
     )
-    .with_runs(svc.runs.clone());
+    .with_runs(svc.runs.clone())
+    .with_auto(config::auto_setting(svc));
     let procs: Arc<dyn ProcessLister> = opts
         .procs
         .clone()

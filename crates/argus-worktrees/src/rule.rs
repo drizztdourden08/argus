@@ -37,6 +37,9 @@ pub struct Rule {
     pub added_by: Option<String>,
     #[serde(default)]
     pub added_at: Option<String>,
+    /// Derived from the registry, never stored on a board.
+    #[serde(default, skip_serializing)]
+    pub auto: bool,
 }
 
 impl Rule {
@@ -53,6 +56,7 @@ impl Rule {
             stale_days: None,
             added_by: None,
             added_at: None,
+            auto: false,
         }
     }
 

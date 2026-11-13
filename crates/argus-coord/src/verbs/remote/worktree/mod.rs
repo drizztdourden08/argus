@@ -4,6 +4,7 @@
 //! its guards. Any registered thread may read and write the rules; `remove`, `prune` and `request`
 //! are the project lead's or the rule thread's.
 
+mod auto_plan;
 mod idle;
 mod keep;
 mod leftovers;
@@ -22,7 +23,7 @@ use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::verbs::remote::support::link::take_sub;
 
-const VERBS: &str = "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune, release, approve, request, requests, link, unlink.";
+const VERBS: &str = "worktree verb must be one of rule add|rm, rules, auto-plan, list, leftovers, keep, done, remove, prune, release, approve, request, requests, link, unlink.";
 
 fn rule(call: &mut Call<'_>) -> Outcome {
     let action = take_sub(call);
@@ -45,6 +46,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     match sub.as_deref() {
         Some("rule") => rule(call),
         Some("rules") => rules::rules(call),
+        Some("auto-plan") => auto_plan::auto_plan(call),
         Some("list") => list::list(call),
         Some("leftovers") => leftovers::leftovers(call),
         Some("keep") => keep::keep(call),
