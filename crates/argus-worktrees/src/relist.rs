@@ -22,9 +22,11 @@ pub fn undecided(fact: &Fact, listed: &HashSet<String>, env: &ScanEnv<'_>) -> bo
 }
 
 fn has_list(lists: &[RepoList], repo: &str, ci: bool) -> bool {
-    lists
-        .iter()
-        .any(|l| l.items.first().is_some_and(|i| same_path(&i.path, repo, ci)))
+    lists.iter().any(|l| {
+        l.items
+            .first()
+            .is_some_and(|i| same_path(&i.path, repo, ci))
+    })
 }
 
 /// Ask the known repositories not listed yet. False when a repository that still exists did not answer: what it lists
