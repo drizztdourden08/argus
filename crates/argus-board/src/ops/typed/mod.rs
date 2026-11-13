@@ -38,5 +38,5 @@ pub(crate) use description::written as description_text;
 pub(crate) use edit::{applies as edits, item_edit};
 pub(crate) use note::rewrite as note_text;
 pub(crate) use outcome::Outcome;
-pub(crate) use parent_rule::on_plain as plain_needs_parent;
+pub use parent_rule::on_plain as plain_needs_parent;
 pub(crate) use shift::on_move;

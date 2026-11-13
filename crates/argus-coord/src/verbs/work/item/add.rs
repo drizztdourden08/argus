@@ -9,7 +9,7 @@ use argus_board::Board;
 use argus_board::content::{Context, check};
 use argus_board::json::display;
 use argus_board::limits::require_text;
-use argus_board::ops::{Check, OpResult, authorize};
+use argus_board::ops::{Check, OpResult, authorize, plain_needs_parent};
 use argus_board::store::create_doc;
 use serde_json::{Map, Value, json};
 
@@ -88,6 +88,7 @@ fn draft_of(r: &Run<'_>) -> Res<Draft> {
 
 /// The plain item of always: its thread, origin and numbered criteria.
 fn plain(board: &mut Board, who: &Caller, owner: &str, draft: &Draft) -> Res<String> {
+    plain_needs_parent(board)?;
     let ac: Vec<Value> = draft
         .ac
         .iter()

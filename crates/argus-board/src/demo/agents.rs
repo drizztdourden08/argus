@@ -3,11 +3,10 @@
 use super::{Step, step};
 
 /// The folders the verb creates under the demo home, bound to these names.
-pub const FOLDERS: [(&str, &str); 4] = [
+pub const FOLDERS: [(&str, &str); 3] = [
     ("wt_ui", "lobby-ui"),
     ("wt_api", "seat-api"),
     ("wt_spike", "relay-spike"),
-    ("wt_old", "old-experiment"),
 ];
 
 pub(super) const STEPS: &[Step] = &[
@@ -143,15 +142,4 @@ pub(super) const STEPS: &[Step] = &[
     ),
     step("lead", "", &["worktree", "link", "{wt_ui}", "{s3}"]),
     step("lead", "", &["worktree", "link", "{wt_api}", "{bug}"]),
-    step(
-        "lead",
-        "",
-        &[
-            "worktree",
-            "keep",
-            "{wt_old}",
-            "--note",
-            "Kept for the demo: an old experiment.",
-        ],
-    ),
 ];

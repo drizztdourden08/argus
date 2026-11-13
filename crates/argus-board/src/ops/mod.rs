@@ -56,7 +56,7 @@ pub use pr::is_pr_kind;
 pub use restore::restore_from;
 pub use result::{Notice, OpResult, Status};
 pub use target::{record_arg, record_thread};
-pub use typed::create_note;
+pub use typed::{create_note, plain_needs_parent};
 pub use who::{Role, Who};
 pub use worktree::forget_old_keeps;
 

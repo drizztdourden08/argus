@@ -53,7 +53,7 @@ pub(crate) fn on_create(board: &Board, ty: &ItemType, parent: &Value) -> Result<
 }
 
 /// A plain item reads as the default type, so it needs the parent that type needs.
-pub(crate) fn on_plain(board: &Board) -> Result<(), BoardError> {
+pub fn on_plain(board: &Board) -> Result<(), BoardError> {
     match registry().item_type(DEFAULT_TYPE) {
         Some(ty) => on_create(board, ty, &Value::Null),
         None => Ok(()),
