@@ -24,7 +24,11 @@ async fn rig() -> TestServer {
     };
     let t = TestServer::start(options).await;
     write_board(&t, ID, &json!({ "project": ID }));
-    write_board(&t, "legacy", &json!({ "project": "legacy", "name": "Old Name" }));
+    write_board(
+        &t,
+        "legacy",
+        &json!({ "project": "legacy", "name": "Old Name" }),
+    );
     let table = json!({
         "version": 1,
         "state": "active",
@@ -92,7 +96,12 @@ async fn the_boards_list_has_the_table_and_the_legacy_folders() {
 #[tokio::test(flavor = "multi_thread")]
 async fn a_patch_renames_a_table_board_and_a_legacy_folder() {
     let t = rig().await;
-    let done = patch(&t, &format!("/api/boards/{ID}"), &json!({ "name": "  Beta  " })).await;
+    let done = patch(
+        &t,
+        &format!("/api/boards/{ID}"),
+        &json!({ "name": "  Beta  " }),
+    )
+    .await;
     assert_eq!(done.status, 200);
     assert_eq!(done.json(), json!({ "id": ID, "name": "Beta" }));
     let legacy = patch(&t, "/api/boards/legacy", &json!({ "name": "New Name" })).await;
