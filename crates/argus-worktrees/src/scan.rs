@@ -210,7 +210,7 @@ impl Scanner<'_, '_> {
     fn inspect_found(&mut self, rule: &Rule, paths: &[String]) {
         for dir in paths.iter().take(MAX_CANDIDATES) {
             let id = worktree_id(&clean_path(dir), self.env.case_insensitive);
-            if !self.seen.insert(id) {
+            if !self.seen.insert(id.clone()) {
                 continue;
             }
             let fact = self.read_dir(dir, rule);
