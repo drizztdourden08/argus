@@ -87,6 +87,7 @@ impl AutoRepos {
 }
 
 /// The text of a setting value as a list of repos with their owner.
+#[must_use]
 pub fn extras_of(raw: &Value, default_owner: &str) -> Vec<ExtraRepo> {
     raw.as_array()
         .into_iter()

@@ -392,7 +392,7 @@ fn a_board_written_before_worktrees_reads_as_no_rules_and_list_says_the_dashboar
     assert!(say(&w.worker(&["rules"])).contains("no worktree rules yet"));
     w.refuse_all(&[
         (&["list"], "the dashboard is not running"),
-        (&["frobnicate"], "worktree verb must be one of rule add|rm, rules, list, leftovers, keep, done, remove, prune"),
+        (&["frobnicate"], "worktree verb must be one of rule add|rm, rules, auto-plan, list, leftovers, keep, done, remove, prune"),
     ]);
 }
 
