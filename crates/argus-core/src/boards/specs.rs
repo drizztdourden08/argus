@@ -39,7 +39,6 @@ fn save_and_load_round_trip() {
     assert_eq!(fs::read_dir(home.path()).unwrap().count(), 1);
 }
 
-// test-tag: critical
 #[test]
 fn resolve_order_is_id_then_alias_then_folder() {
     let home = tempfile::tempdir().unwrap();
@@ -56,7 +55,6 @@ fn resolve_order_is_id_then_alias_then_folder() {
     assert_eq!(resolve(home.path(), "nope"), None);
 }
 
-// test-tag: critical
 #[test]
 fn legacy_home_without_table_resolves_folders_never_portfolio() {
     let home = tempfile::tempdir().unwrap();
@@ -68,7 +66,6 @@ fn legacy_home_without_table_resolves_folders_never_portfolio() {
     assert_eq!(resolve(home.path(), "_portfolio"), None);
 }
 
-// test-tag: critical
 #[test]
 fn mint_makes_a_unique_formatted_id_and_records_the_alias() {
     let home = tempfile::tempdir().unwrap();
@@ -92,7 +89,6 @@ fn mint_makes_a_unique_formatted_id_and_records_the_alias() {
     assert_eq!(resolve(home.path(), "key3"), Some(seen[3].clone()));
 }
 
-// test-tag: critical
 #[test]
 fn mint_refuses_bad_and_taken_keys() {
     let home = tempfile::tempdir().unwrap();
@@ -104,7 +100,6 @@ fn mint_refuses_bad_and_taken_keys() {
     assert!(is_reserved("overlord") && is_reserved("localpkg"));
 }
 
-// test-tag: critical
 #[test]
 fn rename_checks_bounds_and_keeps_aliases() {
     let home = tempfile::tempdir().unwrap();
@@ -124,7 +119,6 @@ fn rename_checks_bounds_and_keeps_aliases() {
     assert!(rename(home.path(), "bzzzzzz", "Name").is_err());
 }
 
-// test-tag: critical
 #[test]
 fn roles_are_found_both_ways() {
     let home = tempfile::tempdir().unwrap();

@@ -1,6 +1,8 @@
 //! The review on temp fixtures: two accounts (`h` on `a1/o1`, `s` on `a2/o2`) and a cross scope
 //! `a1/o2` the old tool made, a fake sidebar store, a fixed clock.
 
+// test-tag: critical
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;

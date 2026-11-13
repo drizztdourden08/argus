@@ -493,6 +493,7 @@ pub(crate) fn stop(svc: &Services) {
     svc.tasks.abort(NAME);
 }
 
+// test-tag: critical
 #[cfg(test)]
 mod tests {
     use super::live_usage_allowed;

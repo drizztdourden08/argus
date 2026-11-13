@@ -69,7 +69,6 @@ fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_
     assert_sibling_intact(Path::new(&sibling));
 }
 
-// test-tag: standard
 #[test]
 fn a_folder_that_is_no_work_tree_stays_for_the_lead_when_its_last_live_sibling_is_gone() {
     let fx = Fixture::fake_bare();
