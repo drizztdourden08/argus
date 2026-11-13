@@ -60,6 +60,10 @@ impl McpBackend for ServerBackend {
         config::file_roots(&self.svc)
     }
 
+    fn home(&self) -> Option<PathBuf> {
+        Some(self.svc.paths.coord_home.clone())
+    }
+
     fn default_base_url(&self) -> String {
         config::base_url(&self.svc)
     }
