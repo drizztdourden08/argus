@@ -204,9 +204,10 @@ pub struct ClearRequest {
 /// (A browser request is refused before this, by the route.)
 ///
 /// # Errors
-/// 400 for a bad project, thread or note; 403 when `by` is not the Overlord.
+/// 400 for a bad project, thread or note; 403 when `by` is not the Overlord (`overlord_board` is the id of his board).
 pub fn clear_request(
     body: &Value,
+    overlord_board: &str,
     portfolio: Option<&BoardView>,
 ) -> Result<ClearRequest, RequestError> {
     let project = text_field(body, "project")
@@ -223,7 +224,7 @@ pub fn clear_request(
         )));
     }
     let by = text_field(body, "by").unwrap_or("");
-    overlord_only(by, portfolio, "clear a wake fault")?;
+    overlord_only(by, overlord_board, portfolio, "clear a wake fault")?;
     Ok(ClearRequest {
         project: project.to_owned(),
         thread: thread.to_owned(),

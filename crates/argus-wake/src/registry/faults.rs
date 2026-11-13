@@ -6,7 +6,6 @@ use tracing::warn;
 
 use super::{Env, Key, Registry};
 use crate::faults::{Fault, NewFault};
-use crate::reasons::MAIN_SCOPE;
 use crate::time::iso;
 use crate::wake::WakeInput;
 
@@ -104,7 +103,7 @@ impl Registry {
     /// Sends one wake of `reason` about `scope/thread` to the Overlord.
     fn tell_main(&self, env: &mut Env<'_>, scope: &str, thread: &str, reason: &str, text: String) {
         let wake = WakeInput::about(
-            MAIN_SCOPE,
+            &self.boards.overlord(),
             &self.main_thread(),
             reason,
             &format!("{scope}/{thread}"),

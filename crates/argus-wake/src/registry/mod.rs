@@ -43,7 +43,7 @@ use crate::docs::DocSink;
 use crate::engine::{EngineNote, WakeEngine};
 use crate::faults::{ClearFault, Fault, FaultStore};
 use crate::presence::Presence;
-use crate::reasons::{MAIN_SCOPE, PORTFOLIO};
+use crate::reasons::PORTFOLIO;
 use crate::source::BoardSource;
 use crate::time::iso;
 use argus_core::clock::Clock;
@@ -178,7 +178,7 @@ impl Registry {
     #[must_use]
     pub fn main_thread(&self) -> String {
         self.boards
-            .board(MAIN_SCOPE)
+            .board(&self.boards.overlord())
             .and_then(|b| b.coordinator())
             .unwrap_or_else(|| "coordinator".to_owned())
     }
@@ -186,7 +186,7 @@ impl Registry {
     /// Is this the Overlord's own thread?
     #[must_use]
     pub fn is_main(&self, scope: &str, thread: &str) -> bool {
-        scope == MAIN_SCOPE && thread == self.main_thread()
+        scope == self.boards.overlord() && thread == self.main_thread()
     }
 
     /// Hook into the engine, take up the young events still queued from before a restart, clear the

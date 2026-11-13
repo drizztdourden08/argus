@@ -6,7 +6,6 @@ use super::ItemWakeConfig;
 use crate::blockers;
 use crate::board::{BoardView, ItemView, LIVE_AGENT, Record};
 use crate::policy::coordinator_in;
-use crate::reasons::MAIN_SCOPE;
 use crate::source::BoardSource;
 use crate::time::ms_or_zero;
 
@@ -194,11 +193,15 @@ pub(super) fn by_thread(stale: &[Stale]) -> Vec<((String, String), Vec<Stale>)> 
 }
 
 /// The items quiet for at least `escalate_ms`, by project (the portfolio itself has no digest).
-pub(super) fn by_project(stale: &[Stale], escalate_ms: i64) -> Vec<(String, Vec<Stale>)> {
+pub(super) fn by_project(
+    stale: &[Stale],
+    overlord: &str,
+    escalate_ms: i64,
+) -> Vec<(String, Vec<Stale>)> {
     group(
         stale
             .iter()
-            .filter(|s| s.scope != MAIN_SCOPE && s.quiet >= escalate_ms)
+            .filter(|s| s.scope != overlord && s.quiet >= escalate_ms)
             .map(|s| (s.scope.clone(), s.clone())),
     )
 }

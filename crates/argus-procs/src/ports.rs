@@ -103,6 +103,9 @@ pub trait ProcsHost: Send + Sync {
     /// The tray's pid, when it runs.
     fn tray_pid(&self) -> Option<u32>;
 
+    /// The id of the Overlord's board, where the process alerts go.
+    fn overlord_board(&self) -> String;
+
     /// The coordinator thread of the portfolio board, when there is one.
     fn coordinator(&self) -> Option<String>;
 

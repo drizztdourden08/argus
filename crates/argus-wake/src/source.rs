@@ -12,6 +12,9 @@ pub trait BoardSource: Send + Sync {
     /// The project keys that have a board (the portfolio board included).
     fn scopes(&self) -> Vec<String>;
 
+    /// The id of the Overlord's board, found by its role. Nothing in the wake logic names it by key.
+    fn overlord(&self) -> String;
+
     /// The board of a project as the last export left it.
     fn board(&self, scope: &str) -> Option<Arc<BoardView>>;
 }

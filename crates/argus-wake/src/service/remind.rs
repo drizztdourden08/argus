@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use super::WakeService;
 use crate::faults::Fault;
-use crate::reasons::MAIN_SCOPE;
 use crate::reminders::{NoticeSource, OpenNotice, OwnerSink};
 use crate::wake::WakeInput;
 
@@ -42,7 +41,13 @@ impl WakeService {
         let Some(line) = self.resend.due(now, &theirs, &notices) else {
             return 0;
         };
-        let wake = WakeInput::about(MAIN_SCOPE, &self.main_thread(), RESEND_REASON, "open", line);
+        let wake = WakeInput::about(
+            &self.boards.overlord(),
+            &self.main_thread(),
+            RESEND_REASON,
+            "open",
+            line,
+        );
         self.submit_logged(&[wake], "open resend");
         1
     }

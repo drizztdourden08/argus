@@ -28,7 +28,6 @@ use serde_json::Value;
 
 use crate::activity::{ActivityLine, Level};
 use crate::config::section_ms;
-use crate::reasons::MAIN_SCOPE;
 use crate::source::BoardSource;
 use crate::wake::WakeInput;
 
@@ -183,8 +182,9 @@ impl ItemWakes {
         stale: &[Stale],
         out: &mut ItemTick,
     ) {
-        for (scope, mut list) in stale::by_project(stale, self.config.escalate_ms) {
-            if now - self.last_of(env, &format!("digest/{scope}"), MAIN_SCOPE, main, &scope)
+        let overlord = env.boards.overlord();
+        for (scope, mut list) in stale::by_project(stale, &overlord, self.config.escalate_ms) {
+            if now - self.last_of(env, &format!("digest/{scope}"), &overlord, main, &scope)
                 < self.config.digest_repeat_ms
             {
                 continue;
@@ -199,7 +199,7 @@ impl ItemWakes {
                 thread: None,
             });
             out.wakes
-                .push(WakeInput::about(MAIN_SCOPE, main, REASON, &scope, text));
+                .push(WakeInput::about(&overlord, main, REASON, &scope, text));
             self.sent.insert(format!("digest/{scope}"), now);
         }
     }

@@ -14,7 +14,6 @@ use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::requests::{MAX_TARGETS, Queued, RequestInput, Target};
 use crate::service::Service;
-use argus_core::ids::OVERLORD_PROJECT;
 use serde::Serialize;
 
 /// Several worktrees approved in one word.
@@ -73,7 +72,7 @@ impl Service {
             return Ok(board
                 .live_thread(by)
                 .is_none()
-                .then(|| OVERLORD_PROJECT.to_string()));
+                .then(|| self.deps.store.overlord_board()));
         }
         let lead = self.with_hygiene(project, |m| {
             m.marks.get(&fact.id).and_then(|mark| mark.thread.clone())

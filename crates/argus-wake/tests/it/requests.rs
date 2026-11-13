@@ -215,7 +215,7 @@ fn overlord() -> BoardView {
 }
 
 fn clear(body: &Value) -> Result<ClearRequest, RequestError> {
-    clear_request(body, Some(&overlord()))
+    clear_request(body, "portfolio", Some(&overlord()))
 }
 
 const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
@@ -271,6 +271,7 @@ fn only_a_live_coordinator_of_the_portfolio_board_may_clear_a_fault() {
     }
     let no_board = clear_request(
         &json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": NOTE}),
+        "portfolio",
         None,
     );
     assert_eq!(no_board.expect_err("no board").status(), 403);

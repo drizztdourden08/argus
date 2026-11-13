@@ -8,7 +8,6 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::service::Service;
-use argus_core::ids::OVERLORD_PROJECT;
 use serde::Serialize;
 
 const NOTE_MAX: usize = 300;
@@ -46,7 +45,7 @@ impl Service {
     /// Only the Overlord writes the list; anyone else is told whom to ask.
     fn overlord_only(&self, input: &KeepInput) -> Result<String> {
         let by = input.caller.thread().unwrap_or_default().to_string();
-        let from_portfolio = input.by_project.as_deref() == Some(OVERLORD_PROJECT);
+        let from_portfolio = input.by_project.as_deref() == Some(self.deps.store.overlord_board().as_str());
         if from_portfolio && !by.is_empty() && self.overlord().as_deref() == Some(by.as_str()) {
             return Ok(by);
         }

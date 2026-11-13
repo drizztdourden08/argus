@@ -2,14 +2,14 @@
 
 use crate::board::BoardView;
 use crate::external::RequestError;
-use crate::reasons::MAIN_SCOPE;
 
-/// Is `by` a coordinator thread of the portfolio board that has not ended?
+/// Is `by` a coordinator thread of the portfolio board (`overlord_board` is its id) that has not ended?
 ///
 /// # Errors
 /// 403, with a message that says what only the Overlord may do (`what`), when `by` is anybody else.
 pub fn overlord_only(
     by: &str,
+    overlord_board: &str,
     portfolio: Option<&BoardView>,
     what: &str,
 ) -> Result<(), RequestError> {
@@ -20,7 +20,7 @@ pub fn overlord_only(
         Ok(())
     } else {
         Err(RequestError::Forbidden(format!(
-            "only the Overlord (the coordinator thread of project {MAIN_SCOPE}) may {what}"
+            "only the Overlord (the coordinator thread of project {overlord_board}) may {what}"
         )))
     }
 }
