@@ -98,6 +98,12 @@ impl Rule {
     pub fn allows(&self, name: &str, case_insensitive: bool) -> bool {
         name_allowed(&self.include, &self.exclude, name, case_insensitive)
     }
+
+    /// The one place the name filters meet registration: a folder its repository registers as a worktree is always
+    /// let through, whatever its name. The filters only sort the folders git does not register.
+    pub fn admits(&self, name: &str, case_insensitive: bool, registered: bool) -> bool {
+        registered || self.allows(name, case_insensitive)
+    }
 }
 
 // test-tag: critical
@@ -137,6 +143,14 @@ mod tests {
         assert!(rule.allows("web-1", false));
         assert!(!rule.allows("web-22", false));
         assert!(!rule.allows("agent", false));
+    }
+
+    #[test]
+    fn a_registered_worktree_passes_the_filters_and_an_unregistered_folder_does_not() {
+        let rule = Rule::folder("W-1", "X:/a", "t").filtered(&["agent-*"], &[]);
+        assert!(rule.admits("wave-a", false, true));
+        assert!(!rule.admits("wave-x", false, false));
+        assert!(rule.admits("agent-1", false, false));
     }
 
     #[test]

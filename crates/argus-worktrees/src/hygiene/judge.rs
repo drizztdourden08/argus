@@ -6,7 +6,7 @@ use crate::board::{AgentFact, BoardFacts, Link};
 use crate::fact::Fact;
 use crate::guards::is_brock_lock;
 use crate::linking::{agent_item, resolve};
-use crate::paths::{base_name, clean_path, is_below, same_path};
+use crate::paths::{base_name, clean_path, is_below, join_path, same_path};
 use crate::remove::{Safety, plural};
 use crate::service::Service;
 
@@ -51,6 +51,8 @@ pub(crate) struct Look<'a> {
 enum Shape {
     Worktree,
     EmptyLeftover,
+    /// A folder under a rule that is no work tree: git still lists it, or its `.git` is not usable.
+    NotGit,
 }
 
 fn absolute(path: &str) -> bool {
@@ -138,6 +140,9 @@ fn shape_of(fact: &Fact) -> Option<Shape> {
     let empty = fact.leftover.as_ref().is_some_and(|l| {
         l.files == Some(0) && !l.pending && !l.partial && !l.is_link && !l.has_nested_git
     });
+    if fact.not_git() {
+        return Some(Shape::NotGit);
+    }
     empty.then_some(Shape::EmptyLeftover)
 }
 
@@ -224,10 +229,33 @@ impl Service {
     }
 
     /// Not the hygiene's at all: a main checkout, a folder its repository does not list, one outside its rule.
-    fn outside(&self, board: &BoardFacts, fact: &Fact) -> bool {
+    fn outside(&self, board: &BoardFacts, fact: &Fact, shape: Shape) -> bool {
+        let unlisted = shape == Shape::Worktree && !fact.registered;
+        let own_repo =
+            shape == Shape::NotGit && self.deps.fs.is_dir(&join_path(&fact.path, ".git"));
         self.assert_not_main(fact).is_err()
-            || !fact.registered
+            || unlisted
+            || own_repo
             || self.rule_of(board, fact).is_err()
+    }
+
+    /// A folder that is no work tree: empty it is clean, else the lead is told what is left.
+    fn not_git_verdict(&self, fact: &Fact) -> Verdict {
+        let entries = self
+            .deps
+            .fs
+            .read_dir(&fact.path)
+            .map(|all| all.iter().filter(|e| e.name != ".git").count());
+        match entries {
+            Ok(0) => Verdict::Clean,
+            Ok(count) => Verdict::Left(format!(
+                "not a git worktree: {} left",
+                plural(u32::try_from(count).unwrap_or(u32::MAX), "entry")
+            )),
+            Err(_) => {
+                Verdict::Left("not a git worktree: its entries could not be read".to_string())
+            }
+        }
     }
 
     /// The verdict on one worktree and whom it is about, whatever its age.
@@ -235,7 +263,7 @@ impl Service {
         let Some(shape) = shape_of(fact) else {
             return (Verdict::Quiet, Owner::default());
         };
-        if shape == Shape::Worktree && self.outside(look.board, fact) {
+        if shape != Shape::EmptyLeftover && self.outside(look.board, fact, shape) {
             return (Verdict::Quiet, Owner::default());
         }
         let owners = self.owners(look.board, fact);
@@ -252,20 +280,22 @@ impl Service {
         if let Some(why) = attached {
             return (Verdict::Attached(why), owner);
         }
-        (Self::free_verdict(look, fact, shape), owner)
+        (self.free_verdict(look, fact, shape), owner)
     }
 
     /// Nothing is attached: clean, or what would be lost (what Argus could not remove before counts while the
     /// worktree stays as it was).
-    fn free_verdict(look: &Look<'_>, fact: &Fact, shape: Shape) -> Verdict {
+    fn free_verdict(&self, look: &Look<'_>, fact: &Fact, shape: Shape) -> Verdict {
         if let Some(refused) = look
             .refused
             .filter(|r| r.head == fact.head && r.dirty == fact.dirty)
         {
             return Verdict::Left(format!("Argus could not remove it: {}", refused.why));
         }
-        if shape == Shape::EmptyLeftover {
-            return Verdict::Clean;
+        match shape {
+            Shape::EmptyLeftover => return Verdict::Clean,
+            Shape::NotGit => return self.not_git_verdict(fact),
+            Shape::Worktree => {}
         }
         left_why(fact).map_or(Verdict::Clean, Verdict::Left)
     }

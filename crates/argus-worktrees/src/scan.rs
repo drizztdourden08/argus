@@ -190,10 +190,11 @@ impl Scanner<'_, '_> {
             } else {
                 name.clone()
             };
-            if !rule.allows(&base, self.env.case_insensitive) {
+            let path = join_path(root, &name);
+            let may_be_listed = !deleting && self.env.fs.exists(&join_path(&path, ".git"));
+            if !rule.allows(&base, self.env.case_insensitive) && !may_be_listed {
                 continue;
             }
-            let path = join_path(root, &name);
             if deleting {
                 self.deleting.push(DeletingFolder {
                     path,
@@ -212,10 +213,15 @@ impl Scanner<'_, '_> {
             if !self.seen.insert(id) {
                 continue;
             }
+            let fact = self.read_dir(dir, rule);
+            let ci = self.env.case_insensitive;
             if rule.kind == RuleKind::Folder {
+                if !rule.admits(&base_name(dir), ci, fact.registered && !fact.main) {
+                    self.seen.remove(&id);
+                    continue;
+                }
                 self.folder_facts.push(self.facts.len());
             }
-            let fact = self.read_dir(dir, rule);
             self.facts.push(fact);
         }
     }
@@ -237,8 +243,7 @@ impl Scanner<'_, '_> {
         let ci = self.env.case_insensitive;
         for list in &self.ctx.lists {
             for item in list.items.iter().skip(1) {
-                let ours = same_path(&parent_of(&item.path), &rule.path, ci)
-                    && rule.allows(&base_name(&item.path), ci);
+                let ours = same_path(&parent_of(&item.path), &rule.path, ci);
                 if !item.bare && !self.env.fs.is_dir(&item.path) && ours {
                     found
                         .missing

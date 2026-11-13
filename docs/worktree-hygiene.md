@@ -10,6 +10,11 @@ The goal: the Worktrees list of a project is about one to one with the agents th
 
 The code is `crates/argus-worktrees/src/hygiene`.
 
+A rule's include and exclude filters sort only the folders git does not register as worktrees. A
+folder under the rule folder that its repository registers is always listed, whatever its name.
+A folder under the rule folder that is no work tree is judged like a worktree: clean when empty,
+else the lead approves it and Argus removes it, links first, and prunes its stale registration.
+
 ## Attached
 
 A worktree is attached while any of these holds, whatever its age.

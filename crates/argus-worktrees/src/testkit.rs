@@ -323,6 +323,13 @@ impl Fixture {
 
     /// The same layout as [`Fixture::new`], built on the fake git: no git process runs for it.
     pub fn fake() -> Self {
+        let fx = Self::fake_bare();
+        fx.populate();
+        fx
+    }
+
+    /// The fake repository and its worktrees folder with no worktree in it yet.
+    pub fn fake_bare() -> Self {
         let dir = tempfile::tempdir().unwrap();
         let root = root_of(&dir);
         let (repo, wts) = (join_path(&root, "proj"), join_path(&root, "proj-worktrees"));
@@ -333,15 +340,13 @@ impl Fixture {
             &repo, "a.txt", "one
 ", 20.0,
         );
-        let fx = Self {
+        Self {
             _dir: dir,
             root,
             repo,
             wts,
             fake: true,
-        };
-        fx.populate();
-        fx
+        }
     }
 
     fn populate(&self) {

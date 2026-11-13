@@ -238,6 +238,8 @@ impl Service {
         let Some(fact) = self.fact_of(&input.project, &wid, &board) else {
             return Err(self.not_listed(input, &board, &wid));
         };
+        let not_git = fact.not_git() && !input.prune;
+        let fact = self.as_leftover(fact, not_git);
         trace.leftover = fact.leftover.is_some();
         let rule = board
             .rules
@@ -260,7 +262,7 @@ impl Service {
             ));
         }
         if fact.leftover.is_some() && !input.prune {
-            return self.start_leftover(input, &fact, &rule, &board);
+            return self.start_leftover(input, (&fact, not_git), &rule, &board);
         }
         if !fact.exists || input.prune {
             return self.prune_gone(input, &fact);

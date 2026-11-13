@@ -52,7 +52,7 @@ pub fn world_with(
     agents: &[(&str, &str, &str)],
     prep: impl FnOnce(&Fixture),
 ) -> (Fixture, Harness) {
-    let fx = Fixture::fake();
+    let fx = Fixture::fake_bare();
     for (n, _, _) in agents {
         fx.add(&format!("agent-a{n}"));
     }

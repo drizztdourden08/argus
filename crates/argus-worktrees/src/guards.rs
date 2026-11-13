@@ -183,7 +183,7 @@ impl Service {
         let under = match rule.kind {
             RuleKind::Folder => {
                 same_path(&rule.path, &parent_of(&fact.path), ci)
-                    && rule.allows(&base_name(&fact.path), ci)
+                    && rule.admits(&base_name(&fact.path), ci, fact.registered)
             }
             RuleKind::Repo => fact
                 .repo

@@ -112,8 +112,12 @@ fn the_same_worktree_under_a_literal_parent_rule_with_include_is_one_row_and_its
         |_| {},
     );
     h.scan();
-    assert_eq!(h.docs().keys().cloned().collect::<Vec<_>>(), ["web-1"]);
-    assert!(h.docs()["web-1"].leftover.is_none());
+    let docs = h.docs();
+    assert!(docs.contains_key("web-1") && docs["web-1"].leftover.is_none());
+    assert!(
+        !docs.contains_key("plain") && !docs.contains_key("web-1/apps"),
+        "an unregistered folder is filtered and a sub-folder is no candidate"
+    );
     assert_eq!(h.meta().leftovers, 0);
 }
 

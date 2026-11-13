@@ -156,6 +156,55 @@ impl Service {
         Ok(asked)
     }
 
+    /// A folder that is no work tree goes the way a leftover goes: measured now, so the change token has something to
+    /// compare.
+    pub(crate) fn as_leftover(&self, mut fact: Fact, not_git: bool) -> Fact {
+        if not_git {
+            fact.leftover = Some(measure_folder(
+                self.deps.fs.as_ref(),
+                &fact.path,
+                self.opts.remove_bounds,
+                &|| SystemClock.now_ms(),
+            ));
+        }
+        fact
+    }
+
+    /// A `.git` the folder has of its own: a folder is one, and a file is one when git reads a work tree from it. A
+    /// not-git folder passes with a `.git` file git cannot read.
+    fn assert_no_repo_of_its_own(&self, project: &str, fact: &Fact, not_git: bool) -> Result<()> {
+        let dot = join_path(&fact.path, ".git");
+        let own = self.deps.fs.exists(&dot)
+            && (!not_git
+                || self.deps.fs.is_dir(&dot)
+                || self.deps.git.read(&fact.path, &["rev-parse", "--git-dir"]).ok());
+        if !own {
+            return Ok(());
+        }
+        self.request_rescan(project);
+        Err(conflict(format!(
+            "{} has a .git of its own now: it is not a leftover, nothing was deleted; the listing is being refreshed",
+            fact.path
+        )))
+    }
+
+    /// The repositories that still list a not-git folder: its stale registration goes with the folder.
+    fn prune_stale(&self, project: &str, fact: &Fact, repos: &[String]) {
+        for repo in repos {
+            if let Err(err) = self.prune_repo(repo, &[fact.path.as_str()]) {
+                self.note(
+                    project,
+                    "warn",
+                    &format!(
+                        "removed {} but could not prune its registration in {repo}: {}",
+                        fact.path, err.message
+                    ),
+                    None,
+                );
+            }
+        }
+    }
+
     fn assert_leftover_path(&self, board: &BoardFacts, rule: &Rule, path: &str) -> Result<()> {
         let rules = board.valid_rules();
         match crate::guards::leftover_path_problem(&rules, rule, path, self.ci()) {
@@ -167,7 +216,13 @@ impl Service {
     /// Does any repository the scans know list this folder now (read-only git; a failed question is a refusal, not a
     /// yes)? Beyond "listed itself": a folder that HOLDS a worktree git lists, or sits INSIDE a live linked worktree, or
     /// inside a folder with a `.git` of its own, is live work, never a leftover.
-    fn assert_not_listed(&self, project: &str, fact: &Fact) -> Result<()> {
+    fn assert_not_listed(
+        &self,
+        project: &str,
+        fact: &Fact,
+        not_git: bool,
+    ) -> Result<Vec<String>> {
+        let mut stale = Vec::new();
         let mut repos: Vec<String> = self
             .facts_of(project)
             .into_iter()
@@ -190,7 +245,9 @@ impl Service {
                 )));
             }
             let items = parse_worktree_list(&run.stdout);
-            if items.iter().any(|i| path_key(&i.path, ci) == mine) {
+            if not_git && items.iter().any(|i| path_key(&i.path, ci) == mine) {
+                stale.push(repo.clone());
+            } else if items.iter().any(|i| path_key(&i.path, ci) == mine) {
                 self.request_rescan(project);
                 return Err(conflict(format!(
                     "git lists {} again (a worktree of {repo}): it is not a leftover any more, nothing was deleted; the listing is being refreshed",
@@ -219,7 +276,7 @@ impl Service {
                 "{} is inside {holder}, a folder with a .git of its own: it is part of a live work tree, not a leftover; nothing was deleted",
                 fact.path
             ))),
-            None => Ok(()),
+            None => Ok(stale),
         }
     }
 
@@ -262,7 +319,13 @@ impl Service {
         m: &Leftover,
         limit_days: f64,
     ) -> Result<()> {
-        if input.empty_goes && !m.partial && m.files == Some(0) {
+        let approved = matches!(
+            input.caller,
+            crate::board::Caller::Hygiene {
+                approved_by: Some(_)
+            }
+        );
+        if input.empty_goes && !m.partial && (m.files == Some(0) || approved) {
             return Ok(());
         }
         let made = self.is_made(&input.project, &fact.path);
@@ -331,7 +394,7 @@ impl Service {
     pub(crate) fn start_leftover(
         &self,
         input: &RemoveInput,
-        fact: &Fact,
+        (fact, not_git): (&Fact, bool),
         rule: &Rule,
         board: &BoardFacts,
     ) -> Result<RemoveOutcome> {
@@ -362,21 +425,17 @@ impl Service {
             )));
         }
         self.assert_leftover_path(board, rule, &fact.path)?;
-        if self.deps.fs.exists(&join_path(&fact.path, ".git")) {
-            self.request_rescan(&input.project);
-            return Err(conflict(format!(
-                "{} has a .git of its own now: it is not a leftover, nothing was deleted; the listing is being refreshed",
-                fact.path
-            )));
-        }
-        self.assert_not_listed(&input.project, fact)?;
+        self.assert_no_repo_of_its_own(&input.project, fact, not_git)?;
+        let stale = self.assert_not_listed(&input.project, fact, not_git)?;
         let m = self.look_before_deleting(&fact.path)?;
         if let Some(user) = self.busy_by(&fact.path, input.job.is_some(), "deleted")? {
             return Err(Self::in_use(&fact.path, &user, "deleted"));
         }
         self.check_age(input, fact, &m, limit_days)?;
         self.check_token(input, fact, &m)?;
-        self.rename_and_queue(input, fact, &m)
+        let outcome = self.rename_and_queue(input, fact, &m)?;
+        self.prune_stale(&input.project, fact, &stale);
+        Ok(outcome)
     }
 
     fn rename_and_queue(

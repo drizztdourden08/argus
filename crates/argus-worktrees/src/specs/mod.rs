@@ -15,6 +15,7 @@ mod hygiene_ask;
 mod hygiene_kit;
 mod leftover;
 mod leftover_restart;
+mod registered;
 mod links;
 mod links_fs;
 mod probe;

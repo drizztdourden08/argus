@@ -196,7 +196,7 @@ impl Service {
 
     /// A linked git worktree, or the sentence that says the verb takes one.
     pub(super) fn worktree_only(listed: &Fact, verb: &str) -> Result<()> {
-        if Self::judged(listed) {
+        if Self::judged(listed) || listed.not_git() {
             return Ok(());
         }
         Err(WtError::new(

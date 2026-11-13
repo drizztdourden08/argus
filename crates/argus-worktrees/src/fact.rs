@@ -44,6 +44,14 @@ pub struct Fact {
     pub error: Option<String>,
 }
 
+impl Fact {
+    /// A folder that is there but is not a work tree and was not taken for a leftover: git still lists it, or its
+    /// `.git` is no work tree. Not a main checkout, which the guards refuse apart.
+    pub fn not_git(&self) -> bool {
+        self.exists && !self.is_git && self.leftover.is_none() && self.error.is_none()
+    }
+}
+
 /// The facts of a folder nothing was read from yet (not a git work tree).
 pub fn blank_fact(path: &str, rule: &Rule, case_insensitive: bool) -> Fact {
     Fact {
