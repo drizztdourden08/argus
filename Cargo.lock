@@ -75,6 +75,7 @@ dependencies = [
  "argus-core",
  "argus-dns",
  "argus-mcp",
+ "argus-migrate",
  "argus-native",
  "argus-parity",
  "argus-server",
@@ -215,6 +216,22 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+]
+
+[[package]]
+name = "argus-migrate"
+version = "0.2.0"
+dependencies = [
+ "argus-board",
+ "argus-core",
+ "argus-store",
+ "regex",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tempfile",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

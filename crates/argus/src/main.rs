@@ -7,6 +7,7 @@
 #![deny(clippy::cognitive_complexity)]
 
 mod lifecycle;
+mod migrate;
 mod node_form;
 mod tray;
 
@@ -77,6 +78,12 @@ enum Command {
         /// The flags, read by the self-install command itself.
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
+    },
+    /// One-off data migrations of the coord home: `board-ids [--dry-run] [--rollback]
+    /// [--restore <backup>] [--home <path>]`.
+    Migrate {
+        #[command(subcommand)]
+        verb: migrate::Verb,
     },
     /// Compares two dashboard servers by value, read-only: the shadow check of the switch-over.
     Parity(argus_parity::Args),
@@ -151,6 +158,7 @@ async fn run_cli() -> ExitCode {
         Command::InstallMcp { args } => Ok(run_install(install::mcp_config::run, &args)),
         Command::Autostart { args } => Ok(run_install(install::autostart::run, &args)),
         Command::SelfInstall { args } => Ok(run_install(install::self_install::run, &args)),
+        Command::Migrate { verb } => migrate::run(verb).await,
         Command::Parity(args) => argus_parity::run(args).await,
         Command::Tray {
             action,

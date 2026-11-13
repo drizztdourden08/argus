@@ -32,7 +32,11 @@ fn is_taken(home: &Path, boards: &Boards, s: &str) -> bool {
     is_reserved(s) || boards.boards.contains_key(s) || has_alias(boards, s) || home.join(s).exists()
 }
 
-fn fresh(home: &Path, boards: &Boards) -> Result<BoardId, BoardsError> {
+/// A free id: not reserved, not an id or alias of `boards`, no folder of that name in `home`.
+///
+/// # Errors
+/// No free id was found.
+pub fn fresh_id(home: &Path, boards: &Boards) -> Result<BoardId, BoardsError> {
     for _ in 0..ATTEMPTS {
         let id = draw()?;
         if id.bytes().any(|b| b.is_ascii_digit()) && !is_taken(home, boards, &id) {
@@ -55,7 +59,7 @@ pub fn mint(home: &Path, given_key: &str) -> Result<BoardId, BoardsError> {
         {
             return Err(BoardsError::BadKey(given_key.to_owned()));
         }
-        let id = fresh(home, boards)?;
+        let id = fresh_id(home, boards)?;
         boards.boards.insert(
             id.clone(),
             BoardEntry {
