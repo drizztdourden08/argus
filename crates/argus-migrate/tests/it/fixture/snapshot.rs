@@ -25,7 +25,11 @@ fn all_files(root: &Path, rel: &str, out: &mut Vec<String>) {
     for item in fs::read_dir(root.join(rel)).unwrap() {
         let item = item.unwrap();
         let name = item.file_name().to_string_lossy().into_owned();
-        let path = if rel.is_empty() { name } else { format!("{rel}/{name}") };
+        let path = if rel.is_empty() {
+            name
+        } else {
+            format!("{rel}/{name}")
+        };
         if item.file_type().unwrap().is_dir() {
             all_files(root, &path, out);
         } else {
@@ -49,7 +53,11 @@ fn rows_of(file: &Path) -> BTreeMap<String, Vec<String>> {
     let mut stmt = conn
         .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
         .unwrap();
-    let tables: Vec<String> = stmt.query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+    let tables: Vec<String> = stmt
+        .query_map([], |r| r.get(0))
+        .unwrap()
+        .map(Result::unwrap)
+        .collect();
     let mut out = BTreeMap::new();
     for table in tables {
         let mut query = conn.prepare(&format!("SELECT * FROM {table}")).unwrap();
@@ -81,7 +89,11 @@ pub fn take(home: &Path) -> Snapshot {
         }
     }
     let db_file = home.join("dashboard").join("dashboard.db");
-    let db = if db_file.is_file() { rows_of(&db_file) } else { BTreeMap::new() };
+    let db = if db_file.is_file() {
+        rows_of(&db_file)
+    } else {
+        BTreeMap::new()
+    };
     Snapshot {
         json,
         files: names.into_iter().collect(),

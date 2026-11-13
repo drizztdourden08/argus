@@ -13,13 +13,20 @@ use crate::fixture::{Fixture, snapshot};
 
 fn id_of(fx: &Fixture, key: &str) -> String {
     let table = boards::load(&fx.home).unwrap();
-    let found = table.boards.iter().find(|(_, e)| e.aliases.iter().any(|a| a == key));
+    let found = table
+        .boards
+        .iter()
+        .find(|(_, e)| e.aliases.iter().any(|a| a == key));
     found.map(|(id, _)| id.clone()).unwrap()
 }
 
 fn table_of(fx: &Fixture) -> Vec<(String, Vec<String>)> {
     let table = boards::load(&fx.home).unwrap();
-    table.boards.iter().map(|(id, e)| (id.clone(), e.aliases.clone())).collect()
+    table
+        .boards
+        .iter()
+        .map(|(id, e)| (id.clone(), e.aliases.clone()))
+        .collect()
 }
 
 fn marker(fx: &Fixture) -> bool {
@@ -56,7 +63,8 @@ fn a_rollback_that_would_collide_stops_before_any_write() {
     let fx = Fixture::new();
     run(&fx.options(Mode::Migrate)).unwrap();
     let conn = Connection::open(fx.home.join("dashboard").join("dashboard.db")).unwrap();
-    conn.execute("INSERT INTO kv(key,value) VALUES ('run:alpha','1')", []).unwrap();
+    conn.execute("INSERT INTO kv(key,value) VALUES ('run:alpha','1')", [])
+        .unwrap();
     drop(conn);
     let before = snapshot::take(&fx.home);
     let message = run(&fx.options(Mode::Rollback)).unwrap_err().to_string();

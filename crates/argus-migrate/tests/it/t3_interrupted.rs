@@ -9,7 +9,11 @@ use crate::fixture::{Fixture, snapshot};
 
 fn table_of(fx: &Fixture) -> Vec<(String, Vec<String>)> {
     let table = boards::load(&fx.home).unwrap();
-    table.boards.iter().map(|(id, e)| (id.clone(), e.aliases.clone())).collect()
+    table
+        .boards
+        .iter()
+        .map(|(id, e)| (id.clone(), e.aliases.clone()))
+        .collect()
 }
 
 fn plan_file(fx: &Fixture) -> std::path::PathBuf {
@@ -37,7 +41,10 @@ fn stop_and_rerun(plan: &str, fault: Fault) -> Fixture {
 fn a_stopped_run_finished_by_a_rerun_equals_an_uninterrupted_run() {
     let (reference_fx, plan) = reference();
     let want = snapshot::take(&reference_fx.home);
-    let faults = [1, 2, 3, 4, 5].map(Fault::AfterBoard).into_iter().chain([Fault::AfterDb]);
+    let faults = [1, 2, 3, 4, 5]
+        .map(Fault::AfterBoard)
+        .into_iter()
+        .chain([Fault::AfterDb]);
     for fault in faults {
         let fx = stop_and_rerun(&plan, fault);
         assert_eq!(snapshot::take(&fx.home), want, "{fault:?}");

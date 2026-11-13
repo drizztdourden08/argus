@@ -14,9 +14,21 @@ fn assert_no_key_in_db(home: &std::path::Path) {
     let conn = Connection::open(home.join("dashboard").join("dashboard.db")).unwrap();
     for key in KEYS {
         let q = |sql: &str| count(&conn, &sql.replace("{k}", key));
-        assert_eq!(q("SELECT COUNT(*) FROM docs WHERE scope='{k}'"), 0, "docs {key}");
-        assert_eq!(q("SELECT COUNT(*) FROM activity WHERE project='{k}'"), 0, "activity {key}");
-        assert_eq!(q("SELECT COUNT(*) FROM notifications WHERE project='{k}'"), 0, "notes {key}");
+        assert_eq!(
+            q("SELECT COUNT(*) FROM docs WHERE scope='{k}'"),
+            0,
+            "docs {key}"
+        );
+        assert_eq!(
+            q("SELECT COUNT(*) FROM activity WHERE project='{k}'"),
+            0,
+            "activity {key}"
+        );
+        assert_eq!(
+            q("SELECT COUNT(*) FROM notifications WHERE project='{k}'"),
+            0,
+            "notes {key}"
+        );
         assert_eq!(
             q("SELECT COUNT(*) FROM kv WHERE key LIKE '%:{k}' OR key LIKE '%:{k}:%'"),
             0,
@@ -40,7 +52,10 @@ fn counts_are_kept_and_no_old_key_is_left() {
     for key in KEYS {
         let id = boards::resolve(&fx.home, key).unwrap();
         assert_ne!(id, key);
-        assert!(table.boards[&id].aliases.iter().any(|a| a == key), "alias {key}");
+        assert!(
+            table.boards[&id].aliases.iter().any(|a| a == key),
+            "alias {key}"
+        );
         assert!(!fx.home.join(key).exists(), "folder {key} renamed");
         assert!(fx.home.join(&id).join("board.json").is_file());
     }

@@ -85,7 +85,11 @@ fn seed_name(home: &Path, key: &str, registry: &Value) -> Result<String> {
         registry["projects"][key]["name"].as_str(),
     );
     let name: String = shown.trim().chars().take(NAME_MAX).collect();
-    Ok(if name.is_empty() { key.to_owned() } else { name })
+    Ok(if name.is_empty() {
+        key.to_owned()
+    } else {
+        name
+    })
 }
 
 fn registry(home: &Path) -> Value {
@@ -143,8 +147,8 @@ pub fn build(home: &Path) -> Result<Plan> {
     }
     let registry = registry(home);
     for folder in folders_with_boards(home)? {
-        let known = plan.boards.contains_key(&folder)
-            || plan.boards.values().any(|p| p.id == folder);
+        let known =
+            plan.boards.contains_key(&folder) || plan.boards.values().any(|p| p.id == folder);
         if known {
             continue;
         }

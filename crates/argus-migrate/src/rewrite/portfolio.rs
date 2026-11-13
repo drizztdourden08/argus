@@ -25,7 +25,9 @@ fn swap_entries(entries: &mut Value, map: &IdMap) {
     for entry in children_mut(entries) {
         swap_field(entry, "project", map);
         if let Some(list) = entry.get_mut("deliveredTo") {
-            children_mut(list).into_iter().for_each(|s| swap_str(s, map));
+            children_mut(list)
+                .into_iter()
+                .for_each(|s| swap_str(s, map));
         }
     }
 }

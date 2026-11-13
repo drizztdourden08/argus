@@ -35,7 +35,11 @@ fn swap(home: &Path, staged: &Path, aside: &Path) -> Result<()> {
 
 fn report(manifest: &backup::Manifest, from: &Path, aside: &Path) -> Vec<String> {
     let mut lines = vec![
-        format!("restored {} files from {}", manifest.files.len(), from.display()),
+        format!(
+            "restored {} files from {}",
+            manifest.files.len(),
+            from.display()
+        ),
         format!("the previous home is kept at {}", aside.display()),
     ];
     if !manifest.links.is_empty() {
@@ -43,7 +47,12 @@ fn report(manifest: &backup::Manifest, from: &Path, aside: &Path) -> Vec<String>
             "{} links or junctions were not in the backup, recreate them by hand:",
             manifest.links.len()
         ));
-        lines.extend(manifest.links.iter().map(|l| format!("  {} -> {}", l.path, l.target)));
+        lines.extend(
+            manifest
+                .links
+                .iter()
+                .map(|l| format!("  {} -> {}", l.path, l.target)),
+        );
     }
     lines
 }

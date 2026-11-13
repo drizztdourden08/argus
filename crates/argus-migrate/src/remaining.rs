@@ -99,17 +99,33 @@ pub fn scan(home: &Path, plan: &Plan) -> Result<Remaining> {
     let keys: BTreeSet<&str> = plan.boards.keys().map(String::as_str).collect();
     let mut out = Remaining::new();
     for (key, planned) in &plan.boards {
-        let folder = if home.join(key).is_dir() { key } else { &planned.id };
+        let folder = if home.join(key).is_dir() {
+            key
+        } else {
+            &planned.id
+        };
         let label = format!("{key}/board.json");
         let file = board_file(home, folder);
-        scan_file(&file, label, &keys, |v| {
-            board::rewrite(v, &ids);
-        }, &mut out)?;
+        scan_file(
+            &file,
+            label,
+            &keys,
+            |v| {
+                board::rewrite(v, &ids);
+            },
+            &mut out,
+        )?;
     }
     let file = board_file(home, PORTFOLIO);
     let label = format!("{PORTFOLIO}/board.json");
-    scan_file(&file, label, &keys, |v| {
-        portfolio::rewrite(v, &ids);
-    }, &mut out)?;
+    scan_file(
+        &file,
+        label,
+        &keys,
+        |v| {
+            portfolio::rewrite(v, &ids);
+        },
+        &mut out,
+    )?;
     Ok(out)
 }

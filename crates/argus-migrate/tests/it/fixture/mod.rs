@@ -57,7 +57,12 @@ impl Fixture {
         fs::read_dir(self.dir.path())
             .unwrap()
             .map(|e| e.unwrap().path())
-            .find(|p| p.file_name().unwrap().to_string_lossy().starts_with("coord-backup-"))
+            .find(|p| {
+                p.file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with("coord-backup-")
+            })
             .unwrap()
     }
 }

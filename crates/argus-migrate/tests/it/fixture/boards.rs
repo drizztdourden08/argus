@@ -9,7 +9,11 @@ use super::KEYS;
 
 fn write_json(file: &Path, value: &Value) {
     fs::create_dir_all(file.parent().unwrap()).unwrap();
-    fs::write(file, format!("{}\n", serde_json::to_string_pretty(value).unwrap())).unwrap();
+    fs::write(
+        file,
+        format!("{}\n", serde_json::to_string_pretty(value).unwrap()),
+    )
+    .unwrap();
 }
 
 fn other(key: &str) -> &'static str {
@@ -22,7 +26,9 @@ fn other(key: &str) -> &'static str {
 
 fn board(key: &str) -> Value {
     let peer = other(key);
-    let proof = format!("see C:\\Users\\x\\.coord\\{key}\\proofs\\p1.png and /home/x/.coord/{key}/proofs/p1.png");
+    let proof = format!(
+        "see C:\\Users\\x\\.coord\\{key}\\proofs\\p1.png and /home/x/.coord/{key}/proofs/p1.png"
+    );
     let mut board = json!({
         "version": 1,
         "project": key,
@@ -85,9 +91,15 @@ pub fn write_all(home: &Path) {
     }
     write_json(&home.join("_portfolio").join("board.json"), &portfolio());
     let syncs = json!({"alpha": {"at": "t", "by": "alpha"}, "gamma": {"at": "t", "by": "gamma"}});
-    write_json(&home.join("remote.json"), &json!({"mode": "local", "syncs": syncs}));
+    write_json(
+        &home.join("remote.json"),
+        &json!({"mode": "local", "syncs": syncs}),
+    );
     let roots = json!({"alpha": "X:\\a", "gamma": "X:\\g"});
-    write_json(&home.join("dashboard").join("config.json"), &json!({"port": 1, "projectRoots": roots}));
+    write_json(
+        &home.join("dashboard").join("config.json"),
+        &json!({"port": 1, "projectRoots": roots}),
+    );
     for name in [
         "listen-alpha-coordinator.json",
         "listen-beta-two-coordinator.json",

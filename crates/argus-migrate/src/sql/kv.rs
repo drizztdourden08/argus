@@ -84,9 +84,18 @@ mod tests {
             ("launcher-played:alpha:dev", "launcher-played:b1k2m3n:dev"),
             ("inbox-read:alpha:lead", "inbox-read:b1k2m3n:lead"),
             ("run:alpha", "run:b1k2m3n"),
-            ("stall-ack:alpha:idle:I-1:99", "stall-ack:b1k2m3n:idle:I-1:99"),
-            ("assigned-owner:alpha:lead:5", "assigned-owner:b1k2m3n:lead:5"),
-            ("wake-fault-owner:alpha:lead:5", "wake-fault-owner:b1k2m3n:lead:5"),
+            (
+                "stall-ack:alpha:idle:I-1:99",
+                "stall-ack:b1k2m3n:idle:I-1:99",
+            ),
+            (
+                "assigned-owner:alpha:lead:5",
+                "assigned-owner:b1k2m3n:lead:5",
+            ),
+            (
+                "wake-fault-owner:alpha:lead:5",
+                "wake-fault-owner:b1k2m3n:lead:5",
+            ),
             ("changes:cleared:alpha", "changes:cleared:b1k2m3n"),
             ("worktrees:made:alpha", "worktrees:made:b1k2m3n"),
             ("worktrees:sent:alpha", "worktrees:sent:b1k2m3n"),

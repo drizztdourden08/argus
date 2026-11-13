@@ -8,11 +8,12 @@ use serde_json::Value;
 
 use super::Check;
 use crate::error::Result;
-use crate::jsonio;
 use crate::journal::Entry;
+use crate::jsonio;
 
 static PATH: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?i)\.coord[\\/]([a-z0-9][a-z0-9-]*)[\\/]([^\s"'`)\]]+)"#).expect("the path pattern")
+    Regex::new(r#"(?i)\.coord[\\/]([a-z0-9][a-z0-9-]*)[\\/]([^\s"'`)\]]+)"#)
+        .expect("the path pattern")
 });
 
 fn strings_of<'a>(v: &'a Value, out: &mut Vec<&'a str>) {
@@ -25,12 +26,7 @@ fn strings_of<'a>(v: &'a Value, out: &mut Vec<&'a str>) {
 }
 
 /// Checks the proof paths of the board `e`, read from its backup file `before`.
-pub fn check(
-    check: &Check,
-    e: &Entry,
-    before: &Path,
-    problems: &mut Vec<String>,
-) -> Result<()> {
+pub fn check(check: &Check, e: &Entry, before: &Path, problems: &mut Vec<String>) -> Result<()> {
     let Some(backup) = check.backup else {
         return Ok(());
     };

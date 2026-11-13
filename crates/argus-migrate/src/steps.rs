@@ -139,7 +139,9 @@ fn finished(home: &Path, journal: &Journal) -> Result<Vec<String>> {
         map: &ids,
         backup: None,
     })?;
-    Ok(vec!["already migrated; verified again, nothing changed".to_owned()])
+    Ok(vec![
+        "already migrated; verified again, nothing changed".to_owned(),
+    ])
 }
 
 /// Migrates, finishes an interrupted migration, or verifies a finished one.

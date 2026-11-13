@@ -59,7 +59,9 @@ pub fn collisions(db: &Path, map: &IdMap) -> Result<Vec<String>> {
         for (table, cols) in UNIQUE {
             let n = scoped(&conn, table, cols, from, to)?;
             if n > 0 {
-                out.push(format!("{table}: {n} rows of scope {from} collide with scope {to}"));
+                out.push(format!(
+                    "{table}: {n} rows of scope {from} collide with scope {to}"
+                ));
             }
         }
     }

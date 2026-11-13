@@ -44,8 +44,11 @@ pub fn is_stray(home: &Path, name: &str) -> bool {
     if dir.join("board.json").exists() {
         return false;
     }
-    fs::read_dir(&dir)
-        .is_ok_and(|items| items.filter_map(io::Result::ok).all(|i| i.file_name() == LOCK))
+    fs::read_dir(&dir).is_ok_and(|items| {
+        items
+            .filter_map(io::Result::ok)
+            .all(|i| i.file_name() == LOCK)
+    })
 }
 
 fn drop_stray(home: &Path, name: &str) -> Result<()> {

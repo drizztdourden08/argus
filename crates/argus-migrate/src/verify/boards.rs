@@ -43,7 +43,10 @@ fn one_board(check: &Check, e: &crate::journal::Entry, problems: &mut Vec<String
         return Ok(());
     }
     if jsonio::read(&file)?["project"].as_str() == Some(e.key.as_str()) {
-        problems.push(format!("{}/board.json still names the key as its project", e.id));
+        problems.push(format!(
+            "{}/board.json still names the key as its project",
+            e.id
+        ));
     }
     let Some(backup) = check.backup else {
         return Ok(());
@@ -53,7 +56,10 @@ fn one_board(check: &Check, e: &crate::journal::Entry, problems: &mut Vec<String
         board::rewrite(v, check.map);
     })?;
     if !equal {
-        problems.push(format!("{} differs from its backup outside the whitelist", e.id));
+        problems.push(format!(
+            "{} differs from its backup outside the whitelist",
+            e.id
+        ));
     }
     proofs::check(check, e, &before, problems)
 }

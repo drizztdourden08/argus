@@ -94,7 +94,9 @@ pub fn take(home: &Path, pairs: &[(String, String)]) -> Result<Held> {
     for (first, second) in &names {
         all.push(lock_file(home, first));
         all.push(lock_file(home, second));
-        let folder = if holds_board(home, first) || !holds_board(home, second) && home.join(first).is_dir() {
+        let folder = if holds_board(home, first)
+            || !holds_board(home, second) && home.join(first).is_dir()
+        {
             first
         } else {
             second

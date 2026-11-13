@@ -11,7 +11,10 @@ use crate::error::Result;
 use crate::sql::{PROJECT_TABLES, SCOPE_TABLES, rewrite_key};
 
 fn open(file: &Path) -> Result<Connection> {
-    Ok(Connection::open_with_flags(file, OpenFlags::SQLITE_OPEN_READ_ONLY)?)
+    Ok(Connection::open_with_flags(
+        file,
+        OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )?)
 }
 
 fn count(conn: &Connection, table: &str) -> Result<i64> {
@@ -43,8 +46,9 @@ fn leftovers(conn: &Connection, check: &Check, problems: &mut Vec<String>) -> Re
 }
 
 fn table_names(conn: &Connection) -> Result<Vec<String>> {
-    let mut stmt = conn
-        .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")?;
+    let mut stmt = conn.prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    )?;
     let names = stmt.query_map([], |r| r.get(0))?;
     Ok(names.collect::<std::result::Result<Vec<String>, _>>()?)
 }
