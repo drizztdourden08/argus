@@ -7,9 +7,9 @@ use argus_core::js;
 use serde_json::json;
 
 use crate::cli::exit::{CoordError, Outcome};
-use crate::who::refuse_while_migrating;
 use crate::verbs::thread::docs::list;
 use crate::verbs::thread::frame::Frame;
+use crate::who::refuse_while_migrating;
 
 const NAME_MAX: usize = 30;
 

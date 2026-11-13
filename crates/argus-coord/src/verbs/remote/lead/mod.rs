@@ -133,7 +133,9 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
         return Err(no_board(&target));
     };
     wake(call, &target, &thread, &note);
-    call.inv
-        .say(&[&format!("queued for {} lead: {text}", shown(&home, &target))]);
+    call.inv.say(&[&format!(
+        "queued for {} lead: {text}",
+        shown(&home, &target)
+    )]);
     Ok(())
 }
