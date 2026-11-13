@@ -69,8 +69,9 @@ impl Client {
 
     /// Starts an add; answers the collections to read, in order: the ones new to this client,
     /// then the ones only pending in another add (read in case that add is cancelled). Empty when
-    /// nothing is new. Collections already followed are left alone, so a repeat never sends a
-    /// second snapshot.
+    /// nothing is new. Collections already followed are left alone, so a repeat `sub` with
+    /// `since` never sends a second snapshot; one without `since` forgets them first and reads
+    /// them again.
     pub fn begin_add(&mut self, token: u64, colls: &[Coll]) -> Vec<Coll> {
         let (mut fresh, mut waiting): (Vec<Coll>, Vec<Coll>) = (Vec::new(), Vec::new());
         for c in colls {
