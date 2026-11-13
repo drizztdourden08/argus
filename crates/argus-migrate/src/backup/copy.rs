@@ -84,7 +84,7 @@ pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Res
                 continue;
             }
             if skip(&path) {
-                done.locks += usize::from(is_lock(name));
+                done.locks += usize::from(is_lock(&name));
                 continue;
             }
             if meta.is_dir() {
