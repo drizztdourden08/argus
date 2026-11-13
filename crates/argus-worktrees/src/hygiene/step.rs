@@ -185,7 +185,7 @@ impl Service {
         for (thread, ids) in due {
             let mut input = RequestInput::new(project, Caller::Thread(thread));
             input.targets.clone_from(&ids);
-            input.branch = true;
+            input.branch = false;
             input.reason = Some("nothing is attached to it and nothing would be lost".to_string());
             let Ok(queued) = self.request_hygiene(&input, Mode::Detached) else {
                 continue;
