@@ -8,7 +8,7 @@ use argus_core::Paths;
 use serde_json::Value;
 
 use crate::cli::{CoordError, Env, Options};
-use crate::who::find_project;
+use crate::who::{find_project, refuse_while_migrating};
 
 /// One hook call.
 pub struct Hook<'a> {
@@ -83,6 +83,7 @@ impl<'a> Hook<'a> {
         project: &str,
         f: impl FnOnce(&mut Board) -> Result<T, BoardError>,
     ) -> Result<T, CoordError> {
+        refuse_while_migrating(&self.paths.coord_home)?;
         Ok(with_board(&self.paths.coord_home, project, false, f)?)
     }
 }

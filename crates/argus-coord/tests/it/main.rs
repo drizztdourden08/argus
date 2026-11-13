@@ -16,6 +16,7 @@ mod work_board;
 mod agent_diff;
 mod agent_links;
 mod agent_model;
+mod board_ids;
 mod board_shortcut;
 mod board_shortcut_verb;
 mod build_links;

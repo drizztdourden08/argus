@@ -5,6 +5,7 @@ use std::path::Path;
 use argus_board::json::{map_mut, obj};
 use argus_board::limits::require_text;
 use argus_board::store::board_path;
+use argus_core::boards;
 use argus_core::ids::PORTFOLIO;
 use serde_json::{Value, json};
 
@@ -37,13 +38,30 @@ fn key_of(call: &Call<'_>, refusal: &str) -> Result<String, CoordError> {
         .ok_or_else(|| CoordError::refuse(refusal))
 }
 
+/// The id a project is listed by. A home with a boards table gives it an id (an old key or id
+/// already in the table keeps its own), named `name`; a home without one lists the key itself.
+fn table_id(home: &Path, key: &str, name: &str) -> Result<String, CoordError> {
+    if !home.join("boards.json").is_file() {
+        return Ok(key.to_owned());
+    }
+    let refused = |e: boards::BoardsError| CoordError::refuse(e.to_string());
+    let id = match boards::resolve(home, key) {
+        Some(id) => id,
+        None => boards::mint(home, key).map_err(refused)?,
+    };
+    boards::rename(home, &id, name).map_err(refused)?;
+    Ok(id)
+}
+
 /// `coord portfolio add <key> --name "<Name>" [--root <dir>]`.
 pub(super) fn add(call: &mut Call<'_>) -> Outcome {
     let key = key_of(call, "pass the project key (the ai-config key, e.g. rotp).");
+    let home = coord_home(call);
     with_portfolio(call, false, |p, scope| {
         let key = key?;
         let name_option = scope.options.json("name").unwrap_or(Value::Null);
         let name = require_text("name", &name_option)?;
+        let key = table_id(&home, &key, &name)?;
         let root = match scope.options.text("root") {
             Some(root) => json!(resolve(scope.cwd, Path::new(root)).to_string_lossy()),
             None => p["projects"][key.as_str()]
@@ -65,8 +83,10 @@ pub(super) fn add(call: &mut Call<'_>) -> Outcome {
 /// stays on disk.
 pub(super) fn remove(call: &mut Call<'_>) -> Outcome {
     let key = key_of(call, "pass the project key to retire (e.g. foundation).");
+    let home = coord_home(call);
     with_portfolio(call, false, |p, scope| {
         let key = key?;
+        let key = boards::resolve(&home, &key).unwrap_or(key);
         let mut record = match obj(&p["projects"]).get(&key) {
             Some(known) => known.clone(),
             None => json!({ "key": key, "name": key, "root": null }),

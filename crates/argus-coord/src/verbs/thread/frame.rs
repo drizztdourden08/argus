@@ -14,7 +14,7 @@ use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::{Call, Env, Options, out};
 use crate::client::board_port;
 use crate::verbs::shared::lock::board_refusal;
-use crate::who::{Caller, caller, me};
+use crate::who::{Caller, caller, me, refuse_while_migrating};
 
 pub use crate::verbs::shared::caller::{is_coordinator, who_of};
 
@@ -78,6 +78,7 @@ pub fn locked<T>(
     create: bool,
     f: impl FnOnce(&mut Board) -> Result<T, CoordError>,
 ) -> Result<T, CoordError> {
+    refuse_while_migrating(home)?;
     with_board(home, project, create, |board| {
         f(board).map_err(|e| BoardError::Refused(e.to_string()))
     })

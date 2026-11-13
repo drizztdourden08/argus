@@ -19,7 +19,7 @@ use super::support::scope::coord_home;
 use super::support::text::is_key;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
-use crate::who::find_project;
+use crate::who::{board_ref, find_project, refuse_while_migrating, shown};
 use deliver::{Note, deliver};
 
 const WAKE_CLIP: usize = 100;
@@ -119,17 +119,21 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     let kind = kind_of(call)?;
     let text = require_text("lead", &json!(call.positional.get(1)))?;
     let from = own_key(call)?;
+    let home = coord_home(call);
+    refuse_while_migrating(&home)?;
+    let target = board_ref(&home, &target)?;
     check_target(call, &from, &target)?;
+    let shown_from = shown(&home, &from);
     let note = Note {
         kind,
         text: &text,
-        from: &from,
+        from: &shown_from,
     };
-    let Some(thread) = deliver(&coord_home(call), &target, &note)? else {
+    let Some(thread) = deliver(&home, &target, &note)? else {
         return Err(no_board(&target));
     };
     wake(call, &target, &thread, &note);
     call.inv
-        .say(&[&format!("queued for {target} lead: {text}")]);
+        .say(&[&format!("queued for {} lead: {text}", shown(&home, &target))]);
     Ok(())
 }

@@ -1,6 +1,7 @@
 //! `coord board <verb>` (`verbs/board.mjs`): create the board of a project, name it, print a
 //! summary, point the Browser pane at it, and open it on the dashboard.
 
+mod id;
 mod init;
 mod settings;
 mod shortcut;
@@ -34,7 +35,8 @@ fn path(frame: &mut Frame<'_>) -> Outcome {
     Ok(())
 }
 
-const VERBS: [(&str, Verb); 9] = [
+const VERBS: [(&str, Verb); 10] = [
+    ("id", id::run),
     ("init", init::run),
     ("open", open),
     ("page", page),
