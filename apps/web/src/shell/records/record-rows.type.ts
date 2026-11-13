@@ -38,6 +38,7 @@ interface RecordRowProps {
   chips?: readonly RowChip[];
   age?: string;
   trailing?: ReactNode;
+  body?: ReactNode;
 }
 
 interface CardTitleProps {

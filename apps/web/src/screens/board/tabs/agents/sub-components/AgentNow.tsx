@@ -14,6 +14,7 @@ const AgentNow = (props: AgentNowProps) => {
   const doing = agentNow(agent);
   const stalled = isStalled(agent);
   if (!doing && !stalled) return <Box as="span" className="agents-na">-</Box>;
+  const text = doing ? `${doing.text}${doing.since ? ` - ${formatAgo(doing.since, now)}` : ''}` : '';
   const age = formatAgo(quietSince(props), now);
   return (
     <>
@@ -22,7 +23,7 @@ const AgentNow = (props: AgentNowProps) => {
           <Flex inline gap="xs" align="center"><Icon name="triangle-alert" size={11} aria-hidden />{`stalled ${age}`}</Flex>
         </Tag>
       )}
-      {doing && ` ${doing.text}${doing.since ? ` · ${formatAgo(doing.since, now)}` : ''}`}
+      {doing && <Box as="span" className="agents-now" title={text}>{text}</Box>}
     </>
   );
 };

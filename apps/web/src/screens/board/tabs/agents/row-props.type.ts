@@ -36,6 +36,11 @@ interface AgentNowProps {
   now: number;
 }
 
+interface AgentDetailsProps {
+  agent: Agent;
+  now: number;
+}
+
 interface AgentLiveNoteProps {
   agent: Agent;
 }
@@ -101,6 +106,7 @@ interface AgentRunRowProps {
 }
 
 export type {
+  AgentDetailsProps,
   AgentGroupListProps,
   AgentKeyGroupsProps,
   AgentLiveNoteProps,

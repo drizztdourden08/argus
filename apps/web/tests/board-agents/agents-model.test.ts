@@ -4,7 +4,7 @@ import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  agentChips, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
+  agentChips, agentDetails, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
   runSpan, sortActive, sortDone, statusLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
@@ -190,5 +190,19 @@ describe('I-85 P7 agent marks', { tags: ['critical'] }, () => {
     expect(labels({ duplicateOf: 'A-9' })).toEqual(['duplicate of A-9']);
     expect(labels({ lost: true })).toEqual(['lost']);
     expect(labels({ idMismatch: true, modelMismatch: true, modelUsed: 'opus-5-5' })).toEqual(['id mismatch', 'model mismatch']);
+  });
+});
+
+describe('I-150 agent details', { tags: ['critical'] }, () => {
+  it('lists only the lines the agent has, in a fixed order', () => {
+    const agent: Agent = { status: 'working', note: 'on it', items: ['I-1', 'I-2'], worktree: 'X:/w/a', live: { lastMessage: 'hello' } };
+    const lines = agentDetails(agent, NOW);
+    expect(lines.map((line) => line.id)).toEqual(['message', 'note', 'items', 'worktree']);
+    expect(lines.find((line) => line.id === 'items')?.value).toBe('I-1, I-2');
+  });
+
+  it('gives nothing for a bare agent and falls back to where for the worktree', () => {
+    expect(agentDetails({ status: 'done' }, NOW)).toEqual([]);
+    expect(agentDetails({ status: 'done', where: 'X:/w/b' }, NOW)[0]?.value).toBe('X:/w/b');
   });
 });

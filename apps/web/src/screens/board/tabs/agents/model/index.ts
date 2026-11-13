@@ -5,6 +5,7 @@ export { agentsView } from './agents-view';
 export { groupAgentsBy } from './group-agents-by';
 export { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_GROUPS, AGENT_ORDER_IDS, AGENT_ORDERS, AGENTS_TAB, SEARCH_PLACEHOLDER } from './agents-view.constants';
 export type * from './agents-view.type';
+export { agentDetails } from './agent-details';
 export { agentElapsed } from './agent-elapsed';
 export { agentItems } from './agent-items';
 export { agentMarks } from './agent-marks';

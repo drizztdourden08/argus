@@ -183,3 +183,34 @@
   }
 }
 
+.agents-now {
+  display: inline-block;
+  max-inline-size: calc(var(--agents-rem) * 16);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.agents-details {
+  grid-template-columns: 1fr;
+}
+
+.agents-details__line {
+  display: grid;
+  grid-template-columns: calc(var(--agents-rem) * 7) 1fr;
+  gap: var(--space-md);
+}
+
+.agents-details dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@container agents-panel (max-width: 55.99rem) {
+  .agents-now {
+    display: none;
+  }
+}
+

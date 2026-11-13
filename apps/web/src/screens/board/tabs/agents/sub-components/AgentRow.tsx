@@ -4,6 +4,7 @@ import { RecordRow, recordMenuGroups } from '../../../../../shell';
 import { agentHandlers } from '../behavior/agent-handlers';
 import { agentChips, agentTitle } from '../model';
 import type { AgentRowProps } from '../row-props.type';
+import { AgentDetails } from './AgentDetails';
 import { AgentTrailing } from './AgentTrailing';
 
 const AgentRow = (props: AgentRowProps) => {
@@ -23,6 +24,7 @@ const AgentRow = (props: AgentRowProps) => {
         title={agentTitle(agent, id)}
         chips={agentChips(agent, now)}
         trailing={<AgentTrailing id={id} agent={agent} now={now} actions={actions} />}
+        body={<AgentDetails agent={agent} now={now} />}
         onOpen={() => onOpen(id)}
       />
     </Box>

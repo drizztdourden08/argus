@@ -10,7 +10,7 @@ import { RowChips } from './RowChips';
 import { RowTitle } from './RowTitle';
 
 const RecordRow = (props: RecordRowProps) => {
-  const { head, title: given, onOpen, chips = [], age, trailing } = props;
+  const { head, title: given, onOpen, chips = [], age, trailing, body } = props;
   const untitled = given === '';
   const title = untitled ? head.code : given;
   const linked = onOpen !== undefined && rowLinked(title, chips);
@@ -33,7 +33,9 @@ const RecordRow = (props: RecordRowProps) => {
       }
       menu={<RecordMenu groups={head.menu} label={head.menuLabel} />}
       attrs={{ role: 'listitem', 'data-record': head.code }}
-    />
+    >
+      {body}
+    </RecordFrame>
   );
 };
 
