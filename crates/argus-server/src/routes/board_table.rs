@@ -10,6 +10,7 @@ use argus_board::roles::{is_argus, is_overlord};
 use argus_board::store::{read_board, with_board};
 use argus_core::ApiError;
 use argus_core::boards::{self, Boards, BoardsError};
+use argus_core::ids::PORTFOLIO;
 use serde_json::{Value, json};
 
 use super::params::scan_boards;
@@ -27,12 +28,13 @@ fn legacy_role(home: &Path, id: &str) -> Value {
     }
 }
 
-fn legacy_row(home: &Path, id: &str) -> Value {
+fn legacy_row(home: &Path, id: &str, registry: &Value) -> Value {
     let board = read_board(home, id).ok().flatten();
     let named = board.as_ref().and_then(|b| b["name"].as_str());
+    let registered = registry["projects"][id]["name"].as_str();
     json!({
         "id": id,
-        "name": display_name(home, id, named, None),
+        "name": display_name(home, id, named, registered),
         "aliases": [],
         "role": legacy_role(home, id),
     })
@@ -55,11 +57,15 @@ pub fn list(home: &Path) -> Vec<Value> {
         .iter()
         .map(|(id, b)| json!({ "id": id, "name": b.name, "aliases": b.aliases, "role": b.role }))
         .collect();
+    let registry = read_board(home, PORTFOLIO)
+        .ok()
+        .flatten()
+        .unwrap_or(Value::Null);
     rows.extend(
         scan_boards(home)
             .iter()
             .filter(|key| !has_entry(&table, key))
-            .map(|key| legacy_row(home, key)),
+            .map(|key| legacy_row(home, key, &registry)),
     );
     rows
 }

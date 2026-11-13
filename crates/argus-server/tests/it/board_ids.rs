@@ -94,6 +94,26 @@ async fn the_boards_list_has_the_table_and_the_legacy_folders() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_legacy_folder_without_a_board_name_shows_its_registry_name() {
+    let t = rig().await;
+    write_board(&t, "geo", &json!({ "project": "geo" }));
+    write_board(
+        &t,
+        "_portfolio",
+        &json!({ "projects": { "geo": { "key": "geo", "name": "ShardTide" } } }),
+    );
+    let rows = t.get("/api/boards").await.json();
+    let geo = rows
+        .as_array()
+        .and_then(|r| r.iter().find(|b| b["id"] == "geo"))
+        .cloned();
+    assert_eq!(
+        geo,
+        Some(json!({ "id": "geo", "name": "ShardTide", "aliases": [], "role": null }))
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn a_patch_renames_a_table_board_and_a_legacy_folder() {
     let t = rig().await;
     let done = patch(
