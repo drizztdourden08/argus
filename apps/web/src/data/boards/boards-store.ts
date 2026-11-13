@@ -8,6 +8,8 @@ const state: { boards: BoardInfo[]; started: boolean; listeners: Set<() => void>
   listeners: new Set(),
 };
 
+const isBoardList = (value: unknown): value is BoardInfo[] => Array.isArray(value);
+
 const publish = (boards: BoardInfo[]): void => {
   state.boards = boards;
   state.listeners.forEach((listener) => listener());
@@ -16,7 +18,9 @@ const publish = (boards: BoardInfo[]): void => {
 const refresh = async (): Promise<void> => {
   state.started = true;
   try {
-    publish(await apiRequest<BoardInfo[]>('/api/boards'));
+    const boards = await apiRequest<unknown>('/api/boards');
+    if (isBoardList(boards)) publish(boards);
+    else state.started = state.boards.length > 0;
   } catch {
     state.started = state.boards.length > 0;
   }

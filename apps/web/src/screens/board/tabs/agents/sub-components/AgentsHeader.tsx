@@ -17,7 +17,7 @@ const AgentsHeader = (props: AgentsHeaderProps) => {
       </Text>
       {lead && <LeadLine lead={lead} now={now} />}
       <IconButton size="sm" variant="ghost" label={label} title={label} aria-label={label} aria-pressed={expand.all} onClick={expand.onToggle}>
-        <Icon name={expand.all ? 'chevron-up' : 'chevrons-up-down'} />
+        <Icon name={expand.all ? 'chevrons-down-up' : 'chevrons-up-down'} />
       </IconButton>
     </Flex>
   );
