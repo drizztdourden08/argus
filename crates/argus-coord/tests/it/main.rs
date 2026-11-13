@@ -75,6 +75,7 @@ mod thread_diff;
 mod thread_diff_records;
 mod thread_verbs;
 mod wake_faults_cli;
+mod wake_faults_table_cli;
 mod work_differential;
 mod work_inbox;
 mod worktree_verbs;

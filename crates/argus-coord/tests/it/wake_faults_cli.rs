@@ -8,7 +8,7 @@ use crate::common::{Ran, coord};
 use crate::remote::{ALPHA_LEAD, HELPER, MAIN, Rig, UI, env_plus, ok, refused, seed_standard};
 use serde_json::{Value, json};
 
-const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
+pub const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
 
 async fn faults(rig: &Rig, all: bool) -> Vec<Value> {
     let path = if all {
@@ -25,8 +25,13 @@ async fn faults(rig: &Rig, all: bool) -> Vec<Value> {
 /// A server where two wakes for threads nobody listens for have become faults: the window closes
 /// after 100 ms of the manual clock and the 300 ms without a listener pass after 400 more.
 async fn faulted() -> Rig {
+    faulted_with(seed_standard).await
+}
+
+/// [`faulted`] on a home that `seed(coord_home, folder)` filled.
+pub async fn faulted_with(seed: impl FnOnce(&std::path::Path, &std::path::Path)) -> Rig {
     let config = json!({ "wake": { "windowMs": 30, "noListenerMs": 300, "reactionMs": 60000, "tickMs": 50, "aliveMs": 1 }, "wakePolicy": { "debounceMs": 0 } });
-    let rig = Rig::start_manual_wakes(config, seed_standard).await;
+    let rig = Rig::start_manual_wakes(config, seed).await;
     for thread in ["ui", "api"] {
         let body = json!({ "thread": thread, "reason": "thread-message", "text": format!("lead: look at {thread}") });
         let queued = rig
@@ -46,7 +51,7 @@ async fn faulted() -> Rig {
     rig
 }
 
-fn as_session(rig: &Rig, argv: &[&str], session: Option<&str>, folder: &str) -> Ran {
+pub fn as_session(rig: &Rig, argv: &[&str], session: Option<&str>, folder: &str) -> Ran {
     let cwd = rig.dir.path().join(folder);
     rig.run_in(argv, session, &cwd)
 }
@@ -94,7 +99,7 @@ async fn list_works_for_any_session_and_the_cleared_one_is_not_listed() {
 }
 
 /// `coord wake-fault clear alpha/api <extra>` as a session, from a folder of the rig.
-fn clear(rig: &Rig, extra: &[&str], session: Option<&str>, folder: &str) -> Ran {
+pub fn clear(rig: &Rig, extra: &[&str], session: Option<&str>, folder: &str) -> Ran {
     let mut argv = vec!["wake-fault", "clear", "alpha/api"];
     argv.extend(extra);
     as_session(rig, &argv, session, folder)
