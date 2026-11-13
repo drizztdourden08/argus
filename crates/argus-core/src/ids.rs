@@ -16,6 +16,25 @@ pub fn is_key(s: &str) -> bool {
         && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
+/// Names a board id may never take: the folders and scopes under `COORD_HOME` that are not boards.
+pub const RESERVED: [&str; 9] = [
+    "argus",
+    "argus-app",
+    "overlord",
+    "dashboard",
+    PORTFOLIO,
+    "locks",
+    "ci",
+    "releases",
+    "localpkg",
+];
+
+/// Whether `s` is a reserved name.
+#[must_use]
+pub fn is_reserved(s: &str) -> bool {
+    RESERVED.contains(&s)
+}
+
 /// A project key or `_portfolio`.
 #[must_use]
 pub fn is_scope(s: &str) -> bool {
