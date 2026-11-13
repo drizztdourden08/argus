@@ -12,7 +12,7 @@ const LeadStatus = (props: LeadStatusProps) => {
   return (
     <Flex gap="sm" align="center">
       <Status tone={activityTone(lead.activity)} pulse={lead.activity === 'working'} dot title={lead.activity ?? 'unknown'}>
-        <Text weight={600} title={lead.session ?? lead.id}>{lead.session ?? lead.id}</Text>
+        <Text weight={600} title={lead.session ?? lead.id}>{lead.role}</Text>
       </Status>
       {tone ? <Tag variant="urgency" color={tone} fill="tint">{lead.status}</Tag> : <Tag>{lead.status}</Tag>}
       <Text variant="caption" tone="muted" title={lead.lastSeen ?? 'never seen'}>

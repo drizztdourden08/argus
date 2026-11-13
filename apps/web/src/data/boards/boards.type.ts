@@ -33,4 +33,16 @@ type BoardOp =
   | { kind: 'edit'; id: string; field: BoardEditField; value: string; prev: string | null; baseRev?: number }
   | { kind: 'archive' | 'unarchive'; id: string };
 
-export type { BoardDoc, BoardItem, BoardItems, BoardOp };
+interface BoardInfo {
+  id: string;
+  name: string;
+  aliases: string[];
+  role: string | null;
+}
+
+interface BoardRename {
+  id: string;
+  name: string;
+}
+
+export type { BoardDoc, BoardInfo, BoardItem, BoardItems, BoardOp, BoardRename };

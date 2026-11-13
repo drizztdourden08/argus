@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, OverflowRow, Text } from '@drizztdourden08/tessera';
+import { Flex, OverflowRow } from '@drizztdourden08/tessera';
 import type { OverflowRowItem } from '@drizztdourden08/tessera';
 import type { ProjectThread } from '../../../../data/agents';
 import { useCollection, useDoc } from '../../../../data/react';
@@ -12,6 +12,7 @@ import { RegisteredStrip } from '../../RegisteredStrip';
 import { findLead } from '../../tabs/agents/model';
 import type { BoardHeaderProps } from '../BoardHeader.type';
 import { BoardAlerts } from './BoardAlerts';
+import { BoardTitle } from './BoardTitle';
 import { BoardRunning } from './BoardRunning';
 import { BoardStamp } from './BoardStamp';
 import { BoardSync } from './BoardSync';
@@ -33,7 +34,7 @@ const BoardHeaderRow = (props: BoardHeaderProps) => {
       node: (
         <Flex align="center" gap="sm">
           <BoardIcon size="md" boardKey={boardKey} icon={doc?.icon} avatar={doc?.avatar} />
-          <Text as="h1" className="board-header__title">{name}</Text>
+          <BoardTitle boardKey={boardKey} name={name} />
         </Flex>
       ),
     },
