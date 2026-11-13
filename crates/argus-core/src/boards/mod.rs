@@ -11,7 +11,7 @@ mod role;
 mod store;
 
 pub use error::BoardsError;
-pub use mint::mint;
+pub use mint::{fresh_id, mint};
 pub use model::{BoardEntry, BoardId, Boards, Role};
 pub use rename::rename;
 pub use resolve::{display_name, resolve};

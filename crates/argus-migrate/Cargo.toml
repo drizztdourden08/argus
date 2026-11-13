@@ -1,0 +1,27 @@
+[package]
+name = "argus-migrate"
+description = "Argus migrate: one-off data migrations of the coord home, starting with board ids."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+argus-board = { path = "../argus-board" }
+argus-core = { path = "../argus-core" }
+regex = "1"
+rusqlite = { version = "0.37", features = ["bundled", "backup"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.10"
+thiserror = "2"
+
+[dev-dependencies]
+argus-store = { path = "../argus-store" }
+tempfile = "3"
+
+[lints]
+workspace = true

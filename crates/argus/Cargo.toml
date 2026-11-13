@@ -14,6 +14,7 @@ argus-coord = { path = "../argus-coord" }
 argus-core = { path = "../argus-core" }
 argus-dns = { path = "../argus-dns" }
 argus-mcp = { path = "../argus-mcp" }
+argus-migrate = { path = "../argus-migrate" }
 argus-native = { path = "../argus-native" }
 argus-parity = { path = "../argus-parity" }
 argus-server = { path = "../argus-server" }
