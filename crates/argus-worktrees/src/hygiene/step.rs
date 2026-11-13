@@ -7,7 +7,7 @@ use crate::board::{BoardFacts, Caller};
 use crate::fact::Fact;
 use crate::requests::{Mode, RequestInput};
 use crate::service::Service;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 /// What one step did.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -80,8 +80,10 @@ impl Service {
         let runs = self.deps.store.live_runs();
         let (refused, exceptions) =
             self.with_hygiene(project, |m| (m.refused.clone(), m.exceptions.clone()));
+        let failed = self.failed_rules(project);
         self.facts_of(project)
             .into_iter()
+            .filter(|fact| !failed.contains(&fact.rule))
             .map(|fact| {
                 let look = Look {
                     board,
@@ -97,19 +99,27 @@ impl Service {
             .collect()
     }
 
-    /// The last clean scan's time, when there is one.
+    /// The rules the last scan could not read (a rule that is invalid is not an error of the scan). Their worktrees
+    /// are skipped for this step; every other rule goes on.
+    fn failed_rules(&self, project: &str) -> HashSet<String> {
+        let state = self.st();
+        state.scans.get(project).map_or_else(HashSet::new, |scan| {
+            scan.rules
+                .iter()
+                .filter(|r| r.error.is_some() && r.invalid.is_none())
+                .map(|r| r.id.clone())
+                .collect()
+        })
+    }
+
+    /// The last scan's time, when the scan as a whole worked (a rule that failed only skips its own worktrees).
     fn clean_scan_ms(&self, project: &str) -> Option<i64> {
         let state = self.st();
         let scan = state.scans.get(project)?;
-        let failed = scan.error.is_some()
-            || scan
-                .rules
-                .iter()
-                .any(|r| r.error.is_some() && r.invalid.is_none());
-        (!failed).then_some(scan.at_ms)
+        scan.error.is_none().then_some(scan.at_ms)
     }
 
-    /// Mark every worktree of the last clean scan. True when a mark changed.
+    /// Mark every worktree of the last scan whose rule was read. True when a mark changed.
     fn mark_all(&self, project: &str, board: &BoardFacts, scanned_ms: i64) -> bool {
         let alive: Vec<String> = self.facts_of(project).into_iter().map(|f| f.id).collect();
         let now = self.now();

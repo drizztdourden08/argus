@@ -12,6 +12,7 @@
 //! - `kept`: one that needs a decision, snoozed by `coord worktree keep`
 
 use crate::board::{Keep, RequestDoc};
+use crate::class::{Class, LockKind};
 use crate::clock::{DAY_MS, iso_from_ms};
 use crate::doc::{ItemLink, KeptDoc, LeftoverDoc, Status, WorktreeDoc};
 use crate::fact::Fact;
@@ -146,12 +147,15 @@ pub fn doc_of(fact: &Fact, judging: &Judging<'_>, request: Option<RequestDoc>) -
         age_days: judged.age_days,
         stale_days: judged.stale_days,
         dirty: fact.dirty,
+        untracked: fact.untracked,
         ahead: fact.ahead,
         behind: fact.behind,
         upstream: fact.upstream.clone(),
         merged: fact.merged,
         merged_into: fact.merged_into.clone(),
         referenced: fact.referenced,
+        class: Class::of(fact),
+        lock_kind: LockKind::of(fact),
         unmerged: fact.unmerged,
         unmerged_subjects: fact.unmerged_subjects.iter().take(3).cloned().collect(),
         prunable: fact.prunable.clone(),

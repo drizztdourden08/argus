@@ -22,7 +22,10 @@ pub struct Fact {
     pub subject: Option<String>,
     pub commit_ms: Option<i64>,
     pub index_ms: Option<i64>,
+    /// Every changed path, tracked or not.
     pub dirty: u32,
+    /// How many of the changed paths are untracked.
+    pub untracked: u32,
     pub ahead: u32,
     pub behind: u32,
     pub upstream: Option<String>,
@@ -69,6 +72,7 @@ pub fn blank_fact(path: &str, rule: &Rule, case_insensitive: bool) -> Fact {
         commit_ms: None,
         index_ms: None,
         dirty: 0,
+        untracked: 0,
         ahead: 0,
         behind: 0,
         upstream: None,

@@ -17,6 +17,7 @@ mod backup;
 mod batch;
 mod board;
 mod branch;
+mod class;
 mod clock;
 mod deleting;
 mod derive;
