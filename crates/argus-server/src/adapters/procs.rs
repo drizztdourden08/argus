@@ -3,7 +3,6 @@
 
 use std::sync::{Arc, PoisonError, RwLock};
 
-use argus_board::names::MAIN_KEY;
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, Config, DocChange};
 use argus_native::{TrayFiles, read_live_tray};
@@ -129,7 +128,7 @@ impl ProcsHost for ProcsHostAdapter {
     }
 
     fn coordinator(&self) -> Option<String> {
-        self.boards.coordinator(MAIN_KEY)
+        self.boards.overlord_thread()
     }
 
     fn submit_wake(&self, wake: &WakeRequest) -> Result<(), String> {

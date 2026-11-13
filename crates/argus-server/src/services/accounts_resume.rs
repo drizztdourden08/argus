@@ -17,7 +17,6 @@ use argus_accounts::resume::{
     ResumeLead, ResumeTask, TASK_CWD, build_prompt, has_run, remove_task, write_task,
 };
 use argus_accounts::{Scope, find_app_data};
-use argus_board::names::MAIN_KEY;
 use argus_core::clock::now_ms;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -109,8 +108,8 @@ fn resume_leads(cycle: &Cycle) -> Vec<ResumeLead> {
 /// The Desktop chat of the Overlord: the live coordinator of the portfolio board.
 fn overlord_chat(svc: &Services) -> Option<String> {
     let boards = svc.boards();
-    let thread = boards.coordinator(MAIN_KEY)?;
-    let board = boards.board(MAIN_KEY)?;
+    let thread = boards.overlord_thread()?;
+    let board = boards.overlord_board()?;
     let record = &board["threads"][thread.as_str()];
     chat_id(record["link"].as_str(), record["sessionId"].as_str())
 }

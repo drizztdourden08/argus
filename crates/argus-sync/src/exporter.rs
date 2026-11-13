@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use argus_board::Board;
-use argus_board::sync::{PAGE_COLLECTIONS, export_docs};
+use argus_board::sync::{PAGE_COLLECTIONS, export_docs_at};
 use argus_core::clock::now_iso;
 use argus_core::ids::PORTFOLIO;
 use argus_core::{ApiError, Coll, DocChange};
@@ -109,7 +109,7 @@ impl State {
     /// Exports a board already read or just saved, and keeps it as the last good board.
     pub fn export_board(self: &Arc<Self>, key: &str, board: Board) -> Result<Exported, ApiError> {
         let project = key != PORTFOLIO;
-        let mut docs = export_docs(&board, &|p| {
+        let mut docs = export_docs_at(self.coord_home(), &board, &|p| {
             proof_url(key, p["file"].as_str().unwrap_or_default())
         });
         if project {

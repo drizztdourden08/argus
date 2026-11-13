@@ -21,6 +21,8 @@ mod parent;
 mod stamp;
 mod stream;
 
+use std::path::Path;
+
 use argus_board::json::truthy;
 use argus_board::names::session_name;
 use argus_core::clock::now_ms;
@@ -63,10 +65,10 @@ fn listen_ms(hook: &Hook<'_>) -> i64 {
     }
 }
 
-fn target_of(board: &Value, project: &str, id: &str) -> Target {
+fn target_of(home: &Path, board: &Value, project: &str, id: &str) -> Target {
     let thread = doc(board, id);
     let lead = is_lead(thread);
-    let name = session_name(&js::string(&board["project"]), board["name"].as_str());
+    let name = session_name(home, &js::string(&board["project"]), board["name"].as_str());
     let label = label_of(thread, lead, &name);
     let label = js::slice(&label, 80);
     Target {
@@ -113,7 +115,7 @@ pub fn run(hook: &Hook<'_>) -> Result<Said, CoordError> {
     parent::watch(hook.env);
     Ok(stream::wait(
         hook,
-        &target_of(&board, &project, &id),
+        &target_of(&hook.paths.coord_home, &board, &project, &id),
         deadline,
     ))
 }

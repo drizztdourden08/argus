@@ -1,10 +1,14 @@
 //! The names the owner sees for the main coordinator and its project. Only what is shown
-//! differs from the ids: the project key stays `portfolio`, the thread id `coordinator`.
+//! differs from the ids: the thread id stays `coordinator`. The Overlord's board is found by its
+//! role (`crate::roles`), never by a key, and the identity table holds the display name.
 
+use std::path::Path;
+
+use argus_core::boards;
 use argus_core::js;
 
-/// The key of the Overlord's own project.
-pub const MAIN_KEY: &str = "portfolio";
+use crate::roles::{is_overlord, table_id};
+
 /// The dashboard app and its overview page.
 pub const ARGUS: &str = "Argus";
 /// The main coordinator and its project, as shown.
@@ -24,26 +28,43 @@ fn usable<'a>(key: &str, name: Option<&'a str>) -> Option<&'a str> {
     (!name.is_empty() && name != key && !is_legacy(name)).then_some(name)
 }
 
-/// The display name of a project: its board name, else its registry name, else the key. The
-/// Overlord's project shows the registry or board name when it is a real choice, else
-/// `Overlord`.
-#[must_use]
-pub fn display_name(key: &str, board_name: Option<&str>, registry_name: Option<&str>) -> String {
-    if key == MAIN_KEY {
-        return usable(key, registry_name)
-            .or_else(|| usable(key, board_name))
-            .unwrap_or(OVERLORD)
-            .to_owned();
-    }
-    board_name.or(registry_name).unwrap_or(key).to_owned()
+fn table_name(home: &Path, id: &str) -> Option<String> {
+    let board = table_id(home, id)?;
+    boards::display_name(home, &board)
 }
 
-/// What a session title starts with: `Overlord` for the main project, else the board name.
+fn overlord_name(key: &str, board_name: Option<&str>, registry_name: Option<&str>) -> String {
+    usable(key, registry_name)
+        .or_else(|| usable(key, board_name))
+        .unwrap_or(OVERLORD)
+        .to_owned()
+}
+
+/// The display name of a board: the identity table's name, else (no table) its board name, else
+/// its registry name, else the id. The Overlord's board shows the registry or board name when it
+/// is a real choice, else `Overlord`.
 #[must_use]
-pub fn session_name(key: &str, board_name: Option<&str>) -> String {
-    if key == MAIN_KEY {
-        OVERLORD.to_owned()
-    } else {
-        board_name.unwrap_or(key).to_owned()
+pub fn display_name(
+    home: &Path,
+    id: &str,
+    board_name: Option<&str>,
+    registry_name: Option<&str>,
+) -> String {
+    if let Some(name) = table_name(home, id) {
+        return name;
     }
+    if is_overlord(home, id) {
+        return overlord_name(id, board_name, registry_name);
+    }
+    board_name.or(registry_name).unwrap_or(id).to_owned()
+}
+
+/// What a session title starts with: `Overlord` for the Overlord's board, else the table name,
+/// else the board name.
+#[must_use]
+pub fn session_name(home: &Path, id: &str, board_name: Option<&str>) -> String {
+    if is_overlord(home, id) {
+        return OVERLORD.to_owned();
+    }
+    table_name(home, id).unwrap_or_else(|| board_name.unwrap_or(id).to_owned())
 }

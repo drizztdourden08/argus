@@ -6,7 +6,6 @@ use std::sync::Arc;
 
 use argus_accounts::handover::{AgentLoad, AgentStop, Cycle, Lead, READY_REASON, WakeKind};
 use argus_accounts::{Clock, HandoverStore, Threads};
-use argus_board::names::MAIN_KEY;
 use argus_core::clock::now_ms;
 use argus_core::ids::PORTFOLIO;
 use argus_core::{Coll, DocChange};
@@ -143,10 +142,11 @@ impl Threads for BoardThreads {
     }
 
     fn notice(&self, subject: &str, text: &str) -> Result<(), String> {
-        let Some(overlord) = self.boards.coordinator(MAIN_KEY) else {
-            return Err("the portfolio board has no live coordinator".to_owned());
+        let (Some(main), Some(overlord)) = (self.boards.overlord(), self.boards.overlord_thread())
+        else {
+            return Err("the Overlord's board has no live coordinator".to_owned());
         };
-        let wake = WakeRequest::about(MAIN_KEY, &overlord, READY_REASON, subject, text);
+        let wake = WakeRequest::about(&main, &overlord, READY_REASON, subject, text);
         self.wake.submit(&[wake])
     }
 }

@@ -168,6 +168,7 @@ impl SyncService {
                 let board = self.state.board(&key);
                 ProjectRow {
                     name: display_name(
+                        self.state.coord_home(),
                         &key,
                         board.as_ref().and_then(|b| b["name"].as_str()),
                         reg[&key]["name"].as_str(),

@@ -73,8 +73,8 @@ fn thread_line(hit: &Hit) -> String {
 }
 
 /// The sentence that asks a thread to run `coord board shortcut`; the Overlord's makes two rows.
-fn shortcut_line(project: &str, thread: &str) -> &'static str {
-    if is_overlord(project, thread) {
+fn shortcut_line(hook: &Hook<'_>, project: &str, thread: &str) -> &'static str {
+    if is_overlord(&hook.paths.coord_home, project, thread) {
         " This checkout's .claude/launch.json lacks the Overlord's shortcuts: run `coord board shortcut` once (idempotent); it creates two rows, \"Argus\" (the overview of every project) and \"Overlord\" (your own board), so the Browser pane's new tab offers both."
     } else {
         " This checkout's .claude/launch.json lists no shortcut to your board: run `coord board shortcut` once (idempotent), so the Browser pane's new tab offers it."
@@ -83,9 +83,9 @@ fn shortcut_line(project: &str, thread: &str) -> &'static str {
 
 fn pane_line(hook: &Hook<'_>, hit: &Hit, project: &str, start: bool) -> String {
     let id = shown(hit.thread.get("id"));
-    let wants = start && needs_shortcut(&git_root(&hook.cwd), project, &id);
+    let wants = start && needs_shortcut(&hook.paths.coord_home, &git_root(&hook.cwd), project, &id);
     let shortcut = if wants {
-        shortcut_line(project, &id)
+        shortcut_line(hook, project, &id)
     } else {
         ""
     };

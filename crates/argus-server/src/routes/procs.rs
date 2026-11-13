@@ -19,7 +19,6 @@ mod own;
 
 use std::sync::Arc;
 
-use argus_board::names::MAIN_KEY;
 use argus_core::clock::iso_from_ms;
 use argus_core::{ApiError, ErrorCode};
 use argus_procs::{
@@ -80,7 +79,7 @@ impl Caller {
 }
 
 fn is_overlord(ctx: &Ctx, by: &str) -> bool {
-    let board = ctx.svc.boards().board(MAIN_KEY);
+    let board = ctx.svc.boards().overlord_board();
     let thread = board.as_ref().map(|b| &b["threads"][by]);
     thread.is_some_and(|t| {
         t["role"] == "coordinator" && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
@@ -116,7 +115,7 @@ fn caller(ctx: &Ctx, body: &Value, what: &str) -> Result<Caller, ApiError> {
     Err(ApiError::new(
         ErrorCode::Forbidden,
         format!(
-            "only the Overlord (the coordinator thread of project {MAIN_KEY}) or the owner's page may {what}"
+            "only the Overlord (the coordinator thread of its board) or the owner's page may {what}"
         ),
     ))
 }

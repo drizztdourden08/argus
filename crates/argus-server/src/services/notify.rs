@@ -7,7 +7,6 @@ use std::sync::Arc;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
 
-use argus_board::names::MAIN_KEY;
 use argus_core::clock::{Clock, SystemClock};
 use argus_core::ids::PORTFOLIO;
 use argus_native::{Notifier, NotifyError, RecordingNotifier, Toast};
@@ -146,7 +145,7 @@ fn worker(notify: Arc<Notify>) -> Option<Sender<Export>> {
 
 fn announce(tx: &Sender<Export>, boards: &BoardReader, key: &str) {
     if let Some(board) = boards.board(key) {
-        let facts = facts_of(key, &board, boards.board(MAIN_KEY).as_ref());
+        let facts = facts_of(key, &board, boards.overlord_board().as_ref());
         drop(tx.send((key.to_owned(), facts)));
     }
 }

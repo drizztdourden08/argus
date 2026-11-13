@@ -2,7 +2,7 @@
 //! that board with the `?thread=` claim. `argus.localhost` is always the overview and
 //! `overlord.localhost` the Overlord's own board. `/p/<key>/` is the board page of a known key.
 
-use argus_board::names::{ARGUS, MAIN_KEY, display_name};
+use argus_board::names::{ARGUS, display_name};
 use argus_core::ApiError;
 use argus_core::ids::is_key;
 use axum::http::header;
@@ -31,8 +31,11 @@ async fn home(ctx: Ctx) -> Reply {
         .and_then(|h| host_alias(h, ctx.svc.port(), ctx.svc.doors()));
     match alias {
         Some(a) if a.reserved => {
-            if a.key == "overlord" && a.thread.is_none() && known_keys(&ctx).contains(MAIN_KEY) {
-                return Ok(redirect(&format!("/p/{MAIN_KEY}/?thread=coordinator"), &[]));
+            let main = ctx.svc.boards().overlord();
+            if let Some(main) = main.filter(|m| {
+                a.key == "overlord" && a.thread.is_none() && known_keys(&ctx).contains(m)
+            }) {
+                return Ok(redirect(&format!("/p/{main}/?thread=coordinator"), &[]));
             }
         }
         Some(a) if known_keys(&ctx).contains(&a.key) => {
@@ -92,7 +95,7 @@ async fn board(ctx: Ctx) -> Reply {
         .and_then(|b| b["name"].as_str().or_else(|| b["project"].as_str()));
     Ok(page(
         &ctx,
-        &display_name(&key, named, None),
+        &display_name(&ctx.svc.paths.coord_home, &key, named, None),
         &key,
         &format!("/p/{key}/"),
     ))
