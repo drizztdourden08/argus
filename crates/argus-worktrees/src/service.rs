@@ -55,6 +55,8 @@ pub struct Options {
     /// is attached to is removed, or its lead is asked when something would be lost, and the Overlord is told after
     /// `report_after_ms`.
     pub hygiene: bool,
+    /// What the hygiene does under an automatic repo rule (`worktrees.autoRules`, report only by default).
+    pub auto_rules: crate::auto::AutoMode,
     /// How long a worktree stays unattached before the hygiene acts on it (`worktrees.detachDebounceMs`, 1 minute), so
     /// an agent that ends and a new one that starts in the same folder do not cause a removal.
     pub detach_debounce_ms: i64,
@@ -86,6 +88,7 @@ impl Default for Options {
             keep_backup_days: 30,
             run_requests: true,
             hygiene: true,
+            auto_rules: crate::auto::AutoMode::Report,
             detach_debounce_ms: 60_000,
             report_after_ms: 30 * 60_000,
             target_limit_ms: 30 * 60_000,

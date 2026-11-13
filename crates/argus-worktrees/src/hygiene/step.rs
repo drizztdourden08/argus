@@ -71,7 +71,7 @@ fn mark_of(
 
 impl Service {
     /// The verdicts of every worktree of the last scan.
-    fn verdicts(
+    pub(super) fn verdicts(
         &self,
         project: &str,
         board: &BoardFacts,
@@ -113,7 +113,7 @@ impl Service {
     }
 
     /// The last scan's time, when the scan as a whole worked (a rule that failed only skips its own worktrees).
-    fn clean_scan_ms(&self, project: &str) -> Option<i64> {
+    pub(super) fn clean_scan_ms(&self, project: &str) -> Option<i64> {
         let state = self.st();
         let scan = state.scans.get(project)?;
         scan.error.is_none().then_some(scan.at_ms)
@@ -129,6 +129,7 @@ impl Service {
             let before = std::mem::take(&mut memory.marks);
             memory.marks = judged
                 .into_iter()
+                .filter(|(fact, ..)| !self.reports_only(board, &fact.rule))
                 .filter_map(|(fact, verdict, owner)| {
                     let id = fact.id.clone();
                     mark_of(&fact, &verdict, owner, before.get(&id), now).map(|m| (id, m))

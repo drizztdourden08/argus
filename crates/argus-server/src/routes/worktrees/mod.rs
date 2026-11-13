@@ -18,6 +18,7 @@
 //! - `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by, byProject}` the Overlord's exception list: a
 //!   worktree on it is never removed or reported (`until` an ISO date or milliseconds; `clear` takes it off). Anyone
 //!   else is refused with 403 `forbidden` and told to ask the Overlord: `{id, text}`
+//! - `GET /api/worktrees/auto-plan` what the hygiene would do under each automatic repo rule: `{mode, plan}`
 //! - `POST /api/p/:key/worktrees/leftovers/remove {ids?, olderThanDays?, confirmYoung?, reason?,
 //!   by?}` queues every old leftover folder for deletion in the background
 //! - `POST /api/p/:key/worktrees/requests {targets? | finished? | allLeftovers?, branch?, discard?,
@@ -45,6 +46,7 @@ use crate::routes::params;
 use crate::services::worktrees::publish;
 use crate::{AuthKind, Ctx, RouteOpts, Router};
 
+mod auto_plan;
 mod hygiene;
 mod leftovers;
 mod remove;
@@ -156,6 +158,7 @@ where
 
 /// Registers the worktree routes.
 pub fn register(r: &mut Router) {
+    auto_plan::register(r);
     remove::register(r);
     hygiene::register(r);
     leftovers::register(r);

@@ -13,6 +13,7 @@ use argus_store::Db;
 use argus_worktrees::{BoardFacts, Link, WorktreeStore};
 use serde_json::json;
 
+use super::auto::{AutoRepos, AutoSetting};
 use super::facts::facts_of;
 use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
@@ -27,6 +28,7 @@ pub struct BoardWorktrees {
     coord_home: PathBuf,
     shadow: bool,
     runs: Option<Arc<RunService<RunHost>>>,
+    auto: AutoRepos,
 }
 
 impl BoardWorktrees {
@@ -39,7 +41,15 @@ impl BoardWorktrees {
             coord_home,
             shadow,
             runs: None,
+            auto: AutoRepos::new(AutoSetting::default()),
         }
+    }
+
+    /// The same storage, with the settings of the automatic repo rules.
+    #[must_use]
+    pub fn with_auto(mut self, setting: AutoSetting) -> Self {
+        self.auto = AutoRepos::new(setting);
+        self
     }
 
     /// The same storage, with the run engine the hygiene asks which runs work in a worktree.
@@ -64,7 +74,9 @@ impl WorktreeStore for BoardWorktrees {
     }
 
     fn board(&self, project: &str) -> Option<BoardFacts> {
-        self.boards.board(project).map(|b| facts_of(&b))
+        let mut facts = facts_of(&self.boards.board(project)?);
+        facts.rules.extend(self.auto.of(&self.boards, project));
+        Some(facts)
     }
 
     fn projects(&self) -> Vec<String> {

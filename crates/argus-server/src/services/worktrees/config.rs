@@ -1,9 +1,10 @@
 //! `config.worktrees` as the service's options and the server's own timings.
 
-use argus_worktrees::{Options, REMOVE_TIMEOUT};
+use argus_worktrees::{AutoMode, Options, REMOVE_TIMEOUT};
 use serde_json::Value;
 
 use crate::Services;
+use crate::adapters::worktrees::{AutoSetting, extras_of};
 
 /// When the server scans, apart from the service's own settings.
 #[derive(Clone, Copy, Debug)]
@@ -51,6 +52,23 @@ pub(super) fn timing_of(svc: &Services) -> Timing {
     }
 }
 
+/// `worktrees.autoRules`: `report` (the default), `on` or `off`.
+fn auto_mode(setting: &Value) -> AutoMode {
+    setting["autoRules"]
+        .as_str()
+        .map_or(AutoMode::Report, AutoMode::parse)
+}
+
+/// The automatic repo rules: their mode and `worktrees.extraRepos`, whose owner is the portfolio board by default.
+pub(super) fn auto_setting(svc: &Services) -> AutoSetting {
+    let s = setting(svc);
+    let owner = svc.boards().overlord().unwrap_or_default();
+    AutoSetting {
+        mode: auto_mode(&s),
+        extras: extras_of(&s["extraRepos"], &owner),
+    }
+}
+
 /// The service's settings: scan and repeat periods, the stale and leftover limits, the folder
 /// of the backups.
 pub(super) fn options_of(svc: &Services) -> Options {
@@ -72,6 +90,7 @@ pub(super) fn options_of(svc: &Services) -> Options {
             .into_owned(),
         run_requests: !svc.shadow,
         hygiene: !svc.shadow && s["hygiene"] != false && s["release"] != false,
+        auto_rules: auto_mode(&s),
         detach_debounce_ms: int(&s, "detachDebounceMs", base.detach_debounce_ms, 0),
         report_after_ms: int(&s, "reportAfterMs", base.report_after_ms, 0),
         ..base

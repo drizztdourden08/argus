@@ -76,7 +76,10 @@ impl Service {
     ) -> BTreeMap<String, Vec<&'a WorktreeDoc>> {
         let now = self.now();
         let mut due: BTreeMap<String, Vec<&WorktreeDoc>> = BTreeMap::new();
-        for doc in docs.iter().filter(|d| d.status.needs_decision()) {
+        let decisions = docs
+            .iter()
+            .filter(|d| d.status.needs_decision() && !self.reports_only(board, &d.rule));
+        for doc in decisions {
             let prev = sent.get(&doc.id);
             if let Some(prev) = prev.filter(|p| {
                 p.s.as_deref() == Some(doc.status.as_str()) && now - p.a < self.opts.repeat_ms

@@ -139,6 +139,7 @@ impl Service {
                     stale_days: r.stale_days,
                     added_by: r.added_by.clone(),
                     added_at: r.added_at.clone(),
+                    auto: r.auto,
                     exists: info.map(|i| i.exists),
                     matched: info.map(|i| i.matched),
                     candidates: info.map(|i| i.candidates),

@@ -160,6 +160,8 @@ pub struct RuleSummary {
     pub stale_days: Option<u32>,
     pub added_by: Option<String>,
     pub added_at: Option<String>,
+    /// Derived from the registry, not written on the board.
+    pub auto: bool,
     pub exists: Option<bool>,
     pub matched: Option<u32>,
     pub candidates: Option<u32>,
