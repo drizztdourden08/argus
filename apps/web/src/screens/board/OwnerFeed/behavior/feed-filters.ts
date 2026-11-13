@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { SortDirection } from '@drizztdourden08/tessera';
 import type { BoardWork, FeedCard } from '../../feed-model';
-import { cardFacts } from '../behavior/card-facts';
+import { cardFacts } from './card-facts';
 import type { FeedFilters } from '../OwnerFeed.type';
 import { feedKind } from './feed-kind';
 

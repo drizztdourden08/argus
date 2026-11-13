@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { BoardWork } from '../../feed-model';
 import type { Option } from '../../shared';
-import { cardFacts } from '../behavior/card-facts';
+import { cardFacts } from './card-facts';
 
 const feedAuthors = (work: BoardWork): Option[] => {
   const cards = [...work.waiting, ...work.leads, ...work.notices].map((card) => cardFacts(card).thread ?? '');

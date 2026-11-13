@@ -3,7 +3,7 @@ import { GroupControl, SearchInput, SegmentedControl, SortControl } from '@drizz
 import type { OverflowRowItem } from '@drizztdourden08/tessera';
 import type { OverviewView } from '../boards/boards-view.type';
 import { GROUP_OPTIONS, LAYOUT_OPTIONS, SORT_OPTIONS } from '../overview.constants';
-import { groupFrom } from './group-from';
+import { groupFrom } from '../behavior/group-from';
 
 const boardsToolItems = (view: OverviewView): OverflowRowItem[] => [
   { id: 'search', priority: 4, node: <SearchInput size="sm" value={view.search} onChange={view.setSearch} placeholder="Search boards" aria-label="Search boards" /> },

@@ -2,7 +2,7 @@
 import { List, ListItem, Small, Text } from '@drizztdourden08/tessera';
 import { Age, LinkedText, RecordLink, ShownCode } from '../../../../shell';
 import { plainText } from '../../plain-text';
-import type { LogListProps } from '../OwnerFeedLog.type';
+import type { LogListProps } from '../behavior/log.type';
 import './LogList.css';
 
 const LogList = (props: LogListProps) => {

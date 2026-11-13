@@ -3,7 +3,7 @@ import { Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { OwnerBox } from '../../OwnerBox';
 import { askCopy } from '../behavior/ask-copy';
-import type { AskFormProps } from '../OwnerFeedAsk.type';
+import type { AskFormProps } from '../behavior/ask.type';
 import { DismissButton } from './DismissButton';
 import { OptionButtons } from './OptionButtons';
 

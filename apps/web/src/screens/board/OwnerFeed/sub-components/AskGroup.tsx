@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Flex, Text } from '@drizztdourden08/tessera';
-import type { AskGroupProps } from '../OwnerFeedAsk.type';
+import type { AskGroupProps } from '../behavior/ask.type';
 import { AskCard } from './AskCard';
 
 const AskGroup = (props: AskGroupProps) => {

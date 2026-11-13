@@ -7,9 +7,9 @@ import { TabFilterBar, TabGroupSort, useTabTools, useTabView } from '../BoardTab
 import { useNow } from '../shared';
 import { useFeedActions } from './behavior/useFeedActions';
 import { useFeedFilter } from './behavior/useFeedFilter';
-import { feedAuthors } from './model/feed-authors';
-import { feedFields } from './model/feed-fields';
-import { applyFeedFilters } from './model/feed-filters';
+import { feedAuthors } from './behavior/feed-authors';
+import { feedFields } from './behavior/feed-fields';
+import { applyFeedFilters } from './behavior/feed-filters';
 import { FEED_SORT_OPTIONS, FEED_VIEW, FEED_VIEW_LABEL, FILTER_OPTIONS } from './OwnerFeed.constants';
 import type { OwnerFeedProps } from './OwnerFeed.type';
 import { FeedSections } from './sub-components/FeedSections';
