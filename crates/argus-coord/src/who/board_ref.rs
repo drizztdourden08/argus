@@ -32,7 +32,7 @@ pub fn board_ref(home: &Path, value: &str) -> Result<String, CoordError> {
     }
     boards::resolve(home, value).ok_or_else(|| {
         CoordError::refuse(format!(
-            "unknown project \"{value}\" (known: {}).",
+            "unknown project \"{value}\" (known: {}). A new board is added with: coord portfolio add {value} --name <Name>.",
             known(home)
         ))
     })
