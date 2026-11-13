@@ -36,7 +36,7 @@ fn a_registered_worktree_is_listed_and_judged_whatever_its_name() {
 
 #[test]
 fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_a_junction_target()
- {
+{
     let fx = Fixture::fake_bare();
     let path = fx.add("agent-ng");
     std::fs::remove_file(join_path(&path, ".git")).unwrap();

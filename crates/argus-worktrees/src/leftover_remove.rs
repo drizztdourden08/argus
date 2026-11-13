@@ -177,7 +177,11 @@ impl Service {
         let own = self.deps.fs.exists(&dot)
             && (!not_git
                 || self.deps.fs.is_dir(&dot)
-                || self.deps.git.read(&fact.path, &["rev-parse", "--git-dir"]).ok());
+                || self
+                    .deps
+                    .git
+                    .read(&fact.path, &["rev-parse", "--git-dir"])
+                    .ok());
         if !own {
             return Ok(());
         }
@@ -216,12 +220,7 @@ impl Service {
     /// Does any repository the scans know list this folder now (read-only git; a failed question is a refusal, not a
     /// yes)? Beyond "listed itself": a folder that HOLDS a worktree git lists, or sits INSIDE a live linked worktree, or
     /// inside a folder with a `.git` of its own, is live work, never a leftover.
-    fn assert_not_listed(
-        &self,
-        project: &str,
-        fact: &Fact,
-        not_git: bool,
-    ) -> Result<Vec<String>> {
+    fn assert_not_listed(&self, project: &str, fact: &Fact, not_git: bool) -> Result<Vec<String>> {
         let mut stale = Vec::new();
         let mut repos: Vec<String> = self
             .facts_of(project)
