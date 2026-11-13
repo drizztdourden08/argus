@@ -28,6 +28,7 @@ mod agents;
 mod alias;
 mod alias_rules;
 mod board_icon;
+mod board_ids;
 mod cache;
 mod cache_worktree;
 mod deps;

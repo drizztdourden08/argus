@@ -19,6 +19,7 @@ use argus_core::{ApiError, ErrorCode};
 use argus_launchers::{RunError, RunService, check_key, check_rid};
 
 use crate::adapters::runs::RunHost;
+use crate::routes::params::board_id;
 use crate::{AuthKind, Ctx, Router};
 
 mod attach;
@@ -73,7 +74,7 @@ fn actor(ctx: &Ctx) -> &'static str {
 fn ids(ctx: &Ctx) -> Result<(String, String), ApiError> {
     let key = check_key(ctx.param("key")).map_err(|e| refusal(&e))?;
     let rid = check_rid(ctx.param("rid")).map_err(|e| refusal(&e))?;
-    Ok((key.to_owned(), rid.to_owned()))
+    Ok((board_id(ctx, key), rid.to_owned()))
 }
 
 /// Registers the run routes.

@@ -8,6 +8,7 @@ use serde_json::{Value, json, to_value};
 use super::{actor, ids, is_page, refusal, service, unknown_run, writable};
 use crate::reply::json_reply;
 use crate::router::Reply;
+use crate::routes::params::board_id;
 use crate::routes::write::object_body;
 use crate::{Ctx, RouteOpts, Router};
 
@@ -19,7 +20,7 @@ fn answer(body: &Value) -> Response {
 
 fn key_of(ctx: &Ctx) -> Result<String, ApiError> {
     check_key(ctx.param("key"))
-        .map(str::to_owned)
+        .map(|k| board_id(ctx, k))
         .map_err(|e| refusal(&e))
 }
 
@@ -58,7 +59,7 @@ async fn start(ctx: Ctx) -> Reply {
     let body = object_body(&ctx).await?;
     let name = body["name"].as_str().unwrap_or_default();
     let out = runs
-        .start(ctx.param("key"), name, &start_options(&ctx, &body))
+        .start(&key_of(&ctx)?, name, &start_options(&ctx, &body))
         .map_err(|e| refusal(&e))?;
     Ok(answer(
         &json!({ "run": to_value(&out.run).unwrap_or(Value::Null), "already": out.already }),

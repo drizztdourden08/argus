@@ -3,7 +3,7 @@
 //! finish for a second, stops sync and removes the pid file.
 
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU16, AtomicUsize};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::Duration;
@@ -145,6 +145,11 @@ pub enum ServeError {
     /// A preview may not start on the live boards.
     #[error("{0}")]
     PreviewRefused(String),
+    /// The board ids migration is running.
+    #[error(
+        "the boards are being migrated ({0} exists): wait for `coord migrate` to finish, or delete the file if no migration runs"
+    )]
+    Migrating(PathBuf),
     /// A file could not be written.
     #[error(transparent)]
     Io(#[from] std::io::Error),
@@ -391,11 +396,21 @@ async fn run(listener: TcpListener, doors: Vec<TcpListener>, svc: Arc<Services>)
     close(&svc);
 }
 
+fn refuse_while_migrating(coord_home: &Path) -> Result<(), ServeError> {
+    let marker = coord_home.join("MIGRATING");
+    if marker.exists() {
+        return Err(ServeError::Migrating(marker));
+    }
+    Ok(())
+}
+
 /// Starts the server.
 ///
 /// # Errors
-/// A refused config, an unopenable database, a running server of this home, or a taken port.
+/// A refused config, an unopenable database, a running server of this home, a taken port, or a
+/// board migration under way.
 pub async fn serve(opts: ServeOptions) -> Result<ServerHandle, ServeError> {
+    refuse_while_migrating(&opts.paths.coord_home)?;
     let svc = build(&opts).await?;
     let listener = match bind(svc.config().port).await {
         Ok(l) => l,

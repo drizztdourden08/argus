@@ -8,7 +8,7 @@ use argus_core::ids::is_key;
 use axum::http::header;
 use axum::response::Response;
 
-use super::params::known_keys;
+use super::params::{board_id, known_keys};
 use crate::reply::{bytes_reply, escape, html_page, info_page, redirect};
 use crate::router::Reply;
 use crate::security::host_alias;
@@ -38,13 +38,14 @@ async fn home(ctx: Ctx) -> Reply {
                 return Ok(redirect(&format!("/p/{main}/?thread=coordinator"), &[]));
             }
         }
-        Some(a) if known_keys(&ctx).contains(&a.key) => {
+        Some(a) if known_keys(&ctx).contains(&board_id(&ctx, &a.key)) => {
+            let id = board_id(&ctx, &a.key);
             let thread = ctx
                 .query("thread")
                 .filter(|t| !t.is_empty())
                 .or(a.thread.as_deref())
                 .unwrap_or("coordinator");
-            let target = format!("/p/{}/?thread={}", a.key, encode(thread));
+            let target = format!("/p/{id}/?thread={}", encode(thread));
             return Ok(redirect(&target, &[]));
         }
         _ => {}
@@ -79,12 +80,17 @@ fn query_suffix(ctx: &Ctx) -> String {
 }
 
 async fn slash(ctx: Ctx) -> Reply {
-    let target = format!("/p/{}/{}", encode(ctx.param("key")), query_suffix(&ctx));
+    let id = board_id(&ctx, ctx.param("key"));
+    let target = format!("/p/{}/{}", encode(&id), query_suffix(&ctx));
     Ok(redirect(&target, &[]))
 }
 
 async fn board(ctx: Ctx) -> Reply {
-    let key = ctx.param("key").to_owned();
+    let named = ctx.param("key");
+    let key = board_id(&ctx, named);
+    if key != named && is_key(&key) && known_keys(&ctx).contains(&key) {
+        return slash(ctx).await;
+    }
     if !is_key(&key) || !known_keys(&ctx).contains(&key) {
         let what = escape(&format!("There is no board for \"{key}\"."));
         return Ok(html_page(404, info_page("Not found", &[&what])));

@@ -8,6 +8,7 @@ use argus_core::ids::is_key;
 use argus_store::rusqlite::{OptionalExtension, params};
 use axum::http::header;
 
+use super::params::board_id;
 use crate::reply::bytes_reply;
 use crate::router::Reply;
 use crate::web::content_type;
@@ -50,10 +51,11 @@ fn send_file(file: &Path, kind: &str, extra: &[(header::HeaderName, &str)]) -> R
 }
 
 async fn proof(ctx: Ctx) -> Reply {
-    let (key, name) = (ctx.param("key"), ctx.param("name"));
+    let (named, name) = (ctx.param("key"), ctx.param("name"));
     let kind = image_type(name)
-        .filter(|_| is_key(key) && name_ok(name))
+        .filter(|_| is_key(named) && name_ok(name))
         .ok_or_else(|| ApiError::not_found("no such proof"))?;
+    let key = board_id(&ctx, named);
     let dir = ctx.svc.paths.coord_home.join(key).join("proofs");
     let file = inside(&dir, Path::new(name)).ok_or_else(|| ApiError::not_found("no such proof"))?;
     send_file(&file, kind, &[])
@@ -73,8 +75,9 @@ fn attachment_row(ctx: &Ctx, id: &str, key: &str) -> Option<(String, String)> {
 }
 
 async fn attachment(ctx: Ctx) -> Reply {
-    let (key, id) = (ctx.param("key"), ctx.param("attId"));
-    let row = if is_key(key) {
+    let (named, id) = (ctx.param("key"), ctx.param("attId"));
+    let key = &board_id(&ctx, named);
+    let row = if is_key(named) {
         attachment_row(&ctx, id, key)
     } else {
         None
