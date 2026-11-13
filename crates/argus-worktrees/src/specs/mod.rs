@@ -12,6 +12,7 @@ mod holders;
 mod hygiene;
 mod hygiene_approve;
 mod hygiene_ask;
+mod hygiene_gone;
 mod hygiene_kit;
 mod hygiene_rule_error;
 mod leftover;

@@ -19,9 +19,9 @@ use crate::{
 };
 
 /// A record `git worktree prune` would forget: its name under `.git/worktrees` and the folder it stood for, when known.
-struct Record {
-    name: String,
-    path: Option<String>,
+pub(crate) struct Record {
+    pub(crate) name: String,
+    pub(crate) path: Option<String>,
 }
 
 fn is_removing(line: &str) -> bool {
@@ -68,7 +68,7 @@ fn folder_of_gitdir(text: &str) -> String {
 
 impl Service {
     /// The records `git worktree prune` would forget in `repo`.
-    fn prune_records(&self, repo: &str) -> Result<Vec<Record>> {
+    pub(crate) fn prune_records(&self, repo: &str) -> Result<Vec<Record>> {
         let dry = self
             .deps
             .git

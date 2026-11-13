@@ -54,6 +54,7 @@
 mod approve;
 mod ask;
 mod exception;
+mod gone;
 mod judge;
 mod memory;
 mod notices;
@@ -61,6 +62,7 @@ mod release;
 mod report;
 mod step;
 mod text;
+mod unlock;
 
 pub use approve::{ApproveInput, Approved, NotApproved};
 pub use exception::{KeepInput, Kept};

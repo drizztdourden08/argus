@@ -82,6 +82,12 @@ pub struct LiveRun {
 pub trait ProcessLister: Send + Sync {
     fn list(&self) -> Result<Vec<ProcInfo>, String>;
 
+    /// Is the process with this pid running? A list that cannot be read counts as alive: nothing is judged dead blind.
+    fn alive(&self, pid: u32) -> bool {
+        self.list()
+            .map_or(true, |all| all.iter().any(|p| p.pid == pid))
+    }
+
     /// Argus's own runs that are live now; none where the process list knows no runs.
     fn runs(&self) -> Vec<LiveRun> {
         Vec::new()
