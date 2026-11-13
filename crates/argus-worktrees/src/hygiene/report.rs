@@ -7,12 +7,14 @@ use super::memory::{HygieneState, Mark};
 use super::text::{REPORT_REASON, Reported, report_note, report_wake};
 use crate::ports::WakeEvent;
 use crate::service::Service;
-use argus_core::ids::OVERLORD_PROJECT;
 
 impl Service {
     /// The Overlord's thread: the live lead of the `portfolio` board.
     pub(crate) fn overlord(&self) -> Option<String> {
-        self.deps.store.board(OVERLORD_PROJECT)?.coordinator()
+        self.deps
+            .store
+            .board(&self.deps.store.overlord_board())?
+            .coordinator()
     }
 
     /// Report the asks left unanswered. With no Overlord to tell, the next step tries again. Says how many reports
@@ -68,11 +70,11 @@ impl Service {
         let posted = matches!(
             self.deps
                 .store
-                .post_inbox(OVERLORD_PROJECT, overlord, &note),
+                .post_inbox(&self.deps.store.overlord_board(), overlord, &note),
             Ok(true)
         );
         let event = WakeEvent {
-            scope: OVERLORD_PROJECT.to_string(),
+            scope: self.deps.store.overlord_board(),
             thread: overlord.to_string(),
             reason: REPORT_REASON,
             subject: overlord.to_string(),

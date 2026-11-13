@@ -24,7 +24,7 @@ pub use found::{Found, Kind};
 pub use idle::IdleWatch;
 
 use crate::board::BoardView;
-use crate::reasons::{MAIN_SCOPE, PORTFOLIO};
+use crate::reasons::PORTFOLIO;
 use crate::source::BoardSource;
 
 /// How long each condition must hold before it is a stall (ms).
@@ -71,11 +71,12 @@ pub fn find(now: i64, input: &RuleInput<'_>) -> Vec<Found> {
 
 /// The project boards the rules of one project watch: not the main scope and not the ledger.
 fn projects(input: &RuleInput<'_>) -> Vec<(String, Arc<BoardView>)> {
+    let overlord = input.boards.overlord();
     input
         .boards
         .scopes()
         .into_iter()
-        .filter(|scope| scope != MAIN_SCOPE && scope != PORTFOLIO)
+        .filter(|scope| *scope != overlord && scope != PORTFOLIO)
         .filter_map(|scope| {
             let board = input.boards.board(&scope)?;
             Some((scope, board))

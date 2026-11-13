@@ -3,9 +3,6 @@
 /// The portfolio scope (the Argus overview), also its folder under `COORD_HOME`.
 pub const PORTFOLIO: &str = "_portfolio";
 
-/// The project whose lead is the Overlord (`coord lead portfolio`).
-pub const OVERLORD_PROJECT: &str = "portfolio";
-
 /// `^[a-z0-9][a-z0-9-]*$`: a project key.
 #[must_use]
 pub fn is_key(s: &str) -> bool {

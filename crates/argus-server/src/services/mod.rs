@@ -207,6 +207,13 @@ impl Services {
         BoardReader::new(self.sync.clone(), self.paths.coord_home.clone())
     }
 
+    /// The id of the Overlord's board, found by its role (`boards.json`, else the legacy folder). Empty when
+    /// the home has no such board, so no key matches it.
+    #[must_use]
+    pub fn overlord(&self) -> String {
+        self.boards().overlord().unwrap_or_default()
+    }
+
     /// Keeps a bus listener attached for as long as the services live.
     pub(crate) fn keep(&self, link: Subscription) {
         self.links

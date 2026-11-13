@@ -11,7 +11,9 @@ use argus_wake::board::InboxMessage;
 use argus_wake::config::WakeConfig;
 use argus_wake::engine::{AttachOptions, Delivery, ListenerSink};
 use argus_wake::faults::{Fault, FaultStore};
-use argus_wake::registry::RowState;
+use argus_wake::memory::{MemoryBoards, MemoryDocs, MemoryFaults};
+use argus_wake::registry::{Registry, RegistryConfig, RegistryDeps, RowState};
+use argus_wake::{Clock, ManualClock};
 use argus_wake::store::WakeStore;
 use argus_wake::testkit::{MIN, Rig, SEC, registry_config, wake_in};
 use argus_wake::time::iso;
@@ -507,4 +509,25 @@ fn timeouts_come_from_the_options_a_short_reaction_and_no_listener_ms_fault_soon
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(10 * SEC, STEP);
     assert_eq!(rig.state("alpha", "ui"), Some(RowState::Fault));
+}
+
+#[test]
+fn the_overlord_is_found_by_the_id_of_its_board_not_by_the_key_portfolio() {
+    let boards = MemoryBoards::new().with_overlord("overlord-7");
+    for (scope, board) in argus_wake::testkit::registry_boards(MIN) {
+        boards.set(if scope == "portfolio" { "overlord-7" } else { scope }, board);
+    }
+    let clock: std::sync::Arc<dyn Clock> = std::sync::Arc::new(ManualClock::at(0));
+    let registry = Registry::new(
+        RegistryDeps {
+            boards: std::sync::Arc::new(boards),
+            faults: Box::new(MemoryFaults::new()),
+            docs: std::sync::Arc::new(MemoryDocs::new()),
+            clock,
+        },
+        RegistryConfig::default(),
+    );
+    assert_eq!(registry.main_thread(), "coordinator");
+    assert!(registry.is_main("overlord-7", "coordinator"));
+    assert!(!registry.is_main("portfolio", "coordinator"));
 }

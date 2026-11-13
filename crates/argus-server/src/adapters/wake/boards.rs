@@ -15,6 +15,7 @@ use crate::boards::BoardReader;
 
 /// The project boards, as [`BoardView`]s.
 pub struct WakeBoards {
+    overlord: String,
     reader: BoardReader,
     kept: RwLock<HashMap<String, Arc<BoardView>>>,
 }
@@ -26,10 +27,11 @@ pub fn view_of(board: &Board) -> Arc<BoardView> {
 }
 
 impl WakeBoards {
-    /// Boards read through `reader`, with a kept copy per key.
+    /// Boards read through `reader`, with a kept copy per key; `overlord` is the id of the Overlord's board.
     #[must_use]
-    pub fn new(reader: BoardReader) -> Self {
+    pub fn new(reader: BoardReader, overlord: String) -> Self {
         WakeBoards {
+            overlord,
             reader,
             kept: RwLock::new(HashMap::new()),
         }
@@ -48,6 +50,10 @@ impl WakeBoards {
 }
 
 impl BoardSource for WakeBoards {
+    fn overlord(&self) -> String {
+        self.overlord.clone()
+    }
+
     fn scopes(&self) -> Vec<String> {
         self.reader
             .projects()

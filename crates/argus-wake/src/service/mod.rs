@@ -30,7 +30,7 @@ use crate::mirror::{WakeDoc, docs_of};
 use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
-use crate::reasons::{IMMEDIATE_REASONS, MAIN_SCOPE, PORTFOLIO};
+use crate::reasons::{IMMEDIATE_REASONS, PORTFOLIO};
 use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
 use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
 use crate::source::{AgentLive, BoardSource, SyncSource};
@@ -185,7 +185,7 @@ impl WakeService {
 
     /// The Overlord's thread, or `coordinator`.
     fn main_thread(&self) -> String {
-        coordinator_in(self.boards.board(MAIN_SCOPE).as_deref())
+        coordinator_in(self.boards.board(&self.boards.overlord()).as_deref())
             .unwrap_or_else(|| "coordinator".to_owned())
     }
 

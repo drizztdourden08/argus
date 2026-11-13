@@ -15,8 +15,6 @@ use crate::system_sampler::platform_name;
 use crate::types::{Meta, Sample};
 use std::time::Instant;
 
-const MAIN_SCOPE: &str = "portfolio";
-
 impl Inner {
     /// The guard of a sample: this process and its parents, the tray, the Windows folder.
     pub(crate) fn guard_for(&self, sample: &Sample) -> GuardCtx {
@@ -151,7 +149,7 @@ impl Inner {
         let text = alert_text(due);
         let host = &self.ports.host;
         let wake = WakeRequest {
-            scope: MAIN_SCOPE.to_string(),
+            scope: host.overlord_board(),
             thread: host
                 .coordinator()
                 .unwrap_or_else(|| "coordinator".to_string()),

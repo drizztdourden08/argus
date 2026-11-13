@@ -9,6 +9,8 @@ use argus_core::StorageError;
 pub trait WorktreeStore: Send + Sync {
     /// The project's board as one snapshot, or none when there is no such project.
     fn board(&self, project: &str) -> Option<BoardFacts>;
+    /// The id of the Overlord's board.
+    fn overlord_board(&self) -> String;
     /// The projects that have a board.
     fn projects(&self) -> Vec<String>;
     fn kv_get(&self, key: &str) -> Option<String>;

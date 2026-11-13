@@ -9,7 +9,6 @@ use super::book::{Open, StallBook};
 use super::config::StallConfig;
 use super::env::StallEnv;
 use crate::activity::{ActivityLine, Level};
-use crate::reasons::MAIN_SCOPE;
 use crate::wake::WakeInput;
 
 /// The reason of the wake the Overlord hears.
@@ -23,13 +22,14 @@ pub(super) fn due(
     book: &StallBook,
     out: &mut StallTick,
 ) {
+    let overlord = env.boards.overlord();
     for open in book.unacked() {
-        let last = env.last_sent(MAIN_SCOPE, env.main, REASON, &open.key);
+        let last = env.last_sent(&overlord, env.main, REASON, &open.key);
         if last != 0 && now - last < config.resend_ms {
             continue;
         }
         out.wakes.push(WakeInput::about(
-            MAIN_SCOPE,
+            &overlord,
             env.main,
             REASON,
             &open.key,

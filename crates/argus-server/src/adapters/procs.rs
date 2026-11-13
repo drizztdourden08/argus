@@ -127,6 +127,10 @@ impl ProcsHost for ProcsHostAdapter {
         read_live_tray(&self.tray, alive).map(|r| r.pid)
     }
 
+    fn overlord_board(&self) -> String {
+        self.boards.overlord().unwrap_or_default()
+    }
+
     fn coordinator(&self) -> Option<String> {
         self.boards.overlord_thread()
     }

@@ -41,8 +41,9 @@ impl NoticeSource for SyncDue {
         let records: HashMap<String, SyncRecord> = self.syncs.syncs().into_iter().collect();
         let mut scopes = self.boards.scopes();
         scopes.sort();
+        let overlord = self.boards.overlord();
         let mut out = Vec::new();
-        for scope in scopes.iter().filter(|s| tracked(s)) {
+        for scope in scopes.iter().filter(|s| tracked(s, &overlord)) {
             let Some(lead) = self.boards.board(scope).as_deref().and_then(lead_of) else {
                 continue;
             };

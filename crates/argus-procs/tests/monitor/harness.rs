@@ -212,6 +212,10 @@ impl ProcsHost for Fake {
         *lock(&self.tray)
     }
 
+    fn overlord_board(&self) -> String {
+        "portfolio".to_string()
+    }
+
     fn coordinator(&self) -> Option<String> {
         Some("boss".to_string())
     }

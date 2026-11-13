@@ -3,7 +3,6 @@
 use argus_core::{ApiError, ErrorCode};
 use argus_wake::board::BoardView;
 use argus_wake::external::{RequestError, clear_request, no_open_fault};
-use argus_wake::reasons::MAIN_SCOPE;
 use argus_wake::service::driver::{SharedWake, lock};
 use serde_json::{Value, json, to_value};
 
@@ -38,15 +37,16 @@ fn browser_like(ctx: &Ctx) -> bool {
 pub(crate) async fn overlord_call<R>(
     ctx: &Ctx,
     from_page: &str,
-    parse: impl FnOnce(&Value, Option<&BoardView>) -> Result<R, RequestError>,
+    parse: impl FnOnce(&Value, &str, Option<&BoardView>) -> Result<R, RequestError>,
 ) -> Result<(SharedWake, R), ApiError> {
     let wake = service(ctx)?;
     if browser_like(ctx) {
         return Err(ApiError::new(ErrorCode::Forbidden, from_page));
     }
     let body = ctx.json().await?;
-    let portfolio = ctx.svc.boards().board(MAIN_SCOPE).map(|b| view_of(&b));
-    let request = parse(&body, portfolio.as_deref()).map_err(|e| refusal(&e))?;
+    let overlord = ctx.svc.overlord();
+    let portfolio = ctx.svc.boards().board(&overlord).map(|b| view_of(&b));
+    let request = parse(&body, &overlord, portfolio.as_deref()).map_err(|e| refusal(&e))?;
     Ok((wake, request))
 }
 

@@ -362,17 +362,35 @@ impl NoticeSource for MemoryNotices {
 }
 
 /// The project boards in memory.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct MemoryBoards {
+    overlord: String,
     inner: Arc<Mutex<IndexMap<String, Arc<BoardView>>>>,
     retired: Arc<Mutex<Vec<String>>>,
 }
 
+impl Default for MemoryBoards {
+    fn default() -> Self {
+        MemoryBoards {
+            overlord: "portfolio".to_owned(),
+            inner: Arc::default(),
+            retired: Arc::default(),
+        }
+    }
+}
+
 impl MemoryBoards {
-    /// No boards.
+    /// No boards; the Overlord's board is `portfolio`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// The same boards with the Overlord's board under another id.
+    #[must_use]
+    pub fn with_overlord(mut self, id: &str) -> Self {
+        id.clone_into(&mut self.overlord);
+        self
     }
 
     /// Put a board in place of the one of `scope`.
@@ -394,6 +412,10 @@ impl MemoryBoards {
 }
 
 impl BoardSource for MemoryBoards {
+    fn overlord(&self) -> String {
+        self.overlord.clone()
+    }
+
     fn scopes(&self) -> Vec<String> {
         let retired = locked(&self.retired).clone();
         locked(&self.inner)

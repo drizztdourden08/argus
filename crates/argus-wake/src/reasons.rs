@@ -4,9 +4,6 @@
 /// The scope of the portfolio page.
 pub const PORTFOLIO: &str = "_portfolio";
 
-/// The project whose coordinator is the Overlord.
-pub const MAIN_SCOPE: &str = "portfolio";
-
 /// Every reason a wake row can carry.
 pub const WAKE_REASONS: [&str; 51] = [
     "test-fail",

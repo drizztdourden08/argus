@@ -10,7 +10,6 @@ use argus_core::ids::is_key;
 use argus_core::{ApiError, ErrorCode};
 use argus_wake::board::BoardView;
 use argus_wake::external::{RequestError, overlord_only};
-use argus_wake::reasons::MAIN_SCOPE;
 use argus_wake::service::driver::lock;
 use argus_wake::stalls::StallInfo;
 use argus_wake::text::one_line;
@@ -62,7 +61,11 @@ fn field<'a>(body: &'a Value, name: &str) -> &'a str {
     body[name].as_str().unwrap_or("")
 }
 
-fn request(body: &Value, portfolio: Option<&BoardView>) -> Result<AckRequest, RequestError> {
+fn request(
+    body: &Value,
+    overlord: &str,
+    portfolio: Option<&BoardView>,
+) -> Result<AckRequest, RequestError> {
     let project = field(body, "project");
     if !is_key(project) {
         return Err(RequestError::BadRequest(
@@ -76,7 +79,7 @@ fn request(body: &Value, portfolio: Option<&BoardView>) -> Result<AckRequest, Re
         )));
     }
     let by = field(body, "by");
-    overlord_only(by, portfolio, "acknowledge a stall")?;
+    overlord_only(by, overlord, portfolio, "acknowledge a stall")?;
     Ok(AckRequest {
         project: project.to_owned(),
         note,
@@ -92,7 +95,7 @@ fn acked_text(project: &str, count: usize) -> String {
 async fn ack(ctx: Ctx) -> Reply {
     let (wake, req) = overlord_call(&ctx, FROM_PAGE, request).await?;
     let project = req.project.clone();
-    let by = format!("{MAIN_SCOPE}/{}", req.by);
+    let by = format!("{}/{}", ctx.svc.overlord(), req.by);
     let acked = blocking(move || lock(&wake).ack_stalls(&req.project, &by, &req.note)).await?;
     if acked.is_empty() {
         return Err(ApiError::new(

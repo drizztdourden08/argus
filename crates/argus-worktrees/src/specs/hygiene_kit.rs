@@ -3,12 +3,12 @@
 
 use crate::board::{AgentFact, BoardFacts, Caller, ThreadInfo};
 use crate::hygiene::{HygieneState, Stepped};
+use crate::ports::WorktreeStore;
 use crate::request::RemoveInput;
 use crate::rule::Rule;
 use crate::service::Options;
 use crate::sync::locked;
 use crate::testkit::{Fixture, Harness, rule_for};
-use argus_core::ids::OVERLORD_PROJECT;
 use std::path::Path;
 
 /// How long a worktree stays unattached before the hygiene acts.
@@ -146,7 +146,7 @@ pub fn add_overlord(h: &Harness) {
             live: true,
         },
     );
-    locked(&h.store.others).insert(OVERLORD_PROJECT.to_string(), board);
+    locked(&h.store.others).insert(h.store.overlord_board(), board);
 }
 
 /// The input of `by` about the worktree at `path`.

@@ -27,7 +27,7 @@ use crate::activity::{ActivityLine, Level};
 use crate::board::BoardView;
 use crate::config::section_ms;
 use crate::item_wakes::LastSent;
-use crate::reasons::{MAIN_SCOPE, PORTFOLIO};
+use crate::reasons::PORTFOLIO;
 use crate::source::{BoardSource, SyncSource};
 use crate::time::parse_ms;
 use crate::wake::WakeInput;
@@ -111,8 +111,8 @@ fn lead_of(board: &BoardView) -> Option<Lead> {
     })
 }
 
-fn tracked(scope: &str) -> bool {
-    scope != PORTFOLIO && scope != MAIN_SCOPE
+fn tracked(scope: &str, overlord: &str) -> bool {
+    scope != PORTFOLIO && scope != overlord
 }
 
 fn sync_line(project: &str, record: &SyncRecord) -> ActivityLine {
@@ -228,7 +228,8 @@ impl SyncWakes {
         self.log_new(&records, &mut out);
         let mut scopes = env.boards.scopes();
         scopes.sort();
-        for scope in scopes.iter().filter(|s| tracked(s)) {
+        let overlord = env.boards.overlord();
+        for scope in scopes.iter().filter(|s| tracked(s, &overlord)) {
             self.check(now, scope, &records, env, &mut out);
         }
         out

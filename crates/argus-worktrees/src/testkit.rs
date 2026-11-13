@@ -437,6 +437,10 @@ impl MemStore {
 }
 
 impl WorktreeStore for MemStore {
+    fn overlord_board(&self) -> String {
+        "portfolio".to_string()
+    }
+
     fn board(&self, project: &str) -> Option<BoardFacts> {
         if let Some(other) = locked(&self.others).get(project) {
             return Some(other.clone());

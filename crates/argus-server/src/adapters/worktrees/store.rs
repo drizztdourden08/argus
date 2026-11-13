@@ -59,6 +59,10 @@ fn run_link(run: RunRow) -> Link {
 }
 
 impl WorktreeStore for BoardWorktrees {
+    fn overlord_board(&self) -> String {
+        self.boards.overlord().unwrap_or_default()
+    }
+
     fn board(&self, project: &str) -> Option<BoardFacts> {
         self.boards.board(project).map(|b| facts_of(&b))
     }

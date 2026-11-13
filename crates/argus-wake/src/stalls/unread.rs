@@ -21,7 +21,7 @@ use super::config::StallConfig;
 use super::env::StallEnv;
 use super::sources::StallKv;
 use crate::board::BoardView;
-use crate::reasons::{MAIN_SCOPE, PORTFOLIO};
+use crate::reasons::PORTFOLIO;
 use crate::reminders::{OwnerNotice, TOPIC_STALL};
 use crate::stall_rules::{Found, Kind};
 use crate::time::{iso, ms_or_zero};
@@ -113,7 +113,7 @@ impl Scan<'_> {
             out.owner.push(notice(row, age, at, &line));
         }
         let (_, unread_ms) = self.config.unread_steps(&row.reason);
-        if age >= unread_ms && row.scope != MAIN_SCOPE {
+        if age >= unread_ms && row.scope != self.env.boards.overlord() {
             out.deps.extend(dep_of(row));
             out.stalls.push(found(row, at, line));
         }

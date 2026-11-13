@@ -73,7 +73,7 @@ impl Default for WakeOptions {
 
 pub(crate) fn build(svc: &Services, opts: &ServeOptions) -> Option<Arc<Mutex<WakeService>>> {
     let sync = svc.sync.as_ref().filter(|_| opts.wake.enabled)?;
-    let boards = Arc::new(WakeBoards::new(svc.boards()));
+    let boards = Arc::new(WakeBoards::new(svc.boards(), svc.overlord()));
     let settings = Value::Object(svc.config().extra);
     let config = WakeConfig::from_json(&settings);
     let clock = opts
