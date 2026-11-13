@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
-import type { LogLine } from '../../../data/types';
-import type { FeedCard } from '../feed-model';
-import type { FeedContext, FeedFilter } from './OwnerFeed.type';
+import type { LogLine } from '../../../../data/types';
+import type { FeedCard } from '../../feed-model';
+import type { FeedContext, FeedFilter } from '../OwnerFeed.type';
 
 interface LogWindow {
   shown: number;

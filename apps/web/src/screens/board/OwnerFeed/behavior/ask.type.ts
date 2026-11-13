@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind types */
-import type { Entry } from '../../../data/types';
-import type { AskMode, FeedCard } from '../feed-model';
-import type { NoteKind } from '../owner-posts';
-import type { EntryBodyProps, FeedContext } from './OwnerFeed.type';
+import type { Entry } from '../../../../data/types';
+import type { AskMode, FeedCard } from '../../feed-model';
+import type { NoteKind } from '../../owner-posts';
+import type { EntryBodyProps, FeedContext } from '../OwnerFeed.type';
 
 type AskFeedCard = Extract<FeedCard, { data: Entry }>;
 
