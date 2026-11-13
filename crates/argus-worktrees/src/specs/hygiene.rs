@@ -513,7 +513,10 @@ fn only_the_worktree_the_keep_pattern_names_stays() {
     });
     h.scan();
     h.svc.start();
-    assert!(through_debounce(&h, &fx.path("agent-a2")), "no pattern holds it");
+    assert!(
+        through_debounce(&h, &fx.path("agent-a2")),
+        "no pattern holds it"
+    );
     assert!(exists_itself(&fx.path("agent-a1")), "its pattern holds it");
 }
 

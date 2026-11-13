@@ -131,10 +131,7 @@ fn a_keep_pattern_holds_a_sibling_even_in_on_mode_and_the_plan_says_why() {
     let plan = h.svc.auto_plan();
     let row = plan.iter().find(|r| r.path.ends_with("/sib")).unwrap();
     assert!(!row.would_remove);
-    assert_eq!(
-        row.reason,
-        format!("kept by the keep pattern {}", pattern)
-    );
+    assert_eq!(row.reason, format!("kept by the keep pattern {pattern}"));
 }
 
 #[test]
