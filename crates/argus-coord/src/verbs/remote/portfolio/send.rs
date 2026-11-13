@@ -12,6 +12,7 @@ use super::with_portfolio;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::verbs::remote::support::scope::coord_home;
+use crate::who::board_ref;
 
 fn names(list: &Value) -> Vec<String> {
     list.as_array()
@@ -33,6 +34,11 @@ pub(super) fn send(call: &mut Call<'_>) -> Outcome {
         .cloned()
         .unwrap_or_else(|| "undefined".to_owned());
     let home = coord_home(call);
+    let target = if target == "all" {
+        target
+    } else {
+        board_ref(&home, &target)?
+    };
     with_portfolio(call, false, |p, scope| {
         if target != "all" && !project_keys(&home, p).contains(&target) {
             return Err(CoordError::refuse(format!(

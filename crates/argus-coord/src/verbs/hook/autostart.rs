@@ -20,6 +20,7 @@ use serde_json::Value;
 use super::alive::{pid_alive, quit_this_boot};
 use crate::cli::Env;
 use crate::client::launch::{plan, spawn};
+use crate::who::migrating;
 
 const LOCK_FRESH: Duration = Duration::from_secs(60);
 
@@ -51,7 +52,7 @@ fn held_back(env: &Env, home: &Path) -> bool {
 
 /// Starts the dashboard when it is down and may be started. Never fails.
 pub fn ensure_dashboard(env: &Env, paths: &Paths) {
-    if held_back(env, &paths.home) {
+    if migrating(&paths.coord_home) || held_back(env, &paths.home) {
         return;
     }
     let Some(plan) = plan(env, paths) else {

@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use crate::cli::{Call, CoordError, Invocation, Options, Outcome};
 use crate::verbs::shared::lock::board_refusal;
-use crate::who::{Caller, caller, me};
+use crate::who::{Caller, caller, me, refuse_while_migrating};
 
 /// A board step that can refuse.
 pub type Res<T> = Result<T, BoardError>;
@@ -130,6 +130,7 @@ impl<'a> Run<'a> {
         change: impl FnOnce(&mut Board, &mut Run<'_>) -> Res<T>,
     ) -> Result<T, CoordError> {
         let (home, key) = (self.home.clone(), self.project.clone());
+        refuse_while_migrating(&home)?;
         with_board(&home, &key, false, |board| change(board, self))
             .map_err(|e| board_refusal(e, &home, &key))
     }

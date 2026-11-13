@@ -53,7 +53,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord inbox [--ack] | rm <m-id>
 
 Coordinator side (the same verbs work on every thread's records; --for <T> creates or lists for T, --to <T> reassigns):
-  coord board init [--name <Name>] | name <Name> | prefixes [<Product>...] [--clear] | show [--json] | open | path
+  coord board init [--name <Name>] | name <Name> | id | prefixes [<Product>...] [--clear] | show [--json] | open | path
   coord board shortcut [--thread <id>] [--root <dir>]   (adds "<Name> board" to .claude/launch.json: the Browser pane's new tab lists it, Play opens the board, nothing is started; idempotent; the Overlord gets two rows, "Argus" and "Overlord")
   coord thread add <name> --subject <s> --brief "<text>" [--worktree <w>]   (coord dispatch is the same)
   coord thread set <name> [--subject <s>] [--brief "<text>"] [--note "..."] [--status <s>] [--before|--after <T>] [--if-rev n]

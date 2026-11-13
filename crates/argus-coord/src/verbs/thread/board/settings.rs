@@ -2,14 +2,27 @@
 
 use argus_board::json::{display, set, unset};
 use argus_board::names::session_name;
+use argus_core::boards;
 use argus_core::js;
 use serde_json::json;
 
 use crate::cli::exit::{CoordError, Outcome};
+use crate::who::refuse_while_migrating;
 use crate::verbs::thread::docs::list;
 use crate::verbs::thread::frame::Frame;
 
 const NAME_MAX: usize = 30;
+
+/// A board of the identity table is renamed there; its aliases stay.
+fn rename_in_table(frame: &mut Frame<'_>, value: &str) -> Outcome {
+    let (home, project) = (frame.home(), frame.project);
+    refuse_while_migrating(home)?;
+    boards::rename(home, project, value).map_err(|e| CoordError::refuse(e.to_string()))?;
+    frame.say(&[&format!(
+        "{project} is shown as \"{value}\". Sessions: the lead \"{value}\" and \"{value} - <Subject>\"."
+    )]);
+    Ok(())
+}
 
 /// The verb `board name <Name>`.
 ///
@@ -23,6 +36,9 @@ pub fn name(frame: &mut Frame<'_>) -> Outcome {
         ));
     }
     let project = frame.project;
+    if boards::load(frame.home()).is_ok_and(|t| t.boards.contains_key(project)) {
+        return rename_in_table(frame, &value);
+    }
     frame.mutate(false, |board, fr| {
         set(board, "name", value.as_str());
         fr.say(&[&format!(

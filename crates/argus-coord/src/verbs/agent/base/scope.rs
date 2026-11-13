@@ -13,7 +13,7 @@ use crate::cli::exit::CoordError;
 use crate::cli::out::say;
 use crate::cli::{Call, Env, Invocation, Options};
 use crate::verbs::shared::lock::board_refusal;
-use crate::who::{Caller, caller, me};
+use crate::who::{Caller, caller, me, refuse_while_migrating};
 
 /// What a verb works with besides the board.
 pub struct Run<'a> {
@@ -85,6 +85,7 @@ pub fn write<T>(
     verb: impl FnOnce(&mut Board, &Caller, &mut Run<'_>) -> Result<T, CoordError>,
 ) -> Result<T, CoordError> {
     let (home, key, mut run) = open(call);
+    refuse_while_migrating(&home)?;
     with_board(&home, key, false, |board| {
         let who = begin(board, &run).map_err(|e| board_error(&e))?;
         verb(board, &who, &mut run).map_err(|e| board_error(&e))

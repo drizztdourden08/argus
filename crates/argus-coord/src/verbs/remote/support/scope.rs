@@ -12,7 +12,7 @@ use crate::cli::exit::CoordError;
 use crate::cli::route::Call;
 use crate::cli::{Env, Options, out};
 use crate::verbs::shared::lock::board_refusal;
-use crate::who::{Caller, caller, me};
+use crate::who::{Caller, caller, me, refuse_while_migrating};
 
 use super::link::{paths_of, project_of};
 
@@ -77,6 +77,7 @@ pub fn locked<T>(
     f: impl FnOnce(&mut Board, &mut Scope<'_>) -> Result<T, CoordError>,
 ) -> Result<T, CoordError> {
     let home = coord_home(call);
+    refuse_while_migrating(&home)?;
     let inv = &mut *call.inv;
     let mut scope = Scope {
         env: &inv.env,

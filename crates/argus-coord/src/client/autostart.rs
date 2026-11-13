@@ -16,6 +16,7 @@ use super::health::healthy;
 use super::http::{Client, ClientError};
 use super::launch::{plan, spawn};
 use crate::cli::env::Env;
+use crate::who::migrating::{MESSAGE as MIGRATING, migrating};
 
 const WAIT_DEFAULT_MS: u64 = 8000;
 const POLL: Duration = Duration::from_millis(200);
@@ -44,6 +45,9 @@ pub fn dashboard_client(env: &Env, paths: &Paths, autostart: bool) -> Result<Cli
     }
     if !autostart {
         return Err(ClientError::down(None));
+    }
+    if migrating(&paths.coord_home) {
+        return Err(ClientError::down(Some(MIGRATING)));
     }
     let Some(plan) = plan(env, paths) else {
         return Err(ClientError::down(Some("no dashboard install found")));
