@@ -29,7 +29,9 @@ pub fn table_present(home: &Path) -> bool {
 /// The id a key, alias or id names in the table; `None` without a table or when unknown.
 #[must_use]
 pub fn table_id(home: &Path, s: &str) -> Option<BoardId> {
-    table_present(home).then(|| boards::resolve(home, s)).flatten()
+    table_present(home)
+        .then(|| boards::resolve(home, s))
+        .flatten()
 }
 
 /// The id of the board that holds `role`: from the table, else (no table) the legacy folder.

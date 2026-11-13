@@ -131,7 +131,8 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, name: &str, sid: Option<&str>
         new_thread(board, name, fields, name);
     }
     record_session(board, frame, name, sid)?;
-    if let Some(problem) = naming::problem(&frame.paths.coord_home, board, &board["threads"][name]) {
+    if let Some(problem) = naming::problem(&frame.paths.coord_home, board, &board["threads"][name])
+    {
         frame.say(&[&format!("naming: {problem}")]);
     }
     record_texts(board, frame, name)?;

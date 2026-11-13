@@ -12,12 +12,26 @@ use serde_json::json;
 #[test]
 fn other_projects_are_their_board_name_else_the_registry_name_else_the_key() {
     let home = tempfile::tempdir().expect("temp dir");
-    assert_eq!(display_name(home.path(), "rotp", Some("RotP"), Some("Relic")), "RotP");
-    assert_eq!(display_name(home.path(), "rotp", None, Some("Relic")), "Relic");
-    assert_eq!(display_name(home.path(), "rotp", None, None), "rotp");
-    assert_eq!(display_name(home.path(), "portfolio-two", None, None), "portfolio-two");
     assert_eq!(
-        display_name(home.path(), "pixelarttool", Some("Bxel"), Some("Pixel art tool")),
+        display_name(home.path(), "rotp", Some("RotP"), Some("Relic")),
+        "RotP"
+    );
+    assert_eq!(
+        display_name(home.path(), "rotp", None, Some("Relic")),
+        "Relic"
+    );
+    assert_eq!(display_name(home.path(), "rotp", None, None), "rotp");
+    assert_eq!(
+        display_name(home.path(), "portfolio-two", None, None),
+        "portfolio-two"
+    );
+    assert_eq!(
+        display_name(
+            home.path(),
+            "pixelarttool",
+            Some("Bxel"),
+            Some("Pixel art tool")
+        ),
         "Bxel"
     );
 }
@@ -25,7 +39,10 @@ fn other_projects_are_their_board_name_else_the_registry_name_else_the_key() {
 #[test]
 fn the_overlords_project_is_overlord_by_default_and_old_names_never_count() {
     let home = tempfile::tempdir().expect("temp dir");
-    assert_eq!(display_name(home.path(), "portfolio", None, None), "Overlord");
+    assert_eq!(
+        display_name(home.path(), "portfolio", None, None),
+        "Overlord"
+    );
     assert_eq!(
         display_name(home.path(), "portfolio", Some("Portfolio"), None),
         "Overlord"
@@ -40,16 +57,34 @@ fn the_overlords_project_is_overlord_by_default_and_old_names_never_count() {
         "Overlord"
     );
     assert_eq!(
-        display_name(home.path(), "portfolio", Some("portfolio"), Some("portfolio")),
+        display_name(
+            home.path(),
+            "portfolio",
+            Some("portfolio"),
+            Some("portfolio")
+        ),
         "Overlord"
     );
-    assert_eq!(display_name(home.path(), "portfolio", Some("  "), Some("")), "Overlord");
     assert_eq!(
-        display_name(home.path(), "portfolio", Some("Portfolio"), Some("Overlord")),
+        display_name(home.path(), "portfolio", Some("  "), Some("")),
         "Overlord"
     );
     assert_eq!(
-        display_name(home.path(), "portfolio", Some("Portfolio"), Some("Control room")),
+        display_name(
+            home.path(),
+            "portfolio",
+            Some("Portfolio"),
+            Some("Overlord")
+        ),
+        "Overlord"
+    );
+    assert_eq!(
+        display_name(
+            home.path(),
+            "portfolio",
+            Some("Portfolio"),
+            Some("Control room")
+        ),
         "Control room"
     );
     assert_eq!(
@@ -65,9 +100,15 @@ fn the_overlords_project_is_overlord_by_default_and_old_names_never_count() {
 #[test]
 fn the_overlords_session_title_is_exactly_overlord() {
     let home = tempfile::tempdir().expect("temp dir");
-    assert_eq!(session_name(home.path(), "portfolio", Some("Portfolio")), "Overlord");
+    assert_eq!(
+        session_name(home.path(), "portfolio", Some("Portfolio")),
+        "Overlord"
+    );
     assert_eq!(session_name(home.path(), "portfolio", None), "Overlord");
-    assert_eq!(session_name(home.path(), "portfolio", Some("Argus")), "Overlord");
+    assert_eq!(
+        session_name(home.path(), "portfolio", Some("Argus")),
+        "Overlord"
+    );
     assert_eq!(session_name(home.path(), "rotp", Some("RotP")), "RotP");
     assert_eq!(session_name(home.path(), "rotp", None), "rotp");
 }
