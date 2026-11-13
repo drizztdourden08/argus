@@ -13,11 +13,11 @@ use argus_wake::engine::{AttachOptions, Delivery, ListenerSink};
 use argus_wake::faults::{Fault, FaultStore};
 use argus_wake::memory::{MemoryBoards, MemoryDocs, MemoryFaults};
 use argus_wake::registry::{Registry, RegistryConfig, RegistryDeps, RowState};
-use argus_wake::{Clock, ManualClock};
 use argus_wake::store::WakeStore;
 use argus_wake::testkit::{MIN, Rig, SEC, registry_config, wake_in};
 use argus_wake::time::iso;
 use argus_wake::wake::{WakeEvent, WakeStatus};
+use argus_wake::{Clock, ManualClock};
 use serde_json::Value;
 
 const STEP: i64 = 5 * SEC;
@@ -515,7 +515,14 @@ fn timeouts_come_from_the_options_a_short_reaction_and_no_listener_ms_fault_soon
 fn the_overlord_is_found_by_the_id_of_its_board_not_by_the_key_portfolio() {
     let boards = MemoryBoards::new().with_overlord("overlord-7");
     for (scope, board) in argus_wake::testkit::registry_boards(MIN) {
-        boards.set(if scope == "portfolio" { "overlord-7" } else { scope }, board);
+        boards.set(
+            if scope == "portfolio" {
+                "overlord-7"
+            } else {
+                scope
+            },
+            board,
+        );
     }
     let clock: std::sync::Arc<dyn Clock> = std::sync::Arc::new(ManualClock::at(0));
     let registry = Registry::new(
