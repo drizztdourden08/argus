@@ -8,7 +8,7 @@
 use crate::board::Caller;
 use crate::hygiene::{ApproveInput, HygieneState};
 use crate::paths::join_path;
-use crate::specs::hygiene_kit::{DEBOUNCE, agent, hygienic, inbox, kind, left_why, state, step};
+use crate::specs::hygiene_kit::{DEBOUNCE, agent, hygienic, kind, left_why, state, step};
 use crate::testkit::{Fixture, Harness, exists_itself, listed, make_link, put, rule_for};
 use argus_core::fixture::links::{assert_sibling_intact, fill_sibling};
 use std::path::Path;
@@ -46,7 +46,7 @@ fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_
     fill_sibling(Path::new(&sibling));
     make_link(&join_path(&path, "lnk"), &sibling);
     let h = agents_only(&fx);
-    h.board().agents = vec![agent("1", "lead", "running", h.clock_now())];
+    h.board().agents = vec![agent("1", "lead", "working", h.clock_now())];
     h.scan();
     h.svc.start();
     assert_eq!(
@@ -64,12 +64,7 @@ fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_
     assert_eq!(done.refused.len(), 0, "{:?}", done.refused);
     assert_eq!(kind(&h, "agent-ng"), Some(HygieneState::Removing));
     h.svc.requests_idle();
-    assert!(
-        !exists_itself(&path),
-        "{:?} {:?}",
-        inbox(&h),
-        h.docs().get("agent-ng").map(|d| d.hygiene.clone())
-    );
+    assert!(!exists_itself(&path));
     assert!(!listed(&fx.repo).contains(&"agent-ng".to_string()));
     assert_sibling_intact(Path::new(&sibling));
 }
