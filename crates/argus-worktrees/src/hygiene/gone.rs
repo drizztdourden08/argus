@@ -47,7 +47,9 @@ impl Service {
                 Ok(count) => {
                     pruned = true;
                     self.pruned_note(project, repo, &facts, count);
-                    facts.iter().for_each(|f| self.forget(project, &f.id));
+                    for f in &facts {
+                        self.forget(project, &f.id);
+                    }
                 }
                 Err(err) => self.prune_failed(project, repo, &err.message),
             }

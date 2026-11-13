@@ -93,6 +93,7 @@ fn auto_harness(fx: &Fixture, mode: AutoMode) -> Harness {
         o.auto_rules = mode;
     });
     h.scan();
+    h.svc.start();
     h
 }
 

@@ -4,9 +4,7 @@
 
 // test-tag: standard
 
-use crate::ports::ProcInfo;
-use crate::specs::hygiene_kit::{DEBOUNCE, left_why, step, through_debounce, world};
-use crate::sync::locked;
+use crate::specs::hygiene_kit::{DEBOUNCE, left_why, step, through_debounce, world, world_alive};
 use crate::testkit::{Fixture, Harness, records};
 use std::fs;
 
@@ -21,14 +19,11 @@ fn pruned_lines(h: &Harness) -> usize {
 }
 
 #[test]
-fn a_worktree_whose_folder_was_deleted_is_pruned_by_the_step() {
+fn a_worktree_whose_folder_was_deleted_is_pruned_by_the_step_the_scan_runs() {
     let (fx, h) = world(|fx| {
         fx.add("agent-a9");
         delete_folder(fx, "agent-a9");
     });
-    assert!(records(&fx).contains(&"agent-a9".to_string()));
-    let stepped = step(&h, DEBOUNCE);
-    assert!(stepped.changed);
     assert_eq!(records(&fx), vec!["agent-a1".to_string()]);
     assert_eq!(pruned_lines(&h), 1);
     step(&h, DEBOUNCE);
@@ -79,12 +74,7 @@ fn a_claude_lock_with_a_dead_pid_is_unlocked_and_the_clean_worktree_removed() {
 
 #[test]
 fn a_claude_lock_with_a_live_pid_stays_and_asks_the_lead() {
-    let (fx, h) = world(|fx| lock_agent(fx, DEAD));
-    locked(&h.procs.0).push(ProcInfo {
-        pid: 4242,
-        name: "claude".into(),
-        ..ProcInfo::default()
-    });
+    let (fx, h) = world_alive(&[4242], |fx| lock_agent(fx, DEAD));
     step(&h, 1000);
     assert_eq!(h.notes.removals("unlocked").len(), 0);
     assert_eq!(left_why(&h, "agent-a1"), format!("it is locked ({DEAD})"));

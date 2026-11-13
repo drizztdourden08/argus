@@ -1,6 +1,6 @@
 //! `config.worktrees` as the service's options and the server's own timings.
 
-use argus_worktrees::{AutoMode, Options, REMOVE_TIMEOUT};
+use argus_worktrees::{AutoMode, Options, REMOVE_TIMEOUT, ScratchMode, ScratchRoot};
 use serde_json::Value;
 
 use crate::Services;

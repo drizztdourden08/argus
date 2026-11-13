@@ -47,6 +47,12 @@ fn worktree_write_ok(rest: &[&str]) -> bool {
             let forced = rest.len() == 3 && rest[1] == "--force" && !rest[2].starts_with('-');
             plain || forced
         }
+        Some(&"lock") => {
+            rest.len() == 4
+                && rest[1] == "--reason"
+                && !rest[2].is_empty()
+                && !rest[3].starts_with('-')
+        }
         Some(&"unlock") => rest.len() == 2 && !rest[1].starts_with('-'),
         Some(&"prune") => rest.len() == 1 || rest == ["prune", "--dry-run", "--verbose"],
         _ => false,
@@ -172,12 +178,13 @@ mod tests {
     #[test]
     fn the_write_door_allows_only_the_removals_own_commands() {
         let sha = "0123456789abcdef0123456789abcdef01234567";
-        let ok: [&[&str]; 12] = [
+        let ok: [&[&str]; 13] = [
             &["worktree", "remove", "X:/w"],
             &["worktree", "remove", "--force", "X:/w"],
             &["worktree", "prune"],
             &["worktree", "prune", "--dry-run", "--verbose"],
             &["worktree", "unlock", "X:/w"],
+            &["worktree", "lock", "--reason", "held", "X:/w"],
             &["update-ref", "-d", "refs/heads/b", sha],
             &["bundle", "create", "f", "b", "--not", "--remotes"],
             &["bundle", "verify", "f"],

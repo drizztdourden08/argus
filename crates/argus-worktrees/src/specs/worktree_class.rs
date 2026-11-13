@@ -8,7 +8,7 @@
 use crate::class::{Class, LockKind};
 use crate::hygiene::HygieneState;
 use crate::specs::hygiene_kit::{
-    agent, agents_rule, hygienic, kind, left_why, through_debounce, world,
+    agent, agents_rule, hygienic, kind, left_why, through_debounce, world, world_alive,
 };
 use crate::testkit::{Fixture, Harness, commit, put, rule_for};
 
@@ -49,7 +49,7 @@ fn the_doc_shows_the_class_of_each_worktree_of_the_fixture() {
 #[test]
 fn a_lock_shows_whose_it_is_and_still_waits_for_the_lead_unless_it_is_brocks() {
     let lock = |reason: &'static str| {
-        world(move |fx| {
+        world_alive(&[4242], move |fx| {
             fx.git(&["worktree", "lock", "--reason", reason, &fx.path("agent-a1")]);
         })
     };

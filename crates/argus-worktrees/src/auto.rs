@@ -56,17 +56,17 @@ pub struct AutoRule {
     pub rule: Rule,
 }
 
-fn repo_rule(id: String, path: &str, owner: &str) -> Rule {
+fn repo_rule(id: &str, path: &str, owner: &str) -> Rule {
     Rule {
         auto: true,
         note: Some("automatic".to_string()),
-        ..Rule::folder(&id, path, owner).repo()
+        ..Rule::folder(id, path, owner).repo()
     }
 }
 
-fn covered(made: &[AutoRule], hand: &[&Rule], path: &str, ci: bool) -> bool {
+fn covered(derived: &[AutoRule], hand: &[&Rule], path: &str, ci: bool) -> bool {
     hand.iter().any(|r| same_path(&r.path, path, ci))
-        || made.iter().any(|a| same_path(&a.rule.path, path, ci))
+        || derived.iter().any(|a| same_path(&a.rule.path, path, ci))
 }
 
 /// One repo rule per root that has none: a board with a repo rule of its own gets none, two boards sharing a root get
@@ -85,28 +85,28 @@ pub fn auto_rules(
         .flat_map(|b| b.rules)
         .filter(|r| r.kind == RuleKind::Repo)
         .collect();
-    let mut made: Vec<AutoRule> = Vec::new();
+    let mut derived: Vec<AutoRule> = Vec::new();
     for board in boards {
         let own = board.rules.iter().any(|r| r.kind == RuleKind::Repo);
         let Some(root) = board.root.filter(|r| !own && !r.trim().is_empty()) else {
             continue;
         };
-        if !covered(&made, &hand, root, ci) {
-            let rule = repo_rule(format!("auto-{}", board.key), root, board.key);
-            made.push(AutoRule {
+        if !covered(&derived, &hand, root, ci) {
+            let rule = repo_rule(&format!("auto-{}", board.key), root, board.key);
+            derived.push(AutoRule {
                 owner: board.key.to_string(),
                 rule,
             });
         }
     }
     for (n, extra) in extras.iter().enumerate() {
-        if !covered(&made, &hand, &extra.path, ci) {
-            let rule = repo_rule(format!("auto-extra-{}", n + 1), &extra.path, &extra.owner);
-            made.push(AutoRule {
+        if !covered(&derived, &hand, &extra.path, ci) {
+            let rule = repo_rule(&format!("auto-extra-{}", n + 1), &extra.path, &extra.owner);
+            derived.push(AutoRule {
                 owner: extra.owner.clone(),
                 rule,
             });
         }
     }
-    made
+    derived
 }

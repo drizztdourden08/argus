@@ -3,7 +3,7 @@
 
 use crate::board::{AgentFact, BoardFacts, Caller, ThreadInfo};
 use crate::hygiene::{HygieneState, Stepped};
-use crate::ports::WorktreeStore;
+use crate::ports::{ProcInfo, WorktreeStore};
 use crate::request::RemoveInput;
 use crate::rule::Rule;
 use crate::service::Options;
@@ -52,12 +52,28 @@ pub fn world_with(
     agents: &[(&str, &str, &str)],
     prep: impl FnOnce(&Fixture),
 ) -> (Fixture, Harness) {
+    world_running(agents, &[], prep)
+}
+
+/// `world_with` where the processes of `pids` are running before the first scan, which already runs a hygiene step.
+pub fn world_running(
+    agents: &[(&str, &str, &str)],
+    pids: &[u32],
+    prep: impl FnOnce(&Fixture),
+) -> (Fixture, Harness) {
     let fx = Fixture::fake_bare();
     for (n, _, _) in agents {
         fx.add(&format!("agent-a{n}"));
     }
     prep(&fx);
     let h = hygienic(&fx, agents_rule(&fx));
+    for pid in pids {
+        locked(&h.procs.0).push(ProcInfo {
+            pid: *pid,
+            name: "claude".into(),
+            ..ProcInfo::default()
+        });
+    }
     let ended = h.clock_now() - 1000;
     h.board().agents = agents
         .iter()
@@ -66,6 +82,11 @@ pub fn world_with(
     h.scan();
     h.svc.start();
     (fx, h)
+}
+
+/// Agent 1 of the lead, done, and its worktree, with the processes of `pids` running.
+pub fn world_alive(pids: &[u32], prep: impl FnOnce(&Fixture)) -> (Fixture, Harness) {
+    world_running(&[("1", "lead", "done")], pids, prep)
 }
 
 /// Agent 1 of the lead, done, and its worktree.
