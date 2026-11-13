@@ -96,6 +96,14 @@ impl Client {
         read
     }
 
+    /// Stops streaming the live collections among `colls`, so the next add reads them again as
+    /// new ones. Pending collections are left alone.
+    pub fn forget_live(&mut self, colls: &[Coll]) {
+        for c in colls {
+            self.live.remove(c);
+        }
+    }
+
     /// Delivers one doc apply: live collections get their frame now, collections being added get
     /// the event buffered. `false` once the stream is closed.
     pub fn deliver(&mut self, scope: &str, e: &DocsEvent) -> bool {

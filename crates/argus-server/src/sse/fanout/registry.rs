@@ -62,6 +62,18 @@ impl Fanout {
         })
     }
 
+    /// Makes the collections the client already follows new to it again, for a `sub` without
+    /// `since`: the add that follows sends their snapshot. The client stays registered.
+    pub(super) fn forget_live(&self, h: &Handle, colls: &[Coll]) {
+        let mut all = self.lock();
+        if let Some(c) = all
+            .get_mut(&h.scope)
+            .and_then(|list| list.iter_mut().find(|c| c.id == h.id))
+        {
+            c.forget_live(colls);
+        }
+    }
+
     /// Starts an add under the lock: registers a new client or finds the existing one, and marks
     /// the collections new to it pending. Answers the add's token and the collections to read.
     pub(super) fn begin(

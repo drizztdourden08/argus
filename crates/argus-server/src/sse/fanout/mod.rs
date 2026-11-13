@@ -116,6 +116,9 @@ impl Fanout {
         colls: &[Coll],
         since: Option<i64>,
     ) -> Result<(), ApiError> {
+        if since.is_none() && matches!(target, Target::Add(_)) {
+            self.forget_live(h, colls);
+        }
         let (token, read) = self.begin(h, target, colls)?;
         if read.is_empty() {
             let seq = db.docs().seq()?;
@@ -135,8 +138,9 @@ impl Fanout {
     }
 
     /// Follows `colls` of `scope`: the missed changes when `since` is servable, else one snapshot
-    /// per collection new to the client, then `ready`. Collections the client already follows
-    /// send no snapshot; when nothing is new a mux client still gets `ready` with no collections.
+    /// per collection, then `ready`. Without `since`, collections the client already follows get
+    /// a fresh snapshot again; with `since`, those it follows send nothing, and when nothing is
+    /// new a mux client still gets `ready` with no collections.
     /// The other collections of the client keep streaming meanwhile.
     ///
     /// # Errors

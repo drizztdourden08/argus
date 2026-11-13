@@ -179,3 +179,20 @@ async fn a_since_the_log_cannot_serve_falls_back_to_snapshots() {
         .unwrap();
     assert_eq!(names(&w.frames().await), ["snapshot", "ready"]);
 }
+
+#[tokio::test]
+async fn a_repeated_sub_without_since_sends_the_snapshot_again() {
+    let r = rig();
+    r.set(Coll::Items, "I-1");
+    let (h, mut w) = following_meta(&r).await;
+    let target = Target::Add(&h);
+    r.fanout
+        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None)
+        .unwrap();
+    let got = w.frames().await;
+    assert_eq!(names(&got), ["snapshot", "ready"]);
+    assert_eq!(got[0].1["coll"], "meta");
+    assert_eq!(got[1].1["colls"], json!(["meta"]));
+    r.set(Coll::Meta, "later");
+    assert_eq!(names(&w.frames().await), ["changes"]);
+}
