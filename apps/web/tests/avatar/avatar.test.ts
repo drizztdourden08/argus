@@ -2,11 +2,18 @@
 import { describe, expect, it } from 'vitest';
 import { fileToAvatar, resolveAvatar } from '../../src/avatar';
 
+const BOARDS = [{ id: 'b5qa9b7', name: 'Argus', aliases: ['argus'], role: 'argus' }];
+
 describe('I-83 the avatar of a lead', { tags: ['critical'] }, () => {
   it('defaults to the brand mark of the app a board key belongs to', () => {
     expect(resolveAvatar('tessera')).toEqual({ kind: 'brand', app: 'tessera' });
     expect(resolveAvatar('pixelarttool')).toEqual({ kind: 'brand', app: 'bxel' });
     expect(resolveAvatar('argus')).toEqual({ kind: 'brand', app: 'argus' });
+  });
+
+  it('finds the brand of a board through its old keys', () => {
+    expect(resolveAvatar('b5qa9b7', undefined, BOARDS)).toEqual({ kind: 'brand', app: 'argus' });
+    expect(resolveAvatar('b9zzzzz', undefined, BOARDS)).toBeNull();
   });
 
   it('has no source for a board without a brand, so the initials show', () => {

@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind barrel */
+export { brandOf } from './brand-of';
 export { fileToAvatar } from './file-to-avatar';
 export { readFileUrl } from './read-file-url';
 export { resolveAvatar } from './resolve-avatar';

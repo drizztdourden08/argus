@@ -2,7 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import { BOARD_ICON_NAMES, ICON_MAX, resolveBoardIcon } from '../../src/board-icon';
 
-const PNG = 'data:image/png;base64,AAAA';
+const BOARDS = [
+  { id: 'b5qa9b7', name: 'Argus', aliases: ['argus'], role: 'argus' },
+  { id: 'b4k7qz2', name: 'ShardTide', aliases: ['geo-survivors'], role: null },
+];
+const PNG ='data:image/png;base64,AAAA';
 const SVG = 'data:image/svg+xml;base64,AAAA';
 
 describe('I-109 the icon of a board', { tags: ['critical'] }, () => {
@@ -14,6 +18,11 @@ describe('I-109 the icon of a board', { tags: ['critical'] }, () => {
     const url = '/api/p/x/icon?v=0a1b2c3d';
     expect(resolveBoardIcon('x', null, null, url).source).toEqual({ kind: 'image', src: url });
     expect(resolveBoardIcon('x', 'icon:zap').isDefault).toBe(false);
+  });
+
+  it('keeps the brand and the default icon of a board after its key became an id', () => {
+    expect(resolveBoardIcon('b5qa9b7', null, null, null, BOARDS).source).toEqual({ kind: 'brand', app: 'argus' });
+    expect(resolveBoardIcon('b4k7qz2', null, null, null, BOARDS)).toEqual(resolveBoardIcon('geo-survivors'));
   });
 
   it('prefers the board setting over the card icon', () => {

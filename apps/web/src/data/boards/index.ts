@@ -6,6 +6,7 @@ export { boardEntry } from './board-entry';
 export { boardName } from './board-name';
 export { findBoard } from './find-board';
 export { joinBoards } from './join-boards';
+export { firstLegacyKey, legacyKeys } from './legacy-keys';
 export { migrateStoredKeys } from './migrate-stored-keys';
 export { postBoardOp } from './post-board-op';
 export { renameBoard } from './rename-board';

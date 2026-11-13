@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind logic */
-import { AVATAR_BRANDS, AVATAR_MAX_CHARS, BRAND_PREFIX, IMAGE_PREFIX, KEY_BRANDS } from './avatar.constants';
+import { AVATAR_BRANDS, AVATAR_MAX_CHARS, BRAND_PREFIX, IMAGE_PREFIX } from './avatar.constants';
+import { brandOf } from './brand-of';
+import type { BoardInfo } from '../data/boards/boards.type';
 import type { AvatarSource } from './avatar.type';
 
 const fromSetting = (setting: string): AvatarSource | null => {
@@ -10,10 +12,10 @@ const fromSetting = (setting: string): AvatarSource | null => {
   return setting.startsWith(IMAGE_PREFIX) && setting.length <= AVATAR_MAX_CHARS ? { kind: 'image', src: setting } : null;
 };
 
-const resolveAvatar = (key: string, setting?: unknown): AvatarSource | null => {
+const resolveAvatar = (key: string, setting?: unknown, boards?: readonly BoardInfo[]): AvatarSource | null => {
   const chosen = typeof setting === 'string' ? fromSetting(setting) : null;
   if (chosen) return chosen;
-  const app = Object.hasOwn(KEY_BRANDS, key) ? KEY_BRANDS[key] : undefined;
+  const app = brandOf(key, boards);
   return app ? { kind: 'brand', app } : null;
 };
 

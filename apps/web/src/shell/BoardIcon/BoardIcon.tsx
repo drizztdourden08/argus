@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Box, Icon, Image } from '@drizztdourden08/tessera';
 import { BRAND_FAMILY, BrandMark } from '@drizztdourden08/tessera/brand';
+import { useBoards } from '../../data/boards';
 import { resolveBoardIcon } from '../../board-icon';
 import { BOARD_ICON_PX } from './BoardIcon.constants';
 import type { BoardIconProps } from './BoardIcon.type';
@@ -8,7 +9,8 @@ import './BoardIcon.css';
 
 const BoardIcon = (props: BoardIconProps) => {
   const { source, boardKey = '', icon, avatar, cardIcon, size = 'md', title } = props;
-  const shown = source ?? resolveBoardIcon(boardKey, icon, avatar, cardIcon).source;
+  const boards = useBoards();
+  const shown = source ?? resolveBoardIcon(boardKey, icon, avatar, cardIcon, boards).source;
   const px = BOARD_ICON_PX[size];
   const sized = `board-icon board-icon--${size}`;
   if (shown.kind === 'brand') {
