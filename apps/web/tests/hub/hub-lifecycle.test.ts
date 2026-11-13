@@ -113,7 +113,9 @@ describe('C3 Hub resume and reset', { tags: ['critical'] }, () => {
     rig.send('c', { type: 'want', scope: 'rotp', coll: 'items' });
     expect(rig.to('c').some((message) => message.type === 'snapshot')).toBe(false);
   });
+});
 
+describe('C3 Hub recovery', { tags: ['critical'] }, () => {
   it('unsubscribes before the sub after a reset so the server sends a fresh snapshot', () => {
     const rig = loaded();
     rig.frame({ event: 'reset', data: { scope: 'rotp', reason: 'resync' } });

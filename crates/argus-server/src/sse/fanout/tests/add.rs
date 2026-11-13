@@ -79,14 +79,14 @@ async fn the_other_collections_keep_streaming_during_the_add() {
 }
 
 #[tokio::test]
-async fn a_repeat_subscribe_sends_no_snapshot_only_an_empty_ready() {
+async fn a_repeat_subscribe_with_since_sends_no_snapshot_only_an_empty_ready() {
     let r = rig();
     let (h, mut w) = following_meta(&r).await;
     let target = Target::Add(&h);
-    r.fanout
-        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None)
-        .unwrap();
     let seq = r.db.docs().seq().unwrap();
+    r.fanout
+        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], Some(seq))
+        .unwrap();
     let got = w.frames().await;
     assert_eq!(names(&got), ["ready"]);
     assert_eq!(got[0].1, json!({"scope": ALPHA, "seq": seq, "colls": []}));
