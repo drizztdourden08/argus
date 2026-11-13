@@ -79,6 +79,8 @@ const MASTER_TIP = 'Works on the main checkout.';
 
 const WORKTREE_FALLBACK_CODE = 'WT';
 
+const LONG_AGENT_FOLDER = /^(agent-[0-9a-f]{6})[0-9a-f]+$/u;
+
 const BUILD_FALLBACK_CODE = 'BL';
 
 const NO_RANK = 1_000_000_000;
@@ -110,6 +112,7 @@ export {
   NO_RUNS_LINE,
   NO_WORKTREE_TEXT,
   NO_WORKTREE_TIP,
+  LONG_AGENT_FOLDER,
   MASTER_TIP,
   MASTER_WORD,
   MINUTES_PER_HOUR,

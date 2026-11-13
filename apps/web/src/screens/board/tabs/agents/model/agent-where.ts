@@ -2,10 +2,8 @@
 import type { Agent } from '../../../../../data/agents';
 import { kindOf } from '../../../../../data/registry';
 import { folderOf } from './folder-of';
-import { BUILD_FALLBACK_CODE, MASTER_TIP, MASTER_WORD, NO_WORKTREE_TEXT, NO_WORKTREE_TIP, WORKTREE_FALLBACK_CODE } from './model.constants';
+import { BUILD_FALLBACK_CODE, LONG_AGENT_FOLDER, MASTER_TIP, MASTER_WORD, NO_WORKTREE_TEXT, NO_WORKTREE_TIP, WORKTREE_FALLBACK_CODE } from './model.constants';
 import type { WhereLook } from './model.type';
-
-const LONG_AGENT_FOLDER = /^(agent-[0-9a-f]{6})[0-9a-f]+$/u;
 
 const chipFolder = (folder: string): string => folder.replace(LONG_AGENT_FOLDER, '$1');
 
