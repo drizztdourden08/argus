@@ -8,11 +8,13 @@ import { LoadingFallback } from '../LoadingFallback';
 import { PageFrame } from '../PageFrame';
 import { ShellBar } from '../ShellBar';
 import { usePreloadPages } from './behavior/usePreloadPages';
+import { useMigrateStored } from './behavior/useMigrateStored';
 import { useShellMode } from './behavior/useShellMode';
 import './AppShell.css';
 
 const AppShell = () => {
   const { mode, boardKey, boardsAvailable, select } = useShellMode();
+  useMigrateStored();
   usePreloadPages();
   return (
     <AppSettingsProvider>

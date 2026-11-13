@@ -18,6 +18,17 @@ interface BoardHeaderProps {
   tools: ReactNode;
 }
 
+interface BoardTitleProps {
+  boardKey: string;
+  name: string;
+}
+
+interface Rename {
+  error: string | null;
+  commit: (text: string) => void;
+  validate: (text: string) => string | undefined;
+}
+
 interface LeadStatusProps {
   lead: WithId<ProjectThread> | null;
 }
