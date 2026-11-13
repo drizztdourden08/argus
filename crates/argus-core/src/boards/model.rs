@@ -30,6 +30,7 @@ pub struct BoardEntry {
     #[serde(default)]
     pub role: Option<Role>,
     /// When the board was added.
+    #[serde(default)]
     pub created_at: String,
     /// When it was last renamed.
     #[serde(default)]
