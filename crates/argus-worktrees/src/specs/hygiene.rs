@@ -486,6 +486,38 @@ fn a_junction_inside_is_removed_as_a_link_and_its_target_stays() {
 }
 
 #[test]
+fn a_wildcard_keep_pattern_holds_every_worktree_it_matches() {
+    let fx = Fixture::fake_bare();
+    fx.add("agent-a1");
+    fx.add("agent-a2");
+    let pattern = fx.path("agent-a*");
+    let h = Harness::new(&fx.root, vec![agents_rule(&fx)], |o| {
+        hygiene_on(o);
+        o.keep = vec![pattern.clone()];
+    });
+    h.scan();
+    h.svc.start();
+    assert!(!through_debounce(&h, &fx.path("agent-a1")));
+    assert!(exists_itself(&fx.path("agent-a2")));
+}
+
+#[test]
+fn only_the_worktree_the_keep_pattern_names_stays() {
+    let fx = Fixture::fake_bare();
+    fx.add("agent-a1");
+    fx.add("agent-a2");
+    let pattern = fx.path("agent-a1");
+    let h = Harness::new(&fx.root, vec![agents_rule(&fx)], |o| {
+        hygiene_on(o);
+        o.keep = vec![pattern.clone()];
+    });
+    h.scan();
+    h.svc.start();
+    assert!(through_debounce(&h, &fx.path("agent-a2")), "no pattern holds it");
+    assert!(exists_itself(&fx.path("agent-a1")), "its pattern holds it");
+}
+
+#[test]
 fn a_restart_keeps_when_it_goes() {
     let (fx, h) = world(|_| {});
     step(&h, DEBOUNCE / 2);

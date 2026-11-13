@@ -269,6 +269,10 @@ impl Service {
             agent: owners.last().map(|a| a.id.clone()),
             thread: self.owning_lead(look.board, fact, &owners),
         };
+        if let Some(glob) = self.keep_pattern(&fact.path) {
+            let why = format!("kept by the keep pattern {glob}");
+            return (Verdict::Exception(why), owner);
+        }
         if let Some(exception) = look.exception {
             return (Verdict::Exception(exception.reason.clone()), owner);
         }

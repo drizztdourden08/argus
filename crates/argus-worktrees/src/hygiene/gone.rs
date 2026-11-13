@@ -26,7 +26,7 @@ impl Service {
         let gone: Vec<Fact> = self
             .vetted_gone(project, board)
             .into_iter()
-            .filter(|f| !self.reports_only(board, &f.rule))
+            .filter(|f| !self.reports_only(board, &f.rule) && !self.is_kept(f))
             .collect();
         let mut repos: Vec<&str> = gone.iter().filter_map(|f| f.repo.as_deref()).collect();
         repos.sort_unstable();

@@ -110,6 +110,34 @@ fn in_report_mode_a_clean_sibling_stays_and_the_plan_lists_it() {
 }
 
 #[test]
+fn a_keep_pattern_holds_a_sibling_even_in_on_mode_and_the_plan_says_why() {
+    let fx = Fixture::fake_bare();
+    fx.add("sib");
+    fx.add("other");
+    let pattern = fx.path("sib*");
+    let rule = Rule {
+        auto: true,
+        ..Rule::folder("auto-alpha", &fx.repo, "lead").repo()
+    };
+    let h = Harness::new(&fx.root, vec![rule], |o| {
+        hygiene_on(o);
+        o.auto_rules = AutoMode::On;
+        o.keep = vec![pattern.clone()];
+    });
+    h.scan();
+    h.svc.start();
+    assert!(through_debounce(&h, &fx.path("other")));
+    assert!(exists_itself(&fx.path("sib")), "the pattern holds it");
+    let plan = h.svc.auto_plan();
+    let row = plan.iter().find(|r| r.path.ends_with("/sib")).unwrap();
+    assert!(!row.would_remove);
+    assert_eq!(
+        row.reason,
+        format!("kept by the keep pattern {}", pattern)
+    );
+}
+
+#[test]
 fn in_on_mode_the_sibling_is_removed_after_the_debounce() {
     let (fx, h) = sibling_world(AutoMode::On);
     let path = fx.path("sib");

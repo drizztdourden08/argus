@@ -26,6 +26,7 @@ fn reason_of(verdict: &Verdict) -> String {
             "not the hygiene's (a main checkout or a folder git does not list)".to_string()
         }
         Verdict::Attached(why) => format!("attached: {why}"),
+        Verdict::Exception(why) if why.starts_with("kept by the keep pattern") => why.clone(),
         Verdict::Exception(why) => format!("kept as an exception: {why}"),
         Verdict::Clean => "nothing is attached and nothing would be lost".to_string(),
         Verdict::Left(what) => format!("would ask its lead: {what}"),

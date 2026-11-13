@@ -70,6 +70,8 @@ pub struct Options {
     pub scratch: Vec<crate::scratch::ScratchRoot>,
     /// How often the scratch step walks its roots (`worktrees.scratchEveryMs`, 1 hour).
     pub scratch_every_ms: i64,
+    /// Path globs of worktrees the automatic hygiene never touches (`worktrees.keep`, none by default).
+    pub keep: Vec<String>,
 }
 
 impl Default for Options {
@@ -98,6 +100,7 @@ impl Default for Options {
             target_limit_ms: 30 * 60_000,
             scratch: Vec::new(),
             scratch_every_ms: 3_600_000,
+            keep: Vec::new(),
         }
     }
 }

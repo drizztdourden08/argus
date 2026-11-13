@@ -78,6 +78,20 @@ fn scratch_roots(setting: &Value) -> Vec<ScratchRoot> {
         .unwrap_or_default()
 }
 
+/// `worktrees.keep`: path globs of worktrees the automatic hygiene never touches, none by default.
+fn keep_globs(setting: &Value) -> Vec<String> {
+    setting["keep"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .filter_map(|g| g.as_str().map(str::trim))
+                .filter(|g| !g.is_empty())
+                .map(ToString::to_string)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 pub(super) fn timing_of(svc: &Services) -> Timing {
     let s = setting(svc);
     Timing {
@@ -130,6 +144,7 @@ pub(super) fn options_of(svc: &Services) -> Options {
         report_after_ms: int(&s, "reportAfterMs", base.report_after_ms, 0),
         scratch: scratch_roots(&s),
         scratch_every_ms: int(&s, "scratchEveryMs", base.scratch_every_ms, 1000),
+        keep: keep_globs(&s),
         ..base
     };
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {
@@ -154,4 +169,22 @@ pub(super) fn git_limits(svc: &Services) -> (usize, u64, u64) {
         number(&s, "gitTimeoutMs", 10_000, 100),
         number(&s, "removeTimeoutMs", remove_ms, 1000),
     )
+}
+
+// test-tag: critical
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn keep_reads_the_trimmed_non_empty_strings_and_defaults_to_none() {
+        let s = json!({"keep": ["X:/geo-survivors-v*", " X:/geo-survivors-play* ", "", 3]});
+        assert_eq!(
+            keep_globs(&s),
+            vec!["X:/geo-survivors-v*", "X:/geo-survivors-play*"]
+        );
+        assert_eq!(keep_globs(&json!({})).len(), 0);
+        assert_eq!(keep_globs(&Value::Null).len(), 0);
+    }
 }

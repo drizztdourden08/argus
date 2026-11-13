@@ -55,6 +55,7 @@ mod approve;
 mod ask;
 mod auto_plan;
 mod exception;
+mod keep;
 mod gone;
 mod judge;
 mod memory;
