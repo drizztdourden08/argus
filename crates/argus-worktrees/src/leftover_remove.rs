@@ -398,7 +398,7 @@ impl Service {
         board: &BoardFacts,
     ) -> Result<RemoveOutcome> {
         let branch_asked = input.branch && !input.empty_goes;
-        if branch_asked || input.discard {
+        if !not_git && (branch_asked || input.discard) {
             return Err(WtError::new(
                 ErrorCode::BadRequest,
                 format!(
