@@ -9,7 +9,7 @@ use serde_json::Value;
 pub const HEALTH_KEY: &str = "localhostDoor";
 /// The name of the overview.
 pub const OVERVIEW_LABEL: &str = "argus";
-/// The name of the board of the project `argus`, whose key is the overview's name.
+/// The host label of a board whose id or legacy key is the overview's own name (`argus`): a label clash, not a role test. Ids never clash.
 pub const ARGUS_BOARD_LABEL: &str = "argus-app";
 const HTTP_PORT: u16 = 80;
 
@@ -30,7 +30,7 @@ impl Page {
     }
 }
 
-/// The host label of a project's board: its key, `argus-app` for the project `argus`.
+/// The host label of a board: its id (or legacy key), `argus-app` where that would be the overview's own label.
 #[must_use]
 pub fn board_label(key: &str) -> &str {
     if key == OVERVIEW_LABEL {

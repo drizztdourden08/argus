@@ -1,6 +1,8 @@
 //! The board as page documents: every doc of the page collections, the portfolio cards and
 //! dependencies when present, `meta/board`, and `launches/<name>` from the run definitions.
 
+use std::path::Path;
+
 use argus_core::clock::now_ms;
 use argus_core::{Coll, DocChange};
 use serde_json::{Map, Value, json};
@@ -151,7 +153,7 @@ fn public_launch(name: &str, def: &Value) -> Value {
     out
 }
 
-fn board_meta(board: &Board) -> Value {
+fn board_meta(board: &Board, name: &str) -> Value {
     let counters = if board["counters"].is_null() {
         json!({})
     } else {
@@ -159,7 +161,7 @@ fn board_meta(board: &Board) -> Value {
     };
     let mut meta = json!({
         "project": board["project"],
-        "name": display_name(&display(&board["project"]), board["name"].as_str(), None),
+        "name": name,
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
         "avatar": nn(board, "avatar"),
         "icon": nn(board, "icon"),
@@ -184,6 +186,29 @@ fn board_doc(doc: &Value, board: &Board) -> Value {
 /// proof kept on disk (one with a `file`).
 #[must_use]
 pub fn export_docs(board: &Board, proof_url: &dyn Fn(&Value) -> String) -> Vec<DocChange> {
+    let shown = board["name"]
+        .as_str()
+        .map_or_else(|| display(&board["project"]), str::to_owned);
+    docs_named(board, &shown, proof_url)
+}
+
+/// [`export_docs`] with the board's shown name read through the home's identity table.
+#[must_use]
+pub fn export_docs_at(
+    home: &Path,
+    board: &Board,
+    proof_url: &dyn Fn(&Value) -> String,
+) -> Vec<DocChange> {
+    let shown = display_name(
+        home,
+        &display(&board["project"]),
+        board["name"].as_str(),
+        None,
+    );
+    docs_named(board, &shown, proof_url)
+}
+
+fn docs_named(board: &Board, name: &str, proof_url: &dyn Fn(&Value) -> String) -> Vec<DocChange> {
     let mut docs = Vec::new();
     for coll in PAGE_COLLECTIONS {
         for (id, doc) in section(board, coll.as_str()) {
@@ -204,12 +229,12 @@ pub fn export_docs(board: &Board, proof_url: &dyn Fn(&Value) -> String) -> Vec<D
             board_doc(doc, board),
         ));
     }
-    docs.push(DocChange::set(Coll::Meta, "board", board_meta(board)));
-    for (name, def) in section(board, "runDefs") {
+    docs.push(DocChange::set(Coll::Meta, "board", board_meta(board, name)));
+    for (launch, def) in section(board, "runDefs") {
         docs.push(DocChange::set(
             Coll::Launches,
-            name.clone(),
-            public_launch(name, def),
+            launch.clone(),
+            public_launch(launch, def),
         ));
     }
     docs

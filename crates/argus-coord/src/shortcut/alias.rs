@@ -4,13 +4,15 @@
 //! - `http://<key>.localhost:<port>` is the lead's board
 //! - `http://<thread>.<key>.localhost:<port>` is a thread's board
 //!
-//! The Overlord (the coordinator thread of project `portfolio`) gets two rows, `Argus`
+//! The Overlord (the coordinator thread of the board with the Overlord role) gets two rows, `Argus`
 //! (`http://argus.localhost:<port>`, the overview) and `Overlord`
 //! (`http://overlord.localhost:<port>`, its own board). `argus` and `overlord` are reserved
 //! host names: no project key of those names can be an alias, and the project `argus` (the
 //! app's own repo) is `argus-app.localhost`.
 
-use argus_board::names::{ARGUS, MAIN_KEY, OVERLORD};
+use std::path::Path;
+
+use argus_board::names::{ARGUS, OVERLORD};
 use serde_json::{Value, json};
 
 use crate::cli::exit::CoordError;
@@ -76,8 +78,8 @@ pub fn alias_url(project: &str, thread: &str, port: u16) -> Result<String, Coord
 
 /// Is this the Overlord, the thread that gets the two rows?
 #[must_use]
-pub fn is_overlord(project: &str, thread: &str) -> bool {
-    project == MAIN_KEY && thread == LEAD
+pub fn is_overlord(home: &Path, project: &str, thread: &str) -> bool {
+    argus_board::roles::is_overlord(home, project) && thread == LEAD
 }
 
 /// The configuration to merge for a thread: a lead is named `<Project> board`, any other thread
@@ -105,12 +107,13 @@ pub fn shortcut_config(
 /// # Errors
 /// As [`alias_url`].
 pub fn shortcut_configs(
+    home: &Path,
     name: &str,
     project: &str,
     thread: &str,
     port: u16,
 ) -> Result<Vec<Value>, CoordError> {
-    if is_overlord(project, thread) {
+    if is_overlord(home, project, thread) {
         return Ok(vec![
             json!({ "name": ARGUS, "port": port, "url": format!("http://argus.localhost:{port}") }),
             json!({ "name": OVERLORD, "port": port, "url": format!("http://overlord.localhost:{port}") }),

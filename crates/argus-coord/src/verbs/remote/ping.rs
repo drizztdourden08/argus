@@ -2,14 +2,14 @@
 //! Notifications, and an OS toast). Any registered thread may ping, the Overlord too.
 
 use argus_board::limits::{require_text, require_text_max};
-use argus_board::names::{MAIN_KEY, display_name};
+use argus_board::names::display_name;
 use argus_board::ops::Role;
 use argus_core::js;
 use argus_notify::{Level, Outcome as Pinged, ToastState, sentence};
 use serde_json::{Value, json};
 
 use super::support::link::{connect, project_of};
-use super::support::scope::require_board;
+use super::support::scope::{coord_home, require_board};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
 use crate::who::caller;
@@ -63,7 +63,7 @@ fn title_of(call: &Call<'_>, board_name: Option<&str>, thread: &str) -> Result<S
     {
         return Ok(require_text_max("title", &json!(title), TITLE_MAX)?);
     }
-    let named = display_name(project_of(call), board_name, None);
+    let named = display_name(&coord_home(call), project_of(call), board_name, None);
     Ok(js::slice(&format!("{named}: {thread}"), TITLE_MAX).to_owned())
 }
 
@@ -78,7 +78,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     let board = require_board(call, &project)?;
     let who = caller(&board, &call.inv.cwd, &call.inv.env, &call.options)?;
     let title = title_of(call, board["name"].as_str(), &who.thread)?;
-    let by = if project == MAIN_KEY && who.role == Role::Coordinator {
+    let by = if argus_board::roles::is_overlord(&coord_home(call), &project) && who.role == Role::Coordinator {
         "overlord"
     } else {
         "thread"

@@ -84,7 +84,11 @@ fn on_board(
     } else {
         Vec::new()
     };
-    let name = session_name(&js::string(&board["project"]), board["name"].as_str());
+    let name = session_name(
+        &hook.paths.coord_home,
+        &js::string(&board["project"]),
+        board["name"].as_str(),
+    );
     Ok(Some(Hit {
         thread: doc(board, &id).clone(),
         fresh,

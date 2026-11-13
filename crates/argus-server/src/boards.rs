@@ -4,7 +4,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use argus_board::Board;
+use argus_board::roles;
 use argus_board::store::read_board;
+use argus_core::boards::Role;
 use argus_sync::{ProjectRow, SyncService};
 
 const ENDED: [&str; 2] = ["done", "archived"];
@@ -44,6 +46,30 @@ impl BoardReader {
     #[must_use]
     pub fn projects(&self) -> Vec<ProjectRow> {
         self.sync.as_ref().map(|s| s.projects()).unwrap_or_default()
+    }
+
+    /// The id of the Overlord's board, found by its role.
+    #[must_use]
+    pub fn overlord(&self) -> Option<String> {
+        roles::id_of(&self.coord_home, Role::Overlord)
+    }
+
+    /// The Overlord's board.
+    #[must_use]
+    pub fn overlord_board(&self) -> Option<Board> {
+        self.board(&self.overlord()?)
+    }
+
+    /// Is this board (an id or an alias) the Overlord's?
+    #[must_use]
+    pub fn is_overlord(&self, id: &str) -> bool {
+        roles::is_overlord(&self.coord_home, id)
+    }
+
+    /// The live coordinator thread of the Overlord's board.
+    #[must_use]
+    pub fn overlord_thread(&self) -> Option<String> {
+        self.coordinator(&self.overlord()?)
     }
 
     /// The thread of a board that coordinates it, unless it is done or archived.

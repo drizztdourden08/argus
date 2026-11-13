@@ -1,6 +1,5 @@
 //! The two routes that ping the owner: a thread's `POST /api/notify` and the page's test button.
 
-use argus_board::names::MAIN_KEY;
 use argus_core::{ApiError, ErrorCode};
 use argus_native::TEXT_MAX;
 use argus_notify::{By, Level, PingRequest};
@@ -60,10 +59,14 @@ fn thread_of(body: &Value) -> Option<String> {
 }
 
 fn is_overlord(ctx: &Ctx, project: Option<&str>, thread: Option<&str>) -> bool {
-    let (Some(MAIN_KEY), Some(thread)) = (project, thread) else {
+    let (Some(project), Some(thread)) = (project, thread) else {
         return false;
     };
-    let board = ctx.svc.boards().board(MAIN_KEY);
+    let boards = ctx.svc.boards();
+    if !boards.is_overlord(project) {
+        return false;
+    }
+    let board = boards.overlord_board();
     board.is_some_and(|b| b["threads"][thread]["role"] == "coordinator")
 }
 

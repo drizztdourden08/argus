@@ -9,7 +9,6 @@ use crate::agents::stop_agents;
 use crate::error::BoardError;
 use crate::inbox::{Message, message_id, push};
 use crate::json::{doc_mut, ids, nullish, set, shown, text, unset};
-use crate::names::session_name;
 use crate::store::touch;
 
 const PAUSE_TAG: &str = "[Paused] ";
@@ -133,10 +132,9 @@ pub fn pause_thread(board: &mut Board, id: &str, by: &str) -> Result<bool, Board
     touch(board, "threads", id);
     let fallback = format!(
         "{} - <Subject>",
-        session_name(
-            &crate::json::display(&board["project"]),
-            board["name"].as_str()
-        )
+        board["name"]
+            .as_str()
+            .map_or_else(|| crate::json::display(&board["project"]), str::to_owned)
     );
     let title = paused_title(session.as_deref().unwrap_or(&fallback));
     let line = format!(

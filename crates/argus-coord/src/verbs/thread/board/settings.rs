@@ -63,7 +63,7 @@ pub fn prefixes(frame: &mut Frame<'_>) -> Outcome {
         }
         let listed: Vec<String> = list(&board["prefixes"]).iter().map(display).collect();
         let shown = if listed.is_empty() {
-            vec![session_name(project, board["name"].as_str())]
+            vec![session_name(&fr.paths.coord_home, project, board["name"].as_str())]
         } else {
             listed
         };

@@ -3,6 +3,8 @@
 //! four words at most. A board may list its own prefixes when its threads belong to several
 //! products. `thread register` tells a thread whose title does not follow it.
 
+use std::path::Path;
+
 use argus_board::Board;
 use argus_board::json::{display, truthy};
 use argus_board::names::session_name;
@@ -63,8 +65,8 @@ fn subject_problem(title: &str, prefixes: &[String]) -> Option<String> {
 
 /// What is wrong with the title of the session a thread registers from, if anything.
 #[must_use]
-pub fn problem(board: &Board, thread: &Value) -> Option<String> {
-    let name = session_name(&display(&board["project"]), board["name"].as_str());
+pub fn problem(home: &Path, board: &Board, thread: &Value) -> Option<String> {
+    let name = session_name(home, &display(&board["project"]), board["name"].as_str());
     let lead = thread["role"] == "coordinator";
     if !truthy(thread, "session") {
         let wanted = if lead {

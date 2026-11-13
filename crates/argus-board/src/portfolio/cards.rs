@@ -208,7 +208,7 @@ fn icon_of(key: &str, board: &Board) -> Option<String> {
     Some(format!("/api/p/{key}/icon?v={}", &digest[..8]))
 }
 
-fn card_of(key: &str, reg: &Value, board: &Board) -> Value {
+fn card_of(home: &Path, key: &str, reg: &Value, board: &Board) -> Value {
     let (view, paused) = view_of(board);
     let coord = view
         .live
@@ -232,6 +232,7 @@ fn card_of(key: &str, reg: &Value, board: &Board) -> Value {
     put(
         "name",
         json!(display_name(
+            home,
             key,
             board["name"].as_str(),
             reg["name"].as_str()
@@ -282,9 +283,9 @@ pub fn summarize(home: &Path, key: &str, p: &Board, board: Option<&Board>) -> Va
     };
     let Some(board) = board else {
         return json!({
-            "key": key, "name": display_name(key, None, reg["name"].as_str()),
+            "key": key, "name": display_name(home, key, None, reg["name"].as_str()),
             "state": "not started", "root": reg["root"], "url": format!("/p/{key}/"),
         });
     };
-    card_of(key, &reg, board)
+    card_of(home, key, &reg, board)
 }

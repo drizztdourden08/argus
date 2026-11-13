@@ -144,7 +144,7 @@ pub fn run_frame(frame: &mut Frame<'_>) -> Outcome {
     let worktree = optional_text("name", &frame.value("worktree"))?;
     add(frame, (&name, &subject, &brief), worktree.as_deref())?;
     let board = frame.read_board()?;
-    let shown = session_name(frame.project, board["name"].as_str());
+    let shown = session_name(&frame.paths.coord_home, frame.project, board["name"].as_str());
     let title = chip_title(&shown, frame.options.text("title"), &subject);
     let text = prompt(&Prompt {
         project: frame.project,

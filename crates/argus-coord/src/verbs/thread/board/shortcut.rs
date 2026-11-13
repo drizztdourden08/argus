@@ -73,7 +73,7 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
         .as_str()
         .map_or_else(|| display(&board["project"]), str::to_owned);
     let port = board_port(frame.env, frame.paths);
-    let configs = shortcut_configs(&label, frame.project, &id_of(&thread), port)?;
+    let configs = shortcut_configs(&frame.paths.coord_home, &label, frame.project, &id_of(&thread), port)?;
     let written = write_shortcuts(&root, &configs)?;
     let file = written.file.display();
     if !written.changed {

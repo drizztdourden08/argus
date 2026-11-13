@@ -117,8 +117,8 @@ fn without_port(url: &str) -> &str {
     }
 }
 
-fn needs(root: &Path, project: &str, thread: &str) -> Result<bool, CoordError> {
-    let wants: Vec<String> = shortcut_configs(project, project, thread, 0)?
+fn needs(home: &Path, root: &Path, project: &str, thread: &str) -> Result<bool, CoordError> {
+    let wants: Vec<String> = shortcut_configs(home, project, project, thread, 0)?
         .iter()
         .map(|c| {
             let url = c["url"].as_str().unwrap_or_default();
@@ -145,6 +145,6 @@ fn needs(root: &Path, project: &str, thread: &str) -> Result<bool, CoordError> {
 /// thread id cannot be a host name, and when the file cannot be read (the verb would refuse it
 /// too).
 #[must_use]
-pub fn needs_shortcut(root: &Path, project: &str, thread: &str) -> bool {
-    needs(root, project, thread).unwrap_or(false)
+pub fn needs_shortcut(home: &Path, root: &Path, project: &str, thread: &str) -> bool {
+    needs(home, root, project, thread).unwrap_or(false)
 }

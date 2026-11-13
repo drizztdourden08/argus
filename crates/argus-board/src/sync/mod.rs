@@ -15,7 +15,7 @@ mod replies;
 use argus_core::Coll;
 
 pub use argus_core::op_kinds::OP_KINDS;
-pub use export::export_docs;
+pub use export::{export_docs, export_docs_at};
 pub use import::{ImportResult, OpCounts, import_entries, import_entries_at};
 
 /// The collections the page mirrors from a board.
