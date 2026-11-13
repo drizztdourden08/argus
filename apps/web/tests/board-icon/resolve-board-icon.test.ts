@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { BOARD_ICON_NAMES, ICON_MAX, resolveBoardIcon } from '../../src/board-icon';
+import { boardsStore } from '../../src/data/boards/boards-store';
 
 const BOARDS = [
   { id: 'b5qa9b7', name: 'Argus', aliases: ['argus'], role: 'argus' },
@@ -21,12 +22,15 @@ describe('I-109 the icon of a board', { tags: ['critical'] }, () => {
   });
 
   it('keeps the brand and the default icon of a board after its key became an id', () => {
-    expect(resolveBoardIcon('b5qa9b7', null, null, null, BOARDS).source).toEqual({ kind: 'brand', app: 'argus' });
-    expect(resolveBoardIcon('b4k7qz2', null, null, null, BOARDS)).toEqual(resolveBoardIcon('geo-survivors'));
+    const unaliased = resolveBoardIcon('geo-survivors');
+    boardsStore.set(BOARDS);
+    expect(resolveBoardIcon('b5qa9b7').source).toEqual({ kind: 'brand', app: 'argus' });
+    expect(resolveBoardIcon('b4k7qz2')).toEqual(unaliased);
+    boardsStore.set([]);
   });
 
   it('prefers the board setting over the card icon', () => {
-    expect(resolveBoardIcon('x', 'icon:leaf', null, 'brand:brock').source).toEqual({ kind: 'icon', name: 'leaf' });
+    expect(resolveBoardIcon('x', 'icon:book', null, 'brand:brock').source).toEqual({ kind: 'icon', name: 'book' });
   });
 
   it('refuses unknown names, other types, foreign urls and oversize data', () => {

@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { AVATAR_BRANDS, BRAND_PREFIX, brandOf } from '../avatar';
-import { firstLegacyKey } from '../data/boards/legacy-keys';
-import type { BoardInfo } from '../data/boards/boards.type';
+import { firstLegacyKey } from '../data/boards/first-legacy-key';
 import { BOARD_ICON_NAMES, ICON_MAX, ICON_NAME_PREFIX, ICON_URL_PATTERN, PNG_PREFIX, SVG_PREFIX } from './board-icon.constants';
 import { toBoardIconName } from './to-board-icon-name';
 import type { BoardIconSource, ResolvedBoardIcon } from './board-icon.type';
@@ -28,16 +27,16 @@ const parseSetting = (value: unknown): BoardIconSource | null => {
 
 const hashKey = (key: string): number => [...key].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7);
 
-const defaultSource = (key: string, avatar: unknown, boards?: readonly BoardInfo[]): BoardIconSource => {
-  const app = brandOf(key, boards);
+const defaultSource = (key: string, avatar: unknown): BoardIconSource => {
+  const app = brandOf(key);
   if (app) return { kind: 'brand', app };
   const brandAvatar = typeof avatar === 'string' && avatar.startsWith(BRAND_PREFIX) ? parseBrand(avatar) : null;
-  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(firstLegacyKey(key, boards)) %BOARD_ICON_NAMES.length] ?? 'code' };
+  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(firstLegacyKey(key)) % BOARD_ICON_NAMES.length] ?? 'code' };
 };
 
-const resolveBoardIcon = (key: string, icon?: unknown, avatar?: unknown, cardIcon?: unknown, boards?: readonly BoardInfo[]): ResolvedBoardIcon => {
+const resolveBoardIcon = (key: string, icon?: unknown, avatar?: unknown, cardIcon?: unknown): ResolvedBoardIcon => {
   const chosen = parseSetting(icon) ?? parseSetting(cardIcon);
-  return chosen ? { source: chosen, isDefault: false } : { source: defaultSource(key, avatar, boards), isDefault: true };
+  return chosen ? { source: chosen, isDefault: false } : { source: defaultSource(key, avatar), isDefault: true };
 };
 
 export { resolveBoardIcon };

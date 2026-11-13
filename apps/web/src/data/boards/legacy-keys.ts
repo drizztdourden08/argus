@@ -8,6 +8,4 @@ const legacyKeys = (key: string, boards: readonly BoardInfo[] = boardsStore.get(
   ...(findBoard(boards, key)?.aliases ?? []).filter((alias) => alias !== key),
 ];
 
-const firstLegacyKey = (key: string, boards: readonly BoardInfo[] = boardsStore.get()): string => legacyKeys(key, boards)[1] ?? key;
-
-export { firstLegacyKey, legacyKeys };
+export { legacyKeys };

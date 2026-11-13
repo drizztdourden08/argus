@@ -9,8 +9,8 @@ import './BoardIcon.css';
 
 const BoardIcon = (props: BoardIconProps) => {
   const { source, boardKey = '', icon, avatar, cardIcon, size = 'md', title } = props;
-  const boards = useBoards();
-  const shown = source ?? resolveBoardIcon(boardKey, icon, avatar, cardIcon, boards).source;
+  useBoards();
+  const shown = source ?? resolveBoardIcon(boardKey, icon, avatar, cardIcon).source;
   const px = BOARD_ICON_PX[size];
   const sized = `board-icon board-icon--${size}`;
   if (shown.kind === 'brand') {
