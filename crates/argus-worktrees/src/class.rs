@@ -2,7 +2,7 @@
 //! only classifies and shows; no verdict reads it.
 
 use crate::fact::Fact;
-use crate::guards::is_brock_lock;
+use crate::guards::{is_brock_lock, is_claude_lock};
 use crate::remove::Safety;
 use serde::Serialize;
 
@@ -23,7 +23,7 @@ impl LockKind {
         let reason = fact.locked.as_deref()?;
         Some(if is_brock_lock(reason) {
             Self::Brock
-        } else if reason.to_lowercase().starts_with("claude agent") {
+        } else if is_claude_lock(reason) {
             Self::Claude
         } else {
             Self::Other

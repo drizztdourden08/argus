@@ -21,6 +21,28 @@ pub(crate) fn is_brock_lock(reason: &str) -> bool {
     reason.starts_with(BROCK_LOCK)
 }
 
+/// Claude Code locks every agent worktree with `claude agent <agent id> (pid <n>)`.
+const CLAUDE_LOCK: &str = "claude agent";
+
+/// Is this lock reason Claude Code's?
+pub(crate) fn is_claude_lock(reason: &str) -> bool {
+    reason.to_lowercase().starts_with(CLAUDE_LOCK)
+}
+
+/// The pid a Claude Code lock names, when the reason is Claude's and carries one.
+pub(crate) fn claude_lock_pid(reason: &str) -> Option<u32> {
+    if !is_claude_lock(reason) {
+        return None;
+    }
+    let lower = reason.to_lowercase();
+    let at = lower.rfind("(pid ")? + "(pid ".len();
+    let digits: String = lower[at..]
+        .chars()
+        .take_while(char::is_ascii_digit)
+        .collect();
+    digits.parse().ok()
+}
+
 /// A command line holding `worktree remove|prune` is the request itself (and the shell that runs it): not a user of the folder.
 pub fn is_requester(cmd: &str) -> bool {
     let lower = cmd.to_lowercase();

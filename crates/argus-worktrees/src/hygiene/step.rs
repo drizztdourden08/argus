@@ -149,7 +149,9 @@ impl Service {
         else {
             return Stepped::default();
         };
-        let changed = self.mark_all(project, &board, scanned_ms);
+        let lifted = self.unlock_stale_claude(project, &board);
+        let pruned = self.prune_gone_records(project, &board);
+        let changed = self.mark_all(project, &board, scanned_ms) || lifted || pruned;
         let filed = self.remove_detached(project);
         let told = self.ask_leads(project) + self.report_overlord(project);
         let (noticed, noted) = self.notice_items(project, &board);
