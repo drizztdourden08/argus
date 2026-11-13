@@ -25,12 +25,13 @@ const migrateScoped = (storage: Storage, boards: readonly BoardInfo[], prefix: s
   }
 };
 
-const migrateStoredKeys = (storage: Storage, boards: readonly BoardInfo[], valueKeys: readonly string[], scopedPrefixes: readonly string[]): void => {
+const migrateStoredKeys = (storage: Storage, boards: readonly BoardInfo[], valueKeys: readonly string[], scopedPrefixes: readonly string[]): boolean => {
   try {
     valueKeys.forEach((key) => migrateValue(storage, boards, key));
     scopedPrefixes.forEach((prefix) => migrateScoped(storage, boards, prefix));
+    return true;
   } catch {
-    return;
+    return false;
   }
 };
 

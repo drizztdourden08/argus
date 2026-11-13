@@ -103,8 +103,10 @@ export type {
   BoardRunningProps,
   BoardStallsProps,
   BoardStampProps,
+  BoardTitleProps,
   BoardSyncProps,
   BoardWorktreesProps,
   LeadStatusProps,
   NoticeListProps,
+  Rename,
 };

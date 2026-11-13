@@ -605,7 +605,7 @@ fn board_name_prefixes_show_and_the_retired_pages() {
     );
     fx.refused(
         &["board", "frobnicate"],
-        "board verb must be one of init, open, page, url, show, path, name, prefixes, shortcut.",
+        "board verb must be one of id, init, open, page, url, show, path, name, prefixes, shortcut.",
     );
     let json = fx.ok(&["board", "show", "--json"]);
     let summary: Value = serde_json::from_str(&json.out).expect("json");

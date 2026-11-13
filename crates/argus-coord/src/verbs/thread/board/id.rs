@@ -11,6 +11,7 @@ use crate::verbs::thread::frame::Frame;
 ///
 /// # Errors
 /// Never; a board with no file is shown by its id.
+#[allow(clippy::unnecessary_wraps)]
 pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let (home, id) = (frame.home(), frame.project);
     let board_name = frame
