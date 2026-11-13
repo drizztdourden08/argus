@@ -128,7 +128,7 @@ describe('C3 Hub recovery', { tags: ['critical'] }, () => {
   it('subscribes again once when a sub fails, and stops after a second failure', () => {
     const rig = createHubRig();
     rig.send('a', { type: 'want', scope: 'rotp', coll: 'items' });
-    const op = { op: 'sub', scope: 'rotp', colls: ['items'] } as const;
+    const op = { op: 'sub' as const, scope: 'rotp', colls: ['items'] };
     rig.opError(op, { code: 'busy', message: 'later' });
     expect(rig.ops()).toEqual([op, op]);
     rig.opError(op, { code: 'busy', message: 'later' });
