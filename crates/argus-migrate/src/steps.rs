@@ -1,29 +1,41 @@
-//! The forward run, in the order of the plan: precondition, marker and locks, backup, table,
-//! boards, portfolio, database, home files, verification, then `active`. Every step checks the
-//! disk before it acts, so the same call after an interruption finishes the job; a finished run
-//! only verifies again.
+//! The forward run, in the order of the plan: marker, server check, locks, backup, table, boards,
+//! portfolio, database, home files, verification, then `active`. Every step checks the disk before
+//! it acts, so the same call after an interruption finishes the job; a finished run only
+//! verifies again.
 
 use std::path::{Path, PathBuf};
 
 use argus_core::ids::PORTFOLIO;
 
-use crate::error::Result;
+use crate::error::{Result, stop};
 use crate::journal::Journal;
+use crate::locks::Held;
 use crate::map::{self, IdMap};
 use crate::options::{Fault, Options};
 use crate::plan::{self, Plan, board_file};
 use crate::verify::{self, Check};
 use crate::{backup, fault, files, locks, marker, precheck, relocate, rewrite, sql, table};
 
+fn any_renamed(home: &Path, journal: &Journal) -> bool {
+    journal
+        .boards
+        .iter()
+        .any(|e| e.phase == "renamed" || home.join(&e.id).is_dir())
+}
+
 fn ensure_backup(opts: &Options, journal: &mut Journal) -> Result<PathBuf> {
-    let kept = journal
-        .backup
-        .as_ref()
-        .map(PathBuf::from)
-        .filter(|p| p.is_dir());
-    if let Some(path) = kept {
-        backup::check_folder(&path)?;
-        return Ok(path);
+    let kept = journal.backup.as_ref().map(PathBuf::from);
+    if let Some(path) = kept.as_ref().filter(|p| p.is_dir()) {
+        backup::check_folder(path)?;
+        return Ok(path.clone());
+    }
+    if let Some(gone) = kept {
+        if any_renamed(&opts.home, journal) {
+            return stop(format!(
+                "the backup {} is gone and boards are already renamed: a new backup would hold a half-migrated home; restore the folder or roll back",
+                gone.display()
+            ));
+        }
     }
     let path = backup::make(opts)?;
     journal.backup = Some(path.display().to_string());
@@ -47,18 +59,44 @@ fn rewrite_shared(opts: &Options, ids: &IdMap) -> Result<()> {
     files::rewrite(&opts.home, ids)
 }
 
-fn cut_over(opts: &Options, plan: &Plan, journal: &mut Journal) -> Result<Vec<String>> {
+/// What the refusals before the first change leave behind.
+struct Ready {
+    plan: Plan,
+    journal: Journal,
+    backup: PathBuf,
+    _locks: Held,
+}
+
+/// Everything that can refuse before the first change: server, plan, locks, backup.
+fn prepare(opts: &Options, saved: Option<Journal>) -> Result<Ready> {
     let home = &opts.home;
-    let backup = match ensure_backup(opts, journal) {
-        Ok(path) => path,
-        Err(e) => {
-            marker::clear(home);
-            return Err(e);
-        }
-    };
-    let ids = map::forward(plan);
-    table::seed(home, plan)?;
-    move_boards(opts, plan, &ids, journal)?;
+    precheck::server_down(opts)?;
+    let plan = plan::build(home)?;
+    plan::save(home, &plan)?;
+    let held = locks::take(home, &map::pairs(&plan))?;
+    precheck::server_down(opts)?;
+    let mut journal = saved.unwrap_or_else(|| Journal::new(&plan));
+    journal.ensure(&plan);
+    let backup = ensure_backup(opts, &mut journal)?;
+    Ok(Ready {
+        plan,
+        journal,
+        backup,
+        _locks: held,
+    })
+}
+
+fn cut_over(opts: &Options, ready: Ready) -> Result<Vec<String>> {
+    let home = &opts.home;
+    let Ready {
+        plan,
+        mut journal,
+        backup,
+        _locks,
+    } = ready;
+    let ids = map::forward(&plan);
+    table::seed(home, &plan)?;
+    move_boards(opts, &plan, &ids, &mut journal)?;
     rewrite_shared(opts, &ids)?;
     let check = Check {
         home,
@@ -71,10 +109,22 @@ fn cut_over(opts: &Options, plan: &Plan, journal: &mut Journal) -> Result<Vec<St
     journal.complete = true;
     journal.save(home)?;
     marker::clear(home);
-    Ok(vec![
+    Ok(report(&plan, &backup))
+}
+
+fn report(plan: &Plan, backup: &Path) -> Vec<String> {
+    let mut lines = vec![
         format!("migrated {} boards to ids", plan.boards.len()),
         format!("backup: {}", backup.display()),
-    ])
+    ];
+    if let Ok(manifest) = backup::read_manifest(backup) {
+        lines.push(format!(
+            "the backup left out {} links or junctions (listed in its manifest.json, recreate them by hand after a restore) and {} lock files",
+            manifest.links.len(),
+            manifest.locks_skipped
+        ));
+    }
+    lines
 }
 
 fn finished(home: &Path, journal: &Journal) -> Result<Vec<String>> {
@@ -99,12 +149,10 @@ pub fn migrate(opts: &Options) -> Result<Vec<String>> {
     if let Some(done) = saved.as_ref().filter(|j| j.complete) {
         return finished(home, done);
     }
-    precheck::server_down(opts)?;
-    let plan = plan::build(home)?;
-    plan::save(home, &plan)?;
+    let keep = saved.is_some() || marker::exists(home);
     marker::take(opts)?;
-    let _locks = locks::take(home, &map::pairs(&plan)).inspect_err(|_| marker::clear(home))?;
-    let mut journal = saved.unwrap_or_else(|| Journal::new(&plan));
-    journal.ensure(&plan);
-    cut_over(opts, &plan, &mut journal)
+    match prepare(opts, saved) {
+        Ok(ready) => cut_over(opts, ready),
+        Err(e) => Err(marker::release(home, keep, e)),
+    }
 }

@@ -6,7 +6,7 @@ use std::fs::{self, Metadata};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use super::manifest::{Entry, copy_hashed};
+use super::manifest::{Entry, Link, copy_hashed};
 
 /// What a backup of the home never copies, by path under the home.
 pub fn is_skipped(rel: &str) -> bool {
@@ -42,9 +42,28 @@ fn rel_of(rel: &Path, name: &str) -> String {
     }
 }
 
-/// Copies the tree of `from` into `to`, skipping what `skip` names, and lists the files.
-pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Result<Vec<Entry>> {
-    let mut entries = Vec::new();
+/// What a copy made and what it left out.
+#[derive(Default)]
+pub struct Copied {
+    /// Every file copied.
+    pub files: Vec<Entry>,
+    /// Every link or junction not followed.
+    pub links: Vec<Link>,
+    /// How many lock files were skipped.
+    pub locks: usize,
+}
+
+fn link_of(path: &str, item: &Path) -> Link {
+    let target = fs::read_link(item).map(|t| t.display().to_string());
+    Link {
+        path: path.to_owned(),
+        target: target.unwrap_or_default(),
+    }
+}
+
+/// Copies the tree of `from` into `to`, skipping what `skip` names; lists files, links and locks.
+pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Result<Copied> {
+    let mut done = Copied::default();
     let mut stack: Vec<PathBuf> = vec![PathBuf::new()];
     fs::create_dir_all(to)?;
     while let Some(rel) = stack.pop() {
@@ -53,7 +72,12 @@ pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Res
             let name = item.file_name().to_string_lossy().into_owned();
             let path = rel_of(&rel, &name);
             let meta = fs::symlink_metadata(item.path())?;
-            if is_link(&meta) || skip(&path) {
+            if is_link(&meta) {
+                done.links.push(link_of(&path, &item.path()));
+                continue;
+            }
+            if skip(&path) {
+                done.locks += usize::from(name.ends_with(".lock"));
                 continue;
             }
             if meta.is_dir() {
@@ -61,10 +85,10 @@ pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Res
                 stack.push(PathBuf::from(&path));
             } else {
                 let (size, sha256) = copy_hashed(&item.path(), &to.join(&path))?;
-                entries.push(Entry { path, size, sha256 });
+                done.files.push(Entry { path, size, sha256 });
             }
         }
     }
-    entries.sort_by(|a, b| a.path.cmp(&b.path));
-    Ok(entries)
+    done.files.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(done)
 }

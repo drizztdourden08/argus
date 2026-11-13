@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::error::Result;
+use crate::journal::Journal;
 use crate::jsonio;
 
 const NAME_MAX: usize = 30;
@@ -108,13 +109,38 @@ fn taken(plan: &Plan) -> Boards {
     table
 }
 
-/// The plan of a home: the saved one, plus an id for every board folder it does not know yet.
+fn name_of(home: &Path, id: &str, key: &str) -> String {
+    boards::load(home)
+        .ok()
+        .and_then(|table| table.boards.get(id).map(|b| b.name.clone()))
+        .unwrap_or_else(|| key.to_owned())
+}
+
+/// The journal wins: a key it holds keeps the id it recorded, even when the plan file is lost or
+/// says otherwise.
+fn seed_from_journal(home: &Path, plan: &mut Plan, journal: &Journal) {
+    for e in &journal.boards {
+        let name = name_of(home, &e.id, &e.key);
+        let planned = plan.boards.entry(e.key.clone()).or_insert_with(|| Planned {
+            id: e.id.clone(),
+            name,
+            role: role_of(&e.key),
+        });
+        planned.id.clone_from(&e.id);
+    }
+}
+
+/// The plan of a home: the saved one, the ids of the journal of a run, plus an id for every board
+/// folder it does not know yet.
 pub fn build(home: &Path) -> Result<Plan> {
     let mut plan = load(home)?.unwrap_or(Plan {
         version: 1,
         boards: BTreeMap::new(),
         remaining: BTreeMap::new(),
     });
+    if let Some(journal) = Journal::load(home)? {
+        seed_from_journal(home, &mut plan, &journal);
+    }
     let registry = registry(home);
     for folder in folders_with_boards(home)? {
         let known = plan.boards.contains_key(&folder)

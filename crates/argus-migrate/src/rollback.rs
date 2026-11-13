@@ -11,10 +11,11 @@ use argus_core::ids::PORTFOLIO;
 
 use crate::error::{Result, stop};
 use crate::journal::{self, Journal};
-use crate::map;
+use crate::locks::Held;
+use crate::map::{self, IdMap};
 use crate::options::Options;
 use crate::plan::board_file;
-use crate::{backup, files, locks, marker, precheck, relocate, rewrite, sql};
+use crate::{backup, files, locks, marker, precheck, relocate, rewrite, rollcheck, sql};
 
 fn strangers(home: &Path, journal: &Journal) -> Result<()> {
     let table = boards::load(home)?;
@@ -40,22 +41,30 @@ fn remove(file: &Path) -> Result<()> {
     }
 }
 
+fn gate(opts: &Options, journal: &Journal, back: &IdMap) -> Result<Held> {
+    precheck::server_down(opts)?;
+    let pairs: Vec<(String, String)> = journal
+        .boards
+        .iter()
+        .map(|e| (e.key.clone(), e.id.clone()))
+        .collect();
+    let held = locks::take(&opts.home, &pairs)?;
+    precheck::server_down(opts)?;
+    rollcheck::run(&opts.home, journal, back)?;
+    Ok(held)
+}
+
 /// Reverses the migration of the home.
 pub fn run(opts: &Options) -> Result<Vec<String>> {
     let home = &opts.home;
     let Some(journal) = Journal::load(home)? else {
         return stop("there is no board-ids.journal.json: nothing to roll back");
     };
-    precheck::server_down(opts)?;
     strangers(home, &journal)?;
+    let keep = marker::exists(home);
     marker::take(opts)?;
-    let pairs: Vec<(String, String)> = journal
-        .boards
-        .iter()
-        .map(|e| (e.key.clone(), e.id.clone()))
-        .collect();
-    let _locks = locks::take(home, &pairs).inspect_err(|_| marker::clear(home))?;
     let back = map::reverse(&journal.boards);
+    let _locks = gate(opts, &journal, &back).map_err(|e| marker::release(home, keep, e))?;
     files::rewrite(home, &back)?;
     sql::rewrite(&home.join(backup::DB_REL), &back)?;
     rewrite::portfolio::rewrite_file(&board_file(home, PORTFOLIO), &back)?;

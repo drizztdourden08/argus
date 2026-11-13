@@ -7,3 +7,4 @@ mod t2_counts;
 mod t3_interrupted;
 mod t4_backup;
 mod t5_guards;
+mod t6_review_fixes;

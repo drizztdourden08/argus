@@ -1,6 +1,7 @@
 //! Step 6: the database, in one `BEGIN IMMEDIATE` transaction: the scope and project columns,
 //! the attachment paths and the kv keys that embed a board key.
 
+mod collide;
 mod kv;
 mod tables;
 
@@ -26,5 +27,6 @@ pub fn rewrite(db: &Path, map: &IdMap) -> Result<()> {
     Ok(())
 }
 
+pub use collide::collisions;
 pub use kv::rewrite_key;
 pub use tables::{PROJECT_TABLES, SCOPE_TABLES};

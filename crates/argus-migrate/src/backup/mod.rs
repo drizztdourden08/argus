@@ -58,13 +58,16 @@ fn damage(backup: &Path, manifest: &Manifest) -> Result<()> {
 pub fn make(opts: &Options) -> Result<PathBuf> {
     let home = &opts.home;
     let path = sibling(home, "backup");
-    let mut files = copy_tree(home, &path, &copy::is_skipped)?;
+    let copied = copy_tree(home, &path, &copy::is_skipped)?;
+    let mut files = copied.files;
     files.extend(db::copy(home, &path)?);
     files.sort_by(|a, b| a.path.cmp(&b.path));
     let manifest = Manifest {
         created: now_iso(),
         source: home.display().to_string(),
         files,
+        links: copied.links,
+        locks_skipped: copied.locks,
     };
     jsonio::write(&path.join(MANIFEST), &serde_json::to_value(&manifest)?)?;
     if fault::armed(opts, Fault::CorruptBackup) {

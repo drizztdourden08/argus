@@ -18,6 +18,15 @@ pub struct Entry {
     pub sha256: String,
 }
 
+/// A link or junction the backup did not follow.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Link {
+    /// The path under the home, with `/` separators.
+    pub path: String,
+    /// What it pointed at, empty when that could not be read.
+    pub target: String,
+}
+
 /// The manifest.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -27,6 +36,12 @@ pub struct Manifest {
     pub source: String,
     /// Every file.
     pub files: Vec<Entry>,
+    /// Every link or junction left out, to recreate by hand after a restore.
+    #[serde(default)]
+    pub links: Vec<Link>,
+    /// How many `*.lock` files were left out.
+    #[serde(default)]
+    pub locks_skipped: usize,
 }
 
 /// The name of the manifest file in a backup.

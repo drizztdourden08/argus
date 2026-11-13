@@ -21,6 +21,7 @@ mod remaining;
 mod restore;
 mod rewrite;
 mod rollback;
+mod rollcheck;
 mod run;
 mod sql;
 mod steps;
