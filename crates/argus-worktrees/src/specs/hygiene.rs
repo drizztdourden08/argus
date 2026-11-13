@@ -68,13 +68,13 @@ fn a_clean_worktree_nothing_is_attached_to_goes_after_the_debounce() {
 }
 
 #[test]
-fn the_removal_takes_the_merged_branches_and_leaves_one_note_per_lead() {
+fn the_removal_keeps_the_branches_and_leaves_one_note_per_lead() {
     let (fx, h) = world_with(&[("1", "lead", "done"), ("2", "lead", "done")], |_| {});
     let (one, two) = (fx.path("agent-a1"), fx.path("agent-a2"));
     assert!(through_debounce(&h, &one) && !exists_itself(&two));
     let left = branches(&fx.repo);
     assert!(
-        !left.contains(&"agent-a1".to_string()) && !left.contains(&"agent-a2".to_string()),
+        left.contains(&"agent-a1".to_string()) && left.contains(&"agent-a2".to_string()),
         "{left:?}"
     );
     let notes = inbox(&h);
@@ -91,7 +91,7 @@ fn the_removal_takes_the_merged_branches_and_leaves_one_note_per_lead() {
     let removed = h.meta().hygiene.removed;
     assert_eq!(removed.len(), 2);
     let request = &h.svc.request_list("alpha")[0];
-    assert!(request.branch && !request.discard, "{request:?}");
+    assert!(!request.branch && !request.discard, "{request:?}");
 }
 
 #[test]
