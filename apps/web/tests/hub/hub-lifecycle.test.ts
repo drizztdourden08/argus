@@ -114,6 +114,36 @@ describe('C3 Hub resume and reset', { tags: ['critical'] }, () => {
     expect(rig.to('c').some((message) => message.type === 'snapshot')).toBe(false);
   });
 
+  it('unsubscribes before the sub after a reset so the server sends a fresh snapshot', () => {
+    const rig = loaded();
+    rig.frame({ event: 'reset', data: { scope: 'rotp', reason: 'resync' } });
+    expect(rig.ops().slice(-2)).toEqual([
+      { op: 'unsub', scope: 'rotp', colls: ['items'] },
+      { op: 'sub', scope: 'rotp', colls: ['items'] },
+    ]);
+  });
+
+  it('subscribes again once when a sub fails, and stops after a second failure', () => {
+    const rig = createHubRig();
+    rig.send('a', { type: 'want', scope: 'rotp', coll: 'items' });
+    const op = { op: 'sub', scope: 'rotp', colls: ['items'] } as const;
+    rig.opError(op, { code: 'busy', message: 'later' });
+    expect(rig.ops()).toEqual([op, op]);
+    rig.opError(op, { code: 'busy', message: 'later' });
+    expect(rig.ops()).toHaveLength(2);
+  });
+
+  it('asks the server again when a tab wants a collection that is ready but holds no data', () => {
+    const rig = createHubRig();
+    rig.send('a', { type: 'want', scope: 'rotp', coll: 'items' });
+    rig.frame(ready('rotp', ['items']));
+    rig.send('b', { type: 'want', scope: 'rotp', coll: 'items' });
+    expect(rig.ops().slice(-2)).toEqual([
+      { op: 'unsub', scope: 'rotp', colls: ['items'] },
+      { op: 'sub', scope: 'rotp', colls: ['items'] },
+    ]);
+  });
+
   it('closes the connection and stops the linger timers on dispose', () => {
     const rig = loaded();
     rig.send('a', { type: 'unwant', scope: 'rotp', coll: 'items' });
