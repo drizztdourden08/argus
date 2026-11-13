@@ -17,6 +17,7 @@
 mod agents;
 mod args;
 mod backend;
+mod board_names;
 mod bridge;
 mod call;
 mod context;

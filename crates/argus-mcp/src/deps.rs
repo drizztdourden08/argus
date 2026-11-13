@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 use crate::args::arg_str;
 use crate::backend::McpBackend;
 use crate::json::text;
+use crate::project::resolve_project;
 
 fn touches(dep: &Value, project: &str) -> bool {
     ["from", "to"]
@@ -16,7 +17,9 @@ fn touches(dep: &Value, project: &str) -> bool {
 
 /// The dependencies, oldest first as the ledger holds them.
 pub fn list_dependencies(backend: &dyn McpBackend, args: &Value) -> Value {
-    let project = arg_str(args, "project");
+    let resolved = arg_str(args, "project")
+        .map(|key| resolve_project(backend, key).unwrap_or_else(|| key.to_owned()));
+    let project = resolved.as_deref();
     let state = arg_str(args, "state");
     let deps: Vec<Value> = backend
         .docs(PORTFOLIO, "deps")

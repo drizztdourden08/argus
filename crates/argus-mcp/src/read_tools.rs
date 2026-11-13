@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 
 use crate::agents::list_agents;
 use crate::backend::McpBackend;
+use crate::board_names::describe;
 use crate::call::Call;
 use crate::deps::list_dependencies;
 use crate::error::ToolError;
@@ -18,11 +19,12 @@ use crate::summary::board_summary;
 #[must_use]
 pub fn portfolio_cards(backend: &dyn McpBackend) -> Vec<Value> {
     let cards = backend.docs(PORTFOLIO, "cards");
-    if cards.is_empty() {
+    let cards = if cards.is_empty() {
         backend.cards()
     } else {
         cards
-    }
+    };
+    cards.into_iter().map(|c| describe(backend, c)).collect()
 }
 
 /// Run a read tool, or none when `name` is not one.

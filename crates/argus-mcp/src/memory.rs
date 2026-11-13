@@ -50,6 +50,7 @@ pub struct MemoryBackend {
     policy: Mutex<McpConfig>,
     attach: AttachConfig,
     roots: Vec<PathBuf>,
+    home: Option<PathBuf>,
     calls: Mutex<Calls>,
 }
 
@@ -81,6 +82,7 @@ impl MemoryBackend {
                 extra: Map::new(),
             },
             roots: Vec::new(),
+            home: None,
             calls: Mutex::new(Calls::default()),
         }
     }
@@ -125,6 +127,13 @@ impl MemoryBackend {
     #[must_use]
     pub fn with_attach(mut self, attach: AttachConfig) -> Self {
         self.attach = attach;
+        self
+    }
+
+    /// Set the coord home that holds `boards.json`.
+    #[must_use]
+    pub fn with_home(mut self, home: PathBuf) -> Self {
+        self.home = Some(home);
         self
     }
 
@@ -190,6 +199,10 @@ impl McpBackend for MemoryBackend {
 
     fn doc(&self, scope: &str, coll: &str, id: &str) -> Option<Value> {
         self.docs[scope][coll].get(id).cloned()
+    }
+
+    fn home(&self) -> Option<PathBuf> {
+        self.home.clone()
     }
 
     fn policy(&self) -> McpConfig {

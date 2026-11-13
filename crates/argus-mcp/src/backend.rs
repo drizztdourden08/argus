@@ -83,6 +83,11 @@ pub trait McpBackend: Send + Sync {
     /// One doc.
     fn doc(&self, scope: &str, coll: &str, id: &str) -> Option<Value>;
 
+    /// The coord home, where `boards.json` lives. With none, a board is known by its key only.
+    fn home(&self) -> Option<PathBuf> {
+        None
+    }
+
     /// `config.mcp`, read on every call so an edit takes effect without a restart.
     fn policy(&self) -> McpConfig;
 

@@ -10,7 +10,7 @@ use crate::call::Call;
 use crate::error::ToolError;
 use crate::ids::new_id;
 use crate::json::{pick, text, truthy};
-use crate::project::{need, require_project};
+use crate::project::{need, require_project, resolve_project};
 
 /// The refusal of a fail, partial or blocked result without a note.
 pub const RESULT_NOTE_REQUIRED: &str =
@@ -147,12 +147,14 @@ pub async fn send_to_lead(call: &Call<'_>) -> Result<Value, ToolError> {
             "project is required: a project key, or \"all\"",
         ));
     };
-    if target != "all" {
-        require_project(call.backend, Some(target))?;
-    }
+    let target = if target == "all" {
+        target.to_owned()
+    } else {
+        require_project(call.backend, Some(target))?
+    };
     let text = arg_str(call.args, "text").unwrap_or_default();
     call.backend
-        .send_to_lead(target, text, flag(call.args, "decision"), &call.via)
+        .send_to_lead(&target, text, flag(call.args, "decision"), &call.via)
         .await
 }
 
@@ -169,7 +171,9 @@ pub async fn notify_owner(call: &Call<'_>) -> Result<Value, ToolError> {
         title: arg(call, "title"),
         text: arg(call, "text").unwrap_or_default(),
         level: arg(call, "level").unwrap_or_else(|| "ping".to_owned()),
-        project: arg(call, "project").or_else(|| call.ctx.default_project.clone()),
+        project: arg(call, "project")
+            .or_else(|| call.ctx.default_project.clone())
+            .map(|key| resolve_project(call.backend, &key).unwrap_or(key)),
         thread: call.via.clone(),
     };
     let sent = call.backend.notify(&request).await?;

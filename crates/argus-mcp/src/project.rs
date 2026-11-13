@@ -2,34 +2,50 @@
 
 use std::cmp::Ordering;
 
+use argus_core::boards::resolve;
 use argus_core::ids::is_key;
 use serde_json::{Value, json};
 
 use crate::backend::McpBackend;
+use crate::board_names::label;
 use crate::error::ToolError;
 use crate::json::{display, truthy};
 use argus_core::collate;
 
-/// The project key a call names, checked against the boards that exist.
+/// The board id for what a caller typed (an id or an old key), if that board has a board.
+#[must_use]
+pub fn resolve_project(backend: &dyn McpBackend, key: &str) -> Option<String> {
+    let known = backend.project_keys();
+    let id = match backend.home() {
+        Some(home) => resolve(&home, key),
+        None => Some(key.to_owned()),
+    };
+    id.filter(|id| known.contains(id))
+}
+
+/// The board id a call names (a board id or an old key), checked against the boards that exist.
 pub fn require_project(backend: &dyn McpBackend, key: Option<&str>) -> Result<String, ToolError> {
     let Some(key) = key.filter(|k| !k.is_empty()) else {
         return Err(ToolError::bad_request(
-            "project is required: pass the project key (portfolio_overview lists them).",
+            "project is required: pass the board id or old key (portfolio_overview lists them).",
         ));
     };
     if !is_key(key) {
         return Err(ToolError::bad_request(format!(
-            "\"{key}\" is not a project key (lowercase letters, digits, dashes)."
+            "\"{key}\" is not a board id or key (lowercase letters, digits, dashes)."
         )));
     }
-    let known = backend.project_keys();
-    if !known.iter().any(|k| k == key) {
-        return Err(
-            ToolError::not_found(format!("no board for project \"{key}\""))
-                .with_details(json!({ "known": known })),
-        );
-    }
-    Ok(key.to_owned())
+    resolve_project(backend, key).ok_or_else(|| unknown_board(backend, key))
+}
+
+fn unknown_board(backend: &dyn McpBackend, key: &str) -> ToolError {
+    let known: Vec<String> = backend
+        .project_keys()
+        .iter()
+        .map(|id| label(backend, id))
+        .collect();
+    ToolError::not_found(format!("no board for project \"{key}\""))
+        .with_details(json!({ "known": known }))
 }
 
 /// A doc or a `not_found` saying what is missing.

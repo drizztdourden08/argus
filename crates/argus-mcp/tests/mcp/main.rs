@@ -1,6 +1,7 @@
 //! The MCP layer against the fake backend and a local HTTP stub: the cases of the Node
 //! `mcp.tools`, `mcp.http`, `mcp.server` (protocol side) and `mcp.stdio` tests.
 
+mod board_ids;
 mod bridge;
 mod bridge_stub;
 mod defs;

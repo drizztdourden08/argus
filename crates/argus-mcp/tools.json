@@ -18,7 +18,7 @@
   {
     "name": "portfolio_overview",
     "title": "Argus overview",
-    "description": "One card per project: threads, open questions, tests, runs. Start here to learn the project keys.",
+    "description": "One card per project: threads, open questions, tests, runs. Start here to learn the board ids, names and old keys.",
     "inputSchema": {
       "type": "object",
       "properties": {},
@@ -41,7 +41,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         }
       },
       "additionalProperties": false
@@ -63,7 +63,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "includeHidden": {
           "type": "boolean"
@@ -88,7 +88,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "status": {
           "type": "string",
@@ -135,7 +135,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "id": {
           "type": "string",
@@ -165,7 +165,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "item": {
           "type": "string",
@@ -220,7 +220,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "id": {
           "type": "string",
@@ -250,7 +250,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "live": {
           "type": "boolean"
@@ -278,7 +278,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "kind": {
           "type": "string"
@@ -316,7 +316,7 @@
         },
         "project": {
           "type": "string",
-          "description": "A project key, or \"all\". Defaults to the default project, else every project."
+          "description": "A board id or old key, or \"all\". Defaults to the default project, else every project."
         },
         "collections": {
           "type": "array",
@@ -363,7 +363,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "run": {
           "type": "string",
@@ -409,7 +409,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "includeRetired": {
           "type": "boolean"
@@ -434,7 +434,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "run": {
           "type": "string",
@@ -481,7 +481,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "kind": {
           "type": "string",
@@ -534,7 +534,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "entry": {
           "type": "string",
@@ -573,7 +573,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "text": {
           "type": "string",
@@ -612,7 +612,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "test": {
           "type": "string",
@@ -656,7 +656,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "name": {
           "type": "string",
@@ -693,7 +693,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "run": {
           "type": "string",
@@ -723,7 +723,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         },
         "test": {
           "type": "string",
@@ -778,7 +778,7 @@
       "properties": {
         "project": {
           "type": "string",
-          "description": "A project key, or \"all\"."
+          "description": "A board id or old key, or \"all\"."
         },
         "text": {
           "type": "string",
@@ -828,7 +828,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Project key (see portfolio_overview). Optional when the server was started with a default project."
+          "description": "Board id or old key (see portfolio_overview). Optional when the server was started with a default project."
         }
       },
       "required": [
@@ -853,7 +853,7 @@
         "project": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
-          "description": "Only the dependencies that start or end on this project (see portfolio_overview)."
+          "description": "Only the dependencies that start or end on this board (id or old key; see portfolio_overview)."
         },
         "state": {
           "type": "string",
