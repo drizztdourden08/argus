@@ -106,9 +106,9 @@ pub fn take(home: &Path, pairs: &[(String, String)]) -> Result<Held> {
         }
         let file = lock_file(home, folder);
         if let Err(e) = acquire(&file) {
-            got.iter().for_each(|p| {
+            for p in &got {
                 fs::remove_file(p).ok();
-            });
+            }
             return Err(e);
         }
         got.push(file);

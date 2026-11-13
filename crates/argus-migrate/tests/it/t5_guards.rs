@@ -15,7 +15,11 @@ fn alive(_pid: u32) -> bool {
 #[test]
 fn a_live_server_refuses_the_run() {
     let fx = Fixture::new();
-    fs::write(fx.home.join("dashboard").join("server.pid"), "4242").unwrap();
+    fs::write(
+        fx.home.join("dashboard").join("server.pid"),
+        r#"{"pid":4242,"port":47615}"#,
+    )
+    .unwrap();
     let before = snapshot::take(&fx.home);
     let opts = Options {
         pid_alive: alive,

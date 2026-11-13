@@ -14,7 +14,7 @@ fn dry_run(opts: &Options) -> Result<Vec<String>> {
         .iter()
         .map(|(key, p)| format!("{key} -> {}  ({})", p.id, p.name))
         .collect();
-    let strings: usize = plan.remaining.values().map(|shapes| shapes.len()).sum();
+    let strings: usize = plan.remaining.values().map(BTreeMap::len).sum();
     lines.push(format!(
         "{} boards planned; {strings} kinds of exact-key strings stay, listed per file in {}",
         plan.boards.len(),

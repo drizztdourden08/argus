@@ -8,10 +8,17 @@ use std::path::{Path, PathBuf};
 
 use super::manifest::{Entry, Link, copy_hashed};
 
+/// A lock file, whatever the case of its extension.
+fn is_lock(name: &str) -> bool {
+    std::path::Path::new(name)
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("lock"))
+}
+
 /// What a backup of the home never copies, by path under the home.
 pub fn is_skipped(rel: &str) -> bool {
     let name = rel.rsplit('/').next().unwrap_or(rel);
-    name.ends_with(".lock")
+    is_lock(name)
         || matches!(
             rel,
             "MIGRATING"
@@ -77,7 +84,7 @@ pub fn copy_tree(from: &Path, to: &Path, skip: &dyn Fn(&str) -> bool) -> io::Res
                 continue;
             }
             if skip(&path) {
-                done.locks += usize::from(name.ends_with(".lock"));
+                done.locks += usize::from(is_lock(name));
                 continue;
             }
             if meta.is_dir() {

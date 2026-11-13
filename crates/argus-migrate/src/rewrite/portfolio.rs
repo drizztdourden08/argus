@@ -25,9 +25,9 @@ fn swap_entries(entries: &mut Value, map: &IdMap) {
     for entry in children_mut(entries) {
         swap_field(entry, "project", map);
         if let Some(list) = entry.get_mut("deliveredTo") {
-            children_mut(list)
-                .into_iter()
-                .for_each(|s| swap_str(s, map));
+            for s in children_mut(list) {
+                swap_str(s, map);
+            }
         }
     }
 }
@@ -39,9 +39,9 @@ pub fn rewrite(portfolio: &mut Value, map: &IdMap) -> bool {
     rekey_field(portfolio, "cards", map, true);
     rekey_field(portfolio, "pushedHash", map, false);
     if let Some(boards) = portfolio.get_mut("boards") {
-        children_mut(boards)
-            .into_iter()
-            .for_each(|b| swap_field(b, "key", map));
+        for b in children_mut(boards) {
+            swap_field(b, "key", map);
+        }
     }
     if let Some(deps) = portfolio.get_mut("deps") {
         swap_dep_ends(deps, map);
