@@ -493,18 +493,15 @@ mod tests {
 
     #[test]
     fn the_owner_quitting_during_the_wait_ends_it_well() {
-        let looks = std::cell::Cell::new(0);
+        let asked = std::cell::Cell::new(false);
         let result = await_quit(
             &mut Quit {
                 force: false,
                 cancelled: &|| false,
-                waiting: &mut |_| {},
+                waiting: &mut |_| asked.set(true),
             },
             LIMITS,
-            &|| {
-                looks.set(looks.get() + 1);
-                looks.get() > 12
-            },
+            &|| asked.get(),
             &mut || {},
         );
         assert_eq!(result, Ok(()));

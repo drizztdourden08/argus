@@ -2,6 +2,7 @@
 //! The files a run adds on purpose (table, plan, journal, marker, locks) are left out.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 use std::fs;
 use std::path::Path;
 
@@ -38,13 +39,19 @@ fn all_files(root: &Path, rel: &str, out: &mut Vec<String>) {
     }
 }
 
+fn has_ext(name: &str, ext: &str) -> bool {
+    Path::new(name)
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case(ext))
+}
+
 fn is_left_out(rel: &str) -> bool {
     let name = rel.rsplit('/').next().unwrap();
     matches!(
         rel,
         "boards.json" | "board-ids.plan.json" | "board-ids.journal.json" | "MIGRATING"
-    ) || name.ends_with(".lock")
-        || name.ends_with(".tmp")
+    ) || has_ext(name, "lock")
+        || has_ext(name, "tmp")
         || rel.starts_with("dashboard/dashboard.db")
 }
 
@@ -83,7 +90,7 @@ pub fn take(home: &Path) -> Snapshot {
     names.retain(|n| !is_left_out(n));
     let mut json = BTreeMap::new();
     for name in &names {
-        if name.ends_with(".json") {
+        if has_ext(name, "json") {
             let text = fs::read_to_string(home.join(name)).unwrap();
             json.insert(name.clone(), serde_json::from_str(&text).unwrap());
         }
@@ -109,7 +116,10 @@ pub fn hashes(home: &Path) -> BTreeMap<String, String> {
         .into_iter()
         .map(|n| {
             let digest = Sha256::digest(fs::read(home.join(&n)).unwrap());
-            let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+            let hex = digest.iter().fold(String::new(), |mut acc, b| {
+                let _ = write!(acc, "{b:02x}");
+                acc
+            });
             (n, hex)
         })
         .collect()
