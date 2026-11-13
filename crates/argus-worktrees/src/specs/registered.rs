@@ -68,3 +68,23 @@ fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_
     assert!(!listed(&fx.repo).contains(&"agent-ng".to_string()));
     assert_sibling_intact(Path::new(&sibling));
 }
+
+// test-tag: standard
+#[test]
+fn a_folder_that_is_no_work_tree_stays_for_the_lead_when_its_last_live_sibling_is_gone() {
+    let fx = Fixture::fake_bare();
+    let sibling = fx.add("agent-a1");
+    let path = fx.add("agent-ng");
+    std::fs::remove_file(join_path(&path, ".git")).unwrap();
+    put(&path, "notes.txt", "left behind\n");
+    let h = agents_only(&fx);
+    h.board().agents = vec![agent("1", "lead", "working", h.clock_now())];
+    h.scan();
+    fx.git(&["worktree", "remove", "--force", &sibling]);
+    h.scan();
+    h.svc.start();
+    assert_eq!(
+        left_why(&h, "agent-ng"),
+        "not a git worktree: 2 entries left"
+    );
+}

@@ -173,6 +173,7 @@ fn scan_no_repo(wts: &str, ci: bool) -> crate::scan::ScanResult {
         fs: &RealFs,
         case_insensitive: ci,
         measure: &real_measure,
+        known_repos: &[],
     };
     scan_rules(&[Rule::folder("W-1", wts, "lead")], &env)
 }

@@ -49,6 +49,7 @@ fn with_a_repository_a_folder_git_still_lists_stays_not_git_one_it_does_not_list
         fs: &RealFs,
         case_insensitive: ci,
         measure: &real_measure,
+        known_repos: &[],
     };
     let out = scan_rules(&[Rule::folder("W-1", &fx.wts, "lead")], &env);
     let f = facts_by_name(&out.facts);

@@ -21,6 +21,7 @@ pub fn env<'a>(
         fs: &RealFs,
         case_insensitive: ci,
         measure,
+        known_repos: &[],
     }
 }
 

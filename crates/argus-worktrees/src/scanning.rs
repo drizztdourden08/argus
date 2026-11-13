@@ -71,12 +71,17 @@ impl Service {
         value
     }
 
-    fn scan_env<'a>(&'a self, measure: &'a dyn Fn(&str) -> Leftover) -> ScanEnv<'a> {
+    fn scan_env<'a>(
+        &'a self,
+        measure: &'a dyn Fn(&str) -> Leftover,
+        known_repos: &'a [String],
+    ) -> ScanEnv<'a> {
         ScanEnv {
             git: &self.deps.git,
             fs: self.deps.fs.as_ref(),
             case_insensitive: self.ci(),
             measure,
+            known_repos,
         }
     }
 
@@ -117,7 +122,9 @@ impl Service {
         } else {
             self.st().budget_spent_ms = 0;
             let measure = |path: &str| self.measure_leftover(path);
-            let found = scan_rules_with(&board.rules, &self.scan_env(&measure), kept.as_ref());
+            let repos = self.known_repos();
+            let env = self.scan_env(&measure, &repos);
+            let found = scan_rules_with(&board.rules, &env, kept.as_ref());
             self.adopt_deleting(project, &found.deleting, &board.rules);
             ScanState {
                 at_ms: self.now(),
@@ -316,7 +323,7 @@ impl Service {
         };
         self.st().budget_spent_ms = 0;
         let measure = |path: &str| self.measure_leftover(path);
-        let env = self.scan_env(&measure);
+        let env = self.scan_env(&measure, &[]);
         let mut ctx = ScanCtx {
             git: env.git,
             fs: env.fs,

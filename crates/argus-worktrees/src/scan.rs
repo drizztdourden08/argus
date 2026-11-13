@@ -12,6 +12,7 @@ use crate::measure::Leftover;
 use crate::parse::{ListedWorktree, parse_worktree_list};
 use crate::paths::{base_name, clean_path, join_path, parent_of, path_key, same_path, worktree_id};
 use crate::probe::{Fingerprint, Reuse, fingerprint};
+use crate::relist::{note_repo, relist_known, undecided};
 use crate::rule::{Rule, RuleKind};
 use std::collections::{HashMap, HashSet};
 
@@ -54,6 +55,8 @@ pub struct ScanEnv<'a> {
     pub fs: &'a dyn Fs,
     pub case_insensitive: bool,
     pub measure: &'a dyn Fn(&str) -> Leftover,
+    /// The repositories earlier scans knew, asked for a folder rule whose live worktrees are all gone.
+    pub known_repos: &'a [String],
 }
 
 /// The candidate folders of a folder rule, from directory listings only (no git).
@@ -294,17 +297,40 @@ impl Scanner<'_, '_> {
         info
     }
 
-    fn finish(mut self, rules: Vec<RuleInfo>) -> ScanResult {
+    fn listed(&self) -> HashSet<String> {
         let ci = self.env.case_insensitive;
-        let listed: HashSet<String> = self
-            .ctx
+        self.ctx
             .lists
             .iter()
             .flat_map(|l| l.items.iter().map(|i| path_key(&i.path, ci)))
-            .collect();
+            .collect()
+    }
+
+    fn any_undecided(&self) -> bool {
+        let listed = self.listed();
+        self.folder_facts
+            .iter()
+            .any(|&i| undecided(&self.facts[i], &listed, self.env))
+    }
+
+    /// Settle the folders of folder rules: a folder no listing names is asked of the known repositories before it can
+    /// be a leftover, and is not taken for one when a known repository could not answer.
+    fn settle_folders(&mut self) -> HashSet<String> {
+        let env = self.env;
+        let complete = !self.any_undecided() || relist_known(&mut self.ctx, env.known_repos);
+        let listed = self.listed();
         for index in std::mem::take(&mut self.folder_facts) {
-            mark_leftover(&mut self.facts[index], &listed, self.env);
+            let fact = &mut self.facts[index];
+            note_repo(fact, &self.ctx.lists, env.case_insensitive);
+            if complete || !undecided(fact, &listed, env) {
+                mark_leftover(fact, &listed, env);
+            }
         }
+        listed
+    }
+
+    fn finish(mut self, rules: Vec<RuleInfo>) -> ScanResult {
+        let listed = self.settle_folders();
         ScanResult {
             rules,
             facts: self.facts,

@@ -52,7 +52,9 @@ Overlord.
 | `exception` | exception | On the Overlord's exception list. Never removed, never reported. |
 
 A leftover folder with no file in it (nothing git lists, 0 files) is `removing` the same way and
-goes through the existing leftover removal. The tab lists the last 20 removals under the table.
+goes through the existing leftover removal. A folder that lost its `.git` but that a known repository
+still lists stays not-git for its lead, even when no live worktree is left under the rule (the scan asks
+the repositories it knew); if such a repository cannot answer, the folder is not taken for a leftover. The tab lists the last 20 removals under the table.
 
 ## The flow
 

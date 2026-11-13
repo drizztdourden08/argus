@@ -54,6 +54,7 @@ mod remove;
 mod request;
 mod requests;
 mod rule;
+mod relist;
 mod scan;
 mod scanning;
 mod service;
