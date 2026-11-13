@@ -40,8 +40,9 @@ fn take(path: &Path) -> Result<Option<TableLock>, BoardsError> {
 fn is_stale(path: &Path) -> bool {
     fs::metadata(path)
         .and_then(|m| m.modified())
-        .map(|t| SystemTime::now().duration_since(t).unwrap_or_default() > STALE)
-        .unwrap_or(true)
+        .map_or(true, |t| {
+            SystemTime::now().duration_since(t).unwrap_or_default() > STALE
+        })
 }
 
 /// Waits up to 5 s for the lock of `home`.
