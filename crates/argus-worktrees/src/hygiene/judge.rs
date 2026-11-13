@@ -248,10 +248,8 @@ impl Service {
             .map(|all| all.iter().filter(|e| e.name != ".git").count());
         match entries {
             Ok(0) => Verdict::Clean,
-            Ok(count) => Verdict::Left(format!(
-                "not a git worktree: {} left",
-                plural(u32::try_from(count).unwrap_or(u32::MAX), "entry")
-            )),
+            Ok(1) => Verdict::Left("not a git worktree: 1 entry left".to_string()),
+            Ok(count) => Verdict::Left(format!("not a git worktree: {count} entries left")),
             Err(_) => {
                 Verdict::Left("not a git worktree: its entries could not be read".to_string())
             }

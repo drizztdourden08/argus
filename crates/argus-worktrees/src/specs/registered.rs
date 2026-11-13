@@ -50,7 +50,7 @@ fn a_folder_that_is_no_work_tree_is_left_for_the_lead_and_goes_without_touching_
     h.svc.start();
     assert_eq!(
         left_why(&h, "agent-ng"),
-        "not a git worktree: 2 entries left"
+        "not a git worktree: 3 entries left"
     );
     step(&h, DEBOUNCE);
     let input = ApproveInput {
