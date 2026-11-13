@@ -16,6 +16,8 @@ interface AgentRowProps {
   now: number;
   actions: AgentActions;
   onOpen: OpenRecord;
+  open: ReadonlySet<string>;
+  onRowOpen: (id: string, open: boolean) => void;
 }
 
 interface AgentTrailingProps {

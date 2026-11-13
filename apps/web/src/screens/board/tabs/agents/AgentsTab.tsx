@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Box, Flex } from '@drizztdourden08/tessera';
+import { useState } from 'react';
 import { useRecordPane } from '../../../../shell';
 import { FINISHED_KEY, useStoredFlag } from '../../../../stored';
 import { useTabView } from '../../BoardTabsRow';
@@ -9,7 +10,7 @@ import { useAgentActions } from './behavior/useAgentActions';
 import { useAgentRuns } from './behavior/useAgentRuns';
 import { useAgentsView } from './behavior/useAgentsView';
 import { useReconcile } from './behavior/useReconcile';
-import { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_ORDER_IDS, AGENTS_TAB } from './model';
+import { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_ORDER_IDS, AGENTS_TAB, allOpen, setRowOpen, toggleAll } from './model';
 import { AgentRunsSection } from './sub-components/AgentRunsSection';
 import { AgentsBody } from './sub-components/AgentsBody';
 import { AgentsFoot } from './sub-components/AgentsFoot';
@@ -28,18 +29,21 @@ const AgentsTab = (props: AgentsTabProps) => {
   const now = useNow(view.active.length > 0);
   const runs = useAgentRuns(boardKey);
   const runNow = useNow(runs.live.length > 0, SECOND_TICK_MS);
-  const { open } = useRecordPane();
+  const { open: openRecord } = useRecordPane();
   const [showFinished, setShowFinished] = useStoredFlag(FINISHED_KEY);
   const count = view.finishedCount;
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const ids = [...view.shown.active, ...(showFinished ? view.shown.done : [])].map((agent) => agent.id);
+  const expand = { all: allOpen(open, ids), onToggle: () => setOpen(toggleAll(open, ids)) };
   const finished = { count, shown: showFinished, onToggle: () => setShowFinished(!showFinished) };
   return (
     <Flex direction="column" gap="md">
       <AgentsTools boardKey={boardKey} tabView={tabView} view={view} finished={finished} />
       <ReconcilePanel findings={findings} />
       <Box as="section" aria-label="Agents" className="agents-panel">
-        <AgentsHeader active={view.active} lead={view.lead} now={now} />
+        <AgentsHeader active={view.active} lead={view.lead} now={now} expand={expand} />
         <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={runNow} />
-        <AgentsBody boardKey={boardKey} view={view} showFinished={showFinished} group={tabView.group} now={now} actions={actions} onOpen={open} />
+        <AgentsBody boardKey={boardKey} view={view} showFinished={showFinished} group={tabView.group} now={now} actions={actions} onOpen={openRecord} open={open} onRowOpen={(id, value) => setOpen(setRowOpen(open, id, value))} />
         {showFinished && count > 0 && (
           <AgentsFoot canArchive={view.shown.done.length > 0} onArchive={() => actions.archiveFinished(view.shown.done.map((agent) => agent.id))} />
         )}

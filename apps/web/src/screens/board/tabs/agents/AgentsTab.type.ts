@@ -48,6 +48,7 @@ interface AgentsHeaderProps {
   active: readonly WithId<Agent>[];
   lead: WithId<ProjectThread> | null;
   now: number;
+  expand: { all: boolean; onToggle: () => void };
 }
 
 interface LeadLineProps {
@@ -63,6 +64,8 @@ interface AgentsBodyProps {
   now: number;
   actions: AgentActions;
   onOpen: (code: string, tab?: string) => void;
+  open: ReadonlySet<string>;
+  onRowOpen: (id: string, open: boolean) => void;
 }
 
 interface AgentsFootProps {

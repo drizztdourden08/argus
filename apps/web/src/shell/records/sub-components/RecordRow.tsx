@@ -10,7 +10,7 @@ import { RowChips } from './RowChips';
 import { RowTitle } from './RowTitle';
 
 const RecordRow = (props: RecordRowProps) => {
-  const { head, title: given, onOpen, chips = [], age, trailing, body } = props;
+  const { head, title: given, onOpen, chips = [], age, trailing, body, open, onOpenChange } = props;
   const untitled = given === '';
   const title = untitled ? head.code : given;
   const linked = onOpen !== undefined && rowLinked(title, chips);
@@ -21,6 +21,8 @@ const RecordRow = (props: RecordRowProps) => {
       name={head.code}
       kind={head.kind}
       density="row"
+      open={open}
+      onOpenChange={onOpenChange}
       code={untitled ? undefined : opener}
       title={<RowTitle title={title} board={head.boardKey} linked={linked} onOpen={onOpen} label={`Open ${head.code}: ${title}`} />}
       content={

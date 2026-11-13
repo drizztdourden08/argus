@@ -8,7 +8,7 @@ import { AgentDetails } from './AgentDetails';
 import { AgentTrailing } from './AgentTrailing';
 
 const AgentRow = (props: AgentRowProps) => {
-  const { boardKey, id, agent, threads, now, actions, onOpen } = props;
+  const { boardKey, id, agent, threads, now, actions, onOpen, open, onRowOpen } = props;
   return (
     <Box data-swap-item>
       <RecordRow
@@ -26,6 +26,8 @@ const AgentRow = (props: AgentRowProps) => {
         trailing={<AgentTrailing id={id} agent={agent} now={now} actions={actions} />}
         body={<AgentDetails agent={agent} now={now} />}
         onOpen={() => onOpen(id)}
+        open={open.has(id)}
+        onOpenChange={(value) => onRowOpen(id, value)}
       />
     </Box>
   );

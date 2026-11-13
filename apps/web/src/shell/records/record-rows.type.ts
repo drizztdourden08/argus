@@ -39,6 +39,8 @@ interface RecordRowProps {
   age?: string;
   trailing?: ReactNode;
   body?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface CardTitleProps {

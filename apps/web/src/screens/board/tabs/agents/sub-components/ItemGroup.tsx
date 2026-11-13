@@ -5,7 +5,7 @@ import { AgentRow } from './AgentRow';
 import { ItemHeader } from './ItemHeader';
 
 const ItemGroup = (props: ItemGroupProps) => {
-  const { itemId, items, agents, boardKey, threads, now, actions, onOpen } = props;
+  const { itemId, items, agents, boardKey, threads, now, actions, onOpen, open, onRowOpen } = props;
   const item = items.find((candidate) => candidate.id === itemId);
   return (
     <RecordGroup
@@ -14,7 +14,7 @@ const ItemGroup = (props: ItemGroupProps) => {
       label={`Agents of ${item ? itemCode(item) : itemId}`}
     >
       {agents.map((agent) => (
-        <AgentRow key={agent.id} boardKey={boardKey} id={agent.id} agent={agent} threads={threads} now={now} actions={actions} onOpen={onOpen} />
+        <AgentRow key={agent.id} boardKey={boardKey} id={agent.id} agent={agent} threads={threads} now={now} actions={actions} onOpen={onOpen} open={open} onRowOpen={onRowOpen} />
       ))}
     </RecordGroup>
   );
