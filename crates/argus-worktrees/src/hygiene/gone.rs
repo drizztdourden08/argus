@@ -23,7 +23,11 @@ impl Service {
     /// prune it never refuses a whole repository: a record outside every rule is held back, the others go. True when
     /// a record went.
     pub(crate) fn prune_gone_records(&self, project: &str, board: &BoardFacts) -> bool {
-        let gone = self.vetted_gone(project, board);
+        let gone: Vec<Fact> = self
+            .vetted_gone(project, board)
+            .into_iter()
+            .filter(|f| !self.reports_only(board, &f.rule))
+            .collect();
         let mut repos: Vec<&str> = gone.iter().filter_map(|f| f.repo.as_deref()).collect();
         repos.sort_unstable();
         repos.dedup();

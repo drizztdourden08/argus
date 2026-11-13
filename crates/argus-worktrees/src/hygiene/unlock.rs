@@ -14,6 +14,7 @@ impl Service {
             .facts_of(project)
             .into_iter()
             .filter(|f| !f.main && self.rule_of(board, f).is_ok())
+            .filter(|f| !self.reports_only(board, &f.rule))
             .filter_map(|f| {
                 let pid = claude_lock_pid(f.locked.as_deref()?)?;
                 Some((f, pid))
