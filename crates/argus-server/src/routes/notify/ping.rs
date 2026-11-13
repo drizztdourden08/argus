@@ -8,6 +8,7 @@ use serde_json::Value;
 use super::{LEVEL_WORDS, answer, service};
 use crate::router::Reply;
 use crate::routes::blocking::blocking;
+use crate::routes::params::board_id;
 use crate::{AuthKind, Ctx};
 
 const THREAD_MAX: usize = 60;
@@ -40,12 +41,12 @@ fn is_project_key(text: &str) -> bool {
     text.chars().count() <= KEY_MAX && argus_core::ids::is_key(text)
 }
 
-fn project_of(body: &Value) -> Result<Option<String>, ApiError> {
+fn project_of(ctx: &Ctx, body: &Value) -> Result<Option<String>, ApiError> {
     let Some(project) = body["project"].as_str().filter(|p| !p.is_empty()) else {
         return Ok(None);
     };
     if is_project_key(project) {
-        return Ok(Some(project.to_owned()));
+        return Ok(Some(board_id(ctx, project)));
     }
     let shown: String = project.chars().take(KEY_MAX).collect();
     Err(ApiError::bad_request(format!(
@@ -92,7 +93,7 @@ fn too_long(text: &str) -> Option<ApiError> {
 fn request_of(ctx: &Ctx, body: &Value) -> Result<PingRequest, ApiError> {
     let text = text_of(body)?;
     let level = level_of(body)?;
-    let project = project_of(body)?;
+    let project = project_of(ctx, body)?;
     let thread = thread_of(body);
     if ctx.auth != Some(AuthKind::Page) {
         if let Some(error) = too_long(&text) {

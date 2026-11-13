@@ -5,33 +5,41 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
+use argus_core::boards;
 use argus_core::ids::{is_key, is_scope};
 use argus_core::{ApiError, Coll};
 use argus_sync::SyncService;
 
 use crate::Ctx;
 
-/// The `:scope` param.
+/// The id of the board a caller named: an id, an old key (alias) or a legacy folder. A name
+/// that is no board stays as it is, so the route answers its own not found.
+#[must_use]
+pub fn board_id(ctx: &Ctx, named: &str) -> String {
+    boards::resolve(&ctx.svc.paths.coord_home, named).unwrap_or_else(|| named.to_owned())
+}
+
+/// The `:scope` param, served as the board id; `_portfolio` stays the system scope.
 ///
 /// # Errors
 /// 400 for anything but a key or `_portfolio`.
 pub fn scope(ctx: &Ctx) -> Result<String, ApiError> {
     let s = ctx.param("scope");
     if is_scope(s) {
-        Ok(s.to_owned())
+        Ok(board_id(ctx, s))
     } else {
         Err(ApiError::bad_request(format!("invalid scope \"{s}\"")))
     }
 }
 
-/// The `:key` param.
+/// The `:key` param, served as the board id.
 ///
 /// # Errors
 /// 400 for anything but a project key.
 pub fn key(ctx: &Ctx) -> Result<String, ApiError> {
     let k = ctx.param("key");
     if is_key(k) {
-        Ok(k.to_owned())
+        Ok(board_id(ctx, k))
     } else {
         Err(ApiError::bad_request(format!(
             "invalid project key \"{k}\""

@@ -23,6 +23,7 @@ use axum::response::Response;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
+use super::params::board_id;
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::deps::{act, run};
@@ -104,7 +105,7 @@ async fn one(ctx: Ctx) -> Reply {
 
 async fn of_item(ctx: Ctx) -> Reply {
     let (project, item) = (
-        ctx.param("project").to_owned(),
+        board_id(&ctx, ctx.param("project")),
         ctx.param("item").to_owned(),
     );
     let dep = run(&ctx.svc, move |home| by_item(home, &project, &item)).await?;
