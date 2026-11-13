@@ -49,7 +49,9 @@ fn fresh(home: &Path, boards: &Boards) -> Result<BoardId, BoardsError> {
 /// table cannot be written.
 pub fn mint(home: &Path, given_key: &str) -> Result<BoardId, BoardsError> {
     update(home, |boards| {
-        if !is_key(given_key) || boards.boards.contains_key(given_key) || has_alias(boards, given_key)
+        if !is_key(given_key)
+            || boards.boards.contains_key(given_key)
+            || has_alias(boards, given_key)
         {
             return Err(BoardsError::BadKey(given_key.to_owned()));
         }
