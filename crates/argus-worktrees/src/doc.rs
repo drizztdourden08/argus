@@ -1,6 +1,7 @@
 //! The records the server mirrors for the board's Worktrees tab: one doc per worktree, one summary per project.
 
 use crate::board::RequestDoc;
+use crate::class::{Class, LockKind};
 use crate::hygiene::{HygieneDoc, HygieneMeta};
 use crate::jobs::JobDoc;
 use crate::linking::LinkSource;
@@ -111,12 +112,19 @@ pub struct WorktreeDoc {
     pub age_days: Option<i64>,
     pub stale_days: u32,
     pub dirty: u32,
+    /// How many of the `dirty` paths are untracked files.
+    pub untracked: u32,
     pub ahead: u32,
     pub behind: u32,
     pub upstream: Option<String>,
     pub merged: bool,
     pub merged_into: Option<String>,
     pub referenced: Option<bool>,
+    /// What the folder is and what removing it would cost. Display only: no removal reads it.
+    pub class: Class,
+    /// Whose lock holds it, for a locked worktree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lock_kind: Option<LockKind>,
     pub unmerged: Option<u32>,
     pub unmerged_subjects: Vec<String>,
     pub prunable: Option<String>,

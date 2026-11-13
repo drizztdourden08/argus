@@ -135,8 +135,8 @@ fn probe_repo(git: &Git, dir: &str) -> Probed {
 fn apply_status(fact: &mut Fact, out: &GitOutput) {
     if out.ok() {
         let status = parse_status(&out.stdout);
-        (fact.dirty, fact.ahead, fact.behind, fact.upstream) =
-            (status.dirty, status.ahead, status.behind, status.upstream);
+        (fact.dirty, fact.untracked) = (status.dirty, status.untracked);
+        (fact.ahead, fact.behind, fact.upstream) = (status.ahead, status.behind, status.upstream);
         return;
     }
     let text = if out.timed_out {

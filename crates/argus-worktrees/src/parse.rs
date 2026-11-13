@@ -64,7 +64,10 @@ pub fn parse_worktree_list(text: &str) -> Vec<ListedWorktree> {
 /// What `git status --porcelain=v1 -b` says.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct StatusInfo {
+    /// Every changed path, tracked or not.
     pub dirty: u32,
+    /// How many of them are untracked (`??` lines). The tracked changes are `dirty - untracked`.
+    pub untracked: u32,
     pub ahead: u32,
     pub behind: u32,
     pub upstream: Option<String>,
@@ -106,10 +109,13 @@ pub fn parse_status(text: &str) -> StatusInfo {
         .find(|l| l.starts_with("## "))
         .copied()
         .unwrap_or_default();
-    let dirty = lines.iter().filter(|l| !l.starts_with("## ")).count();
+    let changes = || lines.iter().filter(|l| !l.starts_with("## "));
+    let dirty = changes().count();
+    let untracked = changes().filter(|l| l.starts_with("??")).count();
     let (upstream, counts) = branch_parts(head);
     StatusInfo {
         dirty: u32::try_from(dirty).unwrap_or(u32::MAX),
+        untracked: u32::try_from(untracked).unwrap_or(u32::MAX),
         ahead: count_after(&counts, "ahead "),
         behind: count_after(&counts, "behind "),
         upstream,
@@ -125,6 +131,7 @@ mod tests {
     fn info(dirty: u32, ahead: u32, behind: u32, upstream: Option<&str>, gone: bool) -> StatusInfo {
         StatusInfo {
             dirty,
+            untracked: 0,
             ahead,
             behind,
             upstream: upstream.map(String::from),
@@ -136,7 +143,10 @@ mod tests {
     fn status_dirty_count_ahead_behind_upstream_gone() {
         assert_eq!(
             parse_status("## main...origin/main [ahead 2, behind 1]\n M a.txt\n?? b.txt\n"),
-            info(2, 2, 1, Some("origin/main"), false)
+            StatusInfo {
+                untracked: 1,
+                ..info(2, 2, 1, Some("origin/main"), false)
+            }
         );
         assert_eq!(parse_status("## feat\n"), info(0, 0, 0, None, false));
         assert_eq!(
