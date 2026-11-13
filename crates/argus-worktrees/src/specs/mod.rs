@@ -36,6 +36,7 @@ mod safety;
 mod scan;
 mod scan_git;
 mod scan_kit;
+mod scratch;
 mod service;
 mod service_status;
 mod slow;

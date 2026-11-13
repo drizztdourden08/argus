@@ -60,3 +60,20 @@ pub(crate) fn publish(svc: &Services, service: &WorktreeService, key: &str) {
         publish_derived(svc, key, &derived);
     }
 }
+
+/// The folders the scratch step would remove, read-only, in the portfolio doc `meta/worktrees` under `scratch`.
+pub(crate) fn publish_scratch(svc: &Services, service: &WorktreeService) {
+    let plan = to_value(service.scratch_plan()).unwrap_or(Value::Null);
+    let written = svc.db.tx(|tx| {
+        let mut all = tx
+            .get(PORTFOLIO, Coll::Meta, "worktrees")?
+            .map_or_else(|| json!({}), |row| row.data);
+        all["scratch"] = plan;
+        tx.apply(PORTFOLIO, &[DocChange::set(Coll::Meta, "worktrees", all)])?;
+        Ok(())
+    });
+    if let Err(e) = written {
+        svc.log
+            .warn("scratch list not written", json!({ "err": e.to_string() }));
+    }
+}

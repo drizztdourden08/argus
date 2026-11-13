@@ -14,7 +14,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::time::Instant;
 
 use super::config::Timing;
-use super::publish::{publish, publish_derived};
+use super::publish::{publish, publish_derived, publish_scratch};
 use crate::Services;
 
 const PUMP_EVERY: Duration = Duration::from_millis(200);
@@ -57,6 +57,9 @@ async fn scan_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {
 async fn live_all(svc: &Arc<Services>, service: &Arc<WorktreeService>) {
     let service = Arc::clone(service);
     blocking(svc, move |svc| {
+        if service.scratch_step() {
+            publish_scratch(svc, &service);
+        }
         for key in projects(&service) {
             let found = service.live_step(&key);
             let scanned = service.scan_if_changed(&key).is_some();

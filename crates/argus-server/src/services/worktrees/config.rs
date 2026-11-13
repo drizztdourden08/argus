@@ -43,6 +43,41 @@ fn int(setting: &Value, name: &str, default: i64, min: u64) -> i64 {
     .unwrap_or(default)
 }
 
+/// One `worktrees.scratch` entry: a root, the include globs, the days untouched (7 by default) and the mode (`report`
+/// unless it says `remove`). An entry with no root is dropped.
+fn scratch_entry(entry: &Value) -> Option<ScratchRoot> {
+    let root = entry["root"].as_str().filter(|r| !r.trim().is_empty())?;
+    Some(ScratchRoot {
+        root: root.to_string(),
+        include: entry["include"]
+            .as_array()
+            .map(|globs| {
+                globs
+                    .iter()
+                    .filter_map(|g| g.as_str().map(ToString::to_string))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        min_age_days: entry["minAgeDays"]
+            .as_f64()
+            .filter(|d| *d > 0.0)
+            .unwrap_or(7.0),
+        mode: if entry["mode"] == "remove" {
+            ScratchMode::Remove
+        } else {
+            ScratchMode::Report
+        },
+    })
+}
+
+/// `worktrees.scratch`: the scratch roots, none by default.
+fn scratch_roots(setting: &Value) -> Vec<ScratchRoot> {
+    setting["scratch"]
+        .as_array()
+        .map(|list| list.iter().filter_map(scratch_entry).collect())
+        .unwrap_or_default()
+}
+
 pub(super) fn timing_of(svc: &Services) -> Timing {
     let s = setting(svc);
     Timing {
@@ -93,6 +128,8 @@ pub(super) fn options_of(svc: &Services) -> Options {
         auto_rules: auto_mode(&s),
         detach_debounce_ms: int(&s, "detachDebounceMs", base.detach_debounce_ms, 0),
         report_after_ms: int(&s, "reportAfterMs", base.report_after_ms, 0),
+        scratch: scratch_roots(&s),
+        scratch_every_ms: int(&s, "scratchEveryMs", base.scratch_every_ms, 1000),
         ..base
     };
     if let Some(days) = s["leftoverAgeDays"].as_f64().filter(|d| *d >= 0.0) {

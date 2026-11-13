@@ -66,6 +66,10 @@ pub struct Options {
     /// How long one target of a request may take before the request gives up on it and goes on (30 minutes: more
     /// than the longest git removal, 15 minutes, and a scan before it).
     pub target_limit_ms: i64,
+    /// The scratch roots (`worktrees.scratch`, none by default).
+    pub scratch: Vec<crate::scratch::ScratchRoot>,
+    /// How often the scratch step walks its roots (`worktrees.scratchEveryMs`, 1 hour).
+    pub scratch_every_ms: i64,
 }
 
 impl Default for Options {
@@ -92,6 +96,8 @@ impl Default for Options {
             detach_debounce_ms: 60_000,
             report_after_ms: 30 * 60_000,
             target_limit_ms: 30 * 60_000,
+            scratch: Vec::new(),
+            scratch_every_ms: 3_600_000,
         }
     }
 }
@@ -155,6 +161,10 @@ pub struct State {
     /// What each running removal does now, by worktree id.
     pub steps: HashMap<String, crate::progress::Step>,
     pub stopped: bool,
+    /// The last failure of the gone-record prune, by repository: said once, again only when it changes.
+    pub prune_errors: HashMap<String, String>,
+    /// The last scratch step and what it would remove.
+    pub scratch: crate::scratch::ScratchState,
 }
 
 pub struct Inner {

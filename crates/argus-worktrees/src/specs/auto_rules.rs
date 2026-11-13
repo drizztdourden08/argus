@@ -8,7 +8,7 @@
 use crate::auto::{AutoBoard, AutoMode, AutoRule, ExtraRepo, auto_rules};
 use crate::rule::{Rule, RuleKind};
 use crate::specs::hygiene_kit::{DEBOUNCE, hygiene_on, step, through_debounce};
-use crate::testkit::{Fixture, Harness, exists_itself};
+use crate::testkit::{Fixture, Harness, exists_itself, records};
 
 fn owned(made: &[AutoRule]) -> Vec<(String, String)> {
     made.iter()
@@ -79,6 +79,11 @@ fn an_extra_repo_is_covered_by_the_owner_board() {
 fn sibling_world(mode: AutoMode) -> (Fixture, Harness) {
     let fx = Fixture::fake_bare();
     fx.add("sib");
+    let h = auto_harness(&fx, mode);
+    (fx, h)
+}
+
+fn auto_harness(fx: &Fixture, mode: AutoMode) -> Harness {
     let rule = Rule {
         auto: true,
         ..Rule::folder("auto-alpha", &fx.repo, "lead").repo()
@@ -88,7 +93,7 @@ fn sibling_world(mode: AutoMode) -> (Fixture, Harness) {
         o.auto_rules = mode;
     });
     h.scan();
-    (fx, h)
+    h
 }
 
 #[test]
@@ -110,4 +115,28 @@ fn in_on_mode_the_sibling_is_removed_after_the_debounce() {
     step(&h, DEBOUNCE / 2);
     assert!(exists_itself(&path), "not before the debounce");
     assert!(through_debounce(&h, &path));
+}
+
+#[test]
+fn in_report_mode_a_gone_record_is_not_pruned_and_a_dead_pid_lock_is_not_unlocked() {
+    let fx = Fixture::fake_bare();
+    fx.add("gone");
+    fx.add("held");
+    fx.git(&[
+        "worktree",
+        "lock",
+        "--reason",
+        "claude agent agent-a1 (pid 4242)",
+        &fx.path("held"),
+    ]);
+    std::fs::remove_dir_all(fx.path("gone")).unwrap();
+    let h = auto_harness(&fx, AutoMode::Report);
+    step(&h, 1000);
+    assert!(records(&fx).contains(&"gone".to_string()));
+    assert_eq!(h.notes.removals("pruned").len(), 0);
+    assert_eq!(h.notes.removals("unlocked").len(), 0);
+    assert!(
+        fx.git(&["worktree", "list", "--porcelain"])
+            .contains("locked claude agent")
+    );
 }

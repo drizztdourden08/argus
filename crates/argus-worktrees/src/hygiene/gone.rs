@@ -38,25 +38,33 @@ impl Service {
                 .filter(|f| f.repo.as_deref() == Some(repo))
                 .collect();
             let allowed: Vec<&str> = facts.iter().map(|f| f.path.as_str()).collect();
-            match self.prune_allowed(repo, &allowed) {
+            let ran = self.prune_allowed(repo, &allowed);
+            if ran.is_ok() {
+                self.st().prune_errors.remove(repo);
+            }
+            match ran {
                 Ok(0) => {}
                 Ok(count) => {
                     pruned = true;
                     self.pruned_note(project, repo, &facts, count);
                     facts.iter().for_each(|f| self.forget(project, &f.id));
                 }
-                Err(err) => self.note(
-                    project,
-                    "warn",
-                    &format!(
-                        "could not prune the gone worktrees of {repo}: {}",
-                        err.message
-                    ),
-                    None,
-                ),
+                Err(err) => self.prune_failed(project, repo, &err.message),
             }
         }
         pruned
+    }
+
+    /// A failing prune is said once per repository and distinct error, not at every step.
+    fn prune_failed(&self, project: &str, repo: &str, message: &str) {
+        let before = self
+            .st()
+            .prune_errors
+            .insert(repo.to_string(), message.to_string());
+        if before.as_deref() != Some(message) {
+            let text = format!("could not prune the gone worktrees of {repo}: {message}");
+            self.note(project, "warn", &text, None);
+        }
     }
 
     fn pruned_note(&self, project: &str, repo: &str, facts: &[&Fact], count: usize) {

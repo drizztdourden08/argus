@@ -59,6 +59,7 @@ mod requests;
 mod rule;
 mod scan;
 mod scanning;
+mod scratch;
 mod service;
 mod status;
 mod submodules;
@@ -112,6 +113,7 @@ pub use requests::{
 };
 pub use rule::{Rule, RuleKind};
 pub use scanning::LiveResult;
+pub use scratch::{ScratchItem, ScratchMode, ScratchRoot};
 pub use service::{Deps, Options, Service};
 pub use status::wake_text;
 pub use waking::{REASON, UNLINKED_REASON, sent_key};
