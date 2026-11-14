@@ -17,7 +17,8 @@ use crate::scan::inside_worktree;
 use crate::service::{Service, age_ms};
 use crate::submodules::Except;
 
-/// A thread may go below the server's age limit down to this (6 hours), and only with a reason.
+/// A thread may go below the server's age limit down to this (6 hours), and only with a reason. The project's lead
+/// and the Overlord may go lower, with a reason too (P-258): the process, link and listing guards still run.
 pub const THREAD_MIN_AGE_DAYS: f64 = 0.25;
 
 /// How many folders the walk for a nested `.git` visits before it gives up.
@@ -121,6 +122,20 @@ fn describe(svc: &Service, m: &Leftover) -> String {
 impl Service {
     /// The age a leftover must have for this request, in days. The page: what it asks (else the server's limit). A
     /// thread: the server's limit, or less down to 6 hours with a reason; a plain sentence (400) otherwise.
+    /// The project's live lead, or the Overlord, may ask for an age below the 6 hour floor.
+    fn below_floor_allowed(&self, input: &RemoveInput) -> bool {
+        let Some(by) = input.caller.thread() else {
+            return false;
+        };
+        if self.overlord().as_deref() == Some(by) {
+            return true;
+        }
+        self.board(&input.project)
+            .ok()
+            .and_then(|b| b.threads.get(by).map(|t| t.coordinator && t.live))
+            .unwrap_or(false)
+    }
+
     pub(crate) fn age_limit(&self, input: &RemoveInput) -> Result<f64> {
         let limit = self.opts.leftover_age_days;
         let Some(asked) = input
@@ -133,11 +148,11 @@ impl Service {
         if input.caller.is_page() || asked >= limit {
             return Ok(asked);
         }
-        if asked < THREAD_MIN_AGE_DAYS {
+        if asked < THREAD_MIN_AGE_DAYS && !self.below_floor_allowed(input) {
             return Err(WtError::new(
                 ErrorCode::BadRequest,
                 format!(
-                    "a thread deletes a leftover untouched for {} at the least (--older-than 6h), not {}; the owner's page deletes younger ones",
+                    "a thread deletes a leftover untouched for {} at the least (--older-than 6h), not {}; the owner's page, the project's lead and the Overlord delete younger ones",
                     Self::duration_text(THREAD_MIN_AGE_DAYS),
                     Self::duration_text(asked)
                 ),

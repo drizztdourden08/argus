@@ -631,7 +631,7 @@ fn older_than_below_the_default_needs_a_reason_and_not_below_6_hours_each_refusa
     .unwrap_err();
     assert_eq!(
         too_low.message,
-        "a thread deletes a leftover untouched for 6 hours at the least (--older-than 6h), not 2 hours; the owner's page deletes younger ones"
+        "a thread deletes a leftover untouched for 6 hours at the least (--older-than 6h), not 2 hours; the owner's page, the project's lead and the Overlord delete younger ones"
     );
     let blank = thread_batch(&s.h, |i| {
         (i.older_than_days, i.reason) = (Some(0.5), Some("   ".into()));
@@ -658,6 +658,23 @@ fn older_than_below_the_default_needs_a_reason_and_not_below_6_hours_each_refusa
         exists_itself(&s.fx.path("age-12h")) && exists_itself(&s.fx.path("age-3h")),
         "nothing was deleted"
     );
+}
+
+#[test]
+fn the_lead_goes_below_6_hours_with_a_reason_and_never_without_one() {
+    let s = shape(RemoveMode::Real, ages);
+    let by = || Caller::Thread("lead".into());
+    let bare =
+        s.h.batch(by(), |i| i.older_than_days = Some(0.1))
+            .unwrap_err();
+    assert_eq!(bare.code, ErrorCode::BadRequest);
+    let out =
+        s.h.batch(by(), |i| {
+            (i.older_than_days, i.reason) = (Some(0.1), Some("a failed upgrade left it".into()));
+        })
+        .unwrap();
+    assert_eq!(job_names(&out), ["age-12h", "age-2d", "age-3h", "age-9d"]);
+    s.h.idle();
 }
 
 #[test]
