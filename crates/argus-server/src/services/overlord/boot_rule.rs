@@ -14,8 +14,6 @@ pub(crate) enum Mode {
 pub(crate) struct Lead {
     pub board: String,
     pub thread: String,
-    /// The Desktop chat of the lead's thread.
-    pub session_id: String,
     /// A wake listener is connected for the thread.
     pub listening: bool,
 }
@@ -56,7 +54,6 @@ mod tests {
         Lead {
             board: board.into(),
             thread: "coordinator".into(),
-            session_id: format!("local_{board}"),
             listening,
         }
     }
