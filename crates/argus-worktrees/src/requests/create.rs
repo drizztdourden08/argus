@@ -114,7 +114,9 @@ fn check_flags(input: &RequestInput, mode: Mode) -> Result<()> {
         ));
     }
     if !matches!(mode, Mode::Leftovers | Mode::Targets) && input.older_than_days.is_some() {
-        return Err(bad("--older-than goes with --all-leftovers or named leftover folders"));
+        return Err(bad(
+            "--older-than goes with --all-leftovers or named leftover folders",
+        ));
     }
     Ok(())
 }

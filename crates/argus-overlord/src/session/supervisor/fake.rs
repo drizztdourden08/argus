@@ -90,13 +90,19 @@ impl ChildHost for FakeHost {
         })
     }
 
-    async fn write_line(&self, pid: u32, line: &str) -> Result<(), HostFault> {
+    fn write_line(
+        &self,
+        pid: u32,
+        line: &str,
+    ) -> impl Future<Output = Result<(), HostFault>> + Send {
         let mut inner = self.inner();
-        if !inner.outputs.contains_key(&pid) {
-            return Err(HostFault("not running".to_owned()));
-        }
-        inner.written.push((pid, line.to_owned()));
-        Ok(())
+        let wrote = if inner.outputs.contains_key(&pid) {
+            inner.written.push((pid, line.to_owned()));
+            Ok(())
+        } else {
+            Err(HostFault("not running".to_owned()))
+        };
+        std::future::ready(wrote)
     }
 
     async fn close_stdin(&self, _pid: u32) {}

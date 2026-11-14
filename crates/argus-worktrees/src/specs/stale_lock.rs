@@ -5,10 +5,10 @@
 
 use crate::error::ErrorCode;
 use crate::ports::ProcInfo;
+use crate::rule::Rule;
 use crate::testkit::{
     Fixture, Harness, backdate, exists_itself, listed, make_link, put, root_of, rule_for,
 };
-use crate::rule::Rule;
 use std::fs;
 use tempfile::tempdir;
 
@@ -96,18 +96,18 @@ fn a_folder_with_a_link_refuses_and_keeps_the_lock_and_the_target() {
 }
 
 /// P-259: under a repo rule, a folder whose `.git` is gone leaves no fact with a repository; the removal still asks the
-/// rule's repository, finds the stale lock and deletes the folder.
+/// rule's repository, finds the stale lock and deletes the folder by the folder rule of its parent.
 #[test]
 fn under_a_repo_rule_a_dead_pid_lock_without_git_is_found_through_the_rule_and_deleted() {
     let fx = Fixture::fake_bare();
     let path = fx.add("agent-a37");
     fx.git(&["worktree", "lock", "--reason", LOCK, &path]);
     fs::remove_file(format!("{path}/.git")).unwrap();
-    put(&path, "CLAUDE.md", "rendered
-");
+    put(&path, "CLAUDE.md", "rendered\n");
     backdate(&path, 10.0);
-    let rule = Rule::folder("W-1", &fx.repo, "worker").repo();
-    let h = Harness::new(&fx.root, vec![rule], |_| {});
+    let repo = Rule::folder("W-1", &fx.repo, "worker").repo();
+    let folder = Rule::folder("W-2", &fx.wts, "worker");
+    let h = Harness::new(&fx.root, vec![repo, folder], |_| {});
     h.scan();
     let out = h.rm(&h.id_of(&path)).unwrap();
     assert!(out.started, "{}", out.text);

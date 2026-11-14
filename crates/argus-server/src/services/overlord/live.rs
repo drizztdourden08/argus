@@ -63,8 +63,10 @@ impl Observer for Wakes {
     }
 
     fn guard_failed(&self, fault: &GuardFault) {
-        self.log
-            .warn("hosted overlord ended", json!({ "fault": fault.to_string() }));
+        self.log.warn(
+            "hosted overlord ended",
+            json!({ "fault": fault.to_string() }),
+        );
     }
 }
 

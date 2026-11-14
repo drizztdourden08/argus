@@ -70,9 +70,12 @@ fn a_wake_that_found_no_child_stays_pending_and_the_next_attach_gets_it() {
     let mut rig = EngineRig::new(15_000);
     rig.submit(&[wake("coordinator", "T-1 failed: a")]);
     rig.advance(15_000);
-    let dead = rig
-        .engine
-        .attach("alpha", "coordinator", Box::new(gone()), AttachOptions::default());
+    let dead = rig.engine.attach(
+        "alpha",
+        "coordinator",
+        Box::new(gone()),
+        AttachOptions::default(),
+    );
     assert_eq!(dead.replayed, 0);
     assert_eq!(
         rig.store.get("W-1").unwrap().unwrap().status,

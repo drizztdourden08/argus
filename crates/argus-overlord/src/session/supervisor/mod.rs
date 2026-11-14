@@ -10,10 +10,10 @@
 //! guard runs on the first turn, not at spawn.
 
 mod child;
-mod restart;
-mod run;
 #[cfg(test)]
 mod fake;
+mod restart;
+mod run;
 #[cfg(test)]
 mod specs;
 

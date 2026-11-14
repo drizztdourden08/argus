@@ -4,11 +4,11 @@
 
 use std::sync::Arc;
 
+use super::overlord::live;
 use super::{
     accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale,
     stalls, sync, wake, wake_relay, worktrees,
 };
-use super::overlord::live;
 use crate::{ServeOptions, Services};
 
 pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {

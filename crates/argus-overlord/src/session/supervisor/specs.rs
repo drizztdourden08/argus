@@ -15,7 +15,8 @@ use crate::session::env::build_env;
 use crate::session::guard::GuardFault;
 use crate::session::state::Status;
 
-const INIT: &str = r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"ANTHROPIC_API_KEY"}"#;
+const INIT: &str =
+    r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"ANTHROPIC_API_KEY"}"#;
 const INIT_OAUTH: &str =
     r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"none"}"#;
 const RESULT: &str =
@@ -48,15 +49,15 @@ struct Rig {
     handle: Handle,
 }
 
-fn spec() -> Result<ChildSpec, HostFault> {
+fn spec() -> ChildSpec {
     let key = crate::ports::ApiKey::new("sk-test");
-    Ok(ChildSpec {
+    ChildSpec {
         program: "claude".into(),
         args: Vec::new(),
         env: build_env(Vec::new(), &key, 30),
         cwd: ".".into(),
         stderr_log: "stderr.log".into(),
-    })
+    }
 }
 
 async fn settle() {
@@ -67,7 +68,7 @@ async fn rig(restart_max: u32) -> Rig {
     let host = FakeHost::default();
     let observer = Arc::new(Recorder::default());
     let config = Config {
-        spec: Box::new(|_| spec()),
+        spec: Box::new(|_| Ok(spec())),
         restart_max,
         resume_from: None,
     };
@@ -121,7 +122,10 @@ async fn a_dead_child_refuses_messages_and_its_restart_gets_the_lost_turn() {
     settle().await;
     rig.host.die(first);
     settle().await;
-    assert!(!rig.handle.link.send(String::from("refused")), "no child is up");
+    assert!(
+        !rig.handle.link.send(String::from("refused")),
+        "no child is up"
+    );
     assert_eq!(rig.observer.stopped.load(Ordering::SeqCst), 1);
     tokio::time::sleep(Duration::from_secs(2)).await;
     let pids = rig.host.pids();

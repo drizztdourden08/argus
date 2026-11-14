@@ -208,17 +208,17 @@ fn discard_needs_the_owners_page_entry_exactly_as_remove_does_and_with_it_the_wo
 #[test]
 fn the_lead_names_one_young_leftover_with_older_than_and_a_reason() {
     let (fx, h) = world();
-    let young = leftover_of(&fx, "junk-young", 0.0);
+    let young = leftover_of(&fx, "junk-young", 0.1);
     h.scan();
     let named = vec![worktree_id(&young, h.svc.opts.case_insensitive)];
     let bare = ask(&h, lead(), |i| {
-        (i.targets, i.older_than_days) = (named.clone(), Some(0.0));
+        (i.targets, i.older_than_days) = (named.clone(), Some(0.05));
     })
     .unwrap_err();
     assert_eq!(bare.code, ErrorCode::BadRequest);
     ask(&h, lead(), |i| {
         (i.targets, i.older_than_days, i.reason) =
-            (named, Some(0.0), Some("a failed upgrade left it".into()));
+            (named, Some(0.05), Some("a failed upgrade left it".into()));
     })
     .unwrap();
     let one = only(&h).remove(0);

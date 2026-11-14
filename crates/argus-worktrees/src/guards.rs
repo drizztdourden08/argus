@@ -189,6 +189,28 @@ fn outside_text(rule: &Rule, fact: &Fact) -> String {
 }
 
 impl Service {
+    /// A leftover the scan filed under a repo rule (git listed it once) goes by the folder rule of its parent when one
+    /// admits it: only a folder rule deletes a leftover.
+    pub(crate) fn leftover_rule(&self, board: &BoardFacts, mut fact: Fact) -> Fact {
+        let repo_rule = board
+            .rules
+            .iter()
+            .any(|r| r.id == fact.rule && r.kind == RuleKind::Repo);
+        if fact.leftover.is_none() || !repo_rule {
+            return fact;
+        }
+        let (ci, parent, name) = (self.ci(), parent_of(&fact.path), base_name(&fact.path));
+        let folder = board.valid_rules().into_iter().find(|r| {
+            r.kind == RuleKind::Folder
+                && same_path(&r.path, &parent, ci)
+                && r.admits(&name, ci, fact.registered)
+        });
+        if let Some(folder) = folder {
+            fact.rule.clone_from(&folder.id);
+        }
+        fact
+    }
+
     /// The rule a fact belongs to, and that it really is under it.
     pub(crate) fn rule_of(&self, board: &BoardFacts, fact: &Fact) -> Result<Rule> {
         if let Some(bad) = board
