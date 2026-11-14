@@ -94,8 +94,16 @@ pub fn keep_listener(hook: &Hook<'_>, project: &str, thread: &Value) {
     stamp::keep(&stamp::file(&hook.paths.home, project, id), listen_ms(hook));
 }
 
+/// The hosted Overlord gets its wakes on stdin, so a listener under it ends at once.
+fn hosted(hook: &Hook<'_>) -> bool {
+    hook.env.get("ARGUS_HOSTED") == Some("1")
+}
+
 /// Listens for this session's thread until a wake, a replacement or the deadline.
 pub fn run(hook: &Hook<'_>) -> Result<Said, CoordError> {
+    if hosted(hook) {
+        return Ok(Said::Nothing);
+    }
     let Some((project, board)) = hook.project_board()? else {
         return Ok(Said::Nothing);
     };

@@ -28,6 +28,15 @@ fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() 
 }
 
 #[test]
+fn under_the_hosted_overlord_the_listener_ends_at_once_without_joining_the_stream() {
+    let server = serve_one_wake();
+    let f = fixture(&server);
+    let ran = listen(&f, LEAD, "SessionStart", &[("ARGUS_HOSTED", "1")]);
+    assert_eq!((ran.code, ran.out.as_str(), ran.err.as_str()), (0, "", ""));
+    assert_eq!(streams(&server).len(), 0);
+}
+
+#[test]
 fn several_wakes_are_counted_and_unreadable_data_still_wakes() {
     let data = json!({ "thread": "ui", "lines": ["a", "b"], "count": 3 });
     let server = serve(always(Some(wake(&data))));

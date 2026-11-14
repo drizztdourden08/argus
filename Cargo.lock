@@ -159,6 +159,7 @@ dependencies = [
  "argus-procs",
  "argus-server",
  "argus-testkit",
+ "argus-wake",
  "argus-worktrees",
  "memchr",
  "serde",
@@ -268,6 +269,7 @@ dependencies = [
  "argus-core",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
