@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
 use argus_core::clock::{iso_from_ms, now_ms};
+use argus_core::redact::Redactor;
 use argus_overlord::approvals::{
     Approval, DecideFault, Decision, Prompt, Queue, Status, bearer_ok, mcp_config_json, reply_for,
     summarize, timed_out,
@@ -98,7 +99,11 @@ impl ApprovalGate {
             let _ = store.abandon_pending(&iso_from_ms(now_ms()));
         }
         let bearer = random_bearer();
-        let file = dir.join(format!("argus-overlord-mcp-{}.json", &bearer[..12]));
+        let file = dir.join(format!(
+            "argus-overlord-mcp-{}-{}.json",
+            std::process::id(),
+            now_ms()
+        ));
         std::fs::write(&file, mcp_config_json(endpoint, &bearer))
             .map_err(|_| HostFault("the mcp config cannot be written".to_owned()))?;
         let mut creds = self.creds();
@@ -163,7 +168,7 @@ impl ApprovalGate {
 
     fn submit(&self, prompt: &Prompt) -> Approval {
         let now = now_ms();
-        let summary = summarize(&prompt.input);
+        let summary = Redactor::default().redact(&summarize(&prompt.input));
         let item = self
             .queue()
             .submit(&prompt.tool_name, &summary, &iso_from_ms(now), now);

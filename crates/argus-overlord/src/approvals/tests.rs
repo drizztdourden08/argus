@@ -83,7 +83,7 @@ fn the_queue_settles_each_approval_once() {
     let item = asked(&mut queue);
     assert_eq!(queue.pending(), vec![item.id.clone()]);
     queue.decide(&item.id, Decision::Allow, None, AT).unwrap();
-    assert!(queue.pending().is_empty());
+    assert_eq!(queue.pending().len(), 0);
     assert_eq!(
         queue.decide(&item.id, Decision::Deny, None, AT),
         Err(DecideFault::Settled)

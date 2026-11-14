@@ -128,10 +128,8 @@ async fn approve_lets_the_call_run_and_the_toast_links_the_tab() {
     let (header, _dir) = begin(&t);
     let input = json!({ "command": "git push" });
     let held = t.send(rpc(&call("Bash", &input)).header("Authorization", &header));
-    let (reply, ()) = tokio::join!(
-        held,
-        answer_when_pending(&t, &json!({ "decision": "allow" }))
-    );
+    let yes = json!({ "decision": "allow" });
+    let (reply, ()) = tokio::join!(held, answer_when_pending(&t, &yes));
     assert_eq!(reply.status, 200, "{}", reply.text());
     assert_eq!(
         reply_of(&reply.json()),

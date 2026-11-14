@@ -26,7 +26,7 @@ pub enum Parsed {
     Ask(Prompt),
 }
 
-fn result(id: &Value, body: Value) -> Value {
+fn result(id: &Value, body: &Value) -> Value {
     json!({ "jsonrpc": "2.0", "id": id, "result": body })
 }
 
@@ -82,9 +82,9 @@ pub fn parse(body: &[u8]) -> Parsed {
         return Parsed::Quiet;
     };
     match message["method"].as_str() {
-        Some("initialize") => Parsed::Now(result(&id, initialize())),
-        Some("ping") => Parsed::Now(result(&id, json!({}))),
-        Some("tools/list") => Parsed::Now(result(&id, listing())),
+        Some("initialize") => Parsed::Now(result(&id, &initialize())),
+        Some("ping") => Parsed::Now(result(&id, &json!({}))),
+        Some("tools/list") => Parsed::Now(result(&id, &listing())),
         Some("tools/call") => ask(&id, &message["params"]),
         _ => Parsed::Now(failure(&id, -32601, "method not found")),
     }
@@ -95,6 +95,6 @@ pub fn parse(body: &[u8]) -> Parsed {
 pub fn tool_result(id: &Value, reply: &Value) -> Value {
     result(
         id,
-        json!({ "content": [{ "type": "text", "text": reply.to_string() }] }),
+        &json!({ "content": [{ "type": "text", "text": reply.to_string() }] }),
     )
 }
