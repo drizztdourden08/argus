@@ -5,9 +5,13 @@
 use argus_board::Board;
 use argus_board::json::{doc, set, truthy, unset};
 use argus_board::limits::{optional_text, require_text};
+use argus_board::roles::is_overlord;
 use argus_board::store::stamp;
 use argus_board::text::slug;
 use argus_core::clock::now_iso;
+use argus_core::config::peek_config;
+use argus_overlord::mode::Mode;
+use argus_overlord::seat::{SEAT, may_take_seat};
 use serde_json::{Value, json};
 
 use super::fold;
@@ -144,10 +148,23 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, name: &str, sid: Option<&str>
     Ok(())
 }
 
+/// K4: the Overlord's seat goes to the session the mode puts there, so two live coordinators
+/// never exist at once (I-173).
+fn check_seat(frame: &Frame<'_>, name: &str) -> Result<(), CoordError> {
+    if name != SEAT || !is_overlord(&frame.paths.coord_home, frame.project) {
+        return Ok(());
+    }
+    let config = peek_config(frame.paths, None).unwrap_or_default();
+    let mode = Mode::of_config(config["overlord"]["mode"].as_str());
+    let hosted = frame.env.get("ARGUS_HOSTED") == Some("1");
+    may_take_seat(mode, hosted).map_err(|fault| CoordError::refuse(fault.to_string()))
+}
+
 /// The verb `thread register <name>`.
 ///
 /// # Errors
-/// Refused for a missing or too long name, a bad `--link`, texts over their limits, and no board.
+/// Refused for a missing or too long name, a bad `--link`, texts over their limits, no board, and
+/// the Overlord's seat taken by the wrong session for the mode.
 pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let name = slug(&require_text("name", &json!(frame.arg(0)))?);
     if name.is_empty() {
@@ -155,6 +172,7 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
             "thread name must contain letters or digits.",
         ));
     }
+    check_seat(frame, &name)?;
     let sid = frame.env.session_id().map(str::to_owned);
     frame.mutate(false, |board, fr| apply(board, fr, &name, sid.as_deref()))?;
     if let Some(sid) = sid {
