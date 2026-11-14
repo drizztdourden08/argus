@@ -48,9 +48,7 @@ impl<H: ChildHost> Run<H> {
         });
         w.alive.store(true, Ordering::SeqCst);
         w.observer.started(&w.link);
-        let (ended, fault) = self
-            .serve(&mut w.rx, w.observer.as_ref(), child)
-            .await;
+        let (ended, fault) = self.serve(&mut w.rx, w.observer.as_ref(), child).await;
         w.alive.store(false, Ordering::SeqCst);
         w.observer.stopped();
         if let Some(fault) = fault {

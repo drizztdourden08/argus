@@ -67,11 +67,7 @@ pub fn verdict(tool: &str, input: &Value) -> Verdict {
             .strip_prefix(DASHBOARD)
             .is_some_and(|name| DASHBOARD_READS.contains(&name))
         || (tool == "Bash" && input["command"].as_str().is_some_and(read_command));
-    if reads {
-        Verdict::Allow
-    } else {
-        Verdict::Deny
-    }
+    if reads { Verdict::Allow } else { Verdict::Deny }
 }
 
 fn read_command(command: &str) -> bool {
