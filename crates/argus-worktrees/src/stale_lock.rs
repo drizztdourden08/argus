@@ -51,8 +51,12 @@ fn walk_links(fs: &dyn Fs, root: &str) -> Links {
 impl Service {
     /// What git lists right now for a folder with no `.git` file: registered, its lock and its repository. The scan
     /// reads a repository's listing only through a worktree of it, so it may have missed the lock; the removal asks
-    /// again. A repository that does not answer adds nothing here (the leftover guards refuse on it later).
-    pub(crate) fn with_live_lock(&self, project: &str, mut fact: Fact) -> Fact {
+    /// again. A repository that does not answer adds nothing here (the leftover guards refuse on it later). A folder
+    /// that is a work tree (`not_git` false) is returned as it is.
+    pub(crate) fn with_live_lock(&self, project: &str, mut fact: Fact, not_git: bool) -> Fact {
+        if !not_git {
+            return fact;
+        }
         let (ci, mine) = (self.ci(), path_key(&fact.path, self.ci()));
         for repo in self.candidate_repos(project) {
             if !self.deps.fs.exists(&repo) {
