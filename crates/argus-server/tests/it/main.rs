@@ -53,6 +53,7 @@ mod mux_tails;
 mod notify;
 mod notify_auto;
 mod owner_avatar;
+mod overlord_key;
 mod owner_text;
 mod portfolio_send;
 mod portfolio_send_cli;

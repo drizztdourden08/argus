@@ -10,6 +10,7 @@ pub mod agents;
 pub mod check_links;
 pub mod mcp;
 pub mod notify;
+pub mod overlord;
 pub mod proc_folders;
 pub mod procs;
 pub mod records;

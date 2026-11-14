@@ -28,6 +28,7 @@ pub mod item_images;
 pub mod mcp;
 pub mod mux;
 pub mod notify;
+pub mod overlord;
 pub mod owner_avatar;
 pub mod pages;
 mod params;
@@ -55,6 +56,7 @@ pub fn register_all(router: &mut Router) {
     board_icon::register(router);
     boards::register(router);
     owner_avatar::register(router);
+    overlord::register(router);
     activity::register(router);
     agents::register(router);
     procs::register(router);
