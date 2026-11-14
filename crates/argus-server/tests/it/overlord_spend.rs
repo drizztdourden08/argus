@@ -22,10 +22,10 @@ async fn an_empty_ledger_shows_the_defaults_and_the_whole_budget_left() {
     let reply = t.send(t.page(show())).await;
     assert_eq!(reply.status, 200, "{}", reply.text());
     let body = reply.json();
-    assert_eq!(body["spentUsd"], json!(0.0));
-    assert_eq!(body["budgetUsd"], json!(100.0));
-    assert_eq!(body["warnAt"], json!(0.8));
-    assert_eq!(body["leftUsd"], json!(100.0));
+    assert_eq!(body["spentUsd"].as_f64(), Some(0.0));
+    assert_eq!(body["budgetUsd"].as_f64(), Some(100.0));
+    assert_eq!(body["warnAt"].as_f64(), Some(0.8));
+    assert_eq!(body["leftUsd"].as_f64(), Some(100.0));
     assert_eq!(body["note"], json!("estimate; the Console is the bill"));
     assert_eq!(body["month"].as_str().map(str::len), Some(7));
     t.stop(false).await;

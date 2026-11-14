@@ -407,16 +407,32 @@ fn a_queued_wake_and_no_listener_open_not_listening_whatever_the_heartbeat_age_a
     rig.service.detach(&stream.attached.id);
 }
 
+/// How many `not-listening` faults are open.
+fn deaf(rig: &Rig) -> usize {
+    reasons(&open(rig))
+        .into_iter()
+        .filter(|(_, reason)| reason == "not-listening")
+        .count()
+}
+
 #[test]
 fn a_queued_wake_does_not_open_not_listening_for_a_running_turn_or_a_listening_thread() {
     let mut rig = queued_for_idle_ui();
-    rig.edit_thread("alpha", "ui", |t| t.activity = "working".into());
+    let now = iso(rig.clock.now_ms());
+    rig.edit_thread("alpha", "ui", |t| {
+        t.activity = "working".into();
+        t.last_seen = now.as_str().into();
+    });
     rig.service.on_board("alpha");
     rig.pass(70 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 0, "a turn is running");
+    assert_eq!(
+        deaf(&rig),
+        0,
+        "a turn is running (board-closed may open, not-listening may not)"
+    );
     let stream = listen(&mut rig, "alpha", "ui");
     rig.pass(70 * SEC, STEP);
-    assert_eq!(open(&rig).len(), 0, "a listener covers it");
+    assert_eq!(deaf(&rig), 0, "a listener covers it");
     rig.service.detach(&stream.attached.id);
 }
 
