@@ -4,11 +4,16 @@ use std::fmt;
 
 use crate::ports::ApiKey;
 
-/// Auth variables of the parent that must never reach the child.
+/// Name prefixes of the parent's variables that must never reach the child: auth, the API base
+/// URL (a Claude Desktop session points it at its own proxy, which signs every call with the
+/// subscription) and every setting a parent Claude session passes to its tools.
+const STRIPPED_PREFIXES: [&str; 2] = ["ANTHROPIC_", "CLAUDE"];
+
+/// Whole names of the parent's auth switches that must never reach the child.
 const STRIPPED: [&str; 3] = [
-    "ANTHROPIC_API_KEY",
-    "ANTHROPIC_AUTH_TOKEN",
-    "CLAUDE_CODE_OAUTH_TOKEN",
+    "USE_LOCAL_OAUTH",
+    "USE_STAGING_OAUTH",
+    "CONTROL_PLANE_API_KEY",
 ];
 
 /// Variables this builder sets itself, so a parent copy is dropped first.
@@ -46,7 +51,7 @@ impl fmt::Debug for ChildEnv {
     }
 }
 
-/// The parent env minus the three auth variables, plus the key, `ARGUS_HOSTED=1` and
+/// The parent env minus its auth and Claude session variables, plus the key, `ARGUS_HOSTED=1` and
 /// `MCP_TOOL_TIMEOUT` (the approval timeout plus a margin, in milliseconds).
 #[must_use]
 pub fn build_env(
@@ -56,7 +61,7 @@ pub fn build_env(
 ) -> ChildEnv {
     let mut pairs: Vec<(String, String)> = parent
         .into_iter()
-        .filter(|(name, _)| !is_one_of(name, &STRIPPED) && !is_one_of(name, &OWNED))
+        .filter(|(name, _)| !is_stripped(name) && !is_one_of(name, &OWNED))
         .collect();
     pairs.push(("ANTHROPIC_API_KEY".to_owned(), key.expose().to_owned()));
     pairs.push(("ARGUS_HOSTED".to_owned(), "1".to_owned()));
@@ -65,6 +70,14 @@ pub fn build_env(
         tool_timeout_ms(approval_timeout_min).to_string(),
     ));
     ChildEnv(pairs)
+}
+
+fn is_stripped(name: &str) -> bool {
+    let upper = name.to_ascii_uppercase();
+    STRIPPED_PREFIXES
+        .iter()
+        .any(|prefix| upper.starts_with(prefix))
+        || is_one_of(name, &STRIPPED)
 }
 
 fn is_one_of(name: &str, names: &[&str]) -> bool {
@@ -90,6 +103,10 @@ mod tests {
             ("ANTHROPIC_API_KEY", "sk-parent"),
             ("ANTHROPIC_AUTH_TOKEN", "tok-parent"),
             ("claude_code_oauth_token", "oauth-parent"),
+            ("ANTHROPIC_BASE_URL", "http://proxy-parent"),
+            ("CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH", "parent"),
+            ("CLAUDECODE", "parent"),
+            ("USE_LOCAL_OAUTH", "parent"),
             ("MCP_TOOL_TIMEOUT", "5"),
         ]
         .iter()
@@ -104,6 +121,9 @@ mod tests {
         assert_eq!(env.get("ANTHROPIC_API_KEY"), Some("sk-child"));
         assert_eq!(env.get("ANTHROPIC_AUTH_TOKEN"), None);
         assert_eq!(env.get("CLAUDE_CODE_OAUTH_TOKEN"), None);
+        assert_eq!(env.get("ANTHROPIC_BASE_URL"), None);
+        assert_eq!(env.get("CLAUDECODE"), None);
+        assert_eq!(env.get("USE_LOCAL_OAUTH"), None);
         let keys = env
             .pairs()
             .iter()
