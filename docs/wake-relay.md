@@ -14,7 +14,7 @@ demand.
    desktop session id of each.
 4. The relay sends `WAKE <thread>: run coord inbox (relayed by Argus)` to each target with the desktop's
    send-to-session tool. The target resumes and its listener takes the queued wake.
-5. Still due 2 minutes after a note: one more note, to a different relay when there is one.
+5. Still due 2 minutes after a note? Argus sends one more, to a different relay when there is one.
 6. No relay, or still due after two notes: Argus resumes the target itself, headless.
 7. Still due 10 minutes after that: one owner notification, then nothing more for that target for 1 hour.
 8. A target is forgotten the moment it is no longer due.
