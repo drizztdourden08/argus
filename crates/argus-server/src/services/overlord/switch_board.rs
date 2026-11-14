@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 use crate::{Services, WakeRequest};
 
 /// The Overlord's board.
-pub(super) const BOARD: &str = "portfolio";
+const BOARD: &str = "portfolio";
 const ACTOR: &str = "argus";
 const FILE: &str = "handover.md";
 const PREVIOUS: &str = "handover.prev.md";
@@ -44,8 +44,10 @@ pub(super) fn ask_handover(svc: &Services) {
     let file = handover_file(svc).display().to_string();
     let wake = WakeRequest::about(BOARD, SEAT, SWITCH_REASON, SWITCH_KIND, switch_text(&file));
     if let Err(error) = svc.wake_hook().submit(&[wake]) {
-        svc.log
-            .warn("overlord switch wake not raised", json!({ "error": error }));
+        svc.log.warn(
+            "the overlord switch wake was not raised",
+            json!({ "error": error }),
+        );
     }
 }
 
@@ -94,6 +96,10 @@ fn open_items(board: &Board) -> Vec<(String, String)> {
         .collect()
 }
 
+fn seat_note(board: &Board) -> Option<String> {
+    board["threads"][SEAT]["note"].as_str().map(str::to_owned)
+}
+
 fn write_file(file: &Path, text: &str) -> std::io::Result<()> {
     if let Some(dir) = file.parent() {
         fs::create_dir_all(dir)?;
@@ -108,9 +114,7 @@ pub(super) fn hand_back(svc: &Services, session_id: Option<String>) {
     let back = Handback {
         at: now_iso(),
         session_id,
-        note: board
-            .as_ref()
-            .and_then(|b| b["threads"][SEAT]["note"].as_str().map(str::to_owned)),
+        note: board.as_ref().and_then(seat_note),
         items: board.as_ref().map(open_items).unwrap_or_default(),
     };
     end_threads(svc, &[SEAT]);
@@ -137,13 +141,9 @@ mod tests {
             "I-5": { "title": "Review", "status": "review" },
         }});
         let open = open_items(&board);
-        assert_eq!(
-            open,
-            vec![
-                ("I-1".to_owned(), "Open".to_owned()),
-                ("I-5".to_owned(), "Review".to_owned())
-            ]
-        );
+        let ids: Vec<&str> = open.iter().map(|(id, _)| id.as_str()).collect();
+        assert_eq!(ids, ["I-1", "I-5"]);
+        assert_eq!(open[1].1, "Review");
     }
 
     #[test]

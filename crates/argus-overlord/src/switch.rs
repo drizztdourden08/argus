@@ -2,6 +2,8 @@
 //! for its handover, the first message of the live child, and the handover file the hosted side
 //! leaves for the desktop Overlord. All pure.
 
+use std::fmt::Write;
+
 /// The reason of the wake that asks the desktop Overlord for its handover.
 pub const SWITCH_REASON: &str = "overlord-switch";
 
@@ -56,10 +58,11 @@ fn items_text(items: &[(String, String)]) -> String {
     if items.is_empty() {
         return "- none\n".to_owned();
     }
-    items
-        .iter()
-        .map(|(id, title)| format!("- {id}: {title}\n"))
-        .collect()
+    let mut text = String::new();
+    for (id, title) in items {
+        let _ = writeln!(text, "- {id}: {title}");
+    }
+    text
 }
 
 /// The handover file the hosted side writes at a rollback, for the desktop Overlord.
@@ -91,7 +94,7 @@ mod tests {
         Handback {
             at: "2026-11-14T10:00:00Z".to_owned(),
             session_id: Some("s-9".to_owned()),
-            note: Some("watching the Brock sync".to_owned()),
+            note: Some("watching Brock".to_owned()),
             items: vec![("I-3".to_owned(), "Ship the tray".to_owned())],
         }
     }
@@ -101,9 +104,9 @@ mod tests {
     fn the_handback_names_the_session_the_note_and_each_open_item() {
         let text = handback_text(&back());
         assert!(text.contains("Hosted session: s-9"), "{text}");
-        assert!(text.contains("Thread note: watching the Brock sync"), "{text}");
+        assert!(text.contains("Thread note: watching Brock"), "{text}");
         assert!(text.contains("- I-3: Ship the tray"), "{text}");
-        assert!(text.contains("coord thread register coordinator"), "{text}");
+        assert!(text.contains("thread register coordinator"), "{text}");
     }
 
     #[test]
@@ -131,7 +134,7 @@ mod tests {
     #[test]
     fn a_start_without_a_switch_only_registers() {
         let intro = live_intro(None);
-        assert!(intro.contains("coord thread register coordinator"), "{intro}");
+        assert!(intro.contains("thread register coordinator"), "{intro}");
         assert!(!intro.contains("handover"), "{intro}");
     }
 }

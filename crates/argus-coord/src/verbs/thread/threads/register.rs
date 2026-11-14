@@ -157,7 +157,10 @@ fn check_seat(frame: &Frame<'_>, name: &str) -> Result<(), CoordError> {
     let config = peek_config(frame.paths, None).unwrap_or_default();
     let mode = Mode::of_config(config["overlord"]["mode"].as_str());
     let hosted = frame.env.get("ARGUS_HOSTED") == Some("1");
-    may_take_seat(mode, hosted).map_err(|fault| CoordError::refuse(fault.to_string()))
+    if let Err(fault) = may_take_seat(mode, hosted) {
+        return Err(CoordError::refuse(fault.to_string()));
+    }
+    Ok(())
 }
 
 /// The verb `thread register <name>`.

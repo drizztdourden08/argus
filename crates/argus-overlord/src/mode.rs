@@ -108,6 +108,10 @@ mod tests {
 
     const ALL: [Mode; 3] = [Mode::Off, Mode::Shadow, Mode::Live];
 
+    fn fault(from: Mode, to: Mode) -> ModeFault {
+        ModeFault::Jump { from, to }
+    }
+
     // test-tag: critical
     #[test]
     fn the_same_mode_is_already_there() {
@@ -127,22 +131,10 @@ mod tests {
     // test-tag: critical
     #[test]
     fn off_to_live_and_live_to_shadow_are_refused() {
-        let jump = step(Mode::Off, Mode::Live);
-        assert_eq!(
-            jump,
-            Err(ModeFault::Jump {
-                from: Mode::Off,
-                to: Mode::Live
-            })
-        );
-        let back = step(Mode::Live, Mode::Shadow);
-        assert_eq!(
-            back,
-            Err(ModeFault::Jump {
-                from: Mode::Live,
-                to: Mode::Shadow
-            })
-        );
+        let jump = Err(fault(Mode::Off, Mode::Live));
+        assert_eq!(step(Mode::Off, Mode::Live), jump);
+        let back = Err(fault(Mode::Live, Mode::Shadow));
+        assert_eq!(step(Mode::Live, Mode::Shadow), back);
     }
 
     #[test]
@@ -157,11 +149,7 @@ mod tests {
 
     #[test]
     fn a_fault_names_both_modes() {
-        let text = ModeFault::Jump {
-            from: Mode::Off,
-            to: Mode::Live,
-        }
-        .to_string();
+        let text = fault(Mode::Off, Mode::Live).to_string();
         assert!(text.contains("from off to live"), "{text}");
     }
 

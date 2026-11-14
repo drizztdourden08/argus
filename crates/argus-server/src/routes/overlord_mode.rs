@@ -16,12 +16,11 @@ const SMALL: usize = 8 * 1024;
 
 fn refusal(fault: SwitchFault) -> ApiError {
     let error = ApiError::new(fault.code(), fault.sentence());
-    match fault {
-        SwitchFault::Jump(ModeFault::Jump { from, to }) => {
-            error.with_details(json!({ "from": from.as_str(), "to": to.as_str() }))
-        }
-        _ => error,
+    if let SwitchFault::Jump(ModeFault::Jump { from, to }) = fault {
+        let modes = json!({ "from": from.as_str(), "to": to.as_str() });
+        return error.with_details(modes);
     }
+    error
 }
 
 async fn change(ctx: Ctx) -> Reply {
@@ -32,14 +31,12 @@ async fn change(ctx: Ctx) -> Reply {
         .and_then(Mode::parse)
         .ok_or_else(|| ApiError::bad_request("mode must be off, shadow or live"))?;
     let done = switch(&ctx.svc, to).await.map_err(refusal)?;
-    Ok(json_reply(
-        200,
-        &json!({
-            "from": done.from.as_str(),
-            "to": done.to.as_str(),
-            "already": done.already,
-        }),
-    ))
+    let answer = json!({
+        "from": done.from.as_str(),
+        "to": done.to.as_str(),
+        "already": done.already,
+    });
+    Ok(json_reply(200, &answer))
 }
 
 /// Registers the mode route.

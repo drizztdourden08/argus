@@ -222,7 +222,8 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
 /// The live child's observer: its first message tells it to register, and at a switch-over to read
 /// the desktop Overlord's handover.
 fn live_observer(svc: &Services, wake: SharedWake, origin: &Origin) -> Wakes {
-    let handover = (*origin != Origin::Fresh).then(|| handover_file(svc).display().to_string());
+    let file = handover_file(svc).display().to_string();
+    let handover = (*origin != Origin::Fresh).then_some(file);
     Wakes {
         log: Arc::clone(&svc.log),
         hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),

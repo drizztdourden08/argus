@@ -18,6 +18,9 @@ use super::shadow::desktop_session;
 use super::switch_board::{ask_handover, end_threads, hand_back, set_aside};
 use crate::Services;
 
+const NO_SESSION: &str =
+    "no session to go live from: the shadow has none and the desktop Overlord has none";
+
 /// What a change of mode did.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Switched {
@@ -44,10 +47,7 @@ impl SwitchFault {
     pub(crate) fn sentence(self) -> String {
         match self {
             SwitchFault::Jump(fault) => fault.to_string(),
-            SwitchFault::NoSession => {
-                "no session to go live from: the shadow has none and the desktop Overlord has none"
-                    .to_owned()
-            }
+            SwitchFault::NoSession => NO_SESSION.to_owned(),
             SwitchFault::Control(refused) => refused.sentence().to_owned(),
             SwitchFault::Save => "the Overlord mode could not be saved".to_owned(),
         }
@@ -62,7 +62,8 @@ impl SwitchFault {
 }
 
 fn save(svc: &Services, mode: Mode) -> Result<(), SwitchFault> {
-    save_field(svc, "mode", json!(mode.as_str())).map_err(|_| SwitchFault::Save)
+    let saved = save_field(svc, "mode", json!(mode.as_str()));
+    saved.map_err(|_| SwitchFault::Save)
 }
 
 /// Runs a blocking effect (board lock, files, the wake store) off the async workers.
