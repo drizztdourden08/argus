@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { TranscriptLine } from '../../../../data/overlord';
+import type { TranscriptLine } from '../../../data/overlord';
 import type { TranscriptRow } from './model.type';
 import { piecesOf } from './pieces-of';
 

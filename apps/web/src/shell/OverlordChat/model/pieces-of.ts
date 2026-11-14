@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { TranscriptEvent } from '../../../../data/overlord';
+import type { TranscriptEvent } from '../../../data/overlord';
 import { OWNER_PREFIX, OWNER_SPLIT } from './model.constants';
 import type { ContentBlock, Piece } from './model.type';
 

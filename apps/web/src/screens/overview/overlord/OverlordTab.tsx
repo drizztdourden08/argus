@@ -1,12 +1,10 @@
 /* @layer renderer-app @kind component */
 import { Box, Callout, EmptyState } from '@drizztdourden08/tessera';
-import { useChatOpen } from './behavior/useChatOpen';
+import { useChatOpen } from '../../../shell/OverlordChat';
 import { useOverlord } from './behavior/useOverlord';
-import { isRunning } from './model';
 import { READING } from './overlord.constants';
 import { ApprovalStrip } from './sub-components/ApprovalStrip';
 import { BudgetCard } from './sub-components/BudgetCard';
-import { ChatDrawer } from './sub-components/ChatDrawer';
 import { SpendCard } from './sub-components/SpendCard';
 import { StatusBar } from './sub-components/StatusBar';
 import './OverlordTab.css';
@@ -26,15 +24,6 @@ const OverlordTab = () => {
       </Box>
       {spend && <Box className="overlord-layout__spend"><SpendCard spend={spend} /></Box>}
       {spend && <Box className="overlord-layout__budget"><BudgetCard spend={spend} action={overlord.budget} onSave={overlord.onSave} /></Box>}
-      <ChatDrawer
-        open={chat.open}
-        rows={overlord.rows}
-        problem={overlord.transcriptProblem}
-        running={isRunning(status.status)}
-        action={overlord.chat}
-        onSend={overlord.onSend}
-        onClose={chat.close}
-      />
     </Box>
   );
 };

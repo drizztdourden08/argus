@@ -5,6 +5,7 @@ import { Outlet } from 'react-router';
 import { AppSettingsProvider } from '../AppSettings';
 import { MeshBackdrop } from '../backdrop';
 import { LoadingFallback } from '../LoadingFallback';
+import { OverlordChat } from '../OverlordChat';
 import { PageFrame } from '../PageFrame';
 import { ShellBar } from '../ShellBar';
 import { usePreloadPages } from './behavior/usePreloadPages';
@@ -21,6 +22,7 @@ const AppShell = () => {
       <Box className="app-shell">
         <BackdropLayer className="app-shell__backdrop" backdrop={{ kind: 'node', node: <MeshBackdrop /> }} />
         <ShellBar mode={mode} boardKey={boardKey} boardsAvailable={boardsAvailable} onMode={select} />
+        <OverlordChat />
         <PageFrame>
           <Suspense fallback={<LoadingFallback />}>
             <Outlet />

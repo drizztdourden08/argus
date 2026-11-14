@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Box, Callout, EmptyState } from '@drizztdourden08/tessera';
-import { Panel } from '../../../../shell';
-import { EMPTY_TRANSCRIPT } from '../overlord.constants';
-import type { TranscriptViewProps } from '../overlord.type';
+import { Panel } from '../../Panel';
+import { EMPTY_TRANSCRIPT } from '../OverlordChat.constants';
+import type { TranscriptViewProps } from '../OverlordChat.type';
 import { TalkRowView } from './TalkRowView';
 import { ToolsRow } from './ToolsRow';
 
