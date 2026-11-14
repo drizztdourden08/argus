@@ -8,4 +8,7 @@ pub(crate) mod config;
 pub(crate) mod control;
 pub(crate) mod live;
 pub(crate) mod running;
+mod setting;
 pub(crate) mod shadow;
+pub(crate) mod switch;
+mod switch_board;

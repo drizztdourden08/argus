@@ -18,15 +18,20 @@ pub fn switch_text(handover: &str) -> String {
     )
 }
 
-/// The first message of the live child. `handover` is the file the desktop Overlord writes.
+const REGISTER: &str = "LIVE MODE (Argus). You are the Overlord now, hosted by Argus. First run \
+     `coord thread register coordinator --role coordinator`.";
+
+/// The first message of the live child. At a switch-over `handover` is the file the desktop
+/// Overlord writes; any other start (a boot, the owner's start) has none.
 #[must_use]
-pub fn live_intro(handover: &str) -> String {
+pub fn live_intro(handover: Option<&str>) -> String {
+    let Some(file) = handover else {
+        return REGISTER.to_owned();
+    };
     format!(
-        "LIVE MODE (Argus). You are the Overlord now, hosted by Argus. First run \
-         `coord thread register coordinator --role coordinator`. Then read {handover} if it is \
-         there: the desktop Overlord writes it as you start, so if it is missing, look again at \
-         your next wake. A wake with the reason {SWITCH_REASON} was meant for the desktop Overlord: \
-         ignore it."
+        "{REGISTER} Then read {file} if it is there: the desktop Overlord writes it as you start, \
+         so if it is missing, look again at your next wake. A wake with the reason \
+         {SWITCH_REASON} was meant for the desktop Overlord: ignore it."
     )
 }
 
@@ -118,8 +123,15 @@ mod tests {
     #[test]
     fn the_wake_and_the_intro_name_the_handover_file() {
         assert!(switch_text(FILE).contains(FILE));
-        let intro = live_intro(FILE);
+        let intro = live_intro(Some(FILE));
         assert!(intro.contains(FILE), "{intro}");
         assert!(intro.contains(SWITCH_REASON), "{intro}");
+    }
+
+    #[test]
+    fn a_start_without_a_switch_only_registers() {
+        let intro = live_intro(None);
+        assert!(intro.contains("coord thread register coordinator"), "{intro}");
+        assert!(!intro.contains("handover"), "{intro}");
     }
 }

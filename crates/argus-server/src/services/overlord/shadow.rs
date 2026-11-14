@@ -84,7 +84,7 @@ pub(crate) struct ShadowInput {
 
 /// The CLI session id the desktop Overlord runs now: the board thread's session id, looked up in
 /// the desktop app's records (its current id after a compaction), else the thread's own.
-fn desktop_session(boards: &BoardReader) -> Option<String> {
+pub(super) fn desktop_session(boards: &BoardReader) -> Option<String> {
     let board = boards.overlord_board()?;
     let thread = coordinator_in(&board)?;
     let session = board["threads"][thread.as_str()]["sessionId"]

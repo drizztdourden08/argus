@@ -5,7 +5,7 @@
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, PoisonError};
 
 use argus_accounts::alerts::local_offset_seconds;
 use argus_accounts::{find_app_data, find_cli_exe};
@@ -16,15 +16,19 @@ use argus_overlord::session::args::{SessionArgs, build_argv};
 use argus_overlord::session::env::build_env;
 use argus_overlord::session::guard::GuardFault;
 use argus_overlord::session::supervisor::{self, Config, Link, Observer, SpecFactory};
+use argus_overlord::shadow::shadow_args;
 use argus_overlord::spend::{left_usd, month_key};
+use argus_overlord::switch::live_intro;
 use argus_store::Db;
 use argus_wake::engine::AttachOptions;
 use argus_wake::hosted::HostedSink;
+use argus_wake::service::driver::SharedWake;
 use serde_json::json;
 
 use super::attachment::Attachment;
 use super::config::{self, Live};
 use super::shadow::{self, Shadow, ShadowInput};
+use super::switch_board::handover_file;
 use crate::Services;
 use crate::adapters::overlord::gate::ApprovalGate;
 use crate::adapters::overlord::host::SystemChildHost;
@@ -38,10 +42,20 @@ const LABEL: &str = "hosted overlord";
 struct Wakes {
     log: Arc<Logger>,
     hold: Attachment,
+    /// The first message, sent at the first start only (a restart keeps its session).
+    intro: Mutex<Option<String>>,
 }
 
 impl Observer for Wakes {
     fn started(&self, link: &Link) {
+        let intro = self
+            .intro
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take();
+        if let Some(intro) = intro {
+            let _ = link.send(intro);
+        }
         let link = link.clone();
         let sink = HostedSink::new(Box::new(move |text| link.send(text)));
         let options = AttachOptions {
@@ -75,6 +89,29 @@ struct Inputs {
     endpoint: String,
     /// Set in shadow mode: the child forks the desktop session and may only read.
     shadow: Option<ShadowInput>,
+    /// Set at a switch-over with no shadow session: the live child forks this desktop session.
+    fork_from: Option<String>,
+}
+
+/// Where a live child's first session comes from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Origin {
+    /// A new session: a boot or the owner's start.
+    Fresh,
+    /// The shadow's session, resumed at the switch-over.
+    Resume(String),
+    /// A fork of the desktop session, at a switch-over with no shadow session.
+    Fork(String),
+}
+
+/// The argument line: the shadow's, a fork of the desktop session at its first start, or the plain
+/// live one.
+fn args_of(inputs: &Inputs, base: &SessionArgs) -> Result<Vec<String>, HostFault> {
+    match (&inputs.shadow, &inputs.fork_from) {
+        (Some(shadow), _) => shadow::argv(shadow, base),
+        (None, Some(desktop)) => Ok(build_argv(&shadow_args(base, desktop))),
+        (None, None) => Ok(build_argv(base)),
+    }
 }
 
 fn find_exe() -> PathBuf {
@@ -110,13 +147,9 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
         mcp_config: config.to_string_lossy().into_owned(),
         budget_left_usd: budget_left(inputs),
     };
-    let args = match &inputs.shadow {
-        Some(shadow) => shadow::argv(shadow, &base)?,
-        None => build_argv(&base),
-    };
     Ok(ChildSpec {
         program: inputs.exe.clone(),
-        args,
+        args: args_of(inputs, &base)?,
         env: build_env(std::env::vars(), &key, inputs.live.approval_timeout_min),
         cwd: inputs
             .live
@@ -127,7 +160,12 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     })
 }
 
-fn spec_factory(svc: &Services, live: &Live, shadow: Option<ShadowInput>) -> SpecFactory {
+fn spec_factory(
+    svc: &Services,
+    live: &Live,
+    shadow: Option<ShadowInput>,
+    fork_from: Option<String>,
+) -> SpecFactory {
     let inputs = Inputs {
         home: svc.paths.home.clone(),
         db: Arc::clone(&svc.db),
@@ -137,6 +175,7 @@ fn spec_factory(svc: &Services, live: &Live, shadow: Option<ShadowInput>) -> Spe
         gate: Arc::clone(&svc.overlord_approvals),
         endpoint: format!("http://127.0.0.1:{}/mcp/overlord", svc.port()),
         shadow,
+        fork_from,
     };
     Box::new(move |resume| spec_of(&inputs, resume))
 }
@@ -171,11 +210,40 @@ pub(crate) fn start(svc: &Arc<Services>) {
     }
 }
 
-/// Starts the supervisor when the mode is `live` or `shadow` and the wake engine is on.
+/// Starts the supervisor when the mode is `live` or `shadow` and the wake engine is on, with a new
+/// session for a live child.
 ///
 /// # Errors
 /// A [`StartFault`] naming why nothing started.
 pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
+    try_start_from(svc, Origin::Fresh)
+}
+
+/// The live child's observer: its first message tells it to register, and at a switch-over to read
+/// the desktop Overlord's handover.
+fn live_observer(svc: &Services, wake: SharedWake, origin: &Origin) -> Wakes {
+    let handover = (*origin != Origin::Fresh).then(|| handover_file(svc).display().to_string());
+    Wakes {
+        log: Arc::clone(&svc.log),
+        hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
+        intro: Mutex::new(Some(live_intro(handover.as_deref()))),
+    }
+}
+
+/// The session to resume and the desktop session to fork at the first start.
+fn first_session(origin: Origin) -> (Option<String>, Option<String>) {
+    match origin {
+        Origin::Fresh => (None, None),
+        Origin::Resume(id) => (Some(id), None),
+        Origin::Fork(id) => (None, Some(id)),
+    }
+}
+
+/// [`try_start`] with the live child's first session named by `origin`; a shadow child ignores it.
+///
+/// # Errors
+/// A [`StartFault`] naming why nothing started.
+pub(crate) fn try_start_from(svc: &Arc<Services>, origin: Origin) -> Result<(), StartFault> {
     if svc.shadow {
         return Err(StartFault::Shadow);
     }
@@ -188,18 +256,20 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
     let observer: Arc<dyn Observer> = if shadowing {
         Arc::new(Shadow::new(svc, wake))
     } else {
-        Arc::new(Wakes {
-            log: Arc::clone(&svc.log),
-            hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
-        })
+        Arc::new(live_observer(svc, wake, &origin))
     };
     let input = shadowing.then(|| ShadowInput {
         boards: svc.boards(),
     });
+    let (resume_from, fork_from) = if shadowing {
+        (None, None)
+    } else {
+        first_session(origin)
+    };
     let setup = Config {
-        spec: spec_factory(svc, &live, input),
+        spec: spec_factory(svc, &live, input, fork_from),
         restart_max: live.restart_max,
-        resume_from: None,
+        resume_from,
     };
     svc.overlord
         .install(|| supervisor::start(Arc::new(SystemChildHost::default()), setup, observer))

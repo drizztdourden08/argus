@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use argus_overlord::mode::Mode;
 use serde_json::Value;
 
 use crate::Services;
@@ -44,6 +45,11 @@ fn setting(svc: &Services) -> Value {
         .get("overlord")
         .cloned()
         .unwrap_or(Value::Null)
+}
+
+/// The `mode` as saved; a missing or unknown value is `off`.
+pub(crate) fn mode(svc: &Services) -> Mode {
+    Mode::of_config(setting(svc)["mode"].as_str())
 }
 
 /// True when `mode` is `live`.

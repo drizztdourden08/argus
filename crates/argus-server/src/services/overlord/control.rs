@@ -33,7 +33,8 @@ pub(crate) async fn start(svc: &Arc<Services>) -> Result<(), Refused> {
     try_start(svc).map_err(Refused::Start)
 }
 
-async fn end(svc: &Services) -> Result<(), Refused> {
+/// Stops the child and waits for its supervisor to end; the caller holds the control lock.
+pub(super) async fn end(svc: &Services) -> Result<(), Refused> {
     let mut task = svc.overlord.begin_stop().ok_or(Refused::NotRunning)?;
     if tokio::time::timeout(STOP_WAIT, &mut task).await.is_err() {
         svc.overlord.return_task(task);
