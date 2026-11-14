@@ -20,7 +20,7 @@ const OverlordKeySection = () => {
     <SettingsSection
       id="overlord-key"
       title={KEY_TITLE}
-      rows={[{ id: 'key', title: KEY_ROW_TITLE, description: keyLine(api.status), problem: api.problem ?? undefined, content: control }]}
+      rows={[{ id: 'key', title: KEY_ROW_TITLE, description: keyLine(api.status), problem: api.problem ?? undefined, input: { kind: 'custom', control } }]}
     />
   );
 };
