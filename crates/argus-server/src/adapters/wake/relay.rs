@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 
-use argus_accounts::session_map::{local_ids, seat_of};
 use argus_accounts::find_cli_exe;
+use argus_accounts::session_map::{local_ids, seat_of};
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
 use argus_notify::{By, Level, Notify, PingRequest};
@@ -47,7 +47,10 @@ impl RelayHost {
         let Some(app) = (self.app_data)() else {
             return;
         };
-        let wanted: Vec<String> = targets.iter().filter_map(|t| t.session_id.clone()).collect();
+        let wanted: Vec<String> = targets
+            .iter()
+            .filter_map(|t| t.session_id.clone())
+            .collect();
         let local = local_ids(&app, &wanted);
         let lines: Vec<Line<'_>> = targets.iter().filter_map(|t| line_of(t, &local)).collect();
         if lines.is_empty() {

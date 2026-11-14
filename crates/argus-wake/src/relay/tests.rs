@@ -99,7 +99,9 @@ fn the_second_note_goes_to_a_different_relay() {
     let first = relay.step(now, &[target("a", "ui")], &all);
     assert_eq!(via_of(&first), [key("portfolio", "coordinator")]);
     assert_eq!(
-        relay.step(now + AGAIN_AFTER_MS - 1, &[target("a", "ui")], &all).len(),
+        relay
+            .step(now + AGAIN_AFTER_MS - 1, &[target("a", "ui")], &all)
+            .len(),
         0
     );
     let second = relay.step(now + AGAIN_AFTER_MS, &[target("a", "ui")], &all);
@@ -111,7 +113,10 @@ fn no_relay_leads_to_the_headless_resume() {
     let mut relay = relay();
     let out = relay.step(T0 + FIRST_AFTER_MS, &[target("a", "ui")], &[]);
     assert_eq!(out, [Action::Headless(target("a", "ui").ward)]);
-    assert_eq!(relay.last("a", "ui").expect("last").kind, AttemptKind::Headless);
+    assert_eq!(
+        relay.last("a", "ui").expect("last").kind,
+        AttemptKind::Headless
+    );
 }
 
 #[test]
@@ -121,7 +126,10 @@ fn two_notes_that_did_not_work_lead_to_the_headless_resume() {
     let now = T0 + FIRST_AFTER_MS;
     let due = [target("a", "ui")];
     assert_eq!(via_of(&relay.step(now, &due, &all)).len(), 1);
-    assert_eq!(via_of(&relay.step(now + AGAIN_AFTER_MS, &due, &all)).len(), 1);
+    assert_eq!(
+        via_of(&relay.step(now + AGAIN_AFTER_MS, &due, &all)).len(),
+        1
+    );
     let out = relay.step(now + 2 * AGAIN_AFTER_MS, &due, &all);
     assert_eq!(out, [Action::Headless(due[0].ward.clone())]);
 }
@@ -147,10 +155,16 @@ fn the_ten_minute_notice_happens_once() {
     assert_eq!(relay.step(now, &due, &[]).len(), 1);
     assert_eq!(relay.step(now + NOTICE_AFTER_MS - 1, &due, &[]).len(), 0);
     let at = now + NOTICE_AFTER_MS;
-    assert_eq!(relay.step(at, &due, &[]), [Action::Notice(due[0].ward.clone())]);
+    assert_eq!(
+        relay.step(at, &due, &[]),
+        [Action::Notice(due[0].ward.clone())]
+    );
     assert_eq!(relay.step(at + 60_000, &due, &[]).len(), 0);
     assert_eq!(relay.step(at + QUIET_MS - 1, &due, &[]).len(), 0);
-    assert_eq!(relay.last("a", "ui").expect("last").kind, AttemptKind::Notified);
+    assert_eq!(
+        relay.last("a", "ui").expect("last").kind,
+        AttemptKind::Notified
+    );
 }
 
 #[test]

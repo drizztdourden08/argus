@@ -18,9 +18,8 @@ pub const TIMEOUT: Duration = Duration::from_secs(20 * 60);
 /// Does a running CLI process carry this session id on its command line?
 #[must_use]
 pub fn carries_session(rows: &[ProcRow], session_id: &str) -> bool {
-    rows.iter().any(|row| {
-        row.name.to_ascii_lowercase().contains("claude") && row.cmd.contains(session_id)
-    })
+    rows.iter()
+        .any(|row| row.name.to_ascii_lowercase().contains("claude") && row.cmd.contains(session_id))
 }
 
 /// Is a CLI process running that carries the session id? A machine that cannot be read says no.
@@ -38,7 +37,14 @@ pub fn session_running(session_id: &str) -> bool {
 pub fn resume(exe: &Path, cwd: &Path, session_id: &str, text: &str) -> std::io::Result<()> {
     let mut command = hidden_command(exe);
     command
-        .args(["-p", "--resume", session_id, text, "--output-format", "json"])
+        .args([
+            "-p",
+            "--resume",
+            session_id,
+            text,
+            "--output-format",
+            "json",
+        ])
         .current_dir(cwd)
         .env_clear()
         .envs(strip_env(std::env::vars()))
