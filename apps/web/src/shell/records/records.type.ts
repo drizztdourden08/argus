@@ -59,6 +59,11 @@ interface LinkedTextProps {
   board?: string;
 }
 
+interface AgentName {
+  id: string;
+  name?: string | null;
+}
+
 interface AssigneeLook {
   label: string;
   tip: string;
@@ -192,7 +197,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps,
+  ActionDef, ActionHandlers, AgentName, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps,
   HeadSelection, OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordHeadViewProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
   RecordPaneState, RecordRef, RecordTarget, ShownCodeProps, TextPart, TypeIconProps,
 };

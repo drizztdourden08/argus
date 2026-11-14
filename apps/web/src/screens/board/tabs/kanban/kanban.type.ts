@@ -13,7 +13,10 @@ import type { PurgeNotice, TrashRow, TrashSource } from './trash';
 
 interface AgentDoc extends TrashSource {
   item?: string | null;
+  items?: string[];
+  model?: string | null;
   status?: string;
+  finishedAt?: string | null;
 }
 
 interface KanbanData {

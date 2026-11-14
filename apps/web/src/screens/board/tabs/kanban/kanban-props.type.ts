@@ -3,7 +3,7 @@ import type { CardTone, KanbanGroupFold } from '@drizztdourden08/tessera';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
-import type { AddPanel, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
+import type { AddPanel, AgentDoc, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
 import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
 import type { LayoutState, TreeSource } from '../kanban-tree';
 
@@ -20,6 +20,7 @@ interface KanbanToolbarProps {
   view: KanbanView;
   items: readonly ItemRef[];
   threads: Threads;
+  agents: readonly AgentDoc[];
   selection: Selection;
   layout: LayoutState;
 }

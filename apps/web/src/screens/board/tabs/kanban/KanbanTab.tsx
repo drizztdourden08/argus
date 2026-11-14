@@ -40,7 +40,7 @@ const KanbanTab = (props: KanbanTabProps) => {
   return (
     <Flex direction="column" gap="md">
       {!panels.trash.open && (
-        <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} selection={selection} layout={layout} />
+        <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} agents={data.agents} selection={selection} layout={layout} />
       )}
       {!panels.trash.open && <KanbanLegend />}
       <OpNotices ops={notices} />

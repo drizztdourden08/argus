@@ -11,7 +11,7 @@ import type { ItemOrder } from '../model';
 import { kanbanFields } from '../model/filter-fields';
 
 const KanbanToolbar = (props: KanbanToolbarProps) => {
-  const { boardKey, state, view, items, threads, selection, layout } = props;
+  const { boardKey, state, view, items, threads, agents, selection, layout } = props;
   const { prefs, filters, patchFilters, setGroup, setOrder, setDirection, setShowDone } = state;
   const sortBy = (order: ItemOrder, direction: SortDirection) => {
     if (order !== prefs.order) {
@@ -37,7 +37,7 @@ const KanbanToolbar = (props: KanbanToolbarProps) => {
     { id: 'counts', priority: 1, node: <Text variant="caption" tone="muted" aria-live="polite" title={DONE_TIP}>{countsText(view)}</Text> },
   ]);
   return (
-    <TabFilterBar tab="kanban" boardKey={boardKey} fields={kanbanFields(boardKey, items, threads)} filters={filters} patchFilters={patchFilters} placeholder="Search id or title" />
+    <TabFilterBar tab="kanban" boardKey={boardKey} fields={kanbanFields(boardKey, items, threads, agents)} filters={filters} patchFilters={patchFilters} placeholder="Search id or title" />
   );
 };
 

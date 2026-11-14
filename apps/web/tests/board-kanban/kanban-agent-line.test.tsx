@@ -27,13 +27,12 @@ describe('I-85 P4 the agent line of a card', { tags: ['critical'] }, () => {
     expect(paneOf()).toEqual({ open: 'A-9', pane: null });
   });
 
-  it('shows the count of two agents and links to the work tab of the item', async () => {
+  it('lists two agents as two links, each with its state', async () => {
     await mountKanban({ items: [item('I-1', { agents: [working('A-9', 'coder'), working('A-10', 'checker')] })] });
     const line = within(lineOf('I-1') as HTMLElement);
-    expect(line.queryByText('coder')).toBeNull();
-    fireEvent.click(line.getByRole('link', { name: '2 agents' }));
-    await screen.findByRole('dialog', { name: 'Work item' });
-    expect(paneOf()).toEqual({ open: 'I-1', pane: 'work' });
+    expect(line.getByRole('link', { name: 'coder' })).toBeTruthy();
+    expect(line.getByRole('link', { name: 'checker' })).toBeTruthy();
+    expect(line.getAllByText('working')).toHaveLength(2);
   });
 
   it('draws no line for an item nobody works on', async () => {

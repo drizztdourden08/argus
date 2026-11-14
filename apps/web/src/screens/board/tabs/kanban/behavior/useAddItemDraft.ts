@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { ItemRef } from '../../../../../data/kanban';
 import { requiresParent } from '../../../../../data/registry';
 import { threadChoices } from '../../../shared';
-import { DEFAULT_TYPE, STARTING_STATUS, addParentOptions, listedThreads } from '../model';
+import { DEFAULT_TYPE, STARTING_STATUS, addParentOptions, createReady, listedThreads } from '../model';
 import type { AddPreset } from '../model';
 import type { AddItemDraft, Threads } from '../kanban.type';
 
@@ -19,7 +19,7 @@ const useAddItemDraft = (threads: Threads, preset: AddPreset, items: ReadonlyMap
     setParent,
     parentOptions: addParentOptions(DEFAULT_TYPE, items),
     needsParent,
-    ready: thread !== '' && (!needsParent || pickedParent !== ''),
+    ready: createReady(thread, needsParent, pickedParent),
     itemOf: (title) => ({ title, thread, status: preset.status ?? STARTING_STATUS, ...(pickedParent ? { parent: pickedParent } : {}), ...(preset.assignee ? { assignee: preset.assignee } : {}) }),
   };
 };
