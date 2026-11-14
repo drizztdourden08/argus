@@ -248,10 +248,17 @@ impl Service {
         crate::guards::check_caller(&board, &input.caller, &Self::caller_rules(&board, rule))?;
         let rule = self.rule_of(&board, &fact)?;
         self.assert_not_main(&fact)?;
-        Self::assert_not_locked(
-            &fact,
-            fact.leftover.is_none() && fact.exists && !input.prune,
-        )?;
+        let lifted = if input.prune {
+            None
+        } else {
+            self.lift_stale_lock(&fact, not_git)?
+        };
+        if lifted.is_none() {
+            Self::assert_not_locked(
+                &fact,
+                fact.leftover.is_none() && fact.exists && !input.prune,
+            )?;
+        }
         if input.job.is_some() && fact.leftover.is_none() {
             return Err(WtError::new(
                 ErrorCode::Conflict,
@@ -262,7 +269,11 @@ impl Service {
             ));
         }
         if fact.leftover.is_some() && !input.prune {
-            return self.start_leftover(input, (&fact, not_git), &rule, &board);
+            let started = self.start_leftover(input, (&fact, not_git), &rule, &board);
+            if let (Err(_), Some(reason)) = (&started, &lifted) {
+                self.relock(&fact, reason);
+            }
+            return started;
         }
         if !fact.exists || input.prune {
             return self.prune_gone(input, &fact);

@@ -41,6 +41,7 @@ mod scratch;
 mod service;
 mod service_status;
 mod slow;
+mod stale_lock;
 mod stuck;
 mod submodules;
 mod turns;

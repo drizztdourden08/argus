@@ -21,6 +21,13 @@ pub(crate) fn is_brock_lock(reason: &str) -> bool {
     reason.starts_with(BROCK_LOCK)
 }
 
+/// The refusal of a locked worktree whose lock Argus does not lift: the text I-163 hit before stale Claude locks went.
+pub(crate) fn locked_refusal(path: &str, reason: &str) -> String {
+    format!(
+        "{path} is locked ({reason}): unlock it first (git worktree unlock), Argus never removes a locked worktree"
+    )
+}
+
 /// Claude Code locks every agent worktree with `claude agent <agent id> (pid <n>)`.
 const CLAUDE_LOCK: &str = "claude agent";
 
@@ -243,10 +250,9 @@ impl Service {
     /// Never a locked worktree. The one lock Argus lifts itself is Brock's (see [`is_brock_lock`]), and only for a removal.
     pub(crate) fn assert_not_locked(fact: &Fact, removing: bool) -> Result<()> {
         match &fact.locked {
-            Some(reason) if !(removing && is_brock_lock(reason)) => Err(forbidden(format!(
-                "{} is locked ({reason}): unlock it first (git worktree unlock), Argus never removes a locked worktree",
-                fact.path
-            ))),
+            Some(reason) if !(removing && is_brock_lock(reason)) => {
+                Err(forbidden(locked_refusal(&fact.path, reason)))
+            }
             _ => Ok(()),
         }
     }
