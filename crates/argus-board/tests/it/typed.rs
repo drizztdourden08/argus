@@ -52,14 +52,16 @@ fn typed(kind: &str, title: &str) -> Value {
     json!({"title": title, "thread": "ui", "type": kind})
 }
 
-fn bug_set(title: &str) -> Value {
-    json!({"title": title, "thread": "ui", "type": "bug", "fields": {"severity": "S2"}})
+fn bug_set(title: &str, parent: &str) -> Value {
+    json!({"title": title, "thread": "ui", "type": "bug", "parent": parent,
+        "fields": {"severity": "S2"}})
 }
 
 /// A board with a bug made by the coordinator and moved by the owner into `stage`.
 fn bug_at(stage: &str) -> (Value, String) {
     let mut b = alpha();
-    let id = made(&mut b, &lead(), bug_set("Crash"));
+    let epic = an_epic(&mut b);
+    let id = made(&mut b, &lead(), bug_set("Crash", &epic));
     applied(&edit(&mut b, &Who::human(), &id, json!({"stage": stage})));
     (b, id)
 }
@@ -146,9 +148,14 @@ fn the_subject_of_an_item_is_never_written_or_edited_again() {
 #[test]
 fn a_bug_needs_its_severity_and_follows_its_flow() {
     let mut b = alpha();
-    let missing = make(&mut b, &lead(), typed("bug", "Crash"));
+    let epic = an_epic(&mut b);
+    let missing = make(
+        &mut b,
+        &lead(),
+        json!({"title": "Crash", "thread": "ui", "type": "bug", "parent": epic}),
+    );
     assert!(refused(&missing).contains("severity"));
-    let id = made(&mut b, &lead(), bug_set("Crash"));
+    let id = made(&mut b, &lead(), bug_set("Crash", &epic));
     assert_eq!(b["items"][id.as_str()]["type"], "bug");
     assert_eq!(b["items"][id.as_str()]["fields"]["severity"], "S2");
     let skip = edit(&mut b, &lead(), &id, json!({"status": "doing"}));
@@ -307,7 +314,8 @@ fn a_move_op_follows_the_same_rules_as_an_edit() {
 #[test]
 fn a_stage_and_a_status_that_disagree_are_refused() {
     let mut b = alpha();
-    let id = made(&mut b, &lead(), bug_set("Crash"));
+    let epic = an_epic(&mut b);
+    let id = made(&mut b, &lead(), bug_set("Crash", &epic));
     let res = edit(
         &mut b,
         &lead(),
@@ -319,16 +327,22 @@ fn a_stage_and_a_status_that_disagree_are_refused() {
     assert!(refused(&unknown).contains("has the stages"));
 }
 
-fn plan_set(title: &str) -> Value {
-    json!({"title": title, "thread": "ui", "type": "test-plan", "fields": {"cases": ["T-1"]}})
+fn plan_set(title: &str, parent: &str) -> Value {
+    json!({"title": title, "thread": "ui", "type": "test-plan", "parent": parent,
+        "fields": {"cases": ["T-1"]}})
 }
 
 #[test]
 fn a_test_plan_always_keeps_a_case() {
     let mut b = alpha();
-    let bare = make(&mut b, &lead(), typed("test-plan", "Smoke"));
+    let epic = an_epic(&mut b);
+    let bare = make(
+        &mut b,
+        &lead(),
+        json!({"title": "Smoke", "thread": "ui", "type": "test-plan", "parent": epic}),
+    );
     assert!(refused(&bare).contains("keeps at least one case"));
-    let plan = made(&mut b, &lead(), plan_set("Smoke"));
+    let plan = made(&mut b, &lead(), plan_set("Smoke", &epic));
     let ready = edit(&mut b, &lead(), &plan, json!({"stage": "ready"}));
     applied(&ready);
     assert_eq!(b["items"][plan.as_str()]["fields"]["cases"], json!(["T-1"]));
@@ -353,7 +367,8 @@ fn run_of(plan: &str, stage: &str, status: &str) -> Value {
 #[test]
 fn a_test_plan_passes_only_when_its_last_run_passed_every_case() {
     let mut b = alpha();
-    let plan = made(&mut b, &lead(), plan_set("Smoke"));
+    let epic = an_epic(&mut b);
+    let plan = made(&mut b, &lead(), plan_set("Smoke", &epic));
     let none = edit(&mut b, &Who::human(), &plan, json!({"stage": "passed"}));
     assert!(refused(&none).contains("no run yet"));
     b["items"]["I-90"] = run_of(&plan, "reported", "fail");
@@ -371,7 +386,8 @@ fn a_test_plan_passes_only_when_its_last_run_passed_every_case() {
 #[test]
 fn fields_are_checked_by_the_registry_and_belong_to_the_type() {
     let mut b = alpha();
-    let bug = made(&mut b, &lead(), bug_set("Crash"));
+    let epic = an_epic(&mut b);
+    let bug = made(&mut b, &lead(), bug_set("Crash", &epic));
     let wrong = edit(&mut b, &lead(), &bug, json!({"fields.severity": "S9"}));
     assert!(refused(&wrong).contains("severity"));
     let foreign = edit(&mut b, &lead(), &bug, json!({"fields.goal": "ship"}));
@@ -804,6 +820,31 @@ fn a_story_or_task_without_an_epic_is_refused_and_keeps_its_parent_on_edit() {
     );
     let clear = edit(&mut b, &lead(), &child, json!({"parent": "none"}));
     assert!(refused(&clear).contains("needs a parent"));
-    let bug = made(&mut b, &lead(), bug_set("Roots are fine"));
-    applied(&edit(&mut b, &lead(), &bug, json!({"parent": "none"})));
+    let bug = made(&mut b, &lead(), bug_set("Parented", &epic));
+    let cleared = edit(&mut b, &lead(), &bug, json!({"parent": "none"}));
+    assert!(refused(&cleared).contains("needs a parent"));
+}
+
+#[test]
+fn a_bug_without_a_parent_is_refused_and_one_under_an_epic_passes() {
+    let mut b = alpha();
+    let epic = an_epic(&mut b);
+    for kind in ["bug", "debt", "test-plan"] {
+        let bare = make(&mut b, &lead(), typed(kind, "Orphan"));
+        let text = refused(&bare);
+        assert!(text.contains("needs a parent"), "{text}");
+        assert!(text.contains("--parent I-n"), "{text}");
+    }
+    let under = make(&mut b, &lead(), bug_set("Crash", &epic));
+    applied(&under);
+}
+
+#[test]
+fn an_old_bug_without_a_parent_stays_editable() {
+    let mut b = alpha();
+    let epic = an_epic(&mut b);
+    let bug = made(&mut b, &lead(), bug_set("Old crash", &epic));
+    b["items"][bug.as_str()]["parent"] = Value::Null;
+    applied(&edit(&mut b, &lead(), &bug, json!({"title": "Old crash, renamed"})));
+    assert_eq!(b["items"][bug.as_str()]["title"], "Old crash, renamed");
 }

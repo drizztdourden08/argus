@@ -9,16 +9,18 @@ use serde_json::json;
 /// A board with a bug (I-2), a story (I-3) and the seeded untyped item (I-1).
 fn seeded() -> Work {
     let work = Work::new();
+    let epic = work.seed_epic();
     work.worker_ok(&[
         "item",
         "add",
         "Crash",
         "--type",
         "bug",
+        "--parent",
+        epic,
         "--field",
         "severity=S2",
     ]);
-    let epic = work.seed_epic();
     work.worker_ok(&["item", "add", "Plan", "--type", "story", "--parent", epic]);
     work
 }

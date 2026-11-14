@@ -58,12 +58,15 @@ fn the_subject_flag_is_ignored_by_add_and_set() {
 #[test]
 fn add_takes_a_type_its_fields_and_a_named_flag_for_each_field() {
     let work = Work::new();
+    let epic = work.seed_epic();
     let said = work.worker_ok(&[
         "item",
         "add",
         "Crash",
         "--type",
         "bug",
+        "--parent",
+        epic,
         "--field",
         "severity=S2",
     ]);
@@ -77,6 +80,8 @@ fn add_takes_a_type_its_fields_and_a_named_flag_for_each_field() {
         "Hang",
         "--type",
         "bug",
+        "--parent",
+        epic,
         "--severity",
         "S1",
         "--expected",
@@ -90,7 +95,10 @@ fn add_takes_a_type_its_fields_and_a_named_flag_for_each_field() {
 #[test]
 fn add_refuses_what_the_registry_refuses() {
     let work = Work::new();
-    let no_severity = work.worker(&["item", "add", "Crash", "--type", "bug"]);
+    let epic = work.seed_epic();
+    let no_severity = work.worker(&[
+        "item", "add", "Crash", "--type", "bug", "--parent", epic,
+    ]);
     assert_eq!(no_severity.code, 1);
     assert!(
         no_severity.err.contains("needs severity"),
@@ -168,6 +176,8 @@ fn add_places_a_child_under_its_parent_and_a_typed_add_for_a_thread_assigns_it()
 #[test]
 fn set_retypes_assigns_and_clears_a_parent() {
     let work = Work::new();
+    let epic = work.seed_epic();
+    work.worker_ok(&["item", "set", "I-1", "--parent", epic]);
     let said = work.worker_ok(&[
         "item",
         "set",
@@ -186,11 +196,10 @@ fn set_retypes_assigns_and_clears_a_parent() {
     assert_eq!(item(&work, "I-1")["assignee"], "owner");
     work.worker_ok(&["item", "set", "I-1", "--assignee", "none"]);
     assert_eq!(item(&work, "I-1")["assignee"], Value::Null);
-    work.worker_ok(&["item", "add", "Release", "--type", "epic"]);
-    work.worker_ok(&["item", "set", "I-1", "--parent", "I-2"]);
-    assert_eq!(item(&work, "I-1")["parent"], "I-2");
-    work.worker_ok(&["item", "set", "I-1", "--parent", "none"]);
-    assert_eq!(item(&work, "I-1")["parent"], Value::Null);
+    let cleared = work.worker(&["item", "set", "I-1", "--parent", "none"]);
+    assert_eq!(cleared.code, 1);
+    assert!(cleared.err.contains("needs a parent"), "{}", cleared.err);
+    assert_eq!(item(&work, "I-1")["parent"], epic);
     let wrong = work.worker(&["item", "set", "I-1", "--field", "mood=ok"]);
     assert!(
         wrong.err.contains("mood is not a field here"),

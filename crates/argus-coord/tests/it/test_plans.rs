@@ -14,8 +14,9 @@ fn planned() -> Work {
     for title in ["Lobby opens", "Join is approved", "Seat is freed"] {
         work.worker_ok(&["test", "add", "I-1", title]);
     }
+    let epic = work.seed_epic();
     let said = work.worker_ok(&[
-        "test", "plan", "add", "Smoke", "--case", "T-1", "--case", "T-2",
+        "test", "plan", "add", "Smoke", "--case", "T-1", "--case", "T-2", "--parent", epic,
     ]);
     assert!(
         said.contains("I-2: Smoke (test plan, worker, 2 case(s))"),
