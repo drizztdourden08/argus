@@ -55,7 +55,6 @@ export type {
   ChatOpen,
   ContentBlock,
   Piece,
-  TalkRow,
   TalkRowViewProps,
   ToolsRowProps,
   TranscriptRow,
