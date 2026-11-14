@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use argus_accounts::find_app_data;
 use argus_accounts::session_map::local_ids;
 use argus_wake::registry::DueThread;
+use argus_wake::relay::LastAttempt;
 use argus_wake::service::driver::lock;
 use serde_json::{Value, json, to_value};
 
@@ -24,17 +25,28 @@ fn mapping(ctx: &Ctx, due: &[DueThread]) -> HashMap<String, String> {
         .unwrap_or_default()
 }
 
-fn entry(due: &DueThread, local: &HashMap<String, String>) -> Value {
+fn entry(due: &DueThread, local: &HashMap<String, String>, last: Option<&LastAttempt>) -> Value {
     let mut value = to_value(due).unwrap_or_default();
     let id = due.session_id.as_ref().and_then(|s| local.get(s));
     value["localId"] = json!(id);
+    value["relay"] = last.map_or(Value::Null, LastAttempt::json);
     value
 }
 
 pub(super) async fn due(ctx: Ctx) -> Reply {
     let wake = service(&ctx)?;
-    let due = blocking(move || lock(&wake).due()).await?;
+    let (due, lasts) = blocking(move || {
+        let mut guard = lock(&wake);
+        let due = guard.due();
+        let lasts: Vec<Option<LastAttempt>> = due.iter().map(|d| guard.relay_last(d)).collect();
+        (due, lasts)
+    })
+    .await?;
     let local = mapping(&ctx, &due);
-    let rows: Vec<Value> = due.iter().map(|d| entry(d, &local)).collect();
+    let rows: Vec<Value> = due
+        .iter()
+        .zip(&lasts)
+        .map(|(d, last)| entry(d, &local, last.as_ref()))
+        .collect();
     Ok(json_reply(200, &json!({ "due": rows })))
 }

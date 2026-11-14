@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use super::{
     accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale,
-    stalls, sync, wake, worktrees,
+    stalls, sync, wake, wake_relay, worktrees,
 };
 use crate::{ServeOptions, Services};
 
@@ -26,6 +26,7 @@ pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {
     svc.notifier = notify::build_notifier(svc, opts);
     svc.notify = notify::build(svc, opts);
     reminders::wire(svc);
+    wake_relay::wire(svc);
     stalls::wire(svc);
 }
 

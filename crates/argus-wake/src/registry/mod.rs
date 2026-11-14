@@ -28,11 +28,13 @@ mod faults;
 mod mirror;
 mod pending;
 mod recover;
+mod relay;
 mod rows;
 mod watch;
 
 pub use due::DueThread;
 pub use pending::Pending;
+pub use relay::target_of;
 pub use rows::{BoardFlags, FaultSummary, ListenFlags, PendingWake, RegistryRow, RowState};
 
 use std::collections::HashMap;

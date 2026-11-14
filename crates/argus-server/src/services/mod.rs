@@ -60,6 +60,7 @@ pub(crate) mod sync;
 pub(crate) mod tasks;
 pub(crate) mod wake;
 pub(crate) mod wake_hook;
+pub(crate) mod wake_relay;
 pub(crate) mod worktrees;
 
 pub use accounts::{AccountsOptions, AccountsService};

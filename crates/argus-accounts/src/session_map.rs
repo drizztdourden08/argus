@@ -99,6 +99,25 @@ pub fn local_ids(app_data: &Path, wanted: &[String]) -> HashMap<String, String> 
     found
 }
 
+/// Where a Desktop session runs: its current CLI session id and its folder.
+#[derive(Deserialize, Debug, Default, Clone, PartialEq, Eq)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Seat {
+    /// The CLI session id the Desktop app resumes now.
+    pub cli_session_id: Option<String>,
+    /// The folder the session works in.
+    pub cwd: Option<String>,
+}
+
+/// The record of one Desktop session (`local_...`), read only; `None` when no record has that id.
+#[must_use]
+pub fn seat_of(app_data: &Path, local_id: &str) -> Option<Seat> {
+    let path = record_files(app_data)
+        .into_iter()
+        .find(|p| p.file_stem().is_some_and(|s| s == local_id))?;
+    serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
+}
+
 // test-tag: critical
 #[cfg(test)]
 mod tests {
@@ -116,6 +135,19 @@ mod tests {
     #[test]
     fn a_record_holds_its_current_and_its_prior_cli_ids() {
         assert_eq!(claimed_ids(&record()), [CURRENT, PRIOR]);
+    }
+
+    #[test]
+    fn a_seat_gives_the_cli_id_and_the_folder_of_a_local_id() {
+        let dir = tempfile::tempdir().expect("dir");
+        let org = dir.path().join("claude-code-sessions/acct/org");
+        fs::create_dir_all(&org).expect("org");
+        let text = format!(r#"{{"cliSessionId":"{CURRENT}","cwd":"X:/work"}}"#);
+        fs::write(org.join("local_bbbb.json"), text).expect("record");
+        let seat = seat_of(dir.path(), "local_bbbb").expect("seat");
+        assert_eq!(seat.cli_session_id.as_deref(), Some(CURRENT));
+        assert_eq!(seat.cwd.as_deref(), Some("X:/work"));
+        assert_eq!(seat_of(dir.path(), "local_none"), None);
     }
 
     #[test]

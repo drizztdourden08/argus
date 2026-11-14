@@ -25,6 +25,7 @@ pub mod policy;
 pub mod presence;
 pub mod reasons;
 pub mod registry;
+pub mod relay;
 pub mod reminders;
 pub mod service;
 pub mod source;

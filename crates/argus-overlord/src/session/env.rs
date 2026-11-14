@@ -59,9 +59,9 @@ pub fn build_env(
     key: &ApiKey,
     approval_timeout_min: u64,
 ) -> ChildEnv {
-    let mut pairs: Vec<(String, String)> = parent
+    let mut pairs: Vec<(String, String)> = strip_env(parent)
         .into_iter()
-        .filter(|(name, _)| !is_stripped(name) && !is_one_of(name, &OWNED))
+        .filter(|(name, _)| !is_one_of(name, &OWNED))
         .collect();
     pairs.push(("ANTHROPIC_API_KEY".to_owned(), key.expose().to_owned()));
     pairs.push(("ARGUS_HOSTED".to_owned(), "1".to_owned()));
@@ -70,6 +70,16 @@ pub fn build_env(
         tool_timeout_ms(approval_timeout_min).to_string(),
     ));
     ChildEnv(pairs)
+}
+
+/// The parent env minus the auth variables, the session variables of the desktop app and the OAuth switches
+/// (the prefixes above): a child started with it signs in by itself, never through the parent's proxy or key.
+#[must_use]
+pub fn strip_env(parent: impl IntoIterator<Item = (String, String)>) -> Vec<(String, String)> {
+    parent
+        .into_iter()
+        .filter(|(name, _)| !is_stripped(name))
+        .collect()
 }
 
 fn is_stripped(name: &str) -> bool {
@@ -135,6 +145,13 @@ mod tests {
                 .iter()
                 .all(|(_, value)| !value.contains("parent"))
         );
+    }
+
+    #[test]
+    fn strip_env_drops_the_auth_and_session_variables_and_adds_nothing() {
+        let kept = strip_env(parent());
+        let names: Vec<&str> = kept.iter().map(|(n, _)| n.as_str()).collect();
+        assert_eq!(names, ["PATH", "MCP_TOOL_TIMEOUT"]);
     }
 
     #[test]

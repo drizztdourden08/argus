@@ -51,6 +51,7 @@ impl WakeService {
         if self.schedule.registry.due(now) {
             self.registry_tick();
             self.reminder_tick();
+            self.relay_tick();
         }
         if self.schedule.agents.due(now) {
             self.agent_tick();

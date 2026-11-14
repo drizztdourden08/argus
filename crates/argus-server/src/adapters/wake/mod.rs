@@ -5,10 +5,14 @@ pub mod applied;
 pub mod boards;
 pub mod docs;
 pub mod faults;
+pub mod headless;
+pub mod relay;
+pub mod relay_text;
 pub mod store;
 
 pub use applied::applied_of;
 pub use boards::{WakeBoards, WatcherLive, view_of};
 pub use docs::WakeDocs;
 pub use faults::SqlFaultStore;
+pub use relay::{RelayHost, ServerRelay};
 pub use store::SqlWakeStore;

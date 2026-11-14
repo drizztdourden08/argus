@@ -621,3 +621,5 @@ coord action list [--who <w>]
 2. A to-do has an assignee. With no `--who` it is the owner's, as before. `lead:<key>` sends it to
    the lead of another project and wakes it (`todo-assigned`). A to-do blocks an item only when it
    is linked in `blockedBy`.
+
+The wake relay, which wakes a paused thread through another thread or a headless resume, is in `docs/wake-relay.md`.

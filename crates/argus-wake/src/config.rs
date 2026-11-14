@@ -11,6 +11,7 @@ use crate::registry::{
     DEFAULT_ALIVE_MS, DEFAULT_BOARD_GRACE_MS, DEFAULT_NO_LISTENER_MS, DEFAULT_REACTION_MS,
     DEFAULT_TICK_MS, RegistryConfig,
 };
+use crate::relay::RelaySettings;
 use crate::reminders::ReminderConfig;
 use crate::stalls::StallConfig;
 use crate::sync_wakes::SyncWakeConfig;
@@ -82,6 +83,8 @@ pub struct WakeConfig {
     pub reminders: ReminderConfig,
     /// The stall watch (`stall.*`).
     pub stall: StallConfig,
+    /// The wake relay (`wakeRelay.*`).
+    pub relay: RelaySettings,
 }
 
 impl Default for WakeConfig {
@@ -115,6 +118,7 @@ impl WakeConfig {
             policy: WakePolicy::from_json(config.get("wakePolicy").unwrap_or(&Value::Null)),
             reminders: ReminderConfig::from_json(config.get("reminders").unwrap_or(&Value::Null)),
             stall: StallConfig::from_json(config.get("stall").unwrap_or(&Value::Null)),
+            relay: RelaySettings::from_json(config.get("wakeRelay").unwrap_or(&Value::Null)),
         }
     }
 }

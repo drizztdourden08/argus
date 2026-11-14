@@ -4,6 +4,7 @@
 
 pub mod driver;
 mod periodic;
+mod relay;
 mod remind;
 mod schedule;
 mod stall;
@@ -32,6 +33,7 @@ use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, PORTFOLIO};
 use crate::registry::{DueThread, Env, Registry, RegistryDeps, RegistryRow};
+use crate::relay::{Relay, RelayPort};
 use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
 use crate::source::{AgentLive, BoardSource, SyncSource};
 use crate::stalls::Stalls;
@@ -94,6 +96,8 @@ pub struct WakeService {
     resend: Resend,
     owner_alerts: OwnerAlerts,
     owner: Option<Arc<dyn OwnerSink>>,
+    relay: Relay,
+    relay_port: Option<Arc<dyn RelayPort>>,
     notice_sources: Vec<Arc<dyn NoticeSource>>,
     boards: Arc<dyn BoardSource>,
     live: Arc<dyn AgentLive>,
@@ -153,6 +157,8 @@ impl WakeService {
             resend: Resend::new(config.reminders.resend_ms),
             owner_alerts: OwnerAlerts::new(config.reminders.owner_ms),
             owner: None,
+            relay: Relay::new(config.relay),
+            relay_port: None,
             notice_sources: vec![sync_due],
             boards: deps.boards,
             live: deps.live,
