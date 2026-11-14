@@ -16,8 +16,8 @@ It drops every variable of the parent whose name starts with `ANTHROPIC_` or `CL
 `USE_LOCAL_OAUTH`, `USE_STAGING_OAUTH` and `CONTROL_PLANE_API_KEY`, then adds the key, `ARGUS_HOSTED=1`
 and `MCP_TOOL_TIMEOUT`.
 
-Why the prefixes: a Claude Desktop session sets `ANTHROPIC_BASE_URL` to its own local proxy, which signs every
-call with the subscription. When Argus is started from a Claude shell, its env carries that variable. The first
+Why the prefixes: a session of the desktop app sets `ANTHROPIC_BASE_URL` to its own local proxy, which signs every
+call with the subscription. When Argus is started from a shell of that app, its env carries that variable. The first
 probe kept it and got `401 OAuth access token is invalid` on both turns, at zero cost. The billing guard alone
 could not catch it: `apiKeySource` still read `ANTHROPIC_API_KEY`.
 

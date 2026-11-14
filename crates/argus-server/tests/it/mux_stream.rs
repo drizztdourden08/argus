@@ -53,7 +53,9 @@ async fn a_second_sub_sends_only_the_snapshot_of_its_new_collection() {
     assert_eq!(names(&got), ["snapshot", "ready"]);
     assert_eq!(got[0].data["coll"], "meta");
     assert_eq!(got[1].data["colls"], json!(["meta"]));
-    let again = m.sub(&t, sub_since("alpha", &["items", "meta"], seq(&t))).await;
+    let again = m
+        .sub(&t, sub_since("alpha", &["items", "meta"], seq(&t)))
+        .await;
     assert_eq!(names(&again), ["ready"], "nothing new, no snapshot");
     assert_eq!(again[0].data["colls"], json!([]));
     apply(&t, "alpha", &[set_item("I-3")]);
