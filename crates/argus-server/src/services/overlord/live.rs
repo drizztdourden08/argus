@@ -1,5 +1,6 @@
-//! The hosted Overlord's child, started with Argus when `config.overlord.mode` is `live` (the
-//! default is `off`, so nothing starts; `autostart` false keeps it down at boot). While a child runs, a `HostedSink` is attached to the wake
+//! The hosted Overlord's child, started with Argus when `config.overlord.mode` is `live` or `shadow`
+//! (the default is `off`, so nothing starts; `autostart` false keeps it down at boot). A shadow
+//! child is the read-only copy of `shadow.rs`. While a child runs, a `HostedSink` is attached to the wake
 //! engine for the project `portfolio` and the thread `coordinator`, so its wakes go to the child's
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
@@ -23,6 +24,7 @@ use argus_wake::service::driver::{SharedWake, lock};
 use serde_json::json;
 
 use super::config::{self, Live};
+use super::shadow::{self, Shadow, ShadowInput};
 use crate::Services;
 use crate::adapters::overlord::gate::ApprovalGate;
 use crate::adapters::overlord::host::SystemChildHost;
@@ -83,6 +85,8 @@ struct Inputs {
     gate: Arc<ApprovalGate>,
     /// The endpoint of the private MCP server, `http://127.0.0.1:<port>/mcp/overlord`.
     endpoint: String,
+    /// Set in shadow mode: the child forks the desktop session and may only read.
+    shadow: Option<ShadowInput>,
 }
 
 fn find_exe() -> PathBuf {
@@ -110,14 +114,18 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     std::fs::create_dir_all(&dir)
         .map_err(|_| HostFault("the overlord folder cannot be made".to_owned()))?;
     let config = inputs.gate.begin(&inputs.endpoint, &std::env::temp_dir())?;
-    let args = build_argv(&SessionArgs {
+    let base = SessionArgs {
         model: inputs.live.model.clone(),
         effort: None,
         resume: resume.map(str::to_owned),
         fork: false,
         mcp_config: config.to_string_lossy().into_owned(),
         budget_left_usd: budget_left(inputs),
-    });
+    };
+    let args = match &inputs.shadow {
+        Some(shadow) => shadow::argv(shadow, &base)?,
+        None => build_argv(&base),
+    };
     Ok(ChildSpec {
         program: inputs.exe.clone(),
         args,
@@ -131,7 +139,7 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     })
 }
 
-fn spec_factory(svc: &Services, live: &Live) -> SpecFactory {
+fn spec_factory(svc: &Services, live: &Live, shadow: Option<ShadowInput>) -> SpecFactory {
     let inputs = Inputs {
         home: svc.paths.home.clone(),
         db: Arc::clone(&svc.db),
@@ -140,6 +148,7 @@ fn spec_factory(svc: &Services, live: &Live) -> SpecFactory {
         live: live.clone(),
         gate: Arc::clone(&svc.overlord_approvals),
         endpoint: format!("http://127.0.0.1:{}/mcp/overlord", svc.port()),
+        shadow,
     };
     Box::new(move |resume| spec_of(&inputs, resume))
 }
@@ -173,7 +182,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     }
 }
 
-/// Starts the supervisor when the mode is `live` and the wake engine is on.
+/// Starts the supervisor when the mode is `live` or `shadow` and the wake engine is on.
 ///
 /// # Errors
 /// A [`StartFault`] naming why nothing started.
@@ -181,19 +190,27 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
     if svc.shadow {
         return Err(StartFault::Shadow);
     }
-    if !config::is_live(svc) {
+    let shadowing = config::is_shadow(svc);
+    if !shadowing && !config::is_live(svc) {
         return Err(StartFault::NotLive);
     }
     let wake = svc.wake.clone().ok_or(StartFault::NoWake)?;
     let live = config::live(svc);
-    let observer = Arc::new(Wakes {
-        wake,
-        log: Arc::clone(&svc.log),
-        gate: Arc::clone(&svc.overlord_approvals),
-        attached: Mutex::new(None),
+    let observer: Arc<dyn Observer> = if shadowing {
+        Arc::new(Shadow::new(svc, wake))
+    } else {
+        Arc::new(Wakes {
+            wake,
+            log: Arc::clone(&svc.log),
+            gate: Arc::clone(&svc.overlord_approvals),
+            attached: Mutex::new(None),
+        })
+    };
+    let input = shadowing.then(|| ShadowInput {
+        boards: svc.boards(),
     });
     let setup = Config {
-        spec: spec_factory(svc, &live),
+        spec: spec_factory(svc, &live, input),
         restart_max: live.restart_max,
         resume_from: None,
     };

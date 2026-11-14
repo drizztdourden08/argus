@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use super::overlord::web_only;
 use crate::reply::json_reply;
 use crate::router::Reply;
-use crate::services::overlord::config::is_live;
+use crate::services::overlord::config::{is_live, is_shadow};
 use crate::services::overlord::control;
 use crate::{Ctx, RouteOpts, Router};
 
@@ -19,6 +19,8 @@ fn mode(ctx: &Ctx) -> &'static str {
         "shadow"
     } else if is_live(&ctx.svc) {
         "live"
+    } else if is_shadow(&ctx.svc) {
+        "shadow"
     } else {
         "off"
     }

@@ -99,3 +99,22 @@ fn a_wake_that_found_no_child_stays_pending_and_the_next_attach_gets_it() {
         WakeStatus::Delivered
     );
 }
+
+#[test]
+fn a_mirror_copies_the_wakes_of_one_thread_and_skips_the_rest() {
+    let taken = Taken::default();
+    let seen = Arc::clone(&taken);
+    let mut sink = HostedSink::mirror(
+        Box::new(move |text| {
+            seen.lock().unwrap().push(text);
+            true
+        }),
+        |thread| thread == "coordinator",
+    );
+    let mut other = event(&["not for the overlord"], 1);
+    other.thread = "brock".to_owned();
+    assert_eq!(sink.deliver(&other), Delivery::Sent);
+    assert_eq!(taken.lock().unwrap().len(), 0);
+    assert_eq!(sink.deliver(&event(&["x"], 1)), Delivery::Sent);
+    assert_eq!(taken.lock().unwrap().len(), 1);
+}
