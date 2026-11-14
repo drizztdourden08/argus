@@ -33,6 +33,7 @@ pub mod overlord;
 mod overlord_approvals;
 mod overlord_budget;
 mod overlord_message;
+mod overlord_mode;
 mod overlord_session;
 mod overlord_shadow;
 mod overlord_spend;
