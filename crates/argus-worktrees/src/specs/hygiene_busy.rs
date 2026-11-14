@@ -66,6 +66,7 @@ fn the_debounce_starts_after_the_grace() {
 fn a_process_counts_by_its_command_line_when_its_cwd_cannot_be_read() {
     let (fx, h) = world(|_| {});
     let upper = fx.path("agent-a1").replace('/', "\\").to_uppercase();
+    h.clock.advance(10_001);
     running(&h, &format!("bun upgrade --dir {upper}\\web"), None);
     h.scan();
     assert!(attached_why(&h, "agent-a1").contains("4242"));
@@ -76,6 +77,7 @@ fn a_process_counts_by_its_command_line_when_its_cwd_cannot_be_read() {
 fn a_process_counts_by_its_cwd_when_its_command_line_names_nothing() {
     let (fx, h) = world(|_| {});
     let inside = format!("{}/packages/web", fx.path("agent-a1")).replace('/', "\\");
+    h.clock.advance(10_001);
     running(&h, "pnpm install", Some(&inside));
     h.scan();
     assert!(attached_why(&h, "agent-a1").contains("4242"));
