@@ -13,7 +13,7 @@ use argus_worktrees::{LiveRun, ProcInfo, ProcessLister};
 use super::cwds::cwds_of;
 use crate::adapters::runs::RunHost;
 
-const FRESH_MS: i64 = 60_000;
+const FRESH_MS: i64 = 5_000;
 /// Live runs looked at, at most.
 const RUNS_MAX: i64 = 500;
 

@@ -141,6 +141,7 @@ pub(super) fn options_of(svc: &Services) -> Options {
         hygiene: !svc.shadow && s["hygiene"] != false && s["release"] != false,
         auto_rules: auto_mode(&s),
         detach_debounce_ms: int(&s, "detachDebounceMs", base.detach_debounce_ms, 0),
+        busy_grace_ms: int(&s, "busyGraceMs", base.busy_grace_ms, 0),
         report_after_ms: int(&s, "reportAfterMs", base.report_after_ms, 0),
         scratch: scratch_roots(&s),
         scratch_every_ms: int(&s, "scratchEveryMs", base.scratch_every_ms, 1000),

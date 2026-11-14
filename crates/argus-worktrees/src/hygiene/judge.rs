@@ -224,7 +224,7 @@ impl Service {
         match self.busy_by(&fact.path, !look.fresh, "removed") {
             Err(err) => Some(err.message),
             Ok(Some(user)) => Some(format!("{} {} uses it", base_name(&user.name), user.pid)),
-            Ok(None) => None,
+            Ok(None) => self.busy_why(fact),
         }
     }
 

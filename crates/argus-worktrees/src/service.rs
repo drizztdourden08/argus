@@ -60,6 +60,9 @@ pub struct Options {
     /// How long a worktree stays unattached before the hygiene acts on it (`worktrees.detachDebounceMs`, 1 minute), so
     /// an agent that ends and a new one that starts in the same folder do not cause a removal.
     pub detach_debounce_ms: i64,
+    /// A worktree whose folder, `.git` file or top-level files changed within this long is busy, never removed
+    /// (`worktrees.busyGraceMs`, 10 minutes; 0 turns it off).
+    pub busy_grace_ms: i64,
     /// How long the lead's approval ask stays unanswered before the Overlord is told (`worktrees.reportAfterMs`,
     /// 30 minutes).
     pub report_after_ms: i64,
@@ -96,6 +99,7 @@ impl Default for Options {
             hygiene: true,
             auto_rules: crate::auto::AutoMode::Report,
             detach_debounce_ms: 60_000,
+            busy_grace_ms: 10 * 60_000,
             report_after_ms: 30 * 60_000,
             target_limit_ms: 30 * 60_000,
             scratch: Vec::new(),

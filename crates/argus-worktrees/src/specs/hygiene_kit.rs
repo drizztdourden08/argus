@@ -38,6 +38,7 @@ pub fn agents_rule(fx: &Fixture) -> Rule {
 pub fn hygiene_on(o: &mut Options) {
     o.hygiene = true;
     o.detach_debounce_ms = DEBOUNCE;
+    o.busy_grace_ms = 0;
     o.report_after_ms = REPORT;
 }
 

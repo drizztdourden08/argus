@@ -30,6 +30,8 @@ A worktree is attached while any of these holds, whatever its age.
 3. A launcher that is not retired, a bundle that is not closed, or a queued or running run (check
    runs among them) is in it.
 4. A live process uses it (the same process check the removal makes).
+5. It is busy: its folder, its `.git` file or the files directly under it changed in the last 10 minutes
+   (`worktrees.busyGraceMs`). The 1 minute debounce starts only after that grace.
 
 A list Argus cannot read (the runs, the processes) counts as attached. An open pull request does
 not attach a worktree: its branch outlives the folder.
