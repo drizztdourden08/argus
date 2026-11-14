@@ -12,6 +12,7 @@ const OVERVIEW_TABS = [
   { id: 'cache', label: 'Cache' },
   { id: 'releases', label: 'Releases' },
   { id: 'registry', label: 'Registry' },
+  { id: 'overlord', label: 'Overlord' },
 ];
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);
@@ -30,6 +31,7 @@ const TAB_ICONS: Readonly<Record<string, IconName>> = {
   cache: 'database',
   releases: 'tag',
   registry: 'server',
+  overlord: 'hand',
 };
 
 const GROUP_OPTIONS = [
