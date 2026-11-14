@@ -464,15 +464,13 @@ fn leftovers_and_all_leftovers_check_their_arguments_before_the_dashboard_is_ask
             "--older-than takes an age such as 3d, 12h, 1w or a number of days",
         );
     }
-    for low in ["5h", "1h", "0d", "0.1"] {
-        let argv = with(&["--older-than", low, "--reason", "x"]);
-        refused(
-            &w.worker(&argv),
-            1,
-            "--older-than goes down to 6h at the least",
-        );
-    }
-    for (age, reason) in [("6h", "finished agents"), ("3d", ""), ("12h", "")] {
+    for (age, reason) in [
+        ("0", "lead go"),
+        ("5h", "lead go"),
+        ("6h", "finished agents"),
+        ("3d", ""),
+        ("12h", ""),
+    ] {
         let mut argv = with(&["--older-than", age]);
         if !reason.is_empty() {
             argv.extend(["--reason", reason]);
@@ -517,10 +515,6 @@ fn request_and_requests_check_their_arguments_before_the_dashboard_is_asked() {
         (
             &["request", all, "--older-than", "soon"],
             "--older-than takes an age such as 3d, 12h, 1w or a number of days",
-        ),
-        (
-            &["request", all, "--older-than", "5h"],
-            "--older-than goes down to 6h at the least",
         ),
         (&["request", "X:/Proj/*"], "name one worktree"),
         (

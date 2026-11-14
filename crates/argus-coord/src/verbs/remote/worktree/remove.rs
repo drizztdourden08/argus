@@ -38,7 +38,7 @@ pub(super) fn slow(e: ClientError, what: &str, check: &str) -> CoordError {
 
 const AGE_USAGE: &str = "--older-than takes an age such as 3d, 12h, 1w or a number of days.";
 
-/// `3d`, `12h`, `1w` or a bare number of days, in days.
+/// `3d`, `12h`, `1w` or a bare number of days, in days. The server owns the 6 hour floor: the lead and the Overlord go below it.
 pub(super) fn age_arg(text: Option<&str>) -> Result<f64, CoordError> {
     let (n, unit) =
         amount_and_unit(text.unwrap_or_default()).ok_or_else(|| CoordError::refuse(AGE_USAGE))?;
@@ -48,11 +48,6 @@ pub(super) fn age_arg(text: Option<&str>) -> Result<f64, CoordError> {
         "w" => n * 7.0,
         _ => return Err(CoordError::refuse(AGE_USAGE)),
     };
-    if days < 0.25 {
-        return Err(CoordError::refuse(
-            "--older-than goes down to 6h at the least (a thread deletes nothing younger; the owner's page can).",
-        ));
-    }
     Ok(days)
 }
 
