@@ -99,7 +99,7 @@ fn leads(svc: &Services) -> Vec<Lead> {
 }
 
 /// The wake of a lead: the deaf-wake path of the wake relay (`docs/wake-relay.md`) takes it from
-/// here, asking a live listener thread to send_message once and resuming it headless when none is.
+/// here, asking a live listener thread to `send_message` once and resuming it headless when none is.
 fn wake_of(lead: &Lead) -> WakeRequest {
     WakeRequest::about(&lead.board, &lead.thread, REASON, "boot", TEXT.to_owned())
 }
