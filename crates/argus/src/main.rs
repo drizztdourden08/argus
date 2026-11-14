@@ -9,6 +9,7 @@
 mod lifecycle;
 mod migrate;
 mod node_form;
+mod overlord_probe;
 mod tray;
 
 use std::io::{self, Write};
@@ -87,6 +88,12 @@ enum Command {
     },
     /// Compares two dashboard servers by value, read-only: the shadow check of the switch-over.
     Parity(argus_parity::Args),
+    /// Hidden one-shots of the hosted Overlord.
+    #[command(hide = true)]
+    Overlord {
+        #[command(subcommand)]
+        verb: overlord_probe::Verb,
+    },
     /// The tray icon (Windows): run, start, stop or status; start is the default.
     Tray {
         #[command(subcommand)]
@@ -160,6 +167,7 @@ async fn run_cli() -> ExitCode {
         Command::SelfInstall { args } => Ok(run_install(install::self_install::run, &args)),
         Command::Migrate { verb } => migrate::run(verb).await,
         Command::Parity(args) => argus_parity::run(args).await,
+        Command::Overlord { verb } => overlord_probe::run(verb).await,
         Command::Tray {
             action,
             data_dir,

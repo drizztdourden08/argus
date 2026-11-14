@@ -24,16 +24,7 @@ pub struct SessionArgs {
 /// `CLAUDE.md` the Overlord depends on.
 #[must_use]
 pub fn build_argv(config: &SessionArgs) -> Vec<String> {
-    let mut argv = to_strings(&[
-        "-p",
-        "--input-format",
-        "stream-json",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--model",
-        &config.model,
-    ]);
+    let mut argv = head(&config.model);
     if let Some(id) = &config.resume {
         argv.extend(["--resume".to_owned(), id.clone()]);
         if config.fork {
@@ -45,10 +36,35 @@ pub fn build_argv(config: &SessionArgs) -> Vec<String> {
         PERMISSION_TOOL,
         "--mcp-config",
         &config.mcp_config,
-        "--max-budget-usd",
-        &format!("{:.2}", config.budget_left_usd),
     ]));
+    argv.extend(budget(config.budget_left_usd));
     argv
+}
+
+/// The argument line of the story 4 probe: the same pieces without the permission tool and the
+/// MCP config, because no private endpoint exists for a one-shot probe.
+#[must_use]
+pub fn build_probe_argv(model: &str, budget_usd: f64) -> Vec<String> {
+    let mut argv = head(model);
+    argv.extend(budget(budget_usd));
+    argv
+}
+
+fn head(model: &str) -> Vec<String> {
+    to_strings(&[
+        "-p",
+        "--input-format",
+        "stream-json",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        model,
+    ])
+}
+
+fn budget(usd: f64) -> Vec<String> {
+    vec!["--max-budget-usd".to_owned(), format!("{usd:.2}")]
 }
 
 fn to_strings(parts: &[&str]) -> Vec<String> {
