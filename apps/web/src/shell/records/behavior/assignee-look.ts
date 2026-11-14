@@ -1,19 +1,14 @@
 /* @layer renderer-app @kind logic */
 import { OWNER_DEFAULTS } from '../../../owner';
-import type { OwnerProfile } from '../../../owner';
 import { boardName } from '../../../data/boards';
-import type { ThreadChoice } from '../../../data/kanban';
-import type { WithId } from '../../../data/react';
 import { ITEM_REGISTRY } from '../../../data/registry';
 import { categoryColor } from './category-color';
 import { AGENT_PREFIX, COORDINATOR, LEAD_PREFIX, OWNER } from './look.constants';
-import type { AgentName, AssigneeLook } from '../records.type';
-
-type Threads = readonly WithId<ThreadChoice>[];
+import type { AgentName, AssigneeLook, LookExtras, Threads } from '../records.type';
 
 const leadLook = (key: string, tip: (name: string) => string): AssigneeLook => {
   const look = ITEM_REGISTRY.people.leads[key];
-  const name = boardName(key);
+  const name = trimmed(boardName(key)) || key;
   return { label: `${name} lead`, tip: tip(name), initials: look?.initials ?? name.slice(0, 2).toUpperCase(), color: categoryColor(look?.color), lead: key, owner: false };
 };
 
@@ -32,7 +27,8 @@ const agentLook = (id: string, agents: readonly AgentName[]): AssigneeLook => {
   return { label: name, tip: `Assigned to agent ${name}`, initials: name.slice(0, 2).toUpperCase(), owner: false };
 };
 
-const assigneeLook = (assignee: string, boardKey: string, threads: Threads, owner: OwnerProfile = OWNER_DEFAULTS, agents: readonly AgentName[] = []): AssigneeLook => {
+const assigneeLook = (assignee: string, boardKey: string, threads: Threads, extras: LookExtras = {}): AssigneeLook => {
+  const { owner = OWNER_DEFAULTS, agents = [] } = extras;
   if (assignee === OWNER) return { label: owner.name, tip: 'Assigned to you', icon: 'user', owner: true };
   if (assignee.startsWith(AGENT_PREFIX)) return agentLook(assignee.slice(AGENT_PREFIX.length), agents);
   if (assignee.startsWith(LEAD_PREFIX)) return leadLook(assignee.slice(LEAD_PREFIX.length), (name) => `Assigned to the lead of ${name}`);

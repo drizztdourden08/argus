@@ -13,7 +13,7 @@ const assigneeChoices = (items: readonly ItemRef[], boardKey: string, threads: r
   const found = new Set(items.filter((item) => !item.deletedAt).map(assigneeOf));
   found.delete(OWNER);
   for (const choice of live) found.delete(choice.value);
-  const labelOf = (value: string): string => assigneeLook(value, boardKey, threads, undefined, agents).label;
+  const labelOf = (value: string): string => assigneeLook(value, boardKey, threads, { agents }).label;
   const others = [...found].sort().map((value) => ({ value, label: labelOf(value) }));
   return [{ value: OWNER, label: labelOf(OWNER) }, ...others, ...live];
 };

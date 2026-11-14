@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { isChatOpen, withChat } from '../../src/shell/OverlordChat/behavior/chat-params';
+import { isChatOpen } from '../../src/shell/OverlordChat/behavior/chat-params';
+import { withChat } from '../../src/shell/OverlordChat/behavior/with-chat';
 
 describe('O5 the chat drawer follows the chat URL parameter', { tags: ['critical'] }, () => {
   it('is open only when chat is 1', () => {

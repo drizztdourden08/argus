@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useSearchParams } from 'react-router';
 import type { ChatOpen } from '../OverlordChat.type';
-import { isChatOpen, withChat } from './chat-params';
+import { isChatOpen } from './chat-params';
+import { withChat } from './with-chat';
 
 const useChatOpen = (): ChatOpen => {
   const [params, setParams] = useSearchParams();

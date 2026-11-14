@@ -14,7 +14,7 @@ const ItemAgents = (props: PaneBodyProps) => {
       {linked.map((agent) => (
         <Flex key={agent.id} gap="sm" align="center" wrap>
           <RecordLink id={agent.id}>
-            <Text as="span" weight={600}>{agent.name?.trim() || agent.id}</Text>
+            <Text as="span" weight={600}>{(agent.name?.trim() ?? '') || agent.id}</Text>
           </RecordLink>
           <Text as="span" variant="caption" tone="muted">{agent.model ?? 'model not set'}</Text>
           <Tag variant="urgency" color={agentTone(agent.status)}>{agent.status ?? 'working'}</Tag>

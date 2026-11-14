@@ -4,6 +4,7 @@ import type { MouseEvent, ReactNode } from 'react';
 import type { ItemRef, ThreadChoice } from '../../data/kanban';
 import type { WithId } from '../../data/react';
 import type { KindCollection } from '../../data/registry';
+import type { OwnerProfile } from '../../owner';
 import type { AvatarSource } from '../../avatar';
 import type { RecordFrameProps } from './record-frame.type';
 
@@ -62,6 +63,13 @@ interface LinkedTextProps {
 interface AgentName {
   id: string;
   name?: string | null;
+}
+
+type Threads = readonly WithId<ThreadChoice>[];
+
+interface LookExtras {
+  owner?: OwnerProfile;
+  agents?: readonly AgentName[];
 }
 
 interface AssigneeLook {
@@ -197,7 +205,7 @@ interface RecordPaneScopeProps {
 }
 
 export type {
-  ActionDef, ActionHandlers, AgentName, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps,
+  ActionDef, ActionHandlers, AgentName, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LookExtras, Threads,
   HeadSelection, OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordHeadViewProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
   RecordPaneState, RecordRef, RecordTarget, ShownCodeProps, TextPart, TypeIconProps,
 };

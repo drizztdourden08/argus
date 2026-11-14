@@ -27,8 +27,8 @@ describe('I-167 agents as assignees and on tickets', { tags: ['critical'] }, () 
   const agents = [agent('A-1', { item: 'I-1' }), agent('A-2', { items: ['I-1', 'I-2'] }), agent('A-3', { item: 'I-1', status: 'done' })];
 
   it('renders agent:A-n as the agent name, or the id when unknown', () => {
-    expect(assigneeLook('agent:A-1', 'argus', [], undefined, agents).label).toBe('agent A-1');
-    expect(assigneeLook('agent:A-7', 'argus', [], undefined, agents).label).toBe('A-7');
+    expect(assigneeLook('agent:A-1', 'argus', [], { agents }).label).toBe('agent A-1');
+    expect(assigneeLook('agent:A-7', 'argus', [], { agents }).label).toBe('A-7');
   });
 
   it('offers the live agents as agent:A-n choices', () => {

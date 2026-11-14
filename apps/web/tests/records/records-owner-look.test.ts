@@ -9,7 +9,7 @@ const alex = { name: 'Alex', initials: 'AX', avatar: null };
 describe('I-111 the owner shows by name', { tags: ['critical'] }, () => {
   it('names the owner mark by the profile and keeps the sentence', () => {
     expect(assigneeLook('owner', 'argus', [])).toMatchObject({ label: 'You', owner: true });
-    expect(assigneeLook('owner', 'argus', [], alex)).toMatchObject({ label: 'Alex', tip: 'Assigned to you', owner: true });
+    expect(assigneeLook('owner', 'argus', [], { owner: alex })).toMatchObject({ label: 'Alex', tip: 'Assigned to you', owner: true });
   });
 
   it('labels the picker entry with the name and you, or just You by default', () => {
