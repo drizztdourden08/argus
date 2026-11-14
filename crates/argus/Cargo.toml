@@ -11,17 +11,19 @@ repository.workspace = true
 
 [dependencies]
 argus-coord = { path = "../argus-coord" }
+argus-accounts = { path = "../argus-accounts" }
 argus-core = { path = "../argus-core" }
 argus-dns = { path = "../argus-dns" }
 argus-mcp = { path = "../argus-mcp" }
 argus-migrate = { path = "../argus-migrate" }
 argus-native = { path = "../argus-native" }
+argus-overlord = { path = "../argus-overlord" }
 argus-parity = { path = "../argus-parity" }
 argus-server = { path = "../argus-server" }
 argus-wake = { path = "../argus-wake" }
 clap = { version = "4", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-tokio = { version = "1", features = ["io-std", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio = { version = "1", features = ["io-std", "io-util", "macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }
 tokio-util = "0.7"
 
 [dev-dependencies]

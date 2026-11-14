@@ -10,7 +10,7 @@ mod logs;
 mod node_guard;
 mod open;
 mod serve;
-mod spawn;
+pub(crate) mod spawn;
 pub(crate) mod start;
 mod status;
 mod stop;
