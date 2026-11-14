@@ -10,7 +10,7 @@ use std::time::Duration;
 
 use super::fake::FakeHost;
 use super::{Config, Handle, Link, Observer, start};
-use crate::ports::{ChildSpec, HostFault};
+use crate::ports::ChildSpec;
 use crate::session::env::build_env;
 use crate::session::guard::GuardFault;
 use crate::session::state::Status;
