@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind component */
-import { InlineCreateForm, Select, toast } from '@drizztdourden08/tessera';
+import { InlineCreateForm, Select, Text, toast } from '@drizztdourden08/tessera';
 import { threadChoices } from '../../../shared';
 import { useAddItemDraft } from '../behavior/useAddItemDraft';
 import type { ColumnAddFormProps } from '../kanban-props.type';
+import { PARENT_HINT } from '../kanban.constants';
 import { textProblem } from '../model';
 
 const ColumnAddForm = (props: ColumnAddFormProps) => {
@@ -32,6 +33,7 @@ const ColumnAddForm = (props: ColumnAddFormProps) => {
           {draft.needsParent ? (
             <Select aria-label="Epic" size="sm" placeholder="Epic (required)" options={draft.parentOptions} value={draft.parent} onChange={draft.setParent} />
           ) : null}
+          {draft.needsParent && draft.parent === '' ? <Text variant="caption" tone="muted">{PARENT_HINT}</Text> : null}
         </>
       }
     />

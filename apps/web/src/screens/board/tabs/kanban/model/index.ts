@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { addParentOptions } from './add-parent-options';
+export { createReady } from './create-ready';
 export { agentChoices } from './agent-choices';
 export { agentTone } from './agent-tone';
 export { itemAgents, withItemAgents } from './item-agents';
