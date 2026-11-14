@@ -27,6 +27,8 @@ pub(crate) fn budget(svc: &Services) -> Budget {
     let setting = config.extra.get("overlord").unwrap_or(&Value::Null);
     Budget {
         budget_usd: share(setting, "budgetUsd", DEFAULT_BUDGET_USD, |v| v >= 0.0),
-        warn_at: share(setting, "warnAt", DEFAULT_WARN_AT, |v| (0.0..=1.0).contains(&v)),
+        warn_at: share(setting, "warnAt", DEFAULT_WARN_AT, |v| {
+            (0.0..=1.0).contains(&v)
+        }),
     }
 }

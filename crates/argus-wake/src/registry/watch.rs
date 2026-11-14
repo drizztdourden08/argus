@@ -130,7 +130,10 @@ impl Registry {
             return false;
         }
         let detail = if queued.is_some() {
-            format!("a wake is queued and nobody listens, for {}", secs(now - since))
+            format!(
+                "a wake is queued and nobody listens, for {}",
+                secs(now - since)
+            )
         } else {
             format!(
                 "no wake-stream for {} while the session is active",

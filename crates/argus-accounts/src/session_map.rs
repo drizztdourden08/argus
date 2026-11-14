@@ -47,9 +47,13 @@ fn subdirs(parent: &Path) -> Vec<PathBuf> {
 }
 
 fn is_record(path: &Path) -> bool {
-    path.file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .is_some_and(|n| n.starts_with("local_") && n.ends_with(".json"))
+    let named = path
+        .file_name()
+        .is_some_and(|n| n.to_string_lossy().starts_with("local_"));
+    named
+        && path
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
 }
 
 fn record_files(app_data: &Path) -> Vec<PathBuf> {

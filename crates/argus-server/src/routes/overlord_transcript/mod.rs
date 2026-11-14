@@ -96,7 +96,10 @@ async fn stream(ctx: Ctx) -> Reply {
     let held: Arc<Mutex<Option<FeedListening>>> = Arc::default();
     let dropper = Arc::clone(&held);
     let on_drop = Box::new(move || {
-        dropper.lock().unwrap_or_else(PoisonError::into_inner).take();
+        dropper
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take();
     });
     let (sender, res) = open_stream(ctx.svc.heartbeat, &ctx.svc.streams, Some(on_drop));
     let follow = Follow::new(sender, session.clone(), after);

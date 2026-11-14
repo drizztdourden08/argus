@@ -410,11 +410,7 @@ fn a_queued_wake_and_no_listener_open_not_listening_whatever_the_heartbeat_age_a
 #[test]
 fn a_queued_wake_does_not_open_not_listening_for_a_running_turn_or_a_listening_thread() {
     let mut rig = queued_for_idle_ui();
-    let now = iso(rig.clock.now_ms());
-    rig.edit_thread("alpha", "ui", |t| {
-        t.activity = "working".into();
-        t.last_seen = now.as_str().into();
-    });
+    rig.edit_thread("alpha", "ui", |t| t.activity = "working".into());
     rig.service.on_board("alpha");
     rig.pass(70 * SEC, STEP);
     assert_eq!(open(&rig).len(), 0, "a turn is running");

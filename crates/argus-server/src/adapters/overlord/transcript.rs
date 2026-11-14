@@ -60,7 +60,10 @@ impl TranscriptStore for FileTranscripts {
             Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
             Err(_) => return Err(fault("the transcript folder cannot be read")),
         };
-        Ok(entries.filter_map(Result::ok).filter_map(stamp).collect())
+        Ok(entries
+            .filter_map(Result::ok)
+            .filter_map(|e| stamp(&e))
+            .collect())
     }
 
     fn delete(&self, session: &str) -> Result<(), TranscriptFault> {
@@ -73,7 +76,7 @@ impl TranscriptStore for FileTranscripts {
     }
 }
 
-fn stamp(entry: fs::DirEntry) -> Option<Stamp> {
+fn stamp(entry: &fs::DirEntry) -> Option<Stamp> {
     let session = session_of(entry.file_name().to_str()?)?;
     let modified = entry.metadata().ok()?.modified().ok()?;
     let ms = modified.duration_since(UNIX_EPOCH).ok()?.as_millis();
@@ -98,7 +101,9 @@ mod tests {
         let home = tempfile::tempdir().unwrap();
         let first = Transcript::new(FileTranscripts::new(home.path()), &ApiKey::new(KEY));
         first.record("s1", r#"{"n":1}"#).unwrap();
-        first.record("s1", &format!(r#"{{"n":2,"text":"{KEY}"}}"#)).unwrap();
+        first
+            .record("s1", &format!(r#"{{"n":2,"text":"{KEY}"}}"#))
+            .unwrap();
         drop(first);
         let second = Transcript::new(FileTranscripts::new(home.path()), &ApiKey::new(KEY));
         let all = second.read_after("s1", 0).unwrap();

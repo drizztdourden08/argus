@@ -265,6 +265,7 @@ dependencies = [
 name = "argus-overlord"
 version = "0.2.0"
 dependencies = [
+ "argus-core",
  "serde",
  "serde_json",
 ]

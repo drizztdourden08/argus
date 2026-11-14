@@ -2,7 +2,7 @@
 //! `GET /api/overlord/spend` is `{month, spentUsd, budgetUsd, warnAt, leftUsd, note}`. The figure
 //! is the sum of the turns' costs this month by the local calendar, an estimate.
 
-use argus_accounts::local_offset_seconds;
+use argus_accounts::alerts::local_offset_seconds;
 use argus_core::clock::now_ms;
 use argus_core::{ApiError, ErrorCode};
 use argus_overlord::ports::SpendLedger;

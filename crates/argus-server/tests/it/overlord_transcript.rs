@@ -74,9 +74,7 @@ async fn the_stream_replays_then_follows_the_feed() {
     let t = start().await;
     seed(&t, "s1", 2);
     let stream = t
-        .sse_with(t.page(read(
-            "/api/overlord/transcript/stream?session=s1&after=1",
-        )))
+        .sse_with(t.page(read("/api/overlord/transcript/stream?session=s1&after=1")))
         .await;
     let first = stream
         .next(Some("line"), 5000)

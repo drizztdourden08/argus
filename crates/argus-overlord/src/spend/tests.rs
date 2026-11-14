@@ -1,10 +1,10 @@
 use super::*;
 
-fn at(seq: u64, usd: f64) -> Option<Last> {
-    Some(Last {
+fn at(seq: u64, usd: f64) -> Last {
+    Last {
         process_seq: seq,
         cumulative_usd: usd,
-    })
+    }
 }
 
 fn near(a: f64, b: f64) -> bool {
@@ -15,22 +15,22 @@ fn near(a: f64, b: f64) -> bool {
 #[test]
 fn a_cumulative_value_costs_the_step_from_the_last_one() {
     assert!(near(delta(None, 1, 0.064), 0.064));
-    assert!(near(delta(at(1, 0.064), 1, 0.0668), 0.0028));
+    assert!(near(delta(Some(at(1, 0.064)), 1, 0.0668), 0.0028));
 }
 
 #[test]
 fn a_new_process_starts_from_zero() {
-    assert!(near(delta(at(1, 0.5), 2, 0.07), 0.07));
+    assert!(near(delta(Some(at(1, 0.5)), 2, 0.07), 0.07));
 }
 
 #[test]
 fn a_lower_value_in_the_same_process_is_a_new_baseline() {
-    assert!(near(delta(at(1, 0.5), 1, 0.2), 0.2));
+    assert!(near(delta(Some(at(1, 0.5)), 1, 0.2), 0.2));
 }
 
 #[test]
 fn a_resumed_session_in_a_new_process_counts_its_whole_value() {
-    assert!(near(delta(at(3, 1.25), 4, 0.05), 0.05));
+    assert!(near(delta(Some(at(3, 1.25)), 4, 0.05), 0.05));
 }
 
 #[test]
