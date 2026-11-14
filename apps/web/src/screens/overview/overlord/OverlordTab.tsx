@@ -1,0 +1,42 @@
+/* @layer renderer-app @kind component */
+import { Box, Callout, EmptyState } from '@drizztdourden08/tessera';
+import { useChatOpen } from './behavior/useChatOpen';
+import { useOverlord } from './behavior/useOverlord';
+import { isRunning } from './model';
+import { READING } from './overlord.constants';
+import { ApprovalStrip } from './sub-components/ApprovalStrip';
+import { BudgetCard } from './sub-components/BudgetCard';
+import { ChatDrawer } from './sub-components/ChatDrawer';
+import { SpendCard } from './sub-components/SpendCard';
+import { StatusBar } from './sub-components/StatusBar';
+import './OverlordTab.css';
+
+const OverlordTab = () => {
+  const overlord = useOverlord();
+  const chat = useChatOpen();
+  const { status, spend } = overlord;
+  if (!status) return overlord.problem ? <Callout tone="danger">{`The Overlord could not be read: ${overlord.problem}.`}</Callout> : <EmptyState message={READING} />;
+  return (
+    <Box className="overlord-layout">
+      <Box className="overlord-layout__status">
+        <StatusBar status={status} action={overlord.control} onControl={overlord.onControl} chatOpen={chat.open} onChat={chat.toggle} />
+      </Box>
+      <Box className="overlord-layout__approvals">
+        <ApprovalStrip approvals={overlord.pending} action={overlord.decision} onDecide={overlord.onDecide} />
+      </Box>
+      {spend && <Box className="overlord-layout__spend"><SpendCard spend={spend} /></Box>}
+      {spend && <Box className="overlord-layout__budget"><BudgetCard spend={spend} action={overlord.budget} onSave={overlord.onSave} /></Box>}
+      <ChatDrawer
+        open={chat.open}
+        rows={overlord.rows}
+        problem={overlord.transcriptProblem}
+        running={isRunning(status.status)}
+        action={overlord.chat}
+        onSend={overlord.onSend}
+        onClose={chat.close}
+      />
+    </Box>
+  );
+};
+
+export { OverlordTab };

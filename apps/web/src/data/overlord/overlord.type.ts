@@ -13,4 +13,79 @@ interface OverlordKeyApi {
   remove: () => Promise<boolean>;
 }
 
-export type { KeyStatus, OverlordKeyApi };
+type OverlordState = 'stopped' | 'starting' | 'idle' | 'turn' | 'paused-budget' | 'waiting-approval' | 'crashed';
+
+type OverlordAction = 'start' | 'stop' | 'restart';
+
+interface OverlordStatus {
+  mode: string | null;
+  status: OverlordState;
+  pid: number | null;
+  startedAt: string | null;
+  sessionId: string | null;
+}
+
+interface OverlordSpend {
+  month: string;
+  spentUsd: number;
+  budgetUsd: number;
+  warnAt: number;
+  leftUsd: number;
+  note: string;
+}
+
+type ApprovalState = 'pending' | 'allowed' | 'denied' | 'expired';
+
+type ApprovalDecision = 'allow' | 'deny';
+
+interface OverlordApproval {
+  id: string;
+  at: string;
+  tool: string;
+  inputSummary: string;
+  status: ApprovalState;
+}
+
+interface TranscriptEvent {
+  type?: string;
+  message?: { content?: unknown };
+}
+
+interface TranscriptLine {
+  index: number;
+  event: TranscriptEvent | string;
+}
+
+interface TranscriptPage {
+  session: string | null;
+  lines: (TranscriptEvent | string)[];
+  next: number;
+}
+
+interface ActionState {
+  busy: boolean;
+  problem: string | null;
+  run: (action: () => Promise<unknown>) => Promise<boolean>;
+}
+
+interface TranscriptFeed {
+  lines: TranscriptLine[];
+  problem: string | null;
+}
+
+export type {
+  ActionState,
+  ApprovalDecision,
+  ApprovalState,
+  KeyStatus,
+  OverlordAction,
+  OverlordApproval,
+  OverlordKeyApi,
+  OverlordSpend,
+  OverlordState,
+  OverlordStatus,
+  TranscriptEvent,
+  TranscriptFeed,
+  TranscriptLine,
+  TranscriptPage,
+};
