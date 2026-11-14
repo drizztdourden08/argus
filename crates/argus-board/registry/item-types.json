@@ -232,6 +232,7 @@
       "color": "rose",
       "collection": "items",
       "parents": ["epic", "story"],
+      "parentRequired": true,
       "stages": [
         { "id": "reported", "label": "Reported", "lane": "todo", "next": ["confirmed", "wontfix", "duplicate"] },
         { "id": "confirmed", "label": "Confirmed", "lane": "todo", "next": ["fixing"] },
@@ -276,6 +277,7 @@
       "color": "amber",
       "collection": "items",
       "parents": ["epic", "story"],
+      "parentRequired": true,
       "stages": [
         { "id": "noted", "label": "Noted", "lane": "todo" },
         { "id": "planned", "label": "Planned", "lane": "todo" },
@@ -314,6 +316,8 @@
       "color": "cyan",
       "collection": "items",
       "parents": ["epic", "story"],
+      "parentRequired": true,
+      "parentRequired": true,
       "stages": [
         { "id": "draft", "label": "Draft", "lane": "todo" },
         {

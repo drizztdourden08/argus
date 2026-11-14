@@ -44,8 +44,11 @@ fn plan_board() -> (Value, String) {
         }),
         3072,
     );
+    b["items"]["I-80"] = json!({
+        "id": "I-80", "title": "Parent", "thread": "ui", "type": "epic", "status": "todo",
+    });
     let set = json!({
-        "title": "Smoke", "thread": "ui", "type": "test-plan",
+        "title": "Smoke", "thread": "ui", "type": "test-plan", "parent": "I-80",
         "fields": {"cases": ["T-1", "T-2", "T-3"]},
     });
     let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
@@ -160,7 +163,8 @@ fn a_plan_has_one_open_run_and_a_ready_run_is_the_one_that_starts() {
 #[test]
 fn a_plan_keeps_at_least_one_case() {
     let (mut b, plan) = plan_board();
-    let set = json!({"title": "Empty", "thread": "ui", "type": "test-plan"});
+    let set =
+        json!({"title": "Empty", "thread": "ui", "type": "test-plan", "parent": "I-80"});
     let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
     let empty = apply_op(&mut b, &op, &lead(), None);
     assert!(refused(&empty).contains("keeps at least one case"));
