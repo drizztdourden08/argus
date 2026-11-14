@@ -85,8 +85,13 @@ async fn a_call_without_the_childs_bearer_is_401() {
     let (header, _dir) = begin(&t);
     assert_eq!(t.send(rpc(&list)).await.status, 401, "no header");
     let dashboard = t.send(t.bearer(rpc(&list))).await;
-    assert_eq!(dashboard.status, 401, "the dashboard token is not the child's");
-    let wrong = t.send(rpc(&list).header("Authorization", "Bearer nope")).await;
+    assert_eq!(
+        dashboard.status, 401,
+        "the dashboard token is not the child's"
+    );
+    let wrong = t
+        .send(rpc(&list).header("Authorization", "Bearer nope"))
+        .await;
     assert_eq!(wrong.status, 401);
     let right = t.send(rpc(&list).header("Authorization", &header)).await;
     assert_eq!(right.status, 200, "{}", right.text());
@@ -123,7 +128,10 @@ async fn approve_lets_the_call_run_and_the_toast_links_the_tab() {
     let (header, _dir) = begin(&t);
     let input = json!({ "command": "git push" });
     let held = t.send(rpc(&call("Bash", &input)).header("Authorization", &header));
-    let (reply, ()) = tokio::join!(held, answer_when_pending(&t, &json!({ "decision": "allow" })));
+    let (reply, ()) = tokio::join!(
+        held,
+        answer_when_pending(&t, &json!({ "decision": "allow" }))
+    );
     assert_eq!(reply.status, 200, "{}", reply.text());
     assert_eq!(
         reply_of(&reply.json()),
@@ -140,14 +148,17 @@ async fn deny_returns_the_owners_message() {
     let toasts = Arc::new(Toasts::default());
     let t = start(&toasts).await;
     let (header, _dir) = begin(&t);
-    let held = t.send(rpc(&call("Bash", &json!({ "command": "rm x" }))).header("Authorization", &header));
+    let held =
+        t.send(rpc(&call("Bash", &json!({ "command": "rm x" }))).header("Authorization", &header));
     let no = json!({ "decision": "deny", "message": "not today" });
     let (reply, ()) = tokio::join!(held, answer_when_pending(&t, &no));
     assert_eq!(
         reply_of(&reply.json()),
         json!({ "behavior": "deny", "message": "not today" })
     );
-    let list = t.send(t.page(Request::new("GET", "/api/overlord/approvals"))).await;
+    let list = t
+        .send(t.page(Request::new("GET", "/api/overlord/approvals")))
+        .await;
     assert_eq!(list.json()["approvals"][0]["status"], json!("denied"));
     assert_eq!(list.json()["approvals"][0]["decidedBy"], json!("owner"));
     t.stop(false).await;
@@ -167,7 +178,9 @@ async fn no_answer_in_time_is_denied_and_a_late_answer_is_a_conflict() {
         wait_ms: 50,
         link_base: t.url.clone(),
     };
-    let sink = Arc::new(argus_server::adapters::overlord::approvals::NotifyToast(None));
+    let sink = Arc::new(argus_server::adapters::overlord::approvals::NotifyToast(
+        None,
+    ));
     let reply = t.svc.overlord_approvals.ask(&ask, sink).await;
     assert_eq!(
         reply,

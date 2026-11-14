@@ -8,8 +8,8 @@ use std::time::Duration;
 
 use argus_core::clock::{iso_from_ms, now_ms};
 use argus_overlord::approvals::{
-    Approval, DecideFault, Decision, Prompt, Queue, Status, bearer_ok, mcp_config_json,
-    reply_for, summarize, timed_out,
+    Approval, DecideFault, Decision, Prompt, Queue, Status, bearer_ok, mcp_config_json, reply_for,
+    summarize, timed_out,
 };
 use argus_overlord::ports::{ApprovalStore, HostFault, OwnerToast};
 use serde_json::Value;
@@ -200,7 +200,12 @@ impl ApprovalGate {
             match found {
                 Some(a) if a.status != Status::Pending => return a,
                 Some(_) => {}
-                None => return Approval { status: Status::Expired, ..item.clone() },
+                None => {
+                    return Approval {
+                        status: Status::Expired,
+                        ..item.clone()
+                    };
+                }
             }
             if timed_out(item.requested_ms, now, wait_ms) {
                 self.expire(&item.id, "timeout");

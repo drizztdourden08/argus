@@ -118,14 +118,20 @@ fn the_rpc_answers_the_handshake_and_the_listing_and_finds_the_question() {
     let Parsed::Now(reply) = parse(init.to_string().as_bytes()) else {
         panic!("initialize answers at once");
     };
-    assert_eq!(reply["result"]["serverInfo"]["name"], json!("argus-overlord"));
+    assert_eq!(
+        reply["result"]["serverInfo"]["name"],
+        json!("argus-overlord")
+    );
     let note = json!({ "jsonrpc": "2.0", "method": "notifications/initialized" });
     assert_eq!(parse(note.to_string().as_bytes()), Parsed::Quiet);
     let list = json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" });
     let Parsed::Now(listing) = parse(list.to_string().as_bytes()) else {
         panic!("tools/list answers at once");
     };
-    assert_eq!(listing["result"]["tools"][0]["name"], json!("permission_prompt"));
+    assert_eq!(
+        listing["result"]["tools"][0]["name"],
+        json!("permission_prompt")
+    );
     let call = json!({ "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {
         "name": "permission_prompt",
         "arguments": { "tool_name": "Bash", "input": { "command": "ls" }, "tool_use_id": "tu1" }

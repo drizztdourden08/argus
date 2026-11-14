@@ -125,7 +125,8 @@ mod tests {
         store.abandon_pending("2026-11-14T11:00:00.000Z").unwrap();
         let rows: Vec<(String, String)> = db
             .with_conn(|c| {
-                let mut stmt = c.prepare("SELECT id, status FROM overlord_approvals ORDER BY id")?;
+                let mut stmt =
+                    c.prepare("SELECT id, status FROM overlord_approvals ORDER BY id")?;
                 stmt.query_map((), |r| Ok((r.get(0)?, r.get(1)?)))?
                     .collect::<Result<_, _>>()
             })
