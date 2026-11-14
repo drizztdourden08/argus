@@ -48,7 +48,9 @@ impl<H: ChildHost> Run<H> {
         });
         w.alive.store(true, Ordering::SeqCst);
         w.observer.started(&w.link);
-        let (ended, fault) = self.serve(&mut w.rx, child).await;
+        let (ended, fault) = self
+            .serve(&mut w.rx, w.observer.as_ref(), child)
+            .await;
         w.alive.store(false, Ordering::SeqCst);
         w.observer.stopped();
         if let Some(fault) = fault {
@@ -61,6 +63,7 @@ impl<H: ChildHost> Run<H> {
     async fn serve(
         &mut self,
         rx: &mut UnboundedReceiver<Command>,
+        observer: &dyn Observer,
         mut child: SpawnedChild<H::Lines>,
     ) -> (Ended, Option<GuardFault>) {
         let pid = child.pid;
@@ -71,6 +74,7 @@ impl<H: ChildHost> Run<H> {
                     let Some(line) = line else {
                         return (Ended::Exited, None);
                     };
+                    observer.line(&line);
                     if let Some(fault) = self.on_line(pid, &line).await {
                         return (Ended::Guard, Some(fault));
                     }

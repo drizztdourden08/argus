@@ -9,5 +9,6 @@ pub mod approvals;
 pub mod ports;
 pub mod protocol;
 pub mod session;
+pub mod shadow;
 pub mod spend;
 pub mod transcript;

@@ -22,7 +22,7 @@ const REASON: &str = "boot-revival";
 const TEXT: &str = "Argus restarted after a reboot; you had no listener. Run coord inbox.";
 
 fn mode(svc: &Services) -> Mode {
-    if svc.shadow {
+    if svc.shadow || config::is_shadow(svc) {
         Mode::Shadow
     } else if config::is_live(svc) {
         Mode::Live

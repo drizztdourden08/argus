@@ -16,6 +16,7 @@ argus-core = { path = "../argus-core" }
 argus-launchers = { path = "../argus-launchers" }
 argus-native = { path = "../argus-native" }
 argus-notify = { path = "../argus-notify" }
+argus-overlord = { path = "../argus-overlord" }
 argus-wake = { path = "../argus-wake" }
 argus-worktrees = { path = "../argus-worktrees" }
 memchr = "2"

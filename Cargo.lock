@@ -156,6 +156,7 @@ dependencies = [
  "argus-launchers",
  "argus-native",
  "argus-notify",
+ "argus-overlord",
  "argus-procs",
  "argus-server",
  "argus-testkit",

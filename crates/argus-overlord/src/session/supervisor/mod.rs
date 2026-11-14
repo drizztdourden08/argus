@@ -44,6 +44,8 @@ pub trait Observer: Send + Sync {
     fn stopped(&self);
     /// The first turn failed the billing guard; the child was ended and is not restarted.
     fn guard_failed(&self, fault: &GuardFault);
+    /// One raw stdout line of the child, before it is read. Most observers ignore it.
+    fn line(&self, _line: &str) {}
 }
 
 /// Builds the spec of the next child from the session id to resume, read fresh at every start so a

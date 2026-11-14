@@ -15,7 +15,7 @@ use crate::adapters::overlord::approvals::NotifyToast;
 use crate::adapters::overlord::gate::Ask;
 use crate::reply::{bytes_reply, json_reply};
 use crate::router::{AuthMode, Reply};
-use crate::services::overlord::config;
+use crate::services::overlord::{config, shadow};
 use crate::{Ctx, RouteOpts, Router};
 
 const MAX_BYTES: usize = 256 * 1024;
@@ -30,6 +30,10 @@ async fn post(ctx: Ctx) -> Reply {
     match parse(&body) {
         Parsed::Now(message) => Ok(json_reply(200, &message)),
         Parsed::Quiet => Ok(bytes_reply(202, Body::empty(), &[])),
+        Parsed::Ask(prompt) if config::is_shadow(&ctx.svc) => {
+            let reply = shadow::judge(&ctx.svc, &prompt);
+            Ok(json_reply(200, &tool_result(&prompt.id, &reply)))
+        }
         Parsed::Ask(prompt) => {
             let id = prompt.id.clone();
             let ask = Ask {

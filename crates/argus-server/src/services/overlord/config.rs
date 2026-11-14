@@ -46,12 +46,17 @@ fn setting(svc: &Services) -> Value {
         .unwrap_or(Value::Null)
 }
 
-/// True when `mode` is `live`; `off` (the default) and `shadow` start no child.
+/// True when `mode` is `live`.
 pub(crate) fn is_live(svc: &Services) -> bool {
     setting(svc)["mode"].as_str() == Some("live")
 }
 
-/// `autostart` (default true): with mode `live`, Argus starts the child at boot.
+/// True when `mode` is `shadow`: a read-only child that mirrors the desktop Overlord's wakes.
+pub(crate) fn is_shadow(svc: &Services) -> bool {
+    setting(svc)["mode"].as_str() == Some("shadow")
+}
+
+/// `autostart` (default true): with mode `live` or `shadow`, Argus starts the child at boot.
 pub(crate) fn autostart(svc: &Services) -> bool {
     setting(svc)["autostart"].as_bool().unwrap_or(true)
 }
