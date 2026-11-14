@@ -156,7 +156,7 @@ pub fn schedule_for_cycle(svc: &Services, target: &Scope) -> Result<Option<Strin
     }
     let fire_at = now_ms() + FIRE_AFTER_MS;
     let task = ResumeTask {
-        id: format!("argus-resume-{}", cycle.id),
+        id: format!("argus-resume-{}", cycle.id.to_ascii_lowercase()),
         fire_at_ms: fire_at,
         cwd: TASK_CWD.to_owned(),
         notify_session_id: overlord_chat(svc),
@@ -291,7 +291,7 @@ mod tests {
 
     fn pending(ran_at: Option<i64>) -> Pending {
         Pending {
-            id: "argus-resume-SW-1".into(),
+            id: "argus-resume-sw-1".into(),
             scope: Scope {
                 account: "a".into(),
                 org: "o".into(),
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn a_pending_task_is_not_done_until_marked_and_the_mark_survives_the_database() {
-        let old = r#"{"id":"argus-resume-SW-1","scope":{"account":"a","org":"o"},"fireAt":1}"#;
+        let old = r#"{"id":"argus-resume-sw-1","scope":{"account":"a","org":"o"},"fireAt":1}"#;
         let p: Pending = serde_json::from_str(old).unwrap();
         assert!(!p.done && p.ran_at.is_none());
         let done = Pending { done: true, ..p };

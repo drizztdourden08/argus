@@ -181,7 +181,7 @@ fn ensure_closed(app: &Path) -> Result<(), String> {
     }
 }
 
-/// Copies the current file to `scheduled-tasks.json.bak-<SW-n>` beside it, when there is one.
+/// Copies the current file to `scheduled-tasks.json.bak-<sw-n>` beside it, when there is one.
 fn backup_tasks(path: &Path, task_id: &str) -> Result<(), String> {
     if !path.exists() {
         return Ok(());
@@ -267,7 +267,7 @@ mod tests {
     use crate::handover::HandoverState;
     use crate::types::Scope;
 
-    const ID: &str = "argus-resume-SW-3";
+    const ID: &str = "argus-resume-sw-3";
 
     fn scope() -> Scope {
         Scope {
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(mine["notifySessionId"], json!("local_overlord"));
         assert!(mine.get("cronExpression").is_none());
         let skill = fs::read_to_string(skills.join(ID).join("SKILL.md")).unwrap();
-        assert!(skill.starts_with("---\nname: argus-resume-SW-3\ndescription: "));
+        assert!(skill.starts_with("---\nname: argus-resume-sw-3\ndescription: "));
         assert!(skill.contains("do the thing"));
     }
 
@@ -418,7 +418,7 @@ mod tests {
         let (_temp, app, skills, path) = world();
         let before = fs::read_to_string(&path).unwrap();
         write_task(&app, &scope(), &task(), &skills).unwrap();
-        let backup = path.with_file_name("scheduled-tasks.json.bak-SW-3");
+        let backup = path.with_file_name("scheduled-tasks.json.bak-sw-3");
         assert_eq!(fs::read_to_string(backup).unwrap(), before);
     }
 
@@ -448,7 +448,7 @@ mod tests {
         assert!(!skills.join(ID).exists());
         assert!(
             !path
-                .with_file_name("scheduled-tasks.json.bak-SW-3")
+                .with_file_name("scheduled-tasks.json.bak-sw-3")
                 .exists()
         );
     }
