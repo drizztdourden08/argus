@@ -113,8 +113,8 @@ fn check_flags(input: &RequestInput, mode: Mode) -> Result<()> {
             "leftover folders have no branch: --branch does not apply to --all-leftovers",
         ));
     }
-    if mode != Mode::Leftovers && input.older_than_days.is_some() {
-        return Err(bad("--older-than goes with --all-leftovers"));
+    if !matches!(mode, Mode::Leftovers | Mode::Targets) && input.older_than_days.is_some() {
+        return Err(bad("--older-than goes with --all-leftovers or named leftover folders"));
     }
     Ok(())
 }

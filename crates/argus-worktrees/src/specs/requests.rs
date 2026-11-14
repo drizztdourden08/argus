@@ -204,6 +204,29 @@ fn discard_needs_the_owners_page_entry_exactly_as_remove_does_and_with_it_the_wo
     assert!(exists_itself(&fx.path("detached-work")));
 }
 
+/// P-261: the lead names one young leftover with `--older-than` and a reason; without a reason it is refused.
+#[test]
+fn the_lead_names_one_young_leftover_with_older_than_and_a_reason() {
+    let (fx, h) = world();
+    let young = leftover_of(&fx, "junk-young", 0.0);
+    h.scan();
+    let named = vec![worktree_id(&young, h.svc.opts.case_insensitive)];
+    let bare = ask(&h, lead(), |i| {
+        (i.targets, i.older_than_days) = (named.clone(), Some(0.0));
+    })
+    .unwrap_err();
+    assert_eq!(bare.code, ErrorCode::BadRequest);
+    ask(&h, lead(), |i| {
+        (i.targets, i.older_than_days, i.reason) =
+            (named, Some(0.0), Some("a failed upgrade left it".into()));
+    })
+    .unwrap();
+    let one = only(&h).remove(0);
+    assert_eq!(one.status, RequestStatus::Done, "{one:?}");
+    h.idle();
+    assert!(!exists_itself(&young));
+}
+
 #[test]
 fn a_young_leftover_keeps_the_age_limit_through_a_request_all_leftovers_skips_young_ones_and_says_so_and_6_hours_needs_a_reason()
  {

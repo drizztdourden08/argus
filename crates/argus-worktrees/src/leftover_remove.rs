@@ -12,7 +12,7 @@ use crate::measure::{Leftover, about_text, measure_folder};
 use crate::parse::parse_worktree_list;
 use crate::paths::{is_below, join_path, path_key};
 use crate::request::{RemoveInput, RemoveOutcome};
-use crate::rule::Rule;
+use crate::rule::{Rule, RuleKind};
 use crate::scan::inside_worktree;
 use crate::service::{Service, age_ms};
 use crate::submodules::Except;
@@ -233,12 +233,27 @@ impl Service {
     }
 
     /// The repositories a folder of this project may belong to: those of its scanned facts and the known ones.
+    /// The repositories the board's repo rules name: a repo rule whose worktrees all lost their `.git` leaves no fact
+    /// with a repository, so its path is asked as it is.
+    fn repo_rule_paths(&self, project: &str) -> Vec<String> {
+        self.board(project)
+            .map(|b| {
+                b.valid_rules()
+                    .iter()
+                    .filter(|r| r.kind == RuleKind::Repo)
+                    .map(|r| r.path.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     pub(crate) fn candidate_repos(&self, project: &str) -> Vec<String> {
         let mut repos: Vec<String> = self
             .facts_of(project)
             .into_iter()
             .filter_map(|f| f.repo)
             .chain(self.known_repos())
+            .chain(self.repo_rule_paths(project))
             .collect();
         repos.sort();
         repos.dedup();

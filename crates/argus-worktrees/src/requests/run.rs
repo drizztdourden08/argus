@@ -58,7 +58,7 @@ impl Service {
         input.discard = rec.discard;
         input.owner_entry.clone_from(&rec.owner_entry);
         input.reason.clone_from(&rec.reason);
-        if rec.mode == Mode::Leftovers {
+        if matches!(rec.mode, Mode::Leftovers | Mode::Targets) {
             input.older_than_days = rec.older_than_days;
         }
         input.empty_goes = matches!(rec.mode, Mode::Detached | Mode::Approved);
