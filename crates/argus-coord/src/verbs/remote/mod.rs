@@ -15,5 +15,6 @@ pub mod proc;
 pub mod run;
 pub mod stall;
 mod support;
+pub mod wake;
 pub mod wakefault;
 pub mod worktree;

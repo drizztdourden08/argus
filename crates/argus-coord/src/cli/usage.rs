@@ -96,7 +96,8 @@ Argus (the overview of every project; its verb is "coord portfolio", used by the
 Dashboard (the local server for every board page, MCP and runs):
   coord dashboard start | stop | status | open [<key>] | logs | resync [--project k] [--hard] | mcp | install-mcp | autostart
   coord dashboard wake-stream --project <key> --thread <you|*>     (run it under the Monitor tool: one line per wake)
-  coord wake-fault list [--all] [--json]         (wakes that failed to reach a thread; the pages show a warning on the Registered strip)
+  coord wake due [--json]                        (threads that hold a queued wake and have no listener: board, thread, count, oldest age, local_ session id or -)
+  coord wake-fault list [--all] [--json]        (wakes that failed to reach a thread; the pages show a warning on the Registered strip)
   coord wake-fault clear <project>/<thread> --note "<what was wrong and what you did>"     (the Overlord only)
   coord stall list [--project k]                 (what Argus found stalled: an unread wake, an unstarted request, an idle lead, a silent item)
   coord stall ack <project> --note "<what you did>"     (the Overlord only; stops the resends, the stall stays listed until the cause clears)

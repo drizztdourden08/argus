@@ -22,6 +22,7 @@
 //! goes idle, since a board is required only inside a turn (`board-closed`). A thread that is sent more wakes while its fault is open tells
 //! the Overlord again, at most every 10 minutes, so a deaf thread is never silently ignored.
 
+mod due;
 mod evaluate;
 mod faults;
 mod mirror;
@@ -30,6 +31,7 @@ mod recover;
 mod rows;
 mod watch;
 
+pub use due::DueThread;
 pub use pending::Pending;
 pub use rows::{BoardFlags, FaultSummary, ListenFlags, PendingWake, RegistryRow, RowState};
 

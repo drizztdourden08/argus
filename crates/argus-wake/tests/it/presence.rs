@@ -12,7 +12,8 @@ use argus_wake::faults::{Fault, FaultStore, NewFault};
 use argus_wake::presence::{MAX_TABS_PER_THREAD, Presence};
 use argus_wake::registry::{RegistryRow, RowState};
 use argus_wake::testkit::{
-    HOUR, Rig, SEC, START, Tap, board, merge, presence_config, registry_boards, thread,
+    HOUR, MIN, Rig, SEC, START, Tap, board, merge, presence_config, registry_boards, thread,
+    wake_in,
 };
 use argus_wake::time::iso;
 use serde_json::json;
@@ -375,6 +376,51 @@ fn an_active_session_with_no_wake_stream_for_a_minute_is_a_not_listening_fault_a
         Some("registry")
     );
     assert!(!row(&mut rig, "alpha", "ui").flags.deaf);
+    rig.service.detach(&stream.attached.id);
+}
+
+/// A rig whose queued-wake fault is slower than the not-listening grace, with a queued wake for `ui`
+/// whose thread was last seen an hour ago.
+fn queued_for_idle_ui() -> Rig {
+    let mut config = presence_config();
+    config.registry.no_listener_ms = 10 * MIN;
+    let mut rig = Rig::registry_seen(&config, true, HOUR);
+    rig.service
+        .submit(&[wake_in("alpha", "ui", "hello", "test-fail")])
+        .expect("submit");
+    rig
+}
+
+#[test]
+fn a_queued_wake_and_no_listener_open_not_listening_whatever_the_heartbeat_age_and_a_listener_clears_it()
+ {
+    let mut rig = queued_for_idle_ui();
+    rig.pass(55 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0, "inside the grace");
+    rig.pass(15 * SEC, STEP);
+    assert_eq!(
+        reasons(&open(&rig)),
+        [("ui".to_owned(), "not-listening".to_owned())]
+    );
+    let stream = listen(&mut rig, "alpha", "ui");
+    assert_eq!(open(&rig).len(), 0);
+    rig.service.detach(&stream.attached.id);
+}
+
+#[test]
+fn a_queued_wake_does_not_open_not_listening_for_a_running_turn_or_a_listening_thread() {
+    let mut rig = queued_for_idle_ui();
+    let now = iso(rig.clock.now_ms());
+    rig.edit_thread("alpha", "ui", |t| {
+        t.activity = "working".into();
+        t.last_seen = now.as_str().into();
+    });
+    rig.service.on_board("alpha");
+    rig.pass(70 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0, "a turn is running");
+    let stream = listen(&mut rig, "alpha", "ui");
+    rig.pass(70 * SEC, STEP);
+    assert_eq!(open(&rig).len(), 0, "a listener covers it");
     rig.service.detach(&stream.attached.id);
 }
 

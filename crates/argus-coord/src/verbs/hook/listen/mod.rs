@@ -4,7 +4,7 @@
 //! project) and waits. The first wake prints its line on stderr and exits 2, and Claude Code
 //! wakes the model with that text. A newer listener for the thread replaces this one (exit 0,
 //! silent); a dashboard that is down is started and waited out; the wait ends silently after
-//! `COORD_LISTEN_MS` (default six hours, as Node), or as soon as the process
+//! `COORD_LISTEN_MS` (default 71 hours, just under the 72 hour hook timeout), or as soon as the process
 //! named by `ARGUS_COORD_PARENT` (the shim) is gone.
 //!
 //! A `PostToolUse` listener is skipped while a listener of the thread started in the last two
@@ -36,9 +36,9 @@ use super::wake_line::{is_lead, label_of};
 use crate::cli::CoordError;
 use crate::who::is_ended;
 
-/// The longest wait when `COORD_LISTEN_MS` does not say: six hours, as Node. The 259200 s
-/// (three days) of the rendered hook config is the hook timeout, not this deadline.
-const LISTEN_DEFAULT_MS: i64 = 6 * 3600 * 1000;
+/// The longest wait when `COORD_LISTEN_MS` does not say: 71 hours, one hour under the 259200 s
+/// (72 hours) hook timeout of the rendered hook config, so the listener ends by itself first.
+const LISTEN_DEFAULT_MS: i64 = 71 * 3600 * 1000;
 
 /// What a listener listens to: the project, the thread (`*` for a lead) and its label.
 pub struct Target {
@@ -118,4 +118,17 @@ pub fn run(hook: &Hook<'_>) -> Result<Said, CoordError> {
         &target_of(&hook.paths.coord_home, &board, &project, &id),
         deadline,
     ))
+}
+
+// test-tag: critical
+#[cfg(test)]
+mod tests {
+    use super::LISTEN_DEFAULT_MS;
+
+    #[test]
+    fn the_default_deadline_is_71_hours_one_under_the_hook_timeout() {
+        let hook_timeout_ms = 259_200 * 1000;
+        assert_eq!(LISTEN_DEFAULT_MS, 71 * 3_600_000);
+        assert_eq!(hook_timeout_ms - LISTEN_DEFAULT_MS, 3_600_000);
+    }
 }

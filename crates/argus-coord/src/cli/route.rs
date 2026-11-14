@@ -67,6 +67,7 @@ const VERBS: [(&str, &str); 43] = [
     ("portfolio", "portfolio"),
     ("lead", "lead"),
     ("ping", "ping"),
+    ("wake", "wake"),
     ("wake-fault", "wakefault"),
     ("stall", "stall"),
     ("proc", "proc"),
@@ -81,12 +82,13 @@ const VERBS: [(&str, &str); 43] = [
 ];
 
 /// These modules work outside any project and find their own caller when they need one.
-const NO_PROJECT: [&str; 11] = [
+const NO_PROJECT: [&str; 12] = [
     "hook",
     "demo",
     "portfolio",
     "dashboard",
     "lead",
+    "wake",
     "wakefault",
     "proc",
     "activity",

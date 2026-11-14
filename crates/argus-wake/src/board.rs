@@ -69,6 +69,8 @@ pub struct ThreadView {
     pub placeholder: Flag,
     /// The session title.
     pub session: Text,
+    /// The CLI session id the last hook saw.
+    pub session_id: Text,
     /// The last sign of life (ISO).
     pub last_seen: Text,
     /// When the thread registered on the board (ISO).
