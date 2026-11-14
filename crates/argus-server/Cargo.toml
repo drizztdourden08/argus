@@ -20,6 +20,7 @@ argus-launchers = { path = "../argus-launchers" }
 argus-mcp = { path = "../argus-mcp" }
 argus-native = { path = "../argus-native" }
 argus-notify = { path = "../argus-notify" }
+argus-overlord = { path = "../argus-overlord" }
 argus-procs = { path = "../argus-procs" }
 argus-records = { path = "../argus-records" }
 argus-store = { path = "../argus-store" }

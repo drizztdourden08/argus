@@ -319,6 +319,7 @@ dependencies = [
  "argus-mcp",
  "argus-native",
  "argus-notify",
+ "argus-overlord",
  "argus-procs",
  "argus-records",
  "argus-store",
