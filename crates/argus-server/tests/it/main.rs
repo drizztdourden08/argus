@@ -52,6 +52,7 @@ mod mux_stream;
 mod mux_tails;
 mod notify;
 mod notify_auto;
+mod overlord_approvals;
 mod overlord_key;
 mod overlord_spend;
 mod overlord_transcript;

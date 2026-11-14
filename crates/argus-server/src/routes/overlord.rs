@@ -102,4 +102,5 @@ pub fn register(r: &mut Router) {
     r.add("DELETE", "/api/overlord/key", small, remove);
     super::overlord_transcript::register(r);
     super::overlord_spend::register(r);
+    super::overlord_approvals::register(r);
 }

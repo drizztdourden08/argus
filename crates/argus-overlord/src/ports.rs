@@ -4,6 +4,7 @@ use std::fmt;
 use std::future::Future;
 use std::path::PathBuf;
 
+use crate::approvals::Approval;
 use crate::session::env::ChildEnv;
 use crate::spend::{Last, SpendRow};
 use crate::transcript::{Page, Stamp};
@@ -220,6 +221,39 @@ pub trait SpendLedger: Send + Sync {
     /// # Errors
     /// A fault when the flag cannot be kept.
     fn set_warned(&self, month: &str) -> Result<(), SpendFault>;
+}
+
+/// Why the approval table failed. Carries a reason, never a tool input.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApprovalFault(pub String);
+
+impl fmt::Display for ApprovalFault {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for ApprovalFault {}
+
+/// Where the approvals are kept (`overlord_approvals`).
+pub trait ApprovalStore: Send + Sync {
+    /// Adds the row, or replaces the row with the same id.
+    ///
+    /// # Errors
+    /// A fault when the row cannot be kept.
+    fn save(&self, approval: &Approval) -> Result<(), ApprovalFault>;
+
+    /// Marks every row still pending as expired by `restart` at `at`: no child waits for them.
+    ///
+    /// # Errors
+    /// A fault when the rows cannot be changed.
+    fn abandon_pending(&self, at: &str) -> Result<(), ApprovalFault>;
+}
+
+/// The owner's toast: urgent, and a click opens `url`.
+pub trait OwnerToast: Send + Sync {
+    /// Shows the toast. A toast that cannot be shown is not an error for the caller.
+    fn urgent(&self, text: &str, url: &str);
 }
 
 #[cfg(test)]

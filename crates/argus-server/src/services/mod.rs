@@ -27,6 +27,7 @@ use argus_worktrees::Service as WorktreeService;
 use tokio_util::sync::CancellationToken;
 
 use crate::adapters::overlord::feed::TranscriptFeed;
+use crate::adapters::overlord::gate::ApprovalGate;
 use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
 use crate::local_names::LiveNames;
@@ -164,6 +165,8 @@ pub struct Services {
     pub(crate) localhost_door: OnceLock<u16>,
     /// The way in to the hosted Overlord's child, once it is started (mode `live`).
     pub(crate) overlord_link: OnceLock<Link>,
+    /// The approvals the hosted Overlord asks for, and the bearer of its private endpoint.
+    pub overlord_approvals: Arc<ApprovalGate>,
     pub(crate) links: Mutex<Vec<Subscription>>,
 }
 

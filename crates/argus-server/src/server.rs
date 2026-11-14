@@ -15,6 +15,7 @@ use argus_core::redact::Redactor;
 use argus_core::remote::Switch;
 use argus_core::{Bus, Config, Paths};
 use argus_native::TrayFiles;
+use argus_overlord::ports::ApprovalStore;
 use argus_store::{Db, PruneOptions, StoreError};
 use argus_sync::{RunsView, ScopeQueue};
 use serde_json::json;
@@ -22,6 +23,8 @@ use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+use crate::adapters::overlord::approvals::SqlApprovals;
+use crate::adapters::overlord::gate::ApprovalGate;
 use crate::first_start;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
@@ -241,6 +244,14 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     })
 }
 
+/// The approval gate of the hosted Overlord, over its table when the table can be made.
+fn approval_gate(db: &Arc<Db>) -> Arc<ApprovalGate> {
+    let store = SqlApprovals::open(Arc::clone(db))
+        .ok()
+        .map(|s| Arc::new(s) as Arc<dyn ApprovalStore>);
+    Arc::new(ApprovalGate::new(store))
+}
+
 fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     let Core {
         paths,
@@ -253,6 +264,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
     db.kv_set("instance", &instance)?;
     let fanout = Arc::new(Fanout::default());
     let links = fanout.link(&bus);
+    let approvals = approval_gate(&db);
     Ok(Services {
         config,
         env_port: opts.port,
@@ -297,6 +309,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         names: OnceLock::new(),
         localhost_door: OnceLock::new(),
         overlord_link: OnceLock::new(),
+        overlord_approvals: approvals,
         links: Mutex::new(links),
     })
 }

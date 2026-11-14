@@ -5,6 +5,7 @@
 //! Modules land one story at a time. Add the next one (`session`, `spend`, ...) below as a plain
 //! `pub mod` line.
 
+pub mod approvals;
 pub mod ports;
 pub mod protocol;
 pub mod session;
