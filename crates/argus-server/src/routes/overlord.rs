@@ -4,6 +4,8 @@
 //! - `PUT /api/overlord/key` takes `{key}` and answers the same shape
 //! - `DELETE /api/overlord/key` removes the key and answers the same shape
 //!
+//! The transcript routes live in `overlord_transcript`.
+//!
 //! Every verb needs the page's own origin: a CLI, a bearer or a foreign origin is refused with 403. The key is
 //! never in a reply, a log line, an activity entry or an error text.
 
@@ -24,7 +26,7 @@ use crate::{AuthKind, Ctx, RouteOpts, Router};
 
 const SMALL: usize = 8 * 1024;
 
-fn web_only(ctx: &Ctx, strict: bool) -> Result<(), ApiError> {
+pub(super) fn web_only(ctx: &Ctx, strict: bool) -> Result<(), ApiError> {
     let page = ctx.auth == Some(AuthKind::Page)
         && origin_ok(&ctx.headers, ctx.svc.port(), ctx.svc.doors(), strict);
     if page {
@@ -98,4 +100,5 @@ pub fn register(r: &mut Router) {
     r.get("/api/overlord/key", show);
     r.add("PUT", "/api/overlord/key", small, save);
     r.add("DELETE", "/api/overlord/key", small, remove);
+    super::overlord_transcript::register(r);
 }

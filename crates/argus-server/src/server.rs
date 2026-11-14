@@ -288,6 +288,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         fanout,
         mux: Arc::default(),
         run_logs: Arc::default(),
+        overlord_feed: Arc::default(),
         streams: Arc::new(AtomicUsize::new(0)),
         codes: LoginCodes::default(),
         stop: CancellationToken::new(),

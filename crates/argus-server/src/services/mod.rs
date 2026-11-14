@@ -25,6 +25,7 @@ use argus_wake::service::WakeService;
 use argus_worktrees::Service as WorktreeService;
 use tokio_util::sync::CancellationToken;
 
+use crate::adapters::overlord::feed::TranscriptFeed;
 use crate::adapters::runs::RunHost;
 use crate::boards::BoardReader;
 use crate::local_names::LiveNames;
@@ -146,6 +147,8 @@ pub struct Services {
     pub mux: Arc<MuxRegistry>,
     /// The live tail of run logs.
     pub run_logs: Arc<RunLogs>,
+    /// The live tail of the hosted Overlord transcript.
+    pub overlord_feed: Arc<TranscriptFeed>,
     /// Open SSE streams.
     pub streams: Arc<AtomicUsize>,
     /// One-time login codes.
