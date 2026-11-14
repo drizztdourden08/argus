@@ -59,7 +59,7 @@ async fn with_store<T: Send + 'static>(
 
 async fn show(ctx: Ctx) -> Reply {
     web_only(&ctx, false)?;
-    let body = with_store(&ctx, |s| status(s)).await?;
+    let body = with_store(&ctx, status).await?;
     Ok(json_reply(200, &body))
 }
 

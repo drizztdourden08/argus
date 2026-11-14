@@ -1,9 +1,9 @@
 /* @layer renderer-app @kind constants */
 const KEY_TITLE = 'Overlord API key';
 
-const KEY_ROW_TITLE = 'Anthropic key';
+const KEY_ROW_TITLE = 'API key';
 
-const KEY_FIELD_LABEL = 'Anthropic API key';
+const KEY_FIELD_LABEL = 'Overlord API key value';
 
 const KEY_PLACEHOLDER = 'Paste a key';
 

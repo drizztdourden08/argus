@@ -30,7 +30,7 @@ describe('S1 the Overlord API key in the Settings dialog', { tags: ['standard'] 
     });
     await openSystem();
     expect(await screen.findByText('No key saved')).toBeTruthy();
-    const field = screen.getByLabelText<HTMLInputElement>('Anthropic API key');
+    const field = screen.getByLabelText<HTMLInputElement>('Overlord API key value');
     fireEvent.change(field, { target: { value: KEY } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('****abcd')).toBeTruthy();

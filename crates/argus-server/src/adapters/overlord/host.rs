@@ -23,7 +23,7 @@ const KILL_GRACE: Duration = Duration::from_secs(2);
 const KEY_VAR: &str = "ANTHROPIC_API_KEY";
 
 struct Entry {
-    stdin: Arc<AsyncMutex<Option<ChildStdin>>>,
+    stdin: SharedStdin,
     exited: watch::Receiver<bool>,
 }
 
@@ -42,11 +42,11 @@ impl LineStream for StdoutLines {
     }
 }
 
+/// The stdin of one child, shared so a write and a close never race.
+type SharedStdin = Arc<AsyncMutex<Option<ChildStdin>>>;
+
 impl SystemChildHost {
-    fn entry_parts(
-        &self,
-        pid: u32,
-    ) -> Option<(Arc<AsyncMutex<Option<ChildStdin>>>, watch::Receiver<bool>)> {
+    fn entry_parts(&self, pid: u32) -> Option<(SharedStdin, watch::Receiver<bool>)> {
         let children = self.children.lock().unwrap_or_else(PoisonError::into_inner);
         children
             .get(&pid)

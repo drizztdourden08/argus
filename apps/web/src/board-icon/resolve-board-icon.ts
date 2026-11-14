@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { AVATAR_BRANDS, BRAND_PREFIX, brandOf } from '../avatar';
-import { firstLegacyKey } from '../data/boards/first-legacy-key';
+import { firstLegacyKey } from '../data/boards';
 import { BOARD_ICON_NAMES, ICON_MAX, ICON_NAME_PREFIX, ICON_URL_PATTERN, PNG_PREFIX, SVG_PREFIX } from './board-icon.constants';
 import { toBoardIconName } from './to-board-icon-name';
 import type { BoardIconSource, ResolvedBoardIcon } from './board-icon.type';
