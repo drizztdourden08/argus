@@ -149,8 +149,7 @@ impl Registry {
             "{}/{}: not listening, {detail}. Resolve it with them now (coord lead): its wake listener (the background hook, started at the end of each turn) is not running, so one message that makes it run a turn starts it; it clears itself when it listens.",
             w.scope, w.id
         );
-        if let Some(fault) =
-            self.raise_noticed(env, w.scope, w.id, "not-listening", (detail, text))
+        if let Some(fault) = self.raise_noticed(env, w.scope, w.id, "not-listening", (detail, text))
         {
             open.insert(key, fault);
         }

@@ -41,9 +41,7 @@ impl Registry {
             "{}/{}: the hosted Overlord is down, {detail}. Start it again from the Overlord tab; wakes stay pending until it is up.",
             w.scope, w.id
         );
-        if let Some(fault) =
-            self.raise_noticed(env, w.scope, w.id, HOSTED_DOWN, (detail, text))
-        {
+        if let Some(fault) = self.raise_noticed(env, w.scope, w.id, HOSTED_DOWN, (detail, text)) {
             open.insert(key, fault);
         }
         true

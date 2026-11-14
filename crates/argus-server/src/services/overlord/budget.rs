@@ -23,5 +23,11 @@ pub(crate) fn save_budget(svc: &Services, usd: f64) -> Result<(), StorageError> 
         _ => Map::new(),
     };
     setting.insert("budgetUsd".to_owned(), json!(usd));
-    save_extra_key(&svc.paths, &mut live, svc.env_port, KEY, Value::Object(setting))
+    save_extra_key(
+        &svc.paths,
+        &mut live,
+        svc.env_port,
+        KEY,
+        Value::Object(setting),
+    )
 }
