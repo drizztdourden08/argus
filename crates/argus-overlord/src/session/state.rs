@@ -179,6 +179,7 @@ mod tests {
         )
     }
 
+    // test-tag: critical
     #[test]
     fn a_start_runs_from_spawn_to_idle() {
         let started = apply(&State::default(), &spawned());

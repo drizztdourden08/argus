@@ -82,6 +82,7 @@ mod tests {
     use super::*;
     use crate::protocol::Block;
 
+    // test-tag: critical
     #[test]
     fn init_carries_session_and_key_source() {
         let line = r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"ANTHROPIC_API_KEY","model":"sonnet","tools":["Bash"],"mcp_servers":[{"name":"x"}],"cwd":"X:/"}"#;

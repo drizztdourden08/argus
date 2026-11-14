@@ -140,6 +140,7 @@ pub trait ChildHost: Send + Sync + 'static {
 mod tests {
     use super::*;
 
+    // test-tag: critical
     #[test]
     fn the_api_key_debug_is_redacted() {
         assert_eq!(

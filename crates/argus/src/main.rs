@@ -156,7 +156,19 @@ async fn run_cli() -> ExitCode {
         Ok(cli) => cli,
         Err(error) => return lifecycle::refuse::<Cli>(&error),
     };
-    let done = match cli.command {
+    match dispatch(cli.command).await {
+        Ok(0) => ExitCode::SUCCESS,
+        Ok(code) => ExitCode::from(code),
+        Err(e) => {
+            eprintln!("argus: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Runs one parsed command; its exit code, or the error to print.
+async fn dispatch(command: Command) -> Result<u8, String> {
+    match command {
         Command::Lifecycle(verb) => lifecycle::run(verb).await,
         Command::WakeStream { args } => run_wake_stream(args).await,
         Command::Mcp { project, data_dir } => {
@@ -175,14 +187,6 @@ async fn run_cli() -> ExitCode {
         } => {
             let action = action.unwrap_or(TrayAction::Start);
             tray::command(action, lifecycle::paths_of(data_dir), shadow).await
-        }
-    };
-    match done {
-        Ok(0) => ExitCode::SUCCESS,
-        Ok(code) => ExitCode::from(code),
-        Err(e) => {
-            eprintln!("argus: {e}");
-            ExitCode::FAILURE
         }
     }
 }

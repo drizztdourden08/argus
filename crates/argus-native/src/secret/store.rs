@@ -110,6 +110,7 @@ mod tests {
         (dir, store)
     }
 
+    // test-tag: critical
     #[test]
     fn a_saved_key_round_trips_and_the_blob_does_not_hold_the_text() {
         let (_dir, store) = store();

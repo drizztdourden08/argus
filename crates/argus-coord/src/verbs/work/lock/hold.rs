@@ -75,7 +75,11 @@ pub(super) fn claim(r: &mut Run<'_>) -> Outcome {
     as_caller(r, |board, r, resource, agent, who| {
         let me = who.thread;
         open_lock(board, resource);
-        describe(board, resource, optional_text("description", &r.opt("desc"))?);
+        describe(
+            board,
+            resource,
+            optional_text("description", &r.opt("desc"))?,
+        );
         let lock = find_lock(board, resource)?;
         let since = ago(lock["since"].as_str(), r.now_ms());
         match holder_of(&lock) {
@@ -117,7 +121,9 @@ fn same_agent(resource: &str, lock: &Value, agent: Option<&str>) -> Res<()> {
 /// `coord lock release`: hands the lock to the head of the queue.
 pub(super) fn release(r: &mut Run<'_>) -> Outcome {
     as_caller(r, |board, r, resource, agent, who| {
-        let lock = doc(board, "locks", resource).cloned().unwrap_or(Value::Null);
+        let lock = doc(board, "locks", resource)
+            .cloned()
+            .unwrap_or(Value::Null);
         if holder_of(&lock).is_none() {
             return Err(bad(format!("{resource}: nobody holds it.")));
         }

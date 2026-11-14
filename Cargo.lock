@@ -71,12 +71,14 @@ dependencies = [
 name = "argus"
 version = "0.2.0"
 dependencies = [
+ "argus-accounts",
  "argus-coord",
  "argus-core",
  "argus-dns",
  "argus-mcp",
  "argus-migrate",
  "argus-native",
+ "argus-overlord",
  "argus-parity",
  "argus-server",
  "argus-testkit",

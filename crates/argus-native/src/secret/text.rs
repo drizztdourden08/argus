@@ -51,6 +51,7 @@ pub fn hint_of(key: &str) -> String {
 mod tests {
     use super::*;
 
+    // test-tag: critical
     #[test]
     fn debug_and_display_never_show_the_value() {
         let secret = SecretText::new("sk-ant-very-secret");

@@ -86,6 +86,7 @@ mod tests {
         }
     }
 
+    // test-tag: critical
     #[test]
     fn the_argv_never_has_bare_and_names_the_permission_tool() {
         let argv = build_argv(&config());

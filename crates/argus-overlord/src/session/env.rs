@@ -97,6 +97,7 @@ mod tests {
         .collect()
     }
 
+    // test-tag: critical
     #[test]
     fn the_child_gets_the_key_and_not_the_parents_auth() {
         let env = build_env(parent(), &ApiKey::new("sk-child"), 30);

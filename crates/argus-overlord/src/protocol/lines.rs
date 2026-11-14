@@ -29,6 +29,7 @@ impl LineSplitter {
 mod tests {
     use super::*;
 
+    // test-tag: critical
     #[test]
     fn partial_line_waits_for_its_newline() {
         let mut splitter = LineSplitter::new();

@@ -20,6 +20,7 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
+    // test-tag: critical
     #[test]
     fn user_message_is_one_json_line() {
         let line = encode_user_message("hello\nworld \"q\"");

@@ -50,6 +50,7 @@ mod tests {
         }
     }
 
+    // test-tag: critical
     #[test]
     fn the_api_key_passes() {
         assert_eq!(check_init(&init(Some("ANTHROPIC_API_KEY"))), Ok(()));
