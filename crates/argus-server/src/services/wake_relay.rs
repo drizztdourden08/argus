@@ -19,6 +19,7 @@ pub(crate) fn wire(svc: &Services) {
         shadow: svc.shadow,
         app_data: Box::new(move || find_app_data(accounts.config().app_data.as_deref())),
         notify: svc.notify.clone(),
+        hook: svc.wake_hook(),
     };
     lock(wake).set_relay_port(Arc::new(ServerRelay::new(host)));
 }

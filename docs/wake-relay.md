@@ -11,7 +11,8 @@ demand.
 2. After the wake has waited 30 seconds, Argus picks a relay: a thread with a v2 listener. The Overlord comes first
    when it is not in a turn, then any thread not in a turn, then a thread in a turn. Never the target itself.
 3. Argus posts one inbox note from `Argus` to the relay. It names every due target of that relay at once, with the
-   desktop session id of each.
+   desktop session id of each. Then it wakes the relay with the reason `wake-relay`, which skips the coalescing
+   window and the debounce, so the relay hears it at once.
 4. The relay sends `WAKE <thread>: run coord inbox (relayed by Argus)` to each target with the desktop's
    send-to-session tool. The target resumes and its listener takes the queued wake.
 5. Still due 2 minutes after a note? Argus sends one more, to a different relay when there is one.

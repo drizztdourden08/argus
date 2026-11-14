@@ -21,7 +21,7 @@ pub enum WakeClass {
 }
 
 /// Every reason of [`crate::reasons::WAKE_REASONS`] and its class.
-pub const WAKE_CLASSES: [(&str, WakeClass); 51] = [
+pub const WAKE_CLASSES: [(&str, WakeClass); 52] = [
     ("test-fail", WakeClass::Wake),
     ("test-partial", WakeClass::Wake),
     ("test-blocked", WakeClass::Wake),
@@ -73,6 +73,7 @@ pub const WAKE_CLASSES: [(&str, WakeClass); 51] = [
     ("handover-estimate", WakeClass::Wake),
     ("handover-request", WakeClass::Wake),
     ("handover-ready", WakeClass::Passive),
+    ("wake-relay", WakeClass::Wake),
 ];
 
 /// The class of a reason. A reason the table does not list wakes, so nothing new is ever lost.

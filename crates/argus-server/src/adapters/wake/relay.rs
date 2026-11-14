@@ -13,7 +13,11 @@ use argus_notify::{By, Level, Notify, PingRequest};
 use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 
 use super::headless::{resume, session_running};
-use super::relay_text::{Line, note_text, wake_text};
+use super::relay_text::{Line, note_text, relay_wake_text, wake_text};
+use crate::{WakeHook, WakeRequest};
+
+/// The reason of the wake that tells a relay its note is waiting.
+const RELAY_REASON: &str = "wake-relay";
 
 /// What the relay port reaches.
 pub struct RelayHost {
@@ -25,6 +29,8 @@ pub struct RelayHost {
     pub app_data: Box<dyn Fn() -> Option<PathBuf> + Send + Sync>,
     /// The owner notifications.
     pub notify: Option<Arc<Notify>>,
+    /// Wakes the relay once its note is in the inbox.
+    pub hook: WakeHook,
 }
 
 /// The relay port over the boards, the desktop's session records and the CLI.
@@ -57,9 +63,19 @@ impl RelayHost {
             return;
         }
         let text = note_text(&lines);
-        drop(with_board(&self.coord_home, &via.project, false, |board| {
+        let posted = with_board(&self.coord_home, &via.project, false, |board| {
             Ok(queue(board, &via.thread, "Argus", "note", &text, None))
-        }));
+        });
+        if matches!(posted, Ok(true)) {
+            let wake = WakeRequest::about(
+                &via.project,
+                &via.thread,
+                RELAY_REASON,
+                "relay",
+                relay_wake_text(lines.len()),
+            );
+            drop(self.hook.submit(&[wake]));
+        }
     }
 
     fn resume_headless(&self, target: &Ward) {

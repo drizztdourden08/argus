@@ -29,6 +29,12 @@ pub fn note_text(lines: &[Line<'_>]) -> String {
         .join("\n")
 }
 
+/// The wake line that sends the relay to its inbox, short enough for a wake.
+#[must_use]
+pub fn relay_wake_text(count: usize) -> String {
+    format!("Argus: RELAY, wake {count} paused thread(s): run coord inbox for the session ids")
+}
+
 /// The message a headless resume carries.
 #[must_use]
 pub fn wake_text(thread: &str) -> String {
