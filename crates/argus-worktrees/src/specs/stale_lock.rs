@@ -63,9 +63,16 @@ fn a_live_pid_lock_refuses_and_names_the_pid() {
     let path = fx.path("agent-a37");
     let err = h.refused(&h.id_of(&path), |_| {});
     assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(err.message.contains("pid 39176, which is running"), "{}", err.message);
+    assert!(
+        err.message.contains("pid 39176, which is running"),
+        "{}",
+        err.message
+    );
     assert!(exists_itself(&path));
-    assert!(fx.git(&["worktree", "list", "--porcelain"]).contains("locked claude agent"));
+    assert!(
+        fx.git(&["worktree", "list", "--porcelain"])
+            .contains("locked claude agent")
+    );
 }
 
 #[test]
@@ -74,7 +81,14 @@ fn a_folder_with_a_link_refuses_and_keeps_the_lock_and_the_target() {
     let path = fx.path("agent-a37");
     let err = h.refused(&h.id_of(&path), |_| {});
     assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(err.message.contains("holds a link or junction"), "{}", err.message);
+    assert!(
+        err.message.contains("holds a link or junction"),
+        "{}",
+        err.message
+    );
     assert!(exists_itself(&format!("{path}/lnk")));
-    assert!(fx.git(&["worktree", "list", "--porcelain"]).contains("locked claude agent"));
+    assert!(
+        fx.git(&["worktree", "list", "--porcelain"])
+            .contains("locked claude agent")
+    );
 }
