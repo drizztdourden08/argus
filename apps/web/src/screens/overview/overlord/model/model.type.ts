@@ -34,4 +34,4 @@ interface SpendLook {
 
 type Piece = Omit<TalkRow, 'key'> | { kind: 'tool'; name: string };
 
-export type { ContentBlock, ControlSet, Piece, SpendLook, TalkKind, TalkRow, ToolsRow, TranscriptRow };
+export type { ContentBlock, ControlSet, Piece, SpendLook, TalkRow, TranscriptRow };

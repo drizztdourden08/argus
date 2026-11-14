@@ -76,7 +76,6 @@ interface TranscriptFeed {
 export type {
   ActionState,
   ApprovalDecision,
-  ApprovalState,
   KeyStatus,
   OverlordAction,
   OverlordApproval,
