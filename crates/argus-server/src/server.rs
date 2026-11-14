@@ -308,7 +308,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         port: AtomicU16::new(0),
         names: OnceLock::new(),
         localhost_door: OnceLock::new(),
-        overlord_link: OnceLock::new(),
+        overlord: crate::services::overlord::running::Running::default(),
         overlord_approvals: approvals,
         links: Mutex::new(links),
     })

@@ -69,3 +69,11 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 - **Faults.** A hosted thread never gets `board-closed` or `not-listening`. The sink the server attaches while the child runs counts as its listener. When the sink is gone for the board grace while the thread was seen alive, the registry opens `hosted-down` (`crates/argus-wake/src/registry/hosted.rs`). It clears itself when the sink is back. The Overlord cannot resolve its own outage, so this fault reaches the owner at once as a toast, not after the hour that other faults wait (`reminders/owner.rs`).
 - **Account switch.** The handover of I-135 skips a hosted thread, and the resume task does not message it as the Overlord chat.
 - **Boot.** With `config.overlord.mode` `live`, Argus starts the child at boot. `config.overlord.autostart` set to false keeps it down; the default is true.
+
+## Session routes
+
+`GET /api/overlord/status` is for the owner's page only. It answers `{mode, status, pid, startedAt, sessionId}`: `mode` is `off`, `shadow` or `live`, and `status` is the supervisor state (`stopped`, `starting`, `idle`, `turn`, `paused-budget`, `waiting-approval` or `crashed`). With no supervisor it is `stopped` with nulls. The route is `crates/argus-server/src/routes/overlord_session.rs`; the running supervisor is kept in `services/overlord/running.rs`.
+
+`POST /api/overlord/control` with `{action: "start" | "stop" | "restart"}` is for the owner's page only, with the strict origin check, and answers the status body. An unknown action is 400. It is 409 for a start when the mode is not `live` ("the Overlord mode is off; set overlord.mode to live in config.json"), for a start when a child already runs and for a stop when none runs. A restart stops, waits up to 15 seconds for the old supervisor task to end (409 if it does not), then starts. Actions run one at a time, so two children never exist at once.
+
+`PUT /api/overlord/budget` with `{budgetUsd}` is for the owner's page only, with the strict origin check. The number must be finite, at least 0 and at most 10000 (400 otherwise). It saves `overlord.budgetUsd` in `config.json`, keeps every other `overlord` field, and answers with the body of `GET /api/overlord/spend`.

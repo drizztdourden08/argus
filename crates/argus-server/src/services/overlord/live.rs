@@ -144,14 +144,47 @@ fn spec_factory(svc: &Services, live: &Live) -> SpecFactory {
     Box::new(move |resume| spec_of(&inputs, resume))
 }
 
-/// Starts the supervisor when the mode is `live` and the wake engine is on.
-pub(crate) fn start(svc: &Arc<Services>) {
-    if svc.shadow || !config::is_live(svc) || !config::autostart(svc) {
-        return;
+/// Why a start did not happen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum StartFault {
+    Shadow,
+    NotLive,
+    NoWake,
+    Running,
+}
+
+impl StartFault {
+    pub(crate) fn sentence(self) -> &'static str {
+        match self {
+            StartFault::Shadow => "Argus runs in shadow mode; the Overlord does not start",
+            StartFault::NotLive => {
+                "the Overlord mode is off; set overlord.mode to live in config.json"
+            }
+            StartFault::NoWake => "the wake engine is off; the Overlord does not start",
+            StartFault::Running => "the hosted Overlord is already running",
+        }
     }
-    let Some(wake) = svc.wake.clone() else {
-        return;
-    };
+}
+
+/// The boot path: starts when autostart and the settings allow, and stays quiet when they do not.
+pub(crate) fn start(svc: &Arc<Services>) {
+    if config::autostart(svc) {
+        let _ = try_start(svc);
+    }
+}
+
+/// Starts the supervisor when the mode is `live` and the wake engine is on.
+///
+/// # Errors
+/// A [`StartFault`] naming why nothing started.
+pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
+    if svc.shadow {
+        return Err(StartFault::Shadow);
+    }
+    if !config::is_live(svc) {
+        return Err(StartFault::NotLive);
+    }
+    let wake = svc.wake.clone().ok_or(StartFault::NoWake)?;
     let live = config::live(svc);
     let observer = Arc::new(Wakes {
         wake,
@@ -164,14 +197,13 @@ pub(crate) fn start(svc: &Arc<Services>) {
         restart_max: live.restart_max,
         resume_from: None,
     };
-    let handle = supervisor::start(Arc::new(SystemChildHost::default()), setup, observer);
-    let _ = svc.overlord_link.set(handle.link);
-    svc.tasks.keep("overlord", handle.task);
+    svc.overlord
+        .install(|| supervisor::start(Arc::new(SystemChildHost::default()), setup, observer))
 }
 
 /// Asks the supervisor to end the child by pid.
 pub(crate) fn stop(svc: &Services) {
-    if let Some(link) = svc.overlord_link.get() {
+    if let Some(link) = svc.overlord.link() {
         link.stop();
     }
 }

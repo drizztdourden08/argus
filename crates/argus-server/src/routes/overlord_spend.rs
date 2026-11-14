@@ -7,7 +7,7 @@ use argus_core::clock::now_ms;
 use argus_core::{ApiError, ErrorCode};
 use argus_overlord::ports::SpendLedger;
 use argus_overlord::spend::{left_usd, month_key};
-use serde_json::json;
+use serde_json::{Value, json};
 
 use super::blocking::blocking;
 use super::overlord::web_only;
@@ -23,8 +23,8 @@ fn ledger_error() -> ApiError {
     ApiError::new(ErrorCode::Internal, "the spend ledger failed")
 }
 
-async fn show(ctx: Ctx) -> Reply {
-    web_only(&ctx, false)?;
+/// The reply body of the spend meter.
+pub(super) async fn body(ctx: &Ctx) -> Result<Value, ApiError> {
     let month = month_key(now_ms(), local_offset_seconds());
     let db = ctx.svc.db.clone();
     let key = month.clone();
@@ -35,17 +35,19 @@ async fn show(ctx: Ctx) -> Reply {
     })
     .await??;
     let setting = budget(&ctx.svc);
-    Ok(json_reply(
-        200,
-        &json!({
-            "month": month,
-            "spentUsd": spent,
-            "budgetUsd": setting.budget_usd,
-            "warnAt": setting.warn_at,
-            "leftUsd": left_usd(spent, setting.budget_usd),
-            "note": NOTE,
-        }),
-    ))
+    Ok(json!({
+        "month": month,
+        "spentUsd": spent,
+        "budgetUsd": setting.budget_usd,
+        "warnAt": setting.warn_at,
+        "leftUsd": left_usd(spent, setting.budget_usd),
+        "note": NOTE,
+    }))
+}
+
+async fn show(ctx: Ctx) -> Reply {
+    web_only(&ctx, false)?;
+    Ok(json_reply(200, &body(&ctx).await?))
 }
 
 /// Registers the spend route.
