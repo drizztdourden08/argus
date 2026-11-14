@@ -42,6 +42,12 @@ impl Registry {
         thread.in_turn(self.now())
     }
 
+    /// When the registry started waiting on a wake of this thread that no listener has taken yet.
+    fn queued_since(&self, key: &Key) -> Option<i64> {
+        let queued = self.pending.get(key)?;
+        queued.delivered_at_ms.is_none().then_some(queued.since_ms)
+    }
+
     pub(super) fn heartbeat(&self, thread: &ThreadView) -> bool {
         parse_ms(thread.last_seen.as_str())
             .is_some_and(|seen| self.now() - seen <= self.config.alive_ms)
@@ -109,19 +115,28 @@ impl Registry {
             }
             return listening_again;
         }
-        if !(w.thread.is_live() && self.heartbeat(w.thread) && !self.in_turn(w.thread)) {
+        let queued = self.queued_since(&key);
+        let reachable = queued.is_some() || self.heartbeat(w.thread);
+        if !(w.thread.is_live() && reachable && !self.in_turn(w.thread)) {
             self.deaf.remove(&key);
             return false;
         }
         let now = self.now();
-        let since = *self.deaf.entry(key.clone()).or_insert(now);
+        let since = match queued {
+            Some(at) => at,
+            None => *self.deaf.entry(key.clone()).or_insert(now),
+        };
         if !(w.warm && !open.contains_key(&key) && now - since > self.config.deaf_grace_ms) {
             return false;
         }
-        let detail = format!(
-            "no wake-stream for {} while the session is active",
-            secs(now - since)
-        );
+        let detail = if queued.is_some() {
+            format!("a wake is queued and nobody listens, for {}", secs(now - since))
+        } else {
+            format!(
+                "no wake-stream for {} while the session is active",
+                secs(now - since)
+            )
+        };
         let text = format!(
             "{}/{}: not listening, {detail}. Resolve it with them now (coord lead): its wake listener (the background hook, started at the end of each turn) is not running, so one message that makes it run a turn starts it; it clears itself when it listens.",
             w.scope, w.id

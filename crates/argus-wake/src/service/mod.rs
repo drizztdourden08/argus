@@ -31,7 +31,7 @@ use crate::notices::{NoticeDigest, digest};
 use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, PORTFOLIO};
-use crate::registry::{Env, Registry, RegistryDeps, RegistryRow};
+use crate::registry::{DueThread, Env, Registry, RegistryDeps, RegistryRow};
 use crate::reminders::{NoticeSource, OwnerAlerts, OwnerSink, Resend};
 use crate::source::{AgentLive, BoardSource, SyncSource};
 use crate::stalls::Stalls;
@@ -333,6 +333,12 @@ impl WakeService {
     #[must_use]
     pub fn registry_rows(&mut self, scope: &str) -> Vec<RegistryRow> {
         self.with_env(|registry, env| registry.rows(env, scope))
+    }
+
+    /// The threads that hold a queued wake and have no listener.
+    #[must_use]
+    pub fn due(&mut self) -> Vec<DueThread> {
+        self.with_env(|registry, env| registry.due(env))
     }
 
     /// The wake faults.

@@ -17,10 +17,14 @@
 //!   board, and a passive reason is recorded as a notice only
 //! - `GET /api/p/:key/presence?thread=<id>&tab=<id>` is held open by a board page opened with
 //!   `?thread=`; `GET /api/presence` is `{open}`, the threads with an open board
+//! - `GET /api/wakes/due` is `{due}`: the threads with a queued wake and no listener, each
+//!   `{project, thread, count, oldest, sessionId, localId}` (`localId` is the Desktop session id,
+//!   or null when no record holds the CLI session id)
 //! - `GET /api/wake-faults[?all=1]` is `{faults}`
 //! - `POST /api/wake-faults/clear {project, thread, note, by}` clears one; never from a
 //!   browser, and only for the Overlord
 
+mod due;
 mod faults;
 mod listing;
 mod presence;
@@ -74,6 +78,7 @@ pub fn register(r: &mut Router) {
     r.get("/api/presence", presence::open);
     r.get("/api/p/:key/wakes/listeners", listing::listeners);
     r.get("/api/p/:key/wakes/notices", listing::notices);
+    r.get("/api/wakes/due", due::due);
     r.get("/api/wake-faults", faults::list);
     r.add("POST", "/api/wake-faults/clear", clear, faults::clear);
     r.get("/api/p/:key/wakes", listing::wakes);
