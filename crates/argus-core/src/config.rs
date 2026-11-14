@@ -343,6 +343,28 @@ pub fn save_config(
     Ok(())
 }
 
+/// Saves one `config.extra` key. The in-memory key is put back as it was when the file cannot be written.
+///
+/// # Errors
+/// A [`StorageError`](crate::StorageError) when `config.json` cannot be saved.
+pub fn save_extra_key(
+    paths: &Paths,
+    live: &mut Config,
+    env_port: Option<u16>,
+    key: &str,
+    value: Value,
+) -> Result<(), crate::StorageError> {
+    let before = live.extra.insert(key.to_owned(), value);
+    if let Err(error) = save_config(paths, live, env_port) {
+        match before {
+            Some(old) => live.extra.insert(key.to_owned(), old),
+            None => live.extra.remove(key),
+        };
+        return Err(crate::StorageError(error.to_string()));
+    }
+    Ok(())
+}
+
 /// The file as it is, without creating anything (for `status` and `stop`).
 #[must_use]
 pub fn peek_config(paths: &Paths, env_port: Option<u16>) -> Option<Value> {

@@ -146,28 +146,30 @@ fn seat_for(app: &Path, session: &str) -> (String, Option<String>) {
     (id, seat.and_then(|s| s.cwd))
 }
 
-impl RelayPort for ServerRelay {
-    fn note(&self, via: &ThreadKey, targets: &[Ward]) {
+impl ServerRelay {
+    /// Runs `job` on its own thread with the host, unless the host only shadows.
+    fn spawn(&self, job: impl FnOnce(&RelayHost) + Send + 'static) {
         if self.host.shadow {
             return;
         }
-        let (host, via, targets) = (Arc::clone(&self.host), via.clone(), targets.to_vec());
-        drop(thread::spawn(move || host.post_note(&via, &targets)));
+        let host = Arc::clone(&self.host);
+        drop(thread::spawn(move || job(&host)));
+    }
+}
+
+impl RelayPort for ServerRelay {
+    fn note(&self, via: &ThreadKey, targets: &[Ward]) {
+        let (via, targets) = (via.clone(), targets.to_vec());
+        self.spawn(move |host| host.post_note(&via, &targets));
     }
 
     fn headless(&self, target: &Ward) {
-        if self.host.shadow {
-            return;
-        }
-        let (host, target) = (Arc::clone(&self.host), target.clone());
-        drop(thread::spawn(move || host.resume_headless(&target)));
+        let target = target.clone();
+        self.spawn(move |host| host.resume_headless(&target));
     }
 
     fn notice(&self, target: &Ward) {
-        if self.host.shadow {
-            return;
-        }
-        let (host, target) = (Arc::clone(&self.host), target.clone());
-        drop(thread::spawn(move || host.tell_owner(&target)));
+        let target = target.clone();
+        self.spawn(move |host| host.tell_owner(&target));
     }
 }

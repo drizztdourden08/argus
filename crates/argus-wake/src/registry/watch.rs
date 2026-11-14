@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use super::faults::{Failure, secs};
+use super::faults::secs;
 use super::{Env, Key, Registry};
 use crate::board::ThreadView;
 use crate::engine::ListenerInfo;
@@ -149,13 +149,9 @@ impl Registry {
             "{}/{}: not listening, {detail}. Resolve it with them now (coord lead): its wake listener (the background hook, started at the end of each turn) is not running, so one message that makes it run a turn starts it; it clears itself when it listens.",
             w.scope, w.id
         );
-        let failure = Failure {
-            reason: "not-listening",
-            wake_id: None,
-            detail,
-            text: Some(text),
-        };
-        if let Some(fault) = self.raise(env, w.scope, w.id, &failure) {
+        if let Some(fault) =
+            self.raise_noticed(env, w.scope, w.id, "not-listening", (detail, text))
+        {
             open.insert(key, fault);
         }
         true
@@ -193,13 +189,7 @@ impl Registry {
             "{}/{}: board closed, {detail}. Resolve it with them now (coord lead); it clears itself when the board opens.",
             w.scope, w.id
         );
-        let failure = Failure {
-            reason: "board-closed",
-            wake_id: None,
-            detail,
-            text: Some(text),
-        };
-        self.raise(env, w.scope, w.id, &failure);
+        self.raise_noticed(env, w.scope, w.id, "board-closed", (detail, text));
         true
     }
 

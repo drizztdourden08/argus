@@ -24,10 +24,12 @@ use crate::reply::bytes_reply;
 
 mod fanout;
 mod frame;
+mod hub;
 mod mux;
 mod run_logs;
 
 pub use fanout::{Fanout, Handle, Kind, MAX_CLIENTS_PER_SCOPE, StreamRequest, Target};
+pub use hub::Hub;
 pub use frame::{frame, frame_with, mux_frame};
 pub use mux::{Conn, MAX_CONNS, MuxRegistry};
 pub use run_logs::{LogListening, RunLogs};

@@ -418,12 +418,7 @@ fn deaf(rig: &Rig) -> usize {
 #[test]
 fn a_queued_wake_does_not_open_not_listening_for_a_running_turn_or_a_listening_thread() {
     let mut rig = queued_for_idle_ui();
-    let now = iso(rig.clock.now_ms());
-    rig.edit_thread("alpha", "ui", |t| {
-        t.activity = "working".into();
-        t.last_seen = now.as_str().into();
-    });
-    rig.service.on_board("alpha");
+    turn_begins(&mut rig);
     rig.pass(70 * SEC, STEP);
     assert_eq!(
         deaf(&rig),
@@ -484,12 +479,7 @@ fn after_a_dashboard_restart_nothing_is_raised_during_the_restart_grace() {
 fn a_thread_in_a_turn_with_no_listener_is_busy_not_not_listening() {
     let mut rig = rig();
     let _board = rig.service.presence_attach("alpha", "ui", "busy-tab");
-    let now = iso(rig.clock.now_ms());
-    rig.edit_thread("alpha", "ui", |t| {
-        t.activity = "working".into();
-        t.last_seen = now.as_str().into();
-    });
-    rig.service.on_board("alpha");
+    turn_begins(&mut rig);
     let busy = row(&mut rig, "alpha", "ui");
     assert_eq!(busy.state, RowState::Busy);
     assert!(!busy.flags.deaf);
@@ -575,6 +565,15 @@ fn a_stale_board_closed_fault_of_an_idle_lead_is_cleared_on_start() {
 }
 
 /// The turn ends: the stop hook marks the thread idle and stamps it.
+fn turn_begins(rig: &mut Rig) {
+    let now = iso(rig.clock.now_ms());
+    rig.edit_thread("alpha", "ui", |t| {
+        t.activity = "working".into();
+        t.last_seen = now.as_str().into();
+    });
+    rig.service.on_board("alpha");
+}
+
 fn turn_ends(rig: &mut Rig) {
     let now = iso(rig.clock.now_ms());
     rig.edit_thread("alpha", "ui", |t| {

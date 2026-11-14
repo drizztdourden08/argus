@@ -3,7 +3,7 @@
 //! runs. A thread that was alive a moment ago and has no sink for the board grace means the child is dead or crashed:
 //! `hosted-down`, which the owner hears at once (the Overlord cannot resolve its own outage).
 
-use super::faults::{Failure, secs};
+use super::faults::secs;
 use super::watch::{Open, Watch};
 use super::{Env, Key, Registry};
 use crate::reminders::HOSTED_DOWN;
@@ -41,13 +41,9 @@ impl Registry {
             "{}/{}: the hosted Overlord is down, {detail}. Start it again from the Overlord tab; wakes stay pending until it is up.",
             w.scope, w.id
         );
-        let failure = Failure {
-            reason: HOSTED_DOWN,
-            wake_id: None,
-            detail,
-            text: Some(text),
-        };
-        if let Some(fault) = self.raise(env, w.scope, w.id, &failure) {
+        if let Some(fault) =
+            self.raise_noticed(env, w.scope, w.id, HOSTED_DOWN, (detail, text))
+        {
             open.insert(key, fault);
         }
         true

@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, PoisonError, RwLock};
 
-use argus_core::config::save_config;
+use argus_core::config::save_extra_key;
 use argus_core::{Config, Paths, StorageError};
 use argus_notify::{ConfigStore, NotifyConfig};
 use serde_json::{Map, Value, to_value};
@@ -57,15 +57,6 @@ impl ConfigStore for LiveConfig {
         let mut live = self.config.write().unwrap_or_else(PoisonError::into_inner);
         let before = live.extra.get(KEY).cloned();
         let value = merged(before.as_ref(), config)?;
-        live.extra.insert(KEY.to_owned(), value);
-        let saved = save_config(&self.paths, &live, self.env_port);
-        if let Err(error) = saved {
-            match before {
-                Some(old) => live.extra.insert(KEY.to_owned(), old),
-                None => live.extra.remove(KEY),
-            };
-            return Err(StorageError(error.to_string()));
-        }
-        Ok(())
+        save_extra_key(&self.paths, &mut live, self.env_port, KEY, value)
     }
 }

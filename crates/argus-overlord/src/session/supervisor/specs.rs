@@ -81,12 +81,18 @@ async fn rig(restart_max: u32) -> Rig {
     }
 }
 
-#[tokio::test(start_paused = true)]
-async fn the_first_message_is_written_at_once_and_a_later_one_waits_for_the_result() {
+/// A rig whose first child has been given the message "one".
+async fn rig_with_first_message() -> (Rig, u32) {
     let rig = rig(3).await;
     let pid = rig.host.pids()[0];
     assert!(rig.handle.link.send(String::from("one")));
     settle().await;
+    (rig, pid)
+}
+
+#[tokio::test(start_paused = true)]
+async fn the_first_message_is_written_at_once_and_a_later_one_waits_for_the_result() {
+    let (rig, pid) = rig_with_first_message().await;
     assert_eq!(rig.host.texts(pid), ["one"]);
     rig.host.say(pid, INIT);
     assert!(rig.handle.link.send(String::from("two")));
@@ -100,10 +106,7 @@ async fn the_first_message_is_written_at_once_and_a_later_one_waits_for_the_resu
 
 #[tokio::test(start_paused = true)]
 async fn an_idle_child_takes_each_message_as_it_comes() {
-    let rig = rig(3).await;
-    let pid = rig.host.pids()[0];
-    assert!(rig.handle.link.send(String::from("one")));
-    settle().await;
+    let (rig, pid) = rig_with_first_message().await;
     rig.host.say(pid, INIT);
     rig.host.say(pid, RESULT);
     settle().await;

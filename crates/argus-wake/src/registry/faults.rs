@@ -114,6 +114,24 @@ impl Registry {
         }
     }
 
+    /// Opens a fault of `reason` with the notice `text` for the Overlord.
+    pub(super) fn raise_noticed(
+        &mut self,
+        env: &mut Env<'_>,
+        scope: &str,
+        thread: &str,
+        reason: &str,
+        (detail, text): (String, String),
+    ) -> Option<Fault> {
+        let failure = Failure {
+            reason,
+            wake_id: None,
+            detail,
+            text: Some(text),
+        };
+        self.raise(env, scope, thread, &failure)
+    }
+
     pub(super) fn raise_delivery_error(
         &mut self,
         env: &mut Env<'_>,
