@@ -5,6 +5,7 @@ use std::future::Future;
 use std::path::PathBuf;
 
 use crate::session::env::ChildEnv;
+use crate::spend::{Last, SpendRow};
 use crate::transcript::{Page, Stamp};
 
 /// The Anthropic key. `Debug` prints a redaction; only `expose` gives the text.
@@ -174,6 +175,51 @@ pub trait TranscriptStore: Send + Sync {
     /// # Errors
     /// A fault when the file cannot be removed.
     fn delete(&self, session: &str) -> Result<(), TranscriptFault>;
+}
+
+/// Why the spend ledger failed. Carries a reason, never a row.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpendFault(pub String);
+
+impl fmt::Display for SpendFault {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for SpendFault {}
+
+/// Where the cost of each turn is kept, and whether the month was warned about.
+pub trait SpendLedger: Send + Sync {
+    /// Adds one row.
+    ///
+    /// # Errors
+    /// A fault when the row cannot be kept.
+    fn record(&self, row: &SpendRow) -> Result<(), SpendFault>;
+
+    /// The sum of the deltas of the month (`YYYY-MM`).
+    ///
+    /// # Errors
+    /// A fault when the ledger cannot be read.
+    fn month_total(&self, month: &str) -> Result<f64, SpendFault>;
+
+    /// The newest row of the session as its last cumulative value.
+    ///
+    /// # Errors
+    /// A fault when the ledger cannot be read.
+    fn last(&self, session: &str) -> Result<Option<Last>, SpendFault>;
+
+    /// True when the month already had its warning.
+    ///
+    /// # Errors
+    /// A fault when the flag cannot be read.
+    fn warned(&self, month: &str) -> Result<bool, SpendFault>;
+
+    /// Marks the month as warned.
+    ///
+    /// # Errors
+    /// A fault when the flag cannot be kept.
+    fn set_warned(&self, month: &str) -> Result<(), SpendFault>;
 }
 
 #[cfg(test)]

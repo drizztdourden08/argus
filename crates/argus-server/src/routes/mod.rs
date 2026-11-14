@@ -29,6 +29,7 @@ pub mod mcp;
 pub mod mux;
 pub mod notify;
 pub mod overlord;
+mod overlord_spend;
 mod overlord_transcript;
 pub mod owner_avatar;
 pub mod pages;

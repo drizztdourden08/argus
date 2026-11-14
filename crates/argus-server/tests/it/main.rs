@@ -53,6 +53,7 @@ mod mux_tails;
 mod notify;
 mod notify_auto;
 mod overlord_key;
+mod overlord_spend;
 mod overlord_transcript;
 mod owner_avatar;
 mod owner_text;

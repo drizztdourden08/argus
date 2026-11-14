@@ -101,4 +101,5 @@ pub fn register(r: &mut Router) {
     r.add("PUT", "/api/overlord/key", small, save);
     r.add("DELETE", "/api/overlord/key", small, remove);
     super::overlord_transcript::register(r);
+    super::overlord_spend::register(r);
 }

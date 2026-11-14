@@ -4,4 +4,5 @@
 pub mod feed;
 pub mod host;
 pub mod key;
+pub mod spend;
 pub mod transcript;

@@ -8,4 +8,5 @@
 pub mod ports;
 pub mod protocol;
 pub mod session;
+pub mod spend;
 pub mod transcript;
