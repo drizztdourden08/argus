@@ -25,6 +25,7 @@ use argus_wake::hosted::HostedSink;
 use argus_wake::service::driver::SharedWake;
 use serde_json::{Value, json};
 
+use super::attachment::Attachment;
 use crate::Services;
 use crate::boards::{BoardReader, coordinator_in};
 
