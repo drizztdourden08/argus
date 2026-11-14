@@ -7,7 +7,7 @@ import type { RegistryKind } from '../../../data/registry';
 import type { Entry, Test } from '../../../data/types';
 import type { FeedActions } from '../../../screens/board/OwnerFeed';
 import type { Option } from '../../../screens/board/shared';
-import type { ItemOps, KanbanData, RecordActions, Threads } from '../../../screens/board/tabs/kanban/kanban.type';
+import type { AgentDoc, ItemOps, KanbanData, RecordActions, Threads } from '../../../screens/board/tabs/kanban/kanban.type';
 import type { AskLink } from '../../../screens/board/tabs/kanban/model';
 import type { EntryRow, ItemRecord } from '../../../screens/board/tabs/kanban/record';
 import type { RecordPaneState, RecordRef } from '../records.type';
@@ -21,6 +21,7 @@ interface PaneData {
   tests: readonly WithId<Test>[];
   allTests: readonly WithId<Test>[];
   threads: Threads;
+  agents: readonly AgentDoc[];
   record: ItemRecord;
   waiting: boolean;
   blocking: AskLink | null;

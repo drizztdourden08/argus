@@ -9,6 +9,7 @@ const paneData = (extra: Partial<PaneData> = {}): PaneData => ({
   tests: [],
   allTests: [],
   threads: [],
+  agents: [],
   record: { questions: [], decisions: [], notes: [], todos: [], timeline: [] },
   waiting: false,
   blocking: null,

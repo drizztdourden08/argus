@@ -15,6 +15,7 @@ const itemPaneData = (item: ItemRef, kanban: KanbanData, shared: Shared): PaneDa
     tests: allTests.filter((test) => test.item === item.id && !test.archivedAt),
     allTests,
     threads: kanban.threads,
+    agents: kanban.agents,
     waiting: needsYou(kanban.needs.get(item.id)),
     blocking,
     open: (id) => shared.open(id),

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import { WIDE_KEY } from '../../../shared';
 import type { Option } from '../../../shared';
-import { OWNER, OWNER_TITLE } from '../../../../../shell/records/behavior/look.constants';
+import { AGENT_PREFIX, OWNER, OWNER_TITLE } from '../../../../../shell/records/behavior/look.constants';
 import type { ChildCount, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs } from './model.type';
 
 const MS_PER_HOUR = 3_600_000;
@@ -83,6 +83,7 @@ const STORE_KEYS = {
 };
 
 export {
+  AGENT_PREFIX,
   ANSWER_KINDS,
   BAD_STATUSES,
   CHIP_PREFIX,
