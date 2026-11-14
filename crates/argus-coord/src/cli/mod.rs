@@ -9,6 +9,7 @@ pub mod invocation;
 pub mod out;
 pub mod resolve;
 pub mod route;
+pub mod shadow;
 pub mod usage;
 
 pub use args::{Args, Opt, Options, Val, parse_args};

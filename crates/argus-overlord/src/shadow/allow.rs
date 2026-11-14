@@ -79,7 +79,14 @@ fn read_command(command: &str) -> bool {
         return false;
     }
     let words: Vec<&str> = command.split_whitespace().collect();
-    coord_args(&words).is_some_and(|rest| is_read(rest) || is_registration(rest))
+    coord_args(&words).is_some_and(coord_words_allowed)
+}
+
+/// Whether the words of a `coord` call (the verb and its positional words, no options) are
+/// something the shadow may run: a read verb, its own registration or a thread note.
+#[must_use]
+pub fn coord_words_allowed(rest: &[&str]) -> bool {
+    is_read(rest) || is_registration(rest) || matches!(rest, ["thread", "note", ..])
 }
 
 /// The words after `coord`, or after `node <path>/coord.mjs`.

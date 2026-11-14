@@ -10,6 +10,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 use super::args::{Options, parse_args};
 use super::exit::{CoordError, NOT_PORTED, Outcome, report};
 use super::invocation::Invocation;
+use super::shadow;
 use super::usage::USAGE;
 use crate::who::find_project;
 
@@ -106,6 +107,16 @@ pub fn module_of(verb: &str) -> Option<&'static str> {
     VERBS.iter().find(|(v, _)| *v == verb).map(|(_, m)| *m)
 }
 
+/// The verb and its positional words, as the shadow guard reads them.
+fn shadow_words(verb: &str, positional: &[String], module: &str) -> Vec<String> {
+    if TAKES_VERB.contains(&module) {
+        return positional.to_vec();
+    }
+    let mut words = vec![verb.to_owned()];
+    words.extend_from_slice(positional);
+    words
+}
+
 fn help(inv: &mut Invocation) -> i32 {
     inv.say(&[USAGE]);
     0
@@ -165,6 +176,12 @@ pub fn dispatch(inv: &mut Invocation, ported: &[Entry]) -> i32 {
             Err(code) => return code,
         }
     };
+    if module != "hook" {
+        let words = shadow_words(verb, &positional, module);
+        if let Err(e) = shadow::guard(inv, &args.options, project.as_deref(), &words) {
+            return report(&e, &mut inv.stderr);
+        }
+    }
     let mut call = Call {
         inv,
         positional,

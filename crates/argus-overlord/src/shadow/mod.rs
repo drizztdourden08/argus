@@ -9,7 +9,7 @@ mod log;
 #[cfg(test)]
 mod tests;
 
-pub use allow::{DENIED, Verdict, verdict};
+pub use allow::{DENIED, Verdict, coord_words_allowed, verdict};
 pub use argv::{shadow_args, shadow_argv};
 pub use intro::intro;
 pub use log::{Seen, Turn, denial_entry, seen};
