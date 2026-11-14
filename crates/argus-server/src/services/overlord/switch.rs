@@ -13,6 +13,7 @@ use serde_json::json;
 use super::config;
 use super::control::{self, Refused};
 use super::live::{Origin, try_start, try_start_from};
+use super::live_session;
 use super::setting::save_field;
 use super::shadow::desktop_session;
 use super::switch_board::{ask_handover, end_threads, hand_back, set_aside};
@@ -115,6 +116,7 @@ async fn go_live(svc: &Arc<Services>) -> Result<(), SwitchFault> {
     .await;
     stop_child(svc).await?;
     save(svc, Mode::Live)?;
+    live_session::clear(&svc.db);
     if let Err(fault) = try_start_from(svc, origin) {
         let _ = save(svc, Mode::Shadow);
         let _ = try_start(svc);
@@ -130,6 +132,7 @@ async fn roll_back(svc: &Arc<Services>) -> Result<(), SwitchFault> {
     let session_id = svc.overlord.state().session_id;
     stop_child(svc).await?;
     save(svc, Mode::Off)?;
+    live_session::clear(&svc.db);
     blocking(svc, move |svc| hand_back(svc, session_id)).await;
     Ok(())
 }

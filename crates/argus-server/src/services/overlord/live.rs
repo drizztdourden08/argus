@@ -5,6 +5,7 @@
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use argus_accounts::alerts::local_offset_seconds;
@@ -15,6 +16,7 @@ use argus_overlord::ports::{ChildSpec, HostFault, SecretStore, SpendLedger};
 use argus_overlord::session::args::{SessionArgs, build_argv};
 use argus_overlord::session::env::build_env;
 use argus_overlord::session::guard::GuardFault;
+use argus_overlord::protocol::{Event as Wire, decode_line};
 use argus_overlord::session::supervisor::{self, Config, Link, Observer, SpecFactory};
 use argus_overlord::shadow::shadow_args;
 use argus_overlord::spend::{left_usd, month_key};
@@ -27,6 +29,7 @@ use serde_json::json;
 
 use super::attachment::Attachment;
 use super::config::{self, Live};
+use super::live_session;
 use super::shadow::{self, Shadow, ShadowInput};
 use super::switch_board::handover_file;
 use crate::Services;
@@ -44,9 +47,19 @@ struct Wakes {
     hold: Attachment,
     /// The first message, sent at the first start only (a restart keeps its session).
     intro: Mutex<Option<String>>,
+    db: Arc<Db>,
+    /// A saved session was resumed and the child has not reported its id yet.
+    unproven: AtomicBool,
 }
 
 impl Observer for Wakes {
+    fn line(&self, line: &str) {
+        if let Ok(Wire::Init(init)) = decode_line(line) {
+            live_session::save(&self.db, &init.session_id);
+            self.unproven.store(false, Ordering::SeqCst);
+        }
+    }
+
     fn started(&self, link: &Link) {
         let intro = self
             .intro
@@ -67,6 +80,9 @@ impl Observer for Wakes {
 
     fn stopped(&self) {
         self.hold.end();
+        if self.unproven.swap(false, Ordering::SeqCst) {
+            live_session::clear(&self.db);
+        }
     }
 
     fn guard_failed(&self, fault: &GuardFault) {
@@ -221,13 +237,15 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
 
 /// The live child's observer: its first message tells it to register, and at a switch-over to read
 /// the desktop Overlord's handover.
-fn live_observer(svc: &Services, wake: SharedWake, origin: &Origin) -> Wakes {
+fn live_observer(svc: &Services, wake: SharedWake, switching: bool, unproven: bool) -> Wakes {
     let file = handover_file(svc).display().to_string();
-    let handover = (*origin != Origin::Fresh).then_some(file);
+    let handover = switching.then_some(file);
     Wakes {
         log: Arc::clone(&svc.log),
         hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
         intro: Mutex::new(Some(live_intro(handover.as_deref()))),
+        db: Arc::clone(&svc.db),
+        unproven: AtomicBool::new(unproven),
     }
 }
 
@@ -254,10 +272,13 @@ pub(crate) fn try_start_from(svc: &Arc<Services>, origin: Origin) -> Result<(), 
     }
     let wake = svc.wake.clone().ok_or(StartFault::NoWake)?;
     let live = config::live(svc);
+    let switching = origin != Origin::Fresh;
+    let kept = live_session::origin_for(origin, live_session::saved(&svc.db).as_deref());
     let observer: Arc<dyn Observer> = if shadowing {
         Arc::new(Shadow::new(svc, wake))
     } else {
-        Arc::new(live_observer(svc, wake, &origin))
+        let unproven = !switching && kept != Origin::Fresh;
+        Arc::new(live_observer(svc, wake, switching, unproven))
     };
     let input = shadowing.then(|| ShadowInput {
         boards: svc.boards(),
@@ -265,7 +286,7 @@ pub(crate) fn try_start_from(svc: &Arc<Services>, origin: Origin) -> Result<(), 
     let (resume_from, fork_from) = if shadowing {
         (None, None)
     } else {
-        first_session(origin)
+        first_session(kept)
     };
     let setup = Config {
         spec: spec_factory(svc, &live, input, fork_from),
