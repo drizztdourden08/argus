@@ -296,6 +296,7 @@ fn assemble(core: Core, opts: &ServeOptions) -> Result<Services, ServeError> {
         port: AtomicU16::new(0),
         names: OnceLock::new(),
         localhost_door: OnceLock::new(),
+        overlord_link: OnceLock::new(),
         links: Mutex::new(links),
     })
 }

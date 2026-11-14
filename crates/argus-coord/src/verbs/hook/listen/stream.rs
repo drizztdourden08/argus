@@ -10,13 +10,14 @@ use std::time::Duration;
 
 use argus_core::clock::now_ms;
 use argus_core::js::encode_uri_component as enc;
+use argus_wake::line::wake_line;
 
 use super::super::Said;
 use super::super::autostart::ensure_dashboard;
 use super::super::ctx::Hook;
 use super::super::read_stamp::stamp_inbox;
 use super::Target;
-use super::line::{all_from, wake_line};
+use super::line::all_from;
 use crate::client::{Client, ClientError, DashboardConfig, SseReader, server_port};
 
 const RETRY_MS: i64 = 5000;

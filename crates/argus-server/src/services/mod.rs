@@ -18,6 +18,7 @@ use argus_launchers::RunService;
 use argus_launchers::launcher::LauncherStale;
 use argus_native::{Notifier, TrayFiles};
 use argus_notify::Notify;
+use argus_overlord::session::supervisor::Link;
 use argus_procs::ProcsService;
 use argus_store::{ActivityLog, Db};
 use argus_sync::{ScopeQueue, SyncService};
@@ -161,6 +162,8 @@ pub struct Services {
     pub(crate) port: AtomicU16,
     pub(crate) names: OnceLock<LiveNames>,
     pub(crate) localhost_door: OnceLock<u16>,
+    /// The way in to the hosted Overlord's child, once it is started (mode `live`).
+    pub(crate) overlord_link: OnceLock<Link>,
     pub(crate) links: Mutex<Vec<Subscription>>,
 }
 

@@ -1,11 +1,16 @@
 //! `config.overlord`: the parts the spend meter reads, with the plan's defaults.
 
+use std::path::PathBuf;
+
 use serde_json::Value;
 
 use crate::Services;
 
 const DEFAULT_BUDGET_USD: f64 = 100.0;
 const DEFAULT_WARN_AT: f64 = 0.8;
+const DEFAULT_MODEL: &str = "sonnet";
+const DEFAULT_RESTART_MAX: u32 = 3;
+const DEFAULT_APPROVAL_MIN: u64 = 30;
 
 /// The monthly budget and the share of it that warns.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -30,5 +35,57 @@ pub(crate) fn budget(svc: &Services) -> Budget {
         warn_at: share(setting, "warnAt", DEFAULT_WARN_AT, |v| {
             (0.0..=1.0).contains(&v)
         }),
+    }
+}
+
+fn setting(svc: &Services) -> Value {
+    svc.config()
+        .extra
+        .get("overlord")
+        .cloned()
+        .unwrap_or(Value::Null)
+}
+
+/// True when `mode` is `live`; `off` (the default) and `shadow` start no child.
+pub(crate) fn is_live(svc: &Services) -> bool {
+    setting(svc)["mode"].as_str() == Some("live")
+}
+
+/// What the live child is started with.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Live {
+    /// The Overlord's folder; the dashboard home when none is set.
+    pub cwd: Option<PathBuf>,
+    pub model: String,
+    /// The `claude` to run; the one the Desktop app carries when none is set.
+    pub claude_exe: Option<PathBuf>,
+    pub restart_max: u32,
+    pub approval_timeout_min: u64,
+}
+
+fn text(setting: &Value, name: &str) -> Option<String> {
+    setting[name]
+        .as_str()
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+        .map(str::to_owned)
+}
+
+/// `cwd`, `model` (default `sonnet`), `claudeExe`, `restartMax` (default 3) and
+/// `approvalTimeoutMin` (default 30).
+pub(crate) fn live(svc: &Services) -> Live {
+    let setting = setting(svc);
+    Live {
+        cwd: text(&setting, "cwd").map(PathBuf::from),
+        model: text(&setting, "model").unwrap_or_else(|| DEFAULT_MODEL.to_owned()),
+        claude_exe: text(&setting, "claudeExe").map(PathBuf::from),
+        restart_max: setting["restartMax"]
+            .as_u64()
+            .and_then(|v| u32::try_from(v).ok())
+            .unwrap_or(DEFAULT_RESTART_MAX),
+        approval_timeout_min: setting["approvalTimeoutMin"]
+            .as_u64()
+            .filter(|v| *v > 0)
+            .unwrap_or(DEFAULT_APPROVAL_MIN),
     }
 }

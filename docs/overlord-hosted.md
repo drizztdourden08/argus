@@ -42,3 +42,7 @@ redacted everywhere. Exit 0 is a pass, 2 is the billing guard refusing, 1 is an 
   The real session runs in the Overlord's home and must load `coord-dashboard` there (story 5 checks it).
 - About 25,000 tokens of system prompt and tools are cached on the first turn. A wake that reuses the session reads
   them from the cache.
+
+## How wakes reach the child
+
+While the child runs, the server attaches a `HostedSink` (`crates/argus-wake/src/hosted.rs`) to the wake engine for the project `portfolio`, thread `coordinator`, v 2. It formats each event with `argus_wake::line::wake_line`, the same function the `coord hook listen` hook calls, so the text is identical on both paths. The supervisor (`crates/argus-overlord/src/session/supervisor/`) owns an inbox. An idle child gets the first message at once. While a turn runs, messages are held, and after the `result` they go as one user message, the texts joined by a blank line. The `init` event comes only after the first message, so the billing guard runs on the first turn. When the child dies, the sink returns `Delivery::Gone`, the server detaches it and the engine keeps the wakes pending (`registry/pending.rs`). The next start attaches a new sink, which replays them. A turn written but not answered when the child died is written again to the next child. `coord hook listen` exits 0 at once under `ARGUS_HOSTED=1`. Nothing starts unless `config.overlord.mode` is `live`; the default is `off`.

@@ -8,6 +8,7 @@ use super::{
     accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale,
     stalls, sync, wake, wake_relay, worktrees,
 };
+use super::overlord::live;
 use crate::{ServeOptions, Services};
 
 pub(crate) fn build_all(svc: &mut Services, opts: &ServeOptions) {
@@ -44,11 +45,13 @@ pub(crate) async fn start_all(svc: &Arc<Services>) {
     worktrees::start(svc);
     cache::start(svc);
     records::start(svc).await;
+    live::start(svc);
     activity::started(svc);
 }
 
 pub(crate) fn stop_all(svc: &Services) {
     activity::stopped(svc);
+    live::stop(svc);
     notify::stop(svc);
     cache::stop(svc);
     records::stop(svc);

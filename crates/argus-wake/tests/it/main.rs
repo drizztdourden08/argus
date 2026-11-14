@@ -3,6 +3,7 @@ mod agents;
 mod dep_wakes;
 mod driver;
 mod engine;
+mod hosted;
 mod item_watch;
 mod items;
 mod policy;
