@@ -28,7 +28,7 @@ async fn post(ctx: Ctx) -> Reply {
     let text = body["text"]
         .as_str()
         .ok_or_else(|| ApiError::bad_request("send the message as text"))?;
-    deliver(ctx.svc.overlord_link.get(), text).map_err(|f| refusal(&f))?;
+    deliver(ctx.svc.overlord.link().as_ref(), text).map_err(|f| refusal(&f))?;
     Ok(json_reply(200, &json!({ "sent": true })))
 }
 

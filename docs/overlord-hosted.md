@@ -61,3 +61,11 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 ## Owner chat
 
 `POST /api/overlord/message` with `{text}` is for the owner's page only. No MCP tool or coord verb can post it, so no thread can speak as the owner. The text must not be empty and must not pass 20,000 characters (400). Argus writes it to the child as a user message that starts with `Owner (Argus Overlord tab): `, so the Overlord can tell the owner from a wake. It goes through the same link as the wakes: held while a turn runs and sent after the `result`. With no child up the answer is 409, "the hosted Overlord is not running". The pure parts are in `crates/argus-overlord/src/session/owner.rs`; the route is `crates/argus-server/src/routes/overlord_message.rs`.
+
+## Session routes
+
+`GET /api/overlord/status` is for the owner's page only. It answers `{mode, status, pid, startedAt, sessionId}`: `mode` is `off`, `shadow` or `live`, and `status` is the supervisor state (`stopped`, `starting`, `idle`, `turn`, `paused-budget`, `waiting-approval` or `crashed`). With no supervisor it is `stopped` with nulls. The route is `crates/argus-server/src/routes/overlord_session.rs`; the running supervisor is kept in `services/overlord/running.rs`.
+
+`POST /api/overlord/control` with `{action: "start" | "stop" | "restart"}` is for the owner's page only, with the strict origin check, and answers the status body. An unknown action is 400. It is 409 for a start when the mode is not `live` ("the Overlord mode is off; set overlord.mode to live in config.json"), for a start when a child already runs and for a stop when none runs. A restart stops, waits up to 15 seconds for the old supervisor task to end (409 if it does not), then starts. Actions run one at a time, so two children never exist at once.
+
+`PUT /api/overlord/budget` with `{budgetUsd}` is for the owner's page only, with the strict origin check. The number must be finite, at least 0 and at most 10000 (400 otherwise). It saves `overlord.budgetUsd` in `config.json`, keeps every other `overlord` field, and answers with the body of `GET /api/overlord/spend`.
