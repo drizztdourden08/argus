@@ -106,11 +106,13 @@ mod tests {
     }
 
     #[test]
-    fn clearing_the_parent_of_a_story_is_refused_but_a_bug_may_be_a_root() {
+    fn clearing_the_parent_of_a_story_or_a_bug_is_refused_but_an_epic_is_a_root() {
         let reg = registry();
-        let story = reg.item_type("story").unwrap();
-        assert!(on_clear(&board(), story, &Value::Null).is_err());
-        let bug = reg.item_type("bug").unwrap();
-        assert!(on_clear(&board(), bug, &Value::Null).is_ok());
+        for ty in ["story", "bug"] {
+            let t = reg.item_type(ty).unwrap();
+            assert!(on_clear(&board(), t, &Value::Null).is_err(), "{ty}");
+        }
+        let epic = reg.item_type("epic").unwrap();
+        assert!(on_clear(&board(), epic, &Value::Null).is_ok());
     }
 }
