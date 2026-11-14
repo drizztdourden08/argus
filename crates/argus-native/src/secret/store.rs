@@ -116,7 +116,7 @@ mod tests {
         store.save(KEY).expect("save");
         let blob = fs::read(store.path()).expect("blob");
         let leaked = blob.windows(KEY.len()).any(|w| w == KEY.as_bytes());
-        assert_eq!(leaked, false);
+        assert!(!leaked);
         assert_eq!(store.load().expect("load").expect("some").expose(), KEY);
     }
 
@@ -134,7 +134,7 @@ mod tests {
         store.save(KEY).expect("save");
         assert!(store.is_set());
         store.clear().expect("clear");
-        assert_eq!(store.is_set(), false);
+        assert!(!store.is_set());
         assert_eq!(store.load().expect("load"), None);
         store.clear().expect("clear again");
     }
@@ -143,7 +143,7 @@ mod tests {
     fn a_blank_key_is_refused_and_nothing_is_written() {
         let (_dir, store) = store();
         assert_eq!(store.save("   "), Err(SecretError::Empty));
-        assert_eq!(store.is_set(), false);
+        assert!(!store.is_set());
     }
 
     #[test]
@@ -151,7 +151,7 @@ mod tests {
         let (_dir, store) = store();
         store.save(KEY).expect("save");
         let loaded = store.load().expect("load");
-        assert_eq!(format!("{loaded:?}").contains("SECRET"), false);
+        assert!(!format!("{loaded:?}").contains("SECRET"));
     }
 }
 
@@ -165,6 +165,6 @@ mod tests {
         let store = KeyStore::new(dir.path());
         let outcome = store.save("sk-ant-abcdefgh");
         assert!(matches!(outcome, Err(SecretError::Platform(_))));
-        assert_eq!(store.is_set(), false);
+        assert!(!store.is_set());
     }
 }

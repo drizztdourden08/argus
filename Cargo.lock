@@ -260,6 +260,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "argus-overlord"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "argus-parity"
 version = "0.2.0"
 dependencies = [

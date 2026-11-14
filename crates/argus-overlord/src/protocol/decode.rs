@@ -193,10 +193,7 @@ mod tests {
             decode_line(r#"{"type":"res"#),
             Err(DecodeError::Malformed(_))
         ));
-        assert!(matches!(
-            decode_line("[1]"),
-            Err(DecodeError::Malformed(_))
-        ));
+        assert!(matches!(decode_line("[1]"), Err(DecodeError::Malformed(_))));
         assert_eq!(decode_line("  \r\n"), Err(DecodeError::Blank));
     }
 }
