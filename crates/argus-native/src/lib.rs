@@ -10,6 +10,7 @@ mod identity;
 mod notifier;
 mod payload;
 mod recording;
+mod secret;
 mod text;
 mod toast;
 mod tray;
@@ -22,6 +23,7 @@ pub use identity::{ARGUS_AUMID, ARGUS_NAME, Identity};
 pub use notifier::Notifier;
 pub use payload::{GROUP, Payload};
 pub use recording::RecordingNotifier;
+pub use secret::{KEY_FILE, KeyStore, SecretError, SecretText, hint_of};
 pub use text::{TEXT_MAX, TITLE_MAX, plain, xml_escape};
 pub use toast::{Level, Toast};
 pub use tray::{
