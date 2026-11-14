@@ -217,11 +217,8 @@ impl Service {
         }
     }
 
-    /// Does any repository the scans know list this folder now (read-only git; a failed question is a refusal, not a
-    /// yes)? Beyond "listed itself": a folder that HOLDS a worktree git lists, or sits INSIDE a live linked worktree, or
-    /// inside a folder with a `.git` of its own, is live work, never a leftover.
-    fn assert_not_listed(&self, project: &str, fact: &Fact, not_git: bool) -> Result<Vec<String>> {
-        let mut stale = Vec::new();
+    /// The repositories a folder of this project may belong to: those of its scanned facts and the known ones.
+    pub(crate) fn candidate_repos(&self, project: &str) -> Vec<String> {
         let mut repos: Vec<String> = self
             .facts_of(project)
             .into_iter()
@@ -230,6 +227,15 @@ impl Service {
             .collect();
         repos.sort();
         repos.dedup();
+        repos
+    }
+
+    /// Does any repository the scans know list this folder now (read-only git; a failed question is a refusal, not a
+    /// yes)? Beyond "listed itself": a folder that HOLDS a worktree git lists, or sits INSIDE a live linked worktree, or
+    /// inside a folder with a `.git` of its own, is live work, never a leftover.
+    fn assert_not_listed(&self, project: &str, fact: &Fact, not_git: bool) -> Result<Vec<String>> {
+        let mut stale = Vec::new();
+        let repos = self.candidate_repos(project);
         let (ci, mine) = (self.ci(), path_key(&fact.path, self.ci()));
         for repo in repos.iter().filter(|r| self.deps.fs.exists(r)) {
             let run = self

@@ -14,7 +14,8 @@ use tempfile::tempdir;
 const LOCK: &str = "claude agent agent-a37f1556 (pid 39176)";
 
 fn world(link: bool) -> (Fixture, Harness) {
-    let fx = Fixture::fake();
+    let fx = Fixture::fake_bare();
+    fx.add("live");
     let path = fx.add("agent-a37");
     fx.git(&["worktree", "lock", "--reason", LOCK, &path]);
     fs::remove_file(format!("{path}/.git")).unwrap();

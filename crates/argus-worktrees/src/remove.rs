@@ -240,6 +240,11 @@ impl Service {
         };
         let not_git = fact.not_git() && !input.prune;
         let fact = self.as_leftover(fact, not_git);
+        let fact = if not_git {
+            self.with_live_lock(&input.project, fact)
+        } else {
+            fact
+        };
         trace.leftover = fact.leftover.is_some();
         let rule = board
             .rules

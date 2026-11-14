@@ -8,7 +8,8 @@ use crate::error::{ErrorCode, Result, WtError};
 use crate::fact::Fact;
 use crate::fs::Fs;
 use crate::guards::{claude_lock_pid, is_claude_lock};
-use crate::paths::join_path;
+use crate::parse::parse_worktree_list;
+use crate::paths::{join_path, path_key};
 use crate::service::Service;
 
 /// How many folders the walk for links visits before it gives up.
@@ -48,6 +49,35 @@ fn walk_links(fs: &dyn Fs, root: &str) -> Links {
 }
 
 impl Service {
+    /// What git lists right now for a folder with no `.git` file: registered, its lock and its repository. The scan
+    /// reads a repository's listing only through a worktree of it, so it may have missed the lock; the removal asks
+    /// again. A repository that does not answer adds nothing here (the leftover guards refuse on it later).
+    pub(crate) fn with_live_lock(&self, project: &str, mut fact: Fact) -> Fact {
+        let (ci, mine) = (self.ci(), path_key(&fact.path, self.ci()));
+        for repo in self.candidate_repos(project) {
+            if !self.deps.fs.exists(&repo) {
+                continue;
+            }
+            let run = self
+                .deps
+                .git
+                .read(&repo, &["worktree", "list", "--porcelain"]);
+            if !run.ok() {
+                continue;
+            }
+            let items = parse_worktree_list(&run.stdout);
+            if let Some(item) = items.iter().skip(1).find(|i| path_key(&i.path, ci) == mine) {
+                fact.registered = true;
+                fact.locked.clone_from(&item.locked);
+                if fact.repo.is_none() {
+                    fact.repo = items.first().map(|i| i.path.clone());
+                }
+                return fact;
+            }
+        }
+        fact
+    }
+
     /// For a registered folder with no `.git` file: lift a stale Claude Code lock so the folder can be deleted like a
     /// leftover. `Ok(Some(reason))` is the lock that was lifted (to put back if a later guard refuses); `Ok(None)` means
     /// this is not the case (the usual lock guard judges it). A live pid, or a link in the folder, is a refusal.

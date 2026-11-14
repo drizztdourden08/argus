@@ -51,13 +51,23 @@ pub fn relist_known(ctx: &mut ScanCtx<'_>, repos: &[String]) -> bool {
 }
 
 /// A folder git lists without a work tree in it keeps the repository that lists it, so the next scan still knows it.
+/// It also takes the listing's own facts (registered, locked, prunable): a lock git keeps on a folder that lost its
+/// `.git` file still guards it (I-163).
 pub fn note_repo(fact: &mut Fact, lists: &[RepoList], ci: bool) {
     if fact.is_git || fact.repo.is_some() {
         return;
     }
     let key = path_key(&fact.path, ci);
-    let list = lists
-        .iter()
-        .find(|l| l.items.iter().any(|i| path_key(&i.path, ci) == key));
-    fact.repo = list.and_then(|l| l.items.first().map(|i| i.path.clone()));
+    let Some((list, item)) = lists.iter().find_map(|l| {
+        l.items
+            .iter()
+            .find(|i| path_key(&i.path, ci) == key)
+            .map(|i| (l, i))
+    }) else {
+        return;
+    };
+    fact.repo = list.items.first().map(|i| i.path.clone());
+    fact.registered = true;
+    fact.locked.clone_from(&item.locked);
+    fact.prunable.clone_from(&item.prunable);
 }
