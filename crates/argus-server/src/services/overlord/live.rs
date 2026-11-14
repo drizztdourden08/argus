@@ -11,7 +11,7 @@ use argus_accounts::{find_app_data, find_cli_exe};
 use argus_core::clock::now_ms;
 use argus_core::log::Logger;
 use argus_overlord::ports::{ChildSpec, HostFault, SecretStore, SpendLedger};
-use argus_overlord::session::args::build_probe_argv;
+use argus_overlord::session::args::{SessionArgs, build_argv};
 use argus_overlord::session::env::build_env;
 use argus_overlord::session::guard::GuardFault;
 use argus_overlord::session::supervisor::{self, Config, Link, Observer, SpecFactory};
@@ -24,6 +24,7 @@ use serde_json::json;
 
 use super::config::{self, Live};
 use crate::Services;
+use crate::adapters::overlord::gate::ApprovalGate;
 use crate::adapters::overlord::host::SystemChildHost;
 use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::spend::SqlLedger;
@@ -36,6 +37,7 @@ const LABEL: &str = "hosted overlord";
 struct Wakes {
     wake: SharedWake,
     log: Arc<Logger>,
+    gate: Arc<ApprovalGate>,
     attached: Mutex<Option<ListenerId>>,
 }
 
@@ -52,6 +54,7 @@ impl Observer for Wakes {
     }
 
     fn stopped(&self) {
+        self.gate.end();
         let id = self
             .attached
             .lock()
@@ -75,6 +78,9 @@ struct Inputs {
     exe: PathBuf,
     budget_usd: f64,
     live: Live,
+    gate: Arc<ApprovalGate>,
+    /// The endpoint of the private MCP server, `http://127.0.0.1:<port>/mcp/overlord`.
+    endpoint: String,
 }
 
 fn find_exe() -> PathBuf {
@@ -101,10 +107,15 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     let dir = inputs.home.join("overlord");
     std::fs::create_dir_all(&dir)
         .map_err(|_| HostFault("the overlord folder cannot be made".to_owned()))?;
-    let mut args = build_probe_argv(&inputs.live.model, budget_left(inputs));
-    if let Some(id) = resume {
-        args.extend(["--resume".to_owned(), id.to_owned()]);
-    }
+    let config = inputs.gate.begin(&inputs.endpoint, &std::env::temp_dir())?;
+    let args = build_argv(&SessionArgs {
+        model: inputs.live.model.clone(),
+        effort: None,
+        resume: resume.map(str::to_owned),
+        fork: false,
+        mcp_config: config.to_string_lossy().into_owned(),
+        budget_left_usd: budget_left(inputs),
+    });
     Ok(ChildSpec {
         program: inputs.exe.clone(),
         args,
@@ -125,6 +136,8 @@ fn spec_factory(svc: &Services, live: &Live) -> SpecFactory {
         exe: live.claude_exe.clone().unwrap_or_else(find_exe),
         budget_usd: config::budget(svc).budget_usd,
         live: live.clone(),
+        gate: Arc::clone(&svc.overlord_approvals),
+        endpoint: format!("http://127.0.0.1:{}/mcp/overlord", svc.port()),
     };
     Box::new(move |resume| spec_of(&inputs, resume))
 }
@@ -141,6 +154,7 @@ pub(crate) fn start(svc: &Arc<Services>) {
     let observer = Arc::new(Wakes {
         wake,
         log: Arc::clone(&svc.log),
+        gate: Arc::clone(&svc.overlord_approvals),
         attached: Mutex::new(None),
     });
     let setup = Config {
