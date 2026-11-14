@@ -107,11 +107,11 @@ fn the_first_start_forks_the_desktop_session() {
     let args = shadow_args(&base(), "desktop-1");
     assert_eq!(args.resume.as_deref(), Some("desktop-1"));
     assert!(args.fork);
-    let argv = shadow_argv(&base(), "desktop-1");
-    assert!(argv.windows(2).any(|w| w == ["--resume", "desktop-1"]));
-    assert!(argv.iter().any(|a| a == "--fork-session"));
-    let at = argv.iter().position(|a| a == "--disallowedTools").unwrap();
-    assert!(argv[at + 1].contains("Write"));
+    let line = shadow_argv(&base(), "desktop-1");
+    assert!(line.windows(2).any(|w| w == ["--resume", "desktop-1"]));
+    assert!(line.iter().any(|a| a == "--fork-session"));
+    let at = line.iter().position(|a| a == "--disallowedTools").unwrap();
+    assert!(line[at + 1].contains("Write"));
 }
 
 #[test]

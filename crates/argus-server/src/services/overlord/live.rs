@@ -5,7 +5,7 @@
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::Arc;
 
 use argus_accounts::alerts::local_offset_seconds;
 use argus_accounts::{find_app_data, find_cli_exe};
@@ -18,11 +18,11 @@ use argus_overlord::session::guard::GuardFault;
 use argus_overlord::session::supervisor::{self, Config, Link, Observer, SpecFactory};
 use argus_overlord::spend::{left_usd, month_key};
 use argus_store::Db;
-use argus_wake::engine::{AttachOptions, ListenerId};
+use argus_wake::engine::AttachOptions;
 use argus_wake::hosted::HostedSink;
-use argus_wake::service::driver::{SharedWake, lock};
 use serde_json::json;
 
+use super::attachment::Attachment;
 use super::config::{self, Live};
 use super::shadow::{self, Shadow, ShadowInput};
 use crate::Services;
@@ -31,16 +31,13 @@ use crate::adapters::overlord::host::SystemChildHost;
 use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::spend::SqlLedger;
 
-const SCOPE: &str = "portfolio";
 const THREAD: &str = "coordinator";
 const LABEL: &str = "hosted overlord";
 
 /// Attaches the wake sink while a child runs and detaches it when the child is gone.
 struct Wakes {
-    wake: SharedWake,
     log: Arc<Logger>,
-    gate: Arc<ApprovalGate>,
-    attached: Mutex<Option<ListenerId>>,
+    hold: Attachment,
 }
 
 impl Observer for Wakes {
@@ -51,20 +48,11 @@ impl Observer for Wakes {
             v: 2,
             label: Some(LABEL.to_owned()),
         };
-        let attached = lock(&self.wake).attach(SCOPE, THREAD, Box::new(sink), options);
-        *self.attached.lock().unwrap_or_else(PoisonError::into_inner) = Some(attached.id);
+        self.hold.attach(THREAD, sink, options);
     }
 
     fn stopped(&self) {
-        self.gate.end();
-        let id = self
-            .attached
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .take();
-        if let Some(id) = id {
-            lock(&self.wake).detach(&id);
-        }
+        self.hold.end();
     }
 
     fn guard_failed(&self, fault: &GuardFault) {
@@ -201,10 +189,8 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
         Arc::new(Shadow::new(svc, wake))
     } else {
         Arc::new(Wakes {
-            wake,
             log: Arc::clone(&svc.log),
-            gate: Arc::clone(&svc.overlord_approvals),
-            attached: Mutex::new(None),
+            hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
         })
     };
     let input = shadowing.then(|| ShadowInput {

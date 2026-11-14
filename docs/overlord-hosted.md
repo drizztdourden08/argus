@@ -60,7 +60,7 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 
 ## Owner chat
 
-`POST /api/overlord/message` with `{text}` is for the owner's page only. No MCP tool or coord verb can post it, so no thread can speak as the owner. The text must not be empty and must not pass 20,000 characters (400). Argus writes it to the child as a user message that starts with `Owner (Argus Overlord tab): `, so the Overlord can tell the owner from a wake. It goes through the same link as the wakes: held while a turn runs and sent after the `result`. With no child up the answer is 409, "the hosted Overlord is not running". The pure parts are in `crates/argus-overlord/src/session/owner.rs`; the route is `crates/argus-server/src/routes/overlord_message.rs`.
+`POST /api/overlord/message` with `{text}` is for the owner's page only. No MCP tool or coord verb can post it, so no thread can speak as the owner. The text must not be empty and must not pass 20,000 characters (400). Argus writes it to the child as a user message that starts with `Owner (Argus Overlord tab):` and a space, so the Overlord can tell the owner from a wake. It goes through the same link as the wakes: held while a turn runs and sent after the `result`. With no child up the answer is 409, "the hosted Overlord is not running". The pure parts are in `crates/argus-overlord/src/session/owner.rs`; the route is `crates/argus-server/src/routes/overlord_message.rs`.
 
 ## On the board
 
@@ -84,7 +84,7 @@ The desktop Overlord messaged each lead with no wake listener after a machine bo
 
 - **When.** Two minutes after Argus starts, so the leads that are alive can connect their listeners. Mode `off` or `shadow` does nothing. A machine with no boot time reading (not Windows) does nothing. The relay stays off in a shadow run and in a server without the accounts service.
 - **Who.** Each project board's coordinator thread (not ended) that has no listener for its thread or for `*`. The Overlord's own board is skipped.
-- **What.** One wake for the lead (reason `boot-revival`, text "Argus restarted after a reboot; you had no listener"), submitted through the wake hook. A lead with no listener is a due thread, so the wake relay of I-161 (`docs/wake-relay.md`) takes it: a live listener thread is asked once to send_message the lead, and when none is live or the notes fail, Argus resumes the lead headless, then tells the owner. No Desktop scheduled task is written, so it works while Claude Desktop runs.
+- **What.** One wake for the lead (reason `boot-revival`, text "Argus restarted after a reboot; you had no listener"), submitted through the wake hook. A lead with no listener is a due thread, so the wake relay of I-161 (`docs/wake-relay.md`) takes it: a live listener thread is asked once to send_message the lead, and when none is live or the notes fail, Argus resumes the lead headless, then tells the owner. No Desktop scheduled task is written, so it works while the desktop app runs.
 - **Once per boot.** Each resumed lead is recorded as `<board>/<thread>` in the key `overlord.boot-resume` of the database, with the boot time. A second start of Argus in the same boot (boot times within a minute) adds nothing for a recorded lead. A new boot starts a new list.
 
 ## Shadow mode (I-172)

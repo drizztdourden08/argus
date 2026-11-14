@@ -20,16 +20,14 @@ use argus_overlord::session::supervisor::{Link, Observer};
 use argus_overlord::shadow::{
     DENIED, Seen, THREAD, Turn, Verdict, denial_entry, intro, mirrors, seen, shadow_argv, verdict,
 };
-use argus_wake::engine::{AttachOptions, ListenerId};
+use argus_wake::engine::AttachOptions;
 use argus_wake::hosted::HostedSink;
-use argus_wake::service::driver::{SharedWake, lock};
+use argus_wake::service::driver::SharedWake;
 use serde_json::{Value, json};
 
 use crate::Services;
-use crate::adapters::overlord::gate::ApprovalGate;
 use crate::boards::{BoardReader, coordinator_in};
 
-const SCOPE: &str = "portfolio";
 const ALL_THREADS: &str = "*";
 const LABEL: &str = "shadow overlord";
 const FILE: &str = "shadow-would-do.jsonl";
@@ -119,23 +117,19 @@ pub(crate) fn judge(svc: &Services, prompt: &Prompt) -> Value {
 
 /// Mirrors the desktop Overlord's wakes to the child and logs what the child says.
 pub(super) struct Shadow {
-    wake: SharedWake,
     log: Arc<Logger>,
-    gate: Arc<ApprovalGate>,
     file: ShadowLog,
     turn: Arc<Mutex<Turn>>,
-    attached: Mutex<Option<ListenerId>>,
+    hold: Attachment,
 }
 
 impl Shadow {
     pub(super) fn new(svc: &Services, wake: SharedWake) -> Self {
         Self {
-            wake,
             log: Arc::clone(&svc.log),
-            gate: Arc::clone(&svc.overlord_approvals),
             file: ShadowLog::new(&svc.paths.home),
             turn: Arc::default(),
-            attached: Mutex::new(None),
+            hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
         }
     }
 
@@ -151,7 +145,9 @@ impl Observer for Shadow {
         let push = move |text: String| {
             let taken = to_child.send(text.clone());
             if taken {
-                turn.lock().unwrap_or_else(PoisonError::into_inner).wake(text);
+                turn.lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .wake(text);
             }
             taken
         };
@@ -160,20 +156,11 @@ impl Observer for Shadow {
             v: 1,
             label: Some(LABEL.to_owned()),
         };
-        let attached = lock(&self.wake).attach(SCOPE, ALL_THREADS, Box::new(sink), options);
-        *self.attached.lock().unwrap_or_else(PoisonError::into_inner) = Some(attached.id);
+        self.hold.attach(ALL_THREADS, sink, options);
     }
 
     fn stopped(&self) {
-        self.gate.end();
-        let id = self
-            .attached
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .take();
-        if let Some(id) = id {
-            lock(&self.wake).detach(&id);
-        }
+        self.hold.end();
     }
 
     fn guard_failed(&self, fault: &GuardFault) {
