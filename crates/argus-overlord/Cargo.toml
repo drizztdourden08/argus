@@ -13,5 +13,6 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+argus-core = { path = "../argus-core" }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }

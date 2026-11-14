@@ -5,6 +5,7 @@ use std::future::Future;
 use std::path::PathBuf;
 
 use crate::session::env::ChildEnv;
+use crate::transcript::{Page, Stamp};
 
 /// The Anthropic key. `Debug` prints a redaction; only `expose` gives the text.
 #[derive(Clone, PartialEq, Eq)]
@@ -134,6 +135,45 @@ pub trait ChildHost: Send + Sync + 'static {
 
     /// Ends the tree of `pid` at once.
     fn kill_tree(&self, pid: u32) -> impl Future<Output = ()> + Send;
+}
+
+/// Why the transcript store failed. Carries a reason, never an event.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TranscriptFault(pub String);
+
+impl fmt::Display for TranscriptFault {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for TranscriptFault {}
+
+/// Where the redacted event lines of each session are kept, one file per session.
+pub trait TranscriptStore: Send + Sync {
+    /// Appends one line (a newline is added) to the session file, creating it.
+    ///
+    /// # Errors
+    /// A fault when the session id is not usable or the file cannot be written.
+    fn append(&self, session: &str, line: &str) -> Result<(), TranscriptFault>;
+
+    /// The complete lines after the first `after`; an empty page when the session has no file.
+    ///
+    /// # Errors
+    /// A fault when the file cannot be read.
+    fn read_after(&self, session: &str, after: usize) -> Result<Page, TranscriptFault>;
+
+    /// Every session file with its modified time.
+    ///
+    /// # Errors
+    /// A fault when the folder cannot be read.
+    fn list(&self) -> Result<Vec<Stamp>, TranscriptFault>;
+
+    /// Deletes the session file.
+    ///
+    /// # Errors
+    /// A fault when the file cannot be removed.
+    fn delete(&self, session: &str) -> Result<(), TranscriptFault>;
 }
 
 #[cfg(test)]
