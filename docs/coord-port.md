@@ -274,7 +274,7 @@ session host as exit 101.
 
 ### The asyncRewake listener
 
-`hook listen` runs for up to `COORD_LISTEN_MS` (6 h). Its contract, kept as is:
+`hook listen` runs for up to `COORD_LISTEN_MS` (71 h). Its contract, kept as is:
 
 - Returns 0 for no board, no session, a placeholder or an ended thread.
 - On PostToolUse it returns 0 when `listen-<project>-<thread>.json` names another live pid
@@ -287,14 +287,14 @@ session host as exit 101.
 
 Node commit `db17ac5` raised the hook timeout of the three `hook listen` entries in
 `shared/hooks.json` (PostToolUse, SessionStart, Stop) from 21600 s (6 h) to 259200 s (3 days). That
-is the hook timeout of the rendered config, not the listener's own deadline: the Rust
-listener keeps Node's default of 6 h (`COORD_LISTEN_MS` overrides it) until Node changes it, and
-the rendered config of Argus carries the same 259200. The same commit added the `master`
+is the hook timeout of the rendered config, not the listener's own deadline. Since I-161 the Rust
+listener waits 71 h by default, one hour under that timeout (`COORD_LISTEN_MS` overrides it), so a
+quiet thread is not left deaf after 6 h. The rendered config of Argus carries the same 259200. The same commit added the `master`
 launcher of the Overlord project, which is project config and needs no port. The wake side of that
 commit (the re-alert for a deaf thread, the self-clearing `no-listener` fault) is already in
 `argus-wake`.
 
-Under the shim, a Node parent waits on the Rust child for those 6 h. The shim passes its pid in
+Under the shim, a Node parent waits on the Rust child until either one ends. The shim passes its pid in
 `ARGUS_COORD_PARENT`, and the Rust listener checks it every 5 s and exits 0 when the parent is
 gone, so a killed hook leaves no orphan holding a wake stream. The server keeps one listener per
 thread, so a leftover is replaced at the next start in any case.
