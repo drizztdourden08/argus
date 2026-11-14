@@ -96,9 +96,7 @@ fn add_takes_a_type_its_fields_and_a_named_flag_for_each_field() {
 fn add_refuses_what_the_registry_refuses() {
     let work = Work::new();
     let epic = work.seed_epic();
-    let no_severity = work.worker(&[
-        "item", "add", "Crash", "--type", "bug", "--parent", epic,
-    ]);
+    let no_severity = work.worker(&["item", "add", "Crash", "--type", "bug", "--parent", epic]);
     assert_eq!(no_severity.code, 1);
     assert!(
         no_severity.err.contains("needs severity"),

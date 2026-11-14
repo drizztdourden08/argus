@@ -845,6 +845,11 @@ fn an_old_bug_without_a_parent_stays_editable() {
     let epic = an_epic(&mut b);
     let bug = made(&mut b, &lead(), bug_set("Old crash", &epic));
     b["items"][bug.as_str()]["parent"] = Value::Null;
-    applied(&edit(&mut b, &lead(), &bug, json!({"title": "Old crash, renamed"})));
+    applied(&edit(
+        &mut b,
+        &lead(),
+        &bug,
+        json!({"title": "Old crash, renamed"}),
+    ));
     assert_eq!(b["items"][bug.as_str()]["title"], "Old crash, renamed");
 }

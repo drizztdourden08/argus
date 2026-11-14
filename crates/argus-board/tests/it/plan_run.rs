@@ -163,8 +163,7 @@ fn a_plan_has_one_open_run_and_a_ready_run_is_the_one_that_starts() {
 #[test]
 fn a_plan_keeps_at_least_one_case() {
     let (mut b, plan) = plan_board();
-    let set =
-        json!({"title": "Empty", "thread": "ui", "type": "test-plan", "parent": "I-80"});
+    let set = json!({"title": "Empty", "thread": "ui", "type": "test-plan", "parent": "I-80"});
     let op = json!({"kind": "create", "target": {"c": "items"}, "set": set});
     let empty = apply_op(&mut b, &op, &lead(), None);
     assert!(refused(&empty).contains("keeps at least one case"));

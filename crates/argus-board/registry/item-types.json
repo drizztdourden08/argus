@@ -317,7 +317,6 @@
       "collection": "items",
       "parents": ["epic", "story"],
       "parentRequired": true,
-      "parentRequired": true,
       "stages": [
         { "id": "draft", "label": "Draft", "lane": "todo" },
         {

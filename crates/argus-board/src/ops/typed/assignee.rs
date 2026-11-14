@@ -15,7 +15,11 @@ const AGENT_PREFIX: &str = "agent:";
 /// The assignee of an item: a thread of the board, the owner, or `agent:A-n` of an agent record
 /// of the board. A blank value is `null`.
 pub(crate) fn check(board: &Board, v: &Value) -> Result<Value, BoardError> {
-    if let Some(id) = v.as_str().map(js::trim).and_then(|t| t.strip_prefix(AGENT_PREFIX)) {
+    if let Some(id) = v
+        .as_str()
+        .map(js::trim)
+        .and_then(|t| t.strip_prefix(AGENT_PREFIX))
+    {
         return agent(board, id);
     }
     content_check("assignee", v, &Known::of(board, Vec::new()).context())
@@ -104,7 +108,9 @@ mod tests {
 
     #[test]
     fn an_unknown_agent_is_refused_naming_its_id() {
-        let text = check(&board(), &json!("agent:A-9")).unwrap_err().to_string();
+        let text = check(&board(), &json!("agent:A-9"))
+            .unwrap_err()
+            .to_string();
         assert!(text.contains("A-9 is not an agent of this board"), "{text}");
     }
 
