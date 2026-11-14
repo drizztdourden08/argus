@@ -70,8 +70,10 @@ fn check_shape(
             "leftover folders have no branch: --branch does not apply to --all-leftovers.",
         ));
     }
-    if call.options.get("older-than").is_some() && !all {
-        return Err(refuse("--older-than goes with --all-leftovers."));
+    if call.options.get("older-than").is_some() && finished {
+        return Err(refuse(
+            "--older-than goes with named leftovers or --all-leftovers, not with --finished.",
+        ));
     }
     Ok(owner_entry)
 }

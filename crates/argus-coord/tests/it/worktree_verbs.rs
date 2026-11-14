@@ -511,8 +511,8 @@ fn request_and_requests_check_their_arguments_before_the_dashboard_is_asked() {
             "leftover folders have no branch: --branch does not apply to --all-leftovers.",
         ),
         (
-            &["request", FOO, "--older-than", "3d"],
-            "--older-than goes with --all-leftovers.",
+            &["request", "--finished", "--older-than", "3d"],
+            "not with --finished.",
         ),
         (
             &["request", all, "--older-than", "soon"],
