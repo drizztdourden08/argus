@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { controlsFor, pendingApprovals, spendLook } from '../../src/screens/overview/overlord/model';
+import { controlsFor, modeSteps, pendingApprovals, spendLook } from '../../src/screens/overview/overlord/model';
 import { isRunning, toRows } from '../../src/shell/OverlordChat/model';
 import { STATE_STATUSES } from '../../src/screens/overview/overlord/overlord.constants';
 
@@ -68,5 +68,21 @@ describe('O4 approvals and spend', { tags: ['critical'] }, () => {
     expect(spendLook({ ...base, spentUsd: 23 })).toEqual({ ratio: 0.23, tone: 'success' });
     expect(spendLook({ ...base, spentUsd: 85 }).tone).toBe('warning');
     expect(spendLook({ ...base, spentUsd: 130 })).toEqual({ ratio: 1, tone: 'danger' });
+  });
+});
+
+describe('O9 mode steps', { tags: ['critical'] }, () => {
+  const allowed = (mode: 'off' | 'shadow' | 'live') => modeSteps(mode).filter((step) => step.allowed).map((step) => step.mode);
+
+  it('allows only the legal steps from each mode', () => {
+    expect(allowed('off')).toEqual(['off', 'shadow']);
+    expect(allowed('shadow')).toEqual(['off', 'shadow', 'live']);
+    expect(allowed('live')).toEqual(['off', 'live']);
+  });
+
+  it('says why a step is refused', () => {
+    expect(modeSteps('off')[2]).toMatchObject({ mode: 'live', allowed: false, reason: 'Start shadow first' });
+    expect(modeSteps('live')[1]).toMatchObject({ mode: 'shadow', allowed: false, reason: 'Go to off first' });
+    expect(modeSteps('shadow').find((step) => step.current)?.mode).toBe('shadow');
   });
 });

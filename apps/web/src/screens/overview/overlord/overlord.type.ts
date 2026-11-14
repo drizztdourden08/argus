@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { ActionState, OverlordAction, OverlordApproval, OverlordSpend, OverlordStatus } from '../../../data/overlord';
+import type { ActionState, OverlordAction, OverlordApproval, OverlordMode, OverlordSpend, OverlordStatus } from '../../../data/overlord';
 
 interface StatusBarProps {
   status: OverlordStatus;
@@ -25,4 +25,10 @@ interface BudgetCardProps {
   onSave: (budgetUsd: number) => void;
 }
 
-export type { ApprovalStripProps, BudgetCardProps, SpendCardProps, StatusBarProps };
+interface ModeCardProps {
+  mode: string | null;
+  action: ActionState;
+  onSwitch: (mode: OverlordMode) => void;
+}
+
+export type { ApprovalStripProps, BudgetCardProps, ModeCardProps, SpendCardProps, StatusBarProps };

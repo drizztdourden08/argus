@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   APPROVALS_POLL_MS, SPEND_POLL_MS, STATUS_POLL_MS,
-  controlOverlord, decideApproval, readApprovals, readSpend, readStatus, saveBudget, useAction,
+  controlOverlord, decideApproval, readApprovals, readSpend, readStatus, saveBudget, switchMode, useAction,
 } from '../../../../data/overlord';
-import type { ApprovalDecision, OverlordAction } from '../../../../data/overlord';
+import type { ApprovalDecision, OverlordAction, OverlordMode } from '../../../../data/overlord';
 import { useRemoteRead } from '../../../../data/remote';
 import { APPROVAL_PARAM } from '../overlord.constants';
 import { pendingApprovals } from '../model';
@@ -21,6 +21,7 @@ const useOverlord = () => {
     status.reload();
   });
   const budget = useAction(spend.reload);
+  const modeAction = useAction(status.reload);
   const pending = useMemo(() => pendingApprovals(approvals.data ?? [], params.get(APPROVAL_PARAM)), [approvals.data, params]);
 
   return {
@@ -31,8 +32,10 @@ const useOverlord = () => {
     control,
     decision,
     budget,
+    modeAction,
     onControl: (action: OverlordAction) => void control.run(() => controlOverlord(action)),
     onDecide: (id: string, choice: ApprovalDecision) => void decision.run(() => decideApproval(id, choice)),
+    onSwitch: (mode: OverlordMode) => void modeAction.run(() => switchMode(mode)),
     onSave: (budgetUsd: number) => void budget.run(() => saveBudget(budgetUsd)),
   };
 };

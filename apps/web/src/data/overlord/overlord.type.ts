@@ -15,6 +15,14 @@ interface OverlordKeyApi {
 
 type OverlordState = 'stopped' | 'starting' | 'idle' | 'turn' | 'paused-budget' | 'waiting-approval' | 'crashed';
 
+type OverlordMode = 'off' | 'shadow' | 'live';
+
+interface ModeSwitch {
+  from: OverlordMode;
+  to: OverlordMode;
+  already: boolean;
+}
+
 type OverlordAction = 'start' | 'stop' | 'restart';
 
 interface OverlordStatus {
@@ -77,9 +85,11 @@ export type {
   ActionState,
   ApprovalDecision,
   KeyStatus,
+  ModeSwitch,
   OverlordAction,
   OverlordApproval,
   OverlordKeyApi,
+  OverlordMode,
   OverlordSpend,
   OverlordState,
   OverlordStatus,

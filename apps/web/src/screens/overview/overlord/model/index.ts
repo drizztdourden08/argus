@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { controlsFor } from './controls-for';
+export { modeSteps } from './mode-steps';
 export { pendingApprovals } from './pending-approvals';
 export { spendLook } from './spend-look';
 export { uptimeText } from './uptime-text';

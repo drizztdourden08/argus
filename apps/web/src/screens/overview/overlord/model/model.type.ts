@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind types */
+import type { OverlordMode } from '../../../../data/overlord';
+
 interface ControlSet {
   start: boolean;
   restart: boolean;
@@ -10,4 +12,12 @@ interface SpendLook {
   tone: 'success' | 'warning' | 'danger';
 }
 
-export type { ControlSet, SpendLook };
+interface ModeStep {
+  mode: OverlordMode;
+  label: string;
+  current: boolean;
+  allowed: boolean;
+  reason: string | null;
+}
+
+export type { ControlSet, ModeStep, SpendLook };
