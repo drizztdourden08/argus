@@ -51,19 +51,25 @@ pub enum Event {
         resume_from: Option<String>,
     },
     /// The init event passed the billing guard.
-    InitOk { session_id: String },
+    InitOk {
+        session_id: String,
+    },
     /// The init event failed the guard: the child is stopped and not restarted.
     InitGuardFailed,
     /// A message was written to stdin.
     TurnStarted,
     /// A `result` event arrived; `cost_usd` is its cumulative cost.
-    ResultReceived { cost_usd: f64 },
+    ResultReceived {
+        cost_usd: f64,
+    },
     BudgetPaused,
     BudgetResumed,
     ApprovalRequested,
     ApprovalResolved,
     /// The process is gone; `requested` is true when Argus asked it to stop.
-    Exited { requested: bool },
+    Exited {
+        requested: bool,
+    },
     /// A restart is allowed after a crash.
     RestartAllowed,
     /// No restart is left: the session stays crashed.
@@ -102,7 +108,9 @@ pub fn apply(state: &State, event: &Event) -> State {
             next.session_id = Some(session_id.clone());
         }
         (Status::Starting, Event::InitGuardFailed) => stop(&mut next, Status::Stopped),
-        (Status::Idle, Event::TurnStarted) => next.status = Status::Turn,
+        (Status::Idle, Event::TurnStarted) | (Status::WaitingApproval, Event::ApprovalResolved) => {
+            next.status = Status::Turn;
+        }
         (Status::Turn | Status::WaitingApproval, Event::ResultReceived { cost_usd }) => {
             next.status = Status::Idle;
             next.last_cost_usd = *cost_usd;
@@ -110,7 +118,6 @@ pub fn apply(state: &State, event: &Event) -> State {
         (Status::Idle | Status::Turn, Event::BudgetPaused) => next.status = Status::PausedBudget,
         (Status::PausedBudget, Event::BudgetResumed) => next.status = Status::Idle,
         (Status::Turn, Event::ApprovalRequested) => next.status = Status::WaitingApproval,
-        (Status::WaitingApproval, Event::ApprovalResolved) => next.status = Status::Turn,
         (status, Event::Exited { requested }) if status.is_live() => {
             let after = if *requested {
                 Status::Stopped

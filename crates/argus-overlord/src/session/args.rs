@@ -117,6 +117,10 @@ mod tests {
     fn fork_without_resume_adds_nothing() {
         let mut forked = config();
         forked.fork = true;
-        assert!(!build_argv(&forked).iter().any(|arg| arg == "--fork-session"));
+        assert!(
+            !build_argv(&forked)
+                .iter()
+                .any(|arg| arg == "--fork-session")
+        );
     }
 }

@@ -96,13 +96,14 @@ impl ChildHost for SystemChildHost {
     type Lines = StdoutLines;
 
     fn spawn(&self, spec: &ChildSpec) -> Result<SpawnedChild<StdoutLines>, HostFault> {
-        let mut child = command_for(spec)
-            .spawn()
-            .map_err(|error| HostFault(format!("cannot start {}: {error}", spec.program.display())))?;
+        let mut child = command_for(spec).spawn().map_err(|error| {
+            HostFault(format!("cannot start {}: {error}", spec.program.display()))
+        })?;
         let pid = child
             .id()
             .ok_or_else(|| HostFault("the child ended before it had a pid".to_owned()))?;
-        let (stdin, stdout, stderr) = (child.stdin.take(), child.stdout.take(), child.stderr.take());
+        let (stdin, stdout, stderr) =
+            (child.stdin.take(), child.stdout.take(), child.stderr.take());
         let (Some(stdin), Some(stdout), Some(stderr)) = (stdin, stdout, stderr) else {
             return Err(HostFault("the child pipes are missing".to_owned()));
         };
@@ -158,7 +159,10 @@ impl ChildHost for SystemChildHost {
             return;
         };
         self.close_stdin(pid).await;
-        let gone = timeout(STOP_GRACE, exited.wait_for(|done| *done)).await;
+        let gone = timeout(STOP_GRACE, async {
+            exited.wait_for(|done| *done).await.is_ok()
+        })
+        .await;
         if gone.is_err() {
             self.kill_tree(pid).await;
         }
