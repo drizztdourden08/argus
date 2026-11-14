@@ -8,6 +8,7 @@ import { FieldRow } from '../fields/FieldRow';
 import { fieldGroups } from '../model/field-groups';
 import { paneType } from '../model/pane-type';
 import { peopleOptions } from '../model/people-options';
+import { ItemAgents } from '../ItemAgents';
 import { PaneFacts } from '../PaneFacts';
 import type { PaneBodyProps } from '../pane.type';
 
@@ -20,6 +21,7 @@ const OverviewTab = (props: PaneBodyProps) => {
   return (
     <Flex direction="column" gap="lg">
       <PaneFacts data={data} />
+      <ItemAgents data={data} />
       {type && fieldGroups(type).map((group) => <FieldGroup key={group.id} group={group} render={(name) => <FieldRow name={name} {...shared} />} />)}
       <DescriptionSection item={item} ops={ops} />
       <CriteriaSection item={item} tests={tests} ops={ops} />

@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { ActionDoc, Entry, Item, ThreadChoice } from '../../../../../data/kanban';
 import { useCollection } from '../../../../../data/react';
 import type { Build, Test } from '../../../../../data/types';
-import { OP_KINDS, askLinks, needsMap } from '../model';
+import { OP_KINDS, askLinks, needsMap, withItemAgents } from '../model';
 import { signalsMap } from '../attention';
 import type { AgentDoc, KanbanData, SoftDoc } from '../kanban.type';
 import { useTrails } from './useTrails';
@@ -18,6 +18,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
   const tests = useCollection<Test>(boardKey, 'tests');
   const builds = useCollection<Build>(boardKey, 'builds');
   const agents = useCollection<AgentDoc>(boardKey, 'agents');
+  const itemsWithAgents = useMemo(() => withItemAgents(items.docs, agents.docs), [items.docs, agents.docs]);
   const closedBuilds = useMemo(() => new Set(builds.docs.filter((build) => build.closedAt).map((build) => build.id)), [builds.docs]);
   const needs = useMemo(
     () => needsMap({
@@ -35,7 +36,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
   const trails = useTrails(boardKey, items.docs);
   return {
     ready: items.ready && threads.ready,
-    items: items.docs,
+    items: itemsWithAgents,
     threads: threads.docs,
     entries: entries.docs,
     actions: actions.docs,

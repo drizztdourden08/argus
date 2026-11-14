@@ -21,6 +21,17 @@ const STATUS_TONES: Record<string, TagUrgencyColor> = {
   blocked: 'danger',
 };
 
+const AGENT_TONES: Record<string, TagUrgencyColor> = {
+  working: 'success',
+  running: 'success',
+  idle: 'info',
+  waiting: 'warning',
+  blocked: 'warning',
+  stalled: 'warning',
+  failed: 'danger',
+  lost: 'danger',
+};
+
 const DEP_HEADINGS = { waits: 'Waiting on', asked: 'Requested by' } as const;
 
 const NEEDS_YOU_TIP = 'A question, a to-do or a test waits on you.';
@@ -56,6 +67,4 @@ const DONE_TIP = 'The done and dropped items are hidden until you open them. A s
 
 const AGENT_KIND = 'agent';
 
-const AGENT_WORK_TAB = 'work';
-
-export { AGENT_KIND, AGENT_WORK_TAB, DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
+export { AGENT_KIND, AGENT_TONES, DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, TYPING_SELECTOR };
