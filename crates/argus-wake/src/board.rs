@@ -77,9 +77,17 @@ pub struct ThreadView {
     pub registered_at: Text,
     /// `working` or `idle`.
     pub activity: Text,
+    /// `argus` for the hosted Overlord's thread; absent (desktop) for every other.
+    pub host: Text,
 }
 
 impl ThreadView {
+    /// Is the session a child that Argus itself runs (woken by user messages, no listener, no board tab)?
+    #[must_use]
+    pub fn is_hosted(&self) -> bool {
+        self.host.is("argus")
+    }
+
     /// Has the thread ended?
     #[must_use]
     pub fn is_ended(&self) -> bool {

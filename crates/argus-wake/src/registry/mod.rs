@@ -25,6 +25,7 @@
 mod due;
 mod evaluate;
 mod faults;
+mod hosted;
 mod mirror;
 mod pending;
 mod recover;

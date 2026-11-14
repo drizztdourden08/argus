@@ -4,6 +4,7 @@ mod dep_wakes;
 mod driver;
 mod engine;
 mod hosted;
+mod hosted_registry;
 mod item_watch;
 mod items;
 mod policy;

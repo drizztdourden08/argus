@@ -33,8 +33,8 @@ pub(super) struct Watch<'a> {
     pub(super) scope: &'a str,
     pub(super) id: &'a str,
     pub(super) thread: &'a ThreadView,
-    listener: Option<&'a ListenerInfo>,
-    warm: bool,
+    pub(super) listener: Option<&'a ListenerInfo>,
+    pub(super) warm: bool,
 }
 
 impl Registry {
@@ -56,7 +56,9 @@ impl Registry {
     /// A board must be open only while the thread is inside a turn: the Browser pane of a session
     /// closes by itself between turns, so an idle thread is reached through its listener, not its page.
     pub(super) fn board_required(&self, env: &Env<'_>, thread: Option<&ThreadView>) -> bool {
-        thread.is_some_and(|t| env.presence.is_some() && t.is_live() && self.in_turn(t))
+        thread.is_some_and(|t| {
+            env.presence.is_some() && t.is_live() && !t.is_hosted() && self.in_turn(t)
+        })
     }
 
     /// Open the not-listening and board-closed faults and clear them when they are over.
@@ -103,6 +105,9 @@ impl Registry {
     }
 
     fn check_listening(&mut self, env: &mut Env<'_>, w: &Watch<'_>, open: &mut Open) -> bool {
+        if w.thread.is_hosted() {
+            return self.check_hosted(env, w, open);
+        }
         let key: Key = (w.scope.to_owned(), w.id.to_owned());
         if w.listener.is_some() {
             self.deaf.remove(&key);

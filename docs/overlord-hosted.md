@@ -61,3 +61,11 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 ## Owner chat
 
 `POST /api/overlord/message` with `{text}` is for the owner's page only. No MCP tool or coord verb can post it, so no thread can speak as the owner. The text must not be empty and must not pass 20,000 characters (400). Argus writes it to the child as a user message that starts with `Owner (Argus Overlord tab): `, so the Overlord can tell the owner from a wake. It goes through the same link as the wakes: held while a turn runs and sent after the `result`. With no child up the answer is 409, "the hosted Overlord is not running". The pure parts are in `crates/argus-overlord/src/session/owner.rs`; the route is `crates/argus-server/src/routes/overlord_message.rs`.
+
+## On the board
+
+- **The thread.** The session-start hook sets `host: argus` on the thread when the child env has `ARGUS_HOSTED=1`. A desktop thread has no `host` field, and a desktop session on a thread that was hosted takes the field off. The wake logic reads it as `ThreadView::is_hosted` (`crates/argus-wake/src/board.rs`).
+- **The hook text.** A hosted session start says "Waking: hosted. Wakes come as user messages; no listener, no board tab." in place of the board-tab and listener text (`crates/argus-coord/src/verbs/hook/wake_line.rs`). The tab-closing guard skips a hosted thread.
+- **Faults.** A hosted thread never gets `board-closed` or `not-listening`. The sink the server attaches while the child runs counts as its listener. When the sink is gone for the board grace while the thread was seen alive, the registry opens `hosted-down` (`crates/argus-wake/src/registry/hosted.rs`). It clears itself when the sink is back. The Overlord cannot resolve its own outage, so this fault reaches the owner at once as a toast, not after the hour that other faults wait (`reminders/owner.rs`).
+- **Account switch.** The handover of I-135 skips a hosted thread, and the resume task does not message it as the Overlord chat.
+- **Boot.** With `config.overlord.mode` `live`, Argus starts the child at boot. `config.overlord.autostart` set to false keeps it down; the default is true.

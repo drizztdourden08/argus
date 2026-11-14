@@ -51,6 +51,11 @@ pub(crate) fn is_live(svc: &Services) -> bool {
     setting(svc)["mode"].as_str() == Some("live")
 }
 
+/// `autostart` (default true): with mode `live`, Argus starts the child at boot.
+pub(crate) fn autostart(svc: &Services) -> bool {
+    setting(svc)["autostart"].as_bool().unwrap_or(true)
+}
+
 /// What the live child is started with.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Live {

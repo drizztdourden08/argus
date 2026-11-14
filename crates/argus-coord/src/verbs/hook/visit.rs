@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use super::adopt::adopt;
 use super::ctx::Hook;
-use super::thread::{doc, find, retired};
+use super::thread::{HOST_ARGUS, doc, find, is_hosted, retired};
 use crate::cli::CoordError;
 
 /// A thread whose `lastSeen` is older than this gets a new one.
@@ -79,6 +79,7 @@ fn on_board(
     };
     let seen_before = doc(board, &id)["lastSeen"].as_str().map(str::to_owned);
     heartbeat(board, &id, sid, mode.activity);
+    mark_host(board, &id, hook.hosted());
     let fresh = if mode.deliver {
         deliver(board, &id)
     } else {
@@ -123,6 +124,24 @@ fn heartbeat(board: &mut Board, id: &str, sid: &str, activity: Option<&str>) {
         }
         touch(board, "threads", id);
     }
+}
+
+/// A hosted session sets `host: argus` on its thread; a desktop session on a thread that was
+/// hosted takes the field off again, so `host` is absent for a desktop thread.
+fn mark_host(board: &mut Board, id: &str, hosted: bool) {
+    let Some(thread) = board["threads"].get_mut(id) else {
+        return;
+    };
+    if hosted && !is_hosted(thread) {
+        thread["host"] = json!(HOST_ARGUS);
+    } else if !hosted && is_hosted(thread) {
+        if let Some(fields) = thread.as_object_mut() {
+            fields.remove("host");
+        }
+    } else {
+        return;
+    }
+    touch(board, "threads", id);
 }
 
 /// Marks the thread's undelivered messages delivered now and returns them.

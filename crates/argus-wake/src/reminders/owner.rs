@@ -11,6 +11,10 @@ use crate::time::ms_or_zero;
 /// The topic of a notice about a wake fault.
 pub const TOPIC_FAULT: &str = "wake-fault";
 
+/// The fault of a hosted Overlord whose child is gone: it reaches the owner at once, since the
+/// Overlord cannot resolve its own outage.
+pub const HOSTED_DOWN: &str = "hosted-down";
+
 /// The topic of a notice about an unread wake.
 pub const TOPIC_STALL: &str = "stall";
 
@@ -80,7 +84,12 @@ impl OwnerAlerts {
         let mut out = Vec::new();
         for fault in faults {
             let age = now - ms_or_zero(Some(fault.since.as_str()));
-            if age >= self.after_ms && self.told.insert(key_of(fault)) {
+            let after = if fault.reason == HOSTED_DOWN {
+                0
+            } else {
+                self.after_ms
+            };
+            if age >= after && self.told.insert(key_of(fault)) {
                 out.push(OwnerNotice {
                     topic: TOPIC_FAULT.to_owned(),
                     title: format!("Wake fault open for {}", age_text(age)),

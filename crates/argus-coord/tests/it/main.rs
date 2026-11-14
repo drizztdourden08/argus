@@ -41,6 +41,7 @@ mod hook_agents_prompt;
 mod hook_autostart;
 mod hook_differ;
 mod hook_guard;
+mod hook_hosted;
 mod hook_listen;
 mod hook_listen_process;
 mod hook_notices;

@@ -9,6 +9,9 @@ use super::ctx::Hook;
 use crate::cli::Options;
 use crate::who::{is_ended, resolve_thread};
 
+/// The `host` of a thread run by Argus itself; a desktop thread has no `host`.
+pub const HOST_ARGUS: &str = "argus";
+
 /// The id of the thread this hook's session is, if the board has one.
 pub fn find(board: &Board, hook: &Hook<'_>) -> Option<String> {
     resolve_thread(board, &hook.cwd, &Options::default(), hook.session_id()).ok()
@@ -22,6 +25,11 @@ pub fn doc<'b>(board: &'b Board, id: &str) -> &'b Value {
 /// Whether a thread is still the unnamed placeholder of a session.
 pub fn is_placeholder(thread: &Value) -> bool {
     truthy(thread, "placeholder")
+}
+
+/// Whether a thread doc is the hosted Overlord's (`host` is `argus`).
+pub fn is_hosted(thread: &Value) -> bool {
+    thread["host"].as_str() == Some(HOST_ARGUS)
 }
 
 /// The registered thread of this session (never a placeholder), for the sub-agent hooks.

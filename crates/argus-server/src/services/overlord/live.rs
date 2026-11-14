@@ -1,5 +1,5 @@
 //! The hosted Overlord's child, started with Argus when `config.overlord.mode` is `live` (the
-//! default is `off`, so nothing starts). While a child runs, a `HostedSink` is attached to the wake
+//! default is `off`, so nothing starts; `autostart` false keeps it down at boot). While a child runs, a `HostedSink` is attached to the wake
 //! engine for the project `portfolio` and the thread `coordinator`, so its wakes go to the child's
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
@@ -146,7 +146,7 @@ fn spec_factory(svc: &Services, live: &Live) -> SpecFactory {
 
 /// Starts the supervisor when the mode is `live` and the wake engine is on.
 pub(crate) fn start(svc: &Arc<Services>) {
-    if svc.shadow || !config::is_live(svc) {
+    if svc.shadow || !config::is_live(svc) || !config::autostart(svc) {
         return;
     }
     let Some(wake) = svc.wake.clone() else {

@@ -14,6 +14,9 @@ use crate::who::git_root;
 
 const AUTOMATIC: &str = "Waking: automatic. A background hook is your wake listener (no Monitor, no tokens while idle): a line `WAKE ...` that reaches you, even as Stop hook feedback, is a wake: run coord inbox. Do NOT start a Monitor wake-stream and do not use a coord tick cron; if you have a tick cron, delete it (CronList, then CronDelete).";
 
+/// What a hosted thread is told in place of the listener and the board tab.
+pub const HOSTED: &str = "Waking: hosted. Wakes come as user messages; no listener, no board tab.";
+
 /// Whether the rendered settings of the hook's folder or its checkout carry `hook listen`.
 fn auto_wake(hook: &Hook<'_>) -> bool {
     [hook.cwd.clone(), git_root(&hook.cwd)].iter().any(|dir| {
@@ -53,6 +56,9 @@ pub fn is_lead(thread: &Value) -> bool {
 
 /// The wake line of a registered thread.
 pub fn wake_line(hook: &Hook<'_>, hit: &Hit, project: &str) -> String {
+    if hook.hosted() {
+        return HOSTED.to_owned();
+    }
     if auto_wake(hook) {
         return AUTOMATIC.to_owned();
     }

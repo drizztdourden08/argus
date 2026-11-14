@@ -44,6 +44,7 @@ fn fault_words(reason: &str) -> String {
         "delivery-error" => "a wake could not be written to its listener".to_owned(),
         "not-listening" => "its wake listener is not running".to_owned(),
         "board-closed" => "its board is closed".to_owned(),
+        "hosted-down" => "the hosted Overlord is down".to_owned(),
         other => format!("wake fault {other}"),
     }
 }

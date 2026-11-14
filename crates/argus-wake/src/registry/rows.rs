@@ -183,6 +183,7 @@ impl Registry {
             flags: ListenFlags {
                 listening: listener.is_some(),
                 deaf: live
+                    && thread.is_some_and(|t| !t.is_hosted())
                     && listener.is_none()
                     && !busy
                     && thread.is_some_and(|t| self.heartbeat(t)),

@@ -38,6 +38,12 @@ impl<'a> Hook<'a> {
         self.input["session_id"].as_str().filter(|s| !s.is_empty())
     }
 
+    /// Whether the session is the hosted Overlord's child (`ARGUS_HOSTED=1`): it is woken by
+    /// user messages, has no listener and no board tab.
+    pub fn hosted(&self) -> bool {
+        self.env.get("ARGUS_HOSTED") == Some("1")
+    }
+
     /// Whether the call is a sub-agent's: its payload carries a non-empty `agent_id` (the rule
     /// of `hook.mjs`). A sub-agent's call neither marks its lead's activity nor takes its
     /// inbox.

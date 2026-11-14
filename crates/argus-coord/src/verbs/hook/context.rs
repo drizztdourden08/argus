@@ -99,6 +99,7 @@ fn pane_line(hook: &Hook<'_>, hit: &Hit, project: &str, start: bool) -> String {
 pub fn context(hook: &Hook<'_>, hit: &Hit, project: &str, start: bool) -> String {
     let placeholder = truthy(&hit.thread, "placeholder");
     let registered = !hit.adopted && !placeholder;
+    let tab = registered && !hook.hosted();
     let mut parts = vec![if hit.adopted {
         join_text(hit, project)
     } else if placeholder {
@@ -106,7 +107,7 @@ pub fn context(hook: &Hook<'_>, hit: &Hit, project: &str, start: bool) -> String
     } else {
         thread_line(hit)
     }];
-    if registered {
+    if tab {
         parts.push(pane_line(hook, hit, project, start));
     }
     if start && registered {

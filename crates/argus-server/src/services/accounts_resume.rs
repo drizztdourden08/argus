@@ -111,6 +111,9 @@ fn overlord_chat(svc: &Services) -> Option<String> {
     let thread = boards.overlord_thread()?;
     let board = boards.overlord_board()?;
     let record = &board["threads"][thread.as_str()];
+    if record["host"].as_str() == Some("argus") {
+        return None;
+    }
     chat_id(record["link"].as_str(), record["sessionId"].as_str())
 }
 

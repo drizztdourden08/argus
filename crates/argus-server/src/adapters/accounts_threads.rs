@@ -46,13 +46,14 @@ impl BoardThreads {
     }
 }
 
-/// The coordinator of a board when it is a live, unpaused session.
+/// The coordinator of a board when it is a live, unpaused Desktop session. A hosted one (run by
+/// Argus) has no chat to hand over from and none to message.
 fn live_lead(board: &BoardView) -> Option<(String, &ThreadView)> {
     let id = board.coordinator()?;
     let live = board
         .threads
         .get(&id)
-        .filter(|t| t.is_live() && !t.status.is("paused"))?;
+        .filter(|t| t.is_live() && !t.status.is("paused") && !t.is_hosted())?;
     Some((id, live))
 }
 

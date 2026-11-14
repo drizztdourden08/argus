@@ -16,7 +16,7 @@ mod text;
 
 pub use config::ReminderConfig;
 pub use owner::{
-    OwnerAlerts, OwnerNotice, OwnerSink, TOPIC_ASSIGNED, TOPIC_FAULT, TOPIC_RUN, TOPIC_STALL,
+    HOSTED_DOWN, OwnerAlerts, OwnerNotice, OwnerSink, TOPIC_ASSIGNED, TOPIC_FAULT, TOPIC_RUN, TOPIC_STALL,
     TOPIC_VERIFY,
 };
 pub use resend::Resend;
