@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { controlsFor, isRunning, pendingApprovals, spendLook, toRows } from '../../src/screens/overview/overlord/model';
+import { controlsFor, pendingApprovals, spendLook } from '../../src/screens/overview/overlord/model';
+import { isRunning, toRows } from '../../src/shell/OverlordChat/model';
 import { STATE_STATUSES } from '../../src/screens/overview/overlord/overlord.constants';
 
 const assistant = (index: number, content: unknown[]) => ({ index, event: { type: 'assistant', message: { content } } });

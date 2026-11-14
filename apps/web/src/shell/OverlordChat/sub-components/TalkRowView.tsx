@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Box, Stack, Text } from '@drizztdourden08/tessera';
-import type { TalkRowViewProps } from '../overlord.type';
-import { TALK_WHO } from '../overlord.constants';
+import type { TalkRowViewProps } from '../OverlordChat.type';
+import { TALK_WHO } from '../OverlordChat.constants';
 
 const TalkRowView = (props: TalkRowViewProps) => {
   const { row } = props;

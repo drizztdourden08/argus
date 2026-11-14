@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Disclosure, Stack, Text } from '@drizztdourden08/tessera';
-import type { ToolsRowProps } from '../overlord.type';
+import type { ToolsRowProps } from '../OverlordChat.type';
 
 const ToolsRow = (props: ToolsRowProps) => {
   const { names } = props;

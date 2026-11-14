@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, Flex, Stack, Text, Textarea } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import { CHAT_PLACEHOLDER, STOPPED_CHAT } from '../overlord.constants';
-import type { ChatBoxProps } from '../overlord.type';
+import { CHAT_PLACEHOLDER, STOPPED_CHAT } from '../OverlordChat.constants';
+import type { ChatBoxProps } from '../OverlordChat.type';
 
 const ChatBox = (props: ChatBoxProps) => {
   const { running, action, onSend } = props;
