@@ -11,6 +11,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const expectResub = (rig: ReturnType<typeof createHubRig>) => {
+  expect(rig.ops().slice(-2)).toEqual([
+    { op: 'unsub', scope: 'rotp', colls: ['items'] },
+    { op: 'sub', scope: 'rotp', colls: ['items'] },
+  ]);
+};
+
 describe('C3 Hub status', { tags: ['critical'] }, () => {
   it('goes live per scope after that scope ready, and tells only the tabs that follow it', () => {
     const rig = createHubRig();
@@ -119,10 +126,7 @@ describe('C3 Hub recovery', { tags: ['critical'] }, () => {
   it('unsubscribes before the sub after a reset so the server sends a fresh snapshot', () => {
     const rig = loaded();
     rig.frame({ event: 'reset', data: { scope: 'rotp', reason: 'resync' } });
-    expect(rig.ops().slice(-2)).toEqual([
-      { op: 'unsub', scope: 'rotp', colls: ['items'] },
-      { op: 'sub', scope: 'rotp', colls: ['items'] },
-    ]);
+    expectResub(rig);
   });
 
   it('subscribes again once when a sub fails, and stops after a second failure', () => {
@@ -140,10 +144,7 @@ describe('C3 Hub recovery', { tags: ['critical'] }, () => {
     rig.send('a', { type: 'want', scope: 'rotp', coll: 'items' });
     rig.frame(ready('rotp', ['items']));
     rig.send('b', { type: 'want', scope: 'rotp', coll: 'items' });
-    expect(rig.ops().slice(-2)).toEqual([
-      { op: 'unsub', scope: 'rotp', colls: ['items'] },
-      { op: 'sub', scope: 'rotp', colls: ['items'] },
-    ]);
+    expectResub(rig);
   });
 
   it('closes the connection and stops the linger timers on dispose', () => {

@@ -14,6 +14,16 @@ async fn following_meta(r: &Rig) -> (Handle, Wire) {
     (h, w)
 }
 
+/// Subscribes `coll` onto the following client and returns its snapshot and ready frames.
+async fn add_sub(r: &Rig, h: &Handle, w: &mut Wire, coll: Coll) -> Vec<(String, Value)> {
+    r.fanout
+        .subscribe(&r.db, ALPHA, Target::Add(h), &[coll], None)
+        .unwrap();
+    let got = w.frames().await;
+    assert_eq!(names(&got), ["snapshot", "ready"]);
+    got
+}
+
 #[tokio::test]
 async fn adding_a_collection_mid_stream_has_no_gap_and_no_duplicate() {
     let r = rig();
@@ -52,12 +62,7 @@ async fn only_the_added_collections_snapshot_is_sent() {
     let r = rig();
     r.set(Coll::Items, "I-1");
     let (h, mut w) = following_meta(&r).await;
-    let target = Target::Add(&h);
-    r.fanout
-        .subscribe(&r.db, ALPHA, target, &[Coll::Items], None)
-        .unwrap();
-    let got = w.frames().await;
-    assert_eq!(names(&got), ["snapshot", "ready"]);
+    let got = add_sub(&r, &h, &mut w, Coll::Items).await;
     assert_eq!(got[0].1["coll"], "items");
     assert_eq!(got[0].1["scope"], ALPHA);
     assert_eq!(got[1].1["colls"], json!(["items"]));
@@ -185,12 +190,7 @@ async fn a_repeated_sub_without_since_sends_the_snapshot_again() {
     let r = rig();
     r.set(Coll::Items, "I-1");
     let (h, mut w) = following_meta(&r).await;
-    let target = Target::Add(&h);
-    r.fanout
-        .subscribe(&r.db, ALPHA, target, &[Coll::Meta], None)
-        .unwrap();
-    let got = w.frames().await;
-    assert_eq!(names(&got), ["snapshot", "ready"]);
+    let got = add_sub(&r, &h, &mut w, Coll::Meta).await;
     assert_eq!(got[0].1["coll"], "meta");
     assert_eq!(got[1].1["colls"], json!(["meta"]));
     r.set(Coll::Meta, "later");

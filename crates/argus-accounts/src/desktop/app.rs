@@ -457,19 +457,23 @@ mod tests {
     const LIMITS: (Duration, Duration, Duration) =
         (Duration::from_millis(5), Duration::from_millis(40), MS);
 
-    #[test]
-    fn a_quit_in_the_grace_needs_no_waiting_text() {
-        let mut told = Vec::new();
-        let result = await_quit(
+    fn quit_never_killing(told: &mut Vec<String>, gone: &dyn Fn() -> bool) -> Result<(), String> {
+        await_quit(
             &mut Quit {
                 force: false,
                 cancelled: &|| false,
                 waiting: &mut |t| told.push(t.to_owned()),
             },
             LIMITS,
-            &|| true,
+            gone,
             &mut || panic!("no kill"),
-        );
+        )
+    }
+
+    #[test]
+    fn a_quit_in_the_grace_needs_no_waiting_text() {
+        let mut told = Vec::new();
+        let result = quit_never_killing(&mut told, &|| true);
         assert_eq!(result, Ok(()));
         assert_eq!(told.len(), 0);
     }
@@ -477,16 +481,7 @@ mod tests {
     #[test]
     fn a_tray_app_makes_the_close_wait_and_say_so() {
         let mut told = Vec::new();
-        let result = await_quit(
-            &mut Quit {
-                force: false,
-                cancelled: &|| false,
-                waiting: &mut |t| told.push(t.to_owned()),
-            },
-            LIMITS,
-            &|| false,
-            &mut || panic!("no kill"),
-        );
+        let result = quit_never_killing(&mut told, &|| false);
         assert_eq!(result, Err(NOT_QUIT.to_owned()));
         assert_eq!(told, [QUIT_BY_HAND]);
     }

@@ -236,7 +236,17 @@ impl Fs for RealFs {
 mod tests {
     use super::*;
     use crate::testkit::{exists_itself, make_link, put};
-    use tempfile::tempdir;
+    use tempfile::{TempDir, tempdir};
+
+    /// A folder to link from, a folder outside it holding `keep.txt`, and the path of each.
+    fn precious_target() -> (TempDir, TempDir, String, String) {
+        let dir = tempdir().unwrap();
+        let outside = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().into_owned();
+        let target = outside.path().to_string_lossy().into_owned();
+        put(&target, "keep.txt", "precious");
+        (dir, outside, root, target)
+    }
 
     #[test]
     fn a_link_is_a_leaf_in_lstat_and_read_dir_and_dirs_still_lists_it() {
@@ -272,11 +282,7 @@ mod tests {
 
     #[test]
     fn removing_a_link_leaves_its_target_alone() {
-        let dir = tempdir().unwrap();
-        let outside = tempdir().unwrap();
-        let root = dir.path().to_string_lossy().into_owned();
-        let target = outside.path().to_string_lossy().into_owned();
-        put(&target, "keep.txt", "precious");
+        let (_dir, _outside, root, target) = precious_target();
         let link = join_path(&root, "lnk");
         make_link(&link, &target);
         RealFs.remove_link(&link).unwrap();
@@ -289,11 +295,7 @@ mod tests {
 
     #[test]
     fn folder_links_go_at_once_without_the_slept_retries() {
-        let dir = tempdir().unwrap();
-        let outside = tempdir().unwrap();
-        let root = dir.path().to_string_lossy().into_owned();
-        let target = outside.path().to_string_lossy().into_owned();
-        put(&target, "keep.txt", "precious");
+        let (_dir, _outside, root, target) = precious_target();
         let links: Vec<String> = (0..20)
             .map(|i| join_path(&root, &format!("lnk{i}")))
             .collect();

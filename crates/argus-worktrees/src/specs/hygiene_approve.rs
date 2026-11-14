@@ -7,7 +7,9 @@
 
 use crate::board::Caller;
 use crate::hygiene::{ApproveInput, HygieneState};
-use crate::specs::hygiene_kit::{DEBOUNCE, backup_files, input_by, kind, step, world, world_with};
+use crate::specs::hygiene_kit::{
+    DEBOUNCE, approve_as_lead, backup_files, input_by, kind, step, world, world_with,
+};
 use crate::testkit::{Fixture, Harness, branches, commit, exists_itself, put};
 
 /// The lead is asked: the debounce over.
@@ -141,10 +143,7 @@ fn an_approved_removal_deletes_a_merged_branch() {
         put(&fx.path("agent-a1"), "wip.txt", "not committed\n");
     });
     asked(&h);
-    h.svc
-        .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
-        .unwrap();
-    h.svc.requests_idle();
+    approve_as_lead(&h, &fx.path("agent-a1"));
     assert!(!exists_itself(&fx.path("agent-a1")));
     assert!(!branches(&fx.repo).contains(&"agent-a1".to_string()));
     assert!(h.svc.request_list("alpha")[0].branch);
@@ -158,10 +157,7 @@ fn an_approved_removal_keeps_an_unmerged_branch() {
         put(&path, "wip.txt", "not committed\n");
     });
     asked(&h);
-    h.svc
-        .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
-        .unwrap();
-    h.svc.requests_idle();
+    approve_as_lead(&h, &fx.path("agent-a1"));
     assert!(!exists_itself(&fx.path("agent-a1")));
     assert!(branches(&fx.repo).contains(&"agent-a1".to_string()));
 }

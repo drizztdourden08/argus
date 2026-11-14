@@ -11,8 +11,8 @@ use crate::hygiene::{HygieneState, KeepInput};
 use crate::linking::LinkSource;
 use crate::rule::Rule;
 use crate::specs::hygiene_kit::{
-    DEBOUNCE, HOUR, REPORT, add_overlord, backup_files, has_extension, hygiene_on, input_by, kind,
-    left_why, notes_of, state, step, wakes, world, world_with,
+    DEBOUNCE, HOUR, REPORT, add_overlord, approve_as_lead, backup_files, has_extension, hygiene_on,
+    input_by, kind, left_why, notes_of, state, step, wakes, world, world_with,
 };
 use crate::testkit::{Fixture, Harness, branches, exists_itself, put, rule_for, write};
 use std::path::Path;
@@ -212,10 +212,7 @@ fn the_leads_approval_writes_a_full_backup_and_removes_it_with_its_merged_branch
 fn commits_no_ref_keeps_go_to_a_bundle_on_approval() {
     let (fx, h) = detached_world();
     asked(&h);
-    h.svc
-        .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
-        .unwrap();
-    h.svc.requests_idle();
+    approve_as_lead(&h, &fx.path("agent-a1"));
     assert!(!exists_itself(&fx.path("agent-a1")));
     assert!(has_extension(&backup_files(&h), "bundle"));
 }
@@ -261,10 +258,7 @@ fn a_backup_that_would_be_partial_refuses_even_the_approval() {
     }
     h.scan();
     asked(&h);
-    h.svc
-        .approve(&input_by(&h, &fx.path("agent-a1"), "lead"))
-        .unwrap();
-    h.svc.requests_idle();
+    approve_as_lead(&h, &fx.path("agent-a1"));
     assert!(exists_itself(&fx.path("agent-a1")), "nothing was removed");
     let note = notes_of(&h, "lead").pop().unwrap();
     assert!(

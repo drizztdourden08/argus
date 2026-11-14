@@ -80,14 +80,7 @@ impl Service {
             subject: overlord.to_string(),
             text: report_wake(list),
         };
-        let woke = self
-            .deps
-            .notifier
-            .wake(std::slice::from_ref(&event))
-            .is_ok();
-        if woke {
-            self.log_wakes(project, &[event]);
-        }
+        let woke = self.wake_one(project, event);
         posted || woke
     }
 }

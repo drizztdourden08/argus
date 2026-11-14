@@ -2,7 +2,6 @@
 //! 5 s, so the Node dashboard and an old binary wait (a lock older than 15 s counts as a crash).
 
 use std::fs::{self, OpenOptions};
-use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -10,6 +9,7 @@ use std::thread::{self, JoinHandle, sleep};
 use std::time::{Duration, Instant, SystemTime};
 
 use argus_core::ids::PORTFOLIO;
+use argus_core::lockfile;
 
 use crate::error::{Result, stop};
 
@@ -25,36 +25,18 @@ pub struct Held {
     refresher: Option<JoinHandle<()>>,
 }
 
-fn is_stale(path: &Path) -> bool {
-    fs::metadata(path)
-        .and_then(|m| m.modified())
-        .map_or(true, |t| {
-            SystemTime::now().duration_since(t).unwrap_or_default() > STALE
-        })
-}
-
 fn acquire(path: &Path) -> Result<()> {
     let start = Instant::now();
-    loop {
-        match OpenOptions::new().write(true).create_new(true).open(path) {
-            Ok(_) => return Ok(()),
-            Err(e)
-                if matches!(
-                    e.kind(),
-                    io::ErrorKind::AlreadyExists | io::ErrorKind::PermissionDenied
-                ) =>
-            {
-                if is_stale(path) {
-                    fs::remove_file(path).ok();
-                } else if start.elapsed() > WAIT {
-                    return stop(format!("{} stays locked by a live writer", path.display()));
-                } else {
-                    sleep(Duration::from_millis(50));
-                }
-            }
-            Err(e) => return Err(e.into()),
+    while !lockfile::create_new(path)? {
+        if lockfile::is_stale(path, STALE) {
+            fs::remove_file(path).ok();
+        } else if start.elapsed() > WAIT {
+            return stop(format!("{} stays locked by a live writer", path.display()));
+        } else {
+            sleep(Duration::from_millis(50));
         }
     }
+    Ok(())
 }
 
 fn touch(path: &Path) {

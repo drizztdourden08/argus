@@ -317,15 +317,20 @@ fn short7_or_unknown(head: Option<&str>) -> String {
     }
 }
 
-fn pruned_outcome(gone: &[Fact]) -> RemoveOutcome {
-    let names: String = gone
-        .iter()
+/// The folder names of `facts`, comma separated and cut at 200 characters.
+pub(crate) fn folder_names<'a>(facts: impl IntoIterator<Item = &'a Fact>) -> String {
+    facts
+        .into_iter()
         .map(|f| base_name(&f.path))
         .collect::<Vec<_>>()
         .join(", ")
         .chars()
         .take(200)
-        .collect();
+        .collect()
+}
+
+fn pruned_outcome(gone: &[Fact]) -> RemoveOutcome {
+    let names = folder_names(gone);
     let text = if gone.is_empty() {
         "nothing to prune: no gone worktree".to_string()
     } else {

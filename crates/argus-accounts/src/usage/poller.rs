@@ -331,7 +331,12 @@ mod tests {
         account_in("a", "A", None, org.map(str::to_owned))
     }
 
-    fn run(source: Vec<Result<Usage, String>>, refresh: Result<String, String>) -> PollResult {
+    fn polled(
+        source: Vec<Result<Usage, String>>,
+        refresh: Result<String, String>,
+        schedule: &mut Schedule,
+        now: i64,
+    ) -> PollResult {
         let source = FakeSource(Mutex::new(source));
         let creds = FakeCreds { refresh };
         let config = AccountsConfig::default();
@@ -343,8 +348,11 @@ mod tests {
             active: None,
         };
         let mut burn = BurnHistory::default();
-        let mut schedule = Schedule::default();
-        poll_all(&[account(None)], &poll, (&mut burn, &mut schedule), 1000).remove(0)
+        poll_all(&[account(None)], &poll, (&mut burn, schedule), now).remove(0)
+    }
+
+    fn run(source: Vec<Result<Usage, String>>, refresh: Result<String, String>) -> PollResult {
+        polled(source, refresh, &mut Schedule::default(), 1000)
     }
 
     #[test]
@@ -433,20 +441,7 @@ mod tests {
     }
 
     fn pass(source: Vec<Result<Usage, String>>, schedule: &mut Schedule, now: i64) -> PollResult {
-        let source = FakeSource(Mutex::new(source));
-        let creds = FakeCreds {
-            refresh: Err("no".to_owned()),
-        };
-        let config = AccountsConfig::default();
-        let poll = Poll {
-            source: &source,
-            creds: &creds,
-            app: None,
-            config: &config,
-            active: None,
-        };
-        let mut burn = BurnHistory::default();
-        poll_all(&[account(None)], &poll, (&mut burn, schedule), now).remove(0)
+        polled(source, Err("no".to_owned()), schedule, now)
     }
 
     #[test]

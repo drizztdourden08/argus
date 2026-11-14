@@ -20,15 +20,6 @@ fn id_of(fx: &Fixture, key: &str) -> String {
     found.map(|(id, _)| id.clone()).unwrap()
 }
 
-fn table_of(fx: &Fixture) -> Vec<(String, Vec<String>)> {
-    let table = boards::load(&fx.home).unwrap();
-    table
-        .boards
-        .iter()
-        .map(|(id, e)| (id.clone(), e.aliases.clone()))
-        .collect()
-}
-
 fn marker(fx: &Fixture) -> bool {
     fx.home.join("MIGRATING").exists()
 }
@@ -78,8 +69,8 @@ fn a_rollback_that_would_collide_stops_before_any_write() {
 fn a_lost_plan_file_after_a_partial_run_draws_no_new_id() {
     let fx = Fixture::new();
     assert!(run(&fx.faulty(Mode::Migrate, Some(Fault::AfterBoard(2)))).is_err());
-    let before = table_of(&fx);
+    let before = fx.table();
     fs::remove_file(fx.home.join("board-ids.plan.json")).unwrap();
     run(&fx.options(Mode::Migrate)).unwrap();
-    assert_eq!(table_of(&fx), before);
+    assert_eq!(fx.table(), before);
 }

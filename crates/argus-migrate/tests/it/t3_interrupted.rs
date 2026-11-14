@@ -2,19 +2,9 @@
 
 use std::fs;
 
-use argus_core::boards;
 use argus_migrate::{Fault, Mode, run};
 
 use crate::fixture::{Fixture, snapshot};
-
-fn table_of(fx: &Fixture) -> Vec<(String, Vec<String>)> {
-    let table = boards::load(&fx.home).unwrap();
-    table
-        .boards
-        .iter()
-        .map(|(id, e)| (id.clone(), e.aliases.clone()))
-        .collect()
-}
 
 fn plan_file(fx: &Fixture) -> std::path::PathBuf {
     fx.home.join("board-ids.plan.json")
@@ -48,7 +38,7 @@ fn a_stopped_run_finished_by_a_rerun_equals_an_uninterrupted_run() {
     for fault in faults {
         let fx = stop_and_rerun(&plan, fault);
         assert_eq!(snapshot::take(&fx.home), want, "{fault:?}");
-        assert_eq!(table_of(&fx), table_of(&reference_fx), "{fault:?}");
+        assert_eq!(fx.table(), reference_fx.table(), "{fault:?}");
     }
 }
 

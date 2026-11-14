@@ -13,6 +13,7 @@ use crate::cli::Outcome;
 use crate::cli::out::ago;
 use crate::verbs::work::keys::js_order;
 use crate::verbs::work::run::{Res, Run, bad};
+use crate::who::Caller;
 
 fn open_lock(board: &mut Board, resource: &str) {
     let locks = map_mut(board, "locks");
@@ -56,22 +57,33 @@ fn enqueue(board: &mut Board, resource: &str, entry: &str) -> usize {
         .map_or(0, |i| i + 1)
 }
 
-/// `coord lock claim`: held at once when free, else queued.
-pub(super) fn claim(r: &mut Run<'_>) -> Outcome {
+/// Reads the resource argument and the agent label, then runs `change` on the board as the caller.
+fn as_caller(
+    r: &mut Run<'_>,
+    change: impl FnOnce(&mut Board, &mut Run<'_>, &str, Option<String>, Caller) -> Res<()>,
+) -> Outcome {
     let resource = resource_arg(r.arg(0))?;
     let agent = agent::label(r);
     r.write(|board, r| {
-        let me = r.begin(board)?.thread;
-        open_lock(board, &resource);
-        describe(board, &resource, optional_text("description", &r.opt("desc"))?);
-        let lock = find_lock(board, &resource)?;
+        let who = r.begin(board)?;
+        change(board, r, &resource, agent, who)
+    })
+}
+
+/// `coord lock claim`: held at once when free, else queued.
+pub(super) fn claim(r: &mut Run<'_>) -> Outcome {
+    as_caller(r, |board, r, resource, agent, who| {
+        let me = who.thread;
+        open_lock(board, resource);
+        describe(board, resource, optional_text("description", &r.opt("desc"))?);
+        let lock = find_lock(board, resource)?;
         let since = ago(lock["since"].as_str(), r.now_ms());
         match holder_of(&lock) {
             Some(holder) if holder == me && holder_agent(&lock) == agent => {
                 r.say(&[&format!("{resource}: you already hold it (since {since}).")]);
             }
             None => {
-                take(board, &resource, &me, agent.as_deref());
+                take(board, resource, &me, agent.as_deref());
                 let flag = agent
                     .as_ref()
                     .map_or_else(String::new, |a| format!(" --agent {a}"));
@@ -80,7 +92,7 @@ pub(super) fn claim(r: &mut Run<'_>) -> Outcome {
                 )]);
             }
             Some(holder) => {
-                let place = enqueue(board, &resource, &entry_of(&me, agent.as_deref()));
+                let place = enqueue(board, resource, &entry_of(&me, agent.as_deref()));
                 let holder = holder_text(&lock).unwrap_or(holder);
                 r.say(&[
                     &format!("{resource}: held by {holder} (since {since}). You are #{place} in the queue."),
@@ -104,18 +116,15 @@ fn same_agent(resource: &str, lock: &Value, agent: Option<&str>) -> Res<()> {
 
 /// `coord lock release`: hands the lock to the head of the queue.
 pub(super) fn release(r: &mut Run<'_>) -> Outcome {
-    let resource = resource_arg(r.arg(0))?;
-    let agent = agent::label(r);
-    r.write(|board, r| {
-        let who = r.begin(board)?;
-        let lock = doc(board, "locks", &resource).cloned().unwrap_or(Value::Null);
+    as_caller(r, |board, r, resource, agent, who| {
+        let lock = doc(board, "locks", resource).cloned().unwrap_or(Value::Null);
         if holder_of(&lock).is_none() {
             return Err(bad(format!("{resource}: nobody holds it.")));
         }
         may(&who, "release", &lock)?;
-        same_agent(&resource, &lock, agent.as_deref())?;
-        hand_on(board, &resource, None, &who.actor);
-        let now = find_lock(board, &resource)?;
+        same_agent(resource, &lock, agent.as_deref())?;
+        hand_on(board, resource, None, &who.actor);
+        let now = find_lock(board, resource)?;
         let Some(next) = holder_of(&now) else {
             r.say(&[&format!("{resource}: released, nobody waiting.")]);
             return Ok(());
@@ -136,16 +145,14 @@ pub(super) fn release(r: &mut Run<'_>) -> Outcome {
 
 /// `coord lock drop`: leaves the queue.
 pub(super) fn drop_queue(r: &mut Run<'_>) -> Outcome {
-    let resource = resource_arg(r.arg(0))?;
-    let agent = agent::label(r);
-    r.write(|board, r| {
-        let me = r.begin(board)?.thread;
-        find_lock(board, &resource)?;
+    as_caller(r, |board, r, resource, agent, who| {
+        let me = who.thread;
+        find_lock(board, resource)?;
         let mine = entry_of(&me, agent.as_deref());
-        if let Some(lock) = doc_mut(board, "locks", &resource) {
+        if let Some(lock) = doc_mut(board, "locks", resource) {
             array_mut(lock, "queue").retain(|id| id.as_str() != Some(mine.as_str()));
         }
-        touched(board, &resource);
+        touched(board, resource);
         r.say(&[&format!("{resource}: you left the queue.")]);
         Ok(())
     })

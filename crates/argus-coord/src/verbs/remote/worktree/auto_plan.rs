@@ -2,9 +2,7 @@
 
 use serde_json::Value;
 
-use crate::cli::exit::Outcome;
-use crate::cli::out;
-use crate::cli::route::Call;
+use crate::cli::{exit::Outcome, out, route::Call};
 use crate::verbs::remote::support::link::{connect, list_of};
 use crate::verbs::remote::support::text::{cell, say_all, truthy};
 

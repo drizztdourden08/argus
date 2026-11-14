@@ -4,8 +4,8 @@
 use crate::board::BoardFacts;
 use crate::error::Result;
 use crate::fact::Fact;
-use crate::paths::{base_name, same_path};
-use crate::prune::Record;
+use crate::paths::same_path;
+use crate::prune::{Record, folder_names};
 use crate::service::Service;
 
 /// The reason of the lock that keeps a stray record out of the prune for a moment.
@@ -70,14 +70,7 @@ impl Service {
     }
 
     fn pruned_note(&self, project: &str, repo: &str, facts: &[&Fact], count: usize) {
-        let names: String = facts
-            .iter()
-            .map(|f| base_name(&f.path))
-            .collect::<Vec<_>>()
-            .join(", ")
-            .chars()
-            .take(200)
-            .collect();
+        let names = folder_names(facts.iter().copied());
         let text = format!("pruned {count} gone worktree record(s) of {repo} ({names})");
         self.note(project, "info", &text, None);
     }

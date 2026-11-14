@@ -1,12 +1,13 @@
 //! The board lock file, `<project>/board.lock`, and the two ways to wait for it: blocking (the
 //! CLI) and polling with timers (the server). A lock older than 15 s belongs to a crashed call.
 
-use std::fs::{self, OpenOptions};
+use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
 
 use argus_core::clock::now_iso;
+use argus_core::lockfile;
 
 use super::io::{read_board, save_board};
 use super::{board_dir, empty_board};
@@ -33,20 +34,9 @@ impl Drop for BoardLock {
 }
 
 fn take(path: &Path) -> Result<Option<BoardLock>, BoardError> {
-    match OpenOptions::new().write(true).create_new(true).open(path) {
-        Ok(_) => Ok(Some(BoardLock {
-            path: path.to_path_buf(),
-        })),
-        Err(e)
-            if matches!(
-                e.kind(),
-                io::ErrorKind::AlreadyExists | io::ErrorKind::PermissionDenied
-            ) =>
-        {
-            Ok(None)
-        }
-        Err(e) => Err(e.into()),
-    }
+    Ok(lockfile::create_new(path)?.then(|| BoardLock {
+        path: path.to_path_buf(),
+    }))
 }
 
 fn age_of(path: &Path) -> io::Result<Duration> {

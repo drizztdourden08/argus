@@ -53,6 +53,16 @@ impl Fixture {
     }
 
     /// The backup folder a run made next to the home.
+    /// The board table of the home: every board id with its aliases.
+    pub fn table(&self) -> Vec<(String, Vec<String>)> {
+        let table = argus_core::boards::load(&self.home).unwrap();
+        table
+            .boards
+            .iter()
+            .map(|(id, e)| (id.clone(), e.aliases.clone()))
+            .collect()
+    }
+
     pub fn backup_dir(&self) -> PathBuf {
         fs::read_dir(self.dir.path())
             .unwrap()

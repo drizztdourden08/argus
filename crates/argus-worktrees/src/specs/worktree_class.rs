@@ -87,12 +87,17 @@ fn a_merged_worktree_with_untracked_files_is_merged_untracked_and_still_asks_the
     assert!(!through_debounce(&h, &fx.path("agent-a1")));
 }
 
+/// The worktree `agent-a1` is merged, will be removed, and goes through the debounce.
+fn assert_merged_and_removable(fx: &Fixture, h: &Harness) {
+    assert_eq!(class_of(h, "agent-a1"), (Class::Merged, None));
+    assert_eq!(kind(h, "agent-a1"), Some(HygieneState::Removing));
+    assert!(through_debounce(h, &fx.path("agent-a1")));
+}
+
 #[test]
 fn merged_and_clean_is_removable_after_the_debounce() {
     let (fx, h) = world(|_| {});
-    assert_eq!(class_of(&h, "agent-a1"), (Class::Merged, None));
-    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
-    assert!(through_debounce(&h, &fx.path("agent-a1")));
+    assert_merged_and_removable(&fx, &h);
 }
 
 #[test]
@@ -100,9 +105,7 @@ fn a_detached_head_merged_into_main_is_merged_and_removable() {
     let (fx, h) = detached_world(|_| {});
     let doc = &h.docs()["agent-a1"];
     assert_eq!((doc.detached, doc.merged), (true, true));
-    assert_eq!(class_of(&h, "agent-a1"), (Class::Merged, None));
-    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
-    assert!(through_debounce(&h, &fx.path("agent-a1")));
+    assert_merged_and_removable(&fx, &h);
 }
 
 #[test]

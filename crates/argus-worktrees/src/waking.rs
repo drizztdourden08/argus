@@ -50,6 +50,19 @@ impl Service {
         }
     }
 
+    /// Wakes one thread and logs the wake when it was sent. True when the wake went out.
+    pub(crate) fn wake_one(&self, project: &str, event: WakeEvent) -> bool {
+        let woke = self
+            .deps
+            .notifier
+            .wake(std::slice::from_ref(&event))
+            .is_ok();
+        if woke {
+            self.log_wakes(project, &[event]);
+        }
+        woke
+    }
+
     fn load_sent(&self, project: &str) -> SentMap {
         let text = self
             .deps

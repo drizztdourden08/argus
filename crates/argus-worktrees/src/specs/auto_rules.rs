@@ -79,11 +79,11 @@ fn an_extra_repo_is_covered_by_the_owner_board() {
 fn sibling_world(mode: AutoMode) -> (Fixture, Harness) {
     let fx = Fixture::fake_bare();
     fx.add("sib");
-    let h = auto_harness(&fx, mode);
+    let h = auto_harness(&fx, mode, Vec::new());
     (fx, h)
 }
 
-fn auto_harness(fx: &Fixture, mode: AutoMode) -> Harness {
+fn auto_harness(fx: &Fixture, mode: AutoMode, keep: Vec<String>) -> Harness {
     let rule = Rule {
         auto: true,
         ..Rule::folder("auto-alpha", &fx.repo, "lead").repo()
@@ -91,6 +91,7 @@ fn auto_harness(fx: &Fixture, mode: AutoMode) -> Harness {
     let h = Harness::new(&fx.root, vec![rule], |o| {
         hygiene_on(o);
         o.auto_rules = mode;
+        o.keep = keep;
     });
     h.scan();
     h.svc.start();
@@ -115,17 +116,7 @@ fn a_keep_pattern_holds_a_sibling_even_in_on_mode_and_the_plan_says_why() {
     fx.add("sib");
     fx.add("other");
     let pattern = fx.path("sib*");
-    let rule = Rule {
-        auto: true,
-        ..Rule::folder("auto-alpha", &fx.repo, "lead").repo()
-    };
-    let h = Harness::new(&fx.root, vec![rule], |o| {
-        hygiene_on(o);
-        o.auto_rules = AutoMode::On;
-        o.keep = vec![pattern.clone()];
-    });
-    h.scan();
-    h.svc.start();
+    let h = auto_harness(&fx, AutoMode::On, vec![pattern.clone()]);
     assert!(through_debounce(&h, &fx.path("other")));
     assert!(exists_itself(&fx.path("sib")), "the pattern holds it");
     let plan = h.svc.auto_plan();
@@ -156,7 +147,7 @@ fn in_report_mode_a_gone_record_is_not_pruned_and_a_dead_pid_lock_is_not_unlocke
         &fx.path("held"),
     ]);
     std::fs::remove_dir_all(fx.path("gone")).unwrap();
-    let h = auto_harness(&fx, AutoMode::Report);
+    let h = auto_harness(&fx, AutoMode::Report, Vec::new());
     step(&h, 1000);
     assert!(records(&fx).contains(&"gone".to_string()));
     assert_eq!(h.notes.removals("pruned").len(), 0);

@@ -1,12 +1,12 @@
 //! `boards.lock`: one writer of the table at a time. A lock older than 15 s belongs to a crash.
 
-use std::fs::{self, OpenOptions};
-use std::io;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread::sleep;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 
 use super::error::BoardsError;
+use crate::lockfile;
 
 const WAIT: Duration = Duration::from_secs(5);
 const STALE: Duration = Duration::from_secs(15);
@@ -23,26 +23,7 @@ impl Drop for TableLock {
 }
 
 fn take(path: &Path) -> Result<Option<TableLock>, BoardsError> {
-    match OpenOptions::new().write(true).create_new(true).open(path) {
-        Ok(_) => Ok(Some(TableLock(path.to_path_buf()))),
-        Err(e)
-            if matches!(
-                e.kind(),
-                io::ErrorKind::AlreadyExists | io::ErrorKind::PermissionDenied
-            ) =>
-        {
-            Ok(None)
-        }
-        Err(e) => Err(e.into()),
-    }
-}
-
-fn is_stale(path: &Path) -> bool {
-    fs::metadata(path)
-        .and_then(|m| m.modified())
-        .map_or(true, |t| {
-            SystemTime::now().duration_since(t).unwrap_or_default() > STALE
-        })
+    Ok(lockfile::create_new(path)?.then(|| TableLock(path.to_path_buf())))
 }
 
 /// Waits up to 5 s for the lock of `home`.
@@ -57,7 +38,7 @@ pub fn acquire(home: &Path) -> Result<TableLock, BoardsError> {
         if let Some(lock) = take(&path)? {
             return Ok(lock);
         }
-        if is_stale(&path) {
+        if lockfile::is_stale(&path, STALE) {
             fs::remove_file(&path).ok();
         } else if start.elapsed() > WAIT {
             return Err(BoardsError::Locked);

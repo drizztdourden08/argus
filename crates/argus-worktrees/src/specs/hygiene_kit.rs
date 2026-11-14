@@ -175,6 +175,12 @@ pub fn input_by(h: &Harness, path: &str, by: &str) -> RemoveInput {
     RemoveInput::new("alpha", &h.id_of(path), Caller::Thread(by.to_string()))
 }
 
+/// The lead approves the removal of the worktree at `path`, and the request runs to its end.
+pub fn approve_as_lead(h: &Harness, path: &str) {
+    h.svc.approve(&input_by(h, path, "lead")).unwrap();
+    h.svc.requests_idle();
+}
+
 pub fn backup_files(h: &Harness) -> Vec<String> {
     let mut names: Vec<String> = std::fs::read_dir(&h.backups)
         .map(|dir| {
