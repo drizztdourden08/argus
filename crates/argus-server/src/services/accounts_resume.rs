@@ -70,7 +70,7 @@ fn verdict(pending: &Pending, ran: bool, reported: bool, now: i64) -> Verdict {
     }
 }
 
-fn skill_root() -> PathBuf {
+pub(crate) fn skill_root() -> PathBuf {
     let home = std::env::var("USERPROFILE")
         .or_else(|_| std::env::var("HOME"))
         .unwrap_or_default();
@@ -78,7 +78,7 @@ fn skill_root() -> PathBuf {
 }
 
 /// The Desktop chat id (`local_<uuid>`) of a thread: the tail of its link, else its session id.
-fn chat_id(link: Option<&str>, session: Option<&str>) -> Option<String> {
+pub(crate) fn chat_id(link: Option<&str>, session: Option<&str>) -> Option<String> {
     link.and_then(|l| l.rsplit('/').next())
         .filter(|t| t.starts_with("local_"))
         .or(session)
@@ -106,7 +106,7 @@ fn resume_leads(cycle: &Cycle) -> Vec<ResumeLead> {
 }
 
 /// The Desktop chat of the Overlord: the live coordinator of the portfolio board.
-fn overlord_chat(svc: &Services) -> Option<String> {
+pub(crate) fn overlord_chat(svc: &Services) -> Option<String> {
     let boards = svc.boards();
     let thread = boards.overlord_thread()?;
     let board = boards.overlord_board()?;

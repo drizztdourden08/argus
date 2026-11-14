@@ -77,3 +77,13 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 `POST /api/overlord/control` with `{action: "start" | "stop" | "restart"}` is for the owner's page only, with the strict origin check, and answers the status body. An unknown action is 400. It is 409 for a start when the mode is not `live` ("the Overlord mode is off; set overlord.mode to live in config.json"), for a start when a child already runs and for a stop when none runs. A restart stops, waits up to 15 seconds for the old supervisor task to end (409 if it does not), then starts. Actions run one at a time, so two children never exist at once.
 
 `PUT /api/overlord/budget` with `{budgetUsd}` is for the owner's page only, with the strict origin check. The number must be finite, at least 0 and at most 10000 (400 otherwise). It saves `overlord.budgetUsd` in `config.json`, keeps every other `overlord` field, and answers with the body of `GET /api/overlord/spend`.
+
+## Boot revival
+
+The desktop Overlord messaged each lead with no wake listener after a machine boot. With the hosted Overlord (mode `live`) Argus does it (`crates/argus-server/src/services/overlord/boot_resume.rs`, rule in `boot_rule.rs`).
+
+- **When.** Two minutes after Argus starts, so the leads that are alive can connect their listeners. Mode `off` or `shadow` does nothing. A machine with no boot time reading (not Windows) does nothing.
+- **Who.** Each project board's coordinator thread (not ended) that has a chat to message and no listener for its thread or for `*`. The Overlord's own board is skipped.
+- **What.** One call to `argus_accounts::resume::write_task`, the writer of the account switch (I-135): a one-off task `argus-resume-boot-<boot ms>` in the scope of the account logged in now, firing a minute later, with the same prompt (`build_prompt`). Like the switch, it only writes while Claude Desktop is closed. When the write is refused the lead is not recorded, and a later start of Argus in the same boot tries again.
+- **Once per boot.** Each resumed lead is recorded as `<board>/<thread>` in the key `overlord.boot-resume` of the database, with the boot time. A second start of Argus in the same boot (boot times within a minute) adds nothing for a recorded lead. A new boot starts a new list.
+- **Left alone.** The finished task stays in the scheduled-tasks file until Claude cleans it; nothing here removes it.

@@ -168,6 +168,7 @@ impl StartFault {
 
 /// The boot path: starts when autostart and the settings allow, and stays quiet when they do not.
 pub(crate) fn start(svc: &Arc<Services>) {
+    super::boot_resume::spawn(svc);
     if config::autostart(svc) {
         let _ = try_start(svc);
     }
