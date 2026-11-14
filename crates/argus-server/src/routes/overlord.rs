@@ -103,4 +103,5 @@ pub fn register(r: &mut Router) {
     super::overlord_transcript::register(r);
     super::overlord_spend::register(r);
     super::overlord_approvals::register(r);
+    super::overlord_message::register(r);
 }

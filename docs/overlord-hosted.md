@@ -57,3 +57,7 @@ The child starts with `--permission-prompt-tool mcp__argus-overlord__permission_
 - **The tab** reads `GET /api/overlord/approvals` (pending and recent, newest first) and answers with `POST /api/overlord/approvals/<id>` and `{decision: "allow" | "deny", message?}`. Both are for the owner's page only. A second answer is 409.
 - **When the child stops** the bearer dies, the file is deleted and every pending approval expires. A start also marks rows left pending by an earlier run as expired.
 - The pure parts (queue, timeout, reply shapes, bearer check, mcp-config text) are in `crates/argus-overlord/src/approvals/`. The gate that holds the calls is `crates/argus-server/src/adapters/overlord/gate.rs`.
+
+## Owner chat
+
+`POST /api/overlord/message` with `{text}` is for the owner's page only. No MCP tool or coord verb can post it, so no thread can speak as the owner. The text must not be empty and must not pass 20,000 characters (400). Argus writes it to the child as a user message that starts with `Owner (Argus Overlord tab): `, so the Overlord can tell the owner from a wake. It goes through the same link as the wakes: held while a turn runs and sent after the `result`. With no child up the answer is 409, "the hosted Overlord is not running". The pure parts are in `crates/argus-overlord/src/session/owner.rs`; the route is `crates/argus-server/src/routes/overlord_message.rs`.
