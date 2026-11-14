@@ -39,6 +39,7 @@ mod intents;
 mod job_run;
 mod jobs;
 mod leftover_remove;
+mod stale_lock;
 mod linking;
 mod made;
 mod measure;
