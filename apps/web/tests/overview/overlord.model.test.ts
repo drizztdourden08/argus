@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { controlsFor, modeSteps, pendingApprovals, spendLook } from '../../src/screens/overview/overlord/model';
-import { isRunning, toRows } from '../../src/shell/OverlordChat/model';
+import { isRunning } from '../../src/shell/OverlordChat/behavior/is-running';
+import { toRows } from '../../src/shell/OverlordChat/behavior/to-rows';
 import { STATE_STATUSES } from '../../src/screens/overview/overlord/overlord.constants';
 
 const assistant = (index: number, content: unknown[]) => ({ index, event: { type: 'assistant', message: { content } } });

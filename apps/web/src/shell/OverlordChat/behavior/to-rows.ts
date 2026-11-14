@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { TranscriptLine } from '../../../data/overlord';
-import type { TranscriptRow } from './model.type';
+import type { TranscriptRow } from '../OverlordChat.type';
 import { piecesOf } from './pieces-of';
 
 const toRows = (lines: readonly TranscriptLine[]): TranscriptRow[] => {

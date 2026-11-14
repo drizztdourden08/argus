@@ -2,7 +2,8 @@
 import { useMemo } from 'react';
 import { STATUS_POLL_MS, readStatus, sendMessage, useAction, useOverlordTranscript } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
-import { isRunning, toRows } from '../model';
+import { isRunning } from './is-running';
+import { toRows } from './to-rows';
 
 const noop = (): void => {};
 

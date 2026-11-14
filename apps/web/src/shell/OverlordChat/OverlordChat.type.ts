@@ -1,6 +1,29 @@
 /* @layer renderer-app @kind types */
 import type { ActionState } from '../../data/overlord';
-import type { TalkRow, TranscriptRow } from './model';
+
+type TalkKind = 'assistant' | 'owner' | 'wake';
+
+interface TalkRow {
+  kind: TalkKind;
+  key: string;
+  text: string;
+}
+
+interface ToolsRow {
+  kind: 'tools';
+  key: string;
+  names: string[];
+}
+
+type TranscriptRow = TalkRow | ToolsRow;
+
+interface ContentBlock {
+  type?: string;
+  text?: string;
+  name?: string;
+}
+
+type Piece = Omit<TalkRow, 'key'> | { kind: 'tool'; name: string };
 
 interface TranscriptViewProps {
   rows: TranscriptRow[];
@@ -27,4 +50,14 @@ interface ChatOpen {
   close: () => void;
 }
 
-export type { ChatBoxProps, ChatOpen, TalkRowViewProps, ToolsRowProps, TranscriptViewProps };
+export type {
+  ChatBoxProps,
+  ChatOpen,
+  ContentBlock,
+  Piece,
+  TalkRow,
+  TalkRowViewProps,
+  ToolsRowProps,
+  TranscriptRow,
+  TranscriptViewProps,
+};
