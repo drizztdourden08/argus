@@ -198,7 +198,14 @@ mod tests {
             &["diff", "HEAD", "--binary", "--output=f"],
             &["check-ignore", "-q", "node_modules"],
             &["ls-files", "--cached", "-z", "--", "node_modules"],
-            &["ls-files", "--cached", "-z", "--", ":(literal)src/a", ":(literal)b"],
+            &[
+                "ls-files",
+                "--cached",
+                "-z",
+                "--",
+                ":(literal)src/a",
+                ":(literal)b",
+            ],
             &["ls-files", "--others", "--exclude-standard", "-z"],
         ];
         for args in ok {

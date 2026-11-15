@@ -26,9 +26,12 @@ fn pnpm_file(s: &Shape) -> String {
 
 /// Did the removal send git this command (its first words)?
 fn asked(s: &Shape, command: &[&str]) -> bool {
-    s.h.exec.calls.lock().unwrap().iter().any(|a| {
-        a.len() >= command.len() && a.iter().zip(command).all(|(x, y)| x == y)
-    })
+    s.h.exec
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .any(|a| a.len() >= command.len() && a.iter().zip(command).all(|(x, y)| x == y))
 }
 
 /// Nothing was touched: `node_modules` and every link are still there, and git was never asked to check or remove.
@@ -36,10 +39,19 @@ fn assert_untouched(s: &Shape) {
     let merged = s.fx.path("old-merged");
     assert!(exists_itself(&pnpm_file(s)), "node_modules is still there");
     for link in ["node_modules/pkg", "node_modules/ext", "lnk-top"] {
-        assert!(exists_itself(&format!("{merged}/{link}")), "{link} was not dropped");
+        assert!(
+            exists_itself(&format!("{merged}/{link}")),
+            "{link} was not dropped"
+        );
     }
-    assert!(!asked(s, &["check-ignore"]), "node_modules was not looked at");
-    assert!(!asked(s, &["worktree", "remove"]), "git was never asked to remove it");
+    assert!(
+        !asked(s, &["check-ignore"]),
+        "node_modules was not looked at"
+    );
+    assert!(
+        !asked(s, &["worktree", "remove"]),
+        "git was never asked to remove it"
+    );
     assert!(!asked(s, &["worktree", "unlock"]));
 }
 
@@ -48,7 +60,7 @@ fn untracked(fx: &Fixture) {
 }
 
 /// `old-merged` commits `pkg/a.txt`, then its `pkg` folder is swapped for a junction to a copy outside: git reads the
-/// file through the junction, so the worktree looks clean until the link goes (R-10 on the RotP Web board).
+/// file through the junction, so the worktree looks clean until the link goes (R-10 on the `RotP` Web board).
 fn tracked_behind_a_link(outside: &str) -> impl FnOnce(&Fixture) + '_ {
     move |fx| {
         let merged = fx.path("old-merged");
@@ -83,7 +95,10 @@ fn only_untracked_files_and_no_discard_is_refused_before_node_modules_or_a_link_
     assert_eq!(err.code, ErrorCode::Forbidden);
     assert!(err.message.contains(REFUSED), "{}", err.message);
     assert_untouched(&s);
-    assert!(exists_itself(&format!("{}/notes.txt", s.fx.path("old-merged"))));
+    assert!(exists_itself(&format!(
+        "{}/notes.txt",
+        s.fx.path("old-merged")
+    )));
 }
 
 #[test]
