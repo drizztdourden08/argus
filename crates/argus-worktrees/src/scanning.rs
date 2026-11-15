@@ -27,6 +27,21 @@ fn elapsed_ms(since: Instant) -> i64 {
     i64::try_from(since.elapsed().as_millis()).unwrap_or(i64::MAX)
 }
 
+/// The scan of a project with no rules: nothing found.
+fn empty_scan(at_ms: i64, full_ms: i64, shape: String) -> ScanState {
+    ScanState {
+        at_ms,
+        took_ms: 0,
+        rules: Vec::new(),
+        facts: Vec::new(),
+        listed: HashSet::new(),
+        error: None,
+        full_ms,
+        shape,
+        prints: HashMap::new(),
+    }
+}
+
 fn rules_signature(rules: &[Rule]) -> String {
     serde_json::to_string(rules).unwrap_or_default()
 }
@@ -116,30 +131,14 @@ impl Service {
         let kept = if keep { self.kept_of(project) } else { None };
         let full_ms = kept.as_ref().map_or(started, |k| k.full_ms);
         let scan = if board.rules.is_empty() {
-            ScanState {
-                at_ms: started,
-                took_ms: 0,
-                rules: Vec::new(),
-                facts: Vec::new(),
-                listed: HashSet::new(),
-                error: None,
-                full_ms,
-                shape,
-                prints: HashMap::new(),
-            }
+            empty_scan(started, full_ms, shape)
         } else {
             self.st().budget_spent_ms = 0;
             let measure = |path: &str| self.measure_leftover(path);
             let repos = self.known_repos();
             let env = self.scan_env(&measure, &repos);
             let mut found = scan_rules_with(&board.rules, &env, kept.as_ref());
-            found.facts = own_facts(
-                project,
-                found.facts,
-                &self.all_boards(),
-                &repos,
-                self.ci(),
-            );
+            found.facts = own_facts(project, found.facts, &self.all_boards(), &repos, self.ci());
             self.adopt_deleting(project, &found.deleting, &board.rules);
             ScanState {
                 at_ms: self.now(),
