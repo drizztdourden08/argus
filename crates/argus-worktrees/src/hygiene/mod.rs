@@ -11,7 +11,8 @@
 //! - a launcher, a bundle or a run (check runs among them) is in it
 //! - a live process uses it: its command line, executable path or working directory names the folder (any slash,
 //!   any case; an unreadable working directory leaves the command line)
-//! - its folder, `.git` file or top-level files changed within `busy_grace_ms` (10 minutes): busy, not unattached
+//! - its folder, `.git` file, top-level files, git index or last commit changed within `busy_grace_ms` (10 minutes):
+//!   busy, not unattached
 //!
 //! A list Argus cannot read (the runs, the processes) counts as attached. An open pull request does not: its branch
 //! outlives the folder.

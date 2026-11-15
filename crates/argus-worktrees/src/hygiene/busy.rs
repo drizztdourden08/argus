@@ -22,16 +22,26 @@ impl Service {
             .max()
     }
 
-    /// Why the worktree counts as busy: its folder, `.git` file or top-level files changed within the grace.
-    pub(super) fn busy_why(&self, fact: &Fact) -> Option<String> {
+    /// Why the worktree counts as busy: its folder, `.git` file or top-level files changed, its git index was
+    /// written (`git add`, a commit) or its last commit was made within the grace. A commit touches the index and
+    /// files deep in the tree, which the top-level check does not see.
+    pub(crate) fn busy_why(&self, fact: &Fact) -> Option<String> {
         let grace = self.opts.busy_grace_ms;
         if grace <= 0 {
             return None;
         }
-        let age = self.now() - self.newest_change_ms(&fact.path)?;
+        let (what, at) = [
+            ("its files", self.newest_change_ms(&fact.path)),
+            ("its git index", fact.index_ms),
+            ("its last commit", fact.commit_ms),
+        ]
+        .into_iter()
+        .filter_map(|(what, at)| at.map(|at| (what, at)))
+        .max_by_key(|(_, at)| *at)?;
+        let age = self.now() - at;
         (age < grace).then(|| {
             format!(
-                "its files changed {} s ago: it counts as busy for {} minutes",
+                "{what} changed {} s ago: it counts as busy for {} minutes",
                 age.max(0) / 1000,
                 grace / 60_000
             )

@@ -2,6 +2,8 @@
 //! Worktree hygiene, I-162: a command that creates a worktree and works in it for over a minute (an install and an
 //! upgrade, 75 s) is never taken for an unattached one. A process counts when its working directory or its command
 //! line names the folder, and a worktree whose files changed in the last 10 minutes is busy.
+//! I-178: a commit or `git add` writes the git index and files deep in the tree, so a recent index or last commit
+//! keeps a worktree busy even when its top-level files are older than the grace.
 
 // test-tag: critical
 
@@ -60,6 +62,21 @@ fn the_debounce_starts_after_the_grace() {
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
     assert!(exists_itself(&path));
     assert!(through_debounce(&h, &path));
+}
+
+#[test]
+fn a_recent_git_index_or_commit_keeps_a_worktree_busy() {
+    let (_fx, h) = world_with_grace();
+    step(&h, GRACE + 1000);
+    let mut fact = h.fact("agent-a1");
+    (fact.index_ms, fact.commit_ms) = (None, None);
+    assert_eq!(h.svc.busy_why(&fact), None, "files past the grace");
+    fact.index_ms = Some(h.clock_now() - 7000);
+    let why = h.svc.busy_why(&fact).expect("a recent index is busy");
+    assert!(why.contains("busy") && why.contains("git index"), "{why}");
+    (fact.index_ms, fact.commit_ms) = (None, Some(h.clock_now() - 7000));
+    let why = h.svc.busy_why(&fact).expect("a recent commit is busy");
+    assert!(why.contains("busy") && why.contains("last commit"), "{why}");
 }
 
 #[test]
