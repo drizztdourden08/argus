@@ -4,7 +4,9 @@ use crate::attribution::{Entry, listed_here, own_facts};
 use crate::board::{AgentFact, BoardFacts};
 use crate::fact::{Fact, blank_fact};
 use crate::measure::Leftover;
+use crate::paths::join_path;
 use crate::rule::Rule;
+use crate::testkit::{Fixture, Harness, board_with, put};
 
 const REPO: &str = "X:/relic";
 
@@ -128,4 +130,31 @@ fn a_leftover_goes_to_the_board_that_works_in_it() {
     let fact = leftover("web-shots");
     assert!(!listed_here("rotp", &fact, &boards, &repos, true));
     assert!(listed_here("rotp-web", &fact, &boards, &repos, true));
+}
+
+fn stale_listed_under(h: &Harness, project: &str) -> bool {
+    h.svc.list(project).iter().any(|d| d.name == "stale")
+}
+
+#[test]
+fn a_leftover_the_live_check_meets_again_stays_with_one_project() {
+    let fx = Fixture::fake();
+    let dir = join_path(&fx.repo, ".claude/worktrees");
+    put(&dir, "stale/readme.txt", "old\n");
+    let auto = Rule::folder("auto", &fx.repo, "lead").repo();
+    let hand = Rule::folder("r1", &dir, "lead");
+    let h = Harness::new(&fx.root, vec![auto, hand.clone()], |_| {});
+    let others = &h.store.others;
+    others
+        .lock()
+        .unwrap()
+        .insert("beta".to_string(), board_with(vec![hand]));
+    h.store.projects.lock().unwrap().push("beta".to_string());
+    for project in ["alpha", "beta"] {
+        h.svc.scan_now(project);
+        h.svc.live_step(project);
+    }
+    h.svc.live_step("beta");
+    assert!(stale_listed_under(&h, "alpha"));
+    assert!(!stale_listed_under(&h, "beta"));
 }

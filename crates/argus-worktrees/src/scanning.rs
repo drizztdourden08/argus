@@ -1,6 +1,6 @@
 //! Scans and the live check: how the service fills and keeps its picture of the disk.
 
-use crate::attribution::{Entry, own_facts};
+use crate::attribution::{Entry, listed_here, own_facts};
 use crate::clock::{Clock, SystemClock};
 use crate::doc::Derived;
 use crate::fact::Fact;
@@ -338,6 +338,7 @@ impl Service {
         self.st().budget_spent_ms = 0;
         let measure = |path: &str| self.measure_leftover(path);
         let env = self.scan_env(&measure, &[]);
+        let (boards, repos) = (self.all_boards(), self.known_repos());
         let mut ctx = ScanCtx {
             git: env.git,
             fs: env.fs,
@@ -348,6 +349,9 @@ impl Service {
             let print = fingerprint(env.fs, &clean_path(dir));
             let mut fact = inspect_dir(dir, rule, &mut ctx);
             mark_leftover(&mut fact, &listed, &env);
+            if !listed_here(project, &fact, &boards, &repos, self.ci()) {
+                continue;
+            }
             if let Some(scan) = self.st().scans.get_mut(project) {
                 scan.prints.insert(fact.path.clone(), print);
                 if !scan.facts.iter().any(|f| f.id == fact.id) {
