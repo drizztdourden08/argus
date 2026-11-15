@@ -75,4 +75,5 @@ pub use exception::{KeepInput, Kept};
 pub use memory::{HygieneDoc, HygieneMeta, HygieneState, RemovedDoc, hygiene_key};
 pub use step::Stepped;
 
+pub(crate) use judge::{links_to, owns};
 pub(crate) use memory::Memories;

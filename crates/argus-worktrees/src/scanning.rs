@@ -1,5 +1,6 @@
 //! Scans and the live check: how the service fills and keeps its picture of the disk.
 
+use crate::attribution::{Entry, own_facts};
 use crate::clock::{Clock, SystemClock};
 use crate::doc::Derived;
 use crate::fact::Fact;
@@ -71,6 +72,13 @@ impl Service {
         value
     }
 
+    /// Every project's board, in registration order.
+    fn all_boards(&self) -> Vec<Entry> {
+        let store = &self.deps.store;
+        let named = |p: String| store.board(&p).map(|b| (p, b));
+        store.projects().into_iter().filter_map(named).collect()
+    }
+
     fn scan_env<'a>(
         &'a self,
         measure: &'a dyn Fn(&str) -> Leftover,
@@ -124,7 +132,8 @@ impl Service {
             let measure = |path: &str| self.measure_leftover(path);
             let repos = self.known_repos();
             let env = self.scan_env(&measure, &repos);
-            let found = scan_rules_with(&board.rules, &env, kept.as_ref());
+            let mut found = scan_rules_with(&board.rules, &env, kept.as_ref());
+            found.facts = own_facts(project, found.facts, &self.all_boards(), self.ci());
             self.adopt_deleting(project, &found.deleting, &board.rules);
             ScanState {
                 at_ms: self.now(),

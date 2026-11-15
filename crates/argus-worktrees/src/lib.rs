@@ -13,6 +13,7 @@
 )]
 
 mod approval;
+mod attribution;
 mod auto;
 mod backup;
 mod batch;

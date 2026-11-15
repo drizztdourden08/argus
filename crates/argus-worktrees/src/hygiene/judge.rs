@@ -62,7 +62,7 @@ fn absolute(path: &str) -> bool {
 }
 
 /// Does this agent record own the worktree: its `worktree` names it, or it is the agent's own folder?
-fn owns(agent: &AgentFact, fact: &Fact, ci: bool) -> bool {
+pub(crate) fn owns(agent: &AgentFact, fact: &Fact, ci: bool) -> bool {
     let name = base_name(&fact.path);
     let same = |a: &str, b: &str| {
         if ci {
@@ -93,7 +93,7 @@ fn owns(agent: &AgentFact, fact: &Fact, ci: bool) -> bool {
 }
 
 /// Does this open thing work in the worktree: its folder, its branch, or its text names it?
-fn links_to(link: &Link, fact: &Fact, ci: bool) -> bool {
+pub(crate) fn links_to(link: &Link, fact: &Fact, ci: bool) -> bool {
     let folder = link
         .path
         .as_deref()
