@@ -25,23 +25,10 @@ interface ContentBlock {
 
 type Piece = Omit<TalkRow, 'key'> | { kind: 'tool'; name: string };
 
-interface TranscriptViewProps {
-  rows: TranscriptRow[];
-  problem: string | null;
-}
-
 interface ChatBoxProps {
   running: boolean;
   action: ActionState;
   onSend: (text: string) => Promise<boolean>;
-}
-
-interface TalkRowViewProps {
-  row: TalkRow;
-}
-
-interface ToolsRowProps {
-  names: string[];
 }
 
 interface ChatOpen {
@@ -55,8 +42,5 @@ export type {
   ChatOpen,
   ContentBlock,
   Piece,
-  TalkRowViewProps,
-  ToolsRowProps,
   TranscriptRow,
-  TranscriptViewProps,
 };

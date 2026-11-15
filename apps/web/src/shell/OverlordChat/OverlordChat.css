@@ -1,17 +1,4 @@
 .overlord-transcript {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: var(--space-sm);
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  block-size: 60vh;
+  min-block-size: var(--size-256);
 }
-
-.overlord-talk {
-  padding: var(--space-sm);
-  border: var(--border-width-thin) solid var(--c-border);
-  border-radius: var(--radius-md);
-}
-
-.overlord-talk--owner { border-color: var(--c-info); }
-.overlord-talk--wake { border-style: dashed; }
