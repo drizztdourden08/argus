@@ -133,7 +133,13 @@ impl Service {
             let repos = self.known_repos();
             let env = self.scan_env(&measure, &repos);
             let mut found = scan_rules_with(&board.rules, &env, kept.as_ref());
-            found.facts = own_facts(project, found.facts, &self.all_boards(), self.ci());
+            found.facts = own_facts(
+                project,
+                found.facts,
+                &self.all_boards(),
+                &repos,
+                self.ci(),
+            );
             self.adopt_deleting(project, &found.deleting, &board.rules);
             ScanState {
                 at_ms: self.now(),
