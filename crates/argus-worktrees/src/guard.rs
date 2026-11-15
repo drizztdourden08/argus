@@ -59,6 +59,13 @@ fn worktree_write_ok(rest: &[&str]) -> bool {
     }
 }
 
+/// `ls-files --cached -z -- <path>...`: the tracked files at or under the named paths.
+fn cached_listing(rest: &[&str]) -> bool {
+    rest.len() > 3
+        && rest[..3] == ["--cached", "-z", "--"]
+        && rest[3..].iter().all(|p| !p.is_empty())
+}
+
 fn write_command_ok(command: &str, rest: &[&str]) -> bool {
     match command {
         "worktree" => worktree_write_ok(rest),
@@ -78,11 +85,11 @@ fn write_command_ok(command: &str, rest: &[&str]) -> bool {
                 && rest.contains(&"--binary")
                 && rest.iter().any(|a| a.starts_with("--output="))
         }
-        // The two questions asked before Argus clears an ignored `node_modules`.
+        // The two questions asked before Argus clears an ignored `node_modules`, and which links hold tracked paths.
         "check-ignore" => rest == ["-q", "node_modules"],
         "ls-files" => {
             (rest.contains(&"--others") && rest.contains(&"--exclude-standard"))
-                || rest == ["--cached", "-z", "--", "node_modules"]
+                || cached_listing(rest)
         }
         "rev-list" => true,
         _ => false,
@@ -178,7 +185,7 @@ mod tests {
     #[test]
     fn the_write_door_allows_only_the_removals_own_commands() {
         let sha = "0123456789abcdef0123456789abcdef01234567";
-        let ok: [&[&str]; 13] = [
+        let ok: [&[&str]; 14] = [
             &["worktree", "remove", "X:/w"],
             &["worktree", "remove", "--force", "X:/w"],
             &["worktree", "prune"],
@@ -191,12 +198,13 @@ mod tests {
             &["diff", "HEAD", "--binary", "--output=f"],
             &["check-ignore", "-q", "node_modules"],
             &["ls-files", "--cached", "-z", "--", "node_modules"],
+            &["ls-files", "--cached", "-z", "--", ":(literal)src/a", ":(literal)b"],
             &["ls-files", "--others", "--exclude-standard", "-z"],
         ];
         for args in ok {
             assert!(assert_write_ok(args).is_ok(), "{args:?}");
         }
-        let bad: [&[&str]; 23] = [
+        let bad: [&[&str]; 24] = [
             &["worktree", "unlock"],
             &["worktree", "unlock", "--force", "X:/w"],
             &["worktree", "lock", "X:/w"],
@@ -217,7 +225,8 @@ mod tests {
             &["worktree", "prune", "--verbose", "--dry-run"],
             &["check-ignore", "-q", "src"],
             &["check-ignore", "node_modules"],
-            &["ls-files", "--cached", "-z", "--", "src"],
+            &["ls-files", "--cached", "-z", "--"],
+            &["ls-files", "--cached", "-z", "--", ""],
             &["ls-files", "--cached"],
             &[],
         ];

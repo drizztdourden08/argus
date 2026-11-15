@@ -46,6 +46,8 @@ pub(crate) struct Finish<'a> {
     pub run: &'a GitOutput,
     pub plan: &'a BranchPlan,
     pub modules: NodeModules,
+    /// How many links Argus dropped inside the worktree before git ran.
+    pub links: u32,
 }
 
 /// Has git let go of the worktree after its removal failed on the folder?
@@ -155,6 +157,7 @@ impl Service {
             run,
             plan,
             modules,
+            ..
         } = *step;
         self.remember_made(&input.project, &now.path);
         let branch = if input.branch {

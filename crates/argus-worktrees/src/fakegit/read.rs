@@ -265,15 +265,25 @@ pub(super) fn worktree_list(repo: &Repo) -> String {
     out
 }
 
-/// `ls-files --others --exclude-standard -z` and `ls-files --cached -z -- <folder>`.
+/// `ls-files --others --exclude-standard -z` and `ls-files --cached -z -- <path>...` (a path may carry `:(literal)`):
+/// the tracked files that are a path or lie under one.
 pub(super) fn ls_files(repo: &Repo, wt: &Wt, args: &[String]) -> String {
     let names: Vec<String> = if has(args, "--others") {
         dirt_of(repo, wt).others
     } else {
-        let prefix = format!("{}/", args.last().map_or("", String::as_str));
+        let wanted: Vec<&str> = args
+            .iter()
+            .skip_while(|a| *a != "--")
+            .skip(1)
+            .map(|a| a.strip_prefix(":(literal)").unwrap_or(a.as_str()))
+            .collect();
         tracked_of(repo, wt)
             .into_keys()
-            .filter(|k| k.starts_with(&prefix))
+            .filter(|k| {
+                wanted
+                    .iter()
+                    .any(|w| k.as_str() == *w || k.starts_with(&format!("{w}/")))
+            })
             .collect()
     };
     names.iter().fold(String::new(), |mut out, name| {

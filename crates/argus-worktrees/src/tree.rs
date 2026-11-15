@@ -14,18 +14,19 @@ pub fn unlink_link<F: Fs + ?Sized>(fs: &F, path: &str) -> io::Result<()> {
 
 /// Every link below `dir` (pnpm's `node_modules` is full of junctions) is removed as a link, walking real folders only.
 /// Only the worktree's own top-level `.git` (a file or a folder, not a link) is left alone; a link anywhere else, a
-/// `.git` named link included, goes as a link.
-pub fn drop_links(fs: &dyn Fs, dir: &str) -> io::Result<()> {
+/// `.git` named link included, goes as a link. The answer is how many links went.
+pub fn drop_links(fs: &dyn Fs, dir: &str) -> io::Result<usize> {
     drop_links_in(fs, dir, true)
 }
 
-fn drop_links_in(fs: &dyn Fs, dir: &str, top: bool) -> io::Result<()> {
+fn drop_links_in(fs: &dyn Fs, dir: &str, top: bool) -> io::Result<usize> {
     let entries = fs.read_dir(dir)?;
     if fs.lstat(dir)?.is_link {
         return Err(io::Error::other(format!(
             "{dir} became a link while it was being read"
         )));
     }
+    let mut dropped = 0;
     for entry in entries {
         if (top && entry.name == ".git" && !entry.is_link) || !(entry.is_dir || entry.is_link) {
             continue;
@@ -36,11 +37,12 @@ fn drop_links_in(fs: &dyn Fs, dir: &str, top: bool) -> io::Result<()> {
         };
         if stat.is_link {
             unlink_link(fs, &path)?;
+            dropped += 1;
         } else if stat.is_dir {
-            drop_links_in(fs, &path, false)?;
+            dropped += drop_links_in(fs, &path, false)?;
         }
     }
-    Ok(())
+    Ok(dropped)
 }
 
 /// Delete a folder and everything in it. A link inside is unlinked, never entered. The file system does the walk

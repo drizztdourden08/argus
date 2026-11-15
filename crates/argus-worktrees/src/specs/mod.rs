@@ -26,6 +26,7 @@ mod probe;
 mod registered;
 mod release_probe;
 mod remove;
+mod remove_git_view;
 mod remove_links;
 mod remove_real;
 mod request_kit;

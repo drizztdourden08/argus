@@ -31,6 +31,7 @@ mod finish;
 mod fs;
 mod gh;
 mod git;
+mod git_view;
 mod guard;
 mod guards;
 mod holders;

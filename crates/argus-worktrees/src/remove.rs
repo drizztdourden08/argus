@@ -539,7 +539,7 @@ impl Service {
             return Err(Self::in_use(&fact.path, &user, "removed"));
         }
         self.probe_release(&fact.path)?;
-        let now = self.look_again(input, fact, rule)?;
+        let now = self.as_git_sees(self.look_again(input, fact, rule)?)?;
         let safety = Safety::of(&now);
         let owner_says = input.discard && !matches!(input.caller, Caller::Hygiene { .. });
         let plan = self.plan_branch(input.branch, owner_says, &now);
@@ -548,7 +548,7 @@ impl Service {
         self.step(&fact.id, "node_modules clear");
         let modules = self.clear_ignored_node_modules(&now);
         self.step(&fact.id, "links");
-        self.drop_links_before_git(&now, backup.as_ref(), modules)?;
+        let links = self.drop_links_before_git(&now, backup.as_ref(), modules)?;
         self.lift_brock_lock(&now, backup.as_ref())?;
         self.step(&fact.id, "git worktree remove");
         let run = self.git_remove(&now, submodules)?;
@@ -563,6 +563,7 @@ impl Service {
             run: &run,
             plan: &plan,
             modules,
+            links,
         };
         if !run.ok() {
             return self.git_could_not(&finish, backup, discarded);
@@ -618,7 +619,7 @@ impl Service {
             LetGo::Unvetted(text) => format!("; Argus did not prune git's records: {text}"),
             LetGo::No => String::new(),
         };
-        let cut = cut_text(step.run, step.modules);
+        let cut = prep_text(step.run, step.modules, step.links);
         let here = backup
             .as_ref()
             .map(|b| format!("; the backup is in {}", b.dir))
@@ -675,17 +676,17 @@ impl Service {
 
     /// Windows: git for Windows follows a junction when it deletes a folder, and deletes what the junction points to.
     /// So every link in the worktree is removed AS a link first; the removal is authorized by now. A link that cannot be
-    /// removed stops the removal: git must not meet it.
+    /// removed stops the removal: git must not meet it. The answer is how many links went.
     fn drop_links_before_git(
         &self,
         now: &Fact,
         backup: Option<&Backup>,
         modules: NodeModules,
-    ) -> Result<()> {
+    ) -> Result<u32> {
         if !self.opts.drop_links_first {
-            return Ok(());
+            return Ok(0);
         }
-        drop_links(self.deps.fs.as_ref(), &now.path).map_err(|err| {
+        let dropped = drop_links(self.deps.fs.as_ref(), &now.path).map_err(|err| {
             let began = if modules.begun() {
                 " (except the ignored node_modules Argus began to clear first)"
             } else {
@@ -693,7 +694,8 @@ impl Service {
             };
             let here = backup.map(|b| format!("; the backup is in {}", b.dir)).unwrap_or_default();
             WtError::new(ErrorCode::GitFailed, format!("could not remove the junctions or symlinks inside {} first ({}): git for Windows would follow them and delete what they point to, so nothing was removed{began}{here}", now.path, crate::error::io_code(&err))).with_backup(backup.cloned())
-        })
+        })?;
+        Ok(u32::try_from(dropped).unwrap_or(u32::MAX))
     }
 }
 
@@ -709,6 +711,32 @@ fn cut_text(run: &GitOutput, modules: NodeModules) -> String {
             "; Argus deleted nothing but part of the ignored node_modules".to_string()
         }
     }
+}
+
+/// What a refusal adds when git failed: what Argus itself had already done to the folder before git ran, so the caller
+/// knows to reinstall (I-177). git cut short says it in `cut_text`; the links are said either way.
+fn prep_text(run: &GitOutput, modules: NodeModules, links: u32) -> String {
+    let cut = cut_text(run, modules);
+    let cleared = match (run.was_cut(), modules) {
+        (false, NodeModules::Cleared) => Some("cleared the ignored node_modules"),
+        (false, NodeModules::Partial) => Some("cleared part of the ignored node_modules"),
+        _ => None,
+    };
+    let dropped = (links > 0).then(|| {
+        format!(
+            "dropped {} inside the worktree (as links: what they point to is untouched)",
+            plural(links, "link")
+        )
+    });
+    let cleared = cleared.map(String::from);
+    let done: Vec<String> = cleared.into_iter().chain(dropped).collect();
+    if done.is_empty() {
+        return cut;
+    }
+    format!(
+        "{cut}; before git ran, Argus had {}: reinstall the dependencies before working in the worktree again",
+        done.join(" and ")
+    )
 }
 
 pub(crate) fn apply_branch(out: &mut RemoveOutcome, branch: &BranchOutcome) {
