@@ -27,7 +27,9 @@ pub(super) fn overlord_wake(project: &str, id: &str, asker: &str) -> String {
 /// The asking thread's note when the Overlord answered.
 pub(super) fn answer_note(path: &str, confirmed: bool) -> String {
     if confirmed {
-        format!("Argus: the Overlord confirmed your keep of {path}: it stays on the exception list.")
+        format!(
+            "Argus: the Overlord confirmed your keep of {path}: it stays on the exception list."
+        )
     } else {
         format!("Argus: the Overlord declined your keep of {path}: the hygiene judges it again.")
     }

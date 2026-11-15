@@ -58,7 +58,11 @@ fn a_threads_keep_files_a_pending_keep_and_the_overlord_gets_one_note_and_one_wa
     let notes = notes_of(&h, "overlord");
     assert_eq!(notes.len(), 1);
     assert!(notes[0].contains("lead of alpha"), "{}", notes[0]);
-    assert!(notes[0].contains("the owner tests it tonight"), "{}", notes[0]);
+    assert!(
+        notes[0].contains("the owner tests it tonight"),
+        "{}",
+        notes[0]
+    );
     assert!(
         notes[0].contains(&format!(
             "coord worktree keep {id} --project alpha --asked-by lead --note"
@@ -73,7 +77,11 @@ fn a_threads_keep_files_a_pending_keep_and_the_overlord_gets_one_note_and_one_wa
     );
     assert_eq!(wakes(&h, "worktree-report").len(), 1);
     h.svc.keep(&ask(&h, &path)).unwrap();
-    assert_eq!(notes_of(&h, "overlord").len(), 1, "a second ask is no duplicate");
+    assert_eq!(
+        notes_of(&h, "overlord").len(),
+        1,
+        "a second ask is no duplicate"
+    );
 }
 
 #[test]
@@ -159,7 +167,10 @@ fn the_page_is_refused_and_a_thread_clears_only_its_own_pending_keep() {
     );
     h.svc.keep(&ask(&h, &path)).unwrap();
     h.svc.keep(&answer(&h, &path)).unwrap();
-    assert!(h.svc.keep(&own).is_err(), "a confirmed keep is not withdrawn");
+    assert!(
+        h.svc.keep(&own).is_err(),
+        "a confirmed keep is not withdrawn"
+    );
     h.svc.hygiene_step("alpha");
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
 }

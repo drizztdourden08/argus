@@ -36,7 +36,7 @@ impl Service {
         let (_, fact) = self.listed_fact(&lookup)?;
         let prior = self.with_hygiene(&input.project, |m| m.exceptions.get(&fact.id).cloned());
         if input.clear {
-            return self.withdraw(&input.project, &fact, &thread, prior);
+            return self.withdraw(&input.project, &fact, &thread, prior.as_ref());
         }
         let reason = Self::reason_of(input)?;
         if prior.as_ref().is_some_and(|e| !e.pending) {
@@ -86,11 +86,9 @@ impl Service {
         project: &str,
         fact: &Fact,
         thread: &str,
-        prior: Option<Exception>,
+        prior: Option<&Exception>,
     ) -> Result<Kept> {
-        let own = prior
-            .as_ref()
-            .is_some_and(|e| e.pending && e.asked_by.as_deref() == Some(thread));
+        let own = prior.is_some_and(|e| e.pending && e.asked_by.as_deref() == Some(thread));
         if !own {
             return Err(bad(format!(
                 "{thread} has no pending keep of {}: only the Overlord clears a confirmed one",

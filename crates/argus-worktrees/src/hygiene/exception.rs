@@ -6,7 +6,6 @@
 use super::memory::Exception;
 use crate::board::Caller;
 use crate::error::{ErrorCode, Result, WtError};
-use crate::remove::forbidden;
 use crate::request::RemoveInput;
 use crate::service::Service;
 use serde::Serialize;
