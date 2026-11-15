@@ -36,10 +36,17 @@
 //! what is left, the backup path and the one delete command (`coord worktree approve <id> --project <p>`), and a
 //! `worktree-report` wake.
 //!
-//! EXCEPTION (`exception`): `coord worktree keep <id> --note "why"` is the Overlord's word only; a thread that calls it
-//! is refused and told to ask with `coord lead portfolio "..."`. An exception is never removed and never reported. It
-//! ends at its `until`, when the Overlord clears it, or when its worktree is gone. The keeps threads wrote on the board
-//! before 2026-11-06 do not hold a worktree here (they still snooze the `worktree-stale` signal).
+//! EXCEPTION (`exception`): `coord worktree keep <id> --note "why"` is the Overlord's word. An exception is never
+//! removed and never reported. It ends at its `until`, when the Overlord clears it, or when its worktree is gone. The
+//! keeps threads wrote on the board before 2026-11-06 do not hold a worktree here (they still snooze the
+//! `worktree-stale` signal).
+//!
+//! PENDING KEEP (`pending`): a thread that calls keep (the page is refused) files a pending keep: an exception marked
+//! `pending`, held for `PENDING_KEEP_MS` (24 hours), that the hygiene honours exactly like a confirmed one. The
+//! Overlord gets ONE inbox note on his board with the reason and the two answers (confirm: his keep, decline: his
+//! `--clear`) and a `worktree-report` wake. Confirmed, it becomes a normal exception; declined, it is removed. Either
+//! way, or when it lapses unanswered after 24 hours, the asking thread gets an inbox note. A thread's `--clear`
+//! withdraws its own pending keep only. A second ask for the same worktree refreshes the note.
 //!
 //! Anything attached again (an agent, a run) stops all of this: the mark goes back to `attached`, and a later detach
 //! starts over (a new debounce, a new ask).
@@ -64,6 +71,8 @@ mod judge;
 mod keep;
 mod memory;
 mod notices;
+mod pending;
+mod pending_text;
 mod release;
 mod report;
 mod step;

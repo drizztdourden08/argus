@@ -91,6 +91,9 @@ pub struct Exception {
     pub at: i64,
     /// When it ends; none holds until the Overlord clears it.
     pub until: Option<i64>,
+    /// A thread's keep ask the Overlord has not answered: it holds the worktree until `until` (24 hours).
+    #[serde(default)]
+    pub pending: bool,
 }
 
 /// A worktree the hygiene removed, as the page lists it.
@@ -136,10 +139,18 @@ impl Memory {
         self.removed.drain(..extra);
     }
 
-    /// The exceptions that still hold: not expired, and their worktree still listed.
-    pub fn prune_exceptions(&mut self, alive: &[String], now: i64) {
-        self.exceptions
-            .retain(|id, e| alive.contains(id) && e.until.is_none_or(|u| u > now));
+    /// The exceptions that still hold: not expired, and their worktree still listed. Says which pending keeps
+    /// lapsed unanswered (their worktree still listed), so their askers can be told.
+    pub fn prune_exceptions(&mut self, alive: &[String], now: i64) -> Vec<Exception> {
+        let mut lapsed = Vec::new();
+        self.exceptions.retain(|id, e| {
+            let expired = e.until.is_some_and(|u| u <= now);
+            if expired && e.pending && alive.contains(id) {
+                lapsed.push(e.clone());
+            }
+            alive.contains(id) && !expired
+        });
+        lapsed
     }
 }
 
@@ -164,6 +175,8 @@ pub struct HygieneDoc {
     pub reported_at: Option<String>,
     /// When its exception ends.
     pub until: Option<String>,
+    /// Its exception is a thread's keep ask the Overlord has not answered.
+    pub pending: bool,
 }
 
 /// The hygiene part of the summary.
@@ -210,7 +223,9 @@ impl Service {
     pub(crate) fn hygiene_of(&self, project: &str, id: &str) -> Option<HygieneDoc> {
         let debounce = self.opts.detach_debounce_ms;
         self.with_hygiene(project, |m| {
-            let until = m.exceptions.get(id).and_then(|e| e.until);
+            let exception = m.exceptions.get(id);
+            let until = exception.and_then(|e| e.until);
+            let pending = exception.is_some_and(|e| e.pending);
             m.marks.get(id).map(|mark| HygieneDoc {
                 state: mark.state,
                 why: mark.why.clone(),
@@ -223,6 +238,7 @@ impl Service {
                 until: until
                     .filter(|_| mark.state == HygieneState::Exception)
                     .map(iso_from_ms),
+                pending: pending && mark.state == HygieneState::Exception,
             })
         })
     }

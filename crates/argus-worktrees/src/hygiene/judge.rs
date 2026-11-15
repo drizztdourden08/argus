@@ -274,7 +274,15 @@ impl Service {
             return (Verdict::Exception(why), owner);
         }
         if let Some(exception) = look.exception {
-            return (Verdict::Exception(exception.reason.clone()), owner);
+            let why = if exception.pending {
+                format!(
+                    "pending keep, the Overlord has not answered: {}",
+                    exception.reason
+                )
+            } else {
+                exception.reason.clone()
+            };
+            return (Verdict::Exception(why), owner);
         }
         let attached = self
             .held_by_agent(look, project, &owners)

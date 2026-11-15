@@ -123,7 +123,8 @@ impl Service {
     fn mark_all(&self, project: &str, board: &BoardFacts, scanned_ms: i64) -> bool {
         let alive: Vec<String> = self.facts_of(project).into_iter().map(|f| f.id).collect();
         let now = self.now();
-        self.with_hygiene(project, |memory| memory.prune_exceptions(&alive, now));
+        let lapsed = self.with_hygiene(project, |memory| memory.prune_exceptions(&alive, now));
+        self.tell_lapsed(project, &lapsed);
         let judged = self.verdicts(project, board, scanned_ms);
         self.with_hygiene(project, |memory| {
             let before = std::mem::take(&mut memory.marks);

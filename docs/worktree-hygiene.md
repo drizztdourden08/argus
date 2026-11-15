@@ -95,10 +95,11 @@ Argus judges every worktree right after every scan and on every live tick (`live
 
 ## The exception list
 
-Only the Overlord keeps a worktree: `coord worktree keep <id> --project <p> --note "why"
-[--until <date>] [--asked-by <thread>]`. A lead asks him with
-`coord lead portfolio "keep worktree <id> of <p>: <why>"`. A thread or the owner's page that calls
-keep is refused and told so. An exception ends at its `until`, when the Overlord clears it
+Only the Overlord confirms a keep: `coord worktree keep <id> --project <p> --note "why"
+[--until <date>] [--asked-by <thread>]`. A thread that calls keep files a pending keep instead: the
+hygiene holds the worktree like an exception for at most 24 hours, the Overlord gets one note and a
+wake with the confirm and decline commands, and the thread is told of his answer or of the lapse.
+A thread's `--clear` withdraws its own pending keep only. The owner's page is refused. An exception ends at its `until`, when the Overlord clears it
 (`--clear`), or when its worktree is gone.
 
 The keeps threads wrote on the board before 2026-11-06 (`worktreeKeeps`) do not hold a worktree

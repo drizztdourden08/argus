@@ -301,22 +301,23 @@ fn an_agent_back_on_it_stops_the_ask_and_a_later_detach_asks_again() {
 }
 
 #[test]
-fn a_lead_thread_named_like_the_coordinator_is_refused_without_the_portfolio_board() {
+fn a_lead_thread_named_like_the_coordinator_only_asks_without_the_portfolio_board() {
     let (fx, h) = world(|_| {});
     let path = fx.path("agent-a1");
     add_overlord(&h);
     for from in [Some("alpha"), None] {
         let mut input = keep_by(&h, &path, "overlord");
         input.by_project = from.map(Into::into);
-        let refused = h.svc.keep(&input).unwrap_err();
+        let kept = h.svc.keep(&input).unwrap();
         assert!(
-            refused
-                .message
-                .starts_with("only the Overlord puts a worktree"),
+            kept.text.starts_with("pending keep filed"),
             "{from:?}: {}",
-            refused.message
+            kept.text
         );
     }
+    h.svc.hygiene_step("alpha");
+    let (_, why) = state(&h, "agent-a1").unwrap();
+    assert!(why.unwrap().starts_with("pending keep"));
     assert!(h.svc.keep(&keep_by(&h, &path, "overlord")).is_ok());
 }
 
@@ -325,13 +326,11 @@ fn only_the_overlord_keeps_and_his_exception_holds_until_he_clears_it() {
     let (fx, h) = world(|_| {});
     let path = fx.path("agent-a1");
     add_overlord(&h);
-    let refused = h.svc.keep(&keep_by(&h, &path, "lead")).unwrap_err();
+    let pending = h.svc.keep(&keep_by(&h, &path, "lead")).unwrap();
     assert!(
-        refused.message.starts_with(
-            "only the Overlord puts a worktree on the exception list: ask him with coord lead portfolio"
-        ),
+        pending.text.starts_with("pending keep filed"),
         "{}",
-        refused.message
+        pending.text
     );
     let mut page = keep_by(&h, &path, "lead");
     page.caller = Caller::Page;

@@ -42,7 +42,7 @@ fn until_of(text: &str) -> Value {
 }
 
 /// `coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear]`:
-/// POSTs `/api/p/<p>/worktrees/keep`; Argus refuses anyone but the Overlord, naming the Overlord.
+/// POSTs `/api/p/<p>/worktrees/keep`; from a thread that is not the Overlord, Argus files a pending keep (24 h) and asks him.
 pub(super) fn keep(call: &mut Call<'_>) -> Outcome {
     if call.options.get("days").is_some() {
         return Err(CoordError::refuse(

@@ -17,6 +17,7 @@ mod hygiene_ask;
 mod hygiene_busy;
 mod hygiene_gone;
 mod hygiene_kit;
+mod hygiene_pending;
 mod hygiene_rule_error;
 mod leftover;
 mod leftover_restart;
