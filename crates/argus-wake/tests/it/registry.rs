@@ -538,3 +538,27 @@ fn the_overlord_is_found_by_the_id_of_its_board_not_by_the_key_portfolio() {
     assert!(registry.is_main("overlord-7", "coordinator"));
     assert!(!registry.is_main("portfolio", "coordinator"));
 }
+
+#[test]
+fn a_thread_with_only_an_open_resend_queued_is_not_due() {
+    let mut rig = rig();
+    rig.service
+        .submit(&[wake_in("alpha", "ui", "2 faults open", "open-resend")])
+        .expect("submit");
+    assert_eq!(rig.service.due().len(), 0);
+}
+
+#[test]
+fn an_open_resend_beside_a_new_wake_leaves_the_thread_due_with_the_new_wake_only() {
+    let mut rig = rig();
+    rig.service
+        .submit(&[wake_in("alpha", "ui", "2 faults open", "open-resend")])
+        .expect("submit");
+    rig.service
+        .submit(&[wake_in("alpha", "ui", "T-1 stalled", "stall")])
+        .expect("submit");
+    let due = rig.service.due();
+    assert_eq!(due.len(), 1);
+    assert_eq!(due[0].thread, "ui");
+    assert_eq!(due[0].count, 1);
+}
