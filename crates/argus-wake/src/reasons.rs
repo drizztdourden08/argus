@@ -60,6 +60,16 @@ pub const WAKE_REASONS: [&str; 52] = [
     "wake-relay",
 ];
 
+/// Reasons that only remind a thread of something it was already told. A queued row with one of them waits for
+/// the thread's next resume but never makes the thread due for a relay.
+pub const REMINDER_REASONS: [&str; 1] = ["open-resend"];
+
+/// Whether a queued wake with this reason is worth a relay: it carries something new, not a reminder.
+#[must_use]
+pub fn relays(reason: &str) -> bool {
+    !REMINDER_REASONS.contains(&reason)
+}
+
 /// What the owner is waiting on, a fault or a stall for the Overlord, a wake sent again because nobody read
 /// it, a finished or blocked dependency, and the accounts service asking a lead for a handover estimate or a
 /// handover before an account switch, and a relay note asking a live thread to wake paused ones: these close

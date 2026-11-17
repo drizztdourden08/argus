@@ -7,6 +7,7 @@ use serde::Serialize;
 use super::watch::listener_of;
 use super::{Env, Registry};
 use crate::engine::ListenerInfo;
+use crate::reasons::relays;
 use crate::time::iso;
 
 /// A queued wake is kept this long (and handed to the first listener).
@@ -50,7 +51,12 @@ impl Registry {
             .filter(|l| l.v >= 2)
             .collect();
         let mut queued: BTreeMap<String, Vec<String>> = BTreeMap::new();
-        for row in env.engine.queued_since(scope, since) {
+        for row in env
+            .engine
+            .queued_since(scope, since)
+            .into_iter()
+            .filter(|row| relays(&row.reason))
+        {
             queued.entry(row.thread).or_default().push(row.at);
         }
         queued

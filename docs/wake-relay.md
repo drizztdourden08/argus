@@ -7,7 +7,8 @@ demand.
 
 ## The flow
 
-1. A thread is due: a queued wake, no listener, live on its board (`GET /api/wakes/due`).
+1. A thread is due: a queued wake, no listener, live on its board (`GET /api/wakes/due`). Reminders (`open-resend`)
+   do not count: they stay queued for the thread's next resume but never make it due on their own.
 2. After the wake has waited 30 seconds, Argus picks a relay: a thread with a v2 listener. The Overlord comes first
    when it is not in a turn, then any thread not in a turn, then a thread in a turn. Never the target itself.
 3. Argus posts one inbox note from `Argus` to the relay. It names every due target of that relay at once, with the
