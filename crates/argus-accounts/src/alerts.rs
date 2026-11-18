@@ -1,7 +1,8 @@
 //! What to tell the owner about usage: a warning near a limit, a proposal to switch account and
 //! the news that a spent limit is back. Pure: the caller gives the last and the new usage of
 //! every account and sends the alerts. Each alert fires once per limit window; what fired is
-//! remembered by account, limit and the time the limit resets.
+//! remembered by account, limit and the hour the limit resets. The reset time the usage feed
+//! gives drifts by seconds from one poll to the next, so the exact time would fire again.
 //!
 //! An account with auto-switch gets no proposal: the switch rules count down for it.
 
@@ -109,7 +110,7 @@ impl Alerter {
 
     /// True the first time this alert is asked about for the limit's window.
     fn once(&mut self, account: &str, what: &str, limit: &UsageLimit) -> bool {
-        let id = format!("{account}|{what}|{}|{:?}", limit_id(limit), limit.resets_at);
+        let id = format!("{account}|{what}|{}|{:?}", limit_id(limit), window(limit));
         self.fired.insert(id)
     }
 
@@ -179,6 +180,12 @@ fn limit_id(limit: &UsageLimit) -> String {
         limit.group.as_deref().unwrap_or_default(),
         limit.model.as_deref().unwrap_or_default()
     )
+}
+
+/// The hour a limit resets, rounded to the nearest one, so a drift of seconds is the same window.
+fn window(limit: &UsageLimit) -> Option<i64> {
+    const HOUR_MS: i64 = 3_600_000;
+    ms_of(limit.resets_at.as_deref()).map(|t| (t + HOUR_MS / 2).div_euclid(HOUR_MS))
 }
 
 fn ms_of(text: Option<&str>) -> Option<i64> {
@@ -387,6 +394,22 @@ mod tests {
             ..all[0].clone()
         }];
         assert_eq!(alerter.check(&all, &next, &settings(), NOW).len(), 1);
+    }
+
+    #[test]
+    fn a_reset_time_that_drifts_by_seconds_is_the_same_window() {
+        let mut alerter = Alerter::new();
+        let at = |percent: f64, resets: &str| {
+            let mut s = snap("a", percent, true, false);
+            s.usage.limits = vec![limit(percent, resets)];
+            [s]
+        };
+        let first = at(92.0, "2026-11-21T07:59:58.120Z");
+        assert_eq!(alerter.check(&[], &first, &settings(), NOW).len(), 1);
+        let drift = at(92.0, "2026-11-21T08:00:00.480Z");
+        assert_eq!(alerter.check(&first, &drift, &settings(), NOW).len(), 0);
+        let earlier = at(93.0, "2026-11-21T07:59:31Z");
+        assert_eq!(alerter.check(&drift, &earlier, &settings(), NOW).len(), 0);
     }
 
     #[test]
