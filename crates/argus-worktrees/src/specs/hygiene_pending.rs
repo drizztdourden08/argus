@@ -7,10 +7,10 @@
 
 use crate::board::Caller;
 use crate::hygiene::{HygieneState, KeepInput};
+use crate::requests::{RequestInput, RequestStatus};
 use crate::specs::hygiene_kit::{
     DEBOUNCE, HOUR, add_overlord, kind, notes_of, state, step, through_debounce, wakes, world,
 };
-use crate::requests::{RequestInput, RequestStatus};
 use crate::testkit::{Harness, exists_itself};
 
 fn keep_by(h: &Harness, path: &str, by: &str, from: &str) -> KeepInput {

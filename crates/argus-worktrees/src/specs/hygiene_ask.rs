@@ -382,6 +382,10 @@ fn an_exception_ends_at_its_until() {
             .is_some()
     );
     step(&h, 1);
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
+    step(&h, HOUR - 1);
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
+    step(&h, 1);
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
     let mut past = keep_by(&h, &path, "overlord");
     past.until_ms = Some(h.clock_now());

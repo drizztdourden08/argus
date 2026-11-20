@@ -103,7 +103,7 @@ A thread's `--clear` withdraws its own pending keep only. The owner's page is re
 (`--clear`), or when its worktree is gone.
 
 A bare date in `--until` (`2026-11-20`) keeps the worktree through the end of that day, local time of this PC.
-A full timestamp or a number of milliseconds keeps its own meaning. When a keep ends (confirmed or
+A full timestamp or a count of milliseconds keeps its own meaning. When a keep ends (confirmed or
 pending) and its worktree is still listed, it holds one more hour (the grace). The verdict says the keep
 ended and when the grace ends, and the asker is told once. A later `--until` renews it; after the hour the
 hygiene judges the worktree again.

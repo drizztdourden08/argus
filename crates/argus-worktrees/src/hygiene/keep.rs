@@ -4,7 +4,7 @@
 
 use crate::error::WtError;
 use crate::fact::Fact;
-use crate::paths::{clean_path, name_glob_matches};
+use crate::paths::{clean_path, is_worktree_id, name_glob_matches, worktree_id};
 use crate::remove::forbidden;
 use crate::service::Service;
 
@@ -27,8 +27,14 @@ impl Service {
 
     /// The refusal of a removal request for a worktree on the keep list (an exception that still holds, or a keep
     /// pattern): clear the keep first. None when it is not kept.
-    pub(crate) fn kept_refusal(&self, project: &str, id: &str) -> Option<WtError> {
-        let fact = self.facts_of(project).into_iter().find(|f| f.id == id);
+    pub(crate) fn kept_refusal(&self, project: &str, target: &str) -> Option<WtError> {
+        let target = target.trim();
+        let id = &if is_worktree_id(target) {
+            target.to_string()
+        } else {
+            worktree_id(&clean_path(target), self.ci())
+        };
+        let fact = self.facts_of(project).into_iter().find(|f| f.id == *id);
         let path = fact.as_ref().map_or("", |f| f.path.as_str());
         let now = self.now();
         let held = self.with_hygiene(project, |m| {
