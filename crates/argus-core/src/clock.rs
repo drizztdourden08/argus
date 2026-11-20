@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
-use time::{Date, OffsetDateTime, PrimitiveDateTime};
+use time::{Date, OffsetDateTime, PrimitiveDateTime, UtcOffset};
 
 /// A source of epoch milliseconds, injected so tests can drive time.
 pub trait Clock: Send + Sync {
@@ -120,6 +120,22 @@ pub fn parse_ms(text: &str) -> Option<i64> {
     Date::parse(t, &day)
         .ok()
         .map(|d| millis(d.midnight().assume_utc()))
+}
+
+/// The end of a day written as a bare `YYYY-MM-DD`: the start of the day after, in the zone `offset_seconds` east of
+/// UTC. `None` when the text is anything else (a full timestamp keeps its meaning through [`parse_ms`]).
+#[must_use]
+pub fn end_of_day_ms(text: &str, offset_seconds: i32) -> Option<i64> {
+    let day = format_description!("[year]-[month]-[day]");
+    let date = Date::parse(text.trim(), &day).ok()?;
+    let offset = UtcOffset::from_whole_seconds(offset_seconds).ok()?;
+    Some(millis(date.next_day()?.midnight().assume_offset(offset)))
+}
+
+/// This PC's offset from UTC in seconds east, UTC when the system will not say.
+#[must_use]
+pub fn local_offset_seconds() -> i32 {
+    UtcOffset::current_local_offset().map_or(0, UtcOffset::whole_seconds)
 }
 
 fn millis(dt: OffsetDateTime) -> i64 {

@@ -103,6 +103,9 @@ impl Service {
 
     /// One target through the very same removal the CLI route calls.
     pub(super) fn remove_one(&self, rec: &RequestRec, target: &Target) -> Outcome {
+        if let Some(err) = self.kept_refusal(&rec.key, &target.id) {
+            return refusal(target, &err);
+        }
         match self.remove_in_request(&Self::removal_of(rec, target)) {
             Ok(out) if out.leftover && out.job_id.is_some() => {
                 let path = out.path.as_deref().unwrap_or_default();

@@ -274,14 +274,7 @@ impl Service {
             return (Verdict::Exception(why), owner);
         }
         if let Some(exception) = look.exception {
-            let why = if exception.pending {
-                format!(
-                    "pending keep, the Overlord has not answered: {}",
-                    exception.reason
-                )
-            } else {
-                exception.reason.clone()
-            };
+            let why = exception.why(self.now());
             return (Verdict::Exception(why), owner);
         }
         let attached = self

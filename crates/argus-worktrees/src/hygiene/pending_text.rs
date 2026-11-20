@@ -41,3 +41,10 @@ pub(super) fn lapsed_note(path: &str) -> String {
         "Argus: your pending keep of {path} lapsed after 24 hours with no answer from the Overlord: the hygiene judges it again."
     )
 }
+
+/// The asking thread's note when a confirmed keep ended: it holds one more hour.
+pub(super) fn ended_note(path: &str) -> String {
+    format!(
+        "Argus: the keep of {path} ended. It is removed in an hour unless it is kept again with a later --until (coord worktree keep <id> --until <date>)."
+    )
+}

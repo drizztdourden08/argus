@@ -1,7 +1,7 @@
 //! The hygiene's two words: a lead's or the Overlord's approval to remove a worktree that holds work, and the
 //! Overlord's exception list.
 
-use argus_core::clock::parse_ms;
+use argus_core::clock::{end_of_day_ms, local_offset_seconds, parse_ms};
 use argus_worktrees::{ApproveInput, KeepInput, RemoveInput, Service, WtError};
 use serde_json::{Value, to_value};
 
@@ -53,12 +53,12 @@ fn approve_call(service: &Service, approval: &Approval) -> Result<Value, WtError
         .map(|queued| to_value(queued).unwrap_or(Value::Null))
 }
 
-/// `until` as an ISO date or a number of milliseconds.
+/// `until` as a number of milliseconds, a full timestamp, or a bare date: that date means through the end of that
+/// day, local time.
 fn until_of(value: &Value) -> Option<i64> {
     value.as_i64().or_else(|| {
-        value
-            .as_str()
-            .and_then(|at| parse_ms(&at.trim().chars().take(40).collect::<String>()))
+        let at: String = value.as_str()?.trim().chars().take(40).collect();
+        end_of_day_ms(&at, local_offset_seconds()).or_else(|| parse_ms(&at))
     })
 }
 

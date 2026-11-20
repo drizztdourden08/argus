@@ -109,6 +109,7 @@ impl Service {
             at: now,
             until: input.until_ms,
             pending: false,
+            told: false,
         };
         self.with_hygiene(&input.project, |m| {
             m.exceptions.insert(fact.id.clone(), exception);

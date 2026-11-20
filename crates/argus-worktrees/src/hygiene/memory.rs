@@ -10,6 +10,9 @@ use std::sync::Mutex;
 /// The last removals a project keeps for the page.
 const REMOVED_KEPT: usize = 20;
 
+/// How long an ended keep still holds its worktree, so its asker can renew it.
+pub(crate) const KEEP_GRACE_MS: i64 = 60 * 60 * 1000;
+
 /// The key-value key of a project's hygiene.
 pub fn hygiene_key(project: &str) -> String {
     format!("worktrees:hygiene:{project}")
@@ -94,6 +97,38 @@ pub struct Exception {
     /// A thread's keep ask the Overlord has not answered: it holds the worktree until `until` (24 hours).
     #[serde(default)]
     pub pending: bool,
+    /// Its asker was told that it ended (once, when the grace began).
+    #[serde(default)]
+    pub told: bool,
+}
+
+impl Exception {
+    /// Has it ended: its `until` passed.
+    pub(crate) fn ended(&self, now: i64) -> bool {
+        self.until.is_some_and(|u| u <= now)
+    }
+
+    /// Does it still hold its worktree: not ended, or ended less than [`KEEP_GRACE_MS`] ago.
+    pub(crate) fn holds(&self, now: i64) -> bool {
+        self.until.is_none_or(|u| u + KEEP_GRACE_MS > now)
+    }
+
+    /// The sentence of the verdict while it holds: its reason, or that it ended and when the grace ends.
+    pub(crate) fn why(&self, now: i64) -> String {
+        match self.until.filter(|_| self.ended(now)) {
+            Some(until) => format!(
+                "the keep ended {}: removed after {} unless kept again with a later --until ({})",
+                iso_from_ms(until),
+                iso_from_ms(until + KEEP_GRACE_MS),
+                self.reason
+            ),
+            None if self.pending => format!(
+                "pending keep, the Overlord has not answered: {}",
+                self.reason
+            ),
+            None => self.reason.clone(),
+        }
+    }
 }
 
 /// A worktree the hygiene removed, as the page lists it.
@@ -139,18 +174,22 @@ impl Memory {
         self.removed.drain(..extra);
     }
 
-    /// The exceptions that still hold: not expired, and their worktree still listed. Says which pending keeps
-    /// lapsed unanswered (their worktree still listed), so their askers can be told.
+    /// The exceptions that still hold: not past their grace, and their worktree still listed. An ended one stays
+    /// for [`KEEP_GRACE_MS`]. Says which ended for the first time (their worktree still listed), so their askers can
+    /// be told once.
     pub fn prune_exceptions(&mut self, alive: &[String], now: i64) -> Vec<Exception> {
-        let mut lapsed = Vec::new();
+        let mut ended = Vec::new();
         self.exceptions.retain(|id, e| {
-            let expired = e.until.is_some_and(|u| u <= now);
-            if expired && e.pending && alive.contains(id) {
-                lapsed.push(e.clone());
+            if !alive.contains(id) {
+                return false;
             }
-            alive.contains(id) && !expired
+            if e.ended(now) && !e.told {
+                e.told = true;
+                ended.push(e.clone());
+            }
+            e.holds(now)
         });
-        lapsed
+        ended
     }
 }
 

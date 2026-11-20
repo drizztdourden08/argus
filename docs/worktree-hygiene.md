@@ -102,6 +102,16 @@ wake with the confirm and decline commands, and the thread is told of his answer
 A thread's `--clear` withdraws its own pending keep only. The owner's page is refused. An exception ends at its `until`, when the Overlord clears it
 (`--clear`), or when its worktree is gone.
 
+A bare date in `--until` (`2026-11-20`) keeps the worktree through the end of that day, local time of this PC.
+A full timestamp or a number of milliseconds keeps its own meaning. When a keep ends (confirmed or
+pending) and its worktree is still listed, it holds one more hour (the grace). The verdict says the keep
+ended and when the grace ends, and the asker is told once. A later `--until` renews it; after the hour the
+hygiene judges the worktree again.
+
+A removal request (`coord worktree request`) for a worktree on the keep list, an exception that still
+holds or a keep pattern, is refused: `on the keep list (<reason>): clear the keep first with coord
+worktree keep <id> --clear` (decision D-117). The check sits where every request target passes.
+
 The keeps threads wrote on the board before 2026-11-06 (`worktreeKeeps`) do not hold a worktree
 any more. They still snooze the `worktree-stale` signal until their date.
 
@@ -166,7 +176,7 @@ The numbers are in the worktrees meta of the project (`listed`, `runningAgents`,
 - `coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear]`:
   the Overlord only. Route:
   `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by, byProject}` (`until` is
-  an ISO date or milliseconds). Every lead's thread is named `coordinator`, so the name proves
+  an ISO date, through the end of that day in local time, or milliseconds). Every lead's thread is named `coordinator`, so the name proves
   nothing: the keep passes only when `byProject` is `portfolio` AND `by` is that board's
   coordinator thread. A missing or other `byProject` is refused with the usual message.
 

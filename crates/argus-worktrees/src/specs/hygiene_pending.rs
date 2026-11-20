@@ -10,6 +10,7 @@ use crate::hygiene::{HygieneState, KeepInput};
 use crate::specs::hygiene_kit::{
     DEBOUNCE, HOUR, add_overlord, kind, notes_of, state, step, through_debounce, wakes, world,
 };
+use crate::requests::{RequestInput, RequestStatus};
 use crate::testkit::{Harness, exists_itself};
 
 fn keep_by(h: &Harness, path: &str, by: &str, from: &str) -> KeepInput {
@@ -139,9 +140,58 @@ fn a_pending_keep_lapses_after_24_hours_and_the_thread_is_told() {
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
     assert_eq!(notes_of(&h, "lead").len(), 0);
     step(&h, 1);
-    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
     let told = notes_of(&h, "lead");
     assert!(told.iter().any(|t| t.contains("lapsed")), "{told:?}");
+    step(&h, HOUR);
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
+}
+
+/// The Overlord's keep of agent 1's worktree that ends in an hour.
+fn timed_keep(h: &Harness, path: &str) -> KeepInput {
+    let mut keep = answer(h, path);
+    keep.until_ms = Some(h.clock_now() + HOUR);
+    keep.asked_by = Some("lead".into());
+    keep
+}
+
+#[test]
+fn an_ended_keep_holds_one_more_hour_and_its_asker_is_told_once() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    add_overlord(&h);
+    h.svc.keep(&timed_keep(&h, &path)).unwrap();
+    step(&h, HOUR - 1);
+    assert_eq!(notes_of(&h, "lead").len(), 0);
+    step(&h, 1);
+    let (kept, why) = state(&h, "agent-a1").unwrap();
+    assert_eq!(kept, HygieneState::Exception);
+    assert!(why.unwrap_or_default().contains("the keep ended"));
+    step(&h, HOUR / 2);
+    let told = notes_of(&h, "lead");
+    assert_eq!(told.len(), 1, "{told:?}");
+    assert!(told[0].contains("ended") && told[0].contains(&path));
+    step(&h, HOUR / 2);
+    assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Removing));
+    assert_eq!(notes_of(&h, "lead").len(), 1);
+}
+
+#[test]
+fn a_removal_request_for_a_kept_worktree_is_refused_until_the_keep_is_cleared() {
+    let (fx, h) = world(|_| {});
+    let path = fx.path("agent-a1");
+    add_overlord(&h);
+    h.svc.keep(&answer(&h, &path)).unwrap();
+    let mut input = RequestInput::new("alpha", Caller::Thread("lead".into()));
+    input.targets = vec![path.clone()];
+    h.svc.request(&input).unwrap();
+    h.svc.requests_idle();
+    let list = h.svc.request_list("alpha");
+    assert_eq!(list[0].status, RequestStatus::Refused);
+    let said = &list[0].results[0].text;
+    assert!(said.contains("on the keep list"), "{said}");
+    assert!(said.contains("--clear"), "{said}");
+    assert!(exists_itself(&path));
 }
 
 #[test]

@@ -4,7 +4,9 @@
 
 use super::exception::{KeepInput, Kept, bad};
 use super::memory::Exception;
-use super::pending_text::{answer_note, filed_reply, lapsed_note, overlord_note, overlord_wake};
+use super::pending_text::{
+    answer_note, ended_note, filed_reply, lapsed_note, overlord_note, overlord_wake,
+};
 use super::text::{APPROVE_REASON, REPORT_REASON};
 use crate::board::Caller;
 use crate::error::Result;
@@ -63,6 +65,7 @@ impl Service {
             at: now,
             until: Some(now + PENDING_KEEP_MS),
             pending: true,
+            told: false,
         };
         self.with_hygiene(project, |m| {
             m.exceptions.insert(fact.id.clone(), exception);
@@ -137,10 +140,15 @@ impl Service {
         }
     }
 
-    /// Tell the askers of the pending keeps that lapsed unanswered.
+    /// Tell the askers of the keeps that ended: a pending one lapsed unanswered, a confirmed one ran out.
     pub(super) fn tell_lapsed(&self, project: &str, lapsed: &[Exception]) {
         for e in lapsed {
-            self.tell_asker(project, e, &lapsed_note(&e.path));
+            let note = if e.pending {
+                lapsed_note(&e.path)
+            } else {
+                ended_note(&e.path)
+            };
+            self.tell_asker(project, e, &note);
         }
     }
 
