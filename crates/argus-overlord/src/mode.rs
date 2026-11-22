@@ -1,7 +1,6 @@
-//! The mode of the hosted Overlord and the steps between modes (I-173). Live always comes after a
-//! shadow, and leaving live always goes to off, so the owner never jumps straight from the desktop
-//! Overlord to the hosted one or from the hosted one back to a shadow. All pure; the server runs the
-//! effect of each step.
+//! The mode of the hosted Overlord and the steps between modes (I-173, I-193). Leaving live always
+//! goes to off, so the owner never jumps from the hosted Overlord back to a shadow. Live may start
+//! from a shadow or straight from off. All pure; the server runs the effect of each step.
 
 use std::fmt;
 
@@ -62,6 +61,8 @@ pub enum Step {
     ShadowOff,
     /// Shadow to live: the switch-over.
     GoLive,
+    /// Off to live: start the live child with no shadow.
+    LiveOn,
     /// Live to off: the rollback to the desktop Overlord.
     Rollback,
 }
@@ -69,7 +70,7 @@ pub enum Step {
 /// Why a change of mode is refused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModeFault {
-    /// Off to live or live to shadow.
+    /// Live to shadow.
     Jump { from: Mode, to: Mode },
 }
 
@@ -78,7 +79,7 @@ impl fmt::Display for ModeFault {
         let ModeFault::Jump { from, to } = self;
         write!(
             f,
-            "the Overlord mode cannot go from {from} to {to}: live comes only after shadow, and leaving live goes to off"
+            "the Overlord mode cannot go from {from} to {to}: leaving live goes to off"
         )
     }
 }
@@ -88,7 +89,7 @@ impl std::error::Error for ModeFault {}
 /// The step from one mode to another.
 ///
 /// # Errors
-/// [`ModeFault::Jump`] for off to live and for live to shadow.
+/// [`ModeFault::Jump`] for live to shadow.
 pub fn step(from: Mode, to: Mode) -> Result<Step, ModeFault> {
     if from == to {
         return Ok(Step::Already);
@@ -97,6 +98,7 @@ pub fn step(from: Mode, to: Mode) -> Result<Step, ModeFault> {
         (Mode::Off, Mode::Shadow) => Ok(Step::ShadowOn),
         (Mode::Shadow, Mode::Off) => Ok(Step::ShadowOff),
         (Mode::Shadow, Mode::Live) => Ok(Step::GoLive),
+        (Mode::Off, Mode::Live) => Ok(Step::LiveOn),
         (Mode::Live, Mode::Off) => Ok(Step::Rollback),
         _ => Err(ModeFault::Jump { from, to }),
     }
@@ -121,18 +123,17 @@ mod tests {
     }
 
     #[test]
-    fn the_four_legal_steps_name_their_effect() {
+    fn the_five_legal_steps_name_their_effect() {
         assert_eq!(step(Mode::Off, Mode::Shadow), Ok(Step::ShadowOn));
         assert_eq!(step(Mode::Shadow, Mode::Off), Ok(Step::ShadowOff));
         assert_eq!(step(Mode::Shadow, Mode::Live), Ok(Step::GoLive));
+        assert_eq!(step(Mode::Off, Mode::Live), Ok(Step::LiveOn));
         assert_eq!(step(Mode::Live, Mode::Off), Ok(Step::Rollback));
     }
 
     // test-tag: critical
     #[test]
-    fn off_to_live_and_live_to_shadow_are_refused() {
-        let jump = Err(fault(Mode::Off, Mode::Live));
-        assert_eq!(step(Mode::Off, Mode::Live), jump);
+    fn only_live_to_shadow_is_refused() {
         let back = Err(fault(Mode::Live, Mode::Shadow));
         assert_eq!(step(Mode::Live, Mode::Shadow), back);
     }
@@ -144,13 +145,13 @@ mod tests {
             .flat_map(|from| ALL.iter().map(move |to| step(*from, *to)))
             .filter(Result::is_err)
             .count();
-        assert_eq!(refused, 2);
+        assert_eq!(refused, 1);
     }
 
     #[test]
     fn a_fault_names_both_modes() {
-        let text = fault(Mode::Off, Mode::Live).to_string();
-        assert!(text.contains("from off to live"), "{text}");
+        let text = fault(Mode::Live, Mode::Shadow).to_string();
+        assert!(text.contains("from live to shadow"), "{text}");
     }
 
     #[test]

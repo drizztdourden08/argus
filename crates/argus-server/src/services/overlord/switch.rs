@@ -34,9 +34,9 @@ pub(crate) struct Switched {
 /// Why a change of mode did not happen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SwitchFault {
-    /// Off to live or live to shadow.
+    /// Live to shadow.
     Jump(ModeFault),
-    /// Going live with no shadow session and no desktop session to start from.
+    /// Going live from a shadow with no shadow session and no desktop session to start from.
     NoSession,
     /// The child did not start or stop.
     Control(Refused),
@@ -126,6 +126,38 @@ async fn go_live(svc: &Arc<Services>) -> Result<(), SwitchFault> {
     Ok(())
 }
 
+/// The first session of a live child started from off: the saved live session when there is one
+/// (the start resumes it by itself), else a fork of the desktop session, else a fresh one.
+fn off_origin(svc: &Services) -> Origin {
+    if live_session::saved(&svc.db).is_some() {
+        return Origin::Fresh;
+    }
+    desktop_session(&svc.boards()).map_or(Origin::Fresh, Origin::Fork)
+}
+
+/// Off to live: saves the mode and starts the live child with no shadow before it. A fork asks the
+/// desktop Overlord for its handover first. A start that fails puts `off` back.
+async fn live_on(svc: &Arc<Services>) -> Result<(), SwitchFault> {
+    let origin = off_origin(svc);
+    let forked = matches!(origin, Origin::Fork(_));
+    if forked {
+        blocking(svc, |svc| {
+            set_aside(svc);
+            ask_handover(svc);
+        })
+        .await;
+    }
+    save(svc, Mode::Live)?;
+    if let Err(fault) = try_start_from(svc, origin) {
+        let _ = save(svc, Mode::Off);
+        return Err(SwitchFault::Control(Refused::Start(fault)));
+    }
+    if forked {
+        blocking(svc, |svc| end_threads(svc, &[SEAT, SHADOW_THREAD])).await;
+    }
+    Ok(())
+}
+
 /// Live to off: stops the child by pid, saves the mode, marks the hosted seat ended and writes the
 /// handover file for the desktop Overlord.
 async fn roll_back(svc: &Arc<Services>) -> Result<(), SwitchFault> {
@@ -140,7 +172,7 @@ async fn roll_back(svc: &Arc<Services>) -> Result<(), SwitchFault> {
 /// Changes the mode to `to`, running the effect of the step.
 ///
 /// # Errors
-/// A [`SwitchFault`]: a refused jump, no session to go live from, a child that did not start or
+/// A [`SwitchFault`]: a refused jump, no session to go live from a shadow, a child that did not start or
 /// stop, or a config that could not be saved.
 pub(crate) async fn switch(svc: &Arc<Services>, to: Mode) -> Result<Switched, SwitchFault> {
     let _one = svc.overlord.control.lock().await;
@@ -151,6 +183,7 @@ pub(crate) async fn switch(svc: &Arc<Services>, to: Mode) -> Result<Switched, Sw
         Step::ShadowOn => shadow_on(svc)?,
         Step::ShadowOff => shadow_off(svc).await?,
         Step::GoLive => go_live(svc).await?,
+        Step::LiveOn => live_on(svc).await?,
         Step::Rollback => roll_back(svc).await?,
     }
     svc.log.info(

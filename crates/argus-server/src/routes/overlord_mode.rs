@@ -1,6 +1,6 @@
 //! The switch-over and the rollback, for the owner's page only: `POST /api/overlord/mode` with
-//! `{mode: off|shadow|live}` runs one step and answers `{from, to, already}`. A jump from off to live
-//! or from live to shadow is 409 with the fault.
+//! `{mode: off|shadow|live}` runs one step and answers `{from, to, already}`. A jump from live to
+//! shadow is 409 with the fault.
 
 use argus_core::ApiError;
 use argus_overlord::mode::{Mode, ModeFault};
