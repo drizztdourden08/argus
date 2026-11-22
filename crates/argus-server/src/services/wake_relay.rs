@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use argus_accounts::find_app_data;
+use argus_accounts::{CliCredentials, Credentials, find_app_data};
 use argus_wake::service::driver::lock;
 
 use crate::Services;
@@ -15,14 +15,21 @@ pub(crate) fn wire(svc: &Services) {
     let (Some(wake), Some(accounts)) = (&svc.wake, svc.accounts.clone()) else {
         return;
     };
+    let app_of = Arc::clone(&accounts);
+    let list_of = Arc::clone(&accounts);
+    let creds: Arc<dyn Credentials> = Arc::new(CliCredentials::new(find_app_data(
+        accounts.config().app_data.as_deref(),
+    )));
     let host = RelayHost {
         coord_home: svc.paths.coord_home.clone(),
         shadow: svc.shadow,
-        app_data: Box::new(move || find_app_data(accounts.config().app_data.as_deref())),
+        app_data: Box::new(move || find_app_data(app_of.config().app_data.as_deref())),
         notify: svc.notify.clone(),
         hook: svc.wake_hook(),
         activity: Some(Arc::clone(&svc.activity)),
         sign_in: SignInGate::default(),
+        accounts: Box::new(move || list_of.config().accounts),
+        creds,
     };
     lock(wake).set_relay_port(Arc::new(ServerRelay::new(host)));
 }

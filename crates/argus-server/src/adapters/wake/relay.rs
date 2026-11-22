@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 
-use argus_accounts::find_cli_exe;
+use argus_accounts::{Account, Credentials, find_cli_exe};
 use argus_accounts::session_map::{local_ids, seat_of};
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
@@ -14,6 +14,7 @@ use argus_store::ActivityLog;
 use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 
 use super::headless::{resume, session_running};
+use super::login::Login;
 use super::outcome::Outcome;
 use super::relay_outcome::SignInGate;
 use super::relay_text::{Line, note_text, relay_wake_text, wake_text};
@@ -38,6 +39,10 @@ pub struct RelayHost {
     pub activity: Option<Arc<ActivityLog>>,
     /// Keeps the expired-login ping to once an hour.
     pub sign_in: SignInGate,
+    /// The known accounts, read when a headless resume picks its login.
+    pub accounts: Box<dyn Fn() -> Vec<Account> + Send + Sync>,
+    /// The CLI logins of the accounts.
+    pub creds: Arc<dyn Credentials>,
 }
 
 /// The relay port over the boards, the desktop's session records and the CLI.
@@ -100,13 +105,22 @@ impl RelayHost {
             return;
         };
         if !session_running(&id) && !session_running(session) {
-            self.start_resume(&exe, Path::new(&cwd), &id, target);
+            let login = self.headless_login(&app, session, target);
+            self.start_resume(&exe, Path::new(&cwd), &id, login, target);
         }
     }
 
-    fn start_resume(self: &Arc<Self>, exe: &Path, cwd: &Path, id: &str, target: &Ward) {
+    fn start_resume(
+        self: &Arc<Self>,
+        exe: &Path,
+        cwd: &Path,
+        id: &str,
+        login: Option<Login>,
+        target: &Ward,
+    ) {
         let (host, ward) = (Arc::clone(self), target.clone());
-        let started = resume(exe, cwd, id, &wake_text(&target.key.thread), move |out| {
+        let text = wake_text(&target.key.thread);
+        let started = resume(exe, cwd, id, &text, login.as_ref(), move |out| {
             host.on_outcome(&ward, &out);
         });
         if let Err(error) = started {

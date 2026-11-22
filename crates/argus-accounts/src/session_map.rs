@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::types::Account;
+
 /// The two fields of a session record that hold CLI session ids.
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -118,6 +120,40 @@ pub fn seat_of(app_data: &Path, local_id: &str) -> Option<Seat> {
     serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
 }
 
+/// The scope folders `(desktopAccount, desktopOrg)` of every record of a Desktop session
+/// (`local_...`), in path order. A session with no record has none.
+#[must_use]
+pub fn scopes_of(app_data: &Path, local_id: &str) -> Vec<(String, String)> {
+    record_files(app_data)
+        .into_iter()
+        .filter(|p| p.file_stem().is_some_and(|s| s == local_id))
+        .filter_map(|p| {
+            let org = p.parent()?;
+            let account = org.parent()?;
+            Some((folder_name(account)?, folder_name(org)?))
+        })
+        .collect()
+}
+
+fn folder_name(dir: &Path) -> Option<String> {
+    Some(dir.file_name()?.to_string_lossy().into_owned())
+}
+
+/// The first account, in config order, whose `desktop_account` and `desktop_org` both equal one
+/// of the scopes.
+#[must_use]
+pub fn account_for_scopes<'a>(
+    accounts: &'a [Account],
+    scopes: &[(String, String)],
+) -> Option<&'a Account> {
+    accounts.iter().find(|a| {
+        let (Some(acct), Some(org)) = (&a.desktop_account, &a.desktop_org) else {
+            return false;
+        };
+        scopes.iter().any(|(sa, so)| sa == acct && so == org)
+    })
+}
+
 // test-tag: critical
 #[cfg(test)]
 mod tests {
@@ -172,5 +208,43 @@ mod tests {
         assert_eq!(found.get(CURRENT).map(String::as_str), Some("local_aaaa"));
         assert_eq!(found.get(PRIOR).map(String::as_str), Some("local_aaaa"));
         assert_eq!(found.get("none"), None);
+    }
+
+    fn scope(account: &str, org: &str) -> (String, String) {
+        (account.to_owned(), org.to_owned())
+    }
+
+    fn account_of(key: &str, account: &str, org: &str) -> Account {
+        crate::fixtures::account_in(key, key, Some(account.to_owned()), Some(org.to_owned()))
+    }
+
+    #[test]
+    fn the_scopes_of_a_local_id_are_the_folders_of_each_of_its_records() {
+        let dir = tempfile::tempdir().expect("dir");
+        let base = dir.path().join("claude-code-sessions");
+        for (acct, org) in [("a1", "o1"), ("a2", "o2")] {
+            let folder = base.join(acct).join(org);
+            fs::create_dir_all(&folder).expect("folder");
+            fs::write(folder.join("local_cccc.json"), "{}").expect("record");
+        }
+        let scopes = scopes_of(dir.path(), "local_cccc");
+        assert_eq!(scopes, [scope("a1", "o1"), scope("a2", "o2")]);
+        assert_eq!(scopes_of(dir.path(), "local_none").len(), 0);
+    }
+
+    #[test]
+    fn an_account_matches_only_when_both_ids_match_a_scope() {
+        let accounts = [account_of("x", "a1", "o9"), account_of("y", "a1", "o1")];
+        let found = account_for_scopes(&accounts, &[scope("a1", "o1")]);
+        assert_eq!(found.map(|a| a.key.as_str()), Some("y"));
+        assert!(account_for_scopes(&accounts, &[scope("a2", "o1")]).is_none());
+    }
+
+    #[test]
+    fn with_two_scopes_and_one_match_the_matching_account_wins() {
+        let accounts = [account_of("x", "a1", "o1"), account_of("y", "a2", "o2")];
+        let scopes = [scope("a3", "o3"), scope("a2", "o2")];
+        let found = account_for_scopes(&accounts, &scopes);
+        assert_eq!(found.map(|a| a.key.as_str()), Some("y"));
     }
 }

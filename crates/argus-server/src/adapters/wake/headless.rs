@@ -15,7 +15,11 @@ use argus_core::process::hidden_command;
 use argus_overlord::session::env::strip_env;
 use argus_procs::{Killer, ProcRow, Sampler, SystemKiller, SystemSampler};
 
+use super::login::Login;
 use super::outcome::{Outcome, parse};
+
+/// The variable the CLI reads an OAuth access token from.
+const LOGIN_ENV: &str = "CLAUDE_CODE_OAUTH_TOKEN";
 
 /// A headless resume that runs longer than this is killed.
 pub const TIMEOUT: Duration = Duration::from_secs(20 * 60);
@@ -36,7 +40,7 @@ pub fn session_running(session_id: &str) -> bool {
 }
 
 /// Start the resume and return at once; a helper thread waits for the child, ends it after [`TIMEOUT`] and
-/// hands its [`Outcome`] to `on_done`.
+/// hands its [`Outcome`] to `on_done`. With a `login` the CLI runs with that access token, else with its own login.
 ///
 /// # Errors
 /// When the CLI could not be started.
@@ -45,6 +49,7 @@ pub fn resume(
     cwd: &Path,
     session_id: &str,
     text: &str,
+    login: Option<&Login>,
     on_done: impl FnOnce(Outcome) + Send + 'static,
 ) -> std::io::Result<()> {
     let mut command = hidden_command(exe);
@@ -63,6 +68,9 @@ pub fn resume(
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null());
+    if let Some(login) = login {
+        command.env(LOGIN_ENV, login.expose());
+    }
     let mut child = command.spawn()?;
     let pid = child.id();
     let killed = Arc::new(AtomicBool::new(false));

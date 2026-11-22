@@ -28,7 +28,9 @@ demand.
 The CLI's print mode: `-p --resume <cliSessionId> "<wake text>" --output-format json`, hidden, in the session's folder, from the
 desktop's own CLI. The env drops the auth variables, the session variables of the desktop app and the OAuth switches (`strip_env` in
 `argus-overlord`), so the CLI uses its own sign-in. It is skipped when a running CLI process carries that
-session id. It is killed by pid after 20 minutes, never by name. The session id and folder come from the desktop's
+session id. The login is the one Argus manages for the thread's account: the account whose Desktop account and organization match a
+folder of the session's records gives its access token (refreshed when expired), passed as `CLAUDE_CODE_OAUTH_TOKEN` and never logged.
+With no matching account or no token, the CLI's default login runs and the activity log says so. It is killed by pid after 20 minutes, never by name. The session id and folder come from the desktop's
 session record (`cliSessionId`, `cwd`).
 
 ## Config
