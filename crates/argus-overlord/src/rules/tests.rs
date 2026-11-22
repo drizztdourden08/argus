@@ -152,6 +152,22 @@ fn the_next_due_time_is_the_soonest_enabled() {
 }
 
 #[test]
+fn the_next_rule_is_the_enabled_one_due_first() {
+    let mut soon = rule(15);
+    soon.id = "OR-1".to_owned();
+    soon.next_run_at = iso_from_ms(NOW + MIN);
+    let mut later = soon.clone();
+    later.id = "OR-2".to_owned();
+    later.next_run_at = iso_from_ms(NOW + 9 * MIN);
+    let mut off = soon.clone();
+    off.enabled = false;
+    off.next_run_at = iso_from_ms(NOW);
+    let all = [later, off, soon];
+    assert_eq!(next_rule(&all).map(|r| r.id.as_str()), Some("OR-1"));
+    assert_eq!(next_rule(&[]), None);
+}
+
+#[test]
 fn the_seed_is_three_owner_rules() {
     let rules = seed(NOW);
     let shape: Vec<(&str, u32)> = rules

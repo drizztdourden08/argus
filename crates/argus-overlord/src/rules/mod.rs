@@ -12,7 +12,7 @@ mod validate;
 
 pub use model::{By, Rule, RuleInput, RulePatch};
 pub use parse::{parse_input, parse_patch};
-pub use schedule::{after_run, due, next_due_at, prompt_text};
+pub use schedule::{after_run, due, next_due_at, next_rule, prompt_text};
 pub use seed::seed;
 pub use validate::{create, patch};
 

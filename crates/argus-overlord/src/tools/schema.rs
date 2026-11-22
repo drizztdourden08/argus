@@ -40,6 +40,36 @@ pub fn specs() -> Vec<Value> {
             &json!({ "localId": { "type": "string" }, "text": { "type": "string" } }),
             &["localId", "text"],
         ),
+        tool(
+            "rules_list",
+            "Lists the timed rules: id, title, prompt, everyMin, enabled, createdBy, lastRunAt, nextRunAt.",
+            &json!({}),
+            &[],
+        ),
+        tool(
+            "rule_add",
+            "Adds a timed rule that sends you its prompt every everyMin minutes (5 to 1440), first one period from now.",
+            &json!({ "title": { "type": "string" }, "prompt": { "type": "string" }, "everyMin": { "type": "integer" } }),
+            &["title", "prompt", "everyMin"],
+        ),
+        tool(
+            "rule_update",
+            "Changes a timed rule; the fields you leave out stay as they are.",
+            &json!({
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "prompt": { "type": "string" },
+                "everyMin": { "type": "integer" },
+                "enabled": { "type": "boolean" }
+            }),
+            &["id"],
+        ),
+        tool(
+            "rule_remove",
+            "Removes a timed rule.",
+            &json!({ "id": { "type": "string" } }),
+            &["id"],
+        ),
     ]
 }
 
@@ -58,7 +88,11 @@ mod tests {
                 "thread_message",
                 "thread_wake",
                 "sessions_list",
-                "session_message"
+                "session_message",
+                "rules_list",
+                "rule_add",
+                "rule_update",
+                "rule_remove"
             ]
         );
         for entry in &all {

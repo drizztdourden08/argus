@@ -43,6 +43,17 @@ pub fn next_due_at(rules: &[Rule]) -> Option<String> {
         .map(|(_, text)| text.clone())
 }
 
+/// The enabled rule due first, or `None` when no enabled rule has a readable time.
+#[must_use]
+pub fn next_rule(rules: &[Rule]) -> Option<&Rule> {
+    rules
+        .iter()
+        .filter(|rule| rule.enabled)
+        .filter_map(|rule| parse_ms(&rule.next_run_at).map(|at| (at, rule)))
+        .min_by_key(|(at, _)| *at)
+        .map(|(_, rule)| rule)
+}
+
 /// The message for the child: `Rule OR-n "<title>" (every N min): <prompt>`.
 #[must_use]
 pub fn prompt_text(rule: &Rule) -> String {

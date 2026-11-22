@@ -1,8 +1,10 @@
 //! The Overlord's own tools on `POST /mcp/overlord` (I-192): reach a thread, list the Desktop sessions and
-//! resume one. The shadow Overlord only reads, so it may list sessions and nothing else.
+//! resume one, keep the timed rules. The shadow Overlord only reads, so it may list sessions and
+//! rules and nothing else.
 
 mod board;
 mod resume;
+mod rules;
 
 use std::sync::Arc;
 
@@ -71,12 +73,18 @@ async fn dispatch(svc: &Arc<Services>, call: Call) -> Result<String, String> {
             reason,
         } => blocking(svc, move |s| board::wake_only(s, &project, &thread, &reason)).await,
         Call::SessionMessage { local_id, text } => resume::run(svc, &local_id, &text).await,
+        Call::RulesList => blocking(svc, rules::list).await,
+        Call::RuleAdd { input } => blocking(svc, move |s| rules::add(s, &input)).await,
+        Call::RuleUpdate { id, change } => {
+            blocking(svc, move |s| rules::update(s, &id, &change)).await
+        }
+        Call::RuleRemove { id } => blocking(svc, move |s| rules::remove(s, &id)).await,
     }
 }
 
 /// Runs one tool call. The shadow is refused every tool that writes.
 pub async fn run(svc: &Arc<Services>, call: Call) -> Answer {
-    if is_shadow(svc) && !matches!(call, Call::SessionsList) {
+    if is_shadow(svc) && !matches!(call, Call::SessionsList | Call::RulesList) {
         return Answer::of(Err(SHADOW_REFUSAL.to_owned()));
     }
     Answer::of(dispatch(svc, call).await)

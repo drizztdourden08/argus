@@ -127,11 +127,17 @@ A rule is a timed prompt: `{id "OR-n", title, prompt, everyMin, enabled, created
 
 ## Overlord tools (I-192)
 
-`POST /mcp/overlord` lists four tools beside `permission_prompt`, behind the same bearer. A bad argument gets an `isError` text, never a fault. The shadow may only list sessions: the other three are refused with "the shadow Overlord only reads".
+`POST /mcp/overlord` lists eight tools beside `permission_prompt`, behind the same bearer. A bad argument gets an `isError` text, never a fault. The shadow may only list sessions and rules: the other six are refused with "the shadow Overlord only reads".
 
 - **`thread_message {project, thread, text}`.** Queues a note from `Overlord` in the thread's inbox, then wakes the thread. An unknown board or thread is refused with a sentence that lists what exists.
 - **`thread_wake {project, thread, reason}`.** A wake only, with the reason as its line.
 - **`sessions_list`.** The Desktop sessions from the session records, newest first, at most 200: `localId`, `title`, `cwd`, `archived`, `cliSessionId`, `updatedAt`.
 - **`session_message {localId, text}`.** A headless resume with the login of the session's account. It skips an archived session and one that runs now. It waits up to 10 minutes and answers `ok`, a sign-in notice, a failure reason, a timeout or a skip reason.
+- **`rules_list`.** Every timed rule as JSON text.
+- **`rule_add {title, prompt, everyMin}`.** Adds a rule created by `overlord`, due one period from now. The limits are those of the Rules tab; a refusal comes back as `isError` text with its sentence.
+- **`rule_update {id, title?, prompt?, everyMin?, enabled?}`.** Changes the fields given and answers the rule.
+- **`rule_remove {id}`.** Removes the rule.
+
+The four rule tools call the rules service, so they check and store a rule exactly as the owner's page does.
 
 The pure parts (schemas, argument parsing) are in `crates/argus-overlord/src/tools/`. The server side is `crates/argus-server/src/adapters/overlord/tools/`.
