@@ -12,6 +12,7 @@
 mod child;
 #[cfg(test)]
 mod fake;
+mod flight;
 mod restart;
 mod run;
 #[cfg(test)]
@@ -24,7 +25,9 @@ use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
+use self::flight::Flight;
 use super::guard::GuardFault;
+use super::inbox::{Held, HeldView, Inbox};
 use super::state::State;
 use crate::ports::{ChildHost, ChildSpec, HostFault};
 
@@ -66,6 +69,8 @@ pub struct Config {
 pub struct Link {
     commands: UnboundedSender<Command>,
     alive: Arc<AtomicBool>,
+    flight: Flight,
+    held: HeldView,
 }
 
 impl Link {
@@ -74,6 +79,18 @@ impl Link {
     #[must_use]
     pub fn send(&self, text: String) -> bool {
         self.alive.load(Ordering::SeqCst) && self.commands.send(Command::Message(text)).is_ok()
+    }
+
+    /// Is a tool call of the child waiting for its result?
+    #[must_use]
+    pub fn tool_in_flight(&self) -> bool {
+        self.flight.in_flight()
+    }
+
+    /// The messages waiting for the child, oldest first.
+    #[must_use]
+    pub fn held(&self) -> Vec<Held> {
+        self.held.snapshot()
     }
 
     /// Asks the supervisor to end the child by pid and finish.
@@ -96,9 +113,12 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
     let (commands, rx) = unbounded_channel();
     let (state_tx, state) = watch::channel(State::default());
     let alive = Arc::new(AtomicBool::new(false));
+    let (inbox, flight) = (Inbox::default(), Flight::default());
     let link = Link {
         commands,
         alive: Arc::clone(&alive),
+        flight: flight.clone(),
+        held: inbox.view(),
     };
     let wiring = child::Wiring {
         rx,
@@ -107,6 +127,6 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
         alive,
         link: link.clone(),
     };
-    let task = tokio::spawn(restart::drive(run::Run::new(host, state_tx), wiring));
+    let task = tokio::spawn(restart::drive(run::Run::new(host, state_tx, (inbox, flight)), wiring));
     Handle { link, state, task }
 }

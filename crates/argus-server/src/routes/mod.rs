@@ -34,6 +34,7 @@ mod overlord_approvals;
 mod overlord_budget;
 mod overlord_message;
 mod overlord_mode;
+mod overlord_queue;
 mod overlord_rules;
 mod overlord_session;
 mod overlord_shadow;

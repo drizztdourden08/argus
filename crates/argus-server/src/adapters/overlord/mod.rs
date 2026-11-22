@@ -6,6 +6,7 @@ pub mod feed;
 pub mod gate;
 pub mod host;
 pub mod key;
+pub mod queue;
 pub mod rules;
 pub mod spend;
 pub mod transcript;

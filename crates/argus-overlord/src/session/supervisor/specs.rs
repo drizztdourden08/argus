@@ -186,3 +186,22 @@ async fn stop_ends_the_child_by_pid_and_the_supervisor() {
     assert_eq!(rig.handle.state.borrow().status, Status::Stopped);
     assert!(rig.handle.task.is_finished());
 }
+
+const TOOL_USE: &str = r#"{"type":"assistant","session_id":"s1","message":{"content":[{"type":"tool_use","id":"t1","name":"Bash","input":{}}]}}"#;
+const TOOL_RESULT: &str = r#"{"type":"user","session_id":"s1","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"ok"}]}}"#;
+
+#[tokio::test(start_paused = true)]
+async fn the_link_tells_a_tool_in_flight_and_the_held_messages() {
+    let (rig, pid) = rig_with_first_message().await;
+    rig.host.say(pid, INIT);
+    rig.host.say(pid, TOOL_USE);
+    assert!(rig.handle.link.send(String::from("two")));
+    settle().await;
+    assert!(rig.handle.link.tool_in_flight());
+    let held = rig.handle.link.held();
+    assert_eq!(held.len(), 1);
+    assert_eq!(held[0].text, "two");
+    rig.host.say(pid, TOOL_RESULT);
+    settle().await;
+    assert!(!rig.handle.link.tool_in_flight());
+}

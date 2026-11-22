@@ -93,9 +93,11 @@ impl<H: ChildHost> Run<H> {
 
     /// Reads one stdout line. A fault means the child was refused and ended.
     async fn on_line(&mut self, pid: u32, line: &str) -> Option<GuardFault> {
-        match decode_line(line) {
-            Ok(Wire::Init(init)) => return self.on_init(pid, &init).await,
-            Ok(Wire::Result(outcome)) => {
+        let event = decode_line(line).ok()?;
+        self.flight.see(&event);
+        match event {
+            Wire::Init(init) => return self.on_init(pid, &init).await,
+            Wire::Result(outcome) => {
                 self.turn_done(outcome.total_cost_usd);
                 self.flush(pid).await;
             }

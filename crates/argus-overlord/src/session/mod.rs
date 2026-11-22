@@ -3,6 +3,7 @@
 //! supervisor spawns nothing itself; the server adapter does, through the
 //! [`ChildHost`](crate::ports::ChildHost) port.
 
+pub mod activity;
 pub mod args;
 pub mod env;
 pub mod guard;

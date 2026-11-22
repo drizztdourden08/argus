@@ -6,6 +6,7 @@ use tokio::sync::watch;
 
 use super::super::inbox::Inbox;
 use super::super::state::{Event as Change, State, apply};
+use super::flight::Flight;
 use crate::ports::ChildHost;
 use crate::protocol::encode_user_message;
 
@@ -14,6 +15,8 @@ pub(super) struct Run<H: ChildHost> {
     pub(super) state: State,
     state_tx: watch::Sender<State>,
     pub(super) inbox: Inbox,
+    /// The tool calls the child has started and not finished.
+    pub(super) flight: Flight,
     /// True from a write until its `result`. The state machine cannot say it: the first turn runs
     /// while the status is still `Starting`, because `init` comes after the first message.
     pub(super) busy: bool,
@@ -24,12 +27,17 @@ pub(super) struct Run<H: ChildHost> {
 }
 
 impl<H: ChildHost> Run<H> {
-    pub(super) fn new(host: Arc<H>, state_tx: watch::Sender<State>) -> Self {
+    pub(super) fn new(
+        host: Arc<H>,
+        state_tx: watch::Sender<State>,
+        (inbox, flight): (Inbox, Flight),
+    ) -> Self {
         Self {
             host,
             state: State::default(),
             state_tx,
-            inbox: Inbox::default(),
+            inbox,
+            flight,
             busy: false,
             in_flight: None,
             crashes: 0,
@@ -75,6 +83,7 @@ impl<H: ChildHost> Run<H> {
             self.inbox.requeue(text);
         }
         self.busy = false;
+        self.flight.clear();
         self.apply(&Change::Exited { requested });
     }
 }

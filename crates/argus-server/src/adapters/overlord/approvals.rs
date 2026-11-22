@@ -20,8 +20,9 @@ const TABLE: &str = "CREATE TABLE IF NOT EXISTS overlord_approvals (
 );";
 
 const TITLE: &str = "The Overlord needs an answer";
-const BOARD: &str = "portfolio";
-const THREAD: &str = "coordinator";
+/// The board of the Overlord and its coordinator thread.
+pub(crate) const BOARD: &str = "portfolio";
+pub(crate) const THREAD: &str = "coordinator";
 
 /// The rows over the shared database, as the `ApprovalStore` port.
 pub struct SqlApprovals {
