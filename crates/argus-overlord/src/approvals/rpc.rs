@@ -3,6 +3,8 @@
 
 use serde_json::{Value, json};
 
+use crate::tools::{self, Call, parse_call, text_result};
+
 const PROTOCOL: &str = "2025-06-18";
 const TOOL: &str = "permission_prompt";
 
@@ -24,6 +26,8 @@ pub enum Parsed {
     Quiet,
     /// A permission question to put to the owner.
     Ask(Prompt),
+    /// A call of one of the Overlord's own tools; `id` is the request id to answer.
+    Tool { id: Value, call: Call },
 }
 
 fn result(id: &Value, body: &Value) -> Value {
@@ -35,7 +39,7 @@ fn failure(id: &Value, code: i64, message: &str) -> Value {
 }
 
 fn listing() -> Value {
-    json!({ "tools": [{
+    let mut all = vec![json!({
         "name": TOOL,
         "description": "Asks the owner whether a tool call may run.",
         "inputSchema": {
@@ -47,7 +51,9 @@ fn listing() -> Value {
             },
             "required": ["tool_name", "input"]
         }
-    }] })
+    })];
+    all.extend(tools::specs());
+    json!({ "tools": all })
 }
 
 fn initialize() -> Value {
@@ -60,8 +66,10 @@ fn initialize() -> Value {
 
 fn ask(id: &Value, params: &Value) -> Parsed {
     let args = &params["arguments"];
-    let named = params["name"].as_str() == Some(TOOL);
-    let Some(tool_name) = args["tool_name"].as_str().filter(|_| named) else {
+    if params["name"].as_str() != Some(TOOL) {
+        return own_tool(id, params["name"].as_str().unwrap_or_default(), args);
+    }
+    let Some(tool_name) = args["tool_name"].as_str() else {
         return Parsed::Now(failure(id, -32602, "unknown tool or missing tool_name"));
     };
     Parsed::Ask(Prompt {
@@ -70,6 +78,17 @@ fn ask(id: &Value, params: &Value) -> Parsed {
         input: args.get("input").cloned().unwrap_or_else(|| json!({})),
         tool_use_id: args["tool_use_id"].as_str().map(str::to_owned),
     })
+}
+
+fn own_tool(id: &Value, name: &str, args: &Value) -> Parsed {
+    match parse_call(name, args) {
+        Some(Ok(call)) => Parsed::Tool {
+            id: id.clone(),
+            call,
+        },
+        Some(Err(sentence)) => Parsed::Now(text_result(id, &sentence, true)),
+        None => Parsed::Now(failure(id, -32602, "unknown tool or missing tool_name")),
+    }
 }
 
 /// Reads one request body.

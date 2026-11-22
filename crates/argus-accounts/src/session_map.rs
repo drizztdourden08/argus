@@ -58,7 +58,7 @@ fn is_record(path: &Path) -> bool {
             .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
 }
 
-fn record_files(app_data: &Path) -> Vec<PathBuf> {
+pub(crate) fn record_files(app_data: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
     for account in subdirs(&app_data.join("claude-code-sessions")) {
         for org in subdirs(&account) {

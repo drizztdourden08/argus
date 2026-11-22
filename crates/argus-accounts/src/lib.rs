@@ -17,6 +17,7 @@ pub mod ports;
 pub mod registry;
 pub mod resume;
 pub mod rules;
+pub mod session_list;
 pub mod session_map;
 pub mod sidebar;
 pub mod sync;

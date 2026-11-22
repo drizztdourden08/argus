@@ -9,4 +9,5 @@ pub mod key;
 pub mod queue;
 pub mod rules;
 pub mod spend;
+pub mod tools;
 pub mod transcript;

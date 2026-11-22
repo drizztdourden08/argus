@@ -62,7 +62,7 @@ fn now_ms() -> i64 {
 }
 
 /// The login of the account that owns the desktop session `session` (a hook session id), or why none.
-fn login_of(
+pub(crate) fn login_of(
     creds: &dyn Credentials,
     accounts: &[Account],
     app: &Path,

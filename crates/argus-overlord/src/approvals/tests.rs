@@ -147,6 +147,40 @@ fn the_rpc_answers_the_handshake_and_the_listing_and_finds_the_question() {
 
 // test-tag: critical
 #[test]
+fn the_listing_shows_the_own_tools_and_a_call_of_one_is_parsed() {
+    let list = json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" });
+    let Parsed::Now(listing) = parse(list.to_string().as_bytes()) else {
+        panic!("tools/list answers at once");
+    };
+    let names: Vec<&str> = listing["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|t| t["name"].as_str())
+        .collect();
+    assert_eq!(names[0], "permission_prompt");
+    assert!(names.contains(&"thread_message"));
+    assert!(names.contains(&"session_message"));
+    let call = json!({ "jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {
+        "name": "thread_wake",
+        "arguments": { "project": "brock", "thread": "coordinator", "reason": "look" }
+    } });
+    let Parsed::Tool { id, call } = parse(call.to_string().as_bytes()) else {
+        panic!("an own tool call is parsed");
+    };
+    assert_eq!(id, json!(4));
+    assert!(matches!(call, crate::tools::Call::ThreadWake { .. }));
+    let bad = json!({ "jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {
+        "name": "thread_wake", "arguments": { "project": "brock" }
+    } });
+    let Parsed::Now(reply) = parse(bad.to_string().as_bytes()) else {
+        panic!("a bad argument is answered at once");
+    };
+    assert_eq!(reply["result"]["isError"], json!(true));
+}
+
+// test-tag: critical
+#[test]
 fn the_mcp_config_names_the_endpoint_and_the_bearer() {
     let text = mcp_config_json("http://127.0.0.1:9/mcp/overlord", "tok");
     let value: serde_json::Value = serde_json::from_str(&text).unwrap();

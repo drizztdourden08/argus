@@ -15,5 +15,6 @@ pub mod session;
 pub mod shadow;
 pub mod spend;
 pub mod switch;
+pub mod tools;
 pub mod transcript;
 pub mod view;
