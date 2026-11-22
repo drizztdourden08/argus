@@ -23,7 +23,7 @@ interface ModeSwitch {
   already: boolean;
 }
 
-type OverlordAction = 'start' | 'stop' | 'restart';
+type OverlordAction = 'restart';
 
 type OverlordActivity = 'off' | 'idle' | 'thinking' | 'working';
 

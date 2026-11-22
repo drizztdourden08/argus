@@ -2,9 +2,7 @@
 import type { OverlordMode } from '../../../../data/overlord';
 
 interface ControlSet {
-  start: boolean;
   restart: boolean;
-  stop: boolean;
 }
 
 interface SpendLook {

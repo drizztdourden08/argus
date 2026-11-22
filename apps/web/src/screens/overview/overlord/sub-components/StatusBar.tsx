@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, Flex, Stack, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { KeyButton } from '../../../../shell/OverlordChat';
 import { useNow } from '../behavior/useNow';
 import { controlsFor, uptimeText } from '../model';
 import { NO_MODE, STATE_STATUSES } from '../overlord.constants';
@@ -19,11 +20,11 @@ const StatusBar = (props: StatusBarProps) => {
         {facts && <Text variant="caption" tone="muted">{facts}</Text>}
       </Flex>
       <Flex gap="sm" wrap>
-        <Button variant="primary" size="sm" disabled={!can.start || action.busy} onClick={() => onControl('start')}>Start</Button>
         <Button size="sm" disabled={!can.restart || action.busy} onClick={() => onControl('restart')}>Restart</Button>
-        <Button variant="danger" size="sm" disabled={!can.stop || action.busy} onClick={() => onControl('stop')}>Stop</Button>
+        {status.problem && <KeyButton note={status.problem} />}
         <Button size="sm" active={chatOpen} onClick={onChat}>Chat</Button>
       </Flex>
+      {status.problem && <Text variant="caption" tone="muted">{status.problem}</Text>}
       {action.problem && <Callout tone="danger">{action.problem}</Callout>}
     </Stack>
   );

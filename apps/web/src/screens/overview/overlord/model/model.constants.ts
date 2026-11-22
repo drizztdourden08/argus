@@ -3,16 +3,16 @@ import type { OverlordMode, OverlordState } from '../../../../data/overlord';
 import type { ControlSet } from './model.type';
 
 const CONTROLS_BY_STATE: Readonly<Record<OverlordState, ControlSet>> = {
-  stopped: { start: true, restart: false, stop: false },
-  starting: { start: false, restart: false, stop: true },
-  idle: { start: false, restart: true, stop: true },
-  turn: { start: false, restart: true, stop: true },
-  'paused-budget': { start: false, restart: true, stop: true },
-  'waiting-approval': { start: false, restart: true, stop: true },
-  crashed: { start: true, restart: true, stop: false },
+  stopped: { restart: false },
+  starting: { restart: false },
+  idle: { restart: true },
+  turn: { restart: true },
+  'paused-budget': { restart: true },
+  'waiting-approval': { restart: true },
+  crashed: { restart: true },
 };
 
-const NO_CONTROLS: ControlSet = { start: false, restart: false, stop: false };
+const NO_CONTROLS: ControlSet = { restart: false };
 
 const MODES: readonly OverlordMode[] = ['off', 'shadow', 'live'];
 
