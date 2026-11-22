@@ -118,3 +118,20 @@ A rule is a timed prompt: `{id "OR-n", title, prompt, everyMin, enabled, created
 - **The tick.** `services/overlord/rules_tick.rs` runs every 30 seconds. For each enabled rule that is due and, when the mode is `live` and the child runs, it sends `Rule OR-n "<title>" (every N min): <prompt>` through the same link as the owner chat, so it is held while a turn runs. Otherwise the run is skipped. Either way the rule gets `lastRunAt` now and `nextRunAt` one period later, and the activity log gets `overlord rule OR-n ran` or `overlord rule OR-n skipped: not running`.
 - **The routes** are for the owner's page only, and writes need the strict origin check (`routes/overlord_rules.rs`). `GET /api/overlord/rules` is `{rules, nextDueAt}`. `POST /api/overlord/rules` adds an owner rule. `PUT /api/overlord/rules/<id>` patches one; a new period or switching a rule on moves its next run to one period from now. `DELETE /api/overlord/rules/<id>` is `{ok: true}`. `POST /api/overlord/rules/<id>/run` delivers it now and is 409 "the hosted Overlord is not running" with no child. Bad input is 400 with the sentence, an unknown id 404.
 - **The service** (`services/overlord/rules.rs`) has `list`, `add(input, by)`, `update(id, patch)`, `remove(id)` and `run_now(id)`, so the Overlord tools of a later story reuse the same checks.
+
+## Queue and activity (I-191)
+
+`GET /api/overlord/status` carries `activity`: `off` when no child runs, `thinking` while a turn runs with no tool call open, `working` while a tool call is open, and `idle` otherwise. The supervisor opens a call at each `tool_use` block and closes it at its `tool_result`, and clears them when the child ends. It also carries `nextRuleAt`, `nextRuleEveryMin` and `nextRuleTitle`: the enabled rule due first, or null with no enabled rule.
+
+`GET /api/overlord/queue` is for the owner's page only. It answers `{wakes, held, approvals, alerts}`. `wakes` are the wakes pending for the Overlord thread. `held` are the messages the supervisor keeps while a turn runs, each clipped to 500 characters. `approvals` are the permission asks that wait for the owner. `alerts` are the unacknowledged stalls and the open notices of the portfolio board. The code is `crates/argus-server/src/adapters/overlord/queue.rs` and the rows are built in `crates/argus-overlord/src/view.rs`.
+
+## Overlord tools (I-192)
+
+`POST /mcp/overlord` lists four tools beside `permission_prompt`, behind the same bearer. A bad argument gets an `isError` text, never a fault. The shadow may only list sessions: the other three are refused with "the shadow Overlord only reads".
+
+- **`thread_message {project, thread, text}`.** Queues a note from `Overlord` in the thread's inbox, then wakes the thread. An unknown board or thread is refused with a sentence that lists what exists.
+- **`thread_wake {project, thread, reason}`.** A wake only, with the reason as its line.
+- **`sessions_list`.** The Desktop sessions from the session records, newest first, at most 200: `localId`, `title`, `cwd`, `archived`, `cliSessionId`, `updatedAt`.
+- **`session_message {localId, text}`.** A headless resume with the login of the session's account. It skips an archived session and one that runs now. It waits up to 10 minutes and answers `ok`, a sign-in notice, a failure reason, a timeout or a skip reason.
+
+The pure parts (schemas, argument parsing) are in `crates/argus-overlord/src/tools/`. The server side is `crates/argus-server/src/adapters/overlord/tools/`.
