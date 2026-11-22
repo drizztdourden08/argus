@@ -16,6 +16,7 @@ use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 use super::headless::{resume, session_running};
 use super::login::Login;
 use super::outcome::Outcome;
+use super::relay_archived::ArchivedGate;
 use super::relay_outcome::SignInGate;
 use super::relay_text::{Line, note_text, relay_wake_text, wake_text};
 use crate::{WakeHook, WakeRequest};
@@ -39,6 +40,8 @@ pub struct RelayHost {
     pub activity: Option<Arc<ActivityLog>>,
     /// Keeps the expired-login ping to once an hour.
     pub sign_in: SignInGate,
+    /// Keeps the archived-session notice to once a day per thread.
+    pub archived: ArchivedGate,
     /// The known accounts, read when a headless resume picks its login.
     pub accounts: Box<dyn Fn() -> Vec<Account> + Send + Sync>,
     /// The CLI logins of the accounts.
@@ -70,7 +73,11 @@ impl RelayHost {
             .filter_map(|t| t.session_id.clone())
             .collect();
         let local = local_ids(&app, &wanted);
-        let lines: Vec<Line<'_>> = targets.iter().filter_map(|t| line_of(t, &local)).collect();
+        let lines: Vec<Line<'_>> = targets
+            .iter()
+            .filter(|t| !self.skip_archived(&app, t))
+            .filter_map(|t| line_of(t, &local))
+            .collect();
         if lines.is_empty() {
             return;
         }
@@ -100,6 +107,9 @@ impl RelayHost {
         let Some(exe) = find_cli_exe(&app) else {
             return;
         };
+        if self.skip_archived(&app, target) {
+            return;
+        }
         let (id, cwd) = seat_for(&app, session);
         let Some(cwd) = cwd else {
             return;

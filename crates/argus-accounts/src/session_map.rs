@@ -109,6 +109,8 @@ pub struct Seat {
     pub cli_session_id: Option<String>,
     /// The folder the session works in.
     pub cwd: Option<String>,
+    /// The owner archived the session in the Desktop app.
+    pub is_archived: bool,
 }
 
 /// The record of one Desktop session (`local_...`), read only; `None` when no record has that id.
@@ -118,6 +120,19 @@ pub fn seat_of(app_data: &Path, local_id: &str) -> Option<Seat> {
         .into_iter()
         .find(|p| p.file_stem().is_some_and(|s| s == local_id))?;
     serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
+}
+
+/// Is the Desktop session (`local_...`) archived? Only when it has a record and every record with that
+/// id says archived.
+#[must_use]
+pub fn is_archived(app_data: &Path, local_id: &str) -> bool {
+    let flags: Vec<bool> = record_files(app_data)
+        .into_iter()
+        .filter(|p| p.file_stem().is_some_and(|s| s == local_id))
+        .filter_map(|p| serde_json::from_str::<Seat>(&fs::read_to_string(p).ok()?).ok())
+        .map(|seat| seat.is_archived)
+        .collect();
+    !flags.is_empty() && flags.iter().all(|archived| *archived)
 }
 
 /// The scope folders `(desktopAccount, desktopOrg)` of every record of a Desktop session
@@ -184,6 +199,51 @@ mod tests {
         assert_eq!(seat.cli_session_id.as_deref(), Some(CURRENT));
         assert_eq!(seat.cwd.as_deref(), Some("X:/work"));
         assert_eq!(seat_of(dir.path(), "local_none"), None);
+    }
+
+    fn write_record(dir: &Path, scope: (&str, &str), name: &str, text: &str) {
+        let org = dir.join("claude-code-sessions").join(scope.0).join(scope.1);
+        fs::create_dir_all(&org).expect("org");
+        fs::write(org.join(name), text).expect("record");
+    }
+
+    #[test]
+    fn a_seat_reads_is_archived_true_false_and_missing() {
+        let dir = tempfile::tempdir().expect("dir");
+        write_record(
+            dir.path(),
+            ("a", "o"),
+            "local_t.json",
+            r#"{"isArchived":true}"#,
+        );
+        write_record(
+            dir.path(),
+            ("a", "o"),
+            "local_f.json",
+            r#"{"isArchived":false}"#,
+        );
+        write_record(dir.path(), ("a", "o"), "local_m.json", "{}");
+        assert!(seat_of(dir.path(), "local_t").expect("seat").is_archived);
+        assert!(!seat_of(dir.path(), "local_f").expect("seat").is_archived);
+        assert!(!seat_of(dir.path(), "local_m").expect("seat").is_archived);
+    }
+
+    #[test]
+    fn a_local_id_is_archived_only_when_every_record_says_so() {
+        let dir = tempfile::tempdir().expect("dir");
+        let archived = r#"{"isArchived":true}"#;
+        write_record(dir.path(), ("a1", "o1"), "local_x.json", archived);
+        write_record(dir.path(), ("a2", "o2"), "local_x.json", archived);
+        write_record(dir.path(), ("a1", "o1"), "local_y.json", archived);
+        write_record(
+            dir.path(),
+            ("a2", "o2"),
+            "local_y.json",
+            r#"{"isArchived":false}"#,
+        );
+        assert!(is_archived(dir.path(), "local_x"));
+        assert!(!is_archived(dir.path(), "local_y"));
+        assert!(!is_archived(dir.path(), "local_none"));
     }
 
     #[test]

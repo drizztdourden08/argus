@@ -9,6 +9,7 @@ pub mod headless;
 pub mod login;
 pub mod outcome;
 pub mod relay;
+pub mod relay_archived;
 pub mod relay_outcome;
 pub mod relay_text;
 pub mod store;
