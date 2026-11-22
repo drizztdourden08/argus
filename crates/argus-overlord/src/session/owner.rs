@@ -52,7 +52,19 @@ pub fn compose(text: &str) -> Result<String, Refusal> {
 /// # Errors
 /// A [`Refusal`]; `NotRunning` when there is no link or no child is up.
 pub fn deliver(link: Option<&Link>, text: &str) -> Result<(), Refusal> {
-    let message = compose(text)?;
+    send(link, compose(text)?)
+}
+
+/// Gives the child a text the owner did not type, as it is (a timed rule): the same link, so it is
+/// held while a turn runs.
+///
+/// # Errors
+/// [`Refusal::NotRunning`] when there is no link or no child is up.
+pub fn deliver_plain(link: Option<&Link>, text: &str) -> Result<(), Refusal> {
+    send(link, text.to_owned())
+}
+
+fn send(link: Option<&Link>, message: String) -> Result<(), Refusal> {
     match link {
         Some(link) if link.send(message) => Ok(()),
         _ => Err(Refusal::NotRunning),
@@ -82,6 +94,7 @@ mod specs {
     #[test]
     fn no_link_is_not_running() {
         assert_eq!(deliver(None, "hi"), Err(Refusal::NotRunning));
+        assert_eq!(deliver_plain(None, "hi"), Err(Refusal::NotRunning));
     }
 
     #[test]

@@ -34,6 +34,7 @@ mod overlord_approvals;
 mod overlord_budget;
 mod overlord_message;
 mod overlord_mode;
+mod overlord_rules;
 mod overlord_session;
 mod overlord_shadow;
 mod overlord_spend;
@@ -68,6 +69,7 @@ pub fn register_all(router: &mut Router) {
     overlord::register(router);
     mcp_overlord::register(router);
     overlord_shadow::register(router);
+    overlord_rules::register(router);
     activity::register(router);
     agents::register(router);
     procs::register(router);

@@ -8,6 +8,8 @@ pub(crate) mod config;
 pub(crate) mod control;
 pub(crate) mod live;
 mod live_session;
+pub(crate) mod rules;
+pub(crate) mod rules_tick;
 pub(crate) mod running;
 mod setting;
 pub(crate) mod shadow;

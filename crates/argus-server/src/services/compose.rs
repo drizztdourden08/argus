@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use super::overlord::live;
+use super::overlord::{live, rules_tick};
 use super::{
     accounts, activity, agents, cache, deps, notify, procs, records, reminders, runs, stale,
     stalls, sync, wake, wake_relay, worktrees,
@@ -46,11 +46,13 @@ pub(crate) async fn start_all(svc: &Arc<Services>) {
     cache::start(svc);
     records::start(svc).await;
     live::start(svc);
+    rules_tick::start(svc);
     activity::started(svc);
 }
 
 pub(crate) fn stop_all(svc: &Services) {
     activity::stopped(svc);
+    rules_tick::stop(svc);
     live::stop(svc);
     notify::stop(svc);
     cache::stop(svc);
