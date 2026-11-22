@@ -63,8 +63,8 @@ interface RulesPage {
 type RulePatch = Partial<RuleDraft & { enabled: boolean }>;
 
 interface QueueWake {
-  reason: string;
-  text: string;
+  reason: string | null;
+  text: string | null;
   at: string;
 }
 

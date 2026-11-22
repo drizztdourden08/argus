@@ -64,8 +64,8 @@ interface QueueSectionProps {
 }
 
 interface QueueLineProps {
-  text: string;
-  label?: string;
+  text: string | null;
+  label?: string | null;
   at?: string;
 }
 
