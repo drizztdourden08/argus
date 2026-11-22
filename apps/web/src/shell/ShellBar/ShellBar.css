@@ -1,4 +1,4 @@
 .shell-bar {
-  min-height: var(--size-40);
+  min-height: var(--size-64);
   margin: var(--space-md) var(--space-lg) 0;
 }

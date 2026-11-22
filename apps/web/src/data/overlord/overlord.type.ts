@@ -25,12 +25,61 @@ interface ModeSwitch {
 
 type OverlordAction = 'start' | 'stop' | 'restart';
 
+type OverlordActivity = 'off' | 'idle' | 'thinking' | 'working';
+
 interface OverlordStatus {
   mode: string | null;
   status: OverlordState;
   pid: number | null;
   startedAt: string | null;
   sessionId: string | null;
+  activity?: OverlordActivity;
+  nextRuleAt?: string | number | null;
+  nextRuleEveryMin?: number | null;
+  nextRuleTitle?: string | null;
+}
+
+type RuleAuthor = 'owner' | 'overlord';
+
+interface RuleDraft {
+  title: string;
+  prompt: string;
+  everyMin: number;
+}
+
+interface OverlordRule extends RuleDraft {
+  id: string;
+  enabled: boolean;
+  createdBy: RuleAuthor;
+  lastRunAt?: string | null;
+  nextRunAt?: string | null;
+}
+
+interface RulesPage {
+  rules: OverlordRule[];
+  nextDueAt?: string | null;
+}
+
+type RulePatch = Partial<RuleDraft & { enabled: boolean }>;
+
+interface QueueWake {
+  reason: string;
+  text: string;
+  at: string;
+}
+
+type QueueHeld = string | { text: string; at?: string };
+
+interface QueueAlert {
+  text: string;
+  at?: string;
+}
+
+interface OverlordQueue {
+  wakes: QueueWake[];
+  held: QueueHeld[];
+  approvals: OverlordApproval[];
+  alerts: QueueAlert[];
 }
 
 interface OverlordSpend {
@@ -83,6 +132,16 @@ interface TranscriptFeed {
 
 export type {
   ActionState,
+  OverlordActivity,
+  OverlordQueue,
+  OverlordRule,
+  QueueAlert,
+  QueueHeld,
+  QueueWake,
+  RuleAuthor,
+  RuleDraft,
+  RulePatch,
+  RulesPage,
   ApprovalDecision,
   KeyStatus,
   ModeSwitch,

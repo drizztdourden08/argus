@@ -1,0 +1,18 @@
+.overlord-presence {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: var(--size-56);
+  block-size: var(--size-56);
+}
+
+.overlord-presence__ring {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.overlord-presence.is-off .brand-mark {
+  opacity: var(--opacity-faint);
+}

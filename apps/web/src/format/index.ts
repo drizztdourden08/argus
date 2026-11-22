@@ -11,4 +11,5 @@ export { formatMinutes } from './format-minutes';
 export { orText } from './or-text';
 export { shortCommit } from './short-commit';
 export { smartTimes } from './smart-times';
+export { minutesUntil } from './minutes-until';
 export { toMillis } from './to-millis';
