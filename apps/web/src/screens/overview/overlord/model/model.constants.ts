@@ -19,7 +19,7 @@ const MODES: readonly OverlordMode[] = ['off', 'shadow', 'live'];
 const MODE_LABELS: Readonly<Record<OverlordMode, string>> = { off: 'Off', shadow: 'Shadow', live: 'Live' };
 
 const MODE_STEPS: Readonly<Record<OverlordMode, readonly OverlordMode[]>> = {
-  off: ['shadow'],
+  off: ['shadow', 'live'],
   shadow: ['off', 'live'],
   live: ['off'],
 };
@@ -27,7 +27,7 @@ const MODE_STEPS: Readonly<Record<OverlordMode, readonly OverlordMode[]>> = {
 const MODE_REFUSALS: Readonly<Record<OverlordMode, string>> = {
   off: '',
   shadow: 'Go to off first',
-  live: 'Start shadow first',
+  live: '',
 };
 
 const SECONDS_PER_MINUTE = 60;
