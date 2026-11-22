@@ -70,7 +70,9 @@ fn login_of(
 ) -> Result<Login, &'static str> {
     let wanted = [session.to_owned()];
     let local = local_ids(app, &wanted);
-    let scopes = local.get(session).map_or_else(Vec::new, |id| scopes_of(app, id));
+    let scopes = local
+        .get(session)
+        .map_or_else(Vec::new, |id| scopes_of(app, id));
     let account = account_for_scopes(accounts, &scopes).ok_or("no matching account")?;
     token_of(creds, Path::new(&account.cli_dir), now_ms())
 }
@@ -78,12 +80,7 @@ fn login_of(
 impl RelayHost {
     /// The login for the headless wake of `target`. Without one the wake runs with the default CLI login and
     /// one activity line says why.
-    pub(super) fn headless_login(
-        &self,
-        app: &Path,
-        session: &str,
-        target: &Ward,
-    ) -> Option<Login> {
+    pub(super) fn headless_login(&self, app: &Path, session: &str, target: &Ward) -> Option<Login> {
         let accounts = (self.accounts)();
         match login_of(self.creds.as_ref(), &accounts, app, session) {
             Ok(login) => Some(login),
@@ -151,14 +148,34 @@ mod tests {
 
     #[test]
     fn a_live_token_is_used_as_stored() {
-        assert_eq!(token(&Fake { expires: Some(1001) }).ok().as_deref(), Some("fake-stored"));
-        assert_eq!(token(&Fake { expires: None }).ok().as_deref(), Some("fake-stored"));
+        assert_eq!(
+            token(&Fake {
+                expires: Some(1001)
+            })
+            .ok()
+            .as_deref(),
+            Some("fake-stored")
+        );
+        assert_eq!(
+            token(&Fake { expires: None }).ok().as_deref(),
+            Some("fake-stored")
+        );
     }
 
     #[test]
     fn a_token_that_expires_now_or_earlier_is_refreshed() {
-        assert_eq!(token(&Fake { expires: Some(1000) }).ok().as_deref(), Some("fake-refreshed"));
-        assert_eq!(token(&Fake { expires: Some(5) }).ok().as_deref(), Some("fake-refreshed"));
+        assert_eq!(
+            token(&Fake {
+                expires: Some(1000)
+            })
+            .ok()
+            .as_deref(),
+            Some("fake-refreshed")
+        );
+        assert_eq!(
+            token(&Fake { expires: Some(5) }).ok().as_deref(),
+            Some("fake-refreshed")
+        );
     }
 
     #[test]

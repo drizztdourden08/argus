@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 
-use argus_accounts::{Account, Credentials, find_cli_exe};
 use argus_accounts::session_map::{local_ids, seat_of};
+use argus_accounts::{Account, Credentials, find_cli_exe};
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
 use argus_notify::{By, Level, Notify, PingRequest};
@@ -106,7 +106,7 @@ impl RelayHost {
         };
         if !session_running(&id) && !session_running(session) {
             let login = self.headless_login(&app, session, target);
-            self.start_resume(&exe, Path::new(&cwd), &id, login, target);
+            self.start_resume(&exe, Path::new(&cwd), &id, login.as_ref(), target);
         }
     }
 
@@ -115,12 +115,12 @@ impl RelayHost {
         exe: &Path,
         cwd: &Path,
         id: &str,
-        login: Option<Login>,
+        login: Option<&Login>,
         target: &Ward,
     ) {
         let (host, ward) = (Arc::clone(self), target.clone());
         let text = wake_text(&target.key.thread);
-        let started = resume(exe, cwd, id, &text, login.as_ref(), move |out| {
+        let started = resume(exe, cwd, id, &text, login, move |out| {
             host.on_outcome(&ward, &out);
         });
         if let Err(error) = started {
