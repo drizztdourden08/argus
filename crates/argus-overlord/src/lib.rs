@@ -9,6 +9,7 @@ pub mod approvals;
 pub mod mode;
 pub mod ports;
 pub mod protocol;
+pub mod rules;
 pub mod seat;
 pub mod session;
 pub mod shadow;
