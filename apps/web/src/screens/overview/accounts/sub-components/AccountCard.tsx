@@ -12,7 +12,8 @@ const AccountCard = (props: AccountCardProps) => {
   const { account, actions, rules, onSwitch } = props;
   const look = SEVERITY_LOOK[severityOf(account)];
   const label = account.label ?? account.key ?? 'Account';
-  const limits = (account.limits ?? []).filter((limit) => limit.isActive !== false);
+  const limits = [...(account.limits ?? [])].sort((a, b) => Number(b.isActive === true) - Number(a.isActive === true));
+  const marked = limits.length > 1;
   return (
     <Card edge="left" edgeTone={look.color}>
       <Stack gap="sm">
@@ -24,7 +25,7 @@ const AccountCard = (props: AccountCardProps) => {
           <Tag variant="urgency" color={look.color}>{look.label}</Tag>
         </Inline>
         {account.error && <Callout tone="warning">{account.error}</Callout>}
-        {limits.map((limit) => <LimitMeter key={`${limit.kind}-${limit.model ?? ''}`} limit={limit} />)}
+        {limits.map((limit) => <LimitMeter key={`${limit.kind}-${limit.model ?? ''}`} limit={limit} binding={marked && limit.isActive === true} />)}
         <AccountFacts account={account} />
         <RuleChips account={account} rules={rules} />
         <CyclePanel account={account} />

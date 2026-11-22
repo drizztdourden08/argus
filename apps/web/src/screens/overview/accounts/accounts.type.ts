@@ -39,6 +39,7 @@ interface AccountCardProps {
 
 interface LimitMeterProps {
   limit: AccountLimit;
+  binding: boolean;
 }
 
 interface AccountFactsProps {

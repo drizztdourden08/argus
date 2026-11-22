@@ -7,6 +7,8 @@ const DRIFT_DOC = 'drift';
 
 const NONE_FOUND = 'No accounts yet. Argus finds them in the Desktop data folders and the extra account folders.';
 const ACTIVE_NOTE = 'Desktop is on this one';
+const BINDING_NOTE = 'Binding';
+const BINDING_TIP = 'The limit that stops this account now';
 
 const SEVERITY_LOOK: Readonly<Record<AccountSeverity, { color: 'success' | 'warning' | 'danger'; label: string }>> = {
   normal: { color: 'success', label: 'Has room' },
@@ -39,5 +41,5 @@ const HANDOVER_OPTIONS = [
 
 export {
   AUTO_SWITCH_LABEL, CAN_RECEIVE_LABEL, DEFAULT_HANDOVER_PERCENT, DEFAULT_SWITCH_AT, HANDOVER_LABEL, HANDOVER_OPTIONS,
-  ACCOUNTS_COLL, ACCOUNTS_STATE_COLL, ACTIVE_NOTE, DRIFT_DOC, DRIFT_TIP, KIND_LABEL, METER_TONE, NONE_FOUND, RESET_FORMAT, SEVERITY_LOOK,
+  ACCOUNTS_COLL, ACCOUNTS_STATE_COLL, ACTIVE_NOTE, BINDING_NOTE, BINDING_TIP, DRIFT_DOC, DRIFT_TIP, KIND_LABEL, METER_TONE, NONE_FOUND, RESET_FORMAT, SEVERITY_LOOK,
 };
