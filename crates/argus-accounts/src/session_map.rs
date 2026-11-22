@@ -122,8 +122,8 @@ pub fn seat_of(app_data: &Path, local_id: &str) -> Option<Seat> {
     serde_json::from_str(&fs::read_to_string(path).ok()?).ok()
 }
 
-/// Is the Desktop session (`local_...`) archived? Only when it has a record and every record with that
-/// id says archived.
+/// Is the Desktop session (`local_...`) archived? When any record with that id says archived: the
+/// Desktop refuses a message to it as soon as the record of the signed-in account does.
 #[must_use]
 pub fn is_archived(app_data: &Path, local_id: &str) -> bool {
     let flags: Vec<bool> = record_files(app_data)
@@ -132,7 +132,7 @@ pub fn is_archived(app_data: &Path, local_id: &str) -> bool {
         .filter_map(|p| serde_json::from_str::<Seat>(&fs::read_to_string(p).ok()?).ok())
         .map(|seat| seat.is_archived)
         .collect();
-    !flags.is_empty() && flags.iter().all(|archived| *archived)
+    flags.iter().any(|archived| *archived)
 }
 
 /// The scope folders `(desktopAccount, desktopOrg)` of every record of a Desktop session
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn a_local_id_is_archived_only_when_every_record_says_so() {
+    fn a_local_id_is_archived_when_any_record_says_so() {
         let dir = tempfile::tempdir().expect("dir");
         let archived = r#"{"isArchived":true}"#;
         write_record(dir.path(), ("a1", "o1"), "local_x.json", archived);
@@ -241,8 +241,12 @@ mod tests {
             "local_y.json",
             r#"{"isArchived":false}"#,
         );
+        let live = r#"{"isArchived":false}"#;
+        write_record(dir.path(), ("a1", "o1"), "local_z.json", live);
+        write_record(dir.path(), ("a2", "o2"), "local_z.json", live);
         assert!(is_archived(dir.path(), "local_x"));
-        assert!(!is_archived(dir.path(), "local_y"));
+        assert!(is_archived(dir.path(), "local_y"));
+        assert!(!is_archived(dir.path(), "local_z"));
         assert!(!is_archived(dir.path(), "local_none"));
     }
 
