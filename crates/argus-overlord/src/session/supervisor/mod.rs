@@ -127,6 +127,9 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
         alive,
         link: link.clone(),
     };
-    let task = tokio::spawn(restart::drive(run::Run::new(host, state_tx, (inbox, flight)), wiring));
+    let task = tokio::spawn(restart::drive(
+        run::Run::new(host, state_tx, (inbox, flight)),
+        wiring,
+    ));
     Handle { link, state, task }
 }

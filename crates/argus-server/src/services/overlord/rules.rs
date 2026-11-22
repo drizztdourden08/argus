@@ -4,7 +4,9 @@
 //! is `rules_tick.rs`. Every function blocks on the database; call it from a blocking thread.
 
 use argus_core::clock::now_ms;
-use argus_overlord::rules::{By, Rule, RuleInput, RulePatch, after_run, create, patch, prompt_text};
+use argus_overlord::rules::{
+    By, Rule, RuleInput, RulePatch, after_run, create, patch, prompt_text,
+};
 use argus_overlord::session::owner::deliver_plain;
 use argus_store::{ActivityLevel, NewActivity};
 
@@ -71,8 +73,7 @@ pub(crate) fn remove(svc: &Services, id: &str) -> Result<(), RuleFault> {
 
 /// Gives the rule's text to the child, when the mode is live and a child is up.
 pub(super) fn deliver(svc: &Services, rule: &Rule) -> bool {
-    config::is_live(svc)
-        && deliver_plain(svc.overlord.link().as_ref(), &prompt_text(rule)).is_ok()
+    config::is_live(svc) && deliver_plain(svc.overlord.link().as_ref(), &prompt_text(rule)).is_ok()
 }
 
 /// Saves the rule after a run (or a skipped one) and writes its activity line.

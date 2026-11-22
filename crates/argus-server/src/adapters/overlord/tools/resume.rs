@@ -21,7 +21,8 @@ const WAIT: Duration = Duration::from_secs(10 * 60);
 
 const SIGN_IN: &str = "sign-in: the CLI login expired, the owner must run claude auth login";
 const KILLED: &str = "timed out: the resume was killed after 20 minutes";
-const STILL_RUNNING: &str = "timed out: still running after 10 minutes, it goes on in the background";
+const STILL_RUNNING: &str =
+    "timed out: still running after 10 minutes, it goes on in the background";
 
 /// Where a session runs, checked.
 #[derive(Debug, PartialEq, Eq)]
@@ -130,11 +131,7 @@ async fn resumed(svc: &Arc<Services>, local_id: &str, text: &str) -> Result<Stri
 }
 
 /// Resumes `local_id` with `text` and waits for the outcome.
-pub(super) async fn run(
-    svc: &Arc<Services>,
-    local_id: &str,
-    text: &str,
-) -> Result<String, String> {
+pub(super) async fn run(svc: &Arc<Services>, local_id: &str, text: &str) -> Result<String, String> {
     let answer = resumed(svc, local_id, text).await;
     log(svc, local_id, &answer);
     answer
@@ -177,7 +174,10 @@ mod tests {
         assert_eq!(why("local_arch"), "skipped: the session is archived");
         assert_eq!(why("local_nocwd"), "failed: the session has no folder");
         assert_eq!(why("local_noid"), "failed: the session has no CLI id");
-        assert_eq!(why("local_none"), "failed: no desktop session \"local_none\"");
+        assert_eq!(
+            why("local_none"),
+            "failed: no desktop session \"local_none\""
+        );
     }
 
     #[test]

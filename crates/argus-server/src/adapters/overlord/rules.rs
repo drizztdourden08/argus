@@ -141,7 +141,10 @@ mod specs {
     fn store() -> (tempfile::TempDir, SqlRules) {
         let dir = tempfile::tempdir().unwrap();
         let db = Db::open(&dir.path().join("a.db"), Bus::new()).unwrap();
-        (dir, SqlRules::open(Arc::new(db), 1_800_000_000_000).unwrap())
+        (
+            dir,
+            SqlRules::open(Arc::new(db), 1_800_000_000_000).unwrap(),
+        )
     }
 
     // test-tag: critical

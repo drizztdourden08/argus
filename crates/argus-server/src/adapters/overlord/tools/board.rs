@@ -49,7 +49,9 @@ fn target(svc: &Services, project: &str, thread: &str) -> Result<Target, String>
     };
     if board["threads"][thread].is_null() {
         let known = threads_of(&board).join(", ");
-        return Err(format!("no thread \"{thread}\" on {id}; its threads: {known}"));
+        return Err(format!(
+            "no thread \"{thread}\" on {id}; its threads: {known}"
+        ));
     }
     Ok(Target {
         board: id,
@@ -60,7 +62,8 @@ fn target(svc: &Services, project: &str, thread: &str) -> Result<Target, String>
 /// Hands one wake to the engine. With the wake service off the hook accepts and drops it.
 fn wake(svc: &Services, to: &Target, reason: &str, text: &str) -> Result<(), String> {
     let body = json!({ "reason": reason, "thread": to.thread, "text": text });
-    let input = external_wake(&to.board, &body, &|_, _| true).map_err(|e| e.message().to_owned())?;
+    let input =
+        external_wake(&to.board, &body, &|_, _| true).map_err(|e| e.message().to_owned())?;
     svc.wake_hook().submit(&[input])
 }
 

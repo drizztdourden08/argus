@@ -107,7 +107,9 @@ mod tests {
     #[test]
     fn a_thread_message_reads_its_three_arguments() {
         let args = json!({ "project": " brock ", "thread": "coordinator", "text": "hi" });
-        let call = parse_call("thread_message", &args).expect("ours").expect("ok");
+        let call = parse_call("thread_message", &args)
+            .expect("ours")
+            .expect("ok");
         assert_eq!(
             call,
             Call::ThreadMessage {
@@ -124,7 +126,9 @@ mod tests {
         let fault = parse_call("thread_wake", &args).expect("ours").unwrap_err();
         assert_eq!(fault, "thread is required, as text");
         let args = json!({ "localId": "local_a" });
-        let fault = parse_call("session_message", &args).expect("ours").unwrap_err();
+        let fault = parse_call("session_message", &args)
+            .expect("ours")
+            .unwrap_err();
         assert_eq!(fault, "text is required, as text");
     }
 
@@ -166,7 +170,9 @@ mod tests {
         };
         assert_eq!(id, "OR-2");
         assert_eq!(change.enabled, Some(false));
-        let fault = parse_call("rule_remove", &json!({})).expect("ours").unwrap_err();
+        let fault = parse_call("rule_remove", &json!({}))
+            .expect("ours")
+            .unwrap_err();
         assert_eq!(fault, "id is required, as text");
     }
 }

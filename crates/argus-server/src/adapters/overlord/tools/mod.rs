@@ -71,7 +71,12 @@ async fn dispatch(svc: &Arc<Services>, call: Call) -> Result<String, String> {
             project,
             thread,
             reason,
-        } => blocking(svc, move |s| board::wake_only(s, &project, &thread, &reason)).await,
+        } => {
+            blocking(svc, move |s| {
+                board::wake_only(s, &project, &thread, &reason)
+            })
+            .await
+        }
         Call::SessionMessage { local_id, text } => resume::run(svc, &local_id, &text).await,
         Call::RulesList => blocking(svc, rules::list).await,
         Call::RuleAdd { input } => blocking(svc, move |s| rules::add(s, &input)).await,

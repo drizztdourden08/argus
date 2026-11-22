@@ -36,7 +36,9 @@ fn refusal(fault: RuleFault) -> ApiError {
 async fn list(ctx: Ctx) -> Reply {
     web_only(&ctx, false)?;
     let svc = ctx.svc.clone();
-    let all = blocking(move || rules::list(&svc)).await?.map_err(refusal)?;
+    let all = blocking(move || rules::list(&svc))
+        .await?
+        .map_err(refusal)?;
     let next = next_due_at(&all);
     Ok(json_reply(200, &json!({ "rules": all, "nextDueAt": next })))
 }

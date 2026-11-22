@@ -151,8 +151,18 @@ mod tests {
     #[test]
     fn the_limit_cuts_the_list_and_a_broken_record_is_skipped() {
         let dir = tempfile::tempdir().expect("dir");
-        write(dir.path(), ("a", "o"), "local_a.json", r#"{"lastActivityAt":1}"#);
-        write(dir.path(), ("a", "o"), "local_b.json", r#"{"lastActivityAt":2}"#);
+        write(
+            dir.path(),
+            ("a", "o"),
+            "local_a.json",
+            r#"{"lastActivityAt":1}"#,
+        );
+        write(
+            dir.path(),
+            ("a", "o"),
+            "local_b.json",
+            r#"{"lastActivityAt":2}"#,
+        );
         write(dir.path(), ("a", "o"), "local_c.json", "not json");
         let rows = sessions(dir.path(), 1);
         assert_eq!(rows.len(), 1);

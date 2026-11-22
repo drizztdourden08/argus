@@ -32,6 +32,9 @@ mod tests {
         assert_eq!(answer["id"], 7);
         assert_eq!(answer["result"]["content"][0]["text"], "done");
         assert_eq!(answer["result"]["isError"], false);
-        assert_eq!(text_result(&json!(7), "no", true)["result"]["isError"], true);
+        assert_eq!(
+            text_result(&json!(7), "no", true)["result"]["isError"],
+            true
+        );
     }
 }

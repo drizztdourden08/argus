@@ -98,6 +98,9 @@ mod tests {
         for entry in &all {
             assert_eq!(entry["inputSchema"]["type"], "object");
         }
-        assert_eq!(all[3]["inputSchema"]["required"], json!(["localId", "text"]));
+        assert_eq!(
+            all[3]["inputSchema"]["required"],
+            json!(["localId", "text"])
+        );
     }
 }

@@ -35,7 +35,10 @@ async fn post(ctx: Ctx) -> Reply {
         Parsed::Quiet => Ok(bytes_reply(202, Body::empty(), &[])),
         Parsed::Tool { id, call } => {
             let answer = tools::run(&ctx.svc, call).await;
-            Ok(json_reply(200, &text_result(&id, &answer.text, answer.is_error)))
+            Ok(json_reply(
+                200,
+                &text_result(&id, &answer.text, answer.is_error),
+            ))
         }
         Parsed::Ask(prompt) if config::is_shadow(&ctx.svc) => {
             let reply = shadow::judge(&ctx.svc, &prompt);
