@@ -96,7 +96,7 @@ fn a_threads_keep_files_a_pending_keep_and_the_overlord_gets_one_note_and_one_wa
 
 #[test]
 fn a_pending_keep_stops_the_hygiene_removing_a_clean_unattached_worktree() {
-    let (fx, h, path) = asked();
+    let (_fx, h, path) = asked();
     step(&h, DEBOUNCE);
     step(&h, DEBOUNCE);
     h.svc.requests_idle();
@@ -106,7 +106,7 @@ fn a_pending_keep_stops_the_hygiene_removing_a_clean_unattached_worktree() {
 
 #[test]
 fn the_overlords_keep_confirms_it_and_tells_the_thread() {
-    let (fx, h, path) = asked();
+    let (_fx, h, path) = asked();
     h.svc.keep(&answer(&h, &path)).unwrap();
     h.svc.hygiene_step("alpha");
     assert!(!is_pending(&h));
@@ -119,7 +119,7 @@ fn the_overlords_keep_confirms_it_and_tells_the_thread() {
 
 #[test]
 fn the_overlords_clear_declines_it_and_the_hygiene_judges_the_worktree_again() {
-    let (fx, h, path) = asked();
+    let (_fx, h, path) = asked();
     let mut clear = answer(&h, &path);
     clear.clear = true;
     h.svc.keep(&clear).unwrap();
@@ -132,7 +132,7 @@ fn the_overlords_clear_declines_it_and_the_hygiene_judges_the_worktree_again() {
 
 #[test]
 fn a_pending_keep_lapses_after_24_hours_and_the_thread_is_told() {
-    let (fx, h, path) = asked();
+    let (_fx, h, _path) = asked();
     step(&h, 24 * HOUR - 1);
     assert_eq!(kind(&h, "agent-a1"), Some(HygieneState::Exception));
     assert_eq!(notes_of(&h, "lead").len(), 0);
