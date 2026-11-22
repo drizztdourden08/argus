@@ -6,6 +6,7 @@ pub(crate) mod boot_rule;
 pub(crate) mod budget;
 pub(crate) mod config;
 pub(crate) mod control;
+pub(crate) mod keeper;
 pub(crate) mod live;
 mod live_session;
 pub(crate) mod rules;

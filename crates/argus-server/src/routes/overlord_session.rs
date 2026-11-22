@@ -1,7 +1,9 @@
 //! The hosted Overlord's session, for the owner's page only:
 //! `GET /api/overlord/status` is `{mode, status, activity, pid, startedAt, sessionId}` (`activity` is
 //! `off`, `idle`, `thinking` or `working`) with `nextRuleAt`, `nextRuleEveryMin` and `nextRuleTitle`
-//! (the enabled rule due first, all null with none or when the rules cannot be read) and
+//! (the enabled rule due first, all null with none or when the rules cannot be read) and `problem`
+//! (null while a child runs, else one plain sentence of why not, such as "no API key is saved" or
+//! the last start fault with "retrying in N s"; a missing mode is `live`) and
 //! `POST /api/overlord/control` with `{action: start|stop|restart}` answers the same shape.
 
 use argus_core::{ApiError, ErrorCode};
@@ -14,6 +16,7 @@ use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::overlord::config::{is_live, is_shadow};
 use crate::services::overlord::control;
+use crate::services::overlord::keeper;
 use crate::services::overlord::rules;
 use crate::{Ctx, RouteOpts, Router};
 
@@ -55,6 +58,7 @@ fn status_body(ctx: &Ctx) -> Value {
         "pid": state.pid,
         "startedAt": state.started_at,
         "sessionId": state.session_id,
+        "problem": keeper::problem(&ctx.svc),
         "nextRuleAt": rule_at,
         "nextRuleEveryMin": rule_every,
         "nextRuleTitle": rule_title,

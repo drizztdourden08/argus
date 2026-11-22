@@ -19,7 +19,8 @@ async fn status_is_stopped_with_no_supervisor() {
     let reply = t.send(t.page(status())).await;
     assert_eq!(reply.status, 200, "{}", reply.text());
     let body = reply.json();
-    assert_eq!(body["mode"], json!("off"));
+    assert_eq!(body["mode"], json!("live"), "a missing mode is live");
+    assert_eq!(body["problem"], json!("no API key is saved"));
     assert_eq!(body["status"], json!("stopped"));
     assert_eq!(body["pid"], json!(null));
     assert_eq!(body["startedAt"], json!(null));
@@ -41,7 +42,11 @@ async fn a_bearer_is_refused() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn start_is_409_when_the_mode_is_off() {
-    let t = TestServer::start(TestOptions::default()).await;
+    let options = TestOptions {
+        config: json!({ "overlord": { "mode": "off" } }),
+        ..TestOptions::default()
+    };
+    let t = TestServer::start(options).await;
     let reply = t.send(t.page(control("start"))).await;
     assert_eq!(reply.status, 409, "{}", reply.text());
     assert!(reply.text().contains("set overlord.mode to live"));

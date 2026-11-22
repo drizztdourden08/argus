@@ -47,19 +47,19 @@ fn setting(svc: &Services) -> Value {
         .unwrap_or(Value::Null)
 }
 
-/// The `mode` as saved; a missing or unknown value is `off`.
+/// The `mode` as saved; a missing or unknown value is `live` (I-196).
 pub(crate) fn mode(svc: &Services) -> Mode {
     Mode::of_config(setting(svc)["mode"].as_str())
 }
 
-/// True when `mode` is `live`.
+/// True when `mode` is `live`, which a missing mode is too.
 pub(crate) fn is_live(svc: &Services) -> bool {
-    setting(svc)["mode"].as_str() == Some("live")
+    mode(svc) == Mode::Live
 }
 
 /// True when `mode` is `shadow`: a read-only child that mirrors the desktop Overlord's wakes.
 pub(crate) fn is_shadow(svc: &Services) -> bool {
-    setting(svc)["mode"].as_str() == Some("shadow")
+    mode(svc) == Mode::Shadow
 }
 
 /// `autostart` (default true): with mode `live` or `shadow`, Argus starts the child at boot.

@@ -78,6 +78,7 @@ async fn save(ctx: Ctx) -> Reply {
         status(s)
     })
     .await?;
+    ctx.svc.overlord.keeper.kick();
     Ok(json_reply(200, &body))
 }
 

@@ -8,6 +8,7 @@ use argus_overlord::session::supervisor::{Handle, Link};
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
+use super::keeper::Keeper;
 use super::live::StartFault;
 
 struct Entry {
@@ -28,6 +29,8 @@ pub(crate) struct Running {
     entry: Mutex<Option<Entry>>,
     /// Held by a control action from its start to its end, so two never overlap.
     pub(crate) control: tokio::sync::Mutex<()>,
+    /// What keeps the child up while a key is saved.
+    pub(crate) keeper: Keeper,
 }
 
 impl Running {
@@ -38,6 +41,11 @@ impl Running {
     /// The way in for messages; none before the first start.
     pub(crate) fn link(&self) -> Option<Link> {
         self.entry().as_ref().map(|e| e.link.clone())
+    }
+
+    /// True while a supervisor task is up.
+    pub(crate) fn up(&self) -> bool {
+        self.entry().as_ref().is_some_and(Entry::running)
     }
 
     /// The state of the session; the default (stopped) when none was started.

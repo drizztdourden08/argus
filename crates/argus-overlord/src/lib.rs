@@ -6,6 +6,7 @@
 //! `pub mod` line.
 
 pub mod approvals;
+pub mod keeper;
 pub mod mode;
 pub mod ports;
 pub mod protocol;

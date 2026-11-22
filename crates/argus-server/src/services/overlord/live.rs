@@ -1,5 +1,6 @@
-//! The hosted Overlord's child, started with Argus when `config.overlord.mode` is `live` or `shadow`
-//! (the default is `off`, so nothing starts; `autostart` false keeps it down at boot). A shadow
+//! The hosted Overlord's child, started with Argus when `config.overlord.mode` is `live` (a missing
+//! mode is live) or `shadow` and a key is saved; `autostart` false keeps it down at boot, and the
+//! keeper (`keeper.rs`) starts it later when it is not up. A shadow
 //! child is the read-only copy of `shadow.rs`. While a child runs, a `HostedSink` is attached to the wake
 //! engine for the project `portfolio` and the thread `coordinator`, so its wakes go to the child's
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
@@ -136,12 +137,17 @@ fn find_exe() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("claude"))
 }
 
-fn budget_left(inputs: &Inputs) -> f64 {
+/// The money left of this month's budget.
+pub(super) fn budget_remaining(db: &Arc<Db>, budget_usd: f64) -> f64 {
     let month = month_key(now_ms(), local_offset_seconds());
-    let spent = SqlLedger::open(Arc::clone(&inputs.db))
+    let spent = SqlLedger::open(Arc::clone(db))
         .and_then(|ledger| ledger.month_total(&month))
         .unwrap_or(0.0);
-    left_usd(spent, inputs.budget_usd)
+    left_usd(spent, budget_usd)
+}
+
+fn budget_left(inputs: &Inputs) -> f64 {
+    budget_remaining(&inputs.db, inputs.budget_usd)
 }
 
 /// The next child: the key is read now, so a replaced key takes effect at the next start. A fault
@@ -218,10 +224,11 @@ impl StartFault {
     }
 }
 
-/// The boot path: starts when autostart and the settings allow, and stays quiet when they do not.
+/// The boot path: starts when autostart, a saved key and the settings allow, and stays quiet when
+/// they do not.
 pub(crate) fn start(svc: &Arc<Services>) {
     super::boot_resume::spawn(svc);
-    if config::autostart(svc) {
+    if config::autostart(svc) && super::keeper::key_saved(svc) {
         let _ = try_start(svc);
     }
 }

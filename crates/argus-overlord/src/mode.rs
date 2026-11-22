@@ -27,10 +27,11 @@ impl Mode {
         }
     }
 
-    /// The mode of the config value: a missing or unknown value is off, as the server reads it.
+    /// The mode of the config value: a missing or unknown value is live (I-196), so the hosted
+    /// Overlord is on unless the owner saved `off` or `shadow`.
     #[must_use]
     pub fn of_config(text: Option<&str>) -> Mode {
-        text.and_then(Mode::parse).unwrap_or(Mode::Off)
+        text.and_then(Mode::parse).unwrap_or(Mode::Live)
     }
 
     /// The word saved in the config.
@@ -155,13 +156,14 @@ mod tests {
     }
 
     #[test]
-    fn the_config_word_parses_and_anything_else_is_off() {
+    fn the_config_word_parses_and_anything_else_is_live() {
         for mode in ALL {
             assert_eq!(Mode::parse(mode.as_str()), Some(mode));
         }
         assert_eq!(Mode::parse("Live"), None);
-        assert_eq!(Mode::of_config(Some("bogus")), Mode::Off);
-        assert_eq!(Mode::of_config(None), Mode::Off);
+        assert_eq!(Mode::of_config(Some("bogus")), Mode::Live);
+        assert_eq!(Mode::of_config(None), Mode::Live);
+        assert_eq!(Mode::of_config(Some("off")), Mode::Off);
         assert_eq!(Mode::of_config(Some("shadow")), Mode::Shadow);
     }
 }
