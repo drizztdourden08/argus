@@ -35,6 +35,13 @@ fn asked(s: &Shape, command: &[&str]) -> bool {
 }
 
 /// Nothing was touched: `node_modules` and every link are still there, and git was never asked to check or remove.
+fn refused_and_untouched(s: &Shape) {
+    let err = s.h.refused(&s.id("old-merged"), |_| {});
+    assert_eq!(err.code, ErrorCode::Forbidden);
+    assert!(err.message.contains(REFUSED), "{}", err.message);
+    assert_untouched(s);
+}
+
 fn assert_untouched(s: &Shape) {
     let merged = s.fx.path("old-merged");
     assert!(exists_itself(&pnpm_file(s)), "node_modules is still there");
@@ -91,10 +98,7 @@ fn discard_with_the_owners_say(s: &Shape) -> crate::request::RemoveOutcome {
 #[test]
 fn only_untracked_files_and_no_discard_is_refused_before_node_modules_or_a_link_is_touched() {
     let s = shape(RemoveMode::Real, untracked);
-    let err = s.h.refused(&s.id("old-merged"), |_| {});
-    assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(err.message.contains(REFUSED), "{}", err.message);
-    assert_untouched(&s);
+    refused_and_untouched(&s);
     assert!(exists_itself(&format!(
         "{}/notes.txt",
         s.fx.path("old-merged")
@@ -122,10 +126,7 @@ fn a_tracked_folder_behind_a_link_looks_clean_but_is_refused_before_anything_is_
         0,
         "git reads the tracked file through the junction"
     );
-    let err = s.h.refused(&s.id("old-merged"), |_| {});
-    assert_eq!(err.code, ErrorCode::Forbidden);
-    assert!(err.message.contains(REFUSED), "{}", err.message);
-    assert_untouched(&s);
+    refused_and_untouched(&s);
     assert!(exists_itself(&format!("{}/pkg", s.fx.path("old-merged"))));
     assert!(exists_itself(&format!("{outside}/a.txt")));
 }

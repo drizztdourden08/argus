@@ -40,23 +40,26 @@ fn with_agent(mut entry: Entry, folder: &str) -> Entry {
     entry
 }
 
+/// The shared worktree is listed by `here` and not by `not_here`.
+fn listed_once(boards: &[Entry], here: &str, not_here: &str) {
+    let fact = worktree("eb8e7e24f6");
+    assert!(listed_here(here, &fact, boards, &[], true));
+    assert!(!listed_here(not_here, &fact, boards, &[], true));
+}
+
 #[test]
 fn the_board_with_an_agent_in_the_worktree_owns_it() {
     let boards = vec![
         board_with_repo("rotp-web"),
         with_agent(board_with_repo("rotp"), "eb8e7e24f6"),
     ];
-    let fact = worktree("eb8e7e24f6");
-    assert!(listed_here("rotp", &fact, &boards, &[], true));
-    assert!(!listed_here("rotp-web", &fact, &boards, &[], true));
+    listed_once(&boards, "rotp", "rotp-web");
 }
 
 #[test]
 fn a_worktree_nobody_owns_stays_with_the_first_registered_project() {
     let boards = vec![board_with_repo("rotp-web"), board_with_repo("rotp")];
-    let fact = worktree("eb8e7e24f6");
-    assert!(listed_here("rotp-web", &fact, &boards, &[], true));
-    assert!(!listed_here("rotp", &fact, &boards, &[], true));
+    listed_once(&boards, "rotp-web", "rotp");
 }
 
 #[test]
@@ -85,9 +88,7 @@ fn leftover(folder: &str) -> Fact {
 #[test]
 fn a_project_reaching_the_repository_through_a_folder_rule_shares_it() {
     let boards = vec![board_with_repo("rotp"), board_with_folder_rule("rotp-web")];
-    let fact = worktree("eb8e7e24f6");
-    assert!(listed_here("rotp", &fact, &boards, &[], true));
-    assert!(!listed_here("rotp-web", &fact, &boards, &[], true));
+    listed_once(&boards, "rotp", "rotp-web");
 }
 
 #[test]
