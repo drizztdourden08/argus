@@ -189,7 +189,7 @@ fn the_ten_minute_notice_happens_once() {
 
 #[test]
 fn a_target_no_longer_due_is_forgotten() {
-    let mut relay = relay();
+    let mut relay = relay_headless();
     let due = [target("a", "ui")];
     relay.step(T0 + FIRST_AFTER_MS, &due, &[]);
     assert!(relay.last("a", "ui").is_some());

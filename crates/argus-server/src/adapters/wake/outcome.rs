@@ -72,9 +72,8 @@ mod tests {
 
     #[test]
     fn another_error_keeps_a_short_reason() {
-        let out = parse(
-            r#"{"is_error":true,"subtype":"error_during_execution","api_error_status":529}"#,
-        );
+        let out =
+            parse(r#"{"is_error":true,"subtype":"error_during_execution","api_error_status":529}"#);
         assert_eq!(
             out,
             Outcome::Failed("error_during_execution, status 529".to_owned())
@@ -91,9 +90,6 @@ mod tests {
             parse("not json"),
             Outcome::Failed("no readable result".to_owned())
         );
-        assert_eq!(
-            parse(""),
-            Outcome::Failed("no readable result".to_owned())
-        );
+        assert_eq!(parse(""), Outcome::Failed("no readable result".to_owned()));
     }
 }
