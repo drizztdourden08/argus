@@ -13,7 +13,7 @@ const ChatBody = () => {
         {feed.problem && <Callout tone="danger">{feed.problem}</Callout>}
         <ChatTranscript messages={feed.messages} empty={feed.problem ? undefined : EMPTY_TRANSCRIPT} className="overlord-transcript" />
       </Panel>
-      <ChatBox running={feed.running} action={feed.action} onSend={feed.onSend} />
+      <ChatBox running={feed.running} note={feed.note} action={feed.action} onSend={feed.onSend} />
     </Flex>
   );
 };

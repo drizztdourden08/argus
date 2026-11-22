@@ -34,6 +34,7 @@ interface OverlordStatus {
   startedAt: string | null;
   sessionId: string | null;
   activity?: OverlordActivity;
+  problem?: string | null;
   nextRuleAt?: string | number | null;
   nextRuleEveryMin?: number | null;
   nextRuleTitle?: string | null;

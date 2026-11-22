@@ -1,11 +1,11 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, Flex, Stack, Text, Textarea } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import { CHAT_PLACEHOLDER, STOPPED_CHAT } from '../OverlordChat.constants';
+import { CHAT_PLACEHOLDER } from '../OverlordChat.constants';
 import type { ChatBoxProps } from '../OverlordChat.type';
 
 const ChatBox = (props: ChatBoxProps) => {
-  const { running, action, onSend } = props;
+  const { running, note, action, onSend } = props;
   const [text, setText] = useState('');
   const blocked = !running || action.busy || text.trim() === '';
   const send = () => {
@@ -13,7 +13,7 @@ const ChatBox = (props: ChatBoxProps) => {
   };
   return (
     <Stack gap="sm">
-      {!running && <Text variant="caption" tone="muted">{STOPPED_CHAT}</Text>}
+      {!running && <Text variant="caption" tone="muted">{note}</Text>}
       <Flex gap="sm" align="end">
         <Textarea
           aria-label="Message to the Overlord"

@@ -5,7 +5,10 @@ import type { ChatTab, QueueSectionName } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
 const CHAT_LABEL = 'Overlord chat';
-const STOPPED_CHAT = 'The Overlord is stopped. Start it to send a message.';
+const STARTING_CHAT = 'The Overlord is starting.';
+const RUNNING_WORD = 'Running';
+const NO_KEY_PATTERN = /no .*key/i;
+const KEY_SETTINGS_LABEL = 'Set the key';
 const CHAT_PLACEHOLDER = 'Message the Overlord. It reads as Owner (Argus Overlord tab).';
 const EMPTY_TRANSCRIPT = 'Nothing has been said yet.';
 const TALK_WHO: Readonly<Record<'assistant' | 'owner' | 'wake', string>> = { assistant: 'Overlord', owner: 'Owner', wake: 'Wake' };
@@ -53,7 +56,10 @@ export {
   OWNER_PREFIX,
   OWNER_SPLIT,
   RUNNING_STATES,
-  STOPPED_CHAT,
+  STARTING_CHAT,
+  RUNNING_WORD,
+  NO_KEY_PATTERN,
+  KEY_SETTINGS_LABEL,
   TALK_ROLE,
   TALK_WHO,
 };

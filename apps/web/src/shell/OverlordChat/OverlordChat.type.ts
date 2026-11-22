@@ -28,6 +28,7 @@ type Piece = Omit<TalkRow, 'key'> | { kind: 'tool'; name: string };
 
 interface ChatBoxProps {
   running: boolean;
+  note: string;
   action: ActionState;
   onSend: (text: string) => Promise<boolean>;
 }

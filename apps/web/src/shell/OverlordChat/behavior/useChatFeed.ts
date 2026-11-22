@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { STATUS_POLL_MS, readStatus, sendMessage, useAction, useOverlordTranscript } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
 import { isRunning } from './is-running';
+import { overlordNote } from './overlord-note';
 import { toMessages } from './to-messages';
 import { toRows } from './to-rows';
 
@@ -17,6 +18,7 @@ const useChatFeed = () => {
     messages,
     problem: feed.problem,
     running: isRunning(status.data?.status),
+    note: overlordNote(status.data),
     action: chat,
     onSend: (text: string) => chat.run(() => sendMessage(text)),
   };
