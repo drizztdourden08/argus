@@ -9,7 +9,9 @@ demand.
 
 1. A thread is due: a queued wake, no listener, live on its board (`GET /api/wakes/due`). Reminders (`open-resend`)
    do not count: they stay queued for the thread's next resume but never make it due on their own.
-2. After the wake has waited 30 seconds, Argus picks a relay: a thread with a v2 listener. The Overlord comes first
+2. After the wake has waited 30 seconds, Argus resumes the target itself, headless (when `wakeRelay.headless` is on).
+   The outcome goes to the activity log. An expired CLI sign-in also pings the owner, at most once an hour.
+   Still due 2 minutes later, or at once with the headless resume off, Argus picks a relay: a thread with a v2 listener. The Overlord comes first
    when it is not in a turn, then any thread not in a turn, then a thread in a turn. Never the target itself.
 3. Argus posts one inbox note from `Argus` to the relay. It names every due target of that relay at once, with the
    desktop session id of each. Then it wakes the relay with the reason `wake-relay`, which skips the coalescing
@@ -17,8 +19,8 @@ demand.
 4. The relay sends `WAKE <thread>: run coord inbox (relayed by Argus)` to each target with the desktop's
    send-to-session tool. The target resumes and its listener takes the queued wake.
 5. Still due 2 minutes after a note? Argus sends one more, to a different relay when there is one.
-6. No relay, or still due after two notes: Argus resumes the target itself, headless.
-7. Still due 10 minutes after that: one owner notification, then nothing more for that target for 1 hour.
+6. No relay, or still due after two notes: nothing more is tried.
+7. Still due 10 minutes after the last try: one owner notification, then nothing more for that target for 1 hour.
 8. A target is forgotten the moment it is no longer due.
 
 ## Headless resume

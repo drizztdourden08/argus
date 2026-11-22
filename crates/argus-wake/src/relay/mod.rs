@@ -1,5 +1,6 @@
-//! The wake relay: a paused thread that holds a queued wake is woken through another live thread, then
-//! by a headless resume, and the owner hears of it when nothing worked. Pure logic over what the registry
+//! The wake relay: a paused thread that holds a queued wake is woken by a headless resume first, then
+//! through other live threads when the resume did not work, and the owner hears of it when nothing worked.
+//! With the headless resume off, the relay notes come first. Pure logic over what the registry
 //! sees; the server turns the actions into inbox notes, a child process and a toast. See `docs/wake-relay.md`.
 
 mod pick;
@@ -18,15 +19,15 @@ pub use types::{
 
 use track::{Attempt, Step};
 
-/// A wake waits this long before the first relay note.
+/// A wake waits this long before the first move (the headless resume, or the first relay note).
 pub const FIRST_AFTER_MS: i64 = 30_000;
-/// A target still due this long after a note gets the next step.
+/// A target still due this long after a move gets the next step.
 pub const AGAIN_AFTER_MS: i64 = 120_000;
-/// A target still due this long after the headless try reaches the owner.
+/// A target still due this long after the last try reaches the owner.
 pub const NOTICE_AFTER_MS: i64 = 600_000;
 /// After the owner notice, nothing more for a target for this long.
 pub const QUIET_MS: i64 = 3_600_000;
-/// Relay notes sent for one target before the headless try.
+/// Relay notes sent for one target after the headless try.
 pub const MAX_NOTES: u32 = 2;
 
 /// The attempts made for every target that is due.

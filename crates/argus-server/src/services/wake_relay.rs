@@ -8,6 +8,7 @@ use argus_accounts::find_app_data;
 use argus_wake::service::driver::lock;
 
 use crate::Services;
+use crate::adapters::wake::relay_outcome::SignInGate;
 use crate::adapters::wake::{RelayHost, ServerRelay};
 
 pub(crate) fn wire(svc: &Services) {
@@ -20,6 +21,8 @@ pub(crate) fn wire(svc: &Services) {
         app_data: Box::new(move || find_app_data(accounts.config().app_data.as_deref())),
         notify: svc.notify.clone(),
         hook: svc.wake_hook(),
+        activity: Some(Arc::clone(&svc.activity)),
+        sign_in: SignInGate::default(),
     };
     lock(wake).set_relay_port(Arc::new(ServerRelay::new(host)));
 }

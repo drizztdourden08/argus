@@ -26,6 +26,13 @@ fn live(project: &str, thread: &str, in_turn: bool, main: bool) -> RelayLive {
 }
 
 fn relay() -> Relay {
+    Relay::new(RelaySettings {
+        enabled: true,
+        headless: false,
+    })
+}
+
+fn relay_headless() -> Relay {
     Relay::new(RelaySettings::default())
 }
 
@@ -109,29 +116,42 @@ fn the_second_note_goes_to_a_different_relay() {
 }
 
 #[test]
-fn no_relay_leads_to_the_headless_resume() {
-    let mut relay = relay();
-    let out = relay.step(T0 + FIRST_AFTER_MS, &[target("a", "ui")], &[]);
-    assert_eq!(out, [Action::Headless(target("a", "ui").ward)]);
+fn headless_comes_first_when_on() {
+    let mut relay = relay_headless();
+    let all = [live("a", "lead", false, false)];
+    let due = [target("a", "ui")];
+    let now = T0 + FIRST_AFTER_MS;
+    let out = relay.step(now, &due, &all);
+    assert_eq!(out, [Action::Headless(due[0].ward.clone())]);
     assert_eq!(
         relay.last("a", "ui").expect("last").kind,
         AttemptKind::Headless
     );
+    assert_eq!(relay.step(now + AGAIN_AFTER_MS - 1, &due, &all).len(), 0);
+    let next = relay.step(now + AGAIN_AFTER_MS, &due, &all);
+    assert_eq!(via_of(&next), [key("a", "lead")]);
+    assert_eq!(relay.last("a", "ui").expect("last").kind, AttemptKind::Note);
 }
 
 #[test]
-fn two_notes_that_did_not_work_lead_to_the_headless_resume() {
-    let mut relay = relay();
+fn headless_then_two_notes_then_the_notice() {
+    let mut relay = relay_headless();
     let all = [live("a", "lead", false, false)];
-    let now = T0 + FIRST_AFTER_MS;
     let due = [target("a", "ui")];
-    assert_eq!(via_of(&relay.step(now, &due, &all)).len(), 1);
+    let now = T0 + FIRST_AFTER_MS;
+    assert_eq!(relay.step(now, &due, &all).len(), 1);
     assert_eq!(
         via_of(&relay.step(now + AGAIN_AFTER_MS, &due, &all)).len(),
         1
     );
-    let out = relay.step(now + 2 * AGAIN_AFTER_MS, &due, &all);
-    assert_eq!(out, [Action::Headless(due[0].ward.clone())]);
+    assert_eq!(
+        via_of(&relay.step(now + 2 * AGAIN_AFTER_MS, &due, &all)).len(),
+        1
+    );
+    let spent = now + 3 * AGAIN_AFTER_MS;
+    assert_eq!(relay.step(spent, &due, &all).len(), 0);
+    let out = relay.step(spent + NOTICE_AFTER_MS, &due, &all);
+    assert_eq!(out, [Action::Notice(due[0].ward.clone())]);
 }
 
 #[test]
@@ -152,7 +172,7 @@ fn the_ten_minute_notice_happens_once() {
     let mut relay = relay();
     let due = [target("a", "ui")];
     let now = T0 + FIRST_AFTER_MS;
-    assert_eq!(relay.step(now, &due, &[]).len(), 1);
+    assert_eq!(relay.step(now, &due, &[]).len(), 0);
     assert_eq!(relay.step(now + NOTICE_AFTER_MS - 1, &due, &[]).len(), 0);
     let at = now + NOTICE_AFTER_MS;
     assert_eq!(

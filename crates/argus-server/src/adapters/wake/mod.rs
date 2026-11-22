@@ -6,7 +6,9 @@ pub mod boards;
 pub mod docs;
 pub mod faults;
 pub mod headless;
+pub mod outcome;
 pub mod relay;
+pub mod relay_outcome;
 pub mod relay_text;
 pub mod store;
 

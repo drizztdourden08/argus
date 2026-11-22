@@ -10,9 +10,12 @@ use argus_accounts::session_map::{local_ids, seat_of};
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
 use argus_notify::{By, Level, Notify, PingRequest};
+use argus_store::ActivityLog;
 use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 
 use super::headless::{resume, session_running};
+use super::outcome::Outcome;
+use super::relay_outcome::SignInGate;
 use super::relay_text::{Line, note_text, relay_wake_text, wake_text};
 use crate::{WakeHook, WakeRequest};
 
@@ -31,6 +34,10 @@ pub struct RelayHost {
     pub notify: Option<Arc<Notify>>,
     /// Wakes the relay once its note is in the inbox.
     pub hook: WakeHook,
+    /// The activity log, for the outcome of each headless resume.
+    pub activity: Option<Arc<ActivityLog>>,
+    /// Keeps the expired-login ping to once an hour.
+    pub sign_in: SignInGate,
 }
 
 /// The relay port over the boards, the desktop's session records and the CLI.
@@ -78,7 +85,7 @@ impl RelayHost {
         }
     }
 
-    fn resume_headless(&self, target: &Ward) {
+    fn resume_headless(self: &Arc<Self>, target: &Ward) {
         let Some(session) = target.session_id.as_deref() else {
             return;
         };
@@ -93,12 +100,18 @@ impl RelayHost {
             return;
         };
         if !session_running(&id) && !session_running(session) {
-            drop(resume(
-                &exe,
-                Path::new(&cwd),
-                &id,
-                &wake_text(&target.key.thread),
-            ));
+            self.start_resume(&exe, Path::new(&cwd), &id, target);
+        }
+    }
+
+    fn start_resume(self: &Arc<Self>, exe: &Path, cwd: &Path, id: &str, target: &Ward) {
+        let (host, ward) = (Arc::clone(self), target.clone());
+        let started = resume(exe, cwd, id, &wake_text(&target.key.thread), move |out| {
+            host.on_outcome(&ward, &out);
+        });
+        if let Err(error) = started {
+            let reason = format!("not started: {}", error.kind());
+            self.on_outcome(target, &Outcome::Failed(reason));
         }
     }
 
@@ -148,7 +161,7 @@ fn seat_for(app: &Path, session: &str) -> (String, Option<String>) {
 
 impl ServerRelay {
     /// Runs `job` on its own thread with the host, unless the host only shadows.
-    fn spawn(&self, job: impl FnOnce(&RelayHost) + Send + 'static) {
+    fn spawn(&self, job: impl FnOnce(&Arc<RelayHost>) + Send + 'static) {
         if self.host.shadow {
             return;
         }
