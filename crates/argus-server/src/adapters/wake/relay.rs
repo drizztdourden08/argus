@@ -140,15 +140,21 @@ impl RelayHost {
     }
 
     fn tell_owner(&self, target: &Ward) {
+        let text = format!(
+            "{} {} holds a wake and could not be woken. Open its session to wake it.",
+            target.key.project, target.key.thread
+        );
+        self.ping(target, format!("{} is asleep", target.key.thread), text);
+    }
+
+    /// Sends the owner a ping about `target`.
+    pub(super) fn ping(&self, target: &Ward, title: String, text: String) {
         let Some(notify) = &self.notify else {
             return;
         };
         drop(notify.send(PingRequest {
-            title: Some(format!("{} is asleep", target.key.thread)),
-            text: format!(
-                "{} {} holds a wake and could not be woken. Open its session to wake it.",
-                target.key.project, target.key.thread
-            ),
+            title: Some(title),
+            text,
             level: Level::Ping,
             project: Some(target.key.project.clone()),
             thread: Some(target.key.thread.clone()),

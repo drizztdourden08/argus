@@ -7,7 +7,6 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use argus_accounts::session_map::{is_archived, local_ids};
-use argus_notify::{By, Level, PingRequest};
 use argus_store::{ActivityLevel, NewActivity};
 use argus_wake::relay::Ward;
 
@@ -71,20 +70,10 @@ impl RelayHost {
     }
 
     fn tell_archived(&self, target: &Ward) {
-        let Some(notify) = &self.notify else {
-            return;
-        };
-        drop(notify.send(PingRequest {
-            title: Some(format!("{} is archived", target.key.thread)),
-            text: format!(
-                "{} {} holds a wake but its session is archived, so Argus cannot wake it. Unarchive it or end the thread.",
-                target.key.project, target.key.thread
-            ),
-            level: Level::Ping,
-            project: Some(target.key.project.clone()),
-            thread: Some(target.key.thread.clone()),
-            by: By::Auto,
-            url: None,
-        }));
+        let text = format!(
+            "{} {} holds a wake but its session is archived, so Argus cannot wake it. Unarchive it or end the thread.",
+            target.key.project, target.key.thread
+        );
+        self.ping(target, format!("{} is archived", target.key.thread), text);
     }
 }
