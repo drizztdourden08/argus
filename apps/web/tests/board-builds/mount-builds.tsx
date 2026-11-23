@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind test */
+import { Text } from '@drizztdourden08/tessera';
 import { act } from '@testing-library/react';
+import { useLocation } from 'react-router';
 import { BoardTabsRow } from '../../src/screens/board/BoardTabsRow';
 import { BuildsTab } from '../../src/screens/board/tabs/builds';
 import { stubFetch } from '../board-tests/mount-tab';
@@ -14,12 +16,15 @@ interface Board {
   items?: object[];
 }
 
+const Where = () => <Text as="output" aria-label="where">{useLocation().search}</Text>;
+
 const mountBuilds = async (board: Board = {}, respond?: Responder) => {
   const calls = stubFetch(respond);
   const ui = (
     <>
       <BoardTabsRow tabs={[{ id: 'builds', label: 'Builds' }]} activeTab="builds" onTabChange={() => undefined} />
       <BuildsTab boardKey={SCOPE} />
+      <Where />
     </>
   );
   const { view, live } = await mountBoard(ui, [

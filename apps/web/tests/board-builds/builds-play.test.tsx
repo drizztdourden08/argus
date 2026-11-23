@@ -65,6 +65,13 @@ describe('I-215 Running now at the top of Builds', { tags: ['standard'] }, () =>
     expect(within(section).queryByText('R-6')).toBeNull();
   });
 
+  it('opens the run pane on its log tab when a row is clicked', async () => {
+    await mountBuilds(board([runningDoc('R-7', 'launcher-master', { name: 'build web' })]));
+    const section = await screen.findByRole('region', { name: 'Running now' });
+    fireEvent.click(within(section).getByText('build web'));
+    expect(screen.getByLabelText('where').textContent).toBe('?open=R-7&pane=log');
+  });
+
   it('shows no section without a live run', async () => {
     await mountBuilds(board([runDoc('R-6', 'launcher-master')]));
     await playButton();
