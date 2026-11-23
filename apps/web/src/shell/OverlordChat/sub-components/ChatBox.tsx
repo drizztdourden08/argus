@@ -18,7 +18,8 @@ const ChatBox = (props: ChatBoxProps) => {
         value={text}
         onChange={setText}
         onSubmit={send}
-        disabled={!running || action.busy}
+        disabled={!running}
+        busy={action.busy}
         placeholder={CHAT_PLACEHOLDER}
       />
       {action.problem && <Callout tone="danger">{action.problem}</Callout>}
