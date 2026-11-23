@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind component */
 import './RunCard.css';
 import './SectionHead.css';
-import { Flex, Text } from '@drizztdourden08/tessera';
+import { Text } from '@drizztdourden08/tessera';
 import type { ClosedRunCardProps } from '../tests-props.type';
 import { ClosedTestRow } from './ClosedTestRow';
+import { RunChips } from './RunChips';
 import { RunCounts } from './RunCounts';
 import { RunFrame } from './RunFrame';
 
@@ -12,12 +13,16 @@ const ClosedRunCard = (props: ClosedRunCardProps) => {
   return (
     <RunFrame
       view={view}
-      muted
       open={open}
       onToggle={onToggle}
-      className="run-card run-card--closed"
-      attrs={{ 'data-swap-item': '', 'data-run': view.item.id }}
-      content={<Flex gap="xs" align="center" className="run-card__end"><RunCounts counts={view.counts} /></Flex>}
+      menu={[]}
+      className="run-card"
+      signals={(
+        <>
+          <RunChips view={view} />
+          <RunCounts counts={view.counts} />
+        </>
+      )}
     >
       {view.tests.length > 0
         ? view.tests.map((test) => <ClosedTestRow key={test.id} test={test} />)

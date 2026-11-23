@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind types */
-import type { IconName } from '@drizztdourden08/tessera';
+import type { IconName, MenuGroup } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { RecordFrameProps } from '../../../../shell';
 import type { RunEntry } from '../../../../data/runs';
-import type { RunView, TestDoc, TestsView } from './model';
-import type { CaseHead, CaseLayout } from './tests.type';
+import type { RunView, TestDoc } from './model';
+import type { CaseHead } from './tests.type';
 
 interface CaseOutcomeProps {
   test: TestDoc;
@@ -18,12 +17,13 @@ interface SectionHeadProps {
   action?: ReactNode;
 }
 
-interface RunFrameProps extends Pick<RecordFrameProps, 'attrs' | 'className'>, Partial<Pick<RecordFrameProps, 'edgeTone' | 'menu'>> {
+interface RunFrameProps {
   view: RunView;
-  muted?: boolean;
   open: boolean;
   onToggle: (open: boolean) => void;
-  content: ReactNode;
+  menu: MenuGroup[];
+  signals: ReactNode;
+  className?: string;
   children: ReactNode;
 }
 
@@ -41,15 +41,6 @@ interface RunActionsProps {
   runs: RunEntry[];
 }
 
-interface LayoutControlProps {
-  layout: CaseLayout;
-  onChange: (layout: CaseLayout) => void;
-}
-
-interface TestsSummaryProps {
-  view: TestsView;
-}
-
 export type {
-  BuildChipProps, CaseOutcomeProps, LayoutControlProps, RunActionsProps, RunChipsProps, RunFrameProps, SectionHeadProps, TestsSummaryProps,
+  BuildChipProps, CaseOutcomeProps, RunActionsProps, RunChipsProps, RunFrameProps, SectionHeadProps,
 };

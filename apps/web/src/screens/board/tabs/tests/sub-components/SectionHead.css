@@ -16,8 +16,4 @@
   .test-section__grid {
     padding-inline: var(--space-sm);
   }
-
-  .test-section__hint {
-    display: none;
-  }
 }

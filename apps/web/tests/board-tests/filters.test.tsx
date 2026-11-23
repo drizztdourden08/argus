@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from './board-dom';
 import { addFilter, openFilters, removeFilter } from '../helpers/filter-clauses';
@@ -15,8 +15,7 @@ describe('S1 search', { tags: ['standard'] }, () => {
     await openFilters();
     typeSearch('logout');
     shown('T-2');
-    expect(screen.getByText('2 of 3 cases to run')).toBeTruthy();
-    expect(screen.getByText('filtered')).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Tests counts' })).getByText('to run 2')).toBeTruthy();
     typeSearch('t-3');
     shown('T-3');
   });

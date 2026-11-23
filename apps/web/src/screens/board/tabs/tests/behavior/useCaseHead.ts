@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind logic */
-import { caseAssignee, caseChips, isToRun } from '../model';
+import { caseAssignee, caseChips, caseTime, isToRun } from '../model';
 import type { TestDoc } from '../model';
 import { CASE_KIND } from '../tests.constants';
 import type { CaseHead } from '../tests.type';
@@ -24,6 +24,7 @@ const useCaseHead = (test: TestDoc): CaseHead => {
       menuLabel: `More actions for ${test.id}`,
     },
     title: test.title,
+    time: caseTime(test),
     chips: caseChips(test, group, conflicted),
     toRun: isToRun(test),
     controls,

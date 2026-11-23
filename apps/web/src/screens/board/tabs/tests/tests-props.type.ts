@@ -21,6 +21,7 @@ interface TestsToolbarProps {
   subjects: string[];
   runs: Option[];
   plans: Option[];
+  closedCount: number;
 }
 
 interface TestNoticesProps {
@@ -94,9 +95,7 @@ interface DoneListProps {
 
 interface ClosedSectionProps {
   views: RunView[];
-  count: number;
   shown: boolean;
-  onShownChange: (shown: boolean) => void;
 }
 
 interface RunListProps {

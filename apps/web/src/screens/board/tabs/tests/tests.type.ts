@@ -21,7 +21,7 @@ interface TestsData {
   wakes: WithId<Wake>[];
 }
 
-type CaseLayout = 'rows' | 'cards';
+type CaseLayout = 'normal' | 'compact';
 
 interface TestsState {
   filters: TestFilters;
@@ -161,6 +161,7 @@ interface TestActions {
 interface CaseHead {
   head: RecordHeadProps;
   title: string;
+  time: string;
   chips: RowChip[];
   toRun: boolean;
   controls: Outcome;

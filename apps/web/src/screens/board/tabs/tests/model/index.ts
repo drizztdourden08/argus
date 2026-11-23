@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { caseAssignee } from './case-assignee';
 export { caseChips } from './case-chips';
+export { caseTime } from './case-time';
 export { byLabel } from './by-label';
 export { changedFields } from './changed-fields';
 export { conflictedTests } from './conflicted-tests';
@@ -38,7 +39,7 @@ export { shownDirection } from './sort-direction';
 export { sortToRun } from './sort-to-run';
 export { shownIds } from './shown-ids';
 export { subjectsOf } from './subjects-of';
-export { summarySignals } from './summary-signals';
+export { testStats } from './test-stats';
 export { testNotices } from './test-notices';
 export { testsView } from './tests-view';
 export { toRunCount } from './to-run-count';
@@ -46,6 +47,6 @@ export { visibleTests } from './visible-tests';
 export { wakeChip } from './wake-chip';
 export { wakePending } from './wake-pending';
 export {
-  DEFAULT_FILTERS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, ORDER_OPTIONS, OWNER_ASSIGNEE, PLAN_KIND, STORE_KEYS,
+  DEFAULT_FILTERS, DONE_FOLD_AFTER, TESTS_TAB, EDIT_LIMITS, GROUP_OPTIONS, ORDER_OPTIONS, OWNER_ASSIGNEE, PLAN_KIND, STORE_KEYS,
 } from './model.constants';
 export type * from './model.type';

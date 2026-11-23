@@ -13,7 +13,7 @@ const CaseRow = (props: TestPartProps) => {
   const { controls, toRun } = view;
   return (
     <Box data-swap-item data-test={test.id} data-to-run={toRun ? '' : undefined} onKeyDown={rowKeys(toRun, controls)}>
-      <RecordRow head={view.head} title={view.title} onOpen={view.open} chips={view.chips} trailing={<CaseOutcome test={test} view={view} />} />
+      <RecordRow head={view.head} title={view.title} time={view.time} onOpen={view.open} chips={view.chips} trailing={<CaseOutcome test={test} view={view} />} />
       {controls.open && <ResultComposer testId={test.id} outcome={controls.open} controls={controls} />}
     </Box>
   );

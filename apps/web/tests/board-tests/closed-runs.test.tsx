@@ -39,6 +39,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
     await showClosed();
     const card = cardOf(container, 'I-51');
     expect(card.textContent).toContain('passed');
+    fireEvent.click(toggleOf(card));
     expect(within(card).getByRole('group', { name: '1 to run · 1 pass · 1 fail' })).toBeTruthy();
   });
 
@@ -57,7 +58,7 @@ describe('S1 closed runs', { tags: ['standard'] }, () => {
     const { container } = await mountTab(closedBoard());
     await showClosed();
     expect(cardOf(container, 'I-51')).not.toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show closed (1)' }));
     expect(cardOf(container, 'I-51')).toBeNull();
   });
 });

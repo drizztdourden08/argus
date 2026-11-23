@@ -1,10 +1,10 @@
 /* @layer renderer-app @kind logic */
 import { useCallback, useEffect, useState } from 'react';
-import { formatFilters, readStored, writeStored } from '../../../shared';
-import { DEFAULT_FILTERS, parseStored, shownDirection, STORE_KEYS } from '../model';
+import { formatFilters, readStored, useTabLayout, writeStored } from '../../../shared';
+import { DEFAULT_FILTERS, parseStored, shownDirection, STORE_KEYS, TESTS_TAB } from '../model';
 import type { StoredView, TestFilters, TestPrefs } from '../model';
+import { LAYOUT_IDS } from '../tests.constants';
 import type { TestsState } from '../tests.type';
-import { useCaseLayout } from './useCaseLayout';
 
 const loadView = (): StoredView =>
   parseStored({
@@ -23,9 +23,9 @@ const saveView = ({ filters, prefs }: StoredView): void => {
   writeStored(STORE_KEYS.closed, prefs.showClosed ? '1' : '0');
 };
 
-const useTestsState = (): TestsState => {
+const useTestsState = (boardKey: string): TestsState => {
   const [view, setView] = useState<StoredView>(loadView);
-  const [layout, setLayout] = useCaseLayout();
+  const [layout, setLayout] = useTabLayout(TESTS_TAB, boardKey, LAYOUT_IDS, 'normal');
   useEffect(() => saveView(view), [view]);
   const patchFilters = useCallback((patch: Partial<TestFilters>) => setView((now) => ({ ...now, filters: { ...now.filters, ...patch } })), []);
   const patchPrefs = useCallback((patch: Partial<TestPrefs>) => setView((now) => ({ ...now, prefs: { ...now.prefs, ...patch } })), []);

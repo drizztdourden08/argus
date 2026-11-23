@@ -1,32 +1,33 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
-import { RecordFrame, ShownCode } from '../../../../../shell';
+import { Box, Flex } from '@drizztdourden08/tessera';
+import { itemCode, RecordRow, useRecordPane } from '../../../../../shell';
+import { useTestsShared } from '../behavior/useTestsShared';
 import { RUN_KIND } from '../tests.constants';
 import type { RunFrameProps } from '../tests-head-props.type';
-import { RunChips } from './RunChips';
 
 const RunFrame = (props: RunFrameProps) => {
-  const { view, muted = false, open, onToggle, content, children, ...look } = props;
-  const title = view.item.title || view.plan?.title;
+  const { view, open, onToggle, menu, signals, className, children } = props;
+  const { boardKey, threads } = useTestsShared();
+  const pane = useRecordPane();
+  const { item } = view;
+  const code = itemCode(item);
   return (
-    <RecordFrame
-      {...look}
-      name={view.item.id}
-      kind={RUN_KIND}
-      density="row"
-      open={open}
-      onOpenChange={onToggle}
-      code={<Text font="title" tone={muted ? 'muted' : undefined} className="run-card__tag"><ShownCode id={view.item.id} /></Text>}
-      title={title && <Text smartTimes tone={muted ? 'muted' : 'dim'} className="run-card__title">{title}</Text>}
-      content={
-        <>
-          <RunChips view={view} />
-          {content}
-        </>
-      }
-    >
-      {children}
-    </RecordFrame>
+    <Box data-swap-item data-run={item.id} className={className}>
+      <RecordRow
+        head={{ kind: RUN_KIND, code, assignee: item.assignee ?? item.thread ?? '', boardKey, threads, menu, menuLabel: `More actions for ${code}` }}
+        title={item.title || view.plan?.title || ''}
+        time={item.updatedAt ?? null}
+        onOpen={() => pane.open(code)}
+        open={open}
+        onOpenChange={onToggle}
+        body={(
+          <Flex direction="column" gap="sm">
+            <Flex gap="xs" align="center" wrap>{signals}</Flex>
+            {children}
+          </Flex>
+        )}
+      />
+    </Box>
   );
 };
 

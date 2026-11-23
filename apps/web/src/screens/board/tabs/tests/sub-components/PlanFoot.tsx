@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Flex, Icon, IconButton, Spacer, Text } from '@drizztdourden08/tessera';
-import { Age, useRecordPane, useRunOps } from '../../../../../shell';
+import { Flex, Icon, IconButton, Text } from '@drizztdourden08/tessera';
+import { useRecordPane, useRunOps } from '../../../../../shell';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { countsText } from '../model';
 import { NO_CASES_TIP } from '../tests.constants';
@@ -26,8 +26,6 @@ const PlanFoot = (props: PlanFootProps) => {
           <Icon name="play" />
         </IconButton>
         <Text variant="caption" tone="muted">{empty ? 'no cases' : countsText(plan.counts)}</Text>
-        <Spacer />
-        {plan.item.updatedAt && <Text variant="caption" tone="muted"><Age value={plan.item.updatedAt} /></Text>}
       </Flex>
     </Flex>
   );

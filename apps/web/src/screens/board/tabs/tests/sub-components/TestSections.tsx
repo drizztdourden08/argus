@@ -2,10 +2,10 @@
 import { Box, Text } from '@drizztdourden08/tessera';
 import { useTestsShared } from '../behavior/useTestsShared';
 import { doneTests, isToRun, sortToRun } from '../model';
-import { KEY_HINT } from '../tests.constants';
 import type { TestSectionsProps } from '../tests-props.type';
 import { CaseItems } from './CaseItems';
 import { DoneList } from './DoneList';
+import { KeyHint } from './KeyHint';
 import { SectionHead } from './SectionHead';
 
 const TestSections = (props: TestSectionsProps) => {
@@ -13,7 +13,7 @@ const TestSections = (props: TestSectionsProps) => {
   const { order, direction, showPassed } = useTestsShared();
   const toRun = sortToRun(tests.filter(isToRun), order, direction);
   const done = doneTests(tests, showPassed);
-  const hint = toRun.length > 0 ? <Text variant="caption" tone="muted" className="test-section__hint">{KEY_HINT}</Text> : undefined;
+  const hint = toRun.length > 0 ? <KeyHint /> : undefined;
   return (
     <>
       <Box role="group" aria-label="To run">

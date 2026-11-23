@@ -57,6 +57,8 @@ const AUTO_TIP = 'A thread can run this one itself; you can still post a result'
 
 const OP_KINDS = ['create', 'edit', 'move', 'ac', 'archive', 'unarchive', 'delete', 'restore', 'bulk', 'purge', 'build', 'avatar', 'worktree-link', 'worktree-keep', 'launcher-link', 'launcher-retire'];
 
+const TESTS_TAB = 'tests';
+
 export {
   AUTO_TIP, BAD_STATUSES, DEFAULT_FILTERS, DEFAULT_PREFS, DONE_FOLD_AFTER, EDIT_LIMITS, GROUP_OPTIONS, HUMAN, NO_KEY, NOTE_MIN_CHARS, NOTE_OUTCOMES, OP_KINDS, OWNER_ASSIGNEE,
   PASSED_STATUSES, PLAN_CLOSED_STAGES, PLAN_KIND, ORDER_OPTIONS, RUN_CLOSED_STAGES, STATUS_FILTERS, STORE_KEYS, WAKE_WAIT_MS,

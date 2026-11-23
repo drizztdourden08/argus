@@ -112,20 +112,20 @@ describe('S1 closed runs and the search', { tags: ['standard'] }, () => {
     await openFilters();
     fireEvent.click(await screen.findByRole('button', { name: 'Show closed (1)' }));
     expect(localStorage.getItem('coord.closed')).toBe('1');
-    fireEvent.click(screen.getByRole('button', { name: 'Hide closed (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show closed (1)' }));
     expect(localStorage.getItem('coord.closed')).toBe('0');
   });
 });
 
 describe('S1 the case view', { tags: ['standard'] }, () => {
-  it('shows rows by default, switches to cards with the same result buttons, and remembers it', async () => {
+  it('shows normal by default, switches to compact with the same result buttons, and remembers it', async () => {
     const { container } = await mountTab({ tests: [testDoc('T-1')] });
     await screen.findByText('Test number 1');
     await openFilters();
-    expect(screen.getByRole('radio', { name: 'Rows' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('radio', { name: 'Normal' }).getAttribute('aria-checked')).toBe('true');
     expect(container.querySelector('.test-section__grid')).toBeNull();
-    fireEvent.click(screen.getByRole('radio', { name: 'Cards' }));
-    expect(localStorage.getItem('argus.tab.tests.layout')).toBe('cards');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compact' }));
+    expect(localStorage.getItem('argus.tab.tests.layout.rotp')).toBe('compact');
     expect(container.querySelector('.test-section__grid [data-test="T-1"]')).not.toBeNull();
     expect(within(screen.getByRole('group', { name: 'Run T-1' })).getByRole('button', { name: 'fail' })).toBeTruthy();
   });

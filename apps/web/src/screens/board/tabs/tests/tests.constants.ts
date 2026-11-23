@@ -69,14 +69,12 @@ const PROGRESS_SEGMENTS: { id: keyof Counts; label: string; color: StackedBarCol
   { id: 'run', label: 'to run', color: 'neutral', icon: 'list-checks' },
 ];
 
-const LAYOUT_KEY = 'argus.tab.tests.layout';
-
-const CASE_CARD_WIDTH = 272;
-
 const LAYOUT_CHOICES: SegmentOption<CaseLayout>[] = [
-  { value: 'rows', icon: 'rows-3', hint: { label: 'Rows', description: 'One line per case' } },
-  { value: 'cards', icon: 'layout-grid', hint: { label: 'Cards', description: 'Case cards that wrap' } },
+  { value: 'normal', icon: 'rows-3', hint: { label: 'Normal', description: 'One line per case, the title first' } },
+  { value: 'compact', icon: 'list', hint: { label: 'Compact', description: 'Code and signals on one line, the title below' } },
 ];
+
+const LAYOUT_IDS: CaseLayout[] = ['normal', 'compact'];
 
 const COMPOSE_HINTS: Record<string, string> = {
   fail: 'What failed? The thread reads this.',
@@ -130,6 +128,6 @@ const MODE_OPTIONS = [
 ];
 
 export {
-  ANCHOR_PATTERN, BUILD_KIND, BUILD_TIP, CASE_CARD_WIDTH, CASE_KIND, LAYOUT_CHOICES, LAYOUT_KEY, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_RUNS_TEXT, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PROGRESS_SEGMENTS,
+  ANCHOR_PATTERN, BUILD_KIND, BUILD_TIP, CASE_KIND, LAYOUT_CHOICES, LAYOUT_IDS, CLOSED_PLANS, COMPOSE_HINTS, FIND_TEXT, KEY_HINT, MODE_OPTIONS, NO_CASES_TIP, NO_MATCH_TEXT, NO_PLAN_GROUP, NO_RUNS_TEXT, NO_PLANS_TEXT, NO_TESTS_TEXT, NOTE_DIALOG_TEXT, OUTCOME_BUTTON_SELECTOR, OUTCOMES, PROGRESS_SEGMENTS,
   RESULT_PLACEHOLDER, RESULT_TONES, RUN_KIND, RUN_ROW_SELECTOR, RUN_TAGS, RUN_TIPS, TEST_STATUSES, TEST_TAGS, TYPING_SELECTOR, WAKE_TAGS, WAKE_TICK_MS,
 };
