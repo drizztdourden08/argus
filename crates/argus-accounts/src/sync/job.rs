@@ -284,7 +284,7 @@ pub(super) fn kind_of(scan: &Scan, change: &Change) -> StepKind {
 }
 
 /// Which chats each scope holds once the chat changes are written, with their focus time.
-fn presence_after(scan: &Scan, plan: &Plan) -> Presence {
+pub(super) fn presence_after(scan: &Scan, plan: &Plan) -> Presence {
     let mut presence = Presence::new();
     for s in &scan.scopes {
         let chats = s

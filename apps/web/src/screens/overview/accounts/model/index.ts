@@ -5,6 +5,8 @@ export { blockReason } from './block-reason';
 export { clampPercent } from './clamp-percent';
 export { clockText } from './clock-text';
 export { countCritical } from './count-critical';
+export { copyLabel } from './copy-label';
+export { copyPairs } from './copy-pairs';
 export { currentName } from './current-name';
 export { differsText } from './differs-text';
 export { driftText } from './drift-text';

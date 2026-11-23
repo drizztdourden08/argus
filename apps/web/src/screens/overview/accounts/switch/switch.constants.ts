@@ -87,7 +87,7 @@ const PHASE_STATUSES = defineStatuses({
   idle: { label: 'Idle', tone: 'neutral' },
   countdown: { label: 'Counting down', tone: 'warning', pulse: true },
   handover: { label: 'Handover', tone: 'info', pulse: true },
-  sync: { label: 'Syncing', tone: 'info', pulse: true },
+  sync: { label: 'Copying the sidebar', tone: 'info', pulse: true },
   switching: { label: 'Switching', tone: 'info', pulse: true },
   verifying: { label: 'Verifying', tone: 'info', pulse: true },
   done: { label: 'Done', tone: 'success' },
@@ -115,7 +115,7 @@ const AT_ZERO_SYNC = 'At 0:00 Argus syncs the sidebar, then switches.';
 const THREADS_TITLE = 'Threads for handover';
 const NO_THREADS = 'No working threads found.';
 const THREADS_UNCHECKED = 'Not checked yet.';
-const SYNC_TITLE = 'Sidebar sync';
+const SYNC_TITLE = 'Sidebar copy';
 const SYNC_UNSTARTED = 'Not started yet.';
 const STUCK_PREFIX = 'Stuck:';
 const BY_RULE = 'Started by the auto-switch rule.';

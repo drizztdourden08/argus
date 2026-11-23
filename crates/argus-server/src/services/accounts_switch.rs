@@ -383,7 +383,7 @@ impl Prepared {
     pub async fn run(self) -> Result<(), String> {
         let accounts = Arc::clone(&self.accounts);
         let svc = Arc::clone(&self.svc);
-        let to = self.to.label.clone();
+        let ends = (self.from.clone(), self.to.clone());
         let id = self.id.clone();
         let result = tokio::task::spawn_blocking(move || self.run_blocking())
             .await
@@ -394,8 +394,9 @@ impl Prepared {
         let _ = tokio::task::spawn_blocking(move || publish_logins(&svc2, &accounts2)).await;
         let done = result?;
         if done == Done::Switched {
-            let _ = tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &to, &id))
-                .await;
+            let _ =
+                tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &ends, &id))
+                    .await;
         }
         Ok(())
     }
@@ -544,17 +545,18 @@ const SIDEBAR_SETTLE: Duration = Duration::from_secs(20);
 /// switch `id` (verifying until then) as done or failed. A check that passes confirms the
 /// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
 /// toast and a log line, never silent. Blocking.
-fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str, id: &str) {
+fn check_sidebars(svc: &Services, accounts: &AccountsService, ends: &(Account, Account), id: &str) {
+    let (from, to) = ends;
     std::thread::sleep(SIDEBAR_SETTLE);
-    let left = accounts.sync_left();
-    let line = sidebar_check_line(&left, to);
+    let left = accounts.copy_left(from, to);
+    let line = sidebar_check_line(&left, &to.label);
     if left == Ok(0) {
         accounts.finish_switch(id, ("done", None), &[line]);
         verify_version(svc, accounts);
         return;
     }
     let detail = match &left {
-        Ok(n) => format!("{n} sidebar changes are missing again after Claude started"),
+        Ok(n) => format!("{n} sidebar changes of the copy are missing again after Claude started"),
         Err(why) => why.clone(),
     };
     let error = format!("the switch worked but the sidebar check failed: {detail}");
@@ -726,17 +728,17 @@ impl Stages for ServerStages<'_> {
 
     fn sync(&self) -> Result<String, String> {
         let accounts = &self.run.accounts;
-        let summary = match accounts.sync(false) {
+        let summary = match accounts.copy_onto(&self.run.from, &self.run.to, false) {
             Ok(summary) => summary,
             Err(why) => {
-                let error = format!("the sync of the chats and folders failed: {why}");
+                let error = format!("the copy of the chats and folders failed: {why}");
                 accounts.note_sync(sync_info(None, Some(error.as_str())));
                 return Err(error);
             }
         };
         if !summary.verified {
             let error = format!(
-                "the sync wrote but its check found changes left: {}",
+                "the copy wrote but its check found changes left: {}",
                 sync_note(&summary)
             );
             accounts.note_sync(sync_info(Some(&summary), Some(error.as_str())));

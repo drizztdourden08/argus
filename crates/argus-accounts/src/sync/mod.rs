@@ -8,6 +8,7 @@ pub mod compare;
 pub mod counts;
 pub mod drift;
 pub mod job;
+pub mod onto;
 pub mod review;
 pub mod steps;
 
@@ -16,4 +17,5 @@ pub use compare::{Compare, build_compare};
 pub use counts::{ChatCounts, chat_counts};
 pub use drift::{Drift, drift_of};
 pub use job::{Env, Mode, Phase, Progress, Summary, lock_running, run, scan_and_plan};
+pub use onto::{Route, run_onto, scan_and_plan_onto};
 pub use steps::{StepKind, StepSink, StepState, SyncStep};

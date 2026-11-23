@@ -20,6 +20,10 @@ use crate::config::ArchiveRule;
 use crate::ports::{Catalog, Transcripts};
 use crate::types::Scope;
 
+mod onto;
+
+pub use onto::build_plan_onto;
+
 const INDEX_FILE: &str = "archived-sessions.idx";
 
 /// What a change does.
@@ -464,22 +468,26 @@ impl Planner<'_> {
     /// records stay, except the ones deleted there.
     fn plan_indexes(&mut self) {
         for i in 0..self.scopes.len() {
-            let scope = &self.scopes[i];
-            let mut archived: BTreeSet<String> = scope.index.iter().cloned().collect();
-            for (id, loaded) in &scope.records {
-                if archive_vote(&loaded.value, 0).archived {
-                    archived.insert(id.clone());
-                } else {
-                    archived.remove(id);
-                }
+            self.plan_index(i);
+        }
+    }
+
+    fn plan_index(&mut self, i: usize) {
+        let scope = &self.scopes[i];
+        let mut archived: BTreeSet<String> = scope.index.iter().cloned().collect();
+        for (id, loaded) in &scope.records {
+            if archive_vote(&loaded.value, 0).archived {
+                archived.insert(id.clone());
+            } else {
+                archived.remove(id);
             }
-            archived.retain(|id| !scope.deleted.contains(id));
-            let chosen: Vec<String> = archived.into_iter().collect();
-            if chosen != scope.index {
-                let before = scope.index_sha.clone();
-                let data = json!({ "v": 1, "archived": chosen });
-                self.push(i, ChangeKind::ArchiveIndex, "", before, data);
-            }
+        }
+        archived.retain(|id| !scope.deleted.contains(id));
+        let chosen: Vec<String> = archived.into_iter().collect();
+        if chosen != scope.index {
+            let before = scope.index_sha.clone();
+            let data = json!({ "v": 1, "archived": chosen });
+            self.push(i, ChangeKind::ArchiveIndex, "", before, data);
         }
     }
 }

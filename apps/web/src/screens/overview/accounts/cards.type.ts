@@ -81,9 +81,14 @@ interface SyncCardProps {
 
 interface SyncActionsProps {
   run: AccountsRun | null;
-  active: boolean;
   actions: AccountActions;
   onReview: () => void;
+}
+
+interface SyncChoicesProps {
+  accounts: readonly Account[];
+  disabled: boolean;
+  actions: AccountActions;
 }
 
 interface SyncRunLineProps {
@@ -111,5 +116,5 @@ interface AccountsOverviewProps {
 export type {
   AccountCardProps, AccountCardsProps, AccountFactsProps, AccountNameProps, AccountsOverviewProps, ActivityCardProps, LimitMeterProps,
   LimitMetersProps, ReceiveLineProps, RuleFieldsProps, RulesBlockProps, RulesCardProps, SwitchActionProps, SyncActionsProps, SyncCardProps,
-  SyncRunLineProps,
+  SyncChoicesProps, SyncRunLineProps,
 };

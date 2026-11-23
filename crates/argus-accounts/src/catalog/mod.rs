@@ -7,7 +7,9 @@ pub mod plan;
 pub mod read;
 
 pub use apply::{StepStatus, apply, preflight};
-pub use plan::{Change, ChangeKind, Conflict, Plan, PlanSummary, TombstoneSkip, build_plan};
+pub use plan::{
+    Change, ChangeKind, Conflict, Plan, PlanSummary, TombstoneSkip, build_plan, build_plan_onto,
+};
 pub use read::{FsCatalog, FsTranscripts};
 
 /// Chat folders and transcripts in a temp dir, for the tests of the sync.

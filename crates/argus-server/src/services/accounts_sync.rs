@@ -10,11 +10,13 @@ use std::time::{Duration, Instant};
 use argus_accounts::catalog::{FsCatalog, FsTranscripts};
 use argus_accounts::find_app_data;
 use argus_accounts::sidebar::LevelDbSidebar;
+use argus_accounts::sync::Route;
 use argus_accounts::sync::backup::{self, UndoReport};
 use argus_accounts::sync::{
     Compare, Drift, Env, Mode, Progress, Summary, build_compare, chat_counts, drift_of,
-    lock_running, run, scan_and_plan,
+    lock_running, run, run_onto, scan_and_plan, scan_and_plan_onto,
 };
+use argus_accounts::types::{Account, Scope};
 use argus_core::Coll;
 use argus_core::clock::now_ms;
 use serde_json::{Value, json};
@@ -169,8 +171,73 @@ impl AccountsService {
         self.run_sync(&turn, dry_run)
     }
 
-    fn run_sync(&self, _turn: &Turn<'_>, dry_run: bool) -> Result<Summary, String> {
+    /// The one-way copy of `from` onto `to`, as the switch runs it: the target ends up as the
+    /// current account is. Like [`Self::sync`] it waits up to two minutes for the turn.
+    ///
+    /// # Errors
+    /// [`SYNC_BUSY`] when the turn did not come free in time, an account with no Desktop scope,
+    /// or the reason the run failed.
+    pub fn copy_onto(
+        &self,
+        from: &Account,
+        to: &Account,
+        dry_run: bool,
+    ) -> Result<Summary, String> {
+        let route = route_of(from, to)?;
+        let turn = self.sync.take_waiting(TURN_WAIT)?;
+        self.run_onto_route(&turn, &route, dry_run)
+    }
+
+    /// [`Self::copy_onto`] for the web route: answers [`SYNC_BUSY`] instead of waiting.
+    ///
+    /// # Errors
+    /// [`SYNC_BUSY`] while another run is active, an account with no Desktop scope, or the
+    /// reason the run failed.
+    pub fn try_copy_onto(
+        &self,
+        from: &Account,
+        to: &Account,
+        dry_run: bool,
+    ) -> Result<Summary, String> {
+        let route = route_of(from, to)?;
+        let turn = self.sync.take()?;
+        self.run_onto_route(&turn, &route, dry_run)
+    }
+
+    fn run_onto_route(
+        &self,
+        turn: &Turn<'_>,
+        route: &Route,
+        dry_run: bool,
+    ) -> Result<Summary, String> {
         let mode = if dry_run { Mode::DryRun } else { Mode::Apply };
+        let result = self.run_job(turn, |env, on_progress| {
+            run_onto(env, route, mode, &self.docs, on_progress)
+        });
+        if mode == Mode::Apply && result.is_ok() {
+            // A copy leaves the two-way drift as it was; count it again for the cards.
+            self.scan_drift_unturned();
+        }
+        result
+    }
+
+    fn run_sync(&self, turn: &Turn<'_>, dry_run: bool) -> Result<Summary, String> {
+        let mode = if dry_run { Mode::DryRun } else { Mode::Apply };
+        let result = self.run_job(turn, |env, on_progress| {
+            run(env, mode, &self.docs, on_progress)
+        });
+        if let Ok(summary) = &result {
+            self.put_drift(&settled(mode, summary));
+        }
+        result
+    }
+
+    /// Runs one job over the environment and keeps the `run` doc of it.
+    fn run_job(
+        &self,
+        _turn: &Turn<'_>,
+        job: impl FnOnce(&Env, &mut dyn FnMut(&Progress)) -> Result<Summary, String>,
+    ) -> Result<Summary, String> {
         let started = now_ms();
         let mut doc = json!({
             "id": format!("SY-{started}"), "phase": "scan", "step": 0, "total": 0,
@@ -183,7 +250,7 @@ impl AccountsService {
                 }
                 self.put_run(&doc);
             };
-            run(env, mode, &self.docs, &mut on_progress)
+            job(env, &mut on_progress)
         })?;
         let end = match &result {
             Ok(summary) => json!(summary),
@@ -197,9 +264,6 @@ impl AccountsService {
                 .unwrap_or_default(),
         );
         self.put_run(&doc);
-        if let Ok(summary) = &result {
-            self.put_drift(&settled(mode, summary));
-        }
         result
     }
 
@@ -217,13 +281,14 @@ impl AccountsService {
         }
     }
 
-    /// How many sidebar changes a sync would make now, read without writing; the switch checks
-    /// with it that the sync held once Claude started again. Blocking.
+    /// How many changes the one-way copy of `from` onto `to` would still make now; the switch
+    /// checks with it that the copy held once Claude started again. Blocking.
     ///
     /// # Errors
-    /// When the chats or the sidebar cannot be read.
-    pub(crate) fn sync_left(&self) -> Result<usize, String> {
-        self.with_env(|env| scan_and_plan(env).map(|p| drift_of(&p).total))?
+    /// When an account has no Desktop scope, or the chats or the sidebar cannot be read.
+    pub(crate) fn copy_left(&self, from: &Account, to: &Account) -> Result<usize, String> {
+        let route = route_of(from, to)?;
+        self.with_env(|env| scan_and_plan_onto(env, &route).map(|p| drift_of(&p).total))?
     }
 
     /// The rows of the Compare view.
@@ -254,6 +319,11 @@ impl AccountsService {
         let Ok(_turn) = turn else {
             return;
         };
+        self.scan_drift_unturned();
+    }
+
+    /// The drift scan itself; the caller holds the turn.
+    fn scan_drift_unturned(&self) {
         let accounts = self.config().accounts;
         let scanned = self
             .with_env(|env| scan_and_plan(env).map(|p| (drift_of(&p), chat_counts(&p, &accounts))));
@@ -292,6 +362,21 @@ impl AccountsService {
             report,
         })
     }
+}
+
+/// The route of a copy: the Desktop scope of each account.
+fn route_of(from: &Account, to: &Account) -> Result<Route, String> {
+    let scope = |a: &Account| match (&a.desktop_account, &a.desktop_org) {
+        (Some(account), Some(org)) => Ok(Scope {
+            account: account.clone(),
+            org: org.clone(),
+        }),
+        _ => Err(format!("{} has no Desktop scope", a.label)),
+    };
+    Ok(Route {
+        source: scope(from)?,
+        target: scope(to)?,
+    })
 }
 
 pub(crate) fn merge(into: &mut Value, from: serde_json::Map<String, Value>) {

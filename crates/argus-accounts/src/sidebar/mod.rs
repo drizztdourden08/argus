@@ -4,12 +4,14 @@
 
 pub mod edit;
 pub mod folders;
+pub mod onto;
 pub mod store;
 
 use serde_json::{Map, Value, json};
 
 pub use edit::{FolderEditor, chat_folder};
 pub use folders::{FolderPlan, FolderStep, Presence, fresh_folder_id, plan_folders};
+pub use onto::plan_folders_onto;
 pub use store::LevelDbSidebar;
 
 /// The three keys that hold the sidebar folders, decoded, with the encoding byte each value

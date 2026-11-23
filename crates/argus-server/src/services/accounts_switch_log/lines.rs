@@ -208,13 +208,14 @@ pub(crate) fn sidebar_check_line(left: &Result<usize, String>, to: &str) -> Line
     let (state, text) = match left {
         Ok(0) => (
             LineState::Done,
-            "Sidebar check: the chats and folders are the same on every account.".to_owned(),
+            "Sidebar check: the chats and folders of the previous account are on the new one."
+                .to_owned(),
         ),
         Ok(n) => (
             LineState::Failed,
             format!(
                 "Sidebar check failed: {n} sidebar changes are missing again after Claude started on {to}. \
-                 Claude rewrote its sidebar. Close Claude from its tray and run the sync from the Accounts tab."
+                 Claude rewrote its sidebar. Close Claude from its tray and copy the sidebar again from the Accounts tab."
             ),
         ),
         Err(why) => (

@@ -12,8 +12,14 @@ interface AccountsFeed {
 
 interface AccountActions {
   busy: boolean;
-  sync: () => void;
+  merge: () => void;
+  copy: (from: string, to: string) => void;
   undo: () => void;
+}
+
+interface CopyPair {
+  from: Account;
+  to: Account;
 }
 
 interface PostAction {
@@ -37,4 +43,4 @@ interface PercentFieldProps {
   onCommit: (value: number) => void;
 }
 
-export type { Account, AccountActions, AccountsFeed, AccountsView, PercentFieldProps, PostAction, RowState };
+export type { Account, AccountActions, AccountsFeed, AccountsView, CopyPair, PercentFieldProps, PostAction, RowState };

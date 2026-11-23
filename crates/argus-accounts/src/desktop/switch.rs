@@ -82,7 +82,7 @@ pub trait Stages: Send + Sync {
     /// # Errors
     /// [`Stop::Cancelled`] when the owner cancelled, else the reason.
     fn handover(&self) -> Result<String, Stop>;
-    /// Syncs chats and folders between the accounts, with Claude closed.
+    /// Copies the chats and folders of the current account onto the next one, with Claude closed.
     ///
     /// # Errors
     /// The reason the sync failed.
@@ -189,7 +189,7 @@ impl<'a> Steps<'a> {
             "Ask the leads for handovers".to_owned(),
             "Close Claude".to_owned(),
             format!("Save {}'s login", plan.from.label),
-            "Sync the sidebars".to_owned(),
+            format!("Copy {}'s sidebar onto {}", plan.from.label, plan.to.label),
             format!("Restore {}'s login", plan.to.label),
             "Schedule the resume".to_owned(),
             "Start Claude".to_owned(),

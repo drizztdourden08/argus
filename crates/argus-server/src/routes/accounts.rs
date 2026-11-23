@@ -6,14 +6,17 @@
 //!   `{results}` with one entry per account
 //! - `GET /api/accounts/settings` is the whole settings object, accounts included
 //! - `GET /api/accounts/compare` is the ordered rows of folders and chats of every account
-//! - `POST /api/accounts/sync {dryRun}` plans (default) or applies the chat and folder sync and
-//!   answers the summary; 409 while a run is active
+//! - `POST /api/accounts/sync {dryRun}` plans (default) or applies the two-way merge of chats and
+//!   folders and answers the summary; 409 while a run is active
+//! - `POST /api/accounts/sync {dryRun, from, to}` (account keys) does the one-way copy instead:
+//!   the sidebar of `from` is copied onto `to`, which keeps what only it has
 //! - `POST /api/accounts/sync/undo {backupDir?}` puts a backup back, the last one by default
 //! - `POST /api/accounts/settings {<keys>}` replaces the keys sent, saves `config.json` and
 //!   answers the whole settings object
 
 use std::sync::Arc;
 
+use argus_accounts::Account;
 use argus_core::{ApiError, ErrorCode};
 use serde_json::{Value, json};
 
@@ -122,11 +125,40 @@ async fn sync(ctx: Ctx) -> Reply {
     if accounts.sync_active() {
         return Err(sync_error(SYNC_BUSY.to_owned()));
     }
-    let summary = tokio::task::spawn_blocking(move || accounts.try_sync(dry_run))
-        .await
-        .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))?
-        .map_err(sync_error)?;
+    let ends = copy_ends(&accounts, &body)?;
+    let summary = tokio::task::spawn_blocking(move || match ends {
+        Some((from, to)) => accounts.try_copy_onto(&from, &to, dry_run),
+        None => accounts.try_sync(dry_run),
+    })
+    .await
+    .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))?
+    .map_err(sync_error)?;
     Ok(json_reply(200, &json!(summary)))
+}
+
+/// The two accounts of a one-way copy when the body names them, else none (the two-way merge).
+fn copy_ends(
+    accounts: &AccountsService,
+    body: &Value,
+) -> Result<Option<(Account, Account)>, ApiError> {
+    let key = |name: &str| body.get(name).and_then(Value::as_str);
+    let (from, to) = match (key("from"), key("to")) {
+        (None, None) => return Ok(None),
+        (Some(from), Some(to)) => (from, to),
+        _ => return Err(ApiError::bad_request("a copy needs both `from` and `to`")),
+    };
+    let known = accounts.accounts();
+    let find = |wanted: &str| {
+        known
+            .iter()
+            .find(|a| a.key == wanted)
+            .cloned()
+            .ok_or_else(|| ApiError::bad_request(format!("unknown account {wanted}")))
+    };
+    if from == to {
+        return Err(ApiError::bad_request("a copy needs two different accounts"));
+    }
+    Ok(Some((find(from)?, find(to)?)))
 }
 
 async fn undo(ctx: Ctx) -> Reply {
