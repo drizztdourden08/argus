@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
-import type { ActionState, OverlordQueue, OverlordRule, RuleDraft } from '../../data/overlord';
+import type { ActionState, OverlordQueue, OverlordRule, RuleDraft } from '../../../data/overlord';
 
 type Editing = OverlordRule | 'new' | null;
 
@@ -58,4 +58,4 @@ interface ChatOpen {
   close: () => void;
 }
 
-export type { ChatOpen, ChatTab, Editing, QueueFeed, QueueFeedProps, QueueLineProps, QueueSectionName, QueueSectionProps, RuleFormProps, RuleFormState, RuleRowProps };
+export type { ChatOpen, ChatTab, Editing, QueueFeedProps, QueueLineProps, QueueSectionName, QueueSectionProps, RuleFormProps, RuleFormState, RuleRowProps };

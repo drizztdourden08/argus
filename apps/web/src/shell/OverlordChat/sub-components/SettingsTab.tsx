@@ -17,8 +17,8 @@ const SettingsTab = () => {
         <SettingsField name="cwd" source={settings.cwd.source} {...field}>
           <TextInput value={draft.cwd} onChange={(event) => form.change({ cwd: event.target.value })} />
         </SettingsField>
-        <SettingsField name="claudeExe" source={settings.claudeExe.source} {...field}>
-          <TextInput value={draft.claudeExe} onChange={(event) => form.change({ claudeExe: event.target.value })} />
+        <SettingsField name="exePath" source={settings.exePath.source} {...field}>
+          <TextInput value={draft.exePath} onChange={(event) => form.change({ exePath: event.target.value })} />
         </SettingsField>
         <SettingsField name="budgetUsd" source={settings.budgetUsd.source} {...field}>
           <NumberInput sizeToContent min={1} max={10000} value={draft.budgetUsd} onChange={(budgetUsd) => form.change({ budgetUsd })} />

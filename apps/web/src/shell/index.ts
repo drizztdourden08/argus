@@ -6,7 +6,7 @@ export {
   assigneeLook, assigneeOfRecord, AssigneeMark, categoryColor, DepRecordLink, groupRecords, itemCode, LinkedText, parseRecord, planProgress, RECORD_ACTIONS, FrameCode, RecordCard, RecordFrame, RecordGroup, RecordGroupHeader,
   RecordHead, RecordLink, recordMenuGroups, RecordPaneScope, RecordRow, ShownCode, shownCode, splitRecords, TypeIcon, useRecordOrder, useRecordPane, useRunOps,
 } from './records';
-export type { ActionHandlers, RecordFrameProps, RecordGroups, RecordHeadProps, RowChip } from './records';
+export type {RecordFrameProps, RecordGroups, RecordHeadProps, RowChip } from './records';
 export { LoadingFallback } from './LoadingFallback';
 export { PageFrame } from './PageFrame';
 export { Panel } from './Panel';

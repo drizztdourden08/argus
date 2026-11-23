@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text } from '@drizztdourden08/tessera';
 import { NONE_WAITING } from '../OverlordChat.constants';
-import type { QueueSectionProps } from '../chat-panels.type';
+import type { QueueSectionProps } from '../behavior/chat-panels.type';
 
 const QueueSection = (props: QueueSectionProps) => {
   const { title, count, children } = props;

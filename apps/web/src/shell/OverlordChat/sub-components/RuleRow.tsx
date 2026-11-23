@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Flex, Stack, Tag, Text, Toggle } from '@drizztdourden08/tessera';
 import { nextRunText } from '../behavior/next-run-text';
-import type { RuleRowProps } from '../chat-panels.type';
+import type { RuleRowProps } from '../behavior/chat-panels.type';
 
 const RuleRow = (props: RuleRowProps) => {
   const { rule, busy, onToggle, onEdit, onRun, onDelete } = props;

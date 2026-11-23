@@ -3,7 +3,7 @@ import { Flex, ScrollArea, SegmentedControl } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useQueue } from '../behavior/useQueue';
 import { CHAT_TABS, TABS_LABEL } from '../OverlordChat.constants';
-import type { ChatTab } from '../chat-panels.type';
+import type { ChatTab } from '../behavior/chat-panels.type';
 import { ChatBody } from './ChatBody';
 import { QueueTab } from './QueueTab';
 import { RulesTab } from './RulesTab';

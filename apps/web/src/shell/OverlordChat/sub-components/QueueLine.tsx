@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Stack, Text } from '@drizztdourden08/tessera';
 import { Age } from '../../Age';
-import type { QueueLineProps } from '../chat-panels.type';
+import type { QueueLineProps } from '../behavior/chat-panels.type';
 
 const QueueLine = (props: QueueLineProps) => {
   const { text, label, at } = props;

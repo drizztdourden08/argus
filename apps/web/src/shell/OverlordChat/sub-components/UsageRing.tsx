@@ -3,7 +3,7 @@ import { Anchored, Card, IconButton, ProgressRing } from '@drizztdourden08/tesse
 import { contextShare } from '../behavior/context-share';
 import { useUsagePopover } from '../behavior/useUsagePopover';
 import { USAGE_LABEL } from '../OverlordChat.constants';
-import type { UsageRingProps } from '../chat-settings.type';
+import type { UsageRingProps } from '../behavior/chat-settings.type';
 import { UsagePanel } from './UsagePanel';
 
 const UsageRing = (props: UsageRingProps) => {

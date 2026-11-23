@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { OverlordSettings } from '../../../data/overlord';
 import { SETTING_LABELS } from '../OverlordChat.constants';
-import type { ChipSpec, SettingChoice } from '../chat-settings.type';
+import type { ChipSpec, SettingChoice } from './chat-settings.type';
 import { capitalize } from './capitalize';
 import { labelOf } from './label-of';
 

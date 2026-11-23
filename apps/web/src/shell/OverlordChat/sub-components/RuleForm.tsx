@@ -2,7 +2,7 @@
 import { Button, Callout, Field, Flex, NumberInput, Stack, TextInput, Textarea } from '@drizztdourden08/tessera';
 import { useRuleForm } from '../behavior/useRuleForm';
 import { MAX_EVERY_MIN, MIN_EVERY_MIN } from '../OverlordChat.constants';
-import type { RuleFormProps } from '../chat-panels.type';
+import type { RuleFormProps } from '../behavior/chat-panels.type';
 
 const RuleForm = (props: RuleFormProps) => {
   const { rule, onClose } = props;

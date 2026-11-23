@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import type { ChatOpen } from '../chat-panels.type';
+import type { ChatOpen } from './chat-panels.type';
 import { isChatOpen } from './chat-params';
 import { withChat } from './with-chat';
 

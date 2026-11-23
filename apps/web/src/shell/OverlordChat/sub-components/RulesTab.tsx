@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Panel } from '../../Panel';
 import { useRules } from '../behavior/useRules';
 import { NO_RULES } from '../OverlordChat.constants';
-import type { Editing } from '../chat-panels.type';
+import type { Editing } from '../behavior/chat-panels.type';
 import { RuleForm } from './RuleForm';
 import { RuleRow } from './RuleRow';
 

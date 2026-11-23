@@ -5,7 +5,7 @@ import { heldAt } from '../behavior/held-at';
 import { heldText } from '../behavior/held-text';
 import { queueTotal } from '../behavior/queue-total';
 import { QUEUE_EMPTY, QUEUE_TITLES } from '../OverlordChat.constants';
-import type { QueueFeedProps } from '../chat-panels.type';
+import type { QueueFeedProps } from '../behavior/chat-panels.type';
 import { QueueLine } from './QueueLine';
 import { QueueSection } from './QueueSection';
 

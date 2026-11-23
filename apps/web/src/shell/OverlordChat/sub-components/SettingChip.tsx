@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { DropdownMenu } from '@drizztdourden08/tessera';
 import type { MenuGroup } from '@drizztdourden08/tessera';
-import type { SettingChipProps } from '../chat-settings.type';
+import type { SettingChipProps } from '../behavior/chat-settings.type';
 
 const SettingChip = (props: SettingChipProps) => {
   const { label, current, selected, choices, busy, onPick } = props;

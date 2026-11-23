@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
-import type { ActionState, LimitKey, LimitSource, OverlordSettings, OverlordUsage, SettingsDraft } from '../../data/overlord';
+import type { ActionState, LimitKey, LimitSource, OverlordSettings, OverlordUsage, SettingsDraft } from '../../../data/overlord';
 
 interface SettingsFormState {
   settings: OverlordSettings | null;

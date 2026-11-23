@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { settingChips } from '../behavior/setting-chips';
-import type { SettingChipsProps } from '../chat-settings.type';
+import type { SettingChipsProps } from '../behavior/chat-settings.type';
 import { SettingChip } from './SettingChip';
 
 const SettingChips = (props: SettingChipsProps) => {

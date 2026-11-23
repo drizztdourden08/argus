@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind component */
-import { BrandMark, Flex, Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
+import { OverlordMark } from '../../OverlordMark';
 import type { WorkingLineProps } from '../OverlordChat.type';
-import '../../overlord-mark.css';
 
 const WorkingLine = (props: WorkingLineProps) => {
   const { activity } = props;
   return (
     <Flex gap="sm" align="center">
-      <BrandMark app="argus" size="sm" className={`overlord-mark is-${activity.mark}`} />
+      <OverlordMark activity={activity.mark} size="sm" />
       <Text variant="caption" tone="muted" clamp={1}>{activity.text}</Text>
     </Flex>
   );

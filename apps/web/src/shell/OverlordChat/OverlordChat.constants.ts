@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import type { ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { LimitKey, LimitSource, OverlordState } from '../../data/overlord';
-import type { ChatTab, QueueSectionName } from './chat-panels.type';
+import type { ChatTab, QueueSectionName } from './behavior/chat-panels.type';
 import type { TalkKind, ToolStatus } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
@@ -81,7 +81,7 @@ const CHAT_TABS: { value: ChatTab; label: string }[] = [
 ];
 const SETTINGS_LABELS: Readonly<Record<LimitKey, string>> = {
   cwd: 'Working folder',
-  claudeExe: 'Claude program',
+  exePath: 'Agent program path',
   budgetUsd: 'Monthly budget (USD, blank for no cap)',
   restartMax: 'Restarts allowed',
   approvalTimeoutMin: 'Approval wait (minutes)',

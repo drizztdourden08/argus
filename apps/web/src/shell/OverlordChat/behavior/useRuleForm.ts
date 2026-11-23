@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createRule, updateRule, useAction } from '../../../data/overlord';
 import type { OverlordRule, RuleDraft } from '../../../data/overlord';
 import { BLANK_DRAFT } from '../OverlordChat.constants';
-import type { RuleFormState } from '../chat-panels.type';
+import type { RuleFormState } from './chat-panels.type';
 
 const draftOf = (rule: OverlordRule | null): RuleDraft =>
   rule ? { title: rule.title, prompt: rule.prompt, everyMin: rule.everyMin } : BLANK_DRAFT;

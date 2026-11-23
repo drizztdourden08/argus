@@ -36,6 +36,12 @@ interface WorkingActivity {
   mark: 'thinking' | 'working';
 }
 
+interface DraftBlock {
+  kind: string;
+  name: string | null;
+  text: string;
+}
+
 interface LiveDraft {
   rows: TalkRow[];
   tool: string | null;
@@ -105,4 +111,4 @@ interface ToolLineProps {
   tool: ToolItem;
 }
 
-export type { ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
+export type { ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
