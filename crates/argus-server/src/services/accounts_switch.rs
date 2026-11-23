@@ -481,12 +481,18 @@ impl Prepared {
         );
         let outcome = outcome_of(&done);
         if let Err(why) = &outcome {
-            self.put(&last.0, &last.1, Some(why), &[failure_line(&done, &last.1, why)]);
+            self.put(
+                &last.0,
+                &last.1,
+                Some(why),
+                &[failure_line(&done, &last.1, why)],
+            );
         }
         if let Done::Noted(note) = &done {
             let text = format!("The account was not confirmed: {note}.");
             let line = Line::new(Stage::Verify, LineState::Skipped, text);
-            self.accounts.finish_switch(&self.id, ("done", None), &[line]);
+            self.accounts
+                .finish_switch(&self.id, ("done", None), &[line]);
         }
         outcome.map(|()| done)
     }
@@ -514,13 +520,21 @@ impl Prepared {
 /// The step-log line of a switch that did not finish: the stage of the step that failed.
 fn failure_line(done: &Done, steps: &[Step], why: &str) -> Line {
     if *done == Done::Cancelled {
-        return Line::new(Stage::Switch, LineState::Skipped, "The switch was cancelled.");
+        return Line::new(
+            Stage::Switch,
+            LineState::Skipped,
+            "The switch was cancelled.",
+        );
     }
     let stage = steps
         .iter()
         .find(|s| s.status == StepStatus::Failed)
         .map_or(Stage::Switch, |s| stage_of(s.id));
-    Line::new(stage, LineState::Failed, format!("The switch failed: {why}."))
+    Line::new(
+        stage,
+        LineState::Failed,
+        format!("The switch failed: {why}."),
+    )
 }
 
 /// How long Claude may rewrite its storage after it started before the sidebar check reads it.
@@ -544,7 +558,11 @@ fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str, id: &str
         Err(why) => why.clone(),
     };
     let error = format!("the switch worked but the sidebar check failed: {detail}");
-    accounts.finish_switch(id, ("failed", Some(error.as_str())), std::slice::from_ref(&line));
+    accounts.finish_switch(
+        id,
+        ("failed", Some(error.as_str())),
+        std::slice::from_ref(&line),
+    );
     svc.log
         .warn("accounts sidebar check failed", json!({ "error": detail }));
     if let Some(notify) = &svc.notify {

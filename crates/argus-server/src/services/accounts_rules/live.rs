@@ -17,11 +17,11 @@ use serde_json::{Value, json};
 use super::{Snapshot, World};
 use crate::Services;
 use crate::services::AccountsService;
-use crate::services::accounts_switch_log::Line;
 use crate::services::accounts::last_known_account;
 use crate::services::accounts_estimates::{LeadRef, estimate_state};
 use crate::services::accounts_handover::Handovers;
 use crate::services::accounts_switch::{Origin, is_running, logins_root, shown_switch, switch_to};
+use crate::services::accounts_switch_log::Line;
 
 /// How long the read of the usage at the end of a countdown may take before the rules go on.
 const REFRESH_LIMIT: std::time::Duration = std::time::Duration::from_secs(30);
@@ -243,7 +243,10 @@ impl World for Live {
     }
 
     async fn shown(&self) -> Option<Value> {
-        self.blocking(|me| shown_switch(&me.svc)).await.ok().flatten()
+        self.blocking(|me| shown_switch(&me.svc))
+            .await
+            .ok()
+            .flatten()
     }
 
     async fn toast(&self, level: Level, title: &str, text: &str) {

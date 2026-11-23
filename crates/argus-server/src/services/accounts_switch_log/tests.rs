@@ -55,7 +55,11 @@ fn the_end_closes_the_log_and_the_next_process_starts_a_new_one() {
     log.add(1, &lines(&["Countdown started."]));
     let done = log.stamp(doc("done"), 1);
     assert_eq!(texts(&done), ["Countdown started."]);
-    assert_eq!(log.again(false, 2), None, "an ended doc is not written again");
+    assert_eq!(
+        log.again(false, 2),
+        None,
+        "an ended doc is not written again"
+    );
     log.add(3, &lines(&["Handover cycle SW-3 started."]));
     let next = doc("countdown");
     log.begin(&next);
@@ -124,7 +128,10 @@ fn the_doc_follows_the_contract() {
     assert_eq!(shown["desktopPhase"], "syncing");
     assert_eq!(shown["desktopSteps"].as_array().unwrap().len(), 2);
     assert_eq!(shown["countdownEndsAt"], iso_from_ms(60_000));
-    assert_eq!(shown["sync"], json!({ "backupDir": "B", "state": "running" }));
+    assert_eq!(
+        shown["sync"],
+        json!({ "backupDir": "B", "state": "running" })
+    );
     assert_eq!(shown["threads"].as_array().unwrap().len(), 0);
     assert!(shown["blocker"].is_null());
     assert!(shown["error"].is_null());
@@ -189,10 +196,16 @@ fn a_desktop_step_makes_a_line_only_when_its_status_changes() {
         step("sync", StepStatus::Failed, "boom"),
     ];
     let out = step_lines(&before, &after);
-    assert_eq!(line_texts(&out), ["Step close: done.", "Step sync: failed."]);
+    assert_eq!(
+        line_texts(&out),
+        ["Step close: done.", "Step sync: failed."]
+    );
     assert_eq!(out[0].stage, Stage::Switch);
     assert_eq!(out[0].detail.as_deref(), Some("closed"));
-    assert_eq!((out[1].stage, out[1].state), (Stage::Sync, LineState::Failed));
+    assert_eq!(
+        (out[1].stage, out[1].state),
+        (Stage::Sync, LineState::Failed)
+    );
     assert_eq!(step_lines(&after, &after).len(), 0);
 }
 

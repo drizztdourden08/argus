@@ -91,10 +91,15 @@ fn blocker_of(raw: &Value, threads: &[Value], now: i64) -> Value {
             .filter_map(|t| t["title"].as_str())
             .collect();
         if !waiting.is_empty() {
-            return json!(format!("Waiting for the handover of {}.", waiting.join(", ")));
+            return json!(format!(
+                "Waiting for the handover of {}.",
+                waiting.join(", ")
+            ));
         }
     }
-    let overdue = raw["countdownEndsAt"].as_i64().is_some_and(|end| end <= now);
+    let overdue = raw["countdownEndsAt"]
+        .as_i64()
+        .is_some_and(|end| end <= now);
     if phase == "countdown" && overdue {
         return json!("The countdown ended and the switch has not started yet.");
     }

@@ -72,7 +72,10 @@ impl Handovers {
         let before = self.desk.cycle();
         let out = call(&self.desk);
         let after = self.desk.cycle();
-        accounts.note_cycle(&cycle_lines(before.as_ref(), after.as_ref()), after.as_ref());
+        accounts.note_cycle(
+            &cycle_lines(before.as_ref(), after.as_ref()),
+            after.as_ref(),
+        );
         out
     }
 

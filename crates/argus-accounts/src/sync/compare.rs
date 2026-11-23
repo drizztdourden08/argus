@@ -674,7 +674,11 @@ mod tests {
         let b = scope_scan(B, vec![("local_1", chat("one", 10, None, false))]);
         let k = keys(&[(A, vec![("Current", vec!["local_gone"])]), (B, vec![])]);
         let compare = build_compare(&planned(vec![a, b], k), &[account("a", A), account("b", B)]);
-        let row = compare.rows.iter().find(|r| r.id == "folder:Current").unwrap();
+        let row = compare
+            .rows
+            .iter()
+            .find(|r| r.id == "folder:Current")
+            .unwrap();
         assert_eq!(row.cells["a"].status, Status::Empty);
         assert_eq!(row.cells["b"].status, Status::Empty);
         assert_eq!(compare.counts.different, 0);
