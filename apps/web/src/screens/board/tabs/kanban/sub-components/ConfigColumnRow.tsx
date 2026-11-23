@@ -21,7 +21,7 @@ const ConfigColumnRow = (props: ConfigColumnRowProps) => {
         <Flex gap="xs">
           <IconButton label={`Move ${name} up`} variant="ghost" size="sm" disabled={index === 0} onClick={() => onMove(-1)}><Icon name="chevron-up" /></IconButton>
           <IconButton label={`Move ${name} down`} variant="ghost" size="sm" disabled={index === count - 1} onClick={() => onMove(1)}><Icon name="chevron-down" /></IconButton>
-          <IconButton label={`Remove ${name}`} variant="ghost" size="sm" onClick={onRemove}><Icon name="trash" /></IconButton>
+          <IconButton label={`Remove ${name}`} variant="ghost" size="sm" onClick={onRemove}><Icon name="trash-2" /></IconButton>
         </Flex>
       )}
     >

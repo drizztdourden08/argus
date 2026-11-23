@@ -10,8 +10,10 @@ const LIMIT_MODES = ['warn', 'refuse', 'alert'];
 
 const WRITE_MODES = ['warn', 'refuse'];
 
+const FIRST_KIND: RuleKind = { kind: 'require-parent', sweep: false, params: [{ key: 'types', label: 'Parent types', type: 'list' }] };
+
 const RULE_KINDS: readonly RuleKind[] = [
-  { kind: 'require-parent', sweep: false, params: [{ key: 'types', label: 'Parent types', type: 'list' }] },
+  FIRST_KIND,
   { kind: 'require-assignee', sweep: false, params: [{ key: 'kinds', label: 'Assignee kinds', type: 'list' }] },
   { kind: 'limit', sweep: false, params: [] },
   { kind: 'require-field', sweep: false, params: [{ key: 'field', label: 'Field', type: 'text' }] },
@@ -37,4 +39,4 @@ const DEFAULT_CONFIG: KanbanConfig = {
   rules: [stale('stale-todo', 24), stale('stale-doing', 4), stale('stale-review', 6)],
 };
 
-export { ALERT_TARGET_HINT, DEFAULT_CONFIG, HOUR_MS, LANES, LIMIT_MODES, NEW_ALERT, RULE_KINDS, WRITE_MODES };
+export { ALERT_TARGET_HINT, DEFAULT_CONFIG, FIRST_KIND, HOUR_MS, LANES, LIMIT_MODES, NEW_ALERT, RULE_KINDS, WRITE_MODES };

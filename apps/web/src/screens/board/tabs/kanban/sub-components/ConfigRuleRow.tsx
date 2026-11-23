@@ -12,7 +12,7 @@ const ConfigRuleRow = (props: ConfigRuleRowProps) => {
     <Disclosure
       size="sm"
       summary={<Flex gap="sm" align="center"><Text variant="label">{rule.id}</Text><Text variant="caption" tone="muted">{rule.kind}</Text></Flex>}
-      end={<IconButton label={`Remove rule ${rule.id}`} variant="ghost" size="sm" onClick={onRemove}><Icon name="trash" /></IconButton>}
+      end={<IconButton label={`Remove rule ${rule.id}`} variant="ghost" size="sm" onClick={onRemove}><Icon name="trash-2" /></IconButton>}
     >
       <Flex direction="column" gap="md">
         <Flex gap="md">

@@ -5,7 +5,9 @@ const configMoveColumn = (config: KanbanConfig, index: number, step: -1 | 1): Ka
   const to = index + step;
   if (to < 0 || to >= config.columns.length) return config;
   const columns = [...config.columns];
-  [columns[index], columns[to]] = [columns[to], columns[index]];
+  const [moved] = columns.splice(index, 1);
+  if (!moved) return config;
+  columns.splice(to, 0, moved);
   return { ...config, columns };
 };
 

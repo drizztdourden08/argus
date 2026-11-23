@@ -1,14 +1,16 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import type { KanbanConfig } from '../../src/data/types';
+import type { KanbanColumnConfig, KanbanConfig } from '../../src/data/types';
 import {
   HOUR_MS, configAddColumn, configAddRule, configMoveColumn, configParseList, configRemoveColumn, configRemoveRule, configRuleOfKind, configSetColumn, configSetRule, configToggleList,
 } from '../../src/screens/board/tabs/kanban/model';
 
+const second: KanbanColumnConfig = { id: 'b', name: 'B', match: { lanes: ['doing'] }, rules: ['r1'] };
+
 const base: KanbanConfig = {
   columns: [
     { id: 'a', name: 'A', match: { lanes: ['todo'] }, rules: ['r1', 'r2'] },
-    { id: 'b', name: 'B', match: { lanes: ['doing'] }, rules: ['r1'] },
+    second,
   ],
   rules: [
     { id: 'r1', kind: 'limit', params: {}, mode: 'warn' },
@@ -39,7 +41,7 @@ describe('I-206 the config editor helpers', { tags: ['critical'] }, () => {
   it('renames a rule in the columns that name it', () => {
     const next = configSetRule(base, 0, { id: 'cap', kind: 'limit', params: {}, mode: 'refuse' });
     expect(next.columns.map((column) => column.rules)).toEqual([['cap', 'r2'], ['cap']]);
-    expect(configSetColumn(base, 1, { ...base.columns[1], name: 'Busy' }).columns[1].name).toBe('Busy');
+    expect(configSetColumn(base, 1, { ...second, name: 'Busy' }).columns[1]?.name).toBe('Busy');
   });
 
   it('gives a rule the defaults of its new kind', () => {
