@@ -1,5 +1,7 @@
 //! A repository shared by two projects: each worktree is listed under one project only.
 
+// test-tag: critical
+
 use crate::attribution::{Entry, listed_here, own_facts};
 use crate::board::{AgentFact, BoardFacts};
 use crate::fact::{Fact, blank_fact};
