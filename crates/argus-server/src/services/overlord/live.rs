@@ -155,7 +155,7 @@ fn args_of(inputs: &Inputs, base: &SessionArgs) -> Result<Vec<String>, HostFault
     }
 }
 
-fn find_exe() -> PathBuf {
+pub(super) fn find_exe() -> PathBuf {
     find_app_data(None)
         .and_then(|app| find_cli_exe(&app))
         .unwrap_or_else(|| PathBuf::from("claude"))
@@ -211,7 +211,7 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
 
 /// The root of the Overlord's board (`X:\ai-config` here), so the child runs under the owner's
 /// own settings, guard and allow list, as the desktop Overlord did.
-fn overlord_root(svc: &Services) -> Option<PathBuf> {
+pub(super) fn overlord_root(svc: &Services) -> Option<PathBuf> {
     let boards = svc.boards();
     let id = boards.overlord()?;
     let root = boards.projects().into_iter().find(|p| p.key == id)?.root?;

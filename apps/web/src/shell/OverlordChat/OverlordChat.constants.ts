@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
 import type { ChatTranscriptRole } from '@drizztdourden08/tessera';
-import type { OverlordState } from '../../data/overlord';
+import type { LimitKey, LimitSource, OverlordState } from '../../data/overlord';
 import type { ChatTab, QueueSectionName, TalkKind, ToolStatus } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
@@ -74,7 +74,21 @@ const CHAT_TABS: { value: ChatTab; label: string }[] = [
   { value: 'chat', label: 'Chat' },
   { value: 'rules', label: 'Rules' },
   { value: 'queue', label: 'Queue' },
+  { value: 'settings', label: 'Settings' },
 ];
+const SETTINGS_LABELS: Readonly<Record<LimitKey, string>> = {
+  cwd: 'Working folder',
+  claudeExe: 'Claude program',
+  budgetUsd: 'Monthly budget (USD, blank for no cap)',
+  restartMax: 'Restarts allowed',
+  approvalTimeoutMin: 'Approval wait (minutes)',
+};
+const SOURCE_CAPTIONS: Readonly<Record<LimitSource, string>> = {
+  set: 'Set in config.json',
+  board: 'The folder of the Overlord board',
+  default: 'Default',
+};
+const RESET_LABEL = 'Reset to default';
 const NO_RULES = 'No rules yet.';
 const NONE_WAITING = 'None waiting.';
 const QUEUE_EMPTY = 'Nothing is waiting for the Overlord.';
@@ -113,6 +127,9 @@ export {
   CHAT_PARAM,
   CHAT_PLACEHOLDER,
   CHAT_TABS,
+  RESET_LABEL,
+  SETTINGS_LABELS,
+  SOURCE_CAPTIONS,
   MAX_EVERY_MIN,
   MIN_EVERY_MIN,
   NONE_WAITING,

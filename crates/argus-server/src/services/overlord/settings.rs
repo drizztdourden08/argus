@@ -12,15 +12,18 @@ use super::config::{self, is_live};
 use super::control::{self, Refused};
 use super::live_session;
 use super::setting::save_fields;
+use super::settings_limits::{self, Limits};
 use crate::Services;
 
 /// Why a change was not applied.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum SettingsFault {
     /// A field is not one of the choices; nothing was saved.
     Bad(BadChoice),
     /// `config.json` could not be written; nothing was saved.
     Storage,
+    /// A folder, program or limit is missing or out of range; nothing was saved.
+    Invalid(String),
     /// Saved, but the running child could not be restarted.
     Restart(Refused),
 }
@@ -28,7 +31,7 @@ pub(crate) enum SettingsFault {
 /// The settings and their choices: the shape of `GET /api/overlord/settings`.
 pub(crate) fn body(svc: &Services) -> Value {
     let live = config::live(svc);
-    json!({
+    let mut body = json!({
         "model": live.model,
         "effort": live.effort,
         "permissionMode": live.permission_mode,
@@ -37,7 +40,12 @@ pub(crate) fn body(svc: &Services) -> Value {
             "efforts": EFFORTS,
             "permissionModes": permission_modes(),
         },
-    })
+    });
+    if let (Some(all), Value::Object(limits)) = (body.as_object_mut(), settings_limits::body(svc))
+    {
+        all.extend(limits);
+    }
+    body
 }
 
 /// The `config.overlord` fields a change writes.
@@ -62,16 +70,22 @@ async fn restart_same_session(svc: &Arc<Services>) -> Result<(), Refused> {
     control::restart(svc).await
 }
 
-/// Checks `change` against the choices and saves it. When it changed a setting and a child runs,
-/// the child is restarted on the same session so the new setting takes effect.
+/// Checks `change` and `limits` and saves them. When they changed a setting and a child runs, the
+/// child is restarted on the same session so the new setting takes effect.
 ///
 /// # Errors
 /// A [`SettingsFault`] naming what failed.
-pub(crate) async fn apply(svc: &Arc<Services>, change: &Change) -> Result<(), SettingsFault> {
-    let before = config::live(svc);
-    check(change, &before.model).map_err(SettingsFault::Bad)?;
-    save_fields(svc, fields(change)).map_err(|_| SettingsFault::Storage)?;
-    if config::live(svc) == before || !svc.overlord.up() {
+pub(crate) async fn apply(
+    svc: &Arc<Services>,
+    change: &Change,
+    limits: &Limits,
+) -> Result<(), SettingsFault> {
+    let before = (config::live(svc), config::budget(svc));
+    check(change, &before.0.model).map_err(SettingsFault::Bad)?;
+    let mut all = fields(change);
+    all.extend(limits.fields().map_err(SettingsFault::Invalid)?);
+    save_fields(svc, all).map_err(|_| SettingsFault::Storage)?;
+    if (config::live(svc), config::budget(svc)) == before || !svc.overlord.up() {
         return Ok(());
     }
     restart_same_session(svc)

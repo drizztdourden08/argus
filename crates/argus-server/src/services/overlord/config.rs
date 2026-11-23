@@ -119,13 +119,37 @@ pub(crate) fn live(svc: &Services) -> Live {
             DEFAULT_PERMISSION_MODE,
         ),
         claude_exe: text(&setting, "claudeExe").map(PathBuf::from),
-        restart_max: setting["restartMax"]
-            .as_u64()
-            .and_then(|v| u32::try_from(v).ok())
-            .unwrap_or(DEFAULT_RESTART_MAX),
-        approval_timeout_min: setting["approvalTimeoutMin"]
-            .as_u64()
-            .filter(|v| *v > 0)
-            .unwrap_or(DEFAULT_APPROVAL_MIN),
+        restart_max: restart_max_of(&setting).unwrap_or(DEFAULT_RESTART_MAX),
+        approval_timeout_min: approval_of(&setting).unwrap_or(DEFAULT_APPROVAL_MIN),
+    }
+}
+
+fn restart_max_of(setting: &Value) -> Option<u32> {
+    setting["restartMax"]
+        .as_u64()
+        .and_then(|v| u32::try_from(v).ok())
+}
+
+fn approval_of(setting: &Value) -> Option<u64> {
+    setting["approvalTimeoutMin"].as_u64().filter(|v| *v > 0)
+}
+
+/// Which of the page's settings `config.json` holds a usable value for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct Saved {
+    pub claude_exe: bool,
+    pub budget: bool,
+    pub restart_max: bool,
+    pub approval_timeout: bool,
+}
+
+/// What `config.json` sets, so the page can say where each value in effect came from.
+pub(crate) fn saved(svc: &Services) -> Saved {
+    let setting = setting(svc);
+    Saved {
+        claude_exe: text(&setting, "claudeExe").is_some(),
+        budget: budget(svc).budget_usd.is_some(),
+        restart_max: restart_max_of(&setting).is_some(),
+        approval_timeout: approval_of(&setting).is_some(),
     }
 }

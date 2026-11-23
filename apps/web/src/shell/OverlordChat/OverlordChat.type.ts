@@ -1,7 +1,17 @@
 /* @layer renderer-app @kind types */
 import type { ChatTranscriptMessage, ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ActionState, OverlordQueue, OverlordRule, OverlordSettings, OverlordUsage, RuleDraft } from '../../data/overlord';
+import type {
+  ActionState,
+  LimitKey,
+  LimitSource,
+  OverlordQueue,
+  OverlordRule,
+  OverlordSettings,
+  OverlordUsage,
+  RuleDraft,
+  SettingsDraft,
+} from '../../data/overlord';
 
 type Editing = OverlordRule | 'new' | null;
 
@@ -78,7 +88,24 @@ interface ChatBoxProps {
   onSend: (text: string) => Promise<boolean>;
 }
 
-type ChatTab = 'chat' | 'rules' | 'queue';
+type ChatTab = 'chat' | 'rules' | 'queue' | 'settings';
+
+interface SettingsFormState {
+  settings: OverlordSettings | null;
+  draft: SettingsDraft | null;
+  action: ActionState;
+  change: (patch: Partial<SettingsDraft>) => void;
+  save: () => void;
+  reset: (key: LimitKey) => void;
+}
+
+interface SettingsFieldProps {
+  name: LimitKey;
+  source: LimitSource;
+  busy: boolean;
+  onReset: (key: LimitKey) => void;
+  children: ReactNode;
+}
 
 type QueueSectionName = 'wakes' | 'held' | 'alerts';
 
@@ -241,6 +268,8 @@ export type {
   RuleFormProps,
   RuleFormState,
   RuleRowProps,
+  SettingsFieldProps,
+  SettingsFormState,
   ChatOpen,
   ContentBlock,
   Piece,

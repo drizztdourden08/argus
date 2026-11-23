@@ -1,10 +1,13 @@
 //! The hosted Overlord's settings, for the owner's page only (I-200):
 //!
 //! - `GET /api/overlord/settings` is `{model, effort, permissionMode, choices: {models: [{id,
-//!   label}], efforts, permissionModes: [{id, label}]}}`
-//! - `POST /api/overlord/settings` takes any of `{model, effort, permissionMode}`, checks each
-//!   against the choices (400 on a bad value), saves it in `config.overlord`, restarts a running
-//!   child on the same session and answers the same shape
+//!   label}], efforts, permissionModes: [{id, label}]}}` plus `cwd`, `claudeExe`, `budgetUsd`,
+//!   `restartMax` and `approvalTimeoutMin`, each `{value, source}` with source `set`, `board` or
+//!   `default` (I-207)
+//! - `POST /api/overlord/settings` takes any of those fields (an empty text resets one to its
+//!   default), checks each (400 on a bad value, a missing folder or file, a number out of
+//!   range), saves it in `config.overlord`, restarts a running child on the same session when a
+//!   setting changed and answers the same shape
 
 use argus_core::{ApiError, ErrorCode};
 use argus_overlord::session::choices::Change;
@@ -14,6 +17,7 @@ use super::overlord::web_only;
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::overlord::settings::{SettingsFault, apply, body};
+use crate::services::overlord::settings_limits::Limits;
 use crate::{Ctx, RouteOpts, Router};
 
 const SMALL: usize = 8 * 1024;
@@ -38,6 +42,7 @@ fn change_of(request: &Value) -> Result<Change, ApiError> {
 fn refusal(fault: SettingsFault) -> ApiError {
     match fault {
         SettingsFault::Bad(bad) => ApiError::bad_request(bad.sentence()),
+        SettingsFault::Invalid(sentence) => ApiError::bad_request(sentence),
         SettingsFault::Storage => {
             ApiError::new(ErrorCode::Internal, "the settings could not be saved")
         }
@@ -52,8 +57,10 @@ async fn show(ctx: Ctx) -> Reply {
 
 async fn change(ctx: Ctx) -> Reply {
     web_only(&ctx, true)?;
-    let wanted = change_of(&ctx.json().await?)?;
-    apply(&ctx.svc, &wanted).await.map_err(refusal)?;
+    let request = ctx.json().await?;
+    let wanted = change_of(&request)?;
+    let limits = Limits::parse(&request).map_err(ApiError::bad_request)?;
+    apply(&ctx.svc, &wanted, &limits).await.map_err(refusal)?;
     Ok(json_reply(200, &body(&ctx.svc)))
 }
 

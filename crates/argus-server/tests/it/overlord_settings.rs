@@ -80,6 +80,86 @@ async fn a_good_change_is_saved_and_echoed() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn the_folder_and_limits_say_where_they_come_from() {
+    let t = TestServer::start(TestOptions::default()).await;
+    let body = t.send(t.page(show())).await.json();
+    for name in [
+        "cwd",
+        "claudeExe",
+        "budgetUsd",
+        "restartMax",
+        "approvalTimeoutMin",
+    ] {
+        assert_ne!(body[name]["source"], json!("set"), "{name}");
+    }
+    assert_eq!(body["budgetUsd"]["value"], json!(null));
+    assert_eq!(body["restartMax"]["value"], json!(3));
+    assert_eq!(body["approvalTimeoutMin"]["value"], json!(30));
+    assert_eq!(body["restartMax"]["source"], json!("default"));
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_folder_and_limits_are_saved_and_reset() {
+    let t = TestServer::start(TestOptions::default()).await;
+    let dir = tempfile::tempdir().expect("a temp folder");
+    let exe = dir.path().join("claude.exe");
+    std::fs::write(&exe, "").expect("a file");
+    let folder = dir.path().to_string_lossy().into_owned();
+    let program = exe.to_string_lossy().into_owned();
+    let wanted = json!({
+        "cwd": folder, "claudeExe": program, "budgetUsd": 25.5,
+        "restartMax": 5, "approvalTimeoutMin": 10,
+    });
+    let reply = t.send(t.page(change(&wanted))).await;
+    assert_eq!(reply.status, 200, "{}", reply.text());
+    let body = t.send(t.page(show())).await.json();
+    assert_eq!(body["cwd"], json!({ "value": folder, "source": "set" }));
+    assert_eq!(body["claudeExe"]["value"], json!(program));
+    assert_eq!(body["budgetUsd"], json!({ "value": 25.5, "source": "set" }));
+    assert_eq!(body["restartMax"], json!({ "value": 5, "source": "set" }));
+    assert_eq!(body["approvalTimeoutMin"]["value"], json!(10));
+    let reset = json!({ "cwd": "", "claudeExe": "", "budgetUsd": "", "restartMax": "" });
+    let reply = t.send(t.page(change(&reset))).await;
+    assert_eq!(reply.status, 200, "{}", reply.text());
+    let after = t.send(t.page(show())).await.json();
+    assert_ne!(after["cwd"]["source"], json!("set"));
+    assert_eq!(after["claudeExe"]["source"], json!("default"));
+    assert_eq!(after["budgetUsd"], json!({ "value": null, "source": "default" }));
+    assert_eq!(after["restartMax"], json!({ "value": 3, "source": "default" }));
+    assert_eq!(after["approvalTimeoutMin"]["source"], json!("set"));
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_bad_folder_or_limit_is_400_and_nothing_is_saved() {
+    let t = TestServer::start(TestOptions::default()).await;
+    let missing = std::env::temp_dir().join("argus-no-such-folder-i207");
+    let missing = missing.to_string_lossy().into_owned();
+    let bad = [
+        json!({ "cwd": missing }),
+        json!({ "claudeExe": missing }),
+        json!({ "budgetUsd": 0 }),
+        json!({ "budgetUsd": 1_000_000 }),
+        json!({ "restartMax": 99 }),
+        json!({ "approvalTimeoutMin": 0 }),
+        json!({ "approvalTimeoutMin": 5000 }),
+        json!({ "restartMax": "many" }),
+        json!({ "cwd": 7 }),
+    ];
+    for request in bad {
+        let reply = t.send(t.page(change(&request))).await;
+        assert_eq!(reply.status, 400, "{request}: {}", reply.text());
+    }
+    let mixed = json!({ "effort": "low", "restartMax": 99 });
+    assert_eq!(t.send(t.page(change(&mixed))).await.status, 400);
+    let after = t.send(t.page(show())).await.json();
+    assert_eq!(after["effort"], json!("high"));
+    assert_eq!(after["restartMax"]["source"], json!("default"));
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn the_usage_is_zero_with_no_session() {
     let t = TestServer::start(TestOptions::default()).await;
     let reply = t
