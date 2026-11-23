@@ -81,7 +81,10 @@ pub(super) fn open(
     resumed: Option<String>,
 ) -> Option<Arc<Recorder<FileTranscripts>>> {
     let Ok(Some(key)) = DpapiKeyStore::new(home).load() else {
-        log.warn("hosted overlord transcript is off", json!({ "why": "no key to redact" }));
+        log.warn(
+            "hosted overlord transcript is off",
+            json!({ "why": "no key to redact" }),
+        );
         return None;
     };
     Some(Arc::new(Recorder::new(

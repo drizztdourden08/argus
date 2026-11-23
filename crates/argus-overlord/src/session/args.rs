@@ -114,7 +114,11 @@ mod tests {
     fn no_budget_means_no_budget_flag() {
         let mut open = config();
         open.budget_left_usd = None;
-        assert!(!build_argv(&open).iter().any(|arg| arg == "--max-budget-usd"));
+        assert!(
+            !build_argv(&open)
+                .iter()
+                .any(|arg| arg == "--max-budget-usd")
+        );
     }
 
     #[test]
