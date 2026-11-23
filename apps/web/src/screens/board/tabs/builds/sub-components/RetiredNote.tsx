@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Text } from '@drizztdourden08/tessera';
-import { Age, RecordLink } from '../../../../../shell';
+import { RecordLink } from '../../../../../shell';
 import type { RetiredNoteProps } from '../builds-props.type';
 
 const RetiredNote = (props: RetiredNoteProps) => {
@@ -11,7 +11,7 @@ const RetiredNote = (props: RetiredNoteProps) => {
   return (
     <Text variant="caption" tone="muted" title={launcher.retireNote ?? 'Retired: merged or replaced'}>
       {item && <>{launcher.retiredByItem ? 'closed with ' : 'was for '}<RecordLink id={item} board={boardKey} />{' · '}</>}
-      {'retired '}<Age value={launcher.retiredAt} ago />{launcher.retiredBy ? ` by ${launcher.retiredBy}` : ''}
+      {launcher.retiredBy ? `retired by ${launcher.retiredBy}` : 'retired'}
     </Text>
   );
 };

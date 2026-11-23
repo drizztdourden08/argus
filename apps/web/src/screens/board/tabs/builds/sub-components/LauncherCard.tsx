@@ -8,7 +8,7 @@ import { BuildFoot } from './BuildFoot';
 import { BuildSignals } from './BuildSignals';
 
 const LauncherCard = (props: LauncherCardProps) => {
-  const { view, boardKey, runs, threads } = props;
+  const { view, boardKey, runs, threads, compact } = props;
   const { launcher } = view;
   const pane = useRecordPane();
   const owner = useOwnerAsk();
@@ -22,11 +22,13 @@ const LauncherCard = (props: LauncherCardProps) => {
         openLabel={`Open ${head.code}: ${title}`}
         onOpen={() => pane.open(head.code)}
         label={`Build ${head.code}: ${title}`}
+        time={launcher.retiredAt ?? launcher.updatedAt ?? null}
+        compact={compact}
         edge="border"
         edgeTone={launcher.current ? 'success' : undefined}
         attrs={{ 'data-swap-item': '', 'data-launcher': launcher.name }}
         signals={<BuildSignals view={view} code={head.code} />}
-        foot={<BuildFoot view={view} boardKey={boardKey} runs={runs} />}
+        foot={<BuildFoot view={view} boardKey={boardKey} runs={runs} compact={compact} />}
       />
       {owner.ask && <OwnerOpDialog boardKey={boardKey} ask={owner.ask} onClose={owner.close} />}
     </>

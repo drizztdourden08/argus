@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { RunEntry } from '../../../../../data/runs';
-import { MS_PER_SECOND, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from './model.constants';
+import { MS_PER_SECOND, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '../builds.constants';
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 

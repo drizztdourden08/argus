@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
 import { buildDoc, defDoc, launcherDoc, runDoc, runningDoc } from './fixtures';
@@ -54,6 +54,21 @@ describe('S1 Stop and the status line', { tags: ['standard'] }, () => {
     change('runs', 'R-7', runDoc('R-7', 'launcher-master', { status: 'exited', exitCode: 0 }));
     expect(await playButton()).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Run R-7' }).textContent).toContain('exited 0');
+  });
+});
+
+describe('I-215 Running now at the top of Builds', { tags: ['standard'] }, () => {
+  it('lists the live runs and leaves the finished ones to the build pane', async () => {
+    await mountBuilds(board([runningDoc('R-7', 'launcher-master'), runDoc('R-6', 'launcher-master')]));
+    const section = await screen.findByRole('region', { name: 'Running now' });
+    expect(within(section).getByText('R-7')).toBeTruthy();
+    expect(within(section).queryByText('R-6')).toBeNull();
+  });
+
+  it('shows no section without a live run', async () => {
+    await mountBuilds(board([runDoc('R-6', 'launcher-master')]));
+    await playButton();
+    expect(screen.queryByRole('region', { name: 'Running now' })).toBeNull();
   });
 });
 

@@ -17,7 +17,7 @@ const ServedTab = (props: PaneBodyProps) => {
       <DrawerSection title={`${BUILDS_TITLE} · ${served.builds.length}`}>
         {served.builds.length === 0
           ? <EmptyLine>{NO_BUILDS_TEXT}</EmptyLine>
-          : <LauncherList views={served.builds} label={BUILDS_TITLE} boardKey={boardKey} runs={served.runs} />}
+          : <LauncherList views={served.builds} label={BUILDS_TITLE} boardKey={boardKey} runs={served.runs} compact={false} />}
       </DrawerSection>
       <ServedWorktrees rows={served.worktrees} />
     </Flex>

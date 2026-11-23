@@ -3,8 +3,6 @@ import type { AgentField, ModelFamily, ModelLook, StatusLook } from './model.typ
 
 const ACTIVE_STATUSES: readonly string[] = ['working', 'waiting', 'stop-requested'];
 
-const MS_PER_SECOND = 1000;
-
 const MS_PER_MINUTE = 60_000;
 
 const STALE_MS = 45 * MS_PER_MINUTE;
@@ -63,8 +61,6 @@ const ADD_ITEM_LABEL = 'add an item';
 
 const MASTER_WORD = 'master';
 
-const LOG_PANE_TAB = 'log';
-
 const NO_ITEM_TITLE = 'No item';
 
 const CLOSED_ITEMS_TITLE = 'Closed items';
@@ -83,10 +79,6 @@ const BUILD_FALLBACK_CODE = 'BL';
 
 const NO_RANK = 1_000_000_000;
 
-const SECONDS_PER_MINUTE = 60;
-
-const SECONDS_PER_HOUR = 3600;
-
 export {
   ACTIVE_STATUSES,
   ADD_ITEM_LABEL,
@@ -99,7 +91,6 @@ export {
   HOURS_PER_DAY,
   CLOSED_ITEMS_TITLE,
   ITEM_LABEL_CHARS,
-  LOG_PANE_TAB,
   NO_ITEM,
   BUILD_FALLBACK_CODE,
   NO_BLOCKERS_LINE,
@@ -116,11 +107,8 @@ export {
   MODEL_LOOKS,
   MODEL_FAMILIES,
   MS_PER_MINUTE,
-  MS_PER_SECOND,
   NO_WHY,
   REFUSED_TEXT,
-  SECONDS_PER_HOUR,
-  SECONDS_PER_MINUTE,
   STALE_MS,
   STATUS_LOOKS,
   UNREACHABLE_TEXT,

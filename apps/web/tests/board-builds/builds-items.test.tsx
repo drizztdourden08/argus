@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
-import { addGroup } from '../helpers/filter-clauses';
+import { addGroup, openFilters } from '../helpers/filter-clauses';
 import { groupOf, order } from '../helpers/group-dom';
 import { ago, DAY, launcherDoc } from './fixtures';
 import { withDefs } from './list-dom';
@@ -40,12 +40,12 @@ describe('P13 the Builds tab by item', { tags: ['standard'] }, () => {
     expect(needs.querySelector('[data-launcher="guess"]')).not.toBeNull();
   });
 
-  it('keeps the builds closed with their item in a collapsed Closed section that names the item, without Play', async () => {
+  it('keeps the builds closed with their item behind Show closed, naming the item, without Play', async () => {
     const { container } = await mountBuilds(board());
-    const toggle = await screen.findByText('Closed (1)');
-    const details = toggle.closest('details') as HTMLDetailsElement;
-    expect(details.open).toBe(false);
-    fireEvent.click(toggle.closest('summary') as HTMLElement);
+    await openFilters();
+    const toggle = await screen.findByRole('button', { name: 'Show closed (1)' });
+    expect(container.querySelector('[data-launcher="gone"]')).toBeNull();
+    fireEvent.click(toggle);
     const card = container.querySelector('[data-launcher="gone"]') as HTMLElement;
     expect(card.textContent).toContain('closed with I-3');
     expect(within(card).queryByRole('button', { name: /play/i })).toBeNull();

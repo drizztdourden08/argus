@@ -13,7 +13,7 @@ const orderOf = (container: HTMLElement): (string | null)[] => [...container.que
 describe('S1 the launcher list', { tags: ['standard'] }, () => {
   it('sorts numbered names the way a person counts', async () => {
     const { container } = await mountBuilds(withDefs([launcherDoc('master'), launcherDoc('build-10'), launcherDoc('build-9')]));
-    await screen.findByText('3 to start');
+    await screen.findByText('builds 3');
     expect(orderOf(container)).toEqual(['master', 'build-9', 'build-10']);
   });
 

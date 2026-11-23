@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind test */
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MIN, agent, agentRows, ago, headOf, item, mockApi, renderAgents, rowOf } from './agents-harness';
-import { addGroup, openFilters } from '../helpers/filter-clauses';
+import { agent, agentRows, headOf, item, mockApi, renderAgents, rowOf } from './agents-harness';
+import { addGroup } from '../helpers/filter-clauses';
 
 afterEach(() => {
   localStorage.clear();
@@ -90,19 +90,6 @@ describe('I-85 P7 Agents tab: the where chip', { tags: ['critical'] }, () => {
 
   it('shows no link when the place is unknown', async () => {
     expect((await chipsOf({})).queryByRole('link', { name: 'no worktree' })).toBeNull();
-  });
-});
-
-describe('I-85 Agents tab: a run opens its pane', { tags: ['critical'] }, () => {
-  const run = { name: 'build web', kind: 'build', status: 'exited', exitCode: 0, origin: 'cli', by: 'lead', queuedAt: ago(5 * MIN), startedAt: ago(4 * MIN), endedAt: ago(3 * MIN), lastLine: 'done', cmd: 'pnpm build', cwd: 'X:/p' };
-
-  it('opens the run pane on its log tab from the row', async () => {
-    mockApi();
-    await renderAgents({ runs: { 'R-1': run } });
-    await openFilters();
-    fireEvent.click(screen.getByRole('button', { name: 'Show finished (1)' }));
-    fireEvent.click(await screen.findByText('build web'));
-    expect(where()).toBe('?open=R-1&pane=log');
   });
 });
 

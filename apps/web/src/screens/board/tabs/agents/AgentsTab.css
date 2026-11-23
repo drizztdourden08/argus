@@ -38,15 +38,6 @@
   padding: var(--space-sm) var(--space-md);
 }
 
-.agents-runs {
-  border-bottom: var(--border-width-thin) solid var(--c-border);
-}
-
-.agents-runs__title {
-  margin: 0;
-  padding: var(--space-md) var(--space-md) var(--space-xs);
-}
-
 .agents-kv,
 .agents-timeline {
   display: grid;
@@ -83,10 +74,6 @@
 
 .agents-section {
   min-width: 0;
-}
-
-.agents-runs__list {
-  padding: 0 var(--space-md) var(--space-sm);
 }
 
 .agents-now {

@@ -2,7 +2,6 @@
 import type { Agent, ProjectThread } from '../../../../data/agents';
 import type { Item } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
-import type { RunEntry } from '../../../../data/runs';
 import type { AgentActions, AgentsView } from './AgentsTab.type';
 import type { AgentGroup, AgentLayout } from './model';
 
@@ -109,19 +108,6 @@ interface AgentKeyGroupsProps extends Omit<AgentGroupListProps, 'items'> {
   group: AgentGroup;
 }
 
-interface AgentRunsProps {
-  title: string;
-  runs: readonly RunEntry[];
-  boardKey: string;
-  now: number;
-}
-
-interface AgentRunRowProps {
-  run: RunEntry;
-  boardKey: string;
-  now: number;
-}
-
 export type {
   AgentCardProps,
   AgentCellsProps,
@@ -133,8 +119,6 @@ export type {
   AgentNowProps,
   AgentReplyProps,
   AgentRowProps,
-  AgentRunRowProps,
-  AgentRunsProps,
   AgentSectionProps,
   AgentSessionProps,
   AgentStatusTagProps,

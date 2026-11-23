@@ -9,8 +9,8 @@ import { LauncherList } from './LauncherList';
 import { MasterGroup } from './MasterGroup';
 
 const BuildSections = (props: BuildSectionsProps) => {
-  const { groups, boardKey, runs, threads, group, views } = props;
-  if (group !== 'item') return <BuildFlatSections groups={groups} group={group} views={views} boardKey={boardKey} runs={runs} />;
+  const { groups, boardKey, runs, threads, group, views, compact } = props;
+  if (group !== 'item') return <BuildFlatSections groups={groups} group={group} views={views} boardKey={boardKey} runs={runs} compact={compact} />;
   const shown: ItemGroups<LauncherView> = {
     groups: groups.items.map((group) => ({ item: group.item, rows: group.views })),
     none: groups.needsLink,
@@ -24,9 +24,9 @@ const BuildSections = (props: BuildSectionsProps) => {
       label="Builds"
       noneTitle={NEEDS_LINK_TITLE}
       noneFlag
-      lead={groups.master.length > 0 ? <MasterGroup views={groups.master} boardKey={boardKey} runs={runs} /> : undefined}
+      lead={groups.master.length > 0 ? <MasterGroup views={groups.master} boardKey={boardKey} runs={runs} compact={compact} /> : undefined}
     >
-      {(rows) => <LauncherList views={rows} label="Builds" boardKey={boardKey} runs={runs} />}
+      {(rows) => <LauncherList views={rows} label="Builds" boardKey={boardKey} runs={runs} compact={compact} />}
     </ItemGroupSections>
   );
 };

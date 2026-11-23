@@ -13,9 +13,6 @@ interface BuildsData {
   threads: GroupThreads;
 }
 
-interface RetiredFlag {
-  shown: boolean;
-  set: (open: boolean) => void;
-}
+type BuildLayout = 'normal' | 'compact';
 
-export type { BuildsData, RetiredFlag };
+export type { BuildLayout, BuildsData };

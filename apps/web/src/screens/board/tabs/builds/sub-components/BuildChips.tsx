@@ -7,8 +7,8 @@ const BuildChips = (props: LauncherPartProps) => {
   const { launcher } = props.view;
   return (
     <>
-      {isMaster(launcher) && <Tag title="The main checkout: every project has one">master</Tag>}
-      <Tag title={`Kind: ${launcher.kind ?? 'app'}`}>{launcher.kind ?? 'app'}</Tag>
+      {isMaster(launcher) && Boolean(launcher.retiredAt) && <Tag title="The main checkout: every project has one">master</Tag>}
+      {launcher.kind && launcher.kind !== 'app' && <Tag title={`Kind: ${launcher.kind}`}>{launcher.kind}</Tag>}
       {launcher.current && <Tag variant="urgency" color="success" title="The valid one to start now">current</Tag>}
     </>
   );

@@ -1,0 +1,13 @@
+/* @layer renderer-app @kind style */
+.builds-runs {
+  border-bottom: var(--border-width-thin) solid var(--c-border);
+}
+
+.builds-runs__title {
+  margin: 0;
+  padding: var(--space-md) var(--space-md) var(--space-xs);
+}
+
+.builds-runs__list {
+  padding: 0 var(--space-md) var(--space-sm);
+}

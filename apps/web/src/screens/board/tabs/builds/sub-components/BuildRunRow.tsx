@@ -4,11 +4,11 @@ import { RecordRow, recordMenuGroups, useRecordPane } from '../../../../../shell
 import { isLiveRun, runLine } from '../../../../../data/runs';
 import { formatAgo } from '../../../../../format';
 import { usePlay } from '../../../run-play';
-import type { AgentRunRowProps } from '../row-props.type';
-import { LOG_PANE_TAB, runSpan } from '../model';
-import { PAGE_ORIGIN } from './AgentRunRow.constants';
+import { LOG_PANE_TAB, PAGE_ORIGIN } from '../builds.constants';
+import type { BuildRunRowProps } from '../builds-props.type';
+import { runSpan } from '../model';
 
-const detailOf = (props: AgentRunRowProps): string => {
+const detailOf = (props: BuildRunRowProps): string => {
   const { run, now } = props;
   const line = runLine(run);
   if (isLiveRun(run)) return [run.origin ?? '', run.agent ?? '', line.last].filter(Boolean).join(' \u00b7 ');
@@ -16,7 +16,7 @@ const detailOf = (props: AgentRunRowProps): string => {
   return [line.label, runSpan(run), ended, run.orphan ? 'orphan' : '', line.last].filter(Boolean).join(' \u00b7 ');
 };
 
-const AgentRunRow = (props: AgentRunRowProps) => {
+const BuildRunRow = (props: BuildRunRowProps) => {
   const { run, boardKey, now } = props;
   const pane = useRecordPane();
   const openLog = () => pane.open(run.id, LOG_PANE_TAB);
@@ -48,10 +48,11 @@ const AgentRunRow = (props: AgentRunRowProps) => {
             )}
           </Flex>
         }
+        time={live ? run.startedAt ?? run.queuedAt : run.endedAt ?? run.queuedAt}
         onOpen={openLog}
       />
     </Box>
   );
 };
 
-export { AgentRunRow };
+export { BuildRunRow };

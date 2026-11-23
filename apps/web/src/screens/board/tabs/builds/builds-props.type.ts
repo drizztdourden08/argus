@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { RunEntry } from '../../../../data/runs';
 import type { GroupThreads } from '../../item-groups';
-import type { BuildsData, RetiredFlag } from './builds.type';
+import type { BuildLayout, BuildsData } from './builds.type';
 import type { TabView } from '../../BoardTabsRow';
 import type { BuildFilters, BuildGroup, BuildGroups, BuildOrder, LauncherView } from './model';
 
@@ -9,13 +9,10 @@ interface BuildsTabProps {
   boardKey: string;
 }
 
-interface BuildsLeadProps {
-  counts: string;
-}
-
 interface RunScope {
   boardKey: string;
   runs: RunEntry[];
+  compact: boolean;
 }
 
 interface LauncherListProps extends RunScope {
@@ -47,7 +44,6 @@ interface RetiredNoteProps extends LauncherPartProps {
 
 interface RetiredSectionProps extends RunScope {
   views: LauncherView[];
-  flag: RetiredFlag;
 }
 
 interface MasterGroupProps extends RunScope {
@@ -74,11 +70,25 @@ interface BuildFlatSectionsProps extends RunScope {
 
 interface BuildsToolsProps {
   boardKey: string;
+  layout: { value: BuildLayout; onChange: (layout: BuildLayout) => void };
+  closed: { count: number; shown: boolean; onToggle: () => void };
   tabView: TabView<BuildGroup, BuildOrder, BuildFilters>;
   data: BuildsData;
 }
 
+interface BuildRunsProps {
+  runs: readonly RunEntry[];
+  boardKey: string;
+  now: number;
+}
+
+interface BuildRunRowProps {
+  run: RunEntry;
+  boardKey: string;
+  now: number;
+}
+
 export type {
-  BuildFlatSectionsProps, BuildFootProps, BuildSectionsProps, BuildSignalsProps, BuildsLeadProps, BuildsTabProps, BuildsToolsProps, GroupTitleProps, LauncherCardProps, LauncherListProps, LauncherPartProps, MasterGroupProps,
+  BuildFlatSectionsProps, BuildFootProps, BuildRunRowProps, BuildRunsProps, BuildSectionsProps, BuildSignalsProps, BuildsTabProps, BuildsToolsProps, GroupTitleProps, LauncherCardProps, LauncherListProps, LauncherPartProps, MasterGroupProps,
   RetiredNoteProps, RetiredSectionProps,
 };

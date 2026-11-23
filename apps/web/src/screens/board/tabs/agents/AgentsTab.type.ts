@@ -37,8 +37,6 @@ interface AgentActions extends AgentEdits {
 
 interface AgentRuns {
   all: RunEntry[];
-  live: RunEntry[];
-  finished: RunEntry[];
 }
 
 interface AgentsBodyProps {

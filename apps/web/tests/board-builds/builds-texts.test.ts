@@ -2,20 +2,22 @@
 import { describe, expect, it } from 'vitest';
 import { mergeRunLines } from '../../src/data/runs/merge-run-lines';
 import type { RunEntry, RunLogLine } from '../../src/data/runs';
-import { countsText, launcherViews } from '../../src/screens/board/tabs/builds/model';
+import { buildStats, groupByItem, launcherViews } from '../../src/screens/board/tabs/builds/model';
 import { logRows, terminalLast, terminalMeta } from '../../src/screens/board/run-terminal';
 import { DAY, launcherDoc, runningDoc, standaloneDoc } from './fixtures';
 import { at, input, launchers } from './model-docs';
 
 describe('K1 texts of a launcher and a run', { tags: ['critical'] }, () => {
-  it('counts the launchers to start, stale and retired', () => {
-    const none = launcherViews(input({ launchers: launchers() }));
-    expect(countsText(none)).toBe('');
+  it('counts the builds, the stale ones and the missing master as stats', () => {
+    const count = (id: string, views: ReturnType<typeof launcherViews>) => buildStats(views, groupByItem(views, [])).find((stat) => stat.id === id)?.count;
     const views = launcherViews(input({
       launchers: launchers(launcherDoc('master'), standaloneDoc('s', { lastUsedAt: at(30 * DAY) }), launcherDoc('r', { retiredAt: at(DAY) })),
     }));
-    expect(countsText(views)).toBe('2 to start · 1 stale · 1 closed');
-    expect(countsText(launcherViews(input()))).toBe('1 to start');
+    expect(count('builds', views)).toBe(2);
+    expect(count('stale', views)).toBe(1);
+    expect(count('needs-link', views)).toBe(1);
+    expect(count('no-master', views)).toBe(0);
+    expect(count('no-master', launcherViews(input({ launchers: launchers() })))).toBe(1);
   });
 
   it('writes the meta and the last line of a terminal', () => {

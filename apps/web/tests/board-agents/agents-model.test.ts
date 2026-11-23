@@ -2,11 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
-import type { RunEntry } from '../../src/data/runs';
 import {
-  agentChips, agentDetails, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentStats, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
-  runSpan, sortActive, sortDone, statusLook, tokenLines,
+  agentChips, agentDetails, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentStats, agentWhere, findLead, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
+  sortActive, sortDone, statusLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
+import { runSpan } from '../../src/screens/board/tabs/builds/model';
 
 const NOW = Date.parse('2026-10-26T12:00:00Z');
 const MIN = 60_000;
@@ -126,18 +126,6 @@ describe('K1 lists', { tags: ['critical'] }, () => {
     expect(findLead([thread('old', { status: 'done' }), thread('now')])?.id).toBe('now');
     expect(findLead([thread('old', { status: 'done' })])?.id).toBe('old');
     expect(findLead([thread('gone', { deletedAt: 'x' }), thread('merged', { mergedInto: 'y' })])).toBeNull();
-  });
-});
-
-describe('K1 finishedCount', { tags: ['critical'] }, () => {
-  const agent = (id: string): WithId<Agent> => ({ id, status: 'done' });
-  const run = (id: string, status: string): RunEntry => ({ id, status, queuedAt: at(MIN) }) as RunEntry;
-
-  it('adds the finished runs to the finished agents, as the Node Show finished button does', () => {
-    const agents = [agent('A-1'), agent('A-2')];
-    const runs = [run('R-1', 'exited'), run('R-2', 'failed'), run('R-3', 'running')];
-    expect(finishedCount(agents, runs)).toBe(4);
-    expect(finishedCount(agents, [])).toBe(2);
   });
 });
 
