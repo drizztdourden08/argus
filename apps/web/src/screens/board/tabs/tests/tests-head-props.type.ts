@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { IconName, MenuGroup } from '@drizztdourden08/tessera';
+import type { IconName } from '@drizztdourden08/tessera';
+import type { RecordFrameProps } from '../../../../shell';
 import type { ReactNode } from 'react';
 import type { RunEntry } from '../../../../data/runs';
 import type { RunView, TestDoc } from './model';
@@ -17,13 +18,13 @@ interface SectionHeadProps {
   action?: ReactNode;
 }
 
-interface RunFrameProps {
+interface RunFrameProps extends Pick<RecordFrameProps, 'className' | 'edgeTone'> {
   view: RunView;
+  muted?: boolean;
   open: boolean;
   onToggle: (open: boolean) => void;
-  menu: MenuGroup[];
+  menu?: ReactNode;
   signals: ReactNode;
-  className?: string;
   children: ReactNode;
 }
 

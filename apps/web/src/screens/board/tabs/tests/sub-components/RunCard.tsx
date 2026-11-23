@@ -1,22 +1,22 @@
 /* @layer renderer-app @kind component */
 import './RunCard.css';
-import { useRunMenu } from '../behavior/useRunMenu';
 import type { RunCardProps } from '../tests-props.type';
 import { RunActions } from './RunActions';
 import { RunChips } from './RunChips';
 import { RunFrame } from './RunFrame';
+import { RunMenu } from './RunMenu';
 import { TestSections } from './TestSections';
 
 const RunCard = (props: RunCardProps) => {
   const { view, runs, open, onToggle } = props;
-  const menu = useRunMenu(view, runs);
   return (
     <RunFrame
       view={view}
       open={open}
       className="run-card"
       onToggle={onToggle}
-      menu={menu}
+      edgeTone={view.handed ? 'neutral' : undefined}
+      menu={<RunMenu view={view} runs={runs} />}
       signals={(
         <>
           <RunChips view={view} />

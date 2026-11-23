@@ -3,6 +3,11 @@
   overflow: hidden;
 }
 
+.run-card--closed {
+  border-style: dashed;
+  background: var(--c-inset);
+}
+
 .run-card__end > * {
   white-space: nowrap;
 }

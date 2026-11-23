@@ -15,8 +15,8 @@ const ClosedRunCard = (props: ClosedRunCardProps) => {
       view={view}
       open={open}
       onToggle={onToggle}
-      menu={[]}
-      className="run-card"
+      muted
+      className="run-card run-card--closed"
       signals={(
         <>
           <RunChips view={view} />
