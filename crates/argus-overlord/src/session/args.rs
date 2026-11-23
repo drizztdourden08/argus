@@ -20,7 +20,9 @@ pub struct SessionArgs {
     pub budget_left_usd: Option<f64>,
 }
 
-/// The arguments after the program name. Never `--bare`: it would skip the hooks and the
+/// The arguments after the program name. It runs with every permission (the owner wants zero
+/// approvals); the hooks still run, and any ask left goes to the permission tool, which allows it.
+/// Never `--bare`: it would skip the hooks and the
 /// `CLAUDE.md` the Overlord depends on.
 #[must_use]
 pub fn build_argv(config: &SessionArgs) -> Vec<String> {
@@ -32,6 +34,8 @@ pub fn build_argv(config: &SessionArgs) -> Vec<String> {
         }
     }
     argv.extend(to_strings(&[
+        "--permission-mode",
+        "bypassPermissions",
         "--permission-prompt-tool",
         PERMISSION_TOOL,
         "--mcp-config",
@@ -98,6 +102,10 @@ mod tests {
             .position(|arg| arg == "--permission-prompt-tool")
             .unwrap();
         assert_eq!(argv[at + 1], "mcp__argus-overlord__permission_prompt");
+        assert!(
+            argv.windows(2)
+                .any(|w| w == ["--permission-mode", "bypassPermissions"])
+        );
     }
 
     #[test]
