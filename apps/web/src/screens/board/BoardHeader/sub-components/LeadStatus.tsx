@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, Icon, Link, Status, Tag, Text } from '@drizztdourden08/tessera';
+import { Flex, Status, Tag, Text } from '@drizztdourden08/tessera';
 import { Age } from '../../../../shell';
 import { activityTone } from '../../shared';
 import { LEAD_STATUS_TONES, NO_LEAD } from '../BoardHeader.constants';
@@ -18,11 +18,6 @@ const LeadStatus = (props: LeadStatusProps) => {
       <Text variant="caption" tone="muted">
         {lead.lastSeen ? <>seen <Age value={lead.lastSeen} ago /></> : 'never seen'}
       </Text>
-      {lead.link ? (
-        <Link href={lead.link} variant="subtle" aria-label="Open the chat of the lead" title="Open the lead chat">
-          <Icon name="message-square" size={14} />
-        </Link>
-      ) : null}
     </Flex>
   );
 };
