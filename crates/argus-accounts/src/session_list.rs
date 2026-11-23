@@ -41,7 +41,10 @@ struct Fields {
 
 fn millis(value: &Value) -> i64 {
     // The record keeps epoch milliseconds, whole or with a fraction; the fraction is dropped.
-    let text = value.as_number().map(ToString::to_string).unwrap_or_default();
+    let text = value
+        .as_number()
+        .map(ToString::to_string)
+        .unwrap_or_default();
     text.split('.')
         .next()
         .and_then(|whole| whole.parse().ok())

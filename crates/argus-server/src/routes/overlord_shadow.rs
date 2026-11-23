@@ -5,9 +5,9 @@
 use serde_json::json;
 
 use super::{blocking::blocking, overlord::web_only};
-use crate::{reply::json_reply, router::Reply};
 use crate::services::overlord::shadow::{RECENT, ShadowLog};
 use crate::{Ctx, Router};
+use crate::{reply::json_reply, router::Reply};
 
 async fn show(ctx: Ctx) -> Reply {
     web_only(&ctx, false)?;

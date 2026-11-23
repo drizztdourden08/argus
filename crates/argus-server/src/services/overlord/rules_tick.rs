@@ -34,7 +34,7 @@ async fn tick_loop(svc: Arc<Services>) {
         tokio::time::sleep(EVERY).await;
         let held = Arc::clone(&svc);
         let pass = tokio::task::spawn_blocking(move || tick(&held)).await;
-        if !matches!(pass, Ok(Ok(_))) {
+        if !matches!(pass, Ok(Ok(()))) {
             let why = format!("{pass:?}");
             svc.log
                 .warn("overlord rules tick failed", json!({ "pass": why }));

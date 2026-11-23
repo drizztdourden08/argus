@@ -76,7 +76,7 @@ impl Keeper {
     }
 
     /// Notes how a start ended.
-    fn settle(&self, result: &Result<(), StartFault>) {
+    fn settle(&self, result: Result<(), StartFault>) {
         let now = clock();
         let mut memory = self.memory();
         match result {
@@ -150,7 +150,7 @@ fn say(svc: &Services, level: ActivityLevel, text: String) {
     svc.activity.add(NewActivity::new(KIND, level, text));
 }
 
-fn report(svc: &Services, result: &Result<(), StartFault>) {
+fn report(svc: &Services, result: Result<(), StartFault>) {
     match result {
         Ok(()) => say(
             svc,
@@ -178,8 +178,8 @@ async fn pass(svc: &Arc<Services>) {
         return;
     }
     let result = try_start(svc);
-    svc.overlord.keeper.settle(&result);
-    report(svc, &result);
+    svc.overlord.keeper.settle(result);
+    report(svc, result);
 }
 
 async fn keep_loop(svc: Arc<Services>) {

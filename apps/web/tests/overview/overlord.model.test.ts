@@ -19,11 +19,12 @@ describe('O1 the Overlord state words and tones', { tags: ['critical'] }, () => 
 });
 
 describe('O2 controls by state', { tags: ['critical'] }, () => {
-  it('lets a stopped Overlord start only and a running one restart or stop', () => {
-    expect(controlsFor('stopped')).toEqual({ start: true, restart: false, stop: false });
-    expect(controlsFor('idle')).toEqual({ start: false, restart: true, stop: true });
-    expect(controlsFor('crashed').start).toBe(true);
-    expect(controlsFor(undefined)).toEqual({ start: false, restart: false, stop: false });
+  it('lets the Overlord restart unless it is starting', () => {
+    expect(controlsFor('stopped')).toEqual({ restart: true });
+    expect(controlsFor('starting')).toEqual({ restart: false });
+    expect(controlsFor('idle')).toEqual({ restart: true });
+    expect(controlsFor('crashed').restart).toBe(true);
+    expect(controlsFor(undefined)).toEqual({ restart: false });
   });
 
   it('takes chat only while the child runs', () => {

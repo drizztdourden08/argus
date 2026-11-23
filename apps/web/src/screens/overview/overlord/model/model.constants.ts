@@ -3,7 +3,7 @@ import type { OverlordMode, OverlordState } from '../../../../data/overlord';
 import type { ControlSet } from './model.type';
 
 const CONTROLS_BY_STATE: Readonly<Record<OverlordState, ControlSet>> = {
-  stopped: { restart: false },
+  stopped: { restart: true },
   starting: { restart: false },
   idle: { restart: true },
   turn: { restart: true },
