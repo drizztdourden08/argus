@@ -31,6 +31,7 @@ use serde_json::json;
 use super::attachment::Attachment;
 use super::config::{self, Live};
 use super::live_session;
+use super::live_transcript::{Recorder, approval_line, open as open_recorder};
 use super::shadow::{self, Shadow, ShadowInput};
 use super::switch_board::handover_file;
 use crate::Services;
@@ -38,6 +39,7 @@ use crate::adapters::overlord::gate::ApprovalGate;
 use crate::adapters::overlord::host::SystemChildHost;
 use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::spend::SqlLedger;
+use crate::adapters::overlord::transcript::FileTranscripts;
 
 const THREAD: &str = "coordinator";
 const LABEL: &str = "hosted overlord";
@@ -51,17 +53,34 @@ struct Wakes {
     db: Arc<Db>,
     /// A saved session was resumed and the child has not reported its id yet.
     unproven: AtomicBool,
+    gate: Arc<ApprovalGate>,
+    /// The live transcript; none when no key could be read to redact.
+    recorder: Option<Arc<Recorder<FileTranscripts>>>,
 }
 
 impl Observer for Wakes {
     fn line(&self, line: &str) {
+        if let Some(recorder) = &self.recorder {
+            recorder.line(line);
+        }
         if let Ok(Wire::Init(init)) = decode_line(line) {
             live_session::save(&self.db, &init.session_id);
             self.unproven.store(false, Ordering::SeqCst);
         }
     }
 
+    fn sent(&self, line: &str) {
+        if let Some(recorder) = &self.recorder {
+            recorder.add(line);
+        }
+    }
+
     fn started(&self, link: &Link) {
+        if let Some(recorder) = &self.recorder {
+            let recorder = Arc::clone(recorder);
+            self.gate
+                .tap(Some(Arc::new(move |a| recorder.add(&approval_line(a)))));
+        }
         let intro = self
             .intro
             .lock()
@@ -81,6 +100,7 @@ impl Observer for Wakes {
 
     fn stopped(&self) {
         self.hold.end();
+        self.gate.tap(None);
         if self.unproven.swap(false, Ordering::SeqCst) {
             live_session::clear(&self.db);
         }
@@ -246,7 +266,12 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
 
 /// The live child's observer: its first message tells it to register, and at a switch-over to read
 /// the desktop Overlord's handover.
-fn live_observer(svc: &Services, wake: SharedWake, switching: bool, unproven: bool) -> Wakes {
+fn live_observer(
+    svc: &Services,
+    wake: SharedWake,
+    (switching, unproven): (bool, bool),
+    resumed: Option<String>,
+) -> Wakes {
     let file = handover_file(svc).display().to_string();
     let handover = switching.then_some(file);
     Wakes {
@@ -255,6 +280,8 @@ fn live_observer(svc: &Services, wake: SharedWake, switching: bool, unproven: bo
         intro: Mutex::new(Some(live_intro(handover.as_deref()))),
         db: Arc::clone(&svc.db),
         unproven: AtomicBool::new(unproven),
+        gate: Arc::clone(&svc.overlord_approvals),
+        recorder: open_recorder(&svc.paths.home, &svc.log, resumed),
     }
 }
 
@@ -287,7 +314,11 @@ pub(crate) fn try_start_from(svc: &Arc<Services>, origin: Origin) -> Result<(), 
         Arc::new(Shadow::new(svc, wake))
     } else {
         let unproven = !switching && kept != Origin::Fresh;
-        Arc::new(live_observer(svc, wake, switching, unproven))
+        let resumed = match &kept {
+            Origin::Resume(id) => Some(id.clone()),
+            _ => None,
+        };
+        Arc::new(live_observer(svc, wake, (switching, unproven), resumed))
     };
     let input = shadowing.then(|| ShadowInput {
         boards: svc.boards(),

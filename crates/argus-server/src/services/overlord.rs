@@ -9,6 +9,7 @@ pub(crate) mod control;
 pub(crate) mod keeper;
 pub(crate) mod live;
 mod live_session;
+mod live_transcript;
 pub(crate) mod rules;
 pub(crate) mod rules_tick;
 pub(crate) mod running;

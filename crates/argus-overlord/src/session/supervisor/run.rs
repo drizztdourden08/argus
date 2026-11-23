@@ -6,6 +6,7 @@ use tokio::sync::watch;
 
 use super::super::inbox::Inbox;
 use super::super::state::{Event as Change, State, apply};
+use super::Observer;
 use super::flight::Flight;
 use crate::ports::ChildHost;
 use crate::protocol::encode_user_message;
@@ -24,6 +25,8 @@ pub(super) struct Run<H: ChildHost> {
     in_flight: Option<String>,
     pub(super) crashes: u32,
     pub(super) resume: Option<String>,
+    /// Told of every line written to the child.
+    observer: Arc<dyn Observer>,
 }
 
 impl<H: ChildHost> Run<H> {
@@ -31,6 +34,7 @@ impl<H: ChildHost> Run<H> {
         host: Arc<H>,
         state_tx: watch::Sender<State>,
         (inbox, flight): (Inbox, Flight),
+        observer: Arc<dyn Observer>,
     ) -> Self {
         Self {
             host,
@@ -42,6 +46,7 @@ impl<H: ChildHost> Run<H> {
             in_flight: None,
             crashes: 0,
             resume: None,
+            observer,
         }
     }
 
@@ -60,6 +65,7 @@ impl<H: ChildHost> Run<H> {
         };
         let line = encode_user_message(&text);
         if self.host.write_line(pid, line.trim_end()).await.is_ok() {
+            self.observer.sent(line.trim_end());
             self.busy = true;
             self.in_flight = Some(text);
             self.apply(&Change::TurnStarted);

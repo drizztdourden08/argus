@@ -49,6 +49,8 @@ pub trait Observer: Send + Sync {
     fn guard_failed(&self, fault: &GuardFault);
     /// One raw stdout line of the child, before it is read. Most observers ignore it.
     fn line(&self, _line: &str) {}
+    /// One user message line written to the child's stdin, at the moment it is written.
+    fn sent(&self, _line: &str) {}
 }
 
 /// Builds the spec of the next child from the session id to resume, read fresh at every start so a
@@ -123,12 +125,12 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
     let wiring = child::Wiring {
         rx,
         config,
-        observer,
+        observer: Arc::clone(&observer),
         alive,
         link: link.clone(),
     };
     let task = tokio::spawn(restart::drive(
-        run::Run::new(host, state_tx, (inbox, flight)),
+        run::Run::new(host, state_tx, (inbox, flight), observer),
         wiring,
     ));
     Handle { link, state, task }

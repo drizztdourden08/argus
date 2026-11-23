@@ -18,6 +18,9 @@ use tokio::sync::watch;
 
 const BEARER_BYTES: usize = 32;
 
+/// Told of every approval change, so the transcript can show it.
+pub type Tap = Arc<dyn Fn(&Approval) + Send + Sync>;
+
 /// One question for the owner, with where its toast leads.
 pub struct Ask {
     pub prompt: Prompt,
@@ -39,6 +42,7 @@ pub struct ApprovalGate {
     credentials: Mutex<Credentials>,
     changed: watch::Sender<u64>,
     store: Option<Arc<dyn ApprovalStore>>,
+    tap: Mutex<Option<Tap>>,
 }
 
 /// Expires the approval when its call is dropped before an answer (the child went away).
@@ -68,7 +72,13 @@ impl ApprovalGate {
             credentials: Mutex::new(Credentials::default()),
             changed: watch::channel(0).0,
             store,
+            tap: Mutex::new(None),
         }
+    }
+
+    /// Hears every approval change from now on, or none with `None`.
+    pub fn tap(&self, tap: Option<Tap>) {
+        *self.tap.lock().unwrap_or_else(PoisonError::into_inner) = tap;
     }
 
     fn queue(&self) -> std::sync::MutexGuard<'_, Queue> {
@@ -84,6 +94,14 @@ impl ApprovalGate {
     fn keep(&self, approval: &Approval) {
         if let Some(store) = &self.store {
             let _ = store.save(approval);
+        }
+        let tap = self
+            .tap
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone();
+        if let Some(tap) = tap {
+            tap(approval);
         }
         self.changed.send_modify(|n| *n += 1);
     }
