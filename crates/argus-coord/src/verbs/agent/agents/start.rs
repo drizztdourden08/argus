@@ -7,6 +7,7 @@
 use argus_agents::model_rules::ModelWhy;
 use argus_agents::text::same_model;
 use argus_board::Board;
+use argus_board::agent_links::items_of;
 use argus_board::agents::{is_live, live_agent_ids};
 use argus_board::json::{display, doc, section, set, truthy};
 use argus_board::limits::require_str;
@@ -18,6 +19,7 @@ use serde_json::{Map, Value};
 use super::bind::{claude_id, hook_record, launch_for};
 use super::fields::{Fields, add_model, checkin, claude_id_option, fields_of, model_why};
 use super::find::{agent_mut, clear_ending, owner_of};
+use super::holds::{check_free, claim, release};
 use super::links::{for_items, for_start};
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
@@ -58,6 +60,7 @@ fn replace_running(
         set(agent, "status", "stopped");
         set(agent, "finishedAt", now_iso());
         stamp(board, "agents", id, &who.actor)?;
+        release(board, who, id)?;
     }
     Ok(if replaced.is_empty() {
         String::new()
@@ -127,7 +130,7 @@ fn bind(
 }
 
 /// A new record, with the defaults of a fresh agent. Returns the line to print.
-fn add(board: &mut Board, who: &Caller, entry: &Entry<'_>) -> Result<String, CoordError> {
+fn add(board: &mut Board, who: &Caller, entry: &Entry<'_>) -> Result<(String, String), CoordError> {
     let mut base = Map::new();
     for (key, v) in [
         ("name", Value::from(entry.name)),
@@ -161,10 +164,11 @@ fn add(board: &mut Board, who: &Caller, entry: &Entry<'_>) -> Result<String, Coo
     let id = create_doc(board, "agents", "A", base, &who.actor)?;
     let item = doc(board, "agents", &id).map(for_items).unwrap_or_default();
     let running = live_agent_ids(board, Some(&entry.owner)).len();
-    Ok(format!(
+    let line = format!(
         "{id}: agent {} started on {}{item} ({running} running)",
         entry.name, entry.owner
-    ))
+    );
+    Ok((id, line))
 }
 
 /// The id of the record the Claude id names, whatever its age or state.
@@ -231,10 +235,14 @@ fn register(
         None => hook_record(board, &entry.owner, &entry.text, run.now_ms),
     };
     let swapped = replace_running(board, who, &entry, hooked.as_deref())?;
-    let line = match &hooked {
-        Some(id) => bind(board, who, &entry, id)?,
+    let items = items_of(&Value::Object(entry.fields.clone()));
+    let take = run.options.get("take").is_some();
+    check_free(board, &items, hooked.as_deref(), take)?;
+    let (id, line) = match &hooked {
+        Some(id) => (id.clone(), bind(board, who, &entry, id)?),
         None => add(board, who, &entry)?,
     };
+    claim(board, who, &id)?;
     run.say(&format!("{line}{swapped}"));
     Ok(())
 }

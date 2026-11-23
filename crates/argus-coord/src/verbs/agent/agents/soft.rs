@@ -6,6 +6,7 @@ use argus_board::limits::optional_text;
 use serde_json::{Map, Value};
 
 use super::find::{Want, find};
+use super::holds::release;
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::apply::{apply, op};
@@ -78,6 +79,9 @@ pub fn run(call: &mut Call<'_>, soft: Soft) -> Outcome {
             let mut rest = Map::new();
             if let Some(why) = &reason {
                 rest.insert("reason".to_owned(), Value::from(why.as_str()));
+            }
+            if matches!(soft, Soft::Remove) {
+                release(board, who, &id)?;
             }
             let operation = op(soft.kind(), "agents", &id, rest, run.options)?;
             apply(board, who, &operation)?;

@@ -127,7 +127,7 @@ fn cleared() -> Map<String, Value> {
     Map::from_iter([("blocker".to_owned(), Value::Null)])
 }
 
-fn edit(
+pub(super) fn edit(
     board: &mut Board,
     by: &Caller,
     (id, set): (&str, Map<String, Value>),

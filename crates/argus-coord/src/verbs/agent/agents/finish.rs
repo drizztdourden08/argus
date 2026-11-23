@@ -9,6 +9,7 @@ use argus_core::clock::now_iso;
 use serde_json::Value;
 
 use super::find::{Want, own};
+use super::holds::release;
 use crate::cli::Call;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::verbs::agent::base::{opt::word, write};
@@ -74,6 +75,7 @@ pub fn run(call: &mut Call<'_>, ending: Ending) -> Outcome {
         }
         let (name, thread) = (display(&agent["name"]), display(&agent["thread"]));
         stamp(board, "agents", &id, &who.actor)?;
+        release(board, who, &id)?;
         let running = live_agent_ids(board, Some(&thread)).len();
         let shown = result
             .as_ref()

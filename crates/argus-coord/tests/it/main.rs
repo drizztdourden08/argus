@@ -13,6 +13,7 @@ mod thread_support;
 mod toasts;
 mod work_board;
 
+mod agent_assignee;
 mod agent_diff;
 mod agent_links;
 mod agent_model;

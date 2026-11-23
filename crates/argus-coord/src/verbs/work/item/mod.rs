@@ -14,6 +14,7 @@ mod force;
 mod images;
 mod marks;
 mod migrate;
+mod migrate_assignees;
 mod read;
 mod served_line;
 mod set;
@@ -44,12 +45,13 @@ const GROUP: Group = Group {
         ("list", read::list),
         ("tree", tree::tree),
         ("migrate-blockers", migrate::migrate),
+        ("migrate-assignees", migrate_assignees::migrate),
     ],
     soft: Some(Soft {
         coll: "items",
         after: |_: &mut Board, _: &Value| {},
     }),
-    names: "add, set, status, block, unblock, move, ac, ac-done, ac-rm, archive, unarchive, rm, restore, show, list, tree, migrate-blockers",
+    names: "add, set, status, block, unblock, move, ac, ac-done, ac-rm, archive, unarchive, rm, restore, show, list, tree, migrate-blockers, migrate-assignees",
     typed: None,
 };
 

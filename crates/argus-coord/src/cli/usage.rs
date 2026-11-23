@@ -10,7 +10,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord thread set [--subject <s>] [--note "..."] [--status <s>]   coord thread flag <needs-human|blocked> [--clear]
   coord thread list [--all] | show [name] | done | pause [name] | resume [name]
   coord thread archive [name] | unarchive [name]  (session gone: off the list, work stays visible; --as <name> works too)
-  coord agent start <name> "<task>" --model <haiku|sonnet|opus> --why "<justification>" [--checkin 15..30] [--kind build|test|research|chore] --item I [--item I ...] (I-n, or the letters of its type: B-12) (--worktree <path|auto> | --master) [--blocked-by id ...] [--branch b]   (prints its A-id; an agent works on an item and runs somewhere, so --item and a place are required; --checkin 15..30: minutes between check-in wakes for an opus-level agent, pick by assumed complexity (15 for risky or sprawling work, 30 for a well-bounded task); required for opus level, ignored for haiku/sonnet)
+  coord agent start <name> "<task>" --model <haiku|sonnet|opus> --why "<justification>" [--checkin 15..30] [--kind build|test|research|chore] --item I [--item I ...] (I-n, or the letters of its type: B-12) (--worktree <path|auto> | --master) [--blocked-by id ...] [--branch b] [--take]   (prints its A-id; each --item gets assignee agent:A-n until the agent ends, and an item held by another live agent is refused unless --take; an agent works on an item and runs somewhere, so --item and a place are required; --checkin 15..30: minutes between check-in wakes for an opus-level agent, pick by assumed complexity (15 for risky or sprawling work, 30 for a well-bounded task); required for opus level, ignored for haiku/sonnet)
   coord agent note <A|name> "<text>" | set <A|name> [--task t] [--model m --why "..."] [--kind k] [--item I ...] [--add-item I] [--branch b] [--worktree w|auto | --master] [--blocked-by id ...] [--status waiting|working] [--checkin 15..30]
   coord agent done <A|name> ["<result>"] | fail <A|name> "<reason>" | stop <A|name> | archive|unarchive|rm|restore <A|name>...
   coord agent list [--all] [--thread T] [--status s] [--json] | show <A|name>      (a name is your newest running agent with it)
@@ -22,7 +22,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord item move <I> [--status s] [--before <I>|--after <I>|--top|--bottom]    archive|unarchive|rm|restore <I> [--reason "..."]
   coord item ac <I> add "<t>" | set <n> "<t>" | done <n> [--undo] | rm <n>[-<m>] | move <n> <pos>
   coord item show <I> | list [--mine] [--status s] [--type t] [--assignee who|me] [--open] [--archived] [--deleted] [--json]
-  coord item tree [<I>] [--type t] [--open] [--assignee who|me]    coord item migrate-blockers [--dry-run]    coord types [<type>]
+  coord item tree [<I>] [--type t] [--open] [--assignee who|me]    coord item migrate-blockers [--dry-run]    coord item migrate-assignees [--dry-run]    coord types [<type>]
   coord test add <I> "<title>" [--mode ai|manual] [--file spec.json] [--ac N]...    coord test show <T> | list [--item I] [--mine]   (a case is run by AI or by hand; ai is auto)
   coord test step|setup|expect|proof <T> ... (add, set <n>, rm <n>)    coord test set <T> ...
   coord test run list [--plan I] [--json]      (each run: run id, plan, build, stage, pass, fail, to run)
