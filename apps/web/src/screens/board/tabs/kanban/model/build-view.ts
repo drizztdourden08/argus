@@ -14,18 +14,18 @@ import { needsYou } from './needs-you';
 import { parentItems } from './parent-items';
 import { quietMs } from './quiet-ms';
 import { typeOf } from './type-of';
-import type { CardData, CardFacts, KanbanView, TrailInfo, ViewInput } from './model.type';
+import type { CardData, CardFacts, ItemGroup, KanbanView, TrailInfo, ViewInput } from './model.type';
 
 const onKanban = (item: ItemRef): boolean => !itemTypeOf(typeOf(item))?.hideOnKanban;
 
 const isClosed = (item: ItemRef): boolean => CLOSED_STATUSES.includes(item.status);
 
-const cardOf = (item: ItemRef, facts: CardFacts, now: number, group: string | undefined): CardData => {
+const cardOf = (item: ItemRef, facts: CardFacts, now: number): CardData => {
   const waiting = needsYou(facts.needs);
   const quiet = quietMs(item, waiting, now);
   const { asks, signals, conflicted, needs, children, lastRun, trail } = facts;
   const attention = attentionOf({ item, needs, asks, signals, quietMs: quiet });
-  return { id: item.id, item, needsYou: waiting, needs, children, lastRun, trail, asks, signals, attention, quietMs: quiet, conflicted, ...(group ? { group } : {}) };
+  return { id: item.id, item, needsYou: waiting, needs, children, lastRun, trail, asks, signals, attention, quietMs: quiet, conflicted };
 };
 
 const longTrail = (trail: TrailInfo | undefined): TrailInfo | null => (trail && trail.depth >= TRAIL_MIN_DEPTH ? trail : null);
@@ -36,6 +36,14 @@ const conflictedIds = (input: ViewInput): Set<string> =>
 const threadKeeper = (input: ViewInput): ((thread: string) => boolean) => {
   const focus = input.threads.some((thread) => thread.id === input.focus) ? input.focus : '';
   return (thread) => (input.showPaused || !input.paused.has(thread)) && (!focus || thread === focus);
+};
+
+const grouped = (cards: CardData[], group: ItemGroup): CardData[] => {
+  const byId = new Map(cards.map((card) => [card.id, card.item]));
+  return cards.map((card) => {
+    const container = groupOf(card.item, group, byId);
+    return container ? { ...card, group: container } : card;
+  });
 };
 
 const buildView = (input: ViewInput): KanbanView => {
@@ -55,13 +63,15 @@ const buildView = (input: ViewInput): KanbanView => {
     trail: longTrail(trails.get(item.id)),
   });
   const parents = parentItems(items);
-  const cards = live.map((item) => cardOf(item, facts(item), now, groupOf(item, prefs.group, parents)));
+  const cards = live.map((item) => cardOf(item, facts(item), now));
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
-  const shown = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
+  const visible = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
+  const shown = grouped(visible, prefs.group);
+  const containers = new Set(shown.flatMap((card) => (card.group ? [card.group] : [])));
   const filtered = filtersActive(filters);
   const seeds = prefs.group === 'thread' && !filtered ? listedThreads(threads) : [];
   return {
-    columns: buildColumns({ cards: shown, group: prefs.group, order: prefs.order, direction: prefs.direction, showClosed, seeds, parents }),
+    columns: buildColumns({ cards: shown.filter((card) => !containers.has(card.id)), group: prefs.group, order: prefs.order, direction: prefs.direction, showClosed, seeds, parents }),
     cards: shown,
     open: cards.filter((card) => !isClosed(card.item)).length,
     total: cards.length,
