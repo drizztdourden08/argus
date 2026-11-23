@@ -72,7 +72,7 @@ pub(crate) fn autostart(svc: &Services) -> bool {
 /// What the live child is started with.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Live {
-    /// The Overlord's folder; the dashboard home when none is set.
+    /// The Overlord's folder; the root of the Overlord's board when none is set, else the dashboard home.
     pub cwd: Option<PathBuf>,
     pub model: String,
     /// The `claude` to run; the one the Desktop app carries when none is set.

@@ -20,8 +20,8 @@ pub fn switch_text(handover: &str) -> String {
     )
 }
 
-const REGISTER: &str = "LIVE MODE (Argus). You are the Overlord now, hosted by Argus. First run \
-     `coord thread register coordinator --role coordinator`.";
+const REGISTER: &str = "LIVE MODE (Argus). You are the Overlord now, hosted by Argus. Argus \
+     connects your wakes itself: do not run `coord thread register`.";
 
 /// The first message of the live child. At a switch-over `handover` is the file the desktop
 /// Overlord writes; any other start (a boot, the owner's start) has none.

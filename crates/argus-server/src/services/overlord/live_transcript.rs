@@ -54,16 +54,13 @@ impl<S: TranscriptStore> Recorder<S> {
     /// One line written to the child's stdin or one approval change.
     pub(super) fn add(&self, raw: &str) {
         let mut cursor = self.cursor.lock().unwrap_or_else(PoisonError::into_inner);
-        match cursor.session.clone() {
-            Some(session) => {
-                let _ = self.transcript.record(&session, raw);
+        if let Some(session) = cursor.session.clone() {
+            let _ = self.transcript.record(&session, raw);
+        } else {
+            if cursor.held.len() == HELD_MAX {
+                cursor.held.remove(0);
             }
-            None => {
-                if cursor.held.len() == HELD_MAX {
-                    cursor.held.remove(0);
-                }
-                cursor.held.push(raw.to_owned());
-            }
+            cursor.held.push(raw.to_owned());
         }
     }
 

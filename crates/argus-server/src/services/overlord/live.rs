@@ -208,12 +208,24 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     })
 }
 
+/// The root of the Overlord's board (`X:\ai-config` here), so the child runs under the owner's
+/// own settings, guard and allow list, as the desktop Overlord did.
+fn overlord_root(svc: &Services) -> Option<PathBuf> {
+    let boards = svc.boards();
+    let id = boards.overlord()?;
+    let root = boards.projects().into_iter().find(|p| p.key == id)?.root?;
+    Some(PathBuf::from(root))
+}
+
 fn spec_factory(
     svc: &Services,
     live: &Live,
     shadow: Option<ShadowInput>,
     fork_from: Option<String>,
 ) -> SpecFactory {
+    let mut live = live.clone();
+    live.cwd = live.cwd.or_else(|| overlord_root(svc));
+    let live = &live;
     let inputs = Inputs {
         home: svc.paths.home.clone(),
         db: Arc::clone(&svc.db),
