@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { TagLook } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { RecordHeadProps } from './records.type';
+import type { RecordHeadProps, RecordTimeValue } from './records.type';
 
 interface RowChip {
   id: string;
@@ -36,7 +36,8 @@ interface RecordRowProps {
   title: string;
   onOpen?: () => void;
   chips?: readonly RowChip[];
-  age?: string;
+  time?: RecordTimeValue;
+  compact?: boolean;
   trailing?: ReactNode;
   body?: ReactNode;
   open?: boolean;

@@ -44,7 +44,7 @@ export { sizeText } from './size-text';
 export { statusShown } from './status-shown';
 export { summaryParts } from './summary-parts';
 export { threadOf } from './thread-of';
-export { touchedAge } from './touched-age';
+export { touchedAt } from './touched-at';
 export { worktreeChips } from './worktree-chips';
 export { worktreeCode } from './worktree-code';
 export { worktreeLabel } from './worktree-label';

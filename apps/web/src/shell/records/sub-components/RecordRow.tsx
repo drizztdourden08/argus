@@ -1,16 +1,17 @@
 /* @layer renderer-app @kind component */
-import { Pressable, Text } from '@drizztdourden08/tessera';
+import { Pressable } from '@drizztdourden08/tessera';
 import { rowLinked } from '../behavior/row-linked';
 import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
 import { FrameCode } from './FrameCode';
 import { RecordFrame } from './RecordFrame';
 import { RecordMenu } from './RecordMenu';
+import { RecordTime } from './RecordTime';
 import { RowChips } from './RowChips';
 import { RowTitle } from './RowTitle';
 
 const RecordRow = (props: RecordRowProps) => {
-  const { head, title: given, onOpen, chips = [], age, trailing, body, open, onOpenChange } = props;
+  const { head, title: given, onOpen, chips = [], time, trailing, body, open, onOpenChange } = props;
   const untitled = given === '';
   const title = untitled ? head.code : given;
   const linked = onOpen !== undefined && rowLinked(title, chips);
@@ -29,7 +30,7 @@ const RecordRow = (props: RecordRowProps) => {
         <>
           {chips.length > 0 && <RowChips chips={chips} board={head.boardKey} />}
           {trailing}
-          {age !== undefined && <Text variant="caption" leading="16" tone="muted">{age}</Text>}
+          <RecordTime time={time} />
           <AssigneeMark assignee={head.assignee} boardKey={head.boardKey} threads={head.threads} />
         </>
       }

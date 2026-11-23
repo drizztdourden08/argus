@@ -3,13 +3,13 @@ import { Flex, Text } from '@drizztdourden08/tessera';
 import { RecordRow, useRecordPane } from '../../../../../shell';
 import { OwnerOpDialog, useOwnerAsk } from '../../../owner-links';
 import { worktreeMenu } from '../behavior/worktree-menu';
-import { jobText, threadOf, touchedAge, worktreeChips, worktreeCode, worktreeLabel, worktreeTitle } from '../model';
+import { jobText, threadOf, touchedAt, worktreeChips, worktreeCode, worktreeLabel, worktreeTitle } from '../model';
 import { WORKTREE_KIND } from '../worktrees.constants';
 import type { WorktreeRecordProps } from '../worktrees-props.type';
 import { WorktreeDetail } from './WorktreeDetail';
 
 const WorktreeRecord = (props: WorktreeRecordProps) => {
-  const { boardKey, row, threads, agents, now, meta, controls, ask, removal } = props;
+  const { boardKey, row, threads, agents, meta, controls, ask, removal } = props;
   const pane = useRecordPane();
   const code = worktreeCode(row);
   const label = worktreeLabel(row);
@@ -32,7 +32,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
         }}
         title={worktreeTitle(row, agents)}
         chips={worktreeChips(row)}
-        age={touchedAge(row, now)}
+        time={touchedAt(row)}
         trailing={row.job ? <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text> : undefined}
         onOpen={open}
       />

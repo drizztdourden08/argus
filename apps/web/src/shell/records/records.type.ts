@@ -10,6 +10,12 @@ import type { RecordFrameProps } from './record-frame.type';
 
 type HeadSize = 'xs' | 'sm';
 
+type RecordTimeValue = string | number | null;
+
+interface RecordTimeProps {
+  time?: RecordTimeValue;
+}
+
 type HeadThreads = readonly WithId<ThreadChoice>[];
 
 interface RecordRef {
@@ -100,6 +106,7 @@ interface RecordHeadProps {
   mark?: ReactNode;
   size?: HeadSize;
   selection?: HeadSelection;
+  time?: RecordTimeValue;
 }
 
 type HeadFrameKeys = 'title' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'fill' | 'className' | 'label' | 'onKeyDown' | 'onActivate';
@@ -145,6 +152,8 @@ interface RecordCardProps {
   openLabel: string;
   onOpen: () => void;
   clamp?: number;
+  time?: RecordTimeValue;
+  compact?: boolean;
   signals?: ReactNode;
   foot?: ReactNode;
   attrs?: Readonly<Record<string, string>>;
@@ -208,5 +217,5 @@ interface RecordPaneScopeProps {
 export type {
   ActionDef, ActionHandlers, AgentName, AssigneeLook, AssigneeMarkProps, DepRecordLinkProps, ItemLookup, ItemTypeMarkProps, KindMark, LeadMarkProps, LegacyOpen, LinkedTextProps, LookExtras, Threads,
   HeadSelection, OpenOfHref, RecordAnchorProps, RecordCardProps, RecordHeadProps, RecordHeadViewProps, RecordLinkProps, RecordMenuProps, RecordOrder, RecordGrammar, RecordPaneScopeProps,
-  RecordPaneState, RecordRef, RecordTarget, ShownCodeProps, TextPart, TypeIconProps,
+  RecordPaneState, RecordRef, RecordTarget, RecordTimeProps, RecordTimeValue, ShownCodeProps, TextPart, TypeIconProps,
 };
