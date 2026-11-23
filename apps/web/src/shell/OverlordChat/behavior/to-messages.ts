@@ -4,8 +4,7 @@ import { createElement } from 'react';
 import { TALK_ROLE, TALK_WHO } from '../OverlordChat.constants';
 import type { TalkRow, ToolsRow, TranscriptRow } from '../OverlordChat.type';
 import { StepContent } from '../sub-components/StepContent';
-
-const STEP_KINDS: readonly string[] = ['thinking', 'turn', 'approval'];
+import { STEP_KINDS } from './to-messages.constants';
 
 const toolsMessage = (row: ToolsRow): ChatTranscriptMessage => ({
   id: row.key,

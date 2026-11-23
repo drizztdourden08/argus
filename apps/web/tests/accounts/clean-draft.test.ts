@@ -6,7 +6,7 @@ import { cleanDraft } from '../../src/shell/AppSettings/sub-components/AccountsS
 const settings = (switchAt: number, handover: HandoverRule): AccountsSettings => ({
   pollMinutes: 5, fastPollSeconds: 60, fastAt: 80, forceQuit: false, warnAt: 80, proposeAt: 95, archiveRule: 'newest',
   estimateDefaults: { opus: 0.3, sonnet: 0.1, haiku: 0.03, lead: 0.4, longContextFactor: 1.5, safety: 0.5 }, k: 1,
-  accounts: [{ key: 'hotmail', label: 'Hotmail', color: '#6f9cf0', cliDir: 'C:/x/hotmail', canReceive: true, rules: { autoSwitch: true, switchAt, handover } }],
+  accounts: [{ key: 'hotmail', label: 'Hotmail', color: 'blue', cliDir: 'C:/x/hotmail', canReceive: true, rules: { autoSwitch: true, switchAt, handover } }],
 });
 
 const rulesOf = (draft: AccountsSettings) => draft.accounts[0]?.rules;

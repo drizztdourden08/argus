@@ -8,7 +8,7 @@ const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
 
 const account = (switchAt: number, handover: number | 'auto' = 'auto') => ({
-  key: 'hotmail', label: 'Hotmail', color: '#6f9cf0', cliDir: 'C:/x/hotmail', canReceive: true,
+  key: 'hotmail', label: 'Hotmail', color: 'blue', cliDir: 'C:/x/hotmail', canReceive: true,
   rules: { autoSwitch: true, switchAt, handover },
 });
 

@@ -51,7 +51,9 @@ fn register(board: &mut Board, session_id: &str) -> Result<(), BoardError> {
         "active"
     };
     set(thread, "status", status);
-    STALE.iter().for_each(|key| unset(thread, key));
+    for key in STALE {
+        unset(thread, key);
+    }
     set(thread, "lastSeen", now_iso());
     stamp(board, "threads", SEAT, ACTOR)
 }

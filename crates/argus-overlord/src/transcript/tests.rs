@@ -1,5 +1,5 @@
 use super::*;
-use crate::ports::{ApiKey, TranscriptStore};
+use crate::ports::ApiKey;
 
 const KEY: &str = "sk-ant-api03-SECRETSECRETSECRET-abcd";
 

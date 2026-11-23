@@ -1,13 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Disclosure, Text } from '@drizztdourden08/tessera';
+import { Disclosure } from '@drizztdourden08/tessera';
 import { THINKING_LABEL } from '../OverlordChat.constants';
 import type { StepContentProps } from '../OverlordChat.type';
-
-const Muted = (props: { text: string }) => (
-  <Text variant="caption" tone="muted">
-    {props.text}
-  </Text>
-);
+import { Muted } from './Muted';
 
 const StepContent = (props: StepContentProps) => {
   const { row } = props;

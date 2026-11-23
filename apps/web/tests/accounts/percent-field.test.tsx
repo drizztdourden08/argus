@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PercentField } from '../../src/screens/overview/accounts/sub-components/PercentField';
 
 const mount = (value: number) => {
@@ -8,6 +8,8 @@ const mount = (value: number) => {
   render(<PercentField label="Auto-switch" value={value} disabled={false} onCommit={onCommit} />);
   return { onCommit, input: screen.getByRole('spinbutton', { name: 'Auto-switch' }) };
 };
+
+afterEach(cleanup);
 
 describe('the percent field of an account rule', { tags: ['critical'] }, () => {
   it('saves a stepper click at once, without a blur', () => {

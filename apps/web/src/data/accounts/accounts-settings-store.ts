@@ -1,10 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { apiRequest, errorMessage } from '../api';
 import type { AccountsSettings, SettingsAccount } from '../types';
-import { SETTINGS_PATH } from './accounts-settings.constants';
+import { EMPTY, SETTINGS_PATH } from './accounts-settings.constants';
 import type { AccountChange, AccountsSettingsState } from './accounts-settings.type';
-
-const EMPTY: AccountsSettingsState = { settings: null, problem: null, busy: false };
 
 let state = EMPTY;
 let writes = 0;

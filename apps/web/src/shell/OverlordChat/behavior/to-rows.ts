@@ -2,14 +2,7 @@
 import type { TranscriptLine } from '../../../data/overlord';
 import type { Piece, ToolItem, TranscriptRow } from '../OverlordChat.type';
 import { piecesOf } from './pieces-of';
-
-interface Acc {
-  rows: TranscriptRow[];
-  tools: Map<string, ToolItem>;
-  approvals: Map<string, TranscriptRow>;
-}
-
-type PieceOf<K extends Piece['kind']> = Extract<Piece, { kind: K }>;
+import type { Acc, PieceOf, TalkPiece } from './to-rows.type';
 
 const settleTool = (acc: Acc, piece: PieceOf<'result'>): void => {
   const tool = acc.tools.get(piece.id);
@@ -18,7 +11,7 @@ const settleTool = (acc: Acc, piece: PieceOf<'result'>): void => {
   if (piece.failed && piece.text) tool.summary = `${tool.summary} (error: ${piece.text})`;
 };
 
-const placeApproval = (acc: Acc, piece: Extract<Piece, { text: string; kind: 'approval' }>, key: string): void => {
+const placeApproval = (acc: Acc, piece: TalkPiece, key: string): void => {
   const known = acc.approvals.get(piece.id ?? key);
   if (known && known.kind !== 'tools') {
     known.text = piece.text;
