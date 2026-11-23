@@ -178,18 +178,6 @@ impl AccountsService {
         self.write_again(doc);
     }
 
-    /// Notes resume steps after the end of a switch and writes its doc again. Blocking.
-    pub(crate) fn note_after_switch(&self, lines: &[Line]) {
-        if lines.is_empty() {
-            return;
-        }
-        let now = now_ms();
-        let mut log = self.switch_log.held();
-        log.add_after(now, lines);
-        let doc = log.again(true, now);
-        self.write_again(doc);
-    }
-
     /// Ends the switch `id` in `phase` (with `error`) after the steps `lines`, as long as no
     /// other doc was written since. Blocking.
     pub(crate) fn finish_switch(&self, id: &str, end: (&str, Option<&str>), lines: &[Line]) {

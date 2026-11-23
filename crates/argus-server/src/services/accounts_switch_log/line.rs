@@ -42,10 +42,10 @@ pub(crate) struct Line {
 }
 
 impl Line {
-    pub(crate) fn new(stage: Stage, state: LineState, text: impl Into<String>) -> Self {
+    pub(crate) fn new(stage: Stage, how: LineState, text: impl Into<String>) -> Self {
         Line {
             stage,
-            state,
+            state: how,
             text: text.into(),
             detail: None,
         }

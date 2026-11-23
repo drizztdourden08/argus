@@ -263,6 +263,29 @@ impl RulesDesk {
             }
             Decision::StartEstimates(leads) => self.ask_leads(&leads).await,
             Decision::AddLeads(leads) => self.add_leads(&leads).await,
+            Decision::StartCycle { .. } | Decision::AskAll | Decision::CutOffRest => {
+                return self.carry_out_cycle((active, use_now), decision).await;
+            }
+            Decision::StartCountdown { to, reason } => {
+                self.start_countdown(state, snapshot, &to, reason).await;
+            }
+            Decision::Switch { .. } => {}
+            Decision::StandDown { reason } => self.stand_down(state, snapshot, reason).await,
+            Decision::NotifyNoTarget { window } => {
+                self.tell_no_target(snapshot, active).await;
+                state.told = Some(window);
+            }
+        }
+        true
+    }
+
+    /// Does one step of the handover cycle; false when the rest of the decisions must wait.
+    async fn carry_out_cycle(
+        &self,
+        (active, use_now): (&str, Option<f64>),
+        decision: Decision,
+    ) -> bool {
+        match decision {
             Decision::StartCycle { mode, ask_at } => {
                 let started = self.world.start_cycle(active, mode, ask_at, use_now).await;
                 let ok = started.is_ok();
@@ -281,15 +304,7 @@ impl RulesDesk {
                 self.failed("The leads not ready were not cut off", cut)
                     .await;
             }
-            Decision::StartCountdown { to, reason } => {
-                self.start_countdown(state, snapshot, &to, reason).await;
-            }
-            Decision::Switch { .. } => {}
-            Decision::StandDown { reason } => self.stand_down(state, snapshot, reason).await,
-            Decision::NotifyNoTarget { window } => {
-                self.tell_no_target(snapshot, active).await;
-                state.told = Some(window);
-            }
+            _ => {}
         }
         true
     }

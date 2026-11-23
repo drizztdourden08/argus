@@ -62,10 +62,10 @@ fn sync_of(desktop: &Value, info: &Value) -> Value {
         .into_iter()
         .flatten()
         .find(|s| s["id"] == "sync");
-    let state = match step.and_then(|s| s["status"].as_str()) {
-        Some(s @ ("running" | "done" | "failed" | "skipped")) => s,
-        _ => "pending",
-    };
+    let state = step
+        .and_then(|s| s["status"].as_str())
+        .filter(|s| matches!(*s, "running" | "done" | "failed" | "skipped"))
+        .unwrap_or("pending");
     let mut out = if info.is_object() {
         info.clone()
     } else {

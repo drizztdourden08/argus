@@ -78,7 +78,7 @@ fn lead_text(h: &Handover) -> String {
 
 fn lead_line(h: &Handover) -> Line {
     use LineState::{Done, Failed, Running, Skipped, Waiting};
-    let (stage, state) = match h.state {
+    let (stage, how) = match h.state {
         HandoverState::EstimateAsked | HandoverState::Asked => (Stage::Handover, Waiting),
         HandoverState::Estimated | HandoverState::Writing => (Stage::Handover, Running),
         HandoverState::Ready => (Stage::Handover, Done),
@@ -86,7 +86,7 @@ fn lead_line(h: &Handover) -> Line {
         HandoverState::Resumed => (Stage::Verify, Done),
         HandoverState::NotResumed => (Stage::Verify, Failed),
     };
-    Line::new(stage, state, lead_text(h))
+    Line::new(stage, how, lead_text(h))
 }
 
 fn phase_line(phase: CyclePhase) -> Option<Line> {
