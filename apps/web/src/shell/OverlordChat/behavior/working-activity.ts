@@ -4,7 +4,7 @@ import type { LiveDraft, ToolItem, TranscriptRow, WorkingActivity } from '../Ove
 
 const runningTool = (rows: readonly TranscriptRow[]): ToolItem | undefined => {
   const last = rows.at(-1);
-  return last?.kind === 'tools' ? last.tools.findLast((tool) => tool.status === 'running') : undefined;
+  return last?.kind === 'tools' ? last.tools.filter((tool) => tool.status === 'running').at(-1) : undefined;
 };
 
 const toolText = (name: string, summary: string): string => `${RUNNING_WORD} ${name}${summary ? `: ${summary}` : ''}`;

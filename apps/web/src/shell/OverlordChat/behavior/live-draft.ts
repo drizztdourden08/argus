@@ -40,14 +40,14 @@ const rowOf = ([at, block]: [number, DraftBlock]): TalkRow[] => {
 };
 
 const liveDraft = (lines: readonly TranscriptLine[]): LiveDraft => {
-  const last = lines.findLastIndex(endsTurn);
+  const last = lines.map(endsTurn).lastIndexOf(true);
   const blocks = new Map<number, DraftBlock>();
   lines.slice(last + 1).forEach((line) => {
     const inner = innerOf(line);
     if (inner) apply(blocks, inner);
   });
   const ordered = [...blocks.entries()].sort((a, b) => a[0] - b[0]);
-  const running = ordered.findLast(([, block]) => block.kind === 'tool_use');
+  const running = ordered.filter(([, block]) => block.kind === 'tool_use').at(-1);
   return { rows: ordered.flatMap(rowOf), tool: running?.[1].name ?? null };
 };
 
