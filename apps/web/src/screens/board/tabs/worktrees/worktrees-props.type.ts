@@ -1,18 +1,14 @@
 /* @layer renderer-app @kind types */
 import type { Agent } from '../../../../data/agents';
 import type { WithId } from '../../../../data/react';
-import type { BatchJob, RemovedWorktree, WorktreeRequest, WorktreeRule, WorktreesMeta } from '../../../../data/worktrees';
-import type { Counts, Notice, Panel, WorktreeFilter, WorktreeGroup, WorktreeRow } from './model';
+import type { BatchJob, RemovedWorktree, WorktreeRequest, WorktreesMeta } from '../../../../data/worktrees';
+import type { RecordHeadProps } from '../../../../shell';
+import type { Counts, Notice, Panel, WorktreeChip, WorktreeGroup, WorktreeLayout, WorktreeRow } from './model';
 import type { GroupThreads } from '../../item-groups';
 import type { AskThread, BatchControls, PanelControls, Removal, TabPrefs } from './worktrees.type';
 
 interface WorktreesTabProps {
   boardKey: string;
-}
-
-interface WorktreeSummaryProps {
-  counts: Counts;
-  meta: WorktreesMeta | null;
 }
 
 interface WorktreeToolbarProps {
@@ -84,6 +80,8 @@ interface WorktreeGroupsProps {
   boardKey: string;
   rows: WorktreeRow[];
   group: WorktreeGroup;
+  layout: WorktreeLayout;
+  compact: boolean;
   meta: WorktreesMeta | null;
   controls: PanelControls;
   ask: AskThread;
@@ -96,29 +94,38 @@ interface WorktreeRecordProps {
   threads: GroupThreads;
   agents: readonly WithId<Agent>[];
   now: number;
+  layout: WorktreeLayout;
+  compact: boolean;
   meta: WorktreesMeta | null;
   controls: PanelControls;
   ask: AskThread;
   removal: Removal;
 }
 
+interface WorktreeCardProps {
+  head: RecordHeadProps;
+  title: string;
+  chips: WorktreeChip[];
+  time: string | number | undefined;
+  job: WorktreeRow['job'];
+  label: string;
+  compact: boolean;
+  onOpen: () => void;
+}
+
+interface WorktreeScannedProps {
+  scannedAt?: string | number | null;
+}
+
+interface WorktreeCellsProps extends Omit<WorktreeRecordProps, 'row'> {
+  rows: WorktreeRow[];
+}
+
 interface WorktreeBodyProps extends WorktreeGroupsProps {
   total: number;
-  filter: WorktreeFilter;
+  needOnly: boolean;
   hasRules: boolean;
   onShowAll: () => void;
-}
-
-interface RulesSectionProps {
-  rules: WorktreeRule[];
-  meta: WorktreesMeta | null;
-  open: boolean;
-  onOpen: (open: boolean) => void;
-}
-
-interface RuleLineProps {
-  rule: WorktreeRule;
-  meta: WorktreesMeta | null;
 }
 
 interface CapToggleProps {
@@ -154,6 +161,6 @@ interface RemovedRowProps {
 
 export type {
   BatchConfirmProps, CapToggleProps, ConfirmFooterProps, DetailProps, LeftoverConfirmProps, LostTextProps, NoticeBannerProps,
-  RefusedJobsProps, RemoveConfirmProps, RemovedRowProps, RemovedSectionProps, RequestFormProps, RequestRowProps, RequestsSectionProps, RuleLineProps, RulesSectionProps, WorktreeBodyProps,
-  WorktreeGroupsProps, WorktreeRecordProps, WorktreeSummaryProps, WorktreeToolbarProps, WorktreesTabProps,
+  RefusedJobsProps, RemoveConfirmProps, RemovedRowProps, RemovedSectionProps, RequestFormProps, RequestRowProps, RequestsSectionProps, WorktreeBodyProps,
+  WorktreeCardProps, WorktreeCellsProps, WorktreeGroupsProps, WorktreeRecordProps, WorktreeScannedProps, WorktreeToolbarProps, WorktreesTabProps,
 };

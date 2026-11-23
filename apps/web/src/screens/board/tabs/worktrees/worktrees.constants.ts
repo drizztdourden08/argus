@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder } from './model';
+import type { SegmentOption } from '@drizztdourden08/tessera';
+import type { WorktreeFilters, WorktreeGroup, WorktreeLayout, WorktreeOrder } from './model';
 
 const WORKTREE_KIND = 'worktree';
 
@@ -7,19 +8,20 @@ const REQUEST_KIND = 'removal-request';
 
 const MAIN_TITLE = 'Main checkouts';
 
-const FILTER_KEY = 'coord.wtfilter';
+const WORKTREES_TAB = 'worktrees';
 
-const RULES_KEY = 'coord.wtrules';
+const WORKTREE_CARD_WIDTH = 272;
 
-const FILTER_IDS: readonly WorktreeFilter[] = ['all', 'need', 'left'];
+const LAYOUT_CHOICES: SegmentOption<WorktreeLayout>[] = [
+  { value: 'list', icon: 'rows-3', hint: { label: 'List', description: 'One line per worktree' } },
+  { value: 'cards', icon: 'layout-grid', hint: { label: 'Cards', description: 'Worktree cards that wrap' } },
+];
 
-const RULES_STATES: readonly ('0' | '1')[] = ['0', '1'];
+const LAYOUT_IDS: WorktreeLayout[] = ['list', 'cards'];
 
-const EXPLAINER_TEXT = 'Where the thread\'s worktrees are, as git sees them now. The thread decides what to do, or you delete one here (a backup is saved first when work would be lost).';
+const NEED_LABEL = 'Needs a decision';
 
-const NO_RULES_HINT = 'The registered thread adds the places once: coord worktree rule add <path> (--kind folder: every sub-folder is a worktree, --kind repo: the repository\'s git worktree list). Argus then looks with read-only git and wakes the thread when one goes stale.';
-
-const FILTER_LABEL = 'Show';
+const COMPACT_LABEL = 'Compact';
 
 const GROUP_CHOICES: { id: WorktreeGroup; label: string }[] = [
   { id: 'item', label: 'Item' },
@@ -72,6 +74,6 @@ const ASK_HINTS = {
 } as const;
 
 export {
-  ASK_BUTTONS, ASK_HINTS, EXPLAINER_TEXT, GROUP_CHOICES, KIND_OPTIONS, MAIN_TITLE, FILTER_IDS, FILTER_KEY, FILTER_LABEL, NO_RULES_HINT, NO_THREAD_TITLE, ORDER_CHOICES, REMOVED_CHIP, REMOVED_TITLE,
-  REQUEST_KIND, REQUESTS_TITLE, RULES_KEY, RULES_STATES, STALE_TEXT, WORKTREE_KIND, WORKTREE_VIEW,
+  ASK_BUTTONS, ASK_HINTS, COMPACT_LABEL, GROUP_CHOICES, KIND_OPTIONS, LAYOUT_CHOICES, LAYOUT_IDS, MAIN_TITLE, NEED_LABEL, NO_THREAD_TITLE, ORDER_CHOICES, REMOVED_CHIP, REMOVED_TITLE,
+  REQUEST_KIND, REQUESTS_TITLE, STALE_TEXT, WORKTREE_CARD_WIDTH, WORKTREE_KIND, WORKTREE_VIEW, WORKTREES_TAB,
 };

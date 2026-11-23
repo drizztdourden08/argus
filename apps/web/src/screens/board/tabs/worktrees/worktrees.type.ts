@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { useTabView } from '../../BoardTabsRow';
 import type { WorktreesMeta } from '../../../../data/worktrees';
-import type { Notice, Panel, PanelKind, WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder, WorktreeRow } from './model';
+import type { Notice, Panel, PanelKind, WorktreeFilters, WorktreeGroup, WorktreeLayout, WorktreeOrder, WorktreeRow } from './model';
 
 type WorktreeView = ReturnType<typeof useTabView<WorktreeGroup, WorktreeOrder, WorktreeFilters>>;
 
@@ -19,10 +19,12 @@ interface WorktreesData {
 }
 
 interface TabPrefs {
-  filter: WorktreeFilter;
-  setFilter: (filter: WorktreeFilter) => void;
-  rulesOpen: boolean;
-  setRulesOpen: (open: boolean) => void;
+  needOnly: boolean;
+  setNeedOnly: (next: boolean) => void;
+  compact: boolean;
+  setCompact: (next: boolean) => void;
+  layout: WorktreeLayout;
+  setLayout: (layout: WorktreeLayout) => void;
   view: WorktreeView;
 }
 

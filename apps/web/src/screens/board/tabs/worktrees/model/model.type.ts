@@ -4,9 +4,9 @@ import type { Worktree } from '../../../../../data/worktrees';
 
 type WorktreeRow = WithId<Worktree>;
 
-type WorktreeFilter = 'all' | 'need' | 'left';
-
 type WorktreeGroup = 'item' | 'thread' | 'status' | 'none';
+
+type WorktreeLayout = 'list' | 'cards';
 
 type WorktreeOrder = 'need' | 'age' | 'path' | 'size';
 
@@ -55,14 +55,6 @@ interface Counts {
   git: number;
 }
 
-interface SummaryParts {
-  counts: string;
-  need: string;
-  gone: string | null;
-  problems: string | null;
-  many: string | null;
-}
-
 interface LeftoverFlag {
   text: string;
   tip: string;
@@ -81,5 +73,5 @@ interface WorktreeChip {
 }
 
 export type {
-  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, RowGroup, Seen, SummaryParts, WorktreeChip, WorktreeFilter, WorktreeFilters, WorktreeGroup, WorktreeOrder, WorktreeRow,
+  Counts, LeftoverFlag, Notice, Panel, PanelKind, RemoveLook, RowGroup, Seen, WorktreeChip, WorktreeFilters, WorktreeGroup, WorktreeLayout, WorktreeOrder, WorktreeRow,
 };

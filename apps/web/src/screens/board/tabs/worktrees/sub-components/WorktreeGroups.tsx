@@ -8,18 +8,18 @@ import { useNow } from '../../../shared';
 import { groupRows } from '../model';
 import { MAIN_TITLE } from '../worktrees.constants';
 import type { WorktreeGroupsProps } from '../worktrees-props.type';
-import { WorktreeRecord } from './WorktreeRecord';
+import { WorktreeCells } from './WorktreeCells';
 
 const WorktreeGroups = (props: WorktreeGroupsProps) => {
-  const { boardKey, rows, group, meta, controls, ask, removal } = props;
+  const { boardKey, rows, group, layout, compact, meta, controls, ask, removal } = props;
   const data = useGroupsData(boardKey);
   const agents = useCollection<Agent>(boardKey, 'agents').docs;
   const now = useNow(false);
   if (!data.ready) return <Text tone="muted">Loading the items.</Text>;
-  const records = (shown: typeof rows) => shown.map((row) => (
-    <WorktreeRecord key={row.id} boardKey={boardKey} row={row} threads={data.threads} agents={agents} now={now} meta={meta} controls={controls} ask={ask} removal={removal} />
-  ));
-  if (group === 'none') return <Flex direction="column" gap="xs" role="list" aria-label="Worktrees">{records(rows)}</Flex>;
+  const records = (shown: typeof rows) => (
+    <WorktreeCells rows={shown} boardKey={boardKey} threads={data.threads} agents={agents} now={now} layout={layout} compact={compact} meta={meta} controls={controls} ask={ask} removal={removal} />
+  );
+  if (group === 'none') return records(rows);
   if (group !== 'item') {
     return (
       <Flex direction="column" gap="md">

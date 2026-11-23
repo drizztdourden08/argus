@@ -1,14 +1,15 @@
 /* @layer renderer-app @kind logic */
 import { useTabView } from '../../../BoardTabsRow';
-import { FILTER_IDS, FILTER_KEY, RULES_KEY, RULES_STATES, WORKTREE_VIEW } from '../worktrees.constants';
+import { useStoredFlag, useTabLayout } from '../../../shared';
+import { LAYOUT_IDS, WORKTREE_VIEW, WORKTREES_TAB } from '../worktrees.constants';
 import type { TabPrefs } from '../worktrees.type';
-import { usePersisted } from './usePersisted';
 
-const useTabPrefs = (): TabPrefs => {
-  const [filter, setFilter] = usePersisted(FILTER_KEY, FILTER_IDS, 'all');
-  const [rules, setRules] = usePersisted(RULES_KEY, RULES_STATES, '0');
-  const view = useTabView('worktrees', WORKTREE_VIEW);
-  return { filter, setFilter, rulesOpen: rules === '1', setRulesOpen: (open) => setRules(open ? '1' : '0'), view };
+const useTabPrefs = (boardKey: string): TabPrefs => {
+  const [needOnly, setNeedOnly] = useStoredFlag(`argus.tab.${WORKTREES_TAB}.need.${boardKey}`);
+  const [compact, setCompact] = useStoredFlag(`argus.tab.${WORKTREES_TAB}.compact.${boardKey}`);
+  const [layout, setLayout] = useTabLayout(WORKTREES_TAB, boardKey, LAYOUT_IDS, 'list');
+  const view = useTabView(WORKTREES_TAB, WORKTREE_VIEW);
+  return { needOnly, setNeedOnly, compact, setCompact, layout, setLayout, view };
 };
 
 export { useTabPrefs };

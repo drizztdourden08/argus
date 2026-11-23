@@ -4,7 +4,7 @@ import type { WorktreeHygiene } from '../../src/data/worktrees';
 import {
   aboutSize, askProblem, batchNotice, canRemove, compareRows, confirmStale, countRows, daysText, entryProblem, filterRows, isNeeding,
   isSafe, isYoung, leftoverFlags, lostItems, nextPanel, refusedJobs, removalInput, removalNotice, sizeText, statusShown,
-  summaryParts,
+  worktreeStats,
   threadOf,
 } from '../../src/screens/board/tabs/worktrees/model';
 import { DAY, NOW, ago, leftover, metaDoc, oldMeta, rule, worktree } from './fixtures';
@@ -37,11 +37,10 @@ describe('K1 the order and the filters', { tags: ['critical'] }, () => {
     expect(names).toEqual(['merged-1', 'stale-1', 'dirty-1', 'left-1', 'active-1', 'plain-1']);
   });
 
-  it('counts and filters by need and by leftover', () => {
+  it('counts and filters by need', () => {
     expect(countRows(rows)).toEqual({ all: 6, need: 3, left: 1, git: 5 });
-    expect(filterRows(rows, 'need').map((row) => row.name)).toEqual(['stale-1', 'merged-1', 'dirty-1']);
-    expect(filterRows(rows, 'left').map((row) => row.name)).toEqual(['left-1']);
-    expect(filterRows(rows, 'all')).toHaveLength(6);
+    expect(filterRows(rows, true).map((row) => row.name)).toEqual(['stale-1', 'merged-1', 'dirty-1']);
+    expect(filterRows(rows, false)).toHaveLength(6);
     expect(isNeeding(worktree('k', 'kept'))).toBe(false);
   });
 });
@@ -167,20 +166,15 @@ describe('K1 the sentences', { tags: ['critical'] }, () => {
     expect(batchNotice({ started: 3 }).text).toContain('Queued 3 leftover folders for deletion.');
   });
 
-  it('the summary: git worktrees and leftovers apart, gone, rule problems and too many', () => {
+  it('the stats: git worktrees and leftovers apart, gone, rule problems and too many', () => {
     const rows = [worktree('a', 'stale'), leftover('b'), leftover('c')];
-    const parts = summaryParts(countRows(rows), metaDoc({ gone: 2, tooMany: true, rules: [rule({ exists: false }), rule({ id: 'W-2', error: 'not a git repository' }), rule({ id: 'W-3' })] }));
-    expect(parts).toEqual({
-      counts: '1 git worktree, 2 leftover folders',
-      need: '1 needs a decision',
-      gone: '2 gone (git still lists them)',
-      problems: '2 rule problems',
-      many: 'Alpha has 3 folders: that is a lot, delete the old leftovers',
-    });
-    const calm = summaryParts(countRows([worktree('a', 'active')]), metaDoc({ gone: 1 }));
-    expect(calm.counts).toBe('1 worktree');
-    expect(calm.gone).toBe('1 gone (git still lists it)');
-    expect(calm.many).toBeNull();
+    const stats = worktreeStats(countRows(rows), metaDoc({ gone: 2, tooMany: true, rules: [rule({ exists: false }), rule({ id: 'W-2', error: 'not a git repository' }), rule({ id: 'W-3' })] }));
+    expect(stats.map((stat) => [stat.id, stat.count])).toEqual([['worktrees', 1], ['leftovers', 2], ['need', 1], ['gone', 2], ['rules', 2], ['many', 3]]);
+    expect(stats.find((stat) => stat.id === 'rules')?.tone).toBe('danger');
+    expect(stats.find((stat) => stat.id === 'rules')?.tip).toContain('not a git repository');
+    const calm = worktreeStats(countRows([worktree('a', 'active')]), metaDoc({ gone: 1 }));
+    expect(calm.map((stat) => stat.id)).toEqual(['worktrees', 'leftovers', 'need', 'gone']);
+    expect(calm.find((stat) => stat.id === 'gone')?.count).toBe(1);
   });
 
   it('lists the batch jobs a guard refused in the last hour, minus the dismissed ones', () => {
