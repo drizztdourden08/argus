@@ -1,40 +1,37 @@
 /* @layer renderer-app @kind component */
-import { Button, Callout, NumberInput, Stack, TextInput } from '@drizztdourden08/tessera';
+import { Button, Callout, SettingsSection, Stack } from '@drizztdourden08/tessera';
+import type { SettingsInput } from '@drizztdourden08/tessera';
+import type { LimitKey } from '../../../data/overlord';
 import { Panel } from '../../Panel';
+import { settingsRow } from '../behavior/settings-rows';
 import { useSettingsForm } from '../behavior/useSettingsForm';
-import { SettingsField } from './SettingsField';
+import { SETTINGS_SECTIONS } from '../OverlordChat.constants';
 
 const SettingsTab = () => {
   const form = useSettingsForm();
-  const { settings, draft, action } = form;
+  const { draft, action } = form;
   const failure = action.problem && <Callout tone="danger">{action.problem}</Callout>;
-  if (!settings || !draft) return <Panel title="Settings">{failure}</Panel>;
-  const field = { busy: action.busy, onReset: form.reset };
+  if (!form.settings || !draft) return <Panel title="Settings">{failure}</Panel>;
+  const row = (key: LimitKey, input: SettingsInput) => settingsRow(form, key, input);
   return (
     <Panel title="Settings">
       <Stack gap="md">
         {failure}
-        <SettingsField name="cwd" source={settings.cwd.source} {...field}>
-          <TextInput value={draft.cwd} onChange={(event) => form.change({ cwd: event.target.value })} />
-        </SettingsField>
-        <SettingsField name="exePath" source={settings.exePath.source} {...field}>
-          <TextInput value={draft.exePath} onChange={(event) => form.change({ exePath: event.target.value })} />
-        </SettingsField>
-        <SettingsField name="budgetUsd" source={settings.budgetUsd.source} {...field}>
-          <NumberInput sizeToContent min={1} max={10000} value={draft.budgetUsd} onChange={(budgetUsd) => form.change({ budgetUsd })} />
-        </SettingsField>
-        <SettingsField name="restartMax" source={settings.restartMax.source} {...field}>
-          <NumberInput sizeToContent min={0} max={20} value={draft.restartMax} onChange={(restartMax) => form.change({ restartMax })} />
-        </SettingsField>
-        <SettingsField name="approvalTimeoutMin" source={settings.approvalTimeoutMin.source} {...field}>
-          <NumberInput
-            sizeToContent
-            min={1}
-            max={1440}
-            value={draft.approvalTimeoutMin}
-            onChange={(approvalTimeoutMin) => form.change({ approvalTimeoutMin })}
-          />
-        </SettingsField>
+        <SettingsSection
+          title={SETTINGS_SECTIONS.agent}
+          rows={[
+            row('cwd', { kind: 'text', value: draft.cwd, onChange: (cwd) => form.change({ cwd }) }),
+            row('exePath', { kind: 'text', value: draft.exePath, onChange: (exePath) => form.change({ exePath }) }),
+          ]}
+        />
+        <SettingsSection
+          title={SETTINGS_SECTIONS.limits}
+          rows={[
+            row('budgetUsd', { kind: 'number', min: 1, max: 10000, unit: 'USD', value: draft.budgetUsd, onChange: (budgetUsd) => form.change({ budgetUsd }) }),
+            row('restartMax', { kind: 'number', min: 0, max: 20, value: draft.restartMax, onChange: (restartMax) => form.change({ restartMax }) }),
+            row('approvalTimeoutMin', { kind: 'number', min: 1, max: 1440, unit: 'min', value: draft.approvalTimeoutMin, onChange: (approvalTimeoutMin) => form.change({ approvalTimeoutMin }) }),
+          ]}
+        />
         <Button variant="primary" disabled={action.busy} onClick={form.save}>Save</Button>
       </Stack>
     </Panel>

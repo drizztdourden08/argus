@@ -78,19 +78,19 @@ const CHAT_TABS: { value: ChatTab; label: string }[] = [
   { value: 'queue', label: 'Queue' },
   { value: 'settings', label: 'Settings' },
 ];
-const SETTINGS_LABELS: Readonly<Record<LimitKey, string>> = {
-  cwd: 'Working folder',
-  exePath: 'Agent program path',
-  budgetUsd: 'Monthly budget (USD, blank for no cap)',
-  restartMax: 'Restarts allowed',
-  approvalTimeoutMin: 'Approval wait (minutes)',
+const SETTINGS_ROWS: Readonly<Record<LimitKey, { title: string; note: string }>> = {
+  cwd: { title: 'Working folder', note: 'The folder the Overlord works in.' },
+  exePath: { title: 'Agent program path', note: 'The program that runs the Overlord.' },
+  budgetUsd: { title: 'Monthly budget', note: 'Spend cap in USD. Blank means no cap.' },
+  restartMax: { title: 'Restarts allowed', note: 'How often it may restart on its own.' },
+  approvalTimeoutMin: { title: 'Approval wait', note: 'Minutes to wait for an approval.' },
 };
+const SETTINGS_SECTIONS = { agent: 'Agent', limits: 'Limits' } as const;
 const SOURCE_CAPTIONS: Readonly<Record<LimitSource, string>> = {
   set: 'Set in config.json',
   board: 'The folder of the Overlord board',
   default: 'Default',
 };
-const RESET_LABEL = 'Reset to default';
 const NO_RULES = 'No rules yet.';
 const NONE_WAITING = 'None waiting.';
 const QUEUE_EMPTY = 'Nothing is waiting for the Overlord.';
@@ -130,8 +130,8 @@ export {
   CHAT_PARAM,
   CHAT_PLACEHOLDER,
   CHAT_TABS,
-  RESET_LABEL,
-  SETTINGS_LABELS,
+  SETTINGS_ROWS,
+  SETTINGS_SECTIONS,
   SOURCE_CAPTIONS,
   MAX_EVERY_MIN,
   MIN_EVERY_MIN,

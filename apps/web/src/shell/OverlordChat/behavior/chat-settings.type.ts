@@ -1,5 +1,4 @@
 /* @layer renderer-app @kind types */
-import type { ReactNode } from 'react';
 import type { ActionState, LimitKey, LimitSource, OverlordSettings, OverlordUsage, SettingsDraft } from '../../../data/overlord';
 
 interface SettingsFormState {
@@ -9,14 +8,6 @@ interface SettingsFormState {
   change: (patch: Partial<SettingsDraft>) => void;
   save: () => void;
   reset: (key: LimitKey) => void;
-}
-
-interface SettingsFieldProps {
-  name: LimitKey;
-  source: LimitSource;
-  busy: boolean;
-  onReset: (key: LimitKey) => void;
-  children: ReactNode;
 }
 
 interface SettingChoice {
@@ -81,4 +72,4 @@ interface SettingChipsProps {
   chat: ChatSettings;
 }
 
-export type { ChatBarProps, ChatSettings, ChatUsage, ChipSpec, SettingChipProps, SettingChipsProps, SettingChoice, SettingKey, SettingsFieldProps, SettingsFormState, UsagePanelProps, UsageRingProps, UsageRow, UsageSection };
+export type { ChatBarProps, ChatSettings, ChatUsage, ChipSpec, SettingChipProps, SettingChipsProps, SettingChoice, SettingKey, SettingsFormState, UsagePanelProps, UsageRingProps, UsageRow, UsageSection };
