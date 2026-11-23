@@ -132,7 +132,6 @@ export type {
   BoardHealthView,
   BoardStatusProps,
   HealthInput,
-  HealthTone,
   BoardNoticesProps,
   BoardRunningProps,
   BoardStallsProps,
