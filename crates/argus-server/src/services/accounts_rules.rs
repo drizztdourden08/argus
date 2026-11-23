@@ -28,6 +28,7 @@ use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
 use super::AccountsService;
+use super::accounts_switch_log::{Line, LineState, Stage};
 use super::tasks::Timer;
 use crate::Services;
 
@@ -72,9 +73,9 @@ pub(crate) trait World: Send + Sync {
     /// Calls the handover cycle off.
     async fn cancel_cycle(&self);
     /// Writes the `switch` state doc, with `lines` added to its step log.
-    async fn publish(&self, doc: Value, lines: Vec<String>);
+    async fn publish(&self, doc: Value, lines: Vec<Line>);
     /// Adds steps to the step log of the switch.
-    async fn note(&self, lines: Vec<String>);
+    async fn note(&self, lines: Vec<Line>);
     /// The `switch` state doc as it is shown now.
     async fn shown(&self) -> Option<Value>;
     /// Shows a toast.
@@ -299,11 +300,12 @@ impl RulesDesk {
         }
     }
 
-    /// A failed step of the process: a log line and a step-log line.
+    /// A failed step of the handover: a log line and a step-log line.
     async fn failed(&self, what: &str, result: Result<(), String>) {
         if let Err(e) = result {
             self.world.warn(what, &e);
-            self.world.note(vec![format!("{what}: {e}.")]).await;
+            let line = Line::new(Stage::Handover, LineState::Failed, format!("{what}: {e}."));
+            self.world.note(vec![line]).await;
         }
     }
 
@@ -320,10 +322,11 @@ impl RulesDesk {
         let mut doc = switch_doc(&id, &from, to, "countdown");
         doc["countdownEndsAt"] = json!(ends_at_ms);
         let label = label_of(snapshot, to);
-        let line = format!(
+        let text = format!(
             "Countdown started: the switch to {label} begins in 1 minute ({}).",
             reason_text(reason)
         );
+        let line = Line::new(Stage::Countdown, LineState::Running, text);
         self.world.publish(doc, vec![line]).await;
         let text = countdown_text(reason, &label_of(snapshot, &from));
         self.world
@@ -373,8 +376,9 @@ impl RulesDesk {
         };
         let Countdown { from, to, .. } = running.countdown;
         let mut doc = switch_doc(&running.id, &from, &to, "cancelled");
-        let line = format!("Stood down: {}.", reason.text());
-        doc["error"] = json!(line);
+        let text = format!("Stood down: {}.", reason.text());
+        doc["error"] = json!(text);
+        let line = Line::new(Stage::Countdown, LineState::Skipped, text);
         self.world.publish(doc, vec![line]).await;
         let text = format!(
             "The switch to {} stood down: {}.",
@@ -402,7 +406,8 @@ impl RulesDesk {
 
     /// Makes the switch; a failed one holds the rule off so it does not start again at once.
     async fn switch(&self, go: Go) {
-        let line = format!("The countdown ended: the switch to {} starts.", go.label);
+        let text = format!("The countdown ended: the switch to {} starts.", go.label);
+        let line = Line::new(Stage::Countdown, LineState::Done, text);
         self.world.note(vec![line]).await;
         let result = self.world.switch(&go.to, go.handover).await;
         if let Err(e) = &result {
@@ -428,7 +433,8 @@ impl RulesDesk {
         if stuck {
             let mut doc = switch_doc(&go.id, &go.from.account, &go.to, "failed");
             doc["error"] = json!(error);
-            let line = format!("The switch failed: {error}.");
+            let text = format!("The switch failed: {error}.");
+            let line = Line::new(Stage::Switch, LineState::Failed, text);
             self.world.publish(doc, vec![line]).await;
         }
         let text = format!(
@@ -462,7 +468,11 @@ impl RulesDesk {
             state.hold_offs.push(HoldOff::after_cancel(view));
         }
         self.world.cancel_cycle().await;
-        let line = "The owner cancelled the countdown.".to_owned();
+        let line = Line::new(
+            Stage::Countdown,
+            LineState::Skipped,
+            "The owner cancelled the countdown.",
+        );
         self.world
             .publish(switch_doc(&running.id, &from, &to, "cancelled"), vec![line])
             .await;

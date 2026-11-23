@@ -1,41 +1,47 @@
-//! The plain lines of the step log, as pure functions: what changed in the Desktop steps of a
-//! switch, and what changed in the handover cycle.
+//! The lines of the step log, as pure functions: what changed in the Desktop steps of a switch,
+//! what changed in the handover cycle, and the leads the cycle found.
 
 use argus_accounts::desktop::{Step, StepStatus};
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState};
 use argus_accounts::sync::Summary;
+use serde_json::{Value, json};
+
+use super::line::{Line, LineState, Stage};
 
 /// The lines a change of the handover cycle makes: the ones of the process, and the resume
 /// lines that come after the switch ended.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) struct CycleLines {
     /// Cycle started, leads asked, handovers received, every handover in.
-    pub process: Vec<String>,
+    pub process: Vec<Line>,
     /// Leads that resumed, or did not, after the switch.
-    pub resume: Vec<String>,
+    pub resume: Vec<Line>,
 }
 
-fn with_detail(label: &str, word: &str, detail: &str) -> String {
-    if detail.is_empty() {
-        format!("{label}: {word}.")
-    } else {
-        format!("{label}: {word} ({detail}).")
+/// The stage a Desktop step belongs to.
+pub(crate) fn stage_of(step_id: &str) -> Stage {
+    match step_id {
+        "handover" => Stage::Handover,
+        "sync" => Stage::Sync,
+        "confirm" => Stage::Verify,
+        _ => Stage::Switch,
     }
 }
 
-fn step_line(step: &Step) -> Option<String> {
-    let word = match step.status {
+fn step_line(step: &Step) -> Option<Line> {
+    let (state, word) = match step.status {
         StepStatus::Pending => return None,
-        StepStatus::Running => return Some(format!("{}: started.", step.label)),
-        StepStatus::Done => "done",
-        StepStatus::Failed => "failed",
-        StepStatus::Skipped => "skipped",
+        StepStatus::Running => (LineState::Running, "started"),
+        StepStatus::Done => (LineState::Done, "done"),
+        StepStatus::Failed => (LineState::Failed, "failed"),
+        StepStatus::Skipped => (LineState::Skipped, "skipped"),
     };
-    Some(with_detail(&step.label, word, &step.detail))
+    let text = format!("{}: {word}.", step.label);
+    Some(Line::new(stage_of(step.id), state, text).with_detail(&step.detail))
 }
 
 /// One line per Desktop step whose status changed between `before` and `after`.
-pub(crate) fn step_lines(before: &[Step], after: &[Step]) -> Vec<String> {
+pub(crate) fn step_lines(before: &[Step], after: &[Step]) -> Vec<Line> {
     after
         .iter()
         .filter(|step| {
@@ -56,7 +62,7 @@ fn mode_text(mode: CycleMode) -> &'static str {
     }
 }
 
-fn lead_line(h: &Handover) -> String {
+fn lead_text(h: &Handover) -> String {
     let name = format!("{}/{}", h.board, h.thread);
     match h.state {
         HandoverState::EstimateAsked => format!("{name} was asked for an estimate."),
@@ -70,10 +76,31 @@ fn lead_line(h: &Handover) -> String {
     }
 }
 
-fn phase_line(phase: CyclePhase) -> Option<&'static str> {
+fn lead_line(h: &Handover) -> Line {
+    use LineState::{Done, Failed, Running, Skipped, Waiting};
+    let (stage, state) = match h.state {
+        HandoverState::EstimateAsked | HandoverState::Asked => (Stage::Handover, Waiting),
+        HandoverState::Estimated | HandoverState::Writing => (Stage::Handover, Running),
+        HandoverState::Ready => (Stage::Handover, Done),
+        HandoverState::CutOff => (Stage::Handover, Skipped),
+        HandoverState::Resumed => (Stage::Verify, Done),
+        HandoverState::NotResumed => (Stage::Verify, Failed),
+    };
+    Line::new(stage, state, lead_text(h))
+}
+
+fn phase_line(phase: CyclePhase) -> Option<Line> {
     match phase {
-        CyclePhase::Ready => Some("Every handover is in."),
-        CyclePhase::Cancelled => Some("The handover cycle was called off."),
+        CyclePhase::Ready => Some(Line::new(
+            Stage::Handover,
+            LineState::Done,
+            "Every handover is in.",
+        )),
+        CyclePhase::Cancelled => Some(Line::new(
+            Stage::Handover,
+            LineState::Skipped,
+            "The handover cycle was called off.",
+        )),
         CyclePhase::Estimating | CyclePhase::Asked | CyclePhase::Done => None,
     }
 }
@@ -84,15 +111,22 @@ pub(crate) fn cycle_lines(before: Option<&Cycle>, after: Option<&Cycle>) -> Cycl
     let Some(after) = after else { return out };
     let before = before.filter(|b| b.id == after.id);
     if before.is_none() {
-        out.process.push(format!(
-            "Handover cycle {} started for {}: {}.",
-            after.id,
-            after.account,
-            mode_text(after.mode)
+        out.process.push(Line::new(
+            Stage::Handover,
+            LineState::Running,
+            format!(
+                "Handover cycle {} started for {}: {}.",
+                after.id,
+                after.account,
+                mode_text(after.mode)
+            ),
         ));
         if after.leads.is_empty() {
-            out.process
-                .push("No lead is working, so there is nothing to hand over.".to_owned());
+            out.process.push(Line::new(
+                Stage::Handover,
+                LineState::Skipped,
+                "No lead is working, so there is nothing to hand over.",
+            ));
         }
     }
     for h in &after.leads {
@@ -108,11 +142,43 @@ pub(crate) fn cycle_lines(before: Option<&Cycle>, after: Option<&Cycle>) -> Cycl
         }
     }
     if before.is_none_or(|b| b.phase != after.phase) {
-        if let Some(line) = phase_line(after.phase) {
-            out.process.push(line.to_owned());
-        }
+        out.process.extend(phase_line(after.phase));
     }
     out
+}
+
+/// How a lead of the cycle stands, in the words of the doc, with a note when it did not go well.
+fn thread_state(state: HandoverState) -> (&'static str, Option<&'static str>) {
+    match state {
+        HandoverState::EstimateAsked | HandoverState::Estimated => ("found", None),
+        HandoverState::Asked | HandoverState::Writing => ("asked", None),
+        HandoverState::Ready => ("ready", None),
+        HandoverState::Resumed => ("ready", Some("resumed on the new account")),
+        HandoverState::CutOff => ("skipped", Some("cut off before its handover")),
+        HandoverState::NotResumed => ("failed", Some("did not resume on the new account")),
+    }
+}
+
+/// The leads the cycle found for the handover, as the `threads` of the doc.
+pub(crate) fn threads_of(cycle: &Cycle) -> Vec<Value> {
+    cycle
+        .leads
+        .iter()
+        .map(|h| {
+            let (state, note) = thread_state(h.state);
+            let mut out = json!({
+                "board": h.board,
+                "thread": h.thread,
+                "title": h.thread,
+                "sessionId": h.session_id,
+                "state": state,
+            });
+            if let Some(note) = note {
+                out["note"] = json!(note);
+            }
+            out
+        })
+        .collect()
 }
 
 /// What the sync step of a switch did, in words: the changes by kind and what it left alone.
@@ -138,13 +204,23 @@ pub(crate) fn sync_note(summary: &Summary) -> String {
 }
 
 /// The step-log line of the sidebar check after Claude started again.
-pub(crate) fn sidebar_check_line(left: &Result<usize, String>, to: &str) -> String {
-    match left {
-        Ok(0) => "Sidebar check: the chats and folders are the same on every account.".to_owned(),
-        Ok(n) => format!(
-            "Sidebar check failed: {n} sidebar changes are missing again after Claude started on {to}. \
-             Claude rewrote its sidebar. Close Claude from its tray and run the sync from the Accounts tab."
+pub(crate) fn sidebar_check_line(left: &Result<usize, String>, to: &str) -> Line {
+    let (state, text) = match left {
+        Ok(0) => (
+            LineState::Done,
+            "Sidebar check: the chats and folders are the same on every account.".to_owned(),
         ),
-        Err(why) => format!("Sidebar check failed: the sidebars could not be read ({why})."),
-    }
+        Ok(n) => (
+            LineState::Failed,
+            format!(
+                "Sidebar check failed: {n} sidebar changes are missing again after Claude started on {to}. \
+                 Claude rewrote its sidebar. Close Claude from its tray and run the sync from the Accounts tab."
+            ),
+        ),
+        Err(why) => (
+            LineState::Failed,
+            format!("Sidebar check failed: the sidebars could not be read ({why})."),
+        ),
+    };
+    Line::new(Stage::Verify, state, text)
 }

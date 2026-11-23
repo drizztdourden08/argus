@@ -144,6 +144,24 @@ Cancel works until the app is about to close. A failure after the app closed rol
 app is closed, the saved login of the old account is put back when the login may have changed
 (from `restore_login` on), and the app is started again. The error says whether going back worked.
 
+### The switch doc
+
+The web reads `accountsState/switch` in the portfolio scope
+(`/api/p/_portfolio/db/accountsState/switch`). It carries:
+
+- `phase`: `idle`, `countdown`, `handover`, `sync`, `switching`, `verifying`, `done`, `failed` or
+  `cancelled`. A switch that went through is `verifying` until the sidebar check 20 seconds after
+  the start, then `done`, or `failed` when the sidebars differ again.
+- `desktopPhase` and `desktopSteps`: the Desktop phase (`waiting_for_quit` included) and the eight
+  steps above.
+- `countdownEndsAt`: ISO, or null.
+- `steps`: the step log, oldest first, never cleared during a run: `{at, stage, state, text,
+  detail?}` with the stages `detect`, `countdown`, `handover`, `sync`, `switch` and `verify`.
+- `threads`: the leads of the handover cycle, `{board, thread, title, sessionId, state, note?}`.
+- `sync`: `{state, backupDir?, counts?: {copied, updated, folders, archived}, error?}`.
+- `error`, and `blocker`: why the switch is not moving (Desktop to quit from its tray, leads still
+  to hand over, a countdown that ended without the switch starting).
+
 ## The rules
 
 Every account has two rules of its own. They apply while Desktop is on that account.

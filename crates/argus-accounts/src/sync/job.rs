@@ -75,6 +75,9 @@ pub struct Summary {
     pub mode: Mode,
     /// The changes found, by kind.
     pub drift: Drift,
+    /// How many of the chat changes copy a chat to an account that lacks it; the rest bring a
+    /// copy up to date.
+    pub copied: usize,
     /// Chats left alone because their copies disagree.
     pub conflicts: usize,
     /// Chats left alone because no valid transcript was found.
@@ -167,6 +170,15 @@ impl Planned {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.catalog.changes.is_empty() && self.folders.steps.is_empty()
+    }
+
+    /// How many chat changes copy a chat to an account that lacks it.
+    #[must_use]
+    pub fn copied(&self) -> usize {
+        self.kinds
+            .iter()
+            .filter(|k| **k == StepKind::CopySession)
+            .count()
     }
 }
 
@@ -446,6 +458,7 @@ fn run_inner(run: &mut Run, mode: Mode) -> Result<Summary, String> {
     let mut summary = Summary {
         mode,
         drift,
+        copied: planned.copied(),
         conflicts: planned.catalog.conflicts.len(),
         missing_transcripts: planned.catalog.missing_transcripts.len(),
         verified: false,

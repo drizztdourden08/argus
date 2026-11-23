@@ -10,8 +10,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use argus_accounts::desktop::{
-    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, Stop, Timing, WAITING_PHASE,
-    last_known_account, repair,
+    ClaudeDesktop, Done, FsVault, Journal, Plan, Repair, Stages, Step, StepStatus, Stop, Timing,
+    WAITING_PHASE, last_known_account, repair,
 };
 use argus_accounts::handover::{CycleEvent, CycleMode, StartRequest};
 use argus_accounts::{Account, DesktopApp, LoginVault, QUIT_BY_HAND, Scope, find_app_data};
@@ -24,7 +24,9 @@ use tokio::sync::broadcast::Receiver;
 
 use super::AccountsService;
 use super::accounts_handover::{Handovers, use_now};
-use super::accounts_switch_log::{sidebar_check_line, step_lines, sync_note};
+use super::accounts_switch_log::{
+    Line, LineState, Stage, sidebar_check_line, stage_of, step_lines, sync_info, sync_note,
+};
 use crate::Services;
 
 /// What a second switch answers while one runs; the route turns it into a 409.
@@ -382,6 +384,7 @@ impl Prepared {
         let accounts = Arc::clone(&self.accounts);
         let svc = Arc::clone(&self.svc);
         let to = self.to.label.clone();
+        let id = self.id.clone();
         let result = tokio::task::spawn_blocking(move || self.run_blocking())
             .await
             .map_err(|e| e.to_string())?;
@@ -391,12 +394,13 @@ impl Prepared {
         let _ = tokio::task::spawn_blocking(move || publish_logins(&svc2, &accounts2)).await;
         let done = result?;
         if done == Done::Switched {
-            let _ = tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &to)).await;
+            let _ = tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &to, &id))
+                .await;
         }
         Ok(())
     }
 
-    fn put(&self, phase: &str, steps: &[Step], error: Option<&str>, lines: &[String]) {
+    fn put(&self, phase: &str, steps: &[Step], error: Option<&str>, lines: &[Line]) {
         let doc = switch_doc(
             &self.id,
             (&self.from.key, &self.to.key),
@@ -413,16 +417,21 @@ impl Prepared {
     }
 
     /// The first lines of the step log: who started the switch, and the version warning.
-    fn opening_lines(&self) -> Vec<String> {
+    fn opening_lines(&self) -> Vec<Line> {
         let by = match self.origin {
             Origin::Owner => "the owner",
             Origin::Rule => "the auto-switch rule",
         };
-        let mut lines = vec![format!(
+        let text = format!(
             "Switch started by {by}: from {} to {}.",
             self.from.label, self.to.label
-        )];
-        lines.extend(self.warning.clone());
+        );
+        let mut lines = vec![Line::new(Stage::Detect, LineState::Done, text)];
+        lines.extend(
+            self.warning
+                .iter()
+                .map(|w| Line::new(Stage::Detect, LineState::Done, format!("{w}."))),
+        );
         lines
     }
 
@@ -458,17 +467,26 @@ impl Prepared {
                     self.tell_to_quit();
                 }
                 let mut lines = step_lines(&last.1, steps);
-                if phase == "done" {
-                    lines.push(format!("Done: Claude runs as {}.", self.to.label));
-                }
-                self.put(phase, steps, None, &lines);
-                last = (phase.to_owned(), steps.to_vec());
+                // A finished switch shows as verifying until the sidebar check.
+                let shown = if phase == "done" {
+                    let text = format!("Done: Claude runs as {}.", self.to.label);
+                    lines.push(Line::new(Stage::Switch, LineState::Done, text));
+                    "verifying"
+                } else {
+                    phase
+                };
+                self.put(shown, steps, None, &lines);
+                last = (shown.to_owned(), steps.to_vec());
             },
         );
         let outcome = outcome_of(&done);
         if let Err(why) = &outcome {
-            let line = format!("The switch failed: {why}.");
-            self.put(&last.0, &last.1, Some(why), &[line]);
+            self.put(&last.0, &last.1, Some(why), &[failure_line(&done, &last.1, why)]);
+        }
+        if let Done::Noted(note) = &done {
+            let text = format!("The account was not confirmed: {note}.");
+            let line = Line::new(Stage::Verify, LineState::Skipped, text);
+            self.accounts.finish_switch(&self.id, ("done", None), &[line]);
         }
         outcome.map(|()| done)
     }
@@ -493,17 +511,31 @@ impl Prepared {
     }
 }
 
+/// The step-log line of a switch that did not finish: the stage of the step that failed.
+fn failure_line(done: &Done, steps: &[Step], why: &str) -> Line {
+    if *done == Done::Cancelled {
+        return Line::new(Stage::Switch, LineState::Skipped, "The switch was cancelled.");
+    }
+    let stage = steps
+        .iter()
+        .find(|s| s.status == StepStatus::Failed)
+        .map_or(Stage::Switch, |s| stage_of(s.id));
+    Line::new(stage, LineState::Failed, format!("The switch failed: {why}."))
+}
+
 /// How long Claude may rewrite its storage after it started before the sidebar check reads it.
 const SIDEBAR_SETTLE: Duration = Duration::from_secs(20);
 
-/// After a confirmed switch: checks that the sync held once Claude started again. A check that
-/// passes confirms the installed Claude version; one that fails is a step-log line, an urgent
+/// After a confirmed switch: checks that the sync held once Claude started again, and ends the
+/// switch `id` (verifying until then) as done or failed. A check that passes confirms the
+/// installed Claude version; one that fails is a failed step, the error of the doc, an urgent
 /// toast and a log line, never silent. Blocking.
-fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str) {
+fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str, id: &str) {
     std::thread::sleep(SIDEBAR_SETTLE);
     let left = accounts.sync_left();
-    accounts.note_after_switch(&[sidebar_check_line(&left, to)]);
+    let line = sidebar_check_line(&left, to);
     if left == Ok(0) {
+        accounts.finish_switch(id, ("done", None), &[line]);
         verify_version(svc, accounts);
         return;
     }
@@ -511,12 +543,14 @@ fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str) {
         Ok(n) => format!("{n} sidebar changes are missing again after Claude started"),
         Err(why) => why.clone(),
     };
+    let error = format!("the switch worked but the sidebar check failed: {detail}");
+    accounts.finish_switch(id, ("failed", Some(error.as_str())), std::slice::from_ref(&line));
     svc.log
         .warn("accounts sidebar check failed", json!({ "error": detail }));
     if let Some(notify) = &svc.notify {
         notify.send(PingRequest {
             title: Some("The sidebars are not the same after the switch".to_owned()),
-            text: sidebar_check_line(&left, to),
+            text: line.text,
             level: Level::Urgent,
             project: None,
             thread: None,
@@ -673,17 +707,24 @@ impl Stages for ServerStages<'_> {
     }
 
     fn sync(&self) -> Result<String, String> {
-        let summary = self
-            .run
-            .accounts
-            .sync(false)
-            .map_err(|why| format!("the sync of the chats and folders failed: {why}"))?;
+        let accounts = &self.run.accounts;
+        let summary = match accounts.sync(false) {
+            Ok(summary) => summary,
+            Err(why) => {
+                let error = format!("the sync of the chats and folders failed: {why}");
+                accounts.note_sync(sync_info(None, Some(error.as_str())));
+                return Err(error);
+            }
+        };
         if !summary.verified {
-            return Err(format!(
+            let error = format!(
                 "the sync wrote but its check found changes left: {}",
                 sync_note(&summary)
-            ));
+            );
+            accounts.note_sync(sync_info(Some(&summary), Some(error.as_str())));
+            return Err(error);
         }
+        accounts.note_sync(sync_info(Some(&summary), None));
         Ok(sync_note(&summary))
     }
 
@@ -749,7 +790,8 @@ pub(crate) fn repair_interrupted(svc: &Services, accounts: &AccountsService) {
             let id = entry.map_or_else(|| "SW-0".to_owned(), |e| e.id);
             let doc = switch_doc(&id, (&from, ""), Origin::Owner, "failed", &[]);
             let doc = with_error(doc, Some(INTERRUPTED));
-            let line = format!("The switch was cut short: {INTERRUPTED}.");
+            let text = format!("The switch was cut short: {INTERRUPTED}.");
+            let line = Line::new(Stage::Switch, LineState::Failed, text);
             if let Err(e) = accounts.put_switch(doc, &[line]) {
                 svc.log
                     .error("accounts switch doc not written", json!({ "error": e }));

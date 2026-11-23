@@ -17,6 +17,7 @@ use serde_json::{Value, json};
 use super::{Snapshot, World};
 use crate::Services;
 use crate::services::AccountsService;
+use crate::services::accounts_switch_log::Line;
 use crate::services::accounts::last_known_account;
 use crate::services::accounts_estimates::{LeadRef, estimate_state};
 use crate::services::accounts_handover::Handovers;
@@ -225,7 +226,7 @@ impl World for Live {
             .await;
     }
 
-    async fn publish(&self, doc: Value, lines: Vec<String>) {
+    async fn publish(&self, doc: Value, lines: Vec<Line>) {
         let _ = self
             .blocking(move |me| {
                 if let Err(e) = me.accounts.put_switch(doc, &lines) {
@@ -235,7 +236,7 @@ impl World for Live {
             .await;
     }
 
-    async fn note(&self, lines: Vec<String>) {
+    async fn note(&self, lines: Vec<Line>) {
         let _ = self
             .blocking(move |me| me.accounts.note_switch(&lines))
             .await;

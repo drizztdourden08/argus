@@ -44,6 +44,7 @@ fn run_inner(run: &mut Run, request: &Request) -> Result<Summary, String> {
     let mut summary = Summary {
         mode: Mode::Apply,
         drift: drift_of(&planned),
+        copied: planned.copied(),
         conflicts: planned.catalog.conflicts.len(),
         missing_transcripts: planned.catalog.missing_transcripts.len(),
         verified: false,

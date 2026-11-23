@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
-import type { SwitchPhase, SwitchStage, SwitchSyncCounts } from '../../../../data/types';
+import type { DesktopPhase, SwitchPhase, SwitchStage, SwitchSyncCounts } from '../../../../data/types';
 
 const SWITCH_DOC = 'switch';
 const SWITCH_PATH = '/api/accounts/switch';
@@ -11,6 +11,7 @@ const SWITCH_LINK_PARAM = 'switch';
 const TAB_LINK_PARAM = 'tab';
 
 const RUNNING_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover', 'sync', 'switching', 'verifying']);
+const WAITING_PHASE: DesktopPhase = 'waiting_for_quit';
 const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover']);
 
 const STAGES: readonly SwitchStage[] = ['detect', 'countdown', 'handover', 'sync', 'switch', 'verify'];
@@ -108,7 +109,7 @@ const ANYWAY_TOAST = 'Not waiting for the rest.';
 const SWITCH_CANCELLED_TOAST = 'Switch cancelled.';
 
 export {
-  ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, CANCEL_PATH, COUNT_KEYS,
+  ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, WAITING_PHASE, CANCEL_PATH, COUNT_KEYS,
   HANDOVER_TOGGLE, LAST_RUN, NO_REASON, NO_RUN_YET, NO_SWITCH, NO_THREADS, NOT_REACHED, NOW_LABEL, PHASE_STAGE, PHASE_STATUSES, PROCESS_TITLE, RUNNING_PHASES,
   STAGE_LABEL, STAGE_PLAN, STAGES, START_LABEL, STEP_STATUSES, STUCK_PREFIX, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_LINK_PARAM, SWITCH_PATH,
   SWITCH_STARTED, SYNC_STATUSES, SYNC_TITLE, SYNC_UNSTARTED, TAB_LINK_PARAM, THREAD_STATUSES, THREADS_TITLE, THREADS_UNCHECKED, ZERO_GRACE_MS, ZERO_TEXT,

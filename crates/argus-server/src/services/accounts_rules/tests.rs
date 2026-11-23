@@ -14,6 +14,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use super::{RulesDesk, Snapshot, World};
+use crate::services::accounts_switch_log::Line;
 
 #[derive(Default)]
 struct Fake {
@@ -103,12 +104,12 @@ impl World for Fake {
     async fn cancel_cycle(&self) {
         self.log("cancel_cycle");
     }
-    async fn publish(&self, doc: Value, lines: Vec<String>) {
+    async fn publish(&self, doc: Value, lines: Vec<Line>) {
         held(&self.docs).push(doc);
-        held(&self.lines).extend(lines);
+        held(&self.lines).extend(lines.into_iter().map(|l| l.text));
     }
-    async fn note(&self, lines: Vec<String>) {
-        held(&self.lines).extend(lines);
+    async fn note(&self, lines: Vec<Line>) {
+        held(&self.lines).extend(lines.into_iter().map(|l| l.text));
     }
     async fn shown(&self) -> Option<Value> {
         held(&self.docs).last().cloned()

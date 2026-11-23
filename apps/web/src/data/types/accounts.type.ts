@@ -80,6 +80,10 @@ interface SyncStepDoc {
   detail?: string | null;
 }
 
+type DesktopPhase =
+  | 'idle' | 'countdown' | 'handover' | 'closing' | 'waiting_for_quit' | 'saving_login' | 'syncing' | 'restoring_login'
+  | 'scheduling_resume' | 'starting' | 'confirming' | 'verifying' | 'done' | 'cancelled' | 'failed';
+
 type SwitchPhase = 'idle' | 'countdown' | 'handover' | 'sync' | 'switching' | 'verifying' | 'done' | 'failed' | 'cancelled';
 
 type SwitchStage = 'detect' | 'countdown' | 'handover' | 'sync' | 'switch' | 'verify';
@@ -127,6 +131,7 @@ interface AccountsSwitch {
   to?: string | null;
   startedBy?: 'rule' | 'owner';
   phase?: SwitchPhase;
+  desktopPhase?: DesktopPhase;
   countdownEndsAt?: number | string | null;
   steps?: SwitchStepDoc[];
   threads?: SwitchThreadDoc[];
@@ -177,6 +182,7 @@ interface AccountsSettings {
 }
 
 export type {
+  DesktopPhase,
   AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsSettings, AccountsSwitch, HandoverRule, SettingsAccount, SettingsRules, SwitchPhase, SwitchStage,
   SwitchStepState, SwitchSyncCounts, SwitchSyncDoc, SwitchThreadDoc, RunResult,
