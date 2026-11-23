@@ -96,6 +96,11 @@ fn text(setting: &Value, name: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
+/// The program path: `exePath`, else the `claudeExe` an older config wrote.
+fn exe_text(setting: &Value) -> Option<String> {
+    text(setting, "exePath").or_else(|| text(setting, "claudeExe"))
+}
+
 /// A text field that is one of the choices `ok` takes, else `default`.
 fn picked(setting: &Value, name: &str, ok: fn(&str) -> bool, default: &str) -> String {
     text(setting, name)
@@ -104,7 +109,7 @@ fn picked(setting: &Value, name: &str, ok: fn(&str) -> bool, default: &str) -> S
 }
 
 /// `cwd`, `model` (default `sonnet`), `effort` (default `high`), `permissionMode` (default
-/// `bypassPermissions`), `claudeExe`, `restartMax` (default 3) and `approvalTimeoutMin`
+/// `bypassPermissions`), `exePath` (the old `claudeExe` is read too), `restartMax` (default 3) and `approvalTimeoutMin`
 /// (default 30). An effort or a mode that is not one of the choices is the default.
 pub(crate) fn live(svc: &Services) -> Live {
     let setting = setting(svc);
@@ -118,7 +123,7 @@ pub(crate) fn live(svc: &Services) -> Live {
             is_permission_mode,
             DEFAULT_PERMISSION_MODE,
         ),
-        claude_exe: text(&setting, "claudeExe").map(PathBuf::from),
+        claude_exe: exe_text(&setting).map(PathBuf::from),
         restart_max: restart_max_of(&setting).unwrap_or(DEFAULT_RESTART_MAX),
         approval_timeout_min: approval_of(&setting).unwrap_or(DEFAULT_APPROVAL_MIN),
     }
@@ -134,22 +139,37 @@ fn approval_of(setting: &Value) -> Option<u64> {
     setting["approvalTimeoutMin"].as_u64().filter(|v| *v > 0)
 }
 
-/// Which of the page's settings `config.json` holds a usable value for.
+/// A setting of the page that `config.json` can hold a value for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct Saved {
-    pub claude_exe: bool,
-    pub budget: bool,
-    pub restart_max: bool,
-    pub approval_timeout: bool,
+pub(crate) enum Field {
+    ExePath,
+    Budget,
+    RestartMax,
+    ApprovalTimeout,
+}
+
+/// Which of the page's settings `config.json` holds a usable value for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Saved(Vec<Field>);
+
+impl Saved {
+    pub(crate) fn has(&self, field: Field) -> bool {
+        self.0.contains(&field)
+    }
 }
 
 /// What `config.json` sets, so the page can say where each value in effect came from.
 pub(crate) fn saved(svc: &Services) -> Saved {
     let setting = setting(svc);
-    Saved {
-        claude_exe: text(&setting, "claudeExe").is_some(),
-        budget: budget(svc).budget_usd.is_some(),
-        restart_max: restart_max_of(&setting).is_some(),
-        approval_timeout: approval_of(&setting).is_some(),
-    }
+    let held = [
+        (Field::ExePath, exe_text(&setting).is_some()),
+        (Field::Budget, budget(svc).budget_usd.is_some()),
+        (Field::RestartMax, restart_max_of(&setting).is_some()),
+        (Field::ApprovalTimeout, approval_of(&setting).is_some()),
+    ];
+    Saved(
+        held.into_iter()
+            .filter_map(|(field, set)| set.then_some(field))
+            .collect(),
+    )
 }

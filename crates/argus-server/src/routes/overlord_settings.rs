@@ -1,7 +1,7 @@
 //! The hosted Overlord's settings, for the owner's page only (I-200):
 //!
 //! - `GET /api/overlord/settings` is `{model, effort, permissionMode, choices: {models: [{id,
-//!   label}], efforts, permissionModes: [{id, label}]}}` plus `cwd`, `claudeExe`, `budgetUsd`,
+//!   label}], efforts, permissionModes: [{id, label}]}}` plus `cwd`, `exePath`, `budgetUsd`,
 //!   `restartMax` and `approvalTimeoutMin`, each `{value, source}` with source `set`, `board` or
 //!   `default` (I-207)
 //! - `POST /api/overlord/settings` takes any of those fields (an empty text resets one to its
@@ -13,7 +13,7 @@ use argus_core::{ApiError, ErrorCode};
 use argus_overlord::session::choices::Change;
 use serde_json::Value;
 
-use super::overlord::web_only;
+use super::overlord::{internal, web_only};
 use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::overlord::settings::{SettingsFault, apply, body};
@@ -43,9 +43,7 @@ fn refusal(fault: SettingsFault) -> ApiError {
     match fault {
         SettingsFault::Bad(bad) => ApiError::bad_request(bad.sentence()),
         SettingsFault::Invalid(sentence) => ApiError::bad_request(sentence),
-        SettingsFault::Storage => {
-            ApiError::new(ErrorCode::Internal, "the settings could not be saved")
-        }
+        SettingsFault::Storage => internal("the settings could not be saved"),
         SettingsFault::Restart(refused) => ApiError::new(ErrorCode::Conflict, refused.sentence()),
     }
 }

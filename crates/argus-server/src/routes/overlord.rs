@@ -26,6 +26,11 @@ use crate::{AuthKind, Ctx, RouteOpts, Router};
 
 const SMALL: usize = 8 * 1024;
 
+/// A 500 with the sentence the owner's page shows.
+pub(super) fn internal(sentence: &'static str) -> ApiError {
+    ApiError::new(ErrorCode::Internal, sentence)
+}
+
 pub(super) fn web_only(ctx: &Ctx, strict: bool) -> Result<(), ApiError> {
     let page = ctx.auth == Some(AuthKind::Page)
         && origin_ok(&ctx.headers, ctx.svc.port(), ctx.svc.doors(), strict);

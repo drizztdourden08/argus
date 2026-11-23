@@ -6,7 +6,7 @@ use std::path::Path;
 
 use serde_json::{Value, json};
 
-use super::config::{self, Saved};
+use super::config::{self, Field, Saved};
 use super::live::{find_exe, overlord_root};
 use crate::Services;
 
@@ -67,7 +67,7 @@ fn existing_file(v: &str) -> Result<Value, &'static str> {
     let path = Path::new(v);
     (path.is_absolute() && path.is_file())
         .then(|| json!(v))
-        .ok_or("claudeExe must be the full path of an existing file")
+        .ok_or("exePath must be the full path of an existing file")
 }
 
 fn sane_budget(v: f64) -> Result<Value, &'static str> {
@@ -111,7 +111,7 @@ impl Limits {
     pub(crate) fn parse(request: &Value) -> Result<Self, String> {
         Ok(Self {
             cwd: text_edit(request, "cwd")?,
-            claude_exe: text_edit(request, "claudeExe")?,
+            claude_exe: text_edit(request, "exePath")?,
             budget_usd: number_edit(request, "budgetUsd", Value::as_f64)?,
             restart_max: number_edit(request, "restartMax", Value::as_u64)?,
             approval_timeout_min: number_edit(request, "approvalTimeoutMin", Value::as_u64)?,
@@ -125,9 +125,12 @@ impl Limits {
     pub(crate) fn fields(&self) -> Result<Vec<(String, Value)>, String> {
         let mut out = Vec::new();
         put(&mut out, "cwd", &self.cwd, |v| existing_folder(v))?;
-        put(&mut out, "claudeExe", &self.claude_exe, |v| {
+        put(&mut out, "exePath", &self.claude_exe, |v| {
             existing_file(v)
         })?;
+        if self.claude_exe != Edit::Keep {
+            out.push(("claudeExe".to_owned(), Value::Null));
+        }
         put(&mut out, "budgetUsd", &self.budget_usd, |v| sane_budget(*v))?;
         put(&mut out, "restartMax", &self.restart_max, |v| {
             sane_restarts(*v)
@@ -142,7 +145,7 @@ impl Limits {
     }
 }
 
-fn entry(value: Value, source: &str) -> Value {
+fn entry(value: &Value, source: &str) -> Value {
     json!({ "value": value, "source": source })
 }
 
@@ -163,13 +166,16 @@ pub(crate) fn body(svc: &Services) -> Value {
     };
     let exe = live.claude_exe.unwrap_or_else(find_exe);
     json!({
-        "cwd": entry(json!(folder.to_string_lossy()), folder_source),
-        "claudeExe": entry(json!(exe.to_string_lossy()), pick(saved.claude_exe)),
-        "budgetUsd": entry(json!(config::budget(svc).budget_usd), pick(saved.budget)),
-        "restartMax": entry(json!(live.restart_max), pick(saved.restart_max)),
+        "cwd": entry(&json!(folder.to_string_lossy()), folder_source),
+        "exePath": entry(&json!(exe.to_string_lossy()), pick(saved.has(Field::ExePath))),
+        "budgetUsd": entry(
+            &json!(config::budget(svc).budget_usd),
+            pick(saved.has(Field::Budget)),
+        ),
+        "restartMax": entry(&json!(live.restart_max), pick(saved.has(Field::RestartMax))),
         "approvalTimeoutMin": entry(
-            json!(live.approval_timeout_min),
-            pick(saved.approval_timeout),
+            &json!(live.approval_timeout_min),
+            pick(saved.has(Field::ApprovalTimeout)),
         ),
     })
 }

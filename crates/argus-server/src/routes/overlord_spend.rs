@@ -5,13 +5,13 @@
 
 use argus_accounts::alerts::local_offset_seconds;
 use argus_core::clock::now_ms;
-use argus_core::{ApiError, ErrorCode};
+use argus_core::ApiError;
 use argus_overlord::ports::SpendLedger;
 use argus_overlord::spend::{left_usd, month_key};
 use serde_json::{Value, json};
 
 use super::blocking::blocking;
-use super::overlord::web_only;
+use super::overlord::{internal, web_only};
 use crate::adapters::overlord::spend::SqlLedger;
 use crate::reply::json_reply;
 use crate::router::Reply;
@@ -21,7 +21,7 @@ use crate::{Ctx, Router};
 const NOTE: &str = "estimate; the Console is the bill";
 
 fn ledger_error() -> ApiError {
-    ApiError::new(ErrorCode::Internal, "the spend ledger failed")
+    internal("the spend ledger failed")
 }
 
 /// The reply body of the spend meter.
