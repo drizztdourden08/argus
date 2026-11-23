@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import type { ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { OverlordState } from '../../data/overlord';
-import type { ChatTab, QueueSectionName } from './OverlordChat.type';
+import type { ChatTab, QueueSectionName, TalkKind } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
 const CHAT_LABEL = 'Overlord chat';
@@ -11,8 +11,32 @@ const NO_KEY_PATTERN = /no .*key/i;
 const KEY_SETTINGS_LABEL = 'Set the key';
 const CHAT_PLACEHOLDER = 'Message the Overlord. It reads as Owner (Argus Overlord tab).';
 const EMPTY_TRANSCRIPT = 'Nothing has been said yet.';
-const TALK_WHO: Readonly<Record<'assistant' | 'owner' | 'wake', string>> = { assistant: 'Overlord', owner: 'Owner', wake: 'Wake' };
-const TALK_ROLE: Readonly<Record<'assistant' | 'owner' | 'wake', ChatTranscriptRole>> = { assistant: 'assistant', owner: 'user', wake: 'system' };
+const TALK_WHO: Readonly<Record<TalkKind, string>> = {
+  assistant: 'Overlord',
+  owner: 'Owner',
+  wake: 'Wake',
+  rule: 'Rule',
+  thinking: 'Overlord',
+  turn: 'Overlord',
+  approval: 'Approval',
+};
+const TALK_ROLE: Readonly<Record<TalkKind, ChatTranscriptRole>> = {
+  assistant: 'assistant',
+  owner: 'user',
+  wake: 'system',
+  rule: 'system',
+  thinking: 'assistant',
+  turn: 'system',
+  approval: 'system',
+};
+const SUMMARY_MAX = 120;
+const SUMMARY_FIELDS = ['command', 'file_path', 'path', 'pattern', 'url', 'query'] as const;
+const THINKING_LABEL = 'Thinking';
+const WAITING_APPROVAL = 'The Overlord is waiting for your approval';
+const QUEUED_NOTE = 'Queued, sent when the current step ends';
+const SENDING_NOTE = 'Sending...';
+const SENT_NOTE = 'Sent';
+const APPROVAL_WORDS: Readonly<Record<string, string>> = { pending: 'waiting for an answer', allowed: 'allowed', denied: 'denied', expired: 'expired' };
 
 const RULES_POLL_MS = 5_000;
 const MIN_EVERY_MIN = 5;
@@ -39,6 +63,14 @@ const OWNER_SPLIT = /\n\n(?=Owner \(Argus Overlord tab\): )/;
 const RUNNING_STATES: readonly OverlordState[] = ['idle', 'turn', 'waiting-approval'];
 
 export {
+  APPROVAL_WORDS,
+  QUEUED_NOTE,
+  SENDING_NOTE,
+  SENT_NOTE,
+  SUMMARY_FIELDS,
+  SUMMARY_MAX,
+  THINKING_LABEL,
+  WAITING_APPROVAL,
   BLANK_DRAFT,
   CHAT_LABEL,
   CHAT_PARAM,

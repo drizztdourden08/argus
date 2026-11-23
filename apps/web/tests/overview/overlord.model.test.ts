@@ -7,7 +7,7 @@ import { STATE_STATUSES } from '../../src/screens/overview/overlord/overlord.con
 
 const assistant = (index: number, content: unknown[]) => ({ index, event: { type: 'assistant', message: { content } } });
 const user = (index: number, content: unknown) => ({ index, event: { type: 'user', message: { content } } });
-const tool = (name: string) => ({ type: 'tool_use', name });
+const tool = (name: string, id = '', input?: unknown) => ({ type: 'tool_use', name, id, input });
 
 describe('O1 the Overlord state words and tones', { tags: ['critical'] }, () => {
   it('has a plain label and a tone for every state', () => {
@@ -42,7 +42,7 @@ describe('O3 transcript rows', { tags: ['critical'] }, () => {
       assistant(3, [{ type: 'text', text: 'Done.' }]),
     ]);
     expect(rows.map((row) => row.kind)).toEqual(['assistant', 'tools', 'assistant']);
-    expect(rows[1]).toMatchObject({ names: ['coord inbox', 'coord board', 'send_message'] });
+    expect(rows[1]).toMatchObject({ tools: [{ name: 'coord inbox' }, { name: 'coord board' }, { name: 'send_message' }] });
   });
 
   it('tells the owner from a wake, also when they arrive joined', () => {
@@ -50,9 +50,46 @@ describe('O3 transcript rows', { tags: ['critical'] }, () => {
     expect(rows).toMatchObject([{ kind: 'wake', text: 'WAKE inbox' }, { kind: 'owner', text: 'stop the build' }]);
   });
 
-  it('hides tool results and unknown lines', () => {
-    const rows = toRows([user(1, [{ type: 'tool_result', content: 'ok' }]), { index: 2, event: 'raw text' }]);
+  it('hides unknown lines and results with no call', () => {
+    const rows = toRows([user(1, [{ type: 'tool_result', tool_use_id: 'x', content: 'ok' }]), { index: 2, event: 'raw text' }]);
     expect(rows).toEqual([]);
+  });
+
+  it('summarises a tool call and marks its result', () => {
+    const rows = toRows([
+      assistant(1, [tool('PowerShell', 't1', { command: 'Get-Date' }), tool('Read', 't2', { file_path: 'a.txt' }), tool('mcp__x__go', 't3', { n: 1, q: 'hello' })]),
+      user(2, [{ type: 'tool_result', tool_use_id: 't1', content: 'ok' }, { type: 'tool_result', tool_use_id: 't2', is_error: true, content: [{ text: 'nope
+more' }] }]),
+    ]);
+    expect(rows[0]).toMatchObject({
+      kind: 'tools',
+      tools: [
+        { summary: 'Get-Date', status: 'done' },
+        { summary: 'a.txt (error: nope)', status: 'failed' },
+        { summary: 'hello', status: 'running' },
+      ],
+    });
+  });
+
+  it('cuts a long command at 120 characters', () => {
+    const rows = toRows([assistant(1, [tool('Bash', 't', { command: 'x'.repeat(300) })])]);
+    expect(rows[0]).toMatchObject({ tools: [{ summary: `${'x'.repeat(119)}...` }] });
+  });
+
+  it('shows thinking, a turn separator and rule lines', () => {
+    const rows = toRows([
+      assistant(1, [{ type: 'thinking', thinking: 'hmm' }]),
+      { index: 2, event: { type: 'result', duration_ms: 2500 } },
+      { index: 3, event: { type: 'user', argus: { source: 'rule' }, message: { content: 'Check the boards' } } },
+    ]);
+    expect(rows).toMatchObject([{ kind: 'thinking', text: 'hmm' }, { kind: 'turn', text: 'Turn finished in 2.5s' }, { kind: 'rule', text: 'Check the boards' }]);
+  });
+
+  it('keeps only the latest approval line per id', () => {
+    const ask = (index: number, status: string) => ({ index, event: { type: 'argus', event: 'approval', id: 'a1', tool: 'PowerShell', summary: 'Get-Date', status, decidedBy: 'owner' } });
+    const rows = toRows([ask(1, 'pending'), ask(2, 'allowed')]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ kind: 'approval', text: 'Asked to run PowerShell: Get-Date, allowed by owner' });
   });
 });
 

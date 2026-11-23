@@ -1,21 +1,29 @@
 /* @layer renderer-app @kind types */
 import type { ReactNode } from 'react';
-import type { ActionState, ApprovalDecision, OverlordApproval, OverlordRule, RuleDraft } from '../../data/overlord';
+import type { ActionState, ApprovalDecision, OverlordApproval, OverlordQueue, OverlordRule, RuleDraft } from '../../data/overlord';
 
 type Editing = OverlordRule | 'new' | null;
 
-type TalkKind = 'assistant' | 'owner' | 'wake';
+type TalkKind = 'assistant' | 'owner' | 'wake' | 'rule' | 'thinking' | 'turn' | 'approval';
 
 interface TalkRow {
   kind: TalkKind;
   key: string;
   text: string;
+  id?: string;
+}
+
+interface ToolItem {
+  id: string;
+  name: string;
+  summary: string;
+  status: 'running' | 'done' | 'failed';
 }
 
 interface ToolsRow {
   kind: 'tools';
   key: string;
-  names: string[];
+  tools: ToolItem[];
 }
 
 type TranscriptRow = TalkRow | ToolsRow;
@@ -24,9 +32,37 @@ interface ContentBlock {
   type?: string;
   text?: string;
   name?: string;
+  id?: string;
+  input?: unknown;
+  thinking?: string;
+  tool_use_id?: string;
+  is_error?: boolean;
+  content?: unknown;
 }
 
-type Piece = Omit<TalkRow, 'key'> | { kind: 'tool'; name: string };
+type Piece =
+  | Omit<TalkRow, 'key'>
+  | { kind: 'tool'; id: string; name: string; summary: string }
+  | { kind: 'result'; id: string; failed: boolean; text: string };
+
+interface QueueFeed {
+  queue?: OverlordQueue | null;
+  problem?: string | null;
+  action: ActionState;
+  reload: () => void;
+  decide: (id: string, decision: ApprovalDecision) => Promise<boolean>;
+}
+
+interface QueueFeedProps {
+  feed: QueueFeed;
+}
+
+interface PendingSend {
+  id: number;
+  text: string;
+  baseline: number;
+  state: 'sending' | 'sent';
+}
 
 interface ChatBoxProps {
   running: boolean;
@@ -87,6 +123,10 @@ interface ChatOpen {
 export type {
   ApprovalLineProps,
   ChatBoxProps,
+  PendingSend,
+  QueueFeed,
+  QueueFeedProps,
+  ToolItem,
   ChatTab,
   Editing,
   QueueLineProps,

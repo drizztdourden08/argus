@@ -10,6 +10,7 @@ const useQueue = () => {
     queue: read.data,
     problem: read.error,
     action,
+    reload: read.reload,
     decide: (id: string, decision: ApprovalDecision) => action.run(() => decideApproval(id, decision)),
   };
 };

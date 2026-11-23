@@ -4,14 +4,14 @@ import { Panel } from '../../Panel';
 import { heldAt } from '../behavior/held-at';
 import { heldText } from '../behavior/held-text';
 import { queueTotal } from '../behavior/queue-total';
-import { useQueue } from '../behavior/useQueue';
 import { QUEUE_EMPTY, QUEUE_TITLES } from '../OverlordChat.constants';
+import type { QueueFeedProps } from '../OverlordChat.type';
 import { ApprovalLine } from './ApprovalLine';
 import { QueueLine } from './QueueLine';
 import { QueueSection } from './QueueSection';
 
-const QueueTab = () => {
-  const { queue, problem, action, decide } = useQueue();
+const QueueTab = (props: QueueFeedProps) => {
+  const { queue, problem, action, decide } = props.feed;
   const failure = problem || action.problem;
   if (!queue) return <Panel title="Queue">{failure && <Callout tone="danger">{failure}</Callout>}</Panel>;
   return (

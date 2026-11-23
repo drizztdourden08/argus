@@ -107,6 +107,14 @@ interface OverlordApproval {
 interface TranscriptEvent {
   type?: string;
   message?: { content?: unknown };
+  duration_ms?: number;
+  argus?: { source?: string };
+  event?: string;
+  id?: string;
+  tool?: string;
+  summary?: string;
+  status?: string;
+  decidedBy?: string;
 }
 
 interface TranscriptLine {
