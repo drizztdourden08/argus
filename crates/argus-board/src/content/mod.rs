@@ -26,6 +26,8 @@ pub struct Context<'a> {
     pub ids: Option<&'a [String]>,
     /// The threads of the board; when set, a person must be one of them.
     pub threads: Option<&'a [String]>,
+    /// The board's item title limit; when unset the registry's own limit holds.
+    pub title_max: Option<usize>,
 }
 
 /// A refusal: a stable key that both implementations agree on, and the message for the user.
@@ -109,11 +111,20 @@ pub(crate) fn within(field: &str, text: &str, max: Option<usize>) -> Result<(), 
     }
 }
 
+/// The longest `field` may be: the board's title limit for a title, else the registry's max.
+fn max_of(field: &str, spec: &Field, cx: &Context<'_>) -> Option<usize> {
+    if field == "title" {
+        cx.title_max.or(spec.max)
+    } else {
+        spec.max
+    }
+}
+
 /// One value of a field that is not a list.
 fn one(field: &str, spec: &Field, value: &Value, cx: &Context<'_>) -> Result<Value, Rejection> {
     let text = || text_of(field, value);
     match spec.content {
-        ContentType::Line => line::check(field, spec, text()?),
+        ContentType::Line => line::check(field, text()?, max_of(field, spec, cx)),
         ContentType::Slug => plain::slug(field, spec, text()?),
         ContentType::Rich => rich::check(field, spec, text()?, cx),
         ContentType::Enum => plain::choice(field, spec, text()?),

@@ -49,6 +49,7 @@ fn signature(e: &Value) -> String {
         get("avatar"),
         get("icon"),
         get("kanban"),
+        get("titleMax"),
     ]);
     parts.to_string()
 }
@@ -62,7 +63,9 @@ fn subject_of(e: &Value) -> Option<String> {
     match named {
         Some(v) => Some(display(v)),
         None => match e["kind"].as_str() {
-            Some(kind @ ("build" | "avatar" | "icon" | "kanban-config")) => Some(kind.to_owned()),
+            Some(kind @ ("build" | "avatar" | "icon" | "kanban-config" | "title-max")) => {
+                Some(kind.to_owned())
+            }
             _ => None,
         },
     }

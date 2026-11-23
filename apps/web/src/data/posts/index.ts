@@ -13,5 +13,6 @@ export { sendDown } from './send-down';
 export { setAvatar } from './set-avatar';
 export { setIcon } from './set-icon';
 export { setProfile } from './set-profile';
+export { setTitleMax } from './set-title-max';
 export { unlinkLauncher } from './unlink-launcher';
 export type * from './posts.type';

@@ -21,7 +21,17 @@ const ICON_MODES: { value: IconMode; label: string }[] = [
   { value: 'upload', label: 'Upload' },
 ];
 
+const TITLE_LIMIT_SAVED = 'The title length limit is saved.';
+
+const TITLE_LIMIT_NOTE = 'Longest item title this board accepts, in characters.';
+
+const TITLE_LIMIT_DEFAULT = 80;
+
+const TITLE_LIMIT_MIN = 20;
+
+const TITLE_LIMIT_MAX = 200;
+
 const ICON_REFUSED = 'Only PNG and SVG';
 const AVATAR_REFUSED = 'Only PNG, JPEG, WebP and GIF';
 
-export { AVATAR_NOTE, AVATAR_REFUSED, AVATAR_SAVED, ICON_REFUSED, ICON_MODES, ICON_NOTE, ICON_PICKER_LABEL, ICON_SAVED, ICON_VALUE_PREFIX, ICON_TYPES };
+export { AVATAR_NOTE, AVATAR_REFUSED, AVATAR_SAVED, ICON_REFUSED, ICON_MODES, ICON_NOTE, ICON_PICKER_LABEL, ICON_SAVED, ICON_VALUE_PREFIX, ICON_TYPES, TITLE_LIMIT_DEFAULT, TITLE_LIMIT_MAX, TITLE_LIMIT_MIN, TITLE_LIMIT_NOTE, TITLE_LIMIT_SAVED };

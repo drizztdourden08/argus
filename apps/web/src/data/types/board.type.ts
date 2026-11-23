@@ -6,6 +6,7 @@ interface BoardMeta {
   palette?: string;
   avatar?: string | null;
   icon?: string | null;
+  titleMax?: number | null;
   owner?: { name?: string; initials?: string; avatar?: string | null };
 }
 

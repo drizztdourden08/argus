@@ -32,6 +32,7 @@ mod result;
 mod soft;
 mod target;
 mod test_run;
+mod title_max;
 mod typed;
 mod who;
 mod worktree;
@@ -94,6 +95,7 @@ fn dispatch(
         "avatar" => avatar::handle(board, op, who),
         "icon" => icon::handle(board, op, who),
         "kanban-config" => kanban_config::handle(board, op, who),
+        "title-max" => title_max::handle(board, op, who),
         "worktree-link" => handed(board, op, who, worktree::handle_link),
         "worktree-keep" => handed(board, op, who, worktree::handle_keep),
         "launcher-link" => handed(board, op, who, launcher::handle_link),

@@ -68,6 +68,7 @@ fn description(r: &Run<'_>) -> Res<String> {
         images: &[],
         ids: None,
         threads: None,
+        title_max: None,
     };
     let checked = check("description", &r.opt("desc"), &cx)?;
     Ok(checked.as_str().unwrap_or_default().to_owned())

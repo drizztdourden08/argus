@@ -33,6 +33,7 @@ pub mod served;
 pub mod store;
 pub mod sync;
 pub mod text;
+pub mod title_limit;
 pub mod trail;
 
 pub use error::BoardError;

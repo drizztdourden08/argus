@@ -165,6 +165,7 @@ fn board_meta(board: &Board, name: &str) -> Value {
         "updatedAt": nn(board, "updatedAt"), "counters": counters,
         "avatar": nn(board, "avatar"),
         "icon": nn(board, "icon"),
+        "titleMax": nn(board, "titleMax"),
     });
     if let Some(owner) = crate::portfolio::export_owner(board) {
         set(&mut meta, "owner", owner);

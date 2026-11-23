@@ -18,4 +18,5 @@ mod portfolio;
 mod portfolio_boards;
 mod prs;
 mod served;
+mod title_limit;
 mod typed;

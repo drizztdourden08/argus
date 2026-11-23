@@ -10,6 +10,7 @@ pub(crate) struct Known {
     ids: Vec<String>,
     threads: Vec<String>,
     images: Vec<u32>,
+    title_max: Option<usize>,
 }
 
 impl Known {
@@ -19,6 +20,7 @@ impl Known {
             ids: live_ids(board),
             threads: ids(board, "threads"),
             images,
+            title_max: crate::title_limit::of(board),
         }
     }
 
@@ -28,6 +30,7 @@ impl Known {
             images: self.images.as_slice(),
             ids: Some(self.ids.as_slice()),
             threads: Some(self.threads.as_slice()),
+            title_max: self.title_max,
         }
     }
 }

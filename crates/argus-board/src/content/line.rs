@@ -4,11 +4,11 @@ use argus_core::js;
 use serde_json::Value;
 
 use super::{Rejection, reject, within};
-use crate::registry::{Field, registry};
+use crate::registry::registry;
 
 /// The trimmed line, refused when it breaks over lines, opens with Markdown block syntax or is
-/// over the field's max.
-pub(super) fn check(field: &str, spec: &Field, text: &str) -> Result<Value, Rejection> {
+/// over `max`.
+pub(super) fn check(field: &str, text: &str, max: Option<usize>) -> Result<Value, Rejection> {
     let kind = &registry().content.line;
     let text = js::trim(text);
     if !kind.newlines && text.contains(['\n', '\r']) {
@@ -22,6 +22,6 @@ pub(super) fn check(field: &str, spec: &Field, text: &str) -> Result<Value, Reje
             ),
         ));
     }
-    within(field, text, spec.max)?;
+    within(field, text, max)?;
     Ok(Value::String(text.to_owned()))
 }

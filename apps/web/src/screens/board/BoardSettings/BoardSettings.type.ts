@@ -46,4 +46,13 @@ interface IconChoice extends AvatarChoice {
   pickIcon: (name: BoardIconName) => Promise<void>;
 }
 
-export type { AvatarChoice, BoardSettingsButtonProps, BoardSettingsDialogProps, IconChoice, IconMode, SectionProps, SettingSave, SettingSaveOptions };
+interface TitleLimitChoice {
+  value: number;
+  busy: boolean;
+  problem: string | null;
+  changed: boolean;
+  setValue: (value: number) => void;
+  commit: () => Promise<void>;
+}
+
+export type { AvatarChoice, BoardSettingsButtonProps, BoardSettingsDialogProps, IconChoice, IconMode, SectionProps, SettingSave, SettingSaveOptions, TitleLimitChoice };

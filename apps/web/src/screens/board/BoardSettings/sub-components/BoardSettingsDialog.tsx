@@ -4,6 +4,7 @@ import { ColumnsRulesSection } from '../../tabs/kanban';
 import type { BoardSettingsDialogProps } from '../BoardSettings.type';
 import { AvatarSection } from './AvatarSection';
 import { IconSection } from './IconSection';
+import { TitleLimitSection } from './TitleLimitSection';
 
 const BoardSettingsDialog = (props: BoardSettingsDialogProps) => {
   const { boardKey, onClose } = props;
@@ -20,6 +21,8 @@ const BoardSettingsDialog = (props: BoardSettingsDialogProps) => {
         <IconSection boardKey={boardKey} />
         <Divider />
         <AvatarSection boardKey={boardKey} />
+        <Divider />
+        <TitleLimitSection boardKey={boardKey} />
         <Divider />
         <ColumnsRulesSection boardKey={boardKey} />
       </Flex>
