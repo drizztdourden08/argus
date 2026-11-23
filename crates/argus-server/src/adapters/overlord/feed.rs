@@ -6,12 +6,15 @@ use std::sync::Arc;
 
 use crate::sse::Hub;
 
-/// One stored line: `index` is the number of lines the file holds with it (1 for the first).
+/// One line for the streams: `index` is the number of lines the file holds with it (1 for the
+/// first). A line that is not `stored` is only for the pages open now (a partial message): its
+/// `index` is the stored count at that moment and it never moves a stream's cursor.
 #[derive(Debug, Clone)]
 pub struct FedLine {
     pub session: String,
     pub index: usize,
     pub line: String,
+    pub stored: bool,
 }
 
 /// The hub between the supervisor's stored lines and the transcript streams.

@@ -1,7 +1,8 @@
 //! The live child's transcript, written as it happens: every stdout line, every message written to
 //! its stdin and every approval change, one redacted line each, into `transcript-<session>.jsonl`.
 //! The session id comes from the `init` event (a resumed session is known up front), so lines that
-//! come first are held and written once it is known.
+//! come first are held and written once it is known. A `stream_event` (a partial message of the
+//! live thinking) goes to the open pages only: the whole event that follows is what is stored.
 
 use std::path::Path;
 use std::sync::{Arc, Mutex, PoisonError};
@@ -14,6 +15,7 @@ use argus_overlord::protocol::{Event as Wire, decode_line};
 use argus_overlord::transcript::Transcript;
 use serde_json::{Value, json};
 
+use crate::adapters::overlord::feed::{FedLine, TranscriptFeed};
 use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::transcript::FileTranscripts;
 
@@ -24,23 +26,33 @@ const HELD_MAX: usize = 500;
 struct Cursor {
     session: Option<String>,
     held: Vec<String>,
+    /// The lines the session file holds, read once when first needed.
+    stored: Option<usize>,
 }
 
 /// Writes the lines of one live child into its session's transcript.
 pub(super) struct Recorder<S> {
     transcript: Transcript<S>,
     cursor: Mutex<Cursor>,
+    feed: Option<Arc<TranscriptFeed>>,
 }
 
 impl<S: TranscriptStore> Recorder<S> {
     /// A recorder that hides `key`; `session` is the resumed session, when the child has one.
-    pub(super) fn new(store: S, key: &ApiKey, session: Option<String>) -> Self {
+    /// Every line it handles is also told to `feed`, for the pages open now.
+    pub(super) fn new(
+        store: S,
+        key: &ApiKey,
+        session: Option<String>,
+        feed: Option<Arc<TranscriptFeed>>,
+    ) -> Self {
         Self {
             transcript: Transcript::new(store, key),
             cursor: Mutex::new(Cursor {
                 session,
-                held: Vec::new(),
+                ..Cursor::default()
             }),
+            feed,
         }
     }
 
@@ -57,9 +69,14 @@ impl<S: TranscriptStore> Recorder<S> {
         let stamped = stamped(raw, &now_iso());
         let raw = stamped.as_str();
         let mut cursor = self.cursor.lock().unwrap_or_else(PoisonError::into_inner);
+        let partial = is_stream_event(raw);
         if let Some(session) = cursor.session.clone() {
-            let _ = self.transcript.record(&session, raw);
-        } else {
+            if partial {
+                self.tell(&mut cursor, &session, raw, false);
+            } else {
+                self.store(&mut cursor, &session, raw);
+            }
+        } else if !partial {
             if cursor.held.len() == HELD_MAX {
                 cursor.held.remove(0);
             }
@@ -70,10 +87,43 @@ impl<S: TranscriptStore> Recorder<S> {
     fn open(&self, session: &str) {
         let mut cursor = self.cursor.lock().unwrap_or_else(PoisonError::into_inner);
         cursor.session = Some(session.to_owned());
+        cursor.stored = None;
         for raw in std::mem::take(&mut cursor.held) {
-            let _ = self.transcript.record(session, &raw);
+            self.store(&mut cursor, session, &raw);
         }
     }
+
+    fn store(&self, cursor: &mut Cursor, session: &str, raw: &str) {
+        let count = self.count(cursor, session);
+        if self.transcript.record(session, raw).is_ok() {
+            cursor.stored = Some(count + 1);
+            self.tell(cursor, session, raw, true);
+        }
+    }
+
+    fn count(&self, cursor: &mut Cursor, session: &str) -> usize {
+        *cursor.stored.get_or_insert_with(|| {
+            self.transcript
+                .read_after(session, 0)
+                .map_or(0, |page| page.next)
+        })
+    }
+
+    fn tell(&self, cursor: &mut Cursor, session: &str, raw: &str, stored: bool) {
+        let Some(feed) = &self.feed else { return };
+        feed.publish(&FedLine {
+            session: session.to_owned(),
+            index: self.count(cursor, session),
+            line: self.transcript.redact(raw),
+            stored,
+        });
+    }
+}
+
+/// Whether the line is a partial message of the stream (`--include-partial-messages`).
+fn is_stream_event(raw: &str) -> bool {
+    serde_json::from_str::<Value>(raw)
+        .is_ok_and(|value| value.get("type").and_then(Value::as_str) == Some("stream_event"))
 }
 
 /// The line with the time it arrived in `argusAt`, so the chat can show it. A line that is not a
@@ -94,6 +144,7 @@ pub(super) fn open(
     home: &Path,
     log: &Logger,
     resumed: Option<String>,
+    feed: &Arc<TranscriptFeed>,
 ) -> Option<Arc<Recorder<FileTranscripts>>> {
     let Ok(Some(key)) = DpapiKeyStore::new(home).load() else {
         log.warn(
@@ -106,6 +157,7 @@ pub(super) fn open(
         FileTranscripts::new(home),
         &key,
         resumed,
+        Some(Arc::clone(feed)),
     )))
 }
 
@@ -145,7 +197,7 @@ mod tests {
     #[test]
     fn lines_before_the_init_are_held_then_written_in_order() {
         let store = Memory::default();
-        let recorder = Recorder::new(store.clone(), &ApiKey::new(KEY), None);
+        let recorder = Recorder::new(store.clone(), &ApiKey::new(KEY), None, None);
         recorder.add(r#"{"type":"user","n":1}"#);
         assert_eq!(store.0.lock().unwrap().len(), 0);
         recorder.line(INIT);
@@ -160,11 +212,48 @@ mod tests {
     #[test]
     fn a_resumed_session_is_written_at_once_and_the_key_is_hidden() {
         let store = Memory::default();
-        let recorder = Recorder::new(store.clone(), &ApiKey::new(KEY), Some("s9".to_owned()));
+        let recorder = Recorder::new(
+            store.clone(),
+            &ApiKey::new(KEY),
+            Some("s9".to_owned()),
+            None,
+        );
         recorder.add(&format!(r#"{{"type":"user","text":"{KEY}"}}"#));
         let got = lines(&store, "s9");
         assert_eq!(got.len(), 1);
         assert!(!got[0].contains("SECRETSECRET"));
+    }
+
+    // test-tag: critical
+    #[test]
+    fn a_stream_event_reaches_the_pages_and_is_not_stored() {
+        let store = Memory::default();
+        let feed = Arc::new(TranscriptFeed::default());
+        let heard: Arc<Mutex<Vec<FedLine>>> = Arc::default();
+        let sink = Arc::clone(&heard);
+        let _listening = feed.listen(move |fed| sink.lock().unwrap().push(fed.clone()));
+        let recorder = Recorder::new(
+            store.clone(),
+            &ApiKey::new(KEY),
+            Some("s9".to_owned()),
+            Some(Arc::clone(&feed)),
+        );
+        recorder.add(r#"{"type":"user","n":1}"#);
+        recorder.add(&format!(
+            r#"{{"type":"stream_event","event":{{"delta":{{"thinking":"{KEY}"}}}}}}"#
+        ));
+        recorder.add(r#"{"type":"assistant","n":2}"#);
+        let got = lines(&store, "s9");
+        assert_eq!(got.len(), 2);
+        assert!(!got.iter().any(|line| line.contains("stream_event")));
+        let heard = heard.lock().unwrap();
+        assert_eq!(heard.len(), 3);
+        assert!(heard[1].line.contains("stream_event"));
+        assert!(!heard[1].line.contains("SECRETSECRET"));
+        assert!(!heard[1].stored);
+        assert_eq!(heard[1].index, 1);
+        assert!(heard[2].stored);
+        assert_eq!(heard[2].index, 2);
     }
 
     #[test]

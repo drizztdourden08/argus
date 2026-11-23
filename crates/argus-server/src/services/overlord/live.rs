@@ -299,7 +299,7 @@ fn live_observer(
         unproven: AtomicBool::new(unproven),
         coord_home: svc.paths.coord_home.clone(),
         gate: Arc::clone(&svc.overlord_approvals),
-        recorder: open_recorder(&svc.paths.home, &svc.log, resumed),
+        recorder: open_recorder(&svc.paths.home, &svc.log, resumed, &svc.overlord_feed),
     }
 }
 

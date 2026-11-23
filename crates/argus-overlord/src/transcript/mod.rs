@@ -46,6 +46,12 @@ impl<S: TranscriptStore> Transcript<S> {
         Ok(stored)
     }
 
+    /// One raw event line with the key hidden, as `record` would store it, without storing it.
+    #[must_use]
+    pub fn redact(&self, raw: &str) -> String {
+        redacted_line(&self.redactor, raw)
+    }
+
     /// The lines of a session after the first `after`.
     ///
     /// # Errors

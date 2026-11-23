@@ -86,11 +86,13 @@ async fn the_stream_replays_then_follows_the_feed() {
         session: "other".to_owned(),
         index: 1,
         line: "{}".to_owned(),
+        stored: true,
     });
     t.svc.overlord_feed.publish(&FedLine {
         session: "s1".to_owned(),
         index: 3,
         line: json!({ "n": 2 }).to_string(),
+        stored: true,
     });
     let live = stream
         .next(Some("line"), 5000)

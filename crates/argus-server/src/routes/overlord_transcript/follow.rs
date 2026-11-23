@@ -44,10 +44,22 @@ impl Follow {
             return;
         }
         state.cursor = index;
+        self.send(index, line, i64::try_from(index).ok());
+    }
+
+    fn send(&self, index: usize, line: &str, id: Option<i64>) {
         let event: Value =
             serde_json::from_str(line).unwrap_or_else(|_| Value::String(line.to_owned()));
         let data = json!({ "session": self.session, "index": index, "event": event });
-        let _ = self.sender.event("line", &data, i64::try_from(index).ok());
+        let _ = self.sender.event("line", &data, id);
+    }
+
+    fn emit_fed(&self, state: &mut State, fed: &FedLine) {
+        if fed.stored {
+            self.emit(state, fed.index, &fed.line);
+        } else {
+            self.send(state.cursor, &fed.line, None);
+        }
     }
 
     /// A line the feed published: sent now, or kept until the replay is over.
@@ -59,7 +71,7 @@ impl Follow {
         if state.replaying {
             state.waiting.push(fed.clone());
         } else {
-            self.emit(&mut state, fed.index, &fed.line);
+            self.emit_fed(&mut state, fed);
         }
     }
 
@@ -71,7 +83,7 @@ impl Follow {
             self.emit(&mut state, first + i + 1, line);
         }
         for fed in std::mem::take(&mut state.waiting) {
-            self.emit(&mut state, fed.index, &fed.line);
+            self.emit_fed(&mut state, &fed);
         }
         state.replaying = false;
     }
