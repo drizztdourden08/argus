@@ -1,11 +1,10 @@
 /* @layer renderer-app @kind logic */
-import type { BoardWork } from '../../feed-model';
 import type { Option } from '../../shared';
+import type { AskFeedCard } from './ask.type';
 import { cardFacts } from './card-facts';
 
-const feedAuthors = (work: BoardWork): Option[] => {
-  const cards = [...work.waiting, ...work.leads, ...work.notices].map((card) => cardFacts(card).thread ?? '');
-  const names = new Set([...cards, ...work.lines.map((line) => line.thread)]);
+const feedAuthors = (cards: readonly AskFeedCard[]): Option[] => {
+  const names = new Set(cards.map((card) => cardFacts(card).thread ?? ''));
   return [...names].filter((name) => name !== '').sort().map((name) => ({ value: name, label: name }));
 };
 

@@ -4,4 +4,6 @@ import type { AskFeedCard } from './ask.type';
 
 const isAskCard = (card: FeedCard): card is AskFeedCard => card.type === 'decision' || card.type === 'question' || card.type === 'message';
 
-export { isAskCard };
+const askCards = (cards: readonly FeedCard[]): AskFeedCard[] => cards.filter(isAskCard);
+
+export { askCards };

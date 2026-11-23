@@ -1,35 +1,29 @@
 /* @layer renderer-app @kind component */
-import { SegmentedControl } from '@drizztdourden08/tessera';
+import { EmptyState } from '@drizztdourden08/tessera';
 import { Panel } from '../../../shell';
 import type { ThreadChoice } from '../../../data/kanban';
 import { useCollection } from '../../../data/react';
 import { TabFilterBar, TabGroupSort, useTabTools, useTabView } from '../BoardTabsRow';
 import { useNow } from '../shared';
 import { useFeedActions } from './behavior/useFeedActions';
-import { useFeedFilter } from './behavior/useFeedFilter';
+import { askCards } from './behavior/ask-cards';
 import { feedAuthors } from './behavior/feed-authors';
 import { feedFields } from './behavior/feed-fields';
 import { applyFeedFilters } from './behavior/feed-filters';
-import { FEED_SORT_OPTIONS, FEED_VIEW, FEED_VIEW_LABEL, FILTER_OPTIONS } from './OwnerFeed.constants';
+import { FEED_SORT_OPTIONS, FEED_VIEW } from './OwnerFeed.constants';
 import type { OwnerFeedProps } from './OwnerFeed.type';
-import { FeedSections } from './sub-components/FeedSections';
+import { AskGroup } from './sub-components/AskGroup';
 
 const OwnerFeed = (props: OwnerFeedProps) => {
   const { boardKey, work } = props;
   const actions = useFeedActions(boardKey);
   const threads = useCollection<ThreadChoice>(boardKey, 'threads');
   const now = useNow(true);
-  const [filter, setFilter] = useFeedFilter();
   const view = useTabView('activity', FEED_VIEW);
-  const shown = applyFeedFilters(work, view.filters, view.direction);
-  const count = work.waiting.length;
+  const asks = askCards(work.waiting);
+  const shown = applyFeedFilters(asks, view.filters, view.direction);
   const ctx = { boardKey, threads: threads.docs, now, index: work.index, actions };
   useTabTools('activity', [
-    {
-      id: 'view',
-      priority: 4,
-      node: <SegmentedControl selectedTone="neutral" size="sm" aria-label={FEED_VIEW_LABEL} value={filter} options={FILTER_OPTIONS} onChange={setFilter} />,
-    },
     {
       id: 'sort',
       priority: 5,
@@ -37,16 +31,16 @@ const OwnerFeed = (props: OwnerFeedProps) => {
     },
   ]);
   return (
-    <Panel title="Activity" note={count > 0 ? `${count} waiting on you` : undefined}>
+    <Panel title="Activity" note={asks.length > 0 ? `${asks.length} waiting on you` : undefined}>
       <TabFilterBar
         tab="activity"
         boardKey={boardKey}
-        fields={feedFields(feedAuthors(work))}
+        fields={feedFields(feedAuthors(asks))}
         filters={view.filters}
         patchFilters={view.patchFilters}
-        placeholder="Search the activity"
+        placeholder="Search the questions and decisions"
       />
-      <FeedSections filter={filter} work={shown} ctx={ctx} />
+      {shown.length === 0 ? <EmptyState message="No questions or decisions waiting." size="sm" /> : <AskGroup cards={shown} ctx={ctx} />}
     </Panel>
   );
 };

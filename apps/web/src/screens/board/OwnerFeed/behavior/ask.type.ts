@@ -19,7 +19,6 @@ interface AskCopy {
 }
 
 interface AskGroupProps {
-  heading: string;
   cards: AskFeedCard[];
   ctx: FeedContext;
 }

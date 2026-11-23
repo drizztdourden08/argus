@@ -1,9 +1,6 @@
 /* @layer renderer-app @kind logic */
-import type { FeedCard } from '../../feed-model';
+import type { AskFeedCard } from './ask.type';
 
-const feedKind = (card: FeedCard): string => {
-  if (card.type === 'question' || card.type === 'decision' || card.type === 'notice') return card.type;
-  return card.type === 'test' || card.type === 'run' ? 'test' : 'note';
-};
+const feedKind = (card: AskFeedCard): string => (card.type === 'question' || card.type === 'decision' ? card.type : 'note');
 
 export { feedKind };

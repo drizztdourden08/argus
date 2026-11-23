@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
-import { RecordHead, useRecordPane } from '../../../../shell';
+import { Text, Tooltip } from '@drizztdourden08/tessera';
+import { Age, RecordHead, useRecordPane } from '../../../../shell';
 import { askMode } from '../../feed-model';
 import { askLines } from '../behavior/ask-lines';
 import { cardFacts } from '../behavior/card-facts';
@@ -16,15 +16,22 @@ const AskCard = (props: AskCardProps) => {
   const pane = useRecordPane();
   const facts = cardFacts(card);
   const lines = askLines(entry.text);
-  const title = <Text weight={500} clamp={1}>{lines.title}</Text>;
+  const title = (
+    <Tooltip content={lines.title}>
+      <Text weight={500} clamp={1}>{lines.title}</Text>
+    </Tooltip>
+  );
+  const time = <Text as="span" variant="caption" tone="muted"><Age value={entry.createdAt} /></Text>;
   return (
     <RecordHead
-      {...feedHead(card, facts, ctx, () => pane.open(facts.code))}
+      {...feedHead(facts, ctx, () => pane.open(facts.code))}
       title={title}
+      content={time}
+      density="row"
       defaultOpen
       edge="left"
       edgeTone="warning"
-      attrs={{ 'data-feed-type': card.type, 'data-swap-item': '', 'data-record': facts.code }}
+      attrs={{ role: 'listitem', 'data-feed-type': card.type, 'data-swap-item': '', 'data-record': facts.code }}
     >
       <ContextPreview entry={entry} actions={ctx.actions} onMore={() => pane.open(entry.id)} />
       {lines.rest === '' ? null : <Text smartTimes>{lines.rest}</Text>}
