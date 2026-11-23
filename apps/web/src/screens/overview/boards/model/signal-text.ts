@@ -1,17 +1,22 @@
 /* @layer renderer-app @kind logic */
 import type { SignalId } from './board.type';
 
-const signalText = (id: SignalId, count: number): string => {
-  switch (id) {
-    case 'needs-you': return count === 1 ? '1 needs you' : `${count} need you`;
-    case 'failing': return count === 1 ? '1 failing test' : `${count} failing tests`;
-    case 'blocked': return `${count} blocked`;
-    case 'stalled': return `${count} stalled`;
-    case 'sync-due': return 'Sync due';
-    case 'master-missing': return 'Master missing';
-    case 'paused': return `${count} paused`;
-    case 'archived': return 'Archived';
-  }
+const plural = (count: number, one: string, many: string): string => (count === 1 ? one : many);
+
+const COUNTED: Partial<Record<SignalId, (count: number) => string>> = {
+  'needs-you': (count) => plural(count, '1 needs you', `${count} need you`),
+  failing: (count) => plural(count, '1 failing test', `${count} failing tests`),
+  blocked: (count) => `${count} blocked`,
+  stalled: (count) => `${count} stalled`,
+  paused: (count) => `${count} paused`,
 };
+
+const FIXED: Partial<Record<SignalId, string>> = {
+  'sync-due': 'Sync due',
+  'master-missing': 'Master missing',
+  archived: 'Archived',
+};
+
+const signalText = (id: SignalId, count: number): string => FIXED[id] ?? COUNTED[id]?.(count) ?? '';
 
 export { signalText };

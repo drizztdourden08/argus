@@ -1,13 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { StatusTone } from '@drizztdourden08/tessera';
 import type { SignalTone } from './model';
-
-type UrgencyColor = 'danger' | 'warning';
-
-interface LeadWords {
-  text: string;
-  tone: StatusTone;
-}
+import type { LeadWords, UrgencyColor } from './boards.type';
 
 const SIGNAL_URGENCY: Readonly<Partial<Record<SignalTone, UrgencyColor>>> = {
   bad: 'danger',
@@ -25,5 +18,4 @@ const MS_PER_DAY = 86_400_000;
 
 const NEEDS_BOARD: readonly string[] = ['open', 'send', 'play', 'stop'];
 
-export type { LeadWords };
 export { LEAD_WORDS, MS_PER_DAY, NEEDS_BOARD, SIGNAL_URGENCY };

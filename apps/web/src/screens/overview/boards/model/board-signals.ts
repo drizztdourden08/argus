@@ -1,9 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { NO_LIVE } from './board-signals.constants';
 import { signalText } from './signal-text';
+import type { Raw } from './board-signals.type';
 import type { BoardLive, BoardRecord, BoardSignal } from './board.type';
-
-type Raw = Omit<BoardSignal, 'text'>;
 
 const withText = (raw: Raw): BoardSignal => ({ ...raw, text: signalText(raw.id, raw.count) });
 

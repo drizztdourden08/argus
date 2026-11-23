@@ -2,7 +2,7 @@
 import { formatAgo } from '../../../../format';
 import type { Card } from '../../../../data/types';
 import { LEAD_WORDS } from '../boards.constants';
-import type { LeadWords } from '../boards.constants';
+import type { LeadWords } from '../boards.type';
 import type { BoardLive, BoardRecord } from '../model';
 
 const leadLine = (record: BoardRecord, live: BoardLive, card: Card | null, now: number): LeadWords => {

@@ -1,10 +1,17 @@
 /* @layer renderer-app @kind types */
+import type { StatusTone } from '@drizztdourden08/tessera';
 import type { RefObject } from 'react';
 import type { RemoteSync } from '../../../data/remote';
 import type { RunRow } from '../../../data/runs';
 import type { Card } from '../../../data/types';
-import type { LeadWords } from './boards.constants';
 import type { BoardActionId, BoardLive, BoardProgress, BoardRecord, BoardSignal, MasterLine, SendKind, SentItem } from './model';
+
+type UrgencyColor = 'danger' | 'warning';
+
+interface LeadWords {
+  text: string;
+  tone: StatusTone;
+}
 
 type LogOpener = (key: string, run: RunRow) => void;
 
@@ -110,5 +117,5 @@ interface SentRowProps {
 }
 
 export type {
-  BoardActions, BoardBodyProps, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardLeadProps, BoardPlayProps, BoardProgressProps, BoardSignalsProps, LogOpener, LogTarget, MasterRun, MasterStatusProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps,
+  BoardActions, BoardBodyProps, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardLeadProps, BoardPlayProps, BoardProgressProps, BoardSignalsProps, LeadWords, LogOpener, LogTarget, MasterRun, MasterStatusProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps, UrgencyColor,
 };

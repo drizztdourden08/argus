@@ -3,11 +3,7 @@ import type { RemoteSync } from '../../../../data/remote';
 import { formatAgo, toMillis } from '../../../../format';
 import { syncTone } from '../../../../shell/SyncStamp/behavior/sync-tone';
 import { MS_PER_DAY } from '../boards.constants';
-
-interface SyncWords {
-  text: string;
-  tone: 'muted' | 'danger';
-}
+import type { SyncWords } from './sync-words.type';
 
 const syncWords = (sync: RemoteSync | null, now: number): SyncWords => {
   if (!sync) return { text: 'Never synced', tone: 'muted' };
