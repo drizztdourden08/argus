@@ -1,10 +1,9 @@
 // test-tag: critical
 //! The approvals of the hosted Overlord over HTTP: the private endpoint answers only the bearer of
-//! the running child (K4), a held call waits for the owner and gets the documented reply (K2), and
+//! the running child (K4), every call is allowed at once with no toast (zero approvals), and
 //! the tab's routes list and decide (S2). The toast goes to a recording notifier.
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use argus_native::Notifier;
 use argus_overlord::approvals::Prompt;
@@ -56,26 +55,6 @@ fn reply_of(body: &Value) -> Value {
     serde_json::from_str(text).expect("reply json")
 }
 
-async fn answer_when_pending(t: &TestServer, decision: &Value) {
-    loop {
-        let list = t
-            .send(t.page(Request::new("GET", "/api/overlord/approvals")))
-            .await;
-        let pending = list.json()["approvals"]
-            .as_array()
-            .and_then(|a| a.iter().find(|x| x["status"] == "pending").cloned());
-        if let Some(item) = pending {
-            let path = format!("/api/overlord/approvals/{}", item["id"].as_str().unwrap());
-            let sent = t
-                .send(t.page(Request::new("POST", &path).json(decision)))
-                .await;
-            assert_eq!(sent.status, 200, "{}", sent.text());
-            return;
-        }
-        tokio::time::sleep(Duration::from_millis(20)).await;
-    }
-}
-
 #[tokio::test(flavor = "multi_thread")]
 async fn a_call_without_the_childs_bearer_is_401() {
     let toasts = Arc::new(Toasts::default());
@@ -122,43 +101,24 @@ async fn the_config_file_is_gone_when_the_child_ends() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn approve_lets_the_call_run_and_the_toast_links_the_tab() {
+async fn every_call_is_allowed_at_once_and_no_toast_is_sent() {
     let toasts = Arc::new(Toasts::default());
     let t = start(&toasts).await;
     let (header, _dir) = begin(&t);
     let input = json!({ "command": "git push" });
-    let held = t.send(rpc(&call("Bash", &input)).header("Authorization", &header));
-    let yes = json!({ "decision": "allow" });
-    let (reply, ()) = tokio::join!(held, answer_when_pending(&t, &yes));
+    let reply = t
+        .send(rpc(&call("Bash", &input)).header("Authorization", &header))
+        .await;
     assert_eq!(reply.status, 200, "{}", reply.text());
     assert_eq!(
         reply_of(&reply.json()),
         json!({ "behavior": "allow", "updatedInput": { "command": "git push" } })
     );
-    let toast = toasts.last();
-    assert!(toast.text.contains("git push"));
-    assert!(toast.url.unwrap().contains("tab=overlord&approval=ap-"));
-    t.stop(false).await;
-}
-
-#[tokio::test(flavor = "multi_thread")]
-async fn deny_returns_the_owners_message() {
-    let toasts = Arc::new(Toasts::default());
-    let t = start(&toasts).await;
-    let (header, _dir) = begin(&t);
-    let held =
-        t.send(rpc(&call("Bash", &json!({ "command": "rm x" }))).header("Authorization", &header));
-    let no = json!({ "decision": "deny", "message": "not today" });
-    let (reply, ()) = tokio::join!(held, answer_when_pending(&t, &no));
     assert_eq!(
-        reply_of(&reply.json()),
-        json!({ "behavior": "deny", "message": "not today" })
+        toasts.count(),
+        0,
+        "zero approvals: the owner is never asked"
     );
-    let list = t
-        .send(t.page(Request::new("GET", "/api/overlord/approvals")))
-        .await;
-    assert_eq!(list.json()["approvals"][0]["status"], json!("denied"));
-    assert_eq!(list.json()["approvals"][0]["decidedBy"], json!("owner"));
     t.stop(false).await;
 }
 

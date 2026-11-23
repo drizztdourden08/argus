@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Portal } from '@drizztdourden08/tessera';
+import { Box, Portal } from '@drizztdourden08/tessera';
 import { useLayoutEffect, useRef } from 'react';
 import { useChatOpen } from '../../OverlordChat';
 import { HEADER_MARK_SELECTOR } from '../OverlordPresence.constants';
@@ -7,7 +7,7 @@ import { OverlordPresence } from '../OverlordPresence';
 
 const PresenceOverDrawer = () => {
   const { open } = useChatOpen();
-  const box = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const rect = document.querySelector(HEADER_MARK_SELECTOR)?.getBoundingClientRect();
     if (!open || !rect || !box.current) return;
@@ -17,9 +17,9 @@ const PresenceOverDrawer = () => {
   if (!open) return null;
   return (
     <Portal layer="popover">
-      <div ref={box} className="overlord-presence-float">
+      <Box ref={box} className="overlord-presence-float">
         <OverlordPresence />
-      </div>
+      </Box>
     </Portal>
   );
 };

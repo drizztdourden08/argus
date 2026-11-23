@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Drawer } from '@drizztdourden08/tessera';
+import { Box, Drawer } from '@drizztdourden08/tessera';
 import { useChatOpen } from './behavior/useChatOpen';
 import { CHAT_LABEL } from './OverlordChat.constants';
 import { ChatControls } from './sub-components/ChatControls';
@@ -17,7 +17,7 @@ const OverlordChat = () => {
       stackNarrow
       size="wide"
       label={CHAT_LABEL}
-      title={<span className="overlord-chat__mask-gap" aria-hidden />}
+      title={<Box className="overlord-chat__mask-gap" aria-hidden />}
       headerActions={<ChatControls />}
     >
       {open && <ChatTabs />}
