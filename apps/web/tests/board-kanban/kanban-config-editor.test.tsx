@@ -28,7 +28,7 @@ describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
   it('sends null for the default', async () => {
     const view = await mountKanban();
     const dialog = await openSettings();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Use the default' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Use the default columns and rules' }));
     await waitFor(() => expect(sentConfig(view.posted)).toBeTruthy());
     expect(sentConfig(view.posted)?.body.kanban).toBeNull();
   });

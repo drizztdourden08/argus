@@ -44,7 +44,7 @@ const ColumnsRulesSection = (props: ConfigSectionProps) => {
       <Flex gap="sm">
         <Button size="sm" variant="primary" disabled={busy || !editor.dirty} onClick={() => void editor.save()}>Save the columns and rules</Button>
         <Button size="sm" variant="ghost" disabled={busy || !editor.dirty} onClick={editor.discard}>Discard changes</Button>
-        <Button size="sm" variant="secondary" disabled={busy} onClick={() => void editor.useDefault()}>Use the default</Button>
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => void editor.useDefault()}>Use the default columns and rules</Button>
       </Flex>
     </Flex>
   );
