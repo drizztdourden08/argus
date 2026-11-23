@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Tag, Text, Tooltip } from '@drizztdourden08/tessera';
-import { RecordCard, recordMenuGroups, ShownCode } from '../../../../../shell';
-import { agentHandlers } from '../behavior/agent-handlers';
+import { RecordCard, ShownCode } from '../../../../../shell';
+import { agentHead } from '../behavior/agent-head';
 import { agentChips, agentItems, agentMarks, agentName, isActive } from '../model';
 import type { AgentCardProps } from '../row-props.type';
 import { AgentNow } from './AgentNow';
@@ -9,20 +9,12 @@ import { AgentStatusTag } from './AgentStatusTag';
 import { AgentStopButton } from './AgentStopButton';
 
 const AgentCard = (props: AgentCardProps) => {
-  const { boardKey, id, agent, threads, now, actions, onOpen } = props;
+  const { boardKey, id, agent, now, actions, onOpen } = props;
   const name = agentName(agent, id);
   const stale = agentMarks(agent, now).filter((mark) => mark.id === 'stale');
   return (
     <RecordCard
-      head={{
-        kind: 'agent',
-        code: id,
-        assignee: agent.thread ?? '',
-        boardKey,
-        threads,
-        menu: recordMenuGroups('agent', id, agentHandlers(id, agent, actions, onOpen)),
-        menuLabel: `More actions for ${id}`,
-      }}
+      head={agentHead(props)}
       title={name}
       clamp={1}
       openLabel={`Open ${id}: ${name}`}
