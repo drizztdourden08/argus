@@ -23,7 +23,7 @@ import { SelectionBar } from './sub-components/SelectionBar';
 const KanbanTab = (props: KanbanTabProps) => {
   const { boardKey, trash, onTrashBack, onPurge } = props;
   const data = useKanbanData(boardKey);
-  const state = useKanbanState();
+  const state = useKanbanState(boardKey);
   const focus = useFocusState(boardKey);
   const now = useNow();
   const ops = useItemOps(boardKey);
