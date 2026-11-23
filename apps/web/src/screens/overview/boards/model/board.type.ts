@@ -76,9 +76,9 @@ interface BoardLive {
   syncDue: boolean;
 }
 
-type SignalId = 'needs-you' | 'running' | 'failing' | 'blocked' | 'stalled' | 'fault' | 'sync-due' | 'master-missing' | 'paused' | 'archived';
+type SignalId = 'needs-you' | 'failing' | 'blocked' | 'stalled' | 'sync-due' | 'master-missing' | 'paused' | 'archived';
 
-type SignalTone = 'bad' | 'warn' | 'good' | 'neutral' | 'muted';
+type SignalTone = 'bad' | 'warn' | 'neutral' | 'muted';
 
 type SignalTab = 'overview' | 'work' | 'tests' | 'activity' | 'builds';
 
@@ -86,6 +86,7 @@ interface BoardSignal {
   id: SignalId;
   tone: SignalTone;
   count: number;
+  text: string;
   label: string;
   tab: SignalTab;
 }

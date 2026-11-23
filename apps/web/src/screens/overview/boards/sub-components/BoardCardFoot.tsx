@@ -2,48 +2,33 @@
 import { Flex, Icon, IconButton, Pressable, Spacer, Text } from '@drizztdourden08/tessera';
 import { useRef } from 'react';
 import { formatAgo } from '../../../../format';
-import { SyncStamp, WorktreeCounter } from '../../../../shell';
 import { useRecordPane } from '../../../../shell/records';
 import { PORTFOLIO_SCOPE, useDoc } from '../../../../data/react';
 import type { PortfolioWorktrees } from '../../../../data/worktrees';
-import { CardProgressRow } from '../../../board/tabs/kanban/sub-components/CardProgressRow';
 import { SendDownPopover } from './SendDownPopover';
-import { agentsText } from '../behavior/agents-text';
-import { progressSegments } from '../behavior/progress-segments';
+import { syncWords } from '../behavior/sync-words';
 import type { BoardCardFootProps } from '../boards.type';
-import { boardProgress } from '../model';
-import { BoardPlay } from './BoardPlay';
 
 const BoardCardFoot = (props: BoardCardFootProps) => {
-  const { record, card, now, send, run, sync, onLog } = props;
+  const { record, card, now, send, sync } = props;
   const pane = useRecordPane();
   const anchor = useRef<HTMLButtonElement>(null);
-  const counter = useDoc<PortfolioWorktrees>(PORTFOLIO_SCOPE, 'meta', 'worktrees').doc?.counts?.[record.key];
+  const listed = useDoc<PortfolioWorktrees>(PORTFOLIO_SCOPE, 'meta', 'worktrees').doc?.counts?.[record.key]?.listed ?? 0;
+  const words = syncWords(sync, now);
   return (
-    <Flex direction="column" gap="xs">
-      <Flex gap="sm" align="center" wrap>
-        <Text variant="caption" tone="muted" title="Agents">{agentsText(record.counts)}</Text>
-        <Text variant="caption" tone="muted" title="Lead state">{record.lead}</Text>
-        <CardProgressRow segments={progressSegments(boardProgress(record))} />
-        <Spacer />
-        <Text variant="caption" tone="muted" title="Board updated">{formatAgo(card?.updatedAt, now)}</Text>
-      </Flex>
-      {record.started && (
-        <Flex gap="sm" align="center" wrap>
-          {card && <BoardPlay card={card} run={run} onLog={onLog} />}
-          {counter && (
-            <Pressable onClick={() => pane.open(record.id, 'worktrees')} aria-label={`Open the worktrees of ${record.name}`}>
-              <WorktreeCounter listed={counter.listed} running={counter.running} />
-            </Pressable>
-          )}
-          <SyncStamp sync={sync} compact />
-          <Spacer />
-          <IconButton ref={anchor} size="sm" variant="ghost" label="Send down" title={`Send a decision or a note to ${record.name}`} onClick={() => send.open(record.key)}>
-            <Icon name="send" />
-          </IconButton>
-          <SendDownPopover send={send} owner={record.key} anchorRef={anchor} />
-        </Flex>
+    <Flex gap="sm" align="center" wrap className="board-card__foot">
+      {card?.updatedAt && <Text variant="caption" tone="muted">Updated {formatAgo(card.updatedAt, now)} ago</Text>}
+      {listed > 0 && (
+        <Pressable onClick={() => pane.open(record.id, 'worktrees')} aria-label={`Open the worktrees of ${record.name}`}>
+          <Text variant="caption" tone="muted">{listed} {listed === 1 ? 'worktree' : 'worktrees'}</Text>
+        </Pressable>
       )}
+      <Text variant="caption" tone={words.tone}>{words.text}</Text>
+      <Spacer />
+      <IconButton ref={anchor} size="sm" variant="ghost" label="Send down" title={`Send a decision or a note to ${record.name}`} onClick={() => send.open(record.key)}>
+        <Icon name="send" />
+      </IconButton>
+      <SendDownPopover send={send} owner={record.key} anchorRef={anchor} />
     </Flex>
   );
 };

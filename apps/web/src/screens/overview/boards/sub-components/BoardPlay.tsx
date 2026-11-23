@@ -1,20 +1,21 @@
 /* @layer renderer-app @kind component */
 import { Button, Inline, Text, Tooltip } from '@drizztdourden08/tessera';
 import { NO_PLAY } from '../boards-run.constants';
+import { masterWords } from '../behavior/master-words';
 import { masterLine } from '../model';
 import { MasterStatus } from './MasterStatus';
 import type { BoardPlayProps } from '../boards.type';
 
 const BoardPlay = (props: BoardPlayProps) => {
-  const { card, run, onLog } = props;
-  const line = masterLine(card);
+  const { card, run, now, onLog } = props;
   const { master } = card;
-  const last = master?.lastRun;
-  if (!master) return <Text variant="caption" tone={line.tone === 'neutral' ? 'muted' : line.tone}>{line.head}</Text>;
+  if (!master) return null;
+  const line = masterLine(card);
+  const last = master.lastRun;
   return (
     <Inline gap="xs" align="center" wrap>
       <Tooltip content={[master.title, master.cmd].filter(Boolean).join('\n') || 'master'}>
-        <Text variant="caption" tone="dim" mono weight={600}>master</Text>
+        <Text variant="caption" tone="dim" weight={600}>Master</Text>
       </Tooltip>
       {line.running
         ? <Button size="xs" variant="danger" disabled={run.busy} onClick={run.stop}>Stop</Button>
@@ -23,7 +24,7 @@ const BoardPlay = (props: BoardPlayProps) => {
             Play
           </Button>
         )}
-      {last && <MasterStatus line={line} run={last} onLog={(logged) => onLog(card.key, logged)} />}
+      {last && <MasterStatus line={line} words={masterWords(last, line, now)} run={last} onLog={(logged) => onLog(card.key, logged)} />}
     </Inline>
   );
 };

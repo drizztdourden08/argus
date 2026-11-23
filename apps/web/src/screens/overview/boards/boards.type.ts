@@ -1,12 +1,10 @@
 /* @layer renderer-app @kind types */
-import type { SignalItem } from '@drizztdourden08/tessera';
 import type { RefObject } from 'react';
 import type { RemoteSync } from '../../../data/remote';
 import type { RunRow } from '../../../data/runs';
 import type { Card } from '../../../data/types';
-import type { BoardActionId, BoardLive, BoardRecord, MasterLine, SendKind, SentItem } from './model';
-
-type StripTone = SignalItem['tone'];
+import type { LeadWords } from './boards.constants';
+import type { BoardActionId, BoardLive, BoardProgress, BoardRecord, BoardSignal, MasterLine, SendKind, SentItem } from './model';
 
 type LogOpener = (key: string, run: RunRow) => void;
 
@@ -27,19 +25,42 @@ interface BoardCardProps {
   onLog: LogOpener;
 }
 
+interface BoardBodyProps {
+  record: BoardRecord;
+  card: Card | null;
+  live: BoardLive;
+  now: number;
+  run: MasterRun;
+  onLog: LogOpener;
+  onOpen: (tab: string) => void;
+}
+
 interface BoardCardFootProps {
   record: BoardRecord;
   card: Card | null;
   now: number;
   send: SendDown;
-  run: MasterRun;
   sync: RemoteSync | null;
-  onLog: LogOpener;
+}
+
+interface BoardLeadProps {
+  line: LeadWords;
+  agents: string;
+}
+
+interface BoardSignalsProps {
+  signals: readonly BoardSignal[];
+  onOpen: (tab: string) => void;
+}
+
+interface BoardProgressProps {
+  progress: BoardProgress;
 }
 
 interface BoardPlayProps {
   card: Card;
   run: MasterRun;
+  now: number;
   onLog: LogOpener;
 }
 
@@ -75,6 +96,7 @@ interface MasterRun {
 
 interface MasterStatusProps {
   line: MasterLine;
+  words: string;
   run: RunRow;
   onLog: (run: RunRow) => void;
 }
@@ -88,5 +110,5 @@ interface SentRowProps {
 }
 
 export type {
-  BoardActions, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardPlayProps, LogOpener, LogTarget, MasterRun, MasterStatusProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps, StripTone,
+  BoardActions, BoardBodyProps, BoardCardFootProps, BoardCardProps, BoardHandlers, BoardLeadProps, BoardPlayProps, BoardProgressProps, BoardSignalsProps, LogOpener, LogTarget, MasterRun, MasterStatusProps, RunningNowProps, SendDown, SendDownPopoverProps, SentRowProps,
 };

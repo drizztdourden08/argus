@@ -20,20 +20,18 @@ describe('P3 the signals of a board', { tags: ['critical'] }, () => {
     ]);
   });
 
-  it('raises stalled, fault and sync due from the live facts', () => {
-    const live = { fault: { since: 's', reason: 'board-closed' }, stalls: 2, syncDue: true };
-    const found = boardSignals(record('a'), live);
-    expect(ids(found)).toEqual(['stalled', 'fault', 'sync-due']);
-    expect(found.find((signal) => signal.id === 'fault')?.label).toBe('board closed');
-    expect(boardSignals(record('a'), { ...live, fault: { since: 's', reason: 'x' } }).find((signal) => signal.id === 'fault')?.label).toBe('wake failed');
+  it('raises stalled and sync due from the live facts, in words', () => {
+    const found = boardSignals(record('a'), { fault: null, stalls: 2, syncDue: true });
+    expect(found.map((signal) => [signal.id, signal.text])).toEqual([['stalled', '2 stalled'], ['sync-due', 'Sync due']]);
+  });
+
+  it('says each count in words', () => {
+    const found = boardSignals(record('a', { counts: { ...COUNTS, needsYou: 4, testsFailing: 8, blocked: 2, paused: 1 } }));
+    expect(found.map((signal) => signal.text)).toEqual(['4 need you', '8 failing tests', '2 blocked', '1 paused']);
   });
 
   it('flags a missing master as neutral on the builds tab', () => {
-    expect(boardSignals(record('a', { masterMissing: true }))).toEqual([{ id: 'master-missing', tone: 'neutral', count: 1, label: 'master missing', tab: 'builds' }]);
-  });
-
-  it('shows a running lead as running', () => {
-    expect(ids(boardSignals(record('a', { counts: { ...COUNTS, agents: 1, working: 1 } })))).toEqual(['running']);
+    expect(boardSignals(record('a', { masterMissing: true }))).toEqual([{ id: 'master-missing', tone: 'neutral', count: 1, text: 'Master missing', label: 'master missing', tab: 'builds' }]);
   });
 
   it('shows only archived for an archived board', () => {

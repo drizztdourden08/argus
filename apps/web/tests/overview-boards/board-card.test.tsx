@@ -96,10 +96,10 @@ describe('P4 stall and fault on a board card', { tags: ['standard'] }, () => {
   it('says wake failed for a wake fault and board closed for a closed board', async () => {
     stubApi();
     const view = renderCard(rotp(), { ...QUIET, fault: { since: minutesAgo(10), reason: 'not-listening' } });
-    expect(await screen.findByRole('button', { name: /wake failed/ })).toBeTruthy();
+    expect(await screen.findByText('Wake failed')).toBeTruthy();
     view.unmount();
     renderCard(rotp(), { ...QUIET, fault: { since: minutesAgo(10), reason: 'board-closed' } });
-    expect(await screen.findByRole('button', { name: /board closed/ })).toBeTruthy();
+    expect(await screen.findByText('Board closed')).toBeTruthy();
   });
 });
 
@@ -126,7 +126,7 @@ describe('P4 the worktree counter of a board card', { tags: ['standard'] }, () =
   it('shows the board worktree count and opens its Worktrees tab', async () => {
     stubApi();
     renderCard(rotp(), QUIET, { rotp: { listed: 3, running: 2 } });
-    expect(await screen.findByText('worktrees 3 / running agents 2')).toBeTruthy();
+    expect(await screen.findByText('3 worktrees')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Open the worktrees of RotP' }));
     expect(screen.getByTestId('where').textContent).toContain('worktrees');
   });
@@ -135,6 +135,6 @@ describe('P4 the worktree counter of a board card', { tags: ['standard'] }, () =
     stubApi();
     renderCard(rotp());
     await screen.findByRole('button', { name: 'Play' });
-    expect(screen.queryByText(/^worktrees /)).toBeNull();
+    expect(screen.queryByText(/ worktrees?$/)).toBeNull();
   });
 });

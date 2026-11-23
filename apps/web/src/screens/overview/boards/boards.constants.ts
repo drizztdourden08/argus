@@ -1,39 +1,29 @@
 /* @layer renderer-app @kind constants */
-import type { AvatarStatus, IconName } from '@drizztdourden08/tessera';
-import type { LeadState, SignalId, SignalTone } from './model';
-import type { StripTone } from './boards.type';
+import type { StatusTone } from '@drizztdourden08/tessera';
+import type { SignalTone } from './model';
 
-const SIGNAL_ICON: Readonly<Record<SignalId, IconName>> = {
-  'needs-you': 'bell',
-  running: 'play',
-  failing: 'circle-x',
-  blocked: 'circle-alert',
-  stalled: 'clock',
-  fault: 'triangle-alert',
-  'sync-due': 'refresh-cw',
-  'master-missing': 'wrench',
-  paused: 'pause',
-  archived: 'archive',
-};
+type UrgencyColor = 'danger' | 'warning';
 
-const SIGNAL_TONE: Readonly<Record<SignalTone, StripTone>> = {
+interface LeadWords {
+  text: string;
+  tone: StatusTone;
+}
+
+const SIGNAL_URGENCY: Readonly<Partial<Record<SignalTone, UrgencyColor>>> = {
   bad: 'danger',
   warn: 'warning',
-  good: 'success',
-  neutral: 'neutral',
-  muted: 'neutral',
 };
 
-const LEAD_STATUS: Readonly<Record<LeadState, AvatarStatus>> = {
-  running: 'running',
-  idle: 'quiet',
-  stale: 'fault',
-  paused: 'quiet',
-  'not started': 'none',
+const LEAD_WORDS: Readonly<Record<'running' | 'idle' | 'paused' | 'not started', LeadWords>> = {
+  running: { text: 'Lead working', tone: 'success' },
+  idle: { text: 'Lead idle', tone: 'neutral' },
+  paused: { text: 'Lead paused', tone: 'neutral' },
+  'not started': { text: 'Not started', tone: 'neutral' },
 };
 
-const SIGNAL_MAX = 4;
+const MS_PER_DAY = 86_400_000;
 
 const NEEDS_BOARD: readonly string[] = ['open', 'send', 'play', 'stop'];
 
-export { LEAD_STATUS, NEEDS_BOARD, SIGNAL_ICON, SIGNAL_MAX, SIGNAL_TONE };
+export type { LeadWords };
+export { LEAD_WORDS, MS_PER_DAY, NEEDS_BOARD, SIGNAL_URGENCY };

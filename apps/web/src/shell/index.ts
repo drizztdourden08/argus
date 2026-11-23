@@ -12,7 +12,6 @@ export { PageFrame } from './PageFrame';
 export { Panel } from './Panel';
 export { ReplayTag } from './ReplayTag';
 export { StatusNotice } from './StatusNotice';
-export { WorktreeCounter } from './WorktreeCounter';
 export { SyncStamp } from './SyncStamp';
 export type { HashTab } from './shell.type';
 export { Age } from './Age';

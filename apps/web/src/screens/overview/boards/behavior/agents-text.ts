@@ -2,9 +2,9 @@
 import type { BoardCounts } from '../model';
 
 const agentsText = (counts: BoardCounts): string => {
-  if (counts.agents === 0) return 'no agents';
+  if (counts.agents === 0) return '';
   const noun = counts.agents === 1 ? 'agent' : 'agents';
-  return `${counts.agents} ${noun} · ${counts.working} working`;
+  return `${counts.agents} ${noun}, ${counts.working} working`;
 };
 
 export { agentsText };
