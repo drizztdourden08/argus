@@ -1,14 +1,15 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
+import type { StreamInner, TranscriptLine } from '../../src/data/overlord/overlord-transcript.type';
 import { liveDraft } from '../../src/shell/OverlordChat/behavior/live-draft';
 import { tailOf } from '../../src/shell/OverlordChat/behavior/tail-of';
 import { toRows } from '../../src/shell/OverlordChat/behavior/to-rows';
 import { workingActivity } from '../../src/shell/OverlordChat/behavior/working-activity';
 
-const assistant = (index: number, content: unknown[], argusAt?: string) => ({ index, event: { type: 'assistant', argusAt, message: { content } } });
-const stream = (index: number, inner: unknown) => ({ index, event: { type: 'stream_event', event: inner } });
-const start = (index: number, at: number, type: string, name?: string) => stream(index, { type: 'content_block_start', index: at, content_block: { type, name } });
-const delta = (index: number, at: number, body: Record<string, string>) => stream(index, { type: 'content_block_delta', index: at, delta: body });
+const assistant = (index: number, content: unknown[], argusAt?: string): TranscriptLine => ({ index, event: { type: 'assistant', argusAt, message: { content } } });
+const stream = (index: number, inner: StreamInner): TranscriptLine => ({ index, event: { type: 'stream_event', event: inner } });
+const start = (index: number, at: number, type: string, name?: string): TranscriptLine => stream(index, { type: 'content_block_start', index: at, content_block: { type, name } });
+const delta = (index: number, at: number, body: Record<string, string>): TranscriptLine => stream(index, { type: 'content_block_delta', index: at, delta: body });
 
 describe('L1 live thinking and text', { tags: ['critical'] }, () => {
   it('grows a thinking row and a text row from the deltas after the last whole event', () => {

@@ -224,7 +224,6 @@ mod tests {
         assert!(!got[0].contains("SECRETSECRET"));
     }
 
-    // test-tag: critical
     #[test]
     fn a_stream_event_reaches_the_pages_and_is_not_stored() {
         let store = Memory::default();
