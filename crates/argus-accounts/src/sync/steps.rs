@@ -32,6 +32,8 @@ pub enum StepKind {
     RenameFolder,
     /// The owner deleted a folder; its chats are no longer filed.
     DeleteFolder,
+    /// A section took a view setting (`groupBy`) from the same section on another account.
+    SetView,
     /// The re-plan after the writes is empty.
     Verify,
 }

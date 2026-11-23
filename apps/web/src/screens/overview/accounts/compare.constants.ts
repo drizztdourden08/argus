@@ -26,6 +26,7 @@ const STEP_KIND_LABEL: Readonly<Record<SyncStepKind, string>> = {
   delete_chat: 'Delete chat',
   rename_folder: 'Rename folder',
   delete_folder: 'Delete folder',
+  set_view: 'Set folder view',
 };
 
 const PHASE_LABEL: Readonly<Record<RunPhase, string>> = {

@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use super::merge::{
-    advance_history, archive_vote, fingerprint, merge_archive, merge_artifacts, merge_lineage,
-    portable_record, set_archived, set_artifacts, set_lineage,
+    advance_history, archive_vote, fill_missing, fingerprint, full_record, merge_archive,
+    merge_artifacts, merge_lineage, set_archived, set_artifacts, set_lineage,
 };
 use super::read::is_uuid;
 use crate::config::ArchiveRule;
@@ -275,9 +275,9 @@ impl Planner<'_> {
         let overlay = self.overlay(&holders, &values, id);
         for i in 0..self.scopes.len() {
             if holders.contains(&i) {
-                self.update(i, id, &values[source], &overlay);
+                self.update(i, id, &values, &overlay);
             } else {
-                self.copy(i, id, &values[source], &overlay);
+                self.copy(i, id, &values, &overlay);
             }
         }
     }
@@ -378,13 +378,17 @@ impl Planner<'_> {
         }
     }
 
-    fn update(&mut self, i: usize, id: &str, source: &Value, overlay: &Overlay) {
+    /// Brings a copy up to date from `copies` (newest first, the first is the source): the
+    /// newest history, the keys it lacks, then the merged lineage, archived flag and artifacts.
+    fn update(&mut self, i: usize, id: &str, copies: &[Value], overlay: &Overlay) {
         let current = self.scopes[i].records[id].value.clone();
+        let source = &copies[0];
         let mut record = if fingerprint(&current) == fingerprint(source) {
             current.clone()
         } else {
             advance_history(&current, source)
         };
+        fill_missing(&mut record, copies);
         apply_overlay(&mut record, overlay);
         if let Some(map) = record.as_object_mut() {
             map.remove("transcriptUnavailable");
@@ -401,7 +405,7 @@ impl Planner<'_> {
         self.push(i, ChangeKind::UpdateSession, id, before, record);
     }
 
-    fn copy(&mut self, i: usize, id: &str, source: &Value, overlay: &Overlay) {
+    fn copy(&mut self, i: usize, id: &str, copies: &[Value], overlay: &Overlay) {
         let scope = &self.scopes[i];
         if scope.deleted.contains(id) {
             let skip = TombstoneSkip {
@@ -421,7 +425,7 @@ impl Planner<'_> {
             });
             return;
         }
-        let mut record = portable_record(source);
+        let mut record = full_record(copies);
         apply_overlay(&mut record, overlay);
         let loaded = Loaded {
             value: record.clone(),
@@ -517,7 +521,7 @@ mod tests {
     }
 
     #[test]
-    fn copies_a_missing_chat_with_portable_fields_only() {
+    fn copies_a_missing_chat_with_every_field() {
         let (fx, a, b) = with_empty_b();
         let mut rec = record(1, 10);
         rec["permissionMode"] = json!("bypassPermissions");
@@ -530,9 +534,23 @@ mod tests {
         assert_eq!(change.scope, b);
         assert_eq!(change.file, format!("{}.json", session_id(1)));
         assert!(change.before_sha256.is_none());
-        assert_eq!(change.data["permissionMode"], "default");
-        assert!(change.data.get("enabledMcpTools").is_none());
+        assert_eq!(change.data["permissionMode"], "bypassPermissions");
+        assert_eq!(change.data["enabledMcpTools"], json!(["x"]));
         assert_eq!(change.data["title"], "chat 1");
+    }
+
+    #[test]
+    fn a_stripped_copy_gets_back_the_fields_it_lacks() {
+        let (fx, a, b) = two_scopes();
+        let mut full = record(1, 10);
+        full["scheduledTaskId"] = json!("st_sweep");
+        fx.put(&a, 1, &full);
+        fx.put(&b, 1, &record(1, 10));
+        fx.transcript(1);
+        let plan = plan(&fx, ArchiveRule::Newest);
+        assert_eq!(kinds(&plan), vec![ChangeKind::UpdateSession]);
+        assert_eq!(plan.changes[0].scope, b);
+        assert_eq!(plan.changes[0].data["scheduledTaskId"], "st_sweep");
     }
 
     #[test]
@@ -542,6 +560,7 @@ mod tests {
         old["permissionMode"] = json!("plan");
         let mut new = record(1, 20);
         new["title"] = json!("newer title");
+        new["permissionMode"] = json!("default");
         fx.put(&a, 1, &old);
         fx.put(&b, 1, &new);
         fx.transcript(1);

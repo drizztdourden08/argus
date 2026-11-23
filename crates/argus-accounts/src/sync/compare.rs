@@ -37,6 +37,9 @@ pub enum Status {
     NotSubthread,
     /// A sub-thread here, a top-level chat elsewhere.
     Subthread,
+    /// A folder that holds no chat on any account (only deleted ones): the app hides it, so
+    /// it is not a difference.
+    Empty,
 }
 
 /// One account's side of a row.
@@ -318,9 +321,20 @@ fn chat_status(chat: &Chat, folder: Option<&String>, others: &[Peer], columns: u
     }
 }
 
+/// Whether no account files a chat it holds in the folder.
+fn folder_is_empty(cols: &[Col], name: &str) -> bool {
+    cols.iter().all(|c| {
+        !c.chats
+            .keys()
+            .any(|id| c.folders.of_chat.get(id).is_some_and(|f| f == name))
+    })
+}
+
 fn folder_cell(cols: &[Col], col: &Col, planned: &Planned, name: &str) -> Cell {
     let present = col.folders.names.iter().any(|n| n == name);
-    let status = if present {
+    let status = if folder_is_empty(cols, name) {
+        Status::Empty
+    } else if present {
         let everywhere = cols
             .iter()
             .all(|c| c.folders.names.iter().any(|n| n == name));
@@ -474,7 +488,11 @@ fn push_children(
 fn tally(rows: &[Row]) -> (usize, usize) {
     let same = rows
         .iter()
-        .filter(|r| r.cells.values().all(|c| c.status == Status::Same))
+        .filter(|r| {
+            r.cells
+                .values()
+                .all(|c| matches!(c.status, Status::Same | Status::Empty))
+        })
         .count();
     (same, rows.len() - same)
 }
@@ -637,7 +655,7 @@ mod tests {
             ],
         );
         let b = scope_scan(B, vec![("local_1", chat("one", 10, None, false))]);
-        let k = keys(&[(A, vec![("Alpha", vec![])]), (B, vec![])]);
+        let k = keys(&[(A, vec![("Alpha", vec!["local_2"])]), (B, vec![])]);
         let compare = build_compare(&planned(vec![a, b], k), &[account("a", A), account("b", B)]);
         let row = |id: &str| compare.rows.iter().find(|r| r.id == id).unwrap();
         assert_eq!(row("local_1").cells["a"].status, Status::ArchivedHereOnly);
@@ -648,6 +666,18 @@ mod tests {
         assert_eq!(row("folder:Alpha").cells["a"].status, Status::OnlyHere);
         assert_eq!(row("folder:Alpha").cells["b"].status, Status::Missing);
         assert_eq!(compare.counts.same, 1, "only the no-folder header agrees");
+    }
+
+    #[test]
+    fn a_folder_of_deleted_chats_only_is_empty_not_a_difference() {
+        let a = scope_scan(A, vec![("local_1", chat("one", 10, None, false))]);
+        let b = scope_scan(B, vec![("local_1", chat("one", 10, None, false))]);
+        let k = keys(&[(A, vec![("Current", vec!["local_gone"])]), (B, vec![])]);
+        let compare = build_compare(&planned(vec![a, b], k), &[account("a", A), account("b", B)]);
+        let row = compare.rows.iter().find(|r| r.id == "folder:Current").unwrap();
+        assert_eq!(row.cells["a"].status, Status::Empty);
+        assert_eq!(row.cells["b"].status, Status::Empty);
+        assert_eq!(compare.counts.different, 0);
     }
 
     #[test]

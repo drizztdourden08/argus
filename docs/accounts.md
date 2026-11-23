@@ -83,8 +83,10 @@ the last good read and shows its age. The Desktop usage log is the fallback.
 The sync keeps every account's sidebar the same: the same chats, folders, sub-threads and archived
 state. A run is Scan, Compare, Plan, Back up, Apply, Verify.
 
-- Chats. A chat missing on an account is copied with its portable fields. History advances from
-  the newest copy. Each account keeps its own permission and tool settings. Tombstones are
+- Chats. A chat missing on an account is copied with every field it has (`scheduledTaskId`,
+  `folderPlace`, `enabledMcpTools` and the rest), so a routine run stays a routine run. A copy that
+  lacks a field gets it from another copy. History advances from the newest copy. A field both
+  copies have keeps each account's own value, so permission settings stay apart. Tombstones are
   respected. A chat whose copies disagree, or whose transcript is missing or ambiguous, is left
   alone and counted as a conflict or a missing transcript.
 - Sub-threads. `spawnedFrom`, `lineageDetached`, `lineageDetachedBy`, `dispatchParentId` and
@@ -93,7 +95,10 @@ state. A run is Scan, Compare, Plan, Back up, Apply, Verify.
 - Archived. Merged on its own, the most recent change wins. The setting `archiveRule` is `newest`
   (default) or `anywhere` (archived on one account means archived on all).
 - Folders. Matched by name, since the ids differ. A missing folder is created with a fresh id. The
-  members and the order follow the newest account. An archived chat keeps its folder.
+  members and the order follow the newest account. An archived chat keeps its folder. A filed
+  chat stays filed: an unfiled copy opened later never takes it out. A section view setting
+  (`groupBy`) one account lacks is taken from the other, the system sections included. A folder
+  that holds only deleted chats shows as empty in the compare, not as a difference.
 - Idempotent. Verify plans again after the writes and fails loudly if anything still differs. A
   second run plans no write.
 

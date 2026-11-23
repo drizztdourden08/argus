@@ -66,7 +66,7 @@ type RunResult = {
 type SyncStepKind =
   | 'backup' | 'copy_session' | 'update_session' | 'link_thread' | 'archive'
   | 'create_folder' | 'assign_folder' | 'write_storage' | 'verify'
-  | 'move_chat' | 'delete_chat' | 'rename_folder' | 'delete_folder';
+  | 'move_chat' | 'delete_chat' | 'rename_folder' | 'delete_folder' | 'set_view';
 
 interface SyncStepDoc {
   seq?: number;

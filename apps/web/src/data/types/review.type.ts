@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 type ReviewStatus =
   | 'same' | 'missing' | 'will_create' | 'only_here' | 'folder_differs'
-  | 'archived_here_only' | 'active_here_only' | 'not_subthread' | 'subthread';
+  | 'archived_here_only' | 'active_here_only' | 'not_subthread' | 'subthread' | 'empty';
 
 interface ReviewCell {
   present?: boolean;

@@ -1,10 +1,12 @@
 //! The merge rules of the chat sync, as pure functions on chat records. A record is a
 //! `serde_json::Value` object exactly as the Desktop app wrote it.
 //!
-//! A record's portable keys fall in four groups: the conversation history (compared as a
+//! A record's merged keys fall in four groups: the conversation history (compared as a
 //! fingerprint; the newest copy wins), the sub-thread lineage, the archived flag and the
 //! published artifacts. The last three are merged on their own, so a difference in them never
-//! makes two copies of a chat disagree about history.
+//! makes two copies of a chat disagree about history. Every other key travels as it is: a new
+//! copy keeps every field of the chat, and a copy that lacks a key gets it from another copy.
+//! Without `scheduledTaskId` a routine run shows as a plain chat.
 
 use std::cmp::Reverse;
 
@@ -74,13 +76,6 @@ pub struct ArchiveVote {
     pub mtime_ms: i64,
 }
 
-fn is_portable_key(key: &str) -> bool {
-    HISTORY_KEYS.contains(&key)
-        || LINEAGE_KEYS.contains(&key)
-        || key == ARCHIVED_KEY
-        || key == ARTIFACTS_KEY
-}
-
 fn pick(record: &Value, keep: impl Fn(&str) -> bool) -> Map<String, Value> {
     record
         .as_object()
@@ -99,16 +94,49 @@ pub fn history_record(record: &Value) -> Value {
     Value::Object(pick(record, |k| HISTORY_KEYS.contains(&k)))
 }
 
-/// What a new copy of a chat starts from: every portable key, and a fresh permission mode, so
-/// an account's tool grants never travel.
+/// Keys that say something about one account's copy only, never copied to another.
+const LOCAL_KEYS: [&str; 1] = ["transcriptUnavailable"];
+
+/// The keys the sync merges by its own rules; a missing one is never filled in from another copy.
+fn is_merged_key(key: &str) -> bool {
+    HISTORY_KEYS.contains(&key)
+        || LINEAGE_KEYS.contains(&key)
+        || key == ARCHIVED_KEY
+        || key == ARTIFACTS_KEY
+}
+
+/// Gives `record` every key it lacks that another copy has, value for value, except the merged
+/// and the local keys. The newest copy comes first in `copies`, so its value wins when the
+/// others differ.
+pub fn fill_missing(record: &mut Value, copies: &[Value]) {
+    let Some(map) = record.as_object_mut() else {
+        return;
+    };
+    for copy in copies {
+        let Some(other) = copy.as_object() else {
+            continue;
+        };
+        for (key, value) in other {
+            let skip = is_merged_key(key) || LOCAL_KEYS.contains(&key.as_str());
+            if !skip && !map.contains_key(key) {
+                map.insert(key.clone(), value.clone());
+            }
+        }
+    }
+}
+
+/// What a new copy of a chat starts from: the newest copy (first in `copies`) with every field
+/// but the local ones, and the keys only the other copies have.
 #[must_use]
-pub fn portable_record(record: &Value) -> Value {
-    let mut clean = pick(record, is_portable_key);
-    clean.insert(
-        "permissionMode".to_owned(),
-        Value::String("default".to_owned()),
-    );
-    Value::Object(clean)
+pub fn full_record(copies: &[Value]) -> Value {
+    let mut record = copies
+        .first()
+        .map_or_else(|| Value::Object(Map::new()), Value::clone);
+    if let Some(map) = record.as_object_mut() {
+        map.retain(|k, _| !LOCAL_KEYS.contains(&k.as_str()));
+    }
+    fill_missing(&mut record, copies);
+    record
 }
 
 /// A key-sorted copy of a value, so the same content always gives the same bytes.
@@ -329,13 +357,26 @@ mod tests {
     }
 
     #[test]
-    fn portable_record_keeps_portable_keys_and_resets_permissions() {
+    fn a_new_copy_keeps_every_field_of_the_chat() {
         let rec = json!({ "sessionId": "local_a", "title": "t", "spawnedFrom": { "name": "n" },
-            "permissionMode": "bypass", "enabledMcpTools": ["x"], "error": "limit" });
-        let out = portable_record(&rec);
-        assert_eq!(out["permissionMode"], "default");
-        assert_eq!(out["spawnedFrom"]["name"], "n");
-        assert!(out.get("enabledMcpTools").is_none() && out.get("error").is_none());
+            "permissionMode": "bypass", "enabledMcpTools": ["x"], "scheduledTaskId": "st_1",
+            "folderPlace": { "at": 2 }, "spawnSeed": "s", "transcriptUnavailable": true });
+        let out = full_record(std::slice::from_ref(&rec));
+        let mut expected = rec.clone();
+        expected
+            .as_object_mut()
+            .expect("an object")
+            .remove("transcriptUnavailable");
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn a_stripped_copy_gets_the_keys_it_lacks_and_keeps_its_own() {
+        let mut stripped = json!({ "sessionId": "local_a", "title": "mine" });
+        let full = json!({ "sessionId": "local_a", "title": "theirs", "scheduledTaskId": "st_1" });
+        fill_missing(&mut stripped, &[full]);
+        assert_eq!(stripped["scheduledTaskId"], "st_1");
+        assert_eq!(stripped["title"], "mine");
     }
 
     #[test]

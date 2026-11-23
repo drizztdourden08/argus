@@ -675,6 +675,12 @@ fn shown_as<'a>(
             ..line(StepKind::RenameFolder, name)
         },
         FolderStep::DeleteFolder { name, .. } => line(StepKind::DeleteFolder, name),
+        FolderStep::SetView {
+            section, setting, ..
+        } => Shown {
+            detail: setting.clone(),
+            ..line(StepKind::SetView, section)
+        },
         FolderStep::ReorderFolder { .. } => return None,
     })
 }

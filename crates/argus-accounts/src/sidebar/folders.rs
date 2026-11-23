@@ -1,9 +1,11 @@
 //! Pure folder logic. Given the three sidebar keys and which chats each scope holds, it works
 //! out what is missing so every scope shows the same manual folders with the same chats.
-//! Folders match by name across scopes (their ids differ). A chat's folder follows the scope
-//! where the chat was focused last, and the order inside a folder follows the scope with the
-//! newest focus among that folder's chats. System sections (pinned, routines, sessions) are
-//! never touched, nothing is deleted, and running the plan on its own output gives no steps.
+//! Folders match by name across scopes (their ids differ). A filed chat stays filed: its folder
+//! follows the scope where it was focused last among the scopes that file it, so a later look at
+//! an unfiled copy never takes it out. The order inside a folder follows the scope with the
+//! newest focus among that folder's chats. A view setting of a section (`groupBy`) one scope
+//! lacks is taken from another; system sections (pinned, routines, sessions) change in nothing
+//! else. Nothing is deleted, and running the plan on its own output gives no steps.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -47,6 +49,14 @@ pub enum FolderStep {
     },
     /// The owner deleted a folder; its chats are no longer filed.
     DeleteFolder { scope: String, name: String },
+    /// A section took a view setting (`groupBy`) it lacked from the same section elsewhere.
+    SetView {
+        scope: String,
+        /// The folder name, or the kind of a system section (`sessions`).
+        section: String,
+        /// The setting and its value, `groupBy none`.
+        setting: String,
+    },
 }
 
 impl FolderStep {
@@ -59,7 +69,8 @@ impl FolderStep {
             | Self::ReorderFolder { scope, .. }
             | Self::MoveChat { scope, .. }
             | Self::RenameFolder { scope, .. }
-            | Self::DeleteFolder { scope, .. } => scope,
+            | Self::DeleteFolder { scope, .. }
+            | Self::SetView { scope, .. } => scope,
         }
     }
 }
@@ -101,6 +112,7 @@ pub fn plan_folders(
     fill_orders(&mut next, &scopes, presence, &mut steps);
     assign_chats(&mut next, &scopes, presence, &mut steps);
     reorder_folders(&mut next, &scopes, presence, &mut steps);
+    align_views(&mut next, &scopes, &mut steps);
     mirror_into_store(&mut next, &steps);
     Ok(FolderPlan { steps, keys: next })
 }
@@ -369,8 +381,10 @@ fn assign_chats(
     }
 }
 
-/// The scope that focused the chat last (a scope where the chat has a folder wins a tie) and
-/// the name of the folder the chat has there. None when that scope keeps the chat unfiled.
+/// Among the scopes that file the chat, the one that focused it last, and the folder name it
+/// has there. None when no scope files the chat. A copy left unfiled (a chat copied before its
+/// folder existed, then opened there) never takes a chat out of its folder; the owner does that
+/// with the folder editor, which changes every scope.
 fn leading_folder(
     keys: &SidebarKeys,
     holders: &[&String],
@@ -383,7 +397,7 @@ fn leading_folder(
             .and_then(|m| m.get(sid))
             .copied()
             .unwrap_or(0);
-        (focus, assigned_id(keys, scope, sid).is_some())
+        (assigned_id(keys, scope, sid).is_some(), focus)
     };
     let mut best: Option<&String> = None;
     for scope in holders {
@@ -530,6 +544,73 @@ fn follow_order(
     }
 }
 
+// Step 4: the view settings of a section follow the scopes that have them.
+
+/// The view settings a section carries that the sync keeps equal.
+const VIEW_KEYS: [&str; 1] = ["groupBy"];
+
+/// The name a section matches by across scopes: a folder's name, a system section's kind.
+fn section_match(section: &Value) -> Option<String> {
+    if is_manual(section) {
+        text(section, "name").map(str::to_owned)
+    } else {
+        text(section, "kind").map(str::to_owned)
+    }
+}
+
+fn sections_of(keys: &SidebarKeys, scope: &str) -> Vec<Value> {
+    entry(&keys.code_sections, scope)
+        .and_then(|e| e.get("sections"))
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+}
+
+/// A view setting a scope's section lacks is copied from the same section in another scope
+/// (the first scope that has it, in scope order).
+fn align_views(keys: &mut SidebarKeys, scopes: &[String], steps: &mut Vec<FolderStep>) {
+    for target in scopes {
+        let list = sections_of(keys, target);
+        let others: Vec<Vec<Value>> = scopes
+            .iter()
+            .filter(|s| *s != target)
+            .map(|s| sections_of(keys, s))
+            .collect();
+        let mut changed = list.clone();
+        for section in &mut changed {
+            let Some(name) = section_match(section) else {
+                continue;
+            };
+            for key in VIEW_KEYS {
+                if section.get(key).is_some() {
+                    continue;
+                }
+                let found = others
+                    .iter()
+                    .flatten()
+                    .filter(|o| section_match(o).as_deref() == Some(name.as_str()))
+                    .find_map(|o| o.get(key).cloned());
+                let Some(value) = found else { continue };
+                let shown = value
+                    .as_str()
+                    .map_or_else(|| value.to_string(), str::to_owned);
+                section[key] = value;
+                steps.push(FolderStep::SetView {
+                    scope: target.clone(),
+                    section: name.clone(),
+                    setting: format!("{key} {shown}"),
+                });
+            }
+        }
+        if changed == list {
+            continue;
+        }
+        if let Some(e) = entry_mut(&mut keys.code_sections, target) {
+            e["sections"] = Value::Array(changed);
+        }
+    }
+}
+
 // The app's own copies, kept equal for every scope the plan changed: `customGroupsByScope`
 // holds the groups, `codeSidebarByScope` the sections with the members of each folder.
 
@@ -595,6 +676,11 @@ fn mirror_sections(
             let previous = old.iter().find(|o| text(o, "id") == Some(id));
             let mut out = previous.unwrap_or(section).clone();
             out["order"] = section.get("order").cloned().unwrap_or(Value::Null);
+            for key in VIEW_KEYS {
+                if let Some(value) = section.get(key) {
+                    out[key] = value.clone();
+                }
+            }
             if is_manual(section) {
                 out["name"] = section.get("name").cloned().unwrap_or(Value::Null);
                 out["members"] = json!(members_of(id, previous, groups));
@@ -948,6 +1034,48 @@ mod tests {
         assert_eq!(mirrored, &plan.keys.group_scopes["value"][A]);
         let untouched = &plan.keys.dframe_store["state"]["customGroupsByScope"][B];
         assert_eq!(untouched, &k.group_scopes["value"][B]);
+    }
+
+    #[test]
+    fn a_filed_chat_stays_filed_when_an_unfiled_copy_was_focused_later() {
+        let a = scope_data(&[("cg-a1", "Lead Threads")], &[("local_1", Some("cg-a1"))]);
+        let b = scope_data(&[("cg-b1", "Lead Threads")], &[("local_1", None)]);
+        let plan = run(
+            &keys(&[(A, a), (B, b)]),
+            &presence(&[("local_1", 100)], &[("local_1", 900)]),
+        );
+        assert_eq!(
+            plan.keys.group_scopes["value"][B]["assignments"]["code:local_1"],
+            "cg-b1"
+        );
+    }
+
+    #[test]
+    fn a_view_setting_one_scope_lacks_is_taken_from_the_other() {
+        let mut a = scope_data(&[("cg-a1", "Lead Threads")], &[]);
+        let b = scope_data(&[("cg-b1", "Lead Threads")], &[]);
+        for s in a.0["sections"].as_array_mut().unwrap() {
+            if s["id"] == "sessions" || s["id"] == "cg-a1" {
+                s["groupBy"] = json!("none");
+            }
+        }
+        let plan = run(&keys(&[(A, a), (B, b)]), &presence(&[], &[]));
+        let setting = |id: &str| {
+            plan.keys.code_sections["value"][B]["sections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|s| s["id"] == id)
+                .unwrap()["groupBy"]
+                .clone()
+        };
+        assert_eq!(setting("sessions"), "none");
+        assert_eq!(setting("cg-b1"), "none");
+        assert_eq!(plan.steps.len(), 2);
+        let mirrored = &plan.keys.dframe_store["state"]["codeSidebarByScope"][B]["sections"];
+        let grouped = |s: &Value| s["id"] == "pinned" || s["groupBy"] == "none";
+        assert!(mirrored.as_array().unwrap().iter().all(grouped));
+        assert_eq!(run(&plan.keys, &presence(&[], &[])).steps.len(), 0);
     }
 
     #[test]
