@@ -11,7 +11,8 @@ const whenText = (run: AccountsRun): string => {
 
 const doneText = (run: AccountsRun, drifted: boolean): string => {
   const tail = runResultText(run.result) || (drifted ? '' : MATCH_TEXT);
-  return `Last sync${whenText(run)}${tail ? `: ${tail}` : ''}.`;
+  const text = `Last sync${whenText(run)}${tail ? `: ${tail}` : ''}`;
+  return text.endsWith('.') ? text : `${text}.`;
 };
 
 const lastSyncText = (run: AccountsRun | null, drifted = false): string => {
