@@ -69,6 +69,7 @@ interface LinkedTextProps {
 interface AgentName {
   id: string;
   name?: string | null;
+  status?: string | null;
 }
 
 type Threads = readonly WithId<ThreadChoice>[];

@@ -23,8 +23,10 @@ const threadName = (assignee: string, threads: Threads): string => {
 };
 
 const agentLook = (id: string, agents: readonly AgentName[]): AssigneeLook => {
-  const name = trimmed(agents.find((agent) => agent.id === id)?.name) || id;
-  return { label: name, tip: `Assigned to agent ${name}`, initials: name.slice(0, 2).toUpperCase(), owner: false };
+  const found = agents.find((agent) => agent.id === id);
+  const name = trimmed(found?.name) || id;
+  const state = trimmed(found?.status);
+  return { label: name, tip: `Assigned to agent ${name}${state ? ` (${state})` : ''}`, initials: name.slice(0, 2).toUpperCase(), owner: false };
 };
 
 const assigneeLook = (assignee: string, boardKey: string, threads: Threads, extras: LookExtras = {}): AssigneeLook => {

@@ -4,7 +4,6 @@ export { createReady } from './create-ready';
 export { agentChoices } from './agent-choices';
 export { agentTone } from './agent-tone';
 export { itemAgents } from './item-agents';
-export { withItemAgents } from './with-item-agents';
 export { addPreset } from './add-preset';
 export { askLinks } from './ask-links';
 export { blockedSignature } from './blocked-signature';

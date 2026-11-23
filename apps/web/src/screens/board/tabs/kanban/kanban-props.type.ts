@@ -25,7 +25,6 @@ interface KanbanToolbarProps {
   layout: LayoutState;
 }
 
-
 interface OpNoticesProps {
   ops: NoticeOps;
 }
@@ -120,10 +119,6 @@ interface CardTagsProps {
   onOpen: (id: string) => void;
 }
 
-interface AgentLineProps {
-  item: ItemRef;
-}
-
 interface CardFootProps {
   card: CardData;
   group: ItemGroup;
@@ -149,7 +144,6 @@ interface CardProgressRowProps {
   segments: readonly CardProgress[];
 }
 
-
 export type {
-  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
+  AcListProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
 };

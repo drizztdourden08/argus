@@ -29,12 +29,6 @@ interface ServedBy {
   worktrees: number;
 }
 
-interface ItemAgent {
-  id: string;
-  name: string;
-  status?: string;
-}
-
 interface ItemTyping {
   type?: string;
   parent?: string | null;
@@ -45,7 +39,6 @@ interface ItemTyping {
   blocked?: BlockedCause[];
   images?: ItemImage[];
   servedBy?: ServedBy;
-  agents?: ItemAgent[];
 }
 
 interface WorkItem extends ItemTyping {
