@@ -17,6 +17,4 @@ const DEAF_NOTE = '. The session is active: the Overlord is told when this lasts
 
 const CLOSED_BOARD_NOTE = '. Its board tab is not open: the Overlord is told when this lasts.';
 
-const REGISTERED_HINT = 'The threads hooked on this dashboard';
-
-export { BUSY_TIP, CLOSED_BOARD_NOTE, DEAF_NOTE, FAULT_LOOK, NO_LOAD, PLAIN_LOOK, REGISTERED_HINT, STALE_AGENT_MS, STATE_RANK, UNKNOWN_RANK };
+export { BUSY_TIP, CLOSED_BOARD_NOTE, DEAF_NOTE, FAULT_LOOK, NO_LOAD, PLAIN_LOOK, STALE_AGENT_MS, STATE_RANK, UNKNOWN_RANK };

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DataProvider } from '../../src/data/react';
 import { createScopeStreams } from '../../src/data/stream';
@@ -44,27 +44,20 @@ const seeded = async (docs: Record<string, Record<string, object>>) => {
   return sources;
 };
 
-const openStrip = (): void => {
-  fireEvent.click(screen.getByRole('button', { name: /registered/ }));
-};
-
 const registry = (...rows: RegistryRow[]) => Object.fromEntries(rows.map((entry) => [entry.id, entry]));
 
 describe('S1 the Registered strip', { tags: ['standard'] }, () => {
-  it('is a chip that counts the registered threads, and follows the registry stream', async () => {
+  it('lists the registered threads, and follows the registry stream', async () => {
     const sources = mount();
     await waitForStream(sources);
     expect(sources[0]?.url).toContain('registry');
     act(() => seedBoard(sources[0], { registry: {} }));
-    expect(screen.getByRole('button', { name: '0 registered' })).toBeTruthy();
-    openStrip();
     expect(screen.getByText('No thread is registered on this board yet.')).toBeTruthy();
     act(() => changeBoard(sources[0], 'registry', 'lead', row({ thread: 'lead', role: 'coordinator' })));
-    expect(screen.getByRole('button', { name: '1 registered' })).toBeTruthy();
-    expect(within(screen.getByRole('dialog', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
+    expect(within(screen.getByLabelText('Registered threads')).getByText('lead')).toBeTruthy();
   });
 
-  it('says how many are registered, waking and faulted, with one chip per thread, worst state first', async () => {
+  it('has one chip per thread, worst state first', async () => {
     await seeded({
       registry: registry(
         row({ thread: 'lead', role: 'coordinator' }),
@@ -73,10 +66,6 @@ describe('S1 the Registered strip', { tags: ['standard'] }, () => {
         row({ thread: 'delta', state: 'idle' }),
       ),
     });
-    expect(screen.getByRole('button', { name: /^4 registered/ })).toBeTruthy();
-    expect(screen.getByText('1 waking')).toBeTruthy();
-    expect(screen.getByText('1 fault')).toBeTruthy();
-    openStrip();
     const names = screen.getAllByText(/^(lead|beta|gamma|delta)$/).map((node) => node.textContent);
     expect(names).toEqual(['gamma', 'beta', 'lead', 'delta']);
     expect(screen.getByText('wake failed')).toBeTruthy();
@@ -98,7 +87,6 @@ describe('S1 the agents of the strip', { tags: ['standard'] }, () => {
         agent('A-5', { archivedAt: minutesAgo(3) }),
       ]),
     });
-    openStrip();
     expect(screen.getByText('+1 agent working')).toBeTruthy();
     expect(screen.getByText('2 stalled')).toBeTruthy();
   });

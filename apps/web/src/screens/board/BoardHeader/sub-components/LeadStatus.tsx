@@ -10,13 +10,13 @@ const LeadStatus = (props: LeadStatusProps) => {
   if (!lead) return <Text variant="caption" tone="muted">{NO_LEAD}</Text>;
   const tone = LEAD_STATUS_TONES[lead.status];
   return (
-    <Flex gap="sm" align="center">
+    <Flex gap="sm" align="center" wrap>
       <Status tone={activityTone(lead.activity)} pulse={lead.activity === 'working'} dot title={lead.activity ?? 'unknown'}>
-        <Text weight={600} title={lead.session ?? lead.id}>{lead.role}</Text>
+        <Text weight={600} title={lead.session ?? lead.id}>{lead.name}</Text>
       </Status>
       {tone ? <Tag variant="urgency" color={tone} fill="tint">{lead.status}</Tag> : <Tag>{lead.status}</Tag>}
-      <Text variant="caption" tone="muted" title={lead.lastSeen ?? 'never seen'}>
-        {lead.lastSeen ? <>seen <Age value={lead.lastSeen} /> ago</> : 'seen never'}
+      <Text variant="caption" tone="muted">
+        {lead.lastSeen ? <>seen <Age value={lead.lastSeen} ago /></> : 'never seen'}
       </Text>
       {lead.link ? (
         <Link href={lead.link} variant="subtle" aria-label="Open the chat of the lead" title="Open the lead chat">

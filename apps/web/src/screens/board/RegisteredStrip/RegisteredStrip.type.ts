@@ -6,10 +6,6 @@ interface RegisteredStripProps {
   boardKey: string;
 }
 
-interface RegisteredLabelProps {
-  rows: readonly RegistryRow[];
-}
-
 interface RegistryAgent {
   thread: string;
   status: string;
@@ -69,7 +65,6 @@ export type {
   ChipTipProps,
   FaultTipProps,
   RegisteredChipProps,
-  RegisteredLabelProps,
   RegisteredStripProps,
   RegisteredView,
   RegistryAgent,

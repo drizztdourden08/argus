@@ -64,7 +64,7 @@ const drawerOf = async (): Promise<HTMLElement> => screen.findByRole('dialog', {
 
 const clickChip = async (id: string): Promise<void> => {
   const name = `Open the thread ${id}`;
-  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: /registered/ }));
+  if (!screen.queryByRole('button', { name })) fireEvent.click(await screen.findByRole('button', { name: 'Board status' }));
   fireEvent.click(await screen.findByRole('button', { name }));
 };
 

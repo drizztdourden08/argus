@@ -43,8 +43,8 @@ describe('S2 routing', { tags: ['standard'] }, () => {
       }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();
-    fireEvent.click(await screen.findByRole('button', { name: '1 registered' }));
-    expect(within(await screen.findByRole('dialog', { name: 'Registered threads' })).getByText('lead')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Board status' }));
+    expect(within(await screen.findByRole('dialog', { name: 'Board status' })).getByText('lead')).toBeTruthy();
     for (const label of ['Agents', 'Activity', 'Kanban', 'Tests', 'Builds', 'Worktrees', 'Changes', 'Releases']) {
       expect(screen.getByRole('tab', { name: new RegExp(`^${label}`) })).toBeTruthy();
     }

@@ -83,6 +83,35 @@ interface NoticeListProps {
   notices: readonly WithId<Wake>[];
 }
 
+type HealthTone = 'success' | 'warning' | 'danger';
+
+interface BoardHealth {
+  tone: HealthTone;
+  reason: string;
+}
+
+interface HealthInput {
+  lead: WithId<ProjectThread> | null;
+  faults: number;
+  offline: boolean;
+  updatedAt: string | null;
+  now: number;
+}
+
+interface BoardHealthView extends BoardHealth {
+  lead: WithId<ProjectThread> | null;
+  faults: readonly WithId<RegistryRow>[];
+  listed: number | undefined;
+  runningAgents: number | undefined;
+  status: StreamStatus;
+  updatedAt: string | null;
+}
+
+interface BoardStatusProps {
+  boardKey: string;
+  health: BoardHealthView;
+}
+
 interface AlertsView {
   stalls: WithId<StallDoc>[];
   faults: WithId<RegistryRow>[];
@@ -99,6 +128,11 @@ export type {
   BoardAlertsProps,
   BoardFaultsProps,
   BoardHeaderProps,
+  BoardHealth,
+  BoardHealthView,
+  BoardStatusProps,
+  HealthInput,
+  HealthTone,
   BoardNoticesProps,
   BoardRunningProps,
   BoardStallsProps,

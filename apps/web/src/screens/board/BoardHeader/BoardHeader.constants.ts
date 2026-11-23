@@ -1,4 +1,6 @@
 /* @layer renderer-app @kind constants */
+const STALE_UPDATE_MS = 60 * 60 * 1000;
+
 const LEAD_STATUS_TONES: Readonly<Record<string, 'success' | 'warning'>> = { active: 'success', paused: 'warning' };
 
 const NO_LEAD = 'no lead yet';
@@ -15,12 +17,8 @@ const ALERTS_HINT = 'What needs a look on this board: stalled threads, faults, n
 
 const NO_ALERTS = 'Nothing needs attention.';
 
-const UPDATED_HINT = 'When the board data last changed.';
-
-const WORKTREES_HINT = 'Worktrees listed (main checkouts aside). Open the Worktrees tab.';
-
-const WORKTREES_OVER_HINT = 'More worktrees are listed than agents running: some are not cleaned. Open the Worktrees tab.';
+const WORKTREES_OVER_REASON = 'more are listed than agents running, so some are not cleaned';
 
 const RUNNING_HINT = 'Agents running now. Open the Agents tab.';
 
-export { ALERTS_HINT, LEAD_STATUS_TONES, NAME_EMPTY, NAME_MAX, NAME_TOO_LONG, NO_ALERTS, NO_LEAD, NOTICES_HINT, RUNNING_HINT, UPDATED_HINT, WORKTREES_HINT, WORKTREES_OVER_HINT };
+export { ALERTS_HINT, LEAD_STATUS_TONES, NAME_EMPTY, NAME_MAX, NAME_TOO_LONG, NO_ALERTS, NO_LEAD, NOTICES_HINT, RUNNING_HINT, STALE_UPDATE_MS, WORKTREES_OVER_REASON };
