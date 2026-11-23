@@ -10,7 +10,9 @@ const RUNNING_WORD = 'Running';
 const NO_KEY_PATTERN = /no .*key/i;
 const KEY_SETTINGS_LABEL = 'Set the key';
 const CHAT_PLACEHOLDER = 'Message the Overlord';
-const WORKING_NOTE = 'Working';
+const WRITING_LABEL = 'Writing';
+const TAIL_MAX = 90;
+const FINAL_EVENTS: readonly string[] = ['assistant', 'user', 'result'];
 const EMPTY_TRANSCRIPT = 'Nothing has been said yet.';
 const TALK_WHO: Readonly<Record<TalkKind, string>> = {
   assistant: 'Overlord',
@@ -121,7 +123,9 @@ export {
   SUMMARY_FIELDS,
   SUMMARY_MAX,
   THINKING_LABEL,
-  WORKING_NOTE,
+  WRITING_LABEL,
+  TAIL_MAX,
+  FINAL_EVENTS,
   BLANK_DRAFT,
   CHAT_LABEL,
   CHAT_PARAM,

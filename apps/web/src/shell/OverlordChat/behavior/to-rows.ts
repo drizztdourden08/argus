@@ -37,10 +37,20 @@ const place = (acc: Acc, piece: Piece, key: string): void => {
   else acc.rows.push({ ...piece, key });
 };
 
+const stampRows = (rows: TranscriptRow[], event: TranscriptLine['event']): void => {
+  const at = typeof event === 'string' ? undefined : event.argusAt;
+  if (!at) return;
+  rows.forEach((row) => {
+    row.at ??= at;
+  });
+};
+
 const toRows = (lines: readonly TranscriptLine[]): TranscriptRow[] => {
   const acc: Acc = { rows: [], tools: new Map(), approvals: new Map() };
   lines.forEach((line) => {
+    const before = acc.rows.length;
     piecesOf(line.event).forEach((piece, at) => place(acc, piece, `${line.index}-${at}`));
+    stampRows(acc.rows.slice(before), line.event);
   });
   return acc.rows;
 };

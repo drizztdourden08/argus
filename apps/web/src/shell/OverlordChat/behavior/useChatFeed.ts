@@ -5,6 +5,8 @@ import { useRemoteRead } from '../../../data/remote';
 import type { PendingSend } from '../OverlordChat.type';
 import { isRunning } from './is-running';
 import { overlordNote } from './overlord-note';
+import { liveDraft } from './live-draft';
+import { workingActivity } from './working-activity';
 import { countOf } from './count-of';
 import { queuedMessages } from './queued-messages';
 import { unsettled } from './unsettled';
@@ -18,7 +20,8 @@ const useChatFeed = (held: readonly string[], reload: () => void) => {
   const [pending, setPending] = useState<PendingSend[]>([]);
   const next = useRef(0);
   const rows = useMemo(() => toRows(feed.lines), [feed.lines]);
-  const messages = useMemo(() => toMessages(rows), [rows]);
+  const draft = useMemo(() => liveDraft(feed.lines), [feed.lines]);
+  const messages = useMemo(() => toMessages([...rows, ...draft.rows]), [rows, draft]);
   const visible = unsettled(pending, rows, held);
 
   const onSend = async (text: string): Promise<boolean> => {
@@ -35,7 +38,7 @@ const useChatFeed = (held: readonly string[], reload: () => void) => {
     messages,
     queued: queuedMessages(held, visible),
     problem: feed.problem,
-    working: status.data?.status === 'turn',
+    working: status.data?.status === 'turn' ? workingActivity(rows, draft) : null,
     running: isRunning(status.data?.status),
     note: overlordNote(status.data),
     action: chat,

@@ -22,6 +22,8 @@ interface TalkRow {
   key: string;
   text: string;
   id?: string;
+  at?: string;
+  live?: boolean;
 }
 
 type ToolStatus = 'running' | 'done' | 'failed';
@@ -38,6 +40,17 @@ interface ToolsRow {
   kind: 'tools';
   key: string;
   tools: ToolItem[];
+  at?: string;
+}
+
+interface WorkingActivity {
+  text: string;
+  mark: 'thinking' | 'working';
+}
+
+interface LiveDraft {
+  rows: TalkRow[];
+  tool: string | null;
 }
 
 interface StepContentProps {
@@ -145,7 +158,11 @@ interface QueueLineProps {
 interface ChatFeedProps {
   messages: ChatTranscriptMessage[];
   queued: ChatTranscriptMessage[];
-  working: boolean;
+  working: WorkingActivity | null;
+}
+
+interface WorkingLineProps {
+  activity: WorkingActivity;
 }
 
 interface ChatMessageProps {
@@ -251,6 +268,9 @@ export type {
   UsageRingProps,
   UsageRow,
   ChatFeedProps,
+  LiveDraft,
+  WorkingActivity,
+  WorkingLineProps,
   ChatMessageProps,
   ChatBoxProps,
   PendingSend,

@@ -37,6 +37,7 @@ pub fn build_argv(config: &SessionArgs) -> Vec<String> {
         argv.extend(["--effort".to_owned(), effort.clone()]);
     }
     argv.extend(to_strings(&[
+        "--include-partial-messages",
         "--permission-mode",
         &config.permission_mode,
         "--permission-prompt-tool",
@@ -110,6 +111,12 @@ mod tests {
             argv.windows(2)
                 .any(|w| w == ["--permission-mode", "bypassPermissions"])
         );
+    }
+
+    #[test]
+    fn the_argv_asks_for_partial_messages_so_thinking_streams() {
+        let argv = build_argv(&config());
+        assert!(argv.iter().any(|arg| arg == "--include-partial-messages"));
     }
 
     #[test]

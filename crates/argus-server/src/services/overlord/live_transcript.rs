@@ -6,12 +6,13 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex, PoisonError};
 
+use argus_core::clock::now_iso;
 use argus_core::log::Logger;
 use argus_overlord::approvals::Approval;
 use argus_overlord::ports::{ApiKey, SecretStore, TranscriptStore};
 use argus_overlord::protocol::{Event as Wire, decode_line};
 use argus_overlord::transcript::Transcript;
-use serde_json::json;
+use serde_json::{Value, json};
 
 use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::transcript::FileTranscripts;
@@ -53,6 +54,8 @@ impl<S: TranscriptStore> Recorder<S> {
 
     /// One line written to the child's stdin or one approval change.
     pub(super) fn add(&self, raw: &str) {
+        let stamped = stamped(raw, &now_iso());
+        let raw = stamped.as_str();
         let mut cursor = self.cursor.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(session) = cursor.session.clone() {
             let _ = self.transcript.record(&session, raw);
@@ -70,6 +73,18 @@ impl<S: TranscriptStore> Recorder<S> {
         for raw in std::mem::take(&mut cursor.held) {
             let _ = self.transcript.record(session, &raw);
         }
+    }
+}
+
+/// The line with the time it arrived in `argusAt`, so the chat can show it. A line that is not a
+/// JSON object, or already has the field, is kept as it is.
+fn stamped(raw: &str, at: &str) -> String {
+    match serde_json::from_str::<Value>(raw) {
+        Ok(Value::Object(mut map)) if !map.contains_key("argusAt") => {
+            map.insert("argusAt".to_owned(), Value::String(at.to_owned()));
+            Value::Object(map).to_string()
+        }
+        _ => raw.to_owned(),
     }
 }
 
@@ -150,6 +165,16 @@ mod tests {
         let got = lines(&store, "s9");
         assert_eq!(got.len(), 1);
         assert!(!got[0].contains("SECRETSECRET"));
+    }
+
+    #[test]
+    fn a_line_keeps_the_time_it_arrived() {
+        let got: Value = serde_json::from_str(&stamped(r#"{"type":"assistant"}"#, "T1")).unwrap();
+        assert_eq!(got["argusAt"], "T1");
+        assert_eq!(got["type"], "assistant");
+        assert_eq!(stamped("not json", "T1"), "not json");
+        let known = r#"{"argusAt":"T0"}"#;
+        assert_eq!(stamped(known, "T1"), known);
     }
 
     #[test]

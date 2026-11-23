@@ -16,7 +16,7 @@ const ChatBody = (props: QueueFeedProps) => {
       {feed.problem && <Callout tone="danger">{feed.problem}</Callout>}
       <ChatFeed messages={feed.messages} queued={feed.queued} working={feed.working} />
       <ChatBox running={feed.running} note={feed.note} action={feed.action} onSend={feed.onSend} />
-      <ChatBar working={feed.working} />
+      <ChatBar working={feed.working !== null} />
     </Flex>
   );
 };

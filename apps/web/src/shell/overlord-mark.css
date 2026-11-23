@@ -1,0 +1,42 @@
+.overlord-mark {
+  transform-origin: center;
+}
+
+.overlord-mark.is-thinking {
+  animation: overlord-mark-breathe var(--duration-status-breathe) ease-in-out infinite;
+}
+
+.overlord-mark.is-working {
+  animation: overlord-mark-work var(--duration-step-breathe) ease-in-out infinite;
+}
+
+@keyframes overlord-mark-breathe {
+  0%,
+  100% {
+    opacity: var(--opacity-faint);
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes overlord-mark-work {
+  0%,
+  100% {
+    transform: rotate(-6deg) scale(0.96);
+  }
+
+  50% {
+    transform: rotate(6deg) scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlord-mark.is-thinking,
+  .overlord-mark.is-working {
+    animation: none;
+  }
+}

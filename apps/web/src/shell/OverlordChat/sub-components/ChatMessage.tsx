@@ -9,7 +9,7 @@ const ChatMessage = (props: ChatMessageProps) => {
   return (
     <Stack gap="2xs" className={`overlord-chat__message is-${role}`}>
       {message.content != null && <MessageBody role={role} content={message.content} />}
-      {message.time != null && <Text variant="caption" tone="faint">{message.time}</Text>}
+      {message.time != null && <Text variant="caption" tone="muted">{message.time}</Text>}
     </Stack>
   );
 };

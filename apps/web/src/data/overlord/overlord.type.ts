@@ -170,12 +170,26 @@ interface OverlordApproval {
   status: ApprovalState;
 }
 
+interface StreamDelta {
+  type?: string;
+  text?: string;
+  thinking?: string;
+}
+
+interface StreamInner {
+  type?: string;
+  index?: number;
+  content_block?: { type?: string; name?: string };
+  delta?: StreamDelta;
+}
+
 interface TranscriptEvent {
   type?: string;
   message?: { content?: unknown };
   duration_ms?: number;
   argus?: { source?: string };
-  event?: string;
+  event?: string | StreamInner;
+  argusAt?: string;
   id?: string;
   tool?: string;
   summary?: string;
@@ -208,6 +222,7 @@ interface TranscriptFeed {
 export type {
   ActionState,
   OverlordActivity,
+  StreamInner,
   OverlordQueue,
   OverlordRule,
   QueueHeld,

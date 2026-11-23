@@ -58,9 +58,8 @@
   inline-size: min(var(--size-320), calc(100vw - var(--space-xl)));
 }
 
-.overlord-chat__working {
-  flex-direction: row;
-  align-items: center;
+.overlord-chat__feed {
+  scroll-behavior: auto;
 }
 
 .overlord-chat__row {
