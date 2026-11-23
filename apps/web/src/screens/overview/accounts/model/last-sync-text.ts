@@ -4,14 +4,19 @@ import { FAILED_TEXT, MATCH_TEXT, NEVER_SYNCED } from '../compare.constants';
 import { clockText } from './clock-text';
 import { runResultText } from './run-result-text';
 
-const lastSyncText = (run: AccountsRun | null, drifted = false): string => {
-  if (run?.phase !== 'done' && run?.phase !== 'failed') return NEVER_SYNCED;
+const whenText = (run: AccountsRun): string => {
   const at = clockText(run.finishedAt);
-  const when = at ? ` at ${at}` : '';
-  const result = runResultText(run.result);
-  if (run.phase === 'failed') return `Last sync failed${when}: ${result || FAILED_TEXT}`;
-  const tail = result || (drifted ? '' : MATCH_TEXT);
-  return `Last sync${when}${tail ? `: ${tail}` : ''}.`;
+  return at ? ` at ${at}` : '';
+};
+
+const doneText = (run: AccountsRun, drifted: boolean): string => {
+  const tail = runResultText(run.result) || (drifted ? '' : MATCH_TEXT);
+  return `Last sync${whenText(run)}${tail ? `: ${tail}` : ''}.`;
+};
+
+const lastSyncText = (run: AccountsRun | null, drifted = false): string => {
+  if (run?.phase === 'failed') return `Last sync failed${whenText(run)}: ${runResultText(run.result) || FAILED_TEXT}`;
+  return run?.phase === 'done' ? doneText(run, drifted) : NEVER_SYNCED;
 };
 
 export { lastSyncText };

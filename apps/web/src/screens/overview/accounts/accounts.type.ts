@@ -48,6 +48,20 @@ interface AccountNameProps {
   account: Account;
 }
 
+interface RowState {
+  receive: boolean;
+  full: boolean;
+  until: string;
+  blocked: boolean;
+  tip: string | undefined;
+}
+
+interface ReceiveCellProps {
+  receive: boolean;
+  full: boolean;
+  until: string;
+}
+
 interface UsageCellProps {
   limit: AccountLimit | null;
   label: string;
@@ -94,5 +108,5 @@ interface PercentFieldProps {
 
 export type {
   Account, AccountActions, AccountNameProps, AccountRowProps, AccountsFeed, AccountsStripProps, AccountsView, PercentFieldProps, PostAction,
-  RuleChipsProps, SyncActionsProps, SyncRunLineProps, SyncSectionProps, SyncStateLineProps, UsageCellProps,
+  ReceiveCellProps, RowState, RuleChipsProps, SyncActionsProps, SyncRunLineProps, SyncSectionProps, SyncStateLineProps, UsageCellProps,
 };

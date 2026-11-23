@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { accountFacts } from './account-facts';
 export { accountName } from './account-name';
-export { canReceive } from './can-receive';
 export { clampPercent } from './clamp-percent';
 export { clockText } from './clock-text';
 export { countCritical } from './count-critical';
@@ -11,9 +10,8 @@ export { isRunActive } from './is-run-active';
 export { lastSyncText } from './last-sync-text';
 export { orderedSteps } from './ordered-steps';
 export { recentSteps } from './recent-steps';
-export { resetClock } from './reset-clock';
 export { resetText } from './reset-text';
+export { rowState } from './row-state';
 export { ruleChips } from './rule-chips';
 export { stepLine } from './step-line';
 export { usageOf } from './usage-of';
-export { weeklyLimit } from './weekly-limit';
