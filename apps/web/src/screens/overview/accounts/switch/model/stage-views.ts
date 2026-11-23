@@ -16,7 +16,8 @@ const stateOf = (doc: AccountsSwitch, last: SwitchStepDoc | undefined, stage: Sw
   last?.state ?? (unrecorded ? 'done' : fallbackState(doc, stage));
 
 const textOf = (doc: AccountsSwitch, last: SwitchStepDoc | undefined, stage: SwitchStage, unrecorded: boolean): string => {
-  if (last?.text !== undefined) return last.text;
+  const own = last?.text ?? undefined;
+  if (own !== undefined) return own;
   return unrecorded ? NO_RECORD : planText(stage, stateOf(doc, last, stage, unrecorded), isActive(doc));
 };
 
