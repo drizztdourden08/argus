@@ -207,6 +207,22 @@ mod tests {
     }
 
     #[test]
+    fn a_full_percent_rule_saves_and_reads_back() {
+        let account = json!({
+            "key": "hotmail", "label": "Hotmail", "color": "#6f9cf0", "cliDir": "C:/x/hotmail",
+            "rules": { "autoSwitch": true, "switchAt": 100, "handover": 99 }
+        });
+        let next = AccountsConfig::default()
+            .patched(&json!({ "accounts": [account] }))
+            .unwrap();
+        let back = AccountsConfig::from_json(&next.to_json());
+        let rules = &back.accounts[0].rules;
+        assert!((rules.switch_at - 100.0).abs() < f64::EPSILON);
+        assert_eq!(rules.handover, HandoverMode::At(99.0));
+        assert_eq!(back.to_json()["accounts"][0]["rules"]["switchAt"], json!(100.0));
+    }
+
+    #[test]
     fn round_trips() {
         let c = AccountsConfig::default();
         assert_eq!(AccountsConfig::from_json(&c.to_json()), c);

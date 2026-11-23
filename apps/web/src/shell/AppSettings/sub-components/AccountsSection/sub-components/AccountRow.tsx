@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Card, Inline, Select, Stack, Tag, Text, TextInput, Toggle } from '@drizztdourden08/tessera';
+import { MAX_PERCENT, MIN_PERCENT } from '../../../../../screens/overview/accounts/accounts.constants';
 import { handoverKind, handoverRule } from '../../../../../screens/overview/accounts/model';
 import { DEFAULT_COLOR, HANDOVER_CHOICES, NEW_KEY_HINT } from '../AccountsSection.constants';
 import type { AccountRowProps } from '../AccountsSection.type';
@@ -32,9 +33,9 @@ const AccountRow = (props: AccountRowProps) => {
         <Inline gap="md" align="end" wrap>
           <Toggle size="sm" label="Can be switched to" checked={item.canReceive} onChange={(canReceive) => onChange({ canReceive })} />
           <Toggle size="sm" label="Auto-switch" checked={rules.autoSwitch} onChange={(autoSwitch) => setRules({ autoSwitch })} />
-          {rules.autoSwitch && <NumberField label="Switch at (%)" value={rules.switchAt} onChange={(switchAt) => setRules({ switchAt })} />}
+          {rules.autoSwitch && <NumberField label="Switch at (%)" min={MIN_PERCENT} max={MAX_PERCENT} value={rules.switchAt} onChange={(switchAt) => setRules({ switchAt })} />}
           <Select size="sm" width="fit" aria-label="Handover" options={HANDOVER_CHOICES} value={kind} onChange={(next) => setRules({ handover: handoverRule(next as typeof kind, rules.handover) })} />
-          {typeof rules.handover === 'number' && <NumberField label="Handover at (%)" value={rules.handover} onChange={(handover) => setRules({ handover })} />}
+          {typeof rules.handover === 'number' && <NumberField label="Handover at (%)" min={MIN_PERCENT} max={MAX_PERCENT} value={rules.handover} onChange={(handover) => setRules({ handover })} />}
         </Inline>
       </Stack>
     </Card>

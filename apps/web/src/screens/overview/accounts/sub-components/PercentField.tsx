@@ -1,14 +1,35 @@
 /* @layer renderer-app @kind component */
 import { NumberInput } from '@drizztdourden08/tessera';
 import { useEffect, useState } from 'react';
+import { MAX_PERCENT, MIN_PERCENT } from '../accounts.constants';
 import type { PercentFieldProps } from '../accounts.type';
+import { clampPercent } from '../model';
 
 const PercentField = (props: PercentFieldProps) => {
   const { value, label, disabled, onCommit } = props;
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
-  const commit = () => draft !== value && Number.isFinite(draft) && onCommit(Math.min(100, Math.max(1, draft)));
-  return <NumberInput size="sm" aria-label={label} min={1} max={100} value={draft} disabled={disabled} onChange={setDraft} onBlur={commit} />;
+  const commit = (next: number) => {
+    const percent = clampPercent(next, value);
+    setDraft(percent);
+    if (percent !== value) onCommit(percent);
+  };
+  const step = (dir: 1 | -1) => commit((Number.isFinite(draft) ? draft : value) + dir);
+  return (
+    <NumberInput
+      size="sm"
+      aria-label={label}
+      min={MIN_PERCENT}
+      max={MAX_PERCENT}
+      value={draft}
+      disabled={disabled}
+      stepDisabled={[draft <= MIN_PERCENT, draft >= MAX_PERCENT]}
+      onChange={setDraft}
+      onStep={step}
+      onBlur={() => commit(draft)}
+      onKeyDown={(event) => event.key === 'Enter' && commit(draft)}
+    />
+  );
 };
 
 export { PercentField };

@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind barrel */
+export { clampPercent } from './clamp-percent';
 export { countCritical } from './count-critical';
 export { handoverKind } from './handover-kind';
 export { handoverRule } from './handover-rule';

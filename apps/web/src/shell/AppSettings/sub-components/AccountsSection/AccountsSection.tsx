@@ -4,6 +4,7 @@ import { useAccountsSettings } from '../../../../data/accounts';
 import { PORTFOLIO_SCOPE, useCollection } from '../../../../data/react';
 import type { AccountDoc } from '../../../../data/types';
 import { ACCOUNTS_COLL, ACCOUNTS_NOTE, ACCOUNTS_TITLE, ADD_LABEL, FORCE_QUIT_LABEL, SAVED_TEXT, SAVE_LABEL } from './AccountsSection.constants';
+import { cleanDraft } from './behavior/clean-draft';
 import { useAccountsDraft } from './behavior/useAccountsDraft';
 import { AccountRow } from './sub-components/AccountRow';
 import { EstimateFields } from './sub-components/EstimateFields';
@@ -16,7 +17,7 @@ const AccountsSection = () => {
   if (api.problem && !draft) return <Callout tone="danger">{`The accounts settings could not be read: ${api.problem}.`}</Callout>;
   if (!draft) return null;
   const saved = new Set(api.settings?.accounts.map((item) => item.key));
-  const save = () => void api.save(draft).then((ok) => ok && toast({ variant: 'success', message: SAVED_TEXT }));
+  const save = () => void api.save(cleanDraft(draft, api.settings)).then((ok) => ok && toast({ variant: 'success', message: SAVED_TEXT }));
   return (
     <SettingsSection id="accounts" title={ACCOUNTS_TITLE}>
       <Stack gap="md">

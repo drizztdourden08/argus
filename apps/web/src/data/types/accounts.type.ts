@@ -173,5 +173,5 @@ interface AccountsSettings {
 export type {
   AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsCycle, AccountsSettings, AccountsSwitch, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
-  SwitchPhase, SwitchStepStatus, RunResult,
+  SettingsRules, SwitchPhase, SwitchStepStatus, RunResult,
 };

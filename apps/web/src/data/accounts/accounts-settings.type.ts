@@ -1,12 +1,17 @@
 /* @layer renderer-app @kind types */
-import type { AccountsSettings, SettingsAccount } from '../types';
+import type { AccountsSettings, SettingsAccount, SettingsRules } from '../types';
 
-interface AccountsSettingsApi {
+type AccountChange = Partial<Omit<SettingsAccount, 'rules'>> & { rules?: Partial<SettingsRules> };
+
+interface AccountsSettingsState {
   settings: AccountsSettings | null;
   problem: string | null;
   busy: boolean;
-  save: (patch: Partial<AccountsSettings>) => Promise<boolean>;
-  changeAccount: (key: string, change: Partial<SettingsAccount>) => Promise<boolean>;
 }
 
-export type { AccountsSettingsApi };
+interface AccountsSettingsApi extends AccountsSettingsState {
+  save: (patch: Partial<AccountsSettings>) => Promise<boolean>;
+  changeAccount: (key: string, change: AccountChange) => Promise<boolean>;
+}
+
+export type { AccountChange, AccountsSettingsApi, AccountsSettingsState };

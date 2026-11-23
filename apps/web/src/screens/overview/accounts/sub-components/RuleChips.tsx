@@ -9,7 +9,7 @@ const RuleChips = (props: RuleChipsProps) => {
   const { account, rules } = props;
   const mine = rules.settings?.accounts.find((item) => item.key === (account.key ?? account.id));
   if (!mine) return <Inline gap="xs" wrap>{ruleChips(account.rules).map((chip) => <Tag key={chip}>{chip}</Tag>)}</Inline>;
-  const change = (next: Partial<typeof mine.rules>) => void rules.changeAccount(mine.key, { rules: { ...mine.rules, ...next } });
+  const change = (next: Partial<typeof mine.rules>) => void rules.changeAccount(mine.key, { rules: next });
   const kind = handoverKind(mine.rules.handover);
   return (
     <Inline gap="md" align="center" wrap>
