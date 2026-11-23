@@ -1,34 +1,30 @@
 /* @layer renderer-app @kind component */
 import { EmptyState, Stack } from '@drizztdourden08/tessera';
+import { useState } from 'react';
 import { useAccountsSettings } from '../../../data/accounts';
 import { NONE_FOUND } from './accounts.constants';
+import type { AccountsView } from './accounts.type';
 import { useAccountActions } from './behavior/useAccountActions';
 import { useAccountsFeed } from './behavior/useAccountsFeed';
-import { useAccountView } from './behavior/useAccountView';
-import { AccountCard } from './sub-components/AccountCard';
-import { AccountsSummary } from './sub-components/AccountsSummary';
-import { ApplyingView } from './sub-components/ApplyingView';
 import { ReviewView } from './review';
-import { SyncRow } from './sub-components/SyncRow';
-import { SwitchDialog, useSwitchTarget } from './switch';
+import { AccountsStrip } from './sub-components/AccountsStrip';
+import { SyncSection } from './sub-components/SyncSection';
+import { isActive, ProcessPanel, useSwitchFeed, useSwitchTarget } from './switch';
 
 const AccountsTab = () => {
   const { ready, accounts, drift } = useAccountsFeed();
-  const { view, show } = useAccountView();
+  const [view, show] = useState<AccountsView>('overview');
   const rules = useAccountsSettings();
   const target = useSwitchTarget();
-  const actions = useAccountActions(() => show('applying'));
-  if (view === 'review') return <ReviewView onBack={() => show('overview')} onApplied={() => show('applying')} />;
-  if (view === 'applying') return <ApplyingView actions={actions} onBack={() => show('overview')} />;
+  const doc = useSwitchFeed();
+  const actions = useAccountActions();
+  if (view === 'review') return <ReviewView onBack={() => show('overview')} onApplied={() => show('overview')} />;
   if (accounts.length === 0) return ready ? <EmptyState message={NONE_FOUND} /> : null;
-  const total = drift?.total ?? 0;
-  const switching = accounts.find((account) => account.id === target.key);
   return (
     <Stack gap="md">
-      <AccountsSummary accounts={accounts} drift={total} />
-      {accounts.map((account) => <AccountCard key={account.id} account={account} actions={actions} rules={rules} onSwitch={target.open} />)}
-      <SyncRow drift={total} actions={actions} onReview={() => show('review')} />
-      {switching && <SwitchDialog target={switching} accounts={accounts} onClose={target.close} />}
+      <AccountsStrip accounts={accounts} rules={rules} confirmKey={target.key} switching={isActive(doc)} onSwitch={target.open} onCloseConfirm={target.close} />
+      <ProcessPanel doc={doc} accounts={accounts} />
+      <SyncSection drift={drift} accounts={accounts} actions={actions} onReview={() => show('review')} />
     </Stack>
   );
 };

@@ -80,17 +80,45 @@ interface SyncStepDoc {
   detail?: string | null;
 }
 
-type SwitchPhase =
-  | 'idle' | 'countdown' | 'handover' | 'closing' | 'waiting_for_quit' | 'saving_login' | 'syncing' | 'restoring_login'
-  | 'scheduling_resume' | 'starting' | 'confirming' | 'done' | 'cancelled' | 'failed';
+type SwitchPhase = 'idle' | 'countdown' | 'handover' | 'sync' | 'switching' | 'verifying' | 'done' | 'failed' | 'cancelled';
 
-type SwitchStepStatus = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
+type SwitchStage = 'detect' | 'countdown' | 'handover' | 'sync' | 'switch' | 'verify';
+
+type SwitchStepState = 'waiting' | 'running' | 'done' | 'failed' | 'skipped';
 
 interface SwitchStepDoc {
-  id?: string;
-  label?: string;
-  status?: SwitchStepStatus;
+  at?: string | null;
+  stage?: SwitchStage;
+  state?: SwitchStepState;
+  text?: string | null;
   detail?: string | null;
+}
+
+type SwitchThreadState = 'found' | 'asked' | 'ready' | 'skipped' | 'failed';
+
+interface SwitchThreadDoc {
+  board?: string;
+  thread?: string;
+  title?: string | null;
+  sessionId?: string | null;
+  state?: SwitchThreadState;
+  note?: string | null;
+}
+
+type SwitchSyncState = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
+
+interface SwitchSyncCounts {
+  copied?: number;
+  updated?: number;
+  folders?: number;
+  archived?: number;
+}
+
+interface SwitchSyncDoc {
+  state?: SwitchSyncState;
+  backupDir?: string | null;
+  counts?: SwitchSyncCounts | null;
+  error?: string | null;
 }
 
 interface AccountsSwitch {
@@ -101,32 +129,10 @@ interface AccountsSwitch {
   phase?: SwitchPhase;
   countdownEndsAt?: number | string | null;
   steps?: SwitchStepDoc[];
+  threads?: SwitchThreadDoc[];
+  sync?: SwitchSyncDoc | null;
   error?: string | null;
-}
-
-interface AccountsCycle {
-  id?: string;
-  account?: string;
-  mode?: 'auto' | 'fixed' | 'now';
-  askAt?: number;
-  k?: number;
-  useAtRequest?: number;
-  useAtReady?: number;
-  leads?: string[];
-}
-
-type HandoverState = 'estimate_asked' | 'estimated' | 'asked' | 'writing' | 'ready' | 'cut_off' | 'resumed' | 'not_resumed';
-
-interface HandoverDoc {
-  id?: string;
-  cycle?: string;
-  board?: string;
-  thread?: string;
-  sessionId?: string | null;
-  state?: HandoverState;
-  estimate?: { percent?: number; minutes?: number; agents?: number; at?: number | string | null } | null;
-  file?: string | null;
-  agents?: { id?: string; branch?: string; stop?: string }[];
+  blocker?: string | null;
 }
 
 type HandoverRule = 'off' | 'auto' | number;
@@ -172,6 +178,6 @@ interface AccountsSettings {
 
 export type {
   AccountDoc, AccountLimit, AccountRules, AccountSeverity, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
-  AccountsCycle, AccountsSettings, AccountsSwitch, HandoverDoc, HandoverRule, HandoverState, SettingsAccount,
-  SettingsRules, SwitchPhase, SwitchStepStatus, RunResult,
+  AccountsSettings, AccountsSwitch, HandoverRule, SettingsAccount, SettingsRules, SwitchPhase, SwitchStage,
+  SwitchStepState, SwitchSyncCounts, SwitchSyncDoc, SwitchThreadDoc, RunResult,
 };

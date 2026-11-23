@@ -1,86 +1,115 @@
 /* @layer renderer-app @kind constants */
-import type { HandoverState, SwitchPhase, SwitchStepStatus } from '../../../../data/types';
+import { defineStatuses } from '@drizztdourden08/tessera';
+import type { SwitchPhase, SwitchStage, SwitchSyncCounts } from '../../../../data/types';
 
 const SWITCH_DOC = 'switch';
-const CYCLE_DOC = 'cycle';
-const HANDOVERS_COLL = 'handovers';
 const SWITCH_PATH = '/api/accounts/switch';
 const ANYWAY_PATH = '/api/accounts/switch/anyway';
 const CANCEL_PATH = '/api/accounts/switch/cancel';
 
-const HANDOVER_STEP = 'handover';
 const SWITCH_LINK_PARAM = 'switch';
 const TAB_LINK_PARAM = 'tab';
 
-const FINISHED_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['idle', 'done', 'cancelled', 'failed']);
-const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover', 'waiting_for_quit']);
-const READY_STATES: ReadonlySet<HandoverState> = new Set<HandoverState>(['ready', 'cut_off', 'resumed', 'not_resumed']);
+const RUNNING_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover', 'sync', 'switching', 'verifying']);
+const CANCELABLE_PHASES: ReadonlySet<SwitchPhase> = new Set<SwitchPhase>(['countdown', 'handover']);
 
-const STEP_MARK: Readonly<Record<SwitchStepStatus, string>> = {
-  pending: '\u25CB',
-  running: '\u25CF',
-  done: '\u2713',
-  failed: '\u2717',
-  skipped: '\u2212',
+const STAGES: readonly SwitchStage[] = ['detect', 'countdown', 'handover', 'sync', 'switch', 'verify'];
+
+const PHASE_STAGE: Readonly<Partial<Record<SwitchPhase, SwitchStage>>> = {
+  countdown: 'countdown',
+  handover: 'handover',
+  sync: 'sync',
+  switching: 'switch',
+  verifying: 'verify',
 };
 
-const STEP_TONE: Readonly<Record<SwitchStepStatus, 'muted' | 'info' | 'success' | 'danger'>> = {
-  pending: 'muted',
-  running: 'info',
-  done: 'success',
-  failed: 'danger',
-  skipped: 'muted',
+const STAGE_LABEL: Readonly<Record<SwitchStage, string>> = {
+  detect: 'Detect',
+  countdown: 'Countdown',
+  handover: 'Handover',
+  sync: 'Sync',
+  switch: 'Switch',
+  verify: 'Verify',
 };
 
-const STATE_LABEL: Readonly<Record<HandoverState, string>> = {
-  estimate_asked: 'estimate asked',
-  estimated: 'estimated',
-  asked: 'asked',
-  writing: 'writing',
-  ready: 'ready',
-  cut_off: 'cut off',
-  resumed: 'resumed',
-  not_resumed: 'not resumed',
+const STAGE_PLAN: Readonly<Record<SwitchStage, string>> = {
+  detect: 'Find the threads that are working now.',
+  countdown: 'Wait a moment, so the switch can still be cancelled.',
+  handover: 'Ask each working thread to write a handover.',
+  sync: 'Copy the Desktop sidebar to the new account.',
+  switch: 'Quit Desktop and sign in to the new account.',
+  verify: 'Check that Desktop is on the new account.',
 };
 
-const STATE_TONE: Readonly<Record<HandoverState, 'info' | 'success' | 'warning'>> = {
-  estimate_asked: 'info',
-  estimated: 'info',
-  asked: 'info',
-  writing: 'warning',
-  ready: 'success',
-  cut_off: 'warning',
-  resumed: 'success',
-  not_resumed: 'warning',
-};
+const STEP_STATUSES = defineStatuses({
+  waiting: { label: 'Waiting', tone: 'neutral' },
+  running: { label: 'Running', tone: 'info', pulse: true },
+  done: { label: 'Done', tone: 'success' },
+  failed: { label: 'Failed', tone: 'danger' },
+  skipped: { label: 'Skipped', tone: 'neutral' },
+});
 
-const WAITING_PHASE: SwitchPhase = 'waiting_for_quit';
-const QUIT_TEXT = 'Quit Desktop from its tray icon (right-click, Quit); Argus continues as soon as it has quit';
-const DIALOG_TITLE = 'Switch Desktop to';
-const HANDOVER_TOGGLE = 'Ask working leads for a handover first';
-const HANDOVER_TOGGLE_HELP = 'Each lead writes down where it is, and the new account picks the work up from those notes.';
-const START_LABEL = 'Start';
+const THREAD_STATUSES = defineStatuses({
+  found: { label: 'Found', tone: 'neutral' },
+  asked: { label: 'Asked', tone: 'info', pulse: true },
+  ready: { label: 'Ready', tone: 'success' },
+  skipped: { label: 'Skipped', tone: 'neutral' },
+  failed: { label: 'Failed', tone: 'danger' },
+});
+
+const SYNC_STATUSES = defineStatuses({
+  pending: { label: 'Pending', tone: 'neutral' },
+  running: { label: 'Running', tone: 'info', pulse: true },
+  done: { label: 'Done', tone: 'success' },
+  failed: { label: 'Failed', tone: 'danger' },
+  skipped: { label: 'Skipped', tone: 'neutral' },
+});
+
+const PHASE_STATUSES = defineStatuses({
+  idle: { label: 'Idle', tone: 'neutral' },
+  countdown: { label: 'Counting down', tone: 'warning', pulse: true },
+  handover: { label: 'Handover', tone: 'info', pulse: true },
+  sync: { label: 'Syncing', tone: 'info', pulse: true },
+  switching: { label: 'Switching', tone: 'info', pulse: true },
+  verifying: { label: 'Verifying', tone: 'info', pulse: true },
+  done: { label: 'Done', tone: 'success' },
+  failed: { label: 'Failed', tone: 'danger' },
+  cancelled: { label: 'Cancelled', tone: 'neutral' },
+});
+
+const COUNT_KEYS: readonly (keyof SwitchSyncCounts)[] = ['copied', 'updated', 'folders', 'archived'];
+
+const PROCESS_TITLE = 'Switch process';
+const NO_SWITCH = 'No switch running.';
+const NO_RUN_YET = 'No switch has run yet.';
+const LAST_RUN = 'Last run';
+const NOT_REACHED = 'Not reached.';
+const ZERO_GRACE_MS = 3000;
+const ZERO_TEXT = 'The countdown is at 0:00 and nothing moved.';
+const NO_REASON = 'Argus gave no reason.';
+const AT_ZERO_HANDOVER = 'At 0:00 Argus asks the working threads for a handover.';
+const AT_ZERO_SYNC = 'At 0:00 Argus syncs the sidebar, then switches.';
+const THREADS_TITLE = 'Threads for handover';
+const NO_THREADS = 'No working threads found.';
+const THREADS_UNCHECKED = 'Not checked yet.';
+const SYNC_TITLE = 'Sidebar sync';
+const SYNC_UNSTARTED = 'Not started yet.';
+const STUCK_PREFIX = 'Stuck:';
+const BY_RULE = 'Started by the auto-switch rule.';
+const BY_OWNER = 'Started by you.';
+
+const HANDOVER_TOGGLE = 'Ask working threads for a handover first';
+const START_LABEL = 'Start switch';
 const CANCEL_LABEL = 'Cancel';
-const CLOSE_LABEL = 'Close';
 const ANYWAY_LABEL = 'Switch anyway';
 const NOW_LABEL = 'Switch now';
-const DESKTOP_CLOSES = 'The Desktop app closes in the next step. This page stays up and keeps following the switch.';
-const SWITCH_DONE = 'Desktop is on the new account.';
-const SWITCH_CANCELLED = 'The switch was cancelled.';
-const ANYWAY_TOAST = 'Not waiting for the rest.';
-const CYCLE_TITLE = 'Handover cycle';
-const NOT_ASKED_TEXT = 'not asked';
-const SWITCH_FAILED = 'The switch failed.';
-const REASON_RULE = 'The auto-switch rule reached its percent. Handovers, if asked, are in.';
-const REASON_OWNER = 'You asked for this switch.';
 const SWITCH_STARTED = 'Switch started.';
+const ANYWAY_TOAST = 'Not waiting for the rest.';
 const SWITCH_CANCELLED_TOAST = 'Switch cancelled.';
 
-
 export {
-  QUIT_TEXT, WAITING_PHASE,
-  ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, CANCELABLE_PHASES, CANCEL_LABEL, CANCEL_PATH, CLOSE_LABEL, CYCLE_DOC, CYCLE_TITLE, DESKTOP_CLOSES, DIALOG_TITLE,
-  FINISHED_PHASES, HANDOVERS_COLL, HANDOVER_STEP, HANDOVER_TOGGLE, HANDOVER_TOGGLE_HELP, NOT_ASKED_TEXT, NOW_LABEL, READY_STATES, REASON_OWNER, REASON_RULE, START_LABEL, STATE_LABEL,
-  STATE_TONE, STEP_MARK, STEP_TONE, SWITCH_CANCELLED, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_DONE, SWITCH_LINK_PARAM, SWITCH_PATH,
-  SWITCH_FAILED, SWITCH_STARTED, TAB_LINK_PARAM,
+  ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, CANCEL_PATH, COUNT_KEYS,
+  HANDOVER_TOGGLE, LAST_RUN, NO_REASON, NO_RUN_YET, NO_SWITCH, NO_THREADS, NOT_REACHED, NOW_LABEL, PHASE_STAGE, PHASE_STATUSES, PROCESS_TITLE, RUNNING_PHASES,
+  STAGE_LABEL, STAGE_PLAN, STAGES, START_LABEL, STEP_STATUSES, STUCK_PREFIX, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_LINK_PARAM, SWITCH_PATH,
+  SWITCH_STARTED, SYNC_STATUSES, SYNC_TITLE, SYNC_UNSTARTED, TAB_LINK_PARAM, THREAD_STATUSES, THREADS_TITLE, THREADS_UNCHECKED, ZERO_GRACE_MS, ZERO_TEXT,
 };

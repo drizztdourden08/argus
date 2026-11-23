@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind barrel */
 export { useDeepTab } from './behavior/useDeepTab';
-export { SwitchCountdown } from './sub-components/SwitchCountdown';
-export { SwitchDialog } from './sub-components/SwitchDialog';
-export { CyclePanel } from './sub-components/CyclePanel';
+export { useSwitchFeed } from './behavior/useSwitchFeed';
 export { useSwitchTarget } from './behavior/useSwitchTarget';
+export { isActive } from './model';
+export { ProcessPanel } from './sub-components/ProcessPanel';
+export { SwitchConfirm } from './sub-components/SwitchConfirm';

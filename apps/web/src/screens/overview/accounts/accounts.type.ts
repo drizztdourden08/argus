@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind types */
 import type { AccountsSettingsApi } from '../../../data/accounts';
 import type { WithId } from '../../../data/react';
-import type { AccountDoc, AccountLimit, AccountsDrift } from '../../../data/types';
+import type { AccountDoc, AccountLimit, AccountsDrift, AccountsRun } from '../../../data/types';
+import type { SyncStep } from './compare.type';
 
 type Account = WithId<AccountDoc>;
 
@@ -17,33 +18,48 @@ interface AccountActions {
   undo: () => void;
 }
 
-type AccountsView = 'overview' | 'review' | 'applying';
+type AccountsView = 'overview' | 'review';
 
-interface AccountsSummaryProps {
+interface AccountsStripProps {
   accounts: readonly Account[];
-  drift: number;
+  rules: AccountsSettingsApi;
+  confirmKey: string | null;
+  switching: boolean;
+  onSwitch: (key: string) => void;
+  onCloseConfirm: () => void;
 }
 
-interface SyncRowProps {
-  drift: number;
+interface AccountRowProps {
+  account: Account;
+  rules: AccountsSettingsApi;
+  now: number;
+  confirming: boolean;
+  switching: boolean;
+  onSwitch: (key: string) => void;
+  onCloseConfirm: () => void;
+}
+
+interface AccountNameProps {
+  account: Account;
+}
+
+interface UsageCellProps {
+  limit: AccountLimit | null;
+  label: string;
+  now: number;
+}
+
+interface SyncSectionProps {
+  drift: AccountsDrift | null;
+  accounts: readonly Account[];
   actions: AccountActions;
   onReview: () => void;
 }
 
-interface AccountCardProps {
-  account: Account;
-  actions: AccountActions;
-  rules: AccountsSettingsApi;
-  onSwitch: (key: string) => void;
-}
-
-interface LimitMeterProps {
-  limit: AccountLimit;
-  binding: boolean;
-}
-
-interface AccountFactsProps {
-  account: Account;
+interface SyncRunLineProps {
+  run: AccountsRun;
+  steps: readonly SyncStep[];
+  accounts: readonly Account[];
 }
 
 interface RuleChipsProps {
@@ -58,4 +74,7 @@ interface PercentFieldProps {
   onCommit: (value: number) => void;
 }
 
-export type { Account, AccountActions, AccountCardProps, AccountFactsProps, AccountsFeed, AccountsSummaryProps, AccountsView, LimitMeterProps, PercentFieldProps, RuleChipsProps, SyncRowProps };
+export type {
+  Account, AccountActions, AccountNameProps, AccountRowProps, AccountsFeed, AccountsStripProps, AccountsView, PercentFieldProps, RuleChipsProps,
+  SyncRunLineProps, SyncSectionProps, UsageCellProps,
+};

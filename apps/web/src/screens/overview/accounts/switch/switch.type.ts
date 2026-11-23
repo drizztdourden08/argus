@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { AccountsCycle, AccountsSwitch, HandoverDoc } from '../../../../data/types';
+import type { AccountsSwitch, SwitchStage, SwitchStepState, SwitchSyncDoc, SwitchThreadDoc } from '../../../../data/types';
 import type { Account } from '../accounts.type';
 
 interface SwitchActions {
@@ -9,55 +9,54 @@ interface SwitchActions {
   cancel: () => void;
 }
 
-interface SwitchFeed {
-  doc: AccountsSwitch | null;
-  cycle: AccountsCycle | null;
-  handovers: HandoverDoc[];
-}
-
-interface SwitchDialogProps {
-  target: Account;
-  accounts: readonly Account[];
-  onClose: () => void;
-}
-
-interface SwitchFooterProps {
-  target: Account;
-  feed: SwitchFeed;
-  actions: SwitchActions;
-  handover: boolean;
-  onClose: () => void;
-}
-
-interface SwitchBodyProps {
-  target: Account;
-  accounts: readonly Account[];
-  feed: SwitchFeed;
-  actions: SwitchActions;
-  handover: boolean;
-  onHandover: (next: boolean) => void;
-}
-
-interface SwitchOutcomeProps {
-  feed: SwitchFeed;
-}
-
-interface SwitchStepsProps {
-  feed: SwitchFeed;
-  actions: SwitchActions;
-}
-
 interface SwitchLink {
   target: string | null;
   clear: () => void;
 }
 
-interface CyclePanelProps {
-  account: Account;
+interface StageView {
+  stage: SwitchStage;
+  label: string;
+  state: SwitchStepState;
+  text: string;
+  at: string;
+  detail: string;
 }
 
-interface HandoverLineProps {
-  doc: HandoverDoc;
+interface ProcessPanelProps {
+  doc: AccountsSwitch | null;
+  accounts: readonly Account[];
 }
 
-export type { CyclePanelProps, HandoverLineProps, SwitchActions, SwitchBodyProps, SwitchDialogProps, SwitchFeed, SwitchFooterProps, SwitchLink, SwitchOutcomeProps, SwitchStepsProps };
+interface ProcessDocProps {
+  doc: AccountsSwitch;
+}
+
+interface ProcessSummaryProps {
+  doc: AccountsSwitch;
+  accounts: readonly Account[];
+}
+
+interface StageRowProps {
+  view: StageView;
+  doc: AccountsSwitch;
+}
+
+interface ThreadListProps {
+  threads: readonly SwitchThreadDoc[];
+  checked: boolean;
+}
+
+interface SyncBlockProps {
+  sync: SwitchSyncDoc | null | undefined;
+}
+
+interface SwitchConfirmProps {
+  target: Account;
+  onClose: () => void;
+}
+
+export type {
+  ProcessDocProps, ProcessPanelProps, ProcessSummaryProps, StageRowProps, StageView, SwitchActions, SwitchConfirmProps, SwitchLink, SyncBlockProps,
+  ThreadListProps,
+};
