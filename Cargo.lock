@@ -109,6 +109,7 @@ dependencies = [
 name = "argus-agents"
 version = "0.2.0"
 dependencies = [
+ "argus-board",
  "argus-core",
  "serde",
  "serde_json",

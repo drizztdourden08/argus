@@ -105,6 +105,7 @@ fn world() -> World {
         Board {
             agents: vec![],
             threads: vec![main],
+            ..Board::default()
         },
     );
     World {
@@ -638,6 +639,34 @@ fn an_idle_agent_gets_one_wake_with_the_id_then_is_closed_as_finished_after_the_
     w.advance(11);
     let run = r.tick();
     assert_closed_as_finished(&w, &run);
+}
+
+#[test]
+fn a_record_closed_as_finished_hands_its_items_back_to_its_thread() {
+    let w = world();
+    ended(
+        &w,
+        Sub {
+            quiet: 6,
+            ..Sub::default()
+        },
+    );
+    w.edit_board(|board| {
+        board["agents"]["A-44"]["items"] = json!(["I-1", "I-2"]);
+        board["items"] = json!({
+            "I-1": { "id": "I-1", "assignee": "agent:A-44", "rev": 1 },
+            "I-2": { "id": "I-2", "assignee": "ui", "rev": 1 },
+        });
+    });
+    let r = w.reconciler(true);
+    r.tick();
+    w.advance(31);
+    r.tick();
+    assert_eq!(w.a("A-44")["status"], json!("done"));
+    let items = w.boards.load("alpha")["items"].clone();
+    assert_eq!(items["I-1"]["assignee"], json!("coordinator"));
+    assert_eq!(items["I-1"]["rev"], json!(2));
+    assert_eq!(items["I-2"]["assignee"], json!("ui"));
 }
 
 fn assert_closed_as_finished(w: &World, run: &RunReport) {

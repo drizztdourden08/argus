@@ -10,6 +10,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+argus-board = { path = "../argus-board" }
 argus-core = { path = "../argus-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }

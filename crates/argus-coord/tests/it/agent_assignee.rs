@@ -125,3 +125,26 @@ fn migrate_assignees_sets_the_live_agent_and_a_dry_run_writes_nothing() {
     let again = rig.ok(&["item", "migrate-assignees"], As::Lead);
     assert_eq!(again.out, "no item needs an agent assignee.\n");
 }
+
+#[test]
+fn a_takeover_gives_the_hold_of_the_twin_to_the_absorbing_agent() {
+    let rig = rig();
+    rig.edit(|b| {
+        let mut target = hook_agent("lead-started", "sonnet");
+        target["id"] = json!("A-1");
+        target["source"] = json!("manual");
+        target["hookId"] = Value::Null;
+        target["items"] = json!(["I-1"]);
+        let mut twin = hook_agent("hook-made", "sonnet");
+        twin["id"] = json!("A-2");
+        twin["claudeId"] = json!("dupe-1");
+        twin["hookId"] = json!("dupe-1");
+        twin["items"] = json!(["I-1"]);
+        b["agents"]["A-1"] = target;
+        b["agents"]["A-2"] = twin;
+        b["items"]["I-1"]["assignee"] = json!("agent:A-2");
+    });
+    rig.ok(&["agent", "set", "A-1", "--claude-id", "dupe-1"], As::Lead);
+    assert_eq!(assignee(&rig, "I-1"), "agent:A-1");
+    assert_eq!(rig.board()["agents"]["A-2"]["status"], "stopped");
+}

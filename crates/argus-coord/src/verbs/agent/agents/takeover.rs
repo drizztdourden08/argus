@@ -4,6 +4,7 @@
 
 use argus_board::Board;
 use argus_board::agents::is_live;
+use argus_board::holds::transfer;
 use argus_board::json::{doc, set};
 use argus_board::store::stamp;
 use argus_core::clock::now_iso;
@@ -34,7 +35,7 @@ fn take_into(fields: &mut Fields, twin: &Value, target: &Value) {
 }
 
 /// Moves what the target lacks from the twin into `fields`, then empties the twin's ids, marks it
-/// `duplicateOf` the target and stops it when it was live.
+/// `duplicateOf` the target and stops it when it was live. The items the twin held go to the target.
 ///
 /// # Errors
 /// No such twin or target record.
@@ -60,5 +61,6 @@ pub fn absorb(
         set(twin, "finishedAt", now_iso());
     }
     stamp(board, "agents", twin_id, actor)?;
+    transfer(board, twin_id, target_id, actor)?;
     Ok(())
 }

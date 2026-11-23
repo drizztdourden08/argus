@@ -1,7 +1,8 @@
 //! Writing the decisions of an evaluation onto the board under its lock.
 
 use crate::board::Board;
-use crate::record::{Patches, is_set, stamp};
+use crate::holds::release;
+use crate::record::{Patches, is_live, is_set, stamp};
 use serde_json::Value;
 
 const ACTOR: &str = "dashboard";
@@ -18,6 +19,9 @@ pub(super) fn apply_patches(board: &mut Board, patches: &Patches, now_ms: i64) {
         if is_set(agent, "orphanSince") {
             let rev = agent.get("rev").cloned().unwrap_or(Value::Null);
             agent.insert("orphanRev".into(), rev);
+        }
+        if !is_live(agent) {
+            release(board, id, now_ms);
         }
     }
 }

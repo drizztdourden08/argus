@@ -105,6 +105,30 @@ fn a_working_hook_agent_with_a_transcript_quiet_for_more_than_20_minutes_is_clos
 }
 
 #[test]
+fn a_closed_agent_hands_its_items_back_to_its_thread_and_leaves_the_others_alone() {
+    let w = world();
+    let file = w.transcript("a13", 25);
+    let mut board = board_json(
+        &[thread_record("coordinator", "coordinator", &json!({}))],
+        &[agent(
+            "A-13",
+            &json!({ "items": ["I-1", "I-2"], "transcriptFile": file }),
+        )],
+    );
+    board["items"] = json!({
+        "I-1": { "id": "I-1", "assignee": "agent:A-13", "rev": 1 },
+        "I-2": { "id": "I-2", "assignee": "worker", "rev": 1 },
+    });
+    w.boards.save("alpha", &board);
+    assert_eq!(w.plain().tick(), vec!["alpha/A-13".to_owned()]);
+    let items = w.boards.load("alpha")["items"].clone();
+    assert_eq!(items["I-1"]["assignee"], json!("coordinator"));
+    assert_eq!(items["I-1"]["rev"], json!(2));
+    assert_eq!(items["I-2"]["assignee"], json!("worker"));
+    assert_eq!(items["I-2"]["rev"], json!(1));
+}
+
+#[test]
 fn every_close_is_one_line_in_the_activity_log_after_the_board_was_written() {
     let w = world();
     let file = w.transcript("a12", 30);
@@ -234,6 +258,7 @@ fn what_the_board_file_says_wins_over_the_mirror() {
     let mirror = Board {
         agents: vec![stale.as_object().cloned().unwrap()],
         threads: vec![],
+        ..Board::default()
     };
     w.boards.set_mirror("alpha", mirror);
     assert_eq!(w.plain().tick(), Vec::<String>::new());

@@ -40,6 +40,15 @@ fn board_of(root: &Value) -> Board {
     Board {
         agents: records(root, "agents"),
         threads: records(root, "threads"),
+        items: Vec::new(),
+    }
+}
+
+/// The board of a write: the items too, which the cheap snapshot leaves out.
+fn write_board_of(root: &Value) -> Board {
+    Board {
+        items: records(root, "items"),
+        ..board_of(root)
     }
 }
 
@@ -60,11 +69,12 @@ impl BoardStore for AgentBoards {
 
     fn write(&self, key: &str, change: &mut dyn FnMut(&mut Board)) -> Result<(), AgentsError> {
         let job = with_board_async(&self.home, key, LockWait::default(), |root| {
-            let before = board_of(root);
+            let before = write_board_of(root);
             let mut board = before.clone();
             change(&mut board);
             put_back(root, "agents", &changed(&before.agents, &board.agents));
             put_back(root, "threads", &changed(&before.threads, &board.threads));
+            put_back(root, "items", &changed(&before.items, &board.items));
             Ok(())
         });
         self.runtime

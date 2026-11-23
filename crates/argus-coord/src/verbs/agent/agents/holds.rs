@@ -5,16 +5,13 @@
 use argus_board::Board;
 use argus_board::agent_links::items_of;
 use argus_board::agents::is_live;
-use argus_board::json::{display, doc, truthy};
+use argus_board::holds::{handbacks, tag};
+use argus_board::json::{display, doc};
 use serde_json::{Value, json};
 
 use crate::cli::exit::CoordError;
 use crate::verbs::agent::base::apply::apply;
 use crate::who::Caller;
-
-fn tag(agent_id: &str) -> String {
-    format!("agent:{agent_id}")
-}
 
 fn assignee_of(board: &Board, item: &str) -> String {
     doc(board, "items", item)
@@ -82,18 +79,8 @@ pub fn claim(board: &mut Board, who: &Caller, agent_id: &str) -> Result<(), Coor
 /// # Errors
 /// The refusal of the edit.
 pub fn release(board: &mut Board, who: &Caller, agent_id: &str) -> Result<(), CoordError> {
-    let agent = doc(board, "agents", agent_id)
-        .cloned()
-        .unwrap_or(Value::Null);
-    let thread = display(&agent["thread"]);
-    if doc(board, "threads", &thread).is_none() {
-        return Ok(());
-    }
-    for item in items_of(&agent) {
-        let live = doc(board, "items", &item).is_some_and(|i| !truthy(i, "deletedAt"));
-        if live && assignee_of(board, &item) == tag(agent_id) {
-            write(board, who, &item, &thread)?;
-        }
+    for (item, thread) in handbacks(board, agent_id) {
+        write(board, who, &item, &thread)?;
     }
     Ok(())
 }

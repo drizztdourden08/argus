@@ -10,6 +10,8 @@ pub struct Board {
     pub agents: Vec<Record>,
     /// The `threads` collection.
     pub threads: Vec<Record>,
+    /// The `items` collection; only a write fills it, a snapshot leaves it empty.
+    pub items: Vec<Record>,
 }
 
 /// Whether a thread has ended.
@@ -28,6 +30,11 @@ impl Board {
     /// The agent with this id, for writing.
     pub fn agent_mut(&mut self, id: &str) -> Option<&mut Record> {
         self.agents.iter_mut().find(|a| id_of(a) == id)
+    }
+
+    /// The item with this id, for writing.
+    pub fn item_mut(&mut self, id: &str) -> Option<&mut Record> {
+        self.items.iter_mut().find(|i| id_of(i) == id)
     }
 
     /// The first coordinator thread that has not ended.

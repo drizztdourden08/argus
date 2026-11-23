@@ -152,6 +152,7 @@ impl JsonBoards {
         let board = Board {
             agents: records(&root, "agents"),
             threads: records(&root, "threads"),
+            items: records(&root, "items"),
         };
         Some((root, board))
     }
@@ -175,6 +176,7 @@ impl BoardStore for JsonBoards {
         change(&mut board);
         put_back(&mut root, "agents", &board.agents);
         put_back(&mut root, "threads", &board.threads);
+        put_back(&mut root, "items", &board.items);
         self.save(project, &root);
         Ok(())
     }

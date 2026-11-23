@@ -133,6 +133,7 @@ fn board(threads: &[Value]) -> Board {
     Board {
         agents: vec![],
         threads: list,
+        ..Board::default()
     }
 }
 
@@ -156,6 +157,7 @@ fn the_thread_to_wake_is_the_owner_while_it_lives_else_the_coordinator() {
             "coordinator",
             &json!({ "status": "archived" }),
         ))],
+        ..Board::default()
     };
     assert_eq!(ended_lead.coordinator(), None);
 }

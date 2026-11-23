@@ -119,6 +119,7 @@ impl Harness {
         let board = Board {
             agents: vec![self.rec.clone()],
             threads: vec![],
+            ..Board::default()
         };
         self.boards.set_mirror("alpha", board);
     }

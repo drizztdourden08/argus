@@ -27,6 +27,7 @@ use crate::config::{MINUTE_MS, ReaperOptions, ReconcilerOptions};
 use crate::evidence::Env;
 use crate::evidence::session::Session;
 use crate::evidence::sign::{Look, last_sign};
+use crate::holds::release;
 use crate::iso::format_iso;
 use crate::model_rules::high_tier;
 use crate::ports::{ActivityLine, Ports};
@@ -183,6 +184,7 @@ impl AgentReaper {
                     continue;
                 };
                 lines.push(Self::close(project, agent, idle, at));
+                release(board, id, at);
                 closed.push(format!("{project}/{id}"));
             }
         });

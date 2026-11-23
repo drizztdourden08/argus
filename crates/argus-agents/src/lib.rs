@@ -18,6 +18,7 @@ pub mod error;
 mod evidence;
 pub mod fakes;
 pub mod fs;
+pub mod holds;
 pub mod hook_logic;
 pub mod iso;
 pub mod model_rules;
