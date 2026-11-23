@@ -17,7 +17,7 @@ const mockPosts = (status = 'applied', outcome: string | null = null) => {
 };
 
 const sentPosts = (fetchMock: ReturnType<typeof mockPosts>): SentPost[] =>
-  fetchMock.mock.calls.map(([input, init]) => ({ path: String(input), body: JSON.parse(String(init?.body)) as Record<string, unknown> }));
+  fetchMock.mock.calls.filter(([, init]) => typeof init?.body === 'string').map(([input, init]) => ({ path: String(input), body: JSON.parse(String(init?.body)) as Record<string, unknown> }));
 
 const onlyPost = async (fetchMock: ReturnType<typeof mockPosts>): Promise<SentPost | undefined> => {
   await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
