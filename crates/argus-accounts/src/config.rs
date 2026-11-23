@@ -219,7 +219,10 @@ mod tests {
         let rules = &back.accounts[0].rules;
         assert!((rules.switch_at - 100.0).abs() < f64::EPSILON);
         assert_eq!(rules.handover, HandoverMode::At(99.0));
-        assert_eq!(back.to_json()["accounts"][0]["rules"]["switchAt"], json!(100.0));
+        assert_eq!(
+            back.to_json()["accounts"][0]["rules"]["switchAt"],
+            json!(100.0)
+        );
     }
 
     #[test]
