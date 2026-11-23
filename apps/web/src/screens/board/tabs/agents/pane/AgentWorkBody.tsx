@@ -4,7 +4,7 @@ import type { RecordBodyProps } from '../../../../../shell/records/pane/pane.typ
 import { DrawerSection } from '../../kanban/sub-components/DrawerSection';
 import { EmptyLine } from '../../kanban/sub-components/EmptyLine';
 import { AgentItemsField } from '../sub-components/AgentItemsField';
-import { AgentRunRow } from '../sub-components/AgentRunRow';
+import { BuildRunRow } from '../../builds/sub-components/BuildRunRow';
 import { AgentStopLine } from '../sub-components/AgentStopLine';
 import { AgentWhere } from '../sub-components/AgentWhere';
 import { RecordLink } from '../../../../../shell';
@@ -41,7 +41,7 @@ const AgentWorkBody = (props: RecordBodyProps) => {
       <DrawerSection title={`Runs · ${mine.length}`}>
         {mine.length === 0 && <EmptyLine>{NO_RUNS_LINE}</EmptyLine>}
         <Flex direction="column" gap="xs" role="list" aria-label="Runs of the agent">
-          {mine.map((run) => <AgentRunRow key={run.id} run={run} boardKey={boardKey} now={now} />)}
+          {mine.map((run) => <BuildRunRow key={run.id} run={run} boardKey={boardKey} now={now} />)}
         </Flex>
       </DrawerSection>
     </Flex>

@@ -3,7 +3,6 @@ export { changesFields } from './changes-fields';
 export { changesStats } from './changes-stats';
 export { viewPrs } from './changes-view';
 export { checksProgress } from './checks-progress';
-export { failingPrIds } from './failing-prs';
 export { prSignals } from './pr-signals';
 export { sortPrs } from './sort-prs';
 export { sortRuns } from './sort-runs';

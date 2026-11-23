@@ -13,4 +13,4 @@ interface LogDoc {
   entries: LogLine[];
 }
 
-export type { LogDoc, LogLine };
+export type { LogDoc };

@@ -21,5 +21,4 @@ export { OpNoticeCallout } from './sub-components/OpNoticeCallout';
 export { RecordDrawer } from './sub-components/RecordDrawer';
 export { SoftTools } from './sub-components/SoftTools';
 export { TabPanel } from './sub-components/TabPanel';
-export { TabStats } from './sub-components/TabStats';
 export type * from './shared.type';

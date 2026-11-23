@@ -7,7 +7,7 @@ import { boardFlagKey } from '../model/board-flag-key';
 import type { ItemGroup, ItemOrder, KanbanFilters, StoredView } from '../model';
 import type { KanbanState } from '../kanban.type';
 
-const storedFlag = (base: string, boardKey: string): string | null => readStored(boardFlagKey(base, boardKey)) || readStored(base);
+const storedFlag = (base: string, boardKey: string): string | null => readStored(boardFlagKey(base, boardKey)) ?? readStored(base);
 
 const loadView = (boardKey: string): StoredView =>
   parseStored({

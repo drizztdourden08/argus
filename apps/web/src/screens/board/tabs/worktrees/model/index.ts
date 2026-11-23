@@ -39,7 +39,6 @@ export { removedLabel } from './removed-label';
 export { removedOf } from './removed-of';
 export { removedTitle } from './removed-title';
 export { requestsOf } from './requests-of';
-export { ruleProblemLines } from './rule-problem-lines';
 export { sizeText } from './size-text';
 export { statusShown } from './status-shown';
 export { threadOf } from './thread-of';

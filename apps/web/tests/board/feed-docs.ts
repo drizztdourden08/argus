@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import type { BoardAction, Entry, WorkItem } from '../../src/data/types';
-import { buildWork } from '../../src/screens/board/feed-model';
+import { buildWork } from '../../src/screens/board/feed-model/build-work';
 import type { ManualTest, WorkSources } from '../../src/screens/board/feed-model';
 
 const at = (minute: number): string => `2026-10-26T08:${String(minute).padStart(2, '0')}:00.000Z`;
