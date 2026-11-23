@@ -2,6 +2,8 @@
 import type { AccountsSwitch, SwitchStage, SwitchStepState, SwitchSyncDoc, SwitchThreadDoc } from '../../../../data/types';
 import type { Account } from '../accounts.type';
 
+type TitleText = (from: string, to: string) => string;
+
 interface SwitchActions {
   busy: boolean;
   start: (to: string, handover: boolean) => void;
@@ -53,10 +55,11 @@ interface SyncBlockProps {
 
 interface SwitchConfirmProps {
   target: Account;
+  from: string | null;
   onClose: () => void;
 }
 
 export type {
   ProcessDocProps, ProcessPanelProps, ProcessSummaryProps, StageRowProps, StageView, SwitchActions, SwitchConfirmProps, SwitchLink, SyncBlockProps,
-  ThreadListProps,
+  ThreadListProps, TitleText,
 };

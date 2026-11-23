@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Inline, ProgressBar, Stack, Status, Text } from '@drizztdourden08/tessera';
-import type { SyncRunLineProps } from '../accounts.type';
 import { useQuitCancel } from '../behavior/useQuitCancel';
+import type { SyncRunLineProps } from '../cards.type';
 import { PHASE_LABEL, QUIT_CANCEL_LABEL, QUIT_FALLBACK } from '../compare.constants';
 import { recentSteps, stepLine } from '../model';
 

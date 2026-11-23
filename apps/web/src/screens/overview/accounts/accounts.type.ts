@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind types */
-import type { AccountsSettingsApi } from '../../../data/accounts';
 import type { WithId } from '../../../data/react';
-import type { AccountDoc, AccountLimit, AccountsDrift, AccountsRun } from '../../../data/types';
-import type { SyncStep } from './compare.type';
+import type { AccountDoc, AccountsDrift } from '../../../data/types';
 
 type Account = WithId<AccountDoc>;
 
@@ -25,78 +23,11 @@ interface PostAction {
 
 type AccountsView = 'overview' | 'review';
 
-interface AccountsStripProps {
-  accounts: readonly Account[];
-  rules: AccountsSettingsApi;
-  confirmKey: string | null;
-  switching: boolean;
-  onSwitch: (key: string) => void;
-  onCloseConfirm: () => void;
-}
-
-interface AccountRowProps {
-  account: Account;
-  rules: AccountsSettingsApi;
-  now: number;
-  confirming: boolean;
-  switching: boolean;
-  onSwitch: (key: string) => void;
-  onCloseConfirm: () => void;
-}
-
-interface AccountNameProps {
-  account: Account;
-}
-
 interface RowState {
   receive: boolean;
   full: boolean;
   until: string;
   blocked: boolean;
-  tip: string | undefined;
-}
-
-interface ReceiveCellProps {
-  receive: boolean;
-  full: boolean;
-  until: string;
-}
-
-interface UsageCellProps {
-  limit: AccountLimit | null;
-  label: string;
-  now: number;
-}
-
-interface SyncSectionProps {
-  drift: AccountsDrift | null;
-  accounts: readonly Account[];
-  actions: AccountActions;
-  onReview: () => void;
-}
-
-interface SyncActionsProps {
-  run: AccountsRun | null;
-  active: boolean;
-  actions: AccountActions;
-  onReview: () => void;
-}
-
-interface SyncStateLineProps {
-  drift: AccountsDrift | null;
-  run: AccountsRun | null;
-  active: boolean;
-}
-
-interface SyncRunLineProps {
-  run: AccountsRun;
-  steps: readonly SyncStep[];
-  accounts: readonly Account[];
-}
-
-interface RuleChipsProps {
-  account: Account;
-  rules: AccountsSettingsApi;
 }
 
 interface PercentFieldProps {
@@ -106,7 +37,4 @@ interface PercentFieldProps {
   onCommit: (value: number) => void;
 }
 
-export type {
-  Account, AccountActions, AccountNameProps, AccountRowProps, AccountsFeed, AccountsStripProps, AccountsView, PercentFieldProps, PostAction,
-  ReceiveCellProps, RowState, RuleChipsProps, SyncActionsProps, SyncRunLineProps, SyncSectionProps, SyncStateLineProps, UsageCellProps,
-};
+export type { Account, AccountActions, AccountsFeed, AccountsView, PercentFieldProps, PostAction, RowState };

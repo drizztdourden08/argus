@@ -5,6 +5,7 @@ export { countdownText } from './countdown-text';
 export { countsText } from './counts-text';
 export { detectDone } from './detect-done';
 export { isActive } from './is-active';
+export { processTitle } from './process-title';
 export { readyText } from './ready-text';
 export { resultLine } from './result-line';
 export { stageViews } from './stage-views';

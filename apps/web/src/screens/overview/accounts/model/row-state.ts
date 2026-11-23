@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind logic */
 import type { AccountsSettingsApi } from '../../../../data/accounts';
-import { limitTip } from '../accounts.constants';
 import type { Account, RowState } from '../accounts.type';
 import { canReceive } from './can-receive';
 import { resetClock } from './reset-clock';
@@ -12,7 +11,7 @@ const rowState = (account: Account, rules: AccountsSettingsApi, now: number, swi
   const until = resetClock(limit?.resetsAt, now);
   const full = limit !== null;
   const blocked = account.active === true || switching || !receive || full;
-  return { receive, full, until, blocked, tip: full ? limitTip(until) : undefined };
+  return { receive, full, until, blocked };
 };
 
 export { rowState };

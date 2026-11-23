@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { WithId } from '../../../data/react';
-import type { AccountsRun, SyncStepDoc } from '../../../data/types';
+import type { AccountsRun, ReviewCell, SyncStepDoc } from '../../../data/types';
 
 type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 
@@ -21,4 +21,16 @@ interface StatusChipProps {
   title?: string;
 }
 
-export type { RunFeed, StatusChipProps, SyncStep };
+interface CompareRow {
+  id: string;
+  kind: string;
+  title?: string;
+  cells: Record<string, ReviewCell | undefined>;
+}
+
+interface CompareDoc {
+  accounts: { key: string; label?: string; color?: string }[];
+  rows: CompareRow[];
+}
+
+export type { CompareDoc, CompareRow, RunFeed, StatusChipProps, SyncStep };

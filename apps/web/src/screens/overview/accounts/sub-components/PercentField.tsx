@@ -1,9 +1,11 @@
 /* @layer renderer-app @kind component */
-import { NumberInput } from '@drizztdourden08/tessera';
+import { NumberInput, Text } from '@drizztdourden08/tessera';
 import { useEffect, useState } from 'react';
 import { MAX_PERCENT, MIN_PERCENT } from '../accounts.constants';
 import type { PercentFieldProps } from '../accounts.type';
 import { clampPercent } from '../model';
+
+const PERCENT_MARK = { icon: <Text variant="caption" tone="muted">%</Text> };
 
 const PercentField = (props: PercentFieldProps) => {
   const { value, label, disabled, onCommit } = props;
@@ -18,6 +20,8 @@ const PercentField = (props: PercentFieldProps) => {
   return (
     <NumberInput
       size="sm"
+      sizeToContent
+      end={PERCENT_MARK}
       aria-label={label}
       min={MIN_PERCENT}
       max={MAX_PERCENT}

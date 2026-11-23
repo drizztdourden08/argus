@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
 import type { DesktopPhase, SwitchPhase, SwitchStage, SwitchStepState, SwitchSyncCounts } from '../../../../data/types';
+import type { TitleText } from './switch.type';
 
 const SWITCH_DOC = 'switch';
 const SWITCH_PATH = '/api/accounts/switch';
@@ -96,7 +97,12 @@ const PHASE_STATUSES = defineStatuses({
 
 const COUNT_KEYS: readonly (keyof SwitchSyncCounts)[] = ['copied', 'updated', 'folders', 'archived'];
 
-const PROCESS_TITLE = 'Switch process';
+const MOVING_TITLE: TitleText = (from, to) => `Switching Desktop from ${from} to ${to}`;
+const PHASE_TITLE: Readonly<Partial<Record<SwitchPhase, TitleText>>> = {
+  done: (from, to) => `Desktop switched from ${from} to ${to}`,
+  failed: (from, to) => `Switch from ${from} to ${to} failed`,
+  cancelled: (from, to) => `Switch from ${from} to ${to} was cancelled`,
+};
 const NO_SWITCH = 'No switch running.';
 const NO_RUN_YET = 'No switch has run yet.';
 const LAST_RUN = 'Last run';
@@ -126,7 +132,7 @@ const SWITCH_CANCELLED_TOAST = 'Switch cancelled.';
 
 export {
   ANYWAY_LABEL, ANYWAY_PATH, ANYWAY_TOAST, AT_ZERO_HANDOVER, AT_ZERO_SYNC, BY_OWNER, BY_RULE, CANCELABLE_PHASES, CANCEL_LABEL, WAITING_PHASE, CANCEL_PATH, COUNT_KEYS,
-  HANDOVER_TOGGLE, LAST_RUN, LEGACY_STAGE, LEGACY_STATE, NO_RECORD, NO_REASON, NO_RUN_YET, NO_SWITCH, NO_THREADS, NOT_REACHED, NOW_LABEL, PHASE_STAGE, PHASE_STATUSES, PROCESS_TITLE, RUNNING_PHASES,
+  HANDOVER_TOGGLE, LAST_RUN, MOVING_TITLE, LEGACY_STAGE, LEGACY_STATE, NO_RECORD, NO_REASON, NO_RUN_YET, NO_SWITCH, NO_THREADS, NOT_REACHED, NOW_LABEL, PHASE_STAGE, PHASE_STATUSES, PHASE_TITLE, RUNNING_PHASES,
   STAGE_LABEL, STAGE_PLAN, STAGES, START_LABEL, STEP_STATUSES, STUCK_PREFIX, SWITCH_CANCELLED_TOAST, SWITCH_DOC, SWITCH_LINK_PARAM, SWITCH_PATH,
   SWITCH_STARTED, SYNC_STATUSES, SYNC_TITLE, SYNC_UNSTARTED, TAB_LINK_PARAM, THREAD_STATUSES, THREADS_TITLE, THREADS_UNCHECKED, ZERO_GRACE_MS, ZERO_TEXT,
 };

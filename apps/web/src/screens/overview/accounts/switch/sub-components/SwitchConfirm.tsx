@@ -7,7 +7,7 @@ import type { SwitchConfirmProps } from '../switch.type';
 import './SwitchConfirm.css';
 
 const SwitchConfirm = (props: SwitchConfirmProps) => {
-  const { target, onClose } = props;
+  const { target, from, onClose } = props;
   const actions = useSwitchActions();
   const [handover, setHandover] = useState(target.rules?.handover !== 'off');
   const start = () => {
@@ -16,7 +16,7 @@ const SwitchConfirm = (props: SwitchConfirmProps) => {
   };
   return (
     <Stack gap="xs" className="switch-confirm" role="group" aria-label={START_LABEL}>
-      <Text weight={600}>{`Switch Desktop to ${target.label ?? target.id}?`}</Text>
+      <Text weight={600}>{from ? `Switch Desktop from ${from} to ${target.label ?? target.id}?` : `Switch Desktop to ${target.label ?? target.id}?`}</Text>
       <Toggle size="sm" checked={handover} onChange={setHandover} label={HANDOVER_TOGGLE} />
       <Inline gap="xs">
         <Button size="xs" disabled={actions.busy} onClick={start}>{START_LABEL}</Button>

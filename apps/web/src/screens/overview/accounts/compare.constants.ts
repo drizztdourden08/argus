@@ -45,14 +45,34 @@ const MATCH_TEXT = 'both accounts match';
 const FAILED_TEXT = 'the sync stopped before it finished.';
 const NEVER_SYNCED = 'No sync has run yet.';
 const SYNC_TITLE = 'Sidebar sync';
-const MATCHING = 'Sidebars match';
-const REVIEW_LABEL = 'Review';
-const SYNC_LABEL = 'Sync now';
+const BOTH_MATCH = 'Both sidebars match';
+const REVIEW_LABEL = 'Review differences';
+const SYNC_LABEL = 'Sync both accounts now';
+const COMPARE_PATH = '/api/accounts/compare';
+const SAME_AS_CURRENT = 'Same as current';
+const DIFF_KINDS: Readonly<Record<string, readonly [string, string]>> = {
+  chat: ['chat', 'chats'],
+  folder: ['folder', 'folders'],
+};
+const DIFF_PHRASES: Readonly<Record<string, (what: string) => string>> = {
+  missing: (what) => `${what} missing here`,
+  only_here: (what) => `${what} only here`,
+  active_here_only: (what) => `${what} open here but archived on current`,
+  archived_here_only: (what) => `${what} archived here but open on current`,
+};
+const DRIFT_KINDS: Readonly<Record<string, readonly [string, string]>> = {
+  chat: ['chat', 'chats'],
+  archive: ['archived', 'archived'],
+  folder: ['folder', 'folders'],
+  membership: ['folder membership', 'folder memberships'],
+  thread: ['sub-thread', 'sub-threads'],
+};
 const UNDO_LABEL = 'Undo last sync';
 const SYNC_STARTED = 'Sidebar sync started.';
 const UNDO_STARTED = 'Undoing the last sync.';
 
 export {
-  ACTIVE_PHASES, FAILED_TEXT, LOG_LIMIT, MATCH_TEXT, MATCHING, NEVER_SYNCED, PHASE_LABEL, QUIT_CANCEL_LABEL, QUIT_CANCEL_PATH, QUIT_FALLBACK,
-  REVIEW_LABEL, RUN_DOC, STEP_KIND_LABEL, SYNC_LABEL, SYNC_PATH, SYNC_STARTED, SYNC_STEPS_COLL, SYNC_TITLE, UNDO_LABEL, UNDO_PATH, UNDO_STARTED,
+  ACTIVE_PHASES, BOTH_MATCH, COMPARE_PATH, DIFF_KINDS, DIFF_PHRASES, DRIFT_KINDS, FAILED_TEXT, LOG_LIMIT,
+  MATCH_TEXT, NEVER_SYNCED, PHASE_LABEL, QUIT_CANCEL_LABEL, QUIT_CANCEL_PATH, QUIT_FALLBACK,
+  REVIEW_LABEL, RUN_DOC, SAME_AS_CURRENT, STEP_KIND_LABEL, SYNC_LABEL, SYNC_PATH, SYNC_STARTED, SYNC_STEPS_COLL, SYNC_TITLE, UNDO_LABEL, UNDO_PATH, UNDO_STARTED,
 };
