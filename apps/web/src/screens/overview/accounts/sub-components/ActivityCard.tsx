@@ -9,7 +9,7 @@ import { SyncRunLine } from './SyncRunLine';
 const ActivityCard = (props: ActivityCardProps) => {
   const { doc, accounts, confirmKey, drifted, run, steps, onCloseConfirm } = props;
   const target = confirmKey ? accounts.find((account) => account.id === confirmKey || account.key === confirmKey) : undefined;
-  const live = isRunActive(run) ? run : null;
+  const live = run && isRunActive(run) ? run : null;
   return (
     <Card title={ACTIVITY_TITLE}>
       <Stack gap="md">

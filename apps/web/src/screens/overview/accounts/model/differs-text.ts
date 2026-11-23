@@ -9,7 +9,8 @@ const countOf = (compare: CompareDoc, key: string, status: string, kind: string)
 const phraseOf = (compare: CompareDoc, key: string, status: string, kind: string): string[] => {
   const count = countOf(compare, key, status, kind);
   const nouns = DIFF_KINDS[kind];
-  return count === 0 || !nouns ? [] : [DIFF_PHRASES[status](plural(count, nouns[0], nouns[1]))];
+  const phrase = DIFF_PHRASES[status];
+  return count === 0 || !nouns || !phrase ? [] : [phrase(plural(count, nouns[0], nouns[1]))];
 };
 
 const differsText = (compare: CompareDoc | null, key: string): string | null => {
