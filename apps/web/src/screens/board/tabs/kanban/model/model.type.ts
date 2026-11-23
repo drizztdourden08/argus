@@ -29,6 +29,8 @@ interface KanbanPrefs {
   order: ItemOrder;
   direction: SortDirection | null;
   showDone: boolean;
+  compact: boolean;
+  epicsView: boolean;
 }
 
 interface StoredView {
@@ -41,6 +43,8 @@ interface RawStored {
   group: string | null;
   direction?: string | null;
   showDone: string | null;
+  compact?: string | null;
+  epicsView?: string | null;
 }
 
 interface BulkSofts {

@@ -43,6 +43,10 @@ interface KanbanState {
   setOrder: (order: ItemOrder) => void;
   setDirection: (direction: SortDirection) => void;
   setShowDone: (show: boolean) => void;
+  compact: boolean;
+  epicsView: boolean;
+  setCompact: (on: boolean) => void;
+  setEpicsView: (on: boolean) => void;
 }
 
 interface FocusState {

@@ -49,7 +49,7 @@ const entryRef = (id: string, extra: Partial<Entry> = {}): WithId<Entry> => ({
 
 const filters = (extra: Partial<KanbanFilters> = {}): KanbanFilters => ({ ...DEFAULT_FILTERS, ...extra });
 
-const prefs = (extra: Partial<KanbanPrefs> = {}): KanbanPrefs => ({ group: 'status', order: 'rank', direction: null, showDone: false, ...extra });
+const prefs = (extra: Partial<KanbanPrefs> = {}): KanbanPrefs => ({ group: 'status', order: 'rank', direction: null, showDone: false, compact: false, epicsView: false, ...extra });
 
 const noNeeds: ReadonlyMap<string, Needs> = new Map();
 

@@ -42,7 +42,7 @@ const KanbanTab = (props: KanbanTabProps) => {
       {!panels.trash.open && (
         <KanbanToolbar boardKey={boardKey} state={state} view={view} items={data.items} threads={data.threads} agents={data.agents} selection={selection} layout={layout} />
       )}
-      {!panels.trash.open && <KanbanLegend />}
+      {!panels.trash.open && <KanbanLegend state={state} />}
       <OpNotices ops={notices} />
       {!panels.trash.open && <SelectionBar items={view.cards.map((card) => card.item)} threads={data.threads} selection={selection} ops={bulk} />}
       <KanbanBody

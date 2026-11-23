@@ -28,7 +28,7 @@ const orderOf = (stored: Record<string, unknown>): ItemOrder => (stored.sort ===
 
 const parseStored = (raw: RawStored): StoredView => {
   const stored = jsonRecord(raw.filters);
-  const prefs: KanbanPrefs = { group: groupOf(raw.group), order: orderOf(stored), direction: directionOf(raw.direction), showDone: raw.showDone === '1' };
+  const prefs: KanbanPrefs = { group: groupOf(raw.group), order: orderOf(stored), direction: directionOf(raw.direction), showDone: raw.showDone === '1', compact: raw.compact === '1', epicsView: raw.epicsView === '1' };
   return { filters: filtersOf(stored), prefs };
 };
 

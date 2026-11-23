@@ -12,6 +12,8 @@ const loadView = (): StoredView =>
     group: readStored(STORE_KEYS.group),
     direction: readStored(STORE_KEYS.direction),
     showDone: readStored(STORE_KEYS.showDone),
+    compact: readStored(STORE_KEYS.compact),
+    epicsView: readStored(STORE_KEYS.epicsView),
   });
 
 const useKanbanState = (): KanbanState => {
@@ -23,6 +25,8 @@ const useKanbanState = (): KanbanState => {
     writeStored(STORE_KEYS.group, prefs.group);
     writeStored(STORE_KEYS.direction, shownDirection(prefs.order, prefs.direction));
     writeStored(STORE_KEYS.showDone, prefs.showDone ? '1' : '0');
+    writeStored(STORE_KEYS.compact, prefs.compact ? '1' : '0');
+    writeStored(STORE_KEYS.epicsView, prefs.epicsView ? '1' : '0');
   }, [filters, prefs]);
 
   const patchFilters = useCallback((patch: Partial<KanbanFilters>) => setView((now) => ({ ...now, filters: { ...now.filters, ...patch } })), []);
@@ -31,8 +35,10 @@ const useKanbanState = (): KanbanState => {
   const setOrder = useCallback((order: ItemOrder) => setView((now) => ({ ...now, prefs: { ...now.prefs, order, direction: null } })), []);
   const setDirection = useCallback((direction: SortDirection) => setView((now) => ({ ...now, prefs: { ...now.prefs, direction } })), []);
   const setShowDone = useCallback((showDone: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, showDone } })), []);
+  const setCompact = useCallback((compact: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, compact } })), []);
+  const setEpicsView = useCallback((epicsView: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, epicsView } })), []);
 
-  return { filters, prefs, patchFilters, clearFilters, setGroup, setOrder, setDirection, setShowDone };
+  return { filters, prefs, patchFilters, clearFilters, setGroup, setOrder, setDirection, setShowDone, compact: prefs.compact, epicsView: prefs.epicsView, setCompact, setEpicsView };
 };
 
 export { useKanbanState };

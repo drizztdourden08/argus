@@ -70,7 +70,7 @@ const STARTING_STATUS = 'todo';
 
 const DEFAULT_FILTERS: KanbanFilters = { query: '', threads: [], status: '', types: [], assignees: [], needs: false, conflict: false, archived: false };
 
-const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', direction: null, showDone: false };
+const DEFAULT_PREFS: KanbanPrefs = { group: 'status', order: 'rank', direction: null, showDone: false, compact: false, epicsView: false };
 
 const STORE_KEYS = {
   filters: 'coord.f',
@@ -78,6 +78,8 @@ const STORE_KEYS = {
   order: 'coord.sort',
   direction: 'coord.sortdir',
   showDone: 'coord.done2',
+  compact: 'coord.compact',
+  epicsView: 'coord.epics',
   showPaused: 'coord.paused',
   wide: WIDE_KEY,
 };
