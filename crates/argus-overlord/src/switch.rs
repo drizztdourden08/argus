@@ -132,9 +132,9 @@ mod tests {
     }
 
     #[test]
-    fn a_start_without_a_switch_only_registers() {
+    fn a_start_without_a_switch_never_registers() {
         let intro = live_intro(None);
-        assert!(intro.contains("thread register coordinator"), "{intro}");
+        assert!(intro.contains("do not run"), "{intro}");
         assert!(!intro.contains("handover"), "{intro}");
     }
 }
