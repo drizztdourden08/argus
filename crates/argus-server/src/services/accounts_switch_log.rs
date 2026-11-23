@@ -15,7 +15,7 @@ use argus_core::Coll;
 use argus_core::clock::now_ms;
 use serde_json::{Value, json};
 
-pub(crate) use lines::{CycleLines, cycle_lines, step_lines};
+pub(crate) use lines::{CycleLines, cycle_lines, sidebar_check_line, step_lines, sync_note};
 
 use super::AccountsService;
 

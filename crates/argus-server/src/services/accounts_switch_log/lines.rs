@@ -3,6 +3,7 @@
 
 use argus_accounts::desktop::{Step, StepStatus};
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, Handover, HandoverState};
+use argus_accounts::sync::Summary;
 
 /// The lines a change of the handover cycle makes: the ones of the process, and the resume
 /// lines that come after the switch ended.
@@ -112,4 +113,37 @@ pub(crate) fn cycle_lines(before: Option<&Cycle>, after: Option<&Cycle>) -> Cycl
         }
     }
     out
+}
+
+/// What the sync step of a switch did, in words: the changes by kind and what it left alone.
+pub(crate) fn sync_note(summary: &Summary) -> String {
+    let k = &summary.drift.by_kind;
+    let wrote = if summary.drift.total == 0 {
+        "nothing to change".to_owned()
+    } else {
+        format!(
+            "{} changes written ({} chats, {} folders, {} memberships, {} archive, {} threads)",
+            summary.drift.total, k.chat, k.folder, k.membership, k.archive, k.thread
+        )
+    };
+    let check = if summary.verified {
+        "checked"
+    } else {
+        "not checked"
+    };
+    format!(
+        "{wrote}, {check}; {} conflicts and {} chats without a transcript left alone",
+        summary.conflicts, summary.missing_transcripts
+    )
+}
+
+/// The step-log line of the sidebar check after Claude started again.
+pub(crate) fn sidebar_check_line(left: &Result<usize, String>, to: &str) -> String {
+    match left {
+        Ok(0) => "Sidebar check: the chats and folders are the same on every account.".to_owned(),
+        Ok(n) => format!(
+            "Sidebar check failed: {n} sidebar changes are missing again after Claude started on {to}.              Claude rewrote its sidebar. Close Claude from its tray and run the sync from the Accounts tab."
+        ),
+        Err(why) => format!("Sidebar check failed: the sidebars could not be read ({why})."),
+    }
 }

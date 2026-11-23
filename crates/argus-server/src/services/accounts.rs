@@ -81,6 +81,7 @@ pub struct AccountsService {
     pub(crate) handovers: OnceLock<Arc<super::accounts_handover::Handovers>>,
     pub(crate) sync: super::accounts_sync::SyncState,
     pub(crate) rules: OnceLock<Arc<super::accounts_rules::RulesDesk>>,
+    pub(crate) switch_log: super::accounts_switch_log::SwitchLog,
 }
 
 /// The outside world of the usage poll.
@@ -120,6 +121,7 @@ impl AccountsService {
             handovers: OnceLock::new(),
             sync: super::accounts_sync::SyncState::default(),
             rules: OnceLock::new(),
+            switch_log: super::accounts_switch_log::SwitchLog::default(),
         }
     }
 

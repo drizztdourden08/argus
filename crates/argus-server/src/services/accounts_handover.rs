@@ -13,6 +13,7 @@ use serde_json::json;
 use tokio::sync::broadcast;
 
 use super::AccountsService;
+use super::accounts_switch_log::cycle_lines;
 use crate::Services;
 use crate::adapters::accounts_threads::{BoardThreads, HandoverDocs, SystemNow};
 
@@ -61,6 +62,20 @@ impl Handovers {
         outcome
     }
 
+    /// Runs a desk call and notes in the switch step log what it changed in the cycle: the
+    /// cycle started, each lead asked, each handover received, the resumes.
+    fn logged<T>(
+        &self,
+        accounts: &AccountsService,
+        call: impl FnOnce(&Desk) -> Result<T, DeskError>,
+    ) -> Result<T, DeskError> {
+        let before = self.desk.cycle();
+        let out = call(&self.desk);
+        let after = self.desk.cycle();
+        accounts.note_cycle(cycle_lines(before.as_ref(), after.as_ref()));
+        out
+    }
+
     /// Starts a cycle. Blocking: wakes go through the wake engine.
     ///
     /// # Errors
@@ -71,23 +86,31 @@ impl Handovers {
         accounts: &AccountsService,
     ) -> Result<Outcome, DeskError> {
         let defaults = accounts.config().estimate_defaults;
-        self.published(self.desk.start(request, &defaults))
+        self.published(self.logged(accounts, |d| d.start(request, &defaults)))
     }
 
     /// The ask point. Blocking.
     ///
     /// # Errors
     /// See [`Desk::ask_all`].
-    pub fn ask_all(&self, use_now: Option<f64>) -> Result<Outcome, DeskError> {
-        self.published(self.desk.ask_all(use_now))
+    pub fn ask_all(
+        &self,
+        use_now: Option<f64>,
+        accounts: &AccountsService,
+    ) -> Result<Outcome, DeskError> {
+        self.published(self.logged(accounts, |d| d.ask_all(use_now)))
     }
 
     /// The switch point came first. Blocking.
     ///
     /// # Errors
     /// See [`Desk::cut_off_rest`].
-    pub fn cut_off_rest(&self, use_now: Option<f64>) -> Result<Outcome, DeskError> {
-        self.published(self.desk.cut_off_rest(use_now))
+    pub fn cut_off_rest(
+        &self,
+        use_now: Option<f64>,
+        accounts: &AccountsService,
+    ) -> Result<Outcome, DeskError> {
+        self.published(self.logged(accounts, |d| d.cut_off_rest(use_now)))
     }
 
     /// Asks a lead of the estimating cycle for a fresh estimate. Blocking.
@@ -100,7 +123,7 @@ impl Handovers {
         accounts: &AccountsService,
     ) -> Result<Outcome, DeskError> {
         let defaults = accounts.config().estimate_defaults;
-        self.desk.re_ask_estimate(lead, &defaults)
+        self.logged(accounts, |d| d.re_ask_estimate(lead, &defaults))
     }
 
     /// Adds a lead that started working after the cycle did. Blocking.
@@ -109,7 +132,7 @@ impl Handovers {
     /// See [`Desk::add_lead`].
     pub fn add_lead(&self, lead: &Lead, accounts: &AccountsService) -> Result<Outcome, DeskError> {
         let defaults = accounts.config().estimate_defaults;
-        self.desk.add_lead(lead, &defaults)
+        self.logged(accounts, |d| d.add_lead(lead, &defaults))
     }
 
     /// A lead's request, with the use of the cycle's account now. Blocking.
@@ -127,7 +150,7 @@ impl Handovers {
             .cycle()
             .and_then(|c| use_now(accounts, &c.account));
         let defaults = accounts.config().estimate_defaults;
-        let reply = self.desk.lead(lead, action, use_now, &defaults)?;
+        let reply = self.logged(accounts, |d| d.lead(lead, action, use_now, &defaults))?;
         self.publish(reply.event.as_ref());
         Ok(reply)
     }

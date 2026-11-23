@@ -217,6 +217,15 @@ impl AccountsService {
         }
     }
 
+    /// How many sidebar changes a sync would make now, read without writing; the switch checks
+    /// with it that the sync held once Claude started again. Blocking.
+    ///
+    /// # Errors
+    /// When the chats or the sidebar cannot be read.
+    pub(crate) fn sync_left(&self) -> Result<usize, String> {
+        self.with_env(|env| scan_and_plan(env).map(|p| drift_of(&p).total))?
+    }
+
     /// The rows of the Compare view.
     ///
     /// # Errors

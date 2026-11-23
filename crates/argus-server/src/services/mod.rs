@@ -43,6 +43,7 @@ pub(crate) mod accounts_resume;
 pub(crate) mod accounts_review;
 pub(crate) mod accounts_rules;
 pub(crate) mod accounts_switch;
+pub(crate) mod accounts_switch_log;
 pub(crate) mod accounts_sync;
 pub(crate) mod activity;
 pub(crate) mod agents;

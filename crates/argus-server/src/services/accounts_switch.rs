@@ -24,6 +24,7 @@ use tokio::sync::broadcast::Receiver;
 
 use super::AccountsService;
 use super::accounts_handover::{Handovers, use_now};
+use super::accounts_switch_log::{sidebar_check_line, step_lines, sync_note};
 use crate::Services;
 
 /// What a second switch answers while one runs; the route turns it into a 409.
@@ -194,6 +195,8 @@ pub struct Prepared {
     origin: Origin,
     handover: bool,
     id: String,
+    /// The warning of an automatic switch on a Claude version no switch confirmed yet.
+    warning: Option<String>,
     control: Control,
     _slot: Slot,
 }
@@ -241,11 +244,12 @@ pub fn prepare(
         return Err(format!("{} cannot be switched to", target.label));
     }
     let vault = FsVault::new(&app, &logins_root(svc));
+    let mut warning = None;
     if origin == Origin::Rule {
         if vault.saved_at(&target).is_none() {
             return Err(format!("{} has no saved login yet", target.label));
         }
-        version_gate(svc, &config)?;
+        warning = version_warning(svc, &config);
     }
     let leftover = match repair(
         &journal_of(svc),
@@ -275,21 +279,36 @@ pub fn prepare(
         origin,
         handover,
         id,
+        warning,
         control,
         _slot: slot,
     })
 }
 
-/// An automatic switch needs the installed Claude to be the version a switch by hand confirmed.
-fn version_gate(svc: &Services, config: &argus_accounts::AccountsConfig) -> Result<(), String> {
-    let current = cached_version().ok_or("the Claude version could not be read")?;
-    if config.verified_app_version.as_deref() == Some(current.as_str()) {
-        return Ok(());
+/// The warning step of an automatic switch on a Claude version that no switch confirmed yet;
+/// `None` when the version is the confirmed one.
+fn unverified_text(current: Option<&str>, verified: Option<&str>) -> Option<String> {
+    match current {
+        Some(now) if verified == Some(now) => None,
+        Some(now) => Some(format!(
+            "Warning: no switch confirmed Claude {now} yet; the switch goes on and checks the account and the sidebars after it"
+        )),
+        None => Some(
+            "Warning: the Claude version could not be read; the switch goes on and checks the account and the sidebars after it"
+                .to_owned(),
+        ),
     }
-    let text = format!("Claude updated to {current}; do one switch by hand so Argus can check it");
+}
+
+/// An automatic switch never stops on a new Claude version: it goes on with a warning step, and
+/// the owner is told once per version.
+fn version_warning(svc: &Services, config: &argus_accounts::AccountsConfig) -> Option<String> {
+    let current = cached_version();
+    let text = unverified_text(current.as_deref(), config.verified_app_version.as_deref())?;
+    let seen = current.unwrap_or_default();
     let mut told = TOLD_VERSION.lock().unwrap_or_else(PoisonError::into_inner);
-    if told.as_deref() != Some(current.as_str()) {
-        *told = Some(current);
+    if told.as_deref() != Some(seen.as_str()) {
+        *told = Some(seen);
         if let Some(notify) = &svc.notify {
             notify.send(PingRequest {
                 title: Some("Claude was updated".to_owned()),
@@ -302,19 +321,22 @@ fn version_gate(svc: &Services, config: &argus_accounts::AccountsConfig) -> Resu
             });
         }
     }
-    Err(text)
+    Some(text)
 }
 
-/// The id of the switch: the one a countdown already shows, else a new one.
-fn switch_id(svc: &Services) -> String {
-    let shown = svc
-        .db
+/// The `switch` doc as it is shown now.
+pub(crate) fn shown_switch(svc: &Services) -> Option<Value> {
+    svc.db
         .docs()
         .get(PORTFOLIO, Coll::AccountsState, SWITCH_DOC)
         .ok()
         .flatten()
-        .map(|row| row.data);
-    shown
+        .map(|row| row.data)
+}
+
+/// The id of the switch: the one a countdown already shows, else a new one.
+fn switch_id(svc: &Services) -> String {
+    shown_switch(svc)
         .filter(|doc| doc["phase"] == "countdown")
         .and_then(|doc| doc["id"].as_str().map(str::to_owned))
         .unwrap_or_else(|| format!("SW-{}", now_ms()))
@@ -359,16 +381,22 @@ impl Prepared {
     pub async fn run(self) -> Result<(), String> {
         let accounts = Arc::clone(&self.accounts);
         let svc = Arc::clone(&self.svc);
+        let to = self.to.label.clone();
         let result = tokio::task::spawn_blocking(move || self.run_blocking())
             .await
             .map_err(|e| e.to_string())?;
         // The active account and the logins changed; show them now rather than at the next poll.
         let _ = accounts.poll_now().await;
-        let _ = tokio::task::spawn_blocking(move || publish_logins(&svc, &accounts)).await;
-        result
+        let (svc2, accounts2) = (Arc::clone(&svc), Arc::clone(&accounts));
+        let _ = tokio::task::spawn_blocking(move || publish_logins(&svc2, &accounts2)).await;
+        let done = result?;
+        if done == Done::Switched {
+            let _ = tokio::task::spawn_blocking(move || check_sidebars(&svc, &accounts, &to)).await;
+        }
+        Ok(())
     }
 
-    fn put(&self, phase: &str, steps: &[Step], error: Option<&str>) {
+    fn put(&self, phase: &str, steps: &[Step], error: Option<&str>, lines: &[String]) {
         let doc = switch_doc(
             &self.id,
             (&self.from.key, &self.to.key),
@@ -377,18 +405,33 @@ impl Prepared {
             steps,
         );
         let doc = with_error(doc, error);
-        if let Err(e) = self.accounts.docs.put(Coll::AccountsState, SWITCH_DOC, doc) {
+        if let Err(e) = self.accounts.put_switch(doc, lines) {
             self.svc
                 .log
                 .error("accounts switch doc not written", json!({ "error": e }));
         }
     }
 
-    fn run_blocking(self) -> Result<(), String> {
+    /// The first lines of the step log: who started the switch, and the version warning.
+    fn opening_lines(&self) -> Vec<String> {
+        let by = match self.origin {
+            Origin::Owner => "the owner",
+            Origin::Rule => "the auto-switch rule",
+        };
+        let mut lines = vec![format!(
+            "Switch started by {by}: from {} to {}.",
+            self.from.label, self.to.label
+        )];
+        lines.extend(self.warning.clone());
+        lines
+    }
+
+    fn run_blocking(self) -> Result<Done, String> {
         let desktop = ClaudeDesktop::new(&self.app);
         let vault = FsVault::new(&self.app, &logins_root(&self.svc));
         let stages = ServerStages::new(&self);
         refresh_version(&self.app);
+        self.accounts.note_switch(&self.opening_lines());
         let journal = journal_of(&self.svc);
         let plan = Plan {
             id: &self.id,
@@ -414,18 +457,20 @@ impl Prepared {
                     told = true;
                     self.tell_to_quit();
                 }
-                self.put(phase, steps, None);
+                let mut lines = step_lines(&last.1, steps);
+                if phase == "done" {
+                    lines.push(format!("Done: Claude runs as {}.", self.to.label));
+                }
+                self.put(phase, steps, None, &lines);
                 last = (phase.to_owned(), steps.to_vec());
             },
         );
         let outcome = outcome_of(&done);
         if let Err(why) = &outcome {
-            self.put(&last.0, &last.1, Some(why));
+            let line = format!("The switch failed: {why}.");
+            self.put(&last.0, &last.1, Some(why), &[line]);
         }
-        if done == Done::Switched && self.origin == Origin::Owner {
-            self.verify_version();
-        }
-        outcome
+        outcome.map(|()| done)
     }
 
     /// An automatic switch cannot finish until the owner quits Desktop from its tray.
@@ -446,23 +491,56 @@ impl Prepared {
             )),
         });
     }
+}
 
-    /// A switch by hand confirmed the account: the installed Claude version is now the verified one.
-    fn verify_version(&self) {
-        let Some(version) = cached_version() else {
-            return;
-        };
-        let saved = self
-            .accounts
-            .update(&json!({ "verifiedAppVersion": version }))
-            .and_then(|config| {
-                super::accounts::save(&self.svc, &config).map_err(|e| e.to_string())
-            });
-        if let Err(e) = saved {
-            self.svc
-                .log
-                .error("accounts verified version not saved", json!({ "error": e }));
-        }
+/// How long Claude may rewrite its storage after it started before the sidebar check reads it.
+const SIDEBAR_SETTLE: Duration = Duration::from_secs(20);
+
+/// After a confirmed switch: checks that the sync held once Claude started again. A check that
+/// passes confirms the installed Claude version; one that fails is a step-log line, an urgent
+/// toast and a log line, never silent. Blocking.
+fn check_sidebars(svc: &Services, accounts: &AccountsService, to: &str) {
+    std::thread::sleep(SIDEBAR_SETTLE);
+    let left = accounts.sync_left();
+    accounts.note_after_switch(&[sidebar_check_line(&left, to)]);
+    if left == Ok(0) {
+        verify_version(svc, accounts);
+        return;
+    }
+    let detail = match &left {
+        Ok(n) => format!("{n} sidebar changes are missing again after Claude started"),
+        Err(why) => why.clone(),
+    };
+    svc.log
+        .warn("accounts sidebar check failed", json!({ "error": detail }));
+    if let Some(notify) = &svc.notify {
+        notify.send(PingRequest {
+            title: Some("The sidebars are not the same after the switch".to_owned()),
+            text: sidebar_check_line(&left, to),
+            level: Level::Urgent,
+            project: None,
+            thread: None,
+            by: By::Auto,
+            url: Some(format!("http://127.0.0.1:{}/?tab=accounts", svc.port())),
+        });
+    }
+}
+
+/// A switch whose account and sidebars checked out: the installed Claude version is now the
+/// verified one.
+fn verify_version(svc: &Services, accounts: &AccountsService) {
+    let Some(version) = cached_version() else {
+        return;
+    };
+    if accounts.config().verified_app_version.as_deref() == Some(version.as_str()) {
+        return;
+    }
+    let saved = accounts
+        .update(&json!({ "verifiedAppVersion": version }))
+        .and_then(|config| super::accounts::save(svc, &config).map_err(|e| e.to_string()));
+    if let Err(e) = saved {
+        svc.log
+            .error("accounts verified version not saved", json!({ "error": e }));
     }
 }
 
@@ -535,7 +613,7 @@ impl<'a> ServerStages<'a> {
             }
             if self.run.control.anyway.load(Ordering::SeqCst) || Instant::now() >= end {
                 let out = desk
-                    .cut_off_rest(now_use)
+                    .cut_off_rest(now_use, &self.run.accounts)
                     .map_err(|e| Stop::Failed(e.to_string()))?;
                 return Ok(out
                     .event
@@ -563,6 +641,18 @@ impl Stages for ServerStages<'_> {
             .ok_or_else(|| Stop::Failed("the handover desk has not started".to_owned()))?;
         let mut events = desk.subscribe();
         let now_use = use_now(accounts, &self.run.from.key);
+        if let Some(open) = desk
+            .desk()
+            .cycle()
+            .filter(|c| c.phase.is_open() && c.account == self.run.from.key)
+        {
+            // The rule opened this cycle at its switch point: wait for it instead of a new one.
+            let asked = desk.ask_all(now_use, accounts).ok();
+            return match asked.and_then(|a| a.event) {
+                Some(event) => Ok(ready_note(&event)),
+                None => self.wait_ready(&desk, &mut events, &open.id, now_use),
+            };
+        }
         let request = StartRequest {
             account: self.run.from.key.clone(),
             mode: CycleMode::Now,
@@ -574,7 +664,7 @@ impl Stages for ServerStages<'_> {
             .start(request, accounts)
             .map_err(|e| Stop::Failed(e.to_string()))?;
         // A Now cycle asks at start; asking again is harmless and covers a desk that did not.
-        let asked = desk.ask_all(now_use).ok();
+        let asked = desk.ask_all(now_use, accounts).ok();
         let ready = started.event.or_else(|| asked.and_then(|a| a.event));
         match ready {
             Some(event) => Ok(ready_note(&event)),
@@ -583,8 +673,18 @@ impl Stages for ServerStages<'_> {
     }
 
     fn sync(&self) -> Result<String, String> {
-        let summary = self.run.accounts.sync(false)?;
-        Ok(format!("synced, {} left alone", summary.conflicts))
+        let summary = self
+            .run
+            .accounts
+            .sync(false)
+            .map_err(|why| format!("the sync of the chats and folders failed: {why}"))?;
+        if !summary.verified {
+            return Err(format!(
+                "the sync wrote but its check found changes left: {}",
+                sync_note(&summary)
+            ));
+        }
+        Ok(sync_note(&summary))
     }
 
     fn resume(&self) -> Result<String, String> {
@@ -649,7 +749,8 @@ pub(crate) fn repair_interrupted(svc: &Services, accounts: &AccountsService) {
             let id = entry.map_or_else(|| "SW-0".to_owned(), |e| e.id);
             let doc = switch_doc(&id, (&from, ""), Origin::Owner, "failed", &[]);
             let doc = with_error(doc, Some(INTERRUPTED));
-            if let Err(e) = accounts.docs.put(Coll::AccountsState, SWITCH_DOC, doc) {
+            let line = format!("The switch was cut short: {INTERRUPTED}.");
+            if let Err(e) = accounts.put_switch(doc, &[line]) {
                 svc.log
                     .error("accounts switch doc not written", json!({ "error": e }));
             }
