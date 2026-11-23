@@ -4,11 +4,10 @@ import type { WithId } from '../../../../data/react';
 import type { Item, SoftKind } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
 import type { TabView } from '../../BoardTabsRow';
-import type { AgentField, AgentFilters, AgentGroup, AgentOrder, ShownAgents } from './model';
+import type { AgentField, AgentFilters, AgentGroup, AgentLayout, AgentOrder, AgentStat, ShownAgents } from './model';
 
 interface AgentsTabProps {
   boardKey: string;
-  onPurge: (thread: string) => void;
 }
 
 interface AgentsView {
@@ -20,8 +19,6 @@ interface AgentsView {
   items: WithId<Item>[];
   threads: WithId<ProjectThread>[];
   finishedCount: number;
-  lead: WithId<ProjectThread> | null;
-  chats: WithId<ProjectThread>[];
   flagSignature: string;
 }
 
@@ -45,15 +42,7 @@ interface AgentRuns {
 }
 
 interface AgentsHeaderProps {
-  active: readonly WithId<Agent>[];
-  lead: WithId<ProjectThread> | null;
-  now: number;
-  expand: { all: boolean; onToggle: () => void };
-}
-
-interface LeadLineProps {
-  lead: WithId<ProjectThread>;
-  now: number;
+  stats: readonly AgentStat[];
 }
 
 interface AgentsBodyProps {
@@ -61,6 +50,7 @@ interface AgentsBodyProps {
   view: AgentsView;
   showFinished: boolean;
   group: AgentGroup;
+  layout: AgentLayout;
   now: number;
   actions: AgentActions;
   onOpen: (code: string, tab?: string) => void;
@@ -78,39 +68,23 @@ interface AgentsToolsProps {
   tabView: TabView<AgentGroup, AgentOrder, AgentFilters>;
   view: AgentsView;
   finished: { count: number; shown: boolean; onToggle: () => void };
+  layout: { value: AgentLayout; onChange: (layout: AgentLayout) => void };
+  expand: { all: boolean; onToggle: () => void };
 }
 
 interface ReconcilePanelProps {
   findings: readonly ReconcileFinding[];
 }
 
-interface ChatsListProps {
-  boardKey: string;
-  chats: readonly WithId<ProjectThread>[];
-  now: number;
-  onPurge: (thread: string) => void;
-}
-
-interface ChatRowProps {
-  boardKey: string;
-  chat: WithId<ProjectThread>;
-  now: number;
-  onPurge: (thread: string) => void;
-}
-
-
 export type {
   AgentActions,
   AgentEdits,
   AgentRuns,
-  ChatRowProps,
   AgentsBodyProps,
   AgentsFootProps,
   AgentsHeaderProps,
   AgentsTabProps,
   AgentsToolsProps,
   AgentsView,
-  ChatsListProps,
-  LeadLineProps,
   ReconcilePanelProps,
 };

@@ -4,7 +4,7 @@ import type { Agent } from '../../src/data/agents';
 import type { WithId } from '../../src/data/react';
 import type { RunEntry } from '../../src/data/runs';
 import {
-  agentChips, agentDetails, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
+  agentChips, agentDetails, agentElapsed, agentMarks, agentItems, agentMessage, agentNow, agentProblem, agentStats, agentWhere, findLead, finishedCount, formatDuration, groupAgents, isStale, itemOptions, modelFamily, modelTip,
   runSpan, sortActive, sortDone, statusLook, tokenLines,
 } from '../../src/screens/board/tabs/agents/model';
 
@@ -205,5 +205,18 @@ describe('I-150 agent details', { tags: ['critical'] }, () => {
   it('gives nothing for a bare agent and falls back to where for the worktree', () => {
     expect(agentDetails({ status: 'done' }, NOW)).toEqual([]);
     expect(agentDetails({ status: 'done', where: 'X:/w/b' }, NOW)[0]?.value).toBe('X:/w/b');
+  });
+});
+
+describe('I-208 agent stats', { tags: ['critical'] }, () => {
+  it('counts working and waiting, hides stopping at zero and ends with finished', () => {
+    const active: Agent[] = [{ status: 'working' }, { status: 'working' }, { status: 'waiting' }];
+    expect(agentStats(active, 4).map((stat) => `${stat.label} ${stat.count}`)).toEqual(['working 2', 'waiting 1', 'finished 4']);
+  });
+
+  it('shows stopping once an agent is being stopped', () => {
+    const stats = agentStats([{ status: 'stop-requested' }], 0);
+    expect(stats.map((stat) => stat.id)).toEqual(['working', 'waiting', 'stop-requested', 'finished']);
+    expect(stats[2]?.label).toBe('stopping');
   });
 });

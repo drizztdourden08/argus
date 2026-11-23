@@ -12,7 +12,6 @@ export { useWriter } from './behavior/useWriter';
 export { readStored, useStored, useStoredFlag, writeStored, WIDE_KEY } from '../../../stored';
 export { activityTone, formatFilters, jsonRecord, neighbours, nonEmpty, threadChoices } from './model';
 export { SECOND_TICK_MS, SOFT_LABEL } from './shared.constants';
-export { ChatButton } from './sub-components/ChatButton';
 export { DrawerToolbar } from './sub-components/DrawerToolbar';
 export { FactSelect } from './sub-components/FactSelect';
 export { EditableMarkdown } from './sub-components/EditableMarkdown';

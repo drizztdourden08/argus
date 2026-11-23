@@ -103,12 +103,6 @@ interface SoftToolsProps {
   onDelete: () => void;
 }
 
-interface ChatButtonProps {
-  link: string;
-  label: string;
-  size?: 'xs' | 'sm';
-}
-
 interface DrawerToolbarProps {
   id: string;
   previous: string | null;
@@ -122,4 +116,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { ChatButtonProps, DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };
+export type { DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };

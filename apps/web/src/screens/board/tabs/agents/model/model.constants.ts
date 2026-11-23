@@ -37,8 +37,6 @@ const MODEL_LOOKS: Readonly<Record<ModelFamily, ModelLook>> = {
 
 const AGENT_LIMITS: Readonly<Record<AgentField, number>> = { task: 120, note: 100, branch: 80, worktree: 120 };
 
-const CHAT_ORDER: Readonly<Record<string, number>> = { blocked: 0, active: 1, waiting: 2, idle: 3, dispatched: 4, paused: 5 };
-
 const CONFLICT_TEXT = 'a thread changed it after you looked';
 
 const REFUSED_TEXT = 'the board did not accept it';
@@ -93,7 +91,6 @@ export {
   ACTIVE_STATUSES,
   ADD_ITEM_LABEL,
   AGENT_LIMITS,
-  CHAT_ORDER,
   CONFLICT_TEXT,
   EMPTY_ALL,
   EMPTY_RUNNING,

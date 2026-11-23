@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { RecordGroup } from '../../../../../shell';
 import { CLOSED_ITEMS_TITLE, groupAgents, NO_ITEM_TITLE } from '../model';
 import type { AgentGroupListProps } from '../row-props.type';
-import { AgentRow } from './AgentRow';
+import { AgentCells } from './AgentCells';
 import { ItemGroup } from './ItemGroup';
 
 const AgentGroupList = (props: AgentGroupListProps) => {
@@ -16,7 +16,7 @@ const AgentGroupList = (props: AgentGroupListProps) => {
       {grouped.groups.map((entry) => group(entry.key, entry.rows))}
       {grouped.none.length > 0 && (
         <RecordGroup header={<Text weight={600}>{NO_ITEM_TITLE}</Text>} count={grouped.none.length} flagged label={NO_ITEM_TITLE}>
-          {grouped.none.map((agent) => <AgentRow key={agent.id} id={agent.id} agent={agent} {...row} />)}
+          <AgentCells agents={grouped.none} {...row} />
         </RecordGroup>
       )}
       {grouped.closed.length > 0 && (

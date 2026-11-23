@@ -1,11 +1,12 @@
 /* @layer renderer-app @kind component */
 import { itemCode, RecordGroup } from '../../../../../shell';
 import type { ItemGroupProps } from '../row-props.type';
-import { AgentRow } from './AgentRow';
+import { AgentCells } from './AgentCells';
 import { ItemHeader } from './ItemHeader';
 
 const ItemGroup = (props: ItemGroupProps) => {
-  const { itemId, items, agents, boardKey, threads, now, actions, onOpen, open, onRowOpen } = props;
+  const { itemId, items, agents, ...row } = props;
+  const { boardKey, threads, onOpen } = row;
   const item = items.find((candidate) => candidate.id === itemId);
   return (
     <RecordGroup
@@ -13,9 +14,7 @@ const ItemGroup = (props: ItemGroupProps) => {
       count={agents.length}
       label={`Agents of ${item ? itemCode(item) : itemId}`}
     >
-      {agents.map((agent) => (
-        <AgentRow key={agent.id} boardKey={boardKey} id={agent.id} agent={agent} threads={threads} now={now} actions={actions} onOpen={onOpen} open={open} onRowOpen={onRowOpen} />
-      ))}
+      <AgentCells agents={agents} {...row} />
     </RecordGroup>
   );
 };

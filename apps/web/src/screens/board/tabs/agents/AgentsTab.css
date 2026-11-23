@@ -12,39 +12,25 @@
 }
 
 .agents-head {
-  gap: var(--space-sm) var(--space-md);
-  min-height: calc(var(--size-40) + var(--size-4));
+  flex-wrap: nowrap;
   padding: var(--space-sm) var(--space-md);
+  overflow: hidden;
   border-bottom: var(--border-width-thin) solid var(--c-border);
 }
 
-.agents-head__title {
-  margin: 0;
-  font-size: var(--size-16);
-  font-weight: var(--weight-semi);
-  line-height: var(--size-24);
-}
-
-.agents-lead {
-  flex: 1 1 calc(var(--agents-rem) * 16);
+.agents-grid {
   min-width: 0;
-  color: var(--c-text-dim);
-  font-size: var(--text-sm);
 }
 
-.agents-lead > * {
-  flex: none;
+.agents-card__foot {
+  min-width: 0;
 }
 
-.agents-lead > .agents-lead__note {
+.agents-card__foot .agents-now {
+  display: block;
   flex: 1 1 0;
   min-width: 0;
-  overflow: hidden;
-  color: var(--c-text);
-  font-size: var(--text-sm);
-  text-align: start;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-inline-size: 100%;
 }
 
 .agents-na {
@@ -74,55 +60,6 @@
 .agents-runs__title {
   margin: 0;
   padding: var(--space-md) var(--space-md) var(--space-xs);
-}
-
-.agents-chats {
-  border-top: var(--border-width-thin) solid var(--c-border);
-}
-
-.agents-chats__title {
-  margin: 0;
-  padding: var(--space-md) var(--space-md) var(--space-xs);
-}
-
-.agents-chat {
-  display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-  min-height: calc(var(--size-32) + var(--size-4));
-  padding: var(--space-xs) var(--space-md);
-  border-bottom: var(--border-width-thin) solid var(--c-border);
-  font-size: var(--text-sm);
-}
-
-.agents-chat:hover {
-  background: var(--c-hover);
-}
-
-.agents-chat > * {
-  flex: none;
-}
-
-.agents-chat > .agents-chat__name {
-  display: flex;
-  flex: 0 1 calc(var(--agents-rem) * 12);
-  gap: var(--space-xs);
-  align-items: center;
-  min-width: 0;
-}
-
-.agents-chat > .agents-chat__note {
-  flex: 1 1 0;
-  color: var(--c-text-dim);
-  min-width: 0;
-  overflow: hidden;
-  text-align: start;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agents-chat--paused {
-  opacity: var(--opacity-muted);
 }
 
 .agents-kv,
@@ -165,22 +102,6 @@
 
 .agents-runs__list {
   padding: 0 var(--space-md) var(--space-sm);
-}
-
-@container agents-panel (max-width: 39.99rem) {
-  .agents-head__count {
-    flex: 1 1 calc(var(--agents-rem) * 7);
-    min-width: 0;
-  }
-
-  .agents-lead {
-    flex-basis: 100%;
-    order: 3;
-  }
-
-  .agents-chat > .agents-chat__name {
-    flex-basis: calc(var(--agents-rem) * 8);
-  }
 }
 
 .agents-now {

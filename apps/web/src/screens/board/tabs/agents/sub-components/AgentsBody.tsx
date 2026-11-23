@@ -6,10 +6,10 @@ import { EMPTY_ALL, EMPTY_RUNNING } from '../model';
 import { AgentSection } from './AgentSection';
 
 const AgentsBody = (props: AgentsBodyProps) => {
-  const { boardKey, view, showFinished, group, now, actions, onOpen, open, onRowOpen } = props;
+  const { boardKey, view, showFinished, group, layout, now, actions, onOpen, open, onRowOpen } = props;
   const { active, done, items, threads, shown } = view;
   if (active.length + done.length === 0) return <Text as="p" tone="muted" className="agents-empty">{EMPTY_ALL}</Text>;
-  const shared = { boardKey, items, threads, group, now, actions, onOpen, open, onRowOpen };
+  const shared = { boardKey, items, threads, group, layout, now, actions, onOpen, open, onRowOpen };
   return (
     <Flex direction="column" gap="md" className="agents-body">
       {shown.active.length === 0

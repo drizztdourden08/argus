@@ -4,7 +4,7 @@ import type { Item } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
 import type { RunEntry } from '../../../../data/runs';
 import type { AgentActions, AgentsView } from './AgentsTab.type';
-import type { AgentGroup } from './model';
+import type { AgentGroup, AgentLayout } from './model';
 
 type OpenRecord = (code: string, tab?: string) => void;
 
@@ -13,11 +13,22 @@ interface AgentRowProps {
   id: string;
   agent: Agent;
   threads: AgentsView['threads'];
+  layout: AgentLayout;
   now: number;
   actions: AgentActions;
   onOpen: OpenRecord;
   open: ReadonlySet<string>;
   onRowOpen: (id: string, open: boolean) => void;
+}
+
+interface AgentCardProps {
+  boardKey: string;
+  id: string;
+  agent: Agent;
+  threads: AgentsView['threads'];
+  now: number;
+  actions: AgentActions;
+  onOpen: OpenRecord;
 }
 
 interface AgentTrailingProps {
@@ -65,6 +76,10 @@ interface AgentModelProps {
   agent: Agent;
 }
 
+interface AgentCellsProps extends Omit<AgentRowProps, 'id' | 'agent'> {
+  agents: readonly WithId<Agent>[];
+}
+
 interface ItemHeaderProps {
   boardKey: string;
   itemId: string;
@@ -108,6 +123,8 @@ interface AgentRunRowProps {
 }
 
 export type {
+  AgentCardProps,
+  AgentCellsProps,
   AgentDetailsProps,
   AgentGroupListProps,
   AgentKeyGroupsProps,

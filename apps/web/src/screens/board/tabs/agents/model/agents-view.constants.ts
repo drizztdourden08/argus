@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { AgentFilters, AgentGroup, AgentOrder } from './agents-view.type';
+import type { SegmentOption } from '@drizztdourden08/tessera';
+import type { AgentFilters, AgentGroup, AgentLayout, AgentOrder } from './agents-view.type';
 import { MODEL_FAMILIES, STATUS_LOOKS } from './model.constants';
 
 const AGENTS_TAB = 'agents';
@@ -36,6 +37,15 @@ const NONE_LABELS: Readonly<Record<AgentGroup, string>> = {
   none: 'All',
 };
 
+const LAYOUT_KEY = 'argus.tab.agents.layout';
+
+const AGENT_CARD_WIDTH = 272;
+
+const LAYOUT_CHOICES: SegmentOption<AgentLayout>[] = [
+  { value: 'list', icon: 'rows-3', hint: { label: 'List', description: 'One line per agent' } },
+  { value: 'cards', icon: 'layout-grid', hint: { label: 'Cards', description: 'Agent cards that wrap' } },
+];
+
 const SEARCH_PLACEHOLDER = 'Search id, name or note';
 
-export { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_GROUPS, AGENT_ORDER_IDS, AGENT_ORDERS, AGENTS_TAB, MODEL_CHOICES, NONE_LABELS, SEARCH_PLACEHOLDER, STATUS_CHOICES };
+export { AGENT_CARD_WIDTH, AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_GROUPS, AGENT_ORDER_IDS, AGENT_ORDERS, AGENTS_TAB, LAYOUT_CHOICES, LAYOUT_KEY, MODEL_CHOICES, NONE_LABELS, SEARCH_PLACEHOLDER, STATUS_CHOICES };

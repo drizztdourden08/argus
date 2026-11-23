@@ -10,7 +10,7 @@ const BoardTabBody = (props: BoardTabBodyProps) => {
   return (
     <ContentSwap swapKey={`${boardKey}:${tab}`} effect="reflow" sequence="out-in">
       <Suspense fallback={<LoadingFallback />}>
-        {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} onPurge={(thread) => more.openPurge({ scope: 'thread', thread })} />}
+        {tab === 'agents' && <LazyAgentsTab boardKey={boardKey} />}
         {tab === 'activity' && <LazyActivityTab boardKey={boardKey} work={work} />}
         {tab === 'kanban' && <LazyKanbanTab boardKey={boardKey} trash={more.trashOpen} onTrashBack={more.closeTrash} onPurge={(scope) => more.openPurge({ scope })} />}
         {tab === 'tests' && <LazyTestsTab boardKey={boardKey} />}

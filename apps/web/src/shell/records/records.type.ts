@@ -144,6 +144,7 @@ interface RecordCardProps {
   title: string;
   openLabel: string;
   onOpen: () => void;
+  clamp?: number;
   signals?: ReactNode;
   foot?: ReactNode;
   attrs?: Readonly<Record<string, string>>;

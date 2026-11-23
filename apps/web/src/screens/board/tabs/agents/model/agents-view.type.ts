@@ -5,6 +5,8 @@ import type { WithId } from '../../../../../data/react';
 
 type AgentGroup = 'item' | 'thread' | 'status' | 'model' | 'none';
 
+type AgentLayout = 'list' | 'cards';
+
 type AgentOrder = 'updated' | 'started' | 'name';
 
 type AgentFilterKey = 'thread' | 'status' | 'model' | 'item';
@@ -34,4 +36,4 @@ interface KeyGroup {
   rows: WithId<Agent>[];
 }
 
-export type { AgentFilterKey, AgentFilters, AgentGroup, AgentOrder, AgentViewSpec, KeyGroup, ShownAgents };
+export type { AgentFilterKey, AgentFilters, AgentGroup, AgentLayout, AgentOrder, AgentViewSpec, KeyGroup, ShownAgents };

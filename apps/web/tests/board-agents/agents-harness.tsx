@@ -86,13 +86,13 @@ const Where = () => <Text as="output" aria-label="where">{useLocation().search}<
 
 const item = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({ title: 'ship it', status: 'doing', thread: 'lead', type: 'task', rank: 1, ...extra });
 
-const renderAgents = async (board: Board, onPurge: (thread: string) => void = () => undefined, at = '/p/alpha#agents') => {
+const renderAgents = async (board: Board, at = '/p/alpha#agents') => {
   const { view, source } = await mountStreamed(
     <TesseraProvider overrides={{}}>
       <MemoryRouter initialEntries={[at]}>
         <BoardTabsRow tabs={[{ id: 'agents', label: 'Agents' }]} activeTab="agents" onTabChange={() => undefined} />
         <Routes>
-          <Route path="/p/:key" element={<AgentsTab boardKey="alpha" onPurge={onPurge} />} />
+          <Route path="/p/:key" element={<AgentsTab boardKey="alpha" />} />
         </Routes>
         <Where />
       </MemoryRouter>
