@@ -38,15 +38,12 @@ pub(crate) fn handle(board: &mut Board, op: &Value, who: &Who) -> Result<OpResul
     if next == was {
         return Ok(OpResult::applied("the title limit is unchanged"));
     }
-    let what = match next {
-        Some(n) => {
-            set(board, "titleMax", n);
-            format!("set the item title limit to {n}")
-        }
-        None => {
-            unset(board, "titleMax");
-            "cleared the item title limit".to_owned()
-        }
+    let what = if let Some(n) = next {
+        set(board, "titleMax", n);
+        format!("set the item title limit to {n}")
+    } else {
+        unset(board, "titleMax");
+        "cleared the item title limit".to_owned()
     };
     audit(board, &who.actor_of(), &format!("{} {what}", who.label()));
     Ok(OpResult::applied(what))

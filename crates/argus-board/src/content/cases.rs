@@ -40,6 +40,7 @@ fn verdict(case: &Value) -> Option<String> {
         images: &images,
         ids: ids.as_deref(),
         threads: threads.as_deref(),
+        title_max: None,
     };
     let got = check_keyed(case["field"].as_str().unwrap(), &case["value"], &cx);
     let name = &case["name"];
