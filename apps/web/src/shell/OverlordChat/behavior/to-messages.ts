@@ -4,13 +4,14 @@ import { createElement } from 'react';
 import { TALK_ROLE, TALK_WHO } from '../OverlordChat.constants';
 import type { TalkRow, ToolsRow, TranscriptRow } from '../OverlordChat.type';
 import { StepContent } from '../sub-components/StepContent';
+import { ToolsGroup } from '../sub-components/ToolsGroup';
 import { STEP_KINDS } from './to-messages.constants';
 
 const toolsMessage = (row: ToolsRow): ChatTranscriptMessage => ({
   id: row.key,
   speaker: TALK_WHO.assistant,
   role: TALK_ROLE.assistant,
-  tools: row.tools.map((tool) => ({ id: tool.id, name: tool.name, summary: tool.summary || undefined, status: tool.status })),
+  content: createElement(ToolsGroup, { tools: row.tools }),
 });
 
 const talkMessage = (row: TalkRow): ChatTranscriptMessage => ({

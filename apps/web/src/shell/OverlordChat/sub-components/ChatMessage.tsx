@@ -1,18 +1,14 @@
 /* @layer renderer-app @kind component */
-import { Box, Stack, Text } from '@drizztdourden08/tessera';
+import { Stack, Text } from '@drizztdourden08/tessera';
 import type { ChatMessageProps } from '../OverlordChat.type';
+import { MessageBody } from './MessageBody';
 
 const ChatMessage = (props: ChatMessageProps) => {
   const { message } = props;
   const role = message.role ?? 'assistant';
   return (
     <Stack gap="2xs" className={`overlord-chat__message is-${role}`}>
-      {message.content != null && (role === 'system' ? <Text variant="caption" tone="muted">{message.content}</Text> : <Box className="overlord-chat__text">{message.content}</Box>)}
-      {message.tools?.map((tool) => (
-        <Text key={tool.id} variant="caption" tone="muted" className="overlord-chat__tool">
-          {tool.name} {tool.summary}{tool.status === 'failed' ? ' (failed)' : ''}
-        </Text>
-      ))}
+      {message.content != null && <MessageBody role={role} content={message.content} />}
       {message.time != null && <Text variant="caption" tone="faint">{message.time}</Text>}
     </Stack>
   );

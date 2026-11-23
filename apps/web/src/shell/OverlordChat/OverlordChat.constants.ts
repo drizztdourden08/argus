@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind constants */
 import type { ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { OverlordState } from '../../data/overlord';
-import type { ChatTab, QueueSectionName, TalkKind } from './OverlordChat.type';
+import type { ChatTab, QueueSectionName, TalkKind, ToolStatus } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
 const CHAT_LABEL = 'Overlord chat';
@@ -38,6 +38,34 @@ const SENDING_NOTE = 'Sending...';
 const SENT_NOTE = 'Sent';
 const APPROVAL_WORDS: Readonly<Record<string, string>> = { pending: 'waiting for an answer', allowed: 'allowed', denied: 'denied', expired: 'expired' };
 
+const TOOL_STATUS = {
+  running: { label: 'Running', tone: 'info', pulse: true },
+  done: { label: 'Ran', tone: 'success' },
+  failed: { label: 'Failed', tone: 'danger' },
+} as const satisfies Record<ToolStatus, { label: string; tone: string; pulse?: boolean }>;
+const TOOL_COUNT_WORDS = { done: 'done', failed: 'failed', running: 'running' } as const;
+const TOOL_NAMES = { one: 'tool', many: 'tools' } as const;
+const ERROR_CLAMP_LINES = 2;
+const SETTING_LABELS = { model: 'Model', effort: 'Effort', permissionMode: 'Permission mode' } as const;
+const SWITCHING_NOTE = 'Restarting the Overlord';
+const SEND_LABEL = 'Send';
+const USAGE_LABEL = 'Context and usage';
+const USAGE_TITLES = { context: 'Context', session: 'This session', lastTurn: 'Last turn', month: 'This month' } as const;
+const USAGE_WORDS = {
+  context: 'Context used',
+  model: 'Model',
+  input: 'Input',
+  output: 'Output',
+  cacheRead: 'Cache read',
+  cacheWrite: 'Cache write',
+  cost: 'Cost',
+  turns: 'Turns',
+  duration: 'Duration',
+  spent: 'Spent',
+  budget: 'Budget',
+  noBudget: 'None',
+} as const;
+
 const RULES_POLL_MS = 5_000;
 const MIN_EVERY_MIN = 5;
 const MAX_EVERY_MIN = 1440;
@@ -63,6 +91,16 @@ const RUNNING_STATES: readonly OverlordState[] = ['idle', 'turn', 'waiting-appro
 
 export {
   APPROVAL_WORDS,
+  ERROR_CLAMP_LINES,
+  SEND_LABEL,
+  SETTING_LABELS,
+  SWITCHING_NOTE,
+  TOOL_COUNT_WORDS,
+  TOOL_NAMES,
+  TOOL_STATUS,
+  USAGE_LABEL,
+  USAGE_TITLES,
+  USAGE_WORDS,
   QUEUED_NOTE,
   SENDING_NOTE,
   SENT_NOTE,

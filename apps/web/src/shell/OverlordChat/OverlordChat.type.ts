@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
-import type { ChatTranscriptMessage } from '@drizztdourden08/tessera';
+import type { ChatTranscriptMessage, ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ActionState, OverlordQueue, OverlordRule, RuleDraft } from '../../data/overlord';
+import type { ActionState, OverlordQueue, OverlordRule, OverlordSettings, OverlordUsage, RuleDraft } from '../../data/overlord';
 
 type Editing = OverlordRule | 'new' | null;
 
@@ -14,11 +14,14 @@ interface TalkRow {
   id?: string;
 }
 
+type ToolStatus = 'running' | 'done' | 'failed';
+
 interface ToolItem {
   id: string;
   name: string;
   summary: string;
-  status: 'running' | 'done' | 'failed';
+  status: ToolStatus;
+  error?: string;
 }
 
 interface ToolsRow {
@@ -122,6 +125,81 @@ interface ChatMessageProps {
   message: ChatTranscriptMessage;
 }
 
+interface MessageBodyProps {
+  role: ChatTranscriptRole;
+  content: ReactNode;
+}
+
+interface ToolsGroupProps {
+  tools: ToolItem[];
+}
+
+interface ToolLineProps {
+  tool: ToolItem;
+}
+
+interface SettingChoice {
+  id: string;
+  label: string;
+}
+
+type SettingKey = 'model' | 'effort' | 'permissionMode';
+
+interface SettingChipProps {
+  label: string;
+  current: string;
+  selected: string;
+  choices: SettingChoice[];
+  busy: boolean;
+  onPick: (id: string) => void;
+}
+
+interface ChatSettings {
+  settings: OverlordSettings | null;
+  busy: boolean;
+  problem: string | null;
+  pick: (key: SettingKey, id: string) => void;
+}
+
+interface ChatUsage {
+  usage: OverlordUsage | null;
+  reload: () => void;
+}
+
+interface ChatBarProps {
+  working: boolean;
+}
+
+interface UsageRingProps {
+  usage: ChatUsage;
+}
+
+interface UsagePanelProps {
+  usage: OverlordUsage;
+}
+
+interface UsageRow {
+  label: string;
+  value: string;
+}
+
+interface UsageSection {
+  title: string;
+  rows: UsageRow[];
+}
+
+interface ChipSpec {
+  key: SettingKey;
+  label: string;
+  current: string;
+  selected: string;
+  choices: SettingChoice[];
+}
+
+interface SettingChipsProps {
+  chat: ChatSettings;
+}
+
 interface ChatOpen {
   open: boolean;
   toggle: () => void;
@@ -129,6 +207,22 @@ interface ChatOpen {
 }
 
 export type {
+  ChatBarProps,
+  MessageBodyProps,
+  ChipSpec,
+  SettingChipsProps,
+  UsageSection,
+  ChatSettings,
+  ChatUsage,
+  SettingChipProps,
+  SettingChoice,
+  SettingKey,
+  ToolLineProps,
+  ToolStatus,
+  ToolsGroupProps,
+  UsagePanelProps,
+  UsageRingProps,
+  UsageRow,
   ChatFeedProps,
   ChatMessageProps,
   ChatBoxProps,

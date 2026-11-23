@@ -64,7 +64,7 @@ describe('O3 transcript rows', { tags: ['critical'] }, () => {
       kind: 'tools',
       tools: [
         { summary: 'Get-Date', status: 'done' },
-        { summary: 'a.txt (error: nope)', status: 'failed' },
+        { summary: 'a.txt', error: 'nope', status: 'failed' },
         { summary: 'hello', status: 'running' },
       ],
     });

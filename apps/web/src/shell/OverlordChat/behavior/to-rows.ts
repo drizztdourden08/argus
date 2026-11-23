@@ -8,7 +8,7 @@ const settleTool = (acc: Acc, piece: PieceOf<'result'>): void => {
   const tool = acc.tools.get(piece.id);
   if (!tool) return;
   tool.status = piece.failed ? 'failed' : 'done';
-  if (piece.failed && piece.text) tool.summary = `${tool.summary} (error: ${piece.text})`;
+  if (piece.failed && piece.text) tool.error = piece.text;
 };
 
 const placeApproval = (acc: Acc, piece: TalkPiece, key: string): void => {

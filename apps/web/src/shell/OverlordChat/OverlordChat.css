@@ -16,7 +16,6 @@
 .overlord-chat__text {
   min-inline-size: 0;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
 }
 
 .overlord-chat__message.is-user {
@@ -26,9 +25,55 @@
 }
 
 .overlord-chat__tool {
+  min-inline-size: 0;
+}
+
+.overlord-chat__tool-name {
+  flex: none;
+}
+
+.overlord-chat__tool-summary {
+  flex: 1 1 auto;
+  min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.overlord-chat__box {
+  padding: var(--space-sm);
+  border: var(--border-width-thin) solid var(--c-border);
+  border-radius: var(--radius-xl);
+  background: var(--c-surface);
+}
+
+.overlord-chat__box:focus-within {
+  border-color: var(--c-border-strong);
+}
+
+.overlord-chat__box .overlord-chat__input.textarea,
+.overlord-chat__box .overlord-chat__input.textarea:focus {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  max-block-size: var(--size-192);
+  padding: var(--space-xs);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  field-sizing: content;
+}
+
+.overlord-chat__bar {
+  flex: none;
+}
+
+.overlord-chat__ring {
+  inline-size: var(--size-16);
+  block-size: var(--size-16);
+}
+
+.overlord-chat__usage {
+  inline-size: min(var(--size-320), calc(100vw - var(--space-xl)));
 }
 
 .overlord-chat__working {

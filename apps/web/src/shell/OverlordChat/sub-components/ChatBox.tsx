@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
-import { Button, Callout, Flex, Stack, Text, Textarea } from '@drizztdourden08/tessera';
+import { Callout, Flex, Icon, IconButton, Stack, Text, Textarea } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import { CHAT_PLACEHOLDER } from '../OverlordChat.constants';
+import { CHAT_PLACEHOLDER, SEND_LABEL } from '../OverlordChat.constants';
 import type { ChatBoxProps } from '../OverlordChat.type';
 
 const ChatBox = (props: ChatBoxProps) => {
@@ -14,10 +14,12 @@ const ChatBox = (props: ChatBoxProps) => {
   return (
     <Stack gap="sm">
       {!running && <Text variant="caption" tone="muted">{note}</Text>}
-      <Flex gap="sm" align="end">
+      <Flex gap="sm" align="end" className="overlord-chat__box">
         <Textarea
           aria-label="Message to the Overlord"
+          className="overlord-chat__input"
           rows={1}
+          resize="none"
           value={text}
           disabled={!running}
           placeholder={CHAT_PLACEHOLDER}
@@ -28,7 +30,9 @@ const ChatBox = (props: ChatBoxProps) => {
             send();
           }}
         />
-        <Button variant="primary" disabled={blocked} onClick={send}>Send</Button>
+        <IconButton label={SEND_LABEL} variant="primary" size="sm" disabled={blocked} onClick={send}>
+          <Icon name="arrow-up" />
+        </IconButton>
       </Flex>
       {action.problem && <Callout tone="danger">{action.problem}</Callout>}
     </Stack>

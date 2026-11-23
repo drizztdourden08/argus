@@ -92,6 +92,43 @@ interface OverlordSpend {
   note: string;
 }
 
+interface OverlordChoice {
+  id: string;
+  label: string;
+}
+
+interface OverlordSettings {
+  model: string;
+  effort: string;
+  permissionMode: string;
+  choices: { models: OverlordChoice[]; efforts: string[]; permissionModes: OverlordChoice[] };
+}
+
+interface OverlordSettingsPatch {
+  model?: string;
+  effort?: string;
+  permissionMode?: string;
+}
+
+interface UsageTotals {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  costUsd: number;
+  turns: number;
+  durationMs: number;
+}
+
+interface OverlordUsage {
+  session: UsageTotals;
+  lastTurn: UsageTotals | null;
+  context: { usedTokens: number; windowTokens: number };
+  model: string;
+  month: { spentUsd: number; budgetUsd: number | null };
+  updatedAt: string;
+}
+
 type ApprovalState = 'pending' | 'allowed' | 'denied' | 'expired';
 
 type ApprovalDecision = 'allow' | 'deny';
@@ -155,7 +192,12 @@ export type {
   OverlordApproval,
   OverlordKeyApi,
   OverlordMode,
+  OverlordChoice,
+  OverlordSettings,
+  OverlordSettingsPatch,
   OverlordSpend,
+  OverlordUsage,
+  UsageTotals,
   OverlordState,
   OverlordStatus,
   TranscriptEvent,
