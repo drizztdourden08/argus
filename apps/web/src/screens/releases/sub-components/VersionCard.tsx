@@ -11,11 +11,11 @@ import { ShippedRows } from './ShippedRows';
 import { VersionFoot } from './VersionFoot';
 
 const VersionCard = (props: VersionCardProps) => {
-  const { channel, version, latest, project, prefixed, shipped } = props;
+  const { channel, version, latest, project, prefixed, shipped, layout } = props;
   const pane = useRecordPane();
   const code = releaseCode(project, version.version, prefixed);
   const kind = kindOf(RELEASE_KIND);
-  const title = version.title || `Release ${version.version}`;
+  const title = version.title;
   const open = () => pane.open(code);
   return (
     <RecordCard
@@ -29,6 +29,8 @@ const VersionCard = (props: VersionCardProps) => {
         menuLabel: `More actions for ${code}`,
       }}
       title={title}
+      time={version.publishedAt}
+      compact={layout === 'compact'}
       openLabel={`Open ${code}: ${title}`}
       onOpen={open}
       label={`Release ${version.version} of channel ${channel}`}
@@ -37,8 +39,8 @@ const VersionCard = (props: VersionCardProps) => {
       attrs={{ 'data-version': version.version }}
       foot={(
         <Flex direction="column" gap="xs">
-          <VersionFoot version={version} latest={latest} />
-          {shipped && <ShippedRows version={version} project={project} source={shipped} />}
+          <VersionFoot version={version} layout={layout} />
+          {shipped && layout !== 'compact' && <ShippedRows version={version} project={project} source={shipped} />}
         </Flex>
       )}
     />

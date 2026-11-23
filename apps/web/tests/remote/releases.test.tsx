@@ -43,7 +43,7 @@ describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
     expect(await screen.findByRole('list', { name: 'Channel stable' })).toBeTruthy();
     expect(screen.getByText('latest 1.2.0')).toBeTruthy();
     const newest = within(screen.getByRole('group', { name: 'Release 1.2.0 of channel stable' }));
-    expect(newest.getByText('latest')).toBeTruthy();
+    expect(newest.queryByText('latest')).toBeNull();
     const older = within(screen.getByRole('group', { name: 'Release 1.1.0 of channel stable' }));
     expect(older.queryByText('latest')).toBeNull();
   });
@@ -52,7 +52,7 @@ describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
     mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
     const card = within(await screen.findByRole('group', { name: 'Release 1.2.0 of channel stable' }));
     expect(card.getByText('Release 1.2.0')).toBeTruthy();
-    expect(card.getByText('v1.2.0')).toBeTruthy();
+    expect(card.queryByText('v1.2.0')).toBeNull();
     expect(card.getByText('0123456')).toBeTruthy();
     expect(card.getByText('5m')).toBeTruthy();
     expect(card.getByRole('link', { name: 'Release notes' }).getAttribute('href')).toBe('/releases/rotp/stable/1.2.0/notes.md');
@@ -68,6 +68,13 @@ describe('S1 the board Releases tab', { tags: ['standard'] }, () => {
     expect(card.getByText('1 file')).toBeTruthy();
     expect(card.queryByRole('link', { name: 'rotp-1.2.0-setup.exe' })).toBeNull();
     expect(card.getByRole('button', { name: /^Open V-1\.2\.0/ })).toBeTruthy();
+  });
+
+  it('shows compact stats in the header and no panel title', async () => {
+    mountBoard({ '/api/p/rotp/releases': { channels: CHANNELS } });
+    await screen.findByRole('list', { name: 'Channel stable' });
+    expect(screen.queryByRole('heading', { name: 'Releases' })).toBeNull();
+    expect(screen.getByText('wait for the go')).toBeTruthy();
   });
 
   it('says when the releases could not be read', async () => {

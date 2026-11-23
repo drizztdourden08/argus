@@ -11,7 +11,10 @@ interface ShippedSource {
   prs: readonly PullRequestDoc[];
 }
 
+type ReleaseLayout = 'normal' | 'compact';
+
 interface ReleaseScope {
+  layout?: ReleaseLayout;
   project: string;
   prefixed: boolean;
   shipped?: ShippedSource;
@@ -39,7 +42,7 @@ interface VersionCardProps extends ReleaseScope {
 
 interface VersionFootProps {
   version: ReleaseVersion;
-  latest: boolean;
+  layout?: ReleaseLayout;
 }
 
 interface VersionFilesProps {
@@ -66,5 +69,5 @@ interface ShippedPrRowProps {
 }
 
 export type {
-  ChannelListProps, ChannelSectionProps, FileLineProps, PullRequestDoc, Shipped, ShippedPrRowProps, ShippedRowsProps, ShippedSource, VersionCardProps, VersionFilesProps, VersionFootProps,
+  ChannelListProps, ChannelSectionProps, FileLineProps, PullRequestDoc, Shipped, ShippedPrRowProps, ShippedRowsProps, ReleaseLayout, ShippedSource, VersionCardProps, VersionFilesProps, VersionFootProps,
 };

@@ -6,6 +6,8 @@ interface ReleasesTabProps {
   boardKey: string;
 }
 
+type ReleasesLayout = 'normal' | 'compact';
+
 type ReleasesOrder = 'newest' | 'channel';
 
 interface ReleasesFilters {
@@ -23,8 +25,9 @@ interface ReleasesView {
 
 interface ReleasesToolsProps {
   boardKey: string;
+  layout: { value: ReleasesLayout; onChange: (layout: ReleasesLayout) => void };
   view: ReleasesView;
   channels: readonly ReleaseChannel[];
 }
 
-export type { ReleasesFilters, ReleasesOrder, ReleasesTabProps, ReleasesToolsProps };
+export type { ReleasesFilters, ReleasesLayout, ReleasesOrder, ReleasesTabProps, ReleasesToolsProps };

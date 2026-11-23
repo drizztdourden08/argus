@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { SortDirection } from '@drizztdourden08/tessera';
-import type { ReleasesFilters, ReleasesOrder } from './releases.type';
+import type { SegmentOption, SortDirection } from '@drizztdourden08/tessera';
+import type { ReleasesFilters, ReleasesLayout, ReleasesOrder } from './releases.type';
 
 const LOADING_TEXT = 'Loading the releases.';
 
@@ -17,6 +17,13 @@ const RELEASES_ORDERS: readonly { id: ReleasesOrder; label: string }[] = [
   { id: 'channel', label: 'Channel' },
 ];
 
+const LAYOUT_CHOICES: SegmentOption<ReleasesLayout>[] = [
+  { value: 'normal', icon: 'rows-3', hint: { label: 'Normal', description: 'Each version with its details' } },
+  { value: 'compact', icon: 'rows-4', hint: { label: 'Compact', description: 'Tighter cards' } },
+];
+
+const LAYOUT_IDS: ReleasesLayout[] = ['normal', 'compact'];
+
 const RELEASES_DIRECTION: SortDirection = 'desc';
 
 const RELEASES_FILTERS: ReleasesFilters = { query: '', channel: '' };
@@ -30,4 +37,4 @@ const RELEASES_SETUP = {
   filters: RELEASES_FILTERS,
 };
 
-export { EMPTY_HINT, EMPTY_TEXT, LOADING_TEXT, NO_MATCH_TEXT, RELEASES_ORDERS, RELEASES_SETUP, RELEASES_TAB };
+export { EMPTY_HINT, EMPTY_TEXT, LAYOUT_CHOICES, LAYOUT_IDS, LOADING_TEXT, NO_MATCH_TEXT, RELEASES_ORDERS, RELEASES_SETUP, RELEASES_TAB };
