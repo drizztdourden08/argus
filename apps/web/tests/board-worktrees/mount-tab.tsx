@@ -42,7 +42,7 @@ const stubFetch = (respond: Responder | undefined): Call[] => {
   const calls: Call[] = [];
   const answer = (url: string, init?: RequestInit): Promise<Response> => {
     const call: Call = { url, method: init?.method ?? 'GET', body: bodyOf(init) };
-    calls.push(call);
+    if (call.method !== 'GET') calls.push(call);
     const { status, body } = respond?.(call) ?? { status: 200, body: POSTED };
     return Promise.resolve(new Response(JSON.stringify(body), { status, headers: JSON_HEADERS }));
   };
