@@ -77,7 +77,8 @@ fn a_good_config_is_stored_and_an_equal_one_changes_nothing() {
     assert_eq!(b["kanban"]["columns"][0]["id"], "now");
     assert_eq!(effective(&b).columns.len(), 2);
     let (_, again) = post(&mut b, json!({"kind": "kanban-config", "kanban": good()}));
-    assert_eq!(again.ops.applied, 1);
+    assert_eq!(again.ops.applied, 0);
+    assert_eq!(b["kanban"]["columns"][0]["id"], "now");
     let (_, cleared) = post(&mut b, json!({"kind": "kanban-config", "kanban": null}));
     assert_eq!(cleared.ops.applied, 1);
     assert_eq!(b.get("kanban"), None);

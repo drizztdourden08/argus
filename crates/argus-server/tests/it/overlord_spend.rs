@@ -1,6 +1,7 @@
 // test-tag: critical
 //! The Overlord spend route: the owner's page only, the plan's defaults, and the shape of the reply.
 
+use crate::page_get::page_body;
 use argus_testkit::{Request, TestOptions, TestServer};
 use serde_json::json;
 
@@ -19,9 +20,7 @@ async fn a_bearer_is_refused() {
 #[tokio::test(flavor = "multi_thread")]
 async fn an_empty_ledger_shows_zero_spent_and_no_cap() {
     let t = TestServer::start(TestOptions::default()).await;
-    let reply = t.send(t.page(show())).await;
-    assert_eq!(reply.status, 200, "{}", reply.text());
-    let body = reply.json();
+    let body = page_body(&t, show()).await;
     assert_eq!(body["spentUsd"].as_f64(), Some(0.0));
     assert!(body["budgetUsd"].is_null());
     assert_eq!(body["warnAt"].as_f64(), Some(0.8));

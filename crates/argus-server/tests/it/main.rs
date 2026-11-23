@@ -9,6 +9,8 @@ mod machine;
 mod mux_rig;
 #[path = "support/node_home.rs"]
 mod node_home;
+#[path = "support/page_get.rs"]
+mod page_get;
 #[path = "support/page_send.rs"]
 mod page_send;
 mod posting;

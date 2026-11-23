@@ -48,6 +48,7 @@ fn signature(e: &Value) -> String {
         get("handed"),
         get("avatar"),
         get("icon"),
+        get("kanban"),
     ]);
     parts.to_string()
 }

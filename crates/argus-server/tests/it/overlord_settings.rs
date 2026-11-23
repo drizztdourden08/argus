@@ -2,6 +2,7 @@
 //! The Overlord settings and usage routes: the owner's page only, a bad value refused, a good one
 //! saved and echoed, and an empty usage with no session.
 
+use crate::page_get::page_body;
 use argus_testkit::{Request, TestOptions, TestServer};
 use serde_json::{Value, json};
 
@@ -32,9 +33,7 @@ async fn the_settings_need_the_page() {
 #[tokio::test(flavor = "multi_thread")]
 async fn the_defaults_and_the_choices_are_shown() {
     let t = TestServer::start(TestOptions::default()).await;
-    let reply = t.send(t.page(show())).await;
-    assert_eq!(reply.status, 200, "{}", reply.text());
-    let body = reply.json();
+    let body = page_body(&t, show()).await;
     assert_eq!(body["model"], json!("sonnet"));
     assert_eq!(body["effort"], json!("high"));
     assert_eq!(body["permissionMode"], json!("bypassPermissions"));
