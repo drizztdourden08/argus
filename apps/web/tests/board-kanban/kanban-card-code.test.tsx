@@ -6,7 +6,7 @@ import { boardOf, cardOf, cleanKanban, item, mountKanban, paneOf } from './kanba
 cleanKanban();
 
 const typed = {
-  items: [item('I-1', { type: 'bug' }), item('I-2', { type: 'epic' }), item('I-3', { type: 'story', parent: 'I-2' }), item('I-4')],
+  items: [item('I-1', { type: 'bug' }), item('I-2', { type: 'epic' }), item('I-3', { type: 'story' }), item('I-4')],
 };
 
 describe('I-85 the code of a card is the code of its type', { tags: ['critical'] }, () => {
