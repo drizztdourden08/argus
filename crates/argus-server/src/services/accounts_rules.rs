@@ -71,8 +71,12 @@ pub(crate) trait World: Send + Sync {
     async fn add_lead(&self, lead: &LeadKey) -> Result<(), String>;
     /// Calls the handover cycle off.
     async fn cancel_cycle(&self);
-    /// Writes the `switch` state doc.
-    async fn publish(&self, doc: Value);
+    /// Writes the `switch` state doc, with `lines` added to its step log.
+    async fn publish(&self, doc: Value, lines: Vec<String>);
+    /// Adds steps to the step log of the switch.
+    async fn note(&self, lines: Vec<String>);
+    /// The `switch` state doc as it is shown now.
+    async fn shown(&self) -> Option<Value>;
     /// Shows a toast.
     async fn toast(&self, level: Level, title: &str, text: &str);
     /// Reads every account's usage now.
@@ -128,6 +132,10 @@ struct Go {
     from: HoldOff,
     to: String,
     handover: bool,
+    /// The id of the countdown the switch comes from.
+    id: String,
+    /// The name of the target, for the owner.
+    label: String,
 }
 
 /// The rules over a world.
@@ -257,17 +265,20 @@ impl RulesDesk {
             Decision::StartCycle { mode, ask_at } => {
                 let started = self.world.start_cycle(active, mode, ask_at, use_now).await;
                 let ok = started.is_ok();
-                self.note("handover cycle not started", started);
-                return ok;
+                self.failed("The handover cycle did not start", started)
+                    .await;
+                // At the switch point the countdown goes on even when the cycle did not start.
+                return ok || mode == CycleMode::Now;
             }
             Decision::AskAll => {
-                self.note("handover request", self.world.ask_all(use_now).await);
+                let asked = self.world.ask_all(use_now).await;
+                self.failed("The leads were not asked for their handover", asked)
+                    .await;
             }
             Decision::CutOffRest => {
-                self.note(
-                    "handovers not cut off",
-                    self.world.cut_off_rest(use_now).await,
-                );
+                let cut = self.world.cut_off_rest(use_now).await;
+                self.failed("The leads not ready were not cut off", cut)
+                    .await;
             }
             Decision::StartCountdown { to, reason } => {
                 self.start_countdown(state, snapshot, &to, reason).await;
@@ -288,6 +299,14 @@ impl RulesDesk {
         }
     }
 
+    /// A failed step of the process: a log line and a step-log line.
+    async fn failed(&self, what: &str, result: Result<(), String>) {
+        if let Err(e) = result {
+            self.world.warn(what, &e);
+            self.world.note(vec![format!("{what}: {e}.")]).await;
+        }
+    }
+
     async fn start_countdown(
         &self,
         state: &mut State,
@@ -300,8 +319,12 @@ impl RulesDesk {
         let id = format!("SW-{}", self.clock.now_ms());
         let mut doc = switch_doc(&id, &from, to, "countdown");
         doc["countdownEndsAt"] = json!(ends_at_ms);
-        self.world.publish(doc).await;
         let label = label_of(snapshot, to);
+        let line = format!(
+            "Countdown started: the switch to {label} begins in 1 minute ({}).",
+            reason_text(reason)
+        );
+        self.world.publish(doc, vec![line]).await;
         let text = countdown_text(reason, &label_of(snapshot, &from));
         self.world
             .toast(
@@ -328,7 +351,7 @@ impl RulesDesk {
     }
 
     fn begin_switch(state: &mut State, snapshot: &Snapshot, from: &str, to: String) -> Option<Go> {
-        state.countdown = None;
+        let id = state.countdown.take()?.id;
         let view = view_of(snapshot, from)?;
         let cycle = Self::cycle_view(state, snapshot);
         if cycle == CycleView::Ready {
@@ -337,8 +360,10 @@ impl RulesDesk {
         state.switching = true;
         Some(Go {
             from: HoldOff::after_cancel(view),
+            label: label_of(snapshot, &to),
             to,
             handover: view.rules.handover != HandoverMode::Off && cycle != CycleView::Ready,
+            id,
         })
     }
 
@@ -348,8 +373,9 @@ impl RulesDesk {
         };
         let Countdown { from, to, .. } = running.countdown;
         let mut doc = switch_doc(&running.id, &from, &to, "cancelled");
-        doc["error"] = json!(format!("Stood down: {}.", reason.text()));
-        self.world.publish(doc).await;
+        let line = format!("Stood down: {}.", reason.text());
+        doc["error"] = json!(line);
+        self.world.publish(doc, vec![line]).await;
         let text = format!(
             "The switch to {} stood down: {}.",
             label_of(snapshot, &to),
@@ -376,14 +402,42 @@ impl RulesDesk {
 
     /// Makes the switch; a failed one holds the rule off so it does not start again at once.
     async fn switch(&self, go: Go) {
+        let line = format!("The countdown ended: the switch to {} starts.", go.label);
+        self.world.note(vec![line]).await;
         let result = self.world.switch(&go.to, go.handover).await;
+        if let Err(e) = &result {
+            self.tell_failure(&go, e).await;
+        }
         let mut state = self.state.lock().await;
         state.switching = false;
-        if let Err(e) = result {
-            self.world.warn("rule switch failed", &e);
+        if result.is_err() {
             state.hold_offs.retain(|h| h.account != go.from.account);
             state.hold_offs.push(go.from);
         }
+    }
+
+    /// A failed switch never leaves the countdown on screen: the doc fails with the reason (when
+    /// the switch did not write it already) and an urgent toast says why.
+    async fn tell_failure(&self, go: &Go, error: &str) {
+        self.world.warn("rule switch failed", error);
+        let stuck = self
+            .world
+            .shown()
+            .await
+            .is_some_and(|doc| doc["id"] == go.id.as_str() && doc["phase"] == "countdown");
+        if stuck {
+            let mut doc = switch_doc(&go.id, &go.from.account, &go.to, "failed");
+            doc["error"] = json!(error);
+            let line = format!("The switch failed: {error}.");
+            self.world.publish(doc, vec![line]).await;
+        }
+        let text = format!(
+            "The switch to {} did not happen: {error}. Open the Accounts tab to switch by hand.",
+            go.label
+        );
+        self.world
+            .toast(Level::Urgent, "The automatic switch failed", &text)
+            .await;
     }
 
     /// Takes the running countdown out of the state and stops its task, with the state still
@@ -408,8 +462,9 @@ impl RulesDesk {
             state.hold_offs.push(HoldOff::after_cancel(view));
         }
         self.world.cancel_cycle().await;
+        let line = "The owner cancelled the countdown.".to_owned();
         self.world
-            .publish(switch_doc(&running.id, &from, &to, "cancelled"))
+            .publish(switch_doc(&running.id, &from, &to, "cancelled"), vec![line])
             .await;
         true
     }
@@ -440,6 +495,13 @@ impl RulesDesk {
             self.world.learn(&event.cycle).await;
         }
         self.evaluate().await;
+    }
+}
+
+fn reason_text(reason: CountdownReason) -> &'static str {
+    match reason {
+        CountdownReason::SwitchPoint => "the use reached the switch point",
+        CountdownReason::HandoversReady => "every handover is in",
     }
 }
 

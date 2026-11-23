@@ -20,6 +20,8 @@ struct Fake {
     snapshot: Mutex<Option<Snapshot>>,
     calls: Mutex<Vec<String>>,
     docs: Mutex<Vec<Value>>,
+    /// The step log, every line in order.
+    lines: Mutex<Vec<String>>,
     switch_fails: Mutex<bool>,
 }
 
@@ -53,6 +55,10 @@ impl Fake {
 
     fn switched(&self) -> bool {
         self.calls().iter().any(|c| c.starts_with("switch"))
+    }
+
+    fn lines(&self) -> Vec<String> {
+        held(&self.lines).clone()
     }
 
     fn doc_phases(&self) -> Vec<String> {
@@ -97,8 +103,15 @@ impl World for Fake {
     async fn cancel_cycle(&self) {
         self.log("cancel_cycle");
     }
-    async fn publish(&self, doc: Value) {
+    async fn publish(&self, doc: Value, lines: Vec<String>) {
         held(&self.docs).push(doc);
+        held(&self.lines).extend(lines);
+    }
+    async fn note(&self, lines: Vec<String>) {
+        held(&self.lines).extend(lines);
+    }
+    async fn shown(&self) -> Option<Value> {
+        held(&self.docs).last().cloned()
     }
     async fn toast(&self, level: Level, title: &str, _text: &str) {
         self.log(format!("toast {level:?} {title}"));
@@ -307,7 +320,46 @@ async fn a_failed_switch_holds_the_rule_off() {
             .contains(&"warn rule switch failed".to_owned())
     );
     desk.evaluate().await;
+    assert_eq!(
+        world.doc_phases(),
+        ["countdown", "failed"],
+        "a failed switch never leaves the countdown on screen"
+    );
+    let failed = held(&world.docs).last().cloned().expect("the failed doc");
+    assert_eq!(failed["error"], "boom");
+    assert!(
+        world
+            .toasts()
+            .contains(&"toast Urgent The automatic switch failed".to_owned())
+    );
+    assert_eq!(world.lines().last().unwrap(), "The switch failed: boom.");
+}
+
+#[tokio::test(start_paused = true)]
+async fn handover_on_at_the_point_asks_every_lead_before_the_countdown() {
+    let (world, desk) = desk_with(snapshot(100.0, 10.0, HandoverMode::Auto));
+    desk.evaluate().await;
+    assert_eq!(
+        world.calls(),
+        [
+            "start a Now None",
+            "toast Urgent Switching to B in 1 minute"
+        ]
+    );
     assert_eq!(world.doc_phases(), ["countdown"]);
+    wait_grace().await;
+    assert_eq!(world.calls().last().unwrap(), "switch b true");
+}
+
+#[tokio::test(start_paused = true)]
+async fn the_step_log_names_the_countdown_and_its_end() {
+    let (world, desk) = desk_with(snapshot(98.0, 10.0, HandoverMode::Off));
+    desk.evaluate().await;
+    wait_grace().await;
+    let lines = world.lines();
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0].starts_with("Countdown started: the switch to B"));
+    assert_eq!(lines[1], "The countdown ended: the switch to B starts.");
 }
 
 #[tokio::test(start_paused = true)]

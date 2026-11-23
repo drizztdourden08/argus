@@ -9,7 +9,6 @@ use argus_accounts::desktop::FsVault;
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, DeskError, Outcome, StartRequest};
 use argus_accounts::rules::{CycleView, Estimates, LeadKey, View};
 use argus_accounts::{Account, AccountsConfig, PollResult, Severity, binding_limit, find_app_data};
-use argus_core::Coll;
 use argus_core::clock::parse_ms;
 use argus_notify::{By, Level, PingRequest};
 use async_trait::async_trait;
@@ -21,9 +20,10 @@ use crate::services::AccountsService;
 use crate::services::accounts::last_known_account;
 use crate::services::accounts_estimates::{LeadRef, estimate_state};
 use crate::services::accounts_handover::Handovers;
-use crate::services::accounts_switch::{Origin, is_running, logins_root, switch_to};
+use crate::services::accounts_switch::{Origin, is_running, logins_root, shown_switch, switch_to};
 
-const SWITCH_DOC: &str = "switch";
+/// How long the read of the usage at the end of a countdown may take before the rules go on.
+const REFRESH_LIMIT: std::time::Duration = std::time::Duration::from_secs(30);
 
 #[derive(Clone)]
 pub(super) struct Live {
@@ -181,12 +181,12 @@ impl World for Live {
     }
 
     async fn ask_all(&self, use_now: Option<f64>) -> Result<(), String> {
-        self.desk_call(move |me| me.desk_of()?.ask_all(use_now))
+        self.desk_call(move |me| me.desk_of()?.ask_all(use_now, &me.accounts))
             .await
     }
 
     async fn cut_off_rest(&self, use_now: Option<f64>) -> Result<(), String> {
-        self.desk_call(move |me| me.desk_of()?.cut_off_rest(use_now))
+        self.desk_call(move |me| me.desk_of()?.cut_off_rest(use_now, &me.accounts))
             .await
     }
 
@@ -225,14 +225,24 @@ impl World for Live {
             .await;
     }
 
-    async fn publish(&self, doc: Value) {
+    async fn publish(&self, doc: Value, lines: Vec<String>) {
         let _ = self
-            .blocking(|me| {
-                if let Err(e) = me.accounts.docs.put(Coll::AccountsState, SWITCH_DOC, doc) {
+            .blocking(move |me| {
+                if let Err(e) = me.accounts.put_switch(doc, &lines) {
                     me.warn("switch doc not written", &e);
                 }
             })
             .await;
+    }
+
+    async fn note(&self, lines: Vec<String>) {
+        let _ = self
+            .blocking(move |me| me.accounts.note_switch(&lines))
+            .await;
+    }
+
+    async fn shown(&self) -> Option<Value> {
+        self.blocking(|me| shown_switch(&me.svc)).await.ok().flatten()
     }
 
     async fn toast(&self, level: Level, title: &str, text: &str) {
@@ -254,8 +264,10 @@ impl World for Live {
     }
 
     async fn refresh(&self) {
-        if let Err(e) = self.accounts.poll_now().await {
-            self.warn("usage not refreshed", &e);
+        match tokio::time::timeout(REFRESH_LIMIT, self.accounts.poll_now()).await {
+            Ok(Ok(_)) => {}
+            Ok(Err(e)) => self.warn("usage not refreshed", &e),
+            Err(_) => self.warn("usage not refreshed", "the usage read took too long"),
         }
     }
 

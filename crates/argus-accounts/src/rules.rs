@@ -10,6 +10,8 @@
 //! handover Auto     near   -> cycle (auto) asks for estimates; at the ask point ask every lead
 //! every asked lead ready (even below the switch point)          -> countdown at once
 //! switch point with the cycle still open                        -> cut the rest off, countdown
+//! switch point, handover on, no cycle yet  -> cycle (now) asks every lead, countdown; the switch
+//!                                             waits for the handovers
 //! countdown over: still over the point (or ready), target still has room, same account
 //!                                                               -> switch, else stand down
 //! ```
@@ -21,6 +23,17 @@ use crate::types::{AccountKey, HandoverMode, Rules};
 pub const GRACE_MS: i64 = 60_000;
 /// A cancel holds a rule off until the use is this many points under the switch point.
 pub const HOLD_OFF_MARGIN: f64 = 5.0;
+/// Two reads of a reset time this close name the same window: the usage API moves the reset
+/// by seconds between polls, a real reset moves it by hours.
+pub const RESET_SLACK_MS: i64 = 10 * 60_000;
+
+/// Whether two reset times name the same limit window.
+fn same_reset(a: Option<i64>, b: Option<i64>) -> bool {
+    match (a, b) {
+        (Some(a), Some(b)) => (a - b).abs() <= RESET_SLACK_MS,
+        (a, b) => a == b,
+    }
+}
 
 /// A lead, named by its board and thread.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -258,8 +271,8 @@ pub fn pick_target<'a>(accounts: &'a [View], from: &str) -> Option<&'a View> {
 
 fn hold_off_over(hold: &HoldOff, view: Option<&View>, now_ms: i64) -> bool {
     let Some(view) = view else { return false };
-    let reset =
-        hold.resets_at_ms.is_some_and(|t| now_ms >= t) || hold.resets_at_ms != view.resets_at_ms;
+    let reset = hold.resets_at_ms.is_some_and(|t| now_ms >= t)
+        || !same_reset(hold.resets_at_ms, view.resets_at_ms);
     let dropped = view
         .percent
         .is_some_and(|p| p <= view.rules.switch_at - HOLD_OFF_MARGIN);
@@ -318,8 +331,17 @@ fn at_point(facts: &Facts<'_>, me: &View, target: Option<&View>, ready: bool) ->
         return no_target(facts, me);
     };
     let mut out = Vec::new();
-    if matches!(facts.cycle, CycleView::Estimating | CycleView::Asked) {
-        out.push(Decision::CutOffRest);
+    match facts.cycle {
+        CycleView::Estimating | CycleView::Asked => out.push(Decision::CutOffRest),
+        // Over the point with no cycle (the use jumped, or the rule was turned on late): every
+        // lead is asked now, and the switch waits for the handovers.
+        CycleView::None if me.rules.handover != HandoverMode::Off => {
+            out.push(Decision::StartCycle {
+                mode: CycleMode::Now,
+                ask_at: None,
+            });
+        }
+        CycleView::None | CycleView::Foreign | CycleView::Ready => {}
     }
     let reason = if ready {
         CountdownReason::HandoversReady
@@ -338,7 +360,10 @@ fn no_target(facts: &Facts<'_>, me: &View) -> Vec<Decision> {
         account: me.key.clone(),
         resets_at_ms: me.resets_at_ms,
     };
-    if facts.told == Some(&window) {
+    let told = facts.told.is_some_and(|t| {
+        t.account == window.account && same_reset(t.resets_at_ms, window.resets_at_ms)
+    });
+    if told {
         Vec::new()
     } else {
         vec![Decision::NotifyNoTarget { window }]
@@ -596,8 +621,42 @@ mod tests {
         );
         s.told = Some(window);
         assert!(run(&s).is_empty());
-        s.accounts[0].resets_at_ms = Some(99);
+        s.accounts[0].resets_at_ms = Some(10 + 5_000);
+        assert_eq!(
+            run(&s).len(),
+            0,
+            "a reset time read a few seconds later is the same window"
+        );
+        s.accounts[0].resets_at_ms = Some(10 + 5 * 3_600_000);
         assert_eq!(run(&s).len(), 1);
+    }
+
+    #[test]
+    fn handover_on_over_the_point_with_no_cycle_asks_every_lead_then_counts_down() {
+        for handover in [HandoverMode::Auto, HandoverMode::At(90.0)] {
+            let mut me = view("a", 100.0, 10);
+            me.rules.handover = handover;
+            let s = setup(me, view("b", 10.0, 20));
+            assert_eq!(
+                run(&s),
+                vec![
+                    Decision::StartCycle {
+                        mode: CycleMode::Now,
+                        ask_at: None
+                    },
+                    countdown_to("b")
+                ]
+            );
+        }
+    }
+
+    #[test]
+    fn a_hold_off_survives_a_reset_time_that_moves_by_seconds() {
+        let mut s = setup(view("a", 100.0, 10), view("b", 10.0, 20));
+        s.accounts[0].resets_at_ms = Some(5_000_000);
+        s.hold_offs = vec![HoldOff::after_cancel(&s.accounts[0])];
+        s.accounts[0].resets_at_ms = Some(5_000_000 + 3_000);
+        assert_eq!(run(&s).len(), 0);
     }
 
     #[test]
