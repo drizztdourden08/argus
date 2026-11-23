@@ -2,7 +2,7 @@
 export { askMode } from './ask-mode';
 export { buildWork } from './build-work';
 export { contextParts } from './context-parts';
-export { DEFAULT_ITEM_KIND, FEED_KIND, OWNER_ASSIGNEE } from './feed.constants';
+export { FEED_KIND, OWNER_ASSIGNEE } from './feed.constants';
 export { hasContext } from './has-context';
 export { ownerMarks } from './owner-marks';
 export { sectionOf } from './section-of';
