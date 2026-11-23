@@ -371,7 +371,10 @@ fn route_of(from: &Account, to: &Account) -> Result<Route, String> {
             account: account.clone(),
             org: org.clone(),
         }),
-        _ => Err(format!("{} has no Desktop scope", a.label)),
+        _ => Err(format!(
+            "Open Claude once on {} before the first copy",
+            a.label
+        )),
     };
     Ok(Route {
         source: scope(from)?,

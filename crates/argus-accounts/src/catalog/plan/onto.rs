@@ -24,8 +24,9 @@ use crate::types::Scope;
 const SOURCE: usize = 0;
 const TARGET: usize = 1;
 
-/// Plans the copy of the `source` scope onto the `target` scope. A scope that has no chat
-/// folder yet gives an empty plan: there is nothing to copy from or onto.
+/// Plans the copy of the `source` scope onto the `target` scope. A source with no chat folder
+/// gives an empty plan. A target with no chat folder yet (an account Desktop never opened) is
+/// planned as an empty scope: the copy creates its folder with the first chat it writes.
 ///
 /// # Errors
 /// When both scopes are the same, or a record, an index or a file cannot be read.
@@ -39,7 +40,7 @@ pub fn build_plan_onto(
         return Err("a copy needs two different accounts".to_owned());
     }
     let present = catalog.scopes()?;
-    if !present.contains(source) || !present.contains(target) {
+    if !present.contains(source) {
         return Ok(Plan::default());
     }
     let scopes = vec![
@@ -147,6 +148,25 @@ mod tests {
         assert_eq!(change.data["isArchived"], true);
         assert_eq!(change.data["customKey"], "kept");
         assert_eq!(plan.conflicts.len(), 0);
+    }
+
+    #[test]
+    fn a_target_with_no_chat_folder_yet_gets_every_source_chat() {
+        let fx = Fixture::new();
+        let (a, b) = (scope("a1", "o1"), scope("a2", "o2"));
+        fx.put(&a, 1, &record(1, 10));
+        fx.put(&a, 2, &record(2, 20));
+        fx.transcript(1);
+        fx.transcript(2);
+        let plan = onto(&fx, &a, &b);
+        let copies = plan
+            .changes
+            .iter()
+            .filter(|c| c.kind == ChangeKind::CopySession && c.scope == b)
+            .count();
+        assert_eq!(copies, 2);
+        apply(&fx.catalog(), &plan, |_, _| {}).unwrap();
+        assert_eq!(onto(&fx, &a, &b).changes.len(), 0);
     }
 
     #[test]
