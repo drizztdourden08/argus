@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, Flex, Stack, Status, Tag, Text } from '@drizztdourden08/tessera';
 import { KeyButton } from '../../../../shell/OverlordChat';
-import { useNow } from '../behavior/useNow';
+import { useNow } from '../../clock';
 import { controlsFor, uptimeText } from '../model';
 import { NO_MODE, STATE_STATUSES } from '../overlord.constants';
 import type { StatusBarProps } from '../overlord.type';

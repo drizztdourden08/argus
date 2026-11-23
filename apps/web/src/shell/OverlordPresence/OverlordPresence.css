@@ -13,6 +13,6 @@
   block-size: 100%;
 }
 
-.overlord-presence.is-off .brand-mark {
+.overlord-presence.is-off .overlord-presence__mark {
   opacity: var(--opacity-faint);
 }

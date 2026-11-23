@@ -27,7 +27,6 @@ const MODE_CONFIRM = 'This moves the Overlord thread. The desktop Overlord and t
 const asMode = (mode: string | null): OverlordMode => (mode === 'shadow' || mode === 'live' ? mode : 'off');
 const needsConfirm = (from: OverlordMode, to: OverlordMode) => from === 'live' || to === 'live';
 
-const CLOCK_MS = 30_000;
 const APPROVAL_PARAM = 'approval';
 
-export { APPROVAL_PARAM, BUDGET_NOTE, CLOCK_MS, MODE_CONFIRM, MODE_NOTES, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES, asMode, needsConfirm };
+export { APPROVAL_PARAM, BUDGET_NOTE, MODE_CONFIRM, MODE_NOTES, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES, asMode, needsConfirm };

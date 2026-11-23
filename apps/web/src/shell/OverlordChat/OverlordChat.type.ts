@@ -2,6 +2,8 @@
 import type { ReactNode } from 'react';
 import type { ActionState, ApprovalDecision, OverlordApproval, OverlordRule, RuleDraft } from '../../data/overlord';
 
+type Editing = OverlordRule | 'new' | null;
+
 type TalkKind = 'assistant' | 'owner' | 'wake';
 
 interface TalkRow {
@@ -86,6 +88,7 @@ export type {
   ApprovalLineProps,
   ChatBoxProps,
   ChatTab,
+  Editing,
   QueueLineProps,
   QueueSectionName,
   QueueSectionProps,

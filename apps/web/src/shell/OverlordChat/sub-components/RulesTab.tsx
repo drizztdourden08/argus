@@ -1,14 +1,12 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, EmptyState, Flex, Stack } from '@drizztdourden08/tessera';
 import { useState } from 'react';
-import type { OverlordRule } from '../../../data/overlord';
 import { Panel } from '../../Panel';
 import { useRules } from '../behavior/useRules';
 import { NO_RULES } from '../OverlordChat.constants';
+import type { Editing } from '../OverlordChat.type';
 import { RuleForm } from './RuleForm';
 import { RuleRow } from './RuleRow';
-
-type Editing = OverlordRule | 'new' | null;
 
 const RulesTab = () => {
   const rules = useRules();

@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Callout, EmptyState, Stack } from '@drizztdourden08/tessera';
 import { Panel } from '../../Panel';
-import { heldAt, heldText } from '../behavior/held-text';
+import { heldAt } from '../behavior/held-at';
+import { heldText } from '../behavior/held-text';
 import { queueTotal } from '../behavior/queue-total';
 import { useQueue } from '../behavior/useQueue';
 import { QUEUE_EMPTY, QUEUE_TITLES } from '../OverlordChat.constants';

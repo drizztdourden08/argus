@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind logic */
+import { MS_PER_MINUTE } from './format.constants';
 import { toMillis } from './to-millis';
-
-const MS_PER_MINUTE = 60_000;
 
 const minutesUntil = (value: unknown, now: number): number | null => {
   const at = toMillis(value);
