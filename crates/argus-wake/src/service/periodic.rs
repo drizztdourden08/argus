@@ -109,6 +109,7 @@ impl WakeService {
             self.items.tick(now, &env)
         };
         self.forward_activity(out.activity);
+        self.tell_owner_of(out.owner);
         self.submit_logged(&out.wakes, "item wakes");
         out.wakes.len() + self.watch_quiet()
     }

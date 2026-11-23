@@ -847,7 +847,7 @@ The port of DESIGN 13.3 to 13.9, in modules that mirror the Node files:
 | `registry` | One row per live thread, states, the three failures, `wake_faults`, the Overlord's wake, the `registry` docs |
 | `presence` | Open board tabs, `board-closed` faults |
 | `agent_wakes` | `agent-stale`, `agent-checkin` and `agent-unassigned` |
-| `item_wakes` | `kanban-stale` reminders and the Overlord's digest |
+| `item_wakes` | the Kanban sweep (`kanban_sweep`: `dwell`, `assignee-gone`, `over-limit`, `unassigned`), the `kanban-stale` reminders and the Overlord's digest |
 | `sync_wakes` | `remote-sync-due` wake of a lead a day without `coord remote synced` (docs/remote-sync.md) |
 | `dep_wakes` | `dep-request`, `dep-resolved`, `dep-blocked`, `dep-cancelled` and `dep-reopened` from the history of the dependency ledger, once per `D-n#seq` (docs/wake-policy.md) |
 | `item_watch` | Item events from the diff of two exports of a board (`argus_board::item_events`): `item-assigned`, `item-unassigned`, `todo-assigned`, `item-status`, `item-ask`, `item-unblocked`, `children-done`, `plan-run-done`, `todo-quiet`, and the owner notices (docs/wake-policy.md) |
@@ -884,7 +884,9 @@ in the next prompt hook's digest line; it never reaches a listener and is never 
 | `wake-fault` | passive | `board-closed`, `no-listener`, `no-reaction`, `not-listening`, `delivery-error` of a thread |
 | `agent-stale`, `agent-checkin` | passive | a quiet agent reminder |
 | `agent-unassigned` | passive | an agent with no item 10 minutes after it started: it works on an item (R21), told once |
-| `kanban-stale` | passive | item staleness |
+| `kanban-stale` | passive | item staleness (a `dwell` rule that wakes) |
+| `kanban-alert` | wake | a sweep break (`assignee-gone`, `over-limit`, `unassigned`) with `wake` on |
+| `kanban-notice` | passive | a sweep break with `wake` off: the inbox only |
 | `process-alert` | passive | hogs and orphans the process monitor saw |
 | `worktree-stale` | passive | worktree staleness |
 | `worktree-review` | passive | no longer sent (the hygiene of 2026-11-06 asks with `worktree-approve`); kept for old rows |

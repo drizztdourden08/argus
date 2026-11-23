@@ -5,7 +5,7 @@
 pub const PORTFOLIO: &str = "_portfolio";
 
 /// Every reason a wake row can carry.
-pub const WAKE_REASONS: [&str; 52] = [
+pub const WAKE_REASONS: [&str; 54] = [
     "test-fail",
     "test-partial",
     "test-blocked",
@@ -29,6 +29,8 @@ pub const WAKE_REASONS: [&str; 52] = [
     "agent-orphan",
     "agent-idle",
     "kanban-stale",
+    "kanban-alert",
+    "kanban-notice",
     "process-alert",
     "process-reaped",
     "worktree-stale",

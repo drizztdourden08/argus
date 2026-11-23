@@ -49,7 +49,7 @@ It is never woken for, and these stay notices:
   fault itself by `fault-open` (see Open faults and notices);
 - `worktree-stale`, `worktree-unlinked`, `launcher-stale`, `worktree-review` (no longer sent),
   `launcher-master-missing`;
-- `kanban-stale` (item staleness), `agent-stale` and `agent-checkin` (quiet agent reminders),
+- `kanban-stale` (item staleness), `kanban-notice` (a Kanban alert that does not wake), `agent-stale` and `agent-checkin` (quiet agent reminders),
   `agent-unassigned` (an agent with no item 10 minutes after it started, once);
 - `remote-sync-due`;
 - `process-alert` (hogs and orphans, mostly not project work);

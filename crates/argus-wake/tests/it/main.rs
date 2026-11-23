@@ -7,6 +7,7 @@ mod hosted;
 mod hosted_registry;
 mod item_watch;
 mod items;
+mod kanban_sweep;
 mod policy;
 mod presence;
 mod registry;

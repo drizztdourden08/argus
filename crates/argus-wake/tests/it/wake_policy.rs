@@ -21,13 +21,14 @@ use serde_json::json;
 
 const WINDOW: i64 = 15 * SEC;
 
-const PASSIVE: [&str; 20] = [
+const PASSIVE: [&str; 21] = [
     "lead-info",
     "wake-fault",
     "agent-stale",
     "agent-checkin",
     "agent-unassigned",
     "kanban-stale",
+    "kanban-notice",
     "process-alert",
     "worktree-stale",
     "worktree-review",

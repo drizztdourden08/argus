@@ -9,16 +9,22 @@
 //! * digest: the Overlord hears once a day (`digest_repeat_ms`) about each project that has items quiet for
 //!   longer than `escalate_ms` (3 days), so a lead that ignores the reminders is visible.
 //!
+//! The items and the thresholds are not fixed: the sweep reads the Kanban config of each board
+//! (`kanban_sweep`), and a board without one runs the default, which is the reminders above. The same
+//! sweep also tells `assignee-gone`, `over-limit` and `unassigned` breaks (docs/kanban-config.md).
+//!
 //! Never reminded: done, dropped, archived or deleted items; an item that waits on someone else (an open
 //! question or decision of the owner, a to-do of the owner, a test run handed to the
 //! owner, a live sub-agent working on it, a request to another board that is still being answered, a
 //! request of another board that was blocked on the requester); a thread that is paused. There are no
 //! quiet hours.
 
+mod kanban_sweep;
 mod stale;
 mod text;
 
 pub use argus_core::clock::age_text;
+use kanban_sweep::Group;
 pub use stale::Stale;
 pub(crate) use stale::{has_live_agent, last_change, target_for};
 
@@ -28,6 +34,7 @@ use serde_json::Value;
 
 use crate::activity::{ActivityLine, Level};
 use crate::config::section_ms;
+use crate::reminders::{OwnerNotice, TOPIC_KANBAN};
 use crate::source::BoardSource;
 use crate::wake::WakeInput;
 
@@ -96,6 +103,8 @@ pub struct ItemTick {
     pub wakes: Vec<WakeInput>,
     /// The activity lines (one per digest).
     pub activity: Vec<ActivityLine>,
+    /// The notices for the owner: the sweep alerts that go to him.
+    pub owner: Vec<OwnerNotice>,
 }
 
 /// What a tick reads.
@@ -130,48 +139,70 @@ impl ItemWakes {
         &self.config
     }
 
-    fn last_of(
-        &self,
-        env: &ItemEnv<'_>,
-        mem_key: &str,
-        scope: &str,
-        thread: &str,
-        subject: &str,
-    ) -> i64 {
-        let stored = (env.last_sent)(scope, thread, REASON, subject);
-        self.sent.get(mem_key).copied().unwrap_or(0).max(stored)
+    fn last_of(&self, env: &ItemEnv<'_>, group: &Group) -> i64 {
+        let stored = (env.last_sent)(
+            &group.scope,
+            &group.thread,
+            group.reason(),
+            &group.subject(),
+        );
+        self.sent
+            .get(&group.memory_key())
+            .copied()
+            .unwrap_or(0)
+            .max(stored)
+    }
+
+    fn last_digest(&self, env: &ItemEnv<'_>, overlord: &str, main: &str, scope: &str) -> i64 {
+        let stored = (env.last_sent)(overlord, main, REASON, scope);
+        self.sent
+            .get(&format!("digest/{scope}"))
+            .copied()
+            .unwrap_or(0)
+            .max(stored)
     }
 
     /// The stale items of every board, not yet grouped.
     #[must_use]
     pub fn stale_items(&self, now: i64, boards: &dyn BoardSource) -> Vec<Stale> {
-        stale::stale_items(&self.config, now, boards)
+        kanban_sweep::stale_of(&kanban_sweep::sweep(&self.config, now, boards))
     }
 
     /// The wakes due now.
     pub fn tick(&mut self, now: i64, env: &ItemEnv<'_>) -> ItemTick {
-        let stale = self.stale_items(now, env.boards);
+        let findings = kanban_sweep::sweep(&self.config, now, env.boards);
+        let stale = kanban_sweep::stale_of(&findings);
         let mut out = ItemTick::default();
-        for ((scope, thread), mut list) in stale::by_thread(&stale) {
-            if now - self.last_of(env, &format!("{scope}/{thread}"), &scope, &thread, &thread)
-                < self.config.repeat_ms
-            {
+        for mut group in kanban_sweep::groups(findings) {
+            if now - self.last_of(env, &group) < group.repeat_ms {
                 continue;
             }
-            list.sort_by(stale::worst_first);
-            out.wakes.push(WakeInput::about(
-                &scope,
-                &thread,
-                REASON,
-                &thread,
-                text::reminder_text(&list),
-            ));
-            self.sent.insert(format!("{scope}/{thread}"), now);
+            group
+                .list
+                .sort_by(|a, b| stale::worst_first(&a.stale, &b.stale));
+            Self::tell(&group, now, &mut out);
+            self.sent.insert(group.memory_key(), now);
         }
         if let Some(main) = &env.main {
             self.digests(now, env, main, &stale, &mut out);
         }
         out
+    }
+
+    /// One group told: a notice for the owner, else a wake (or an inbox notice) for its thread.
+    fn tell(group: &Group, now: i64, out: &mut ItemTick) {
+        let text = kanban_sweep::alert_text(group.kind, &group.list);
+        if group.for_owner() {
+            out.owner.push(owner_notice(group, text, now));
+            return;
+        }
+        out.wakes.push(WakeInput::about(
+            &group.scope,
+            &group.thread,
+            group.reason(),
+            &group.subject(),
+            text,
+        ));
     }
 
     fn digests(
@@ -184,9 +215,7 @@ impl ItemWakes {
     ) {
         let overlord = env.boards.overlord();
         for (scope, mut list) in stale::by_project(stale, &overlord, self.config.escalate_ms) {
-            if now - self.last_of(env, &format!("digest/{scope}"), &overlord, main, &scope)
-                < self.config.digest_repeat_ms
-            {
+            if now - self.last_digest(env, &overlord, main, &scope) < self.config.digest_repeat_ms {
                 continue;
             }
             list.sort_by(stale::worst_first);
@@ -202,5 +231,19 @@ impl ItemWakes {
                 .push(WakeInput::about(&overlord, main, REASON, &scope, text));
             self.sent.insert(format!("digest/{scope}"), now);
         }
+    }
+}
+
+/// The notice for the owner of a group of breaks. Each telling is a notice of its own, so the repeat is
+/// the sweep's `repeatMs` and nothing else.
+fn owner_notice(group: &Group, text: String, now: i64) -> OwnerNotice {
+    let kind = group.kind.key();
+    OwnerNotice {
+        topic: TOPIC_KANBAN.to_owned(),
+        title: format!("Kanban {kind}: {} to look at", group.list.len()),
+        text,
+        project: group.scope.clone(),
+        thread: "kanban".to_owned(),
+        since: format!("{kind}:{now}"),
     }
 }

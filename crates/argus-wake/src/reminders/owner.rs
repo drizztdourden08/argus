@@ -27,6 +27,9 @@ pub const TOPIC_VERIFY: &str = "verify";
 /// The topic of a notice that a test plan is ready to run (`notify.auto.run`).
 pub const TOPIC_RUN: &str = "run";
 
+/// The topic of a notice that a Kanban sweep rule is broken and its alert goes to the owner.
+pub const TOPIC_KANBAN: &str = "kanban";
+
 /// What the owner is told.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OwnerNotice {

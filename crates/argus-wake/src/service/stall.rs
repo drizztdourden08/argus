@@ -49,7 +49,7 @@ impl WakeService {
         self.stalls.ack(project, by, note, self.clock.now_ms())
     }
 
-    fn tell_owner_of(&self, notices: Vec<OwnerNotice>) {
+    pub(super) fn tell_owner_of(&self, notices: Vec<OwnerNotice>) {
         if let Some(sink) = &self.owner {
             for notice in notices {
                 sink.notify(notice);

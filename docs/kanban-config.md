@@ -2,7 +2,7 @@
 
 Each board may carry its own Kanban columns and rules. The config lives in `board.json` as the
 top-level `kanban` object. The write-time rules read it when an item is written (see Write-time
-rules). The sweep that reads the rest comes later (I-206 piece P7).
+rules). The sweep runs the alert rules every tick (see The sweep).
 
 ## Shape
 
@@ -65,6 +65,41 @@ A board with no `kanban` runs the default, which is today's page:
 
 Each stale rule alerts `item-thread`, with a wake, every 12 h, as the stale sweep does today. A
 stored config that no longer passes the checks falls back to the default.
+
+## The sweep
+
+Every tick (5 minutes) the wake service sweeps each board with the config in use: the board's own, or
+the default when it has none or a damaged one. The default is built from the `items` timing of
+`config.json` (`staleTodoMs`, `staleDoingMs`, `staleReviewMs`, `repeatMs`), so a board with no
+config gets the stale reminders it always had, with the same wording and the same single wake per
+thread, worst offenders first.
+
+For each live item, each column that holds it (its lane, and its stage when the column names stages)
+runs the sweep rules the column lists:
+
+| Kind | A break is |
+|---|---|
+| `dwell` | the item sat in the column longer than `params.ms`. The clock starts at `laneAt` (then `startedAt`, then `updatedAt`) and restarts when anything touches the item (tests, to-dos, sub-agents, entries). An item that waits on someone else is skipped, as the stale reminders skip it |
+| `assignee-gone` | the assignee is an agent that no longer runs, or a thread that is missing or ended. `owner` and no assignee are never a break |
+| `unassigned` | the item had no assignee for longer than `params.ms` since it entered the column |
+| `over-limit` | the column holds more live items than `limit.max`. A column whose `limit.mode` is `alert` fires too, to the lead, with a wake, every 12 h, when it has no `over-limit` rule |
+
+Who hears of a break is `alert.to`: `item-thread` (the item's thread while it is live, else the
+lead), `assignee` (the assignee thread, an agent's thread, or the owner; the item thread when none),
+`lead`, `owner`, or a thread id (that thread while live, else the lead). `over-limit` is about a
+column, not one item, so `item-thread` and `assignee` mean the lead there. A paused thread hears
+nothing until it resumes.
+
+`alert.wake` picks the reason of the row in the wakes table. With `wake` on, a `dwell` keeps
+`kanban-stale` and the other kinds use `kanban-alert` (a wake). With `wake` off the row is a
+`kanban-notice`, which only lands in the inbox and the board notices. One line is sent per project,
+recipient and kind, listing the worst items first.
+
+`alert.repeatMs` is the wait before the same break is told again to the same recipient. For a thread
+the wakes table remembers it, so a restart does not repeat a line. An alert to the `owner` goes
+through the owner notice path (`OwnerNotice`, topic `kanban`: a toast and a line in the
+notifications); it has no wakes row, so only the running process remembers its pace and a restart
+may tell it once more.
 
 ## Who may change it
 
