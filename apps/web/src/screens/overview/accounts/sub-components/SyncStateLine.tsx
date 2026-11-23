@@ -13,7 +13,7 @@ const SyncStateLine = (props: SyncStateLineProps) => {
     <Inline gap="md" align="center" wrap>
       <Status tone={total === 0 ? 'success' : 'warning'} size="sm" dot title={DRIFT_TIP}>{total === 0 ? MATCHING : `${total} to sync`}</Status>
       {scanned && <Text variant="caption" tone="muted">{`Scanned ${scanned}`}</Text>}
-      {!active && <Text variant="caption" tone={run?.phase === 'failed' ? 'danger' : 'muted'}>{lastSyncText(run)}</Text>}
+      {!active && <Text variant="caption" tone={run?.phase === 'failed' ? 'danger' : 'muted'}>{lastSyncText(run, total > 0)}</Text>}
     </Inline>
   );
 };

@@ -96,6 +96,9 @@ interface SwitchStepDoc {
   state?: SwitchStepState;
   text?: string | null;
   detail?: string | null;
+  id?: string;
+  label?: string | null;
+  status?: string;
 }
 
 type SwitchThreadState = 'found' | 'asked' | 'ready' | 'skipped' | 'failed';
