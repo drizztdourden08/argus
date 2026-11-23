@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KanbanConfig } from '../../src/data/types';
 import {
-  DEFAULT_CONFIG, HOUR_MS, configAddColumn, configAddRule, configIsDefault, configMoveColumn, configParseList, configRemoveColumn, configRemoveRule, configRuleOfKind, configSetColumn, configSetRule, configToggleList,
+  DEFAULT_CONFIG, HOUR_MS, configAddColumn, configAddRule, configMoveColumn, configParseList, configRemoveColumn, configRemoveRule, configRuleOfKind, configSetColumn, configSetRule, configToggleList,
 } from '../../src/screens/board/tabs/kanban/model';
 
 const base: KanbanConfig = {
@@ -55,10 +55,5 @@ describe('I-206 the config editor helpers', { tags: ['critical'] }, () => {
     expect(configParseList(' epic, task ,, ')).toEqual(['epic', 'task']);
     expect(configToggleList(['todo'], 'doing', true)).toEqual(['todo', 'doing']);
     expect(configToggleList(['todo', 'doing'], 'todo', false)).toEqual(['doing']);
-  });
-
-  it('tells the default config from its own', () => {
-    expect(configIsDefault(DEFAULT_CONFIG)).toBe(true);
-    expect(configIsDefault(configAddColumn(DEFAULT_CONFIG))).toBe(false);
   });
 });

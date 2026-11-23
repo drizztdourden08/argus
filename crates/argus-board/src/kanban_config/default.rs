@@ -61,8 +61,15 @@ pub fn effective(board: &Board) -> KanbanConfig {
     }
 }
 
-/// The config as the page document `meta/kanban`.
+/// The config as the page document `meta/kanban`, with `custom` true when the board runs its own.
 #[must_use]
 pub fn export(board: &Board) -> Value {
-    serde_json::to_value(effective(board)).unwrap_or(Value::Null)
+    let custom = board
+        .get("kanban")
+        .is_some_and(|value| !value.is_null() && parse(value).is_ok());
+    let mut doc = serde_json::to_value(effective(board)).unwrap_or(Value::Null);
+    if let Some(fields) = doc.as_object_mut() {
+        fields.insert("custom".into(), Value::Bool(custom));
+    }
+    doc
 }

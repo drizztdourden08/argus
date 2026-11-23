@@ -34,4 +34,8 @@ interface KanbanConfig {
   rules?: KanbanRuleConfig[];
 }
 
-export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig, KanbanRuleAlert, KanbanRuleConfig };
+interface KanbanMeta extends KanbanConfig {
+  custom?: boolean;
+}
+
+export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig, KanbanMeta, KanbanRuleAlert, KanbanRuleConfig };

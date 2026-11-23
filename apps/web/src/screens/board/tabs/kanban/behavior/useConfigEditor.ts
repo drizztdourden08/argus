@@ -3,13 +3,13 @@ import { useCallback, useState } from 'react';
 import { writeErrorText } from '../../../../../data/api';
 import { sendOp } from '../../../../../data/kanban';
 import { useDoc } from '../../../../../data/react';
-import type { KanbanConfig } from '../../../../../data/types';
+import type { KanbanConfig, KanbanMeta } from '../../../../../data/types';
 import { postVerdict } from '../../tests/model';
-import { DEFAULT_CONFIG, configIsDefault } from '../model';
+import { DEFAULT_CONFIG } from '../model';
 import type { ConfigEditor } from '../config-editor.type';
 
 const useConfigEditor = (boardKey: string): ConfigEditor => {
-  const stored = useDoc<KanbanConfig>(boardKey, 'meta', 'kanban').doc ?? DEFAULT_CONFIG;
+  const { custom = false, ...stored }: KanbanMeta = useDoc<KanbanMeta>(boardKey, 'meta', 'kanban').doc ?? DEFAULT_CONFIG;
   const [draft, setDraft] = useState<KanbanConfig | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -29,7 +29,7 @@ const useConfigEditor = (boardKey: string): ConfigEditor => {
   const config = draft ?? stored;
   return {
     config,
-    custom: !configIsDefault(stored),
+    custom,
     dirty: draft !== null,
     busy,
     problem,

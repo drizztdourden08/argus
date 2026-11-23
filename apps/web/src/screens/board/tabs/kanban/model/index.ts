@@ -49,7 +49,6 @@ export {
 } from './model.constants';
 export { configAddColumn } from './config-add-column';
 export { configAddRule } from './config-add-rule';
-export { configIsDefault } from './config-is-default';
 export { configKind } from './config-kind';
 export { configMoveColumn } from './config-move-column';
 export { configParseList } from './config-parse-list';

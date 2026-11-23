@@ -143,9 +143,11 @@ fn the_export_carries_the_default_and_a_set_config() {
     let mut b = alpha();
     let meta = exported(&b, Coll::Meta, "kanban");
     assert_eq!(meta["columns"].as_array().map(Vec::len), Some(4));
+    assert_eq!(meta["custom"], false);
     post(&mut b, json!({"kind": "kanban-config", "kanban": good()}));
     let meta = exported(&b, Coll::Meta, "kanban");
     assert_eq!(meta["columns"][0]["id"], "now");
+    assert_eq!(meta["custom"], true);
 }
 
 #[test]
