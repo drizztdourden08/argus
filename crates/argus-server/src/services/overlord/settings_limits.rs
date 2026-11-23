@@ -125,14 +125,19 @@ impl Limits {
     pub(crate) fn fields(&self) -> Result<Vec<(String, Value)>, String> {
         let mut out = Vec::new();
         put(&mut out, "cwd", &self.cwd, |v| existing_folder(v))?;
-        put(&mut out, "claudeExe", &self.claude_exe, |v| existing_file(v))?;
+        put(&mut out, "claudeExe", &self.claude_exe, |v| {
+            existing_file(v)
+        })?;
         put(&mut out, "budgetUsd", &self.budget_usd, |v| sane_budget(*v))?;
         put(&mut out, "restartMax", &self.restart_max, |v| {
             sane_restarts(*v)
         })?;
-        put(&mut out, "approvalTimeoutMin", &self.approval_timeout_min, |v| {
-            sane_wait(*v)
-        })?;
+        put(
+            &mut out,
+            "approvalTimeoutMin",
+            &self.approval_timeout_min,
+            |v| sane_wait(*v),
+        )?;
         Ok(out)
     }
 }

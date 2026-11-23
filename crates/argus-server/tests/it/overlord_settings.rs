@@ -125,8 +125,14 @@ async fn the_folder_and_limits_are_saved_and_reset() {
     let after = t.send(t.page(show())).await.json();
     assert_ne!(after["cwd"]["source"], json!("set"));
     assert_eq!(after["claudeExe"]["source"], json!("default"));
-    assert_eq!(after["budgetUsd"], json!({ "value": null, "source": "default" }));
-    assert_eq!(after["restartMax"], json!({ "value": 3, "source": "default" }));
+    assert_eq!(
+        after["budgetUsd"],
+        json!({ "value": null, "source": "default" })
+    );
+    assert_eq!(
+        after["restartMax"],
+        json!({ "value": 3, "source": "default" })
+    );
     assert_eq!(after["approvalTimeoutMin"]["source"], json!("set"));
     t.stop(false).await;
 }

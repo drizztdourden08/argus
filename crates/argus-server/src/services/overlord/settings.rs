@@ -41,8 +41,7 @@ pub(crate) fn body(svc: &Services) -> Value {
             "permissionModes": permission_modes(),
         },
     });
-    if let (Some(all), Value::Object(limits)) = (body.as_object_mut(), settings_limits::body(svc))
-    {
+    if let (Some(all), Value::Object(limits)) = (body.as_object_mut(), settings_limits::body(svc)) {
         all.extend(limits);
     }
     body

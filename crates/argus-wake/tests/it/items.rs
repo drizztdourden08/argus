@@ -323,10 +323,26 @@ fn an_item_waiting_on_someone_else_is_skipped_an_open_question_a_run_handed_to_t
 fn an_item_held_by_a_live_agent_is_not_stale_and_one_held_by_a_finished_agent_is() {
     let mut world = World::new();
     let old = iso(START - 30 * HOUR);
-    world.add(&item("I-1", "doing", hours(30), &json!({"assignee": "agent:A-1"})));
-    world.add(&item("I-2", "doing", hours(30), &json!({"assignee": "agent:A-2"})));
-    world.put("agents", &json!({"id": "A-1", "item": "I-9", "status": "working", "updatedAt": old}));
-    world.put("agents", &json!({"id": "A-2", "item": "I-9", "status": "done", "updatedAt": old}));
+    world.add(&item(
+        "I-1",
+        "doing",
+        hours(30),
+        &json!({"assignee": "agent:A-1"}),
+    ));
+    world.add(&item(
+        "I-2",
+        "doing",
+        hours(30),
+        &json!({"assignee": "agent:A-2"}),
+    ));
+    world.put(
+        "agents",
+        &json!({"id": "A-1", "item": "I-9", "status": "working", "updatedAt": old}),
+    );
+    world.put(
+        "agents",
+        &json!({"id": "A-2", "item": "I-9", "status": "done", "updatedAt": old}),
+    );
     assert_eq!(world.stale_ids(0), "I-2");
 }
 
