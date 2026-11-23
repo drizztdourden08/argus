@@ -10,7 +10,7 @@ const ChatFeed = (props: ChatFeedProps) => {
   const all = [...messages, ...queued];
   if (all.length === 0 && working === null) return <EmptyState message={EMPTY_TRANSCRIPT} className="overlord-chat__feed" />;
   return (
-    <ScrollArea follow scrollbar="slim" className="overlord-chat__feed">
+    <ScrollArea follow followBehavior="instant" scrollbar="slim" className="overlord-chat__feed">
       <Stack gap="md" className="overlord-chat__messages">
         {all.map((message) => <ChatMessage key={message.id} message={message} />)}
         {working && <WorkingLine activity={working} />}

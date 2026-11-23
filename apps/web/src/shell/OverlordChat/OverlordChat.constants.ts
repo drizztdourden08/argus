@@ -51,7 +51,6 @@ const TOOL_NAMES = { one: 'tool', many: 'tools' } as const;
 const ERROR_CLAMP_LINES = 2;
 const SETTING_LABELS = { model: 'Model', effort: 'Effort', permissionMode: 'Permission mode' } as const;
 const SWITCHING_NOTE = 'Restarting the Overlord';
-const SEND_LABEL = 'Send';
 const USAGE_LABEL = 'Context and usage';
 const USAGE_TITLES = { context: 'Context', session: 'This session', lastTurn: 'Last turn', month: 'This month' } as const;
 const USAGE_WORDS = {
@@ -109,7 +108,6 @@ const RUNNING_STATES: readonly OverlordState[] = ['idle', 'turn', 'waiting-appro
 export {
   APPROVAL_WORDS,
   ERROR_CLAMP_LINES,
-  SEND_LABEL,
   SETTING_LABELS,
   SWITCHING_NOTE,
   TOOL_COUNT_WORDS,

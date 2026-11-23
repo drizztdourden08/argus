@@ -40,11 +40,6 @@
   white-space: nowrap;
 }
 
-.overlord-chat__input {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-}
-
 .overlord-chat__bar {
   flex: none;
 }
@@ -56,10 +51,6 @@
 
 .overlord-chat__usage {
   inline-size: min(var(--size-320), calc(100vw - var(--space-xl)));
-}
-
-.overlord-chat__feed {
-  scroll-behavior: auto;
 }
 
 .overlord-chat__row {
