@@ -12,12 +12,19 @@ const fallbackState = (doc: AccountsSwitch, stage: SwitchStage): SwitchStepState
 const planText = (stage: SwitchStage, state: SwitchStepState, live: boolean): string =>
   live || state !== 'waiting' ? STAGE_PLAN[stage] : NOT_REACHED;
 
+const stateOf = (doc: AccountsSwitch, last: SwitchStepDoc | undefined, stage: SwitchStage, unrecorded: boolean): SwitchStepState =>
+  last?.state ?? (unrecorded ? 'done' : fallbackState(doc, stage));
+
+const textOf = (doc: AccountsSwitch, last: SwitchStepDoc | undefined, stage: SwitchStage, unrecorded: boolean): string => {
+  if (last?.text !== undefined) return last.text;
+  return unrecorded ? NO_RECORD : planText(stage, stateOf(doc, last, stage, unrecorded), isActive(doc));
+};
+
 const stageView = (doc: AccountsSwitch, steps: SwitchStepDoc[], stage: SwitchStage): StageView => {
   const last = steps.filter((step) => step.stage === stage).at(-1);
   const unrecorded = last === undefined && doc.phase === 'done';
-  const state: SwitchStepState = last?.state ?? (unrecorded ? 'done' : fallbackState(doc, stage));
-  const plan = unrecorded ? NO_RECORD : planText(stage, state, isActive(doc));
-  return { stage, label: STAGE_LABEL[stage], state, text: last?.text ?? plan, at: clockText(last?.at, true), detail: last?.detail ?? '' };
+  const state = stateOf(doc, last, stage, unrecorded);
+  return { stage, label: STAGE_LABEL[stage], state, text: textOf(doc, last, stage, unrecorded), at: clockText(last?.at, true), detail: last?.detail ?? '' };
 };
 
 const stageViews = (doc: AccountsSwitch): StageView[] => {
