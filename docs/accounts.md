@@ -80,8 +80,17 @@ the last good read and shows its age. The Desktop usage log is the fallback.
 
 ## The sync rules
 
-The sync keeps every account's sidebar the same: the same chats, folders, sub-threads and archived
-state. A run is Scan, Compare, Plan, Back up, Apply, Verify.
+Two kinds of run exist (owner, Q-25, 2026-11-23):
+
+- The one-way copy. It makes a target account look like a source account. A shared chat takes the
+  source record whole, a source-only chat is copied, and a target-only chat is kept: it never
+  deletes. A chat the target deleted stays deleted. Folders and filing follow the source, and
+  target-only folders stay. A switch always runs this copy, from the current account onto the next
+  one. `POST /api/accounts/sync` with `from` and `to` runs it by hand ("Copy A onto B").
+- The merge. It keeps every account's sidebar the same, both ways, by the rules below. It runs
+  only by hand ("Merge both accounts"), `POST /api/accounts/sync` without `from` and `to`.
+
+Each run is Scan, Compare, Plan, Back up, Apply, Verify. The merge rules:
 
 - Chats. A chat missing on an account is copied with every field it has (`scheduledTaskId`,
   `folderPlace`, `enabledMcpTools` and the rest), so a routine run stays a routine run. A copy that
