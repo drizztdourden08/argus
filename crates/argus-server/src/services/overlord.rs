@@ -16,4 +16,5 @@ pub(crate) mod running;
 mod setting;
 pub(crate) mod shadow;
 pub(crate) mod switch;
+mod seat_register;
 mod switch_board;

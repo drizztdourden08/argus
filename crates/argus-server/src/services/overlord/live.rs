@@ -32,6 +32,7 @@ use super::attachment::Attachment;
 use super::config::{self, Live};
 use super::live_session;
 use super::live_transcript::{Recorder, approval_line, open as open_recorder};
+use super::seat_register::register_seat;
 use super::shadow::{self, Shadow, ShadowInput};
 use super::switch_board::handover_file;
 use crate::Services;
@@ -53,6 +54,8 @@ struct Wakes {
     db: Arc<Db>,
     /// A saved session was resumed and the child has not reported its id yet.
     unproven: AtomicBool,
+    /// Argus registers the hosted Overlord's thread when the child reports its session.
+    coord_home: PathBuf,
     gate: Arc<ApprovalGate>,
     /// The live transcript; none when no key could be read to redact.
     recorder: Option<Arc<Recorder<FileTranscripts>>>,
@@ -66,6 +69,7 @@ impl Observer for Wakes {
         if let Ok(Wire::Init(init)) = decode_line(line) {
             live_session::save(&self.db, &init.session_id);
             self.unproven.store(false, Ordering::SeqCst);
+            register_seat(&self.coord_home, &self.log, &init.session_id);
         }
     }
 
@@ -264,7 +268,7 @@ pub(crate) fn try_start(svc: &Arc<Services>) -> Result<(), StartFault> {
     try_start_from(svc, Origin::Fresh)
 }
 
-/// The live child's observer: its first message tells it to register, and at a switch-over to read
+/// The live child's observer: its first message, at a switch-over, tells it to read
 /// the desktop Overlord's handover.
 fn live_observer(
     svc: &Services,
@@ -280,6 +284,7 @@ fn live_observer(
         intro: Mutex::new(Some(live_intro(handover.as_deref()))),
         db: Arc::clone(&svc.db),
         unproven: AtomicBool::new(unproven),
+        coord_home: svc.paths.coord_home.clone(),
         gate: Arc::clone(&svc.overlord_approvals),
         recorder: open_recorder(&svc.paths.home, &svc.log, resumed),
     }
