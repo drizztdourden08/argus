@@ -1,4 +1,5 @@
-//! What the supervisor keeps between children: the state, the held messages, whether a turn runs.
+//! What the supervisor keeps between children: the state, the held messages, the usage tally,
+//! whether a turn runs.
 
 use std::sync::Arc;
 
@@ -6,6 +7,7 @@ use tokio::sync::watch;
 
 use super::super::inbox::Inbox;
 use super::super::state::{Event as Change, State, apply};
+use super::super::usage::Meter;
 use super::Observer;
 use super::flight::Flight;
 use crate::ports::ChildHost;
@@ -18,6 +20,8 @@ pub(super) struct Run<H: ChildHost> {
     pub(super) inbox: Inbox,
     /// The tool calls the child has started and not finished.
     pub(super) flight: Flight,
+    /// The session's usage, read from the child's lines.
+    pub(super) meter: Meter,
     /// True from a write until its `result`. The state machine cannot say it: the first turn runs
     /// while the status is still `Starting`, because `init` comes after the first message.
     pub(super) busy: bool,
@@ -33,7 +37,7 @@ impl<H: ChildHost> Run<H> {
     pub(super) fn new(
         host: Arc<H>,
         state_tx: watch::Sender<State>,
-        (inbox, flight): (Inbox, Flight),
+        (inbox, flight, meter): (Inbox, Flight, Meter),
         observer: Arc<dyn Observer>,
     ) -> Self {
         Self {
@@ -42,6 +46,7 @@ impl<H: ChildHost> Run<H> {
             state_tx,
             inbox,
             flight,
+            meter,
             busy: false,
             in_flight: None,
             crashes: 0,

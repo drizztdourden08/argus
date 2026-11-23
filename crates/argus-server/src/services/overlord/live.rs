@@ -189,7 +189,8 @@ fn spec_of(inputs: &Inputs, resume: Option<&str>) -> Result<ChildSpec, HostFault
     let config = inputs.gate.begin(&inputs.endpoint, &std::env::temp_dir())?;
     let base = SessionArgs {
         model: inputs.live.model.clone(),
-        effort: None,
+        effort: Some(inputs.live.effort.clone()),
+        permission_mode: inputs.live.permission_mode.clone(),
         resume: resume.map(str::to_owned),
         fork: false,
         mcp_config: config.to_string_lossy().into_owned(),
@@ -349,6 +350,7 @@ pub(crate) fn try_start_from(svc: &Arc<Services>, origin: Origin) -> Result<(), 
         spec: spec_factory(svc, &live, input, fork_from),
         restart_max: live.restart_max,
         resume_from,
+        meter: svc.overlord.meter.clone(),
     };
     svc.overlord
         .install(|| supervisor::start(Arc::new(SystemChildHost::default()), setup, observer))

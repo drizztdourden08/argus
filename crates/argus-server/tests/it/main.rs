@@ -57,6 +57,7 @@ mod overlord_budget;
 mod overlord_key;
 mod overlord_message;
 mod overlord_session;
+mod overlord_settings;
 mod overlord_spend;
 mod overlord_transcript;
 mod owner_avatar;

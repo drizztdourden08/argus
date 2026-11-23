@@ -1,10 +1,11 @@
 //! The running supervisor of the hosted Overlord: its link, its state and its task, kept so a
-//! stop can wait for the end and a start can follow it.
+//! stop can wait for the end and a start can follow it, and the usage tally of its session.
 
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use argus_overlord::session::state::State;
 use argus_overlord::session::supervisor::{Handle, Link};
+use argus_overlord::session::usage::Meter;
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
@@ -31,6 +32,8 @@ pub(crate) struct Running {
     pub(crate) control: tokio::sync::Mutex<()>,
     /// What keeps the child up while a key is saved.
     pub(crate) keeper: Keeper,
+    /// The usage of the child's session, kept across restarts; it starts again at a new session id.
+    pub(crate) meter: Meter,
 }
 
 impl Running {

@@ -7,9 +7,10 @@ const PERMISSION_TOOL: &str = "mcp__argus-overlord__permission_prompt";
 #[derive(Debug, Clone, PartialEq)]
 pub struct SessionArgs {
     pub model: String,
-    /// The effort setting. Adds nothing yet: the story 4 probe decides whether it is a flag or
-    /// a setting, and this field then gains its line in [`build_argv`].
+    /// The effort level (`low` to `max`); `None` leaves the CLI's own default.
     pub effort: Option<String>,
+    /// The `--permission-mode` of the child, such as `bypassPermissions`.
+    pub permission_mode: String,
     /// A session id to resume.
     pub resume: Option<String>,
     /// With `resume`: continue in a new session instead of the old one.
@@ -20,10 +21,9 @@ pub struct SessionArgs {
     pub budget_left_usd: Option<f64>,
 }
 
-/// The arguments after the program name. It runs with every permission (the owner wants zero
-/// approvals); the hooks still run, and any ask left goes to the permission tool, which allows it.
-/// Never `--bare`: it would skip the hooks and the
-/// `CLAUDE.md` the Overlord depends on.
+/// The arguments after the program name. The permission mode is the owner's setting; in every mode
+/// any ask goes to the permission tool, which allows it, so the owner sees zero approvals. The hooks
+/// still run. Never `--bare`: it would skip the hooks and the `CLAUDE.md` the Overlord depends on.
 #[must_use]
 pub fn build_argv(config: &SessionArgs) -> Vec<String> {
     let mut argv = head(&config.model);
@@ -33,9 +33,12 @@ pub fn build_argv(config: &SessionArgs) -> Vec<String> {
             argv.push("--fork-session".to_owned());
         }
     }
+    if let Some(effort) = &config.effort {
+        argv.extend(["--effort".to_owned(), effort.clone()]);
+    }
     argv.extend(to_strings(&[
         "--permission-mode",
-        "bypassPermissions",
+        &config.permission_mode,
         "--permission-prompt-tool",
         PERMISSION_TOOL,
         "--mcp-config",
@@ -85,6 +88,7 @@ mod tests {
         SessionArgs {
             model: "sonnet".to_owned(),
             effort: Some("medium".to_owned()),
+            permission_mode: "bypassPermissions".to_owned(),
             resume: None,
             fork: false,
             mcp_config: "C:/tmp/mcp.json".to_owned(),
@@ -130,10 +134,25 @@ mod tests {
     }
 
     #[test]
-    fn effort_adds_nothing_yet() {
+    fn the_effort_is_a_flag_and_none_leaves_it_out() {
+        assert!(
+            build_argv(&config())
+                .windows(2)
+                .any(|w| w == ["--effort", "medium"])
+        );
         let mut other = config();
         other.effort = None;
-        assert_eq!(build_argv(&config()), build_argv(&other));
+        assert!(!build_argv(&other).iter().any(|arg| arg == "--effort"));
+    }
+
+    #[test]
+    fn the_mode_is_the_setting_and_the_permission_tool_stays() {
+        let mut planned = config();
+        planned.permission_mode = "plan".to_owned();
+        let argv = build_argv(&planned);
+        assert!(argv.windows(2).any(|w| w == ["--permission-mode", "plan"]));
+        assert!(!argv.iter().any(|arg| arg == "bypassPermissions"));
+        assert!(argv.iter().any(|arg| arg == "--permission-prompt-tool"));
     }
 
     #[test]

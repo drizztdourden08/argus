@@ -29,6 +29,7 @@ use self::flight::Flight;
 use super::guard::GuardFault;
 use super::inbox::{Held, HeldView, Inbox};
 use super::state::State;
+use super::usage::Meter;
 use crate::ports::{ChildHost, ChildSpec, HostFault};
 
 /// What the supervisor is told.
@@ -64,6 +65,9 @@ pub struct Config {
     pub restart_max: u32,
     /// The session to resume at the first start.
     pub resume_from: Option<String>,
+    /// The usage tally the child's lines are added to; the caller keeps it, so it outlives a
+    /// restart of the supervisor on the same session.
+    pub meter: Meter,
 }
 
 /// The way in for messages: cheap to clone, and honest about whether a child is up.
@@ -116,6 +120,7 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
     let (state_tx, state) = watch::channel(State::default());
     let alive = Arc::new(AtomicBool::new(false));
     let (inbox, flight) = (Inbox::default(), Flight::default());
+    let meter = config.meter.clone();
     let link = Link {
         commands,
         alive: Arc::clone(&alive),
@@ -130,7 +135,7 @@ pub fn start<H: ChildHost>(host: Arc<H>, config: Config, observer: Arc<dyn Obser
         link: link.clone(),
     };
     let task = tokio::spawn(restart::drive(
-        run::Run::new(host, state_tx, (inbox, flight), observer),
+        run::Run::new(host, state_tx, (inbox, flight, meter), observer),
         wiring,
     ));
     Handle { link, state, task }

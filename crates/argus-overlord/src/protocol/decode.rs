@@ -36,11 +36,16 @@ fn message(value: &Value) -> Message {
         .get("parent_tool_use_id")
         .and_then(Value::as_str)
         .map(str::to_string);
-    let blocks = parse_blocks(value.get("message").and_then(|m| m.get("content")));
+    let body = value.get("message");
+    let blocks = parse_blocks(body.and_then(|m| m.get("content")));
+    let usage = body
+        .and_then(|m| m.get("usage"))
+        .and_then(|u| serde_json::from_value(u.clone()).ok());
     Message {
         session_id,
         parent_tool_use_id,
         blocks,
+        usage,
     }
 }
 
@@ -157,6 +162,21 @@ mod tests {
             panic!("not stream");
         };
         assert_eq!(payload["type"], "content_block_delta");
+    }
+
+    #[test]
+    fn assistant_carries_its_usage() {
+        let line = r#"{"type":"assistant","message":{"content":[],"usage":{"input_tokens":3,"cache_read_input_tokens":40,"cache_creation_input_tokens":5}}}"#;
+        let Ok(Event::Assistant(msg)) = decode_line(line) else {
+            panic!("not assistant");
+        };
+        let usage = msg.usage.expect("usage");
+        assert_eq!(usage.cache_creation_input_tokens, 5);
+        let bare = r#"{"type":"assistant","message":{"content":[]}}"#;
+        let Ok(Event::Assistant(msg)) = decode_line(bare) else {
+            panic!("not assistant");
+        };
+        assert_eq!(msg.usage, None);
     }
 
     #[test]

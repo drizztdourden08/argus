@@ -3,6 +3,9 @@
 use std::path::PathBuf;
 
 use argus_overlord::mode::Mode;
+use argus_overlord::session::choices::{
+    DEFAULT_EFFORT, DEFAULT_PERMISSION_MODE, is_effort, is_permission_mode,
+};
 use serde_json::Value;
 
 use crate::Services;
@@ -75,6 +78,10 @@ pub(crate) struct Live {
     /// The Overlord's folder; the root of the Overlord's board when none is set, else the dashboard home.
     pub cwd: Option<PathBuf>,
     pub model: String,
+    /// The `--effort` level.
+    pub effort: String,
+    /// The `--permission-mode`.
+    pub permission_mode: String,
     /// The `claude` to run; the one the Desktop app carries when none is set.
     pub claude_exe: Option<PathBuf>,
     pub restart_max: u32,
@@ -89,13 +96,28 @@ fn text(setting: &Value, name: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// `cwd`, `model` (default `sonnet`), `claudeExe`, `restartMax` (default 3) and
-/// `approvalTimeoutMin` (default 30).
+/// A text field that is one of the choices `ok` takes, else `default`.
+fn picked(setting: &Value, name: &str, ok: fn(&str) -> bool, default: &str) -> String {
+    text(setting, name)
+        .filter(|v| ok(v))
+        .unwrap_or_else(|| default.to_owned())
+}
+
+/// `cwd`, `model` (default `sonnet`), `effort` (default `high`), `permissionMode` (default
+/// `bypassPermissions`), `claudeExe`, `restartMax` (default 3) and `approvalTimeoutMin`
+/// (default 30). An effort or a mode that is not one of the choices is the default.
 pub(crate) fn live(svc: &Services) -> Live {
     let setting = setting(svc);
     Live {
         cwd: text(&setting, "cwd").map(PathBuf::from),
         model: text(&setting, "model").unwrap_or_else(|| DEFAULT_MODEL.to_owned()),
+        effort: picked(&setting, "effort", is_effort, DEFAULT_EFFORT),
+        permission_mode: picked(
+            &setting,
+            "permissionMode",
+            is_permission_mode,
+            DEFAULT_PERMISSION_MODE,
+        ),
         claude_exe: text(&setting, "claudeExe").map(PathBuf::from),
         restart_max: setting["restartMax"]
             .as_u64()

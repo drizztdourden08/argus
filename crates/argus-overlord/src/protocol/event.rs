@@ -35,9 +35,11 @@ pub struct Message {
     pub session_id: String,
     pub parent_tool_use_id: Option<String>,
     pub blocks: Vec<Block>,
+    /// `message.usage` of an assistant message: the tokens of the request that wrote it.
+    pub usage: Option<Usage>,
 }
 
-/// Token counters of a `result`.
+/// Token counters of a `result` or of an assistant message.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[serde(default)]
 pub struct Usage {

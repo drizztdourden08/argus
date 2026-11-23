@@ -15,6 +15,7 @@ pub(crate) mod rules_tick;
 pub(crate) mod running;
 mod seat_register;
 mod setting;
+pub(crate) mod settings;
 pub(crate) mod shadow;
 pub(crate) mod switch;
 mod switch_board;

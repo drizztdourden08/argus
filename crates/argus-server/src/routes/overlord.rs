@@ -106,6 +106,8 @@ pub fn register(r: &mut Router) {
     super::overlord_approvals::register(r);
     super::overlord_message::register(r);
     super::overlord_session::register(r);
+    super::overlord_settings::register(r);
+    super::overlord_usage::register(r);
     super::overlord_mode::register(r);
     super::overlord_queue::register(r);
     super::overlord_budget::register(r);

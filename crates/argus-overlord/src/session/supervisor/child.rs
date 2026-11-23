@@ -41,6 +41,7 @@ impl<H: ChildHost> Run<H> {
         let Ok(child) = self.host.spawn(&spec) else {
             return Ended::Exited;
         };
+        self.meter.spawned();
         self.apply(&Change::Spawned {
             pid: child.pid,
             started_at: now_iso(),
@@ -95,6 +96,7 @@ impl<H: ChildHost> Run<H> {
     async fn on_line(&mut self, pid: u32, line: &str) -> Option<GuardFault> {
         let event = decode_line(line).ok()?;
         self.flight.see(&event);
+        self.meter.see(&event);
         match event {
             Wire::Init(init) => return self.on_init(pid, &init).await,
             Wire::Result(outcome) => {

@@ -14,6 +14,7 @@ use crate::ports::ChildSpec;
 use crate::session::env::build_env;
 use crate::session::guard::GuardFault;
 use crate::session::state::Status;
+use crate::session::usage::Meter;
 
 const INIT: &str =
     r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"ANTHROPIC_API_KEY"}"#;
@@ -71,6 +72,7 @@ async fn rig(restart_max: u32) -> Rig {
         spec: Box::new(|_| Ok(spec())),
         restart_max,
         resume_from: None,
+        meter: Meter::default(),
     };
     let handle = start(Arc::new(host.clone()), config, observer.clone());
     settle().await;

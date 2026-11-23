@@ -7,6 +7,7 @@ fn base() -> SessionArgs {
     SessionArgs {
         model: "sonnet".to_owned(),
         effort: None,
+        permission_mode: "bypassPermissions".to_owned(),
         resume: None,
         fork: false,
         mcp_config: "C:/tmp/mcp.json".to_owned(),
