@@ -7,16 +7,16 @@ use serde_json::Value;
 
 use crate::Services;
 
-const DEFAULT_BUDGET_USD: f64 = 100.0;
 const DEFAULT_WARN_AT: f64 = 0.8;
 const DEFAULT_MODEL: &str = "sonnet";
 const DEFAULT_RESTART_MAX: u32 = 3;
 const DEFAULT_APPROVAL_MIN: u64 = 30;
 
-/// The monthly budget and the share of it that warns.
+/// The monthly budget, when one is set, and the share of it that warns.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Budget {
-    pub budget_usd: f64,
+    /// `None` is no cap, the default.
+    pub budget_usd: Option<f64>,
     pub warn_at: f64,
 }
 
@@ -27,12 +27,14 @@ fn share(setting: &Value, name: &str, default: f64, ok: impl Fn(f64) -> bool) ->
         .unwrap_or(default)
 }
 
-/// `budgetUsd` (default 100, not below 0) and `warnAt` (default 0.8, between 0 and 1).
+/// `budgetUsd` (default none; a missing, null or 0 value is no cap) and `warnAt` (default 0.8, between 0 and 1).
 pub(crate) fn budget(svc: &Services) -> Budget {
     let config = svc.config();
     let setting = config.extra.get("overlord").unwrap_or(&Value::Null);
     Budget {
-        budget_usd: share(setting, "budgetUsd", DEFAULT_BUDGET_USD, |v| v >= 0.0),
+        budget_usd: setting["budgetUsd"]
+            .as_f64()
+            .filter(|v| v.is_finite() && *v > 0.0),
         warn_at: share(setting, "warnAt", DEFAULT_WARN_AT, |v| {
             (0.0..=1.0).contains(&v)
         }),

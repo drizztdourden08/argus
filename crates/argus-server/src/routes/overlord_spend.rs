@@ -1,5 +1,6 @@
 //! The spend meter of the hosted Overlord, for the owner's page only:
-//! `GET /api/overlord/spend` is `{month, spentUsd, budgetUsd, warnAt, leftUsd, note}`. The figure
+//! `GET /api/overlord/spend` is `{month, spentUsd, budgetUsd, warnAt, leftUsd, note}`; `budgetUsd` and `leftUsd` are null
+//! when no budget is set. The figure
 //! is the sum of the turns' costs this month by the local calendar, an estimate.
 
 use argus_accounts::alerts::local_offset_seconds;
@@ -40,7 +41,7 @@ pub(super) async fn body(ctx: &Ctx) -> Result<Value, ApiError> {
         "spentUsd": spent,
         "budgetUsd": setting.budget_usd,
         "warnAt": setting.warn_at,
-        "leftUsd": left_usd(spent, setting.budget_usd),
+        "leftUsd": setting.budget_usd.map(|usd| left_usd(spent, usd)),
         "note": NOTE,
     }))
 }

@@ -10,7 +10,7 @@ fn base() -> SessionArgs {
         resume: None,
         fork: false,
         mcp_config: "C:/tmp/mcp.json".to_owned(),
-        budget_left_usd: 10.0,
+        budget_left_usd: Some(10.0),
     }
 }
 

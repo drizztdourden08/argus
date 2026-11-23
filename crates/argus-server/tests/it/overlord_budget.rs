@@ -33,10 +33,24 @@ async fn a_saved_budget_shows_in_the_spend_route() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn a_null_budget_clears_it_back_to_no_cap() {
+    let t = TestServer::start(TestOptions::default()).await;
+    t.send(t.page(put(42.5))).await;
+    let clear = Request::new("PUT", "/api/overlord/budget").json(&json!({ "budgetUsd": null }));
+    let cleared = t.send(t.page(clear)).await;
+    assert_eq!(cleared.status, 200, "{}", cleared.text());
+    assert!(cleared.json()["budgetUsd"].is_null());
+    assert!(cleared.json()["leftUsd"].is_null());
+    t.stop(false).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn a_budget_out_of_range_is_400() {
     let t = TestServer::start(TestOptions::default()).await;
     let negative = t.send(t.page(put(-1.0))).await;
     assert_eq!(negative.status, 400, "{}", negative.text());
+    let zero = t.send(t.page(put(0.0))).await;
+    assert_eq!(zero.status, 400, "{}", zero.text());
     let huge = t.send(t.page(put(10_000.5))).await;
     assert_eq!(huge.status, 400, "{}", huge.text());
     t.stop(false).await;

@@ -1,5 +1,5 @@
 //! The monthly budget of the hosted Overlord, for the owner's page only: `PUT /api/overlord/budget`
-//! with `{budgetUsd}` saves `overlord.budgetUsd` in `config.json` and answers like the spend route.
+//! with `{budgetUsd}` (a positive number, or null for no cap) saves `overlord.budgetUsd` in `config.json` and answers like the spend route.
 
 use argus_core::{ApiError, ErrorCode};
 
@@ -13,11 +13,16 @@ use crate::{Ctx, RouteOpts, Router};
 const SMALL: usize = 8 * 1024;
 const BUDGET_MAX: f64 = 10_000.0;
 
-fn amount(raw: &serde_json::Value) -> Result<f64, ApiError> {
-    raw["budgetUsd"]
-        .as_f64()
-        .filter(|v| v.is_finite() && (0.0..=BUDGET_MAX).contains(v))
-        .ok_or_else(|| ApiError::bad_request("budgetUsd must be a number from 0 to 10000"))
+fn amount(raw: &serde_json::Value) -> Result<Option<f64>, ApiError> {
+    let bad = || ApiError::bad_request("budgetUsd must be null or a number above 0 up to 10000");
+    match &raw["budgetUsd"] {
+        serde_json::Value::Null if raw.get("budgetUsd").is_some() => Ok(None),
+        value => value
+            .as_f64()
+            .filter(|v| *v > 0.0 && *v <= BUDGET_MAX)
+            .map(Some)
+            .ok_or_else(bad),
+    }
 }
 
 async fn put(ctx: Ctx) -> Reply {

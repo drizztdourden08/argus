@@ -1,6 +1,6 @@
 //! The keeper of the hosted Overlord (I-196): it is on as long as the mode is live and a key is
 //! saved, with nothing to start by hand. Every 30 seconds, when the mode is live, the key file
-//! exists, the budget is not spent and no child runs, it starts one under the control lock. After a
+//! exists, no set budget is spent and no child runs, it starts one under the control lock. After a
 //! failed start or a child that ended it waits 30 s, 60 s, 2 min, then 5 min at most (the schedule
 //! is `argus_overlord::keeper`). A saved key kicks it at once. One activity line says how each
 //! start attempt ended, never one per tick; a pass that has nothing to do writes nothing.
@@ -112,8 +112,11 @@ pub(crate) fn key_saved(svc: &Services) -> bool {
     DpapiKeyStore::new(&svc.paths.home).saved_at().is_some()
 }
 
+/// True only when a monthly budget is set and used up; no budget never blocks.
 fn budget_spent(svc: &Services) -> bool {
-    budget_remaining(&svc.db, config::budget(svc).budget_usd) <= 0.0
+    config::budget(svc)
+        .budget_usd
+        .is_some_and(|usd| budget_remaining(&svc.db, usd) <= 0.0)
 }
 
 /// Why the child cannot be started now, in one plain sentence; `None` when nothing stands in the

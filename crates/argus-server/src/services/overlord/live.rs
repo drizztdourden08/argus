@@ -99,7 +99,7 @@ struct Inputs {
     home: PathBuf,
     db: Arc<Db>,
     exe: PathBuf,
-    budget_usd: f64,
+    budget_usd: Option<f64>,
     live: Live,
     gate: Arc<ApprovalGate>,
     /// The endpoint of the private MCP server, `http://127.0.0.1:<port>/mcp/overlord`.
@@ -137,7 +137,7 @@ fn find_exe() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("claude"))
 }
 
-/// The money left of this month's budget.
+/// The money left of this month's budget, for a budget that is set.
 pub(super) fn budget_remaining(db: &Arc<Db>, budget_usd: f64) -> f64 {
     let month = month_key(now_ms(), local_offset_seconds());
     let spent = SqlLedger::open(Arc::clone(db))
@@ -146,8 +146,10 @@ pub(super) fn budget_remaining(db: &Arc<Db>, budget_usd: f64) -> f64 {
     left_usd(spent, budget_usd)
 }
 
-fn budget_left(inputs: &Inputs) -> f64 {
-    budget_remaining(&inputs.db, inputs.budget_usd)
+fn budget_left(inputs: &Inputs) -> Option<f64> {
+    inputs
+        .budget_usd
+        .map(|usd| budget_remaining(&inputs.db, usd))
 }
 
 /// The next child: the key is read now, so a replaced key takes effect at the next start. A fault

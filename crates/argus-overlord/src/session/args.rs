@@ -16,8 +16,8 @@ pub struct SessionArgs {
     pub fork: bool,
     /// The temp JSON naming the private MCP endpoint and its bearer.
     pub mcp_config: String,
-    /// What is left of the month's budget, in USD.
-    pub budget_left_usd: f64,
+    /// What is left of the month's budget, in USD; `None` means no cap and no flag.
+    pub budget_left_usd: Option<f64>,
 }
 
 /// The arguments after the program name. Never `--bare`: it would skip the hooks and the
@@ -37,7 +37,9 @@ pub fn build_argv(config: &SessionArgs) -> Vec<String> {
         "--mcp-config",
         &config.mcp_config,
     ]));
-    argv.extend(budget(config.budget_left_usd));
+    if let Some(left) = config.budget_left_usd {
+        argv.extend(budget(left));
+    }
     argv
 }
 
@@ -82,7 +84,7 @@ mod tests {
             resume: None,
             fork: false,
             mcp_config: "C:/tmp/mcp.json".to_owned(),
-            budget_left_usd: 42.5,
+            budget_left_usd: Some(42.5),
         }
     }
 
@@ -106,6 +108,13 @@ mod tests {
             argv.windows(2)
                 .any(|w| w == ["--mcp-config", "C:/tmp/mcp.json"])
         );
+    }
+
+    #[test]
+    fn no_budget_means_no_budget_flag() {
+        let mut open = config();
+        open.budget_left_usd = None;
+        assert!(!build_argv(&open).iter().any(|arg| arg == "--max-budget-usd"));
     }
 
     #[test]
