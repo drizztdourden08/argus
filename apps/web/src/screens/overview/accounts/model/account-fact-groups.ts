@@ -1,7 +1,10 @@
 /* @layer renderer-app @kind logic */
 import type { FactsPanelGroup } from '@drizztdourden08/tessera';
 import type { Account } from '../accounts.type';
-import { cliText, desktopText, readText, sidebarText } from './fact-text';
+import { desktopText } from './desktop-text';
+import { cliText } from './fact-text';
+import { readText } from './read-text';
+import { sidebarText } from './sidebar-text';
 
 const accountFactGroups = (account: Account, differs: string | null): FactsPanelGroup[] => [[
   { label: 'CLI', value: cliText(account.cli) },

@@ -33,4 +33,4 @@ interface CompareDoc {
   rows: CompareRow[];
 }
 
-export type { CompareDoc, CompareRow, RunFeed, StatusChipProps, SyncStep };
+export type { CompareDoc, RunFeed, StatusChipProps, SyncStep };
