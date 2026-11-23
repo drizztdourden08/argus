@@ -166,7 +166,7 @@ fn help_with_no_verb_or_the_word_help_prints_the_usage_and_exits_0() {
     }
     assert!(USAGE.starts_with("Usage: coord <verb> ... [--project <key>] [--as <thread>]\n"));
     assert!(USAGE.ends_with("coord hook session-start|prompt|tool|guard|stop"));
-    assert_eq!(USAGE.lines().count(), 106);
+    assert_eq!(USAGE.lines().count(), 107);
 }
 
 #[test]
