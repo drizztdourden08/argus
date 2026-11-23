@@ -19,6 +19,7 @@ interface RecordFrameProps {
   content?: ReactNode;
   menu?: ReactNode;
   density?: FrameDensity;
+  chevronOnIcon?: boolean;
   edge?: CardEdge;
   edgeTone?: CardTone;
   variant?: CardVariant;

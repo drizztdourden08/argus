@@ -12,7 +12,7 @@ import { QuietBadge } from './QuietBadge';
 
 const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => card.quietMs !== null).length;
 
-const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} withCode /> : undefined);
+const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} /> : undefined);
 
 const columnDefs = (props: KanbanColumnsProps): KanbanColumn<CardData>[] => {
   const { view, state, threads, ops, add, focus } = props;

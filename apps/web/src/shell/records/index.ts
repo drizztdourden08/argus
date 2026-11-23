@@ -22,6 +22,7 @@ export { RecordFrame } from './sub-components/RecordFrame';
 export { RecordGroup } from './sub-components/RecordGroup';
 export { RecordGroupHeader } from './sub-components/RecordGroupHeader';
 export { RecordHead } from './sub-components/RecordHead';
+export { RecordMenu } from './sub-components/RecordMenu';
 export { RecordLink } from './sub-components/RecordLink';
 export { RecordPaneScope } from './sub-components/RecordPaneScope';
 export { RecordRow } from './sub-components/RecordRow';

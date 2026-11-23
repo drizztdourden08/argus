@@ -1,21 +1,25 @@
 /* @layer renderer-app @kind component */
 import { KanbanBoard, TesseraProvider } from '@drizztdourden08/tessera';
-import type { KanbanGroupFold, KanbanMove } from '@drizztdourden08/tessera';
+import type { KanbanColumn, KanbanGroupFold, KanbanMove } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ItemRef } from '../../../../../data/kanban';
 import { itemCode } from '../../../../../shell';
 import { applyDrop } from '../behavior/apply-drop';
+import { cardMenuGroups } from '../behavior/card-menu-groups';
 import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { planDrop } from '../model';
+import type { CardData } from '../model';
 import { columnDefs } from './ColumnDefs';
+import { EpicHeader } from './EpicHeader';
 import { ItemCard } from './ItemCard';
-import { ParentHeader } from './ParentHeader';
 
-const frameHeader = (parents: ReadonlyMap<string, ItemRef>, id: string, fold: KanbanGroupFold): ReactNode => {
-  const parent = parents.get(id);
-  return parent ? <ParentHeader parent={parent} withCode={false} fold={fold} /> : undefined;
+const frameHeader = (props: KanbanColumnsProps, id: string, column: KanbanColumn<CardData>, fold: KanbanGroupFold): ReactNode => {
+  const { view, threads, ops, onOpen } = props;
+  const parent = view.parents.get(id);
+  if (!parent) return undefined;
+  const count = column.cards.filter((card) => card.group === id).length;
+  return <EpicHeader parent={parent} count={count} menu={cardMenuGroups({ item: parent, threads, ops, onOpen })} fold={fold} onOpen={onOpen} />;
 };
 
 const KanbanColumns = (props: KanbanColumnsProps) => {
@@ -39,6 +43,8 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       columnHeight="fit"
       grip={false}
       foldable={false}
+      foldedGroups={state.foldedGroups}
+      onFoldedGroupsChange={state.setFoldedGroups}
       stack
       cardFrame="none"
       columns={columns}
@@ -46,7 +52,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       cardEdgeTone={(card) => leadTone(card.attention)}
       onMove={onMove}
       onCardOpen={onCardOpen}
-      renderGroupHeader={(groupId, _column, fold) => frameHeader(view.parents, groupId, fold)}
+      renderGroupHeader={(groupId, column, fold) => frameHeader(props, groupId, column, fold)}
       renderCard={(card, frame) => (
         <ItemCard
           boardKey={boardKey}
@@ -58,6 +64,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
           selecting={selection.active}
           ops={ops}
           edgeTone={frame.edgeTone}
+          compact={state.compact}
           onToggle={(id) => selection.toggle(id, ids)}
           onMark={selection.mark}
           onOpen={onOpen}

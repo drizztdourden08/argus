@@ -2,7 +2,7 @@
 import type { SortDirection } from '@drizztdourden08/tessera';
 import { useCallback, useEffect, useState } from 'react';
 import { formatFilters, readStored, writeStored } from '../../../shared';
-import { DEFAULT_FILTERS, STORE_KEYS, parseStored, shownDirection } from '../model';
+import { DEFAULT_FILTERS, STORE_KEYS, parseFolded, parseStored, shownDirection } from '../model';
 import { boardFlagKey } from '../model/board-flag-key';
 import type { ItemGroup, ItemOrder, KanbanFilters, StoredView } from '../model';
 import type { KanbanState } from '../kanban.type';
@@ -19,11 +19,16 @@ const loadView = (boardKey: string): StoredView =>
     epicsView: storedFlag(STORE_KEYS.epicsView, boardKey),
   });
 
+const loadFolded = (boardKey: string): readonly string[] => parseFolded(readStored(boardFlagKey(STORE_KEYS.foldedGroups, boardKey)));
+
 const useKanbanState = (boardKey: string): KanbanState => {
   const [held, setHeld] = useState<{ boardKey: string; view: StoredView }>(() => ({ boardKey, view: loadView(boardKey) }));
   const current = held.boardKey === boardKey ? held : { boardKey, view: loadView(boardKey) };
   if (current !== held) setHeld(current);
   const { filters, prefs } = current.view;
+  const [heldFolds, setHeldFolds] = useState<{ boardKey: string; groups: readonly string[] }>(() => ({ boardKey, groups: loadFolded(boardKey) }));
+  const foldedGroups = heldFolds.boardKey === boardKey ? heldFolds.groups : loadFolded(boardKey);
+  if (heldFolds.boardKey !== boardKey) setHeldFolds({ boardKey, groups: foldedGroups });
 
   useEffect(() => {
     writeStored(STORE_KEYS.filters, formatFilters(readStored(STORE_KEYS.filters), filters, prefs.order));
@@ -33,6 +38,10 @@ const useKanbanState = (boardKey: string): KanbanState => {
     writeStored(boardFlagKey(STORE_KEYS.compact, boardKey), prefs.compact ? '1' : '0');
     writeStored(boardFlagKey(STORE_KEYS.epicsView, boardKey), prefs.epicsView ? '1' : '0');
   }, [boardKey, filters, prefs]);
+
+  useEffect(() => {
+    writeStored(boardFlagKey(STORE_KEYS.foldedGroups, boardKey), JSON.stringify(foldedGroups));
+  }, [boardKey, foldedGroups]);
 
   const setView = useCallback(
     (update: (now: StoredView) => StoredView) => setHeld((now) => ({ boardKey, view: update(now.boardKey === boardKey ? now.view : loadView(boardKey)) })),
@@ -46,8 +55,9 @@ const useKanbanState = (boardKey: string): KanbanState => {
   const setShowDone = useCallback((showDone: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, showDone } })), [setView]);
   const setCompact = useCallback((compact: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, compact } })), [setView]);
   const setEpicsView = useCallback((epicsView: boolean) => setView((now) => ({ ...now, prefs: { ...now.prefs, epicsView } })), [setView]);
+  const setFoldedGroups = useCallback((groups: readonly string[]) => setHeldFolds({ boardKey, groups }), [boardKey]);
 
-  return { filters, prefs, patchFilters, clearFilters, setGroup, setOrder, setDirection, setShowDone, compact: prefs.compact, epicsView: prefs.epicsView, setCompact, setEpicsView };
+  return { filters, prefs, patchFilters, clearFilters, setGroup, setOrder, setDirection, setShowDone, compact: prefs.compact, epicsView: prefs.epicsView, setCompact, setEpicsView, foldedGroups, setFoldedGroups };
 };
 
 export { useKanbanState };

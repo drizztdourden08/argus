@@ -47,6 +47,8 @@ interface KanbanState {
   epicsView: boolean;
   setCompact: (on: boolean) => void;
   setEpicsView: (on: boolean) => void;
+  foldedGroups: readonly string[];
+  setFoldedGroups: (groups: readonly string[]) => void;
 }
 
 interface FocusState {

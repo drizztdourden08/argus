@@ -80,6 +80,7 @@ const STORE_KEYS = {
   showDone: 'coord.done2',
   compact: 'coord.compact',
   epicsView: 'coord.epics',
+  foldedGroups: 'coord.folded',
   showPaused: 'coord.paused',
   wide: WIDE_KEY,
 };

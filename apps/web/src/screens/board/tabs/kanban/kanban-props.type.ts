@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { CardTone, KanbanGroupFold } from '@drizztdourden08/tessera';
+import type { CardTone, KanbanGroupFold, MenuGroup } from '@drizztdourden08/tessera';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
@@ -80,10 +80,16 @@ interface QuietBadgeProps {
   count: number;
 }
 
+interface EpicHeaderProps {
+  parent: ItemRef;
+  count: number;
+  menu: readonly MenuGroup[];
+  fold: KanbanGroupFold;
+  onOpen: (id: string) => void;
+}
+
 interface ParentHeaderProps {
   parent: ItemRef;
-  withCode: boolean;
-  fold?: KanbanGroupFold;
 }
 
 interface ColumnAddProps {
@@ -102,6 +108,7 @@ interface ItemCardProps {
   selecting: boolean;
   ops: ItemOps;
   edgeTone: CardTone | undefined;
+  compact: boolean;
   onToggle: (id: string) => void;
   onMark: (shift: boolean) => void;
   onOpen: (id: string) => void;
@@ -144,5 +151,5 @@ interface CardProgressRowProps {
 
 
 export type {
-  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
+  AcListProps, AgentLineProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
 };

@@ -32,6 +32,7 @@ export { neighbour } from './neighbour';
 export { needsMap } from './needs-map';
 export { needsYou } from './needs-you';
 export { opNotices } from './op-notices';
+export { parseFolded } from './parse-folded';
 export { parseStored } from './parse-stored';
 export { shownDirection } from './shown-direction';
 export { parseTrails } from './parse-trails';

@@ -109,7 +109,7 @@ interface RecordHeadProps {
   time?: RecordTimeValue;
 }
 
-type HeadFrameKeys = 'title' | 'content' | 'density' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'fill' | 'className' | 'label' | 'onKeyDown' | 'onActivate';
+type HeadFrameKeys = 'title' | 'content' | 'density' | 'chevronOnIcon' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'fill' | 'className' | 'label' | 'onKeyDown' | 'onActivate';
 
 interface RecordHeadViewProps extends RecordHeadProps, Pick<RecordFrameProps, HeadFrameKeys> {}
 
@@ -154,6 +154,7 @@ interface RecordCardProps {
   clamp?: number;
   time?: RecordTimeValue;
   compact?: boolean;
+  chevronOnIcon?: boolean;
   signals?: ReactNode;
   foot?: ReactNode;
   attrs?: Readonly<Record<string, string>>;
