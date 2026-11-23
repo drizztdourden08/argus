@@ -15,10 +15,18 @@ interface KanbanColumnConfig {
   rules?: string[];
 }
 
+interface KanbanRuleAlert {
+  to: string;
+  wake: boolean;
+  repeatMs: number;
+}
+
 interface KanbanRuleConfig {
   id: string;
   kind: string;
   params?: { ms?: number } & Record<string, unknown>;
+  mode?: 'warn' | 'refuse';
+  alert?: KanbanRuleAlert;
 }
 
 interface KanbanConfig {
@@ -26,4 +34,4 @@ interface KanbanConfig {
   rules?: KanbanRuleConfig[];
 }
 
-export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig };
+export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig, KanbanRuleAlert, KanbanRuleConfig };

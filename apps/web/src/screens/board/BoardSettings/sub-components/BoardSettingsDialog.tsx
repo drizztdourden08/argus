@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind component */
 import { Button, DialogShell, Divider, Flex } from '@drizztdourden08/tessera';
+import { ColumnsRulesSection } from '../../tabs/kanban';
 import type { BoardSettingsDialogProps } from '../BoardSettings.type';
 import { AvatarSection } from './AvatarSection';
 import { IconSection } from './IconSection';
@@ -19,6 +20,8 @@ const BoardSettingsDialog = (props: BoardSettingsDialogProps) => {
         <IconSection boardKey={boardKey} />
         <Divider />
         <AvatarSection boardKey={boardKey} />
+        <Divider />
+        <ColumnsRulesSection boardKey={boardKey} />
       </Flex>
     </DialogShell>
   );

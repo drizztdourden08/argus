@@ -45,6 +45,20 @@ export { typeOf } from './type-of';
 export { validateDecision } from './validate-decision';
 export { validateField } from './validate-field';
 export {
-  CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
+  ACCENTS, CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
 } from './model.constants';
+export { configAddColumn } from './config-add-column';
+export { configAddRule } from './config-add-rule';
+export { configIsDefault } from './config-is-default';
+export { configKind } from './config-kind';
+export { configMoveColumn } from './config-move-column';
+export { configParseList } from './config-parse-list';
+export { configRemoveColumn } from './config-remove-column';
+export { configRemoveRule } from './config-remove-rule';
+export { configRuleOfKind } from './config-rule-of-kind';
+export { configSetColumn } from './config-set-column';
+export { configSetRule } from './config-set-rule';
+export { configToggleList } from './config-toggle-list';
+export { ALERT_TARGET_HINT, DEFAULT_CONFIG, HOUR_MS, LANES, LIMIT_MODES, NEW_ALERT, RULE_KINDS, WRITE_MODES } from './config-editor.constants';
+export type * from './config-editor.type';
 export type * from './model.type';
