@@ -72,5 +72,5 @@ interface CleanupDoc {
 }
 
 export type {
-  CleanupCandidate, CleanupDoc, ReviewAccount, ReviewCell, ReviewDiff, ReviewDoc, ReviewEdit, ReviewRow, ReviewStatus,
+  CleanupCandidate, CleanupDoc, ReviewAccount, ReviewCell, ReviewDiff, ReviewDoc, ReviewEdit, ReviewRow,
 };

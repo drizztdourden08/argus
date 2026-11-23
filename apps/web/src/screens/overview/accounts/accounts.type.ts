@@ -18,6 +18,11 @@ interface AccountActions {
   undo: () => void;
 }
 
+interface PostAction {
+  busy: boolean;
+  post: (path: string, json: object | undefined, done: string) => void;
+}
+
 type AccountsView = 'overview' | 'review';
 
 interface AccountsStripProps {
@@ -56,6 +61,19 @@ interface SyncSectionProps {
   onReview: () => void;
 }
 
+interface SyncActionsProps {
+  run: AccountsRun | null;
+  active: boolean;
+  actions: AccountActions;
+  onReview: () => void;
+}
+
+interface SyncStateLineProps {
+  drift: AccountsDrift | null;
+  run: AccountsRun | null;
+  active: boolean;
+}
+
 interface SyncRunLineProps {
   run: AccountsRun;
   steps: readonly SyncStep[];
@@ -75,6 +93,6 @@ interface PercentFieldProps {
 }
 
 export type {
-  Account, AccountActions, AccountNameProps, AccountRowProps, AccountsFeed, AccountsStripProps, AccountsView, PercentFieldProps, RuleChipsProps,
-  SyncRunLineProps, SyncSectionProps, UsageCellProps,
+  Account, AccountActions, AccountNameProps, AccountRowProps, AccountsFeed, AccountsStripProps, AccountsView, PercentFieldProps, PostAction,
+  RuleChipsProps, SyncActionsProps, SyncRunLineProps, SyncSectionProps, SyncStateLineProps, UsageCellProps,
 };

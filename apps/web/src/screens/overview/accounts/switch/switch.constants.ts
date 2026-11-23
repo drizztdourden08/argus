@@ -42,13 +42,14 @@ const STAGE_PLAN: Readonly<Record<SwitchStage, string>> = {
   verify: 'Check that Desktop is on the new account.',
 };
 
-const STEP_STATUSES = defineStatuses({
-  waiting: { label: 'Waiting', tone: 'neutral' },
+const RUN_STATES = defineStatuses({
   running: { label: 'Running', tone: 'info', pulse: true },
   done: { label: 'Done', tone: 'success' },
   failed: { label: 'Failed', tone: 'danger' },
   skipped: { label: 'Skipped', tone: 'neutral' },
 });
+
+const STEP_STATUSES = defineStatuses({ waiting: { label: 'Waiting', tone: 'neutral' }, ...RUN_STATES });
 
 const THREAD_STATUSES = defineStatuses({
   found: { label: 'Found', tone: 'neutral' },
@@ -58,13 +59,7 @@ const THREAD_STATUSES = defineStatuses({
   failed: { label: 'Failed', tone: 'danger' },
 });
 
-const SYNC_STATUSES = defineStatuses({
-  pending: { label: 'Pending', tone: 'neutral' },
-  running: { label: 'Running', tone: 'info', pulse: true },
-  done: { label: 'Done', tone: 'success' },
-  failed: { label: 'Failed', tone: 'danger' },
-  skipped: { label: 'Skipped', tone: 'neutral' },
-});
+const SYNC_STATUSES = defineStatuses({ pending: { label: 'Pending', tone: 'neutral' }, ...RUN_STATES });
 
 const PHASE_STATUSES = defineStatuses({
   idle: { label: 'Idle', tone: 'neutral' },
