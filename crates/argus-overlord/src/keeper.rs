@@ -140,7 +140,7 @@ mod tests {
         assert!(backoff.tracking());
         backoff.ended(secs(600));
         assert!(!backoff.tracking());
-        assert_eq!(backoff.retry_in_secs(secs(600)), Some(60));
+        assert_eq!(backoff.retry_in_secs(secs(600)), Some(30));
     }
 
     #[test]

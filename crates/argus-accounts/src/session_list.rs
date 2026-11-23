@@ -40,10 +40,11 @@ struct Fields {
 }
 
 fn millis(value: &Value) -> i64 {
-    // The record keeps epoch milliseconds, whole or with a fraction.
-    value
-        .as_i64()
-        .or_else(|| value.as_f64().map(|f| f as i64))
+    // The record keeps epoch milliseconds, whole or with a fraction; the fraction is dropped.
+    let text = value.as_number().map(ToString::to_string).unwrap_or_default();
+    text.split('.')
+        .next()
+        .and_then(|whole| whole.parse().ok())
         .unwrap_or(0)
 }
 
@@ -111,12 +112,7 @@ pub fn sessions(app_data: &Path, limit: usize) -> Vec<SessionRow> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn write(dir: &Path, scope: (&str, &str), name: &str, text: &str) {
-        let org = dir.join("claude-code-sessions").join(scope.0).join(scope.1);
-        fs::create_dir_all(&org).expect("org");
-        fs::write(org.join(name), text).expect("record");
-    }
+    use crate::fixtures::write_record as write;
 
     #[test]
     fn the_list_is_newest_first_and_reads_the_fields() {

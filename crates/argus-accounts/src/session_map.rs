@@ -173,6 +173,7 @@ pub fn account_for_scopes<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fixtures::write_record;
 
     const CURRENT: &str = "11111111-1111-4111-8111-111111111111";
     const PRIOR: &str = "22222222-2222-4222-8222-222222222222";
@@ -199,12 +200,6 @@ mod tests {
         assert_eq!(seat.cli_session_id.as_deref(), Some(CURRENT));
         assert_eq!(seat.cwd.as_deref(), Some("X:/work"));
         assert_eq!(seat_of(dir.path(), "local_none"), None);
-    }
-
-    fn write_record(dir: &Path, scope: (&str, &str), name: &str, text: &str) {
-        let org = dir.join("claude-code-sessions").join(scope.0).join(scope.1);
-        fs::create_dir_all(&org).expect("org");
-        fs::write(org.join(name), text).expect("record");
     }
 
     #[test]
