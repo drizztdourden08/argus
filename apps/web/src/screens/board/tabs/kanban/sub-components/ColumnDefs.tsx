@@ -27,10 +27,10 @@ const badgeOf = (view: KanbanView, column: KanbanColumn<CardData>): ReactNode =>
   );
 };
 
-const columnDefs = (props: KanbanColumnsProps): KanbanColumn<CardData>[] => {
+const columnDefs = (props: KanbanColumnsProps, source: readonly KanbanColumn<CardData>[]): KanbanColumn<CardData>[] => {
   const { view, state, threads, ops, add, focus } = props;
   const { group } = state.prefs;
-  return view.columns.map((column) => ({
+  return source.map((column) => ({
     ...column,
     header: headerOf(group, view.parents.get(column.id)),
     badge: badgeOf(view, column),

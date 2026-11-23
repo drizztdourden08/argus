@@ -8,17 +8,20 @@ import { cardMenuGroups } from '../behavior/card-menu-groups';
 import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
-import { planDrop } from '../model';
+import { epicColumns, epicFolded, epicKeyOf, epicKeys, epicStored, planDrop } from '../model';
 import type { CardData } from '../model';
 import { columnDefs } from './ColumnDefs';
 import { EpicHeader } from './EpicHeader';
 import { ItemCard } from './ItemCard';
+import { NoEpicHeader } from './NoEpicHeader';
 
 const frameHeader = (props: KanbanColumnsProps, id: string, column: KanbanColumn<CardData>, fold: KanbanGroupFold): ReactNode => {
   const { view, threads, ops, onOpen } = props;
-  const parent = view.parents.get(id);
-  if (!parent) return undefined;
   const count = column.cards.filter((card) => card.group === id).length;
+  const key = epicKeyOf(id);
+  if (key && !key.epic) return <NoEpicHeader count={count} fold={fold} />;
+  const parent = view.parents.get(key ? (key.epic ?? '') : id);
+  if (!parent) return undefined;
   return <EpicHeader parent={parent} count={count} menu={cardMenuGroups({ item: parent, threads, ops, onOpen })} fold={fold} onOpen={onOpen} />;
 };
 
@@ -34,7 +37,12 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
     const card = view.cards.find((candidate) => candidate.id === cardId);
     if (card) onOpen(itemCode(card.item));
   };
-  const columns = columnDefs(props);
+  const epics = state.epicsView && group !== 'parent';
+  const shown = epics ? epicColumns(view.columns, view.parents) : view.columns;
+  const keys = epicKeys(shown);
+  const columns = columnDefs(props, shown);
+  const folded = epics ? epicFolded(state.foldedGroups, keys) : state.foldedGroups;
+  const onFolded = (next: readonly string[]) => state.setFoldedGroups(epics ? epicStored(state.foldedGroups, keys, next) : next);
   return (
     <TesseraProvider overrides={EMPTY_COLUMN_STRINGS}>
     <KanbanBoard
@@ -43,8 +51,8 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       columnHeight="fit"
       grip={false}
       foldable={false}
-      foldedGroups={state.foldedGroups}
-      onFoldedGroupsChange={state.setFoldedGroups}
+      foldedGroups={folded}
+      onFoldedGroupsChange={onFolded}
       stack
       cardFrame="none"
       columns={columns}

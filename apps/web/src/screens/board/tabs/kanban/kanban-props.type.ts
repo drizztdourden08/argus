@@ -92,6 +92,11 @@ interface EpicHeaderProps {
   onOpen: (id: string) => void;
 }
 
+interface NoEpicHeaderProps {
+  count: number;
+  fold: KanbanGroupFold;
+}
+
 interface ParentHeaderProps {
   parent: ItemRef;
 }
@@ -150,5 +155,5 @@ interface CardProgressRowProps {
 }
 
 export type {
-  AcListProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, LimitBadgeProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
+  AcListProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, LimitBadgeProps, NoEpicHeaderProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
 };

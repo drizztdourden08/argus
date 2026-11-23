@@ -68,6 +68,11 @@ interface AskLink {
   via: 'item' | 'blocker';
 }
 
+interface EpicKey {
+  epic: string | null;
+  column: string;
+}
+
 interface TrailInfo {
   depth: number;
   open: number;
@@ -226,5 +231,5 @@ type DepView = DepLink & {
 };
 
 export type {
-  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnLimit, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
+  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnLimit, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EpicKey, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };

@@ -1,13 +1,14 @@
 /* @layer renderer-app @kind component */
 import { Disclosure, Flex, Icon, IconButton, Text } from '@drizztdourden08/tessera';
 import type { ConfigColumnRowProps } from '../config-editor.type';
+import { rulesText } from '../model';
 import { ConfigColumnFields } from './ConfigColumnFields';
 import { ConfigColumnLimit } from './ConfigColumnLimit';
 
 const summaryText = (props: ConfigColumnRowProps): string => {
   const { column } = props;
   const limit = column.limit ? `, max ${column.limit.max} ${column.limit.mode}` : '';
-  return `${column.match.lanes.join(' + ') || 'no lane'}${limit}, ${(column.rules ?? []).length} rules`;
+  return `${column.match.lanes.join(' + ') || 'no lane'}${limit}, ${rulesText((column.rules ?? []).length)}`;
 };
 
 const ConfigColumnRow = (props: ConfigColumnRowProps) => {
