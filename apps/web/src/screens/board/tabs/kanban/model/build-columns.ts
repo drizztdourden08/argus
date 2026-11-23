@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { KanbanColumn } from '@drizztdourden08/tessera';
-import { columnsOf, configColumns } from './config-columns';
+import { columnsOf } from './columns-of';
+import { configColumns } from './config-columns';
 import { columnKey } from './column-key';
 import { columnOrder } from './column-order';
 import { clusterGroups } from './cluster-groups';

@@ -15,7 +15,7 @@ const withinColumn = (input: DropInput, place: PlaceAmong | null): DropPlan => {
 const targetOf = (input: DropInput): string => (input.group === 'status' ? input.targets?.get(input.move.to.columnId) : undefined) ?? input.move.to.columnId;
 
 const acrossColumns = (input: DropInput, place: PlaceAmong | null): DropPlan => {
-  const { group, move } = input;
+  const { group } = input;
   if (group !== 'status' && group !== 'thread') return { kind: 'group-off' };
   return { kind: group, to: targetOf(input), place: manual(input) && place ? place : {} };
 };

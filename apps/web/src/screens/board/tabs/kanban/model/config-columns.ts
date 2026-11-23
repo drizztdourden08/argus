@@ -1,14 +1,11 @@
 /* @layer renderer-app @kind logic */
 import type { KanbanColumn, TagCategoryColor } from '@drizztdourden08/tessera';
 import type { ItemRef } from '../../../../../data/kanban';
-import type { KanbanColumnConfig, KanbanConfig } from '../../../../../data/types';
+import type { KanbanColumnConfig } from '../../../../../data/types';
 import { clusterGroups } from './cluster-groups';
 import { ACCENTS, CLOSED_STATUSES } from './model.constants';
 import { sortCards } from './sort-cards';
 import type { CardData, ColumnsInput } from './model.type';
-
-const columnsOf = (config: KanbanConfig | null | undefined): KanbanColumnConfig[] | null =>
-  config && Array.isArray(config.columns) && config.columns.length > 0 ? config.columns : null;
 
 const takes = (column: KanbanColumnConfig, item: ItemRef): boolean => {
   const stages = column.match.stages ?? [];
@@ -31,4 +28,4 @@ const configColumns = (input: ColumnsInput, columns: readonly KanbanColumnConfig
       cards: clusterGroups(sortCards(input.cards.filter((card) => columnOf(columns, card.item)?.id === column.id), input.order, input.direction)),
     }));
 
-export { columnOf, columnsOf, configColumns };
+export { configColumns };

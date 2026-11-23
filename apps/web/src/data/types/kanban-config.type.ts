@@ -26,4 +26,4 @@ interface KanbanConfig {
   rules?: KanbanRuleConfig[];
 }
 
-export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig, KanbanLimitMode, KanbanRuleConfig };
+export type { KanbanColumnConfig, KanbanColumnLimit, KanbanConfig };

@@ -1,8 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { KanbanColumnConfig, KanbanConfig } from '../../../../../data/types';
-import { MS_PER_HOUR, QUIET_HOURS } from './model.constants';
-
-const DEFAULT_QUIET_MS: Readonly<Record<string, number>> = Object.fromEntries(Object.entries(QUIET_HOURS).map(([lane, hours]) => [lane, hours * MS_PER_HOUR]));
+import { DEFAULT_QUIET_MS } from './quiet-limits.constants';
 
 const dwellOf = (config: KanbanConfig, column: KanbanColumnConfig): number | null => {
   const rule = (config.rules ?? []).find((candidate) => candidate.kind === 'dwell' && (column.rules ?? []).includes(candidate.id));
@@ -19,4 +17,4 @@ const quietLimits = (config: KanbanConfig | null | undefined, columns: readonly 
   return Object.fromEntries([...entries].reverse());
 };
 
-export { DEFAULT_QUIET_MS, quietLimits };
+export { quietLimits };

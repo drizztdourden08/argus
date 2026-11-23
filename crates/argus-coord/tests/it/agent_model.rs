@@ -18,6 +18,7 @@ fn start(rig: &Rig, name: &str, extra: &[&str]) -> crate::common::Ran {
     if !extra.contains(&"--worktree") && !extra.contains(&"--master") {
         args.push("--master");
     }
+    args.push("--take");
     rig.call(&args, As::Lead)
 }
 
