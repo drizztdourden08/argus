@@ -16,6 +16,7 @@ pub mod ids;
 pub mod inbox;
 pub mod item_events;
 pub mod json;
+pub mod kanban_config;
 pub mod launchers;
 pub mod limits;
 pub mod migrate_runs;

@@ -3,6 +3,7 @@
 
 mod id;
 mod init;
+mod kanban;
 mod settings;
 mod shortcut;
 mod show;
@@ -35,7 +36,7 @@ fn path(frame: &mut Frame<'_>) -> Outcome {
     Ok(())
 }
 
-const VERBS: [(&str, Verb); 10] = [
+const VERBS: [(&str, Verb); 11] = [
     ("id", id::run),
     ("init", init::run),
     ("open", open),
@@ -46,6 +47,7 @@ const VERBS: [(&str, Verb); 10] = [
     ("name", settings::name),
     ("prefixes", settings::prefixes),
     ("shortcut", shortcut::run),
+    ("kanban", kanban::run),
 ];
 
 /// The verb `board`.

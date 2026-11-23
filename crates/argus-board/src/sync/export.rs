@@ -230,6 +230,11 @@ fn docs_named(board: &Board, name: &str, proof_url: &dyn Fn(&Value) -> String) -
         ));
     }
     docs.push(DocChange::set(Coll::Meta, "board", board_meta(board, name)));
+    docs.push(DocChange::set(
+        Coll::Meta,
+        "kanban",
+        crate::kanban_config::export(board),
+    ));
     for (launch, def) in section(board, "runDefs") {
         docs.push(DocChange::set(
             Coll::Launches,

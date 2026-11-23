@@ -7,6 +7,7 @@ mod deps;
 mod entry_images;
 mod export_import;
 mod item_images;
+mod kanban_config;
 mod lock;
 mod names;
 mod op_links;

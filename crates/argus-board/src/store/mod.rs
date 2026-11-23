@@ -6,6 +6,7 @@
 mod damage;
 mod docs;
 mod io;
+mod lane;
 mod lock;
 mod migrate;
 mod normalize;
@@ -19,6 +20,7 @@ use serde_json::json;
 pub use damage::{BoardDamage, DamagedBoard, check_board_bytes, damaged_boards, read_board_text};
 pub use docs::{LogLine, append_log, create_doc, next_id, remove_doc, stamp, touch};
 pub use io::{read_board, save_board, save_board_with};
+pub use lane::{set_lane, stamp_lane};
 pub use lock::{BoardLock, LockWait, try_lock, with_board, with_board_async};
 pub use normalize::normalize;
 pub use rank::{rank_between, rank_end};

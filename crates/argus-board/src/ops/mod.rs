@@ -1,6 +1,6 @@
 //! What may change on the board, by whom, and how a change is made. One op is the same shape the
 //! page posts as an entry: `create`, `edit`, `move`, `ac`, `archive`, `unarchive`, `delete`,
-//! `restore`, `bulk`, `purge`, `build`, `avatar`, `icon`, the owner's worktree and build ops (`worktree-link`,
+//! `restore`, `bulk`, `purge`, `build`, `avatar`, `icon`, `kanban-config`, the owner's worktree and build ops (`worktree-link`,
 //! `worktree-keep`, `launcher-link`, `launcher-retire`), the test plan run ops (`plan-run-start`, `plan-run-record`, `plan-run-end`) and the pull request ops of the local remote (`pr-open`,
 //! `pr-update`, `pr-merge`, `pr-close`, `pr-checks`). [`apply_op`] checks the caller, validates, checks the
 //! revision the writer saw, applies, stamps, and tells the owning threads.
@@ -19,6 +19,7 @@ mod edit;
 mod fields;
 mod icon;
 mod icon_image;
+mod kanban_config;
 mod launcher;
 mod move_;
 mod plan;
@@ -91,6 +92,7 @@ fn dispatch(
         "build" => handed(board, op, who, build::handle),
         "avatar" => avatar::handle(board, op, who),
         "icon" => icon::handle(board, op, who),
+        "kanban-config" => kanban_config::handle(board, op, who),
         "worktree-link" => handed(board, op, who, worktree::handle_link),
         "worktree-keep" => handed(board, op, who, worktree::handle_keep),
         "launcher-link" => handed(board, op, who, launcher::handle_link),

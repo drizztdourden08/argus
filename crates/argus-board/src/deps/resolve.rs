@@ -15,9 +15,9 @@ use super::ledger::{Side, Step, dep_in, deps_in, get, locked, locked_ledger, mov
 use super::model::{Dep, DepState, Done, Transition, project_of};
 use super::reconcile::reconcile_with;
 use super::sight::find_requested;
-use crate::json::{doc, doc_mut, set, truthy};
+use crate::json::{doc, doc_mut, truthy};
 use crate::limits::optional_text;
-use crate::store::stamp;
+use crate::store::{set_lane, stamp};
 
 /// The body of `POST /api/deps/:id/close`.
 #[derive(Debug, Clone, Deserialize)]
@@ -120,7 +120,7 @@ fn set_status(
         if removed || !from_ok || item["status"] == to {
             return Ok(());
         }
-        set(item, "status", to);
+        set_lane(item, to);
         stamp(board, "items", &id, by)?;
         Ok(())
     })

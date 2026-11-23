@@ -18,7 +18,7 @@ use crate::{
     Board,
     error::{BoardError, refuse},
     json::{display, doc, doc_mut, obj, same, set},
-    store::stamp,
+    store::{stamp, stamp_lane},
 };
 
 /// The fields an edit asks for, refused when there are none.
@@ -70,8 +70,12 @@ fn write_fields(
     let Some(d) = doc_mut(board, coll, id) else {
         return;
     };
+    let was = d["status"].clone();
     for f in fields {
         set(d, f, next[f].clone());
+    }
+    if coll == "items" {
+        stamp_lane(d, &was);
     }
     if coll == "entries" {
         set(d, "editedAt", now_iso());

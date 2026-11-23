@@ -16,7 +16,7 @@ use super::notice::{Note, note, write};
 use super::sight::{Look, Seen, Sight};
 use crate::Board;
 use crate::json::{doc_mut, set};
-use crate::store::{stamp, touch};
+use crate::store::{set_lane, stamp, touch};
 
 /// The `waitsOn` field of the requester item.
 pub(crate) fn waits_on(dep: &Dep, title: &str) -> Value {
@@ -158,7 +158,7 @@ fn apply(
         }
         if work.drop_idle {
             if let Some(d) = doc_mut(board, "items", &seen.id) {
-                set(d, "status", "dropped");
+                set_lane(d, "dropped");
             }
             stamp(board, "items", &seen.id, "argus")?;
         }

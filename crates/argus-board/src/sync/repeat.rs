@@ -61,7 +61,7 @@ fn subject_of(e: &Value) -> Option<String> {
     match named {
         Some(v) => Some(display(v)),
         None => match e["kind"].as_str() {
-            Some(kind @ ("build" | "avatar" | "icon")) => Some(kind.to_owned()),
+            Some(kind @ ("build" | "avatar" | "icon" | "kanban-config")) => Some(kind.to_owned()),
             _ => None,
         },
     }

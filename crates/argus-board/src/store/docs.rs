@@ -62,6 +62,9 @@ pub fn create_doc(
     doc.insert("updatedAt".into(), json!(at));
     doc.insert("updatedBy".into(), json!(actor));
     doc.insert("rank".into(), js::number(rank_end(board, coll)));
+    if coll == "items" {
+        doc.insert("laneAt".into(), json!(at));
+    }
     doc.extend(fields);
     doc.insert("rev".into(), json!(1));
     map_mut(board, coll).insert(id.clone(), Value::Object(doc));

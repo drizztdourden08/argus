@@ -15,7 +15,7 @@ use super::who::Who;
 use crate::Board;
 use crate::error::{BoardError, refuse};
 use crate::json::{as_integer, display, doc, doc_mut, find_ids, nullish, obj, set, strict_eq};
-use crate::store::{rank_between, stamp};
+use crate::store::{rank_between, stamp, stamp_lane};
 
 const OPEN: [&str; 3] = ["open", "pending", "doing"];
 
@@ -204,8 +204,12 @@ fn write_move(board: &mut Board, (coll, id): (&str, &str), plan: &Plan, rank: Op
     let Some(d) = doc_mut(board, coll, id) else {
         return;
     };
+    let was = d["status"].clone();
     for (field, value) in &plan.changes {
         set(d, field, value.clone());
+    }
+    if coll == "items" {
+        stamp_lane(d, &was);
     }
     if let Some(refs) = &plan.ac_refs {
         set(d, "ac", Value::Array(refs.clone()));
