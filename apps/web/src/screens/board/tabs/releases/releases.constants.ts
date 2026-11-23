@@ -19,7 +19,7 @@ const RELEASES_ORDERS: readonly { id: ReleasesOrder; label: string }[] = [
 
 const LAYOUT_CHOICES: SegmentOption<ReleasesLayout>[] = [
   { value: 'normal', icon: 'rows-3', hint: { label: 'Normal', description: 'Each version with its details' } },
-  { value: 'compact', icon: 'rows-4', hint: { label: 'Compact', description: 'Tighter cards' } },
+  { value: 'compact', icon: 'list', hint: { label: 'Compact', description: 'Tighter cards' } },
 ];
 
 const LAYOUT_IDS: ReleasesLayout[] = ['normal', 'compact'];
