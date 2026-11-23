@@ -192,7 +192,6 @@ export type {
   OverlordApproval,
   OverlordKeyApi,
   OverlordMode,
-  OverlordChoice,
   OverlordSettings,
   OverlordSettingsPatch,
   OverlordSpend,
