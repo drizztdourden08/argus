@@ -27,7 +27,7 @@ const BoardStatus = (props: BoardStatusProps) => {
     { label: 'Faults', value: faults.length > 0 ? <BoardFaults faults={faults} /> : 'none' },
   ];
   return (
-    <HeaderPopover trigger={<><Status tone={tone} dot /><Icon name="info" size={14} aria-label="Board status" /></>} label="Board status" hint={reason}>
+    <HeaderPopover trigger={<><Status tone={tone} dot>{null}</Status><Icon name="info" size={14} aria-label="Board status" /></>} label="Board status" hint={reason}>
       <FactsPanel layout="terms" framed={false} label="Board status" groups={[facts]} />
     </HeaderPopover>
   );

@@ -19,7 +19,7 @@ const useBoardHealth = (props: Pick<BoardHeaderProps, 'boardKey' | 'status' | 'u
   const faults = useMemo(() => registry.docs.filter((row) => row.state === 'fault'), [registry.docs]);
   const offline = status === 'unavailable' || status === 'unauthorized';
   const health = healthOf({ lead, faults: faults.length, offline, updatedAt, now });
-  return { ...health, lead, faults, listed: counts?.listed, runningAgents: counts?.runningAgents, status, updatedAt };
+  return { ...health, lead, faults, listed: counts?.listed ?? undefined, runningAgents: counts?.runningAgents ?? undefined, status, updatedAt };
 };
 
 export { useBoardHealth };
