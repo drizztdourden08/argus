@@ -12,7 +12,8 @@ use serde_json::{Value, json};
 
 use super::merge::{
     advance_history, archive_vote, fill_missing, fingerprint, full_record, merge_archive,
-    merge_artifacts, merge_lineage, set_archived, set_artifacts, set_lineage,
+    merge_archive_set_at, merge_artifacts, merge_lineage, set_archive_set_at, set_archived,
+    set_artifacts, set_lineage,
 };
 use super::read::is_uuid;
 use crate::config::ArchiveRule;
@@ -219,6 +220,7 @@ struct Planner<'a> {
 struct Overlay {
     lineage: Vec<super::merge::LineageValue>,
     archived: bool,
+    archive_set_at: i64,
     artifacts: Vec<Value>,
 }
 
@@ -374,6 +376,7 @@ impl Planner<'_> {
         Overlay {
             lineage: merge_lineage(&refs),
             archived: merge_archive(&votes, self.rule),
+            archive_set_at: merge_archive_set_at(&votes, self.rule),
             artifacts: merge_artifacts(&refs),
         }
     }
@@ -484,6 +487,7 @@ impl Planner<'_> {
 fn apply_overlay(record: &mut Value, overlay: &Overlay) {
     set_lineage(record, &overlay.lineage);
     set_archived(record, overlay.archived);
+    set_archive_set_at(record, overlay.archive_set_at);
     set_artifacts(record, &overlay.artifacts);
 }
 

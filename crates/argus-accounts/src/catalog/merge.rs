@@ -25,6 +25,7 @@ pub const LINEAGE_KEYS: [&str; 5] = [
 ];
 
 const ARCHIVED_KEY: &str = "isArchived";
+const ARCHIVE_SET_KEY: &str = "archiveSetAtMs";
 const ARTIFACTS_KEY: &str = "publishedArtifacts";
 const DETACHED_KEY: &str = "lineageDetached";
 const MAX_ARTIFACTS: usize = 50;
@@ -72,6 +73,8 @@ pub struct ArchiveVote {
     pub focused_at: i64,
     /// `lastActivityAt` of the copy, 0 when absent.
     pub activity_at: i64,
+    /// `archiveSetAtMs` of the copy: when its archived flag was last set, 0 when absent.
+    pub archive_set_at: i64,
     /// The record file's modification time.
     pub mtime_ms: i64,
 }
@@ -102,6 +105,7 @@ fn is_merged_key(key: &str) -> bool {
     HISTORY_KEYS.contains(&key)
         || LINEAGE_KEYS.contains(&key)
         || key == ARCHIVED_KEY
+        || key == ARCHIVE_SET_KEY
         || key == ARTIFACTS_KEY
 }
 
@@ -241,6 +245,7 @@ pub fn archive_vote(record: &Value, mtime_ms: i64) -> ArchiveVote {
         archived: record.get(ARCHIVED_KEY) == Some(&Value::Bool(true)),
         focused_at: millis(record, "lastFocusedAt"),
         activity_at: millis(record, "lastActivityAt"),
+        archive_set_at: millis(record, ARCHIVE_SET_KEY),
         mtime_ms,
     }
 }
@@ -256,17 +261,49 @@ fn millis(record: &Value, key: &str) -> i64 {
     }
 }
 
+impl ArchiveVote {
+    /// The latest change to this copy: a focus, an activity or an archive flip.
+    fn changed_at(&self) -> i64 {
+        self.focused_at
+            .max(self.activity_at)
+            .max(self.archive_set_at)
+    }
+}
+
+fn newest_vote(votes: &[ArchiveVote]) -> Option<&ArchiveVote> {
+    votes
+        .iter()
+        .max_by_key(|v| (v.changed_at(), v.mtime_ms, v.archived))
+}
+
 /// Whether the merged chat is archived. With `Anywhere` one archived copy archives all; with
-/// `Newest` the copy changed last decides (focus time, then activity time, then file time), and
-/// a full tie archives.
+/// `Newest` the copy changed last decides (the latest of its focus, activity and archive time,
+/// then file time), and a full tie archives.
 #[must_use]
 pub fn merge_archive(votes: &[ArchiveVote], rule: ArchiveRule) -> bool {
     match rule {
         ArchiveRule::Anywhere => votes.iter().any(|v| v.archived),
-        ArchiveRule::Newest => votes
-            .iter()
-            .max_by_key(|v| (v.focused_at, v.activity_at, v.mtime_ms, v.archived))
-            .is_some_and(|v| v.archived),
+        ArchiveRule::Newest => newest_vote(votes).is_some_and(|v| v.archived),
+    }
+}
+
+/// The `archiveSetAtMs` the merged chat carries: the deciding copy's under `Newest`, the latest
+/// of all copies under `Anywhere`. 0 means none.
+#[must_use]
+pub fn merge_archive_set_at(votes: &[ArchiveVote], rule: ArchiveRule) -> i64 {
+    match rule {
+        ArchiveRule::Anywhere => votes.iter().map(|v| v.archive_set_at).max().unwrap_or(0),
+        ArchiveRule::Newest => newest_vote(votes).map_or(0, |v| v.archive_set_at),
+    }
+}
+
+/// Carries `archiveSetAtMs` onto a record so every copy agrees; 0 leaves the record as it is.
+pub fn set_archive_set_at(record: &mut Value, at: i64) {
+    if at == 0 || millis(record, ARCHIVE_SET_KEY) == at {
+        return;
+    }
+    if let Some(map) = record.as_object_mut() {
+        map.insert(ARCHIVE_SET_KEY.to_owned(), Value::from(at));
     }
 }
 
@@ -342,7 +379,15 @@ mod tests {
             archived,
             focused_at,
             activity_at,
+            archive_set_at: 0,
             mtime_ms,
+        }
+    }
+
+    fn stamped(archived: bool, focused_at: i64, archive_set_at: i64) -> ArchiveVote {
+        ArchiveVote {
+            archive_set_at,
+            ..vote(archived, focused_at, 0, 1)
         }
     }
 
@@ -423,6 +468,35 @@ mod tests {
         assert!(merge_archive(&by_activity, ArchiveRule::Newest));
         let by_mtime = [vote(true, 0, 0, 4), vote(false, 0, 0, 7)];
         assert!(!merge_archive(&by_mtime, ArchiveRule::Newest));
+    }
+
+    #[test]
+    fn an_archive_set_after_the_other_focus_wins() {
+        let votes = [stamped(true, 5, 9), stamped(false, 7, 0)];
+        assert!(merge_archive(&votes, ArchiveRule::Newest));
+        assert_eq!(merge_archive_set_at(&votes, ArchiveRule::Newest), 9);
+    }
+
+    #[test]
+    fn a_focus_after_the_archive_unarchives() {
+        let votes = [stamped(true, 5, 9), stamped(false, 12, 0)];
+        assert!(!merge_archive(&votes, ArchiveRule::Newest));
+    }
+
+    #[test]
+    fn a_missing_archive_time_ranks_as_before() {
+        let votes = [stamped(true, 5, 0), stamped(false, 9, 0)];
+        assert!(!merge_archive(&votes, ArchiveRule::Newest));
+        assert_eq!(merge_archive_set_at(&votes, ArchiveRule::Newest), 0);
+    }
+
+    #[test]
+    fn the_archive_time_is_carried_onto_a_record() {
+        let mut rec = json!({ "isArchived": true });
+        set_archive_set_at(&mut rec, 0);
+        assert!(rec.get("archiveSetAtMs").is_none());
+        set_archive_set_at(&mut rec, 9);
+        assert_eq!(rec["archiveSetAtMs"], 9);
     }
 
     #[test]
