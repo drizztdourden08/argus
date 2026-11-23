@@ -4,7 +4,7 @@ import type { WithId } from '../../../../data/react';
 import type { Item, SoftKind } from '../../../../data/kanban';
 import type { RunEntry } from '../../../../data/runs';
 import type { TabView } from '../../BoardTabsRow';
-import type { AgentField, AgentFilters, AgentGroup, AgentLayout, AgentOrder, AgentStat, ShownAgents } from './model';
+import type { AgentField, AgentFilters, AgentGroup, AgentLayout, AgentOrder, ShownAgents } from './model';
 
 interface AgentsTabProps {
   boardKey: string;
@@ -39,10 +39,6 @@ interface AgentRuns {
   all: RunEntry[];
   live: RunEntry[];
   finished: RunEntry[];
-}
-
-interface AgentsHeaderProps {
-  stats: readonly AgentStat[];
 }
 
 interface AgentsBodyProps {
@@ -82,7 +78,6 @@ export type {
   AgentRuns,
   AgentsBodyProps,
   AgentsFootProps,
-  AgentsHeaderProps,
   AgentsTabProps,
   AgentsToolsProps,
   AgentsView,

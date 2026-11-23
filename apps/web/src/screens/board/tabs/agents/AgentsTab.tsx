@@ -1,28 +1,26 @@
 /* @layer renderer-app @kind component */
-import { Box, Flex } from '@drizztdourden08/tessera';
+import { Flex } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useRecordPane } from '../../../../shell';
 import { FINISHED_KEY, useStoredFlag } from '../../../../stored';
 import { useTabView } from '../../BoardTabsRow';
-import { SECOND_TICK_MS, useNow } from '../../shared';
+import { SECOND_TICK_MS, TabPanel, useNow, useTabLayout } from '../../shared';
 import type { AgentsTabProps } from './AgentsTab.type';
 import { useAgentActions } from './behavior/useAgentActions';
-import { useAgentLayout } from './behavior/useAgentLayout';
 import { useAgentRuns } from './behavior/useAgentRuns';
 import { useAgentsView } from './behavior/useAgentsView';
 import { useReconcile } from './behavior/useReconcile';
-import { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_ORDER_IDS, AGENTS_TAB, agentStats, allOpen, setRowOpen, toggleAll } from './model';
+import { AGENT_FILTERS, AGENT_GROUP_IDS, AGENT_ORDER_IDS, AGENTS_TAB, LAYOUT_IDS, agentStats, allOpen, setRowOpen, toggleAll } from './model';
 import { AgentRunsSection } from './sub-components/AgentRunsSection';
 import { AgentsBody } from './sub-components/AgentsBody';
 import { AgentsFoot } from './sub-components/AgentsFoot';
-import { AgentsHeader } from './sub-components/AgentsHeader';
 import { ReconcilePanel } from './sub-components/ReconcilePanel';
 import { AgentsTools } from './AgentsTools';
 import './AgentsTab.css';
 
 const AgentsTab = (props: AgentsTabProps) => {
   const { boardKey } = props;
-  const [layout, setLayout] = useAgentLayout();
+  const [layout, setLayout] = useTabLayout(AGENTS_TAB, boardKey, LAYOUT_IDS, 'list');
   const tabView = useTabView(AGENTS_TAB, { groups: AGENT_GROUP_IDS, orders: AGENT_ORDER_IDS, group: 'none', order: 'updated', direction: 'desc', filters: AGENT_FILTERS });
   const view = useAgentsView(boardKey, { filters: tabView.filters, order: tabView.order, direction: tabView.direction });
   const actions = useAgentActions(boardKey, view.all);
@@ -41,15 +39,14 @@ const AgentsTab = (props: AgentsTabProps) => {
     <Flex direction="column" gap="md">
       <AgentsTools boardKey={boardKey} tabView={tabView} view={view} finished={finished} layout={{ value: layout, onChange: setLayout }} expand={expand} />
       <ReconcilePanel findings={findings} />
-      <Box as="section" aria-label="Agents" className="agents-panel">
-        <AgentsHeader stats={agentStats(view.active, count)} />
+      <TabPanel label="Agents" className="agents-panel" stats={agentStats(view.active, count)}>
         <AgentRunsSection title="Running now" runs={runs.live} boardKey={boardKey} now={runNow} />
         <AgentsBody boardKey={boardKey} view={view} showFinished={showFinished} group={tabView.group} layout={layout} now={now} actions={actions} onOpen={openRecord} open={open} onRowOpen={(id, value) => setOpen(setRowOpen(open, id, value))} />
         {showFinished && count > 0 && (
           <AgentsFoot canArchive={view.shown.done.length > 0} onArchive={() => actions.archiveFinished(view.shown.done.map((agent) => agent.id))} />
         )}
         {showFinished && <AgentRunsSection title="Finished runs" runs={runs.finished} boardKey={boardKey} now={now} />}
-      </Box>
+      </TabPanel>
     </Flex>
   );
 };

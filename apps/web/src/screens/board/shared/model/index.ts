@@ -4,5 +4,6 @@ export { formatFilters } from './format-filters';
 export { jsonRecord } from './json-record';
 export { neighbours } from './neighbours';
 export { nonEmpty } from './non-empty';
+export { tagLook } from './tag-look';
 export { noticeRows } from './notice-rows';
 export { threadChoices } from './threads';

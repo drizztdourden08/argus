@@ -1,21 +1,6 @@
 /* @layer renderer-app @kind style */
 .agents-panel {
   --agents-rem: var(--size-16);
-
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  background: var(--c-surface);
-  border: var(--border-width-thin) solid var(--c-border);
-  border-radius: var(--radius-lg);
-  container: agents-panel / inline-size;
-}
-
-.agents-head {
-  flex-wrap: nowrap;
-  padding: var(--space-sm) var(--space-md);
-  overflow: hidden;
-  border-bottom: var(--border-width-thin) solid var(--c-border);
 }
 
 .agents-grid {
@@ -129,7 +114,7 @@
   white-space: pre-wrap;
 }
 
-@container agents-panel (max-width: 55.99rem) {
+@container tab-panel (max-width: 55.99rem) {
   .agents-now {
     display: none;
   }

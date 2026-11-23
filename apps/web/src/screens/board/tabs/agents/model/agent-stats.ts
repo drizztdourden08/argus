@@ -1,16 +1,16 @@
 /* @layer renderer-app @kind logic */
 import type { Agent } from '../../../../../data/agents';
-import type { AgentStat } from './model.type';
+import type { TabStat } from '../../../shared';
 import { statusLook } from './status-look';
 
 const countOf = (active: readonly Agent[], status: string): number => active.filter((agent) => agent.status === status).length;
 
-const statOf = (active: readonly Agent[], status: string): AgentStat => {
+const statOf = (active: readonly Agent[], status: string): TabStat => {
   const look = statusLook(status);
   return { id: status, label: look.label, count: countOf(active, status), tone: look.tone };
 };
 
-const agentStats = (active: readonly Agent[], finished: number): AgentStat[] => {
+const agentStats = (active: readonly Agent[], finished: number): TabStat[] => {
   const stopping = statOf(active, 'stop-requested');
   return [
     statOf(active, 'working'),

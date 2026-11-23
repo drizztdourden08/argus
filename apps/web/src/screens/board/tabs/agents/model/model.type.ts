@@ -1,13 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { StatusTone } from '@drizztdourden08/tessera';
 
-interface AgentStat {
-  id: string;
-  label: string;
-  count: number;
-  tone: StatusTone;
-}
-
 interface DetailLine {
   id: string;
   label: string;
@@ -56,4 +49,4 @@ interface Verdict {
   message: string;
 }
 
-export type { AgentField, AgentMark, AgentStat, DetailLine, ModelFamily, ModelLook, NowLine, StatusLook, Verdict, WhereLook };
+export type { AgentField, AgentMark, DetailLine, ModelFamily, ModelLook, NowLine, StatusLook, Verdict, WhereLook };

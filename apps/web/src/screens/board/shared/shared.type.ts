@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind types */
+import type { SegmentOption, StatusTone } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
 import type { OpOutcome, OwnerOp, SentOp } from '../../../data/kanban';
 import type { Pictures } from '../../../data/media';
@@ -34,6 +35,34 @@ interface NoticeActions {
 interface OpNoticeProps {
   notice: OpNotice;
   ops: NoticeActions;
+}
+
+interface TabStat {
+  id: string;
+  label: string;
+  count: number;
+  tone: StatusTone;
+  tip?: string;
+}
+
+interface TabStatsProps {
+  stats: readonly TabStat[];
+  label?: string;
+}
+
+interface TabPanelProps {
+  label: string;
+  stats: readonly TabStat[];
+  tools?: ReactNode;
+  className?: string;
+  children?: ReactNode;
+}
+
+interface LayoutToggleProps<T extends string> {
+  value: T;
+  options: SegmentOption<T>[];
+  onChange: (value: T) => void;
+  label: string;
 }
 
 interface NoticeDiffProps {
@@ -116,4 +145,4 @@ interface DrawerToolbarProps {
   children?: ReactNode;
 }
 
-export type { DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, ItemMedia, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, Writer };
+export type { DrawerToolbarProps, EditableMarkdownProps, FactSelectProps, ItemMedia, LayoutToggleProps, MarkdownFieldEditorProps, NoticeDiffProps, NoticeRow, OpNotice, OpNoticeProps, Option, RecordDrawerProps, SoftToolsProps, StoredFilters, TabPanelProps, TabStat, TabStatsProps, Writer };

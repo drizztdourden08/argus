@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Box, Tag, Tooltip } from '@drizztdourden08/tessera';
 import type { AgentModelProps } from '../row-props.type';
-import { MODEL_LOOKS, modelFamily, modelLabel, modelTip, tagLook } from '../model';
+import { tagLook } from '../../../shared';
+import { MODEL_LOOKS, modelFamily, modelLabel, modelTip } from '../model';
 
 const AgentModelTag = (props: AgentModelProps) => {
   const { agent } = props;

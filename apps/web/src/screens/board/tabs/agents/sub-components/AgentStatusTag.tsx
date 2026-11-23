@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Tag } from '@drizztdourden08/tessera';
 import type { AgentStatusTagProps } from '../row-props.type';
-import { statusLook, tagLook } from '../model';
+import { tagLook } from '../../../shared';
+import { statusLook } from '../model';
 
 const AgentStatusTag = (props: AgentStatusTagProps) => {
   const look = statusLook(props.agent.status);

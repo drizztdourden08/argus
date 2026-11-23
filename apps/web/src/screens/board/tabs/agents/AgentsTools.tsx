@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
-import { Icon, IconButton, SegmentedControl } from '@drizztdourden08/tessera';
+import { Icon, IconButton } from '@drizztdourden08/tessera';
 import { TabFilterBar, TabGroupSort, ToolToggle, useTabTools } from '../../BoardTabsRow';
 import { COLLAPSE_ALL, EXPAND_ALL } from './AgentsTab.constants';
+import { LayoutToggle } from '../../shared';
 import type { AgentsToolsProps } from './AgentsTab.type';
 import { agentFields, AGENT_GROUPS, AGENT_ORDERS, AGENTS_TAB, LAYOUT_CHOICES, SEARCH_PLACEHOLDER } from './model';
 
@@ -24,7 +25,7 @@ const AgentsTools = (props: AgentsToolsProps) => {
       priority: 5,
       node: <TabGroupSort group={{ options: AGENT_GROUPS, value: group, empty: 'none', onChange: setGroup }} sort={{ options: AGENT_ORDERS, order, direction, onChange: setSort }} />,
     },
-    { id: 'layout', priority: 4, node: <SegmentedControl value={layout.value} options={LAYOUT_CHOICES} onChange={layout.onChange} selectedTone="neutral" size="sm" aria-label="Agent view" /> },
+    { id: 'layout', priority: 4, node: <LayoutToggle value={layout.value} options={LAYOUT_CHOICES} onChange={layout.onChange} label="Agent view" /> },
     { id: 'show-finished', priority: 3, node: <ToolToggle label="Show finished" count={finished.count} pressed={finished.shown} onToggle={finished.onToggle} /> },
     ...(layout.value === 'list' ? [expandTool] : []),
   ]);
