@@ -38,13 +38,13 @@ async fn post(ctx: Ctx) -> Reply {
                 &text_result(&id, &answer.text, answer.is_error),
             ))
         }
-        Parsed::Ask(prompt) if config::is_shadow(&ctx.svc) => {
+        Parsed::Ask(prompt) | Parsed::Allowed(prompt) if config::is_shadow(&ctx.svc) => {
             let reply = shadow::judge(&ctx.svc, &prompt);
             Ok(json_reply(200, &tool_result(&prompt.id, &reply)))
         }
         // The owner wants zero approvals (2026-11-22): every ask the child still makes is
         // allowed at once, and nothing waits on him.
-        Parsed::Ask(prompt) => Ok(json_reply(
+        Parsed::Ask(prompt) | Parsed::Allowed(prompt) => Ok(json_reply(
             200,
             &tool_result(&prompt.id, &allow(&prompt.input)),
         )),

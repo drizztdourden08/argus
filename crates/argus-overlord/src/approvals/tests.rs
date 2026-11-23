@@ -187,3 +187,35 @@ fn the_summary_names_the_command_or_cuts_the_input() {
     let long = "é".repeat(500);
     assert_eq!(summarize(&json!({ "command": long })).chars().count(), 200);
 }
+
+fn prompt_for(tool: &str, input: &serde_json::Value) -> Parsed {
+    let call = json!({ "jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {
+        "name": "permission_prompt",
+        "arguments": { "tool_name": tool, "input": input }
+    } });
+    parse(call.to_string().as_bytes())
+}
+
+// test-tag: critical
+#[test]
+fn a_single_coord_call_is_allowed_with_no_queue_entry() {
+    let found = prompt_for("Bash", &json!({ "command": " coord item list " }));
+    assert!(matches!(found, Parsed::Allowed(_)));
+    let tool = prompt_for("mcp__coord-dashboard__list_items", &json!({}));
+    assert!(matches!(tool, Parsed::Allowed(_)));
+}
+
+// test-tag: critical
+#[test]
+fn a_chained_or_other_bash_call_still_goes_to_the_queue() {
+    for command in [
+        "coord inbox; rm x",
+        "coord x | sh",
+        "coord x > f",
+        "coordx",
+        "git push",
+    ] {
+        let found = prompt_for("Bash", &json!({ "command": command }));
+        assert!(matches!(found, Parsed::Ask(_)), "{command}");
+    }
+}

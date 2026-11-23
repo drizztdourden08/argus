@@ -3,6 +3,7 @@
 
 use serde_json::{Value, json};
 
+use super::auto::auto_allowed;
 use crate::tools::{self, Call, parse_call, text_result};
 
 const PROTOCOL: &str = "2025-06-18";
@@ -26,6 +27,8 @@ pub enum Parsed {
     Quiet,
     /// A permission question to put to the owner.
     Ask(Prompt),
+    /// A question the owner settled in advance (I-198): allow it at once, queue nothing.
+    Allowed(Prompt),
     /// A call of one of the Overlord's own tools; `id` is the request id to answer.
     Tool { id: Value, call: Call },
 }
@@ -72,12 +75,17 @@ fn ask(id: &Value, params: &Value) -> Parsed {
     let Some(tool_name) = args["tool_name"].as_str() else {
         return Parsed::Now(failure(id, -32602, "unknown tool or missing tool_name"));
     };
-    Parsed::Ask(Prompt {
+    let prompt = Prompt {
         id: id.clone(),
         tool_name: tool_name.to_owned(),
         input: args.get("input").cloned().unwrap_or_else(|| json!({})),
         tool_use_id: args["tool_use_id"].as_str().map(str::to_owned),
-    })
+    };
+    if auto_allowed(&prompt.tool_name, &prompt.input) {
+        Parsed::Allowed(prompt)
+    } else {
+        Parsed::Ask(prompt)
+    }
 }
 
 fn own_tool(id: &Value, name: &str, args: &Value) -> Parsed {

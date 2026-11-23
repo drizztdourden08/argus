@@ -49,7 +49,7 @@ const READ_VERBS: [(&str, &[&str]); 16] = [
 ];
 
 /// Characters that chain, redirect or substitute: a command holding one is never read-only.
-const SHELL: [char; 11] = [';', '&', '|', '<', '>', '`', '$', '(', ')', '\n', '\r'];
+pub(crate) const SHELL: [char; 11] = [';', '&', '|', '<', '>', '`', '$', '(', ')', '\n', '\r'];
 
 /// What the shadow does with one tool ask.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

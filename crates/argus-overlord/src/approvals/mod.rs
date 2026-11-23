@@ -2,6 +2,7 @@
 //! the owner answers in the Overlord tab, and the answer goes back in the shape the CLI expects.
 //! All pure; the rows live behind the `ApprovalStore` port and the toast behind `OwnerToast`.
 
+mod auto;
 mod bearer;
 mod config;
 mod model;
