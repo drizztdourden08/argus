@@ -110,7 +110,7 @@ fn address(at: &Where<'_>, to: &Hearer) -> Option<(String, String)> {
             let board = at.boards.board(key)?;
             coordinator_in(Some(&*board)).map(|lead| (key.clone(), lead))
         }
-        Hearer::Owner => None,
+        Hearer::Owner | Hearer::Agent(_) => None,
     }
 }
 

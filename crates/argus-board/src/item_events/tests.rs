@@ -109,6 +109,24 @@ fn an_item_given_to_the_owner_by_a_thread_is_told_to_him_but_not_when_he_did_it(
     assert_eq!(item_events(&before, &given("human")).len(), 0);
 }
 
+#[test]
+fn an_item_given_to_an_agent_wakes_its_thread_and_never_a_thread_called_agent() {
+    let before = board(&[item("I-1", &json!({"thread": "api"}))], &json!({}));
+    let agents = json!({"agents": {"A-1": {"id": "A-1", "thread": "ui"}}});
+    let given = |by: &str| {
+        let held = json!({"thread": "api", "assignee": "agent:A-1", "updatedBy": by, "rev": 2});
+        board(&[item("I-1", &held)], &agents)
+    };
+    let heard =
+        |events: &[ItemEvent], who: &str| events.iter().filter(|e| e.to == thread(who)).count();
+    let by_lead = item_events(&before, &given("lead"));
+    assert_eq!(heard(&by_lead, "agent:A-1"), 0);
+    assert_eq!(heard(&by_lead, "ui"), 1);
+    let by_agent_thread = item_events(&before, &given("ui"));
+    assert_eq!(heard(&by_agent_thread, "agent:A-1"), 0);
+    assert_eq!(heard(&by_agent_thread, "ui"), 0);
+}
+
 /// A board with the to-do `H-1` on `I-1`, its fields overridden by `extra`.
 fn todo_board(extra: &Value) -> Value {
     let mut t = json!({"id": "H-1", "text": "Check the log", "status": "pending", "item": "I-1", "rev": 1, "updatedBy": "api"});

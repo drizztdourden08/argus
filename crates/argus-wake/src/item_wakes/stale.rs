@@ -103,12 +103,23 @@ fn handed_run(board: &BoardView, id: &str) -> bool {
     })
 }
 
-/// Does a sub-agent still run on the item?
+/// Does a sub-agent still run on the item, or hold it as its assignee?
 pub(crate) fn has_live_agent(board: &BoardView, item_id: &str) -> bool {
     board
         .agents
         .values()
         .any(|a| a.rec.is_live_on(item_id) && a.status.is_any(&LIVE_AGENT))
+        || held_by_live_agent(board, item_id)
+}
+
+/// Is the item's assignee `agent:A-n` of an agent that is still live?
+fn held_by_live_agent(board: &BoardView, item_id: &str) -> bool {
+    board
+        .items
+        .get(item_id)
+        .and_then(|item| item.assignee.as_str().strip_prefix("agent:"))
+        .and_then(|id| board.agents.get(id))
+        .is_some_and(|a| a.rec.is_live() && a.status.is_any(&LIVE_AGENT))
 }
 
 fn stale_in(config: &ItemWakeConfig, now: i64, scope: &str, board: &BoardView) -> Vec<Stale> {

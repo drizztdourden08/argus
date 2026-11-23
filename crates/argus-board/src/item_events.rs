@@ -80,6 +80,8 @@ pub enum Hearer {
     Owner,
     /// The lead of the board of this project key.
     Lead(String),
+    /// A sub-agent, by its id; its wakes go to the thread that owns it.
+    Agent(String),
 }
 
 /// One thing that happened to an item, a to-do or an ask, and who must hear of it.

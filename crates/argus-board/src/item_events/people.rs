@@ -9,6 +9,7 @@ use crate::json::{text, truthy};
 pub(super) const OWNER: &str = "owner";
 const HUMAN: &str = "human";
 const LEAD_PREFIX: &str = "lead:";
+const AGENT_PREFIX: &str = "agent:";
 
 /// A record that was deleted or archived.
 pub(super) fn gone(record: &Value) -> bool {
@@ -33,12 +34,14 @@ pub(super) fn assignee(item: &Value) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// The person as a hearer: the owner, the lead of another board, or a thread.
+/// The person as a hearer: the owner, the lead of another board, an agent, or a thread.
 pub(super) fn hearer_of(who: &str) -> Hearer {
     if who == OWNER {
         Hearer::Owner
     } else if let Some(key) = who.strip_prefix(LEAD_PREFIX) {
         Hearer::Lead(key.to_owned())
+    } else if let Some(id) = who.strip_prefix(AGENT_PREFIX) {
+        Hearer::Agent(id.to_owned())
     } else {
         Hearer::Thread(who.to_owned())
     }

@@ -539,7 +539,7 @@ the dependency mirrors, the revision and the stamps). These are new and all opti
 |---|---|---|
 | `type` | a registry type id | `task` |
 | `parent` | an `I-n` of this board | a root item |
-| `assignee` | a thread of the board, `owner`, or `lead:<key>` | the item's `thread` |
+| `assignee` | the one holder: a thread of the board, `owner`, or `agent:A-n` of an agent of the board (its wakes go to the agent's thread, none to the thread that made the change; a live agent holder keeps the item out of the stale reminders) | the item's `thread` |
 | `stage` | a stage id of the type | the first stage of the type in the current lane |
 | `fields` | the type's own fields, keyed by field id | none |
 | `blockedBy` | ids of this board: `I-n`, `T-n`, `H-n`, `Q-n`, `D-n` | none |

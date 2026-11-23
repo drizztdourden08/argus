@@ -122,6 +122,8 @@ pub struct ItemView {
     pub kind: Text,
     /// The owning thread.
     pub thread: Text,
+    /// Who holds the item: a thread, `owner`, or `agent:A-n`.
+    pub assignee: Text,
     /// `todo`, `doing`, `review`, `done`, `dropped`.
     pub status: Text,
     /// The requests to other boards this item waits on, one per dependency.

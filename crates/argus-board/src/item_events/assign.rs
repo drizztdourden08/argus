@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use super::people::{actor, assignee, gone, hearer_of, is_owner, worker};
 use super::{EventKind, Hearer, ItemEvent, Moved, Seen};
-use crate::json::{section, text};
+use crate::json::{doc, section, text};
 
 /// An item given to a thread or to the owner by someone else, and the thread it was taken from.
 /// A thread handing an item to itself, or taking its own away, says nothing; neither does giving the
@@ -22,6 +22,10 @@ pub(super) fn item(m: &Moved<'_>) -> Vec<ItemEvent> {
     let given = assignee(m.now)
         .filter(|new| *new != by)
         .map(|new| hearer_of(&new));
+    let given = match given {
+        Some(Hearer::Agent(id)) => agent_thread(m.seen, &id, &by),
+        other => other,
+    };
     match given {
         Some(Hearer::Owner) if is_owner(&by) => {}
         Some(hearer @ (Hearer::Owner | Hearer::Thread(_))) => {
@@ -30,6 +34,15 @@ pub(super) fn item(m: &Moved<'_>) -> Vec<ItemEvent> {
         _ => {}
     }
     out
+}
+
+/// The thread that owns the agent, as a hearer; nobody when the agent is unknown or that thread made
+/// the change itself.
+fn agent_thread(seen: &Seen<'_>, id: &str, by: &str) -> Option<Hearer> {
+    doc(seen.after, "agents", id)
+        .and_then(|agent| text(agent, "thread"))
+        .filter(|thread| !thread.is_empty() && *thread != by)
+        .map(|thread| Hearer::Thread(thread.to_owned()))
 }
 
 /// The assignee a to-do names itself; a to-do that names none is the owner's by default and tells nobody.
@@ -57,7 +70,7 @@ fn todo_event(id: &str, was: &Value, todo: &Value) -> Option<ItemEvent> {
     let own_act = match &to {
         Hearer::Thread(thread) => *thread == by,
         Hearer::Owner => is_owner(&by),
-        Hearer::Lead(_) => false,
+        Hearer::Lead(_) | Hearer::Agent(_) => false,
     };
     (!own_act).then(|| ItemEvent {
         kind: EventKind::TodoAssigned,
