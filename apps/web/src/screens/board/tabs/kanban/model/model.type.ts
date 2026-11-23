@@ -4,6 +4,7 @@ import type { DocData } from '../../../../../data/api';
 import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
+import type { KanbanColumnLimit, KanbanConfig } from '../../../../../data/types';
 import type { OpNotice, Option } from '../../../shared';
 import type { AttentionKind, Signals } from '../attention/attention.type';
 
@@ -122,6 +123,7 @@ interface ViewInput {
   paused: ReadonlySet<string>;
   focus: string;
   showPaused: boolean;
+  config?: KanbanConfig | null;
   now: number;
 }
 
@@ -145,6 +147,7 @@ interface ColumnsInput {
   showClosed: boolean;
   seeds: readonly string[];
   parents: ReadonlyMap<string, ItemRef>;
+  config?: KanbanConfig | null;
 }
 
 interface KanbanView {
@@ -156,7 +159,11 @@ interface KanbanView {
   closed: number;
   filtered: boolean;
   parents: ReadonlyMap<string, ItemRef>;
+  limits: ReadonlyMap<string, ColumnLimit>;
+  targets: ReadonlyMap<string, string>;
 }
+
+type ColumnLimit = KanbanColumnLimit;
 
 type EntryDocs = readonly WithId<Entry>[];
 
@@ -172,6 +179,7 @@ interface DropInput {
   group: ItemGroup;
   order: ItemOrder;
   direction?: SortDirection | null;
+  targets?: ReadonlyMap<string, string>;
 }
 
 type DropPlan =
@@ -218,5 +226,5 @@ type DepView = DepLink & {
 };
 
 export type {
-  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
+  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnLimit, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };

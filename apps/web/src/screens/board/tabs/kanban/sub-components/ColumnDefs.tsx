@@ -4,9 +4,10 @@ import type { ReactNode } from 'react';
 import type { ItemRef } from '../../../../../data/kanban';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { addPreset } from '../model';
-import type { CardData, ItemGroup } from '../model';
+import type { CardData, ItemGroup, KanbanView } from '../model';
 import { ColumnAdd } from './ColumnAdd';
 import { ColumnAddForm } from './ColumnAddForm';
+import { LimitBadge } from './LimitBadge';
 import { ParentHeader } from './ParentHeader';
 import { QuietBadge } from './QuietBadge';
 
@@ -14,18 +15,30 @@ const quietIn = (cards: readonly CardData[]): number => cards.filter((card) => c
 
 const headerOf = (group: ItemGroup, parent: ItemRef | undefined): ReactNode => (group === 'parent' && parent ? <ParentHeader parent={parent} /> : undefined);
 
+const badgeOf = (view: KanbanView, column: KanbanColumn<CardData>): ReactNode => {
+  const limit = view.limits.get(column.id);
+  const quiet = quietIn(column.cards);
+  if (!limit && quiet === 0) return undefined;
+  return (
+    <>
+      {limit ? <LimitBadge count={column.cards.length} limit={limit} /> : null}
+      {quiet > 0 ? <QuietBadge count={quiet} /> : null}
+    </>
+  );
+};
+
 const columnDefs = (props: KanbanColumnsProps): KanbanColumn<CardData>[] => {
   const { view, state, threads, ops, add, focus } = props;
   const { group } = state.prefs;
   return view.columns.map((column) => ({
     ...column,
     header: headerOf(group, view.parents.get(column.id)),
-    badge: quietIn(column.cards) > 0 ? <QuietBadge count={quietIn(column.cards)} /> : undefined,
+    badge: badgeOf(view, column),
     action: <ColumnAdd title={column.title} open={add.column === column.id} onToggle={() => add.toggle(column.id)} />,
     top:
       add.column === column.id ? (
         <ColumnAddForm
-          preset={addPreset(group, column.id, focus)}
+          preset={addPreset(group, view.targets.get(column.id) ?? column.id, focus)}
           group={group}
           threads={threads}
           items={view.parents}

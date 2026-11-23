@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind test */
 import type { Entry, ItemRef, ThreadChoice } from '../../src/data/kanban';
 import type { WithId } from '../../src/data/react';
+import type { KanbanConfig } from '../../src/data/types';
 import type { OpNotice } from '../../src/screens/board/shared';
 import type { Signals } from '../../src/screens/board/tabs/kanban/attention';
 import type { AskLink, KanbanFilters, KanbanPrefs, Needs, TrailInfo } from '../../src/screens/board/tabs/kanban/model';
@@ -65,6 +66,7 @@ interface Setup {
   paused?: string[];
   focus?: string;
   showPaused?: boolean;
+  config?: KanbanConfig | null;
 }
 
 const listsOf = (setup: Setup) => ({
@@ -89,6 +91,7 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
     prefs: prefs(setup.prefs),
     focus: setup.focus ?? '',
     showPaused: setup.showPaused ?? false,
+    config: setup.config,
     now: NOW,
   });
 

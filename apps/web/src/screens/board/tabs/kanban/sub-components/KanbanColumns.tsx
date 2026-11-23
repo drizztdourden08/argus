@@ -28,7 +28,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
   const ids = view.columns.flatMap((column) => column.cards.map((card) => card.id));
   const onMove = (move: KanbanMove) => {
     const card = view.cards.find((candidate) => candidate.id === move.cardId);
-    if (card) applyDrop(planDrop({ columns: view.columns, move, group, order, direction }), card.item, ops);
+    if (card) applyDrop(planDrop({ columns: view.columns, move, group, order, direction, targets: view.targets }), card.item, ops);
   };
   const onCardOpen = (cardId: string) => {
     const card = view.cards.find((candidate) => candidate.id === cardId);

@@ -4,7 +4,7 @@ import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
 import type { AddPanel, AgentDoc, BulkOps, ItemOps, KanbanState, NoticeOps, Selection, Threads } from './kanban.type';
-import type { AddPreset, CardData, CardProgress, ItemGroup, KanbanView } from './model';
+import type { AddPreset, CardData, CardProgress, ColumnLimit, ItemGroup, KanbanView } from './model';
 import type { LayoutState, TreeSource } from '../kanban-tree';
 
 interface KanbanTabProps {
@@ -73,6 +73,11 @@ interface KanbanColumnsProps {
   add: AddPanel;
   focus: string;
   onOpen: (id: string) => void;
+}
+
+interface LimitBadgeProps {
+  count: number;
+  limit: ColumnLimit;
 }
 
 interface QuietBadgeProps {
@@ -145,5 +150,5 @@ interface CardProgressRowProps {
 }
 
 export type {
-  AcListProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
+  AcListProps, CardBarsProps, CardFootProps, CardMenuProps, CardProgressRowProps, CardTagsProps, ColumnAddFormProps, ColumnAddProps, EpicHeaderProps, ItemCardProps, KanbanBodyProps, KanbanColumnsProps, KanbanTabProps, KanbanToolbarProps, LimitBadgeProps, OpNoticesProps, ParentHeaderProps, QuietBadgeProps, SelectionBarProps,
 };

@@ -10,6 +10,7 @@ export { blockedSignature } from './blocked-signature';
 export { assigneeLook } from '../../../../../shell';
 export { assigneeOf } from './assignee-of';
 export { buildView } from './build-view';
+export { limitTone } from './column-limits';
 export { byCreated } from './by-created';
 export { categoryColor } from '../../../../../shell';
 export { cardChips } from './card-chips';

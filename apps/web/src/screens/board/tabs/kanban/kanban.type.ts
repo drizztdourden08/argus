@@ -3,7 +3,7 @@ import type { ReorderDrag, SortDirection } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, RefObject } from 'react';
 import type { ActionDoc, CriterionOp, EditChange, EditField, EditRef, Entry, FieldValue, ItemInput, ItemRef, MoveTarget, SoftKind, ThreadChoice } from '../../../../data/kanban';
 import type { WithId } from '../../../../data/react';
-import type { Test } from '../../../../data/types';
+import type { KanbanConfig, Test } from '../../../../data/types';
 import type { NoteKind } from '../../owner-posts';
 import type { OpNotice, Option } from '../../shared';
 import type { Signals } from './attention';
@@ -32,6 +32,7 @@ interface KanbanData {
   asks: ReadonlyMap<string, AskLink[]>;
   signals: ReadonlyMap<string, Signals>;
   trails: ReadonlyMap<string, TrailInfo>;
+  config: KanbanConfig | null;
 }
 
 interface KanbanState {

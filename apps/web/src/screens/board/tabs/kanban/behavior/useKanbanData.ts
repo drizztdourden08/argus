@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind logic */
 import { useMemo } from 'react';
 import type { ActionDoc, Entry, Item, ThreadChoice } from '../../../../../data/kanban';
-import { useCollection } from '../../../../../data/react';
-import type { Build, Test } from '../../../../../data/types';
+import { useCollection, useDoc } from '../../../../../data/react';
+import type { Build, KanbanConfig, Test } from '../../../../../data/types';
 import { OP_KINDS, askLinks, needsMap } from '../model';
 import { signalsMap } from '../attention';
 import type { AgentDoc, KanbanData, SoftDoc } from '../kanban.type';
@@ -33,6 +33,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     [tests.docs, closedBuilds],
   );
   const trails = useTrails(boardKey, items.docs);
+  const config = useDoc<KanbanConfig>(boardKey, 'meta', 'kanban').doc;
   return {
     ready: items.ready && threads.ready,
     items: items.docs,
@@ -46,6 +47,7 @@ const useKanbanData = (boardKey: string): KanbanData => {
     asks,
     signals,
     trails,
+    config,
   };
 };
 

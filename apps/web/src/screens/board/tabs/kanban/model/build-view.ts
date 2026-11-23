@@ -3,6 +3,9 @@ import type { ItemRef } from '../../../../../data/kanban';
 import { itemTypeOf } from '../../../../../data/registry';
 import { NO_SIGNALS, attentionOf } from '../attention';
 import { buildColumns } from './build-columns';
+import { limitsOf } from './column-limits';
+import { targetsOf } from './column-targets';
+import { columnsOf } from './config-columns';
 import { childCounts } from './child-counts';
 import { groupOf } from './group-of';
 import { filtersActive } from './filters-active';
@@ -13,6 +16,7 @@ import { CLOSED_STATUSES, NO_CHILDREN, TRAIL_MIN_DEPTH } from './model.constants
 import { needsYou } from './needs-you';
 import { parentItems } from './parent-items';
 import { quietMs } from './quiet-ms';
+import { quietLimits } from './quiet-limits';
 import { typeOf } from './type-of';
 import type { CardData, CardFacts, ItemGroup, KanbanView, TrailInfo, ViewInput } from './model.type';
 
@@ -20,9 +24,9 @@ const onKanban = (item: ItemRef): boolean => !itemTypeOf(typeOf(item))?.hideOnKa
 
 const isClosed = (item: ItemRef): boolean => CLOSED_STATUSES.includes(item.status);
 
-const cardOf = (item: ItemRef, facts: CardFacts, now: number): CardData => {
+const cardOf = (item: ItemRef, facts: CardFacts, now: number, limits: Readonly<Record<string, number>>): CardData => {
   const waiting = needsYou(facts.needs);
-  const quiet = quietMs(item, waiting, now);
+  const quiet = quietMs(item, waiting, now, limits);
   const { asks, signals, conflicted, needs, children, lastRun, trail } = facts;
   const attention = attentionOf({ item, needs, asks, signals, quietMs: quiet });
   return { id: item.id, item, needsYou: waiting, needs, children, lastRun, trail, asks, signals, attention, quietMs: quiet, conflicted };
@@ -48,6 +52,9 @@ const grouped = (cards: CardData[], group: ItemGroup): CardData[] => {
 
 const buildView = (input: ViewInput): KanbanView => {
   const { items, threads, needs, asks, signals, trails, filters, prefs, now } = input;
+  const columns = columnsOf(input.config);
+  const configured = prefs.group === 'status' ? columns : null;
+  const limits = quietLimits(input.config, columns);
   const conflicted = conflictedIds(input);
   const keeps = threadKeeper(input);
   const live = items.filter((item) => onKanban(item) && !item.deletedAt && (filters.archived || !item.archivedAt) && keeps(item.thread));
@@ -63,7 +70,7 @@ const buildView = (input: ViewInput): KanbanView => {
     trail: longTrail(trails.get(item.id)),
   });
   const parents = parentItems(items);
-  const cards = live.map((item) => cardOf(item, facts(item), now));
+  const cards = live.map((item) => cardOf(item, facts(item), now, limits));
   const showClosed = prefs.showDone || CLOSED_STATUSES.includes(filters.status);
   const visible = cards.filter((card) => (showClosed || !isClosed(card.item)) && matchesFilters(card.item, filters, card.needsYou, card.conflicted));
   const shown = grouped(visible, prefs.group);
@@ -71,7 +78,7 @@ const buildView = (input: ViewInput): KanbanView => {
   const filtered = filtersActive(filters);
   const seeds = prefs.group === 'thread' && !filtered ? listedThreads(threads) : [];
   return {
-    columns: buildColumns({ cards: shown.filter((card) => !containers.has(card.id)), group: prefs.group, order: prefs.order, direction: prefs.direction, showClosed, seeds, parents }),
+    columns: buildColumns({ cards: shown.filter((card) => !containers.has(card.id)), group: prefs.group, order: prefs.order, direction: prefs.direction, showClosed, seeds, parents, config: input.config }),
     cards: shown,
     open: cards.filter((card) => !isClosed(card.item)).length,
     total: cards.length,
@@ -79,6 +86,8 @@ const buildView = (input: ViewInput): KanbanView => {
     closed: cards.filter((card) => isClosed(card.item)).length,
     filtered,
     parents,
+    limits: limitsOf(configured),
+    targets: targetsOf(configured),
   };
 };
 

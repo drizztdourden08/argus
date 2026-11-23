@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind logic */
 import type { KanbanColumn } from '@drizztdourden08/tessera';
+import { columnsOf, configColumns } from './config-columns';
 import { columnKey } from './column-key';
 import { columnOrder } from './column-order';
 import { clusterGroups } from './cluster-groups';
@@ -28,6 +29,10 @@ const keyedColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => {
   return [...groups.keys()].sort(columnOrder(input.group)).map((key) => ({ id: key, title: columnTitle(key, input), cards: clusterGroups(sortCards(groups.get(key) ?? [], input.order, input.direction)) }));
 };
 
-const buildColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => (input.group === 'status' ? statusColumns(input) : keyedColumns(input));
+const buildColumns = (input: ColumnsInput): KanbanColumn<CardData>[] => {
+  if (input.group !== 'status') return keyedColumns(input);
+  const configured = columnsOf(input.config);
+  return configured ? configColumns(input, configured) : statusColumns(input);
+};
 
 export { buildColumns };

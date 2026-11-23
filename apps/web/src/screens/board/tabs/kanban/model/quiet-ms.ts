@@ -1,13 +1,13 @@
 /* @layer renderer-app @kind logic */
 import type { ItemRef } from '../../../../../data/kanban';
-import { MS_PER_HOUR, QUIET_HOURS } from './model.constants';
+import { DEFAULT_QUIET_MS } from './quiet-limits';
 
-const quietMs = (item: ItemRef, waiting: boolean, now: number): number | null => {
-  const hours = QUIET_HOURS[item.status];
+const quietMs = (item: ItemRef, waiting: boolean, now: number, limits: Readonly<Record<string, number>> = DEFAULT_QUIET_MS): number | null => {
+  const limit = limits[item.status];
   const changed = Date.parse(item.updatedAt ?? '');
-  if (!hours || !Number.isFinite(changed) || item.archivedAt || waiting) return null;
+  if (!limit || !Number.isFinite(changed) || item.archivedAt || waiting) return null;
   const elapsed = now - changed;
-  return elapsed >= hours * MS_PER_HOUR ? elapsed : null;
+  return elapsed >= limit ? elapsed : null;
 };
 
 export { quietMs };

@@ -12,10 +12,12 @@ const withinColumn = (input: DropInput, place: PlaceAmong | null): DropPlan => {
   return manual(input) ? { kind: 'reorder', place } : { kind: 'order-off' };
 };
 
+const targetOf = (input: DropInput): string => (input.group === 'status' ? input.targets?.get(input.move.to.columnId) : undefined) ?? input.move.to.columnId;
+
 const acrossColumns = (input: DropInput, place: PlaceAmong | null): DropPlan => {
   const { group, move } = input;
   if (group !== 'status' && group !== 'thread') return { kind: 'group-off' };
-  return { kind: group, to: move.to.columnId, place: manual(input) && place ? place : {} };
+  return { kind: group, to: targetOf(input), place: manual(input) && place ? place : {} };
 };
 
 const planDrop = (input: DropInput): DropPlan => {
