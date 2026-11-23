@@ -5,7 +5,7 @@ import { textProblem } from '../owner-posts';
 import type { OwnerBoxProps } from './OwnerBox.type';
 
 const OwnerBox = (props: OwnerBoxProps) => {
-  const { label, ariaLabel, placeholder, value, onChange, onSubmit, onEscape, problem, rows = 4, disabled = false, autoFocus = false, compact = false, actions, submitLabel } = props;
+  const { label, ariaLabel, placeholder, value, onChange, onSubmit, onEscape, problem, rows = 4, layout = 'tabs', disabled = false, autoFocus = false, compact = false, actions, submitLabel } = props;
   return (
     <BoardMarkdownEditor
       label={label}
@@ -20,7 +20,7 @@ const OwnerBox = (props: OwnerBoxProps) => {
       submitLabel={submitLabel}
       maxLength={OWNER_TEXT_MAX}
       rows={rows}
-      layout="tabs"
+      layout={layout}
       compact={compact}
       disabled={disabled}
       autoFocus={autoFocus}

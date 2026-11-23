@@ -10,6 +10,7 @@ interface OwnerBoxProps {
   placeholder?: string;
   problem?: string | null;
   rows?: number;
+  layout?: 'split' | 'tabs' | 'composer';
   disabled?: boolean;
   autoFocus?: boolean;
   compact?: boolean;
