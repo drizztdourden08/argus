@@ -9,7 +9,8 @@ const STARTING_CHAT = 'The Overlord is starting.';
 const RUNNING_WORD = 'Running';
 const NO_KEY_PATTERN = /no .*key/i;
 const KEY_SETTINGS_LABEL = 'Set the key';
-const CHAT_PLACEHOLDER = 'Message the Overlord. It reads as Owner (Argus Overlord tab).';
+const CHAT_PLACEHOLDER = 'Message the Overlord';
+const WORKING_NOTE = 'Working';
 const EMPTY_TRANSCRIPT = 'Nothing has been said yet.';
 const TALK_WHO: Readonly<Record<TalkKind, string>> = {
   assistant: 'Overlord',
@@ -32,7 +33,6 @@ const TALK_ROLE: Readonly<Record<TalkKind, ChatTranscriptRole>> = {
 const SUMMARY_MAX = 120;
 const SUMMARY_FIELDS = ['command', 'file_path', 'path', 'pattern', 'url', 'query'] as const;
 const THINKING_LABEL = 'Thinking';
-const WAITING_APPROVAL = 'The Overlord is waiting for your approval';
 const QUEUED_NOTE = 'Queued, sent when the current step ends';
 const SENDING_NOTE = 'Sending...';
 const SENT_NOTE = 'Sent';
@@ -53,7 +53,6 @@ const QUEUE_EMPTY = 'Nothing is waiting for the Overlord.';
 const QUEUE_TITLES: Readonly<Record<QueueSectionName, string>> = {
   wakes: 'Wakes',
   held: 'Held messages',
-  approvals: 'Approvals',
   alerts: 'Alerts',
 };
 const BLANK_DRAFT = { title: '', prompt: '', everyMin: 60 };
@@ -70,7 +69,7 @@ export {
   SUMMARY_FIELDS,
   SUMMARY_MAX,
   THINKING_LABEL,
-  WAITING_APPROVAL,
+  WORKING_NOTE,
   BLANK_DRAFT,
   CHAT_LABEL,
   CHAT_PARAM,

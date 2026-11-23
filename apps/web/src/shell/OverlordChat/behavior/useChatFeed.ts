@@ -35,6 +35,7 @@ const useChatFeed = (held: readonly string[], reload: () => void) => {
     messages,
     queued: queuedMessages(held, visible),
     problem: feed.problem,
+    working: status.data?.status === 'turn',
     running: isRunning(status.data?.status),
     note: overlordNote(status.data),
     action: chat,

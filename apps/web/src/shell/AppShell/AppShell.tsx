@@ -6,6 +6,7 @@ import { AppSettingsProvider } from '../AppSettings';
 import { MeshBackdrop } from '../backdrop';
 import { LoadingFallback } from '../LoadingFallback';
 import { OverlordChat } from '../OverlordChat';
+import { PresenceOverDrawer } from '../OverlordPresence';
 import { PageFrame } from '../PageFrame';
 import { ShellBar } from '../ShellBar';
 import { usePreloadPages } from './behavior/usePreloadPages';
@@ -23,6 +24,7 @@ const AppShell = () => {
         <BackdropLayer className="app-shell__backdrop" backdrop={{ kind: 'node', node: <MeshBackdrop /> }} />
         <ShellBar mode={mode} boardKey={boardKey} boardsAvailable={boardsAvailable} onMode={select} />
         <OverlordChat />
+        <PresenceOverDrawer />
         <PageFrame>
           <Suspense fallback={<LoadingFallback />}>
             <Outlet />

@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Flex, SegmentedControl } from '@drizztdourden08/tessera';
+import { Flex, ScrollArea, SegmentedControl } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import { useQueue } from '../behavior/useQueue';
 import { CHAT_TABS, TABS_LABEL } from '../OverlordChat.constants';
@@ -12,11 +12,11 @@ const ChatTabs = () => {
   const [tab, setTab] = useState<ChatTab>('chat');
   const queue = useQueue();
   return (
-    <Flex direction="column" gap="lg">
+    <Flex direction="column" gap="md" className="overlord-chat__tabs">
       <SegmentedControl label={TABS_LABEL} value={tab} options={CHAT_TABS} onChange={setTab} />
       {tab === 'chat' && <ChatBody feed={queue} />}
-      {tab === 'rules' && <RulesTab />}
-      {tab === 'queue' && <QueueTab feed={queue} />}
+      {tab === 'rules' && <ScrollArea className="overlord-chat__pane"><RulesTab /></ScrollArea>}
+      {tab === 'queue' && <ScrollArea className="overlord-chat__pane"><QueueTab feed={queue} /></ScrollArea>}
     </Flex>
   );
 };

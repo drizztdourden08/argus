@@ -2,6 +2,7 @@
 import type { OverlordActivity, OverlordState } from '../../data/overlord';
 
 const PRESENCE_LABEL = 'Open the Overlord chat';
+const HEADER_MARK_SELECTOR = '.shell-bar .overlord-presence';
 const CLOCK_MS = 1_000;
 const MS_PER_MINUTE = 60_000;
 
@@ -22,4 +23,4 @@ const ACTIVITY_BY_STATE: Readonly<Record<OverlordState, OverlordActivity>> = {
   'waiting-approval': 'idle',
 };
 
-export { ACTIVITY_BY_STATE, ACTIVITY_LABELS, CLOCK_MS, MS_PER_MINUTE, PRESENCE_LABEL };
+export { ACTIVITY_BY_STATE, ACTIVITY_LABELS, CLOCK_MS, HEADER_MARK_SELECTOR, MS_PER_MINUTE, PRESENCE_LABEL };

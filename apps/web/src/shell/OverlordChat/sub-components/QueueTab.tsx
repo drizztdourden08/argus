@@ -6,12 +6,11 @@ import { heldText } from '../behavior/held-text';
 import { queueTotal } from '../behavior/queue-total';
 import { QUEUE_EMPTY, QUEUE_TITLES } from '../OverlordChat.constants';
 import type { QueueFeedProps } from '../OverlordChat.type';
-import { ApprovalLine } from './ApprovalLine';
 import { QueueLine } from './QueueLine';
 import { QueueSection } from './QueueSection';
 
 const QueueTab = (props: QueueFeedProps) => {
-  const { queue, problem, action, decide } = props.feed;
+  const { queue, problem, action } = props.feed;
   const failure = problem ?? action.problem;
   if (!queue) return <Panel title="Queue">{failure && <Callout tone="danger">{failure}</Callout>}</Panel>;
   return (
@@ -26,9 +25,6 @@ const QueueTab = (props: QueueFeedProps) => {
             </QueueSection>
             <QueueSection title={QUEUE_TITLES.held} count={queue.held.length}>
               {queue.held.map((held) => <QueueLine key={heldText(held)} text={heldText(held)} at={heldAt(held)} />)}
-            </QueueSection>
-            <QueueSection title={QUEUE_TITLES.approvals} count={queue.approvals.length}>
-              {queue.approvals.map((approval) => <ApprovalLine key={approval.id} approval={approval} busy={action.busy} onDecide={(id, decision) => void decide(id, decision)} />)}
             </QueueSection>
             <QueueSection title={QUEUE_TITLES.alerts} count={queue.alerts.length}>
               {queue.alerts.map((alert) => <QueueLine key={`${alert.at}${alert.text}`} text={alert.text} at={alert.at} />)}

@@ -17,11 +17,16 @@ const ChatBox = (props: ChatBoxProps) => {
       <Flex gap="sm" align="end">
         <Textarea
           aria-label="Message to the Overlord"
-          rows={2}
+          rows={1}
           value={text}
           disabled={!running}
           placeholder={CHAT_PLACEHOLDER}
           onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            send();
+          }}
         />
         <Button variant="primary" disabled={blocked} onClick={send}>Send</Button>
       </Flex>

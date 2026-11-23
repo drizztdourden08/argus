@@ -1,4 +1,48 @@
-.overlord-transcript {
-  block-size: 60vh;
-  min-block-size: var(--size-256);
+.overlord-chat__tabs,
+.overlord-chat__pane,
+.overlord-chat__feed {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.overlord-chat__tabs {
+  overflow: hidden;
+}
+
+.overlord-chat__messages {
+  padding-block: var(--space-sm);
+}
+
+.overlord-chat__text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.overlord-chat__message.is-user {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--c-text) 8%, transparent);
+}
+
+.overlord-chat__tool {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlord-chat__working {
+  flex-direction: row;
+  align-items: center;
+}
+
+.overlord-chat__row {
+  padding-block: var(--space-sm);
+  border-block-end: var(--border-width-thin) solid var(--c-border);
+}
+
+.overlord-chat__mask-gap {
+  display: block;
+  inline-size: var(--size-56);
+  block-size: var(--size-56);
 }

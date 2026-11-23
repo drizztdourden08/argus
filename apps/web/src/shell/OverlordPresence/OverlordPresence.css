@@ -6,6 +6,13 @@
   block-size: var(--size-56);
 }
 
+.overlord-presence-float {
+  position: fixed;
+  inset-block-start: var(--float-top);
+  inset-inline-start: var(--float-left);
+  pointer-events: auto;
+}
+
 .overlord-presence__ring {
   position: absolute;
   inset: 0;

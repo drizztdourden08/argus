@@ -17,7 +17,7 @@ const OverlordChat = () => {
       stackNarrow
       size="wide"
       label={CHAT_LABEL}
-      title={CHAT_LABEL}
+      title={<span className="overlord-chat__mask-gap" aria-hidden />}
       headerActions={<ChatControls />}
     >
       {open && <ChatTabs />}

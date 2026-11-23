@@ -1,6 +1,7 @@
 /* @layer renderer-app @kind types */
+import type { ChatTranscriptMessage } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ActionState, ApprovalDecision, OverlordApproval, OverlordQueue, OverlordRule, RuleDraft } from '../../data/overlord';
+import type { ActionState, OverlordQueue, OverlordRule, RuleDraft } from '../../data/overlord';
 
 type Editing = OverlordRule | 'new' | null;
 
@@ -54,7 +55,6 @@ interface QueueFeed {
   problem?: string | null;
   action: ActionState;
   reload: () => void;
-  decide: (id: string, decision: ApprovalDecision) => Promise<boolean>;
 }
 
 interface QueueFeedProps {
@@ -77,7 +77,7 @@ interface ChatBoxProps {
 
 type ChatTab = 'chat' | 'rules' | 'queue';
 
-type QueueSectionName = 'wakes' | 'held' | 'approvals' | 'alerts';
+type QueueSectionName = 'wakes' | 'held' | 'alerts';
 
 interface RuleRowProps {
   rule: OverlordRule;
@@ -112,10 +112,14 @@ interface QueueLineProps {
   at?: string;
 }
 
-interface ApprovalLineProps {
-  approval: OverlordApproval;
-  busy: boolean;
-  onDecide: (id: string, decision: ApprovalDecision) => void;
+interface ChatFeedProps {
+  messages: ChatTranscriptMessage[];
+  queued: ChatTranscriptMessage[];
+  working: boolean;
+}
+
+interface ChatMessageProps {
+  message: ChatTranscriptMessage;
 }
 
 interface ChatOpen {
@@ -125,7 +129,8 @@ interface ChatOpen {
 }
 
 export type {
-  ApprovalLineProps,
+  ChatFeedProps,
+  ChatMessageProps,
   ChatBoxProps,
   PendingSend,
   StepContentProps,
