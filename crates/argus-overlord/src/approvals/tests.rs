@@ -20,7 +20,6 @@ fn a_call_without_the_right_bearer_never_matches() {
     assert!(!bearer_ok(Some("Bearer "), Some("")));
 }
 
-// test-tag: critical
 #[test]
 fn the_timeout_decides_after_the_whole_wait() {
     assert!(!timed_out(0, 29 * 60_000 + 59_999, timeout_ms(30)));
@@ -28,7 +27,6 @@ fn the_timeout_decides_after_the_whole_wait() {
     assert_eq!(timeout_ms(30), 1_800_000);
 }
 
-// test-tag: critical
 #[test]
 fn an_expired_approval_is_denied_with_the_owner_did_not_answer() {
     let mut queue = Queue::default();
@@ -41,7 +39,6 @@ fn an_expired_approval_is_denied_with_the_owner_did_not_answer() {
     );
 }
 
-// test-tag: critical
 #[test]
 fn the_allow_and_deny_replies_have_the_documented_shape() {
     let mut queue = Queue::default();
@@ -65,7 +62,6 @@ fn the_allow_and_deny_replies_have_the_documented_shape() {
     assert_eq!(reply_for(&bare, &input)["message"], json!(DENIED_DEFAULT));
 }
 
-// test-tag: critical
 #[test]
 fn the_tool_result_carries_the_reply_as_text_content() {
     let wrapped = tool_result(&json!(7), &deny("no"));
@@ -76,7 +72,6 @@ fn the_tool_result_carries_the_reply_as_text_content() {
     assert_eq!(wrapped["result"]["content"][0]["type"], json!("text"));
 }
 
-// test-tag: standard
 #[test]
 fn the_queue_settles_each_approval_once() {
     let mut queue = Queue::default();
@@ -101,7 +96,6 @@ fn the_queue_settles_each_approval_once() {
     assert_eq!(queue.recent(2).len(), 2);
 }
 
-// test-tag: standard
 #[test]
 fn the_queue_never_drops_a_pending_approval() {
     let mut queue = Queue::default();
@@ -111,7 +105,6 @@ fn the_queue_never_drops_a_pending_approval() {
     assert_eq!(queue.pending().len(), KEEP + 5);
 }
 
-// test-tag: standard
 #[test]
 fn the_rpc_answers_the_handshake_and_the_listing_and_finds_the_question() {
     let init = json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {} });
@@ -145,7 +138,6 @@ fn the_rpc_answers_the_handshake_and_the_listing_and_finds_the_question() {
     assert!(matches!(parse(b"not json"), Parsed::Now(_)));
 }
 
-// test-tag: critical
 #[test]
 fn the_listing_shows_the_own_tools_and_a_call_of_one_is_parsed() {
     let list = json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" });
@@ -179,7 +171,6 @@ fn the_listing_shows_the_own_tools_and_a_call_of_one_is_parsed() {
     assert_eq!(reply["result"]["isError"], json!(true));
 }
 
-// test-tag: critical
 #[test]
 fn the_mcp_config_names_the_endpoint_and_the_bearer() {
     let text = mcp_config_json("http://127.0.0.1:9/mcp/overlord", "tok");
@@ -189,7 +180,6 @@ fn the_mcp_config_names_the_endpoint_and_the_bearer() {
     assert_eq!(server["headers"]["Authorization"], json!("Bearer tok"));
 }
 
-// test-tag: standard
 #[test]
 fn the_summary_names_the_command_or_cuts_the_input() {
     assert_eq!(summarize(&json!({ "command": "git push" })), "git push");

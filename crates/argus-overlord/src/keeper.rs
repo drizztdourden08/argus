@@ -82,6 +82,7 @@ mod tests {
         Duration::from_secs(n)
     }
 
+    // test-tag: critical
     #[test]
     fn the_delay_climbs_and_stops_at_five_minutes() {
         let waits: Vec<u64> = (1..=6).map(|n| delay(n).as_secs()).collect();
@@ -89,7 +90,6 @@ mod tests {
         assert_eq!(delay(0).as_secs(), 30);
     }
 
-    // test-tag: critical
     #[test]
     fn a_failure_holds_the_next_try_until_the_delay_has_passed() {
         let mut backoff = Backoff::default();
@@ -111,7 +111,6 @@ mod tests {
         assert_eq!(backoff.retry_in_secs(secs(90)), Some(120));
     }
 
-    // test-tag: critical
     #[test]
     fn a_child_that_ran_ten_minutes_starts_the_schedule_over() {
         let mut backoff = Backoff::default();

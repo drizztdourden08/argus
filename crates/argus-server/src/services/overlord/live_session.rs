@@ -39,6 +39,7 @@ pub(super) fn origin_for(origin: Origin, saved: Option<&str>) -> Origin {
 mod specs {
     use super::*;
 
+    // test-tag: critical
     #[test]
     fn a_fresh_start_resumes_the_saved_session() {
         let chosen = origin_for(Origin::Fresh, Some("s-1"));

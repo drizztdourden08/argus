@@ -76,6 +76,7 @@ mod specs {
     use super::*;
     use crate::session::inbox::Inbox;
 
+    // test-tag: critical
     #[test]
     fn the_text_gets_the_owner_prefix() {
         assert_eq!(

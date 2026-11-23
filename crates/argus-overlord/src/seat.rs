@@ -57,7 +57,6 @@ mod tests {
         assert_eq!(may_take_seat(Mode::Live, false), refused);
     }
 
-    // test-tag: critical
     #[test]
     fn outside_live_only_a_desktop_session_takes_the_seat() {
         let refused = Err(SeatFault::HostedWhileNotLive);

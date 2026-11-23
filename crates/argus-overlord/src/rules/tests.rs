@@ -57,7 +57,6 @@ fn a_refusal_is_a_plain_sentence() {
     assert_eq!(text, "everyMin must be 5 to 1440 minutes");
 }
 
-// test-tag: critical
 #[test]
 fn only_an_enabled_rule_past_its_time_is_due() {
     let mut late = rule(15);
@@ -78,7 +77,6 @@ fn a_rule_is_due_at_its_exact_time() {
     assert_eq!(due(&[exact], NOW).len(), 1);
 }
 
-// test-tag: critical
 #[test]
 fn a_run_moves_the_next_time_a_period_on() {
     let ran = after_run(&rule(30), NOW + 90 * MIN);

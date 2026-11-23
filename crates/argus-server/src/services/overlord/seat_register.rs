@@ -88,7 +88,6 @@ mod tests {
         assert_eq!(seat["createdBy"], "argus");
     }
 
-    // test-tag: critical
     #[test]
     fn an_ended_seat_is_taken_back_with_the_new_session() {
         let mut board = json!({ "threads": { "coordinator": {

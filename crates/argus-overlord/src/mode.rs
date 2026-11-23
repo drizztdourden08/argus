@@ -132,7 +132,6 @@ mod tests {
         assert_eq!(step(Mode::Live, Mode::Off), Ok(Step::Rollback));
     }
 
-    // test-tag: critical
     #[test]
     fn only_live_to_shadow_is_refused() {
         let back = Err(fault(Mode::Live, Mode::Shadow));

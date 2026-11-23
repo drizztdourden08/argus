@@ -59,7 +59,6 @@ fn the_shadow_may_read() {
     }
 }
 
-// test-tag: critical
 #[test]
 fn the_shadow_registers_only_as_a_plain_thread() {
     assert_eq!(
@@ -79,14 +78,12 @@ fn the_shadow_registers_only_as_a_plain_thread() {
     }
 }
 
-// test-tag: critical
 #[test]
 fn the_shadow_is_not_the_overlord_thread() {
     assert_ne!(THREAD, OVERLORD_THREAD);
     assert!(!mirrors(THREAD));
 }
 
-// test-tag: critical
 #[test]
 fn the_mirror_copies_every_overlord_wake_and_nothing_else() {
     assert!(mirrors("coordinator"));

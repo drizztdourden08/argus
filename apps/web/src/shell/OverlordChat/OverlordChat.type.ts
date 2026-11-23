@@ -129,6 +129,7 @@ export type {
   ChatBoxProps,
   PendingSend,
   StepContentProps,
+  TalkKind,
   TalkRow,
   ToolsRow,
   QueueFeedProps,
