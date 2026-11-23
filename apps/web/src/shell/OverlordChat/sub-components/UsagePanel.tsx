@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Flex, Stack, Text } from '@drizztdourden08/tessera';
 import { usageSections } from '../behavior/usage-sections';
-import type { UsagePanelProps } from '../OverlordChat.type';
+import type { UsagePanelProps } from '../chat-settings.type';
 
 const UsagePanel = (props: UsagePanelProps) => {
   const { usage } = props;

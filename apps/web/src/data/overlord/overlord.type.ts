@@ -92,53 +92,6 @@ interface OverlordSpend {
   note: string;
 }
 
-interface OverlordChoice {
-  id: string;
-  label: string;
-}
-
-type LimitSource = 'set' | 'board' | 'default';
-
-interface LimitEntry<T> {
-  value: T;
-  source: LimitSource;
-}
-
-interface OverlordSettings {
-  model: string;
-  effort: string;
-  permissionMode: string;
-  choices: { models: OverlordChoice[]; efforts: string[]; permissionModes: OverlordChoice[] };
-  cwd: LimitEntry<string>;
-  claudeExe: LimitEntry<string>;
-  budgetUsd: LimitEntry<number | null>;
-  restartMax: LimitEntry<number>;
-  approvalTimeoutMin: LimitEntry<number>;
-}
-
-type LimitKey = 'cwd' | 'claudeExe' | 'budgetUsd' | 'restartMax' | 'approvalTimeoutMin';
-
-/** An empty text or an empty string in place of a number resets the field to its default. */
-interface OverlordSettingsPatch {
-  model?: string;
-  effort?: string;
-  permissionMode?: string;
-  cwd?: string;
-  claudeExe?: string;
-  budgetUsd?: number | '';
-  restartMax?: number | '';
-  approvalTimeoutMin?: number | '';
-}
-
-/** The settings form; a number that is not finite is a blank field. */
-interface SettingsDraft {
-  cwd: string;
-  claudeExe: string;
-  budgetUsd: number;
-  restartMax: number;
-  approvalTimeoutMin: number;
-}
-
 interface UsageTotals {
   inputTokens: number;
   outputTokens: number;
@@ -170,59 +123,15 @@ interface OverlordApproval {
   status: ApprovalState;
 }
 
-interface StreamDelta {
-  type?: string;
-  text?: string;
-  thinking?: string;
-}
-
-interface StreamInner {
-  type?: string;
-  index?: number;
-  content_block?: { type?: string; name?: string };
-  delta?: StreamDelta;
-}
-
-interface TranscriptEvent {
-  type?: string;
-  message?: { content?: unknown };
-  duration_ms?: number;
-  argus?: { source?: string };
-  event?: string | StreamInner;
-  argusAt?: string;
-  id?: string;
-  tool?: string;
-  summary?: string;
-  status?: string;
-  decidedBy?: string;
-}
-
-interface TranscriptLine {
-  index: number;
-  event: TranscriptEvent | string;
-}
-
-interface TranscriptPage {
-  session: string | null;
-  lines: (TranscriptEvent | string)[];
-  next: number;
-}
-
 interface ActionState {
   busy: boolean;
   problem: string | null;
   run: (action: () => Promise<unknown>) => Promise<boolean>;
 }
 
-interface TranscriptFeed {
-  lines: TranscriptLine[];
-  problem: string | null;
-}
-
 export type {
   ActionState,
   OverlordActivity,
-  StreamInner,
   OverlordQueue,
   OverlordRule,
   QueueHeld,
@@ -236,19 +145,9 @@ export type {
   OverlordApproval,
   OverlordKeyApi,
   OverlordMode,
-  LimitEntry,
-  LimitKey,
-  LimitSource,
-  OverlordSettings,
-  OverlordSettingsPatch,
-  SettingsDraft,
   OverlordSpend,
   OverlordUsage,
   UsageTotals,
   OverlordState,
   OverlordStatus,
-  TranscriptEvent,
-  TranscriptFeed,
-  TranscriptLine,
-  TranscriptPage,
 };

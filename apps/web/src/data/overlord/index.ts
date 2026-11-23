@@ -21,3 +21,5 @@ export { switchMode } from './switch-mode';
 export { updateRule } from './update-rule';
 export { APPROVALS_POLL_MS, SPEND_POLL_MS, STATUS_POLL_MS } from './overlord.constants';
 export type * from './overlord.type';
+export type * from './overlord-settings.type';
+export type * from './overlord-transcript.type';

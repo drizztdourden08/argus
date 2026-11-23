@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import type { OverlordUsage, UsageTotals } from '../../../data/overlord';
 import { USAGE_TITLES, USAGE_WORDS } from '../OverlordChat.constants';
-import type { UsageRow, UsageSection } from '../OverlordChat.type';
+import type { UsageRow, UsageSection } from '../chat-settings.type';
 import { formatClock } from './format-clock';
 import { formatTokens } from './format-tokens';
 import { formatUsd } from './format-usd';

@@ -1,6 +1,5 @@
 /* @layer renderer-app @kind logic */
-const MS_PER_SECOND = 1_000;
-const SECONDS_PER_MINUTE = 60;
+import { MS_PER_SECOND, SECONDS_PER_MINUTE } from './format-clock.constants';
 
 const formatClock = (millis: number): string => {
   const total = Math.round(millis / MS_PER_SECOND);

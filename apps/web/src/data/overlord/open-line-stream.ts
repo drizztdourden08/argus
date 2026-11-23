@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { queryString } from '../api';
 import { STREAM_PATH } from './overlord.constants';
-import type { TranscriptLine } from './overlord.type';
+import type { TranscriptLine } from './overlord-transcript.type';
 
 const parseLine = (data: string): TranscriptLine | null => {
   try {

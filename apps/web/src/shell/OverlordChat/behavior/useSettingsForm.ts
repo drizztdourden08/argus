@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { readSettings, saveSettings, useAction } from '../../../data/overlord';
 import type { OverlordSettings, OverlordSettingsPatch, SettingsDraft } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
-import type { SettingsFormState } from '../OverlordChat.type';
+import type { SettingsFormState } from '../chat-settings.type';
 import { draftOf, patchOf } from './settings-patch';
 
 const useSettingsForm = (): SettingsFormState => {

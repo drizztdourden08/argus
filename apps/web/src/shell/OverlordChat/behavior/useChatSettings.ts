@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { readSettings, saveSettings, useAction } from '../../../data/overlord';
 import type { OverlordSettings } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
-import type { ChatSettings, SettingKey } from '../OverlordChat.type';
+import type { ChatSettings, SettingKey } from '../chat-settings.type';
 
 const useChatSettings = (): ChatSettings => {
   const read = useRemoteRead(readSettings);

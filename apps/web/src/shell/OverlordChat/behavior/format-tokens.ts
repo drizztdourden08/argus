@@ -1,7 +1,5 @@
 /* @layer renderer-app @kind logic */
-const THOUSAND = 1_000;
-const MILLION = 1_000_000;
-const TENS_OF_THOUSANDS = 10_000;
+import { MILLION, TENS_OF_THOUSANDS, THOUSAND } from './format-tokens.constants';
 
 const trimmed = (value: number, digits: number): string => value.toFixed(digits).replace(/\.0$/, '');
 

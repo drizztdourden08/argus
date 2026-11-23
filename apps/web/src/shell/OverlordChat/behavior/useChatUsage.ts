@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { readUsage } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
-import type { ChatUsage } from '../OverlordChat.type';
+import type { ChatUsage } from '../chat-settings.type';
 
 const useChatUsage = (working: boolean): ChatUsage => {
   const { data, reload } = useRemoteRead(readUsage);

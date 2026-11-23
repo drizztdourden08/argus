@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Field, Flex, Stack, Text } from '@drizztdourden08/tessera';
 import { RESET_LABEL, SETTINGS_LABELS, SOURCE_CAPTIONS } from '../OverlordChat.constants';
-import type { SettingsFieldProps } from '../OverlordChat.type';
+import type { SettingsFieldProps } from '../chat-settings.type';
 
 const SettingsField = (props: SettingsFieldProps) => {
   const { name, source, busy, onReset, children } = props;

@@ -1,19 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { ChatTranscriptMessage, ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type {
-  ActionState,
-  LimitKey,
-  LimitSource,
-  OverlordQueue,
-  OverlordRule,
-  OverlordSettings,
-  OverlordUsage,
-  RuleDraft,
-  SettingsDraft,
-} from '../../data/overlord';
-
-type Editing = OverlordRule | 'new' | null;
+import type { ActionState } from '../../data/overlord';
 
 type TalkKind = 'assistant' | 'owner' | 'wake' | 'rule' | 'thinking' | 'turn' | 'approval';
 
@@ -76,17 +64,6 @@ type Piece =
   | { kind: 'tool'; id: string; name: string; summary: string }
   | { kind: 'result'; id: string; failed: boolean; text: string };
 
-interface QueueFeed {
-  queue?: OverlordQueue | null;
-  problem?: string | null;
-  action: ActionState;
-  reload: () => void;
-}
-
-interface QueueFeedProps {
-  feed: QueueFeed;
-}
-
 interface PendingSend {
   id: number;
   text: string;
@@ -99,60 +76,6 @@ interface ChatBoxProps {
   note: string;
   action: ActionState;
   onSend: (text: string) => Promise<boolean>;
-}
-
-type ChatTab = 'chat' | 'rules' | 'queue' | 'settings';
-
-interface SettingsFormState {
-  settings: OverlordSettings | null;
-  draft: SettingsDraft | null;
-  action: ActionState;
-  change: (patch: Partial<SettingsDraft>) => void;
-  save: () => void;
-  reset: (key: LimitKey) => void;
-}
-
-interface SettingsFieldProps {
-  name: LimitKey;
-  source: LimitSource;
-  busy: boolean;
-  onReset: (key: LimitKey) => void;
-  children: ReactNode;
-}
-
-type QueueSectionName = 'wakes' | 'held' | 'alerts';
-
-interface RuleRowProps {
-  rule: OverlordRule;
-  busy: boolean;
-  onToggle: (enabled: boolean) => void;
-  onEdit: () => void;
-  onRun: () => void;
-  onDelete: () => void;
-}
-
-interface RuleFormProps {
-  rule: OverlordRule | null;
-  onClose: () => void;
-}
-
-interface RuleFormState {
-  draft: RuleDraft;
-  action: ActionState;
-  change: (patch: Partial<RuleDraft>) => void;
-  save: () => void;
-}
-
-interface QueueSectionProps {
-  title: string;
-  count: number;
-  children: ReactNode;
-}
-
-interface QueueLineProps {
-  text: string | null;
-  label?: string | null;
-  at?: string;
 }
 
 interface ChatFeedProps {
@@ -182,116 +105,4 @@ interface ToolLineProps {
   tool: ToolItem;
 }
 
-interface SettingChoice {
-  id: string;
-  label: string;
-}
-
-type SettingKey = 'model' | 'effort' | 'permissionMode';
-
-interface SettingChipProps {
-  label: string;
-  current: string;
-  selected: string;
-  choices: SettingChoice[];
-  busy: boolean;
-  onPick: (id: string) => void;
-}
-
-interface ChatSettings {
-  settings: OverlordSettings | null;
-  busy: boolean;
-  problem: string | null;
-  pick: (key: SettingKey, id: string) => void;
-}
-
-interface ChatUsage {
-  usage: OverlordUsage | null;
-  reload: () => void;
-}
-
-interface ChatBarProps {
-  working: boolean;
-}
-
-interface UsageRingProps {
-  usage: ChatUsage;
-}
-
-interface UsagePanelProps {
-  usage: OverlordUsage;
-}
-
-interface UsageRow {
-  label: string;
-  value: string;
-}
-
-interface UsageSection {
-  title: string;
-  rows: UsageRow[];
-}
-
-interface ChipSpec {
-  key: SettingKey;
-  label: string;
-  current: string;
-  selected: string;
-  choices: SettingChoice[];
-}
-
-interface SettingChipsProps {
-  chat: ChatSettings;
-}
-
-interface ChatOpen {
-  open: boolean;
-  toggle: () => void;
-  close: () => void;
-}
-
-export type {
-  ChatBarProps,
-  MessageBodyProps,
-  ChipSpec,
-  SettingChipsProps,
-  UsageSection,
-  ChatSettings,
-  ChatUsage,
-  SettingChipProps,
-  SettingChoice,
-  SettingKey,
-  ToolLineProps,
-  ToolStatus,
-  ToolsGroupProps,
-  UsagePanelProps,
-  UsageRingProps,
-  UsageRow,
-  ChatFeedProps,
-  LiveDraft,
-  WorkingActivity,
-  WorkingLineProps,
-  ChatMessageProps,
-  ChatBoxProps,
-  PendingSend,
-  StepContentProps,
-  TalkKind,
-  TalkRow,
-  ToolsRow,
-  QueueFeedProps,
-  ToolItem,
-  ChatTab,
-  Editing,
-  QueueLineProps,
-  QueueSectionName,
-  QueueSectionProps,
-  RuleFormProps,
-  RuleFormState,
-  RuleRowProps,
-  SettingsFieldProps,
-  SettingsFormState,
-  ChatOpen,
-  ContentBlock,
-  Piece,
-  TranscriptRow,
-};
+export type { ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };

@@ -3,7 +3,7 @@ import { Callout, Flex, Spinner } from '@drizztdourden08/tessera';
 import { useChatSettings } from '../behavior/useChatSettings';
 import { useChatUsage } from '../behavior/useChatUsage';
 import { SWITCHING_NOTE } from '../OverlordChat.constants';
-import type { ChatBarProps } from '../OverlordChat.type';
+import type { ChatBarProps } from '../chat-settings.type';
 import { SettingChips } from './SettingChips';
 import { UsageRing } from './UsageRing';
 

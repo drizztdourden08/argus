@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { errorMessage } from '../../api';
 import { openLineStream } from '../open-line-stream';
-import type { TranscriptFeed, TranscriptLine } from '../overlord.type';
+import type { TranscriptFeed, TranscriptLine } from '../overlord-transcript.type';
 import { readTranscript } from '../read-transcript';
 
 const appendTo = (set: Dispatch<SetStateAction<TranscriptLine[]>>) => (line: TranscriptLine) => {

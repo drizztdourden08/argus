@@ -2,7 +2,7 @@
 import { Callout, Flex } from '@drizztdourden08/tessera';
 import { heldText } from '../behavior/held-text';
 import { useChatFeed } from '../behavior/useChatFeed';
-import type { QueueFeedProps } from '../OverlordChat.type';
+import type { QueueFeedProps } from '../chat-panels.type';
 import { ChatBar } from './ChatBar';
 import { ChatBox } from './ChatBox';
 import { ChatFeed } from './ChatFeed';

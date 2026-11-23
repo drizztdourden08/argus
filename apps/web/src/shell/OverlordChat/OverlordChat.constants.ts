@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind constants */
 import type { ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { LimitKey, LimitSource, OverlordState } from '../../data/overlord';
-import type { ChatTab, QueueSectionName, TalkKind, ToolStatus } from './OverlordChat.type';
+import type { ChatTab, QueueSectionName } from './chat-panels.type';
+import type { TalkKind, ToolStatus } from './OverlordChat.type';
 
 const CHAT_PARAM = 'chat';
 const CHAT_LABEL = 'Overlord chat';
