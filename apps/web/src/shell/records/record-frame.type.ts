@@ -3,7 +3,7 @@ import type { CardEdge, CardTone, CardVariant } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import type { HeadSelection } from './records.type';
 
-type FrameDensity = 'card' | 'row';
+type FrameDensity = 'card' | 'row' | 'compact';
 
 interface RecordFrameProps {
   open?: boolean;

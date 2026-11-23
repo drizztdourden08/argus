@@ -52,9 +52,8 @@ describe('P4 the Changes tab header and view', { tags: ['standard'] }, () => {
     const key = 'argus.tab.changes.layout.rotp';
     localStorage.setItem(key, 'compact');
     try {
-      const { container } = await mountChanges([prDoc('PR-1')]);
+      await mountChanges([prDoc('PR-1')]);
       await cardOf('PR-1');
-      expect(container.querySelector('[data-pr="PR-1"]')?.getAttribute('data-compact')).toBe('true');
       expect(screen.queryByText('feat/login into main')).toBeNull();
       expect(screen.queryByText('waits for the go')).toBeNull();
     } finally {

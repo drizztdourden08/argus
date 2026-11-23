@@ -10,11 +10,12 @@ const RecordCard = (props: RecordCardProps) => {
     <RecordHead
       {...head}
       {...look}
+      density={compact ? 'compact' : undefined}
       time={time ?? head.time}
       title={<CardTitle {...parts} clamp={clamp} />}
       defaultOpen={defaultOpen}
       content={content}
-      attrs={compact ? { ...attrs, 'data-compact': 'true' } : attrs}
+      attrs={attrs}
       onClickCapture={onClickCapture}
     >
       {signals}

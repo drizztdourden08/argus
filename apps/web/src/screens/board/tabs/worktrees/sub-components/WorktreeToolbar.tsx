@@ -21,7 +21,7 @@ const WorktreeToolbar = (props: WorktreeToolbarProps) => {
     { id: 'need', priority: 4, node: <ToolToggle label={NEED_LABEL} count={counts.need} pressed={prefs.needOnly} onToggle={() => prefs.setNeedOnly(!prefs.needOnly)} /> },
     { id: 'group-sort', priority: 5, node: <TabGroupSort group={{ options: GROUP_CHOICES, value: view.group, empty: 'none', onChange: view.setGroup }} sort={sort} /> },
     { id: 'layout', priority: 3, node: <LayoutToggle value={prefs.layout} options={LAYOUT_CHOICES} onChange={prefs.setLayout} label="Worktree view" /> },
-    ...(prefs.layout === 'cards' ? [compact] : []),
+    compact,
     ...(clean ? [{ id: 'delete-leftovers', priority: 1, node: clean }] : []),
   ];
   useTabTools(WORKTREES_TAB, items);
