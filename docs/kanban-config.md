@@ -1,8 +1,8 @@
 # Kanban config
 
 Each board may carry its own Kanban columns and rules. The config lives in `board.json` as the
-top-level `kanban` object. This piece only stores and checks it. The write-time rules and the
-sweep that read it come later (I-206 pieces P6 and P7).
+top-level `kanban` object. The write-time rules read it when an item is written (see Write-time
+rules). The sweep that reads the rest comes later (I-206 piece P7).
 
 ## Shape
 
@@ -86,6 +86,29 @@ Every item has a `laneAt` stamp (an ISO time): when it entered its current lane.
 create and on every change of `status` (move, edit, a dependency drop or reopen). The `dwell`
 rule reads it, falling back to `startedAt`, then `updatedAt`, for older items.
 
+## Write-time rules
+
+When a `create`, `edit` or `move` op writes an item (a bulk runs its ops one by one), the column
+the item lands in judges it: the first column whose `match` takes its status and stage. The rules
+of that column run on the board as the write leaves it.
+
+- `require-parent`: the item has a parent whose type is in `params.types` (an item with no type
+  reads as `task`).
+- `require-assignee`: the item has an `assignee`; with `params.kinds`, of one of those kinds:
+  `thread`, `owner`, `agent` (`agent:A-n`) or `lead` (`lead:key`).
+- `require-field`: `params.field` is set on the item or among its type `fields`.
+- `limit`: the column's `limit.max` is not passed by the live items in it (not in the trash, not
+  archived), counting the item just written. The column's own `limit` acts the same with its mode
+  when the column names no `limit` rule; mode `alert` does nothing at write time (the sweep
+  handles it).
+
+A rule with `mode` `refuse` refuses the op: nothing is written and the outcome is
+`rule-refused: I-5 cannot enter Doing: <rule id> needs a parent of type epic.` A rule with mode
+`warn` (also when no mode is set) lets the op apply, and the outcome ends with `Warning: ...` and
+lists the lines in `warnings`, as the stage warnings of typed items do. Only items the op created
+or changed in status, stage, parent, assignee, thread, type or fields are judged. A board with no
+config runs the default, which has no write-time rule, so nothing changes for it.
+
 ## Error keys
 
 A refusal starts with its key, then a colon and a sentence.
@@ -105,3 +128,4 @@ A refusal starts with its key, then a colon and a sentence.
 | `bad-rule-mode` | a rule mode other than `warn` or `refuse` |
 | `bad-params` | the params of the kind are missing or of the wrong type |
 | `bad-alert` | an alert with no recipient or a `repeatMs` below 1 |
+| `rule-refused` | a write-time rule with mode `refuse` refused an item op |

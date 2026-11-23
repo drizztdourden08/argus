@@ -20,6 +20,7 @@ mod fields;
 mod icon;
 mod icon_image;
 mod kanban_config;
+mod kanban_rules;
 mod launcher;
 mod move_;
 mod plan;
@@ -113,11 +114,13 @@ fn dispatch(
 /// rules, or a bad field or value).
 pub fn apply_op(board: &mut Board, op: &Value, who: &Who, home: Option<&Path>) -> OpResult {
     let was = closed_with::before(board);
+    let guard = kanban_rules::begin(board, op);
     let result = match dispatch(board, op, who, home) {
         Some(Ok(result)) => result,
         Some(Err(e)) => OpResult::refused(e.to_string()),
         None => OpResult::refused(format!("unknown op \"{}\"", shown(op.get("kind")))),
     };
+    let result = kanban_rules::finish(board, guard, result);
     closed_with::tell(board, &was, result)
 }
 

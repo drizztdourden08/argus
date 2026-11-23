@@ -163,3 +163,100 @@ fn a_lane_change_stamps_lane_at() {
     assert_eq!(b["items"]["I-1"]["status"], to);
     assert_ne!(b["items"]["I-1"]["laneAt"], "old");
 }
+
+fn doing_with(rule_mode: &str, limit: Option<Value>) -> Value {
+    let mut doing = json!({"id": "doing", "name": "Doing", "match": {"lanes": ["doing"]},
+        "rules": ["epic"]});
+    if let Some(limit) = limit {
+        doing["limit"] = limit;
+    }
+    json!({
+        "columns": [
+            {"id": "todo", "name": "To do", "match": {"lanes": ["todo"]}},
+            doing,
+            {"id": "done", "name": "Done", "match": {"lanes": ["done", "dropped"]}}
+        ],
+        "rules": [
+            {"id": "epic", "kind": "require-parent", "params": {"types": ["epic"]}, "mode": rule_mode}
+        ]
+    })
+}
+
+fn board_with(config: &Value) -> Value {
+    let mut b = alpha();
+    b["items"]["I-9"] = json!({
+        "title": "Epic", "type": "epic", "status": "todo", "thread": "ui", "rev": 1
+    });
+    applied(&apply_op(
+        &mut b,
+        &json!({"kind": "kanban-config", "kanban": config}),
+        &lead(),
+        None,
+    ));
+    b
+}
+
+fn move_to_doing(b: &mut Value, id: &str) -> argus_board::ops::OpResult {
+    let target = json!({"c": "items", "id": id});
+    let op = json!({"kind": "move", "target": target, "to": {"status": "doing"}});
+    apply_op(b, &op, &lead(), None)
+}
+
+#[test]
+fn a_refusing_rule_stops_the_move_and_leaves_the_item_where_it_was() {
+    let mut b = board_with(&doing_with("refuse", None));
+    let said = refused(&move_to_doing(&mut b, "I-2"));
+    assert_eq!(
+        said,
+        "rule-refused: I-2 cannot enter Doing: epic needs a parent of type epic."
+    );
+    assert_eq!(b["items"]["I-2"]["status"], "todo");
+    b["items"]["I-2"]["parent"] = json!("I-9");
+    applied(&move_to_doing(&mut b, "I-2"));
+    assert_eq!(b["items"]["I-2"]["status"], "doing");
+}
+
+#[test]
+fn a_warning_rule_lets_the_move_through_and_says_so() {
+    let mut b = board_with(&doing_with("warn", None));
+    let res = move_to_doing(&mut b, "I-2");
+    applied(&res);
+    assert_eq!(b["items"]["I-2"]["status"], "doing");
+    assert!(
+        res.outcome.contains("Warning: I-2 in Doing"),
+        "{}",
+        res.outcome
+    );
+    assert_eq!(res.extra["warnings"].as_array().map(Vec::len), Some(1));
+}
+
+#[test]
+fn a_refusing_column_limit_stops_the_item_that_goes_over() {
+    let limit = json!({"max": 1, "mode": "refuse"});
+    let mut b = board_with(&doing_with("warn", Some(limit)));
+    let said = refused(&move_to_doing(&mut b, "I-2"));
+    assert!(
+        said.starts_with("rule-refused: I-2 cannot enter Doing: Doing holds"),
+        "{said}"
+    );
+    assert_eq!(b["items"]["I-2"]["status"], "todo");
+}
+
+#[test]
+fn an_alert_limit_does_nothing_when_an_item_is_written() {
+    let limit = json!({"max": 1, "mode": "alert"});
+    let mut b = board_with(&doing_with("warn", Some(limit)));
+    let res = move_to_doing(&mut b, "I-2");
+    applied(&res);
+    assert_eq!(res.extra["warnings"].as_array().map(Vec::len), Some(1));
+    assert!(!res.outcome.contains("holds"), "{}", res.outcome);
+}
+
+#[test]
+fn a_board_with_no_config_moves_as_before() {
+    let mut b = alpha();
+    let res = move_to_doing(&mut b, "I-2");
+    applied(&res);
+    assert_eq!(b["items"]["I-2"]["status"], "doing");
+    assert_eq!(res.extra.get("warnings"), None);
+}
