@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { BoardAction, Entry, LogLine, WorkItem } from '../../../data/types';
+import type { BoardAction, Entry, WorkItem } from '../../../data/types';
 
 interface Proof {
   n: number;
@@ -33,12 +33,12 @@ interface RunCard {
   reported: boolean;
 }
 
-type FeedKind = 'decision' | 'question' | 'message' | 'notice' | 'action' | 'test' | 'run' | 'sent';
+type FeedKind = 'decision' | 'question' | 'message' | 'action' | 'test' | 'run';
 
-type AskKind = 'decision' | 'question' | 'message' | 'notice';
+type AskKind = 'decision' | 'question' | 'message';
 
 type FeedCard =
-  | { type: AskKind | 'sent'; at: string; data: Entry }
+  | { type: AskKind; at: string; data: Entry }
   | { type: 'action'; at: string; data: BoardAction }
   | { type: 'test'; at: string; data: ManualTest }
   | { type: 'run'; at: string; data: RunCard };
@@ -63,7 +63,6 @@ interface WorkSources {
   entries: Entry[];
   actions: BoardAction[];
   tests: ManualTest[];
-  log: { subject?: string; entries?: LogLine[] }[];
   items: WorkItem[];
 }
 
@@ -76,14 +75,9 @@ interface NeedCount {
 
 type ItemNeeds = ReadonlyMap<string, NeedCount>;
 
-type FeedSection = 'waiting' | 'leads' | 'log';
-
 interface BoardWork {
   ready: boolean;
-  waiting: FeedCard[];
-  leads: FeedCard[];
-  notices: FeedCard[];
-  lines: LogLine[];
+  asks: FeedCard[];
   items: WorkItem[];
   index: ReadonlyMap<string, WorkItem>;
   needs: ItemNeeds;
@@ -102,7 +96,6 @@ export type {
   FeedCard,
   FeedInput,
   FeedKind,
-  FeedSection,
   ItemNeeds,
   ManualTest,
   NeedCount,

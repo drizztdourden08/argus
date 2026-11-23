@@ -20,9 +20,8 @@ const agentsBadge = (agents: readonly Agent[], now: number): Badge => {
 };
 
 const activityBadge = (work: BoardWork): Badge => {
-  const cards = [...work.waiting, ...work.notices];
-  const tone = work.waiting.some((card) => card.type === 'decision') ? 'danger' : toneOf(work.waiting.length > 0, 'warn');
-  return { count: cards.length, tone };
+  const tone = work.asks.some((card) => card.type === 'decision') ? 'danger' : toneOf(work.asks.length > 0, 'warn');
+  return { count: work.asks.length, tone };
 };
 
 const needsYou = (work: BoardWork, id: string): boolean => {

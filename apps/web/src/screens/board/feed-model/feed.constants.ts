@@ -12,18 +12,12 @@ const FEED_KIND: Record<FeedKind, string> = {
   test: 'test-case',
   run: 'test-run',
   message: 'message',
-  notice: 'notice',
-  sent: 'followup',
 };
 
 const OWNER_ASSIGNEE = 'owner';
-
-const OWNER_AUTHOR = 'human';
-
-const SENT_KINDS: readonly string[] = ['followup', 'message'];
 
 const FINISHED_ITEM_STATUSES = ['done', 'dropped'];
 
 const CONTEXT_SHOWN_PARAGRAPHS = 2;
 
-export { CONTEXT_SHOWN_PARAGRAPHS,FEED_KIND, FINISHED_ITEM_STATUSES, NO_NEEDS, OP_KINDS, OWNER_ASSIGNEE, OWNER_AUTHOR, SENT_KINDS };
+export { CONTEXT_SHOWN_PARAGRAPHS, FEED_KIND, FINISHED_ITEM_STATUSES, NO_NEEDS, OP_KINDS, OWNER_ASSIGNEE };

@@ -20,7 +20,7 @@ const OwnerFeed = (props: OwnerFeedProps) => {
   const threads = useCollection<ThreadChoice>(boardKey, 'threads');
   const now = useNow(true);
   const view = useTabView('activity', FEED_VIEW);
-  const asks = askCards(work.waiting);
+  const asks = askCards(work.asks);
   const shown = applyFeedFilters(asks, view.filters, view.direction);
   const ctx = { boardKey, threads: threads.docs, now, index: work.index, actions };
   useTabTools('activity', [

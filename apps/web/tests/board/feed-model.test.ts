@@ -12,17 +12,17 @@ describe('K1 what asks the owner', { tags: ['critical'] }, () => {
   });
 
   it('open questions split into decision and question cards, newest first', () => {
-    const { waiting } = work({
+    const { asks } = work({
       entries: [
         entry({ id: 'Q-1', createdAt: at(1) }),
         entry({ id: 'Q-2', options: undefined, createdAt: at(9) }),
       ],
     });
-    expect(waiting.map((card) => [card.type, card.data.id])).toEqual([['question', 'Q-2'], ['decision', 'Q-1']]);
+    expect(asks.map((card) => [card.type, card.data.id])).toEqual([['question', 'Q-2'], ['decision', 'Q-1']]);
   });
 
   it('an answered or dismissed question leaves the feed at once, a closed one never shows', () => {
-    const { waiting } = work({
+    const { asks } = work({
       entries: [
         entry({ id: 'Q-1' }),
         entry({ id: 'Q-2' }),
@@ -32,64 +32,51 @@ describe('K1 what asks the owner', { tags: ['critical'] }, () => {
         human({ id: 'O-2', kind: 'ack', replyTo: 'Q-2' }),
       ],
     });
-    expect(ids(waiting)).toEqual(['Q-3']);
+    expect(ids(asks)).toEqual(['Q-3']);
   });
 
-  it('notices wait in their own group and a messages needs the owner', () => {
+  it('a notice never shows, an open message needs the owner', () => {
     const result = work({
-      entries: [
-        entry({ id: 'N-1', kind: 'notice', createdAt: at(3) }),
-        entry({ id: 'M-1', kind: 'message', createdAt: at(4) }),
-        entry({ id: 'N-2', kind: 'notice', createdAt: at(5) }),
-        human({ id: 'O-1', kind: 'ack', replyTo: 'N-2' }),
-      ],
+      entries: [entry({ id: 'N-1', kind: 'notice', createdAt: at(3) }), entry({ id: 'M-1', kind: 'message', createdAt: at(4) })],
     });
-    expect(result.notices.map((card) => card.data.id)).toEqual(['N-1']);
-    expect(result.waiting.map((card) => card.data.id)).toEqual(['M-1']);
+    expect(ids(result.asks)).toEqual(['M-1']);
   });
 
   it('a reply to a message answers it, the entries of the page itself are never cards', () => {
-    const { waiting, notices } = work({
+    const { asks } = work({
       entries: [entry({ id: 'M-1', kind: 'message' }), human({ id: 'O-1', kind: 'followup', replyTo: 'M-1' }), entry({ id: 'E-1', kind: 'edit' })],
     });
-    expect([...waiting, ...notices]).toEqual([]);
+    expect(asks).toEqual([]);
   });
 
   it('deleted and archived entries are left out', () => {
-    const { waiting } = work({ entries: [entry({ id: 'Q-1', deletedAt: at(2) }), entry({ id: 'Q-2', archivedAt: at(2) }), entry({ id: 'Q-3' })] });
-    expect(ids(waiting)).toEqual(['Q-3']);
+    const { asks } = work({ entries: [entry({ id: 'Q-1', deletedAt: at(2) }), entry({ id: 'Q-2', archivedAt: at(2) }), entry({ id: 'Q-3' })] });
+    expect(ids(asks)).toEqual(['Q-3']);
   });
 });
 
 describe('K1 manual steps and tests', { tags: ['critical'] }, () => {
-  it('a manual step waits until the owner marks it done, the mark counts until the board applied it', () => {
-    const pending = work({ actions: [step({ id: 'H-1' })] });
-    expect(ids(pending.waiting)).toEqual(['H-1']);
-    const marked = work({ actions: [step({ id: 'H-1' })], entries: [human({ id: 'O-1', kind: 'done', replyTo: 'H-1' })] });
-    expect(marked.waiting).toEqual([]);
-    const applied = work({
-      actions: [step({ id: 'H-1' })],
-      entries: [human({ id: 'O-1', kind: 'done', replyTo: 'H-1', appliedAt: at(31), status: 'new' })],
+  it('feeds no card to the activity, only the needs of the item', () => {
+    const result = work({
+      actions: [step({ id: 'H-1', item: 'I-1' })],
+      tests: [manual({ id: 'T-1', item: 'I-2' })],
+      items: [plan({ id: 'I-5' }), run({ id: 'I-6' })],
     });
-    expect(ids(applied.waiting)).toEqual(['H-1']);
-    expect(work({ actions: [step({ id: 'H-1', status: 'done' })] }).waiting).toEqual([]);
+    expect(result.asks).toEqual([]);
+    expect(result.needs.get('I-1')?.steps).toBe(1);
+    expect(result.needs.get('I-2')?.tests).toBe(1);
+    expect(result.needs.get('I-5')?.tests).toBe(1);
   });
 
-  it('a ready run assigned to the owner is ONE run card with its plan, build and case count', () => {
-    const { waiting, needs } = work({
-      items: [
-        plan({ id: 'I-5', title: 'Login flow', fields: { cases: ['T-1', 'T-2', 'T-3'] } }),
-        run({ id: 'I-6', n: 2, fields: { plan: 'I-5', build: 'b-7' } }),
-      ],
-    });
-    expect(waiting).toHaveLength(1);
-    const card = waiting[0];
-    expect(card?.type).toBe('run');
-    if (card?.type === 'run') expect(card.data).toMatchObject({ id: 'I-6', n: 2, planTitle: 'Login flow', build: 'b-7', cases: 3, reported: false });
-    expect(needs.get('I-5')?.tests).toBe(1);
+  it('a manual step counts until the owner marks it done, the mark counts until the board applied it', () => {
+    const steps = (entries: ReturnType<typeof human>[], status = 'pending') => work({ actions: [step({ id: 'H-1', item: 'I-1', status })], entries }).needs.get('I-1')?.steps;
+    expect(steps([])).toBe(1);
+    expect(steps([human({ id: 'O-1', kind: 'done', replyTo: 'H-1' })])).toBeUndefined();
+    expect(steps([human({ id: 'O-1', kind: 'done', replyTo: 'H-1', appliedAt: at(31), status: 'new' })])).toBe(1);
+    expect(steps([], 'done')).toBeUndefined();
   });
 
-  it('a reported run waits for the owner to pass it, a running, passed or lead-held run does not show', () => {
+  it('a run waits for the owner when ready for him or reported, a running, passed, lead-held or deleted run does not', () => {
     const items = [
       plan({ id: 'I-5' }),
       run({ id: 'I-6', stage: 'reported', assignee: null }),
@@ -98,21 +85,17 @@ describe('K1 manual steps and tests', { tags: ['critical'] }, () => {
       run({ id: 'I-9', assignee: 'lead' }),
       run({ id: 'I-10', deletedAt: at(3) }),
     ];
-    const { waiting } = work({ items });
-    expect(waiting.map((card) => [card.type, card.data.id])).toEqual([['run', 'I-6']]);
-    if (waiting[0]?.type === 'run') expect(waiting[0].data.reported).toBe(true);
+    expect(work({ items }).needs.get('I-5')?.tests).toBe(1);
   });
 
-  it('a test with no build stays its own card, automatic and finished tests do not wait on the owner', () => {
-    const { waiting } = work({
-      tests: [
-        manual({ id: 'T-1' }),
-        manual({ id: 'T-2', mode: 'auto' }),
-        manual({ id: 'T-3', status: 'pass' }),
-        manual({ id: 'T-4', archivedAt: at(4) }),
-      ],
-    });
-    expect(waiting.map((card) => [card.type, card.data.id])).toEqual([['test', 'T-1']]);
+  it('automatic, finished, archived and built tests do not wait on the owner', () => {
+    const tests = [
+      manual({ id: 'T-2', item: 'I-1', mode: 'auto' }),
+      manual({ id: 'T-3', item: 'I-1', status: 'pass' }),
+      manual({ id: 'T-4', item: 'I-1', archivedAt: at(4) }),
+      manual({ id: 'T-5', item: 'I-1', build: 'b-1' }),
+    ];
+    expect(work({ tests }).needs.get('I-1')).toBeUndefined();
   });
 });
 
@@ -133,7 +116,7 @@ describe('K1 what each work item needs', { tags: ['critical'] }, () => {
   });
 });
 
-describe('K1 work items and the log', { tags: ['critical'] }, () => {
+describe('K1 work items', { tags: ['critical'] }, () => {
   const item = (id: string, over: object = {}) => ({ id, title: id, status: 'doing', thread: 'lead', ...over });
 
   it('shows the open items in manual order and hides done, dropped, archived and deleted ones', () => {
@@ -149,16 +132,6 @@ describe('K1 work items and the log', { tags: ['critical'] }, () => {
       ],
     });
     expect(items.map((doc) => doc.id)).toEqual(['I-1', 'I-2', 'I-10']);
-  });
-
-  it('lists the lines of every subject, newest first, each with its subject', () => {
-    const { lines } = work({
-      log: [
-        { subject: 'audit', entries: [{ seq: 1, ts: at(1), thread: 'a', text: 'first' }, { seq: 2, ts: at(8), thread: 'a', text: 'third' }] },
-        { subject: 'leads', entries: [{ seq: 1, ts: at(4), thread: 'b', text: 'second' }] },
-      ],
-    });
-    expect(lines.map((line) => [line.text, line.subject])).toEqual([['third', 'audit'], ['second', 'leads'], ['first', 'audit']]);
   });
 });
 

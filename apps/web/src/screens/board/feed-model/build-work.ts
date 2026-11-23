@@ -2,11 +2,9 @@
 import type { WorkItem } from '../../../data/types';
 import { buildFeed } from './build-feed';
 import { FINISHED_ITEM_STATUSES, OP_KINDS } from './feed.constants';
-import type { BoardWork, WorkSources } from './feed.type';
+import type { BoardWork, FeedCard, WorkSources } from './feed.type';
 import { itemNeeds } from './item-needs';
-import { logLines } from './log-lines';
 import { ownerMarks } from './owner-marks';
-import { sectionOf } from './section-of';
 
 const isVisible = (doc: { archivedAt?: string; deletedAt?: string }): boolean => !doc.archivedAt && !doc.deletedAt;
 
@@ -17,15 +15,14 @@ const openItems = (items: WorkItem[]): WorkItem[] =>
 
 const indexOf = (items: WorkItem[]): ReadonlyMap<string, WorkItem> => new Map(items.filter(isVisible).map((item) => [item.id, item]));
 
+const isAsk = (card: FeedCard): boolean => card.type === 'decision' || card.type === 'question' || card.type === 'message';
+
 const buildWork = (sources: WorkSources): Omit<BoardWork, 'ready'> => {
   const entries = sources.entries.filter((entry) => isVisible(entry) && !OP_KINDS.includes(entry.kind));
   const actions = sources.actions.filter(isVisible);
   const cards = buildFeed({ entries, actions, tests: sources.tests, items: sources.items.filter(isVisible), marks: ownerMarks(entries) });
   return {
-    waiting: cards.filter((card) => sectionOf(card) === 'waiting'),
-    leads: cards.filter((card) => sectionOf(card) === 'leads'),
-    notices: cards.filter((card) => sectionOf(card) === 'log'),
-    lines: logLines(sources.log),
+    asks: cards.filter(isAsk),
     items: openItems(sources.items),
     index: indexOf(sources.items),
     needs: itemNeeds(cards, entries),

@@ -42,7 +42,7 @@ const step = (over: Partial<BoardAction> & { id: string }): BoardAction => ({
 });
 
 const work = (over: Partial<WorkSources>) =>
-  buildWork({ entries: [], actions: [], tests: [], log: [], items: [], ...over });
+  buildWork({ entries: [], actions: [], tests: [], items: [], ...over });
 
 const plan = (over: Partial<WorkItem> & { id: string }): WorkItem => ({
   title: 'a plan',

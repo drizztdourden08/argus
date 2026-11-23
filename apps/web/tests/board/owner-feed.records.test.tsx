@@ -21,24 +21,13 @@ const leadStep = { ...manualStep, id: 'H-2', text: 'Rebuild the cache', assignee
 describe('I-85 P4 every card says what it is', { tags: ['standard'] }, () => {
   it('shows the kind icon, the code and the avatar of who must act on one row', async () => {
     mockPosts();
-    await openBoard({ entries: byId(decision, freeText), actions: byId(manualStep) });
+    await openBoard({ entries: byId(decision, freeText) });
     const asking = within(cardOf('Q-1'));
     expect(cardOf('Q-1').querySelector('[data-type-mark="decision"]')).not.toBeNull();
     expect(asking.getByText('Q-1')).toBeTruthy();
     expect(asking.getByRole('img', { name: 'Assigned to you' })).toBeTruthy();
     expect(asking.getByRole('button', { name: 'More actions for Q-1' })).toBeTruthy();
     expect(cardOf('Q-2').querySelector('[data-type-mark="question"]')).not.toBeNull();
-    expect(cardOf('H-1').querySelector('[data-type-mark="todo"]')).not.toBeNull();
-  });
-
-  it('puts the item as a chip with its own type icon on a to-do card, and no kind word', async () => {
-    mockPosts();
-    await openBoard({ actions: byId(manualStep), items: { 'I-4': { id: 'I-4', title: 'Private repo', type: 'bug', thread: 'coordinator', status: 'doing', rank: 1 } } });
-    const card = cardOf('H-1');
-    const chip = card.querySelector('[data-item-chip="I-4"]');
-    expect(chip?.querySelector('[data-type-mark="bug"]')).not.toBeNull();
-    expect(within(chip as HTMLElement).getByText('B-4 Private repo')).toBeTruthy();
-    expect(within(card).queryByText('decision needed')).toBeNull();
   });
 
   it('puts the code and the title on the header row of a question, then the context and the answers', async () => {
@@ -90,33 +79,17 @@ describe('I-85 P4 the answers', { tags: ['standard'] }, () => {
   });
 });
 
-describe('I-85 P4 the sections of the feed', { tags: ['standard'] }, () => {
-  it('orders waiting on you, then for the leads, then the folded log', async () => {
+describe('I-214 the activity holds only questions and decisions', { tags: ['standard'] }, () => {
+  it('shows the questions and decisions, and no to-do, notice or section header', async () => {
     mockPosts();
     await openBoard({ entries: byId(decision, notice), actions: byId(manualStep, leadStep) });
-    const asks = screen.getByText('Questions and decisions · 1');
-    const waiting = screen.getByText('Waiting on you · 1');
-    expect(before(asks, waiting)).toBe(true);
-    const leads = screen.getByText('For the leads · 1');
-    const log = screen.getByText('Log · 1');
-    expect(before(waiting, leads)).toBe(true);
-    expect(before(leads, log)).toBe(true);
-    expect(within(cardOf('H-2')).getByText('Rebuild the cache')).toBeTruthy();
-    expect(log.closest('details')?.open).toBe(false);
-  });
-
-  it('keeps the to-do for the leads out of the owner count', async () => {
-    mockPosts();
-    await openBoard({ actions: byId(leadStep) });
+    expect(screen.getByText('Questions and decisions · 1')).toBeTruthy();
+    expect(document.querySelector('[data-record="Q-1"]')).not.toBeNull();
+    expect(document.querySelector('[data-record="H-1"]')).toBeNull();
+    expect(document.querySelector('[data-record="H-2"]')).toBeNull();
     expect(screen.queryByText(/Waiting on you/)).toBeNull();
-    expect(screen.getByText('For the leads · 1')).toBeTruthy();
-  });
-
-  it('shows a to-do as a card with no Open button', async () => {
-    mockPosts();
-    await openBoard({ actions: byId(manualStep) });
-    expect(within(cardOf('H-1')).getByRole('button', { name: 'Done' })).toBeTruthy();
-    expect(within(cardOf('H-1')).queryByRole('button', { name: /^Open$/ })).toBeNull();
+    expect(screen.queryByText(/For the leads/)).toBeNull();
+    expect(screen.queryByText(/^Log/)).toBeNull();
   });
 });
 
