@@ -83,7 +83,8 @@ describe('I-214 the activity holds only questions and decisions', { tags: ['stan
   it('shows the questions and decisions, and no to-do, notice or section header', async () => {
     mockPosts();
     await openBoard({ entries: byId(decision, notice), actions: byId(manualStep, leadStep) });
-    expect(screen.getByText('Questions and decisions · 1')).toBeTruthy();
+    expect(screen.getByRole('list', { name: 'Questions and decisions' })).toBeTruthy();
+    expect(screen.queryByText(/Questions and decisions ·/)).toBeNull();
     expect(document.querySelector('[data-record="Q-1"]')).not.toBeNull();
     expect(document.querySelector('[data-record="H-1"]')).toBeNull();
     expect(document.querySelector('[data-record="H-2"]')).toBeNull();
