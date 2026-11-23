@@ -86,9 +86,9 @@ interface OverlordQueue {
 interface OverlordSpend {
   month: string;
   spentUsd: number;
-  budgetUsd: number;
+  budgetUsd: number | null;
   warnAt: number;
-  leftUsd: number;
+  leftUsd: number | null;
   note: string;
 }
 

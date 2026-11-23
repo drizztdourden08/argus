@@ -7,8 +7,9 @@ const toneOf = (ratio: number, warnAt: number): SpendLook['tone'] => {
   return ratio >= warnAt ? 'warning' : 'success';
 };
 
-const spendLook = (spend: OverlordSpend): SpendLook => {
-  const ratio = spend.budgetUsd > 0 ? spend.spentUsd / spend.budgetUsd : 0;
+const spendLook = (spend: OverlordSpend): SpendLook | null => {
+  if (spend.budgetUsd === null || spend.budgetUsd <= 0) return null;
+  const ratio = spend.spentUsd / spend.budgetUsd;
   return { ratio: Math.min(ratio, 1), tone: toneOf(ratio, spend.warnAt) };
 };
 

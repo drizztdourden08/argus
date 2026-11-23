@@ -12,9 +12,10 @@ const STATE_STATUSES = defineStatuses({
   crashed: { label: 'Crashed', tone: 'danger' },
 });
 
+const NO_LIMIT = 'No limit';
 const READING = 'Reading the Overlord.';
 const SPEND_NOTE = 'An estimate from token counts. The provider console has the real bill.';
-const BUDGET_NOTE = 'At the warning level a notification. At 100 percent the Overlord stops and Argus says so.';
+const BUDGET_NOTE = 'No limit is the default. With a cap, a notification at the warning level and the Overlord stops at 100 percent.';
 const NO_MODE = 'Hosted, API key';
 
 const MODE_NOTES: Readonly<Record<OverlordMode, string>> = {
@@ -29,4 +30,4 @@ const needsConfirm = (from: OverlordMode, to: OverlordMode) => from === 'live' |
 
 const APPROVAL_PARAM = 'approval';
 
-export { APPROVAL_PARAM, BUDGET_NOTE, MODE_CONFIRM, MODE_NOTES, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES, asMode, needsConfirm };
+export { APPROVAL_PARAM, BUDGET_NOTE, MODE_CONFIRM, MODE_NOTES, NO_LIMIT, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES, asMode, needsConfirm };

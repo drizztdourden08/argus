@@ -22,7 +22,7 @@ interface SpendCardProps {
 interface BudgetCardProps {
   spend: OverlordSpend;
   action: ActionState;
-  onSave: (budgetUsd: number) => void;
+  onSave: (budgetUsd: number | null) => void;
 }
 
 interface ModeCardProps {

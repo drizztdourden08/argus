@@ -36,7 +36,7 @@ const useOverlord = () => {
     onControl: (action: OverlordAction) => void control.run(() => controlOverlord(action)),
     onDecide: (id: string, choice: ApprovalDecision) => void decision.run(() => decideApproval(id, choice)),
     onSwitch: (mode: OverlordMode) => void modeAction.run(() => switchMode(mode)),
-    onSave: (budgetUsd: number) => void budget.run(() => saveBudget(budgetUsd)),
+    onSave: (budgetUsd: number | null) => void budget.run(() => saveBudget(budgetUsd)),
   };
 };
 

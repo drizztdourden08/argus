@@ -66,10 +66,14 @@ describe('O4 approvals and spend', { tags: ['critical'] }, () => {
   });
 
   it('turns warning at the warn level and danger at the budget', () => {
-    const base = { month: '2026-11', budgetUsd: 100, warnAt: 0.8, leftUsd: 0, note: '' };
+    const base = { month: '2026-11', budgetUsd: 100 as number | null, warnAt: 0.8, leftUsd: 0, note: '' };
     expect(spendLook({ ...base, spentUsd: 23 })).toEqual({ ratio: 0.23, tone: 'success' });
-    expect(spendLook({ ...base, spentUsd: 85 }).tone).toBe('warning');
+    expect(spendLook({ ...base, spentUsd: 85 })?.tone).toBe('warning');
     expect(spendLook({ ...base, spentUsd: 130 })).toEqual({ ratio: 1, tone: 'danger' });
+  });
+
+  it('has no look when there is no cap', () => {
+    expect(spendLook({ month: '2026-11', budgetUsd: null, warnAt: 0.8, leftUsd: null, note: '', spentUsd: 500 })).toBeNull();
   });
 });
 
