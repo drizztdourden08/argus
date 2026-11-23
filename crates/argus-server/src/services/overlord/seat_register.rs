@@ -19,6 +19,8 @@ use serde_json::json;
 const BOARD: &str = "portfolio";
 const ACTOR: &str = "argus";
 const HOST: &str = "argus";
+/// The marks a live seat never carries.
+const STALE: [&str; 4] = ["placeholder", "mergedInto", "archivedAt", "archivedBy"];
 
 fn new_seat(board: &mut Board) {
     let at = now_iso();
@@ -43,12 +45,13 @@ fn register(board: &mut Board, session_id: &str) -> Result<(), BoardError> {
     set(thread, "role", "coordinator");
     set(thread, "host", HOST);
     set(thread, "sessionId", session_id);
-    if thread["status"] != "paused" {
-        set(thread, "status", "active");
-    }
-    for key in ["placeholder", "mergedInto", "archivedAt", "archivedBy"] {
-        unset(thread, key);
-    }
+    let status = if thread["status"] == "paused" {
+        "paused"
+    } else {
+        "active"
+    };
+    set(thread, "status", status);
+    STALE.iter().for_each(|key| unset(thread, key));
     set(thread, "lastSeen", now_iso());
     stamp(board, "threads", SEAT, ACTOR)
 }

@@ -12,7 +12,7 @@ import { QueueSection } from './QueueSection';
 
 const QueueTab = (props: QueueFeedProps) => {
   const { queue, problem, action, decide } = props.feed;
-  const failure = problem || action.problem;
+  const failure = problem ?? action.problem;
   if (!queue) return <Panel title="Queue">{failure && <Callout tone="danger">{failure}</Callout>}</Panel>;
   return (
     <Panel title="Queue">

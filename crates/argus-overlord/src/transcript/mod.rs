@@ -3,6 +3,8 @@
 //! prints it or a tool result quotes it. Reading is by line number, so a client resumes where it was.
 
 mod line;
+#[cfg(any(test, feature = "test-support"))]
+mod memory;
 mod name;
 mod page;
 mod stamp;
@@ -12,6 +14,8 @@ use argus_core::redact::Redactor;
 use crate::ports::{ApiKey, TranscriptFault, TranscriptStore};
 
 pub use line::redacted_line;
+#[cfg(any(test, feature = "test-support"))]
+pub use memory::MemoryTranscripts;
 pub use name::{file_name, session_of, valid_session};
 pub use page::{Page, lines_after};
 pub use stamp::{KEEP_SESSIONS, Stamp, newest, stale};

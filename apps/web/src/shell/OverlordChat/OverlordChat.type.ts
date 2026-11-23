@@ -26,6 +26,10 @@ interface ToolsRow {
   tools: ToolItem[];
 }
 
+interface StepContentProps {
+  row: TalkRow;
+}
+
 type TranscriptRow = TalkRow | ToolsRow;
 
 interface ContentBlock {
@@ -124,7 +128,9 @@ export type {
   ApprovalLineProps,
   ChatBoxProps,
   PendingSend,
-  QueueFeed,
+  StepContentProps,
+  TalkRow,
+  ToolsRow,
   QueueFeedProps,
   ToolItem,
   ChatTab,

@@ -45,6 +45,7 @@ tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "process"
 tokio-util = { version = "0.7", features = ["io"] }
 
 [dev-dependencies]
+argus-overlord = { path = "../argus-overlord", features = ["test-support"] }
 argus-testkit = { path = "../argus-testkit" }
 base64 = "0.22"
 filetime = "0.2"

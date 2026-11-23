@@ -112,46 +112,15 @@ pub(super) fn approval_line(approval: &Approval) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-    use std::sync::Arc;
-
     use argus_overlord::approvals::Status;
-    use argus_overlord::ports::TranscriptFault;
-    use argus_overlord::transcript::{Page, Stamp, lines_after};
+    use argus_overlord::transcript::MemoryTranscripts;
 
     use super::*;
 
     const KEY: &str = "sk-ant-api03-SECRETSECRETSECRET-abcd";
     const INIT: &str = r#"{"type":"system","subtype":"init","session_id":"s1","apiKeySource":"ANTHROPIC_API_KEY","model":"sonnet","tools":[],"mcp_servers":[],"cwd":"X:/"}"#;
 
-    #[derive(Default, Clone)]
-    struct Memory(Arc<Mutex<BTreeMap<String, String>>>);
-
-    impl TranscriptStore for Memory {
-        fn append(&self, session: &str, line: &str) -> Result<(), TranscriptFault> {
-            let mut all = self.0.lock().unwrap();
-            let file = all.entry(session.to_owned()).or_default();
-            file.push_str(line);
-            file.push('\n');
-            Ok(())
-        }
-
-        fn read_after(&self, session: &str, after: usize) -> Result<Page, TranscriptFault> {
-            let all = self.0.lock().unwrap();
-            Ok(lines_after(
-                all.get(session).map_or("", String::as_str),
-                after,
-            ))
-        }
-
-        fn list(&self) -> Result<Vec<Stamp>, TranscriptFault> {
-            Ok(Vec::new())
-        }
-
-        fn delete(&self, _session: &str) -> Result<(), TranscriptFault> {
-            Ok(())
-        }
-    }
+    type Memory = MemoryTranscripts;
 
     fn lines(store: &Memory, session: &str) -> Vec<String> {
         store.read_after(session, 0).unwrap().lines

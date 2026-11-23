@@ -58,8 +58,7 @@ describe('O3 transcript rows', { tags: ['critical'] }, () => {
   it('summarises a tool call and marks its result', () => {
     const rows = toRows([
       assistant(1, [tool('PowerShell', 't1', { command: 'Get-Date' }), tool('Read', 't2', { file_path: 'a.txt' }), tool('mcp__x__go', 't3', { n: 1, q: 'hello' })]),
-      user(2, [{ type: 'tool_result', tool_use_id: 't1', content: 'ok' }, { type: 'tool_result', tool_use_id: 't2', is_error: true, content: [{ text: 'nope
-more' }] }]),
+      user(2, [{ type: 'tool_result', tool_use_id: 't1', content: 'ok' }, { type: 'tool_result', tool_use_id: 't2', is_error: true, content: [{ text: 'nope\nmore' }] }]),
     ]);
     expect(rows[0]).toMatchObject({
       kind: 'tools',

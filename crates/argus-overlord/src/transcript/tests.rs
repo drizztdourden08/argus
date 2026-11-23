@@ -1,45 +1,9 @@
-use std::collections::BTreeMap;
-use std::sync::Mutex;
-
 use super::*;
-use crate::ports::{ApiKey, TranscriptFault, TranscriptStore};
+use crate::ports::{ApiKey, TranscriptStore};
 
 const KEY: &str = "sk-ant-api03-SECRETSECRETSECRET-abcd";
 
-#[derive(Default)]
-struct Memory(Mutex<BTreeMap<String, String>>);
-
-impl TranscriptStore for Memory {
-    fn append(&self, session: &str, line: &str) -> Result<(), TranscriptFault> {
-        let mut all = self.0.lock().unwrap();
-        let file = all.entry(session.to_owned()).or_default();
-        file.push_str(line);
-        file.push('\n');
-        Ok(())
-    }
-
-    fn read_after(&self, session: &str, after: usize) -> Result<Page, TranscriptFault> {
-        let all = self.0.lock().unwrap();
-        Ok(lines_after(
-            all.get(session).map_or("", String::as_str),
-            after,
-        ))
-    }
-
-    fn list(&self) -> Result<Vec<Stamp>, TranscriptFault> {
-        let all = self.0.lock().unwrap();
-        let stamps = all.keys().zip(0..).map(|(k, ms)| Stamp {
-            session: k.clone(),
-            modified_ms: ms,
-        });
-        Ok(stamps.collect())
-    }
-
-    fn delete(&self, session: &str) -> Result<(), TranscriptFault> {
-        self.0.lock().unwrap().remove(session);
-        Ok(())
-    }
-}
+type Memory = MemoryTranscripts;
 
 fn stamps(count: u64) -> Vec<Stamp> {
     (0..count)
