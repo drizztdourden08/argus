@@ -1,14 +1,16 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import type { KanbanConfig } from '../../src/data/types';
+import type { KanbanColumnConfig, KanbanConfig } from '../../src/data/types';
 import { limitTone } from '../../src/screens/board/tabs/kanban/model';
 import { HOUR, before, idsIn, itemRef, viewOf } from './kanban-docs';
+
+const active: KanbanColumnConfig = { id: 'active', name: 'Active', accent: 'blue', match: { lanes: ['doing', 'review'] }, limit: { max: 1, mode: 'refuse' }, rules: ['stale'] };
 
 const config: KanbanConfig = {
   columns: [
     { id: 'ready', name: 'Ready', accent: 'teal', match: { lanes: ['todo'], stages: ['ready'] } },
     { id: 'backlog', name: 'Backlog', match: { lanes: ['todo'] }, limit: { max: 2, mode: 'warn' } },
-    { id: 'active', name: 'Active', accent: 'blue', match: { lanes: ['doing', 'review'] }, limit: { max: 1, mode: 'refuse' }, rules: ['stale'] },
+    active,
     { id: 'shipped', name: 'Shipped', match: { lanes: ['done', 'dropped'] } },
   ],
   rules: [{ id: 'stale', kind: 'dwell', params: { ms: HOUR } }],
@@ -33,7 +35,7 @@ describe('I-206 columns come from the board config', { tags: ['critical'] }, () 
   });
 
   it('names the columns and passes the accent, dropping an unknown one', () => {
-    const view = viewOf(items, { config: { columns: [{ id: 'a', name: 'Alpha', accent: 'mauve', match: { lanes: ['todo'] } }, config.columns[2]] } });
+    const view = viewOf(items, { config: { columns: [{ id: 'a', name: 'Alpha', accent: 'mauve', match: { lanes: ['todo'] } }, active] } });
     expect(view.columns.map((column) => [column.title, column.accent])).toEqual([['Alpha', undefined], ['Active', 'blue']]);
   });
 
@@ -42,7 +44,7 @@ describe('I-206 columns come from the board config', { tags: ['critical'] }, () 
   });
 
   it('leaves out an item no column takes', () => {
-    const view = viewOf(items, { config: { columns: [config.columns[2]] } });
+    const view = viewOf(items, { config: { columns: [active] } });
     expect(view.cards.length).toBe(4);
     expect(view.columns.flatMap((column) => column.cards).length).toBe(2);
   });
