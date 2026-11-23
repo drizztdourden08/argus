@@ -3,7 +3,9 @@
 
 use std::sync::Arc;
 
-use argus_overlord::session::choices::{BadChoice, Change, EFFORTS, check, models, permission_modes};
+use argus_overlord::session::choices::{
+    BadChoice, Change, EFFORTS, check, models, permission_modes,
+};
 use serde_json::{Value, json};
 
 use super::config::{self, is_live};
@@ -68,8 +70,7 @@ async fn restart_same_session(svc: &Arc<Services>) -> Result<(), Refused> {
 pub(crate) async fn apply(svc: &Arc<Services>, change: &Change) -> Result<(), SettingsFault> {
     let before = config::live(svc);
     check(change, &before.model).map_err(SettingsFault::Bad)?;
-    save_fields(svc, fields(change))
-        .map_err(|_| SettingsFault::Storage)?;
+    save_fields(svc, fields(change)).map_err(|_| SettingsFault::Storage)?;
     if config::live(svc) == before || !svc.overlord.up() {
         return Ok(());
     }

@@ -43,7 +43,10 @@ async fn the_defaults_and_the_choices_are_shown() {
         .cloned()
         .unwrap_or_default();
     assert_eq!(models.len(), 5, "the current model is offered too");
-    assert_eq!(models[0], json!({ "id": "claude-opus-5-5", "label": "Opus 5.5" }));
+    assert_eq!(
+        models[0],
+        json!({ "id": "claude-opus-5-5", "label": "Opus 5.5" })
+    );
     let efforts = json!(["low", "medium", "high", "xhigh", "max"]);
     assert_eq!(body["choices"]["efforts"], efforts);
     assert_eq!(body["choices"]["permissionModes"][2]["label"], json!("Ask"));

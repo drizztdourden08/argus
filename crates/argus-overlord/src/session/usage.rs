@@ -177,7 +177,8 @@ mod specs {
     use super::*;
     use crate::protocol::decode_line;
 
-    const INIT: &str = r#"{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5[1m]"}"#;
+    const INIT: &str =
+        r#"{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5[1m]"}"#;
     const ASSISTANT: &str = r#"{"type":"assistant","message":{"content":[],"usage":{"input_tokens":4,"cache_read_input_tokens":900,"cache_creation_input_tokens":96,"output_tokens":7}}}"#;
     const SIDE: &str = r#"{"type":"assistant","parent_tool_use_id":"t1","message":{"content":[],"usage":{"input_tokens":5}}}"#;
     const ONE: &str = r#"{"type":"result","total_cost_usd":0.25,"duration_ms":1000,"num_turns":2,"usage":{"input_tokens":10,"output_tokens":5,"cache_read_input_tokens":100,"cache_creation_input_tokens":20}}"#;

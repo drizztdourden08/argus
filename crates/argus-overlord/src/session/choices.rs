@@ -101,11 +101,7 @@ impl BadChoice {
     }
 }
 
-fn holds(
-    value: Option<&str>,
-    ok: impl Fn(&str) -> bool,
-    bad: BadChoice,
-) -> Result<(), BadChoice> {
+fn holds(value: Option<&str>, ok: impl Fn(&str) -> bool, bad: BadChoice) -> Result<(), BadChoice> {
     match value {
         Some(v) if !ok(v) => Err(bad),
         _ => Ok(()),
