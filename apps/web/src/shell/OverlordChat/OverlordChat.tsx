@@ -13,7 +13,7 @@ const OverlordChat = () => {
       open={open}
       onClose={close}
       side="left"
-      look="record"
+      look="split"
       stackNarrow
       size="wide"
       label={CHAT_LABEL}
