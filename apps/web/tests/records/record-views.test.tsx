@@ -6,6 +6,8 @@ import { RecordCard, RecordGroup, RecordHead, RecordRow } from '../../src/shell'
 import { HEAD_SIZE_PX } from '../../src/shell/records/head.constants';
 import { head, mount, where } from './records-mount';
 
+const THREE_MINUTES_MS = 180_000;
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -47,7 +49,7 @@ describe('I-85 P3 the card, the row and the group', { tags: ['critical'] }, () =
 
   it('shows a row with its code, title, chips and age, and opens it', () => {
     const open = vi.fn();
-    mount(<RecordRow head={head('build', 'BL-web', 'worker')} title="web" onOpen={open} chips={[{ id: 'port', text: ':5173' }]} age="3m" />);
+    mount(<RecordRow head={head('build', 'BL-web', 'worker')} title="web" onOpen={open} chips={[{ id: 'port', text: ':5173' }]} time={Date.now() - THREE_MINUTES_MS} />);
     expect(screen.getByText('BL-web')).toBeTruthy();
     expect(screen.getByText(':5173')).toBeTruthy();
     expect(screen.getByText('3m')).toBeTruthy();
