@@ -125,9 +125,7 @@ impl Limits {
     pub(crate) fn fields(&self) -> Result<Vec<(String, Value)>, String> {
         let mut out = Vec::new();
         put(&mut out, "cwd", &self.cwd, |v| existing_folder(v))?;
-        put(&mut out, "exePath", &self.claude_exe, |v| {
-            existing_file(v)
-        })?;
+        put(&mut out, "exePath", &self.claude_exe, |v| existing_file(v))?;
         if self.claude_exe != Edit::Keep {
             out.push(("claudeExe".to_owned(), Value::Null));
         }
