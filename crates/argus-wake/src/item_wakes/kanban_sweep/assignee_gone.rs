@@ -11,7 +11,10 @@ fn agent_gone(ctx: &Ctx<'_>, id: &str) -> bool {
 }
 
 fn thread_gone(ctx: &Ctx<'_>, id: &str) -> bool {
-    ctx.board.threads.get(id).is_none_or(|t| t.is_ended())
+    ctx.board
+        .threads
+        .get(id)
+        .is_none_or(crate::board::ThreadView::is_ended)
 }
 
 fn gone(ctx: &Ctx<'_>, assignee: &str) -> bool {

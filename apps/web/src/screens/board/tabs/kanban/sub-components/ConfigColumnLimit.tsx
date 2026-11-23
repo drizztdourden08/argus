@@ -1,12 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Field, Flex, NumberInput, Select, Toggle } from '@drizztdourden08/tessera';
-import { LIMIT_MODES } from '../model';
 import type { KanbanColumnLimit } from '../../../../../data/types';
 import type { ConfigColumnLimitProps } from '../config-editor.type';
-
-const FIRST_LIMIT: KanbanColumnLimit = { max: 3, mode: 'warn' };
-
-const MODE_OPTIONS = LIMIT_MODES.map((mode) => ({ value: mode, label: mode }));
+import { FIRST_LIMIT, MODE_OPTIONS } from './ConfigColumnLimit.constants';
 
 const ConfigColumnLimit = (props: ConfigColumnLimitProps) => {
   const { column, onChange } = props;

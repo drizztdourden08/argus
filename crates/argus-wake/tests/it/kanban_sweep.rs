@@ -59,6 +59,14 @@ fn rule(id: &str, kind: &str, params: &Value, to: &str, wake: bool) -> Value {
     })
 }
 
+/// A doing column with one dwell rule of an hour, alerting `to`.
+fn slow_doing(to: &str, wake: bool) -> Value {
+    kanban(
+        &json!([column("doing", &["doing"], &["slow"], &Value::Null)]),
+        &json!([rule("slow", "dwell", &json!({"ms": HOUR}), to, wake)]),
+    )
+}
+
 fn column(id: &str, lanes: &[&str], rules: &[&str], limit: &Value) -> Value {
     let mut col = json!({
         "id": id, "name": id, "match": {"lanes": lanes}, "rules": rules,
@@ -103,10 +111,7 @@ fn the_default_tells_the_same_thread_again_only_after_twelve_hours() {
 
 #[test]
 fn dwell_uses_the_limit_of_its_rule_and_the_lane_clock_of_the_item() {
-    let cfg = kanban(
-        &json!([column("doing", &["doing"], &["slow"], &Value::Null)]),
-        &json!([rule("slow", "dwell", &json!({"ms": HOUR}), "lead", true)]),
-    );
+    let cfg = slow_doing("lead", true);
     let fresh_lane = item("I-1", "doing", 0, &json!({"laneAt": iso(START - 30 * MIN)}));
     let old_lane = item("I-2", "doing", 3, &json!({"laneAt": iso(START - 3 * HOUR)}));
     let out = tick(&mut fresh(), &world(&[fresh_lane, old_lane], &cfg), START);
@@ -118,16 +123,7 @@ fn dwell_uses_the_limit_of_its_rule_and_the_lane_clock_of_the_item() {
 
 #[test]
 fn an_alert_that_does_not_wake_lands_as_an_inbox_notice() {
-    let cfg = kanban(
-        &json!([column("doing", &["doing"], &["slow"], &Value::Null)]),
-        &json!([rule(
-            "slow",
-            "dwell",
-            &json!({"ms": HOUR}),
-            "item-thread",
-            false
-        )]),
-    );
+    let cfg = slow_doing("item-thread", false);
     let out = tick(
         &mut fresh(),
         &world(&[item("I-1", "doing", 3, &json!({}))], &cfg),

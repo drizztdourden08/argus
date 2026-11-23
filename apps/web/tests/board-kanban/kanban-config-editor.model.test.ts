@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KanbanConfig } from '../../src/data/types';
 import {
-  DEFAULT_CONFIG, HOUR_MS, configAddColumn, configAddRule, configMoveColumn, configParseList, configRemoveColumn, configRemoveRule, configRuleOfKind, configSetColumn, configSetRule, configToggleList,
+  HOUR_MS, configAddColumn, configAddRule, configMoveColumn, configParseList, configRemoveColumn, configRemoveRule, configRuleOfKind, configSetColumn, configSetRule, configToggleList,
 } from '../../src/screens/board/tabs/kanban/model';
 
 const base: KanbanConfig = {

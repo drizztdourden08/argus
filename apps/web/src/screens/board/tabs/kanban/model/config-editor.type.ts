@@ -13,4 +13,4 @@ interface RuleKind {
   params: readonly ParamField[];
 }
 
-export type { ParamField, ParamType, RuleKind };
+export type { ParamField, RuleKind };

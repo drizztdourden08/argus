@@ -1,12 +1,9 @@
 /* @layer renderer-app @kind component */
 import { Checkbox, Field, Flex, Select, Text, TextInput } from '@drizztdourden08/tessera';
-import { ACCENTS, LANES, configToggleList } from '../model';
+import { LANES, configToggleList } from '../model';
 import type { ConfigColumnFieldsProps } from '../config-editor.type';
+import { ACCENT_OPTIONS, NO_ACCENT } from './ConfigColumnFields.constants';
 import { ConfigListInput } from './ConfigListInput';
-
-const NO_ACCENT = 'none';
-
-const ACCENT_OPTIONS = [{ value: NO_ACCENT, label: 'No accent' }, ...ACCENTS.map((accent) => ({ value: accent, label: accent }))];
 
 const ConfigColumnFields = (props: ConfigColumnFieldsProps) => {
   const { column, rules, onChange } = props;

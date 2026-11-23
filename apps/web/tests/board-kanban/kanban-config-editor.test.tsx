@@ -7,6 +7,10 @@ cleanKanban();
 
 const REFUSAL = 'bad-column: a column needs an id and a name';
 
+type Posted = Awaited<ReturnType<typeof mountKanban>>['posted'];
+
+const sentConfig = (posted: Posted) => posted.find((sent) => sent.body.kind === 'kanban-config');
+
 describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
   it('sends the whole config through the kanban-config op', async () => {
     const view = await mountKanban();
@@ -14,8 +18,8 @@ describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
     expect(within(dialog).getByText('This board runs the default columns and rules.')).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add a column' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save the columns and rules' }));
-    await waitFor(() => expect(view.posted.some((sent) => sent.body.kind === 'kanban-config')).toBe(true));
-    const post = view.posted.find((sent) => sent.body.kind === 'kanban-config');
+    await waitFor(() => expect(sentConfig(view.posted)).toBeTruthy());
+    const post = sentConfig(view.posted);
     const kanban = post?.body.kanban as { columns: { id: string }[]; rules: unknown[] };
     expect(kanban.columns.map((column) => column.id)).toEqual(['todo', 'doing', 'review', 'done', 'column']);
     expect(kanban.rules).toHaveLength(3);
@@ -25,8 +29,8 @@ describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
     const view = await mountKanban();
     const dialog = await openSettings();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Use the default' }));
-    await waitFor(() => expect(view.posted.some((sent) => sent.body.kind === 'kanban-config')).toBe(true));
-    expect(view.posted.find((sent) => sent.body.kind === 'kanban-config')?.body.kanban).toBeNull();
+    await waitFor(() => expect(sentConfig(view.posted)).toBeTruthy());
+    expect(sentConfig(view.posted)?.body.kanban).toBeNull();
   });
 
   it('shows a refusal with its key and sentence', async () => {

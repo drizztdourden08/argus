@@ -1,11 +1,10 @@
 /* @layer renderer-app @kind component */
 import { Disclosure, Field, Flex, Icon, IconButton, Select, Text, TextInput } from '@drizztdourden08/tessera';
-import { RULE_KINDS, configRuleOfKind } from '../model';
+import { configRuleOfKind } from '../model';
 import type { ConfigRuleRowProps } from '../config-editor.type';
+import { KIND_OPTIONS } from './ConfigRuleRow.constants';
 import { ConfigRuleParams } from './ConfigRuleParams';
 import { ConfigRuleReaction } from './ConfigRuleReaction';
-
-const KIND_OPTIONS = RULE_KINDS.map((entry) => ({ value: entry.kind, label: entry.kind }));
 
 const ConfigRuleRow = (props: ConfigRuleRowProps) => {
   const { rule, onChange, onRemove } = props;

@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind component */
 import { Field, Flex, Select, TextInput, Toggle } from '@drizztdourden08/tessera';
-import { ALERT_TARGET_HINT, NEW_ALERT, WRITE_MODES, configKind } from '../model';
+import { ALERT_TARGET_HINT, NEW_ALERT, configKind } from '../model';
 import type { ConfigRuleFieldProps } from '../config-editor.type';
 import { ConfigHoursInput } from './ConfigHoursInput';
-
-const MODE_OPTIONS = WRITE_MODES.map((mode) => ({ value: mode, label: mode }));
+import { MODE_OPTIONS } from './ConfigRuleReaction.constants';
 
 const ConfigRuleReaction = (props: ConfigRuleFieldProps) => {
   const { rule, onChange } = props;
