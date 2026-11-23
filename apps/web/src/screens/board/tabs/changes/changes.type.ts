@@ -34,6 +34,13 @@ interface ChangesTabProps {
 
 type ChangesGroup = 'item' | 'status' | 'none';
 
+type ChangesLayout = 'normal' | 'compact';
+
+interface ChangesLayoutProps {
+  value: ChangesLayout;
+  onChange: (layout: ChangesLayout) => void;
+}
+
 type ChangesOrder = 'created' | 'merged' | 'title';
 
 interface ChangesFilters {
@@ -59,29 +66,34 @@ interface ChangesToolsProps {
   view: ChangesView;
   prs: readonly PullRequestDoc[];
   items: readonly ItemRef[];
+  layout: ChangesLayoutProps;
 }
 
 interface PrGroupsProps {
   boardKey: string;
   prs: readonly PullRequestDoc[];
   group: ChangesGroup;
+  compact: boolean;
 }
 
 interface PrListProps {
   boardKey: string;
   rows: readonly PullRequestDoc[];
   threads: GroupThreads;
+  compact: boolean;
 }
 
 interface PrCardProps {
   boardKey: string;
   pr: PullRequestDoc;
   threads: GroupThreads;
+  compact: boolean;
 }
 
 interface PrFootProps {
   pr: PullRequestDoc;
   runs: readonly CheckRun[] | null;
+  compact: boolean;
 }
 
 interface PrSignalsProps {
@@ -100,5 +112,5 @@ interface StepLogBodyProps {
 }
 
 export type {
-  ChangesFilters, ChangesGroup, ChangesOrder, ChangesTabProps, ChangesToolsProps, ChecksProgress, LogTarget, PrCardProps, PrFootProps, PrGroupsProps, PrListProps, PrSignal, PrSignalsProps, PullRequestDoc, StepListProps, StepLogBodyProps,
+  ChangesFilters, ChangesGroup, ChangesLayout, ChangesOrder, ChangesTabProps, ChangesToolsProps, ChecksProgress, LogTarget, PrCardProps, PrFootProps, PrGroupsProps, PrListProps, PrSignal, PrSignalsProps, PullRequestDoc, StepListProps, StepLogBodyProps,
 };

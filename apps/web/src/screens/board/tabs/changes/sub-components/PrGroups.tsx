@@ -7,10 +7,10 @@ import type { PrGroupsProps } from '../changes.type';
 import { PrList } from './PrList';
 
 const PrGroups = (props: PrGroupsProps) => {
-  const { boardKey, prs, group } = props;
+  const { boardKey, prs, group, compact } = props;
   const data = useGroupsData(boardKey);
   if (!data.ready) return <Text tone="muted">Loading the items.</Text>;
-  if (group === 'none') return <PrList boardKey={boardKey} rows={prs} threads={data.threads} />;
+  if (group === 'none') return <PrList boardKey={boardKey} rows={prs} threads={data.threads} compact={compact} />;
   if (group === 'status') {
     return (
       <Flex direction="column" gap="md">
@@ -20,7 +20,7 @@ const PrGroups = (props: PrGroupsProps) => {
           return (
             <Box key={value} data-group={value}>
               <RecordGroup header={<Text weight={600}>{label}</Text>} count={rows.length} label={label}>
-                <PrList boardKey={boardKey} rows={rows} threads={data.threads} />
+                <PrList boardKey={boardKey} rows={rows} threads={data.threads} compact={compact} />
               </RecordGroup>
             </Box>
           );
@@ -31,7 +31,7 @@ const PrGroups = (props: PrGroupsProps) => {
   const groups = itemGroups(prs, data.items, (pr) => pr.item);
   return (
     <ItemGroupSections groups={groups} boardKey={boardKey} threads={data.threads} label="Pull requests" noneTitle={NO_ITEM_TITLE} noneFlag>
-      {(rows) => <PrList boardKey={boardKey} rows={rows} threads={data.threads} />}
+      {(rows) => <PrList boardKey={boardKey} rows={rows} threads={data.threads} compact={compact} />}
     </ItemGroupSections>
   );
 };

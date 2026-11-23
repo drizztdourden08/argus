@@ -2,7 +2,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { cleanAfterEach } from '../board-tests/board-dom';
-import { prDoc } from './helpers/fixtures';
+import { ago, MIN, prDoc } from './helpers/fixtures';
 import { mountChanges } from './helpers/mount-changes';
 
 cleanAfterEach();
@@ -27,6 +27,39 @@ describe('S1 the Changes tab list', { tags: ['standard'] }, () => {
     const card = await cardOf('PR-1');
     expect(card.getByText('Merged')).toBeTruthy();
     expect(card.getAllByText('A new title').length).toBeGreaterThan(0);
+  });
+});
+
+describe('P4 the Changes tab header and view', { tags: ['standard'] }, () => {
+  it('shows the counts as the only header stats', async () => {
+    await mountChanges([prDoc('PR-1')]);
+    const stats = within(screen.getByRole('group', { name: 'Changes counts' }));
+    expect(stats.getByText('Open 1')).toBeTruthy();
+    expect(stats.getByText('Failing 0')).toBeTruthy();
+    expect(stats.getByText('Merged 0')).toBeTruthy();
+    expect(stats.getByText('Closed 0')).toBeTruthy();
+    expect(stats.getByText('Not on GitHub 1')).toBeTruthy();
+    expect(screen.queryByText(/pull request/)).toBeNull();
+  });
+
+  it('times a merged pull request by its merge', async () => {
+    await mountChanges([prDoc('PR-2', { status: 'merged', mergedAt: ago(2 * MIN) })]);
+    const card = await cardOf('PR-2');
+    expect(card.getByText('2m')).toBeTruthy();
+  });
+
+  it('drops the branch and the replay in the compact view', async () => {
+    const key = 'argus.tab.changes.layout.rotp';
+    localStorage.setItem(key, 'compact');
+    try {
+      const { container } = await mountChanges([prDoc('PR-1')]);
+      await cardOf('PR-1');
+      expect(container.querySelector('[data-pr="PR-1"]')?.getAttribute('data-compact')).toBe('true');
+      expect(screen.queryByText('feat/login into main')).toBeNull();
+      expect(screen.queryByText('waits for the go')).toBeNull();
+    } finally {
+      localStorage.removeItem(key);
+    }
   });
 });
 

@@ -8,7 +8,7 @@ import { PrFoot } from './PrFoot';
 import { PrSignals } from './PrSignals';
 
 const PrCard = (props: PrCardProps) => {
-  const { boardKey, pr, threads } = props;
+  const { boardKey, pr, threads, compact } = props;
   const pane = useRecordPane();
   const { data } = usePrChecks(boardKey, pr);
   const open = () => pane.open(pr.id);
@@ -24,12 +24,14 @@ const PrCard = (props: PrCardProps) => {
         menuLabel: `More actions for ${pr.id}`,
       }}
       title={pr.title}
+      time={pr.mergedAt ?? pr.createdAt ?? null}
+      compact={compact}
       openLabel={`Open ${pr.id}: ${pr.title}`}
       onOpen={open}
       edge="border"
       attrs={{ 'data-pr': pr.id, 'data-swap-item': '' }}
       signals={<PrSignals pr={pr} runs={data} />}
-      foot={<PrFoot pr={pr} runs={data} />}
+      foot={<PrFoot pr={pr} runs={data} compact={compact} />}
     />
   );
 };

@@ -4,10 +4,10 @@ import type { PrListProps } from '../changes.type';
 import { PrCard } from './PrCard';
 
 const PrList = (props: PrListProps) => {
-  const { boardKey, rows, threads } = props;
+  const { boardKey, rows, threads, compact } = props;
   return (
     <Flex direction="column" gap="sm" role="list" aria-label="Pull requests">
-      {rows.map((pr) => <PrCard key={pr.id} boardKey={boardKey} pr={pr} threads={threads} />)}
+      {rows.map((pr) => <PrCard key={pr.id} boardKey={boardKey} pr={pr} threads={threads} compact={compact} />)}
     </Flex>
   );
 };
