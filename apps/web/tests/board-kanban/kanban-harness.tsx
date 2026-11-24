@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind test */
 import { TesseraProvider, ToastStack, toast } from '@drizztdourden08/tessera';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 import { DataProvider } from '../../src/data/react';
@@ -66,9 +66,11 @@ const Stage = () => {
   );
 };
 
-const openSettings = async (): Promise<HTMLElement> => {
+const openSettings = async (tab?: string): Promise<HTMLElement> => {
   fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
-  return screen.findByRole('dialog', { name: 'Board settings' });
+  const dialog = await screen.findByRole('dialog', { name: 'Board settings' });
+  if (tab) fireEvent.click(within(dialog).getByRole('tab', { name: tab }));
+  return dialog;
 };
 
 const moreItem = async (name: string | RegExp) => {

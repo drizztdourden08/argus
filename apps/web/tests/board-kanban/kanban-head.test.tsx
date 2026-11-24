@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind test */
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { HEAD_SIZE_PX } from '../../src/shell/records/head.constants';
 import { cardOf, cleanKanban, item, mountKanban, openSettings } from './kanban-harness';
@@ -57,14 +57,15 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
 });
 
 describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
-  it('saves a brand mark as an owner post and reads it back', async () => {
-    const view = await mountKanban(board);
+  it('offers an icon grid and an upload, and no brand mark', async () => {
+    await mountKanban(board);
     const dialog = await openSettings();
-    const marks = within(dialog).getByRole('group', { name: 'Avatar brand marks' });
-    fireEvent.click(within(marks).getByRole('button', { name: 'Use the Brock mark' }));
-    await screen.findByText('The lead avatar is saved.');
-    const post = view.posted.find((sent) => sent.body.kind === 'avatar');
-    expect(post?.body).toMatchObject({ kind: 'avatar', avatar: 'brand:brock', author: 'human' });
+    expect(within(dialog).getByRole('button', { name: /Pick a lead avatar icon/ })).toBeTruthy();
+    expect(within(dialog).queryByRole('group', { name: 'Avatar brand marks' })).toBeNull();
+  });
+
+  it('keeps reading a brand mark a board already stores', async () => {
+    const view = await mountKanban(board);
     view.change('meta', 'board', { project: 'alpha', name: 'Alpha', avatar: 'brand:brock' });
     expect(within(headOf('I-2')).getByRole('img', { name: LEAD }).closest('svg')).toBeTruthy();
   });
@@ -72,7 +73,7 @@ describe('I-83 the lead avatar setting', { tags: ['critical'] }, () => {
   it('refuses an image over the cap before it is posted', async () => {
     const view = await mountKanban(board);
     const dialog = await openSettings();
-    const input = dialog.querySelector('input[type="file"]');
+    const input = [...dialog.querySelectorAll('input[type="file"]')].at(-1);
     if (!(input instanceof HTMLInputElement)) throw new Error('no file input');
     const big = new File([new Uint8Array(300 * 1024)], 'big.png', { type: 'image/png' });
     fireEvent.change(input, { target: { files: [big] } });

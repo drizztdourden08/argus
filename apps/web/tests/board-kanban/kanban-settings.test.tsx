@@ -6,20 +6,17 @@ import { cleanKanban, mountKanban, openSettings } from './kanban-harness';
 cleanKanban();
 
 describe('I-105 the board icon setting', { tags: ['critical'] }, () => {
-  it('posts a brand mark as an icon entry', async () => {
-    const view = await mountKanban();
+  it('offers an icon grid and an upload, and no brand mark', async () => {
+    await mountKanban();
     const dialog = await openSettings();
-    const marks = within(dialog).getByRole('group', { name: 'Icon brand marks' });
-    fireEvent.click(within(marks).getByRole('button', { name: 'Use the Brock mark' }));
-    await screen.findByText('The board icon is saved.');
-    const post = view.posted.find((sent) => sent.body.kind === 'icon');
-    expect(post?.body).toMatchObject({ kind: 'icon', icon: 'brand:brock', author: 'human' });
+    expect(within(dialog).getByRole('button', { name: /Pick a board icon/ })).toBeTruthy();
+    expect(within(dialog).queryByRole('group', { name: 'Icon brand marks' })).toBeNull();
+    expect(within(dialog).queryByRole('radio', { name: 'Brand mark' })).toBeNull();
   });
 
   it('posts nothing for a file type it does not take', async () => {
     const view = await mountKanban();
     const dialog = await openSettings();
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Upload' }));
     const input = dialog.querySelector('input[type="file"]');
     if (!(input instanceof HTMLInputElement)) throw new Error('no file input');
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.gif', { type: 'image/gif' })] } });

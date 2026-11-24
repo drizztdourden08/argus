@@ -14,7 +14,7 @@ const sentConfig = (posted: Posted) => posted.find((sent) => sent.body.kind === 
 describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
   it('sends the whole config through the kanban-config op', async () => {
     const view = await mountKanban();
-    const dialog = await openSettings();
+    const dialog = await openSettings('Kanban');
     expect(within(dialog).getByText('This board runs the default columns and rules.')).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add a column' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save the columns and rules' }));
@@ -27,7 +27,7 @@ describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
 
   it('sends null for the default', async () => {
     const view = await mountKanban();
-    const dialog = await openSettings();
+    const dialog = await openSettings('Kanban');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Use the default columns and rules' }));
     await waitFor(() => expect(sentConfig(view.posted)).toBeTruthy());
     expect(sentConfig(view.posted)?.body.kanban).toBeNull();
@@ -35,7 +35,7 @@ describe('I-206 the Columns and rules section', { tags: ['critical'] }, () => {
 
   it('shows a refusal with its key and sentence', async () => {
     await mountKanban({}, (body) => (body.kind === 'kanban-config' ? { id: 'entry', status: 'refused', outcome: REFUSAL, entry: null, seq: 1 } : undefined));
-    const dialog = await openSettings();
+    const dialog = await openSettings('Kanban');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add a column' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save the columns and rules' }));
     expect(await screen.findByText(`Refused: ${REFUSAL}.`)).toBeTruthy();
