@@ -1,13 +1,8 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { idsIn, itemRef, viewOf } from './kanban-docs';
+import { familyItems, idsIn, itemRef, viewOf } from './kanban-docs';
 
-const family = [
-  itemRef('I-1', { type: 'epic', rank: 1 }),
-  itemRef('I-2', { parent: 'I-1', rank: 2 }),
-  itemRef('I-3', { rank: 3 }),
-  itemRef('I-4', { parent: 'I-1', rank: 4 }),
-];
+const family = familyItems();
 
 describe('I-94 children are framed under their parent', { tags: ['standard'] }, () => {
   it('keeps the children of one parent together where the first child sits', () => {

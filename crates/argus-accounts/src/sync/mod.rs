@@ -7,6 +7,7 @@ pub mod backup;
 pub mod compare;
 pub mod counts;
 pub mod drift;
+mod drive;
 pub mod job;
 pub mod onto;
 pub mod review;

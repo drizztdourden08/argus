@@ -30,7 +30,7 @@ const BOARD_ICON_NAMES = [
   'trophy',
   'sun',
   'moon',
-  'home',
+  'house',
   'message-square',
   'users',
   'bookmark',
@@ -47,8 +47,7 @@ const BOARD_ICON_NAMES = [
   'link',
 ] as const;
 
-/** The names a board's default icon is drawn from: the first 16, so a default never moves when the list grows. */
-const DEFAULT_ICON_COUNT = 16;
+const DEFAULT_ICON_POOL = 16;
 
 const ICON_MAX = 64 * 1024;
 
@@ -68,7 +67,7 @@ const ICON_NAME_PREFIX = 'icon:';
 
 export {
   BOARD_ICON_NAMES,
-  DEFAULT_ICON_COUNT,
+  DEFAULT_ICON_POOL,
   ICON_MAX,
   ICON_NAME_PREFIX,
   ICON_PX,

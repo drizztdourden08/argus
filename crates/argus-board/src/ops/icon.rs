@@ -53,7 +53,7 @@ pub const ICON_NAMES: [&str; 45] = [
     "trophy",
     "sun",
     "moon",
-    "home",
+    "house",
     "message-square",
     "users",
     "bookmark",

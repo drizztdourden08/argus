@@ -95,7 +95,14 @@ const viewOf = (items: ItemRef[], setup: Setup = {}) =>
     now: NOW,
   });
 
+const familyItems = (): ItemRef[] => [
+  itemRef('I-1', { type: 'epic', rank: 1 }),
+  itemRef('I-2', { parent: 'I-1', rank: 2 }),
+  itemRef('I-3', { rank: 3 }),
+  itemRef('I-4', { parent: 'I-1', rank: 4 }),
+];
+
 const idsIn = (view: ReturnType<typeof viewOf>, column: string): string[] =>
   (view.columns.find((candidate) => candidate.id === column)?.cards ?? []).map((card) => card.id);
 
-export { DAY, HOUR, NOW, before, entryRef, filters, idsIn, itemRef, noNeeds, prefs, threadRef, viewOf };
+export { DAY, HOUR, NOW, before, entryRef, familyItems, filters, idsIn, itemRef, noNeeds, prefs, threadRef, viewOf };

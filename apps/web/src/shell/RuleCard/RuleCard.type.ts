@@ -29,4 +29,4 @@ interface RuleCardProps {
   onRemove: () => void;
 }
 
-export type { RuleCardProps, RuleCardToggle, RuleFact };
+export type { RuleCardProps, RuleFact };

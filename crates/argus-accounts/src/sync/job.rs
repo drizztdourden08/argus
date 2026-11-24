@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::backup;
-use super::drift::{Drift, drift_of};
+use super::drift::Drift;
+use super::drive::{apply_planned, drive, opening_summary};
 use super::steps::{StepKind, StepSink, StepState, SyncStep};
 use crate::catalog::merge::LINEAGE_KEYS;
 use crate::catalog::plan::{Change, ChangeKind, Plan, build_plan, is_syncable};
@@ -438,15 +439,7 @@ pub fn run(
     sink: &dyn StepSink,
     on_progress: &mut dyn FnMut(&Progress),
 ) -> Result<Summary, String> {
-    let mut run = Run::new(env, sink, on_progress);
-    run.start(mode);
-    let result = run_inner(&mut run, mode);
-    run.phase(if result.is_ok() {
-        Phase::Done
-    } else {
-        Phase::Failed
-    });
-    result
+    drive(env, mode, sink, on_progress, |run| run_inner(run, mode))
 }
 
 fn run_inner(run: &mut Run, mode: Mode) -> Result<Summary, String> {
@@ -454,37 +447,8 @@ fn run_inner(run: &mut Run, mode: Mode) -> Result<Summary, String> {
     let scanned = scan(env)?;
     run.phase(Phase::Plan);
     let planned = plan(env, scanned)?;
-    let drift = drift_of(&planned);
-    let mut summary = Summary {
-        mode,
-        drift,
-        copied: planned.copied(),
-        conflicts: planned.catalog.conflicts.len(),
-        missing_transcripts: planned.catalog.missing_transcripts.len(),
-        verified: false,
-        backup_dir: None,
-    };
-    if mode == Mode::DryRun {
-        return Ok(summary);
-    }
-    if (env.running)() {
-        return Err("Claude Desktop is running; close it and run the sync again".to_owned());
-    }
-    if planned.is_empty() {
-        summary.verified = true;
-        return Ok(summary);
-    }
-    let backup_dir = write_planned(run, &planned, &|env| {
-        let again = scan_and_plan(env)?;
-        let left = again.catalog.changes.len() + again.folders.steps.len();
-        if left > 0 {
-            return Err(format!("{left} changes are still planned"));
-        }
-        Ok(())
-    })?;
-    summary.backup_dir = Some(backup_dir);
-    summary.verified = true;
-    Ok(summary)
+    let summary = opening_summary(mode, &planned);
+    apply_planned(run, &planned, summary, "sync", &scan_and_plan)
 }
 
 /// Backs up, writes the chat files and the sidebar storage of a plan, then runs `check` as the

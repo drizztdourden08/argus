@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { ActionState, LimitKey, LimitSource, OverlordSettings, OverlordUsage, SettingsDraft } from '../../../data/overlord';
+import type { ActionState, LimitKey, OverlordSettings, OverlordUsage, SettingsDraft } from '../../../data/overlord';
 
 interface SettingsFormState {
   settings: OverlordSettings | null;

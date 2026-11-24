@@ -5,7 +5,7 @@ import { useConfigEditor } from '../behavior/useConfigEditor';
 import type { ConfigSectionProps } from '../config-editor.type';
 import { ConfigColumn } from './ConfigColumn';
 import { ConfigRuleCard } from './ConfigRuleCard';
-import './ConfigPreview.css';
+import './ColumnsRulesSection.css';
 
 const ColumnsRulesSection = (props: ConfigSectionProps) => {
   const editor = useConfigEditor(props.boardKey);

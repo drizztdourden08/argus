@@ -9,7 +9,7 @@ use crate::catalog::merge::{json_bytes, sha256_hex};
 use crate::catalog::plan::{Change, ChangeKind};
 use crate::catalog::read::tombstone_name;
 use crate::sidebar::{SidebarKeys, fresh_folder_id};
-use crate::sync::drift::drift_of;
+use crate::sync::drive::{drive, opening_summary};
 use crate::sync::job::{Env, Mode, Phase, Planned, Progress, Run, Summary, scan, write_planned};
 use crate::sync::steps::StepSink;
 
@@ -25,15 +25,9 @@ pub fn run_review(
     sink: &dyn StepSink,
     on_progress: &mut dyn FnMut(&Progress),
 ) -> Result<Summary, String> {
-    let mut run = Run::new(env, sink, on_progress);
-    run.start(Mode::Apply);
-    let result = run_inner(&mut run, request);
-    run.phase(if result.is_ok() {
-        Phase::Done
-    } else {
-        Phase::Failed
-    });
-    result
+    drive(env, Mode::Apply, sink, on_progress, |run| {
+        run_inner(run, request)
+    })
 }
 
 fn run_inner(run: &mut Run, request: &Request) -> Result<Summary, String> {
@@ -41,15 +35,7 @@ fn run_inner(run: &mut Run, request: &Request) -> Result<Summary, String> {
     let scanned = scan(env)?;
     run.phase(Phase::Plan);
     let planned = plan_review(env, scanned, request, &mut fresh_folder_id)?;
-    let mut summary = Summary {
-        mode: Mode::Apply,
-        drift: drift_of(&planned),
-        copied: planned.copied(),
-        conflicts: planned.catalog.conflicts.len(),
-        missing_transcripts: planned.catalog.missing_transcripts.len(),
-        verified: false,
-        backup_dir: None,
-    };
+    let mut summary = opening_summary(Mode::Apply, &planned);
     if (env.running)() {
         return Err("Claude Desktop is running; close it and apply again".to_owned());
     }

@@ -1,15 +1,9 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
 import { epicColumns, epicFolded, epicKeyOf, epicKeys, epicStored, rulesText } from '../../src/screens/board/tabs/kanban/model';
-import { itemRef, viewOf } from './kanban-docs';
+import { familyItems, itemRef, viewOf } from './kanban-docs';
 
-const items = [
-  itemRef('I-1', { type: 'epic', rank: 1 }),
-  itemRef('I-2', { parent: 'I-1', rank: 2 }),
-  itemRef('I-3', { rank: 3 }),
-  itemRef('I-4', { parent: 'I-1', rank: 4 }),
-  itemRef('I-5', { parent: 'I-1', rank: 5, status: 'doing' }),
-];
+const items = [...familyItems(), itemRef('I-5', { parent: 'I-1', rank: 5, status: 'doing' })];
 
 const shownOf = () => {
   const view = viewOf(items, { prefs: { order: 'rank' } });

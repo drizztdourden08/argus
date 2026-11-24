@@ -3,17 +3,16 @@ import { useCallback } from 'react';
 import { fileToIcon } from '../../../../board-icon';
 import { setIcon } from '../../../../data/posts';
 import { useDoc } from '../../../../data/react';
-import type { BoardIconName } from '../../../../board-icon';
 import type { BoardMeta } from '../../../../data/types';
-import { ICON_REFUSED, ICON_SAVED, ICON_VALUE_PREFIX } from '../BoardSettings.constants';
+import { ICON_REFUSED, ICON_SAVED } from '../BoardSettings.constants';
 import type { IconChoice } from '../BoardSettings.type';
+import { useSavePicks } from './useSavePicks';
 import { useSettingSave } from './useSettingSave';
 
 const useIconChoice = (boardKey: string): IconChoice => {
   const meta = useDoc<BoardMeta>(boardKey, 'meta', 'board').doc;
   const { busy, problem, setProblem, save } = useSettingSave({ boardKey, post: setIcon, saved: ICON_SAVED });
-  const pickIcon = useCallback((name: BoardIconName) => save(`${ICON_VALUE_PREFIX}${name}`), [save]);
-  const reset = useCallback(() => save(null), [save]);
+  const { pickIcon, reset } = useSavePicks(save);
   const upload = useCallback(async (files: File[]) => {
     if (!files[0]) return;
     const result = await fileToIcon(files[0]);

@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const setTitleMax = vi.fn();
+const setTitleMax = vi.fn<(key: string, value: number | null) => Promise<unknown>>();
 
 vi.mock('../../src/data/posts', () => ({ setTitleMax: (key: string, value: number | null) => setTitleMax(key, value) }));
 vi.mock('../../src/data/react', () => ({ useDoc: () => ({ doc: { project: 'argus', name: 'Argus', updatedAt: '', titleMax: null } }) }));

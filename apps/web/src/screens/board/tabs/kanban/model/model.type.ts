@@ -1,7 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { KanbanColumn, KanbanMove, SegmentedBarSegment, SortDirection } from '@drizztdourden08/tessera';
 import type { DocData } from '../../../../../data/api';
-import type { DepHistoryRow, DepState } from '../../../../../data/deps';
 import type { Entry, ItemRef, PlaceAmong, ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import type { KanbanColumnLimit, KanbanConfig } from '../../../../../data/types';
@@ -200,18 +199,6 @@ interface TestScope {
   build?: string | null;
 }
 
-interface DepLink {
-  side: 'waits' | 'asked';
-  dep: string;
-  project: string;
-  item: string;
-  title: string;
-  thread: string | null;
-  state: DepState;
-  since: string | null;
-  reason: string | null;
-}
-
 interface CardChip {
   id: string;
   text: string;
@@ -225,11 +212,7 @@ interface CardProgress {
   title: string;
 }
 
-type DepView = DepLink & {
-  history: DepHistoryRow[];
-  cancellable: boolean;
-};
-
+export type { DepLink, DepView } from './dep.type';
 export type {
-  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnLimit, ColumnsInput, DepLink, DepView, DropInput, DropPlan, EditableField, EpicKey, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
+  AddPreset, AskKind, AskLink, BulkSofts, CardBars, CardChip, CardData, CardProgress, ChildCount, CardFacts, ColumnLimit, ColumnsInput, DropInput, DropPlan, EditableField, EpicKey, EntryDocs, FocusChoices, ItemGroup, ItemOrder, KanbanFilters, KanbanPrefs, KanbanView, Needs, NeedsInput, RawStored, StoredView, TestScope, TrailInfo, ViewInput,
 };
