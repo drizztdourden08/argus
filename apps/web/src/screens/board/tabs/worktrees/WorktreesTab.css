@@ -1,0 +1,4 @@
+/* @layer renderer-app @kind style */
+.worktrees-body {
+  padding: var(--space-md);
+}

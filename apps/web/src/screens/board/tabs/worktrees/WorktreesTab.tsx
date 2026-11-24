@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Text } from '@drizztdourden08/tessera';
+import { Flex, Text } from '@drizztdourden08/tessera';
 import { TabPanel } from '../../shared';
 import { useAskThread } from './behavior/useAskThread';
 import { useAttempt } from './behavior/useAttempt';
@@ -19,6 +19,7 @@ import { WorktreeBody } from './sub-components/WorktreeBody';
 import { WorktreeScanned } from './sub-components/WorktreeScanned';
 import { WorktreeToolbar } from './sub-components/WorktreeToolbar';
 import type { WorktreesTabProps } from './worktrees-props.type';
+import './WorktreesTab.css';
 
 const WorktreesTab = (props: WorktreesTabProps) => {
   const { boardKey } = props;
@@ -37,27 +38,29 @@ const WorktreesTab = (props: WorktreesTabProps) => {
   const shown = sortRows(applyRowFilters(filterRows(rows, prefs.needOnly), view.filters, meta), view.order, view.direction);
   return (
     <TabPanel label="Worktrees" stats={worktreeStats(counts, meta)} tools={rules.length > 0 ? <WorktreeScanned scannedAt={meta?.scannedAt} /> : undefined}>
-      <WorktreeToolbar boardKey={boardKey} rows={rows} prefs={prefs} counts={counts} meta={meta} batch={batch} />
-      <LeftoverBatchConfirm meta={meta} batch={batch} />
-      {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
-      <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
-      <WorktreeBody
-        boardKey={boardKey}
-        rows={shown}
-        group={view.group}
-        layout={prefs.layout}
-        compact={prefs.compact}
-        total={counts.all}
-        needOnly={prefs.needOnly}
-        hasRules={rules.length > 0}
-        meta={meta}
-        controls={controls}
-        ask={ask}
-        removal={removal}
-        onShowAll={() => prefs.setNeedOnly(false)}
-      />
-      <RequestsSection boardKey={boardKey} requests={requestsOf(meta)} />
-      <RemovedSection boardKey={boardKey} removed={removedOf(meta)} />
+      <Flex direction="column" gap="sm" className="worktrees-body">
+        <WorktreeToolbar boardKey={boardKey} rows={rows} prefs={prefs} counts={counts} meta={meta} batch={batch} />
+        <LeftoverBatchConfirm meta={meta} batch={batch} />
+        {notices.notice && <NoticeBanner notice={notices.notice} onDismiss={notices.clear} />}
+        <RefusedJobs jobs={refusedJobs(meta, notices.dismissed, Date.now())} onDismiss={notices.dismissJobs} />
+        <WorktreeBody
+          boardKey={boardKey}
+          rows={shown}
+          group={view.group}
+          layout={prefs.layout}
+          compact={prefs.compact}
+          total={counts.all}
+          needOnly={prefs.needOnly}
+          hasRules={rules.length > 0}
+          meta={meta}
+          controls={controls}
+          ask={ask}
+          removal={removal}
+          onShowAll={() => prefs.setNeedOnly(false)}
+        />
+        <RequestsSection boardKey={boardKey} requests={requestsOf(meta)} />
+        <RemovedSection boardKey={boardKey} removed={removedOf(meta)} />
+      </Flex>
     </TabPanel>
   );
 };

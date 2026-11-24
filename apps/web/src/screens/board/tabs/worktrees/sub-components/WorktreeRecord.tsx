@@ -40,7 +40,6 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
             title={title}
             chips={chips}
             time={touchedAt(row)}
-            compact={compact}
             trailing={row.job ? <Text variant="caption" tone={row.job.state === 'failed' ? 'danger' : 'muted'}>{jobText(row.job)}</Text> : undefined}
             onOpen={open}
           />
