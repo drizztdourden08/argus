@@ -9,6 +9,8 @@ pub enum Outcome {
     Ok,
     /// The CLI could not sign in (status 401 or an authentication error).
     SignIn,
+    /// The account is at its usage limit (status 429 or a rate limit error).
+    RateLimited,
     /// The CLI failed for another reason, in a few words.
     Failed(String),
     /// The CLI ran too long and was killed.
@@ -29,7 +31,15 @@ pub fn parse(stdout: &str) -> Outcome {
     if status == Some(401) || kind == Some("authentication_error") {
         return Outcome::SignIn;
     }
+    if limited(&result, status, kind) {
+        return Outcome::RateLimited;
+    }
     Outcome::Failed(reason(&result, status, kind))
+}
+
+fn limited(result: &Value, status: Option<i64>, kind: Option<&str>) -> bool {
+    let text = result.get("result").and_then(Value::as_str).unwrap_or("");
+    status == Some(429) || kind == Some("rate_limit_error") || text.contains("rate_limit_error")
 }
 
 fn reason(result: &Value, status: Option<i64>, kind: Option<&str>) -> String {
@@ -68,6 +78,17 @@ mod tests {
         assert_eq!(by_status, Outcome::SignIn);
         let by_type = parse(r#"{"is_error":true,"api_error_type":"authentication_error"}"#);
         assert_eq!(by_type, Outcome::SignIn);
+    }
+
+    #[test]
+    fn a_429_or_a_rate_limit_error_is_its_own_kind() {
+        let by_status = parse(r#"{"is_error":true,"api_error_status":429}"#);
+        assert_eq!(by_status, Outcome::RateLimited);
+        let by_type = parse(r#"{"is_error":true,"api_error_type":"rate_limit_error"}"#);
+        assert_eq!(by_type, Outcome::RateLimited);
+        let by_text =
+            parse(r#"{"is_error":true,"result":"API Error: {\"type\":\"rate_limit_error\"}"}"#);
+        assert_eq!(by_text, Outcome::RateLimited);
     }
 
     #[test]

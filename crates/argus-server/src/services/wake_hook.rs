@@ -1,7 +1,7 @@
 //! The one door other services use to wake a thread: [`WakeHook::submit`]. The runs, the
 //! launcher wakes, the worktrees, the process monitor and the sub-agent services each have
 //! their own wake type in their crate; their adapters turn it into a [`WakeRequest`] and call
-//! this. With the wake service off, a submit is a no-op that succeeds.
+//! this. With the wake service off, a submit does nothing and says so.
 
 use std::sync::{Arc, Mutex};
 
@@ -26,10 +26,10 @@ impl WakeHook {
     /// `spawn_blocking`.
     ///
     /// # Errors
-    /// The reason the engine could not record them; they are then not sent.
+    /// The reason the engine could not record them, or that the wake service is off; they are then not sent.
     pub fn submit(&self, wakes: &[WakeRequest]) -> Result<(), String> {
         let Some(wake) = &self.wake else {
-            return Ok(());
+            return Err("the wake service is off, nothing was sent".to_owned());
         };
         lock(wake)
             .submit(wakes)

@@ -8,10 +8,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use argus_accounts::session_map::{account_for_scopes, local_ids, scopes_of};
 use argus_accounts::{Account, Credentials};
-use argus_store::{ActivityLevel, NewActivity};
-use argus_wake::relay::Ward;
 
-use super::relay::RelayHost;
+use super::account_pick::{Use, pick};
 
 /// An access token held for one headless resume. Its `Debug` hides it.
 pub struct Login(String);
@@ -61,49 +59,42 @@ fn now_ms() -> i64 {
     i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
 }
 
-/// The login of the account that owns the desktop session `session` (a hook session id), or why none.
+/// A login with the account it belongs to.
+pub struct Signed {
+    /// The token.
+    pub login: Login,
+    /// The key of the account that signed in.
+    pub account: String,
+    /// Why the owning account was passed over, when it was.
+    pub why: Option<String>,
+}
+
+/// The login for the desktop session `session` (a hook session id), or why none. The owning account signs
+/// in, unless it is at its limit and another account has room.
 pub(crate) fn login_of(
     creds: &dyn Credentials,
     accounts: &[Account],
+    uses: &[Use],
     app: &Path,
     session: &str,
-) -> Result<Login, &'static str> {
+) -> Result<Signed, &'static str> {
     let wanted = [session.to_owned()];
     let local = local_ids(app, &wanted);
     let scopes = local
         .get(session)
         .map_or_else(Vec::new, |id| scopes_of(app, id));
-    let account = account_for_scopes(accounts, &scopes).ok_or("no matching account")?;
-    token_of(creds, Path::new(&account.cli_dir), now_ms())
-}
-
-impl RelayHost {
-    /// The login for the headless wake of `target`. Without one the wake runs with the default CLI login and
-    /// one activity line says why.
-    pub(super) fn headless_login(&self, app: &Path, session: &str, target: &Ward) -> Option<Login> {
-        let accounts = (self.accounts)();
-        match login_of(self.creds.as_ref(), &accounts, app, session) {
-            Ok(login) => Some(login),
-            Err(reason) => {
-                self.log_default_login(target, reason);
-                None
-            }
-        }
-    }
-
-    fn log_default_login(&self, target: &Ward, reason: &str) {
-        let Some(activity) = &self.activity else {
-            return;
-        };
-        let text = format!(
-            "headless wake of {} {}: default CLI login ({reason})",
-            target.key.project, target.key.thread
-        );
-        activity.add(
-            NewActivity::new("headless-wake", ActivityLevel::Info, text)
-                .project(Some(target.key.project.clone()))
-                .thread(Some(target.key.thread.clone())),
-        );
+    let owner = account_for_scopes(accounts, &scopes).ok_or("no matching account")?;
+    let chosen = pick(accounts, owner, uses);
+    let sign = |account: &Account, why: Option<String>| {
+        token_of(creds, Path::new(&account.cli_dir), now_ms()).map(|login| Signed {
+            login,
+            account: account.key.clone(),
+            why,
+        })
+    };
+    match sign(chosen.account, chosen.why.clone()) {
+        Err(_) if chosen.why.is_some() => sign(owner, None),
+        other => other,
     }
 }
 

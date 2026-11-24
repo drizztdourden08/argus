@@ -8,10 +8,13 @@ use std::time::Duration;
 
 use argus_accounts::session_map::{is_archived, seat_of};
 use argus_accounts::{Account, CliCredentials, find_app_data, find_cli_exe};
+use argus_core::clock::now_ms;
 use argus_store::{ActivityLevel, NewActivity};
 use tokio::sync::oneshot;
 
 use crate::Services;
+use crate::adapters::wake::account_pick::{Use, uses_now};
+use crate::adapters::wake::backoff::{BASE_MS, clock_text};
 use crate::adapters::wake::headless::{resume, session_running};
 use crate::adapters::wake::login::login_of;
 use crate::adapters::wake::outcome::Outcome;
@@ -23,6 +26,14 @@ const SIGN_IN: &str = "sign-in: the CLI login expired, the owner must run claude
 const KILLED: &str = "timed out: the resume was killed after 20 minutes";
 const STILL_RUNNING: &str =
     "timed out: still running after 10 minutes, it goes on in the background";
+
+/// The answer for an account at its limit: the relay tries the lead again after its first backoff step.
+fn limited(now: i64) -> String {
+    format!(
+        "rate limited, the relay will retry at {}",
+        clock_text(now + BASE_MS)
+    )
+}
 
 /// Where a session runs, checked.
 #[derive(Debug, PartialEq, Eq)]
@@ -55,6 +66,7 @@ struct Desktop {
     app: PathBuf,
     exe: PathBuf,
     accounts: Vec<Account>,
+    uses: Vec<Use>,
     creds: CliCredentials,
 }
 
@@ -73,6 +85,7 @@ fn desktop(svc: &Services) -> Result<Desktop, String> {
         app,
         exe,
         accounts: config.accounts,
+        uses: uses_now(&svc.db),
         creds: CliCredentials::new(found),
     })
 }
@@ -88,7 +101,14 @@ fn start(
     if session_running(&plan.cli_id) || session_running(local_id) {
         return Err("skipped: the session is running now".to_owned());
     }
-    let login = login_of(&desk.creds, &desk.accounts, &desk.app, &plan.cli_id).ok();
+    let signed = login_of(
+        &desk.creds,
+        &desk.accounts,
+        &desk.uses,
+        &desk.app,
+        &plan.cli_id,
+    );
+    let login = signed.ok().map(|s| s.login);
     let on_done = move |out| drop(done.send(out));
     let (exe, cwd) = (&desk.exe, Path::new(&plan.cwd));
     resume(exe, cwd, &plan.cli_id, text, login.as_ref(), on_done)
@@ -96,10 +116,11 @@ fn start(
 }
 
 /// The tool's answer for an outcome: the text, and whether the message was delivered.
-fn describe(outcome: &Outcome) -> Result<String, String> {
+fn describe(outcome: &Outcome, now: i64) -> Result<String, String> {
     match outcome {
         Outcome::Ok => Ok("ok".to_owned()),
         Outcome::SignIn => Err(SIGN_IN.to_owned()),
+        Outcome::RateLimited => Err(limited(now)),
         Outcome::Failed(reason) => Err(format!("failed: {reason}")),
         Outcome::TimedOut => Err(KILLED.to_owned()),
     }
@@ -124,7 +145,7 @@ async fn resumed(svc: &Arc<Services>, local_id: &str, text: &str) -> Result<Stri
         .map_err(|_| "failed: the resume could not be started".to_owned())?;
     started?;
     match tokio::time::timeout(WAIT, outcome).await {
-        Ok(Ok(outcome)) => describe(&outcome),
+        Ok(Ok(outcome)) => describe(&outcome, now_ms()),
         Ok(Err(_)) => Err("failed: the resume ended without an outcome".to_owned()),
         Err(_) => Err(STILL_RUNNING.to_owned()),
     }
@@ -182,10 +203,15 @@ mod tests {
 
     #[test]
     fn only_a_clean_finish_is_delivered() {
-        assert_eq!(describe(&Outcome::Ok), Ok("ok".to_owned()));
-        assert_eq!(describe(&Outcome::SignIn), Err(SIGN_IN.to_owned()));
-        let failed = describe(&Outcome::Failed("status 529".to_owned()));
+        assert_eq!(describe(&Outcome::Ok, 0), Ok("ok".to_owned()));
+        assert_eq!(describe(&Outcome::SignIn, 0), Err(SIGN_IN.to_owned()));
+        let failed = describe(&Outcome::Failed("status 529".to_owned()), 0);
         assert_eq!(failed, Err("failed: status 529".to_owned()));
-        assert_eq!(describe(&Outcome::TimedOut), Err(KILLED.to_owned()));
+        assert_eq!(describe(&Outcome::TimedOut, 0), Err(KILLED.to_owned()));
+        let limit = describe(&Outcome::RateLimited, 0);
+        assert_eq!(
+            limit,
+            Err("rate limited, the relay will retry at 00:02 UTC".to_owned())
+        );
     }
 }

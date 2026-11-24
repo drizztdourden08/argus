@@ -4,6 +4,7 @@
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use argus_core::clock::now_ms;
 use argus_notify::{By, Level, PingRequest};
 use argus_store::{ActivityLevel, NewActivity};
 use argus_wake::relay::Ward;
@@ -34,11 +35,21 @@ impl SignInGate {
 }
 
 impl RelayHost {
-    /// Records the outcome of a headless resume of `target`, and pings the owner on an expired login.
-    pub(super) fn on_outcome(&self, target: &Ward, outcome: &Outcome) {
+    /// Records the outcome of a headless resume of `target` that started at `since` (an ISO time). A success
+    /// clears the lead's backoff. Any other end puts the lead back (idle, wake due again), backs it off, and
+    /// pings the owner on an expired login or an account at its limit.
+    pub(super) fn on_outcome(&self, target: &Ward, outcome: &Outcome, since: &str) {
         self.log_outcome(target, outcome);
-        if *outcome == Outcome::SignIn && self.sign_in.due(Instant::now()) {
-            self.tell_sign_in();
+        if *outcome == Outcome::Ok {
+            self.backoff.reset(&target.key);
+            return;
+        }
+        let retry_at = self.backoff.fail(&target.key, now_ms());
+        self.put_back(target, since);
+        match outcome {
+            Outcome::SignIn if self.sign_in.due(Instant::now()) => self.tell_sign_in(),
+            Outcome::RateLimited => self.tell_limited(target, retry_at),
+            _ => {}
         }
     }
 
@@ -49,6 +60,7 @@ impl RelayHost {
         let (level, what) = match outcome {
             Outcome::Ok => (ActivityLevel::Info, "ok".to_owned()),
             Outcome::SignIn => (ActivityLevel::Warn, "sign-in expired".to_owned()),
+            Outcome::RateLimited => (ActivityLevel::Warn, "account limit reached".to_owned()),
             Outcome::Failed(reason) => (ActivityLevel::Warn, format!("failed ({reason})")),
             Outcome::TimedOut => (ActivityLevel::Warn, "timed out".to_owned()),
         };

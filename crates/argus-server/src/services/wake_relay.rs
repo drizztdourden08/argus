@@ -8,6 +8,8 @@ use argus_accounts::{CliCredentials, Credentials, find_app_data};
 use argus_wake::service::driver::lock;
 
 use crate::Services;
+use crate::adapters::wake::account_pick::uses_now;
+use crate::adapters::wake::backoff::Backoff;
 use crate::adapters::wake::relay_archived::ArchivedGate;
 use crate::adapters::wake::relay_outcome::SignInGate;
 use crate::adapters::wake::{RelayHost, ServerRelay};
@@ -18,6 +20,7 @@ pub(crate) fn wire(svc: &Services) {
     };
     let app_of = Arc::clone(&accounts);
     let list_of = Arc::clone(&accounts);
+    let db = Arc::clone(&svc.db);
     let creds: Arc<dyn Credentials> = Arc::new(CliCredentials::new(find_app_data(
         accounts.config().app_data.as_deref(),
     )));
@@ -32,6 +35,8 @@ pub(crate) fn wire(svc: &Services) {
         archived: ArchivedGate::default(),
         accounts: Box::new(move || list_of.config().accounts),
         creds,
+        usage: Box::new(move || uses_now(&db)),
+        backoff: Backoff::default(),
     };
     lock(wake).set_relay_port(Arc::new(ServerRelay::new(host)));
 }

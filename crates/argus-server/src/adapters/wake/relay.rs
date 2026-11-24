@@ -9,10 +9,13 @@ use argus_accounts::session_map::{local_ids, seat_of};
 use argus_accounts::{Account, Credentials, find_cli_exe};
 use argus_board::inbox::queue;
 use argus_board::store::with_board;
+use argus_core::clock::{now_iso, now_ms};
 use argus_notify::{By, Level, Notify, PingRequest};
 use argus_store::ActivityLog;
 use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 
+use super::account_pick::Use;
+use super::backoff::{Backoff, clock_text};
 use super::headless::{resume, session_running};
 use super::login::Login;
 use super::outcome::Outcome;
@@ -46,6 +49,10 @@ pub struct RelayHost {
     pub accounts: Box<dyn Fn() -> Vec<Account> + Send + Sync>,
     /// The CLI logins of the accounts.
     pub creds: Arc<dyn Credentials>,
+    /// The use of each account, read when a headless resume picks its login.
+    pub usage: Box<dyn Fn() -> Vec<Use> + Send + Sync>,
+    /// How long a lead whose resume failed is left alone.
+    pub backoff: Backoff,
 }
 
 /// The relay port over the boards, the desktop's session records and the CLI.
@@ -98,26 +105,38 @@ impl RelayHost {
     }
 
     fn resume_headless(self: &Arc<Self>, target: &Ward) {
+        if let Some(at) = self.backoff.waiting(&target.key, now_ms()) {
+            let text = format!("waiting for the backoff, next try at {}", clock_text(at));
+            return self.log_wake(target, text);
+        }
         let Some(session) = target.session_id.as_deref() else {
-            return;
+            return self.log_wake(
+                target,
+                "not resumed: the thread has no session id".to_owned(),
+            );
         };
         let Some(app) = (self.app_data)() else {
-            return;
+            return self.log_wake(target, "not resumed: no desktop app data folder".to_owned());
         };
         let Some(exe) = find_cli_exe(&app) else {
-            return;
+            return self.log_wake(
+                target,
+                "not resumed: the Claude CLI was not found".to_owned(),
+            );
         };
         if self.skip_archived(&app, target) {
             return;
         }
         let (id, cwd) = seat_for(&app, session);
         let Some(cwd) = cwd else {
-            return;
+            return self.log_wake(target, "not resumed: the session has no folder".to_owned());
         };
-        if !session_running(&id) && !session_running(session) {
-            let login = self.headless_login(&app, session, target);
-            self.start_resume(&exe, Path::new(&cwd), &id, login.as_ref(), target);
+        if session_running(&id) || session_running(session) {
+            let text = "not resumed: the session is running, the relay note follows".to_owned();
+            return self.log_wake(target, text);
         }
+        let login = self.headless_login(&app, session, target);
+        self.start_resume(&exe, Path::new(&cwd), &id, login.as_ref(), target);
     }
 
     fn start_resume(
@@ -130,12 +149,14 @@ impl RelayHost {
     ) {
         let (host, ward) = (Arc::clone(self), target.clone());
         let text = wake_text(&target.key.thread);
+        let since = now_iso();
+        let when = since.clone();
         let started = resume(exe, cwd, id, &text, login, move |out| {
-            host.on_outcome(&ward, &out);
+            host.on_outcome(&ward, &out, &when);
         });
         if let Err(error) = started {
             let reason = format!("not started: {}", error.kind());
-            self.on_outcome(target, &Outcome::Failed(reason));
+            self.on_outcome(target, &Outcome::Failed(reason), &since);
         }
     }
 
