@@ -14,6 +14,7 @@ export { limitTone } from './column-limits';
 export { byCreated } from './by-created';
 export { categoryColor } from '../../../../../shell';
 export { cardChips } from './card-chips';
+export { cardTint } from './card-tint';
 export { acSegments } from './ac-segments';
 export { cardBars } from './card-bars';
 export { cardProgress } from './card-progress';
