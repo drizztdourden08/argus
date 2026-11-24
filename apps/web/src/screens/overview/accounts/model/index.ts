@@ -18,6 +18,7 @@ export { lastSyncText } from './last-sync-text';
 export { limitLabel } from './limit-label';
 export { limitLine } from './limit-line';
 export { mainLimit } from './main-limit';
+export { nextPair } from './next-pair';
 export { nextSteps } from './next-steps';
 export { orderAccounts } from './order-accounts';
 export { orderedSteps } from './ordered-steps';

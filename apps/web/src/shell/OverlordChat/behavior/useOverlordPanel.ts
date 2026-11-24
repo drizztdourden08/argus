@@ -7,7 +7,7 @@ import {
 } from '../../../data/overlord';
 import type { ApprovalDecision, OverlordAction, OverlordMode } from '../../../data/overlord';
 import { useRemoteRead } from '../../../data/remote';
-import { APPROVAL_PARAM } from '../OverlordPanel.constants';
+import { APPROVAL_PARAM } from '../OverlordChat.constants';
 import { pendingApprovals } from './pending-approvals';
 
 const useOverlordPanel = () => {

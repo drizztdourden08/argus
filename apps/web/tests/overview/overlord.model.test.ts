@@ -6,7 +6,7 @@ import { pendingApprovals } from '../../src/shell/OverlordChat/behavior/pending-
 import { spendLook } from '../../src/shell/OverlordChat/behavior/spend-look';
 import { isRunning } from '../../src/shell/OverlordChat/behavior/is-running';
 import { toRows } from '../../src/shell/OverlordChat/behavior/to-rows';
-import { STATE_STATUSES } from '../../src/shell/OverlordChat/OverlordPanel.constants';
+import { STATE_STATUSES } from '../../src/shell/OverlordChat/OverlordChat.constants';
 
 const assistant = (index: number, content: unknown[]) => ({ index, event: { type: 'assistant', message: { content } } });
 const user = (index: number, content: unknown) => ({ index, event: { type: 'user', message: { content } } });

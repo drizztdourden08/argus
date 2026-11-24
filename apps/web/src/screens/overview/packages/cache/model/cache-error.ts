@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
 import { ApiError } from '../../../../../data/api';
-import { DOWN_SENTENCE } from '../../overview.constants';
+import { DOWN_SENTENCE } from '../../../overview.constants';
 
 const cacheError = (error: unknown, otherwise: (detail: string) => string): string => {
   if (error instanceof ApiError && error.status === 0) return DOWN_SENTENCE;

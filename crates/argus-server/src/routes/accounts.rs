@@ -96,14 +96,19 @@ async fn settings(ctx: Ctx) -> Reply {
     Ok(json_reply(200, &service(&ctx)?.config().to_json()))
 }
 
+fn require_writes(ctx: &Ctx) -> Result<(), ApiError> {
+    if ctx.svc.board_writes {
+        return Ok(());
+    }
+    Err(ApiError::new(
+        ErrorCode::ReadOnly,
+        "shadow mode: Argus does not write the accounts settings",
+    ))
+}
+
 async fn update(ctx: Ctx) -> Reply {
     // A preview home is a copy, so its settings may change; a shadow home writes nothing.
-    if !ctx.svc.board_writes {
-        return Err(ApiError::new(
-            ErrorCode::ReadOnly,
-            "shadow mode: Argus does not write the accounts settings",
-        ));
-    }
+    require_writes(&ctx)?;
     let accounts = service(&ctx)?;
     let body: Value = ctx.json().await?;
     let config = accounts.update(&body).map_err(ApiError::bad_request)?;
@@ -175,12 +180,7 @@ fn copy_ends(
 }
 
 async fn next(ctx: Ctx) -> Reply {
-    if !ctx.svc.board_writes {
-        return Err(ApiError::new(
-            ErrorCode::ReadOnly,
-            "shadow mode: Argus does not write the accounts settings",
-        ));
-    }
+    require_writes(&ctx)?;
     let accounts = service(&ctx)?;
     let body: Value = ctx.json().await?;
     let svc = Arc::clone(&ctx.svc);

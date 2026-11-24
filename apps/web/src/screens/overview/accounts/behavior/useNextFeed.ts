@@ -7,7 +7,7 @@ import { ACCOUNTS_PATH, NEXT_TICK_MS } from '../next.constants';
 import type { NextFeed } from '../next.type';
 
 const statusOf = (answer: unknown): AccountsStatus | null =>
-  answer !== null && typeof answer === 'object' && !Array.isArray(answer) ? (answer as AccountsStatus) : null;
+  answer !== null && typeof answer === 'object' && !Array.isArray(answer) ? answer : null;
 
 const useNextFeed = (): NextFeed => {
   const tick = useNow(NEXT_TICK_MS);

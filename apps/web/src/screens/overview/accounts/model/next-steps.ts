@@ -1,9 +1,7 @@
 /* @layer renderer-app @kind logic */
-import type { StepperProps } from '@drizztdourden08/tessera';
 import type { NextRunPhase } from '../../../../data/types';
 import { STEP_ASKED, STEP_DONE, STEP_LABELS, STEP_OF_PHASE, STEP_SWITCHED } from '../next.constants';
-
-type NextSteps = Pick<StepperProps, 'steps' | 'currentId' | 'complete' | 'tone'>;
+import type { NextSteps } from './next-steps.type';
 
 const nextSteps = (phase: NextRunPhase = 'idle'): NextSteps => ({
   steps: [

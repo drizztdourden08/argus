@@ -2,7 +2,7 @@
 import type { AccountsSettingsApi } from '../../../data/accounts';
 import type { AccountLimit, AccountsDrift, AccountsRun } from '../../../data/types';
 import type { Account, AccountActions, RowState } from './accounts.type';
-import type { CompareDoc, SyncStep } from './compare.type';
+import type { SyncStep } from './compare.type';
 
 interface AccountNameProps {
   account: Account;
@@ -46,6 +46,12 @@ interface SyncCardProps {
   onReview: () => void;
 }
 
+interface SyncFooterProps {
+  drift: AccountsDrift | null;
+  run: AccountsRun | null;
+  active: boolean;
+}
+
 interface SyncActionsProps {
   run: AccountsRun | null;
   actions: AccountActions;
@@ -65,6 +71,6 @@ interface AccountsOverviewProps {
 }
 
 export type {
-  AccountFactsProps, AccountNameProps, AccountsOverviewProps, LimitMeterProps, LimitMetersProps, RuleFieldsProps, SwitchActionProps, SyncActionsProps,
+  AccountFactsProps, AccountNameProps, AccountsOverviewProps, LimitMeterProps, LimitMetersProps, RuleFieldsProps, SwitchActionProps, SyncActionsProps, SyncFooterProps,
   SyncCardProps, SyncRunLineProps,
 };

@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Button, Callout, Flex, Stack, Text } from '@drizztdourden08/tessera';
 import { Age } from '../../Age';
-import type { ApprovalStripProps } from '../OverlordPanel.type';
+import type { ApprovalStripProps } from '../OverlordChat.type';
 
 const ApprovalStrip = (props: ApprovalStripProps) => {
   const { approvals, action, onDecide } = props;

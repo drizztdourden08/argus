@@ -1,8 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Flex, ProgressBar, SettingsSection, Stack, Text } from '@drizztdourden08/tessera';
 import { spendLook } from '../behavior/spend-look';
-import { NO_LIMIT, SPEND_NOTE } from '../OverlordPanel.constants';
-import type { SpendSectionProps } from '../OverlordPanel.type';
+import { NO_LIMIT, SPEND_NOTE } from '../OverlordChat.constants';
+import type { SpendSectionProps } from '../OverlordChat.type';
 
 const SpendSection = (props: SpendSectionProps) => {
   const { spend } = props;

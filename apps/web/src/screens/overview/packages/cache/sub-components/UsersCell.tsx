@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind component */
 import { FoldText, Text } from '@drizztdourden08/tessera';
-import { useNow } from '../../clock';
+import { useNow } from '../../../clock';
 import { USERS_LINES } from '../cache.constants';
 import type { UsersCellProps } from '../cache.type';
 import { unusedNote } from '../model';

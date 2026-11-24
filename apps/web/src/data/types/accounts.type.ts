@@ -214,7 +214,7 @@ interface AccountsSettings {
 
 export type {
   DesktopPhase,
-  AccountDoc, AccountLimit, AccountLimitState, AccountsStatus, AccountSeverity, NextRun, NextRunPhase, NextSwitch, NextWhen, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
+  AccountDoc, AccountLimit, AccountsStatus, AccountSeverity, NextRunPhase, NextWhen, AccountsDrift, AccountsRun, RunPhase, SyncStepDoc, SyncStepKind,
   AccountsSettings, AccountsSwitch, HandoverRule, SettingsAccount, SettingsRules, SwitchPhase, SwitchStage,
   SwitchStepDoc, SwitchStepState, SwitchSyncCounts, SwitchSyncDoc, SwitchThreadDoc, RunResult,
 };

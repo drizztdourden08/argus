@@ -2,10 +2,11 @@
 import { Callout, Dialog, SettingsSection, Stack } from '@drizztdourden08/tessera';
 import { useState } from 'react';
 import type { OverlordMode } from '../../../data/overlord';
-import { asMode, needsConfirm } from '../behavior/mode-rules';
+import { asMode } from '../behavior/as-mode';
+import { needsConfirm } from '../behavior/needs-confirm';
 import { modeSteps } from '../behavior/mode-steps';
-import { MODE_CONFIRM, MODE_NOTES } from '../OverlordPanel.constants';
-import type { ModeSectionProps } from '../OverlordPanel.type';
+import { MODE_CONFIRM, MODE_NOTES } from '../OverlordChat.constants';
+import type { ModeSectionProps } from '../OverlordChat.type';
 
 const ModeSection = (props: ModeSectionProps) => {
   const { mode, action, onSwitch } = props;

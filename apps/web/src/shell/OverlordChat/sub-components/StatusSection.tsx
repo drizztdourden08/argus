@@ -3,8 +3,8 @@ import { Button, Callout, Flex, SettingsSection, Stack, Status, Tag } from '@dri
 import { useNow } from '../../../screens/overview/clock';
 import { controlsFor } from '../behavior/controls-for';
 import { uptimeText } from '../behavior/uptime-text';
-import { NO_MODE, STATE_STATUSES } from '../OverlordPanel.constants';
-import type { StatusSectionProps } from '../OverlordPanel.type';
+import { NO_MODE, STATE_STATUSES } from '../OverlordChat.constants';
+import type { StatusSectionProps } from '../OverlordChat.type';
 import { KeyButton } from './KeyButton';
 
 const StatusSection = (props: StatusSectionProps) => {

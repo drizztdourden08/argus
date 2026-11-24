@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind component */
 import { Callout, EmptyState, Stack } from '@drizztdourden08/tessera';
 import { useOverlordPanel } from '../behavior/useOverlordPanel';
-import { READING } from '../OverlordPanel.constants';
+import { READING } from '../OverlordChat.constants';
 import { ApprovalStrip } from './ApprovalStrip';
 import { ModeSection } from './ModeSection';
 import { SpendSection } from './SpendSection';

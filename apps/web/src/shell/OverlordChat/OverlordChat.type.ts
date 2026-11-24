@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind types */
 import type { ChatTranscriptMessage, ChatTranscriptRole } from '@drizztdourden08/tessera';
 import type { ReactNode } from 'react';
-import type { ActionState } from '../../data/overlord';
+import type { ActionState, OverlordAction, OverlordApproval, OverlordMode, OverlordSpend, OverlordStatus } from '../../data/overlord';
 
 type TalkKind = 'assistant' | 'owner' | 'wake' | 'rule' | 'thinking' | 'turn' | 'approval';
 
@@ -111,4 +111,26 @@ interface ToolLineProps {
   tool: ToolItem;
 }
 
-export type { ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
+interface StatusSectionProps {
+  status: OverlordStatus;
+  action: ActionState;
+  onControl: (action: OverlordAction) => void;
+}
+
+interface ApprovalStripProps {
+  approvals: OverlordApproval[];
+  action: ActionState;
+  onDecide: (id: string, decision: 'allow' | 'deny') => void;
+}
+
+interface SpendSectionProps {
+  spend: OverlordSpend;
+}
+
+interface ModeSectionProps {
+  mode: string | null;
+  action: ActionState;
+  onSwitch: (mode: OverlordMode) => void;
+}
+
+export type { ApprovalStripProps, ModeSectionProps, SpendSectionProps, StatusSectionProps, ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
