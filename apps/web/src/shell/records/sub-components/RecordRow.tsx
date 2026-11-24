@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind component */
-import { Pressable } from '@drizztdourden08/tessera';
+import { Flex, Pressable } from '@drizztdourden08/tessera';
 import { rowLinked } from '../behavior/row-linked';
 import type { RecordRowProps } from '../record-rows.type';
 import { AssigneeMark } from './AssigneeMark';
@@ -27,12 +27,12 @@ const RecordRow = (props: RecordRowProps) => {
       code={untitled ? undefined : opener}
       title={<RowTitle title={title} board={head.boardKey} linked={linked} onOpen={onOpen} label={`Open ${head.code}: ${title}`} />}
       content={
-        <>
+        <Flex gap="xs" align="center">
           {chips.length > 0 && <RowChips chips={chips} board={head.boardKey} />}
           {trailing}
           <RecordTime time={time} />
           <AssigneeMark assignee={head.assignee} boardKey={head.boardKey} threads={head.threads} />
-        </>
+        </Flex>
       }
       menu={<RecordMenu groups={head.menu} label={head.menuLabel} />}
       attrs={{ role: 'listitem', 'data-record': head.code }}

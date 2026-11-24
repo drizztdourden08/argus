@@ -7,7 +7,7 @@ import { WorktreeRecord } from './WorktreeRecord';
 const WorktreeCells = (props: WorktreeCellsProps) => {
   const { rows, ...record } = props;
   const cells = rows.map((row) => <WorktreeRecord key={row.id} row={row} {...record} />);
-  if (record.layout === 'list') return <Flex direction="column" gap="xs" role="list" aria-label="Worktrees">{cells}</Flex>;
+  if (record.layout === 'list') return <Flex direction="column" gap="sm" role="list" aria-label="Worktrees">{cells}</Flex>;
   return <Grid minColWidth={WORKTREE_CARD_WIDTH} gap="sm" role="list" aria-label="Worktrees">{cells}</Grid>;
 };
 

@@ -31,7 +31,7 @@ const WorktreeRecord = (props: WorktreeRecordProps) => {
   const title = worktreeTitle(row, agents);
   const chips = worktreeChips(row);
   return (
-    <Flex direction="column" gap="xs" data-worktree={row.id} data-swap-item>
+    <Flex direction="column" gap="sm" data-worktree={row.id} data-swap-item>
       {layout === 'cards'
         ? <WorktreeCard head={head} title={title} chips={chips} time={touchedAt(row)} job={row.job} label={label} compact={compact} onOpen={open} />
         : (

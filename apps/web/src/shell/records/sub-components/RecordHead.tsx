@@ -1,4 +1,5 @@
 /* @layer renderer-app @kind component */
+import { Flex } from '@drizztdourden08/tessera';
 import type { RecordHeadViewProps } from '../records.type';
 import { AssigneeMark } from './AssigneeMark';
 import { RecordFrame } from './RecordFrame';
@@ -18,11 +19,11 @@ const RecordHead = (props: RecordHeadViewProps) => {
       selection={selection}
       code={<RecordLink id={code} />}
       content={
-        <>
+        <Flex gap="xs" align="center">
           {content}
           <RecordTime time={time} />
           <AssigneeMark assignee={assignee} boardKey={boardKey} threads={threads} size={size} />
-        </>
+        </Flex>
       }
       menu={<RecordMenu groups={menu} label={menuLabel} />}
     />
