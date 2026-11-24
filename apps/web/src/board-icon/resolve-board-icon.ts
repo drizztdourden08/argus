@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { AVATAR_BRANDS, BRAND_PREFIX, brandOf } from '../avatar';
 import { firstLegacyKey } from '../data/boards';
-import { BOARD_ICON_NAMES, ICON_MAX, ICON_NAME_PREFIX, ICON_URL_PATTERN, PNG_PREFIX, SVG_PREFIX } from './board-icon.constants';
+import { BOARD_ICON_NAMES, DEFAULT_ICON_COUNT, ICON_MAX, ICON_NAME_PREFIX, ICON_URL_PATTERN, PNG_PREFIX, SVG_PREFIX } from './board-icon.constants';
 import { toBoardIconName } from './to-board-icon-name';
 import type { BoardIconSource, ResolvedBoardIcon } from './board-icon.type';
 
@@ -31,7 +31,7 @@ const defaultSource = (key: string, avatar: unknown): BoardIconSource => {
   const app = brandOf(key);
   if (app) return { kind: 'brand', app };
   const brandAvatar = typeof avatar === 'string' && avatar.startsWith(BRAND_PREFIX) ? parseBrand(avatar) : null;
-  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(firstLegacyKey(key)) % BOARD_ICON_NAMES.length] ?? 'code' };
+  return brandAvatar ?? { kind: 'icon', name: BOARD_ICON_NAMES[hashKey(firstLegacyKey(key)) % DEFAULT_ICON_COUNT] ?? 'code' };
 };
 
 const resolveBoardIcon = (key: string, icon?: unknown, avatar?: unknown, cardIcon?: unknown): ResolvedBoardIcon => {
