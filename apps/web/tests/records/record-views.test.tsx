@@ -20,7 +20,7 @@ describe('I-85 P3 the head of a record, for any kind', { tags: ['critical'] }, (
     expect(screen.getByRole('link', { name: 'Q-4' })).toBeTruthy();
     expect(screen.getByRole('img', { name: 'Assigned to you' })).toBeTruthy();
     expect(container.querySelector('[data-type-mark="question"] .type-mark--outline.type-mark--xs')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'More actions for Q-4' }).className).toContain('icon-btn--2xs');
+    expect(screen.getByRole('button', { name: 'More actions for Q-4' }).className).toContain('icon-btn--xs');
   });
 
   it('draws a lead as the square app logo, not a round avatar', () => {
