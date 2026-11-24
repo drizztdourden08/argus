@@ -22,7 +22,7 @@ use crate::{
 const BRAND_APPS: [&str; 6] = ["tessera", "rotp", "archipelia", "brock", "bxel", "argus"];
 
 /// The curated icon names. `apps/web/src/board-icon/board-icon.constants.ts` lists the same names.
-pub const ICON_NAMES: [&str; 16] = [
+pub const ICON_NAMES: [&str; 45] = [
     "gamepad-2",
     "palette",
     "flask",
@@ -39,6 +39,35 @@ pub const ICON_NAMES: [&str; 16] = [
     "camera",
     "heart",
     "zap",
+    "star",
+    "flag",
+    "folder",
+    "wrench",
+    "puzzle",
+    "sparkles",
+    "server",
+    "lock",
+    "bell",
+    "calendar",
+    "bug",
+    "trophy",
+    "sun",
+    "moon",
+    "home",
+    "message-square",
+    "users",
+    "bookmark",
+    "headphones",
+    "image",
+    "mic",
+    "clock",
+    "mail",
+    "map",
+    "monitor",
+    "smartphone",
+    "gift",
+    "tag",
+    "link",
 ];
 
 fn check_named(text: &str) -> Option<Result<(), BoardError>> {

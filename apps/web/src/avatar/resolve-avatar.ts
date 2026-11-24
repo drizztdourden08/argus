@@ -1,5 +1,7 @@
 /* @layer renderer-app @kind logic */
 import { AVATAR_BRANDS, AVATAR_MAX_CHARS, BRAND_PREFIX, IMAGE_PREFIX } from './avatar.constants';
+import { ICON_NAME_PREFIX } from '../board-icon/board-icon.constants';
+import { toBoardIconName } from '../board-icon/to-board-icon-name';
 import { brandOf } from './brand-of';
 import type { BoardInfo } from '../data/boards/boards.type';
 import type { AvatarSource } from './avatar.type';
@@ -8,6 +10,10 @@ const fromSetting = (setting: string): AvatarSource | null => {
   if (setting.startsWith(BRAND_PREFIX)) {
     const app = AVATAR_BRANDS.find((brand) => brand === setting.slice(BRAND_PREFIX.length));
     return app ? { kind: 'brand', app } : null;
+  }
+  if (setting.startsWith(ICON_NAME_PREFIX)) {
+    const name = toBoardIconName(setting.slice(ICON_NAME_PREFIX.length));
+    return name ? { kind: 'icon', name } : null;
   }
   return setting.startsWith(IMAGE_PREFIX) && setting.length <= AVATAR_MAX_CHARS ? { kind: 'image', src: setting } : null;
 };

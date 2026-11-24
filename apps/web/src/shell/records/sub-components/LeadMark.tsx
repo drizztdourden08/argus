@@ -10,6 +10,8 @@ const LeadMark = (props: LeadMarkProps) => {
       <Flex as="span" inline align="center" data-lead-mark={source.kind}>
         {source.kind === 'brand' ? (
           <BrandMark app={source.app} size="sm" variant="app-icon" title={label} />
+        ) : source.kind === 'icon' ? (
+          <Avatar icon={source.name} label={label} shape="square" size={size} />
         ) : (
           <Avatar src={source.src} label={label} shape="square" size={size} />
         )}

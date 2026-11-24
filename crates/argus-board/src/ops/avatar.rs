@@ -1,5 +1,5 @@
 //! The `avatar` op: the picture a project's lead wears on the cards. A change at the coordinator's
-//! level: the board holds `avatar`, either `brand:<app>` (a Tessera brand mark) or an image as a
+//! level: the board holds `avatar`, either `brand:<app>` (a Tessera brand mark), `icon:<name>` (a curated icon) or an image as a
 //! data URL no larger than [`AVATAR_MAX`], and one audit line records it. `null` clears it.
 
 use serde_json::Value;
@@ -7,6 +7,7 @@ use serde_json::Value;
 use super::{
     announce::audit,
     authorize::{Check, authorize},
+    icon::ICON_NAMES,
     icon_image::text_or_clear,
     result::OpResult,
     who::Who,
@@ -74,6 +75,13 @@ fn check(value: &Value) -> Result<Option<String>, BoardError> {
                 "avatar brand must be one of {}.",
                 BRAND_APPS.join(", ")
             )))
+        };
+    }
+    if let Some(name) = text.strip_prefix("icon:") {
+        return if ICON_NAMES.contains(&name) {
+            Ok(Some(text.to_owned()))
+        } else {
+            Err(refuse("avatar icon is not a known icon name."))
         };
     }
     check_image(text).map(|()| Some(text.to_owned()))
