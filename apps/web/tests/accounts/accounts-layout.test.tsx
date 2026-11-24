@@ -33,7 +33,7 @@ describe('the small account card', { tags: ['critical'] }, () => {
     render(<AccountCard account={account({})} onOpen={vi.fn()} />);
     const setData = vi.fn();
     fireEvent.dragStart(screen.getByText('Alpha'), { dataTransfer: { setData } });
-    expect(setData).toHaveBeenCalledWith('text/plain', 'a1');
+    expect(setData).toHaveBeenCalledWith('application/x-argus-account', 'a1');
   });
 
   it('shows the limit line only when the limit is confirmed', () => {
@@ -52,7 +52,7 @@ describe('the model of the switch tab', { tags: ['critical'] }, () => {
     expect(nextSteps('handover-asked').currentId).toBe('handover-asked');
     expect(nextSteps('limit-confirmed').steps[1]?.label).toBe('Limit confirmed');
     expect(nextSteps('switched').complete).toBe(true);
-    expect(nextSteps().currentId).toBeUndefined();
+    expect(nextSteps().currentId).toBeNull();
   });
 
   it('words the when and the copy direction', () => {
