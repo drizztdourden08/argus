@@ -195,9 +195,9 @@ pub fn agent_record(id: &str, now_ms: i64, fields: &Value) -> Value {
     let hour_ago = format_iso(now_ms - 60 * 60_000);
     let number: i64 = id.get(2..).and_then(|n| n.parse().ok()).unwrap_or(0);
     let mut record = serde_json::json!({
-        "id": id, "createdAt": hour_ago, "createdBy": "coordinator", "updatedAt": hour_ago,
-        "updatedBy": "coordinator", "rank": 9000 + number, "name": format!("agent-{id}"),
-        "thread": "coordinator", "task": "work", "model": "sonnet", "modelWhy": null,
+        "id": id, "createdAt": hour_ago, "createdBy": "lead", "updatedAt": hour_ago,
+        "updatedBy": "lead", "rank": 9000 + number, "name": format!("agent-{id}"),
+        "thread": "lead", "task": "work", "model": "sonnet", "modelWhy": null,
         "kind": "build", "item": null, "branch": null, "worktree": null, "status": "working",
         "note": null, "result": null, "startedAt": hour_ago, "finishedAt": null, "rev": 1
     });

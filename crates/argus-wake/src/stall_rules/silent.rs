@@ -44,7 +44,7 @@ fn one(
     Some(Found {
         kind: Kind::Silent,
         project: project.to_owned(),
-        lead: board.coordinator().unwrap_or_default(),
+        lead: board.lead().unwrap_or_default(),
         subject: id.to_owned(),
         since: last,
         text: text::silent(project, &item.shown_id(), age),

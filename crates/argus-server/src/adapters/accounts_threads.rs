@@ -46,10 +46,10 @@ impl BoardThreads {
     }
 }
 
-/// The coordinator of a board when it is a live, unpaused Desktop session. A hosted one (run by
+/// The lead of a board when it is a live, unpaused Desktop session. A hosted one (run by
 /// Argus) has no chat to hand over from and none to message.
 fn live_lead(board: &BoardView) -> Option<(String, &ThreadView)> {
-    let id = board.coordinator()?;
+    let id = board.lead()?;
     let live = board
         .threads
         .get(&id)
@@ -145,7 +145,7 @@ impl Threads for BoardThreads {
     fn notice(&self, subject: &str, text: &str) -> Result<(), String> {
         let (Some(main), Some(overlord)) = (self.boards.overlord(), self.boards.overlord_thread())
         else {
-            return Err("the Overlord's board has no live coordinator".to_owned());
+            return Err("the Overlord's board has no live lead".to_owned());
         };
         let wake = WakeRequest::about(&main, &overlord, READY_REASON, subject, text);
         self.wake.submit(&[wake])
@@ -220,13 +220,13 @@ mod tests {
 
     fn board(activity: &str, seen_ago_ms: i64, agent_status: &str) -> BoardView {
         BoardView::from_json(json!({
-            "threads": { "coordinator": {
-                "id": "coordinator", "role": "coordinator", "status": "active",
+            "threads": { "lead": {
+                "id": "lead", "role": "lead", "status": "active",
                 "activity": activity, "lastSeen": iso_from_ms(NOW - seen_ago_ms),
                 "sessionId": "s-1", "link": "claude://claude.ai/epitaxy/local_1"
             }},
             "agents": { "A-1": {
-                "id": "A-1", "thread": "coordinator", "status": agent_status, "branch": "wip/a"
+                "id": "A-1", "thread": "lead", "status": agent_status, "branch": "wip/a"
             }}
         }))
     }

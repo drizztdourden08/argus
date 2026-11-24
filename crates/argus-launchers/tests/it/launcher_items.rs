@@ -1,5 +1,5 @@
 //! Builds that serve an item (I-78): the `for` link takes the usage window away, the master role
-//! is one flag handed over by the coordinator, and `link_launcher` moves a build to an item.
+//! is one flag handed over by the lead, and `link_launcher` moves a build to an item.
 //!
 //! Keep rule: K1, K4.
 // test-tag: critical
@@ -84,7 +84,7 @@ fn a_new_build_with_no_link_is_refused_and_so_is_clearing_the_link_of_one() {
 }
 
 #[test]
-fn the_master_role_is_handed_over_by_the_coordinator_and_the_old_master_waits_for_a_link() {
+fn the_master_role_is_handed_over_by_the_lead_and_the_old_master_waits_for_a_link() {
     let mut board = with_build("I-5");
     let res = write_launcher(&mut board, &lead(), "build-2", &master_patch(), &ctx()).unwrap();
     assert_eq!(res.changed, ["master"]);
@@ -107,7 +107,7 @@ fn a_thread_cannot_hand_the_master_role_over() {
         &ctx(),
     )
     .unwrap_err();
-    assert!(refused.0.contains("coordinator"), "{refused}");
+    assert!(refused.0.contains("lead"), "{refused}");
     assert!(!board.launchers["build-2"].link.master);
 }
 
@@ -208,7 +208,7 @@ fn a_write_that_brings_a_build_back_forgets_the_item_that_closed_it() {
     let mut board = with_build("I-5");
     if let Some(rec) = board.launchers.get_mut("build-2") {
         rec.retired_at = Some(AT.to_owned());
-        rec.retired_by = Some("coordinator".to_owned());
+        rec.retired_by = Some("lead".to_owned());
         rec.retired_by_item = Some("I-5".to_owned());
     }
     let patch = LauncherPatch {

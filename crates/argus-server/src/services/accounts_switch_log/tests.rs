@@ -93,7 +93,7 @@ fn resume_lines_join_the_finished_log() {
     let mut log = LogState::default();
     log.add(1, &lines(&["Done."]));
     log.stamp(doc("done"), 1);
-    log.add_after(2, &lines(&["rotp/coordinator resumed on the new account."]));
+    log.add_after(2, &lines(&["rotp/lead resumed on the new account."]));
     let again = log.again(true, 2).expect("the finished doc");
     assert_eq!(texts(&again).len(), 2);
     assert_eq!(again["phase"], "done");
@@ -155,7 +155,7 @@ fn the_handover_phase_names_the_leads_it_waits_for() {
     let found = cycle(
         CyclePhase::Asked,
         vec![
-            handover("coordinator", HandoverState::Asked),
+            handover("lead", HandoverState::Asked),
             handover("builder", HandoverState::Ready),
         ],
     );
@@ -164,7 +164,7 @@ fn the_handover_phase_names_the_leads_it_waits_for() {
     assert_eq!(shown["phase"], "handover");
     assert_eq!(shown["threads"][0]["state"], "asked");
     assert_eq!(shown["threads"][1]["state"], "ready");
-    assert_eq!(shown["blocker"], "Waiting for the handover of coordinator.");
+    assert_eq!(shown["blocker"], "Waiting for the handover of lead.");
 }
 
 #[test]
@@ -246,14 +246,14 @@ fn cycle(phase: CyclePhase, leads: Vec<Handover>) -> Cycle {
 fn a_new_cycle_logs_its_start_and_every_lead_asked() {
     let after = cycle(
         CyclePhase::Asked,
-        vec![handover("coordinator", HandoverState::Asked)],
+        vec![handover("lead", HandoverState::Asked)],
     );
     let out = cycle_lines(None, Some(&after));
     assert_eq!(
         line_texts(&out.process),
         [
             "Handover cycle SW-2 started for hotmail: every lead is asked at once.",
-            "rotp/coordinator was asked for its handover."
+            "rotp/lead was asked for its handover."
         ]
     );
     assert_eq!(out.process[1].state, LineState::Waiting);
@@ -264,19 +264,16 @@ fn a_new_cycle_logs_its_start_and_every_lead_asked() {
 fn a_ready_lead_and_the_ready_cycle_are_logged_once() {
     let before = cycle(
         CyclePhase::Asked,
-        vec![handover("coordinator", HandoverState::Asked)],
+        vec![handover("lead", HandoverState::Asked)],
     );
     let after = cycle(
         CyclePhase::Ready,
-        vec![handover("coordinator", HandoverState::Ready)],
+        vec![handover("lead", HandoverState::Ready)],
     );
     let out = cycle_lines(Some(&before), Some(&after));
     assert_eq!(
         line_texts(&out.process),
-        [
-            "Handover received from rotp/coordinator.",
-            "Every handover is in."
-        ]
+        ["Handover received from rotp/lead.", "Every handover is in."]
     );
     assert_eq!(cycle_lines(Some(&after), Some(&after)).process.len(), 0);
 }
@@ -285,17 +282,17 @@ fn a_ready_lead_and_the_ready_cycle_are_logged_once() {
 fn a_resume_goes_to_the_resume_lines() {
     let before = cycle(
         CyclePhase::Ready,
-        vec![handover("coordinator", HandoverState::Ready)],
+        vec![handover("lead", HandoverState::Ready)],
     );
     let after = cycle(
         CyclePhase::Done,
-        vec![handover("coordinator", HandoverState::Resumed)],
+        vec![handover("lead", HandoverState::Resumed)],
     );
     let out = cycle_lines(Some(&before), Some(&after));
     assert_eq!(out.process.len(), 0);
     assert_eq!(
         line_texts(&out.resume),
-        ["rotp/coordinator resumed on the new account."]
+        ["rotp/lead resumed on the new account."]
     );
     assert_eq!(out.resume[0].stage, Stage::Verify);
 }

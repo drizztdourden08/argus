@@ -188,7 +188,7 @@ pub struct LauncherBoard {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Role {
-    Coordinator,
+    Lead,
     Human,
     Thread,
 }
@@ -203,6 +203,6 @@ pub struct Who {
 
 impl Who {
     pub fn is_lead(&self) -> bool {
-        matches!(self.role, Role::Coordinator | Role::Human)
+        matches!(self.role, Role::Lead | Role::Human)
     }
 }

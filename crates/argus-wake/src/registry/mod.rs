@@ -38,6 +38,7 @@ pub use pending::Pending;
 pub use relay::target_of;
 pub use rows::{BoardFlags, FaultSummary, ListenFlags, PendingWake, RegistryRow, RowState};
 
+use argus_core::lead::LEAD;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -179,13 +180,13 @@ impl Registry {
             .collect()
     }
 
-    /// The Overlord's thread: the coordinator of project `portfolio`.
+    /// The Overlord's thread: the lead of project `portfolio`.
     #[must_use]
     pub fn main_thread(&self) -> String {
         self.boards
             .board(&self.boards.overlord())
-            .and_then(|b| b.coordinator())
-            .unwrap_or_else(|| "coordinator".to_owned())
+            .and_then(|b| b.lead())
+            .unwrap_or_else(|| LEAD.to_owned())
     }
 
     /// Is this the Overlord's own thread?

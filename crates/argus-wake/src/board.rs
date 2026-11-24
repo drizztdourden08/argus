@@ -1,5 +1,6 @@
 //! The part of a project board the wake logic reads, parsed tolerantly from the board JSON.
 
+use argus_core::lead::LEAD_ROLE;
 use std::sync::Arc;
 
 use argus_board::ids::shown;
@@ -61,7 +62,7 @@ impl Record {
 pub struct ThreadView {
     /// The thread id.
     pub id: Text,
-    /// `coordinator` or `thread`.
+    /// `lead` or `thread`.
     pub role: Text,
     /// `active`, `paused`, `done`, `archived`...
     pub status: Text,
@@ -393,12 +394,12 @@ impl BoardView {
             .unwrap_or_default()
     }
 
-    /// The coordinator thread of the board: the first one that has not ended.
+    /// The lead thread of the board: the first one that has not ended.
     #[must_use]
-    pub fn coordinator(&self) -> Option<String> {
+    pub fn lead(&self) -> Option<String> {
         self.threads
             .iter()
-            .find(|(_, t)| t.role.is("coordinator") && !t.is_ended())
+            .find(|(_, t)| t.role.is(LEAD_ROLE) && !t.is_ended())
             .map(|(key, t)| t.id.some().map_or_else(|| key.clone(), str::to_owned))
     }
 }

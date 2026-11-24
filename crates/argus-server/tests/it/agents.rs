@@ -36,7 +36,7 @@ struct Setup {
     reconciler: bool,
 }
 
-/// A server whose alpha board holds `agents` (and no others), a coordinator that owns the
+/// A server whose alpha board holds `agents` (and no others), a lead that owns the
 /// session `SID`, and a Claude home with that session's folder.
 async fn rig(agents: &[Value], setup: Setup) -> Rig {
     let home = tempfile::tempdir().expect("coord home");
@@ -45,8 +45,8 @@ async fn rig(agents: &[Value], setup: Setup) -> Rig {
     std::fs::create_dir_all(claude.path().join("projects").join("X--proj").join(SID))
         .expect("session folder");
     let mut board = alpha_board(home.path());
-    board["threads"]["coordinator"]["sessionId"] = json!(SID);
-    board["threads"]["coordinator"]["root"] = json!("X:\\proj");
+    board["threads"]["lead"]["sessionId"] = json!(SID);
+    board["threads"]["lead"]["root"] = json!("X:\\proj");
     board["agents"] = Value::Object(
         agents
             .iter()
@@ -139,7 +139,7 @@ async fn the_first_run_finds_the_orphan_flags_the_record_and_wakes_the_owning_th
     let record = t.board("alpha")["agents"]["A-44"].clone();
     assert!(record["orphanSince"].is_string() && record["orphanWokeAt"].is_string());
     let wake = wake_where(t, "alpha", |w| w["reason"] == "agent-orphan").await;
-    assert_eq!(wake["thread"], "coordinator");
+    assert_eq!(wake["thread"], "lead");
     let text = wake["text"].as_str().unwrap_or_default();
     assert!(text.starts_with("A-44 controllers-opus (opus) is on the board but Claude has no sub-agent or background task for it"), "{text}");
 }

@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn a_thread_message_reads_its_three_arguments() {
-        let args = json!({ "project": " brock ", "thread": "coordinator", "text": "hi" });
+        let args = json!({ "project": " brock ", "thread": "lead", "text": "hi" });
         let call = parse_call("thread_message", &args)
             .expect("ours")
             .expect("ok");
@@ -114,7 +114,7 @@ mod tests {
             call,
             Call::ThreadMessage {
                 project: "brock".to_owned(),
-                thread: "coordinator".to_owned(),
+                thread: "lead".to_owned(),
                 text: "hi".to_owned()
             }
         );

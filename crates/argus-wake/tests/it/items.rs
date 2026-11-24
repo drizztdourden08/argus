@@ -30,7 +30,7 @@ fn hours(h: i64) -> i64 {
 fn empty_board() -> Value {
     json!({
         "threads": {
-            "lead": {"id": "lead", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "worker": {"id": "worker", "role": "thread", "status": "active"},
             "other": {"id": "other", "role": "thread", "status": "active"},
             "gone": {"id": "gone", "status": "done"},
@@ -86,7 +86,7 @@ impl World {
     fn tick_at(&mut self, now: i64) -> usize {
         let env = ItemEnv {
             boards: &self.boards,
-            main: Some("coordinator".to_owned()),
+            main: Some("lead".to_owned()),
             last_sent: &*self.last_sent,
         };
         let out = self.wakes.tick(now, &env);
@@ -480,7 +480,7 @@ fn the_overlord_hears_once_a_day_of_a_project_with_items_quiet_for_3_days_and_no
             digest[0].reason.as_str(),
             digest[0].subject.as_deref()
         ),
-        ("coordinator", "kanban-stale", Some("alpha"))
+        ("lead", "kanban-stale", Some("alpha"))
     );
     assert_eq!(
         digest[0].text,
@@ -505,7 +505,7 @@ fn a_digest_is_one_activity_line_and_the_reminders_to_the_threads_are_not() {
     world.add(&item("I-1", "todo", hours(120), &json!({"thread": "lead"})));
     let env = ItemEnv {
         boards: &world.boards,
-        main: Some("coordinator".to_owned()),
+        main: Some("lead".to_owned()),
         last_sent: &*world.last_sent,
     };
     let out = world.wakes.tick(START, &env);

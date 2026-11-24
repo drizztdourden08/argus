@@ -1,4 +1,4 @@
-//! A portfolio send (the Overlord's decision or note) wakes the coordinator of every project it reached.
+//! A portfolio send (the Overlord's decision or note) wakes the lead of every project it reached.
 
 use super::ApplyCtx;
 use crate::board::EntryView;
@@ -24,7 +24,7 @@ pub(super) fn from_portfolio(ctx: &ApplyCtx<'_>, entry: &EntryView) -> Vec<WakeI
         .iter()
         .filter_map(|key| {
             let key = key.some()?;
-            let thread = (ctx.coordinator_of)(key)?;
+            let thread = (ctx.lead_of)(key)?;
             Some(WakeInput::about(
                 key,
                 &thread,

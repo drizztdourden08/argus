@@ -2,9 +2,10 @@
 //! mode is live) or `shadow` and a key is saved; `autostart` false keeps it down at boot, and the
 //! keeper (`keeper.rs`) starts it later when it is not up. A shadow
 //! child is the read-only copy of `shadow.rs`. While a child runs, a `HostedSink` is attached to the wake
-//! engine for the project `portfolio` and the thread `coordinator`, so its wakes go to the child's
+//! engine for the project `portfolio` and the thread `lead`, so its wakes go to the child's
 //! stdin. When the child dies the sink is detached and the wakes stay pending until the next start.
 
+use argus_core::lead::LEAD;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -42,7 +43,7 @@ use crate::adapters::overlord::key::DpapiKeyStore;
 use crate::adapters::overlord::spend::SqlLedger;
 use crate::adapters::overlord::transcript::FileTranscripts;
 
-const THREAD: &str = "coordinator";
+const THREAD: &str = LEAD;
 const LABEL: &str = "hosted overlord";
 
 /// Attaches the wake sink while a child runs and detaches it when the child is gone.

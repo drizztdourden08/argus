@@ -1,6 +1,7 @@
 //! The part of a project board these services look at: its agents and its threads.
 
 use crate::record::{Record, id_of, is_set, text};
+use argus_core::lead::LEAD_ROLE;
 use serde_json::{Map, Value};
 
 /// A board as the services see it, both collections in file order.
@@ -37,22 +38,22 @@ impl Board {
         self.items.iter_mut().find(|i| id_of(i) == id)
     }
 
-    /// The first coordinator thread that has not ended.
+    /// The first lead thread that has not ended.
     #[must_use]
-    pub fn coordinator(&self) -> Option<String> {
+    pub fn lead(&self) -> Option<String> {
         self.threads
             .iter()
-            .find(|t| text(t, "role") == Some("coordinator") && !thread_ended(t))
+            .find(|t| text(t, "role") == Some(LEAD_ROLE) && !thread_ended(t))
             .map(|t| id_of(t).to_owned())
     }
 
-    /// The thread to tell about an agent: its own while it lives, else the coordinator.
+    /// The thread to tell about an agent: its own while it lives, else the lead.
     #[must_use]
     pub fn wake_target(&self, agent: &Record) -> Option<String> {
         let own = text(agent, "thread").and_then(|id| self.thread(id));
         match own {
             Some(t) if !thread_ended(t) && !is_set(t, "placeholder") => Some(id_of(t).to_owned()),
-            _ => self.coordinator(),
+            _ => self.lead(),
         }
     }
 }

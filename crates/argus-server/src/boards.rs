@@ -1,5 +1,6 @@
 //! Reading boards for the services: the sync service's last good copy, else the file on disk.
 
+use argus_core::lead::LEAD_ROLE;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -66,29 +67,27 @@ impl BoardReader {
         roles::is_overlord(&self.coord_home, id)
     }
 
-    /// The live coordinator thread of the Overlord's board.
+    /// The live lead thread of the Overlord's board.
     #[must_use]
     pub fn overlord_thread(&self) -> Option<String> {
-        self.coordinator(&self.overlord()?)
+        self.lead(&self.overlord()?)
     }
 
     /// The thread of a board that coordinates it, unless it is done or archived.
     #[must_use]
-    pub fn coordinator(&self, key: &str) -> Option<String> {
+    pub fn lead(&self, key: &str) -> Option<String> {
         let board = self.board(key)?;
-        coordinator_in(&board)
+        lead_in(&board)
     }
 }
 
-/// The id of the first thread of a board whose role is `coordinator` and whose status is not
+/// The id of the first thread of a board whose role is `lead` and whose status is not
 /// `done` or `archived`.
 #[must_use]
-pub fn coordinator_in(board: &Board) -> Option<String> {
+pub fn lead_in(board: &Board) -> Option<String> {
     let threads = board["threads"].as_object()?;
     threads
         .values()
-        .find(|t| {
-            t["role"] == "coordinator" && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
-        })
+        .find(|t| t["role"] == LEAD_ROLE && !ENDED.contains(&t["status"].as_str().unwrap_or("")))
         .and_then(|t| t["id"].as_str().map(str::to_owned))
 }

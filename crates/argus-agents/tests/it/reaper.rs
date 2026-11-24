@@ -57,7 +57,7 @@ impl World {
     }
 
     fn put_lead(&self, lead_fields: &Value, agents: &[Value]) {
-        let lead = thread_record("coordinator", "coordinator", lead_fields);
+        let lead = thread_record("lead", "lead", lead_fields);
         self.boards.save("alpha", &board_json(&[lead], agents));
     }
 
@@ -109,7 +109,7 @@ fn a_closed_agent_hands_its_items_back_to_its_thread_and_leaves_the_others_alone
     let w = world();
     let file = w.transcript("a13", 25);
     let mut board = board_json(
-        &[thread_record("coordinator", "coordinator", &json!({}))],
+        &[thread_record("lead", "lead", &json!({}))],
         &[agent(
             "A-13",
             &json!({ "items": ["I-1", "I-2"], "transcriptFile": file }),
@@ -122,7 +122,7 @@ fn a_closed_agent_hands_its_items_back_to_its_thread_and_leaves_the_others_alone
     w.boards.save("alpha", &board);
     assert_eq!(w.plain().tick(), vec!["alpha/A-13".to_owned()]);
     let items = w.boards.load("alpha")["items"].clone();
-    assert_eq!(items["I-1"]["assignee"], json!("coordinator"));
+    assert_eq!(items["I-1"]["assignee"], json!("lead"));
     assert_eq!(items["I-1"]["rev"], json!(2));
     assert_eq!(items["I-2"]["assignee"], json!("worker"));
     assert_eq!(items["I-2"]["rev"], json!(1));
@@ -146,7 +146,7 @@ fn every_close_is_one_line_in_the_activity_log_after_the_board_was_written() {
     );
     assert_eq!(lines[0].kind, "agent");
     assert_eq!(lines[0].project, "alpha");
-    assert_eq!(lines[0].thread.as_deref(), Some("coordinator"));
+    assert_eq!(lines[0].thread.as_deref(), Some("lead"));
 }
 
 #[test]

@@ -26,7 +26,7 @@ fn rotp(lead: &Value, items: &[Value], extra: &Value) -> Value {
     let mut lead_fields = json!({"lastSeen": iso(START)});
     merge(&mut lead_fields, lead);
     let mut value = json!({
-        "threads": {"lead": thread("lead", "coordinator", &lead_fields)},
+        "threads": {"lead": thread("lead", "lead", &lead_fields)},
         "items": by_id(items),
         "inbox": {},
     });
@@ -38,10 +38,10 @@ fn rotp(lead: &Value, items: &[Value], extra: &Value) -> Value {
 pub fn world(lead: &Value, items: &[Value], extra: &Value) -> Rig {
     let rig = Rig::new(&registry_config(), false);
     rig.boards.set("rotp", board(&rotp(lead, items, extra)));
-    let overlord = thread("coordinator", "coordinator", &json!({}));
+    let overlord = thread("lead", "lead", &json!({}));
     rig.boards.set(
         "portfolio",
-        board(&json!({"threads": {"coordinator": overlord}, "inbox": {}})),
+        board(&json!({"threads": {"lead": overlord}, "inbox": {}})),
     );
     rig
 }

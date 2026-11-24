@@ -495,7 +495,7 @@ mod tests {
     fn lead(board: &str) -> Lead {
         Lead {
             board: board.into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: Some(format!("{board}-session")),
             link: None,
             agents: vec![AgentStop {
@@ -589,26 +589,22 @@ mod tests {
     #[test]
     fn an_estimate_moves_the_lead_and_is_kept() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
-        let h = c.on_estimate("rotp", "coordinator", estimate(0.6)).unwrap();
+        let h = c.on_estimate("rotp", "lead", estimate(0.6)).unwrap();
         assert_eq!(h.state, HandoverState::Estimated);
         assert_eq!(h.estimate.as_ref().map(|e| e.percent), Some(0.6));
-        let again = c.on_estimate("rotp", "coordinator", estimate(0.8)).unwrap();
+        let again = c.on_estimate("rotp", "lead", estimate(0.8)).unwrap();
         assert_eq!(again.estimate.as_ref().map(|e| e.percent), Some(0.8));
     }
 
     #[test]
     fn an_estimate_from_an_idle_lead_or_out_of_bounds_is_refused() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
-        let err = c
-            .on_estimate("tessera", "coordinator", estimate(0.3))
-            .unwrap_err();
+        let err = c.on_estimate("tessera", "lead", estimate(0.3)).unwrap_err();
         assert_eq!(err.status(), 404);
-        let err = c
-            .on_estimate("rotp", "coordinator", estimate(140.0))
-            .unwrap_err();
+        let err = c.on_estimate("rotp", "lead", estimate(140.0)).unwrap_err();
         assert!(matches!(err, ProtocolError::Invalid(_)));
         let err = c
-            .on_estimate("rotp", "coordinator", estimate(f64::NAN))
+            .on_estimate("rotp", "lead", estimate(f64::NAN))
             .unwrap_err();
         assert_eq!(err.status(), 400);
     }
@@ -648,8 +644,8 @@ mod tests {
     #[test]
     fn re_asking_keeps_the_last_estimate_and_wakes_the_lead_again() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
-        c.on_estimate("rotp", "coordinator", estimate(0.6)).unwrap();
-        let effects = c.re_ask_estimate("rotp", "coordinator", NOW).unwrap();
+        c.on_estimate("rotp", "lead", estimate(0.6)).unwrap();
+        let effects = c.re_ask_estimate("rotp", "lead", NOW).unwrap();
         assert_eq!(kinds(&effects), [WakeKind::Estimate]);
         assert_eq!(c.leads[0].state, HandoverState::EstimateAsked);
         assert_eq!(c.leads[0].estimate.as_ref().map(|e| e.percent), Some(0.6));
@@ -660,16 +656,14 @@ mod tests {
     fn re_asking_is_refused_once_the_leads_were_asked_for_the_handover() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp"]);
         assert_eq!(
-            c.re_ask_estimate("tessera", "coordinator", NOW)
+            c.re_ask_estimate("tessera", "lead", NOW)
                 .unwrap_err()
                 .status(),
             404
         );
         c.ask_all(None, NOW);
         assert_eq!(
-            c.re_ask_estimate("rotp", "coordinator", NOW)
-                .unwrap_err()
-                .status(),
+            c.re_ask_estimate("rotp", "lead", NOW).unwrap_err().status(),
             409
         );
     }
@@ -677,7 +671,7 @@ mod tests {
     #[test]
     fn ask_all_requests_every_pending_lead_once() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp", "brock"]);
-        c.on_estimate("rotp", "coordinator", estimate(0.6)).unwrap();
+        c.on_estimate("rotp", "lead", estimate(0.6)).unwrap();
         let effects = c.ask_all(Some(95.7), NOW);
         assert_eq!(kinds(&effects), [WakeKind::Request, WakeKind::Request]);
         assert_eq!(c.phase, CyclePhase::Asked);
@@ -688,10 +682,10 @@ mod tests {
     #[test]
     fn status_after_the_request_marks_the_lead_writing() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp"]);
-        let h = c.on_status("rotp", "coordinator").unwrap();
+        let h = c.on_status("rotp", "lead").unwrap();
         assert_eq!(h.state, HandoverState::Writing);
         let (mut early, _) = cycle(CycleMode::Auto, &["rotp"]);
-        let h = early.on_status("rotp", "coordinator").unwrap();
+        let h = early.on_status("rotp", "lead").unwrap();
         assert_eq!(h.state, HandoverState::EstimateAsked);
     }
 
@@ -699,13 +693,7 @@ mod tests {
     fn the_last_ready_lead_makes_the_cycle_ready() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
         let (h, effects) = c
-            .on_ready(
-                "rotp",
-                "coordinator",
-                "rotp.md",
-                Vec::new(),
-                (Some(96.0), NOW),
-            )
+            .on_ready("rotp", "lead", "rotp.md", Vec::new(), (Some(96.0), NOW))
             .unwrap();
         assert_eq!(h.state, HandoverState::Ready);
         assert_eq!(h.agents.len(), 1, "the agents seen at the start are kept");
@@ -713,13 +701,7 @@ mod tests {
         assert_eq!(ready_events(&effects), 0);
         assert!(!c.all_ready());
         let (_, effects) = c
-            .on_ready(
-                "brock",
-                "coordinator",
-                "brock.md",
-                Vec::new(),
-                (Some(96.4), NOW),
-            )
+            .on_ready("brock", "lead", "brock.md", Vec::new(), (Some(96.4), NOW))
             .unwrap();
         assert_eq!(ready_events(&effects), 1);
         assert_eq!(c.phase, CyclePhase::Ready);
@@ -729,7 +711,7 @@ mod tests {
     #[test]
     fn a_second_write_corrects_the_file_and_sends_nothing() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
-        c.on_ready("rotp", "coordinator", "a.md", Vec::new(), (None, NOW))
+        c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         let stop = AgentStop {
             id: "A-1".into(),
@@ -737,7 +719,7 @@ mod tests {
             stop: Some("tests pass".into()),
         };
         let (h, effects) = c
-            .on_ready("rotp", "coordinator", "b.md", vec![stop], (None, NOW))
+            .on_ready("rotp", "lead", "b.md", vec![stop], (None, NOW))
             .unwrap();
         assert!(effects.is_empty());
         assert_eq!(h.file.as_deref(), Some("b.md"));
@@ -747,7 +729,7 @@ mod tests {
     #[test]
     fn a_lead_ready_before_the_ask_point_is_not_asked_again() {
         let (mut c, _) = cycle(CycleMode::Auto, &["rotp", "brock"]);
-        c.on_ready("rotp", "coordinator", "a.md", Vec::new(), (None, NOW))
+        c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         assert_eq!(
             c.phase,
@@ -761,7 +743,7 @@ mod tests {
     #[test]
     fn the_switch_point_cuts_off_the_rest() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
-        c.on_ready("rotp", "coordinator", "a.md", Vec::new(), (None, NOW))
+        c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         let effects = c.cut_off_rest(Some(98.0));
         let Some(Effect::CycleReady(event)) = effects.first() else {
@@ -771,7 +753,7 @@ mod tests {
         assert_eq!(c.leads[1].state, HandoverState::CutOff);
         assert!(c.cut_off_rest(Some(99.0)).is_empty());
         let err = c
-            .on_ready("brock", "coordinator", "b.md", Vec::new(), (None, NOW))
+            .on_ready("brock", "lead", "b.md", Vec::new(), (None, NOW))
             .unwrap_err();
         assert_eq!(err.status(), 409);
     }
@@ -779,7 +761,7 @@ mod tests {
     #[test]
     fn resume_verdicts_finish_the_cycle() {
         let (mut c, _) = cycle(CycleMode::Now, &["rotp", "brock"]);
-        c.on_ready("rotp", "coordinator", "a.md", Vec::new(), (None, NOW))
+        c.on_ready("rotp", "lead", "a.md", Vec::new(), (None, NOW))
             .unwrap();
         c.cut_off_rest(None);
         assert_eq!(

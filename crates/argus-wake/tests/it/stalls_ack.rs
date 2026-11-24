@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use crate::stalls_world::{activity_texts, pass, pass_reminding, silent_world, touch};
 
-const BY: &str = "portfolio/coordinator";
+const BY: &str = "portfolio/lead";
 
 #[test]
 fn an_acked_stall_stops_its_resends_and_leaves_the_open_resend_line() {
@@ -23,7 +23,7 @@ fn an_acked_stall_stops_its_resends_and_leaves_the_open_resend_line() {
     assert_eq!(lines[0].text, "1 stall open");
     assert_eq!(
         (lines[0].scope.as_str(), lines[0].thread.as_str()),
-        ("portfolio", "coordinator")
+        ("portfolio", "lead")
     );
     let acked = rig
         .service

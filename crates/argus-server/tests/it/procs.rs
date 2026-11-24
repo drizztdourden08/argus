@@ -173,11 +173,7 @@ async fn the_page_and_the_overlord_may_change_rules_and_no_other_caller() {
         403,
         "a CLI caller without by"
     );
-    assert_eq!(
-        post(t, path, &by("api")).await.status,
-        403,
-        "not the coordinator"
-    );
+    assert_eq!(post(t, path, &by("api")).await.status, 403, "not the lead");
     assert_eq!(
         post(t, path, &by("lead")).await.status,
         403,
@@ -186,25 +182,24 @@ async fn the_page_and_the_overlord_may_change_rules_and_no_other_caller() {
     let page = post_as_page(t, path, &body).await;
     assert_eq!(page.status, 200, "{}", page.text());
     assert_eq!(page.json()["created"], true);
-    let idle = json!({ "rule": { "name": "extra", "idleMin": 30 }, "by": "coordinator" });
+    let idle = json!({ "rule": { "name": "extra", "idleMin": 30 }, "by": "lead" });
     let cli = post(t, path, &idle).await;
     assert_eq!(cli.status, 200, "{}", cli.text());
     let want =
         json!({ "name": "extra", "match": { "name": "^python" }, "maxMemMB": 900, "idleMin": 30 });
     assert_eq!(cli.json()["rule"], want);
-    let regex =
-        json!({ "rule": { "name": "extra", "match": { "cmd": "(" } }, "by": "coordinator" });
+    let regex = json!({ "rule": { "name": "extra", "match": { "cmd": "(" } }, "by": "lead" });
     assert_eq!(post(t, path, &regex).await.status, 400);
     assert_eq!(post(t, path, &json!({})).await.status, 400);
-    let gone = json!({ "name": "extra", "by": "coordinator" });
+    let gone = json!({ "name": "extra", "by": "lead" });
     assert_eq!(post(t, "/api/procs/rules/remove", &gone).await.status, 200);
     assert_eq!(post(t, "/api/procs/rules/remove", &gone).await.status, 404);
     let acts = activity_texts(t, "process-rule").await;
     assert_eq!(
         acts,
         [
-            "rule extra removed by coordinator",
-            "rule extra changed by coordinator",
+            "rule extra removed by lead",
+            "rule extra changed by lead",
             "rule extra added from the page"
         ]
     );
@@ -261,14 +256,13 @@ async fn a_kill_from_the_page_and_one_from_the_overlord_end_the_process_and_say_
     let want = json!({ "killed": true, "pid": b, "name": "node.exe", "memMB": 50 });
     assert_eq!(done.json(), want);
     assert!(!r.machine.alive(b));
-    let by = json!({ "pid": e, "startedAt": started_of(&listed, e), "reason": "a test child", "by": "coordinator" });
+    let by = json!({ "pid": e, "startedAt": started_of(&listed, e), "reason": "a test child", "by": "lead" });
     let cli = post(t, "/api/procs/kill", &by).await;
     assert_eq!(cli.status, 200, "{}", cli.text());
     let texts = activity_texts(t, "process-kill").await;
     let page_line = format!("killed node {b} (procs-http-test, 50 MB) from the page: {reason}");
-    let cli_line = format!(
-        "killed node {e} (procs-http-test, 70 MB) from the CLI (coordinator): a test child"
-    );
+    let cli_line =
+        format!("killed node {e} (procs-http-test, 70 MB) from the CLI (lead): a test child");
     assert!(texts.contains(&page_line), "{texts:?}");
     assert!(texts.contains(&cli_line), "{texts:?}");
 }

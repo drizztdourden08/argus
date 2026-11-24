@@ -10,7 +10,7 @@ pub enum By {
     /// A registered thread, the default.
     #[default]
     Thread,
-    /// The coordinator of the portfolio board.
+    /// The lead of the portfolio board.
     Overlord,
     /// Argus itself, from a board event.
     Auto,

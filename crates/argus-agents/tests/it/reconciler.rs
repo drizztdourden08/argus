@@ -96,7 +96,7 @@ fn world() -> World {
     }
     let now = SystemClock.now_ms();
     let boards = Arc::new(JsonBoards::new(home.path(), &["alpha"]));
-    let main = thread_record("main", "coordinator", &json!({}))
+    let main = thread_record("main", "lead", &json!({}))
         .as_object()
         .cloned()
         .unwrap();
@@ -187,7 +187,7 @@ impl World {
 
     fn put(&self, agents: &[Value]) {
         let sessions = json!({ "root": "X:\\proj" });
-        let mut lead = thread_record("coordinator", "coordinator", &sessions);
+        let mut lead = thread_record("lead", "lead", &sessions);
         lead["sessionId"] = json!(SID);
         let mut ui = thread_record("ui", "thread", &sessions);
         ui["sessionId"] = json!(SID_UI);
@@ -618,7 +618,7 @@ fn an_idle_agent_gets_one_wake_with_the_id_then_is_closed_as_finished_after_the_
     assert_eq!(sent.len(), 1);
     assert_eq!(
         (sent[0].scope.as_str(), sent[0].thread.as_str()),
-        ("alpha", "coordinator")
+        ("alpha", "lead")
     );
     assert_eq!(
         sent[0].text,
@@ -664,7 +664,7 @@ fn a_record_closed_as_finished_hands_its_items_back_to_its_thread() {
     r.tick();
     assert_eq!(w.a("A-44")["status"], json!("done"));
     let items = w.boards.load("alpha")["items"].clone();
-    assert_eq!(items["I-1"]["assignee"], json!("coordinator"));
+    assert_eq!(items["I-1"]["assignee"], json!("lead"));
     assert_eq!(items["I-1"]["rev"], json!(2));
     assert_eq!(items["I-2"]["assignee"], json!("ui"));
 }
@@ -680,7 +680,7 @@ fn assert_closed_as_finished(w: &World, run: &RunReport) {
     assert_eq!(
         w.events().len(),
         1,
-        "a finished close is not a fault: the main coordinator hears nothing"
+        "a finished close is not a fault: the main lead hears nothing"
     );
 }
 
@@ -783,7 +783,7 @@ fn a_recent_record_or_one_the_lead_touched_lately_is_only_pending() {
 }
 
 #[test]
-fn an_orphan_wakes_its_thread_once_is_closed_as_lost_after_the_clear_period_and_the_main_coordinator_is_told()
+fn an_orphan_wakes_its_thread_once_is_closed_as_lost_after_the_clear_period_and_the_main_lead_is_told()
  {
     let w = world();
     w.put(&[old(&w, 20, &json!({}))]);
@@ -813,7 +813,7 @@ fn assert_orphan_told_once(w: &World) {
     assert_eq!(ids(&sent), vec!["A-44:agent-orphan".to_owned()]);
     assert_eq!(
         (sent[0].scope.as_str(), sent[0].thread.as_str()),
-        ("alpha", "coordinator")
+        ("alpha", "lead")
     );
     assert_eq!(
         sent[0].text,
@@ -883,7 +883,7 @@ fn the_owning_thread_that_ended_falls_back_to_the_lead() {
     w.put(&[old(&w, 20, &json!({ "thread": "ui" }))]);
     w.edit_board(|b| b["threads"]["ui"]["status"] = json!("done"));
     w.reconciler(true).tick();
-    assert_eq!(w.events()[0].thread, "coordinator");
+    assert_eq!(w.events()[0].thread, "lead");
 }
 
 #[test]
@@ -891,14 +891,14 @@ fn a_thread_with_no_session_id_or_one_claude_has_no_folder_for_is_unknown_never_
     let w = world();
     w.put(&[
         old(&w, 500, &json!({ "thread": "ui" })),
-        old(&w, 500, &json!({ "id": "A-45", "thread": "coordinator" })),
+        old(&w, 500, &json!({ "id": "A-45", "thread": "lead" })),
     ]);
     w.edit_board(|b| {
         b["threads"]["ui"]
             .as_object_mut()
             .unwrap()
             .remove("sessionId");
-        b["threads"]["coordinator"]["sessionId"] = json!("sess-9999-zzzz");
+        b["threads"]["lead"]["sessionId"] = json!("sess-9999-zzzz");
     });
     let r = w.reconciler(true);
     let run = r.tick();

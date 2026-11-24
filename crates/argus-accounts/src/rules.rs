@@ -697,9 +697,9 @@ mod tests {
         s.cycle = CycleView::Asked;
         assert!(run(&s).is_empty());
         let mut e = estimates(90.0);
-        e.new_leads = vec![lead("coordinator")];
+        e.new_leads = vec![lead("lead")];
         s.estimates = Some(e);
-        assert_eq!(run(&s), vec![Decision::AddLeads(vec![lead("coordinator")])]);
+        assert_eq!(run(&s), vec![Decision::AddLeads(vec![lead("lead")])]);
     }
 
     #[test]
@@ -720,7 +720,7 @@ mod tests {
     fn auto_handover_asks_for_estimates_when_the_estimator_says_near() {
         let mut s = auto_setup(90.0);
         let mut e = estimates(95.7);
-        e.ask_estimates = vec![lead("coordinator")];
+        e.ask_estimates = vec![lead("lead")];
         s.estimates = Some(e);
         assert_eq!(
             run(&s),
@@ -738,13 +738,13 @@ mod tests {
         let mut s = auto_setup(92.0);
         s.cycle = CycleView::Estimating;
         let mut e = estimates(95.7);
-        e.ask_estimates = vec![lead("coordinator")];
+        e.ask_estimates = vec![lead("lead")];
         e.new_leads = vec![lead("late")];
         s.estimates = Some(e);
         assert_eq!(
             run(&s),
             vec![
-                Decision::StartEstimates(vec![lead("coordinator")]),
+                Decision::StartEstimates(vec![lead("lead")]),
                 Decision::AddLeads(vec![lead("late")])
             ]
         );

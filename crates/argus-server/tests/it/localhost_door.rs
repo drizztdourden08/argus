@@ -42,10 +42,7 @@ async fn the_door_redirects_a_lead_and_a_thread_like_the_main_listener() {
     let port = door_port(&t);
     let lead = at_door(&t, "/", &format!("alpha.localhost:{port}")).await;
     assert_eq!(lead.status, 302);
-    assert_eq!(
-        lead.header("location"),
-        Some("/p/alpha/?thread=coordinator")
-    );
+    assert_eq!(lead.header("location"), Some("/p/alpha/?thread=lead"));
     let thread = at_door(&t, "/", &format!("ui.alpha.localhost:{port}")).await;
     assert_eq!(thread.status, 302);
     assert_eq!(thread.header("location"), Some("/p/alpha/?thread=ui"));

@@ -7,6 +7,7 @@
 
 use argus_core::ApiError;
 use argus_core::clock::now_iso;
+use argus_core::lead::canonical;
 use argus_wake::external::valid_thread_id;
 use argus_wake::service::driver::lock;
 use serde_json::{Value, json};
@@ -26,7 +27,7 @@ fn thread_of(body: &Value) -> Result<String, ApiError> {
     body["thread"]
         .as_str()
         .filter(|t| valid_thread_id(t))
-        .map(str::to_owned)
+        .map(|t| canonical(t).into_owned())
         .ok_or_else(|| ApiError::bad_request("thread must be a thread id"))
 }
 

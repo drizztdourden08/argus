@@ -18,6 +18,7 @@ mod text;
 pub use due::SyncDue;
 pub use text::{ago_text, due_text};
 
+use argus_core::lead::LEAD_ROLE;
 use std::collections::HashMap;
 
 use argus_core::remote::SyncRecord;
@@ -99,12 +100,12 @@ struct Lead {
     registered_ms: Option<i64>,
 }
 
-/// The first coordinator thread that is registered and has not ended.
+/// The first lead thread that is registered and has not ended.
 fn lead_of(board: &BoardView) -> Option<Lead> {
     let (key, thread) = board
         .threads
         .iter()
-        .find(|(_, t)| t.role.is("coordinator") && t.is_live())?;
+        .find(|(_, t)| t.role.is(LEAD_ROLE) && t.is_live())?;
     Some(Lead {
         id: thread.id.some().map_or_else(|| key.clone(), str::to_owned),
         registered_ms: thread.registered_at.some().and_then(parse_ms),

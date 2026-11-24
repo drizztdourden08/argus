@@ -95,7 +95,7 @@ pub trait ProcsHost: Send + Sync {
             .collect()
     }
 
-    /// The lead (coordinator thread) of a project, when it has one.
+    /// The lead (lead thread) of a project, when it has one.
     fn lead_of(&self, _project: &str) -> Option<String> {
         None
     }
@@ -106,8 +106,8 @@ pub trait ProcsHost: Send + Sync {
     /// The id of the Overlord's board, where the process alerts go.
     fn overlord_board(&self) -> String;
 
-    /// The coordinator thread of the portfolio board, when there is one.
-    fn coordinator(&self) -> Option<String>;
+    /// The lead thread of the portfolio board, when there is one.
+    fn lead(&self) -> Option<String>;
 
     /// Hands a wake to the engine.
     ///

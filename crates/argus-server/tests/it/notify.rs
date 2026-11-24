@@ -260,7 +260,7 @@ async fn by_is_the_page_for_the_page_the_overlord_only_when_the_board_says_so_ne
     let t = &r.t;
     let thread = |text, thread, project, by| json!({ "text": text, "thread": thread, "project": project, "by": by });
     assert_eq!(
-        by_of(t, thread("a", "coordinator", "alpha", "overlord"), false).await,
+        by_of(t, thread("a", "lead", "alpha", "overlord"), false).await,
         "thread"
     );
     assert_eq!(
@@ -268,16 +268,11 @@ async fn by_is_the_page_for_the_page_the_overlord_only_when_the_board_says_so_ne
         "thread"
     );
     assert_eq!(
-        by_of(
-            t,
-            thread("c", "coordinator", "portfolio", "overlord"),
-            false
-        )
-        .await,
+        by_of(t, thread("c", "lead", "portfolio", "overlord"), false).await,
         "overlord"
     );
     assert_eq!(
-        by_of(t, thread("d", "coordinator", "alpha", "auto"), false).await,
+        by_of(t, thread("d", "lead", "alpha", "auto"), false).await,
         "thread"
     );
     assert_eq!(
@@ -289,16 +284,12 @@ async fn by_is_the_page_for_the_page_the_overlord_only_when_the_board_says_so_ne
 #[tokio::test(flavor = "multi_thread")]
 async fn the_overlord_opens_the_notifications_tab() {
     let r = rig().await;
-    let body = json!({ "text": "the Overlord needs you", "title": "Overlord", "thread": "coordinator", "project": "portfolio", "by": "overlord" });
+    let body = json!({ "text": "the Overlord needs you", "title": "Overlord", "thread": "lead", "project": "portfolio", "by": "overlord" });
     assert_eq!(ping(&r.t, &body).await.status, 200);
     let top = notes(&r.t).await.remove(0);
     assert_eq!(
         (&top["by"], &top["project"], &top["thread"]),
-        (
-            &json!("overlord"),
-            &json!("portfolio"),
-            &json!("coordinator")
-        )
+        (&json!("overlord"), &json!("portfolio"), &json!("lead"))
     );
     let tab = format!("http://127.0.0.1:{}/#notifications", r.t.port);
     assert_eq!(top["url"], tab);

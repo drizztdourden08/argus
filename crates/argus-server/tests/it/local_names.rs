@@ -100,10 +100,7 @@ async fn the_front_door_routes_by_host_like_the_main_listener() {
     let port = live.door.port;
     let board = at_door(&live, "/", &format!("alpha.argus:{port}")).await;
     assert_eq!(board.status, 302);
-    assert_eq!(
-        board.header("location"),
-        Some("/p/alpha/?thread=coordinator")
-    );
+    assert_eq!(board.header("location"), Some("/p/alpha/?thread=lead"));
     let thread = at_door(&live, "/", &format!("ui.alpha.argus:{port}")).await;
     assert_eq!(thread.header("location"), Some("/p/alpha/?thread=ui"));
     for host in [

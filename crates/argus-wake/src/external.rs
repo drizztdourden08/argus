@@ -2,6 +2,7 @@
 //! may clear a fault. The server slice maps a [`RequestError`] to its status code.
 
 use argus_core::ids::is_key;
+use argus_core::lead::canonical;
 use serde_json::Value;
 
 use crate::board::BoardView;
@@ -76,7 +77,7 @@ pub fn valid_thread_key(thread: &str) -> bool {
 pub fn stream_thread(raw: Option<&str>) -> Result<String, RequestError> {
     let thread = raw.filter(|t| !t.is_empty()).unwrap_or("*");
     if valid_thread_key(thread) {
-        Ok(thread.to_owned())
+        Ok(canonical(thread).into_owned())
     } else {
         Err(bad("thread must be a thread id or *"))
     }
@@ -170,6 +171,8 @@ pub fn external_wake(
     let Some(thread) = text_field(body, "thread").filter(|t| valid_thread_id(t)) else {
         return Err(bad("thread must be a thread id"));
     };
+    let thread = canonical(thread);
+    let thread = &*thread;
     let Some(text) = text_field(body, "text").filter(|t| !t.trim().is_empty()) else {
         return Err(bad("text is required"));
     };
@@ -200,7 +203,7 @@ pub struct ClearRequest {
     pub by: String,
 }
 
-/// Check a request to clear a wake fault: the shape, the note, and that `by` is a live coordinator of the portfolio board.
+/// Check a request to clear a wake fault: the shape, the note, and that `by` is a live lead of the portfolio board.
 /// (A browser request is refused before this, by the route.)
 ///
 /// # Errors
@@ -224,12 +227,17 @@ pub fn clear_request(
         )));
     }
     let by = text_field(body, "by").unwrap_or("");
-    overlord_only(by, overlord_board, portfolio, "clear a wake fault")?;
+    overlord_only(
+        &canonical(by),
+        overlord_board,
+        portfolio,
+        "clear a wake fault",
+    )?;
     Ok(ClearRequest {
         project: project.to_owned(),
-        thread: thread.to_owned(),
+        thread: canonical(thread).into_owned(),
         note,
-        by: by.to_owned(),
+        by: canonical(by).into_owned(),
     })
 }
 

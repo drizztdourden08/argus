@@ -1,6 +1,7 @@
 //! Launches, starting, stopping, typing into and listing runs.
 
 use argus_core::ApiError;
+use argus_core::lead::canonical;
 use argus_launchers::{ListFilter, Origin, StartOptions, check_key};
 use axum::response::Response;
 use serde_json::{Value, json, to_value};
@@ -35,7 +36,7 @@ fn by_of(ctx: &Ctx, body: &Value) -> String {
     if is_page(ctx) {
         "human".to_owned()
     } else {
-        named.unwrap_or("cli").to_owned()
+        canonical(named.unwrap_or("cli")).into_owned()
     }
 }
 

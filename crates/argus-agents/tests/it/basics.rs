@@ -138,9 +138,9 @@ fn board(threads: &[Value]) -> Board {
 }
 
 #[test]
-fn the_thread_to_wake_is_the_owner_while_it_lives_else_the_coordinator() {
+fn the_thread_to_wake_is_the_owner_while_it_lives_else_the_lead() {
     let board = board(&[
-        thread_record("lead", "coordinator", &json!({})),
+        thread_record("lead", "lead", &json!({})),
         thread_record("ui", "thread", &json!({})),
         thread_record("old", "thread", &json!({ "status": "done" })),
         thread_record("hold", "thread", &json!({ "placeholder": true })),
@@ -154,10 +154,10 @@ fn the_thread_to_wake_is_the_owner_while_it_lives_else_the_coordinator() {
         agents: vec![],
         threads: vec![record(&thread_record(
             "lead",
-            "coordinator",
+            "lead",
             &json!({ "status": "archived" }),
         ))],
         ..Board::default()
     };
-    assert_eq!(ended_lead.coordinator(), None);
+    assert_eq!(ended_lead.lead(), None);
 }

@@ -3,6 +3,7 @@
 //! unless `window`), kept in step by every write. `launcher` on the definition names its
 //! owner, so a definition made by hand under that name is never touched.
 
+use argus_core::lead::LEAD_ROLE;
 use std::path::{Component, Path, PathBuf};
 
 use super::join::is_live;
@@ -16,7 +17,7 @@ pub fn project_root(board: &LauncherBoard, who: &Who, cwd: &str) -> String {
     board
         .threads
         .values()
-        .find(|t| t.role == "coordinator" && t.root.is_some() && t.deleted_at.is_none())
+        .find(|t| t.role == LEAD_ROLE && t.root.is_some() && t.deleted_at.is_none())
         .and_then(|t| t.root.clone())
         .or_else(|| who.thread.as_ref().and_then(|t| t.root.clone()))
         .unwrap_or_else(|| cwd.to_owned())

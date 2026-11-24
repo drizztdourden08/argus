@@ -16,7 +16,7 @@ fn a_doing_item_60_min_without_a_write_or_agent_stalls() {
     pass(&mut rig, 1);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
-    assert_to(&stalls[0], "portfolio", "coordinator");
+    assert_to(&stalls[0], "portfolio", "lead");
     assert_eq!(stalls[0].text, "stall: rotp/K-12 doing 60 min, no agent");
     let open = rig.service.stalls(Some("rotp"));
     assert_eq!(

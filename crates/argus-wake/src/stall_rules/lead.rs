@@ -5,9 +5,9 @@ use crate::board::{BoardView, ItemView, LIVE_AGENT, ThreadView};
 use crate::item_wakes::target_for;
 use crate::time::parse_ms;
 
-/// The coordinator when it has a live session and is not paused: a dormant project is not a stall.
+/// The lead when it has a live session and is not paused: a dormant project is not a stall.
 pub(super) fn live_lead(board: &BoardView) -> Option<(String, &ThreadView)> {
-    let id = board.coordinator()?;
+    let id = board.lead()?;
     let thread = board.threads.get(&id)?;
     (thread.is_live() && !thread.status.is("paused")).then_some((id, thread))
 }

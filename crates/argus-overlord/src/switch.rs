@@ -16,7 +16,7 @@ pub fn switch_text(handover: &str) -> String {
     format!(
         "Argus is switching to the hosted Overlord. Write your handover to {handover} now: what is \
          open, the agents running and their stop points, and the next steps. Then end your turn. \
-         Your coordinator thread is ended; the hosted Overlord takes it."
+         Your lead thread is ended; the hosted Overlord takes it."
     )
 }
 
@@ -44,7 +44,7 @@ pub struct Handback {
     pub at: String,
     /// The hosted child's session id, if it had one.
     pub session_id: Option<String>,
-    /// The note of the hosted coordinator thread.
+    /// The note of the hosted lead thread.
     pub note: Option<String>,
     /// The open items of the Overlord's board, as id and title.
     pub items: Vec<(String, String)>,
@@ -74,7 +74,7 @@ pub fn handback_text(back: &Handback) -> String {
          - Hosted session: {session}\n\
          - Thread note: {note}\n\n\
          ## To take the thread back\n\n\
-         Run `coord thread register coordinator --role coordinator`, then `coord inbox`.\n\n\
+         Run `coord thread register lead --role lead`, then `coord inbox`.\n\n\
          ## Open items on the board\n\n\
          {items}",
         at = back.at,
@@ -106,7 +106,7 @@ mod tests {
         assert!(text.contains("Hosted session: s-9"), "{text}");
         assert!(text.contains("Thread note: watching Brock"), "{text}");
         assert!(text.contains("- I-3: Ship the tray"), "{text}");
-        assert!(text.contains("thread register coordinator"), "{text}");
+        assert!(text.contains("thread register lead"), "{text}");
     }
 
     #[test]

@@ -857,7 +857,7 @@ pub fn board_with(rules: Vec<Rule>) -> BoardFacts {
         rules,
         ..BoardFacts::default()
     };
-    for (id, coordinator, live) in [
+    for (id, lead, live) in [
         ("lead", true, true),
         ("worker", false, true),
         ("other", false, true),
@@ -867,7 +867,7 @@ pub fn board_with(rules: Vec<Rule>) -> BoardFacts {
             id.to_string(),
             ThreadInfo {
                 id: id.to_string(),
-                coordinator,
+                lead,
                 live,
             },
         );

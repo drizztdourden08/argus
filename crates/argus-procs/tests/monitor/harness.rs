@@ -216,7 +216,7 @@ impl ProcsHost for Fake {
         "portfolio".to_string()
     }
 
-    fn coordinator(&self) -> Option<String> {
+    fn lead(&self) -> Option<String> {
         Some("boss".to_string())
     }
 

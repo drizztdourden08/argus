@@ -214,7 +214,7 @@ fn a_live_thread_with_a_session_and_no_open_board_waits_the_grace_then_one_fault
     assert_eq!(wakes.len(), 1);
     assert_eq!(
         (wakes[0].scope.as_str(), wakes[0].thread.as_str()),
-        ("portfolio", "coordinator")
+        ("portfolio", "lead")
     );
     assert!(
         digits_between(
@@ -305,23 +305,23 @@ fn only_a_thread_whose_session_is_alive_needs_its_board() {
 fn the_lead_is_covered_by_its_star_listener_and_the_overlord_itself_is_shown_on_the_page_only() {
     let mut rig = rig();
     let _lead = listen(&mut rig, "alpha", "*");
-    let _main = listen(&mut rig, "portfolio", "coordinator");
+    let _main = listen(&mut rig, "portfolio", "lead");
     working(&mut rig, "alpha", "lead");
-    working(&mut rig, "portfolio", "coordinator");
+    working(&mut rig, "portfolio", "lead");
     rig.pass(40 * SEC, STEP);
     let mut faults: Vec<String> = open(&rig)
         .iter()
         .map(|f| format!("{}/{}", f.project, f.thread))
         .collect();
     faults.sort();
-    assert_eq!(faults, ["alpha/lead", "portfolio/coordinator"]);
+    assert_eq!(faults, ["alpha/lead", "portfolio/lead"]);
     assert_eq!(
         rig.fault_wakes().len(),
         1,
         "the lead is reported to the Overlord; the Overlord is not"
     );
     assert_eq!(
-        row(&mut rig, "portfolio", "coordinator")
+        row(&mut rig, "portfolio", "lead")
             .fault
             .expect("fault")
             .reason,

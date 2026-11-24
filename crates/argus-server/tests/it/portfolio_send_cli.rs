@@ -26,7 +26,7 @@ async fn the_lead_reads_it_whole_with_coord_inbox_no_ellipsis_nothing_cut() {
     let out = cli
         .run(
             t,
-            &["inbox", "--project", "beta", "--as", "coordinator"],
+            &["inbox", "--project", "beta", "--as", "lead"],
             &t.coord_home,
             &[],
         )

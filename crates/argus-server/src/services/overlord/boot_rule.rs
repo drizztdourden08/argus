@@ -53,7 +53,7 @@ mod tests {
     fn lead(board: &str, listening: bool) -> Lead {
         Lead {
             board: board.into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             listening,
         }
     }

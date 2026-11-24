@@ -4,6 +4,7 @@
 //! The line is `WAKE <thread>: <line1>; <line2> ... Run: coord inbox`. Nothing else goes to stdout.
 
 use argus_core::ids::is_key;
+use argus_core::lead::canonical;
 use serde_json::Value;
 
 use crate::external::{clean_label, valid_thread_key};
@@ -79,7 +80,9 @@ fn finish(parsed: Parsed) -> Result<WakeArgs, String> {
     let Some(project) = project else {
         return Err("--project <key> is required (the project key, e.g. rotp)".to_owned());
     };
-    let thread = parsed.thread.unwrap_or_else(|| "*".to_owned());
+    let thread = parsed
+        .thread
+        .map_or_else(|| "*".to_owned(), |t| canonical(&t).into_owned());
     if !valid_thread_key(&thread) {
         return Err("--thread must be a thread id or *".to_owned());
     }

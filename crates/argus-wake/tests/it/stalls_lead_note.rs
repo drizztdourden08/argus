@@ -34,7 +34,7 @@ fn an_unread_lead_note_nudges_at_3_and_wakes_the_overlord_at_5() {
         pass(&mut rig, 1);
         let stalls = rig.wakes_of("stall");
         assert_eq!(stalls.len(), 1, "{reason}");
-        assert_to(&stalls[0], "portfolio", "coordinator");
+        assert_to(&stalls[0], "portfolio", "lead");
         assert_eq!(
             stalls[0].text,
             format!("stall: rotp did not read the lead note \"{NOTE}\" for 5 min (it is idle)")

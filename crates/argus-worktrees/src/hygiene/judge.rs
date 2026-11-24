@@ -167,7 +167,7 @@ impl Service {
         live(owners.last().and_then(|a| a.thread.as_deref()))
             .or_else(item_thread)
             .or_else(rule_thread)
-            .or_else(|| board.coordinator())
+            .or_else(|| board.lead())
     }
 
     /// The agents that own the worktree, the last to end last (a running one after all).

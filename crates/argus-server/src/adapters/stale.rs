@@ -79,8 +79,8 @@ impl StaleEnv for StaleHost {
         serde_json::from_value(board).ok()
     }
 
-    fn coordinator(&self, scope: &str) -> Option<String> {
-        self.boards.coordinator(scope)
+    fn lead(&self, scope: &str) -> Option<String> {
+        self.boards.lead(scope)
     }
 
     /// The newest Play run of the launcher (the runs table keeps a few weeks of them), kept in

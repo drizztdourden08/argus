@@ -14,7 +14,7 @@ impl Service {
         self.deps
             .store
             .board(&self.deps.store.overlord_board())?
-            .coordinator()
+            .lead()
     }
 
     /// Report the asks left unanswered. With no Overlord to tell, the next step tries again. Says how many reports

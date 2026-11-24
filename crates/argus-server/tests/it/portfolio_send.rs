@@ -26,7 +26,7 @@ fn lead_entry(t: &TestServer, key: &str, reference: &str) -> Value {
 }
 
 fn inbox_message(t: &TestServer, key: &str, reference: &str) -> Value {
-    let inbox = t.board(key)["inbox"]["coordinator"]
+    let inbox = t.board(key)["inbox"]["lead"]
         .as_array()
         .cloned()
         .unwrap_or_default();

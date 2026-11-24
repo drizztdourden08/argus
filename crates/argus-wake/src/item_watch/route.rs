@@ -7,7 +7,7 @@ use super::text;
 use crate::activity::{ActivityLine, Level};
 use crate::board::BoardView;
 use crate::item_wakes::target_for;
-use crate::policy::coordinator_in;
+use crate::policy::lead_in;
 use crate::reminders::{OwnerNotice, TOPIC_ASSIGNED, TOPIC_RUN, TOPIC_VERIFY};
 use crate::source::BoardSource;
 use crate::wake::WakeInput;
@@ -108,7 +108,7 @@ fn address(at: &Where<'_>, to: &Hearer) -> Option<(String, String)> {
         }
         Hearer::Lead(key) => {
             let board = at.boards.board(key)?;
-            coordinator_in(Some(&*board)).map(|lead| (key.clone(), lead))
+            lead_in(Some(&*board)).map(|lead| (key.clone(), lead))
         }
         Hearer::Owner | Hearer::Agent(_) => None,
     }

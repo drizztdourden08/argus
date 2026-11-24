@@ -87,7 +87,7 @@ pub struct RegistryRow {
     pub thread: String,
     /// The session title.
     pub session: Option<String>,
-    /// `coordinator` or `thread`.
+    /// `lead` or `thread`.
     pub role: String,
     /// The listener's label.
     pub listener_label: Option<String>,

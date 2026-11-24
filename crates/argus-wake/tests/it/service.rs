@@ -28,7 +28,7 @@ fn alpha(tests: &[(&str, &str)], i2_thread: &str, ui_status: &str) -> Value {
         .collect();
     json!({
         "threads": {
-            "coordinator": thread("coordinator", "coordinator", &json!({})),
+            "lead": thread("lead", "lead", &json!({})),
             "ui": thread("ui", "thread", &json!({"status": ui_status})),
             "api": thread("api", "thread", &json!({})),
         },
@@ -253,12 +253,12 @@ fn the_settings_come_from_config_json_and_an_invalid_value_keeps_its_default() {
 #[test]
 fn a_board_with_odd_field_types_still_reads() {
     let odd = board(&json!({
-        "threads": {"ui": {"id": 7, "role": ["coordinator"], "status": "active", "placeholder": 0}, "bad": "text"},
+        "threads": {"ui": {"id": 7, "role": ["lead"], "status": "active", "placeholder": 0}, "bad": "text"},
         "items": [],
         "tests": {"T-1": {"id": "T-1", "thread": 3, "mode": "manual"}, "T-2": 5},
     }));
     assert_eq!(odd.threads.len(), 1);
     assert!(odd.threads["ui"].is_live());
-    assert_eq!(odd.coordinator(), None);
+    assert_eq!(odd.lead(), None);
     assert_eq!(odd.tests.len(), 1);
 }

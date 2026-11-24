@@ -120,7 +120,7 @@ impl ProcsHost for ProcsHostAdapter {
     }
 
     fn lead_of(&self, project: &str) -> Option<String> {
-        self.boards.coordinator(project)
+        self.boards.lead(project)
     }
 
     fn tray_pid(&self) -> Option<u32> {
@@ -131,7 +131,7 @@ impl ProcsHost for ProcsHostAdapter {
         self.boards.overlord().unwrap_or_default()
     }
 
-    fn coordinator(&self) -> Option<String> {
+    fn lead(&self) -> Option<String> {
         self.boards.overlord_thread()
     }
 

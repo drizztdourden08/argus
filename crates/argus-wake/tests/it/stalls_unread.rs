@@ -39,7 +39,7 @@ fn d11_unread_dep_request_nudges_at_5_wakes_the_overlord_at_10_and_the_owner_at_
     pass_with(&mut rig, 1, working);
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
-    assert_to(&stalls[0], "portfolio", "coordinator");
+    assert_to(&stalls[0], "portfolio", "lead");
     assert_eq!(
         stalls[0].text,
         "stall: rotp did not read D-11 for 10 min (it is in a turn)"
@@ -109,7 +109,7 @@ fn the_overlord_hears_the_nudge_and_the_owner_the_toast_but_never_a_stall_about_
     let mut rig = world(&json!({}), &[], &json!({}));
     let wake = WakeInput::about(
         "portfolio",
-        "coordinator",
+        "lead",
         "owner-note",
         "E-4",
         "owner note: look at the bundle",
@@ -118,7 +118,7 @@ fn the_overlord_hears_the_nudge_and_the_owner_the_toast_but_never_a_stall_about_
     pass(&mut rig, 30);
     let nudges = rig.wakes_of("ack-nudge");
     assert_eq!(nudges.len(), 1);
-    assert_to(&nudges[0], "portfolio", "coordinator");
+    assert_to(&nudges[0], "portfolio", "lead");
     assert_eq!(rig.wakes_of("stall").len(), 0);
     let notices = rig.owner.notices();
     assert_eq!(notices.len(), 1);

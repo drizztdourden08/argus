@@ -148,7 +148,7 @@ pub fn check_caller(board: &BoardFacts, caller: &Caller, rules: &[&Rule]) -> Res
             "only a registered thread of this project (its lead or the rule's thread) or the owner's page may remove a worktree{who}"
         )));
     };
-    if thread.coordinator
+    if thread.lead
         || rules
             .iter()
             .any(|r| r.thread.as_deref() == Some(thread.id.as_str()))

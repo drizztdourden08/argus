@@ -330,7 +330,7 @@ async fn send_to_lead_delivers_to_the_project_lead_inbox() {
     )
     .await;
     assert_eq!(r["status"], "delivered", "{r}");
-    let lead = t.board("beta")["inbox"]["coordinator"].clone();
+    let lead = t.board("beta")["inbox"]["lead"].clone();
     let sent = lead.as_array().expect("lead inbox");
     assert!(sent.iter().any(|m| {
         m["text"]

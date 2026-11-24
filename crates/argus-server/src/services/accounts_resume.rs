@@ -105,7 +105,7 @@ fn resume_leads(cycle: &Cycle) -> Vec<ResumeLead> {
         .collect()
 }
 
-/// The Desktop chat of the Overlord: the live coordinator of the portfolio board.
+/// The Desktop chat of the Overlord: the live lead of the portfolio board.
 fn overlord_chat(svc: &Services) -> Option<String> {
     let boards = svc.boards();
     let thread = boards.overlord_thread()?;
@@ -310,7 +310,7 @@ mod tests {
             id: "H-1".into(),
             cycle: "SW-1".into(),
             board: "rotp".into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: Some("cli-1".into()),
             link: link.map(str::to_owned),
             state,

@@ -3,7 +3,7 @@
 use super::{Ctx, Finding, Kind, OWNER};
 use crate::board::{BoardView, ItemView};
 use crate::item_wakes::target_for;
-use crate::policy::coordinator_in;
+use crate::policy::lead_in;
 
 fn assignee_target(board: &BoardView, item: &ItemView) -> Option<String> {
     let assignee = item.assignee.as_str();
@@ -24,7 +24,7 @@ fn assignee_target(board: &BoardView, item: &ItemView) -> Option<String> {
 /// none of.
 pub(super) fn column_recipient(board: &BoardView, to: &str) -> Option<String> {
     match to {
-        "item-thread" | "assignee" | "lead" => coordinator_in(Some(board)),
+        "item-thread" | "assignee" | "lead" => lead_in(Some(board)),
         OWNER => Some(OWNER.to_owned()),
         thread => target_for(board, thread),
     }

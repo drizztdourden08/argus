@@ -28,9 +28,9 @@ pub fn thread(id: &str, role: &str) -> ThreadInfo {
 
 pub fn lead() -> Who {
     Who {
-        actor: "coordinator".to_owned(),
-        role: Role::Coordinator,
-        thread: Some(thread("coordinator", "coordinator")),
+        actor: "lead".to_owned(),
+        role: Role::Lead,
+        thread: Some(thread("lead", "lead")),
     }
 }
 
@@ -61,11 +61,7 @@ pub fn board() -> LauncherBoard {
         created_at: Some(AT.to_owned()),
         ..LauncherBoard::default()
     };
-    for (id, role) in [
-        ("coordinator", "coordinator"),
-        ("worker", "thread"),
-        ("other", "thread"),
-    ] {
+    for (id, role) in [("lead", "lead"), ("worker", "thread"), ("other", "thread")] {
         board.threads.insert(id.to_owned(), thread(id, role));
     }
     board
@@ -369,9 +365,11 @@ fn who_may_change_a_launcher_the_lead_its_maker_or_a_manager_of_its_bundle() {
     let refused = authorize_launcher(&board, &worker("other"), Some(&rec))
         .unwrap_err()
         .to_string();
-    assert!(refused.starts_with(
-        "launcher build-2 was set by worker; only worker or the coordinator can change it."
-    ));
+    assert!(
+        refused.starts_with(
+            "launcher build-2 was set by worker; only worker or the lead can change it."
+        )
+    );
     let made = Launcher {
         bundle: Some("b1".to_owned()),
         ..launcher("build-2")
@@ -389,14 +387,14 @@ fn who_may_change_a_launcher_the_lead_its_maker_or_a_manager_of_its_bundle() {
             .starts_with("no thread is calling")
     );
     let by_lead = Launcher {
-        created_by: Some("coordinator".to_owned()),
+        created_by: Some("lead".to_owned()),
         ..launcher("c")
     };
     assert!(
         authorize_launcher(&board, &worker("other"), Some(&by_lead))
             .unwrap_err()
             .to_string()
-            .contains("only the coordinator can change it")
+            .contains("only the lead can change it")
     );
 }
 
@@ -667,7 +665,7 @@ fn retire_removes_the_play_and_set_brings_it_back_master_is_never_retired() {
             rec.retire_note.as_deref(),
             rec.current
         ),
-        (Some("coordinator"), Some("merged into main"), false)
+        (Some("lead"), Some("merged into main"), false)
     );
     assert!(!board.run_defs.contains_key("launcher-build-2"));
     assert!(
@@ -734,7 +732,7 @@ fn keep_counts_as_a_use_with_who_and_why_and_days_hold_it_fresh() {
     keep_launcher(&mut board, &lead(), "keep-1", (Some(30), None), AT).unwrap();
     let held = &board.launchers["keep-1"];
     assert_eq!(held.kept_until.as_deref(), Some("2026-11-23T00:00:00.000Z"));
-    assert_eq!(held.kept_by.as_deref(), Some("coordinator"));
+    assert_eq!(held.kept_by.as_deref(), Some("lead"));
     assert!(
         board
             .audit

@@ -13,6 +13,7 @@ use crate::rule::Rule;
 use crate::service::{Engine, Inner, RulesSnapshot, locked};
 use crate::system_sampler::platform_name;
 use crate::types::{Meta, Sample};
+use argus_core::lead::LEAD;
 use std::time::Instant;
 
 impl Inner {
@@ -150,9 +151,7 @@ impl Inner {
         let host = &self.ports.host;
         let wake = WakeRequest {
             scope: host.overlord_board(),
-            thread: host
-                .coordinator()
-                .unwrap_or_else(|| "coordinator".to_string()),
+            thread: host.lead().unwrap_or_else(|| LEAD.to_string()),
             reason: "process-alert".to_string(),
             subject: "procs".to_string(),
             text: text.clone(),

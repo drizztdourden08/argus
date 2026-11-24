@@ -97,12 +97,7 @@ fn a_wake_fault_that_the_overlord_clears_names_who_and_why() {
         .open(&open("brock", "ui", "no-listener", Some(detail)))
         .expect("open");
     faults
-        .clear(&clear(
-            "brock",
-            "ui",
-            "coordinator",
-            "restarted its listener",
-        ))
+        .clear(&clear("brock", "ui", "lead", "restarted its listener"))
         .expect("clear");
     assert_eq!(
         written(&log),
@@ -115,7 +110,7 @@ fn a_wake_fault_that_the_overlord_clears_names_who_and_why() {
             ),
             line(
                 Level::Info,
-                "brock/ui: wake fault (no-listener) cleared by coordinator: restarted its listener",
+                "brock/ui: wake fault (no-listener) cleared by lead: restarted its listener",
                 "brock",
                 "ui"
             ),
@@ -135,7 +130,7 @@ fn every_reason_has_its_words_and_an_unknown_one_is_named() {
         wake_id: None,
         detail: detail.map(str::to_owned),
         cleared_at: None,
-        cleared_by: Some("coordinator".to_owned()),
+        cleared_by: Some("lead".to_owned()),
         note: None,
     };
     assert_eq!(
@@ -156,6 +151,6 @@ fn every_reason_has_its_words_and_an_unknown_one_is_named() {
     );
     assert_eq!(
         cleared_line(&fault("no-reaction", None)),
-        "p/t: wake fault (no-reaction) cleared by coordinator"
+        "p/t: wake fault (no-reaction) cleared by lead"
     );
 }

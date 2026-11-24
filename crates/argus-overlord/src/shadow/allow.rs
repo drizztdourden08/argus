@@ -1,6 +1,7 @@
 //! The read-only allow list of the shadow. Every ask the project's own rules do not settle comes to
 //! the permission tool; the shadow answers it here, with no owner toast.
 
+use argus_core::lead::{LEAD_ROLE, LEGACY};
 use serde_json::Value;
 
 use super::THREAD;
@@ -104,11 +105,14 @@ fn is_read(rest: &[&str]) -> bool {
     }
 }
 
-/// `coord thread register coordinator-hosted ...`, never another thread or the coordinator role.
+/// `coord thread register lead-hosted ...`, never another thread or the lead role.
 fn is_registration(rest: &[&str]) -> bool {
     match rest {
         ["thread", "register", name, options @ ..] => {
-            *name == THREAD && !options.iter().any(|w| w.contains("coordinator"))
+            *name == THREAD
+                && !options
+                    .iter()
+                    .any(|w| [LEAD_ROLE, LEGACY].iter().any(|word| w.contains(word)))
         }
         _ => false,
     }

@@ -1,6 +1,7 @@
 //! The page mirror of the registry: collection `registry`, doc id = thread on a project scope; the
 //! portfolio scope has the lead rows of every project (id `<project>/<thread>`) and every faulted row.
 
+use argus_core::lead::LEAD_ROLE;
 use tracing::warn;
 
 use super::rows::RegistryRow;
@@ -47,7 +48,7 @@ impl Registry {
         let mut lead: Vec<RegistryRow> = Vec::new();
         for project in &all {
             for row in self.rows_with(env, project, &faults) {
-                if row.role == "coordinator" || row.fault.is_some() {
+                if row.role == LEAD_ROLE || row.fault.is_some() {
                     lead.push(RegistryRow {
                         id: format!("{project}/{}", row.thread),
                         ..row

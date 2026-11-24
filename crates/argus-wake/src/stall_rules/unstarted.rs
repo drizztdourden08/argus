@@ -38,7 +38,7 @@ fn one(now: i64, input: &RuleInput<'_>, key: &str, dep: &DepView) -> Option<Foun
     Some(Found {
         kind: Kind::Unstarted,
         project: project.to_owned(),
-        lead: board.coordinator().unwrap_or_default(),
+        lead: board.lead().unwrap_or_default(),
         subject: id.to_owned(),
         since: opened,
         text: text::unstarted(id, age, project, &item.shown_id()),

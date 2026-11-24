@@ -38,9 +38,9 @@ impl Env {
             vec![
                 "thread",
                 "register",
-                "coordinator",
+                "lead",
                 "--role",
-                "coordinator",
+                "lead",
                 "--project",
                 "alpha",
             ],
@@ -66,7 +66,7 @@ impl Env {
         self.cli.run(&self.t, args, self.dir.path(), &[]).await
     }
 
-    /// A verb of a project, as the coordinator unless `rest` says otherwise.
+    /// A verb of a project, as the lead unless `rest` says otherwise.
     async fn run(&self, verb: &[&str], rest: &[&str]) -> CliOut {
         let mut args = vec!["run"];
         args.extend(verb);
@@ -81,7 +81,7 @@ impl Env {
         std::fs::write(&file, source).expect("the script");
         let cmd = format!("node \"{}\"", file.display());
         let out = self
-            .run(&["define", name, "--cmd", &cmd], &["--as", "coordinator"])
+            .run(&["define", name, "--cmd", &cmd], &["--as", "lead"])
             .await;
         assert_eq!(out.status, 0, "{}", out.stderr);
     }
@@ -126,7 +126,7 @@ async fn first_define(env: &Env) {
                 "--env",
                 "MODE=prod",
                 "--as",
-                "coordinator",
+                "lead",
             ],
         )
         .await;
@@ -143,7 +143,7 @@ async fn first_define(env: &Env) {
                 "timeoutSec": def["timeoutSec"], "parallel": def["parallel"], "rev": def["rev"],
                 "definedBy": def["definedBy"] }),
         json!({ "cmd": "npm run build", "kind": "build", "hand": false, "visible": false,
-                "timeoutSec": 1800, "parallel": 1, "rev": 1, "definedBy": "coordinator" })
+                "timeoutSec": 1800, "parallel": 1, "rev": 1, "definedBy": "lead" })
     );
     assert_eq!(def["env"], json!({ "API_TOKEN": "s3cret", "MODE": "prod" }));
     assert_eq!(
@@ -177,7 +177,7 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
                 "--timeout",
                 "0",
             ],
-            &["--as", "coordinator"],
+            &["--as", "lead"],
         )
         .await;
     assert!(again.stdout.contains("updated build"), "{}", again.stdout);
@@ -194,7 +194,7 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
                 "--parallel",
                 "1",
             ],
-            &["--as", "coordinator"],
+            &["--as", "lead"],
         )
         .await;
     assert_eq!(hand.status, 0, "{}", hand.stderr);
@@ -216,9 +216,7 @@ async fn define_defs_and_undefine_work_on_the_board_file_and_the_server_shows_th
 }
 
 async fn undefine_build(env: &Env) {
-    let gone = env
-        .run(&["undefine", "build"], &["--as", "coordinator"])
-        .await;
+    let gone = env.run(&["undefine", "build"], &["--as", "lead"]).await;
     assert_eq!(gone.status, 0, "{}", gone.stderr);
     let keys: Vec<String> = env.board()["runDefs"]
         .as_object()

@@ -62,18 +62,18 @@ fn the_overlord_is_preferred_when_idle() {
     let mut relay = relay();
     let all = [
         live("a", "lead", false, false),
-        live("portfolio", "coordinator", false, true),
+        live("portfolio", "lead", false, true),
     ];
     let out = relay.step(T0 + FIRST_AFTER_MS, &[target("a", "ui")], &all);
-    assert_eq!(via_of(&out), [key("portfolio", "coordinator")]);
+    assert_eq!(via_of(&out), [key("portfolio", "lead")]);
     let last = relay.last("a", "ui").expect("last");
     assert_eq!(last.kind, AttemptKind::Note);
-    assert_eq!(last.via.as_deref(), Some("coordinator"));
+    assert_eq!(last.via.as_deref(), Some("lead"));
 }
 
 #[test]
 fn a_thread_in_a_turn_is_chosen_only_when_no_idle_one_exists() {
-    let busy_main = live("portfolio", "coordinator", true, true);
+    let busy_main = live("portfolio", "lead", true, true);
     let idle = live("a", "lead", false, false);
     let mut relay = relay();
     let out = relay.step(
@@ -84,7 +84,7 @@ fn a_thread_in_a_turn_is_chosen_only_when_no_idle_one_exists() {
     assert_eq!(via_of(&out), [key("a", "lead")]);
     let mut relay = self::relay();
     let out = relay.step(T0 + FIRST_AFTER_MS, &[target("a", "ui")], &[busy_main]);
-    assert_eq!(via_of(&out), [key("portfolio", "coordinator")]);
+    assert_eq!(via_of(&out), [key("portfolio", "lead")]);
 }
 
 #[test]
@@ -99,12 +99,12 @@ fn the_target_is_never_its_own_relay() {
 fn the_second_note_goes_to_a_different_relay() {
     let mut relay = relay();
     let all = [
-        live("portfolio", "coordinator", false, true),
+        live("portfolio", "lead", false, true),
         live("a", "lead", false, false),
     ];
     let now = T0 + FIRST_AFTER_MS;
     let first = relay.step(now, &[target("a", "ui")], &all);
-    assert_eq!(via_of(&first), [key("portfolio", "coordinator")]);
+    assert_eq!(via_of(&first), [key("portfolio", "lead")]);
     assert_eq!(
         relay
             .step(now + AGAIN_AFTER_MS - 1, &[target("a", "ui")], &all)
@@ -201,13 +201,13 @@ fn a_target_no_longer_due_is_forgotten() {
 fn several_targets_for_one_relay_fold_into_one_note() {
     let mut relay = relay();
     let due = [target("a", "ui"), target("b", "api")];
-    let all = [live("portfolio", "coordinator", false, true)];
+    let all = [live("portfolio", "lead", false, true)];
     let out = relay.step(T0 + FIRST_AFTER_MS, &due, &all);
     assert_eq!(out.len(), 1);
     let Action::Note { via, targets } = &out[0] else {
         panic!("a note");
     };
-    assert_eq!(via, &key("portfolio", "coordinator"));
+    assert_eq!(via, &key("portfolio", "lead"));
     assert_eq!(targets.len(), 2);
 }
 

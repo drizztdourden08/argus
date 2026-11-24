@@ -130,7 +130,7 @@ pub fn registry_boards(seen_ago_ms: i64) -> [(&'static str, BoardView); 2] {
             "alpha",
             board(&json!({
                 "threads": {
-                    "lead": thread("lead", "coordinator", &seen),
+                    "lead": thread("lead", "lead", &seen),
                     "ui": thread("ui", "thread", &seen),
                     "api": thread("api", "thread", &seen),
                     "old": thread("old", "thread", &json!({"status": "done"})),
@@ -141,9 +141,7 @@ pub fn registry_boards(seen_ago_ms: i64) -> [(&'static str, BoardView); 2] {
         ),
         (
             "portfolio",
-            board(
-                &json!({"threads": {"coordinator": thread("coordinator", "coordinator", &seen)}, "inbox": {}}),
-            ),
+            board(&json!({"threads": {"lead": thread("lead", "lead", &seen)}, "inbox": {}})),
         ),
     ]
 }

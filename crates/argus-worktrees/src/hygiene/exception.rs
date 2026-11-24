@@ -17,8 +17,8 @@ const NOTE_MAX: usize = 300;
 pub struct KeepInput {
     pub project: String,
     pub caller: Caller,
-    /// The board the caller speaks from. Every lead's thread is named `coordinator`, so the name alone proves
-    /// nothing: only a caller from the `portfolio` board who is that board's coordinator is the Overlord.
+    /// The board the caller speaks from. Every lead's thread is named `lead`, so the name alone proves
+    /// nothing: only a caller from the `portfolio` board who is that board's lead is the Overlord.
     pub by_project: Option<String>,
     /// The worktree's id or path.
     pub id: String,
@@ -42,7 +42,7 @@ pub(super) fn bad(message: impl Into<String>) -> WtError {
 }
 
 impl Service {
-    /// The Overlord's thread when the caller is he: a thread of the `portfolio` board that is its coordinator.
+    /// The Overlord's thread when the caller is he: a thread of the `portfolio` board that is its lead.
     fn as_overlord(&self, input: &KeepInput) -> Option<String> {
         let by = input.caller.thread().unwrap_or_default().to_string();
         let from_portfolio =

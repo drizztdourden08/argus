@@ -9,7 +9,7 @@ fn thread_on(ctx: &ApplyCtx<'_>, id: Option<&str>) -> Option<String> {
     let known = id.filter(|id| ctx.board.is_some_and(|b| b.threads.contains_key(*id)));
     match known {
         Some(id) => Some(id.to_owned()),
-        None => (ctx.coordinator_of)(ctx.scope).or_else(|| id.map(str::to_owned)),
+        None => (ctx.lead_of)(ctx.scope).or_else(|| id.map(str::to_owned)),
     }
 }
 

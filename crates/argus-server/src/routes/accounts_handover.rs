@@ -10,6 +10,7 @@
 //! - `action` `resumed` or `not_resumed` (`board`, `thread`) is the resume task's verdict on a
 //!   lead after the switch; the answer is `{handover, cycle: {id, phase}}`
 
+use argus_core::lead::canonical;
 use std::sync::Arc;
 
 use argus_accounts::handover::{AgentStop, DeskError, Estimate, LeadAction};
@@ -133,7 +134,10 @@ fn resume_report(handovers: &Handovers, body: &Value, resumed: bool) -> Reply {
     let desk = handovers.desk();
     let id = desk
         .cycle()
-        .and_then(|c| c.handover_of(board, thread).map(|h| h.id.clone()))
+        .and_then(|c| {
+            c.handover_of(board, &canonical(thread))
+                .map(|h| h.id.clone())
+        })
         .ok_or_else(|| ApiError::not_found("no such lead in the handover cycle"))?;
     let handover = desk
         .mark_resumed(&id, resumed)
@@ -162,6 +166,7 @@ async fn handover(ctx: Ctx) -> Reply {
     let thread = text(&body, "thread")
         .ok_or_else(|| ApiError::bad_request("thread is required"))?
         .to_owned();
+    let thread = canonical(&thread).into_owned();
     let desk = Arc::clone(&handovers);
     let reply =
         tokio::task::spawn_blocking(move || desk.lead((&board, &thread), action, &accounts))

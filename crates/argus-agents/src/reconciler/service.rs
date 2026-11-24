@@ -12,6 +12,7 @@ use crate::iso::format_iso;
 use crate::ports::{ActivityLine, Ports, WakeEvent};
 use crate::schedule::Tick;
 use crate::text::clip;
+use argus_core::lead::LEAD;
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 use std::sync::{Mutex, PoisonError};
@@ -219,7 +220,7 @@ impl AgentReconciler {
         }
     }
 
-    /// The main coordinator hears one line when records were closed as lost.
+    /// The main lead hears one line when records were closed as lost.
     fn tell_main(&self, lost: &[(String, String)]) {
         let Some(engine) = &self.ports.wakes else {
             return;
@@ -232,8 +233,8 @@ impl AgentReconciler {
             .ports
             .store
             .snapshot(&overlord)
-            .and_then(|b| b.coordinator())
-            .unwrap_or_else(|| "coordinator".to_owned());
+            .and_then(|b| b.lead())
+            .unwrap_or_else(|| LEAD.to_owned());
         let mut by: Vec<&str> = Vec::new();
         for (project, _) in lost {
             if !by.contains(&project.as_str()) {

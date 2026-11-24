@@ -156,7 +156,7 @@ async fn a_run_that_fails_wakes_the_lead_of_its_project() {
         wakes_of(&r.t, "alpha", "run-failed").await.pop()
     })
     .await;
-    assert_eq!(wake["thread"], "coordinator");
+    assert_eq!(wake["thread"], "lead");
     let text = wake["text"].as_str().unwrap();
     assert!(text.starts_with("R-1 fail failed (exit 3)"), "{text}");
     let stopped = r.begin("slow").await;
@@ -200,7 +200,7 @@ async fn the_launcher_wakes_tell_the_lead_of_a_project_with_no_master_launcher()
     let wakes = wakes_of(&t, "alpha", "launcher-master-missing").await;
     assert_eq!(
         (wakes[0]["thread"].clone(), wakes[0]["subject"].clone()),
-        (json!("coordinator"), json!("alpha"))
+        (json!("lead"), json!("alpha"))
     );
     let activity = t.get("/api/activity?kind=launcher-stale").await.json();
     assert!(

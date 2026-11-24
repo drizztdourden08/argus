@@ -132,7 +132,7 @@ impl Service {
         }
         self.board(&input.project)
             .ok()
-            .and_then(|b| b.threads.get(by).map(|t| t.coordinator && t.live))
+            .and_then(|b| b.threads.get(by).map(|t| t.lead && t.live))
             .unwrap_or(false)
     }
 

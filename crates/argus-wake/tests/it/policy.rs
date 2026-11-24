@@ -25,7 +25,7 @@ fn mk_board(tests: Vec<Value>) -> BoardView {
         .collect();
     board(&json!({
         "threads": {
-            "coordinator": {"id": "coordinator", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "ui": {"id": "ui", "status": "active"},
             "api": {"id": "api", "status": "paused"},
         },
@@ -42,8 +42,8 @@ fn mk_board(tests: Vec<Value>) -> BoardView {
 }
 
 #[allow(clippy::unnecessary_wraps)]
-fn coordinator(_: &str) -> Option<String> {
-    Some("coordinator".to_owned())
+fn lead(_: &str) -> Option<String> {
+    Some("lead".to_owned())
 }
 
 fn quiet(wakes: &[WakeInput]) {
@@ -59,13 +59,13 @@ struct Post<'a> {
 
 impl Post<'_> {
     fn wakes(&self, entry: &Value) -> Vec<WakeInput> {
-        self.wakes_with(entry, &coordinator)
+        self.wakes_with(entry, &lead)
     }
 
     fn wakes_with(
         &self,
         entry: &Value,
-        coordinator_of: &dyn Fn(&str) -> Option<String>,
+        lead_of: &dyn Fn(&str) -> Option<String>,
     ) -> Vec<WakeInput> {
         let entry: EntryView = serde_json::from_value(entry.clone()).expect("entry");
         let ctx = ApplyCtx {
@@ -74,7 +74,7 @@ impl Post<'_> {
             status: self.status,
             board: self.board,
             before: self.before,
-            coordinator_of,
+            lead_of,
         };
         wakes_for(&ctx)
     }
@@ -214,7 +214,7 @@ fn results() -> Value {
 fn base_json() -> Value {
     json!({
         "threads": {
-            "coordinator": {"id": "coordinator", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "ui": {"id": "ui", "status": "active"},
         },
         "items": {},
@@ -263,8 +263,7 @@ fn the_owner_answering_a_question_wakes_the_thread_that_asked_and_a_decision_ans
 }
 
 #[test]
-fn an_owner_note_or_decision_wakes_that_thread_and_an_unknown_thread_falls_back_to_the_coordinator()
-{
+fn an_owner_note_or_decision_wakes_that_thread_and_an_unknown_thread_falls_back_to_the_lead() {
     let board = mk_board(vec![]);
     let post = alpha(&board, None);
     let note = post.wakes(&json!({"id": "O-4", "kind": "followup", "item": "I-1", "thread": "ui", "text": "Please also handle the empty state."}));
@@ -294,7 +293,7 @@ fn an_owner_note_or_decision_wakes_that_thread_and_an_unknown_thread_falls_back_
     assert_eq!(decision[0].text, "owner decision: Ship it.");
     let lost =
         post.wakes(&json!({"id": "O-6", "kind": "followup", "thread": "ghost", "text": "hello"}));
-    assert_eq!(lost[0].thread, "coordinator");
+    assert_eq!(lost[0].thread, "lead");
 }
 
 #[test]
@@ -366,7 +365,7 @@ fn resuming_a_paused_thread_wakes_it_and_resuming_one_that_was_not_paused_does_n
 }
 
 #[test]
-fn a_portfolio_send_wakes_the_coordinator_of_every_project_it_was_delivered_to() {
+fn a_portfolio_send_wakes_the_lead_of_every_project_it_was_delivered_to() {
     let entry = json!({"id": "O-10", "kind": "decision", "project": "all", "text": "Freeze the release.", "deliveredTo": ["alpha", "beta"]});
     let post = Post {
         scope: "_portfolio",
@@ -374,16 +373,7 @@ fn a_portfolio_send_wakes_the_coordinator_of_every_project_it_was_delivered_to()
         board: None,
         before: None,
     };
-    let lead_of = |key: &str| {
-        Some(
-            if key == "alpha" {
-                "lead"
-            } else {
-                "coordinator"
-            }
-            .to_owned(),
-        )
-    };
+    let lead_of = |key: &str| Some(if key == "alpha" { "lead" } else { "lead" }.to_owned());
     let wakes = post.wakes_with(&entry, &lead_of);
     let rows: Vec<(&str, &str, &str)> = wakes
         .iter()
@@ -393,7 +383,7 @@ fn a_portfolio_send_wakes_the_coordinator_of_every_project_it_was_delivered_to()
         rows,
         [
             ("alpha", "lead", "portfolio-decision"),
-            ("beta", "coordinator", "portfolio-decision")
+            ("beta", "lead", "portfolio-decision")
         ]
     );
     assert!(
@@ -459,7 +449,7 @@ fn a_post_that_was_not_applied_wakes_nobody() {
         status: Some("applied"),
         board: Some(&board),
         before: None,
-        coordinator_of: &coordinator,
+        lead_of: &lead,
     };
     quiet(&wakes_for(&ctx));
 }

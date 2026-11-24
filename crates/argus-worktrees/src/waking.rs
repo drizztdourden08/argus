@@ -77,7 +77,7 @@ impl Service {
         doc.thread
             .as_deref()
             .and_then(|t| board.live_thread(t))
-            .or_else(|| board.coordinator())
+            .or_else(|| board.lead())
     }
 
     fn collect_due<'a>(
@@ -135,7 +135,7 @@ impl Service {
         let target = if prev.is_some_and(|p| now - p.a < self.opts.repeat_ms) {
             None
         } else {
-            board.coordinator().or_else(|| {
+            board.lead().or_else(|| {
                 board
                     .rules
                     .iter()

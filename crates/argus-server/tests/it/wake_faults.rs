@@ -1,6 +1,6 @@
 //! Wake faults end to end, ported from the HTTP side of `wake.faults.test.mjs`: a wake nobody
 //! listens for becomes a fault, mirrored to the `registry` docs and told once to the main
-//! coordinator as a passive notice and woken at once by one `fault-open` wake; the clear route refuses a browser and anyone but the Overlord. The `coord
+//! lead as a passive notice and woken at once by one `fault-open` wake; the clear route refuses a browser and anyone but the Overlord. The `coord
 //! wake-fault` verbs stay in the Node `coord` tests until the `coord` port of slice 8.
 //! S2, K2, K4: the fault life cycle and the clear route refusals against an in-process server.
 // test-tag: standard
@@ -68,7 +68,7 @@ async fn until(what: &str, check: impl Fn() -> bool) {
     wait::until(what, || async { check().then_some(()) }).await;
 }
 
-/// Two wakes for threads nobody listens for, and the main coordinator listening.
+/// Two wakes for threads nobody listens for, and the main lead listening.
 async fn faulted() -> Faulted {
     let home = tempfile::tempdir().expect("coord home");
     make_home(home.path());
@@ -81,7 +81,7 @@ async fn faulted() -> Faulted {
         ..TestOptions::default()
     })
     .await;
-    let main = wake_stream(&t, "coordinator", "portfolio").await;
+    let main = wake_stream(&t, "lead", "portfolio").await;
     for thread in ["ui", "api"] {
         let body = json!({ "thread": thread, "reason": "thread-message", "text": format!("lead: look at {thread}") });
         assert_eq!(post_wake(&t, "alpha", &body).await.json()["queued"], true);
@@ -112,13 +112,13 @@ fn the_fault_shows_on_the_rows(t: &TestServer) {
             .is_some_and(|d| d.contains("nobody listening"))
     );
     assert_eq!(ui["pendingWake"], Value::Null);
-    assert_eq!(state_of(t, "alpha", "coordinator").as_deref(), Some("idle"));
+    assert_eq!(state_of(t, "alpha", "lead").as_deref(), Some("idle"));
     assert_eq!(
         state_of(t, PORTFOLIO, "alpha/ui").as_deref(),
         Some("fault"),
         "the portfolio page shows it"
     );
-    assert!(registry_doc(t, PORTFOLIO, "alpha/coordinator").is_some());
+    assert!(registry_doc(t, PORTFOLIO, "alpha/lead").is_some());
     assert_eq!(
         registry_doc(t, PORTFOLIO, "alpha/api").expect("api")["project"],
         "alpha"
@@ -126,7 +126,7 @@ fn the_fault_shows_on_the_rows(t: &TestServer) {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets_one_notice_per_fault_and_one_fault_open_wake()
+async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_lead_gets_one_notice_per_fault_and_one_fault_open_wake()
  {
     let f = faulted().await;
     the_fault_shows_on_the_rows(&f.t);
@@ -160,7 +160,7 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
     assert_eq!(
         of("fault-open").len(),
         2,
-        "each fault wakes the main coordinator once, at once"
+        "each fault wakes the main lead once, at once"
     );
     let woken = f.main.next(Some("wake"), 5000).await.expect("a wake event");
     assert!(
@@ -172,10 +172,10 @@ async fn a_wake_nobody_listens_for_becomes_a_fault_and_the_main_coordinator_gets
     two_fault_notices_in_the_digest(&f.t).await;
 }
 
-/// The main coordinator's prompt digest counts the two fault notices.
+/// The main lead's prompt digest counts the two fault notices.
 async fn two_fault_notices_in_the_digest(t: &TestServer) {
     let digest = t
-        .get("/api/p/portfolio/wakes/notices?thread=coordinator")
+        .get("/api/p/portfolio/wakes/notices?thread=lead")
         .await
         .json();
     assert_eq!(digest["count"], 2);
@@ -266,7 +266,7 @@ async fn the_faults_list_for_anyone_open_ones_by_default_and_all_with_a_flag() {
 async fn the_clear_route_refuses_a_browser_request_with_or_without_the_bearer() {
     let f = faulted().await;
     let t = &f.t;
-    let body = json!({ "project": "alpha", "thread": "ui", "note": NOTE, "by": "coordinator" });
+    let body = json!({ "project": "alpha", "thread": "ui", "note": NOTE, "by": "lead" });
     let page = t
         .send(t.page(Request::new("POST", "/api/wake-faults/clear").json(&body)))
         .await;
@@ -284,9 +284,9 @@ async fn the_clear_route_refuses_a_browser_request_with_or_without_the_bearer() 
     assert_eq!(state_of(t, "alpha", "ui").as_deref(), Some("fault"));
 }
 
-/// A clear request for alpha/ui as the main coordinator, with `extra` laid over it.
+/// A clear request for alpha/ui as the main lead, with `extra` laid over it.
 fn with(extra: &Value) -> Value {
-    let mut body = json!({ "project": "alpha", "thread": "ui", "by": "coordinator" });
+    let mut body = json!({ "project": "alpha", "thread": "ui", "by": "lead" });
     body.as_object_mut()
         .expect("object")
         .extend(extra.as_object().cloned().unwrap_or_default());
@@ -294,13 +294,13 @@ fn with(extra: &Value) -> Value {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn the_clear_route_needs_a_note_and_the_main_coordinator() {
+async fn the_clear_route_needs_a_note_and_the_main_lead() {
     let f = faulted().await;
     let t = &f.t;
     assert_eq!(
         clear(
             t,
-            &json!({ "project": "alpha", "thread": "ui", "by": "coordinator" })
+            &json!({ "project": "alpha", "thread": "ui", "by": "lead" })
         )
         .await,
         400,
@@ -334,7 +334,7 @@ async fn the_clear_route_needs_a_note_and_the_main_coordinator() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn the_main_coordinator_clears_a_fault_with_a_note() {
+async fn the_main_lead_clears_a_fault_with_a_note() {
     let f = faulted().await;
     let t = &f.t;
     let done = t
@@ -345,7 +345,7 @@ async fn the_main_coordinator_clears_a_fault_with_a_note() {
         )
         .await;
     assert_eq!(done.status, 200);
-    assert_eq!(done.json()["fault"]["clearedBy"], "coordinator");
+    assert_eq!(done.json()["fault"]["clearedBy"], "lead");
     until("the row to go idle", || {
         state_of(t, "alpha", "ui").as_deref() == Some("idle")
     })
@@ -365,6 +365,6 @@ async fn the_main_coordinator_clears_a_fault_with_a_note() {
         .and_then(|l| l.iter().find(|f| f["thread"] == "ui"))
         .cloned()
         .expect("the cleared fault");
-    assert_eq!(ui["clearedBy"], "coordinator");
+    assert_eq!(ui["clearedBy"], "lead");
     assert_eq!(ui["note"], NOTE);
 }

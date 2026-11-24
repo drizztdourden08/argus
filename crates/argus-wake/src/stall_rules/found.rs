@@ -33,7 +33,7 @@ pub struct Found {
     pub kind: Kind,
     /// The project key.
     pub project: String,
-    /// The coordinator thread of the project; empty when it has none.
+    /// The lead thread of the project; empty when it has none.
     pub lead: String,
     /// What the stall is about: `D-n` for a dependency, the lead thread, or `I-n` for an item.
     pub subject: String,

@@ -1,8 +1,9 @@
-//! Who may change a launcher: the coordinator (or the owner), the thread that made it, or,
+//! Who may change a launcher: the lead (or the owner), the thread that made it, or,
 //! for one made for a bundle, a thread that manages that bundle. Anyone registered may
 //! make a new one.
 
 use super::record::{Launcher, LauncherBoard, RuleError, Who};
+use argus_core::lead::{LEAD, LEAD_ROLE};
 
 pub fn authorize_launcher(
     board: &LauncherBoard,
@@ -33,10 +34,10 @@ pub fn authorize_launcher(
 fn refusal(board: &LauncherBoard, rec: &Launcher, maker: Option<&str>) -> RuleError {
     let maker_is_lead = maker
         .and_then(|m| board.threads.get(m))
-        .is_some_and(|t| t.role == "coordinator");
+        .is_some_and(|t| t.role == LEAD_ROLE);
     let allowed = match maker {
-        Some(m) if !maker_is_lead => format!("{m} or the coordinator"),
-        _ => "the coordinator".to_owned(),
+        Some(m) if !maker_is_lead => format!("{m} or the lead"),
+        _ => "the lead".to_owned(),
     };
     let bundle = rec
         .bundle
@@ -47,7 +48,7 @@ fn refusal(board: &LauncherBoard, rec: &Launcher, maker: Option<&str>) -> RuleEr
         "launcher {} was set by {}; only {allowed}{bundle} can change it. Ask with coord inbox send {} \"...\" or coord message.",
         rec.name,
         maker.unwrap_or("another thread"),
-        maker.unwrap_or("coordinator"),
+        maker.unwrap_or(LEAD),
     ))
 }
 

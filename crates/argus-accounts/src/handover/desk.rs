@@ -432,7 +432,7 @@ mod tests {
     fn lead(board: &str) -> Lead {
         Lead {
             board: board.into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: None,
             link: None,
             agents: Vec::new(),
@@ -494,7 +494,7 @@ mod tests {
             .unwrap();
         let status = desk
             .lead(
-                ("rotp", "coordinator"),
+                ("rotp", "lead"),
                 LeadAction::Status,
                 None,
                 &EstimateDefaults::default(),
@@ -512,7 +512,7 @@ mod tests {
         };
         let reply = desk
             .lead(
-                ("rotp", "coordinator"),
+                ("rotp", "lead"),
                 write,
                 Some(96.0),
                 &EstimateDefaults::default(),
@@ -529,7 +529,7 @@ mod tests {
         let (_, desk) = desk(&[]);
         let err = desk
             .lead(
-                ("rotp", "coordinator"),
+                ("rotp", "lead"),
                 LeadAction::Status,
                 None,
                 &EstimateDefaults::default(),
@@ -554,8 +554,7 @@ mod tests {
         desk.start(request(CycleMode::Auto), &defaults).unwrap();
         let added = desk.add_lead(&lead("brock"), &defaults).unwrap();
         assert_eq!(added.cycle.leads.len(), 2);
-        desk.re_ask_estimate(("rotp", "coordinator"), &defaults)
-            .unwrap();
+        desk.re_ask_estimate(("rotp", "lead"), &defaults).unwrap();
         let wakes = world.wakes.lock().unwrap();
         assert_eq!(wakes.len(), 3);
         assert!(wakes.iter().all(|(_, kind, _)| *kind == WakeKind::Estimate));

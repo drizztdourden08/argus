@@ -301,7 +301,7 @@ fn an_agent_back_on_it_stops_the_ask_and_a_later_detach_asks_again() {
 }
 
 #[test]
-fn a_lead_thread_named_like_the_coordinator_only_asks_without_the_portfolio_board() {
+fn a_lead_thread_named_like_the_lead_only_asks_without_the_portfolio_board() {
     let (fx, h) = world(|_| {});
     let path = fx.path("agent-a1");
     add_overlord(&h);

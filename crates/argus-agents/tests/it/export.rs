@@ -40,7 +40,7 @@ fn world() -> World {
     let builder = json!({ "name": "builder", "transcriptFile": transcript.to_string_lossy() });
     let checker = json!({ "name": "checker", "status": "done", "finishedAt": null });
     let board = board_json(
-        &[thread_record("coordinator", "coordinator", &json!({}))],
+        &[thread_record("lead", "lead", &json!({}))],
         &[
             agent_record("A-1", T0, &builder),
             agent_record("A-2", T0, &checker),

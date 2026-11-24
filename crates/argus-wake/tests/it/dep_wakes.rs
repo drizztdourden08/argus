@@ -41,7 +41,7 @@ fn dep(history: &[Value]) -> Value {
 fn project(items: &Value) -> Value {
     json!({
         "threads": {
-            "lead": {"id": "lead", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "worker": {"id": "worker", "role": "thread", "status": "active"},
             "builder": {"id": "builder", "role": "thread", "status": "active"},
         },

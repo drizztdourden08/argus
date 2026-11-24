@@ -4,6 +4,7 @@
 //! system process); this route checks that `by` is a live thread of that board. Answers
 //! `{killed, pid, name, exe, tree, error?}`. A shadow server never kills.
 
+use argus_core::lead::canonical;
 use argus_core::{ApiError, ErrorCode};
 use argus_procs::{SELF_KILL_KIND, SelfKillRequest};
 use argus_store::{ActivityLevel, NewActivity};
@@ -31,6 +32,7 @@ fn thread_of(ctx: &Ctx, key: &str, body: &Value) -> Result<String, ApiError> {
         .chars()
         .take(BY_MAX)
         .collect();
+    let by = canonical(&by).into_owned();
     let board = ctx.svc.boards().board(key);
     let thread = board.as_ref().map(|b| &b["threads"][by.as_str()]);
     let live = thread

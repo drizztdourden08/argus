@@ -1,8 +1,9 @@
-//! What `coord thread register coordinator --role coordinator` did for the hosted Overlord, done by
+//! What `coord thread register lead --role lead` did for the hosted Overlord, done by
 //! Argus itself when the live child reports its session id: the seat thread of the Overlord's
-//! board is created or refreshed with the role coordinator, host argus and that session id. The
+//! board is created or refreshed with the role lead, host argus and that session id. The
 //! child never runs the verb (its settings do not allow coord), so nothing waits on an approval.
 
+use argus_core::lead::LEAD_ROLE;
 use std::path::Path;
 
 use argus_board::Board;
@@ -26,7 +27,7 @@ fn new_seat(board: &mut Board) {
     let at = now_iso();
     let rank = js::number(rank_end(board, "threads"));
     let thread = json!({
-        "id": SEAT, "name": SEAT, "role": "coordinator",
+        "id": SEAT, "name": SEAT, "role": LEAD_ROLE,
         "flags": { "needsHuman": false, "blocked": false },
         "note": null, "subject": null, "brief": null,
         "registeredAt": at, "createdBy": ACTOR, "updatedAt": at, "updatedBy": ACTOR,
@@ -42,7 +43,7 @@ fn register(board: &mut Board, session_id: &str) -> Result<(), BoardError> {
         new_seat(board);
     }
     let thread = &mut board["threads"][SEAT];
-    set(thread, "role", "coordinator");
+    set(thread, "role", LEAD_ROLE);
     set(thread, "host", HOST);
     set(thread, "sessionId", session_id);
     let status = if thread["status"] == "paused" {
@@ -77,11 +78,11 @@ mod tests {
 
     // test-tag: critical
     #[test]
-    fn a_missing_seat_is_created_as_the_hosted_coordinator() {
+    fn a_missing_seat_is_created_as_the_hosted_lead() {
         let mut board = json!({ "threads": {} });
         register(&mut board, "sid-1").unwrap();
         let seat = &board["threads"][SEAT];
-        assert_eq!(seat["role"], "coordinator");
+        assert_eq!(seat["role"], "lead");
         assert_eq!(seat["host"], "argus");
         assert_eq!(seat["sessionId"], "sid-1");
         assert_eq!(seat["status"], "active");
@@ -90,8 +91,8 @@ mod tests {
 
     #[test]
     fn an_ended_seat_is_taken_back_with_the_new_session() {
-        let mut board = json!({ "threads": { "coordinator": {
-            "id": "coordinator", "status": "done", "rev": 4, "sessionId": "old",
+        let mut board = json!({ "threads": { "lead": {
+            "id": "lead", "status": "done", "rev": 4, "sessionId": "old",
             "archivedAt": "2026-11-01", "note": "kept",
         }}});
         register(&mut board, "sid-2").unwrap();
@@ -105,8 +106,8 @@ mod tests {
 
     #[test]
     fn a_paused_seat_stays_paused() {
-        let mut board = json!({ "threads": { "coordinator": {
-            "id": "coordinator", "status": "paused", "rev": 1,
+        let mut board = json!({ "threads": { "lead": {
+            "id": "lead", "status": "paused", "rev": 1,
         }}});
         register(&mut board, "sid-3").unwrap();
         assert_eq!(board["threads"][SEAT]["status"], "paused");

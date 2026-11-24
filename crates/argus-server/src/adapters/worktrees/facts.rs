@@ -1,6 +1,7 @@
 //! A project's board as the worktree service reads it: the rules, the keeps, the thread's
 //! answers, the threads and the owner entries that matter to a removal.
 
+use argus_core::lead::LEAD_ROLE;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use argus_board::Board;
@@ -72,7 +73,7 @@ fn threads_of(raw: &Value) -> BTreeMap<String, ThreadInfo> {
             let id = t["id"].as_str().unwrap_or(key).to_owned();
             let info = ThreadInfo {
                 id,
-                coordinator: t["role"] == "coordinator",
+                lead: t["role"] == LEAD_ROLE,
                 live: thread_live(t),
             };
             (key.clone(), info)

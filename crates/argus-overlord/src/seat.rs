@@ -1,13 +1,14 @@
-//! Who may hold the Overlord's seat, the thread `coordinator` of the Overlord's board (I-173, K4).
-//! Two live coordinators never exist at once: while the mode is live only the hosted child may
+//! Who may hold the Overlord's seat, the thread `lead` of the Overlord's board (I-173, K4).
+//! Two live leads never exist at once: while the mode is live only the hosted child may
 //! register it, and while the mode is not live only a desktop session may.
 
+use argus_core::lead::LEAD;
 use std::fmt;
 
 use crate::mode::Mode;
 
 /// The thread of the Overlord on its board.
-pub const SEAT: &str = "coordinator";
+pub const SEAT: &str = LEAD;
 
 /// Why a registration of the seat is refused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -25,7 +26,7 @@ impl fmt::Display for SeatFault {
                 "Argus runs the hosted Overlord (mode live). Roll back first: POST /api/overlord/mode with {\"mode\":\"off\"}, then register here."
             }
             SeatFault::HostedWhileNotLive => {
-                "the hosted Overlord takes the coordinator thread only in mode live; the desktop Overlord holds it now."
+                "the hosted Overlord takes the lead thread only in mode live; the desktop Overlord holds it now."
             }
         })
     }

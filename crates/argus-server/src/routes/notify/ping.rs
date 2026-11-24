@@ -1,5 +1,6 @@
 //! The two routes that ping the owner: a thread's `POST /api/notify` and the page's test button.
 
+use argus_core::lead::{LEAD_ROLE, canonical};
 use argus_core::{ApiError, ErrorCode};
 use argus_native::TEXT_MAX;
 use argus_notify::{By, Level, PingRequest};
@@ -56,7 +57,7 @@ fn project_of(ctx: &Ctx, body: &Value) -> Result<Option<String>, ApiError> {
 
 fn thread_of(body: &Value) -> Option<String> {
     let thread = body["thread"].as_str()?.trim();
-    (!thread.is_empty()).then(|| thread.chars().take(THREAD_MAX).collect())
+    (!thread.is_empty()).then(|| canonical(thread).chars().take(THREAD_MAX).collect())
 }
 
 fn is_overlord(ctx: &Ctx, project: Option<&str>, thread: Option<&str>) -> bool {
@@ -68,7 +69,7 @@ fn is_overlord(ctx: &Ctx, project: Option<&str>, thread: Option<&str>) -> bool {
         return false;
     }
     let board = boards.overlord_board();
-    board.is_some_and(|b| b["threads"][thread]["role"] == "coordinator")
+    board.is_some_and(|b| b["threads"][thread]["role"] == LEAD_ROLE)
 }
 
 fn by_of(ctx: &Ctx, body: &Value, project: Option<&str>, thread: Option<&str>) -> By {

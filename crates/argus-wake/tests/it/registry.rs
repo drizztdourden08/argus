@@ -91,7 +91,7 @@ fn rows_exist_for_live_threads_only_no_done_archived_or_placeholder_thread() {
         .into_iter()
         .map(|r| r.thread)
         .collect();
-    assert_eq!(main, ["coordinator"]);
+    assert_eq!(main, ["lead"]);
 }
 
 #[test]
@@ -153,7 +153,7 @@ fn the_registry_is_mirrored_live_as_docs_per_project_and_as_project_thread_on_th
         .into_iter()
         .map(|d| d.id)
         .collect();
-    assert_eq!(portfolio, ["alpha/lead", "portfolio/coordinator"]);
+    assert_eq!(portfolio, ["alpha/lead", "portfolio/lead"]);
     assert_eq!(
         rig.doc("_portfolio", "alpha/lead").expect("doc")["project"],
         "alpha"
@@ -262,7 +262,7 @@ fn a_wake_queued_with_nobody_listening_is_waking_then_a_fault_after_no_listener_
 #[test]
 fn the_overlord_is_told_once_with_a_notice_and_woken_once_when_a_wake_failed() {
     let mut rig = rig();
-    let mut main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let mut main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
     assert_eq!(
@@ -275,7 +275,7 @@ fn the_overlord_is_told_once_with_a_notice_and_woken_once_when_a_wake_failed() {
     let notice = rig.fault_wakes()[0].clone();
     assert_eq!(
         (notice.scope.as_str(), notice.thread.as_str()),
-        ("portfolio", "coordinator")
+        ("portfolio", "lead")
     );
     assert_eq!(notice.status, WakeStatus::Passive);
     assert_eq!(
@@ -289,7 +289,7 @@ fn a_delivered_wake_with_no_reaction_within_reaction_ms_is_a_fault_and_the_star_
  {
     let mut rig = rig();
     let _lead = rig.listen("alpha", "*", AttachOptions::default());
-    let _main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let _main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "lead", "owner note");
     assert_eq!(
         rig.store.get("W-1").expect("read").expect("row").status,
@@ -334,7 +334,7 @@ fn a_wake_replayed_to_a_late_listener_starts_the_reaction_clock_when_it_is_deliv
 #[test]
 fn a_write_that_throws_is_a_fault_at_once() {
     let mut rig = rig();
-    let _main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let _main = rig.listen("portfolio", "lead", AttachOptions::default());
     rig.service
         .attach("alpha", "ui", Box::new(Throwing), AttachOptions::default());
     send(&mut rig, "ui", "T-1 failed: x");
@@ -350,7 +350,7 @@ fn a_write_that_throws_is_a_fault_at_once() {
 #[test]
 fn a_second_failure_of_a_thread_with_an_open_fault_is_not_recorded_and_not_sent_again() {
     let mut rig = rig();
-    let _main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let _main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "ui", "first");
     rig.pass(70 * SEC, STEP);
     assert_eq!(rig.state("alpha", "ui"), Some(RowState::Fault));
@@ -395,7 +395,7 @@ fn a_no_listener_fault_clears_itself_once_the_thread_listens_again() {
 fn a_deaf_thread_with_an_open_fault_that_is_sent_another_wake_tells_the_overlord_again_at_most_every_10_minutes()
  {
     let mut rig = rig();
-    let mut main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let mut main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "ui", "first");
     rig.pass(70 * SEC, STEP);
     assert_eq!(rig.fault_wakes().len(), 1);
@@ -437,22 +437,22 @@ fn a_deaf_thread_with_an_open_fault_that_is_sent_another_wake_tells_the_overlord
 #[test]
 fn only_clear_fault_clears_it_records_who_and_why_and_a_new_failure_opens_a_new_fault() {
     let mut rig = rig();
-    let _main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let _main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "ui", "T-1 failed: x");
     rig.pass(70 * SEC, STEP);
     let note = "ui session had crashed, restarted its stream";
     let cleared = rig
         .service
-        .clear_fault("alpha", "ui", "coordinator", note)
+        .clear_fault("alpha", "ui", "lead", note)
         .expect("cleared");
-    assert_eq!(cleared.cleared_by.as_deref(), Some("coordinator"));
+    assert_eq!(cleared.cleared_by.as_deref(), Some("lead"));
     assert_eq!(cleared.note.as_deref(), Some(note));
     assert_eq!(rig.state("alpha", "ui"), Some(RowState::Idle));
     assert_eq!(fault_doc(&rig, "alpha", "ui"), Value::Null);
     assert_eq!(open_faults(&rig).len(), 0);
     assert!(
         rig.service
-            .clear_fault("alpha", "ui", "coordinator", "nothing left to clear")
+            .clear_fault("alpha", "ui", "lead", "nothing left to clear")
             .is_none()
     );
     assert_eq!(rig.service.faults(true).len(), 1);
@@ -476,7 +476,7 @@ fn a_fault_notice_for_an_overlord_nobody_hears_is_never_queued_so_it_raises_no_f
         WakeStatus::Passive
     );
     rig.pass(70 * SEC, STEP);
-    assert_ne!(rig.state("portfolio", "coordinator"), Some(RowState::Fault));
+    assert_ne!(rig.state("portfolio", "lead"), Some(RowState::Fault));
     assert_eq!(
         rig.fault_wakes().len(),
         1,
@@ -534,9 +534,9 @@ fn the_overlord_is_found_by_the_id_of_its_board_not_by_the_key_portfolio() {
         },
         RegistryConfig::default(),
     );
-    assert_eq!(registry.main_thread(), "coordinator");
-    assert!(registry.is_main("overlord-7", "coordinator"));
-    assert!(!registry.is_main("portfolio", "coordinator"));
+    assert_eq!(registry.main_thread(), "lead");
+    assert!(registry.is_main("overlord-7", "lead"));
+    assert!(!registry.is_main("portfolio", "lead"));
 }
 
 #[test]

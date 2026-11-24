@@ -471,8 +471,8 @@ async fn portfolio_cards_follow_a_project_change() {
 }
 
 fn launchers(at: &str, retired: bool) -> Value {
-    let master = json!({ "name": "master", "title": "Main", "cmd": "game run", "cwd": null, "kind": "app", "branch": "main", "commit": null, "note": null, "current": true, "retiredAt": retired.then_some(at), "retiredBy": null, "retireNote": null, "createdAt": at, "createdBy": "coordinator", "updatedAt": at, "by": "coordinator" });
-    let old = json!({ "name": "old-1", "title": null, "cmd": "game run --old", "cwd": null, "kind": "dev", "branch": null, "commit": null, "note": null, "current": false, "retiredAt": at, "retiredBy": "coordinator", "retireNote": "merged", "createdAt": at, "createdBy": "coordinator", "updatedAt": at, "by": "coordinator" });
+    let master = json!({ "name": "master", "title": "Main", "cmd": "game run", "cwd": null, "kind": "app", "branch": "main", "commit": null, "note": null, "current": true, "retiredAt": retired.then_some(at), "retiredBy": null, "retireNote": null, "createdAt": at, "createdBy": "lead", "updatedAt": at, "by": "lead" });
+    let old = json!({ "name": "old-1", "title": null, "cmd": "game run --old", "cwd": null, "kind": "dev", "branch": null, "commit": null, "note": null, "current": false, "retiredAt": at, "retiredBy": "lead", "retireNote": "merged", "createdAt": at, "createdBy": "lead", "updatedAt": at, "by": "lead" });
     json!({ "master": master, "old-1": old })
 }
 
@@ -480,7 +480,7 @@ async fn install_launchers(h: &Harness, retired: bool) {
     let mut board = h.read("alpha");
     board["launchers"] = launchers(AT, retired);
     let cwd = h.home().display().to_string();
-    board["runDefs"]["launcher-master"] = json!({ "name": "launcher-master", "label": "Play master", "launcher": "master", "cmd": "game run", "cwd": cwd, "kind": "launch", "env": {}, "hand": true, "visible": false, "window": false, "timeoutSec": 0, "parallel": 1, "definedBy": "coordinator", "definedAt": AT, "rev": 1 });
+    board["runDefs"]["launcher-master"] = json!({ "name": "launcher-master", "label": "Play master", "launcher": "master", "cmd": "game run", "cwd": cwd, "kind": "launch", "env": {}, "hand": true, "visible": false, "window": false, "timeoutSec": 0, "parallel": 1, "definedBy": "lead", "definedAt": AT, "rev": 1 });
     h.write("alpha", &board);
     h.resync_with_cards("alpha").await;
 }

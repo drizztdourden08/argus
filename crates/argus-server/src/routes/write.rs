@@ -1,6 +1,7 @@
 //! What the write routes of the local remote share: the shadow refusal, the JSON object body and
 //! the name of who acted.
 
+use argus_core::lead::canonical;
 use argus_core::{ApiError, ErrorCode};
 use serde_json::Value;
 
@@ -57,5 +58,8 @@ pub fn actor(ctx: &Ctx, body: &Value) -> String {
         return "human".to_owned();
     }
     let named = body["by"].as_str().map(str::trim).filter(|b| !b.is_empty());
-    named.map_or_else(|| "cli".to_owned(), |b| b.chars().take(BY_MAX).collect())
+    named.map_or_else(
+        || "cli".to_owned(),
+        |b| canonical(b).chars().take(BY_MAX).collect(),
+    )
 }

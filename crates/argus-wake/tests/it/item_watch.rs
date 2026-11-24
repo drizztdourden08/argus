@@ -31,7 +31,7 @@ fn item(id: &str, extra: &Value) -> Value {
 fn alpha(items: &[Value], rest: &Value) -> Value {
     let base = json!({
         "threads": {
-            "lead": {"id": "lead", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "api": {"id": "api", "role": "thread", "status": "active"},
             "ui": {"id": "ui", "role": "thread", "status": "active"},
         },
@@ -41,7 +41,7 @@ fn alpha(items: &[Value], rest: &Value) -> Value {
 }
 
 fn beta() -> Value {
-    json!({"threads": {"blead": {"id": "blead", "role": "coordinator", "status": "active"}}})
+    json!({"threads": {"blead": {"id": "blead", "role": "lead", "status": "active"}}})
 }
 
 struct World {

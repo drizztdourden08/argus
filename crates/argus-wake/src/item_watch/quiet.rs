@@ -6,7 +6,7 @@ use serde_json::Value;
 use argus_board::json::{doc, section, text};
 
 use crate::board::BoardView;
-use crate::policy::coordinator_in;
+use crate::policy::lead_in;
 use crate::source::BoardSource;
 use crate::text::clip;
 use crate::time::ms_or_zero;
@@ -49,7 +49,7 @@ fn wake_for(
     (id, todo): (&str, &Value),
 ) -> Option<WakeInput> {
     let key = lead_of(todo)?;
-    let lead = coordinator_in(boards.board(key).as_deref())?;
+    let lead = lead_in(boards.board(key).as_deref())?;
     let subject = format!("{id}:{}", todo["rev"].as_i64().unwrap_or(0));
     let words = format!(
         "to-do {id} ({}) has been quiet for a day and holds {} on {scope}",

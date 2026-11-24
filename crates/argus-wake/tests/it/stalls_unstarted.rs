@@ -28,7 +28,7 @@ fn an_acked_dep_open_30_min_with_its_item_todo_wakes_the_overlord_then_every_30_
     assert_eq!(first.len(), 1);
     assert_eq!(
         (first[0].scope.as_str(), first[0].thread.as_str()),
-        ("portfolio", "coordinator")
+        ("portfolio", "lead")
     );
     assert_eq!(
         first[0].text,

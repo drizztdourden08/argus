@@ -1,5 +1,6 @@
 //! Watching the live threads: an active session nobody can wake, and a thread inside a turn with no board open.
 
+use argus_core::lead::LEAD_ROLE;
 use std::collections::HashMap;
 
 use super::faults::secs;
@@ -15,7 +16,7 @@ const LISTEN_CLEARS: [&str; 2] = ["not-listening", "no-listener"];
 
 pub(super) type Open = HashMap<Key, Fault>;
 
-/// The listener that covers a thread: its own, or the `*` one for the project's coordinator.
+/// The listener that covers a thread: its own, or the `*` one for the project's lead.
 pub(super) fn listener_of<'a>(
     id: &str,
     thread: Option<&ThreadView>,
@@ -23,7 +24,7 @@ pub(super) fn listener_of<'a>(
 ) -> Option<&'a ListenerInfo> {
     let own = listeners.iter().find(|l| l.thread == id);
     let lead = thread
-        .is_some_and(|t| t.role.is("coordinator"))
+        .is_some_and(|t| t.role.is(LEAD_ROLE))
         .then(|| listeners.iter().find(|l| l.thread == "*"));
     own.or(lead.flatten())
 }

@@ -27,7 +27,7 @@ use serde_json::{Value, json};
 
 use super::attachment::Attachment;
 use crate::Services;
-use crate::boards::{BoardReader, coordinator_in};
+use crate::boards::{BoardReader, lead_in};
 
 const ALL_THREADS: &str = "*";
 const LABEL: &str = "shadow overlord";
@@ -86,7 +86,7 @@ pub(crate) struct ShadowInput {
 /// the desktop app's records (its current id after a compaction), else the thread's own.
 pub(super) fn desktop_session(boards: &BoardReader) -> Option<String> {
     let board = boards.overlord_board()?;
-    let thread = coordinator_in(&board)?;
+    let thread = lead_in(&board)?;
     let session = board["threads"][thread.as_str()]["sessionId"]
         .as_str()
         .filter(|id| !id.is_empty())?

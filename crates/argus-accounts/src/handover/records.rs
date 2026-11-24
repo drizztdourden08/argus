@@ -2,7 +2,8 @@
 //! per lead that was working when the cycle started. Both serialize as camelCase; the cycle is
 //! kept whole in the kv store and shown as the `cycle` doc plus one `Handovers` doc per lead.
 
-use serde::{Deserialize, Serialize};
+use argus_core::lead::canonical;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 
 use crate::types::AccountKey;
@@ -132,6 +133,12 @@ pub struct Lead {
     pub agents: Vec<AgentStop>,
 }
 
+/// A thread id read from a record; the old lead name reads as the lead.
+fn lead_thread<'de, D: Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
+    let raw = String::deserialize(deserializer)?;
+    Ok(canonical(&raw).into_owned())
+}
+
 /// One lead's handover in a cycle.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -143,6 +150,7 @@ pub struct Handover {
     /// The board key.
     pub board: String,
     /// The lead's thread id.
+    #[serde(deserialize_with = "lead_thread")]
     pub thread: String,
     /// The Claude Code session id of the thread.
     #[serde(default)]
@@ -252,7 +260,7 @@ mod tests {
             id: "H-1".into(),
             cycle: "SW-1".into(),
             board: "rotp".into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: None,
             link: None,
             state: HandoverState::EstimateAsked,
@@ -292,6 +300,14 @@ mod tests {
         let doc = h.to_doc();
         assert_eq!(doc["state"], json!("cut_off"));
         assert_eq!(doc["sessionId"], json!(null));
+    }
+
+    #[test]
+    fn a_handover_written_under_the_old_lead_name_reads_as_the_lead() {
+        let mut doc = handover().to_doc();
+        doc["thread"] = json!("coordinator");
+        let read: Handover = serde_json::from_value(doc).unwrap();
+        assert_eq!(read.thread, "lead");
     }
 
     #[test]

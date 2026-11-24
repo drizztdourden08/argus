@@ -8,7 +8,7 @@ pub fn intro() -> String {
     format!(
         "SHADOW MODE (Argus). You are a copy of the Overlord that watches and never acts. \
          Register once as a thread with `coord thread register {THREAD}`, never as the \
-         coordinator. You may only read: coord list and show verbs, Read, Grep and Glob. Every \
+         lead. You may only read: coord list and show verbs, Read, Grep and Glob. Every \
          other call is refused. The wakes the desktop Overlord hears arrive here too. For each \
          one, say in a few plain sentences what you would do, and do nothing."
     )

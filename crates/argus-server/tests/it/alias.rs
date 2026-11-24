@@ -84,7 +84,7 @@ async fn the_root_of_an_alias_host_redirects_to_that_board_with_a_thread_claim()
         let lead = get(&t, path, &format!("alpha.localhost:{port}")).await;
         assert_eq!(
             (lead.status, location(&lead)),
-            (302, Some("/p/alpha/?thread=coordinator")),
+            (302, Some("/p/alpha/?thread=lead")),
             "{path}"
         );
         let thread = get(&t, path, &format!("ui.beta-2.localhost:{port}")).await;
@@ -120,7 +120,17 @@ async fn a_thread_given_in_the_address_wins_over_the_label_and_the_default() {
         (
             format!("alpha.localhost:{port}"),
             "/?thread=",
-            "/p/alpha/?thread=coordinator",
+            "/p/alpha/?thread=lead",
+        ),
+        (
+            format!("coordinator.alpha.localhost:{port}"),
+            "/",
+            "/p/alpha/?thread=lead",
+        ),
+        (
+            format!("alpha.localhost:{port}"),
+            "/?thread=coordinator",
+            "/p/alpha/?thread=lead",
         ),
     ];
     for (host, path, target) in cases {
@@ -274,14 +284,11 @@ async fn overlord_localhost_redirects_to_the_overlord_board_once_it_has_one() {
         let r = get(&t, path, &host).await;
         assert_eq!(
             (r.status, location(&r)),
-            (302, Some("/p/portfolio/?thread=coordinator")),
+            (302, Some("/p/portfolio/?thread=lead")),
             "{path}"
         );
     }
     let shouting = get(&t, "/", &format!("OVERLORD.localhost:{port}")).await;
-    assert_eq!(
-        location(&shouting),
-        Some("/p/portfolio/?thread=coordinator")
-    );
+    assert_eq!(location(&shouting), Some("/p/portfolio/?thread=lead"));
     t.stop(false).await;
 }

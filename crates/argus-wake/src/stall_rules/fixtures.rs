@@ -25,7 +25,7 @@ pub(super) fn project(lead: &Value, items: &[Value], extra: &Value) -> Value {
     let mut lead_fields = json!({"lastSeen": iso(NOW - 20 * MIN)});
     merge(&mut lead_fields, lead);
     let mut value = json!({
-        "threads": {"lead": thread("lead", "coordinator", &lead_fields)},
+        "threads": {"lead": thread("lead", "lead", &lead_fields)},
         "items": by_id(items),
     });
     merge(&mut value, extra);

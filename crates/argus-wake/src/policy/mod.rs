@@ -7,7 +7,7 @@
 //! | followup or decision | the thread that asked, or the thread the note is about | `owner-answer`, `owner-note`, `owner-decision` |
 //! | move of an item to a thread | the new thread | `item-assigned` |
 //! | resume of a paused thread | that thread | `resume` |
-//! | portfolio send | the project's coordinator | `portfolio-decision`, `portfolio-note` |
+//! | portfolio send | the project's lead | `portfolio-decision`, `portfolio-note` |
 
 mod assign;
 mod note;
@@ -26,8 +26,8 @@ const NOT_APPLIED: [&str; 5] = ["duplicate", "cancelled", "refused", "conflict",
 /// Statuses of a test that count as a failing outcome.
 pub const FAILING: [&str; 3] = ["fail", "partial", "blocked"];
 
-/// The id of a project's coordinator thread, when it has one.
-pub type CoordinatorOf<'a> = &'a dyn Fn(&str) -> Option<String>;
+/// The id of a project's lead thread, when it has one.
+pub type LeadOf<'a> = &'a dyn Fn(&str) -> Option<String>;
 
 /// One applied owner post.
 pub struct ApplyCtx<'a> {
@@ -41,8 +41,8 @@ pub struct ApplyCtx<'a> {
     pub board: Option<&'a BoardView>,
     /// The project board just before (the last export).
     pub before: Option<&'a BoardView>,
-    /// The coordinator thread of a project.
-    pub coordinator_of: CoordinatorOf<'a>,
+    /// The lead thread of a project.
+    pub lead_of: LeadOf<'a>,
 }
 
 /// The wakes one applied owner post causes.
@@ -67,8 +67,8 @@ pub fn wakes_for(ctx: &ApplyCtx<'_>) -> Vec<WakeInput> {
     }
 }
 
-/// The coordinator thread of a board: the first one that has not ended.
+/// The lead thread of a board: the first one that has not ended.
 #[must_use]
-pub fn coordinator_in(board: Option<&BoardView>) -> Option<String> {
-    board.and_then(BoardView::coordinator)
+pub fn lead_in(board: Option<&BoardView>) -> Option<String> {
+    board.and_then(BoardView::lead)
 }

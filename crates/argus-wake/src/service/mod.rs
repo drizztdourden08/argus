@@ -10,6 +10,7 @@ mod schedule;
 mod stall;
 mod watch;
 
+use argus_core::lead::LEAD;
 use std::sync::Arc;
 
 use tokio::sync::Notify;
@@ -29,7 +30,7 @@ use crate::item_wakes::ItemWakes;
 use crate::item_watch::ItemWatch;
 use crate::mirror::{WakeDoc, docs_of};
 use crate::notices::{NoticeDigest, digest};
-use crate::policy::{ApplyCtx, RunView, coordinator_in, failed_run_line, wake_for_run, wakes_for};
+use crate::policy::{ApplyCtx, RunView, failed_run_line, lead_in, wake_for_run, wakes_for};
 use crate::presence::{Presence, PresenceRow, PresenceToken};
 use crate::reasons::{IMMEDIATE_REASONS, PORTFOLIO};
 use crate::registry::{DueThread, Env, Registry, RegistryDeps, RegistryRow};
@@ -189,10 +190,10 @@ impl WakeService {
         Arc::clone(&self.notify)
     }
 
-    /// The Overlord's thread, or `coordinator`.
+    /// The Overlord's thread, or `lead`.
     fn main_thread(&self) -> String {
-        coordinator_in(self.boards.board(&self.boards.overlord()).as_deref())
-            .unwrap_or_else(|| "coordinator".to_owned())
+        lead_in(self.boards.board(&self.boards.overlord()).as_deref())
+            .unwrap_or_else(|| LEAD.to_owned())
     }
 
     /// Hook the registry to the engine, close the windows a stop left open, and arm the timers.
@@ -235,11 +236,8 @@ impl WakeService {
     /// One applied owner post: ask the policy which threads it wakes. Never fails: the post is already done.
     pub fn on_applied(&mut self, post: &AppliedPost) {
         let boards = Arc::clone(&self.boards);
-        let coordinator = move |key: &str| {
-            Some(
-                coordinator_in(boards.board(key).as_deref())
-                    .unwrap_or_else(|| "coordinator".to_owned()),
-            )
+        let lead = move |key: &str| {
+            Some(lead_in(boards.board(key).as_deref()).unwrap_or_else(|| LEAD.to_owned()))
         };
         let ctx = ApplyCtx {
             scope: &post.scope,
@@ -247,7 +245,7 @@ impl WakeService {
             status: post.status.as_deref(),
             board: post.board.as_deref(),
             before: post.before.as_deref(),
-            coordinator_of: &coordinator,
+            lead_of: &lead,
         };
         let wakes = wakes_for(&ctx);
         self.submit_logged(&wakes, "owner wake");
@@ -266,7 +264,7 @@ impl WakeService {
                 });
             }
         }
-        let lead = coordinator_in(self.boards.board(&run.scope).as_deref());
+        let lead = lead_in(self.boards.board(&run.scope).as_deref());
         if let Some(wake) = wake_for_run(run, lead.as_deref()) {
             self.submit_logged(&[wake], "run wake");
         }

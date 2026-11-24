@@ -17,7 +17,7 @@ use super::AccountsService;
 use super::accounts::save;
 use crate::Services;
 
-/// A lead, named by its board: every board has a `coordinator` thread.
+/// A lead, named by its board: every board has a `lead` thread.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct LeadRef {
     /// The board key.

@@ -21,7 +21,7 @@ fn project(lead_status: &str) -> Value {
     json!({
         "threads": {
             "lead": {
-                "id": "lead", "role": "coordinator", "status": lead_status,
+                "id": "lead", "role": "lead", "status": lead_status,
                 "registeredAt": iso(START),
             },
             "worker": {"id": "worker", "role": "thread", "status": "active"},
@@ -156,7 +156,7 @@ fn a_synced_project_counts_from_its_last_record_and_the_text_says_how_long_ago()
 fn a_lead_that_registered_long_ago_and_never_synced_is_due_at_once() {
     let world_board = json!({
         "threads": {"lead": {
-            "id": "lead", "role": "coordinator", "status": "active",
+            "id": "lead", "role": "lead", "status": "active",
             "registeredAt": iso(START - 3 * DAY),
         }},
     });
@@ -193,18 +193,18 @@ fn an_archived_or_done_lead_and_a_board_with_no_lead_are_left_alone() {
     world.boards.set("alpha", board(&no_lead));
     assert_eq!(world.at(48), 0);
     let placeholder = json!({"threads": {"lead": {
-        "id": "lead", "role": "coordinator", "status": "active", "placeholder": true,
+        "id": "lead", "role": "lead", "status": "active", "placeholder": true,
     }}});
     world.boards.set("alpha", board(&placeholder));
     assert_eq!(world.at(48), 0, "a placeholder is not a registered session");
 }
 
 #[test]
-fn a_lead_that_ended_gives_way_to_the_next_coordinator() {
+fn a_lead_that_ended_gives_way_to_the_next_lead() {
     let mut world = World::new();
     let two = json!({"threads": {
-        "old": {"id": "old", "role": "coordinator", "status": "archived"},
-        "lead": {"id": "lead", "role": "coordinator", "status": "active", "registeredAt": iso(START)},
+        "old": {"id": "old", "role": "lead", "status": "archived"},
+        "lead": {"id": "lead", "role": "lead", "status": "active", "registeredAt": iso(START)},
     }});
     world.boards.set("alpha", board(&two));
     assert_eq!(world.at(24), 1);

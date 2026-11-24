@@ -41,7 +41,7 @@ impl StaleEnv for Fixture {
     fn board(&self, scope: &str) -> Option<LauncherBoard> {
         self.boards.lock().unwrap().get(scope).cloned()
     }
-    fn coordinator(&self, _scope: &str) -> Option<String> {
+    fn lead(&self, _scope: &str) -> Option<String> {
         self.lead.lock().unwrap().clone()
     }
     fn played_ms(&self, scope: &str, name: &str) -> i64 {
@@ -96,7 +96,7 @@ fn board() -> LauncherBoard {
         ..LauncherBoard::default()
     };
     for (id, role, status) in [
-        ("lead", "coordinator", "active"),
+        ("lead", "lead", "active"),
         ("worker", "thread", "active"),
         ("other", "thread", "active"),
         ("gone", "thread", "done"),

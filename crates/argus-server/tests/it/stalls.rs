@@ -130,7 +130,7 @@ async fn an_unread_request_is_a_stall_for_the_cli_and_a_doc_for_the_page() {
 async fn stall_ack_is_refused_from_the_page_and_for_anyone_but_the_overlord() {
     let s = stalled().await;
     let t = &s.t;
-    let page = Request::new("POST", "/api/stalls/ack").json(&ack_body("coordinator"));
+    let page = Request::new("POST", "/api/stalls/ack").json(&ack_body("lead"));
     let refused = t.send(t.page(page)).await;
     assert_eq!(refused.status, 403);
     assert!(
@@ -139,7 +139,7 @@ async fn stall_ack_is_refused_from_the_page_and_for_anyone_but_the_overlord() {
             .is_some_and(|m| m.contains("cannot be acknowledged from the page"))
     );
     let meta = Request::new("POST", "/api/stalls/ack")
-        .json(&ack_body("coordinator"))
+        .json(&ack_body("lead"))
         .header("Sec-Fetch-Site", "same-origin");
     assert_eq!(t.send(t.bearer(meta)).await.status, 403);
     for by in ["api", "nobody", ""] {
@@ -147,10 +147,10 @@ async fn stall_ack_is_refused_from_the_page_and_for_anyone_but_the_overlord() {
         assert_eq!(status, 403, "by \"{by}\"");
         assert_eq!(body["error"]["code"], "forbidden");
     }
-    let mut short = ack_body("coordinator");
+    let mut short = ack_body("lead");
     short["note"] = json!("too");
     assert_eq!(ack(t, &short).await.0, 400, "a short note");
-    let mut nowhere = ack_body("coordinator");
+    let mut nowhere = ack_body("lead");
     nowhere["project"] = json!("Bad Key");
     assert_eq!(ack(t, &nowhere).await.0, 400, "not a project key");
 
@@ -162,7 +162,7 @@ async fn stall_ack_is_refused_from_the_page_and_for_anyone_but_the_overlord() {
 async fn the_overlord_acknowledges_every_open_stall_of_a_project_and_the_page_docs_follow() {
     let s = stalled().await;
     let t = &s.t;
-    let (status, done) = ack(t, &ack_body("coordinator")).await;
+    let (status, done) = ack(t, &ack_body("lead")).await;
     assert_eq!(status, 200, "{done}");
     let acked = done["acked"].as_array().expect("acked stalls");
     assert_ne!(acked.len(), 0);
@@ -174,7 +174,7 @@ async fn the_overlord_acknowledges_every_open_stall_of_a_project_and_the_page_do
     );
 
     let stall = unread(&stalls_of(t, "beta").await).expect("it stays until it clears");
-    assert_eq!(stall["ackedBy"], "portfolio/coordinator");
+    assert_eq!(stall["ackedBy"], "portfolio/lead");
     assert_eq!(stall["ackNote"], NOTE);
     let doc = page_docs(t)
         .into_iter()
@@ -182,10 +182,10 @@ async fn the_overlord_acknowledges_every_open_stall_of_a_project_and_the_page_do
         .expect("the doc");
     assert_eq!(doc["ackNote"], NOTE, "the page sees the ack at once");
 
-    let (again, body) = ack(t, &ack_body("coordinator")).await;
+    let (again, body) = ack(t, &ack_body("lead")).await;
     assert_eq!(again, 409, "nothing left to acknowledge");
     assert_eq!(body["error"]["message"], "beta has no open stall");
-    let mut other = ack_body("coordinator");
+    let mut other = ack_body("lead");
     other["project"] = json!("alpha");
     assert_eq!(ack(t, &other).await.0, 409, "alpha has no open stall");
 }

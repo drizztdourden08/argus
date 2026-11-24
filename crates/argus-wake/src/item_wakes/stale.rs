@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 
 use crate::blockers;
 use crate::board::{BoardView, ItemView, LIVE_AGENT, Record};
-use crate::policy::coordinator_in;
+use crate::policy::lead_in;
 use crate::time::ms_or_zero;
 
 /// A stale item and who must be told.
@@ -31,7 +31,7 @@ pub(crate) fn target_for(board: &BoardView, owner: &str) -> Option<String> {
         .filter(|t| t.is_live());
     match live {
         Some(thread) => Some(thread.id.some().unwrap_or(owner).to_owned()),
-        None => coordinator_in(Some(board)),
+        None => lead_in(Some(board)),
     }
 }
 

@@ -106,7 +106,7 @@ body {{\"action\":\"resumed\",\"board\":\"<board>\",\"thread\":\"<thread>\"}} fo
 started, or \"not_resumed\" for one that did not start after the second message (curl.exe or \
 Invoke-RestMethod, Content-Type application/json).\n\
 5. Toast the owner once, saying which leads resumed and which did not: {COORD} ping \"<text>\" \
---title \"Argus\" --level ping --project portfolio --as coordinator\n\
+--title \"Argus\" --level ping --project portfolio --as lead\n\
 Then finish with a one line report."
     )
 }
@@ -289,7 +289,7 @@ mod tests {
     fn lead(board: &str, file: Option<&str>) -> ResumeLead {
         ResumeLead {
             board: board.into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: format!("local_{board}"),
             file: file.map(str::to_owned),
             state: HandoverState::Ready,
@@ -328,7 +328,7 @@ mod tests {
     fn the_prompt_names_every_lead_and_the_port_and_has_no_dashes() {
         let prompt = build_prompt(&[lead("rotp", Some("h.md")), lead("brock", None)], 47615);
         assert!(prompt.contains("http://127.0.0.1:47615/api/health"));
-        assert!(prompt.contains("board rotp, thread coordinator, session local_rotp"));
+        assert!(prompt.contains("board rotp, thread lead, session local_rotp"));
         assert!(prompt.contains("handover file: h.md"));
         assert!(prompt.contains("none written, it was cut off"));
         assert!(prompt.contains("\"action\":\"resumed\""));

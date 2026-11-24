@@ -16,7 +16,7 @@ fn event(lines: &[&str], count: u32) -> WakeEvent {
     WakeEvent {
         id: "W-1".to_owned(),
         scope: "portfolio".to_owned(),
-        thread: "coordinator".to_owned(),
+        thread: "lead".to_owned(),
         at: "2026-11-14T10:00:00.000Z".to_owned(),
         lines: lines.iter().map(|l| (*l).to_owned()).collect(),
         count,
@@ -48,14 +48,14 @@ fn the_hosted_path_says_what_the_hook_listener_prints() {
     ] {
         assert_eq!(sink.deliver(&wake_event), Delivery::Sent);
         let data = serde_json::to_string(&serde_json::to_value(&wake_event).unwrap()).unwrap();
-        let hook_text = wake_line(&data, "coordinator");
+        let hook_text = wake_line(&data, "lead");
         assert_eq!(taken.lock().unwrap().last(), Some(&hook_text));
     }
     assert_eq!(
         taken.lock().unwrap()[..2],
         [
-            "WAKE coordinator: lead: look at the build. Run: coord inbox",
-            "WAKE coordinator: a; b (3 wakes). Run: coord inbox",
+            "WAKE lead: lead: look at the build. Run: coord inbox",
+            "WAKE lead: a; b (3 wakes). Run: coord inbox",
         ]
     );
 }
@@ -68,14 +68,11 @@ fn a_sink_whose_child_is_gone_says_gone() {
 #[test]
 fn a_wake_that_found_no_child_stays_pending_and_the_next_attach_gets_it() {
     let mut rig = EngineRig::new(15_000);
-    rig.submit(&[wake("coordinator", "T-1 failed: a")]);
+    rig.submit(&[wake("lead", "T-1 failed: a")]);
     rig.advance(15_000);
-    let dead = rig.engine.attach(
-        "alpha",
-        "coordinator",
-        Box::new(gone()),
-        AttachOptions::default(),
-    );
+    let dead = rig
+        .engine
+        .attach("alpha", "lead", Box::new(gone()), AttachOptions::default());
     assert_eq!(dead.replayed, 0);
     assert_eq!(
         rig.store.get("W-1").unwrap().unwrap().status,
@@ -85,14 +82,14 @@ fn a_wake_that_found_no_child_stays_pending_and_the_next_attach_gets_it() {
     let taken = Taken::default();
     let live = rig.engine.attach(
         "alpha",
-        "coordinator",
+        "lead",
         Box::new(taking(&taken)),
         AttachOptions::default(),
     );
     assert_eq!(live.replayed, 1);
     assert_eq!(
         taken.lock().unwrap()[..],
-        ["WAKE coordinator: T-1 failed: a. Run: coord inbox"]
+        ["WAKE lead: T-1 failed: a. Run: coord inbox"]
     );
     assert_eq!(
         rig.store.get("W-1").unwrap().unwrap().status,
@@ -109,7 +106,7 @@ fn a_mirror_copies_the_wakes_of_one_thread_and_skips_the_rest() {
             seen.lock().unwrap().push(text);
             true
         }),
-        |thread| thread == "coordinator",
+        |thread| thread == "lead",
     );
     let mut other = event(&["not for the overlord"], 1);
     other.thread = "brock".to_owned();

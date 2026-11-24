@@ -164,7 +164,7 @@ pub fn add_overlord(h: &Harness) {
         "overlord".to_string(),
         ThreadInfo {
             id: "overlord".to_string(),
-            coordinator: true,
+            lead: true,
             live: true,
         },
     );

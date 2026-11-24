@@ -160,14 +160,14 @@ mod tests {
     #[test]
     fn a_seat_is_marked_done_once_and_a_missing_one_is_skipped() {
         let mut board = json!({ "threads": {
-            "coordinator": { "id": "coordinator", "status": "active" },
+            "lead": { "id": "lead", "status": "active" },
             "old": { "id": "old", "status": "archived" },
         }});
-        end_thread(&mut board, "coordinator").unwrap();
+        end_thread(&mut board, "lead").unwrap();
         end_thread(&mut board, "old").unwrap();
         end_thread(&mut board, "missing").unwrap();
-        assert_eq!(board["threads"]["coordinator"]["status"], "done");
-        assert_eq!(board["threads"]["coordinator"]["updatedBy"], "argus");
+        assert_eq!(board["threads"]["lead"]["status"], "done");
+        assert_eq!(board["threads"]["lead"]["updatedBy"], "argus");
         assert_eq!(board["threads"]["old"]["status"], "archived");
     }
 }

@@ -129,12 +129,12 @@ async fn an_answer_a_resume_and_a_reassigned_item_wake_the_right_thread_to_a_sta
 
     let moved = post(
         t,
-        &json!({ "kind": "move", "target": { "c": "items", "id": "I-2" }, "to": { "thread": "coordinator" } }),
+        &json!({ "kind": "move", "target": { "c": "items", "id": "I-2" }, "to": { "thread": "lead" } }),
     )
     .await;
     assert_eq!(moved["status"], "applied");
     let assigned = star.next(Some("wake"), 5000).await.expect("the assignment");
-    assert_eq!(assigned.data["thread"], "coordinator");
+    assert_eq!(assigned.data["thread"], "lead");
     assert!(
         lines(&assigned.data)[0]
             .starts_with("I-2 (Settings page) was assigned to you by the owner")
@@ -165,7 +165,7 @@ async fn edits_status_moves_and_archives_wake_nobody() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_portfolio_send_wakes_the_coordinator_of_the_project_it_was_delivered_to() {
+async fn a_portfolio_send_wakes_the_lead_of_the_project_it_was_delivered_to() {
     let r = rig().await;
     let t = &r.t;
     let lead = wake_stream(t, "*", "beta").await;
@@ -175,7 +175,7 @@ async fn a_portfolio_send_wakes_the_coordinator_of_the_project_it_was_delivered_
     assert_eq!(sent["status"], "delivered");
     let e = lead.next(Some("wake"), 5000).await.expect("the decision");
     assert_eq!(e.data["scope"], "beta");
-    assert_eq!(e.data["thread"], "coordinator");
+    assert_eq!(e.data["thread"], "lead");
     assert_eq!(
         lines(&e.data),
         ["owner decision from the Overlord: Freeze the API until Friday."]
@@ -230,15 +230,16 @@ async fn a_lead_message_goes_through_the_engine_window_star_listener_replay_and_
     let sent = post_wake(
         t,
         "beta",
-        &json!({ "thread": "coordinator", "reason": "lead-message", "text": text }),
+        &json!({ "thread": "lead", "reason": "lead-message", "text": text }),
     )
     .await;
     let sent = sent.json();
     assert_eq!(sent["queued"], true);
     assert_eq!(sent["scope"], "beta");
-    assert_eq!(sent["thread"], "coordinator");
+    assert_eq!(sent["thread"], "lead");
     assert_eq!(sent["windowMs"], 150);
-    let second = json!({ "thread": "coordinator", "reason": "lead-message", "text": "pixelarttool lead: second" });
+    let second =
+        json!({ "thread": "lead", "reason": "lead-message", "text": "pixelarttool lead: second" });
     post_wake(t, "beta", &second).await;
     let e = star.next(Some("wake"), 5000).await.expect("the event");
     assert_eq!(e.data["count"], 2, "coalesced in one window");
@@ -251,15 +252,14 @@ async fn a_lead_message_goes_through_the_engine_window_star_listener_replay_and_
     assert_eq!(row["count"], 2);
     drop(star);
 
-    let ping =
-        json!({ "thread": "coordinator", "reason": "lead-message", "text": "tessera lead: ping" });
+    let ping = json!({ "thread": "lead", "reason": "lead-message", "text": "tessera lead: ping" });
     post_wake(t, "beta", &ping).await;
     let queued = wake_where(t, "beta", |w| {
         w["text"] == "tessera lead: ping" && w["status"] == "queued"
     })
     .await;
     assert_eq!(queued["listeners"], 0);
-    let late = wake_stream(t, "coordinator", "beta").await;
+    let late = wake_stream(t, "lead", "beta").await;
     let replay = late.next(Some("wake"), 5000).await.expect("the replay");
     assert_eq!(lines(&replay.data), ["tessera lead: ping"]);
 }
@@ -270,10 +270,10 @@ async fn only_an_outside_reason_an_existing_thread_and_a_text_are_accepted() {
     let t = &r.t;
     let before = wakes(t, "beta").await.len();
     let bad = |body: Value, key: &'static str| async move { post_wake(t, key, &body).await.status };
-    let ok = json!({ "thread": "coordinator", "reason": "lead-message", "text": "x" });
+    let ok = json!({ "thread": "lead", "reason": "lead-message", "text": "x" });
     assert_eq!(
         bad(
-            json!({ "thread": "coordinator", "reason": "test-fail", "text": "x" }),
+            json!({ "thread": "lead", "reason": "test-fail", "text": "x" }),
             "beta"
         )
         .await,
@@ -281,7 +281,7 @@ async fn only_an_outside_reason_an_existing_thread_and_a_text_are_accepted() {
         "a policy reason"
     );
     assert_eq!(
-        bad(json!({ "thread": "coordinator", "text": "x" }), "beta").await,
+        bad(json!({ "thread": "lead", "text": "x" }), "beta").await,
         400,
         "no reason"
     );
@@ -301,7 +301,7 @@ async fn only_an_outside_reason_an_existing_thread_and_a_text_are_accepted() {
     );
     assert_eq!(
         bad(
-            json!({ "thread": "coordinator", "reason": "lead-message", "text": "  " }),
+            json!({ "thread": "lead", "reason": "lead-message", "text": "  " }),
             "beta"
         )
         .await,
@@ -325,7 +325,7 @@ async fn only_an_outside_reason_an_existing_thread_and_a_text_are_accepted() {
 async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
     let r = rig().await;
     let t = &r.t;
-    let old = wake_stream(t, "coordinator", "beta").await;
+    let old = wake_stream(t, "lead", "beta").await;
     let star = wake_stream(t, "*", "beta").await;
     let mut threads: Vec<String> = listeners(t, "beta")
         .await
@@ -333,9 +333,9 @@ async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
         .map(|l| l["thread"].as_str().unwrap_or_default().to_owned())
         .collect();
     threads.sort();
-    assert_eq!(threads, ["*", "coordinator"]);
+    assert_eq!(threads, ["*", "lead"]);
     let fresh = t
-        .sse("/api/p/beta/wakes/stream?thread=coordinator&v=2&id=RotP%20lead")
+        .sse("/api/p/beta/wakes/stream?thread=lead&v=2&id=RotP%20lead")
         .await;
     fresh.next(Some("ready"), 5000).await.expect("ready");
     let bye = old.next(Some("replaced"), 5000).await.expect("replaced");
@@ -350,15 +350,12 @@ async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
         2,
         "the replaced one is gone, the star one stays"
     );
-    let mine = open
-        .iter()
-        .find(|l| l["thread"] == "coordinator")
-        .expect("mine");
+    let mine = open.iter().find(|l| l["thread"] == "lead").expect("mine");
     assert_eq!(mine["label"], "RotP lead");
     assert_eq!(mine["v"], 2);
     assert!(mine["since"].as_str().is_some());
 
-    let hello = json!({ "thread": "coordinator", "reason": "thread-message", "text": "a: hello" });
+    let hello = json!({ "thread": "lead", "reason": "thread-message", "text": "a: hello" });
     post_wake(t, "beta", &hello).await;
     let e = fresh.next(Some("wake"), 5000).await.expect("the event");
     assert_eq!(lines(&e.data), ["a: hello"]);
@@ -368,26 +365,23 @@ async fn a_newer_v2_stream_for_the_same_thread_replaces_the_older_one() {
         w["text"] == "a: hello" && w["status"] == "delivered"
     })
     .await;
-    assert_eq!(
-        row["listeners"], 2,
-        "the coordinator stream and the star stream"
-    );
+    assert_eq!(row["listeners"], 2, "the lead stream and the star stream");
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
     let r = rig().await;
     let t = &r.t;
-    let text = |s: &str| json!({ "thread": "coordinator", "reason": "thread-message", "text": s });
+    let text = |s: &str| json!({ "thread": "lead", "reason": "thread-message", "text": s });
     post_wake(t, "beta", &text("queued before any listener")).await;
     wake_where(t, "beta", |w| {
         w["text"] == "queued before any listener" && w["status"] == "queued"
     })
     .await;
-    let legacy = t.sse("/api/p/beta/wakes/stream?thread=coordinator").await;
+    let legacy = t.sse("/api/p/beta/wakes/stream?thread=lead").await;
     let ready = legacy.next(Some("ready"), 5000).await.expect("ready");
-    assert_eq!(ready.data["thread"], "coordinator");
-    let legacy2 = t.sse("/api/p/beta/wakes/stream?thread=coordinator").await;
+    assert_eq!(ready.data["thread"], "lead");
+    let legacy2 = t.sse("/api/p/beta/wakes/stream?thread=lead").await;
     legacy2.next(Some("ready"), 5000).await.expect("ready");
     assert!(
         !legacy.ended(),
@@ -420,7 +414,7 @@ async fn a_legacy_stream_is_served_but_not_counted_replayed_to_or_replacing() {
     );
     assert_eq!(held["listeners"], 0, "{held}");
 
-    let modern = wake_stream(t, "coordinator", "beta").await;
+    let modern = wake_stream(t, "lead", "beta").await;
     assert!(!legacy.ended(), "a v2 stream does not replace a legacy one");
     let mut texts = Vec::new();
     while texts.len() < 2 {

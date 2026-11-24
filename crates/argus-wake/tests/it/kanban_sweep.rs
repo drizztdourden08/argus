@@ -23,7 +23,7 @@ fn item(id: &str, status: &str, hours_ago: i64, extra: &Value) -> Value {
 fn world(items: &[Value], extra: &Value) -> Value {
     let mut doc = json!({
         "threads": {
-            "lead": {"id": "lead", "role": "coordinator", "status": "active"},
+            "lead": {"id": "lead", "role": "lead", "status": "active"},
             "worker": {"id": "worker", "role": "thread", "status": "active"},
             "gone": {"id": "gone", "role": "thread", "status": "archived"},
         },

@@ -2,6 +2,7 @@
 //! the owner's toast over the notification service. The table is made here with `IF NOT EXISTS`,
 //! so the six migrations Node shares stay as they are.
 
+use argus_core::lead::LEAD;
 use std::sync::Arc;
 
 use argus_notify::{By, Level, Notify, PingRequest};
@@ -20,9 +21,9 @@ const TABLE: &str = "CREATE TABLE IF NOT EXISTS overlord_approvals (
 );";
 
 const TITLE: &str = "The Overlord needs an answer";
-/// The Overlord's coordinator thread, and the project key a toast of it carries (the user-facing alias).
+/// The Overlord's lead thread, and the project key a toast of it carries (the user-facing alias).
 const TOAST_PROJECT: &str = "portfolio";
-pub(crate) const THREAD: &str = "coordinator";
+pub(crate) const THREAD: &str = LEAD;
 
 /// The rows over the shared database, as the `ApprovalStore` port.
 pub struct SqlApprovals {

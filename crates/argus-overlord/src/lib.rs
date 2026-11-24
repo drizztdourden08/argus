@@ -1,4 +1,4 @@
-//! The hosted Overlord: the pure parts of the coordinator that Argus runs as a `claude -p` child
+//! The hosted Overlord: the pure parts of the lead that Argus runs as a `claude -p` child
 //! on the owner's API key (I-159). Nothing here spawns a process or touches the disk; the server
 //! crate wires these pieces to real adapters.
 //!

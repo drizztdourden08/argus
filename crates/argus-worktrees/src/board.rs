@@ -28,7 +28,7 @@ pub struct Answer {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ThreadInfo {
     pub id: String,
-    pub coordinator: bool,
+    pub lead: bool,
     /// Registered and not ended, not a placeholder, not deleted.
     pub live: bool,
 }
@@ -168,11 +168,11 @@ impl BoardFacts {
             .map(|t| t.id.clone())
     }
 
-    /// The project's lead: the first live thread whose role is coordinator.
-    pub fn coordinator(&self) -> Option<String> {
+    /// The project's lead: the first live thread whose role is lead.
+    pub fn lead(&self) -> Option<String> {
         self.threads
             .values()
-            .find(|t| t.live && t.coordinator)
+            .find(|t| t.live && t.lead)
             .map(|t| t.id.clone())
     }
 }
@@ -353,19 +353,19 @@ mod tests {
     }
 
     #[test]
-    fn the_coordinator_is_the_first_live_one() {
+    fn the_lead_is_the_first_live_one() {
         let mut board = BoardFacts::default();
-        for (id, coordinator, live) in [("a", true, false), ("b", true, true), ("c", false, true)] {
+        for (id, lead, live) in [("a", true, false), ("b", true, true), ("c", false, true)] {
             board.threads.insert(
                 id.into(),
                 ThreadInfo {
                     id: id.into(),
-                    coordinator,
+                    lead,
                     live,
                 },
             );
         }
-        assert_eq!(board.coordinator().as_deref(), Some("b"));
+        assert_eq!(board.lead().as_deref(), Some("b"));
         assert_eq!(board.live_thread("a"), None);
         assert_eq!(board.live_thread("c").as_deref(), Some("c"));
     }

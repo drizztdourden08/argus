@@ -24,7 +24,7 @@ fn bash(command: &str) -> Verdict {
 fn the_shadow_cannot_run_a_write_verb() {
     for command in [
         "coord item status I-1 done",
-        "coord inbox send coordinator hi",
+        "coord inbox send lead hi",
         "coord entry add x",
         "coord item list; coord item status I-1 done",
         "coord item list && rm x",
@@ -49,7 +49,7 @@ fn the_shadow_cannot_run_a_write_verb() {
 fn the_shadow_may_read() {
     for command in [
         "coord item list",
-        "coord thread show coordinator",
+        "coord thread show lead",
         "coord inbox",
         "node .claude/tools/coord/coord.mjs item show I-3",
     ] {
@@ -63,17 +63,15 @@ fn the_shadow_may_read() {
 #[test]
 fn the_shadow_registers_only_as_a_plain_thread() {
     assert_eq!(
-        bash("coord thread register coordinator-hosted --role thread"),
+        bash("coord thread register lead-hosted --role thread"),
         Verdict::Allow
     );
-    assert_eq!(
-        bash("coord thread register coordinator-hosted"),
-        Verdict::Allow
-    );
+    assert_eq!(bash("coord thread register lead-hosted"), Verdict::Allow);
     for command in [
-        "coord thread register coordinator",
-        "coord thread register coordinator-hosted --role coordinator",
+        "coord thread register lead",
+        "coord thread register lead-hosted --role lead",
         "coord thread register other",
+        "coord thread register lead-hosted --role coordinator",
     ] {
         assert_eq!(bash(command), Verdict::Deny, "{command}");
     }
@@ -87,15 +85,8 @@ fn the_shadow_is_not_the_overlord_thread() {
 
 #[test]
 fn the_mirror_copies_every_overlord_wake_and_nothing_else() {
-    assert!(mirrors("coordinator"));
-    for other in [
-        "coordinator-hosted",
-        "argus",
-        "brock",
-        "*",
-        "",
-        "Coordinator",
-    ] {
+    assert!(mirrors("lead"));
+    for other in ["lead-hosted", "argus", "brock", "*", "", "Lead"] {
         assert!(!mirrors(other), "{other}");
     }
 }

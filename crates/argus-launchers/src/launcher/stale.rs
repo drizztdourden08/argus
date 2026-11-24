@@ -75,7 +75,7 @@ pub trait StaleEnv: Send + Sync {
     fn scopes(&self) -> Vec<String>;
     fn board(&self, scope: &str) -> Option<LauncherBoard>;
     /// The lead thread of a project.
-    fn coordinator(&self, scope: &str) -> Option<String>;
+    fn lead(&self, scope: &str) -> Option<String>;
     /// The `queuedAt` (ms) of the newest Play run of `launcher-<name>`; 0 when unknown.
     fn played_ms(&self, scope: &str, name: &str) -> i64;
     /// When the wake store last sent this wake (ms); 0 when never.
@@ -163,7 +163,7 @@ impl LauncherStale {
             .filter(|t| !ENDED.contains(&t.status.as_str()) && !t.placeholder);
         match maker {
             Some(thread) => Some(thread.id.clone()),
-            None => self.env.coordinator(scope),
+            None => self.env.lead(scope),
         }
     }
 
@@ -208,7 +208,7 @@ impl LauncherStale {
     fn master_wakes(&self, now: i64) -> Vec<WakeEvent> {
         let mut events = Vec::new();
         for (scope, board) in self.project_boards() {
-            let Some(lead) = self.env.coordinator(&scope) else {
+            let Some(lead) = self.env.lead(&scope) else {
                 continue;
             };
             let waited = now - time_of(board.created_at.as_deref()) >= self.config.master_wait_ms;

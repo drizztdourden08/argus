@@ -56,7 +56,7 @@ fn fault(reason: &str) -> Fault {
     Fault {
         id: 1,
         project: "portfolio".to_owned(),
-        thread: "coordinator".to_owned(),
+        thread: "lead".to_owned(),
         since: iso(START),
         reason: reason.to_owned(),
         wake_id: None,
@@ -119,6 +119,6 @@ fn a_hosted_down_fault_reaches_the_owner_at_once_and_another_waits_the_hour() {
     assert_eq!(notices.len(), 1);
     assert_eq!(
         notices[0].text,
-        "portfolio/coordinator: the hosted Overlord is down"
+        "portfolio/lead: the hosted Overlord is down"
     );
 }

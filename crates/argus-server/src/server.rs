@@ -28,6 +28,7 @@ use crate::adapters::overlord::gate::ApprovalGate;
 use crate::first_start;
 use crate::gate::{App, dispatch};
 use crate::instance::{read_pid_file, running_instance, write_pid_file};
+use crate::legacy_lead;
 use crate::local_names::{self, Front, LocalNamesOptions};
 use crate::localhost_door;
 use crate::security::LoginCodes;
@@ -235,6 +236,7 @@ async fn open_core(opts: &ServeOptions) -> Result<Core, ServeError> {
     }
     let bus = Bus::new();
     let db = Arc::new(Db::open(&paths.db, bus.clone())?);
+    legacy_lead::migrate(&paths.home, &db);
     Ok(Core {
         paths,
         config: Arc::new(RwLock::new(config)),

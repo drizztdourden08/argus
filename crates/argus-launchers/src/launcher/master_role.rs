@@ -1,5 +1,5 @@
 //! The master role of a board: held by one build at a time and handed over with
-//! `coord launcher set <name> --master`, by the coordinator or the owner.
+//! `coord launcher set <name> --master`, by the lead or the owner.
 
 use super::audit::audit;
 use super::record::{LauncherBoard, MASTER, RuleError, Who};
@@ -10,11 +10,11 @@ pub(super) fn wanted(patch: &LauncherPatch) -> bool {
     patch.master == Some(true)
 }
 
-/// Refuses a hand-over by a thread that is not the coordinator or the owner.
+/// Refuses a hand-over by a thread that is not the lead or the owner.
 pub(super) fn check_hand(who: &Who, patch: &LauncherPatch) -> Result<(), RuleError> {
     if wanted(patch) && !who.is_lead() {
         return Err(RuleError::new(
-            "only the coordinator or the owner hands the master role over.",
+            "only the lead or the owner hands the master role over.",
         ));
     }
     Ok(())

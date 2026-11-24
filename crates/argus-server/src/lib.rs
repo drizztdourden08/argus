@@ -15,6 +15,7 @@ pub mod endpoint;
 pub mod first_start;
 mod gate;
 pub mod instance;
+mod legacy_lead;
 mod local_names;
 mod localhost_door;
 mod pathing;

@@ -1,4 +1,4 @@
-//! The owner's Queue view of the hosted Overlord: what waits for it. The wakes of its coordinator thread,
+//! The owner's Queue view of the hosted Overlord: what waits for it. The wakes of its lead thread,
 //! the messages held for the child, the approvals nobody answered and the alerts (open notices of its board
 //! and the stall lines). Each part is read from its own source; a missing source gives an empty part.
 

@@ -155,7 +155,7 @@ fn the_listing_shows_the_own_tools_and_a_call_of_one_is_parsed() {
     assert!(names.contains(&"session_message"));
     let call = json!({ "jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {
         "name": "thread_wake",
-        "arguments": { "project": "brock", "thread": "coordinator", "reason": "look" }
+        "arguments": { "project": "brock", "thread": "lead", "reason": "look" }
     } });
     let Parsed::Tool { id, call } = parse(call.to_string().as_bytes()) else {
         panic!("an own tool call is parsed");

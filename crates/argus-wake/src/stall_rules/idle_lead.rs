@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn the_work_of_another_live_thread_does_not_count() {
-        let worker = json!({"threads": {"lead": {"id": "lead", "role": "coordinator", "status": "active", "activity": "idle", "lastSeen": iso(NOW - 20 * MIN)}, "ui": {"id": "ui", "role": "thread", "status": "active"}}});
+        let worker = json!({"threads": {"lead": {"id": "lead", "role": "lead", "status": "active", "activity": "idle", "lastSeen": iso(NOW - 20 * MIN)}, "ui": {"id": "ui", "role": "thread", "status": "active"}}});
         let owned = item("I-4", "todo", &json!({"thread": "ui"}));
         let world = rotp(&json!({}), &[owned], &worker);
         assert_eq!(idle_found(&world, &IdleWatch::new(), NOW, false).len(), 0);

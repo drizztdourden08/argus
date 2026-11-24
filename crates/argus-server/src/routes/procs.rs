@@ -10,13 +10,14 @@
 //! - `POST /api/p/:key/procs/:pid/kill {by, tree?, reason?}` is a thread's kill of its own
 //!   process ([`own`])
 //!
-//! Who may change rules or kill: the owner's page, or the Overlord (the coordinator thread of
+//! Who may change rules or kill: the owner's page, or the Overlord (the lead thread of
 //! the portfolio board) named in `by` from the CLI. Anyone may read. A thread may kill only its
 //! own project's processes, through the route of its project. A shadow server and a preview
 //! never kill: every kill route answers 403 `read_only`.
 
 mod own;
 
+use argus_core::lead::{LEAD_ROLE, canonical};
 use std::sync::Arc;
 
 use argus_core::clock::iso_from_ms;
@@ -82,7 +83,7 @@ fn is_overlord(ctx: &Ctx, by: &str) -> bool {
     let board = ctx.svc.boards().overlord_board();
     let thread = board.as_ref().map(|b| &b["threads"][by]);
     thread.is_some_and(|t| {
-        t["role"] == "coordinator" && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
+        t["role"] == LEAD_ROLE && !ENDED.contains(&t["status"].as_str().unwrap_or(""))
     })
 }
 
@@ -92,11 +93,11 @@ fn caller(ctx: &Ctx, body: &Value, what: &str) -> Result<Caller, ApiError> {
             source: Source::Page,
         });
     }
-    let by = body["by"].as_str().unwrap_or("");
-    if is_overlord(ctx, by) {
+    let by = canonical(body["by"].as_str().unwrap_or("")).into_owned();
+    if is_overlord(ctx, &by) {
         return Ok(Caller {
             source: Source::Cli {
-                actor: Some(by.to_owned()),
+                actor: Some(by.clone()),
             },
         });
     }
@@ -114,9 +115,7 @@ fn caller(ctx: &Ctx, body: &Value, what: &str) -> Result<Caller, ApiError> {
         .add(NewActivity::new(KILL_KIND, ActivityLevel::Warn, text));
     Err(ApiError::new(
         ErrorCode::Forbidden,
-        format!(
-            "only the Overlord (the coordinator thread of its board) or the owner's page may {what}"
-        ),
+        format!("only the Overlord (the lead thread of its board) or the owner's page may {what}"),
     ))
 }
 

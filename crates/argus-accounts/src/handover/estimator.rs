@@ -257,7 +257,7 @@ mod tests {
     fn est(percent: f64, minutes: f64) -> LeadEstimate {
         LeadEstimate {
             board: "b".into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             percent,
             minutes,
             fresh: true,
@@ -284,7 +284,7 @@ mod tests {
     fn lead(estimate: Option<Estimate>, agents: usize, asked_ago: Option<i64>) -> LeadInput {
         LeadInput {
             board: "rotp".into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             agents: vec![AgentLoad::default(); agents],
             estimate,
             asked_at_ms: asked_ago.map(|m| NOW - m * MIN),
@@ -436,7 +436,7 @@ mod tests {
             id: "H-1".into(),
             cycle: "SW-1".into(),
             board: "rotp".into(),
-            thread: "coordinator".into(),
+            thread: "lead".into(),
             session_id: None,
             link: None,
             state,

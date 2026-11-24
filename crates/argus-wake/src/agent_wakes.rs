@@ -20,7 +20,7 @@ use serde_json::Value;
 
 use crate::board::{AgentView, BoardView, LIVE_AGENT};
 use crate::config::section_ms;
-use crate::policy::coordinator_in;
+use crate::policy::lead_in;
 use crate::source::{AgentLive, BoardSource};
 use crate::text::cut;
 use crate::time::{ms_or_zero, parse_ms};
@@ -130,9 +130,7 @@ fn target_of(board: &BoardView, agent: &AgentView) -> Option<String> {
             .get(*t)
             .is_some_and(crate::board::ThreadView::is_live)
     });
-    owner
-        .map(str::to_owned)
-        .or_else(|| coordinator_in(Some(board)))
+    owner.map(str::to_owned).or_else(|| lead_in(Some(board)))
 }
 
 fn who(agent: &AgentView) -> String {

@@ -42,7 +42,7 @@ fn remind(rig: &mut Rig, ms: i64) {
 /// An Overlord that listens, and a wake for each of these threads that nobody hears: one fault each.
 fn faulted(threads: &[&str]) -> (Rig, Tap) {
     let mut rig = Rig::registry(&registry_config(), false);
-    let main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let main = rig.listen("portfolio", "lead", AttachOptions::default());
     for thread in threads {
         send(&mut rig, thread);
     }
@@ -112,7 +112,7 @@ fn an_open_fault_wakes_the_overlord_once_at_once_and_a_quiet_ten_minutes_wakes_n
     let rows = rig.wakes_of("fault-open");
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].status, WakeStatus::Delivered);
-    assert_eq!(rows[0].thread, "coordinator");
+    assert_eq!(rows[0].thread, "lead");
     remind(&mut rig, 10 * MIN);
     assert_eq!(rig.wakes_of("fault-open").len(), 1);
     assert_eq!(rig.wakes_of("open-resend").len(), 0);
@@ -135,7 +135,7 @@ fn two_open_faults_are_sent_again_every_15_minutes_as_one_coalesced_line() {
     assert_eq!(first[0].text, "2 faults open, oldest 15m");
     assert_eq!(
         (first[0].scope.as_str(), first[0].thread.as_str()),
-        ("portfolio", "coordinator")
+        ("portfolio", "lead")
     );
     remind(&mut rig, 15 * MIN);
     let all = rig.wakes_of("open-resend");
@@ -169,7 +169,7 @@ fn the_owner_is_told_once_when_a_fault_has_been_open_an_hour() {
 fn a_fault_clears_by_itself_when_the_lead_shows_signs_of_life_and_the_log_says_why() {
     let mut rig = Rig::registry(&registry_config(), false);
     let _lead = rig.listen("alpha", "*", AttachOptions::default());
-    let _main = rig.listen("portfolio", "coordinator", AttachOptions::default());
+    let _main = rig.listen("portfolio", "lead", AttachOptions::default());
     send(&mut rig, "lead");
     rig.pass(125 * SEC, STEP);
     let open = rig.faults.list(false).expect("faults");

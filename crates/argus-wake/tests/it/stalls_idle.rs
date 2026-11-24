@@ -21,7 +21,7 @@ fn an_idle_lead_with_an_unblocked_todo_item_stalls_within_11_min() {
     let stalls = rig.wakes_of("stall");
     assert_eq!(stalls.len(), 1);
     assert_eq!(stalls[0].text, LINE);
-    assert_to(&stalls[0], "portfolio", "coordinator");
+    assert_to(&stalls[0], "portfolio", "lead");
     let open = rig.service.stalls(Some("rotp"));
     assert_eq!(
         (

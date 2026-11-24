@@ -50,7 +50,7 @@ impl World {
     fn new() -> Self {
         let json = json!({
             "threads": {
-                "lead": {"id": "lead", "role": "coordinator", "status": "active"},
+                "lead": {"id": "lead", "role": "lead", "status": "active"},
                 "ui": {"id": "ui", "role": "thread", "status": "active"},
                 "old": {"id": "old", "status": "done"},
             },

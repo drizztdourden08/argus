@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use super::boot_rule::{Lead, Mode, lead_key, needing_resume, same_boot};
 use super::config;
-use crate::boards::coordinator_in;
+use crate::boards::lead_in;
 use crate::{Services, WakeRequest};
 
 const KEY: &str = "overlord.boot-resume";
@@ -76,10 +76,10 @@ fn listening(svc: &Services, board: &str, thread: &str) -> bool {
         .any(|l| l.thread == thread || l.thread == "*")
 }
 
-/// The coordinator thread of a board as a lead.
+/// The lead thread of a board as a lead.
 fn lead_of(svc: &Services, key: &str) -> Option<Lead> {
     let board = svc.boards().board(key)?;
-    let thread = coordinator_in(&board)?;
+    let thread = lead_in(&board)?;
     Some(Lead {
         listening: listening(svc, key, &thread),
         board: key.to_owned(),

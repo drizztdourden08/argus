@@ -32,7 +32,7 @@ async fn a_cli_change_reaches_the_stream_within_a_second() {
             "--project",
             "alpha",
             "--as",
-            "coordinator",
+            "lead",
         ];
         let took = item_arrival(&t, "smoke", async || run_ok(&cli, &t, &add).await).await;
         let took = took.unwrap_or_else(|| panic!("{}: the new item did not arrive", cli.name()));

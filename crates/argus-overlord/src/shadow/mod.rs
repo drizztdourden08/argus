@@ -2,6 +2,8 @@
 //! hears a copy of every wake the desktop Overlord hears, may only read, and writes what it would
 //! do. All pure; the server wires it to the child, the wake engine and the permission endpoint.
 
+use argus_core::lead::LEAD;
+
 mod allow;
 mod argv;
 mod intro;
@@ -16,10 +18,10 @@ pub use intro::intro;
 pub use log::{Seen, Turn, denial_entry, seen};
 
 /// The thread the shadow registers as, with the role `thread`, so `overlord_only` refuses it.
-pub const THREAD: &str = "coordinator-hosted";
+pub const THREAD: &str = "lead-hosted";
 
 /// The thread of the desktop Overlord, whose wakes the shadow mirrors.
-pub const OVERLORD_THREAD: &str = "coordinator";
+pub const OVERLORD_THREAD: &str = LEAD;
 
 /// The mirror rule: a wake is copied to the shadow when the desktop Overlord got it, and only then.
 #[must_use]

@@ -5,6 +5,7 @@
 use argus_board::names::{ARGUS, display_name};
 use argus_core::ApiError;
 use argus_core::ids::is_key;
+use argus_core::lead::{LEAD, canonical};
 use axum::http::header;
 use axum::response::Response;
 
@@ -35,17 +36,18 @@ async fn home(ctx: Ctx) -> Reply {
             if let Some(main) = main.filter(|m| {
                 a.key == "overlord" && a.thread.is_none() && known_keys(&ctx).contains(m)
             }) {
-                return Ok(redirect(&format!("/p/{main}/?thread=coordinator"), &[]));
+                return Ok(redirect(&format!("/p/{main}/?thread={LEAD}"), &[]));
             }
         }
         Some(a) if known_keys(&ctx).contains(&board_id(&ctx, &a.key)) => {
             let id = board_id(&ctx, &a.key);
-            let thread = ctx
+            let asked = ctx
                 .query("thread")
                 .filter(|t| !t.is_empty())
                 .or(a.thread.as_deref())
-                .unwrap_or("coordinator");
-            let target = format!("/p/{id}/?thread={}", encode(thread));
+                .unwrap_or(LEAD);
+            let thread = canonical(asked);
+            let target = format!("/p/{id}/?thread={}", encode(&thread));
             return Ok(redirect(&target, &[]));
         }
         _ => {}

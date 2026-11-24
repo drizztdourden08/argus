@@ -27,15 +27,13 @@ fn rig() -> Rig {
     );
     rig.boards.set(
         "beta",
-        board(
-            &json!({"threads": {"coordinator": thread("coordinator", "coordinator", &json!({}))}}),
-        ),
+        board(&json!({"threads": {"lead": thread("lead", "lead", &json!({}))}})),
     );
     rig
 }
 
 fn known(scope: &str, thread: &str) -> bool {
-    scope == "beta" && thread == "coordinator"
+    scope == "beta" && thread == "lead"
 }
 
 fn post(rig: &mut Rig, body: &Value) -> Result<(), RequestError> {
@@ -45,7 +43,7 @@ fn post(rig: &mut Rig, body: &Value) -> Result<(), RequestError> {
 }
 
 fn text_post(text: &str, reason: &str) -> Value {
-    json!({"thread": "coordinator", "reason": reason, "text": text})
+    json!({"thread": "lead", "reason": reason, "text": text})
 }
 
 fn listen(rig: &mut Rig, thread: &str) -> Tap {
@@ -73,7 +71,7 @@ fn a_lead_message_wake_goes_through_the_engine_with_the_window_a_star_listener_a
     let event = star.events()[0].clone();
     assert_eq!(
         (event.thread.as_str(), event.count),
-        ("coordinator", 2),
+        ("lead", 2),
         "coalesced in the same window as any other wake"
     );
     assert_eq!(event.lines, [text.trim(), "pixelarttool lead: second"]);
@@ -89,7 +87,7 @@ fn a_lead_message_wake_goes_through_the_engine_with_the_window_a_star_listener_a
             delivered.listeners,
             delivered.count
         ),
-        ("coordinator", 1, 2)
+        ("lead", 1, 2)
     );
 
     rig.service.detach(&star.attached.id);
@@ -102,7 +100,7 @@ fn a_lead_message_wake_goes_through_the_engine_with_the_window_a_star_listener_a
         .find(|r| r.text == "tessera lead: ping")
         .expect("row");
     assert_eq!((queued.status, queued.listeners), (WakeStatus::Queued, 0));
-    let mut late = listen(&mut rig, "coordinator");
+    let mut late = listen(&mut rig, "lead");
     assert_eq!(late.lines(), [["tessera lead: ping"]]);
 }
 
@@ -125,9 +123,9 @@ fn a_thread_message_wake_goes_through_the_engine_like_a_lead_message() {
         (row.status, row.listeners, row.text.as_str()),
         (WakeStatus::Queued, 0, "ui: please look at T-9")
     );
-    let mut late = listen(&mut rig, "coordinator");
+    let mut late = listen(&mut rig, "lead");
     assert_eq!(late.lines(), [["ui: please look at T-9"]]);
-    let mut second = listen(&mut rig, "coordinator");
+    let mut second = listen(&mut rig, "lead");
     assert_eq!(second.count(), 0, "replayed once");
 }
 
@@ -137,12 +135,12 @@ fn only_the_outside_reasons_an_existing_thread_and_a_text_are_accepted_and_nothi
     let mut rig = rig();
     let refused = [
         (
-            json!({"thread": "coordinator", "reason": "test-fail", "text": "x"}),
+            json!({"thread": "lead", "reason": "test-fail", "text": "x"}),
             400,
             "reason must be one of lead-message, lead-info, thread-message, wake-fault",
         ),
         (
-            json!({"thread": "coordinator", "text": "x"}),
+            json!({"thread": "lead", "text": "x"}),
             400,
             "reason must be one of",
         ),
@@ -157,7 +155,7 @@ fn only_the_outside_reasons_an_existing_thread_and_a_text_are_accepted_and_nothi
             "thread must be a thread id",
         ),
         (
-            json!({"thread": "coordinator", "reason": "lead-message", "text": "  "}),
+            json!({"thread": "lead", "reason": "lead-message", "text": "  "}),
             400,
             "text is required",
         ),
@@ -202,15 +200,15 @@ fn the_text_of_an_outside_wake_is_one_line_of_at_most_300_characters() {
             wake.thread.as_str(),
             wake.subject.as_deref()
         ),
-        ("beta", "coordinator", Some("coordinator"))
+        ("beta", "lead", Some("lead"))
     );
 }
 
 fn overlord() -> BoardView {
     board(&json!({"threads": {
-        "coordinator": thread("coordinator", "coordinator", &json!({})),
+        "lead": thread("lead", "lead", &json!({})),
         "helper": thread("helper", "thread", &json!({})),
-        "retired": thread("retired", "coordinator", &json!({"status": "archived"})),
+        "retired": thread("retired", "lead", &json!({"status": "archived"})),
     }}))
 }
 
@@ -222,7 +220,7 @@ const NOTE: &str = "the ui session had crashed, restarted its wake-stream";
 
 #[test]
 fn clearing_a_fault_needs_a_project_a_thread_a_note_of_10_to_300_characters_and_the_overlord() {
-    let ok = clear(&json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": NOTE}))
+    let ok = clear(&json!({"project": "alpha", "thread": "ui", "by": "lead", "note": NOTE}))
         .expect("accepted");
     assert_eq!(
         (
@@ -231,38 +229,38 @@ fn clearing_a_fault_needs_a_project_a_thread_a_note_of_10_to_300_characters_and_
             ok.by.as_str(),
             ok.note.as_str()
         ),
-        ("alpha", "ui", "coordinator", NOTE)
+        ("alpha", "ui", "lead", NOTE)
     );
     let status = |body: Value| clear(&body).expect_err("refused").status();
     assert_eq!(
-        status(json!({"project": "alpha", "thread": "ui", "by": "coordinator"})),
+        status(json!({"project": "alpha", "thread": "ui", "by": "lead"})),
         400
     );
     assert_eq!(
-        status(
-            json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": "too short"})
-        ),
+        status(json!({"project": "alpha", "thread": "ui", "by": "lead", "note": "too short"})),
         400
     );
     assert_eq!(
-        status(
-            json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": "x".repeat(301)})
-        ),
+        status(json!({"project": "alpha", "thread": "ui", "by": "lead", "note": "x".repeat(301)})),
         400
     );
     assert_eq!(
-        status(json!({"project": "alpha", "thread": "*", "by": "coordinator", "note": NOTE})),
+        status(json!({"project": "alpha", "thread": "*", "by": "lead", "note": NOTE})),
         400
     );
     assert_eq!(
-        status(json!({"project": "Bad Key", "thread": "ui", "by": "coordinator", "note": NOTE})),
+        status(json!({"project": "Bad Key", "thread": "ui", "by": "lead", "note": NOTE})),
         400
     );
-    assert_eq!(clear(&json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": "x".repeat(300)})).map(|r| r.note.len()), Ok(300));
+    assert_eq!(
+        clear(&json!({"project": "alpha", "thread": "ui", "by": "lead", "note": "x".repeat(300)}))
+            .map(|r| r.note.len()),
+        Ok(300)
+    );
 }
 
 #[test]
-fn only_a_live_coordinator_of_the_portfolio_board_may_clear_a_fault() {
+fn only_a_live_lead_of_the_portfolio_board_may_clear_a_fault() {
     for by in ["helper", "lead", "nobody", "", "retired"] {
         let err = clear(&json!({"project": "alpha", "thread": "ui", "by": by, "note": NOTE}))
             .expect_err("refused");
@@ -270,7 +268,7 @@ fn only_a_live_coordinator_of_the_portfolio_board_may_clear_a_fault() {
         assert!(err.message().starts_with("only the Overlord"));
     }
     let no_board = clear_request(
-        &json!({"project": "alpha", "thread": "ui", "by": "coordinator", "note": NOTE}),
+        &json!({"project": "alpha", "thread": "ui", "by": "lead", "note": NOTE}),
         "portfolio",
         None,
     );

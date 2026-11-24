@@ -31,6 +31,7 @@
 //! Refusals carry the crate's codes: 403 `forbidden`, 404 `not_found`, 409 `conflict`, 423
 //! `in_use`, 500 `backup_failed` and `git_failed`. Shadow mode answers `read_only`.
 
+use argus_core::lead::canonical;
 use std::future::Future;
 use std::sync::Arc;
 
@@ -79,7 +80,7 @@ fn caller(ctx: &Ctx, body: &Value) -> Caller {
         return Caller::Page;
     }
     let by = body["by"].as_str().unwrap_or_default();
-    Caller::Thread(by.chars().take(BY_MAX).collect())
+    Caller::Thread(canonical(by).chars().take(BY_MAX).collect())
 }
 
 /// The reason, its white space folded and cut short.
