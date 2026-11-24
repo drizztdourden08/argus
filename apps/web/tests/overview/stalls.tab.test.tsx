@@ -5,7 +5,7 @@ import type { FakeSource } from '../helpers/fake-source';
 import { openAlerts } from '../helpers/open-alerts';
 import { renderAt } from '../helpers/render-at';
 import { feed } from './helpers/feed';
-import { CARDS, NOTIFICATIONS } from './helpers/fixtures';
+import { CARDS } from './helpers/fixtures';
 import { installHarness } from './helpers/harness';
 import { STALLS } from './helpers/stalls';
 import { stubApi } from './helpers/stub-api';
@@ -32,47 +32,6 @@ describe('S1 the stalls on the overview card', { tags: ['standard'] }, () => {
     expect(screen.queryByRole('button', { name: /^stalled:/ })).toBeNull();
   });
 });
-
-describe('S1 the stalls in the Notifications tab', { tags: ['standard'] }, () => {
-  const openTab = async (stalls: Record<string, object>) => {
-    const view = renderAt('/#notifications');
-    await feed(view.sources, { cards: CARDS, notifications: NOTIFICATIONS, stalls });
-    return view;
-  };
-
-  it('lists the stalls oldest first with the kind, the project and the age', async () => {
-    await openTab(STALLS);
-    const list = await screen.findByRole('list', { name: 'Stalls' });
-    const rows = [...list.querySelectorAll<HTMLElement>('[data-record]')];
-    expect(rows).toHaveLength(3);
-    expect(rows[0]?.textContent).toContain('silent');
-    expect(rows[0]?.textContent).toContain('1h');
-    expect(rows[1]?.textContent).toContain('unread');
-    expect(rows[2]?.textContent).toContain('idle');
-    expect(within(rows[2] as HTMLElement).getByRole('link', { name: 'RotP' }).getAttribute('href')).toBe('/p/rotp/');
-  });
-
-  it('marks an acked stall with its note as the title', async () => {
-    await openTab(STALLS);
-    const list = await screen.findByRole('list', { name: 'Stalls' });
-    const acked = within(list).getAllByText('acked');
-    expect(acked).toHaveLength(1);
-    expect(acked[0]?.closest('[title]')?.getAttribute('title')).toBe('asked the lead');
-  });
-
-  it('shows no Stalls list when none is open', async () => {
-    await openTab({});
-    await screen.findByText('RotP: build ready');
-    expect(screen.queryByRole('list', { name: 'Stalls' })).toBeNull();
-  });
-});
-
-const portfolioOf = async (view: ReturnType<typeof renderAt>): Promise<FakeSource[]> =>
-  waitFor(() => {
-    const source = view.portfolio();
-    if (!source) throw new Error('no open _portfolio stream yet');
-    return [source];
-  });
 
 describe('S1 the stalls in the board header', { tags: ['standard'] }, () => {
   it('shows the stalls of that board as chips with their age', async () => {

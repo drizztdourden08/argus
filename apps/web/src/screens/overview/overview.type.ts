@@ -8,7 +8,6 @@ interface TabBadges {
   counts: Record<string, number>;
   tones: Record<string, TabBadgeTone>;
   freshActivity: number;
-  freshNotifications: number;
 }
 
 interface ChipFilterProps {

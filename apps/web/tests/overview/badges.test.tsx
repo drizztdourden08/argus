@@ -31,11 +31,6 @@ describe('S1 the tabs and their badges', { tags: ['standard'] }, () => {
     await waitFor(() => expect(tab('Activity').textContent).toContain('2'));
   });
 
-  it('counts the notifications that were never read on Notifications', async () => {
-    await open();
-    await waitFor(() => expect(tab('Notifications').textContent).toContain('2'));
-  });
-
   it('reads the Activity badge when the tab opens and remembers the time', async () => {
     await open();
     await waitFor(() => expect(tab('Activity').textContent).toContain('2'));
@@ -64,8 +59,11 @@ describe('S1 the tabs and their badges', { tags: ['standard'] }, () => {
   });
 
   it('opens the tab named by the hash, and falls back on Boards for a hash it does not know', async () => {
+    await open('/#activity');
+    expect(tab('Activity').getAttribute('aria-selected')).toBe('true');
+    cleanup();
     await open('/#notifications');
-    expect(tab('Notifications').getAttribute('aria-selected')).toBe('true');
+    expect(tab('Boards').getAttribute('aria-selected')).toBe('true');
     cleanup();
     await open('/#nowhere');
     expect(tab('Boards').getAttribute('aria-selected')).toBe('true');
