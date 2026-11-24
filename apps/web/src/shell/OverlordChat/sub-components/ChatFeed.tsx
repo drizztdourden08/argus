@@ -1,21 +1,23 @@
 /* @layer renderer-app @kind component */
-import { EmptyState, ScrollArea, Stack } from '@drizztdourden08/tessera';
+import { ChatTranscript, EmptyState, Flex } from '@drizztdourden08/tessera';
+import type { ChatTranscriptMessage } from '@drizztdourden08/tessera';
 import { EMPTY_TRANSCRIPT } from '../OverlordChat.constants';
 import type { ChatFeedProps } from '../OverlordChat.type';
-import { ChatMessage } from './ChatMessage';
+import { MessageBody } from './MessageBody';
 import { WorkingLine } from './WorkingLine';
+
+const withBody = (message: ChatTranscriptMessage): ChatTranscriptMessage =>
+  message.content == null ? message : { ...message, content: <MessageBody role={message.role ?? 'assistant'} content={message.content} /> };
 
 const ChatFeed = (props: ChatFeedProps) => {
   const { messages, queued, working } = props;
-  const all = [...messages, ...queued];
+  const all = [...messages, ...queued].map(withBody);
   if (all.length === 0 && working === null) return <EmptyState message={EMPTY_TRANSCRIPT} className="overlord-chat__feed" />;
   return (
-    <ScrollArea follow followBehavior="instant" scrollbar="slim" className="overlord-chat__feed">
-      <Stack gap="md" className="overlord-chat__messages">
-        {all.map((message) => <ChatMessage key={message.id} message={message} />)}
-        {working && <WorkingLine activity={working} />}
-      </Stack>
-    </ScrollArea>
+    <Flex direction="column" gap="sm" className="overlord-chat__feed">
+      <ChatTranscript messages={all} className="overlord-chat__transcript" />
+      {working && <WorkingLine activity={working} />}
+    </Flex>
   );
 };
 

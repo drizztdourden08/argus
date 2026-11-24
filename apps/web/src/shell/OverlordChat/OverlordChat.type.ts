@@ -94,10 +94,6 @@ interface WorkingLineProps {
   activity: WorkingActivity;
 }
 
-interface ChatMessageProps {
-  message: ChatTranscriptMessage;
-}
-
 interface MessageBodyProps {
   role: ChatTranscriptRole;
   content: ReactNode;
@@ -133,4 +129,4 @@ interface ModeSectionProps {
   onSwitch: (mode: OverlordMode) => void;
 }
 
-export type { ApprovalStripProps, ModeSectionProps, SpendSectionProps, StatusSectionProps, ChatBoxProps, ChatFeedProps, ChatMessageProps, ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
+export type { ApprovalStripProps, ModeSectionProps, SpendSectionProps, StatusSectionProps, ChatBoxProps, ChatFeedProps,ContentBlock, DraftBlock, LiveDraft, MessageBodyProps, PendingSend, Piece, StepContentProps, TalkKind, TalkRow, ToolItem, ToolLineProps, ToolStatus, ToolsGroupProps, ToolsRow, TranscriptRow, WorkingActivity, WorkingLineProps };
