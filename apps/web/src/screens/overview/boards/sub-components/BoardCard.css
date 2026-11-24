@@ -8,10 +8,6 @@
   background: transparent;
 }
 
-.board-card__foot {
-  margin-block-start: auto;
-}
-
 .board-progress__bar {
   flex: none;
   inline-size: var(--size-48);

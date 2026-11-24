@@ -1,7 +1,8 @@
 /* @layer renderer-app @kind component */
 import { Flex, Icon, IconButton, Pressable, Spacer, Text } from '@drizztdourden08/tessera';
 import { useRef } from 'react';
-import { formatAgo } from '../../../../format';
+import { agoWords } from '../../../../format';
+import { WORDS } from '../boards-words.constants';
 import { useRecordPane } from '../../../../shell/records';
 import { PORTFOLIO_SCOPE, useDoc } from '../../../../data/react';
 import type { PortfolioWorktrees } from '../../../../data/worktrees';
@@ -16,8 +17,8 @@ const BoardCardFoot = (props: BoardCardFootProps) => {
   const listed = useDoc<PortfolioWorktrees>(PORTFOLIO_SCOPE, 'meta', 'worktrees').doc?.counts?.[record.key]?.listed ?? 0;
   const words = syncWords(sync, now);
   return (
-    <Flex gap="sm" align="center" wrap className="board-card__foot">
-      {card?.updatedAt && <Text variant="caption" tone="muted">Updated {formatAgo(card.updatedAt, now)} ago</Text>}
+    <Flex gap="sm" align="center" wrap>
+      {card?.updatedAt && <Text variant="caption" tone="muted">{WORDS.updated(agoWords(card.updatedAt, now))}</Text>}
       {listed > 0 && (
         <Pressable onClick={() => pane.open(record.id, 'worktrees')} aria-label={`Open the worktrees of ${record.name}`}>
           <Text variant="caption" tone="muted">{listed} {listed === 1 ? 'worktree' : 'worktrees'}</Text>
