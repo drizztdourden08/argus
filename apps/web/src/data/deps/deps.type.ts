@@ -58,4 +58,4 @@ interface DepAnswer {
   text: string;
 }
 
-export type { DepAnswer, DepColor, DepDoc, DepEnd, DepHistoryRow, DepState, RequestedBy, WaitsOn };
+export type { DepAnswer, DepColor, DepDoc, DepHistoryRow, DepState, RequestedBy, WaitsOn };

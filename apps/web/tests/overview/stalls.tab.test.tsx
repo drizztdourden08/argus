@@ -33,6 +33,13 @@ describe('S1 the stalls on the overview card', { tags: ['standard'] }, () => {
   });
 });
 
+const portfolioOf = async (view: ReturnType<typeof renderAt>): Promise<FakeSource[]> =>
+  waitFor(() => {
+    const source = view.portfolio();
+    if (!source) throw new Error('no open _portfolio stream yet');
+    return [source];
+  });
+
 describe('S1 the stalls in the board header', { tags: ['standard'] }, () => {
   it('shows the stalls of that board as chips with their age', async () => {
     const view = renderAt('/p/rotp/');

@@ -5,6 +5,4 @@ export { cancelDep } from './cancel-dep';
 export { depColor } from './dep-color';
 export { depRef } from './dep-ref';
 export { isLive } from './is-live';
-export { isWaiting } from './is-waiting';
-export { LONG_WAIT_MS } from './deps.constants';
 export type * from './deps.type';
