@@ -14,8 +14,7 @@ const ACCOUNT_TABS = [
   { id: TAB_SYNC, label: 'Manual sync' },
 ];
 
-const DRAG_TYPE = 'text/plain';
-const SLOT_EMPTY = 'Choose an account';
+const DRAG_TYPE = 'application/x-argus-account';
 const SLOT_CLEAR = 'Clear';
 const SLOT_FROM = 'From';
 const SLOT_TO = 'To';
@@ -23,21 +22,20 @@ const SLOT_LEFT = 'Left account';
 const SLOT_RIGHT = 'Right account';
 const STRIP_LABEL = 'Next switch';
 const WHEN_UNKNOWN = 'When is not known yet';
-const RUN_IDLE = 'No switch running';
 const PANE_LABEL = 'Account details';
 
 const STEP_ASKED = 'handover-asked';
 const STEP_DONE = 'handover-done';
 const STEP_SWITCHED = 'switched';
 const STEP_LABELS = { asked: 'Handover asked', done: 'Handover done', limit: 'Limit confirmed', switched: 'Switched' } as const;
-const STEP_OF_PHASE: Readonly<Record<NextRunPhase, string | undefined>> = {
-  idle: undefined,
+const STEP_OF_PHASE: Readonly<Record<NextRunPhase, string | null>> = {
+  idle: null,
   'handover-asked': STEP_ASKED,
   'handover-done': STEP_DONE,
   'limit-confirmed': STEP_DONE,
   switching: STEP_SWITCHED,
   switched: STEP_SWITCHED,
-  failed: undefined,
+  failed: null,
 };
 
 const DIRECTION_LTR = 'ltr';
@@ -54,6 +52,6 @@ const SYNC_GO_REVIEW = 'Review both';
 
 export {
   ACCOUNT_TABS, ACCOUNTS_PATH, DIRECTION_BOTH, DIRECTION_LABEL, DIRECTION_LTR, DIRECTION_OPTIONS, DRAG_TYPE, NEXT_CLEARED, NEXT_PATH,
-  NEXT_SAVED, NEXT_TICK_MS, PANE_LABEL, RUN_IDLE, SLOT_CLEAR, SLOT_EMPTY, SLOT_FROM, SLOT_LEFT, SLOT_RIGHT, SLOT_TO, STEP_ASKED, STEP_DONE, STEP_LABELS,
+  NEXT_SAVED, NEXT_TICK_MS, PANE_LABEL, SLOT_CLEAR, SLOT_FROM, SLOT_LEFT, SLOT_RIGHT, SLOT_TO, STEP_ASKED, STEP_DONE, STEP_LABELS,
   STEP_OF_PHASE, STEP_SWITCHED, STRIP_LABEL, SYNC_GO_COPY, SYNC_GO_REVIEW, TAB_SWITCH, TAB_SYNC, WHEN_UNKNOWN,
 };

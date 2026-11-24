@@ -1,10 +1,9 @@
 /* @layer renderer-app @kind component */
-import { Box, Card, DropdownMenu, Text } from '@drizztdourden08/tessera';
-import type { DragEvent } from 'react';
+import { Box, DropdownMenu, DropSlot } from '@drizztdourden08/tessera';
 import { useRef, useState } from 'react';
-import { DRAG_TYPE, SLOT_EMPTY } from '../next.constants';
+import { DRAG_TYPE, SLOT_CLEAR } from '../next.constants';
 import type { AccountSlotProps } from '../next.type';
-import { accountName, findAccount, slotGroups } from '../model';
+import { findAccount, slotGroups } from '../model';
 import { AccountName } from './AccountName';
 
 const AccountSlot = (props: AccountSlotProps) => {
@@ -16,21 +15,22 @@ const AccountSlot = (props: AccountSlotProps) => {
     setOpen(false);
     onPick(key);
   };
-  const drop = (event: DragEvent) => {
-    event.preventDefault();
-    const key = event.dataTransfer.getData(DRAG_TYPE);
+  const drop = (key: string) => {
     if (!disabled && findAccount(accounts, key)) onPick(key);
   };
   return (
     <Box ref={anchor}>
-      <Card
-        aria-label={`${label}: ${chosen ? accountName(accounts, chosen.id) : SLOT_EMPTY}`}
-        onActivate={disabled ? undefined : () => setOpen(true)}
-        onDragOver={(event) => event.preventDefault()}
+      <DropSlot
+        label={label}
+        accept={DRAG_TYPE}
+        clearLabel={SLOT_CLEAR}
+        disabled={disabled}
         onDrop={drop}
+        onClear={chosen ? onClear : undefined}
+        onPick={() => setOpen(true)}
       >
-        {chosen ? <AccountName account={chosen} /> : <Text tone="muted">{SLOT_EMPTY}</Text>}
-      </Card>
+        {chosen ? <AccountName account={chosen} /> : undefined}
+      </DropSlot>
       {open && <DropdownMenu groups={slotGroups(accounts, value, pick, onClear)} label={label} anchorRef={anchor} side="below" align="start" onClose={() => setOpen(false)} />}
     </Box>
   );
