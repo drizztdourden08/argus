@@ -1,15 +1,15 @@
 /* @layer renderer-app @kind logic */
 import type { RemoteSync } from '../../../../data/remote';
-import { formatAgo, toMillis } from '../../../../format';
+import { agoWords } from '../../../../format';
 import { syncTone } from '../../../../shell/SyncStamp/behavior/sync-tone';
-import { MS_PER_DAY } from '../boards.constants';
+import { WORDS } from '../boards-words.constants';
 import type { SyncWords } from './sync-words.type';
 
 const syncWords = (sync: RemoteSync | null, now: number): SyncWords => {
-  if (!sync) return { text: 'Never synced', tone: 'muted' };
-  if (syncTone(sync.at, now) !== 'danger') return { text: `Synced ${formatAgo(sync.at, now)} ago`, tone: 'muted' };
-  const days = Math.round((now - toMillis(sync.at)) / MS_PER_DAY);
-  return { text: `Sync due, ${days} ${days === 1 ? 'day' : 'days'}`, tone: 'danger' };
+  if (!sync) return { text: WORDS.neverSynced, tone: 'muted' };
+  const ago = agoWords(sync.at, now);
+  if (syncTone(sync.at, now) !== 'danger') return { text: WORDS.synced(ago), tone: 'muted' };
+  return { text: WORDS.syncDue(ago), tone: 'danger' };
 };
 
 export { syncWords };

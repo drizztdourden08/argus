@@ -1,5 +1,6 @@
 /* @layer renderer-app @kind barrel */
 export { agoText } from './ago-text';
+export { agoWords } from './ago-words';
 export { asNumber } from './as-number';
 export { clipText } from './clip-text';
 export { formatAgo } from './format-ago';

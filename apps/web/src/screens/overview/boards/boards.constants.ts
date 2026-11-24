@@ -14,8 +14,6 @@ const LEAD_WORDS: Readonly<Record<'running' | 'idle' | 'paused' | 'not started',
   'not started': { text: 'Not started', tone: 'neutral' },
 };
 
-const MS_PER_DAY = 86_400_000;
-
 const NEEDS_BOARD: readonly string[] = ['open', 'send', 'play', 'stop'];
 
-export { LEAD_WORDS, MS_PER_DAY, NEEDS_BOARD, SIGNAL_URGENCY };
+export { LEAD_WORDS, NEEDS_BOARD, SIGNAL_URGENCY };
