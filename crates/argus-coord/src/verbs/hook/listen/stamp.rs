@@ -20,6 +20,7 @@ const FRESH_MS: i64 = 120_000;
 /// The stamp file of a thread; characters a file name should not hold become `_`.
 pub fn file(home: &Path, project: &str, thread: &str) -> PathBuf {
     let mut name = String::new();
+    let thread = argus_core::lead::canonical(thread);
     for c in format!("listen-{project}-{thread}.json").chars() {
         if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') {
             name.push(c);

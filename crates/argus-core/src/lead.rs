@@ -19,7 +19,6 @@ pub fn canonical(id: &str) -> Cow<'_, str> {
     match id {
         LEGACY => Cow::Borrowed(LEAD),
         LEGACY_HOSTED => Cow::Borrowed(LEAD_HOSTED),
-        LEGACY_HOSTED => Cow::Borrowed(LEAD_HOSTED),
         other => Cow::Borrowed(other),
     }
 }
