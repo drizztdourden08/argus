@@ -591,6 +591,20 @@ fn blockers_are_ids_of_the_board_and_never_close_a_cycle() {
 }
 
 #[test]
+fn a_dependency_id_blocks_only_while_the_item_waits_on_it() {
+    let mut b = alpha();
+    let waits = |state: &str| json!([{"dep": "D-182", "project": "x", "item": "I-9", "state": state}]);
+    let ghost = edit(&mut b, &lead(), "I-2", json!({"blockedBy": ["D-182"]}));
+    assert!(refused(&ghost).contains("D-182 is not on this board"));
+    b["items"]["I-2"]["waitsOn"] = waits("done");
+    let closed = edit(&mut b, &lead(), "I-2", json!({"blockedBy": ["D-182"]}));
+    assert!(refused(&closed).contains("D-182 is not on this board"));
+    b["items"]["I-2"]["waitsOn"] = waits("open");
+    applied(&edit(&mut b, &lead(), "I-2", json!({"blockedBy": ["D-182"]})));
+    assert_eq!(b["items"]["I-2"]["blockedBy"], json!(["D-182"]));
+}
+
+#[test]
 fn images_are_listed_with_their_proof_and_a_rich_text_may_name_them() {
     let mut b = alpha();
     let digest = "a".repeat(64);

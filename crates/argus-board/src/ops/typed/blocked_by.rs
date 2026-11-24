@@ -54,6 +54,22 @@ fn reaches(board: &Board, from: &str, target: &str) -> bool {
     false
 }
 
+/// Whether the item waits on the cross-board dependency `link`, still unsettled, through its
+/// `waitsOn` mirror. A decision of the same id is looked up first by the caller.
+fn waits_on_dep(board: &Board, id: Option<&str>, link: &str) -> bool {
+    let mirrors = id
+        .and_then(|me| doc(board, "items", me))
+        .map(|item| &item["waitsOn"]);
+    let list: Vec<&Value> = match mirrors {
+        Some(Value::Array(list)) => list.iter().collect(),
+        Some(one @ Value::Object(_)) => vec![one],
+        _ => Vec::new(),
+    };
+    list.into_iter().any(|m| {
+        m["dep"] == link && matches!(m["state"].as_str(), Some("opening" | "open" | "blocked"))
+    })
+}
+
 fn one(board: &Board, id: Option<&str>, entry: &Value) -> Result<String, BoardError> {
     let link = js::trim(entry.as_str().unwrap_or_default()).to_owned();
     if id == Some(link.as_str()) {
@@ -62,7 +78,7 @@ fn one(board: &Board, id: Option<&str>, entry: &Value) -> Result<String, BoardEr
     let (coll, kind) = home(&link)?;
     let live = doc(board, coll, &link)
         .is_some_and(|d| !truthy(d, "deletedAt") && kind.is_none_or(|k| d["kind"] == k));
-    if !live {
+    if !live && !waits_on_dep(board, id, &link) {
         return Err(refuse(format!("{link} is not on this board.")));
     }
     if coll == "items" && id.is_some_and(|me| reaches(board, &link, me)) {
