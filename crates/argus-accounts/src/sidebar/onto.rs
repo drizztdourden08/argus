@@ -152,7 +152,13 @@ mod tests {
             .filter_map(|g| g["name"].as_str())
             .collect();
         assert!(names.contains(&"Work") && names.contains(&"Only here"));
-        assert_eq!(target["assignments"]["code:c1"], "g-new-1");
+        let work = target["groups"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|g| g["name"] == "Work")
+            .unwrap();
+        assert_eq!(target["assignments"]["code:c1"], work["id"]);
         assert_eq!(
             plan.keys.group_scopes["value"][A],
             before.group_scopes["value"][A]

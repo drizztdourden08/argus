@@ -12,7 +12,7 @@ fn as_owner(board: &mut Value, op: &Value) -> OpResult {
 }
 
 fn titled(board: &mut Value, len: usize) -> OpResult {
-    let op = json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "t".repeat(len)}});
+    let op = json!({"kind": "create", "target": {"c": "items"}, "set": {"title": "t".repeat(len), "thread": "ui", "type": "epic"}});
     as_owner(board, &op)
 }
 
