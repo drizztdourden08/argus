@@ -165,11 +165,11 @@ describe('K1 the board filters', { tags: ['critical'] }, () => {
 });
 
 describe('K1 the other groupings', { tags: ['critical'] }, () => {
-  it('makes a column per thread, an empty one for a listed thread, none for the coordinator or a placeholder', () => {
+  it('makes a column per thread, an empty one for a listed thread, none for the lead or a placeholder', () => {
     const threads = [
       threadRef('worker'),
       threadRef('idle'),
-      threadRef('lead', { role: 'coordinator' }),
+      threadRef('lead', { role: 'lead' }),
       threadRef('ghost', { placeholder: true }),
       threadRef('old', { status: 'archived' }),
     ];

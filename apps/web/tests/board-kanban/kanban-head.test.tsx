@@ -7,11 +7,11 @@ import { cardOf, cleanKanban, item, mountKanban, openSettings } from './kanban-h
 cleanKanban();
 
 const PIXEL = 'data:image/png;base64,iVBORw0KGgo=';
-const LEAD = 'Assigned to alpha lead (coordinator)';
+const LEAD = 'Assigned to alpha lead';
 
 const headOf = (id: string): HTMLElement => cardOf(id);
 
-const board = { items: [item('I-1', { assignee: 'owner' }), item('I-2', { assignee: 'coordinator' }), item('I-3', { assignee: 'lead:tessera' }), item('I-4', { assignee: 'builder' })] };
+const board = { items: [item('I-1', { assignee: 'owner' }), item('I-2', { assignee: 'lead' }), item('I-3', { assignee: 'lead:tessera' }), item('I-4', { assignee: 'builder' })] };
 
 describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
   it('draws every element at the one size of the owner avatar', async () => {
@@ -38,7 +38,7 @@ describe('I-83 the head row of a card', { tags: ['critical'] }, () => {
     expect(within(headOf('I-3')).queryByText('TE')).toBeNull();
     const lead = headOf('I-2');
     expect(lead.querySelector('[data-lead-mark]')).toBeNull();
-    expect(within(lead).getByRole('img', { name: 'Assigned to alpha lead (coordinator)' }).textContent).toBe('AL');
+    expect(within(lead).getByRole('img', { name: 'Assigned to alpha lead' }).textContent).toBe('AL');
   });
 
   it('keeps the initials of another thread', async () => {

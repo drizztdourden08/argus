@@ -5,7 +5,7 @@ const CATEGORY_COLORS: readonly TagCategoryColor[] = ['rose', 'orange', 'amber',
 
 const AGENT_PREFIX = 'agent:';
 
-const COORDINATOR = 'coordinator';
+const LEAD = 'lead';
 
 const LEAD_PREFIX = 'lead:';
 
@@ -13,4 +13,4 @@ const OWNER = 'owner';
 
 const OWNER_TITLE = 'You';
 
-export { AGENT_PREFIX, CATEGORY_COLORS, COORDINATOR, LEAD_PREFIX, OWNER, OWNER_TITLE };
+export { AGENT_PREFIX, CATEGORY_COLORS, LEAD, LEAD_PREFIX, OWNER, OWNER_TITLE };

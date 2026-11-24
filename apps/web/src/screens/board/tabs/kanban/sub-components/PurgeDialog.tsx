@@ -33,7 +33,7 @@ const PurgeDialog = (props: PurgeDialogProps) => {
       size="lg"
       variant="danger"
       title="Purge"
-      message="A purge removes records from the board and from this page for good. The dashboard first writes a restorable backup on this machine (the coordinator restores it with coord restore). The coordinator thread is never purged."
+      message="A purge removes records from the board and from this page for good. The dashboard first writes a restorable backup on this machine (the lead restores it with coord restore). The lead thread is never purged."
       confirmLabel="Purge"
       confirmDisabled={!ready}
       onConfirm={() => void send(draft, counts).then((ok) => ok && onClose())}

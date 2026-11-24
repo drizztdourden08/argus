@@ -1,7 +1,7 @@
 /* @layer renderer-app @kind test */
 const NOW = '2026-10-26T08:00:00.000Z';
 
-const base = { author: 'coordinator', thread: 'coordinator', status: 'open', createdAt: NOW };
+const base = { author: 'lead', thread: 'lead', status: 'open', createdAt: NOW };
 
 const decision = {
   ...base,
@@ -22,7 +22,7 @@ const notice = { ...base, id: 'N-1', kind: 'notice', text: 'Crash restored', lev
 
 const message = { ...base, id: 'M-1', kind: 'message', text: 'Owner resumed the thread' };
 
-const manualStep = { id: 'H-1', text: 'Restart the app', status: 'pending', thread: 'coordinator', item: 'I-4', createdAt: NOW };
+const manualStep = { id: 'H-1', text: 'Restart the app', status: 'pending', thread: 'lead', item: 'I-4', createdAt: NOW };
 
 const dismissal = (target: string, id = 'O-9') => ({
   id,

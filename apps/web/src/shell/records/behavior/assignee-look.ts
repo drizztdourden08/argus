@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind logic */
+import { isLeadRole } from '../../../data/content';
 import { OWNER_DEFAULTS } from '../../../owner';
 import { boardName } from '../../../data/boards';
 import { ITEM_REGISTRY } from '../../../data/registry';
 import { categoryColor } from './category-color';
-import { AGENT_PREFIX, COORDINATOR, LEAD_PREFIX, OWNER } from './look.constants';
+import { AGENT_PREFIX, LEAD, LEAD_PREFIX, OWNER } from './look.constants';
 import type { AgentName, AssigneeLook, LookExtras, Threads } from '../records.type';
 
 const leadLook = (key: string, tip: (name: string) => string): AssigneeLook => {
@@ -13,7 +14,7 @@ const leadLook = (key: string, tip: (name: string) => string): AssigneeLook => {
 };
 
 const isLead = (assignee: string, threads: Threads): boolean =>
-  assignee === COORDINATOR || threads.some((thread) => thread.id === assignee && thread.role === COORDINATOR);
+  assignee === LEAD || threads.some((thread) => thread.id === assignee && isLeadRole(thread.role));
 
 const trimmed = (value: string | null | undefined): string => value?.trim() ?? '';
 
@@ -34,7 +35,7 @@ const assigneeLook = (assignee: string, boardKey: string, threads: Threads, extr
   if (assignee === OWNER) return { label: owner.name, tip: 'Assigned to you', icon: 'user', owner: true };
   if (assignee.startsWith(AGENT_PREFIX)) return agentLook(assignee.slice(AGENT_PREFIX.length), agents);
   if (assignee.startsWith(LEAD_PREFIX)) return leadLook(assignee.slice(LEAD_PREFIX.length), (name) => `Assigned to the lead of ${name}`);
-  if (isLead(assignee, threads)) return leadLook(boardKey, (name) => `Assigned to ${name} lead (coordinator)`);
+  if (isLead(assignee, threads)) return leadLook(boardKey, (name) => `Assigned to ${name} lead`);
   const label = threadName(assignee, threads);
   return { label, tip: `Assigned to ${label}`, initials: label.slice(0, 2).toUpperCase(), owner: false };
 };

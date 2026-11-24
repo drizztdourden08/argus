@@ -3,9 +3,10 @@ import type { ThreadChoice } from '../../../../../data/kanban';
 import type { WithId } from '../../../../../data/react';
 import { nonEmpty } from '../../../shared';
 import type { FocusOption } from './model.type';
+import { isLeadRole } from '../../../../../data/content';
 
 const isFocusable = (thread: ThreadChoice): boolean =>
-  !thread.mergedInto && thread.status !== 'done' && thread.status !== 'archived' && thread.role !== 'coordinator';
+  !thread.mergedInto && thread.status !== 'done' && thread.status !== 'archived' && !isLeadRole(thread.role);
 
 const focusOptions = (threads: readonly WithId<ThreadChoice>[], paused: ReadonlySet<string>): FocusOption[] =>
   threads.filter(isFocusable).map((thread) => ({

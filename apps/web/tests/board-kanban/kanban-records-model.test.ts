@@ -31,7 +31,7 @@ describe('K1 the range of a shift-click', { tags: ['critical'] }, () => {
 });
 
 describe('K1 paused threads and the focus choices', { tags: ['critical'] }, () => {
-  const threads = [threadRef('a'), threadRef('b', { status: 'paused' }), threadRef('lead', { role: 'coordinator' }), threadRef('old', { status: 'done' })];
+  const threads = [threadRef('a'), threadRef('b', { status: 'paused' }), threadRef('lead', { role: 'lead' }), threadRef('old', { status: 'done' })];
 
   it('reads the board status and the pause the owner posted that is not applied yet', () => {
     const entries = [entryRef('O-1', { kind: 'pause', author: 'human', replyTo: 'a', status: 'new' }), entryRef('O-2', { kind: 'resume', author: 'human', replyTo: 'b', status: 'new', createdAt: before(0) })];
@@ -39,7 +39,7 @@ describe('K1 paused threads and the focus choices', { tags: ['critical'] }, () =
     expect([...pausedThreads(threads, [])]).toEqual(['b']);
   });
 
-  it('offers the live threads without the coordinator and says which are paused', () => {
+  it('offers the live threads without the lead and says which are paused', () => {
     const choices = focusChoices(threads, new Set(['b']));
     expect(choices.options.map((option) => option.label)).toEqual(['a', 'b (paused)']);
     expect(choices.pausedCount).toBe(1);
@@ -64,7 +64,7 @@ describe('K1 the record of an item', { tags: ['critical'] }, () => {
 
 describe('K3 what a purge removes', { tags: ['critical'] }, () => {
   const data: PurgeData = {
-    threads: [threadRef('a', { lastSeen: before(40 * DAY) }), threadRef('b', { lastSeen: before(DAY) }), threadRef('lead', { role: 'coordinator', lastSeen: before(90 * DAY) })],
+    threads: [threadRef('a', { lastSeen: before(40 * DAY) }), threadRef('b', { lastSeen: before(DAY) }), threadRef('lead', { role: 'lead', lastSeen: before(90 * DAY) })],
     items: [{ id: 'I-1', thread: 'a', ac: [{}, {}] }, { id: 'I-2', thread: 'b' }],
     tests: [{ id: 'T-1', item: 'I-1', thread: 'a' }],
     actions: [{ id: 'H-1', item: 'I-1', thread: 'a' }],
@@ -76,7 +76,7 @@ describe('K3 what a purge removes', { tags: ['critical'] }, () => {
     expect(purgeCounts({ threads: ['a'] }, data, NOW)).toEqual({ threads: 1, items: 1, ac: 2, tests: 1, entries: 2, actions: 1, logLines: 1 });
   });
 
-  it('keeps the checked threads, picks idle ones, and never takes the coordinator', () => {
+  it('keeps the checked threads, picks idle ones, and never takes the lead', () => {
     expect(purgeCounts({ keep: ['a'] }, data, NOW).threads).toBe(1);
     expect(purgeCounts({ idleDays: 30 }, data, NOW).threads).toBe(1);
     expect(purgeCounts({ status: ['done'] }, data, NOW).threads).toBe(0);

@@ -20,9 +20,9 @@ const launcherDoc = (name: string, extra: object = {}) => ({
   retiredAt: null,
   retiredBy: null,
   retireNote: null,
-  createdBy: 'coordinator',
+  createdBy: 'lead',
   updatedAt: ago(2 * MIN),
-  by: 'coordinator',
+  by: 'lead',
   ...extra,
 });
 

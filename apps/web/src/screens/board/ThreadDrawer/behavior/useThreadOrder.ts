@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import type { ProjectThread } from '../../../../data/agents';
 import { useCollection } from '../../../../data/react';
-import { COORDINATOR_ROLE } from '../ThreadDrawer.constants';
+import { isLeadRole } from '../../../../data/content';
 
 const useThreadOrder = (boardKey: string): string[] => {
   const threads = useCollection<ProjectThread>(boardKey, 'threads');
@@ -10,7 +10,7 @@ const useThreadOrder = (boardKey: string): string[] => {
     () =>
       threads.docs
         .filter((thread) => !thread.deletedAt && !thread.mergedInto && !thread.placeholder)
-        .sort((a, b) => Number(b.role === COORDINATOR_ROLE) - Number(a.role === COORDINATOR_ROLE) || a.id.localeCompare(b.id))
+        .sort((a, b) => Number(isLeadRole(b.role)) - Number(isLeadRole(a.role)) || a.id.localeCompare(b.id))
         .map((thread) => thread.id),
     [threads.docs],
   );

@@ -9,15 +9,15 @@ import { stubCss } from '../helpers/stub-css';
 
 stubCss();
 
-const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activity: 'idle', session: 'RotP', lastSeen: at(0) };
+const lead = { name: 'lead', role: 'lead', status: 'active', activity: 'idle', session: 'RotP', lastSeen: at(0) };
 
 const WAKES = {
-  'W-1': { thread: 'coordinator', reason: 'kanban-stale', text: 'I-4 sits in doing for 3 days', status: 'passive', listeners: 0, at: at(30) },
-  'W-2': { thread: 'coordinator', reason: 'test-fail', text: 'T-1 failed', status: 'delivered', listeners: 1, at: at(20) },
+  'W-1': { thread: 'lead', reason: 'kanban-stale', text: 'I-4 sits in doing for 3 days', status: 'passive', listeners: 0, at: at(30) },
+  'W-2': { thread: 'lead', reason: 'test-fail', text: 'T-1 failed', status: 'delivered', listeners: 1, at: at(20) },
   'W-3': { thread: 'ui', reason: 'worktree-review', text: '3 worktrees need a decision', status: 'passive', listeners: 0, at: at(10) },
 };
 
-const open = (wakes: Record<string, object>) => openRotp({ wakes, threads: { coordinator: lead } });
+const open = (wakes: Record<string, object>) => openRotp({ wakes, threads: { lead } });
 
 describe('K1 the board notices', { tags: ['critical'] }, () => {
   it('keeps only the passive rows, newest first', () => {

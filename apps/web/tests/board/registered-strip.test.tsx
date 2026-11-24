@@ -53,14 +53,14 @@ describe('S1 the Registered strip', { tags: ['standard'] }, () => {
     expect(sources[0]?.url).toContain('registry');
     act(() => seedBoard(sources[0], { registry: {} }));
     expect(screen.getByText('No thread is registered on this board yet.')).toBeTruthy();
-    act(() => changeBoard(sources[0], 'registry', 'lead', row({ thread: 'lead', role: 'coordinator' })));
+    act(() => changeBoard(sources[0], 'registry', 'lead', row({ thread: 'lead', role: 'lead' })));
     expect(within(screen.getByLabelText('Registered threads')).getByText('lead')).toBeTruthy();
   });
 
   it('has one chip per thread, worst state first', async () => {
     await seeded({
       registry: registry(
-        row({ thread: 'lead', role: 'coordinator' }),
+        row({ thread: 'lead', role: 'lead' }),
         waking('beta'),
         faulted('gamma', 'no-listener'),
         row({ thread: 'delta', state: 'idle' }),
@@ -78,7 +78,7 @@ describe('S1 the agents of the strip', { tags: ['standard'] }, () => {
   it('counts the agents working per thread, and the stalled ones apart', async () => {
     const agent = (id: string, over: object) => [id, { thread: 'lead', status: 'working', updatedAt: minutesAgo(1), ...over }] as const;
     await seeded({
-      registry: registry(row({ thread: 'lead', role: 'coordinator' })),
+      registry: registry(row({ thread: 'lead', role: 'lead' })),
       agents: Object.fromEntries([
         agent('A-1', {}),
         agent('A-2', { updatedAt: minutesAgo(120) }),

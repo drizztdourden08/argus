@@ -56,7 +56,7 @@ interface ThreadToolsProps {
 }
 
 interface ThreadState {
-  coordinator: boolean;
+  lead: boolean;
   archived: boolean;
   live: boolean;
 }

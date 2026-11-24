@@ -26,7 +26,7 @@ describe('P3 the attention group of a board', { tags: ['critical'] }, () => {
 
   it('puts a board with no card or board in Not started, and an archived one in Archived above all', () => {
     expect(attentionGroup(record('a', null))).toBe('not-started');
-    expect(attentionGroup(record('a', { state: 'not started', coordinator: undefined }))).toBe('not-started');
+    expect(attentionGroup(record('a', { state: 'not started', lead: undefined }))).toBe('not-started');
     expect(attentionGroup(record('a', { counts: { ...COUNTS, needsYou: 2 } }, { archivedAt: ARCHIVED }))).toBe('archived');
   });
 });

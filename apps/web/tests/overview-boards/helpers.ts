@@ -14,7 +14,7 @@ const cardAt = (key: string, now: number, extra: Partial<Card> = {}): Card => ({
   state: 'running',
   root: null,
   url: `/p/${key}/`,
-  coordinator: { session: 's', link: null, lastSeen: new Date(now - 60000).toISOString(), activity: 'idle', note: null },
+  lead: { session: 's', link: null, lastSeen: new Date(now - 60000).toISOString(), activity: 'idle', note: null },
   ...extra,
 });
 

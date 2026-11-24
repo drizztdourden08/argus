@@ -1,8 +1,9 @@
 /* @layer renderer-app @kind logic */
 import type { RegistryRow } from '../../../../data/types';
 import { STATE_RANK, UNKNOWN_RANK } from '../RegisteredStrip.constants';
+import { isLeadRole } from '../../../../data/content';
 
-const isLead = (row: RegistryRow): number => (row.role === 'coordinator' ? -1 : 0);
+const isLead = (row: RegistryRow): number => (isLeadRole(row.role) ? -1 : 0);
 
 const nameOf = (row: RegistryRow): string => row.session ?? row.thread;
 

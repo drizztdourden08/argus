@@ -3,12 +3,13 @@ import { Checkbox, Flex, NumberInput, Select } from '@drizztdourden08/tessera';
 import type { PurgeScopeFieldsProps } from '../trash-props.type';
 import { threadChoices } from '../../../shared';
 import { PURGE_STATUSES } from '../trash';
+import { isLeadRole } from '../../../../../data/content';
 
 const toggled = (list: readonly string[], value: string, on: boolean): string[] => (on ? [...list, value] : list.filter((entry) => entry !== value));
 
 const PurgeScopeFields = (props: PurgeScopeFieldsProps) => {
   const { draft, threads, patch } = props;
-  const owners = threadChoices(threads.filter((thread) => thread.role !== 'coordinator'));
+  const owners = threadChoices(threads.filter((thread) => !isLeadRole(thread.role)));
   if (draft.scope === 'thread') {
     return (
       <Select

@@ -39,7 +39,7 @@ describe('S2 routing', { tags: ['standard'] }, () => {
     act(() => {
       sources[0]?.emit('snapshot', snapshot('rotp', 'meta', { board: { project: 'rotp', name: 'Relic of the Past' } }));
       sources[0]?.emit('snapshot', snapshot('rotp', 'registry', {
-        lead: { id: 'lead', project: 'rotp', thread: 'lead', session: 'lead', role: 'coordinator', state: 'listening' },
+        lead: { id: 'lead', project: 'rotp', thread: 'lead', session: 'lead', role: 'lead', state: 'listening' },
       }));
     });
     expect(await screen.findByRole('heading', { name: 'Relic of the Past' })).toBeTruthy();

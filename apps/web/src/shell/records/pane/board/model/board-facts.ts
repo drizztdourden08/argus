@@ -8,7 +8,7 @@ const boardFacts = (data: BoardPaneData): BoardFact[] => {
   const { record, card, now } = data;
   return [
     { label: 'Lead', text: record.lead },
-    { label: 'Seen', text: ago(card?.coordinator?.lastSeen, now) },
+    { label: 'Seen', text: ago(card?.lead?.lastSeen, now) },
     { label: 'Root', text: card?.root ?? 'none' },
     { label: 'State', text: record.archived ? 'archived' : (card?.state ?? 'not started') },
     { label: 'Palette', text: record.palette ?? 'basic' },

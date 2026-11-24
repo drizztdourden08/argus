@@ -67,7 +67,7 @@ describe('I-85 P4 the answers', { tags: ['standard'] }, () => {
   it('leaves the answer box open for a question that has no quick answer', async () => {
     mockPosts();
     await openBoard({ entries: byId(freeText) });
-    expect(within(cardOf('Q-2')).getByRole('textbox', { name: 'Answer coordinator.' })).toBeTruthy();
+    expect(within(cardOf('Q-2')).getByRole('textbox', { name: 'Answer lead.' })).toBeTruthy();
     expect(within(cardOf('Q-2')).queryByRole('button', { name: 'Custom answer' })).toBeNull();
   });
 

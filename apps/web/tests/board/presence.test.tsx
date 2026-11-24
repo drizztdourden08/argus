@@ -16,14 +16,14 @@ const ofType = (sent: TabMessage[], type: TabMessage['type']) => sent.filter((me
 
 describe('S2 board presence', { tags: ['standard'] }, () => {
   it('sends presence for the thread in the URL', async () => {
-    const { sent } = renderAt('/p/rotp/?thread=coordinator');
+    const { sent } = renderAt('/p/rotp/?thread=lead');
     await waitFor(() => expect(ofType(sent, 'presence')).toHaveLength(1));
-    expect(ofType(sent, 'presence')[0]).toEqual({ type: 'presence', scope: 'rotp', thread: 'coordinator' });
+    expect(ofType(sent, 'presence')[0]).toEqual({ type: 'presence', scope: 'rotp', thread: 'lead' });
     expect(ofType(sent, 'unpresence')).toHaveLength(0);
   });
 
   it('sends unpresence when the page goes away', async () => {
-    const { sent, unmount } = renderAt('/p/rotp/?thread=coordinator');
+    const { sent, unmount } = renderAt('/p/rotp/?thread=lead');
     await waitFor(() => expect(ofType(sent, 'presence')).toHaveLength(1));
     unmount();
     expect(ofType(sent, 'unpresence')).toEqual([{ type: 'unpresence', scope: 'rotp' }]);

@@ -14,13 +14,13 @@ const liveItems = (props: ThreadMenuProps): MenuItem[] => {
 const archiveItems = (props: ThreadMenuProps): MenuItem[] => {
   const { thread, ops } = props;
   const state = threadState(thread);
-  if (state.coordinator && !state.archived) return [];
+  if (state.lead && !state.archived) return [];
   return [{ id: 'archive', label: state.archived ? 'Unarchive' : 'Archive', onSelect: () => ops.soft(state.archived ? 'unarchive' : 'archive', thread) }];
 };
 
 const purgeItems = (props: ThreadMenuProps): MenuItem[] => {
   const { thread, onPurge } = props;
-  return threadState(thread).coordinator ? [] : [{ id: 'purge', label: 'Purge...', tone: 'danger', onSelect: () => onPurge(thread.id) }];
+  return threadState(thread).lead ? [] : [{ id: 'purge', label: 'Purge...', tone: 'danger', onSelect: () => onPurge(thread.id) }];
 };
 
 const subjectItems = (props: ThreadMenuProps): MenuItem[] => {

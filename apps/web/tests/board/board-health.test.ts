@@ -8,7 +8,7 @@ const NOW = Date.parse('2026-11-22T12:00:00Z');
 const input = (over: Partial<HealthInput> & { status?: string; activity?: string }): HealthInput => {
   const { status = 'active', activity, ...rest } = over;
   return {
-    lead: { id: 'lead', name: 'lead', role: 'coordinator', status, activity },
+    lead: { id: 'lead', name: 'lead', role: 'lead', status, activity },
     faults: 0,
     offline: false,
     updatedAt: '2026-11-22T11:59:00Z',

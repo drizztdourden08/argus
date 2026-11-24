@@ -121,8 +121,8 @@ describe('K1 lists', { tags: ['critical'] }, () => {
     expect(runSpan(run('2026-01-01T00:00:00Z', '2026-01-01T00:00:09Z'))).toBe('9s');
   });
 
-  it('takes the live coordinator as the lead and ignores merged and deleted ones', () => {
-    const thread = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: id, role: 'coordinator', status: 'active', ...extra });
+  it('takes the live lead as the lead and ignores merged and deleted ones', () => {
+    const thread = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: id, role: 'lead', status: 'active', ...extra });
     expect(findLead([thread('old', { status: 'done' }), thread('now')])?.id).toBe('now');
     expect(findLead([thread('old', { status: 'done' })])?.id).toBe('old');
     expect(findLead([thread('gone', { deletedAt: 'x' }), thread('merged', { mergedInto: 'y' })])).toBeNull();

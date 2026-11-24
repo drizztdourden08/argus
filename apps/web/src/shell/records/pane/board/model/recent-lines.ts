@@ -3,15 +3,15 @@ import { formatAgo } from '../../../../../format';
 import { RECENT_MAX } from '../board.constants';
 import type { BoardPaneData } from '../board.type';
 
-const coordinatorLines = (card: BoardPaneData['card']): string[] => {
-  const coordinator = card?.coordinator;
-  return [coordinator?.activity ? `Lead is ${coordinator.activity}.` : '', coordinator?.note ?? ''];
+const leadLines = (card: BoardPaneData['card']): string[] => {
+  const lead = card?.lead;
+  return [lead?.activity ? `Lead is ${lead.activity}.` : '', lead?.note ?? ''];
 };
 
 const recentLines = (data: BoardPaneData): string[] => {
   const { card, now } = data;
   const lines = [
-    ...coordinatorLines(card),
+    ...leadLines(card),
     card?.master?.updatedAt ? `Master changed ${formatAgo(card.master.updatedAt, now)} ago.` : '',
     ...(card?.attention ?? []),
   ];

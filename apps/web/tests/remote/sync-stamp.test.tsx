@@ -97,9 +97,9 @@ describe('S2 the overview cards', { tags: ['standard'] }, () => {
   const seen = new Date(NOW).toISOString();
   const lead = { session: 'lead', link: null, lastSeen: seen, activity: 'idle', note: null };
   const cards = {
-    rotp: { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/', counts: COUNTS, updatedAt: seen, coordinator: lead },
-    beta: { key: 'beta', name: 'Beta', state: 'running', root: null, url: '/p/beta/', counts: COUNTS, updatedAt: seen, coordinator: lead },
-    gamma: { key: 'gamma', name: 'Gamma', state: 'running', root: null, url: '/p/gamma/', counts: COUNTS, updatedAt: seen, coordinator: lead },
+    rotp: { key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/', counts: COUNTS, updatedAt: seen, lead },
+    beta: { key: 'beta', name: 'Beta', state: 'running', root: null, url: '/p/beta/', counts: COUNTS, updatedAt: seen, lead },
+    gamma: { key: 'gamma', name: 'Gamma', state: 'running', root: null, url: '/p/gamma/', counts: COUNTS, updatedAt: seen, lead },
     delta: { key: 'delta', name: 'Delta', state: 'not started', root: null, url: '/p/delta/' },
   };
   const boards = Object.fromEntries(Object.keys(cards).map((key) => [`BD-${key}`, { key }]));

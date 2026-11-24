@@ -13,7 +13,7 @@ describe('S1 a message is dismissed or answered', { tags: ['standard'] }, () => 
     await openBoard({ entries: byId(message) });
     expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
     fireEvent.click(screen.getByText('Write a reply'));
-    fireEvent.change(textbox('Reply to coordinator.'), { target: { value: 'thanks' } });
+    fireEvent.change(textbox('Reply to lead.'), { target: { value: 'thanks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
     expect(sentPosts(fetchMock)[0]?.body).toMatchObject({ kind: 'followup', text: 'thanks', replyTo: 'M-1' });
@@ -31,9 +31,9 @@ describe('S1 a question with no context', { tags: ['standard'] }, () => {
     expect(sentPosts(fetchMock)[0]?.body).toMatchObject({
       kind: 'followup',
       text: 'Please add context: what is this about and why does it need me? (Q-3)',
-      thread: 'coordinator',
+      thread: 'lead',
     });
-    expect(await screen.findByText('Asked coordinator for context.')).toBeTruthy();
+    expect(await screen.findByText('Asked lead for context.')).toBeTruthy();
   });
 });
 

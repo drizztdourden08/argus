@@ -17,7 +17,7 @@ interface CardCounts {
   paused?: number;
 }
 
-interface CardCoordinator {
+interface CardLead {
   session: string | null;
   link: string | null;
   lastSeen: string | null;
@@ -54,7 +54,7 @@ interface Card {
   icon?: string;
   counts?: CardCounts;
   ownerItems?: OwnerItem[];
-  coordinator?: CardCoordinator | null;
+  lead?: CardLead | null;
   attention?: string[];
   master?: CardMaster | null;
   masterMissing?: boolean;

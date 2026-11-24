@@ -18,7 +18,7 @@ describe('I-168 readable assignee names', { tags: ['critical'] }, () => {
   });
 
   it('labels a lead with the board name and falls back to the key', () => {
-    expect(assigneeLook('coordinator', 'b5qa9b7', threads).label).toBe('b5qa9b7 lead');
+    expect(assigneeLook('lead', 'b5qa9b7', threads).label).toBe('b5qa9b7 lead');
     expect(assigneeLook('lead:brock', 'argus', threads).tip).toBe('Assigned to the lead of brock');
   });
 });

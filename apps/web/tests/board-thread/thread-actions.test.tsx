@@ -65,7 +65,7 @@ describe('S1 the end of a thread in the thread drawer', { tags: ['standard'] }, 
   });
 
   it('the lead has no Pause, Focus, Archive or Purge, only Copy id', async () => {
-    await mountBoard({ threads: docs(thread('lead', { role: 'coordinator' })), registry: docs(chip('lead', { role: 'coordinator' })) });
+    await mountBoard({ threads: docs(thread('lead', { role: 'lead' })), registry: docs(chip('lead', { role: 'lead' })) });
     const dialog = await openChip('lead');
     for (const name of ['Pause this thread', 'Focus']) expect(within(dialog).queryByRole('button', { name })).toBeNull();
     menu(dialog, 'lead');

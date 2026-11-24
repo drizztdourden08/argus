@@ -17,7 +17,7 @@ const prDoc = (id: string, extra: object = {}) => ({
   status: 'open' as PullRequest['status'],
   item: 'I-12',
   checks: [] as string[],
-  createdBy: 'coordinator',
+  createdBy: 'lead',
   createdAt: ago(5 * MIN),
   mergedAt: null,
   mergeCommit: null,

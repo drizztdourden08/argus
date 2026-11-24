@@ -29,7 +29,7 @@ describe('P3 the board record, a board doc joined to its card', { tags: ['critic
 
   it('is not started with no card or a not started card', () => {
     expect(record('a', null)).toMatchObject({ started: false, lead: 'not started' });
-    expect(record('a', { state: 'not started', coordinator: undefined })).toMatchObject({ started: false });
+    expect(record('a', { state: 'not started', lead: undefined })).toMatchObject({ started: false });
     expect(record('a').started).toBe(true);
   });
 

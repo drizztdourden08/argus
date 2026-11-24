@@ -11,13 +11,13 @@ stubCss();
 
 const NOW = minutesAgo(0);
 
-const lead = { name: 'coordinator', role: 'coordinator', status: 'active', activity: 'idle', session: 'RotP', lastSeen: NOW, link: 'chat://lead/1' };
+const lead = { name: 'lead', role: 'lead', status: 'active', activity: 'idle', session: 'RotP', lastSeen: NOW, link: 'chat://lead/1' };
 
 const open = async (at = '/p/rotp/', worktrees: object | null = null) => {
   const { sources } = renderAt(at);
   await waitForStream(sources);
   const meta = { board: { project: 'rotp', name: 'RotP', updatedAt: NOW }, ...(worktrees ? { worktrees } : {}) };
-  act(() => seedBoard(sources[0], { meta, threads: { coordinator: lead } }));
+  act(() => seedBoard(sources[0], { meta, threads: { lead } }));
   return sources;
 };
 

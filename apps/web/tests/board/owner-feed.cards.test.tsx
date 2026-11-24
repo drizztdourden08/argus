@@ -18,7 +18,7 @@ describe('S1 a decision card', { tags: ['standard'] }, () => {
       text: 'Yes, private',
       replyTo: 'Q-1',
       item: 'I-4',
-      thread: 'coordinator',
+      thread: 'lead',
       author: 'human',
       status: 'new',
     });
@@ -52,17 +52,17 @@ describe('S1 a question without options', { tags: ['standard'] }, () => {
   it('the answer is a followup that points at the question', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(freeText) });
-    fireEvent.change(textbox('Answer coordinator.'), { target: { value: 'Call it argus' } });
+    fireEvent.change(textbox('Answer lead.'), { target: { value: 'Call it argus' } });
     fireEvent.click(screen.getByRole('button', { name: 'Answer' }));
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
-    expect(sentPosts(fetchMock)[0]?.body).toMatchObject({ kind: 'followup', text: 'Call it argus', replyTo: 'Q-2', thread: 'coordinator' });
-    expect(await screen.findByText('Reply sent to coordinator.')).toBeTruthy();
+    expect(sentPosts(fetchMock)[0]?.body).toMatchObject({ kind: 'followup', text: 'Call it argus', replyTo: 'Q-2', thread: 'lead' });
+    expect(await screen.findByText('Reply sent to lead.')).toBeTruthy();
   });
 
   it('Ctrl+Enter sends the box, a plain Enter does not', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(freeText) });
-    const field = textbox('Answer coordinator.');
+    const field = textbox('Answer lead.');
     fireEvent.change(field, { target: { value: 'line one' } });
     fireEvent.keyDown(field, { key: 'Enter' });
     expect(sentPosts(fetchMock)).toHaveLength(0);
@@ -76,7 +76,7 @@ describe('K3 a question without options', { tags: ['standard'] }, () => {
   it('a long answer is posted whole: 20000 characters, no counter, no refusal', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(freeText) });
-    fireEvent.change(textbox('Answer coordinator.'), { target: { value: 'x'.repeat(20000) } });
+    fireEvent.change(textbox('Answer lead.'), { target: { value: 'x'.repeat(20000) } });
     expect(screen.queryByRole('alert')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Answer' }));
     await waitFor(() => expect(sentPosts(fetchMock)).toHaveLength(1));
@@ -96,7 +96,7 @@ describe('K4 a question without options', { tags: ['standard'] }, () => {
   it('over 50000 characters the box says so in a plain sentence and nothing is posted or cut', async () => {
     const fetchMock = mockPosts();
     await openBoard({ entries: byId(freeText) });
-    fireEvent.change(textbox('Answer coordinator.'), { target: { value: 'x'.repeat(50001) } });
+    fireEvent.change(textbox('Answer lead.'), { target: { value: 'x'.repeat(50001) } });
     const sentence = 'This text is 50001 characters and one post takes 50000 at most: shorten it or post it in two parts.';
     expect(screen.getAllByText(sentence)).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Answer' }));

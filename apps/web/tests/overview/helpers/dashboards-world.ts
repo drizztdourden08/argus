@@ -11,12 +11,12 @@ const cards = {
   rotp: {
     key: 'rotp', name: 'RotP', state: 'running', root: null, url: '/p/rotp/', counts: COUNTS, updatedAt: minutesAgo(1),
     attention: ['Q-3 needs a decision: ship it?', 'T-4 failing: login'],
-    coordinator: { session: 'lead', link: null, lastSeen: minutesAgo(1), activity: 'working', note: null },
+    lead: { session: 'lead', link: null, lastSeen: minutesAgo(1), activity: 'working', note: null },
     master: MASTER,
   },
   beta: {
     key: 'beta', name: 'Beta', state: 'running', root: null, url: '/p/beta/', counts: { ...COUNTS, needsYou: 0, testsFailing: 0, blocked: 0, agents: 0, working: 0, itemsOpen: 1, tests: 0, testsPass: 0 }, master: null, updatedAt: minutesAgo(1),
-    coordinator: { session: 'lead', link: null, lastSeen: minutesAgo(1), activity: 'idle', note: null },
+    lead: { session: 'lead', link: null, lastSeen: minutesAgo(1), activity: 'idle', note: null },
   },
   delta: { key: 'delta', name: 'Delta', state: 'not started', root: null, url: '/p/delta/' },
 };

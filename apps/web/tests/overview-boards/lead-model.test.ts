@@ -12,22 +12,22 @@ const card = (key: string, extra: Partial<Card> = {}): Card => cardAt(key, NOW, 
 
 describe('K1 the state of a lead, from its card', { tags: ['critical'] }, () => {
   it('is not started with no board', () => {
-    expect(leadState(card('a', { state: 'not started', coordinator: undefined }), NOW)).toBe('not started');
+    expect(leadState(card('a', { state: 'not started', lead: undefined }), NOW)).toBe('not started');
   });
 
-  it('is paused or idle with no live coordinator, by whether threads are paused', () => {
-    expect(leadState(card('a', { coordinator: null }), NOW)).toBe('idle');
-    expect(leadState(card('a', { coordinator: null, counts: { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0, paused: 2 } }), NOW)).toBe('paused');
+  it('is paused or idle with no live lead, by whether threads are paused', () => {
+    expect(leadState(card('a', { lead: null }), NOW)).toBe('idle');
+    expect(leadState(card('a', { lead: null, counts: { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0, paused: 2 } }), NOW)).toBe('paused');
   });
 
-  it('is stale when the coordinator was not seen for an hour', () => {
-    expect(leadState(card('a', { coordinator: { session: 's', link: null, lastSeen: minutesAgo(61), activity: 'working', note: null } }), NOW)).toBe('stale');
-    expect(leadState(card('a', { coordinator: { session: 's', link: null, lastSeen: minutesAgo(59), activity: 'idle', note: null } }), NOW)).toBe('idle');
+  it('is stale when the lead was not seen for an hour', () => {
+    expect(leadState(card('a', { lead: { session: 's', link: null, lastSeen: minutesAgo(61), activity: 'working', note: null } }), NOW)).toBe('stale');
+    expect(leadState(card('a', { lead: { session: 's', link: null, lastSeen: minutesAgo(59), activity: 'idle', note: null } }), NOW)).toBe('idle');
   });
 
-  it('is running when the coordinator works, or any thread or agent works, else idle', () => {
+  it('is running when the lead works, or any thread or agent works, else idle', () => {
     const base = { threads: 0, working: 0, blocked: 0, needsYou: 0, itemsOpen: 0, done: 0 };
-    expect(leadState(card('a', { coordinator: { session: 's', link: null, lastSeen: minutesAgo(1), activity: 'working', note: null } }), NOW)).toBe('running');
+    expect(leadState(card('a', { lead: { session: 's', link: null, lastSeen: minutesAgo(1), activity: 'working', note: null } }), NOW)).toBe('running');
     expect(leadState(card('a', { counts: { ...base, working: 1 } }), NOW)).toBe('running');
     expect(leadState(card('a', { counts: { ...base, agents: 2 } }), NOW)).toBe('running');
     expect(leadState(card('a', { counts: base }), NOW)).toBe('idle');

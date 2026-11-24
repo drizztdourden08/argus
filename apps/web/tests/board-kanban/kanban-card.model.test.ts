@@ -66,12 +66,12 @@ describe('I-72 the stage label of a card', { tags: ['critical'] }, () => {
 });
 
 describe('I-72 the assignee of a card', { tags: ['critical'] }, () => {
-  const threads = [threadRef('worker'), threadRef('lead', { role: 'coordinator' })];
+  const threads = [threadRef('worker'), threadRef('lead', { role: 'lead' })];
 
   it('looks like the owner with a ring, the lead of the board, another lead or a thread', () => {
     expect(assigneeLook('owner', 'argus', threads)).toMatchObject({ label: 'You', icon: 'user', owner: true });
-    expect(assigneeLook('lead', 'argus', threads)).toMatchObject({ initials: 'AR', color: 'blue', tip: 'Assigned to argus lead (coordinator)' });
-    expect(assigneeLook('coordinator', 'brock', [])).toMatchObject({ initials: 'BR', color: 'orange' });
+    expect(assigneeLook('lead', 'argus', threads)).toMatchObject({ initials: 'AR', color: 'blue', tip: 'Assigned to argus lead' });
+    expect(assigneeLook('lead', 'brock', [])).toMatchObject({ initials: 'BR', color: 'orange' });
     expect(assigneeLook('lead:tessera', 'argus', threads)).toMatchObject({ initials: 'TE', color: 'pink' });
     expect(assigneeLook('worker', 'argus', threads)).toMatchObject({ initials: 'WO', tip: 'Assigned to worker', owner: false });
   });
