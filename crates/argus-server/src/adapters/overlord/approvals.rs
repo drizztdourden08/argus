@@ -20,8 +20,8 @@ const TABLE: &str = "CREATE TABLE IF NOT EXISTS overlord_approvals (
 );";
 
 const TITLE: &str = "The Overlord needs an answer";
-/// The board of the Overlord and its coordinator thread.
-pub(crate) const BOARD: &str = "portfolio";
+/// The Overlord's coordinator thread, and the project key a toast of it carries (the user-facing alias).
+const TOAST_PROJECT: &str = "portfolio";
 pub(crate) const THREAD: &str = "coordinator";
 
 /// The rows over the shared database, as the `ApprovalStore` port.
@@ -94,7 +94,7 @@ impl OwnerToast for NotifyToast {
             title: Some(TITLE.to_owned()),
             text: text.to_owned(),
             level: Level::Urgent,
-            project: Some(BOARD.to_owned()),
+            project: Some(TOAST_PROJECT.to_owned()),
             thread: Some(THREAD.to_owned()),
             by: By::Overlord,
             url: Some(url.to_owned()),

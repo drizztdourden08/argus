@@ -293,7 +293,11 @@ fn live_observer(
     let handover = switching.then_some(file);
     Wakes {
         log: Arc::clone(&svc.log),
-        hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
+        hold: Attachment::new(
+            wake,
+            Arc::clone(&svc.overlord_approvals),
+            svc.paths.coord_home.clone(),
+        ),
         intro: Mutex::new(Some(live_intro(handover.as_deref()))),
         db: Arc::clone(&svc.db),
         unproven: AtomicBool::new(unproven),

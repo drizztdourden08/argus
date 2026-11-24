@@ -2,19 +2,24 @@
 //! messages another project's lead, with no thread of its own on the other board. The message
 //! is queued in the target lead's inbox; the dashboard is then told, best effort. A decision asks
 //! for action and wakes the lead (`lead-message`); a note is information only and stays a passive
-//! notice on its board (`lead-info`), handed over with its next prompt. A dashboard that is down
-//! never fails the verb.
+//! notice on its board (`lead-info`), handed over with its next prompt, except to the Overlord,
+//! whose notes always wake it. A dashboard that is down never fails the verb, but a wake that
+//! did not go out is said on stderr.
+// test-tag: critical
 
 mod deliver;
 
+use std::fmt::Display;
+
 use argus_board::limits::require_text;
 use argus_board::portfolio::project_keys;
+use argus_board::roles::is_overlord;
 use argus_board::store::{board_path, read_board};
-use argus_core::ids::PORTFOLIO;
 use argus_core::js;
 use serde_json::json;
 
 use super::support::link::connect;
+use super::support::overlord::board_id;
 use super::support::scope::coord_home;
 use super::support::text::is_key;
 use crate::cli::exit::{CoordError, Outcome};
@@ -50,7 +55,7 @@ fn no_board(target: &str) -> CoordError {
 /// The projects the Overlord's registry and the boards on disk know.
 fn known(call: &Call<'_>) -> Result<Vec<String>, CoordError> {
     let home = coord_home(call);
-    let registry = read_board(&home, PORTFOLIO)?.unwrap_or_else(|| json!({}));
+    let registry = read_board(&home, &board_id(&home))?.unwrap_or_else(|| json!({}));
     Ok(project_keys(
         &home,
         &json!({ "projects": registry["projects"] }),
@@ -85,24 +90,38 @@ fn check_target(call: &Call<'_>, from: &str, target: &str) -> Result<(), CoordEr
     Ok(())
 }
 
-/// The wake reason of a message kind: only a decision asks the other lead for action.
-fn reason_of(kind: &str) -> &'static str {
-    if kind == "decision" {
+/// The wake reason of a message kind: a decision asks the other lead for action, and so does any
+/// message to the Overlord, which has no other way to hear of it.
+fn reason_of(kind: &str, to_overlord: bool) -> &'static str {
+    if kind == "decision" || to_overlord {
         "lead-message"
     } else {
         "lead-info"
     }
 }
 
-/// The nudge: the target lead is told (a wake for a decision, a notice for a note). Nothing
-/// here ever fails the verb.
-fn wake(call: &Call<'_>, key: &str, thread: &str, note: &Note<'_>) {
-    let Ok(client) = connect(call, false) else {
-        return;
-    };
+/// The stderr line for a wake that did not go out, naming what failed.
+fn failure_line(key: &str, step: &str, error: &dyn Display) -> String {
+    format!("coord: the wake for {key} was not sent ({step}: {error}); the message is queued.")
+}
+
+/// The nudge: the target lead is told (a wake for a decision or for the Overlord, a notice for a
+/// note). A failure never fails the verb, but it is said on stderr.
+fn wake(call: &mut Call<'_>, key: &str, thread: &str, note: &Note<'_>) {
+    let to_overlord = is_overlord(&coord_home(call), key);
     let line = format!("{} lead: {}", note.from, js::slice(note.text, WAKE_CLIP));
-    let body = json!({ "thread": thread, "reason": reason_of(note.kind), "text": line });
-    client.post(&format!("/api/p/{key}/wakes"), &body).ok();
+    let reason = reason_of(note.kind, to_overlord);
+    let body = json!({ "thread": thread, "reason": reason, "text": line });
+    let failed = match connect(call, false) {
+        Err(e) => Some(failure_line(key, "the dashboard is not reachable", &e)),
+        Ok(client) => client
+            .post(&format!("/api/p/{key}/wakes"), &body)
+            .err()
+            .map(|e| failure_line(key, "the wake request failed", &e)),
+    };
+    if let Some(text) = failed {
+        call.inv.warn(&text);
+    }
 }
 
 /// `coord lead <project-key> "<text>"`.
@@ -138,4 +157,29 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
         shown(&home, &target)
     )]);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_note_to_the_overlord_wakes_it() {
+        assert_eq!(reason_of("followup", true), "lead-message");
+        assert_eq!(reason_of("followup", false), "lead-info");
+        assert_eq!(reason_of("decision", false), "lead-message");
+    }
+
+    #[test]
+    fn portfolio_is_the_overlord_board_in_a_home_without_a_table() {
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(board_id(dir.path()), "portfolio");
+    }
+
+    #[test]
+    fn a_failed_wake_is_named_in_the_warning() {
+        let line = failure_line("bja1s18", "the wake request failed", &"timed out");
+        assert!(line.contains("bja1s18"));
+        assert!(line.contains("the wake request failed: timed out"));
+    }
 }

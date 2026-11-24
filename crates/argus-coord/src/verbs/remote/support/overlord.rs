@@ -3,6 +3,8 @@
 //! `boards.json`, an id or an alias; `portfolio` only in a home without the table). The dashboard
 //! checks it again.
 
+use std::path::Path;
+
 use argus_board::roles::{id_of, is_overlord};
 use argus_core::boards::Role;
 
@@ -21,6 +23,12 @@ fn refusal(main: &str, what: &str, who: &str, advice: &str) -> CoordError {
     ))
 }
 
+/// The key of the Overlord's board: the board that holds the role, else its old key.
+#[must_use]
+pub fn board_id(home: &Path) -> String {
+    id_of(home, Role::Overlord).unwrap_or_else(|| LEGACY.to_owned())
+}
+
 /// The actor id of the Overlord making this call.
 ///
 /// # Errors
@@ -29,7 +37,7 @@ fn refusal(main: &str, what: &str, who: &str, advice: &str) -> CoordError {
 pub fn actor(call: &Call<'_>, what: &str, advice: &str) -> Result<String, CoordError> {
     let env = &call.inv.env;
     let home = coord_home(call);
-    let main = id_of(&home, Role::Overlord).unwrap_or_else(|| LEGACY.to_owned());
+    let main = board_id(&home);
     let own = find_project(env, &call.inv.cwd, &call.options, env.session_id()).ok();
     match own.as_deref() {
         Some(project) if project == main || is_overlord(&home, project) => {}

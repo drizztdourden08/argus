@@ -8,8 +8,9 @@ use argus_overlord::view::{held_rows, notice_rows, stall_row, wake_row};
 use argus_wake::service::driver::lock;
 use serde_json::{Value, json};
 
-use super::approvals::{BOARD, THREAD};
+use super::approvals::THREAD;
 use crate::Services;
+use crate::services::overlord::board_id::overlord_board_id;
 
 /// How many approvals the gate is asked for; the pending ones are filtered out of them.
 const APPROVALS_READ: usize = 100;
@@ -18,10 +19,11 @@ fn wakes(svc: &Services) -> Vec<Value> {
     let Some(wake) = &svc.wake else {
         return Vec::new();
     };
+    let board = overlord_board_id(&svc.paths.coord_home);
     let pending = lock(wake).registry().pending();
     pending
         .iter()
-        .filter(|(scope, thread, _)| scope == BOARD && thread == THREAD)
+        .filter(|(scope, thread, _)| *scope == board && thread == THREAD)
         .map(|(_, _, p)| wake_row(p.reason.as_deref(), p.text.as_deref(), &p.at))
         .collect()
 }
@@ -54,10 +56,11 @@ fn stalls(svc: &Services) -> Vec<Value> {
 }
 
 fn notices(svc: &Services) -> Vec<Value> {
+    let id = overlord_board_id(&svc.paths.coord_home);
     let board = svc
         .boards()
-        .board(BOARD)
-        .or_else(|| read_board(&svc.paths.coord_home, BOARD).ok().flatten());
+        .board(&id)
+        .or_else(|| read_board(&svc.paths.coord_home, &id).ok().flatten());
     board.map(|b| notice_rows(&b)).unwrap_or_default()
 }
 

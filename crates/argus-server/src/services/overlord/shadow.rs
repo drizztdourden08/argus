@@ -130,7 +130,11 @@ impl Shadow {
             log: Arc::clone(&svc.log),
             file: ShadowLog::new(&svc.paths.home),
             turn: Arc::default(),
-            hold: Attachment::new(wake, Arc::clone(&svc.overlord_approvals)),
+            hold: Attachment::new(
+                wake,
+                Arc::clone(&svc.overlord_approvals),
+                svc.paths.coord_home.clone(),
+            ),
         }
     }
 
