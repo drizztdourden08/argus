@@ -13,6 +13,7 @@ const WorktreeCard = (props: WorktreeCardProps) => {
       clamp={1}
       time={time}
       compact={compact}
+      chevronOnIcon
       openLabel={`Open ${label}`}
       onOpen={onOpen}
       attrs={{ 'data-record': label }}

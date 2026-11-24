@@ -26,6 +26,7 @@ const PrCard = (props: PrCardProps) => {
       title={pr.title}
       time={pr.mergedAt ?? pr.createdAt ?? null}
       compact={compact}
+      chevronOnIcon
       openLabel={`Open ${pr.id}: ${pr.title}`}
       onOpen={open}
       edge="border"

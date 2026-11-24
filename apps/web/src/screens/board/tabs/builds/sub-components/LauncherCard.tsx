@@ -24,6 +24,7 @@ const LauncherCard = (props: LauncherCardProps) => {
         label={`Build ${head.code}: ${title}`}
         time={launcher.retiredAt ?? launcher.updatedAt ?? null}
         compact={compact}
+        chevronOnIcon
         edge="border"
         edgeTone={launcher.current ? 'success' : undefined}
         attrs={{ 'data-swap-item': '', 'data-launcher': launcher.name }}
