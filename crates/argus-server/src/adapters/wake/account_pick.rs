@@ -93,7 +93,11 @@ pub fn pick<'a>(accounts: &'a [Account], owner: &'a Account, uses: &[Use]) -> Ch
     let best = accounts
         .iter()
         .filter(|a| a.key != owner.key)
-        .filter_map(|a| of(&a.key).filter(|u| !u.full()).map(|u| (a, u.load()?)))
+        .filter_map(|a| {
+            of(&a.key)
+                .filter(|u| !u.full())
+                .and_then(|u| u.load().map(|l| (a, l)))
+        })
         .min_by(|(_, x), (_, y)| x.total_cmp(y));
     match best {
         Some((account, _)) => Chosen {
