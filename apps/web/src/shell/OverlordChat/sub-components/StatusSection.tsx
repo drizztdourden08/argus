@@ -22,7 +22,8 @@ const StatusSection = (props: StatusSectionProps) => {
       {status.problem && <KeyButton note={status.problem} />}
     </Flex>
   );
-  const row = { id: 'status', title: 'State', description: facts || undefined, input: { kind: 'custom' as const, control } };
+  const text = facts ? { description: facts } : { noDescription: true as const };
+  const row = { id: 'status', title: 'State', ...text, input: { kind: 'custom' as const, control } };
   return (
     <Stack gap="sm">
       <SettingsSection title="Status" rows={[row]} />
