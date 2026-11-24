@@ -135,3 +135,10 @@ describe('K3 Prune now', { tags: ['standard'] }, () => {
     expect(screen.getByText('Nothing is past its grace period, so there is nothing to delete.')).toBeTruthy();
   });
 });
+
+describe('K1 the Packages tab download cache', { tags: ['critical'] }, () => {
+  it('opens from the old cache hash and says what the sub-tab is', async () => {
+    await open();
+    expect(screen.getByText('Package and Electron versions downloaded to this machine, and what can be freed.')).toBeTruthy();
+  });
+});

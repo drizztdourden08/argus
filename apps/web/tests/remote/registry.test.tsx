@@ -63,3 +63,11 @@ describe('S1 the overview Registry tab', { tags: ['standard'] }, () => {
     expect(await screen.findByText(/The local registry could not be read/)).toBeTruthy();
   });
 });
+
+describe('K1 the Packages tab local builds', { tags: ['critical'] }, () => {
+  it('opens from the old registry hash on the local builds and says what they are', async () => {
+    open(REPORT);
+    expect(await screen.findByText('Packages built from your own repos and the projects that use them.')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Download cache' })).toBeTruthy();
+  });
+});
