@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn no_doc_is_idle() {
         assert_eq!(
-            run_shown(None, false),
+            run_shown(None, false, SOON),
             json!({ "phase": "idle", "atMs": null })
         );
         assert_eq!(phase(&doc("cancelled", &[]), false), "idle");
