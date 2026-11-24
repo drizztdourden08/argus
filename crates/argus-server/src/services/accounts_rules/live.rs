@@ -4,12 +4,8 @@
 
 use std::sync::Arc;
 
-use argus_accounts::LoginVault;
-use argus_accounts::desktop::FsVault;
 use argus_accounts::handover::{Cycle, CycleMode, CyclePhase, DeskError, Outcome, StartRequest};
-use argus_accounts::rules::{CycleView, Estimates, LeadKey, View};
-use argus_accounts::{Account, AccountsConfig, PollResult, Severity, binding_limit, find_app_data};
-use argus_core::clock::parse_ms;
+use argus_accounts::rules::{CycleView, Estimates, LeadKey};
 use argus_notify::{By, Level, PingRequest};
 use async_trait::async_trait;
 use serde_json::{Value, json};
@@ -17,10 +13,10 @@ use serde_json::{Value, json};
 use super::{Snapshot, World};
 use crate::Services;
 use crate::services::AccountsService;
-use crate::services::accounts::last_known_account;
 use crate::services::accounts_estimates::{LeadRef, estimate_state};
 use crate::services::accounts_handover::Handovers;
-use crate::services::accounts_switch::{Origin, is_running, logins_root, shown_switch, switch_to};
+use crate::services::accounts_next::{active_key, settle_plan, views};
+use crate::services::accounts_switch::{Origin, is_running, shown_switch, switch_to};
 use crate::services::accounts_switch_log::Line;
 
 /// How long the read of the usage at the end of a countdown may take before the rules go on.
@@ -30,22 +26,6 @@ const REFRESH_LIMIT: std::time::Duration = std::time::Duration::from_secs(30);
 pub(super) struct Live {
     svc: Arc<Services>,
     accounts: Arc<AccountsService>,
-}
-
-fn view_of(account: &Account, polled: Option<&PollResult>, has_login: bool) -> View {
-    let limit = polled.and_then(|p| binding_limit(&p.usage));
-    View {
-        key: account.key.clone(),
-        label: account.label.clone(),
-        // A rule may only switch to an account whose Desktop login is saved.
-        can_receive: account.can_receive && has_login,
-        rules: account.rules.clone(),
-        percent: limit.map(|l| l.percent),
-        critical: limit.is_some_and(|l| l.severity == Severity::Critical),
-        resets_at_ms: limit
-            .and_then(|l| l.resets_at.as_deref())
-            .and_then(parse_ms),
-    }
 }
 
 fn lead_key(lead: LeadRef) -> LeadKey {
@@ -67,16 +47,6 @@ fn cycle_view(cycle: Option<&Cycle>, active: Option<&str>) -> CycleView {
         (CyclePhase::Estimating | CyclePhase::Asked, false) => CycleView::Foreign,
         _ => CycleView::None,
     }
-}
-
-fn active_key(config: &AccountsConfig) -> Option<String> {
-    let app = find_app_data(config.app_data.as_deref())?;
-    let uuid = last_known_account(&app)?;
-    config
-        .accounts
-        .iter()
-        .find(|a| a.desktop_account.as_deref() == Some(uuid.as_str()))
-        .map(|a| a.key.clone())
 }
 
 impl Live {
@@ -115,15 +85,10 @@ impl Live {
 
     fn read(&self) -> Snapshot {
         let config = self.accounts.config();
-        let latest = self.accounts.latest_usage();
-        let app = find_app_data(config.app_data.as_deref()).unwrap_or_default();
-        let vault = FsVault::new(&app, &logins_root(&self.svc));
-        let accounts = config
-            .accounts
-            .iter()
-            .map(|a| view_of(a, latest.get(&a.key), vault.saved_at(a).is_some()))
-            .collect();
+        let accounts = views(&self.svc, &self.accounts);
         let active = active_key(&config);
+        settle_plan(&self.svc, &self.accounts, active.as_deref());
+        let plan = self.accounts.config().next_plan;
         let estimates = active
             .as_deref()
             .and_then(|key| estimate_state(&self.accounts, key))
@@ -139,6 +104,7 @@ impl Live {
             estimates,
             cycle: cycle_view(cycle.as_ref(), active.as_deref()),
             cycle_id: cycle.map(|c| c.id),
+            plan,
             active,
         }
     }
@@ -157,6 +123,7 @@ impl World for Live {
             estimates: None,
             cycle: CycleView::None,
             cycle_id: None,
+            plan: None,
         })
     }
 

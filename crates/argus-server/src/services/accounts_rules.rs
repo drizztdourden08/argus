@@ -14,6 +14,7 @@ use std::time::Duration;
 
 use argus_accounts::PollResult;
 use argus_accounts::handover::{CycleEvent, CycleMode};
+use argus_accounts::next::NextPlan;
 use argus_accounts::rules::{
     Countdown, CountdownReason, CycleView, Decision, Estimates, Facts, GRACE_MS, HoldOff, LeadKey,
     StandDownReason, View, Window, decide,
@@ -47,6 +48,8 @@ pub(crate) struct Snapshot {
     pub cycle: CycleView,
     /// The id of the last cycle, whatever it is for.
     pub cycle_id: Option<String>,
+    /// The switch the owner planned.
+    pub plan: Option<NextPlan>,
 }
 
 /// The outside world of the rules.
@@ -211,6 +214,7 @@ impl RulesDesk {
             hold_offs: &state.hold_offs,
             countdown: state.countdown.as_ref().map(|r| &r.countdown),
             told: state.told.as_ref(),
+            plan: snapshot.plan.as_ref(),
             now_ms: self.clock.now_ms(),
         })
     }

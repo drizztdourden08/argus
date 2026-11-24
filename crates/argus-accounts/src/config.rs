@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::next::NextPlan;
 use crate::types::Account;
 
 /// Where an archived chat is kept when the accounts disagree.
@@ -80,6 +81,8 @@ pub struct AccountsConfig {
     /// End Claude Desktop by PID when it stays in the tray after a polite close. Off by default:
     /// Desktop may lose its last few seconds of unsaved sidebar changes.
     pub force_quit: bool,
+    /// The switch the owner planned; `None` leaves the pick to the auto-switch.
+    pub next_plan: Option<NextPlan>,
     /// The known accounts; empty until discovery fills it.
     pub accounts: Vec<Account>,
 }
@@ -100,6 +103,7 @@ impl Default for AccountsConfig {
             k: 1.0,
             verified_app_version: None,
             force_quit: false,
+            next_plan: None,
             accounts: Vec::new(),
         }
     }

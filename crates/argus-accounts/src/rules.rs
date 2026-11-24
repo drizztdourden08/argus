@@ -17,6 +17,7 @@
 //! ```
 
 use crate::handover::CycleMode;
+use crate::next::{self, NextPlan};
 use crate::types::{AccountKey, HandoverMode, Rules};
 
 /// The grace between the decision to switch and the switch.
@@ -164,6 +165,8 @@ pub struct Facts<'a> {
     pub countdown: Option<&'a Countdown>,
     /// The window of the last no-target notice.
     pub told: Option<&'a Window>,
+    /// The switch the owner planned.
+    pub plan: Option<&'a NextPlan>,
     /// Now, epoch milliseconds.
     pub now_ms: i64,
 }
@@ -315,7 +318,7 @@ fn for_active(facts: &Facts<'_>) -> Vec<Decision> {
     if !me.rules.auto_switch || held(facts, &me.key) {
         return Vec::new();
     }
-    let target = pick_target(facts.accounts, &me.key);
+    let target = next::target(facts.accounts, &me.key, facts.plan);
     let ready = facts.cycle == CycleView::Ready;
     if me.over() || ready {
         return at_point(facts, me, target, ready);
@@ -536,6 +539,7 @@ mod tests {
             hold_offs: &s.hold_offs,
             countdown: s.countdown.as_ref(),
             told: s.told.as_ref(),
+            plan: None,
             now_ms: s.now_ms,
         })
     }

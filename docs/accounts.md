@@ -254,7 +254,8 @@ The accounts feature is read-only in a preview and in shadow mode. A sync that a
 
 | Method | Path | Does |
 |---|---|---|
-| GET | `/api/accounts` | The accounts and the settings without them. |
+| GET | `/api/accounts` | The accounts (each with `limit` `{confirmed, atMs, untilMs}`, true only after a real 429 the wake relay saw for it, until its window resets), the settings without them, `next` `{from, to, source, when}` and `run` `{phase, atMs}`. |
+| POST | `/api/accounts/next` | `{from, to}` plans the next switch, `{clear: true}` drops it. The auto-switch uses the planned `to` when it has room and the current account is `from`. |
 | POST | `/api/accounts/usage/refresh` | Poll now. |
 | GET | `/api/accounts/compare` | The ordered rows of folders and chats of every account, with a status per cell. |
 | POST | `/api/accounts/sync` | `{dryRun}` (default true). Plan or apply. 409 while a run is active. |

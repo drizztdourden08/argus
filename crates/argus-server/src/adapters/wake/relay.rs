@@ -17,7 +17,7 @@ use argus_wake::relay::{RelayPort, ThreadKey, Ward};
 use super::account_pick::Use;
 use super::backoff::{Backoff, clock_text};
 use super::headless::{resume, session_running};
-use super::login::Login;
+use super::login::Signed;
 use super::outcome::Outcome;
 use super::relay_archived::ArchivedGate;
 use super::relay_outcome::SignInGate;
@@ -53,6 +53,8 @@ pub struct RelayHost {
     pub usage: Box<dyn Fn() -> Vec<Use> + Send + Sync>,
     /// How long a lead whose resume failed is left alone.
     pub backoff: Backoff,
+    /// Notes that the account with this key was refused with a rate limit.
+    pub refused: Box<dyn Fn(&str) + Send + Sync>,
 }
 
 /// The relay port over the boards, the desktop's session records and the CLI.
@@ -135,8 +137,8 @@ impl RelayHost {
             let text = "not resumed: the session is running, the relay note follows".to_owned();
             return self.log_wake(target, text);
         }
-        let login = self.headless_login(&app, session, target);
-        self.start_resume(&exe, Path::new(&cwd), &id, login.as_ref(), target);
+        let signed = self.headless_login(&app, session, target);
+        self.start_resume(&exe, Path::new(&cwd), &id, signed.as_ref(), target);
     }
 
     fn start_resume(
@@ -144,19 +146,21 @@ impl RelayHost {
         exe: &Path,
         cwd: &Path,
         id: &str,
-        login: Option<&Login>,
+        signed: Option<&Signed>,
         target: &Ward,
     ) {
         let (host, ward) = (Arc::clone(self), target.clone());
         let text = wake_text(&target.key.thread);
         let since = now_iso();
         let when = since.clone();
+        let account = signed.map(|s| s.account.clone());
+        let login = signed.map(|s| &s.login);
         let started = resume(exe, cwd, id, &text, login, move |out| {
-            host.on_outcome(&ward, &out, &when);
+            host.on_outcome(&ward, &out, (&when, account.as_deref()));
         });
         if let Err(error) = started {
             let reason = format!("not started: {}", error.kind());
-            self.on_outcome(target, &Outcome::Failed(reason), &since);
+            self.on_outcome(target, &Outcome::Failed(reason), (&since, None));
         }
     }
 

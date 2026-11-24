@@ -162,6 +162,7 @@ fn snapshot(a: f64, b: f64, handover: HandoverMode) -> Snapshot {
         estimates: None,
         cycle: CycleView::None,
         cycle_id: None,
+        plan: None,
     }
 }
 

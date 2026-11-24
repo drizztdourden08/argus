@@ -20,6 +20,7 @@ pub(crate) fn wire(svc: &Services) {
     };
     let app_of = Arc::clone(&accounts);
     let list_of = Arc::clone(&accounts);
+    let refused_of = Arc::clone(&accounts);
     let db = Arc::clone(&svc.db);
     let creds: Arc<dyn Credentials> = Arc::new(CliCredentials::new(find_app_data(
         accounts.config().app_data.as_deref(),
@@ -37,6 +38,7 @@ pub(crate) fn wire(svc: &Services) {
         creds,
         usage: Box::new(move || uses_now(&db)),
         backoff: Backoff::default(),
+        refused: Box::new(move |key| refused_of.record_refusal(key)),
     };
     lock(wake).set_relay_port(Arc::new(ServerRelay::new(host)));
 }

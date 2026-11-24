@@ -13,6 +13,7 @@ pub mod config;
 pub mod credentials;
 pub mod desktop;
 pub mod handover;
+pub mod next;
 pub mod ports;
 pub mod registry;
 pub mod resume;

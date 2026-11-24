@@ -2,6 +2,11 @@
 //!
 //! - `GET /api/accounts` is `{accounts, config, appVersion}`: the known accounts, the settings
 //!   without them and the installed Claude version (null when unreadable)
+//!   and each account gains `limit` `{confirmed, atMs, untilMs}` (true only after a real refusal),
+//!   the answer gains `next` `{from, to, source, when}` (the owner's plan, else the auto pick) and
+//!   `run` `{phase, atMs}` (where the current switch stands)
+//! - `POST /api/accounts/next {from, to}` plans the next switch, `{clear: true}` drops the plan;
+//!   it answers `{next}` and refuses with a plain sentence
 //! - `POST /api/accounts/usage/refresh` reads every account's usage now and answers
 //!   `{results}` with one entry per account
 //! - `GET /api/accounts/settings` is the whole settings object, accounts included
@@ -24,6 +29,7 @@ use crate::reply::json_reply;
 use crate::router::Reply;
 use crate::services::AccountsService;
 use crate::services::accounts::save;
+use crate::services::accounts_shown::{plan_of, shown_of};
 use crate::services::accounts_switch::app_version;
 use crate::services::accounts_sync::SYNC_BUSY;
 use crate::{Ctx, RouteOpts, Router};
@@ -63,7 +69,14 @@ async fn listing(ctx: Ctx) -> Reply {
         .await
         .ok()
         .flatten();
-    let body = json!({ "accounts": config.accounts, "config": view, "appVersion": version });
+    let svc = Arc::clone(&ctx.svc);
+    let shown = tokio::task::spawn_blocking(move || shown_of(&svc, &accounts))
+        .await
+        .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))?;
+    let body = json!({
+        "accounts": shown.accounts, "config": view, "appVersion": version,
+        "next": shown.next, "run": shown.run,
+    });
     Ok(json_reply(200, &body))
 }
 
@@ -161,6 +174,22 @@ fn copy_ends(
     Ok(Some((find(from)?, find(to)?)))
 }
 
+async fn next(ctx: Ctx) -> Reply {
+    if !ctx.svc.board_writes {
+        return Err(ApiError::new(
+            ErrorCode::ReadOnly,
+            "shadow mode: Argus does not write the accounts settings",
+        ));
+    }
+    let accounts = service(&ctx)?;
+    let body: Value = ctx.json().await?;
+    let svc = Arc::clone(&ctx.svc);
+    let planned = tokio::task::spawn_blocking(move || plan_of(&svc, &accounts, &body))
+        .await
+        .map_err(|e| ApiError::new(ErrorCode::Internal, e.to_string()))??;
+    Ok(json_reply(200, &json!({ "next": planned })))
+}
+
 async fn undo(ctx: Ctx) -> Reply {
     outward(&ctx, "undo a sync")?;
     let accounts = service(&ctx)?;
@@ -195,6 +224,7 @@ pub fn register(r: &mut Router) {
     r.get("/api/accounts", listing);
     r.post("/api/accounts/usage/refresh", refresh);
     r.get("/api/accounts/compare", compare);
+    r.post("/api/accounts/next", next);
     r.post("/api/accounts/sync", sync);
     r.post("/api/accounts/sync/undo", undo);
     r.get("/api/accounts/settings", settings);

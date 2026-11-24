@@ -35,10 +35,16 @@ impl SignInGate {
 }
 
 impl RelayHost {
-    /// Records the outcome of a headless resume of `target` that started at `since` (an ISO time). A success
+    /// Records the outcome of a headless resume of `target` that started at `since` (an ISO time) as
+    /// `account` (the key of the account that signed in, when one did). A success
     /// clears the lead's backoff. Any other end puts the lead back (idle, wake due again), backs it off, and
     /// pings the owner on an expired login or an account at its limit.
-    pub(super) fn on_outcome(&self, target: &Ward, outcome: &Outcome, since: &str) {
+    pub(super) fn on_outcome(
+        &self,
+        target: &Ward,
+        outcome: &Outcome,
+        (since, account): (&str, Option<&str>),
+    ) {
         self.log_outcome(target, outcome);
         if *outcome == Outcome::Ok {
             self.backoff.reset(&target.key);
@@ -48,7 +54,12 @@ impl RelayHost {
         self.put_back(target, since);
         match outcome {
             Outcome::SignIn if self.sign_in.due(Instant::now()) => self.tell_sign_in(),
-            Outcome::RateLimited => self.tell_limited(target, retry_at),
+            Outcome::RateLimited => {
+                if let Some(key) = account {
+                    (self.refused)(key);
+                }
+                self.tell_limited(target, retry_at);
+            }
             _ => {}
         }
     }

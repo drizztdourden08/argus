@@ -82,6 +82,7 @@ pub struct AccountsService {
     pub(crate) sync: super::accounts_sync::SyncState,
     pub(crate) rules: OnceLock<Arc<super::accounts_rules::RulesDesk>>,
     pub(crate) switch_log: super::accounts_switch_log::SwitchLog,
+    pub(crate) refusals: super::accounts_limit::Refusals,
 }
 
 /// The outside world of the usage poll.
@@ -122,6 +123,7 @@ impl AccountsService {
             sync: super::accounts_sync::SyncState::default(),
             rules: OnceLock::new(),
             switch_log: super::accounts_switch_log::SwitchLog::default(),
+            refusals: super::accounts_limit::Refusals::default(),
         }
     }
 

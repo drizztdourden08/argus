@@ -5,13 +5,18 @@ use std::path::Path;
 use argus_store::{ActivityLevel, NewActivity};
 use argus_wake::relay::Ward;
 
-use super::login::{Login, login_of};
+use super::login::{Signed, login_of};
 use super::relay::RelayHost;
 
 impl RelayHost {
     /// The login for the headless wake of `target`. Without one the wake runs with the default CLI login and
     /// one activity line says why. A wake that signs in with another account than the owner's says so too.
-    pub(super) fn headless_login(&self, app: &Path, session: &str, target: &Ward) -> Option<Login> {
+    pub(super) fn headless_login(
+        &self,
+        app: &Path,
+        session: &str,
+        target: &Ward,
+    ) -> Option<Signed> {
         let accounts = (self.accounts)();
         let uses = (self.usage)();
         match login_of(self.creds.as_ref(), &accounts, &uses, app, session) {
@@ -19,7 +24,7 @@ impl RelayHost {
                 if let Some(why) = &signed.why {
                     self.log_wake(target, format!("signed in as {} ({why})", signed.account));
                 }
-                Some(signed.login)
+                Some(signed)
             }
             Err(reason) => {
                 self.log_wake(target, format!("default CLI login ({reason})"));
