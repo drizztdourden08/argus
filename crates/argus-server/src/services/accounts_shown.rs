@@ -43,7 +43,7 @@ pub(crate) fn shown_of(svc: &Services, accounts: &AccountsService) -> Shown {
     Shown {
         accounts: with_limit(accounts),
         next: json!(next_shown(svc, accounts)),
-        run: run_shown(doc.as_ref(), leaving),
+        run: run_shown(doc.as_ref(), leaving, argus_core::clock::now_ms()),
     }
 }
 
