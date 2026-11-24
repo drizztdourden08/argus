@@ -13,8 +13,9 @@ use std::fmt::Display;
 
 use argus_board::limits::require_text;
 use argus_board::portfolio::project_keys;
-use argus_board::roles::{is_overlord, overlord_key};
+use argus_board::roles::is_overlord;
 use argus_board::store::{board_path, read_board};
+use argus_core::ids::PORTFOLIO;
 use argus_core::js;
 use serde_json::json;
 
@@ -54,7 +55,7 @@ fn no_board(target: &str) -> CoordError {
 /// The projects the Overlord's registry and the boards on disk know.
 fn known(call: &Call<'_>) -> Result<Vec<String>, CoordError> {
     let home = coord_home(call);
-    let registry = read_board(&home, &overlord_key(&home))?.unwrap_or_else(|| json!({}));
+    let registry = read_board(&home, PORTFOLIO)?.unwrap_or_else(|| json!({}));
     Ok(project_keys(
         &home,
         &json!({ "projects": registry["projects"] }),

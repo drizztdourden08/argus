@@ -22,19 +22,19 @@ impl RelayHost {
         match login_of(self.creds.as_ref(), &accounts, &uses, app, session) {
             Ok(signed) => {
                 if let Some(why) = &signed.why {
-                    self.log_wake(target, format!("signed in as {} ({why})", signed.account));
+                    self.log_wake(target, &format!("signed in as {} ({why})", signed.account));
                 }
                 Some(signed)
             }
             Err(reason) => {
-                self.log_wake(target, format!("default CLI login ({reason})"));
+                self.log_wake(target, &format!("default CLI login ({reason})"));
                 None
             }
         }
     }
 
     /// One activity line about the headless wake of `target`.
-    pub(super) fn log_wake(&self, target: &Ward, what: String) {
+    pub(super) fn log_wake(&self, target: &Ward, what: &str) {
         let Some(activity) = &self.activity else {
             return;
         };

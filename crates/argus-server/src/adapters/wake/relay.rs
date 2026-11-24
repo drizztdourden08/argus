@@ -109,33 +109,29 @@ impl RelayHost {
     fn resume_headless(self: &Arc<Self>, target: &Ward) {
         if let Some(at) = self.backoff.waiting(&target.key, now_ms()) {
             let text = format!("waiting for the backoff, next try at {}", clock_text(at));
-            return self.log_wake(target, text);
+            return self.log_wake(target, &text);
         }
         let Some(session) = target.session_id.as_deref() else {
-            return self.log_wake(
-                target,
-                "not resumed: the thread has no session id".to_owned(),
-            );
+            return self.log_wake(target, "not resumed: the thread has no session id");
         };
         let Some(app) = (self.app_data)() else {
-            return self.log_wake(target, "not resumed: no desktop app data folder".to_owned());
+            return self.log_wake(target, "not resumed: no desktop app data folder");
         };
         let Some(exe) = find_cli_exe(&app) else {
-            return self.log_wake(
-                target,
-                "not resumed: the Claude CLI was not found".to_owned(),
-            );
+            return self.log_wake(target, "not resumed: the Claude CLI was not found");
         };
         if self.skip_archived(&app, target) {
             return;
         }
         let (id, cwd) = seat_for(&app, session);
         let Some(cwd) = cwd else {
-            return self.log_wake(target, "not resumed: the session has no folder".to_owned());
+            return self.log_wake(target, "not resumed: the session has no folder");
         };
         if session_running(&id) || session_running(session) {
-            let text = "not resumed: the session is running, the relay note follows".to_owned();
-            return self.log_wake(target, text);
+            return self.log_wake(
+                target,
+                "not resumed: the session is running, the relay note follows",
+            );
         }
         let signed = self.headless_login(&app, session, target);
         self.start_resume(&exe, Path::new(&cwd), &id, signed.as_ref(), target);
