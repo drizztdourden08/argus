@@ -373,7 +373,7 @@ fn a_portfolio_send_wakes_the_lead_of_every_project_it_was_delivered_to() {
         board: None,
         before: None,
     };
-    let lead_of = |key: &str| Some(if key == "alpha" { "lead" } else { "lead" }.to_owned());
+    let lead_of = |_: &str| Some("lead".to_owned());
     let wakes = post.wakes_with(&entry, &lead_of);
     let rows: Vec<(&str, &str, &str)> = wakes
         .iter()
