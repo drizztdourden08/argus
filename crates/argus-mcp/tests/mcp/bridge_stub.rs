@@ -56,7 +56,7 @@ async fn concurrent_calls_each_get_their_own_answer() {
                 .as_array()
                 .expect("items")
                 .len(),
-            2
+            4
         );
         seen.push(m["id"].as_i64().expect("an id"));
     }
