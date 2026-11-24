@@ -14,12 +14,12 @@ const RecordCard = (props: RecordCardProps) => {
       time={time ?? head.time}
       title={<CardTitle {...parts} clamp={clamp} />}
       defaultOpen={defaultOpen}
-      content={content}
+      content={compact ? <>{content}{signals}</> : content}
       attrs={attrs}
       onClickCapture={onClickCapture}
     >
-      {signals}
-      {foot}
+      {compact ? undefined : signals}
+      {compact ? undefined : foot}
     </RecordHead>
   );
 };
