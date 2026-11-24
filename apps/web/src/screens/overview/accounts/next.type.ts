@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind types */
 import type { AccountsSettingsApi } from '../../../data/accounts';
-import type { AccountsStatus, AccountsSwitch } from '../../../data/types';
+import type { AccountsStatus, AccountsSwitch, NextRunPhase } from '../../../data/types';
 import type { Account, AccountActions } from './accounts.type';
 import type { CompareDoc } from './compare.type';
 
@@ -30,6 +30,10 @@ interface NextStripProps {
   accounts: readonly Account[];
   status: AccountsStatus | null;
   actions: NextActions;
+}
+
+interface NextRunProps {
+  phase: NextRunPhase | undefined;
 }
 
 interface SwitchTabProps extends NextStripProps {
@@ -66,4 +70,4 @@ interface SyncChoicesProps {
   onReview: () => void;
 }
 
-export type { AccountCardProps, AccountCardsProps, AccountPaneProps, AccountSlotProps, Direction, NextActions, NextFeed, NextStripProps, SwitchTabProps, SyncChoicesProps };
+export type { AccountCardProps, AccountCardsProps, AccountPaneProps, AccountSlotProps, Direction, NextActions, NextFeed, NextRunProps, NextStripProps, SwitchTabProps, SyncChoicesProps };
