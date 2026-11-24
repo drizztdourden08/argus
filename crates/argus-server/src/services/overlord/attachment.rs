@@ -8,8 +8,8 @@ use argus_wake::engine::{AttachOptions, ListenerId};
 use argus_wake::hosted::HostedSink;
 use argus_wake::service::driver::{SharedWake, lock};
 
-use super::board_id::overlord_board_id;
 use crate::adapters::overlord::gate::ApprovalGate;
+use argus_board::roles::overlord_key;
 
 /// One child's hold on the wake engine and on the approval gate.
 pub(super) struct Attachment {
@@ -31,7 +31,7 @@ impl Attachment {
 
     /// Attaches `sink` to `thread` of the Overlord board and keeps its id for [`Self::end`].
     pub(super) fn attach(&self, thread: &str, sink: HostedSink, options: AttachOptions) {
-        let scope = overlord_board_id(&self.coord_home);
+        let scope = overlord_key(&self.coord_home);
         let attached = lock(&self.wake).attach(&scope, thread, Box::new(sink), options);
         *self.id.lock().unwrap_or_else(PoisonError::into_inner) = Some(attached.id);
     }

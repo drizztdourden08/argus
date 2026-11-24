@@ -10,6 +10,8 @@ use std::sync::Arc;
 
 /// The project boards.
 pub trait BoardStore: Send + Sync {
+    /// The key of the Overlord's board (its id, never the alias `portfolio`).
+    fn overlord_key(&self) -> String;
     /// The keys of every project.
     fn projects(&self) -> Vec<String>;
     /// The exported mirror of a board, the cheap place to look first.

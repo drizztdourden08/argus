@@ -227,10 +227,11 @@ impl AgentReconciler {
         if lost.is_empty() {
             return;
         }
+        let overlord = self.ports.store.overlord_key();
         let main = self
             .ports
             .store
-            .snapshot("portfolio")
+            .snapshot(&overlord)
             .and_then(|b| b.coordinator())
             .unwrap_or_else(|| "coordinator".to_owned());
         let mut by: Vec<&str> = Vec::new();
@@ -247,7 +248,7 @@ impl AgentReconciler {
             names.join(", ")
         );
         let event = WakeEvent {
-            scope: "portfolio".into(),
+            scope: overlord,
             thread: main,
             reason: "wake-fault".into(),
             subject: "agent-reconciler".into(),

@@ -15,7 +15,7 @@ use argus_core::log::Logger;
 use argus_overlord::seat::SEAT;
 use serde_json::json;
 
-use super::board_id::overlord_board_id;
+use argus_board::roles::overlord_key;
 
 const ACTOR: &str = "argus";
 const HOST: &str = "argus";
@@ -60,7 +60,7 @@ fn register(board: &mut Board, session_id: &str) -> Result<(), BoardError> {
 
 /// Registers the hosted Overlord's thread; a failure logs one warning and changes nothing else.
 pub(super) fn register_seat(coord_home: &Path, log: &Logger, session_id: &str) {
-    let done = with_board(coord_home, &overlord_board_id(coord_home), false, |board| {
+    let done = with_board(coord_home, &overlord_key(coord_home), false, |board| {
         register(board, session_id)
     });
     if let Err(error) = done {

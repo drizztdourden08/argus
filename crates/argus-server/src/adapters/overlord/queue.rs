@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::approvals::THREAD;
 use crate::Services;
-use crate::services::overlord::board_id::overlord_board_id;
+use argus_board::roles::overlord_key;
 
 /// How many approvals the gate is asked for; the pending ones are filtered out of them.
 const APPROVALS_READ: usize = 100;
@@ -19,7 +19,7 @@ fn wakes(svc: &Services) -> Vec<Value> {
     let Some(wake) = &svc.wake else {
         return Vec::new();
     };
-    let board = overlord_board_id(&svc.paths.coord_home);
+    let board = overlord_key(&svc.paths.coord_home);
     let pending = lock(wake).registry().pending();
     pending
         .iter()
@@ -56,7 +56,7 @@ fn stalls(svc: &Services) -> Vec<Value> {
 }
 
 fn notices(svc: &Services) -> Vec<Value> {
-    let id = overlord_board_id(&svc.paths.coord_home);
+    let id = overlord_key(&svc.paths.coord_home);
     let board = svc
         .boards()
         .board(&id)

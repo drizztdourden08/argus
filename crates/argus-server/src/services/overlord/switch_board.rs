@@ -15,8 +15,8 @@ use argus_overlord::seat::SEAT;
 use argus_overlord::switch::{Handback, SWITCH_KIND, SWITCH_REASON, handback_text, switch_text};
 use serde_json::{Value, json};
 
-use super::board_id::overlord_board_id;
 use crate::{Services, WakeRequest};
+use argus_board::roles::overlord_key;
 
 const ACTOR: &str = "argus";
 const FILE: &str = "handover.md";
@@ -28,7 +28,7 @@ const ITEM_CLOSED: [&str; 2] = ["done", "dropped"];
 pub(crate) fn handover_file(svc: &Services) -> PathBuf {
     svc.paths
         .coord_home
-        .join(overlord_board_id(&svc.paths.coord_home))
+        .join(overlord_key(&svc.paths.coord_home))
         .join(FILE)
 }
 
@@ -45,7 +45,7 @@ pub(super) fn set_aside(svc: &Services) {
 pub(super) fn ask_handover(svc: &Services) {
     let file = handover_file(svc).display().to_string();
     let wake = WakeRequest::about(
-        &overlord_board_id(&svc.paths.coord_home),
+        &overlord_key(&svc.paths.coord_home),
         SEAT,
         SWITCH_REASON,
         SWITCH_KIND,
@@ -75,7 +75,7 @@ fn end_thread(board: &mut Board, id: &str) -> Result<(), BoardError> {
 pub(super) fn end_threads(svc: &Services, ids: &[&str]) {
     let ended = with_board(
         &svc.paths.coord_home,
-        &overlord_board_id(&svc.paths.coord_home),
+        &overlord_key(&svc.paths.coord_home),
         false,
         |board| ids.iter().try_for_each(|id| end_thread(board, id)),
     );
@@ -121,9 +121,7 @@ fn write_file(file: &Path, text: &str) -> std::io::Result<()> {
 /// The rollback's board side: reads the seat's note and the open items, marks the hosted seat
 /// ended and writes the handover file for the desktop Overlord.
 pub(super) fn hand_back(svc: &Services, session_id: Option<String>) {
-    let board = svc
-        .boards()
-        .fresh(&overlord_board_id(&svc.paths.coord_home));
+    let board = svc.boards().fresh(&overlord_key(&svc.paths.coord_home));
     let back = Handback {
         at: now_iso(),
         session_id,

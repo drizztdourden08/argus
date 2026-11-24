@@ -159,6 +159,10 @@ impl JsonBoards {
 }
 
 impl BoardStore for JsonBoards {
+    fn overlord_key(&self) -> String {
+        "portfolio".to_owned()
+    }
+
     fn projects(&self) -> Vec<String> {
         self.projects.clone()
     }

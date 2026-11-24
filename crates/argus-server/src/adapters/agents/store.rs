@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use argus_agents::board::{put_back, records};
 use argus_agents::record::Record;
 use argus_agents::{AgentsError, Board, BoardStore};
+use argus_board::roles;
 use argus_board::store::{LockWait, with_board_async};
 use argus_sync::ScopeQueue;
 use serde_json::Value;
@@ -59,6 +60,10 @@ fn changed(before: &[Record], after: &[Record]) -> Vec<Record> {
 }
 
 impl BoardStore for AgentBoards {
+    fn overlord_key(&self) -> String {
+        roles::overlord_key(&self.home)
+    }
+
     fn projects(&self) -> Vec<String> {
         self.boards.projects().into_iter().map(|p| p.key).collect()
     }

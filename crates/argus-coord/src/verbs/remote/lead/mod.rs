@@ -13,13 +13,12 @@ use std::fmt::Display;
 
 use argus_board::limits::require_text;
 use argus_board::portfolio::project_keys;
-use argus_board::roles::is_overlord;
+use argus_board::roles::{is_overlord, overlord_key};
 use argus_board::store::{board_path, read_board};
 use argus_core::js;
 use serde_json::json;
 
 use super::support::link::connect;
-use super::support::overlord::board_id;
 use super::support::scope::coord_home;
 use super::support::text::is_key;
 use crate::cli::exit::{CoordError, Outcome};
@@ -55,7 +54,7 @@ fn no_board(target: &str) -> CoordError {
 /// The projects the Overlord's registry and the boards on disk know.
 fn known(call: &Call<'_>) -> Result<Vec<String>, CoordError> {
     let home = coord_home(call);
-    let registry = read_board(&home, &board_id(&home))?.unwrap_or_else(|| json!({}));
+    let registry = read_board(&home, &overlord_key(&home))?.unwrap_or_else(|| json!({}));
     Ok(project_keys(
         &home,
         &json!({ "projects": registry["projects"] }),
@@ -173,7 +172,7 @@ mod tests {
     #[test]
     fn portfolio_is_the_overlord_board_in_a_home_without_a_table() {
         let dir = tempfile::tempdir().unwrap();
-        assert_eq!(board_id(dir.path()), "portfolio");
+        assert_eq!(overlord_key(dir.path()), "portfolio");
     }
 
     #[test]

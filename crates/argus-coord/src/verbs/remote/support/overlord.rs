@@ -3,10 +3,7 @@
 //! `boards.json`, an id or an alias; `portfolio` only in a home without the table). The dashboard
 //! checks it again.
 
-use std::path::Path;
-
-use argus_board::roles::{id_of, is_overlord};
-use argus_core::boards::Role;
+use argus_board::roles::{is_overlord, overlord_key};
 
 use super::scope::{coord_home, require_board};
 use crate::cli::exit::CoordError;
@@ -14,19 +11,10 @@ use crate::cli::route::Call;
 use crate::verbs::shared::caller::is_coordinator;
 use crate::who::{caller, find_project};
 
-/// The Overlord's board when no board holds the role yet: its old key.
-const LEGACY: &str = "portfolio";
-
 fn refusal(main: &str, what: &str, who: &str, advice: &str) -> CoordError {
     CoordError::refuse(format!(
         "only the Overlord (the coordinator thread of project {main}) can {what}; {who}. {advice}"
     ))
-}
-
-/// The key of the Overlord's board: the board that holds the role, else its old key.
-#[must_use]
-pub fn board_id(home: &Path) -> String {
-    id_of(home, Role::Overlord).unwrap_or_else(|| LEGACY.to_owned())
 }
 
 /// The actor id of the Overlord making this call.
@@ -37,7 +25,7 @@ pub fn board_id(home: &Path) -> String {
 pub fn actor(call: &Call<'_>, what: &str, advice: &str) -> Result<String, CoordError> {
     let env = &call.inv.env;
     let home = coord_home(call);
-    let main = board_id(&home);
+    let main = overlord_key(&home);
     let own = find_project(env, &call.inv.cwd, &call.options, env.session_id()).ok();
     match own.as_deref() {
         Some(project) if project == main || is_overlord(&home, project) => {}

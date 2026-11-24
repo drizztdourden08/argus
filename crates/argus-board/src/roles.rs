@@ -67,3 +67,30 @@ pub fn is_overlord(home: &Path, id: &str) -> bool {
 pub fn is_argus(home: &Path, id: &str) -> bool {
     is_role(home, id, Role::Argus)
 }
+
+/// The key of the Overlord's board: the id of the board that holds the role, else (no such board
+/// yet) its old key `portfolio`. Wakes, listeners and boards are keyed by this, never by an alias.
+#[must_use]
+pub fn overlord_key(home: &Path) -> String {
+    id_of(home, Role::Overlord).unwrap_or_else(|| LEGACY_OVERLORD.to_owned())
+}
+
+#[cfg(test)]
+mod overlord_key_tests {
+    use super::*;
+
+    #[test]
+    fn an_empty_home_gives_the_legacy_key() {
+        let dir = tempfile::tempdir().unwrap();
+        assert_eq!(overlord_key(dir.path()), "portfolio");
+    }
+
+    #[test]
+    fn a_table_with_an_overlord_gives_its_id() {
+        let dir = tempfile::tempdir().unwrap();
+        let table = r#"{"version":1,"state":"active","boards":{"bja1s18":
+            {"name":"Overlord","aliases":["portfolio"],"role":"overlord"}}}"#;
+        std::fs::write(dir.path().join("boards.json"), table).unwrap();
+        assert_eq!(overlord_key(dir.path()), "bja1s18");
+    }
+}
