@@ -121,7 +121,7 @@ fn counts_of(board: &Board, v: &View, open_questions: usize) -> Value {
             .count()
     };
     json!({
-        "threads": live.iter().filter(|t| t["role"] != "coordinator").count(),
+        "threads": live.iter().filter(|t| t["role"] != "lead").count(),
         "working": live.iter().filter(|t| t["activity"] == "working").count(),
         "blocked": live.iter().filter(|t| is_blocked(t)).count(),
         "needsYou": open_questions + pending_actions + manual,
@@ -188,7 +188,7 @@ fn recent_of(board: &Board, paused: &HashSet<String>) -> Vec<Value> {
         .collect()
 }
 
-fn coordinator_of(coord: Option<&Value>) -> Value {
+fn lead_of(coord: Option<&Value>) -> Value {
     coord.map_or(Value::Null, |c| {
         json!({
             "session": c["session"], "link": c["link"], "lastSeen": c["lastSeen"],
@@ -210,11 +210,7 @@ fn icon_of(key: &str, board: &Board) -> Option<String> {
 
 fn card_of(home: &Path, key: &str, reg: &Value, board: &Board) -> Value {
     let (view, paused) = view_of(board);
-    let coord = view
-        .live
-        .iter()
-        .find(|t| t["role"] == "coordinator")
-        .copied();
+    let coord = view.live.iter().find(|t| t["role"] == "lead").copied();
     let open: Vec<&Value> = view
         .entries
         .iter()
@@ -243,7 +239,7 @@ fn card_of(home: &Path, key: &str, reg: &Value, board: &Board) -> Value {
         json!(if coord.is_some() {
             "running"
         } else {
-            "no coordinator"
+            "no lead"
         }),
     );
     put("root", root);
@@ -251,7 +247,7 @@ fn card_of(home: &Path, key: &str, reg: &Value, board: &Board) -> Value {
         put("icon", json!(icon));
     }
     put("url", json!(format!("/p/{key}/")));
-    put("coordinator", coordinator_of(coord));
+    put("lead", lead_of(coord));
     put("counts", counts_of(board, &view, open.len()));
     put("attention", json!(attention_of(&view, &open)));
     put("ownerItems", json!(owner_items(&view.items, &view.actions)));

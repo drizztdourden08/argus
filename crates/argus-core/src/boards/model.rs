@@ -11,7 +11,7 @@ pub type BoardId = String;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Role {
-    /// The coordinator board (was `portfolio`).
+    /// The lead board (was `portfolio`).
     Overlord,
     /// The Argus app board.
     Argus,

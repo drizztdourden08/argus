@@ -9,6 +9,7 @@ mod io;
 mod lane;
 mod lock;
 mod migrate;
+mod migrate_lead;
 mod normalize;
 mod rank;
 

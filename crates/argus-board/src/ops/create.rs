@@ -3,7 +3,7 @@
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
-use super::announce::{announce, coordinator_ids, refresh_needs_human};
+use super::announce::{announce, lead_ids, refresh_needs_human};
 use super::authorize::{Check, authorize};
 use super::result::OpResult;
 use super::target::{ITEM_STATUSES, id_arg, one_of, record_arg, record_thread, thread_arg};
@@ -17,7 +17,7 @@ use crate::store::{create_doc, rank_between};
 use crate::text::clip_text;
 
 /// The thread a created record belongs to: the one named, else the fallback, else the creator's
-/// own thread, else (the owner creating without naming one) the first live coordinator.
+/// own thread, else (the owner creating without naming one) the first live lead.
 fn owner_for(
     board: &Board,
     who: &Who,
@@ -28,7 +28,7 @@ fn owner_for(
     let id = named
         .or(fallback)
         .or_else(|| who.self_id().map(str::to_owned))
-        .or_else(|| coordinator_ids(board, true).into_iter().next());
+        .or_else(|| lead_ids(board, true).into_iter().next());
     let Some(id) = id else {
         return Err(refuse("name the thread this belongs to."));
     };
@@ -42,12 +42,12 @@ fn fields_of(value: Value) -> Map<String, Value> {
     }
 }
 
-/// Who made the item: the coordinator side (the owner, or a lead filing for another thread) or
+/// Who made the item: the lead side (the owner, or a lead filing for another thread) or
 /// the thread itself.
 fn origin_of(who: &Who, owner: &str) -> &'static str {
-    let from_other_lead = who.role == Role::Coordinator && who.self_id() != Some(owner);
+    let from_other_lead = who.role == Role::Lead && who.self_id() != Some(owner);
     if who.is_human() || from_other_lead {
-        "coordinator"
+        "lead"
     } else {
         "thread"
     }

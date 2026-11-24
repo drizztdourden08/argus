@@ -1,4 +1,4 @@
-//! The `purge` op: remove records for good, after a restorable backup. Only the coordinator and
+//! The `purge` op: remove records for good, after a restorable backup. Only the lead and
 //! the owner's page may do it; the owner confirms with the project key against the counts they
 //! looked at.
 

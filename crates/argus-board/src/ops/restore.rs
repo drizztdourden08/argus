@@ -235,7 +235,7 @@ fn audit_restore(board: &mut Board, counts: &Map<String, Value>, file: &Path) {
         count_line(&shown_counts),
         name.unwrap_or_default()
     );
-    audit(board, "coordinator", &line);
+    audit(board, "lead", &line);
 }
 
 /// Put a backup's records back: only those whose id is absent (nothing is overwritten),
@@ -243,7 +243,7 @@ fn audit_restore(board: &mut Board, counts: &Map<String, Value>, file: &Path) {
 /// old paths. Everything restored is marked dirty. Returns the counts restored (`threads`,
 /// `items`, `tests`, `entries`, `actions`, `agents`, `logLines`, `inbox`, `proofs`), plus
 /// `skipped` for records already on the board. The caller checks that the caller is the
-/// coordinator.
+/// lead.
 ///
 /// # Errors
 /// The file cannot be read, is not JSON, is not a purge backup, belongs to another project, or

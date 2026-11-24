@@ -1,4 +1,4 @@
-//! The `avatar` op: the picture a project's lead wears on the cards. A change at the coordinator's
+//! The `avatar` op: the picture a project's lead wears on the cards. A change at the lead's
 //! level: the board holds `avatar`, either `brand:<app>` (a Tessera brand mark), `icon:<name>` (a curated icon) or an image as a
 //! data URL no larger than [`AVATAR_MAX`], and one audit line records it. `null` clears it.
 

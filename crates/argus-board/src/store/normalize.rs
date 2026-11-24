@@ -5,6 +5,7 @@ use argus_core::ids::PORTFOLIO;
 use serde_json::{Value, json};
 
 use super::migrate::{convert_agents, migrate_to_2};
+use super::migrate_lead;
 use crate::Board;
 use crate::json::{default_field, set, slot, unset};
 
@@ -67,4 +68,5 @@ pub fn normalize(board: &mut Board) {
         migrate_to_2(board);
     }
     convert_agents(board);
+    migrate_lead::migrate(board);
 }

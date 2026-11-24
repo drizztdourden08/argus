@@ -70,10 +70,10 @@ pub fn doc(id: &str, by: &str, fields: Value, rank: i64) -> Value {
     d
 }
 
-/// A thread doc: the coordinator is leading, any other thread works on its subject.
+/// A thread doc: the lead is leading, any other thread works on its subject.
 #[must_use]
 pub fn thread(id: &str, role: &str, subject: &str, session: &str, rank: i64) -> Value {
-    let note = if role == "coordinator" {
+    let note = if role == "lead" {
         "leading".to_owned()
     } else {
         format!("working on {subject}")

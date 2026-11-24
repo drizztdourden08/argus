@@ -13,6 +13,7 @@ use argus_core::fs::{write_atomic_with, write_new};
 use serde_json::Value;
 
 use super::damage::read_board_text;
+use super::migrate_lead;
 use super::normalize::{normalize, stale_schema};
 use super::{board_dir, board_path};
 use crate::Board;
@@ -39,6 +40,8 @@ fn note_unmigrated(file: &Path, raw: String, board: &Board) {
         map.insert(file.to_path_buf(), (raw, "board.v1"));
     } else if has_embedded_agents(board) && !truthy(board, "agentsMigrated") {
         map.insert(file.to_path_buf(), (raw, "board.pre-agents"));
+    } else if migrate_lead::pending(board) {
+        map.insert(file.to_path_buf(), (raw, "board.pre-lead"));
     } else {
         map.remove(file);
     }
@@ -46,7 +49,10 @@ fn note_unmigrated(file: &Path, raw: String, board: &Board) {
 
 /// Read and normalize the board of a project. `None` when it has no board file. A board that
 /// still needs converting is remembered, and its first save writes the old text beside it as
-/// `board.v1.<timestamp>.json` or `board.pre-agents.<timestamp>.json`.
+/// `board.v1.<timestamp>.json`, `board.pre-agents.<timestamp>.json` or
+/// `board.pre-lead.<timestamp>.json`.
+///
+/// A board that still names a thread `lead` next to its old `coordinator` is refused.
 ///
 /// # Errors
 /// The file cannot be read or is not a JSON object.
@@ -61,6 +67,7 @@ pub fn read_board(home: &Path, key: &str) -> Result<Option<Board>, BoardError> {
             "the board of \"{key}\" is not a JSON object."
         )));
     }
+    migrate_lead::check(&board)?;
     note_unmigrated(&file, raw, &board);
     normalize(&mut board);
     Ok(Some(board))

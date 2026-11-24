@@ -45,8 +45,8 @@ fn a_decision_is_handed_down_to_the_lead_of_the_project() {
         .expect("an entry on the board");
     assert_eq!(made["kind"], "decision");
     assert_eq!(made["status"], "pending");
-    assert_eq!(made["thread"], "coordinator");
-    let inbox = board["inbox"]["coordinator"]
+    assert_eq!(made["thread"], "lead");
+    let inbox = board["inbox"]["lead"]
         .as_array()
         .cloned()
         .unwrap_or_default();
@@ -122,7 +122,7 @@ fn the_card_of_a_running_project_counts_what_needs_the_owner() {
     assert_eq!(card["state"], "running");
     assert_eq!(card["name"], "Alpha");
     assert_eq!(card["url"], "/p/alpha/");
-    assert_eq!(card["coordinator"]["session"], "Alpha");
+    assert_eq!(card["lead"]["session"], "Alpha");
     assert_eq!(card["counts"]["threads"], 1);
     assert_eq!(card["counts"]["needsYou"], 3);
     assert_eq!(card["counts"]["itemsOpen"], 4);

@@ -116,7 +116,7 @@ fn the_owner_creates_an_item_with_criteria_for_a_thread() {
     );
     assert_eq!(b["entries"][id.as_str()]["outcome"], "I-4 created");
     let item = &b["items"]["I-4"];
-    assert_eq!(item["origin"], "coordinator");
+    assert_eq!(item["origin"], "lead");
     assert_eq!(item["subject"], Value::Null);
     assert_eq!(item["ac"].as_array().map(Vec::len), Some(2));
     assert_eq!(item["createdBy"], "human");
@@ -175,7 +175,7 @@ fn delete_restore_and_archive_are_soft_and_stop_a_running_agent() {
     assert!(b["agents"]["A-1"]["archivedAt"].is_string());
     let (_, coord) = post(
         &mut b,
-        json!({"kind": "archive", "target": {"c": "threads", "id": "coordinator"}}),
+        json!({"kind": "archive", "target": {"c": "threads", "id": "lead"}}),
     );
     assert_eq!(coord.ops.refused, 1);
 }

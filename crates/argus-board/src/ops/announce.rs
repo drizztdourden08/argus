@@ -89,10 +89,10 @@ pub fn refresh_needs_human(board: &mut Board, thread: &str) {
     touch(board, "threads", thread);
 }
 
-/// The ids of the coordinator threads, only the live ones when asked.
-pub(crate) fn coordinator_ids(board: &Board, live_only: bool) -> Vec<String> {
+/// The ids of the lead threads, only the live ones when asked.
+pub(crate) fn lead_ids(board: &Board, live_only: bool) -> Vec<String> {
     find_ids(board, "threads", |t| {
-        t["role"] == "coordinator"
+        t["role"] == "lead"
             && (!live_only || !matches!(t["status"].as_str(), Some("done" | "archived")))
     })
 }

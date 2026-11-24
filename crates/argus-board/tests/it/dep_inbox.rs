@@ -23,7 +23,7 @@ fn asking_queues_one_dep_message_for_the_thread_the_wake_reaches() {
     req.to = Some("dev".to_owned());
     req.ac = vec!["Hook is public".to_owned(), "Docs updated".to_owned()];
     ask_in(h, &req).expect("asked");
-    assert_eq!(messages(h, "beta", "coordinator").len(), 0);
+    assert_eq!(messages(h, "beta", "lead").len(), 0);
     let sent = messages(h, "beta", "dev");
     assert_eq!(sent.len(), 1);
     assert_eq!(sent[0]["kind"], "dep");
@@ -55,7 +55,7 @@ fn ack_sets_acked_at_once_only_for_an_open_dep_of_that_project() {
     assert!(!ack(h, "D-1", "beta", "beta/dev").expect("ack"));
     assert_eq!(ledger(h, "D-1")["ackedAt"], first);
     assert_eq!(ledger(h, "D-1")["ackedBy"], "beta lead");
-    assert_eq!(inbox_texts(h, "beta", "coordinator").len(), 1);
+    assert_eq!(inbox_texts(h, "beta", "lead").len(), 1);
 
     let closed = world(&["alpha", "beta"]);
     let c = closed.path();

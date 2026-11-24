@@ -11,7 +11,7 @@ use crate::store::read_board;
 
 /// The live threads and the live lead of a project.
 pub trait Roster {
-    /// The live coordinator thread of a project, when it has one.
+    /// The live lead thread of a project, when it has one.
     fn lead(&self, project: &str) -> Option<String>;
     /// The live threads of a project.
     fn live_threads(&self, project: &str) -> Vec<String>;
@@ -52,11 +52,11 @@ fn is_live(thread: &Value) -> bool {
     !matches!(thread["status"].as_str(), Some("done" | "archived"))
 }
 
-/// The first live coordinator thread of a board.
+/// The first live lead thread of a board.
 pub(crate) fn lead_in(board: &Board) -> Option<String> {
     section(board, "threads")
         .iter()
-        .find(|(_, t)| t["role"] == "coordinator" && is_live(t))
+        .find(|(_, t)| t["role"] == "lead" && is_live(t))
         .map(|(id, _)| id.clone())
 }
 

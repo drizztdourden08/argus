@@ -139,7 +139,7 @@ fn make(
         .collect();
     let fields = json!({
         "title": plan.title, "description": plan.description, "subject": slug(&subject),
-        "thread": plan.thread, "status": "todo", "origin": "coordinator", "ac": ac,
+        "thread": plan.thread, "status": "todo", "origin": "lead", "ac": ac,
         "requestedBy": [mirror],
     });
     Ok(create_doc(board, "items", "I", object(fields), &req.actor)?)

@@ -12,7 +12,7 @@ pub(super) const STEPS: &[Step] = &[
             "register",
             "lead",
             "--role",
-            "coordinator",
+            "lead",
             "--root",
             "{root}",
             "--session",

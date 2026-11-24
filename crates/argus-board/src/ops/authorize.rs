@@ -1,5 +1,5 @@
 //! The ownership rules. A record belongs to one thread ([`owner_of`]); a thread changes only its
-//! own, the coordinator changes anything, and the owner can do what the coordinator can except
+//! own, the lead changes anything, and the owner can do what the lead can except
 //! restore from a backup. Authority comes from the caller's role, never from a flag.
 
 use serde_json::Value;
@@ -12,7 +12,7 @@ type Verdict = Result<(), BoardError>;
 
 const READ_VERBS: [&str; 3] = ["read", "list", "show"];
 const CREATE_VERBS: [&str; 2] = ["create", "add"];
-const COORDINATOR_ONLY: [&str; 6] = [
+const LEAD_ONLY: [&str; 6] = [
     "purge",
     "restore-backup",
     "trash",
@@ -90,10 +90,10 @@ fn belongs(id: &str, owner: &str, word: &str) -> String {
     } else {
         id.to_owned()
     };
-    let allowed = if owner == "coordinator" {
-        "the coordinator".to_owned()
+    let allowed = if owner == "lead" {
+        "the lead".to_owned()
     } else {
-        format!("{owner} or the coordinator")
+        format!("{owner} or the lead")
     };
     format!(
         "{label} belongs to {owner}; only {allowed} can {word} it. {}",
@@ -101,7 +101,7 @@ fn belongs(id: &str, owner: &str, word: &str) -> String {
     )
 }
 
-fn coordinator_words(verb: &str) -> &str {
+fn lead_words(verb: &str) -> &str {
     match verb {
         "restore-backup" => "restore from a backup",
         "hand" => "hand a build to the owner",
@@ -125,18 +125,15 @@ pub fn authorize(who: &Who, c: &Check) -> Verdict {
     if READ_VERBS.contains(&c.verb) && c.coll != "inbox" {
         return Ok(());
     }
-    let coordinator_thread =
-        c.coll == "threads" && c.doc.is_some_and(|d| d["role"] == "coordinator");
-    if coordinator_thread && matches!(c.verb, "archive" | "rm") {
-        return Err(refuse(
-            "the coordinator thread is never archived or deleted.",
-        ));
+    let lead_thread = c.coll == "threads" && c.doc.is_some_and(|d| d["role"] == "lead");
+    if lead_thread && matches!(c.verb, "archive" | "rm") {
+        return Err(refuse("the lead thread is never archived or deleted."));
     }
     match who.role {
         Role::Human if c.verb == "restore-backup" => {
-            Err(refuse("only the coordinator can restore from a backup."))
+            Err(refuse("only the lead can restore from a backup."))
         }
-        Role::Human | Role::Coordinator => Ok(()),
+        Role::Human | Role::Lead => Ok(()),
         Role::Thread => thread_rules(who, c),
     }
 }
@@ -147,11 +144,11 @@ fn thread_rules(who: &Who, c: &Check) -> Verdict {
             "no thread is calling: this needs a registered session.",
         ));
     };
-    if COORDINATOR_ONLY.contains(&c.verb) {
+    if LEAD_ONLY.contains(&c.verb) {
         return Err(refuse(format!(
-            "only the coordinator can {}. {}",
-            coordinator_words(c.verb),
-            hint("coordinator")
+            "only the lead can {}. {}",
+            lead_words(c.verb),
+            hint("lead")
         )));
     }
     if c.coll == "locks" {
@@ -175,15 +172,15 @@ fn lock_rule(me: &str, c: &Check) -> Verdict {
         "claim" | "drop" => Ok(()),
         "release" if c.doc.and_then(|d| nullish(d, "holder")).as_deref() == Some(me) => Ok(()),
         "release" => Err(refuse(format!(
-            "{} is held by {}; only the holder or the coordinator can release it.",
+            "{} is held by {}; only the holder or the lead can release it.",
             c.id(),
             c.doc
                 .and_then(|d| nullish(d, "holder"))
                 .unwrap_or_else(|| "nobody".to_owned())
         ))),
         verb => Err(refuse(format!(
-            "only the coordinator can {verb} a lock. {}",
-            hint("coordinator")
+            "only the lead can {verb} a lock. {}",
+            hint("lead")
         ))),
     }
 }
@@ -199,7 +196,7 @@ fn create_rule(me: &str, c: &Check) -> Verdict {
     }
     let shown = owner.unwrap_or_else(|| "null".to_owned());
     Err(refuse(format!(
-        "you cannot create records for {shown}; only the coordinator can. {}",
+        "you cannot create records for {shown}; only the lead can. {}",
         hint(&shown)
     )))
 }
@@ -208,7 +205,7 @@ fn thread_doc_rule(me: &str, c: &Check) -> Verdict {
     let id = c.id();
     if id != me {
         return Err(refuse(format!(
-            "{me} cannot {} {id}: only {id} itself or the coordinator can. {}",
+            "{me} cannot {} {id}: only {id} itself or the lead can. {}",
             c.verb,
             hint(&id)
         )));
@@ -216,7 +213,7 @@ fn thread_doc_rule(me: &str, c: &Check) -> Verdict {
     let brief_or_rank = c.fields.iter().any(|f| f == "brief" || f == "rank");
     if c.verb == "move" || brief_or_rank {
         return Err(refuse(
-            "only the coordinator can change a thread brief or the thread order.",
+            "only the lead can change a thread brief or the thread order.",
         ));
     }
     Ok(())
@@ -226,8 +223,8 @@ fn thread_doc_rule(me: &str, c: &Check) -> Verdict {
 fn entry_rule(me: &str, c: &Check, doc: &Value, owner: Option<&str>) -> Result<bool, BoardError> {
     match c.verb {
         "answer" => Err(refuse(format!(
-            "only the coordinator can answer. {}",
-            hint("coordinator")
+            "only the lead can answer. {}",
+            hint("lead")
         ))),
         "pick" | "done" | "ack" => {
             let routed = owner == Some("human") && doc["thread"].as_str() == Some(me);
@@ -268,7 +265,7 @@ fn doc_rule(me: &str, c: &Check, doc: &Value) -> Verdict {
     }
     if c.verb == "move" && c.to.is_some_and(|to| Some(to) != owner.as_deref()) {
         return Err(refuse(format!(
-            "{} is yours, but only the coordinator can hand it to {}. Ask with coord message or coord inbox send {} \"...\".",
+            "{} is yours, but only the lead can hand it to {}. Ask with coord message or coord inbox send {} \"...\".",
             c.id(),
             c.to.unwrap_or_default(),
             c.to.unwrap_or_default()

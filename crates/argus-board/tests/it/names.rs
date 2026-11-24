@@ -1,4 +1,4 @@
-//! The names the owner sees: the main coordinator thread is the Overlord, and the Overlord's own
+//! The names the owner sees: the main lead thread is the Overlord, and the Overlord's own
 //! project (key `portfolio`) is shown as the Overlord. Only the displayed names change; the ids
 //! stay.
 //! K1: the display names.

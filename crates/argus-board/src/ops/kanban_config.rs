@@ -1,5 +1,5 @@
 //! The `kanban-config` op: the columns and rules of a board's Kanban tab. A change at the
-//! coordinator's level (the owner and the board's lead): the board holds `kanban`, one audit line
+//! lead's level (the owner and the board's lead): the board holds `kanban`, one audit line
 //! records a change, and `null` clears it so the default runs again.
 
 use serde_json::Value;

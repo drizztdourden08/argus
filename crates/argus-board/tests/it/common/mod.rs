@@ -17,7 +17,7 @@ use tempfile::TempDir;
 
 static POSTS: AtomicUsize = AtomicUsize::new(0);
 
-/// The `alpha` board of the dashboard tests: a coordinator and a `ui` thread, items with AC, an
+/// The `alpha` board of the dashboard tests: a lead and a `ui` thread, items with AC, an
 /// auto test (pass) and a manual test (pending, build b1, handed), a question, a notice, a
 /// pending action, agents working and done, a lock and a log.
 pub fn alpha() -> Board {
@@ -47,11 +47,11 @@ pub fn post(board: &mut Board, body: Value) -> (String, ImportResult) {
     (id, result)
 }
 
-/// The coordinator, who may do what a lead does.
+/// The lead, who may do what a lead does.
 pub fn lead() -> Who {
     Who {
-        thread: Some("coordinator".to_owned()),
-        role: Role::Coordinator,
+        thread: Some("lead".to_owned()),
+        role: Role::Lead,
         actor: None,
     }
 }

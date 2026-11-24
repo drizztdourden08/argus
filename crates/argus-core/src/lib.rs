@@ -20,6 +20,7 @@ pub mod ids;
 pub mod js;
 pub mod json_text;
 pub mod launch;
+pub mod lead;
 pub mod lockfile;
 pub mod log;
 pub mod names;

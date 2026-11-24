@@ -36,7 +36,7 @@ fn sender(from_owner: bool) -> Sender {
     }
 }
 
-/// Hand one message to a project's coordinator. Returns the entry id and the lead thread it was
+/// Hand one message to a project's lead. Returns the entry id and the lead thread it was
 /// queued for, or `None` when the board does not exist yet.
 fn deliver(
     home: &Path,
@@ -50,12 +50,12 @@ fn deliver(
     let sender = sender(from_owner);
     let delivered = with_board(home, key, false, |board| {
         let lead = find_ids(board, "threads", |t| {
-            t["role"] == "coordinator" && t["status"] != "done"
+            t["role"] == "lead" && t["status"] != "done"
         });
         let to = lead
             .first()
             .and_then(|id| doc(board, "threads", id).and_then(|t| nullish(t, "id")))
-            .unwrap_or_else(|| "coordinator".to_owned());
+            .unwrap_or_else(|| "lead".to_owned());
         let decision = kind == "decision";
         let fields = json!({
             "kind": kind, "author": sender.author, "via": "portfolio", "ref": reference,

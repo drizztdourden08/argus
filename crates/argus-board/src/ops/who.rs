@@ -6,7 +6,7 @@ pub enum Role {
     /// The owner (the page entry being applied).
     Human,
     /// The project lead: changes anything except restoring from a backup.
-    Coordinator,
+    Lead,
     /// An ordinary thread: changes only its own records.
     Thread,
 }

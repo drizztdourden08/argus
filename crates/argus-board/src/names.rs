@@ -1,5 +1,5 @@
-//! The names the owner sees for the main coordinator and its project. Only what is shown
-//! differs from the ids: the thread id stays `coordinator`. The Overlord's board is found by its
+//! The names the owner sees for the main lead and its project. Only what is shown
+//! differs from the ids: the thread id stays `lead`. The Overlord's board is found by its
 //! role (`crate::roles`), never by a key, and the identity table holds the display name.
 
 use std::path::Path;
@@ -11,7 +11,7 @@ use crate::roles::{is_overlord, table_id};
 
 /// The dashboard app and its overview page.
 pub const ARGUS: &str = "Argus";
-/// The main coordinator and its project, as shown.
+/// The main lead and its project, as shown.
 pub const OVERLORD: &str = "Overlord";
 
 fn is_legacy(name: &str) -> bool {

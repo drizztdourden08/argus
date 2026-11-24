@@ -9,7 +9,7 @@ pub enum BoardError {
     #[error("board {0} is locked by another coord call; retry.")]
     Locked(String),
     /// The project has no board file and the call may not create one.
-    #[error("no board for project \"{0}\". Run `coord board init` first (coordinator).")]
+    #[error("no board for project \"{0}\". Run `coord board init` first (lead).")]
     Missing(String),
     /// A validation or ownership rule refused the change; the text says why.
     #[error("{0}")]

@@ -9,7 +9,7 @@ use argus_core::fs::{copy_atomic, write_new};
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
-use super::announce::{audit, coordinator_ids, refresh_needs_human};
+use super::announce::{audit, lead_ids, refresh_needs_human};
 use super::plan::{COLLS, PurgePlan};
 use super::who::Who;
 use crate::Board;
@@ -174,7 +174,7 @@ fn announce_purge(board: &mut Board, by: &str, summary: &str, (file, name): (&st
     audit(board, by, &format!("purged {summary}; backup {name}"));
     let who = if by == "human" { "owner" } else { by };
     let project = display(&board["project"]);
-    for to in coordinator_ids(board, true) {
+    for to in lead_ids(board, true) {
         let text = format!(
             "{who} purged {summary}. Backup: {file}. Restore: coord restore --from {file} --confirm {project}"
         );
@@ -201,7 +201,7 @@ fn action_owners(records: &Map<String, Value>) -> Vec<String> {
 /// `<home>/<project>/purged/<timestamp>.json` (records keyed by id, the work-log lines per
 /// subject, the inbox per thread, the doc versions) and the proof images move to
 /// `purged/<timestamp>/proofs/`. Counters are untouched: ids are never reused. Locks held by a
-/// purged thread pass to the next in the queue. The coordinators are told where the backup is.
+/// purged thread pass to the next in the queue. The leads are told where the backup is.
 ///
 /// # Errors
 /// A backup or proof file cannot be written, copied or removed.

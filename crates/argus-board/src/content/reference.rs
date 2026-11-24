@@ -1,6 +1,7 @@
 //! The kinds that point at something: an id of a kind, and a person.
 
 use argus_core::js;
+use argus_core::lead::canonical;
 use serde_json::Value;
 
 use super::{Context, Rejection, reject};
@@ -62,14 +63,18 @@ pub(super) fn person(
     if !reg.content.person.pattern.0.is_match(text) {
         return Err(reject(
             "bad-person",
-            format!("{field} is the owner or a thread id like coordinator, not \"{text}\"."),
+            format!("{field} is the owner or a thread id like lead, not \"{text}\"."),
         ));
     }
-    if cx.threads.is_some_and(|all| !all.iter().any(|t| t == text)) {
+    let text = canonical(text).into_owned();
+    if cx
+        .threads
+        .is_some_and(|all| !all.iter().any(|t| *t == text))
+    {
         return Err(reject(
             "unknown-person",
             format!("{text} is not a thread of this board."),
         ));
     }
-    Ok(Value::String(text.to_owned()))
+    Ok(Value::String(text))
 }

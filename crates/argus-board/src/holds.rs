@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn a_transfer_gives_the_held_items_to_the_absorbing_agent() {
         let mut moved = board();
-        transfer(&mut moved, "A-1", "A-2", "coordinator").unwrap();
+        transfer(&mut moved, "A-1", "A-2", "lead").unwrap();
         assert_eq!(moved["items"]["I-1"]["assignee"], "agent:A-2");
         assert_eq!(moved["items"]["I-1"]["rev"], 2);
         assert_eq!(moved["items"]["I-2"]["assignee"], "worker");

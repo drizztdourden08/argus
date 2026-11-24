@@ -160,3 +160,34 @@ fn a_board_still_on_schema_1_is_migrated_and_its_first_save_keeps_the_old_text()
         .collect();
     assert_eq!(backups.len(), 1, "the unmigrated text is kept once");
 }
+
+#[test]
+fn a_coordinator_board_is_renamed_on_read_and_its_first_save_keeps_the_old_text() {
+    let home = tempfile::tempdir().expect("temp dir");
+    let old = json!({
+        "schema": 2,
+        "project": "lead-old",
+        "threads": {"coordinator": {"id": "coordinator", "role": "coordinator"}},
+        "items": {"I-1": {"id": "I-1", "assignee": "coordinator", "thread": "coordinator"}},
+    });
+    let dir = board_dir(home.path(), "lead-old");
+    fs::create_dir_all(&dir).expect("dir");
+    fs::write(dir.join("board.json"), old.to_string()).expect("write");
+    let board = read_board(home.path(), "lead-old")
+        .expect("read")
+        .expect("a board");
+    assert_eq!(board["threads"]["lead"]["role"], json!("lead"));
+    assert_eq!(board["items"]["I-1"]["assignee"], json!("lead"));
+    with_board(home.path(), "lead-old", false, |_| Ok(())).expect("saved");
+    let backups: Vec<_> = fs::read_dir(&dir)
+        .expect("list")
+        .filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.starts_with("board.pre-lead."))
+        .collect();
+    assert_eq!(backups.len(), 1, "the old text is kept once");
+    let again = read_board(home.path(), "lead-old")
+        .expect("read")
+        .expect("a board");
+    assert_eq!(again["threads"]["lead"]["id"], json!("lead"));
+}

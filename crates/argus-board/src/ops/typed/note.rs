@@ -30,7 +30,7 @@ pub(crate) fn rewrite(board: &Board, entry: &Value, text: &Value) -> Result<Valu
 
 /// Add a note on an item or a test: an entry of kind `note` with the next `N-n` id, its text
 /// checked as rich text of at most 300 characters. Only the thread that owns the record (or the
-/// coordinator, or the owner) adds one.
+/// lead, or the owner) adds one.
 ///
 /// # Errors
 /// Refused when the record does not exist, the caller may not add to it, or the text is blank or

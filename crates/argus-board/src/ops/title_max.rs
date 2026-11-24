@@ -1,4 +1,4 @@
-//! The `title-max` op: the longest item title a board accepts. A change at the coordinator's
+//! The `title-max` op: the longest item title a board accepts. A change at the lead's
 //! level: the board holds `titleMax`, a whole number from [`MIN`] to [`MAX`], and one audit line
 //! records it. `null` clears it so the default limit runs again.
 

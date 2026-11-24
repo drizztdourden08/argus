@@ -1,4 +1,4 @@
-//! The `alpha` board of the dashboard tests: a coordinator and a `ui` thread, items with AC, an
+//! The `alpha` board of the dashboard tests: a lead and a `ui` thread, items with AC, an
 //! auto test that passed and a manual test, a test plan of the manual test and a ready run of it
 //! handed to the owner on the live build `build-1`, a question, a notice, a pending action,
 //! agents working and done, a lock and a log.
@@ -11,7 +11,7 @@ use super::{ago, by_id, doc, test_doc, thread};
 pub fn fill_alpha(board: &mut Value) {
     board["counters"] = json!({ "I": 2, "T": 2, "Q": 1, "N": 1, "H": 1, "A": 2, "log:ui": 2 });
     board["threads"] = json!({
-        "coordinator": thread("coordinator", "coordinator", "lead", "Alpha", 1024),
+        "lead": thread("lead", "lead", "lead", "Alpha", 1024),
         "ui": thread("ui", "thread", "ui", "Alpha - UI", 2048),
     });
     board["items"] = items();
@@ -36,7 +36,7 @@ fn items() -> Value {
         doc(
             "I-2",
             "ui",
-            json!({ "title": "Settings page", "description": null, "subject": "ui", "thread": "ui", "status": "todo", "origin": "coordinator", "ac": [] }),
+            json!({ "title": "Settings page", "description": null, "subject": "ui", "thread": "ui", "status": "todo", "origin": "lead", "ac": [] }),
             2048,
         ),
         doc(

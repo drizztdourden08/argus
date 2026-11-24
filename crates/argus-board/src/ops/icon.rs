@@ -1,4 +1,4 @@
-//! The `icon` op: the picture a board wears in the shell. A change at the coordinator's level: the
+//! The `icon` op: the picture a board wears in the shell. A change at the lead's level: the
 //! board holds `icon`, one of `brand:<app>` (a Tessera brand mark), `icon:<name>` (a name of
 //! [`ICON_NAMES`]) or a png or svg data URL no larger than the icon cap, and one audit line records
 //! it. `null` clears it.

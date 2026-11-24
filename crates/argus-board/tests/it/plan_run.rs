@@ -98,7 +98,7 @@ fn a_run_starts_once_and_moves_the_plan_to_running() {
     assert_eq!(run["n"], 1);
     assert_eq!(run["fields"]["build"], "l1");
     assert_eq!(run["fields"]["plan"], plan.as_str());
-    assert_eq!(run["createdBy"], "coordinator");
+    assert_eq!(run["createdBy"], "lead");
     assert_eq!(run["stage"], "running");
     assert_eq!(run["status"], "doing");
     assert_eq!(run["endedAt"], Value::Null);
@@ -187,7 +187,7 @@ fn a_result_in_a_run_is_also_written_to_its_test() {
     );
     assert_eq!(b["tests"]["T-3"]["status"], "fail");
     assert_eq!(b["tests"]["T-3"]["result"]["text"], "the join hangs");
-    assert_eq!(b["tests"]["T-3"]["result"]["by"], "coordinator");
+    assert_eq!(b["tests"]["T-3"]["result"]["by"], "lead");
     assert_eq!(b["tests"]["T-3"]["runs"].as_array().map_or(0, Vec::len), 1);
     let again = record(&mut b, &plan, "T-3", "pass", "");
     applied(&again);

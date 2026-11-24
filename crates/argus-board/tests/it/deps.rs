@@ -36,7 +36,7 @@ fn item(id: &str, status: &str) -> Value {
 fn project_board(key: &str) -> Board {
     let mut b = empty_board(key);
     b["threads"] = json!({
-        "coordinator": thread("coordinator", "coordinator", "lead", key, 1024),
+        "lead": thread("lead", "lead", "lead", key, 1024),
         "dev": thread("dev", "thread", "dev", key, 2048),
     });
     b["items"] = by_id(vec![item("I-1", "doing"), item("I-2", "done")]);
@@ -167,7 +167,7 @@ fn an_ask_opens_the_request_and_writes_the_ledger_and_both_mirrors() {
     );
     assert_eq!(
         stored["to"],
-        json!({"project": "beta", "item": "I-3", "thread": "coordinator"})
+        json!({"project": "beta", "item": "I-3", "thread": "lead"})
     );
     assert_eq!(stored["history"][0]["from"], "opening");
     assert_eq!(stored["history"][0]["to"], "open");
@@ -181,15 +181,15 @@ fn an_ask_opens_the_request_and_writes_the_ledger_and_both_mirrors() {
     let beta = read(h, "beta");
     let made = &beta["items"]["I-3"];
     assert_eq!(made["status"], "todo");
-    assert_eq!(made["thread"], "coordinator");
-    assert_eq!(made["origin"], "coordinator");
+    assert_eq!(made["thread"], "lead");
+    assert_eq!(made["origin"], "lead");
     assert_eq!(made["title"], "Expose the save hook");
     let by = json!({
         "dep": "D-1", "project": "alpha", "item": "I-1", "thread": "dev", "title": "Item I-1",
         "state": "open",
     });
     assert_eq!(made["requestedBy"], json!([by]));
-    let inbox = inbox_texts(h, "beta", "coordinator");
+    let inbox = inbox_texts(h, "beta", "lead");
     assert_eq!(inbox.len(), 1);
     assert!(inbox[0].starts_with("dep D-1: alpha/I-1 needs your I-3 \"Expose the save hook\""));
 }
@@ -214,10 +214,10 @@ fn an_ask_that_breaks_a_rule_is_refused_with_the_contract_text() {
     named.to = Some("T-9".to_owned());
     assert_eq!(
         refused(h, &named),
-        "thread T-9 is not live on beta: live threads coordinator, dev"
+        "thread T-9 is not live on beta: live threads lead, dev"
     );
     edit(h, "beta", |b| {
-        b["threads"]["coordinator"]["status"] = json!("done");
+        b["threads"]["lead"]["status"] = json!("done");
     });
     assert_eq!(
         refused(h, &asking("alpha", "I-1", "beta")),
@@ -414,9 +414,7 @@ fn a_cancel_drops_an_item_nobody_started_and_keeps_one_that_was() {
         "cancelled"
     );
     assert_eq!(
-        inbox_texts(h, "beta", "coordinator")
-            .last()
-            .map(String::as_str),
+        inbox_texts(h, "beta", "lead").last().map(String::as_str),
         Some("alpha/I-1 cancelled its request I-3 (D-1)")
     );
     let started = world(&["alpha", "beta"]);
@@ -500,7 +498,7 @@ fn a_requester_item_that_ends_cancels_the_request_and_tells_the_assignee() {
     let beta = read(home.path(), "beta");
     assert_eq!(beta["items"]["I-3"]["status"], "dropped");
     assert_eq!(
-        inbox_texts(home.path(), "beta", "coordinator")
+        inbox_texts(home.path(), "beta", "lead")
             .last()
             .map(String::as_str),
         Some("alpha/I-1 cancelled its request I-3 (D-1)")
@@ -557,7 +555,7 @@ fn crashed_ask(home: &Path, created: &str) {
             "id": "D-1", "rev": 1, "createdAt": created, "createdBy": "alpha/dev",
             "updatedAt": created, "state": "opening",
             "from": {"project": "alpha", "item": "I-1", "thread": "dev"},
-            "to": {"project": "beta", "item": null, "thread": "coordinator"},
+            "to": {"project": "beta", "item": null, "thread": "lead"},
             "title": "Expose the save hook", "reason": null, "openedAt": null,
             "resolvedAt": null, "history": [],
         });

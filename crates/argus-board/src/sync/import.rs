@@ -7,6 +7,7 @@ use std::path::Path;
 
 use argus_core::clock::{now_iso, now_ms, parse_ms};
 use argus_core::js;
+use argus_core::lead::canonical;
 use serde_json::{Map, Value, json};
 
 use super::repeat::is_repeat;
@@ -88,7 +89,10 @@ fn route_entry(board: &Board, e: &Value) -> String {
     ]
     .into_iter()
     .find(js::truthy)
-    .map_or_else(|| "coordinator".to_owned(), |t| display(&t))
+    .map_or_else(
+        || "lead".to_owned(),
+        |t| canonical(&display(&t)).into_owned(),
+    )
 }
 
 /// The thread an op entry is about, so purging that thread takes the entry with it.
@@ -202,8 +206,9 @@ fn queue_notices(
         if notice.to.is_empty() || notice.text.is_empty() {
             continue;
         }
-        let skip = queued.get(&notice.to).copied().unwrap_or(0);
-        let inbox = array_mut(slot(board, "inbox"), &notice.to);
+        let to = canonical(&notice.to);
+        let skip = queued.get(to.as_ref()).copied().unwrap_or(0);
+        let inbox = array_mut(slot(board, "inbox"), &to);
         if inbox
             .iter()
             .skip(skip)
@@ -218,7 +223,7 @@ fn queue_notices(
             text: &notice.text,
             reference: Some(id),
         };
-        push(board, &notice.to, &message);
+        push(board, &to, &message);
     }
 }
 

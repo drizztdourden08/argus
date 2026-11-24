@@ -1,4 +1,4 @@
-//! The `build` op: the build handed to the owner. A change at the coordinator's level: the board
+//! The `build` op: the build handed to the owner. A change at the lead's level: the board
 //! holds `handedBuild` and `handedAt`, and one audit line records it.
 
 use argus_core::clock::now_iso;

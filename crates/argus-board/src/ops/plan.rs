@@ -4,7 +4,7 @@ use argus_core::clock::{now_ms, parse_ms};
 use argus_core::js;
 use serde_json::{Map, Value, json};
 
-use super::announce::coordinator_ids;
+use super::announce::lead_ids;
 use super::target::thread_arg;
 use crate::Board;
 use crate::error::{BoardError, refuse};
@@ -128,7 +128,7 @@ fn select_named(
     for id in named_threads(board, &criteria["threads"])? {
         if always.contains(&id) {
             return Err(refuse(format!(
-                "{id} is the coordinator or the calling thread and is never purged."
+                "{id} is the lead or the calling thread and is never purged."
             )));
         }
         sel.add("threads", &id);
@@ -345,7 +345,7 @@ fn counts_of(board: &Board, sel: &Selection) -> Map<String, Value> {
 
 /// What a purge would remove. `criteria` is one or more of: `threads` (ids), `keep` (ids) (every
 /// other thread), `status` (a list) (a thread status or `placeholder`), `idleDays` n, `trash` (true,
-/// with `olderDays` n). Coordinators and `protect` threads are never purged. A placeholder merged
+/// with `olderDays` n). Leads and `protect` threads are never purged. A placeholder merged
 /// into a purged thread goes with it. Everything the threads own goes too: items (their AC),
 /// tests, entries (and every entry replying to or targeting a removed record), actions, the
 /// thread's agents, work-log lines, inbox. The audit log is kept.
@@ -354,7 +354,7 @@ fn counts_of(board: &Board, sel: &Selection) -> Map<String, Value> {
 /// Refused when no criterion is named, a named thread does not exist or is protected, or the
 /// criteria contradict each other.
 pub fn purge_plan(board: &Board, criteria: &Value) -> Result<PurgePlan, BoardError> {
-    let mut always = coordinator_ids(board, false);
+    let mut always = lead_ids(board, false);
     always.extend(
         criteria["protect"]
             .as_array()

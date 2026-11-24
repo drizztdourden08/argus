@@ -57,7 +57,7 @@ fn bug_set(title: &str, parent: &str) -> Value {
         "fields": {"severity": "S2"}})
 }
 
-/// A board with a bug made by the coordinator and moved by the owner into `stage`.
+/// A board with a bug made by the lead and moved by the owner into `stage`.
 fn bug_at(stage: &str) -> (Value, String) {
     let mut b = alpha();
     let epic = an_epic(&mut b);
@@ -98,7 +98,7 @@ fn an_item_without_a_type_is_written_and_changed_exactly_as_before() {
     let mut b = alpha();
     let id = "I-90".to_owned();
     b["items"][id.as_str()] = json!({
-        "title": "Plain", "thread": "ui", "status": "todo", "origin": "coordinator",
+        "title": "Plain", "thread": "ui", "status": "todo", "origin": "lead",
         "ac": [{"n": 1, "text": "one", "done": false}],
     });
     let keys: Vec<String> = b["items"][id.as_str()]
@@ -501,19 +501,19 @@ fn the_assignee_and_the_thread_move_together() {
         &mut b,
         &Who::human(),
         "I-1",
-        json!({"assignee": "coordinator"}),
+        json!({"assignee": "lead"}),
     ));
-    assert_eq!(b["items"]["I-1"]["thread"], "coordinator");
-    assert_eq!(b["items"]["I-1"]["assignee"], "coordinator");
-    assert_eq!(b["tests"]["T-2"]["thread"], "coordinator");
-    assert_eq!(b["entries"]["Q-1"]["thread"], "coordinator");
+    assert_eq!(b["items"]["I-1"]["thread"], "lead");
+    assert_eq!(b["items"]["I-1"]["assignee"], "lead");
+    assert_eq!(b["tests"]["T-2"]["thread"], "lead");
+    assert_eq!(b["entries"]["Q-1"]["thread"], "lead");
     applied(&edit(
         &mut b,
         &Who::human(),
         "I-1",
         json!({"assignee": "owner"}),
     ));
-    assert_eq!(b["items"]["I-1"]["thread"], "coordinator");
+    assert_eq!(b["items"]["I-1"]["thread"], "lead");
     assert_eq!(b["items"]["I-1"]["assignee"], "owner");
     let lead_of_other = edit(
         &mut b,
@@ -529,8 +529,8 @@ fn the_assignee_and_the_thread_move_together() {
 #[test]
 fn a_thread_cannot_hand_its_item_over_through_the_assignee() {
     let mut b = alpha();
-    let res = edit(&mut b, &worker(), "I-1", json!({"assignee": "coordinator"}));
-    assert!(refused(&res).contains("only the coordinator can hand it"));
+    let res = edit(&mut b, &worker(), "I-1", json!({"assignee": "lead"}));
+    assert!(refused(&res).contains("only the lead can hand it"));
     assert_eq!(b["items"]["I-1"]["thread"], "ui");
     applied(&edit(
         &mut b,
@@ -553,7 +553,7 @@ fn a_new_item_assigned_to_a_thread_belongs_to_that_thread() {
     let clash = make(
         &mut b,
         &Who::human(),
-        json!({"title": "Clash", "thread": "coordinator", "assignee": "ui", "parent": epic}),
+        json!({"title": "Clash", "thread": "lead", "assignee": "ui", "parent": epic}),
     );
     assert!(refused(&clash).contains("differ"));
 }
@@ -764,12 +764,12 @@ fn a_note_follows_the_rich_text_rules_and_the_ownership_of_its_record() {
         .to_string();
     assert_eq!(blank, "note text is required.");
     let mut other = alpha();
-    other["items"]["I-2"]["thread"] = json!("coordinator");
+    other["items"]["I-2"]["thread"] = json!("lead");
     let foreign = create_note(&mut other, &worker(), "I-2", &json!("hello"))
         .unwrap_err()
         .to_string();
     assert!(
-        foreign.contains("you cannot create records for coordinator"),
+        foreign.contains("you cannot create records for lead"),
         "{foreign}"
     );
 }
