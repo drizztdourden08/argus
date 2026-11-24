@@ -8,7 +8,7 @@ import { cardMenuGroups } from '../behavior/card-menu-groups';
 import { leadTone } from '../attention';
 import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
-import { epicColumns, epicFolded, epicKeyOf, epicKeys, epicStored, planDrop } from '../model';
+import { cardTint, epicColumns, epicFolded, epicKeyOf, epicKeys, epicStored, planDrop } from '../model';
 import type { CardData } from '../model';
 import { columnDefs } from './ColumnDefs';
 import { EpicHeader } from './EpicHeader';
@@ -58,6 +58,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       columns={columns}
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
+      cardTint={cardTint}
       onMove={onMove}
       onCardOpen={onCardOpen}
       renderGroupHeader={(groupId, column, fold) => frameHeader(props, groupId, column, fold)}
