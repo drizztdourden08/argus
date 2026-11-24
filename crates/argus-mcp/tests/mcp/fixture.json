@@ -9,13 +9,13 @@
       }
     },
     "threads": {
-      "coordinator": {
-        "id": "coordinator",
+      "lead": {
+        "id": "lead",
         "rev": 1,
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "status": "active",
-        "role": "coordinator",
+        "role": "lead",
         "subject": "lead",
         "note": "steering",
         "flags": {},
@@ -57,7 +57,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "status": "doing",
-        "thread": "coordinator",
+        "thread": "lead",
         "subject": "lead",
         "title": "Ship the pedestal fix",
         "description": "sword pedestal",
@@ -114,7 +114,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "status": "doing",
-        "thread": "coordinator",
+        "thread": "lead",
         "subject": "lead",
         "title": "Pedestal plan",
         "type": "test-plan",
@@ -130,7 +130,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "status": "doing",
-        "thread": "coordinator",
+        "thread": "lead",
         "subject": "lead",
         "title": "Pedestal run 1",
         "type": "test-run",
@@ -154,7 +154,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "item": "I-1",
-        "thread": "coordinator",
+        "thread": "lead",
         "title": "A sword nobody pulled changes nothing",
         "covers": "gate PedestalScenes",
         "mode": "manual",
@@ -179,7 +179,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "item": "I-1",
-        "thread": "coordinator",
+        "thread": "lead",
         "title": "Unit suite",
         "covers": "core",
         "mode": "auto",
@@ -189,7 +189,7 @@
         "result": {
           "status": "pass",
           "text": "green",
-          "by": "coordinator",
+          "by": "lead",
           "at": "2026-10-22T10:00:00.000Z"
         }
       },
@@ -215,8 +215,8 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "kind": "question",
-        "author": "coordinator",
-        "thread": "coordinator",
+        "author": "lead",
+        "thread": "lead",
         "item": "I-1",
         "text": "Should the pedestal glow after the sword is pulled?",
         "context": "A visual polish choice on the story scene. It only changes the look of the sword moment. If unanswered the scene stays plain.",
@@ -234,7 +234,7 @@
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "kind": "decision",
         "author": "human",
-        "thread": "coordinator",
+        "thread": "lead",
         "item": "I-1",
         "text": "Go with the glow",
         "status": "pending"
@@ -255,7 +255,7 @@
         "resource": "rom",
         "holder": "story",
         "queue": [
-          "coordinator"
+          "lead"
         ]
       }
     },
@@ -265,7 +265,7 @@
         "rev": 1,
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
-        "thread": "coordinator",
+        "thread": "lead",
         "item": "I-1",
         "text": "Plug in the controller",
         "status": "pending"
@@ -278,7 +278,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "name": "builder",
-        "thread": "coordinator",
+        "thread": "lead",
         "task": "build the pedestal fix",
         "status": "working",
         "kind": "build",
@@ -325,7 +325,7 @@
         "exitCode": 0,
         "agent": "A-1",
         "origin": "cli",
-        "by": "coordinator"
+        "by": "lead"
       }
     },
     "launches": {
@@ -362,7 +362,7 @@
         "current": true,
         "retiredAt": null,
         "updatedAt": "2026-10-22T10:00:00.000Z",
-        "by": "coordinator"
+        "by": "lead"
       },
       "master": {
         "name": "master",
@@ -373,7 +373,7 @@
         "current": false,
         "retiredAt": null,
         "updatedAt": "2026-10-22T10:00:00.000Z",
-        "by": "coordinator"
+        "by": "lead"
       },
       "old-1": {
         "name": "old-1",
@@ -382,9 +382,9 @@
         "kind": "dev",
         "current": false,
         "retiredAt": "2026-10-22T10:00:00.000Z",
-        "retiredBy": "coordinator",
+        "retiredBy": "lead",
         "updatedAt": "2026-10-22T10:00:00.000Z",
-        "by": "coordinator"
+        "by": "lead"
       }
     }
   },
@@ -399,8 +399,8 @@
       }
     },
     "threads": {
-      "coordinator": {
-        "id": "coordinator",
+      "lead": {
+        "id": "lead",
         "rev": 1,
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
@@ -416,7 +416,7 @@
         "createdAt": "2026-10-22T10:00:00.000Z",
         "updatedAt": "2026-10-22T10:00:00.000Z",
         "status": "todo",
-        "thread": "coordinator",
+        "thread": "lead",
         "title": "Pedestal in the beta game",
         "ac": []
       }

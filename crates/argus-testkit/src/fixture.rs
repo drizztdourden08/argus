@@ -1,7 +1,7 @@
 //! The fixture home of the Node tests, written as plain JSON:
-//! `alpha` (coordinator and `ui`, items with AC, an auto test that passed and a manual test of
+//! `alpha` (lead and `ui`, items with AC, an auto test that passed and a manual test of
 //! the handed build `b1`, a question, a notice, a pending action, agents working and done, a
-//! lock, a log, and the run defs `hello`, `fail`, `slow`, `app`), `beta` (coordinator and `api`,
+//! lock, a log, and the run defs `hello`, `fail`, `slow`, `app`), `beta` (lead and `api`,
 //! one item, a manual test, an open decision request) and `_portfolio` listing both.
 
 use std::path::Path;
@@ -16,7 +16,7 @@ const COLLECTIONS: [&str; 13] = [
 ];
 
 fn run_def(name: &str, cmd: &str, cwd: &str, extra: Value) -> Value {
-    let base = json!({ "name": name, "cmd": cmd, "cwd": cwd, "kind": "task", "env": {}, "hand": false, "visible": false, "timeoutSec": 0, "parallel": 1, "definedBy": "coordinator", "definedAt": ago(20), "rev": 1 });
+    let base = json!({ "name": name, "cmd": cmd, "cwd": cwd, "kind": "task", "env": {}, "hand": false, "visible": false, "timeoutSec": 0, "parallel": 1, "definedBy": "lead", "definedAt": ago(20), "rev": 1 });
     merge(base, extra)
 }
 
@@ -55,7 +55,7 @@ pub fn alpha_board(home: &Path) -> Value {
 pub fn beta_board() -> Value {
     let mut b = base("beta", "Beta");
     b["counters"] = json!({ "I": 1, "T": 1, "Q": 1 });
-    b["threads"] = json!({ "coordinator": thread("coordinator", "coordinator", "lead", "Beta", 1024), "api": thread("api", "thread", "api", "Beta - API", 2048) });
+    b["threads"] = json!({ "lead": thread("lead", "lead", "lead", "Beta", 1024), "api": thread("api", "thread", "api", "Beta - API", 2048) });
     b["items"] = by_id(vec![doc(
         "I-1",
         "api",

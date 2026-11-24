@@ -1,5 +1,5 @@
 //! A thread going out of sight: `thread pause` and `resume` (yourself, or any thread when the
-//! coordinator asks for the owner), `thread archive` and `unarchive` (a thread whose session is
+//! lead asks for the owner), `thread archive` and `unarchive` (a thread whose session is
 //! gone: its items, questions, decisions, actions and tests stay visible).
 
 use argus_board::Board;
@@ -12,17 +12,17 @@ use serde_json::{Value, json};
 
 use super::target;
 use crate::cli::exit::{CoordError, Outcome};
-use crate::verbs::thread::frame::{Frame, is_coordinator, who_of};
+use crate::verbs::thread::frame::{Frame, is_lead, who_of};
 use crate::verbs::thread::passed::{lock_holders, say_passed};
 use crate::who::Caller;
 
-/// Who the thread is told did it: the coordinator's session when it acts for the owner.
+/// Who the thread is told did it: the lead's session when it acts for the owner.
 fn by_whom(board: &Board, who: &Caller, id: &str) -> String {
-    if !is_coordinator(who) {
+    if !is_lead(who) {
         return id.to_owned();
     }
     let session = nullish(&board["threads"][who.actor.as_str()], "session")
-        .unwrap_or_else(|| "the coordinator".to_owned());
+        .unwrap_or_else(|| "the lead".to_owned());
     format!("{session} (for the owner)")
 }
 
@@ -83,9 +83,9 @@ fn archive_or_not(frame: &mut Frame<'_>, verb: &str) -> Outcome {
     frame.mutate(false, |board, fr| {
         let who = fr.identify(board)?;
         let id = target(board, fr, &who)?;
-        if verb == "archive" && board["threads"][id.as_str()]["role"] == "coordinator" {
+        if verb == "archive" && board["threads"][id.as_str()]["role"] == "lead" {
             return Err(CoordError::refuse(
-                "the coordinator thread is never archived.",
+                "the lead thread is never archived.",
             ));
         }
         let acting = who_of(&who);
@@ -116,7 +116,7 @@ fn archive_or_not(frame: &mut Frame<'_>, verb: &str) -> Outcome {
 /// The verb `thread archive [name] [--reason "..."]`.
 ///
 /// # Errors
-/// Refused for the coordinator thread, an unknown thread, a thread that is not the caller's to
+/// Refused for the lead thread, an unknown thread, a thread that is not the caller's to
 /// archive, a reason over its limit and no board.
 pub fn archive(frame: &mut Frame<'_>) -> Outcome {
     archive_or_not(frame, "archive")

@@ -21,11 +21,11 @@ pub(super) struct Note<'a> {
 
 fn lead_of(board: &Value) -> String {
     let ids = find_ids(board, "threads", |t| {
-        t["role"] == "coordinator" && t["status"] != "done"
+        t["role"] == "lead" && t["status"] != "done"
     });
     ids.first()
         .and_then(|id| doc(board, "threads", id).and_then(|t| nullish(t, "id")))
-        .unwrap_or_else(|| "coordinator".to_owned())
+        .unwrap_or_else(|| "lead".to_owned())
 }
 
 /// One line of the `leads` log, numbered and never trimmed.

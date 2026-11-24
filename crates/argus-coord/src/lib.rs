@@ -19,7 +19,7 @@
 //! src/shortcut/  alias urls and launch.json merge (`coord board shortcut`)
 //! src/verbs/     the table of ported verb groups (`PORTED`)
 //! src/verbs/shared/ what every group uses and none rebuilds: `caller` (`who_of`,
-//!                `is_coordinator`) and `lock` (`board_refusal`, the Node lock sentence)
+//!                `is_lead`) and `lock` (`board_refusal`, the Node lock sentence)
 //! ```
 //!
 //! The verb groups, one folder each so parallel work packages never edit the same file. A

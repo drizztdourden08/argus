@@ -26,14 +26,14 @@ fn row(name: &str, port: u16, url: &str) -> Value {
 #[test]
 fn the_lead_is_the_project_alias_and_a_thread_is_thread_dot_project() {
     assert_eq!(
-        alias_url("alpha", "coordinator", 51999).unwrap(),
+        alias_url("alpha", "lead", 51999).unwrap(),
         "http://alpha.localhost:51999"
     );
     assert_eq!(
         alias_url("alpha", "worker", 51999).unwrap(),
         "http://worker.alpha.localhost:51999"
     );
-    let lead = shortcut_config("Alpha", "alpha", "coordinator", 51999).unwrap();
+    let lead = shortcut_config("Alpha", "alpha", "lead", 51999).unwrap();
     assert_eq!(
         lead,
         row("Alpha board", 51999, "http://alpha.localhost:51999")
@@ -65,20 +65,18 @@ fn a_thread_id_a_host_name_cannot_carry_gets_no_shortcut() {
 #[test]
 fn a_project_key_a_host_name_cannot_carry_gets_no_shortcut() {
     for key in ["", "-lead", "Has.Dot", "under_score", &"k".repeat(64)] {
-        let err = alias_url(key, "coordinator", 1).unwrap_err().to_string();
+        let err = alias_url(key, "lead", 1).unwrap_err().to_string();
         assert!(err.contains("cannot be a host name"), "{key}: {err}");
     }
-    assert!(alias_url(&"k".repeat(63), "coordinator", 1).is_ok());
+    assert!(alias_url(&"k".repeat(63), "lead", 1).is_ok());
 }
 
 #[test]
 fn a_reserved_project_key_gets_no_shortcut_and_the_app_project_is_argus_app() {
-    let err = alias_url("overlord", "coordinator", 1)
-        .unwrap_err()
-        .to_string();
+    let err = alias_url("overlord", "lead", 1).unwrap_err().to_string();
     assert!(err.contains("reserved host name"), "{err}");
     assert_eq!(
-        alias_url("argus", "coordinator", 5).unwrap(),
+        alias_url("argus", "lead", 5).unwrap(),
         "http://argus-app.localhost:5"
     );
     assert_eq!(
@@ -89,17 +87,11 @@ fn a_reserved_project_key_gets_no_shortcut_and_the_app_project_is_argus_app() {
 
 #[test]
 fn the_overlord_gets_two_rows_and_nobody_else_does() {
-    assert!(is_overlord(Path::new(NO_HOME), "portfolio", "coordinator"));
+    assert!(is_overlord(Path::new(NO_HOME), "portfolio", "lead"));
     assert!(!is_overlord(Path::new(NO_HOME), "portfolio", "helper"));
-    assert!(!is_overlord(Path::new(NO_HOME), "alpha", "coordinator"));
-    let rows = shortcut_configs(
-        Path::new(NO_HOME),
-        "Portfolio",
-        "portfolio",
-        "coordinator",
-        51999,
-    )
-    .unwrap();
+    assert!(!is_overlord(Path::new(NO_HOME), "alpha", "lead"));
+    let rows =
+        shortcut_configs(Path::new(NO_HOME), "Portfolio", "portfolio", "lead", 51999).unwrap();
     assert_eq!(
         rows,
         [
@@ -129,8 +121,7 @@ fn the_overlord_gets_two_rows_and_nobody_else_does() {
 fn a_new_file_gets_version_and_one_row_as_two_space_json() {
     let home = Home::new();
     let root = home.folder("lead");
-    let rows =
-        shortcut_configs(Path::new(NO_HOME), "Alpha", "alpha", "coordinator", 51999).unwrap();
+    let rows = shortcut_configs(Path::new(NO_HOME), "Alpha", "alpha", "lead", 51999).unwrap();
     let written = write_shortcuts(&root, &rows).unwrap();
     assert!(written.changed);
     assert_eq!(written.wrote, rows);
@@ -150,8 +141,7 @@ fn a_new_file_gets_version_and_one_row_as_two_space_json() {
 fn the_same_call_again_changes_nothing() {
     let home = Home::new();
     let root = home.folder("lead");
-    let rows =
-        shortcut_configs(Path::new(NO_HOME), "Alpha", "alpha", "coordinator", 51999).unwrap();
+    let rows = shortcut_configs(Path::new(NO_HOME), "Alpha", "alpha", "lead", 51999).unwrap();
     write_shortcuts(&root, &rows).unwrap();
     let first = fs::read_to_string(launch_file(&root)).unwrap();
     let again = write_shortcuts(&root, &rows).unwrap();
@@ -203,14 +193,8 @@ fn other_rows_and_top_level_keys_are_kept_in_order_and_the_same_name_is_replaced
 fn with_one_overlord_row_missing_only_that_one_is_written() {
     let home = Home::new();
     let root = home.folder("overlord");
-    let rows = shortcut_configs(
-        Path::new(NO_HOME),
-        "Portfolio",
-        "portfolio",
-        "coordinator",
-        51999,
-    )
-    .unwrap();
+    let rows =
+        shortcut_configs(Path::new(NO_HOME), "Portfolio", "portfolio", "lead", 51999).unwrap();
     write_shortcuts(&root, &rows).unwrap();
     let mut json = read(&root);
     json["configurations"] = json!([rows[0]]);
@@ -298,29 +282,23 @@ fn the_overlord_is_told_while_either_row_is_missing() {
         Path::new(NO_HOME),
         &root,
         "portfolio",
-        "coordinator"
+        "lead"
     ));
-    let rows = shortcut_configs(
-        Path::new(NO_HOME),
-        "Portfolio",
-        "portfolio",
-        "coordinator",
-        51999,
-    )
-    .unwrap();
+    let rows =
+        shortcut_configs(Path::new(NO_HOME), "Portfolio", "portfolio", "lead", 51999).unwrap();
     write_shortcuts(&root, &rows[..1]).unwrap();
     assert!(needs_shortcut(
         Path::new(NO_HOME),
         &root,
         "portfolio",
-        "coordinator"
+        "lead"
     ));
     write_shortcuts(&root, &rows).unwrap();
     assert!(!needs_shortcut(
         Path::new(NO_HOME),
         &root,
         "portfolio",
-        "coordinator"
+        "lead"
     ));
 }
 

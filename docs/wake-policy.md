@@ -158,7 +158,7 @@ working when its thread is inside a turn or it has a live agent record; an idle 
 `handover-estimate` and `handover-request` skip the wake debounce (`DEBOUNCE_BYPASS_REASONS` in
 `crates/argus-wake/src/reasons.rs`, applied in `engine/policy.rs`): a lead woken a minute ago still
 gets them at once, because the switch does not wait for a digest. They are also immediate, so the
-window closes at once. Only the coordinator of a board (the Overlord on `portfolio`) answers with
+window closes at once. Only the lead of a board (the Overlord on `portfolio`) answers with
 `coord handover estimate`, `write` or `status`.
 
 ## Open faults and notices

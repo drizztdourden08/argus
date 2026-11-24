@@ -34,7 +34,7 @@ impl Fixture {
         };
         fx.set_port(51999);
         fx.ok(&["board", "init", "--project", "alpha", "--name", "Alpha"]);
-        fx.register("coordinator", &["--role", "coordinator"], &fx.lead_root);
+        fx.register("lead", &["--role", "lead"], &fx.lead_root);
         fx.register("worker", &["--subject", "work"], &fx.work_root);
         fx.register("dot.x", &["--subject", "dots"], &fx.work_root);
         fx.register(
@@ -86,7 +86,7 @@ fn with<'a>(words: &[&'a str], tail: &[&'a str]) -> Vec<&'a str> {
 fn the_lead_gets_one_configuration_on_the_project_alias_and_no_command() {
     let fx = Fixture::new();
     assert!(!launch(&fx.lead_root).exists());
-    let ran = fx.ok(&with(&["board", "shortcut", "--as", "coordinator"], &A));
+    let ran = fx.ok(&with(&["board", "shortcut", "--as", "lead"], &A));
     assert_eq!(
         read(&fx.lead_root),
         json!({"version": "0.0.1", "configurations": [{"name": "Alpha board", "port": 51999, "url": "http://alpha.localhost:51999"}]})

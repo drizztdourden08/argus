@@ -1085,7 +1085,7 @@ outside world is a trait, so tests fake it); the server composes it in `services
 | Colls (`_portfolio`) | `Accounts` (a doc per account key), `AccountsState` (`drift`, `run`, `switch`, `cycle`), `SyncSteps` (a doc per step), `Handovers` (`H-n` per lead) |
 | Routes | `/api/accounts` and its `usage/refresh`, `compare`, `sync`, `sync/undo`, `login/save`, `switch`, `switch/anyway`, `switch/cancel`, `cycle`, `handover`, `settings` and `tray` (table under Routes added by Argus) |
 | Wakes | `handover-estimate` and `handover-request` to a working lead, `handover-ready` to the Overlord (`docs/wake-policy.md`) |
-| Coord | `coord handover estimate`, `write` and `status` in `argus-coord`, for a board's coordinator only |
+| Coord | `coord handover estimate`, `write` and `status` in `argus-coord`, for a board's lead only |
 | Data on disk | `<DASHBOARD_HOME>ccounts\logins` (saved Desktop logins) and `<DASHBOARD_HOME>ccountsackups` (sync backups); settings under `accounts` in `config.json` |
 | Safety | nothing is written while the app holds its lock; a sync backs up first and can be undone; a failed switch puts the old login back; a token is never logged, shown or sent anywhere but the usage and token calls; no process is killed by name |
 

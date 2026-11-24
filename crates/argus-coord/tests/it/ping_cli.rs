@@ -19,21 +19,15 @@ fn seed(coord_home: &Path, base: &Path) {
     let alpha_root = make_checkout(base, "alpha");
     let main_root = make_checkout(base, "portfolio");
     let alpha: [ThreadSpec<'_>; 2] = [
-        (
-            "lead",
-            "coordinator",
-            "active",
-            Some(LEAD),
-            Some(&alpha_root),
-        ),
+        ("lead", "lead", "active", Some(LEAD), Some(&alpha_root)),
         ("helper", "thread", "active", Some(HELPER), None),
     ];
     let mut board = board_with("alpha", &alpha);
     board["name"] = json!("Alpha");
     argus_testkit::write_board(coord_home, "alpha", &board);
     let portfolio = [(
-        "coordinator",
-        "coordinator",
+        "lead",
+        "lead",
         "active",
         Some(MAIN),
         Some(main_root.as_path()),
@@ -204,7 +198,7 @@ async fn the_overlord_pings_as_the_overlord_and_a_session_that_is_no_thread_is_t
     let n = newest(&rig).await;
     assert_eq!(
         json!([n["by"], n["project"], n["thread"]]),
-        json!(["overlord", "portfolio", "coordinator"])
+        json!(["overlord", "portfolio", "lead"])
     );
     refused(
         &ping(&rig, &["who am I"], "sess-nobody", "checkout-alpha"),

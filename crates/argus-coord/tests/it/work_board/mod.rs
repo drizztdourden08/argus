@@ -1,5 +1,5 @@
-//! A seeded `alpha` board for the work verb tests: a coordinator, a worker and one item (I-1), in
-//! a temp home, and calls of `coord` as the worker or the coordinator. Each test binary uses only
+//! A seeded `alpha` board for the work verb tests: a lead, a worker and one item (I-1), in
+//! a temp home, and calls of `coord` as the worker or the lead. Each test binary uses only
 //! part of it.
 #![allow(dead_code)]
 
@@ -22,7 +22,7 @@ impl Work {
         let home = Home::new();
         let cwd = home.folder("work");
         let board = FixtureBoard::new("alpha")
-            .thread("coordinator", "coordinator", None)
+            .thread("lead", "lead", None)
             .thread("worker", "thread", None)
             .item("Login", "worker", "todo", &[]);
         let dir = home.coord_home().join("alpha");
@@ -51,7 +51,7 @@ impl Work {
     }
 
     pub fn lead(&self, words: &[&str]) -> Ran {
-        self.as_thread("coordinator", words)
+        self.as_thread("lead", words)
     }
 
     /// The board file as JSON.

@@ -1,6 +1,6 @@
 //! `coord agent`: the sub-agents a thread runs, as board documents (`A-1`, `A-2`, ...). The thread
 //! that starts one registers it, keeps its note current and closes it, so the board lists every
-//! agent working right now. The coordinator acts on any thread's agents with `--for <thread>`.
+//! agent working right now. The lead acts on any thread's agents with `--for <thread>`.
 
 mod bind;
 mod fields;

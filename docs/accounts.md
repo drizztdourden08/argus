@@ -201,7 +201,7 @@ The handover cycle, per account:
 A lead is working when its thread is inside a turn or it has a live agent record. An idle lead is
 not asked and costs nothing. The lead is told what to do by `coord handover estimate`, `write` and
 `status` (the verbs are in `crates/argus-coord/src/verbs/remote/handover.rs`, and only a board's
-coordinator may call them).
+lead may call them).
 
 ### The ask point
 

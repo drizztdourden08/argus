@@ -33,7 +33,7 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
         &format!("board created for {}: {file}", frame.project),
         "",
         "Next:",
-        "  1. coord thread register coordinator --role coordinator --session \"<this session title>\"",
+        "  1. coord thread register lead --role lead --session \"<this session title>\"",
         &format!("  2. coord board open   (the page: {page})"),
     ]);
     Ok(())

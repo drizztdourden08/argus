@@ -5,7 +5,7 @@ use argus_board::Board;
 use argus_board::json::{section, truthy};
 use serde_json::{Value, json};
 
-use super::need_coordinator;
+use super::need_lead;
 use crate::cli::exit::Outcome;
 use crate::cli::out::{clip, table};
 use crate::cli::{Opt, Val};
@@ -72,11 +72,11 @@ fn what(doc: &Value) -> String {
 /// The verb `trash [--for T] [--json]`.
 ///
 /// # Errors
-/// Refused for a caller that is not the coordinator, and no board.
+/// Refused for a caller that is not the lead, and no board.
 pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let board = frame.read_board()?;
     let who = frame.caller(&board)?;
-    need_coordinator(&who, "read the trash")?;
+    need_lead(&who, "read the trash")?;
     let entries = found(&board, frame.options.text("for").filter(|o| !o.is_empty()));
     if matches!(frame.options.get("json"), Some(Opt::One(Val::Flag))) {
         frame.json(&as_json(&entries));

@@ -30,7 +30,7 @@ fn a_dispatch_is_stored_for_a_registered_thread_silently() {
     let list = dispatches(&f);
     assert_eq!(list.len(), 1);
     let d = &list[0];
-    assert_eq!(d["thread"], "coordinator");
+    assert_eq!(d["thread"], "lead");
     assert_eq!(d["toolUseId"], "toolu_1");
     assert_eq!(d["description"], "Run the test suite");
     assert_eq!(d["promptHead"].as_str().unwrap().len(), 300);
@@ -63,9 +63,9 @@ fn another_tool_is_ignored_and_a_missing_model_is_null() {
 fn dispatches_older_than_ten_minutes_go_and_the_list_keeps_twenty() {
     let f = Fixture::new();
     let mut board = f.board();
-    let mut list = vec![json!({ "thread": "coordinator", "description": "old", "at": ago(11) })];
+    let mut list = vec![json!({ "thread": "lead", "description": "old", "at": ago(11) })];
     for i in 0..22 {
-        list.push(json!({ "thread": "coordinator", "description": format!("d{i}"), "at": ago(0) }));
+        list.push(json!({ "thread": "lead", "description": format!("d{i}"), "at": ago(0) }));
     }
     board["agentDispatches"] = Value::Array(list);
     f.save(&board);
@@ -89,7 +89,7 @@ fn dispatch_then_start_makes_one_record_with_the_dispatch_fields() {
     assert_eq!(board["agents"].as_object().unwrap().len(), 3);
     let a = f.by_hook("agent-abcdef-1234").expect("the record");
     assert_eq!(a["id"], "A-3");
-    assert_eq!(a["thread"], "coordinator");
+    assert_eq!(a["thread"], "lead");
     assert_eq!(a["name"], "run-the-test-suite");
     assert_eq!(a["task"], "Run the test suite");
     assert_eq!(a["model"], "sonnet");
@@ -247,7 +247,7 @@ fn a_stop_for_an_unknown_agent_or_with_no_body_adds_no_record() {
         "only a note for a start that may still come"
     );
     assert_eq!(stops[0]["hookId"], "agent-never-seen");
-    assert_eq!(stops[0]["thread"], "coordinator");
+    assert_eq!(stops[0]["thread"], "lead");
     assert_eq!(stops[0]["used"], Value::Null);
 }
 

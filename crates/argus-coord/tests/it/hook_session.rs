@@ -12,12 +12,12 @@ fn input(f: &Fixture, sid: &str) -> Value {
 
 fn with_message(f: &Fixture, to: &str, text: &str) {
     let mut board = f.board();
-    let message = json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": text, "ref": null, "deliveredAt": null });
+    let message = json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "lead", "kind": "note", "text": text, "ref": null, "deliveredAt": null });
     board["inbox"][to] = json!([message]);
     f.save(&board);
 }
 
-const MESSAGES: &str = "Coordination board: 1 new message(s) for thread \"ui\".\n- [note] from coordinator: Start with the parser.\nAct on them, then run `coord inbox --ack`.";
+const MESSAGES: &str = "Coordination board: 1 new message(s) for thread \"ui\".\n- [note] from lead: Start with the parser.\nAct on them, then run `coord inbox --ack`.";
 
 #[test]
 fn a_prompt_hands_the_new_messages_over_once_and_marks_them_delivered() {
@@ -179,7 +179,7 @@ fn a_session_found_by_its_id_wins_over_the_folder() {
     let text = out["hookSpecificOutput"]["additionalContext"]
         .as_str()
         .unwrap();
-    assert!(text.starts_with("You are thread \"coordinator\""), "{text}");
+    assert!(text.starts_with("You are thread \"lead\""), "{text}");
 }
 
 #[test]

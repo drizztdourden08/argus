@@ -50,7 +50,7 @@ names who recorded it and the note. The tones live in
 Reason `remote-sync-due`; it is not an immediate reason, so it coalesces like the Kanban
 reminders.
 
-- A project is checked when its board has a coordinator thread that is registered and not ended
+- A project is checked when its board has a lead thread that is registered and not ended
   (not `done`, not `archived`, not a placeholder). The Overlord's scope (`portfolio`) and the
   portfolio board are left out.
 - The sync is due when `due_ms` (24 hours) have passed since the last record. A project that

@@ -48,21 +48,19 @@ fn context(f: &Fixture, event: &str, input: &Value) -> String {
 }
 
 #[test]
-fn a_coordinator_is_denied_with_its_board_url_on_the_configured_port() {
+fn a_lead_is_denied_with_its_board_url_on_the_configured_port() {
     let f = fixture();
     let ran = f.hook("guard", &input(&f, LEAD));
     assert_eq!(ran.code, 0);
     let text = reason(&ran.out);
     assert!(
-        text.contains(&format!(
-            "http://127.0.0.1:{PORT}/p/alpha/?thread=coordinator"
-        )),
+        text.contains(&format!("http://127.0.0.1:{PORT}/p/alpha/?thread=lead")),
         "{text}"
     );
     assert_eq!(
         text,
         format!(
-            "Do not close browser tabs in a registered thread: your board tab (http://127.0.0.1:{PORT}/p/alpha/?thread=coordinator) must stay open, the dashboard reports a closed board to the Overlord. Open other pages in a new tab (tabs_create), and if the board tab is gone, reopen it with preview_start."
+            "Do not close browser tabs in a registered thread: your board tab (http://127.0.0.1:{PORT}/p/alpha/?thread=lead) must stay open, the dashboard reports a closed board to the Overlord. Open other pages in a new tab (tabs_create), and if the board tab is gone, reopen it with preview_start."
         )
     );
 }
@@ -77,7 +75,7 @@ fn the_reason_falls_back_to_the_default_port_without_a_config() {
         ("DASHBOARD_HOME", &bare.to_string_lossy()),
     ]);
     let ran = crate::hook_support::hook_with(env, "guard", &input(&f, LEAD).to_string(), &f.cwd);
-    assert!(reason(&ran.out).contains("http://127.0.0.1:47615/p/alpha/?thread=coordinator"));
+    assert!(reason(&ran.out).contains("http://127.0.0.1:47615/p/alpha/?thread=lead"));
 }
 
 #[test]
@@ -155,19 +153,19 @@ fn the_guard_never_changes_the_board() {
 }
 
 #[test]
-fn the_coordinator_is_told_to_open_its_board_in_the_browser_pane_and_keep_it_open() {
+fn the_lead_is_told_to_open_its_board_in_the_browser_pane_and_keep_it_open() {
     let f = fixture();
     let text = context(&f, "session-start", &input(&f, LEAD));
     for part in [
         "preview_start",
         "Never close that tab",
-        &format!("http://127.0.0.1:{PORT}/p/alpha/?thread=coordinator"),
+        &format!("http://127.0.0.1:{PORT}/p/alpha/?thread=lead"),
         "30 seconds",
         "mcp__ccd_view__show_pane with pane \"preview\"",
     ] {
         assert!(text.contains(part), "{part}: {text}");
     }
-    assert!(text.starts_with("You are thread \"coordinator\" on the Alpha coordination board (subject lead). Load the coord skill before working; keep your note current with coord thread note.\nDashboard: "));
+    assert!(text.starts_with("You are thread \"lead\" on the Alpha coordination board (subject lead). Load the coord skill before working; keep your note current with coord thread note.\nDashboard: "));
 }
 
 #[test]
@@ -218,13 +216,13 @@ fn overlord_home(home: &Home, root: &Path) {
     wire(root, "portfolio");
     fs::create_dir_all(root.join(".git")).unwrap();
     let thread = json!({
-        "id": "coordinator", "name": "coordinator", "role": "coordinator", "status": "active",
+        "id": "lead", "name": "lead", "role": "lead", "status": "active",
         "subject": null, "root": root, "session": "Overlord", "sessionId": null,
         "rev": 1, "rank": 1024, "lastSeen": crate::hook_support::ago(1), "activity": "working",
     });
     let board = json!({
         "schema": 2, "project": "portfolio", "name": "Portfolio", "counters": {},
-        "threads": { "coordinator": thread }, "inbox": {}, "agents": {}, "dirty": {},
+        "threads": { "lead": thread }, "inbox": {}, "agents": {}, "dirty": {},
     });
     home.write_board("portfolio", &board);
 }
@@ -267,7 +265,8 @@ fn the_overlord_is_told_the_shortcut_makes_two_rows_until_both_are_there() {
 fn only_session_start_asks_for_the_shortcut_and_gives_the_wake_line() {
     let f = fixture();
     let mut board = f.board();
-    board["inbox"]["ui"] = json!([{ "id": "m-1", "from": "coordinator", "kind": "note", "text": "hi", "deliveredAt": null }]);
+    board["inbox"]["ui"] =
+        json!([{ "id": "m-1", "from": "lead", "kind": "note", "text": "hi", "deliveredAt": null }]);
     f.save(&board);
     let out = context(&f, "prompt", &input(&f, UI));
     assert!(out.starts_with("You are thread \"ui\""), "{out}");

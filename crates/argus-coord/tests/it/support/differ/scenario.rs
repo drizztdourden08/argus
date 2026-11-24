@@ -13,7 +13,7 @@ use super::snapshot::snapshot;
 use super::step::Step;
 use super::verdict::{NOT_PORTED, Seen, Verdict, judge};
 
-/// The session id of the coordinator thread of the standard fixture.
+/// The session id of the lead thread of the standard fixture.
 pub const LEAD_SESSION: &str = "11111111-1111-4111-8111-111111111111";
 
 /// The session id of the worker thread of the standard fixture.
@@ -53,7 +53,7 @@ impl Differ {
         })
     }
 
-    /// Twin homes seeded with the standard fixture: `alpha` (coordinator `lead` bound to
+    /// Twin homes seeded with the standard fixture: `alpha` (lead `lead` bound to
     /// [`LEAD_SESSION`], thread `worker` bound to [`WORKER_SESSION`], three items, one waiting
     /// message) and `beta`.
     pub fn standard(engines: Engines) -> io::Result<Differ> {

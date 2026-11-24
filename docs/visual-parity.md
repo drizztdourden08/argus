@@ -110,7 +110,7 @@ this section, this section is true.
    because no board had a pending decision when the round was shot.
 3. fixed: one header row with the All, Needs you and Log control (selected tone differs, see new
    item 124).
-4. fixed: bundle to test is one line with tag, title, coordinator, age and Open. The amber left edge
+4. fixed: bundle to test is one line with tag, title, lead, age and Open. The amber left edge
    is missing, see new item 127.
 5. fixed: work log with short ages and link coloured source.
 6. fixed: kebab on every decision card.
@@ -167,7 +167,7 @@ this section, this section is true.
 4. fixed: full width launch field with Copy and Play, run line, "run in" and "from launcher" chip.
    The Copy button is green outlined and the launcher chip accent coloured, see new item 125.
 5. fixed: Terminal box with Full log.
-6. fixed: done rows with outcome tag, "you · age", coordinator notified tag, amber left bar.
+6. fixed: done rows with outcome tag, "you · age", lead notified tag, amber left bar.
 7. fixed: chips show the thread id.
 8. fixed: Show closed (13) as a link.
 
@@ -175,7 +175,7 @@ this section, this section is true.
 
 1. fixed: command row with Copy, Play, run status and Log.
 2. fixed: bundle chip with link icon and status tag.
-3. fixed: set by coordinator right aligned (age rounding differs, see Page shell item 5).
+3. fixed: set by lead right aligned (age rounding differs, see Page shell item 5).
 4. fixed: current launcher has the green edge.
 5. fixed: the panel header is one line, "Builds 9 to start · 1 retired What you can start...", with
    the divider under it (the shell Panel).
@@ -355,10 +355,10 @@ this section, this section is true.
     selected fill (the pills had the white outline); the number cells are 13px dim, the name and pid
     13px, as Node (they were 12px bright and 14px). (Overview Processes)
 149. fixed: item drawer question and decision cards: the head reads "Q-29 question · needs a decision
-    · coordinator · 24h answered" and a reply "you · 23h", as Node (it read "coordinator, 24h ago");
+    · lead · 24h answered" and a reply "you · 23h", as Node (it read "lead, 24h ago");
     the card has the kebab (Archive, Delete, Copy id); the question and reply text is 14px and the
     context text dim (it was 12px bright). The Activity list in the drawer shows the short age "22h"
-    without "ago", and the Trash cell reads "3m · coordinator" with the long text as the tooltip.
+    without "ago", and the Trash cell reads "3m · lead" with the long text as the tooltip.
     (Item drawer, Trash)
 150. fixed: the tests of an item show the build chip, "bundle-15 · handed to you" when it is the handed
     build; the fill of that chip differs, see item 157. (Item drawer)
@@ -586,7 +586,7 @@ Screenshots: `visual-audit/w1440-dark-overview-activity.png`.
 ## Overview: Notifications tab
 
 1. Rows. Node: one 52px row: bell icon, age, blue "ping" tag, bold title and the text inline,
-   project chip, "/ coordinator", and "toast shown" muted under it. Argus: an 83px table row with
+   project chip, "/ lead", and "toast shown" muted under it. Argus: an 83px table row with
    the level, the title on its own line, the text, "toast shown", then When and Project columns at
    the right. Fix: `NoteRow.tsx` on one line like the activity row, no table header in
    `NoteFeed.tsx`.
@@ -648,7 +648,7 @@ overview thread can reuse it.
    hold sits above the tab bar on every tab. Fix: `BoardPage.tsx` renders OwnerFeed when `tab ===
    "activity"` and removes it from BoardBody.
 2. Decision card size. Node: a compact card with an amber left bar, an eyebrow "DECISION NEEDED Q-29
-   coordinator I-88 7m" and a kebab, the context, the question in bold, the option buttons (the
+   lead I-88 7m" and a kebab, the context, the question in bold, the option buttons (the
    recommended one carries a RECOMMENDED suffix), and a one line editor (small toolbar, 3 line
    textarea with "Or write your own answer" as placeholder, Decide at the right, "Ctrl+Enter sends"
    under it). About 135px. Argus: a red header band "DECISION NEEDED", a meta line, the context, the
@@ -662,10 +662,10 @@ overview thread can reuse it.
    "Activity view" with the segmented control. Fix: `OwnerFeed.tsx` PanelContainer header with the
    SegmentedControl in its actions.
 4. Bundle to test. Node: one line with an amber left bar, a grey tag "bundle-14 · handed to you", "1
-   test to run · title", "coordinator 7h" and an Open button. Argus: a brown header band BUNDLE TO
+   test to run · title", "lead 7h" and an Open button. Argus: a brown header band BUNDLE TO
    TEST, a meta line, then the title and an "Open in Tests" link. Fix: `TestBody.tsx` as one
    ListItemRow.
-5. Work log. Node: short ages ("26m"), the source in link blue (leads, portfolio, coordinator), the
+5. Work log. Node: short ages ("26m"), the source in link blue (leads, portfolio, lead), the
    text, "audit" muted. Argus: long ages ("26 minutes ago") and a muted source. Fix: `LogList.tsx`
    with ShortAge and Link tone for the source.
 6. Decision kebab. Node has a kebab on each decision card; Argus has none. Fix: a DropdownMenu in
@@ -773,7 +773,7 @@ Screenshots: `visual-audit/tab-rotp-kanban.png`, `visual-audit/tab-argus-kanban.
    line, all green tinted with Pass filled. Fix: `TestRow.tsx` on one Flex row, `OutcomeButtons.tsx`
    with a tone per outcome (success, danger, warning, info).
 3. Bundle header. Node: one row, chevron, bundle name in bold and its subtitle, then at the right
-   "ready" green, "handed to you" grey filled, "coordinator", "3 pass · 2 partial", a green and
+   "ready" green, "handed to you" grey filled, "lead", "3 pass · 2 partial", a green and
    amber progress bar, and Unhand. Argus: the tags right after the name ("READY" uppercase), no
    progress bar, Unhand on its own line further down. Fix: `BundleHead.tsx` with a Spacer before the
    tags, `BundleProgress.tsx` as a 140px StackedBar, `HandButton.tsx` in the head.
@@ -785,11 +785,11 @@ Screenshots: `visual-audit/tab-rotp-kanban.png`, `visual-audit/tab-argus-kanban.
    Argus: no box and no Full log. Fix: `RunTerminal.tsx` inside a PanelContainer with a "Full log"
    Link.
 6. Done rows. Node: a row per test with an amber left bar for partial, the outcome tag, "you · 18h
-   ago" and a blue "coordinator notified" tag at the right, the note on one truncated line. Argus:
-   "Partial coordinator / 40 minutes ago", the note in full, and a "Run again" text button on every
+   ago" and a blue "lead notified" tag at the right, the note on one truncated line. Argus:
+   "Partial lead / 40 minutes ago", the note in full, and a "Run again" text button on every
    row (Node keeps it in the kebab). Fix: `DoneList.tsx` rows like the open rows, RerunButton inside
    TestMenu.
-7. Thread chip. Node shows the thread id ("coordinator"); Argus shows the session name ("RotP",
+7. Thread chip. Node shows the thread id ("lead"); Argus shows the session name ("RotP",
    "Brock"). Fix: `TestChips.tsx` uses the thread id.
 8. Show closed. Node: a link "Show closed (12)" at the left. Argus: a bold label with a switch at
    the far right. Fix: `ClosedSection.tsx` link style disclosure.
@@ -807,7 +807,7 @@ Screenshots: `visual-audit/tab-rotp-tests.png`, `visual-audit/tab-brock-tests.pn
 2. Bundle link. Node: a chip with a link icon "for bundle bundle-7" and a separate "closed" tag.
    Argus: an amber underlined link "for bundle bundle-7 (ready)". Fix: `BundleLink.tsx` as Tag with
    Icon link and a status Tag.
-3. Head. Node: "set by coordinator · 3d ago" right aligned. Argus: inline after the tags, "2 days
+3. Head. Node: "set by lead · 3d ago" right aligned. Argus: inline after the tags, "2 days
    ago". Fix: `LauncherHead.tsx` Spacer and ShortAge.
 4. Current launcher. Node gives "master current" a green edge. Argus does not. Fix: the Card edge
    tone.
@@ -867,7 +867,7 @@ Screenshots: `visual-audit/w1440-dark-rotp-drawer-item.png`,
 ## Drawer: work item
 
 1. Facts. Node: one row "Status [Doing] Thread [RotP] Subject coordination" with compact selects,
-   then "rev 5, updated by coordinator 8h ago". Argus: a status tag, then the status select and the
+   then "rev 5, updated by lead 8h ago". Argus: a status tag, then the status select and the
    thread select full width on separate lines, then the subject on its own line. Fix:
    `DrawerFacts.tsx` one Flex row with inline labelled Select size sm.
 2. Sections. Node: uppercase titles with a middle dot ("ACCEPTANCE CRITERIA · 0/0") and a rule
@@ -909,7 +909,7 @@ Screenshots: `visual-audit/w1440-dark-rotp-drawer-test.png`,
 1. Missing Where section. Node: WHERE with Model, Kind, Branch ("add branch") and Worktree ("add
    worktree") as inline editable fields. Argus: none. Fix: a WHERE DrawerSection in
    `AgentDrawerBody.tsx` with InlineEdit fields.
-2. Missing Item select. Node: "Item [I-49 Archipelia B3 ...]" select and "Thread coordinator".
+2. Missing Item select. Node: "Item [I-49 Archipelia B3 ...]" select and "Thread lead".
    Argus: a read only facts box. Fix: `AgentFacts.tsx` Select for the item.
 3. Order and timeline. Node: Task, Note, Result, Where, Timeline ("Started 24/10/2026, 02:22:57 (3d
    ago)"). Argus: a facts box first (thread, item, agent id, started, updated, finished, duration)
@@ -926,8 +926,8 @@ Screenshots: `visual-audit/w1440-dark-brock-drawer-agent.png`,
 1. Open work rows are broken. Argus wraps the item id over two lines ("I-" then "72") and wraps the
    titles, because the id column is too narrow in the 384px drawer. Node: full width one line mini
    cards (id, status tag, title). Fix: `ThreadWork.tsx` as ListItemRow with a nowrap mono id.
-2. Header. Node: eyebrow "coordinator [active] idle [coord]", title "Brock", tools: copy link,
-   previous, next, Expand, chat icon, copy, kebab, close. Argus: "BROCK coordinator" in accent
+2. Header. Node: eyebrow "lead [active] idle [coord]", title "Brock", tools: copy link,
+   previous, next, Expand, chat icon, copy, kebab, close. Argus: "BROCK lead" in accent
    uppercase, then a row with Expand, an underlined "Open the chat" link and two unlabelled copy
    icons; no previous, next or kebab. Fix: the new Drawer header with the thread kebab from
    `ThreadTools.tsx`.

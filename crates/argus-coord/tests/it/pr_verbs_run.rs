@@ -94,7 +94,7 @@ fn merge_runs_brock_in_the_project_root_and_records_the_commit_it_printed() {
         (pr["status"].as_str(), pr["mergeCommit"].as_str()),
         (Some("merged"), Some(MERGE))
     );
-    assert_eq!(pr["mergedBy"], "coordinator");
+    assert_eq!(pr["mergedBy"], "lead");
     assert!(pr["mergedAt"].is_string());
     let args = fs::read_to_string(&record).expect("args");
     assert_eq!(args.trim().trim_matches('"'), "pr merge --local PR-1");

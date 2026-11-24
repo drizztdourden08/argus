@@ -1,5 +1,5 @@
 //! `coord entry pick <E>`, `done <E>` and `move <E> --item <I>`. A decision is picked only by the
-//! thread it was routed to (or the coordinator); the routing is never rewritten, so nobody takes
+//! thread it was routed to (or the lead); the routing is never rewritten, so nobody takes
 //! another thread's decision.
 
 use argus_board::json::{display, doc_mut, set};

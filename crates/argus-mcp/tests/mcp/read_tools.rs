@@ -30,7 +30,7 @@ async fn board_summary_builds_the_shape_and_adds_runs_and_the_handed_run() {
         s["handedRun"],
         json!({
             "id": "I-6", "title": "Pedestal run 1", "build": "build-1",
-            "thread": "coordinator", "at": "2026-10-22T10:00:00.000Z"
+            "thread": "lead", "at": "2026-10-22T10:00:00.000Z"
         })
     );
     assert!(s.get("handedBuild").is_none());
@@ -48,12 +48,12 @@ async fn board_summary_builds_the_shape_and_adds_runs_and_the_handed_run() {
         !ids(&s, "items").iter().any(|id| id == "I-3" || id == "I-4"),
         "archived and deleted items stay out"
     );
-    let coordinator = s["threads"]
+    let lead = s["threads"]
         .as_array()
         .expect("threads")
         .iter()
-        .find(|t| t["id"] == "coordinator");
-    assert_eq!(coordinator.expect("coordinator")["agents"], 1);
+        .find(|t| t["id"] == "lead");
+    assert_eq!(lead.expect("lead")["agents"], 1);
     for dropped in ["artifact", "dirty", "inbox"] {
         assert!(s.get(dropped).is_none(), "{dropped}");
     }
@@ -89,10 +89,7 @@ async fn board_summary_keeps_the_node_key_order() {
 async fn list_threads_hides_archived_and_paused_unless_asked() {
     let rig = &Rig::new();
     let shown = rig.ok("list_threads", json!({ "project": "alpha" })).await;
-    assert_eq!(
-        sorted_ids(&shown, "threads"),
-        strings(&["coordinator", "story"])
-    );
+    assert_eq!(sorted_ids(&shown, "threads"), strings(&["lead", "story"]));
     let all = rig
         .ok(
             "list_threads",

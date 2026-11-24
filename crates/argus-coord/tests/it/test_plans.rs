@@ -260,17 +260,17 @@ fn a_to_do_names_an_assignee_and_may_be_about_a_test() {
         "--item",
         "I-2",
         "--who",
-        "coordinator",
+        "lead",
     ]);
     assert!(
-        for_lead.contains("H-2 is for coordinator: Review the plan"),
+        for_lead.contains("H-2 is for lead: Review the plan"),
         "{for_lead}"
     );
     work.worker_ok(&["action", "add", "Ask brock", "--who", "lead:brock"]);
     let board = work.board();
     assert_eq!(board["actions"]["H-1"]["item"], "T-1");
     assert_eq!(board["actions"]["H-1"].get("assignee"), None);
-    assert_eq!(board["actions"]["H-2"]["assignee"], "coordinator");
+    assert_eq!(board["actions"]["H-2"]["assignee"], "lead");
     assert_eq!(board["actions"]["H-3"]["assignee"], "lead:brock");
     let who = work.worker(&["action", "add", "Nobody", "--who", "nobody"]);
     assert_eq!(who.code, 1);
@@ -278,8 +278,8 @@ fn a_to_do_names_an_assignee_and_may_be_about_a_test() {
     assert_eq!(lead.code, 1);
     let test = work.worker(&["action", "add", "Missing", "--item", "T-99"]);
     assert!(test.err.contains("no test \"T-99\"."), "{}", test.err);
-    let listed = work.worker_ok(&["action", "list", "--who", "coordinator"]);
-    assert!(listed.contains("[coordinator] Review the plan"), "{listed}");
+    let listed = work.worker_ok(&["action", "list", "--who", "lead"]);
+    assert!(listed.contains("[lead] Review the plan"), "{listed}");
     assert!(!listed.contains("Plug in the device"), "{listed}");
     let moved = work.worker_ok(&["action", "set", "H-2", "--who", "owner"]);
     assert!(moved.contains("H-2: assignee updated"), "{moved}");
@@ -289,7 +289,7 @@ fn a_to_do_names_an_assignee_and_may_be_about_a_test() {
 #[test]
 fn only_a_to_do_for_the_owner_makes_a_thread_need_the_human() {
     let work = Work::new();
-    work.worker_ok(&["action", "add", "Review it", "--who", "coordinator"]);
+    work.worker_ok(&["action", "add", "Review it", "--who", "lead"]);
     assert_eq!(
         work.board()["threads"]["worker"]["flags"]["needsHuman"],
         false
@@ -309,20 +309,16 @@ fn the_assignee_ticks_a_to_do_that_belongs_to_another_thread() {
         "add",
         "Smoke the build",
         "--for",
-        "coordinator",
+        "lead",
         "--who",
         "worker",
     ]);
     assert_eq!(made.code, 0, "{}", made.err);
-    let plain = work.lead(&["action", "add", "Mine", "--for", "coordinator"]);
+    let plain = work.lead(&["action", "add", "Mine", "--for", "lead"]);
     assert_eq!(plain.code, 0, "{}", plain.err);
     let denied = work.worker(&["action", "done", "H-2"]);
     assert_eq!(denied.code, 1);
-    assert!(
-        denied.err.contains("belongs to coordinator"),
-        "{}",
-        denied.err
-    );
+    assert!(denied.err.contains("belongs to lead"), "{}", denied.err);
     let ticked = work.worker_ok(&["action", "done", "H-1"]);
     assert!(ticked.contains("H-1: done (by worker)"), "{ticked}");
     assert_eq!(work.board()["actions"]["H-1"]["status"], "done");

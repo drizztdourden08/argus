@@ -46,7 +46,7 @@ pub(super) fn targets(run: &mut Runner) {
                 "register",
                 "lead",
                 "--role",
-                "coordinator",
+                "lead",
                 "--session",
                 "Demo lead",
             ]);
@@ -132,7 +132,7 @@ pub(super) fn merge(run: &mut Runner) {
     });
     let who = Who {
         thread: Some(argus_board::demo::LEAD.to_owned()),
-        role: Role::Coordinator,
+        role: Role::Lead,
         actor: None,
     };
     let key = run.key().to_owned();

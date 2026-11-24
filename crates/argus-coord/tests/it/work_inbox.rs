@@ -132,7 +132,7 @@ fn with_the_dashboard_running_the_thread_is_woken_with_sender_and_the_first_100_
     assert_eq!(wakes.len(), 1, "{wakes:?}");
     assert_eq!(
         wakes[0],
-        json!({"thread": "worker", "reason": "thread-message", "text": format!("coordinator: {}", "y".repeat(100))})
+        json!({"thread": "worker", "reason": "thread-message", "text": format!("lead: {}", "y".repeat(100))})
     );
     assert_eq!(
         inbox_of(&work, "worker").last().map(|m| m["text"].clone()),

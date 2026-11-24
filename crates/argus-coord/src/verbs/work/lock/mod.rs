@@ -1,6 +1,6 @@
 //! `coord lock`: resource locks with a queue. A claim on a free resource holds it at once; a
 //! claim on a held one queues the caller. A release hands the resource to the queue head and
-//! tells the releasing thread who to message so the next one starts right away. The coordinator
+//! tells the releasing thread who to message so the next one starts right away. The lead
 //! can also free a lock by force (`free [--to T]`) or delete it (`rm`).
 
 mod agent;

@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 
 const FOO: &str = "X:/Proj/.claude/worktrees/foo";
 
-/// A home with a board `alpha` holding a coordinator and a worker, both rooted in the home.
+/// A home with a board `alpha` holding a lead and a worker, both rooted in the home.
 struct World {
     home: Home,
 }
@@ -19,13 +19,7 @@ impl World {
         let home = Home::new();
         let root = home.path().to_path_buf();
         let threads = [
-            (
-                "coordinator",
-                "coordinator",
-                "active",
-                None,
-                Some(root.as_path()),
-            ),
+            ("lead", "lead", "active", None, Some(root.as_path())),
             ("worker", "thread", "active", None, Some(root.as_path())),
         ];
         home.write_board("alpha", &crate::common::board_with("alpha", &threads));
@@ -118,7 +112,7 @@ fn the_same_path_and_kind_again_updates_the_rule_and_a_repo_rule_is_another_one(
         "--stale-days",
         "5",
         "--thread",
-        "coordinator",
+        "lead",
     ];
     let updated = say(&w.worker(&again));
     let words = if cfg!(windows) {
@@ -134,7 +128,7 @@ fn the_same_path_and_kind_again_updates_the_rule_and_a_repo_rule_is_another_one(
                 w.rules()[0]["staleDays"].clone(),
                 w.rules()[0]["thread"].clone()
             ),
-            (json!(5), json!("coordinator"))
+            (json!(5), json!("lead"))
         );
         let same = say(&w.worker(&["rule", "add", "x:/proj/.claude/worktrees"]));
         assert!(same.contains("W-1: unchanged"), "{same}");
@@ -148,11 +142,11 @@ fn the_same_path_and_kind_again_updates_the_rule_and_a_repo_rule_is_another_one(
         "--note",
         "the repo itself",
     ];
-    ok(&w.run(&repo, "coordinator"));
+    ok(&w.run(&repo, "lead"));
     let last = w.rules().last().cloned().expect("a rule");
     assert_eq!(
         (last["kind"].clone(), last["thread"].clone()),
-        (json!("repo"), json!("coordinator"))
+        (json!("repo"), json!("lead"))
     );
 }
 
@@ -206,16 +200,16 @@ fn rules_lists_them_and_rule_rm_removes_one_and_says_so() {
         "--stale-days",
         "5",
         "--thread",
-        "coordinator",
+        "lead",
     ]);
-    ok(&w.run(&["rule", "add", "X:/Proj", "--kind", "repo"], "coordinator"));
+    ok(&w.run(&["rule", "add", "X:/Proj", "--kind", "repo"], "lead"));
     let table = say(&w.worker(&["rules"]));
     let flat = table.split_whitespace().collect::<Vec<_>>().join(" ");
     assert!(
-        flat.contains("W-1 folder X:/Proj/.claude/worktrees coordinator 5d"),
+        flat.contains("W-1 folder X:/Proj/.claude/worktrees lead 5d"),
         "{flat}"
     );
-    assert!(flat.contains("W-2 repo X:/Proj coordinator 3d"), "{flat}");
+    assert!(flat.contains("W-2 repo X:/Proj lead 3d"), "{flat}");
     let json: Value = serde_json::from_str(&say(&w.worker(&["rules", "--json"]))).expect("json");
     let ids: Vec<&Value> = json["rules"]
         .as_array()

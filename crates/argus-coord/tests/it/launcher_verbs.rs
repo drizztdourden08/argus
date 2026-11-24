@@ -324,14 +324,13 @@ fn refusals_a_bad_name_limits_a_kind_no_command_for_a_new_one_an_empty_command()
 }
 
 #[test]
-fn who_may_write_a_thread_makes_one_only_its_maker_or_the_coordinator_change_it_no_thread_no_write()
-{
+fn who_may_write_a_thread_makes_one_only_its_maker_or_the_lead_change_it_no_thread_no_write() {
     let rig = Rig::new();
     made_build_2(&rig);
     rig.refused(
         &["launcher", "set", "build-2", "--title", "mine now"],
         As::Other,
-        "launcher build-2 was set by worker; only worker or the coordinator",
+        "launcher build-2 was set by worker; only worker or the lead",
     );
     rig.refused(
         &["launcher", "retire", "build-2"],
@@ -342,7 +341,7 @@ fn who_may_write_a_thread_makes_one_only_its_maker_or_the_coordinator_change_it_
         &["launcher", "set", "build-2", "--title", "Build two (lead)"],
         As::Lead,
     );
-    assert_eq!(launcher(&rig, "build-2")["by"], "coordinator");
+    assert_eq!(launcher(&rig, "build-2")["by"], "lead");
     rig.ok(
         &[
             "launcher",
@@ -453,11 +452,7 @@ fn retire_is_off_the_list_back_with_all_no_play_not_current_set_brings_it_back_w
     let l = launcher(&rig, "build-2");
     assert_eq!(
         keys(&l, &["retiredBy", "retireNote", "current"]),
-        [
-            json!("coordinator"),
-            json!("merged into main"),
-            json!(false)
-        ]
+        [json!("lead"), json!("merged into main"), json!(false)]
     );
     assert!(l["retiredAt"].is_string());
     assert!(rig.board()["runDefs"].get("launcher-build-2").is_none());
@@ -802,7 +797,7 @@ fn keep_counts_as_a_use_without_running_it_who_and_why_are_recorded_days_holds_i
         days.out
     );
     let held = launcher(&rig, "keep-1");
-    assert_eq!(held["keptBy"], "coordinator");
+    assert_eq!(held["keptBy"], "lead");
     assert!(held["keptUntil"].is_string());
     assert!(
         rig.board()["log"]

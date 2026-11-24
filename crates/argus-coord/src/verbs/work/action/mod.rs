@@ -1,6 +1,6 @@
 //! `coord action` (alias `todo`): manual steps only the human can take (approve a PR, plug in a
 //! device, sign in). A thread adds one, the human ticks it on the board, the checker tells the
-//! thread. A thread changes only its own; the coordinator any (`--for` and `--to` name the thread).
+//! thread. A thread changes only its own; the lead any (`--for` and `--to` name the thread).
 //! A to-do may be about an item (`I-n`) or a test (`T-n`) and may be for anyone: `--who` names the
 //! owner (the default), a thread of the board or `lead:<key>`; the assignee can tick it too.
 

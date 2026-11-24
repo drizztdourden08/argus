@@ -1,7 +1,7 @@
 //! `coord log`: the work log, grouped by subject. One document per subject (never one per line):
 //! a subject keeps its latest 200 lines so the document stays small. Each line carries a `seq`
 //! (monotonic per subject) so `coord log rm <subject> <seq>` can name it: a thread removes its
-//! own lines, the coordinator any.
+//! own lines, the lead any.
 
 mod list;
 mod rm;

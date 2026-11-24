@@ -59,13 +59,7 @@ fn the_board_holding_the_session_names_the_project_wherever_the_cwd_is() {
         "alpha",
         &board_with(
             "alpha",
-            &[(
-                "coordinator",
-                "coordinator",
-                "active",
-                Some("sid-lead"),
-                None,
-            )],
+            &[("lead", "lead", "active", Some("sid-lead"), None)],
         ),
     );
     home.write_board(

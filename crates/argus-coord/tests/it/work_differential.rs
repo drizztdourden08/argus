@@ -9,7 +9,7 @@ use crate::support::differ::{Differ, Engines, LEAD_SESSION, Step, WORKER_SESSION
 const CTX: &str =
     "The login form can remember the email, which changes what is stored on the machine.";
 
-/// A step on the `alpha` board as the coordinator.
+/// A step on the `alpha` board as the lead.
 fn lead(words: &[&str]) -> Step {
     on_alpha(words).session(LEAD_SESSION)
 }

@@ -44,7 +44,7 @@ fn run_row(
 /// The two runs of the stub: R-1 exited, R-2 running.
 pub fn run_rows() -> Vec<Value> {
     vec![
-        run_row("R-1", "hello", "exited", Some("A-1"), "cli", "coordinator"),
+        run_row("R-1", "hello", "exited", Some("A-1"), "cli", "lead"),
         run_row("R-2", "slow", "running", None, "page", "human"),
     ]
 }

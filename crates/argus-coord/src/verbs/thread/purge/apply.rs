@@ -3,7 +3,7 @@
 use argus_board::ops::{apply_purge, count_line, purge_plan};
 
 use super::criteria::criteria_of;
-use super::{need_coordinator, total};
+use super::{need_lead, total};
 use crate::cli::exit::Outcome;
 use crate::verbs::thread::frame::{Frame, who_of};
 use crate::verbs::thread::passed::{lock_holders, say_passed};
@@ -11,14 +11,14 @@ use crate::verbs::thread::passed::{lock_holders, say_passed};
 /// The confirmed `purge ...`.
 ///
 /// # Errors
-/// Refused for a caller that is not the coordinator, criteria that do not hold, no board and a
+/// Refused for a caller that is not the lead, criteria that do not hold, no board and a
 /// backup that cannot be written.
 pub fn run(frame: &mut Frame<'_>, words: &[String]) -> Outcome {
     let home = frame.home();
     let project = frame.project;
     frame.mutate(false, |board, fr| {
         let who = fr.caller(board)?;
-        need_coordinator(&who, "purge")?;
+        need_lead(&who, "purge")?;
         let wanted = criteria_of(board, &who, fr, words)?;
         let plan = purge_plan(board, &wanted.criteria)?;
         if total(&plan.counts) == 0.0 {

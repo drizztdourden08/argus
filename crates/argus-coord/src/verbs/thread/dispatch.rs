@@ -1,4 +1,4 @@
-//! The coordinator adding a new thread (`coord thread add`, with `coord dispatch` as its alias):
+//! The lead adding a new thread (`coord thread add`, with `coord dispatch` as its alias):
 //! it is recorded on the board as `dispatched` (so the checker notices when it never registers)
 //! and the prompt to hand to the session chip (or to paste into a new session) is printed.
 
@@ -8,7 +8,7 @@ use argus_board::names::session_name;
 use argus_board::text::slug;
 use serde_json::{Value, json};
 
-use super::frame::{Frame, is_coordinator, with_frame};
+use super::frame::{Frame, is_lead, with_frame};
 use super::newthread::new_thread;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::route::Call;
@@ -93,7 +93,7 @@ fn chip_title(display: &str, typed: Option<&str>, subject: &str) -> String {
     format!("{display} - {}", shown.join(" "))
 }
 
-/// Adds the thread to the board as `dispatched`, for the coordinator only.
+/// Adds the thread to the board as `dispatched`, for the lead only.
 fn add(
     frame: &mut Frame<'_>,
     (name, subject, brief): (&str, &str, &str),
@@ -101,9 +101,9 @@ fn add(
 ) -> Outcome {
     frame.mutate(false, |board, fr| {
         let who = fr.caller(board)?;
-        if !is_coordinator(&who) {
+        if !is_lead(&who) {
             return Err(CoordError::refuse(
-                "only the coordinator adds a thread (register with --role coordinator).",
+                "only the lead adds a thread (register with --role lead).",
             ));
         }
         let known = &board["threads"][name];
@@ -136,7 +136,7 @@ fn add(
 ///
 /// # Errors
 /// Refused for a missing or too long name, subject or brief, a caller that is not the
-/// coordinator, a thread that already exists and no board.
+/// lead, a thread that already exists and no board.
 pub fn run_frame(frame: &mut Frame<'_>) -> Outcome {
     let name = slug(&require_text("name", &json!(frame.arg(0)))?);
     let subject = slug(&require_text("subject", &frame.value("subject"))?);

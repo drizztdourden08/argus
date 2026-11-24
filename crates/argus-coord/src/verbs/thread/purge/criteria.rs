@@ -23,11 +23,11 @@ pub struct Criteria {
     pub args: String,
 }
 
-/// The threads a purge never takes: every coordinator and the thread making the call.
+/// The threads a purge never takes: every lead and the thread making the call.
 fn protected_ids(board: &Board, who: &Caller) -> Vec<String> {
     let mut ids: Vec<String> = section(board, "threads")
         .values()
-        .filter(|t| t["role"] == "coordinator")
+        .filter(|t| t["role"] == "lead")
         .map(|t| display(&t["id"]))
         .collect();
     ids.push(who.thread.clone());
@@ -81,7 +81,7 @@ fn by_threads(
         .collect();
     if !refused.is_empty() {
         return Err(CoordError::refuse(format!(
-            "{} cannot be purged: the coordinator and the calling thread are never purged.",
+            "{} cannot be purged: the lead and the calling thread are never purged.",
             refused.join(", ")
         )));
     }

@@ -31,7 +31,7 @@ fn a_hosted_session_start_sets_host_argus_and_gets_the_hosted_wake_line_and_no_b
     assert!(text.contains(HOSTED_LINE), "{text}");
     assert!(!text.contains("preview_start"), "{text}");
     assert!(!text.contains("wake-stream"), "{text}");
-    assert_eq!(f.board()["threads"]["coordinator"]["host"], "argus");
+    assert_eq!(f.board()["threads"]["lead"]["host"], "argus");
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn a_desktop_session_on_a_thread_that_was_hosted_takes_the_host_off() {
     let f = Fixture::new();
     hosted(&f, "session-start", LEAD);
     f.hook("prompt", &session_input(&f, LEAD));
-    assert_eq!(f.board()["threads"]["coordinator"].get("host"), None);
+    assert_eq!(f.board()["threads"]["lead"].get("host"), None);
 }
 
 #[test]

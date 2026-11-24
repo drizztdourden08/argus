@@ -1,4 +1,4 @@
-//! The checker's report: what needs a nudge, a delivery or the coordinator's eye. Archived and
+//! The checker's report: what needs a nudge, a delivery or the lead's eye. Archived and
 //! deleted records are out of it; the board file keeps them. Running agents are listed too; a
 //! working one untouched for 45 minutes is marked stale (informational).
 

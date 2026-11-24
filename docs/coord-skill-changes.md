@@ -375,7 +375,7 @@ and the verbs below are the Overlord's.
    op `handle_keep` in `argus-board/src/ops/worktree.rs`) and POST
    `/api/p/<p>/worktrees/keep {id, note, until, askedBy, clear, by, byProject}` instead (`byProject`
    is the project of the board the calling thread is registered on, `portfolio` for the Overlord;
-   the server refuses a keep without it, because every lead's thread is also named `coordinator`; I-130), then print the
+   the server refuses a keep without it, because every lead's thread is also named `lead`; I-130), then print the
    answer's text. `until` is an ISO date or milliseconds. `--days n` goes; a thread's keep is
    refused by the server with a message that names the Overlord.
 2. Line 38, the link line, keeps its verbs and changes its note to:

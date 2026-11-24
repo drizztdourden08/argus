@@ -176,9 +176,9 @@ The numbers are in the worktrees meta of the project (`listed`, `runningAgents`,
 - `coord worktree keep <id|path> --note "why" [--until <date>] [--asked-by <thread>] [--clear]`:
   the Overlord only. Route:
   `POST /api/p/:key/worktrees/keep {id, note, until?, askedBy?, clear?, by, byProject}` (`until` is
-  an ISO date, through the end of that day in local time, or milliseconds). Every lead's thread is named `coordinator`, so the name proves
+  an ISO date, through the end of that day in local time, or milliseconds). Every lead's thread is named `lead`, so the name proves
   nothing: the keep passes only when `byProject` is `portfolio` AND `by` is that board's
-  coordinator thread. A missing or other `byProject` is refused with the usual message.
+  lead thread. A missing or other `byProject` is refused with the usual message.
 
 ## The config
 

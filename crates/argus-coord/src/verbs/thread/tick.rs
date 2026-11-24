@@ -1,6 +1,6 @@
-//! `coord tick` (`verbs/tick.mjs`): the coordinator's manual check, never run on a schedule
+//! `coord tick` (`verbs/tick.mjs`): the lead's manual check, never run on a schedule
 //! (waking is the dashboard's wake stream). It only reads the board and prints JSON: `wake` lists
-//! the idle threads holding messages no hook could hand over, `attention` what the coordinator
+//! the idle threads holding messages no hook could hand over, `attention` what the lead
 //! itself should look at. `coord tick woke <thread>...` records that those threads were messaged.
 
 use argus_board::Board;

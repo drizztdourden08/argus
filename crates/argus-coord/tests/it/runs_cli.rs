@@ -55,7 +55,7 @@ fn define_records_the_launch_and_a_second_define_updates_it() {
             "--env",
             "MODE=prod",
             "--as",
-            "coordinator",
+            "lead",
         ],
     );
     let out = ok(&first);
@@ -76,16 +76,7 @@ fn define_records_the_launch_and_a_second_define_updates_it() {
     ]);
     assert_eq!(
         seen,
-        json!([
-            "npm run build",
-            "build",
-            false,
-            false,
-            1800,
-            1,
-            1,
-            "coordinator"
-        ])
+        json!(["npm run build", "build", false, false, 1800, 1, 1, "lead"])
     );
     assert_eq!(def["env"], json!({ "API_TOKEN": "s3cret", "MODE": "prod" }));
     assert!(
@@ -199,14 +190,14 @@ fn defs_lists_the_launches_without_their_env_values_and_undefine_removes_one() {
 }
 
 #[test]
-fn define_and_undefine_refuse_what_is_not_the_coordinators_or_not_valid() {
+fn define_and_undefine_refuse_what_is_not_the_leads_or_not_valid() {
     let local = Local::new();
     let worker = ["--as", "worker"];
     let refusals: [(&[&str], &[&str], &str); 9] = [
         (
             &["define", "evil", "--cmd", "calc"],
             &worker,
-            "only the coordinator",
+            "only the lead",
         ),
         (
             &["define", "x", "--cmd", "echo", "--visible"],
@@ -235,7 +226,7 @@ fn define_and_undefine_refuse_what_is_not_the_coordinators_or_not_valid() {
             &AS,
             "--timeout",
         ),
-        (&["undefine", "build"], &worker, "only the coordinator"),
+        (&["undefine", "build"], &worker, "only the lead"),
     ];
     for (words, extra, text) in refusals {
         refused(&local.go(words, extra), 1, text);

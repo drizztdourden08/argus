@@ -53,7 +53,7 @@ pub fn session_input(f: &Fixture, sid: &str) -> Value {
     json!({ "session_id": sid, "cwd": f.cwd_text() })
 }
 
-/// The prompt hook of thread `ui` after the coordinator left it a message with `text`.
+/// The prompt hook of thread `ui` after the lead left it a message with `text`.
 pub fn prompt_after_message(f: &Fixture, text: &str) -> Ran {
     let mut board = f.board();
     board["inbox"]["ui"] = json!([message(text)]);
@@ -61,12 +61,12 @@ pub fn prompt_after_message(f: &Fixture, text: &str) -> Ran {
     f.hook("prompt", &session_input(f, UI))
 }
 
-/// A message of the coordinator in an inbox.
+/// A message of the lead in an inbox.
 pub fn message(text: &str) -> Value {
-    json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "coordinator", "kind": "note", "text": text, "ref": null, "deliveredAt": null })
+    json!({ "id": "m-1790000000000-ab12", "ts": ago(1), "from": "lead", "kind": "note", "text": text, "ref": null, "deliveredAt": null })
 }
 
-/// The `alpha` board: a coordinator and a `ui` thread bound to their sessions, and two agents
+/// The `alpha` board: a lead and a `ui` thread bound to their sessions, and two agents
 /// of `ui` (one working, one done) too old to be bound by a hook.
 pub fn alpha_board() -> Value {
     json!({
@@ -75,7 +75,7 @@ pub fn alpha_board() -> Value {
         "createdAt": ago(120), "updatedAt": ago(5),
         "counters": { "A": 2 },
         "threads": {
-            "coordinator": thread("coordinator", "coordinator", "lead", "Alpha", LEAD, 1024),
+            "lead": thread("lead", "lead", "lead", "Alpha", LEAD, 1024),
             "ui": thread("ui", "thread", "ui", "Alpha - UI", UI, 2048),
         },
         "items": {}, "tests": {}, "entries": {}, "locks": {}, "actions": {},
@@ -197,8 +197,8 @@ impl Fixture {
     pub fn manual(&self, id: &str, name: &str, task: &str, extra: &Value) -> String {
         let mut board = self.board();
         let mut record = json!({
-            "id": id, "createdAt": ago(0), "createdBy": "coordinator", "updatedAt": ago(0),
-            "updatedBy": "coordinator", "rank": 9000, "name": name, "thread": "coordinator",
+            "id": id, "createdAt": ago(0), "createdBy": "lead", "updatedAt": ago(0),
+            "updatedBy": "lead", "rank": 9000, "name": name, "thread": "lead",
             "task": task, "model": "sonnet", "modelWhy": "sonnet: most coding, one module",
             "kind": "build", "item": null, "branch": null, "worktree": null,
             "status": "working", "note": null, "result": null, "startedAt": ago(0),

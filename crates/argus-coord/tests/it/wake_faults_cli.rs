@@ -1,5 +1,5 @@
 //! K2, K4: `coord wake-fault` against an in-process server whose wake engine the test ticks by
-//! hand. The list works for any session, the clear works only for the coordinator of project
+//! hand. The list works for any session, the clear works only for the lead of project
 //! `portfolio` and needs a note, and a dashboard that is down is an error, not a silent success.
 
 // test-tag: standard
@@ -59,7 +59,7 @@ pub fn as_session(rig: &Rig, argv: &[&str], session: Option<&str>, folder: &str)
 #[tokio::test(flavor = "multi_thread")]
 async fn list_works_for_any_session_and_the_cleared_one_is_not_listed() {
     let rig = faulted().await;
-    let cleared = json!({ "project": "alpha", "thread": "ui", "by": "coordinator", "note": NOTE });
+    let cleared = json!({ "project": "alpha", "thread": "ui", "by": "lead", "note": NOTE });
     assert_eq!(
         rig.t
             .write("POST", "/api/wake-faults/clear", &cleared)
@@ -85,13 +85,10 @@ async fn list_works_for_any_session_and_the_cleared_one_is_not_listed() {
         .as_array()
         .and_then(|l| l.iter().find(|f| f["thread"] == "ui"))
         .cloned();
-    assert_eq!(
-        ui.map(|f| f["clearedBy"].clone()),
-        Some(json!("coordinator"))
-    );
+    assert_eq!(ui.map(|f| f["clearedBy"].clone()), Some(json!("lead")));
     let table = rig.run(&["wake-fault", "list", "--all"]);
     assert!(
-        ok(&table).contains("cleared by coordinator: the ui session had crashed"),
+        ok(&table).contains("cleared by lead: the ui session had crashed"),
         "{}",
         table.out
     );
@@ -110,7 +107,7 @@ async fn clear_is_refused_for_everyone_but_the_overlord() {
     let rig = faulted().await;
     let with_note = ["--note", NOTE];
     let overlord =
-        "only the Overlord (the coordinator thread of project portfolio) can clear a wake fault; ";
+        "only the Overlord (the lead thread of project portfolio) can clear a wake fault; ";
     let refusals = [
         (
             clear(&rig, &with_note, Some(UI), "checkout-alpha"),
@@ -118,7 +115,7 @@ async fn clear_is_refused_for_everyone_but_the_overlord() {
         ),
         (
             clear(&rig, &with_note, Some(HELPER), "checkout-portfolio"),
-            "thread helper is not the coordinator",
+            "thread helper is not the lead",
         ),
         (
             clear(&rig, &with_note, Some(ALPHA_LEAD), "checkout-alpha"),
@@ -127,7 +124,7 @@ async fn clear_is_refused_for_everyone_but_the_overlord() {
         (
             clear(
                 &rig,
-                &["--note", NOTE, "--as", "coordinator"],
+                &["--note", NOTE, "--as", "lead"],
                 Some(ALPHA_LEAD),
                 "checkout-alpha",
             ),

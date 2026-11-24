@@ -12,7 +12,7 @@ use argus_core::clock::now_ms;
 use argus_server::ServeOptions;
 use serde_json::{Value, json};
 
-const OVERLORD: &str = "only the Overlord (the coordinator thread of project portfolio) can ";
+const OVERLORD: &str = "only the Overlord (the lead thread of project portfolio) can ";
 
 async fn rig() -> (Rig, Arc<Machine>) {
     let fake = Arc::new(Machine::with_self());
@@ -108,7 +108,7 @@ async fn rule_set_rm_and_kill_rule_are_refused_for_everyone_but_the_overlord() {
         ),
         (
             proc(&rig, &set[..5], Some(HELPER), "checkout-portfolio"),
-            "change the process rules; thread helper is not the coordinator",
+            "change the process rules; thread helper is not the lead",
         ),
         (
             proc(&rig, &["kill-rule", "test-kids"], None, "."),
@@ -235,9 +235,8 @@ async fn the_overlord_kills_a_listed_process_and_the_activity_log_says_so() {
         .iter()
         .filter_map(|a| a["text"].as_str())
         .collect();
-    let line = format!(
-        "killed node {pid} (procs-http-test, 70 MB) from the CLI (coordinator): a test child"
-    );
+    let line =
+        format!("killed node {pid} (procs-http-test, 70 MB) from the CLI (lead): a test child");
     assert!(texts.iter().any(|t| *t == line), "{texts:?}");
     rig.stop().await;
 }

@@ -47,7 +47,7 @@ Untagged after: 0. Every e2e case also carries `#[ignore = "e2e"]`. Files with t
 - argus-wake service.rs `a_wake_nobody_listens_for_stays_queued_and_goes_once_to_the_next_listener`: engine.rs `with_no_listener_the_event_stays_queued_and_goes_once_to_the_first_listener_that_connects` (W4).
 - argus-wake service.rs `the_pass_that_completes_the_bundle_wakes_once`: policy.rs `the_pass_that_leaves_no_pending_manual_test_wakes_once_with_the_counts` (W4).
 - argus-wake service.rs `an_answer_a_note_a_reassigned_item_and_a_resume_wake_the_right_thread_and_a_star_listener_hears_every_thread`: policy.rs has one case per reason and engine.rs the star listener (W4).
-- argus-wake service.rs `a_portfolio_send_wakes_the_coordinator_of_the_project_it_was_delivered_to`: policy.rs `a_portfolio_send_wakes_the_coordinator_of_every_project_it_was_delivered_to` (W4).
+- argus-wake service.rs `a_portfolio_send_wakes_the_lead_of_the_project_it_was_delivered_to`: policy.rs `a_portfolio_send_wakes_the_lead_of_every_project_it_was_delivered_to` (W4).
 - board.rs `callers_say_who_asked` and jobs.rs `a_doc_names_the_folder` (not K1 to K4): a text getter and a one-line accessor (W5).
 
 ## Verdicts: argus-worktrees

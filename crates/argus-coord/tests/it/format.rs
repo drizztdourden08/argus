@@ -23,11 +23,11 @@ fn a_table_pads_every_column_to_its_widest_cell_and_trims_each_line() {
     let t = table(&rows(&[
         &["thread", "status", "note"],
         &["ui", "active", ""],
-        &["coordinator", "idle", "waiting"],
+        &["lead", "idle", "waiting"],
     ]));
     assert_eq!(
         t,
-        "thread       status  note\nui           active\ncoordinator  idle    waiting"
+        "thread  status  note\nui      active\nlead    idle    waiting"
     );
 }
 

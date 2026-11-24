@@ -1,7 +1,7 @@
 //! What the entity verbs share (`crud.mjs`): the lookup of a doc by id, the thread an argument
 //! names, the op a verb sends to the shared `apply_op`, and the refusals of its answers. Authority
 //! never comes from a flag: every change goes through `authorize` and `apply_op`, so a thread
-//! changes only what it owns and the coordinator changes anything.
+//! changes only what it owns and the lead changes anything.
 
 use argus_board::Board;
 use argus_board::ids;
@@ -14,7 +14,7 @@ use super::run::{Res, bad};
 use crate::cli::Options;
 use crate::who::Caller;
 
-pub use crate::verbs::shared::caller::{is_coordinator, who_of};
+pub use crate::verbs::shared::caller::{is_lead, who_of};
 
 /// The word a collection goes by in the messages.
 #[must_use]
@@ -122,7 +122,7 @@ pub fn thread_arg(board: &Board, name: &str) -> Res<String> {
     }
 }
 
-/// The thread a new record belongs to: `--for <T>` (the coordinator's, `authorize` refuses anyone
+/// The thread a new record belongs to: `--for <T>` (the lead's, `authorize` refuses anyone
 /// else) or the caller's own thread.
 ///
 /// # Errors

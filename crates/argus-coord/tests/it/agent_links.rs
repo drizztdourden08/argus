@@ -89,7 +89,7 @@ fn a_start_on_the_main_checkout_says_master_and_prints_the_items() {
     let rig = rig();
     let ran = rig.ok(&base("a1", &["--item", "I-1,I-2", "--master"]), As::Lead);
     assert!(
-        ran.out.contains("started on coordinator for I-1, I-2"),
+        ran.out.contains("started on lead for I-1, I-2"),
         "{}",
         ran.out
     );

@@ -177,7 +177,7 @@ fn with_no_record_yet_the_id_waits_in_a_launch_note() {
         .unwrap()
         .clone();
     assert_eq!(note["claudeId"], "a0000000000000011");
-    assert_eq!(note["thread"], "coordinator");
+    assert_eq!(note["thread"], "lead");
     assert_eq!(note["toolUseId"], "toolu_note");
     assert_eq!(
         note["description"], "R1: restore the apworld on master",

@@ -9,7 +9,7 @@ use argus_board::ops::{count_line, restore_from};
 use serde_json::{Map, Value};
 
 use super::confirm::confirmed;
-use super::need_coordinator;
+use super::need_lead;
 use super::text_of;
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::resolve::resolve;
@@ -52,7 +52,7 @@ fn said(counts: &Map<String, Value>) -> String {
 ///
 /// # Errors
 /// Refused without `--from` and `--confirm`, for a backup that cannot be read or belongs to
-/// another project, a caller that is not the coordinator, a thread the backup does not hold and
+/// another project, a caller that is not the lead, a thread the backup does not hold and
 /// no board.
 pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let Some(from) = frame.options.text("from") else {
@@ -79,7 +79,7 @@ pub fn run(frame: &mut Frame<'_>) -> Outcome {
     let threads: Vec<String> = frame.options.many("thread").iter().map(text_of).collect();
     frame.mutate(false, |board, fr| {
         let who = fr.caller(board)?;
-        need_coordinator(&who, "restore a purge")?;
+        need_lead(&who, "restore a purge")?;
         let counts = restore_from(board, &file, &threads)?;
         fr.say(&[&said(&counts)]);
         Ok(())

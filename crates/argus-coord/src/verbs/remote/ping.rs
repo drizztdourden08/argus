@@ -78,13 +78,12 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
     let board = require_board(call, &project)?;
     let who = caller(&board, &call.inv.cwd, &call.inv.env, &call.options)?;
     let title = title_of(call, board["name"].as_str(), &who.thread)?;
-    let by = if argus_board::roles::is_overlord(&coord_home(call), &project)
-        && who.role == Role::Coordinator
-    {
-        "overlord"
-    } else {
-        "thread"
-    };
+    let by =
+        if argus_board::roles::is_overlord(&coord_home(call), &project) && who.role == Role::Lead {
+            "overlord"
+        } else {
+            "thread"
+        };
     let client = connect(call, true)?;
     let body = json!({
         "title": title, "text": text, "level": level_name,

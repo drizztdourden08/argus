@@ -33,11 +33,11 @@ fn other(args: &[&str]) -> Step {
     st(args, "other")
 }
 
-/// The seed: `alpha` with the coordinator `lead`, the threads `worker` and `other`, three items,
+/// The seed: `alpha` with the lead `lead`, the threads `worker` and `other`, three items,
 /// and what `edit` adds to the board file.
 fn seed(edit: impl FnOnce(&mut Value)) -> TempDir {
     let board = FixtureBoard::new("alpha")
-        .thread("lead", "coordinator", None)
+        .thread("lead", "lead", None)
         .thread("worker", "thread", None)
         .thread("other", "thread", None)
         .item("Plan the release", "lead", "doing", &["Notes written"])

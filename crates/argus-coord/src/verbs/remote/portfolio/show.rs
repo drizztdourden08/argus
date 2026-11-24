@@ -23,13 +23,13 @@ fn row(card: &Value, now: i64) -> Vec<String> {
     vec![
         cell(card.get("name")),
         cell(card.get("state")),
-        cell(card["coordinator"].get("session")),
+        cell(card["lead"].get("session")),
         count("threads"),
         count("agents"),
         count("needsYou"),
         count("itemsOpen"),
         tests,
-        out::ago(card["coordinator"]["lastSeen"].as_str(), now),
+        out::ago(card["lead"]["lastSeen"].as_str(), now),
     ]
 }
 
@@ -53,7 +53,7 @@ pub(super) fn show(call: &mut Call<'_>) -> Outcome {
         [
             "project",
             "state",
-            "coordinator",
+            "lead",
             "threads",
             "agents",
             "needs you",

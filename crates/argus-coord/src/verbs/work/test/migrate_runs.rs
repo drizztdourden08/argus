@@ -32,7 +32,7 @@ fn print(r: &mut Run<'_>, report: &Report, dry: bool) {
 fn lead_only(by: &Caller) -> Res<()> {
     if by.role == Role::Thread {
         return Err(bad(
-            "coord test migrate-runs belongs to the coordinator: try --dry-run to see what it would do.",
+            "coord test migrate-runs belongs to the lead: try --dry-run to see what it would do.",
         ));
     }
     Ok(())

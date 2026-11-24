@@ -9,7 +9,7 @@
 //!   record is ready
 //! - `status`: the record and what Argus expects next
 //!
-//! Only the lead of the board (its coordinator thread, the Overlord on `portfolio`) answers.
+//! Only the lead of the board (its lead thread, the Overlord on `portfolio`) answers.
 
 use std::path::PathBuf;
 
@@ -22,7 +22,7 @@ use super::support::text::{cell, collapse, int_within, number_of};
 use crate::cli::exit::{CoordError, Outcome};
 use crate::cli::out;
 use crate::cli::route::Call;
-use crate::verbs::shared::caller::is_coordinator;
+use crate::verbs::shared::caller::is_lead;
 use crate::who::caller;
 
 const NOTE_MAX: usize = 300;
@@ -37,9 +37,9 @@ fn lead(call: &Call<'_>) -> Result<(String, String), CoordError> {
     let board_key = project_of(call).to_owned();
     let board = require_board(call, &board_key)?;
     let who = caller(&board, &call.inv.cwd, &call.inv.env, &call.options)?;
-    if !is_coordinator(&who) {
+    if !is_lead(&who) {
         return Err(CoordError::refuse(format!(
-            "coord handover is for the lead of {board_key}; {} is not its coordinator.",
+            "coord handover is for the lead of {board_key}; {} is not its lead.",
             who.thread
         )));
     }

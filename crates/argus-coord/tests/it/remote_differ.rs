@@ -19,10 +19,10 @@ fn differ(test: &str) -> Option<Differ> {
     let engines = Engines::or_skip(test)?;
     let boards = vec![
         FixtureBoard::new("alpha")
-            .thread("lead", "coordinator", Some(LEAD_SESSION))
+            .thread("lead", "lead", Some(LEAD_SESSION))
             .thread("worker", "thread", Some(WORKER_SESSION)),
-        FixtureBoard::new("beta").thread("lead", "coordinator", None),
-        FixtureBoard::new("portfolio").thread("coordinator", "coordinator", Some(MAIN_SESSION)),
+        FixtureBoard::new("beta").thread("lead", "lead", None),
+        FixtureBoard::new("portfolio").thread("lead", "lead", Some(MAIN_SESSION)),
     ];
     let sessions = [LEAD_SESSION, WORKER_SESSION, MAIN_SESSION];
     Some(Differ::new(engines, &Seed::Fixture(boards), &sessions).expect("twin homes"))

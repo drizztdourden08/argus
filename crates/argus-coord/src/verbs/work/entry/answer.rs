@@ -1,4 +1,4 @@
-//! `coord answer <entry> "<text>" [--decision]`: a reply written from the CLI (the coordinator
+//! `coord answer <entry> "<text>" [--decision]`: a reply written from the CLI (the lead
 //! relaying what the owner said in chat). The page writes the same shape through the tick.
 
 use argus_board::inbox::post;
@@ -9,7 +9,7 @@ use serde_json::json;
 
 use super::create_entry;
 use crate::cli::Outcome;
-use crate::verbs::work::crud::{checked, is_coordinator};
+use crate::verbs::work::crud::{checked, is_lead};
 use crate::verbs::work::run::Run;
 
 /// `coord answer`.
@@ -23,7 +23,7 @@ pub(super) fn answer(r: &mut Run<'_>) -> Outcome {
     r.write(|board, r| {
         let who = r.begin(board)?;
         let question = checked(board, &who, ("entries", "answer"), r.arg(0))?;
-        let author = if is_coordinator(&who) {
+        let author = if is_lead(&who) {
             "human"
         } else {
             who.thread.as_str()

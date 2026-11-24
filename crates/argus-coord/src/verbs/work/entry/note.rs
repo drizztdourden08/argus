@@ -1,6 +1,6 @@
 //! `coord note <I-n|T-n> "<text>"`: an informal remark on an item or a test, kept as a `note`
 //! entry (`N-n`). It never blocks anything. Only the thread that owns the record (or the
-//! coordinator) adds one.
+//! lead) adds one.
 
 use argus_board::Board;
 use argus_board::ops::create_note;

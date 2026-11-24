@@ -4,7 +4,7 @@
 //! - `http://<key>.localhost:<port>` is the lead's board
 //! - `http://<thread>.<key>.localhost:<port>` is a thread's board
 //!
-//! The Overlord (the coordinator thread of the board with the Overlord role) gets two rows, `Argus`
+//! The Overlord (the lead thread of the board with the Overlord role) gets two rows, `Argus`
 //! (`http://argus.localhost:<port>`, the overview) and `Overlord`
 //! (`http://overlord.localhost:<port>`, its own board). `argus` and `overlord` are reserved
 //! host names: no project key of those names can be an alias, and the project `argus` (the
@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 
 use crate::cli::exit::CoordError;
 
-const LEAD: &str = "coordinator";
+const LEAD: &str = "lead";
 const RESERVED: [&str; 2] = ["argus", "overlord"];
 
 fn is_label_char(c: char) -> bool {
@@ -49,7 +49,7 @@ fn host_label(project: &str) -> Option<&str> {
     }
 }
 
-/// The alias url of a thread's board; the lead (the thread `coordinator`) gets the short one.
+/// The alias url of a thread's board; the lead (the thread `lead`) gets the short one.
 ///
 /// # Errors
 /// Refused with a sentence when the key or the thread id cannot be a host name, or the key is

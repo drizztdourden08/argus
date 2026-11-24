@@ -43,8 +43,10 @@ the Rust router keeps:
 | Unknown verb | stderr `Unknown verb "<v>".`, a blank line and `USAGE`, exit 1 |
 | Aliases | `ask`, `decide`, `notify`, `message`, `answer`, `entry` go to the entry module with the typed verb; `todo` is `action`; `restore`, `trash` go to the purge module with the typed verb; `dispatch` is `thread add` |
 | Project | `--project`, `COORD_PROJECT`, the board holding a live thread with this session id (every board under `COORD_HOME` is read, in directory order), the nearest `.ai-config.json` `projectKey`, a `.coord-project` marker, else `cannot tell which project this is: no .ai-config.json above the cwd. Pass --project <key>.` |
-| Caller | `--as`, the live thread holding `CLAUDE_CODE_SESSION_ID`, else the live thread whose `root` holds the cwd and that no other session claimed (longest root wins, a tie refuses). A thread never acts as another thread; the coordinator may, and is recorded as the actor. Every verb refreshes the real caller's `lastSeen` |
+| Caller | `--as`, the live thread holding `CLAUDE_CODE_SESSION_ID`, else the live thread whose `root` holds the cwd and that no other session claimed (longest root wins, a tie refuses). A thread never acts as another thread; the lead may, and is recorded as the actor. Every verb refreshes the real caller's `lastSeen` |
 | Output order | A verb prints inside its board mutation, before the save. A failed save then prints `coord: ...` after the verb's own lines. Rust keeps that order |
+
+The old name `coordinator` (and `coordinator-hosted`) is still accepted as an alias: the parser reads it as `lead` (or `lead-hosted`) in a positional and in `--as`, `--for`, `--to`, `--thread`, `--role` and `--assignee`.
 
 ### Exit codes
 
@@ -159,7 +161,7 @@ crates/argus-coord/
   src/who/                   WP1: project lookup, caller, me, session scan
   src/client/                WP1: dashboard client, health, autostart, SSE reader
   src/shortcut.rs            WP1: alias urls, launch.json read and merge, needs_shortcut
-  src/verbs/shared/          shared by every group: caller (who_of, is_coordinator), lock
+  src/verbs/shared/          shared by every group: caller (who_of, is_lead), lock
                              (board_refusal, lock_sentence)
   src/verbs/hook/            WP2
   src/verbs/thread/          WP3: thread, dispatch, board, purge, check, tick, sync
@@ -176,7 +178,7 @@ WP2, WP5 and WP6 must not rebuild the lock refusal or the caller helpers. A verb
 board maps its `BoardError` through `verbs::shared::lock::board_refusal(e, home, project)`, which
 says the exact Node sentence `board is locked by another coord call (<path>); retry.` with the path
 as Node's `join(COORD_HOME, project, 'board.lock')` gives it (unresolved, platform separators).
-`who_of` and `is_coordinator` live in `verbs::shared::caller`.
+`who_of` and `is_lead` live in `verbs::shared::caller`.
 
 Each group's `mod.rs` starts as a stub answering exit 120, "not ported" (section 4), so the router
 compiles from day one, the same way `services/compose.rs` works in the server.

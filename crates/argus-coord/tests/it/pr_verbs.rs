@@ -7,10 +7,10 @@ use crate::remote::{alpha_with_worker, lines, ok, read_board_at, refused};
 use argus_coord::Env;
 use serde_json::{Value, json};
 
-const AS: [&str; 2] = ["--as", "coordinator"];
+const AS: [&str; 2] = ["--as", "lead"];
 const SHA: &str = "0123456789abcdef0123456789abcdef01234567";
 
-/// A home with the board `alpha`, and `coord <words> --project alpha --as coordinator` in it.
+/// A home with the board `alpha`, and `coord <words> --project alpha --as lead` in it.
 pub struct Local {
     pub home: Home,
 }

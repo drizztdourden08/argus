@@ -1,5 +1,5 @@
 //! `coord inbox`: a thread's inbox, the messages the board queued for it (answers, decisions, lock
-//! grants, coordinator notes). A thread reads its own with `coord inbox [--ack]`; the coordinator
+//! grants, lead notes). A thread reads its own with `coord inbox [--ack]`; the lead
 //! reads or clears another's with `--for <T>`; `send <T> "<text>"` queues a message for a thread
 //! of this board and asks the dashboard, best effort, to wake it; `rm` drops messages.
 
@@ -42,7 +42,7 @@ pub fn handle(call: &mut Call<'_>) -> Outcome {
 }
 
 /// The thread whose inbox the call is about: the caller's own, or `--for <T>` (the
-/// coordinator's), checked for `verb` (`list` or `rm`).
+/// lead's), checked for `verb` (`list` or `rm`).
 fn target(board: &Board, who: &Caller, r: &Run<'_>, verb: &str) -> Res<String> {
     let Some(name) = r.text_opt("for") else {
         return Ok(who.thread.clone());

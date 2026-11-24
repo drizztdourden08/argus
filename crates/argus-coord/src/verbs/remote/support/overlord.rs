@@ -1,5 +1,5 @@
 //! Who may change the process rules, kill a process or clear a wake fault: the Overlord, the
-//! coordinator thread of the board that holds the Overlord role (found by its role in
+//! lead thread of the board that holds the Overlord role (found by its role in
 //! `boards.json`, an id or an alias; `portfolio` only in a home without the table). The dashboard
 //! checks it again.
 
@@ -8,12 +8,12 @@ use argus_board::roles::{is_overlord, overlord_key};
 use super::scope::{coord_home, require_board};
 use crate::cli::exit::CoordError;
 use crate::cli::route::Call;
-use crate::verbs::shared::caller::is_coordinator;
+use crate::verbs::shared::caller::is_lead;
 use crate::who::{caller, find_project};
 
 fn refusal(main: &str, what: &str, who: &str, advice: &str) -> CoordError {
     CoordError::refuse(format!(
-        "only the Overlord (the coordinator thread of project {main}) can {what}; {who}. {advice}"
+        "only the Overlord (the lead thread of project {main}) can {what}; {who}. {advice}"
     ))
 }
 
@@ -40,8 +40,8 @@ pub fn actor(call: &Call<'_>, what: &str, advice: &str) -> Result<String, CoordE
     }
     let board = require_board(call, &main)?;
     let who = caller(&board, &call.inv.cwd, env, &call.options)?;
-    if !is_coordinator(&who) {
-        let text = format!("thread {} is not the coordinator", who.thread);
+    if !is_lead(&who) {
+        let text = format!("thread {} is not the lead", who.thread);
         return Err(refusal(&main, what, &text, advice));
     }
     Ok(who.actor)

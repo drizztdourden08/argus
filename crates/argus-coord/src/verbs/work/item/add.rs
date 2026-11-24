@@ -20,7 +20,7 @@ use super::images::{keep_all, picked};
 use super::typed;
 use crate::cli::{Options, Outcome};
 use crate::verbs::work::crud::{
-    apply, apply_result, find_doc, is_coordinator, move_op, op, owner_arg, stored_links, who_of,
+    apply, apply_result, find_doc, is_lead, move_op, op, owner_arg, stored_links, who_of,
 };
 use crate::verbs::work::place::rank_to;
 use crate::verbs::work::run::{Res, Run, bad};
@@ -96,11 +96,11 @@ fn plain(board: &mut Board, who: &Caller, owner: &str, draft: &Draft) -> Res<Str
         .zip(1_u32..)
         .map(|(text, n)| json!({"n": n, "text": text, "done": false}))
         .collect();
-    let from_other_lead = is_coordinator(who) && owner != who.thread;
+    let from_other_lead = is_lead(who) && owner != who.thread;
     let fields = json!({
         "title": draft.title, "description": draft.description,
         "thread": owner, "status": draft.status,
-        "origin": if from_other_lead { "coordinator" } else { "thread" },
+        "origin": if from_other_lead { "lead" } else { "thread" },
         "ac": ac,
     });
     let fields = fields.as_object().cloned().unwrap_or_default();

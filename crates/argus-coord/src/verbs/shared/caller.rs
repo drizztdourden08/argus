@@ -16,6 +16,6 @@ pub fn who_of(c: &Caller) -> Who {
 
 /// Whether the caller leads the project.
 #[must_use]
-pub fn is_coordinator(c: &Caller) -> bool {
-    c.role == Role::Coordinator
+pub fn is_lead(c: &Caller) -> bool {
+    c.role == Role::Lead
 }

@@ -20,13 +20,7 @@ fn seed_table(coord_home: &Path, base: &Path) {
     fs::remove_dir_all(coord_home.join("portfolio")).expect("old folder");
     let root = make_checkout(base, "portfolio");
     let threads: [ThreadSpec<'_>; 2] = [
-        (
-            "coordinator",
-            "coordinator",
-            "active",
-            Some(MAIN),
-            Some(&root),
-        ),
+        ("lead", "lead", "active", Some(MAIN), Some(&root)),
         ("helper", "thread", "active", Some(HELPER), None),
     ];
     argus_testkit::write_board(coord_home, OVERLORD, &board_with(OVERLORD, &threads));
@@ -51,13 +45,13 @@ fn seed_table(coord_home: &Path, base: &Path) {
 async fn the_overlord_on_a_board_id_clears_a_wake_fault_and_others_are_refused() {
     let rig = faulted_with(seed_table).await;
     let with_note = ["--note", NOTE];
-    let said = "the coordinator thread of project bovl001) can clear a wake fault";
+    let said = "the lead thread of project bovl001) can clear a wake fault";
     let from_alpha = clear(&rig, &with_note, Some(UI), "checkout-alpha");
     refused(&from_alpha, 1, said);
     refused(&from_alpha, 1, "this session belongs to project alpha");
     let helper = clear(&rig, &with_note, Some(HELPER), "checkout-portfolio");
     refused(&helper, 1, said);
-    refused(&helper, 1, "thread helper is not the coordinator");
+    refused(&helper, 1, "thread helper is not the lead");
     let cleared = clear(&rig, &with_note, Some(MAIN), "checkout-portfolio");
     assert!(
         ok(&cleared).starts_with("cleared the wake fault of alpha/api (since "),

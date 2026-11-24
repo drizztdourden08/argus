@@ -1,4 +1,4 @@
-//! Session titles follow one convention across every project: the coordinator is just the app
+//! Session titles follow one convention across every project: the lead is just the app
 //! name (the main project's is "Overlord"), a thread is "<Project> - <Subject>" with a subject of
 //! four words at most. A board may list its own prefixes when its threads belong to several
 //! products. `thread register` tells a thread whose title does not follow it.
@@ -67,7 +67,7 @@ fn subject_problem(title: &str, prefixes: &[String]) -> Option<String> {
 #[must_use]
 pub fn problem(home: &Path, board: &Board, thread: &Value) -> Option<String> {
     let name = session_name(home, &display(&board["project"]), board["name"].as_str());
-    let lead = thread["role"] == "coordinator";
+    let lead = thread["role"] == "lead";
     if !truthy(thread, "session") {
         let wanted = if lead {
             name.clone()

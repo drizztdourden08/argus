@@ -2,7 +2,7 @@
 //! what it covers, why (context), what changed, the setup and the run command, numbered steps,
 //! what proves it works and what proves it is broken, notes, and the result with picture proof. A
 //! passing result ticks the item's acceptance criteria the test covers. A test belongs to the
-//! thread that owns its item: that thread changes it and records its results, the coordinator
+//! thread that owns its item: that thread changes it and records its results, the lead
 //! can do it all for any thread.
 
 mod add;

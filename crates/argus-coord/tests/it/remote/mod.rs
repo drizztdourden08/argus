@@ -148,9 +148,9 @@ pub fn make_checkout(base: &Path, key: &str) -> PathBuf {
     dir
 }
 
-/// A board of a project whose lead (a coordinator thread named `lead`) works in `root`.
+/// A board of a project whose lead (a lead thread named `lead`) works in `root`.
 pub fn lead_board(key: &str, root: &Path) -> Value {
-    board_with(key, &[("lead", "coordinator", "active", None, Some(root))])
+    board_with(key, &[("lead", "lead", "active", None, Some(root))])
 }
 
 /// The board file of a project under a coord home, parsed.
@@ -167,10 +167,10 @@ pub fn env_plus(env: &Env, extra: &[(&str, &str)]) -> Env {
     Env::of(&pairs)
 }
 
-/// A board of `alpha` with a coordinator that has no folder and a worker working in `root`.
+/// A board of `alpha` with a lead that has no folder and a worker working in `root`.
 pub fn alpha_with_worker(root: &Path) -> Value {
     let threads = [
-        ("coordinator", "coordinator", "active", None, None),
+        ("lead", "lead", "active", None, None),
         ("worker", "thread", "active", None, Some(root)),
     ];
     board_with("alpha", &threads)
@@ -188,7 +188,7 @@ pub fn seed_standard(coord_home: &Path, base: &Path) {
     let alpha: [ThreadSpec<'_>; 4] = [
         (
             "lead",
-            "coordinator",
+            "lead",
             "active",
             Some(ALPHA_LEAD),
             Some(&alpha_root),
@@ -198,13 +198,7 @@ pub fn seed_standard(coord_home: &Path, base: &Path) {
         ("web", "thread", "active", Some("sess-web"), None),
     ];
     let portfolio: [ThreadSpec<'_>; 2] = [
-        (
-            "coordinator",
-            "coordinator",
-            "active",
-            Some(MAIN),
-            Some(&main_root),
-        ),
+        ("lead", "lead", "active", Some(MAIN), Some(&main_root)),
         ("helper", "thread", "active", Some(HELPER), None),
     ];
     argus_testkit::write_board(coord_home, "alpha", &board_with("alpha", &alpha));

@@ -1,5 +1,5 @@
 //! The shadow Overlord only reads (I-172): the one place where `coord` refuses a write by the
-//! thread `coordinator-hosted`, whatever the project's allow rules let through the CLI.
+//! thread `lead-hosted`, whatever the project's allow rules let through the CLI.
 
 use argus_board::store::read_board;
 use argus_overlord::shadow::{THREAD, coord_words_allowed};
@@ -18,7 +18,7 @@ pub const REFUSAL: &str = "the shadow Overlord only reads";
 /// # Errors
 /// Refused with [`REFUSAL`] for a write by the shadow.
 pub fn check(thread: &str, words: &[&str], role: Option<&str>) -> Result<(), CoordError> {
-    let reads = coord_words_allowed(words) && role != Some("coordinator");
+    let reads = coord_words_allowed(words) && role != Some("lead");
     if thread != THREAD || reads {
         Ok(())
     } else {
@@ -71,7 +71,7 @@ mod tests {
         assert!(check(THREAD, &write, None).is_err());
         assert!(check(THREAD, &["entry", "add"], None).is_err());
         assert!(check(THREAD, &["inbox", "send", "x"], None).is_err());
-        assert!(check("coordinator", &write, None).is_ok());
+        assert!(check("lead", &write, None).is_ok());
         assert!(check("brock", &write, None).is_ok());
     }
 
@@ -84,9 +84,9 @@ mod tests {
     }
 
     #[test]
-    fn the_shadow_never_registers_as_the_coordinator() {
+    fn the_shadow_never_registers_as_the_lead() {
         let register = ["thread", "register", THREAD];
-        assert!(check(THREAD, &register, Some("coordinator")).is_err());
-        assert!(check(THREAD, &["thread", "register", "coordinator"], None).is_err());
+        assert!(check(THREAD, &register, Some("lead")).is_err());
+        assert!(check(THREAD, &["thread", "register", "lead"], None).is_err());
     }
 }

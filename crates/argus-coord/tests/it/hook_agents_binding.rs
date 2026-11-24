@@ -196,7 +196,7 @@ fn a_stop_under_another_session_id_than_the_start_still_closes_the_record() {
     dispatch(&f, "Check the long build", "sonnet", "toolu_b6");
     f.started(LEAD, "resumed-0005", "general-purpose");
     let mut board = f.board();
-    board["threads"]["coordinator"]["sessionId"] = json!("sid-lead-resumed-9999");
+    board["threads"]["lead"]["sessionId"] = json!("sid-lead-resumed-9999");
     f.save(&board);
     assert_eq!(
         f.stopped(LEAD, "resumed-0005", &last("build checked")).code,
@@ -315,7 +315,7 @@ fn claude_id_of_a_hand_started_record_takes_the_id_from_the_hooks_own_duplicate_
         "--project",
         "alpha",
         "--as",
-        "coordinator",
+        "lead",
     ];
     let ran = crate::common::coord(&args, f.home.env(), &f.cwd);
     assert_eq!(ran.code, 0, "{}\n{}", ran.out, ran.err);

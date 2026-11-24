@@ -19,7 +19,7 @@ use crate::verbs::remote::support::collate;
 use crate::verbs::remote::support::link::project_of;
 use crate::verbs::remote::support::scope::{Scope, locked, require_board};
 use crate::verbs::remote::support::text::{cell, say_all};
-use crate::verbs::shared::caller::is_coordinator;
+use crate::verbs::shared::caller::is_lead;
 use crate::who::Caller;
 
 const KINDS: [&str; 4] = ["build", "test", "launch", "task"];
@@ -169,10 +169,10 @@ fn record(def: &Def, actor: &str, rev: i64) -> Value {
     })
 }
 
-/// The caller of a change that is the coordinator's alone.
-fn coordinator(board: &mut Board, scope: &Scope<'_>, refusal: &str) -> Result<Caller, CoordError> {
+/// The caller of a change that is the lead's alone.
+fn lead(board: &mut Board, scope: &Scope<'_>, refusal: &str) -> Result<Caller, CoordError> {
     let who = scope.begin(board)?;
-    if is_coordinator(&who) {
+    if is_lead(&who) {
         Ok(who)
     } else {
         Err(CoordError::refuse(refusal))
@@ -184,10 +184,10 @@ pub(super) fn define(call: &mut Call<'_>) -> Outcome {
     let def = read_def(call)?;
     let project = project_of(call).to_owned();
     locked(call, &project, false, |board, scope| {
-        let who = coordinator(
+        let who = lead(
             board,
             scope,
-            "only the coordinator can define what may be launched. Ask with coord inbox send coordinator \"...\" or coord message.",
+            "only the lead can define what may be launched. Ask with coord inbox send lead \"...\" or coord message.",
         )?;
         let defs = map_mut(board, "runDefs");
         let before = defs.get(&def.name).cloned();
@@ -203,10 +203,10 @@ pub(super) fn undefine(call: &mut Call<'_>) -> Outcome {
     let name = need_name(call.positional.first(), "name")?;
     let project = project_of(call).to_owned();
     locked(call, &project, false, |board, scope| {
-        coordinator(
+        lead(
             board,
             scope,
-            "only the coordinator can remove a launch definition.",
+            "only the lead can remove a launch definition.",
         )?;
         if map_mut(board, "runDefs").shift_remove(&name).is_none() {
             return Err(CoordError::refuse(format!(
@@ -264,7 +264,7 @@ pub(super) fn defs(call: &mut Call<'_>) -> Outcome {
         return Ok(());
     }
     if list.is_empty() {
-        call.inv.say(&["no launches defined. A coordinator adds one with: coord run define <name> --cmd \"<command line>\""]);
+        call.inv.say(&["no launches defined. A lead adds one with: coord run define <name> --cmd \"<command line>\""]);
         return Ok(());
     }
     let mut rows = vec![

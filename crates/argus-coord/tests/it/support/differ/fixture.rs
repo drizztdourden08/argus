@@ -119,12 +119,12 @@ impl FixtureBoard {
     }
 }
 
-/// The standard two-board fixture: `alpha` with a coordinator and a worker thread (each bound
-/// to a session id), three items and a waiting message, and `beta` with one coordinator.
+/// The standard two-board fixture: `alpha` with a lead and a worker thread (each bound
+/// to a session id), three items and a waiting message, and `beta` with one lead.
 #[must_use]
-pub fn standard_boards(coordinator_session: &str, worker_session: &str) -> Vec<FixtureBoard> {
+pub fn standard_boards(lead_session: &str, worker_session: &str) -> Vec<FixtureBoard> {
     let alpha = FixtureBoard::new("alpha")
-        .thread("lead", "coordinator", Some(coordinator_session))
+        .thread("lead", "lead", Some(lead_session))
         .thread("worker", "thread", Some(worker_session))
         .item(
             "Plan the release",
@@ -135,6 +135,6 @@ pub fn standard_boards(coordinator_session: &str, worker_session: &str) -> Vec<F
         .item("Port the parser", "worker", "todo", &["Cases pass"])
         .item("Write the docs", "worker", "todo", &[])
         .inbox_message("worker", "lead", "Start with the parser.");
-    let beta = FixtureBoard::new("beta").thread("lead", "coordinator", None);
+    let beta = FixtureBoard::new("beta").thread("lead", "lead", None);
     vec![alpha, beta]
 }

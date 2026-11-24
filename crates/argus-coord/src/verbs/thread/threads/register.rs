@@ -101,9 +101,7 @@ fn record_texts(board: &mut Board, frame: &Frame<'_>, name: &str) -> Result<(), 
 fn tips(frame: &mut Frame<'_>, board: &Board, name: &str) {
     let thread = &board["threads"][name];
     if !truthy(thread, "session") {
-        frame.say(&[
-            "tip: pass --session \"<your session title>\" so the coordinator can wake you.",
-        ]);
+        frame.say(&["tip: pass --session \"<your session title>\" so the lead can wake you."]);
     }
     if !truthy(thread, "link") {
         frame.say(&["tip: no session link found; pass --link \"<link from get_session self>\" so the owner can open you from the board."]);
@@ -120,8 +118,8 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, name: &str, sid: Option<&str>
     }
     let existing = doc(board, "threads", name).is_some();
     if !existing {
-        let role = if frame.options.text("role") == Some("coordinator") {
-            "coordinator"
+        let role = if frame.options.text("role") == Some("lead") {
+            "lead"
         } else {
             "thread"
         };
@@ -148,7 +146,7 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, name: &str, sid: Option<&str>
     Ok(())
 }
 
-/// K4: the Overlord's seat goes to the session the mode puts there, so two live coordinators
+/// K4: the Overlord's seat goes to the session the mode puts there, so two live leads
 /// never exist at once (I-173).
 fn check_seat(frame: &Frame<'_>, name: &str) -> Result<(), CoordError> {
     if name != SEAT || !is_overlord(&frame.paths.coord_home, frame.project) {

@@ -36,9 +36,9 @@ fn started() -> Cli {
     fx.ok(&[
         "thread",
         "register",
-        "coordinator",
+        "lead",
         "--role",
-        "coordinator",
+        "lead",
         "--root",
         &root,
         "--session",
@@ -70,7 +70,7 @@ fn board_init_creates_the_board_and_a_second_init_says_where_it_is() {
     assert!(
         first
             .out
-            .contains("Next:\n  1. coord thread register coordinator --role coordinator")
+            .contains("Next:\n  1. coord thread register lead --role lead")
     );
     assert!(
         first.out.contains("(the page: http://127.0.0.1:"),
@@ -218,7 +218,7 @@ fn register_refuses_what_it_cannot_take() {
         "register",
         "lead",
         "--role",
-        "coordinator",
+        "lead",
         "--session",
         "Wrong",
     ]);
@@ -316,7 +316,7 @@ fn set_changes_what_the_caller_may_change() {
     );
     fx.refused(
         &["thread", "set", "--brief", "b", "--as", "worker"],
-        "only the coordinator can change a thread brief or the thread order.",
+        "only the lead can change a thread brief or the thread order.",
     );
     fx.refused(
         &["thread", "set", "--status", "nope", "--as", "worker"],
@@ -329,32 +329,16 @@ fn set_changes_what_the_caller_may_change() {
         "--if-rev takes the revision number you last saw.",
     );
     fx.refused(
-        &[
-            "thread",
-            "set",
-            "coordinator",
-            "--note",
-            "mine",
-            "--as",
-            "worker",
-        ],
-        "worker cannot set coordinator: only coordinator itself or the coordinator can.",
+        &["thread", "set", "lead", "--note", "mine", "--as", "worker"],
+        "worker cannot set lead: only lead itself or the lead can.",
     );
 }
 
 #[test]
-fn the_coordinator_sets_a_brief_and_the_order_and_checks_revisions() {
+fn the_lead_sets_a_brief_and_the_order_and_checks_revisions() {
     let fx = started();
     let lead = fx.ok(&[
-        "thread",
-        "set",
-        "worker",
-        "--brief",
-        "B",
-        "--before",
-        "coordinator",
-        "--as",
-        "coordinator",
+        "thread", "set", "worker", "--brief", "B", "--before", "lead", "--as", "lead",
     ]);
     assert!(
         lead.out.contains("worker: set brief, order (rev "),
@@ -363,13 +347,7 @@ fn the_coordinator_sets_a_brief_and_the_order_and_checks_revisions() {
     );
     fx.refused(
         &[
-            "thread",
-            "set",
-            "worker",
-            "--after",
-            "ghost",
-            "--as",
-            "coordinator",
+            "thread", "set", "worker", "--after", "ghost", "--as", "lead",
         ],
         "no thread \"ghost\".",
     );
@@ -382,7 +360,7 @@ fn the_coordinator_sets_a_brief_and_the_order_and_checks_revisions() {
         "--subject",
         "late",
         "--as",
-        "coordinator",
+        "lead",
     ]);
     assert_eq!(stale.code, 1);
     assert!(
@@ -395,39 +373,31 @@ fn the_coordinator_sets_a_brief_and_the_order_and_checks_revisions() {
 #[test]
 fn pause_resume_archive_and_unarchive_a_thread() {
     let fx = started();
-    let paused = fx.ok(&["thread", "pause", "worker", "--as", "coordinator"]);
+    let paused = fx.ok(&["thread", "pause", "worker", "--as", "lead"]);
     assert_eq!(
         paused.out,
         "worker: paused. Its inbox tells it what to do; wake it if it is idle.\n"
     );
     assert_eq!(
-        fx.ok(&["thread", "pause", "worker", "--as", "coordinator"])
-            .out,
+        fx.ok(&["thread", "pause", "worker", "--as", "lead"]).out,
         "worker is already paused.\n"
     );
     assert_eq!(fx.board()["inbox"]["worker"].as_array().unwrap().len(), 1);
     assert!(
-        fx.ok(&["thread", "resume", "worker", "--as", "coordinator"])
+        fx.ok(&["thread", "resume", "worker", "--as", "lead"])
             .out
             .contains("worker: resumed.")
     );
     assert_eq!(
-        fx.ok(&["thread", "resume", "worker", "--as", "coordinator"])
-            .out,
+        fx.ok(&["thread", "resume", "worker", "--as", "lead"]).out,
         "worker is already not paused.\n"
     );
     fx.refused(
-        &["thread", "archive", "coordinator", "--as", "coordinator"],
-        "the coordinator thread is never archived.",
+        &["thread", "archive", "lead", "--as", "lead"],
+        "the lead thread is never archived.",
     );
     let archived = fx.ok(&[
-        "thread",
-        "archive",
-        "worker",
-        "--reason",
-        "gone",
-        "--as",
-        "coordinator",
+        "thread", "archive", "worker", "--reason", "gone", "--as", "lead",
     ]);
     assert!(
         archived
@@ -439,11 +409,10 @@ fn pause_resume_archive_and_unarchive_a_thread() {
     assert!(!fx.ok(&["thread", "list"]).out.contains("worker"));
     assert!(fx.ok(&["thread", "list", "--all"]).out.contains("worker"));
     assert_eq!(
-        fx.ok(&["thread", "archive", "worker", "--as", "coordinator"])
-            .out,
+        fx.ok(&["thread", "archive", "worker", "--as", "lead"]).out,
         "worker is already archived.\n"
     );
-    let back = fx.ok(&["thread", "unarchive", "worker", "--as", "coordinator"]);
+    let back = fx.ok(&["thread", "unarchive", "worker", "--as", "lead"]);
     assert!(
         back.out.starts_with("worker: unarchived (active)."),
         "{}",
@@ -455,14 +424,14 @@ fn pause_resume_archive_and_unarchive_a_thread() {
 fn locks_pass_to_the_next_when_a_thread_ends() {
     let fx = started();
     with_board(&fx, |b| {
-        b["locks"] = json!({"db": {"resource": "db", "holder": "worker", "queue": ["coordinator"], "since": "2026-10-01T00:00:00.000Z"}});
+        b["locks"] = json!({"db": {"resource": "db", "holder": "worker", "queue": ["lead"], "since": "2026-10-01T00:00:00.000Z"}});
     });
     let done = fx.ok(&["thread", "done", "--as", "worker"]);
     assert_eq!(
         done.out,
-        "worker: done\nlock db passed to coordinator: message them (session \"Alpha\") so they start.\n"
+        "worker: done\nlock db passed to lead: message them (session \"Alpha\") so they start.\n"
     );
-    assert_eq!(fx.board()["locks"]["db"]["holder"], "coordinator");
+    assert_eq!(fx.board()["locks"]["db"]["holder"], "lead");
 }
 
 #[test]
@@ -478,7 +447,7 @@ fn dispatch_records_the_thread_and_prints_the_chip_prompt() {
         "--worktree",
         "wt",
         "--as",
-        "coordinator",
+        "lead",
     ]);
     assert!(out.out.starts_with("dispatched docs-two (writing-docs-now). Chip title: \"Alpha - Writing Docs Now\". Prompt for the session chip:\n\nYou are \"Alpha - Writing Docs Now\", the \"docs-two\" thread of the Alpha coordination board (subject: writing-docs-now).\n"), "{}", out.out);
     assert!(
@@ -507,7 +476,7 @@ fn dispatch_refuses_a_duplicate_a_thread_caller_and_a_missing_brief() {
         "--brief",
         "y",
         "--as",
-        "coordinator",
+        "lead",
     ]);
     fx.refused(
         &[
@@ -518,7 +487,7 @@ fn dispatch_refuses_a_duplicate_a_thread_caller_and_a_missing_brief() {
             "--brief",
             "y",
             "--as",
-            "coordinator",
+            "lead",
         ],
         "thread \"docs-two\" already exists (dispatched).",
     );
@@ -533,10 +502,10 @@ fn dispatch_refuses_a_duplicate_a_thread_caller_and_a_missing_brief() {
             "--as",
             "worker",
         ],
-        "only the coordinator adds a thread (register with --role coordinator).",
+        "only the lead adds a thread (register with --role lead).",
     );
     fx.refused(
-        &["dispatch", "other", "--subject", "x", "--as", "coordinator"],
+        &["dispatch", "other", "--subject", "x", "--as", "lead"],
         "brief text is required.",
     );
 }
@@ -555,7 +524,7 @@ fn thread_add_is_dispatch_with_a_custom_chip_title() {
         "--title",
         "custom words go here today",
         "--as",
-        "coordinator",
+        "lead",
     ]);
     assert!(
         via_thread

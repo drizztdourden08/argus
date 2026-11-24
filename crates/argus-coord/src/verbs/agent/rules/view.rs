@@ -107,7 +107,7 @@ pub fn rule_who(typed: &LauncherBoard, caller: &Caller) -> Who {
     Who {
         actor: caller.actor.clone(),
         role: match caller.role {
-            Role::Coordinator => argus_launchers::launcher::Role::Coordinator,
+            Role::Lead => argus_launchers::launcher::Role::Lead,
             Role::Human => argus_launchers::launcher::Role::Human,
             Role::Thread => argus_launchers::launcher::Role::Thread,
         },

@@ -45,12 +45,7 @@ fn with_the_server_down_and_no_way_to_start_it_the_plain_message_and_exit_3() {
     );
     let call = |words: &[&str]| -> Ran { coord(&run_argv(words, &[]), env.clone(), home.path()) };
     ok(&call(&[
-        "define",
-        "quick",
-        "--cmd",
-        "echo hi",
-        "--as",
-        "coordinator",
+        "define", "quick", "--cmd", "echo hi", "--as", "lead",
     ]));
     refused(
         &call(&["start", "quick"]),

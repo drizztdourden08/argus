@@ -82,7 +82,7 @@ fn new_messages_and_the_digest_come_in_one_text_the_digest_last() {
     let ran = prompt_after_message(&f, "Start with the parser.");
     assert!(
         ran.out
-            .contains("- [note] from coordinator: Start with the parser.")
+            .contains("- [note] from lead: Start with the parser.")
     );
     assert!(ran.out.ends_with(&format!("\n{LINE}")), "{}", ran.out);
 }

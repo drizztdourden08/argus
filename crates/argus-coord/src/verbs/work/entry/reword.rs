@@ -1,5 +1,5 @@
 //! `coord entry set <E> ["<text>"] [--option "..."]... [--context "<c>"]`: rewords an entry (and
-//! a question's choices). The author while it is open or pending; the coordinator at any time.
+//! a question's choices). The author while it is open or pending; the lead at any time.
 
 use argus_board::json::{display, doc_mut, set};
 use argus_board::limits::{require_context, require_text, soft_context, text_list};
@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use super::{DECISION_OPTIONS, note, prefix_of};
 use crate::cli::{Outcome, Val};
-use crate::verbs::work::crud::{find_live, is_coordinator, who_of};
+use crate::verbs::work::crud::{find_live, is_lead, who_of};
 use crate::verbs::work::run::{Res, Run, bad};
 
 /// The new context: a question or decision keeps the minimum, information is clipped.
@@ -41,7 +41,7 @@ pub(super) fn set_text(r: &mut Run<'_>) -> Outcome {
             return Ok(());
         }
         let open = matches!(e["status"].as_str(), Some("open" | "pending"));
-        if !is_coordinator(&who) && !open {
+        if !is_lead(&who) && !open {
             return Err(bad(format!(
                 "{id} is {}; only an open or pending entry can be reworded.",
                 display(&e["status"])

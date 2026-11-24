@@ -4,6 +4,7 @@
 //! `--` takes it as its value (a single dash included), a repeated option becomes a list, a bare
 //! `--key` is `true`, and `--key=` is the empty text.
 
+use argus_core::lead;
 use serde_json::Value;
 
 /// One value of an option.
@@ -109,7 +110,19 @@ pub struct Args {
     pub options: Options,
 }
 
-/// Splits arguments as `parseArgs` does.
+/// The flags whose value names a thread or a role, so the legacy lead name is read as `lead`.
+const THREAD_FLAGS: [&str; 6] = ["as", "for", "to", "thread", "role", "assignee"];
+
+fn alias_value(key: &str, value: &str) -> String {
+    if THREAD_FLAGS.contains(&key) {
+        lead::canonical(value).into_owned()
+    } else {
+        value.to_owned()
+    }
+}
+
+/// Splits arguments as `parseArgs` does. The legacy lead name is accepted as an alias: a
+/// positional or a thread flag value equal to `coordinator` reads as `lead`.
 #[must_use]
 pub fn parse_args(argv: &[String]) -> Args {
     let mut parsed = Args::default();
@@ -118,13 +131,13 @@ pub fn parse_args(argv: &[String]) -> Args {
         let arg = &argv[i];
         i += 1;
         let Some(body) = arg.strip_prefix("--") else {
-            parsed.positional.push(arg.clone());
+            parsed.positional.push(lead::canonical(arg).into_owned());
             continue;
         };
         if let Some((key, value)) = body.split_once('=') {
-            parsed.options.put(key, Val::Text(value.to_owned()));
+            parsed.options.put(key, Val::Text(alias_value(key, value)));
         } else if let Some(next) = argv.get(i).filter(|n| !n.starts_with("--")) {
-            parsed.options.put(body, Val::Text(next.clone()));
+            parsed.options.put(body, Val::Text(alias_value(body, next)));
             i += 1;
         } else {
             parsed.options.put(body, Val::Flag);

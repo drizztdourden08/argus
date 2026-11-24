@@ -1,4 +1,4 @@
-//! `thread set`: a thread changes its own subject, note and status; the coordinator any thread,
+//! `thread set`: a thread changes its own subject, note and status; the lead any thread,
 //! plus its brief and its place in the manual order (`--before` / `--after` another thread).
 
 use argus_board::Board;
@@ -136,9 +136,9 @@ fn apply(board: &mut Board, frame: &mut Frame<'_>, input: &Input) -> Outcome {
     let id = target(board, frame, &who)?;
     let acting = who_of(&who);
     check_authority(&acting, "set", "threads", board["threads"].get(&id))?;
-    if who.role != Role::Coordinator && (input.brief.is_some() || input.anchor.is_some()) {
+    if who.role != Role::Lead && (input.brief.is_some() || input.anchor.is_some()) {
         return Err(CoordError::refuse(
-            "only the coordinator can change a thread brief or the thread order.",
+            "only the lead can change a thread brief or the thread order.",
         ));
     }
     if let Some((_, other)) = &input.anchor {

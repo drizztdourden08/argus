@@ -120,3 +120,23 @@ fn help_is_an_option_not_a_word() {
     assert_eq!(args.positional, Vec::<String>::new());
     assert!(args.options.flag("help"));
 }
+
+#[test]
+fn the_legacy_lead_name_reads_as_lead_in_a_positional_and_a_thread_flag() {
+    let a = parse(&[
+        "register",
+        "coordinator",
+        "--role",
+        "coordinator",
+        "--as=coordinator-hosted",
+    ]);
+    assert_eq!(a.positional, vec!["register", "lead"]);
+    assert_eq!(a.options.text("role"), Some("lead"));
+    assert_eq!(a.options.text("as"), Some("lead-hosted"));
+}
+
+#[test]
+fn the_legacy_lead_name_is_kept_in_a_flag_that_is_not_a_thread() {
+    let a = parse(&["note", "--note", "coordinator"]);
+    assert_eq!(a.options.text("note"), Some("coordinator"));
+}

@@ -17,7 +17,7 @@ names below are opt-in and need browser setup.
   needs.
 - **What it is.** A second listener on `127.0.0.1:80` that serves the same app and routes by
   `Host` exactly as the main listener does on `:47615`: `http://<key>.localhost/` redirects to
-  `/p/<key>/?thread=coordinator`, `http://<thread>.<key>.localhost/` to
+  `/p/<key>/?thread=lead`, `http://<thread>.<key>.localhost/` to
   `/p/<key>/?thread=<thread>`, `argus.localhost` is the overview. The Host and Origin checks
   accept `<x>.localhost` with no port on this door and refuse every other host with 421. The
   existing `<key>.localhost:47615` hosts keep working.

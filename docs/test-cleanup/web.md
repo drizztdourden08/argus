@@ -128,7 +128,7 @@ none (nothing under apps/web/tests/helpers was touched; fake-source and snapshot
 - kanban-notices.test.tsx: "shows only the cards with a conflict for the conflict filter" - K1 view filter test covers the rule.
 - kanban-ops.test.tsx: "deletes them with restore as the Undo" (bulk) - K1 bulkSofts test covers the inverse, the archive test covers the Undo wiring.
 - kanban-ops.test.tsx: "archives and deletes with the same ops and Undo as the drawer" (card menu) - W4 of the drawer tests.
-- kanban-trash.test.tsx: "purges a thread chosen in the dialog" and "never counts the coordinator thread" - K1 purgeCounts and purgeCriteria tests cover the rules; the trash purge test keeps the confirm gate.
+- kanban-trash.test.tsx: "purges a thread chosen in the dialog" and "never counts the lead thread" - K1 purgeCounts and purgeCriteria tests cover the rules; the trash purge test keeps the confirm gate.
 - kanban-trash.test.tsx: "restores a range of rows picked with shift-click" - rangeOf K1 test plus the single restore test.
 - kanban-moves.test.tsx: "gives only the status for a column with no card", "moves to another column without a place when the order is by update" - K1 planDrop tests cover both. "says a refusal with its reason" - W4 of the conflict message test.
 - kanban-edits.test.tsx: "refuses a description over 400 characters" and "edits the subject, and may empty it" - K1 textProblem tests cover the rule, title refusal test keeps the wiring.

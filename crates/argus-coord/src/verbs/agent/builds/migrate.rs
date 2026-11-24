@@ -258,7 +258,7 @@ pub fn run(call: &mut Call<'_>) -> Outcome {
     write(call, |board, who, run| {
         if who.role == Role::Thread {
             return Err(CoordError::refuse(
-                "coord build migrate-links belongs to the coordinator: try --dry-run to see what it would do.",
+                "coord build migrate-links belongs to the lead: try --dry-run to see what it would do.",
             ));
         }
         let plan = plan_board(board);

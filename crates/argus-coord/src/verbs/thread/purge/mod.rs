@@ -1,8 +1,8 @@
-//! `coord purge`, `restore` and `trash` (`verbs/purge.mjs`): the coordinator's only way to
+//! `coord purge`, `restore` and `trash` (`verbs/purge.mjs`): the lead's only way to
 //! hard-delete, and the way back. `rm` on any record is a soft delete (the trash); a purge removes
 //! records for good, but only after writing a restorable backup under
 //! `<COORD_HOME>/<project>/purged/`. A purge is a dry run until `--confirm <project key>`.
-//! Never run by a thread: the coordinator and the owner's page only.
+//! Never run by a thread: the lead and the owner's page only.
 
 mod apply;
 mod confirm;
@@ -28,13 +28,13 @@ fn text_of(val: &Val) -> String {
     }
 }
 
-/// Only the coordinator purges, restores and reads the trash.
-fn need_coordinator(who: &Caller, what: &str) -> Result<(), CoordError> {
-    if who.role == Role::Coordinator {
+/// Only the lead purges, restores and reads the trash.
+fn need_lead(who: &Caller, what: &str) -> Result<(), CoordError> {
+    if who.role == Role::Lead {
         return Ok(());
     }
     Err(CoordError::refuse(format!(
-        "only the coordinator can {what}. Ask with coord inbox send coordinator \"...\" or coord message."
+        "only the lead can {what}. Ask with coord inbox send lead \"...\" or coord message."
     )))
 }
 

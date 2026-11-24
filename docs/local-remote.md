@@ -64,7 +64,7 @@ record stands on the way to GitHub is `replay` (older writers said `remote`; bot
   "id": "PR-3", "title": "", "body": "", "head": "feat/x", "base": "main",
   "headCommit": "<sha>", "status": "open | merged | closed", "item": "I-12",
   "checks": ["C-4", "C-5"],
-  "createdBy": "coordinator", "createdAt": "",
+  "createdBy": "lead", "createdAt": "",
   "mergedAt": null, "mergeCommit": null, "mergedBy": null,
   "replay": { "state": "pending | done | failed", "at": null, "url": null }
 }

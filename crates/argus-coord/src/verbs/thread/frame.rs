@@ -16,7 +16,7 @@ use crate::client::board_port;
 use crate::verbs::shared::lock::board_refusal;
 use crate::who::{Caller, caller, me, refuse_while_migrating};
 
-pub use crate::verbs::shared::caller::{is_coordinator, who_of};
+pub use crate::verbs::shared::caller::{is_lead, who_of};
 
 /// One call of a verb of this group.
 pub struct Frame<'a> {

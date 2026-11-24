@@ -363,11 +363,11 @@ fn a_record_without_modelwhy_lists_shows_and_takes_a_note_as_before() {
     rig.edit(|b| {
         let at = "2026-10-26T12:00:00.000Z";
         b["agents"]["A-90"] = json!({
-            "id": "A-90", "name": "legacy", "thread": "coordinator", "task": "old one",
+            "id": "A-90", "name": "legacy", "thread": "lead", "task": "old one",
             "model": "sonnet", "kind": "build", "item": null, "branch": null, "worktree": null,
             "status": "working", "note": null, "result": null, "startedAt": at,
-            "finishedAt": null, "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
-            "updatedBy": "coordinator", "rev": 1, "rank": 9999,
+            "finishedAt": null, "createdAt": at, "createdBy": "lead", "updatedAt": at,
+            "updatedBy": "lead", "rev": 1, "rank": 9999,
         });
     });
     assert!(rig.ok(&["agent", "list"], As::Lead).out.contains("legacy"));
@@ -567,9 +567,9 @@ fn registering_with_a_claude_id_that_has_no_record_never_takes_another_agents_ho
     rig.edit(|b| {
         let at = now_iso();
         b["agents"]["A-91"] = json!({
-            "id": "A-91", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
-            "updatedBy": "coordinator", "rank": 91000, "name": "rebuild-the-pad-overlay",
-            "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": "sonnet",
+            "id": "A-91", "createdAt": at, "createdBy": "lead", "updatedAt": at,
+            "updatedBy": "lead", "rank": 91000, "name": "rebuild-the-pad-overlay",
+            "thread": "lead", "task": "Rebuild the pad overlay screen", "model": "sonnet",
             "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
             "status": "working", "note": null, "result": null, "startedAt": at,
             "finishedAt": null, "hookId": "hk-91", "claudeId": "hk-91", "source": "hook",

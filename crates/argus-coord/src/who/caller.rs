@@ -22,7 +22,7 @@ use crate::cli::exit::CoordError;
 pub struct Caller {
     /// The thread the verb acts as (the `--as` thread, else the session's own).
     pub thread: String,
-    /// The authority: coordinator or thread.
+    /// The authority: lead or thread.
     pub role: Role,
     /// The id recorded as the creator or updater.
     pub actor: String,
@@ -35,8 +35,8 @@ fn id_of(thread: &Value) -> String {
 }
 
 fn role_of(thread: &Value) -> Role {
-    if thread["role"] == "coordinator" {
-        Role::Coordinator
+    if thread["role"] == "lead" {
+        Role::Lead
     } else {
         Role::Thread
     }
@@ -128,8 +128,8 @@ fn session_thread(board: &Board, cwd: &Path, sid: &str) -> Option<String> {
 }
 
 /// Who is calling, as a [`Caller`]. `--as X` is refused when this session already is a live
-/// thread other than X and not the coordinator: a thread never acts as another thread. The
-/// coordinator acting as X keeps coordinator authority and is recorded as the actor. A call with
+/// thread other than X and not the lead: a thread never acts as another thread. The
+/// lead acting as X keeps lead authority and is recorded as the actor. A call with
 /// no session id (the owner's own terminal) may act as any thread, with that thread's authority.
 ///
 /// # Errors
@@ -163,10 +163,10 @@ pub fn caller(
             real,
         });
     };
-    if role_of(&board["threads"][real_id.as_str()]) == Role::Coordinator {
+    if role_of(&board["threads"][real_id.as_str()]) == Role::Lead {
         return Ok(Caller {
             thread: named_id,
-            role: Role::Coordinator,
+            role: Role::Lead,
             actor: real_id,
             real,
         });

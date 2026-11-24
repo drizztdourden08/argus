@@ -9,7 +9,7 @@ use crate::remote::{Rig, alpha_with_worker, ok};
 use serde_json::Value;
 
 pub const P: [&str; 2] = ["--project", "alpha"];
-pub const AS: [&str; 2] = ["--as", "coordinator"];
+pub const AS: [&str; 2] = ["--as", "lead"];
 
 pub fn seed(coord_home: &Path, folder: &Path) {
     argus_testkit::write_board(coord_home, "alpha", &alpha_with_worker(folder));

@@ -51,7 +51,7 @@ pub fn label_of(thread: &Value, lead: bool, name: &str) -> String {
 
 /// Whether a thread doc is the project's lead.
 pub fn is_lead(thread: &Value) -> bool {
-    thread["role"] == "coordinator"
+    thread["role"] == "lead"
 }
 
 /// The wake line of a registered thread.

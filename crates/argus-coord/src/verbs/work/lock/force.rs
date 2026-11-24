@@ -1,4 +1,4 @@
-//! The coordinator's side: `coord lock free <resource> [--to T]` and `rm <resource>`.
+//! The lead's side: `coord lock free <resource> [--to T]` and `rm <resource>`.
 
 use argus_board::inbox::post;
 use argus_board::json::doc;

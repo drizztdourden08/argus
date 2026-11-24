@@ -105,7 +105,7 @@ fn item_arg(board: &Board, reference: Option<&str>) -> Res<Value> {
 }
 
 /// The caller and the live item a question or decision attaches to. Only the thread that owns
-/// the item asks inside it (the coordinator can for anyone).
+/// the item asks inside it (the lead can for anyone).
 fn on_item(board: &mut Board, r: &Run<'_>) -> Res<(Caller, Value)> {
     let who = r.begin(board)?;
     let item = item_arg(board, r.arg(0))?;

@@ -50,10 +50,10 @@ fn the_end_of_the_agent_returns_the_items_to_its_thread() {
     let rig = rig();
     run(&rig, &start("a1", &["--item", "I-1", "--master"]), As::Lead);
     rig.ok(&["agent", "done", "A-1"], As::Lead);
-    assert_eq!(assignee(&rig, "I-1"), "coordinator");
+    assert_eq!(assignee(&rig, "I-1"), "lead");
     run(&rig, &start("a2", &["--item", "I-2", "--master"]), As::Lead);
     rig.ok(&["agent", "stop", "A-2"], As::Lead);
-    assert_eq!(assignee(&rig, "I-2"), "coordinator");
+    assert_eq!(assignee(&rig, "I-2"), "lead");
 }
 
 #[test]
@@ -61,10 +61,10 @@ fn a_failed_or_deleted_agent_returns_its_items_too() {
     let rig = rig();
     run(&rig, &start("a1", &["--item", "I-1", "--master"]), As::Lead);
     rig.ok(&["agent", "fail", "A-1", "it broke"], As::Lead);
-    assert_eq!(assignee(&rig, "I-1"), "coordinator");
+    assert_eq!(assignee(&rig, "I-1"), "lead");
     run(&rig, &start("a2", &["--item", "I-2", "--master"]), As::Lead);
     rig.ok(&["agent", "rm", "A-2"], As::Lead);
-    assert_eq!(assignee(&rig, "I-2"), "coordinator");
+    assert_eq!(assignee(&rig, "I-2"), "lead");
 }
 
 #[test]

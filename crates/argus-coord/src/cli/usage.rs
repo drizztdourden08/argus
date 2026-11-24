@@ -52,7 +52,7 @@ Thread side (every thread; read everything, change only what is yours):
   coord log "<what just happened>" [--subject <s>] [--item <I>]   coord log list [--subject <s>] | rm <subject> <seq>
   coord inbox [--ack] | rm <m-id>
 
-Coordinator side (the same verbs work on every thread's records; --for <T> creates or lists for T, --to <T> reassigns):
+Lead side (the same verbs work on every thread's records; --for <T> creates or lists for T, --to <T> reassigns):
   coord board init [--name <Name>] | name <Name> | id | prefixes [<Product>...] [--clear] | show [--json] | open | path
   coord board kanban show | set --file <json>   (the per-board Kanban columns and rules, docs/kanban-config.md; show prints the one in use or the default, set is for the lead and the owner)
   coord board shortcut [--thread <id>] [--root <dir>]   (adds "<Name> board" to .claude/launch.json: the Browser pane's new tab lists it, Play opens the board, nothing is started; idempotent; the Overlord gets two rows, "Argus" and "Overlord")
@@ -80,14 +80,14 @@ Ping the owner (any registered thread, the Overlord too; an OS notification on h
               broken that only he can fix; never for progress or a "done" with nothing to look at. info = recorded only; urgent = stays until
               dismissed, only when he must act now. At most 3 toasts a minute per thread; more are recorded without a toast.)
 
-Coordinator only (hard delete; rm on a record is a soft delete into the trash):
+Lead only (hard delete; rm on a record is a soft delete into the trash):
   coord purge thread <T>... | --keep <T>... | --status done,archived,placeholder,dispatched | --idle <days> | --trash [--older <days>]
               [--reason "..."] [--confirm <project-key>]   (no --confirm: dry run, counts and the exact confirm command)
   coord thread rm <T>...   (= purge thread)
   coord restore --from <backup.json> [--thread T]... --confirm <project-key>
   coord trash [--for T] [--json]
 
-Lead to lead (another project's coordinator; it needs no thread on that board, max 240 chars; wakes it when it runs wake-stream):
+Lead to lead (another project's lead; it needs no thread on that board, max 240 chars; wakes it when it runs wake-stream):
   coord lead <project-key> "<text>" [--kind note|decision]      e.g. coord lead brock "rule X fires on Y, I think it is wrong"
 
 Argus (the overview of every project; its verb is "coord portfolio", used by the Overlord):

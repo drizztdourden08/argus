@@ -79,7 +79,7 @@ fn a_lead_listens_for_every_thread_of_its_project() {
 
 #[test]
 fn a_lead_skips_the_wakes_it_sent_and_hears_the_next_one_from_another_sender() {
-    let own = wake(&json!({ "thread": "ui", "lines": ["coordinator: do it"], "count": 1 }));
+    let own = wake(&json!({ "thread": "ui", "lines": ["lead: do it"], "count": 1 }));
     let other = wake(&json!({ "thread": "ui", "lines": ["ui: done"], "count": 1 }));
     let server = serve(always(Some(format!("{own}{other}"))));
     let f = fixture(&server);

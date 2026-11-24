@@ -1,6 +1,6 @@
 //! `coord thread <verb>` (`verbs/thread.mjs`): a thread registers, keeps its note and status,
-//! flags and ends; the coordinator adds, edits, orders, pauses and archives any thread. A thread
-//! changes only itself, the coordinator any thread (the checks live in `argus-board`).
+//! flags and ends; the lead adds, edits, orders, pauses and archives any thread. A thread
+//! changes only itself, the lead any thread (the checks live in `argus-board`).
 
 mod away;
 mod edit;

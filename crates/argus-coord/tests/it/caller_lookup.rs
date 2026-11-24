@@ -20,13 +20,7 @@ fn lead_and_ui(home: &Home) -> (Value, std::path::PathBuf, std::path::PathBuf) {
     let board = board_with(
         "alpha",
         &[
-            (
-                "coordinator",
-                "coordinator",
-                "active",
-                Some("sid-lead"),
-                Some(&lead_root),
-            ),
+            ("lead", "lead", "active", Some("sid-lead"), Some(&lead_root)),
             ("ui", "thread", "active", Some("sid-ui"), Some(&ui_root)),
         ],
     );
@@ -55,10 +49,7 @@ fn the_thread_holding_the_session_id_is_the_caller_wherever_the_cwd_is() {
         &opts(&[]),
     )
     .unwrap();
-    assert_eq!(
-        (lead.thread.as_str(), lead.role),
-        ("coordinator", Role::Coordinator)
-    );
+    assert_eq!((lead.thread.as_str(), lead.role), ("lead", Role::Lead));
 }
 
 #[test]
@@ -160,16 +151,10 @@ fn as_names_a_thread_and_an_unknown_name_is_refused() {
 fn a_call_with_no_session_may_act_as_any_thread_with_that_threads_authority() {
     let home = Home::new();
     let (board, ..) = lead_and_ui(&home);
-    let who = caller(
-        &board,
-        home.path(),
-        &home.env(),
-        &opts(&["--as", "coordinator"]),
-    )
-    .unwrap();
+    let who = caller(&board, home.path(), &home.env(), &opts(&["--as", "lead"])).unwrap();
     assert_eq!(
         (who.thread.as_str(), who.role, who.actor.as_str(), who.real),
-        ("coordinator", Role::Coordinator, "coordinator", None)
+        ("lead", Role::Lead, "lead", None)
     );
 }
 
@@ -178,25 +163,25 @@ fn a_thread_never_acts_as_another_thread() {
     let home = Home::new();
     let (board, ..) = lead_and_ui(&home);
     let env = with_session(&home, "sid-ui");
-    let err = caller(&board, home.path(), &env, &opts(&["--as", "coordinator"])).unwrap_err();
+    let err = caller(&board, home.path(), &env, &opts(&["--as", "lead"])).unwrap_err();
     assert_eq!(
         err.to_string(),
-        "--as coordinator refused: this session is thread ui, and a thread never acts as another thread."
+        "--as lead refused: this session is thread ui, and a thread never acts as another thread."
     );
     let itself = caller(&board, home.path(), &env, &opts(&["--as", "ui"])).unwrap();
     assert_eq!(itself.thread, "ui");
 }
 
 #[test]
-fn the_coordinator_acting_as_a_thread_keeps_its_authority_and_is_the_actor() {
+fn the_lead_acting_as_a_thread_keeps_its_authority_and_is_the_actor() {
     let home = Home::new();
     let (board, ..) = lead_and_ui(&home);
     let env = with_session(&home, "sid-lead");
     let who = caller(&board, home.path(), &env, &opts(&["--as", "ui"])).unwrap();
     assert_eq!(who.thread, "ui");
-    assert_eq!(who.role, Role::Coordinator);
-    assert_eq!(who.actor, "coordinator");
-    assert_eq!(who.real.as_deref(), Some("coordinator"));
+    assert_eq!(who.role, Role::Lead);
+    assert_eq!(who.actor, "lead");
+    assert_eq!(who.real.as_deref(), Some("lead"));
 }
 
 #[test]
@@ -206,11 +191,11 @@ fn me_refreshes_the_heartbeat_of_the_real_caller_never_the_as_thread() {
     let env = with_session(&home, "sid-lead");
     let acted = me(&mut board, home.path(), &env, &opts(&["--as", "ui"])).unwrap();
     assert_eq!(acted, "ui");
-    assert!(board["threads"]["coordinator"]["lastSeen"].is_string());
+    assert!(board["threads"]["lead"]["lastSeen"].is_string());
     assert!(board["threads"]["ui"].get("lastSeen").is_none());
-    assert_eq!(board["dirty"], json!({"threads/coordinator": true}));
+    assert_eq!(board["dirty"], json!({"threads/lead": true}));
     // a revision is not bumped by a heartbeat
-    assert!(board["threads"]["coordinator"].get("rev").is_none());
+    assert!(board["threads"]["lead"].get("rev").is_none());
 }
 
 #[test]

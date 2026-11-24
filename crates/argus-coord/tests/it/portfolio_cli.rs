@@ -211,7 +211,7 @@ fn show_lists_the_cards_as_a_table_or_json_and_the_old_page_verbs_are_retired() 
         .expect("header")
         .split_whitespace()
         .collect();
-    assert_eq!(header[..4], ["project", "state", "coordinator", "threads"]);
+    assert_eq!(header[..4], ["project", "state", "lead", "threads"]);
     assert!(table.lines().any(|l| l.starts_with("Alpha ")), "{table}");
     let cards: Value =
         serde_json::from_str(ok(&portfolio(&home, &["show", "--json"]))).expect("json");

@@ -53,7 +53,7 @@ fn a_new_build_needs_the_item_it_serves_and_the_item_must_exist() {
 }
 
 #[test]
-fn master_hands_the_role_over_and_only_the_coordinator_may() {
+fn master_hands_the_role_over_and_only_the_lead_may() {
     let rig = Rig::new();
     rig.with_item();
     rig.legacy_launcher("master", None);
@@ -72,7 +72,7 @@ fn master_hands_the_role_over_and_only_the_coordinator_may() {
     rig.refused(
         &["launcher", "set", "web-1", "--master"],
         As::Worker,
-        "coordinator",
+        "lead",
     );
     let handed = rig.ok(&["launcher", "set", "web-1", "--master"], As::Lead);
     assert!(handed.out.contains("master"), "{}", handed.out);
@@ -226,7 +226,7 @@ fn migrate_links_writes_the_flags_and_links_and_a_second_run_changes_nothing() {
     rig.refused(
         &["build", "migrate-links"],
         As::Worker,
-        "belongs to the coordinator",
+        "belongs to the lead",
     );
     let ran = rig.ok(&["build", "migrate-links"], As::Lead);
     assert!(

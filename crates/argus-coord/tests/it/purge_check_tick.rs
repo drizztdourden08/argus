@@ -27,7 +27,7 @@ fn board() -> Value {
         "schema": 2, "project": "alpha", "createdAt": OLD, "updatedAt": OLD,
         "counters": {"I": 2, "Q": 1},
         "threads": {
-            "lead": thread("lead", "coordinator", "active"),
+            "lead": thread("lead", "lead", "active"),
             "gone": thread("gone", "thread", "done"),
             "busy": thread("busy", "thread", "blocked"),
         },
@@ -114,7 +114,7 @@ fn purge_refuses_what_it_cannot_do() {
     );
     fx.refused(
         &["purge", "thread", "lead"],
-        "lead cannot be purged: the coordinator and the calling thread are never purged.",
+        "lead cannot be purged: the lead and the calling thread are never purged.",
     );
     fx.refused(
         &["purge", "--status", "bogus"],
@@ -141,7 +141,7 @@ fn purge_refuses_what_it_cannot_do() {
     assert!(
         worker
             .err
-            .contains("only the coordinator can purge. Ask with coord inbox send coordinator"),
+            .contains("only the lead can purge. Ask with coord inbox send lead"),
         "{}",
         worker.err
     );

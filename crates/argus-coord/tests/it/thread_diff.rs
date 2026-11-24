@@ -296,9 +296,9 @@ fn new_sessions_register_with_a_host_link_and_a_role() {
     let beta_lead = Step::new(&[
         "thread",
         "register",
-        "coordinator",
+        "lead",
         "--role",
-        "coordinator",
+        "lead",
         "--session",
         "alpha",
         "--project",

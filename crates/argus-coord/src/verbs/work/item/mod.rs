@@ -1,5 +1,5 @@
 //! `coord item`: work items, what a thread has been asked to do, with short acceptance criteria.
-//! A thread enters and edits its own items; the coordinator can do all of it for any thread
+//! A thread enters and edits its own items; the lead can do all of it for any thread
 //! (`--for` on add, `--to` on move). An item may be typed (`--type`, `--parent`, `--assignee`,
 //! `--stage`, `--field`): the board checks it against the registry, and a call that names none of
 //! them is the plain item it always was.

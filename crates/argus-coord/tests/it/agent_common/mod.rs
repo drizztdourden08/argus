@@ -1,4 +1,4 @@
-//! A temp home with the board `alpha` and its three threads (`coordinator`, `worker`, `other`),
+//! A temp home with the board `alpha` and its three threads (`lead`, `worker`, `other`),
 //! and calls of `coord` against it with `--project alpha` and `--as <thread>`: what the Node
 //! suites of the agent, build and launcher verbs set up with `board init` and `thread register`.
 #![allow(dead_code)]
@@ -29,7 +29,7 @@ pub enum As {
 impl As {
     fn args(self) -> &'static [&'static str] {
         match self {
-            As::Lead => &["--as", "coordinator"],
+            As::Lead => &["--as", "lead"],
             As::Worker => &["--as", "worker"],
             As::Other => &["--as", "other"],
             As::Nobody => &[],
@@ -61,9 +61,9 @@ pub fn agent(rig: &Rig, name: &str) -> Value {
 pub fn hook_agent(name: &str, model: &str) -> Value {
     let at = now_iso();
     json!({
-        "id": "A-90", "createdAt": at, "createdBy": "coordinator", "updatedAt": at,
-        "updatedBy": "coordinator", "rank": 90000, "name": name,
-        "thread": "coordinator", "task": "Rebuild the pad overlay screen", "model": model,
+        "id": "A-90", "createdAt": at, "createdBy": "lead", "updatedAt": at,
+        "updatedBy": "lead", "rank": 90000, "name": name,
+        "thread": "lead", "task": "Rebuild the pad overlay screen", "model": model,
         "modelWhy": null, "kind": "build", "item": null, "branch": null, "worktree": null,
         "status": "working", "note": null, "result": null, "startedAt": at,
         "finishedAt": null, "hookId": "hk-90", "source": "hook", "agentType": "general-purpose",
@@ -84,11 +84,7 @@ impl Rig {
         let home = Home::new();
         let root = home.path().to_string_lossy().into_owned();
         let mut board = empty_board("alpha");
-        let threads = [
-            ("coordinator", "coordinator"),
-            ("worker", "thread"),
-            ("other", "thread"),
-        ];
+        let threads = [("lead", "lead"), ("worker", "thread"), ("other", "thread")];
         for (rank, (id, role)) in (1_u32..).zip(threads) {
             board["threads"][id] = thread(id, role, &root, 1024 * rank);
         }
@@ -155,7 +151,7 @@ impl Rig {
         ran
     }
 
-    /// The master launcher every project must have, made as the coordinator.
+    /// The master launcher every project must have, made as the lead.
     pub fn with_master(&self) {
         self.ok(
             &["launcher", "set", "master", "--cmd", "game run"],
