@@ -1,7 +1,5 @@
 /* @layer renderer-app @kind logic */
-import type { BrandApp } from '@drizztdourden08/tessera/brand';
 import { useCallback } from 'react';
-import { BRAND_PREFIX } from '../../../../avatar';
 import { fileToIcon } from '../../../../board-icon';
 import { setIcon } from '../../../../data/posts';
 import { useDoc } from '../../../../data/react';
@@ -14,7 +12,6 @@ import { useSettingSave } from './useSettingSave';
 const useIconChoice = (boardKey: string): IconChoice => {
   const meta = useDoc<BoardMeta>(boardKey, 'meta', 'board').doc;
   const { busy, problem, setProblem, save } = useSettingSave({ boardKey, post: setIcon, saved: ICON_SAVED });
-  const pickBrand = useCallback((app: BrandApp) => save(`${BRAND_PREFIX}${app}`), [save]);
   const pickIcon = useCallback((name: BoardIconName) => save(`${ICON_VALUE_PREFIX}${name}`), [save]);
   const reset = useCallback(() => save(null), [save]);
   const upload = useCallback(async (files: File[]) => {
@@ -24,7 +21,7 @@ const useIconChoice = (boardKey: string): IconChoice => {
     else setProblem(result.reason);
   }, [save, setProblem]);
   const reject = useCallback(() => setProblem(ICON_REFUSED), [setProblem]);
-  return { setting: meta?.icon ?? null, avatar: meta?.avatar ?? null, busy, problem, pickBrand, pickIcon, upload, reject, reset };
+  return { setting: meta?.icon ?? null, avatar: meta?.avatar ?? null, busy, problem, pickIcon, upload, reject, reset };
 };
 
 export { useIconChoice };

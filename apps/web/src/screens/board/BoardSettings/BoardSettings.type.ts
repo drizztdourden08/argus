@@ -1,9 +1,10 @@
 /* @layer renderer-app @kind types */
-import type { BrandApp } from '@drizztdourden08/tessera/brand';
+import type { IconPickerValue } from '@drizztdourden08/tessera';
+import type { ReactNode } from 'react';
 import type { BoardIconName } from '../../../board-icon';
 import type { PostResult } from '../../../data/api';
 
-type IconMode = 'brand' | 'icon' | 'upload';
+type SettingsTab = 'appearance' | 'general' | 'kanban';
 
 interface BoardSettingsButtonProps {
   boardKey: string;
@@ -35,7 +36,7 @@ interface AvatarChoice {
   setting: string | null;
   busy: boolean;
   problem: string | null;
-  pickBrand: (app: BrandApp) => Promise<void>;
+  pickIcon: (name: BoardIconName) => Promise<void>;
   upload: (files: File[]) => Promise<void>;
   reject: () => void;
   reset: () => Promise<void>;
@@ -43,7 +44,17 @@ interface AvatarChoice {
 
 interface IconChoice extends AvatarChoice {
   avatar: string | null;
-  pickIcon: (name: BoardIconName) => Promise<void>;
+}
+
+interface LookPickerProps {
+  title: string;
+  note: string;
+  preview: ReactNode;
+  pickerLabel: string;
+  value: IconPickerValue;
+  accept: string[];
+  uploadLabel: string;
+  choice: AvatarChoice;
 }
 
 interface TitleLimitChoice {
@@ -55,4 +66,4 @@ interface TitleLimitChoice {
   commit: () => Promise<void>;
 }
 
-export type { AvatarChoice, BoardSettingsButtonProps, BoardSettingsDialogProps, IconChoice, IconMode, SectionProps, SettingSave, SettingSaveOptions, TitleLimitChoice };
+export type { AvatarChoice, BoardSettingsButtonProps, BoardSettingsDialogProps, IconChoice, LookPickerProps, SectionProps, SettingSave, SettingSaveOptions, SettingsTab, TitleLimitChoice };

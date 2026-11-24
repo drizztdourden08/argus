@@ -1,27 +1,26 @@
 /* @layer renderer-app @kind component */
-import { DropZone, Flex, Text } from '@drizztdourden08/tessera';
-import { AVATAR_BRANDS, AVATAR_TYPES, BRAND_PREFIX } from '../../../../avatar';
-import { AvatarReset } from '../../../../shell/AvatarReset';
-import { BrandMarkPicker } from '../../../../shell/BrandMarkPicker';
+import { AVATAR_TYPES, resolveAvatar } from '../../../../avatar';
+import { BoardIcon } from '../../../../shell/BoardIcon';
+import { pickerValue } from '../behavior/picker-value';
 import { useAvatarChoice } from '../behavior/useAvatarChoice';
-import { AVATAR_NOTE } from '../BoardSettings.constants';
+import { AVATAR_NOTE, AVATAR_PICKER_LABEL } from '../BoardSettings.constants';
 import type { SectionProps } from '../BoardSettings.type';
+import { LookPicker } from './LookPicker';
 
 const AvatarSection = (props: SectionProps) => {
   const choice = useAvatarChoice(props.boardKey);
+  const source = resolveAvatar(props.boardKey, choice.setting);
   return (
-    <Flex direction="column" gap="md">
-      <Text variant="label">Lead avatar</Text>
-      <Text variant="caption" tone="muted">{AVATAR_NOTE}</Text>
-      <BrandMarkPicker
-        label="Avatar brand marks"
-        value={AVATAR_BRANDS.find((app) => choice.setting === `${BRAND_PREFIX}${app}`) ?? null}
-        disabled={choice.busy}
-        onPick={(app) => void choice.pickBrand(app)}
-      />
-      <DropZone variant="inline" size="sm" accept={AVATAR_TYPES} label="Upload an image" disabled={choice.busy} onDrop={(files) => void choice.upload(files)} onReject={choice.reject} />
-      <AvatarReset disabled={choice.busy || choice.setting === null} problem={choice.problem} onReset={() => void choice.reset()} />
-    </Flex>
+    <LookPicker
+      title="Lead avatar"
+      note={AVATAR_NOTE}
+      preview={source && <BoardIcon source={source} size="lg" title="Lead avatar preview" />}
+      pickerLabel={AVATAR_PICKER_LABEL}
+      value={pickerValue(choice.setting)}
+      accept={AVATAR_TYPES}
+      uploadLabel="Upload an image"
+      choice={choice}
+    />
   );
 };
 
