@@ -55,6 +55,7 @@ const serve = (report: CacheReport = REPORT, prune: { status?: number; body?: un
 const open = async (report: CacheReport = REPORT, prune?: { status?: number; body?: unknown }) => {
   const calls = serve(report, prune);
   renderAt('/#cache');
+  fireEvent.click(await screen.findByRole('tab', { name: 'Download cache' }));
   await screen.findAllByText(CORE);
   return calls;
 };
@@ -88,6 +89,7 @@ describe('S1 the Cache tab listing', { tags: ['standard'] }, () => {
   it('says why when the read fails', async () => {
     stubApi(() => ({ status: 503, body: { error: { code: 'unavailable', message: 'the build cache service is not running' } } }));
     renderAt('/#cache');
+    fireEvent.click(await screen.findByRole('tab', { name: 'Download cache' }));
     expect(await screen.findByText('The build cache could not be read: the build cache service is not running.')).toBeTruthy();
   });
 

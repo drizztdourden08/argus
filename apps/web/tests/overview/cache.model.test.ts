@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatBytes } from '../../src/format';
 import { ApiError } from '../../src/data/api';
-import { cacheError, pruneSaid } from '../../src/screens/overview/cache/model';
+import { cacheError, pruneSaid } from '../../src/screens/overview/packages/cache/model';
 
 const EMPTY = { at: '2026-10-29T12:00:00.000Z', deleted: [], abandonedDeleted: 0, freedBytes: 0, refused: [], failed: [] };
 

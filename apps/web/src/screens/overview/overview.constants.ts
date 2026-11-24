@@ -9,14 +9,13 @@ const OVERVIEW_TABS = [
   { id: 'activity', label: 'Activity', badgeTitle: 'Warnings and errors since this tab was last open' },
   { id: 'notifications', label: 'Notifications', badgeTitle: 'Notifications since this tab was last open' },
   { id: 'dependencies', label: 'Dependencies', badgeTitle: 'Blocked requests and requests open for over 3 days' },
-  { id: 'cache', label: 'Cache' },
   { id: 'releases', label: 'Releases' },
-  { id: 'registry', label: 'Registry' },
+  { id: 'packages', label: 'Packages' },
 ];
 
 const OVERVIEW_TAB_IDS = OVERVIEW_TABS.map((tab) => tab.id);
 
-const TAB_ALIASES: Readonly<Record<string, string>> = { dashboards: 'boards' };
+const TAB_ALIASES: Readonly<Record<string, string>> = { dashboards: 'boards', cache: 'packages', registry: 'packages' };
 
 const OVERVIEW_HASHES = [...OVERVIEW_TAB_IDS, ...Object.keys(TAB_ALIASES)];
 
@@ -27,9 +26,8 @@ const TAB_ICONS: Readonly<Record<string, IconName>> = {
   activity: 'scroll-text',
   notifications: 'bell',
   dependencies: 'link',
-  cache: 'database',
+  packages: 'package',
   releases: 'tag',
-  registry: 'server',
 };
 
 const GROUP_OPTIONS = [
