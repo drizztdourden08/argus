@@ -9,19 +9,14 @@
   overflow: hidden;
 }
 
-.overlord-chat__messages {
-  padding-block: var(--space-sm);
+.overlord-chat__transcript {
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 
 .overlord-chat__text {
   min-inline-size: 0;
   overflow-wrap: anywhere;
-}
-
-.overlord-chat__message.is-user {
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--c-text) 8%, transparent);
 }
 
 .overlord-chat__tool {

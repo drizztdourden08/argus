@@ -7,7 +7,7 @@ const WorkingLine = (props: WorkingLineProps) => {
   return (
     <Flex gap="sm" align="center">
       <BrandMark app="argus" size="sm" activity={activity.mark} />
-      <Text variant="caption" tone="muted" clamp={1}>{activity.text}</Text>
+      <Text variant="caption" tone="muted" clamp={1} dots>{activity.text}</Text>
     </Flex>
   );
 };
