@@ -6,16 +6,18 @@ import { Panel } from '../../Panel';
 import { settingsRow } from '../behavior/settings-rows';
 import { useSettingsForm } from '../behavior/useSettingsForm';
 import { SETTINGS_SECTIONS } from '../OverlordChat.constants';
+import { OverlordLive } from './OverlordLive';
 
 const SettingsTab = () => {
   const form = useSettingsForm();
   const { draft, action } = form;
   const failure = action.problem && <Callout tone="danger">{action.problem}</Callout>;
-  if (!form.settings || !draft) return <Panel title="Settings">{failure}</Panel>;
+  if (!form.settings || !draft) return <Panel title="Settings"><Stack gap="md"><OverlordLive />{failure}</Stack></Panel>;
   const row = (key: LimitKey, input: SettingsInput) => settingsRow(form, key, input);
   return (
     <Panel title="Settings">
       <Stack gap="md">
+        <OverlordLive />
         {failure}
         <SettingsSection
           title={SETTINGS_SECTIONS.agent}

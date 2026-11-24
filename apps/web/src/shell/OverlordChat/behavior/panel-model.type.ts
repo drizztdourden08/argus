@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { OverlordMode } from '../../../../data/overlord';
+import type { OverlordMode } from '../../../data/overlord';
 
 interface ControlSet {
   restart: boolean;

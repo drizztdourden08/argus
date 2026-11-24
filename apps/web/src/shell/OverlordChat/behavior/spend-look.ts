@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
-import type { OverlordSpend } from '../../../../data/overlord';
-import type { SpendLook } from './model.type';
+import type { OverlordSpend } from '../../../data/overlord';
+import type { SpendLook } from './panel-model.type';
 
 const toneOf = (ratio: number, warnAt: number): SpendLook['tone'] => {
   if (ratio >= 1) return 'danger';

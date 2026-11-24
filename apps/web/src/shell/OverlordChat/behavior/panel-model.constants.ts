@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
-import type { OverlordMode, OverlordState } from '../../../../data/overlord';
-import type { ControlSet } from './model.type';
+import type { OverlordMode, OverlordState } from '../../../data/overlord';
+import type { ControlSet } from './panel-model.type';
 
 const CONTROLS_BY_STATE: Readonly<Record<OverlordState, ControlSet>> = {
   stopped: { restart: true },

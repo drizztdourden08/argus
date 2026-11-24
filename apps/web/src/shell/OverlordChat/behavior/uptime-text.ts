@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind logic */
-import { toMillis } from '../../../../format';
-import { MINUTES_PER_HOUR, MS_PER_SECOND, SECONDS_PER_MINUTE } from './model.constants';
+import { toMillis } from '../../../format';
+import { MINUTES_PER_HOUR, MS_PER_SECOND, SECONDS_PER_MINUTE } from './panel-model.constants';
 
 const uptimeText = (startedAt: string | null, now: number): string => {
   const started = toMillis(startedAt);

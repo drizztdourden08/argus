@@ -14,7 +14,6 @@ export { readStatus } from './read-status';
 export { readUsage } from './read-usage';
 export { removeRule } from './remove-rule';
 export { runRule } from './run-rule';
-export { saveBudget } from './save-budget';
 export { saveSettings } from './save-settings';
 export { sendMessage } from './send-message';
 export { switchMode } from './switch-mode';

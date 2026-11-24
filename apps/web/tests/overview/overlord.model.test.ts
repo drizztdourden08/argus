@@ -1,9 +1,12 @@
 /* @layer renderer-app @kind test */
 import { describe, expect, it } from 'vitest';
-import { controlsFor, modeSteps, pendingApprovals, spendLook } from '../../src/screens/overview/overlord/model';
+import { controlsFor } from '../../src/shell/OverlordChat/behavior/controls-for';
+import { modeSteps } from '../../src/shell/OverlordChat/behavior/mode-steps';
+import { pendingApprovals } from '../../src/shell/OverlordChat/behavior/pending-approvals';
+import { spendLook } from '../../src/shell/OverlordChat/behavior/spend-look';
 import { isRunning } from '../../src/shell/OverlordChat/behavior/is-running';
 import { toRows } from '../../src/shell/OverlordChat/behavior/to-rows';
-import { STATE_STATUSES } from '../../src/screens/overview/overlord/overlord.constants';
+import { STATE_STATUSES } from '../../src/shell/OverlordChat/OverlordPanel.constants';
 
 const assistant = (index: number, content: unknown[]) => ({ index, event: { type: 'assistant', message: { content } } });
 const user = (index: number, content: unknown) => ({ index, event: { type: 'user', message: { content } } });

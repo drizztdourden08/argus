@@ -81,7 +81,7 @@ const CHAT_TABS: { value: ChatTab; label: string }[] = [
 const SETTINGS_ROWS: Readonly<Record<LimitKey, { title: string; note: string }>> = {
   cwd: { title: 'Working folder', note: 'The folder the Overlord works in.' },
   exePath: { title: 'Agent program path', note: 'The program that runs the Overlord.' },
-  budgetUsd: { title: 'Monthly budget', note: 'Spend cap in USD. Blank means no cap.' },
+  budgetUsd: { title: 'Monthly budget', note: 'Spend cap in USD, warned at 80 percent, paused at 100. Reset means no limit.' },
   restartMax: { title: 'Restarts allowed', note: 'How often it may restart on its own.' },
   approvalTimeoutMin: { title: 'Approval wait', note: 'Minutes to wait for an approval.' },
 };

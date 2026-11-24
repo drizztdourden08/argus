@@ -1,6 +1,6 @@
 /* @layer renderer-app @kind constants */
 import { defineStatuses } from '@drizztdourden08/tessera';
-import type { OverlordMode } from '../../../data/overlord';
+import type { OverlordMode } from '../../data/overlord';
 
 const STATE_STATUSES = defineStatuses({
   stopped: { label: 'Stopped', tone: 'neutral' },
@@ -15,7 +15,6 @@ const STATE_STATUSES = defineStatuses({
 const NO_LIMIT = 'No limit';
 const READING = 'Reading the Overlord.';
 const SPEND_NOTE = 'An estimate from token counts. The provider console has the real bill.';
-const BUDGET_NOTE = 'No limit is the default. With a cap, a notification at the warning level and the Overlord stops at 100 percent.';
 const NO_MODE = 'Hosted, API key';
 
 const MODE_NOTES: Readonly<Record<OverlordMode, string>> = {
@@ -25,9 +24,6 @@ const MODE_NOTES: Readonly<Record<OverlordMode, string>> = {
 };
 const MODE_CONFIRM = 'This moves the Overlord thread. The desktop Overlord and the hosted one swap places.';
 
-const asMode = (mode: string | null): OverlordMode => (mode === 'shadow' || mode === 'live' ? mode : 'off');
-const needsConfirm = (from: OverlordMode, to: OverlordMode) => from === 'live' || to === 'live';
-
 const APPROVAL_PARAM = 'approval';
 
-export { APPROVAL_PARAM, BUDGET_NOTE, MODE_CONFIRM, MODE_NOTES, NO_LIMIT, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES, asMode, needsConfirm };
+export { APPROVAL_PARAM, MODE_CONFIRM, MODE_NOTES, NO_LIMIT, NO_MODE, READING, SPEND_NOTE, STATE_STATUSES };
