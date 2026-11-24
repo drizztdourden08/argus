@@ -130,15 +130,15 @@ pub fn next_of(
     burn: &dyn Fn(&str) -> Option<f64>,
     now_ms: i64,
 ) -> Next {
-    let (from, to, source) = match plan {
-        Some(p) => (Some(p.from.clone()), Some(p.to.clone()), Source::Owner),
-        None => {
+    let (from, to, source) = plan.map_or_else(
+        || {
             let to = active
                 .and_then(|a| pick_target(views, a))
                 .map(|v| v.key.clone());
             (active.map(str::to_owned), to, Source::Auto)
-        }
-    };
+        },
+        |p| (Some(p.from.clone()), Some(p.to.clone()), Source::Owner),
+    );
     let leaving = from
         .as_deref()
         .and_then(|key| views.iter().find(|v| v.key == key));

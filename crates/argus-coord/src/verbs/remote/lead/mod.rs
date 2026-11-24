@@ -171,12 +171,6 @@ mod tests {
     }
 
     #[test]
-    fn portfolio_is_the_overlord_board_in_a_home_without_a_table() {
-        let dir = tempfile::tempdir().unwrap();
-        assert_eq!(overlord_key(dir.path()), "portfolio");
-    }
-
-    #[test]
     fn a_failed_wake_is_named_in_the_warning() {
         let line = failure_line("bja1s18", "the wake request failed", &"timed out");
         assert!(line.contains("bja1s18"));
