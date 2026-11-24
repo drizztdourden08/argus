@@ -110,7 +110,7 @@ interface RecordHeadProps {
   time?: RecordTimeValue;
 }
 
-type HeadFrameKeys = 'title' | 'content' | 'density' | 'chevronOnIcon' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'fill' | 'className' | 'label' | 'onKeyDown' | 'onActivate';
+type HeadFrameKeys = 'title' | 'content' | 'density' | 'chevronOnIcon' | 'defaultOpen' | 'open' | 'onOpenChange' | 'attrs' | 'onClickCapture' | 'children' | 'edge' | 'edgeTone' | 'variant' | 'fill' | 'tint' | 'menuOnHover' | 'className' | 'label' | 'onKeyDown' | 'onActivate';
 
 interface RecordHeadViewProps extends RecordHeadProps, Pick<RecordFrameProps, HeadFrameKeys> {}
 
@@ -166,6 +166,8 @@ interface RecordCardProps {
   edgeTone?: RecordFrameProps['edgeTone'];
   variant?: RecordFrameProps['variant'];
   fill?: RecordFrameProps['fill'];
+  tint?: RecordFrameProps['tint'];
+  menuOnHover?: RecordFrameProps['menuOnHover'];
   className?: string;
   label?: string;
   onKeyDown?: RecordFrameProps['onKeyDown'];

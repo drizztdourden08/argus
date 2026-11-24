@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { CardEdge, CardTone, CardVariant } from '@drizztdourden08/tessera';
+import type { CardEdge, CardTone, CardVariant, TagCategoryColor } from '@drizztdourden08/tessera';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import type { HeadSelection } from './records.type';
 
@@ -24,6 +24,8 @@ interface RecordFrameProps {
   edgeTone?: CardTone;
   variant?: CardVariant;
   fill?: boolean;
+  tint?: TagCategoryColor;
+  menuOnHover?: boolean;
   className?: string;
   attrs?: Readonly<Record<string, string>>;
   onClickCapture?: (event: MouseEvent) => void;

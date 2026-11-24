@@ -10,6 +10,7 @@ const EpicHeader = (props: EpicHeaderProps) => {
   return (
     <RecordHeader
       density="row"
+      menuOnHover
       icon={<TypeIcon kind={parent.type ?? DEFAULT_TYPE} />}
       code={<RecordLink id={code} />}
       title={(

@@ -27,6 +27,7 @@ const CaseCard = (props: TestPartProps) => {
       time={view.time}
       compact={layout === 'compact'}
       chevronOnIcon
+      menuOnHover
       signals={chips}
       attrs={{ 'data-swap-item': '', 'data-test': test.id, ...(toRun ? { 'data-to-run': '' } : {}) }}
       onKeyDown={rowKeys(toRun, controls)}

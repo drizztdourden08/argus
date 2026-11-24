@@ -19,6 +19,7 @@ const PlanCard = (props: PlanCardProps) => {
       time={plan.item.updatedAt ?? null}
       compact={layout === 'compact'}
       chevronOnIcon
+      menuOnHover
       edgeTone={planTone(plan.counts)}
       attrs={{ 'data-swap-item': '', 'data-plan': code }}
       foot={<PlanFoot plan={plan} code={code} />}

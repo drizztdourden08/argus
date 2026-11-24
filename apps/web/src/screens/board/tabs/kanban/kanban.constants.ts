@@ -1,7 +1,9 @@
 /* @layer renderer-app @kind constants */
-import type { TagUrgencyColor, TesseraOverrides } from '@drizztdourden08/tessera';
+import type { TagCategoryColor, TagUrgencyColor, TesseraOverrides } from '@drizztdourden08/tessera';
 import type { NoteKind } from '../../owner-posts';
 import type { PurgeDraft, PurgeScope } from './trash';
+
+const EPIC_ACCENT: TagCategoryColor = 'violet';
 
 const NOW_TICK_MS = 60_000;
 
@@ -67,4 +69,4 @@ const DONE_TIP = 'The done and dropped items are hidden until you open them. A s
 
 const PARENT_HINT = 'Every ticket needs an epic. Pick one.';
 
-export { AGENT_TONES, DEP_HEADINGS, DONE_TIP, EMPTY_COLUMN_STRINGS, GROUP_HINT, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, PARENT_HINT, TYPING_SELECTOR };
+export { AGENT_TONES, DEP_HEADINGS, DONE_TIP, EPIC_ACCENT, EMPTY_COLUMN_STRINGS, GROUP_HINT, NOTE_WORD, DEFAULT_PURGE, PURGE_SCOPES, PURGE_SENT, STATUS_TONES, BOARD_LABEL, COMPOSE_KINDS, ORDER_HINT, NEEDS_YOU_TIP, NO_ITEMS_TEXT, NOW_TICK_MS, PARENT_HINT, TYPING_SELECTOR };

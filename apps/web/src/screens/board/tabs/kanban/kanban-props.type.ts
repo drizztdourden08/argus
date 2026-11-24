@@ -1,5 +1,5 @@
 /* @layer renderer-app @kind types */
-import type { CardTone, KanbanGroupFold, MenuGroup } from '@drizztdourden08/tessera';
+import type { CardTone, KanbanGroupFold, MenuGroup, TagCategoryColor } from '@drizztdourden08/tessera';
 import type { ItemInput, ItemRef } from '../../../../data/kanban';
 import type { PurgeScope } from './trash';
 import type { TrashPanel } from './trash-props.type';
@@ -117,6 +117,7 @@ interface ItemCardProps {
   selecting: boolean;
   ops: ItemOps;
   edgeTone: CardTone | undefined;
+  tint: TagCategoryColor | undefined;
   compact: boolean;
   onToggle: (id: string) => void;
   onMark: (shift: boolean) => void;

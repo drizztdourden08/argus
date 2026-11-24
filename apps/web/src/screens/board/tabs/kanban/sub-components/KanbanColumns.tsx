@@ -6,7 +6,7 @@ import { itemCode } from '../../../../../shell';
 import { applyDrop } from '../behavior/apply-drop';
 import { cardMenuGroups } from '../behavior/card-menu-groups';
 import { leadTone } from '../attention';
-import { BOARD_LABEL, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
+import { BOARD_LABEL, EPIC_ACCENT, EMPTY_COLUMN_STRINGS } from '../kanban.constants';
 import type { KanbanColumnsProps } from '../kanban-props.type';
 import { cardTint, epicColumns, epicFolded, epicKeyOf, epicKeys, epicStored, planDrop } from '../model';
 import type { CardData } from '../model';
@@ -59,6 +59,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
       cardLabel={(card) => `${itemCode(card.item)} ${card.item.title}`}
       cardEdgeTone={(card) => leadTone(card.attention)}
       cardTint={cardTint}
+      groupAccent={(groupId) => (epics && epicKeyOf(groupId)?.epic ? EPIC_ACCENT : undefined)}
       onMove={onMove}
       onCardOpen={onCardOpen}
       renderGroupHeader={(groupId, column, fold) => frameHeader(props, groupId, column, fold)}
@@ -73,6 +74,7 @@ const KanbanColumns = (props: KanbanColumnsProps) => {
           selecting={selection.active}
           ops={ops}
           edgeTone={frame.edgeTone}
+          tint={frame.tint}
           compact={state.compact}
           onToggle={(id) => selection.toggle(id, ids)}
           onMark={selection.mark}

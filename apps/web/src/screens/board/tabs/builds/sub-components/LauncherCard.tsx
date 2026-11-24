@@ -25,6 +25,7 @@ const LauncherCard = (props: LauncherCardProps) => {
         time={launcher.retiredAt ?? launcher.updatedAt ?? null}
         compact={compact}
         chevronOnIcon
+        menuOnHover
         edge="border"
         edgeTone={launcher.current ? 'success' : undefined}
         attrs={{ 'data-swap-item': '', 'data-launcher': launcher.name }}

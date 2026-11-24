@@ -14,6 +14,7 @@ const WorktreeCard = (props: WorktreeCardProps) => {
       time={time}
       compact={compact}
       chevronOnIcon
+      menuOnHover
       openLabel={`Open ${label}`}
       onOpen={onOpen}
       attrs={{ 'data-record': label }}
