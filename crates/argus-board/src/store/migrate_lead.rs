@@ -138,21 +138,39 @@ mod tests {
         })
     }
 
-    #[test]
-    fn a_coordinator_board_comes_out_with_lead_everywhere_and_prose_untouched() {
+    fn migrated() -> Board {
         let mut board = old_board();
         assert!(pending(&board));
         migrate(&mut board);
+        board
+    }
+
+    #[test]
+    fn the_threads_and_counters_of_a_coordinator_board_are_renamed() {
+        let board = migrated();
         assert_eq!(board["threads"]["lead"]["id"], "lead");
         assert_eq!(board["threads"]["lead"]["role"], "lead");
         assert_eq!(board["threads"]["lead"]["note"], "the coordinator leads");
         assert_eq!(board["threads"]["lead-hosted"]["id"], "lead-hosted");
         assert_eq!(board["counters"]["log:lead"], 2);
+        assert!(board["threads"].get("coordinator").is_none());
+        assert_eq!(board["migrations"]["lead"], true);
+        assert!(!pending(&board));
+    }
+
+    #[test]
+    fn the_items_of_a_coordinator_board_name_lead_and_keep_their_prose() {
+        let board = migrated();
         assert_eq!(board["items"]["I-1"]["assignee"], "lead");
         assert_eq!(board["items"]["I-1"]["createdBy"], "lead");
         assert_eq!(board["items"]["I-1"]["origin"], "lead");
         assert_eq!(board["items"]["I-1"]["title"], "coordinator");
         assert_eq!(board["items"]["I-1"]["description"], "ask the coordinator");
+    }
+
+    #[test]
+    fn the_inbox_log_and_entries_of_a_coordinator_board_name_lead() {
+        let board = migrated();
         assert_eq!(board["inbox"]["lead"][0]["text"], "hi coordinator");
         assert_eq!(board["inbox"]["ui"][0]["from"], "lead");
         assert_eq!(board["log"]["lead"]["subject"], "lead");
@@ -160,9 +178,6 @@ mod tests {
         assert_eq!(board["log"]["lead"]["entries"][0]["text"], "coordinator");
         assert_eq!(board["entries"]["E-1"]["by"], "lead");
         assert_eq!(board["entries"]["E-1"]["text"], "coordinator");
-        assert_eq!(board["migrations"]["lead"], true);
-        assert!(board["threads"].get("coordinator").is_none());
-        assert!(!pending(&board));
     }
 
     #[test]

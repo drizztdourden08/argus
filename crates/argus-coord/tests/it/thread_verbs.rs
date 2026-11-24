@@ -274,7 +274,7 @@ fn a_thread_keeps_its_note_status_and_flags_and_ends() {
         "flag must be one of needs-human, blocked.",
     );
     let list = fx.ok(&["thread", "list"]);
-    assert!(list.out.contains("worker       blocked"), "{}", list.out);
+    assert!(list.out.contains("worker  blocked"), "{}", list.out);
     assert_eq!(
         fx.ok(&["thread", "done", "--as", "worker"]).out,
         "worker: done\n"

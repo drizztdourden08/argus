@@ -18,7 +18,7 @@ fn a_wake_for_the_thread_ends_the_listener_with_exit_2_and_the_line_on_stderr() 
     assert_eq!(ran.code, 2);
     assert_eq!(
         ran.err,
-        "WAKE ui: lead: look at the build. Run: coord inbox\n"
+        "WAKE ui: worker: look at the build. Run: coord inbox\n"
     );
     assert_eq!(ran.out, "");
     assert_eq!(

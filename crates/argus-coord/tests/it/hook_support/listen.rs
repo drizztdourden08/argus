@@ -59,7 +59,7 @@ pub fn wake(data: &Value) -> String {
 /// A stand-in stream that wakes thread `ui` with one line, once per stream.
 pub fn serve_one_wake() -> StandIn {
     serve(always(Some(wake(
-        &json!({ "thread": "ui", "lines": ["lead: look at the build"], "count": 1 }),
+        &json!({ "thread": "ui", "lines": ["worker: look at the build"], "count": 1 }),
     ))))
 }
 

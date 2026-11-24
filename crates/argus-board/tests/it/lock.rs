@@ -152,12 +152,7 @@ fn a_board_still_on_schema_1_is_migrated_and_its_first_save_keeps_the_old_text()
     assert_eq!(board["log"]["ui"]["entries"][1]["seq"], json!(2));
     assert_eq!(board["counters"]["log:ui"], json!(2));
     with_board(home.path(), "old", false, |_| Ok(())).expect("saved");
-    let backups: Vec<_> = fs::read_dir(&dir)
-        .expect("list")
-        .filter_map(Result::ok)
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.starts_with("board.v1."))
-        .collect();
+    let backups = backups_named(&dir, "board.v1.");
     assert_eq!(backups.len(), 1, "the unmigrated text is kept once");
 }
 
@@ -179,15 +174,19 @@ fn a_coordinator_board_is_renamed_on_read_and_its_first_save_keeps_the_old_text(
     assert_eq!(board["threads"]["lead"]["role"], json!("lead"));
     assert_eq!(board["items"]["I-1"]["assignee"], json!("lead"));
     with_board(home.path(), "lead-old", false, |_| Ok(())).expect("saved");
-    let backups: Vec<_> = fs::read_dir(&dir)
-        .expect("list")
-        .filter_map(Result::ok)
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.starts_with("board.pre-lead."))
-        .collect();
+    let backups = backups_named(&dir, "board.pre-lead.");
     assert_eq!(backups.len(), 1, "the old text is kept once");
     let again = read_board(home.path(), "lead-old")
         .expect("read")
         .expect("a board");
     assert_eq!(again["threads"]["lead"]["id"], json!("lead"));
+}
+
+fn backups_named(dir: &Path, prefix: &str) -> Vec<String> {
+    fs::read_dir(dir)
+        .expect("list")
+        .filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.starts_with(prefix))
+        .collect()
 }

@@ -175,7 +175,7 @@ async fn the_page_and_the_overlord_may_change_rules_and_no_other_caller() {
     );
     assert_eq!(post(t, path, &by("api")).await.status, 403, "not the lead");
     assert_eq!(
-        post(t, path, &by("lead")).await.status,
+        post(t, path, &by("ghost")).await.status,
         403,
         "no such thread"
     );

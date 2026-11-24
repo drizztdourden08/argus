@@ -4,8 +4,6 @@
 use std::fs;
 use std::path::Path;
 
-use argus_core::lead::canonical;
-
 use crate::error::Result;
 use crate::jsonio;
 use crate::map::IdMap;
@@ -15,14 +13,15 @@ const PREFIX: &str = "listen-";
 const SUFFIX: &str = ".json";
 
 /// The new name of a stamp: the longest key of `map` that starts its `<key>-<thread>` part. The
-/// lead keeps its new id, so a `coordinator` stamp becomes a `lead` one.
+/// thread part is kept as it is, so a rollback gives every stamp back; the listener reads a
+/// `coordinator` stamp as the `lead` one.
 pub fn renamed_stamp(name: &str, map: &IdMap) -> Option<String> {
     let rest = name.strip_prefix(PREFIX)?.strip_suffix(SUFFIX)?;
     let mut keys: Vec<&String> = map.keys().collect();
     keys.sort_by_key(|k| std::cmp::Reverse(k.len()));
     keys.into_iter().find_map(|key| {
         let thread = rest.strip_prefix(key.as_str())?.strip_prefix('-')?;
-        (!thread.is_empty()).then(|| format!("{PREFIX}{}-{}{SUFFIX}", map[key], canonical(thread)))
+        (!thread.is_empty()).then(|| format!("{PREFIX}{}-{thread}{SUFFIX}", map[key]))
     })
 }
 
@@ -69,7 +68,7 @@ pub fn rewrite(home: &Path, map: &IdMap) -> Result<()> {
 // test-tag: critical
 #[cfg(test)]
 mod tests {
-    //! The stamp names: the longest key wins, the thread keeps its name (the lead is renamed).
+    //! The stamp names: the longest key wins, the thread keeps its name.
     use super::renamed_stamp;
     use crate::map::IdMap;
 
@@ -83,9 +82,9 @@ mod tests {
     #[test]
     fn the_longest_key_names_the_stamp() {
         let got = renamed_stamp("listen-rotp-web-coordinator.json", &map());
-        assert_eq!(got.as_deref(), Some("listen-b2-lead.json"));
+        assert_eq!(got.as_deref(), Some("listen-b2-coordinator.json"));
         let got = renamed_stamp("listen-rotp-coordinator.json", &map());
-        assert_eq!(got.as_deref(), Some("listen-b1-lead.json"));
+        assert_eq!(got.as_deref(), Some("listen-b1-coordinator.json"));
     }
 
     #[test]

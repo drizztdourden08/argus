@@ -261,7 +261,7 @@ fn clearing_a_fault_needs_a_project_a_thread_a_note_of_10_to_300_characters_and_
 
 #[test]
 fn only_a_live_lead_of_the_portfolio_board_may_clear_a_fault() {
-    for by in ["helper", "lead", "nobody", "", "retired"] {
+    for by in ["helper", "ghost", "nobody", "", "retired"] {
         let err = clear(&json!({"project": "alpha", "thread": "ui", "by": by, "note": NOTE}))
             .expect_err("refused");
         assert_eq!(err.status(), 403, "by \"{by}\"");

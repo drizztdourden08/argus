@@ -67,10 +67,7 @@ pub(super) fn person(
         ));
     }
     let text = canonical(text).into_owned();
-    if cx
-        .threads
-        .is_some_and(|all| !all.iter().any(|t| *t == text))
-    {
+    if cx.threads.is_some_and(|all| !all.contains(&text)) {
         return Err(reject(
             "unknown-person",
             format!("{text} is not a thread of this board."),

@@ -222,7 +222,15 @@ fn export_docs_covers_every_page_collection_meta_and_launches_without_env_values
     keys.sort();
     assert_eq!(
         keys,
-        ["avatar", "counters", "icon", "name", "project", "updatedAt"]
+        [
+            "avatar",
+            "counters",
+            "icon",
+            "name",
+            "project",
+            "titleMax",
+            "updatedAt"
+        ]
     );
     assert!(
         meta.get("handedBuild").is_none(),
