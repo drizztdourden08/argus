@@ -1,0 +1,13 @@
+/* @layer renderer-app @kind style */
+
+.config-preview__strip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding-block-end: var(--space-sm);
+}
+
+.config-preview__column {
+  flex: 0 0 var(--size-320);
+  inline-size: var(--size-320);
+}

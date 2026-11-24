@@ -54,13 +54,16 @@ export { validateField } from './validate-field';
 export {
   ACCENTS, CLOSED_STATUSES, DEFAULT_FILTERS, DEFAULT_TYPE, GROUP_OPTIONS, HUMAN, NO_PARENT, NO_PARENT_TITLE, OWNER, LIMITS, STARTING_STATUS, OP_KINDS, ORDER_OPTIONS, STATUS_OPTIONS, STORE_KEYS,
 } from './model.constants';
+export { configAccent } from './config-accent';
 export { configAddColumn } from './config-add-column';
 export { configAddRule } from './config-add-rule';
 export { configKind } from './config-kind';
 export { configMoveColumn } from './config-move-column';
 export { configParseList } from './config-parse-list';
+export { configReactionText } from './config-reaction-text';
 export { configRemoveColumn } from './config-remove-column';
 export { configRemoveRule } from './config-remove-rule';
+export { configRuleFacts } from './config-rule-facts';
 export { configRuleOfKind } from './config-rule-of-kind';
 export { configSetColumn } from './config-set-column';
 export { configSetRule } from './config-set-rule';

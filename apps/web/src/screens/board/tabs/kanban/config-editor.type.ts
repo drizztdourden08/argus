@@ -18,7 +18,7 @@ interface ConfigSectionProps {
   boardKey: string;
 }
 
-interface ConfigColumnRowProps {
+interface ConfigColumnProps {
   column: KanbanColumnConfig;
   index: number;
   count: number;
@@ -26,23 +26,28 @@ interface ConfigColumnRowProps {
   onChange: (column: KanbanColumnConfig) => void;
   onMove: (step: -1 | 1) => void;
   onRemove: () => void;
+  onRuleChange: (index: number, rule: KanbanRuleConfig) => void;
+  onRuleRemove: (index: number) => void;
 }
 
 interface ConfigColumnFieldsProps {
   column: KanbanColumnConfig;
-  rules: readonly KanbanRuleConfig[];
   onChange: (column: KanbanColumnConfig) => void;
 }
+
+type ConfigColumnRulesProps = Pick<ConfigColumnProps, 'column' | 'rules' | 'onChange' | 'onRuleChange' | 'onRuleRemove'>;
 
 interface ConfigColumnLimitProps {
   column: KanbanColumnConfig;
   onChange: (column: KanbanColumnConfig) => void;
 }
 
-interface ConfigRuleRowProps {
+interface ConfigRuleCardProps {
   rule: KanbanRuleConfig;
+  detachLabel?: string;
   onChange: (rule: KanbanRuleConfig) => void;
   onRemove: () => void;
+  onDetach?: () => void;
 }
 
 interface ConfigRuleFieldProps {
@@ -67,4 +72,4 @@ interface ConfigRuleParamProps extends ConfigRuleFieldProps {
   field: ParamField;
 }
 
-export type { ConfigRuleParamProps, ConfigHoursInputProps, ConfigListInputProps, ConfigColumnFieldsProps, ConfigColumnLimitProps, ConfigColumnRowProps, ConfigEditor, ConfigRuleFieldProps, ConfigRuleRowProps, ConfigSectionProps };
+export type { ConfigRuleParamProps, ConfigHoursInputProps, ConfigListInputProps, ConfigColumnFieldsProps, ConfigColumnLimitProps, ConfigColumnProps, ConfigColumnRulesProps, ConfigEditor, ConfigRuleFieldProps, ConfigRuleCardProps, ConfigSectionProps };
